@@ -1055,6 +1055,41 @@ describe("who can see whose previews", () => {
       else process.env.PPTFAST_HOME = originalLegacy
     }
   })
+
+  it("copies a symlink ~/.pptfast as a real directory, matching src/cli/home.ts", async () => {
+    const { previewRoot, __testing } = await loadPreviewTool()
+    const { mkdir, writeFile, readFile } = await import("node:fs/promises")
+    const { lstatSync, symlinkSync } = await import("node:fs")
+    const { join } = await import("node:path")
+    const original = process.env.PPTPRESS_HOME
+    const originalLegacy = process.env.PPTFAST_HOME
+    const fakeHome = await scratchTmp("preview-migrate-symlink-")
+    try {
+      delete process.env.PPTPRESS_HOME
+      delete process.env.PPTFAST_HOME
+      __testing.resetLegacyHomeWarnings()
+      const payload = join(fakeHome, "legacy-payload")
+      const legacy = join(fakeHome, ".pptfast")
+      await mkdir(join(payload, "previews"), { recursive: true })
+      await writeFile(join(payload, "config.json"), '{"ok":true}\n')
+      try {
+        symlinkSync(payload, legacy, "dir")
+      } catch {
+        return
+      }
+      const root = previewRoot({ homedir: () => fakeHome })
+      expect(root).toBe(join(fakeHome, ".pptpress", __testing.PREVIEW_DIR))
+      expect(lstatSync(join(fakeHome, ".pptpress")).isSymbolicLink()).toBe(false)
+      expect(lstatSync(join(fakeHome, ".pptpress")).isDirectory()).toBe(true)
+      expect(lstatSync(legacy).isSymbolicLink()).toBe(true)
+      expect(await readFile(join(fakeHome, ".pptpress", "config.json"), "utf8")).toBe('{"ok":true}\n')
+    } finally {
+      if (original === undefined) delete process.env.PPTPRESS_HOME
+      else process.env.PPTPRESS_HOME = original
+      if (originalLegacy === undefined) delete process.env.PPTFAST_HOME
+      else process.env.PPTFAST_HOME = originalLegacy
+    }
+  })
 })
 
 /**

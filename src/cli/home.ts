@@ -1,4 +1,4 @@
-import { cpSync, existsSync, renameSync, rmSync } from "node:fs"
+import { cpSync, existsSync, realpathSync, renameSync, rmSync } from "node:fs"
 import { homedir as osHomedir } from "node:os"
 import { join, resolve } from "node:path"
 import { resolveProductEnv } from "./product-env"
@@ -47,10 +47,14 @@ export function pptpressHome(opts: PptpressHomeOpts = {}): string {
 
 function migrateLegacyHome(legacyDir: string, nextDir: string): void {
   if (existsSync(nextDir) || !existsSync(legacyDir)) return
+  // realpath so a directory symlink is copied as a real tree. Default
+  // `cpSync` would copy the link itself, and the two homes would share one
+  // payload. Leave the old path (symlink or dir) in place.
+  const source = realpathSync(legacyDir)
   const tmpDir = `${nextDir}.migrating`
   rmSync(tmpDir, { recursive: true, force: true })
   try {
-    cpSync(legacyDir, tmpDir, { recursive: true })
+    cpSync(source, tmpDir, { recursive: true })
     renameSync(tmpDir, nextDir)
   } catch (error) {
     try {

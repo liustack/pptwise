@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { existsSync } from "node:fs"
+import { existsSync, lstatSync, symlinkSync } from "node:fs"
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
@@ -117,6 +117,30 @@ describe("pptpressHome", () => {
     expect(await readFile(join(next, "decks", "x", "deck.json"), "utf8")).toBe('{"ok":true}\n')
     expect(await readFile(join(legacy, "config.json"), "utf8")).toBe('{"theme":"tech"}\n')
     expect(await readFile(join(legacy, "decks", "x", "deck.json"), "utf8")).toBe('{"ok":true}\n')
+  })
+
+  it("copies a symlink ~/.pptfast as a real directory and leaves the link in place", async () => {
+    delete process.env.PPTPRESS_HOME
+    delete process.env.PPTFAST_HOME
+    const home = await fakeHomedir()
+    const payload = join(home, "legacy-payload")
+    const legacy = join(home, ".pptfast")
+    const next = join(home, ".pptpress")
+    await mkdir(join(payload, "decks", "x"), { recursive: true })
+    await writeFile(join(payload, "config.json"), '{"theme":"tech"}\n')
+    await writeFile(join(payload, "decks", "x", "deck.json"), '{"ok":true}\n')
+    try {
+      symlinkSync(payload, legacy, "dir")
+    } catch {
+      return
+    }
+    expect(pptpressHome({ homedir: () => home })).toBe(next)
+    expect(lstatSync(next).isSymbolicLink()).toBe(false)
+    expect(lstatSync(next).isDirectory()).toBe(true)
+    expect(lstatSync(legacy).isSymbolicLink()).toBe(true)
+    expect(await readFile(join(next, "config.json"), "utf8")).toBe('{"theme":"tech"}\n')
+    expect(await readFile(join(next, "decks", "x", "deck.json"), "utf8")).toBe('{"ok":true}\n')
+    expect(await readFile(join(legacy, "config.json"), "utf8")).toBe('{"theme":"tech"}\n')
   })
 
   it("does not migrate when the new dir already exists", async () => {

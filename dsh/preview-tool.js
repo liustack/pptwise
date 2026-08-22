@@ -79,7 +79,7 @@
 //    and friends): still fetched or read per run. See `inlineLocalImages`.
 
 import { randomUUID } from 'node:crypto'
-import { cpSync, existsSync, renameSync, rmSync } from 'node:fs'
+import { cpSync, existsSync, realpathSync, renameSync, rmSync } from 'node:fs'
 import { mkdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import { basename, dirname, isAbsolute, join, resolve } from 'node:path'
@@ -339,10 +339,13 @@ function warnLegacyHome() {
 
 function migrateLegacyHome(legacyDir, nextDir) {
   if (existsSync(nextDir) || !existsSync(legacyDir)) return
+  // Must match src/cli/home.ts: realpath so a directory symlink is copied
+  // as a real tree. Default cpSync would copy the link itself.
+  const source = realpathSync(legacyDir)
   const tmpDir = `${nextDir}.migrating`
   rmSync(tmpDir, { recursive: true, force: true })
   try {
-    cpSync(legacyDir, tmpDir, { recursive: true })
+    cpSync(source, tmpDir, { recursive: true })
     renameSync(tmpDir, nextDir)
   } catch (error) {
     try {

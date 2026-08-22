@@ -47,6 +47,14 @@ function shCapture(cmd: string, args: string[]): { status: number; stdout: strin
   }
 }
 
+// Child CLI processes inherit this env. pptpressHome() copies ~/.pptfast into
+// ~/.pptpress when the new dir is missing, so this gate must never run against
+// the developer's real home.
+const e2eHome = mkdtempSync(join(tmpdir(), "pptpress-e2e-home-"))
+delete process.env.PPTFAST_HOME
+process.env.PPTPRESS_HOME = e2eHome
+try {
+
 // 1) render via the built CLI
 const pptxPath = join(OUT, "basic.pptx")
 console.log(sh("node", ["dist/cli.js", "render", "examples/basic.json", "-o", pptxPath]))
@@ -1176,3 +1184,6 @@ rmSync(stockRoot, { recursive: true, force: true })
 console.log("workspace stock-asset render leg OK")
 
 console.log("e2e OK")
+} finally {
+  rmSync(e2eHome, { recursive: true, force: true })
+}

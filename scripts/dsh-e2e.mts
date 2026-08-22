@@ -435,10 +435,14 @@ export interface PreviewToolRun {
   modelText: string
 }
 
-/** Where the plugin keeps previews, resolved by the plugin's own two rules. */
+/** Where the plugin keeps previews. Requires the isolated `PPTPRESS_HOME`
+ *  `main()` sets, so a missing env cannot fall through to the real home. */
 function previewRootForGate(): string {
   const home = process.env.PPTPRESS_HOME
-  return join(resolve(home === undefined || home === "" ? join(homedir(), ".pptpress") : home), "previews")
+  if (home === undefined || home === "") {
+    throw new Error("DSH e2e gate requires PPTPRESS_HOME so it never touches the real user home")
+  }
+  return join(resolve(home), "previews")
 }
 
 /**
@@ -636,44 +640,57 @@ function parseCliOptions(argv: string[]): CliOptions {
 }
 
 async function main(): Promise<void> {
-  const options = parseCliOptions(process.argv.slice(2))
-  const canonicalWorkspace = await canonicalWorkspacePath(options.workspace)
-  const rootPackage = JSON.parse(await readFile(join(import.meta.dirname, "..", "package.json"), "utf8")) as {
-    version: string
-  }
-  const installed = await inspectInstalledDshPlugin({
-    dshHome: options.dshHome,
-    profile: options.profile,
-    expectedVersion: rootPackage.version,
-  })
-  const applied = await applyInstalledDshPlugin(installed)
-  await verifyInstalledDshSkill(installed, applied)
-  const tool = verifyInstalledDshTool(applied)
-  const route = verifyInstalledDshRoute(applied)
-  const client = await verifyInstalledDshClient(installed)
-  const run = await verifyPreviewToolRun(tool)
-  const invocation = buildDshDumpConfigInvocation(canonicalWorkspace, options.profile)
-  const dump = execFileSync(invocation.command, invocation.args, {
-    cwd: invocation.cwd,
-    encoding: "utf8",
-  })
-  assertPptpressMountedInDshConfig(dump)
+  const isolatedHome = await mkdtemp(join(tmpdir(), "pptpress-dsh-e2e-home-"))
+  const previousHome = process.env.PPTPRESS_HOME
+  const previousLegacy = process.env.PPTFAST_HOME
+  process.env.PPTPRESS_HOME = isolatedHome
+  delete process.env.PPTFAST_HOME
+  try {
+    const options = parseCliOptions(process.argv.slice(2))
+    const canonicalWorkspace = await canonicalWorkspacePath(options.workspace)
+    const rootPackage = JSON.parse(await readFile(join(import.meta.dirname, "..", "package.json"), "utf8")) as {
+      version: string
+    }
+    const installed = await inspectInstalledDshPlugin({
+      dshHome: options.dshHome,
+      profile: options.profile,
+      expectedVersion: rootPackage.version,
+    })
+    const applied = await applyInstalledDshPlugin(installed)
+    await verifyInstalledDshSkill(installed, applied)
+    const tool = verifyInstalledDshTool(applied)
+    const route = verifyInstalledDshRoute(applied)
+    const client = await verifyInstalledDshClient(installed)
+    const run = await verifyPreviewToolRun(tool)
+    const invocation = buildDshDumpConfigInvocation(canonicalWorkspace, options.profile)
+    const dump = execFileSync(invocation.command, invocation.args, {
+      cwd: invocation.cwd,
+      encoding: "utf8",
+    })
+    assertPptpressMountedInDshConfig(dump)
 
-  process.stdout.write(
-    [
-      "DSH pptpress preflight OK",
-      `profile: ${installed.profile}`,
-      `plugin: ${PACKAGE_NAME}@${installed.installedVersion}`,
-      `skill: pptpress -> ${installed.cliPath}`,
-      `tool: ${String(tool.name)} (render, presentationMeta, execute)`,
-      `route: ${String(route.path)}`,
-      `card: ${client.clientPath} -> ${TOOLVIEW_SLOT}:${client.slotKeys.join(",")}`,
-      `live run: ${run.pageCount} pages + ${run.pptxPath.split("/").pop()}, model text ${run.modelText.length} bytes, no markup`,
-      `requested workspace: ${options.workspace}`,
-      `canonical workspace: ${canonicalWorkspace}`,
-      "Use the canonical workspace path for any automated workspace fixture.",
-    ].join("\n") + "\n",
-  )
+    process.stdout.write(
+      [
+        "DSH pptpress preflight OK",
+        `profile: ${installed.profile}`,
+        `plugin: ${PACKAGE_NAME}@${installed.installedVersion}`,
+        `skill: pptpress -> ${installed.cliPath}`,
+        `tool: ${String(tool.name)} (render, presentationMeta, execute)`,
+        `route: ${String(route.path)}`,
+        `card: ${client.clientPath} -> ${TOOLVIEW_SLOT}:${client.slotKeys.join(",")}`,
+        `live run: ${run.pageCount} pages + ${run.pptxPath.split("/").pop()}, model text ${run.modelText.length} bytes, no markup`,
+        `requested workspace: ${options.workspace}`,
+        `canonical workspace: ${canonicalWorkspace}`,
+        "Use the canonical workspace path for any automated workspace fixture.",
+      ].join("\n") + "\n",
+    )
+  } finally {
+    if (previousHome === undefined) delete process.env.PPTPRESS_HOME
+    else process.env.PPTPRESS_HOME = previousHome
+    if (previousLegacy === undefined) delete process.env.PPTFAST_HOME
+    else process.env.PPTFAST_HOME = previousLegacy
+    await rm(isolatedHome, { recursive: true, force: true })
+  }
 }
 
 const invokedPath = process.argv[1]
