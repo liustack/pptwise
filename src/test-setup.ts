@@ -1,4 +1,17 @@
+import { mkdtempSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import '@testing-library/jest-dom/vitest'
+
+// pptpressHome() / previewRoot() copy ~/.pptfast into ~/.pptpress when the
+// new dir is missing. A test that unsets the env and then touches either
+// function would migrate the developer's real home. Every worker gets a
+// private home before any test file runs. Tests that need "env unset" still
+// delete the variable and pass an injectable homedir.
+if (process.env.PPTPRESS_HOME === undefined || process.env.PPTPRESS_HOME === "") {
+  process.env.PPTPRESS_HOME = mkdtempSync(join(tmpdir(), "pptpress-vitest-home-"))
+}
+delete process.env.PPTFAST_HOME
 
 // jsdom lacks ResizeObserver — radix-ui components require it.
 if (!globalThis.ResizeObserver) {
