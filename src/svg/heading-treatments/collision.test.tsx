@@ -155,7 +155,7 @@ function deck(themeId: string, slides: Slide[]): PptxIR {
     version: "4",
     filename: "heading-collision.pptx",
     theme: { id: themeId },
-    meta: { organization: "pptfast" },
+    meta: { organization: "pptpress" },
     assets: { images: {} },
     slides,
   } as PptxIR

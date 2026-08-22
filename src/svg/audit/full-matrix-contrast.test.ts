@@ -421,7 +421,7 @@ describe("fashion-masthead meta line contrast (contrast-policy wave, metaInk mig
       version: "4",
       filename: "fashion-masthead-meta-fixture",
       theme: { id: themeId },
-      meta: { organization: "pptfast", date: "2026-08" },
+      meta: { organization: "pptpress", date: "2026-08" },
       assets: { images: {} },
       slides: [{ type: "cover", heading: HEADING, layout: "fashion-masthead", components: [] } as Slide],
     }
@@ -515,7 +515,7 @@ describe("split-diagonal org kicker contrast (B-tier reclassification)", () => {
       version: "4",
       filename: "split-diagonal-kicker-fixture",
       theme: { id: themeId },
-      meta: { organization: "pptfast", date: "2026-08" },
+      meta: { organization: "pptpress", date: "2026-08" },
       assets: { images: {} },
       slides: [{ type: "cover", heading: HEADING, layout: "split-diagonal", components: [] } as Slide],
     }
@@ -710,7 +710,7 @@ describe("pin-only matrix contrast/overflow regression net (quote-stage wave, ta
 // exactly that combination is sufficient and avoids reintroducing the noise
 // the shared fixture already proved unrelated.
 describe("bento-panel kpi_cards contrast (W8 fix round, targeted — see comment above)", () => {
-  // Values match the live repro that surfaced this defect (`pptfast audit`
+  // Values match the live repro that surfaced this defect (`pptpress audit`
   // on a hand-built deck, W8 walkthrough): two kpi_cards items so the grid
   // path (not the single-card degrade) renders both through renderKpiCard.
   const KPI_SLIDE: Slide = {

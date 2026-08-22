@@ -1,12 +1,12 @@
 {
-  "name": "@liustack/pptfast",
+  "name": "@liustack/pptpress",
   "version": "0.20.0",
   "description": "Stable, editable PPTX generation for AI agents — semantic IR in, native DrawingML out",
   "type": "module",
   "sideEffects": false,
   "license": "MIT",
   "bin": {
-    "pptfast": "./dist/cli.js"
+    "pptpress": "./dist/cli.js"
   },
   "main": "./dsh/index.js",
   "exports": {
@@ -30,10 +30,10 @@
     "dist",
     "dsh",
     "cordis.patch.yml",
-    "skills/pptfast/SKILL.md",
-    "skills/pptfast/SKILL.zh-CN.md",
-    "skills/pptfast/scripts",
-    "skills/pptfast/references",
+    "skills/pptpress/SKILL.md",
+    "skills/pptpress/SKILL.zh-CN.md",
+    "skills/pptpress/scripts",
+    "skills/pptpress/references",
     "README.zh-CN.md"
   ],
   "engines": {
@@ -76,7 +76,7 @@
   "author": "Leon Liu",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/liustack/pptfast.git"
+    "url": "git+https://github.com/liustack/pptpress.git"
   },
   "dependencies": {
     "commander": "^13.1.0",

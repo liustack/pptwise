@@ -7,17 +7,17 @@
  * silently resolves `@latest` against what survives that filter, so `@latest`
  * hands a new reader an old release. A pinned version goes stale instead, and
  * this module is the fix: `pnpm release:version` rewrites every pinned
- * `@liustack/pptfast@x.y.z` occurrence in the repo's markdown to the current
+ * `@liustack/pptpress@x.y.z` occurrence in the repo's markdown to the current
  * package.json version, and the drift test (scripts/stamp.test.mts) reads the
  * same occurrences back and asserts each one matches. Keeping the read and
  * the write in one module is what keeps the two in step.
  *
  * Markdown files are discovered by scanning rather than by a fixed list, so a
  * new doc with a pinned command is covered the day it appears. The launchers
- * (`skills/pptfast/scripts/run.sh` and `run.ps1`) carry the same version in a
+ * (`skills/pptpress/scripts/run.sh` and `run.ps1`) carry the same version in a
  * shell and a PowerShell constant, and matter more than any doc line: the
  * pinned version there is what actually runs when a harness invokes the skill
- * without a `pptfast` on PATH. They are stamped by exact line pattern.
+ * without a `pptpress` on PATH. They are stamped by exact line pattern.
  */
 import { readdirSync, readFileSync, writeFileSync } from "node:fs"
 import { dirname, join } from "node:path"
@@ -25,10 +25,10 @@ import { fileURLToPath, pathToFileURL } from "node:url"
 
 export const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..")
 
-export const PKG_NAME = "@liustack/pptfast"
+export const PKG_NAME = "@liustack/pptpress"
 
 /** One pinned occurrence: the whole spec, with the version in group 1. */
-export const PIN_PATTERN = /@liustack\/pptfast@(\d+\.\d+\.\d+)/g
+export const PIN_PATTERN = /@liustack\/pptpress@(\d+\.\d+\.\d+)/g
 
 /** The version this repo currently ships, from package.json. */
 export function readPackageVersion(root = repoRoot): string {
@@ -72,7 +72,7 @@ export function readStampedVersions(root = repoRoot): { file: string; version: s
 
 /**
  * The launcher constants: one line each, the version captured in group 1.
- * `skills/pptfast/scripts/run.sh` and `run.ps1` must agree with package.json
+ * `skills/pptpress/scripts/run.sh` and `run.ps1` must agree with package.json
  * or the skill runs a version this repo never shipped.
  */
 export function launcherTargets(root = repoRoot): {
@@ -81,7 +81,7 @@ export function launcherTargets(root = repoRoot): {
   pattern: RegExp
   format: (version: string) => string
 }[] {
-  const scripts = join(root, "skills", "pptfast", "scripts")
+  const scripts = join(root, "skills", "pptpress", "scripts")
   return [
     {
       name: "run.sh PINNED",

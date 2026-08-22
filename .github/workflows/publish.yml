@@ -4,8 +4,8 @@
 # workflow's GitHub OIDC identity (the `id-token: write` permission below) for
 # a short-lived npm credential at publish time. Before this workflow can
 # actually publish, someone with npm publish rights must register this exact
-# repo + workflow as a trusted publisher for @liustack/pptfast on npmjs.com
-# (package Settings → Trusted Publisher: GitHub Actions, liustack/pptfast,
+# repo + workflow as a trusted publisher for @liustack/pptpress on npmjs.com
+# (package Settings → Trusted Publisher: GitHub Actions, liustack/pptpress,
 # workflow file publish.yml). Until then a tag push simply fails at the
 # publish step — nothing is released, by design.
 #

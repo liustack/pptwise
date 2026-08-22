@@ -1,5 +1,5 @@
 ---
-"@liustack/pptfast": patch
+"@liustack/pptpress": patch
 ---
 
 The `playbill` theme no longer draws its top-right black ticket chip. On the

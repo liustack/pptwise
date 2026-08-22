@@ -1,7 +1,7 @@
 /**
- * `pptfast serve <target>` (serve wave, task S1, spec-plan.md
+ * `pptpress serve <target>` (serve wave, task S1, spec-plan.md
  * `.issues/2026-07-25-serve/spec-plan.md`): a live-reloading HTTP preview of
- * the exact same `preview.html` bundle `pptfast preview --html` writes to
+ * the exact same `preview.html` bundle `pptpress preview --html` writes to
  * disk (`buildDeckPreview`, `./commands.ts`) — this module never builds its
  * own HTML, only serves and refreshes what that shared pipeline produces
  * (design ruling 5: "buildPreviewHtml 复用现状 ... 禁止 fork 一份 preview 构建
@@ -58,7 +58,7 @@
  * event, and the previous good `html` stays cached and keeps serving `GET /`
  * until a later rebuild succeeds. Only the *first* build (at
  * `createServeServer` call time, before the server starts listening) is
- * allowed to reject the whole call — same "throw `PptfastError` → CLI exit 1"
+ * allowed to reject the whole call — same "throw `PptpressError` → CLI exit 1"
  * contract every other `run*` command already has (`./commands.ts`), since
  * there is no previous-good HTML yet to fall back to.
  */
@@ -66,15 +66,15 @@ import { type FSWatcher, watch } from "node:fs"
 import { createServer, type Server, type ServerResponse } from "node:http"
 import { platform as osPlatform } from "node:os"
 import { join } from "node:path"
-import { PptfastError } from "../errors"
+import { PptpressError } from "../errors"
 import { spawnHidden } from "./child"
 import { buildDeckPreview } from "./commands"
 import { findConfig } from "./config"
 import { ASSETS_DIRNAME, PAGES_DIRNAME, SPEC_FILENAME } from "./deck-dir"
 import { resolveWorkspaceLocation } from "./workspace"
 
-/** `pptfast serve`'s own default (spec-plan.md §2's worked example,
- *  `pptfast serve <target> [--port 4400] [--no-open]`) — never
+/** `pptpress serve`'s own default (spec-plan.md §2's worked example,
+ *  `pptpress serve <target> [--port 4400] [--no-open]`) — never
  *  auto-incremented on conflict (design ruling 7: "不自动递增——agent 要可
  *  预测的 URL"), so a busy port is a hard error naming `--port` as the way
  *  out, never a silent fallback to some other port the caller didn't ask
@@ -89,10 +89,10 @@ const HEARTBEAT_MS = 30_000
 export interface ServeOptions {
   /** Same target shape every deck-accepting command accepts: an IR JSON
    *  file, a deck project directory, or a bare name under
-   *  `~/.pptfast/decks` (`buildDeckPreview`/`loadDeckTarget`, `./commands.ts`). */
+   *  `~/.pptpress/decks` (`buildDeckPreview`/`loadDeckTarget`, `./commands.ts`). */
   target: string
   /** Default {@link DEFAULT_PORT}. `0` binds an OS-assigned ephemeral port
-   *  (tests only — `pptfast serve` itself always resolves a fixed port, see
+   *  (tests only — `pptpress serve` itself always resolves a fixed port, see
    *  {@link DEFAULT_PORT}'s own doc comment on why this command never
    *  auto-increments). */
   port?: number
@@ -103,7 +103,7 @@ export interface ServeOptions {
    *  so re-running it every rebuild is safe — but note the flip side: the
    *  first successful registration wins for the process's lifetime, so
    *  editing the theme file itself mid-serve does not live-reload the brand
-   *  (restart `pptfast serve` for that). */
+   *  (restart `pptpress serve` for that). */
   themeFilePath?: string
 }
 
@@ -142,11 +142,11 @@ function watchRoots(resolvedTarget: string, isDir: boolean, extra: string[] = []
  *  fixed string to check for (a defensive double-injection guard —
  *  `createServeServer` only ever calls it on a fresh `buildDeckPreview`
  *  result, which never already contains it, but the check costs nothing). */
-export const SERVE_CLIENT_SCRIPT_ID = "pptfast-serve-client"
+export const SERVE_CLIENT_SCRIPT_ID = "pptpress-serve-client"
 
 /**
  * The serve-mode client (task S2), spliced into every served page by
- * {@link injectServeClient} — never seen by the non-serve `pptfast preview
+ * {@link injectServeClient} — never seen by the non-serve `pptpress preview
  * --html` download path. Two jobs:
  *
  * 1. Live reload: opens `EventSource('/events')`, reloads the whole page on
@@ -165,7 +165,7 @@ export const SERVE_CLIENT_SCRIPT_ID = "pptfast-serve-client"
  * 2. Revision-request submit: rewires the existing export/download button
  *    (`#pf-export-btn`, `buildPreviewHtml`/`./preview-html.ts`) to POST
  *    instead of only downloading. The exact serialized payload comes from
- *    `window.__pptfastBuildExportBlob` — a plain function reference that
+ *    `window.__pptpressBuildExportBlob` — a plain function reference that
  *    file's own `<script>` closure assigns onto `window` specifically as
  *    this module's seam (see that file's own doc comment for the full
  *    rationale; design ruling 5 forbids a second copy of any part of the
@@ -196,7 +196,7 @@ export const SERVE_CLIENT_SCRIPT_ID = "pptfast-serve-client"
  * Exported (S3, S2 re-review's named test carry) purely so
  * `serve-client.test.ts` can execute this exact string under jsdom instead of
  * only grepping it as markup — this file has no other export consumer, isn't
- * re-exported from anywhere `pptfast --help` or the SDK's public surface ever
+ * re-exported from anywhere `pptpress --help` or the SDK's public surface ever
  * reads, and stays exactly as inert to import as before: `src/cli/serve.ts`
  * is already Node-only (AGENTS.md's layout rule), never reachable from
  * `src/index.ts`'s browser-safe closure regardless of what it exports.
@@ -215,7 +215,7 @@ export const SERVE_CLIENT_JS = `
     es.addEventListener('reload', function () { location.reload() })
 
     var banner = document.createElement('div')
-    banner.id = 'pptfast-serve-error-banner'
+    banner.id = 'pptpress-serve-error-banner'
     banner.setAttribute('role', 'alert')
     banner.style.cssText =
       'display:none;position:fixed;top:0;left:0;right:0;z-index:2147483647;' +
@@ -224,7 +224,7 @@ export const SERVE_CLIENT_JS = `
     document.body.appendChild(banner)
 
     function showBanner(message) {
-      banner.textContent = 'pptfast serve: ' + message
+      banner.textContent = 'pptpress serve: ' + message
       banner.style.display = 'block'
     }
 
@@ -242,7 +242,7 @@ export const SERVE_CLIENT_JS = `
   try {
     setUpLiveReload()
   } catch (e) {
-    console.error('pptfast serve: failed to set up live reload', e)
+    console.error('pptpress serve: failed to set up live reload', e)
   }
 })()
 `.trim()
@@ -259,7 +259,7 @@ function buildServeClientScriptTag(): string {
  * and forking a second copy of its build logic is forbidden — so this
  * rewrites the *string* `buildDeckPreview` already returned instead,
  * leaving that module — and every byte it produces for the non-serve
- * `pptfast preview --html` download path — completely untouched).
+ * `pptpress preview --html` download path — completely untouched).
  * `createServeServer` is the only caller, on every fresh
  * `buildDeckPreview` result (initial build and every rebuild alike).
  * Inserted right before the document's one `</body>`: by the time it runs,
@@ -287,7 +287,7 @@ export async function createServeServer(options: ServeOptions): Promise<ServeHan
   const cwd = options.cwd ?? process.cwd()
   const requestedPort = options.port ?? DEFAULT_PORT
   if (!Number.isInteger(requestedPort) || requestedPort < 0 || requestedPort > 65535) {
-    throw new PptfastError(`invalid port ${requestedPort} — expected an integer between 0 and 65535`)
+    throw new PptpressError(`invalid port ${requestedPort} — expected an integer between 0 and 65535`)
   }
 
   // First build happens before the server ever starts listening — deliberate:
@@ -386,7 +386,7 @@ export async function createServeServer(options: ServeOptions): Promise<ServeHan
       // asset is added, materializing `assets/` mid-edit) is never picked
       // up, since nothing here re-scans for newly-appeared watch roots
       // afterward. Changes under such a directory go unnoticed until the
-      // user restarts `pptfast serve`.
+      // user restarts `pptpress serve`.
       if ((e as NodeJS.ErrnoException).code !== "ENOENT") throw e
     }
   }
@@ -414,7 +414,7 @@ export async function createServeServer(options: ServeOptions): Promise<ServeHan
   } catch (e) {
     teardownWatchersAndTimers()
     if ((e as NodeJS.ErrnoException).code === "EADDRINUSE") {
-      throw new PptfastError(`port ${requestedPort} is already in use — pick a different one with --port`)
+      throw new PptpressError(`port ${requestedPort} is already in use — pick a different one with --port`)
     }
     throw e
   }
@@ -461,7 +461,7 @@ export async function createServeServer(options: ServeOptions): Promise<ServeHan
  * rejects a caller's own flow: a headless box, a sandboxed CI runner, or a
  * missing `xdg-open` binary all fail silently — the URL `runServe` already
  * printed to the terminal is the fallback, so a failed launch here degrades
- * to "the user copies the URL themselves", not a broken `pptfast serve`.
+ * to "the user copies the URL themselves", not a broken `pptpress serve`.
  * Windows is out of scope (this repo's own dev-machine assumption is
  * macOS/Linux, spec-plan.md design ruling 1) — falls through to the
  * `xdg-open` branch, which simply fails to spawn (caught below) rather than
@@ -488,7 +488,7 @@ export interface RunServeOptions {
 }
 
 /**
- * `pptfast serve <target>` (`../cli.ts`'s CLI wiring). Resolving does not
+ * `pptpress serve <target>` (`../cli.ts`'s CLI wiring). Resolving does not
  * mean the command is finished — unlike every other `run*` (`./commands.ts`),
  * which does its one unit of work and returns, this one starts a long-lived
  * server and returns almost immediately after; the open listening socket
@@ -499,7 +499,7 @@ export interface RunServeOptions {
  */
 export async function runServe(target: string, opts: RunServeOptions = {}): Promise<void> {
   const handle = await createServeServer({ target, port: opts.port, cwd: opts.cwd, themeFilePath: opts.themeFilePath })
-  console.log(`pptfast serve: ${handle.url} (Ctrl+C to stop)`)
+  console.log(`pptpress serve: ${handle.url} (Ctrl+C to stop)`)
   if (opts.open !== false) openBrowser(handle.url)
   process.on("SIGINT", () => {
     void handle.close().then(

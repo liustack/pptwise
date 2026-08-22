@@ -1,5 +1,5 @@
 /**
- * `pptfast images search|fetch|list|generate` — Pexels first, Pixabay as
+ * `pptpress images search|fetch|list|generate` — Pexels first, Pixabay as
  * empty-result fallback, then Openverse (cc0/pdm). Local generators pin
  * through the same sidecar path. Inject `fetch` / `resizeToJpeg` / `run`
  * so tests never touch the network or spawn real CLIs.
@@ -7,7 +7,7 @@
 import { mkdir, mkdtemp, readFile, readdir, rename, rm, unlink, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { dirname, join, resolve } from "node:path"
-import { PptfastError } from "../errors"
+import { PptpressError } from "../errors"
 import { sniffImageFormat } from "../ir/asset-sniff"
 import { isMissingModuleError } from "../platform/node"
 import { buildAssetBrief } from "../svg/asset-brief"
@@ -117,7 +117,7 @@ export interface ImagesGenerateOptions {
 type FetchImpl = typeof fetch
 
 function userAgent(): string {
-  return `pptfast/${VERSION} (+https://github.com/liustack/pptfast)`
+  return `pptpress/${VERSION} (+https://pptpress.com)`
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -150,7 +150,7 @@ async function fetchJson(
   try {
     res = await fetchImpl(url, init)
   } catch (e) {
-    throw new PptfastError(
+    throw new PptpressError(
       redactSecrets(`stock image request failed: ${e instanceof Error ? e.message : String(e)}`, secrets),
     )
   }
@@ -158,14 +158,14 @@ async function fetchJson(
   const redacted = redactSecrets(text.slice(0, 800), secrets)
   if (!res.ok) {
     if (res.status === 429) {
-      throw new PptfastError(`stock image API rate-limited (HTTP 429): ${redacted}`)
+      throw new PptpressError(`stock image API rate-limited (HTTP 429): ${redacted}`)
     }
-    throw new PptfastError(`stock image API HTTP ${res.status}: ${redacted}`)
+    throw new PptpressError(`stock image API HTTP ${res.status}: ${redacted}`)
   }
   try {
     return JSON.parse(text) as unknown
   } catch {
-    throw new PptfastError(`stock image API returned non-JSON (HTTP ${res.status})`)
+    throw new PptpressError(`stock image API returned non-JSON (HTTP ${res.status})`)
   }
 }
 
@@ -178,7 +178,7 @@ const ORIENTATIONS = new Set(["landscape", "portrait", "square"])
 function parseOrientation(raw: string | undefined): "landscape" | "portrait" | "square" | undefined {
   if (raw === undefined || raw === "") return undefined
   if (!ORIENTATIONS.has(raw)) {
-    throw new PptfastError(`invalid --orientation "${raw}" — expected landscape, portrait, or square`)
+    throw new PptpressError(`invalid --orientation "${raw}" — expected landscape, portrait, or square`)
   }
   return raw as "landscape" | "portrait" | "square"
 }
@@ -307,18 +307,18 @@ function openverseNotes(anonymous: boolean, pixabaySkipped: boolean): string[] {
   const lines = ["Openverse does not verify individual licenses. Results are filtered to cc0/pdm."]
   if (anonymous) {
     lines.push(
-      "Anonymous Openverse quota is very low. Set credentials with `pptfast config set openverse.clientId` and `pptfast config set openverse.clientSecret`.",
+      "Anonymous Openverse quota is very low. Set credentials with `pptpress config set openverse.clientId` and `pptpress config set openverse.clientSecret`.",
     )
   }
   if (pixabaySkipped) {
-    lines.push("Pixabay is unconfigured — pptfast config set pixabay.apiKey")
+    lines.push("Pixabay is unconfigured — pptpress config set pixabay.apiKey")
   }
   return lines
 }
 
 export async function runImagesSearch(query: string, opts: ImagesSearchOptions = {}): Promise<string> {
   const q = query.trim()
-  if (q === "") throw new PptfastError("search query must not be empty")
+  if (q === "") throw new PptpressError("search query must not be empty")
   const env = opts.env ?? process.env
   const keys = await loadKeys(env)
   const secrets = knownSecretsFrom(keys)
@@ -372,11 +372,11 @@ type PhotoRefProvider = "pexels" | "pixabay" | "openverse"
 function parsePhotoRef(ref: string): { provider: PhotoRefProvider; photoId: string } {
   const m = /^(pexels|pixabay|openverse):(.+)$/.exec(ref.trim())
   if (!m) {
-    throw new PptfastError(`invalid photo ref "${ref}" — expected pexels:<id>, pixabay:<id>, or openverse:<id>`)
+    throw new PptpressError(`invalid photo ref "${ref}" — expected pexels:<id>, pixabay:<id>, or openverse:<id>`)
   }
   const photoId = m[2]!.trim()
   if (photoId === "" || photoId.includes("/") || photoId.includes("\\") || photoId.includes("..")) {
-    throw new PptfastError(`invalid photo id in "${ref}"`)
+    throw new PptpressError(`invalid photo id in "${ref}"`)
   }
   return { provider: m[1] as PhotoRefProvider, photoId }
 }
@@ -407,13 +407,13 @@ function assertSafeDownloadUrl(url: string): URL {
   try {
     parsed = new URL(url)
   } catch {
-    throw new PptfastError("invalid download URL")
+    throw new PptpressError("invalid download URL")
   }
   if (parsed.protocol !== "https:") {
-    throw new PptfastError("refusing non-HTTPS download URL")
+    throw new PptpressError("refusing non-HTTPS download URL")
   }
   if (parsed.username !== "" || parsed.password !== "") {
-    throw new PptfastError("refusing download URL with embedded userinfo")
+    throw new PptpressError("refusing download URL with embedded userinfo")
   }
   return parsed
 }
@@ -429,7 +429,7 @@ async function downloadBytes(
   try {
     pin = await assertSafeRemoteTarget(parsed, lookup)
   } catch (e) {
-    throw new PptfastError(redactSecrets(e instanceof Error ? e.message : String(e), secrets))
+    throw new PptpressError(redactSecrets(e instanceof Error ? e.message : String(e), secrets))
   }
   let res: Response
   try {
@@ -438,20 +438,20 @@ async function downloadBytes(
       ? await fetchImpl(parsed.toString(), init)
       : await pinnedFetch(parsed, pin, init)
   } catch (e) {
-    throw new PptfastError(
+    throw new PptpressError(
       redactSecrets(`download failed: ${e instanceof Error ? e.message : String(e)}`, secrets),
     )
   }
   if (!res.ok) {
-    throw new PptfastError(`download HTTP ${res.status}`)
+    throw new PptpressError(`download HTTP ${res.status}`)
   }
   const declared = Number(res.headers.get("content-length") ?? "0")
   if (declared > BYTE_CAP) {
-    throw new PptfastError(`download exceeds the ${BYTE_CAP} byte cap`)
+    throw new PptpressError(`download exceeds the ${BYTE_CAP} byte cap`)
   }
   const buf = Buffer.from(await res.arrayBuffer())
   if (buf.byteLength > BYTE_CAP) {
-    throw new PptfastError(`download exceeds the ${BYTE_CAP} byte cap`)
+    throw new PptpressError(`download exceeds the ${BYTE_CAP} byte cap`)
   }
   return buf
 }
@@ -462,7 +462,7 @@ export async function defaultResizeToJpeg(bytes: Buffer, maxLongEdge: number): P
     sharpMod = (await import("sharp")).default as unknown as typeof Sharp.default
   } catch (e) {
     if (isMissingModuleError(e)) {
-      throw new PptfastError(`Resizing stock photos requires the optional dependency "sharp" (npm i sharp)`)
+      throw new PptpressError(`Resizing stock photos requires the optional dependency "sharp" (npm i sharp)`)
     }
     throw e
   }
@@ -482,7 +482,7 @@ async function toJpeg(
 ): Promise<Buffer> {
   const format = sniffImageFormat(bytes)
   if (format === null) {
-    throw new PptfastError("downloaded bytes are not a recognized image (png/jpeg/gif/webp)")
+    throw new PptpressError("downloaded bytes are not a recognized image (png/jpeg/gif/webp)")
   }
   if (format === "jpeg" && apiLongEdge !== undefined && apiLongEdge <= MAX_LONG_EDGE) {
     return bytes
@@ -506,12 +506,12 @@ async function loadPexelsPhoto(photoId: string, apiKey: string, fetchImpl: Fetch
   const url = `https://api.pexels.com/v1/photos/${encodeURIComponent(photoId)}`
   const json = await fetchJson(url, { headers: pexelsHeaders(apiKey) }, fetchImpl, secrets)
   const photo = asRecord(json)
-  if (!photo) throw new PptfastError(`Pexels photo ${photoId} was not found`)
+  if (!photo) throw new PptpressError(`Pexels photo ${photoId} was not found`)
   const src = asRecord(photo.src) ?? {}
   const original = asString(src.original)
   const large2x = asString(src.large2x)
   const downloadUrl = original ?? large2x
-  if (!downloadUrl) throw new PptfastError(`Pexels photo ${photoId} has no download URL`)
+  if (!downloadUrl) throw new PptpressError(`Pexels photo ${photoId} has no download URL`)
   const author = asString(photo.photographer) ?? "unknown"
   return {
     author,
@@ -535,7 +535,7 @@ async function loadPixabayPhoto(photoId: string, apiKey: string, fetchImpl: Fetc
   const rawHits = Array.isArray(root?.hits) ? root.hits : []
   const raw = asRecord(rawHits[0])
   const downloadUrl = asString(raw?.largeImageURL)
-  if (!hit || !downloadUrl) throw new PptfastError(`Pixabay photo ${photoId} was not found`)
+  if (!hit || !downloadUrl) throw new PptpressError(`Pixabay photo ${photoId} was not found`)
   return {
     author: hit.author,
     pageUrl: hit.pageUrl,
@@ -666,7 +666,7 @@ export async function runImagesFetch(ref: string, opts: ImagesFetchOptions): Pro
   if (meta.source) sidecar.source = meta.source
   const json = JSON.stringify(sidecar, null, 2) + "\n"
   if (/"apiKey"\s*:/.test(json) || /"key"\s*:/.test(json) || /"clientSecret"\s*:/.test(json)) {
-    throw new PptfastError("internal error: sidecar would have contained a key field")
+    throw new PptpressError("internal error: sidecar would have contained a key field")
   }
   await writeFile(jsonPath, json)
   return `pinned ${provider}:${photoId} as ${opts.as} → ${jpgPath}`
@@ -707,7 +707,7 @@ async function writePinnedAsset(
   const tmpJson = join(assetsDir, `.${assetId}.json.tmp`)
   const json = JSON.stringify(sidecar, null, 2) + "\n"
   if (/"apiKey"\s*:/.test(json) || /"key"\s*:/.test(json) || /"clientSecret"\s*:/.test(json)) {
-    throw new PptfastError("internal error: sidecar would have contained a key field")
+    throw new PptpressError("internal error: sidecar would have contained a key field")
   }
   try {
     await writeFile(tmpJpg, jpeg)
@@ -742,7 +742,7 @@ export async function runImagesGenerate(opts: ImagesGenerateOptions): Promise<st
       ? fromFlag
       : await (opts.resolvePrompt ?? defaultResolvePrompt)({ deck: opts.deck, as: opts.as, cwd })
   if (!prompt) {
-    throw new PptfastError(`no prompt for asset "${opts.as}" — pass --prompt`)
+    throw new PptpressError(`no prompt for asset "${opts.as}" — pass --prompt`)
   }
 
   const bins = {} as Record<GeneratorId, string | null>
@@ -754,18 +754,18 @@ export async function runImagesGenerate(opts: ImagesGenerateOptions): Promise<st
   if (!anyEnabled) {
     const foundDisabled = GENERATOR_IDS.filter((id) => bins[id] !== null)
     if (foundDisabled.length === 0) {
-      throw new PptfastError(
+      throw new PptpressError(
         "No image generator is enabled. Looked for grok, codex, antigravity. None were found on PATH.",
       )
     }
     const listed = foundDisabled
-      .map((id) => `${id} — pptfast config set images.generators.${id}.enabled true`)
+      .map((id) => `${id} — pptpress config set images.generators.${id}.enabled true`)
       .join("; ")
-    throw new PptfastError(`No image generator is enabled. Found but disabled: ${listed}`)
+    throw new PptpressError(`No image generator is enabled. Found but disabled: ${listed}`)
   }
 
   const { assetsDir } = await resolveDeckWorkspace(opts.deck, cwd)
-  const workdir = await mkdtemp(join(tmpdir(), "pptfast-gen-"))
+  const workdir = await mkdtemp(join(tmpdir(), "pptpress-gen-"))
   const dest = join(workdir, "generated.jpg")
   const run = opts.run ?? defaultProcessRunner
   const attempts: string[] = []
@@ -785,7 +785,7 @@ export async function runImagesGenerate(opts: ImagesGenerateOptions): Promise<st
         })
         const bytes = await readFile(dest)
         if (sniffImageFormat(bytes) === null) {
-          throw new PptfastError("produced bytes that are not a recognized image")
+          throw new PptpressError("produced bytes that are not a recognized image")
         }
         const resize = opts.resizeToJpeg ?? defaultResizeToJpeg
         const jpeg = await toJpeg(bytes, undefined, resize)
@@ -802,11 +802,11 @@ export async function runImagesGenerate(opts: ImagesGenerateOptions): Promise<st
       }
     }
     if (attempts.length === 0) {
-      throw new PptfastError(
+      throw new PptpressError(
         "No enabled image generator was found on PATH. Looked for grok, codex, antigravity.",
       )
     }
-    throw new PptfastError(`All image generators failed: ${attempts.join("; ")}`)
+    throw new PptpressError(`All image generators failed: ${attempts.join("; ")}`)
   } finally {
     await rm(workdir, { recursive: true, force: true })
   }

@@ -1,4 +1,4 @@
-/** Preflight gate for the *installed* pptfast DSH plugin.
+/** Preflight gate for the *installed* pptpress DSH plugin.
  *
  *  Everything here runs against the copy under `~/.dsh/profiles/<profile>/
  *  node_modules`, never against the working tree, because that is the artifact
@@ -18,10 +18,10 @@ import { dirname, join, resolve } from "node:path"
 import { createRequire } from "node:module"
 import { pathToFileURL } from "node:url"
 
-const PACKAGE_NAME = "@liustack/pptfast"
+const PACKAGE_NAME = "@liustack/pptpress"
 
 /** The tool the card's slot key, the route and the model summary all agree on. */
-const PREVIEW_TOOL_NAME = "pptfast_preview"
+const PREVIEW_TOOL_NAME = "pptpress_preview"
 
 /** The slot the browser half must claim, or the call renders in the generic row. */
 const TOOLVIEW_SLOT = "tool.call.toolview"
@@ -56,7 +56,7 @@ export async function canonicalWorkspacePath(path: string): Promise<string> {
   return canonical
 }
 
-/** Verify the exact pptfast package that the selected DSH profile can load. */
+/** Verify the exact pptpress package that the selected DSH profile can load. */
 export async function inspectInstalledDshPlugin(
   options: InspectInstalledDshPluginOptions,
 ): Promise<InstalledDshPlugin> {
@@ -74,7 +74,7 @@ export async function inspectInstalledDshPlugin(
     throw new Error(`${PACKAGE_NAME} is not declared in DSH profile ${profile}`)
   }
 
-  const pluginDir = join(profileDir, "node_modules", "@liustack", "pptfast")
+  const pluginDir = join(profileDir, "node_modules", "@liustack", "pptpress")
   const installedPackage = JSON.parse(await readFile(join(pluginDir, "package.json"), "utf8")) as {
     name?: string
     version?: string
@@ -101,7 +101,7 @@ export async function inspectInstalledDshPlugin(
   await Promise.all([
     access(pluginEntryPath),
     access(cliPath),
-    access(join(pluginDir, "skills", "pptfast", "SKILL.md")),
+    access(join(pluginDir, "skills", "pptpress", "SKILL.md")),
     access(join(pluginDir, "cordis.patch.yml")),
   ])
 
@@ -158,16 +158,16 @@ export async function applyInstalledDshPlugin(installed: InstalledDshPlugin): Pr
     inject?: unknown
     apply?: (ctx: unknown) => void
   }
-  if (module.name !== "pptfast" || !Array.isArray(module.inject) || !module.inject.includes("skills")) {
-    throw new Error("The installed package does not expose the pptfast DSH plugin shape")
+  if (module.name !== "pptpress" || !Array.isArray(module.inject) || !module.inject.includes("skills")) {
+    throw new Error("The installed package does not expose the pptpress DSH plugin shape")
   }
   if (!module.inject.includes("tools")) {
     throw new Error(
-      `The installed pptfast DSH plugin does not inject "tools" (expected it, so that ${PREVIEW_TOOL_NAME} can register)`,
+      `The installed pptpress DSH plugin does not inject "tools" (expected it, so that ${PREVIEW_TOOL_NAME} can register)`,
     )
   }
   if (typeof module.apply !== "function") {
-    throw new Error("The installed pptfast DSH plugin has no apply function")
+    throw new Error("The installed pptpress DSH plugin has no apply function")
   }
 
   const applied: AppliedDshPlugin = { skills: [], tools: [], routes: [], injected: [] }
@@ -202,20 +202,20 @@ export async function applyInstalledDshPlugin(installed: InstalledDshPlugin): Pr
   return applied
 }
 
-/** Prove the installed entry registers the pptfast skill, pointing at its own CLI. */
+/** Prove the installed entry registers the pptpress skill, pointing at its own CLI. */
 export async function verifyInstalledDshSkill(
   installed: InstalledDshPlugin,
   applied: AppliedDshPlugin,
 ): Promise<InstalledDshRegistration> {
-  if (applied.skills.length !== 1 || applied.skills[0]?.name !== "pptfast") {
+  if (applied.skills.length !== 1 || applied.skills[0]?.name !== "pptpress") {
     throw new Error(
-      `The installed pptfast DSH plugin did not register exactly one pptfast skill (registered ${applied.skills.length}: ${applied.skills.map((s) => String(s.name)).join(", ") || "none"})`,
+      `The installed pptpress DSH plugin did not register exactly one pptpress skill (registered ${applied.skills.length}: ${applied.skills.map((s) => String(s.name)).join(", ") || "none"})`,
     )
   }
   const registration = applied.skills[0]
   // Compared on the resolved real path, not the path the profile happens to
   // reach the package by. Under a `link:` install — how a local checkout is
-  // tried out in a real DSH profile — `node_modules/@liustack/pptfast` is a
+  // tried out in a real DSH profile — `node_modules/@liustack/pptpress` is a
   // symlink, and the plugin computes its own CLI path from `import.meta.url`,
   // which resolves it. The two strings then differ while naming the same
   // file, and this check failed every link install. A gate that cries wolf
@@ -226,7 +226,7 @@ export async function verifyInstalledDshSkill(
     (registration.content.includes(installed.cliPath) || registration.content.includes(expectedCliPath))
   if (!cliPathInSkill) {
     throw new Error(
-      `The installed pptfast skill does not point at its packaged CLI (expected ${installed.cliPath} or its real path ${expectedCliPath})`,
+      `The installed pptpress skill does not point at its packaged CLI (expected ${installed.cliPath} or its real path ${expectedCliPath})`,
     )
   }
   return registration
@@ -244,7 +244,7 @@ export function verifyInstalledDshTool(applied: AppliedDshPlugin): DshToolRegist
   const tool = applied.tools.find((t) => t.name === PREVIEW_TOOL_NAME)
   if (!tool) {
     throw new Error(
-      `The installed pptfast DSH plugin did not register the ${PREVIEW_TOOL_NAME} tool (registered: ${applied.tools.map((t) => String(t.name)).join(", ") || "no tools at all"})`,
+      `The installed pptpress DSH plugin did not register the ${PREVIEW_TOOL_NAME} tool (registered: ${applied.tools.map((t) => String(t.name)).join(", ") || "no tools at all"})`,
     )
   }
   const missing = [
@@ -268,17 +268,17 @@ export function verifyInstalledDshTool(applied: AppliedDshPlugin): DshToolRegist
 export function verifyInstalledDshRoute(applied: AppliedDshPlugin): DshRouteRegistration {
   if (!applied.injected.some((names) => names.includes("webServer"))) {
     throw new Error(
-      'The installed pptfast DSH plugin never asked for "webServer" (expected a scoped ctx.inject(["webServer"], …) that registers the preview route)',
+      'The installed pptpress DSH plugin never asked for "webServer" (expected a scoped ctx.inject(["webServer"], …) that registers the preview route)',
     )
   }
-  const route = applied.routes.find((r) => typeof r.path === "string" && r.path.startsWith("/pptfast/preview"))
+  const route = applied.routes.find((r) => typeof r.path === "string" && r.path.startsWith("/pptpress/preview"))
   if (!route) {
     throw new Error(
-      `The installed pptfast DSH plugin did not register a /pptfast/preview route (registered: ${applied.routes.map((r) => String(r.path)).join(", ") || "no routes at all"})`,
+      `The installed pptpress DSH plugin did not register a /pptpress/preview route (registered: ${applied.routes.map((r) => String(r.path)).join(", ") || "no routes at all"})`,
     )
   }
   if (typeof route.handler !== "function") {
-    throw new Error(`The pptfast preview route ${String(route.path)} has no handler function`)
+    throw new Error(`The pptpress preview route ${String(route.path)} has no handler function`)
   }
   return route
 }
@@ -435,10 +435,14 @@ export interface PreviewToolRun {
   modelText: string
 }
 
-/** Where the plugin keeps previews, resolved by the plugin's own two rules. */
+/** Where the plugin keeps previews. Requires the isolated `PPTPRESS_HOME`
+ *  `main()` sets, so a missing env cannot fall through to the real home. */
 function previewRootForGate(): string {
-  const home = process.env.PPTFAST_HOME
-  return join(resolve(home === undefined || home === "" ? join(homedir(), ".pptfast") : home), "previews")
+  const home = process.env.PPTPRESS_HOME
+  if (home === undefined || home === "") {
+    throw new Error("DSH e2e gate requires PPTPRESS_HOME so it never touches the real user home")
+  }
+  return join(resolve(home), "previews")
 }
 
 /**
@@ -457,8 +461,8 @@ async function removeGeneratedPreview(outDir: string): Promise<void> {
     process.stderr.write(`Refusing to delete ${resolved}: not a direct child of ${root}\n`)
     return
   }
-  if (!(await access(join(resolved, ".pptfast-preview-owner")).then(() => true, () => false))) {
-    process.stderr.write(`Refusing to delete ${resolved}: no pptfast owner marker\n`)
+  if (!(await access(join(resolved, ".pptpress-preview-owner")).then(() => true, () => false))) {
+    process.stderr.write(`Refusing to delete ${resolved}: no pptpress owner marker\n`)
     return
   }
   await rm(resolved, { recursive: true, force: true }).catch(() => {})
@@ -479,16 +483,16 @@ async function removeGeneratedPreview(outDir: string): Promise<void> {
  * regression that no other check would notice.
  */
 export async function verifyPreviewToolRun(tool: DshToolRegistration): Promise<PreviewToolRun> {
-  const workDir = await mkdtemp(join(tmpdir(), "pptfast-dsh-gate-"))
+  const workDir = await mkdtemp(join(tmpdir(), "pptpress-dsh-gate-"))
   const target = join(workDir, "gate-deck.json")
   await writeFile(
     target,
     JSON.stringify({
       version: "4",
-      filename: "pptfast-dsh-gate",
+      filename: "pptpress-dsh-gate",
       theme: { id: "consulting" },
       slides: [
-        { type: "cover", heading: "pptfast DSH preflight", subheading: "generated by pnpm e2e:dsh" },
+        { type: "cover", heading: "pptpress DSH preflight", subheading: "generated by pnpm e2e:dsh" },
         { type: "content", heading: "It ran", components: [{ type: "bullets", items: ["one", "two"] }] },
       ],
     }),
@@ -551,7 +555,7 @@ export async function verifyPreviewToolRun(tool: DshToolRegistration): Promise<P
   } finally {
     await rm(workDir, { recursive: true, force: true }).catch(() => {})
     // The gate's own deck, not the user's, and nothing deletes it on its own:
-    // previews live in `~/.pptfast/previews` until somebody removes them, so a
+    // previews live in `~/.pptpress/previews` until somebody removes them, so a
     // release check that skipped this would leave a rendered deck plus a .pptx
     // in the user's home every run.
     //
@@ -566,15 +570,15 @@ export async function verifyPreviewToolRun(tool: DshToolRegistration): Promise<P
 }
 
 /** Assert that DSH's composed profile config mounts the installed bundle. */
-export function assertPptfastMountedInDshConfig(dump: string): void {
+export function assertPptpressMountedInDshConfig(dump: string): void {
   const mounted = dump.split(/(?=^- id:)/m).some((row) => {
-    const isPptfast = /^- id:\s*["']?pptfast["']?\s*$/m.test(row)
-    const hasPackage = /^\s+name:\s*["']?@liustack\/pptfast["']?\s*$/m.test(row)
+    const isPptpress = /^- id:\s*["']?pptpress["']?\s*$/m.test(row)
+    const hasPackage = /^\s+name:\s*["']?@liustack\/pptpress["']?\s*$/m.test(row)
     const disabled = /^\s+disabled:\s*true\s*$/m.test(row)
-    return isPptfast && hasPackage && !disabled
+    return isPptpress && hasPackage && !disabled
   })
   if (!mounted) {
-    throw new Error("The composed DSH profile does not mount @liustack/pptfast")
+    throw new Error("The composed DSH profile does not mount @liustack/pptpress")
   }
 }
 
@@ -636,51 +640,64 @@ function parseCliOptions(argv: string[]): CliOptions {
 }
 
 async function main(): Promise<void> {
-  const options = parseCliOptions(process.argv.slice(2))
-  const canonicalWorkspace = await canonicalWorkspacePath(options.workspace)
-  const rootPackage = JSON.parse(await readFile(join(import.meta.dirname, "..", "package.json"), "utf8")) as {
-    version: string
-  }
-  const installed = await inspectInstalledDshPlugin({
-    dshHome: options.dshHome,
-    profile: options.profile,
-    expectedVersion: rootPackage.version,
-  })
-  const applied = await applyInstalledDshPlugin(installed)
-  await verifyInstalledDshSkill(installed, applied)
-  const tool = verifyInstalledDshTool(applied)
-  const route = verifyInstalledDshRoute(applied)
-  const client = await verifyInstalledDshClient(installed)
-  const run = await verifyPreviewToolRun(tool)
-  const invocation = buildDshDumpConfigInvocation(canonicalWorkspace, options.profile)
-  const dump = execFileSync(invocation.command, invocation.args, {
-    cwd: invocation.cwd,
-    encoding: "utf8",
-  })
-  assertPptfastMountedInDshConfig(dump)
+  const isolatedHome = await mkdtemp(join(tmpdir(), "pptpress-dsh-e2e-home-"))
+  const previousHome = process.env.PPTPRESS_HOME
+  const previousLegacy = process.env.PPTFAST_HOME
+  process.env.PPTPRESS_HOME = isolatedHome
+  delete process.env.PPTFAST_HOME
+  try {
+    const options = parseCliOptions(process.argv.slice(2))
+    const canonicalWorkspace = await canonicalWorkspacePath(options.workspace)
+    const rootPackage = JSON.parse(await readFile(join(import.meta.dirname, "..", "package.json"), "utf8")) as {
+      version: string
+    }
+    const installed = await inspectInstalledDshPlugin({
+      dshHome: options.dshHome,
+      profile: options.profile,
+      expectedVersion: rootPackage.version,
+    })
+    const applied = await applyInstalledDshPlugin(installed)
+    await verifyInstalledDshSkill(installed, applied)
+    const tool = verifyInstalledDshTool(applied)
+    const route = verifyInstalledDshRoute(applied)
+    const client = await verifyInstalledDshClient(installed)
+    const run = await verifyPreviewToolRun(tool)
+    const invocation = buildDshDumpConfigInvocation(canonicalWorkspace, options.profile)
+    const dump = execFileSync(invocation.command, invocation.args, {
+      cwd: invocation.cwd,
+      encoding: "utf8",
+    })
+    assertPptpressMountedInDshConfig(dump)
 
-  process.stdout.write(
-    [
-      "DSH pptfast preflight OK",
-      `profile: ${installed.profile}`,
-      `plugin: ${PACKAGE_NAME}@${installed.installedVersion}`,
-      `skill: pptfast -> ${installed.cliPath}`,
-      `tool: ${String(tool.name)} (render, presentationMeta, execute)`,
-      `route: ${String(route.path)}`,
-      `card: ${client.clientPath} -> ${TOOLVIEW_SLOT}:${client.slotKeys.join(",")}`,
-      `live run: ${run.pageCount} pages + ${run.pptxPath.split("/").pop()}, model text ${run.modelText.length} bytes, no markup`,
-      `requested workspace: ${options.workspace}`,
-      `canonical workspace: ${canonicalWorkspace}`,
-      "Use the canonical workspace path for any automated workspace fixture.",
-    ].join("\n") + "\n",
-  )
+    process.stdout.write(
+      [
+        "DSH pptpress preflight OK",
+        `profile: ${installed.profile}`,
+        `plugin: ${PACKAGE_NAME}@${installed.installedVersion}`,
+        `skill: pptpress -> ${installed.cliPath}`,
+        `tool: ${String(tool.name)} (render, presentationMeta, execute)`,
+        `route: ${String(route.path)}`,
+        `card: ${client.clientPath} -> ${TOOLVIEW_SLOT}:${client.slotKeys.join(",")}`,
+        `live run: ${run.pageCount} pages + ${run.pptxPath.split("/").pop()}, model text ${run.modelText.length} bytes, no markup`,
+        `requested workspace: ${options.workspace}`,
+        `canonical workspace: ${canonicalWorkspace}`,
+        "Use the canonical workspace path for any automated workspace fixture.",
+      ].join("\n") + "\n",
+    )
+  } finally {
+    if (previousHome === undefined) delete process.env.PPTPRESS_HOME
+    else process.env.PPTPRESS_HOME = previousHome
+    if (previousLegacy === undefined) delete process.env.PPTFAST_HOME
+    else process.env.PPTFAST_HOME = previousLegacy
+    await rm(isolatedHome, { recursive: true, force: true })
+  }
 }
 
 const invokedPath = process.argv[1]
 if (invokedPath !== undefined && import.meta.url === pathToFileURL(invokedPath).href) {
   main().catch((error: unknown) => {
     const message = error instanceof Error ? error.message : String(error)
-    process.stderr.write(`DSH pptfast preflight failed: ${message}\n`)
+    process.stderr.write(`DSH pptpress preflight failed: ${message}\n`)
     process.exitCode = 1
   })
 }

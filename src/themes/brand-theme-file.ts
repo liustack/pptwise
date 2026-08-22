@@ -12,7 +12,7 @@
  * module already-parsed JSON.
  */
 import { z } from "zod"
-import { PptfastError } from "../errors"
+import { PptpressError } from "../errors"
 import { BrandConfigSchema } from "@/ir"
 import type { BrandThemeFile } from "./brand-extract"
 import { getInstalledThemeIds, registerTheme } from "./definitions"
@@ -21,7 +21,7 @@ import { CANONICAL_THEME_IDS } from "./index"
 // A theme file is untrusted (user-edited, or hand-authored from scratch) —
 // unlike `extractBrandTheme`'s own return value, it needs full structural
 // validation before `registerTheme` ever sees it, so a malformed field
-// produces a readable `PptfastError` instead of a raw `TypeError` deep
+// produces a readable `PptpressError` instead of a raw `TypeError` deep
 // inside `assertContrastFloor`. Deliberately a fresh schema rather than a
 // reuse of `ir/index.ts`'s `StyleOverrideSchema` (every field there is
 // `.optional()` — a deep-partial *override* shape — where a theme file's
@@ -113,7 +113,7 @@ export function parseBrandThemeFile(raw: unknown, source: string): BrandThemeFil
   const r = BrandThemeFileSchema.safeParse(raw)
   if (!r.success) {
     const detail = r.error.issues.map((i) => `${i.path.join(".") || "(root)"}: ${i.message}`).join("\n")
-    throw new PptfastError(`invalid theme file ${source}:\n${detail}`)
+    throw new PptpressError(`invalid theme file ${source}:\n${detail}`)
   }
   // BrandThemeFileSchema is a structural mirror of BrandThemeFile (every
   // field name/optionality matches `./brand-extract.ts`'s interface) — the
@@ -138,7 +138,7 @@ export function parseBrandThemeFile(raw: unknown, source: string): BrandThemeFil
  * - `file.id` is already registered (not a builtin) → a silent no-op, not a
  *   second error. `registerTheme` itself throws unconditionally on *any*
  *   id collision, builtin or not — this idempotent skip exists because
- *   `pptfast serve`'s rebuild loop (`src/cli/serve.ts`) calls this on every
+ *   `pptpress serve`'s rebuild loop (`src/cli/serve.ts`) calls this on every
  *   file-watch rebuild for the *same* deck, and the theme-file/deck-dir
  *   `theme.json` it re-reads each time resolves to the same id every time.
  *   (A theme file edited *between* two rebuilds keeps whichever version
@@ -151,8 +151,8 @@ export function parseBrandThemeFile(raw: unknown, source: string): BrandThemeFil
  */
 export function registerBrandThemeFile(file: BrandThemeFile): string {
   if ((CANONICAL_THEME_IDS as readonly string[]).includes(file.id)) {
-    throw new PptfastError(
-      `theme file id "${file.id}" collides with a built-in pptfast theme — pick a different id (\`pptfast brand extract --id <id>\`, or edit the theme file's own "id" field)`,
+    throw new PptpressError(
+      `theme file id "${file.id}" collides with a built-in pptpress theme — pick a different id (\`pptpress brand extract --id <id>\`, or edit the theme file's own "id" field)`,
     )
   }
   if (!getInstalledThemeIds().includes(file.id)) {

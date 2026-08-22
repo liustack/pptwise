@@ -1,6 +1,6 @@
 /**
  * Motif candidate-set rotation (P1 variety wave, task 2 — spec/plan
- * `.issues/plans/2026-07-23-pptfast-p1-variety.md` 任务 2). Before this
+ * `.issues/plans/2026-07-23-pptpress-p1-variety.md` 任务 2). Before this
  * task, `themeDef.motif` (`src/themes/definitions.ts`) was a single fixed id
  * per theme — every decor-bearing page in a deck's whole lifetime drew the
  * exact same sticker (C3 in the diversity deep-review: "全库唯二完全不吃

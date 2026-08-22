@@ -142,7 +142,7 @@ export function createPptxPackageReader(zip: JSZip): PptxPackageReader {
       const Parser = getPlatform().domParser ?? globalThis.DOMParser
       if (!Parser) {
         throw new Error(
-          'DOMParser unavailable — in Node, call installNodePlatform() from "@liustack/pptfast/node" first (the pptfast CLI does this automatically)',
+          'DOMParser unavailable — in Node, call installNodePlatform() from "@liustack/pptpress/node" first (the pptpress CLI does this automatically)',
         )
       }
       const doc = new Parser().parseFromString(xml, "application/xml")

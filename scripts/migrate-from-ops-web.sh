@@ -45,7 +45,7 @@ find src -type f \( -name "*.ts" -o -name "*.tsx" \) -print0 | xargs -0 perl -pi
   s{\./pptx-generate}{./generate}g;
   s{\./pptx-inline-assets}{./inline-assets}g;
   s{\./pptx-ir}{./index}g;
-  s{GeneratedFileError}{PptfastError}g;
+  s{GeneratedFileError}{PptpressError}g;
 '
 
 # 图标生成脚本的输出路径指向新位置

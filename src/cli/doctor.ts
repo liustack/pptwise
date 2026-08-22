@@ -1,7 +1,7 @@
-// `pptfast doctor`: diagnose this machine's install without a single network
+// `pptpress doctor`: diagnose this machine's install without a single network
 // call. Rendering a PPTX is still zero-config and fully local. Optional
 // stock-photo search reads Pexels/Pixabay/Openverse credentials from
-// `$PPTFAST_HOME/config.json` or the env, and this report says whether those
+// `$PPTPRESS_HOME/config.json` or the env, and this report says whether those
 // keys are present and where they came from — never the values. What can actually go wrong is: an
 // installed skill copy frozen at an old version, a dsh plugin left behind, a
 // Node below the floor, a missing optional capability, a broken render chain,
@@ -33,7 +33,8 @@ import { inspectWorkspace, type GitIgnoreStatus, type GitRunner } from "./worksp
 export const MIN_NODE = "22.19"
 
 /** The folder name a skill copy lands under, in every harness's skill root. */
-export const SKILL_DIR_NAME = "pptfast"
+export const SKILL_DIR_NAME = "pptpress"
+export const LEGACY_SKILL_DIR_NAME = "pptfast"
 
 /** Relative paths every current skill copy must contain, in this order.
  *  A copy that pins the running CLI but is missing `references/` is
@@ -75,10 +76,10 @@ const SKILL_ROOTS = [
  *  a component, and the point is proving the chain runs, not covering it. */
 const SELF_TEST_DECK = {
   version: "4",
-  filename: "pptfast-doctor-self-test.pptx",
+  filename: "pptpress-doctor-self-test.pptx",
   theme: { id: "consulting" },
   slides: [
-    { type: "cover", heading: "pptfast doctor", subheading: "self-test render" },
+    { type: "cover", heading: "pptpress doctor", subheading: "self-test render" },
     {
       type: "content",
       heading: "Core chain",
@@ -111,7 +112,7 @@ export interface DoctorSkillCopy {
   harness: string
   /** The skill root scanned, e.g. `~/.claude/skills`. */
   root: string
-  /** The copy directory itself, `<root>/pptfast`. */
+  /** The copy directory itself, `<root>/pptpress`. */
   path: string
   /** The launcher the pin was read from, or null when the copy has no
    *  `scripts/run.sh` at all (a partial copy — reported, never a crash). */
@@ -123,6 +124,8 @@ export interface DoctorSkillCopy {
   /** `SKILL_COPY_FILES` entries this copy does not have. Empty means the
    *  copy is complete for this CLI. Independent of {@link stale}. */
   missing: string[]
+  /** True when this is a leftover `pptfast` skill directory from before the rename. */
+  legacy: boolean
 }
 
 export interface DoctorSkills {
@@ -213,7 +216,7 @@ export interface DoctorReport {
   workspace: DoctorWorkspace
   images: DoctorImages
   generators: DoctorGenerator[]
-  /** Hard failures: the only thing that makes `pptfast doctor` exit non-zero. */
+  /** Hard failures: the only thing that makes `pptpress doctor` exit non-zero. */
   errors: DoctorFinding[]
   /** Worth fixing, never fatal — a stale skill copy or a missing optional
    *  capability still leaves the main flow working, so exit stays 0. */
@@ -275,7 +278,7 @@ async function pathExists(target: string): Promise<boolean> {
  * An installed skill is a *copy*: `INSTALL.md` step 2 copies the folder into
  * the harness's skill root, and that copy keeps its install-time launcher
  * forever. Upgrading the CLI does not touch it, so a machine can sit on a
- * months-old pin while `pptfast --version` reports something much newer, and
+ * months-old pin while `pptpress --version` reports something much newer, and
  * nothing surfaces that gap until someone asks. This is that question.
  *
  * Finding zero copies is a perfectly normal state (dsh users have no skill
@@ -290,35 +293,41 @@ export async function scanSkillCopies(home: string, currentVersion: string): Pro
   for (const { harness, relative } of SKILL_ROOTS) {
     const root = join(home, relative)
     scanned.push(root)
-    const copyDir = join(root, SKILL_DIR_NAME)
-    if (!(await pathExists(copyDir))) continue
-    const launcherPath = join(copyDir, "scripts", "run.sh")
-    let pinned: string | null = null
-    let launcher: string | null = null
-    try {
-      pinned = readPinnedVersion(await readFile(launcherPath, "utf8"))
-      launcher = launcherPath
-    } catch {
-      // no launcher (or unreadable) — the copy still counts, version unknown
+    for (const { dirName, legacy } of [
+      { dirName: SKILL_DIR_NAME, legacy: false },
+      { dirName: LEGACY_SKILL_DIR_NAME, legacy: true },
+    ]) {
+      const copyDir = join(root, dirName)
+      if (!(await pathExists(copyDir))) continue
+      const launcherPath = join(copyDir, "scripts", "run.sh")
+      let pinned: string | null = null
+      let launcher: string | null = null
+      try {
+        pinned = readPinnedVersion(await readFile(launcherPath, "utf8"))
+        launcher = launcherPath
+      } catch {
+        // no launcher (or unreadable) — the copy still counts, version unknown
+      }
+      const missing: string[] = []
+      for (const rel of SKILL_COPY_FILES) {
+        if (!(await pathExists(join(copyDir, rel)))) missing.push(rel)
+      }
+      copies.push({
+        harness,
+        root,
+        path: copyDir,
+        launcher,
+        pinned,
+        stale: legacy || (pinned !== null && isOlder(pinned, currentVersion)),
+        missing,
+        legacy,
+      })
     }
-    const missing: string[] = []
-    for (const rel of SKILL_COPY_FILES) {
-      if (!(await pathExists(join(copyDir, rel)))) missing.push(rel)
-    }
-    copies.push({
-      harness,
-      root,
-      path: copyDir,
-      launcher,
-      pinned,
-      stale: pinned !== null && isOlder(pinned, currentVersion),
-      missing,
-    })
   }
   return { scanned, copies }
 }
 
-/** The version of `@liustack/pptfast` actually resolvable inside a dsh
+/** The version of `@liustack/pptpress` actually resolvable inside a dsh
  *  profile's own `node_modules`, or null. This is the authoritative reading —
  *  it is the package that would really load — and it works through the `link:`
  *  symlink a locally-developed plugin uses, since the symlink target's own
@@ -336,7 +345,7 @@ async function readInstalledPluginVersion(profileDir: string): Promise<string | 
 /**
  * dsh plugin status, per profile.
  *
- * On dsh, pptfast is not a skill folder but a native plugin: the deck skill and
+ * On dsh, pptpress is not a skill folder but a native plugin: the deck skill and
  * the CLI both ship inside the installed package (INSTALL.md step 0), so the
  * question "which version is this machine actually running" is answered by the
  * profile's own installed package, not by a launcher pin.
@@ -394,7 +403,7 @@ export async function inspectDsh(home: string, currentVersion: string): Promise<
   return { applicable: true, home: dshHome, profiles }
 }
 
-/** `npx -y @deepseek-ai/dsh plugin --profile web add @liustack/pptfast@0.18.0`
+/** `npx -y @deepseek-ai/dsh plugin --profile web add @liustack/pptpress@0.18.0`
  *  — the pinned form INSTALL.md step 0 insists on, because dsh installs through
  *  a pnpm that holds back fresh releases and silently resolves `@latest` to an
  *  older one. A named version is a deliberate request. */
@@ -522,7 +531,7 @@ export async function runSelfTest(): Promise<DoctorSelfTest> {
  *  rather than the global npm root on purpose — installing the skill needs no
  *  global CLI install, so there may well be no npm root to copy from. */
 function skillRefreshCommand(copyDir: string): string {
-  return `rm -rf /tmp/pptfast-src && git clone --depth 1 https://github.com/liustack/pptfast.git /tmp/pptfast-src && cp -R /tmp/pptfast-src/skills/${SKILL_DIR_NAME}/. ${copyDir}/`
+  return `rm -rf /tmp/pptpress-src && git clone --depth 1 https://github.com/liustack/pptpress.git /tmp/pptpress-src && cp -R /tmp/pptpress-src/skills/${SKILL_DIR_NAME}/. ${copyDir}/`
 }
 
 export async function buildDoctorReport(input: DoctorInput = {}): Promise<DoctorReport> {
@@ -569,8 +578,8 @@ export async function buildDoctorReport(input: DoctorInput = {}): Promise<Doctor
   if (!runtime.meetsMinimum) {
     errors.push({
       check: "runtime",
-      message: `Node ${runtime.node} is below the ${MIN_NODE} floor pptfast needs`,
-      fix: `install Node ${MIN_NODE}+ from https://nodejs.org (or \`nvm install 22\`), open a new shell, then re-run \`pptfast doctor\``,
+      message: `Node ${runtime.node} is below the ${MIN_NODE} floor pptpress needs`,
+      fix: `install Node ${MIN_NODE}+ from https://nodejs.org (or \`nvm install 22\`), open a new shell, then re-run \`pptpress doctor\``,
     })
   }
   if (!selfTest.ok) {
@@ -582,7 +591,13 @@ export async function buildDoctorReport(input: DoctorInput = {}): Promise<Doctor
   }
 
   for (const copy of skills.copies) {
-    if (copy.stale) {
+    if (copy.legacy) {
+      warnings.push({
+        check: "skill copy",
+        message: `${copy.path} is a leftover pptfast skill copy`,
+        fix: `remove it and install the pptpress skill in ${join(copy.root, SKILL_DIR_NAME)}`,
+      })
+    } else if (copy.stale) {
       warnings.push({
         check: "skill copy",
         message: `${copy.path} pins ${copy.pinned}, behind this CLI's ${version}`,
@@ -622,7 +637,7 @@ export async function buildDoctorReport(input: DoctorInput = {}): Promise<Doctor
 
   // Missing stock-photo keys stay in the Images section as `[-]`, not in
   // `warnings`. Rendering PPTX does not need them, so they must not steal
-  // the "pptfast is healthy" line. A group/other-readable config file is
+  // the "pptpress is healthy" line. A group/other-readable config file is
   // the one images finding that is a real warning.
   if (images.groupOrOtherReadable) {
     warnings.push({
@@ -642,7 +657,7 @@ function mark(state: "ok" | "warn" | "fail" | "n/a"): string {
 export function renderDoctorReport(report: DoctorReport): string {
   const lines: string[] = []
 
-  lines.push(`pptfast doctor — CLI ${report.version}`)
+  lines.push(`pptpress doctor — CLI ${report.version}`)
   lines.push("(local diagnostics only: nothing is written, no network call is made)")
   lines.push("")
 
@@ -653,10 +668,16 @@ export function renderDoctorReport(report: DoctorReport): string {
     lines.push(`      looked in: ${report.skills.scanned.join(", ")}`)
   } else {
     for (const copy of report.skills.copies) {
-      const state = copy.stale || copy.pinned === null || copy.missing.length > 0 ? "warn" : "ok"
-      const pin = copy.pinned === null ? "version unknown" : `pins ${copy.pinned}`
-      lines.push(`  ${mark(state)} ${copy.harness}: ${copy.path} — ${pin}${copy.stale ? " (stale)" : ""}`)
-      if (copy.stale) {
+      const state = copy.legacy || copy.stale || copy.pinned === null || copy.missing.length > 0 ? "warn" : "ok"
+      const pin = copy.legacy
+        ? "leftover pptfast copy"
+        : copy.pinned === null
+          ? "version unknown"
+          : `pins ${copy.pinned}`
+      lines.push(`  ${mark(state)} ${copy.harness}: ${copy.path} — ${pin}${copy.stale && !copy.legacy ? " (stale)" : ""}`)
+      if (copy.legacy) {
+        lines.push(`      fix: remove it and install the pptpress skill in ${join(copy.root, SKILL_DIR_NAME)}`)
+      } else if (copy.stale) {
         lines.push(`      fix: ${skillRefreshCommand(copy.path)}`)
       } else if (copy.pinned === null) {
         lines.push(`      ${copy.launcher === null ? "no scripts/run.sh in this copy" : "scripts/run.sh carries no PINNED line"}`)
@@ -716,7 +737,7 @@ export function renderDoctorReport(report: DoctorReport): string {
   lines.push(`  ${mark("ok")} anchor ${report.workspace.anchor}`)
   lines.push(
     report.workspace.configured
-      ? `  ${mark("ok")} output ${report.workspace.root} (from pptfast.config.json outDir)`
+      ? `  ${mark("ok")} output ${report.workspace.root} (from pptpress.config.json outDir)`
       : `  ${mark("ok")} output ${report.workspace.root}`,
   )
   if (report.workspace.ignore === "ignored") {
@@ -724,7 +745,7 @@ export function renderDoctorReport(report: DoctorReport): string {
   } else if (report.workspace.ignore === "not-ignored") {
     lines.push(`  ${mark("n/a")} not git-ignored — the first render will add a local exclude line`)
   } else if (report.workspace.ignore === "skipped") {
-    lines.push(`  ${mark("n/a")} git-ignore skipped (outDir is set in pptfast.config.json)`)
+    lines.push(`  ${mark("n/a")} git-ignore skipped (outDir is set in pptpress.config.json)`)
   } else {
     lines.push(`  ${mark("n/a")} not a git repository`)
   }
@@ -739,9 +760,9 @@ export function renderDoctorReport(report: DoctorReport): string {
     if (provider.present) {
       lines.push(`  ${mark("ok")} ${provider.provider}: present (${provider.source})`)
     } else if (provider.provider === "openverse") {
-      lines.push(`  ${mark("n/a")} openverse: missing — pptfast config set openverse.clientId`)
+      lines.push(`  ${mark("n/a")} openverse: missing — pptpress config set openverse.clientId`)
     } else {
-      lines.push(`  ${mark("n/a")} ${provider.provider}: missing — pptfast config set ${provider.provider}.apiKey`)
+      lines.push(`  ${mark("n/a")} ${provider.provider}: missing — pptpress config set ${provider.provider}.apiKey`)
     }
   }
   lines.push("")
@@ -754,7 +775,7 @@ export function renderDoctorReport(report: DoctorReport): string {
     }
     const ver = gen.version ? `, ${gen.version}` : ""
     const state = gen.enabled ? "enabled" : "disabled"
-    const hint = gen.enabled ? "" : ` — pptfast config set images.generators.${gen.id}.enabled true`
+    const hint = gen.enabled ? "" : ` — pptpress config set images.generators.${gen.id}.enabled true`
     lines.push(`  ${mark("ok")} ${gen.id}: found (${gen.bin}${ver}) ${state}${hint}`)
   }
   lines.push("")
@@ -770,7 +791,7 @@ export function renderDoctorReport(report: DoctorReport): string {
     lines.push(`  [!] ${warning.check}: ${warning.message}`)
   }
   if (report.errors.length === 0) {
-    lines.push(report.warnings.length === 0 ? "pptfast is healthy on this machine" : "nothing blocking — the warnings above are worth fixing when convenient")
+    lines.push(report.warnings.length === 0 ? "pptpress is healthy on this machine" : "nothing blocking — the warnings above are worth fixing when convenient")
   }
 
   return lines.join("\n")

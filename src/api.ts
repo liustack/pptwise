@@ -19,7 +19,7 @@ export {
   type ThemeInfo,
 } from "./validate-core"
 
-import { PptfastError } from "./errors"
+import { PptpressError } from "./errors"
 import type { PptxIR } from "./ir"
 import { generatePptxBlob } from "./pptx/generate"
 import { slideToSvgMarkup } from "./svg/render-slide"
@@ -29,7 +29,7 @@ import { formatIssues, validateIr } from "./validate-core"
 export function renderSlideSvg(ir: PptxIR, slideIndex: number): string {
   const slide = ir.slides[slideIndex]
   if (!slide) {
-    throw new PptfastError(`slide index ${slideIndex} out of range — deck has ${ir.slides.length} slides`)
+    throw new PptpressError(`slide index ${slideIndex} out of range — deck has ${ir.slides.length} slides`)
   }
   return slideToSvgMarkup(ir, slide, slideIndex)
 }
@@ -52,7 +52,7 @@ function checkDraftGate(ir: PptxIR): void {
   const refs = placeholders
     .map(({ slide, page }) => (slide.id ? `${slide.id} (page ${page})` : `page ${page}`))
     .join(", ")
-  throw new PptfastError(
+  throw new PptpressError(
     `deck has ${placeholders.length} unfilled placeholder page${placeholders.length === 1 ? "" : "s"}: ${refs} — fill them or pass --draft`,
   )
 }
@@ -72,7 +72,7 @@ export async function generatePptx(
   opts?: { draft?: boolean; allowDroppedContent?: boolean },
 ): Promise<Uint8Array> {
   const v = validateIr(input)
-  if (!v.ok) throw new PptfastError(`invalid IR:\n${formatIssues(v.errors)}`)
+  if (!v.ok) throw new PptpressError(`invalid IR:\n${formatIssues(v.errors)}`)
   if (!opts?.draft) checkDraftGate(v.ir!)
   const blob = await generatePptxBlob(v.ir!, { allowDroppedContent: opts?.allowDroppedContent })
   return new Uint8Array(await blob.arrayBuffer())

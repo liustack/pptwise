@@ -1,5 +1,5 @@
 ---
-"@liustack/pptfast": minor
+"@liustack/pptpress": minor
 ---
 
 Six content-page heading treatments, looked up from a render-side assignment table. The IR, schema, and skill routing table do not change.

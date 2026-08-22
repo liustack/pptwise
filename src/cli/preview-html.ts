@@ -1,5 +1,5 @@
 /**
- * Pure string builder for `pptfast preview --html`'s self-contained review
+ * Pure string builder for `pptpress preview --html`'s self-contained review
  * bundle (v0.3 W7 task 1, spec §7 workflow ⑤): one `preview.html` with every
  * slide's already-rendered SVG (`renderSlideSvg`, `../api.ts`) inlined
  * directly into the markup, a bottom thumbnail filmstrip, keyboard (←/→) and
@@ -72,8 +72,8 @@
  * for safely inlining untrusted JSON into a script tag.
  *
  * Annotations were removed on 2026-08-16, along with the "Export revision
- * requests" download and the `window.__pptfastBuildExportBlob` seam that
- * `pptfast serve` used to POST the same payload to disk. The page shows the
+ * requests" download and the `window.__pptpressBuildExportBlob` seam that
+ * `pptpress serve` used to POST the same payload to disk. The page shows the
  * deck and nothing else: a reviewer who wants something changed says so in
  * the conversation, usually with a screenshot, which reaches the agent
  * faster than typing into a panel whose output then has to be exported and
@@ -615,7 +615,7 @@ export function buildPreviewHtml(input: PreviewHtmlInput): string {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${escapedTitle} — pptfast preview</title>
+<title>${escapedTitle} — pptpress preview</title>
 <style>${CSS}</style>
 </head>
 <body data-surround="light">

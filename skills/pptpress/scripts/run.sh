@@ -1,13 +1,13 @@
 #!/bin/sh
-# pptfast skill launcher (macOS / Linux).
+# pptpress skill launcher (macOS / Linux).
 #
-# One stable action for the agent ("run pptfast"); this script picks a working
+# One stable action for the agent ("run pptpress"); this script picks a working
 # way to run it in the current environment. Written to POSIX sh so it runs under
 # dash, busybox ash, and bash alike. Invoke it with `bash run.sh ...` (or plain
 # `sh run.sh ...`) so a lost execute bit after a file copy never matters.
 #
 # Resolution order (kept identical in run.ps1):
-#   1. A compatible pptfast already on PATH -> run it directly.
+#   1. A compatible pptpress already on PATH -> run it directly.
 #   2. npx present, on a node meeting the floor -> run the pinned npm version.
 #   3. bunx present -> run the pinned version via Bun.
 #   4. Nothing usable -> structured diagnosis, exit 78.
@@ -19,8 +19,8 @@ set -eu
 # --- Version constants: stamped by scripts/stamp.mts at release time. ---------
 # Do not edit PINNED by hand; scripts/stamp.test.mts asserts it equals the
 # package.json version, and `pnpm release:version` rewrites it on every bump.
-PKG="@liustack/pptfast"
-BIN="pptfast"
+PKG="@liustack/pptpress"
+BIN="pptpress"
 PINNED="0.20.0"
 # ------------------------------------------------------------------------------
 

@@ -68,14 +68,14 @@ the plugin's packaged CLI can make a PPTX in a real workspace. Prepare an
 isolated existing directory, then run the read-only preflight:
 
 ```bash
-mkdir -p /tmp/pptfast-dsh-e2e
-pnpm e2e:dsh --workspace /tmp/pptfast-dsh-e2e --profile web
+mkdir -p /tmp/pptpress-dsh-e2e
+pnpm e2e:dsh --workspace /tmp/pptpress-dsh-e2e --profile web
 ```
 
 The preflight checks four boundaries. The selected profile must declare
-`@liustack/pptfast`. Its own `node_modules` must contain the same version as
+`@liustack/pptpress`. Its own `node_modules` must contain the same version as
 this checkout plus the plugin entry, bundle patch, skill, and packaged CLI.
-DSH's composed config must mount the `pptfast` row. The workspace path is
+DSH's composed config must mount the `pptpress` row. The workspace path is
 resolved with `fs.realpath`, matching DSH's `WorkspaceRegistry.create`
 identity rule, and the canonical value is printed for the browser leg.
 
@@ -93,25 +93,25 @@ Start the web profile from the same canonical workspace, then open its URL in
 Chromium:
 
 ```bash
-cd /private/tmp/pptfast-dsh-e2e
+cd /private/tmp/pptpress-dsh-e2e
 npx -y @deepseek-ai/dsh web
 ```
 
 Create a fresh session in that workspace and ask DSH to make a small deck with
-pptfast, saving its source as `dsh-pptfast-e2e.json` and its output as
-`dsh-pptfast-e2e.pptx`. The source must pass the installed CLI's validate and
+pptpress, saving its source as `dsh-pptpress-e2e.json` and its output as
+`dsh-pptpress-e2e.pptx`. The source must pass the installed CLI's validate and
 audit commands. The result must be a non-empty package and render through
 LibreOffice when available:
 
 ```bash
-test -s /private/tmp/pptfast-dsh-e2e/dsh-pptfast-e2e.pptx
-unzip -tq /private/tmp/pptfast-dsh-e2e/dsh-pptfast-e2e.pptx
-node ~/.dsh/profiles/web/node_modules/@liustack/pptfast/dist/cli.js \
-  validate /private/tmp/pptfast-dsh-e2e/dsh-pptfast-e2e.json
-node ~/.dsh/profiles/web/node_modules/@liustack/pptfast/dist/cli.js \
-  audit /private/tmp/pptfast-dsh-e2e/dsh-pptfast-e2e.json
-soffice --headless --convert-to pdf --outdir /private/tmp/pptfast-dsh-e2e \
-  /private/tmp/pptfast-dsh-e2e/dsh-pptfast-e2e.pptx
+test -s /private/tmp/pptpress-dsh-e2e/dsh-pptpress-e2e.pptx
+unzip -tq /private/tmp/pptpress-dsh-e2e/dsh-pptpress-e2e.pptx
+node ~/.dsh/profiles/web/node_modules/@liustack/pptpress/dist/cli.js \
+  validate /private/tmp/pptpress-dsh-e2e/dsh-pptpress-e2e.json
+node ~/.dsh/profiles/web/node_modules/@liustack/pptpress/dist/cli.js \
+  audit /private/tmp/pptpress-dsh-e2e/dsh-pptpress-e2e.json
+soffice --headless --convert-to pdf --outdir /private/tmp/pptpress-dsh-e2e \
+  /private/tmp/pptpress-dsh-e2e/dsh-pptpress-e2e.pptx
 ```
 
 The browser session, generated file, audit output, and rendered PDF together
@@ -141,7 +141,7 @@ shape's `descr`, and (b) every alt-bearing IR asset that was actually
 rendered on the slide has at least one matching rendered `<image>` that
 carries its alt as `aria-label` (catches an emission site that draws the
 image but forgets to wire the attribute) and
-throws a `PptfastError` naming the broken invariant — there is no opt-out. `src/pptx/package-audit.test.ts` renders a real deck and
+throws a `PptpressError` naming the broken invariant — there is no opt-out. `src/pptx/package-audit.test.ts` renders a real deck and
 surgically breaks it via JSZip to prove each invariant actually rejects the
 right corruption. `scripts/e2e.mts`'s package-audit leg re-asserts the
 three-way slide consistency and id-uniqueness invariants directly against
@@ -205,7 +205,7 @@ of thirty marked stale that a human then re-made by hand, all of them about
 geometry that had not moved. Verdicts written before the split carry one hash
 and no way to tell the two apart, so they keep the old all-or-nothing rule
 until they are re-stamped — `manifest.json` is at `manifestVersion: 2` and the
-exported payload at `pptfast-gallery-verdicts/3`, both additive.
+exported payload at `pptpress-gallery-verdicts/3`, both additive.
 
 The corpus (`evals/gallery/corpus/`) is deliberately **not**
 `src/svg/audit/stress-fixtures.ts` — those decks are pathological on
@@ -235,7 +235,7 @@ pnpm gallery --bbox --bbox-floor=4  # loosen the fixed part of the slack
 It needs Playwright, which this repo deliberately does **not** depend on —
 `pnpm check` runs the same matrix on every commit and must never pull a
 browser. Install it into the checkout (`pnpm add -D playwright && pnpm exec
-playwright install chromium`) or point `PPTFAST_PLAYWRIGHT` at an existing
+playwright install chromium`) or point `PPTPRESS_PLAYWRIGHT` at an existing
 install; a machine that already has Chromium installed needs no download at all. Results are
 written to `.gallery/bbox.json` and depend on the fonts installed on the
 machine, the same caveat the PowerPoint output carries.

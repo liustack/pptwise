@@ -28,7 +28,7 @@ function deck(themeId: string): PptxIR {
     version: "4",
     filename: "emphasis-unassigned-byte-nail.pptx",
     theme: { id: themeId },
-    meta: { organization: "pptfast" },
+    meta: { organization: "pptpress" },
     assets: { images: {} },
     slides: [
       {
@@ -66,7 +66,7 @@ function consultingPadDeck(): PptxIR {
     version: "4",
     filename: "emphasis-consulting-pad-paths.pptx",
     theme: { id: "consulting" },
-    meta: { organization: "pptfast" },
+    meta: { organization: "pptpress" },
     assets: { images: {} },
     slides: [
       { type: "cover", heading: MARKED_HEADING, components: [] } as Slide,
@@ -120,6 +120,10 @@ function sha(svg: string): string {
 // are enterprise/insight/campaign/tech/ember × pages 0,2,3,4,5 (25 of 115).
 // Other unassigned themes stay byte-identical. consulting is not in this
 // fixture.
+//
+// Recaptured (pptpress rename, 2026-08-23). Cover `meta.organization`
+// changed `pptfast` → `pptpress`. Replay of `renderSlideSvg` over the same
+// 23×5 matrix. Only `*|0` hashes move. Content pages stay byte-identical.
 const fixture = JSON.parse(
   readFileSync(new URL("./__fixtures__/emphasis-unassigned-bytes.json", import.meta.url), "utf-8"),
 ) as { pages: Record<string, string> }

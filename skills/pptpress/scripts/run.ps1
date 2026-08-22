@@ -1,14 +1,14 @@
-# pptfast skill launcher (Windows, PowerShell 5.1 compatible).
+# pptpress skill launcher (Windows, PowerShell 5.1 compatible).
 #
 # The Windows twin of run.sh: identical resolution order, identical diagnostic
 # fields, identical exit codes. One stable action for the agent ("run
-# pptfast"); this script picks a working way to run it here.
+# pptpress"); this script picks a working way to run it here.
 #
 # Invoke it per-process so no global policy is touched:
 #   powershell -ExecutionPolicy Bypass -File run.ps1 validate deck.json
 #
 # Resolution order (kept identical in run.sh):
-#   1. A compatible pptfast already on PATH -> run it directly.
+#   1. A compatible pptpress already on PATH -> run it directly.
 #   2. npx present, on a node meeting the floor -> run the pinned npm version.
 #   3. bunx present -> run the pinned version via Bun.
 #   4. Nothing usable -> structured diagnosis, exit 78.
@@ -21,8 +21,8 @@ $ErrorActionPreference = 'Stop'
 # --- Version constants: stamped by scripts/stamp.mts at release time. ---------
 # Do not edit $Pinned by hand; scripts/stamp.test.mts asserts it equals the
 # package.json version, and `pnpm release:version` rewrites it on every bump.
-$Package = '@liustack/pptfast'
-$Bin = 'pptfast'
+$Package = '@liustack/pptpress'
+$Bin = 'pptpress'
 $Pinned = '0.20.0'
 # ------------------------------------------------------------------------------
 

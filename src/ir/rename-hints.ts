@@ -41,7 +41,7 @@ const SLIDE_LEVEL = (path: string): boolean => /^slides\.\d+$/.test(path)
  * document can still carry the same stale field names as plain schema
  * violations. `scenario` is the one exception: it stays inline in
  * `validateIr` rather than here, because its hint also carries the
- * `pptfast migrate` pointer for genuine v3 documents (a distinction that
+ * `pptpress migrate` pointer for genuine v3 documents (a distinction that
  * doesn't apply to the v2-only renames below — `blocks`/`variant`/`override`
  * are not valid under v3 either, so pointing at a v3-only migration tool for
  * them would be misleading).
@@ -85,7 +85,7 @@ export function renameHintsFor(keys: readonly string[], path: string): string[] 
  * takes priority — see {@link renameHintsFor}'s caller in `../api.ts`).
  */
 export const SLIDE_LEVEL_UNKNOWN_KEY_HINT =
-  " — unexpected fields at slide level usually belong inside one of the slide's components[] entries, not the slide itself (see `pptfast schema`)"
+  " — unexpected fields at slide level usually belong inside one of the slide's components[] entries, not the slide itself (see `pptpress schema`)"
 
 export function isSlideLevelPath(path: string): boolean {
   return SLIDE_LEVEL(path)

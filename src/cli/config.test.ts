@@ -7,7 +7,7 @@ import { __resetRegisteredThemes, registerTheme } from "../themes/definitions"
 import { findConfig, findUserConfig } from "./config"
 
 function tmp(): Promise<string> {
-  return mkdtemp(join(tmpdir(), "pptfast-config-"))
+  return mkdtemp(join(tmpdir(), "pptpress-config-"))
 }
 
 /**
@@ -38,19 +38,19 @@ describe("findConfig", () => {
     expect(await findConfig(await tmp())).toBeNull()
   })
 
-  it("finds pptfast.config.json in a parent directory", async () => {
+  it("finds pptpress.config.json in a parent directory", async () => {
     const root = await tmp()
-    await writeFile(join(root, "pptfast.config.json"), JSON.stringify({ theme: "tech" }))
+    await writeFile(join(root, "pptpress.config.json"), JSON.stringify({ theme: "tech" }))
     const nested = join(root, "a", "b")
     await mkdir(nested, { recursive: true })
     const hit = await findConfig(nested)
-    expect(hit?.path).toBe(join(root, "pptfast.config.json"))
+    expect(hit?.path).toBe(join(root, "pptpress.config.json"))
     expect(hit?.config.theme).toBe("tech")
   })
 
   it("rejects images at the project layer (API keys do not belong in a repo file)", async () => {
     const root = await tmp()
-    const configPath = join(root, "pptfast.config.json")
+    const configPath = join(root, "pptpress.config.json")
     await writeFile(configPath, JSON.stringify({ images: { pexels: { apiKey: "TESTPEXELSKEY99" } } }))
     await expect(findConfig(root)).rejects.toThrow(
       new Error(`invalid ${configPath}:\n(root): Unrecognized key: "images"`),
@@ -59,7 +59,7 @@ describe("findConfig", () => {
 
   it("rejects unknown keys with the config path in the message", async () => {
     const root = await tmp()
-    const configPath = join(root, "pptfast.config.json")
+    const configPath = join(root, "pptpress.config.json")
     await writeFile(configPath, JSON.stringify({ them: "tech" }))
     // Exact text (backlog item 7a, `.issues/notes/engineering-history.md`
     // #7a): config.ts:110-114's real `invalid <path>:\n<field>: <message>`
@@ -70,7 +70,7 @@ describe("findConfig", () => {
 
   it("does not validate the theme id at read time (W5 review fix: moved to applyDeckConfig at resolution time — see commands.test.ts)", async () => {
     const root = await tmp()
-    await writeFile(join(root, "pptfast.config.json"), JSON.stringify({ theme: "neon" }))
+    await writeFile(join(root, "pptpress.config.json"), JSON.stringify({ theme: "neon" }))
     const hit = await findConfig(root)
     expect(hit?.config.theme).toBe("neon")
   })
@@ -107,14 +107,14 @@ describe("findConfig", () => {
       },
     })
     const root = await tmp()
-    await writeFile(join(root, "pptfast.config.json"), JSON.stringify({ theme: "acme-config" }))
+    await writeFile(join(root, "pptpress.config.json"), JSON.stringify({ theme: "acme-config" }))
     const hit = await findConfig(root)
     expect(hit?.config.theme).toBe("acme-config")
   })
 
   it("validates style with the shared schema", async () => {
     const root = await tmp()
-    const configPath = join(root, "pptfast.config.json")
+    const configPath = join(root, "pptpress.config.json")
     await writeFile(configPath, JSON.stringify({ style: { colors: { primary: "blue" } } }))
     // Exact text (backlog item 7a): the shared StyleOverrideSchema's own
     // hex-color pattern message, surfaced through config.ts:110-114's
@@ -127,7 +127,7 @@ describe("findConfig", () => {
 
   it("rejects a config that is not valid JSON", async () => {
     const root = await tmp()
-    const configPath = join(root, "pptfast.config.json")
+    const configPath = join(root, "pptpress.config.json")
     const badJson = "{ theme: tech }"
     await writeFile(configPath, badJson)
     // Exact text (backlog item 7a): config.ts:107's real
@@ -139,45 +139,62 @@ describe("findConfig", () => {
     )
   })
 
-  it("reads decksDir from a project pptfast.config.json (W5 task 6, controller addition A)", async () => {
+  it("reads decksDir from a project pptpress.config.json (W5 task 6, controller addition A)", async () => {
     const root = await tmp()
-    await writeFile(join(root, "pptfast.config.json"), JSON.stringify({ decksDir: "./team-decks" }))
+    await writeFile(join(root, "pptpress.config.json"), JSON.stringify({ decksDir: "./team-decks" }))
     const hit = await findConfig(root)
     expect(hit?.config.decksDir).toBe("./team-decks")
   })
 
   it("accepts a project config with only decksDir set (theme/style both optional)", async () => {
     const root = await tmp()
-    await writeFile(join(root, "pptfast.config.json"), JSON.stringify({ decksDir: "/team/decks" }))
+    await writeFile(join(root, "pptpress.config.json"), JSON.stringify({ decksDir: "/team/decks" }))
     const hit = await findConfig(root)
     expect(hit?.config).toEqual({ decksDir: "/team/decks" })
   })
 
-  it("reads outDir from a project pptfast.config.json (workspace-artifacts wave)", async () => {
+  it("reads outDir from a project pptpress.config.json (workspace-artifacts wave)", async () => {
     const root = await tmp()
-    await writeFile(join(root, "pptfast.config.json"), JSON.stringify({ outDir: "artifacts" }))
+    await writeFile(join(root, "pptpress.config.json"), JSON.stringify({ outDir: "artifacts" }))
     const hit = await findConfig(root)
     expect(hit?.config.outDir).toBe("artifacts")
+  })
+
+  it("reads pptfast.config.json when pptpress.config.json is absent", async () => {
+    const root = await tmp()
+    await writeFile(join(root, "pptfast.config.json"), JSON.stringify({ theme: "ink" }))
+    const hit = await findConfig(root)
+    expect(hit?.path).toBe(join(root, "pptfast.config.json"))
+    expect(hit?.config.theme).toBe("ink")
+  })
+
+  it("prefers pptpress.config.json when both filenames exist (does not merge)", async () => {
+    const root = await tmp()
+    await writeFile(join(root, "pptpress.config.json"), JSON.stringify({ theme: "tech" }))
+    await writeFile(join(root, "pptfast.config.json"), JSON.stringify({ theme: "ink", outDir: "legacy-out" }))
+    const hit = await findConfig(root)
+    expect(hit?.path).toBe(join(root, "pptpress.config.json"))
+    expect(hit?.config).toEqual({ theme: "tech" })
   })
 })
 
 describe("findUserConfig (W5 task 5: four-layer chain, user layer)", () => {
-  const originalHome = process.env.PPTFAST_HOME
+  const originalHome = process.env.PPTPRESS_HOME
 
   afterEach(() => {
     __resetRegisteredThemes()
-    if (originalHome === undefined) delete process.env.PPTFAST_HOME
-    else process.env.PPTFAST_HOME = originalHome
+    if (originalHome === undefined) delete process.env.PPTPRESS_HOME
+    else process.env.PPTPRESS_HOME = originalHome
   })
 
   it("returns null when there is no user config file (missing = fine)", async () => {
-    process.env.PPTFAST_HOME = await tmp()
+    process.env.PPTPRESS_HOME = await tmp()
     expect(await findUserConfig()).toBeNull()
   })
 
-  it("reads theme/style/decksDir from $PPTFAST_HOME/config.json", async () => {
+  it("reads theme/style/decksDir from $PPTPRESS_HOME/config.json", async () => {
     const home = await tmp()
-    process.env.PPTFAST_HOME = home
+    process.env.PPTPRESS_HOME = home
     await writeFile(
       join(home, "config.json"),
       JSON.stringify({ theme: "tech", style: { colors: { primary: "#123456" } }, decksDir: "/elsewhere/decks" }),
@@ -191,7 +208,7 @@ describe("findUserConfig (W5 task 5: four-layer chain, user layer)", () => {
 
   it("does not walk up directories (single fixed path, unlike project config)", async () => {
     const home = await tmp()
-    process.env.PPTFAST_HOME = join(home, "nested", "deeper")
+    process.env.PPTPRESS_HOME = join(home, "nested", "deeper")
     // No config.json exists anywhere along this path — user config has no
     // walk-up behavior at all, so this must be null, not an error.
     expect(await findUserConfig()).toBeNull()
@@ -199,7 +216,7 @@ describe("findUserConfig (W5 task 5: four-layer chain, user layer)", () => {
 
   it("rejects unknown keys with the config path in the message", async () => {
     const home = await tmp()
-    process.env.PPTFAST_HOME = home
+    process.env.PPTPRESS_HOME = home
     const configPath = join(home, "config.json")
     await writeFile(configPath, JSON.stringify({ them: "tech" }))
     // Exact text (backlog item 7a) — same template and unrecognized-key
@@ -209,7 +226,7 @@ describe("findUserConfig (W5 task 5: four-layer chain, user layer)", () => {
 
   it("does not validate the theme id at read time (W5 review fix: moved to applyDeckConfig at resolution time — see commands.test.ts)", async () => {
     const home = await tmp()
-    process.env.PPTFAST_HOME = home
+    process.env.PPTPRESS_HOME = home
     await writeFile(join(home, "config.json"), JSON.stringify({ theme: "neon" }))
     const hit = await findUserConfig()
     expect(hit?.config.theme).toBe("neon")
@@ -217,7 +234,7 @@ describe("findUserConfig (W5 task 5: four-layer chain, user layer)", () => {
 
   it("rejects a config that is not valid JSON", async () => {
     const home = await tmp()
-    process.env.PPTFAST_HOME = home
+    process.env.PPTPRESS_HOME = home
     const configPath = join(home, "config.json")
     const badJson = "{ theme: tech }"
     await writeFile(configPath, badJson)
@@ -230,7 +247,7 @@ describe("findUserConfig (W5 task 5: four-layer chain, user layer)", () => {
 
   it("accepts a config with only decksDir set (theme/style both optional)", async () => {
     const home = await tmp()
-    process.env.PPTFAST_HOME = home
+    process.env.PPTPRESS_HOME = home
     await writeFile(join(home, "config.json"), JSON.stringify({ decksDir: "/team/decks" }))
     const hit = await findUserConfig()
     expect(hit?.config).toEqual({ decksDir: "/team/decks" })
@@ -238,7 +255,7 @@ describe("findUserConfig (W5 task 5: four-layer chain, user layer)", () => {
 
   it("rejects outDir at the user layer (artifact root is a project property)", async () => {
     const home = await tmp()
-    process.env.PPTFAST_HOME = home
+    process.env.PPTPRESS_HOME = home
     const configPath = join(home, "config.json")
     await writeFile(configPath, JSON.stringify({ outDir: "artifacts" }))
     await expect(findUserConfig()).rejects.toThrow(new Error(`invalid ${configPath}:\n(root): Unrecognized key: "outDir"`))
@@ -246,7 +263,7 @@ describe("findUserConfig (W5 task 5: four-layer chain, user layer)", () => {
 
   it("accepts images.pexels.apiKey at the user layer", async () => {
     const home = await tmp()
-    process.env.PPTFAST_HOME = home
+    process.env.PPTPRESS_HOME = home
     await writeFile(
       join(home, "config.json"),
       JSON.stringify({ images: { pexels: { apiKey: "TESTPEXELSKEY99" } } }),

@@ -101,7 +101,7 @@ describe("500-item bullets + 300-row comparison: graceful landing (D1 pathologic
 
   it("generatePptx succeeds — no package-audit rejection (pre-fix: 621 invariant violations)", async () => {
     const bytes = await generatePptx(ir)
-    // A real zip (magic "PK"), not a thrown PptfastError.
+    // A real zip (magic "PK"), not a thrown PptpressError.
     expect(bytes[0]).toBe(0x50)
     expect(bytes[1]).toBe(0x4b)
   })

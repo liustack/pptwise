@@ -8,12 +8,13 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { findOnPath } from "@/cli/image-generators"
+import { resolveProductEnv } from "@/cli/product-env"
 import { installNodePlatform } from "@/platform/node"
 import { auditL1 } from "../l1"
 import { judgeL2, l2SkipReason, type GalleryPageMeta, type L2Verdict } from "../l2"
 
-const OLD_SVG_DIR = process.env.PPTFAST_CAL_SVG_DIR ?? "/tmp/pptfast-gallery-cal-svgs"
-const OUT = process.env.PPTFAST_CAL_L2 ?? "/tmp/pptfast-gallery-cal-l2.json"
+const OLD_SVG_DIR = resolveProductEnv("CAL_SVG_DIR") ?? "/tmp/pptpress-gallery-cal-svgs"
+const OUT = resolveProductEnv("CAL_L2") ?? "/tmp/pptpress-gallery-cal-l2.json"
 
 type Store = Record<string, L2Verdict | { error: string }>
 
@@ -43,7 +44,7 @@ const onlyIds = new Set(
 
 const store: Store = existsSync(OUT) ? (JSON.parse(readFileSync(OUT, "utf8")) as Store) : {}
 const force = process.argv.includes("--force")
-const concurrency = Math.max(1, Number(process.env.PPTFAST_L2_CONCURRENCY ?? 3))
+const concurrency = Math.max(1, Number(resolveProductEnv("L2_CONCURRENCY") ?? 3))
 
 function save(): void {
   writeFileSync(OUT, `${JSON.stringify(store, null, 2)}\n`)

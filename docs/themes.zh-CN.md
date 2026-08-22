@@ -2,7 +2,7 @@
 summary: '24 套内置主题（24 个 id）、从 PowerPoint 模板抽取自家品牌，以及通过 CLI flag、IR、项目配置做 style 覆盖'
 read_when:
   - 挑主题，或查某个主题 id
-  - 想让产出看起来像自己公司（`pptfast brand extract`）
+  - 想让产出看起来像自己公司（`pptpress brand extract`）
   - 不分叉主题就换配色
 ---
 
@@ -37,7 +37,7 @@ read_when:
 | `memo` | Decision Memo（打字机决定） |
 | `playbill` | Playbill（荧光嗓门，10 页内活动宣发 / 招募 / 节目单） |
 
-`pptfast themes [--json]` 会从你装的这一版里打印同一份清单。
+`pptpress themes [--json]` 会从你装的这一版里打印同一份清单。
 
 封面、章节、结尾三类页面，有 Claude Design 设计板就锁到板上的构造。软偏好保不住这三类页。每家内置现在都把 `layouts.cover` 锁到自己的板面（第七波 + restore w1 + restore w2）。章节和结尾仍走各页型全集，等下一轮设计画板后再锁。这是在等板，不是漏锁。内容页从可自动选型的集合里抽（`side-highlight` 退订后是 10 个 id），再按分配表加权。lecture 和 luxe 去掉 `banner-heading` / `split-band` / `stacked-poster`。Playbill 仍走完整的自动内容集。
 
@@ -47,16 +47,16 @@ read_when:
 
 ## 你自己的品牌
 
-让产出看起来像*你的公司*而不是某个内置主题，最快的路径是从你已有的模板里抽取品牌。`pptfast brand extract` 从 `.thmx` 主题、`.potx` 模板或 `.pptx` 演示文稿中读出配色与字体，写出一个 pptfast 主题文件。整个过程**完全在本地进行，文件从不离开你的机器**（已对 macOS PowerPoint 自带的全部 39 个 Office 主题逐一验证）。
+让产出看起来像*你的公司*而不是某个内置主题，最快的路径是从你已有的模板里抽取品牌。`pptpress brand extract` 从 `.thmx` 主题、`.potx` 模板或 `.pptx` 演示文稿中读出配色与字体，写出一个 pptpress 主题文件。整个过程**完全在本地进行，文件从不离开你的机器**（已对 macOS PowerPoint 自带的全部 39 个 Office 主题逐一验证）。
 
 ```bash
-pptfast brand extract corp-template.pptx -o my-brand.theme.json
-pptfast render deck.json -o deck.pptx --theme-file my-brand.theme.json
+pptpress brand extract corp-template.pptx -o my-brand.theme.json
+pptpress render deck.json -o deck.pptx --theme-file my-brand.theme.json
 ```
 
 `--theme-file` 在 `render`、`validate`、`audit`、`preview`、`serve` 上都可用。在 deck 项目目录里，把文件放进去命名为 `theme.json`，每条命令都会自动装载，在 `deck.spec.json` 里引用它的 id 即可，不需要任何 flag。
 
-OOXML 的 12 个色槽与 pptfast 的 tokens 几乎一一对应，六个强调色恰好构成图表色板。唯一需要派生的 token 是 `muted`：向背景色逐步混合，止步于仍能保住 4.5:1 对比度的最后一档。
+OOXML 的 12 个色槽与 pptpress 的 tokens 几乎一一对应，六个强调色恰好构成图表色板。唯一需要派生的 token 是 `muted`：向背景色逐步混合，止步于仍能保住 4.5:1 对比度的最后一档。
 
 装载时执行与所有注册主题相同的对比度底线：文字与背景过近的配色会被拒绝，错误信息写明失败的 token、实测比值与对应背景，绝不渲染出不可读的结果。自定义主题永远不能顶替内置 id。
 
@@ -64,7 +64,7 @@ OOXML 的 12 个色槽与 pptfast 的 tokens 几乎一一对应，六个强调�
 
 ## style 覆盖与项目配置
 
-不分叉主题就换配色：写一份 style JSON（结构见 `pptfast schema --style`），按次渲染传入（`--style brand.json`），或固化在项目级 `pptfast.config.json` 里（自当前目录向上查找，用 `pptfast init` 生成模板）。
+不分叉主题就换配色：写一份 style JSON（结构见 `pptpress schema --style`），按次渲染传入（`--style brand.json`），或固化在项目级 `pptpress.config.json` 里（自当前目录向上查找，用 `pptpress init` 生成模板）。
 
 ```json
 { "theme": "consulting", "style": { "colors": { "primary": "#0B5FFF", "accent": "#FF6A00" } } }

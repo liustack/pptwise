@@ -4,19 +4,19 @@
  * API (BENCH-01, `.issues/2026-08-03-bench-agentic/plan.md`). Unlike
  * `run.mts` (one completion, model must answer with bare IR text), this
  * runner gives the model-under-test real function-calling tools — write a
- * file, read a file, list a directory, run the pptfast CLI — inside a
+ * file, read a file, list a directory, run the pptpress CLI — inside a
  * private per-question workspace, and lets it iterate: write IR, run
  * `validate`/`audit`, read the findings, fix, repeat. This is the mode
  * `tests/bench/README.md`'s "Run protocol" describes end to end; `run.mts`
  * is the stricter single-shot floor measurement next to it.
  *
  * Tool surface (deliberately minimal and neutral, plan 裁定 1): no general
- * shell. `run_pptfast` only accepts a whitelisted, read-only/artifact
+ * shell. `run_pptpress` only accepts a whitelisted, read-only/artifact
  * subcommand — no `serve` (interactive), no `plan`/`scenarios` (removed
  * vocabulary-v4 aliases), no `check-update`/`self-update` (network side
  * effects unrelated to the benchmark). Every path argument to any tool —
  * `write_file`/`read_file`/`list_files`'s own `path`, and every non-flag
- * `run_pptfast` argument — is resolved against the workspace and rejected
+ * `run_pptpress` argument — is resolved against the workspace and rejected
  * if it is absolute or escapes the workspace via `..`. Symlink-based
  * escapes are out of scope (not checked) — the workspace is a
  * harness-created scratch directory the model itself populates, not
@@ -24,7 +24,7 @@
  *
  * No pre-injected vocabulary (schema/narratives/themes JSON) in the system
  * prompt — unlike `run.mts`, whose model has no tools and depends entirely
- * on injection. This runner's model can call `run_pptfast schema` /
+ * on injection. This runner's model can call `run_pptpress schema` /
  * `narratives --json` / `themes --json` itself, exactly what
  * `tests/bench/README.md`'s run protocol and the SKILL playbook already
  * describe ("give the model SKILL.md + prompt.md, let it run the SKILL's
@@ -176,7 +176,7 @@ export function checkPathSafety(workspace: string, relPath: string): PathCheck {
   return { ok: true, resolved }
 }
 
-/** Pulls the path-ish value out of a `run_pptfast` argv token for the
+/** Pulls the path-ish value out of a `run_pptpress` argv token for the
  *  safety scan below: a bare positional token is checked as-is, an
  *  `--opt=value`/`-o=value` token is checked on its `value` half, and a
  *  bare flag name (`--json`, or `-o` whose value is the *next* token) is
@@ -191,14 +191,14 @@ function pathishToken(token: string): string | null {
   return eq === -1 ? null : token.slice(eq + 1)
 }
 
-// ── run_pptfast subcommand whitelist (plan 裁定 1: read-only/artifact only, no serve) ──
+// ── run_pptpress subcommand whitelist (plan 裁定 1: read-only/artifact only, no serve) ──
 
-/** Top-level subcommands allowed through `run_pptfast`. Excludes `serve`
+/** Top-level subcommands allowed through `run_pptpress`. Excludes `serve`
  *  (interactive/long-running), `plan`/`scenarios` (removed vocabulary-v4
  *  aliases that only exist to print a rename error), and
  *  `check-update`/`self-update` (network side effects with no benchmark
  *  value). `init` is excluded too — nothing in the SKILL workflow this
- *  harness exercises needs a scaffolded `pptfast.config.json`. */
+ *  harness exercises needs a scaffolded `pptpress.config.json`. */
 const ALLOWED_SUBCOMMANDS = new Set([
   "render",
   "validate",
@@ -218,11 +218,11 @@ export interface ArgsCheck {
   reason?: string
 }
 
-/** Validates a `run_pptfast` argv array before it is ever spawned: the
+/** Validates a `run_pptpress` argv array before it is ever spawned: the
  *  subcommand (and, for the `spec` group, its one allowed sub-subcommand
  *  `spec validate`) must be on the whitelist, and every path-ish token must
  *  stay inside `workspace` (see `checkPathSafety`). */
-export function checkPptfastArgs(args: string[], workspace: string): ArgsCheck {
+export function checkPptpressArgs(args: string[], workspace: string): ArgsCheck {
   if (args.length === 0) return { ok: false, reason: "no subcommand given" }
   const [head, ...rest] = args
   if (head === "spec") {
@@ -577,13 +577,13 @@ function doListFiles(workspace: string, args: unknown): string {
   return truncateForModel(listing.length > 0 ? listing.join("\n") : "(empty)", TOOL_RESULT_MAX_CHARS)
 }
 
-function doRunPptfast(workspace: string, args: unknown): string {
+function doRunPptpress(workspace: string, args: unknown): string {
   const raw = (args ?? {}) as { args?: unknown }
   if (!Array.isArray(raw.args) || !raw.args.every((a): a is string => typeof a === "string")) {
-    return 'ERROR: run_pptfast requires {args: string[]}, e.g. {"args": ["validate", "deck.json"]}'
+    return 'ERROR: run_pptpress requires {args: string[]}, e.g. {"args": ["validate", "deck.json"]}'
   }
   const argv = raw.args
-  const check = checkPptfastArgs(argv, workspace)
+  const check = checkPptpressArgs(argv, workspace)
   if (!check.ok) return `ERROR: ${check.reason}`
   try {
     const stdout = execFileSync("node", [CLI, ...argv], {
@@ -621,8 +621,8 @@ function executeTool(tc: ToolCall, workspace: string, provisioned?: ReadonlySet<
         return doReadFile(workspace, args)
       case "list_files":
         return doListFiles(workspace, args)
-      case "run_pptfast":
-        return doRunPptfast(workspace, args)
+      case "run_pptpress":
+        return doRunPptpress(workspace, args)
       default:
         return `ERROR: unknown tool ${tc.function.name}`
     }
@@ -677,9 +677,9 @@ const TOOLS = [
   {
     type: "function",
     function: {
-      name: "run_pptfast",
+      name: "run_pptpress",
       description:
-        'Run the pptfast CLI inside your workspace, e.g. {"args": ["validate", "deck.json"]}. Only read-only and ' +
+        'Run the pptpress CLI inside your workspace, e.g. {"args": ["validate", "deck.json"]}. Only read-only and ' +
         "artifact-producing subcommands are available: render, validate, audit, asset-brief, schema, assemble, " +
         "disassemble, migrate, themes, narratives, preview, spec validate. There is no serve command.",
       parameters: {
@@ -783,19 +783,19 @@ async function runOneAgentic(
   const provisioned = copyQuestionAssets(join(dirs.questionsDir, qid), workspace)
 
   const system = [
-    "You are the model-under-test in the pptfast benchmark, agentic tool-loop mode.",
-    "You have four tools: write_file(path, content), read_file(path), list_files(path?), run_pptfast(args).",
+    "You are the model-under-test in the pptpress benchmark, agentic tool-loop mode.",
+    "You have four tools: write_file(path, content), read_file(path), list_files(path?), run_pptpress(args).",
     "All paths are relative to your private workspace directory — you cannot read or write anything outside",
     "it, and absolute paths or \"..\" paths that escape the workspace are rejected.",
-    "run_pptfast runs the pptfast CLI (node dist/cli.js) with your workspace as its current directory; only",
+    "run_pptpress runs the pptpress CLI (node dist/cli.js) with your workspace as its current directory; only",
     "read-only and artifact-producing subcommands are available (render, validate, audit, asset-brief, schema,",
     "assemble, disassemble, migrate, themes, narratives, preview, spec validate) — there is no interactive",
     "serve command and no general shell access.",
     "The IR JSON Schema, narrative presets, and theme catalog are not preloaded below — run",
-    "run_pptfast(['schema']) / run_pptfast(['narratives', '--json']) / run_pptfast(['themes', '--json']) yourself",
+    "run_pptpress(['schema']) / run_pptpress(['narratives', '--json']) / run_pptpress(['themes', '--json']) yourself",
     "whenever you need them, the same way the SKILL playbook expects.",
     "Use the SKILL playbook below to design and build the deck: write your IR (or deck-project files) with",
-    "write_file, run validate/audit with run_pptfast, read what they report, and fix what needs fixing — the",
+    "write_file, run validate/audit with run_pptpress, read what they report, and fix what needs fixing — the",
     "same self-check loop the playbook describes, with real tool access instead of imagined output.",
     "Save your final deck as a single IR JSON file at your workspace root (e.g. deck.json), or, for the",
     "deck-project workflow, as deck.spec.json plus pages/ at your workspace root.",
@@ -810,7 +810,7 @@ async function runOneAgentic(
     "finished, stop calling tools and reply in plain text confirming it's done.",
   ].join(" ")
   const user = [
-    "## Skill playbook (skills/pptfast/SKILL.md)\n\n" + shared.skill,
+    "## Skill playbook (skills/pptpress/SKILL.md)\n\n" + shared.skill,
     "## Deck request\n\n" + prompt,
   ].join("\n\n---\n\n")
 
@@ -996,10 +996,10 @@ async function main(): Promise<void> {
 
   const questions = qids.length > 0 ? qids : readdirSync(questionsDir).filter((d) => /^[a-z]\d\d$/.test(d)).sort()
   // Unlike run.mts's shared object, no schema/narratives/themes CLI calls
-  // here — the agentic model queries live vocabulary itself via run_pptfast
+  // here — the agentic model queries live vocabulary itself via run_pptpress
   // (plan 裁定 1, see file header).
   const shared = {
-    skill: readFileSync(join(ROOT, "skills/pptfast/SKILL.md"), "utf8"),
+    skill: readFileSync(join(ROOT, "skills/pptpress/SKILL.md"), "utf8"),
   }
   console.log(
     `model-tag ${modelTag} · ${questions.length} question(s) · round cap ${ROUND_CAP} · sequential · ` +

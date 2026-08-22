@@ -1,8 +1,8 @@
 ---
-"@liustack/pptfast": patch
+"@liustack/pptpress": patch
 ---
 
-`pptfast audit` no longer reports the organization name on a `split-diagonal`
+`pptpress audit` no longer reports the organization name on a `split-diagonal`
 cover as low-contrast. The name is meta-information, the same tier as a
 copyright line or a page number, so its floor is 3:1 rather than the 4.5:1
 body floor it was being held to. On the `insight` theme the difference decided

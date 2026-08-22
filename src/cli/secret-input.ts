@@ -1,5 +1,5 @@
 import readline from "node:readline"
-import { PptfastError } from "../errors"
+import { PptpressError } from "../errors"
 
 export interface SecretInputIo {
   stdin: NodeJS.ReadableStream
@@ -15,7 +15,7 @@ export async function readSecret(prompt: string, io: SecretInputIo = { stdin: pr
   const isTTY = Boolean((stdin as NodeJS.ReadStream).isTTY)
   if (!isTTY) {
     const line = await readFirstLine(stdin)
-    if (line === "") throw new PptfastError("API key cannot be empty")
+    if (line === "") throw new PptpressError("API key cannot be empty")
     return line
   }
   return await readHiddenTty(prompt, stdin, stderr)
@@ -70,7 +70,7 @@ function readHiddenTty(prompt: string, stdin: NodeJS.ReadableStream, stderr: Nod
         rl.close()
         stderr.write("\n")
         const value = answer.trim()
-        if (value === "") reject(new PptfastError("API key cannot be empty"))
+        if (value === "") reject(new PptpressError("API key cannot be empty"))
         else resolve(value)
       })
     })
@@ -78,11 +78,11 @@ function readHiddenTty(prompt: string, stdin: NodeJS.ReadableStream, stderr: Nod
       finish(() => {
         rl.close()
         stderr.write("\n")
-        reject(new PptfastError("cancelled"))
+        reject(new PptpressError("cancelled"))
       })
     })
     rl.on("close", () => {
-      finish(() => reject(new PptfastError("cancelled")))
+      finish(() => reject(new PptpressError("cancelled")))
     })
   })
 }

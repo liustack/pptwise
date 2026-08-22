@@ -330,7 +330,7 @@ describe("hard gate: theme resolution (installed-theme check)", () => {
     expect(errors[0]!.path).toBe("theme")
     expect(errors[0]!.message).toMatch(/unknown theme "not-a-theme"/)
     expect(errors[0]!.message).toMatch(/consulting/)
-    expect(errors[0]!.message).not.toMatch(/pptfast migrate/)
+    expect(errors[0]!.message).not.toMatch(/pptpress migrate/)
     expect(errors[0]!.message).not.toMatch(/was removed/)
   })
 
@@ -340,7 +340,7 @@ describe("hard gate: theme resolution (installed-theme check)", () => {
     expect(errors[0]!.path).toBe("theme")
     expect(errors[0]!.message).toMatch(/bloom/)
     expect(errors[0]!.message).toMatch(/removed/)
-    expect(errors[0]!.message).toMatch(/pptfast migrate/)
+    expect(errors[0]!.message).toMatch(/pptpress migrate/)
     expect(errors[0]!.message).toMatch(/classroom/)
   })
 })
@@ -372,7 +372,7 @@ describe("hard gate: narrative resolution (resolveNarrative try/catch)", () => {
   // T0b fix 2 (scope-extended, controller ruling): the same {id: <preset>}
   // shape rescue validateIr (api.ts) applies to a bare IR's narrative field
   // must also apply here — a deck.spec.json is the other real entry point
-  // (pptfast spec validate / render <deck-dir>) a weak model's
+  // (pptpress spec validate / render <deck-dir>) a weak model's
   // theme:{id:...}-by-analogy slip can reach.
   it("rescues the {id: <preset>} shape — resolves as if narrative had been the bare preset string, and reports the rewrite", () => {
     const input = minimalValidPlan({ narrative: { id: "boardroom-report" } })
@@ -612,7 +612,7 @@ describe("hard gate: focus vocabulary (strategy tendencies ∪ component types �
     expect(err!.message).toMatch(/kpi_cards/) // strategy tendency list present
     expect(err!.message).toMatch(/bullets/) // component type vocabulary present
     expect(err!.message).toMatch(/two-column/) // layout id vocabulary present
-    expect(err!.message).not.toMatch(/pptfast migrate/)
+    expect(err!.message).not.toMatch(/pptpress migrate/)
   })
 
   it("rejects leftover focus logo_wall and points at migrate to image_grid", () => {
@@ -620,7 +620,7 @@ describe("hard gate: focus vocabulary (strategy tendencies ∪ component types �
     const err = errors.find((e) => e.pageId === "p-1")
     expect(err).toBeDefined()
     expect(err!.message).toMatch(/removed/)
-    expect(err!.message).toMatch(/pptfast migrate/)
+    expect(err!.message).toMatch(/pptpress migrate/)
     expect(err!.message).toMatch(/image_grid/)
   })
 

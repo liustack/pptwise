@@ -1,5 +1,5 @@
 ---
-"@liustack/pptfast": minor
+"@liustack/pptpress": minor
 ---
 
 Rendered slides now enforce a three-layer depth contract. Every SVG paints

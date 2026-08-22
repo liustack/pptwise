@@ -7,23 +7,23 @@ import { persistImageApiKey, persistUserConfigValue } from "./image-config"
 import { resetOpenverseTokenCache } from "./image-openverse"
 import { runImagesFetch, runImagesList, runImagesSearch } from "./images"
 
-const originalHome = process.env.PPTFAST_HOME
-const originalPexels = process.env.PPTFAST_PEXELS_API_KEY
-const originalPixabay = process.env.PPTFAST_PIXABAY_API_KEY
-const originalOvId = process.env.PPTFAST_OPENVERSE_CLIENT_ID
-const originalOvSecret = process.env.PPTFAST_OPENVERSE_CLIENT_SECRET
+const originalHome = process.env.PPTPRESS_HOME
+const originalPexels = process.env.PPTPRESS_PEXELS_API_KEY
+const originalPixabay = process.env.PPTPRESS_PIXABAY_API_KEY
+const originalOvId = process.env.PPTPRESS_OPENVERSE_CLIENT_ID
+const originalOvSecret = process.env.PPTPRESS_OPENVERSE_CLIENT_SECRET
 
 afterEach(() => {
-  if (originalHome === undefined) delete process.env.PPTFAST_HOME
-  else process.env.PPTFAST_HOME = originalHome
-  if (originalPexels === undefined) delete process.env.PPTFAST_PEXELS_API_KEY
-  else process.env.PPTFAST_PEXELS_API_KEY = originalPexels
-  if (originalPixabay === undefined) delete process.env.PPTFAST_PIXABAY_API_KEY
-  else process.env.PPTFAST_PIXABAY_API_KEY = originalPixabay
-  if (originalOvId === undefined) delete process.env.PPTFAST_OPENVERSE_CLIENT_ID
-  else process.env.PPTFAST_OPENVERSE_CLIENT_ID = originalOvId
-  if (originalOvSecret === undefined) delete process.env.PPTFAST_OPENVERSE_CLIENT_SECRET
-  else process.env.PPTFAST_OPENVERSE_CLIENT_SECRET = originalOvSecret
+  if (originalHome === undefined) delete process.env.PPTPRESS_HOME
+  else process.env.PPTPRESS_HOME = originalHome
+  if (originalPexels === undefined) delete process.env.PPTPRESS_PEXELS_API_KEY
+  else process.env.PPTPRESS_PEXELS_API_KEY = originalPexels
+  if (originalPixabay === undefined) delete process.env.PPTPRESS_PIXABAY_API_KEY
+  else process.env.PPTPRESS_PIXABAY_API_KEY = originalPixabay
+  if (originalOvId === undefined) delete process.env.PPTPRESS_OPENVERSE_CLIENT_ID
+  else process.env.PPTPRESS_OPENVERSE_CLIENT_ID = originalOvId
+  if (originalOvSecret === undefined) delete process.env.PPTPRESS_OPENVERSE_CLIENT_SECRET
+  else process.env.PPTPRESS_OPENVERSE_CLIENT_SECRET = originalOvSecret
   resetOpenverseTokenCache()
 })
 
@@ -78,12 +78,12 @@ const OPENVERSE_BYSA = {
 }
 
 async function tmpHome(): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), "pptfast-images-"))
-  process.env.PPTFAST_HOME = dir
-  delete process.env.PPTFAST_PEXELS_API_KEY
-  delete process.env.PPTFAST_PIXABAY_API_KEY
-  delete process.env.PPTFAST_OPENVERSE_CLIENT_ID
-  delete process.env.PPTFAST_OPENVERSE_CLIENT_SECRET
+  const dir = await mkdtemp(join(tmpdir(), "pptpress-images-"))
+  process.env.PPTPRESS_HOME = dir
+  delete process.env.PPTPRESS_PEXELS_API_KEY
+  delete process.env.PPTPRESS_PIXABAY_API_KEY
+  delete process.env.PPTPRESS_OPENVERSE_CLIENT_ID
+  delete process.env.PPTPRESS_OPENVERSE_CLIENT_SECRET
   return dir
 }
 
@@ -201,8 +201,8 @@ describe("runImagesSearch", () => {
     expect(urls.some((u) => u.includes("auth_tokens"))).toBe(false)
     expect(out).toContain(`openverse:${OPENVERSE_CC0_ID}`)
     expect(out).toMatch(/anonymous/i)
-    expect(out).toContain("pptfast config set openverse.clientId")
-    expect(out).toContain("pptfast config set openverse.clientSecret")
+    expect(out).toContain("pptpress config set openverse.clientId")
+    expect(out).toContain("pptpress config set openverse.clientSecret")
     expect(out).not.toContain("<key>")
     expect(out).not.toContain("later version")
     expect(out).toContain("Pixabay is unconfigured")
@@ -242,7 +242,7 @@ describe("runImagesSearch", () => {
     })
     expect(out).toContain("No photos found")
     expect(out).toContain("Pixabay is unconfigured")
-    expect(out).toContain("pptfast config set pixabay.apiKey")
+    expect(out).toContain("pptpress config set pixabay.apiKey")
   })
 
   it("redacts a thrown Pixabay URL that contained key=SUPERSECRET99", async () => {
@@ -378,7 +378,7 @@ describe("runImagesFetch", () => {
   it("writes a jpeg and sidecar, skips the second fetch of the same photo_id, and never stores a key", async () => {
     await tmpHome()
     await persistImageApiKey("pexels", "TESTPEXELSKEY99")
-    const cwd = await mkdtemp(join(tmpdir(), "pptfast-fetch-deck-"))
+    const cwd = await mkdtemp(join(tmpdir(), "pptpress-fetch-deck-"))
     const deck = join(cwd, "demo-deck")
     const fetchImpl: typeof fetch = async (input) => {
       const url = String(input)
@@ -401,7 +401,7 @@ describe("runImagesFetch", () => {
       now: () => new Date("2026-08-22T00:00:00.000Z"),
     })
     expect(first).toContain("pinned pexels:123 as hero")
-    const assets = join(cwd, ".pptfast", "demo-deck", "assets")
+    const assets = join(cwd, ".pptpress", "demo-deck", "assets")
     const jpg = await readFile(join(assets, "hero.jpg"))
     expect(jpg.equals(JPEG_TINY)).toBe(true)
     const sidecar = JSON.parse(await readFile(join(assets, "hero.json"), "utf8")) as Record<string, unknown>
@@ -437,13 +437,13 @@ describe("runImagesFetch", () => {
       /pixabay\.com\/api\/docs/,
     )
     await expect(runImagesFetch("pixabay:456", { deck: "demo", as: "hero" })).rejects.toThrow(
-      /pptfast config set pixabay\.apiKey/,
+      /pptpress config set pixabay\.apiKey/,
     )
   })
 
   it("fetches openverse:<uuid>, writes jpg + sidecar with cc0 attribution, and skips the second fetch", async () => {
     await tmpHome()
-    const cwd = await mkdtemp(join(tmpdir(), "pptfast-fetch-ov-"))
+    const cwd = await mkdtemp(join(tmpdir(), "pptpress-fetch-ov-"))
     const deck = join(cwd, "demo-deck")
     const fetchImpl: typeof fetch = async (input) => {
       const url = String(input)
@@ -466,7 +466,7 @@ describe("runImagesFetch", () => {
       now: () => new Date("2026-08-22T00:00:00.000Z"),
     })
     expect(first).toContain(`pinned openverse:${OPENVERSE_CC0_ID} as hero`)
-    const assets = join(cwd, ".pptfast", "demo-deck", "assets")
+    const assets = join(cwd, ".pptpress", "demo-deck", "assets")
     const sidecar = JSON.parse(await readFile(join(assets, "hero.json"), "utf8")) as Record<string, unknown>
     expect(sidecar.provider).toBe("openverse")
     expect(sidecar.photo_id).toBe(OPENVERSE_CC0_ID)
@@ -495,7 +495,7 @@ describe("runImagesFetch", () => {
 
   it("refuses to fetch an Openverse by-sa detail record and writes no file", async () => {
     await tmpHome()
-    const cwd = await mkdtemp(join(tmpdir(), "pptfast-fetch-bysa-"))
+    const cwd = await mkdtemp(join(tmpdir(), "pptpress-fetch-bysa-"))
     const deck = join(cwd, "demo-deck")
     await expect(
       runImagesFetch(`openverse:${OPENVERSE_BYSA_ID}`, {
@@ -513,15 +513,15 @@ describe("runImagesFetch", () => {
       }),
     ).rejects.toThrow(/cc0|pdm|license/i)
     const { pathExists } = await import("./deck-dir")
-    expect(await pathExists(join(cwd, ".pptfast", "demo-deck", "assets", "hero.jpg"))).toBe(false)
+    expect(await pathExists(join(cwd, ".pptpress", "demo-deck", "assets", "hero.jpg"))).toBe(false)
   })
 })
 
 describe("runImagesList", () => {
   it("lists sidecars for a deck", async () => {
     await tmpHome()
-    const cwd = await mkdtemp(join(tmpdir(), "pptfast-list-deck-"))
-    const assets = join(cwd, ".pptfast", "demo-deck", "assets")
+    const cwd = await mkdtemp(join(tmpdir(), "pptpress-list-deck-"))
+    const assets = join(cwd, ".pptpress", "demo-deck", "assets")
     const { mkdir } = await import("node:fs/promises")
     await mkdir(assets, { recursive: true })
     await writeFile(
@@ -544,8 +544,8 @@ describe("runImagesList", () => {
 
   it("lists an Openverse sidecar", async () => {
     await tmpHome()
-    const cwd = await mkdtemp(join(tmpdir(), "pptfast-list-ov-"))
-    const assets = join(cwd, ".pptfast", "demo-deck", "assets")
+    const cwd = await mkdtemp(join(tmpdir(), "pptpress-list-ov-"))
+    const assets = join(cwd, ".pptpress", "demo-deck", "assets")
     const { mkdir } = await import("node:fs/promises")
     await mkdir(assets, { recursive: true })
     await writeFile(

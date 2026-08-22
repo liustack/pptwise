@@ -9,9 +9,9 @@ read_when:
 
 # IR
 
-IR 是一份描述整份 PPT 内容的 JSON 文件：有哪些页、每页上有什么、整体用哪个主题。agent 写的就是它，`pptfast render` 需要的输入也只有它。
+IR 是一份描述整份 PPT 内容的 JSON 文件：有哪些页、每页上有什么、整体用哪个主题。agent 写的就是它，`pptpress render` 需要的输入也只有它。
 
-运行 `pptfast schema` 获取完整 JSON Schema，让模型写 IR 之前先把它喂进去。
+运行 `pptpress schema` 获取完整 JSON Schema，让模型写 IR 之前先把它喂进去。
 
 ## 一份 deck
 
@@ -37,11 +37,11 @@ IR 是一份描述整份 PPT 内容的 JSON 文件：有哪些页、每页上有
 每张 slide 有：
 
 - `type`：`cover`、`chapter`、`content`、`ending`。
-- `layout`：显式指定的页面版式 id，恒优先于自动选型。省略则由 pptfast 自动选。
+- `layout`：显式指定的页面版式 id，恒优先于自动选型。省略则由 pptpress 自动选。
 - `arrangement`：content 页正文的排布方式，例如 `two_column`、`kpi_focus`。
 - `components`：填充页面的带类型单元（`bullets`、`kpi_cards`、`image`、`chart` 等）。
 
-任意 slide 还可以设置稳定的 `id`（spec 的页面和校验报错都靠它引用）、`placeholder: true`（还没有内容的占位页，由 `assemble` 为 spec 里没人填写的页面注入，内容质量检查会跳过它，`render` 也会因它拒绝导出，除非加 `--draft`），以及 `notes`（同义词 `note`/`speaker_notes`/`speakerNotes`），导出为原生 PowerPoint 演讲者备注。备注只给主讲人自己看，不会画到幻灯片画布上，也不计入任何版式容量。讲稿写进 `notes`。agent 操作手册里的稀排页合同（`skills/pptfast/SKILL.md`）是这条规则。如果文件必须作为文档独立站住，把多出来的字写进 notes，或者改用 PDF。
+任意 slide 还可以设置稳定的 `id`（spec 的页面和校验报错都靠它引用）、`placeholder: true`（还没有内容的占位页，由 `assemble` 为 spec 里没人填写的页面注入，内容质量检查会跳过它，`render` 也会因它拒绝导出，除非加 `--draft`），以及 `notes`（同义词 `note`/`speaker_notes`/`speakerNotes`），导出为原生 PowerPoint 演讲者备注。备注只给主讲人自己看，不会画到幻灯片画布上，也不计入任何版式容量。讲稿写进 `notes`。agent 操作手册里的稀排页合同（`skills/pptpress/SKILL.md`）是这条规则。如果文件必须作为文档独立站住，把多出来的字写进 notes，或者改用 PDF。
 
 ## 会漂移的字段名
 
@@ -68,7 +68,7 @@ IR 是一份描述整份 PPT 内容的 JSON 文件：有哪些页、每页上有
 
 v4 IR schema 自 0.4.0 起冻结，后续演进只走加法：新增可选字段、新增枚举值。任何破坏性变更都会启用新的顶层 `version` 值，并沿用 v3 那套硬拒绝加迁移提示的处理方式。
 
-`pptfast migrate <v3-file.json> -o <out.json>` 确定性地把 v3 文件转成 v4，做字段改名，以及 v4 遗留改写：`chrome` → `branding`、`bloom` → `classroom`、`logo_wall` → `image_grid`。`deck.plan.json` → `deck.spec.json` 的姊妹转换见 [Deck 项目](#deck-项目)。
+`pptpress migrate <v3-file.json> -o <out.json>` 确定性地把 v3 文件转成 v4，做字段改名，以及 v4 遗留改写：`chrome` → `branding`、`bloom` → `classroom`、`logo_wall` → `image_grid`。`deck.plan.json` → `deck.spec.json` 的姊妹转换见 [Deck 项目](#deck-项目)。
 
 ## 叙事
 
@@ -92,11 +92,11 @@ v4 IR schema 自 0.4.0 起冻结，后续演进只走加法：新增可选字段
 
 bullets 需要时会在各自档位基线之下收缩以适配空间，最低到 14px 地板，再触发溢出处理。`default`、`plain`、`divided`、`numbered`、`checklist` 五种要点样式一视同仁：一条要点长到在这个地板字号下仍然放不下，会是一条硬校验错误。它比上面按 pacing 分档的长度指导更宽，触发理由也不同：这种情况在渲染时会真的被省略号截掉文字。
 
-`pptfast validate` 会报出每页实际生效的具体数值。`pptfast narratives [--json]` 列出全部具名预设（各自带一份软性 theme 推荐，仅供参考，不构成约束）及三轴的原始数据表。
+`pptpress validate` 会报出每页实际生效的具体数值。`pptpress narratives [--json]` 列出全部具名预设（各自带一份软性 theme 推荐，仅供参考，不构成约束）及三轴的原始数据表。
 
 ## 版式选型
 
-当某页省略 `layout` 时，pptfast 按四个确定性步骤自动选型：
+当某页省略 `layout` 时，pptpress 按四个确定性步骤自动选型：
 
 1. 该页型已注册的 archetype 池，去掉 pin-only 版式。
 2. 收窄到主题为该页型准备的 `layouts` 集合（封面锁到板面。内容页默认 10 个可自动选型的 id。lecture 和 luxe 去掉 `banner-heading` / `split-band` / `stacked-poster`，见[主题](./themes.zh-CN.md)）。
@@ -108,10 +108,10 @@ bullets 需要时会在各自档位基线之下收缩以适配空间，最低到
 选型本身完全确定：同一份 IR 永远选出同一个结果，预览与最终渲染绝不会不一致。但要在**多次修订之间**保持稳定（改一页不搅动其余页的自动选型），还需要一个持久化的 `seed`，按以下顺序解析：
 
 1. 显式 `ir.seed`，完全修订稳定，恒优先。
-2. deck 项目自己的 seed。spec 省略 `seed` 时，`pptfast assemble` 首次运行会用 spec 的 filename 加页面 id 列表派生一个并打印出来，把这个值写进 `deck.spec.json` 的 `seed` 字段即可固化。
+2. deck 项目自己的 seed。spec 省略 `seed` 时，`pptpress assemble` 首次运行会用 spec 的 filename 加页面 id 列表派生一个并打印出来，把这个值写进 `deck.spec.json` 的 `seed` 字段即可固化。
 3. 以上均未设置：回落到 `filename` 加每页 `heading` 的内容哈希。改动任何一页标题都会重排全 deck 的自动选型。
 
-`pptfast assemble` 还会把每一页的自动选型结果写回合并后的 `deck.json`（页面文件里已显式指定的 `layout` 不受影响），CLI 会提示本次填写了多少页。
+`pptpress assemble` 还会把每一页的自动选型结果写回合并后的 `deck.json`（页面文件里已显式指定的 `layout` 不受影响），CLI 会提示本次填写了多少页。
 
 这套机制的实现细节见 [`selection-and-seed.md`](./selection-and-seed.md)（英文）。
 
@@ -126,16 +126,16 @@ my-deck/
   assets/                本地图片，按文件名自动注册（图片 id = 去掉扩展名的文件名）
 ```
 
-`deck.spec.json` 可以在任何页面填写之前单独校验：`pptfast spec validate deck.spec.json` 检查 schema，以及一组随 strategy 变化的硬门（边界页类型、标题长度、beat 轮换、页数是否匹配 pacing）。
+`deck.spec.json` 可以在任何页面填写之前单独校验：`pptpress spec validate deck.spec.json` 检查 schema，以及一组随 strategy 变化的硬门（边界页类型、标题长度、beat 轮换、页数是否匹配 pacing）。
 
-spec 里某一页如果没有对应的 `pages/<id>.json`，会成为一个**占位页**，只有标题，不算缺失，所以写到一半的 deck 也能正常 assemble 和预览。`pptfast render` 遇到未填的占位页会拒绝导出，除非加 `--draft`。`pptfast preview` 则永远不会因占位页被拦。
+spec 里某一页如果没有对应的 `pages/<id>.json`，会成为一个**占位页**，只有标题，不算缺失，所以写到一半的 deck 也能正常 assemble 和预览。`pptpress render` 遇到未填的占位页会拒绝导出，除非加 `--draft`。`pptpress preview` 则永远不会因占位页被拦。
 
-目录里如果还留着改名前的 `deck.plan.json` 而不是 `deck.spec.json`，不会被直接读取。用 `pptfast migrate <dir> -o <dir>` 原地转换：会在旁边写出 `deck.spec.json`，不覆盖也不删除原文件，确认新文件无误后自己删掉 `deck.plan.json`。目录里两个文件同时存在会硬报错，绝不猜测优先级。
+目录里如果还留着改名前的 `deck.plan.json` 而不是 `deck.spec.json`，不会被直接读取。用 `pptpress migrate <dir> -o <dir>` 原地转换：会在旁边写出 `deck.spec.json`，不覆盖也不删除原文件，确认新文件无误后自己删掉 `deck.plan.json`。目录里两个文件同时存在会硬报错，绝不猜测优先级。
 
-`pptfast assemble <dir>` 把 spec、pages、assets 合并成一个 IR JSON 文件（默认写到 `deck.json`）。`pptfast disassemble <ir.json> -o <dir>` 做反向操作，是有据可查的有损转换：`beat`/`focus` 这类只属于 spec 的字段在 IR 里没有对应位置，无法还原。`render`/`validate`/`preview` 也都能直接接受一个目录，会先在内存里 assemble 一遍。
+`pptpress assemble <dir>` 把 spec、pages、assets 合并成一个 IR JSON 文件（默认写到 `deck.json`）。`pptpress disassemble <ir.json> -o <dir>` 做反向操作，是有据可查的有损转换：`beat`/`focus` 这类只属于 spec 的字段在 IR 里没有对应位置，无法还原。`render`/`validate`/`preview` 也都能直接接受一个目录，会先在内存里 assemble 一遍。
 
-deck 项目目录可以用裸名代替路径引用。`pptfast render my-deck -o out.pptx` 在本地找不到同名文件或目录时，会到 `$PPTFAST_HOME/decks` 下找 `my-deck`（`$PPTFAST_HOME` 缺省是 `~/.pptfast`）。
+deck 项目目录可以用裸名代替路径引用。`pptpress render my-deck -o out.pptx` 在本地找不到同名文件或目录时，会到 `$PPTPRESS_HOME/decks` 下找 `my-deck`（`$PPTPRESS_HOME` 缺省是 `~/.pptpress`）。
 
-所有 deck 默认值按四层优先级解析，从高到低：CLI flag > 项目级 `pptfast.config.json` > 用户级 `~/.pptfast/config.json` > deck 自身的值。两个配置层都可以设置 `decksDir` 来重定向裸名的解析位置：项目层的值相对该配置文件自身所在目录解析（给想把 deck 项目入库的团队用），用户层的值相对 `$PPTFAST_HOME` 解析，两者都设置时项目层优先。
+所有 deck 默认值按四层优先级解析，从高到低：CLI flag > 项目级 `pptpress.config.json` > 用户级 `~/.pptpress/config.json` > deck 自身的值。两个配置层都可以设置 `decksDir` 来重定向裸名的解析位置：项目层的值相对该配置文件自身所在目录解析（给想把 deck 项目入库的团队用），用户层的值相对 `$PPTPRESS_HOME` 解析，两者都设置时项目层优先。
 
 格式的更多细节见 [`deck-projects.md`](./deck-projects.md)（英文）。

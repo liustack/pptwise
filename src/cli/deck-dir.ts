@@ -21,7 +21,7 @@
  * ```
  *
  * A directory carrying the pre-rename `deck.plan.json` only (no
- * `deck.spec.json` yet) is no longer read directly — `pptfast migrate
+ * `deck.spec.json` yet) is no longer read directly — `pptpress migrate
  * <dir> -o <dir>` (`./commands.ts`'s `runMigrate`) converts it in place per
  * spec §9.2's field mapping. A directory carrying *both* files at once is a
  * hard error ({@link readSpecFile} below) — spec §9.2: "目录中同时出现
@@ -29,7 +29,7 @@
  */
 import { copyFile, mkdir, readFile, readdir, stat, writeFile } from "node:fs/promises"
 import { basename, extname, isAbsolute, join, relative, resolve } from "node:path"
-import { PptfastError } from "../errors"
+import { PptpressError } from "../errors"
 import { assembleDeck, type AssembleResult, type PageContent } from "../spec/assemble"
 import { decksRoot } from "./home"
 import { EXT_BY_MIME, loadIrFile } from "./load-ir"
@@ -51,7 +51,7 @@ export const PAGES_DIRNAME = "pages"
 export const ASSETS_DIRNAME = "assets"
 /** Optional deck-local brand theme file (brand-extract wave, 裁定 3's
  *  zero-flag convention): a `theme.json` sitting in the deck project
- *  directory — typically `pptfast brand extract`'s output — is auto-loaded
+ *  directory — typically `pptpress brand extract`'s output — is auto-loaded
  *  (registered through `registerTheme`) before the deck is assembled, so the
  *  spec/IR can reference its `id` with no `--theme-file` flag. Loading
  *  happens in `./commands.ts` (`loadDeckTarget`/`runAssemble`), not here —
@@ -93,12 +93,12 @@ export const THEME_FILENAME = "theme.json"
  * the thrown message points at which field was unsafe.
  */
 export function assertSafeFileSegment(id: string, context: string): void {
-  const safeBase = resolve("/pptfast-safe-base")
+  const safeBase = resolve("/pptpress-safe-base")
   const rel = relative(safeBase, resolve(safeBase, id))
   const safe =
     !isAbsolute(id) && !id.includes("/") && !id.includes("\\") && id !== ".." && !rel.startsWith("..") && !isAbsolute(rel)
   if (!safe) {
-    throw new PptfastError(
+    throw new PptpressError(
       `${context} "${id}" is not a safe file name — ids used as page/asset file names must not contain path separators or ".."`,
     )
   }
@@ -117,7 +117,7 @@ export function assertSafeFileSegment(id: string, context: string): void {
  * a path that turns out not to exist at all, and re-deriving that
  * distinction here would just duplicate it. Any *other* `stat` failure
  * (`EACCES`, `ENOTDIR` via a non-directory path segment, ...) rethrows
- * wrapped in {@link PptfastError} instead — silently reading a real
+ * wrapped in {@link PptpressError} instead — silently reading a real
  * permission or filesystem problem as "not a directory, try it as a single
  * IR file" produces a strictly more confusing downstream error than
  * surfacing the actual failure here.
@@ -127,7 +127,7 @@ export async function isDeckDirectory(path: string): Promise<boolean> {
     return (await stat(path)).isDirectory()
   } catch (e) {
     if ((e as NodeJS.ErrnoException).code === "ENOENT") return false
-    throw new PptfastError(`cannot check ${path}: ${(e as Error).message}`)
+    throw new PptpressError(`cannot check ${path}: ${(e as Error).message}`)
   }
 }
 
@@ -148,7 +148,7 @@ export async function pathExists(path: string): Promise<boolean> {
     return true
   } catch (e) {
     if ((e as NodeJS.ErrnoException).code === "ENOENT") return false
-    throw new PptfastError(`cannot check path ${path}: ${(e as Error).message}`)
+    throw new PptpressError(`cannot check path ${path}: ${(e as Error).message}`)
   }
 }
 
@@ -171,17 +171,17 @@ export async function pathExists(path: string): Promise<boolean> {
  * either way — `path.resolve` returns an absolute later segment as-is.
  *
  * Otherwise `arg` is treated as a deck name under `decksRoot(config)`
- * (`./home.ts` — `$PPTFAST_HOME/decks/<name>`, or a `decksDir` override) —
+ * (`./home.ts` — `$PPTPRESS_HOME/decks/<name>`, or a `decksDir` override) —
  * but only when that candidate actually exists. When *neither* the local
  * path nor the deck-home candidate exists, this returns the local
  * (cwd-resolved) path rather than the deck-home guess: a bare arg that was
- * actually a typo'd local filename (`pptfast validate typo.json`) should
+ * actually a typo'd local filename (`pptpress validate typo.json`) should
  * have its eventual "cannot read" error name the file the user typed, not
- * an unrelated `~/.pptfast/decks/typo.json` path they never meant. `config`
+ * an unrelated `~/.pptpress/decks/typo.json` path they never meant. `config`
  * is not either config layer's raw shape — it is the already-resolved
- * effective `decksDir` source (project `pptfast.config.json`'s own value,
+ * effective `decksDir` source (project `pptpress.config.json`'s own value,
  * spec §7's project-level escape hatch, W5 task 6, when it sets one, else
- * the user config's, `./config.ts`'s `UserPptfastConfig`) computed once by
+ * the user config's, `./config.ts`'s `UserPptpressConfig`) computed once by
  * the caller (`commands.ts`'s `resolveDecksDirSource`) and passed in here
  * already resolved to an absolute path when it came from the project layer
  * — this function itself has no reason to know there were ever two
@@ -204,7 +204,7 @@ export async function resolveDeckTarget(
   config?: { decksDir?: string },
   cwd: string = process.cwd(),
 ): Promise<string> {
-  if (arg.trim() === "") throw new PptfastError("deck target must not be empty")
+  if (arg.trim() === "") throw new PptpressError("deck target must not be empty")
   if (arg.includes("/") || arg.includes("\\")) return resolve(cwd, arg)
   const local = resolve(cwd, arg)
   if (await pathExists(local)) return local
@@ -220,7 +220,7 @@ export async function resolveDeckTarget(
  *  when one of the three filename/`*_DIRNAME` constants above changes. */
 function expectedLayoutHint(): string {
   const rows: [string, string][] = [
-    [SPEC_FILENAME, "the locked spec (see `pptfast spec validate`)"],
+    [SPEC_FILENAME, "the locked spec (see `pptpress spec validate`)"],
     [`${PAGES_DIRNAME}/<page-id>.json`, "one file per filled page (missing pages become placeholders)"],
     [`${ASSETS_DIRNAME}/`, "optional local images"],
   ]
@@ -237,13 +237,13 @@ function expectedLayoutHint(): string {
  *   §9.2: "目录中同时出现 `deck.plan.json` 和 `deck.spec.json` 时应硬报错，
  *   不能猜测优先级" ("hard error, never guess which one wins"). Checked
  *   before the missing-file branch below so a caller that just ran
- *   `pptfast migrate <dir> -o <dir>` (which writes `deck.spec.json`
+ *   `pptpress migrate <dir> -o <dir>` (which writes `deck.spec.json`
  *   *alongside* the pre-existing `deck.plan.json`, never deleting it) gets
  *   pointed at deleting the old file, not a generic "not a deck project"
  *   message.
  * - only `deck.plan.json` present (no `deck.spec.json` yet) — this
  *   directory predates the rename and is no longer read directly; the
- *   message points at `pptfast migrate` instead of the generic missing-file
+ *   message points at `pptpress migrate` instead of the generic missing-file
  *   hint, since the fix here is a one-command conversion, not authoring a
  *   fresh file from scratch.
  * - neither file present — the pre-existing "friendlier message over
@@ -251,20 +251,20 @@ function expectedLayoutHint(): string {
  *   one failure a deck-directory caller is most likely to hit by typo or by
  *   pointing at a directory that was never a deck project in the first
  *   place, so the error spells out the expected layout and points at
- *   `pptfast spec validate` rather than leaving the caller to guess.
+ *   `pptpress spec validate` rather than leaving the caller to guess.
  */
 async function readSpecFile(dir: string): Promise<unknown> {
   const specPath = join(dir, SPEC_FILENAME)
   const planPath = join(dir, PLAN_FILENAME)
   const [specExists, planExists] = await Promise.all([pathExists(specPath), pathExists(planPath)])
   if (specExists && planExists) {
-    throw new PptfastError(
-      `both ${SPEC_FILENAME} and ${PLAN_FILENAME} exist in ${dir} — ambiguous, refusing to guess which one wins. Delete ${PLAN_FILENAME} once you have confirmed ${SPEC_FILENAME} is correct (\`pptfast migrate\` never deletes the source file it read)`,
+    throw new PptpressError(
+      `both ${SPEC_FILENAME} and ${PLAN_FILENAME} exist in ${dir} — ambiguous, refusing to guess which one wins. Delete ${PLAN_FILENAME} once you have confirmed ${SPEC_FILENAME} is correct (\`pptpress migrate\` never deletes the source file it read)`,
     )
   }
   if (!specExists && planExists) {
-    throw new PptfastError(
-      `${dir} has ${PLAN_FILENAME} but no ${SPEC_FILENAME} — deck project directories now use ${SPEC_FILENAME}. Run \`pptfast migrate ${dir} -o ${dir}\` to convert it`,
+    throw new PptpressError(
+      `${dir} has ${PLAN_FILENAME} but no ${SPEC_FILENAME} — deck project directories now use ${SPEC_FILENAME}. Run \`pptpress migrate ${dir} -o ${dir}\` to convert it`,
     )
   }
   let text: string
@@ -272,16 +272,16 @@ async function readSpecFile(dir: string): Promise<unknown> {
     text = await readFile(specPath, "utf8")
   } catch (e) {
     if ((e as NodeJS.ErrnoException).code === "ENOENT") {
-      throw new PptfastError(
+      throw new PptpressError(
         `no ${SPEC_FILENAME} in ${dir} — expected a deck project directory:\n${expectedLayoutHint()}`,
       )
     }
-    throw new PptfastError(`cannot read spec file: ${specPath}`)
+    throw new PptpressError(`cannot read spec file: ${specPath}`)
   }
   try {
     return JSON.parse(text) as unknown
   } catch (e) {
-    throw new PptfastError(`spec file ${specPath} is not valid JSON: ${(e as Error).message}`)
+    throw new PptpressError(`spec file ${specPath} is not valid JSON: ${(e as Error).message}`)
   }
 }
 
@@ -295,7 +295,7 @@ async function readSpecFile(dir: string): Promise<unknown> {
  * yet is exactly `assembleDeck`'s "every page becomes a placeholder" case)
  * — but `pages/` existing as something that cannot be read as a directory
  * (e.g. a file sitting where a directory was expected, `ENOTDIR`) is a real
- * problem and throws {@link PptfastError} naming the path, not silently
+ * problem and throws {@link PptpressError} naming the path, not silently
  * "zero pages" (same ENOENT-vs-everything-else posture as
  * {@link isDeckDirectory} above). Non-`.json` entries (a stray `.DS_Store`,
  * an editor swap file, a subdirectory) are silently skipped rather than fed
@@ -317,7 +317,7 @@ async function readPages(dir: string): Promise<Record<string, unknown>> {
       .map((entry) => entry.name)
   } catch (e) {
     if ((e as NodeJS.ErrnoException).code === "ENOENT") return {}
-    throw new PptfastError(`cannot read ${PAGES_DIRNAME}/ directory ${pagesDir}: ${(e as Error).message}`)
+    throw new PptpressError(`cannot read ${PAGES_DIRNAME}/ directory ${pagesDir}: ${(e as Error).message}`)
   }
   const pages: Record<string, unknown> = {}
   await Promise.all(
@@ -339,7 +339,7 @@ async function readPages(dir: string): Promise<Record<string, unknown>> {
  * called with the deck directory as its base (see `commands.ts`). A missing
  * `assets/` directory (`ENOENT`) is zero assets, same as a missing `pages/`
  * above — anything else (`ENOTDIR`, a permission error, ...) throws
- * {@link PptfastError} naming the path rather than silently reading as "no
+ * {@link PptpressError} naming the path rather than silently reading as "no
  * assets here" (see {@link readPages}'s own note on this). Dotfiles
  * (`.DS_Store` and friends — `extname` returns `""` for these, so their
  * "id" would otherwise be the whole filename) are skipped: they are never a
@@ -361,7 +361,7 @@ async function scanAssets(dir: string): Promise<Record<string, { src: string }>>
       .map((entry) => entry.name)
   } catch (e) {
     if ((e as NodeJS.ErrnoException).code === "ENOENT") return {}
-    throw new PptfastError(`cannot read ${ASSETS_DIRNAME}/ directory ${assetsDir}: ${(e as Error).message}`)
+    throw new PptpressError(`cannot read ${ASSETS_DIRNAME}/ directory ${assetsDir}: ${(e as Error).message}`)
   }
   const images: Record<string, { src: string }> = {}
   const sourceFile = new Map<string, string>()
@@ -369,7 +369,7 @@ async function scanAssets(dir: string): Promise<Record<string, { src: string }>>
     const id = basename(entry, extname(entry))
     const previous = sourceFile.get(id)
     if (previous !== undefined) {
-      throw new PptfastError(
+      throw new PptpressError(
         `${ASSETS_DIRNAME}/${previous} and ${ASSETS_DIRNAME}/${entry} both register image id "${id}" — rename one of the files`,
       )
     }
@@ -472,14 +472,14 @@ export interface WriteDeckAssetsResult {
  * - `data:<mime>;base64,<payload>` → decoded and written to
  *   `assets/<id><ext>`, `ext` looked up from `mime` via `EXT_BY_MIME`
  *   (`./load-ir.ts`). An unrecognized mime or a non-base64 data URI is a
- *   hard {@link PptfastError} naming the asset, not a silent skip.
+ *   hard {@link PptpressError} naming the asset, not a silent skip.
  * - a local file path (relative resolves against `sourceBaseDir`, the same
  *   `isAbsolute(src) ? src : resolve(base, src)` rule `resolveLocalAssets`
  *   itself uses) → copied byte-for-byte into `assets/<id><origExt>`. An
  *   unreadable source (moved/deleted/permission-denied since the IR was
- *   generated) is a hard {@link PptfastError} naming the asset and the path
+ *   generated) is a hard {@link PptpressError} naming the asset and the path
  *   that could not be read.
- * - `http(s)://` → always a hard {@link PptfastError} — a URL asset has no
+ * - `http(s)://` → always a hard {@link PptpressError} — a URL asset has no
  *   local bytes to write at all. The fix is on the deck author's side
  *   (inline it as a data URI, or download it first), not something this
  *   function can paper over.
@@ -518,13 +518,13 @@ async function writeOneAsset(id: string, src: string, assetsDir: string, sourceB
   if (src.startsWith("data:")) {
     const match = DATA_URI_RE.exec(src)
     if (!match) {
-      throw new PptfastError(`asset "${id}": only base64-encoded data URIs can be disassembled (malformed data URI)`)
+      throw new PptpressError(`asset "${id}": only base64-encoded data URIs can be disassembled (malformed data URI)`)
     }
     const mime = match[1]
     const payload = match[2]
     const ext = EXT_BY_MIME[mime]
     if (!ext) {
-      throw new PptfastError(
+      throw new PptpressError(
         `asset "${id}": cannot disassemble a data URI with mime "${mime}" — expected one of ${Object.keys(EXT_BY_MIME).join(", ")}`,
       )
     }
@@ -532,7 +532,7 @@ async function writeOneAsset(id: string, src: string, assetsDir: string, sourceB
     return
   }
   if (/^https?:\/\//.test(src)) {
-    throw new PptfastError(
+    throw new PptpressError(
       `asset "${id}": URL assets cannot be disassembled into a deck directory — inline it as a data URI or download it first`,
     )
   }
@@ -540,6 +540,6 @@ async function writeOneAsset(id: string, src: string, assetsDir: string, sourceB
   try {
     await copyFile(abs, join(assetsDir, `${id}${extname(abs)}`))
   } catch {
-    throw new PptfastError(`asset "${id}": cannot read source image ${abs} (from src "${src}") — cannot disassemble`)
+    throw new PptpressError(`asset "${id}": cannot read source image ${abs} (from src "${src}") — cannot disassemble`)
   }
 }

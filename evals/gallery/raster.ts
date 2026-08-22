@@ -5,6 +5,7 @@
  * never a package dependency.
  */
 
+import { resolveProductEnv } from "@/cli/product-env"
 import { CANVAS_H_PX, CANVAS_W_PX } from "@/constants"
 import { getPlatform } from "@/platform/registry"
 import sharp from "sharp"
@@ -22,7 +23,7 @@ export async function rasterSvgToPng(svg: string): Promise<Buffer> {
 }
 
 async function tryLoadPlaywright(): Promise<any | null> {
-  const specs = [process.env.PPTFAST_PLAYWRIGHT, "playwright", "playwright-core"].filter(Boolean) as string[]
+  const specs = [resolveProductEnv("PLAYWRIGHT"), "playwright", "playwright-core"].filter(Boolean) as string[]
   for (const spec of specs) {
     try {
       const mod = await import(spec)

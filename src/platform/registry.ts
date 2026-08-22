@@ -25,7 +25,7 @@ export interface RasterizedImage {
  * `data:` URI before render — the only way an `http(s)://` href survives
  * into rendered markup at all is a deck that deliberately keeps a remote URL
  * as its own asset `src`. Left there, a Node rasterizer could silently
- * attempt to fetch it (a real network request `pptfast audit` must never
+ * attempt to fetch it (a real network request `pptpress audit` must never
  * make) and a browser canvas would silently drop it and taint the canvas
  * (the audit-v2 controller ruling this guard implements) — either way the
  * rasterized page would show *not what the text actually sits on*, which is
@@ -40,7 +40,7 @@ export function findRemoteAssetRef(svgMarkup: string): string | null {
 
 /** Environment seams. The SDK entry stays browser-safe: Node implementations
  *  live in ./node and are installed explicitly (CLI does it automatically). */
-export interface PptfastPlatform {
+export interface PptpressPlatform {
   /** DOMParser constructor used to parse rendered SVG markup. */
   domParser?: typeof DOMParser
   /** Re-encode an image data URL to PNG (Office rejects webp and friends). */
@@ -67,12 +67,12 @@ export interface PptfastPlatform {
   fetch?: typeof fetch
 }
 
-let current: PptfastPlatform = {}
+let current: PptpressPlatform = {}
 
-export function installPlatform(p: PptfastPlatform): void {
+export function installPlatform(p: PptpressPlatform): void {
   current = { ...current, ...p }
 }
 
-export function getPlatform(): PptfastPlatform {
+export function getPlatform(): PptpressPlatform {
   return current
 }

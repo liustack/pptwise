@@ -31,7 +31,7 @@ const assets = Object.fromEntries(
   await Promise.all(LANGUAGE_IDS.map(async (id) => [id, await corpusAssets(LEXICONS[id])] as const)),
 ) as Record<LanguageId, Awaited<ReturnType<typeof corpusAssets>>>
 const jobs = buildMatrix(themeIds, assets)
-const outDir = mkdtempSync(join(tmpdir(), "pptfast-hashes-"))
+const outDir = mkdtempSync(join(tmpdir(), "pptpress-hashes-"))
 const { manifest } = renderMatrix(jobs, outDir, "pin")
 const gold = hashesFromManifest(manifest)
 writeFileSync(OUT, `${JSON.stringify(gold, null, 2)}\n`)

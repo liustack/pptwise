@@ -26,7 +26,7 @@
 // cell's own real fill (not the page background) and reports it as
 // `low-contrast` at the expected ~4.38-4.44 ratio, below the 4.5 floor.
 // The confinement case is therefore already deterministic and
-// audit-visible, not silent — `pptfast audit` (and this suite) both catch
+// audit-visible, not silent — `pptpress audit` (and this suite) both catch
 // it every time, on every value, with no escape. A third control case
 // (endpoints straddling the band) confirms this isn't a general
 // over-triggering — it passes clean.

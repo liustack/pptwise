@@ -4,7 +4,7 @@ Date: 2026-08-22.
 Pre-fix SHA: `321748d` (the `fix/gallery-review-r1` workspace HEAD at review time).
 Post-fix SHA: `8b4c001` (local main after r1 merged). r2 is **not** on this tree.
 Human set: 44 `rework` page ids restored from `.issues/2026-08-22-gallery-review-r1/fix-list.md`, not a localStorage export. Mapping: every id exists exactly at that SHA.
-L2 model: local `grok` CLI, `--no-subagents`, `--json-schema` `pptfast-gallery-verdicts/3`.
+L2 model: local `grok` CLI, `--no-subagents`, `--json-schema` `pptpress-gallery-verdicts/3`.
 Raw L2: `evals/gallery/calibration/pre-fix-l2.json` (first frozen pass), `pre-fix-l2-replay.json` (new L1+rubric on the same SVGs), `post-fix-l2.json` (HEAD renders).
 
 This auditor does **not** replace a human pass. The 80% bar was not moved.
@@ -21,7 +21,7 @@ Hit = `rework` or `limit`. Unfinished L2 notes (`Placeholder`, `in progress`, `b
 | Meets 80% (35/44) | no | **yes** | n/a (this column is leftover vs false alarm, not recall) |
 | L2 dual-run classification drift (3 pages × 2) | 0/3 (0%), under 5% | not re-run | not re-run |
 | Planted miss-class set | n/a | L1 6/6, L2 10/10 | same gate, ran first |
-| Pre-fix clone | `git clone --shared` into `/tmp/pptfast-gallery-cal-321748d` | same SVGs in `/tmp/pptfast-gallery-cal-svgs` | HEAD `renderMatrix` of the same 44 ids |
+| Pre-fix clone | `git clone --shared` into `/tmp/pptpress-gallery-cal-321748d` | same SVGs in `/tmp/pptpress-gallery-cal-svgs` | HEAD `renderMatrix` of the same 44 ids |
 | Fixture bytes | 0.82MB (budget 15MB) | planted PNG few-shots ~0.26MB extra under `rubric/examples/` | same |
 | Offline render | corpus assets are `data:` JPEGs, `findRemoteAssetRef` is null | unchanged | unchanged |
 

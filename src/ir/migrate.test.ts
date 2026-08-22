@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { PptfastError } from "../errors"
+import { PptpressError } from "../errors"
 import { migrateBloomToClassroom, migrateChromeToBranding, migrateIrV3ToV4, migrateLogoWallToImageGrid } from "./migrate"
 import { PptxIRV3Schema, type PptxIRV3 } from "./legacy-v3"
 import { STRATEGY_VALUES, PACING_VALUES, AUDIENCE_VALUES } from "./narrative-values"
@@ -259,7 +259,7 @@ describe("migrateChromeToBranding", () => {
 
   it("both keys is a hard error naming chrome and branding", () => {
     const input = { chrome: "full", branding: "minimal" }
-    expect(() => migrateChromeToBranding(input)).toThrow(PptfastError)
+    expect(() => migrateChromeToBranding(input)).toThrow(PptpressError)
     expect(() => migrateChromeToBranding(input)).toThrow(/chrome/)
     expect(() => migrateChromeToBranding(input)).toThrow(/branding/)
   })

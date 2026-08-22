@@ -100,7 +100,7 @@ describe("generatePptxBlob speaker notes export", () => {
   it("omitted-notes export is byte-identical across repeated calls (P0 hardening Task 4 pinned every zip timestamp, so this is now a whole-file hash — see generate-determinism.test.ts) — the invariant an omitted-notes deck's export never changes because of this feature", async () => {
     const { generatePptxBlob } = await import("./generate")
     const ir = makeIR([
-      { type: "cover", heading: "pptfast", subheading: "Stable, editable PPTX from a semantic IR", components: [] },
+      { type: "cover", heading: "pptpress", subheading: "Stable, editable PPTX from a semantic IR", components: [] },
       { type: "chapter", heading: "Why an IR", components: [] },
       {
         type: "content",

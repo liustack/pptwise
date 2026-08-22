@@ -61,7 +61,7 @@ export const schema = z
   })
   .strict()
   // Schema guidance (device_mockup wave's Important-1 fix established this
-  // precedent — `pptfast schema`/`irJsonSchema()` is the surface a model
+  // precedent — `pptpress schema`/`irJsonSchema()` is the surface a model
   // actually reads before writing IR, so the flowchart-vs-cycle selection
   // test this schema's own top comment already reasons through needs to
   // live here too, not just in a source comment nobody consuming the JSON

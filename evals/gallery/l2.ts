@@ -12,7 +12,7 @@ import type { ProcessRunner } from "@/cli/image-generators"
 import type { L1Result } from "./l1"
 import { maybePlaywrightPng, rasterSvgToPng } from "./raster"
 
-export const VERDICT_SCHEMA_NAME = "pptfast-gallery-verdicts/3"
+export const VERDICT_SCHEMA_NAME = "pptpress-gallery-verdicts/3"
 
 export const L2_JSON_SCHEMA = {
   type: "object",
@@ -98,7 +98,7 @@ function buildPrompt(
       ? "L1 reported no geometry findings."
       : `L1 findings:\n${l1.findings.map((f) => `- ${f.code}: ${f.message}`).join("\n")}`
   return [
-    "You are auditing one pptfast gallery slide against a written rubric.",
+    "You are auditing one pptpress gallery slide against a written rubric.",
     "You must look at page.png first (and page-browser.png if present). Then output the JSON.",
     'A note that says you did not look, "未看图", "awaiting visual inspection", or "Placeholder while inspecting" is never a valid pass.',
     hasBrowserPng ? "page-browser.png is a real-browser screenshot of the same SVG." : "",
@@ -203,7 +203,7 @@ export interface JudgeL2Input {
 }
 
 export async function judgeL2(input: JudgeL2Input): Promise<L2Verdict> {
-  const workdir = input.workdir ?? mkdtempSync(join(tmpdir(), "pptfast-l2-"))
+  const workdir = input.workdir ?? mkdtempSync(join(tmpdir(), "pptpress-l2-"))
   const rubricDir = input.rubricDir ?? DEFAULT_RUBRIC_DIR
   const run = input.run ?? defaultProcessRunner
   const grokBin = input.grokBin ?? "grok"

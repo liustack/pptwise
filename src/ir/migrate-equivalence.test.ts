@@ -678,7 +678,7 @@ describe("v3 → v4 migration equivalence (task 1 hard gate, spec §10/§12)", (
       // `.audit.json` goldens stayed byte-identical. PPTX part-name sets
       // stayed identical. Shape-count delta matches the SVG trio 1:1:
       //   - `basic`: SVG slides 2/3 (content) lose the rule plus two meta
-      //     texts (`2026-07-17` / `pptfast`). PPTX `slide{3,4}.xml` lose
+      //     texts (`2026-07-17` / `pptpress`). PPTX `slide{3,4}.xml` lose
       //     three shapes each (14->11, 18->15).
       //   - `scenarioBearing`: SVG slides 1/2/3 (content) lose the rule
       //     only (this fixture has no meta). PPTX `slide{2,3,4}.xml` lose
@@ -1054,6 +1054,14 @@ describe("v3 → v4 migration equivalence (task 1 hard gate, spec §10/§12)", (
       // verdict-index knobs + banner-motif rule), `slide2.xml`
       // (ghost-rule-chapter), `slide5.xml` (pinned banner-ending, motif
       // only). File-name set unchanged. Journal fixtures not recaptured.
+      //
+      // Recaptured (pptpress rename, 2026-08-23). Fixture text on `basic`
+      // changed `pptfast` → `pptpress` (cover heading, organization meta,
+      // ending colophon). Replay of `PptxIRV3Schema.parse` →
+      // `migrateIrV3ToV4` → `renderSlideSvg` / `generatePptxBlob` /
+      // `auditDeck`. Only `basic` `.svg.json` and `.pptx-zip.json` moved.
+      // `.audit.json` findings stayed empty. Journal fixtures do not name
+      // the product and were not recaptured.
       it("exports a PPTX byte-identical (docProps/core.xml timestamp excluded) to the base-commit capture", async () => {
         const goldenZipMap = readGoldenJson<Record<string, string>>(`${name}.pptx-zip`)
         const blob = await generatePptxBlob(v4)

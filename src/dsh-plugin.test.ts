@@ -4,7 +4,8 @@
 // with `new URL(..., import.meta.url)` + `fileURLToPath` at module scope,
 // which the repo-default jsdom environment breaks (jsdom swaps global URL —
 // same reason plugin-manifest.test.ts reads files by process.cwd()).
-import { readFileSync } from "node:fs"
+import { mkdtempSync, readFileSync, rmSync } from "node:fs"
+import { tmpdir } from "node:os"
 import { dirname, join } from "node:path"
 
 // The plugin is plain dependency-free JS by design (no build step, no dsh
@@ -13,6 +14,17 @@ import { dirname, join } from "node:path"
 import * as plugin from "../dsh/index.js"
 
 const ROOT = process.cwd()
+
+// Capture first. `plugin.apply()` always `createPreviewService()` →
+// `previewRoot()` with no opts, which copies ~/.pptfast into ~/.pptpress
+// when the new dir is missing. File-level isolation is the default so
+// skill-registration tests cannot see the real homedir. Per-test scratch
+// homes below still override this.
+const ORIGINAL_HOME = process.env.PPTPRESS_HOME
+const ORIGINAL_LEGACY_HOME = process.env.PPTFAST_HOME
+const FILE_HOME = mkdtempSync(join(tmpdir(), "pptpress-dsh-plugin-home-"))
+process.env.PPTPRESS_HOME = FILE_HOME
+delete process.env.PPTFAST_HOME
 
 /** DSH rc.6's skill-name grammar (dsh-skill/lib/index.js SKILL_NAME). */
 const DSH_SKILL_NAME = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
@@ -47,53 +59,53 @@ function applyWithFakeCtx(overrides: { register?: (r: Registration) => () => voi
 
 describe("dsh plugin (skill registration, v0)", () => {
   it("exports the Cordis plugin shape: name, inject, apply", () => {
-    expect(plugin.name).toBe("pptfast")
+    expect(plugin.name).toBe("pptpress")
     // `tools` joined `skills` when the preview tool landed: the skill teaches
-    // the model to drive the CLI, and the tool is what gives pptfast a card of
+    // the model to drive the CLI, and the tool is what gives pptpress a card of
     // its own to preview into.
     expect(plugin.inject).toEqual(["skills", "tools"])
     expect(typeof plugin.apply).toBe("function")
   })
 
-  it("registers exactly one skill named pptfast, valid under DSH's name grammar and clear of built-ins", () => {
+  it("registers exactly one skill named pptpress, valid under DSH's name grammar and clear of built-ins", () => {
     const registered = applyWithFakeCtx()
     expect(registered).toHaveLength(1)
-    expect(registered[0]!.name).toBe("pptfast")
+    expect(registered[0]!.name).toBe("pptpress")
     expect(registered[0]!.name).toMatch(DSH_SKILL_NAME)
     expect(DSH_BUILTIN_SKILLS).not.toContain(registered[0]!.name)
   })
 
   it("registers the real SKILL.md's description and frontmatter-free body", () => {
     const [reg] = applyWithFakeCtx()
-    const raw = readFileSync(join(ROOT, "skills/pptfast/SKILL.md"), "utf8")
+    const raw = readFileSync(join(ROOT, "skills/pptpress/SKILL.md"), "utf8")
     const description = raw.match(/^description:\s*(.+)$/m)![1]!.trim()
     expect(reg!.description).toBe(description)
     // content = preamble + body: never the frontmatter (DSH's runtime
     // registry treats content as body verbatim, no frontmatter parsing)
     expect(reg!.content).not.toMatch(/^---/m)
-    expect(reg!.content).not.toContain("name: pptfast")
-    expect(reg!.content).toContain("# pptfast — deck generation playbook")
+    expect(reg!.content).not.toContain("name: pptpress")
+    expect(reg!.content).toContain("# pptpress — deck generation playbook")
     expect(reg!.source).toBe("bundled")
   })
 
-  it("prepends the DSH runtime preamble mapping `pptfast` onto the package's own CLI (核实 B: profile .bin never enters PATH)", () => {
+  it("prepends the DSH runtime preamble mapping `pptpress` onto the package's own CLI (核实 B: profile .bin never enters PATH)", () => {
     const [reg] = applyWithFakeCtx()
     // The preamble comes first — the model must read the command mapping
-    // before any `pptfast <cmd>` instruction in the body.
+    // before any `pptpress <cmd>` instruction in the body.
     expect(reg!.content.startsWith("## DSH runtime note")).toBe(true)
     const cliPath = reg!.content.match(/node "([^"]+)" <args>/)?.[1]
     expect(cliPath, "preamble must carry an absolute node invocation of the packaged CLI").toBeTruthy()
     expect(cliPath!.endsWith(join("dist", "cli.js"))).toBe(true)
     expect(cliPath!.startsWith("/") || /^[A-Za-z]:[\\/]/.test(cliPath!)).toBe(true)
     // npx fallback stays documented for a missing dist
-    expect(reg!.content).toContain("npx -y @liustack/pptfast")
+    expect(reg!.content).toContain("npx -y @liustack/pptpress")
   })
 
   it("points path/resourceBase at the shipped skill directory", () => {
     const [reg] = applyWithFakeCtx()
-    expect(reg!.path.endsWith(join("skills", "pptfast", "SKILL.md"))).toBe(true)
+    expect(reg!.path.endsWith(join("skills", "pptpress", "SKILL.md"))).toBe(true)
     expect(reg!.resourceBase.kind).toBe("directory")
-    expect(reg!.resourceBase.path.replace(/[\\/]$/, "").endsWith(join("skills", "pptfast"))).toBe(true)
+    expect(reg!.resourceBase.path.replace(/[\\/]$/, "").endsWith(join("skills", "pptpress"))).toBe(true)
   })
 
   it("holds no module-level registration state — a fiber teardown + re-apply registers cleanly (Cordis reversibility)", () => {
@@ -117,7 +129,7 @@ describe("dsh plugin (skill registration, v0)", () => {
           },
         }),
       ).not.toThrow()
-      expect(errors.some((e) => e.includes("[pptfast] skill registration skipped"))).toBe(true)
+      expect(errors.some((e) => e.includes("[pptpress] skill registration skipped"))).toBe(true)
     } finally {
       spy.mockRestore()
     }
@@ -149,15 +161,15 @@ describe("dsh plugin bundle manifest", () => {
     expect(pkg.files).toContain("dsh")
     expect(pkg.files).toContain("cordis.patch.yml")
     // the plugin reads SKILL.md at runtime from the installed package
-    expect(pkg.files).toContain("skills/pptfast/SKILL.md")
-    expect(pkg.files).toContain("skills/pptfast/references")
+    expect(pkg.files).toContain("skills/pptpress/SKILL.md")
+    expect(pkg.files).toContain("skills/pptpress/references")
     expect(pkg.keywords).toEqual(expect.arrayContaining(["dsh", "dsh-plugin"]))
   })
 
-  it("cordis.patch.yml mounts the plugin under the scoped package name (card shows 'pptfast')", () => {
+  it("cordis.patch.yml mounts the plugin under the scoped package name (card shows 'pptpress')", () => {
     const patch = readFileSync(join(ROOT, "cordis.patch.yml"), "utf8")
-    expect(patch).toContain("name: '@liustack/pptfast'")
-    expect(patch).toContain("id: pptfast")
+    expect(patch).toContain("name: '@liustack/pptpress'")
+    expect(patch).toContain("id: pptpress")
   })
 })
 
@@ -228,7 +240,7 @@ interface PreviewService {
 interface PreviewModule {
   createPreviewService: (cliPath: string) => PreviewService
   definePreviewTool: (cliPath: string) => PreviewService["tool"]
-  previewRoot: () => string
+  previewRoot: (opts?: { homedir?: () => string; env?: NodeJS.ProcessEnv }) => string
   PREVIEW_ROUTE: string
   ROUTE_HEADER: string
   ROUTE_HEADER_VALUE: string
@@ -270,6 +282,7 @@ interface PreviewModule {
     SNAPSHOT_FILE: string
     PARTIAL_SUFFIX: string
     OWNER_MARKER: string
+    resetLegacyHomeWarnings: () => void
     PreviewExpired: new (m?: string) => Error
     PreviewUnreadable: new (m?: string) => Error
     PreviewDamaged: new (m?: string) => Error
@@ -281,7 +294,7 @@ async function loadPreviewTool(): Promise<PreviewModule> {
   return import("../dsh/preview-tool.js")
 }
 
-describe("pptfast_preview tool", () => {
+describe("pptpress_preview tool", () => {
   it("shows the model one line and the card the whole deck", async () => {
     // The split this tool exists for. A deck's markup is tens of kilobytes
     // and tells the model nothing it can act on, so it rides
@@ -304,7 +317,7 @@ describe("pptfast_preview tool", () => {
     expect(modelText).not.toContain("<svg")
 
     const meta = tool.output.presentationMeta({}, value)
-    expect(meta.card).toBe("pptfast-preview")
+    expect(meta.card).toBe("pptpress-preview")
     expect(meta.bundle.pages).toHaveLength(1)
   })
 
@@ -381,7 +394,7 @@ async function loadClientBundle(requireImpl: (id: string) => unknown): Promise<C
     // @ts-expect-error untyped on purpose, same as the host half
     await import("../dsh/client.js")
     if (!registered) throw new Error("client bundle registered no factory")
-    expect(registered.id).toBe("@liustack/pptfast")
+    expect(registered.id).toBe("@liustack/pptpress")
     clientFactory = registered.factory
   }
   return clientFactory(requireImpl)
@@ -394,7 +407,7 @@ const fakeReact = {
   useRef: () => ({}),
 }
 
-describe("pptfast preview card (browser half)", () => {
+describe("pptpress preview card (browser half)", () => {
   it("claims the tool.call.toolview key its own tool registers under", async () => {
     // The card and the tool have to agree on one wire name; a typo here
     // simply never renders, which is silent — so it is pinned from both
@@ -409,8 +422,8 @@ describe("pptfast preview card (browser half)", () => {
         register: (s: { name: string; key: string }) => { spec = s },
       },
     })
-    expect(spec).toEqual({ name: "tool.call.toolview", key: "pptfast_preview" })
-    expect(bundle.__testing.TOOL_NAME).toBe("pptfast_preview")
+    expect(spec).toEqual({ name: "tool.call.toolview", key: "pptpress_preview" })
+    expect(bundle.__testing.TOOL_NAME).toBe("pptpress_preview")
   })
 
   it("degrades to a console line rather than taking the turn down with it", async () => {
@@ -444,7 +457,7 @@ describe("pptfast preview card (browser half)", () => {
     expect(bundle.__testing.bundleOf({})).toBeNull()
     expect(bundle.__testing.bundleOf(undefined)).toBeNull()
     expect(
-      bundle.__testing.bundleOf({ meta: { card: "pptfast-preview", bundle: { pages: [{ id: "a" }] } } }),
+      bundle.__testing.bundleOf({ meta: { card: "pptpress-preview", bundle: { pages: [{ id: "a" }] } } }),
     ).toEqual({ pages: [{ id: "a" }] })
   })
 
@@ -517,7 +530,7 @@ describe("preview payload channel", () => {
     // repo's default agent preset runs Code Mode, where every tool is
     // invoked from inside `run_code` and is therefore a sub-call. Verified
     // against a real session log: 34 top-level `run_code` calls, no
-    // `pptfast_preview` among them, and no presentationMeta persisted at
+    // `pptpress_preview` among them, and no presentationMeta persisted at
     // all — the card rendered nothing and nothing said why. The id in the
     // result text is the channel that survives.
     const { definePreviewTool } = await loadPreviewTool()
@@ -529,15 +542,15 @@ describe("preview payload channel", () => {
       audited: true,
       bundle: { pages: [] },
     })[0]!.text
-    expect(text).toContain("pptfast-preview:abc-123")
+    expect(text).toContain("pptpress-preview:abc-123")
     expect(text).not.toContain("<svg")
   })
 
   it("reads that id back out of a result block the way the card does", async () => {
     const bundle = await loadClientBundle(() => ({}))
     const idOf = (bundle.__testing as unknown as { previewIdOf: (b: unknown) => string | null }).previewIdOf
-    expect(idOf({ content: [{ type: "text", text: "pptfast-preview:abc-123 · rendered 4 pages" }] })).toBe("abc-123")
-    expect(idOf({ result: { content: [{ text: "pptfast-preview:zz-9" }] } })).toBe("zz-9")
+    expect(idOf({ content: [{ type: "text", text: "pptpress-preview:abc-123 · rendered 4 pages" }] })).toBe("abc-123")
+    expect(idOf({ result: { content: [{ text: "pptpress-preview:zz-9" }] } })).toBe("zz-9")
     expect(idOf({ content: [{ type: "text", text: "no id here" }] })).toBeNull()
     expect(idOf({})).toBeNull()
   })
@@ -549,8 +562,8 @@ function previewId(tag: string): string {
 }
 
 /**
- * Previews now live under `$PPTFAST_HOME/previews`, so every test below gets
- * its own `PPTFAST_HOME` and nothing here can reach the directory a real
+ * Previews now live under `$PPTPRESS_HOME/previews`, so every test below gets
+ * its own `PPTPRESS_HOME` and nothing here can reach the directory a real
  * installed plugin uses.
  *
  * A home per test, not one per file: the root is shared by every service that
@@ -559,7 +572,6 @@ function previewId(tag: string): string {
  * must not, cannot.
  */
 const scratchDirs = new Set<string>()
-const ORIGINAL_HOME = process.env.PPTFAST_HOME
 
 /** The CLI path and home each service was built with, so a reload can reuse them. */
 const builtWith = new WeakMap<PreviewService, { cliPath: string; home: string }>()
@@ -574,20 +586,20 @@ async function scratchTmp(prefix: string): Promise<string> {
   return dir
 }
 
-/** A private `$PPTFAST_HOME` for one test. */
+/** A private `$PPTPRESS_HOME` for one test. */
 async function scratchHome(tag: string): Promise<string> {
-  return scratchTmp(`pptfast-home-${tag}-`)
+  return scratchTmp(`pptpress-home-${tag}-`)
 }
 
 /** The preview root inside a fresh scratch home, with the env pointed at it. */
 async function scratchRoot(tag: string): Promise<string> {
   const { previewRoot } = await loadPreviewTool()
-  process.env.PPTFAST_HOME = await scratchHome(tag)
+  process.env.PPTPRESS_HOME = await scratchHome(tag)
   return previewRoot()
 }
 
 function uniqueCli(tag: string): string {
-  return `/pptfast-test/${tag}/${Math.random().toString(36).slice(2)}/cli.js`
+  return `/pptpress-test/${tag}/${Math.random().toString(36).slice(2)}/cli.js`
 }
 
 async function makeService(
@@ -597,7 +609,7 @@ async function makeService(
   const cliPath = options.cliPath ?? uniqueCli(tag)
   const home = options.home ?? (await scratchHome(tag))
   // Set before construction: the service reads its root once, at construction.
-  process.env.PPTFAST_HOME = home
+  process.env.PPTPRESS_HOME = home
   const { createPreviewService } = await loadPreviewTool()
   const svc = createPreviewService(cliPath)
   builtWith.set(svc, { cliPath, home })
@@ -627,7 +639,7 @@ async function upgrade(svc: PreviewService, version = "0.99.0"): Promise<Preview
   const { home } = originOf(svc)
   return makeService("upgrade", {
     home,
-    cliPath: `/pptfast-test/.pnpm/@liustack+pptfast@${version}/node_modules/@liustack/pptfast/dist/cli.js`,
+    cliPath: `/pptpress-test/.pnpm/@liustack+pptpress@${version}/node_modules/@liustack/pptpress/dist/cli.js`,
   })
 }
 
@@ -655,8 +667,11 @@ async function seedPreview(
 
 afterAll(async () => {
   const { rm } = await import("node:fs/promises")
-  if (ORIGINAL_HOME === undefined) delete process.env.PPTFAST_HOME
-  else process.env.PPTFAST_HOME = ORIGINAL_HOME
+  if (ORIGINAL_HOME === undefined) delete process.env.PPTPRESS_HOME
+  else process.env.PPTPRESS_HOME = ORIGINAL_HOME
+  if (ORIGINAL_LEGACY_HOME === undefined) delete process.env.PPTFAST_HOME
+  else process.env.PPTFAST_HOME = ORIGINAL_LEGACY_HOME
+  rmSync(FILE_HOME, { recursive: true, force: true })
   await Promise.all([...scratchDirs].map((d) => rm(d, { recursive: true, force: true }).catch(() => {})))
 })
 
@@ -669,8 +684,8 @@ describe("preview recall across restarts", () => {
     //
     // The record living *inside* the directory it describes is what removes
     // the half-dead state the old split layout made ordinary: a record in
-    // `$TMPDIR/pptfast-previews/<hash>/<id>.json` pointing at a deck in
-    // `$TMPDIR/pptfast-preview-XXXX/` could lose either half on its own.
+    // `$TMPDIR/pptpress-previews/<hash>/<id>.json` pointing at a deck in
+    // `$TMPDIR/pptpress-preview-XXXX/` could lose either half on its own.
     const { __testing } = await loadPreviewTool()
     const { join } = await import("node:path")
     const svc = await makeService("recall")
@@ -710,9 +725,9 @@ describe("preview recall across restarts", () => {
 
   it("keeps every preview id resolvable after the plugin is upgraded", async () => {
     // The defect this whole change exists for, said as a test. Records used to
-    // live in `$TMPDIR/pptfast-previews/<sha256(cliPath)[0:16]>/`, and an npm
+    // live in `$TMPDIR/pptpress-previews/<sha256(cliPath)[0:16]>/`, and an npm
     // install path carries the package version
-    // (`.pnpm/@liustack+pptfast@0.19.2/…`), so the bucket name changed on
+    // (`.pnpm/@liustack+pptpress@0.19.2/…`), so the bucket name changed on
     // every upgrade and every previous preview went dead on the spot.
     //
     // `upgrade()` is exactly that event: same machine, same user, same home,
@@ -753,10 +768,10 @@ describe("preview recall across restarts", () => {
     const { PREVIEW_ROUTE } = await loadPreviewTool()
 
     const home = await scratchHome("upgrade-e2e")
-    const installs = await scratchTmp("pptfast-installs-")
+    const installs = await scratchTmp("pptpress-installs-")
     /** A CLI installed the way npm installs one: under a versioned directory. */
     const installAt = async (version: string, source: string) => {
-      const dir = join(installs, ".pnpm", `@liustack+pptfast@${version}`, "node_modules", "@liustack", "pptfast", "dist")
+      const dir = join(installs, ".pnpm", `@liustack+pptpress@${version}`, "node_modules", "@liustack", "pptpress", "dist")
       await mkdir(dir, { recursive: true })
       const cliPath = join(dir, "cli.mjs")
       await copyFile(source, cliPath)
@@ -789,23 +804,29 @@ describe("preview recall across restarts", () => {
     // The property behind the test above, checked directly so it cannot be
     // satisfied by luck. The root is a function of the user's home alone.
     const { previewRoot, createPreviewService, __testing } = await loadPreviewTool()
-    const { homedir } = await import("node:os")
     const { join } = await import("node:path")
 
-    const original = process.env.PPTFAST_HOME
+    const original = process.env.PPTPRESS_HOME
+    const originalLegacy = process.env.PPTFAST_HOME
+    const fakeHome = await scratchTmp("preview-default-home-")
     try {
+      delete process.env.PPTPRESS_HOME
       delete process.env.PPTFAST_HOME
-      // Follows the CLI's own `pptfastHome()` convention (src/cli/home.ts),
-      // rather than inventing a second home for the plugin.
-      expect(previewRoot()).toBe(join(homedir(), ".pptfast", __testing.PREVIEW_DIR))
-      const a = createPreviewService("/opt/.pnpm/@liustack+pptfast@0.19.2/node_modules/x/dist/cli.js")
-      const b = createPreviewService("/somewhere/else/@liustack+pptfast@9.9.9/dist/cli.js")
+      // Follows the CLI's own `pptpressHome()` convention (src/cli/home.ts),
+      // rather than inventing a second home for the plugin. Injectable
+      // homedir so this never copies a real ~/.pptfast.
+      expect(previewRoot({ homedir: () => fakeHome })).toBe(join(fakeHome, ".pptpress", __testing.PREVIEW_DIR))
+      process.env.PPTPRESS_HOME = fakeHome
+      const a = createPreviewService("/opt/.pnpm/@liustack+pptpress@0.19.2/node_modules/x/dist/cli.js")
+      const b = createPreviewService("/somewhere/else/@liustack+pptpress@9.9.9/dist/cli.js")
       expect(a.root).toBe(b.root)
       expect(a.root).toBe(previewRoot())
       expect(a.root).not.toMatch(/\d+\.\d+\.\d+/)
     } finally {
-      if (original === undefined) delete process.env.PPTFAST_HOME
-      else process.env.PPTFAST_HOME = original
+      if (original === undefined) delete process.env.PPTPRESS_HOME
+      else process.env.PPTPRESS_HOME = original
+      if (originalLegacy === undefined) delete process.env.PPTFAST_HOME
+      else process.env.PPTFAST_HOME = originalLegacy
     }
   })
 
@@ -817,13 +838,19 @@ describe("preview recall across restarts", () => {
     const { tmpdir } = await import("node:os")
     const { resolve } = await import("node:path")
 
-    const original = process.env.PPTFAST_HOME
+    const original = process.env.PPTPRESS_HOME
+    const originalLegacy = process.env.PPTFAST_HOME
     try {
+      delete process.env.PPTPRESS_HOME
       delete process.env.PPTFAST_HOME
-      expect(previewRoot().startsWith(resolve(tmpdir()))).toBe(false)
+      // A path that is not under $TMPDIR and does not exist on disk, so the
+      // default-dir migration never copies a real ~/.pptfast.
+      expect(previewRoot({ homedir: () => "/pptpress-not-a-real-home" }).startsWith(resolve(tmpdir()))).toBe(false)
     } finally {
-      if (original === undefined) delete process.env.PPTFAST_HOME
-      else process.env.PPTFAST_HOME = original
+      if (original === undefined) delete process.env.PPTPRESS_HOME
+      else process.env.PPTPRESS_HOME = original
+      if (originalLegacy === undefined) delete process.env.PPTFAST_HOME
+      else process.env.PPTFAST_HOME = originalLegacy
     }
   })
 
@@ -974,7 +1001,7 @@ describe("who can see whose previews", () => {
     expect(await second.recallAnywhere(id)).toMatchObject({ target: "a.json", outDir: join(first.root, id) })
   })
 
-  it("keeps a different $PPTFAST_HOME entirely separate, which is how the tests stay off each other", async () => {
+  it("keeps a different $PPTPRESS_HOME entirely separate, which is how the tests stay off each other", async () => {
     const first = await makeService("home-a")
     const second = await makeService("home-b")
     expect(first.root).not.toBe(second.root)
@@ -984,28 +1011,94 @@ describe("who can see whose previews", () => {
     expect(await second.recallAnywhere(id)).toBeUndefined()
   })
 
-  it("reads $PPTFAST_HOME the way the CLI does, including the empty-string case", async () => {
-    // `PPTFAST_HOME=` in a shell profile sets the variable to the empty string
+  it("reads $PPTPRESS_HOME the way the CLI does, including the empty-string case", async () => {
+    // `PPTPRESS_HOME=` in a shell profile sets the variable to the empty string
     // rather than unsetting it, and `join("", "previews")` is a relative path —
     // which would put a user's decks wherever the harness happened to be
     // started from, and would make the root move when the cwd did.
     const { previewRoot, __testing } = await loadPreviewTool()
-    const { homedir } = await import("node:os")
     const { isAbsolute, join } = await import("node:path")
-    const original = process.env.PPTFAST_HOME
+    const original = process.env.PPTPRESS_HOME
+    const originalLegacy = process.env.PPTFAST_HOME
+    const fakeHome = await scratchTmp("preview-empty-home-")
     try {
-      const fallback = join(homedir(), ".pptfast", __testing.PREVIEW_DIR)
+      const fallback = join(fakeHome, ".pptpress", __testing.PREVIEW_DIR)
+      delete process.env.PPTPRESS_HOME
       delete process.env.PPTFAST_HOME
-      expect(previewRoot()).toBe(fallback)
-      process.env.PPTFAST_HOME = ""
-      expect(previewRoot()).toBe(fallback)
-      process.env.PPTFAST_HOME = "relative/home"
+      expect(previewRoot({ homedir: () => fakeHome })).toBe(fallback)
+      process.env.PPTPRESS_HOME = ""
+      expect(previewRoot({ homedir: () => fakeHome })).toBe(fallback)
+      process.env.PPTPRESS_HOME = "relative/home"
       expect(isAbsolute(previewRoot())).toBe(true)
-      process.env.PPTFAST_HOME = "/somewhere/else"
+      process.env.PPTPRESS_HOME = "/somewhere/else"
       expect(previewRoot()).toBe(join("/somewhere/else", __testing.PREVIEW_DIR))
     } finally {
-      if (original === undefined) delete process.env.PPTFAST_HOME
-      else process.env.PPTFAST_HOME = original
+      if (original === undefined) delete process.env.PPTPRESS_HOME
+      else process.env.PPTPRESS_HOME = original
+      if (originalLegacy === undefined) delete process.env.PPTFAST_HOME
+      else process.env.PPTFAST_HOME = originalLegacy
+    }
+  })
+
+  it("copies ~/.pptfast into ~/.pptpress once, matching src/cli/home.ts", async () => {
+    const { previewRoot, __testing } = await loadPreviewTool()
+    const { mkdir, writeFile, readFile } = await import("node:fs/promises")
+    const { existsSync } = await import("node:fs")
+    const { join } = await import("node:path")
+    const original = process.env.PPTPRESS_HOME
+    const originalLegacy = process.env.PPTFAST_HOME
+    const fakeHome = await scratchTmp("preview-migrate-home-")
+    try {
+      delete process.env.PPTPRESS_HOME
+      delete process.env.PPTFAST_HOME
+      __testing.resetLegacyHomeWarnings()
+      const legacy = join(fakeHome, ".pptfast")
+      await mkdir(join(legacy, "previews"), { recursive: true })
+      await writeFile(join(legacy, "config.json"), '{"ok":true}\n')
+      const root = previewRoot({ homedir: () => fakeHome })
+      expect(root).toBe(join(fakeHome, ".pptpress", __testing.PREVIEW_DIR))
+      expect(existsSync(legacy)).toBe(true)
+      expect(await readFile(join(fakeHome, ".pptpress", "config.json"), "utf8")).toBe('{"ok":true}\n')
+    } finally {
+      if (original === undefined) delete process.env.PPTPRESS_HOME
+      else process.env.PPTPRESS_HOME = original
+      if (originalLegacy === undefined) delete process.env.PPTFAST_HOME
+      else process.env.PPTFAST_HOME = originalLegacy
+    }
+  })
+
+  it("copies a symlink ~/.pptfast as a real directory, matching src/cli/home.ts", async () => {
+    const { previewRoot, __testing } = await loadPreviewTool()
+    const { mkdir, writeFile, readFile } = await import("node:fs/promises")
+    const { lstatSync, symlinkSync } = await import("node:fs")
+    const { join } = await import("node:path")
+    const original = process.env.PPTPRESS_HOME
+    const originalLegacy = process.env.PPTFAST_HOME
+    const fakeHome = await scratchTmp("preview-migrate-symlink-")
+    try {
+      delete process.env.PPTPRESS_HOME
+      delete process.env.PPTFAST_HOME
+      __testing.resetLegacyHomeWarnings()
+      const payload = join(fakeHome, "legacy-payload")
+      const legacy = join(fakeHome, ".pptfast")
+      await mkdir(join(payload, "previews"), { recursive: true })
+      await writeFile(join(payload, "config.json"), '{"ok":true}\n')
+      try {
+        symlinkSync(payload, legacy, "dir")
+      } catch {
+        return
+      }
+      const root = previewRoot({ homedir: () => fakeHome })
+      expect(root).toBe(join(fakeHome, ".pptpress", __testing.PREVIEW_DIR))
+      expect(lstatSync(join(fakeHome, ".pptpress")).isSymbolicLink()).toBe(false)
+      expect(lstatSync(join(fakeHome, ".pptpress")).isDirectory()).toBe(true)
+      expect(lstatSync(legacy).isSymbolicLink()).toBe(true)
+      expect(await readFile(join(fakeHome, ".pptpress", "config.json"), "utf8")).toBe('{"ok":true}\n')
+    } finally {
+      if (original === undefined) delete process.env.PPTPRESS_HOME
+      else process.env.PPTPRESS_HOME = original
+      if (originalLegacy === undefined) delete process.env.PPTFAST_HOME
+      else process.env.PPTFAST_HOME = originalLegacy
     }
   })
 })
@@ -1151,7 +1244,7 @@ async function fakeCli(
 ): Promise<string> {
   const { writeFile } = await import("node:fs/promises")
   const { join } = await import("node:path")
-  const home = await scratchTmp("pptfast-fakecli-")
+  const home = await scratchTmp("pptpress-fakecli-")
   const cliPath = join(home, "cli.mjs")
   await writeFile(cliPath, FAKE_CLI_SOURCE)
   await writeFile(join(home, "cli.log"), "")
@@ -1200,7 +1293,7 @@ async function deckFixture(
 ): Promise<{ deck: string; logoPath: string }> {
   const { mkdir, writeFile } = await import("node:fs/promises")
   const { join } = await import("node:path")
-  const src = await scratchTmp("pptfast-src-")
+  const src = await scratchTmp("pptpress-src-")
   await mkdir(join(src, "assets"), { recursive: true })
   const logoPath = join(src, "assets", "logo.png")
   await writeFile(logoPath, pngWith(logo))
@@ -1383,18 +1476,18 @@ describe("preview route (the handler DSH actually calls)", () => {
     // looking for a retention setting; a user who reads this goes looking in
     // the directory that is named for them.
     const { previewRoot, __testing } = await loadPreviewTool()
-    const original = process.env.PPTFAST_HOME
+    const original = process.env.PPTPRESS_HOME
     try {
-      process.env.PPTFAST_HOME = "/tmp/pptfast-copy-check"
+      process.env.PPTPRESS_HOME = "/tmp/pptpress-copy-check"
       const page = __testing.missingPage("the rendered deck for this preview is gone")
       expect(page).not.toMatch(/expired/i)
       expect(page).not.toMatch(/temporary|temp directory/i)
       expect(page).toContain(previewRoot())
       expect(page).toContain("until you delete them")
-      expect(page).toContain("pptfast_preview")
+      expect(page).toContain("pptpress_preview")
     } finally {
-      if (original === undefined) delete process.env.PPTFAST_HOME
-      else process.env.PPTFAST_HOME = original
+      if (original === undefined) delete process.env.PPTPRESS_HOME
+      else process.env.PPTPRESS_HOME = original
     }
   })
 
@@ -2127,9 +2220,9 @@ describe("preview route (the handler DSH actually calls)", () => {
     await seedPreview(svc.root, id, {
       record: {
         target: "old.json",
-        outDir: "/var/folders/xx/T/pptfast-preview-abc123",
-        snapshot: "/var/folders/xx/T/pptfast-preview-abc123/snapshot.ir.json",
-        pptxPath: "/var/folders/xx/T/pptfast-preview-abc123/old.pptx",
+        outDir: "/var/folders/xx/T/pptpress-preview-abc123",
+        snapshot: "/var/folders/xx/T/pptpress-preview-abc123/snapshot.ir.json",
+        pptxPath: "/var/folders/xx/T/pptpress-preview-abc123/old.pptx",
         // A relative escape in the one field that does become a path.
         pptxFile: "../../../etc/passwd",
       },
@@ -2415,7 +2508,7 @@ describe("publishing a preview", () => {
     const { join } = await import("node:path")
     const { fileURLToPath } = await import("node:url")
 
-    const dir = await scratchTmp("pptfast-hooked-")
+    const dir = await scratchTmp("pptpress-hooked-")
     await writeFile(
       join(dir, "fs-hook.mjs"),
       [
@@ -2456,7 +2549,7 @@ describe("publishing a preview", () => {
     const modulePath = options.killBeforePublish
       ? await fsHookModule()
       : fileURLToPath(new URL("../dsh/preview-tool.js", import.meta.url))
-    const driver = join(await scratchTmp("pptfast-driver-"), "driver.mjs")
+    const driver = join(await scratchTmp("pptpress-driver-"), "driver.mjs")
     await writeFile(
       driver,
       [
@@ -2467,7 +2560,7 @@ describe("publishing a preview", () => {
     )
 
     const child = spawn(process.execPath, [driver], {
-      env: { ...process.env, PPTFAST_HOME: home },
+      env: { ...process.env, PPTPRESS_HOME: home },
       stdio: "ignore",
     })
     // `error` as well as `exit`: a spawn that never starts — `EAGAIN` when the
@@ -2480,11 +2573,11 @@ describe("publishing a preview", () => {
     })
     expect(signal, `the driver was supposed to be killed at ${at}`).toBe("SIGKILL")
     const { previewRoot } = await loadPreviewTool()
-    const original = process.env.PPTFAST_HOME
-    process.env.PPTFAST_HOME = home
+    const original = process.env.PPTPRESS_HOME
+    process.env.PPTPRESS_HOME = home
     const root = previewRoot()
-    if (original === undefined) delete process.env.PPTFAST_HOME
-    else process.env.PPTFAST_HOME = original
+    if (original === undefined) delete process.env.PPTPRESS_HOME
+    else process.env.PPTPRESS_HOME = original
     scratchDirs.add(root)
     return { root, cliPath }
   }
@@ -2809,7 +2902,7 @@ describe("what a preview is allowed to touch", () => {
     const cliPath = await fakeCli()
     const svc = await makeService("symlink-input", { cliPath })
     const { deck } = await deckFixture("LOGO-V1")
-    const linkDir = await scratchTmp("pptfast-link-")
+    const linkDir = await scratchTmp("pptpress-link-")
     const link = join(linkDir, "linked-deck.json")
     await symlink(deck, link)
 
@@ -2832,7 +2925,7 @@ describe("what a preview is allowed to touch", () => {
 
     const cliPath = await fakeCli()
     const svc = await makeService("git-clean", { cliPath })
-    const repo = await scratchTmp("pptfast-repo-")
+    const repo = await scratchTmp("pptpress-repo-")
     await run("git", ["init", "-q"], { cwd: repo })
     await run("git", ["config", "user.email", "t@example.com"], { cwd: repo })
     await run("git", ["config", "user.name", "t"], { cwd: repo })
@@ -2877,7 +2970,7 @@ describe("preview deck snapshot", () => {
     const { mkdir, readFile, writeFile } = await import("node:fs/promises")
     const { join } = await import("node:path")
 
-    const src = await scratchTmp("pptfast-src-")
+    const src = await scratchTmp("pptpress-src-")
     await mkdir(join(src, "assets"), { recursive: true })
     const deck = join(src, "deck.json")
     await writeFile(
@@ -2893,7 +2986,7 @@ describe("preview deck snapshot", () => {
         },
       }),
     )
-    const outDir = await scratchTmp("pptfast-out-")
+    const outDir = await scratchTmp("pptpress-out-")
     const { snapshot } = await __testing.captureSnapshot("/x.js", deck, outDir)
     expect(snapshot).toBe(join(outDir, "snapshot.ir.json"))
 
@@ -2916,13 +3009,13 @@ describe("preview deck snapshot", () => {
     const { mkdir, readFile, writeFile } = await import("node:fs/promises")
     const { join } = await import("node:path")
 
-    const src = await scratchTmp("pptfast-src-")
+    const src = await scratchTmp("pptpress-src-")
     await mkdir(join(src, "assets"), { recursive: true })
     await writeFile(join(src, "assets", "logo.png"), pngWith("BYTES-V1"))
     const deck = join(src, "deck.json")
     await writeFile(deck, JSON.stringify({ assets: { images: { local: { src: "assets/logo.png" } } } }))
 
-    const outDir = await scratchTmp("pptfast-out-")
+    const outDir = await scratchTmp("pptpress-out-")
     const { snapshot } = await __testing.captureSnapshot("/x.js", deck, outDir)
     await writeFile(join(src, "assets", "logo.png"), pngWith("BYTES-V2"))
 
@@ -2940,7 +3033,7 @@ describe("preview deck snapshot", () => {
     const { readFile, writeFile } = await import("node:fs/promises")
     const { join } = await import("node:path")
 
-    const src = await scratchTmp("pptfast-src-")
+    const src = await scratchTmp("pptpress-src-")
     // A PNG that somebody saved as .jpg. The CLI rejects this loudly by
     // design; inlining it would relabel it as valid and lose that error.
     await writeFile(join(src, "mislabelled.jpg"), pngWith("X"))
@@ -2981,7 +3074,7 @@ describe("preview deck snapshot", () => {
     const { __testing } = await loadPreviewTool()
     const { readFile, writeFile } = await import("node:fs/promises")
     const { join } = await import("node:path")
-    const dir = await scratchTmp("pptfast-src-")
+    const dir = await scratchTmp("pptpress-src-")
     const broken = join(dir, "snap.json")
     await writeFile(broken, "{ not json")
     await expect(__testing.inlineLocalImages(broken)).resolves.toBeUndefined()
@@ -2995,7 +3088,7 @@ describe("what the bundle inlines", () => {
   async function bundleDir(sizes: number[]): Promise<string> {
     const { writeFile } = await import("node:fs/promises")
     const { join } = await import("node:path")
-    const dir = await scratchTmp("pptfast-strip-")
+    const dir = await scratchTmp("pptpress-strip-")
     const pages = sizes.map((size, i) => {
       const file = `${String(i + 1).padStart(3, "0")}.svg`
       return { page: i + 1, id: `page-${i + 1}`, file, size }

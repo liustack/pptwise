@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it } from "vitest"
 import {
   buildMeta,
   checkPathSafety,
-  checkPptfastArgs,
+  checkPptpressArgs,
   classifyModelTurn,
   copyQuestionAssets,
   deriveModelTag,
@@ -92,72 +92,72 @@ describe("checkPathSafety", () => {
   })
 })
 
-// ── checkPptfastArgs — run_pptfast subcommand whitelist + path safety ──
+// ── checkPptpressArgs — run_pptpress subcommand whitelist + path safety ──
 
-describe("checkPptfastArgs", () => {
+describe("checkPptpressArgs", () => {
   const workspace = join(sep, "fake", "workspace")
 
   it("allows a whitelisted read-only subcommand with an in-workspace path", () => {
-    expect(checkPptfastArgs(["validate", "deck.json"], workspace)).toEqual({ ok: true })
+    expect(checkPptpressArgs(["validate", "deck.json"], workspace)).toEqual({ ok: true })
   })
 
   it("allows every documented whitelisted subcommand", () => {
     for (const cmd of ["render", "validate", "audit", "asset-brief", "schema", "assemble", "disassemble", "migrate", "themes", "narratives", "preview"]) {
-      expect(checkPptfastArgs([cmd], workspace).ok).toBe(true)
+      expect(checkPptpressArgs([cmd], workspace).ok).toBe(true)
     }
   })
 
   it("allows the one permitted spec sub-subcommand", () => {
-    expect(checkPptfastArgs(["spec", "validate", "deck.spec.json"], workspace)).toEqual({ ok: true })
+    expect(checkPptpressArgs(["spec", "validate", "deck.spec.json"], workspace)).toEqual({ ok: true })
   })
 
   it("rejects other spec sub-subcommands", () => {
-    expect(checkPptfastArgs(["spec", "assemble"], workspace).ok).toBe(false)
+    expect(checkPptpressArgs(["spec", "assemble"], workspace).ok).toBe(false)
   })
 
   it("rejects serve (interactive, out of the neutral tool surface)", () => {
-    expect(checkPptfastArgs(["serve", "deck.json"], workspace).ok).toBe(false)
+    expect(checkPptpressArgs(["serve", "deck.json"], workspace).ok).toBe(false)
   })
 
   it("rejects check-update / self-update (network side effects)", () => {
-    expect(checkPptfastArgs(["check-update"], workspace).ok).toBe(false)
-    expect(checkPptfastArgs(["self-update"], workspace).ok).toBe(false)
+    expect(checkPptpressArgs(["check-update"], workspace).ok).toBe(false)
+    expect(checkPptpressArgs(["self-update"], workspace).ok).toBe(false)
   })
 
   it("rejects removed vocabulary-v4 aliases (plan/scenarios)", () => {
-    expect(checkPptfastArgs(["plan", "validate", "x.json"], workspace).ok).toBe(false)
-    expect(checkPptfastArgs(["scenarios"], workspace).ok).toBe(false)
+    expect(checkPptpressArgs(["plan", "validate", "x.json"], workspace).ok).toBe(false)
+    expect(checkPptpressArgs(["scenarios"], workspace).ok).toBe(false)
   })
 
   it("rejects an unknown subcommand", () => {
-    expect(checkPptfastArgs(["frobnicate"], workspace).ok).toBe(false)
+    expect(checkPptpressArgs(["frobnicate"], workspace).ok).toBe(false)
   })
 
   it("rejects empty args", () => {
-    expect(checkPptfastArgs([], workspace).ok).toBe(false)
+    expect(checkPptpressArgs([], workspace).ok).toBe(false)
   })
 
   it("rejects a path argument escaping the workspace via ..", () => {
-    expect(checkPptfastArgs(["validate", "../../etc/passwd"], workspace).ok).toBe(false)
+    expect(checkPptpressArgs(["validate", "../../etc/passwd"], workspace).ok).toBe(false)
   })
 
   it("rejects an absolute path argument", () => {
-    expect(checkPptfastArgs(["render", "deck.json", "-o", "/tmp/out.pptx"], workspace).ok).toBe(false)
+    expect(checkPptpressArgs(["render", "deck.json", "-o", "/tmp/out.pptx"], workspace).ok).toBe(false)
   })
 
   it("rejects an escaping path passed via --flag=value", () => {
-    expect(checkPptfastArgs(["render", "deck.json", "--output=../outside.pptx"], workspace).ok).toBe(false)
+    expect(checkPptpressArgs(["render", "deck.json", "--output=../outside.pptx"], workspace).ok).toBe(false)
   })
 
   it("allows a safe --flag=value path", () => {
-    expect(checkPptfastArgs(["render", "deck.json", "--output=out.pptx"], workspace)).toEqual({ ok: true })
+    expect(checkPptpressArgs(["render", "deck.json", "--output=out.pptx"], workspace)).toEqual({ ok: true })
   })
 
   it("allows a non-path flag value like a theme id or boolean flag", () => {
-    expect(checkPptfastArgs(["render", "deck.json", "-o", "out.pptx", "--theme", "luxe"], workspace)).toEqual({
+    expect(checkPptpressArgs(["render", "deck.json", "-o", "out.pptx", "--theme", "luxe"], workspace)).toEqual({
       ok: true,
     })
-    expect(checkPptfastArgs(["audit", "deck.json", "--json"], workspace)).toEqual({ ok: true })
+    expect(checkPptpressArgs(["audit", "deck.json", "--json"], workspace)).toEqual({ ok: true })
   })
 })
 

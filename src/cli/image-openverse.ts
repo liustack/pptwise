@@ -2,7 +2,7 @@
  * Openverse search / detail / OAuth token cache. Fetch and sleep are
  * injected so unit tests never hit the network or wait on backoff.
  */
-import { PptfastError } from "../errors"
+import { PptpressError } from "../errors"
 import { VERSION } from "../version"
 import { redactSecrets } from "./redact"
 
@@ -39,7 +39,7 @@ export function resetOpenverseTokenCache(): void {
 }
 
 function userAgent(): string {
-  return `pptfast/${VERSION} (+https://github.com/liustack/pptfast)`
+  return `pptpress/${VERSION} (+https://pptpress.com)`
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -84,14 +84,14 @@ async function fetchOpenverseJson(
     try {
       res = await fetchImpl(url, init)
     } catch (e) {
-      throw new PptfastError(
+      throw new PptpressError(
         redactSecrets(`stock image request failed: ${e instanceof Error ? e.message : String(e)}`, secrets),
       )
     }
     const text = await res.text()
     if (res.status === 429) {
       if (attempt >= 2) {
-        throw new PptfastError(
+        throw new PptpressError(
           `stock image API rate-limited (HTTP 429): ${redactSecrets(text.slice(0, 800), secrets)}`,
         )
       }
@@ -100,12 +100,12 @@ async function fetchOpenverseJson(
       continue
     }
     if (!res.ok) {
-      throw new PptfastError(`stock image API HTTP ${res.status}: ${redactSecrets(text.slice(0, 800), secrets)}`)
+      throw new PptpressError(`stock image API HTTP ${res.status}: ${redactSecrets(text.slice(0, 800), secrets)}`)
     }
     try {
       return JSON.parse(text) as unknown
     } catch {
-      throw new PptfastError(`stock image API returned non-JSON (HTTP ${res.status})`)
+      throw new PptpressError(`stock image API returned non-JSON (HTTP ${res.status})`)
     }
   }
 }
@@ -142,7 +142,7 @@ export async function getOpenverseAccessToken(
   const rec = asRecord(json)
   const accessToken = asString(rec?.access_token)
   const expiresIn = asNumber(rec?.expires_in) ?? 3600
-  if (!accessToken) throw new PptfastError("Openverse token response was missing access_token")
+  if (!accessToken) throw new PptpressError("Openverse token response was missing access_token")
   tokenCache.set(clientId, { accessToken, expiresAt: now() + expiresIn * 1000 })
   return accessToken
 }
@@ -243,11 +243,11 @@ export async function loadOpenverseDetail(
   const json = await fetchOpenverseJson(url, { headers }, fetchImpl, secrets, sleep)
   const license = asString(asRecord(json)?.license)
   if (!isCc0OrPdm(license)) {
-    throw new PptfastError(
+    throw new PptpressError(
       `Openverse photo ${id} is licensed "${license ?? "unknown"}", not cc0/pdm — refusing to download`,
     )
   }
   const hit = parseHit(json)
-  if (!hit) throw new PptfastError(`Openverse photo ${id} was not found`)
+  if (!hit) throw new PptpressError(`Openverse photo ${id} was not found`)
   return hit
 }
