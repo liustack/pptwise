@@ -10,7 +10,7 @@ read_when:
 
 A PPT deck is, at bottom, five orthogonal concerns: a **content model**, a **2D
 layout**, a **visual style**, **time-based interaction** (transitions/animation),
-and a **narrative** that sequences slides. pptfast gives each one exactly one
+and a **narrative** that sequences slides. pptpress gives each one exactly one
 owning layer, so a change in one dimension (say, a new style) never leaks into
 another (layout code stays style-agnostic).
 
@@ -22,7 +22,7 @@ another (layout code stays style-agnostic).
 | Time-based interaction | `meta.animation` in the IR → slide transition / element entrance patches | `src/pptx/` |
 | Narrative | narrative axes (strategy × pacing × audience, named presets) resolving editorial discipline, plus a first-class spec artifact (`deck.spec.json` — locked page order/type/heading, strategy-aware hard gates via `spec validate`) that `assembleDeck`/`disassembleDeck` materialize to and from IR, driving a six-phase spec→fill skill methodology for slide sequencing | `src/spec/`, `src/narrative/`, `skills/` |
 
-The core insight, carried over from the production system pptfast was extracted
+The core insight, carried over from the production system pptpress was extracted
 from: **visual variety comes from tokens × layout library × seed — not
 freeform drawing.** Swapping only color tokens (the shadcn-style reskin) still
 converges on sameness. The layout library is what raises the ceiling — and,
@@ -232,7 +232,7 @@ against the most recent real addition, `data_table`, not predicted):
 Plus, only when they apply: a `src/ir/field-aliases.ts` row in either
 alias table (only if the component needs a synonym rescue); an
 `EVIDENCE_TYPES` insertion when `traits.evidence: true` (the position is
-an editorial call, not mechanical); a `skills/pptfast/SKILL.md`
+an editorial call, not mechanical); a `skills/pptpress/SKILL.md`
 "Component selection" table row, so the authoring skill's own guidance
 knows the type exists; any doc's component-count mention that reads as a
 literal number rather than worded ("every component type"); and a

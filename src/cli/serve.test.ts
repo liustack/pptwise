@@ -32,7 +32,7 @@ const PNG_1PX = Buffer.from(
   "base64",
 )
 
-function makeDir(prefix = "pptfast-serve-"): Promise<string> {
+function makeDir(prefix = "pptpress-serve-"): Promise<string> {
   return mkdtemp(join(tmpdir(), prefix))
 }
 

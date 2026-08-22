@@ -1,5 +1,5 @@
 ---
-"@liustack/pptfast": patch
+"@liustack/pptpress": patch
 ---
 
 A deck with a `cycle` component exports again. Every `cycle` ever rendered was

@@ -93,7 +93,7 @@ describe("Icon component", () => {
 
 describe("Icon component: model pretraining-habit aliases (T0b fix 1)", () => {
   // A weak model's pretraining data remembers the older lucide-react names
-  // ("alert-circle"/"alert-triangle") pptfast never used (this catalog has
+  // ("alert-circle"/"alert-triangle") pptpress never used (this catalog has
   // always spelled these "circle-alert"/"triangle-alert" — see
   // icons/legacy-names.ts). Bench evidence: 6 real validate failures across
   // 3 models, .issues/notes/quality-evidence.md item 1. These aliases

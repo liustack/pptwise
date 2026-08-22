@@ -1,6 +1,6 @@
 ---
-summary: 'skills/pptfast/references/components.md 的中文阅读镜像'
-mirror_of: skills/pptfast/references/components.md
+summary: 'skills/pptpress/references/components.md 的中文阅读镜像'
+mirror_of: skills/pptpress/references/components.md
 ---
 
 # 组件指南
@@ -25,7 +25,7 @@ mirror_of: skills/pptfast/references/components.md
 
 `device_mockup` 把一份资产框进一个主题化的浏览器窗口或手机机身，而不是一个普通带边框的矩形——它只为一件事存在：一张截图需要被读成「一个真实的产品，正在运行」，而不是「slide 上的一张图」。内容是软件/App/仪表盘的截图，且这一页的论点就是「这个产品是真的、正在正常工作」时用它。除此之外——普通照片、示意图、插画,或者只是顺带用截图说明一个观点而不是断言「这在真实运行」——都用 `image`。把不是产品截图的内容硬套 `device_mockup`，读出来只是个奇怪的装饰边框，不是证据。
 
-字段：`device`（`"browser"` 或 `"phone"`，必填，pptfast 不猜）、`asset_id`（语义同 `image`）、可选 `caption`，以及——仅 `browser` 款——可选的 `url`，渲染为地址栏文字（这是「这是真的在浏览器里跑」这件事上最强的信号）。`phone` 款没有地址栏，`validate` 会硬拒绝在 `phone` 上设置 `url`。屏幕内容永远铺满裁切（cover）——不像 `image` 那样有 `fit` 可选：真实设备的屏幕就是边到边铺满的。故意不提供其它装饰选项——没有倾斜/透视、没有暗色窗框开关、没有多设备并排——窗框配色完全由主题 token 决定。
+字段：`device`（`"browser"` 或 `"phone"`，必填，pptpress 不猜）、`asset_id`（语义同 `image`）、可选 `caption`，以及——仅 `browser` 款——可选的 `url`，渲染为地址栏文字（这是「这是真的在浏览器里跑」这件事上最强的信号）。`phone` 款没有地址栏，`validate` 会硬拒绝在 `phone` 上设置 `url`。屏幕内容永远铺满裁切（cover）——不像 `image` 那样有 `fit` 可选：真实设备的屏幕就是边到边铺满的。故意不提供其它装饰选项——没有倾斜/透视、没有暗色窗框开关、没有多设备并排——窗框配色完全由主题 token 决定。
 
 ### 人员卡片 vs. row/icon cards
 

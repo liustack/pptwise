@@ -1,5 +1,5 @@
 ---
-"@liustack/pptfast": minor
+"@liustack/pptpress": minor
 ---
 
 Every theme now says which cover it wants. Ten themes gain or extend a cover

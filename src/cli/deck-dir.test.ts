@@ -3,7 +3,7 @@ import { mkdir, mkdtemp, readFile, readdir, stat, writeFile } from "node:fs/prom
 import { tmpdir } from "node:os"
 import { join, resolve } from "node:path"
 import { afterEach, describe, expect, it } from "vitest"
-import { PptfastError } from "../errors"
+import { PptpressError } from "../errors"
 import {
   assertSafeFileSegment,
   isDeckDirectory,
@@ -14,7 +14,7 @@ import {
 } from "./deck-dir"
 
 function tmp(): Promise<string> {
-  return mkdtemp(join(tmpdir(), "pptfast-deckdir-"))
+  return mkdtemp(join(tmpdir(), "pptpress-deckdir-"))
 }
 
 /** 4 pages clears the "spacious" pacing's page-count floor (spec §5:
@@ -50,22 +50,22 @@ describe("assertSafeFileSegment (W5 whole-branch review finding 1, CRITICAL, CWE
   })
 
   it("rejects an id containing '../' segments, naming the id, its context, and the reason", () => {
-    expect(() => assertSafeFileSegment("../../../../escape", "slide id")).toThrow(PptfastError)
+    expect(() => assertSafeFileSegment("../../../../escape", "slide id")).toThrow(PptpressError)
     expect(() => assertSafeFileSegment("../../../../escape", "slide id")).toThrow(
       'slide id "../../../../escape" is not a safe file name — ids used as page/asset file names must not contain path separators or ".."',
     )
   })
 
   it("rejects an id that is exactly '..'", () => {
-    expect(() => assertSafeFileSegment("..", "asset id")).toThrow(PptfastError)
+    expect(() => assertSafeFileSegment("..", "asset id")).toThrow(PptpressError)
   })
 
   it("rejects an absolute id", () => {
-    expect(() => assertSafeFileSegment("/etc/passwd", "asset id")).toThrow(PptfastError)
+    expect(() => assertSafeFileSegment("/etc/passwd", "asset id")).toThrow(PptpressError)
   })
 
   it("rejects an id containing a backslash", () => {
-    expect(() => assertSafeFileSegment("..\\..\\escape", "asset id")).toThrow(PptfastError)
+    expect(() => assertSafeFileSegment("..\\..\\escape", "asset id")).toThrow(PptpressError)
   })
 
   it("names the context passed in, so the thrown message points at which field was unsafe", () => {
@@ -98,15 +98,15 @@ describe("isDeckDirectory", () => {
 })
 
 describe("resolveDeckTarget", () => {
-  const originalHome = process.env.PPTFAST_HOME
+  const originalHome = process.env.PPTPRESS_HOME
 
   afterEach(() => {
-    if (originalHome === undefined) delete process.env.PPTFAST_HOME
-    else process.env.PPTFAST_HOME = originalHome
+    if (originalHome === undefined) delete process.env.PPTPRESS_HOME
+    else process.env.PPTPRESS_HOME = originalHome
   })
 
   it("rejects an empty target (W5 whole-branch review finding 4)", async () => {
-    await expect(resolveDeckTarget("")).rejects.toThrow(PptfastError)
+    await expect(resolveDeckTarget("")).rejects.toThrow(PptpressError)
     await expect(resolveDeckTarget("")).rejects.toThrow("deck target must not be empty")
   })
 
@@ -145,16 +145,16 @@ describe("resolveDeckTarget", () => {
     expect(await resolveDeckTarget("mydeck", undefined, cwd)).toBe(join(cwd, "mydeck"))
   })
 
-  it("resolves a bare name that does not exist locally to $PPTFAST_HOME/decks/<name> when that candidate exists", async () => {
+  it("resolves a bare name that does not exist locally to $PPTPRESS_HOME/decks/<name> when that candidate exists", async () => {
     const home = await tmp()
-    process.env.PPTFAST_HOME = home
+    process.env.PPTPRESS_HOME = home
     await mkdir(join(home, "decks", "q3-review"), { recursive: true })
     const cwd = await tmp()
     expect(await resolveDeckTarget("q3-review", undefined, cwd)).toBe(join(home, "decks", "q3-review"))
   })
 
   it("honors config.decksDir as an override for the bare-name case, when that candidate exists", async () => {
-    process.env.PPTFAST_HOME = await tmp()
+    process.env.PPTPRESS_HOME = await tmp()
     const teamDecks = await tmp()
     await mkdir(join(teamDecks, "q3-review"), { recursive: true })
     const cwd = await tmp()
@@ -164,7 +164,7 @@ describe("resolveDeckTarget", () => {
   describe("typo'd bare-name fallback (W5 review fix: neither candidate exists)", () => {
     it("returns the local (cwd-resolved) path, not a decksRoot guess, when neither candidate exists", async () => {
       const home = await tmp()
-      process.env.PPTFAST_HOME = home
+      process.env.PPTPRESS_HOME = home
       const cwd = await tmp()
       // Neither `<cwd>/typo.json` nor `<home>/decks/typo.json` exists on disk.
       expect(await resolveDeckTarget("typo.json", undefined, cwd)).toBe(join(cwd, "typo.json"))
@@ -172,7 +172,7 @@ describe("resolveDeckTarget", () => {
 
     it("still prefers an existing decksRoot candidate over the local path", async () => {
       const home = await tmp()
-      process.env.PPTFAST_HOME = home
+      process.env.PPTPRESS_HOME = home
       await mkdir(join(home, "decks", "q3-review"), { recursive: true })
       const cwd = await tmp()
       expect(await resolveDeckTarget("q3-review", undefined, cwd)).toBe(join(home, "decks", "q3-review"))
@@ -295,9 +295,9 @@ describe("readDeckDir", () => {
   })
 
   describe("missing spec file", () => {
-    it("throws a PptfastError suggesting `pptfast spec validate` and the expected layout", async () => {
+    it("throws a PptpressError suggesting `pptpress spec validate` and the expected layout", async () => {
       const dir = await tmp()
-      await expect(readDeckDir(dir)).rejects.toThrow(/pptfast spec validate/)
+      await expect(readDeckDir(dir)).rejects.toThrow(/pptpress spec validate/)
       await expect(readDeckDir(dir)).rejects.toThrow(/pages\/<page-id>\.json/)
       await expect(readDeckDir(dir)).rejects.toThrow(dir)
     })
@@ -307,23 +307,23 @@ describe("readDeckDir", () => {
   // readDeckDir (via readSpecFile, ./deck-dir.ts) must (a) never fall back to
   // reading the pre-rename deck.plan.json directly, (b) hard-error, not guess,
   // when both files are present in the same directory, and (c) point a
-  // plan-only directory at `pptfast migrate` instead of a generic
+  // plan-only directory at `pptpress migrate` instead of a generic
   // "not a deck project" message.
   describe("legacy deck.plan.json handling (spec §9.2)", () => {
     it("does not read a deck.plan.json directly — a plan-only directory is treated as missing a spec", async () => {
       const dir = await tmp()
       await writeFile(join(dir, "deck.plan.json"), JSON.stringify(makePlan()))
-      await expect(readDeckDir(dir)).rejects.toThrow(PptfastError)
+      await expect(readDeckDir(dir)).rejects.toThrow(PptpressError)
       await expect(readDeckDir(dir)).rejects.toThrow(/deck\.plan\.json/)
       await expect(readDeckDir(dir)).rejects.toThrow(/deck\.spec\.json/)
-      await expect(readDeckDir(dir)).rejects.toThrow(/pptfast migrate/)
+      await expect(readDeckDir(dir)).rejects.toThrow(/pptpress migrate/)
     })
 
     it("hard-errors when both deck.plan.json and deck.spec.json exist — never guesses which one wins", async () => {
       const dir = await tmp()
       await writeFile(join(dir, "deck.plan.json"), JSON.stringify(makePlan()))
       await writeDeckSpec(dir)
-      await expect(readDeckDir(dir)).rejects.toThrow(PptfastError)
+      await expect(readDeckDir(dir)).rejects.toThrow(PptpressError)
       await expect(readDeckDir(dir)).rejects.toThrow(/deck\.plan\.json/)
       await expect(readDeckDir(dir)).rejects.toThrow(/deck\.spec\.json/)
       await expect(readDeckDir(dir)).rejects.toThrow(/ambiguous/)

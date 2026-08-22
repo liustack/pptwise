@@ -8,7 +8,7 @@ import { closestMatch } from "./suggest"
  * valid value into the message" behavior (a real icon typo produces a
  * 24,910-char, 1756-option wall. A component-type typo produces a 437-char,
  * 28-option one — borrow-wave B report §3.3 #1/#2) with a nearest-neighbor
- * "did you mean" suggestion, a count, and a pointer to `pptfast schema`
+ * "did you mean" suggestion, a count, and a pointer to `pptpress schema`
  * (the CLI command that prints the full list on request) — never the
  * flattened enumeration itself.
  *
@@ -19,7 +19,7 @@ import { closestMatch } from "./suggest"
  * actually failed (see each function's own doc comment).
  */
 
-const SCHEMA_POINTER = "see `pptfast schema` for the full list"
+const SCHEMA_POINTER = "see `pptpress schema` for the full list"
 
 /**
  * Message-length ceiling this module's own test suite pins for both
@@ -27,7 +27,7 @@ const SCHEMA_POINTER = "see `pptfast schema` for the full list"
  * module exists is that a flattened-candidate-list message has no ceiling at
  * all (it grows with the vocabulary). 500 chars comfortably fits "not a
  * valid X — did you mean the longest plausible candidate name? (N valid X
- * values — see `pptfast schema`)" for every vocabulary this schema has today
+ * values — see `pptpress schema`)" for every vocabulary this schema has today
  * or is likely to grow.
  */
 export const ENUM_ERROR_MESSAGE_MAX_LENGTH = 500
@@ -92,7 +92,7 @@ export function componentTypeError(issue: z.core.$ZodRawIssue<z.core.$ZodIssueIn
       ? (issue.input as Record<string, unknown>)[issue.discriminator]
       : undefined
   if (raw === "logo_wall") {
-    return 'component type "logo_wall" was removed — run `pptfast migrate <input> -o <output>` to rewrite it to "image_grid"'
+    return 'component type "logo_wall" was removed — run `pptpress migrate <input> -o <output>` to rewrite it to "image_grid"'
   }
   return enumMismatchMessage("component type", raw, options.map(String))
 }

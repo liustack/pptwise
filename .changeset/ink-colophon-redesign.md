@@ -1,5 +1,5 @@
 ---
-"@liustack/pptfast": minor
+"@liustack/pptpress": minor
 ---
 
 The ink theme is redesigned around a right-edge colophon, and every theme's
@@ -35,7 +35,7 @@ no longer repeat them in the footer. Two costs come with that, both deliberate:
 the confidentiality label and version number live only in that footer row, so
 they no longer appear on ink content pages; and the colophon column holds 11
 characters (17 when the deck sets no date), so a longer organization name is
-truncated and reported by `pptfast audit` as `content-truncated`. That limit
+truncated and reported by `pptpress audit` as `content-truncated`. That limit
 excludes ordinary names — `Meridian Analytics`, `北京云帆科技有限责任公司` —
 because a per-character vertical column is a short-CJK-signature idiom. Set
 `theme.brand.suppressFooterMeta: false` in the IR to take the footer row back.

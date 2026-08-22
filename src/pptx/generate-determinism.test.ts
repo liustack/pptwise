@@ -47,7 +47,7 @@ async function sha256(blob: Blob): Promise<string> {
 
 function deck(): PptxIR {
   return makeIR([
-    { type: "cover", heading: "pptfast", subheading: "Whole-file determinism", components: [] },
+    { type: "cover", heading: "pptpress", subheading: "Whole-file determinism", components: [] },
     {
       type: "content",
       heading: "Design goals",

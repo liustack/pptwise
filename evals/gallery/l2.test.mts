@@ -118,7 +118,7 @@ describe("judgeL2", () => {
         stderr: "",
       }
     }
-    const workdir = mkdtempSync(join(tmpdir(), "pptfast-l2-"))
+    const workdir = mkdtempSync(join(tmpdir(), "pptpress-l2-"))
     const verdict = await judgeL2({
       svg: SVG,
       page: PAGE,

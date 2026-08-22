@@ -55,8 +55,8 @@ describe("isSlideLevelPath / SLIDE_LEVEL_UNKNOWN_KEY_HINT", () => {
     expect(isSlideLevelPath("")).toBe(false)
   })
 
-  it("the generic hint names components[] and pptfast schema", () => {
+  it("the generic hint names components[] and pptpress schema", () => {
     expect(SLIDE_LEVEL_UNKNOWN_KEY_HINT).toMatch(/components\[\]/)
-    expect(SLIDE_LEVEL_UNKNOWN_KEY_HINT).toMatch(/pptfast schema/)
+    expect(SLIDE_LEVEL_UNKNOWN_KEY_HINT).toMatch(/pptpress schema/)
   })
 })

@@ -48,7 +48,7 @@ describe("registerBrandThemeFile", () => {
 
   it("refuses to shadow a builtin id, naming the fix", async () => {
     const theme = await extractFixtureTheme("consulting")
-    expect(() => registerBrandThemeFile(theme)).toThrow(/collides with a built-in pptfast theme.*--id/)
+    expect(() => registerBrandThemeFile(theme)).toThrow(/collides with a built-in pptpress theme.*--id/)
   })
 
   it("is idempotent for the same already-registered id (serve rebuild loop)", async () => {

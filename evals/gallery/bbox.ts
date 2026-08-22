@@ -29,6 +29,7 @@
 
 import { writeFileSync } from "node:fs"
 import { join } from "node:path"
+import { resolveProductEnv } from "@/cli/product-env"
 import { collectBBoxOverflows, serializePageFunction } from "@/svg/audit/browser-audit"
 import { namespaceSvgIds, svgIdPrefix } from "@/lib/svg-ids"
 import { bleedExemption, DESIGNED_BLEED, type BleedExemption } from "./bbox-exemptions"
@@ -190,7 +191,7 @@ export function slackFor(parsed: Pick<ParsedIssue, "axis" | "extent">, floor: nu
 export function harnessHtml(): string {
   return `<!doctype html>
 <meta charset="utf-8">
-<title>pptfast bbox audit</title>
+<title>pptpress bbox audit</title>
 <style>html,body{margin:0;padding:0;background:#fff}.pg{width:${PAGE_W}px;height:${PAGE_H}px}</style>
 <div id="stage"></div>
 <script>
@@ -246,11 +247,11 @@ function countMeasured(root) {
  *
  * `pnpm check` runs the gallery matrix on every commit and must stay free of
  * browser downloads, so this is resolved when `--bbox` asks for it and not
- * before. A global install works, as does `PPTFAST_PLAYWRIGHT` pointing at
+ * before. A global install works, as does `PPTPRESS_PLAYWRIGHT` pointing at
  * one.
  */
 async function loadPlaywright(): Promise<any> {
-  const specs = [process.env.PPTFAST_PLAYWRIGHT, "playwright", "playwright-core"].filter(Boolean) as string[]
+  const specs = [resolveProductEnv("PLAYWRIGHT"), "playwright", "playwright-core"].filter(Boolean) as string[]
   const tried: string[] = []
   for (const spec of specs) {
     try {
@@ -265,7 +266,7 @@ async function loadPlaywright(): Promise<any> {
   throw new Error(
     "--bbox needs Playwright, which this repo deliberately does not depend on (`pnpm check` must not pull a browser).\n" +
       "  Install it for this checkout — `pnpm add -D playwright && pnpm exec playwright install chromium` —\n" +
-      "  or point PPTFAST_PLAYWRIGHT at an existing install.\n" +
+      "  or point PPTPRESS_PLAYWRIGHT at an existing install.\n" +
       `  Tried:\n    ${tried.join("\n    ")}`,
   )
 }

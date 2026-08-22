@@ -39,8 +39,8 @@ function stockIr(opts: { includeAsset: boolean; assetId: string }): unknown {
 
 describe("workspace stock assets at render", () => {
   it("resolveLocalAssets finds a file that exists only in workspace assets", async () => {
-    const dir = await mkdtemp(join(tmpdir(), "pptfast-ws-stock-"))
-    const workspace = join(dir, ".pptfast", "stock", "assets")
+    const dir = await mkdtemp(join(tmpdir(), "pptpress-ws-stock-"))
+    const workspace = join(dir, ".pptpress", "stock", "assets")
     await mkdir(workspace, { recursive: true })
     await writeFile(join(workspace, "hero.png"), PNG_1PX)
     const ir = PptxIRSchema.parse(stockIr({ includeAsset: true, assetId: "hero" }))
@@ -49,7 +49,7 @@ describe("workspace stock assets at render", () => {
   })
 
   it("keeps a missing-asset warning when neither deck nor workspace has the id", async () => {
-    const dir = await mkdtemp(join(tmpdir(), "pptfast-ws-missing-"))
+    const dir = await mkdtemp(join(tmpdir(), "pptpress-ws-missing-"))
     const irPath = join(dir, "ghost.json")
     await writeFile(irPath, JSON.stringify(stockIr({ includeAsset: false, assetId: "ghost" })))
     const out = await runValidate(irPath, dir)
@@ -58,10 +58,10 @@ describe("workspace stock assets at render", () => {
   })
 
   it("merges a workspace-only image into the loaded IR so render embeds it, twice to identical bytes", async () => {
-    const dir = await mkdtemp(join(tmpdir(), "pptfast-ws-render-"))
+    const dir = await mkdtemp(join(tmpdir(), "pptpress-ws-render-"))
     const irPath = join(dir, "stock.json")
     await writeFile(irPath, JSON.stringify(stockIr({ includeAsset: false, assetId: "hero" })))
-    const workspace = join(dir, ".pptfast", "stock", "assets")
+    const workspace = join(dir, ".pptpress", "stock", "assets")
     await mkdir(workspace, { recursive: true })
     await writeFile(join(workspace, "hero.png"), PNG_1PX)
 
@@ -79,10 +79,10 @@ describe("workspace stock assets at render", () => {
   })
 
   it("lets a local/deck image win over a workspace file of the same id", async () => {
-    const dir = await mkdtemp(join(tmpdir(), "pptfast-ws-win-"))
+    const dir = await mkdtemp(join(tmpdir(), "pptpress-ws-win-"))
     await writeFile(join(dir, "demo.json"), JSON.stringify(stockIr({ includeAsset: true, assetId: "hero" })))
     await writeFile(join(dir, "hero.png"), PNG_1PX)
-    const workspace = join(dir, ".pptfast", "demo", "assets")
+    const workspace = join(dir, ".pptpress", "demo", "assets")
     await mkdir(workspace, { recursive: true })
     await writeFile(join(workspace, "hero.jpg"), Buffer.from([0xff, 0xd8, 0xff, 0xd9]))
 

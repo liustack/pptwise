@@ -84,7 +84,7 @@ export interface Manifest {
    */
   readonly manifestVersion: 2
   readonly generator: string
-  readonly pptfastVersion: string
+  readonly pptpressVersion: string
   readonly generatedAt: string
   readonly slide: { readonly width: number; readonly height: number }
   readonly tables: readonly ManifestTable[]
@@ -208,7 +208,7 @@ export function verdictFreshness(
   return entry.col === now.color ? "fresh" : "recolored"
 }
 
-export function renderMatrix(jobs: readonly Job[], outDir: string, pptfastVersion: string): RenderResult {
+export function renderMatrix(jobs: readonly Job[], outDir: string, pptpressVersion: string): RenderResult {
   const pagesDir = join(outDir, "pages")
   mkdirSync(pagesDir, { recursive: true })
 
@@ -306,8 +306,8 @@ export function renderMatrix(jobs: readonly Job[], outDir: string, pptfastVersio
 
   const manifest: Manifest = {
     manifestVersion: 2,
-    generator: "pptfast gallery",
-    pptfastVersion,
+    generator: "pptpress gallery",
+    pptpressVersion,
     generatedAt: new Date().toISOString(),
     slide: { width: CANVAS_W_PX, height: CANVAS_H_PX },
     tables,

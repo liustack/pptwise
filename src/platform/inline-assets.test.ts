@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 import type { PptxIR } from "@/ir"
 import { inlinePptxAssets } from "./inline-assets"
-import { PptfastError } from "../errors"
+import { PptpressError } from "../errors"
 import { installPlatform } from "./registry"
 
 const RED_PNG =
@@ -72,14 +72,14 @@ describe("inlinePptxAssets", () => {
     expect(out.assets.images.bg.src.startsWith("data:image/png;base64,")).toBe(true)
   })
 
-  it("throws a PptfastError naming the asset when fetch fails", async () => {
+  it("throws a PptpressError naming the asset when fetch fails", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async () => new Response(null, { status: 403 })),
     )
     await expect(
       inlinePptxAssets(ir({ cover_bg: { src: "https://minio.local/x.png" } })),
-    ).rejects.toThrow(PptfastError)
+    ).rejects.toThrow(PptpressError)
     await expect(
       inlinePptxAssets(ir({ cover_bg: { src: "https://minio.local/x.png" } })),
     ).rejects.toThrow(/cover_bg/)
@@ -161,7 +161,7 @@ describe("office-safe mime normalization", () => {
     expect(out.assets.images.photo.src.startsWith("data:image/jpeg;base64,")).toBe(true)
   })
 
-  it("throws a PptfastError naming the asset when re-encode decoding fails", async () => {
+  it("throws a PptpressError naming the asset when re-encode decoding fails", async () => {
     stubDecodeEnv({ decodeOk: false })
     vi.stubGlobal(
       "fetch",
@@ -197,7 +197,7 @@ describe("assertValidFetchedImageBytes (Task 2 follow-up — fetched-bytes valid
     )
     await expect(
       inlinePptxAssets(ir({ hero: { src: "https://example.com/hero.png" } })),
-    ).rejects.toThrow(PptfastError)
+    ).rejects.toThrow(PptpressError)
     await expect(
       inlinePptxAssets(ir({ hero: { src: "https://example.com/hero.png" } })),
     ).rejects.toThrow(/hero/)

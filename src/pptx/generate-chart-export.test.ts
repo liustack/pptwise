@@ -47,7 +47,7 @@ function makeIr(components: Component[]): PptxIR {
   } as PptxIR
 }
 
-/** A real export (zip magic "PK"), not a thrown PptfastError — the
+/** A real export (zip magic "PK"), not a thrown PptpressError — the
  *  reviewer's exact repro threw `invalid-shape-transform: ... a:ext cx=0/
  *  cy=0 ...` for every one of these pre-fix. */
 async function expectExports(components: Component[]): Promise<void> {

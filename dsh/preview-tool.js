@@ -1,9 +1,9 @@
-// The `pptfast_preview` DSH tool.
+// The `pptpress_preview` DSH tool.
 //
 // Why a tool at all, when this plugin already registers a skill: a skill
 // teaches the model to drive the CLI from the terminal, so every call in the
 // transcript belongs to `bash` and renders in DSH's generic terminal card.
-// pptfast owns no surface there, which is why the review loop has been "open
+// pptpress owns no surface there, which is why the review loop has been "open
 // http://127.0.0.1:4400 yourself" — the harness had nowhere to put a button.
 // A registered tool owns its own `tool.call.toolview` key, and that key is
 // the seat the in-conversation preview sits in.
@@ -14,7 +14,7 @@
 // computes it for TOP-LEVEL calls only, and this repo's own default agent
 // preset runs in Code Mode, where every tool is invoked from inside
 // `run_code` and is therefore a sub-call. Verified against a real session
-// log: 34 top-level `run_code` calls, `pptfast_preview` never once among
+// log: 34 top-level `run_code` calls, `pptpress_preview` never once among
 // them, and no `presentationMeta` anywhere in the persisted result. The card
 // dutifully rendered nothing.
 //
@@ -79,6 +79,7 @@
 //    and friends): still fetched or read per run. See `inlineLocalImages`.
 
 import { randomUUID } from 'node:crypto'
+import { cpSync, existsSync, renameSync, rmSync } from 'node:fs'
 import { mkdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import { basename, dirname, isAbsolute, join, resolve } from 'node:path'
@@ -156,7 +157,7 @@ function noticePage(title, heading, message, hint) {
 
 /**
  * The deck is not under this root: a final answer, and usually one the user
- * caused. Usually, not always — the root follows `PPTFAST_HOME`, so a deck
+ * caused. Usually, not always — the root follows `PPTPRESS_HOME`, so a deck
  * written under a different one is alive and out of reach. That is why the
  * hint below prints the root it actually looked in rather than telling the
  * reader what they must have done.
@@ -167,7 +168,7 @@ function missingPage(message) {
     'This deck is no longer on disk',
     message,
     `Rendered decks stay in <code>${escapeHtml(previewRoot())}</code> until you delete them. ` +
-      'Run <code>pptfast_preview</code> again to rebuild this one.',
+      'Run <code>pptpress_preview</code> again to rebuild this one.',
   )
 }
 
@@ -204,7 +205,7 @@ function damagedPage(message) {
     'This deck cannot be opened',
     message,
     "The rendered pages may still be there — it is the file describing them that this version cannot read. " +
-      'Run <code>pptfast_preview</code> again to rebuild it.',
+      'Run <code>pptpress_preview</code> again to rebuild it.',
   )
 }
 
@@ -228,9 +229,9 @@ function escapeHtml(value) {
     .replace(/"/g, '&quot;')
 }
 
-export const TOOL_NAME = 'pptfast_preview'
+export const TOOL_NAME = 'pptpress_preview'
 
-export const PREVIEW_ROUTE = '/pptfast/preview'
+export const PREVIEW_ROUTE = '/pptpress/preview'
 
 /**
  * The stamp every response from this route carries, and the card's only proof
@@ -246,7 +247,7 @@ export const PREVIEW_ROUTE = '/pptfast/preview'
  * nothing else answering on this port has any reason to set, which is enough to
  * stop an unrelated 404 from retiring a live deck.
  */
-export const ROUTE_HEADER = 'x-pptfast-preview'
+export const ROUTE_HEADER = 'x-pptpress-preview'
 export const ROUTE_HEADER_VALUE = '1'
 
 /**
@@ -281,9 +282,9 @@ export const FAILURE_CODES = {
 // because both looked reasonable and both guaranteed the same user-visible
 // failure: cards that go dead for no reason the user can see.
 //
-//  1. The records lived in `$TMPDIR/pptfast-previews/<sha256(cliPath)[0:16]>/`.
+//  1. The records lived in `$TMPDIR/pptpress-previews/<sha256(cliPath)[0:16]>/`.
 //     An npm install path carries the version in it
-//     (`.pnpm/@liustack+pptfast@0.19.2/…`), so that hash changed on every
+//     (`.pnpm/@liustack+pptpress@0.19.2/…`), so that hash changed on every
 //     single plugin upgrade and every historical preview was orphaned the
 //     moment the user updated. Measured on a real machine: 14 records, 7 live
 //     decks, and every dead one predated the commit that introduced the
@@ -307,36 +308,70 @@ export const FAILURE_CODES = {
 // route sees a whole preview or none of one. The three notes below (expiry,
 // `PARTIAL_SUFFIX`, `OWNER_MARKER`) are where each of those is argued.
 
-/** Directory under `$PPTFAST_HOME` that holds every preview this plugin has kept. */
+/** Directory under `$PPTPRESS_HOME` that holds every preview this plugin has kept. */
 const PREVIEW_DIR = 'previews'
 
 /**
  * Root of everything this module writes.
  *
- * `~/.pptfast` (overridable wholesale by `PPTFAST_HOME`) is not invented
- * here — it is already this project's user-state convention, declared by
- * `pptfastHome()` in `src/cli/home.ts` and used for the deck projects and the
- * user config file. The plugin cannot import it (this file is dependency-free
- * plain JS with no build step) so the two lines are duplicated, deliberately
- * and identically, rather than the plugin inventing a second home.
+ * Must match `src/cli/home.ts` `pptpressHome()`: `PPTPRESS_HOME` wins,
+ * `PPTFAST_HOME` is a legacy alias (warn once when it supplies the value),
+ * empty string is unset, default `~/.pptpress` with a one-time copy from
+ * `~/.pptfast` when the new dir is missing. The plugin cannot import the
+ * TypeScript helper (this file is dependency-free plain JS with no build
+ * step) so the two rules are duplicated, deliberately and identically.
  *
- * Read fresh on each call, matching `pptfastHome()`: `PPTFAST_HOME` is meant
- * to be redirectable per process, which is also how the tests keep off a real
- * user's home directory. Empty counts as unset in both places — it did not
- * always, and the mismatch was a real one: the CLI kept `""` and resolved its
- * deck root relative to the cwd while this module treated it as absent, so the
- * two disagreed about where a user's pptfast lived. `src/cli/home.ts` was
- * changed to match this, because this is the side that deletes directories
- * under the root it computes. The rule is what is duplicated, not the line:
- * same variable, same treatment of an empty value, same `~/.pptfast` default.
- * This side then resolves the result, for the reason below.
- *
- * Resolved to an absolute path for the same reason: a relative root would make
- * every path here depend on where the harness happened to be started.
+ * Resolved to an absolute path: a relative root would make every path here
+ * depend on where the harness happened to be started.
  */
-export function previewRoot() {
-  const home = process.env.PPTFAST_HOME
-  return join(resolve(home === undefined || home === '' ? join(homedir(), '.pptfast') : home), PREVIEW_DIR)
+const warnedLegacyHome = new Set()
+
+function nonemptyEnv(env, key) {
+  const value = env[key]
+  return value === undefined || value === '' ? undefined : value
+}
+
+function warnLegacyHome() {
+  if (warnedLegacyHome.has('PPTFAST_HOME')) return
+  warnedLegacyHome.add('PPTFAST_HOME')
+  process.stderr.write('PPTFAST_HOME is deprecated. Use PPTPRESS_HOME instead.\n')
+}
+
+function migrateLegacyHome(legacyDir, nextDir) {
+  if (existsSync(nextDir) || !existsSync(legacyDir)) return
+  const tmpDir = `${nextDir}.migrating`
+  rmSync(tmpDir, { recursive: true, force: true })
+  try {
+    cpSync(legacyDir, tmpDir, { recursive: true })
+    renameSync(tmpDir, nextDir)
+  } catch (error) {
+    try {
+      rmSync(tmpDir, { recursive: true, force: true })
+    } catch {
+      // still throw the original copy/rename failure
+    }
+    throw error
+  }
+}
+
+function resolvePluginHome(opts = {}) {
+  const env = opts.env ?? process.env
+  const homeFn = opts.homedir ?? homedir
+  const current = nonemptyEnv(env, 'PPTPRESS_HOME')
+  if (current !== undefined) return current
+  const legacy = nonemptyEnv(env, 'PPTFAST_HOME')
+  if (legacy !== undefined) {
+    warnLegacyHome()
+    return legacy
+  }
+  const base = homeFn()
+  const next = join(base, '.pptpress')
+  migrateLegacyHome(join(base, '.pptfast'), next)
+  return next
+}
+
+export function previewRoot(opts = {}) {
+  return join(resolve(resolvePluginHome(opts)), PREVIEW_DIR)
 }
 
 /**
@@ -433,7 +468,7 @@ const PARTIAL_SUFFIX = '.partial'
  * a different subject, and belongs in its own change rather than smuggled into
  * a move of the storage root.
  */
-const OWNER_MARKER = '.pptfast-preview-owner'
+const OWNER_MARKER = '.pptpress-preview-owner'
 
 /**
  * Ids reach this module from a URL path and become directory names, so the
@@ -921,7 +956,7 @@ function runCli(cliPath, args, signal) {
     signal,
   }).then(({ code, stdout, stderr }) => {
     if (code === 0) return { stdout, stderr }
-    throw new Error(stderr.trim() || stdout.trim() || `pptfast exited with code ${code}`)
+    throw new Error(stderr.trim() || stdout.trim() || `pptpress exited with code ${code}`)
   })
 }
 
@@ -987,8 +1022,8 @@ async function isFile(path) {
 async function locateDeckDir(target) {
   const direct = resolve(target)
   if (await isDirectory(direct)) return direct
-  // `dirname(previewRoot())` rather than a second hard-coded `~/.pptfast`, so
-  // this follows `PPTFAST_HOME` the way the CLI's own `decksRoot()` does. The
+  // `dirname(previewRoot())` rather than a second hard-coded `~/.pptpress`, so
+  // this follows `PPTPRESS_HOME` the way the CLI's own `decksRoot()` does. The
   // previous literal ignored that variable and looked in the wrong home
   // whenever it was set.
   const named = join(dirname(previewRoot()), 'decks', target)
@@ -1291,7 +1326,7 @@ function modelSummary(value) {
   // text because that is the only part of a sub-call's result the card is
   // guaranteed to see — see this module's own header for why the structured
   // channel was not an option.
-  bits.unshift(`pptfast-preview:${value.previewId}`)
+  bits.unshift(`pptpress-preview:${value.previewId}`)
   // The model is the one who can act on this: the pages are still unfilled,
   // and the export it just handed the user is labelled a draft.
   if (value.bundle && value.bundle.draft) bits.push('draft — some pages are unfilled placeholders')
@@ -1483,7 +1518,7 @@ export function createPreviewService(cliPath) {
    */
   function registerRoute(ctx) {
     ctx.webServer.register({
-      name: 'pptfast-preview',
+      name: 'pptpress-preview',
       kind: 'prefix',
       path: PREVIEW_ROUTE,
       handler: async (req, res) => {
@@ -1731,7 +1766,7 @@ export function createPreviewService(cliPath) {
   const tool = {
     name: TOOL_NAME,
     description:
-      'Render a pptfast deck and show it to the user as a slide preview inside this conversation. ' +
+      'Render a pptpress deck and show it to the user as a slide preview inside this conversation. ' +
       'Accepts the same targets as the CLI: a deck project directory, a single IR json file, or a bare deck name. ' +
       'Prefer this over telling the user to open a preview URL — they can page through the deck right here.',
     parameters: {
@@ -1769,7 +1804,7 @@ export function createPreviewService(cliPath) {
       // channel, and the card prefers it when present. Code Mode simply never
       // computes it, which is why the route exists as well.
       presentationMeta(_args, value) {
-        return { card: 'pptfast-preview', previewId: value.previewId, bundle: value.bundle }
+        return { card: 'pptpress-preview', previewId: value.previewId, bundle: value.bundle }
       },
     },
     async execute(args, exec) {
@@ -1873,6 +1908,9 @@ export const __testing = {
   SNAPSHOT_FILE,
   PARTIAL_SUFFIX,
   OWNER_MARKER,
+  resetLegacyHomeWarnings() {
+    warnedLegacyHome.clear()
+  },
   PreviewExpired,
   PreviewUnreadable,
   PreviewDamaged,

@@ -302,7 +302,7 @@ describe("BentoPanelContent", () => {
     for (const valueText of valueTexts) {
       // Fell back to readableOn's neutral dark ink (colors.accent itself
       // measures ~1.56:1 against this card's own colors.surface — the same
-      // ratio the W8 walkthrough's live `pptfast audit` run caught).
+      // ratio the W8 walkthrough's live `pptpress audit` run caught).
       expect(valueText.getAttribute("fill")).toBe("#0A0E14")
       expect(valueText.getAttribute("fill")).not.toBe(consultingTheme.colors.accent)
     }

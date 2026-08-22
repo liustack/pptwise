@@ -332,8 +332,8 @@ export const CAPACITY = {
    * `bullet_item_overflow` 硬校验错误（本就对全部样式统一套用同一个
    * `measureTextUnits(item)` 上界，从未按样式分支）现在真正兑现了它的承诺：
    * 只要某条要点没触发这条 error，它就不会在渲染时被截断，不分样式——
-   * README.md/README.zh-CN.md/skills/pptfast/SKILL.md 已同步删除
-   * numbered/checklist「可能在 validate 报错前先被截断，靠 `pptfast audit`
+   * README.md/README.zh-CN.md/skills/pptpress/SKILL.md 已同步删除
+   * numbered/checklist「可能在 validate 报错前先被截断，靠 `pptpress audit`
    * 兜底」的例外措辞。`bullets.tsx` 对全部样式无条件都会设置的
    * `data-truncated="1"`（真正超出新边界的条目照常触发）作为渲染期兜底信号
    * 保留，未受这次改动影响——具体机制见该文件 `layoutItems` 自己的推导

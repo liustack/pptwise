@@ -1,8 +1,8 @@
 ---
-"@liustack/pptfast": patch
+"@liustack/pptpress": patch
 ---
 
-`pptfast audit` now attributes text to the decoration it is actually
+`pptpress audit` now attributes text to the decoration it is actually
 painted on. Text sitting on a solid decor shape (a seal, a corner square)
 used to be graded against the page background, reporting a passing ratio
 for unreadable text; backgrounds are now sampled across the run's own ink

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { PptfastError } from "../errors"
+import { PptpressError } from "../errors"
 import { PptxIRSchema, type PptxIR } from "../ir"
 import { resolveEffectiveLayoutId } from "../svg/layout-selection"
 import { assembleDeck, disassembleDeck, type PageContent } from "./assemble"
@@ -30,8 +30,8 @@ describe("assembleDeck", () => {
   // ── step 1 ──────────────────────────────────────────────────────────
 
   describe("step 1 — invalid spec", () => {
-    it("throws PptfastError with validateSpec's own formatted issues", () => {
-      expect(() => assembleDeck({ pages: [] }, {})).toThrow(PptfastError)
+    it("throws PptpressError with validateSpec's own formatted issues", () => {
+      expect(() => assembleDeck({ pages: [] }, {})).toThrow(PptpressError)
       expect(() => assembleDeck({ pages: [] }, {})).toThrow(/invalid spec.*no pages/s)
     })
 
@@ -81,7 +81,7 @@ describe("assembleDeck", () => {
 
     it("rejects a null page content value with a readable error instead of a native TypeError", () => {
       const rawPages: Record<string, unknown> = { "p-kpi": null }
-      expect(() => assembleDeck(makePlan(), rawPages as Record<string, PageContent>)).toThrow(PptfastError)
+      expect(() => assembleDeck(makePlan(), rawPages as Record<string, PageContent>)).toThrow(PptpressError)
       expect(() => assembleDeck(makePlan(), rawPages as Record<string, PageContent>)).toThrow(
         /page "p-kpi": page content must be an object/,
       )
@@ -483,11 +483,11 @@ describe("assembleDeck", () => {
   // ── defensive: malformed page content ──────────────────────────────
 
   describe("page content that cannot produce valid IR", () => {
-    it("throws PptfastError for a component shape that fails IR schema validation", () => {
+    it("throws PptpressError for a component shape that fails IR schema validation", () => {
       const rawPages: Record<string, unknown> = {
         "p-kpi": { components: [{ type: "bullets", items: "not-an-array" }] },
       }
-      expect(() => assembleDeck(makePlan(), rawPages as Record<string, PageContent>)).toThrow(PptfastError)
+      expect(() => assembleDeck(makePlan(), rawPages as Record<string, PageContent>)).toThrow(PptpressError)
       expect(() => assembleDeck(makePlan(), rawPages as Record<string, PageContent>)).toThrow(/did not produce valid IR/)
     })
   })

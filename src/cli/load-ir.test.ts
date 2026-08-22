@@ -16,7 +16,7 @@ const PNG_1PX = Buffer.from(
 
 describe("loadIrFile", () => {
   it("throws a readable error for malformed JSON", async () => {
-    const dir = await mkdtemp(join(tmpdir(), "pptfast-"))
+    const dir = await mkdtemp(join(tmpdir(), "pptpress-"))
     const p = join(dir, "bad.json")
     await writeFile(p, "{ not json")
     await expect(loadIrFile(p)).rejects.toThrow(/not valid JSON/)
@@ -24,7 +24,7 @@ describe("loadIrFile", () => {
 
   it("defaults kind to IR in both failure messages", async () => {
     await expect(loadIrFile("/nowhere/missing.json")).rejects.toThrow(/cannot read IR file/)
-    const dir = await mkdtemp(join(tmpdir(), "pptfast-"))
+    const dir = await mkdtemp(join(tmpdir(), "pptpress-"))
     const p = join(dir, "bad.json")
     await writeFile(p, "{ not json")
     await expect(loadIrFile(p)).rejects.toThrow(/^IR file .* is not valid JSON/)
@@ -32,7 +32,7 @@ describe("loadIrFile", () => {
 
   it("uses a caller-supplied kind in both failure messages (e.g. runSpecValidate passing \"spec\")", async () => {
     await expect(loadIrFile("/nowhere/missing.json", "spec")).rejects.toThrow(/cannot read spec file/)
-    const dir = await mkdtemp(join(tmpdir(), "pptfast-"))
+    const dir = await mkdtemp(join(tmpdir(), "pptpress-"))
     const p = join(dir, "bad-spec.json")
     await writeFile(p, "{ not json")
     await expect(loadIrFile(p, "spec")).rejects.toThrow(/^spec file .* is not valid JSON/)
@@ -42,7 +42,7 @@ describe("loadIrFile", () => {
 describe("resolveLocalAssets", () => {
   it("inlines a local png path into a data URI", async () => {
     installNodePlatform()
-    const dir = await mkdtemp(join(tmpdir(), "pptfast-"))
+    const dir = await mkdtemp(join(tmpdir(), "pptpress-"))
     await writeFile(join(dir, "logo.png"), PNG_1PX)
     const ir = PptxIRSchema.parse({
       version: "4",
@@ -70,7 +70,7 @@ describe("resolveLocalAssets", () => {
 
   it("inlines a file:// URL whose path contains an escaped hash (%23)", async () => {
     installNodePlatform()
-    const dir = await mkdtemp(join(tmpdir(), "pptfast-fileurl-"))
+    const dir = await mkdtemp(join(tmpdir(), "pptpress-fileurl-"))
     const file = join(dir, "hash#tag.png")
     await writeFile(file, PNG_1PX)
     const src = pathToFileURL(file).href
@@ -103,8 +103,8 @@ describe("resolveLocalAssets", () => {
 
   it("falls back to the workspace assets dir when the relative src is missing under baseDir", async () => {
     installNodePlatform()
-    const dir = await mkdtemp(join(tmpdir(), "pptfast-"))
-    const workspace = join(dir, ".pptfast", "deck", "assets")
+    const dir = await mkdtemp(join(tmpdir(), "pptpress-"))
+    const workspace = join(dir, ".pptpress", "deck", "assets")
     const { mkdir } = await import("node:fs/promises")
     await mkdir(workspace, { recursive: true })
     await writeFile(join(workspace, "hero.png"), PNG_1PX)
@@ -126,7 +126,7 @@ describe("resolveLocalAssets", () => {
   // silently and only surfaced (if at all) deep in the export/audit chain.
   describe("byte-level validation (Task 2, borrow wave — D3)", () => {
     it("rejects a zero-byte local image file", async () => {
-      const dir = await mkdtemp(join(tmpdir(), "pptfast-"))
+      const dir = await mkdtemp(join(tmpdir(), "pptpress-"))
       await writeFile(join(dir, "empty.png"), Buffer.alloc(0))
       const ir = PptxIRSchema.parse({
         version: "4",
@@ -139,7 +139,7 @@ describe("resolveLocalAssets", () => {
     })
 
     it("rejects a local .png file whose bytes are garbage (corrupt header)", async () => {
-      const dir = await mkdtemp(join(tmpdir(), "pptfast-"))
+      const dir = await mkdtemp(join(tmpdir(), "pptpress-"))
       await writeFile(join(dir, "garbage.png"), Buffer.from([0x00, 0x01, 0x02, 0x03]))
       const ir = PptxIRSchema.parse({
         version: "4",
@@ -152,7 +152,7 @@ describe("resolveLocalAssets", () => {
     })
 
     it("rejects a real PNG file saved with a .jpg extension (extension/bytes mismatch — trusts neither, rejects)", async () => {
-      const dir = await mkdtemp(join(tmpdir(), "pptfast-"))
+      const dir = await mkdtemp(join(tmpdir(), "pptpress-"))
       await writeFile(join(dir, "photo.jpg"), PNG_1PX)
       const ir = PptxIRSchema.parse({
         version: "4",
@@ -167,7 +167,7 @@ describe("resolveLocalAssets", () => {
     })
 
     it("leaves a genuinely valid local PNG untouched — byte-inertness for a valid asset (hard requirement)", async () => {
-      const dir = await mkdtemp(join(tmpdir(), "pptfast-"))
+      const dir = await mkdtemp(join(tmpdir(), "pptpress-"))
       await writeFile(join(dir, "logo.png"), PNG_1PX)
       const ir = PptxIRSchema.parse({
         version: "4",

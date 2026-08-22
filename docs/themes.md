@@ -2,7 +2,7 @@
 summary: 'The 24 built-in themes, extracting your own brand from a PowerPoint template, and style overrides via CLI flag, IR, or project config'
 read_when:
   - picking a theme, or looking up a theme id
-  - making the output look like your own company (`pptfast brand extract`)
+  - making the output look like your own company (`pptpress brand extract`)
   - re-coloring a theme without forking it
 ---
 
@@ -37,7 +37,7 @@ A theme bundles a style (design tokens), a brand (identity frame: logo, footer, 
 | `memo` | Decision Memo |
 | `playbill` | Playbill |
 
-`pptfast themes [--json]` prints the same list from the installed version.
+`pptpress themes [--json]` prints the same list from the installed version.
 
 Cover, chapter, and ending lock to the Claude Design board when a board exists for that page type. Soft preference cannot hold those pages in place. Every builtin now locks `layouts.cover` to its board face (wave7 + restore w1 + restore w2). Chapter and ending stay on the full registered set until the next design pass draws those boards. That wait is marked on the theme. It is waiting on a board, not a forgotten lock. Content pages pick from the auto-selectable set (10 ids after `side-highlight` retired), weighted by the allocation table. lecture and luxe drop `banner-heading` / `split-band` / `stacked-poster`. Playbill keeps the full auto content set.
 
@@ -47,16 +47,16 @@ Layouts still live in the shared pool. A lock is how a theme uses the pool, not 
 
 ## Your own brand
 
-The fastest way to make the output look like *your company* instead of a built-in theme is to extract the brand from a template you already have. `pptfast brand extract` reads colors and fonts out of a `.thmx` theme, `.potx` template, or `.pptx` presentation and writes a pptfast theme file. It runs **entirely locally — the file never leaves your machine** (verified against all 39 Office themes that ship with a macOS PowerPoint install).
+The fastest way to make the output look like *your company* instead of a built-in theme is to extract the brand from a template you already have. `pptpress brand extract` reads colors and fonts out of a `.thmx` theme, `.potx` template, or `.pptx` presentation and writes a pptpress theme file. It runs **entirely locally — the file never leaves your machine** (verified against all 39 Office themes that ship with a macOS PowerPoint install).
 
 ```bash
-pptfast brand extract corp-template.pptx -o my-brand.theme.json
-pptfast render deck.json -o deck.pptx --theme-file my-brand.theme.json
+pptpress brand extract corp-template.pptx -o my-brand.theme.json
+pptpress render deck.json -o deck.pptx --theme-file my-brand.theme.json
 ```
 
 `--theme-file` works on `render`, `validate`, `audit`, `preview`, and `serve`. In a deck project directory, drop the file in as `theme.json` and it auto-loads on every command — reference its id from `deck.spec.json`, no flag needed.
 
-The 12 OOXML color slots map almost 1:1 onto pptfast's tokens, with the six accent colors becoming the chart palette. The one derived token, `muted`, is stepped toward the background only as far as it can go while still clearing a 4.5:1 contrast ratio.
+The 12 OOXML color slots map almost 1:1 onto pptpress's tokens, with the six accent colors becoming the chart palette. The one derived token, `muted`, is stepped toward the background only as far as it can go while still clearing a 4.5:1 contrast ratio.
 
 Loading enforces the same contrast floor every registered theme faces: a palette whose text and background are too close is refused, naming the failing token, the measured ratio, and the background. It is never rendered unreadable. A custom theme can never shadow a built-in id.
 
@@ -64,7 +64,7 @@ Extraction internals are in [`brand-extraction.md`](./brand-extraction.md), the 
 
 ## Style overrides and project config
 
-To re-color a theme without forking it, write a style JSON (schema: `pptfast schema --style`) and pass it per render (`--style brand.json`), or pin it project-wide in a `pptfast.config.json` (found by walking up from the current directory — `pptfast init` scaffolds one).
+To re-color a theme without forking it, write a style JSON (schema: `pptpress schema --style`) and pass it per render (`--style brand.json`), or pin it project-wide in a `pptpress.config.json` (found by walking up from the current directory — `pptpress init` scaffolds one).
 
 ```json
 { "theme": "consulting", "style": { "colors": { "primary": "#0B5FFF", "accent": "#FF6A00" } } }

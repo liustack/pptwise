@@ -9,7 +9,7 @@
 import JSZip from "jszip"
 import type pptxgen from "pptxgenjs"
 import { PptxIRSchema, type PptxIR } from "@/ir"
-import { PptfastError } from "../errors"
+import { PptpressError } from "../errors"
 import { inlinePptxAssets } from "../platform/inline-assets"
 import { resolveStyle } from "@/themes"
 import { defineMastersForIR } from "./master-builder"
@@ -75,7 +75,7 @@ function checkContentDropGate(dropped: DroppedPage[]): void {
   const refs = dropped
     .map((d) => (d.slideId ? `${d.slideId} (page ${d.page}, ${d.count})` : `page ${d.page} (${d.count})`))
     .join(", ")
-  throw new PptfastError(
+  throw new PptpressError(
     `deck drops ${total} content block${total === 1 ? "" : "s"} that do not fit the content area, on ${dropped.length} page${dropped.length === 1 ? "" : "s"}: ${refs} — shorten the content, split the page in two, or pass --allow-dropped-content`,
   )
 }
@@ -190,7 +190,7 @@ export async function generatePptxBlob(
     // Mirrors package-audit.ts's own "zip-unreadable" wording — this is the
     // same invariant, just caught one layer up since this is the one load
     // the audit itself piggybacks rather than repeating.
-    throw new PptfastError(
+    throw new PptpressError(
       `pptx package audit failed — invariant "zip-unreadable": the generated package is not a readable zip archive (${(e as Error).message})`,
     )
   }
@@ -210,7 +210,7 @@ export async function generatePptxBlob(
     // audit's own invariant name rather than this one. See
     // `PptxSealViolationError`'s own doc comment (pptx-fixed-timestamps.ts)
     // for why this needed to be its own error class rather than a plain
-    // `PptfastError` — this `instanceof` check is the reason.
+    // `PptpressError` — this `instanceof` check is the reason.
     if (e instanceof PptxSealViolationError) throw e
   }
   await auditPptxPackage(zip, ir, imageOpsBySlide)

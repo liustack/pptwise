@@ -18,7 +18,7 @@ function cleanEnv(): NodeJS.ProcessEnv {
 
 describe("CLI argv under Electron (#25)", () => {
   it("parses argv with node semantics when process.versions.electron is set", () => {
-    const dir = mkdtempSync(join(tmpdir(), "pptfast-electron-"))
+    const dir = mkdtempSync(join(tmpdir(), "pptpress-electron-"))
     const shim = join(dir, "electron-shim.cjs")
     writeFileSync(
       shim,

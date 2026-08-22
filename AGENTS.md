@@ -2,7 +2,7 @@
 
 ## Goal
 
-`pptfast` — semantic-IR → native editable PPTX toolchain. It ships in two forms: one skill folder (`skills/pptfast/`, SKILL + launcher scripts) that any harness reads, and one DSH plugin entry (`dsh/index.js` + `cordis.patch.yml`). The JS SDK surface is sealed — the public surface is CLI + IR schema + deck project format + skill + DSH plugin, JS internals carry no semver promise (`docs/internal-api.md`).
+`pptpress` — semantic-IR → native editable PPTX toolchain. It ships in two forms: one skill folder (`skills/pptpress/`, SKILL + launcher scripts) that any harness reads, and one DSH plugin entry (`dsh/index.js` + `cordis.patch.yml`). The JS SDK surface is sealed — the public surface is CLI + IR schema + deck project format + skill + DSH plugin, JS internals carry no semver promise (`docs/internal-api.md`).
 
 ## Architecture
 

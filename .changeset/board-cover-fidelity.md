@@ -1,5 +1,5 @@
 ---
-"@liustack/pptfast": minor
+"@liustack/pptpress": minor
 ---
 
 Five seventh-wave themes now lock their cover to the design-board composition, and the cover pool grows by four.

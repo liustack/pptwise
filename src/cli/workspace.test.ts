@@ -5,7 +5,7 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { promisify } from "node:util"
 import { afterEach, describe, expect, it } from "vitest"
-import { PptfastError } from "../errors"
+import { PptpressError } from "../errors"
 import {
   RENDERED_SVG_PATTERN,
   WORKSPACE_DIRNAME,
@@ -23,7 +23,7 @@ import {
 const execFile = promisify(execFileCb)
 
 function tmp(): Promise<string> {
-  return mkdtemp(join(tmpdir(), "pptfast-ws-"))
+  return mkdtemp(join(tmpdir(), "pptpress-ws-"))
 }
 
 const dirs: string[] = []
@@ -90,8 +90,8 @@ describe("resolveWorkspaceLocation (anchor rules)", () => {
       isDir: false,
     })
     expect(asPosix(loc.anchor)).toBe("/tmp/bare")
-    expect(asPosix(loc.root)).toBe("/tmp/bare/.pptfast")
-    expect(asPosix(loc.dir)).toBe("/tmp/bare/.pptfast/hello")
+    expect(asPosix(loc.root)).toBe("/tmp/bare/.pptpress")
+    expect(asPosix(loc.dir)).toBe("/tmp/bare/.pptpress/hello")
     expect(loc.slug).toBe("hello")
     expect(loc.configured).toBe(false)
   })
@@ -99,19 +99,19 @@ describe("resolveWorkspaceLocation (anchor rules)", () => {
   it("anchors at the project config's directory, even when cwd is nested", () => {
     const loc = resolveWorkspaceLocation({
       cwd: "/tmp/proj/nested",
-      projectConfigPath: "/tmp/proj/pptfast.config.json",
+      projectConfigPath: "/tmp/proj/pptpress.config.json",
       target: "/tmp/proj/nested/hello.json",
       isDir: false,
     })
     expect(asPosix(loc.anchor)).toBe("/tmp/proj")
-    expect(asPosix(loc.root)).toBe("/tmp/proj/.pptfast")
-    expect(asPosix(loc.dir)).toBe("/tmp/proj/.pptfast/hello")
+    expect(asPosix(loc.root)).toBe("/tmp/proj/.pptpress")
+    expect(asPosix(loc.dir)).toBe("/tmp/proj/.pptpress/hello")
   })
 
   it("resolves a relative outDir against the config file's directory, not cwd", () => {
     const loc = resolveWorkspaceLocation({
       cwd: "/tmp/proj/nested",
-      projectConfigPath: "/tmp/proj/pptfast.config.json",
+      projectConfigPath: "/tmp/proj/pptpress.config.json",
       outDir: "artifacts",
       target: "/tmp/proj/team-deck",
       isDir: true,
@@ -124,13 +124,47 @@ describe("resolveWorkspaceLocation (anchor rules)", () => {
   it("passes an absolute outDir through", () => {
     const loc = resolveWorkspaceLocation({
       cwd: "/tmp/proj",
-      projectConfigPath: "/tmp/proj/pptfast.config.json",
+      projectConfigPath: "/tmp/proj/pptpress.config.json",
       outDir: "/var/out",
       target: "/tmp/proj/hello.json",
       isDir: false,
     })
     expect(asPosix(loc.root)).toBe("/var/out")
     expect(loc.configured).toBe(true)
+  })
+
+  it("uses .pptpress when neither artifact dir exists", async () => {
+    const cwd = await trackedTmp()
+    const loc = resolveWorkspaceLocation({
+      cwd,
+      target: join(cwd, "hello.json"),
+      isDir: false,
+    })
+    expect(loc.root).toBe(join(cwd, ".pptpress"))
+  })
+
+  it("reuses an existing .pptfast directory when .pptpress is absent", async () => {
+    const cwd = await trackedTmp()
+    await mkdir(join(cwd, ".pptfast"))
+    const loc = resolveWorkspaceLocation({
+      cwd,
+      target: join(cwd, "hello.json"),
+      isDir: false,
+    })
+    expect(loc.root).toBe(join(cwd, ".pptfast"))
+    expect(loc.dir).toBe(join(cwd, ".pptfast", "hello"))
+  })
+
+  it("uses .pptpress when both artifact dirs exist", async () => {
+    const cwd = await trackedTmp()
+    await mkdir(join(cwd, ".pptpress"))
+    await mkdir(join(cwd, ".pptfast"))
+    const loc = resolveWorkspaceLocation({
+      cwd,
+      target: join(cwd, "hello.json"),
+      isDir: false,
+    })
+    expect(loc.root).toBe(join(cwd, ".pptpress"))
   })
 })
 
@@ -195,7 +229,7 @@ describe("ensureGitIgnored (the four holes)", () => {
     expect(outcome).toEqual({ kind: "already-ignored" })
   })
 
-  it("exit 1 then append: writes .pptfast/ via git-common-dir, never .gitignore", async () => {
+  it("exit 1 then append: writes .pptpress/ via git-common-dir, never .gitignore", async () => {
     const repo = await trackedTmp()
     await execFile("git", ["init", "-q"], { cwd: repo })
     await writeFile(join(repo, ".gitignore"), "# shared\n")
@@ -204,11 +238,11 @@ describe("ensureGitIgnored (the four holes)", () => {
     if (outcome.kind !== "appended") return
     expect(outcome.path).toContain(join(".git", "info", "exclude"))
     const exclude = await readFile(outcome.path, "utf8")
-    expect(exclude).toMatch(/(^|\n)\.pptfast\/\n/)
+    expect(exclude).toMatch(/(^|\n)\.pptpress\/\n/)
     expect(await readFile(join(repo, ".gitignore"), "utf8")).toBe("# shared\n")
     const again = await ensureGitIgnored(repo, WORKSPACE_IGNORE_ENTRY)
     expect(again).toEqual({ kind: "already-ignored" })
-    expect((await readFile(outcome.path, "utf8")).match(/^\.pptfast\/$/gm)).toHaveLength(1)
+    expect((await readFile(outcome.path, "utf8")).match(/^\.pptpress\/$/gm)).toHaveLength(1)
   })
 
   it("worktree shape: writes to whatever --git-common-dir returns, not dir/.git", async () => {
@@ -280,7 +314,7 @@ describe("prepareWorkspaceDir", () => {
       }),
     })
     await expect(stat(loc.dir)).resolves.toBeDefined()
-    expect(notes[0]).toMatch(/note: added \.pptfast\//)
+    expect(notes[0]).toMatch(/note: added \.pptpress\//)
     expect(await readFile(join(cwd, "git-common", "info", "exclude"), "utf8")).toContain(WORKSPACE_IGNORE_ENTRY)
   })
 
@@ -333,7 +367,7 @@ describe("prepareWorkspaceDir", () => {
     expect(notes).toEqual([])
   })
 
-  it.skipIf(process.platform === "win32")("turns a read-only workspace into a PptfastError that names the three ways out", async () => {
+  it.skipIf(process.platform === "win32")("turns a read-only workspace into a PptpressError that names the three ways out", async () => {
     // Windows has no POSIX permission bits, so chmod 0o555 on a directory is not a product bug.
     const cwd = await trackedTmp()
     await chmod(cwd, 0o555)
@@ -343,7 +377,7 @@ describe("prepareWorkspaceDir", () => {
       dir: join(cwd, WORKSPACE_DIRNAME, "hello"),
     })
     try {
-      await expect(prepareWorkspaceDir(loc)).rejects.toThrow(PptfastError)
+      await expect(prepareWorkspaceDir(loc)).rejects.toThrow(PptpressError)
       await expect(prepareWorkspaceDir(loc)).rejects.toThrow(/pass -o <path>/)
       await expect(prepareWorkspaceDir(loc)).rejects.toThrow(/outDir/)
     } finally {
@@ -366,7 +400,7 @@ describe("inspectWorkspace", () => {
     const cwd = await trackedTmp()
     const report = await inspectWorkspace({
       cwd,
-      projectConfigPath: join(cwd, "pptfast.config.json"),
+      projectConfigPath: join(cwd, "pptpress.config.json"),
       outDir: "out",
       runGit: async () => {
         throw new Error("git should not run when outDir is configured")

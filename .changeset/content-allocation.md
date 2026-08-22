@@ -1,5 +1,5 @@
 ---
-"@liustack/pptfast": minor
+"@liustack/pptpress": minor
 ---
 
 Every theme now says which chapter, content, and ending layouts it wants, not just which cover.

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import type { Component } from "@/ir"
-import { PptfastError } from "../../errors"
+import { PptpressError } from "../../errors"
 import { measureComponent, renderComponent } from "./index"
 import type { ComponentBox, ComponentCtx } from "./types"
 
@@ -32,14 +32,14 @@ const ctx: ComponentCtx = {
 const box: ComponentBox = { x: 0, y: 0, w: 1120, h: 100 }
 
 describe("component dispatch guard against an invalid component.type (wave-2 sweep, T3)", () => {
-  it("measureComponent throws PptfastError (not a bare TypeError) naming the invalid type and pointing at validateIr", () => {
-    expect(() => measureComponent(violatingComponent, 1120, ctx)).toThrow(PptfastError)
+  it("measureComponent throws PptpressError (not a bare TypeError) naming the invalid type and pointing at validateIr", () => {
+    expect(() => measureComponent(violatingComponent, 1120, ctx)).toThrow(PptpressError)
     expect(() => measureComponent(violatingComponent, 1120, ctx)).toThrow(/not_a_real_component_type/)
     expect(() => measureComponent(violatingComponent, 1120, ctx)).toThrow(/validateIr/)
   })
 
-  it("renderComponent throws PptfastError (not a bare TypeError) naming the invalid type and pointing at validateIr", () => {
-    expect(() => renderComponent(violatingComponent, box, ctx)).toThrow(PptfastError)
+  it("renderComponent throws PptpressError (not a bare TypeError) naming the invalid type and pointing at validateIr", () => {
+    expect(() => renderComponent(violatingComponent, box, ctx)).toThrow(PptpressError)
     expect(() => renderComponent(violatingComponent, box, ctx)).toThrow(/not_a_real_component_type/)
     expect(() => renderComponent(violatingComponent, box, ctx)).toThrow(/validateIr/)
   })

@@ -1331,7 +1331,7 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
     },
   ]),
 
-  // quote_stage (quote-stage wave, task T2, 裁定 4): pptfast's first
+  // quote_stage (quote-stage wave, task T2, 裁定 4): pptpress's first
   // `pinOnly` layout (registry.ts's `LayoutDefinition.pinOnly`) — the
   // "content layouts" auto-pick fixtures throughout the rest of this
   // file never reach it (it's excluded from every theme's curated pool by

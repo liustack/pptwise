@@ -12,7 +12,7 @@ import {
   type ValidationIssue,
 } from "../api"
 import { CANVAS_H_PX, CANVAS_W_PX } from "../constants"
-import { PptfastError } from "../errors"
+import { PptpressError } from "../errors"
 import { VERSION } from "../version"
 import { StyleOverrideSchema, type PptxIR, type StyleOverride } from "../ir"
 import { PptxIRV3Schema } from "../ir/legacy-v3"
@@ -70,7 +70,7 @@ async function loadStyleFile(path: string): Promise<StyleOverride> {
     const detail = r.error.issues
       .map((i) => `${i.path.join(".") || "(root)"}: ${i.message}`)
       .join("\n")
-    throw new PptfastError(`invalid style file ${path}:\n${detail}`)
+    throw new PptpressError(`invalid style file ${path}:\n${detail}`)
   }
   return r.data
 }
@@ -79,13 +79,13 @@ async function loadStyleFile(path: string): Promise<StyleOverride> {
  * Read + validate + register a brand theme file (brand-extract wave, 裁定 3:
  * loading always goes through `registerTheme`, so its contrast hard gate
  * fires here, before `validateIr` ever sees the deck). Returns the loaded
- * theme's id. Throws {@link PptfastError} for an unreadable/malformed file
+ * theme's id. Throws {@link PptpressError} for an unreadable/malformed file
  * (`parseBrandThemeFile`'s own path-naming message), a builtin-id collision
  * (裁定 4 — a theme file must never shadow a builtin), or a contrast-floor
  * failure (`registerTheme`'s `assertContrastFloor`, whose message names the
  * failing token, the measured ratio, and the background). Re-loading a file
  * whose id is already registered is a no-op (`registerBrandThemeFile`'s own
- * idempotency — `pptfast serve`'s rebuild loop re-runs this every rebuild).
+ * idempotency — `pptpress serve`'s rebuild loop re-runs this every rebuild).
  */
 async function loadThemeFile(path: string): Promise<string> {
   const raw = await loadIrFile(path, "theme")
@@ -95,7 +95,7 @@ async function loadThemeFile(path: string): Promise<string> {
 /**
  * Deck-project `theme.json` auto-discovery (brand-extract wave, 裁定 3's
  * zero-flag convention): a `theme.json` in the deck project directory —
- * typically `pptfast brand extract`'s own output, dropped there so the deck
+ * typically `pptpress brand extract`'s own output, dropped there so the deck
  * carries its brand with it — is loaded automatically before the deck is
  * assembled, so `deck.spec.json` can reference the custom theme's id with no
  * `--theme-file` flag on any command. Must run *before* `readDeckDir`: the
@@ -127,15 +127,15 @@ function describeThemeSource(
  * The `config` argument `resolveDeckTarget` (`./deck-dir.ts`) and its
  * `decksRoot` (`./home.ts`) expect: an object exposing `decksDir`, resolved
  * against whichever base that value's own layer implies. Project
- * `pptfast.config.json`'s own `decksDir` (spec §7's project-level escape
+ * `pptpress.config.json`'s own `decksDir` (spec §7's project-level escape
  * hatch, `ConfigSchema` in `./config.ts`, W5 task 6) wins over the user
  * config's (`UserConfigSchema`) when both are set — same project-beats-user
  * precedence as `theme`/`style` (see `applyDeckConfig` below) — but the two
  * layers resolve against different bases (project against the config file's
- * own directory, user against `pptfastHome()`, `decksRoot`'s one fixed
+ * own directory, user against `pptpressHome()`, `decksRoot`'s one fixed
  * base), so a winning project value is resolved to an absolute path *here*,
  * before being handed down: `decksRoot`'s own
- * `resolve(pptfastHome(), config?.decksDir ?? "decks")` then returns that
+ * `resolve(pptpressHome(), config?.decksDir ?? "decks")` then returns that
  * absolute path unchanged (`path.resolve`'s own semantics for an absolute
  * later segment) — the same "already-absolute short-circuits the base"
  * behavior `decksRoot({ decksDir: "/elsewhere/decks" })` already exercises
@@ -158,7 +158,7 @@ function resolveDecksDirSource(
 /**
  * Resolve deck defaults onto the raw (pre-validation) IR.
  * Precedence (spec §7's four-layer chain, W5 task 5): CLI flag > project
- * `pptfast.config.json` (walked up from cwd) > user `~/.pptfast/config.json`
+ * `pptpress.config.json` (walked up from cwd) > user `~/.pptpress/config.json`
  * (`findUserConfig`, no cwd walk-up — a single fixed path, see `./config.ts`)
  * > whatever the artifact itself already carries (an authored IR's own
  * `theme`, or `PptxIRSchema`'s own "consulting" default when nothing
@@ -226,8 +226,8 @@ export async function applyDeckConfig(
   if (theme !== undefined) {
     const installedThemeIds = getInstalledThemeIds()
     if (!installedThemeIds.includes(theme)) {
-      throw new PptfastError(
-        `unknown theme "${theme}" (from ${describeThemeSource(opts, projectHit, userHit)}) — available: ${installedThemeIds.join(", ")} (see \`pptfast themes\`)`,
+      throw new PptpressError(
+        `unknown theme "${theme}" (from ${describeThemeSource(opts, projectHit, userHit)}) — available: ${installedThemeIds.join(", ")} (see \`pptpress themes\`)`,
       )
     }
   }
@@ -339,7 +339,7 @@ export async function loadValidatedDeckIr(target: string, cwd: string): Promise<
   await applyDeckConfig(raw, { cwd, projectHit, userHit })
   const v = validateIr(raw)
   if (!v.ok) {
-    throw new PptfastError(
+    throw new PptpressError(
       `invalid IR (${v.errors.length} issue${v.errors.length === 1 ? "" : "s"}):\n${formatIssues(v.errors)}`,
     )
   }
@@ -349,7 +349,7 @@ export async function loadValidatedDeckIr(target: string, cwd: string): Promise<
 
 export interface RenderOptions {
   /** `-o <file>`. Optional (workspace-artifacts wave): omitted, the deck
-   *  renders to `<anchor>/.pptfast/<slug>/<slug>.pptx` — see
+   *  renders to `<anchor>/.pptpress/<slug>/<slug>.pptx` — see
    *  {@link resolveWorkspaceLocation} (`./workspace.ts`) for how the anchor
    *  and slug are derived. A relative value resolves against `cwd`, and the
    *  workspace default is never consulted: an explicit path is always the
@@ -375,7 +375,7 @@ export interface RenderOptions {
 
 /**
  * `irPath` accepts a single IR/spec JSON file, a deck project directory, or
- * a bare deck name under `~/.pptfast/decks` (W5 task 5, `loadDeckTarget`
+ * a bare deck name under `~/.pptpress/decks` (W5 task 5, `loadDeckTarget`
  * above) — directory/bare-name input is assembled in memory first, then
  * follows the exact same validate → resolve-assets → generate pipeline a
  * single file always has. `--draft` threads through unchanged either way
@@ -406,7 +406,7 @@ export async function runRender(irPath: string, opts: RenderOptions): Promise<st
     userHit,
   })
   const v = validateIr(raw)
-  if (!v.ok) throw new PptfastError(`invalid IR:\n${formatIssues(v.errors)}`)
+  if (!v.ok) throw new PptpressError(`invalid IR:\n${formatIssues(v.errors)}`)
   await resolveLocalAssets(v.ir!, baseDir, workspaceAssetsDir)
   const bytes = await generatePptx(v.ir!, {
     draft: opts.draft,
@@ -466,7 +466,7 @@ function normalizedNote(normalized: string[] | undefined): string | undefined {
  * "let the caller skip the line entirely" shape {@link normalizedNote}
  * above and {@link placeholderNote} below both use. Exit code is
  * unaffected either way — a warning never turns a `runValidate`/`runRender`
- * call into a thrown `PptfastError` (only `!v.ok`, i.e. an error-severity
+ * call into a thrown `PptpressError` (only `!v.ok`, i.e. an error-severity
  * finding, does that). This note is purely additive visibility.
  */
 function warningsNote(warnings: ValidationIssue[] | undefined): string | undefined {
@@ -503,7 +503,7 @@ function placeholderNote(ir: PptxIR): string | undefined {
  * hand-authored IR that sets `placeholder: true` itself) never grows one,
  * keeping that path's output byte-identical to before this task.
  *
- * Returns human-readable report. Throws PptfastError when invalid (CLI exit 1).
+ * Returns human-readable report. Throws PptpressError when invalid (CLI exit 1).
  * When `validateIr` deterministically rewrote any synonym field names before
  * parsing (W5 task 4 — kpi `title`→`label` and friends, `ir/field-aliases.ts`),
  * appends them as a "note" line after the OK summary: visible so the caller
@@ -542,7 +542,7 @@ export async function runValidate(
   await applyDeckConfig(raw, { themeFilePath: opts.themeFilePath, cwd, projectHit, userHit })
   const v = validateIr(raw)
   if (!v.ok)
-    throw new PptfastError(
+    throw new PptpressError(
       `invalid IR (${v.errors.length} issue${v.errors.length === 1 ? "" : "s"}):\n${formatIssues(v.errors)}`,
     )
   await resolveLocalAssets(v.ir!, baseDir, workspaceAssetsDir)
@@ -575,7 +575,7 @@ function formatAuditFinding(f: AuditFinding): string {
 }
 
 /**
- * Human-readable `pptfast audit` report (W6 task 2, spec §7 workflow ④):
+ * Human-readable `pptpress audit` report (W6 task 2, spec §7 workflow ④):
  * every finding as its own {@link formatAuditFinding} line — already
  * naturally grouped by page, since `auditDeck` pushes findings in slide
  * order (`../svg/audit/deck-audit.ts`) — followed by a trailing summary line
@@ -622,7 +622,7 @@ export interface AuditOptions {
    *  overload). Missing rasterization capability or a remote asset
    *  reference makes this command fail loudly (a rejected `auditDeck`
    *  promise propagates straight out of this function, same as the
-   *  existing invalid-IR `PptfastError` path) rather than silently
+   *  existing invalid-IR `PptpressError` path) rather than silently
    *  reporting a clean pixel check that never ran. */
   pixels?: boolean
   /** `--theme-file <path>` — see `applyDeckConfig`'s own `themeFilePath` doc comment. */
@@ -642,14 +642,14 @@ export interface AuditCliResult {
 }
 
 /**
- * `pptfast audit <target> [--json]` (W6 task 2, spec §7 workflow ④): resolve
+ * `pptpress audit <target> [--json]` (W6 task 2, spec §7 workflow ④): resolve
  * `target` through the exact same `loadDeckTarget` path `runValidate`/
  * `runRender`/`runPreview` already use (IR file / deck project directory /
- * bare name under `~/.pptfast/decks`), validate first, then hand the
+ * bare name under `~/.pptpress/decks`), validate first, then hand the
  * validated IR to `auditDeck` (`../svg/audit/deck-audit.ts`, pure, no I/O).
  *
- * An invalid deck fails exactly like `pptfast validate` — same message
- * shape, same `PptfastError` → CLI exit-1 path — and never reaches
+ * An invalid deck fails exactly like `pptpress validate` — same message
+ * shape, same `PptpressError` → CLI exit-1 path — and never reaches
  * `auditDeck` at all: the geometry/contrast/overlap checks only mean
  * anything over a schema-valid, already-quality-gated deck (`auditDeck`'s
  * own "advisory, not a hard gate" doc comment — `validateIr` is the hard
@@ -676,7 +676,7 @@ export async function runAudit(target: string, opts: AuditOptions = {}): Promise
   await applyDeckConfig(raw, { themeFilePath: opts.themeFilePath, cwd, projectHit, userHit })
   const v = validateIr(raw)
   if (!v.ok) {
-    throw new PptfastError(
+    throw new PptpressError(
       `invalid IR (${v.errors.length} issue${v.errors.length === 1 ? "" : "s"}):\n${formatIssues(v.errors)}`,
     )
   }
@@ -725,7 +725,7 @@ function formatAssetBriefItem(item: AssetBriefItem): string {
 }
 
 /**
- * Human-readable `pptfast asset-brief` report (asset-brief plan, task 1):
+ * Human-readable `pptpress asset-brief` report (asset-brief plan, task 1):
  * one {@link formatAssetBriefItem} block per image slot, followed by a
  * trailing summary line in the same "read just the last line" spirit
  * {@link formatAuditReport} already established for `audit`.
@@ -747,7 +747,7 @@ export interface AssetBriefOptions {
 }
 
 /**
- * `pptfast asset-brief <target> [--json]` (asset-brief plan, task 1): resolve
+ * `pptpress asset-brief <target> [--json]` (asset-brief plan, task 1): resolve
  * `target` through the exact same `loadDeckTarget` path `audit`/`validate`/
  * `render`/`preview` already use, validate first (same error shape/exit-1
  * path as every other command in this file), then hand the validated IR to
@@ -767,7 +767,7 @@ export async function runAssetBrief(target: string, opts: AssetBriefOptions = {}
   await applyDeckConfig(raw, { cwd, projectHit, userHit })
   const v = validateIr(raw)
   if (!v.ok) {
-    throw new PptfastError(
+    throw new PptpressError(
       `invalid IR (${v.errors.length} issue${v.errors.length === 1 ? "" : "s"}):\n${formatIssues(v.errors)}`,
     )
   }
@@ -777,12 +777,12 @@ export async function runAssetBrief(target: string, opts: AssetBriefOptions = {}
 }
 
 /**
- * Validate a deck spec JSON file (W5 task 2: `pptfast plan validate`, renamed
- * to `pptfast spec validate` — vocabulary-v4 rename, task 2, spec §8.2).
+ * Validate a deck spec JSON file (W5 task 2: `pptpress plan validate`, renamed
+ * to `pptpress spec validate` — vocabulary-v4 rename, task 2, spec §8.2).
  * `loadIrFile` is a generic "read + JSON-parse with a readable failure
  * message" helper despite its IR-scoped name (`./load-ir.ts`) — reused as-is
  * rather than duplicated, same pattern `runValidate` above uses for IR.
- * Returns human-readable report. Throws PptfastError when invalid (CLI exit 1).
+ * Returns human-readable report. Throws PptpressError when invalid (CLI exit 1).
  *
  * Appends the same {@link normalizedNote} `runValidate`/`runRender` print
  * (T0b fix 2 scope extension) whenever `validateSpec` rewrote a top-level
@@ -795,13 +795,13 @@ export async function runSpecValidate(specPath: string): Promise<string> {
   // Brand-extract wave: a spec that names a custom theme id normally sits in
   // a deck project directory whose own theme.json defines it — auto-load it
   // from alongside the spec file, same zero-flag convention loadDeckTarget
-  // applies for whole-directory targets, so `pptfast spec validate
+  // applies for whole-directory targets, so `pptpress spec validate
   // deck-dir/deck.spec.json` doesn't hard-fail the theme gate a later
-  // `pptfast validate deck-dir/` would pass.
+  // `pptpress validate deck-dir/` would pass.
   await registerDeckThemeFile(dirname(resolve(specPath)))
   const v = validateSpec(raw)
   if (!v.ok) {
-    throw new PptfastError(formatInvalidSpecError(v.errors))
+    throw new PptpressError(formatInvalidSpecError(v.errors))
   }
   const spec = v.spec!
   // Safe to call unguarded: validateSpec already resolved this same
@@ -812,7 +812,7 @@ export async function runSpecValidate(specPath: string): Promise<string> {
   return aliasNote ? `${ok}\n${aliasNote}` : ok
 }
 
-/** `mode` selects which JSON Schema to print (`pptfast schema [--style|--spec]`,
+/** `mode` selects which JSON Schema to print (`pptpress schema [--style|--spec]`,
  *  spec §8.2's `schema --plan`→`schema --spec` rename, task 2) — `"plan"` was
  *  the pre-rename flag value, no longer accepted (`../cli.ts` hard-fails a
  *  bare `--plan` before this function is ever called, see that file's own
@@ -843,11 +843,11 @@ function defaultThemeIdFor(output: string): string {
 }
 
 /**
- * `pptfast brand extract <file> -o <out.theme.json> [--id] [--label]`
+ * `pptpress brand extract <file> -o <out.theme.json> [--id] [--label]`
  * (brand-extract wave, roadmap §2.0.1): extract brand colors/fonts from a
  * user's own `.thmx`/`.potx`/`.pptx` **locally** — the file's bytes never
  * leave the machine; there is no network call anywhere in this path — into a
- * pptfast theme file (`extractBrandTheme`, `../themes/brand-extract.ts`).
+ * pptpress theme file (`extractBrandTheme`, `../themes/brand-extract.ts`).
  *
  * Two fail-fast checks beyond extraction itself, both mirroring what the
  * load path would reject later, surfaced here where the fix is cheapest:
@@ -866,12 +866,12 @@ export async function runBrandExtract(file: string, opts: BrandExtractOptions): 
   try {
     bytes = await readFile(file)
   } catch {
-    throw new PptfastError(`cannot read template file: ${file}`)
+    throw new PptpressError(`cannot read template file: ${file}`)
   }
   const id = opts.id ?? defaultThemeIdFor(opts.output)
   if ((CANONICAL_THEME_IDS as readonly string[]).includes(id)) {
-    throw new PptfastError(
-      `theme id "${id}" collides with a built-in pptfast theme — pick a different id with --id (or a different output filename)`,
+    throw new PptpressError(
+      `theme id "${id}" collides with a built-in pptpress theme — pick a different id with --id (or a different output filename)`,
     )
   }
   const theme = await extractBrandTheme(bytes, { id, label: opts.label })
@@ -883,7 +883,7 @@ export async function runBrandExtract(file: string, opts: BrandExtractOptions): 
     `wrote ${opts.output} (theme "${theme.id}", label "${theme.label}")`,
     `  colors: bg ${c.bg}, text ${c.text}, primary ${c.primary}, accent ${c.accent}, muted ${c.muted} (derived), ${c.chartPalette.length} chart colors`,
     `  fonts: heading "${theme.style.fonts.heading[0]}", body "${theme.style.fonts.body[0]}"`,
-    `use it: pptfast render <deck> --theme-file ${opts.output} — or drop it into a deck project directory as ${THEME_FILENAME} and reference "${theme.id}" as the deck's theme`,
+    `use it: pptpress render <deck> --theme-file ${opts.output} — or drop it into a deck project directory as ${THEME_FILENAME} and reference "${theme.id}" as the deck's theme`,
   ]
   try {
     assertContrastFloor(theme.id, theme.style)
@@ -908,7 +908,7 @@ export async function runBrandExtract(file: string, opts: BrandExtractOptions): 
  * CLI surface renamed this task (spec §8.2's `scenarios`→`narratives`
  * rename, task 2): command name `narratives`, `--json` output field names
  * `strategies`/`pacings` (were `modes`/`deliveries`) — kept in step with the
- * command's own new name rather than leaving a `pptfast narratives --json`
+ * command's own new name rather than leaving a `pptpress narratives --json`
  * caller staring at a `modes` key for what is now the `strategy` axis.
  */
 export function runNarratives(asJson: boolean): string {
@@ -943,18 +943,18 @@ const CONFIG_TEMPLATE = {
   },
 } as const
 
-/** Scaffold pptfast.config.json in cwd. Never overwrites. */
+/** Scaffold pptpress.config.json in cwd. Never overwrites. */
 export async function runInit(cwd = process.cwd()): Promise<string> {
   const target = join(cwd, CONFIG_FILENAME)
   try {
     await writeFile(target, JSON.stringify(CONFIG_TEMPLATE, null, 2) + "\n", { flag: "wx" })
   } catch (e) {
     if ((e as NodeJS.ErrnoException).code === "EEXIST") {
-      throw new PptfastError(`${target} already exists — edit it instead`)
+      throw new PptpressError(`${target} already exists — edit it instead`)
     }
     throw e
   }
-  return `wrote ${target} — themes: \`pptfast themes\`, style schema: \`pptfast schema --style\``
+  return `wrote ${target} — themes: \`pptpress themes\`, style schema: \`pptpress schema --style\``
 }
 
 export interface PreviewOptions {
@@ -1026,7 +1026,7 @@ async function renderDeckSlides(
   const { raw, baseDir, isDir, resolvedTarget, workspaceAssetsDir } = await loadDeckTarget(target, cwd, projectHit, userHit)
   await applyDeckConfig(raw, { themeFilePath: opts.themeFilePath, cwd, projectHit, userHit })
   const v = validateIr(raw)
-  if (!v.ok) throw new PptfastError(`invalid IR:\n${formatIssues(v.errors)}`)
+  if (!v.ok) throw new PptpressError(`invalid IR:\n${formatIssues(v.errors)}`)
   await resolveLocalAssets(v.ir!, baseDir, workspaceAssetsDir)
   const ir = v.ir!
   const svgs = ir.slides.map((_, i) => renderSlideSvg(ir, i))
@@ -1073,7 +1073,7 @@ function buildDeckAuditAndHtml(
     })),
     findings: findings.map((f) => ({ page: f.page, slideId: f.slideId, code: f.code, message: f.message })),
     auditNote: hasPlaceholder
-      ? "audit overlay skipped — deck has unfilled placeholder pages; fill every page and re-run `pptfast preview --html` to see audit findings"
+      ? "audit overlay skipped — deck has unfilled placeholder pages; fill every page and re-run `pptpress preview --html` to see audit findings"
       : undefined,
     checks: auditReport?.checks,
   })
@@ -1090,12 +1090,12 @@ function buildDeckAuditAndHtml(
  * and `createServeServer` (`./serve.ts`), which calls this once at startup
  * and again on every debounced `fs.watch` rebuild, caching `.html` in memory
  * for `GET /` and pushing an SSE `reload` once it succeeds. A thrown
- * `PptfastError` (invalid IR, a mid-edit malformed JSON save, ...) propagates
+ * `PptpressError` (invalid IR, a mid-edit malformed JSON save, ...) propagates
  * straight out of this function either way — it is `createServeServer`'s job
  * to catch the *rebuild* case and turn it into an SSE `error` event instead
  * of letting it kill the server; the *first* call (before serve starts
  * listening) is deliberately allowed to reject the whole command, same
- * "throw `PptfastError` → CLI exit 1" contract every other `run*` command
+ * "throw `PptpressError` → CLI exit 1" contract every other `run*` command
  * already has, since there is no previous-good HTML yet to keep serving.
  */
 export interface DeckPreviewResult extends DeckRenderResult {
@@ -1132,7 +1132,7 @@ export async function buildDeckPreview(
  * writing each rendered SVG to `outDir`, conditionally writing
  * `preview.html`, and assembling the human-readable summary line. `outDir`
  * is optional (workspace-artifacts wave): omitted, the files land in
- * `<anchor>/.pptfast/<slug>/`, and matching `NNN-<type>.svg` leftovers from
+ * `<anchor>/.pptpress/<slug>/`, and matching `NNN-<type>.svg` leftovers from
  * a previous run of the same deck are pruned first. An explicit `-o` is
  * resolved against `cwd` and is never pruned — that directory may be
  * anything. The directory is only created once assemble/validate/render has
@@ -1190,7 +1190,7 @@ export async function runPreview(irPath: string, outDir?: string, opts: PreviewO
     const hasPlaceholder = ir.slides.some((s) => s.placeholder)
     const manifest = buildPreviewManifest({
       title: ir.filename,
-      pptfastVersion: VERSION,
+      pptpressVersion: VERSION,
       width: CANVAS_W_PX,
       height: CANVAS_H_PX,
       slides: ir.slides.map((slide, i) => ({
@@ -1248,7 +1248,7 @@ function withRewrittenAssetPaths(ir: PptxIR, deckDir: string, outDir: string): P
 }
 
 /**
- * `pptfast assemble <dir|name>` (W5 task 5): resolve `target` (path or bare
+ * `pptpress assemble <dir|name>` (W5 task 5): resolve `target` (path or bare
  * deck name, `resolveDeckTarget`) → `readDeckDir` (spec + pages/ + assets/ →
  * IR, `./deck-dir.ts`) → write the assembled IR as pretty-printed JSON,
  * default `<deckDir>/deck.json` when `-o` is omitted. Deliberately does
@@ -1299,7 +1299,7 @@ export async function runAssemble(target: string, opts: AssembleOptions = {}): P
   const [projectHit, userHit] = await Promise.all([findConfig(cwd), findUserConfig()])
   const dir = await resolveDeckTarget(target, resolveDecksDirSource(projectHit, userHit), cwd)
   if ((await pathExists(dir)) && !(await isDeckDirectory(dir))) {
-    throw new PptfastError(`expected a deck project directory: ${dir}`)
+    throw new PptpressError(`expected a deck project directory: ${dir}`)
   }
   // Same deck-local theme.json auto-load `loadDeckTarget` performs (brand-
   // extract wave) — assemble bypasses that helper but hits the same
@@ -1326,7 +1326,7 @@ export async function runAssemble(target: string, opts: AssembleOptions = {}): P
 }
 
 /**
- * `pptfast disassemble <deck.json> -o <dir>` (W5 task 5): the CLI shell for
+ * `pptpress disassemble <deck.json> -o <dir>` (W5 task 5): the CLI shell for
  * `disassembleDeck` (`../spec/assemble.ts`) — read + validate an IR file the
  * same way `runRender`/`runValidate` do, then write `deck.spec.json` +
  * `pages/<id>.json` for every non-placeholder page. Pretty-printed. Key
@@ -1380,7 +1380,7 @@ export async function runAssemble(target: string, opts: AssembleOptions = {}): P
 export async function runDisassemble(irPath: string, outDir: string): Promise<string> {
   const raw = await loadIrFile(irPath)
   const v = validateIr(raw)
-  if (!v.ok) throw new PptfastError(`invalid IR:\n${formatIssues(v.errors)}`)
+  if (!v.ok) throw new PptpressError(`invalid IR:\n${formatIssues(v.errors)}`)
   const { spec, pages } = disassembleDeck(v.ir!)
 
   // W5 whole-branch review finding 1 (CRITICAL, CWE-22): `id` is `slide.id`
@@ -1400,7 +1400,7 @@ export async function runDisassemble(irPath: string, outDir: string): Promise<st
     await writeFile(specPath, JSON.stringify(spec, null, 2) + "\n", { flag: "wx" })
   } catch (e) {
     if ((e as NodeJS.ErrnoException).code === "EEXIST") {
-      throw new PptfastError(`${specPath} already exists — refusing to overwrite an existing deck project`)
+      throw new PptpressError(`${specPath} already exists — refusing to overwrite an existing deck project`)
     }
     throw e
   }
@@ -1445,7 +1445,7 @@ export async function runDisassemble(irPath: string, outDir: string): Promise<st
 // ── migrate ──────────────────────────────────────────────────────────────
 
 /**
- * `pptfast migrate <input> -o <output>` (spec §9.1/§9.2/§9.3, vocabulary-v4
+ * `pptpress migrate <input> -o <output>` (spec §9.1/§9.2/§9.3, vocabulary-v4
  * rename, task 2): the one deterministic conversion surface for both
  * artifacts this rename touches. Dispatches purely on whether `<input>`
  * resolves to a directory ({@link isDeckDirectory}) — the same signal every
@@ -1464,12 +1464,12 @@ export async function runDisassemble(irPath: string, outDir: string): Promise<st
  *   leftover `logo_wall` component is rewritten to `image_grid` via
  *   {@link migrateLogoWallToImageGrid}. IR v2
  *   is explicitly not accepted here (spec §15.3: "v2 无真实用户" —
- *   `pptfast migrate` does not convert v2, `validateIr`'s own v2
+ *   `pptpress migrate` does not convert v2, `validateIr`'s own v2
  *   hard-reject message carries the full v2→v4 combined mapping for a
  *   caller who needs to convert one by hand).
  *
  * Both branches never overwrite `<output>` — a pre-existing file at the
- * resolved output path is a hard `PptfastError`, the same `wx`-flag EEXIST
+ * resolved output path is a hard `PptpressError`, the same `wx`-flag EEXIST
  * guard `runDisassemble`/`runInit` already use elsewhere in this file (spec
  * §9.2: "迁移工具必须默认写到新目标，不覆盖原文件"). Neither branch runs a
  * model or reinterprets content — both are thin CLI shells over an
@@ -1552,7 +1552,7 @@ async function writeMigratedJson(outPath: string, data: unknown): Promise<void> 
     await writeFile(outPath, JSON.stringify(data, null, 2) + "\n", { flag: "wx" })
   } catch (e) {
     if ((e as NodeJS.ErrnoException).code === "EEXIST") {
-      throw new PptfastError(`${outPath} already exists — refusing to overwrite, delete it first or choose a different -o`)
+      throw new PptpressError(`${outPath} already exists — refusing to overwrite, delete it first or choose a different -o`)
     }
     throw e
   }
@@ -1623,7 +1623,7 @@ async function runMigrateDeckDir(dir: string, output: string, cwd: string): Prom
       const target = pagePaths.length === 1 ? pagePaths[0] : join(outDir, PAGES_DIRNAME)
       return `wrote ${target} (${migrateRewriteNote(false, false, true)})`
     }
-    throw new PptfastError(
+    throw new PptpressError(
       `${dir} has ${SPEC_FILENAME} but no ${PLAN_FILENAME} — this deck project is already migrated, nothing to do`,
     )
   }
@@ -1631,7 +1631,7 @@ async function runMigrateDeckDir(dir: string, output: string, cwd: string): Prom
   const migrated = migrateDeckPlanToSpec(raw)
   await writeMigratedJson(specPath, migrated)
   const pagePaths = await rewriteLogoWallPages(dir, outDir)
-  const specNote = `wrote ${specPath} — run \`pptfast spec validate ${specPath}\` to confirm it, then delete ${planPath} (a directory with both files present is rejected)`
+  const specNote = `wrote ${specPath} — run \`pptpress spec validate ${specPath}\` to confirm it, then delete ${planPath} (a directory with both files present is rejected)`
   if (pagePaths.length === 0) return specNote
   return `${specNote}, wrote ${pagePaths.length === 1 ? pagePaths[0] : join(outDir, PAGES_DIRNAME)} (${migrateRewriteNote(false, false, true)})`
 }
@@ -1641,7 +1641,7 @@ async function runMigrateDeckDir(dir: string, output: string, cwd: string): Prom
  * IR v3 → v4 path (spec §9.3). `version: "2"` gets its own message pointing
  * at `validateIr`'s existing combined v2→v4 mapping rather than silently
  * routing it through the v3 vocabulary as a stepping stone (spec §15.3:
- * "v2 无真实用户", "`pptfast migrate` 只支持 v3→v4，不接 v2"). A v4 IR or
+ * "v2 无真实用户", "`pptpress migrate` 只支持 v3→v4，不接 v2"). A v4 IR or
  * spec-shaped file that still carries the old `chrome` field is rewritten
  * via {@link migrateChromeToBranding}, a leftover `bloom` theme id is
  * relocated onto `classroom` via {@link migrateBloomToClassroom}, and a
@@ -1653,8 +1653,8 @@ async function runMigrateIrFile(filePath: string, output: string, cwd: string): 
   const raw = await loadIrFile(filePath)
   const version = typeof raw === "object" && raw !== null ? (raw as Record<string, unknown>).version : undefined
   if (version === "2") {
-    throw new PptfastError(
-      "pptfast migrate does not support IR v2 (spec §15.3: v2 has no real users) — run `pptfast validate` on the v2 file to see the full v2→v4 combined field mapping and rewrite it by hand",
+    throw new PptpressError(
+      "pptpress migrate does not support IR v2 (spec §15.3: v2 has no real users) — run `pptpress validate` on the v2 file to see the full v2→v4 combined field mapping and rewrite it by hand",
     )
   }
   const outPath = resolve(cwd, output)
@@ -1666,7 +1666,7 @@ async function runMigrateIrFile(filePath: string, output: string, cwd: string): 
     const parsed = PptxIRV3Schema.safeParse(pre)
     if (!parsed.success) {
       const detail = parsed.error.issues.map((issue) => `${issue.path.join(".") || "(root)"}: ${issue.message}`).join("\n")
-      throw new PptfastError(`invalid IR v3 file ${filePath}:\n${detail}`)
+      throw new PptpressError(`invalid IR v3 file ${filePath}:\n${detail}`)
     }
     const migrated = migrateIrV3ToV4(parsed.data)
     await writeMigratedJson(outPath, migrated)
@@ -1680,7 +1680,7 @@ async function runMigrateIrFile(filePath: string, output: string, cwd: string): 
     await writeMigratedJson(outPath, migrated)
     return `wrote ${outPath} (${migrateRewriteNote(chrome, bloom, logoWall)})`
   }
-  throw new PptfastError(
-    `pptfast migrate converts an IR v3 file (version: "3"), a v4 IR or deck spec still carrying the old chrome field (renamed to branding), the removed bloom theme id (relocated to classroom), or a leftover logo_wall component (rewritten to image_grid), or a deck project directory containing ${PLAN_FILENAME} — got version ${JSON.stringify(version)} in ${filePath} with nothing to migrate`,
+  throw new PptpressError(
+    `pptpress migrate converts an IR v3 file (version: "3"), a v4 IR or deck spec still carrying the old chrome field (renamed to branding), the removed bloom theme id (relocated to classroom), or a leftover logo_wall component (rewritten to image_grid), or a deck project directory containing ${PLAN_FILENAME} — got version ${JSON.stringify(version)} in ${filePath} with nothing to migrate`,
   )
 }

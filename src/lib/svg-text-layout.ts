@@ -123,7 +123,7 @@ const WIDE_CHAR_RE = /[\u2014\u2018-\u201f\u2e80-\u9fff\uff00-\uffef]/
 // exports in whatever `resolveFontFace` (fonts.ts) resolves -- Georgia (the
 // consulting theme's default heading+body face, and academic/insight's
 // heading face) and Microsoft YaHei (the resolved body face for 12 of
-// pptfast's 13 themes -- declared directly by 10, and by academic/insight's
+// pptpress's 13 themes -- declared directly by 10, and by academic/insight's
 // role-default fallback since neither's declared body stack hits
 // SAFE_FONTS -- every theme except consulting, whose body resolves to
 // Georgia). Both were measured against the real

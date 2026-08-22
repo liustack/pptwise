@@ -36,7 +36,7 @@ export const schema = z
   })
   .strict()
   // Schema guidance (review fix round, Important-1 — this is the first
-  // component schema to carry a `.describe()`; `pptfast schema`/`irJsonSchema()`
+  // component schema to carry a `.describe()`; `pptpress schema`/`irJsonSchema()`
   // is the surface a model actually reads before writing IR, so the
   // component-vs-image decision this schema's own top comment already
   // reasons through needs to live here too, not just in a comment nobody

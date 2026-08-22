@@ -1,7 +1,7 @@
 /**
  * The machine-readable half of a preview bundle.
  *
- * `pptfast preview` has always written per-slide SVG files and a
+ * `pptpress preview` has always written per-slide SVG files and a
  * self-contained `preview.html`. Both are for eyes: one needs a file browser
  * to make sense of, the other needs a browser window. Neither tells a
  * *program* what it is looking at — which page is which, what the slide
@@ -50,8 +50,8 @@ export interface PreviewManifestPage {
 
 export interface PreviewManifest {
   readonly manifestVersion: typeof PREVIEW_MANIFEST_VERSION
-  readonly generator: "pptfast preview"
-  readonly pptfastVersion: string
+  readonly generator: "pptpress preview"
+  readonly pptpressVersion: string
   readonly title: string
   /** Render canvas in px — every page shares it. */
   readonly slide: { readonly width: number; readonly height: number }
@@ -76,7 +76,7 @@ export interface PreviewManifestSlideInput {
 
 export interface PreviewManifestInput {
   readonly title: string
-  readonly pptfastVersion: string
+  readonly pptpressVersion: string
   readonly width: number
   readonly height: number
   readonly slides: readonly PreviewManifestSlideInput[]
@@ -158,8 +158,8 @@ export function buildPreviewManifest(input: PreviewManifestInput): PreviewManife
 
   return {
     manifestVersion: PREVIEW_MANIFEST_VERSION,
-    generator: "pptfast preview",
-    pptfastVersion: input.pptfastVersion,
+    generator: "pptpress preview",
+    pptpressVersion: input.pptpressVersion,
     title: input.title,
     slide: { width: input.width, height: input.height },
     ...(input.checks !== undefined ? { checks: input.checks } : {}),

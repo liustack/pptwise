@@ -2,12 +2,12 @@
  * Local brand-color/font extraction from a user's own `.thmx`/`.potx`/`.pptx`
  * OOXML theme part (brand-extract wave, roadmap §2.0.1: the free
  * adoption-friction remover — "the output doesn't look like our company" is
- * pptfast's #1 enterprise-adoption blocker, and every user who hits it
+ * pptpress's #1 enterprise-adoption blocker, and every user who hits it
  * already has a company template on disk). Everything in this module runs
  * against zip bytes only (`jszip`, already a browser-safe dependency) —
  * `src/index.ts`'s dependency closure stays free of Node-only deps
  * (`AGENTS.md`'s layout rule), so this can run in a browser as readily as
- * the CLI's `pptfast brand extract` wraps it for.
+ * the CLI's `pptpress brand extract` wraps it for.
  *
  * Rewritten from `.issues/notes/brand-extraction-probe.py` (the 39/39
  * feasibility reference: every macOS Office `.thmx` extracted cleanly) —
@@ -21,7 +21,7 @@
  *   lt2              → surface (falls back to bg when absent)
  *   accent1 (or dk2) → primary/accent
  *   accent1-6        → chartPalette (OOXML's 6 accent slots map 1:1 onto
- *                      pptfast's chart palette — no reshaping needed)
+ *                      pptpress's chart palette — no reshaping needed)
  *   —                → muted, derived (see {@link deriveMuted})
  *
  * ── bg/text assignment: by measured lightness, not slot name ────────────
@@ -50,13 +50,13 @@
  * this wave's "reuse existing ratio/mix utilities" discipline.
  */
 import JSZip from "jszip"
-import { PptfastError } from "../errors"
+import { PptpressError } from "../errors"
 import { contrastRatio } from "../svg/ink"
 import { mixHex } from "../svg/components/color-mix"
 import type { BrandConfig } from "@/ir"
 import type { StyleTokens } from "./tokens"
 
-/** The theme-file JSON shape written by `pptfast brand extract` / SDK
+/** The theme-file JSON shape written by `pptpress brand extract` / SDK
  *  {@link extractBrandTheme}, and read back by `--theme-file` /
  *  `brand-theme-file.ts`'s `registerBrandThemeFile`. Pure data (裁定 3): no
  *  `layouts`/`motif`/`layoutTendencies` — those default to the full set,
@@ -75,7 +75,7 @@ export interface BrandThemeFile {
 export interface ExtractBrandThemeOptions {
   /** Theme id — defaults to a slug of {@link ExtractBrandThemeOptions.label},
    *  or (when that's also absent) a slug of the source theme part's own
-   *  `<a:clrScheme name="…">`. The CLI (`pptfast brand extract`) always
+   *  `<a:clrScheme name="…">`. The CLI (`pptpress brand extract`) always
    *  passes one explicitly (`--id`, or a slug of the `-o` filename — 裁定
    *  4) — this default only ever fires for a bare SDK caller. */
   id?: string
@@ -85,7 +85,7 @@ export interface ExtractBrandThemeOptions {
 }
 
 /** Every OOXML color-scheme slot this parser reads. `hlink`/`folHlink` are
- *  parsed (mirroring probe.py) but never mapped onto a pptfast token — no
+ *  parsed (mirroring probe.py) but never mapped onto a pptpress token — no
  *  hyperlink-color concept exists in `StyleColors` today. */
 type ClrSlot = "dk1" | "lt1" | "dk2" | "lt2" | "accent1" | "accent2" | "accent3" | "accent4" | "accent5" | "accent6" | "hlink" | "folHlink"
 type ClrSlots = Partial<Record<ClrSlot, string>>
@@ -280,7 +280,7 @@ export function slugify(input: string, fallback = "brand"): string {
  * read) — required for this wave's fixture tests' double-run-equality
  * assertions.
  *
- * Throws {@link PptfastError} for two *structural* failures — data this
+ * Throws {@link PptpressError} for two *structural* failures — data this
  * function has no reasonable default for:
  * - no theme part found in the package at all
  * - a theme part with no `dk1`/`lt1` (nothing to derive `bg`/`text` from) or
@@ -304,17 +304,17 @@ export async function extractBrandTheme(
   const zip = await JSZip.loadAsync(bytes)
   const part = await findThemePart(zip)
   if (!part) {
-    throw new PptfastError(
+    throw new PptpressError(
       "no theme part found in this file — expected a .thmx/.potx/.pptx OOXML package with a ppt/theme/theme1.xml (or theme/theme/theme1.xml) part",
     )
   }
   const { schemeName, slots } = parseColors(part.xml)
   if (!slots.dk1 || !slots.lt1) {
-    throw new PptfastError(`theme part ${part.path} is missing dk1/lt1 colors — cannot derive bg/text tokens`)
+    throw new PptpressError(`theme part ${part.path} is missing dk1/lt1 colors — cannot derive bg/text tokens`)
   }
   const chartPalette = ACCENT_SLOTS.map((slot) => slots[slot]).filter((c): c is string => c !== undefined)
   if (chartPalette.length === 0) {
-    throw new PptfastError(`theme part ${part.path} has no accent colors — cannot derive a chart palette or primary color`)
+    throw new PptpressError(`theme part ${part.path} has no accent colors — cannot derive a chart palette or primary color`)
   }
 
   const { bg, text } = resolveBgText(slots.dk1, slots.lt1)

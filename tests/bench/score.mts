@@ -1,6 +1,6 @@
 #!/usr/bin/env -S pnpm exec tsx
 /**
- * Model-agnostic pptfast benchmark scorer (benchmark wave, task 2). Walks
+ * Model-agnostic pptpress benchmark scorer (benchmark wave, task 2). Walks
  * `tests/bench/results/<model-tag>/<question-id>/`, scores each answered question
  * against exactly the mechanical signals the render chain already exposes —
  * `validateIr`/`auditDeck`/`generatePptx` — and writes a per-model
@@ -61,7 +61,7 @@ const REPO_ROOT = resolve(import.meta.dirname, "../..")
 
 /**
  * Strips every occurrence of the repo-root absolute prefix out of `text`,
- * turning e.g. `/Users/x/pptfast/tests/bench/results/m/q1/a.json` into
+ * turning e.g. `/Users/x/pptpress/tests/bench/results/m/q1/a.json` into
  * `tests/bench/results/m/q1/a.json`. A plain prefix strip (not `path.relative`
  * called on the whole string) because some callers below pass through an
  * error message from `readDeckDir`/`assembleDeck` that already has an
@@ -137,7 +137,7 @@ type ArtifactResult = { ir: unknown } | { error: string }
  * imported because the dispatch signal this scorer needs — "does this
  * directory contain a deck spec/plan artifact" — is cheaper than a second
  * `stat`): a bare IR `*.json` file, or a full deck-project directory
- * assembled via `readDeckDir` (the same seam `pptfast validate`/`render`
+ * assembled via `readDeckDir` (the same seam `pptpress validate`/`render`
  * use, `AGENTS.md`'s "reuse, do not reimplement assembly"). Never throws —
  * every failure path (missing directory, missing/ambiguous artifact file,
  * malformed JSON, a `readDeckDir`/`assembleDeck` structural error) returns
@@ -146,7 +146,7 @@ type ArtifactResult = { ir: unknown } | { error: string }
  * Checks for *either* `deck.spec.json` (current, vocabulary-v4 rename, spec
  * §6/§9.2) or the pre-rename `deck.plan.json` — not just the former — so a
  * not-yet-migrated result directory still routes into `readDeckDir` and gets
- * its own readable "no deck.spec.json ... run `pptfast migrate`" error
+ * its own readable "no deck.spec.json ... run `pptpress migrate`" error
  * (`readSpecFile`, `src/cli/deck-dir.ts`) instead of silently falling through
  * to the bare-IR branch below and being mis-parsed as if `deck.plan.json`/
  * `deck.spec.json` itself were a bare `PptxIR` file.
@@ -525,7 +525,7 @@ function mdCell(value: string | number | boolean | undefined): string {
 export function renderModelReport(modelTag: string, scores: QuestionScore[]): string {
   const agg = computeAggregates(scores)
   const lines: string[] = []
-  lines.push(`# pptfast benchmark report — ${modelTag}`)
+  lines.push(`# pptpress benchmark report — ${modelTag}`)
   lines.push("")
   lines.push(
     "Mechanical scoring only — no subjective quality dimension. See `tests/bench/README.md` for the run protocol and " +
@@ -562,7 +562,7 @@ export function renderModelReport(modelTag: string, scores: QuestionScore[]): st
 
 export function renderSummaryReport(reports: ModelReport[]): string {
   const lines: string[] = []
-  lines.push("# pptfast benchmark — cross-model summary")
+  lines.push("# pptpress benchmark — cross-model summary")
   lines.push("")
   lines.push(
     "One row per model. Mechanical scoring only — see `tests/bench/README.md`. Per-question detail lives in each " +

@@ -32,7 +32,7 @@ function coverIr(heading: string): PptxIR {
     version: "3",
     filename: "x.pptx",
     theme: { id: "consulting" },
-    meta: { organization: "pptfast", date: "2026-07" },
+    meta: { organization: "pptpress", date: "2026-07" },
     assets: { images: {} },
     slides: [coverSlide(heading)],
   } as unknown as PptxIR

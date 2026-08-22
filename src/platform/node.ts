@@ -63,7 +63,7 @@ async function recodeWithSharp(dataUrl: string): Promise<string> {
  * implementation (`browser.ts`) — see that function's own doc comment for
  * why the guard lives once, shared, rather than trusting every caller to
  * pre-filter: a Sharp/librsvg fetch of a remote `href` would be a real
- * network request from inside `pptfast audit`, which spec §3.1/§7 promise
+ * network request from inside `pptpress audit`, which spec §3.1/§7 promise
  * never happens.
  *
  * No explicit `density` — an empirically-verified default (this task's own
@@ -82,7 +82,7 @@ async function rasterizeWithSharp(svgMarkup: string, width: number, height: numb
   const remoteRef = findRemoteAssetRef(svgMarkup)
   if (remoteRef) {
     throw new Error(
-      `rasterizeSvg: refusing to rasterize an SVG that references a remote image (${remoteRef}) — only data-URI (or other local) assets are supported, pptfast audit never makes a network request`,
+      `rasterizeSvg: refusing to rasterize an SVG that references a remote image (${remoteRef}) — only data-URI (or other local) assets are supported, pptpress audit never makes a network request`,
     )
   }
   const sharpMod = await loadSharp("Pixel-contrast auditing (--pixels)")

@@ -10,7 +10,7 @@ const ir = PptxIRSchema.parse({
   filename: "smoke",
   theme: { id: "consulting" },
   slides: [
-    { type: "cover", heading: "pptfast smoke", subheading: "node render path", layout: "banner-title" },
+    { type: "cover", heading: "pptpress smoke", subheading: "node render path", layout: "banner-title" },
     { type: "content", heading: "Bullets", components: [{ type: "bullets", items: ["one", "two", "three"] }] },
     { type: "ending", heading: "Thanks" },
   ],
@@ -25,6 +25,6 @@ describe("node platform smoke", () => {
     expect(zip.file("ppt/slides/slide1.xml")).toBeTruthy()
     expect(zip.file("ppt/slides/slide3.xml")).toBeTruthy()
     const slide1 = await zip.file("ppt/slides/slide1.xml")!.async("string")
-    expect(slide1).toContain("pptfast smoke")
+    expect(slide1).toContain("pptpress smoke")
   })
 })

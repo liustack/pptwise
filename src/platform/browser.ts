@@ -97,7 +97,7 @@ function createCanvas(width: number, height: number): MinimalCanvas {
     return canvas as unknown as MinimalCanvas
   }
   throw new Error(
-    'rasterizeSvg unavailable — in Node, call installNodePlatform() from "@liustack/pptfast/node" first (the pptfast CLI does this automatically); in a browser, OffscreenCanvas or a DOM canvas is required',
+    'rasterizeSvg unavailable — in Node, call installNodePlatform() from "@liustack/pptpress/node" first (the pptpress CLI does this automatically); in a browser, OffscreenCanvas or a DOM canvas is required',
   )
 }
 
@@ -110,7 +110,7 @@ export async function rasterizeSvgInBrowser(svgMarkup: string, width: number, he
   }
   if (typeof Image === "undefined") {
     throw new Error(
-      'rasterizeSvg unavailable — in Node, call installNodePlatform() from "@liustack/pptfast/node" first (the pptfast CLI does this automatically); in a browser, the Image constructor is required',
+      'rasterizeSvg unavailable — in Node, call installNodePlatform() from "@liustack/pptpress/node" first (the pptpress CLI does this automatically); in a browser, the Image constructor is required',
     )
   }
 

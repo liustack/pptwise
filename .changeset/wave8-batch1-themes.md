@@ -1,5 +1,5 @@
 ---
-"@liustack/pptfast": minor
+"@liustack/pptpress": minor
 ---
 
 Six themes lock their cover, chapter, and ending to the wave 8 board faces. Content pages keep the full pool but now lean toward the board's main layouts. Motifs stay, evolve, or retire with the board.

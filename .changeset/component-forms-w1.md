@@ -1,5 +1,5 @@
 ---
-"@liustack/pptfast": minor
+"@liustack/pptpress": minor
 ---
 
 Fourteen new content-page faces for eight existing components. The IR, schema, and skill routing table do not change. A theme looks up its face from a render-side assignment table.

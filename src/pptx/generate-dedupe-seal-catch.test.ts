@@ -77,9 +77,9 @@ describe("generate.ts's dedupeMediaInZip catch: two-tier distinction (carried-it
     expect(caught?.message).toContain("simulated ordering-seal violation")
   })
 
-  it("any other PptfastError (not the seal subclass) is still swallowed — only the specific seal subclass propagates", async () => {
-    const { PptfastError } = await import("../errors")
-    dedupeMediaInZipMock.mockRejectedValue(new PptfastError("some unrelated PptfastError, not a seal violation"))
+  it("any other PptpressError (not the seal subclass) is still swallowed — only the specific seal subclass propagates", async () => {
+    const { PptpressError } = await import("../errors")
+    dedupeMediaInZipMock.mockRejectedValue(new PptpressError("some unrelated PptpressError, not a seal violation"))
     const { generatePptxBlob } = await import("./generate")
 
     const blob = await generatePptxBlob(tinyIr())

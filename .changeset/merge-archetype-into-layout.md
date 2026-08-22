@@ -1,5 +1,5 @@
 ---
-"@liustack/pptfast": patch
+"@liustack/pptpress": patch
 ---
 
 Internal rename only: `archetype` and `layout` were two names for the same

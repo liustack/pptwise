@@ -1,5 +1,5 @@
 ---
-"@liustack/pptfast": minor
+"@liustack/pptpress": minor
 ---
 
 Ten remaining themes lock their cover to the face drawn on the design board. Existing cover layouts gain optional knobs. No new cover layout ids.

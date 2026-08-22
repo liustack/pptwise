@@ -1,4 +1,4 @@
-import { PptfastError } from "../errors"
+import { PptpressError } from "../errors"
 import type { PptxIR } from "./index"
 import type { PptxIRV3 } from "./legacy-v3"
 
@@ -14,7 +14,7 @@ export function migrateChromeToBranding(raw: unknown): unknown {
   const hasChrome = Object.hasOwn(obj, "chrome")
   const hasBranding = Object.hasOwn(obj, "branding")
   if (hasChrome && hasBranding) {
-    throw new PptfastError('cannot migrate: both "chrome" and "branding" are present')
+    throw new PptpressError('cannot migrate: both "chrome" and "branding" are present')
   }
   if (!hasChrome) return raw
   const next: Record<string, unknown> = { ...obj, branding: obj.chrome }
@@ -208,7 +208,7 @@ function migrateNarrativeInput(
  * this migration, ever).
  *
  * Exported from the SDK surface (`src/index.ts`) as the deterministic
- * migration primitive the `pptfast migrate` CLI command (task 2) wraps —
+ * migration primitive the `pptpress migrate` CLI command (task 2) wraps —
  * this function itself does no I/O and never runs a model, per spec §9.3's
  * "只做已声明的结构映射，不运行模型，不重写内容，不重新选择 layout".
  *
