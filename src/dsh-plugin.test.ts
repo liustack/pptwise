@@ -4,7 +4,8 @@
 // with `new URL(..., import.meta.url)` + `fileURLToPath` at module scope,
 // which the repo-default jsdom environment breaks (jsdom swaps global URL —
 // same reason plugin-manifest.test.ts reads files by process.cwd()).
-import { readFileSync } from "node:fs"
+import { mkdtempSync, readFileSync, rmSync } from "node:fs"
+import { tmpdir } from "node:os"
 import { dirname, join } from "node:path"
 
 // The plugin is plain dependency-free JS by design (no build step, no dsh
@@ -13,6 +14,17 @@ import { dirname, join } from "node:path"
 import * as plugin from "../dsh/index.js"
 
 const ROOT = process.cwd()
+
+// Capture first. `plugin.apply()` always `createPreviewService()` →
+// `previewRoot()` with no opts, which copies ~/.pptfast into ~/.pptpress
+// when the new dir is missing. File-level isolation is the default so
+// skill-registration tests cannot see the real homedir. Per-test scratch
+// homes below still override this.
+const ORIGINAL_HOME = process.env.PPTPRESS_HOME
+const ORIGINAL_LEGACY_HOME = process.env.PPTFAST_HOME
+const FILE_HOME = mkdtempSync(join(tmpdir(), "pptpress-dsh-plugin-home-"))
+process.env.PPTPRESS_HOME = FILE_HOME
+delete process.env.PPTFAST_HOME
 
 /** DSH rc.6's skill-name grammar (dsh-skill/lib/index.js SKILL_NAME). */
 const DSH_SKILL_NAME = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
@@ -560,8 +572,6 @@ function previewId(tag: string): string {
  * must not, cannot.
  */
 const scratchDirs = new Set<string>()
-const ORIGINAL_HOME = process.env.PPTPRESS_HOME
-const ORIGINAL_LEGACY_HOME = process.env.PPTFAST_HOME
 
 /** The CLI path and home each service was built with, so a reload can reuse them. */
 const builtWith = new WeakMap<PreviewService, { cliPath: string; home: string }>()
@@ -661,6 +671,7 @@ afterAll(async () => {
   else process.env.PPTPRESS_HOME = ORIGINAL_HOME
   if (ORIGINAL_LEGACY_HOME === undefined) delete process.env.PPTFAST_HOME
   else process.env.PPTFAST_HOME = ORIGINAL_LEGACY_HOME
+  rmSync(FILE_HOME, { recursive: true, force: true })
   await Promise.all([...scratchDirs].map((d) => rm(d, { recursive: true, force: true }).catch(() => {})))
 })
 
