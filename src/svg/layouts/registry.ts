@@ -101,6 +101,12 @@ import { layoutDef as coverCapsuleOpenCover } from "./cover-capsule-open-cover"
 import { layoutDef as coverIssueHeadCover } from "./cover-issue-head-cover"
 import { layoutDef as coverDoubleFrameCover } from "./cover-double-frame-cover"
 import { layoutDef as coverVerticalTitleCover } from "./cover-vertical-title-cover"
+import { layoutDef as coverInvitationPlateCover } from "./cover-invitation-plate-cover"
+import { layoutDef as coverLookbookOpenCover } from "./cover-lookbook-open-cover"
+import { layoutDef as coverRedHeadCover } from "./cover-red-head-cover"
+import { layoutDef as coverPledgeOpenCover } from "./cover-pledge-open-cover"
+import { layoutDef as coverReportOpenCover } from "./cover-report-open-cover"
+import { layoutDef as coverCutPanelCover } from "./cover-cut-panel-cover"
 
 import { layoutDef as chapterMastheadChapter } from "./chapter-masthead-chapter"
 import { layoutDef as chapterConstellationChapter } from "./chapter-constellation-chapter"
@@ -123,6 +129,12 @@ import { layoutDef as chapterStickerNumeralChapter } from "./chapter-sticker-num
 import { layoutDef as chapterFascicleGhostChapter } from "./chapter-fascicle-ghost-chapter"
 import { layoutDef as chapterMirrorVolumeChapter } from "./chapter-mirror-volume-chapter"
 import { layoutDef as chapterVolumeSlipChapter } from "./chapter-volume-slip-chapter"
+import { layoutDef as chapterGiltOrdinalChapter } from "./chapter-gilt-ordinal-chapter"
+import { layoutDef as chapterLookRangeChapter } from "./chapter-look-range-chapter"
+import { layoutDef as chapterSealNumeralChapter } from "./chapter-seal-numeral-chapter"
+import { layoutDef as chapterFieldBandChapter } from "./chapter-field-band-chapter"
+import { layoutDef as chapterSubjectRuleChapter } from "./chapter-subject-rule-chapter"
+import { layoutDef as chapterRoundMarkChapter } from "./chapter-round-mark-chapter"
 
 import { layoutDef as endingMastheadEnding } from "./ending-masthead-ending"
 import { layoutDef as endingConstellationEnding } from "./ending-constellation-ending"
@@ -143,6 +155,12 @@ import { layoutDef as endingReminderListEnding } from "./ending-reminder-list-en
 import { layoutDef as endingAfterwordEnding } from "./ending-afterword-ending"
 import { layoutDef as endingInviteFieldEnding } from "./ending-invite-field-ending"
 import { layoutDef as endingSealCloseEnding } from "./ending-seal-close-ending"
+import { layoutDef as endingGiltWordEnding } from "./ending-gilt-word-ending"
+import { layoutDef as endingWindowCloseEnding } from "./ending-window-close-ending"
+import { layoutDef as endingDeliberationEnding } from "./ending-deliberation-ending"
+import { layoutDef as endingScorecardEnding } from "./ending-scorecard-ending"
+import { layoutDef as endingCarePlanEnding } from "./ending-care-plan-ending"
+import { layoutDef as endingSeatCtaEnding } from "./ending-seat-cta-ending"
 
 import { layoutDef as contentNarrowColumn } from "./content-narrow-column"
 import { layoutDef as contentTwoColumn } from "./content-two-column"
@@ -459,6 +477,13 @@ const COVER_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [coverIssueHeadCover.id]: coverIssueHeadCover,
   [coverDoubleFrameCover.id]: coverDoubleFrameCover,
   [coverVerticalTitleCover.id]: coverVerticalTitleCover,
+  // Wave 8 batch 3 (2026-08-23): luxe / runway / vermilion / terra / pulse / arena board locks.
+  [coverInvitationPlateCover.id]: coverInvitationPlateCover,
+  [coverLookbookOpenCover.id]: coverLookbookOpenCover,
+  [coverRedHeadCover.id]: coverRedHeadCover,
+  [coverPledgeOpenCover.id]: coverPledgeOpenCover,
+  [coverReportOpenCover.id]: coverReportOpenCover,
+  [coverCutPanelCover.id]: coverCutPanelCover,
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -488,6 +513,12 @@ const CHAPTER_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [chapterFascicleGhostChapter.id]: chapterFascicleGhostChapter,
   [chapterMirrorVolumeChapter.id]: chapterMirrorVolumeChapter,
   [chapterVolumeSlipChapter.id]: chapterVolumeSlipChapter,
+  [chapterGiltOrdinalChapter.id]: chapterGiltOrdinalChapter,
+  [chapterLookRangeChapter.id]: chapterLookRangeChapter,
+  [chapterSealNumeralChapter.id]: chapterSealNumeralChapter,
+  [chapterFieldBandChapter.id]: chapterFieldBandChapter,
+  [chapterSubjectRuleChapter.id]: chapterSubjectRuleChapter,
+  [chapterRoundMarkChapter.id]: chapterRoundMarkChapter,
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -514,6 +545,12 @@ const ENDING_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [endingAfterwordEnding.id]: endingAfterwordEnding,
   [endingInviteFieldEnding.id]: endingInviteFieldEnding,
   [endingSealCloseEnding.id]: endingSealCloseEnding,
+  [endingGiltWordEnding.id]: endingGiltWordEnding,
+  [endingWindowCloseEnding.id]: endingWindowCloseEnding,
+  [endingDeliberationEnding.id]: endingDeliberationEnding,
+  [endingScorecardEnding.id]: endingScorecardEnding,
+  [endingCarePlanEnding.id]: endingCarePlanEnding,
+  [endingSeatCtaEnding.id]: endingSeatCtaEnding,
 }
 
 // ─────────────────────────────────────────────────────────────────────────

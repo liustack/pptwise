@@ -469,7 +469,7 @@ describe("resolveLayoutId", () => {
 
     it("theme tendency reaches identity pages too (cover), unlike strategy's own content-only layoutTendencies — the one signal that weights cover/chapter/ending personality (design decision 2)", () => {
       const coverPool = layoutsForSlideType("cover")
-        .filter((l) => l.kind === "archetype")
+        .filter((l) => l.kind === "archetype" && !l.pinOnly)
         .map((l) => l.id)
       // "left-anchor" is deliberately not a member of briefing's own
       // identityTendencies.cover (["banner-title", "poster-center"]) — an

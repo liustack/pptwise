@@ -52,7 +52,7 @@ describe("LAYOUT_REGISTRY completeness (layout ids)", () => {
       ...Object.keys(ENDING_LAYOUTS),
     ])
     const layoutEntries = Object.values(LAYOUT_REGISTRY).filter((e) => e.kind === "archetype")
-    expect(layoutEntries).toHaveLength(84)
+    expect(layoutEntries).toHaveLength(102)
     for (const entry of layoutEntries) {
       expect(knownIds.has(entry.id), `"${entry.id}" is not a real layout id`).toBe(true)
     }
@@ -107,7 +107,10 @@ describe("content family: body slot + declared arrangements", () => {
           id === "pill-cta-ending" ||
           id === "defense-close-ending" ||
           id === "homework-close-ending" ||
-          id === "reminder-list-ending"
+          id === "reminder-list-ending" ||
+          id === "deliberation-ending" ||
+          id === "scorecard-ending" ||
+          id === "care-plan-ending"
         ) {
           expect(entry.slots.some((s) => s.name === "body")).toBe(true)
           expect(entry.arrangements).toBeUndefined()
@@ -225,9 +228,9 @@ describe("layoutsForSlideType", () => {
   it("cover/chapter/ending each resolve to exactly their 19, 9 or 7 layouts (no takeovers)", () => {
     // cover grew 13 -> 19 in board-cover-restore wave 1. chapter grew 8 -> 9
     // in the editorial-verse wave (verse-chapter, pinOnly).
-    expect(layoutsForSlideType("cover")).toHaveLength(28)
-    expect(layoutsForSlideType("chapter")).toHaveLength(21)
-    expect(layoutsForSlideType("ending")).toHaveLength(19)
+    expect(layoutsForSlideType("cover")).toHaveLength(34)
+    expect(layoutsForSlideType("chapter")).toHaveLength(27)
+    expect(layoutsForSlideType("ending")).toHaveLength(25)
   })
 
   it("content includes both the 16 layouts and the 4 takeovers (side-highlight retired, 17 -> 16, after gallery r2 D10's 18 -> 17)", () => {
@@ -349,6 +352,24 @@ describe("excludePinOnly (quote-stage wave, task T1's pinOnly tier)", () => {
       "afterword-ending",
       "invite-field-ending",
       "seal-close-ending",
+      "invitation-plate-cover",
+      "lookbook-open-cover",
+      "red-head-cover",
+      "pledge-open-cover",
+      "report-open-cover",
+      "cut-panel-cover",
+      "gilt-ordinal-chapter",
+      "look-range-chapter",
+      "seal-numeral-chapter",
+      "field-band-chapter",
+      "subject-rule-chapter",
+      "round-mark-chapter",
+      "gilt-word-ending",
+      "window-close-ending",
+      "deliberation-ending",
+      "scorecard-ending",
+      "care-plan-ending",
+      "seat-cta-ending",
     ])
     for (const def of Object.values(LAYOUT_REGISTRY)) {
       if (pinOnlyIds.has(def.id)) {
@@ -408,6 +429,24 @@ describe("layout branding declaration (editorial-verse wave)", () => {
       "afterword-ending",
       "invite-field-ending",
       "seal-close-ending",
+      "invitation-plate-cover",
+      "lookbook-open-cover",
+      "red-head-cover",
+      "pledge-open-cover",
+      "report-open-cover",
+      "cut-panel-cover",
+      "gilt-ordinal-chapter",
+      "look-range-chapter",
+      "seal-numeral-chapter",
+      "field-band-chapter",
+      "subject-rule-chapter",
+      "round-mark-chapter",
+      "gilt-word-ending",
+      "window-close-ending",
+      "deliberation-ending",
+      "scorecard-ending",
+      "care-plan-ending",
+      "seat-cta-ending",
     ] as const) {
       expect(LAYOUT_REGISTRY[id].branding, id).toBe("none")
     }
@@ -448,6 +487,24 @@ describe("layout branding declaration (editorial-verse wave)", () => {
       "afterword-ending",
       "invite-field-ending",
       "seal-close-ending",
+      "invitation-plate-cover",
+      "lookbook-open-cover",
+      "red-head-cover",
+      "pledge-open-cover",
+      "report-open-cover",
+      "cut-panel-cover",
+      "gilt-ordinal-chapter",
+      "look-range-chapter",
+      "seal-numeral-chapter",
+      "field-band-chapter",
+      "subject-rule-chapter",
+      "round-mark-chapter",
+      "gilt-word-ending",
+      "window-close-ending",
+      "deliberation-ending",
+      "scorecard-ending",
+      "care-plan-ending",
+      "seat-cta-ending",
     ])
     for (const def of Object.values(LAYOUT_REGISTRY)) {
       if (brandingNone.has(def.id)) continue

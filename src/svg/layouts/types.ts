@@ -68,6 +68,13 @@ export type CoverLayoutId =
   | "issue-head-cover"
   | "double-frame-cover"
   | "vertical-title-cover"
+  // Wave 8 batch 3 (2026-08-23): luxe / runway / vermilion / terra / pulse / arena board locks.
+  | "invitation-plate-cover"
+  | "lookbook-open-cover"
+  | "red-head-cover"
+  | "pledge-open-cover"
+  | "report-open-cover"
+  | "cut-panel-cover"
 
 // Wave 2（chapter/ending）新增 id：每主题 1 个（命名见 Wave 2 任务表）
 export type ChapterLayoutId =
@@ -90,6 +97,13 @@ export type ChapterLayoutId =
   | "fascicle-ghost-chapter"
   | "mirror-volume-chapter"
   | "volume-slip-chapter"
+  // Wave 8 batch 3 pinOnly chapter faces.
+  | "gilt-ordinal-chapter"
+  | "look-range-chapter"
+  | "seal-numeral-chapter"
+  | "field-band-chapter"
+  | "subject-rule-chapter"
+  | "round-mark-chapter"
 export type EndingLayoutId =
   | "banner-ending" | "rail-ending" | "poster-ending"
   | "constellation-ending" | "masthead-ending" | "tone-adaptive-ending"
@@ -108,6 +122,13 @@ export type EndingLayoutId =
   | "afterword-ending"
   | "invite-field-ending"
   | "seal-close-ending"
+  // Wave 8 batch 3 pinOnly ending faces.
+  | "gilt-word-ending"
+  | "window-close-ending"
+  | "deliberation-ending"
+  | "scorecard-ending"
+  | "care-plan-ending"
+  | "seat-cta-ending"
 
 // Wave 3（content）新增 id
 export type ContentLayoutId =
