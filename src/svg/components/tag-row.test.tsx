@@ -150,15 +150,14 @@ function pillOrigins(container: HTMLElement) {
 }
 
 describe("tag_row breathing room", () => {
-  it("splits the title band so the gap under the title is at least 0.6× title size", () => {
+  it("splits the title band so the gap under the title is at least 24px of sibling air", () => {
     const { container } = svg(
       tagRow.render(comp(tags(4), { title: "Tech stack" }), { x: 0, y: 0, w: 1000 }, ctx),
     )
     const title = Array.from(container.querySelectorAll("text")).find((node) => node.textContent === "Tech stack")!
     const titleY = Number(title.getAttribute("y"))
-    const titleSize = Number(title.getAttribute("font-size"))
     const firstPillTop = Math.min(...pillOrigins(container).map((pill) => pill.y))
-    expect(firstPillTop - titleY).toBeGreaterThanOrEqual(titleSize * 0.6)
+    expect(firstPillTop - titleY).toBeGreaterThanOrEqual(24)
   })
 
   it("widens wrapped row gaps past the old 8px crush", () => {

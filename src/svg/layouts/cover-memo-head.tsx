@@ -92,7 +92,7 @@ export function MemoHeadCover({ ir, slide, ctx }: SvgTemplateProps) {
   const titleLastY = titleY + Math.max(0, title.lines.length - 1) * title.lineHeight
   const lastLine = title.lines[title.lines.length - 1] ?? ""
   const { prefix, run } = lastRun(lastLine)
-  const weight = { bold: false, fontFamily: fonts.heading }
+  const weight = { bold: false, fontFamily: fonts.heading, exact: true as const }
   const underlineX = TITLE_X + measureTextUnits(prefix, weight) * title.fontSize
   const underlineW = measureTextUnits(run, weight) * title.fontSize
   const underlineY = underlineYFromBaseline(titleLastY, title.fontSize, run)

@@ -19,21 +19,22 @@ import { leafRecessOpacity } from "./decor-budget"
  *
  * 安全区：标题区 (96,48,1040×122)、正文区 (96,200,1040×420)、页脚 meta
  * 带 (48,664,1184×44)、右下 logo 盒 (1120,630,96×40)、右上 logo 带
- * (1120,48,96×40)。规线 y36，在标题区上沿 y48 之上。横向 96→1104，让开
- * 右上 logo 左沿 1120。
+ * (1120,48,96×40)。规线 y36，在标题区上沿 y48 之上。横向 96→1184，
+ * 整件水平居中。与右上 logo 盒不共 y。
  *
  * 位置全部写死，不读内容、不随 seed 变。纪律：零 theme id、零 hex。
  * 叶子走 `leafRecessOpacity`，内容页中景对比低于 3:1。
  */
 
 const RULE_Y = 36
+/** Equal 96px insets so the whole piece (line + stars) is page-centered. */
 const RULE_X1 = 96
-const RULE_X2 = 1104
+const RULE_X2 = 1184
 const RULE_STROKE = 1.5
-/** 内容页点睛：两枚，圆心就在规线上，落在规线中段。 */
+/** 内容页点睛：两枚，圆心就在规线上，整件中点 640。 */
 const MARKS: readonly { x: number; r: number }[] = [
-  { x: 568, r: 2.5 },
-  { x: 632, r: 2.5 },
+  { x: 608, r: 2.5 },
+  { x: 672, r: 2.5 },
 ]
 
 export function ConstellationMotif({ slide, ctx }: DecorProps) {

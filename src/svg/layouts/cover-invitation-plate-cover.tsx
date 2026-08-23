@@ -6,6 +6,7 @@ import { fitSvgLine } from "../../lib/svg-text-layout"
 import { accessibleInk, metaInk } from "../ink"
 import { hasCjk, trackingPx } from "./minimal-shared"
 import { stripEmphasis } from "../emphasis"
+import { RULE_TYPE_AIR_EM, SIBLING_AIR_PX } from "../spacing"
 
 /**
  * invitation-plate-cover（第八波 pinOnly）：中轴请柬。暖黑纸底不自绘满版。
@@ -90,7 +91,9 @@ export function InvitationPlateCover({ ir, slide, ctx }: SvgTemplateProps) {
   const titleInk = accessibleInk(colors.accent, bg, title.fontSize)
   const titleLastY = TITLE_Y + Math.max(0, titleLines.length - 1) * title.lineHeight
   const subY = titleLastY + SUB_GAP
-  const ruleY = titleLastY + RULE_GAP
+  const footGlyphTop = FOOT_Y - Math.round(FOOT_SIZE * RULE_TYPE_AIR_EM * 0.75)
+  const ruleCeiling = footGlyphTop - SIBLING_AIR_PX
+  const ruleY = Math.min(titleLastY + RULE_GAP, ruleCeiling)
 
   const kickerTracking = org && !hasCjk(org) ? trackingPx(KICKER_SIZE, KICKER_TRACKING_EM) : undefined
   const kicker = org

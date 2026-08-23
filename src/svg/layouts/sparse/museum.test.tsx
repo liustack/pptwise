@@ -86,6 +86,8 @@ describe("museum sparse faces", () => {
     )!
     expect(claim.getAttribute("x")).toBe("640")
     expect(claim.getAttribute("text-anchor")).toBe("middle")
+    const glyphTop = Number(claim.getAttribute("y")) - Math.round(Number(claim.getAttribute("font-size")) * 0.75)
+    expect(glyphTop - Number(panel!.getAttribute("y"))).toBeGreaterThanOrEqual(24)
     const em = Array.from(root.querySelectorAll("tspan")).find((t) => (t.textContent ?? "").includes("6.5"))
     expect(em?.getAttribute("fill")).toBe(ctx.colors.accent)
     expect(markup).toContain("展品 № 01")

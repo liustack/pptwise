@@ -7,6 +7,7 @@ import { resolveStyle, CANONICAL_THEME_IDS } from "../../themes"
 import { contrastRatio, requiredContrastRatio } from "../ink"
 import { MemoHeadCover, layoutDef } from "./cover-memo-head"
 import { underlineYFromBaseline } from "./underline"
+import { measureTextUnits } from "../../lib/svg-text-layout"
 import type { PptxIR, Slide } from "@/ir"
 
 const HEADING = "关于下半年交付侧投入的决定"
@@ -87,6 +88,25 @@ describe("cover-memo-head — board geometry", () => {
       underlineYFromBaseline(baseline, fontSize, last.textContent ?? ""),
     )
     expect(Number(underline.getAttribute("y1")) - baseline).toBeGreaterThan(8)
+  })
+
+  it("sits the last-run underline under the last Latin word using exact Regular widths", () => {
+    const heading = "Q2 2026 Business Review"
+    const { root } = renderCover("consulting", slide(heading, null), {})
+    const last = Array.from(root.querySelectorAll("text")).find((t) => (t.textContent ?? "").includes("Review"))!
+    const underline = Array.from(root.querySelectorAll("line")).find((l) => l.getAttribute("stroke-width") === "6")!
+    const fontSize = Number(last.getAttribute("font-size"))
+    const family = last.getAttribute("font-family") ?? ""
+    const line = last.textContent ?? ""
+    const space = line.lastIndexOf(" ")
+    const prefix = line.slice(0, space + 1)
+    const run = line.slice(space + 1)
+    const weight = { bold: false, fontFamily: family, exact: true as const }
+    expect(Number(underline.getAttribute("x1"))).toBeCloseTo(96 + measureTextUnits(prefix, weight) * fontSize, 0)
+    expect(Number(underline.getAttribute("x2")) - Number(underline.getAttribute("x1"))).toBeCloseTo(
+      measureTextUnits(run, weight) * fontSize,
+      0,
+    )
   })
 
   it("underlines the last two CJK characters of a one-word heading", () => {

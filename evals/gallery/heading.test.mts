@@ -126,6 +126,7 @@ describe("gallery heading table", () => {
     expect(baseline).toMatch(/x="96" y="162" width="1088" height="1"/)
 
     const kicker = svgs.get("heading--vertical-kicker--title--zh")!
-    expect(kicker).toMatch(/x="99" y="72" width="10" height="10"/)
+    // Square is centered on the 16px stacked kicker at x=104.
+    expect(kicker).toMatch(/x="107" y="72" width="10" height="10"/)
   }, 60_000)
 })

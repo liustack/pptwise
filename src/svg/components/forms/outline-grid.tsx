@@ -4,7 +4,6 @@ import { Icon } from "../../icons"
 import type { FormKnobs } from "../form-assignments"
 import type { ComponentBox, ComponentCtx } from "../types"
 import {
-  BOARD_CARD_W,
   boardTypeScale,
   capFormBody,
   formGridCols,
@@ -139,7 +138,7 @@ function geometry(
   const rows = Math.ceil(n / cols)
   const cellW = (w - GAP * (cols - 1)) / cols
   const contentW = Math.max(24, cellW - PAD * 2)
-  const start = boardTypeScale(Math.min(cellW, BOARD_CARD_W))
+  const start = boardTypeScale(cellW)
   const titleSize = Math.min(start.title, CARD_TITLE_MAX)
   const bodySize = capFormBody(titleSize, titleSize * CARD_BODY_TITLE_RATIO)
   const extraAbove = ICON_SIZE + GAP_ICON_TITLE

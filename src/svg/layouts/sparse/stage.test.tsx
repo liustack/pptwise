@@ -147,7 +147,15 @@ describe("stage sparse faces", () => {
       (t.textContent ?? "").includes("最贵的停机"),
     )!
     expect(quote.getAttribute("x")).toBe("640")
-    expect(quote.getAttribute("y")).toBe("360")
+    const quoteY = Number(quote.getAttribute("y"))
+    const quoteSize = Number(quote.getAttribute("font-size"))
+    const lineHeight = quoteSize * 1.32
+    const lineCount = Array.from(root.querySelectorAll("text")).filter((t) =>
+      (t.textContent ?? "").includes("最贵的停机") || (t.textContent ?? "").includes("预料到"),
+    ).length
+    const blockTop = quoteY - quoteSize * 0.8
+    const blockBot = quoteY + (lineCount - 1) * lineHeight
+    expect((blockTop + blockBot) / 2).toBeCloseTo(325, 0)
     expect(Number(quote.getAttribute("font-size"))).toBe(46)
     expect(quote.getAttribute("font-weight")).toBe("400")
     const attr = Array.from(root.querySelectorAll("text")).find((t) =>

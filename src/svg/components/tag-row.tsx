@@ -4,6 +4,7 @@ import { fitSvgLine, measureTextUnits, truncateToUnits } from "../../lib/svg-tex
 import { accessibleInk } from "../ink"
 import { mixHex } from "./color-mix"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
+import { SIBLING_AIR_PX } from "../spacing"
 
 type TagRowComponent = Extract<Component, { type: "tag_row" }>
 
@@ -56,7 +57,7 @@ const MAX_ROWS_H = 300
 // to hold both (gap collapsed to ~0 against the capsules).
 const TITLE_FONT_SIZE = 16
 const TITLE_MIN_FONT_SIZE = 16
-const TITLE_GAP = Math.ceil(TITLE_FONT_SIZE * 0.6)
+const TITLE_GAP = SIBLING_AIR_PX
 const TITLE_BAND = TITLE_FONT_SIZE + TITLE_GAP
 
 // Same "cy + round(fontSize * 0.32)" single-line vertical-centering trick as

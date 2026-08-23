@@ -99,6 +99,10 @@ function consultingPadDeck(): PptxIR {
 // Recaptured (audit round-1 group E, 2026-08-23). Page 3 swaps the retired
 // banner-heading pin for split-band. Only `|3` hashes move (22 of 110).
 // Other unassigned pages stay byte-identical.
+//
+// Recaptured (audit round-2 C/D, 2026-08-24). campaign cover kicker air
+// and tech constellation / bento inset move. Other unassigned pages stay
+// byte-identical.
 const fixture = JSON.parse(
   readFileSync(EMPHASIS_UNASSIGNED_BYTES_URL, "utf-8"),
 ) as { pages: Record<string, string> }

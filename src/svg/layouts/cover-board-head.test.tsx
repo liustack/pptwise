@@ -75,7 +75,7 @@ describe("cover-board-head — board geometry", () => {
     const byline = texts.find((t) => t.getAttribute("font-style") === "italic")!
     expect(byline.getAttribute("text-anchor")).toBe("end")
     expect(byline.getAttribute("x")).toBe("1108")
-    expect(byline.getAttribute("y")).toBe("688")
+    expect(byline.getAttribute("y")).toBe("660")
   })
 
   it("draws a chalk underline under the marked run only", () => {

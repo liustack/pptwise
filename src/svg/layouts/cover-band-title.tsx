@@ -36,7 +36,6 @@ const TITLE_SIZE = 60
 const TITLE_MIN_PT = 36
 const TITLE_MAX_LINES = 2
 const TITLE_LINE_HEIGHT_RATIO = 76 / 60
-const TITLE_PAD = 36
 const KICKER_GAP = 26
 const KICKER_SIZE = 18
 const KICKER_TRACKING_EM = 0.22
@@ -91,7 +90,9 @@ export function BandTitleCover({ ir, slide, ctx }: SvgTemplateProps) {
     fontFamily: fonts.heading,
     typeScale: ctx.shape?.typeScale,
   })
-  const titleY = hangingBaseline(bandY + TITLE_PAD, title.fontSize)
+  const titleBlockH =
+    Math.max(0, title.lines.length - 1) * title.lineHeight + title.fontSize * 0.8
+  const titleY = hangingBaseline(bandY + (bandH - titleBlockH) / 2, title.fontSize)
 
   const kickerSrc = org ? (hasCjk(org) ? org : latinUpper(org)) : null
   const kickerTracking = kickerSrc && !hasCjk(kickerSrc) ? trackingPx(KICKER_SIZE, KICKER_TRACKING_EM) : undefined

@@ -34,6 +34,7 @@ import { fitEmphasisLine, renderEmphasisText } from "../emphasis"
 import { accessibleInk } from "../ink"
 import { tryContentHeadingTreatment } from "../heading-treatments/render"
 import { FRAMED_CONTENT_BOTTOM } from "./framed-content-bottom"
+import { CARD_INSET_PX } from "../spacing"
 
 /**
  * bento-panel content layout（spec §3.2，Wave 3 Task 22，本 wave 体量最大
@@ -120,7 +121,7 @@ import { FRAMED_CONTENT_BOTTOM } from "./framed-content-bottom"
  */
 
 const BENTO_CARD_RADIUS = 6
-const BENTO_CARD_PAD = 20
+const BENTO_CARD_PAD = CARD_INSET_PX
 // Task 2's outline-card treatment: every bento shell (KPI/icon_cards
 // exploded tile, ordinary component cell) shares this fill/stroke — no separate
 // per-card-kind styling. `colors.panel` (bento's old distinct card-fill tier)
@@ -548,6 +549,7 @@ function renderIconCard(
   const contentH = iconCardContentHeight(item, innerW, {
     titleFontSize: BENTO_ICON_CARD_TITLE_SIZE,
     iconSize: BENTO_ICON_CARD_ICON_SIZE,
+    titleMaxLines: 2,
   })
   const innerY =
     box.y + BENTO_CARD_TOP_PAD + Math.max(0, (budgetH - contentH) / 2)
@@ -568,6 +570,7 @@ function renderIconCard(
       {renderIconCardBody(item, { x: innerX, y: innerY, w: innerW }, ctx, {
         titleFontSize: BENTO_ICON_CARD_TITLE_SIZE,
         iconSize: BENTO_ICON_CARD_ICON_SIZE,
+        titleMaxLines: 2,
       })}
     </>
   )
@@ -597,6 +600,7 @@ function cellOverBudget(cell: BentoCell, ctx: ComponentCtx): boolean {
     return (
       iconCardContentHeight(unit.item, box.w - BENTO_CARD_PAD * 2, {
         titleFontSize: BENTO_ICON_CARD_TITLE_SIZE,
+        titleMaxLines: 2,
         iconSize: BENTO_ICON_CARD_ICON_SIZE,
       }) > budgetH
     )

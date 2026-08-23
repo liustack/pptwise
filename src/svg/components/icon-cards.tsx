@@ -50,7 +50,7 @@ const PAD_BOTTOM = 20
 const CARD_RADIUS = 8
 
 interface IconCardTextLayout {
-  title: { text: string; fontSize: number; truncated: boolean }
+  title: { text: string; lines: string[]; fontSize: number; lineHeight: number; truncated: boolean }
   text: { lines: string[]; fontSize: number; lineHeight: number; truncated: boolean }
 }
 
@@ -67,6 +67,8 @@ interface IconCardLayoutOptions {
   titleFontSize?: number
   /** 图标尺寸覆盖（tech bento 卡传更大值增强存在感），缺省共享 ICON_SIZE。 */
   iconSize?: number
+  /** Title wrap. Default 1 keeps the standalone row-card byte-identical. */
+  titleMaxLines?: number
 }
 
 function layoutIconCard(
@@ -75,11 +77,39 @@ function layoutIconCard(
   opts: IconCardLayoutOptions = {}
 ): IconCardTextLayout {
   const titleFontSize = opts.titleFontSize ?? TITLE_FONT_SIZE
-  const title = fitSvgLine(item.title, {
-    maxWidth: contentW,
-    fontSize: titleFontSize,
-    minFontSize: TITLE_MIN_FONT_SIZE,
-  })
+  const titleMaxLines = Math.max(1, opts.titleMaxLines ?? 1)
+  const titleLineHeight = Math.round(titleFontSize * TITLE_LINE_HEIGHT_RATIO)
+  let title: IconCardTextLayout["title"]
+  if (titleMaxLines === 1) {
+    const fitted = fitSvgLine(item.title, {
+      maxWidth: contentW,
+      fontSize: titleFontSize,
+      minFontSize: TITLE_MIN_FONT_SIZE,
+    })
+    title = {
+      text: fitted.text,
+      lines: [fitted.text],
+      fontSize: fitted.fontSize,
+      lineHeight: titleLineHeight,
+      truncated: fitted.truncated,
+    }
+  } else {
+    const laid = layoutSvgText(item.title, {
+      maxWidth: contentW,
+      fontSize: titleFontSize,
+      maxLines: titleMaxLines,
+      minPt: TITLE_MIN_FONT_SIZE,
+      lineHeightRatio: TITLE_LINE_HEIGHT_RATIO,
+      bold: true,
+    })
+    title = {
+      text: laid.lines[0] ?? "",
+      lines: laid.lines,
+      fontSize: laid.fontSize,
+      lineHeight: laid.lineHeight,
+      truncated: laid.truncated,
+    }
+  }
   const wrapped = layoutSvgText(item.text, {
     maxWidth: contentW,
     fontSize: TEXT_FONT_SIZE,
@@ -114,14 +144,12 @@ export function iconCardContentHeight(
   contentW: number,
   opts: IconCardLayoutOptions = {}
 ): number {
-  const titleFontSize = opts.titleFontSize ?? TITLE_FONT_SIZE
   const iconSize = opts.iconSize ?? ICON_SIZE
-  const titleLineHeight = Math.round(titleFontSize * TITLE_LINE_HEIGHT_RATIO)
-  const { text } = layoutIconCard(item, contentW, opts)
+  const { title, text } = layoutIconCard(item, contentW, opts)
   return (
     iconSize +
     GAP_ICON_TITLE +
-    titleLineHeight +
+    title.lines.length * title.lineHeight +
     GAP_TITLE_TEXT +
     text.lines.length * text.lineHeight
   )
@@ -142,13 +170,10 @@ export function renderIconCardBody(
   ctx: ComponentCtx,
   opts: IconCardLayoutOptions = {}
 ): React.ReactElement {
-  const titleFontSize = opts.titleFontSize ?? TITLE_FONT_SIZE
   const iconSize = opts.iconSize ?? ICON_SIZE
-  const titleLineHeight = Math.round(titleFontSize * TITLE_LINE_HEIGHT_RATIO)
   const { title, text } = layoutIconCard(item, box.w, opts)
   const titleTopY = box.y + iconSize + GAP_ICON_TITLE
-  const titleBaselineY = titleTopY + titleFontSize
-  const textTopY = titleTopY + titleLineHeight + GAP_TITLE_TEXT
+  const textTopY = titleTopY + title.lines.length * title.lineHeight + GAP_TITLE_TEXT
   return (
     <>
       <Icon
@@ -158,18 +183,21 @@ export function renderIconCardBody(
         size={iconSize}
         color={ctx.colors.primary}
       />
-      <text
-        data-truncated={title.truncated ? "1" : undefined}
-        x={box.x}
-        y={titleBaselineY}
-        fontSize={title.fontSize}
-        fontWeight="600"
-        fill={ctx.colors.text}
-        fontFamily={ctx.fonts.heading}
-        dominantBaseline="alphabetic"
-      >
-        {title.text}
-      </text>
+      {title.lines.map((line, i) => (
+        <text
+          key={`title-${i}`}
+          data-truncated={title.truncated && i === title.lines.length - 1 ? "1" : undefined}
+          x={box.x}
+          y={titleTopY + i * title.lineHeight + title.fontSize}
+          fontSize={title.fontSize}
+          fontWeight="600"
+          fill={ctx.colors.text}
+          fontFamily={ctx.fonts.heading}
+          dominantBaseline="alphabetic"
+        >
+          {line}
+        </text>
+      ))}
       {text.lines.map((line, li) => (
         <text
           key={li}

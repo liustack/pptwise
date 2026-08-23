@@ -189,6 +189,9 @@ describe("PosterCenterCover — cover knobs (board-cover-restore wave 2)", () =>
       (t) => t.textContent === "云觅科技" && Number(t.getAttribute("y")) < 280,
     )!
     expect(kicker).toBeTruthy()
+    const title = Array.from(root.querySelectorAll("text")).find((t) => t.getAttribute("font-weight") === "800")!
+    const titleTop = Number(title.getAttribute("y")) - Math.round(Number(title.getAttribute("font-size")) * 0.75)
+    expect(titleTop - Number(kicker.getAttribute("y"))).toBeGreaterThanOrEqual(24)
     expect(kicker.getAttribute("fill")).toBe(
       accessibleInk(tokens.colors.accent, ctx.defaultBg ?? tokens.colors.bg, Number(kicker.getAttribute("font-size"))),
     )

@@ -138,9 +138,17 @@ function stackedGlyphBoxes(
   })
 }
 
-function kickerMarkBox(knobs: HeadingKnobs, short: boolean): BandRect | null {
-  if (knobs.kickerMark === "vermilion-dot") return { x: 99, y: 72, w: 10, h: 10 }
-  if (knobs.kickerMark === "gold-rule") return { x: 96, y: 64, w: 1, h: short ? 96 : 120 }
+function kickerMarkBox(
+  knobs: HeadingKnobs,
+  short: boolean,
+  layoutX: number,
+  fontSize: number,
+): BandRect | null {
+  if (knobs.kickerMark === "vermilion-dot") {
+    const markSize = 10
+    return { x: layoutX + (fontSize - markSize) / 2, y: 72, w: markSize, h: markSize }
+  }
+  if (knobs.kickerMark === "gold-rule") return { x: layoutX - 8, y: 64, w: 1, h: short ? 96 : 120 }
   return null
 }
 
@@ -155,7 +163,7 @@ function resolveKickerLayout(
   const pos = verticalKickerPos(knobs)
   if (!reserve?.rects.length) return { x: pos.x, y: pos.y, fontSize, side: "default" }
   const boxes = stackedGlyphBoxes(source, pos.x, pos.y, fontSize, fontFamily)
-  const mark = kickerMarkBox(knobs, short)
+  const mark = kickerMarkBox(knobs, short, pos.x, fontSize)
   const hits = reserve.rects.filter(
     (r) => boxes.some((b) => aabbIntersect(b, r)) || (mark !== null && aabbIntersect(mark, r)),
   )
@@ -207,10 +215,17 @@ function extraTitleY(fitted: ReturnType<typeof fitHeadingLines>): number {
   return Math.max(0, fitted.lines.length - 1) * fitted.lineHeight
 }
 
+export interface HeadingTreatmentPaint {
+  chrome: ReactNode
+  contentRect: ContentRect
+  titleY?: number
+  titleSize?: number
+}
+
 export function tryContentHeadingTreatment(
   props: SvgTemplateProps,
   reserve?: HeadingBandReserve,
-): { chrome: ReactNode; contentRect: ContentRect } | null {
+): HeadingTreatmentPaint | null {
   const { ir, slide, index, ctx } = props
   if (slide.type !== "content") return null
   const assignment = resolveHeadingTreatment(themeIdOf(props))
@@ -337,18 +352,24 @@ function verticalSign(
     fontSize: opts.short ? 16 : verticalKickerFontSize(args.knobs),
     side: "default" as const,
   }
-  const dx = layout.x - pos.x
   const fill = verticalKickerFill(args.knobs, colors)
+  const markSize = 10
   return (
     <>
       {mark === "vermilion-dot" && (
         <g data-decor="">
-          <rect x={99 + dx} y={72} width={10} height={10} fill={colors.accent} />
+          <rect
+            x={layout.x + (layout.fontSize - markSize) / 2}
+            y={72}
+            width={markSize}
+            height={markSize}
+            fill={colors.accent}
+          />
         </g>
       )}
       {mark === "gold-rule" && (
         <g data-decor="">
-          <rect x={96 + dx} y={64} width={1} height={opts.short ? 96 : 120} fill={colors.accent} />
+          <rect x={layout.x - 8} y={64} width={1} height={opts.short ? 96 : 120} fill={colors.accent} />
         </g>
       )}
       {stackChars(source, {
@@ -491,7 +512,7 @@ function renderGhostIndex(args: RenderArgs): { chrome: ReactNode; contentRect: C
   }
 }
 
-function renderBaseline(args: RenderArgs): { chrome: ReactNode; contentRect: ContentRect } {
+function renderBaseline(args: RenderArgs): HeadingTreatmentPaint {
   const { colors, fonts } = args.ctx
   const hasSub = args.subheading.length > 0
   const rule = args.knobs.rule ?? "hairline"
@@ -511,6 +532,8 @@ function renderBaseline(args: RenderArgs): { chrome: ReactNode; contentRect: Con
       : null
   return {
     contentRect: bodyRect(PAGE_LEFT, contentY),
+    titleY: 132,
+    titleSize: title.fontSize,
     chrome: (
       <>
         {title.lines.map((line, i) => (
@@ -754,7 +777,7 @@ function renderLeadAccent(args: RenderArgs): { chrome: ReactNode; contentRect: C
   }
 }
 
-function renderVerticalKicker(args: RenderArgs): { chrome: ReactNode; contentRect: ContentRect } {
+function renderVerticalKicker(args: RenderArgs): HeadingTreatmentPaint {
   const { colors, fonts } = args.ctx
   const source = kickerSource(args)
   const stackable = source.length > 0 && stacksVertically(source)
@@ -783,6 +806,8 @@ function renderVerticalKicker(args: RenderArgs): { chrome: ReactNode; contentRec
   }
   return {
     contentRect: bodyRect(contentX, contentY),
+    titleY: 126,
+    titleSize: title.fontSize,
     chrome: (
       <>
         {stackable && kicker && verticalSign(args, source, { short: false, layout: kicker })}
