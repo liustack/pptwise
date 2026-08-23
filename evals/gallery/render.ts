@@ -21,6 +21,7 @@ import { renderSlideSvg, validateIr } from "@/api"
 import { CANVAS_H_PX, CANVAS_W_PX } from "@/constants"
 import { auditDeck } from "@/svg/audit/deck-audit"
 import type { Job, TableId } from "./matrix"
+import { pruneGalleryDir } from "./prune"
 
 export interface ManifestPage {
   readonly id: string
@@ -315,6 +316,12 @@ export function renderMatrix(jobs: readonly Job[], outDir: string, pptpressVersi
   }
 
   writeFileSync(join(outDir, "manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`, "utf8")
+
+  // Prune AFTER the writes, never before. Wiping pages/ first would blank a
+  // previous good gallery if this run crashed mid-render. `--only=layout`
+  // into a dir that already has theme pages: this run's files are the source
+  // of truth, so the other tables' leftovers go away. That is intended.
+  pruneGalleryDir(pagesDir, new Set(pages.filter((p) => p.file).map((p) => `${p.id}.svg`)))
 
   if (auditErrors.length > 0) {
     throw new Error(

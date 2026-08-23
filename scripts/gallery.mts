@@ -29,6 +29,7 @@ import { corpusAssets, type CorpusAssets } from "../evals/gallery/corpus/decks"
 import { LANGUAGE_IDS, LEXICONS, type LanguageId } from "../evals/gallery/corpus/lexicon"
 import { buildGalleryHtml, summarize } from "../evals/gallery/html"
 import { assertFullCoverage, buildMatrix, type TableId } from "../evals/gallery/matrix"
+import { pruneGalleryDir } from "../evals/gallery/prune"
 import { renderMatrix } from "../evals/gallery/render"
 
 const ROOT = resolve(fileURLToPath(new URL("..", import.meta.url)))
@@ -138,3 +139,7 @@ if (bboxRaw !== undefined) {
   console.log(`gallery: bbox report written to ${writeBBoxReport(report, outDir)}`)
   if (report.defects.length > 0) process.exitCode = 1
 }
+
+const keep = new Set(["pages", "index.html", "manifest.json"])
+if (bboxRaw !== undefined) keep.add("bbox.json")
+pruneGalleryDir(outDir, keep)
