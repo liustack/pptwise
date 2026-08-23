@@ -100,7 +100,8 @@ describe("tag_row component", () => {
     const { container } = svg(tagRow.render(comp([long, "ok"]), { x: 0, y: 0, w: 160 }, ctx))
     const truncated = Array.from(container.querySelectorAll("text")).find((t) => t.getAttribute("data-truncated") === "1")
     expect(truncated).toBeTruthy()
-    expect(truncated!.textContent!.endsWith("…")).toBe(true)
+    expect(truncated!.textContent).not.toContain("…")
+    expect((truncated!.textContent ?? "").length).toBeLessThan(long.length)
   })
 
   it("renders an optional overall title above the row, omitting it entirely when unset", () => {

@@ -3,7 +3,9 @@ import {
   fitSvgLine,
   hasExactWidthTable,
   layoutSvgText,
+  measureMonoTextUnits,
   measureTextUnits,
+  truncateToMonoUnits,
   truncateToUnits,
 } from "./svg-text-layout"
 
@@ -48,19 +50,23 @@ describe("truncateToUnits", () => {
   it("returns short text unchanged", () => {
     expect(truncateToUnits("短", 10)).toBe("短")
   })
-  it("truncates and appends ellipsis within budget", () => {
-    const out = truncateToUnits("微服务架构下的分布式事务一致性", 6)
-    expect(out.endsWith("…")).toBe(true)
+  it("clips to budget without painting an overflow mark", () => {
+    const source = "微服务架构下的分布式事务一致性"
+    const out = truncateToUnits(source, 6)
+    expect(out).not.toContain("…")
+    expect(out).not.toMatch(/(?<![.])\.\.\.(?![.])/)
+    expect(source.startsWith(out)).toBe(true)
+    expect(out.length).toBeLessThan(source.length)
     expect(measureTextUnits(out)).toBeLessThanOrEqual(6)
   })
-  it("returns empty string when even the ellipsis exceeds the budget", () => {
+  it("returns empty string when the budget cannot hold a character", () => {
     const out = truncateToUnits("任意文本", 0.3)
     expect(out).toBe("")
     expect(measureTextUnits(out)).toBeLessThanOrEqual(0.3)
   })
-  it("returns bare ellipsis when budget exactly covers its cost", () => {
+  it("returns empty string when the budget is smaller than one source character", () => {
     const out = truncateToUnits("任意文本", 0.46)
-    expect(out).toBe("…")
+    expect(out).toBe("")
     expect(measureTextUnits(out)).toBeLessThanOrEqual(0.46)
   })
 
@@ -68,15 +74,14 @@ describe("truncateToUnits", () => {
   // truncateToUnits cut strictly char-by-char with no notion of
   // LATIN_RUN_OR_CHAR_RE's own atomic-run boundaries (tokenize()'s
   // wrap/split path already respects those, see that constant's own
-  // comment) — so an ellipsis cut could land mid-Latin-run even though the
+  // comment) — so a clip could land mid-Latin-run even though the
   // same text would never *wrap* mid-run. "集群Kubernetes管理" at a budget
   // that lands 7 letters into "Kubernetes" is exactly that repro.
-  it("retreats a mid-run ellipsis cut to the run's own start instead of splitting the run", () => {
+  it("retreats a mid-run clip to the run's own start instead of splitting the run", () => {
     const out = truncateToUnits("集群Kubernetes管理", 7.3)
-    // Pre-fix this produced "集群Kuberne…" — cut mid-word. Post-fix the
-    // whole "Kubernetes" run yields to the ellipsis instead.
-    expect(out).toBe("集群…")
+    expect(out).toBe("集群")
     expect(out).not.toContain("Kuberne")
+    expect(out).not.toContain("…")
     expect(measureTextUnits(out)).toBeLessThanOrEqual(7.3)
   })
 
@@ -86,23 +91,39 @@ describe("truncateToUnits", () => {
     // same floor philosophy as splitLongToken's own fallback, so the
     // mid-run cut stands.
     const out = truncateToUnits("Kubernetes集群", 5.9)
-    expect(out).toBe("Kubernet…")
-    expect(out.length).toBeGreaterThan(1) // not emptied by the retreat
+    expect(out).not.toContain("…")
+    expect(out.startsWith("K")).toBe(true)
+    expect(out).not.toContain("集群")
+    expect(out.length).toBeGreaterThan(1)
     expect(measureTextUnits(out)).toBeLessThanOrEqual(5.9)
   })
 
-  it("leaves pure-CJK truncation byte-identical (no Latin/digit run to straddle)", () => {
+  it("clips pure-CJK to a prefix of the source (no Latin/digit run to straddle)", () => {
     // Pinned exact output, not just characteristics — every run
     // LATIN_RUN_OR_CHAR_RE finds in pure-CJK text is a single character
     // (length <= 1), so retreatFromMidRun's own `continue` guard means this
     // path is structurally unreachable here, not merely untested.
-    expect(truncateToUnits("微服务架构下的分布式事务一致性", 6)).toBe("微服务架构…")
+    expect(truncateToUnits("微服务架构下的分布式事务一致性", 6)).toBe("微服务架构下")
   })
 
   it("is deterministic across repeated calls on the same input", () => {
     const first = truncateToUnits("集群Kubernetes管理", 7.3)
     const second = truncateToUnits("集群Kubernetes管理", 7.3)
     expect(second).toBe(first)
+  })
+})
+
+describe("truncateToMonoUnits", () => {
+  it("clips a long mono line to budget without an overflow mark", () => {
+    const source = "abcdefghijklmnopqrstuvwxyz"
+    const out = truncateToMonoUnits(source, 4)
+    expect(out).not.toContain("…")
+    expect(source.startsWith(out)).toBe(true)
+    expect(out.length).toBeLessThan(source.length)
+    expect(measureMonoTextUnits(out)).toBeLessThanOrEqual(4)
+  })
+  it("returns empty string when even one mono character exceeds the budget", () => {
+    expect(truncateToMonoUnits("abc", 0.2)).toBe("")
   })
 })
 
@@ -124,9 +145,12 @@ describe("fitSvgLine", () => {
     expect(r.truncated).toBe(false)
   })
   it("truncates at the floor when still too wide", () => {
-    const r = fitSvgLine("一二三四五六七八九十一二", { maxWidth: 120, fontSize: 20, minFontSize: 12 })
+    const source = "一二三四五六七八九十一二"
+    const r = fitSvgLine(source, { maxWidth: 120, fontSize: 20, minFontSize: 12 })
     expect(r.fontSize).toBe(12)
-    expect(r.text.endsWith("…")).toBe(true)
+    expect(r.text).not.toContain("…")
+    expect(source.startsWith(r.text)).toBe(true)
+    expect(r.text.length).toBeLessThan(source.length)
     expect(measureTextUnits(r.text) * 12).toBeLessThanOrEqual(120)
     expect(r.truncated).toBe(true)
   })

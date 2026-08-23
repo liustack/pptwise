@@ -306,6 +306,7 @@ export function RailNumberedContent({ ir, slide, index, ctx }: SvgTemplateProps)
             themeId: ctx.themeId,
           },
           <text
+            data-truncated={subheading.truncated ? "1" : undefined}
             x={TITLE_X}
             y={subheadingY}
             fontFamily={fonts.body}

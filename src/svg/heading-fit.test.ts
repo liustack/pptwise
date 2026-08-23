@@ -114,11 +114,12 @@ describe("fitHeadingLines", () => {
     }
   })
 
-  it("falls back to truncation with an ellipsis when even the floor can't fit two lines", () => {
+  it("falls back to a hard clip when even the floor can't fit two lines", () => {
     const long =
       "微服务架构下的分布式事务一致性保障机制与补偿策略设计规范以及跨可用区容灾演练的完整落地路径说明微服务架构下的分布式事务一致性保障机制"
     const r = fitHeadingLines(long, { maxWidth: 300, fontSize: 84, maxLines: 2, minPt: 40 })
-    expect(r.lines.join("")).toContain("…")
+    expect(r.lines.join("")).not.toContain("…")
+    expect(r.lines.join("").length).toBeLessThan(long.length)
     for (const line of r.lines) {
       expect(measureTextUnits(line) * r.fontSize).toBeLessThanOrEqual(300 + 1)
     }

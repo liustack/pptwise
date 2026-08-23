@@ -286,9 +286,8 @@ describe("icon_cards component: text overflow fallback", () => {
     }
     // 300 repeated wide chars can't fit in 2 lines even at the 1px shrink
     // floor — truncation must have kicked in.
-    expect(bodyTexts.some((t) => (t.textContent ?? "").endsWith("…"))).toBe(
-      true
-    )
+    expect(bodyTexts.some((t) => t.getAttribute("data-truncated") === "1")).toBe(true)
+    expect(bodyTexts.every((t) => !(t.textContent ?? "").includes("…"))).toBe(true)
   })
 })
 

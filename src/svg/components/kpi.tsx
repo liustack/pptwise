@@ -148,7 +148,7 @@ export function fitKpiUnit(
 ): string | null {
   if (!unit) return null
   const fitted = truncateToUnits(unit, unitMaxWidth / unitFontSize, { bold: true, fontFamily })
-  return fitted === "" || fitted === "…" ? null : fitted
+  return fitted === "" ? null : fitted
 }
 
 /**

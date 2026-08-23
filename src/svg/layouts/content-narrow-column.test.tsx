@@ -233,7 +233,8 @@ describe("NarrowColumnContent", () => {
     )
     expect(kicker).toBeDefined()
     const fontSize = Number(kicker!.getAttribute("font-size"))
-    const truncated = (kicker!.textContent ?? "").includes("…")
+    const truncated = kicker!.getAttribute("data-truncated") === "1"
+    expect(kicker!.textContent).not.toContain("…")
     expect(fontSize < 16 || truncated).toBe(true)
   })
 
@@ -392,7 +393,8 @@ describe("NarrowColumnContent", () => {
         (t.textContent ?? "").includes("微服务"),
       )!
       expect(sub.getAttribute("font-size")).toBe("16")
-      expect((sub.textContent ?? "").endsWith("…")).toBe(true)
+      expect(sub.getAttribute("data-truncated")).toBe("1")
+      expect(sub.textContent).not.toContain("…")
       expect(sub.textContent).not.toBe(CJK_LONG.repeat(2))
     })
   })

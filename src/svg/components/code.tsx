@@ -156,6 +156,7 @@ export const code: SvgComponent<CodeComponent> = {
               {i + 1}
             </text>
             <text
+              data-truncated={line !== lines[i] ? "1" : undefined}
               x={textStartX}
               y={PADDING + i * lineHeight + fontSize}
               fontFamily={ctx.fonts.mono}

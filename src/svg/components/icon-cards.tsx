@@ -51,7 +51,7 @@ const CARD_RADIUS = 8
 
 interface IconCardTextLayout {
   title: { text: string; fontSize: number; truncated: boolean }
-  text: { lines: string[]; fontSize: number; lineHeight: number }
+  text: { lines: string[]; fontSize: number; lineHeight: number; truncated: boolean }
 }
 
 /**
@@ -93,9 +93,11 @@ function layoutIconCard(
   // truncate defensively at the fitted size, the same floor-size fallback
   // bullets.tsx applies locally.
   const maxUnits = contentW / wrapped.fontSize
+  const lines = wrapped.lines.map((line) => truncateToUnits(line, maxUnits))
   const text = {
     ...wrapped,
-    lines: wrapped.lines.map((line) => truncateToUnits(line, maxUnits)),
+    lines,
+    truncated: lines.some((line, i) => line !== wrapped.lines[i]),
   }
   return { title, text }
 }
@@ -171,6 +173,7 @@ export function renderIconCardBody(
       {text.lines.map((line, li) => (
         <text
           key={li}
+          data-truncated={text.truncated && li === text.lines.length - 1 ? "1" : undefined}
           x={box.x}
           y={textTopY + li * text.lineHeight + text.fontSize}
           fontSize={text.fontSize}

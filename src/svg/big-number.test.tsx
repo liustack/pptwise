@@ -102,7 +102,10 @@ describe("big_number variant", () => {
     // Audit semantics: measureTextUnits(full textContent) * outer font-size.
     const combined = hero.textContent ?? ""
     expect(measureTextUnits(combined) * outerFontSize).toBeLessThanOrEqual(1120 + 1) // rect.w in renderBig
-    expect(unitTspan.textContent).toMatch(/…$/)
+    expect(unitTspan.textContent).not.toMatch(/…$/)
+    expect((unitTspan.textContent ?? "").length).toBeLessThan(
+      "非常非常非常非常非常非常非常非常非常非常长的单位文字说明超长内容单位".length,
+    )
   })
 
   it("falls back to normal stacking when there is no kpi component", () => {

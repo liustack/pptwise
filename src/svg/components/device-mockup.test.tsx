@@ -123,7 +123,8 @@ describe("device_mockup component — browser", () => {
     const text = Array.from(container.querySelectorAll("text")).find((t) => t.textContent?.startsWith("https://"))
     expect(text).not.toBeUndefined()
     const fontSize = Number(text!.getAttribute("font-size"))
-    const truncated = text!.textContent!.endsWith("…")
+    const truncated = text!.getAttribute("data-truncated") === "1"
+    expect(text!.textContent).not.toContain("…")
     expect(fontSize < 12 || truncated).toBe(true)
   })
 })

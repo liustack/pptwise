@@ -446,8 +446,8 @@ describe("auditDeck — content-truncated / content-dropped (bench-driven fix ro
     const truncated = report.findings.filter((f) => f.code === "content-truncated")
     expect(truncated.length).toBeGreaterThan(0)
     expect(truncated[0]).toMatchObject({ page: 1, slideId: "s1", code: "content-truncated" })
-    expect(truncated[0].message).toMatch(/was truncated with an ellipsis/)
-    expect((truncated[0].detail as { text?: string }).text?.endsWith("…")).toBe(true)
+    expect(truncated[0].message).toMatch(/was truncated/)
+    expect((truncated[0].detail as { text?: string }).text).not.toMatch(/…$/)
   })
 
   it("surfaces layoutContentFit's fully-dropped components as 'content-dropped' findings", () => {
@@ -520,7 +520,7 @@ describe("auditDeck — content-truncated / content-dropped (bench-driven fix ro
     const truncated = report.findings.filter((f) => f.code === "content-truncated")
     expect(truncated.length).toBeGreaterThan(0)
     expect(truncated[0]).toMatchObject({ page: 1, slideId: "s1", code: "content-truncated" })
-    expect((truncated[0].detail as { text?: string }).text?.endsWith("…")).toBe(true)
+    expect((truncated[0].detail as { text?: string }).text).not.toMatch(/…$/)
   })
 
   // Review fix round — Critical 1's exact repro, at the render+audit level:

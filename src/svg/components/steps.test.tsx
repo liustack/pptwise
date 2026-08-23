@@ -375,7 +375,8 @@ describe("steps component: text overflow fallback", () => {
       const width = measureTextUnits(t.textContent ?? "") * fontSize
       expect(width).toBeLessThanOrEqual(contentW + 1) // +1 float rounding slack
     }
-    expect(bodyTexts.some((t) => (t.textContent ?? "").endsWith("…"))).toBe(true)
+    expect(bodyTexts.some((t) => t.getAttribute("data-truncated") === "1")).toBe(true)
+    expect(bodyTexts.every((t) => !(t.textContent ?? "").includes("…"))).toBe(true)
   })
 
   it("keeps every rendered text line within its row's content width in vertical mode", () => {
@@ -406,7 +407,8 @@ describe("steps component: text overflow fallback", () => {
       const width = measureTextUnits(t.textContent ?? "") * fontSize
       expect(width).toBeLessThanOrEqual(contentW + 1)
     }
-    expect(bodyTexts.some((t) => (t.textContent ?? "").endsWith("…"))).toBe(true)
+    expect(bodyTexts.some((t) => t.getAttribute("data-truncated") === "1")).toBe(true)
+    expect(bodyTexts.every((t) => !(t.textContent ?? "").includes("…"))).toBe(true)
   })
 })
 

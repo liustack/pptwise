@@ -188,7 +188,8 @@ describe("comparison component", () => {
       const long = Array.from(container.querySelectorAll("text")).find((t) =>
         t.textContent?.startsWith("对比"),
       )
-      expect(long?.textContent).toContain("…")
+      expect(long?.textContent).not.toContain("…")
+      expect(long?.getAttribute("data-truncated")).toBe("1")
       expect(long?.getAttribute("font-size")).toBe("12")
     })
 

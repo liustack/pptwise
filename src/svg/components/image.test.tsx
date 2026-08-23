@@ -144,7 +144,8 @@ describe("image component", () => {
     expect(captionEl).not.toBeUndefined()
     const fontSize = Number(captionEl.getAttribute("font-size"))
     const shrunk = fontSize < 16
-    const truncated = captionEl.textContent!.endsWith("…")
+    const truncated = captionEl.getAttribute("data-truncated") === "1"
+    expect(captionEl.textContent).not.toContain("…")
     expect(shrunk || truncated).toBe(true)
   })
 

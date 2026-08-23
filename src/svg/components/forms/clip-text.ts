@@ -4,7 +4,9 @@ import {
   type TextWeightHint,
 } from "../../../lib/svg-text-layout"
 
-/** Wrap, then clip every line so a CJK/Latin mix cannot h-overflow the budget. */
+const WRAP_PROBE_LINES = 64
+
+/** Wrap at a frozen font size, then clip leftover glyphs. Never paints `…`. */
 export function wrapClip(
   text: string,
   opts: {
@@ -18,22 +20,24 @@ export function wrapClip(
   },
 ) {
   const weight: TextWeightHint = { fontFamily: opts.fontFamily, bold: opts.bold }
-  const wrapped = layoutSvgText(text, {
+  const fontSize = opts.minPt != null ? Math.max(opts.fontSize, opts.minPt) : opts.fontSize
+  const lineHeightRatio = opts.lineHeightRatio ?? 1.35
+  const laid = layoutSvgText(text, {
     maxWidth: opts.maxWidth,
-    fontSize: opts.fontSize,
-    maxLines: opts.maxLines,
-    lineHeightRatio: opts.lineHeightRatio ?? 1.35,
+    fontSize,
+    maxLines: WRAP_PROBE_LINES,
+    lineHeightRatio,
     fontFamily: opts.fontFamily,
     bold: opts.bold,
-    minPt: opts.minPt,
+    minPt: fontSize,
   })
-  const fontSize =
-    opts.minPt != null ? Math.max(wrapped.fontSize, opts.minPt) : wrapped.fontSize
   const maxUnits = opts.maxWidth / fontSize
+  const kept = laid.lines.slice(0, opts.maxLines)
+  const lines = kept.map((line) => truncateToUnits(line, maxUnits, weight))
   return {
-    ...wrapped,
+    lines,
     fontSize,
-    lineHeight: Math.round(fontSize * (opts.lineHeightRatio ?? 1.35)),
-    lines: wrapped.lines.map((line) => truncateToUnits(line, maxUnits, weight)),
+    lineHeight: Math.round(fontSize * lineHeightRatio),
+    truncated: laid.lines.length > kept.length || lines.some((line, i) => line !== kept[i]),
   }
 }
