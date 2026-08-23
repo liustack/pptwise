@@ -6,7 +6,8 @@
 import { describe, expect, it } from "vitest"
 import { renderSlideSvg } from "@/api"
 import { installNodePlatform } from "@/platform/node"
-import { corpusAssets, layoutPage } from "./corpus/decks"
+import { COMPONENT_BUILDERS, CHART_VARIANTS } from "./corpus/components"
+import { componentPage, corpusAssets, layoutPage } from "./corpus/decks"
 import { LEXICONS } from "./corpus/lexicon"
 import { auditL1, classifyL1 } from "./l1"
 import { loadPlantedManifest, plantedSvg } from "./planted/load"
@@ -278,5 +279,24 @@ describe("auditL1 live sample", () => {
     const result = auditL1(svg)
     expect(Array.isArray(result.findings)).toBe(true)
     expect(classifyL1(result)).toEqual(classifyL1(auditL1(svg)))
+  })
+
+  it("live chart/heatmap/matrix/sankey pages have no axis-title-overlap", async () => {
+    const assets = await corpusAssets(LEXICONS.zh)
+    const pages = [
+      ["chart", COMPONENT_BUILDERS.chart!],
+      ["chart-scatter", CHART_VARIANTS["chart · scatter"]!],
+      ["heatmap", COMPONENT_BUILDERS.heatmap!],
+      ["matrix", COMPONENT_BUILDERS.matrix!],
+      ["sankey", COMPONENT_BUILDERS.sankey!],
+    ] as const
+    for (const [id, build] of pages) {
+      const svg = renderSlideSvg(componentPage(id, build, LEXICONS.zh, assets), 0)
+      if (id !== "sankey") {
+        expect(svg, id).toContain("data-axis-title")
+        expect(svg, id).toContain("data-plot-mark")
+      }
+      expect(classifyL1(auditL1(svg)), id).not.toContain("axis-title-overlap")
+    }
   })
 })

@@ -84,12 +84,8 @@ const DUMBBELL_FROM_FONT_SIZE = 12
 const LABEL_TOP_PAD = 14
 /**
  * Space (px) reserved at the bottom of `h` for category labels below the plot.
- * Exported so `chart.tsx` can sit a vertical y-title's block bottom on the
- * same value-axis baseline the cartesian renderers use for bar bottoms
- * (`plotTop + plotH` = `y0 + h - LABEL_BOTTOM_PAD`).
  */
-export const CARTESIAN_LABEL_BOTTOM_PAD = 18
-const LABEL_BOTTOM_PAD = CARTESIAN_LABEL_BOTTOM_PAD
+const LABEL_BOTTOM_PAD = 18
 
 /**
  * Ceiling (px) for any single ratio-based chart geometry value —
@@ -245,6 +241,7 @@ function renderGridlines(
       {ys.map((y, i) => (
         <line
           key={i}
+          data-plot-mark="1"
           x1={x0}
           y1={y}
           x2={x0 + w}
@@ -283,6 +280,7 @@ function renderGridlinesVertical(
       {xs.map((x, i) => (
         <line
           key={i}
+          data-plot-mark="1"
           x1={x}
           y1={y0}
           x2={x}
@@ -489,6 +487,7 @@ export function renderBar(
           barElements.push(
             <rect
               key={`r-${s.seriesIndex}`}
+              data-plot-mark="1"
               x={barX}
               y={barY}
               width={perBarW}
@@ -628,6 +627,7 @@ export function renderLine(
                   </linearGradient>
                 </defs>
                 <polygon
+                  data-plot-mark="1"
                   points={`${runs[0]!.map((c) => `${c.x},${c.y}`).join(" ")} ${last.x},${baselineY} ${first.x},${baselineY}`}
                   fill={`url(#${areaId})`}
                   stroke="none"
@@ -637,6 +637,7 @@ export function renderLine(
             {runs.map((run, runIdx) => (
               <polyline
                 key={`ln-${runIdx}`}
+                data-plot-mark="1"
                 points={run.map((c) => `${c.x},${c.y}`).join(" ")}
                 fill="none"
                 stroke={palette[sIdx % palette.length]}
@@ -709,6 +710,7 @@ export function renderLine(
             {last && (
               <>
                 <circle
+                  data-plot-mark="1"
                   cx={last.x}
                   cy={last.y}
                   r={ENDPOINT_RING_R}
@@ -716,7 +718,7 @@ export function renderLine(
                   stroke={accentColor}
                   strokeOpacity={ENDPOINT_RING_OPACITY}
                 />
-                <circle cx={last.x} cy={last.y} r={ENDPOINT_DOT_R} fill={accentColor} />
+                <circle data-plot-mark="1" cx={last.x} cy={last.y} r={ENDPOINT_DOT_R} fill={accentColor} />
               </>
             )}
           </g>
@@ -801,6 +803,7 @@ export function renderFunnel(
         return (
           <rect
             key={i}
+            data-plot-mark="1"
             x={barX}
             y={y0 + i * stepH + 2}
             width={barW}
@@ -1024,9 +1027,9 @@ export function renderDumbbell(
             >
               {label.text}
             </text>
-            <line x1={x1} y1={cy} x2={x2} y2={cy} stroke={mutedColor} strokeWidth={2} strokeOpacity={0.55} />
-            <circle cx={x1} cy={cy} r={DUMBBELL_DOT_R} fill={mutedColor} />
-            <circle cx={x2} cy={cy} r={DUMBBELL_DOT_R + 1.5} fill={accentColor} />
+            <line data-plot-mark="1" x1={x1} y1={cy} x2={x2} y2={cy} stroke={mutedColor} strokeWidth={2} strokeOpacity={0.55} />
+            <circle data-plot-mark="1" cx={x1} cy={cy} r={DUMBBELL_DOT_R} fill={mutedColor} />
+            <circle data-plot-mark="1" cx={x2} cy={cy} r={DUMBBELL_DOT_R + 1.5} fill={accentColor} />
             <text
               data-truncated={fromValueLabel.clipped ? "1" : undefined}
               x={x1}
@@ -1175,6 +1178,7 @@ export function renderBarHorizontal(
           barElements.push(
             <rect
               key={`r-${s.seriesIndex}`}
+              data-plot-mark="1"
               x={barX}
               y={barY}
               width={barW}
@@ -1401,6 +1405,7 @@ export function renderScatter(
             return (
               <circle
                 key={di}
+                data-plot-mark="1"
                 cx={xForVal(numX(d.x))}
                 cy={lineValueY(d.y, yDomain, plotTop, plotH)}
                 r={radiusFor(d.size)}
@@ -1495,6 +1500,7 @@ export function renderArea(
             {runs.map((run, ri) => (
               <polygon
                 key={`fill-${ri}`}
+                data-plot-mark="1"
                 points={`${run.map((c) => `${c.x},${c.y}`).join(" ")} ${run[run.length - 1]!.x},${baselineY} ${run[0]!.x},${baselineY}`}
                 fill={color}
                 fillOpacity={AREA_FILL_ALPHA}
@@ -1504,6 +1510,7 @@ export function renderArea(
             {runs.map((run, ri) => (
               <polyline
                 key={`ln-${ri}`}
+                data-plot-mark="1"
                 points={run.map((c) => `${c.x},${c.y}`).join(" ")}
                 fill="none"
                 stroke={color}

@@ -1,7 +1,7 @@
 import type { Component } from "@/ir"
 import { fitSvgLine } from "../../lib/svg-text-layout"
-import { stacksVertically } from "../../lib/text-script"
 import { mixHex } from "./color-mix"
+import { axisTitlePairHeight, renderAxisTitlePair } from "./axis-titles"
 import { accessibleInk, contrastRatio, readableOn } from "../ink"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
 
@@ -23,15 +23,9 @@ type HeatmapComponent = Extract<Component, { type: "heatmap" }>
  *
  * Two geometry precedents this file explicitly reuses rather than
  * reinventing:
- *  - `matrix.tsx`'s x_title (top band)/y_title (a stacked-vertical-char
- *    column down a left band when the title is written in a square script,
- *    one horizontal line in its own top band otherwise — `yTitlePlacement`
- *    below, `lib/text-script.ts` for the rule) fit machinery — ported
- *    near-verbatim (`yTitleStackHeight`/
- *    `maxYTitleChars`/`fitYTitleStack` below are the identical arithmetic,
- *    renamed only to avoid a cross-file name collision) together with its
- *    hard-won gutter lesson: reserve a band's height only when the field is
- *    actually present, and subtract it from whichever one of
+ *  - `axis-titles.tsx`'s horizontal pair (y_title "  ↑" above x_title
+ *    "  →", both outside the grid). Reserve a band's height only when the
+ *    field is actually present, and subtract it from whichever one of
  *    measure()'s-own-fallback/box.h *actually includes it* — never both
  *    (matrix.tsx's own `render` doc comment has the full incident writeup).
  *    `x_title`/`y_title` here describe the *whole* axis (optional, e.g.
@@ -75,14 +69,6 @@ const COL_LABEL_FONT = 11
 const COL_LABEL_MIN_FONT = 9
 const VALUE_FONT = 12
 const VALUE_MIN_FONT = 9
-const X_TITLE_H = 30
-const Y_TITLE_W = 34
-/** Height of the band a *horizontal* y_title takes, above x_title's own —
- * matrix.tsx's `Y_TITLE_TOP_H`, same value and same reasoning (see that
- * constant's doc comment, and `lib/text-script.ts` for which titles get this
- * treatment instead of the character column). */
-const Y_TITLE_TOP_H = 24
-const AXIS_SIZE = 13
 
 /**
  * Floor on the ramp's interpolation fraction (`valueT`'s output is always
@@ -234,121 +220,39 @@ function cellFill(t: number, ctx: ComponentCtx, forInk = false): string {
   return mixHex(ctx.colors.surface, ctx.colors.primary, forInk ? safeEased(eased, ctx) : eased)
 }
 
-// y_title stacked-vertical-char fit — ported from matrix.tsx's
-// `yTitleStackHeight`/`maxYTitleChars`/`fitYTitleStack` (identical
-// arithmetic, renamed to avoid a cross-file symbol collision; no shared
-// module exists for this idiom — every full-body component that needs it
-// keeps its own private copy, same precedent `gantt.tsx`'s own `vx`
-// primitive doc comment names).
-const Y_TITLE_START_Y = 20
-const Y_TITLE_CHAR_ADVANCE = AXIS_SIZE + 2
-
-function yTitleStackHeight(charCount: number): number {
-  if (charCount <= 0) return 0
-  return Y_TITLE_START_Y + (charCount - 1) * Y_TITLE_CHAR_ADVANCE + AXIS_SIZE * 0.25
-}
-
-function maxYTitleChars(availH: number): number {
-  return Math.max(1, Math.floor((availH - Y_TITLE_START_Y - AXIS_SIZE * 0.25) / Y_TITLE_CHAR_ADVANCE) + 1)
-}
-
-function fitYTitleStack(text: string, availH: number): { chars: string[]; truncated: boolean } {
-  const chars = Array.from(text)
-  if (chars.length === 0) return { chars, truncated: false }
-  const maxChars = maxYTitleChars(availH)
-  if (chars.length <= maxChars) return { chars, truncated: false }
-  const kept = chars.slice(0, Math.max(0, maxChars - 1))
-  return { chars: [...kept, "…"], truncated: true }
-}
-
-/** matrix.tsx's `yTitlePlacement`, ported alongside the fit machinery above
- * (same reason: no shared module exists for this idiom). Derived inside
- * `gridGeom`'s own callee so `measure()` and `render()` read one branch off
- * the content rather than each deciding for itself. */
-function yTitlePlacement(component: HeatmapComponent): {
-  stacked: boolean
-  bandW: number
-  topH: number
-} {
-  if (!component.y_title) return { stacked: false, bandW: 0, topH: 0 }
-  const stacked = stacksVertically(component.y_title)
-  return { stacked, bandW: stacked ? Y_TITLE_W : 0, topH: stacked ? 0 : Y_TITLE_TOP_H }
-}
-
 function gridGeom(component: HeatmapComponent, w: number) {
   const cols = component.x_labels.length
   const rows = component.y_labels.length
-  const yTitle = yTitlePlacement(component)
-  const yTitleW = yTitle.bandW
-  const gridX0 = yTitleW + ROW_LABEL_W
+  const titleH = axisTitlePairHeight(component.x_title, component.y_title)
+  const gridX0 = ROW_LABEL_W
   const gridW = Math.max(1, w - gridX0)
   const cellW = (gridW - CELL_GAP * (cols - 1)) / cols
   const gridH = rows * NATURAL_CELL_H + (rows - 1) * CELL_GAP
-  const yTitleH = yTitle.stacked ? yTitleStackHeight(Array.from(component.y_title!).length) : 0
-  return { cols, rows, yTitleW, gridX0, cellW, gridH, yTitleH, yTitle }
+  return { cols, rows, gridX0, cellW, gridH, titleH }
 }
 
 export const heatmap: SvgComponent<HeatmapComponent> = {
   measure(component, w) {
-    const { gridH, yTitleH, yTitle } = gridGeom(component, w)
-    // Same "grow to cover y_title's real stack, off by construction in the
-    // common case" idiom as matrix.tsx's own measure() — see that file's
-    // render() doc comment for the incident this guards against.
-    // `yTitle.topH` is the horizontal treatment's own cost, entering the
-    // footprint the same way the x_title band does; exactly one of the two
-    // y_title terms is ever non-zero.
-    return (
-      yTitle.topH + (component.x_title ? X_TITLE_H : 0) + COL_LABEL_H + Math.max(gridH, yTitleH)
-    )
+    const { gridH, titleH } = gridGeom(component, w)
+    return titleH + COL_LABEL_H + gridH
   },
   render(component, box, ctx) {
-    const { rows, yTitleW, gridX0, cellW, gridH, yTitleH, yTitle } = gridGeom(component, box.w)
-    const xTitleH = component.x_title ? X_TITLE_H : 0
-    // Every band above the grid, top to bottom: a horizontal y_title (only
-    // when the title is not one of the square scripts), x_title, then the
-    // column headers. Mirrors `measure()`'s own non-grid terms exactly.
-    const topBandsH = yTitle.topH + xTitleH + COL_LABEL_H
+    const { rows, gridX0, cellW, gridH, titleH } = gridGeom(component, box.w)
+    const topBandsH = titleH + COL_LABEL_H
     const gridTop = box.y + topBandsH
     // box.h-aware uniform stretch (matrix.tsx's own idiom, no
     // STRETCH_CAP_RATIO ceiling — full-body components never go through
     // growStretchables' capped path). Two "total height" semantics meet
     // here exactly like matrix.tsx's render() — `box.h`, when a caller sets
     // it, is the TOTAL remaining height from box.y downward (inclusive of
-    // every band above the grid: a horizontal y_title's, the x_title band
-    // and the column-header band, same convention measure() returns), so
+    // every band above the grid, same convention measure() returns), so
     // they come off it exactly once, as the one `topBandsH` sum above; the
     // measure()-mirroring fallback already excludes all of them, so
     // subtracting any of them from it again would double-count.
-    const measuredFallbackH = Math.max(gridH, yTitleH)
-    const availGridH = box.h !== undefined ? box.h - topBandsH : measuredFallbackH
+    const availGridH = box.h !== undefined ? box.h - topBandsH : gridH
     const rowH = Math.max(NATURAL_CELL_H, (availGridH - (rows - 1) * CELL_GAP) / rows)
     const r = Math.min(4, ctx.shape?.radius ?? CELL_RADIUS)
     const domain = resolveDomain(component)
-
-    const xTitleFit = component.x_title
-      ? fitSvgLine(`${component.x_title}  →`, {
-          maxWidth: box.w - gridX0,
-          fontSize: AXIS_SIZE,
-          minFontSize: 10,
-        })
-      : null
-    // y_title, horizontal form — matrix.tsx's own branch, same "  ↑" suffix
-    // mirroring x_title's "  →" so the pair of arrows says which caption
-    // names which axis. Fit against the full component width, which is what
-    // the dedicated band buys over sharing x_title's line: the row-label
-    // gutter is only ROW_LABEL_W wide, far too narrow for a real axis name.
-    const yTitleLineFit =
-      component.y_title && !yTitle.stacked
-        ? fitSvgLine(`${component.y_title}  ↑`, {
-            maxWidth: box.w,
-            fontSize: AXIS_SIZE,
-            minFontSize: 10,
-          })
-        : null
-    const yTitleFit =
-      component.y_title && yTitle.stacked
-        ? fitYTitleStack(component.y_title, availGridH)
-        : null
 
     const colLabelFits = component.x_labels.map((label) =>
       fitSvgLine(label, { maxWidth: cellW - COL_LABEL_PAD * 2, fontSize: COL_LABEL_FONT, minFontSize: COL_LABEL_MIN_FONT }),
@@ -363,49 +267,15 @@ export const heatmap: SvgComponent<HeatmapComponent> = {
 
     return (
       <g>
-        {yTitleLineFit ? (
-          <text
-            data-truncated={yTitleLineFit.truncated ? "1" : undefined}
-            x={box.x}
-            y={box.y + AXIS_SIZE + 4}
-            fontSize={yTitleLineFit.fontSize}
-            fill={ctx.colors.muted}
-            fontFamily={ctx.fonts.body}
-            dominantBaseline="alphabetic"
-          >
-            {yTitleLineFit.text}
-          </text>
-        ) : null}
-        {xTitleFit ? (
-          <text
-            data-truncated={xTitleFit.truncated ? "1" : undefined}
-            x={box.x + gridX0}
-            y={box.y + yTitle.topH + AXIS_SIZE + 4}
-            fontSize={xTitleFit.fontSize}
-            fill={ctx.colors.muted}
-            fontFamily={ctx.fonts.body}
-            dominantBaseline="alphabetic"
-          >
-            {xTitleFit.text}
-          </text>
-        ) : null}
-        {yTitleFit
-          ? yTitleFit.chars.map((chr, i) => (
-              <text
-                key={i}
-                data-truncated={yTitleFit.truncated && i === yTitleFit.chars.length - 1 ? "1" : undefined}
-                x={box.x + yTitleW / 2}
-                y={gridTop + Y_TITLE_START_Y + i * Y_TITLE_CHAR_ADVANCE}
-                textAnchor="middle"
-                fontSize={AXIS_SIZE}
-                fill={ctx.colors.muted}
-                fontFamily={ctx.fonts.body}
-                dominantBaseline="alphabetic"
-              >
-                {chr}
-              </text>
-            ))
-          : null}
+        {renderAxisTitlePair({
+          x: box.x,
+          y: box.y,
+          width: box.w,
+          xTitle: component.x_title,
+          yTitle: component.y_title,
+          fill: ctx.colors.muted,
+          fontFamily: ctx.fonts.body,
+        })}
         {colLabelFits.map((fit, col) => {
           const cx = box.x + gridX0 + col * (cellW + CELL_GAP) + cellW / 2
           return (
@@ -413,7 +283,7 @@ export const heatmap: SvgComponent<HeatmapComponent> = {
               key={col}
               data-truncated={fit.truncated ? "1" : undefined}
               x={cx}
-              y={box.y + yTitle.topH + xTitleH + COL_LABEL_H - COL_LABEL_PAD}
+              y={box.y + titleH + COL_LABEL_H - COL_LABEL_PAD}
               textAnchor="middle"
               fontSize={fit.fontSize}
               fill={ctx.colors.muted}
@@ -431,7 +301,7 @@ export const heatmap: SvgComponent<HeatmapComponent> = {
             <text
               key={row}
               data-truncated={fit.truncated ? "1" : undefined}
-              x={box.x + yTitleW + ROW_LABEL_PAD}
+              x={box.x + ROW_LABEL_PAD}
               y={cy + Math.round(fit.fontSize * 0.35)}
               textAnchor="start"
               fontSize={fit.fontSize}
@@ -454,6 +324,7 @@ export const heatmap: SvgComponent<HeatmapComponent> = {
             return (
               <g key={`${row}-${col}`}>
                 <rect
+                  data-plot-mark="1"
                   x={x}
                   y={y}
                   width={cellW}

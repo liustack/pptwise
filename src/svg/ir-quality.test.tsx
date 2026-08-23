@@ -1217,7 +1217,7 @@ describe("checkIrQuality", () => {
   // lie about what actually renders: either a chart_type would render a
   // y_title with no visibility into "this type isn't fully supported", or a
   // chart_type would warn "ignored" while quietly rendering one anyway.
-  // (x_title is accepted and not drawn on applicable types — label-tuning A —
+  // (probe is y_title — both axis titles now paint on applicable types —
   // so the probe string is y_title.)
   // Pins agreement behaviorally (chart.render's real output vs.
   // checkIrQuality's real finding) rather than reaching into either file's
@@ -1248,13 +1248,13 @@ describe("checkIrQuality", () => {
               { name: "To", data: [{ x: "A", y: 20 }] },
             ]
           : [{ name: "S1", data: [{ x: "A", y: 40 }, { x: "B", y: 60 }] }]
-      // Probe is y_title (x_title is accepted and not drawn — label-tuning A).
+      // Probe is y_title (both titles paint on applicable types).
       const component = { type: "chart" as const, chart_type, axes: { y_title: "Probe" }, series }
 
       const markup = renderSvgMarkup(
         <svg xmlns="http://www.w3.org/2000/svg">{chart.render(component, box, ctx)}</svg>,
       )
-      const renders = markup.includes(">Probe<")
+      const renders = markup.includes("Probe")
 
       const ir = makeIR([{ type: "content", heading: "h", components: [component] }])
       const warns = codes(checkIrQuality(ir)).includes("chart_axes_ignored")
