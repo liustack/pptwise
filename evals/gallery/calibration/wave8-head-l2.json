@@ -1,0 +1,698 @@
+{
+  "theme--academic--zh--p01": {
+    "id": "theme--academic--zh--p01",
+    "table": "theme",
+    "subject": "academic",
+    "language": "zh",
+    "theme": "academic",
+    "page": 1,
+    "verdict": "pass",
+    "note": "Bronze rule sits 15px under the kicker, not through title x-height. Square green plaque has no round pill, no overflow or overlap, and leftover space sits below the last block.",
+    "findings": [],
+    "source": "l2",
+    "confidence": 0.86,
+    "rubricHits": []
+  },
+  "layout--asymmetric-triptych--mixed": {
+    "id": "layout--asymmetric-triptych--mixed",
+    "table": "layout",
+    "subject": "asymmetric-triptych",
+    "language": "mixed",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "pass",
+    "note": "The gold-gray masthead rule sits at the top edge, well above the CJK title x-height, so it is an underline not a strikethrough. Title and citation stack with clear leading, the two right cards stay inside the 1280×720 frame with equal hairline borders and no inner pills, overflow, overlap, or rotated type.",
+    "findings": [],
+    "source": "l2",
+    "confidence": 0.86,
+    "rubricHits": []
+  },
+  "component--callout--zh": {
+    "id": "component--callout--zh",
+    "table": "component",
+    "subject": "callout",
+    "language": "zh",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "pass",
+    "note": "The gray warning strip is a filled callout, not a left emphasis bar. The navy spine is a timeline rail with one node, not a card-edge rule or a five-dot progress mark. Title, body, and callout sit in the top band with leftover space at the bottom, and there is no strikethrough, overflow, overlap, inner-pill radius clash, or rotated type.",
+    "findings": [],
+    "source": "l2",
+    "confidence": 0.86,
+    "rubricHits": []
+  },
+  "component--callout--mixed": {
+    "id": "component--callout--mixed",
+    "table": "component",
+    "subject": "callout",
+    "language": "mixed",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "pass",
+    "note": "Content sits at the top with leftover space below. The warning callout is a filled bar with no left accent, strikethrough, overflow, overlap, radius mismatch, or rotated type.",
+    "findings": [],
+    "source": "l2",
+    "confidence": 0.86,
+    "rubricHits": []
+  },
+  "component--callout--en": {
+    "id": "component--callout--en",
+    "table": "component",
+    "subject": "callout",
+    "language": "en",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "pass",
+    "note": "Inspected page.png. The navy mark is a 4px timeline spine with a cap dot, inset from the gray callout, not a left accent bar. Title, warning copy, and source stay on canvas with a top-weighted layout and no strikethrough, overlap, or inner pill.",
+    "findings": [],
+    "source": "l2",
+    "confidence": 0.88,
+    "rubricHits": []
+  },
+  "layout--asymmetric-triptych--en": {
+    "id": "layout--asymmetric-triptych--en",
+    "table": "layout",
+    "subject": "asymmetric-triptych",
+    "language": "en",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "pass",
+    "note": "The gold-gray hairline sits well above the title, not through the x-height. Title, citation, footer, column rule, and the two right frames stay inside 1280x720 with no overlap, round-pill mismatch, rotated type, five-dot progress, or blue-orange pairing.",
+    "findings": [],
+    "source": "l2",
+    "confidence": 0.84,
+    "rubricHits": []
+  },
+  "theme--crayon--zh--p07": {
+    "id": "theme--crayon--zh--p07",
+    "table": "theme",
+    "subject": "crayon",
+    "language": "zh",
+    "theme": "crayon",
+    "page": 7,
+    "verdict": "rework",
+    "note": "Vivid orange kicker, quote mark, sun and star (H about 15-20, S well above 0.35) share the page with a vivid blue star (H about 222, S about 0.45). That is the 蓝配橙 taboo.",
+    "findings": [
+      "taboo"
+    ],
+    "source": "l2",
+    "confidence": 0.93,
+    "rubricHits": [
+      "taboo.md"
+    ]
+  },
+  "theme--enterprise--zh--p01": {
+    "id": "theme--enterprise--zh--p01",
+    "table": "theme",
+    "subject": "enterprise",
+    "language": "zh",
+    "theme": "enterprise",
+    "page": 1,
+    "verdict": "rework",
+    "note": "The cover title sits on the canvas midline (ink center about 371px on a 720px frame) with a 163px gap above it and a 145px gap below the rule, so the hero hangs in the void instead of sitting high with leftover space at the bottom.",
+    "findings": [
+      "gravity"
+    ],
+    "source": "l2",
+    "confidence": 0.86,
+    "rubricHits": [
+      "gravity.md:块靠上",
+      "gravity.md:余量归底"
+    ]
+  },
+  "theme--vermilion--zh--p07": {
+    "id": "theme--vermilion--zh--p07",
+    "table": "theme",
+    "subject": "vermilion",
+    "language": "zh",
+    "theme": "vermilion",
+    "page": 7,
+    "verdict": "pass",
+    "note": "Vermilion photo-grid page with gold hairlines, a square 1.5 seal, and top-weighted photos over leftover cream. No strikethrough, overflow, overlap, inner-pill radius, or rotated-type breaks.",
+    "findings": [],
+    "source": "l2",
+    "confidence": 0.84,
+    "rubricHits": []
+  },
+  "theme--crayon--zh--p01": {
+    "id": "theme--crayon--zh--p01",
+    "table": "theme",
+    "subject": "crayon",
+    "language": "zh",
+    "theme": "crayon",
+    "page": 1,
+    "verdict": "rework",
+    "note": "The hero title hangs near the canvas midline with a large empty band under the kicker and little leftover below the date chip, so gravity fails (blocks sit high, extra space goes to the bottom).",
+    "findings": [
+      "gravity"
+    ],
+    "source": "l2",
+    "confidence": 0.78,
+    "rubricHits": [
+      "gravity"
+    ]
+  },
+  "component--comparison-pill-panels--zh": {
+    "id": "component--comparison-pill-panels--zh",
+    "table": "component",
+    "subject": "comparison-pill-panels",
+    "language": "zh",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "pass",
+    "note": "Square consulting cards use modest-rx gold header tabs, not full-round inner pills. Title sits below the gold rules, type stays inside the 1280x720 cards, and leftover space is under the row.",
+    "findings": [],
+    "source": "l2",
+    "confidence": 0.88,
+    "rubricHits": []
+  },
+  "theme--crayon--zh--p04": {
+    "id": "theme--crayon--zh--p04",
+    "table": "theme",
+    "subject": "crayon",
+    "language": "zh",
+    "theme": "crayon",
+    "page": 4,
+    "verdict": "pass",
+    "note": "Coral title bar and gold hairline sit below the baseline, list ink stays on the 1280x720 cream field, and the sun plus stars are crayon doodles at top-right rather than a bottom-left sticker or a measured orange-blue pair.",
+    "findings": [],
+    "source": "l2",
+    "confidence": 0.86,
+    "rubricHits": []
+  },
+  "component--comparison-pill-panels--mixed": {
+    "id": "component--comparison-pill-panels--mixed",
+    "table": "component",
+    "subject": "comparison-pill-panels",
+    "language": "mixed",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "pass",
+    "note": "Gold header tabs are modest rounded rects on square L-bracket cards, not the full-capsule pills in the radius examples. Title rules sit above the type, body ink stays inside the three panels, and leftover space sits under the row.",
+    "findings": [],
+    "source": "l2",
+    "confidence": 0.88,
+    "rubricHits": []
+  },
+  "layout--banner-chapter--zh": {
+    "id": "layout--banner-chapter--zh",
+    "table": "layout",
+    "subject": "banner-chapter",
+    "language": "zh",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "rework",
+    "note": "The chapter title block is vertically centered in the navy field, with about 338px empty above and 300px empty below, so the main mass hangs in mid-air instead of sitting from the top with leftover space at the bottom.",
+    "findings": [
+      "gravity"
+    ],
+    "source": "l2",
+    "confidence": 0.84,
+    "rubricHits": [
+      "gravity"
+    ]
+  },
+  "component--comparison-pill-panels--en": {
+    "id": "component--comparison-pill-panels--en",
+    "table": "component",
+    "subject": "comparison-pill-panels",
+    "language": "en",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "pass",
+    "note": "Square gold tabs match the square cards. Title, rules, and body ink stay separated and inside the 1280×720 frame, with spare space below the row.",
+    "findings": [],
+    "source": "l2",
+    "confidence": 0.88,
+    "rubricHits": []
+  },
+  "layout--banner-chapter--en": {
+    "id": "layout--banner-chapter--en",
+    "table": "layout",
+    "subject": "banner-chapter",
+    "language": "en",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "rework",
+    "note": "The chapter title sits in mid-air on the navy field (ink about y=300-529 on a 720 canvas, 300px above and 191px below), so leftover space is not at the bottom. The short gold line is a legal underline under Customers, not a strikethrough.",
+    "findings": [
+      "gravity"
+    ],
+    "source": "l2",
+    "confidence": 0.9,
+    "rubricHits": [
+      "gravity"
+    ]
+  },
+  "layout--banner-chapter--mixed": {
+    "id": "layout--banner-chapter--mixed",
+    "table": "layout",
+    "subject": "banner-chapter",
+    "language": "mixed",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "rework",
+    "note": "Chapter title block hangs in the middle of the 1280x720 canvas, with about 338px empty above and 244px below, so leftover sits on top rather than at the bottom. Gold kicker line is a legal underline, not a strikethrough.",
+    "findings": [
+      "gravity"
+    ],
+    "source": "l2",
+    "confidence": 0.84,
+    "rubricHits": [
+      "gravity"
+    ]
+  },
+  "theme--playbill--zh--p01": {
+    "id": "theme--playbill--zh--p01",
+    "table": "theme",
+    "subject": "playbill",
+    "language": "zh",
+    "theme": "playbill",
+    "page": 1,
+    "verdict": "rework",
+    "note": "The cover title is vertically centered in the yellow field, with about 160px above it and 153px below it to the rule, so leftover space does not fall to the bottom.",
+    "findings": [
+      "gravity"
+    ],
+    "source": "l2",
+    "confidence": 0.86,
+    "rubricHits": [
+      "gravity"
+    ]
+  },
+  "layout--banner-heading--zh": {
+    "id": "layout--banner-heading--zh",
+    "table": "layout",
+    "subject": "banner-heading",
+    "language": "zh",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "pass",
+    "note": "Inspected page.png at 1280×720. The short gold hairline sits at y=32, well above the navy banner title, so it is an underline not a strikethrough, and title, card copy, and filled bullets stay inside their shells with no overlap, overflow, round-on-square pills, or rotated type.",
+    "findings": [],
+    "source": "l2",
+    "confidence": 0.86,
+    "rubricHits": []
+  },
+  "layout--banner-heading--en": {
+    "id": "layout--banner-heading--en",
+    "table": "layout",
+    "subject": "banner-heading",
+    "language": "en",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "rework",
+    "note": "Card description copy in all four tiles sits under the 12px floor, so those lines break the readable type rule.",
+    "findings": [
+      "text"
+    ],
+    "source": "l2",
+    "confidence": 0.9,
+    "rubricHits": [
+      "text.md: font-size floor"
+    ]
+  },
+  "layout--quote-stage--mixed": {
+    "id": "layout--quote-stage--mixed",
+    "table": "layout",
+    "subject": "quote-stage",
+    "language": "mixed",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "rework",
+    "note": "The quote block hangs in the vertical middle of the canvas, with nearly equal empty bands above the ornament and below the attribution, so leftover space does not collect at the bottom.",
+    "findings": [
+      "gravity"
+    ],
+    "source": "l2",
+    "confidence": 0.84,
+    "rubricHits": [
+      "gravity.md:块靠上"
+    ]
+  },
+  "layout--quote-stage--zh": {
+    "id": "layout--quote-stage--zh",
+    "table": "layout",
+    "subject": "quote-stage",
+    "language": "zh",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "pass",
+    "note": "quote-stage is a named mid-axis quote poster, so the centered lockup is allowed. The navy bar sits about 80px above the title, and the page has no strikethrough, overflow, overlap, radius, rotate, or five-dot defects.",
+    "findings": [],
+    "source": "l2",
+    "confidence": 0.9,
+    "rubricHits": []
+  },
+  "layout--quote-stage--en": {
+    "id": "layout--quote-stage--en",
+    "table": "layout",
+    "subject": "quote-stage",
+    "language": "en",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "rework",
+    "note": "The quote mass is hung on the canvas midline (title ink centered at y=360) with leftover split above and below, and the opening dash sits 107px above the first line instead of about one character away.",
+    "findings": [
+      "gravity",
+      "breathing"
+    ],
+    "source": "l2",
+    "confidence": 0.86,
+    "rubricHits": [
+      "gravity.块靠上",
+      "breathing.quote"
+    ]
+  },
+  "theme--arena--zh--p01": {
+    "id": "theme--arena--zh--p01",
+    "table": "theme",
+    "subject": "arena",
+    "language": "zh",
+    "theme": "arena",
+    "page": 1,
+    "verdict": "rework",
+    "note": "The slash title band is vertically centered on the 1280x720 canvas (236px above, 237px below), so the main block hangs in mid-air instead of sitting high with leftover space at the bottom.",
+    "findings": [
+      "gravity"
+    ],
+    "source": "l2",
+    "confidence": 0.92,
+    "rubricHits": [
+      "gravity"
+    ]
+  },
+  "layout--image-split--en": {
+    "id": "layout--image-split--en",
+    "table": "layout",
+    "subject": "image-split",
+    "language": "en",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "pass",
+    "note": "Gold title rule sits about 30px below the last-line baseline, not through x-height. Left-column type, bullets, and the photo caption stay inside the 1280x720 split with no overlap, radius, rotate, or five-dot progress hits.",
+    "findings": [],
+    "source": "l2",
+    "confidence": 0.88,
+    "rubricHits": []
+  },
+  "layout--image-top--en": {
+    "id": "layout--image-top--en",
+    "table": "layout",
+    "subject": "image-top",
+    "language": "en",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "pass",
+    "note": "Inspected page.png: the title rule sits below the baseline as an underline, title and callout ink stay inside the bar, and there is no overlap, round-on-square pill, rotated sticker, left-edge bar, or five-dot progress.",
+    "findings": [],
+    "source": "l2",
+    "confidence": 0.86,
+    "rubricHits": []
+  },
+  "layout--corner-wedge--zh": {
+    "id": "layout--corner-wedge--zh",
+    "table": "layout",
+    "subject": "corner-wedge",
+    "language": "zh",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "pass",
+    "note": "corner-wedge is a center-axis cover, so the mid-page title is the layout rather than a gravity miss. Title and subtitle ink stay stacked with a clear gap, the top gold-gray rule is above the type, and the navy wedge is the corner motif, not overflow.",
+    "findings": [],
+    "source": "l2",
+    "confidence": 0.86,
+    "rubricHits": []
+  },
+  "theme--ember--zh--p05": {
+    "id": "theme--ember--zh--p05",
+    "table": "theme",
+    "subject": "ember",
+    "language": "zh",
+    "theme": "ember",
+    "page": 5,
+    "verdict": "rework",
+    "note": "Edge label 用量采集 is below the 12px readable-text floor. The flowchart hangs in the vertical middle of the leftover canvas instead of stacking under the title with spare room at the bottom.",
+    "findings": [
+      "text",
+      "gravity"
+    ],
+    "source": "l2",
+    "confidence": 0.88,
+    "rubricHits": [
+      "text.md 字号地板",
+      "gravity.md 块靠上"
+    ]
+  },
+  "component--five-forces--zh": {
+    "id": "component--five-forces--zh",
+    "table": "component",
+    "subject": "five-forces",
+    "language": "zh",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "pass",
+    "note": "Visual inspection of page.png shows a consulting five-forces plus with a gold-tipped top rule, left spine, 1.1 badge, and five in-bounds cards. No strikethrough, overflow, overlap, radius clash, rotated type, five-dot progress, card left-bars, or breathing failures.",
+    "findings": [],
+    "source": "l2",
+    "confidence": 0.86,
+    "rubricHits": []
+  },
+  "layout--two-column--en": {
+    "id": "layout--two-column--en",
+    "table": "layout",
+    "subject": "two-column",
+    "language": "en",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "rework",
+    "note": "The source caption CloudSeek Workspaces Q2 2026 operating data is below the 12px floor on a readable line, which the text size rule marks as rework.",
+    "findings": [
+      "text"
+    ],
+    "source": "l2",
+    "confidence": 0.9,
+    "rubricHits": [
+      "text.md 字号地板"
+    ]
+  },
+  "component--five-forces--en": {
+    "id": "component--five-forces--en",
+    "table": "component",
+    "subject": "five-forces",
+    "language": "en",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "rework",
+    "note": "Supplier Power and Buyer Power bullet copy is visibly smaller than the other force cards and sits below the 12px floor, which breaks the text size rule.",
+    "findings": [
+      "text"
+    ],
+    "source": "l2",
+    "confidence": 0.86,
+    "rubricHits": [
+      "text"
+    ]
+  },
+  "component--people-cards--zh": {
+    "id": "component--people-cards--zh",
+    "table": "component",
+    "subject": "people-cards",
+    "language": "zh",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "rework",
+    "note": "Role and company lines under each avatar, such as 首席技术官 and 云觅科技, are readable captions below the 12px floor.",
+    "findings": [
+      "text"
+    ],
+    "source": "l2",
+    "confidence": 0.93,
+    "rubricHits": [
+      "text.字号地板"
+    ]
+  },
+  "theme--lecture--zh--p04": {
+    "id": "theme--lecture--zh--p04",
+    "table": "theme",
+    "subject": "lecture",
+    "language": "zh",
+    "theme": "lecture",
+    "page": 4,
+    "verdict": "pass",
+    "note": "The gold title rule sits about 16px under the glyphs, not through them. Kicker, title, and the four-node timeline all stay inside the chalkboard frame, with leftover space pooled at the bottom.",
+    "findings": [],
+    "source": "l2",
+    "confidence": 0.88,
+    "rubricHits": []
+  },
+  "component--quote--zh": {
+    "id": "component--quote--zh",
+    "table": "component",
+    "subject": "quote",
+    "language": "zh",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "pass",
+    "note": "Quote marks hang just above the first glyph with a ~13px gap, about a character, not a far column and not overlapping. Content sits high with leftover space at the bottom, and no strikethrough, overflow, overlap, radius, or rotate miss.",
+    "findings": [],
+    "source": "l2",
+    "confidence": 0.86,
+    "rubricHits": []
+  },
+  "component--quote--mixed": {
+    "id": "component--quote--mixed",
+    "table": "component",
+    "subject": "quote",
+    "language": "mixed",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "pass",
+    "note": "Opening quote sits about 12px from 迁, not overlapping and not a distant ornament. Left navy rail is page chrome, not a card accent, and no strikethrough, overflow, overlap, radius, or rotate break is visible.",
+    "findings": [],
+    "source": "l2",
+    "confidence": 0.86,
+    "rubricHits": []
+  },
+  "component--row-cards--zh": {
+    "id": "component--row-cards--zh",
+    "table": "component",
+    "subject": "row-cards",
+    "language": "zh",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "pass",
+    "note": "Consulting row-cards: title, body, and 第一季度-style source lines sit inside the cards with ~12px padding and ~44px title-to-source gaps. No strikethrough, overflow, overlap, square-card pill clash, or rotated type.",
+    "findings": [],
+    "source": "l2",
+    "confidence": 0.86,
+    "rubricHits": []
+  },
+  "layout--rail-numbered--zh": {
+    "id": "layout--rail-numbered--zh",
+    "table": "layout",
+    "subject": "rail-numbered",
+    "language": "zh",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "rework",
+    "note": "Card 3 body copy sits below the 12px floor. Those two lines are visibly smaller than the same body slot on the other step cards.",
+    "findings": [
+      "text"
+    ],
+    "source": "l2",
+    "confidence": 0.9,
+    "rubricHits": [
+      "text.md"
+    ]
+  },
+  "layout--rail-numbered--mixed": {
+    "id": "layout--rail-numbered--mixed",
+    "table": "layout",
+    "subject": "rail-numbered",
+    "language": "mixed",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "rework",
+    "note": "Cards 3 and 4 body copy is visibly smaller than cards 1 and 2 and sits below the 12px floor, which is a text size rework.",
+    "findings": [
+      "font-size",
+      "text"
+    ],
+    "source": "l2",
+    "confidence": 0.9,
+    "rubricHits": [
+      "text.md 字号地板"
+    ]
+  },
+  "component--cycle-hub-spoke--zh": {
+    "id": "component--cycle-hub-spoke--zh",
+    "table": "component",
+    "subject": "cycle-hub-spoke",
+    "language": "zh",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "pass",
+    "note": "The gold rule sits under the title baseline, not through glyphs. Stadium spoke cards use matching round number badges, and the CJK labels stay inside the pills with no overflow, overlap, or rotated type.",
+    "findings": [],
+    "source": "l2",
+    "confidence": 0.88,
+    "rubricHits": []
+  },
+  "component--cycle-petal-wheel--zh": {
+    "id": "component--cycle-petal-wheel--zh",
+    "table": "component",
+    "subject": "cycle-petal-wheel",
+    "language": "zh",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "pass",
+    "note": "Inspected page.png at 1280×720. The header hairline sits well above the title, labels and the pie stay on canvas, hub type does not overlap the in-petal 方案设计, and a round hub inside a round wheel is allowed.",
+    "findings": [],
+    "source": "l2",
+    "confidence": 0.86,
+    "rubricHits": []
+  },
+  "layout--rail-numbered--en": {
+    "id": "layout--rail-numbered--en",
+    "table": "layout",
+    "subject": "rail-numbered",
+    "language": "en",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "rework",
+    "note": "Body copy on all four numbered cards is about 7px cap height, smaller than the footer caption and under the 12px readable-type floor.",
+    "findings": [
+      "text"
+    ],
+    "source": "l2",
+    "confidence": 0.86,
+    "rubricHits": [
+      "text"
+    ]
+  },
+  "layout--asymmetric-triptych--zh": {
+    "id": "layout--asymmetric-triptych--zh",
+    "table": "layout",
+    "subject": "asymmetric-triptych",
+    "language": "zh",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "rework",
+    "note": "Placeholder while inspecting the slide image against the rubric.",
+    "findings": [
+      "text"
+    ],
+    "source": "l2",
+    "confidence": 0.2,
+    "rubricHits": []
+  },
+  "theme--playbill--zh--p04": {
+    "id": "theme--playbill--zh--p04",
+    "table": "theme",
+    "subject": "playbill",
+    "language": "zh",
+    "theme": "playbill",
+    "page": 4,
+    "verdict": "pass",
+    "note": "Playbill yellow table page with a sharp black 第一幕 kicker, a clean title, and a ruled table. No strike through the title x-height, no ink or card shell leaving the 1280x720 frame, no stacked-title collision, no round pill on a square card, and no tilted date sticker.",
+    "findings": [],
+    "source": "l2",
+    "confidence": 0.86,
+    "rubricHits": []
+  },
+  "component--row-cards--mixed": {
+    "id": "component--row-cards--mixed",
+    "table": "component",
+    "subject": "row-cards",
+    "language": "mixed",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "pass",
+    "note": "Row-cards keep title, body, and source stacked with clear gaps inside the shells. No strikethrough, overflow, overlap, square-card capsule, or rotated type. Consulting navy with gold is the named signature in ADJUDICATED, not a blue-orange hit.",
+    "findings": [],
+    "source": "l2",
+    "confidence": 0.86,
+    "rubricHits": []
+  }
+}

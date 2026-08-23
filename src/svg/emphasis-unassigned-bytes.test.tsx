@@ -1,64 +1,18 @@
 // @vitest-environment node
-import { createHash } from "node:crypto"
 import { readFileSync } from "node:fs"
 import { describe, expect, it } from "vitest"
 import { renderSlideSvg } from "../api"
 import type { PptxIR, Slide } from "../ir"
 import { installNodePlatform } from "../platform/node"
-import { CANONICAL_THEME_IDS } from "../themes"
+import {
+  computeEmphasisUnassignedPages,
+  EMPHASIS_UNASSIGNED_BYTES_URL,
+  MARKED_HEADING,
+  MARKED_SUBHEADING,
+  UNASSIGNED,
+} from "./emphasis-unassigned-bytes"
 
 installNodePlatform()
-
-const UNASSIGNED = CANONICAL_THEME_IDS.filter((themeId) => themeId !== "consulting")
-const MARKED_HEADING = "年度**增长结论**与下一步投入"
-const MARKED_SUBHEADING = "先看**关键判断**，再展开证据"
-
-function content(layout: string, component: Slide["components"][number]): Slide {
-  return {
-    type: "content",
-    layout,
-    heading: MARKED_HEADING,
-    subheading: MARKED_SUBHEADING,
-    components: [component],
-  } as Slide
-}
-
-function deck(themeId: string): PptxIR {
-  return {
-    version: "4",
-    filename: "emphasis-unassigned-byte-nail.pptx",
-    theme: { id: themeId },
-    meta: { organization: "pptpress" },
-    assets: { images: {} },
-    slides: [
-      {
-        type: "cover",
-        heading: MARKED_HEADING,
-        subheading: MARKED_SUBHEADING,
-        components: [],
-      } as Slide,
-      { type: "chapter", heading: "增长战略", components: [] } as Slide,
-      content("two-column", {
-        type: "paragraph",
-        text: "普通正文中的**关键证据**保持原有强调画法。",
-      }),
-      content("banner-heading", {
-        type: "bullets",
-        items: ["第一条包含**关键证据**", "第二条保持普通文本"],
-      }),
-      content("bento-panel", {
-        type: "callout",
-        variant: "info",
-        text: "提示中的**关键证据**保持原有强调画法。",
-      }),
-      content("quiet-frame", {
-        type: "verdict_banner",
-        tone: "positive",
-        text: "结论中的**关键证据**保持原有强调画法。",
-      }),
-    ],
-  } as PptxIR
-}
 
 function consultingPadDeck(): PptxIR {
   const plain = { type: "paragraph" as const, text: "普通正文" }
@@ -107,10 +61,6 @@ function consultingPadDeck(): PptxIR {
   } as PptxIR
 }
 
-function sha(svg: string): string {
-  return createHash("sha256").update(svg).digest("hex")
-}
-
 // Recaptured for the three-layer depth contract. All 115 hashes move because
 // the marked layer groups are now part of the serialized SVG contract. The
 // same matrix remains a byte nail for every later change.
@@ -138,17 +88,11 @@ function sha(svg: string): string {
 // right-edge ticks (cover-only). Covers of all 23 unassigned themes stay
 // byte-identical. consulting is not in this fixture.
 const fixture = JSON.parse(
-  readFileSync(new URL("./__fixtures__/emphasis-unassigned-bytes.json", import.meta.url), "utf-8"),
+  readFileSync(EMPHASIS_UNASSIGNED_BYTES_URL, "utf-8"),
 ) as { pages: Record<string, string> }
 
 describe("unassigned emphasis forms stay pinned to the depth-contract fixture", () => {
-  const pages: Record<string, string> = {}
-  for (const themeId of UNASSIGNED) {
-    const ir = deck(themeId)
-    for (const pageIndex of [0, 2, 3, 4, 5]) {
-      pages[`${themeId}|${pageIndex}`] = sha(renderSlideSvg(ir, pageIndex))
-    }
-  }
+  const pages = computeEmphasisUnassignedPages()
   it("covers 23 themes across five real render paths", () => {
     expect(UNASSIGNED).toHaveLength(23)
     expect(Object.keys(pages)).toHaveLength(115)
