@@ -50,7 +50,9 @@ const ARC_CLEAR = 52
 /** Title-baseline to subtitle-top when there is no chalk underline to clear. */
 const SUBTITLE_GAP = 32
 const BYLINE_X = 1108
-const BYLINE_Y = 688
+/** Inside the 26px lecture-style frame (bottom 694) with SIBLING_AIR, and
+ * left of the (1120,630) logo box. 660 leaves ~30px of air to the frame. */
+const BYLINE_Y = 660
 const BYLINE_SIZE = 20
 
 function hasCjk(text: string): boolean {

@@ -6,6 +6,7 @@ import { CONF_LABEL } from "../../lib/conf-labels"
 import { showsDocumentMeta } from "../document-meta"
 import { accessibleInk } from "../ink"
 import { hasCjk, latinUpper, trackingPx } from "./minimal-shared"
+import { SIBLING_AIR_PX } from "../spacing"
 
 /**
  * poster-center cover layout（spec §3.2）：全居中"海报"式封面——超大居中标题、
@@ -111,10 +112,11 @@ export function PosterCenterCover({ ir, slide, ctx }: SvgTemplateProps) {
       })
     : null
   const titleGlyphTop = COVER_TITLE_Y - Math.round(title.fontSize * 0.75)
+  const kickerClear = Math.max(SIBLING_AIR_PX, Math.round(title.fontSize * 0.32))
   const kickerY =
-    kicker && KICKER_PREFERRED_Y + 2 < titleGlyphTop
+    kicker && KICKER_PREFERRED_Y + kicker.fontSize * 0.25 + 2 < titleGlyphTop
       ? KICKER_PREFERRED_Y
-      : titleGlyphTop - 16
+      : titleGlyphTop - kickerClear
   const kickerFill = accessibleInk(ctx.colors.accent, pageBg, KICKER_SIZE)
 
   const topMetaParts = [org, confLabel, date].filter((v): v is string => Boolean(v))

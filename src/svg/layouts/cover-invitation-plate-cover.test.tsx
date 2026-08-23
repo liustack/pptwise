@@ -98,6 +98,19 @@ describe("cover-invitation-plate-cover — board geometry", () => {
     expect(foot?.getAttribute("data-contrast-tier")).toBe("meta")
   })
 
+  it("keeps the date rule off the foot when the title wraps to two lines", () => {
+    const { root } = renderCover("luxe", slide("云觅科技 2026 年第二季度业务评审"), {
+      organization: "战略与运营部",
+      date: "2026 年 7 月",
+    })
+    const rule = root.querySelector("line")!
+    const foot = Array.from(root.querySelectorAll("text")).find((t) => (t.textContent ?? "").includes("2026 年 7 月"))!
+    const ruleY = Number(rule.getAttribute("y1"))
+    const footY = Number(foot.getAttribute("y"))
+    const footSize = Number(foot.getAttribute("font-size"))
+    expect(footY - ruleY - footSize * 0.75).toBeGreaterThanOrEqual(24)
+  })
+
   it("does not invent cover copy when heading is empty, and skips the rule", () => {
     const { root, markup } = renderCover("luxe", slide("", { heading: "", subheading: "" }), {
       organization: "璟园",

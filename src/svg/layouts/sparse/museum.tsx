@@ -6,6 +6,7 @@ import { heroCaption, heroValue } from "../minimal-shared"
 import { fitSvgLine } from "../../../lib/svg-text-layout"
 import { renderFittedEvidence } from "../fitted-evidence"
 import { evidenceSource, fitHeroLine, fitSparseHeading, pad2 } from "./shared"
+import { SIBLING_AIR_PX } from "../../spacing"
 
 /** museum 稀排脸：展签格言、衬板单证据、铜金巨数。 */
 
@@ -78,7 +79,10 @@ export function oneEvidence({ slide, index, ctx }: SvgTemplateProps) {
     fontFamily: fonts.heading,
     bold: false,
   })
-  const headingY = evidence ? 220 : 300
+  const panelY = 170
+  const headingY = evidence
+    ? panelY + SIBLING_AIR_PX + Math.round(heading.fontSize * 0.75)
+    : 300
   const headingLast = headingY + Math.max(0, heading.lines.length - 1) * heading.lineHeight
   const noteY = evidence ? headingLast + 18 : 366
   const note = slide.subheading
@@ -93,7 +97,7 @@ export function oneEvidence({ slide, index, ctx }: SvgTemplateProps) {
   const evidenceRect = { x: 280, y: evidenceY, w: 720, h: Math.max(140, panelBottom - 10 - evidenceY) }
   return (
     <>
-      <rect x={240} y={170} width={800} height={330} fill={colors.surface} stroke={colors.border} strokeWidth={1} />
+      <rect x={240} y={panelY} width={800} height={330} fill={colors.surface} stroke={colors.border} strokeWidth={1} />
       {heading.lines.map((line, i) => (
         <text
           key={i}
