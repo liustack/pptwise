@@ -729,11 +729,6 @@ function renderLeadAccent(args: RenderArgs): { chrome: ReactNode; contentRect: C
             {titleInner}
           </text>
         )}
-        {args.knobs.tail === "gold-dot" && (
-          <g data-decor="">
-            <circle cx={titleX + 6} cy={152 + lift} r={3} fill={colors.accent} />
-          </g>
-        )}
         {args.knobs.tail === "olive-rule" && (
           <g data-decor="">
             <rect x={titleX} y={142 + lift} width={64} height={2} fill={colors.primary} />

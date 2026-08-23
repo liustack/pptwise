@@ -4,8 +4,9 @@ import { Icon } from "../../icons"
 import type { FormKnobs } from "../form-assignments"
 import type { ComponentBox, ComponentCtx } from "../types"
 import {
+  BOARD_CARD_W,
   boardTypeScale,
-  fillCardType,
+  capFormBody,
   formGridCols,
   formLineHeight,
   layoutFormBody,
@@ -17,12 +18,25 @@ type IconCardsComponent = Extract<Component, { type: "icon_cards" }>
 type IconCardItem = IconCardsComponent["items"][number]
 
 const GAP = 16
-const PAD = 18
-const TITLE_LINE_HEIGHT_RATIO = 1.4
+/**
+ * Inner pad. 24px keeps a line of air above the icon and below the last
+ * body line. 18px read as flush once a wide cell upscaled type to the
+ * shell (academic p03).
+ */
+const PAD = 24
 const TEXT_LINE_HEIGHT_RATIO = 1.4
 const GAP_ICON_TITLE = 14
-const GAP_TITLE_TEXT = 8
+const GAP_TITLE_TEXT = 10
 const ICON_SIZE = 32
+/**
+ * Card body vs card title. 0.55 is one typographic step: the title stays
+ * the item name, the body stays supporting copy. The shared 0.6 form cap
+ * still read as the same size on academic p03 after width upscale
+ * (41 / 24.6). Title caps at 28 so 0.55×title (15.4) sits on the existing
+ * 15px body floor without moving that global constant.
+ */
+const CARD_BODY_TITLE_RATIO = 0.55
+const CARD_TITLE_MAX = 28
 
 function layoutItemText(
   item: IconCardItem,
@@ -125,14 +139,15 @@ function geometry(
   const rows = Math.ceil(n / cols)
   const cellW = (w - GAP * (cols - 1)) / cols
   const contentW = Math.max(24, cellW - PAD * 2)
-  const slotH = boxH != null ? Math.max(1, (boxH - GAP * (rows - 1)) / rows) : undefined
-  const start = boardTypeScale(cellW, slotH)
+  const start = boardTypeScale(Math.min(cellW, BOARD_CARD_W))
+  const titleSize = Math.min(start.title, CARD_TITLE_MAX)
+  const bodySize = capFormBody(titleSize, titleSize * CARD_BODY_TITLE_RATIO)
   const extraAbove = ICON_SIZE + GAP_ICON_TITLE
   const naturalInner =
     extraAbove +
-    formLineHeight(start.title) +
+    formLineHeight(titleSize) +
     GAP_TITLE_TEXT +
-    2 * formLineHeight(start.body)
+    2 * formLineHeight(bodySize)
   const naturalCellH = PAD * 2 + naturalInner
   const naturalMeasured = rows * naturalCellH + (rows - 1) * GAP
   const cellH =
@@ -140,35 +155,22 @@ function geometry(
       ? naturalCellH
       : Math.max(1, (boxH - GAP * (rows - 1)) / rows)
   const innerH = Math.max(1, cellH - PAD * 2)
-  const filled = fillCardType({
-    innerH,
-    contentW,
-    titleSize: start.title,
-    bodySize: start.body,
-    gap: GAP_TITLE_TEXT,
-    extraAbove,
-    longestBody: component.items.map((it) => it.text).sort((a, b) => b.length - a.length)[0],
-    titles: component.items.map((it) => it.title),
-    fonts: { heading: ctx.fonts.heading, body: ctx.fonts.body },
-    titleLhRatio: TITLE_LINE_HEIGHT_RATIO,
-    bodyLhRatio: TEXT_LINE_HEIGHT_RATIO,
-  })
   const fit = linesThatFit({
     innerH,
-    titleSize: filled.titleSize,
-    bodySize: filled.bodySize,
+    titleSize,
+    bodySize,
     gap: GAP_TITLE_TEXT,
     extraAbove,
     titleMax: 2,
-    bodyMax: Math.max(2, filled.bodyMaxLines),
+    bodyMax: 4,
   })
   const layouts = component.items.map((item) =>
     layoutItemText(
       item,
       contentW,
       ctx,
-      filled.titleSize,
-      filled.bodySize,
+      titleSize,
+      bodySize,
       fit.titleMaxLines,
       fit.bodyMaxLines,
     ),

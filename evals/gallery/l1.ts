@@ -4,8 +4,8 @@
  * Reuses `auditSvgMarkup` (overflow / page-overflow) and `findOverlapIssues`.
  * Extra checks: strikethrough vs underline, ink-box overlap, boxless card
  * overflow, page-edge stick, font-size floor, overflow markers, Latin
- * vertical type, axis-title vs data-mark intersection. Five-dot progress
- * is left to L2.
+ * vertical type, axis-title vs data-mark intersection, isolated midground
+ * ticks and filled dots. Five-dot progress is left to L2.
  */
 
 import { META_FONT_FLOOR_PT, META_FONT_FLOOR_PX, pxToPt } from "@/constants"
@@ -99,6 +99,12 @@ const DEPTH_DEFINITION_TAGS = new Set([
   "stop",
 ])
 const ISOLATED_STROKE_TAGS = new Set(["line", "path", "polygon", "polyline", "rect"])
+/** Filled circle/ellipse at or under this diameter is a "dot". */
+const ISOLATED_DOT_MAX = 16
+/** Filled square at or under this side is a "dot". 10px seals stay above it. */
+const ISOLATED_DOT_SQUARE_MAX = 8
+const DOT_SEQUENCE_ALIGN = 4
+const DOT_SEQUENCE_MIN = 3
 
 const OVERFLOW_MARKER = /\+\d+\s*(…|\.{3}|more|项)/i
 const OVERFLOW_MARKER_ZH = /另有\s*\d+\s*项/
@@ -386,6 +392,58 @@ function findAxisTitleOverlap(root: Element, findings: L1Finding[]): void {
   }
 }
 
+function isPlotMark(el: Element): boolean {
+  return el.hasAttribute("data-plot-mark")
+}
+
+function isSmallFilledDot(leaf: DepthLeaf): boolean {
+  if (isPlotMark(leaf.el) || !visibleFill(leaf)) return false
+  if (leaf.tag === "circle" || leaf.tag === "ellipse") {
+    return Math.max(leaf.box.w, leaf.box.h) <= ISOLATED_DOT_MAX
+  }
+  if (leaf.tag === "rect") {
+    const ratio = leaf.box.w / Math.max(leaf.box.h, 1e-6)
+    return (
+      leaf.box.w <= ISOLATED_DOT_SQUARE_MAX &&
+      leaf.box.h <= ISOLATED_DOT_SQUARE_MAX &&
+      ratio >= 0.7 &&
+      ratio <= 1 / 0.7
+    )
+  }
+  return false
+}
+
+function isDotSequence(leaf: DepthLeaf, dots: readonly DepthLeaf[]): boolean {
+  const size = Math.max(leaf.box.w, leaf.box.h)
+  const peers = dots.filter((other) => {
+    if (other.tag !== leaf.tag) return false
+    return Math.abs(Math.max(other.box.w, other.box.h) - size) <= DOT_SEQUENCE_ALIGN
+  })
+  if (peers.length < DOT_SEQUENCE_MIN) return false
+  const xs = peers.map((peer) => peer.box.x + peer.box.w / 2)
+  const ys = peers.map((peer) => peer.box.y + peer.box.h / 2)
+  const alignedX = Math.max(...xs) - Math.min(...xs) <= DOT_SEQUENCE_ALIGN
+  const alignedY = Math.max(...ys) - Math.min(...ys) <= DOT_SEQUENCE_ALIGN
+  if (alignedX || alignedY) return true
+  const bucket = (value: number) => Math.round(value / DOT_SEQUENCE_ALIGN)
+  const uniqueX = new Set(xs.map(bucket))
+  const uniqueY = new Set(ys.map(bucket))
+  return uniqueX.size >= 2 && uniqueY.size >= 2 && uniqueX.size * uniqueY.size >= peers.length
+}
+
+function isAttachedToStructure(leaf: DepthLeaf, leaves: readonly DepthLeaf[]): boolean {
+  const piece = decorPieceOf(leaf.el)
+  if (piece !== null && leaves.some((other) => other.el !== leaf.el && decorPieceOf(other.el) === piece)) {
+    return true
+  }
+  return leaves.some(
+    (other) =>
+      other.el !== leaf.el &&
+      (other.box.w >= CARD_MIN || other.box.h >= CARD_MIN) &&
+      boxesIntersect(expandedBox(leaf.box, BOXLESS_TOL), other.box),
+  )
+}
+
 function findIsolatedMidPieces(root: Element, findings: L1Finding[]): void {
   const mid = depthGroup(root, "mid")
   if (!mid) return
@@ -393,22 +451,21 @@ function findIsolatedMidPieces(root: Element, findings: L1Finding[]): void {
   for (const leaf of leaves) {
     if (!ISOLATED_STROKE_TAGS.has(leaf.tag) || !visibleStroke(leaf.el) || visibleFill(leaf)) continue
     if (leaf.box.w >= CARD_MIN || leaf.box.h >= CARD_MIN) continue
-
-    const piece = decorPieceOf(leaf.el)
-    const grouped = piece !== null && leaves.some((other) => other.el !== leaf.el && decorPieceOf(other.el) === piece)
-    if (grouped) continue
-
-    const nearbyStructure = leaves.some(
-      (other) =>
-        other.el !== leaf.el &&
-        (other.box.w >= CARD_MIN || other.box.h >= CARD_MIN) &&
-        boxesIntersect(expandedBox(leaf.box, BOXLESS_TOL), other.box),
-    )
-    if (nearbyStructure) continue
+    if (isAttachedToStructure(leaf, leaves)) continue
 
     findings.push({
       code: "isolated-mid-piece",
       message: `small stroked midground ${leaf.tag} at ${leaf.box.x.toFixed(0)},${leaf.box.y.toFixed(0)} is isolated from structural geometry`,
+    })
+  }
+
+  const dots = leaves.filter(isSmallFilledDot)
+  for (const leaf of dots) {
+    if (isDotSequence(leaf, dots)) continue
+    if (isAttachedToStructure(leaf, leaves)) continue
+    findings.push({
+      code: "isolated-mid-piece",
+      message: `small filled midground ${leaf.tag} at ${leaf.box.x.toFixed(0)},${leaf.box.y.toFixed(0)} is an isolated dot`,
     })
   }
 }
