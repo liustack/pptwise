@@ -7,6 +7,8 @@ import { resolveStyle } from "../../../themes"
 import { StatementContent } from "../content-statement"
 import { StatHeroContent } from "../content-stat-hero"
 import { MonoBleedContent } from "../content-mono-bleed"
+import { boxesIntersect, textInkBox } from "../../depth-contract/geometry"
+import { LATIN_DESCENT_RATIO } from "../underline"
 import type { PptxIR, Slide } from "@/ir"
 
 const VERSE = "设备不会突然坏，只是没人**听**它说话。"
@@ -74,7 +76,7 @@ describe("playbill sparse faces", () => {
     expect(heading.querySelector("tspan")).toBeNull()
   })
 
-  it("stat-hero bleeds a 560px numeral and bakes a rotated unit chip", () => {
+  it("stat-hero bleeds a 380px numeral and bakes a rotated unit chip", () => {
     const slide: Slide = {
       type: "content",
       layout: "stat-hero",
@@ -86,10 +88,10 @@ describe("playbill sparse faces", () => {
       <StatHeroContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />,
     )
     expect(() => assertSubset(root)).not.toThrow()
-    const hero = Array.from(root.querySelectorAll("text")).find((t) => t.getAttribute("font-size") === "560")!
+    const hero = Array.from(root.querySelectorAll("text")).find((t) => t.getAttribute("font-size") === "380")!
     expect(hero.textContent).toBe("43")
     expect(hero.getAttribute("x")).toBe("640")
-    expect(hero.getAttribute("y")).toBe("560")
+    expect(hero.getAttribute("y")).toBe("500")
     expect(hero.getAttribute("text-anchor")).toBe("middle")
     expect(hero.getAttribute("font-weight")).toBe("700")
     expect(root.querySelector("polygon")).not.toBeNull()
@@ -124,6 +126,53 @@ describe("playbill sparse faces", () => {
     const unrotatedTr = { x: 1100 + 180 / 2, y: 152 - 64 / 2 }
     expect(tr.y).toBeGreaterThan(unrotatedTr.y)
     expect(tr.x).toBeGreaterThan(unrotatedTr.x)
+  })
+
+  it("stat-hero numeral does not cross the caption or the unit chip", () => {
+    const slide: Slide = {
+      type: "content",
+      layout: "stat-hero",
+      heading: "10.2",
+      subheading: "下半年的三项确定性投入",
+      components: [],
+    } as Slide
+    const { root } = render(
+      <StatHeroContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />,
+    )
+    const hero = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "10.2")!
+    const caption = Array.from(root.querySelectorAll("text")).find((t) =>
+      (t.textContent ?? "").includes("下半年"),
+    )!
+    const fs = Number(hero.getAttribute("font-size"))
+    const heroY = Number(hero.getAttribute("y"))
+    const heroInk = textInkBox({
+      content: hero.textContent ?? "",
+      x: Number(hero.getAttribute("x")),
+      y: heroY,
+      fontSize: fs,
+      fontFamily: hero.getAttribute("font-family") ?? "",
+      fontWeight: hero.getAttribute("font-weight"),
+      textAnchor: hero.getAttribute("text-anchor") ?? "start",
+    })
+    heroInk.h = fs * (0.72 + LATIN_DESCENT_RATIO)
+    const captionTop = Number(caption.getAttribute("y")) - Number(caption.getAttribute("font-size"))
+    expect(captionTop).toBeGreaterThan(heroY + fs * LATIN_DESCENT_RATIO)
+    const pts = root
+      .querySelector("polygon")!
+      .getAttribute("points")!
+      .trim()
+      .split(/\s+/)
+      .map((p) => {
+        const [x, y] = p.split(",").map(Number)
+        return { x: x!, y: y! }
+      })
+    const chipBox = {
+      x: Math.min(...pts.map((p) => p.x)),
+      y: Math.min(...pts.map((p) => p.y)),
+      w: Math.max(...pts.map((p) => p.x)) - Math.min(...pts.map((p) => p.x)),
+      h: Math.max(...pts.map((p) => p.y)) - Math.min(...pts.map((p) => p.y)),
+    }
+    expect(boxesIntersect(heroInk, chipBox)).toBe(false)
   })
 
   it("mono-bleed without an image falls back to the generic type-on-field face", () => {

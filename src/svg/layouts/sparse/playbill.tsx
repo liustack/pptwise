@@ -60,8 +60,8 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
   const unsigned = raw.trim().replace(/^-/, "")
   const { body } = splitTrailingPercent(unsigned)
   const fitted = fitHeroLine(numeric ? body : raw, {
-    maxWidth: 1200,
-    fontSize: 560,
+    maxWidth: 1000,
+    fontSize: 380,
     fontFamily: fonts.heading,
     bold: true,
   })
@@ -71,7 +71,7 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
     <>
       <text
         x={640}
-        y={560}
+        y={500}
         textAnchor="middle"
         fontFamily={fonts.heading}
         fontSize={fitted.fontSize}
