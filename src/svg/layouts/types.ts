@@ -104,6 +104,13 @@ export type ChapterLayoutId =
   | "field-band-chapter"
   | "subject-rule-chapter"
   | "round-mark-chapter"
+  // Wave 8 batch 4 pinOnly chapter faces.
+  | "one-word-chapter"
+  | "chalk-rule-chapter"
+  | "decimal-index-chapter"
+  | "issue-line-chapter"
+  | "day-bill-chapter"
+  | "hall-label-chapter"
 export type EndingLayoutId =
   | "banner-ending" | "rail-ending" | "poster-ending"
   | "constellation-ending" | "masthead-ending" | "tone-adaptive-ending"
@@ -129,6 +136,13 @@ export type EndingLayoutId =
   | "scorecard-ending"
   | "care-plan-ending"
   | "seat-cta-ending"
+  // Wave 8 batch 4 pinOnly ending faces.
+  | "release-close-ending"
+  | "next-lecture-ending"
+  | "resolution-ending"
+  | "decision-close-ending"
+  | "ticket-cta-ending"
+  | "exit-word-ending"
 
 // Wave 3（content）新增 id
 export type ContentLayoutId =

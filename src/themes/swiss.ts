@@ -26,7 +26,7 @@ import type { StyleTokens } from "./tokens";
  *   - `bg` `#F7F7F5`：冷白纸。板上原值。
  *   - `surface` `#FFFFFF`：制度卡纯白，从冷白纸上抬一档（consulting 同形）。
  *   - `primary` `#101010`：硬黑。即正文即色块。压 bg 17.74:1，白字压它
- *     19.03:1。横幅、斜切、章节整版都走它，不走红。
+ *     19.03:1。横幅、斜切、签名块走它，不走红。章节页改走冷白纸。
  *   - `accent` `#D7282F`：瑞士红（4.62:1）。只给页缘边条与小色块，永不承字
  *     成横幅。白字压它 4.96:1，刚过 4.5，但本主题纪律禁止把它当成横幅底。
  *   - `text` `#101010`：与 primary 同一格，制度腔就是「墨即结构」。
@@ -50,13 +50,13 @@ import type { StyleTokens } from "./tokens";
  * （字重导出只有粗/不粗两档，900 → 加粗）。圆角 0 + gapScale 1（tight，
  * 与 tech 同档）。
  *
- * 装饰见 `../svg/motifs/motif-swiss-motif.tsx`（顶边 12px 红条 + 右缘三格
- * 灰刻度。light 档，四页型同一张）。板上封面那根 x852 整高裸格线**不进
- * motif**：纵穿正文区 (96,200,1040×420)，违反五个保护区。
+ * 装饰见 `../svg/motifs/motif-swiss-motif.tsx`（顶边 12px 红条四页都画。
+ * 右缘三格灰刻度只留封面，章节 / 内容 / ending 不画刻度）。light 档。
+ * 板上封面那根 x852 整高裸格线**不进 motif**：纵穿正文区
+ * (96,200,1040×420)，违反五个保护区。
  *
- * chapter 默认底取 primary 硬黑（consulting / vermilion 先例：章节整版是
- * 结构色块）。红条压黑底 3.84:1，灰刻度压黑底 2.97:1，都过 motif 可见度
- * 地板 1.02，chapter 不退让。
+ * 第八波批 4：chapter 默认底从 primary 硬黑改为冷白纸（与 bg 同值）。
+ * 板上章节是白纸 + 小数编号，不是整版黑。红条四页都在，是身份件。
  */
 export const SWISS_TOKENS: StyleTokens = {
   id: "swiss",
@@ -83,7 +83,7 @@ export const SWISS_TOKENS: StyleTokens = {
   shape: { radius: 0, gapScale: 1 }, // 制度直角 + tight（与 tech 同档）
   defaultBackgrounds: {
     cover: { kind: "color", value: "#F7F7F5" },
-    chapter: { kind: "color", value: "#101010" }, // 硬黑整版（红身份来自页缘边条，不来自整版红）
+    chapter: { kind: "color", value: "#F7F7F5" }, // 冷白纸（第八波批 4：板上章节是白纸 + 小数编号）
     content: { kind: "color", value: "#F7F7F5" },
     ending: { kind: "color", value: "#F7F7F5" },
   },

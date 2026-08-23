@@ -48,6 +48,13 @@ import type { StyleTokens } from "./tokens";
  *
  * 装饰：无。`THEME_DEFINITIONS.stage.motif` 留空，照 runway 先例。
  * 无框就是身份，一件极轻的框都会把黑场读成 luxe / museum 的亲戚。
+ *
+ * **第八波批 4（2026-08-23，`.issues/design-boards/wave8/b4/Stage.dc.html`）**：
+ * 封面继续锁 `poster-center`，几何不动。章节锁 pinOnly `one-word-chapter`
+ * （一个词满场，幕次退成注脚，标题钉板上 120px，不乘 typeScale）。ending
+ * 锁 pinOnly `release-close-ending`（发布句 + 一行地址，不放二维码不写
+ * Thank you）。decor=none 继续是官方身份，本轮不补 motif。四页
+ * defaultBackgrounds 仍是冷玄黑 `#0F0F12`。角色色 hex 与 fonts 一处不改。
  */
 export const STAGE_TOKENS: StyleTokens = {
   id: "stage",

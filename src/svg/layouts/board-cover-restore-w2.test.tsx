@@ -148,6 +148,51 @@ describe("wave 8 batch 3 — locked cover / chapter / ending faces", () => {
   })
 })
 
+const WAVE8_B4_LOCKS = [
+  { id: "stage", type: "cover" as const, layout: "poster-center", motif: undefined },
+  { id: "stage", type: "chapter" as const, layout: "one-word-chapter", motif: undefined },
+  { id: "stage", type: "ending" as const, layout: "release-close-ending", motif: undefined },
+  { id: "lecture", type: "cover" as const, layout: "board-head", motif: "lecture-motif" },
+  { id: "lecture", type: "chapter" as const, layout: "chalk-rule-chapter", motif: "lecture-motif" },
+  { id: "lecture", type: "ending" as const, layout: "next-lecture-ending", motif: "lecture-motif" },
+  { id: "swiss", type: "cover" as const, layout: "institutional-block", motif: "swiss-motif" },
+  { id: "swiss", type: "chapter" as const, layout: "decimal-index-chapter", motif: "swiss-motif" },
+  { id: "swiss", type: "ending" as const, layout: "resolution-ending", motif: "swiss-motif" },
+  { id: "memo", type: "cover" as const, layout: "memo-head", motif: "memo-motif" },
+  { id: "memo", type: "chapter" as const, layout: "issue-line-chapter", motif: "memo-motif" },
+  { id: "memo", type: "ending" as const, layout: "decision-close-ending", motif: "memo-motif" },
+  { id: "playbill", type: "cover" as const, layout: "bill-head", motif: "playbill-motif" },
+  { id: "playbill", type: "chapter" as const, layout: "day-bill-chapter", motif: "playbill-motif" },
+  { id: "playbill", type: "ending" as const, layout: "ticket-cta-ending", motif: "playbill-motif" },
+  { id: "museum", type: "cover" as const, layout: "poster-center", motif: undefined },
+  { id: "museum", type: "chapter" as const, layout: "hall-label-chapter", motif: undefined },
+  { id: "museum", type: "ending" as const, layout: "exit-word-ending", motif: undefined },
+] as const
+
+describe("wave 8 batch 4 — locked cover / chapter / ending faces", () => {
+  it.each(WAVE8_B4_LOCKS)("$id $type renders $layout with pinned motif", ({ id, type, layout, motif }) => {
+    expect(THEME_DEFINITIONS[id].layouts[type]).toEqual([layout])
+    const slide: Slide = {
+      type,
+      heading: type === "ending" ? "收束" : COVER.heading,
+      subheading: COVER.subheading,
+      components: [],
+    } as Slide
+    const doc = {
+      ...ir(id),
+      slides: type === "chapter" ? [COVER, slide] : [slide],
+    } as PptxIR
+    const index = type === "chapter" ? 1 : 0
+    const { container } = render(<FullSlideSvg ir={doc} slide={slide} index={index} />)
+    expect(container.querySelector("[data-archetype]")?.getAttribute("data-archetype")).toBe(layout)
+    if (motif === undefined) {
+      expect(resolveMotifId(doc, slide, index)).toBeUndefined()
+    } else {
+      expect(resolveMotifId(doc, slide, index)).toBe(motif)
+    }
+  })
+})
+
 function renderPage(themeId: string, type: "cover" | "chapter" | "content" | "ending") {
   const slide: Slide = {
     type,

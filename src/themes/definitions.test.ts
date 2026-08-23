@@ -201,6 +201,12 @@ describe("THEME_DEFINITIONS", () => {
       "terra",
       "pulse",
       "arena",
+      "stage",
+      "lecture",
+      "swiss",
+      "memo",
+      "playbill",
+      "museum",
     ])
     for (const id of CANONICAL_THEME_IDS) {
       expect(THEME_DEFINITIONS[id].layouts.cover.length, `${id}.cover is a singleton lock`).toBe(1)
@@ -232,37 +238,37 @@ describe("THEME_DEFINITIONS", () => {
     expect(THEME_DEFINITIONS.swiss.layouts.cover).toEqual(["institutional-block"])
     expect(THEME_DEFINITIONS.memo.layouts.cover).toEqual(["memo-head"])
     expect(THEME_DEFINITIONS.playbill.layouts.cover).toEqual(["bill-head"])
-    // Cover lock is the board construction. Second-front fills chapter /
-    // content / ending as soft preference over the still-full pools.
+    // Wave 8 batch 4 locks chapter/ending on these five. Content stays a
+    // soft preference over the still-full (or framed) pools.
     expect(THEME_DEFINITIONS.stage.layoutTendencies).toEqual({
       cover: ["poster-center"],
-      chapter: ["constellation-chapter", "tone-adaptive-chapter"],
-      content: ["quiet-frame", "asymmetric-triptych"],
-      ending: ["masthead-ending", "fashion-ending"],
+      chapter: ["one-word-chapter"],
+      content: ["quiet-frame", "stacked-poster", "asymmetric-triptych"],
+      ending: ["release-close-ending"],
     })
     expect(THEME_DEFINITIONS.lecture.layoutTendencies).toEqual({
       cover: ["board-head"],
-      chapter: ["banner-chapter", "tone-adaptive-chapter"],
-      content: ["rail-numbered", "bento-panel"],
-      ending: ["banner-ending", "constellation-ending", "masthead-ending"],
+      chapter: ["chalk-rule-chapter"],
+      content: ["two-column", "quiet-frame", "bento-panel"],
+      ending: ["next-lecture-ending"],
     })
     expect(THEME_DEFINITIONS.swiss.layoutTendencies).toEqual({
       cover: ["institutional-block"],
-      chapter: ["constellation-chapter", "poster-chapter"],
-      content: ["two-column", "split-band"],
-      ending: ["tone-adaptive-ending", "rail-ending", "masthead-ending"],
+      chapter: ["decimal-index-chapter"],
+      content: ["two-column", "split-band", "rail-numbered"],
+      ending: ["resolution-ending"],
     })
     expect(THEME_DEFINITIONS.memo.layoutTendencies).toEqual({
       cover: ["memo-head"],
-      chapter: ["masthead-chapter", "banner-chapter"],
-      content: ["narrow-column", "tone-adaptive-content"],
-      ending: ["banner-ending", "masthead-ending", "tone-adaptive-ending"],
+      chapter: ["issue-line-chapter"],
+      content: ["asymmetric-triptych", "narrow-column", "tone-adaptive-content"],
+      ending: ["decision-close-ending"],
     })
     expect(THEME_DEFINITIONS.playbill.layoutTendencies).toEqual({
       cover: ["bill-head"],
-      chapter: ["fashion-chapter", "poster-chapter"],
-      content: ["split-band", "stacked-poster", "banner-heading"],
-      ending: ["fashion-ending", "poster-ending"],
+      chapter: ["day-bill-chapter"],
+      content: ["stacked-poster", "rail-numbered", "split-band"],
+      ending: ["ticket-cta-ending"],
     })
   })
 

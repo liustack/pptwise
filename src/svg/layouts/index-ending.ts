@@ -24,6 +24,12 @@ import { DeliberationEnding } from "./ending-deliberation-ending"
 import { ScorecardEnding } from "./ending-scorecard-ending"
 import { CarePlanEnding } from "./ending-care-plan-ending"
 import { SeatCtaEnding } from "./ending-seat-cta-ending"
+import { ReleaseCloseEnding } from "./ending-release-close-ending"
+import { NextLectureEnding } from "./ending-next-lecture-ending"
+import { ResolutionEnding } from "./ending-resolution-ending"
+import { DecisionCloseEnding } from "./ending-decision-close-ending"
+import { TicketCtaEnding } from "./ending-ticket-cta-ending"
+import { ExitWordEnding } from "./ending-exit-word-ending"
 
 export type { EndingLayout, EndingLayoutId } from "./types"
 
@@ -55,4 +61,10 @@ export const ENDING_LAYOUTS: Record<EndingLayoutId, EndingLayout> = {
   "scorecard-ending": ScorecardEnding,
   "care-plan-ending": CarePlanEnding,
   "seat-cta-ending": SeatCtaEnding,
+  "release-close-ending": ReleaseCloseEnding,
+  "next-lecture-ending": NextLectureEnding,
+  "resolution-ending": ResolutionEnding,
+  "decision-close-ending": DecisionCloseEnding,
+  "ticket-cta-ending": TicketCtaEnding,
+  "exit-word-ending": ExitWordEnding,
 }

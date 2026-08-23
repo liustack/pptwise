@@ -135,6 +135,12 @@ import { layoutDef as chapterSealNumeralChapter } from "./chapter-seal-numeral-c
 import { layoutDef as chapterFieldBandChapter } from "./chapter-field-band-chapter"
 import { layoutDef as chapterSubjectRuleChapter } from "./chapter-subject-rule-chapter"
 import { layoutDef as chapterRoundMarkChapter } from "./chapter-round-mark-chapter"
+import { layoutDef as chapterOneWordChapter } from "./chapter-one-word-chapter"
+import { layoutDef as chapterChalkRuleChapter } from "./chapter-chalk-rule-chapter"
+import { layoutDef as chapterDecimalIndexChapter } from "./chapter-decimal-index-chapter"
+import { layoutDef as chapterIssueLineChapter } from "./chapter-issue-line-chapter"
+import { layoutDef as chapterDayBillChapter } from "./chapter-day-bill-chapter"
+import { layoutDef as chapterHallLabelChapter } from "./chapter-hall-label-chapter"
 
 import { layoutDef as endingMastheadEnding } from "./ending-masthead-ending"
 import { layoutDef as endingConstellationEnding } from "./ending-constellation-ending"
@@ -161,6 +167,12 @@ import { layoutDef as endingDeliberationEnding } from "./ending-deliberation-end
 import { layoutDef as endingScorecardEnding } from "./ending-scorecard-ending"
 import { layoutDef as endingCarePlanEnding } from "./ending-care-plan-ending"
 import { layoutDef as endingSeatCtaEnding } from "./ending-seat-cta-ending"
+import { layoutDef as endingReleaseCloseEnding } from "./ending-release-close-ending"
+import { layoutDef as endingNextLectureEnding } from "./ending-next-lecture-ending"
+import { layoutDef as endingResolutionEnding } from "./ending-resolution-ending"
+import { layoutDef as endingDecisionCloseEnding } from "./ending-decision-close-ending"
+import { layoutDef as endingTicketCtaEnding } from "./ending-ticket-cta-ending"
+import { layoutDef as endingExitWordEnding } from "./ending-exit-word-ending"
 
 import { layoutDef as contentNarrowColumn } from "./content-narrow-column"
 import { layoutDef as contentTwoColumn } from "./content-two-column"
@@ -519,6 +531,12 @@ const CHAPTER_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [chapterFieldBandChapter.id]: chapterFieldBandChapter,
   [chapterSubjectRuleChapter.id]: chapterSubjectRuleChapter,
   [chapterRoundMarkChapter.id]: chapterRoundMarkChapter,
+  [chapterOneWordChapter.id]: chapterOneWordChapter,
+  [chapterChalkRuleChapter.id]: chapterChalkRuleChapter,
+  [chapterDecimalIndexChapter.id]: chapterDecimalIndexChapter,
+  [chapterIssueLineChapter.id]: chapterIssueLineChapter,
+  [chapterDayBillChapter.id]: chapterDayBillChapter,
+  [chapterHallLabelChapter.id]: chapterHallLabelChapter,
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -551,6 +569,12 @@ const ENDING_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [endingScorecardEnding.id]: endingScorecardEnding,
   [endingCarePlanEnding.id]: endingCarePlanEnding,
   [endingSeatCtaEnding.id]: endingSeatCtaEnding,
+  [endingReleaseCloseEnding.id]: endingReleaseCloseEnding,
+  [endingNextLectureEnding.id]: endingNextLectureEnding,
+  [endingResolutionEnding.id]: endingResolutionEnding,
+  [endingDecisionCloseEnding.id]: endingDecisionCloseEnding,
+  [endingTicketCtaEnding.id]: endingTicketCtaEnding,
+  [endingExitWordEnding.id]: endingExitWordEnding,
 }
 
 // ─────────────────────────────────────────────────────────────────────────
