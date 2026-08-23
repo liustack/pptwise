@@ -52,7 +52,7 @@ There is no step 2. Your AI puts the skill folder where your harness reads it, a
 **On DeepSeek Harness, it is one command instead.** pptpress is a native DSH plugin there, not a skill folder:
 
 ```bash
-npx -y @deepseek-ai/dsh plugin --profile web add @liustack/pptpress@0.20.0
+npx -y @deepseek-ai/dsh plugin --profile web add @liustack/pptpress@0.21.0
 ```
 
 Name the version. Without it, the install quietly lands on an older release and you miss the newest features. `npm view @liustack/pptpress version` prints the current one. The plugin card shows up as "pptpress", registers the deck-generation skill, and carries the CLI inside its own package. Uninstalling removes the skill with no residue.
