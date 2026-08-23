@@ -1,7 +1,7 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import { fitHeadingLines } from "../heading-fit"
-import { fitSvgLine } from "../../lib/svg-text-layout"
+import { fitSvgLine, layoutSvgText } from "../../lib/svg-text-layout"
 import { accessibleInk, metaInk, readableOn } from "../ink"
 import { stripEmphasis } from "../emphasis"
 
@@ -31,12 +31,18 @@ const SUB_DROP = 80
 const SUB_MAX_W = 1088
 const SUB_MIN_PT = 14
 
-const CTA_POINTS = "96,440 396,440 396,482 374,504 96,504"
+const CTA_X = 96
+const CTA_RIGHT = 396
+const CTA_TOP = 440
+const CTA_BOTTOM = 504
+const CTA_NOTCH = 22
 const CTA_TEXT_X = 238
 const CTA_TEXT_Y = 482
 const CTA_SIZE = 22
 const CTA_MIN_PT = 14
 const CTA_MAX_W = 260
+const CTA_MAX_LINES = 2
+const CTA_LINE_HEIGHT_RATIO = 1.25
 
 const FOOT_X = 96
 const FOOT_Y = 620
@@ -85,14 +91,20 @@ export function SeatCtaEnding({ ir, slide, ctx }: SvgTemplateProps) {
     : null
 
   const cta = ctaSource
-    ? fitSvgLine(ctaSource, {
+    ? layoutSvgText(ctaSource, {
         maxWidth: CTA_MAX_W,
         fontSize: CTA_SIZE,
-        minFontSize: CTA_MIN_PT,
+        minPt: CTA_MIN_PT,
+        maxLines: CTA_MAX_LINES,
+        lineHeightRatio: CTA_LINE_HEIGHT_RATIO,
         fontFamily: fonts.heading,
         bold: true,
       })
     : null
+  const ctaExtra = cta ? Math.max(0, (cta.lines.length - 1) * cta.lineHeight) : 0
+  const ctaBottom = CTA_BOTTOM + ctaExtra
+  const ctaPoints = `${CTA_X},${CTA_TOP} ${CTA_RIGHT},${CTA_TOP} ${CTA_RIGHT},${ctaBottom - CTA_NOTCH} ${CTA_RIGHT - CTA_NOTCH},${ctaBottom} ${CTA_X},${ctaBottom}`
+  const ctaFirstY = CTA_TEXT_Y - ctaExtra / 2
 
   const foot = footSource
     ? fitSvgLine(footSource, {
@@ -141,22 +153,29 @@ export function SeatCtaEnding({ ir, slide, ctx }: SvgTemplateProps) {
         </text>
       )}
 
-      {cta && (
+      {cta && cta.lines.length > 0 && (
         <>
-          <polygon points={CTA_POINTS} fill={ctaFill} />
-          <text
-            data-truncated={cta.truncated ? "1" : undefined}
-            x={CTA_TEXT_X}
-            y={CTA_TEXT_Y}
-            textAnchor="middle"
-            fontFamily={fonts.heading}
-            fontSize={cta.fontSize}
-            fontWeight="700"
-            fill={ctaInk}
-            dominantBaseline="alphabetic"
-          >
-            {cta.truncated ? withoutFitEllipsis(cta.text) : cta.text}
-          </text>
+          <polygon points={ctaPoints} fill={ctaFill} />
+          {cta.lines.map((line, i) => {
+            const painted = cta.truncated && i === cta.lines.length - 1 ? withoutFitEllipsis(line) : line
+            if (!painted) return null
+            return (
+              <text
+                key={i}
+                data-truncated={cta.truncated && i === cta.lines.length - 1 ? "1" : undefined}
+                x={CTA_TEXT_X}
+                y={ctaFirstY + i * cta.lineHeight}
+                textAnchor="middle"
+                fontFamily={fonts.heading}
+                fontSize={cta.fontSize}
+                fontWeight="700"
+                fill={ctaInk}
+                dominantBaseline="alphabetic"
+              >
+                {painted}
+              </text>
+            )
+          })}
         </>
       )}
 
