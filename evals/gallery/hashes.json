@@ -452,9 +452,9 @@
       "color": "pmfdca"
     },
     "theme--ink--zh--p01": {
-      "hash": "w60bpl",
-      "geometry": "1qpag4u",
-      "color": "1illifs"
+      "hash": "nzvo7c",
+      "geometry": "vc7ctk",
+      "color": "1cnkfpg"
     },
     "theme--ink--zh--p02": {
       "hash": "4bun6f",
@@ -497,9 +497,9 @@
       "color": "z6m50k"
     },
     "theme--ink--zh--p10": {
-      "hash": "1scrmj",
-      "geometry": "1cc3ame",
-      "color": "1aihzxj"
+      "hash": "sncbw0",
+      "geometry": "1g3q1fa",
+      "color": "164fjt0"
     },
     "theme--insight--zh--p01": {
       "hash": "mw03r2",
@@ -2262,19 +2262,19 @@
       "color": "10x4cm6"
     },
     "layout--seal-close-ending--zh": {
-      "hash": "16a8ex6",
-      "geometry": "1mnpe51",
-      "color": "rviwkg"
+      "hash": "j763r6",
+      "geometry": "1w1v1sc",
+      "color": "10ujj8p"
     },
     "layout--seal-close-ending--en": {
-      "hash": "hvlu57",
-      "geometry": "mf5lac",
-      "color": "vmxbrb"
+      "hash": "bjqh39",
+      "geometry": "a6dhph",
+      "color": "10ujj8p"
     },
     "layout--seal-close-ending--mixed": {
-      "hash": "vdmcjh",
-      "geometry": "19hdu8c",
-      "color": "rviwkg"
+      "hash": "22325d",
+      "geometry": "11yicwp",
+      "color": "10ujj8p"
     },
     "layout--signoff-ending--zh": {
       "hash": "uzqcgt",
@@ -2802,19 +2802,19 @@
       "color": "6gmk7k"
     },
     "layout--vertical-title-cover--zh": {
-      "hash": "5xmze5",
-      "geometry": "rxeong",
-      "color": "z8h5dc"
+      "hash": "r5d9q8",
+      "geometry": "1j5ej8y",
+      "color": "1nbk7m3"
     },
     "layout--vertical-title-cover--en": {
-      "hash": "v455o6",
-      "geometry": "mw9jq4",
-      "color": "fq5opq"
+      "hash": "10zayba",
+      "geometry": "1loxq4n",
+      "color": "c1mckw"
     },
     "layout--vertical-title-cover--mixed": {
-      "hash": "vywov9",
-      "geometry": "1o77ztj",
-      "color": "1ghcgu7"
+      "hash": "1e5y2ci",
+      "geometry": "141surf",
+      "color": "c1mckw"
     },
     "layout--volume-slip-chapter--zh": {
       "hash": "1lslwv7",
