@@ -7,6 +7,7 @@
 <p align="center">🥇 <b>全网第一个 DeepSeek Harness PPT 生成插件</b> 🥇</p>
 
 <p align="center">
+  <a href="https://pptwise.com/zh">pptwise.com</a> ·
   <a href="./README.md">English</a> ·
   <a href="./INSTALL.md">安装（转发给你的 AI）</a> ·
   <a href="./docs/cli.zh-CN.md">命令</a> ·
