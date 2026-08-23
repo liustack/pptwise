@@ -4,7 +4,7 @@ import { renderSvgMarkup, parseSvgRoot } from "../serialize"
 import { assertSubset } from "../subset-validate"
 import { buildCtx, FullSlideSvg, resolveBackgroundHex } from "../full-slide-svg"
 import { resolveStyle, CANONICAL_THEME_IDS } from "../../themes"
-import { contrastRatio, requiredContrastRatio, readableOn } from "../ink"
+import { accessibleInk, contrastRatio, requiredContrastRatio, readableOn } from "../ink"
 import { textInkBox } from "../depth-contract/geometry"
 import { VerticalTitleCover, layoutDef } from "./cover-vertical-title-cover"
 import { sealStudioGlyph } from "./minimal-shared"
@@ -53,6 +53,19 @@ function writingModeCount(root: Element): number {
   return Array.from(root.querySelectorAll("*")).filter((el) => el.hasAttribute("writing-mode")).length
 }
 
+function verticalTitleGlyphs(root: Element): Element[] {
+  return Array.from(root.querySelectorAll("text")).filter((t) => {
+    const x = t.getAttribute("x")
+    return x === "880" || x === "784"
+  })
+}
+
+function sealGlyphEl(root: Element): Element | undefined {
+  return Array.from(root.querySelectorAll("text")).find(
+    (t) => t.getAttribute("font-size") === "34" && t.getAttribute("x") === "1084",
+  )
+}
+
 describe("cover-vertical-title-cover — board geometry", () => {
   it("sets a per-glyph CJK title on the right axis at the board coordinates", () => {
     const { root } = renderCover("ink")
@@ -83,11 +96,12 @@ describe("cover-vertical-title-cover — board geometry", () => {
     expect(seal?.getAttribute("x")).toBe("1048")
     expect(seal?.getAttribute("y")).toBe("480")
     expect(seal?.getAttribute("fill")).toBe(tokens.colors.accent)
-    const glyph = Array.from(root.querySelectorAll("text")).find((t) => t.getAttribute("font-size") === "34")
+    const glyph = sealGlyphEl(root)
     expect(glyph?.textContent).toBe("听")
     expect(glyph?.getAttribute("x")).toBe("1084")
     expect(glyph?.getAttribute("y")).toBe("530")
     expect(glyph?.getAttribute("fill")).toBe(readableOn(tokens.colors.accent))
+    expect(root.querySelector("rect[width='20'][height='20']")).toBeFalsy()
     expect(root.textContent).not.toContain("聽")
     expect(root.textContent).not.toContain("茗")
   })
@@ -127,9 +141,9 @@ describe("cover-vertical-title-cover — board geometry", () => {
     expect(markup).not.toContain("谢谢")
     expect(markup).not.toContain("宋词里的江南")
     expect(markup).not.toContain("聽")
-    expect(Array.from(root.querySelectorAll("text")).filter((t) => t.getAttribute("x") === "880")).toHaveLength(0)
+    expect(verticalTitleGlyphs(root)).toHaveLength(0)
     expect(root.querySelector("rect[width='72']")).toBeFalsy()
-    expect(Array.from(root.querySelectorAll("text")).find((t) => t.getAttribute("font-size") === "34")).toBeFalsy()
+    expect(sealGlyphEl(root)).toBeFalsy()
   })
 
   it("sets a Latin title horizontally on the left, never as a vertical column", () => {
@@ -158,15 +172,18 @@ describe("cover-vertical-title-cover — shared pool", () => {
 
   it("every text run clears its contrast tier against the painted ground", () => {
     for (const themeId of CANONICAL_THEME_IDS) {
-      const { root, tokens, ctx } = renderCover(themeId)
-      const bg = ctx.defaultBg ?? resolveBackgroundHex(tokens.defaultBackgrounds.cover, tokens.colors.surface)
-      for (const el of Array.from(root.querySelectorAll("text"))) {
-        const size = Number(el.getAttribute("font-size"))
-        const fill = el.getAttribute("fill")!
-        const required = el.getAttribute("data-contrast-tier") === "meta" ? 3 : requiredContrastRatio(size)
-        const onSeal = el.getAttribute("font-size") === "34"
-        const ground = onSeal ? tokens.colors.accent : bg
-        expect(contrastRatio(fill, ground), `${themeId}: ${el.textContent}`).toBeGreaterThanOrEqual(required)
+      const cases: PptxIR["meta"][] = [FULL_META, { organization: "战略与运营部" }, {}]
+      for (const meta of cases) {
+        const { root, tokens, ctx } = renderCover(themeId, slide(), meta)
+        const bg = ctx.defaultBg ?? resolveBackgroundHex(tokens.defaultBackgrounds.cover, tokens.colors.surface)
+        for (const el of Array.from(root.querySelectorAll("text"))) {
+          const size = Number(el.getAttribute("font-size"))
+          const fill = el.getAttribute("fill")!
+          const required = el.getAttribute("data-contrast-tier") === "meta" ? 3 : requiredContrastRatio(size)
+          const onSeal = el === sealGlyphEl(root)
+          const ground = onSeal ? tokens.colors.accent : bg
+          expect(contrastRatio(fill, ground), `${themeId}: ${el.textContent}`).toBeGreaterThanOrEqual(required)
+        }
       }
     }
   })
@@ -188,33 +205,64 @@ describe("cover-vertical-title-cover — shared pool", () => {
   })
 })
 
-function titleGlyphs(root: Element, fontSize: string): Element[] {
-  return Array.from(root.querySelectorAll("text")).filter((t) => t.getAttribute("font-size") === fontSize)
-}
-
 describe("cover-vertical-title-cover — vertical overflow without ellipsis", () => {
   it("keeps a short CJK title on the board single column", () => {
     const { root, markup } = renderCover("ink")
-    const glyphs = Array.from(root.querySelectorAll("text")).filter((t) => t.getAttribute("x") === "880")
+    const glyphs = verticalTitleGlyphs(root)
     expect(glyphs.map((t) => t.textContent).join("")).toBe("宋词里的江南")
+    expect(glyphs.map((t) => t.getAttribute("x"))).toEqual(["880", "880", "880", "880", "880", "880"])
     expect(glyphs.map((t) => t.getAttribute("y"))).toEqual(["110", "194", "278", "362", "446", "530"])
     expect(glyphs[0]?.getAttribute("font-size")).toBe("72")
     expect(markup).not.toContain("…")
   })
 
-  it("sets a long CJK title with 2026 across extra columns and draws every converted glyph", () => {
+  it("packs a long CJK title into two columns under the six-character line", () => {
     const heading = "云觅科技 2026 年战略复盘与明年规划"
     const { root, markup } = renderCover("ink", slide(heading))
-    const glyphs = titleGlyphs(root, "72")
+    const glyphs = verticalTitleGlyphs(root)
     expect(glyphs.map((t) => t.textContent).join("")).toBe("云觅科技二〇二六年战略复盘与明年规划")
     expect(markup).not.toContain("…")
     const xs = [...new Set(glyphs.map((t) => t.getAttribute("x")))]
+    expect(xs.every((x) => x === "880" || x === "784")).toBe(true)
     expect(xs).toContain("880")
-    expect(xs.length).toBeGreaterThanOrEqual(2)
-    expect(xs.length).toBeLessThanOrEqual(3)
-    const leftTitle = Math.min(...glyphs.map((t) => Number(t.getAttribute("x"))))
-    const sub = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "烟")
-    expect(sub?.getAttribute("x")).toBe(String(leftTitle - 102))
+    expect(xs.length).toBeGreaterThanOrEqual(1)
+    expect(xs.length).toBeLessThanOrEqual(2)
+    expect(Number(glyphs[0]?.getAttribute("font-size"))).toBeLessThan(72)
+    const lastY = Math.max(...glyphs.map((t) => Number(t.getAttribute("y"))))
+    expect(lastY).toBeLessThanOrEqual(530)
+    expect(Array.from(root.querySelectorAll("text")).some((t) => t.textContent === "烟")).toBe(false)
+    const sub = Array.from(root.querySelectorAll("text")).find((t) =>
+      (t.textContent ?? "").includes("烟雨"),
+    )
+    if (sub) {
+      expect(sub.getAttribute("y")).toBe("580")
+      expect(sub.getAttribute("font-size")).toBe("16")
+      expect(sub.getAttribute("data-contrast-tier")).toBe("meta")
+    }
+  })
+
+  it("keeps a gallery-length subtitle on one horizontal line or omits it", () => {
+    const subheading = "副".repeat(22)
+    const { root, markup } = renderCover("ink", slide(HEADING, { subheading }))
+    expect(markup).not.toContain("…")
+    const singles = Array.from(root.querySelectorAll("text")).filter((t) => t.textContent === "副")
+    expect(singles).toHaveLength(0)
+    const horiz = Array.from(root.querySelectorAll("text")).filter((t) => t.textContent === subheading)
+    expect(horiz.length).toBeLessThanOrEqual(1)
+    if (horiz[0]) {
+      expect(horiz[0].getAttribute("y")).toBe("580")
+      expect(horiz[0].getAttribute("font-size")).toBe("16")
+      expect(horiz[0].getAttribute("data-contrast-tier")).toBe("meta")
+      expect(horiz[0].getAttribute("x")).toBe("96")
+    }
+  })
+
+  it("drops a subtitle that would ellipsize rather than painting …", () => {
+    const { root, markup } = renderCover("ink", slide(HEADING, { subheading: "副".repeat(200) }))
+    expect(markup).not.toContain("…")
+    expect(Array.from(root.querySelectorAll("text")).some((t) => (t.textContent ?? "").includes("副"))).toBe(
+      false,
+    )
   })
 
   it("cuts an extreme CJK title instead of painting an ellipsis", () => {
@@ -228,6 +276,11 @@ describe("cover-vertical-title-cover — vertical overflow without ellipsis", ()
     expect(root.querySelector("[data-dropped]")?.getAttribute("data-dropped")).toBe(
       String(40 - glyphs.length),
     )
+    const lastY = Math.max(...glyphs.map((t) => Number(t.getAttribute("y"))))
+    expect(lastY).toBeLessThanOrEqual(530)
+    const xs = [...new Set(glyphs.map((t) => t.getAttribute("x")))]
+    expect(xs.every((x) => x === "880" || x === "784")).toBe(true)
+    expect(xs.length).toBeLessThanOrEqual(2)
   })
 })
 
@@ -266,22 +319,50 @@ describe("sealStudioGlyph", () => {
 })
 
 describe("cover-vertical-title-cover — seal rules", () => {
-  it("paints 听 from 听雨书院 and never 聽", () => {
-    const { root } = renderCover("ink")
-    const glyph = Array.from(root.querySelectorAll("text")).find((t) => t.getAttribute("font-size") === "34")
+  it("paints 听 from 听雨书院 and never 聽, leaving the title on primary", () => {
+    const { root, tokens, ctx } = renderCover("ink")
+    const glyph = sealGlyphEl(root)
     expect(glyph?.textContent).toBe("听")
     expect(root.textContent).not.toContain("聽")
+    const first = verticalTitleGlyphs(root)[0]
+    const bg = ctx.defaultBg ?? resolveBackgroundHex(tokens.defaultBackgrounds.cover, tokens.colors.surface)
+    const size = Number(first?.getAttribute("font-size"))
+    expect(first?.getAttribute("fill")).toBe(accessibleInk(tokens.colors.primary, bg, size))
+    expect(first?.getAttribute("fill")).not.toBe(accessibleInk(tokens.colors.accent, bg, size))
   })
 
-  it("draws no 72×72 seal for 战略与运营部", () => {
-    const { root } = renderCover("ink", slide(), { organization: "战略与运营部" })
+  it("draws no 72×72 seal for 战略与运营部 and inks the first title glyph", () => {
+    const { root, tokens, ctx } = renderCover("ink", slide(), { organization: "战略与运营部" })
     expect(root.querySelector("rect[width='72'][height='72']")).toBeFalsy()
-    expect(Array.from(root.querySelectorAll("text")).find((t) => t.getAttribute("font-size") === "34")).toBeFalsy()
+    expect(root.querySelector("rect[width='20'][height='20']")).toBeFalsy()
+    expect(sealGlyphEl(root)).toBeFalsy()
+    const first = verticalTitleGlyphs(root)[0]
+    const bg = ctx.defaultBg ?? resolveBackgroundHex(tokens.defaultBackgrounds.cover, tokens.colors.surface)
+    const size = Number(first?.getAttribute("font-size"))
+    const fill = first?.getAttribute("fill")
+    expect(fill).toBe(accessibleInk(tokens.colors.accent, bg, size))
+    expect(contrastRatio(fill!, bg)).toBeGreaterThanOrEqual(requiredContrastRatio(size))
   })
 
-  it("draws no seal when org is missing", () => {
-    const { root } = renderCover("ink", slide(), {})
+  it("inks the first title glyph when org is missing", () => {
+    const { root, tokens, ctx } = renderCover("ink", slide(), {})
     expect(root.querySelector("rect[width='72'][height='72']")).toBeFalsy()
+    const first = verticalTitleGlyphs(root)[0]
+    const bg = ctx.defaultBg ?? resolveBackgroundHex(tokens.defaultBackgrounds.cover, tokens.colors.surface)
+    expect(first?.getAttribute("fill")).toBe(
+      accessibleInk(tokens.colors.accent, bg, Number(first?.getAttribute("font-size"))),
+    )
+  })
+
+  it("draws a 20×20 vermilion square when heading and org are both empty", () => {
+    const { root, tokens } = renderCover("ink", slide("", { heading: "", subheading: "" }), {})
+    expect(root.querySelector("rect[width='72'][height='72']")).toBeFalsy()
+    const dot = Array.from(root.querySelectorAll("rect")).find(
+      (r) => r.getAttribute("width") === "20" && r.getAttribute("height") === "20",
+    )
+    expect(dot?.getAttribute("x")).toBe("1048")
+    expect(dot?.getAttribute("y")).toBe("480")
+    expect(dot?.getAttribute("fill")).toBe(tokens.colors.accent)
   })
 })
 
