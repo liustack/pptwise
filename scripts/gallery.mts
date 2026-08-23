@@ -29,7 +29,7 @@ import { corpusAssets, type CorpusAssets } from "../evals/gallery/corpus/decks"
 import { LANGUAGE_IDS, LEXICONS, type LanguageId } from "../evals/gallery/corpus/lexicon"
 import { buildGalleryHtml, summarize } from "../evals/gallery/html"
 import { assertInventoryCoverage } from "../evals/gallery/coverage"
-import { assertFullCoverage, buildMatrix, type TableId } from "../evals/gallery/matrix"
+import { assertFullCoverage, buildMatrix, TABLE_IDS, type TableId } from "../evals/gallery/matrix"
 import { pruneGalleryDir } from "../evals/gallery/prune"
 import { renderMatrix } from "../evals/gallery/render"
 
@@ -54,8 +54,8 @@ const outDir = resolve(ROOT, flag("out") || ".gallery")
 
 const onlyRaw = flag("only")
 const only = onlyRaw as TableId | undefined
-if (onlyRaw !== undefined && !["theme", "layout", "component", "density"].includes(onlyRaw)) {
-  fail(`--only must be one of theme, layout, component, density (got "${onlyRaw}")`)
+if (onlyRaw !== undefined && !(TABLE_IDS as readonly string[]).includes(onlyRaw)) {
+  fail(`--only must be one of ${TABLE_IDS.join(", ")} (got "${onlyRaw}")`)
 }
 
 const languagesRaw = flag("languages")

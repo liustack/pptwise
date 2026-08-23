@@ -20,7 +20,7 @@ import { join } from "node:path"
 import { renderSlideSvg, validateIr } from "@/api"
 import { CANVAS_H_PX, CANVAS_W_PX } from "@/constants"
 import { auditDeck } from "@/svg/audit/deck-audit"
-import type { Job, TableId } from "./matrix"
+import { TABLE_IDS, type Job, type TableId } from "./matrix"
 import { pruneGalleryDir } from "./prune"
 
 export interface ManifestPage {
@@ -110,6 +110,11 @@ const TABLE_META: Record<TableId, { label: string; question: string }> = {
   density: {
     label: "满载表",
     question: "九个组件各一页，条目数打满容量上限但不超——这一页是满载、不溢出的状态。",
+  },
+  heading: {
+    label: "标题构造表",
+    question:
+      "六种构造 × 三态（无标题 / 仅标题 / 带副题），三种语料各跑一遍——这个标题构造在真实内容页上站不站得住？",
   },
 }
 
@@ -296,14 +301,12 @@ export function renderMatrix(jobs: readonly Job[], outDir: string, pptpressVersi
     })
   }
 
-  const tables: ManifestTable[] = (["theme", "layout", "component", "density"] as const)
-    .map((id) => ({
-      id,
-      label: TABLE_META[id].label,
-      question: TABLE_META[id].question,
-      pages: pages.filter((p) => p.table === id).map((p) => p.id),
-    }))
-    .filter((t) => t.pages.length > 0)
+  const tables: ManifestTable[] = TABLE_IDS.map((id) => ({
+    id,
+    label: TABLE_META[id].label,
+    question: TABLE_META[id].question,
+    pages: pages.filter((p) => p.table === id).map((p) => p.id),
+  })).filter((t) => t.pages.length > 0)
 
   const manifest: Manifest = {
     manifestVersion: 2,

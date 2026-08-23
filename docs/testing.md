@@ -161,11 +161,11 @@ pnpm gallery --only=layout      # one table
 pnpm gallery --languages=zh,en  # narrow the language axis
 ```
 
-It renders four tables through the real chain (`validateIr` →
+It renders five tables through the real chain (`validateIr` →
 `renderSlideSvg`, the same two calls `render`/`preview` make — no
 gallery-specific rendering branch exists, and promotional images are meant
 to come from what passes review here). `evals/gallery/hashes.json` pins
-875 pages (`gallery-page-v2`):
+929 pages (`gallery-page-v2`):
 
 - **主题表** — all 24 themes running one identical ten-page deck (cover +
   chapter + 7 content + ending), so two themes differ by exactly one
@@ -178,6 +178,9 @@ to come from what passes review here). `evals/gallery/hashes.json` pins
   content (195 pages)
 - **满载表** — eight components filled to capacity without overflowing
   (24 pages)
+- **标题构造表** — six heading constructions × three title states (none /
+  title / subtitle) × three language tracks, pinned on two-column after a
+  chapter slide (54 pages)
 
 Output is `.gallery/`: per-page SVGs, a machine-readable `manifest.json`,
 and a self-contained `index.html` that can be double-clicked offline. In

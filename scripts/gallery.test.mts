@@ -113,9 +113,15 @@ describe("gallery coverage", () => {
     expect(sparse).toHaveLength(derived)
   })
 
-  it("emits only the theme, layout, component, and density tables", async () => {
+  it("emits the theme, layout, component, density, and heading tables", async () => {
     const jobs = buildMatrix(themeIds, await assets())
-    expect([...new Set(jobs.map((j) => j.table))].sort()).toEqual(["component", "density", "layout", "theme"])
+    expect([...new Set(jobs.map((j) => j.table))].sort()).toEqual([
+      "component",
+      "density",
+      "heading",
+      "layout",
+      "theme",
+    ])
   })
 })
 

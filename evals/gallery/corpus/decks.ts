@@ -19,6 +19,7 @@ import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 import type { Component, PptxIR, Slide } from "@/ir"
 import { FULL_BODY_TYPES } from "@/svg/component-traits"
+import type { HeadingTreatmentId } from "@/svg/heading-treatments/assignments"
 import { LAYOUT_REGISTRY, type LayoutDefinition } from "@/svg/layouts/registry"
 import { COMPONENT_BUILDERS, PHOTO_ASSETS, SCREENSHOT_ASSET } from "./components"
 import type { LanguageId, Lexicon } from "./lexicon"
@@ -445,4 +446,52 @@ export function densityPage(
   }
   const safeId = componentId.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "")
   return deckShell(lex, assets, BASELINE_THEME, `density-${safeId}-${lex.id}`, [slide])
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Heading table — one construction × title state, always after a chapter
+// ─────────────────────────────────────────────────────────────────────────
+
+export const HEADING_STATES = ["none", "title", "subtitle"] as const
+export type HeadingState = (typeof HEADING_STATES)[number]
+
+/** First assigned theme per construction (see HEADING_TREATMENTS assignments). */
+export const HEADING_THEME: Record<HeadingTreatmentId, string> = {
+  ghost_index: "consulting",
+  baseline: "insight",
+  tag_box: "enterprise",
+  lead_accent: "academic",
+  vertical_kicker: "ink",
+  center_mirror: "luxe",
+}
+
+/** Content layouts that call `tryContentHeadingTreatment`. */
+export const HEADING_LAYOUT = "two-column"
+
+/**
+ * A real content slide under one heading construction. The chapter slide
+ * is always first: ghost_index and tag_box return null when
+ * `chapterNumberFor === 0`, and the other constructions read sectionName
+ * from it. The gallery renders the content slide (`slideIndex: 1`).
+ */
+export function headingPage(
+  treatment: HeadingTreatmentId,
+  state: HeadingState,
+  lex: Lexicon,
+  assets: CorpusAssets,
+): PptxIR {
+  const heading = state === "none" ? "" : lex.headings[8]!
+  const subheading = state === "subtitle" ? lex.deckSubtitle : undefined
+  const slides: Slide[] = [
+    { type: "chapter", heading: lex.chapters[0]!, components: [] },
+    {
+      type: "content",
+      layout: HEADING_LAYOUT,
+      heading,
+      subheading,
+      components: [{ type: "paragraph", text: lex.shortParagraph }, COMPONENT_BUILDERS.bullets!(lex)],
+      footnote: lex.sources[1]!.label,
+    },
+  ]
+  return deckShell(lex, assets, HEADING_THEME[treatment], `heading-${treatment}-${state}-${lex.id}`, slides)
 }
