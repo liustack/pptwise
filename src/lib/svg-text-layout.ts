@@ -20,6 +20,13 @@ export interface TextWeightHint {
    * (the default) selects the conservative cross-face envelope — see
    * `classifyFace` below. */
   fontFamily?: string
+  /**
+   * Use the face's Regular exact hmtx table. Default Regular stays on the
+   * class-average path so existing call sites stay byte-identical. Opt in
+   * when a mark has to sit under a specific glyph (memo-head last-run
+   * underline).
+   */
+  exact?: boolean
 }
 
 export interface SvgTextLayoutOptions extends TextWeightHint {
@@ -490,7 +497,8 @@ export function measureTextUnits(text: string, weight?: TextWeightHint): number 
   // through this function's default Regular path would be an undisclosed
   // behavior change on text this fix promised to leave alone, not something
   // this task's mandate covers.
-  const exactTable = mode === "bold" ? EXACT_TABLE_FOR[faceKey]?.bold : undefined
+  const exactTable =
+    mode === "bold" || weight?.exact ? EXACT_TABLE_FOR[faceKey]?.[mode] : undefined
   return Array.from(text).reduce((sum, char) => {
     // WIDE_CHAR_RE (CJK/ideographic-punctuation/fullwidth) always takes the
     // class path, even under an exact-model face: the exact tables only

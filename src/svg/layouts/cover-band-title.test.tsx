@@ -80,6 +80,13 @@ describe("cover-band-title — board geometry", () => {
     const headings = Array.from(root.querySelectorAll("text")).filter((t) => t.getAttribute("font-weight") === "700")
     expect(headings[0]?.getAttribute("x")).toBe("96")
     expect(headings[0]?.getAttribute("text-anchor") ?? "start").not.toBe("middle")
+    const bandY = Number(band.getAttribute("y"))
+    const bandH = Number(band.getAttribute("height"))
+    const titleY = Number(headings[0]!.getAttribute("y"))
+    const titleSize = Number(headings[0]!.getAttribute("font-size"))
+    const visualMid = titleY - titleSize * 0.4
+    expect(visualMid).toBeGreaterThan(bandY + bandH * 0.35)
+    expect(visualMid).toBeLessThan(bandY + bandH * 0.65)
     const wave = root.querySelector("path")!
     expect(wave.getAttribute("stroke")).toBe(tokens.colors.accent)
     expect(wave.getAttribute("d")).toContain("M96,502")

@@ -97,6 +97,22 @@ describe("auditL1 planted defects", () => {
     expect(codes(svg)).toContain("axis-title-overlap")
   })
 
+  it("flags two data-value-label ink boxes that intersect as label-collision", () => {
+    const svg = wrap(
+      `<text data-value-label="1" x="1000" y="174" font-size="16" text-anchor="end">90</text>` +
+        `<text data-value-label="1" x="1000" y="184" font-size="16" text-anchor="end">87</text>`,
+    )
+    expect(codes(svg)).toContain("label-collision")
+  })
+
+  it("does not flag two data-value-label boxes that sit a line apart", () => {
+    const svg = wrap(
+      `<text data-value-label="1" x="1000" y="160" font-size="16" text-anchor="end">90</text>` +
+        `<text data-value-label="1" x="1000" y="190" font-size="16" text-anchor="end">87</text>`,
+    )
+    expect(codes(svg)).not.toContain("label-collision")
+  })
+
   it("does not flag a tick label sitting clear of the plot marks", () => {
     const svg = wrap(
       `<text data-axis-tick="y" x="180" y="280" font-size="15" text-anchor="end">80%</text>` +
@@ -376,6 +392,13 @@ describe("auditL1 live sample", () => {
       expect(classifyL1(auditL1(svg)), `p${String(index + 1).padStart(2, "0")}`).not.toContain("isolated-mid-piece")
       expect(svg, `p${String(index + 1).padStart(2, "0")}`).not.toMatch(/<g data-decor="">\s*<circle[^>]*r="3"/)
     }
+  })
+
+  it("live journal line chart has no label-collision", async () => {
+    const assets = await corpusAssets(LEXICONS.zh)
+    const ir = themeDeck("journal", LEXICONS.zh, assets)
+    const svg = renderSlideSvg(ir, 2)
+    expect(classifyL1(auditL1(svg))).not.toContain("label-collision")
   })
 
   it("live chart/heatmap/matrix/sankey pages have no axis-title-overlap", async () => {

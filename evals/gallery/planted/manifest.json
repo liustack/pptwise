@@ -180,6 +180,16 @@
       "l1Expected": ["font-size"],
       "l2Expected": "rework",
       "l2Findings": ["font-size"]
+    },
+    {
+      "id": "label-collision-1",
+      "class": "label-collision",
+      "sourcePageId": "theme--journal--zh--p03",
+      "svg": "label-collision-1.svg",
+      "png": "../rubric/examples/label-collision-1.png",
+      "l1Expected": ["label-collision"],
+      "l2Expected": "rework",
+      "l2Findings": ["label-collision"]
     }
   ]
 }

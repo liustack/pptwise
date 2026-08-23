@@ -16,6 +16,7 @@ import {
   type DomainPadMode,
 } from "./cartesian-axis"
 import { buildChartModel, zeroAxisRatio, type ChartDomain } from "./chart-model"
+import { resolveValueLabelCollisions, type ValueLabelSpec } from "./label-collision"
 
 /**
  * Chart renderers for the page-coordinate SVG pipeline.
@@ -405,6 +406,29 @@ export function renderBar(
   const gradientId = chartGradientId("chart-bar-grad", w, h, series)
   const gradientShade = scaleHexBrightness(accentColor, BAR_GRADIENT_SHADE_FACTOR)
   const dataMax = Math.max(...keptValues(model.series), Number.NEGATIVE_INFINITY)
+  const barLabelSpecs: ValueLabelSpec[] = []
+  for (let i = 0; i < categories.length; i++) {
+    const groupX0 = geom.plotX + i * groupW + BAR_GROUP_EDGE_GAP
+    const usableW = groupW - BAR_GROUP_EDGE_GAP * 2
+    const perBarW = n <= 1 ? usableW : Math.max(1, (usableW - (n - 1) * BAR_GROUP_EDGE_GAP) / n)
+    for (const s of model.series) {
+      const value = s.values[i]
+      if (value == null) continue
+      const barX = groupX0 + s.seriesIndex * (perBarW + BAR_GROUP_EDGE_GAP)
+      const { barY } = verticalBarExtent(value, domain, geom.plotY, geom.plotH)
+      barLabelSpecs.push({
+        id: `bar-${i}-${s.seriesIndex}`,
+        text: String(value),
+        x: barX + perBarW / 2,
+        y: barY - VALUE_LABEL_GAP,
+        anchor: "middle",
+        fontSize: VALUE_FONT_SIZE,
+        fontFamily,
+        priority: 100 - s.seriesIndex,
+      })
+    }
+  }
+  const placedBars = new Map(resolveValueLabelCollisions(barLabelSpecs).map((label) => [label.id, label]))
   return (
     <>
       {n <= 1 && (
@@ -444,6 +468,7 @@ export function renderBar(
               ? accentColor
               : `url(#${gradientId})`
             : palette[s.seriesIndex % palette.length]
+          const placed = placedBars.get(`bar-${i}-${s.seriesIndex}`)
           barElements.push(
             <rect
               key={`r-${s.seriesIndex}`}
@@ -455,19 +480,24 @@ export function renderBar(
               fill={fill}
               opacity={isSingle ? (isMax ? 1 : 0.75) : 1}
             />,
-            <text
-              key={`v-${s.seriesIndex}`}
-              x={barX + perBarW / 2}
-              y={barY - VALUE_LABEL_GAP}
-              textAnchor="middle"
-              fontSize={VALUE_FONT_SIZE}
-              fontWeight={VALUE_FONT_WEIGHT}
-              fill={textColor}
-              dominantBaseline="alphabetic"
-            >
-              {value}
-            </text>,
           )
+          if (placed && !placed.hidden) {
+            barElements.push(
+              <text
+                key={`v-${s.seriesIndex}`}
+                data-value-label="1"
+                x={placed.x}
+                y={placed.y}
+                textAnchor="middle"
+                fontSize={VALUE_FONT_SIZE}
+                fontWeight={VALUE_FONT_WEIGHT}
+                fill={textColor}
+                dominantBaseline="alphabetic"
+              >
+                {placed.text}
+              </text>,
+            )
+          }
         }
         return <g key={cat.key}>{barElements}</g>
       })}
@@ -545,6 +575,56 @@ export function renderLine(
     }
   })
 
+  type Resolved = { i: number; x: number; y: number; value: number }
+  const seriesEnds = model.series.map((s) => {
+    const resolved: Resolved[] = []
+    for (let i = 0; i < categories.length; i++) {
+      const value = s.values[i]
+      if (value == null) continue
+      resolved.push({
+        i,
+        x: xForIndex(i),
+        y: mapToPlotY(value, yAxis.domain, geom.plotY, geom.plotH),
+        value,
+      })
+    }
+    return { s, resolved, first: resolved[0], last: resolved[resolved.length - 1] }
+  })
+  const endpointSpecs: ValueLabelSpec[] = []
+  if (showEndpointValues) {
+    for (const end of seriesEnds) {
+      if (end.first) {
+        endpointSpecs.push({
+          id: `${end.s.seriesIndex}-first`,
+          text: String(end.first.value),
+          x: end.first.x,
+          y: end.first.y - 6,
+          anchor: edgeAnchor(end.first.i, categories.length),
+          fontSize: VALUE_FONT_SIZE,
+          fontFamily,
+          priority: 100 - end.s.seriesIndex,
+          yMin: geom.plotY + 8,
+          yMax: geom.plotY + geom.plotH,
+        })
+      }
+      if (end.last && end.last !== end.first) {
+        endpointSpecs.push({
+          id: `${end.s.seriesIndex}-last`,
+          text: String(end.last.value),
+          x: end.last.x,
+          y: end.last.y - 6,
+          anchor: edgeAnchor(end.last.i, categories.length),
+          fontSize: VALUE_FONT_SIZE,
+          fontFamily,
+          priority: 100 - end.s.seriesIndex,
+          yMin: geom.plotY + 8,
+          yMax: geom.plotY + geom.plotH,
+        })
+      }
+    }
+  }
+  const placedEndpoints = new Map(resolveValueLabelCollisions(endpointSpecs).map((label) => [label.id, label]))
+
   return (
     <>
       {renderCartesianFrame({
@@ -559,7 +639,8 @@ export function renderLine(
         mutedColor,
         fontFamily,
       })}
-      {model.series.map((s) => {
+      {seriesEnds.map((end) => {
+        const s = end.s
         const sIdx = s.seriesIndex
         type Resolved = { i: number; x: number; y: number; value: number }
         const pointAt: (Resolved | null)[] = categories.map((_cat, i) => {
@@ -640,32 +721,25 @@ export function renderLine(
                 Dropped entirely past LINE_ENDPOINT_LABEL_MAX_SERIES: the
                 numbers collide into an ink blot, so the legend carries
                 identity instead. */}
-            {showEndpointValues && first && (
-              <text
-                x={first.x}
-                y={first.y - 6}
-                textAnchor={edgeAnchor(first.i, categories.length)}
-                fontSize={VALUE_FONT_SIZE}
-                fontWeight={VALUE_FONT_WEIGHT}
-                fill={textColor}
-                dominantBaseline="alphabetic"
-              >
-                {first.value}
-              </text>
-            )}
-            {showEndpointValues && last && last !== first && (
-              <text
-                x={last.x}
-                y={last.y - 6}
-                textAnchor={edgeAnchor(last.i, categories.length)}
-                fontSize={VALUE_FONT_SIZE}
-                fontWeight={VALUE_FONT_WEIGHT}
-                fill={textColor}
-                dominantBaseline="alphabetic"
-              >
-                {last.value}
-              </text>
-            )}
+            {(["first", "last"] as const).map((kind) => {
+              const placed = placedEndpoints.get(`${sIdx}-${kind}`)
+              if (!placed || placed.hidden) return null
+              return (
+                <text
+                  key={kind}
+                  data-value-label="1"
+                  x={placed.x}
+                  y={placed.y}
+                  textAnchor={placed.anchor}
+                  fontSize={placed.fontSize}
+                  fontWeight={VALUE_FONT_WEIGHT}
+                  fill={textColor}
+                  dominantBaseline="alphabetic"
+                >
+                  {placed.text}
+                </text>
+              )
+            })}
             {/* Endpoint emphasis: a soft outer ring plus a solid accent dot,
                 always at the series' last non-null point (even a
                 single-point series, where it coincides with `first`). */}
@@ -1109,6 +1183,32 @@ export function renderBarHorizontal(
     pos: mapToPlotX(t, xAxis.domain, plotX, plotW),
     anchor: edgeAnchor(i, xAxis.ticks.length),
   }))
+  const hBarSpecs: ValueLabelSpec[] = []
+  for (let i = 0; i < categories.length; i++) {
+    const rowY0 = plotY + i * rowH + BAR_H_ROW_EDGE_GAP
+    const usableH = rowH - BAR_H_ROW_EDGE_GAP * 2
+    const perBarH =
+      n <= 1
+        ? Math.max(BAR_H_MIN_THICKNESS, usableH)
+        : Math.max(BAR_H_MIN_THICKNESS, (usableH - (n - 1) * BAR_H_ROW_EDGE_GAP) / n)
+    for (const s of model.series) {
+      const value = s.values[i]
+      if (value == null) continue
+      const barY = rowY0 + s.seriesIndex * (perBarH + BAR_H_ROW_EDGE_GAP)
+      const { barX, barW } = horizontalBarExtent(value, domain, plotX, plotW)
+      hBarSpecs.push({
+        id: `hbar-${i}-${s.seriesIndex}`,
+        text: String(value),
+        x: barX + barW + 8,
+        y: barY + perBarH / 2 + 4,
+        anchor: "start",
+        fontSize: VALUE_FONT_SIZE,
+        fontFamily,
+        priority: 100 - s.seriesIndex,
+      })
+    }
+  }
+  const placedHBars = new Map(resolveValueLabelCollisions(hBarSpecs).map((label) => [label.id, label]))
   const yTicks = categories.map((cat, i) => {
     const label = fitSvgLine(String(cat.x), {
       maxWidth: BAR_H_LABEL_W - BAR_H_LABEL_FIT_MARGIN,
@@ -1182,18 +1282,24 @@ export function renderBarHorizontal(
               fill={fill}
               opacity={isSingle ? (isMax ? 1 : 0.75) : 1}
             />,
-            <text
-              key={`v-${s.seriesIndex}`}
-              x={barX + barW + 8}
-              y={barY + perBarH / 2 + 4}
-              fontSize={VALUE_FONT_SIZE}
-              fontWeight={VALUE_FONT_WEIGHT}
-              fill={textColor}
-              dominantBaseline="alphabetic"
-            >
-              {value}
-            </text>,
           )
+          const placed = placedHBars.get(`hbar-${i}-${s.seriesIndex}`)
+          if (placed && !placed.hidden) {
+            barElements.push(
+              <text
+                key={`v-${s.seriesIndex}`}
+                data-value-label="1"
+                x={placed.x}
+                y={placed.y}
+                fontSize={VALUE_FONT_SIZE}
+                fontWeight={VALUE_FONT_WEIGHT}
+                fill={textColor}
+                dominantBaseline="alphabetic"
+              >
+                {placed.text}
+              </text>,
+            )
+          }
         }
         return <g key={cat.key}>{barElements}</g>
       })}

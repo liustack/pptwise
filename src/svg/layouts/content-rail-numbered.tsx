@@ -187,6 +187,10 @@ export function RailNumberedContent({ ir, slide, index, ctx }: SvgTemplateProps)
     : null
 
   if (treated) {
+    const titleY = treated.titleY ?? BADGE_CENTER_Y + Math.round(40 * BASELINE_FUDGE_RATIO)
+    const titleSize = treated.titleSize ?? 40
+    const badgeCenterY = titleY - Math.round(titleSize * BASELINE_FUDGE_RATIO)
+    const badgeY = Math.round(badgeCenterY - BADGE_H / 2)
     const treatedRect = {
       x: CONTENT_X,
       y: treated.contentRect.y,
@@ -205,7 +209,7 @@ export function RailNumberedContent({ ir, slide, index, ctx }: SvgTemplateProps)
         <circle cx={RAIL_X + RAIL_W / 2} cy={railNodeCy} r={RAIL_NODE_R} fill={colors.primary} />
         <rect
           x={BADGE_X}
-          y={BADGE_Y}
+          y={badgeY}
           width={BADGE_W}
           height={BADGE_H}
           rx={ctx.shape?.radius ?? BADGE_RADIUS}
@@ -214,7 +218,7 @@ export function RailNumberedContent({ ir, slide, index, ctx }: SvgTemplateProps)
         <text
           data-truncated={badgeLabel.truncated ? "1" : undefined}
           x={BADGE_CENTER_X}
-          y={BADGE_CENTER_Y + Math.round(badgeLabel.fontSize * BASELINE_FUDGE_RATIO)}
+          y={badgeCenterY + Math.round(badgeLabel.fontSize * BASELINE_FUDGE_RATIO)}
           fontFamily={fonts.body}
           fontSize={badgeLabel.fontSize}
           fontWeight="700"

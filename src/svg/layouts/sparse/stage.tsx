@@ -135,14 +135,19 @@ export function pullQuote({ slide, ctx }: SvgTemplateProps) {
     bold: false,
   })
   const attr = pullQuoteAttribution(slide)
+  const ruleTop = 230
+  const ruleBot = 420
+  const titleBlockH =
+    Math.max(0, heading.lines.length - 1) * heading.lineHeight + heading.fontSize * 0.8
+  const titleY = (ruleTop + ruleBot) / 2 - titleBlockH / 2 + heading.fontSize * 0.8
   return (
     <>
-      <line x1={240} y1={230} x2={1040} y2={230} stroke={colors.border} strokeWidth={1.5} />
+      <line x1={240} y1={ruleTop} x2={1040} y2={ruleTop} stroke={colors.border} strokeWidth={1.5} />
       {heading.lines.map((line, i) => (
         <text
           key={i}
           x={640}
-          y={360 + i * heading.lineHeight}
+          y={titleY + i * heading.lineHeight}
           textAnchor="middle"
           fontFamily={fonts.heading}
           fontSize={heading.fontSize}
@@ -157,7 +162,7 @@ export function pullQuote({ slide, ctx }: SvgTemplateProps) {
           })}
         </text>
       ))}
-      <line x1={240} y1={420} x2={1040} y2={420} stroke={colors.border} strokeWidth={1.5} />
+      <line x1={240} y1={ruleBot} x2={1040} y2={ruleBot} stroke={colors.border} strokeWidth={1.5} />
       {attr && (
         <text
           x={1040}

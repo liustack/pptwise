@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">
+  <g data-depth="bg">
+    <rect width="1280" height="720" fill="#F4F0E6"/>
+  </g>
+  <g data-depth="mid"></g>
+  <g data-depth="fg">
+    <text x="96" y="120" font-family="Georgia, serif" font-size="36" font-weight="700" fill="#26261F">续约率回升</text>
+    <polyline points="200,400 1000,180" fill="none" stroke="#8C4A3C" stroke-width="2"/>
+    <polyline points="200,380 1000,190" fill="none" stroke="#4E5E4A" stroke-width="2"/>
+    <circle data-plot-mark="1" cx="1000" cy="180" r="4" fill="#8C4A3C"/>
+    <circle data-plot-mark="1" cx="1000" cy="190" r="4" fill="#4E5E4A"/>
+    <text data-value-label="1" x="1000" y="174" text-anchor="end" font-size="16" font-weight="600" fill="#26261F">90</text>
+    <text data-value-label="1" x="1000" y="184" text-anchor="end" font-size="16" font-weight="600" fill="#26261F">87</text>
+  </g>
+</svg>

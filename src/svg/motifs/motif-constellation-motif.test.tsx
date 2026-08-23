@@ -111,10 +111,11 @@ describe("ConstellationMotif（细规线，星座链退役）", () => {
       expect(dot.getAttribute("cy")).toBe("36")
       const cx = Number(dot.getAttribute("cx"))
       expect(cx).toBeGreaterThanOrEqual(96)
-      expect(cx).toBeLessThanOrEqual(1104)
+      expect(cx).toBeLessThanOrEqual(1184)
     }
     const cxs = dots.map((d) => Number(d.getAttribute("cx"))).sort((a, b) => a - b)
-    const ruleMid = (96 + 1104) / 2
+    const ruleMid = (96 + 1184) / 2
+    expect(ruleMid).toBe(640)
     expect(Math.abs((cxs[0]! + cxs[1]!) / 2 - ruleMid)).toBeLessThan(1)
   })
 

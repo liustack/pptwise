@@ -46,6 +46,7 @@ export const L1_CODES = [
   "mid-text-bleed",
   "isolated-mid-piece",
   "axis-title-overlap",
+  "label-collision",
 ] as const
 
 export type L1Code = (typeof L1_CODES)[number]
@@ -388,6 +389,23 @@ function findAxisTitleOverlap(root: Element, findings: L1Finding[]): void {
         message: `axis ${kind} "${text}" intersects a ${mark.tag} data mark`,
       })
       break
+    }
+  }
+}
+
+function findValueLabelCollision(root: Element, findings: L1Finding[]): void {
+  const labels = collectDepthLeaves(root).filter((leaf) => leaf.el.getAttribute("data-value-label") === "1")
+  for (let i = 0; i < labels.length; i++) {
+    const a = labels[i]!
+    const textA = (a.el.textContent ?? "").trim().slice(0, 24)
+    for (let j = i + 1; j < labels.length; j++) {
+      const b = labels[j]!
+      if (!boxesIntersect(a.box, b.box)) continue
+      const textB = (b.el.textContent ?? "").trim().slice(0, 24)
+      findings.push({
+        code: "label-collision",
+        message: `data labels "${textA}" and "${textB}" intersect`,
+      })
     }
   }
 }
@@ -902,6 +920,7 @@ export function auditL1(svg: string): L1Result {
   findMidTextBleed(root, findings)
   findIsolatedMidPieces(root, findings)
   findAxisTitleOverlap(root, findings)
+  findValueLabelCollision(root, findings)
   const layout = layoutOf(svg)
   walkText(root, layout, findings, collectDividers(root))
   const geo = collectGeometry(root)
