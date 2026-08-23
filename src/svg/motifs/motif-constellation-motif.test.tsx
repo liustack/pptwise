@@ -113,6 +113,9 @@ describe("ConstellationMotif（细规线，星座链退役）", () => {
       expect(cx).toBeGreaterThanOrEqual(96)
       expect(cx).toBeLessThanOrEqual(1104)
     }
+    const cxs = dots.map((d) => Number(d.getAttribute("cx"))).sort((a, b) => a - b)
+    const ruleMid = (96 + 1104) / 2
+    expect(Math.abs((cxs[0]! + cxs[1]!) / 2 - ruleMid)).toBeLessThan(1)
   })
 
   it("内容页叶子按 3:1 天花板退底，没有孤立小件", () => {

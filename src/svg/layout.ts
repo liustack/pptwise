@@ -74,15 +74,20 @@ function twoColumnRun(
 
   const colW = (rect.w - COLUMN_GAP) / 2
   const mid = Math.ceil(components.length / 2)
-  const left = stackFrom(components.slice(0, mid), rect.x, y, colW, ctx, gap)
-  const right = stackFrom(
-    components.slice(mid),
-    rect.x + colW + COLUMN_GAP,
-    y,
-    colW,
-    ctx,
-    gap,
-  )
+  let leftItems = components.slice(0, mid)
+  let rightItems = components.slice(mid)
+  // A timeline reads as a right rail. Copy stays on the left even when the
+  // timeline is the authored lead (stage gallery p03).
+  if (
+    components.length === 2 &&
+    leftItems[0]?.type === "timeline" &&
+    rightItems[0]?.type !== "timeline"
+  ) {
+    leftItems = [rightItems[0]!]
+    rightItems = [components[0]!]
+  }
+  const left = stackFrom(leftItems, rect.x, y, colW, ctx, gap)
+  const right = stackFrom(rightItems, rect.x + colW + COLUMN_GAP, y, colW, ctx, gap)
   return { placed: [...left.placed, ...right.placed], endY: Math.max(left.endY, right.endY) }
 }
 

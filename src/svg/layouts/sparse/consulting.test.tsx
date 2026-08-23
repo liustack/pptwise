@@ -8,6 +8,7 @@ import { StatementContent } from "../content-statement"
 import { StatHeroContent } from "../content-stat-hero"
 import { OneEvidenceContent } from "../content-one-evidence"
 import { measureTextUnits } from "../../../lib/svg-text-layout"
+import { boxesIntersect, textInkBox } from "../../depth-contract/geometry"
 import { underlineYFromBaseline } from "../underline"
 import type { PptxIR, Slide } from "@/ir"
 
@@ -124,6 +125,41 @@ describe("consulting sparse faces", () => {
     expect(bar?.getAttribute("fill")).toBe(ctx.colors.accent)
     expect(markup).toContain("订阅续约率同比回升")
     expect(markup).not.toContain(LUXE_GOLD)
+  })
+
+  it("stat-hero yellow bar sits below the caption ink, not through it", () => {
+    const slide: Slide = {
+      type: "content",
+      layout: "stat-hero",
+      heading: "10.2",
+      subheading: "下半年的三项确定性投入",
+      footnote: "云觅科技 2026 年第二季度经营数据",
+      components: [],
+    } as Slide
+    const { root } = render(
+      <StatHeroContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />,
+    )
+    const caption = Array.from(root.querySelectorAll("text")).find((t) =>
+      (t.textContent ?? "").includes("下半年的三项确定性投入"),
+    )!
+    const bar = Array.from(root.querySelectorAll("rect")).find((r) => r.getAttribute("height") === "10")!
+    const ink = textInkBox({
+      content: caption.textContent ?? "",
+      x: Number(caption.getAttribute("x")),
+      y: Number(caption.getAttribute("y")),
+      fontSize: Number(caption.getAttribute("font-size")),
+      fontFamily: caption.getAttribute("font-family") ?? "",
+      fontWeight: caption.getAttribute("font-weight"),
+      textAnchor: caption.getAttribute("text-anchor") ?? "start",
+    })
+    const barBox = {
+      x: Number(bar.getAttribute("x")),
+      y: Number(bar.getAttribute("y")),
+      w: Number(bar.getAttribute("width")),
+      h: Number(bar.getAttribute("height")),
+    }
+    expect(boxesIntersect(ink, barBox)).toBe(false)
+    expect(ink.y).toBeGreaterThan(barBox.y + barBox.h)
   })
 
   it("one-evidence sits the claim on a white card with a primary top bar and 依据 index", () => {

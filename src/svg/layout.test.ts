@@ -340,6 +340,18 @@ describe("degenerate column variants", () => {
     const placed = layoutContent("two_column", components, { x: 0, y: 0, w: 1088, h: 400 }, ctx)
     expect(placed[0].box.w).toBeLessThan(600)
   })
+
+  it("puts a leading timeline in the right column so copy stays on the left", () => {
+    const components = [
+      { type: "timeline", milestones: [{ title: "开", date: "Q1" }] },
+      { type: "paragraph", text: "说明" },
+    ] as Component[]
+    const placed = layoutContent("two_column", components, { x: 0, y: 0, w: 1088, h: 400 }, ctx)
+    const para = placed.find((p) => p.component.type === "paragraph")!
+    const timeline = placed.find((p) => p.component.type === "timeline")!
+    expect(para.box.x).toBe(0)
+    expect(timeline.box.x).toBeGreaterThan(para.box.x)
+  })
 })
 
 // Wave-B S4: once `layoutContentFit` finds a working gap tier, leftover

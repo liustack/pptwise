@@ -4,7 +4,8 @@ import { renderSvgMarkup, parseSvgRoot } from "../serialize"
 import { buildCtx } from "../full-slide-svg"
 import { resolveStyle } from "../../themes"
 import { measureTextUnits } from "../../lib/svg-text-layout"
-import { FashionMastheadCover } from "./cover-fashion-masthead"
+import { renderSlideSvg } from "../../api"
+import { FashionMastheadCover, layoutDef } from "./cover-fashion-masthead"
 import type { PptxIR, Slide } from "@/ir"
 
 // Red-first regression for the user-reported cover-overflow defect
@@ -265,5 +266,31 @@ describe("cover-fashion-masthead — letter-spacing wrap budget (round-3 D-clust
     const meta = Array.from(root.querySelectorAll("text")).filter((t) => t.getAttribute("letter-spacing") === "3")
     expect(meta).toHaveLength(1)
     expect(renderedWidth(meta[0])).toBeLessThanOrEqual(1100 + 1) // the call site's own maxWidth
+  })
+})
+
+describe("cover-fashion-masthead — no leftover top-left motif stub", () => {
+  it("consulting banner-motif does not paint the yellow lead on this cover", () => {
+    const deck: PptxIR = {
+      version: "4",
+      filename: "fashion-masthead-no-stub.pptx",
+      theme: { id: "consulting" },
+      meta: { organization: "Platform Engineering 团队" },
+      assets: { images: {} },
+      seed: 1,
+      slides: [
+        {
+          type: "cover",
+          layout: "fashion-masthead",
+          heading: "云觅科技平台迁移方案",
+          subheading: "Terraform + ArgoCD",
+          components: [],
+        },
+      ],
+    } as PptxIR
+    const root = parseSvgRoot(renderSlideSvg(deck, 0))
+    const stub = Array.from(root.querySelectorAll("line")).filter((el) => Number(el.getAttribute("y1")) === 32)
+    expect(stub).toHaveLength(0)
+    expect(layoutDef.suppressMotif).toBe(true)
   })
 })

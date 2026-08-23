@@ -7,7 +7,7 @@ const emptyAssets = { images: {} }
 describe("themeDeck corpus thicken (gallery r2 D10/D11/D12/D21)", () => {
   const zh = LEXICONS.zh
 
-  it("stage p03 is a two-column timeline plus a companion paragraph", () => {
+  it("stage p03 is two-column with a timeline lead and a companion paragraph", () => {
     const deck = themeDeck("stage", zh, emptyAssets)
     const page = deck.slides[2]!
     expect(page.layout).toBe("two-column")

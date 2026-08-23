@@ -15,6 +15,8 @@ const GAP = 20
 const ARROW_H = 100
 const ARROW_H_VERTICAL = 52
 const BADGE_R = 22
+/** Keep the outline circle inside the chevron body (stroke + left overhang). */
+const BADGE_INSET = 16
 const TITLE_SIZE = FORM_TITLE_FLOOR
 const FOOT_SIZE = FORM_BODY_FLOOR
 const FOOT_GAP = 14
@@ -182,7 +184,7 @@ export function renderArrowSteps(
   const footH = itemFootH(component, Math.max(1, slotW), ctx.fonts.body, footLines)
   const arrowH = vertical ? ARROW_H_VERTICAL : ARROW_H
   const stride = arrowH + FOOT_GAP + footH + (vertical ? GAP : 0)
-  const titleMaxW = Math.max(1, slotW - BADGE_R * 2 - 28)
+  const titleMaxW = Math.max(1, slotW - BADGE_R * 2 - BADGE_INSET - 28)
   const budget = box.h ?? Number.POSITIVE_INFINITY
   let visible = n
   if (vertical && Number.isFinite(budget)) {
@@ -202,7 +204,7 @@ export function renderArrowSteps(
       {shown.map((item, i) => {
         const x = vertical ? 0 : i * (slotW + GAP)
         const y = vertical ? i * stride : 0
-        const cx = x + BADGE_R
+        const cx = x + BADGE_R + BADGE_INSET
         const cy = y + arrowH / 2
         const title = fitFormTitleLine(item.title, {
           maxWidth: titleMaxW,
@@ -217,7 +219,7 @@ export function renderArrowSteps(
           lineHeightRatio: 1.35,
           fontFamily: ctx.fonts.body,
         })
-        const titleX = x + BADGE_R * 2 + 10
+        const titleX = cx + BADGE_R + 10
         return (
           <g key={i}>
             <path d={arrowD(knobs, x, y, slotW, arrowH)} fill={fill} />

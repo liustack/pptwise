@@ -67,7 +67,11 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
   const numberY = 450
   const barY = underlineYFromBaseline(numberY, fitted.fontSize, fitted.text)
   const barW = Math.round(measureTextUnits(fitted.text, { bold: true, fontFamily: fonts.heading }) * fitted.fontSize)
-  const captionY = barY + 10 + 16
+  const BAR_H = 10
+  const CAPTION_SIZE = 26
+  // Caption ink must sit fully below the 10px bar. CJK fills the em box,
+  // so the baseline is one caption em plus a little air under the bar.
+  const captionY = barY + BAR_H + CAPTION_SIZE + 10
   const sourceY = captionY + 42
   return (
     <>
@@ -82,9 +86,9 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
       >
         {fitted.text}
       </text>
-      <rect x={96} y={barY} width={barW} height={10} fill={colors.accent} />
+      <rect x={96} y={barY} width={barW} height={BAR_H} fill={colors.accent} />
       {caption && (
-        <text x={96} y={captionY} fontFamily={fonts.body} fontSize={26} fill={colors.primary} dominantBaseline="alphabetic">
+        <text x={96} y={captionY} fontFamily={fonts.body} fontSize={CAPTION_SIZE} fill={colors.primary} dominantBaseline="alphabetic">
           {caption}
         </text>
       )}

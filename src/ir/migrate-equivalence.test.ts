@@ -921,6 +921,10 @@ describe("v3 → v4 migration equivalence (task 1 hard gate, spec §10/§12)", (
       // slide5.xml. `.audit.json` stayed empty and was not recaptured.
       // `scenarioBearing` / `annualReviewPreset` (journal) matched the
       // goldens byte-for-byte. Not recaptured.
+      // Recaptured (audit round-1 C/D, 2026-08-23). Motif top-rule skip on
+      // framed/own-chrome covers, tech star marks, journal cover title y,
+      // and two-column timeline rail. Only pages that actually consume those
+      // faces move. `.audit.json` stayed empty.
       it("renders SVG byte-identical to the base-commit (pre-rename) capture, slide for slide", () => {
         const goldenSvgs = readGoldenJson<string[]>(`${name}.svg`)
         const migratedSvgs = v4.slides.map((_, i) => renderSlideSvg(v4, i))

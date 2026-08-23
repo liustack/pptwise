@@ -25,7 +25,6 @@ import { CHART_VARIANTS, DENSITY_BUILDERS, FORM_VARIANTS } from "./corpus/compon
 import { LEXICONS } from "./corpus/lexicon"
 import type { Job } from "./matrix"
 
-/** Emphasis form. It lives on the theme table via `**` markup, not as a component face. */
 /**
  * Emphasis forms draw a `**run**` inside body text, not a component face, so
  * they can never have a dedicated component-table page: there is no component
@@ -183,7 +182,7 @@ export function galleryCoverageGaps(jobs: readonly Job[]): CoverageGaps {
     .sort()
     .filter((id) => !layouts.has(id))
   const missingComponents = COMPONENT_TYPES.filter((id) => !components.has(id))
-  const missingForms = COMPONENT_FORMS.filter((id) => !forms.has(id))
+  const missingForms = COMPONENT_FORMS.filter((id) => !forms.has(id) && !EMPHASIS_FORMS.includes(id))
   const missingDedicatedForms = dedicatedFormIds().filter((id) => !dedicatedForms.has(id))
   const missingHeadings = HEADING_TREATMENTS.filter((id) => !headings.has(id))
   const missingPinnedPages = PINNED_FORM_PAGE_IDS.filter((id) => !ids.has(id))

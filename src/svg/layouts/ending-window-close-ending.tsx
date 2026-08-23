@@ -175,6 +175,7 @@ export const layoutDef = {
   pinOnly: true,
   branding: "none",
   paintsOwnBackground: true,
+  suppressMotif: true,
   slideTypes: ["ending"],
   slots: [
     { name: "heading", accepts: [] },

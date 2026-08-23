@@ -30,10 +30,10 @@ const RULE_Y = 36
 const RULE_X1 = 96
 const RULE_X2 = 1104
 const RULE_STROKE = 1.5
-/** 内容页点睛：两枚，圆心就在规线上。 */
+/** 内容页点睛：两枚，圆心就在规线上，落在规线中段。 */
 const MARKS: readonly { x: number; r: number }[] = [
-  { x: 96, r: 2.5 },
-  { x: 160, r: 2.5 },
+  { x: 568, r: 2.5 },
+  { x: 632, r: 2.5 },
 ]
 
 export function ConstellationMotif({ slide, ctx }: DecorProps) {
