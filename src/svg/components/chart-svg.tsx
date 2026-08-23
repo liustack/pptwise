@@ -1,7 +1,7 @@
 import type { ReactElement } from "react"
 import type { ChartSeries, Component } from "@/ir"
 import { accessibleInk } from "../ink"
-import { fitSvgLine } from "../../lib/svg-text-layout"
+import { fitSvgLine, measureTextUnits } from "../../lib/svg-text-layout"
 import { buildChartModel, zeroAxisRatio, type ChartDomain } from "./chart-model"
 
 /**
@@ -817,15 +817,120 @@ export function renderFunnel(
  * dumbbell 哑铃变化图（2026-07-12 借鉴财经简报）：series[0]=起点值、
  * series[1]=终点值（等长同 x），每行「muted 起点●——线——accent 终点●」+
  * 双端数值标签，行标签左侧右对齐。表达「从 A 到 B 的变化」。
+ *
+ * 左侧类目带宽不再钉死在 96px：按全部行标签实测字宽，优先按可读字号
+ * 把带宽涨到刚好放下，plot 留 floor。空间不够再降到 minFontSize。
+ * 还装不下也不画省略号，末路丢字。
  */
-const DUMBBELL_LABEL_W = 96
+const DUMBBELL_LABEL_W_MIN = 96
 const DUMBBELL_DOT_R = 5
-/** Width budget (px) for the from.y/to.y value labels' `fitSvgLine` call —
- * the same gap `plotW` below already reserves past the plot's right edge
- * for a value label (previously an inline `56` literal there, now named and
- * shared with the fitSvgLine calls below so both consumers of "how wide is
- * a value label allowed to be" stay in sync). */
-const DUMBBELL_VALUE_LABEL_W = 56
+/** Floor (px) reserved past the plot's right edge for the to.y label. Grows
+ * with the widest to-value the same way the left category band grows. */
+const DUMBBELL_VALUE_LABEL_W_MIN = 56
+const DUMBBELL_LABEL_GAP = 12
+const DUMBBELL_LABEL_FONT_SIZE = 13
+const DUMBBELL_LABEL_MIN_FONT_SIZE = 10
+const DUMBBELL_TO_FONT_SIZE = 12.5
+const DUMBBELL_TO_MIN_FONT_SIZE = 10
+/** Keep the connector + both endpoint dots readable when the label band grows. */
+const DUMBBELL_PLOT_MIN_W = 240
+const DUMBBELL_TO_LABEL_INSET = DUMBBELL_DOT_R + 8
+
+function dumbbellTextWidth(text: string, fontSize: number, bold?: boolean): number {
+  return measureTextUnits(text, { bold }) * fontSize
+}
+
+function maxDumbbellTextWidth(texts: string[], fontSize: number, bold?: boolean): number {
+  let widest = 0
+  for (const text of texts) {
+    const px = dumbbellTextWidth(text, fontSize, bold)
+    if (px > widest) widest = px
+  }
+  return widest
+}
+
+/** Drop overflow glyphs with no ellipsis mark (cover-vertical-title pattern). */
+function clipDumbbellText(
+  text: string,
+  maxWidth: number,
+  fontSize: number,
+  bold?: boolean,
+): string {
+  if (maxWidth <= 0 || fontSize <= 0) return ""
+  const weight = { bold }
+  const maxUnits = maxWidth / fontSize
+  if (measureTextUnits(text, weight) <= maxUnits) return text
+  let out = ""
+  for (const ch of Array.from(text)) {
+    const next = out + ch
+    if (measureTextUnits(next, weight) > maxUnits) break
+    out = next
+  }
+  return out
+}
+
+function fitDumbbellLine(
+  text: string,
+  opts: { maxWidth: number; fontSize: number; minFontSize: number; bold?: boolean },
+): { text: string; fontSize: number; clipped: boolean } {
+  const weightBold = opts.bold
+  const units = measureTextUnits(text, { bold: weightBold })
+  if (units <= 0) return { text, fontSize: opts.fontSize, clipped: false }
+  if (opts.maxWidth <= 0) {
+    return { text: "", fontSize: opts.minFontSize, clipped: text.length > 0 }
+  }
+  if (units * opts.fontSize <= opts.maxWidth) {
+    return { text, fontSize: opts.fontSize, clipped: false }
+  }
+  const fitted = Math.min(opts.fontSize, Math.floor(opts.maxWidth / units))
+  if (fitted >= opts.minFontSize) {
+    return { text, fontSize: fitted, clipped: false }
+  }
+  const clipped = clipDumbbellText(text, opts.maxWidth, opts.minFontSize, weightBold)
+  return { text: clipped, fontSize: opts.minFontSize, clipped: clipped !== text }
+}
+
+function allocateDumbbellBands(
+  w: number,
+  categoryTexts: string[],
+  toValueTexts: string[],
+): { labelW: number; valueW: number; plotW: number } {
+  const gap = DUMBBELL_LABEL_GAP
+  const plotFloor = Math.min(DUMBBELL_PLOT_MIN_W, Math.max(1, Math.floor(w * 0.4)))
+  const maxBands = Math.max(0, w - gap - plotFloor)
+
+  const labelPreferred = Math.max(
+    DUMBBELL_LABEL_W_MIN,
+    Math.ceil(maxDumbbellTextWidth(categoryTexts, DUMBBELL_LABEL_FONT_SIZE, true)),
+  )
+  const labelAtMin = Math.max(
+    DUMBBELL_LABEL_W_MIN,
+    Math.ceil(maxDumbbellTextWidth(categoryTexts, DUMBBELL_LABEL_MIN_FONT_SIZE, true)),
+  )
+  const valuePreferred = Math.max(
+    DUMBBELL_VALUE_LABEL_W_MIN,
+    Math.ceil(DUMBBELL_TO_LABEL_INSET + maxDumbbellTextWidth(toValueTexts, DUMBBELL_TO_FONT_SIZE, true)),
+  )
+  const valueAtMin = Math.max(
+    DUMBBELL_VALUE_LABEL_W_MIN,
+    Math.ceil(DUMBBELL_TO_LABEL_INSET + maxDumbbellTextWidth(toValueTexts, DUMBBELL_TO_MIN_FONT_SIZE, true)),
+  )
+
+  // Prefer the readable (13px / 12.5px) band. If that would eat the plot
+  // floor, fall back to minFontSize widths, then cap at maxBands so
+  // fitDumbbellLine can clip glyphs as a last resort.
+  let labelNeed = labelPreferred
+  let valueNeed = valuePreferred
+  if (labelNeed + valueNeed > maxBands) {
+    labelNeed = labelAtMin
+    valueNeed = valueAtMin
+  }
+
+  const labelW = Math.min(labelNeed, maxBands)
+  const valueW = Math.min(valueNeed, Math.max(0, maxBands - labelW))
+  const plotW = Math.max(1, w - labelW - gap - valueW)
+  return { labelW, valueW, plotW }
+}
 
 export function renderDumbbell(
   series: ChartSeries[],
@@ -872,45 +977,44 @@ export function renderDumbbell(
   // to the old `v / max` formula.
   const min = Math.min(0, ...all)
   const max = Math.max(...all, 1)
-  const plotX = x0 + DUMBBELL_LABEL_W + 12
-  const plotW = Math.max(1, w - DUMBBELL_LABEL_W - 12 - DUMBBELL_VALUE_LABEL_W)
+  const categoryTexts = fromData.slice(0, rows).map((d) => String(d.x))
+  const toValueTexts = toData.slice(0, rows).map((d) => String(d.y))
+  const { labelW, valueW, plotW } = allocateDumbbellBands(w, categoryTexts, toValueTexts)
+  const plotX = x0 + labelW + DUMBBELL_LABEL_GAP
   const rowH = h / rows
   const vx = (v: number) => plotX + ((v - min) / (max - min)) * plotW
+  const toLabelMaxWidth = Math.max(0, valueW - DUMBBELL_TO_LABEL_INSET)
+  const fromLabelMaxWidth = Math.max(plotW, valueW)
   return (
     <>
       {Array.from({ length: rows }, (_, i) => {
         const from = fromData[i]
         const to = toData[i]
         const cy = y0 + i * rowH + rowH / 2
-        const label = fitSvgLine(String(from.x), {
-          maxWidth: DUMBBELL_LABEL_W,
-          fontSize: 13,
-          minFontSize: 10,
+        const label = fitDumbbellLine(String(from.x), {
+          maxWidth: labelW,
+          fontSize: DUMBBELL_LABEL_FONT_SIZE,
+          minFontSize: DUMBBELL_LABEL_MIN_FONT_SIZE,
+          bold: true,
         })
-        // from.y/to.y raw-rendered the data value with no width fitting at
-        // all — unlike the row category label immediately above, which
-        // already shrinks/truncates via fitSvgLine. A large value (e.g. a
-        // 10-digit number) had no such protection and could overflow its
-        // row visually. Same treatment, same mechanism, mirrored from that
-        // neighboring call: fontSize/minFontSize match what each label
-        // already rendered at, only maxWidth is new.
-        const fromValueLabel = fitSvgLine(String(from.y), {
-          maxWidth: DUMBBELL_VALUE_LABEL_W,
+        const fromValueLabel = fitDumbbellLine(String(from.y), {
+          maxWidth: fromLabelMaxWidth,
           fontSize: DUMBBELL_FROM_FONT_SIZE,
-          minFontSize: 12,
+          minFontSize: DUMBBELL_FROM_FONT_SIZE,
         })
-        const toValueLabel = fitSvgLine(String(to.y), {
-          maxWidth: DUMBBELL_VALUE_LABEL_W,
-          fontSize: 12.5,
-          minFontSize: 10,
+        const toValueLabel = fitDumbbellLine(String(to.y), {
+          maxWidth: toLabelMaxWidth,
+          fontSize: DUMBBELL_TO_FONT_SIZE,
+          minFontSize: DUMBBELL_TO_MIN_FONT_SIZE,
+          bold: true,
         })
         const x1 = vx(from.y)
         const x2 = vx(to.y)
         return (
           <g key={i}>
             <text
-              data-truncated={label.truncated ? "1" : undefined}
-              x={x0 + DUMBBELL_LABEL_W}
+              data-truncated={label.clipped ? "1" : undefined}
+              x={x0 + labelW}
               y={cy + 4}
               textAnchor="end"
               fontSize={label.fontSize}
@@ -924,7 +1028,7 @@ export function renderDumbbell(
             <circle cx={x1} cy={cy} r={DUMBBELL_DOT_R} fill={mutedColor} />
             <circle cx={x2} cy={cy} r={DUMBBELL_DOT_R + 1.5} fill={accentColor} />
             <text
-              data-truncated={fromValueLabel.truncated ? "1" : undefined}
+              data-truncated={fromValueLabel.clipped ? "1" : undefined}
               x={x1}
               y={cy - 11}
               textAnchor="middle"
@@ -935,8 +1039,8 @@ export function renderDumbbell(
               {fromValueLabel.text}
             </text>
             <text
-              data-truncated={toValueLabel.truncated ? "1" : undefined}
-              x={x2 + DUMBBELL_DOT_R + 8}
+              data-truncated={toValueLabel.clipped ? "1" : undefined}
+              x={x2 + DUMBBELL_TO_LABEL_INSET}
               y={cy + 4}
               fontSize={toValueLabel.fontSize}
               fontWeight="bold"
