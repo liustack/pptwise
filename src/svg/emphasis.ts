@@ -105,6 +105,49 @@ function chalkUnderlineD(x: number, width: number, y: number): string {
   return `M ${x} ${y} q ${ctrlDx} ${ctrlDy} ${span} 2`
 }
 
+function djb2(s: string): number {
+  let h = 5381
+  for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0
+  return Math.abs(h)
+}
+
+function hashUnit(h: number, i: number): number {
+  const mixed = Math.abs((h ^ Math.imul(i + 1, 2654435761)) | 0)
+  return (mixed % 1000) / 999
+}
+
+function r1(v: number): number {
+  return Math.round(v * 10) / 10
+}
+
+/**
+ * Marker-pen pad: a filled quad whose corners miss a true rectangle by a
+ * few pixels. Offsets come from a djb2 of the run, never Math.random.
+ */
+function markerPadD(opts: {
+  x: number
+  y: number
+  width: number
+  height: number
+  seed: string
+}): string {
+  const { x, y, width, height, seed } = opts
+  const h = djb2(seed)
+  const signed = (i: number) => hashUnit(h, i) * 2 - 1
+  const jitter = Math.min(7, Math.max(1.6, height * 0.14))
+  const overshoot = Math.min(10, Math.max(2.2, width * 0.06))
+  const tilt = signed(0) * jitter * 0.55
+  const tlx = r1(x + signed(1) * jitter * 0.45 + tilt)
+  const tly = r1(y + signed(2) * jitter * 0.32)
+  const trx = r1(x + width + signed(3) * jitter * 0.5 + overshoot * (0.15 + 0.45 * hashUnit(h, 4)) + tilt)
+  const try_ = r1(y + signed(5) * jitter * 0.28)
+  const brx = r1(x + width + signed(6) * jitter * 0.48 + overshoot * (0.3 + 0.4 * hashUnit(h, 7)) - tilt)
+  const bry = r1(y + height + signed(8) * jitter * 0.28)
+  const blx = r1(x + signed(9) * jitter * 0.45 - overshoot * (0.12 + 0.28 * hashUnit(h, 10)) - tilt)
+  const bly = r1(y + height + signed(11) * jitter * 0.26)
+  return `M ${tlx} ${tly} L ${trx} ${try_} L ${brx} ${bry} L ${blx} ${bly} Z`
+}
+
 /**
  * Renders one already-fitted emphasis line. The default tint branch delegates
  * to `renderEmphasisTspans` unchanged. A theme-assigned pad branch derives run
@@ -187,22 +230,25 @@ export function renderEmphasisLine(
   const pads = segments.flatMap((segment, index) => {
     const width = widths[index] ?? 0
     textXs[index] = cursorX
-    const rect =
+    const path =
       segment.emphasized && segment.text.length > 0
         ? [
-            React.createElement("rect", {
+            React.createElement("path", {
               key: index,
-              x: cursorX - xPadding,
-              y,
-              width: width + xPadding * 2,
-              height,
+              d: markerPadD({
+                x: cursorX - xPadding,
+                y,
+                width: width + xPadding * 2,
+                height,
+                seed: `${segment.text}:${r1(cursorX)}:${r1(y)}:${r1(width)}:${r1(opts.fontSize)}`,
+              }),
               fill: padFill,
               "data-emphasis-pad": "",
             }),
           ]
         : []
     cursorX += width
-    return rect
+    return path
   })
   const padInk = formLegibleInk(opts.baseFill, padFill, opts.fontSize)
   const tspans = segments.map((segment, index) => {

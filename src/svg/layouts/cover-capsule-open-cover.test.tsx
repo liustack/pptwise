@@ -4,7 +4,7 @@ import { renderSvgMarkup, parseSvgRoot } from "../serialize"
 import { assertSubset } from "../subset-validate"
 import { buildCtx, resolveBackgroundHex } from "../full-slide-svg"
 import { resolveStyle, CANONICAL_THEME_IDS } from "../../themes"
-import { contrastRatio, metaInk, readableOn, requiredContrastRatio } from "../ink"
+import { accessibleInk, contrastRatio, metaInk, requiredContrastRatio } from "../ink"
 import { CapsuleOpenCover, layoutDef } from "./cover-capsule-open-cover"
 import type { PptxIR, Slide } from "@/ir"
 
@@ -46,12 +46,12 @@ function renderCover(themeId: string, s: Slide = slide(), meta: PptxIR["meta"] =
       <CapsuleOpenCover ir={ir(themeId, meta, s)} slide={s} index={0} ctx={ctx} />
     </svg>,
   )
-  return { markup, root: parseSvgRoot(markup), tokens }
+  return { markup, root: parseSvgRoot(markup), tokens, ctx }
 }
 
 describe("cover-capsule-open-cover — board geometry", () => {
-  it("places kicker, left title, subtitle, and primary capsule on the board coordinates", () => {
-    const { root, tokens } = renderCover("crayon")
+  it("places kicker, left title, subtitle, and a typographic date, with no pill", () => {
+    const { root, tokens, ctx } = renderCover("crayon")
     const kicker = Array.from(root.querySelectorAll("text")).find((t) =>
       (t.textContent ?? "").includes("小海豚班"),
     )
@@ -72,17 +72,12 @@ describe("cover-capsule-open-cover — board geometry", () => {
     expect(sub?.getAttribute("x")).toBe("96")
     expect(sub?.getAttribute("y")).toBe("440")
 
-    const capsule = Array.from(root.querySelectorAll("rect")).find((r) => r.getAttribute("height") === "66")
-    expect(capsule?.getAttribute("x")).toBe("96")
-    expect(capsule?.getAttribute("y")).toBe("520")
-    expect(capsule?.getAttribute("rx")).toBe("33")
-    expect(Number(capsule?.getAttribute("width"))).toBeGreaterThanOrEqual(300)
-    expect(capsule?.getAttribute("fill")).toBe(tokens.colors.primary)
-
-    const pill = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === DATE)
-    expect(pill?.getAttribute("text-anchor")).toBe("middle")
-    expect(pill?.getAttribute("y")).toBe("563")
-    expect(pill?.getAttribute("fill")).toBe(readableOn(tokens.colors.primary))
+    expect(root.querySelector("rect")).toBeNull()
+    const date = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === DATE)
+    expect(date?.getAttribute("x")).toBe("96")
+    expect(date?.getAttribute("y")).toBe("563")
+    expect(date?.getAttribute("text-anchor")).not.toBe("middle")
+    expect(date?.getAttribute("fill")).toBe(accessibleInk(tokens.colors.primary, ctx.defaultBg ?? tokens.colors.bg, 22))
   })
 
   it("does not paint a header band or a full-bleed field", () => {
@@ -94,17 +89,18 @@ describe("cover-capsule-open-cover — board geometry", () => {
     expect(topBands).toHaveLength(0)
   })
 
-  it("fills the capsule from date when both date and subheading are present", () => {
+  it("fills the date line from date when both date and subheading are present", () => {
     const { root } = renderCover("crayon")
     const texts = Array.from(root.querySelectorAll("text")).map((t) => t.textContent ?? "")
     expect(texts).toContain(DATE)
     expect(texts.some((t) => t.includes("这学期孩子们"))).toBe(true)
   })
 
-  it("fills the capsule from subheading when date is missing", () => {
+  it("fills the date line from subheading when date is missing", () => {
     const { root } = renderCover("crayon", slide(), { organization: "小海豚班" })
-    const pill = Array.from(root.querySelectorAll("text")).find((t) => t.getAttribute("text-anchor") === "middle")
-    expect(pill?.textContent).toBe(SUBHEADING)
+    const date = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === SUBHEADING)
+    expect(date?.getAttribute("x")).toBe("96")
+    expect(date?.getAttribute("font-weight")).toBe("700")
     expect(Array.from(root.querySelectorAll("text")).filter((t) => t.textContent === SUBHEADING)).toHaveLength(1)
   })
 
@@ -136,15 +132,14 @@ describe("cover-capsule-open-cover — shared pool", () => {
         const size = Number(el.getAttribute("font-size"))
         const fill = el.getAttribute("fill")!
         const required = el.getAttribute("data-contrast-tier") === "meta" ? 3 : requiredContrastRatio(size)
-        const against = el.getAttribute("text-anchor") === "middle" ? tokens.colors.primary : bg
-        expect(contrastRatio(fill, against), `${themeId}: ${el.textContent}`).toBeGreaterThanOrEqual(required)
+        expect(contrastRatio(fill, bg), `${themeId}: ${el.textContent}`).toBeGreaterThanOrEqual(required)
       }
     }
   })
 
   it("uses tokens, not a baked crayon hex, when another theme borrows it", () => {
     const { markup, tokens } = renderCover("tech")
-    expect(markup).toContain(tokens.colors.primary)
+    expect(markup).toContain(tokens.colors.text)
     for (const hex of CRAYON_HEX) {
       expect(markup, hex).not.toContain(hex)
     }

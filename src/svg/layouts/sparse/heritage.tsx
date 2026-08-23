@@ -3,7 +3,7 @@ import { renderEmphasisTspans } from "../../emphasis"
 import { heroCaption, heroValue, pullQuoteAttribution } from "../minimal-shared"
 import { fitHeroLine, fitSparseHeading } from "./shared"
 
-/** heritage 稀排脸：文武线引文、L 角花格言、夹心巨数。不画 motif 顶缘双线和顶角金菱。 */
+/** heritage 稀排脸：文武线引文、取景框格言、夹心巨数。不画 motif 顶缘双线和顶角金菱。 */
 
 function InkDouble({
   x,
@@ -78,27 +78,64 @@ export function pullQuote({ slide, ctx }: SvgTemplateProps) {
   )
 }
 
+const VIEWFINDER_L = 200
+const VIEWFINDER_T = 120
+const VIEWFINDER_R = 1080
+const VIEWFINDER_B = 600
+const VIEWFINDER_ARM = 56
+const SUBJECT_MAX_W = 720
+
+function viewfinderCorner(x: number, y: number, dx: number, dy: number): string {
+  return `M ${x + dx} ${y} L ${x} ${y} L ${x} ${y + dy}`
+}
+
 export function statement({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const heading = fitSparseHeading(slide.heading, {
-    maxWidth: 1088,
-    fontSize: 56,
+    maxWidth: SUBJECT_MAX_W,
+    fontSize: 44,
     maxLines: 2,
-    minPt: 32,
-    lineHeightRatio: 90 / 56,
+    minPt: 28,
+    lineHeightRatio: 64 / 44,
     fontFamily: fonts.heading,
     bold: false,
   })
+  const blockH = heading.lines.length * heading.lineHeight
+  const frameH = VIEWFINDER_B - VIEWFINDER_T
+  const firstY = VIEWFINDER_T + (frameH - blockH) / 2 + heading.fontSize * 0.82
   return (
     <>
-      <path d="M 96 120 l 40 0 M 96 120 l 0 40" fill="none" stroke={colors.accent} strokeWidth={2} />
-      <path d="M 1184 600 l -40 0 M 1184 600 l 0 -40" fill="none" stroke={colors.accent} strokeWidth={2} />
+      <path
+        d={viewfinderCorner(VIEWFINDER_L, VIEWFINDER_T, VIEWFINDER_ARM, VIEWFINDER_ARM)}
+        fill="none"
+        stroke={colors.accent}
+        strokeWidth={2}
+      />
+      <path
+        d={viewfinderCorner(VIEWFINDER_R, VIEWFINDER_T, -VIEWFINDER_ARM, VIEWFINDER_ARM)}
+        fill="none"
+        stroke={colors.accent}
+        strokeWidth={2}
+      />
+      <path
+        d={viewfinderCorner(VIEWFINDER_L, VIEWFINDER_B, VIEWFINDER_ARM, -VIEWFINDER_ARM)}
+        fill="none"
+        stroke={colors.accent}
+        strokeWidth={2}
+      />
+      <path
+        d={viewfinderCorner(VIEWFINDER_R, VIEWFINDER_B, -VIEWFINDER_ARM, -VIEWFINDER_ARM)}
+        fill="none"
+        stroke={colors.accent}
+        strokeWidth={2}
+      />
       {heading.lines.map((line, i) => (
         <text
           key={i}
           data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
-          x={96}
-          y={350 + i * heading.lineHeight}
+          x={640}
+          y={firstY + i * heading.lineHeight}
+          textAnchor="middle"
           fontFamily={fonts.heading}
           fontSize={heading.fontSize}
           fontWeight="400"

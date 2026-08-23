@@ -241,6 +241,46 @@ describe("renderEmphasisLine underline", () => {
   })
 })
 
+function padPathPoints(d: string): { x: number; y: number }[] {
+  const nums = [...d.matchAll(/-?\d+(?:\.\d+)?/g)].map(Number)
+  const points: { x: number; y: number }[] = []
+  for (let i = 0; i + 1 < nums.length; i += 2) {
+    points.push({ x: nums[i]!, y: nums[i + 1]! })
+  }
+  return points
+}
+
+describe("renderEmphasisLine pad", () => {
+  it("paints a marker path under the run, not an axis-aligned rect", () => {
+    const html = emphasisLineMarkup("年度**增长结论**与下一步投入", { themeId: "consulting" })
+    expect(html).toContain('data-emphasis-pad=""')
+    expect(html).not.toContain("data-emphasis-underline")
+    const doc = new DOMParser().parseFromString(`<svg>${html}</svg>`, "image/svg+xml")
+    const pad = doc.querySelector("[data-emphasis-pad]")!
+    expect(pad.tagName.toLowerCase()).toBe("path")
+    expect(pad.getAttribute("fill")).toBe("#E9C46A")
+    const d = pad.getAttribute("d") ?? ""
+    expect(d.startsWith("M ")).toBe(true)
+    expect(d.trim().endsWith("Z")).toBe(true)
+    const points = padPathPoints(d)
+    expect(points.length).toBeGreaterThanOrEqual(4)
+    const xs = [...new Set(points.map((p) => p.x))]
+    const ys = [...new Set(points.map((p) => p.y))]
+    expect(xs.length).toBeGreaterThan(2)
+    expect(ys.length).toBeGreaterThan(2)
+  })
+
+  it("derives the marker from the run text so the same input reprints byte-identically", () => {
+    const a = emphasisLineMarkup("普通 **强调内容** 普通", { themeId: "consulting", fontSize: 24, x: 0 })
+    const b = emphasisLineMarkup("普通 **强调内容** 普通", { themeId: "consulting", fontSize: 24, x: 0 })
+    expect(a).toBe(b)
+    const other = emphasisLineMarkup("普通 **另一段字** 普通", { themeId: "consulting", fontSize: 24, x: 0 })
+    const dOf = (html: string) =>
+      new DOMParser().parseFromString(`<svg>${html}</svg>`, "image/svg+xml").querySelector("[data-emphasis-pad]")?.getAttribute("d")
+    expect(dOf(a)).not.toBe(dOf(other))
+  })
+})
+
 describe("fitEmphasisLine", () => {
   it("returns null for undefined/empty/whitespace-only text", () => {
     expect(fitEmphasisLine(undefined, { maxWidth: 900, fontSize: 22, minFontSize: 16 })).toBeNull()

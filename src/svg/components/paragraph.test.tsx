@@ -62,39 +62,33 @@ describe("paragraph component emphasis", () => {
     const marked = { type: "paragraph" as const, text: "普通 **强调内容** 普通" }
     const { container } = svg(paragraph.render(marked, { x: 0, y: 0, w: 1120 }, consultingCtx))
     const group = container.querySelector("g")!
-    const rect = group.querySelector("rect")!
+    const pad = group.querySelector("[data-emphasis-pad]")!
     const text = group.querySelector("text")!
     const emphasized = Array.from(text.querySelectorAll("tspan")).find(
       (span) => span.textContent === "强调内容",
     )!
     const spans = Array.from(text.querySelectorAll("tspan"))
 
-    expect(rect).toBeTruthy()
-    expect(rect.getAttribute("data-emphasis-pad")).toBe("")
-    expect(rect.closest("[data-decor]")).toBeNull()
-    expect(Array.from(group.children).indexOf(rect)).toBeLessThan(
+    expect(pad.tagName.toLowerCase()).toBe("path")
+    expect(pad.getAttribute("data-emphasis-pad")).toBe("")
+    expect(pad.closest("[data-decor]")).toBeNull()
+    expect(Array.from(group.children).indexOf(pad)).toBeLessThan(
       Array.from(group.children).indexOf(text),
     )
-    expect(rect.getAttribute("fill")).toBe(CONSULTING_TOKENS.colors.accent)
+    expect(pad.getAttribute("fill")).toBe(CONSULTING_TOKENS.colors.accent)
 
-    const runWidth =
-      measureTextUnits("强调内容") * consultingCtx.bodyFontPx
     const runStart =
       measureTextUnits("普通 ") * consultingCtx.bodyFontPx
     expect(Number(spans[0]?.getAttribute("x"))).toBe(0)
-    expect(Number(rect.getAttribute("x"))).toBeCloseTo(
-      runStart - consultingCtx.bodyFontPx * 0.1,
-      6,
-    )
     expect(Number(emphasized.getAttribute("x"))).toBeCloseTo(runStart, 6)
     expect(emphasized.getAttribute("text-anchor")).toBe("start")
     expect(emphasized.getAttribute("data-emphasis-pad-fill")).toBe(CONSULTING_TOKENS.colors.accent)
-    const leftPadding = Number(emphasized.getAttribute("x")) - Number(rect.getAttribute("x"))
-    const rightPadding = Number(rect.getAttribute("width")) - runWidth - leftPadding
-    expect(leftPadding).toBeGreaterThan(0)
-    expect(rightPadding).toBeCloseTo(leftPadding, 6)
-    expect(Number(rect.getAttribute("height"))).toBeCloseTo(consultingCtx.bodyFontPx * 1.1, 6)
-    expect(Number(rect.getAttribute("y"))).toBeLessThan(Number(text.getAttribute("y")))
+    const d = pad.getAttribute("d") ?? ""
+    expect(d.startsWith("M ")).toBe(true)
+    expect(d.trim().endsWith("Z")).toBe(true)
+    const nums = [...d.matchAll(/-?\d+(?:\.\d+)?/g)].map(Number)
+    const ys = nums.filter((_, i) => i % 2 === 1)
+    expect(Math.min(...ys)).toBeLessThan(Number(text.getAttribute("y")))
 
     const ink = emphasized.getAttribute("fill")!
     expect(contrastRatio(ink, CONSULTING_TOKENS.colors.accent)).toBeGreaterThanOrEqual(
@@ -154,7 +148,7 @@ describe("paragraph component emphasis", () => {
     const { container } = svg(paragraph.render(long, { x: 0, y: 0, w: 260 }, consultingCtx))
     const group = container.querySelector("g")!
     const texts = Array.from(group.querySelectorAll("text"))
-    const pads = Array.from(group.querySelectorAll("rect"))
+    const pads = Array.from(group.querySelectorAll("[data-emphasis-pad]"))
 
     expect(texts.length).toBeGreaterThan(1)
     expect(pads).toHaveLength(texts.length)
