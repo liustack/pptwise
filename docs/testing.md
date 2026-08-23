@@ -281,6 +281,12 @@ before regenerating, read the diff and confirm it's the change you intended.
 Silently accepting a snapshot update is how visual regressions slip past
 review.
 
+The two unassigned-theme byte nails
+(`src/svg/__fixtures__/emphasis-unassigned-bytes.json` and
+`src/svg/heading-treatments/__fixtures__/unassigned-bytes.json`) recapture
+with `pnpm fixtures:unassigned-bytes` after an intended renderer change,
+never by editing hashes by hand.
+
 ## PowerPoint repair-dialog gate
 
 Native PowerPoint is stricter than LibreOffice and pptxgenjs about DrawingML
