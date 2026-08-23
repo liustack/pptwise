@@ -5,6 +5,7 @@ import { assertSubset } from "../../subset-validate"
 import { buildCtx } from "../../full-slide-svg"
 import { resolveStyle } from "../../../themes"
 import { __pathBoundingBox } from "../../audit/deck-audit"
+import { measureTextUnits } from "../../../lib/svg-text-layout"
 import { StatementContent } from "../content-statement"
 import { StatHeroContent } from "../content-stat-hero"
 import { OneEvidenceContent } from "../content-one-evidence"
@@ -58,13 +59,19 @@ describe("tech sparse faces", () => {
     expect(hero.getAttribute("font-weight")).toBe("700")
     expect(hero.getAttribute("fill")).toBe(ctx.colors.accent)
     const line = root.querySelector("line")
-    expect(line?.getAttribute("x1")).toBe("110")
-    expect(line?.getAttribute("x2")).toBe("600")
+    const heroW = measureTextUnits(hero.textContent ?? "", {
+      bold: true,
+      fontFamily: ctx.fonts.heading,
+    }) * Number(hero.getAttribute("font-size"))
+    const trackMid = 96 + heroW / 2
+    const span = Math.min(490, Math.max(160, heroW))
+    expect(Number(line?.getAttribute("x1"))).toBeCloseTo(trackMid - span / 2, 0)
+    expect(Number(line?.getAttribute("x2"))).toBeCloseTo(trackMid + span / 2, 0)
     expect(line?.getAttribute("y1")).toBe("505")
     const circles = Array.from(root.querySelectorAll("circle"))
     expect(circles).toHaveLength(4)
-    expect(circles.map((c) => c.getAttribute("cx"))).toEqual(["110", "272", "436", "600"])
-    expect(circles.every((c) => Number(c.getAttribute("cx")) < 700)).toBe(true)
+    const cxs = circles.map((c) => Number(c.getAttribute("cx")))
+    expect((cxs[0]! + cxs[3]!) / 2).toBeCloseTo(trackMid, 0)
     expect(circles.map((c) => c.getAttribute("r"))).toEqual(["5", "3.5", "3.5", "5"])
     expect(circles.every((c) => c.getAttribute("fill") === ctx.colors.accent)).toBe(true)
     expect(markup).not.toContain(LUXE_GOLD)

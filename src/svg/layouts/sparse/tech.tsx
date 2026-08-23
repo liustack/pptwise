@@ -2,28 +2,40 @@ import type { SvgTemplateProps } from "../types"
 import { pickEvidence } from "../../component-traits"
 import { renderEmphasisTspans } from "../../emphasis"
 import { heroCaption, heroSource, heroValue } from "../minimal-shared"
-import { fitSvgLine } from "../../../lib/svg-text-layout"
+import { fitSvgLine, measureTextUnits } from "../../../lib/svg-text-layout"
 import { renderFittedEvidence, textColumnMaxWidth } from "../fitted-evidence"
 import { evidenceSource, fitHeroLine, fitSparseHeading, pad2 } from "./shared"
 
 /** tech 稀排脸：青光巨数、轨道格言、节点证据卡。不画右缘星座链。 */
 
-const STAR_DOTS: { cx: number; r: number }[] = [
-  { cx: 110, r: 5 },
-  { cx: 272, r: 3.5 },
-  { cx: 436, r: 3.5 },
-  { cx: 600, r: 5 },
-]
+const STAR_R = [5, 3.5, 3.5, 5] as const
+const STAR_SPAN = 490
+const HERO_X = 96
+const STAR_Y = 505
+
+function starTrack(heroWidth: number): { x1: number; x2: number; dots: { cx: number; r: number }[] } {
+  const span = Math.min(STAR_SPAN, Math.max(160, heroWidth))
+  const x1 = Math.round(HERO_X + Math.max(0, heroWidth - span) / 2)
+  const x2 = x1 + span
+  const step = span / (STAR_R.length - 1)
+  return {
+    x1,
+    x2,
+    dots: STAR_R.map((r, i) => ({ cx: Math.round(x1 + i * step), r })),
+  }
+}
 
 export function statHero({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const fitted = fitHeroLine(heroValue(slide), { maxWidth: 1100, fontSize: 300, fontFamily: fonts.heading, bold: true })
   const caption = heroCaption(slide)
   const source = heroSource(slide)
+  const heroWidth = measureTextUnits(fitted.text, { bold: true, fontFamily: fonts.heading }) * fitted.fontSize
+  const track = starTrack(heroWidth)
   return (
     <>
       <text
-        x={96}
+        x={HERO_X}
         y={450}
         fontFamily={fonts.heading}
         fontSize={fitted.fontSize}
@@ -33,9 +45,9 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
       >
         {fitted.text}
       </text>
-      <line x1={110} y1={505} x2={600} y2={505} stroke={colors.border} strokeWidth={1.5} />
-      {STAR_DOTS.map((dot) => (
-        <circle key={dot.cx} cx={dot.cx} cy={505} r={dot.r} fill={colors.accent} />
+      <line x1={track.x1} y1={STAR_Y} x2={track.x2} y2={STAR_Y} stroke={colors.border} strokeWidth={1.5} />
+      {track.dots.map((dot) => (
+        <circle key={dot.cx} cx={dot.cx} cy={STAR_Y} r={dot.r} fill={colors.accent} />
       ))}
       {caption && (
         <text x={96} y={574} fontFamily={fonts.body} fontSize={25} fill={colors.text} dominantBaseline="alphabetic">
