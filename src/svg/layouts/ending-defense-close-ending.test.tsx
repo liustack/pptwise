@@ -47,9 +47,9 @@ function renderEnding(themeId: string, s: Slide = slide(), meta: PptxIR["meta"] 
 }
 
 describe("ending-defense-close-ending — board geometry", () => {
-  it("draws CONCLUSIONS, three conclusions, a foot rule, and the subheading sign-off", () => {
+  it("draws 结论, three conclusions, a foot rule, and the subheading sign-off", () => {
     const { root, tokens } = renderEnding("academic")
-    const kicker = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "CONCLUSIONS")
+    const kicker = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "结论")
     expect(kicker?.getAttribute("y")).toBe("140")
     expect(kicker?.getAttribute("letter-spacing")).toBe("8")
 
@@ -76,6 +76,17 @@ describe("ending-defense-close-ending — board geometry", () => {
     expect(texts).not.toMatch(/谢谢/)
     expect(markup).not.toContain("恳请各位老师批评指正")
     expect(texts).toContain("CONCLUSIONS")
+  })
+
+  it("uses CONCLUSIONS on a Latin-only ending", () => {
+    const latin = slide({
+      heading: "One.\nTwo.\nThree.",
+      subheading: "Comments welcome",
+    })
+    const { root } = renderEnding("academic", latin)
+    const texts = Array.from(root.querySelectorAll("text")).map((t) => t.textContent ?? "")
+    expect(texts).toContain("CONCLUSIONS")
+    expect(texts).not.toContain("结论")
   })
 
   it("reads bullets as the list and subheading as the sign-off", () => {

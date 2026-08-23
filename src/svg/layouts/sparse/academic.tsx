@@ -153,9 +153,6 @@ export function statement({ ir, slide, index, ctx }: SvgTemplateProps) {
           })}
         </text>
       ))}
-      <circle cx={616} cy={430} r={3} fill={colors.accent} />
-      <circle cx={640} cy={430} r={3} fill={colors.accent} />
-      <circle cx={664} cy={430} r={3} fill={colors.accent} />
       <text
         x={640}
         y={500}

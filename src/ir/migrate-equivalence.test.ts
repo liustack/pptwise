@@ -930,6 +930,10 @@ describe("v3 → v4 migration equivalence (task 1 hard gate, spec §10/§12)", (
       // lifts into the foreground at the theme color. Identity marks stay
       // in mid unfaded. Ordinary midground still recedes. Empty `data-decor`
       // groups remain as the motif marker. Audit goldens stayed empty.
+      // Recaptured (r2 components, 2026-08-24). Marker-pen emphasis pads,
+      // rail-numbered cap-dot removal, and stacked-poster strip divider
+      // removal move consulting `basic` SVG/PPTX. Journal fixtures move
+      // only where those layouts land. `.audit.json` stayed empty.
       it("renders SVG byte-identical to the base-commit (pre-rename) capture, slide for slide", () => {
         const goldenSvgs = readGoldenJson<string[]>(`${name}.svg`)
         const migratedSvgs = v4.slides.map((_, i) => renderSlideSvg(v4, i))

@@ -194,7 +194,14 @@ export function themeDeck(themeId: string, lex: Lexicon, assets: CorpusAssets): 
     },
     { type: "chapter", heading: lex.chapters[0]!, subheading: lex.kickers[0], components: [] },
     ...content,
-    { type: "ending", heading: lex.chapters[5]!, subheading: lex.verdicts.positive, components: [] },
+    themeId === "academic"
+      ? {
+          type: "ending" as const,
+          heading: lex.chapters[5]!,
+          subheading: lex.verdicts.positive,
+          components: [{ type: "bullets" as const, items: lex.bullets.slice(0, 3) }],
+        }
+      : { type: "ending" as const, heading: lex.chapters[5]!, subheading: lex.verdicts.positive, components: [] },
   ]
   return deckShell(lex, assets, themeId, `theme-${themeId}-${lex.id}`, slides)
 }

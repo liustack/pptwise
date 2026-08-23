@@ -69,7 +69,6 @@ const RAIL_X = 48
 const RAIL_Y = 96
 const RAIL_W = 4
 const RAIL_H = 544
-const RAIL_NODE_R = 7
 
 // BADGE_Y=96 (not 64) keeps the badge clear of Branding's tl logo band
 // (x 64-160, y 48-88) — mirrors the Cover confLabel fix (see
@@ -119,9 +118,8 @@ export function RailNumberedContent({ ir, slide, index, ctx }: SvgTemplateProps)
   )
   const { colors, fonts } = ctx
 
-  const totalChapters = ir.slides.filter((s) => s.type === "chapter").length
   // A content slide with no chapter before it (malformed/edge-case deck) is
-  // clamped to chapter 1 rather than showing "0.n" or a negative rail ratio.
+  // clamped to chapter 1 rather than showing "0.n".
   const chNum = Math.max(1, chapterNumberFor(ir.slides, index))
   const contentNum = contentIndexInChapter(ir.slides, index)
   const badgeLabel = fitSvgLine(`${chNum}.${contentNum}`, {
@@ -129,11 +127,6 @@ export function RailNumberedContent({ ir, slide, index, ctx }: SvgTemplateProps)
     fontSize: BADGE_FONT_SIZE,
     minFontSize: 16,
   })
-
-  const railNodeCy =
-    totalChapters <= 1
-      ? RAIL_Y
-      : RAIL_Y + RAIL_H * ((chNum - 1) / (totalChapters - 1))
 
   const heading = fitHeadingLines(slide.heading, {
     maxWidth: TITLE_MAX_W,
@@ -202,7 +195,6 @@ export function RailNumberedContent({ ir, slide, index, ctx }: SvgTemplateProps)
       <>
         {treated.chrome}
         <rect x={RAIL_X} y={RAIL_Y} width={RAIL_W} height={RAIL_H} fill={colors.primary} />
-        <circle cx={RAIL_X + RAIL_W / 2} cy={railNodeCy} r={RAIL_NODE_R} fill={colors.primary} />
         <rect
           x={BADGE_X}
           y={BADGE_Y}
@@ -245,9 +237,8 @@ export function RailNumberedContent({ ir, slide, index, ctx }: SvgTemplateProps)
 
   return (
     <>
-      {/* Left numbered rail: fixed track + a node marking chapter progress */}
+      {/* Left numbered rail. No cap dot: isolated filled circles are banned. */}
       <rect x={RAIL_X} y={RAIL_Y} width={RAIL_W} height={RAIL_H} fill={colors.primary} />
-      <circle cx={RAIL_X + RAIL_W / 2} cy={railNodeCy} r={RAIL_NODE_R} fill={colors.primary} />
 
       {/* "{chapter}.{content}" number badge, replacing the old section kicker */}
       <rect
