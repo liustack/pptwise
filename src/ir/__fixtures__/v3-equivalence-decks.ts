@@ -25,11 +25,11 @@
 export const V3_EQUIVALENCE_DECKS: Record<string, unknown> = {
   basic: {
     version: "3",
-    filename: "pptpress-basic-demo",
+    filename: "pptwise-basic-demo",
     theme: { id: "consulting" },
-    meta: { organization: "pptpress", date: "2026-07-17" },
+    meta: { organization: "pptwise", date: "2026-07-17" },
     slides: [
-      { type: "cover", heading: "pptpress", subheading: "Stable, editable PPTX from a semantic IR" },
+      { type: "cover", heading: "pptwise", subheading: "Stable, editable PPTX from a semantic IR" },
       { type: "chapter", heading: "Why an IR" },
       {
         type: "content",

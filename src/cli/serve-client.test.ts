@@ -6,7 +6,7 @@
 // exercised it.
 //
 // What remains is a pin on the removal itself. The submit control read its
-// payload from `window.__pptpressBuildExportBlob`, the export function the
+// payload from `window.__pptwiseBuildExportBlob`, the export function the
 // preview's annotation panel installed; the panel was removed on 2026-08-16
 // (see `preview-html.test.ts`), which left the hook hunting for a button
 // that no longer existed and a payload nothing produced. Dead on both ends,
@@ -18,7 +18,7 @@ import { SERVE_CLIENT_JS } from "./serve"
 
 describe("SERVE_CLIENT_JS", () => {
   it("carries no revision-request submit flow, because nothing produces its payload", () => {
-    expect(SERVE_CLIENT_JS).not.toContain("__pptpressBuildExportBlob")
+    expect(SERVE_CLIENT_JS).not.toContain("__pptwiseBuildExportBlob")
     expect(SERVE_CLIENT_JS).not.toContain("setUpRevisionRequestSubmit")
     expect(SERVE_CLIENT_JS).not.toContain("/revision-request")
   })

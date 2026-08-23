@@ -678,7 +678,7 @@ describe("v3 → v4 migration equivalence (task 1 hard gate, spec §10/§12)", (
       // `.audit.json` goldens stayed byte-identical. PPTX part-name sets
       // stayed identical. Shape-count delta matches the SVG trio 1:1:
       //   - `basic`: SVG slides 2/3 (content) lose the rule plus two meta
-      //     texts (`2026-07-17` / `pptpress`). PPTX `slide{3,4}.xml` lose
+      //     texts (`2026-07-17` / `pptwise`). PPTX `slide{3,4}.xml` lose
       //     three shapes each (14->11, 18->15).
       //   - `scenarioBearing`: SVG slides 1/2/3 (content) lose the rule
       //     only (this fixture has no meta). PPTX `slide{2,3,4}.xml` lose
@@ -1059,9 +1059,11 @@ describe("v3 → v4 migration equivalence (task 1 hard gate, spec §10/§12)", (
       // (ghost-rule-chapter), `slide5.xml` (pinned banner-ending, motif
       // only). File-name set unchanged. Journal fixtures not recaptured.
       //
-      // Recaptured (pptpress rename, 2026-08-23). Fixture text on `basic`
-      // changed `pptfast` → `pptpress` (cover heading, organization meta,
-      // ending colophon). Replay of `PptxIRV3Schema.parse` →
+      // Recaptured (pptwise rename, 2026-08-23). Fixture text on `basic`
+      // changed `pptpress` → `pptwise` (cover heading, organization meta,
+      // filename, ending colophon). The filename change re-seeds auto
+      // layout pick: slide 3 content "At a glance" `stacked-poster` ->
+      // `two-column`. Replay of `PptxIRV3Schema.parse` →
       // `migrateIrV3ToV4` → `renderSlideSvg` / `generatePptxBlob` /
       // `auditDeck`. Only `basic` `.svg.json` and `.pptx-zip.json` moved.
       // `.audit.json` findings stayed empty. Journal fixtures do not name

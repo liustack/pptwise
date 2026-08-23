@@ -5,10 +5,10 @@ Read this when writing `deck.spec.json`, choosing page types (`cover` / `chapter
 ### Phase 1 — Read the vocabulary (do this fresh every session)
 
 ```bash
-pptpress schema             # IR JSON Schema: the single source of truth
-pptpress schema --spec      # deck spec schema
-pptpress narratives --json  # named narrative presets (strategy/pacing/audience axes + theme recommendations)
-pptpress themes --json      # built-in themes (id + label)
+pptwise schema             # IR JSON Schema: the single source of truth
+pptwise schema --spec      # deck spec schema
+pptwise narratives --json  # named narrative presets (strategy/pacing/audience axes + theme recommendations)
+pptwise themes --json      # built-in themes (id + label)
 ```
 
 Never write IR or a spec from memory of a previous session or from this file — the schema evolves and `schema`/`narratives`/`themes` output always wins.
@@ -16,7 +16,7 @@ Never write IR or a spec from memory of a previous session or from this file —
 Also scan the workspace before asking anyone anything. Facts the files can answer are not questions:
 
 - An existing confirmed `deck.spec.json` already locks narrative, theme, and branding. Do not re-interview. Route follow-ups through phase 6.
-- A `theme.json`, a pinned `pptpress.config.json` theme, a user-named theme id, or a supplied `.thmx` / `.potx` / branded `.pptx` is a brand signal. Extract or honor it. Do not ask whether a template exists.
+- A `theme.json`, a pinned `pptwise.config.json` theme, a user-named theme id, or a supplied `.thmx` / `.potx` / branded `.pptx` is a brand signal. Extract or honor it. Do not ask whether a template exists.
 - Request text that already names the audience, argument style, or density has derived that axis. Do not re-ask it.
 
 A brand signal answers what the deck should look like, never how it should argue. The full rule lives in `references/branding.md`.
@@ -50,8 +50,8 @@ Propose and confirm before writing any page content.
 - Theme id comes from the chosen narrative's `themeRecommendations` in `narratives --json` (or from `themes` output if none fit — a recommendation, never a constraint). If the interview's brand question returned a template, extract it first — see `references/branding.md`.
 - Write the confirmed `narrative`, `theme`, and `branding` into `deck.spec.json` as soon as the user agrees, before drafting any page. Do not hold them in the conversation and reconstruct them once pages exist.
 - Draft `deck.spec.json`: one entry per page (`id`, `type`, `heading`, optionally `beat`/`focus`/`summary`) — opens on `cover`, closes on `ending`, everything in between is `content` or `chapter`. Write `narrative` as a preset id string when the three axes match a preset exactly, otherwise as `{strategy, pacing, audience}`. Never write `{id, pacing}` mixed shapes. Omit `branding` by default. Write `branding: "full"` only when every content page needs the brand footer (and whenever `meta.confidentiality` is `confidential` or `restricted`). Do not invent a `typeScale` field on the spec — it does not exist. The band is a recommendation. Only a bare IR (spec skipped) may put `theme.style.shape.typeScale` on the IR itself.
-- Run `pptpress spec validate deck.spec.json` and fix whatever it reports until it prints `OK` — the hard gates (boundary pages, heading length, beat rotation, page count vs. pacing) all fire here, before a single page is written
-- Once `spec validate` prints `OK`, set a `seed` (any integer) in `deck.spec.json` for revision stability — write one now, or run `pptpress assemble` once in phase 3 and copy the `generated seed …` value it prints into the spec. Without a persisted seed, editing one page's heading later can reshuffle every other page's auto-picked layout
+- Run `pptwise spec validate deck.spec.json` and fix whatever it reports until it prints `OK` — the hard gates (boundary pages, heading length, beat rotation, page count vs. pacing) all fire here, before a single page is written
+- Once `spec validate` prints `OK`, set a `seed` (any integer) in `deck.spec.json` for revision stability — write one now, or run `pptwise assemble` once in phase 3 and copy the `generated seed …` value it prints into the spec. Without a persisted seed, editing one page's heading later can reshuffle every other page's auto-picked layout
 
 **After the user confirms the validated spec, do not re-spec.** Restructuring a confirmed spec (reordering, retyping, dropping pages) silently wastes the user's review. If new information genuinely forces a change, say so and re-confirm first, then re-run `spec validate`.
 
@@ -98,7 +98,7 @@ After the reply, emit one package and one backup, one sentence of reason, one cl
 
 Lookup (theme = first `themeRecommendations` entry from `narratives --json` for that preset, or for the nearest preset when writing axes). Omit the field by default. Write `"full"` when `meta.confidentiality` is `confidential` or `restricted`, or every content page needs the brand footer. `customer` + `talk-pyramid` + `spacious` → `pitch` / omit / display. `executive` + `talk-pyramid` + `spacious` → `boardroom-report` / omit / display. `customer` + `talk-showcase` + `spacious` → `product-launch` / omit / display. `technical` + `teach` + `balanced` → `training` / omit / regular. `technical` + `read-brief` + `dense` → `weekly-brief` / omit / regular. `executive` + `read-brief` + `dense` → axes `{pyramid, dense, executive}` / omit / regular, theme from `boardroom-report`. `public` + storytelling + `balanced` → `annual-review` / omit / regular. Else write the axes object and take the nearest preset's theme list: `pyramid`+`executive` → `boardroom-report`, `pyramid`+`customer` → `pitch`, `showcase` → `product-launch`, `instructional` → `training`, `briefing`+`dense` → `weekly-brief`, `storytelling` → `annual-review`, else `general`.
 
-Type-scale band: `regular` when `dense` or `balanced`. `display` when `spacious`. `hero` only on a repaint that switches the theme to `stage`. Do not retarget a boardroom deck to `stage` just to enlarge titles. Do not write `typeScale` onto `deck.spec.json`. Do not edit a repo-root `pptpress.config.json` for one deck. On a bare IR (spec skipped) a non-`regular` band may be written as `theme.style.shape.typeScale` 1.3 or 1.5.
+Type-scale band: `regular` when `dense` or `balanced`. `display` when `spacious`. `hero` only on a repaint that switches the theme to `stage`. Do not retarget a boardroom deck to `stage` just to enlarge titles. Do not write `typeScale` onto `deck.spec.json`. Do not edit a repo-root `pptwise.config.json` for one deck. On a bare IR (spec skipped) a non-`regular` band may be written as `theme.style.shape.typeScale` 1.3 or 1.5.
 
 The second candidate ships with the package, prepared in advance, and it has to differ in mechanism: flip density (`spacious` ↔ `dense`, type-scale follows), or flip what leads the argument (`pitch` ↔ `product-launch`, `training` ↔ the same material as a dense handout). The same three axes in a different theme is a repaint, not a candidate — offer that only when the user rejected the look, and say the narrative did not move. `stage` × `hero` is the repaint for a showcase that wanted bigger titles. Do not flip all three axes at once.
 

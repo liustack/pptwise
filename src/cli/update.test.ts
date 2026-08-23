@@ -14,7 +14,7 @@ describe("checkForUpdate", () => {
   it("reports an available update via npm view", async () => {
     const run = vi.fn().mockResolvedValue("9.9.9")
     const info = await checkForUpdate({ currentVersion: "0.1.0", run })
-    expect(run).toHaveBeenCalledWith("npm", ["view", "@liustack/pptpress", "version"])
+    expect(run).toHaveBeenCalledWith("npm", ["view", "@liustack/pptwise", "version"])
     expect(info).toMatchObject({ updateAvailable: true, latestVersion: "9.9.9", checked: true })
   })
 
@@ -29,7 +29,7 @@ describe("createSelfUpdater", () => {
   it("installs latest when behind", async () => {
     const run = vi.fn().mockResolvedValue("9.9.9")
     const result = await createSelfUpdater(run)({ currentVersion: "0.1.0" })
-    expect(run).toHaveBeenCalledWith("npm", ["install", "-g", "@liustack/pptpress@latest"])
+    expect(run).toHaveBeenCalledWith("npm", ["install", "-g", "@liustack/pptwise@latest"])
     expect(result.updated).toBe(true)
   })
 

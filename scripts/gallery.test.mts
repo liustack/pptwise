@@ -314,7 +314,7 @@ describe("gallery corpus", () => {
     const { join } = await import("node:path")
 
     const jobs = buildMatrix(themeIds, await assets())
-    const outDir = mkdtempSync(join(tmpdir(), "pptpress-gallery-"))
+    const outDir = mkdtempSync(join(tmpdir(), "pptwise-gallery-"))
     const { manifest } = renderMatrix(jobs, outDir, "test")
 
     const failures = manifest.pages.filter((p) => p.skipped).map((p) => `${p.id}: ${p.skipped}`)
@@ -332,7 +332,7 @@ describe("gallery corpus", () => {
     const { join } = await import("node:path")
 
     const jobs = buildMatrix(themeIds, await assets(), { only: "component", languages: ["zh"] })
-    const outDir = mkdtempSync(join(tmpdir(), "pptpress-gallery-fp-"))
+    const outDir = mkdtempSync(join(tmpdir(), "pptwise-gallery-fp-"))
     const { manifest } = renderMatrix(jobs, outDir, "test")
 
     const unfingerprinted = manifest.pages
@@ -409,7 +409,7 @@ describe("gallery page", () => {
     const { join } = await import("node:path")
 
     const jobs = buildMatrix(themeIds, await assets(), { only: "component", languages: ["zh"] })
-    const outDir = mkdtempSync(join(tmpdir(), "pptpress-gallery-html-"))
+    const outDir = mkdtempSync(join(tmpdir(), "pptwise-gallery-html-"))
     const { manifest, svgs } = renderMatrix(jobs, outDir, "test")
     const html = buildGalleryHtml(manifest, svgs)
 
@@ -439,7 +439,7 @@ describe("gallery page", () => {
     const vm = await import("node:vm")
 
     const jobs = buildMatrix(themeIds, await assets(), { only: "component", languages: ["zh"] })
-    const outDir = mkdtempSync(join(tmpdir(), "pptpress-gallery-parse-"))
+    const outDir = mkdtempSync(join(tmpdir(), "pptwise-gallery-parse-"))
     const { manifest, svgs } = renderMatrix(jobs, outDir, "test")
     const html = buildGalleryHtml(manifest, svgs)
 
@@ -462,7 +462,7 @@ describe("gallery page", () => {
     const { join } = await import("node:path")
 
     const jobs = buildMatrix(themeIds, await assets(), { only: "component", languages: ["zh"] })
-    const outDir = mkdtempSync(join(tmpdir(), "pptpress-gallery-rule-"))
+    const outDir = mkdtempSync(join(tmpdir(), "pptwise-gallery-rule-"))
     const { manifest, svgs } = renderMatrix(jobs, outDir, "test")
     const html = buildGalleryHtml(manifest, svgs)
 
@@ -479,7 +479,7 @@ describe("gallery page", () => {
     const { join } = await import("node:path")
 
     const jobs = buildMatrix(themeIds, await assets(), { only: "component", languages: ["zh"] })
-    const outDir = mkdtempSync(join(tmpdir(), "pptpress-gallery-esc-"))
+    const outDir = mkdtempSync(join(tmpdir(), "pptwise-gallery-esc-"))
     const { manifest, svgs } = renderMatrix(jobs, outDir, "test")
     const html = buildGalleryHtml(manifest, svgs)
 
@@ -506,7 +506,7 @@ describe("gallery page", () => {
     const { join } = await import("node:path")
 
     const jobs = buildMatrix(themeIds, await assets(), { only: "theme", themeLanguage: "zh" })
-    const outDir = mkdtempSync(join(tmpdir(), "pptpress-gallery-edge-"))
+    const outDir = mkdtempSync(join(tmpdir(), "pptwise-gallery-edge-"))
     const { manifest, svgs } = renderMatrix(jobs, outDir, "test")
     const html = buildGalleryHtml(manifest, svgs)
 
@@ -538,7 +538,7 @@ describe("gallery density table", () => {
     const { join } = await import("node:path")
 
     const jobs = buildMatrix(themeIds, await assets(), { only: "density" })
-    const outDir = mkdtempSync(join(tmpdir(), "pptpress-gallery-density-"))
+    const outDir = mkdtempSync(join(tmpdir(), "pptwise-gallery-density-"))
     const { svgs } = renderMatrix(jobs, outDir, "test")
 
     const marked = [...svgs].filter(([, svg]) => /data-dropped="[1-9]/.test(svg)).map(([id]) => id)

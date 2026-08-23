@@ -1,5 +1,5 @@
 import type JSZip from "jszip"
-import { PptpressError } from "../errors"
+import { PptwiseError } from "../errors"
 
 /**
  * Whole-file byte determinism (P0 hardening, Task 4 — D4 in the robustness
@@ -81,7 +81,7 @@ const CORE_TIMESTAMP_RE =
  * reached through `finalizePptxZip` without ever sealing it (carried-items
  * wave, fix round — review finding F1).
  *
- * Deliberately its own subclass, not a bare `throw new PptpressError(...)`:
+ * Deliberately its own subclass, not a bare `throw new PptwiseError(...)`:
  * `generate.ts`'s call site for `dedupeMediaInZip` already wraps that call
  * in a broad, intentionally-forgiving `try/catch` (documented since
  * 85ebc1e, "a media-dedupe failure is not a reason to abandon export" — a
@@ -92,12 +92,12 @@ const CORE_TIMESTAMP_RE =
  * pipeline entirely* — reordered to run after `normalizePptxTimestamps`
  * sealed the zip — a programming-invariant failure the original catch was
  * never written to anticipate and must not silently absorb. Still an
- * `instanceof PptpressError` (extends it), so anything already catching that
+ * `instanceof PptwiseError` (extends it), so anything already catching that
  * broader class unconditionally elsewhere is unaffected — only a call site
  * that specifically checks `instanceof PptxSealViolationError` before its
  * own catch (see `generate.ts`'s own such check) can tell the two apart.
  */
-export class PptxSealViolationError extends PptpressError {}
+export class PptxSealViolationError extends PptwiseError {}
 
 /**
  * Zip instances `normalizePptxTimestamps` has already run on (carried-items

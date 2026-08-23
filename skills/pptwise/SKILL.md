@@ -1,11 +1,11 @@
 ---
-name: pptpress
-description: Generate a native, editable PPTX deck from an outline, notes, or a document using the pptpress CLI (semantic IR → validate → render). Use when the user asks to create a PPT, deck, presentation, or slides (做PPT/生成PPT/制作演示文稿/幻灯片) and wants a stable, editable, brand-consistent result rather than freeform drawn slides.
+name: pptwise
+description: Generate a native, editable PPTX deck from an outline, notes, or a document using the pptwise CLI (semantic IR → validate → render). Use when the user asks to create a PPT, deck, presentation, or slides (做PPT/生成PPT/制作演示文稿/幻灯片) and wants a stable, editable, brand-consistent result rather than freeform drawn slides.
 ---
 
-# pptpress — deck generation playbook
+# pptwise — deck generation playbook
 
-pptpress turns a JSON IR (intermediate representation) into a native DrawingML `.pptx` — every shape stays editable in PowerPoint. You own the content model. The tool owns layout, style, and motion. You never draw SVG or position anything: pick from a controlled vocabulary and let the validate gate catch what will not fit.
+pptwise turns a JSON IR (intermediate representation) into a native DrawingML `.pptx` — every shape stays editable in PowerPoint. You own the content model. The tool owns layout, style, and motion. You never draw SVG or position anything: pick from a controlled vocabulary and let the validate gate catch what will not fit.
 
 ## Run it
 
@@ -16,42 +16,42 @@ bash <skill-dir>/scripts/run.sh <args>                                       # m
 powershell -ExecutionPolicy Bypass -File <skill-dir>\scripts\run.ps1 <args>  # Windows
 ```
 
-It tries a compatible `pptpress` on `PATH` first, then `npx`, then `bunx`, forwarding your arguments and its exit code unchanged. Nothing to install first, and the version it runs is pinned to this skill. Exit 78 means no runtime at all: relay the `nextSteps` from its stderr JSON instead of retrying.
+It tries a compatible `pptwise` on `PATH` first, then `npx`, then `bunx`, forwarding your arguments and its exit code unchanged. Nothing to install first, and the version it runs is pinned to this skill. Exit 78 means no runtime at all: relay the `nextSteps` from its stderr JSON instead of retrying.
 
-Wherever this playbook writes `pptpress <args>`, run it through that launcher.
+Wherever this playbook writes `pptwise <args>`, run it through that launcher.
 
-Right after an install, and any time a command misbehaves in a way the error message does not explain, run `pptpress doctor` before anything else. It reports the runtime, every installed skill copy and whether one is stale, the dsh plugin's version, which optional capabilities are present, and a self-test render. Relay what it says instead of guessing.
+Right after an install, and any time a command misbehaves in a way the error message does not explain, run `pptwise doctor` before anything else. It reports the runtime, every installed skill copy and whether one is stale, the dsh plugin's version, which optional capabilities are present, and a self-test render. Relay what it says instead of guessing.
 
 If your harness forbids running scripts, work down the same order by hand and use the first line that applies:
 
-1. A `pptpress` on `PATH` at the same major version as the pin below and no older: `pptpress <args>`.
-2. Otherwise, if `npx` exists: `npx --yes --package @liustack/pptpress@0.21.0 pptpress <args>`.
-3. Otherwise, if `bunx` exists: `bunx --bun @liustack/pptpress@0.21.0 <args>`.
-4. Otherwise tell the user no JavaScript runtime was found, and that installing Node 22.19+ (https://nodejs.org) or Bun (https://bun.sh) is the next step. Do not report pptpress itself as broken.
+1. A `pptwise` on `PATH` at the same major version as the pin below and no older: `pptwise <args>`.
+2. Otherwise, if `npx` exists: `npx --yes --package @liustack/pptwise@0.22.0 pptwise <args>`.
+3. Otherwise, if `bunx` exists: `bunx --bun @liustack/pptwise@0.22.0 <args>`.
+4. Otherwise tell the user no JavaScript runtime was found, and that installing Node 22.19+ (https://nodejs.org) or Bun (https://bun.sh) is the next step. Do not report pptwise itself as broken.
 
 ## Workflow
 
-Interview → spec → pages → validate → audit → render. Re-enter at the smallest step that captures a change. A very small deck (a handful of slides) may skip the spec file and write a single IR, still validating with `pptpress validate`. Never write IR or a spec from memory of a previous session or from this file. Run these fresh every session:
+Interview → spec → pages → validate → audit → render. Re-enter at the smallest step that captures a change. A very small deck (a handful of slides) may skip the spec file and write a single IR, still validating with `pptwise validate`. Never write IR or a spec from memory of a previous session or from this file. Run these fresh every session:
 
 ```bash
-pptpress schema             # IR JSON Schema: the single source of truth
-pptpress schema --spec      # deck spec schema
-pptpress narratives --json  # named narrative presets (strategy/pacing/audience axes + theme recommendations)
-pptpress themes --json      # built-in themes (id + label)
+pptwise schema             # IR JSON Schema: the single source of truth
+pptwise schema --spec      # deck spec schema
+pptwise narratives --json  # named narrative presets (strategy/pacing/audience axes + theme recommendations)
+pptwise themes --json      # built-in themes (id + label)
 ```
 
-Also scan the workspace before asking anyone anything. A confirmed `deck.spec.json` already locks narrative, theme, and branding: do not re-interview, revise that deck instead. A `theme.json`, pinned `pptpress.config.json` theme, user-named theme id, or supplied `.thmx` / `.potx` / branded `.pptx` is a brand signal: extract or honor it. Do not ask whether a template exists.
+Also scan the workspace before asking anyone anything. A confirmed `deck.spec.json` already locks narrative, theme, and branding: do not re-interview, revise that deck instead. A `theme.json`, pinned `pptwise.config.json` theme, user-named theme id, or supplied `.thmx` / `.potx` / branded `.pptx` is a brand signal: extract or honor it. Do not ask whether a template exists.
 
 **Boundary-page rule:** `chapter` and `ending` pages never render `components` or `footnote`. `cover` pages never render `footnote`. A `cover` may carry `components` only when its locked layout declares a slot for them. Today that is `verdict-index` (consulting), which reads the first `bullets` block as up to three numbered arguments. Every other cover layout still drops components. Put body content on a `content` page unless you are filling that consulting argument row. Wrong/right JSON and spec writing: `references/spec.md`.
 
 1. **Interview** (at most one round) when a user is present and any of audience, how it is told, or pacing is still unknown. Relay unresolved questions in **one** message, then stop. Do not fill them in. Q1–Q4, ★ defaults, lookup, `NARRATIVE_INTERVIEW` gate: `references/spec.md`.
-2. **Spec and confirm** before any page content. Write `deck.spec.json` (opens on `cover`, closes on `ending`, everything in between is `content` or `chapter`). Run `pptpress spec validate` until `OK`, then persist a `seed`. Do not re-spec a confirmed spec. How to write it: `references/spec.md`. Branding posture: `references/branding.md`.
+2. **Spec and confirm** before any page content. Write `deck.spec.json` (opens on `cover`, closes on `ending`, everything in between is `content` or `chapter`). Run `pptwise spec validate` until `OK`, then persist a `seed`. Do not re-spec a confirmed spec. How to write it: `references/spec.md`. Branding posture: `references/branding.md`.
 3. **Pages** in batches of at most 4. Write `pages/<id>.json` (`components`, optional `layout`/`notes`). Never write `type`/`heading`. Pin-only and sparse climax layouts: `references/layouts.md`. Component forms: `references/components.md`. Density, beat, capacity: `references/density.md`. Images: `references/images.md`.
-4. **Validate** after every batch: `pptpress assemble deck-dir/` then `pptpress validate deck-dir/` until both print `OK`. Restructure flagged content, never delete it. The assemble/validate/audit/preview/serve loop: `references/validate.md`.
-5. **Audit** once every page is filled: `pptpress audit deck-dir/` until exit 0. Do not substitute a screenshot. Then hand the deck over (`pptpress_preview`, else `preview --html`, else `serve --no-open`): `references/validate.md`.
-6. **Render:** `pptpress render deck-dir/`. Report the absolute path it prints. `--draft` and `--allow-dropped-content` only when the user says so.
+4. **Validate** after every batch: `pptwise assemble deck-dir/` then `pptwise validate deck-dir/` until both print `OK`. Restructure flagged content, never delete it. The assemble/validate/audit/preview/serve loop: `references/validate.md`.
+5. **Audit** once every page is filled: `pptwise audit deck-dir/` until exit 0. Do not substitute a screenshot. Then hand the deck over (`pptwise_preview`, else `preview --html`, else `serve --no-open`): `references/validate.md`.
+6. **Render:** `pptwise render deck-dir/`. Report the absolute path it prints. `--draft` and `--allow-dropped-content` only when the user says so.
 
-Follow-up: edit a page → steps 3–6 on that file only. A new deck → step 1. Unrelated → do not invoke pptpress.
+Follow-up: edit a page → steps 3–6 on that file only. A new deck → step 1. Unrelated → do not invoke pptwise.
 
 ## Component selection
 

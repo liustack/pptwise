@@ -1,4 +1,4 @@
-import { PptpressError } from "../errors"
+import { PptwiseError } from "../errors"
 import { findUserConfig } from "./config"
 import { userConfigPath } from "./home"
 import {
@@ -23,7 +23,7 @@ function canOmitValue(key: string): boolean {
 
 export async function runConfigSet(key: string, value: string | undefined, opts: ConfigSetOptions = {}): Promise<string> {
   if (value === undefined && !canOmitValue(key)) {
-    throw new PptpressError(`${key} needs a value: pptpress config set ${key} <value>`)
+    throw new PptwiseError(`${key} needs a value: pptwise config set ${key} <value>`)
   }
   const parsed = parseCliConfigKey(key)
   let resolved = value

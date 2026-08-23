@@ -165,7 +165,7 @@ const EASED_STEP = 0.01
  * the same ~4.38-4.44 ratio this comment names
  * (`heatmap-deadzone.test.ts` pins this against a real `registerTheme` +
  * `auditDeck` reconstruction of the confined case, plus a straddling
- * control that stays clean). `pptpress audit` is the deterministic backstop
+ * control that stays clean). `pptwise audit` is the deterministic backstop
  * for the residual this loop's own boundary clamp cannot itself close.
  */
 function hasSafeInk(hex: string): boolean {

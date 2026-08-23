@@ -50,7 +50,7 @@ function probeJob(): Job {
 describe("renderMatrix page prune", () => {
   it("deletes leftover pages this run did not write, and keeps the ones it did", () => {
     const job = probeJob()
-    const outDir = mkdtempSync(join(tmpdir(), "pptpress-gallery-prune-"))
+    const outDir = mkdtempSync(join(tmpdir(), "pptwise-gallery-prune-"))
     const pagesDir = join(outDir, "pages")
     const realPage = join(pagesDir, `${job.id}.svg`)
     const manifest = join(outDir, "manifest.json")
@@ -82,7 +82,7 @@ describe("renderMatrix page prune", () => {
 
 describe("pruneGalleryDir", () => {
   it("removes leftover root files and a stale bbox, keeping this run's names", () => {
-    const dir = mkdtempSync(join(tmpdir(), "pptpress-gallery-root-"))
+    const dir = mkdtempSync(join(tmpdir(), "pptwise-gallery-root-"))
     mkdirSync(join(dir, "pages"))
     writeFileSync(join(dir, "pages", "keep.svg"), "<svg />\n")
     writeFileSync(join(dir, "index.html"), "ok")
@@ -105,7 +105,7 @@ describe("pruneGalleryDir", () => {
   })
 
   it("keeps bbox.json only when this run produced it", () => {
-    const dir = mkdtempSync(join(tmpdir(), "pptpress-gallery-bbox-"))
+    const dir = mkdtempSync(join(tmpdir(), "pptwise-gallery-bbox-"))
     writeFileSync(join(dir, "index.html"), "ok")
     writeFileSync(join(dir, "manifest.json"), "{}\n")
     writeFileSync(join(dir, "bbox.json"), "this-run")

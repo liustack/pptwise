@@ -28,7 +28,7 @@
  * positional slide index.
  */
 import { z } from "zod"
-import { PptpressError } from "../errors"
+import { PptwiseError } from "../errors"
 import { BEAT_VALUES, BrandSchema, COMPONENT_TYPES, DeckBrandingSchema, MetaSchema, NarrativeProfileInputSchema } from "../ir"
 import { normalizeDeckRootAliases } from "../ir/field-aliases"
 import {
@@ -161,7 +161,7 @@ export const DeckSpecSchema = z
 
 export type DeckSpec = z.infer<typeof DeckSpecSchema>
 
-/** JSON Schema for the deck spec — feed this to a model before it writes one (see `pptpress schema --spec`). */
+/** JSON Schema for the deck spec — feed this to a model before it writes one (see `pptwise schema --spec`). */
 export function specJsonSchema(): Record<string, unknown> {
   return z.toJSONSchema(DeckSpecSchema) as Record<string, unknown>
 }
@@ -204,7 +204,7 @@ export function formatSpecIssues(errors: SpecValidationIssue[]): string {
 
 /**
  * `"invalid spec (N issue[s]):\n<formatted issues>"` — the exact
- * {@link PptpressError} message both `runSpecValidate` (`src/cli/commands.ts`)
+ * {@link PptwiseError} message both `runSpecValidate` (`src/cli/commands.ts`)
  * and {@link assembleDeck}'s (`./assemble.ts`) step 1 throw on a failed
  * {@link validateSpec} call. Extracted here instead of duplicated verbatim at
  * each call site so the two can't drift on wording — reuses
@@ -411,8 +411,8 @@ function checkTheme(spec: DeckSpec): SpecValidationIssue[] {
   if (installed.includes(themeId)) return []
   const message =
     themeId === "bloom"
-      ? 'theme id "bloom" was removed — run `pptpress migrate <input> -o <output>` to rewrite it to "classroom"'
-      : `unknown theme "${themeId}" — available: ${installed.join(", ")} (see \`pptpress themes\`)`
+      ? 'theme id "bloom" was removed — run `pptwise migrate <input> -o <output>` to rewrite it to "classroom"'
+      : `unknown theme "${themeId}" — available: ${installed.join(", ")} (see \`pptwise themes\`)`
   return [{ path: "theme", message }]
 }
 
@@ -449,7 +449,7 @@ function checkFocusVocabulary(spec: DeckSpec, strategy: Strategy): SpecValidatio
         path: `pages.${i}.focus`,
         pageId: page.id,
         message:
-          'component type "logo_wall" was removed — run `pptpress migrate <input> -o <output>` to rewrite it to "image_grid"',
+          'component type "logo_wall" was removed — run `pptwise migrate <input> -o <output>` to rewrite it to "image_grid"',
       })
       return
     }
@@ -458,7 +458,7 @@ function checkFocusVocabulary(spec: DeckSpec, strategy: Strategy): SpecValidatio
         path: `pages.${i}.focus`,
         pageId: page.id,
         message:
-          'layout "banner-heading" was removed — run `pptpress migrate <input> -o <output>` to rewrite it to "two-column"',
+          'layout "banner-heading" was removed — run `pptwise migrate <input> -o <output>` to rewrite it to "two-column"',
       })
       return
     }
@@ -754,7 +754,7 @@ export function validateSpec(input: unknown): SpecValidateResult {
   try {
     resolvedAxes = resolveNarrative(spec.narrative as string | Partial<NarrativeProfile> | undefined)
   } catch (err) {
-    if (!(err instanceof PptpressError)) throw err
+    if (!(err instanceof PptwiseError)) throw err
     return withNormalized({ ok: false, errors: [{ path: "narrative", message: err.message }] })
   }
 

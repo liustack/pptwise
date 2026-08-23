@@ -1,8 +1,8 @@
 // Ported from markpress src/update.ts (same author), minus its playwright
-// post-install step — pptpress has no browser dependency to refresh.
+// post-install step — pptwise has no browser dependency to refresh.
 import { runChild } from "./child"
 
-export const PACKAGE_NAME = "@liustack/pptpress"
+export const PACKAGE_NAME = "@liustack/pptwise"
 
 export interface UpdateInfo {
   packageName: string

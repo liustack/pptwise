@@ -22,7 +22,7 @@ import { DroppedContentMarker } from "./drop-marker"
  * caller's own downstream budget (the support stack's floor, see
  * `SUPPORT_FLOOR` below) a *hard* guarantee instead of a best-effort one.
  * `data-audit-rect`/`data-audit-box` describe the true (post-scale)
- * footprint, same convention the two precedents use, so `pptpress audit`'s
+ * footprint, same convention the two precedents use, so `pptwise audit`'s
  * overflow walker (`svg-audit.ts`) checks reality, not the pre-scale intent.
  */
 function renderFittedEvidence(

@@ -20,7 +20,7 @@ function consultingPadDeck(): PptxIR {
     version: "4",
     filename: "emphasis-consulting-pad-paths.pptx",
     theme: { id: "consulting" },
-    meta: { organization: "pptpress" },
+    meta: { organization: "pptwise" },
     assets: { images: {} },
     slides: [
       { type: "cover", heading: MARKED_HEADING, components: [] } as Slide,
@@ -71,8 +71,8 @@ function consultingPadDeck(): PptxIR {
 // Other unassigned themes stay byte-identical. consulting is not in this
 // fixture.
 //
-// Recaptured (pptpress rename, 2026-08-23). Cover `meta.organization`
-// changed `pptfast` → `pptpress`. Replay of `renderSlideSvg` over the same
+// Recaptured (pptwise rename, 2026-08-23). Cover `meta.organization`
+// changed `pptpress` → `pptwise`. Replay of `renderSlideSvg` over the same
 // 23×5 matrix. Only `*|0` hashes move. Content pages stay byte-identical.
 //
 // Recaptured (wave8 batch 2, 2026-08-23). academic / classroom / crayon /

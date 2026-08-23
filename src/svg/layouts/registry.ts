@@ -65,7 +65,7 @@ import type { STRATEGY_VALUES } from "@/ir/narrative-values"
 // exports — 40 bindings total (content-layout expansion wave grew this
 // from 33/37 to 35/39 — image-lead-split + split-band, tasks T1/T2; the
 // quote-stage wave grew it once more, 35/39 to 36/40 — quote-stage, T2,
-// pptpress's first `pinOnly` member, see {@link LayoutDefinition.pinOnly}).
+// pptwise's first `pinOnly` member, see {@link LayoutDefinition.pinOnly}).
 // Grouped by family, each group in the exact
 // order its former literal Record held (order feeds `layoutsForSlideType`'s
 // `Object.values` walk below, which feeds `theme.layouts[type]`'s array
@@ -589,7 +589,7 @@ const ENDING_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
 
 // ─────────────────────────────────────────────────────────────────────────
 // Content layouts (13, quote-stage wave task T2: 12 -> 13 — quote-stage,
-// pptpress's first `pinOnly` member (see {@link LayoutDefinition.pinOnly}):
+// pptwise's first `pinOnly` member (see {@link LayoutDefinition.pinOnly}):
 // reachable only through an explicit `slide.layout` pin, never auto-picked,
 // so it doesn't grow any theme's curated pool — "12 auto-selectable + 1
 // pin-only", not a flat +1 (see that file's own composition-sketch header);

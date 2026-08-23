@@ -44,7 +44,7 @@
  * `Slide.beat` field (`../ir/index.ts`) — it is now a plain passthrough on
  * both sides, same as `layout`/`heading`, no longer in this lossy list.
  */
-import { PptpressError } from "../errors"
+import { PptwiseError } from "../errors"
 import { PptxIRSchema, type BackgroundSpec, type Component, type PptxIR, type Slide } from "../ir"
 import { resolveEffectiveLayoutId } from "../svg/layout-selection"
 import { formatInvalidSpecError, validateSpec, type DeckSpec, type PageSpec } from "./index"
@@ -159,7 +159,7 @@ const LOCKED_KEYS = ["type", "heading"] as const
  *
  * 1. `spec` is `unknown` (same boundary `validateSpec` itself has — a spec
  *    is almost always freshly `JSON.parse`d off disk by the caller) —
- *    invalid shape or a failed hard gate throws {@link PptpressError} with
+ *    invalid shape or a failed hard gate throws {@link PptwiseError} with
  *    `validateSpec`'s own formatted issue list, not a re-derived message.
  * 2. Shape guard + locked-field protection: a `pages[id]` entry must first be
  *    a plain object — not `null`, an array, or a primitive — else throws.
@@ -245,7 +245,7 @@ export function assembleDeck(spec: unknown, pages: Record<string, PageContent>):
   // Step 1
   const validated = validateSpec(spec)
   if (!validated.ok) {
-    throw new PptpressError(formatInvalidSpecError(validated.errors))
+    throw new PptwiseError(formatInvalidSpecError(validated.errors))
   }
   const deckSpec = validated.spec!
 
@@ -256,11 +256,11 @@ export function assembleDeck(spec: unknown, pages: Record<string, PageContent>):
     const raw = pages[page.id]
     if (raw === undefined) continue
     if (typeof raw !== "object" || raw === null || Array.isArray(raw)) {
-      throw new PptpressError(`page "${page.id}": page content must be an object`)
+      throw new PptwiseError(`page "${page.id}": page content must be an object`)
     }
     for (const key of LOCKED_KEYS) {
       if (Object.hasOwn(raw, key)) {
-        throw new PptpressError(`page "${page.id}": "${key}" is locked by the spec — remove it from the page file`)
+        throw new PptwiseError(`page "${page.id}": "${key}" is locked by the spec — remove it from the page file`)
       }
     }
   }
@@ -269,7 +269,7 @@ export function assembleDeck(spec: unknown, pages: Record<string, PageContent>):
   const specIds = new Set(deckSpec.pages.map((page) => page.id))
   const orphanIds = Object.keys(pages).filter((id) => !specIds.has(id))
   if (orphanIds.length > 0) {
-    throw new PptpressError(
+    throw new PptwiseError(
       `orphan page id${orphanIds.length === 1 ? "" : "s"} ${orphanIds.map((id) => `"${id}"`).join(", ")} — not in the spec, delete the page file or add the page to the spec`,
     )
   }
@@ -299,7 +299,7 @@ export function assembleDeck(spec: unknown, pages: Record<string, PageContent>):
   const parsed = PptxIRSchema.safeParse(rawIr)
   if (!parsed.success) {
     const detail = parsed.error.issues.map((issue) => `${issue.path.join(".") || "(root)"}: ${issue.message}`).join("\n")
-    throw new PptpressError(`assembled deck did not produce valid IR:\n${detail}`)
+    throw new PptwiseError(`assembled deck did not produce valid IR:\n${detail}`)
   }
 
   // Materialization (W4 design decision 10) — must run after the schema

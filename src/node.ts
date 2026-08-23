@@ -1,2 +1,2 @@
 export { installNodePlatform } from "./platform/node"
-export { installPlatform, type PptpressPlatform } from "./platform/registry"
+export { installPlatform, type PptwisePlatform } from "./platform/registry"

@@ -1,4 +1,31 @@
-# @liustack/pptpress
+# @liustack/pptwise
+
+## 0.22.0
+
+### Minor Changes
+
+- b7fedf3: Lecture draws a chalk underline under `**emphasized**` runs. The color follows the theme accent, or an explicit pad fill. Themes without this form keep the previous tint bytes. A hardcoded arc under the whole title is gone.
+- 1e3f0d7: Breaking rename: the product is now pptwise. The package is `@liustack/pptwise`. The CLI is `pptwise`. The skill is `skills/pptwise`. The DSH plugin is `pptwise`. `PPTPRESS_*` and `PPTFAST_*` environment variables remain aliases for `PPTWISE_*`, with the new name winning, then pptpress, then pptfast. If `~/.pptwise` is missing, `~/.pptpress` is copied when present, otherwise `~/.pptfast`. Old directories are left in place. Project config `pptwise.config.json` still reads `pptpress.config.json` and `pptfast.config.json`. Workspace default is `.pptwise`, and a leftover `.pptpress/` or `.pptfast/` is reused when present.
+- 295fd1b: The banner-heading content layout is retired. Pages that pinned `layout: "banner-heading"` should run `pptwise migrate`. Unpinned decks pick another content layout. Heading treatments keep the title face.
+
+  **Unpinned decks change face.** A content page that used to land on the assertion banner now lands on another auto layout.
+
+### Patch Changes
+
+- f43dc0f: Arrow-step outline badges sit inside the chevron body. They no longer hang off the left of the arrow.
+- 896a730: Decorative ticker lines on layouts now paint in the midground. Empty triptych panels no longer draw a frame. The playbill cover date chip sits in the foreground at the wave 7 board position (top 64, right 56, clockwise 4 degrees).
+- f67f8f5: Dumbbell charts grow the left label band to fit category names instead of cutting them with an ellipsis. The plot keeps a readable floor. Overflow glyphs, if a box is pathologically narrow, drop without an ellipsis mark.
+- b6767c0: Fashion-masthead covers no longer inherit the consulting motif's leftover top-left lead. The layout already owns the top rule.
+- 3e49dd6: A page with a large frame no longer also draws a motif top rule. Double-frame cover is the first layout marked this way.
+- 3f51349: Journal covers hang the title closer to the masthead and drop the leftover motif foot. Long gallery titles no longer sit in the lower half of the page.
+- c868fa2: Stage's first content page puts the copy on the left and the timeline on the right.
+- 518b215: Consulting stat-hero keeps its yellow bar under the numeral and clear of the caption. Playbill stat-hero shrinks the bleed number so it no longer crosses the caption or the unit chip.
+- 876073c: Tech content pages put the two cyan marks at the midpoint of the top rule. The stat-hero star track sits under the numeral instead of hugging the left edge.
+- fc6df7f: A two-column page with a timeline and copy puts the copy on the left and the timeline on the right, even when the timeline is the lead component.
+- 8243bfd: Window-close endings no longer inherit a leftover top-left motif rule. The black field already owns the page edge.
+- b83799f: Axis titles sit as a horizontal pair outside the plot. The y-axis name gets an up arrow, the x-axis name a right arrow. Character-column stacking is gone. An L1 check flags a title that lands on a bar, point, bubble, gridline, or connecting band.
+- a5b2d89: Stop painting overflow ellipses. The renderer now clips text to its budget, stamps `data-truncated="1"`, and leaves the cut unmarked. Ending seat-cta wraps its CTA to two lines so the gallery verdict stays whole. Citation sources keep a visible gap before a URL, wider after CJK than after Latin. Campaign chips and tech statement arcs stay fully on the 1280×720 canvas.
+- ef6cc57: tag_row keeps a named gap under its title, wider wrapped-row gaps, and air under the last capsule. The enterprise, playbill, and arena chapter chip no longer sits on the rail-numbered page badge.
 
 ## 0.21.0
 

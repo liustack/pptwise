@@ -9,8 +9,8 @@ A brand signal answers what the deck should look like, never how it should argue
 When the user hands over (or mentions having) a company template — a `.thmx` theme, `.potx` template, or any branded `.pptx` — extract its colors and fonts into a custom theme **before** picking a built-in theme in phase 2. Extraction runs entirely locally; the file never leaves the machine.
 
 ```bash
-pptpress brand extract corp-template.pptx -o deck-dir/theme.json --id acme
-pptpress render deck-dir/     # theme.json auto-loads; set "theme": "acme" in deck.spec.json
+pptwise brand extract corp-template.pptx -o deck-dir/theme.json --id acme
+pptwise render deck-dir/     # theme.json auto-loads; set "theme": "acme" in deck.spec.json
 ```
 
 A `theme.json` sitting in the deck project directory auto-loads on every command (validate/render/audit/preview/serve) — reference its id from `deck.spec.json` and no flag is needed. For a single IR file, pass `--theme-file deck-dir/theme.json` instead (works on the same five commands). Loading enforces a contrast floor: a template whose text/background tones are too close is refused with the failing token and ratio named — relay that message and ask the user whether to adjust the extracted file's colors or fall back to a built-in theme.

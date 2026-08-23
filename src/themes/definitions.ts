@@ -1,5 +1,5 @@
 import type { BackgroundSpec, BrandConfig, Slide } from "@/ir"
-import { PptpressError } from "../errors"
+import { PptwiseError } from "../errors"
 import type { MotifId } from "../svg/motifs/types"
 import { hasExactWidthTable, resolveFontFace } from "../svg/fonts"
 import { contrastRatio } from "../svg/ink"
@@ -111,7 +111,7 @@ export interface ThemeDefinition {
    *   at `validateIr` (`ok` stays true) and render falls back to auto-pick
    *   from the ordinary content (or chapter, for `verse-chapter`) pool.
    * - a list: only those ids. A listed id must be one of the six sparse
-   *   ids (`registerTheme` throws {@link PptpressError} otherwise). It does
+   *   ids (`registerTheme` throws {@link PptwiseError} otherwise). It does
    *   **not** have to sit in `layouts[slideType]` — those pools exclude
    *   pinOnly members by construction.
    *
@@ -247,7 +247,7 @@ const BRANDS: Partial<Record<CanonicalThemeId, BrandConfig>> = {
   //        （落款列按设计只收机构名 + 年月 + 印）。
   //     2. 落款列是逐字竖排，一列排得下 11 个字（带年月时；不带年月 17 个）
   //        ——`motif-ink-motif.tsx` 的 `orgCapacity()` 按几何算的。超过这个
-  //        长度的机构名会被截断并挂 `data-truncated`，`pptpress audit` 照常
+  //        长度的机构名会被截断并挂 `data-truncated`，`pptwise audit` 照常
   //        报 content-truncated。**这不是小概率**：`Meridian Analytics`
   //        （18）、`北京云帆科技有限责任公司`（12）都超。竖排是 CJK 短款识的
   //        写法，拉丁长名逐字母竖排本来也不成体统——落款列吃不下的机构名，
@@ -1253,7 +1253,7 @@ export function resolveBrand(id: string, override?: BrandConfig): BrandConfig {
 // ─────────────────────────────────────────────────────────────────────────
 //
 // This is deliberately *not* the v0.4 registry protocol (no distribution,
-// no manifest fetch, no `pptpress theme add <url>`) — just the runtime SDK
+// no manifest fetch, no `pptwise theme add <url>`) — just the runtime SDK
 // seam a v0.4 registry client (or any embedder) would call into: hand
 // `registerTheme` a fully-formed `ThemeDefinition` and it becomes visible to
 // every internal theme lookup (installed-check, selection, resolveStyle,
@@ -1336,7 +1336,7 @@ const CONTRAST_FLOOR = 3.0
 const CONTRAST_CHECKED_SLIDE_TYPES = ["cover", "content", "ending"] as const
 
 /**
- * Throws {@link PptpressError} the moment any of `style.colors.text`/
+ * Throws {@link PptwiseError} the moment any of `style.colors.text`/
  * `style.colors.muted` falls below {@link CONTRAST_FLOOR} against a
  * {@link CONTRAST_CHECKED_SLIDE_TYPES} slide type's own resolved default
  * background — see that constant's doc comment for the 3.0 rationale and
@@ -1354,7 +1354,7 @@ export function assertContrastFloor(id: string, style: StyleTokens): void {
     for (const token of ["text", "muted"] as const) {
       const ratio = contrastRatio(style.colors[token], bg)
       if (ratio < CONTRAST_FLOOR) {
-        throw new PptpressError(
+        throw new PptwiseError(
           `theme "${id}" colors.${token} has a contrast ratio of ${ratio.toFixed(2)}:1 against its "${slideType}" background (${bg}) — must be at least ${CONTRAST_FLOOR.toFixed(1)}:1`,
         )
       }
@@ -1447,32 +1447,32 @@ export type ThemeRegistration = Omit<ThemeDefinition, "layouts"> & {
  */
 export function registerTheme(def: ThemeRegistration): void {
   if ((CANONICAL_THEME_IDS as readonly string[]).includes(def.id) || REGISTERED_THEMES.has(def.id)) {
-    throw new PptpressError(`theme "${def.id}" is already installed`)
+    throw new PptwiseError(`theme "${def.id}" is already installed`)
   }
   if (!def.style) {
-    throw new PptpressError(`theme "${def.id}" is missing style tokens`)
+    throw new PptwiseError(`theme "${def.id}" is missing style tokens`)
   }
   assertContrastFloor(def.id, def.style)
   const layouts = {} as Record<Slide["type"], readonly string[]>
   for (const slideType of REGISTERABLE_SLIDE_TYPES) {
     const ids = def.layouts?.[slideType] ?? FULL_LAYOUTS[slideType]
     if (ids.length === 0) {
-      throw new PptpressError(`theme "${def.id}" must declare at least one layout for "${slideType}" slides`)
+      throw new PptwiseError(`theme "${def.id}" must declare at least one layout for "${slideType}" slides`)
     }
     for (const id of ids) {
       const layout = getLayout(id)
       if (!layout) {
-        throw new PptpressError(`theme "${def.id}" layouts.${slideType} references unknown layout id "${id}"`)
+        throw new PptwiseError(`theme "${def.id}" layouts.${slideType} references unknown layout id "${id}"`)
       }
       // Curated sets feed the auto-selection path, which assumes layout ids
       // only — a takeover id here would crash at render (undefined component).
       if (layout.kind !== "archetype") {
-        throw new PptpressError(
+        throw new PptwiseError(
           `theme "${def.id}" layouts.${slideType}: "${id}" is a ${layout.kind} layout — curated sets may only contain archetype layouts`,
         )
       }
       if (!layout.slideTypes.includes(slideType)) {
-        throw new PptpressError(
+        throw new PptwiseError(
           `theme "${def.id}" layouts.${slideType}: layout "${id}" is not valid for "${slideType}" slides`,
         )
       }
@@ -1492,7 +1492,7 @@ export function registerTheme(def: ThemeRegistration): void {
     if (!tendencyIds) continue
     for (const id of tendencyIds) {
       if (!layouts[slideType].includes(id)) {
-        throw new PptpressError(
+        throw new PptwiseError(
           `theme "${def.id}" layoutTendencies.${slideType} references "${id}", which is not in this theme's own layouts.${slideType} set — a tendency must name an id already in the theme's curated pool`,
         )
       }
@@ -1507,7 +1507,7 @@ export function registerTheme(def: ThemeRegistration): void {
   if (def.sparseLayouts !== undefined) {
     for (const id of def.sparseLayouts) {
       if (!(SPARSE_LAYOUT_IDS as readonly string[]).includes(id)) {
-        throw new PptpressError(
+        throw new PptwiseError(
           `theme "${def.id}" sparseLayouts references "${id}", which is not a sparse climax layout — allowed: ${SPARSE_LAYOUT_IDS.join(", ")}`,
         )
       }

@@ -1,20 +1,20 @@
-# Installing pptpress (for an AI agent)
+# Installing pptwise (for an AI agent)
 
-You are an AI agent and your user told you to install `pptpress`. This document
+You are an AI agent and your user told you to install `pptwise`. This document
 is the procedure. Follow it in order. Every step is safe to run again, and
 every step names what to do when it fails. Commands are POSIX shell (macOS or
 Linux). A Windows note follows each block that needs one.
 
-There is nothing to configure to render a PPTX. pptpress renders entirely
+There is nothing to configure to render a PPTX. pptwise renders entirely
 locally: no API key, no account, no engine to set up, no network calls at
-render time. Optional stock-photo search (`pptpress images search`) needs the
-user's own Pexels key (`pptpress config set pexels.apiKey`). The only
+render time. Optional stock-photo search (`pptwise images search`) needs the
+user's own Pexels key (`pptwise config set pexels.apiKey`). The only
 prerequisite is Node 22.19+ (or Bun).
 
 ## Step 0: are you inside DeepSeek Harness (dsh)?
 
 If you are, stop and read this section instead of the rest of the file. On dsh
-pptpress is not a skill folder: it is a native plugin, and copying the skill
+pptwise is not a skill folder: it is a native plugin, and copying the skill
 folder there leaves the user without the plugin card and without the CLI that
 ships inside it.
 
@@ -22,18 +22,18 @@ You are on dsh if `~/.dsh/` exists, or the conversation runs in the DeepSeek
 Harness web or desktop app. One command installs the plugin:
 
 ```sh
-npx -y @deepseek-ai/dsh plugin --profile web add @liustack/pptpress@0.21.0
+npx -y @deepseek-ai/dsh plugin --profile web add @liustack/pptwise@0.22.0
 ```
 
 The version is named on purpose: dsh installs plugins through pnpm 11, which
 holds back anything published in the last 24 hours and silently resolves
 `@latest` to an older release. A named version is installed as a deliberate
-request. `npm view @liustack/pptpress version` prints the current one.
+request. `npm view @liustack/pptwise version` prints the current one.
 
 Then tell the user to restart dsh and look at the plugin list: a card named
-"pptpress" means the plugin is live and the deck skill is registered. The skill
+"pptwise" means the plugin is live and the deck skill is registered. The skill
 it registers opens with a runtime note giving the exact `node <path>/dist/cli.js`
-command that stands in for `pptpress` inside dsh. Verify with the step 3 health
+command that stands in for `pptwise` inside dsh. Verify with the step 3 health
 check, using that command in the dsh terminal. Skip steps 1 and 2: there is no
 skill folder to copy and no CLI to install.
 
@@ -41,7 +41,7 @@ skill folder to copy and no CLI to install.
 - `dsh` warns `declares no dsh.bundle` -> the release-age gate installed an
   old version (before 0.17.0 the package had no plugin entry at all).
   `@latest` does not avoid that: name the version instead
-  (`npm view @liustack/pptpress version` prints it), then re-run the command
+  (`npm view @liustack/pptwise version` prints it), then re-run the command
   above with that version.
 - The plugin card does not appear after a restart -> re-run the install
   command (it is safe to repeat), then restart dsh again.
@@ -49,11 +49,11 @@ skill folder to copy and no CLI to install.
 For every other harness, the whole install is three steps:
 
 1. Find the skill directory for your harness.
-2. Put the `skills/pptpress` folder into it.
+2. Put the `skills/pptwise` folder into it.
 3. Run the health check.
 
 There is no CLI install step. The skill carries its own launcher, which
-resolves a runtime on every call (a compatible `pptpress` on `PATH`, then
+resolves a runtime on every call (a compatible `pptwise` on `PATH`, then
 `npx`, then `bunx`) at a version pinned to the skill itself.
 
 ---
@@ -101,17 +101,17 @@ cannot write. Confirm the path is under the user's home directory
 
 ---
 
-## Step 2: Put `skills/pptpress` into the skill directory
+## Step 2: Put `skills/pptwise` into the skill directory
 
-The skill is the `skills/pptpress` folder in this repository: a `SKILL.md`
+The skill is the `skills/pptwise` folder in this repository: a `SKILL.md`
 (with its Chinese reading mirror `SKILL.zh-CN.md`) and a `scripts/` directory
 holding the launcher. Copy the whole folder, launcher included, into `TARGET`:
 
 ```bash
-rm -rf /tmp/pptpress-src
-git clone --depth 1 https://github.com/liustack/pptpress.git /tmp/pptpress-src
-mkdir -p ~/.claude/skills/pptpress          # replace with your TARGET
-cp -R /tmp/pptpress-src/skills/pptpress/. ~/.claude/skills/pptpress/
+rm -rf /tmp/pptwise-src
+git clone --depth 1 https://github.com/liustack/pptwise.git /tmp/pptwise-src
+mkdir -p ~/.claude/skills/pptwise          # replace with your TARGET
+cp -R /tmp/pptwise-src/skills/pptwise/. ~/.claude/skills/pptwise/
 ```
 
 The copy overwrites an earlier install in place, so running it again just
@@ -121,7 +121,7 @@ lines, and the launcher's pinned version comes up to date with them.
 Confirm the skill and its launcher both landed:
 
 ```bash
-ls ~/.claude/skills/pptpress/SKILL.md ~/.claude/skills/pptpress/scripts/run.sh
+ls ~/.claude/skills/pptwise/SKILL.md ~/.claude/skills/pptwise/scripts/run.sh
 ```
 
 **If it fails:**
@@ -133,15 +133,15 @@ ls ~/.claude/skills/pptpress/SKILL.md ~/.claude/skills/pptpress/scripts/run.sh
 - A permission error -> confirm `TARGET` is under the user's home directory
   (`echo $HOME`), not a system path.
 
-> **Windows:** in PowerShell, clone into `"$env:TEMP\pptpress-src"` and replace
+> **Windows:** in PowerShell, clone into `"$env:TEMP\pptwise-src"` and replace
 > the `cp -R` line with
-> `Copy-Item -Recurse -Force "$env:TEMP\pptpress-src\skills\pptpress\*" "$env:USERPROFILE\.claude\skills\pptpress\"`.
+> `Copy-Item -Recurse -Force "$env:TEMP\pptwise-src\skills\pptwise\*" "$env:USERPROFILE\.claude\skills\pptwise\"`.
 
 ### Any other agent
 
 Reference the playbook from the agent's context instead: add one line to the
 project's `AGENTS.md` (or equivalent) pointing at
-[`skills/pptpress/SKILL.md`](./skills/pptpress/SKILL.md), installed locally or
+[`skills/pptwise/SKILL.md`](./skills/pptwise/SKILL.md), installed locally or
 by its GitHub URL. The skill is plain Markdown and self-contained.
 
 ---
@@ -154,10 +154,10 @@ your own `TARGET` in both commands below.
 **1. The built-in check.** One command reports the whole install:
 
 ```bash
-bash ~/.claude/skills/pptpress/scripts/run.sh doctor
+bash ~/.claude/skills/pptwise/scripts/run.sh doctor
 ```
 
-On a machine with no `pptpress` installed, this first call may take a few
+On a machine with no `pptwise` installed, this first call may take a few
 seconds while `npx` fetches the pinned package. That is how npx works, not a
 failure.
 
@@ -173,27 +173,27 @@ anything. `--json` prints the same report machine-readably.
 memory, so run one deck through the file path too:
 
 ```bash
-cat > /tmp/pptpress-hello.json <<'EOF'
+cat > /tmp/pptwise-hello.json <<'EOF'
 {
   "filename": "hello.pptx",
   "theme": { "id": "consulting" },
   "slides": [
-    { "type": "cover", "heading": "Hello pptpress", "subheading": "A first deck in ten minutes" },
+    { "type": "cover", "heading": "Hello pptwise", "subheading": "A first deck in ten minutes" },
     { "type": "content", "heading": "Why it works", "components": [
       { "type": "bullets", "items": ["Semantic IR in", "Native DrawingML out", "Every shape stays editable"] } ] },
     { "type": "ending", "heading": "Thanks" }
   ]
 }
 EOF
-bash ~/.claude/skills/pptpress/scripts/run.sh validate /tmp/pptpress-hello.json
-bash ~/.claude/skills/pptpress/scripts/run.sh render /tmp/pptpress-hello.json -o /tmp/pptpress-hello.pptx
+bash ~/.claude/skills/pptwise/scripts/run.sh validate /tmp/pptwise-hello.json
+bash ~/.claude/skills/pptwise/scripts/run.sh render /tmp/pptwise-hello.json -o /tmp/pptwise-hello.pptx
 ```
 
 Expected output, line for line:
 
 ```
 OK — 3 slides, theme "consulting"
-wrote /tmp/pptpress-hello.pptx (3 slides, 23783 bytes)
+wrote /tmp/pptwise-hello.pptx (3 slides, 23783 bytes)
 ```
 
 (The byte count is exact on the current release: rendering is deterministic,
@@ -206,10 +206,10 @@ The expected output is identical.
 
 **If it fails:**
 - The launcher printed a JSON diagnosis and exited 78 -> no runtime could run
-  pptpress: no compatible `pptpress` on `PATH`, no `npx`, and no `bunx`. Read the
+  pptwise: no compatible `pptwise` on `PATH`, no `npx`, and no `bunx`. Read the
   `nextSteps` field in that JSON and relay it. The fix is installing Node
   22.19+ (https://nodejs.org) or Bun (https://bun.sh), then re-running this
-  step. Do not report pptpress as broken.
+  step. Do not report pptwise as broken.
 - `doctor` reports the runtime below the version floor -> install Node 22.19+
   (https://nodejs.org) or Bun (https://bun.sh), then re-run.
 - `doctor` flags an installed skill copy as stale -> re-run step 2's copy for
@@ -218,7 +218,7 @@ The expected output is identical.
   JSON above is known-good, so an error here means the file was written
   incompletely. Rewrite the heredoc and re-run.
 - A warning about the optional `sharp` dependency -> ignore it. It is only
-  needed by `pptpress audit --pixels`, never by validate or render.
+  needed by `pptwise audit --pixels`, never by validate or render.
 
 ---
 
@@ -227,7 +227,7 @@ The expected output is identical.
 Installation is complete. From now on the skill triggers on its own when the
 user asks for a deck, a PPT, or slides: the model reads the schema, writes IR,
 and closes the validate-render loop itself, as laid out in
-[`skills/pptpress/SKILL.md`](./skills/pptpress/SKILL.md). The
+[`skills/pptwise/SKILL.md`](./skills/pptwise/SKILL.md). The
 [README](./README.md) covers the full CLI, themes, deck projects, and the
 audit and preview tooling.
 
@@ -236,20 +236,20 @@ audit and preview tooling.
 ## Appendix: manual install (rarely needed)
 
 The steps above need no global CLI, and this is not part of them. Install the
-CLI globally only when the user wants `pptpress` as their own everyday command
+CLI globally only when the user wants `pptwise` as their own everyday command
 in a terminal:
 
 ```bash
-npm install -g @liustack/pptpress
-pptpress --version
+npm install -g @liustack/pptwise
+pptwise --version
 ```
 
 The skill's launcher picks up such an install automatically, as long as its
 version is at the same major as the pin and no older.
 
-Building from source is for working on pptpress itself, not for using it:
+Building from source is for working on pptwise itself, not for using it:
 
 ```bash
-git clone https://github.com/liustack/pptpress.git
-cd pptpress && pnpm install && pnpm build
+git clone https://github.com/liustack/pptwise.git
+cd pptwise && pnpm install && pnpm build
 ```

@@ -1,13 +1,13 @@
 ---
-summary: 'skills/pptpress/SKILL.md 的中文阅读镜像，仅供人工审阅该 skill 会指示 agent 做什么'
-mirror_of: skills/pptpress/SKILL.md
+summary: 'skills/pptwise/SKILL.md 的中文阅读镜像，仅供人工审阅该 skill 会指示 agent 做什么'
+mirror_of: skills/pptwise/SKILL.md
 ---
 
-# pptpress — deck 生成操作手册
+# pptwise — deck 生成操作手册
 
-> 本文件是 [`skills/pptpress/SKILL.md`](./SKILL.md) 的中文阅读镜像，供中文使用者审阅这个 skill 会指示 agent 执行的内容。agent 始终加载并执行英文版 `SKILL.md`——本文件不含 `name` 字段，从不注册为一个独立的 skill，也从不被 agent 读取。两个文件如有出入，以英文版 `SKILL.md` 为准。修改任一文件时，必须把改动同步镜像到另一文件。
+> 本文件是 [`skills/pptwise/SKILL.md`](./SKILL.md) 的中文阅读镜像，供中文使用者审阅这个 skill 会指示 agent 执行的内容。agent 始终加载并执行英文版 `SKILL.md`——本文件不含 `name` 字段，从不注册为一个独立的 skill，也从不被 agent 读取。两个文件如有出入，以英文版 `SKILL.md` 为准。修改任一文件时，必须把改动同步镜像到另一文件。
 
-pptpress 把一份 JSON IR（intermediate representation，中间表示）转换成原生 DrawingML 格式的 `.pptx`——每个图形在 PowerPoint 里都保持可编辑。内容模型由你掌控，layout、style 与动效由工具掌控。你从不绘制 SVG，也从不给任何东西定位：从受控词汇表里挑选，装不下的内容交给 validate 关卡去拦。
+pptwise 把一份 JSON IR（intermediate representation，中间表示）转换成原生 DrawingML 格式的 `.pptx`——每个图形在 PowerPoint 里都保持可编辑。内容模型由你掌控，layout、style 与动效由工具掌控。你从不绘制 SVG，也从不给任何东西定位：从受控词汇表里挑选，装不下的内容交给 validate 关卡去拦。
 
 ## 怎么跑
 
@@ -18,42 +18,42 @@ bash <skill-dir>/scripts/run.sh <args>                                       # m
 powershell -ExecutionPolicy Bypass -File <skill-dir>\scripts\run.ps1 <args>  # Windows
 ```
 
-它按顺序尝试：PATH 上版本兼容的 `pptpress`、`npx`、`bunx`，参数与退出码原样透传。不需要预先安装任何东西，跑到的版本被钉死在这份 skill 上。退出码 78 表示没有任何可用运行时：把它 stderr 里 JSON 的 `nextSteps` 转告用户，不要重试。
+它按顺序尝试：PATH 上版本兼容的 `pptwise`、`npx`、`bunx`，参数与退出码原样透传。不需要预先安装任何东西，跑到的版本被钉死在这份 skill 上。退出码 78 表示没有任何可用运行时：把它 stderr 里 JSON 的 `nextSteps` 转告用户，不要重试。
 
-下文凡是写 `pptpress <args>` 的地方，都通过这个启动器执行。
+下文凡是写 `pptwise <args>` 的地方，都通过这个启动器执行。
 
-刚装完，以及任何时候某条命令的表现不对、错误信息又解释不清时，先跑 `pptpress doctor`。它会报告运行时、机器上每一份已安装的 skill 副本及其是否过期、dsh 插件版本、可选能力是否具备，以及一次自检渲染。把它说的原样转达，不要靠猜。
+刚装完，以及任何时候某条命令的表现不对、错误信息又解释不清时，先跑 `pptwise doctor`。它会报告运行时、机器上每一份已安装的 skill 副本及其是否过期、dsh 插件版本、可选能力是否具备，以及一次自检渲染。把它说的原样转达，不要靠猜。
 
 如果你的 harness 不允许执行脚本，就按同样的顺序自己判断，用第一条成立的：
 
-1. PATH 上有 `pptpress`，且主版本号与下面的钉版本相同、版本不低于它：`pptpress <args>`。
-2. 否则，有 `npx` 就用：`npx --yes --package @liustack/pptpress@0.21.0 pptpress <args>`。
-3. 否则，有 `bunx` 就用：`bunx --bun @liustack/pptpress@0.21.0 <args>`。
-4. 都没有就告诉用户机器上找不到 JavaScript 运行时，下一步是装 Node 22.19+（https://nodejs.org）或 Bun（https://bun.sh）。不要说成是 pptpress 本身坏了。
+1. PATH 上有 `pptwise`，且主版本号与下面的钉版本相同、版本不低于它：`pptwise <args>`。
+2. 否则，有 `npx` 就用：`npx --yes --package @liustack/pptwise@0.22.0 pptwise <args>`。
+3. 否则，有 `bunx` 就用：`bunx --bun @liustack/pptwise@0.22.0 <args>`。
+4. 都没有就告诉用户机器上找不到 JavaScript 运行时，下一步是装 Node 22.19+（https://nodejs.org）或 Bun（https://bun.sh）。不要说成是 pptwise 本身坏了。
 
 ## 工作流程
 
-访谈 → spec → pages → validate → audit → render。改动从能承载它的最小一步重新进入。很小的 deck（页数屈指可数）可以跳过 spec 文件，直接写一份 IR，仍用 `pptpress validate` 校验。永远不要凭上一个 session 的记忆、或凭这份文件本身的记忆去写 IR 或 spec。每个 session 都重新跑：
+访谈 → spec → pages → validate → audit → render。改动从能承载它的最小一步重新进入。很小的 deck（页数屈指可数）可以跳过 spec 文件，直接写一份 IR，仍用 `pptwise validate` 校验。永远不要凭上一个 session 的记忆、或凭这份文件本身的记忆去写 IR 或 spec。每个 session 都重新跑：
 
 ```bash
-pptpress schema             # IR JSON Schema: the single source of truth
-pptpress schema --spec      # deck spec schema
-pptpress narratives --json  # named narrative presets (strategy/pacing/audience axes + theme recommendations)
-pptpress themes --json      # built-in themes (id + label)
+pptwise schema             # IR JSON Schema: the single source of truth
+pptwise schema --spec      # deck spec schema
+pptwise narratives --json  # named narrative presets (strategy/pacing/audience axes + theme recommendations)
+pptwise themes --json      # built-in themes (id + label)
 ```
 
-动手问人之前，先扫工作区。已有确认过的 `deck.spec.json` 已经锁死 narrative、theme、品牌框：不要重做访谈，改那份 deck。已有 `theme.json`、项目 `pptpress.config.json` 钉死的 theme、用户点名的 theme id、或用户递来的 `.thmx` / `.potx` / 带品牌 `.pptx`，都是品牌信号：抽取或沿用。不要再问有没有模板。
+动手问人之前，先扫工作区。已有确认过的 `deck.spec.json` 已经锁死 narrative、theme、品牌框：不要重做访谈，改那份 deck。已有 `theme.json`、项目 `pptwise.config.json` 钉死的 theme、用户点名的 theme id、或用户递来的 `.thmx` / `.potx` / 带品牌 `.pptx`，都是品牌信号：抽取或沿用。不要再问有没有模板。
 
 **边界页规则：** `chapter` 和 `ending` 永远不渲染 `components` 或 `footnote`。`cover` 永远不渲染 `footnote`。封面只有在锁定版式声明了对应槽位时才能带 `components`。今天这只发生在 `verdict-index`（consulting）：它读第一个 `bullets` 块，画成最多三条编号论据。其余封面版式仍会丢掉 components。正文放到 `content` 页，除非你在填 consulting 封面那三列论据。对错 JSON 和 spec 写法：`references/spec.md`。
 
 1. **访谈**（最多一轮）：用户在场，且受众、怎么讲、pacing 任一轴仍未知时，把未决的问放进**一条**消息，然后停。不要自己填。Q1–Q4、★ 默认、查表、`NARRATIVE_INTERVIEW` 闸：`references/spec.md`。
-2. **定 spec 并确认**，再写任何页面。写 `deck.spec.json`（以 `cover` 开篇，以 `ending` 收尾，中间是 `content` 或 `chapter`）。跑 `pptpress spec validate` 直到 `OK`，然后固化 `seed`。已确认的 spec 不要重定。写法：`references/spec.md`。品牌框姿态：`references/branding.md`。
+2. **定 spec 并确认**，再写任何页面。写 `deck.spec.json`（以 `cover` 开篇，以 `ending` 收尾，中间是 `content` 或 `chapter`）。跑 `pptwise spec validate` 直到 `OK`，然后固化 `seed`。已确认的 spec 不要重定。写法：`references/spec.md`。品牌框姿态：`references/branding.md`。
 3. **填页面**，每批至多 4 页。写 `pages/<id>.json`（`components`，可选 `layout`/`notes`）。绝不写 `type`/`heading`。Pin-only 与稀排高潮页：`references/layouts.md`。组件形态：`references/components.md`。密度、beat、容量：`references/density.md`。配图：`references/images.md`。
-4. **Validate** 每批之后：`pptpress assemble deck-dir/`，再 `pptpress validate deck-dir/`，直到两者都打印 `OK`。重组被标出的内容，不要删。assemble / validate / audit / preview / serve 回路：`references/validate.md`。
-5. **Audit** 所有页面填完后：`pptpress audit deck-dir/` 直到 exit 0。不要用截图代替。然后把 deck 交给用户（有 `pptpress_preview` 就调它，否则 `preview --html`，再否则 `serve --no-open`）：`references/validate.md`。
-6. **渲染：** `pptpress render deck-dir/`。把打印的绝对路径报给用户。`--draft` 和 `--allow-dropped-content` 只有用户明确要求时才用。
+4. **Validate** 每批之后：`pptwise assemble deck-dir/`，再 `pptwise validate deck-dir/`，直到两者都打印 `OK`。重组被标出的内容，不要删。assemble / validate / audit / preview / serve 回路：`references/validate.md`。
+5. **Audit** 所有页面填完后：`pptwise audit deck-dir/` 直到 exit 0。不要用截图代替。然后把 deck 交给用户（有 `pptwise_preview` 就调它，否则 `preview --html`，再否则 `serve --no-open`）：`references/validate.md`。
+6. **渲染：** `pptwise render deck-dir/`。把打印的绝对路径报给用户。`--draft` 和 `--allow-dropped-content` 只有用户明确要求时才用。
 
-后续请求：改一页 → 只对那一页走步骤 3–6。一份新 deck → 步骤 1。和 deck 生成无关 → 不要调用 pptpress。
+后续请求：改一页 → 只对那一页走步骤 3–6。一份新 deck → 步骤 1。和 deck 生成无关 → 不要调用 pptwise。
 
 ## 组件选型
 

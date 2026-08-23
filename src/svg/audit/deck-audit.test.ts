@@ -12,7 +12,7 @@ import { renderToStaticMarkup } from "react-dom/server"
 import { beforeAll, describe, expect, it } from "vitest"
 import { PptxIRSchema, type ChartSeries, type Component, type PptxIR, type Slide } from "@/ir"
 import { renderSlideSvg } from "../../api"
-import { PptpressError } from "../../errors"
+import { PptwiseError } from "../../errors"
 import { installNodePlatform } from "../../platform/node"
 import { CANONICAL_THEME_IDS } from "../../themes"
 import { renderDonut, renderPie } from "../components/chart-svg"
@@ -1795,7 +1795,7 @@ describe("findContrastIssues — decor/motif subtrees excluded from background-r
 
 // fix/decor-contrast-attribution — the defect this branch exists to close,
 // pinned against real renders rather than synthetic markup. Reported symptom:
-// `pptpress audit` returned `0 findings, exit 0` on a cover with a collision
+// `pptwise audit` returned `0 findings, exit 0` on a cover with a collision
 // visible at a glance, and one of those zero findings was an *answer*, not a
 // gap — the ink theme's cover date measured 5.44:1 against a page background
 // its own motif's vermilion seal completely covers, where the real pairing is
@@ -2221,17 +2221,17 @@ describe("auditDeck — finding shape contract", () => {
 // than importing validateIr's own fixtures, so this test stays a pure
 // "auditDeck's own guard" check independent of validateIr's behavior.
 describe("auditDeck — raw/unvalidated-input guard (Task 2, borrow wave — A4)", () => {
-  it("throws a PptpressError pointing to validateIr for auditDeck({})", () => {
+  it("throws a PptwiseError pointing to validateIr for auditDeck({})", () => {
     // Deliberately passing a shape that violates the PptxIR type — the
     // exact scenario this guard exists to catch (a caller feeding raw JSON
     // straight through without validateIr first).
-    expect(() => auditDeck({} as PptxIR)).toThrow(PptpressError)
+    expect(() => auditDeck({} as PptxIR)).toThrow(PptwiseError)
     expect(() => auditDeck({} as PptxIR)).toThrow(/run validateIr first/)
   })
 
   it("throws the same guard for auditDeck(garbage) — a slides array present but assets missing", () => {
     const garbage = { slides: [{ type: "cover" }] } as unknown as PptxIR
-    expect(() => auditDeck(garbage)).toThrow(PptpressError)
+    expect(() => auditDeck(garbage)).toThrow(PptwiseError)
     expect(() => auditDeck(garbage)).toThrow(/slides\[\] or assets\.images/)
   })
 

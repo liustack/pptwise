@@ -5,7 +5,7 @@ Pre-fix SHA: `321748d` (the `fix/gallery-review-r1` workspace HEAD at review tim
 Post-fix SHA: `8b4c001` (local main after r1 merged). r2 is **not** on this tree.
 Wave 8 HEAD SHA: `2e8aa03` (main after all four wave 8 theme batches).
 Human set: 44 `rework` page ids restored from `.issues/2026-08-22-gallery-review-r1/fix-list.md`, not a localStorage export. Mapping: every id exists exactly at that SHA.
-L2 model: local `grok` CLI, `--no-subagents`, `--json-schema` `pptpress-gallery-verdicts/3`.
+L2 model: local `grok` CLI, `--no-subagents`, `--json-schema` `pptwise-gallery-verdicts/3`.
 Raw L2: `evals/gallery/calibration/pre-fix-l2.json` (first frozen pass), `pre-fix-l2-replay.json` (new L1+rubric on the same SVGs), `post-fix-l2.json` (HEAD renders at `8b4c001`), `wave8-pre-l2.json` (wave 8 L1+L2 on the same 44 defective SVGs), `wave8-head-l2.json` (wave 8 HEAD of those ids).
 
 This auditor does **not** replace a human pass. The 80% bar was not moved.
@@ -22,7 +22,7 @@ Hit = `rework` or `limit`. Unfinished L2 notes (`Placeholder`, `in progress`, `b
 | Meets 80% (35/44) | no | **yes** | n/a (this column is leftover vs false alarm, not recall) | **yes** | n/a (leftover vs false alarm, not recall) |
 | L2 dual-run classification drift (3 pages × 2) | 0/3 (0%), under 5% | not re-run | not re-run | not re-run | not re-run |
 | Planted miss-class set | n/a | L1 6/6, L2 10/10 | same gate, ran first | L1 10/10, L2 14/14 (depth plants added after the first report) | same gate, ran first |
-| Pre-fix clone | `git clone --shared` into `/tmp/pptpress-gallery-cal-321748d` | same SVGs in `/tmp/pptpress-gallery-cal-svgs` | HEAD `renderMatrix` of the same 44 ids | same 321748d SVGs (local copy `/private/tmp/pptfast-gallery-cal-svgs`) | HEAD `renderMatrix` of the same 44 ids |
+| Pre-fix clone | `git clone --shared` into `/tmp/pptwise-gallery-cal-321748d` | same SVGs in `/tmp/pptwise-gallery-cal-svgs` | HEAD `renderMatrix` of the same 44 ids | same 321748d SVGs (local copy `/private/tmp/pptfast-gallery-cal-svgs`) | HEAD `renderMatrix` of the same 44 ids |
 | Fixture bytes | 0.82MB (budget 15MB) | planted PNG few-shots ~0.26MB extra under `rubric/examples/` | same | unchanged | unchanged |
 | Offline render | corpus assets are `data:` JPEGs, `findRemoteAssetRef` is null | unchanged | unchanged | unchanged | unchanged |
 
@@ -126,4 +126,4 @@ Fixed pages stay quiet on HEAD: callout (no left bar), `comparison-pill-panels` 
 
 ## CI
 
-`pnpm check` runs L1 unit tests (synthetic and planted SVG defects) and the live-corpus "L1 completes" smoke. L2 is skipped when `CI=true`, with reason `CI=true`. Planted L2 is a local gate: `CI= pnpm exec tsx evals/gallery/calibration/post-fix.mts`. Replay L2 only with `CI= pnpm exec tsx evals/gallery/calibration/l2-pass.mts`. A later replay that must not clobber the frozen stores can set `PPTPRESS_CAL_PRE_L2` / `PPTPRESS_CAL_POST_L2` / `PPTPRESS_CAL_HEAD_SHA`.
+`pnpm check` runs L1 unit tests (synthetic and planted SVG defects) and the live-corpus "L1 completes" smoke. L2 is skipped when `CI=true`, with reason `CI=true`. Planted L2 is a local gate: `CI= pnpm exec tsx evals/gallery/calibration/post-fix.mts`. Replay L2 only with `CI= pnpm exec tsx evals/gallery/calibration/l2-pass.mts`. A later replay that must not clobber the frozen stores can set `PPTWISE_CAL_PRE_L2` / `PPTWISE_CAL_POST_L2` / `PPTWISE_CAL_HEAD_SHA`.

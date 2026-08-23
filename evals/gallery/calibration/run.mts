@@ -4,8 +4,8 @@
  *
  *   pnpm exec tsx evals/gallery/calibration/run.mts
  *
- * Old SVGs default to /tmp/pptpress-gallery-cal-svgs (render-44.mts at that
- * SHA). Writes /tmp/pptpress-gallery-cal-results.json.
+ * Old SVGs default to /tmp/pptwise-gallery-cal-svgs (render-44.mts at that
+ * SHA). Writes /tmp/pptwise-gallery-cal-results.json.
  */
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
@@ -23,8 +23,8 @@ import { judgeL2, l2SkipReason, type GalleryPageMeta, type L2Verdict } from "../
 import { buildMatrix } from "../matrix"
 import { renderMatrix } from "../render"
 
-const OLD_SVG_DIR = resolveProductEnv("CAL_SVG_DIR") ?? "/tmp/pptpress-gallery-cal-svgs"
-const OUT = resolveProductEnv("CAL_OUT") ?? "/tmp/pptpress-gallery-cal-results.json"
+const OLD_SVG_DIR = resolveProductEnv("CAL_SVG_DIR") ?? "/tmp/pptwise-gallery-cal-svgs"
+const OUT = resolveProductEnv("CAL_OUT") ?? "/tmp/pptwise-gallery-cal-results.json"
 const DUAL_N = 3
 const CURRENT_L2_SAMPLE = 5
 
@@ -102,7 +102,7 @@ const assets = Object.fromEntries(
 ) as Record<LanguageId, CorpusAssets>
 const wanted = new Set(human.verdicts.map((v) => v.id))
 const jobs = buildMatrix(themeIds, assets).filter((j) => wanted.has(j.id))
-const outDir = mkdtempSync(join(tmpdir(), "pptpress-cal-head-"))
+const outDir = mkdtempSync(join(tmpdir(), "pptwise-cal-head-"))
 mkdirSync(outDir, { recursive: true })
 const { svgs } = renderMatrix(jobs, outDir, "head")
 

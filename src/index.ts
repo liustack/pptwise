@@ -1,5 +1,5 @@
 export { VERSION } from "./version"
-export { PptpressError } from "./errors"
+export { PptwiseError } from "./errors"
 export {
   validateIr,
   formatIssues,
@@ -16,13 +16,13 @@ export { PptxIRSchema, ThemeSchema, StyleOverrideSchema, BUILTIN_THEME_IDS, Bran
 export type { PptxIR, Slide, Component, Meta, Assets, BackgroundSpec, StyleOverride, BrandConfig } from "./ir"
 // v3 (frozen, spec §9.3) — kept on the SDK surface only for the deterministic
 // migration primitive below and a caller that still needs to parse a
-// genuinely v3-shaped document (e.g. the `pptpress migrate` CLI command, task
+// genuinely v3-shaped document (e.g. the `pptwise migrate` CLI command, task
 // 2) before migrating it. `validateIr`'s own v3 path never calls either of
 // these — it hard-rejects an explicit `version: "3"` before any schema parse.
 export { PptxIRV3Schema } from "./ir/legacy-v3"
 export type { PptxIRV3 } from "./ir/legacy-v3"
 // Deterministic, pure IR v3 → v4 migration (spec §9.1/§9.3, vocabulary-v4
-// rename task 1) — the primitive the `pptpress migrate` CLI command (task 2)
+// rename task 1) — the primitive the `pptwise migrate` CLI command (task 2)
 // wraps. Field-for-field, value-for-value; never runs a model, never
 // rewrites content, never re-selects a layout.
 export { migrateIrV3ToV4 } from "./ir/migrate"
@@ -32,7 +32,7 @@ export type { ThemeDefinition, ThemeRegistration } from "./themes/definitions"
 // colors/fonts from a user's own .thmx/.potx/.pptx locally — zip bytes in,
 // pure theme-file JSON out (jszip only, browser-safe) — and load such a file
 // back through the registerTheme seam (with its contrast hard gate). The
-// `pptpress brand extract` CLI command and `--theme-file` flag wrap these.
+// `pptwise brand extract` CLI command and `--theme-file` flag wrap these.
 export { extractBrandTheme } from "./themes/brand-extract"
 export type { BrandThemeFile, ExtractBrandThemeOptions } from "./themes/brand-extract"
 export { parseBrandThemeFile, registerBrandThemeFile, BrandThemeFileSchema } from "./themes/brand-theme-file"
@@ -53,7 +53,7 @@ export {
   type PacingBudget,
   type NarrativePreset,
 } from "./narrative"
-export { installPlatform, type PptpressPlatform, type RasterizedImage } from "./platform/registry"
+export { installPlatform, type PptwisePlatform, type RasterizedImage } from "./platform/registry"
 export {
   validateSpec,
   specJsonSchema,
@@ -71,7 +71,7 @@ export {
 } from "./spec"
 export { assembleDeck, disassembleDeck, type PageContent, type AssembleResult } from "./spec/assemble"
 // Deterministic, pure deck.plan.json → deck.spec.json migration (spec §9.2,
-// vocabulary-v4 rename, task 2) — the primitive the `pptpress migrate` CLI
+// vocabulary-v4 rename, task 2) — the primitive the `pptwise migrate` CLI
 // command wraps for the deck-project-directory input shape, mirroring
 // `migrateIrV3ToV4` above for the single-IR-file shape.
 export { migrateDeckPlanToSpec } from "./spec/migrate"

@@ -4,7 +4,7 @@ import { buildPreviewManifest, PREVIEW_MANIFEST_VERSION } from "./preview-manife
 
 const base = {
   title: "deck",
-  pptpressVersion: "9.9.9",
+  pptwiseVersion: "9.9.9",
   width: 1280,
   height: 720,
 }

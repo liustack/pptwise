@@ -10,7 +10,7 @@ import type { StyleTokens } from "./tokens";
  * 过线风险，plan 裁定 2）。
  *
  * **背景裁定（plan 裁定 1 起点为「cover/chapter 可用正红整版」，实现期依
- * pptpress 对比度架构收敛为「仅 chapter 正红整版」）**：`assertContrastFloor`
+ * pptwise 对比度架构收敛为「仅 chapter 正红整版」）**：`assertContrastFloor`
  * （`definitions.ts`）对 cover/content/ending 三页型逐一实测 text/muted 与该
  * 页型默认背景的对比度，要求 ≥3.0——且 text/muted 是全主题单值 token。若
  * cover 取正红，则 text 对红仅 ~2.2:1、muted 对红 ~1.05:1，双双跌破 3.0

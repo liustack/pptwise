@@ -37,7 +37,7 @@ function deck(themeId: string): PptxIR {
     version: "4",
     filename: "emphasis-unassigned-byte-nail.pptx",
     theme: { id: themeId },
-    meta: { organization: "pptpress" },
+    meta: { organization: "pptwise" },
     assets: { images: {} },
     slides: [
       {

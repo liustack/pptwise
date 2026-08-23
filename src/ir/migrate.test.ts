@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { PptpressError } from "../errors"
+import { PptwiseError } from "../errors"
 import {
   migrateBannerHeadingToTwoColumn,
   migrateBloomToClassroom,
@@ -265,7 +265,7 @@ describe("migrateChromeToBranding", () => {
 
   it("both keys is a hard error naming chrome and branding", () => {
     const input = { chrome: "full", branding: "minimal" }
-    expect(() => migrateChromeToBranding(input)).toThrow(PptpressError)
+    expect(() => migrateChromeToBranding(input)).toThrow(PptwiseError)
     expect(() => migrateChromeToBranding(input)).toThrow(/chrome/)
     expect(() => migrateChromeToBranding(input)).toThrow(/branding/)
   })

@@ -104,7 +104,7 @@ export async function pinnedFetch(url: URL, pin: PinnedTarget, init?: RequestIni
 }
 
 function blockedMessage(target: string): string {
-  return `Blocked private or reserved download target: ${target}. pptpress does not download from private addresses.`
+  return `Blocked private or reserved download target: ${target}. pptwise does not download from private addresses.`
 }
 
 function stripIpv6Brackets(hostname: string): string {

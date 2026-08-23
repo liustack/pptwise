@@ -58,7 +58,7 @@ describe("callout default icon through the real generatePptx (task 1 blocking fi
         { type: "callout", variant, text: "Default-icon callout export smoke test." },
       ])
       const bytes = await generatePptx(ir)
-      // A real export (zip magic "PK"), not a thrown PptpressError — the
+      // A real export (zip magic "PK"), not a thrown PptwiseError — the
       // reviewer's exact repro threw `invalid-shape-transform: ... a:ext
       // cx=0 cy=...` for every one of these 3 variants pre-fix.
       expect(bytes.length).toBeGreaterThan(10_000)

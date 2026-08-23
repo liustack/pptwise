@@ -8,7 +8,7 @@ import {
   PptxSealViolationError,
 } from "./pptx-fixed-timestamps"
 import { dedupeMediaInZip } from "./pptx-dedupe-media"
-import { PptpressError } from "../errors"
+import { PptwiseError } from "../errors"
 
 /**
  * carried-items wave — P0 T4 carried item: "normalizePptxTimestamps must
@@ -72,11 +72,11 @@ describe("runtime seal: nothing may mutate a zip after normalizePptxTimestamps r
   })
 
   // Review finding F1 (carried-items wave, fix round): PptxSealViolationError
-  // must still be an instanceof PptpressError, so any call site that already
+  // must still be an instanceof PptwiseError, so any call site that already
   // catches the broader class unconditionally (rather than specifically
   // checking for this subclass — see generate.ts's own dedupeMediaInZip
   // catch) is not silently broken by this class existing.
-  it("PptxSealViolationError is a PptpressError subclass", async () => {
+  it("PptxSealViolationError is a PptwiseError subclass", async () => {
     const zip = buildZip()
     await normalizePptxTimestamps(zip)
     try {
@@ -84,7 +84,7 @@ describe("runtime seal: nothing may mutate a zip after normalizePptxTimestamps r
       expect.unreachable("should have thrown")
     } catch (e) {
       expect(e).toBeInstanceOf(PptxSealViolationError)
-      expect(e).toBeInstanceOf(PptpressError)
+      expect(e).toBeInstanceOf(PptwiseError)
     }
   })
 

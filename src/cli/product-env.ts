@@ -1,13 +1,14 @@
 /**
- * `PPTPRESS_*` environment variables, with `PPTFAST_*` as a per-process alias.
- * The new name wins. Empty string counts as unset. When the old name actually
- * supplies the value, one stderr warning per key per process.
+ * `PPTWISE_*` environment variables, with `PPTPRESS_*` and `PPTFAST_*` as
+ * per-process aliases. The new name wins, then pptpress, then pptfast.
+ * Empty string counts as unset. When an old name actually supplies the
+ * value, one stderr warning per key per process.
  *
- * Never abbreviate the product to PPTP.
+ * Never abbreviate the product to PPTP or PPTW.
  */
 
-export const PRODUCT_ENV_PREFIX = "PPTPRESS_"
-export const LEGACY_ENV_PREFIX = "PPTFAST_"
+export const PRODUCT_ENV_PREFIX = "PPTWISE_"
+export const LEGACY_ENV_PREFIXES = ["PPTPRESS_", "PPTFAST_"] as const
 
 const warnedLegacyKeys = new Set<string>()
 
@@ -20,8 +21,8 @@ export function productEnvName(suffix: string): string {
   return `${PRODUCT_ENV_PREFIX}${suffix}`
 }
 
-export function legacyEnvName(suffix: string): string {
-  return `${LEGACY_ENV_PREFIX}${suffix}`
+export function legacyEnvNames(suffix: string): string[] {
+  return LEGACY_ENV_PREFIXES.map((prefix) => `${prefix}${suffix}`)
 }
 
 function nonempty(value: string | undefined): string | undefined {
@@ -35,18 +36,19 @@ function warnLegacy(legacyKey: string, currentKey: string): void {
 }
 
 /**
- * Look up `PPTPRESS_<suffix>`, falling back to `PPTFAST_<suffix>`.
+ * Look up `PPTWISE_<suffix>`, then `PPTPRESS_<suffix>`, then `PPTFAST_<suffix>`.
  * Consults the **passed** `env` object (tests pass a fake env).
  */
 export function resolveProductEnv(suffix: string, env: NodeJS.ProcessEnv = process.env): string | undefined {
   const currentKey = productEnvName(suffix)
-  const legacyKey = legacyEnvName(suffix)
   const current = nonempty(env[currentKey])
   if (current !== undefined) return current
-  const legacy = nonempty(env[legacyKey])
-  if (legacy !== undefined) {
-    warnLegacy(legacyKey, currentKey)
-    return legacy
+  for (const legacyKey of legacyEnvNames(suffix)) {
+    const legacy = nonempty(env[legacyKey])
+    if (legacy !== undefined) {
+      warnLegacy(legacyKey, currentKey)
+      return legacy
+    }
   }
   return undefined
 }

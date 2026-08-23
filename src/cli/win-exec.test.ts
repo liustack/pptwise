@@ -44,7 +44,7 @@ function winFindDeps(files: Set<string>) {
 
 describe("resolveSpawnPlan", () => {
   it("passes POSIX commands through unchanged", async () => {
-    const plan = await resolveSpawnPlan("npm", ["view", "pptpress"], { PATH: "/usr/bin" }, undefined, {
+    const plan = await resolveSpawnPlan("npm", ["view", "pptwise"], { PATH: "/usr/bin" }, undefined, {
       platform: "linux",
       readFileSync: () => {
         throw new Error("should not read a shim on POSIX")
@@ -52,7 +52,7 @@ describe("resolveSpawnPlan", () => {
       resolveOnPath: async () => "/usr/bin/npm",
       existence: () => "absent",
     })
-    expect(plan).toEqual({ command: "npm", args: ["view", "pptpress"] })
+    expect(plan).toEqual({ command: "npm", args: ["view", "pptwise"] })
   })
 
   it("refuses an unrecognized Windows .cmd shim", async () => {

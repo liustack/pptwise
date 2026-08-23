@@ -25,52 +25,52 @@ beforeAll(() => {
 
 const CURRENT = "0.18.0"
 
-const originalPptpressHome = process.env.PPTPRESS_HOME
-const originalPexels = process.env.PPTPRESS_PEXELS_API_KEY
-const originalPixabay = process.env.PPTPRESS_PIXABAY_API_KEY
-const originalOvId = process.env.PPTPRESS_OPENVERSE_CLIENT_ID
-const originalOvSecret = process.env.PPTPRESS_OPENVERSE_CLIENT_SECRET
+const originalPptwiseHome = process.env.PPTWISE_HOME
+const originalPexels = process.env.PPTWISE_PEXELS_API_KEY
+const originalPixabay = process.env.PPTWISE_PIXABAY_API_KEY
+const originalOvId = process.env.PPTWISE_OPENVERSE_CLIENT_ID
+const originalOvSecret = process.env.PPTWISE_OPENVERSE_CLIENT_SECRET
 
 afterEach(() => {
-  if (originalPptpressHome === undefined) delete process.env.PPTPRESS_HOME
-  else process.env.PPTPRESS_HOME = originalPptpressHome
-  if (originalPexels === undefined) delete process.env.PPTPRESS_PEXELS_API_KEY
-  else process.env.PPTPRESS_PEXELS_API_KEY = originalPexels
-  if (originalPixabay === undefined) delete process.env.PPTPRESS_PIXABAY_API_KEY
-  else process.env.PPTPRESS_PIXABAY_API_KEY = originalPixabay
-  if (originalOvId === undefined) delete process.env.PPTPRESS_OPENVERSE_CLIENT_ID
-  else process.env.PPTPRESS_OPENVERSE_CLIENT_ID = originalOvId
-  if (originalOvSecret === undefined) delete process.env.PPTPRESS_OPENVERSE_CLIENT_SECRET
-  else process.env.PPTPRESS_OPENVERSE_CLIENT_SECRET = originalOvSecret
+  if (originalPptwiseHome === undefined) delete process.env.PPTWISE_HOME
+  else process.env.PPTWISE_HOME = originalPptwiseHome
+  if (originalPexels === undefined) delete process.env.PPTWISE_PEXELS_API_KEY
+  else process.env.PPTWISE_PEXELS_API_KEY = originalPexels
+  if (originalPixabay === undefined) delete process.env.PPTWISE_PIXABAY_API_KEY
+  else process.env.PPTWISE_PIXABAY_API_KEY = originalPixabay
+  if (originalOvId === undefined) delete process.env.PPTWISE_OPENVERSE_CLIENT_ID
+  else process.env.PPTWISE_OPENVERSE_CLIENT_ID = originalOvId
+  if (originalOvSecret === undefined) delete process.env.PPTWISE_OPENVERSE_CLIENT_SECRET
+  else process.env.PPTWISE_OPENVERSE_CLIENT_SECRET = originalOvSecret
 })
 
-/** A fake home, so no test ever reads the machine's real `~` or `~/.pptpress`. */
+/** A fake home, so no test ever reads the machine's real `~` or `~/.pptwise`. */
 async function makeHome(): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), "pptpress-doctor-home-"))
-  process.env.PPTPRESS_HOME = dir
-  delete process.env.PPTPRESS_PEXELS_API_KEY
-  delete process.env.PPTPRESS_PIXABAY_API_KEY
-  delete process.env.PPTPRESS_OPENVERSE_CLIENT_ID
-  delete process.env.PPTPRESS_OPENVERSE_CLIENT_SECRET
+  const dir = await mkdtemp(join(tmpdir(), "pptwise-doctor-home-"))
+  process.env.PPTWISE_HOME = dir
+  delete process.env.PPTWISE_PEXELS_API_KEY
+  delete process.env.PPTWISE_PIXABAY_API_KEY
+  delete process.env.PPTWISE_OPENVERSE_CLIENT_ID
+  delete process.env.PPTWISE_OPENVERSE_CLIENT_SECRET
   return dir
 }
 
-/** Write a skill copy into `<home>/<relative>/pptpress`, with `pinned` stamped
+/** Write a skill copy into `<home>/<relative>/pptwise`, with `pinned` stamped
  *  into its launcher exactly the way `scripts/stamp.mts` stamps the real one.
  *  `pinned: null` writes a launcher with no PINNED line at all. */
 async function writeSkillCopy(home: string, relative: string, pinned: string | null): Promise<string> {
-  const copyDir = join(home, relative, "pptpress")
+  const copyDir = join(home, relative, "pptwise")
   await mkdir(join(copyDir, "scripts"), { recursive: true })
-  const launcher = ["#!/bin/sh", 'PKG="@liustack/pptpress"', ...(pinned === null ? [] : [`PINNED="${pinned}"`]), ""].join("\n")
+  const launcher = ["#!/bin/sh", 'PKG="@liustack/pptwise"', ...(pinned === null ? [] : [`PINNED="${pinned}"`]), ""].join("\n")
   await writeFile(join(copyDir, "scripts", "run.sh"), launcher)
   return copyDir
 }
 
 /** A skill copy directory with no `scripts/run.sh` in it at all. */
 async function writePartialSkillCopy(home: string, relative: string): Promise<string> {
-  const copyDir = join(home, relative, "pptpress")
+  const copyDir = join(home, relative, "pptwise")
   await mkdir(copyDir, { recursive: true })
-  await writeFile(join(copyDir, "SKILL.md"), "# pptpress\n")
+  await writeFile(join(copyDir, "SKILL.md"), "# pptwise\n")
   return copyDir
 }
 
@@ -89,19 +89,19 @@ async function writeDshProfile(
     JSON.stringify({
       name: `dsh-profile-${name}`,
       private: true,
-      dependencies: opts.declared === undefined ? {} : { "@liustack/pptpress": opts.declared },
+      dependencies: opts.declared === undefined ? {} : { "@liustack/pptwise": opts.declared },
     }),
   )
   if (opts.installed !== undefined) {
-    const pkgDir = join(profileDir, "node_modules", "@liustack", "pptpress")
+    const pkgDir = join(profileDir, "node_modules", "@liustack", "pptwise")
     await mkdir(pkgDir, { recursive: true })
-    await writeFile(join(pkgDir, "package.json"), JSON.stringify({ name: "@liustack/pptpress", version: opts.installed }))
+    await writeFile(join(pkgDir, "package.json"), JSON.stringify({ name: "@liustack/pptwise", version: opts.installed }))
   }
 }
 
 describe("readPinnedVersion", () => {
   it("reads the exact PINNED line the launcher carries", () => {
-    expect(readPinnedVersion('PKG="@liustack/pptpress"\nPINNED="0.17.2"\nBIN="pptpress"\n')).toBe("0.17.2")
+    expect(readPinnedVersion('PKG="@liustack/pptwise"\nPINNED="0.17.2"\nBIN="pptwise"\n')).toBe("0.17.2")
   })
 
   it("returns null when there is no PINNED line", () => {
@@ -115,9 +115,9 @@ describe("readPinnedVersion", () => {
 
 describe("scanSkillCopies", () => {
   it("every SKILL_COPY_FILES path exists in the repo skill folder", () => {
-    const root = join(process.cwd(), "skills", "pptpress")
+    const root = join(process.cwd(), "skills", "pptwise")
     for (const rel of SKILL_COPY_FILES) {
-      expect(existsSync(join(root, rel)), `missing skills/pptpress/${rel}`).toBe(true)
+      expect(existsSync(join(root, rel)), `missing skills/pptwise/${rel}`).toBe(true)
     }
   })
 
@@ -197,6 +197,26 @@ describe("scanSkillCopies", () => {
     }
   })
 
+  it("reports a leftover pptpress skill copy as a legacy/stale copy", async () => {
+    const home = await makeHome()
+    try {
+      const copyDir = join(home, ".claude", "skills", "pptpress")
+      await mkdir(copyDir, { recursive: true })
+      await writeFile(join(copyDir, "SKILL.md"), "# pptpress\n")
+      const skills = await scanSkillCopies(home, CURRENT)
+      expect(skills.copies).toHaveLength(1)
+      expect(skills.copies[0]).toMatchObject({ path: copyDir, legacy: true, stale: true })
+
+      const report = await buildDoctorReport({ home, env: { PATH: "" }, version: CURRENT })
+      const warning = report.warnings.find((w) => w.check === "skill copy")
+      expect(warning?.message).toContain("leftover pptpress skill copy")
+      expect(warning?.message).toContain(copyDir)
+      expect(renderDoctorReport(report)).toContain("leftover pptpress copy")
+    } finally {
+      await rm(home, { recursive: true, force: true })
+    }
+  })
+
   it("reports a leftover pptfast skill copy as a legacy/stale copy", async () => {
     const home = await makeHome()
     try {
@@ -221,8 +241,8 @@ describe("scanSkillCopies", () => {
     const home = await makeHome()
     try {
       const copyDir = await writeSkillCopy(home, ".claude/skills", CURRENT)
-      await writeFile(join(copyDir, "SKILL.md"), "# pptpress\n")
-      await writeFile(join(copyDir, "SKILL.zh-CN.md"), "# pptpress\n")
+      await writeFile(join(copyDir, "SKILL.md"), "# pptwise\n")
+      await writeFile(join(copyDir, "SKILL.zh-CN.md"), "# pptwise\n")
       await writeFile(join(copyDir, "scripts", "run.ps1"), "# stub\n")
       const [copy] = (await scanSkillCopies(home, CURRENT)).copies
       expect(copy).toMatchObject({ pinned: CURRENT, stale: false })
@@ -243,7 +263,7 @@ describe("scanSkillCopies", () => {
       expect(rendered).toContain("[!]")
       expect(rendered).toContain("references/spec.md")
       expect(rendered).toContain(
-        "git clone --depth 1 https://github.com/liustack/pptpress.git /tmp/pptpress-src && cp -R /tmp/pptpress-src/skills/pptpress/. ",
+        "git clone --depth 1 https://github.com/liustack/pptwise.git /tmp/pptwise-src && cp -R /tmp/pptwise-src/skills/pptwise/. ",
       )
     } finally {
       await rm(home, { recursive: true, force: true })
@@ -299,7 +319,7 @@ describe("inspectDsh", () => {
   it("reports a link: dependency as installed with no comparable version", async () => {
     const home = await makeHome()
     try {
-      await writeDshProfile(home, "dev", { declared: "link:/Users/someone/projects/pptpress" })
+      await writeDshProfile(home, "dev", { declared: "link:/Users/someone/projects/pptwise" })
       const [profile] = (await inspectDsh(home, CURRENT)).profiles
       expect(profile).toMatchObject({ installed: true, version: null, source: null, stale: false })
     } finally {
@@ -363,7 +383,7 @@ describe("buildDoctorReport", () => {
       const report = await buildDoctorReport({ home, env: { PATH: "" }, version: CURRENT })
       expect(report.errors).toEqual([])
       const warning = report.warnings.find((w) => w.check === "dsh plugin")
-      expect(warning?.fix).toBe(`npx -y @deepseek-ai/dsh plugin --profile web add @liustack/pptpress@${CURRENT}`)
+      expect(warning?.fix).toBe(`npx -y @deepseek-ai/dsh plugin --profile web add @liustack/pptwise@${CURRENT}`)
     } finally {
       await rm(home, { recursive: true, force: true })
     }
@@ -405,7 +425,7 @@ describe("renderDoctorReport", () => {
       expect(rendered).toContain(copyDir)
       expect(rendered).toContain("pins 0.9.0")
       expect(rendered).toContain("(stale)")
-      expect(rendered).toContain(`git clone --depth 1 https://github.com/liustack/pptpress.git /tmp/pptpress-src && cp -R /tmp/pptpress-src/skills/pptpress/. ${copyDir}/`)
+      expect(rendered).toContain(`git clone --depth 1 https://github.com/liustack/pptwise.git /tmp/pptwise-src && cp -R /tmp/pptwise-src/skills/pptwise/. ${copyDir}/`)
     } finally {
       await rm(home, { recursive: true, force: true })
     }
@@ -463,7 +483,7 @@ describe("runDoctor: exit-code policy", () => {
       expect(parsed.errors).toEqual([])
 
       const human = await runDoctor({ home, env: { PATH: "" }, version: CURRENT })
-      expect(human.output.startsWith("pptpress doctor")).toBe(true)
+      expect(human.output.startsWith("pptwise doctor")).toBe(true)
     } finally {
       await rm(home, { recursive: true, force: true })
     }
@@ -473,7 +493,7 @@ describe("runDoctor: exit-code policy", () => {
 describe("runDoctor: workspace artifacts line", () => {
   it("reports the cwd as the anchor when there is no project config", async () => {
     const home = await makeHome()
-    const cwd = await mkdtemp(join(tmpdir(), "pptpress-doctor-ws-"))
+    const cwd = await mkdtemp(join(tmpdir(), "pptwise-doctor-ws-"))
     try {
       const { output } = await runDoctor({
         home,
@@ -487,14 +507,14 @@ describe("runDoctor: workspace artifacts line", () => {
         workspace: { anchor: string; root: string; configured: boolean; ignore: string }
       }
       expect(parsed.workspace.anchor).toBe(cwd)
-      expect(parsed.workspace.root).toBe(join(cwd, ".pptpress"))
+      expect(parsed.workspace.root).toBe(join(cwd, ".pptwise"))
       expect(parsed.workspace.configured).toBe(false)
       expect(parsed.workspace.ignore).toBe("not-a-repo")
 
       const human = await runDoctor({ home, env: { PATH: "" }, version: CURRENT, cwd, runGit: async () => null })
       expect(human.output).toContain("Workspace artifacts")
       expect(human.output).toContain(cwd)
-      expect(human.output).toContain(join(cwd, ".pptpress"))
+      expect(human.output).toContain(join(cwd, ".pptwise"))
       expect(human.output).toContain("not a git repository")
     } finally {
       await rm(home, { recursive: true, force: true })
@@ -504,9 +524,9 @@ describe("runDoctor: workspace artifacts line", () => {
 
   it("names a configured outDir and skips the git probe", async () => {
     const home = await makeHome()
-    const cwd = await mkdtemp(join(tmpdir(), "pptpress-doctor-ws-"))
+    const cwd = await mkdtemp(join(tmpdir(), "pptwise-doctor-ws-"))
     try {
-      await writeFile(join(cwd, "pptpress.config.json"), JSON.stringify({ outDir: "artifacts" }))
+      await writeFile(join(cwd, "pptwise.config.json"), JSON.stringify({ outDir: "artifacts" }))
       const json = await runDoctor({
         home,
         env: { PATH: "" },
@@ -557,7 +577,7 @@ describe("runDoctor: images", () => {
   it.skipIf(process.platform === "win32")("probes a fake grok on PATH as found and disabled by default, without leaking secrets", async () => {
     // Windows: findOnPath only tries PATHEXT, so an extensionless `grok` plus chmod 0755 is not a product bug.
     const home = await makeHome()
-    const binDir = await mkdtemp(join(tmpdir(), "pptpress-doctor-bin-"))
+    const binDir = await mkdtemp(join(tmpdir(), "pptwise-doctor-bin-"))
     await writeFile(join(binDir, "grok"), "#!/bin/sh\nexit 0\n")
     chmodSync(join(binDir, "grok"), 0o755)
     const versionRuns: string[] = []
@@ -592,7 +612,7 @@ describe("runDoctor: images", () => {
       const rendered = renderDoctorReport(report)
       expect(rendered).toContain("Image generators")
       expect(rendered).toContain("disabled")
-      expect(rendered).toContain("pptpress config set images.generators.grok.enabled true")
+      expect(rendered).toContain("pptwise config set images.generators.grok.enabled true")
       expect(versionRuns.some((l) => l.endsWith("--version"))).toBe(true)
     } finally {
       await rm(home, { recursive: true, force: true })

@@ -46,8 +46,8 @@ describe("validateIr", () => {
     expect(v.errors[0]!.message).toMatch(/"text" pacing value is now "dense"/)
     expect(v.errors[0]!.message).toMatch(/"presentation" is now "spacious"/)
     // v2 has no automated migration path (spec §15.3: "不接 v2") — the
-    // message must not point to `pptpress migrate`.
-    expect(v.errors[0]!.message).not.toMatch(/pptpress migrate/)
+    // message must not point to `pptwise migrate`.
+    expect(v.errors[0]!.message).not.toMatch(/pptwise migrate/)
   })
 
   it("hard-rejects IR v3 input with the full §9.1 mapping and a migrate-command pointer (spec §9.3)", () => {
@@ -56,7 +56,7 @@ describe("validateIr", () => {
     expect(v.errors).toHaveLength(1)
     expect(v.errors[0]!.path).toBe("version")
     expect(v.errors[0]!.message).toMatch(/IR v3 is not supported/)
-    expect(v.errors[0]!.message).toMatch(/pptpress migrate <input> -o <output>/)
+    expect(v.errors[0]!.message).toMatch(/pptwise migrate <input> -o <output>/)
     expect(v.errors[0]!.message).toMatch(/scenario is now narrative/)
     expect(v.errors[0]!.message).toMatch(/scenario\.mode is now narrative\.strategy/)
     expect(v.errors[0]!.message).toMatch(/mode "narrative" is now strategy "storytelling"/)
@@ -71,7 +71,7 @@ describe("validateIr", () => {
     expect(v.ok).toBe(false)
     expect(v.errors[0]!.message).toMatch(/unknown theme "neon"/)
     expect(v.errors[0]!.message).toMatch(/available:.*consulting/)
-    expect(v.errors[0]!.message).not.toMatch(/pptpress migrate/)
+    expect(v.errors[0]!.message).not.toMatch(/pptwise migrate/)
     expect(v.errors[0]!.message).not.toMatch(/was removed/)
   })
 
@@ -81,7 +81,7 @@ describe("validateIr", () => {
     expect(v.errors[0]!.path).toBe("theme.id")
     expect(v.errors[0]!.message).toMatch(/bloom/)
     expect(v.errors[0]!.message).toMatch(/removed/)
-    expect(v.errors[0]!.message).toMatch(/pptpress migrate/)
+    expect(v.errors[0]!.message).toMatch(/pptwise migrate/)
     expect(v.errors[0]!.message).toMatch(/classroom/)
   })
 
@@ -103,7 +103,7 @@ describe("validateIr", () => {
     expect(v.ok).toBe(false)
     const message = v.errors.map((e) => e.message).join("\n")
     expect(message).toMatch(/removed/)
-    expect(message).toMatch(/pptpress migrate/)
+    expect(message).toMatch(/pptwise migrate/)
     expect(message).toMatch(/image_grid/)
   })
 
@@ -116,7 +116,7 @@ describe("validateIr", () => {
     expect(v.errors[0]!.path).toBe("slides.0.layout")
     expect(v.errors[0]!.message).toMatch(/banner-heading/)
     expect(v.errors[0]!.message).toMatch(/removed/)
-    expect(v.errors[0]!.message).toMatch(/pptpress migrate/)
+    expect(v.errors[0]!.message).toMatch(/pptwise migrate/)
     expect(v.errors[0]!.message).toMatch(/two-column/)
   })
 
@@ -128,7 +128,7 @@ describe("validateIr", () => {
     expect(v.ok).toBe(false)
     const message = v.errors.map((e) => e.message).join("\n")
     expect(message).toMatch(/unknown layout/)
-    expect(message).not.toMatch(/pptpress migrate/)
+    expect(message).not.toMatch(/pptwise migrate/)
   })
 
   it("unknown other component types still do NOT mention migrate", () => {
@@ -138,7 +138,7 @@ describe("validateIr", () => {
     })
     expect(v.ok).toBe(false)
     const message = v.errors.map((e) => e.message).join("\n")
-    expect(message).not.toMatch(/pptpress migrate/)
+    expect(message).not.toMatch(/pptwise migrate/)
   })
 
   it("maps slide-scoped issues to 1-based page numbers", () => {
@@ -1785,7 +1785,7 @@ describe("v4 has no old-vocabulary rescue (spec §16, reversing the now-supersed
     expect(v.normalized).toBeUndefined()
     expect(v.ir).toBeUndefined()
     expect(v.errors.some((e) => e.message.includes('"scenario" was renamed to "narrative" in IR v4'))).toBe(true)
-    expect(v.errors.some((e) => e.message.includes("pptpress migrate"))).toBe(true)
+    expect(v.errors.some((e) => e.message.includes("pptwise migrate"))).toBe(true)
   })
 
   it("hard-rejects a preset-id string under the pre-rename `scenario` field name too, with the same pointer", () => {
@@ -1949,7 +1949,7 @@ describe("enum/discriminator did-you-mean hints (borrow-wave task 3)", () => {
     const message = v.errors.find((e) => e.path.endsWith(".icon"))!.message
     expect(message).toContain('"check-circle" is not a valid icon name')
     expect(message).toContain('did you mean "circle-check"?')
-    expect(message).toContain("pptpress schema")
+    expect(message).toContain("pptwise schema")
     expect(message).not.toMatch(/"a-arrow-down"/) // the enum is never flattened into the message
     expect(message.length).toBeLessThan(ENUM_ERROR_MESSAGE_MAX_LENGTH)
   })
@@ -1961,7 +1961,7 @@ describe("enum/discriminator did-you-mean hints (borrow-wave task 3)", () => {
     const message = v.errors[0]!.message
     expect(message).toContain('"kpi_card" is not a valid component type')
     expect(message).toContain('did you mean "kpi_cards"?')
-    expect(message).toContain("pptpress schema")
+    expect(message).toContain("pptwise schema")
     expect(message).not.toMatch(/'bullets' \| 'paragraph'/) // the full component-type option list is never flattened into the message
     expect(message.length).toBeLessThan(ENUM_ERROR_MESSAGE_MAX_LENGTH)
   })
@@ -2115,7 +2115,7 @@ describe("renderSlideSvg", () => {
     expect(() => renderSlideSvg(ir, 99)).toThrow(/out of range/)
   })
 
-  it("throws a named PptpressError (not a bare TypeError) for a component.type that bypassed validateIr (wave-2 sweep, T3, final review Minor 2)", () => {
+  it("throws a named PptwiseError (not a bare TypeError) for a component.type that bypassed validateIr (wave-2 sweep, T3, final review Minor 2)", () => {
     const ir = PptxIRSchema.parse(raw)
     // A type assertion, not `validateIr`, is what could ever put an invalid
     // `type` on a `Component` — `RENDER_DEFS[component.type]` used to be
@@ -2134,7 +2134,7 @@ describe("generatePptx", () => {
     expect([bytes[0], bytes[1]]).toEqual([0x50, 0x4b]) // "PK"
   })
 
-  it("throws PptpressError with per-page details for invalid input", async () => {
+  it("throws PptwiseError with per-page details for invalid input", async () => {
     await expect(generatePptx({ nope: true })).rejects.toThrow(/invalid IR/)
   })
 
@@ -2269,7 +2269,7 @@ describe("generatePptx draft gate (W5 task 1)", () => {
     slides: [raw.slides[0], { type: "content" as const, id: "p-2", placeholder: true as const }],
   }
 
-  it("throws PptpressError listing the placeholder page number + id when draft is not passed", async () => {
+  it("throws PptwiseError listing the placeholder page number + id when draft is not passed", async () => {
     await expect(generatePptx(withPlaceholder)).rejects.toThrow(
       "deck has 1 unfilled placeholder page: p-2 (page 2) — fill them or pass --draft",
     )
@@ -2333,7 +2333,7 @@ describe("generatePptx content-drop gate (deep-review P1)", () => {
     expect(svg).not.toContain("more")
   })
 
-  it("throws PptpressError naming the page, the count and the way out", async () => {
+  it("throws PptwiseError naming the page, the count and the way out", async () => {
     await expect(generatePptx(dropping)).rejects.toThrow(
       /deck drops \d+ content blocks that do not fit the content area, on 1 page: p-2 \(page 2, \d+\) — shorten the content, split the page in two, or pass --allow-dropped-content/,
     )
@@ -2546,7 +2546,7 @@ describe("irJsonSchema", () => {
   })
 
   // Review fix round, Important-1: `irJsonSchema()` is the schema surface a
-  // model actually reads before writing IR (`pptpress schema`, `cli/commands
+  // model actually reads before writing IR (`pptwise schema`, `cli/commands
   // .ts`'s `schema` command) — a component-vs-alternative selection call
   // that only lives in a source comment never reaches it. device_mockup is
   // the first component to carry a `.describe()` (`ir/components/
@@ -2615,7 +2615,7 @@ describe("irJsonSchema", () => {
   // a description (same precedent device_mockup's Important-1 fix established);
   // this locks that the subtype enum members AND their selection guidance
   // survive z.toJSONSchema into the emitted JSON Schema the model actually
-  // reads (`pptpress schema`), not just a source comment.
+  // reads (`pptwise schema`), not just a source comment.
   it("surfaces chart_type's subtype selection guidance (the four chart-depth subtypes + the gauge-vs-kpi_cards boundary)", () => {
     const json = JSON.stringify(irJsonSchema())
     // the new enum members reach the emitted schema

@@ -1,7 +1,7 @@
-# pptpress benchmark
+# pptwise benchmark
 
-A model-agnostic evaluation of how well a model follows `skills/pptpress/SKILL.md` to turn a
-plain-English deck request into a working pptpress artifact. Zero API calls, zero model
+A model-agnostic evaluation of how well a model follows `skills/pptwise/SKILL.md` to turn a
+plain-English deck request into a working pptwise artifact. Zero API calls, zero model
 dependency: this directory is a fixed question bank plus a run protocol. Scoring (Task 2 of
 this wave) is entirely mechanical — it consumes the artifact files a model produces, never the
 model itself, and applies no subjective quality dimension.
@@ -35,7 +35,7 @@ scorer (which reads `<resultsDir>/<model-tag>/`) never mistakes an archive folde
 
 For each question:
 
-1. Give the model-under-test exactly two things: `skills/pptpress/SKILL.md` and that question's
+1. Give the model-under-test exactly two things: `skills/pptwise/SKILL.md` and that question's
    `prompt.md`. Nothing else — no `meta.json`, no other question's prompt, no hints about which
    component or layout the question is aiming at.
 2. Let the model run the SKILL's workflow to completion: narrative/theme choice, spec (or a
@@ -60,7 +60,7 @@ measures — a human correcting the output after the fact would measure the huma
 ### Harness role
 
 The harness plays the user for any turn where the model-under-test stops and waits on a human
-reply. `skills/pptpress/SKILL.md` Phase 2 asks the model to propose a spec and confirm it before
+reply. `skills/pptwise/SKILL.md` Phase 2 asks the model to propose a spec and confirm it before
 writing page content — a single-shot harness has no human to supply that confirmation, so the
 harness scripts it instead, with exactly two fixed lines, used verbatim:
 
@@ -124,7 +124,7 @@ compensate for a harness gap").
 
 ## Answer-leak discipline
 
-No `prompt.md` names a pptpress component type, layout id, or narrative/schema vocabulary word
+No `prompt.md` names a pptwise component type, layout id, or narrative/schema vocabulary word
 (`swot`, `bmc`, `gantt`, `waterfall`, `roadmap`, `matrix`, `timeline`, `bullets`, `kpi_cards`,
 `asset_id`, `layout`, `narrative`, `pyramid`/`storytelling`/`instructional`/`showcase`/`briefing`,
 etc.). Every question is written as a working business ask in plain language — a strategy
@@ -188,7 +188,7 @@ Every metric is purely mechanical, computed off the SDK the render chain already
 (`validateIr`/`auditDeck`/`generatePptx`, `src/index.ts`):
 
 - **validate first-pass**: does the produced artifact (or its assembled IR, for a deck project —
-  read via `readDeckDir`, `src/cli/deck-dir.ts`, the same seam `pptpress validate`/`render` use)
+  read via `readDeckDir`, `src/cli/deck-dir.ts`, the same seam `pptwise validate`/`render` use)
   pass `validateIr` — pass/fail plus the raw error count
 - **audit findings**: `auditDeck` finding count (overflow, out-of-bounds, low-contrast, overlap, plus the advisory content-truncated and content-dropped codes — all six count) —
   only computed when validate passed (an invalid IR has nothing well-formed enough to audit)
@@ -277,8 +277,8 @@ The full implementation of the agentic protocol described above (BENCH-01,
 `.issues/2026-08-03-bench-agentic/plan.md`): `pnpm bench:agentic <prefix> [qids...]` drives an
 external OpenAI-compatible model through a real function-calling tool loop instead of one
 completion. The model gets four tools — `write_file(path, content)`, `read_file(path)`,
-`list_files(path?)`, `run_pptpress(args)` — and a private per-question workspace, and iterates on
-its own: write IR (or deck-project files), run `validate`/`audit` via `run_pptpress`, read the
+`list_files(path?)`, `run_pptwise(args)` — and a private per-question workspace, and iterates on
+its own: write IR (or deck-project files), run `validate`/`audit` via `run_pptwise`, read the
 findings, fix, repeat, the same self-check loop the SKILL playbook describes, with real tool
 access instead of imagined output. Credentials use the same `.env` shape as `run.mts`:
 `<PREFIX>_BASE_URL` / `<PREFIX>_API_KEY` / `<PREFIX>_MODEL`. Same `--model=<id>` override as
@@ -293,7 +293,7 @@ placeholder through the text-only `write_file` tool. The system prompt mentions 
 ("the actual referenced files are already present in your workspace... check with list_files")
 without describing what any specific question's material actually shows — the model still has to
 look. After the run, `placeArtifact` copies a bare-IR answer's sibling `assets/` directory (the
-same directory the model's own `run_pptpress validate`/`render` calls resolved against during the
+same directory the model's own `run_pptwise validate`/`render` calls resolved against during the
 tool loop) up into the result root alongside `deck.json`, mirroring what it already did for a
 deck-project answer's `assets/` — otherwise a correctly-authored local-path reference would
 validate and render fine inside the tool loop but then fail `score.mts`'s own re-render, which
@@ -312,20 +312,20 @@ mechanics all worked; see the round-2 task report for the full smoke trace.
 narratives + themes, because that model has no tools and injection is its only access to any of
 it), this runner's system prompt carries only SKILL.md and the question — the IR JSON Schema,
 narrative presets, and theme catalog are not embedded. The model queries them itself via
-`run_pptpress(["schema"])` / `run_pptpress(["narratives", "--json"])` /
-`run_pptpress(["themes", "--json"])`, exactly what this file's own run protocol above and the
+`run_pptwise(["schema"])` / `run_pptwise(["narratives", "--json"])` /
+`run_pptwise(["themes", "--json"])`, exactly what this file's own run protocol above and the
 SKILL playbook already describe. This is the largest cost lever on this runner (the injected
 vocabulary alone was most of an ~83k-token system prompt) and is more protocol-faithful, not a
 compromise — the protocol never asked for pre-injection in a mode where the model can just ask.
 
-**Tool-result cap.** Every tool result (a `read_file`, `list_files`, or `run_pptpress` return
+**Tool-result cap.** Every tool result (a `read_file`, `list_files`, or `run_pptwise` return
 value) is capped at 8000 characters before it goes back to the model, truncated from the end so
 the head — where a CLI's error message or summary line lives — survives intact. An over-cap
 result gets a trailing marker line stating what was cut, e.g.
 `[truncated: 8000 of 41203 chars shown]`. Applies uniformly to every tool and every question, no
 per-question tuning.
 
-**Tool surface — minimal and neutral by design.** No general shell. `run_pptpress` only accepts a
+**Tool surface — minimal and neutral by design.** No general shell. `run_pptwise` only accepts a
 whitelisted, read-only/artifact-producing subcommand (`render`, `validate`, `audit`,
 `asset-brief`, `schema`, `assemble`, `disassemble`, `migrate`, `themes`, `narratives`, `preview`,
 `spec validate`) — no `serve` (interactive), no removed vocabulary-v4 aliases (`plan`,
@@ -396,7 +396,7 @@ question root instead, the same convention `run.mts` uses for its single-shot an
 
 ## Probe bank (`questions-probe/`)
 
-A second, separate question bank — `tests/bench/questions-probe/p01..p08`, its own id namespace, the main `questions/q01..q20` bank untouched — built for exactly one purpose: **evidence-gate input for the candidate component pool** (`.issues/specs/2026-07-24-pptpress-layout-component-roadmap.md` §5/§7), not model benchmarking. The gate requires ≥2 distinct-scenario cases per candidate of "the model wanted to express X and the existing 33-component pool could not carry it" before that candidate gets built. The 2026-07-24 rerun (`.issues/notes/quality-evidence.md`) found the main bank structurally incapable of producing this evidence — it was authored around the existing pool, so no question in it ever puts a model in a position where only a missing component would do. The probe bank exists to put the model in exactly that position, once per candidate.
+A second, separate question bank — `tests/bench/questions-probe/p01..p08`, its own id namespace, the main `questions/q01..q20` bank untouched — built for exactly one purpose: **evidence-gate input for the candidate component pool** (`.issues/specs/2026-07-24-pptwise-layout-component-roadmap.md` §5/§7), not model benchmarking. The gate requires ≥2 distinct-scenario cases per candidate of "the model wanted to express X and the existing 33-component pool could not carry it" before that candidate gets built. The 2026-07-24 rerun (`.issues/notes/quality-evidence.md`) found the main bank structurally incapable of producing this evidence — it was authored around the existing pool, so no question in it ever puts a model in a position where only a missing component would do. The probe bank exists to put the model in exactly that position, once per candidate.
 
 **Scores from this bank are diagnostic, not comparative.** There is no "probe bank pass rate" worth tracking release over release — the deliverable is the qualitative read of what a model tried to do when the pool couldn't carry its intent, produced by a human (or an agent doing the analysis pass, not the run itself) reading each artifact.
 

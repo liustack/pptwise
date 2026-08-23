@@ -36,7 +36,7 @@ describe("gallery SVG text never paints an overflow ellipsis", () => {
       await Promise.all(LANGUAGE_IDS.map(async (id) => [id, await corpusAssets(LEXICONS[id])])),
     ) as Record<LanguageId, Awaited<ReturnType<typeof corpusAssets>>>
     const jobs = buildMatrix(themeIds, assets)
-    const outDir = mkdtempSync(join(tmpdir(), "pptpress-no-ellipsis-"))
+    const outDir = mkdtempSync(join(tmpdir(), "pptwise-no-ellipsis-"))
     const { svgs, manifest } = renderMatrix(jobs, outDir, "no-ellipsis")
     expect(svgs.size).toBeGreaterThan(0)
     expect(manifest.pages.length).toBe(jobs.length)

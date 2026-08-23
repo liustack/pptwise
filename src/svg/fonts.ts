@@ -29,12 +29,12 @@
  *
  * Anthropic's official pptx-generation skill classifies both Georgia and
  * Consolas -- two of this file's SAFE_FONTS members, and the actual export
- * faces for pptpress's default theme (consulting: Georgia heading+body) and
+ * faces for pptwise's default theme (consulting: Georgia heading+body) and
  * every theme's code component (Consolas, all 13 themes, via ROLE_DEFAULT
  * below) -- as "QA-unreliable" rather than "safe". That is axis (2)
  * judgment. This file's SAFE_FONTS is axis (1) judgment. The two
  * classifications disagreeing is not a contradiction to paper over -- they
- * are answering different questions, and pptpress had never actually
+ * are answering different questions, and pptwise had never actually
  * measured axis (2) for these faces before borrow-wave Task 3 (the one
  * prior width-safety mechanism, `code.tsx`'s `MONO_WIDTH_SAFETY`, was
  * itself calibrated against Menlo, a macOS preview stand-in, not the real

@@ -1,8 +1,8 @@
 // @vitest-environment node
 //
 // The shipped examples are the product's front door: `README.md` points at
-// them, `skills/pptpress/SKILL.md` teaches models from them, and a new user's
-// first command is usually `pptpress render examples/<one>.json`. Nothing was
+// them, `skills/pptwise/SKILL.md` teaches models from them, and a new user's
+// first command is usually `pptwise render examples/<one>.json`. Nothing was
 // rendering five of the six — `scripts/e2e.mts` only ever rendered
 // `examples/basic.json`, and the unit suite renders its own fixtures — so
 // `examples/team-onboarding.json` shipped un-renderable through 0.19.2 and

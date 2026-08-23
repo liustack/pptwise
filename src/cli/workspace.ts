@@ -1,9 +1,9 @@
 /**
- * Workspace artifact root — where `pptpress render` / `pptpress preview` put
+ * Workspace artifact root — where `pptwise render` / `pptwise preview` put
  * their output when the caller passes no `-o`.
  *
  * ```
- * <anchor>/.pptpress/
+ * <anchor>/.pptwise/
  *   <deck-slug>/
  *     preview.html        preview --html          (regenerable)
  *     manifest.json       preview --html          (regenerable)
@@ -18,18 +18,18 @@
  * Three properties this module exists to hold:
  *
  * 1. **One anchor rule, two lines long.** The anchor is the directory of the
- *    nearest `pptpress.config.json` (`./config.ts`'s `findConfig` cwd walk-up
+ *    nearest `pptwise.config.json` (`./config.ts`'s `findConfig` cwd walk-up
  *    — the project root is already a concept this CLI has), else cwd. No git
  *    root probing: a git root and a project root are not the same thing in a
  *    monorepo, and a third rule would only be a third thing to remember.
  * 2. **Two zones live here.** Render output (pptx, preview.html, `NNN-*.svg`,
  *    manifest.json) is regenerable: delete those files and re-run, they grow
- *    back. Stock-photo assets (`.pptpress/<deck>/assets/` plus sidecars) are
- *    pinned downloads, not garbage. Deleting the whole `.pptpress/` directory
+ *    back. Stock-photo assets (`.pptwise/<deck>/assets/` plus sidecars) are
+ *    pinned downloads, not garbage. Deleting the whole `.pptwise/` directory
  *    drops those photos. Deck sources (`deck.spec.json`, `pages/`, project
  *    `assets/`, `theme.json`) stay where the user put them.
  * 3. **The directory ignores itself, once.** The first time this CLI creates
- *    `.pptpress/` it appends the entry to the repository's *local* exclude
+ *    `.pptwise/` it appends the entry to the repository's *local* exclude
  *    file — never the shared `.gitignore`, which is the user's to write. See
  *    {@link ensureGitIgnored} for the four ways that can go sideways and what
  *    each one does instead.
@@ -41,27 +41,28 @@
 import { existsSync } from "node:fs"
 import { appendFile, mkdir, readFile, readdir, stat, unlink } from "node:fs/promises"
 import { basename, dirname, extname, join, resolve } from "node:path"
-import { PptpressError } from "../errors"
+import { PptwiseError } from "../errors"
 import { slugify } from "../themes/brand-extract"
 import { runChild } from "./child"
 import { ASSETS_DIRNAME, assertSafeFileSegment } from "./deck-dir"
 
 /** The default artifact root's directory name, relative to the anchor. A
  *  project config's `outDir` (`./config.ts`) replaces it wholesale. */
-export const WORKSPACE_DIRNAME = ".pptpress"
-export const LEGACY_WORKSPACE_DIRNAME = ".pptfast"
+export const WORKSPACE_DIRNAME = ".pptwise"
+export const LEGACY_WORKSPACE_DIRNAMES = [".pptpress", ".pptfast"] as const
 
 /** The line appended to the local exclude file — a trailing slash so it only
  *  ever matches a directory, and no leading slash so it matches at whatever
  *  depth below the repository root the anchor happens to sit (a monorepo's
  *  per-package project root is not the repository root). Fresh projects
- *  write `.pptpress/`. A leftover `.pptfast/` keeps that name. */
+ *  write `.pptwise/`. A leftover `.pptpress/` or `.pptfast/` keeps that name. */
 export const WORKSPACE_IGNORE_ENTRY = `${WORKSPACE_DIRNAME}/`
 
 function defaultWorkspaceDirname(anchor: string): string {
-  const next = join(anchor, WORKSPACE_DIRNAME)
-  const legacy = join(anchor, LEGACY_WORKSPACE_DIRNAME)
-  if (!existsSync(next) && existsSync(legacy)) return LEGACY_WORKSPACE_DIRNAME
+  if (existsSync(join(anchor, WORKSPACE_DIRNAME))) return WORKSPACE_DIRNAME
+  for (const name of LEGACY_WORKSPACE_DIRNAMES) {
+    if (existsSync(join(anchor, name))) return name
+  }
   return WORKSPACE_DIRNAME
 }
 
@@ -86,9 +87,9 @@ export const RENDERED_SVG_PATTERN = /^\d{3}-[a-z-]+\.svg$/
  *  is pure — nothing here has touched the filesystem yet. */
 export interface WorkspaceLocation {
   /** The project root the artifact root hangs off: the nearest
-   *  `pptpress.config.json`'s directory, else cwd. */
+   *  `pptwise.config.json`'s directory, else cwd. */
   anchor: string
-  /** `<anchor>/.pptpress`, or the project config's `outDir` resolved against
+  /** `<anchor>/.pptwise`, or the project config's `outDir` resolved against
    *  the config file's own directory. */
   root: string
   /** `<root>/<slug>` — this deck's own subdirectory. */
@@ -127,7 +128,7 @@ export function deckSlug(target: string, isDir: boolean): string {
  *  rather than any one deck's subdirectory. */
 export function resolveWorkspaceRoot(opts: {
   cwd: string
-  /** The nearest `pptpress.config.json`'s path (`findConfig`'s hit), or null. */
+  /** The nearest `pptwise.config.json`'s path (`findConfig`'s hit), or null. */
   projectConfigPath?: string | null
   /** That config's `outDir`, if it set one. Relative values resolve against
    *  the config file's own directory — the same base `decksDir` already uses
@@ -202,7 +203,7 @@ export async function gitIgnoreStatus(
   runGit: GitRunner = runGitDefault,
 ): Promise<Exclude<GitIgnoreStatus, "skipped">> {
   // Keep a trailing slash if the caller passed one. A directory-only
-  // gitignore rule (`.pptpress/`) does not match a *non-existent* path
+  // gitignore rule (`.pptwise/`) does not match a *non-existent* path
   // without the slash — git cannot know that name would be a directory —
   // so stripping it made the first-create probe always look unignored.
   const check = await runGit(["check-ignore", "-q", "--", entry], dir)
@@ -213,7 +214,7 @@ export async function gitIgnoreStatus(
 }
 
 /**
- * The three facts `pptpress doctor` prints about the workspace: the anchor,
+ * The three facts `pptwise doctor` prints about the workspace: the anchor,
  * the resolved artifact root, and whether git already ignores it. Read-only
  * — never creates a directory, never writes an exclude line.
  */
@@ -316,7 +317,7 @@ async function exists(path: string): Promise<boolean> {
  * artifacts go and who manages them.
  *
  * A root that cannot be created (a read-only checkout, a container mount)
- * throws a {@link PptpressError} naming all three ways out instead of quietly
+ * throws a {@link PptwiseError} naming all three ways out instead of quietly
  * relocating to a temp directory — output the caller cannot find is worse
  * than output that refused to be written.
  */
@@ -328,9 +329,9 @@ export async function prepareWorkspaceDir(
   try {
     await mkdir(location.dir, { recursive: true })
   } catch (e) {
-    throw new PptpressError(
+    throw new PptwiseError(
       `cannot create the output directory ${location.dir}: ${(e as Error).message}\n` +
-        `  pass -o <path> to write somewhere writable, set "outDir" in pptpress.config.json, or run from a writable workspace`,
+        `  pass -o <path> to write somewhere writable, set "outDir" in pptwise.config.json, or run from a writable workspace`,
     )
   }
   if (rootExisted || location.configured || opts.gitIgnore === false) return []
@@ -377,7 +378,7 @@ export function workspaceStockAssetsDir(location: WorkspaceLocation): string {
 }
 
 /**
- * Scan `.pptpress/<deck>/assets/` for image files. Skips `.json` sidecars and
+ * Scan `.pptwise/<deck>/assets/` for image files. Skips `.json` sidecars and
  * dotfiles. `src` is the absolute path so {@link resolveLocalAssets} can
  * inline it without guessing. Duplicate ids (logo.png + logo.jpg) error,
  * same posture as the deck-project `assets/` scan.
@@ -390,7 +391,7 @@ export async function scanWorkspaceAssets(assetsDir: string): Promise<Record<str
       .map((entry) => entry.name)
   } catch (e) {
     if ((e as NodeJS.ErrnoException).code === "ENOENT") return {}
-    throw new PptpressError(`cannot read workspace assets directory ${assetsDir}: ${(e as Error).message}`)
+    throw new PptwiseError(`cannot read workspace assets directory ${assetsDir}: ${(e as Error).message}`)
   }
   const images: Record<string, { src: string }> = {}
   const sourceFile = new Map<string, string>()
@@ -400,7 +401,7 @@ export async function scanWorkspaceAssets(assetsDir: string): Promise<Record<str
     const id = basename(name, extname(name))
     const previous = sourceFile.get(id)
     if (previous !== undefined) {
-      throw new PptpressError(
+      throw new PptwiseError(
         `workspace ${ASSETS_DIRNAME}/${previous} and ${ASSETS_DIRNAME}/${name} both register image id "${id}" — rename one of the files`,
       )
     }

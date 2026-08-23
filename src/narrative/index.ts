@@ -1,4 +1,4 @@
-import { PptpressError } from "../errors"
+import { PptwiseError } from "../errors"
 // STRATEGY_VALUES / PACING_VALUES / AUDIENCE_VALUES (re-exported below, next
 // to Strategy/Pacing/Audience's own spec-table-order doc comments) live in
 // ../ir/narrative-values, not here — see that leaf module's docstring for why
@@ -636,7 +636,7 @@ function rescueIdShape(value: unknown): string | undefined {
  *
  * - `undefined` → {@link DEFAULT_NARRATIVE} (the `general` preset's axes)
  * - a preset id string → that preset's axes (unknown id throws
- *   {@link PptpressError}, listing the available preset ids)
+ *   {@link PptwiseError}, listing the available preset ids)
  * - a partial axes object → each axis defaults independently
  *   (strategy → "briefing", pacing → "balanced", audience → "public" — these
  *   happen to equal `DEFAULT_NARRATIVE`'s values because `general` *is* that
@@ -657,7 +657,7 @@ function rescueIdShape(value: unknown): string | undefined {
  *   specifically to report + persist the rewrite into what they return.
  *
  * An unknown axis value, or an unknown key on the partial axes object,
- * always throws {@link PptpressError} (never silently ignored or dropped) —
+ * always throws {@link PptwiseError} (never silently ignored or dropped) —
  * omission and a typo are different intents, and only the former has a
  * reasonable default. A mixed `{id, strategy}`-style shape is exactly this
  * case ({@link rescueIdShape} declines it): `id` is simply an unrecognized
@@ -681,7 +681,7 @@ export function resolveNarrative(input: string | Partial<NarrativeProfile> | und
 
   if (typeof input === "string") {
     if (!Object.hasOwn(NARRATIVE_PRESETS, input)) {
-      throw new PptpressError(
+      throw new PptwiseError(
         `unknown narrative preset "${input}" — available: ${Object.keys(NARRATIVE_PRESETS).join(", ")}`,
       )
     }
@@ -690,7 +690,7 @@ export function resolveNarrative(input: string | Partial<NarrativeProfile> | und
 
   for (const key of Object.keys(input)) {
     if (!(AXIS_KEYS as readonly string[]).includes(key)) {
-      throw new PptpressError(`unknown narrative axis "${key}" — available: ${AXIS_KEYS.join(", ")}`)
+      throw new PptwiseError(`unknown narrative axis "${key}" — available: ${AXIS_KEYS.join(", ")}`)
     }
   }
 
@@ -698,15 +698,15 @@ export function resolveNarrative(input: string | Partial<NarrativeProfile> | und
   // `null` is a written-wrong value and must hard-error like any other typo.
   const strategy = input.strategy === undefined ? DEFAULT_NARRATIVE.strategy : input.strategy
   if (!STRATEGY_VALUES.includes(strategy)) {
-    throw new PptpressError(`unknown strategy "${strategy}" — available: ${STRATEGY_VALUES.join(", ")}`)
+    throw new PptwiseError(`unknown strategy "${strategy}" — available: ${STRATEGY_VALUES.join(", ")}`)
   }
   const pacing = input.pacing === undefined ? DEFAULT_NARRATIVE.pacing : input.pacing
   if (!PACING_VALUES.includes(pacing)) {
-    throw new PptpressError(`unknown pacing "${pacing}" — available: ${PACING_VALUES.join(", ")}`)
+    throw new PptwiseError(`unknown pacing "${pacing}" — available: ${PACING_VALUES.join(", ")}`)
   }
   const audience = input.audience === undefined ? DEFAULT_NARRATIVE.audience : input.audience
   if (!AUDIENCE_VALUES.includes(audience)) {
-    throw new PptpressError(`unknown audience "${audience}" — available: ${AUDIENCE_VALUES.join(", ")}`)
+    throw new PptwiseError(`unknown audience "${audience}" — available: ${AUDIENCE_VALUES.join(", ")}`)
   }
 
   return { strategy, pacing, audience }
@@ -733,7 +733,7 @@ export interface NormalizeNarrativeShapeResult {
  * Two callers run this today — `validateIr` (`../validate-core.ts`) and
  * `validateSpec` (`../spec/index.ts`, T0b fix 2 scope extension: a
  * `deck.spec.json`'s own top-level `narrative` field is exactly the same
- * shape, reached by `pptpress spec validate`/`pptpress render <deck-dir>`,
+ * shape, reached by `pptwise spec validate`/`pptwise render <deck-dir>`,
  * not just a bare IR file) — each on their own raw, pre-schema-parse input,
  * *before* handing it to their own `z.object(...).strict().safeParse`.
  * Operating pre-parse (not just inside each caller's own `resolveNarrative`

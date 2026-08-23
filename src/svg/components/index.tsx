@@ -1,6 +1,6 @@
 import type React from "react"
 import type { Component } from "@/ir"
-import { PptpressError } from "../../errors"
+import { PptwiseError } from "../../errors"
 import type { ComponentType } from "../component-traits"
 import type { ComponentBox, ComponentCtx, RenderDef } from "./types"
 import { renderDef as paragraphRenderDef } from "./paragraph"
@@ -109,7 +109,7 @@ const RENDER_DEFS: Record<ComponentType, RenderDef> = {
  * of the schema gate) — silently returns `undefined`, so the `.measure`/
  * `.render` call right after it threw a bare "Cannot read properties of
  * undefined" TypeError with no indication of which component or why. This
- * throws a named `PptpressError` instead, identifying the offending type and
+ * throws a named `PptwiseError` instead, identifying the offending type and
  * pointing at `validateIr` as the fix. Every *legal* input — anything that
  * already passed `validateIr` — hits the same value it always did; the
  * `Record<ComponentType, RenderDef>` totality guarantee (see `RENDER_DEFS`'s
@@ -118,7 +118,7 @@ const RENDER_DEFS: Record<ComponentType, RenderDef> = {
 function getRenderDef(type: ComponentType): RenderDef {
   const def = RENDER_DEFS[type]
   if (!def) {
-    throw new PptpressError(
+    throw new PptwiseError(
       `no renderer registered for component type "${type}" — this IR was not accepted by validateIr; run validateIr on the deck to catch an invalid component type before rendering`,
     )
   }

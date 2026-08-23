@@ -74,7 +74,7 @@ beforeAll(async () => {
         },
         register(descriptor: { name: string; key: string }, component: Card) {
           expect(descriptor.name).toBe("tool.call.toolview")
-          expect(descriptor.key).toBe("pptpress_preview")
+          expect(descriptor.key).toBe("pptwise_preview")
           found = component
           return () => {}
         },
@@ -118,8 +118,8 @@ function bundleOf(pages: Page[], title = "Quarterly deck"): Bundle {
 function blockWith(bundle: Bundle | null, previewId: string | null, facts: { pages?: number } = {}) {
   const summary = `deck ready${facts.pages === undefined ? "" : `\nrendered ${facts.pages} pages to /tmp/out`}`
   return {
-    content: previewId ? [{ text: `${summary}\npptpress-preview:${previewId}\n` }] : [{ text: summary }],
-    meta: bundle ? { card: "pptpress-preview", bundle } : undefined,
+    content: previewId ? [{ text: `${summary}\npptwise-preview:${previewId}\n` }] : [{ text: summary }],
+    meta: bundle ? { card: "pptwise-preview", bundle } : undefined,
   }
 }
 
@@ -144,7 +144,7 @@ function clientTesting(): { isZip: (blob: Blob) => Promise<boolean> } {
 /**
  * A response shaped the way the plugin's own route writes one.
  *
- * Every answer the host half sends carries `x-pptpress-preview: 1`, and the card
+ * Every answer the host half sends carries `x-pptwise-preview: 1`, and the card
  * refuses to read a verdict off a response without it — a bare 404 could have
  * come from a proxy, or from a shell that never loaded this plugin at all.
  * Building the mocks through here is what keeps this suite testing the card's
@@ -163,7 +163,7 @@ function routeAnswer(init: {
     ok: init.status >= 200 && init.status < 300,
     status: init.status,
     headers: {
-      get: (name: string) => (stamped && name.toLowerCase() === "x-pptpress-preview" ? "1" : null),
+      get: (name: string) => (stamped && name.toLowerCase() === "x-pptwise-preview" ? "1" : null),
     },
     // Failures carry a machine-readable code beside the sentence, which is how
     // the card tells a deleted preview from a damaged one — both are 410, so
@@ -376,7 +376,7 @@ describe("dsh preview card — the viewer", () => {
     // to run a thinner copy of it beside the original.
     const { container } = await openViewer("abc123")
 
-    expect(viewer(container)).toHaveAttribute("src", "/pptpress/preview/abc123/html")
+    expect(viewer(container)).toHaveAttribute("src", "/pptwise/preview/abc123/html")
     // None of the second implementation is left: no counter, no arrows...
     expect(screen.queryByText(/^\d+ \/ \d+/)).toBeNull()
     expect(screen.queryByText("←")).toBeNull()
@@ -395,7 +395,7 @@ describe("dsh preview card — the viewer", () => {
     const { container } = render(<Card block={blockWith(bundleOf(nine()), "abc")} />)
     fireEvent.click(thumbnails(container)[4]!)
     await waitFor(() => expect(viewer(container)).not.toBeNull())
-    expect(viewer(container)).toHaveAttribute("src", "/pptpress/preview/abc/html#page=5")
+    expect(viewer(container)).toHaveAttribute("src", "/pptwise/preview/abc/html#page=5")
   })
 
   it("opens on page one from the header button, with no hash to undo", async () => {
@@ -404,7 +404,7 @@ describe("dsh preview card — the viewer", () => {
     const { container } = render(<Card block={blockWith(bundleOf(nine()), "abc")} />)
     fireEvent.click(await screen.findByText("Open"))
     await waitFor(() => expect(viewer(container)).not.toBeNull())
-    expect(viewer(container)).toHaveAttribute("src", "/pptpress/preview/abc/html")
+    expect(viewer(container)).toHaveAttribute("src", "/pptwise/preview/abc/html")
   })
 
   it("opens from the keyboard on the thumbnail that has focus", async () => {
@@ -494,8 +494,8 @@ describe("dsh preview card — the viewer", () => {
     const { container } = await openViewer()
     // Waited for rather than read straight off: the sheet is appended by the
     // modal's own effect, one turn after the frame it is asserted through.
-    await waitFor(() => expect(document.querySelectorAll("#pptpress-modal-style")).toHaveLength(1))
-    const css = document.querySelector("#pptpress-modal-style")!.textContent ?? ""
+    await waitFor(() => expect(document.querySelectorAll("#pptwise-modal-style")).toHaveLength(1))
+    const css = document.querySelector("#pptwise-modal-style")!.textContent ?? ""
     expect(css).toContain(".pf-mbtn:hover")
     expect(css).toContain(".pf-mbtn-primary:hover")
 
@@ -528,7 +528,7 @@ describe("dsh preview card — the viewer", () => {
     fireEvent.click(await screen.findByText("Open"))
     await waitFor(() => expect(viewer(container)).not.toBeNull())
     await act(async () => {})
-    expect(document.querySelectorAll("#pptpress-modal-style")).toHaveLength(1)
+    expect(document.querySelectorAll("#pptwise-modal-style")).toHaveLength(1)
   })
 
   it("stays closed once it is closed", async () => {
@@ -549,7 +549,7 @@ describe("dsh preview card — the viewer", () => {
     fireEvent.click(buttons[1]!)
 
     await waitFor(() => expect(anchorClicks).toHaveLength(1))
-    expect(fetchMock).toHaveBeenCalledWith("/pptpress/preview/abc123/pptx")
+    expect(fetchMock).toHaveBeenCalledWith("/pptwise/preview/abc123/pptx")
   })
 
   it("offers no viewer at all without a preview id, rather than an empty frame", () => {
@@ -575,7 +575,7 @@ describe("dsh preview card — the export button", () => {
     fireEvent.click(await screen.findByText("Download .pptx"))
 
     await waitFor(() => expect(anchorClicks).toHaveLength(1))
-    expect(fetchMock).toHaveBeenCalledWith("/pptpress/preview/abc123/pptx")
+    expect(fetchMock).toHaveBeenCalledWith("/pptwise/preview/abc123/pptx")
     expect(anchorClicks[0]!.download).toBe("Quarterly deck.pptx")
     expect(anchorClicks[0]!.href).toContain("blob:deck")
     expect(URL.createObjectURL).toHaveBeenCalledTimes(1)
@@ -687,7 +687,7 @@ describe("dsh preview card — the export button", () => {
 describe("dsh preview card — fetching by id (Code Mode)", () => {
   function respondWith(bundles: Record<string, Bundle>) {
     fetchMock.mockImplementation(async (url: string) => {
-      const id = /\/pptpress\/preview\/([^/]+)$/.exec(url)?.[1]
+      const id = /\/pptwise\/preview\/([^/]+)$/.exec(url)?.[1]
       const found = id ? bundles[id] : undefined
       if (!found) return routeAnswer({ status: 404 })
       return routeAnswer({ status: 200, json: JSON.parse(JSON.stringify(found)) })
@@ -700,7 +700,7 @@ describe("dsh preview card — fetching by id (Code Mode)", () => {
     render(<Card block={blockWith(null, "A")} />)
 
     expect(await screen.findByText("Deck A")).toBeInTheDocument()
-    expect(fetchMock).toHaveBeenCalledWith("/pptpress/preview/A")
+    expect(fetchMock).toHaveBeenCalledWith("/pptwise/preview/A")
     expect(screen.getByText("2 pages")).toBeInTheDocument()
   })
 
@@ -715,7 +715,7 @@ describe("dsh preview card — fetching by id (Code Mode)", () => {
     // Caching on "have I fetched anything yet" left the card pinned to A.
     expect(await screen.findByText("Deck B")).toBeInTheDocument()
     expect(screen.queryByText("Deck A")).toBeNull()
-    expect(fetchMock).toHaveBeenCalledWith("/pptpress/preview/B")
+    expect(fetchMock).toHaveBeenCalledWith("/pptwise/preview/B")
   })
 
   it("says the preview expired when the route 404s, instead of vanishing", async () => {
@@ -729,7 +729,7 @@ describe("dsh preview card — fetching by id (Code Mode)", () => {
     const Card = makeCard()
     render(<Card block={blockWith(null, "missing", { pages: 9 })} />)
 
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith("/pptpress/preview/missing"))
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith("/pptwise/preview/missing"))
     expect(await screen.findByText("gone")).toBeInTheDocument()
     expect(screen.getByText("9 pages")).toBeInTheDocument()
     expect(screen.getByText(/no longer on disk/)).toBeInTheDocument()
@@ -753,7 +753,7 @@ describe("dsh preview card — fetching by id (Code Mode)", () => {
     const Card = makeCard()
     render(<Card block={{ content: [{ text: summary }] }} />)
 
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith("/pptpress/preview/S1"))
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith("/pptwise/preview/S1"))
     expect(await screen.findByText("9 pages")).toBeInTheDocument()
   })
 
@@ -778,7 +778,7 @@ describe("dsh preview card — fetching by id (Code Mode)", () => {
 
     // B has been asked and has not answered. Until it does, this card knows
     // nothing about B — least of all that it has expired.
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith("/pptpress/preview/B"))
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith("/pptwise/preview/B"))
     expect(screen.queryByText("gone")).toBeNull()
     expect(container).toBeEmptyDOMElement()
 
@@ -823,7 +823,7 @@ describe("dsh preview card — fetching by id (Code Mode)", () => {
       const Card = makeCard()
       const view = render(<Card block={blockWith(null, "A", { pages: 3 })} />)
 
-      await waitFor(() => expect(fetchMock).toHaveBeenCalledWith("/pptpress/preview/A"))
+      await waitFor(() => expect(fetchMock).toHaveBeenCalledWith("/pptwise/preview/A"))
       expect(await screen.findByText("Retry"), String(status)).toBeInTheDocument()
       expect(screen.queryByText("gone"), String(status)).toBeNull()
       expect(screen.queryByText(/no longer on disk/), String(status)).toBeNull()
@@ -880,7 +880,7 @@ describe("dsh preview card — fetching by id (Code Mode)", () => {
     const Card = makeCard()
     render(<Card block={blockWith(null, "A", { pages: 3 })} />)
 
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith("/pptpress/preview/A"))
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith("/pptwise/preview/A"))
     expect(await screen.findByText("Retry")).toBeInTheDocument()
     expect(screen.queryByText("gone")).toBeNull()
     expect(screen.queryByText(/no longer on disk/)).toBeNull()
@@ -928,7 +928,7 @@ describe("dsh preview card — fetching by id (Code Mode)", () => {
       const Card = makeCard()
       render(<Card block={blockWith(null, "A")} />)
 
-      await waitFor(() => expect(fetchMock).toHaveBeenCalledWith("/pptpress/preview/A"))
+      await waitFor(() => expect(fetchMock).toHaveBeenCalledWith("/pptwise/preview/A"))
       // Two turns: `unhandledRejection` is only decided once the microtask
       // queue has drained and nobody has attached a handler.
       await new Promise((r) => setTimeout(r, 0))
@@ -1139,7 +1139,7 @@ describe("dsh preview card — one button, many decks", () => {
     // rather than merely being hidden.
     fireEvent.click(await screen.findByText("Download .pptx"))
     await waitFor(() => expect(anchorClicks).toHaveLength(1))
-    expect(fetchMock).toHaveBeenCalledWith("/pptpress/preview/B/pptx")
+    expect(fetchMock).toHaveBeenCalledWith("/pptwise/preview/B/pptx")
   })
 
   it("does not carry a transient download failure across decks either", async () => {
@@ -1233,7 +1233,7 @@ describe("dsh preview card — one instance, decks going past", () => {
 
     fireEvent.click(await screen.findByText("Open"))
     await waitFor(() => expect(viewer(container)).not.toBeNull())
-    expect(viewer(container)).toHaveAttribute("src", "/pptpress/preview/A/html")
+    expect(viewer(container)).toHaveAttribute("src", "/pptwise/preview/A/html")
 
     rerender(<Card block={blockWith(bundleOf([page(1)], "Deck B"), "B")} />)
     await act(async () => {})
@@ -1249,13 +1249,13 @@ describe("dsh preview card — one instance, decks going past", () => {
 
     fireEvent.click(thumbnails(container)[1]!)
     await waitFor(() => expect(viewer(container)).not.toBeNull())
-    expect(viewer(container)).toHaveAttribute("src", "/pptpress/preview/A/html#page=2")
+    expect(viewer(container)).toHaveAttribute("src", "/pptwise/preview/A/html#page=2")
 
     rerender(<Card block={blockWith(bundleOf([page(1), page(2)], "Deck B"), "B")} />)
     await act(async () => {})
     fireEvent.click(await screen.findByText("Open"))
     await waitFor(() => expect(viewer(container)).not.toBeNull())
-    expect(viewer(container)).toHaveAttribute("src", "/pptpress/preview/B/html")
+    expect(viewer(container)).toHaveAttribute("src", "/pptwise/preview/B/html")
   })
 
   it("does not let a stale answer close the viewer the user is looking at", async () => {
@@ -1282,14 +1282,14 @@ describe("dsh preview card — one instance, decks going past", () => {
     rerender(<Card block={blockWith(bundleOf([page(1)], "Deck B"), "B")} />)
     fireEvent.click(await screen.findByText("Open"))
     await waitFor(() => expect(viewer(container)).not.toBeNull())
-    expect(viewer(container)).toHaveAttribute("src", "/pptpress/preview/B/html")
+    expect(viewer(container)).toHaveAttribute("src", "/pptwise/preview/B/html")
 
     // A finally answers, minutes late and about a deck nobody is looking at.
     answerA(routeAnswer({ status: 200, json: bundleOf([page(1), page(2)], "Deck A") }))
     await act(async () => {})
 
     expect(viewer(container)).not.toBeNull()
-    expect(viewer(container)).toHaveAttribute("src", "/pptpress/preview/B/html")
+    expect(viewer(container)).toHaveAttribute("src", "/pptwise/preview/B/html")
   })
 })
 

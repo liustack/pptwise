@@ -197,10 +197,10 @@ const IR_WITH_DROPPED_CONTENT = {
 }
 
 let dir: string
-const originalPptpressHome = process.env.PPTPRESS_HOME
+const originalPptwiseHome = process.env.PPTWISE_HOME
 beforeAll(async () => {
   installNodePlatform()
-  dir = await mkdtemp(join(tmpdir(), "pptpress-cli-"))
+  dir = await mkdtemp(join(tmpdir(), "pptwise-cli-"))
   await writeFile(join(dir, "deck.json"), JSON.stringify(VALID_IR))
   await writeFile(join(dir, "bad.json"), JSON.stringify({ version: "4" }))
   await writeFile(join(dir, "logo.png"), PNG_1PX)
@@ -217,29 +217,29 @@ beforeAll(async () => {
   await writeFile(join(dir, "bad-plan.json"), JSON.stringify(BAD_PLAN))
   await writeFile(join(dir, "plan-with-narrative-id-shape.json"), JSON.stringify(PLAN_WITH_NARRATIVE_ID_SHAPE))
   // Isolate every test in this file from whatever the real machine's
-  // ~/.pptpress happens to hold (W5 task 5: applyDeckConfig now reads the
+  // ~/.pptwise happens to hold (W5 task 5: applyDeckConfig now reads the
   // user config layer — findUserConfig — on every call). A fresh, never-
   // populated directory means "missing = fine" (null) for every test below
-  // that does not opt into a custom user config via withPptpressHome.
-  process.env.PPTPRESS_HOME = await mkdtemp(join(tmpdir(), "pptpress-cli-home-"))
+  // that does not opt into a custom user config via withPptwiseHome.
+  process.env.PPTWISE_HOME = await mkdtemp(join(tmpdir(), "pptwise-cli-home-"))
 })
 
 afterAll(() => {
-  if (originalPptpressHome === undefined) delete process.env.PPTPRESS_HOME
-  else process.env.PPTPRESS_HOME = originalPptpressHome
+  if (originalPptwiseHome === undefined) delete process.env.PPTWISE_HOME
+  else process.env.PPTWISE_HOME = originalPptwiseHome
 })
 
-/** Scopes a `PPTPRESS_HOME` override to `fn`'s duration, restoring whatever
+/** Scopes a `PPTWISE_HOME` override to `fn`'s duration, restoring whatever
  *  was set before (this file's own isolated default, per the `beforeAll`
  *  above, for every caller in this file) even if `fn` throws. */
-async function withPptpressHome<T>(home: string, fn: () => Promise<T>): Promise<T> {
-  const prev = process.env.PPTPRESS_HOME
-  process.env.PPTPRESS_HOME = home
+async function withPptwiseHome<T>(home: string, fn: () => Promise<T>): Promise<T> {
+  const prev = process.env.PPTWISE_HOME
+  process.env.PPTWISE_HOME = home
   try {
     return await fn()
   } finally {
-    if (prev === undefined) delete process.env.PPTPRESS_HOME
-    else process.env.PPTPRESS_HOME = prev
+    if (prev === undefined) delete process.env.PPTWISE_HOME
+    else process.env.PPTWISE_HOME = prev
   }
 }
 
@@ -263,7 +263,7 @@ function makeDeckPlan(extra: Record<string, unknown> = {}): Record<string, unkno
   }
 }
 
-function makeDeckDir(prefix = "pptpress-deck-"): Promise<string> {
+function makeDeckDir(prefix = "pptwise-deck-"): Promise<string> {
   return mkdtemp(join(tmpdir(), prefix))
 }
 
@@ -475,7 +475,7 @@ describe("runAudit (W6 task 2)", () => {
   })
 
   it("resolves a deck project directory through the same loadDeckTarget path as validate/render", async () => {
-    const deckDir = await makeDeckDir("pptpress-audit-dir-")
+    const deckDir = await makeDeckDir("pptwise-audit-dir-")
     await writeFile(join(deckDir, "deck.spec.json"), JSON.stringify(makeDeckPlan()))
     await mkdir(join(deckDir, "pages"))
     await writeFile(join(deckDir, "pages", "p-cover.json"), "{}")
@@ -782,12 +782,12 @@ describe("runSchema --spec", () => {
 })
 
 describe("applyDeckConfig resolution (flag > config > IR)", () => {
-  const freshDir = () => mkdtemp(join(tmpdir(), "pptpress-deckcfg-"))
+  const freshDir = () => mkdtemp(join(tmpdir(), "pptwise-deckcfg-"))
 
   it("--style file wins over config style", async () => {
     const d = await freshDir()
     await writeFile(
-      join(d, "pptpress.config.json"),
+      join(d, "pptwise.config.json"),
       JSON.stringify({ style: { colors: { primary: "#111111" } } }),
     )
     await writeFile(join(d, "style.json"), JSON.stringify({ colors: { primary: "#0B5FFF" } }))
@@ -799,7 +799,7 @@ describe("applyDeckConfig resolution (flag > config > IR)", () => {
   it("config theme and style apply when no flags are given", async () => {
     const d = await freshDir()
     await writeFile(
-      join(d, "pptpress.config.json"),
+      join(d, "pptwise.config.json"),
       JSON.stringify({ theme: "ink", style: { colors: { primary: "#111111" } } }),
     )
     const raw: any = structuredClone(VALID_IR)
@@ -810,7 +810,7 @@ describe("applyDeckConfig resolution (flag > config > IR)", () => {
 
   it("--theme flag beats config and keeps IR-authored style", async () => {
     const d = await freshDir()
-    await writeFile(join(d, "pptpress.config.json"), JSON.stringify({ theme: "ink" }))
+    await writeFile(join(d, "pptwise.config.json"), JSON.stringify({ theme: "ink" }))
     const raw: any = structuredClone(VALID_IR)
     raw.theme = { id: "tech", style: { colors: { primary: "#ABCDEF" } } }
     await applyDeckConfig(raw, { theme: "consulting", cwd: d })
@@ -836,7 +836,7 @@ describe("applyDeckConfig resolution (flag > config > IR)", () => {
 
   it("runValidate reports the config-resolved theme", async () => {
     const d = await freshDir()
-    await writeFile(join(d, "pptpress.config.json"), JSON.stringify({ theme: "ink" }))
+    await writeFile(join(d, "pptwise.config.json"), JSON.stringify({ theme: "ink" }))
     await writeFile(join(d, "deck.json"), JSON.stringify(VALID_IR))
     await expect(runValidate(join(d, "deck.json"), d)).resolves.toMatch(/theme "ink"/)
   })
@@ -844,16 +844,16 @@ describe("applyDeckConfig resolution (flag > config > IR)", () => {
   describe("theme validation moved to resolution time (W5 review fix, finding 6)", () => {
     it("throws unknown-theme naming the config path when a stale project-config theme actually wins", async () => {
       const d = await freshDir()
-      await writeFile(join(d, "pptpress.config.json"), JSON.stringify({ theme: "not-a-real-theme" }))
+      await writeFile(join(d, "pptwise.config.json"), JSON.stringify({ theme: "not-a-real-theme" }))
       const raw: any = structuredClone(VALID_IR)
       await expect(applyDeckConfig(raw, { cwd: d })).rejects.toThrow(
-        /unknown theme "not-a-real-theme" \(from .*pptpress\.config\.json\)/,
+        /unknown theme "not-a-real-theme" \(from .*pptwise\.config\.json\)/,
       )
     })
 
     it("--theme override bypasses a stale/unknown project-config theme entirely — no longer a read-time hard-fail", async () => {
       const d = await freshDir()
-      await writeFile(join(d, "pptpress.config.json"), JSON.stringify({ theme: "not-a-real-theme" }))
+      await writeFile(join(d, "pptwise.config.json"), JSON.stringify({ theme: "not-a-real-theme" }))
       const raw: any = structuredClone(VALID_IR)
       await applyDeckConfig(raw, { theme: "consulting", cwd: d })
       expect(raw.theme.id).toBe("consulting")
@@ -863,16 +863,16 @@ describe("applyDeckConfig resolution (flag > config > IR)", () => {
 
 describe("runInit", () => {
   it("writes a config template into cwd", async () => {
-    const d = await mkdtemp(join(tmpdir(), "pptpress-init-"))
+    const d = await mkdtemp(join(tmpdir(), "pptwise-init-"))
     const msg = await runInit(d)
-    expect(msg).toContain("pptpress.config.json")
-    const written = JSON.parse(await readFile(join(d, "pptpress.config.json"), "utf8"))
+    expect(msg).toContain("pptwise.config.json")
+    const written = JSON.parse(await readFile(join(d, "pptwise.config.json"), "utf8"))
     expect(written.theme).toBe("consulting")
     expect(written.style.colors.primary).toMatch(/^#/)
   })
 
   it("refuses to overwrite an existing config", async () => {
-    const d = await mkdtemp(join(tmpdir(), "pptpress-init-"))
+    const d = await mkdtemp(join(tmpdir(), "pptwise-init-"))
     await runInit(d)
     await expect(runInit(d)).rejects.toThrow(/exists/)
   })
@@ -965,13 +965,13 @@ describe("deck project directory workflow (W5 task 5)", () => {
 })
 
 describe("bare-name resolution through CLI commands (W5 task 5)", () => {
-  it("resolves a bare deck name to $PPTPRESS_HOME/decks/<name> end to end", async () => {
-    const home = await makeDeckDir("pptpress-barehome-")
-    await withPptpressHome(home, async () => {
+  it("resolves a bare deck name to $PPTWISE_HOME/decks/<name> end to end", async () => {
+    const home = await makeDeckDir("pptwise-barehome-")
+    await withPptwiseHome(home, async () => {
       const deckDir = join(home, "decks", "q3-review")
       await mkdir(deckDir, { recursive: true })
       await writeFile(join(deckDir, "deck.spec.json"), JSON.stringify(makeDeckPlan()))
-      const cwd = await makeDeckDir("pptpress-barecwd-")
+      const cwd = await makeDeckDir("pptwise-barecwd-")
       const msg = await runAssemble("q3-review", { cwd })
       expect(msg).toContain(join(deckDir, "deck.json"))
       const written = JSON.parse(await readFile(join(deckDir, "deck.json"), "utf8"))
@@ -980,29 +980,29 @@ describe("bare-name resolution through CLI commands (W5 task 5)", () => {
   })
 
   it("prefers a same-name local file over the deck home (explicit/local path always wins)", async () => {
-    const home = await makeDeckDir("pptpress-barehome2-")
-    await withPptpressHome(home, async () => {
-      const cwd = await makeDeckDir("pptpress-barecwd2-")
+    const home = await makeDeckDir("pptwise-barehome2-")
+    await withPptwiseHome(home, async () => {
+      const cwd = await makeDeckDir("pptwise-barecwd2-")
       await writeFile(join(cwd, "deck.json"), JSON.stringify(VALID_IR))
       // "deck.json" has no path separator, but exists locally under cwd —
-      // must resolve as that local file, not $PPTPRESS_HOME/decks/deck.json.
+      // must resolve as that local file, not $PPTWISE_HOME/decks/deck.json.
       await expect(runValidate("deck.json", cwd)).resolves.toMatch(/OK — 2 slides/)
     })
   })
 
   it("a nonexistent bare-name typo's error names the local candidate, not an obscure deck-home guess (W5 review fix, finding 3)", async () => {
-    const home = await makeDeckDir("pptpress-barehome3-")
-    await withPptpressHome(home, async () => {
-      const cwd = await makeDeckDir("pptpress-barecwd3-")
+    const home = await makeDeckDir("pptwise-barehome3-")
+    await withPptwiseHome(home, async () => {
+      const cwd = await makeDeckDir("pptwise-barecwd3-")
       // "typo.json" exists neither locally under cwd nor under the deck
       // home — the error must name what the user actually typed (resolved
-      // under cwd), not $PPTPRESS_HOME/decks/typo.json.
+      // under cwd), not $PPTWISE_HOME/decks/typo.json.
       await expect(runValidate("typo.json", cwd)).rejects.toThrow(join(cwd, "typo.json"))
     })
   })
 
   it("a separator-relative target resolves against the cwd param (W5 review fix, finding 4)", async () => {
-    const cwd = await makeDeckDir("pptpress-barecwd4-")
+    const cwd = await makeDeckDir("pptwise-barecwd4-")
     await mkdir(join(cwd, "sub"))
     await writeFile(join(cwd, "sub", "deck.json"), JSON.stringify(VALID_IR))
     // "./sub/deck.json" has a path separator — resolveDeckTarget must
@@ -1032,7 +1032,7 @@ describe("structural deck-directory errors surface through the CLI shell (W5 tas
 
   it("surfaces the missing-spec-file error through runPreview", async () => {
     const deckDir = await makeDeckDir()
-    await expect(runPreview(deckDir, join(deckDir, "svgs"))).rejects.toThrow(/pptpress spec validate/)
+    await expect(runPreview(deckDir, join(deckDir, "svgs"))).rejects.toThrow(/pptwise spec validate/)
   })
 
   it("surfaces an invalid-spec error through runAssemble", async () => {
@@ -1183,7 +1183,7 @@ describe("runAssemble", () => {
   it("still surfaces the detailed missing-spec-file error for a target that does not exist at all", async () => {
     const d = await makeDeckDir()
     const missing = join(d, "does-not-exist")
-    await expect(runAssemble(missing)).rejects.toThrow(/pptpress spec validate/)
+    await expect(runAssemble(missing)).rejects.toThrow(/pptwise spec validate/)
   })
 
   describe("cwd + output-relative-asset portability (W5 review fix)", () => {
@@ -1209,7 +1209,7 @@ describe("runAssemble", () => {
       await mkdir(join(deckDir, "assets"))
       await writeFile(join(deckDir, "assets", "logo.png"), PNG_1PX)
 
-      const elsewhere = await makeDeckDir("pptpress-assemble-elsewhere-")
+      const elsewhere = await makeDeckDir("pptwise-assemble-elsewhere-")
       const outPath = join(elsewhere, "out.json")
       await runAssemble(deckDir, { output: outPath })
 
@@ -1557,7 +1557,7 @@ describe("runMigrate", () => {
       await writeFile(irPath, JSON.stringify({ version: "2", slides: [] }))
       const outPath = join(await makeDeckDir(), "v4.json")
       await expect(runMigrate(irPath, outPath)).rejects.toThrow(/does not support IR v2/)
-      await expect(runMigrate(irPath, outPath)).rejects.toThrow(/pptpress validate/)
+      await expect(runMigrate(irPath, outPath)).rejects.toThrow(/pptwise validate/)
     })
 
     it("rejects a file that is already v4 — nothing to migrate", async () => {
@@ -2033,7 +2033,7 @@ describe("applyDeckConfig four-layer chain (W5 task 5): user config layer", () =
     const projectDir = await makeDeckDir()
     const home = await makeDeckDir()
     await writeFile(join(home, "config.json"), JSON.stringify({ theme: "ink" }))
-    await withPptpressHome(home, async () => {
+    await withPptwiseHome(home, async () => {
       const raw: any = structuredClone(VALID_IR)
       await applyDeckConfig(raw, { cwd: projectDir })
       expect(raw.theme.id).toBe("ink")
@@ -2042,10 +2042,10 @@ describe("applyDeckConfig four-layer chain (W5 task 5): user config layer", () =
 
   it("project config wins over user config", async () => {
     const projectDir = await makeDeckDir()
-    await writeFile(join(projectDir, "pptpress.config.json"), JSON.stringify({ theme: "tech" }))
+    await writeFile(join(projectDir, "pptwise.config.json"), JSON.stringify({ theme: "tech" }))
     const home = await makeDeckDir()
     await writeFile(join(home, "config.json"), JSON.stringify({ theme: "ink" }))
-    await withPptpressHome(home, async () => {
+    await withPptwiseHome(home, async () => {
       const raw: any = structuredClone(VALID_IR)
       await applyDeckConfig(raw, { cwd: projectDir })
       expect(raw.theme.id).toBe("tech")
@@ -2054,10 +2054,10 @@ describe("applyDeckConfig four-layer chain (W5 task 5): user config layer", () =
 
   it("CLI flag wins over both project and user config", async () => {
     const projectDir = await makeDeckDir()
-    await writeFile(join(projectDir, "pptpress.config.json"), JSON.stringify({ theme: "tech" }))
+    await writeFile(join(projectDir, "pptwise.config.json"), JSON.stringify({ theme: "tech" }))
     const home = await makeDeckDir()
     await writeFile(join(home, "config.json"), JSON.stringify({ theme: "ink" }))
-    await withPptpressHome(home, async () => {
+    await withPptwiseHome(home, async () => {
       const raw: any = structuredClone(VALID_IR)
       await applyDeckConfig(raw, { theme: "consulting", cwd: projectDir })
       expect(raw.theme.id).toBe("consulting")
@@ -2067,7 +2067,7 @@ describe("applyDeckConfig four-layer chain (W5 task 5): user config layer", () =
   it("falls back to the IR-authored theme when no layer (flag/project/user) sets one", async () => {
     const projectDir = await makeDeckDir()
     const home = await makeDeckDir()
-    await withPptpressHome(home, async () => {
+    await withPptwiseHome(home, async () => {
       const raw: any = structuredClone(VALID_IR) // theme.id: "tech"
       await applyDeckConfig(raw, { cwd: projectDir })
       expect(raw.theme.id).toBe("tech")
@@ -2078,7 +2078,7 @@ describe("applyDeckConfig four-layer chain (W5 task 5): user config layer", () =
     const projectDir = await makeDeckDir()
     const home = await makeDeckDir()
     await writeFile(join(home, "config.json"), JSON.stringify({ style: { colors: { primary: "#654321" } } }))
-    await withPptpressHome(home, async () => {
+    await withPptwiseHome(home, async () => {
       const raw: any = structuredClone(VALID_IR)
       await applyDeckConfig(raw, { cwd: projectDir })
       expect(raw.theme.style.colors.primary).toBe("#654321")
@@ -2090,7 +2090,7 @@ describe("applyDeckConfig four-layer chain (W5 task 5): user config layer", () =
       const projectDir = await makeDeckDir()
       const home = await makeDeckDir()
       await writeFile(join(home, "config.json"), JSON.stringify({ theme: "not-a-real-theme" }))
-      await withPptpressHome(home, async () => {
+      await withPptwiseHome(home, async () => {
         const raw: any = structuredClone(VALID_IR)
         await expect(applyDeckConfig(raw, { cwd: projectDir })).rejects.toThrow(
           /unknown theme "not-a-real-theme" \(from .*config\.json\)/,
@@ -2107,7 +2107,7 @@ describe("applyDeckConfig four-layer chain (W5 task 5): user config layer", () =
       const projectDir = await makeDeckDir()
       const home = await makeDeckDir()
       await writeFile(join(home, "config.json"), JSON.stringify({ theme: "not-a-real-theme" }))
-      await withPptpressHome(home, async () => {
+      await withPptwiseHome(home, async () => {
         const raw: any = structuredClone(VALID_IR)
         await applyDeckConfig(raw, { theme: "consulting", cwd: projectDir })
         expect(raw.theme.id).toBe("consulting")
@@ -2116,10 +2116,10 @@ describe("applyDeckConfig four-layer chain (W5 task 5): user config layer", () =
 
     it("a valid project config theme overrides a stale/unknown user-config theme (project still beats user, no validation error)", async () => {
       const projectDir = await makeDeckDir()
-      await writeFile(join(projectDir, "pptpress.config.json"), JSON.stringify({ theme: "tech" }))
+      await writeFile(join(projectDir, "pptwise.config.json"), JSON.stringify({ theme: "tech" }))
       const home = await makeDeckDir()
       await writeFile(join(home, "config.json"), JSON.stringify({ theme: "not-a-real-theme" }))
-      await withPptpressHome(home, async () => {
+      await withPptwiseHome(home, async () => {
         const raw: any = structuredClone(VALID_IR)
         await applyDeckConfig(raw, { cwd: projectDir })
         expect(raw.theme.id).toBe("tech")
@@ -2131,13 +2131,13 @@ describe("applyDeckConfig four-layer chain (W5 task 5): user config layer", () =
 describe("decksDir redirect (W5 task 5)", () => {
   it("resolves a bare deck name under the user config's decksDir override", async () => {
     const home = await makeDeckDir()
-    const teamDecks = await makeDeckDir("pptpress-teamdecks-")
+    const teamDecks = await makeDeckDir("pptwise-teamdecks-")
     await writeFile(join(home, "config.json"), JSON.stringify({ decksDir: teamDecks }))
-    await withPptpressHome(home, async () => {
+    await withPptwiseHome(home, async () => {
       const deckDir = join(teamDecks, "q3-review")
       await mkdir(deckDir, { recursive: true })
       await writeFile(join(deckDir, "deck.spec.json"), JSON.stringify(makeDeckPlan()))
-      const cwd = await makeDeckDir("pptpress-redirect-cwd-")
+      const cwd = await makeDeckDir("pptwise-redirect-cwd-")
       const msg = await runAssemble("q3-review", { cwd })
       expect(msg).toContain(join(deckDir, "deck.json"))
     })
@@ -2146,13 +2146,13 @@ describe("decksDir redirect (W5 task 5)", () => {
   it("resolves a relative decksDir in the user config against the home dir, not the cwd (W5 review fix, finding 9)", async () => {
     const home = await makeDeckDir()
     await writeFile(join(home, "config.json"), JSON.stringify({ decksDir: "team-decks" }))
-    await withPptpressHome(home, async () => {
+    await withPptwiseHome(home, async () => {
       const deckDir = join(home, "team-decks", "q3-review")
       await mkdir(deckDir, { recursive: true })
       await writeFile(join(deckDir, "deck.spec.json"), JSON.stringify(makeDeckPlan()))
       // cwd is deliberately unrelated to `home` — a cwd-relative (mis)read of
       // decksDir would resolve to a directory under `cwd`, not find this one.
-      const cwd = await makeDeckDir("pptpress-redirect-relative-cwd-")
+      const cwd = await makeDeckDir("pptwise-redirect-relative-cwd-")
       const msg = await runAssemble("q3-review", { cwd })
       expect(msg).toContain(join(deckDir, "deck.json"))
     })
@@ -2160,13 +2160,13 @@ describe("decksDir redirect (W5 task 5)", () => {
 })
 
 describe("decksDir redirect — project config precedence (W5 task 6, controller addition A)", () => {
-  it("a project pptpress.config.json's decksDir wins over the user config's, resolved against the project config file's own directory", async () => {
+  it("a project pptwise.config.json's decksDir wins over the user config's, resolved against the project config file's own directory", async () => {
     const home = await makeDeckDir()
-    const userDecks = await makeDeckDir("pptpress-userdecks-")
+    const userDecks = await makeDeckDir("pptwise-userdecks-")
     await writeFile(join(home, "config.json"), JSON.stringify({ decksDir: userDecks }))
 
-    const projectRoot = await makeDeckDir("pptpress-project-")
-    await writeFile(join(projectRoot, "pptpress.config.json"), JSON.stringify({ decksDir: "team-decks" }))
+    const projectRoot = await makeDeckDir("pptwise-project-")
+    await writeFile(join(projectRoot, "pptwise.config.json"), JSON.stringify({ decksDir: "team-decks" }))
     const projectDeckDir = join(projectRoot, "team-decks", "q3-review")
     await mkdir(projectDeckDir, { recursive: true })
     await writeFile(join(projectDeckDir, "deck.spec.json"), JSON.stringify(makeDeckPlan()))
@@ -2178,7 +2178,7 @@ describe("decksDir redirect — project config precedence (W5 task 6, controller
     await mkdir(userDeckDir, { recursive: true })
     await writeFile(join(userDeckDir, "deck.spec.json"), JSON.stringify(makeDeckPlan({ filename: "wrong-deck" })))
 
-    await withPptpressHome(home, async () => {
+    await withPptwiseHome(home, async () => {
       const msg = await runAssemble("q3-review", { cwd: projectRoot })
       expect(msg).toContain(join(projectDeckDir, "deck.json"))
     })
@@ -2186,17 +2186,17 @@ describe("decksDir redirect — project config precedence (W5 task 6, controller
 
   it("falls back to the user config's decksDir when the project config exists but sets no decksDir of its own", async () => {
     const home = await makeDeckDir()
-    const userDecks = await makeDeckDir("pptpress-userdecks-")
+    const userDecks = await makeDeckDir("pptwise-userdecks-")
     await writeFile(join(home, "config.json"), JSON.stringify({ decksDir: userDecks }))
 
-    const projectRoot = await makeDeckDir("pptpress-project-partial-")
-    await writeFile(join(projectRoot, "pptpress.config.json"), JSON.stringify({ theme: "tech" }))
+    const projectRoot = await makeDeckDir("pptwise-project-partial-")
+    await writeFile(join(projectRoot, "pptwise.config.json"), JSON.stringify({ theme: "tech" }))
 
     const deckDir = join(userDecks, "q3-review")
     await mkdir(deckDir, { recursive: true })
     await writeFile(join(deckDir, "deck.spec.json"), JSON.stringify(makeDeckPlan()))
 
-    await withPptpressHome(home, async () => {
+    await withPptwiseHome(home, async () => {
       const msg = await runAssemble("q3-review", { cwd: projectRoot })
       expect(msg).toContain(join(deckDir, "deck.json"))
     })
@@ -2210,7 +2210,7 @@ describe("brand extract + --theme-file + deck theme.json", () => {
     __resetRegisteredThemes()
   })
 
-  const freshDir = () => mkdtemp(join(tmpdir(), "pptpress-brand-"))
+  const freshDir = () => mkdtemp(join(tmpdir(), "pptwise-brand-"))
 
   async function writeFixtureTemplate(d: string, opts: Parameters<typeof buildThmxBytes>[0] = {}): Promise<string> {
     const p = join(d, "corp.pptx")
@@ -2235,7 +2235,7 @@ describe("brand extract + --theme-file + deck theme.json", () => {
     const d = await freshDir()
     const src = await writeFixtureTemplate(d)
     await expect(runBrandExtract(src, { output: join(d, "out.theme.json"), id: "consulting" })).rejects.toThrow(
-      /collides with a built-in pptpress theme.*--id/,
+      /collides with a built-in pptwise theme.*--id/,
     )
   })
 
@@ -2304,7 +2304,7 @@ describe("brand extract + --theme-file + deck theme.json", () => {
     await writeFile(join(d, "deck.json"), JSON.stringify(VALID_IR))
     await expect(
       runRender(join(d, "deck.json"), { output: join(d, "x.pptx"), themeFilePath: themeOut }),
-    ).rejects.toThrow(/collides with a built-in pptpress theme/)
+    ).rejects.toThrow(/collides with a built-in pptwise theme/)
   })
 
   it("loading a pathological theme file is blocked by the contrast floor with a token-naming message", async () => {
@@ -2353,23 +2353,23 @@ describe("brand extract + --theme-file + deck theme.json", () => {
 
 describe("workspace artifacts (default -o)", () => {
   async function freshCwd(): Promise<string> {
-    return mkdtemp(join(tmpdir(), "pptpress-ws-cmd-"))
+    return mkdtemp(join(tmpdir(), "pptwise-ws-cmd-"))
   }
 
-  it("render without -o writes <cwd>/.pptpress/<slug>/<slug>.pptx and prints the absolute path", async () => {
+  it("render without -o writes <cwd>/.pptwise/<slug>/<slug>.pptx and prints the absolute path", async () => {
     const cwd = await freshCwd()
     await writeFile(join(cwd, "q3-review.json"), JSON.stringify(VALID_IR))
-    const expected = join(cwd, ".pptpress", "q3-review", "q3-review.pptx")
+    const expected = join(cwd, ".pptwise", "q3-review", "q3-review.pptx")
     const msg = await runRender(join(cwd, "q3-review.json"), { cwd, gitIgnore: false })
     expect(msg).toContain(expected)
     const bytes = await readFile(expected)
     expect(bytes.subarray(0, 2).toString("latin1")).toBe("PK")
   })
 
-  it("preview without -o writes the per-slide SVGs under <cwd>/.pptpress/<slug>/", async () => {
+  it("preview without -o writes the per-slide SVGs under <cwd>/.pptwise/<slug>/", async () => {
     const cwd = await freshCwd()
     await writeFile(join(cwd, "hello.json"), JSON.stringify(VALID_IR))
-    const outDir = join(cwd, ".pptpress", "hello")
+    const outDir = join(cwd, ".pptwise", "hello")
     const msg = await runPreview(join(cwd, "hello.json"), undefined, { cwd, gitIgnore: false, htmlOut: true })
     expect(msg).toContain(join(outDir, "preview.html"))
     expect((await readdir(outDir)).sort()).toEqual([
@@ -2382,18 +2382,18 @@ describe("workspace artifacts (default -o)", () => {
 
   it("anchors at the project config's directory when cwd is nested", async () => {
     const root = await freshCwd()
-    await writeFile(join(root, "pptpress.config.json"), JSON.stringify({ theme: "tech" }))
+    await writeFile(join(root, "pptwise.config.json"), JSON.stringify({ theme: "tech" }))
     const nested = join(root, "nested")
     await mkdir(nested)
     await writeFile(join(nested, "hello.json"), JSON.stringify(VALID_IR))
     await runRender(join(nested, "hello.json"), { cwd: nested, gitIgnore: false })
-    await expect(stat(join(root, ".pptpress", "hello", "hello.pptx"))).resolves.toBeDefined()
-    await expect(stat(join(nested, ".pptpress"))).rejects.toThrow()
+    await expect(stat(join(root, ".pptwise", "hello", "hello.pptx"))).resolves.toBeDefined()
+    await expect(stat(join(nested, ".pptwise"))).rejects.toThrow()
   })
 
   it("resolves project outDir against the config file, and skips git ignore", async () => {
     const root = await freshCwd()
-    await writeFile(join(root, "pptpress.config.json"), JSON.stringify({ outDir: "artifacts" }))
+    await writeFile(join(root, "pptwise.config.json"), JSON.stringify({ outDir: "artifacts" }))
     await writeFile(join(root, "hello.json"), JSON.stringify(VALID_IR))
     const msg = await runRender(join(root, "hello.json"), {
       cwd: root,
@@ -2406,7 +2406,7 @@ describe("workspace artifacts (default -o)", () => {
     await expect(stat(expected)).resolves.toBeDefined()
   })
 
-  it("an explicit -o never creates .pptpress and never prunes that directory", async () => {
+  it("an explicit -o never creates .pptwise and never prunes that directory", async () => {
     const cwd = await freshCwd()
     await writeFile(join(cwd, "hello.json"), JSON.stringify(VALID_IR))
     const out = join(cwd, "custom")
@@ -2415,7 +2415,7 @@ describe("workspace artifacts (default -o)", () => {
     await writeFile(join(out, "notes.txt"), "keep")
     await runPreview(join(cwd, "hello.json"), out, { cwd })
     expect((await readdir(out)).sort()).toEqual(["001-cover.svg", "002-content.svg", "006-content.svg", "notes.txt"])
-    await expect(stat(join(cwd, ".pptpress"))).rejects.toThrow()
+    await expect(stat(join(cwd, ".pptwise"))).rejects.toThrow()
   })
 
   it("default-path preview prunes leftover NNN-<type>.svg files and leaves other names", async () => {
@@ -2430,7 +2430,7 @@ describe("workspace artifacts (default -o)", () => {
     }
     await writeFile(join(cwd, "wide.json"), JSON.stringify(three))
     await runPreview(join(cwd, "wide.json"), undefined, { cwd, gitIgnore: false })
-    const outDir = join(cwd, ".pptpress", "wide")
+    const outDir = join(cwd, ".pptwise", "wide")
     expect((await readdir(outDir)).sort()).toEqual(["001-cover.svg", "002-content.svg", "003-content.svg"])
     await writeFile(join(outDir, "notes.txt"), "keep")
     await writeFile(join(cwd, "wide.json"), JSON.stringify(VALID_IR))
@@ -2452,18 +2452,18 @@ describe("workspace artifacts (default -o)", () => {
     await mkdir(join(deckDir, "pages"), { recursive: true })
     await writeFile(join(deckDir, "deck.spec.json"), JSON.stringify(makeDeckPlan()))
     await runRender(deckDir, { cwd, gitIgnore: false, draft: true })
-    await expect(stat(join(cwd, ".pptpress", "launch-deck", "launch-deck.pptx"))).resolves.toBeDefined()
+    await expect(stat(join(cwd, ".pptwise", "launch-deck", "launch-deck.pptx"))).resolves.toBeDefined()
   })
 
-  it("first default-path render in a git repo appends .pptpress/ to the local exclude file", async () => {
+  it("first default-path render in a git repo appends .pptwise/ to the local exclude file", async () => {
     const cwd = await freshCwd()
     await execFile("git", ["init", "-q"], { cwd })
     await writeFile(join(cwd, "hello.json"), JSON.stringify(VALID_IR))
     const msg = await runRender(join(cwd, "hello.json"), { cwd })
-    expect(msg).toMatch(/note: added \.pptpress\//)
+    expect(msg).toMatch(/note: added \.pptwise\//)
     expect(msg).toContain("gitignore is untouched")
     const exclude = await readFile(join(cwd, ".git", "info", "exclude"), "utf8")
-    expect(exclude).toMatch(/(^|\n)\.pptpress\/\n/)
+    expect(exclude).toMatch(/(^|\n)\.pptwise\/\n/)
     const again = await runRender(join(cwd, "hello.json"), { cwd })
     expect(again).not.toContain("note: added")
   })

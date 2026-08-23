@@ -81,7 +81,7 @@ describe("diffAffectedPages", () => {
 
 describe("loadGoldHashes", () => {
   it("reads algorithm and pages from disk", () => {
-    const file = join(mkdtempSync(join(tmpdir(), "pptpress-gold-")), "hashes.json")
+    const file = join(mkdtempSync(join(tmpdir(), "pptwise-gold-")), "hashes.json")
     const payload = gold({ "component--callout--zh": page("h1", "g1", "c1") })
     writeFileSync(file, JSON.stringify(payload))
     expect(loadGoldHashes(file)).toEqual(payload)
@@ -125,7 +125,7 @@ describe("gold sample against a live render", () => {
       { zh: await corpusAssets(LEXICONS.zh) } as Record<LanguageId, Awaited<ReturnType<typeof corpusAssets>>>,
       { only: "component", languages: ["zh"] },
     )
-    const outDir = mkdtempSync(join(tmpdir(), "pptpress-gold-sample-"))
+    const outDir = mkdtempSync(join(tmpdir(), "pptwise-gold-sample-"))
     const current = hashesFromManifest(renderMatrix(jobs, outDir, "pin").manifest)
     const subset: GoldHashes = {
       algorithm: "gallery-page-v2",
