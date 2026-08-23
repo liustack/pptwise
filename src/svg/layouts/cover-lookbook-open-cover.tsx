@@ -71,7 +71,7 @@ export function LookbookOpenCover({ ir, slide, index, ctx }: SvgTemplateProps) {
   const headingSource = slide.heading ?? ""
   const plainHeading = stripEmphasis(headingSource)
   const showTitle = plainHeading.trim().length > 0
-  const seasonText = dateText || subText
+  const seasonText = dateText
 
   const brandTracking = org && !hasCjk(org) ? BRAND_TRACKING : undefined
   const brand = org

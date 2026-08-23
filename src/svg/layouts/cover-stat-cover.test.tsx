@@ -6,6 +6,9 @@ import { buildCtx, resolveBackgroundHex } from "../full-slide-svg"
 import { resolveStyle, CANONICAL_THEME_IDS } from "../../themes"
 import { contrastRatio, requiredContrastRatio } from "../ink"
 import { StatCover, layoutDef } from "./cover-stat-cover"
+import { renderSlideSvg } from "../../api"
+import { SIBLING_AIR_PX } from "../spacing"
+import { underlineDescentRatio } from "./underline"
 import type { PptxIR, Slide } from "@/ir"
 
 const HEADING = "+34%"
@@ -68,9 +71,44 @@ describe("cover-stat-cover — board geometry", () => {
       (t.textContent ?? "").includes("增长的质量"),
     )!
     expect(conclusion.getAttribute("x")).toBe("96")
-    expect(conclusion.getAttribute("y")).toBe("470")
+    expect(conclusion.getAttribute("y")).toBe("483")
     expect(conclusion.getAttribute("fill")).toBe(tokens.colors.text)
     expect(Array.from(root.querySelectorAll("text")).map((t) => t.textContent).join("")).not.toContain("Thank")
+  })
+
+  it("keeps a fitted title and its conclusion at least one sibling-air unit apart", () => {
+    const heading = "The quarter in review"
+    const subheading = "Where the second half goes"
+    const cover = slide(heading, { subheading })
+    const root = parseSvgRoot(renderSlideSvg(ir("insight", {}, cover), 0))
+    const title = Array.from(root.querySelectorAll("text")).find((text) => text.textContent === heading)!
+    const conclusion = Array.from(root.querySelectorAll("text")).find((text) => text.textContent === subheading)!
+    const titleSize = Number(title.getAttribute("font-size"))
+    const titleBottom = Number(title.getAttribute("y")) + titleSize * underlineDescentRatio(heading)
+    const conclusionTop = Number(conclusion.getAttribute("y")) - Number(conclusion.getAttribute("font-size")) * 0.75
+
+    expect(conclusionTop - titleBottom).toBeGreaterThanOrEqual(SIBLING_AIR_PX)
+  })
+
+  it("reflows a truncated title to two lines and spaces the conclusion from the last line", () => {
+    const heading = "The quarter in review and where the second half goes"
+    const subheading = "Second-half choices and tradeoffs"
+    const cover = slide(heading, { subheading })
+    const root = parseSvgRoot(renderSlideSvg(ir("insight", {}, cover), 0))
+    const conclusion = Array.from(root.querySelectorAll("text")).find((text) => text.textContent === subheading)!
+    const titleLines = Array.from(root.querySelectorAll("text")).filter((text) => text !== conclusion)
+
+    expect(titleLines).toHaveLength(2)
+    expect(titleLines.every((line) => line.getAttribute("data-truncated") === null)).toBe(true)
+
+    const lastTitle = titleLines.reduce((last, line) =>
+      Number(line.getAttribute("y")) > Number(last.getAttribute("y")) ? line : last,
+    )
+    const titleSize = Number(lastTitle.getAttribute("font-size"))
+    const titleBottom = Number(lastTitle.getAttribute("y")) + titleSize * underlineDescentRatio(heading)
+    const conclusionTop = Number(conclusion.getAttribute("y")) - Number(conclusion.getAttribute("font-size")) * 0.75
+
+    expect(conclusionTop - titleBottom).toBeGreaterThanOrEqual(SIBLING_AIR_PX)
   })
 
   it("does not invent +34% when the heading is a sentence", () => {
@@ -78,6 +116,13 @@ describe("cover-stat-cover — board geometry", () => {
     const texts = Array.from(root.querySelectorAll("text")).map((t) => t.textContent ?? "")
     expect(texts.some((t) => t.includes("续约率回到九成一"))).toBe(true)
     expect(texts.join("")).not.toContain("+34%")
+  })
+
+  it("keeps the board conclusion baseline when the optional heading is absent", () => {
+    const { root } = renderCover("insight", slide("", { heading: "" }))
+    const conclusion = Array.from(root.querySelectorAll("text")).find((text) => text.textContent === SUBHEADING)!
+
+    expect(conclusion.getAttribute("y")).toBe("470")
   })
 
   it("draws no ticker polyline or isolated ticks — those belong to the motif", () => {

@@ -6,6 +6,7 @@ import { buildCtx, resolveBackgroundHex } from "../full-slide-svg"
 import { resolveStyle, CANONICAL_THEME_IDS } from "../../themes"
 import { accessibleInk, contrastRatio, metaInk, requiredContrastRatio } from "../ink"
 import { LookbookOpenCover, layoutDef } from "./cover-lookbook-open-cover"
+import { renderSlideSvg } from "../../api"
 import type { LayoutDefinition } from "./registry"
 import type { PptxIR, Slide } from "@/ir"
 
@@ -132,10 +133,20 @@ describe("cover-lookbook-open-cover — board geometry", () => {
     expect(Array.from(root.querySelectorAll("text")).filter((t) => t.textContent === "2")).toHaveLength(0)
   })
 
-  it("falls back to subheading for the right season slot when date is missing", () => {
+  it("leaves the right season slot empty when date is missing", () => {
     const { root } = renderCover("runway", slide(), { organization: "ECHO" })
     const right = Array.from(root.querySelectorAll("text")).find((t) => t.getAttribute("text-anchor") === "end" && (t.textContent ?? "").includes("秋冬系列"))
-    expect(right?.getAttribute("y")).toBe("140")
+    expect(right).toBeUndefined()
+  })
+
+  it("renders a cover subheading once when the document date is absent", () => {
+    const subheading = "Where the second half goes"
+    const cover = slide("The quarter in review", { subheading })
+    const root = parseSvgRoot(renderSlideSvg(ir("runway", {}, cover), 0))
+    const matches = Array.from(root.querySelectorAll("text")).filter((text) => text.textContent === subheading)
+
+    expect(matches).toHaveLength(1)
+    expect(matches[0]?.getAttribute("y")).toBe("480")
   })
 
   it("does not paint a full-bleed field of its own", () => {
