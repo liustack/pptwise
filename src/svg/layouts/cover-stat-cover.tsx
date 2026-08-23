@@ -4,6 +4,8 @@ import { fitHeadingLines } from "../heading-fit"
 import { fitSvgLine } from "../../lib/svg-text-layout"
 import { accessibleInk, metaInk } from "../ink"
 import { hasCjk } from "./minimal-shared"
+import { SIBLING_AIR_PX } from "../spacing"
+import { underlineDescentRatio } from "./underline"
 
 /**
  * stat-cover layout（2026-08-22 第八波批 1，新表达）：
@@ -28,12 +30,14 @@ const TITLE_X = 96
 const TITLE_Y = 392
 const TITLE_SIZE = 200
 const TITLE_MIN_PT = 72
-const TITLE_MAX_LINES = 1
+const TITLE_PREFERRED_LINES = 1
+const TITLE_MAX_LINES = 2
 const TITLE_MAX_W = 1088
-/** 板上结论基线 y470 相对 200px 标题基线的比例（78/200）。 */
-const CONCLUSION_GAP_RATIO = 0.39
 const CONCLUSION_SIZE = 30
 const CONCLUSION_MAX_W = 1088
+/** 与渲染审计一致，以 0.75em 估算字顶。 */
+const CONCLUSION_ASCENT_RATIO = 0.75
+const CONCLUSION_Y_WITHOUT_TITLE = 470
 
 const KICKER_X = 96
 const KICKER_Y = 140
@@ -54,15 +58,23 @@ export function StatCover({ ir, slide, ctx }: SvgTemplateProps) {
   const authorText = author ? [author.name, author.role].filter(Boolean).join(" · ") : null
   const version = ir.meta.version
 
-  const title = fitHeadingLines(slide.heading, {
+  const titleFit = {
     maxWidth: TITLE_MAX_W,
     fontSize: TITLE_SIZE,
-    maxLines: TITLE_MAX_LINES,
     minPt: TITLE_MIN_PT,
     fontFamily: fonts.heading,
     typeScale: ctx.shape?.typeScale,
     bold: false,
+  } as const
+  const oneLineTitle = fitHeadingLines(slide.heading, {
+    ...titleFit,
+    maxLines: TITLE_PREFERRED_LINES,
   })
+  // 数字和短标题维持单行板式。只有单行会真实截断时才启用第二行，避免为了
+  // 放大字号把原本完整的一行主动拆开。
+  const title = oneLineTitle.truncated
+    ? fitHeadingLines(slide.heading, { ...titleFit, maxLines: TITLE_MAX_LINES })
+    : oneLineTitle
   const titleInk = accessibleInk(colors.accent, bg, title.fontSize)
 
   const kickerSource = [org, date].filter((part): part is string => Boolean(part)).join(" · ")
@@ -77,7 +89,6 @@ export function StatCover({ ir, slide, ctx }: SvgTemplateProps) {
       })
     : null
 
-  const conclusionY = TITLE_Y + Math.round(title.fontSize * CONCLUSION_GAP_RATIO)
   const conclusion = slide.subheading
     ? fitSvgLine(slide.subheading, {
         maxWidth: CONCLUSION_MAX_W,
@@ -86,6 +97,14 @@ export function StatCover({ ir, slide, ctx }: SvgTemplateProps) {
         fontFamily: fonts.heading,
       })
     : null
+  const titleLastY = TITLE_Y + Math.max(0, title.lines.length - 1) * title.lineHeight
+  const conclusionY =
+    title.lines.length > 0
+      ? titleLastY +
+        Math.round(title.fontSize * underlineDescentRatio(slide.heading ?? "")) +
+        SIBLING_AIR_PX +
+        Math.round((conclusion?.fontSize ?? CONCLUSION_SIZE) * CONCLUSION_ASCENT_RATIO)
+      : CONCLUSION_Y_WITHOUT_TITLE
 
   const footParts = [authorText, version].filter((part): part is string => Boolean(part))
   const foot =
