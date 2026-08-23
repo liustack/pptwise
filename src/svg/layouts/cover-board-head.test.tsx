@@ -5,6 +5,7 @@ import { assertSubset } from "../subset-validate"
 import { buildCtx, resolveBackgroundHex } from "../full-slide-svg"
 import { resolveStyle, CANONICAL_THEME_IDS } from "../../themes"
 import { contrastRatio, requiredContrastRatio } from "../ink"
+import { measureTextUnits } from "../../lib/svg-text-layout"
 import { BoardHeadCover, layoutDef } from "./cover-board-head"
 import type { PptxIR, Slide } from "@/ir"
 
@@ -47,9 +48,15 @@ function renderCover(themeId: string, s: Slide = slide(), meta: PptxIR["meta"] =
   return { markup, root: parseSvgRoot(markup), tokens }
 }
 
+function parseQuadXSpan(d: string): { start: number; width: number } {
+  const match = /^M ([-\d.]+) [-\d.]+ q [-\d.]+ [-\d.]+ ([-\d.]+) [-\d.]+$/.exec(d)
+  if (!match) throw new Error(`not a single-q chalk path: ${d}`)
+  return { start: Number(match[1]), width: Number(match[2]) }
+}
+
 describe("cover-board-head — board geometry", () => {
-  it("places the kicker, light heading, chalk stroke, subtitle and italic byline", () => {
-    const { root, tokens } = renderCover("lecture")
+  it("places the kicker, light heading, subtitle and italic byline", () => {
+    const { root } = renderCover("lecture")
     const texts = Array.from(root.querySelectorAll("text"))
     const kicker = texts.find((t) => Number(t.getAttribute("y")) === 118)!
     expect(kicker.textContent).toBe(FULL_META.organization)
@@ -60,18 +67,51 @@ describe("cover-board-head — board geometry", () => {
     expect(heading.getAttribute("font-weight")).toBe("400")
     expect(heading.getAttribute("font-size")).toBe("126")
 
-    const path = root.querySelector("path")!
-    expect(path.getAttribute("stroke")).toBe(tokens.colors.accent)
-    expect(path.getAttribute("fill")).toBe("none")
-    expect(path.getAttribute("stroke-width")).toBe("5")
-
     const subtitle = texts.find((t) => t.textContent === SUBHEADING)!
     expect(subtitle.getAttribute("x")).toBe("106")
+    const subTop = Number(subtitle.getAttribute("y")) - Math.round(Number(subtitle.getAttribute("font-size")) * 0.8)
+    expect(subTop - Number(heading.getAttribute("y"))).toBe(32)
 
     const byline = texts.find((t) => t.getAttribute("font-style") === "italic")!
     expect(byline.getAttribute("text-anchor")).toBe("end")
     expect(byline.getAttribute("x")).toBe("1108")
     expect(byline.getAttribute("y")).toBe("688")
+  })
+
+  it("draws a chalk underline under the marked run only", () => {
+    const marked = slide("囚徒**困境**与重复博弈")
+    const { root, tokens, markup } = renderCover("lecture", marked)
+    expect(markup).not.toContain("q 120 12 260 4")
+    expect(markup).not.toContain("q 140 -8 292 -2")
+    expect(markup).not.toContain("**")
+
+    const heading = Array.from(root.querySelectorAll("text")).find((t) =>
+      (t.textContent ?? "").includes("困境"),
+    )!
+    const path = root.querySelector("[data-emphasis-underline]")!
+    expect(path.getAttribute("stroke")).toBe(tokens.colors.accent)
+    expect(path.getAttribute("fill")).toBe("none")
+    const fontSize = Number(heading.getAttribute("font-size"))
+    const fontFamily = heading.getAttribute("font-family") ?? undefined
+    const titleX = Number(heading.getAttribute("x"))
+    const span = parseQuadXSpan(path.getAttribute("d")!)
+    const weight = { bold: false, fontFamily }
+    expect(span.start).toBeCloseTo(titleX + measureTextUnits("囚徒", weight) * fontSize, 6)
+    expect(span.width).toBeCloseTo(measureTextUnits("困境", weight) * fontSize, 6)
+    expect(span.width).toBeLessThan(292)
+
+    const subtitle = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === SUBHEADING)!
+    const titleYs = Array.from(root.querySelectorAll("text"))
+      .filter((t) => t.getAttribute("x") === "106" && t.getAttribute("font-weight") === "400" && t !== subtitle)
+      .map((t) => Number(t.getAttribute("y")))
+    const subTop = Number(subtitle.getAttribute("y")) - Math.round(Number(subtitle.getAttribute("font-size")) * 0.8)
+    expect(subTop - Math.max(...titleYs)).toBe(60)
+  })
+
+  it("draws no chalk path when the heading has no ** run", () => {
+    const { root } = renderCover("lecture")
+    expect(root.querySelector("path")).toBeNull()
+    expect(root.querySelector("[data-emphasis-underline]")).toBeNull()
   })
 
   it("does not draw the chalk-tray frame — that belongs to the motif", () => {

@@ -33,7 +33,7 @@ function consultingPadDeck(): PptxIR {
       } as Slide,
       {
         type: "content",
-        layout: "banner-heading",
+        layout: "rail-numbered",
         heading: "普通标题",
         components: [{ type: "bullets", items: ["要点中的**关键证据**"] }],
       } as Slide,
@@ -87,20 +87,50 @@ function consultingPadDeck(): PptxIR {
 // Recaptured (wave8 batch 4, 2026-08-23). swiss content pages drop the
 // right-edge ticks (cover-only). Covers of all 23 unassigned themes stay
 // byte-identical. consulting is not in this fixture.
+//
+// Recaptured (audit round-1 group F, 2026-08-23). lecture leaves the
+// unassigned matrix: emphasis form is now underline. Remaining 22
+// themes × five paths = 110 hashes. consulting is not in this fixture.
+//
+// Recaptured (audit round-1 group E, 2026-08-23). Page 3 swaps the retired
+// banner-heading pin for split-band. Only `|3` hashes move (22 of 110).
+// Other unassigned pages stay byte-identical.
 const fixture = JSON.parse(
   readFileSync(EMPHASIS_UNASSIGNED_BYTES_URL, "utf-8"),
 ) as { pages: Record<string, string> }
 
 describe("unassigned emphasis forms stay pinned to the depth-contract fixture", () => {
   const pages = computeEmphasisUnassignedPages()
-  it("covers 23 themes across five real render paths", () => {
-    expect(UNASSIGNED).toHaveLength(23)
-    expect(Object.keys(pages)).toHaveLength(115)
-    expect(Object.keys(fixture.pages)).toHaveLength(115)
+  it("covers 22 themes across five real render paths", () => {
+    expect(UNASSIGNED).not.toContain("lecture")
+    expect(UNASSIGNED).not.toContain("consulting")
+    expect(UNASSIGNED).toHaveLength(22)
+    expect(Object.keys(pages)).toHaveLength(110)
+    expect(Object.keys(fixture.pages)).toHaveLength(110)
   })
 
   it.each(Object.keys(fixture.pages))("%s", (key) => {
     expect(pages[key]).toBe(fixture.pages[key])
+  })
+})
+
+describe("lecture underline reaches every shared emphasis path", () => {
+  const ir = consultingPadDeck()
+  ir.filename = "emphasis-lecture-underline-paths.pptx"
+  ir.theme = { id: "lecture" }
+
+  it.each([
+    [0, "cover"],
+    [2, "paragraph"],
+    [3, "bullets"],
+    [4, "callout"],
+    [5, "verdict banner"],
+    [6, "heading treatment"],
+  ] as const)("page %i covers %s", (pageIndex, path) => {
+    const svg = renderSlideSvg(ir, pageIndex)
+    expect(svg, path).toContain('data-emphasis-underline=""')
+    expect(svg, path).not.toContain('data-emphasis-pad=""')
+    expect(svg, path).not.toContain("**")
   })
 })
 

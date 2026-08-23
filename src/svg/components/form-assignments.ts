@@ -2,8 +2,8 @@
  * Render-side component form assignment table. Forms are not IR: one
  * theme + one component maps to at most one form, looked up here and
  * ignored by renderers until a later commit wires dispatch. campaign ×
- * cycle is hub_spoke (first-listed wins), never petal_wheel. 78 rows
- * (65 prior + 1 emphasis + 7 typed_nodes + 5 architecture). classroom
+ * cycle is hub_spoke (first-listed wins), never petal_wheel. 79 rows
+ * (65 prior + 2 emphasis + 7 typed_nodes + 5 architecture). classroom
  * is listed on callout like every other canonical theme.
  */
 
@@ -26,6 +26,7 @@ export const COMPONENT_FORMS = [
   "hanging_bare",
   "lead_word",
   "pad",
+  "underline",
   "typed_nodes",
   "layer_stack",
 ] as const
@@ -76,6 +77,7 @@ export interface FormAssignment {
 const ASSIGNMENTS: Record<string, Record<string, FormAssignment>> = {
   emphasis: {
     consulting: { form: "pad" },
+    lecture: { form: "underline" },
   },
   icon_cards: {
     terra: {

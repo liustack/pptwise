@@ -492,7 +492,7 @@ describe("vertical_kicker museum", () => {
 })
 
 describe("vertical_kicker lecture", () => {
-  it("no left rule, chalk underline", () => {
+  it("no left rule, and no chalk path without a ** run", () => {
     const { treated, colors } = withChapter("lecture")
     expect(treated!.contentRect).toMatchObject({ x: 164, y: 196 })
     const root = rootOf(treated!.chrome)
@@ -503,12 +503,31 @@ describe("vertical_kicker lecture", () => {
     expect(kicker.getAttribute("fill")).toBe(colors.muted)
     const title = textContaining(root, HEADING)
     expect(num(title, "x")).toBe(164)
-    const path = root.querySelector("path")!
-    expect(path.getAttribute("d")).toBe("M 166 148 q 160 8 330 3")
-    expect(path.getAttribute("stroke")).toBe(colors.warning)
+    expect(root.querySelector("path")).toBeNull()
+    expect(root.querySelector("[data-emphasis-underline]")).toBeNull()
+  })
+
+  it("draws a chalk underline under the marked title run only", () => {
+    const marked = "算法**团队**的迭代节奏与业务预期存在落差"
+    const { treated, colors, fonts } = withChapter("lecture", { heading: marked })
+    const root = rootOf(treated!.chrome)
+    expect(rootOf(treated!.chrome).textContent).not.toContain("**")
+    const title = textContaining(root, "团队")
+    const path = root.querySelector("[data-emphasis-underline]")!
+    expect(path.getAttribute("d")).not.toBe("M 166 148 q 160 8 330 3")
+    expect(path.getAttribute("stroke")).toBe(colors.accent)
     expect(path.getAttribute("stroke-width")).toBe("3")
-    expect(path.getAttribute("opacity")).toBe("0.85")
     expect(path.getAttribute("stroke-linecap")).toBe("round")
+    const match = /^M ([-\d.]+) [-\d.]+ q [-\d.]+ [-\d.]+ ([-\d.]+) [-\d.]+$/.exec(path.getAttribute("d")!)
+    expect(match).toBeTruthy()
+    const start = Number(match![1])
+    const width = Number(match![2])
+    const fontSize = num(title, "font-size")
+    const titleX = num(title, "x")
+    const weight = { bold: true, fontFamily: fonts.heading }
+    expect(start).toBeCloseTo(titleX + measureTextUnits("算法", weight) * fontSize, 6)
+    expect(width).toBeCloseTo(measureTextUnits("团队", weight) * fontSize, 6)
+    expect(width).toBeLessThan(330)
   })
 })
 
