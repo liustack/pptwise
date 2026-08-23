@@ -12,14 +12,14 @@ const INDEX_X = 16
 const TITLE_X = 72
 const TITLE_COL = 280
 const TITLE_FONT_SIZE = 16
-const ITEMS_FONT_SIZE = 13
-const INDEX_FONT_SIZE = 11
+const ITEMS_FONT_SIZE = 16
+const INDEX_FONT_SIZE = 16
 const TITLE_BASELINE_Y = 38
 const ITEMS_BASELINE_Y = 38
 const INDEX_BASELINE_Y = 38
 const SEPARATOR = " · "
 const PAD = 16
-const MIN_FONT_SIZE = 10
+const MIN_FONT_SIZE = 16
 const HAIRLINE_W = 1
 
 function layerFill(ctx: ComponentCtx, knobs: FormKnobs, focal: boolean): string | undefined {

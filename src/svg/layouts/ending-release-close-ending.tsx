@@ -34,7 +34,7 @@ const ADDRESS_MIN_PT = 14
 const FOOT_Y = 600
 const FOOT_SIZE = 17
 const FOOT_MAX_W = 960
-const FOOT_MIN_PT = 12
+const FOOT_MIN_PT = 16
 
 /** Fit 链可能给末字补上省略号。渲染侧砍掉，不画 … 或 ...。 */
 function cutMarks(text: string): string {

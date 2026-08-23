@@ -214,19 +214,19 @@ describe("STRATEGY_DEFINITIONS", () => {
 describe("PACING_BUDGETS", () => {
   it("pins dense/balanced/spacious to the spec §5 table values", () => {
     expect(PACING_BUDGETS.dense).toEqual({
-      bodyBaselinePx: 20,
+      bodyBaselinePx: 24,
       maxComponentsPerSlide: 5,
-      bullets: { maxItems: 6, maxUnitsPerItem: 48 },
+      bullets: { maxItems: 6, maxUnitsPerItem: 27 },
     })
     expect(PACING_BUDGETS.balanced).toEqual({
       bodyBaselinePx: 24,
       maxComponentsPerSlide: 4,
-      bullets: { maxItems: 5, maxUnitsPerItem: 40 },
+      bullets: { maxItems: 5, maxUnitsPerItem: 25 },
     })
     expect(PACING_BUDGETS.spacious).toEqual({
       bodyBaselinePx: 32,
       maxComponentsPerSlide: 3,
-      bullets: { maxItems: 4, maxUnitsPerItem: 30 },
+      bullets: { maxItems: 4, maxUnitsPerItem: 22 },
     })
   })
 

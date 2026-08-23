@@ -58,7 +58,7 @@ export function CloseWordEnding({ ir, slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(footSource, {
         maxWidth: FOOT_MAX_W,
         fontSize: FOOT_SIZE,
-        minFontSize: 12,
+        minFontSize: 16,
         fontFamily: fonts.body,
       })
     : null

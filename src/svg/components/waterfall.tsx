@@ -73,10 +73,10 @@ const BAR_INSET_RATIO = 0.18
 const BAR_INSET_MAX = 22
 const MIN_BAR_H = 3
 const VALUE_GAP = 6
-const VALUE_FONT = 13
-const VALUE_MIN_FONT = 10
-const CATEGORY_FONT = 12.5
-const CATEGORY_MIN_FONT = 9.5
+const VALUE_FONT = 16
+const VALUE_MIN_FONT = 16
+const CATEGORY_FONT = 16
+const CATEGORY_MIN_FONT = 16
 const CATEGORY_BOTTOM_MARGIN = 10
 const CONNECTOR_DASH = "4 3"
 /** Natural (unstretched) height — full-body geometry is always driven by the

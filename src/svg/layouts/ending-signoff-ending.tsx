@@ -89,7 +89,7 @@ export function SignoffEnding({ ir, slide, ctx }: SvgTemplateProps) {
       ? fitSvgLine(footParts.join(" · "), {
           maxWidth: FOOT_MAX_W,
           fontSize: FOOT_SIZE,
-          minFontSize: 12,
+          minFontSize: 16,
           fontFamily: fonts.body,
         })
       : null
@@ -119,7 +119,7 @@ export function SignoffEnding({ ir, slide, ctx }: SvgTemplateProps) {
         const line = fitSvgLine(item, {
           maxWidth: ITEM_MAX_W,
           fontSize: ITEM_SIZE,
-          minFontSize: 14,
+          minFontSize: 16,
           fontFamily: fonts.body,
         })
         return (

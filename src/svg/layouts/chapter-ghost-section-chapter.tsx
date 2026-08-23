@@ -69,7 +69,7 @@ export function GhostSectionChapter({ ir, slide, index, ctx }: SvgTemplateProps)
   const kicker = fitSvgLine(kickerSource, {
     maxWidth: KICKER_MAX_W,
     fontSize: KICKER_SIZE,
-    minFontSize: 12,
+    minFontSize: 16,
     letterSpacing: KICKER_TRACKING,
     fontFamily: fonts.body,
   })
@@ -90,7 +90,7 @@ export function GhostSectionChapter({ ir, slide, index, ctx }: SvgTemplateProps)
     ? fitSvgLine(slide.subheading, {
         maxWidth: SUB_MAX_W,
         fontSize: SUB_SIZE,
-        minFontSize: 12,
+        minFontSize: 16,
         fontFamily: fonts.body,
       })
     : null

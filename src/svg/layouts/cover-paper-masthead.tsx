@@ -37,7 +37,7 @@ const TITLE_LINE_HEIGHT = 140
 
 const KICKER_X = 96
 const KICKER_Y = 86
-const KICKER_SIZE = 15
+const KICKER_SIZE = 16
 const KICKER_TRACKING_EM = 0.4
 
 const YEAR_X = 1216
@@ -101,7 +101,7 @@ export function PaperMastheadCover({ ir, slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(org, {
         maxWidth: 1000,
         fontSize: KICKER_SIZE,
-        minFontSize: 11,
+        minFontSize: 16,
         letterSpacing: kickerTracking,
         fontFamily: fonts.body,
       })
@@ -121,7 +121,7 @@ export function PaperMastheadCover({ ir, slide, ctx }: SvgTemplateProps) {
       ? fitSvgLine(footParts.join(" · "), {
           maxWidth: 1000,
           fontSize: FOOT_SIZE,
-          minFontSize: 12,
+          minFontSize: 16,
           fontFamily: fonts.body,
         })
       : null

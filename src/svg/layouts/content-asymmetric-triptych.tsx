@@ -80,7 +80,7 @@ export function AsymmetricTriptychContent({ ir, slide, index, ctx }: SvgTemplate
   const { colors, fonts } = ctx
   const section = sectionNameFor(ir.slides, index)
   const kicker = section
-    ? fitSvgLine(section, { maxWidth: HEADING_MAX_W, fontSize: 12, minFontSize: 9, letterSpacing: 4 })
+    ? fitSvgLine(section, { maxWidth: HEADING_MAX_W, fontSize: 16, minFontSize: 16, letterSpacing: 4 })
     : null
 
   const heading = fitHeadingLines(slide.heading, {
@@ -131,7 +131,7 @@ export function AsymmetricTriptychContent({ ir, slide, index, ctx }: SvgTemplate
   const panelRadius = ctx.shape?.radius ?? PANEL_RADIUS
 
   const footnote = slide.footnote
-    ? fitSvgLine(slide.footnote, { maxWidth: HEADING_MAX_W, fontSize: 14, minFontSize: 11 })
+    ? fitSvgLine(slide.footnote, { maxWidth: HEADING_MAX_W, fontSize: 16, minFontSize: 16 })
     : null
 
   const triptychBody = (

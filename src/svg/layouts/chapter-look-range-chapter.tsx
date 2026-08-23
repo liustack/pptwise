@@ -68,7 +68,7 @@ export function LookRangeChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
   const kicker = fitSvgLine(lookLabel(chNum), {
     maxWidth: KICKER_MAX_W,
     fontSize: KICKER_SIZE,
-    minFontSize: 12,
+    minFontSize: 16,
     letterSpacing: KICKER_TRACKING,
     fontFamily: fonts.heading,
   })
@@ -87,7 +87,7 @@ export function LookRangeChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
     ? fitSvgLine(subPlain, {
         maxWidth: SUB_MAX_W,
         fontSize: SUB_SIZE,
-        minFontSize: 14,
+        minFontSize: 16,
         fontFamily: fonts.heading,
       })
     : null

@@ -108,7 +108,7 @@ export function ColophonCover({ ir, slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(org, {
         maxWidth: CONTENT_RIGHT_EDGE - TITLE_X,
         fontSize: KICKER_SIZE,
-        minFontSize: 14,
+        minFontSize: 16,
         letterSpacing: KICKER_LETTER_SPACING,
         fontFamily: fonts.body,
       })

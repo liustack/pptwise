@@ -20,7 +20,7 @@ const CARD_RADIUS = 8
 const BAR_H = 8
 
 const BADGE_R = 19
-const BADGE_FONT = 15
+const BADGE_FONT = 16
 const BASELINE_FUDGE = 0.32
 const BADGE_TOP = BAR_H + 16 // 徽章顶到卡顶
 
@@ -30,7 +30,7 @@ const TITLE_LH = Math.round(TITLE_SIZE * 1.4)
 const GAP_BADGE_TITLE = 14
 const GAP_TITLE_ROWS = 16
 
-const LABEL_SIZE = 13
+const LABEL_SIZE = 16
 const VALUE_SIZE = 14.5
 const VALUE_LH = Math.round(VALUE_SIZE * 1.4)
 const ROW_GAP = 12
@@ -99,7 +99,7 @@ function cardLayout(
     ? fitSvgLine(item.period, {
         maxWidth: contentW - BADGE_R * 2 - 12,
         fontSize: PERIOD_SIZE,
-        minFontSize: 11,
+        minFontSize: 16,
         bold: true,
         fontFamily: bodyFontFamily,
       })
@@ -107,7 +107,7 @@ function cardLayout(
   const title = fitSvgLine(item.title, {
     maxWidth: contentW,
     fontSize: TITLE_SIZE,
-    minFontSize: 14,
+    minFontSize: 16,
     bold: true,
     fontFamily: headingFontFamily,
   })
@@ -120,7 +120,7 @@ function cardLayout(
     : 0
   const valueW = Math.max(40, contentW - labelColW)
   const rows: RowLayout[] = rowItems.map((r) => {
-    const label = fitSvgLine(r.label, { maxWidth: labelColW, fontSize: LABEL_SIZE, minFontSize: 10 })
+    const label = fitSvgLine(r.label, { maxWidth: labelColW, fontSize: LABEL_SIZE, minFontSize: 16 })
     const value = layoutSvgText(r.value, {
       maxWidth: valueW,
       fontSize: VALUE_SIZE,

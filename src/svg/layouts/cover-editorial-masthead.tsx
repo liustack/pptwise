@@ -72,7 +72,7 @@ export function EditorialMastheadCover({ ir, slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(kickerSrc, {
         maxWidth: 900,
         fontSize: KICKER_SIZE,
-        minFontSize: 12,
+        minFontSize: 16,
         letterSpacing: kickerTracking,
         fontFamily: fonts.body,
       })
@@ -147,7 +147,7 @@ export function EditorialMastheadCover({ ir, slide, ctx }: SvgTemplateProps) {
           x={titleX}
           y="656"
           fontFamily={fonts.body}
-          fontSize="13"
+          fontSize="16"
           fill={colors.muted}
           letterSpacing="2"
           textAnchor={textAnchor}

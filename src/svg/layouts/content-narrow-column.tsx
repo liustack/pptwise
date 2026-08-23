@@ -51,7 +51,7 @@ export function NarrowColumnContent({ ir, slide, index, ctx }: SvgTemplateProps)
     const columnH = Math.max(0, COLUMN_BOTTOM - y)
     const pageLabel = String(index + 1).padStart(2, "0")
     const footnote = slide.footnote
-      ? fitSvgLine(slide.footnote, { maxWidth: 980, fontSize: 20, minFontSize: 13 })
+      ? fitSvgLine(slide.footnote, { maxWidth: 980, fontSize: 20, minFontSize: 16 })
       : null
     return (
       <>
@@ -170,7 +170,7 @@ export function NarrowColumnContent({ ir, slide, index, ctx }: SvgTemplateProps)
   const pageLabel = String(index + 1).padStart(2, "0")
 
   const kicker = section
-    ? fitSvgLine(section, { maxWidth: COLUMN_W, fontSize: 16, minFontSize: 12 })
+    ? fitSvgLine(section, { maxWidth: COLUMN_W, fontSize: 16, minFontSize: 16 })
     : null
 
   // 980 = conservative left edge of the page-number digits (1112) minus the
@@ -178,7 +178,7 @@ export function NarrowColumnContent({ ir, slide, index, ctx }: SvgTemplateProps)
   // maximally-fitted footnote never runs into the large muted page number in
   // the right gutter.
   const footnote = slide.footnote
-    ? fitSvgLine(slide.footnote, { maxWidth: 980, fontSize: 20, minFontSize: 13 })
+    ? fitSvgLine(slide.footnote, { maxWidth: 980, fontSize: 20, minFontSize: 16 })
     : null
 
   return (

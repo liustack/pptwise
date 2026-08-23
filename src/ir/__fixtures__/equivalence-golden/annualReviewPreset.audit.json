@@ -1,9 +1,1 @@
-{
-  "findings": [],
-  "pagesAudited": 5,
-  "pagesSkipped": 0,
-  "checks": {
-    "svg": "completed",
-    "pixels": "not-requested"
-  }
-}
+{"findings":[{"page":3,"code":"content-truncated","message":"text \"revenue\" was truncated to fit — widen the layout, shorten the source content, or accept the cut if the tail wasn't essential","detail":{"text":"revenue"}}],"pagesAudited":5,"pagesSkipped":0,"checks":{"svg":"completed","pixels":"not-requested"}}

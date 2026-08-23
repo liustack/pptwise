@@ -71,7 +71,7 @@ export function StatCover({ ir, slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(kickerSource, {
         maxWidth: KICKER_MAX_W,
         fontSize: KICKER_SIZE,
-        minFontSize: 12,
+        minFontSize: 16,
         letterSpacing: kickerTracking,
         fontFamily: fonts.body,
       })
@@ -93,7 +93,7 @@ export function StatCover({ ir, slide, ctx }: SvgTemplateProps) {
       ? fitSvgLine(footParts.join(" · "), {
           maxWidth: 1000,
           fontSize: FOOT_SIZE,
-          minFontSize: 12,
+          minFontSize: 16,
           fontFamily: fonts.body,
         })
       : null

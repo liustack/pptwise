@@ -125,8 +125,8 @@ describe("row_cards density-stretch split between shells and gaps", () => {
   it("at the natural height nothing grows: every gap is the plain CARD_GAP", () => {
     const { tops, heights } = shells()
     expect(tops).toHaveLength(3)
-    expect(tops[1] - (tops[0] + heights[0])).toBeCloseTo(14, 5)
-    expect(tops[2] - (tops[1] + heights[1])).toBeCloseTo(14, 5)
+    expect(tops[1] - (tops[0] + heights[0])).toBeCloseTo(10, 5)
+    expect(tops[2] - (tops[1] + heights[1])).toBeCloseTo(10, 5)
   })
 
   it("a stretched box.h widens the gaps as well as the shells", () => {
@@ -135,12 +135,12 @@ describe("row_cards density-stretch split between shells and gaps", () => {
     const grow = 90
     const { tops, heights } = shells(natural + grow)
     // 30% of the increment shared across the 2 gaps would be 13.5 each,
-    // over the ceiling of 0.6 * CARD_GAP — so the ceiling binds and every
-    // gap grows by exactly 8.4, from 14 to 22.4.
-    expect(tops[1] - (tops[0] + heights[0])).toBeCloseTo(22.4, 5)
-    expect(tops[2] - (tops[1] + heights[1])).toBeCloseTo(22.4, 5)
-    // The shells split what is left: (90 - 8.4 * 2) / 3 per card.
-    for (let i = 0; i < 3; i++) expect(heights[i] - naturalHeights[i]).toBeCloseTo((90 - 8.4 * 2) / 3, 5)
+    // over the ceiling of 0.6 * CARD_GAP (6) — so the ceiling binds and
+    // every gap grows by exactly 6, from 10 to 16.
+    expect(tops[1] - (tops[0] + heights[0])).toBeCloseTo(16, 5)
+    expect(tops[2] - (tops[1] + heights[1])).toBeCloseTo(16, 5)
+    // The shells split what is left: (90 - 6 * 2) / 3 per card.
+    for (let i = 0; i < 3; i++) expect(heights[i] - naturalHeights[i]).toBeCloseTo((90 - 6 * 2) / 3, 5)
   })
 
   it("a small increment stays under the gap ceiling, so the share decides instead", () => {
@@ -148,8 +148,8 @@ describe("row_cards density-stretch split between shells and gaps", () => {
     const naturalHeights = shells().heights
     const grow = 30
     const { tops, heights } = shells(natural + grow)
-    // 30 * 0.3 / 2 = 4.5 per gap, under the 8.4 ceiling.
-    expect(tops[1] - (tops[0] + heights[0])).toBeCloseTo(18.5, 5)
+    // 30 * 0.3 / 2 = 4.5 per gap, under the 6 ceiling.
+    expect(tops[1] - (tops[0] + heights[0])).toBeCloseTo(14.5, 5)
     expect(heights[0] - naturalHeights[0]).toBeCloseTo((30 - 4.5 * 2) / 3, 5)
   })
 

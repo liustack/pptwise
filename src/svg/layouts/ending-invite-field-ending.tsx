@@ -79,7 +79,7 @@ export function InviteFieldEnding({ ir, slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(slide.subheading, {
         maxWidth: SUB_MAX_W,
         fontSize: SUB_SIZE,
-        minFontSize: 14,
+        minFontSize: 16,
         fontFamily: fonts.body,
       })
     : null
@@ -93,7 +93,7 @@ export function InviteFieldEnding({ ir, slide, ctx }: SvgTemplateProps) {
       ? fitSvgLine(footParts.join(" · "), {
           maxWidth: FOOT_MAX_W,
           fontSize: FOOT_SIZE,
-          minFontSize: 12,
+          minFontSize: 16,
           fontFamily: fonts.body,
         })
       : null

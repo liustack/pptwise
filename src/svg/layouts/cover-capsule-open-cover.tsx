@@ -73,7 +73,7 @@ export function CapsuleOpenCover({ ir, slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(org, {
         maxWidth: KICKER_MAX_W,
         fontSize: KICKER_SIZE,
-        minFontSize: 12,
+        minFontSize: 16,
         letterSpacing: kickerTracking,
         fontFamily: fonts.body,
       })
@@ -96,7 +96,7 @@ export function CapsuleOpenCover({ ir, slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(capsuleSource, {
         maxWidth: CAPSULE_MAX_W - CAPSULE_X_PAD,
         fontSize: CAPSULE_TEXT_SIZE,
-        minFontSize: 14,
+        minFontSize: 16,
         fontFamily: fonts.body,
         bold: true,
       })

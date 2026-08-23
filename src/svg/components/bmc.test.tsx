@@ -45,7 +45,9 @@ describe("bmc component", () => {
 
   it("renders all nine block titles", () => {
     const { container } = svg(bmc.render(basic, { x: 0, y: 0, w: 1088 }, ctx))
-    const texts = Array.from(container.querySelectorAll("text")).map((t) => t.textContent)
+    const blob = Array.from(container.querySelectorAll("text"))
+      .map((t) => t.textContent ?? "")
+      .join(" ")
     for (const label of [
       "Key Partners",
       "Key Activities",
@@ -57,7 +59,7 @@ describe("bmc component", () => {
       "Cost Structure",
       "Revenue Streams",
     ]) {
-      expect(texts).toContain(label)
+      expect(blob).toContain(label)
     }
   })
 

@@ -106,7 +106,7 @@ function renderCell({
             textAnchor="middle"
             x={cell.w / 2}
             y={cell.h / 2}
-            fontSize={14}
+            fontSize={16}
             fill={ctx.colors.muted}
             fontFamily={ctx.fonts.body}
             dominantBaseline="alphabetic"
@@ -148,8 +148,8 @@ function renderDefault(component: ImageGridComponent, box: Parameters<SvgCompone
                 (() => {
                   const fitted = fitSvgLine(item.caption, {
                     maxWidth: cell.w - 26,
-                    fontSize: 14,
-                    minFontSize: 11,
+                    fontSize: 16,
+                    minFontSize: 16,
                   })
                   return (
                     // caption 左对齐 + accent 短线前缀（杂志图注惯例），

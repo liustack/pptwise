@@ -170,7 +170,7 @@ export function LeftAnchorCover({ ir, slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(kickerSrc, {
         maxWidth: COVER_TITLE_MAX_W,
         fontSize: IN_BLOCK_KICKER_SIZE,
-        minFontSize: 12,
+        minFontSize: 16,
         letterSpacing: kickerTracking,
         fontFamily: fonts.body,
       })

@@ -784,8 +784,8 @@ describe("pacing bodyFontPx injection seam (W4 task 3 fix round — Major)", () 
     return probeText?.getAttribute("font-size") ?? null
   }
 
-  it("dense pacing renders the paragraph body at 20px through the real render entry point", () => {
-    expect(renderProbeFontSize({ pacing: "dense" })).toBe("20")
+  it("dense pacing renders the paragraph body at 24px through the real render entry point", () => {
+    expect(renderProbeFontSize({ pacing: "dense" })).toBe("24")
   })
 
   it("spacious pacing renders the paragraph body at 32px through the real render entry point", () => {

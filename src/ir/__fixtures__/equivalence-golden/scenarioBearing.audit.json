@@ -1,9 +1,1 @@
-{
-  "findings": [],
-  "pagesAudited": 5,
-  "pagesSkipped": 0,
-  "checks": {
-    "svg": "completed",
-    "pixels": "not-requested"
-  }
-}
+{"findings":[],"pagesAudited":5,"pagesSkipped":0,"checks":{"svg":"completed","pixels":"not-requested"}}

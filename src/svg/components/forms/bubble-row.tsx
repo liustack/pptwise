@@ -187,8 +187,8 @@ export function renderBubbleRow(
         const source = d.item.source
           ? fitFormLine(d.item.source, {
               maxWidth: Math.max(40, r * 2.4),
-              fontSize: 12,
-              floor: 12,
+              fontSize: 16,
+              floor: 16,
               fontFamily: ctx.fonts.body,
             })
           : null

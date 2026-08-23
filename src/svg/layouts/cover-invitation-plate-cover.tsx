@@ -47,7 +47,7 @@ const RULE_W = 160
 const RULE_STROKE = 1
 
 const FOOT_Y = 620
-const FOOT_SIZE = 15
+const FOOT_SIZE = 16
 const FOOT_MAX_W = 1000
 
 function cutMarks(text: string): string {
@@ -97,7 +97,7 @@ export function InvitationPlateCover({ ir, slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(org, {
         maxWidth: KICKER_MAX_W,
         fontSize: KICKER_SIZE,
-        minFontSize: 12,
+        minFontSize: 16,
         letterSpacing: kickerTracking,
         fontFamily: fonts.heading,
       })
@@ -109,7 +109,7 @@ export function InvitationPlateCover({ ir, slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(subSource, {
         maxWidth: SUB_MAX_W,
         fontSize: SUB_SIZE,
-        minFontSize: 14,
+        minFontSize: 16,
         letterSpacing: subTracking,
         fontFamily: fonts.heading,
       })
@@ -121,7 +121,7 @@ export function InvitationPlateCover({ ir, slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(footRaw, {
         maxWidth: FOOT_MAX_W,
         fontSize: FOOT_SIZE,
-        minFontSize: 12,
+        minFontSize: 16,
         letterSpacing: footTracking,
         fontFamily: fonts.heading,
       })

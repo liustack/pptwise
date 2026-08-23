@@ -37,7 +37,7 @@ const PAD_X_PAD = 48
 
 const FOOT_X = 96
 const FOOT_Y = 676
-const FOOT_SIZE = 15
+const FOOT_SIZE = 16
 const FOOT_RULE_Y = 640
 const FOOT_RULE_W = 1088
 
@@ -84,7 +84,7 @@ export function ActionPadEnding({ ir, slide, ctx }: SvgTemplateProps) {
   const kicker = fitSvgLine(NEXT_KICKER, {
     maxWidth: ITEM_MAX_W,
     fontSize: KICKER_SIZE,
-    minFontSize: 12,
+    minFontSize: 16,
     letterSpacing: KICKER_TRACKING,
     fontFamily: fonts.body,
   })
@@ -103,7 +103,7 @@ export function ActionPadEnding({ ir, slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(ctaSource, {
         maxWidth: 1000,
         fontSize: PAD_TEXT_SIZE,
-        minFontSize: 14,
+        minFontSize: 16,
         fontFamily: fonts.body,
       })
     : null
@@ -118,7 +118,7 @@ export function ActionPadEnding({ ir, slide, ctx }: SvgTemplateProps) {
       ? fitSvgLine(footParts.join(" · "), {
           maxWidth: 1000,
           fontSize: FOOT_SIZE,
-          minFontSize: 12,
+          minFontSize: 16,
           fontFamily: fonts.body,
         })
       : null

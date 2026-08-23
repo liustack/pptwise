@@ -156,7 +156,7 @@ export function renderDonutTrio(
           fontFamily: ctx.fonts.body,
         })
         const source = item.source
-          ? fitFormLine(item.source, { maxWidth: G.cellW - 16, fontSize: 12, floor: 12, fontFamily: ctx.fonts.body })
+          ? fitFormLine(item.source, { maxWidth: G.cellW - 16, fontSize: 16, floor: 16, fontFamily: ctx.fonts.body })
           : null
         const labelY = cy + G.r + G.strokeW / 2 + 22
         const iconSize = 14

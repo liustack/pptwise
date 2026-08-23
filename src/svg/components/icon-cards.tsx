@@ -22,7 +22,7 @@ const GAP = 16
 const ICON_SIZE = 24
 const GAP_ICON_TITLE = 12
 const TITLE_FONT_SIZE = 20
-const TITLE_MIN_FONT_SIZE = 14
+const TITLE_MIN_FONT_SIZE = 16
 // Matches callout.tsx/bullets.tsx's own line-height convention for
 // body-weight text (`LINE_RATIO` / the 1.4 used in `layoutItems`) — title
 // never wraps (`fitSvgLine` only shrinks/truncates a single line), so this
@@ -32,7 +32,7 @@ const TITLE_MIN_FONT_SIZE = 14
 // it — see `IconCardLayoutOptions`), not hoisted to its own module constant.
 const TITLE_LINE_HEIGHT_RATIO = 1.4
 const GAP_TITLE_TEXT = 8
-const TEXT_FONT_SIZE = 15
+const TEXT_FONT_SIZE = 16
 // 15 * 1.4 = 21, matching the brief's stated line height for the 2-line
 // description text.
 const TEXT_LINE_HEIGHT_RATIO = 1.4
@@ -97,7 +97,7 @@ function layoutIconCard(
   const text = {
     ...wrapped,
     lines,
-    truncated: lines.some((line, i) => line !== wrapped.lines[i]),
+    truncated: wrapped.truncated || lines.some((line, i) => line !== wrapped.lines[i]),
   }
   return { title, text }
 }

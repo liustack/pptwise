@@ -239,7 +239,7 @@ export const CAPACITY = {
    * 渲染首次截断都在 156 字——约 3.5 倍差距，且该差距是结构性的（不分
    * CJK/Latin），源头是编辑性预算从未对齐 `bullets.tsx` 真正的渲染安全网。
    *
-   * `bullets.tsx` 的安全网是两个与 pacing 无关的定值：`MIN_FONT = 14`（收缩
+   * `bullets.tsx` 的安全网是两个与 pacing 无关的定值：`MIN_FONT = 16`（收缩
    * 地板）与 `maxLines: 2`（`layoutItems` 传给 `layoutSvgText` 的换行上限）。
    * 起始字号由 pacing 决定（`bodyBaselinePx` 20/24/32），但一旦某条要点把
    * 同组件内共享字号压到地板，容量就只由「地板字号 + 可用宽度」决定，与起始
@@ -325,7 +325,7 @@ export const CAPACITY = {
    *
    * numbered/checklist 的真实边界从「约为 plain 家族的一半」收敛到「贴着
    * plain 家族」——差距即前缀自身的预留宽度（1-2 units 量级：numbered
-   * "1. " ≈1.37 units、checklist "☐ " ≈0.81 units，乘以 MIN_FONT=14 后
+   * "1. " ≈1.37 units、checklist "☐ " ≈0.81 units，乘以 MIN_FONT=16 后
    * 换算成 px 从 `maxWidth` 里扣掉），不再是结构性缺口。**结论：五种样式的
    * 边界现在全部 ≥56，严格高于 `itemOverflowUnits=50`——本常量对全部 5 种
    * bullets 样式现在都是滴水不漏的硬界**，`ir-quality.ts` 的
@@ -340,7 +340,7 @@ export const CAPACITY = {
    * 注释。
    */
   bullets: {
-    itemOverflowUnits: 50,
+    itemOverflowUnits: 29,
     /**
      * bullets 条目**数量**的 error 级二级升级阈值（P0 hardening, robustness
      * deep-review D1，warn 二级升级——borrow 波 Task 2 同款 dual-threshold
@@ -367,7 +367,7 @@ export const CAPACITY = {
      *   高于 500，并留出安全余量，不能让"一个作者手滑多写了几百条"这种
      *   仍然可辨认是真实内容的输入被拒收。
      *
-     *   上界——`bullets.tsx` `MIN_FONT=14` 收缩地板下单行项最小占位
+     *   上界——`bullets.tsx` `MIN_FONT=16` 收缩地板下单行项最小占位
      *   `lineHeight(20) + ITEM_GAP(8) = 28px`，即便把整块 720px 画布
      *   （`CANVAS_H_PX`，`constants.ts`，无标题无页边距——比任何真实内容区
      *   都宽松）全部让给 bullets，物理上也只能显示

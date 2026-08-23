@@ -88,7 +88,7 @@ export function ThesisPlateCover({ ir, slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(org, {
         maxWidth: KICKER_MAX_W,
         fontSize: KICKER_SIZE,
-        minFontSize: 12,
+        minFontSize: 16,
         letterSpacing: kickerTracking,
         fontFamily: fonts.heading,
       })
@@ -98,7 +98,7 @@ export function ThesisPlateCover({ ir, slide, ctx }: SvgTemplateProps) {
     fitSvgLine(line, {
       maxWidth: PLATE_TEXT_MAX_W,
       fontSize: PLATE_TEXT_SIZE,
-      minFontSize: 12,
+      minFontSize: 16,
       fontFamily: fonts.body,
     }),
   )

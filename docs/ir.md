@@ -84,13 +84,13 @@ Set the IR's top-level `narrative` to a named preset string (`"boardroom-report"
 
 | pacing | body text | components / slide | bullets |
 |---|---|---|---|
-| `dense` | 20px | 5 | up to 6 items, ~48 characters each |
-| `balanced` (the default) | 24px | 4 | up to 5 items, ~40 characters each |
-| `spacious` | 32px | 3 | up to 4 items, ~30 characters each |
+| `dense` | 24px (18pt) | 5 | up to 6 items, ~27 characters each |
+| `balanced` (the default) | 24px (18pt) | 4 | up to 5 items, ~25 characters each |
+| `spacious` | 32px | 3 | up to 4 items, ~22 characters each |
 
 These are editorial guidance, not hard limits: `validate` reports them as warnings and still succeeds. Only genuine render-safety ceilings can block generation.
 
-Bullets shrink below their tier's baseline to fit when needed, down to a 14px floor, before any overflow handling kicks in. Across every bullet style — `default`, `plain`, `divided`, `numbered`, `checklist` — an item long enough to still overflow at that floor is a hard validate error. That is looser than the per-pacing length guidance above, and it fires for a different reason: the text genuinely loses characters to an ellipsis at render.
+Body copy never shrinks below 24px (18pt). Captions, footnotes, ticks, and other secondary type never shrink below 16px (12pt). An item that still cannot fit at that floor is a hard validate error. The renderer does not paint an ellipsis.
 
 `pptwise validate` reports the exact numbers that applied to each slide. `pptwise narratives [--json]` lists the named presets (each carrying soft theme recommendations, a suggestion rather than a constraint) plus the raw axes tables.
 

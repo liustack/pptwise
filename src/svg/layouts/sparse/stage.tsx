@@ -20,7 +20,7 @@ export function statement({ slide, ctx }: SvgTemplateProps) {
   })
   const attr = statementAttribution(slide)
   const attrLine = attr
-    ? fitSvgLine(attr, { maxWidth: 920, fontSize: 20, minFontSize: 12, fontFamily: fonts.body })
+    ? fitSvgLine(attr, { maxWidth: 920, fontSize: 20, minFontSize: 16, fontFamily: fonts.body })
     : null
   return (
     <>
@@ -68,7 +68,7 @@ export function statHero({ ir, slide, index, ctx }: SvgTemplateProps) {
   const section = sectionNameFor(ir.slides, index)
   const tracking = section && !hasCjk(section) ? 14 : undefined
   const kicker = section
-    ? fitSvgLine(section, { maxWidth: 920, fontSize: 20, minFontSize: 14, letterSpacing: tracking, fontFamily: fonts.body })
+    ? fitSvgLine(section, { maxWidth: 920, fontSize: 20, minFontSize: 16, letterSpacing: tracking, fontFamily: fonts.body })
     : null
   const { body, percent } = splitTrailingPercent(heroValue(slide))
   const fitted = fitHeroLine(body, { maxWidth: 1100, fontSize: 300, fontFamily: fonts.heading, bold: false })

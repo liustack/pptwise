@@ -123,7 +123,7 @@ export function QuoteStageContent({ slide, ctx }: SvgTemplateProps) {
   // its subheading tier: quote-stage's heading already carries the page's
   // entire emphasis, a second emphasized line would compete with it.
   const subheading = slide.subheading
-    ? fitSvgLine(slide.subheading, { maxWidth: 860, fontSize: 20, minFontSize: 14 })
+    ? fitSvgLine(slide.subheading, { maxWidth: 860, fontSize: 20, minFontSize: 16 })
     : null
   const subheadingY = titleLastY + ANNOTATION_GAP
 
@@ -140,7 +140,7 @@ export function QuoteStageContent({ slide, ctx }: SvgTemplateProps) {
   }
 
   const footnote = slide.footnote
-    ? fitSvgLine(slide.footnote, { maxWidth: 900, fontSize: 16, minFontSize: 12 })
+    ? fitSvgLine(slide.footnote, { maxWidth: 900, fontSize: 16, minFontSize: 16 })
     : null
 
   return (

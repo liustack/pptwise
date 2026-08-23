@@ -9,15 +9,17 @@ import { measureTextUnits } from "../../lib/svg-text-layout"
  * (heatmap / matrix) never call it.
  */
 
-export const TICK_FONT_SIZE = 13
-export const TICK_MIN_FONT_SIZE = 12
+export const TICK_FONT_SIZE = 16
+export const TICK_MIN_FONT_SIZE = 16
 export const TICK_TO_AXIS_GAP = 8
 /** Extra px below the x-axis before the tick baseline. L1 treats a full
  * `font-size` box above the baseline, so 2px put the box 2px from the axis
  * and tripped edge-stick. 6px keeps that box 6px clear. */
 export const TICK_BELOW_AXIS = 6
 export const Y_TICK_MIN_GUTTER = 36
-export const X_TICK_BAND = 22
+/** Tick baseline sits `TICK_FONT_SIZE + TICK_BELOW_AXIS` below the axis.
+ * Keep a few px of air before the title pair's origin. */
+export const X_TICK_BAND = TICK_FONT_SIZE + TICK_BELOW_AXIS + 4
 export const PLOT_TOP_PAD = 14
 export const PLOT_RIGHT_PAD = 8
 export const AXIS_STROKE_WIDTH = 1.5

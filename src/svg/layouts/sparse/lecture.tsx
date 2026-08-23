@@ -30,7 +30,7 @@ export function statement({ slide, ctx }: SvgTemplateProps) {
   })
   const attr = statementAttribution(slide)
   const attrLine = attr
-    ? fitSvgLine(attr, { maxWidth: 1040, fontSize: 20, minFontSize: 12, fontFamily: fonts.body })
+    ? fitSvgLine(attr, { maxWidth: 1040, fontSize: 20, minFontSize: 16, fontFamily: fonts.body })
     : null
   return (
     <>
@@ -83,7 +83,7 @@ export function statHero({ ir, slide, index, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const section = sectionNameFor(ir.slides, index)
   const kicker = section
-    ? fitSvgLine(section, { maxWidth: 1040, fontSize: 22, minFontSize: 14, fontFamily: fonts.body })
+    ? fitSvgLine(section, { maxWidth: 1040, fontSize: 22, minFontSize: 16, fontFamily: fonts.body })
     : null
   const fitted = fitHeroLine(heroValue(slide), { maxWidth: 1040, fontSize: 260, fontFamily: fonts.heading, bold: false })
   const caption = heroCaption(slide)

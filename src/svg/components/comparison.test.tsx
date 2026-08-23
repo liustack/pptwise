@@ -148,8 +148,7 @@ describe("comparison component", () => {
     expect(line?.getAttribute("stroke")).toBe("#CCCCCC")
   })
 
-  // backlog#5：列头/单元格「对比…」「落后 27…」式截断——先全表统一缩字号
-  // （地板 12px），字号到地板仍放不下才截断。
+  // 列头/单元格先全表统一缩字号（地板 16px / 12pt），到地板仍放不下才截断。
   describe("shrink-before-truncate", () => {
     const longHeaders = {
       type: "comparison" as const,
@@ -159,7 +158,7 @@ describe("comparison component", () => {
 
     it("renders a moderately long header in full at a reduced font size", () => {
       const { container } = svg(
-        comparison.render(longHeaders, { x: 0, y: 0, w: 500 }, ctx),
+        comparison.render(longHeaders, { x: 0, y: 0, w: 900 }, ctx),
       )
       const headerTexts = Array.from(container.querySelectorAll("text")).filter(
         (t) => t.getAttribute("font-weight") === "bold" && t.textContent?.startsWith("对比"),
@@ -169,12 +168,12 @@ describe("comparison component", () => {
         expect(t.textContent).toMatch(/^对比维度总览与说明列表[甲乙]$/)
         expect(t.textContent).not.toContain("…")
         const size = Number(t.getAttribute("font-size"))
-        expect(size).toBeLessThan(18)
-        expect(size).toBeGreaterThanOrEqual(12)
+        expect(size).toBeLessThanOrEqual(18)
+        expect(size).toBeGreaterThanOrEqual(16)
       }
     })
 
-    it("still truncates at the 12px floor for pathologically long headers", () => {
+    it("still truncates at the 16px floor for pathologically long headers", () => {
       const extreme = {
         ...longHeaders,
         columns: [
@@ -190,7 +189,7 @@ describe("comparison component", () => {
       )
       expect(long?.textContent).not.toContain("…")
       expect(long?.getAttribute("data-truncated")).toBe("1")
-      expect(long?.getAttribute("font-size")).toBe("12")
+      expect(long?.getAttribute("font-size")).toBe("16")
     })
 
     it("renders a moderately long cell in full at a reduced font size", () => {
@@ -201,18 +200,16 @@ describe("comparison component", () => {
           { label: "结论", cells: ["落后 27 个百分点且持续扩大中", "领先"] },
         ],
       }
-      // 480px 时按权重分到的列宽足够 16px 完整渲染（无需缩）；400px 才真正
-      // 触发缩字号路径（fit=15），且缩后仍完整、不出省略号。
+      // 宽盒在 16px 地板上仍能完整放下。更窄的盒走到截断，由下一条钉死。
       const { container } = svg(
-        comparison.render(cellComponent, { x: 0, y: 0, w: 400 }, ctx),
+        comparison.render(cellComponent, { x: 0, y: 0, w: 720 }, ctx),
       )
       const cell = Array.from(container.querySelectorAll("text")).find((t) =>
         t.textContent?.startsWith("落后"),
       )
       expect(cell?.textContent).toBe("落后 27 个百分点且持续扩大中")
       const size = Number(cell?.getAttribute("font-size"))
-      expect(size).toBeLessThan(16)
-      expect(size).toBeGreaterThanOrEqual(12)
+      expect(size).toBeGreaterThanOrEqual(16)
     })
 
     it("keeps default sizes when content is short", () => {

@@ -111,7 +111,7 @@ export function FashionMastheadCover({ ir, slide, ctx }: SvgTemplateProps) {
       ? fitSvgLine(metaParts.join("    ·    "), {
           maxWidth: 1100,
           fontSize: 19,
-          minFontSize: 14,
+          minFontSize: 16,
           letterSpacing: META_LETTER_SPACING,
         })
       : null

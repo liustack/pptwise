@@ -182,8 +182,8 @@ const MIN_NODE_H = 6
 const MIN_BAND_H = 3
 const LABEL_GAP = 8
 const MAX_LABEL_W = 150
-const LABEL_FONT = 12.5
-const LABEL_MIN_FONT = 9.5
+const LABEL_FONT = 16
+const LABEL_MIN_FONT = 16
 /** Natural (unstretched) fallback height — full-body geometry is always
  * driven by the given `box.h` at render time (`checkFullBodyExclusivity`
  * guarantees this is always the slide's sole component), so this only
@@ -708,7 +708,11 @@ export const sankey: SvgComponent<SankeyComponent> = {
           })
           const labelX = n.isLastLayer ? n.x - LABEL_GAP : n.x + NODE_W + LABEL_GAP
           const labelAnchor = n.isLastLayer ? "end" : "start"
-          const labelY = n.y + n.h / 2 + labelFit.fontSize * 0.35
+          const rawLabelY = n.y + n.h / 2 + labelFit.fontSize * 0.35
+          const minLabelY = box.y + labelFit.fontSize * LABEL_ASCENT_RATIO
+          const maxLabelY = box.y + h - labelFit.fontSize * LABEL_DESCENT_RATIO
+          const labelY = Math.min(maxLabelY, Math.max(minLabelY, rawLabelY))
+          const labelFitsVertically = minLabelY <= maxLabelY
           const labelW = measureTextUnits(labelFit.text) * labelFit.fontSize
           const labelBBox: BBox = {
             xMin: n.isLastLayer ? labelX - labelW : labelX,
@@ -716,6 +720,9 @@ export const sankey: SvgComponent<SankeyComponent> = {
             yMin: labelY - labelFit.fontSize * LABEL_ASCENT_RATIO,
             yMax: labelY + labelFit.fontSize * LABEL_DESCENT_RATIO,
           }
+          const labelFitsHorizontally =
+            labelBBox.xMin >= box.x - 6 && labelBBox.xMax <= box.x + box.w + 6
+          const showLabel = labelFitsVertically && labelFitsHorizontally
           // Real render-time safety check (this file's own header comment,
           // "Band opacity prevents a false-positive... it does not, by
           // itself, make a label safe"): every band this label's own glyph
@@ -750,7 +757,7 @@ export const sankey: SvgComponent<SankeyComponent> = {
           return (
             <g key={n.id} data-audit-box={`${boxLeft},${n.y},${boxRight - boxLeft}`}>
               <rect data-plot-mark="1" x={n.x} y={n.y} width={NODE_W} height={n.h} fill={ctx.colors.surface} stroke={ctx.colors.primary} strokeWidth={1} />
-              {needsChip ? (
+              {showLabel && needsChip ? (
                 <rect
                   data-label-chip="1"
                   x={labelBBox.xMin - LABEL_CHIP_PAD_X}
@@ -761,6 +768,7 @@ export const sankey: SvgComponent<SankeyComponent> = {
                   fill={bg}
                 />
               ) : null}
+              {showLabel ? (
               <text
                 data-truncated={labelFit.truncated ? "1" : undefined}
                 data-label-bbox={formatBBox(labelBBox)}
@@ -774,6 +782,7 @@ export const sankey: SvgComponent<SankeyComponent> = {
               >
                 {labelFit.text}
               </text>
+              ) : null}
             </g>
           )
         })}

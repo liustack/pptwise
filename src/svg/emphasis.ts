@@ -1,4 +1,5 @@
 import React from "react"
+import { META_FONT_FLOOR_PX } from "../constants"
 import {
   fitSvgLine,
   measureTextUnits,
@@ -404,7 +405,7 @@ export function fitEmphasisLine(
   opts: { maxWidth: number; fontSize: number; minFontSize?: number },
 ): { fontSize: number; segments: EmphasisSegment[]; truncated: boolean } | null {
   if (!text || !text.trim()) return null
-  const minFontSize = opts.minFontSize ?? 12
+  const minFontSize = opts.minFontSize ?? META_FONT_FLOOR_PX
   const fitted = fitSvgLine(stripEmphasis(text), {
     maxWidth: opts.maxWidth,
     fontSize: opts.fontSize,

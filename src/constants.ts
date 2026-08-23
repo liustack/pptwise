@@ -28,3 +28,21 @@ export const PT_PER_PX = 0.75
 export function pxToPt(px: number): number {
   return px * PT_PER_PX
 }
+
+/** Convert a PowerPoint point size to canvas px. */
+export function ptToPx(pt: number): number {
+  return pt / PT_PER_PX
+}
+
+/**
+ * Readable-type floors on the 1280×720 canvas.
+ *
+ * A 13.333" widescreen slide at 96 px/in is this viewBox. 1pt = 4/3 px.
+ * Projection copy that must stay readable from a few metres out:
+ * body 18pt, footnotes/captions/ticks 12pt. Decorative type
+ * (`data-decor`, midground) is exempt.
+ */
+export const BODY_FONT_FLOOR_PT = 18
+export const META_FONT_FLOOR_PT = 12
+export const BODY_FONT_FLOOR_PX = BODY_FONT_FLOOR_PT / PT_PER_PX
+export const META_FONT_FLOOR_PX = META_FONT_FLOOR_PT / PT_PER_PX

@@ -187,7 +187,7 @@ export function SplitBandContent({ ir, slide, index, ctx }: SvgTemplateProps) {
       h: Math.max(120, bodyBottom - treated.contentRect.y),
     }
     const footnote = slide.footnote
-      ? fitSvgLine(slide.footnote, { maxWidth: TEXT_MAX_W, fontSize: 14, minFontSize: 11 })
+      ? fitSvgLine(slide.footnote, { maxWidth: TEXT_MAX_W, fontSize: 16, minFontSize: 16 })
       : null
     return (
       <>
@@ -216,7 +216,7 @@ export function SplitBandContent({ ir, slide, index, ctx }: SvgTemplateProps) {
   const kickerX = hasTlLogo(ir) ? 176 : TEXT_X
   const kickerMaxW = HEADER_W - 16 - kickerX
   const kicker = section
-    ? fitSvgLine(section, { maxWidth: kickerMaxW, fontSize: 14, minFontSize: 11, letterSpacing: 3 })
+    ? fitSvgLine(section, { maxWidth: kickerMaxW, fontSize: 16, minFontSize: 16, letterSpacing: 3 })
     : null
   const kickerFill = accessibleInk(colors.muted, colors.primary, 14)
 
@@ -245,7 +245,7 @@ export function SplitBandContent({ ir, slide, index, ctx }: SvgTemplateProps) {
   const bodyRect = { x: TEXT_X, y: BODY_Y, w: TEXT_MAX_W, h: Math.max(120, bodyBottom - BODY_Y) }
 
   const footnote = slide.footnote
-    ? fitSvgLine(slide.footnote, { maxWidth: TEXT_MAX_W, fontSize: 14, minFontSize: 11 })
+    ? fitSvgLine(slide.footnote, { maxWidth: TEXT_MAX_W, fontSize: 16, minFontSize: 16 })
     : null
 
   return (

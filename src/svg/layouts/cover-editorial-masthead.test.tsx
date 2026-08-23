@@ -38,7 +38,7 @@ const ir = (theme: string): PptxIR =>
 // the component and copying its output if this layout's markup ever
 // intentionally changes.
 const MAGAZINE_EXPECTED =
-  '<text x="640" y="340" font-family="SimSun, Songti SC, STSong, serif" font-size="92" font-weight="600" fill="#26261F" text-anchor="middle" dominant-baseline="alphabetic">数据驱动的增长引擎</text><line x1="560" y1="396" x2="720" y2="396" stroke="#8C4A3C" stroke-width="1.6"></line><text x="640" y="448" font-family="SimSun, Songti SC, STSong, serif" font-size="28" fill="#626159" font-style="italic" text-anchor="middle" dominant-baseline="alphabetic">面向 2027 的技术路线图</text><text x="640" y="656" font-family="Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif" font-size="13" fill="#626159" letter-spacing="2" text-anchor="middle" dominant-baseline="alphabetic">测试实验室    ·    2026-07</text>'
+  '<text x="640" y="340" font-family="SimSun, Songti SC, STSong, serif" font-size="92" font-weight="600" fill="#26261F" text-anchor="middle" dominant-baseline="alphabetic">数据驱动的增长引擎</text><line x1="560" y1="396" x2="720" y2="396" stroke="#8C4A3C" stroke-width="1.6"></line><text x="640" y="448" font-family="SimSun, Songti SC, STSong, serif" font-size="28" fill="#626159" font-style="italic" text-anchor="middle" dominant-baseline="alphabetic">面向 2027 的技术路线图</text><text x="640" y="656" font-family="Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif" font-size="16" fill="#626159" letter-spacing="2" text-anchor="middle" dominant-baseline="alphabetic">测试实验室    ·    2026-07</text>'
 
 describe("EditorialMastheadCover", () => {
   it("magazine tokens 下输出与固化的基准 markup 逐字节一致（档位一，档案来自旧 EditorialSerifCover）", () => {

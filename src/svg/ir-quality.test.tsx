@@ -560,7 +560,7 @@ describe("checkIrQuality", () => {
       expect(issues.find((i) => i.code === "bullets_overflow")!.bulletsBudget).toEqual({
         pacing: "balanced",
         maxItems: 5,
-        maxUnitsPerItem: 40,
+        maxUnitsPerItem: 25,
       })
     })
   })
@@ -568,7 +568,7 @@ describe("checkIrQuality", () => {
   // ── bullet_item_overflow (borrow wave, Task 2: geometric hard ceiling,
   // dual-threshold severity recalibration) — see CAPACITY.bullets
   // .itemOverflowUnits's own derivation comment (capacity.ts) for the
-  // formula (2 lines x MIN_FONT=14 floor x narrowest two-column width) and
+  // formula (2 lines x MIN_FONT=24 floor x narrowest two-column width) and
   // its empirical confirmation. Pacing-independent by construction (the
   // floor and wrap cap bullets.tsx uses are flat constants) — unlike
   // bullet_item_long, this fires the same regardless of which pacing axis

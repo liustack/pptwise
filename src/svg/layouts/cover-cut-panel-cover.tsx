@@ -41,13 +41,13 @@ const SUB_X = 96
 const SUB_Y = 440
 const SUB_SIZE = 26
 const SUB_MAX_W = 560
-const SUB_MIN_PT = 14
+const SUB_MIN_PT = 16
 
 const FOOT_X = 96
 const FOOT_Y = 662
 const FOOT_SIZE = 17
 const FOOT_MAX_W = 960
-const FOOT_MIN_PT = 12
+const FOOT_MIN_PT = 16
 
 function withoutFitEllipsis(text: string): string {
   return text.replace(/…+$/u, "").replace(/\.{3}$/, "")
@@ -81,7 +81,7 @@ export function CutPanelCover({ ir, slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(org, {
         maxWidth: KICKER_MAX_W,
         fontSize: KICKER_SIZE,
-        minFontSize: 12,
+        minFontSize: 16,
         letterSpacing: kickerTracking,
         fontFamily: fonts.body,
       })

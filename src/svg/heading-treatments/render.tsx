@@ -151,7 +151,7 @@ function resolveKickerLayout(
   reserve: HeadingBandReserve | undefined,
   short: boolean,
 ): KickerLayout {
-  const fontSize = short ? 14 : verticalKickerFontSize(knobs)
+  const fontSize = short ? 16 : verticalKickerFontSize(knobs)
   const pos = verticalKickerPos(knobs)
   if (!reserve?.rects.length) return { x: pos.x, y: pos.y, fontSize, side: "default" }
   const boxes = stackedGlyphBoxes(source, pos.x, pos.y, fontSize, fontFamily)
@@ -334,7 +334,7 @@ function verticalSign(
   const layout = opts.layout ?? {
     x: pos.x,
     y: pos.y,
-    fontSize: opts.short ? 14 : verticalKickerFontSize(args.knobs),
+    fontSize: opts.short ? 16 : verticalKickerFontSize(args.knobs),
     side: "default" as const,
   }
   const dx = layout.x - pos.x
@@ -364,7 +364,7 @@ function verticalSign(
 
 function verticalKickerFontSize(knobs: HeadingKnobs): number {
   if (knobs.kickerMark === "vermilion-dot") return 16
-  return 15
+  return 16
 }
 
 function verticalKickerPos(knobs: HeadingKnobs): { x: number; y: number } {
@@ -544,7 +544,7 @@ function renderBaseline(args: RenderArgs): { chrome: ReactNode; contentRect: Con
           <text
             x={1184}
             y={132}
-            fontSize={14}
+            fontSize={16}
             fontFamily={fonts.body}
             fill={ink(colors.accent, args.ctx, 14)}
             textAnchor="end"
@@ -599,7 +599,7 @@ function renderTagBox(args: RenderArgs): { chrome: ReactNode; contentRect: Conte
   const labelKind = args.knobs.chapterLabel ?? "act"
   const label = formatChapterLabel(labelKind, args.chapterNumber, hasCjk(args.sectionName ?? ""))
   const labelY = hud ? 77 : 82
-  const labelSize = hud ? 15 : box === "solid-primary" ? 17 : 18
+  const labelSize = hud ? 16 : box === "solid-primary" ? 17 : 18
   const chipW = 150
   const chipY = 56
   const chipX = nudgeXForReserve({ x: PAGE_LEFT, y: chipY, w: chipW, h: boxH }, args.reserve)
@@ -687,9 +687,9 @@ function renderLeadAccent(args: RenderArgs): { chrome: ReactNode; contentRect: C
   const notes = hasSub
     ? layoutSvgText(args.subheading, {
         maxWidth: 220,
-        fontSize: 15,
+        fontSize: 16,
         maxLines: 2,
-        minPt: 15,
+        minPt: 16,
         fontFamily: fonts.body,
       })
     : null
@@ -745,9 +745,9 @@ function renderLeadAccent(args: RenderArgs): { chrome: ReactNode; contentRect: C
               key={i}
               x={1184}
               y={noteYs[i] ?? 130}
-              fontSize={15}
+              fontSize={16}
               fontFamily={fonts.body}
-              fill={ink(colors.muted, args.ctx, 15)}
+              fill={ink(colors.muted, args.ctx, 16)}
               textAnchor="end"
               dominantBaseline="alphabetic"
             >
@@ -871,9 +871,9 @@ function renderCenterMirror(args: RenderArgs): { chrome: ReactNode; contentRect:
           <text
             x={640}
             y={70}
-            fontSize={14}
+            fontSize={16}
             fontFamily={fonts.body}
-            fill={ink(colors.muted, args.ctx, 14)}
+            fill={ink(colors.muted, args.ctx, 16)}
             textAnchor="middle"
             dominantBaseline="alphabetic"
           >

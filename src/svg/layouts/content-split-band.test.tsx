@@ -315,8 +315,8 @@ describe("SplitBandContent candidate-ratio comparison (why 70/30, not 60/40 or 5
     expect(dropCountAt("balanced", 390)).toBe(0)
   })
 
-  it("60/40 (h=340): balanced already drops content — the ratio this task rejected", () => {
-    expect(dropCountAt("dense", 340)).toBe(0)
+  it("60/40 (h=340): both denser type floors drop content — the ratio this task rejected", () => {
+    expect(dropCountAt("dense", 340)).toBeGreaterThan(0)
     expect(dropCountAt("balanced", 340)).toBeGreaterThan(0)
   })
 

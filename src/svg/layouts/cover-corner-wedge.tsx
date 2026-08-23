@@ -139,7 +139,7 @@ export function CornerWedgeCover({ ir, slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(kickerSrc, {
         maxWidth: titleMaxW,
         fontSize: KICKER_SIZE,
-        minFontSize: 12,
+        minFontSize: 16,
         letterSpacing: kickerTracking,
         fontFamily: fonts.body,
       })
@@ -162,7 +162,7 @@ export function CornerWedgeCover({ ir, slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(authorText, {
         maxWidth: 720,
         fontSize: META_SIZE,
-        minFontSize: 12,
+        minFontSize: 16,
         fontFamily: fonts.body,
       })
     : null
@@ -172,7 +172,7 @@ export function CornerWedgeCover({ ir, slide, ctx }: SvgTemplateProps) {
       ? fitSvgLine(paperFootParts.join(" · "), {
           maxWidth: 720,
           fontSize: FOOT_SIZE,
-          minFontSize: 12,
+          minFontSize: 16,
           fontFamily: fonts.body,
         })
       : null

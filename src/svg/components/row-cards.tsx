@@ -13,8 +13,8 @@ type RowCardsComponent = Extract<Component, { type: "row_cards" }>
  * 清单/议题列表）。可拉伸（box.h 增量先分一份给卡间距，其余均分给各卡，
  * 内容居中）。
  */
-const CARD_GAP = 14
-const CARD_GAP_MIN = 8
+const CARD_GAP = 10
+const CARD_GAP_MIN = 6
 /** Share of the density-stretch increment spent widening the gaps *between*
  * cards rather than the card shells. The shells split their share into top
  * and bottom padding, so growth that all goes there makes every card emptier
@@ -26,14 +26,14 @@ const CARD_GAP_GROW_SHARE = 0.3
 /** …and no gap grows past this multiple of its own natural size, so the list
  * never falls apart into unrelated cards. */
 const CARD_GAP_GROW_CAP_RATIO = 0.6
-const PAD_Y = 12
-const PAD_Y_MIN = 8
+const PAD_Y = 10
+const PAD_Y_MIN = 6
 const NUM_CX = 46
 const NUM_R = 19
 const TEXT_X = 88
 const TITLE_SIZE = 19
-const TEXT_SIZE = 15
-const SUB_SIZE = 13.5
+const TEXT_SIZE = 16
+const SUB_SIZE = 16
 const TITLE_LH = 26
 /** Extra air under the title before text/source, so the source line is
  * not glued to the title (gallery review 2026-08-22). */
@@ -46,7 +46,7 @@ function cardLayout(item: RowCardsComponent["items"][number], w: number) {
   const title = fitSvgLine(item.title, {
     maxWidth: titleW,
     fontSize: TITLE_SIZE,
-    minFontSize: 14,
+    minFontSize: 16,
   })
   const text = item.text
     ? layoutSvgText(item.text, {
@@ -57,7 +57,7 @@ function cardLayout(item: RowCardsComponent["items"][number], w: number) {
       })
     : null
   const sub = item.sub
-    ? fitSvgLine(item.sub, { maxWidth: contentW, fontSize: SUB_SIZE, minFontSize: 10 })
+    ? fitSvgLine(item.sub, { maxWidth: contentW, fontSize: SUB_SIZE, minFontSize: 16 })
     : null
   const contentH =
     TITLE_LH +

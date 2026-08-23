@@ -75,7 +75,7 @@ export function VolumeSlipChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
     ? fitSvgLine(slide.subheading, {
         maxWidth: SUB_MAX_W,
         fontSize: SUB_SIZE,
-        minFontSize: 14,
+        minFontSize: 16,
         fontFamily: fonts.heading,
       })
     : null

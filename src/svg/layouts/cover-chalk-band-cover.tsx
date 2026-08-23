@@ -85,7 +85,7 @@ export function ChalkBandCover({ ir, slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(org, {
         maxWidth: KICKER_MAX_W,
         fontSize: KICKER_SIZE,
-        minFontSize: 12,
+        minFontSize: 16,
         letterSpacing: kickerTracking,
         fontFamily: fonts.body,
       })
@@ -96,7 +96,7 @@ export function ChalkBandCover({ ir, slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(subSource, {
         maxWidth: SUB_MAX_W,
         fontSize: SUB_SIZE,
-        minFontSize: 14,
+        minFontSize: 16,
         fontFamily: fonts.body,
       })
     : null
@@ -108,7 +108,7 @@ export function ChalkBandCover({ ir, slide, ctx }: SvgTemplateProps) {
   const focus = fitEmphasisLine(ir.meta.date, {
     maxWidth: FOCUS_MAX_W,
     fontSize: FOCUS_SIZE,
-    minFontSize: 12,
+    minFontSize: 16,
   })
   const focusBase = metaInk(colors.muted, paper)
   const focusAccent = accessibleInk(colors.accent, paper, FOCUS_ACCENT_FLOOR_PX)
@@ -117,7 +117,7 @@ export function ChalkBandCover({ ir, slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(authorText, {
         maxWidth: AUTHOR_MAX_W,
         fontSize: AUTHOR_SIZE,
-        minFontSize: 12,
+        minFontSize: 16,
         fontFamily: fonts.body,
       })
     : null

@@ -82,6 +82,9 @@ describe("cartesian axis frame", () => {
     expect(xTicks[xTicks.length - 1]!.getAttribute("text-anchor")).toBe("end")
     expect(xTicks.some((t) => (t.textContent ?? "").includes("周"))).toBe(true)
     expect(yTicks.some((t) => (t.textContent ?? "").includes("%"))).toBe(true)
+    for (const tick of [...yTicks, ...xTicks]) {
+      expect(Number(tick.getAttribute("font-size"))).toBeGreaterThanOrEqual(16)
+    }
   })
 
   it("keeps scatter bubbles inside the axes and off the tick labels", () => {
@@ -117,6 +120,8 @@ describe("cartesian axis frame", () => {
     expect(Number(yTitle.getAttribute("y"))).toBeGreaterThan(axisY)
     expect(yTitle.getAttribute("y")).toBe(xTitle.getAttribute("y"))
     expect(Number(yTitle.getAttribute("x"))).toBeLessThan(Number(xTitle.getAttribute("x")))
+    expect(Number(yTitle.getAttribute("font-size"))).toBeGreaterThanOrEqual(16)
+    expect(Number(xTitle.getAttribute("font-size"))).toBeGreaterThanOrEqual(16)
   })
 })
 
@@ -145,5 +150,7 @@ describe("heatmap puts the title pair below the grid on one line", () => {
     expect(Number(yTitle.getAttribute("y"))).toBeGreaterThan(lastCellBottom)
     expect(yTitle.getAttribute("y")).toBe(xTitle.getAttribute("y"))
     expect(Number(yTitle.getAttribute("x"))).toBeLessThan(Number(xTitle.getAttribute("x")))
+    expect(Number(yTitle.getAttribute("font-size"))).toBeGreaterThanOrEqual(16)
+    expect(Number(xTitle.getAttribute("font-size"))).toBeGreaterThanOrEqual(16)
   })
 })

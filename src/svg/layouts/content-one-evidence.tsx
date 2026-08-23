@@ -62,7 +62,7 @@ function GenericOneEvidenceContent({ slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(footnoteSource, {
         maxWidth: HEADING_MAX_W,
         fontSize: FOOTNOTE_SIZE,
-        minFontSize: 10,
+        minFontSize: 16,
       })
     : null
 

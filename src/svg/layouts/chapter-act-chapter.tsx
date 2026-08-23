@@ -40,7 +40,7 @@ export function ActChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
   const act = fitSvgLine(actLabel, {
     maxWidth: CONTENT_MAX_W,
     fontSize: ACT_SIZE,
-    minFontSize: 12,
+    minFontSize: 16,
     letterSpacing: actTracking,
     fontFamily: fonts.body,
   })
@@ -62,7 +62,7 @@ export function ActChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
     ? fitSvgLine(slide.subheading, {
         maxWidth: CONTENT_MAX_W,
         fontSize: SUB_SIZE,
-        minFontSize: 14,
+        minFontSize: 16,
         fontFamily: fonts.body,
       })
     : null

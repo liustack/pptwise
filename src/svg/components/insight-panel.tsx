@@ -20,13 +20,13 @@ const TITLE_SIZE = 17
 const TITLE_LH = Math.round(TITLE_SIZE * 1.4)
 const GAP_TITLE_ROWS = 18
 
-const LABEL_SIZE = 14
-const TEXT_SIZE = 13.5
+const LABEL_SIZE = 16
+const TEXT_SIZE = 16
 const TEXT_LH = Math.round(TEXT_SIZE * 1.45)
 const ROW_GAP = 16
 const LABEL_COL_MIN = 56
 
-const FOOT_SIZE = 12
+const FOOT_SIZE = 16
 const GAP_ROWS_FOOT = 16
 
 interface RowLayout {
@@ -61,7 +61,7 @@ function panelLayout(
   const title = fitSvgLine(component.title, {
     maxWidth: contentW,
     fontSize: TITLE_SIZE,
-    minFontSize: 13,
+    minFontSize: 16,
     bold: true,
     fontFamily: headingFontFamily,
   })
@@ -74,7 +74,7 @@ function panelLayout(
     const label = fitSvgLine(r.label, {
       maxWidth: labelColW,
       fontSize: LABEL_SIZE,
-      minFontSize: 11,
+      minFontSize: 16,
       bold: true,
       fontFamily: bodyFontFamily,
     })

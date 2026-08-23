@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">
+  <g data-depth="bg">
+    <rect width="1280" height="720" fill="#FFFFFF"/>
+  </g>
+  <g data-depth="mid"></g>
+  <g data-depth="fg">
+    <text x="96" y="200" font-family="Georgia, serif" font-size="48" font-weight="700" fill="#191919">Quarterly signal</text>
+    <text x="96" y="280" font-family="Arial, sans-serif" font-size="10" fill="#191919">tiny body copy that should not ship at 10px</text>
+  </g>
+</svg>

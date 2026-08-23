@@ -19,7 +19,7 @@ const PAD_TOP = 16
 const CARD_RADIUS = 8
 const TITLE_SIZE = 17
 const TITLE_LH = Math.round(TITLE_SIZE * 1.35)
-const TAG_SIZE = 13
+const TAG_SIZE = 16
 const TAG_LH = Math.round(TAG_SIZE * 1.35)
 const GAP_TITLE_TAG = 6
 const PAD_BOTTOM = 16
@@ -56,12 +56,12 @@ function cellLayout(item: MatrixItem, cardW: number, fontFamily?: string): CellL
   const title = fitSvgLine(item.title, {
     maxWidth: contentW,
     fontSize: TITLE_SIZE,
-    minFontSize: 12,
+    minFontSize: 16,
     bold: true,
     fontFamily,
   })
   const tag = item.tag
-    ? fitSvgLine(item.tag, { maxWidth: contentW, fontSize: TAG_SIZE, minFontSize: 10 })
+    ? fitSvgLine(item.tag, { maxWidth: contentW, fontSize: TAG_SIZE, minFontSize: 16 })
     : null
   const contentH = TITLE_LH + (tag ? GAP_TITLE_TAG + TAG_LH : 0)
   return { title, tag, contentH }

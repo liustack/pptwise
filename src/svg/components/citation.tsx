@@ -11,8 +11,8 @@ type CitationComponent = Extract<Component, { type: "citation" }>
 
 const ROW = 28
 const LABEL_FONT_SIZE = 18
-const LABEL_MIN_FONT_SIZE = 13
-const URL_FONT_SIZE = 14
+const LABEL_MIN_FONT_SIZE = 16
+const URL_FONT_SIZE = 16
 const URL_GAP_LATIN = 8
 const URL_GAP_CJK = 16
 

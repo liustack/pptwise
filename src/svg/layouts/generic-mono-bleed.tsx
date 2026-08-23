@@ -39,7 +39,7 @@ export function GenericMonoBleedContent({ slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(subSource, {
         maxWidth: HEADING_MAX_W,
         fontSize: SUB_SIZE,
-        minFontSize: 14,
+        minFontSize: 16,
       })
     : null
   const subY = titleLastY + SUB_GAP

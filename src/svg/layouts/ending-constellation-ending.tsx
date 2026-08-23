@@ -232,7 +232,7 @@ export function ConstellationEnding({ ir, slide, ctx }: SvgTemplateProps) {
               x="640"
               y={metaFirstBaselineY + i * META_LINE_HEIGHT}
               fontFamily={fonts.body}
-              fontSize="13"
+              fontSize="16"
               fill={colors.muted}
               textAnchor="middle"
               dominantBaseline="alphabetic"

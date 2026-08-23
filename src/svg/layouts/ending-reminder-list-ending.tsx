@@ -97,7 +97,7 @@ export function ReminderListEnding({ slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(footSource, {
         maxWidth: FOOT_MAX_W,
         fontSize: FOOT_SIZE,
-        minFontSize: 14,
+        minFontSize: 16,
         fontFamily: fonts.body,
         bold: true,
       })

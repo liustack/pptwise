@@ -304,7 +304,7 @@ describe("baseline journal", () => {
     expect(num(slot, "x")).toBe(1184)
     expect(num(slot, "y")).toBe(132)
     expect(slot.getAttribute("text-anchor")).toBe("end")
-    expect(num(slot, "font-size")).toBe(14)
+    expect(num(slot, "font-size")).toBe(16)
     expect(slot.getAttribute("fill")).toBe(colors.accent)
     expect(treated!.contentRect.y).toBe(210)
   })
@@ -418,7 +418,7 @@ describe("lead_accent academic", () => {
     const notes = texts(root).filter((t) => num(t, "x") === 1184 && t.getAttribute("text-anchor") === "end")
     expect(notes.length).toBeGreaterThanOrEqual(2)
     expect(notes.map((t) => num(t, "y")).sort((a, b) => a - b)).toEqual([106, 130])
-    expect(notes.every((t) => num(t, "font-size") === 15)).toBe(true)
+    expect(notes.every((t) => num(t, "font-size") === 16)).toBe(true)
     expect(notes.every((t) => t.getAttribute("fill") === colors.muted)).toBe(true)
   })
 })
@@ -474,7 +474,7 @@ describe("vertical_kicker museum", () => {
     expect(rule.getAttribute("fill")).toBe(colors.accent)
     const kicker = texts(root).find((t) => num(t, "x") === 116)!
     expect(num(kicker, "y")).toBe(78)
-    expect(num(kicker, "font-size")).toBe(15)
+    expect(num(kicker, "font-size")).toBe(16)
     expect(kicker.getAttribute("fill")).toBe(colors.accent)
     const title = textContaining(root, HEADING)
     expect(num(title, "x")).toBe(168)
@@ -487,7 +487,7 @@ describe("vertical_kicker museum", () => {
     const rule = rectAt(root, 96, 64, 1, 96)
     expect(rule).toBeTruthy()
     const kicker = texts(root).find((t) => num(t, "x") === 116)!
-    expect(num(kicker, "font-size")).toBe(14)
+    expect(num(kicker, "font-size")).toBe(16)
   })
 })
 
@@ -499,7 +499,7 @@ describe("vertical_kicker lecture", () => {
     expect(rects(root).some((r) => num(r, "x") === 96 && num(r, "width") === 1)).toBe(false)
     const kicker = texts(root).find((t) => num(t, "x") === 112)!
     expect(num(kicker, "y")).toBe(76)
-    expect(num(kicker, "font-size")).toBe(15)
+    expect(num(kicker, "font-size")).toBe(16)
     expect(kicker.getAttribute("fill")).toBe(colors.muted)
     const title = textContaining(root, HEADING)
     expect(num(title, "x")).toBe(164)
@@ -572,7 +572,7 @@ describe("center_mirror luxe", () => {
     const eyebrow = textContaining(root, "第一章")
     expect(num(eyebrow, "x")).toBe(640)
     expect(num(eyebrow, "y")).toBe(70)
-    expect(num(eyebrow, "font-size")).toBe(14)
+    expect(num(eyebrow, "font-size")).toBe(16)
     expect(eyebrow.getAttribute("fill")).toBe(colors.muted)
     expect(eyebrow.getAttribute("letter-spacing")).toBeNull()
     const left = rectAt(root, 500, 64, 90, 1)

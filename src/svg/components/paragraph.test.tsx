@@ -176,7 +176,7 @@ describe("paragraph component pacing tiers", () => {
   it("dense pacing (20px) renders font-size 20", () => {
     const denseCtx: ComponentCtx = { ...ctx, bodyFontPx: PACING_BUDGETS.dense.bodyBaselinePx }
     const { container } = svg(paragraph.render(component, { x: 0, y: 0, w: 1120 }, denseCtx))
-    expect(container.querySelector("text")?.getAttribute("font-size")).toBe("20")
+    expect(container.querySelector("text")?.getAttribute("font-size")).toBe("24")
   })
 
   it("balanced pacing (24px) renders font-size 24", () => {

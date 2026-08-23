@@ -121,7 +121,7 @@ describe("renderBar — gradient bars", () => {
     }
   })
 
-  it("paints value labels at 13px / 600 / text, 9px above the bar top, and category ticks at 13px muted", () => {
+  it("paints value labels at 16px / 600 / text, 9px above the bar top, and category ticks at 16px muted", () => {
     const { container } = svg(
       renderBar(seriesOf(100, 200), PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT),
     )
@@ -132,12 +132,12 @@ describe("renderBar — gradient bars", () => {
     expect(values.map((t) => t.textContent)).toEqual(["100", "200"])
     const rects = Array.from(container.querySelectorAll("rect"))
     values.forEach((t, i) => {
-      expect(t.getAttribute("font-size")).toBe("13")
+      expect(t.getAttribute("font-size")).toBe("16")
       expect(t.getAttribute("font-weight")).toBe("600")
       expect(Number(rects[i]!.getAttribute("y")) - Number(t.getAttribute("y"))).toBe(9)
     })
     for (const t of categories) {
-      expect(t.getAttribute("font-size")).toBe("13")
+      expect(t.getAttribute("font-size")).toBe("16")
     }
   })
 })
@@ -628,8 +628,8 @@ describe("renderDumbbell — value-label width fitting (from.y/to.y)", () => {
     const toLabel = texts.find((t) => t.textContent === "128")
     expect(fromLabel).toBeTruthy()
     expect(toLabel).toBeTruthy()
-    expect(Number(fromLabel!.getAttribute("font-size"))).toBe(12)
-    expect(Number(toLabel!.getAttribute("font-size"))).toBe(12.5) // unchanged
+    expect(Number(fromLabel!.getAttribute("font-size"))).toBe(16)
+    expect(Number(toLabel!.getAttribute("font-size"))).toBe(16)
     expect(fromLabel!.getAttribute("data-truncated")).toBeNull()
     expect(toLabel!.getAttribute("data-truncated")).toBeNull()
   })
@@ -652,8 +652,8 @@ describe("renderDumbbell — value-label width fitting (from.y/to.y)", () => {
     expect(toLabel!.textContent).toBe("1987654321")
     expect(fromLabel!.getAttribute("data-truncated")).toBeNull()
     expect(toLabel!.getAttribute("data-truncated")).toBeNull()
-    expect(Number(fromLabel!.getAttribute("font-size"))).toBe(12)
-    expect(Number(toLabel!.getAttribute("font-size"))).toBe(12.5)
+    expect(Number(fromLabel!.getAttribute("font-size"))).toBe(16)
+    expect(Number(toLabel!.getAttribute("font-size"))).toBe(16)
   })
 
   it("grows the value band so a 16-digit from.y/to.y (MAX_SAFE_INTEGER scale) renders in full with no ellipsis", () => {
@@ -717,7 +717,7 @@ describe("renderDumbbell — long English category labels (no ellipsis)", () => 
     expect(labels).toHaveLength(CATEGORIES.length)
     for (const label of labels) {
       expect(label.getAttribute("data-truncated")).toBeNull()
-      expect(Number(label.getAttribute("font-size"))).toBe(13)
+      expect(Number(label.getAttribute("font-size"))).toBe(16)
     }
 
     const painted = labels.map((t) => t.textContent ?? "")

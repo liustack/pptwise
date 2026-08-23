@@ -37,7 +37,7 @@ const SUB_Y = 478
 const SUB_SIZE = 20
 const SUB_DROP = SUB_Y - TITLE_Y
 const SUB_MAX_W = 1088
-const SUB_MIN_PT = 14
+const SUB_MIN_PT = 16
 
 function dropOverflowMark(text: string): string {
   return text.replace(/(?:\u2026|\.{3})$/g, "").replace(/…+$/u, "")
@@ -60,7 +60,7 @@ export function IssueLineChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
   const kicker = fitSvgLine(kickerLabel, {
     maxWidth: KICKER_MAX_W,
     fontSize: KICKER_SIZE,
-    minFontSize: 12,
+    minFontSize: 16,
     fontFamily: fonts.heading,
   })
   const kickerPaint = dropOverflowMark(kicker.text)

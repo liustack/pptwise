@@ -75,7 +75,7 @@ export function PledgeOpenCover({ ir, slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(org, {
         maxWidth: KICKER_MAX_W,
         fontSize: KICKER_SIZE,
-        minFontSize: 12,
+        minFontSize: 16,
         letterSpacing: kickerTracking,
         fontFamily: fonts.body,
       })
@@ -86,7 +86,7 @@ export function PledgeOpenCover({ ir, slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(date, {
         maxWidth: FOOT_MAX_W,
         fontSize: FOOT_SIZE,
-        minFontSize: 12,
+        minFontSize: 16,
         fontFamily: fonts.body,
       })
     : null

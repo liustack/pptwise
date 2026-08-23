@@ -790,26 +790,19 @@ const structuresDeck = {
       layout: "narrow-column",
       components: [
         {
-          // bmc's five-column canvas gives each cell roughly a fifth of the
-          // content width — bench-driven fix round (defect E) turned up
-          // three items here that were already silently ellipsis-truncated
-          // at that width ("Lower total cost of ownership", "Dedicated
-          // customer success manager", "Mid-market enterprise customers")
-          // before the new `content-truncated` audit check made it visible.
-          // Real dead content, not a tool false positive (verified against
-          // bmc.tsx's own PAD_X/BULLET_INDENT/ITEM_SIZE geometry) — shortened
-          // to phrases that actually fit, same "fix the fixture" discipline
-          // defect D's boundary-page gate used for dead content elsewhere.
+          // Five-column BMC cells on narrow-column are ~137px of text at
+          // the 16px (12pt) floor. English phrases longer than ~8 glyphs
+          // truncate. Keep each item to a short label.
           type: "bmc",
-          key_partners: ["Core suppliers", "Channel partners"],
-          key_activities: ["Product R&D"],
-          key_resources: ["Engineering team"],
-          value_propositions: ["One-stop solution", "Lower total cost"],
-          customer_relationships: ["Dedicated support"],
-          channels: ["Direct sales", "Partner distribution"],
-          customer_segments: ["Mid-market firms"],
-          cost_structure: ["R&D investment", "Cloud infrastructure"],
-          revenue_streams: ["Subscription fees", "Implementation services"],
+          key_partners: ["Suppliers", "Resellers"],
+          key_activities: ["R&D"],
+          key_resources: ["Engineers"],
+          value_propositions: ["One-stop", "Lower cost"],
+          customer_relationships: ["Support"],
+          channels: ["Direct", "Partners"],
+          customer_segments: ["Mid-market"],
+          cost_structure: ["R&D", "Cloud"],
+          revenue_streams: ["Subscription", "Services"],
         },
       ],
     },
@@ -875,8 +868,8 @@ const structuresDeck = {
           type: "five_forces",
           rivalry: { items: ["Top 3 players hold 60%+ share", "Persistent price competition"], intensity: "high" },
           new_entrants: { items: ["High licensing barrier to entry"], intensity: "low" },
-          supplier_power: { items: ["Core-component supply shortage"], intensity: "medium" },
-          buyer_power: { items: ["High customer concentration"], intensity: "medium" },
+          supplier_power: { items: ["Supply shortage"], intensity: "medium" },
+          buyer_power: { items: ["Concentration"], intensity: "medium" },
           substitutes: { items: ["Free open-source alternatives"], intensity: "high" },
         },
       ],
@@ -912,11 +905,11 @@ const structuresDeck = {
           type: "sankey",
           nodes: [
             { id: "coal", label: "Coal" },
-            { id: "gas", label: "Natural Gas" },
+            { id: "gas", label: "Gas" },
             { id: "renewables", label: "Renewables" },
-            { id: "grid", label: "National Grid" },
-            { id: "homes", label: "Residential Homes" },
-            { id: "industry", label: "Heavy Industry" },
+            { id: "grid", label: "Grid" },
+            { id: "homes", label: "Homes" },
+            { id: "industry", label: "Industry" },
           ],
           links: [
             { from: "coal", to: "grid", value: 30 },

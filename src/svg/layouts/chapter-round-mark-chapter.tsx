@@ -42,7 +42,7 @@ const SUB_Y = 452
 const SUB_SIZE = 20
 const SUB_DROP = 54
 const SUB_MAX_W = 960
-const SUB_MIN_PT = 14
+const SUB_MIN_PT = 16
 
 const RULE_X1 = 96
 const RULE_X2 = 1184
@@ -65,7 +65,7 @@ export function RoundMarkChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
   const kicker = fitSvgLine(kickerLabel, {
     maxWidth: KICKER_MAX_W,
     fontSize: KICKER_SIZE,
-    minFontSize: 12,
+    minFontSize: 16,
     letterSpacing: KICKER_TRACKING,
     fontFamily: fonts.body,
   })

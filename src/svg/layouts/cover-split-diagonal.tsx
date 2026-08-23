@@ -95,7 +95,7 @@ export function SplitDiagonalCover({ ir, slide, ctx }: SvgTemplateProps) {
       ? fitSvgLine(metaParts.join("    ·    "), {
           maxWidth: TITLE_MAX_W,
           fontSize: 19,
-          minFontSize: 14,
+          minFontSize: 16,
         })
       : null
 

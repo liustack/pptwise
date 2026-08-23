@@ -62,7 +62,7 @@ export function MirrorVolumeChapter({ ir, slide, index, ctx }: SvgTemplateProps)
   const volume = fitSvgLine(volumeSource, {
     maxWidth: CONTENT_MAX_W,
     fontSize: VOLUME_SIZE,
-    minFontSize: 12,
+    minFontSize: 16,
     letterSpacing: volumeTracking,
     fontFamily: fonts.body,
   })
@@ -87,7 +87,7 @@ export function MirrorVolumeChapter({ ir, slide, index, ctx }: SvgTemplateProps)
     ? fitSvgLine(slide.subheading, {
         maxWidth: CONTENT_MAX_W,
         fontSize: SUB_SIZE,
-        minFontSize: 14,
+        minFontSize: 16,
         fontFamily: fonts.body,
       })
     : null

@@ -48,9 +48,9 @@ const MIN_COL_W = 64
 const PAD_X = 12
 const HEADER_FONT_SIZE = 18
 const CELL_FONT_SIZE = 16
-const MIN_FONT_SIZE = 12
-const SOURCE_FONT_SIZE = 12
-const SOURCE_MIN_FONT_SIZE = 10
+const MIN_FONT_SIZE = 16
+const SOURCE_FONT_SIZE = 16
+const SOURCE_MIN_FONT_SIZE = 16
 const SOURCE_GAP = 10
 const SOURCE_LH = 16
 /** measure()/render() 都用这个常量预留脚注带高度——两处必须读同一个值，

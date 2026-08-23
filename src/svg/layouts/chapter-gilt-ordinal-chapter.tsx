@@ -64,7 +64,7 @@ export function GiltOrdinalChapter({ ir, slide, index, ctx }: SvgTemplateProps) 
   const ordinal = fitSvgLine(ordinalSource, {
     maxWidth: ORDINAL_MAX_W,
     fontSize: ORDINAL_SIZE,
-    minFontSize: 12,
+    minFontSize: 16,
     letterSpacing: ordinalTracking,
     fontFamily: fonts.heading,
   })

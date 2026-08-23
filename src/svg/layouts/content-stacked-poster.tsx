@@ -188,7 +188,7 @@ function renderStackedContent(
     ? fitSvgLine(rawSectionLabel, {
         maxWidth: 1168,
         fontSize: 20,
-        minFontSize: 12,
+        minFontSize: 16,
         letterSpacing: 4,
       })
     : null
@@ -437,13 +437,13 @@ export function StackedPosterContent(props: SvgTemplateProps) {
     ? fitSvgLine(rawSectionLabel, {
         maxWidth: 900,
         fontSize: 16,
-        minFontSize: 11,
+        minFontSize: 16,
         letterSpacing: 3,
       })
     : null
 
   const footnote = slide.footnote
-    ? fitSvgLine(slide.footnote, { maxWidth: 1000, fontSize: 20, minFontSize: 14 })
+    ? fitSvgLine(slide.footnote, { maxWidth: 1000, fontSize: 20, minFontSize: 16 })
     : null
 
   if (treated) {

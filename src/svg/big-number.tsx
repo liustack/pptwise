@@ -15,7 +15,7 @@ type KpiCardsComponent = Extract<Component, { type: "kpi_cards" }>
 const HERO_SIZE = 200
 const HERO_MIN_FONT_SIZE = 48
 const LABEL_FONT_SIZE = 28
-const LABEL_MIN_FONT_SIZE = 14
+const LABEL_MIN_FONT_SIZE = 16
 
 /**
  * `big_number` arrangement — a "giant metric stage": the first KPI's value fills the

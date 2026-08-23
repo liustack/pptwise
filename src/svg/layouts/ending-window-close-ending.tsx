@@ -82,7 +82,7 @@ export function WindowCloseEnding({ ir, slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(subText, {
         maxWidth: SUB_MAX_W,
         fontSize: SUB_SIZE,
-        minFontSize: 14,
+        minFontSize: 16,
         fontFamily: fonts.heading,
       })
     : null
@@ -93,7 +93,7 @@ export function WindowCloseEnding({ ir, slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(footSource, {
         maxWidth: FOOT_MAX_W,
         fontSize: FOOT_SIZE,
-        minFontSize: 12,
+        minFontSize: 16,
         fontFamily: fonts.heading,
       })
     : null

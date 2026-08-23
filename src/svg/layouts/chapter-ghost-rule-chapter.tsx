@@ -60,7 +60,7 @@ export function GhostRuleChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
     ? fitSvgLine(slide.subheading, {
         maxWidth: TITLE_MAX_W,
         fontSize: SUB_SIZE,
-        minFontSize: 14,
+        minFontSize: 16,
         fontFamily: fonts.body,
       })
     : null

@@ -63,12 +63,12 @@ const ROW_LABEL_PAD = 8
 const COL_LABEL_H = 26
 const COL_LABEL_PAD = 4
 const CELL_PAD = 4
-const ROW_LABEL_FONT = 12
-const ROW_LABEL_MIN_FONT = 9
-const COL_LABEL_FONT = 11
-const COL_LABEL_MIN_FONT = 9
-const VALUE_FONT = 12
-const VALUE_MIN_FONT = 9
+const ROW_LABEL_FONT = 16
+const ROW_LABEL_MIN_FONT = 16
+const COL_LABEL_FONT = 16
+const COL_LABEL_MIN_FONT = 16
+const VALUE_FONT = 16
+const VALUE_MIN_FONT = 16
 
 /**
  * Floor on the ramp's interpolation fraction (`valueT`'s output is always

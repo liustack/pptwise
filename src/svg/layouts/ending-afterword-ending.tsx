@@ -93,7 +93,7 @@ export function AfterwordEnding({ slide, ctx }: SvgTemplateProps) {
   const kicker = fitSvgLine(AFTERWORD_KICKER, {
     maxWidth: KICKER_MAX_W,
     fontSize: KICKER_SIZE,
-    minFontSize: 12,
+    minFontSize: 16,
     letterSpacing: KICKER_TRACKING,
     fontFamily: fonts.body,
   })
@@ -103,7 +103,7 @@ export function AfterwordEnding({ slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(PREVIEW_KICKER, {
         maxWidth: PREVIEW_MAX_W,
         fontSize: PREVIEW_KICKER_SIZE,
-        minFontSize: 12,
+        minFontSize: 16,
         fontFamily: fonts.body,
       })
     : null
@@ -111,7 +111,7 @@ export function AfterwordEnding({ slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(previewSource, {
         maxWidth: PREVIEW_MAX_W,
         fontSize: PREVIEW_SIZE,
-        minFontSize: 14,
+        minFontSize: 16,
         fontFamily: fonts.heading,
       })
     : null

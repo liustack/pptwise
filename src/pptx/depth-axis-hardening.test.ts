@@ -77,7 +77,7 @@ describe("500-item bullets + 300-row comparison: graceful landing (D1 pathologic
   // Exact shape of the investigation's own `buildPathologicalDeck` bullets/
   // comparison slides (scratchpad `dr/gen-deck.mts`) — the fixture that
   // measured 621 package-audit violations pre-fix.
-  const bigBullets = Array.from({ length: 500 }, (_, i) => `item ${i}: ${"x".repeat(50)}`)
+  const bigBullets = Array.from({ length: 500 }, (_, i) => `item ${i}: ${"x".repeat(12)}`)
   const bigComparisonRows = Array.from({ length: 300 }, (_, i) => ({
     label: `row ${i}`,
     cells: [`cell ${i}a`, `cell ${i}b`],

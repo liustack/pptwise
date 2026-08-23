@@ -15,9 +15,9 @@ import { fitSvgLine, measureTextUnits } from "../../lib/svg-text-layout"
  *    x-axis, left-aligned to the plot origin (`renderCartesianAxisTitles`)
  *  - grid plots (heatmap / matrix) put the same pair under the grid
  */
-export const AXIS_TITLE_SIZE = 13
-export const AXIS_TITLE_MIN_SIZE = 10
-export const AXIS_TITLE_BAND_H = 24
+export const AXIS_TITLE_SIZE = 16
+export const AXIS_TITLE_MIN_SIZE = 16
+export const AXIS_TITLE_BAND_H = 28
 export const AXIS_TITLE_BASELINE = AXIS_TITLE_SIZE + 4
 /** Gap between the y-title and the x-title on the shared line (design board `tspan dx`). */
 export const AXIS_TITLE_GAP = 36

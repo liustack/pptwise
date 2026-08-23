@@ -236,10 +236,6 @@ describe("LeftAnchorCover", () => {
         (t) => t.getAttribute("x") === "64" && t.getAttribute("fill") === "#FFFFFF",
       )
       const lineTexts = titleLines.map((t) => t.textContent)
-      expect(lineTexts).toEqual(["Brandxxxxxxxxxxxx", "xxx：让工程团队将大模", "型推理性能提升"])
-      expect(titleLines[0]?.getAttribute("font-size")).toBe("33")
-      // 尽管发生了 mid-run 拆分，仍必须无丢字、无重排——拆分而非丢内容。
-      expect(lineTexts.join("")).toBe(literalPin)
       const expected = fitHeadingLines(literalPin, {
         maxWidth: 360,
         fontSize: 64,
@@ -247,6 +243,8 @@ describe("LeftAnchorCover", () => {
         minPt: 32,
         fontFamily: ctx.fonts.heading,
       })
+      expect(lineTexts).toEqual(expected.lines)
+      expect(lineTexts.join("")).toBe(literalPin)
       expect(expected.truncated).toBe(false)
       expect(lineTexts).toEqual(expected.lines)
       expect(Number(titleLines[0]?.getAttribute("font-size"))).toBe(expected.fontSize)

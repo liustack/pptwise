@@ -25,8 +25,8 @@ const CENTER_X = 640
 const CONTENT_MAX_W = 920
 const KICKER_Y = 80
 const TITLE_Y = 300
-const KICKER_SIZE = 12
-const ATTR_SIZE = 13
+const KICKER_SIZE = 16
+const ATTR_SIZE = 16
 const KICKER_TRACKING_EM = 0.35
 const ATTR_TRACKING_EM = 0.2
 const ATTR_GAP = 56
@@ -47,7 +47,7 @@ function GenericStatementContent({ ir, slide, index, ctx }: SvgTemplateProps) {
     ? fitSvgLine(latinUpper(section), {
         maxWidth: CONTENT_MAX_W,
         fontSize: KICKER_SIZE,
-        minFontSize: 10,
+        minFontSize: 16,
         letterSpacing: kickerTracking,
       })
     : null
@@ -65,7 +65,7 @@ function GenericStatementContent({ ir, slide, index, ctx }: SvgTemplateProps) {
     ? fitSvgLine(latinUpper(attrSource), {
         maxWidth: CONTENT_MAX_W,
         fontSize: ATTR_SIZE,
-        minFontSize: 10,
+        minFontSize: 16,
         letterSpacing: attrTracking,
       })
     : null
