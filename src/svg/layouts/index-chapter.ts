@@ -14,6 +14,12 @@ import { GhostSectionChapter } from "./chapter-ghost-section-chapter"
 import { EmberIndexChapter } from "./chapter-ember-index-chapter"
 import { StrokeIndexChapter } from "./chapter-stroke-index-chapter"
 import { ActChapter } from "./chapter-act-chapter"
+import { FolioGhostChapter } from "./chapter-folio-ghost-chapter"
+import { LessonBoxChapter } from "./chapter-lesson-box-chapter"
+import { StickerNumeralChapter } from "./chapter-sticker-numeral-chapter"
+import { FascicleGhostChapter } from "./chapter-fascicle-ghost-chapter"
+import { MirrorVolumeChapter } from "./chapter-mirror-volume-chapter"
+import { VolumeSlipChapter } from "./chapter-volume-slip-chapter"
 
 export type { ChapterLayout, ChapterLayoutId } from "./types"
 
@@ -36,4 +42,10 @@ export const CHAPTER_LAYOUTS: Record<ChapterLayoutId, ChapterLayout> = {
   "ember-index-chapter": EmberIndexChapter,
   "stroke-index-chapter": StrokeIndexChapter,
   "act-chapter": ActChapter,
+  "folio-ghost-chapter": FolioGhostChapter,
+  "lesson-box-chapter": LessonBoxChapter,
+  "sticker-numeral-chapter": StickerNumeralChapter,
+  "fascicle-ghost-chapter": FascicleGhostChapter,
+  "mirror-volume-chapter": MirrorVolumeChapter,
+  "volume-slip-chapter": VolumeSlipChapter,
 }

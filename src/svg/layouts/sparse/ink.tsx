@@ -148,9 +148,9 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
       >
         {fitted.text}
       </text>
-      <rect x={700} y={392} width={56} height={56} fill={colors.accent} />
+      <rect x={1108} y={392} width={56} height={56} fill={colors.accent} />
       <text
-        x={728}
+        x={1136}
         y={430}
         textAnchor="middle"
         fontFamily={fonts.heading}

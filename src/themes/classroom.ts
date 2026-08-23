@@ -44,11 +44,15 @@ import type { StyleTokens } from "./tokens";
  * `motif-chart-palette-isolation.test.tsx` 记着的那次图表调色板轮转改色的
  * Major）——图表色与装饰色从此各管各的。
  *
- * chapter 底色取 primary 雾蓝（academic/consulting/terra/pulse 同款
- * per-type 深底约定）：白字压 primary 5.58:1，`readableOn` 取优后稳态可读。
+ * 第八波批 2（2026-08-22，设计源
+ * `.issues/design-boards/wave8/b2/Classroom.dc.html`）：chapter 底色从
+ * primary 雾蓝改为雾蓝讲义纸 `#ECF0F2`。环节盒由 `lesson-box-chapter` 自己
+ * 承 primary 白字，浅底不再假设 rail-chapter 的满版深色。封面改锁
+ * `chalk-band-cover`，不再走 `band-title`。`shape.cover` 里 bandWave 等旧
+ * knobs 留下，别的路径可能还读。角色色与 fonts 不动。
  *
- * 装饰见 `../svg/motifs/motif-classroom-motif.tsx`（拍纸簿：顶缘装订孔排 +
- * 底缘铅笔虚线 + 右上回形针弧）。
+ * 装饰见 `../svg/motifs/motif-classroom-motif.tsx`（横线簿格线：装订孔排与
+ * 铅笔虚线退役）。
  */
 export const CLASSROOM_TOKENS: StyleTokens = {
   id: "classroom",
@@ -76,9 +80,8 @@ export const CLASSROOM_TOKENS: StyleTokens = {
   },
   defaultBackgrounds: {
     cover: { kind: "color", value: "#ECF0F2" },
-    // chapter 走 primary 雾蓝底（rail-chapter 标题是白字，academic 同款
-    // per-type 深底约定——浅底会白字不可见）
-    chapter: { kind: "color", value: "#4A6B8A" },
+    // 第八波批 2：chapter 改雾蓝讲义纸。环节盒自己承 primary。
+    chapter: { kind: "color", value: "#ECF0F2" },
     content: { kind: "color", value: "#ECF0F2" },
     ending: { kind: "color", value: "#ECF0F2" },
   },

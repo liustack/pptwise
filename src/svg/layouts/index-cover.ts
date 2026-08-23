@@ -21,6 +21,12 @@ import { CornerWedgeCover } from "./cover-corner-wedge"
 import { IkbFieldCover } from "./cover-ikb-field-cover"
 import { StatCover } from "./cover-stat-cover"
 import { TypeRuleCover } from "./cover-type-rule-cover"
+import { ThesisPlateCover } from "./cover-thesis-plate-cover"
+import { ChalkBandCover } from "./cover-chalk-band-cover"
+import { CapsuleOpenCover } from "./cover-capsule-open-cover"
+import { IssueHeadCover } from "./cover-issue-head-cover"
+import { DoubleFrameCover } from "./cover-double-frame-cover"
+import { VerticalTitleCover } from "./cover-vertical-title-cover"
 
 export type { CoverLayout, CoverLayoutId } from "./types"
 
@@ -49,4 +55,10 @@ export const COVER_LAYOUTS: Record<CoverLayoutId, CoverLayout> = {
   "ikb-field-cover": IkbFieldCover,
   "stat-cover": StatCover,
   "type-rule-cover": TypeRuleCover,
+  "thesis-plate-cover": ThesisPlateCover,
+  "chalk-band-cover": ChalkBandCover,
+  "capsule-open-cover": CapsuleOpenCover,
+  "issue-head-cover": IssueHeadCover,
+  "double-frame-cover": DoubleFrameCover,
+  "vertical-title-cover": VerticalTitleCover,
 }

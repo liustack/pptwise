@@ -43,14 +43,19 @@ import type { StyleTokens } from "./tokens";
  * 3.50:1），这是 journal 唯一一处照数字改 hex 的格子。
  *
  * chapter 底色仍与正文同纸（`#EFEBE1`），journal 的章节页靠排印分段不靠
- * 满版色块——这也是 `motif-corner-ornament-motif.tsx` 在 journal 上四页型
- * 全画得出的原因（借用它的 luxe/heritage 各自的 chapter 底色不同，见该
- * 文件的 chapter 分支）。
+ * 满版色块。
  *
  * 装饰见 `src/svg/motifs/motif-corner-ornament-motif.tsx`（报头双线 v2：
  * 顶缘文武双线 + 底缘单线 + 线上中点期号）——journal 的锚点 motif 是
  * `corner-ornament-motif`，academic / luxe / heritage 三家在各自的候选集里
  * 也借它，本轮换血因此波及那三家的借用页（归因见编辑组报告）。
+ *
+ * **第八波刊头规制（2026-08-23，`.issues/design-boards/wave8/b2/Journal.dc.html`）**：
+ * 封面改为刊头规制（`issue-head-cover`：左齐刊名 + 右齐日期 + y148/156 文武
+ * 双线，全页零彩）。章节 `fascicle-ghost-chapter`，ending `afterword-ending`。
+ * 四页 `defaultBackgrounds` 仍是期刊纸 `#EFEBE1`。角色色与字体一处不改。
+ * 报头双线 motif 留下：封面版式自己画刊头双线，motif 封面不再画 y26/32。
+ * 内容 / ending 继续页缘文武双线 + 期号，chapter 继续退让。
  */
 
 export const JOURNAL_TOKENS: StyleTokens = {

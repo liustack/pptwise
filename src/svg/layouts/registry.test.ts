@@ -52,7 +52,7 @@ describe("LAYOUT_REGISTRY completeness (layout ids)", () => {
       ...Object.keys(ENDING_LAYOUTS),
     ])
     const layoutEntries = Object.values(LAYOUT_REGISTRY).filter((e) => e.kind === "archetype")
-    expect(layoutEntries).toHaveLength(66)
+    expect(layoutEntries).toHaveLength(84)
     for (const entry of layoutEntries) {
       expect(knownIds.has(entry.id), `"${entry.id}" is not a real layout id`).toBe(true)
     }
@@ -100,7 +100,15 @@ describe("content family: body slot + declared arrangements", () => {
         const entry = LAYOUT_REGISTRY[id]
         // verdict-index reads the first bullets component as numbered
         // arguments. Empty components stay legal (capacity 1, zero drawn).
-        if (id === "verdict-index" || id === "action-pad-ending" || id === "signoff-ending" || id === "pill-cta-ending") {
+        if (
+          id === "verdict-index" ||
+          id === "action-pad-ending" ||
+          id === "signoff-ending" ||
+          id === "pill-cta-ending" ||
+          id === "defense-close-ending" ||
+          id === "homework-close-ending" ||
+          id === "reminder-list-ending"
+        ) {
           expect(entry.slots.some((s) => s.name === "body")).toBe(true)
           expect(entry.arrangements).toBeUndefined()
           continue
@@ -217,9 +225,9 @@ describe("layoutsForSlideType", () => {
   it("cover/chapter/ending each resolve to exactly their 19, 9 or 7 layouts (no takeovers)", () => {
     // cover grew 13 -> 19 in board-cover-restore wave 1. chapter grew 8 -> 9
     // in the editorial-verse wave (verse-chapter, pinOnly).
-    expect(layoutsForSlideType("cover")).toHaveLength(22)
-    expect(layoutsForSlideType("chapter")).toHaveLength(15)
-    expect(layoutsForSlideType("ending")).toHaveLength(13)
+    expect(layoutsForSlideType("cover")).toHaveLength(28)
+    expect(layoutsForSlideType("chapter")).toHaveLength(21)
+    expect(layoutsForSlideType("ending")).toHaveLength(19)
   })
 
   it("content includes both the 16 layouts and the 4 takeovers (side-highlight retired, 17 -> 16, after gallery r2 D10's 18 -> 17)", () => {
@@ -323,6 +331,24 @@ describe("excludePinOnly (quote-stage wave, task T1's pinOnly tier)", () => {
       "ask-ending",
       "rule-close-ending",
       "pill-cta-ending",
+      "thesis-plate-cover",
+      "chalk-band-cover",
+      "capsule-open-cover",
+      "issue-head-cover",
+      "double-frame-cover",
+      "vertical-title-cover",
+      "folio-ghost-chapter",
+      "lesson-box-chapter",
+      "sticker-numeral-chapter",
+      "fascicle-ghost-chapter",
+      "mirror-volume-chapter",
+      "volume-slip-chapter",
+      "defense-close-ending",
+      "homework-close-ending",
+      "reminder-list-ending",
+      "afterword-ending",
+      "invite-field-ending",
+      "seal-close-ending",
     ])
     for (const def of Object.values(LAYOUT_REGISTRY)) {
       if (pinOnlyIds.has(def.id)) {
@@ -364,6 +390,24 @@ describe("layout branding declaration (editorial-verse wave)", () => {
       "action-pad-ending",
       "signoff-ending",
       "pill-cta-ending",
+      "thesis-plate-cover",
+      "chalk-band-cover",
+      "capsule-open-cover",
+      "issue-head-cover",
+      "double-frame-cover",
+      "vertical-title-cover",
+      "folio-ghost-chapter",
+      "lesson-box-chapter",
+      "sticker-numeral-chapter",
+      "fascicle-ghost-chapter",
+      "mirror-volume-chapter",
+      "volume-slip-chapter",
+      "defense-close-ending",
+      "homework-close-ending",
+      "reminder-list-ending",
+      "afterword-ending",
+      "invite-field-ending",
+      "seal-close-ending",
     ] as const) {
       expect(LAYOUT_REGISTRY[id].branding, id).toBe("none")
     }
@@ -386,6 +430,24 @@ describe("layout branding declaration (editorial-verse wave)", () => {
       "action-pad-ending",
       "signoff-ending",
       "pill-cta-ending",
+      "thesis-plate-cover",
+      "chalk-band-cover",
+      "capsule-open-cover",
+      "issue-head-cover",
+      "double-frame-cover",
+      "vertical-title-cover",
+      "folio-ghost-chapter",
+      "lesson-box-chapter",
+      "sticker-numeral-chapter",
+      "fascicle-ghost-chapter",
+      "mirror-volume-chapter",
+      "volume-slip-chapter",
+      "defense-close-ending",
+      "homework-close-ending",
+      "reminder-list-ending",
+      "afterword-ending",
+      "invite-field-ending",
+      "seal-close-ending",
     ])
     for (const def of Object.values(LAYOUT_REGISTRY)) {
       if (brandingNone.has(def.id)) continue

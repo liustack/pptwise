@@ -220,8 +220,8 @@ describe("crayon tokens", () => {
     expect(CRAYON_TOKENS.shape?.radius).toBe(12)
   })
 
-  it("chapter default background is the full-bleed primary crayon blue (white ink via readableOn)", () => {
-    expect(CRAYON_TOKENS.defaultBackgrounds.chapter).toEqual({ kind: "color", value: CRAYON_TOKENS.colors.primary })
+  it("chapter default background is the cream cardstock (sticker numeral sits on paper, not a blue field)", () => {
+    expect(CRAYON_TOKENS.defaultBackgrounds.chapter).toEqual({ kind: "color", value: CRAYON_TOKENS.colors.bg })
   })
 
   it("cover/content/ending default backgrounds stay the cream cardstock", () => {

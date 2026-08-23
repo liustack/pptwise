@@ -4,6 +4,19 @@ import type { HeadingKnobs } from "./assignments"
 const HAN_FORMAL = ["", "壹", "贰", "叁", "肆", "伍", "陆", "柒", "捌", "玖", "拾"] as const
 const CASUAL_HAN = ["", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十"] as const
 
+/** 按位汉字数字。0 是 〇，不是「零」，年号走二〇二六而不是二千零二十六。 */
+export const CJK_DIGITS = ["〇", "一", "二", "三", "四", "五", "六", "七", "八", "九"] as const
+
+/** Replace each ASCII digit with the matching CJK_DIGITS glyph. Other characters pass through. */
+export function asciiDigitsToHan(text: string): string {
+  return [...text]
+    .map((ch) => {
+      if (ch < "0" || ch > "9") return ch
+      return CJK_DIGITS[Number(ch)] ?? ch
+    })
+    .join("")
+}
+
 export function padded(n: number): string {
   return String(n).padStart(2, "0")
 }

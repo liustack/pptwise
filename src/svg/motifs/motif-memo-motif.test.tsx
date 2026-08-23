@@ -200,31 +200,28 @@ describe("MemoMotif（打字机眉行）", () => {
 })
 
 describe("memo vs heritage vs vermilion（字族用法分家）", () => {
-  it("三家顶缘双线不是同一张几何：memo 3px@y26，heritage 2px@y28，vermilion 金线 2px@y22", () => {
+  it("三家顶缘双线不是同一张几何：memo 3px@y26，heritage 退役双线，vermilion 金线 2px@y22", () => {
     const memo = parts(draw("memo", contentSlide).root)
     const heritageCtx = buildCtx(resolveStyle("heritage"), {})
     const vermilionCtx = buildCtx(resolveStyle("vermilion"), {})
     const heritageRoot = render(<HeritageMotif ir={ir("heritage")} slide={coverSlide} ctx={heritageCtx} />).root
     const vermilionRoot = render(<VermilionMotif ir={ir("vermilion")} slide={coverSlide} ctx={vermilionCtx} />).root
-    const heritageThick = Array.from(heritageRoot.querySelectorAll("line")).find((l) => l.getAttribute("stroke-width") === "2")!
     const vermilionThick = Array.from(vermilionRoot.querySelectorAll("line")).find((l) => l.getAttribute("stroke-width") === "2")!
 
     expect(num(memo.thickRule, "y1")).toBe(26)
     expect(memo.thickRule.getAttribute("stroke-width")).toBe("3")
-    expect(num(heritageThick, "y1")).toBe(28)
-    expect(heritageThick.getAttribute("stroke-width")).toBe("2")
+    expect(heritageRoot.querySelector("line")).toBeNull()
     expect(num(vermilionThick, "y1")).toBe(22)
     expect(vermilionThick.getAttribute("stroke")).toBe(resolveStyle("vermilion").colors.accent)
     expect(memo.thickRule.getAttribute("stroke")).toBe(resolveStyle("memo").colors.accent)
-    expect(memo.thickRule.getAttribute("stroke")).not.toBe(heritageThick.getAttribute("stroke"))
   })
 
-  it("只有 memo 在顶缘写下 MEMORANDUM，heritage 是角花，vermilion chapter 整页退让", () => {
+  it("只有 memo 在顶缘写下 MEMORANDUM，heritage motif 四页空，vermilion chapter 整页退让", () => {
     expect(parts(draw("memo", contentSlide).root).eyebrow).toBeTruthy()
     const heritageCtx = buildCtx(resolveStyle("heritage"), {})
     const heritageRoot = render(<HeritageMotif ir={ir("heritage")} slide={coverSlide} ctx={heritageCtx} />).root
     expect(heritageRoot.querySelector("text")).toBeNull()
-    expect(Array.from(heritageRoot.querySelectorAll("rect")).length).toBeGreaterThan(0)
+    expect(heritageRoot.querySelector("rect")).toBeNull()
 
     const vermilionChapter = render(
       <VermilionMotif ir={ir("vermilion")} slide={chapterSlide} ctx={buildCtx(resolveStyle("vermilion"), {})} />,

@@ -178,14 +178,27 @@ describe("THEME_DEFINITIONS", () => {
     "tone-adaptive-ending",
     "fashion-ending",
   ]
-  it("W4 全集放开基线：chapter/ending stay full except wave-8 batch-1 locks. content is full except lecture/luxe/consulting", () => {
+  it("W4 全集放开基线：chapter/ending stay full except wave-8 batch-1 and batch-2 locks. content is full except lecture/luxe/consulting", () => {
     expect(__fullLayoutSet("cover")).toEqual(FULL_COVER)
     expect(__fullLayoutSet("content")).toEqual(FULL_CONTENT)
     const NARROWED_CONTENT = new Set(["lecture", "luxe", "consulting"])
-    const WAVE8_B1 = new Set(["consulting", "enterprise", "insight", "ember", "tech", "campaign"])
+    const WAVE8_LOCKED = new Set([
+      "consulting",
+      "enterprise",
+      "insight",
+      "ember",
+      "tech",
+      "campaign",
+      "academic",
+      "classroom",
+      "crayon",
+      "journal",
+      "heritage",
+      "ink",
+    ])
     for (const id of CANONICAL_THEME_IDS) {
       expect(THEME_DEFINITIONS[id].layouts.cover.length, `${id}.cover is a singleton lock`).toBe(1)
-      if (!WAVE8_B1.has(id)) {
+      if (!WAVE8_LOCKED.has(id)) {
         expect(THEME_DEFINITIONS[id].layouts.chapter, `${id}.chapter`).toEqual(FULL_CHAPTER)
         expect(THEME_DEFINITIONS[id].layouts.ending, `${id}.ending`).toEqual(FULL_ENDING)
       }
@@ -252,7 +265,7 @@ describe("THEME_DEFINITIONS", () => {
     expect(THEME_DEFINITIONS.consulting.layoutTendencies?.cover).toEqual(["verdict-index"])
     expect(THEME_DEFINITIONS.consulting.motif).toBe("banner-motif")
 
-    expect(THEME_DEFINITIONS.classroom.layouts.cover).toEqual(["band-title"])
+    expect(THEME_DEFINITIONS.classroom.layouts.cover).toEqual(["chalk-band-cover"])
     expect(THEME_DEFINITIONS.classroom.motif).toBe("classroom-motif")
 
     expect(THEME_DEFINITIONS.enterprise.layouts.cover).toEqual(["ikb-field-cover"])
@@ -262,8 +275,8 @@ describe("THEME_DEFINITIONS", () => {
     expect(THEME_DEFINITIONS.vermilion.layouts.cover).toEqual(["band-title"])
     expect(THEME_DEFINITIONS.vermilion.layoutTendencies?.cover).toEqual(["band-title"])
 
-    expect(THEME_DEFINITIONS.crayon.layouts.cover).toEqual(["header-band"])
-    expect(THEME_DEFINITIONS.crayon.layoutTendencies?.cover).toEqual(["header-band"])
+    expect(THEME_DEFINITIONS.crayon.layouts.cover).toEqual(["capsule-open-cover"])
+    expect(THEME_DEFINITIONS.crayon.layoutTendencies?.cover).toEqual(["capsule-open-cover"])
 
     expect(THEME_DEFINITIONS.runway.layouts.cover).toEqual(["paper-masthead"])
     expect(THEME_DEFINITIONS.runway.layoutTendencies?.cover).toEqual(["paper-masthead"])
@@ -280,8 +293,8 @@ describe("THEME_DEFINITIONS", () => {
   })
 
   it("board-cover-restore wave 2: ten themes lock layouts.cover to the board face", () => {
-    expect(THEME_DEFINITIONS.academic.layouts.cover).toEqual(["left-anchor"])
-    expect(THEME_DEFINITIONS.academic.layoutTendencies?.cover).toEqual(["left-anchor"])
+    expect(THEME_DEFINITIONS.academic.layouts.cover).toEqual(["thesis-plate-cover"])
+    expect(THEME_DEFINITIONS.academic.layoutTendencies?.cover).toEqual(["thesis-plate-cover"])
 
     expect(THEME_DEFINITIONS.campaign.layouts.cover).toEqual(["poster-center"])
     expect(THEME_DEFINITIONS.campaign.layoutTendencies?.cover).toEqual(["poster-center"])
@@ -295,16 +308,16 @@ describe("THEME_DEFINITIONS", () => {
     expect(THEME_DEFINITIONS.luxe.layouts.cover).toEqual(["poster-center"])
     expect(THEME_DEFINITIONS.luxe.layoutTendencies?.cover).toEqual(["poster-center"])
 
-    expect(THEME_DEFINITIONS.journal.layouts.cover).toEqual(["editorial-masthead"])
-    expect(THEME_DEFINITIONS.journal.layoutTendencies?.cover).toEqual(["editorial-masthead"])
+    expect(THEME_DEFINITIONS.journal.layouts.cover).toEqual(["issue-head-cover"])
+    expect(THEME_DEFINITIONS.journal.layoutTendencies?.cover).toEqual(["issue-head-cover"])
 
-    expect(THEME_DEFINITIONS.ink.layouts.cover).toEqual(["colophon"])
-    expect(THEME_DEFINITIONS.ink.layoutTendencies?.cover).toEqual(["colophon"])
+    expect(THEME_DEFINITIONS.ink.layouts.cover).toEqual(["vertical-title-cover"])
+    expect(THEME_DEFINITIONS.ink.layoutTendencies?.cover).toEqual(["vertical-title-cover"])
     expect(THEME_DEFINITIONS.ink.layoutTendencies).toEqual({
-      cover: ["colophon"],
-      chapter: ["roman-chapter", "tone-adaptive-chapter"],
-      content: ["quiet-frame", "narrow-column"],
-      ending: ["tone-adaptive-ending", "poster-ending"],
+      cover: ["vertical-title-cover"],
+      chapter: ["volume-slip-chapter"],
+      content: ["quiet-frame", "split-band"],
+      ending: ["seal-close-ending"],
     })
 
     expect(THEME_DEFINITIONS.museum.layouts.cover).toEqual(["poster-center"])
@@ -314,8 +327,8 @@ describe("THEME_DEFINITIONS", () => {
     expect(THEME_DEFINITIONS.terra.layouts.cover).toEqual(["tone-adaptive-header"])
     expect(THEME_DEFINITIONS.terra.layoutTendencies?.cover).toEqual(["tone-adaptive-header"])
 
-    expect(THEME_DEFINITIONS.heritage.layouts.cover).toEqual(["editorial-masthead"])
-    expect(THEME_DEFINITIONS.heritage.layoutTendencies?.cover).toEqual(["editorial-masthead"])
+    expect(THEME_DEFINITIONS.heritage.layouts.cover).toEqual(["double-frame-cover"])
+    expect(THEME_DEFINITIONS.heritage.layoutTendencies?.cover).toEqual(["double-frame-cover"])
   })
 
   it("未知 id 经 resolveThemeId 回落 consulting 的主题定义（含 layouts/motif），原 manifest 取值函数回落断言迁移", () => {

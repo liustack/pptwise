@@ -28,8 +28,10 @@ import type { StyleTokens } from "./tokens";
  * `full-matrix-contrast.test.ts` 的 4.5:1 muted 线都要过）：
  * text 13.86:1、muted 5.54:1、primary 15.20:1、accent 5.16:1。
  *
- * 装饰见 `src/svg/motifs/motif-ink-motif.tsx`（v3：右缘落款列 + 一角残山），
- * 封面见 `src/svg/layouts/cover-colophon.tsx`。
+ * 装饰见 `src/svg/motifs/motif-ink-motif.tsx`（第八波：封面左下半山，内容
+ * 右缘落款列，ending 右下半山，章节退让）。封面见
+ * `src/svg/layouts/cover-vertical-title-cover.tsx`（竖题 + 朱砂印）。
+ * 四页 defaultBackgrounds 保持宣纸米，不改角色色。
  */
 export const INK_TOKENS: StyleTokens = {
   id: "ink",

@@ -124,6 +124,10 @@ function sha(svg: string): string {
 // Recaptured (pptpress rename, 2026-08-23). Cover `meta.organization`
 // changed `pptfast` → `pptpress`. Replay of `renderSlideSvg` over the same
 // 23×5 matrix. Only `*|0` hashes move. Content pages stay byte-identical.
+//
+// Recaptured (wave8 batch 2, 2026-08-23). academic / classroom / crayon /
+// journal / heritage / ink covers and content motifs lock to the board.
+// consulting is not in this fixture.
 const fixture = JSON.parse(
   readFileSync(new URL("./__fixtures__/emphasis-unassigned-bytes.json", import.meta.url), "utf-8"),
 ) as { pages: Record<string, string> }

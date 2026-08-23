@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest"
 import {
+  asciiDigitsToHan,
   casualHan,
+  CJK_DIGITS,
   formatChapterLabel,
   formatJournalRightSlot,
   hanFormal,
@@ -36,6 +38,15 @@ describe("casualHan", () => {
     expect(casualHan(3)).toBe("三")
     expect(casualHan(10)).toBe("十")
     expect(casualHan(11)).toBe("十一")
+  })
+})
+
+describe("asciiDigitsToHan", () => {
+  it("maps each ASCII digit onto CJK_DIGITS, so 2026 is 二〇二六", () => {
+    expect(CJK_DIGITS).toEqual(["〇", "一", "二", "三", "四", "五", "六", "七", "八", "九"])
+    expect(asciiDigitsToHan("2026")).toBe("二〇二六")
+    expect(asciiDigitsToHan("2026")).not.toBe("二千零二十六")
+    expect(asciiDigitsToHan("Report 2026")).toBe("Report 二〇二六")
   })
 })
 

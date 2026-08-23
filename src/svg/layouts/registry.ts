@@ -95,6 +95,12 @@ import { layoutDef as coverCornerWedge } from "./cover-corner-wedge"
 import { layoutDef as coverIkbFieldCover } from "./cover-ikb-field-cover"
 import { layoutDef as coverStatCover } from "./cover-stat-cover"
 import { layoutDef as coverTypeRuleCover } from "./cover-type-rule-cover"
+import { layoutDef as coverThesisPlateCover } from "./cover-thesis-plate-cover"
+import { layoutDef as coverChalkBandCover } from "./cover-chalk-band-cover"
+import { layoutDef as coverCapsuleOpenCover } from "./cover-capsule-open-cover"
+import { layoutDef as coverIssueHeadCover } from "./cover-issue-head-cover"
+import { layoutDef as coverDoubleFrameCover } from "./cover-double-frame-cover"
+import { layoutDef as coverVerticalTitleCover } from "./cover-vertical-title-cover"
 
 import { layoutDef as chapterMastheadChapter } from "./chapter-masthead-chapter"
 import { layoutDef as chapterConstellationChapter } from "./chapter-constellation-chapter"
@@ -111,6 +117,12 @@ import { layoutDef as chapterGhostSectionChapter } from "./chapter-ghost-section
 import { layoutDef as chapterEmberIndexChapter } from "./chapter-ember-index-chapter"
 import { layoutDef as chapterStrokeIndexChapter } from "./chapter-stroke-index-chapter"
 import { layoutDef as chapterActChapter } from "./chapter-act-chapter"
+import { layoutDef as chapterFolioGhostChapter } from "./chapter-folio-ghost-chapter"
+import { layoutDef as chapterLessonBoxChapter } from "./chapter-lesson-box-chapter"
+import { layoutDef as chapterStickerNumeralChapter } from "./chapter-sticker-numeral-chapter"
+import { layoutDef as chapterFascicleGhostChapter } from "./chapter-fascicle-ghost-chapter"
+import { layoutDef as chapterMirrorVolumeChapter } from "./chapter-mirror-volume-chapter"
+import { layoutDef as chapterVolumeSlipChapter } from "./chapter-volume-slip-chapter"
 
 import { layoutDef as endingMastheadEnding } from "./ending-masthead-ending"
 import { layoutDef as endingConstellationEnding } from "./ending-constellation-ending"
@@ -125,6 +137,12 @@ import { layoutDef as endingCloseWordEnding } from "./ending-close-word-ending"
 import { layoutDef as endingAskEnding } from "./ending-ask-ending"
 import { layoutDef as endingRuleCloseEnding } from "./ending-rule-close-ending"
 import { layoutDef as endingPillCtaEnding } from "./ending-pill-cta-ending"
+import { layoutDef as endingDefenseCloseEnding } from "./ending-defense-close-ending"
+import { layoutDef as endingHomeworkCloseEnding } from "./ending-homework-close-ending"
+import { layoutDef as endingReminderListEnding } from "./ending-reminder-list-ending"
+import { layoutDef as endingAfterwordEnding } from "./ending-afterword-ending"
+import { layoutDef as endingInviteFieldEnding } from "./ending-invite-field-ending"
+import { layoutDef as endingSealCloseEnding } from "./ending-seal-close-ending"
 
 import { layoutDef as contentNarrowColumn } from "./content-narrow-column"
 import { layoutDef as contentTwoColumn } from "./content-two-column"
@@ -435,6 +453,12 @@ const COVER_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [coverIkbFieldCover.id]: coverIkbFieldCover,
   [coverStatCover.id]: coverStatCover,
   [coverTypeRuleCover.id]: coverTypeRuleCover,
+  [coverThesisPlateCover.id]: coverThesisPlateCover,
+  [coverChalkBandCover.id]: coverChalkBandCover,
+  [coverCapsuleOpenCover.id]: coverCapsuleOpenCover,
+  [coverIssueHeadCover.id]: coverIssueHeadCover,
+  [coverDoubleFrameCover.id]: coverDoubleFrameCover,
+  [coverVerticalTitleCover.id]: coverVerticalTitleCover,
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -458,6 +482,12 @@ const CHAPTER_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [chapterEmberIndexChapter.id]: chapterEmberIndexChapter,
   [chapterStrokeIndexChapter.id]: chapterStrokeIndexChapter,
   [chapterActChapter.id]: chapterActChapter,
+  [chapterFolioGhostChapter.id]: chapterFolioGhostChapter,
+  [chapterLessonBoxChapter.id]: chapterLessonBoxChapter,
+  [chapterStickerNumeralChapter.id]: chapterStickerNumeralChapter,
+  [chapterFascicleGhostChapter.id]: chapterFascicleGhostChapter,
+  [chapterMirrorVolumeChapter.id]: chapterMirrorVolumeChapter,
+  [chapterVolumeSlipChapter.id]: chapterVolumeSlipChapter,
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -478,6 +508,12 @@ const ENDING_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [endingAskEnding.id]: endingAskEnding,
   [endingRuleCloseEnding.id]: endingRuleCloseEnding,
   [endingPillCtaEnding.id]: endingPillCtaEnding,
+  [endingDefenseCloseEnding.id]: endingDefenseCloseEnding,
+  [endingHomeworkCloseEnding.id]: endingHomeworkCloseEnding,
+  [endingReminderListEnding.id]: endingReminderListEnding,
+  [endingAfterwordEnding.id]: endingAfterwordEnding,
+  [endingInviteFieldEnding.id]: endingInviteFieldEnding,
+  [endingSealCloseEnding.id]: endingSealCloseEnding,
 }
 
 // ─────────────────────────────────────────────────────────────────────────

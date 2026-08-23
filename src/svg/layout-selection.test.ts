@@ -575,7 +575,7 @@ describe("resolveLayoutId", () => {
       for (let i = 0; i < N; i++) {
         const picked = resolveLayoutId(
           "chapter",
-          THEME_DEFINITIONS.academic.layouts,
+          FULL_IDENTITY_LAYOUTS,
           i,
           String(i),
           undefined,
@@ -602,7 +602,7 @@ describe("resolveLayoutId", () => {
       for (let i = 0; i < N; i++) {
         const picked = resolveLayoutId(
           "ending",
-          THEME_DEFINITIONS.academic.layouts,
+          FULL_IDENTITY_LAYOUTS,
           i,
           String(i),
           undefined,
@@ -1437,7 +1437,7 @@ describe("unoffered sparse pins warn and fall back", () => {
       expect(statementPicked, themeId).not.toBe("statement")
       expect(versePicked, themeId).not.toBe("verse-chapter")
       assertNonPinOnlyPoolMember(themeId, "content", statementPicked)
-      assertNonPinOnlyPoolMember(themeId, "chapter", versePicked)
+      expect(THEME_DEFINITIONS[themeId].layouts.chapter).toContain(versePicked)
     }
   })
 
