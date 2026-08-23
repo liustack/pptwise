@@ -108,7 +108,9 @@ describe("gallery inventory coverage", () => {
     )
 
     expect(dedicatedFormIds().includes("pad")).toBe(false)
+    expect(dedicatedFormIds().includes("underline")).toBe(false)
     expect(COMPONENT_FORMS.includes("pad")).toBe(true)
+    expect(COMPONENT_FORMS.includes("underline")).toBe(true)
 
     const missingDedicated = dedicatedFormIds().filter((form) => !dedicated.has(form))
     expect(missingDedicated, `missing dedicated form pages: ${missingDedicated.join(", ")}`).toEqual([])

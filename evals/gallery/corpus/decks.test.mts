@@ -7,11 +7,11 @@ const emptyAssets = { images: {} }
 describe("themeDeck corpus thicken (gallery r2 D10/D11/D12/D21)", () => {
   const zh = LEXICONS.zh
 
-  it("stage p03 is two-column with the paragraph on the left and the timeline on the right", () => {
+  it("stage p03 is two-column with a timeline lead and a companion paragraph", () => {
     const deck = themeDeck("stage", zh, emptyAssets)
     const page = deck.slides[2]!
     expect(page.layout).toBe("two-column")
-    expect(page.components.map((c) => c.type)).toEqual(["paragraph", "timeline"])
+    expect(page.components.map((c) => c.type)).toEqual(["timeline", "paragraph"])
   })
 
   it("swiss p03 is a two-column pie plus bullets", () => {

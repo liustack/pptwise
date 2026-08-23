@@ -25,8 +25,8 @@ import { CHART_VARIANTS, DENSITY_BUILDERS, FORM_VARIANTS } from "./corpus/compon
 import { LEXICONS } from "./corpus/lexicon"
 import type { Job } from "./matrix"
 
-/** Emphasis form. It lives on the theme table via `**` markup, not as a component face. */
-const EMPHASIS_FORM: ComponentFormId = "pad"
+/** Emphasis forms. They live on the theme table via `**` markup, not as a component face. */
+const EMPHASIS_FORMS: readonly ComponentFormId[] = ["pad", "underline"]
 
 export type InventoryKind = "theme" | "layout" | "component" | "form" | "heading"
 
@@ -93,7 +93,7 @@ export function mapJobSubject(job: GallerySubject): MappedSubject | undefined {
 
 /** Component faces that need a dedicated `FORM_VARIANTS` page, not just a theme-table sighting. */
 export function dedicatedFormIds(): ComponentFormId[] {
-  return COMPONENT_FORMS.filter((form) => form !== EMPHASIS_FORM)
+  return COMPONENT_FORMS.filter((form) => !EMPHASIS_FORMS.includes(form))
 }
 
 export function formIdForVariant(variant: (typeof FORM_VARIANTS)[number]): ComponentFormId | undefined {
@@ -177,7 +177,7 @@ export function galleryCoverageGaps(jobs: readonly Job[]): CoverageGaps {
     .sort()
     .filter((id) => !layouts.has(id))
   const missingComponents = COMPONENT_TYPES.filter((id) => !components.has(id))
-  const missingForms = COMPONENT_FORMS.filter((id) => !forms.has(id))
+  const missingForms = COMPONENT_FORMS.filter((id) => !forms.has(id) && !EMPHASIS_FORMS.includes(id))
   const missingDedicatedForms = dedicatedFormIds().filter((id) => !dedicatedForms.has(id))
   const missingHeadings = HEADING_TREATMENTS.filter((id) => !headings.has(id))
   const missingPinnedPages = PINNED_FORM_PAGE_IDS.filter((id) => !ids.has(id))

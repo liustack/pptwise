@@ -4,6 +4,7 @@ import { render } from "@testing-library/react"
 import { FullSlideSvg } from "../full-slide-svg"
 import { THEME_DEFINITIONS } from "../../themes/definitions"
 import { resolveMotifId } from "../motif-selection"
+import { getLayout } from "./registry"
 import { HEARTBEAT_POINTS } from "../motifs/motif-pulse-motif"
 import type { PptxIR, Slide } from "@/ir"
 
@@ -56,8 +57,13 @@ describe("board-cover-restore wave 2 — locked cover faces", () => {
       expect(decor).toBeNull()
       expect(resolveMotifId(doc, COVER, 0)).toBeUndefined()
     } else {
-      expect(decor).not.toBeNull()
       expect(resolveMotifId(doc, COVER, 0)).toBe(motif)
+      const chrome = getLayout(layout)
+      if (chrome?.pageFrame || chrome?.suppressMotif) {
+        expect(decor).toBeNull()
+      } else {
+        expect(decor).not.toBeNull()
+      }
     }
   })
 })
