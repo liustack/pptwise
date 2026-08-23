@@ -1,4 +1,5 @@
 import type { Component } from "@/ir"
+import { isCjk } from "../../lib/text-script"
 import {
   fitSvgLine,
   measureTextUnits,
@@ -12,6 +13,8 @@ const ROW = 28
 const LABEL_FONT_SIZE = 18
 const LABEL_MIN_FONT_SIZE = 13
 const URL_FONT_SIZE = 14
+const URL_GAP_LATIN = 8
+const URL_GAP_CJK = 16
 
 /** Baseline y for source row `i`, relative to the component group origin. */
 function baselineY(i: number): number {
@@ -72,10 +75,11 @@ export const citation: SvgComponent<CitationComponent> = {
               {fittedLabel.text}
               {fittedUrl && (
                 <tspan
+                  dx={isCjk(fittedLabel.text) ? URL_GAP_CJK : URL_GAP_LATIN}
                   fill={ctx.colors.muted}
                   fontSize={URL_FONT_SIZE}
                 >
-                  {` ${fittedUrl}`}
+                  {fittedUrl}
                 </tspan>
               )}
             </text>

@@ -163,6 +163,34 @@ describe("ending-seat-cta-ending — shared pool", () => {
     }
   })
 
+  it("wraps the gallery verdict as a two-line CTA instead of cutting it", () => {
+    const SENTENCE = "续约与活跃率双双改善，本季度经营质量优于预期"
+    const s = slide("下半年重点", { subheading: SENTENCE })
+    const { root } = renderEnding("arena", s, { organization: "战略与运营部" })
+    const painted = Array.from(root.querySelectorAll("text"))
+      .map((t) => t.textContent ?? "")
+      .join("")
+    expect(painted).toContain(SENTENCE)
+    const ctaLines = Array.from(root.querySelectorAll("text")).filter(
+      (t) => t.getAttribute("text-anchor") === "middle",
+    )
+    expect(ctaLines.length).toBeGreaterThanOrEqual(1)
+    expect(ctaLines.length).toBeLessThanOrEqual(2)
+    expect(ctaLines.every((t) => t.getAttribute("data-truncated") !== "1")).toBe(true)
+    const poly = root.querySelector("polygon")
+    expect(poly).toBeTruthy()
+    const ys = (poly!.getAttribute("points") ?? "")
+      .trim()
+      .split(/[\s,]+/)
+      .map(Number)
+      .filter((_, i) => i % 2 === 1)
+    expect(Math.max(...ys)).toBeLessThan(620)
+    const foot = Array.from(root.querySelectorAll("text")).find((t) =>
+      (t.textContent ?? "").includes("战略与运营部"),
+    )
+    expect(foot?.getAttribute("y")).toBe("620")
+  })
+
   it("does not paint an ellipsis, even on an extreme title", () => {
     const { markup: shortMarkup } = renderEnding("arena")
     expect(shortMarkup).not.toContain("…")

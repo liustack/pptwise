@@ -101,47 +101,21 @@ export function layoutAtSize(
   const laid = layoutSvgText(content, {
     maxWidth: opts.maxWidth,
     fontSize,
-    maxLines: opts.maxLines,
+    maxLines: 64,
     lineHeightRatio: ratio,
     bold: opts.bold,
     fontFamily: opts.fontFamily,
     minPt: fontSize,
   })
   const maxUnits = opts.maxWidth / fontSize
-  if (laid.fontSize >= fontSize - 0.01 && laid.lines.length <= opts.maxLines) {
-    const lines = laid.lines.map((line) => truncateToUnits(line, maxUnits, weight))
-    return {
-      lines,
-      fontSize,
-      lineHeight,
-      truncated: lines.some((line, i) => line !== laid.lines[i]),
-    }
-  }
-
-  const wide = layoutSvgText(content, {
-    maxWidth: opts.maxWidth,
+  const kept = laid.lines.slice(0, opts.maxLines)
+  const lines = kept.map((line) => truncateToUnits(line, maxUnits, weight))
+  return {
+    lines,
     fontSize,
-    maxLines: Math.max(opts.maxLines, 12),
-    lineHeightRatio: ratio,
-    bold: opts.bold,
-    fontFamily: opts.fontFamily,
-    minPt: fontSize,
-  })
-  const source = wide.fontSize >= fontSize - 0.01 ? wide.lines : laid.lines
-  let truncated = source.length > opts.maxLines
-  let lines: string[]
-  if (source.length > opts.maxLines) {
-    const head = source.slice(0, opts.maxLines - 1)
-    const rest = source.slice(opts.maxLines - 1).join("")
-    lines = [...head, truncateToUnits(rest, maxUnits, weight)]
-  } else {
-    lines = source.map((line) => {
-      const clipped = truncateToUnits(line, maxUnits, weight)
-      if (clipped !== line) truncated = true
-      return clipped
-    })
+    lineHeight,
+    truncated: laid.lines.length > kept.length || lines.some((line, i) => line !== kept[i]),
   }
-  return { lines, fontSize, lineHeight, truncated }
 }
 
 export function layoutFormTitle(

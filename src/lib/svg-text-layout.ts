@@ -817,16 +817,13 @@ function retreatFromMidRun(text: string, cut: string): string {
 
 export function truncateToUnits(text: string, maxUnits: number, weight?: TextWeightHint): string {
   if (measureTextUnits(text, weight) <= maxUnits) return text
-  const budget = maxUnits - 1 // 预留省略号
   let out = ""
   for (const ch of Array.from(text)) {
-    if (measureTextUnits(out + ch, weight) > budget) break
+    if (measureTextUnits(out + ch, weight) > maxUnits) break
     out += ch
   }
-  if (out === "") {
-    return measureTextUnits("…", weight) > maxUnits ? "" : "…"
-  }
-  return `${retreatFromMidRun(text, out)}…`
+  if (out === "") return ""
+  return retreatFromMidRun(text, out)
 }
 
 // Mono sibling of `truncateToUnits` above, measuring with
@@ -837,16 +834,12 @@ export function truncateToUnits(text: string, maxUnits: number, weight?: TextWei
 // wave Task 3 fix-round addition. Only `code.tsx` calls this one.
 export function truncateToMonoUnits(text: string, maxUnits: number): string {
   if (measureMonoTextUnits(text) <= maxUnits) return text
-  const budget = maxUnits - 1 // 预留省略号，与 truncateToUnits 同一约定
   let out = ""
   for (const ch of Array.from(text)) {
-    if (measureMonoTextUnits(out + ch) > budget) break
+    if (measureMonoTextUnits(out + ch) > maxUnits) break
     out += ch
   }
-  if (out === "") {
-    return measureMonoTextUnits("…") > maxUnits ? "" : "…"
-  }
-  return `${out}…`
+  return out
 }
 
 export function fitSvgLine(

@@ -98,6 +98,7 @@ const ISOLATED_STROKE_TAGS = new Set(["line", "path", "polygon", "polyline", "re
 
 const OVERFLOW_MARKER = /\+\d+\s*(…|\.{3}|more|项)/i
 const OVERFLOW_MARKER_ZH = /另有\s*\d+\s*项/
+const OVERFLOW_ELLIPSIS = /…|(?<![.])\.\.\.(?![.])/
 const VERTICAL_WM = /^(tb|tb-rl|vertical-rl|vertical-lr)$/i
 const LATIN = /[A-Za-z]/
 const PUNCT_ONLY = /^[\s"'“”‘’「」『』（）()[\]【】…·•、，。！？：:;,.!?/-]+$/
@@ -730,7 +731,11 @@ function walkText(
         const bottom = ty + fontSize * 0.25
         const decor = hasDecor(el)
 
-        if (OVERFLOW_MARKER.test(content) || OVERFLOW_MARKER_ZH.test(content)) {
+        if (
+          OVERFLOW_MARKER.test(content) ||
+          OVERFLOW_MARKER_ZH.test(content) ||
+          OVERFLOW_ELLIPSIS.test(content)
+        ) {
           findings.push({
             code: "overflow-marker",
             message: `overflow marker "${label}" is banned`,

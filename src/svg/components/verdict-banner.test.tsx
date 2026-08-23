@@ -363,14 +363,15 @@ describe("verdict_banner component: text truncation", () => {
     }
   })
 
-  it("truncates an overlong line with an ellipsis instead of growing past 2 lines", () => {
+  it("truncates an overlong line instead of growing past 2 lines, with no overflow mark", () => {
     const b = component("positive", "结".repeat(240))
     const { container } = svg(
       verdictBanner.render(b, { x: 0, y: 0, w: 1088 }, ctx)
     )
     const texts = Array.from(container.querySelectorAll("text"))
     expect(texts).toHaveLength(2)
-    expect(texts.some((t) => (t.textContent ?? "").endsWith("…"))).toBe(true)
+    expect(texts.some((t) => t.getAttribute("data-truncated") === "1")).toBe(true)
+    expect(texts.every((t) => !(t.textContent ?? "").includes("…"))).toBe(true)
   })
 })
 

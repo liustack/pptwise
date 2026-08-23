@@ -413,7 +413,7 @@ describe("chart component — axes (x_title/y_title/show_grid)", () => {
         t.textContent?.startsWith("Connected equipment"),
       )!
       expect(yTitle.getAttribute("data-truncated")).toBe("1")
-      expect(yTitle.textContent?.endsWith("…")).toBe(true)
+      expect(yTitle.textContent).not.toContain("…")
       expect(yTitle.getAttribute("transform")).toBeNull()
       expect(yTitle.getAttribute("y")).toBe("16")
     })
@@ -1262,7 +1262,7 @@ describe("chart component — vertical y-title (cartesian value axis)", () => {
       (t.textContent ?? "").startsWith("Connected equipment"),
     )!
     expect(yTitle.getAttribute("data-truncated")).toBe("1")
-    expect(yTitle.textContent?.endsWith("…")).toBe(true)
+    expect(yTitle.textContent).not.toContain("…")
     expect(yTitle.getAttribute("transform")).toBeNull()
     expect(yTitle.getAttribute("y")).toBe("16")
   })

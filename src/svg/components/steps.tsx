@@ -71,7 +71,7 @@ const CONNECTOR_STROKE_W = 1.5
 
 interface StepItemTextLayout {
   title: { text: string; fontSize: number; truncated: boolean }
-  text: { lines: string[]; fontSize: number; lineHeight: number }
+  text: { lines: string[]; fontSize: number; lineHeight: number; truncated: boolean }
 }
 
 /** Fit an item's title (single line, shrink-to-fit) and text (up to 2 lines)
@@ -107,9 +107,11 @@ function layoutStepItem(item: StepItem, contentW: number, fontFamily?: string): 
     lineHeightRatio: TEXT_LINE_HEIGHT_RATIO,
   })
   const maxUnits = contentW / wrapped.fontSize
+  const lines = wrapped.lines.map((line) => truncateToUnits(line, maxUnits))
   const text = {
     ...wrapped,
-    lines: wrapped.lines.map((line) => truncateToUnits(line, maxUnits)),
+    lines,
+    truncated: lines.some((line, i) => line !== wrapped.lines[i]),
   }
   return { title, text }
 }
@@ -200,6 +202,7 @@ function renderStepCardBody(
       {text.lines.map((line, li) => (
         <text
           key={li}
+          data-truncated={text.truncated && li === text.lines.length - 1 ? "1" : undefined}
           x={box.x}
           y={textTopY + li * text.lineHeight + text.fontSize}
           fontSize={text.fontSize}
@@ -308,6 +311,7 @@ function renderVertical(component: StepsComponent, box: ComponentBox, ctx: Compo
             {text.lines.map((line, li) => (
               <text
                 key={li}
+                data-truncated={text.truncated && li === text.lines.length - 1 ? "1" : undefined}
                 x={TEXT_X_VERTICAL}
                 y={textTopY + li * text.lineHeight + text.fontSize}
                 fontSize={text.fontSize}

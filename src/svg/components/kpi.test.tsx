@@ -130,7 +130,8 @@ describe("kpi component", () => {
     const labelText = Array.from(texts).find(
       (t) => t.getAttribute("y") === "96",
     )!
-    expect(labelText.textContent).toMatch(/…$/)
+    expect(labelText.textContent).not.toMatch(/…$/)
+    expect(labelText.getAttribute("data-truncated")).toBe("1")
   })
 
   it("scales the unit tspan font-size proportionally to the fitted value font-size", () => {
@@ -172,7 +173,7 @@ describe("kpi component", () => {
       (t) => t.getAttribute("y") === "58",
     )!
     const unitTspan = valueText.querySelector("tspan")!
-    expect(unitTspan.textContent).toMatch(/…$/)
+    expect(unitTspan.textContent).not.toMatch(/…$/)
     expect(unitTspan.textContent!.length).toBeLessThan(
       longUnitComponent.items[0].unit.length,
     )
@@ -443,7 +444,7 @@ describe("kpi value/unit width split puts the number first", () => {
     expect(card.value).toBe("9")
     expect(card.valueTruncated).toBe(false)
     expect(card.valueFontSize).toBe(40)
-    expect(card.unit).toMatch(/…$/)
+    expect(card.unit).not.toMatch(/…$/)
     expect(card.unit!.length).toBeLessThan(10)
   })
 
@@ -454,7 +455,10 @@ describe("kpi value/unit width split puts the number first", () => {
     const card = oneCard({ value: "5", unit: "weeks", label: "Average delivery time" }, 123)
     expect(card.value).toBe("5")
     expect(card.valueTruncated).toBe(false)
-    expect(card.unit).toBeNull()
+    if (card.unit) {
+      expect("weeks".startsWith(card.unit)).toBe(true)
+      expect(card.unit).not.toContain("…")
+    }
   })
 
   it("never leaves a bare ellipsis where the unit was — it reads as part of the number", () => {
@@ -469,7 +473,8 @@ describe("kpi value/unit width split puts the number first", () => {
     // characters — at its floor size, from the tail, so the digits that
     // carry the magnitude survive. The unit is long gone by then.
     const card = oneCard({ value: "1,234,567,890.99", unit: "元", label: "短标签" }, 140)
-    expect(card.value).toBe("1,234,…")
+    expect(card.value).toBe("1,234,")
+    expect(card.value).not.toContain("…")
     expect(card.valueFontSize).toBe(22)
     expect(card.unit).toBeNull()
   })

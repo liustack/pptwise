@@ -1,6 +1,6 @@
 import { Fragment } from "react"
 import type { Component } from "@/ir"
-import { measureTextUnits, type TextWeightHint } from "../../lib/svg-text-layout"
+import { measureTextUnits, truncateToUnits, type TextWeightHint } from "../../lib/svg-text-layout"
 import { resolveComponentForm } from "./form-assignments"
 import { measurePillPanels, renderPillPanels } from "./forms/pill-panels"
 import type { RenderDef, SvgComponent } from "./types"
@@ -181,28 +181,9 @@ function fittedFontSize(
   )
 }
 
-/**
- * Truncate text to fit within available pixel width at the given font size.
- * If the rendered text exceeds the column, trim and append "...".
- */
+/** Clip text to the column width at `fontSize`. No overflow mark. */
 function truncate(text: string, colW: number, fontSize: number, weight?: TextWeightHint): string {
-  const availableUnits = (colW - PAD_X * 2) / fontSize
-  if (measureTextUnits(text, weight) <= availableUnits) return text
-
-  const chars = Array.from(text)
-  const ellipsis = "…"
-  const ellipsisUnits = measureTextUnits(ellipsis, weight)
-  let result = ""
-  let units = 0
-
-  for (const ch of chars) {
-    const chUnits = measureTextUnits(ch, weight)
-    if (units + chUnits + ellipsisUnits > availableUnits) break
-    result += ch
-    units += chUnits
-  }
-
-  return result + ellipsis
+  return truncateToUnits(text, (colW - PAD_X * 2) / fontSize, weight)
 }
 
 function measureDefault(component: ComparisonComponent): number {

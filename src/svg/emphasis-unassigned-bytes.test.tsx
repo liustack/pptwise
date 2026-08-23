@@ -87,6 +87,11 @@ function consultingPadDeck(): PptxIR {
 // Recaptured (wave8 batch 4, 2026-08-23). swiss content pages drop the
 // right-edge ticks (cover-only). Covers of all 23 unassigned themes stay
 // byte-identical. consulting is not in this fixture.
+//
+// Recaptured (no-ellipsis-root, 2026-08-23). Shared text-fit drops overflow
+// marks. insight content pages 2-5 and campaign cover plus content 2-5 move.
+// Other unassigned themes stay byte-identical. consulting is not in this
+// fixture.
 const fixture = JSON.parse(
   readFileSync(EMPHASIS_UNASSIGNED_BYTES_URL, "utf-8"),
 ) as { pages: Record<string, string> }

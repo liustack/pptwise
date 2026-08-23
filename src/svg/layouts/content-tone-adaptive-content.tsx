@@ -409,6 +409,7 @@ export function ToneAdaptiveContent({ ir, slide, index, ctx }: SvgTemplateProps)
               themeId: ctx.themeId,
             },
             <text
+              data-truncated={subheading.truncated ? "1" : undefined}
               x="92"
               y={subheadingY}
               fontFamily={fonts.body}
@@ -573,6 +574,7 @@ export function ToneAdaptiveContent({ ir, slide, index, ctx }: SvgTemplateProps)
             themeId: ctx.themeId,
           },
           <text
+            data-truncated={subheading.truncated ? "1" : undefined}
             x="64"
             y={subheadingY}
             fontFamily={fonts.body}

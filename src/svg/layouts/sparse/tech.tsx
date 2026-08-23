@@ -64,9 +64,9 @@ export function statement({ slide, ctx }: SvgTemplateProps) {
   })
   return (
     <>
-      <path d="M 1060 40 a 190 190 0 0 1 180 130" fill="none" stroke={colors.border} strokeWidth={1.5} />
-      <path d="M 1120 40 a 130 130 0 0 1 122 88" fill="none" stroke={colors.border} strokeWidth={1} />
-      <circle cx={1150} cy={52} r={4} fill={colors.accent} />
+      <path d="M 980 48 C 1140 48 1232 104 1232 208" fill="none" stroke={colors.border} strokeWidth={1.5} />
+      <path d="M 1060 56 C 1164 56 1220 100 1220 176" fill="none" stroke={colors.border} strokeWidth={1} />
+      <circle cx={1148} cy={58} r={4} fill={colors.accent} />
       {heading.lines.map((line, i) => (
         <text
           key={i}

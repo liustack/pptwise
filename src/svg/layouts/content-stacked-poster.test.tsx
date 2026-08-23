@@ -604,7 +604,8 @@ describe("StackedPosterContent subheading", () => {
       (t) => (t.textContent ?? "").includes("微服务") && t.getAttribute("text-anchor") === "middle",
     )!
     expect(sub.getAttribute("font-size")).toBe("16")
-    expect((sub.textContent ?? "").endsWith("…")).toBe(true)
+    expect(sub.getAttribute("data-truncated")).toBe("1")
+    expect(sub.textContent).not.toContain("…")
     expect(sub.textContent).not.toBe(CJK_LONG.repeat(2))
   })
 

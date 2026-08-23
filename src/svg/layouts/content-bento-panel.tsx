@@ -953,6 +953,7 @@ export function BentoPanelContent({ ir, slide, index, ctx }: SvgTemplateProps) {
             themeId: ctx.themeId,
           },
           <text
+            data-truncated={subheading.truncated ? "1" : undefined}
             x="96"
             y={subheadingY}
             fontFamily={fonts.body}

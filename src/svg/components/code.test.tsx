@@ -129,7 +129,8 @@ describe("code component", () => {
     const units = Array.from(content).length * (1126 / 2048)
     expect(units * fontSize).toBeLessThanOrEqual(contentW + 1)
     expect(content).not.toBe(longLine)
-    expect(content.endsWith("…")).toBe(true)
+    expect(content).not.toContain("…")
+    expect(codeText!.getAttribute("data-truncated")).toBe("1")
   })
 
   it("measure returns positive height that grows with line count", () => {

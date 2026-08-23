@@ -332,22 +332,9 @@ export function truncateEmphasisSegments(
   const truncated = truncateToUnits(text, maxUnits, weight)
   if (truncated === text) return segments
 
-  const hasEllipsis = truncated.endsWith("…")
-  const keptLen = Array.from(truncated).length - (hasEllipsis ? 1 : 0)
+  const keptLen = Array.from(truncated).length
   const chars = flattenSegments(segments)
-  const kept = chars.slice(0, keptLen)
-  const result = collapseChars(kept)
-
-  if (hasEllipsis) {
-    const lastEmphasized = kept.length > 0 ? kept[kept.length - 1].emphasized : false
-    const last = result[result.length - 1]
-    if (last && last.emphasized === lastEmphasized) {
-      last.text += "…"
-    } else {
-      result.push({ text: "…", emphasized: lastEmphasized })
-    }
-  }
-  return result
+  return collapseChars(chars.slice(0, keptLen))
 }
 
 /**

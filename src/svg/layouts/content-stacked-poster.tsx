@@ -318,6 +318,7 @@ function renderStackedContent(
             themeId: ctx.themeId,
           },
           <text
+            data-truncated={subheading.truncated ? "1" : undefined}
             x="56"
             y={subheadingY}
             fontFamily={ctx.fonts.heading}
@@ -543,6 +544,7 @@ export function StackedPosterContent(props: SvgTemplateProps) {
             themeId: ctx.themeId,
           },
           <text
+            data-truncated={subheading.truncated ? "1" : undefined}
             x={CENTER_X}
             y={subheadingY}
             textAnchor="middle"

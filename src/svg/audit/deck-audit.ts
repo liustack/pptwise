@@ -2402,7 +2402,7 @@ const TEXT_PREFIX_LEN = 24
 
 function truncatedMessage(prefix: string): string {
   return (
-    `text "${prefix}" was truncated with an ellipsis — widen the layout, shorten the source ` +
+    `text "${prefix}" was truncated to fit — widen the layout, shorten the source ` +
     `content, or accept the cut if the tail wasn't essential`
   )
 }

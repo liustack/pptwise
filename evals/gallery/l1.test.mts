@@ -41,6 +41,21 @@ describe("auditL1 planted defects", () => {
     expect(codes(wrap(`<text x="40" y="40" font-size="14">+2 …</text>`))).toContain("overflow-marker")
   })
 
+  it("flags a bare ellipsis or standalone ... inside text as overflow-marker", () => {
+    expect(codes(wrap(`<text x="40" y="40" font-size="14">云觅科技 2026…</text>`))).toContain("overflow-marker")
+    expect(codes(wrap(`<text x="40" y="40" font-size="14">cut short...</text>`))).toContain("overflow-marker")
+  })
+
+  it("does not treat academic statement gold-dot circles as overflow-marker", () => {
+    const svg = wrap(
+      `<text x="96" y="350" font-size="48">设备不会突然坏</text>` +
+        `<circle cx="200" cy="400" r="4" fill="#C6A15B"/>` +
+        `<circle cx="220" cy="400" r="4" fill="#C6A15B"/>` +
+        `<circle cx="240" cy="400" r="4" fill="#C6A15B"/>`,
+    )
+    expect(codes(svg)).not.toContain("overflow-marker")
+  })
+
   it("flags font-size 10, and ignores data-decor", () => {
     expect(codes(wrap(`<text x="40" y="40" font-size="10">tiny body</text>`))).toContain("font-size")
     expect(codes(wrap(`<text x="40" y="40" font-size="10" data-decor="1">star</text>`))).not.toContain("font-size")

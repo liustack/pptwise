@@ -140,12 +140,11 @@ describe("sliceEmphasisForLines", () => {
     expect(line2.find((s) => s.emphasized)?.text).toBe("segment")
   })
 
-  it("keeps a truncation ellipsis emphasized when it lands inside an emphasized run", () => {
+  it("keeps emphasis on a clipped run that lands inside an emphasized span", () => {
     const segments = parseEmphasis("some **emphasized** text")
-    // Simulates truncateToUnits cutting mid-emphasis-run and appending "…".
-    const [line] = sliceEmphasisForLines(segments, ["some emphas…"])
+    const [line] = sliceEmphasisForLines(segments, ["some emphas"])
     const last = line[line.length - 1]
-    expect(last.text.endsWith("…")).toBe(true)
+    expect(last.text).not.toContain("…")
     expect(last.emphasized).toBe(true)
   })
 
@@ -206,12 +205,13 @@ describe("fitEmphasisLine", () => {
     expect(result!.truncated).toBe(true)
   })
 
-  it("truncates mid-emphasized-run and keeps the ellipsis emphasized", () => {
+  it("truncates mid-emphasized-run without painting an overflow mark", () => {
     const longEmphasis = "**" + "关键结论文字".repeat(4) + "**"
     const result = fitEmphasisLine(longEmphasis, { maxWidth: 200, fontSize: 22, minFontSize: 16 })
     expect(result).not.toBeNull()
+    const rebuilt = result!.segments.map((s) => s.text).join("")
+    expect(rebuilt).not.toContain("…")
     const last = result!.segments[result!.segments.length - 1]
-    expect(last.text.endsWith("…")).toBe(true)
     expect(last.emphasized).toBe(true)
     expect(result!.truncated).toBe(true)
   })

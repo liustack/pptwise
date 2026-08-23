@@ -4,6 +4,7 @@ import { renderSvgMarkup, parseSvgRoot } from "../serialize"
 import { assertSubset } from "../subset-validate"
 import { buildCtx } from "../full-slide-svg"
 import { resolveStyle } from "../../themes"
+import { __pathBoundingBox } from "../audit/deck-audit"
 import { CampaignMotif, CONFETTI_COUNT, PIECE_REACH } from "./motif-campaign-motif"
 import { CONTENT_DECOR_CONTRAST_CEILING, countDecorPieces, leafOpacity, leafPaint, paintedLeaves } from "./decor-budget"
 import { blendOver, contrastRatio } from "../ink"
@@ -156,6 +157,20 @@ describe("CampaignMotif（右上一簇纸屑）", () => {
       expect(box.y0).toBeGreaterThanOrEqual(0)
       expect(box.x1).toBeLessThanOrEqual(1280)
       expect(box.y1).toBeLessThanOrEqual(720)
+    }
+  })
+
+  it("path bbox plus stroke stays on the 1280×720 canvas with a few px of margin", () => {
+    const { root } = draw("campaign", coverSlide)
+    const margin = 24
+    for (const el of Array.from(root.querySelectorAll("path"))) {
+      const box = __pathBoundingBox(el.getAttribute("d") ?? "")
+      expect(box).not.toBeNull()
+      const halfStroke = Number(el.getAttribute("stroke-width") ?? 0) / 2
+      expect(box!.x - halfStroke).toBeGreaterThanOrEqual(margin)
+      expect(box!.y - halfStroke).toBeGreaterThanOrEqual(margin)
+      expect(box!.x + box!.w + halfStroke).toBeLessThanOrEqual(1280 - margin)
+      expect(box!.y + box!.h + halfStroke).toBeLessThanOrEqual(720 - margin)
     }
   })
 

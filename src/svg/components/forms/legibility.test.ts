@@ -18,6 +18,7 @@ import {
   formLegibleInk,
   formGridCols,
   formIconColumnCols,
+  layoutAtSize,
   layoutFormBody,
   BOARD_CARD_W,
   FORM_BODY_FLOOR,
@@ -550,5 +551,31 @@ describe("form body title cap", () => {
       expect(fontSizeOf(t), `body "${t.textContent}" vs title ${titleFs}`).toBeLessThanOrEqual(cap + 0.05)
       expect(fontSizeOf(t)).toBeGreaterThanOrEqual(FORM_BODY_FLOOR)
     }
+  })
+})
+
+describe("layoutAtSize", () => {
+  it("keeps the first maxLines and drops the rest instead of joining leftover onto the last line", () => {
+    const source = "一二三四五六七八九十".repeat(6)
+    const r = layoutAtSize(source, { maxWidth: 80, fontSize: 16, maxLines: 2 })
+    expect(r.fontSize).toBe(16)
+    expect(r.lines.length).toBeLessThanOrEqual(2)
+    expect(r.truncated).toBe(true)
+    expect(r.lines.join("")).not.toContain("…")
+    const joined = r.lines.join("")
+    expect(source.startsWith(joined)).toBe(true)
+    expect(joined.length).toBeLessThan(source.length)
+    for (const line of r.lines) {
+      expect(measureTextUnits(line) * r.fontSize).toBeLessThanOrEqual(80 + 1e-6)
+    }
+  })
+
+  it("stamps truncated when a kept line is clipped, and paints no overflow mark", () => {
+    const source = "一二三四五六七八九十一二三四五六七八九十"
+    const r = layoutAtSize(source, { maxWidth: 48, fontSize: 16, maxLines: 1 })
+    expect(r.truncated).toBe(true)
+    expect(r.lines).toHaveLength(1)
+    expect(r.lines[0]).not.toContain("…")
+    expect(source.startsWith(r.lines[0]!)).toBe(true)
   })
 })
