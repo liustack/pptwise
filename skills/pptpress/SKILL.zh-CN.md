@@ -27,8 +27,8 @@ powershell -ExecutionPolicy Bypass -File <skill-dir>\scripts\run.ps1 <args>  # W
 如果你的 harness 不允许执行脚本，就按同样的顺序自己判断，用第一条成立的：
 
 1. PATH 上有 `pptpress`，且主版本号与下面的钉版本相同、版本不低于它：`pptpress <args>`。
-2. 否则，有 `npx` 就用：`npx --yes --package @liustack/pptpress@0.20.0 pptpress <args>`。
-3. 否则，有 `bunx` 就用：`bunx --bun @liustack/pptpress@0.20.0 <args>`。
+2. 否则，有 `npx` 就用：`npx --yes --package @liustack/pptpress@0.21.0 pptpress <args>`。
+3. 否则，有 `bunx` 就用：`bunx --bun @liustack/pptpress@0.21.0 <args>`。
 4. 都没有就告诉用户机器上找不到 JavaScript 运行时，下一步是装 Node 22.19+（https://nodejs.org）或 Bun（https://bun.sh）。不要说成是 pptpress 本身坏了。
 
 ## 工作流程

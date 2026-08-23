@@ -1,5 +1,282 @@
 # @liustack/pptpress
 
+## 0.21.0
+
+### Minor Changes
+
+- d6f8df5: Architecture diagrams are now a layer stack: index on the left, layer name in the middle, notes on the right, hairline rules between rows. Too many layers fail validate instead of folding into a leftover +N. The renderer no longer drops rows.
+- 7ed0a70: Five seventh-wave themes now lock their cover to the design-board composition, and the cover pool grows by four.
+
+  **Covers change on decks that don't pin one.** Registering four new cover layouts changes the denominator the seeded picker samples from, so a deck with a fixed seed can land on a different cover than it did in 0.20. Pin `slide.layout` on a cover to hold it exactly.
+
+  `stage` reuses `poster-center` (its type scale already does the giant keynote type). `lecture`, `swiss`, `memo`, and `playbill` each get a new shared cover: `board-head` (chalkboard serif, chalk stroke), `institutional-block` (left giant type, accent signature block), `memo-head` (MEMORANDUM eyebrow, double rules, last-word underline), `bill-head` (bleed display type, thick baseline). Each of those five themes now curates only that one cover. Other page types stay on the full set.
+
+  The four new layouts join the shared pool. They read every color through tokens. `playbill`'s date chip stays in the motif, not the layout. `memo`'s edge MEMORANDUM steps off the cover so it does not print twice.
+
+- 2c9579c: The cover pool grows by six, and nine themes lock their cover to the face drawn on the design board.
+
+  **Covers change on decks that don't pin one.** Registering six new cover layouts changes the denominator the seeded picker samples from, and those nine themes now always pick their locked face. A deck with a fixed seed can land on a different cover than it did in 0.20. Pin `slide.layout` on a cover to hold it exactly.
+
+  The six new shared covers are `verdict-index` (verdict heading, optional accent block, up to three numbered arguments), `band-title` (full-width band carrying the reversed title), `header-band` (tone band for meta only, title on paper), `paper-masthead` (giant type on paper, year stacked one glyph per line), `horizon-wedge` (full-width bottom ramp), and `corner-wedge` (lower-right triangular wedge). They read every color through tokens.
+
+  `consulting` locks `verdict-index`. `classroom`, `enterprise`, and `vermilion` lock `band-title`. `crayon` locks `header-band`. `runway` locks `paper-masthead`. `pulse` locks `horizon-wedge`. `arena` and `ember` lock `corner-wedge`. Other page types stay on the full set.
+
+- b36c084: Ten remaining themes lock their cover to the face drawn on the design board. Existing cover layouts gain optional knobs. No new cover layout ids.
+
+  **Covers change on decks that don't pin one.** Those ten themes now always pick their locked face, and six of them stop rotating motifs. A deck with a fixed seed can land on a different cover, and a different decoration, than it did in 0.20. Pin `slide.layout` on a cover to hold it exactly.
+
+  `academic` locks `left-anchor`. `campaign`, `insight`, `luxe`, and `museum` lock `poster-center`. `tech` locks `constellation`. `journal` and `heritage` lock `editorial-masthead`. `ink` locks `colophon`. `terra` locks `tone-adaptive-header`. Motif rotation collapses to the board motif for academic, insight, tech, luxe, journal, and heritage. Chapter and ending stay on the full set.
+
+- 2250609: Breaking rename: the deck and spec field `chrome` is now `branding`. Values are unchanged (`full` / `cover-only` / `minimal`). Layout-declared `branding: "none"` replaces `chrome: "none"`. `pptpress migrate` rewrites the old field on v4 IR and on deck specs. Both fields at once is a hard error. `validateIr` and `validateSpec` still accept `chrome` as an alias when `branding` is absent.
+- d6cc6a2: Fourteen new content-page faces for eight existing components. The IR, schema, and skill routing table do not change. A theme looks up its face from a render-side assignment table.
+
+  **Decks that pick one of the 41 assigned (theme, component) pairs look different.** Unassigned themes keep the current face, byte for byte. campaign's cycle face is hub-spoke (first listing wins).
+
+  `icon_cards` gains column, badge, and outline-grid faces. `cycle` gains loop, hub-spoke, and petal-wheel. `numbered_cards` gains pills and hex cluster. `kpi_cards` gains donut trio and bubble row. `comparison` gains pill panels. `steps` gains an arrow band. `timeline` gains vertical nodes. `image_grid` gains numbered photos.
+
+- ee08bab: Every theme now says which chapter, content, and ending layouts it wants, not just which cover.
+
+  **Pages without an explicit `slide.layout` will change on non-cover slides.** The cover slot does not move. On a fixed seven-page deck across 24 structural identities and 40 seeds, 4278 of 6720 picks move, all of them off the cover. Pin `slide.layout` on a page to hold it exactly.
+
+  A default-narrative deck at seed=1 now resolves 23 distinct layout sequences instead of 11. The one remaining collision is `enterprise` with `classroom` (same sequence, different palettes). Across 40 seeds every identity is distinct.
+
+  `playbill` still ships the full layout set. Its content preference names three poster-like layouts so short event decks lean that way without closing the pool.
+
+  `tech`'s chapter preference and `pulse`'s ending preference were previously invisible under the default narrative (they named only layouts that narrative already favored). Both now name a second layout the default narrative does not already favor.
+
+- 2380485: Deck-level `chrome` posture (`full` / `cover-only` / `minimal`). Omitted equals `cover-only`: cover and chapter pages keep the brand logo, content and ending pages drop the footer rule, meta, and logo. Write `chrome: "full"` only when every content page needs the brand footer. Layout `chrome: "none"` still wins.
+- 04a8e66: Rendered slides now enforce a three-layer depth contract. Every SVG paints
+  background, midground decoration, and foreground content in marked `bg`, `mid`,
+  and `fg` groups. The renderer owns this order, so layouts and motifs no longer
+  need to coordinate their paint position manually.
+
+  Midground paint is capped through the existing decoration contrast budget and
+  a theme-aware saturation ceiling. Decorative leaves that intersect foreground
+  content are omitted at the shared layer boundary. Ghost indices are moved until
+  their complete glyph boxes sit inside the slide.
+
+  Gallery L1 now reports malformed depth order, midground paint at or above the
+  shared 3:1 ceiling, midground text bleeding off canvas, and isolated small
+  stroked decoration. Four planted fixtures hold those checks.
+
+  Serialized SVG changes on every slide because the three depth groups are part
+  of the output contract. Decorative pixels can also change when the new budget,
+  collision retreat, or glyph containment rules apply.
+
+- 2926780: Consulting now renders `**emphasis**` as a fitted yellow pad behind each emphasized run. Wrapped emphasis receives one pad per line, and the text color is checked against the pad for readability.
+
+  Other themes keep the existing tinted bold emphasis output unchanged.
+
+- ef46396: Seven themes now paint flowchart nodes by kind. Start and end get a light wash. A decision takes the one accent, from the theme token, never a hardcoded orange. Unassigned themes keep the previous face, byte for byte. No new IR fields.
+- 41b0a29: Flowchart connectors are now orthogonal rounded elbows. Coaxial nodes stay a straight segment. Offset nodes take a right-angle bend with a small Q radius. Same-side edges fan apart. Edge labels sit 6-10px off the stroke. Arrowheads stay polygons because svg2pptx skips SVG markers. The same IR still renders the same markup.
+- fc2c2a9: Six content-page heading treatments, looked up from a render-side assignment table. The IR, schema, and skill routing table do not change.
+
+  **Decks that pick one of the 16 assigned themes look different on content pages.** Unassigned themes keep the current heading, byte for byte. ghost_index and tag_box need a chapter page, or they keep the native heading.
+
+  Consulting and tech pick a ghost index. Insight, heritage, and journal pick a baseline rule. Playbill, enterprise, and arena pick a chapter tag box. Academic and terra pick a lead accent. Ink, lecture, and museum pick a vertical kicker. Luxe, campaign, and vermilion pick a centered title with mirrored rules.
+
+- 94cc3e7: The ink theme is redesigned around a right-edge colophon, and every theme's
+  cover pool grows by one.
+
+  **Covers change on decks that don't pin one — read this first.** Registering a
+  ninth cover layout changes the denominator the seeded picker samples from
+  (`weightedPickBySeed` chooses by `hash % totalWeight`), so a deck with a fixed
+  seed can land on a different cover than it did in 0.20. Measured across all 17
+  themes × 40 seeds: **505 of 640 cover picks move**. Nothing outside the cover
+  slot moves for any theme except ink, which changed on purpose. This is not
+  specific to the new layout — any future addition to the cover pool does the
+  same thing, and the nine themes that still declare no cover preference will be
+  re-drawn again when they get one. Pin `slide.layout` on a cover to hold it
+  exactly. Three consequences of this ship in the repo itself: the v3→v4
+  equivalence goldens and the checked-in example previews were re-recorded, and
+  in both cases the only difference is which cover layout was selected — no
+  slide other than the cover changed, no content was dropped or truncated, and
+  the audit findings are identical on both sides.
+
+  **ink**: lighter paper and a warmer, blacker ink (`bg` `#F5F0E6` → `#F7F2E7`,
+  `primary` `#2B2B2B` → `#1F1C18`, plus `surface`/`border`/`chartPalette` and a
+  wider whitespace scale). Its decoration is now two marks instead of five: a
+  vertical colophon down the right edge — the organization set one character per
+  line, the year and month below it in Chinese numerals, a vermilion seal at the
+  foot — and a single faint ridge in the bottom-left corner of covers and chapter
+  pages. The full-width frame rules, the layered distant mountains, and the old
+  seal that collided with the bottom-right logo box are gone; that collision (a
+  date measured at 1.07:1 against the seal) is fixed by the move.
+
+  Because the colophon carries the organization and the date, ink's content pages
+  no longer repeat them in the footer. Two costs come with that, both deliberate:
+  the confidentiality label and version number live only in that footer row, so
+  they no longer appear on ink content pages; and the colophon column holds 11
+  characters (17 when the deck sets no date), so a longer organization name is
+  truncated and reported by `pptpress audit` as `content-truncated`. That limit
+  excludes ordinary names — `Meridian Analytics`, `北京云帆科技有限责任公司` —
+  because a per-character vertical column is a short-CJK-signature idiom. Set
+  `theme.brand.suppressFooterMeta: false` in the IR to take the footer row back.
+
+  **New cover layout, `colophon`**, available to every theme: a left-axis heading
+  flagged by a narrow accent block, a wide-tracked organization line, a
+  subheading, and a byline in the bottom-left corner, with the right 100px of the
+  page kept clear for a side rail.
+
+  **New theme brand flag**, `suppressFooterMeta`: skips the footer's
+  organization/confidentiality/version/date row on content slides, for themes
+  whose decoration already carries that information. Independent of the existing
+  `suppressFooterRule`; unset on every other theme, whose output is unchanged.
+
+- ec44d9c: Three pin-only editorial layouts (`statement`, `pull-quote`, `verse-chapter`) and a layout-level `chrome: "none"` declaration. Pinning one of these pages skips the brand footer, logo, and theme motif. Auto-selection is unchanged: the new ids never enter the pool.
+- 7bb5a21: Breaking: the bloom theme id is removed. `pptpress migrate` rewrites IR `theme.id` and spec `theme` `"bloom"` to `"classroom"`. Validate on a leftover bloom id points at migrate. 24 built-in themes, 24 ids.
+- 3972323: Breaking: the `logo_wall` component is removed. `pptpress migrate` rewrites leftover `logo_wall` components to `image_grid` (asset_id copied, label becomes caption, extra items past 4 dropped). Validate on a leftover `logo_wall` points at migrate. 37 typed units.
+- b4faf38: Rename the product from pptfast to pptpress. The package is `@liustack/pptpress`, the CLI is `pptpress`, the skill is `skills/pptpress`, and the DSH plugin is `pptpress`. `PPTFAST_*` environment variables remain aliases for `PPTPRESS_*`. If `~/.pptpress` is missing and `~/.pptfast` exists, the old directory is copied to the new one and left in place. Project config `pptpress.config.json` still reads `pptfast.config.json`. Workspace default is `.pptpress`, and a leftover `.pptfast/` is reused when present.
+- f1bfcb3: Ten more themes get their own sparse climax faces, drawn from the design boards. Unregistered theme/layout pairs still use the generic face.
+- 679106f: Three pin-only speech layouts (`stat-hero`, `one-evidence`, `mono-bleed`). Each declares `chrome: "none"`, so pinning one skips the brand footer, logo, and theme motif. `mono-bleed` also paints its own primary field. Auto-selection is unchanged: the new ids never enter the pool.
+- 329d5be: Optional stock-photo search: `pptpress config set` stores your Pexels and Pixabay keys, `pptpress images search` / `fetch` / `list` pins photos into `.pptpress/<deck>/assets/`. Rendering a PPTX still needs no API key.
+- 748ea79: Optional stock-photo search now falls through to Openverse (CC0 / public domain, commercial filter) when Pexels and Pixabay are empty or unconfigured. `pptpress images generate` pins a locally generated image when a generator CLI is enabled. Rendering a PPTX still needs no API key.
+- 76cdee2: Every theme now says which cover it wants. Ten themes gain or extend a cover
+  preference.
+
+  **Covers change on decks that don't pin one — read this with the ink note.**
+  0.21 moves the cover slot for two reasons that land together. The ink redesign
+  added a ninth cover layout to the shared pool, which changes the denominator
+  the seeded picker samples from, so a fixed seed can land somewhere new even
+  though no existing layout changed. This change is the one that gives the move a
+  reason: themes that previously expressed no cover preference now express one,
+  so the picker leans where the theme's own design points. Measured on a fixed
+  deck across 17 themes × 40 seeds, **351 of 680 cover picks move**, all of them
+  on the ten themes listed below. **No page other than the cover moves for
+  any theme**, and no content is dropped, reflowed or truncated by either pass.
+  Pin `slide.layout` on a cover to hold it exactly.
+
+  The ten whose covers move: `enterprise` and `campaign` toward the diagonal
+  split, `classroom` toward the quiet adaptive header, `luxe` toward
+  the full-bleed masthead, `heritage` toward the double-ruled editorial masthead,
+  `terra` toward a left anchor, `ember` toward the diagonal split, `insight`
+  toward the editorial masthead and `vermilion` toward the tone-adaptive header.
+  `consulting`, `academic`, `ink`, `tech`, `runway`, `journal` and `pulse` pick
+  exactly what they picked before. Four checked-in example previews were
+  re-recorded and every one shows only a different cover layout.
+
+  Because the theme, narrative and beat preferences combine by taking the
+  strongest rather than by multiplying, a theme that names only covers the active
+  narrative already favors adds nothing at all. `insight` and `vermilion` shipped
+  that way in this branch's first pass and are corrected here: `insight` now also
+  leans toward the double-ruled editorial masthead, `vermilion` toward the
+  tone-adaptive header, and both are visible to a deck that names no narrative.
+  A test now holds every theme to it, so a future preference that would flatten to
+  nothing fails at build time instead of shipping silently.
+
+- 4cab5c5: Six themes lock their cover, chapter, and ending to the wave 8 board faces. Content pages keep the full pool but now lean toward the board's main layouts. Motifs stay, evolve, or retire with the board.
+
+  **Unpinned decks change face.** A deck that does not set `slide.layout` can land on a different cover, chapter, ending, and decoration than it did in 0.20. Pin the layout to hold a page exactly. Consulting covers may carry bullets when the locked cover accepts them.
+
+  `consulting` locks `verdict-index`, `ghost-rule-chapter`, and `action-pad-ending`, and keeps `banner-motif`. `enterprise` locks `ikb-field-cover`, `block-numeral-chapter`, and `signoff-ending`, and keeps the square-order motif. `insight` locks `stat-cover`, `ghost-section-chapter`, and `close-word-ending`. Its motif drops the top ticker and keeps a bottom rule. `ember` keeps `corner-wedge` on the cover, locks `ember-index-chapter` and `ask-ending`, and retires rising sparks. `tech` locks `type-rule-cover`, `stroke-index-chapter`, and `rule-close-ending`, and retires the constellation. `campaign` locks `poster-center`, `act-chapter`, and `pill-cta-ending`, and thins the paper-confetti field.
+
+- e6b3a14: Six knowledge and culture themes lock their cover, chapter, and ending to the wave 8 board faces. Content pages keep the full pool but now lean toward the board's main layouts. Motifs stay, evolve, or empty with the board.
+
+  **Unpinned decks change face.** A deck that does not set `slide.layout` can land on a different cover, chapter, ending, and decoration than it did in 0.20. Pin the layout to hold a page exactly.
+
+  `academic` locks `thesis-plate-cover`, `folio-ghost-chapter`, and `defense-close-ending`. Its motif drops the progress dots and keeps a gold opening rule. `classroom` locks `chalk-band-cover`, `lesson-box-chapter`, and `homework-close-ending`, and turns punch holes into ruled notebook lines. `crayon` locks `capsule-open-cover`, `sticker-numeral-chapter`, and `reminder-list-ending`, and keeps a single sun doodle on the cover. `journal` locks `issue-head-cover`, `fascicle-ghost-chapter`, and `afterword-ending`, and keeps masthead rules. `heritage` locks `double-frame-cover`, `mirror-volume-chapter`, and `invite-field-ending`, and retires the bookplate ticks. `ink` locks `vertical-title-cover`, `volume-slip-chapter`, and `seal-close-ending`, and keeps the remnant mountain plus the content colophon rail.
+
+- 7e0c551: Six character themes lock their cover, chapter, and ending to the wave 8 board faces. Content pages keep their pools but now lean toward the board's main layouts. Motifs stay, evolve, or empty with the board.
+
+  **Unpinned decks change face.** A deck that does not set `slide.layout` can land on a different cover, chapter, ending, and decoration than it did in 0.20. Pin the layout to hold a page exactly.
+
+  `luxe` locks `invitation-plate-cover`, `gilt-ordinal-chapter`, and `gilt-word-ending`, and keeps the gilt invitation frame on cover and ending. `runway` locks `lookbook-open-cover`, `look-range-chapter`, and `window-close-ending`, and stays motif-empty. `vermilion` locks `red-head-cover`, `seal-numeral-chapter`, and `deliberation-ending`, and keeps only the gold masthead rules. `terra` locks `pledge-open-cover`, `field-band-chapter`, and `scorecard-ending`, and moves contour lines to the top-left edge. `pulse` locks `report-open-cover`, `subject-rule-chapter`, and `care-plan-ending`, and draws one heartbeat line on the cover. `arena` locks `cut-panel-cover`, `round-mark-chapter`, and `seat-cta-ending`, and retires HUD brackets.
+
+- ebe73c6: Six character themes lock their cover, chapter, and ending to the wave 8 board faces. Covers stay locked on the existing ids. Content pages keep their pools but now lean toward the board's main layouts. Motifs stay, evolve, or empty with the board.
+
+  **Unpinned decks change face.** A deck that does not set `slide.layout` can land on a different chapter, ending, and decoration than it did in 0.20. Pin the layout to hold a page exactly.
+
+  `stage` locks `poster-center`, `one-word-chapter`, and `release-close-ending`, and stays motif-empty. `lecture` locks `board-head`, `chalk-rule-chapter`, and `next-lecture-ending`, and keeps the chalk-tray frame. `swiss` locks `institutional-block`, `decimal-index-chapter`, and `resolution-ending`, puts chapter on cold paper, and keeps the right-edge ticks cover-only. `memo` locks `memo-head`, `issue-line-chapter`, and `decision-close-ending`, and keeps the red double rule. `playbill` locks `bill-head`, `day-bill-chapter`, and `ticket-cta-ending`, and inverts the ending so the date chip yields. `museum` locks `poster-center`, `hall-label-chapter`, and `exit-word-ending`, and stays motif-empty.
+
+- 59dc565: `render` and `preview` no longer require `-o`. Omit it and the files land in `.pptpress/<deck>/` at the project root, git-ignored locally on first create. An explicit `-o` is unchanged.
+
+### Patch Changes
+
+- 8677e76: Cartesian y-axis titles that carry Latin or digits go back to the header row. Only a pure CJK title still stacks on the left. Line charts drop endpoint value labels past four series, and warn past eight.
+- 887bbc3: CLI Windows hardening: parse argv with node semantics under Electron, hide child consoles, refuse unrecognized `.cmd` shims, honor HTTP_PROXY via undici, block private gallery downloads, and unwrap `file://` asset paths.
+- e93789a: Flowchart layout no longer uses dagre. Ranks come from a longest-path layering plus one barycenter sort inside the engine. Connectors, fan-out, and edge-label rules stay the same. The dagre and @types/dagre packages are gone.
+- 9f012ee: Flowchart edge labels no longer repeat a node name, and they only render when that edge is actually drawn. A surviving label sits 6-10px off its own stroke and stays clear of arrowheads.
+- 36ec86a: Keep component-form titles at 20px and body at 15px. Four badge cards wrap 2×2 instead of shrinking type to fit one cramped row.
+- a6396db: Gallery review round 1. Decks no longer draw a five-dot progress track, crayon star stickers, leftover left-edge card bars, or `+n …` overflow debug text. Playbill date chips keep the date at the same 4° tilt as the chip on both SVG and PPTX. Callout emphasis is a top hairline. Layout and component spacing, overflow, and connector bugs from that review are fixed.
+- cbc3de1: Gallery review round 2. A page now paints at most three decoration pieces, and content-page decoration recedes behind the copy. Callout is a theme-assigned morph (tint panel, hanging type, or a lead word) with no edge bars. image-lead-split is retired. Cycle, pill, and bubble nodes scale to their box. Sparse faces keep at most two rule groups.
+- a25f8f2: Rail-numbered content pages on assigned themes no longer crush the heading's first character with the `{chapter}.{n}` badge. The layout still paints the badge. The heading treatment yields by the same 20px gap the native title already used.
+- d495e1b: `pptpress audit` now attributes text to the decoration it is actually
+  painted on. Text sitting on a solid decor shape (a seal, a corner square)
+  used to be graded against the page background, reporting a passing ratio
+  for unreadable text; backgrounds are now sampled across the run's own ink
+  box, and exact-outline decor shapes register as candidates while
+  crayon-stroke paths stay excluded. Across the full theme matrix this
+  surfaces 5 real collisions and removes no findings.
+- 327d8e0: In preview, KaiTi now tries macOS Kaiti SC and STKaiti before Songti. PPTX export still uses the Windows KaiTi face.
+- f9eaf36: Internal rename only: `archetype` and `layout` were two names for the same
+  thing, and only `layout` is left. Nothing renders differently — every SVG and
+  every pptx part comes out byte-for-byte identical, and no golden fixture or
+  snapshot was re-recorded.
+
+  The 36 page templates moved from `src/svg/archetypes/` to `src/svg/layouts/`,
+  so a layout's registry entry and the JSX that draws it now sit in the same
+  file, in the same directory. Renamed along the way: `resolveArchetypeId` →
+  `resolveLayoutId`, `{Cover,Chapter,Content,Ending}Archetype{,Id}` →
+  `…Layout{,Id}`, `{COVER,CHAPTER,CONTENT,ENDING}_ARCHETYPES` → `…_LAYOUTS`,
+  `MotifArchetype{,Id}` → `Motif{,Id}`, `MOTIF_ARCHETYPES` → `MOTIFS`.
+
+  Not one of those names is an exported symbol — the JS internals carry no semver
+  promise anyway (`docs/internal-api.md`), and the CLI, the IR schema, the deck
+  project format and the exported SDK surface are all untouched. The one name
+  that reaches the emitted `.d.ts` is the alias behind `ThemeDefinition["motif"]`
+  (`MotifArchetypeId` → `MotifId`): it is not importable and its value union is
+  unchanged, so nothing a consumer can write breaks.
+
+  Two spellings of `archetype` deliberately stayed put, because changing either
+  would change bytes: the `data-archetype` attribute in rendered SVG, and the
+  `kind: "archetype"` literal in the layout registry. Both are noted in the code
+  as fossils awaiting their own change.
+
+- f2ea9fe: Confidentiality and date stay off cover and ending meta rows unless the deck declares `chrome: "full"`. Author, role, and organization stay. Omitted chrome leaves those two fields off the cover by default.
+- 10e20ef: The agent skill now runs a one-round narrative interview before writing a spec. Four closed questions, a NARRATIVE_INTERVIEW gate that blocks the spec file while any axis is unanswered, and a packaged recommendation with a second candidate that differs in mechanism.
+- 50c69e4: Numbered-pills badges shrink to 0.8 of the pill row, and the left count disc scales into the remaining box. Copy wraps instead of painting an ellipsis, and leftover overflow stamps data-truncated for the audit intercept.
+- 9bce19e: The `playbill` theme no longer draws its top-right black ticket chip. On the
+  design board that patch carried a date, a motif may not carry content, and the
+  empty block that landed instead was decoration for its own sake. `playbill`
+  joins `runway`, `museum`, and `stage` as a theme with no motif at all. Its
+  heavy register now rests on the full-bleed yellow field and the 1.3 type scale.
+
+  Content pages also sit closer to the heading above them. The air a settled
+  block may take above itself is capped at one designed block gap instead of two,
+  and `banner-heading` uses that same beat between its banner and its body. A
+  single-table page that used to leave about 94px of blank between the banner and
+  the first table row now leaves about 60px. The 38% golden share is unchanged,
+  and so is the rule that leftover height sinks below the block rather than above.
+
+- 155c704: The side-highlight content layout is retired. Pages that used its 176px primary side panel now pick another layout and use the full body width.
+- 62acaa9: Stop DSH Desktop from loading pptpress's sharp into the same Electron process as the host's sharp. The optional sharp dependency now tracks the 0.35 line the host ships, and the preview tool always runs the CLI in a child process (real Node when inside Electron, never an in-process import).
+- 12ef69f: `pptpress audit` no longer reports the organization name on a `split-diagonal`
+  cover as low-contrast. The name is meta-information, the same tier as a
+  copyright line or a page number, so its floor is 3:1 rather than the 4.5:1
+  body floor it was being held to. On the `insight` theme the difference decided
+  the verdict: the adaptive dark ink over `#E63946` measures 4.41:1, which was
+  reported as a finding and is not one. Sixteen of seventeen themes cleared both
+  floors and were never affected.
+
+  The rendered color is unchanged on every theme — the fill opacity is now folded
+  into the fill itself, which composites to the same pixels and lets the auditor
+  read the color the page actually paints.
+
+- 8dca766: The agent skill now carries a Sparse-page contract: climax, quote, and evidence pages pin sparse pin-only layouts and put the spoken script in `slide.notes`. This is not a new `pacing` value.
+- 9f682c8: A deck with a `cycle` component exports again. Every `cycle` ever rendered was
+  refused at the door: the ring is drawn around its own center, so half of its
+  labels sit at a negative x in the group's local space, and the exporter sized
+  their text boxes as if that local x were a position on the slide — producing
+  zero-width and negative-width shapes, which the package audit rejects outright.
+  The box is now measured after the group's transforms are folded in, which is
+  the only point where the coordinate is a slide coordinate. Text lands exactly
+  where it always did (the anchor was never the broken part), so no deck renders
+  any differently — the shapes around the text are simply the right size now.
+
+  `examples/team-onboarding.json`, shipped un-renderable since 0.19.2, renders.
+  Every file in `examples/` is now covered by the test suite, so a broken one
+  cannot ship quietly again.
+
 ## Unreleased
 
 ### Minor Changes
