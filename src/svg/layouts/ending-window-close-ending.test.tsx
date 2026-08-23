@@ -6,6 +6,7 @@ import { buildCtx, resolveBackgroundHex } from "../full-slide-svg"
 import { resolveStyle, CANONICAL_THEME_IDS } from "../../themes"
 import { RUNWAY_TOKENS } from "../../themes/runway"
 import { contrastRatio, metaInk, readableOn, requiredContrastRatio } from "../ink"
+import { renderSlideSvg } from "../../api"
 import { WindowCloseEnding, layoutDef } from "./ending-window-close-ending"
 import type { PptxIR, Slide } from "@/ir"
 
@@ -160,5 +161,23 @@ describe("ending-window-close-ending — shared pool", () => {
     const { markup } = renderEnding("runway", slide("江".repeat(80), { subheading: "副".repeat(80) }))
     expect(markup).not.toContain("…")
     expect(markup).not.toContain("...")
+  })
+})
+
+describe("ending-window-close-ending — no leftover top-left motif stub", () => {
+  it("consulting banner-motif does not paint the yellow lead on this ending", () => {
+    const deck: PptxIR = {
+      version: "4",
+      filename: "window-close-no-stub.pptx",
+      theme: { id: "consulting" },
+      meta: FULL_META,
+      assets: { images: {} },
+      seed: 1,
+      slides: [{ type: "ending", layout: "window-close-ending", heading: HEADING, subheading: SUBHEADING, components: [] }],
+    } as PptxIR
+    const root = parseSvgRoot(renderSlideSvg(deck, 0))
+    const stub = Array.from(root.querySelectorAll("line")).filter((el) => Number(el.getAttribute("y1")) === 32)
+    expect(stub).toHaveLength(0)
+    expect(layoutDef.suppressMotif).toBe(true)
   })
 })
