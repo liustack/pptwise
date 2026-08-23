@@ -24,10 +24,11 @@ import { CANVAS_H_PX, CANVAS_W_PX } from "../../constants"
  * journal 改走通栏报头，两家以线制分家——journal 全宽通栏，heritage 双线
  * 断口嵌章。v2 三件半，位置写死：
  *   - **顶缘文武双线**：x48→1232，粗线 y26（2px）+ 细线 y32（0.75px）。
- *     报头的规矩，中文书里叫「文武线」。
+ *     报头的规矩，中文书里叫「文武线」。结构件：刊头结构，进前景，原色满画。
  *   - **底缘单线**：x48→1232、0.75px，与报头双线同宽收口。板上写在 y640
  *     的 x96→1184，实测后落到页缘 y712、第四轮评审后左右拉齐，见下。
- *   - **线上中点期号「№」**：赭红衬线，整个装饰件唯一的字符。
+ *     普通中景装饰，受强度上限。
+ *   - **线上中点期号「№」**：赭红衬线，整个装饰件唯一的字符。随底缘一件走。
  * 「半件」是因为期号带月份时才印全（见下）。
  *
  * 期号的字样从 `ir.meta.date` 推，推不出就只印「№」
@@ -160,7 +161,7 @@ export function CornerOrnamentMotif({ ir, slide, ctx }: DecorProps) {
   return (
     <>
       {!cover && (
-        <DecorPiece id="masthead">
+        <DecorPiece id="masthead" role="structure">
         <line
           x1={RULE_X1}
           y1={THICK_RULE_Y}
@@ -168,7 +169,6 @@ export function CornerOrnamentMotif({ ir, slide, ctx }: DecorProps) {
           y2={THICK_RULE_Y}
           stroke={rule}
           strokeWidth={THICK_RULE_STROKE}
-          opacity={fade(rule)}
         />
         <line
           x1={RULE_X1}
@@ -177,7 +177,6 @@ export function CornerOrnamentMotif({ ir, slide, ctx }: DecorProps) {
           y2={THIN_RULE_Y}
           stroke={rule}
           strokeWidth={THIN_RULE_STROKE}
-          opacity={fade(rule)}
         />
         </DecorPiece>
       )}

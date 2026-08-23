@@ -11,6 +11,25 @@ read_when:
 
 The densest defect history in this project — most of what's below exists because a first-principles-looking fix turned out wrong against real render geometry. Read before touching text color in render code.
 
+## Three-tier depth paint
+
+The depth contract used to fade every midground leaf to stay under the 3:1
+content-decor ceiling. That flattened colors that *are* the page, and also
+flattened colors that *are* the theme. Pieces opt out by an explicit
+`DecorPiece` role (`docs/designing-themes.md` rule 8), never by guessing at
+a hex:
+
+- **Structure** (`role: "structure"`): the page's own chrome. A Swiss top
+  bar, a memo double rule, a vermilion head rule, a luxe invitation frame.
+  Partition lifts it into the foreground. Theme color, no fade, no intensity
+  cap. Gallery L1's midground contrast walk skips it (`skipsMidgroundCeiling`)
+  if it still appears in mid.
+- **Identity** (`role: "identity"`, also `data-identity`): a midground mark
+  whose color is the theme. An ink vermilion seal. It stays under type so it
+  cannot cover copy. The saturation cap and the 3:1 fade do not touch it.
+- **Ordinary decor**: pattern, ghost numerals, wash, insight's baseline.
+  Recedes under the 3:1 ceiling. Do not mark a whole motif to dodge it.
+
 ## The three-tier contrast policy
 
 Every piece of text this renderer paints falls into exactly one of three tiers. The policy exists because "dim it a bit" used to be a per-layout, per-reviewer judgment call with no shared floor. The contrast-policy wave (`.issues/2026-07-28-contrast-policy/plan.md`) formalized it after two real violations shipped under that ad-hoc discipline (a copyright line at 2.93:1, a period-ending heading at 1.57:1), neither caught by any gate.

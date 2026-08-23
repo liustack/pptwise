@@ -102,6 +102,7 @@ describe("PosterMotif（底缘暗线）", () => {
     expect(line.getAttribute("stroke")).toBe(tokens.colors.border)
     expect(line.getAttribute("fill")).toBe("none")
     expect(line.getAttribute("stroke-width")).toBe("2")
+    expect(line.getAttribute("opacity")).toBe("0.4")
     const pts = polylinePoints(root)
     expect(pts[0]).toEqual([0, 545])
     expect(pts[pts.length - 1]).toEqual([1280, 522])
@@ -117,6 +118,7 @@ describe("PosterMotif（底缘暗线）", () => {
       expect(pts[0], slide.type).toEqual([0, 600])
       expect(pts[pts.length - 1], slide.type).toEqual([1280, 586])
       expect(root.querySelector("polyline")!.getAttribute("stroke")).toBe(tokens.colors.border)
+      expect(root.querySelector("polyline")!.getAttribute("opacity"), slide.type).toBe("0.4")
     }
   })
 

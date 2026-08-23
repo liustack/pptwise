@@ -83,10 +83,12 @@ describe("ink-motif wave 8 — remnant mountain and colophon rail by page type",
     expect(root.querySelectorAll("text")).toHaveLength(0)
   })
 
-  it("content keeps the colophon rail at or right of x1220, one grouped piece", () => {
+  it("content keeps the colophon rail at or right of x1220, with a separate identity seal", () => {
     const { root } = render("content")
-    expect(countDecorPieces(root)).toBe(1)
-    expect(root.querySelector("[data-decor-piece]")?.getAttribute("data-decor-piece")).toBe("colophon")
+    expect(countDecorPieces(root)).toBe(2)
+    expect(
+      Array.from(root.querySelectorAll("[data-decor-piece]")).map((el) => el.getAttribute("data-decor-piece")),
+    ).toEqual(["colophon", "seal"])
     expect(root.querySelectorAll("path")).toHaveLength(0)
     expect(root.querySelectorAll("line")).toHaveLength(1)
     expect(root.querySelectorAll("rect")).toHaveLength(2)
@@ -126,10 +128,40 @@ describe("ink-motif wave 8 — remnant mountain and colophon rail by page type",
   it("content-page rail recedes below the 3:1 large-text floor", () => {
     const { root, defaultBg } = render("content")
     for (const el of paintedLeaves(root)) {
+      if (el.closest("[data-identity]")) continue
       const paint = leafPaint(el)
       if (!paint) continue
       const composite = blendOver(paint.color, defaultBg, leafOpacity(el))
       expect(contrastRatio(composite, defaultBg)).toBeLessThan(CONTENT_DECOR_CONTRAST_CEILING)
+    }
+  })
+
+  it("a sparse pull-quote pin yields the rail and paints the left remnant", () => {
+    const slide = { type: "content", layout: "pull-quote", heading: "引", components: [] } as Slide
+    const defaultBg = resolveBackgroundHex(tokens.defaultBackgrounds.content, tokens.colors.surface)
+    const pageCtx = buildCtx(tokens, {}, undefined, defaultBg)
+    const markup = renderSvgMarkup(
+      <svg viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg">
+        <InkMotif ir={ir()} slide={slide} ctx={pageCtx} />
+      </svg>,
+    )
+    const root = parseSvgRoot(markup)
+    expect(root.querySelector("[data-decor-piece]")?.getAttribute("data-decor-piece")).toBe("remnant")
+    expect(root.querySelector("path")?.getAttribute("d")).toBe(REMNANT_LEFT)
+    expect(root.querySelectorAll("line")).toHaveLength(0)
+    expect(root.querySelectorAll("rect")).toHaveLength(0)
+  })
+
+  it("the vermilion seal keeps the theme accent at full strength", () => {
+    const { root } = render("content")
+    const piece = root.querySelector('[data-decor-piece="seal"]')!
+    expect(piece.getAttribute("data-decor-role")).toBe("identity")
+    expect(piece.getAttribute("data-identity")).toBe("true")
+    const rects = Array.from(piece.querySelectorAll("rect"))
+    expect(rects).toHaveLength(2)
+    for (const rect of rects) {
+      expect(rect.getAttribute("fill")).toBe(tokens.colors.accent)
+      expect(rect.getAttribute("opacity")).toBeNull()
     }
   })
 
@@ -239,8 +271,8 @@ describe("ink-motif wave 8 — remnant mountain and colophon rail by page type",
   })
 
   it("does not invent isolated corner ticks", () => {
-    for (const type of ["cover", "content", "ending"] as const) {
-      expect(countDecorPieces(render(type).root), type).toBe(1)
-    }
+    expect(countDecorPieces(render("cover").root)).toBe(1)
+    expect(countDecorPieces(render("content").root)).toBe(2)
+    expect(countDecorPieces(render("ending").root)).toBe(1)
   })
 })

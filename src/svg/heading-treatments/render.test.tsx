@@ -582,6 +582,7 @@ describe("center_mirror luxe", () => {
     const diamond = root.querySelector("path")!
     expect(diamond.getAttribute("d")).toBe("M 640 156 l 5 7 l -5 7 l -5 -7 z")
     expect(diamond.getAttribute("fill")).toBe(colors.accent)
+    expect(diamond.parentElement?.getAttribute("data-decor-role")).toBe("identity")
   })
 
   it("no chapter: no eyebrow, hairlines still drawn", () => {
@@ -657,6 +658,7 @@ describe("center_mirror vermilion", () => {
     const diamond = root.querySelector("path")!
     expect(diamond.getAttribute("d")).toBe("M 640 156 l 5 7 l -5 7 l -5 -7 z")
     expect(diamond.getAttribute("fill")).toBe(colors.accent)
+    expect(diamond.parentElement?.getAttribute("data-decor-role")).toBe("identity")
   })
 })
 

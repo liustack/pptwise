@@ -32,6 +32,7 @@ import {
   MAX_DECOR_PIECES,
   countDecorPieces,
   countSlantedTiles,
+  skipsMidgroundCeiling,
   leafOpacity,
   leafPaint,
   paintedLeaves,
@@ -105,6 +106,7 @@ describe("B2 decoration is always background on content pages", () => {
     for (const id of Object.keys(MOTIFS) as MotifId[]) {
       const { root, defaultBg } = drawMotif(id, "content")
       for (const el of paintedLeaves(root)) {
+        if (skipsMidgroundCeiling(el)) continue
         const paint = leafPaint(el)
         if (!paint) continue
         const opacity = leafOpacity(el)

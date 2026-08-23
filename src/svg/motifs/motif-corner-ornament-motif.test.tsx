@@ -172,8 +172,11 @@ describe("CornerOrnamentMotif（报头双线）", () => {
     expect(countDecorPieces(draw("journal", coverSlide, date).root)).toBe(1)
     expect(countDecorPieces(draw("journal", chapterSlide, date).root)).toBe(0)
     expect(countDecorPieces(draw("journal", contentSlide, date).root)).toBeLessThanOrEqual(MAX_DECOR_PIECES)
-    const contentLine = draw("journal", contentSlide, date).root.querySelector("line")
-    expect(contentLine?.getAttribute("opacity")).toBeTruthy()
+    const lines = Array.from(draw("journal", contentSlide, date).root.querySelectorAll("line"))
+    const [thick, thin, foot] = lines
+    expect(thick?.getAttribute("opacity")).toBeNull()
+    expect(thin?.getAttribute("opacity")).toBeNull()
+    expect(foot?.getAttribute("opacity")).toBeTruthy()
   })
 
   it("chapter 完全退让——底缘单线在 chapter 页型上压字（大章号墨迹到 y715），见 motif 文件头", () => {

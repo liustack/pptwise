@@ -1,6 +1,5 @@
 import type { DecorProps } from "./types"
 import { DecorPiece } from "./decor-piece"
-import { leafRecessOpacity } from "./decor-budget"
 
 /**
  * luxe-motif —— 「请柬金框」（第八波批 3，沿用）。
@@ -21,6 +20,8 @@ import { leafRecessOpacity } from "./decor-budget"
  *
  * 位置全部写死，不读内容、不随 seed 变，也不再随 branding 改下边。新封面
  * 与 ending 版式 `branding: "none"`，logo 不进这两页。
+ *
+ * 金框是请柬的页边，结构件，进前景，原色满画。不是中景底纹，也不标成身份印。
  *
  * 纪律：零 theme id、零 hex，颜色只来自 ctx（accent = 香槟金）。
  */
@@ -54,12 +55,9 @@ export function LuxeMotif({ slide, ctx }: DecorProps) {
   if (slide.type === "chapter" || slide.type === "content") return null
 
   const gold = ctx.colors.accent
-  const bg = ctx.defaultBg ?? ctx.colors.bg
-  const outerFade = leafRecessOpacity(slide.type, gold, bg)
-  const innerFade = leafRecessOpacity(slide.type, gold, bg, INNER_OPACITY)
 
   return (
-    <DecorPiece id="invitation">
+    <DecorPiece id="invitation" role="structure">
       {frameLines(OUTER_X, OUTER_Y, OUTER_W, OUTER_H).map(([x1, y1, x2, y2]) => (
         <line
           key={`outer-${x1}-${y1}`}
@@ -69,7 +67,6 @@ export function LuxeMotif({ slide, ctx }: DecorProps) {
           y2={y2}
           stroke={gold}
           strokeWidth={OUTER_STROKE}
-          opacity={outerFade}
         />
       ))}
       {frameLines(INNER_X, INNER_Y, INNER_W, INNER_H).map(([x1, y1, x2, y2]) => (
@@ -81,7 +78,7 @@ export function LuxeMotif({ slide, ctx }: DecorProps) {
           y2={y2}
           stroke={gold}
           strokeWidth={INNER_STROKE}
-          opacity={innerFade}
+          opacity={INNER_OPACITY}
         />
       ))}
     </DecorPiece>

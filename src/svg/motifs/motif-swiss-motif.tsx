@@ -10,10 +10,12 @@ import { leafRecessOpacity } from "./decor-budget"
  * light 档，位置写死。第八波批 4：
  *   - **顶边 12px 红条**：y0–12 通栏，走 accent（瑞士红）。四页都画，几何
  *     不动。五区外（标题区上沿是 y48）。这是「红成边」的那一条边，不是
- *     横幅，上面不承字。身份件，不许整件删。
+ *     横幅，上面不承字。结构件：版式/页面顶部粗横线是主题也是主体，进前景，
+ *     原色满画，不减淡、不受强度上限。
  *   - **右缘 x1252 三格灰刻度短划**：y64 / 96 / 128（32px 模数），各 16px
  *     水平短划指向页缘，走 muted。**只留封面**（封面锁板）。章节 / 内容 /
- *     ending 不画刻度：板上这三页没有，且 tick 是孤立小件语汇。
+ *     ending 不画刻度：板上这三页没有，且 tick 是孤立小件语汇。普通中景装饰，
+ *     受强度上限。
  *
  * **板上那根 x852 整高裸格线不进本文件。** 它纵穿正文区 (96,200,1040×420)，
  * 违反 `docs/designing-themes.md` 第 5 条五个保护区。封面样例用它交代网格，
@@ -56,15 +58,8 @@ export function SwissMotif({ slide, ctx }: DecorProps) {
 
   return (
     <>
-      <DecorPiece id="red-bar">
-        <rect
-          x={0}
-          y={BAR_Y}
-          width={CANVAS_W_PX}
-          height={BAR_H}
-          fill={red}
-          opacity={leafRecessOpacity(slide.type, red, bg)}
-        />
+      <DecorPiece id="red-bar" role="structure">
+        <rect x={0} y={BAR_Y} width={CANVAS_W_PX} height={BAR_H} fill={red} />
       </DecorPiece>
       {showTicks && (
         <DecorPiece id="ticks">

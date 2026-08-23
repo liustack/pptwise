@@ -1,6 +1,5 @@
 import type { DecorProps } from "./types"
 import { DecorPiece } from "./decor-piece"
-import { leafRecessOpacity } from "./decor-budget"
 
 /**
  * pulse-motif v3 —— 「心搏线」（第八波批 3 演化，设计源
@@ -16,9 +15,9 @@ import { leafRecessOpacity } from "./decor-budget"
  * chapter 退让：深青竖标是 `subject-rule-chapter` 的结构件，motif 再画
  * 是重影。内容 / ending 不画细胞，也不再画顶缘线。
  *
- * 叶子走 `leafRecessOpacity`。位置写死，不读内容、不随 seed 变。零
- * theme id、零 hex，颜色只来自 ctx。pulse 是 MOTIF_CANDIDATES 单成员，
- * 改画不带跑别家。
+ * 身份件：accent 形状即主题签名，留中景压在字下，原色满画，不减淡。
+ * 位置写死，不读内容、不随 seed 变。零 theme id、零 hex，颜色只来自 ctx。
+ * pulse 是 MOTIF_CANDIDATES 单成员，改画不带跑别家。
  */
 
 /** Absolute points for the board path `M 96 560 h 300 l 24 -36 l 36 72 l 24 -36 h 700`. A relative `path` bbox is parsed as number pairs and swallows the title, so the midground contract drops it. */
@@ -29,16 +28,14 @@ export function PulseMotif({ slide, ctx }: DecorProps) {
   if (slide.type !== "cover") return null
 
   const ink = ctx.colors.accent
-  const bg = ctx.defaultBg ?? ctx.colors.bg
 
   return (
-    <DecorPiece id="heartbeat">
+    <DecorPiece id="heartbeat" role="identity">
       <polyline
         points={HEARTBEAT_POINTS}
         fill="none"
         stroke={ink}
         strokeWidth={HEARTBEAT_STROKE}
-        opacity={leafRecessOpacity(slide.type, ink, bg)}
       />
     </DecorPiece>
   )

@@ -212,6 +212,24 @@ describe("auditL1 planted defects", () => {
     expect(codes(svg)).toContain("depth-contract")
   })
 
+  it("does not flag identity-marked midground paint that exceeds the contrast ceiling", () => {
+    const svg = wrap(
+      `<g data-depth="bg"><rect width="1280" height="720" fill="#FFFFFF"/></g>` +
+        `<g data-depth="mid"><g data-identity="true"><rect x="100" y="100" width="32" height="32" fill="#C3272B"/></g></g>` +
+        `<g data-depth="fg"></g>`,
+    )
+    expect(codes(svg)).not.toContain("depth-contract")
+  })
+
+  it("does not flag structure-marked midground paint that exceeds the contrast ceiling", () => {
+    const svg = wrap(
+      `<g data-depth="bg"><rect width="1280" height="720" fill="#FFFFFF"/></g>` +
+        `<g data-depth="mid"><g data-decor-role="structure"><rect x="0" y="0" width="1280" height="12" fill="#D7282F"/></g></g>` +
+        `<g data-depth="fg"></g>`,
+    )
+    expect(codes(svg)).not.toContain("depth-contract")
+  })
+
   it("accepts ordered layers whose midground paint stays below the shared ceiling", () => {
     const svg = wrap(
       `<g data-depth="bg"><rect width="1280" height="720" fill="#FFFFFF"/></g>` +

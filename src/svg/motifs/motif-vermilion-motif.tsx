@@ -1,6 +1,5 @@
 import type { DecorProps } from "./types"
 import { DecorPiece } from "./decor-piece"
-import { leafRecessOpacity } from "./decor-budget"
 import { yieldsOnSparsePin } from "./branded-frame"
 
 /**
@@ -17,9 +16,9 @@ import { yieldsOnSparsePin } from "./branded-frame"
  * 章节退让：收界金线由 `seal-numeral-chapter` 自己画。
  * 内容 / ending 画顶缘金双线。内容稀排钉 pin 继续让位。
  *
- * 叶子走 `leafRecessOpacity`（内容页中景对比低于 3:1）。位置写死，不读
- * 内容、不随 seed 变。零 theme id、零 hex，颜色只来自 ctx。accent 2.26:1
- * 绝不当文字色。刻意不用五角星等政治符号。
+ * 金双线是红头文件的天头结构，进前景，原色满画。位置写死，不读内容、不随
+ * seed 变。零 theme id、零 hex，颜色只来自 ctx。accent 2.26:1 绝不当文字色。
+ * 刻意不用五角星等政治符号。
  */
 
 const RULE_X1 = 48
@@ -31,15 +30,12 @@ const RULE_THIN_W = 0.75
 
 export function VermilionMotif({ slide, ctx }: DecorProps) {
   const gold = ctx.colors.accent
-  const bg = ctx.defaultBg ?? ctx.colors.bg
 
   if (slide.type === "cover" || slide.type === "chapter") return null
   if (yieldsOnSparsePin(slide)) return null
 
-  const fade = leafRecessOpacity(slide.type, gold, bg)
-
   return (
-    <DecorPiece id="gold-rules">
+    <DecorPiece id="gold-rules" role="structure">
       <line
         x1={RULE_X1}
         y1={RULE_THICK_Y}
@@ -47,7 +43,6 @@ export function VermilionMotif({ slide, ctx }: DecorProps) {
         y2={RULE_THICK_Y}
         stroke={gold}
         strokeWidth={RULE_THICK_W}
-        opacity={fade}
       />
       <line
         x1={RULE_X1}
@@ -56,7 +51,6 @@ export function VermilionMotif({ slide, ctx }: DecorProps) {
         y2={RULE_THIN_Y}
         stroke={gold}
         strokeWidth={RULE_THIN_W}
-        opacity={fade}
       />
     </DecorPiece>
   )

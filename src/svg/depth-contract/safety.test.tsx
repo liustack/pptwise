@@ -66,6 +66,62 @@ describe("midground safety contract", () => {
     expect(root.querySelector('[data-probe="clear"]')).not.toBeNull()
   })
 
+  it("keeps identity-marked midground paint at the theme color, without the intensity ceiling", () => {
+    const root = renderContract(
+      <g data-decor>
+        <g data-decor-piece="seal" data-decor-role="identity" data-identity="true">
+          <rect data-probe="seal" x={40} y={40} width={32} height={32} fill="#FF0000" />
+        </g>
+        <g data-decor-piece="rule">
+          <rect data-probe="rule" x={200} y={40} width={32} height={32} fill="#FF0000" />
+        </g>
+      </g>,
+    )
+    const seal = root.querySelector('[data-probe="seal"]')!
+    const rule = root.querySelector('[data-probe="rule"]')!
+    expect(seal.getAttribute("fill")).toBe("#FF0000")
+    expect(seal.getAttribute("fill-opacity")).toBeNull()
+    expect(hexSaturation(rule.getAttribute("fill")!)).toBeLessThanOrEqual(
+      midgroundSaturationCeiling(colors) + 0.001,
+    )
+    expect(
+      contrastRatio(
+        blendOver(rule.getAttribute("fill")!, colors.bg, effectivePaintOpacity(rule, "fill")),
+        colors.bg,
+      ),
+    ).toBeLessThan(CONTENT_DECOR_CONTRAST_CEILING)
+  })
+
+  it("keeps a structure piece that landed in midground at full strength", () => {
+    const root = renderContract(
+      <g data-decor>
+        <g data-decor-piece="red-bar" data-decor-role="structure">
+          <rect data-probe="bar" x={40} y={40} width={80} height={12} fill="#FF0000" />
+        </g>
+      </g>,
+    )
+    const bar = root.querySelector('[data-probe="bar"]')!
+    expect(bar.getAttribute("fill")).toBe("#FF0000")
+    expect(bar.getAttribute("fill-opacity")).toBeNull()
+  })
+
+  it("keeps an identity piece that intersects foreground at full strength", () => {
+    const root = renderContract(
+      <g data-decor>
+        <g data-decor-piece="seal" data-decor-role="identity" data-identity="true">
+          <rect data-probe="seal" x={20} y={20} width={80} height={80} fill="#C3272B" />
+        </g>
+      </g>,
+      <text x={40} y={80} fontFamily="Georgia" fontSize={48} fill="#101010">
+        Title
+      </text>,
+    )
+    const seal = root.querySelector('[data-probe="seal"]')!
+    expect(seal).not.toBeNull()
+    expect(seal.getAttribute("fill")).toBe("#C3272B")
+    expect(seal.getAttribute("fill-opacity")).toBeNull()
+  })
+
   it("keeps a theme motif leaf that intersects foreground and dims it instead of dropping it", () => {
     const root = renderContract(
       <g data-decor>

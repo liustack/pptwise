@@ -6,7 +6,9 @@ import { yieldsOnSparsePin } from "./branded-frame"
 /**
  * poster-motif —— insight 的行情语汇（2026-08-22 第八波批 1 演化）：
  * 顶缘行情带、刻度齿、封面 430px 幽灵季字全部退役。留下的是板上那根
- * **底缘暗线**（polyline，stroke 走 border，中景）。
+ * **底缘暗线**（polyline，stroke 走 border，中景普通装饰）。
+ * 深底上 border 满不透明大约 1.4:1，对比上限抓不到，看起来却像地平线，
+ * 所以给设计透明度 0.4。真装饰，该受上限，不标身份。
  *
  * 设计源 `.issues/design-boards/wave8/b1/Insight.dc.html`：
  *   - 封面走线抄封面样例折点（穿在结论句与落款之间）。
@@ -33,6 +35,8 @@ const FOOT_POINTS: readonly (readonly [number, number])[] = [
 ]
 
 const STROKE = 2
+/** Designed fade. Full-opacity border on insight's dark ground is only ~1.4:1, so the 3:1 ceiling cannot catch it, yet the line still reads as a horizon. */
+const BASELINE_OPACITY = 0.4
 
 function pointsAttr(points: readonly (readonly [number, number])[]): string {
   return points.map(([x, y]) => `${x},${y}`).join(" ")
@@ -53,7 +57,7 @@ export function PosterMotif({ slide, ctx }: DecorProps) {
         fill="none"
         stroke={border}
         strokeWidth={STROKE}
-        opacity={leafRecessOpacity(slide.type, border, bg)}
+        opacity={leafRecessOpacity(slide.type, border, bg, BASELINE_OPACITY)}
       />
     </DecorPiece>
   )

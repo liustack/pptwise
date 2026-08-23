@@ -140,23 +140,24 @@ export function RedHeadCover({ ir, slide, ctx }: SvgTemplateProps) {
         </text>
       )}
 
-      <line
-        x1={RULE_X1}
-        y1={RED_RULE_Y}
-        x2={RULE_X2}
-        y2={RED_RULE_Y}
-        stroke={colors.primary}
-        strokeWidth={RED_RULE_STROKE}
-      />
-      <line
-        data-depth="mid"
-        x1={RULE_X1}
-        y1={GOLD_RULE_Y}
-        x2={RULE_X2}
-        y2={GOLD_RULE_Y}
-        stroke={colors.accent}
-        strokeWidth={GOLD_RULE_STROKE}
-      />
+      <g data-decor-role="structure">
+        <line
+          x1={RULE_X1}
+          y1={RED_RULE_Y}
+          x2={RULE_X2}
+          y2={RED_RULE_Y}
+          stroke={colors.primary}
+          strokeWidth={RED_RULE_STROKE}
+        />
+        <line
+          x1={RULE_X1}
+          y1={GOLD_RULE_Y}
+          x2={RULE_X2}
+          y2={GOLD_RULE_Y}
+          stroke={colors.accent}
+          strokeWidth={GOLD_RULE_STROKE}
+        />
+      </g>
 
       {showTitle &&
         titleLines.map((line, i) => (

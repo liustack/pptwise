@@ -80,14 +80,24 @@ the codebase owns fidelity.
    cover used to paint a node chain with branch tracks, orbit arcs, and a
    row of sparse stars. The stars and the branches were the lesser
    families and were cut.
-8. **Decoration is always background.** On a content page the motif must
-   recede so the copy wins at a glance. Composited motif ink (fill or
-   stroke, after opacity) against the page ground stays below 3:1, the
+8. **Decoration is always background, with two named exceptions.** Ordinary
+   motif ink on a content page recedes so the copy wins at a glance.
+   Composited fill or stroke against the page ground stays below 3:1, the
    large-text and meta floor. Body copy at 4.5:1 then sits clearly in
-   front. Cover, chapter, and ending may keep the designed strength.
-   They are the theme's face. Tune the fade per motif from tokens, never
-   a baked hex (`leafRecessOpacity` in `src/svg/motifs/decor-budget.ts`).
-   Hairlines already under the ceiling stay as they are.
+   front. Two marks opt out by an explicit `DecorPiece` role, never by
+   guessing at a hex:
+   - **Structure** (`role: "structure"`): the page's own chrome. A Swiss
+     top bar, a memo double rule, a vermilion head rule, a luxe invitation
+     frame. It is not decoration. It paints in the foreground at the theme
+     color.
+   - **Identity** (`role: "identity"`): a midground mark whose color is
+     the theme. An ink vermilion seal. It stays under type so it cannot
+     cover copy, but the intensity ceiling does not touch it.
+   Cover, chapter, and ending may keep the designed strength for ordinary
+   decor. They are the theme's face. Tune the fade per motif from tokens,
+   never a baked hex (`leafRecessOpacity` in `src/svg/motifs/decor-budget.ts`).
+   Hairlines already under the ceiling stay as they are. Do not mark a
+   whole motif to dodge the ceiling.
 9. **At most one slanted tile per page.** A slanted tile is a chip-sized
    filled rect or four-point polygon whose tilt from the axis is between
    1° and 20° (a playbill date chip, a unit chip). 45° diamonds are not

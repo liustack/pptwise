@@ -443,6 +443,19 @@ export function FullSlideSvg({
   } else if (pageLayout) {
     pageBody = pageLayout.Component({ ir, slide, index, ctx })
   }
+  const motif =
+    Decor && !imageCoverTakeover && !skipMotif ? (
+      <g data-decor>
+        <Decor ir={ir} slide={slide} ctx={ctx} />
+      </g>
+    ) : null
+  const motifDepth: SvgDepthLayers = motif
+    ? partitionSvgDepth(motif, { slideType: slide.type })
+    : { bg: [], mid: [], fg: [] }
+  const keyedMotif = (depth: keyof SvgDepthLayers) =>
+    motifDepth[depth].map((node, nodeIndex) => (
+      <Fragment key={`motif-${depth}-${nodeIndex}`}>{node}</Fragment>
+    ))
   const bodyDepth: SvgDepthLayers = partitionSvgDepth(pageBody, { slideType: slide.type })
   const keyedBody = (depth: keyof SvgDepthLayers) =>
     bodyDepth[depth].map((node, nodeIndex) => (
@@ -456,17 +469,14 @@ export function FullSlideSvg({
   const branding = skipBranding ? null : <Branding ir={ir} slide={slide} ctx={ctx} />
   const foreground = (
     <>
+      {keyedMotif("fg")}
       {foregroundBody}
       {branding}
     </>
   )
   const midground = (
     <>
-      {Decor && !imageCoverTakeover && !skipMotif && (
-        <g data-decor>
-          <Decor ir={ir} slide={slide} ctx={ctx} />
-        </g>
-      )}
+      {keyedMotif("mid")}
       <SlideDecor ir={ir} slide={slide} index={index} ctx={ctx} />
       {keyedBody("mid")}
     </>
@@ -490,6 +500,7 @@ export function FullSlideSvg({
         {!layoutPaintsBackground && (
           <Background spec={bgSpec} images={ir.assets.images} autoScrimColor={autoScrimColor} />
         )}
+        {keyedMotif("bg")}
         {keyedBody("bg")}
       </g>
       <g data-depth="mid">

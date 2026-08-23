@@ -13,6 +13,7 @@ import {
   CONTENT_DECOR_CONTRAST_CEILING,
   effectivePaintOpacity,
   hexSaturation,
+  skipsMidgroundCeiling,
   leafPaint,
   midgroundSaturationCeiling,
   paintedLeaves,
@@ -120,6 +121,7 @@ describe("FullSlideSvg", () => {
 
     expect(leaves.length).toBeGreaterThan(0)
     for (const leaf of leaves) {
+      if (skipsMidgroundCeiling(leaf)) continue
       const paint = leafPaint(leaf)!
       const opacity = effectivePaintOpacity(leaf, paint.kind)
       expect(hexSaturation(paint.color), leaf.outerHTML).toBeLessThanOrEqual(
@@ -129,6 +131,79 @@ describe("FullSlideSvg", () => {
         CONTENT_DECOR_CONTRAST_CEILING,
       )
     }
+  })
+
+  it("paints the swiss red bar in the foreground at the theme accent", () => {
+    const slide: Slide = { type: "cover", heading: "年度战略回顾", components: [] }
+    const doc: PptxIR = { ...ir([slide]), theme: { id: "swiss" } }
+    const { container } = render(<FullSlideSvg ir={doc} slide={slide} index={0} />)
+    const accent = resolveStyle("swiss").colors.accent
+    const bar = container.querySelector('[data-decor-piece="red-bar"] rect')!
+    expect(bar.closest("[data-depth]")?.getAttribute("data-depth")).toBe("fg")
+    expect(bar.getAttribute("fill")).toBe(accent)
+    expect(bar.getAttribute("opacity")).toBeNull()
+    expect(bar.closest("[data-decor-piece]")?.getAttribute("data-decor-role")).toBe("structure")
+  })
+
+  it("keeps the ink vermilion seal at the theme accent, unfaded", () => {
+    const slide: Slide = {
+      type: "content",
+      heading: "一句留白",
+      components: [{ type: "paragraph", text: "正文" }],
+    }
+    const doc: PptxIR = {
+      ...ir([slide]),
+      theme: { id: "ink" },
+      meta: { organization: "云觅", date: "2026-08-15" },
+    }
+    const { container } = render(<FullSlideSvg ir={doc} slide={slide} index={0} />)
+    const accent = resolveStyle("ink").colors.accent
+    const seals = Array.from(container.querySelectorAll('[data-depth="mid"] [data-identity] rect'))
+    expect(seals.length).toBeGreaterThan(0)
+    for (const seal of seals) {
+      expect(seal.getAttribute("fill")).toBe(accent)
+      expect(seal.getAttribute("opacity")).toBeNull()
+      expect(seal.getAttribute("fill-opacity")).toBeNull()
+    }
+  })
+
+  it("paints the memo masthead in the foreground at the theme accent", () => {
+    const slide: Slide = { type: "content", heading: "决定", components: [{ type: "paragraph", text: "正文" }] }
+    const doc: PptxIR = { ...ir([slide]), theme: { id: "memo" } }
+    const { container } = render(<FullSlideSvg ir={doc} slide={slide} index={0} />)
+    const piece = container.querySelector('[data-decor-piece="masthead"]')!
+    expect(piece.getAttribute("data-decor-role")).toBe("structure")
+    expect(piece.closest("[data-depth]")?.getAttribute("data-depth")).toBe("fg")
+    const accent = resolveStyle("memo").colors.accent
+    for (const line of Array.from(piece.querySelectorAll("line"))) {
+      expect(line.getAttribute("stroke")).toBe(accent)
+      expect(line.getAttribute("opacity")).toBeNull()
+    }
+  })
+
+  it("paints the luxe invitation frame in the foreground at the theme accent", () => {
+    const slide: Slide = { type: "cover", heading: "封面", components: [] }
+    const doc: PptxIR = { ...ir([slide]), theme: { id: "luxe" } }
+    const { container } = render(<FullSlideSvg ir={doc} slide={slide} index={0} />)
+    const piece = container.querySelector('[data-decor-piece="invitation"]')!
+    expect(piece.getAttribute("data-decor-role")).toBe("structure")
+    expect(piece.closest("[data-depth]")?.getAttribute("data-depth")).toBe("fg")
+    const accent = resolveStyle("luxe").colors.accent
+    for (const line of Array.from(piece.querySelectorAll("line"))) {
+      expect(line.getAttribute("stroke")).toBe(accent)
+    }
+  })
+
+  it("keeps the pulse heartbeat in midground at the theme accent", () => {
+    const slide: Slide = { type: "cover", heading: "封面", components: [] }
+    const doc: PptxIR = { ...ir([slide]), theme: { id: "pulse" } }
+    const { container } = render(<FullSlideSvg ir={doc} slide={slide} index={0} />)
+    const piece = container.querySelector('[data-decor-piece="heartbeat"]')!
+    expect(piece.getAttribute("data-decor-role")).toBe("identity")
+    expect(piece.closest("[data-depth]")?.getAttribute("data-depth")).toBe("mid")
+    const line = piece.querySelector("polyline")!
+    expect(line.getAttribute("stroke")).toBe(resolveStyle("pulse").colors.accent)
+    expect(line.getAttribute("opacity")).toBeNull()
   })
 
   it("brings a consulting ghost index fully inside the canvas and removes its bleed exemption", () => {

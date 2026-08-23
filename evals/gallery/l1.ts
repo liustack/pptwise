@@ -27,6 +27,7 @@ import { blendOver, contrastRatio } from "@/svg/ink"
 import {
   CONTENT_DECOR_CONTRAST_CEILING,
   effectivePaintOpacity,
+  skipsMidgroundCeiling,
 } from "@/svg/motifs/decor-budget"
 import { bleedExemption } from "./bbox-exemptions"
 import { layoutOf } from "./bbox"
@@ -295,6 +296,7 @@ function findDepthContract(root: Element, findings: L1Finding[]): void {
   if (!mid || !bg) return
   const backgrounds = collectDepthLeaves(bg)
   for (const leaf of collectDepthLeaves(mid)) {
+    if (skipsMidgroundCeiling(leaf.el)) continue
     const x = leaf.box.x + leaf.box.w / 2
     const y = leaf.box.y + leaf.box.h / 2
     const ground = backgroundAt(backgrounds, x, y)

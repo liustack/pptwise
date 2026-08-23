@@ -17,7 +17,8 @@ import { asciiDigitsToHan, CJK_DIGITS } from "../heading-treatments/labels"
  *
  * 竖排仍然是逐字 `<text>`（不用 `writing-mode`）。列容量由 `orgCapacity()`
  * 按几何倒推。零 theme id、零 hex，颜色全部来自 ctx。叶子走
- * `leafRecessOpacity`。输出包进 `DecorPiece`。
+ * 落款列与半山走 `leafRecessOpacity`。朱砂印是身份件，原色满画，不减淡。
+ * 输出包进 `DecorPiece`。
  */
 
 const RAIL_X = 1220
@@ -92,6 +93,31 @@ function Remnant({ d, ctx, slideType }: { d: string; ctx: DecorProps["ctx"]; sli
   )
 }
 
+function Seal({ ctx }: { ctx: DecorProps["ctx"] }) {
+  const { colors } = ctx
+  return (
+    <DecorPiece id="seal" role="identity">
+      <rect
+        x={SEAL_X}
+        y={SEAL_Y}
+        width={SEAL_SIZE}
+        height={SEAL_SIZE}
+        rx={SEAL_RADIUS}
+        fill={colors.accent}
+      />
+      <rect
+        x={SEAL_X + SEAL_INNER_INSET}
+        y={SEAL_Y + SEAL_INNER_INSET}
+        width={SEAL_INNER_SIZE}
+        height={SEAL_INNER_SIZE}
+        fill={colors.accent}
+        stroke={colors.surface}
+        strokeWidth={SEAL_INNER_STROKE}
+      />
+    </DecorPiece>
+  )
+}
+
 export function InkMotif({ slide, ir, ctx }: DecorProps) {
   if (slide.type === "chapter") return null
 
@@ -103,6 +129,10 @@ export function InkMotif({ slide, ir, ctx }: DecorProps) {
     return <Remnant d={REMNANT_RIGHT} ctx={ctx} slideType={slide.type} />
   }
 
+  if (slide.layout === "pull-quote") {
+    return <Remnant d={REMNANT_LEFT} ctx={ctx} slideType={slide.type} />
+  }
+
   const { colors } = ctx
   const dateGlyphs = colophonDateGlyphs(ir.meta.date)
   const org = fitOrgGlyphs(ir.meta.organization ?? "", orgCapacity(dateGlyphs.length))
@@ -112,69 +142,52 @@ export function InkMotif({ slide, ir, ctx }: DecorProps) {
   const border = colors.border ?? colors.muted
 
   return (
-    <DecorPiece id="colophon">
-      <line
-        x1={RAIL_X}
-        y1={RAIL_Y1}
-        x2={RAIL_X}
-        y2={RAIL_Y2}
-        stroke={border}
-        strokeWidth={RAIL_STROKE}
-        opacity={leafRecessOpacity(slide.type, border, bg)}
-      />
+    <>
+      <DecorPiece id="colophon">
+        <line
+          x1={RAIL_X}
+          y1={RAIL_Y1}
+          x2={RAIL_X}
+          y2={RAIL_Y2}
+          stroke={border}
+          strokeWidth={RAIL_STROKE}
+          opacity={leafRecessOpacity(slide.type, border, bg)}
+        />
 
-      {org.glyphs.map((ch, i) => (
-        <text
-          key={`org-${i}`}
-          data-contrast-tier="meta"
-          data-truncated={org.truncated && i === org.glyphs.length - 1 ? "1" : undefined}
-          x={COLUMN_X}
-          y={ORG_FIRST_Y + i * ORG_STEP}
-          fontFamily={ctx.fonts.heading}
-          fontSize={ORG_SIZE}
-          fill={colors.muted}
-          textAnchor="middle"
-          dominantBaseline="alphabetic"
-        >
-          {ch}
-        </text>
-      ))}
+        {org.glyphs.map((ch, i) => (
+          <text
+            key={`org-${i}`}
+            data-contrast-tier="meta"
+            data-truncated={org.truncated && i === org.glyphs.length - 1 ? "1" : undefined}
+            x={COLUMN_X}
+            y={ORG_FIRST_Y + i * ORG_STEP}
+            fontFamily={ctx.fonts.heading}
+            fontSize={ORG_SIZE}
+            fill={colors.muted}
+            textAnchor="middle"
+            dominantBaseline="alphabetic"
+          >
+            {ch}
+          </text>
+        ))}
 
-      {dateGlyphs.map((ch, i) => (
-        <text
-          key={`date-${i}`}
-          data-contrast-tier="meta"
-          x={COLUMN_X}
-          y={dateFirstY + i * DATE_STEP}
-          fontFamily={ctx.fonts.heading}
-          fontSize={DATE_SIZE}
-          fill={colors.muted}
-          textAnchor="middle"
-          dominantBaseline="alphabetic"
-        >
-          {ch}
-        </text>
-      ))}
-
-      <rect
-        x={SEAL_X}
-        y={SEAL_Y}
-        width={SEAL_SIZE}
-        height={SEAL_SIZE}
-        rx={SEAL_RADIUS}
-        fill={colors.accent}
-        opacity={leafRecessOpacity(slide.type, colors.accent, bg)}
-      />
-      <rect
-        x={SEAL_X + SEAL_INNER_INSET}
-        y={SEAL_Y + SEAL_INNER_INSET}
-        width={SEAL_INNER_SIZE}
-        height={SEAL_INNER_SIZE}
-        fill={colors.accent}
-        stroke={colors.surface}
-        strokeWidth={SEAL_INNER_STROKE}
-        opacity={leafRecessOpacity(slide.type, colors.accent, bg)}
-      />
-    </DecorPiece>
+        {dateGlyphs.map((ch, i) => (
+          <text
+            key={`date-${i}`}
+            data-contrast-tier="meta"
+            x={COLUMN_X}
+            y={dateFirstY + i * DATE_STEP}
+            fontFamily={ctx.fonts.heading}
+            fontSize={DATE_SIZE}
+            fill={colors.muted}
+            textAnchor="middle"
+            dominantBaseline="alphabetic"
+          >
+            {ch}
+          </text>
+        ))}
+      </DecorPiece>
+      <Seal ctx={ctx} />
+    </>
   )
 }
