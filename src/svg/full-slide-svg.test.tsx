@@ -816,11 +816,12 @@ describe("motif candidate rotation (P1 variety wave, task 2)", () => {
     return container.querySelector("[data-decor]")?.innerHTML ?? null
   }
 
-  it("consulting (3-candidate set): different decor pages in the same deck commonly render different motif markup", () => {
+  it("consulting (1-member candidate set): decor markup is identical across page keys at a fixed seed", () => {
     const markups = new Set(
       Array.from({ length: 8 }, (_, i) => decorMarkup("consulting", `page-${i}`, 7)),
     )
-    expect(markups.size, "all 8 pages rendered identical decor markup").toBeGreaterThan(1)
+    expect(markups.size).toBe(1)
+    expect([...markups][0]).not.toBeNull()
   })
 
   it("runway (no motif, settled decision): the decor slot never renders anything, for any pageKey or seed", () => {
