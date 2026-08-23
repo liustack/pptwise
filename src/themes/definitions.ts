@@ -295,30 +295,21 @@ const BRANDS: Partial<Record<CanonicalThemeId, BrandConfig>> = {
  * 产品口径 24 套主题、24 个 id，classroom 独占这一行。
  */
 const CLASSROOM_STRUCTURE: NonNullable<ThemeDefinition["layoutTendencies"]> = {
-  // cover `band-title`：通栏雾蓝板书带承反白标题，陶土波浪在带下。板上那张
-  // 脸，硬锁。banner-title / tone-adaptive-header 那对注释是错的——池里的
-  // banner-title 不画通栏带。
-  cover: ["band-title"],
-  // Second-front wave (2026-08-22)，四轴 L / top-band / medium / medium：
-  // - chapter `masthead-chapter` + `tone-adaptive-chapter`：一条横线加一个
-  //   标题就是板书的断章，角落水印是讲义的第二档。后者不在 briefing 的
-  //   chapter 偏好里，真实边际权重。
-  // - content `rail-numbered` + `tone-adaptive-content`：编号步骤加最朴素的
-  //   讲义页。前者已在 briefing 的 content 偏好里（单独声明空转），后者不在，
-  //   这一格的真实拉力来自最素的那一页。
-  // - ending `tone-adaptive-ending` + `masthead-ending`：最素的两个。前者是
-  //   万金油 id，任何叙事下都拿满额边际权重。
-  chapter: ["masthead-chapter", "tone-adaptive-chapter"],
-  content: ["rail-numbered", "tone-adaptive-content"],
-  ending: ["tone-adaptive-ending", "masthead-ending"],
+  // Wave 8 batch 2: lock the chalkboard-band cover, lesson-box chapter, and
+  // homework ending. Content leans two-column (lecture + figure), bento-panel
+  // (four-cell drill), and tone-adaptive-content (plain adult handout).
+  cover: ["chalk-band-cover"],
+  chapter: ["lesson-box-chapter"],
+  content: ["two-column", "bento-panel", "tone-adaptive-content"],
+  ending: ["homework-close-ending"],
 }
 
 /** classroom 自己的 layouts 对象，与 {@link CLASSROOM_STRUCTURE} 成对。 */
 const CLASSROOM_LAYOUTS: ThemeDefinition["layouts"] = {
-  cover: ["band-title"],
-  chapter: FULL_LAYOUTS.chapter,
+  cover: ["chalk-band-cover"],
+  chapter: ["lesson-box-chapter"],
   content: FULL_LAYOUTS.content,
-  ending: FULL_LAYOUTS.ending,
+  ending: ["homework-close-ending"],
 }
 
 /**
@@ -479,31 +470,15 @@ const LAYOUTS: Record<CanonicalThemeId, Pick<ThemeDefinition, "layouts" | "motif
     },
   },
   academic: {
-    // board-cover-restore wave 2 (parameter gap, no new ids): lock left-anchor.
-    layouts: { cover: ["left-anchor"], chapter: FULL_LAYOUTS.chapter, content: FULL_LAYOUTS.content, ending: FULL_LAYOUTS.ending },
+    // Wave 8 batch 2: lock the thesis-plate cover, folio ghost chapter, and
+    // defense-close ending. Motif id stays rail-motif (gold opening rule).
+    layouts: { cover: ["thesis-plate-cover"], chapter: ["folio-ghost-chapter"], content: FULL_LAYOUTS.content, ending: ["defense-close-ending"] },
     motif: "rail-motif",
-    // Theme-structure wave, task T2: academic's own motif is `rail-motif`,
-    // and `left-anchor`/`rail-chapter`/`rail-ending` are verbatim
-    // extractions of academic's own predecessor render code
-    // (`BCGEmeraldCover`/`Chapter`/`Ending`) — this theme's native
-    // color-block-plus-progress-rail register.
     layoutTendencies: {
-      cover: ["left-anchor"],
-      // Second-front wave (2026-08-22)。四轴按提案 1.3 重建，不当仓内事实：
-      // L / top-band / light / medium（封面 `left-anchor` 定左轴，rail-motif
-      // v2 两件收在顶带 y30 与右上角且板上自称 light 档，`gapScale` 1.05）。
-      // 与 pulse 的反推值全同，正式取值以仓外定稿表为准，本波分配不依赖
-      // 这四格的精确数字，靠既有 rail 家族声明与气质填表。
-      // - chapter `masthead-chapter` 追加：双细线夹左对齐大标题是论文分节，
-      //   进度点轨是 motif 自己在说的话。`masthead-chapter` 已在 briefing
-      //   的 chapter 偏好里，真实边际仍来自既有的 `rail-chapter`。
-      // - content `rail-numbered` + `narrow-column`：编号导轨加稿纸窄栏，
-      //   medium 留白。前者与 briefing 重合，后者不在，真实拉力来自窄栏。
-      // - ending `masthead-ending` 追加：既有 `rail-ending` 的延长线，两个
-      //   id 都是学术落款的读法。前者与 briefing 重合，真实边际仍在 rail。
-      chapter: ["rail-chapter", "masthead-chapter"],
-      content: ["rail-numbered", "narrow-column"],
-      ending: ["rail-ending", "masthead-ending"],
+      cover: ["thesis-plate-cover"],
+      chapter: ["folio-ghost-chapter"],
+      content: ["two-column", "banner-heading", "narrow-column"],
+      ending: ["defense-close-ending"],
     },
   },
   tech: {
@@ -552,8 +527,9 @@ const LAYOUTS: Record<CanonicalThemeId, Pick<ThemeDefinition, "layouts" | "motif
   },
   // journal（人文期刊，原 magazine 改名）：masthead 报头家族，角饰是人文感。
   journal: {
-    // board-cover-restore wave 2 (parameter gap, no new ids): lock editorial-masthead.
-    layouts: { cover: ["editorial-masthead"], chapter: FULL_LAYOUTS.chapter, content: FULL_LAYOUTS.content, ending: FULL_LAYOUTS.ending },
+    // Wave 8 batch 2: lock the issue-head cover, fascicle ghost chapter, and
+    // afterword ending. Motif stays the masthead double rule.
+    layouts: { cover: ["issue-head-cover"], chapter: ["fascicle-ghost-chapter"], content: FULL_LAYOUTS.content, ending: ["afterword-ending"] },
     motif: "corner-ornament-motif",
     // Theme-structure wave, task T2: journal's own motif is
     // `corner-ornament-motif` (editorial ornamentation), and
@@ -627,17 +603,10 @@ const LAYOUTS: Record<CanonicalThemeId, Pick<ThemeDefinition, "layouts" | "motif
     // this chapter fix already moved journal off the crowded
     // `poster-center` + `fashion-chapter` bucket group other themes share.
     layoutTendencies: {
-      cover: ["editorial-masthead"],
-      // Second-front wave (2026-08-22)。chapter 与 ending 保持已声明不动
-      // （declaration-rebalance wave 实测挑出来的那两格）。四轴按提案 1.3
-      // 重建，不当仓内事实：C / top-band / light / medium（封面
-      // `editorial-masthead` 居中，corner-ornament-motif v2 是顶缘文武双线，
-      // `gapScale` 1.1）。无冲突行。
-      // - content `narrow-column` + `two-column`：期刊本来的窄栏与双栏。
-      //   后者与 briefing 重合，真实拉力来自窄栏。
-      chapter: ["masthead-chapter", "roman-chapter", "tone-adaptive-chapter"],
-      content: ["narrow-column", "two-column"],
-      ending: ["masthead-ending", "poster-ending"],
+      cover: ["issue-head-cover"],
+      chapter: ["fascicle-ghost-chapter"],
+      content: ["two-column", "narrow-column", "bento-panel"],
+      ending: ["afterword-ending"],
     },
   },
   // enterprise（原 custom→gallery 二次返工，2026-07-10）：白墙+正 IKB+accent
@@ -757,24 +726,16 @@ const LAYOUTS: Record<CanonicalThemeId, Pick<ThemeDefinition, "layouts" | "motif
   //     推到二期（decisions.md），在它们落地之前，从通用池里硬挑一个 id 只是
   //     为了填表，不是结构判断。
   ink: {
-    // board-cover-restore wave 2 (parameter gap, no new ids): lock colophon
-    // (ink 1a geometry already frozen). Drop fashion-masthead from cover
-    // tendencies. Second face is full-bleed ink and fights the colophon rail.
-    layouts: { cover: ["colophon"], chapter: FULL_LAYOUTS.chapter, content: FULL_LAYOUTS.content, ending: FULL_LAYOUTS.ending },
+    // Wave 8 batch 2: lock the vertical-title cover, volume-slip chapter, and
+    // seal-close ending. Motif stays the residual mountain plus colophon rail
+    // (cover draws mountain only).
+    layouts: { cover: ["vertical-title-cover"], chapter: ["volume-slip-chapter"], content: FULL_LAYOUTS.content, ending: ["seal-close-ending"] },
     motif: "ink-motif",
     layoutTendencies: {
-      cover: ["colophon"],
-      // Second-front wave (2026-08-22)，四轴 L / side-rail / light / airy：
-      // 覆盖本条目上方「chapter / ending 本期不声明」的旧裁剪。content 保持
-      // 已声明的 quiet-frame 加窄栏。
-      // - chapter `roman-chapter` + `tone-adaptive-chapter`：罗马数字旁的圆弧
-      //   意象与一角残山同一路，tone-adaptive 只留一枚角落水印，都是
-      //   「疏可走马」。两个 id 里后者是万金油，任何叙事下都拿满额边际。
-      // - ending `tone-adaptive-ending` + `poster-ending`：素落款加居中海报
-      //   式收尾。前者是万金油 id。
-      chapter: ["roman-chapter", "tone-adaptive-chapter"],
-      content: ["quiet-frame", "narrow-column"],
-      ending: ["tone-adaptive-ending", "poster-ending"],
+      cover: ["vertical-title-cover"],
+      chapter: ["volume-slip-chapter"],
+      content: ["quiet-frame", "split-band"],
+      ending: ["seal-close-ending"],
     },
   },
   // heritage（第 8 主题，2026-07-10）：勃艮第×焦糖 putty 浅底混搭，酒红横幅
@@ -791,23 +752,16 @@ const LAYOUTS: Record<CanonicalThemeId, Pick<ThemeDefinition, "layouts" | "motif
   //   - `left-anchor`：左侧竖向色条 + 左上标题，密排那一路的起手式，bottom-left
   //     的 meta 轴在这个构图里落得最自然。同样不在 briefing 里，真实边际权重。
   heritage: {
-    // board-cover-restore wave 2 (parameter gap, no new ids): lock
-    // editorial-masthead. Drop left-anchor from cover tendencies.
-    layouts: { cover: ["editorial-masthead"], chapter: FULL_LAYOUTS.chapter, content: FULL_LAYOUTS.content, ending: FULL_LAYOUTS.ending },
-    // 2026-07-10 motif 全覆盖：典藏纹饰（徽记/角花/页缘线）
+    // Wave 8 batch 2: lock the double-frame cover, mirror-volume chapter, and
+    // invite-field ending. Motif id stays heritage-motif (now empty: frames
+    // live on the cover layout).
+    layouts: { cover: ["double-frame-cover"], chapter: ["mirror-volume-chapter"], content: FULL_LAYOUTS.content, ending: ["invite-field-ending"] },
     motif: "heritage-motif",
     layoutTendencies: {
-      cover: ["editorial-masthead"],
-      // Second-front wave (2026-08-22)，四轴 L / bottom-left / medium / medium：
-      // - chapter `masthead-chapter` + `roman-chapter`：藏书票的分节是罗马数字
-      //   与文武线。前者与 briefing 重合，真实边际来自罗马数字。
-      // - content `two-column` + `asymmetric-triptych`：密排（双栏与三区）。
-      //   前者与 briefing 重合，真实拉力来自三区。
-      // - ending `rail-ending` + `poster-ending`：左下角色块正落在它的
-      //   bottom-left meta 轴上。两个 id 都不在 briefing 的 ending 偏好里。
-      chapter: ["masthead-chapter", "roman-chapter"],
-      content: ["two-column", "asymmetric-triptych"],
-      ending: ["rail-ending", "poster-ending"],
+      cover: ["double-frame-cover"],
+      chapter: ["mirror-volume-chapter"],
+      content: ["banner-heading", "rail-numbered", "asymmetric-triptych"],
+      ending: ["invite-field-ending"],
     },
   },
   // pulse（医疗健康/生命科学，2026-07-28 themes-16 wave task T1，第 14 主题）：
@@ -1091,20 +1045,15 @@ const LAYOUTS: Record<CanonicalThemeId, Pick<ThemeDefinition, "layouts" | "motif
   // layouts 仍是四页型全集（各家无一收窄，heavy 身份用 motif 降档表达，
   // 不靠策展砍 layout）。
   crayon: {
-    layouts: { cover: ["header-band"], chapter: FULL_LAYOUTS.chapter, content: FULL_LAYOUTS.content, ending: FULL_LAYOUTS.ending },
+    // Wave 8 batch 2: lock the capsule-open cover, sticker-numeral chapter,
+    // and reminder-list ending. Motif stays the sun doodle (cover only).
+    layouts: { cover: ["capsule-open-cover"], chapter: ["sticker-numeral-chapter"], content: FULL_LAYOUTS.content, ending: ["reminder-list-ending"] },
     motif: "crayon-motif",
     layoutTendencies: {
-      cover: ["header-band"],
-      // Second-front wave (2026-08-22)，四轴 L / top-band / heavy / medium：
-      // - chapter `fashion-chapter` + `tone-adaptive-chapter`：满版原色断章加
-      //   角落水印，heavy 的量在色不在件。后者是万金油 id。
-      // - content `tone-adaptive-content` + `stacked-poster`：最朴素的讲义页
-      //   加主视觉堆叠。两个 id 都不在 briefing 的 content 偏好里。
-      // - ending `banner-ending` + `poster-ending`：联系方式加居中海报式收尾。
-      //   前者与 briefing 重合，真实边际来自海报收尾。
-      chapter: ["fashion-chapter", "tone-adaptive-chapter"],
-      content: ["tone-adaptive-content", "stacked-poster"],
-      ending: ["banner-ending", "poster-ending"],
+      cover: ["capsule-open-cover"],
+      chapter: ["sticker-numeral-chapter"],
+      content: ["asymmetric-triptych", "tone-adaptive-content"],
+      ending: ["reminder-list-ending"],
     },
   },
   // arena（竞技场紫黑，2026-08-21 场景审计 #27 第六组新主题·娱乐电竞）：紫黑灯灭 + 电光绿 HUD，由专属

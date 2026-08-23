@@ -9,7 +9,7 @@ import type { StyleTokens } from "./tokens";
  *
  * 与 classroom（讲义雾蓝、拍纸簿）场景切分：classroom 是「亲和的教与学」，
  * crayon 是更低龄的「蜡笔卡纸」。两家四轴最近邻（L / top-band / · / medium），
- * 装饰浓度岔开——classroom 是 medium 的打孔排，crayon 是 heavy 的页缘蜡笔描边。
+ * 装饰浓度岔开——classroom 是横线簿格，crayon 是太阳涂鸦与星贴纸。
  * 底色隔开一个色温段：classroom 雾蓝 `#ECF0F2`、crayon 卡纸奶油
  * `#FFF6E9`。
  *
@@ -37,18 +37,19 @@ import type { StyleTokens } from "./tokens";
  *   - `warning` `#A67C00`：向日黄压深（3.75:1），只作线与图标——原黄永不承字。
  *   - `success` `#278035`：草绿压深（4.88:1），过 4.5:1 正文线。
  *
- * chapter 底色取 primary 蜡笔蓝（classroom/academic/consulting 同款
- * per-type 深底约定）：白字压 primary 6.33:1，`readableOn` 取优后稳态可读。
+ * chapter 底色改卡纸奶油 `#FFF6E9`（第八波批 2：斜贴纸号块是前景，不再铺
+ * 满版 primary）。标题走蜡笔黑压奶油纸，号块走 accent 承 `readableOn`。
  *
  * 字体跟 classroom 同一套 CJK 安全字面（heading 经 resolveFontFace 落到
  * Microsoft YaHei）。圆角 12 + gapScale 1.1，全主题最圆润档（课堂亲和那一档），
  * 蜡笔卡纸要的就是这个圆。
  *
- * 装饰见 `../svg/motifs/motif-crayon-motif.tsx`（蜡笔描边：顶缘蜡笔涂边 +
- * 右上太阳涂鸦 + 底带彩虹短划 + 左下角星贴纸。密页降为顶涂边＋底彩虹划）。
+ * 装饰见 `../svg/motifs/motif-crayon-motif.tsx`（太阳涂鸦留下：封面右上
+ * 一枚大太阳，内容页太阳或星贴纸 ≤3 成组缩角落，chapter / ending 退让。
+ * 顶缘蜡笔涂边与底彩虹划从封面撤掉）。
  *
  * 可拉伸性：四色蜡笔即参数（K12 学科课换学科色组、亲子活动 bg 可提饱和至
- * `#FFF1D6`）。heavy→medium 只撤太阳与星，涂边与彩虹划几何不动。向日黄永不承字。
+ * `#FFF1D6`）。向日黄永不承字。
  */
 export const CRAYON_TOKENS: StyleTokens = {
   id: "crayon",
@@ -73,9 +74,8 @@ export const CRAYON_TOKENS: StyleTokens = {
   shape: { radius: 12, gapScale: 1.1 }, // 与 classroom 同档：最圆润 + 呼吸感
   defaultBackgrounds: {
     cover: { kind: "color", value: "#FFF6E9" },
-    // chapter 走 primary 蜡笔蓝底（rail-chapter 标题是白字，classroom 同款
-    // per-type 深底约定——浅底会白字不可见）
-    chapter: { kind: "color", value: "#2B59C3" },
+    // 第八波批 2：章节改卡纸奶油，斜贴纸号块自己承 accent，不再满版 primary
+    chapter: { kind: "color", value: "#FFF6E9" },
     content: { kind: "color", value: "#FFF6E9" },
     ending: { kind: "color", value: "#FFF6E9" },
   },

@@ -35,17 +35,18 @@ import type { StyleTokens } from "./tokens";
  * 卵石灰 3.37。设计板自查写的 6.5 / 3.1 / 14 / 5 / 6.5·3.1·5·3.5 与实测
  * 同向（靛青一格实测比板上高 1.1，卵石灰低 0.13 仍过 3.0 装饰线），以实测
  * 为准。
- *   - chapter 底色取 primary（同 pulse/consulting/terra 先例），白字对
- *     primary 7.36:1，`readableOn` 自适应两墨取优后稳态可读。
+ *   - chapter 底色（第八波批 2）：从 primary 改为象牙纸 `#F5F3EC`，与封面 /
+ *     内容 / ending 同纸。浅底章首，不再铺满版祖母绿。白字对 primary 的
+ *     7.36:1 仍给封面绿块用（`readableOn(primary)`）。
  *   - 板上「块上金一律用浅金 `#E5D9A8` 承小字」是封面样例里绿块内的取色
  *     主张。token 表没有第二枚 accent 的格位，而 `left-anchor` 今天在绿块
  *     里只画反白标题、不画金色小字，所以本轮无处安放这一档——记在冷调组
  *     报告的「板与版式差距清单」里，等版式级裁定（同暖纸组把 heritage
  *     报头对齐、vermilion 通栏红条留给版式级的处理）。
  *
- * 装饰见 `src/svg/motifs/motif-rail-motif.tsx`（进度轨 v2：底带进度点轨 +
- * 右上双线角标）——academic 的锚点 motif 是 `rail-motif`，consulting /
- * journal / enterprise 三家在各自的候选集里也借它。
+ * 装饰见 `src/svg/motifs/motif-rail-motif.tsx`（第八波批 2 演化：封面开卷
+ * 金线，退役五枚空心点与右上双线角标）。academic 的锚点 motif 仍是
+ * `rail-motif`，id 不改。章节金短线与幽灵章号归章节版式，不进 motif。
  */
 export const ACADEMIC_TOKENS: StyleTokens = {
   id: "academic",
@@ -73,7 +74,7 @@ export const ACADEMIC_TOKENS: StyleTokens = {
   },
   defaultBackgrounds: {
     cover: { kind: "color", value: "#F5F3EC" },
-    chapter: { kind: "color", value: "#0E6245" },
+    chapter: { kind: "color", value: "#F5F3EC" },
     content: { kind: "color", value: "#F5F3EC" },
     ending: { kind: "color", value: "#F5F3EC" },
   },

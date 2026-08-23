@@ -643,7 +643,9 @@ describe("boundary-page render-surface gate (bench-driven fixes wave, defect D)"
     (type) => {
       const v = validateIr({
         ...raw,
-        theme: { id: "academic" },
+        // academic ending now accepts bullets (defense-close). tech's locked
+        // ending still has no body slot.
+        theme: { id: type === "ending" ? "tech" : "academic" },
         slides: [{ type, heading: "H", components: [bullets] }],
       })
       expect(v.ok).toBe(false)
@@ -752,7 +754,7 @@ describe("boundary-page render-surface gate (bench-driven fixes wave, defect D)"
   it("sets slideId when the offending slide has one (same shape as checkLayoutApplicability/checkFullBodyExclusivity)", () => {
     const v = validateIr({
       ...raw,
-      theme: { id: "academic" },
+      theme: { id: "tech" },
       slides: [{ type: "ending", id: "p-end", heading: "Thanks", components: [bullets] }],
     })
     expect(v.ok).toBe(false)

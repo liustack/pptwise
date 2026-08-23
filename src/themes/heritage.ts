@@ -40,8 +40,11 @@ import type { StyleTokens } from "./tokens";
  * 橄榄褐 4.49:1。设计板自查写的 primary 9.7 / accent 3.3 / text 13 /
  * muted 5.5 / chart 8·3.3·7·4 与实测各差 0.1-0.7，以实测为准。
  *
- * 装饰见 `src/svg/motifs/motif-heritage-motif.tsx`（藏书票纹饰：顶缘双线 +
- * 两角小角花 + 底缘细线带中点金菱）。
+ * 第八波批 2（2026-08-23）：封面双框归 `double-frame-cover`，章节中轴对镜
+ * 归 `mirror-volume-chapter`，ending 满版 primary 邀约归 `invite-field-ending`
+ * （版式 `paintsOwnBackground`，本文件 ending 底仍走旧籍纸，避免 contrast
+ * floor 拿深字压深底）。motif 退役顶缘双线、藏书票章、底缘中点金菱，四页
+ * 可空。四页 `defaultBackgrounds` 保持旧籍纸。角色色与字体不动。
  */
 export const HERITAGE_TOKENS: StyleTokens = {
   id: "heritage",

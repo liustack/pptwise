@@ -2,6 +2,8 @@ import type { DecorProps } from "./types"
 import { accessibleInk } from "../ink"
 import { DecorPiece } from "./decor-piece"
 import { leafRecessOpacity } from "./decor-budget"
+import { textInkBox } from "../depth-contract/geometry"
+import { CANVAS_H_PX, CANVAS_W_PX } from "../../constants"
 
 /**
  * corner-ornament-motif v2 —— 「报头双线」（2026-08-20 编辑组皮肤重设计，
@@ -36,6 +38,10 @@ import { leafRecessOpacity } from "./decor-budget"
  * `motif-ink-motif.tsx` 的 `colophonDateGlyphs` 同一条纪律：只认「四位年 +
  * 非数字分隔 + 一到两位月」这一种能确定读懂的形状，读得懂就补两位月份，
  * 读不懂就只留「№」这一个符号——一个不声称任何事实的排印记号。
+ *
+ * **第八波封面退让（2026-08-23）**：`issue-head-cover` 自己画 y148/156 刊头
+ * 文武双线。motif 在 cover 上不再画 y26/32，否则一页四条线。内容 / ending
+ * 继续页缘文武双线 + 期号。chapter 继续退让。期号整字落在 1280×720 内。
  *
  * chapter 完全退让（`return null`）：两条独立实测各自成立。
  *   1. **底缘那条线在 chapter 页上压字**。chapter 页型的排字外沿比其余三档
@@ -121,35 +127,60 @@ function issueLabel(date: string | undefined): string {
   return `№ ${String(month).padStart(2, "0")}`
 }
 
+function placeIssue(label: string, fontFamily: string): { x: number; y: number } {
+  let x = ISSUE_X
+  let y = ISSUE_BASELINE_Y
+  const box = textInkBox({
+    content: label,
+    x,
+    y,
+    fontSize: ISSUE_FONT_SIZE,
+    fontFamily,
+    fontWeight: null,
+    textAnchor: "middle",
+  })
+  if (box.x < 0) x += -box.x
+  if (box.y < 0) y += -box.y
+  if (box.x + box.w > CANVAS_W_PX) x -= box.x + box.w - CANVAS_W_PX
+  if (box.y + box.h > CANVAS_H_PX) y -= box.y + box.h - CANVAS_H_PX
+  return { x, y }
+}
+
 export function CornerOrnamentMotif({ ir, slide, ctx }: DecorProps) {
   // chapter 退让的两条实测依据见文件头。
   if (slide.type === "chapter") return null
 
   const rule = ctx.colors.primary
   const bg = ctx.defaultBg ?? ctx.colors.bg
+  const fade = (ink: string) => leafRecessOpacity(slide.type, ink, bg)
+  const cover = slide.type === "cover"
+  const label = issueLabel(ir.meta.date)
+  const issuePos = placeIssue(label, ctx.fonts.heading)
 
   return (
     <>
-      <DecorPiece id="masthead">
-      <line
-        x1={RULE_X1}
-        y1={THICK_RULE_Y}
-        x2={RULE_X2}
-        y2={THICK_RULE_Y}
-        stroke={rule}
-        strokeWidth={THICK_RULE_STROKE}
-        opacity={leafRecessOpacity(slide.type, rule, bg)}
-      />
-      <line
-        x1={RULE_X1}
-        y1={THIN_RULE_Y}
-        x2={RULE_X2}
-        y2={THIN_RULE_Y}
-        stroke={rule}
-        strokeWidth={THIN_RULE_STROKE}
-        opacity={leafRecessOpacity(slide.type, rule, bg)}
-      />
-      </DecorPiece>
+      {!cover && (
+        <DecorPiece id="masthead">
+        <line
+          x1={RULE_X1}
+          y1={THICK_RULE_Y}
+          x2={RULE_X2}
+          y2={THICK_RULE_Y}
+          stroke={rule}
+          strokeWidth={THICK_RULE_STROKE}
+          opacity={fade(rule)}
+        />
+        <line
+          x1={RULE_X1}
+          y1={THIN_RULE_Y}
+          x2={RULE_X2}
+          y2={THIN_RULE_Y}
+          stroke={rule}
+          strokeWidth={THIN_RULE_STROKE}
+          opacity={fade(rule)}
+        />
+        </DecorPiece>
+      )}
       <DecorPiece id="foot">
       <line
         x1={FOOT_RULE_X1}
@@ -158,19 +189,19 @@ export function CornerOrnamentMotif({ ir, slide, ctx }: DecorProps) {
         y2={FOOT_RULE_Y}
         stroke={rule}
         strokeWidth={FOOT_RULE_STROKE}
-        opacity={leafRecessOpacity(slide.type, rule, bg)}
+        opacity={fade(rule)}
       />
-      {/* 线上中点期号——装饰件唯一的字符 */}
+      {/* 线上中点期号——装饰件唯一的字符。整字落在画布内。 */}
       <text
-        x={ISSUE_X}
-        y={ISSUE_BASELINE_Y}
+        x={issuePos.x}
+        y={issuePos.y}
         fontFamily={ctx.fonts.heading}
         fontSize={ISSUE_FONT_SIZE}
         fill={accessibleInk(ctx.colors.accent, bg, ISSUE_FONT_SIZE)}
         textAnchor="middle"
         dominantBaseline="alphabetic"
       >
-        {issueLabel(ir.meta.date)}
+        {label}
       </text>
       </DecorPiece>
     </>

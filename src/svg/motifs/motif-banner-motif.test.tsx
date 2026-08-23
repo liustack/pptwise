@@ -140,16 +140,13 @@ describe("BannerMotif（批注线）", () => {
     expect(draw("consulting", contentSlide).root.querySelectorAll("line")).toHaveLength(2)
   })
 
-  it("chapter 完全退让——两条线走 primary，consulting/academic 的 chapter 底就是各自的 primary，实测 1.00:1", () => {
-    for (const theme of ["consulting", "academic"] as const) {
-      const t = resolveStyle(theme)
-      const { root } = draw(theme, chapterSlide)
-      expect(root.children, `${theme} chapter draws nothing`).toHaveLength(0)
-      // 退让的实测依据，而不是「感觉太淡」。
-      const chapterBg = t.defaultBackgrounds.chapter
-      expect(chapterBg.kind).toBe("color")
-      expect(contrastRatio(t.colors.primary, (chapterBg as { value: string }).value)).toBeCloseTo(1, 2)
-    }
+  it("chapter 完全退让——两条线走 primary，consulting 的 chapter 底就是 primary，实测 1.00:1", () => {
+    const t = resolveStyle("consulting")
+    const { root } = draw("consulting", chapterSlide)
+    expect(root.children, "consulting chapter draws nothing").toHaveLength(0)
+    const chapterBg = t.defaultBackgrounds.chapter
+    expect(chapterBg.kind).toBe("color")
+    expect(contrastRatio(t.colors.primary, (chapterBg as { value: string }).value)).toBeCloseTo(1, 2)
   })
 
   it("颜色一律读 token：通栏一段走 primary、起手一段走 accent，两段同宽 1.5", () => {

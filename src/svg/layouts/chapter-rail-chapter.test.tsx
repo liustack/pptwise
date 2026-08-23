@@ -10,10 +10,8 @@ import type { PptxIR, Slide } from "@/ir"
 // W4 fix round: RailChapter's heading/subheading now adapt to
 // `ctx.defaultBg` (readableOn) instead of a hardcoded white — every ctx in
 // this file must carry the theme's *true* chapter default background, not
-// `buildCtx`'s own `colors.bg` fallback (wrong for academic, whose
-// `defaultBackgrounds.chapter` is a distinct dark green, not its light
-// `colors.bg`; see this file's own layout header for the same
-// per-theme fact about classroom/consulting).
+// `buildCtx`'s own `colors.bg` fallback. academic chapter default is now
+// ivory paper after wave 8 batch 2, so heading ink is dark.
 function chapterCtx(themeId: string) {
   const tokens = resolveStyle(themeId)
   return buildCtx(tokens, {}, undefined, resolveBackgroundHex(tokens.defaultBackgrounds.chapter, tokens.colors.surface))
@@ -57,9 +55,9 @@ const ir = (theme: string): PptxIR =>
 // on `theme--ink--zh--p02`. See the layout's own `subheadingDrop` for the
 // derivation. Everything else, EXPECTED_CHAPTER1 included, is untouched.
 const EXPECTED_CHAPTER1 =
-  '<text x="1224" y="650" font-family="Georgia, Songti SC, STSong, serif" font-size="260" font-weight="700" fill="#FFFFFF" opacity="0.06" text-anchor="end" dominant-baseline="alphabetic">01</text><text x="640" y="392" font-family="Georgia, Songti SC, STSong, serif" font-size="84" font-weight="600" fill="#FFFFFF" text-anchor="middle" dominant-baseline="alphabetic">第一部分：研究背景</text><line x1="620" y1="600" x2="660" y2="600" stroke="#FFFFFF" stroke-opacity="0.3" stroke-width="1.6"></line><circle cx="620" cy="600" r="7" fill="#FFFFFF" fill-opacity="1"></circle><circle cx="660" cy="600" r="5" fill="#FFFFFF" fill-opacity="0.35"></circle>'
+  '<text x="1224" y="650" font-family="Georgia, Songti SC, STSong, serif" font-size="260" font-weight="700" fill="#FFFFFF" opacity="0.06" text-anchor="end" dominant-baseline="alphabetic">01</text><text x="640" y="392" font-family="Georgia, Songti SC, STSong, serif" font-size="84" font-weight="600" fill="#0A0E14" text-anchor="middle" dominant-baseline="alphabetic">第一部分：研究背景</text><line x1="620" y1="600" x2="660" y2="600" stroke="#FFFFFF" stroke-opacity="0.3" stroke-width="1.6"></line><circle cx="620" cy="600" r="7" fill="#FFFFFF" fill-opacity="1"></circle><circle cx="660" cy="600" r="5" fill="#FFFFFF" fill-opacity="0.35"></circle>'
 const EXPECTED_CHAPTER2 =
-  '<text x="1224" y="650" font-family="Georgia, Songti SC, STSong, serif" font-size="260" font-weight="700" fill="#FFFFFF" opacity="0.06" text-anchor="end" dominant-baseline="alphabetic">02</text><text x="640" y="392" font-family="Georgia, Songti SC, STSong, serif" font-size="84" font-weight="600" fill="#FFFFFF" text-anchor="middle" dominant-baseline="alphabetic">第二部分：方法与证据</text><text x="640" y="452" font-family="Georgia, Songti SC, STSong, serif" font-size="34" fill="#FFFFFF" opacity="0.7" text-anchor="middle" font-style="italic" dominant-baseline="alphabetic">面向可复现的实证研究</text><line x1="620" y1="600" x2="660" y2="600" stroke="#FFFFFF" stroke-opacity="0.3" stroke-width="1.6"></line><circle cx="620" cy="600" r="5" fill="#FFFFFF" fill-opacity="0.35"></circle><circle cx="660" cy="600" r="7" fill="#FFFFFF" fill-opacity="1"></circle>'
+  '<text x="1224" y="650" font-family="Georgia, Songti SC, STSong, serif" font-size="260" font-weight="700" fill="#FFFFFF" opacity="0.06" text-anchor="end" dominant-baseline="alphabetic">02</text><text x="640" y="392" font-family="Georgia, Songti SC, STSong, serif" font-size="84" font-weight="600" fill="#0A0E14" text-anchor="middle" dominant-baseline="alphabetic">第二部分：方法与证据</text><text x="640" y="452" font-family="Georgia, Songti SC, STSong, serif" font-size="34" fill="#0A0E14" opacity="0.7" text-anchor="middle" font-style="italic" dominant-baseline="alphabetic">面向可复现的实证研究</text><line x1="620" y1="600" x2="660" y2="600" stroke="#FFFFFF" stroke-opacity="0.3" stroke-width="1.6"></line><circle cx="620" cy="600" r="5" fill="#FFFFFF" fill-opacity="0.35"></circle><circle cx="660" cy="600" r="7" fill="#FFFFFF" fill-opacity="1"></circle>'
 
 describe("RailChapter", () => {
   it("academic tokens 下输出与迁移前的 BCGEmeraldChapter 逐字节一致（档位一，含多 chapter 序号）", () => {

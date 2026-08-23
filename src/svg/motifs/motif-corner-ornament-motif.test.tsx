@@ -4,7 +4,9 @@ import { renderSvgMarkup, parseSvgRoot } from "../serialize"
 import { assertSubset } from "../subset-validate"
 import { buildCtx } from "../full-slide-svg"
 import { resolveStyle } from "../../themes"
-import { contrastRatio, accessibleInk } from "../ink"
+import { accessibleInk } from "../ink"
+import { textInkBox } from "../depth-contract/geometry"
+import { countDecorPieces, MAX_DECOR_PIECES } from "./decor-budget"
 import { CornerOrnamentMotif } from "./motif-corner-ornament-motif"
 import type { PptxIR, Slide } from "@/ir"
 
@@ -12,8 +14,9 @@ const coverSlide: Slide = { type: "cover", heading: "封面", components: [] } a
 const chapterSlide: Slide = { type: "chapter", heading: "章节", components: [] } as Slide
 const contentSlide: Slide = { type: "content", heading: "内容", components: [] } as Slide
 const endingSlide: Slide = { type: "ending", components: [] } as Slide
-/** chapter 不画（两条实测依据见 motif 文件头），其余三档画同一张。 */
+/** chapter 不画。封面只留底缘线 + 期号。内容 / ending 画页缘文武双线 + 期号。 */
 const DRAWN_SLIDES = [coverSlide, contentSlide, endingSlide]
+const RULE_SLIDES = [contentSlide, endingSlide]
 
 /** 本 motif 的四家消费者：锚点 + `MOTIF_CANDIDATES` 里借它的三家。 */
 const CONSUMERS = ["journal", "academic", "luxe", "heritage"] as const
@@ -133,11 +136,18 @@ const intersects = (b: Box, z: { x: number; y: number; w: number; h: number }) =
  * motif 文件头。
  */
 describe("CornerOrnamentMotif（报头双线）", () => {
-  it("cover/content/ending 画同一张：顶缘文武双线 + 底缘单线 + 线上中点期号", () => {
-    for (const slide of DRAWN_SLIDES) {
+  it("content/ending 画页缘文武双线 + 底缘单线 + 线上中点期号。封面只留底缘 + 期号", () => {
+    for (const slide of RULE_SLIDES) {
       const { root } = draw("journal", slide, "2026 年 7 月")
       expect(Array.from(root.querySelectorAll("line")), `rules on ${slide.type}`).toHaveLength(3)
       expect(Array.from(root.querySelectorAll("text")), `issue mark on ${slide.type}`).toHaveLength(1)
+    }
+    const { root: cover } = draw("journal", coverSlide, "2026 年 7 月")
+    expect(Array.from(cover.querySelectorAll("line"))).toHaveLength(1)
+    expect(Array.from(cover.querySelectorAll("text"))).toHaveLength(1)
+    for (const line of Array.from(cover.querySelectorAll("line"))) {
+      expect(Number(line.getAttribute("y1")), "cover still draws y26/32").not.toBe(26)
+      expect(Number(line.getAttribute("y1")), "cover still draws y26/32").not.toBe(32)
     }
   })
 
@@ -152,32 +162,31 @@ describe("CornerOrnamentMotif（报头双线）", () => {
     }
   })
 
-  it("cover/ending 输出完全相同。内容页退底，件数不变", () => {
+  it("ending 画满页缘文武双线。封面只留底缘。内容页退底，件数仍是文武 + 底缘两件", () => {
     const date = "2026 年 7 月"
-    expect(draw("journal", coverSlide, date).markup).toBe(draw("journal", endingSlide, date).markup)
-    expect(draw("journal", contentSlide, date).root.querySelectorAll("line")).toHaveLength(3)
+    expect(draw("journal", endingSlide, date).root.querySelectorAll("line")).toHaveLength(3)
+    expect(draw("journal", coverSlide, date).root.querySelectorAll("line")).toHaveLength(1)
+    expect(draw("journal", coverSlide, date).markup).not.toBe(draw("journal", endingSlide, date).markup)
+    expect(countDecorPieces(draw("journal", contentSlide, date).root)).toBe(2)
+    expect(countDecorPieces(draw("journal", endingSlide, date).root)).toBe(2)
+    expect(countDecorPieces(draw("journal", coverSlide, date).root)).toBe(1)
+    expect(countDecorPieces(draw("journal", chapterSlide, date).root)).toBe(0)
+    expect(countDecorPieces(draw("journal", contentSlide, date).root)).toBeLessThanOrEqual(MAX_DECOR_PIECES)
+    const contentLine = draw("journal", contentSlide, date).root.querySelector("line")
+    expect(contentLine?.getAttribute("opacity")).toBeTruthy()
   })
 
-  it("chapter 完全退让——借用方 luxe/academic 的 chapter 底上，线走的 primary 实测 1.08:1 / 1.00:1", () => {
-    for (const [theme, expected] of [
-      ["luxe", 1.08],
-      ["academic", 1.0],
-    ] as const) {
-      const t = resolveStyle(theme)
+  it("chapter 完全退让——底缘单线在 chapter 页型上压字（大章号墨迹到 y715），见 motif 文件头", () => {
+    for (const theme of CONSUMERS) {
       const { root } = draw(theme, chapterSlide)
       expect(root.children, `${theme} chapter draws nothing`).toHaveLength(0)
-      const chapterBg = t.defaultBackgrounds.chapter
-      expect(chapterBg.kind).toBe("color")
-      expect(contrastRatio(t.colors.primary, (chapterBg as { value: string }).value)).toBeCloseTo(expected, 1)
     }
-    // journal 自己在 chapter 上画得出（11.75:1），退让的是另一条理由：底缘
-    // 单线在 chapter 页型上压字（大章号墨迹到 y715）——见 motif 文件头。
     expect(draw("journal", chapterSlide).root.children).toHaveLength(0)
   })
 
-  it("颜色一律读 token：三条线走 primary，线宽 2 / 0.75 / 0.75", () => {
+  it("颜色一律读 token：内容页三条线走 primary，线宽 2 / 0.75 / 0.75", () => {
     const t = resolveStyle("journal")
-    const { root } = draw("journal", coverSlide)
+    const { root } = draw("journal", contentSlide)
     const [thick, thin, foot] = Array.from(root.querySelectorAll("line"))
     for (const l of [thick, thin, foot]) expect(l!.getAttribute("stroke")).toBe(t.colors.primary)
     expect(thick!.getAttribute("stroke-width")).toBe("2")
@@ -185,15 +194,18 @@ describe("CornerOrnamentMotif（报头双线）", () => {
     expect(foot!.getAttribute("stroke-width")).toBe("0.75")
   })
 
-  it("顶缘文武双线几何：x48→1232，粗线 y26、细线 y32", () => {
-    const { root } = draw("journal", coverSlide)
+  it("顶缘文武双线几何：内容/ending 上 x48→1232，粗线 y26、细线 y32。封面不画这两条", () => {
+    const { root } = draw("journal", contentSlide)
     const [thick, thin] = Array.from(root.querySelectorAll("line"))
     expect([num(thick!, "x1"), num(thick!, "y1"), num(thick!, "x2"), num(thick!, "y2")]).toEqual([48, 26, 1232, 26])
     expect([num(thin!, "x1"), num(thin!, "y1"), num(thin!, "x2"), num(thin!, "y2")]).toEqual([48, 32, 1232, 32])
+    const coverYs = Array.from(draw("journal", coverSlide).root.querySelectorAll("line")).map((l) => num(l, "y1"))
+    expect(coverYs).not.toContain(26)
+    expect(coverYs).not.toContain(32)
   })
 
   it("底缘单线几何：与报头双线同宽的 x48→1232，落在页缘 y712（板上的 y640 横穿共享脚注行，实测 86 条碰撞）", () => {
-    const { root } = draw("journal", coverSlide)
+    const { root } = draw("journal", contentSlide)
     const [thick, thin, foot] = Array.from(root.querySelectorAll("line"))
     expect([num(foot!, "x1"), num(foot!, "y1"), num(foot!, "x2"), num(foot!, "y2")]).toEqual([48, 712, 1232, 712])
     // 板上原值就是踩坑的那个值，钉在这里免得有人「改回板上」。
@@ -207,13 +219,26 @@ describe("CornerOrnamentMotif（报头双线）", () => {
     }
   })
 
-  it("期号：字样从 meta.date 推，居中 x640、基线 y706（板上 y646 实测 44 条碰撞），落在新底线正上方", () => {
+  it("期号：字样从 meta.date 推，居中 x640、基线 y706（板上 y646 实测 44 条碰撞），落在新底线正上方，整字在画布内", () => {
     const { root } = draw("journal", coverSlide, "2026 年 7 月")
     const t = root.querySelector("text")!
     expect(t.textContent).toBe("№ 07")
     expect([num(t, "x"), num(t, "y"), num(t, "font-size")]).toEqual([640, 706, 16])
     expect(t.getAttribute("text-anchor")).toBe("middle")
     expect(num(t, "y")).not.toBe(646)
+    const box = textInkBox({
+      content: t.textContent ?? "",
+      x: num(t, "x"),
+      y: num(t, "y"),
+      fontSize: num(t, "font-size"),
+      fontFamily: t.getAttribute("font-family") ?? "",
+      fontWeight: t.getAttribute("font-weight"),
+      textAnchor: t.getAttribute("text-anchor") ?? "start",
+    })
+    expect(box.x).toBeGreaterThanOrEqual(0)
+    expect(box.y).toBeGreaterThanOrEqual(0)
+    expect(box.x + box.w).toBeLessThanOrEqual(1280)
+    expect(box.y + box.h).toBeLessThanOrEqual(720)
   })
 
   it("期号：日期推不出月份就只留「№」——写死一个刊号会在每份 deck 上撒同一个谎", () => {
@@ -265,11 +290,13 @@ describe("CornerOrnamentMotif（报头双线）", () => {
     }
   })
 
-  it("安全区：三条线全部落在实测排字外沿之外（y<40 顶带 / y>709.5 底带）", () => {
-    const { root } = draw("journal", coverSlide, "2026 年 7 月")
-    for (const { label, box } of inkBoxes(root).filter((b) => b.label !== "issue")) {
-      const outside = box.y1 <= TEXT_ENVELOPE.top || box.y0 >= TEXT_ENVELOPE.bottom
-      expect(outside, `${label} sits inside the measured text envelope: ${JSON.stringify(box)}`).toBe(true)
+  it("安全区：画出的线全部落在实测排字外沿之外（y<40 顶带 / y>709.5 底带）", () => {
+    for (const slide of DRAWN_SLIDES) {
+      const { root } = draw("journal", slide, "2026 年 7 月")
+      for (const { label, box } of inkBoxes(root).filter((b) => b.label !== "issue")) {
+        const outside = box.y1 <= TEXT_ENVELOPE.top || box.y0 >= TEXT_ENVELOPE.bottom
+        expect(outside, `${slide.type} ${label} sits inside the measured text envelope: ${JSON.stringify(box)}`).toBe(true)
+      }
     }
   })
 
