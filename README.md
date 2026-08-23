@@ -7,6 +7,7 @@
 <p align="center">🥇 <b>The FIRST deck-generation plugin for DeepSeek Harness (dsh)</b> 🥇</p>
 
 <p align="center">
+  <a href="https://pptwise.com">pptwise.com</a> ·
   <a href="./README.zh-CN.md">简体中文</a> ·
   <a href="./INSTALL.md">Install (hand it to your AI)</a> ·
   <a href="./docs/cli.md">Commands</a> ·
