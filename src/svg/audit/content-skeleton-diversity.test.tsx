@@ -146,8 +146,8 @@ function skeletonKey(skeleton: readonly RegionTuple[]): string {
 const ALL_CONTENT_IDS = Object.keys(CONTENT_LAYOUTS) as ContentLayoutId[]
 
 describe("content layout skeleton diversity (content-layout expansion wave, T3 acceptance metric)", () => {
-  it("covers all 16 registered content layouts (sanity — this metric is meaningless over a stale/partial list; side-highlight retired, 17 -> 16)", () => {
-    expect(ALL_CONTENT_IDS).toHaveLength(16)
+  it("covers all 15 registered content layouts (sanity — this metric is meaningless over a stale/partial list; banner-heading retired, 16 -> 15)", () => {
+    expect(ALL_CONTENT_IDS).toHaveLength(15)
   })
 
   it("the full-region skeleton set resolves to >= 6 distinct classes across the pool (was ~4 under the rejected first-box-only reading)", () => {
@@ -155,7 +155,7 @@ describe("content layout skeleton diversity (content-layout expansion wave, T3 a
     const classes = new Set(Array.from(skeletons.values()).map(skeletonKey))
 
     // Non-vacuity: prove some layouts really do still legitimately share
-    // a class (e.g. `rail-numbered`/`banner-heading` are both a lone
+    // a class (e.g. `rail-numbered`/`quiet-frame` are both a lone
     // (x=96, w=1088) single-stack column under this fixture, quantized to
     // (100, 1090)) — so this isn't merely counting trivially-all-different
     // single-member buckets.

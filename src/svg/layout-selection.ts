@@ -89,10 +89,6 @@ type PageBeat = NonNullable<Slide["beat"]>
  * name alone:
  *
  * - **anchor** (one bold, high-impact statement):
- *   - `banner-heading` — the heading sits *inside* a filled "assertion
- *     banner". The banner rect is the heading treatment, not a container
- *     wrapped around a plain title, so this layout's whole identity is
- *     already "one bold claim, loudly stated".
  *   - `stacked-poster` — its non-degrade path routes component 1 into a
  *     dedicated `hero` slot (capacity 1): poster-scale single-subject
  *     treatment, the most visually loud body geometry in the content pool.
@@ -100,11 +96,11 @@ type PageBeat = NonNullable<Slide["beat"]>
  *     `.issues/2026-07-26-content-archetypes/plan.md`) — its full-bleed
  *     `header` band *is* the heading treatment (a filled `colors.primary`
  *     rect spanning the entire page width, not inset to the usual x=96..
- *     1184 content margins the way even `banner-heading`'s own assertion
- *     banner is) — the same "banner rect is the heading" identity that
- *     already earns `banner-heading` its anchor membership, just escalated
- *     to genuinely full-bleed. (The retired `side-highlight` panel used
- *     to share this "loud opaque color block" register beside the body.)
+ *     1184 content margins). The retired `banner-heading` assertion banner
+ *     used to share this "banner rect is the heading" register, inset to
+ *     those margins. `split-band` stays as the remaining assertion-band
+ *     grammar. (The retired `side-highlight` panel used to share this
+ *     "loud opaque color block" register beside the body.)
  * - **dense** (many discrete items, high information density):
  *   - `bento-panel` — the only content layout whose `body` capacity is 6
  *     (every other is 4): a multi-cell grid sized to hold the most, not the
@@ -120,9 +116,10 @@ type PageBeat = NonNullable<Slide["beat"]>
  *     pool's highest *structural* region count after bento-panel's 6-cell
  *     grid — and, addressing the T1 handoff's reviewer note that
  *     `two-column`/`rail-numbered` read as visually thin on a
- *     single-component page, its region dividers/frames are unconditional
- *     frame that stays visible even with exactly 1 component (see the
- *     layout file's own composition-sketch header).
+ *     single-component page, a 3-component page still frames the filled
+ *     TOP/BOTTOM panels. A 1-component page collapses like `two-column`
+ *     at n<2: the lead takes the full body width, and empty slots never
+ *     draw a frame (see the layout file's own composition-sketch header).
  * - **breathing** (generous whitespace, one unhurried flow):
  *   - `narrow-column` — the narrowest body column in the pool, paired with
  *     a large muted page-number watermark filling the right gutter: spacious
@@ -144,7 +141,7 @@ type PageBeat = NonNullable<Slide["beat"]>
  * to read as beat-neutral as well.
  */
 const BEAT_TENDENCIES: Record<PageBeat, readonly string[]> = {
-  anchor: ["banner-heading", "stacked-poster", "split-band"],
+  anchor: ["stacked-poster", "split-band"],
   dense: ["bento-panel", "two-column", "rail-numbered", "asymmetric-triptych"],
   breathing: ["narrow-column", "quiet-frame"],
 }

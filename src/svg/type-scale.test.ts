@@ -34,7 +34,7 @@ function contentIr(style?: StyleOverride): PptxIR {
       {
         type: "content",
         heading: "发现",
-        layout: "banner-heading",
+        layout: "rail-numbered",
         footnote: "来源：内部调研",
         components: [{ type: "paragraph", text: "原字号。" }],
       },

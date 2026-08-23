@@ -87,8 +87,8 @@ describe("explicit seed: revision stability", () => {
     // over this exact fixture, same method the insertion test below
     // documents for its own seed): declaring beat "anchor" on p-2 flips
     // p-2's own raw pick from "rail-numbered" to "bento-panel" for this seed
-    // — neither id is in "anchor"'s own tendency set (banner-heading/
-    // stacked-poster/split-band, `BEAT_TENDENCIES`,
+    // — neither id is in "anchor"'s own tendency set (stacked-poster/
+    // split-band, `BEAT_TENDENCIES`,
     // layout-selection.ts — `split-band` joined by the content-layout
     // expansion wave's own T3 task, side-highlight later retired), so this
     // isn't beat directly favoring the new pick. It's the standard
@@ -103,21 +103,18 @@ describe("explicit seed: revision stability", () => {
     // declaring page's own pick, and that change really doesn't cascade
     // past the one page beat was declared on.
     //
-    // Re-pinned (content-layout expansion wave, task T3 — `split-band`
-    // joining `BEAT_TENDENCIES.anchor` reweighted every hash-interval
-    // boundary again, so seed 1's own before/after pair collapsed to the
-    // same pick for p-2, "banner-heading" both times, breaking this test's
-    // own non-vacuity assertion): re-found by brute-force search over this
-    // exact fixture, same method the insertion test below documents for its
-    // own seed.
-    const seed = 0
-    const { ir: before } = assembleDeck(makePlan(basePages(), { seed }), {})
+    // Re-pinned (banner-heading retirement, 2026-08-23): consulting's
+    // remaining anchor members already sit at weight 3 via theme+strategy,
+    // so beat "anchor" is a no-op on consulting. Academic seed 1 still
+    // flips p-2 `two-column` -> `split-band` with no other page moving.
+    const seed = 1
+    const { ir: before } = assembleDeck(makePlan(basePages(), { seed, theme: "academic" }), {})
     const beforeLayouts = layoutsById(before)
 
     const beatedPages = basePages()
     const p2 = beatedPages.findIndex((p) => p.id === "p-2")
     beatedPages[p2] = { ...beatedPages[p2], beat: "anchor" }
-    const { ir: after } = assembleDeck(makePlan(beatedPages, { seed }), {})
+    const { ir: after } = assembleDeck(makePlan(beatedPages, { seed, theme: "academic" }), {})
     const afterLayouts = layoutsById(after)
 
     // Non-vacuity: the beat declaration actually changed something.
@@ -155,7 +152,7 @@ describe("explicit seed: revision stability", () => {
     // proving this test's exemption is load-bearing, not a vacuously-unused
     // allowance. Any seed would do for the "nothing *else* changes" half of
     // this test.
-    const seed = 3
+    const seed = 0
     const { ir: before } = assembleDeck(makePlan(basePages(), { seed }), {})
     const beforeLayouts = layoutsById(before)
 

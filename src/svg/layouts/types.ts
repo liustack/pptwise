@@ -146,13 +146,15 @@ export type EndingLayoutId =
 
 // Wave 3（content）新增 id
 export type ContentLayoutId =
-  | "banner-heading" | "rail-numbered" | "stacked-poster"
+  | "rail-numbered" | "stacked-poster"
   | "bento-panel" | "narrow-column" | "tone-adaptive-content"
   | "two-column" // P3 Item ②：跨主题通用第二 content 版式（轮换素材）
   // P1 variety wave, task 4 (content-pool expansion): a lead+stacked-pair
   // triptych and a whitespace-led centered frame — see each file's own
   // composition-sketch header. The third member (side-highlight) was later
-  // retired with its 176px primary side panel.
+  // retired with its 176px primary side panel. banner-heading (the
+  // assertion-banner content face) was later retired: heading treatments
+  // keep the title face, leftover pins migrate to two-column.
   | "asymmetric-triptych" | "quiet-frame"
   // Content-layout expansion wave, task T2: the pool's first horizontal
   // split — a full-bleed header band over an ordinary body band.

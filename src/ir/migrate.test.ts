@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest"
 import { PptpressError } from "../errors"
-import { migrateBloomToClassroom, migrateChromeToBranding, migrateIrV3ToV4, migrateLogoWallToImageGrid } from "./migrate"
+import {
+  migrateBannerHeadingToTwoColumn,
+  migrateBloomToClassroom,
+  migrateChromeToBranding,
+  migrateIrV3ToV4,
+  migrateLogoWallToImageGrid,
+} from "./migrate"
 import { PptxIRV3Schema, type PptxIRV3 } from "./legacy-v3"
 import { STRATEGY_VALUES, PACING_VALUES, AUDIENCE_VALUES } from "./narrative-values"
 
@@ -441,5 +447,82 @@ describe("migrateLogoWallToImageGrid", () => {
       slides: Array<{ components: Array<Record<string, unknown>> }>
     }
     expect(result.slides[0]!.components[0]).toEqual({ type: "image_grid", items: "not-an-array" })
+  })
+})
+
+describe("migrateBannerHeadingToTwoColumn", () => {
+  const irWith = (layout: unknown) => ({
+    version: "4",
+    filename: "x",
+    slides: [{ type: "content", heading: "h", layout, components: [{ type: "paragraph", text: "p" }] }],
+  })
+
+  it("rewrites slides[].layout banner-heading to two-column and preserves other slide fields", () => {
+    const input = irWith("banner-heading")
+    const result = migrateBannerHeadingToTwoColumn(input) as {
+      slides: Array<{ type: string; heading: string; layout: string; components: unknown[] }>
+    }
+    expect(result.slides[0]!.heading).toBe("h")
+    expect(result.slides[0]!.layout).toBe("two-column")
+    expect(result.slides[0]!.type).toBe("content")
+    expect(result.slides[0]!.components).toEqual([{ type: "paragraph", text: "p" }])
+    expect(result).not.toBe(input)
+  })
+
+  it("rewrites a spec pages[].layout pin and pages[].focus leftover", () => {
+    const input = {
+      version: "1",
+      theme: "consulting",
+      pages: [
+        { id: "p-1", type: "content", heading: "h", layout: "banner-heading" },
+        { id: "p-2", type: "content", heading: "h2", focus: "banner-heading" },
+      ],
+    }
+    const result = migrateBannerHeadingToTwoColumn(input) as {
+      pages: Array<{ id: string; layout?: string; focus?: string }>
+    }
+    expect(result.pages[0]).toEqual({ id: "p-1", type: "content", heading: "h", layout: "two-column" })
+    expect(result.pages[1]).toEqual({ id: "p-2", type: "content", heading: "h2", focus: "two-column" })
+  })
+
+  it("IR with two-column / omitted layout / other ids is identity: same reference", () => {
+    const twoColumn = irWith("two-column")
+    expect(migrateBannerHeadingToTwoColumn(twoColumn)).toBe(twoColumn)
+    const omitted = { version: "4", filename: "x", slides: [{ type: "cover", heading: "h" }] }
+    expect(migrateBannerHeadingToTwoColumn(omitted)).toBe(omitted)
+    const other = irWith("quiet-frame")
+    expect(migrateBannerHeadingToTwoColumn(other)).toBe(other)
+  })
+
+  it("does not mutate the input", () => {
+    const input = irWith("banner-heading")
+    const snapshot = JSON.parse(JSON.stringify(input))
+    const result = migrateBannerHeadingToTwoColumn(input)
+    expect(input).toEqual(snapshot)
+    expect(result).not.toBe(input)
+  })
+
+  it("non-object input passes through unchanged", () => {
+    expect(migrateBannerHeadingToTwoColumn(null)).toBeNull()
+    expect(migrateBannerHeadingToTwoColumn("not-an-object")).toBe("not-an-object")
+    expect(migrateBannerHeadingToTwoColumn(42)).toBe(42)
+    const arr = [{ layout: "banner-heading" }]
+    expect(migrateBannerHeadingToTwoColumn(arr)).toBe(arr)
+  })
+
+  it("rewrites a page-shaped { layout: banner-heading } object, not only a full IR", () => {
+    const page = { layout: "banner-heading", heading: "h" }
+    const result = migrateBannerHeadingToTwoColumn(page) as { layout: string; heading: string }
+    expect(result).toEqual({ layout: "two-column", heading: "h" })
+    expect(result).not.toBe(page)
+  })
+
+  it("migrateIrV3ToV4 rewrites a banner-heading slide (cast, do not parse leftover through PptxIRV3Schema)", () => {
+    const v3 = {
+      ...baseV3(),
+      slides: [{ type: "content", heading: "h", layout: "banner-heading", components: [{ type: "paragraph", text: "p" }] }],
+    } as PptxIRV3
+    const v4 = migrateIrV3ToV4(v3)
+    expect(v4.slides[0]!.layout).toBe("two-column")
   })
 })

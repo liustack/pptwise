@@ -44,7 +44,7 @@ describe("LAYOUT_REGISTRY completeness (layout ids)", () => {
     }
   }
 
-  it("has exactly 51 layout-kind entries, all traceable to one of the four real registries (side-highlight retired: 52 -> 51, after gallery r2 D10's 53 -> 52)", () => {
+  it("has exactly 50 layout-kind entries, all traceable to one of the four real registries (banner-heading retired: 51 -> 50, after side-highlight 52 -> 51)", () => {
     const knownIds = new Set([
       ...Object.keys(COVER_LAYOUTS),
       ...Object.keys(CHAPTER_LAYOUTS),
@@ -53,7 +53,8 @@ describe("LAYOUT_REGISTRY completeness (layout ids)", () => {
     ])
     const layoutEntries = Object.values(LAYOUT_REGISTRY).filter((e) => e.kind === "archetype")
     // Wave 8 batch 4: +6 chapter +6 ending pinOnly faces, 102 -> 114.
-    expect(layoutEntries).toHaveLength(114)
+    // banner-heading retired: 114 -> 113.
+    expect(layoutEntries).toHaveLength(113)
     for (const entry of layoutEntries) {
       expect(knownIds.has(entry.id), `"${entry.id}" is not a real layout id`).toBe(true)
     }
@@ -145,9 +146,8 @@ describe("content family: body slot + declared arrangements", () => {
     expect(LAYOUT_REGISTRY["stacked-poster"].arrangements).toBe("all")
   })
 
-  it("the remaining six arrangement-respecting layouts declare arrangements: \"all\" (P1 variety wave task 4 added quiet-frame to the five pre-existing members, side-highlight retired)", () => {
+  it("the remaining five arrangement-respecting layouts declare arrangements: \"all\" (P1 variety wave task 4 added quiet-frame, side-highlight and banner-heading retired)", () => {
     for (const id of [
-      "banner-heading",
       "narrow-column",
       "rail-numbered",
       "tone-adaptive-content",
@@ -238,11 +238,11 @@ describe("layoutsForSlideType", () => {
     expect(layoutsForSlideType("ending")).toHaveLength(31)
   })
 
-  it("content includes both the 16 layouts and the 4 takeovers (side-highlight retired, 17 -> 16, after gallery r2 D10's 18 -> 17)", () => {
+  it("content includes both the 15 layouts and the 4 takeovers (banner-heading retired, 16 -> 15, after side-highlight 17 -> 16)", () => {
     const contents = layoutsForSlideType("content")
-    expect(contents.filter((l) => l.kind === "archetype")).toHaveLength(16)
+    expect(contents.filter((l) => l.kind === "archetype")).toHaveLength(15)
     expect(contents.filter((l) => l.kind === "takeover")).toHaveLength(4)
-    expect(contents).toHaveLength(20)
+    expect(contents).toHaveLength(19)
   })
 })
 

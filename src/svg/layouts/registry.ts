@@ -1,6 +1,6 @@
 /**
  * Layout registry (W2 task 1, spec §3/§6/§8): an explicit, statically-checked
- * description of what the render chain's 51 standard layouts + 4
+ * description of what the render chain's 50 standard layouts + 4
  * page-level image takeovers already draw. This is a metadata layer only —
  * it formalizes today's implicit page structure (layout JSX + the
  * FullSlideSvg takeover dispatch) into named `slots`, it does not change any
@@ -177,7 +177,6 @@ import { layoutDef as endingExitWordEnding } from "./ending-exit-word-ending"
 import { layoutDef as contentNarrowColumn } from "./content-narrow-column"
 import { layoutDef as contentTwoColumn } from "./content-two-column"
 import { layoutDef as contentRailNumbered } from "./content-rail-numbered"
-import { layoutDef as contentBannerHeading } from "./content-banner-heading"
 import { layoutDef as contentStackedPoster } from "./content-stacked-poster"
 import { layoutDef as contentBentoPanel } from "./content-bento-panel"
 import { layoutDef as contentToneAdaptiveContent } from "./content-tone-adaptive-content"
@@ -605,7 +604,7 @@ const ENDING_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
 // gate (ir-quality.ts via layout-selection.ts). Numbers are the
 // geometry-honest per-layout component count, sourced from the pre-W3
 // CAPACITY table's derivations (not invented fresh):
-//   - single-stack layouts — narrow-column/rail-numbered/banner-heading/
+//   - single-stack layouts — narrow-column/rail-numbered/
 //     tone-adaptive-content, plus stacked-poster's degrade path
 //     (content-stacked-poster.tsx's own comment on its layoutDef already
 //     establishes it behaves like the
@@ -689,7 +688,6 @@ const CONTENT_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [contentNarrowColumn.id]: contentNarrowColumn,
   [contentTwoColumn.id]: contentTwoColumn,
   [contentRailNumbered.id]: contentRailNumbered,
-  [contentBannerHeading.id]: contentBannerHeading,
   [contentStackedPoster.id]: contentStackedPoster,
   [contentBentoPanel.id]: contentBentoPanel,
   [contentToneAdaptiveContent.id]: contentToneAdaptiveContent,
@@ -725,7 +723,7 @@ const TAKEOVER_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [imageAnnotateLayoutDef.id]: imageAnnotateLayoutDef,
 }
 
-/** All 51 standard layouts + 4 takeover layouts, keyed by id (`kind`
+/** All 50 standard layouts + 4 takeover layouts, keyed by id (`kind`
  *  still spells the standard tier `"archetype"` — a wire-format fossil, see
  *  {@link LayoutDefinition.kind}). */
 export const LAYOUT_REGISTRY: Record<string, LayoutDefinition> = {

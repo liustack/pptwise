@@ -68,7 +68,7 @@ Mixing one in with another component fails `validate` instead of silently droppi
 
 The v4 IR schema is frozen as of 0.4.0. Future evolution is additive only: new optional fields, new enum members. Any breaking change ships under a new top-level `version` value, with the same reject-and-migrate treatment v3 got.
 
-`pptpress migrate <v3-file.json> -o <out.json>` converts a v3 file to v4 deterministically — field renames, plus the v4 leftover rewrites `chrome` → `branding`, `bloom` → `classroom`, and `logo_wall` → `image_grid`. The sibling `deck.plan.json` → `deck.spec.json` conversion is under [Deck projects](#deck-projects).
+`pptpress migrate <v3-file.json> -o <out.json>` converts a v3 file to v4 deterministically — field renames, plus the v4 leftover rewrites `chrome` → `branding`, `bloom` → `classroom`, `logo_wall` → `image_grid`, and `banner-heading` → `two-column`. The sibling `deck.plan.json` → `deck.spec.json` conversion is under [Deck projects](#deck-projects).
 
 ## Narratives
 
@@ -99,7 +99,7 @@ Bullets shrink below their tier's baseline to fit when needed, down to a 14px fl
 When a slide omits `layout`, pptpress resolves one in four deterministic steps:
 
 1. The page type's registered archetype pool, minus pin-only layouts.
-2. Narrowed to the theme's `layouts` set for that page type (covers lock to a board face. Content defaults to the 10-id auto set. lecture and luxe drop `banner-heading` / `split-band` / `stacked-poster` — see [Themes](./themes.md)).
+2. Narrowed to the theme's `layouts` set for that page type (covers lock to a board face. Content defaults to the 9-id auto set. lecture and luxe drop `split-band` / `stacked-poster` — see [Themes](./themes.md)).
 3. Soft weights via `Math.max`: the narrative `strategy`'s `layoutTendencies` (content) or `identityTendencies` (cover/chapter/ending), an optional slide `beat`, and the theme's `layoutTendencies`. Favored ids ×3, everything else ×1. Cover, chapter, and ending pages are weighted via `identityTendencies`.
 4. A seeded weighted pick, swapped deterministically to the runner-up when it would repeat the immediately preceding slide's layout.
 

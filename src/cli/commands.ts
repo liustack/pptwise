@@ -16,7 +16,13 @@ import { PptpressError } from "../errors"
 import { VERSION } from "../version"
 import { StyleOverrideSchema, type PptxIR, type StyleOverride } from "../ir"
 import { PptxIRV3Schema } from "../ir/legacy-v3"
-import { migrateBloomToClassroom, migrateChromeToBranding, migrateIrV3ToV4, migrateLogoWallToImageGrid } from "../ir/migrate"
+import {
+  migrateBannerHeadingToTwoColumn,
+  migrateBloomToClassroom,
+  migrateChromeToBranding,
+  migrateIrV3ToV4,
+  migrateLogoWallToImageGrid,
+} from "../ir/migrate"
 import { disassembleDeck, type PageContent } from "../spec/assemble"
 import { formatInvalidSpecError, specJsonSchema, resolveSpecThemeId, validateSpec } from "../spec"
 import { migrateDeckPlanToSpec } from "../spec/migrate"
@@ -1462,7 +1468,9 @@ export async function runDisassemble(irPath: string, outDir: string): Promise<st
  *   via {@link migrateChromeToBranding}, a leftover `bloom` theme id is
  *   relocated onto `classroom` via {@link migrateBloomToClassroom}, and a
  *   leftover `logo_wall` component is rewritten to `image_grid` via
- *   {@link migrateLogoWallToImageGrid}. IR v2
+ *   {@link migrateLogoWallToImageGrid}, and a leftover `banner-heading`
+ *   layout pin is rewritten to `two-column` via
+ *   {@link migrateBannerHeadingToTwoColumn}. IR v2
  *   is explicitly not accepted here (spec §15.3: "v2 无真实用户" —
  *   `pptpress migrate` does not convert v2, `validateIr`'s own v2
  *   hard-reject message carries the full v2→v4 combined mapping for a
@@ -1508,16 +1516,34 @@ function needsLogoWallRewrite(raw: Record<string, unknown>): boolean {
   return raw.slides.some((slide) => isPlainRecord(slide) && componentListHasLogoWall(slide.components))
 }
 
-function migrateRewriteNote(chrome: boolean, bloom: boolean, logoWall = false): string {
+function recordHasBannerHeadingPin(obj: Record<string, unknown>): boolean {
+  return obj.layout === "banner-heading" || obj.focus === "banner-heading"
+}
+
+function needsBannerHeadingRewrite(raw: Record<string, unknown>): boolean {
+  if (recordHasBannerHeadingPin(raw)) return true
+  if (Array.isArray(raw.slides) && raw.slides.some((slide) => isPlainRecord(slide) && recordHasBannerHeadingPin(slide))) {
+    return true
+  }
+  if (Array.isArray(raw.pages) && raw.pages.some((page) => isPlainRecord(page) && recordHasBannerHeadingPin(page))) {
+    return true
+  }
+  return false
+}
+
+function migrateRewriteNote(chrome: boolean, bloom: boolean, logoWall = false, bannerHeading = false): string {
   const parts: string[] = []
   if (chrome) parts.push("renamed chrome → branding")
   if (bloom) parts.push("relocated bloom → classroom")
   if (logoWall) parts.push("rewrote logo_wall → image_grid")
+  if (bannerHeading) parts.push("rewrote banner-heading → two-column")
   return parts.join(", ")
 }
 
 function applyV4LeftoverRewrites(raw: Record<string, unknown>): unknown {
-  return migrateLogoWallToImageGrid(migrateBloomToClassroom(migrateChromeToBranding(raw)))
+  return migrateBannerHeadingToTwoColumn(
+    migrateLogoWallToImageGrid(migrateBloomToClassroom(migrateChromeToBranding(raw))),
+  )
 }
 
 async function listPageJsonNames(dir: string): Promise<string[]> {
@@ -1531,18 +1557,28 @@ async function listPageJsonNames(dir: string): Promise<string[]> {
   }
 }
 
-async function rewriteLogoWallPages(dir: string, outDir: string): Promise<string[]> {
+async function rewriteLeftoverPages(
+  dir: string,
+  outDir: string,
+): Promise<{ paths: string[]; logoWall: boolean; bannerHeading: boolean }> {
   const names = await listPageJsonNames(dir)
   const written: string[] = []
+  let logoWall = false
+  let bannerHeading = false
   for (const name of names) {
     const src = join(dir, PAGES_DIRNAME, name)
     const raw = await loadIrFile(src, "page")
-    if (!isPlainRecord(raw) || !needsLogoWallRewrite(raw)) continue
+    if (!isPlainRecord(raw)) continue
+    const hasLogo = needsLogoWallRewrite(raw)
+    const hasBanner = needsBannerHeadingRewrite(raw)
+    if (!hasLogo && !hasBanner) continue
+    if (hasLogo) logoWall = true
+    if (hasBanner) bannerHeading = true
     const dest = join(outDir, PAGES_DIRNAME, name)
-    await writeMigratedJson(dest, migrateLogoWallToImageGrid(raw))
+    await writeMigratedJson(dest, migrateBannerHeadingToTwoColumn(migrateLogoWallToImageGrid(raw)))
     written.push(dest)
   }
-  return written
+  return { paths: written, logoWall, bannerHeading }
 }
 
 /** Write JSON with the existing `wx` never-overwrite rule shared by migrate legs. */
@@ -1565,8 +1601,9 @@ async function writeMigratedJson(outPath: string, data: unknown): Promise<void> 
  * messages), maps it through {@link migrateDeckPlanToSpec}
  * (`../spec/migrate.ts`, spec §9.2's field mapping), and writes the result
  * to `<output>/deck.spec.json`. `assets/*` are untouched. Leftover
- * `logo_wall` components in `pages/*.json` are rewritten to `image_grid`
- * at `<output>/pages/<filename>` (source pages stay put). Spec §9.2's
+ * `logo_wall` components in `pages/*.json` are rewritten to `image_grid`,
+ * leftover `banner-heading` pins to `two-column`, at
+ * `<output>/pages/<filename>` (source pages stay put). Spec §9.2's
  * field mapping still only touches `deck.plan.json`'s own top-level
  * `scenario` field and each page's `rhythm` field.
  *
@@ -1608,20 +1645,22 @@ async function runMigrateDeckDir(dir: string, output: string, cwd: string): Prom
   if (!(await pathExists(planPath)) && (await pathExists(sourceSpecPath))) {
     const raw = await loadIrFile(sourceSpecPath, "spec")
     const specNeeds =
-      isPlainRecord(raw) && (needsChromeRewrite(raw) || needsBloomRewrite(raw))
-    const pagePaths = await rewriteLogoWallPages(dir, outDir)
+      isPlainRecord(raw) &&
+      (needsChromeRewrite(raw) || needsBloomRewrite(raw) || needsBannerHeadingRewrite(raw))
+    const pages = await rewriteLeftoverPages(dir, outDir)
     if (specNeeds && isPlainRecord(raw)) {
       const chrome = needsChromeRewrite(raw)
       const bloom = needsBloomRewrite(raw)
+      const bannerHeading = needsBannerHeadingRewrite(raw)
       const migrated = applyV4LeftoverRewrites(raw)
       await writeMigratedJson(specPath, migrated)
-      const specNote = `wrote ${specPath} (${migrateRewriteNote(chrome, bloom, false)})`
-      if (pagePaths.length === 0) return specNote
-      return `${specNote}, wrote ${pagePaths.length === 1 ? pagePaths[0] : join(outDir, PAGES_DIRNAME)} (${migrateRewriteNote(false, false, true)})`
+      const specNote = `wrote ${specPath} (${migrateRewriteNote(chrome, bloom, false, bannerHeading)})`
+      if (pages.paths.length === 0) return specNote
+      return `${specNote}, wrote ${pages.paths.length === 1 ? pages.paths[0] : join(outDir, PAGES_DIRNAME)} (${migrateRewriteNote(false, false, pages.logoWall, pages.bannerHeading)})`
     }
-    if (pagePaths.length > 0) {
-      const target = pagePaths.length === 1 ? pagePaths[0] : join(outDir, PAGES_DIRNAME)
-      return `wrote ${target} (${migrateRewriteNote(false, false, true)})`
+    if (pages.paths.length > 0) {
+      const target = pages.paths.length === 1 ? pages.paths[0] : join(outDir, PAGES_DIRNAME)
+      return `wrote ${target} (${migrateRewriteNote(false, false, pages.logoWall, pages.bannerHeading)})`
     }
     throw new PptpressError(
       `${dir} has ${SPEC_FILENAME} but no ${PLAN_FILENAME} — this deck project is already migrated, nothing to do`,
@@ -1630,10 +1669,10 @@ async function runMigrateDeckDir(dir: string, output: string, cwd: string): Prom
   const raw = await loadIrFile(planPath, "plan")
   const migrated = migrateDeckPlanToSpec(raw)
   await writeMigratedJson(specPath, migrated)
-  const pagePaths = await rewriteLogoWallPages(dir, outDir)
+  const pages = await rewriteLeftoverPages(dir, outDir)
   const specNote = `wrote ${specPath} — run \`pptpress spec validate ${specPath}\` to confirm it, then delete ${planPath} (a directory with both files present is rejected)`
-  if (pagePaths.length === 0) return specNote
-  return `${specNote}, wrote ${pagePaths.length === 1 ? pagePaths[0] : join(outDir, PAGES_DIRNAME)} (${migrateRewriteNote(false, false, true)})`
+  if (pages.paths.length === 0) return specNote
+  return `${specNote}, wrote ${pages.paths.length === 1 ? pages.paths[0] : join(outDir, PAGES_DIRNAME)} (${migrateRewriteNote(false, false, pages.logoWall, pages.bannerHeading)})`
 }
 
 /**
@@ -1646,7 +1685,9 @@ async function runMigrateDeckDir(dir: string, output: string, cwd: string): Prom
  * via {@link migrateChromeToBranding}, a leftover `bloom` theme id is
  * relocated onto `classroom` via {@link migrateBloomToClassroom}, and a
  * leftover `logo_wall` component is rewritten to `image_grid` via
- * {@link migrateLogoWallToImageGrid}. Anything else is rejected with a
+ * {@link migrateLogoWallToImageGrid}, and a leftover `banner-heading`
+ * layout pin is rewritten to `two-column` via
+ * {@link migrateBannerHeadingToTwoColumn}. Anything else is rejected with a
  * message naming what this command does accept.
  */
 async function runMigrateIrFile(filePath: string, output: string, cwd: string): Promise<string> {
@@ -1661,7 +1702,8 @@ async function runMigrateIrFile(filePath: string, output: string, cwd: string): 
   if (version === "3") {
     // PptxIRV3Schema reuses v4 SlideSchema, so a leftover logo_wall would
     // fail parse after the union drops the type. Rewrite it on the raw
-    // object first, then parse, then the v3→v4 field map.
+    // object first, then parse, then the v3→v4 field map (which also
+    // relocates leftover banner-heading pins).
     const pre = isPlainRecord(raw) ? migrateLogoWallToImageGrid(raw) : raw
     const parsed = PptxIRV3Schema.safeParse(pre)
     if (!parsed.success) {
@@ -1672,15 +1714,19 @@ async function runMigrateIrFile(filePath: string, output: string, cwd: string): 
     await writeMigratedJson(outPath, migrated)
     return `wrote ${outPath} (migrated IR v3 → v4)`
   }
-  if (isPlainRecord(raw) && (needsChromeRewrite(raw) || needsBloomRewrite(raw) || needsLogoWallRewrite(raw))) {
+  if (
+    isPlainRecord(raw) &&
+    (needsChromeRewrite(raw) || needsBloomRewrite(raw) || needsLogoWallRewrite(raw) || needsBannerHeadingRewrite(raw))
+  ) {
     const chrome = needsChromeRewrite(raw)
     const bloom = needsBloomRewrite(raw)
     const logoWall = needsLogoWallRewrite(raw)
+    const bannerHeading = needsBannerHeadingRewrite(raw)
     const migrated = applyV4LeftoverRewrites(raw)
     await writeMigratedJson(outPath, migrated)
-    return `wrote ${outPath} (${migrateRewriteNote(chrome, bloom, logoWall)})`
+    return `wrote ${outPath} (${migrateRewriteNote(chrome, bloom, logoWall, bannerHeading)})`
   }
   throw new PptpressError(
-    `pptpress migrate converts an IR v3 file (version: "3"), a v4 IR or deck spec still carrying the old chrome field (renamed to branding), the removed bloom theme id (relocated to classroom), or a leftover logo_wall component (rewritten to image_grid), or a deck project directory containing ${PLAN_FILENAME} — got version ${JSON.stringify(version)} in ${filePath} with nothing to migrate`,
+    `pptpress migrate converts an IR v3 file (version: "3"), a v4 IR or deck spec still carrying the old chrome field (renamed to branding), the removed bloom theme id (relocated to classroom), a leftover logo_wall component (rewritten to image_grid), or a leftover banner-heading layout pin (rewritten to two-column), or a deck project directory containing ${PLAN_FILENAME} — got version ${JSON.stringify(version)} in ${filePath} with nothing to migrate`,
   )
 }

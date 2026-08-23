@@ -37,16 +37,9 @@
  * sans-body themes; it does not by itself re-verify the real-font
  * measurement (that lives in the task report + each template's own test).
  *
- * consulting is a deliberate exception (not a bug in this test): its
- * subheading anchors off the assertion banner's bottom edge, not a title
- * baseline — a filled color block has no glyph descent, so the "+0.12*
- * fontSize" term doesn't apply, and the brief calls for a flat +4 bump
- * (bannerBottom+20 -> +24) verified visually rather than re-derived from
- * the same glyph-metric formula. It gets its own, smaller-threshold check
- * below instead of being forced through the shared 14px assertion — but
- * still checked against both a 1-line and (via `bannerH`'s own 2-line
- * literal) 2-line heading, since that theme's banner height already has
- * explicit 1/2-line branches independent of font metrics.
+ * The retired banner-heading layout used to need a separate banner-edge
+ * check. Heading treatments keep the title face, so every remaining case
+ * here is title-glyph-anchored.
  */
 import { describe, it, expect } from "vitest"
 import { renderSvgMarkup, parseSvgRoot } from "../serialize"
@@ -243,39 +236,4 @@ describe("S3b: title-bottom vs subheading-top gap stays >=14px (shared helper, s
     })
   })
 
-  // classroom: banner-anchored, not title-glyph-anchored (see file header).
-  // consulting is assigned GhostIndex, so the native banner formula is
-  // pinned on an unassigned theme that still uses banner-heading.
-  describe("classroom: subheading clears the assertion banner's bottom edge (banner has no glyph descent, so this is a flat +4 bump, not the title-glyph formula)", () => {
-    it.each([
-      ["1-line heading (88px banner)", HEADING_ONE_LINE],
-      ["2-line heading, real fitHeadingLines wrap (132px banner)", HEADING_TWO_LINE],
-    ])("%s", (_label, heading) => {
-      const contentLayout = contentLayoutFor("banner-heading")
-      const tokens = resolveStyle("classroom")
-      const ctx = buildCtx(tokens, {})
-      const slide: Slide = {
-        type: "content",
-        heading,
-        subheading: SUBHEADING,
-        components: [{ type: "paragraph", text: "支撑论据。" }],
-      }
-      const root = render(contentLayout({ ir: ir("classroom", [slide]), slide, index: 0, ctx }))
-
-      const banner = Array.from(root.querySelectorAll("rect")).find(
-        (r) => r.getAttribute("x") === "96" && Number(r.getAttribute("width")) === 1088,
-      )!
-      const bannerBottom = Number(banner.getAttribute("y")) + Number(banner.getAttribute("height"))
-      const subheadingY = Number(textByContent(root, SUBHEADING).getAttribute("y"))
-
-      // S3b: bannerBottom + 24 (was +20) — the plain baseline-to-edge gap
-      // (not glyph-top-reduced, since there's no glyph on the banner side).
-      // Invariant regardless of 1 vs 2 lines — bannerH is a fixed 88/132
-      // literal per line count, not font-metric-driven, so there's no
-      // wrapping-specific crowding risk here the way there is for the
-      // title-glyph-anchored themes above.
-      expect(subheadingY - bannerBottom).toBe(24)
-      expect(subheadingY - bannerBottom).toBeGreaterThan(20)
-    })
-  })
 })

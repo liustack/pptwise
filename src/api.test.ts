@@ -107,6 +107,30 @@ describe("validateIr", () => {
     expect(message).toMatch(/image_grid/)
   })
 
+  it("hard-rejects leftover banner-heading and points at migrate to two-column", () => {
+    const v = validateIr({
+      theme: { id: "consulting" },
+      slides: [{ heading: "x", layout: "banner-heading" }],
+    })
+    expect(v.ok).toBe(false)
+    expect(v.errors[0]!.path).toBe("slides.0.layout")
+    expect(v.errors[0]!.message).toMatch(/banner-heading/)
+    expect(v.errors[0]!.message).toMatch(/removed/)
+    expect(v.errors[0]!.message).toMatch(/pptpress migrate/)
+    expect(v.errors[0]!.message).toMatch(/two-column/)
+  })
+
+  it("unknown other layouts still do NOT mention migrate", () => {
+    const v = validateIr({
+      theme: { id: "consulting" },
+      slides: [{ heading: "x", layout: "not-a-real-layout" }],
+    })
+    expect(v.ok).toBe(false)
+    const message = v.errors.map((e) => e.message).join("\n")
+    expect(message).toMatch(/unknown layout/)
+    expect(message).not.toMatch(/pptpress migrate/)
+  })
+
   it("unknown other component types still do NOT mention migrate", () => {
     const v = validateIr({
       theme: { id: "consulting" },

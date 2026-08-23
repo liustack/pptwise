@@ -2,7 +2,6 @@ import type { ContentLayout, ContentLayoutId } from "./types"
 import { NarrowColumnContent } from "./content-narrow-column"
 import { TwoColumnContent } from "./content-two-column"
 import { RailNumberedContent } from "./content-rail-numbered"
-import { BannerHeadingContent } from "./content-banner-heading"
 import { StackedPosterContent } from "./content-stacked-poster"
 import { ToneAdaptiveContent } from "./content-tone-adaptive-content"
 import { BentoPanelContent } from "./content-bento-panel"
@@ -26,14 +25,13 @@ export type { ContentLayout, ContentLayoutId } from "./types"
 // Content-layout expansion wave, task T2：新增 split-band。
 // quote-stage / editorial-verse / speech-layouts waves：pinOnly members
 // (quote-stage, statement, pull-quote, stat-hero, one-evidence, mono-bleed).
-// Gallery r2 D10 retired image-lead-split. This change retires
-// side-highlight. Auto-selectable content pool is 10, plus 6 pin-only
-// (17 registered -> 16).
+// Gallery r2 D10 retired image-lead-split. side-highlight retired next.
+// This change retires banner-heading. Auto-selectable content pool is 9,
+// plus 6 pin-only (16 registered -> 15).
 export const CONTENT_LAYOUTS: Record<ContentLayoutId, ContentLayout> = {
   "narrow-column": NarrowColumnContent,
   "two-column": TwoColumnContent,
   "rail-numbered": RailNumberedContent,
-  "banner-heading": BannerHeadingContent,
   "stacked-poster": StackedPosterContent,
   "bento-panel": BentoPanelContent,
   "tone-adaptive-content": ToneAdaptiveContent,

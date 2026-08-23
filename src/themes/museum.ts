@@ -42,7 +42,7 @@ import type { StyleTokens } from "./tokens";
  *
  * 第八波批 4（封面 poster-center 锁板不动）：章节 hall-label-chapter
  * （展厅号当章号，铜金只给厅号），ending exit-word-ending（中轴铜金
- * 短线依附标题簇）。内容倾向 split-band / banner-heading / quiet-frame。
+ * 短线依附标题簇）。内容倾向 split-band / two-column / quiet-frame。
  *
  * 可拉伸性：铜金即参数（自然科普可换成氧化绿 `#5E8A62`，人文讲座 bg 可
  * 收到石黑 `#1A1814`、accent 收到旧银 `#C4B8A0`）。

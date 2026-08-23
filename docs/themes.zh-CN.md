@@ -39,7 +39,7 @@ read_when:
 
 `pptpress themes [--json]` 会从你装的这一版里打印同一份清单。
 
-封面、章节、结尾三类页面，有 Claude Design 设计板就锁到板上的构造。软偏好保不住这三类页。每家内置现在都把 `layouts.cover` 锁到自己的板面（第七波 + restore w1 + restore w2）。章节和结尾仍走各页型全集，等下一轮设计画板后再锁。这是在等板，不是漏锁。内容页从可自动选型的集合里抽（`side-highlight` 退订后是 10 个 id），再按分配表加权。lecture 和 luxe 去掉 `banner-heading` / `split-band` / `stacked-poster`。Playbill 仍走完整的自动内容集。
+封面、章节、结尾三类页面，有 Claude Design 设计板就锁到板上的构造。软偏好保不住这三类页。每家内置现在都把 `layouts.cover` 锁到自己的板面（第七波 + restore w1 + restore w2）。章节和结尾仍走各页型全集，等下一轮设计画板后再锁。这是在等板，不是漏锁。内容页从可自动选型的集合里抽（`banner-heading` 退订后是 9 个 id），再按分配表加权。lecture 和 luxe 去掉 `split-band` / `stacked-poster`。Playbill 仍走完整的自动内容集。
 
 版式仍住在共享池里。锁定是主题怎么用池，不是给一家另开一份私有文件。每家内置也会点名自己更常抽到的封面、章节、内容页和结尾，所以两家主题用同一份 deck、同一个 seed，通常会抽到不同版式。软偏好（`layoutTendencies`）留给内容页，以及还没锁定的身份页。已经锁死的封面，偏好就是那把锁本身。某一页必须是某一个版式时，在那一页写 `slide.layout` 钉死。封面锁定不会因为后面某一波把另外三类页填上而跟着动。每个版式都会按主题的实际背景色自适应取色，所以池在任何主题下都保持可读。
 

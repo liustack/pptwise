@@ -1062,6 +1062,18 @@ describe("v3 → v4 migration equivalence (task 1 hard gate, spec §10/§12)", (
       // `auditDeck`. Only `basic` `.svg.json` and `.pptx-zip.json` moved.
       // `.audit.json` findings stayed empty. Journal fixtures do not name
       // the product and were not recaptured.
+      //
+      // Recaptured (banner-heading retirement, 2026-08-23). Auto content
+      // pool 10 -> 9. Cover, chapter, and pinned endings stay byte-identical.
+      // `.audit.json` findings stayed empty.
+      //   - `basic` (`consulting`): slide 3 content "At a glance"
+      //     `two-column` -> `stacked-poster`.
+      //   - `scenarioBearing` (`journal`): slides 1-3 content
+      //     `narrow-column` -> `two-column`, `banner-heading` ->
+      //     `bento-panel`, `bento-panel` -> `narrow-column`.
+      //   - `annualReviewPreset` (`journal`): slides 2-3 content
+      //     `stacked-poster` -> `narrow-column`, `tone-adaptive-content` ->
+      //     `bento-panel`.
       it("exports a PPTX byte-identical (docProps/core.xml timestamp excluded) to the base-commit capture", async () => {
         const goldenZipMap = readGoldenJson<Record<string, string>>(`${name}.pptx-zip`)
         const blob = await generatePptxBlob(v4)

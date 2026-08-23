@@ -131,21 +131,20 @@ describe("THEME_DEFINITIONS", () => {
     "narrow-column",
     "two-column",
     "rail-numbered",
-    "banner-heading",
     "stacked-poster",
     "bento-panel",
     "tone-adaptive-content",
     // P1 variety wave, task 4: content pool 7 -> 10. side-highlight later
-    // retired.
+    // retired. banner-heading later retired. Auto-selectable content pool is 9.
     "asymmetric-triptych",
     "quiet-frame",
     // content-layout expansion wave, task T2. Gallery r2 D10 retired
-    // image-lead-split. This change retires side-highlight. Auto-selectable
-    // content pool is 10.
+    // image-lead-split. This change retires banner-heading. Auto-selectable
+    // content pool is 9.
     "split-band",
   ]
-  // Gallery r2 D20: framed themes do not sample banner-heading / split-band /
-  // stacked-poster.
+  // Gallery r2 D20: framed themes do not sample split-band /
+  // stacked-poster. banner-heading is globally retired.
   const FRAMED_CONTENT = [
     "narrow-column",
     "two-column",
@@ -161,7 +160,6 @@ describe("THEME_DEFINITIONS", () => {
     "narrow-column",
     "two-column",
     "rail-numbered",
-    "banner-heading",
     "stacked-poster",
     "bento-panel",
     "tone-adaptive-content",
@@ -255,7 +253,7 @@ describe("THEME_DEFINITIONS", () => {
     expect(THEME_DEFINITIONS.swiss.layoutTendencies).toEqual({
       cover: ["institutional-block"],
       chapter: ["decimal-index-chapter"],
-      content: ["two-column", "split-band", "rail-numbered"],
+      content: ["two-column", "narrow-column", "rail-numbered"],
       ending: ["resolution-ending"],
     })
     expect(THEME_DEFINITIONS.memo.layoutTendencies).toEqual({
@@ -538,9 +536,9 @@ describe("registerTheme", () => {
     const fullContent = layoutsForSlideType("content")
       .filter((l) => l.kind === "archetype")
       .map((l) => l.id)
-    registerTheme(testTheme({ layouts: { content: fullContent.filter((id) => id !== "banner-heading") } }))
+    registerTheme(testTheme({ layouts: { content: fullContent.filter((id) => id !== "split-band") } }))
     const def = getThemeDefinition("acme")
-    expect(def.layouts.content).not.toContain("banner-heading")
+    expect(def.layouts.content).not.toContain("split-band")
     expect(def.layouts.content).toHaveLength(fullContent.length - 1)
   })
 

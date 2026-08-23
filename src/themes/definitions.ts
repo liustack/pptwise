@@ -167,8 +167,9 @@ const FULL_LAYOUTS: Record<Slide["type"], readonly string[]> = {
 
 /**
  * Gallery r2 D20: outer-frame themes must not receive top-title / top-image
- * layouts. Framed themes do not sample banner-heading / split-band /
- * stacked-poster. lecture and luxe share this explicit set. Tendency ids
+ * layouts. Framed themes do not sample split-band / stacked-poster.
+ * `banner-heading` is globally retired (heading treatments keep the title
+ * face). lecture and luxe share this explicit set. Tendency ids
  * (`rail-numbered` / `bento-panel` for lecture, `quiet-frame` /
  * `tone-adaptive-content` for luxe) stay inside it.
  */
@@ -185,16 +186,16 @@ const FRAMED_CONTENT_LAYOUTS: readonly string[] = [
 /**
  * Gallery r2 E22: consulting used an explicit named list so it would not
  * sample `side-highlight` (its 176px primary chrome reads as a right
- * vertical card). That id is now globally retired. The named list stays
- * (do not switch consulting back to `FULL_LAYOUTS.content`). Playbill keeps
- * the full auto content pool. consulting's content tendencies
- * (`banner-heading` / `split-band`) stay inside this set.
+ * vertical card). That id is now globally retired, and `banner-heading`
+ * is too. The named list stays (do not switch consulting back to
+ * `FULL_LAYOUTS.content`). Playbill keeps the full auto content pool.
+ * consulting's content tendencies (`split-band` / `stacked-poster`) stay
+ * inside this set.
  */
 const CONSULTING_CONTENT_LAYOUTS: readonly string[] = [
   "narrow-column",
   "two-column",
   "rail-numbered",
-  "banner-heading",
   "stacked-poster",
   "bento-panel",
   "tone-adaptive-content",
@@ -285,9 +286,10 @@ const BRANDS: Partial<Record<CanonicalThemeId, BrandConfig>> = {
  * `auditDeck` 复核零 low-contrast 发现。W4 当时的终态是十三主题不折不扣的
  * {@link FULL_LAYOUTS} 全集。Gallery r2（2026-08-22）在 content 轴重新收窄：
  * D10 退订 image-lead-split 后自动池 11。随后 side-highlight 退订，自动池
- * 10。D20 把 lecture / luxe 换成 `FRAMED_CONTENT_LAYOUTS`。E22 把
- * consulting 换成 `CONSULTING_CONTENT_LAYOUTS`（显式名单，id 全局退订后
- * 仍保持名单）。其余主题的 content 仍是全集。
+ * 10。随后 banner-heading 退订，自动池 9。D20 把 lecture / luxe 换成
+ * `FRAMED_CONTENT_LAYOUTS`。E22 把 consulting 换成
+ * `CONSULTING_CONTENT_LAYOUTS`（显式名单，id 全局退订后仍保持名单）。其余
+ * 主题的 content 仍是全集。
  */
 /**
  * classroom 自己的结构身份（theme-structure-allocation wave）。四轴是
@@ -346,7 +348,7 @@ const CLASSROOM_LAYOUTS: ThemeDefinition["layouts"] = {
  * 无位可加**，只能走三元集或扩池。
  *
  * playbill 不收窄 `layouts`。content 格用三元集（split-band / stacked-poster /
- * banner-heading）把三张海报脸占住。
+ * rail-numbered）把三张海报脸占住。 banner-heading 已退订。
  *
  * 封面轴本波零移动（实测：24 家 × 40 seed × 7 页 = 6720 次抽签里 4278 次移动，
  * 按槽计数 `{1:582, 2:780, 3:836, 4:652, 5:778, 6:650}`，槽 0 一次都没动）。
@@ -422,16 +424,15 @@ const LAYOUTS: Record<CanonicalThemeId, Pick<ThemeDefinition, "layouts" | "motif
     // - chapter `poster-chapter` 追加：左对齐巨幅序号 + 800 字重标题 + 两条
     //   细线 + 右上机构名，就是同一份报告的分节页，左轴那一档的另一张脸。
     //   不在 `briefing.identityTendencies.chapter` 里，真实边际权重。
-    // - content `banner-heading` + `split-band`：`banner-heading` 本来就是从
-    //   consulting 的旧内容页提炼出来的（全宽实心横幅承标题），`split-band`
-    //   是同一句断言横过来占满页宽的全出血头带。前者已在 `briefing`
-    //   的 content 偏好里（max(3,3)=3，单独声明空转），后者不在。这一格的
-    //   真实拉力来自 `split-band`，`banner-heading` 是按裁定 1 保留的真实主张。
+    // - content `stacked-poster` + `split-band`：`banner-heading` 退订后，
+    //   断言横幅这档改由 heading treatments 承担标题脸，`split-band` 仍是
+    //   同一句断言横过来占满页宽的全出血头带。`stacked-poster` 是留下的
+    //   海报级单点强调，不在 `briefing` 的 content 偏好里，真实边际权重。
     // - ending 三元集不动（declaration-rebalance wave 的成果）。
     layoutTendencies: {
       cover: ["verdict-index"],
       chapter: ["ghost-rule-chapter"],
-      content: ["two-column", "split-band", "banner-heading"],
+      content: ["two-column", "split-band", "stacked-poster"],
       ending: ["action-pad-ending"],
     },
   },
@@ -477,7 +478,7 @@ const LAYOUTS: Record<CanonicalThemeId, Pick<ThemeDefinition, "layouts" | "motif
     layoutTendencies: {
       cover: ["thesis-plate-cover"],
       chapter: ["folio-ghost-chapter"],
-      content: ["two-column", "banner-heading", "narrow-column"],
+      content: ["two-column", "narrow-column"],
       ending: ["defense-close-ending"],
     },
   },
@@ -744,7 +745,7 @@ const LAYOUTS: Record<CanonicalThemeId, Pick<ThemeDefinition, "layouts" | "motif
     layoutTendencies: {
       cover: ["double-frame-cover"],
       chapter: ["mirror-volume-chapter"],
-      content: ["banner-heading", "rail-numbered", "asymmetric-triptych"],
+      content: ["rail-numbered", "asymmetric-triptych"],
       ending: ["invite-field-ending"],
     },
   },
@@ -784,7 +785,7 @@ const LAYOUTS: Record<CanonicalThemeId, Pick<ThemeDefinition, "layouts" | "motif
     layoutTendencies: {
       cover: ["report-open-cover"],
       chapter: ["subject-rule-chapter"],
-      content: ["bento-panel", "banner-heading", "rail-numbered"],
+      content: ["bento-panel", "rail-numbered"],
       ending: ["care-plan-ending"],
     },
   },
@@ -824,7 +825,7 @@ const LAYOUTS: Record<CanonicalThemeId, Pick<ThemeDefinition, "layouts" | "motif
     layoutTendencies: {
       cover: ["pledge-open-cover"],
       chapter: ["field-band-chapter"],
-      content: ["banner-heading", "two-column", "quiet-frame"],
+      content: ["two-column", "quiet-frame"],
       ending: ["scorecard-ending"],
     },
   },
@@ -947,7 +948,7 @@ const LAYOUTS: Record<CanonicalThemeId, Pick<ThemeDefinition, "layouts" | "motif
     layoutTendencies: {
       cover: ["red-head-cover"],
       chapter: ["seal-numeral-chapter"],
-      content: ["banner-heading", "rail-numbered", "narrow-column"],
+      content: ["rail-numbered", "narrow-column"],
       ending: ["deliberation-ending"],
     },
   },
@@ -989,7 +990,7 @@ const LAYOUTS: Record<CanonicalThemeId, Pick<ThemeDefinition, "layouts" | "motif
     layoutTendencies: {
       cover: ["cut-panel-cover"],
       chapter: ["round-mark-chapter"],
-      content: ["bento-panel", "banner-heading", "asymmetric-triptych"],
+      content: ["bento-panel", "asymmetric-triptych"],
       ending: ["seat-cta-ending"],
     },
   },
@@ -1019,7 +1020,7 @@ const LAYOUTS: Record<CanonicalThemeId, Pick<ThemeDefinition, "layouts" | "motif
     layoutTendencies: {
       cover: ["poster-center"],
       chapter: ["hall-label-chapter"],
-      content: ["split-band", "banner-heading", "quiet-frame"],
+      content: ["split-band", "two-column", "quiet-frame"],
       ending: ["exit-word-ending"],
     },
   },
@@ -1106,7 +1107,7 @@ const LAYOUTS: Record<CanonicalThemeId, Pick<ThemeDefinition, "layouts" | "motif
     layoutTendencies: {
       cover: ["institutional-block"],
       chapter: ["decimal-index-chapter"],
-      content: ["two-column", "split-band", "rail-numbered"],
+      content: ["two-column", "narrow-column", "rail-numbered"],
       ending: ["resolution-ending"],
     },
   },
@@ -1139,8 +1140,8 @@ const LAYOUTS: Record<CanonicalThemeId, Pick<ThemeDefinition, "layouts" | "motif
     },
   },
   // playbill（荧光嗓门，2026-08-21 第七波）：荧光黄整版 + 硬黑特粗字。
-  // 日期贴片走 playbill-motif（2026-08-22 终审还原：读 meta.date，无日期
-  // 整片不画。journal 期号先例）。heavy 的量在满版黄、typeScale 1.3 和字重。
+  // 日期贴片由 bill-head 当封面前景画（wave 7 几何），motif 为空。
+  // heavy 的量在满版黄、typeScale 1.3 和字重。
   // **heavy 不必然等于 motif 重**：结构行 C / top-band / heavy / medium，
   // 最近邻 vermilion（C / top-band / medium / medium），岔在装饰轴。
   // 封面锁定 `bill-head`（板面是出血巨字 + 底粗线，池里没有这个构造。
@@ -1149,18 +1150,15 @@ const LAYOUTS: Record<CanonicalThemeId, Pick<ThemeDefinition, "layouts" | "motif
   // 分配表倾向。定位 10 页内活动件（宣发 / 招募 / 节目单）。
   playbill: {
     // 第七波封面保真：板面是出血巨字 + 底粗线，池里没有这个构造。新建
-    // bill-head 进共享池并收窄 cover。日期贴片仍走 playbill-motif，版式不画。
-    // chapter / ending 的 layouts 收窄待下版本设计板后锁定。
+    // bill-head 进共享池并收窄 cover。日期贴片由 bill-head 当前景画，motif 为空。
     // Wave 8 batch 4: lock day-bill chapter and ticket-cta ending.
-    // Motif stays playbill-motif. Ending inverts and yields the date chip.
     layouts: {
       cover: ["bill-head"],
       chapter: ["day-bill-chapter"],
       content: FULL_LAYOUTS.content,
       ending: ["ticket-cta-ending"],
     },
-    // 2026-08-22 用户终审还原日期贴片：motif 读 meta.date，无日期整片
-    // 不画（journal 期号先例）。heavy 的主体仍在满版黄与字重。
+    // Motif id 保留，贴片改由 bill-head 画。heavy 的主体仍在满版黄与字重。
     motif: "playbill-motif",
     layoutTendencies: {
       cover: ["bill-head"],

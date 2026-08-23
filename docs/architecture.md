@@ -258,7 +258,7 @@ threshold) once `src/svg/ink.ts`'s real dual-ink contrast comparison
 confirmed all three clear 3:1 without the exclusion
 (`src/themes/definitions.ts` has the full history). Covers now lock to Claude
 Design board faces. Chapter and ending stay the full registered set until
-those boards exist. Content auto-pool is 10 ids (`side-highlight` retired).
+those boards exist. Content auto-pool is 9 ids (`banner-heading` retired).
 Narrowing a page type below the full set is still supported and stays a
 deliberate curation act, not a requirement — see `docs/contrast-system.md`
 for why a narrowing usually turns out to be a contrast bug in disguise rather
