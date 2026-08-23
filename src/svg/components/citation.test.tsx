@@ -102,7 +102,7 @@ describe("citation component", () => {
     expect(Number(text.getAttribute("font-size"))).toBeLessThan(18)
   })
 
-  it("truncates the url tspan with an ellipsis when the row is too narrow for label + full url", () => {
+  it("truncates the url tspan without an overflow mark when the row is too narrow", () => {
     const longUrl = "https://example.com/" + "a".repeat(200)
     const narrowComponent = {
       type: "citation" as const,
@@ -112,8 +112,28 @@ describe("citation component", () => {
       citation.render(narrowComponent, { x: 0, y: 0, w: 300 }, ctx),
     )
     const tspan = container.querySelector("tspan")!
-    expect(tspan.textContent).toMatch(/…$/)
+    expect(tspan.textContent).not.toMatch(/…$/)
     expect(tspan.textContent!.length).toBeLessThan(longUrl.length)
+  })
+
+  it("keeps a visible CJK-to-Latin gap via tspan dx, not a leading space", () => {
+    const cjk = {
+      type: "citation" as const,
+      sources: [{ label: "客户满意度年度调研", url: "https://example.com/survey-2026" }],
+    }
+    const latin = {
+      type: "citation" as const,
+      sources: [{ label: "Wikipedia", url: "https://en.wikipedia.org" }],
+    }
+    const cjkTspan = svg(citation.render(cjk, { x: 0, y: 0, w: 1120 }, ctx)).container.querySelector("tspan")!
+    const latinTspan = svg(citation.render(latin, { x: 0, y: 0, w: 1120 }, ctx)).container.querySelector("tspan")!
+    expect(cjkTspan.textContent).toBe("https://example.com/survey-2026")
+    expect(cjkTspan.textContent).not.toMatch(/^\s/)
+    const cjkDx = Number(cjkTspan.getAttribute("dx"))
+    const latinDx = Number(latinTspan.getAttribute("dx"))
+    expect(cjkDx).toBeGreaterThan(0)
+    expect(latinDx).toBeGreaterThan(0)
+    expect(cjkDx).toBeGreaterThan(latinDx)
   })
 
   // P0 hardening (robustness deep-review D1, family-sweep sibling of
