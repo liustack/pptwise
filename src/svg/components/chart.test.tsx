@@ -154,14 +154,13 @@ describe("chart component", () => {
       ],
     }
     const { container } = svg(chart.render(component, box, ctx))
-    const texts = Array.from(container.querySelectorAll("text"))
-    expect(texts).toHaveLength(4) // 2 bars * (category + value)
-
-    const categories = texts.filter((t) => t.getAttribute("fill") === ctx.colors.muted)
-    const values = texts.filter((t) => t.getAttribute("fill") === ctx.colors.text)
+    const categories = Array.from(container.querySelectorAll('[data-axis-tick="x"]'))
+    const values = Array.from(container.querySelectorAll("text")).filter(
+      (t) => t.getAttribute("fill") === ctx.colors.text,
+    )
     expect(categories.map((t) => t.textContent)).toEqual(["Q1", "Q2"])
     expect(values.map((t) => t.textContent)).toEqual(["100", "200"])
-    for (const t of texts) {
+    for (const t of categories) {
       expect(t.getAttribute("text-anchor")).toBe("middle")
     }
   })
@@ -177,9 +176,7 @@ describe("chart component", () => {
     // default 13px would be far wider than that, so fitSvgLine must shrink
     // it down to (or truncate it at) the configured minimum font size.
     const { container } = svg(chart.render(component, box, ctx))
-    const category = Array.from(container.querySelectorAll("text")).find(
-      (t) => t.getAttribute("fill") === ctx.colors.muted,
-    )!
+    const category = container.querySelector('[data-axis-tick="x"]')!
     expect(Number(category.getAttribute("font-size"))).toBeLessThanOrEqual(13)
     expect(Number(category.getAttribute("font-size"))).toBeGreaterThanOrEqual(8)
   })
@@ -200,11 +197,12 @@ describe("chart component", () => {
       ],
     }
     const { container } = svg(chart.render(component, box, ctx))
-    const texts = Array.from(container.querySelectorAll("text"))
-    const categories = texts.filter((t) => t.getAttribute("fill") === ctx.colors.muted)
-    const values = texts.filter((t) => t.getAttribute("fill") === ctx.colors.text)
+    const categories = Array.from(container.querySelectorAll('[data-axis-tick="x"]'))
+    const values = Array.from(container.querySelectorAll("text")).filter(
+      (t) => t.getAttribute("fill") === ctx.colors.text,
+    )
     expect(categories.map((t) => t.textContent)).toEqual(["Jan", "Feb", "Mar"])
-    expect(values.map((t) => t.textContent)).toEqual(["10", "20"]) // first + last only
+    expect(values.map((t) => t.textContent)).toEqual(["10", "20"])
   })
 
   // Task 8: chart.tsx must thread ctx.colors.accent through to the renderer
@@ -257,7 +255,7 @@ describe("chart component — axes (x_title/y_title/show_grid)", () => {
     { name: "Revenue", data: [{ x: "Q1", y: 100 }, { x: "Q2", y: 200 }] },
   ]
 
-  it("measure() grows one title band per present axis title, independent of script or length", () => {
+  it("measure() grows one title band when any axis title is present, independent of script or length", () => {
     const base = { type: "chart" as const, chart_type: "bar" as const, series: barSeries }
     expect(chart.measure({ ...base, axes: { x_title: "Quarter" } }, 1120, ctx)).toBe(
       chart.measure(base, 1120, ctx) + AXIS_TITLE_BAND_H,
@@ -270,7 +268,7 @@ describe("chart component — axes (x_title/y_title/show_grid)", () => {
     )
     expect(
       chart.measure({ ...base, axes: { x_title: "Quarter", y_title: "营业收入" } }, 1120, ctx),
-    ).toBe(chart.measure(base, 1120, ctx) + AXIS_TITLE_BAND_H * 2)
+    ).toBe(chart.measure(base, 1120, ctx) + AXIS_TITLE_BAND_H)
     expect(
       chart.measure({ ...base, axes: { x_title: "A Much Longer Quarter Axis Title" } }, 1120, ctx),
     ).toBe(chart.measure(base, 1120, ctx) + AXIS_TITLE_BAND_H)
@@ -283,7 +281,7 @@ describe("chart component — axes (x_title/y_title/show_grid)", () => {
     expect(chart.measure(withAxes, 1120, ctx)).toBe(chart.measure(base, 1120, ctx))
   })
 
-  it("paints both axis titles as a left-aligned horizontal pair above the plot", () => {
+  it("paints both axis titles as a left-aligned pair on one line below the plot", () => {
     const component = {
       type: "chart" as const,
       chart_type: "bar" as const,
@@ -295,12 +293,14 @@ describe("chart component — axes (x_title/y_title/show_grid)", () => {
     const xTitle = container.querySelector('[data-axis-title="x"]')!
     expect(yTitle.textContent).toBe("美元  ↑")
     expect(xTitle.textContent).toBe("Quarter  →")
-    expect(yTitle.getAttribute("x")).toBe(xTitle.getAttribute("x"))
-    expect(Number(yTitle.getAttribute("y"))).toBeLessThan(Number(xTitle.getAttribute("y")))
+    expect(Number(yTitle.getAttribute("x"))).toBeLessThan(Number(xTitle.getAttribute("x")))
+    expect(yTitle.getAttribute("y")).toBe(xTitle.getAttribute("y"))
     expect(Array.from(container.querySelectorAll("text")).filter((t) => t.textContent === "美" || t.textContent === "元")).toHaveLength(0)
-    const bar = container.querySelector("rect")!
-    expect(Number(bar.getAttribute("x"))).toBe(4)
-    expect(Number(bar.getAttribute("y"))).toBeGreaterThan(Number(xTitle.getAttribute("y")))
+    const bar = container.querySelector("rect[data-plot-mark]")!
+    expect(Number(bar.getAttribute("x"))).toBeGreaterThan(4)
+    expect(Number(bar.getAttribute("y")) + Number(bar.getAttribute("height"))).toBeLessThan(
+      Number(yTitle.getAttribute("y")),
+    )
   })
 
   it("paints x_title on bar direction=horizontal too", () => {
@@ -328,25 +328,23 @@ describe("chart component — axes (x_title/y_title/show_grid)", () => {
     expect(Array.from(container.querySelectorAll("text")).filter((t) => t.textContent === "数" || t.textContent === "值")).toHaveLength(0)
   })
 
-  it("does not steal a left sidebar — a y_title shifts the plot down, not right", () => {
+  it("does not steal a left sidebar for a y_title — tick gutter is always there", () => {
     const noAxes = { type: "chart" as const, chart_type: "bar" as const, series: barSeries }
     const withYTitle = { ...noAxes, axes: { y_title: "数值" } }
     const base = svg(chart.render(noAxes, box, ctx)).container.querySelector("rect")!
     const titled = svg(chart.render(withYTitle, box, ctx)).container.querySelector("rect")!
     expect(titled.getAttribute("x")).toBe(base.getAttribute("x"))
-    expect(Number(titled.getAttribute("y")) - Number(base.getAttribute("y"))).toBe(AXIS_TITLE_BAND_H)
+    expect(Number(base.getAttribute("x"))).toBeGreaterThan(4)
   })
 
-  it("x_title-only decks keep full plot width and shift the plot down one band", () => {
+  it("x_title-only decks keep plot width and leave the plot top unmoved", () => {
     const noAxes = { type: "chart" as const, chart_type: "bar" as const, series: barSeries }
     const xTitleOnly = { ...noAxes, axes: { x_title: "Quarter" } }
     const rectsBase = svg(chart.render(noAxes, box, ctx)).container.querySelectorAll("rect")
     const rectsXTitle = svg(chart.render(xTitleOnly, box, ctx)).container.querySelectorAll("rect")
     expect(rectsXTitle[0]!.getAttribute("x")).toBe(rectsBase[0]!.getAttribute("x"))
     expect(rectsXTitle[0]!.getAttribute("width")).toBe(rectsBase[0]!.getAttribute("width"))
-    expect(Number(rectsXTitle[0]!.getAttribute("y")) - Number(rectsBase[0]!.getAttribute("y"))).toBe(
-      AXIS_TITLE_BAND_H,
-    )
+    expect(rectsXTitle[0]!.getAttribute("y")).toBe(rectsBase[0]!.getAttribute("y"))
   })
 
   describe("axis title pair: every script is one horizontal line", () => {
@@ -364,8 +362,9 @@ describe("chart component — axes (x_title/y_title/show_grid)", () => {
       expect(yTitle.textContent).toBe("Connected equipment  ↑")
       expect(xTitle.textContent).toBe("Quarter  →")
       expect(Array.from(container.querySelectorAll("text")).filter((t) => t.textContent === "C" || t.textContent === "o")).toHaveLength(0)
-      expect(yTitle.getAttribute("x")).toBe("0")
-      expect(xTitle.getAttribute("x")).toBe("0")
+      expect(Number(yTitle.getAttribute("x"))).toBeGreaterThan(0)
+      expect(Number(yTitle.getAttribute("x"))).toBeLessThan(Number(xTitle.getAttribute("x")))
+      expect(yTitle.getAttribute("y")).toBe(xTitle.getAttribute("y"))
       expect(yTitle.getAttribute("fill")).toBe(ctx.colors.muted)
       expect(yTitle.getAttribute("transform")).toBeNull()
     })
@@ -383,13 +382,13 @@ describe("chart component — axes (x_title/y_title/show_grid)", () => {
       const noYTitle = { type: "chart" as const, chart_type: "bar" as const, series: barSeries }
       const cjk = { ...latin, axes: { y_title: "设备联网量" } }
       expect(chart.measure(cjk, 1120, ctx)).toBe(chart.measure(noYTitle, 1120, ctx) + AXIS_TITLE_BAND_H)
-      expect(chart.measure(latin, 1120, ctx)).toBe(chart.measure(noYTitle, 1120, ctx) + AXIS_TITLE_BAND_H * 2)
+      expect(chart.measure(latin, 1120, ctx)).toBe(chart.measure(noYTitle, 1120, ctx) + AXIS_TITLE_BAND_H)
       expect(
         chart.measure({ ...latin, axes: { x_title: "Quarter", y_title: "A".repeat(80) } }, 1120, ctx),
       ).toBe(chart.measure(latin, 1120, ctx))
     })
 
-    it("pushes the plot down for a y_title alone", () => {
+    it("keeps the plot top unmoved for a y_title alone — the pair sits below", () => {
       const noYTitle = { type: "chart" as const, chart_type: "bar" as const, series: barSeries }
       const yOnly = { ...latin, axes: { y_title: "Connected equipment" } }
       const bandTop = (component: typeof yOnly | typeof noYTitle) =>
@@ -398,7 +397,7 @@ describe("chart component — axes (x_title/y_title/show_grid)", () => {
             .map((el) => Number(el.getAttribute("y")))
             .reduce((a, b) => Math.min(a, b)),
         )
-      expect(bandTop(yOnly) - bandTop(noYTitle)).toBe(AXIS_TITLE_BAND_H)
+      expect(bandTop(yOnly)).toBe(bandTop(noYTitle))
     })
 
     it("fits an egregiously long Latin y_title, truncation-marked rather than overflowing", () => {
@@ -472,9 +471,9 @@ describe("chart component — axes (x_title/y_title/show_grid)", () => {
     const withOtherAxes = { ...bare, axes: { x_title: "Quarter" } }
     const withFalse = { ...bare, axes: { show_grid: false } }
     for (const component of [bare, withOtherAxes, withFalse]) {
-      expect(svg(chart.render(component, box, ctx)).container.querySelectorAll("line")).toHaveLength(
-        0,
-      )
+      const root = svg(chart.render(component, box, ctx)).container
+      expect(root.querySelectorAll("[data-grid]")).toHaveLength(0)
+      expect(root.querySelectorAll("[data-axis]")).toHaveLength(2)
     }
   })
 
@@ -485,7 +484,9 @@ describe("chart component — axes (x_title/y_title/show_grid)", () => {
       series: barSeries,
       axes: { show_grid: true },
     }
-    expect(svg(chart.render(withTrue, box, ctx)).container.querySelectorAll("line")).toHaveLength(3)
+    const root = svg(chart.render(withTrue, box, ctx)).container
+    expect(root.querySelectorAll('[data-grid="h"]').length).toBeGreaterThan(0)
+    expect(root.querySelectorAll('[data-grid="v"]')).toHaveLength(0)
   })
 
   it("a line chart keeps its gridlines by default — only bar lost them", () => {
@@ -494,14 +495,13 @@ describe("chart component — axes (x_title/y_title/show_grid)", () => {
       chart_type: "line" as const,
       series: barSeries,
     }
-    expect(svg(chart.render(lineComponent, box, ctx)).container.querySelectorAll("line")).toHaveLength(
-      3,
-    )
+    const on = svg(chart.render(lineComponent, box, ctx)).container
+    expect(on.querySelectorAll('[data-grid="h"]').length).toBeGreaterThan(0)
     const suppressed = { ...lineComponent, axes: { show_grid: false } }
-    expect(svg(chart.render(suppressed, box, ctx)).container.querySelectorAll("line")).toHaveLength(0)
+    expect(svg(chart.render(suppressed, box, ctx)).container.querySelectorAll("[data-grid]")).toHaveLength(0)
   })
 
-  it("show_grid=true renders new vertical gridlines on bar-horizontal (a real opt-in, not a dead toggle)", () => {
+  it("show_grid=true paints horizontal gridlines on bar-horizontal, never vertical ones", () => {
     const component = {
       type: "chart" as const,
       chart_type: "bar" as const,
@@ -510,7 +510,8 @@ describe("chart component — axes (x_title/y_title/show_grid)", () => {
       axes: { show_grid: true },
     }
     const { container } = svg(chart.render(component, box, ctx))
-    expect(container.querySelectorAll("line")).toHaveLength(3)
+    expect(container.querySelectorAll('[data-grid="v"]')).toHaveLength(0)
+    expect(container.querySelectorAll('[data-grid="h"]').length).toBeGreaterThan(0)
   })
 
   it("axes absent renders byte-identical markup to axes explicitly set to an empty object", () => {
@@ -611,7 +612,10 @@ describe("chart component — legend (n>=2 series)", () => {
   // every `text[font-family]` is unambiguously legend content.
   function legendTexts(container: HTMLElement): Element[] {
     return Array.from(container.querySelectorAll("text")).filter(
-      (t) => t.getAttribute("font-family") === ctx.fonts.body,
+      (t) =>
+        t.getAttribute("font-family") === ctx.fonts.body &&
+        !t.hasAttribute("data-axis-tick") &&
+        !t.hasAttribute("data-axis-title"),
     )
   }
 
@@ -948,7 +952,7 @@ describe("chart component — label-tuning A (header row for legend)", () => {
     expect(chart.measure({ ...oneSeries, axes: { y_title: "接入设备总量" } }, 1120, ctx)).toBe(
       240 + AXIS_TITLE_BAND_H,
     )
-    expect(chart.measure(groupedBar, 1120, ctx)).toBe(292 + AXIS_TITLE_BAND_H * 2)
+    expect(chart.measure(groupedBar, 1120, ctx)).toBe(292 + AXIS_TITLE_BAND_H)
     const twoSeriesNoAxes = { type: "chart" as const, chart_type: "bar" as const, series: groupedBar.series }
     expect(chart.measure(twoSeriesNoAxes, 1120, ctx)).toBe(292)
   })
@@ -960,8 +964,10 @@ describe("chart component — label-tuning A (header row for legend)", () => {
     expect(yTitle.textContent).toBe("接入设备总量  ↑")
     expect(xTitle.textContent).toBe("季度  →")
     expect(yTitle.getAttribute("y")).not.toBe("16")
-    expect(xTitle.getAttribute("x")).toBe(yTitle.getAttribute("x"))
-    expect(Array.from(container.querySelectorAll("text")).filter((t) => (t.textContent ?? "").length === 1)).toHaveLength(0)
+    expect(Number(yTitle.getAttribute("x"))).toBeLessThan(Number(xTitle.getAttribute("x")))
+    expect(yTitle.getAttribute("y")).toBe(xTitle.getAttribute("y"))
+    expect((yTitle.textContent ?? "").length).toBeGreaterThan(1)
+    expect((xTitle.textContent ?? "").length).toBeGreaterThan(1)
   })
 
   it("places the legend on the same header row, right-aligned, 12px muted", () => {
@@ -1059,8 +1065,8 @@ describe("chart component — axis title pair (cartesian value axis)", () => {
     const titledOne = { ...noTitleOne, axes: { y_title: cjkTitle } }
     const barOf = (c: typeof noTitleOne | typeof titledOne) =>
       svg(chart.render(c, box, ctx)).container.querySelector("rect")!
-    expect(Number(barOf(noTitleOne).getAttribute("x"))).toBe(4)
-    expect(Number(barOf(titledOne).getAttribute("x"))).toBe(4)
+    expect(Number(barOf(noTitleOne).getAttribute("x"))).toBeGreaterThan(4)
+    expect(Number(barOf(titledOne).getAttribute("x"))).toBe(Number(barOf(noTitleOne).getAttribute("x")))
   })
 
   it("grows measure() by one title band for a y_title alone, CJK or Latin", () => {
@@ -1142,6 +1148,28 @@ describe("chart component — axis title pair (cartesian value axis)", () => {
     }
   })
 
+  it("draws about four y ticks with units, all outside the plot", () => {
+    const component = {
+      type: "chart" as const,
+      chart_type: "scatter" as const,
+      axes: { x_title: "周期", y_title: "活跃率", x_unit: "周", y_unit: "%" },
+      series: [{ name: "S", data: [{ x: 2, y: 61, size: 14 }, { x: 4, y: 72, size: 22 }, { x: 9, y: 88, size: 18 }] }],
+    }
+    const { container } = svg(chart.render(component, box, ctx))
+    const yTicks = Array.from(container.querySelectorAll('[data-axis-tick="y"]'))
+    const xTicks = Array.from(container.querySelectorAll('[data-axis-tick="x"]'))
+    expect(yTicks.length).toBeGreaterThanOrEqual(3)
+    expect(yTicks.length).toBeLessThanOrEqual(6)
+    expect(xTicks.length).toBeGreaterThanOrEqual(3)
+    expect(yTicks.some((t) => (t.textContent ?? "").includes("%"))).toBe(true)
+    expect(xTicks.some((t) => (t.textContent ?? "").includes("周"))).toBe(true)
+    expect(container.querySelectorAll('[data-grid="v"]')).toHaveLength(0)
+    const yAxisX = Number(container.querySelector('[data-axis="y"]')!.getAttribute("x1"))
+    const xAxisY = Number(container.querySelector('[data-axis="x"]')!.getAttribute("y1"))
+    for (const t of yTicks) expect(Number(t.getAttribute("x"))).toBeLessThan(yAxisX)
+    for (const t of xTicks) expect(Number(t.getAttribute("y"))).toBeGreaterThan(xAxisY)
+  })
+
   it("keeps scatter bubbles off the axis title", () => {
     const component = {
       type: "chart" as const,
@@ -1153,10 +1181,10 @@ describe("chart component — axis title pair (cartesian value axis)", () => {
     const yTitle = container.querySelector('[data-axis-title="y"]')!
     const titleY = Number(yTitle.getAttribute("y"))
     const titleSize = Number(yTitle.getAttribute("font-size"))
-    const titleBottom = titleY + titleSize * 0.25
+    const titleTop = titleY - titleSize
     for (const circle of Array.from(container.querySelectorAll("circle"))) {
-      const top = Number(circle.getAttribute("cy")) - Number(circle.getAttribute("r"))
-      expect(top).toBeGreaterThan(titleBottom)
+      const bottom = Number(circle.getAttribute("cy")) + Number(circle.getAttribute("r"))
+      expect(bottom).toBeLessThan(titleTop)
     }
   })
 })

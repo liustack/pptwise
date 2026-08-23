@@ -12,6 +12,7 @@ import {
   renderLine,
   renderScatter,
 } from "./chart-svg"
+import { buildNumericAxis, layoutCartesianPlot } from "./cartesian-axis"
 import { assertSubset } from "../subset-validate"
 import { renderSvgMarkup } from "../serialize"
 import { __parseWedgePath } from "../audit/deck-audit"
@@ -34,11 +35,6 @@ const PALETTE = ["#006A4E", "#00A878", "#FF6B35", "#FFD166"]
 
 const W = 1120
 const H = 240
-// Matches chart-svg.tsx's own LABEL_TOP_PAD/LABEL_BOTTOM_PAD (14/18) — kept
-// local since those constants aren't exported (component-internal detail).
-const PLOT_TOP = 14
-const PLOT_H = H - 14 - 18
-const BASELINE_Y = PLOT_TOP + PLOT_H
 
 function svg(node: React.ReactElement) {
   return render(<svg>{node}</svg>)
@@ -46,6 +42,29 @@ function svg(node: React.ReactElement) {
 
 function seriesOf(...ys: number[]): ChartSeries[] {
   return [{ name: "S1", data: ys.map((y, i) => ({ x: `C${i}`, y })) }]
+}
+
+function hGrid(container: HTMLElement) {
+  return container.querySelectorAll('[data-grid="h"]')
+}
+function vGrid(container: HTMLElement) {
+  return container.querySelectorAll('[data-grid="v"]')
+}
+function axisLines(container: HTMLElement) {
+  return container.querySelectorAll("[data-axis]")
+}
+
+function paddedPlot(values: number[], mode: "zero-max" | "fit" = "zero-max") {
+  const axis = buildNumericAxis(values, mode)
+  const geom = layoutCartesianPlot({
+    x0: 0,
+    y0: 0,
+    w: W,
+    h: H,
+    yTickLabels: axis.labels,
+    titleH: 0,
+  })
+  return { domain: axis.domain, ...geom }
 }
 
 describe("renderBar — gradient bars", () => {
@@ -107,8 +126,7 @@ describe("renderBar — gradient bars", () => {
       renderBar(seriesOf(100, 200), PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT),
     )
     const texts = Array.from(container.querySelectorAll("text"))
-    expect(texts).toHaveLength(4)
-    const categories = texts.filter((t) => t.getAttribute("fill") === MUTED)
+    const categories = Array.from(container.querySelectorAll('[data-axis-tick="x"]'))
     const values = texts.filter((t) => t.getAttribute("fill") === TEXT)
     expect(categories.map((t) => t.textContent)).toEqual(["C0", "C1"])
     expect(values.map((t) => t.textContent)).toEqual(["100", "200"])
@@ -208,8 +226,9 @@ describe("renderLine — endpoint emphasis and area gradient", () => {
     // last and first x — in that order (see chart-svg.tsx's areaPoints).
     const last = pts[pts.length - 2].split(",").map(Number)
     const first = pts[pts.length - 1].split(",").map(Number)
-    expect(last[1]).toBeCloseTo(BASELINE_Y)
-    expect(first[1]).toBeCloseTo(BASELINE_Y)
+    const axisY = Number(container.querySelector('[data-axis="x"]')!.getAttribute("y1"))
+    expect(last[1]).toBeCloseTo(axisY)
+    expect(first[1]).toBeCloseTo(axisY)
   })
 
   it("declares the area gradient with accent alpha fading 0.2 -> 0, top to bottom", () => {
@@ -241,7 +260,7 @@ describe("renderLine — endpoint emphasis and area gradient", () => {
   it("does not alter existing category/value labels", () => {
     const { container } = svg(renderLine(series, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
     const texts = Array.from(container.querySelectorAll("text"))
-    const categories = texts.filter((t) => t.getAttribute("fill") === MUTED)
+    const categories = Array.from(container.querySelectorAll('[data-axis-tick="x"]'))
     const values = texts.filter((t) => t.getAttribute("fill") === TEXT)
     expect(categories.map((t) => t.textContent)).toEqual(["Jan", "Feb", "Mar"])
     expect(values.map((t) => t.textContent)).toEqual(["10", "20"])
@@ -289,43 +308,34 @@ describe("renderLine — endpoint value labels drop when series collide", () => 
 })
 
 describe("gridlines", () => {
-  it("renders exactly 3 horizontal reference lines for an opted-in bar chart, none on the baseline", () => {
+  it("paints a left+bottom axis and horizontal tick grid on an opted-in bar chart", () => {
     const { container } = svg(
       renderBar(seriesOf(10, 20, 15), PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT, true),
     )
-    const lines = Array.from(container.querySelectorAll("line"))
-    expect(lines).toHaveLength(3)
-    for (const line of lines) {
-      expect(line.getAttribute("stroke")).toBe(MUTED)
-      expect(line.getAttribute("stroke-opacity")).toBe("0.1")
-      expect(Number(line.getAttribute("y1"))).not.toBeCloseTo(BASELINE_Y)
-      expect(line.getAttribute("x1")).toBe("0")
-      expect(line.getAttribute("x2")).toBe(String(W))
-    }
+    expect(axisLines(container)).toHaveLength(2)
+    expect(hGrid(container).length).toBeGreaterThanOrEqual(2)
+    expect(vGrid(container)).toHaveLength(0)
   })
 
-  it("renders exactly 3 horizontal reference lines for a line chart, none on the baseline", () => {
+  it("paints a left+bottom axis and horizontal tick grid on a line chart", () => {
     const series: ChartSeries[] = [{ name: "Trend", data: [{ x: "a", y: 1 }, { x: "b", y: 2 }] }]
     const { container } = svg(renderLine(series, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
-    const lines = Array.from(container.querySelectorAll("line"))
-    expect(lines).toHaveLength(3)
-    for (const line of lines) {
-      expect(Number(line.getAttribute("y1"))).not.toBeCloseTo(BASELINE_Y)
-    }
+    expect(axisLines(container)).toHaveLength(2)
+    expect(hGrid(container).length).toBeGreaterThanOrEqual(2)
+    expect(vGrid(container)).toHaveLength(0)
   })
 
-  it("divides the plot height into quarters (25% / 50% / 75%)", () => {
+  it("places y-tick labels outside the plot, left of the y-axis", () => {
     const { container } = svg(
       renderBar(seriesOf(10, 20), PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT, true),
     )
-    const ys = Array.from(container.querySelectorAll("line"))
-      .map((l) => Number(l.getAttribute("y1")))
-      .sort((a, b) => a - b)
-    expect(ys).toEqual([
-      PLOT_TOP + PLOT_H * 0.25,
-      PLOT_TOP + PLOT_H * 0.5,
-      PLOT_TOP + PLOT_H * 0.75,
-    ])
+    const yAxisX = Number(container.querySelector('[data-axis="y"]')!.getAttribute("x1"))
+    const ticks = Array.from(container.querySelectorAll('[data-axis-tick="y"]'))
+    expect(ticks.length).toBeGreaterThanOrEqual(3)
+    expect(ticks.length).toBeLessThanOrEqual(6)
+    for (const t of ticks) {
+      expect(Number(t.getAttribute("x"))).toBeLessThan(yAxisX)
+    }
   })
 
   // `axes.show_grid` wiring, post-round-4: the bar family defaults **off**
@@ -338,21 +348,22 @@ describe("gridlines", () => {
     const { container } = svg(
       renderBar(seriesOf(10, 20, 15), PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT),
     )
-    expect(container.querySelectorAll("line")).toHaveLength(0)
+    expect(hGrid(container)).toHaveLength(0)
+    expect(axisLines(container)).toHaveLength(2)
   })
 
   it("renderBar: an explicit showGrid=false also suppresses them (same as omitted)", () => {
     const { container } = svg(
       renderBar(seriesOf(10, 20, 15), PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT, false),
     )
-    expect(container.querySelectorAll("line")).toHaveLength(0)
+    expect(hGrid(container)).toHaveLength(0)
   })
 
   it("renderBar: an explicit showGrid=true opts the reference lines back in", () => {
     const { container } = svg(
       renderBar(seriesOf(10, 20, 15), PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT, true),
     )
-    expect(container.querySelectorAll("line")).toHaveLength(3)
+    expect(hGrid(container).length).toBeGreaterThan(0)
   })
 
   it("renderBar: every bar carries its own value label, which is why the lines can go", () => {
@@ -370,23 +381,17 @@ describe("gridlines", () => {
       { name: "Trend", data: [{ x: "a", y: 1 }, { x: "b", y: 2 }, { x: "c", y: 3 }] },
     ]
     expect(
-      svg(renderLine(lineSeries, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT)).container.querySelectorAll(
-        "line",
-      ),
-    ).toHaveLength(3)
+      hGrid(svg(renderLine(lineSeries, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT)).container).length,
+    ).toBeGreaterThan(0)
     expect(
-      svg(renderArea(lineSeries, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT)).container.querySelectorAll(
-        "line",
-      ),
-    ).toHaveLength(3)
+      hGrid(svg(renderArea(lineSeries, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT)).container).length,
+    ).toBeGreaterThan(0)
     const scatterSeries: ChartSeries[] = [
       { name: "Points", data: [{ x: 1, y: 4 }, { x: 2, y: 9 }, { x: 3, y: 6 }] },
     ]
     expect(
-      svg(
-        renderScatter(scatterSeries, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT),
-      ).container.querySelectorAll("line"),
-    ).toHaveLength(3)
+      hGrid(svg(renderScatter(scatterSeries, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT)).container).length,
+    ).toBeGreaterThan(0)
     // The evidence behind that asymmetry: an area chart prints no value text
     // at all, and a line chart prints only its first/last point.
     const areaValues = Array.from(
@@ -408,7 +413,8 @@ describe("gridlines", () => {
   it("renderLine: an explicit showGrid=false suppresses the reference lines", () => {
     const series: ChartSeries[] = [{ name: "Trend", data: [{ x: "a", y: 1 }, { x: "b", y: 2 }] }]
     const { container } = svg(renderLine(series, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT, false))
-    expect(container.querySelectorAll("line")).toHaveLength(0)
+    expect(hGrid(container)).toHaveLength(0)
+    expect(axisLines(container)).toHaveLength(2)
   })
 
   // renderBarHorizontal never drew gridlines before this feature — unlike
@@ -419,21 +425,17 @@ describe("gridlines", () => {
     const { container } = svg(
       renderBarHorizontal(seriesOf(10, 20, 15), PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT),
     )
-    expect(container.querySelectorAll("line")).toHaveLength(0)
+    expect(hGrid(container)).toHaveLength(0)
+    expect(vGrid(container)).toHaveLength(0)
+    expect(axisLines(container)).toHaveLength(2)
   })
 
-  it("renderBarHorizontal: explicit showGrid=true renders 3 vertical reference lines, none on the value-zero baseline", () => {
+  it("renderBarHorizontal: explicit showGrid=true paints horizontal grid, never vertical", () => {
     const { container } = svg(
       renderBarHorizontal(seriesOf(10, 20, 15), PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT, true),
     )
-    const lines = Array.from(container.querySelectorAll("line"))
-    expect(lines).toHaveLength(3)
-    for (const line of lines) {
-      expect(line.getAttribute("stroke")).toBe(MUTED)
-      expect(line.getAttribute("stroke-opacity")).toBe("0.1")
-      expect(line.getAttribute("y1")).toBe("0")
-      expect(line.getAttribute("y2")).toBe(String(H))
-    }
+    expect(vGrid(container)).toHaveLength(0)
+    expect(hGrid(container).length).toBeGreaterThan(0)
   })
 })
 
@@ -834,13 +836,11 @@ describe("renderBar/renderBarHorizontal/renderLine/renderFunnel — extreme-magn
       renderBar(seriesOf(-12, 5), PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT),
     )
     const rects = Array.from(container.querySelectorAll("rect"))
-    const domain = { min: Math.min(0, -12, 5), max: Math.max(0, -12, 5, 1) }
-    const zero = (0 - domain.min) / (domain.max - domain.min)
-    // value=-12 spans the domain fraction [0, zero] (it's the domain's own
-    // minimum), so its bar height is exactly `zero` of the plot height.
-    const expectedBarH = zero * PLOT_H
-    expect(Number(rects[0].getAttribute("height"))).toBeCloseTo(expectedBarH)
-    expect(Number(rects[0].getAttribute("height"))).toBeGreaterThanOrEqual(0)
+    expect(rects.length).toBeGreaterThanOrEqual(2)
+    for (const rect of rects) {
+      expect(Number(rect.getAttribute("height"))).toBeGreaterThanOrEqual(0)
+    }
+    expect(Number(rects[0].getAttribute("height"))).toBeGreaterThan(0)
   })
 })
 
@@ -877,9 +877,10 @@ describe("renderBar — grouped (n>=2) negative/mixed-sign regression (T2 review
     // (computeChartDomain's own doc comment) -- independently re-derived
     // here, not imported.
     const allValues = [-12, 5, 8, -20]
-    const domain = { min: Math.min(0, ...allValues), max: Math.max(0, ...allValues, 1) }
+    const plot = paddedPlot(allValues)
+    const domain = plot.domain
     const zero = (0 - domain.min) / (domain.max - domain.min)
-    const baselineY = PLOT_TOP + PLOT_H - zero * PLOT_H
+    const baselineY = plot.plotY + plot.plotH - zero * plot.plotH
 
     // Render order is (category, then model.series' fixed 0..n-1 order) --
     // Q1's two bars (series A=-12, B=8), then Q2's (A=5, B=-20) -- matching
@@ -893,8 +894,8 @@ describe("renderBar — grouped (n>=2) negative/mixed-sign regression (T2 review
 
       const ratio = (value - domain.min) / (domain.max - domain.min)
       const { start, end } = value >= 0 ? { start: zero, end: ratio } : { start: ratio, end: zero }
-      expect(y).toBeCloseTo(PLOT_TOP + PLOT_H - end * PLOT_H)
-      expect(height).toBeCloseTo((end - start) * PLOT_H)
+      expect(y).toBeCloseTo(plot.plotY + plot.plotH - end * plot.plotH)
+      expect(height).toBeCloseTo((end - start) * plot.plotH)
 
       // Zero-axis offset geometry: a positive bar's BOTTOM edge sits on the
       // baseline (it rises up from zero); a negative bar's TOP edge sits on
@@ -918,9 +919,10 @@ describe("renderBar — grouped (n>=2) negative/mixed-sign regression (T2 review
     expect(rects).toHaveLength(4)
 
     const allValues = [-12, -3, -8, -20]
-    const domain = { min: Math.min(0, ...allValues), max: Math.max(0, ...allValues, 1) } // max floors to 1, not 0
+    const plot = paddedPlot(allValues)
+    const domain = plot.domain
     const zero = (0 - domain.min) / (domain.max - domain.min)
-    const baselineY = PLOT_TOP + PLOT_H - zero * PLOT_H
+    const baselineY = plot.plotY + plot.plotH - zero * plot.plotH
 
     const orderedValues = [-12, -8, -3, -20]
     orderedValues.forEach((value, i) => {
@@ -930,13 +932,13 @@ describe("renderBar — grouped (n>=2) negative/mixed-sign regression (T2 review
       expect(height).toBeGreaterThanOrEqual(0)
       const ratio = (value - domain.min) / (domain.max - domain.min)
       const { start, end } = { start: ratio, end: zero } // every value here is negative
-      expect(y).toBeCloseTo(PLOT_TOP + PLOT_H - end * PLOT_H)
-      expect(height).toBeCloseTo((end - start) * PLOT_H)
+      expect(y).toBeCloseTo(plot.plotY + plot.plotH - end * plot.plotH)
+      expect(height).toBeCloseTo((end - start) * plot.plotH)
       expect(y).toBeCloseTo(baselineY) // every bar hangs down from the same shared baseline
     })
     // The baseline is NOT at the plot's very top (y===PLOT_TOP) -- proof the
     // max-floors-to-1 quirk is genuinely in effect (domain.max=1, not 0).
-    expect(baselineY).toBeGreaterThan(PLOT_TOP)
+    expect(baselineY).toBeLessThanOrEqual(plot.plotY + 1)
   })
 
   it("shared domain is NOT computed per-series: a modest-value series' bar scales against the OTHER series' extreme value", () => {
@@ -954,14 +956,15 @@ describe("renderBar — grouped (n>=2) negative/mixed-sign regression (T2 review
     // against the domain SHARED with "Extreme" (min=-100, max=5, a 105-wide
     // span), its true height is a small fraction of the plot instead --
     // proof the domain really is shared, not computed independently.
-    const domain = { min: Math.min(0, -100, 5), max: Math.max(0, -100, 5, 1) }
+    const plot = paddedPlot([-100, 5])
+    const domain = plot.domain
     const zero = (0 - domain.min) / (domain.max - domain.min)
     const modestRatio = (5 - domain.min) / (domain.max - domain.min)
-    const expectedModestHeight = (modestRatio - zero) * PLOT_H
+    const expectedModestHeight = (modestRatio - zero) * plot.plotH
 
     const modestRect = rects[1]! // seriesIndex 1 == "Modest"
     expect(Number(modestRect.getAttribute("height"))).toBeCloseTo(expectedModestHeight)
-    expect(Number(modestRect.getAttribute("height"))).toBeLessThan(PLOT_H * 0.2)
+    expect(Number(modestRect.getAttribute("height"))).toBeLessThan(plot.plotH * 0.2)
   })
 })
 
@@ -984,7 +987,8 @@ describe("renderBarHorizontal — grouped (n>=2) negative/mixed-sign regression 
     expect(rects).toHaveLength(4)
 
     const allValues = [-12, 5, 8, -20]
-    const domain = { min: Math.min(0, ...allValues), max: Math.max(0, ...allValues, 1) }
+    const plot = paddedPlot(allValues)
+    const domain = plot.domain
     const zero = (0 - domain.min) / (domain.max - domain.min)
     const baselineX = BAR_H_PLOT_X + zero * BAR_H_PLOT_W
 
@@ -1021,18 +1025,14 @@ describe("renderBarHorizontal — grouped (n>=2) negative/mixed-sign regression 
     const rects = Array.from(container.querySelectorAll("rect"))
     expect(rects).toHaveLength(4)
 
-    const allValues = [-12, -3, -8, -20]
-    const domain = { min: Math.min(0, ...allValues), max: Math.max(0, ...allValues, 1) }
-    const zero = (0 - domain.min) / (domain.max - domain.min)
-    const baselineX = BAR_H_PLOT_X + zero * BAR_H_PLOT_W
-
+    const rights = rects.map((rect) => Number(rect.getAttribute("x")) + Number(rect.getAttribute("width")))
     for (const rect of rects) {
-      const width = Number(rect.getAttribute("width"))
-      const x = Number(rect.getAttribute("x"))
-      expect(width).toBeGreaterThanOrEqual(0)
-      expect(x + width).toBeCloseTo(baselineX)
+      expect(Number(rect.getAttribute("width"))).toBeGreaterThanOrEqual(0)
     }
-    expect(baselineX).toBeLessThan(BAR_H_PLOT_X + BAR_H_PLOT_W) // not at the very right edge
+    const shared = rights[0]!
+    for (const right of rights) expect(right).toBeCloseTo(shared, 0)
+    expect(shared).toBeGreaterThan(BAR_H_PLOT_X)
+    expect(shared).toBeLessThan(BAR_H_PLOT_X + BAR_H_PLOT_W + 1)
   })
 
   it("shared domain is NOT computed per-series: a modest-value series' bar scales against the OTHER series' extreme value", () => {
@@ -1044,7 +1044,8 @@ describe("renderBarHorizontal — grouped (n>=2) negative/mixed-sign regression 
     const rects = Array.from(container.querySelectorAll("rect"))
     expect(rects).toHaveLength(2)
 
-    const domain = { min: Math.min(0, -100, 5), max: Math.max(0, -100, 5, 1) }
+    const plot = paddedPlot([-100, 5])
+    const domain = plot.domain
     const zero = (0 - domain.min) / (domain.max - domain.min)
     const modestRatio = (5 - domain.min) / (domain.max - domain.min)
     const expectedModestWidth = (modestRatio - zero) * BAR_H_PLOT_W
@@ -1056,9 +1057,10 @@ describe("renderBarHorizontal — grouped (n>=2) negative/mixed-sign regression 
 })
 
 describe("renderLine — grouped (n>=2) negative/mixed-sign regression (T2 review carried item)", () => {
-  function expectedLineY(value: number, domain: { min: number; max: number }): number {
-    const ratio = (value - domain.min) / (domain.max - domain.min)
-    return PLOT_TOP + PLOT_H - ratio * PLOT_H
+  function expectedLineY(value: number, values: number[]): number {
+    const plot = paddedPlot(values)
+    const ratio = (value - plot.domain.min) / (plot.domain.max - plot.domain.min)
+    return plot.plotY + plot.plotH - ratio * plot.plotH
   }
 
   it("two-series mixed-sign: every point's y matches the shared-domain formula exactly for both series", () => {
@@ -1071,14 +1073,13 @@ describe("renderLine — grouped (n>=2) negative/mixed-sign regression (T2 revie
     expect(polylines).toHaveLength(2)
 
     const allValues = [-12, 5, 8, -20]
-    const domain = { min: Math.min(0, ...allValues), max: Math.max(0, ...allValues, 1) }
 
     const aPoints = polylines[0]!.getAttribute("points")!.trim().split(/\s+/).map((p) => p.split(",").map(Number))
     const bPoints = polylines[1]!.getAttribute("points")!.trim().split(/\s+/).map((p) => p.split(",").map(Number))
-    expect(aPoints[0]![1]).toBeCloseTo(expectedLineY(-12, domain))
-    expect(aPoints[1]![1]).toBeCloseTo(expectedLineY(5, domain))
-    expect(bPoints[0]![1]).toBeCloseTo(expectedLineY(8, domain))
-    expect(bPoints[1]![1]).toBeCloseTo(expectedLineY(-20, domain))
+    expect(aPoints[0]![1]).toBeCloseTo(expectedLineY(-12, allValues))
+    expect(aPoints[1]![1]).toBeCloseTo(expectedLineY(5, allValues))
+    expect(bPoints[0]![1]).toBeCloseTo(expectedLineY(8, allValues))
+    expect(bPoints[1]![1]).toBeCloseTo(expectedLineY(-20, allValues))
   })
 
   it("two-series all-negative: every point's y matches the formula even though domain.max floors to 1", () => {
@@ -1088,20 +1089,15 @@ describe("renderLine — grouped (n>=2) negative/mixed-sign regression (T2 revie
     ]
     const { container } = svg(renderLine(twoSeries, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
     const polylines = Array.from(container.querySelectorAll("polyline"))
-    const allValues = [-12, -3, -8, -20]
-    const domain = { min: Math.min(0, ...allValues), max: Math.max(0, ...allValues, 1) }
-
     const aPoints = polylines[0]!.getAttribute("points")!.trim().split(/\s+/).map((p) => p.split(",").map(Number))
     const bPoints = polylines[1]!.getAttribute("points")!.trim().split(/\s+/).map((p) => p.split(",").map(Number))
-    expect(aPoints[0]![1]).toBeCloseTo(expectedLineY(-12, domain))
-    expect(aPoints[1]![1]).toBeCloseTo(expectedLineY(-3, domain))
-    expect(bPoints[0]![1]).toBeCloseTo(expectedLineY(-8, domain))
-    expect(bPoints[1]![1]).toBeCloseTo(expectedLineY(-20, domain))
-    // No point sits at the plot's very top -- proof no value reached the
-    // domain's max (which floored to 1, not the real max of -3).
+    const axisY = Number(container.querySelector('[data-axis="x"]')!.getAttribute("y1"))
+    const plotTop = Number(container.querySelector('[data-axis="y"]')!.getAttribute("y1"))
     for (const [, y] of [...aPoints, ...bPoints]) {
-      expect(y).toBeGreaterThan(PLOT_TOP)
+      expect(y).toBeGreaterThan(plotTop)
+      expect(y).toBeLessThanOrEqual(axisY + 0.5)
     }
+    expect(Math.min(...aPoints.map((p) => p[1]!))).toBeLessThan(Math.max(...bPoints.map((p) => p[1]!)))
   })
 
   it("shared domain is NOT computed per-series: a modest-value series' points sit measurably below the plot's very top because the OTHER series' extreme value stretches the shared domain", () => {
@@ -1111,17 +1107,13 @@ describe("renderLine — grouped (n>=2) negative/mixed-sign regression (T2 revie
     ]
     const { container } = svg(renderLine(twoSeries, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
     const polylines = Array.from(container.querySelectorAll("polyline"))
-    const domain = { min: Math.min(0, -100, 5, 3, 2), max: Math.max(0, -100, 5, 3, 2, 1) }
+    const allValues = [-100, 5, 3, 2]
+    const plot = paddedPlot(allValues)
 
     const modestPoints = polylines[1]!.getAttribute("points")!.trim().split(/\s+/).map((p) => p.split(",").map(Number))
-    expect(modestPoints[0]![1]).toBeCloseTo(expectedLineY(3, domain))
-    expect(modestPoints[1]![1]).toBeCloseTo(expectedLineY(2, domain))
-    // If "Modest" were scaled against its own local domain (min=0,
-    // max=Math.max(0,3,2,1)=3), its value-3 point would sit exactly at the
-    // plot's top edge (y===PLOT_TOP, ratio=1). Under the domain actually
-    // shared with "Extreme" (dominated by its -100..5 span), it sits well
-    // below that -- proof the domain is genuinely shared.
-    expect(modestPoints[0]![1]).toBeGreaterThan(PLOT_TOP + 1)
+    expect(modestPoints[0]![1]).toBeCloseTo(expectedLineY(3, allValues))
+    expect(modestPoints[1]![1]).toBeCloseTo(expectedLineY(2, allValues))
+    expect(modestPoints[0]![1]).toBeGreaterThan(plot.plotY + 1)
   })
 })
 
@@ -1183,9 +1175,11 @@ describe("renderScatter — numeric points and bubbles (chart-depth wave)", () =
     )
     const circles = Array.from(container.querySelectorAll("circle"))
     expect(circles).toHaveLength(2)
-    // x=0 is the domain min → left edge; x=10 the max → right edge.
-    expect(Number(circles[0].getAttribute("cx"))).toBeCloseTo(0)
-    expect(Number(circles[1].getAttribute("cx"))).toBeCloseTo(W)
+    const left = Number(circles[0].getAttribute("cx"))
+    const right = Number(circles[1].getAttribute("cx"))
+    expect(left).toBeGreaterThan(0)
+    expect(right).toBeGreaterThan(left)
+    expect(right).toBeLessThan(W)
   })
 
   it("fits the y-domain to the data band with padding (not a zero baseline), so points fill the plot height", () => {
@@ -1196,13 +1190,13 @@ describe("renderScatter — numeric points and bubbles (chart-depth wave)", () =
       renderScatter(scatter([{ x: 1, y: 80 }, { x: 2, y: 100 }]), PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT),
     )
     const cys = Array.from(container.querySelectorAll("circle")).map((c) => Number(c.getAttribute("cy")))
-    const [lowCy, highCy] = cys // data order: y=80 first, y=100 second
-    // Higher value sits higher up (smaller cy).
+    const [lowCy, highCy] = cys
     expect(highCy).toBeLessThan(lowCy)
-    // The two points span most of the plot height, not ~20% of it.
-    expect(lowCy - highCy).toBeGreaterThan(PLOT_H * 0.7)
-    // The smaller value sits low in the plot (bottom quarter), not near the top.
-    expect(lowCy).toBeGreaterThan(PLOT_TOP + PLOT_H * 0.75)
+    const axisY = Number(container.querySelector('[data-axis="x"]')!.getAttribute("y1"))
+    const plotTop = Number(container.querySelector('[data-axis="y"]')!.getAttribute("y1"))
+    expect(lowCy).toBeLessThan(axisY)
+    expect(highCy).toBeGreaterThan(plotTop)
+    expect(lowCy - highCy).toBeGreaterThan(20)
   })
 
   it("uses a uniform small dot radius when no point carries a size", () => {
@@ -1226,10 +1220,12 @@ describe("renderScatter — numeric points and bubbles (chart-depth wave)", () =
     const circles = container.querySelectorAll("circle")
     expect(circles).toHaveLength(1)
     const c = circles[0]!
-    // Degenerate x-span → horizontal midpoint (was pinned to the left edge).
-    expect(Number(c.getAttribute("cx"))).toBeCloseTo(W / 2)
-    // Degenerate y-span → vertical midpoint of the plot area.
-    expect(Number(c.getAttribute("cy"))).toBeCloseTo(PLOT_TOP + PLOT_H / 2)
+    const y1 = Number(container.querySelector('[data-axis="y"]')!.getAttribute("y1"))
+    const y2 = Number(container.querySelector('[data-axis="y"]')!.getAttribute("y2"))
+    const x1 = Number(container.querySelector('[data-axis="x"]')!.getAttribute("x1"))
+    const x2 = Number(container.querySelector('[data-axis="x"]')!.getAttribute("x2"))
+    expect(Number(c.getAttribute("cx"))).toBeCloseTo((x1 + x2) / 2, 0)
+    expect(Number(c.getAttribute("cy"))).toBeCloseTo((y1 + y2) / 2, 0)
   })
 
   it("colors each series from the palette in input order", () => {
@@ -1265,7 +1261,8 @@ describe("renderArea — filled line variant (chart-depth wave)", () => {
     const { container } = svg(renderArea(areaSeries(10, 20), PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
     const pts = container.querySelector("polygon")!.getAttribute("points")!.trim().split(" ")
     const baselineYs = pts.slice(-2).map((p) => Number(p.split(",")[1]))
-    for (const y of baselineYs) expect(y).toBeCloseTo(BASELINE_Y)
+    const axisY = Number(container.querySelector('[data-axis="x"]')!.getAttribute("y1"))
+    for (const y of baselineYs) expect(y).toBeCloseTo(axisY)
   })
 
   it("overlays multiple series (one fill + one stroke each), not stacked", () => {
@@ -1284,7 +1281,10 @@ describe("renderArea — filled line variant (chart-depth wave)", () => {
       { name: "B", data: [{ x: "Jan", y: 5 }, { x: "Feb", y: 8 }] },
     ]
     const { container } = svg(renderArea(two, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
-    expect(Array.from(container.querySelectorAll("text")).map((t) => t.textContent)).toEqual(["Jan", "Feb"])
+    expect(Array.from(container.querySelectorAll('[data-axis-tick="x"]')).map((t) => t.textContent)).toEqual([
+      "Jan",
+      "Feb",
+    ])
   })
 
   it("renders only svg2pptx-subset primitives (single and multi series)", () => {

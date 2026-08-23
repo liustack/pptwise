@@ -404,6 +404,20 @@ export function layoutPage(layoutId: string, lex: Lexicon, assets: CorpusAssets,
  * almost never alone on a real slide and its spacing against neighbouring
  * text is part of what is being judged.
  */
+const CARTESIAN_CHART_TYPES = new Set(["bar", "line", "scatter", "area"])
+
+function isCartesianChart(component: Component): component is Extract<Component, { type: "chart" }> {
+  return component.type === "chart" && CARTESIAN_CHART_TYPES.has(component.chart_type)
+}
+
+function isBubbleChart(component: Component): boolean {
+  return (
+    component.type === "chart" &&
+    component.chart_type === "scatter" &&
+    component.series.some((s) => s.data.some((d) => d.size != null))
+  )
+}
+
 export function componentPage(
   componentId: string,
   build: (lex: Lexicon) => Component,
@@ -413,7 +427,9 @@ export function componentPage(
   opts: { solo?: boolean } = {},
 ): PptxIR {
   const component = build(lex)
-  const solo = opts.solo ?? FULL_BODY_TYPES.has(component.type)
+  const cartesian = isCartesianChart(component)
+  const bubble = isBubbleChart(component)
+  const solo = opts.solo ?? (FULL_BODY_TYPES.has(component.type) || cartesian)
 
   // A one-sentence lead-in, not the full corpus paragraph. The paragraph
   // runs long enough in English that it consumed the content rect and the
@@ -423,9 +439,14 @@ export function componentPage(
 
   const slide: Slide = {
     type: "content",
-    heading: lex.headings[8]!,
+    heading: cartesian && component.chart_type === "scatter" ? lex.scatterHeading : lex.headings[8]!,
+    subheading: cartesian
+      ? component.chart_type === "scatter"
+        ? lex.scatterSubhead
+        : lex.sentences[3]
+      : undefined,
     components: solo ? [component] : [leadIn, component],
-    footnote: solo ? undefined : lex.sources[2]!.label,
+    footnote: bubble ? lex.bubbleSizeNote : cartesian || !solo ? lex.sources[2]!.label : undefined,
   }
   const safeId = componentId.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "")
   return deckShell(lex, assets, themeId, `component-${safeId}-${lex.id}`, [slide])

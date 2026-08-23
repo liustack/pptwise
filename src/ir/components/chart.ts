@@ -64,6 +64,10 @@ export const schema = z
       .object({
         x_title: z.string().optional(),
         y_title: z.string().optional(),
+        /** Unit suffix on x-axis tick labels (`周`, `%`, `weeks`). */
+        x_unit: z.string().optional(),
+        /** Unit suffix on y-axis tick labels (`%`, `千`). */
+        y_unit: z.string().optional(),
         show_grid: z.boolean().optional(),
       })
       .strict()
@@ -130,7 +134,7 @@ export const schema = z
 export const aliases = {} satisfies ComponentAliasSpec
 
 export const traits = {
-  stretchable: false,
+  stretchable: true,
   selfVisual: false,
   scalable: true,
   passthroughShell: false,

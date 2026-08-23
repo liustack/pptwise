@@ -150,6 +150,16 @@
       "l1Expected": ["axis-title-overlap"],
       "l2Expected": "rework",
       "l2Findings": ["axis-title-overlap"]
+    },
+    {
+      "id": "axis-title-overlap-2",
+      "class": "axis-title-overlap",
+      "sourcePageId": "planted--axis-tick-overlap",
+      "svg": "axis-title-overlap-2.svg",
+      "png": "../rubric/examples/axis-title-overlap-1.png",
+      "l1Expected": ["axis-title-overlap"],
+      "l2Expected": "rework",
+      "l2Findings": ["axis-title-overlap"]
     }
   ]
 }

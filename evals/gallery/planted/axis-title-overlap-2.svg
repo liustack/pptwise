@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">
+  <g data-depth="bg">
+    <rect width="1280" height="720" fill="#FFFFFF"/>
+  </g>
+  <g data-depth="mid"></g>
+  <g data-depth="fg">
+    <text x="96" y="112" font-family="Arial, sans-serif" font-size="36" font-weight="700" fill="#191919">开通越快，周活跃率越高</text>
+    <text data-axis-tick="x" x="330" y="508" font-family="Arial, sans-serif" font-size="15" text-anchor="middle" fill="#444444">2 周</text>
+    <circle data-plot-mark="1" cx="330" cy="490" r="34" fill="#E0489A" fill-opacity="0.85"/>
+    <circle data-plot-mark="1" cx="640" cy="300" r="20" fill="#E0489A" fill-opacity="0.85"/>
+  </g>
+</svg>
