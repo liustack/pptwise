@@ -10,6 +10,7 @@ import { stripEmphasis } from "../emphasis"
  * issue-head-cover（第八波 pinOnly）：刊头规制。左齐刊名、右齐日期、y148/156
  * 文武双线（粗 3 + 细 1，primary）、铅字标题、底 border 线与编辑部落款。
  * 构图抄 `.issues/design-boards/wave8/b2/Journal.dc.html` 封面。
+ * 标题从板上 y370 收到 y280，长题不再把版心压到下半页。
  *
  * 进共享池，不是 journal 专用。零 theme id、零 baked hex。accent 不上封面。
  * 刊头双线是结构，本版式画。motif 封面不再画 y26/32，避免四条线。
@@ -39,7 +40,7 @@ const THIN_RULE_Y = 156
 const THIN_RULE_STROKE = 1
 
 const TITLE_X = 96
-const TITLE_Y = 370
+const TITLE_Y = 280
 const TITLE_SIZE = 60
 const TITLE_MIN_PT = 36
 const TITLE_MAX_LINES = 2
@@ -271,6 +272,7 @@ export const layoutDef = {
   kind: "archetype",
   pinOnly: true,
   branding: "none",
+  suppressMotif: true,
   slideTypes: ["cover"],
   slots: [
     { name: "kicker", accepts: [] },

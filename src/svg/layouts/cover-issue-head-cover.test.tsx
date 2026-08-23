@@ -5,6 +5,7 @@ import { assertSubset } from "../subset-validate"
 import { buildCtx, resolveBackgroundHex } from "../full-slide-svg"
 import { resolveStyle, CANONICAL_THEME_IDS } from "../../themes"
 import { contrastRatio, metaInk, requiredContrastRatio } from "../ink"
+import { renderSlideSvg } from "../../api"
 import { IssueHeadCover, layoutDef } from "./cover-issue-head-cover"
 import type { PptxIR, Slide } from "@/ir"
 
@@ -75,7 +76,7 @@ describe("cover-issue-head-cover — board geometry", () => {
 
     const title = Array.from(root.querySelectorAll("text")).find((t) => (t.textContent ?? "").includes("县城咖啡"))
     expect(title?.getAttribute("x")).toBe("96")
-    expect(title?.getAttribute("y")).toBe("370")
+    expect(title?.getAttribute("y")).toBe("280")
     expect(Number(title?.getAttribute("font-size"))).toBe(60)
     expect(title?.getAttribute("fill")).toBe(tokens.colors.text)
 
@@ -169,5 +170,25 @@ describe("cover-issue-head-cover — shared pool", () => {
     const bg = resolveBackgroundHex(tokens.defaultBackgrounds.cover, tokens.colors.surface)
     const date = Array.from(root.querySelectorAll("text")).find((t) => (t.textContent ?? "").includes("二〇二六"))!
     expect(date.getAttribute("fill")).toBe(metaInk(tokens.colors.muted, bg))
+  })
+})
+
+describe("cover-issue-head-cover — optical center", () => {
+  it("does not stack a motif foot line under the layout foot, and hangs the title closer to the masthead", () => {
+    const deck: PptxIR = {
+      version: "4",
+      filename: "issue-head-center.pptx",
+      theme: { id: "journal" },
+      meta: FULL_META,
+      assets: { images: {} },
+      seed: 1,
+      slides: [{ type: "cover", layout: "issue-head-cover", heading: HEADING, subheading: SUBHEADING, components: [] }],
+    } as PptxIR
+    const root = parseSvgRoot(renderSlideSvg(deck, 0))
+    expect(root.querySelector('line[y1="712"]')).toBeNull()
+    expect(Array.from(root.querySelectorAll("text")).some((t) => (t.textContent ?? "").includes("№"))).toBe(false)
+    const title = Array.from(root.querySelectorAll("text")).find((t) => (t.textContent ?? "").includes("县城咖啡"))
+    expect(title?.getAttribute("y")).toBe("280")
+    expect(layoutDef.suppressMotif).toBe(true)
   })
 })
