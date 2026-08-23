@@ -52,6 +52,7 @@ describe("PulseMotif（心搏线）", () => {
     expect(Array.from(root.querySelectorAll("polyline"))).toHaveLength(1)
     expect(Array.from(root.querySelectorAll("circle"))).toHaveLength(0)
     expect(root.querySelector(`[${DECOR_PIECE_ATTR}="heartbeat"]`)).toBeTruthy()
+    expect(root.querySelector(`[${DECOR_PIECE_ATTR}="heartbeat"]`)?.getAttribute("data-decor-role")).toBe("identity")
     expect(countDecorPieces(root)).toBe(1)
   })
 

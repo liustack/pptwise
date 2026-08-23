@@ -925,6 +925,11 @@ describe("v3 → v4 migration equivalence (task 1 hard gate, spec §10/§12)", (
       // framed/own-chrome covers, tech star marks, journal cover title y,
       // and two-column timeline rail. Only pages that actually consume those
       // faces move. `.audit.json` stayed empty.
+      // Recaptured (three-tier depth paint, 2026-08-24). Structure chrome
+      // (journal masthead rules, and any other `role="structure"` piece)
+      // lifts into the foreground at the theme color. Identity marks stay
+      // in mid unfaded. Ordinary midground still recedes. Empty `data-decor`
+      // groups remain as the motif marker. Audit goldens stayed empty.
       it("renders SVG byte-identical to the base-commit (pre-rename) capture, slide for slide", () => {
         const goldenSvgs = readGoldenJson<string[]>(`${name}.svg`)
         const migratedSvgs = v4.slides.map((_, i) => renderSlideSvg(v4, i))

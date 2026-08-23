@@ -301,6 +301,13 @@ function isThemeMotifIdentity(props: ElementProps): boolean {
   return props["data-decor"] !== undefined || props["data-decor-piece"] !== undefined
 }
 
+function isIdentityMark(props: ElementProps): boolean {
+  const role = props["data-decor-role"]
+  if (role === "identity" || role === "structure") return true
+  const value = props["data-identity"]
+  return value !== undefined && value !== null && value !== false && value !== "false"
+}
+
 function processMidgroundNode(
   node: ReactNode,
   foregroundBoxes: readonly DepthBox[],
@@ -309,6 +316,7 @@ function processMidgroundNode(
   parentMatrix: SvgMatrix = IDENTITY_MATRIX,
   parentPaint: PaintState = INITIAL_PAINT,
   motifIdentity = false,
+  identityPaint = false,
 ): ReactNode {
   if (node === null || node === undefined || typeof node === "boolean" || typeof node === "string" || typeof node === "number") return node
   if (!isValidElement<ElementProps>(node)) return node
@@ -325,6 +333,7 @@ function processMidgroundNode(
               parentMatrix,
               parentPaint,
               motifIdentity,
+              identityPaint,
             )}
           </Fragment>
         ))}
@@ -341,6 +350,7 @@ function processMidgroundNode(
       parentMatrix,
       parentPaint,
       motifIdentity,
+      identityPaint,
     )
   }
   if (typeof node.type !== "string") return node
@@ -349,6 +359,7 @@ function processMidgroundNode(
   if (DEFINITION_TAGS.has(tag)) return node
   const matrix = multiplyMatrices(parentMatrix, parseSvgTransform(node.props.transform))
   const nextIdentity = motifIdentity || isThemeMotifIdentity(node.props)
+  const nextIdentityPaint = identityPaint || isIdentityMark(node.props)
   if (LEAF_TAGS.has(tag)) {
     const paint = leafPaint(parentPaint, node.props)
     let element = node
@@ -361,8 +372,11 @@ function processMidgroundNode(
       props = clamped.props
       box = clamped.box
     }
-    // Theme motif identity stays. Intersecting ghosts and other mid leaves
-    // still yield. Paint budget is the intensity ceiling for what remains.
+    // Theme motif stays. Intersecting ghosts and other mid leaves still
+    // yield. Paint budget is the intensity ceiling for ordinary decor.
+    // Identity color (a seal) stays in mid at full strength. Structure
+    // chrome is supposed to live in the foreground. If a structure piece
+    // still lands here, keep the theme hue rather than fading page chrome.
     if (
       box &&
       !nextIdentity &&
@@ -370,6 +384,7 @@ function processMidgroundNode(
     ) {
       return null
     }
+    if (nextIdentityPaint) return element
     return applyPaintBudget(element, props, paint, parentPaint, background, saturationCeiling)
   }
 
@@ -377,7 +392,16 @@ function processMidgroundNode(
   const originalChildren = Children.toArray(node.props.children)
   const processedChildren = originalChildren
     .map((child) =>
-      processMidgroundNode(child, foregroundBoxes, background, saturationCeiling, matrix, paint, nextIdentity),
+      processMidgroundNode(
+        child,
+        foregroundBoxes,
+        background,
+        saturationCeiling,
+        matrix,
+        paint,
+        nextIdentity,
+        nextIdentityPaint,
+      ),
     )
     .filter((child) => child !== null && child !== undefined && child !== false)
     .map((child, index) => <Fragment key={`mid-${index}`}>{child}</Fragment>)

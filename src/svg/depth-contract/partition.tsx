@@ -112,9 +112,13 @@ function isBackgroundPaintCluster(node: ReactNode): boolean {
   return evidence.hasFullCanvasPaint && !evidence.hasText
 }
 
-function partitionChildren(children: ReactNode, options: PartitionOptions): SvgDepthLayers {
+function partitionChildren(
+  children: ReactNode,
+  options: PartitionOptions,
+  defaultDepth: SvgDepth = "fg",
+): SvgDepthLayers {
   const layers = emptyLayers()
-  Children.forEach(children, (child) => append(layers, partitionNode(child, options)))
+  Children.forEach(children, (child) => append(layers, partitionNode(child, options, defaultDepth)))
   return layers
 }
 
@@ -130,26 +134,30 @@ function cloneContainerForDepth(
   return cloneElement(element, { key }, keyedChildren)
 }
 
-function partitionNode(node: ReactNode, options: PartitionOptions): SvgDepthLayers {
+function partitionNode(
+  node: ReactNode,
+  options: PartitionOptions,
+  defaultDepth: SvgDepth = "fg",
+): SvgDepthLayers {
   const layers = emptyLayers()
   if (node === null || node === undefined || typeof node === "boolean") return layers
   if (typeof node === "string" || typeof node === "number") {
-    push(layers, "fg", node)
+    push(layers, defaultDepth, node)
     return layers
   }
   if (!isValidElement<ElementProps>(node)) return layers
 
-  if (node.type === Fragment) return partitionChildren(node.props.children, options)
+  if (node.type === Fragment) return partitionChildren(node.props.children, options, defaultDepth)
 
   const executed = executeFunctionElement(node)
   if (executed !== null) {
     if (isBackgroundPaintCluster(executed)) push(layers, "bg", executed)
-    else append(layers, partitionNode(executed, options))
+    else append(layers, partitionNode(executed, options, defaultDepth))
     return layers
   }
 
   if (typeof node.type !== "string") {
-    push(layers, "fg", node)
+    push(layers, defaultDepth, node)
     return layers
   }
 
@@ -161,7 +169,27 @@ function partitionNode(node: ReactNode, options: PartitionOptions): SvgDepthLaye
     push(layers, declaredDepth, cloneElement(node, { "data-depth": undefined }))
     return layers
   }
+
+  const role = node.props["data-decor-role"]
+  if (role === "structure") {
+    push(layers, "fg", node)
+    return layers
+  }
+  if (role === "identity") {
+    push(layers, "mid", node)
+    return layers
+  }
+
   if (node.props["data-decor"] !== undefined) {
+    if (CONTAINER_TAGS.has(node.type)) {
+      const children = partitionChildren(node.props.children, options, "mid")
+      for (const child of children.bg) push(layers, "bg", child)
+      for (const child of children.fg) push(layers, "fg", child)
+      // Keep the motif marker even when every piece lifted to fg or the
+      // motif yielded. Tests and the audit walk key off `data-decor`.
+      push(layers, "mid", cloneContainerForDepth(node, "mid", children.mid))
+      return layers
+    }
     push(layers, "mid", node)
     return layers
   }
@@ -175,9 +203,9 @@ function partitionNode(node: ReactNode, options: PartitionOptions): SvgDepthLaye
   }
 
   if (CONTAINER_TAGS.has(node.type)) {
-    const children = partitionChildren(node.props.children, options)
+    const children = partitionChildren(node.props.children, options, defaultDepth)
     if (children.bg.length === 0 && children.mid.length === 0 && children.fg.length === 0) {
-      push(layers, "fg", node)
+      push(layers, defaultDepth, node)
       return layers
     }
     for (const depth of ["bg", "mid", "fg"] as const) {
@@ -186,7 +214,7 @@ function partitionNode(node: ReactNode, options: PartitionOptions): SvgDepthLaye
     return layers
   }
 
-  push(layers, "fg", node)
+  push(layers, defaultDepth, node)
   return layers
 }
 

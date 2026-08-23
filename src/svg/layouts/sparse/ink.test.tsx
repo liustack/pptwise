@@ -131,7 +131,7 @@ describe("ink sparse faces", () => {
     expect(seal?.getAttribute("fill")).toBe(ctx.colors.accent)
   })
 
-  it("pull-quote is a side mark plus horizontal Kai type", () => {
+  it("CJK pull-quote sets vertically from the right, with a vermilion opener and a left attribution", () => {
     const slide: Slide = {
       type: "content",
       layout: "pull-quote",
@@ -139,18 +139,40 @@ describe("ink sparse faces", () => {
       subheading: "陈砚清 · 首席技术官",
       components: [],
     } as Slide
-    const { root } = render(
+    const { markup, root } = render(
       <PullQuoteContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />,
     )
     expect(() => assertSubset(root)).not.toThrow()
+    expect(markup).not.toContain("writing-mode")
+    const opener = Array.from(root.querySelectorAll("rect")).find((r) => r.getAttribute("width") === "14")
+    expect(opener?.getAttribute("x")).toBe("942")
+    expect(opener?.getAttribute("fill")).toBe(ctx.colors.accent)
+    const first = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "最")
+    expect(first?.getAttribute("x")).toBe("900")
+    expect(first?.getAttribute("y")).toBe("150")
+    expect(Number(first?.getAttribute("font-size"))).toBe(48)
+    expect(first?.getAttribute("fill")).toBe(ctx.colors.primary)
+    const attr = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "陈")
+    expect(attr?.getAttribute("x")).toBe("180")
+    expect(attr?.getAttribute("fill")).toBe(ctx.colors.muted)
+  })
+
+  it("Latin pull-quote stays a side mark plus horizontal type", () => {
+    const slide: Slide = {
+      type: "content",
+      layout: "pull-quote",
+      heading: "The most expensive outage is the one nobody saw coming.",
+      subheading: "Chen Yanqing",
+      components: [],
+    } as Slide
+    const { root } = render(
+      <PullQuoteContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />,
+    )
     const mark = Array.from(root.querySelectorAll("rect")).find((r) => r.getAttribute("width") === "4")
     expect(mark?.getAttribute("x")).toBe("150")
-    expect(mark?.getAttribute("fill")).toBe(ctx.colors.accent)
     const quote = Array.from(root.querySelectorAll("text")).find((t) =>
-      (t.textContent ?? "").includes("最贵的停机"),
+      (t.textContent ?? "").includes("most expensive"),
     )!
     expect(quote.getAttribute("x")).toBe("200")
-    expect(Number(quote.getAttribute("font-size"))).toBe(46)
-    expect(quote.getAttribute("fill")).toBe(ctx.colors.primary)
   })
 })

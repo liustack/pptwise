@@ -62,7 +62,8 @@ describe("board-cover-restore wave 2 — locked cover faces", () => {
       if (chrome?.pageFrame || chrome?.suppressMotif) {
         expect(decor).toBeNull()
       } else {
-        expect(decor).not.toBeNull()
+        const painted = container.querySelector("[data-decor], [data-decor-piece]")
+        expect(painted).not.toBeNull()
       }
     }
   })
@@ -217,13 +218,14 @@ function renderPage(themeId: string, type: "cover" | "chapter" | "content" | "en
 }
 
 describe("wave 8 batch 3 — midground identity survives FullSlideSvg", () => {
-  it.each(["cover", "ending"] as const)("luxe %s keeps the eight-line invitation frame in mid", (type) => {
-    const { mid } = renderPage("luxe", type)
-    expect(mid.querySelector('[data-decor-piece="invitation"]')).not.toBeNull()
-    const lines = Array.from(mid.querySelectorAll("line"))
+  it.each(["cover", "ending"] as const)("luxe %s paints the eight-line invitation frame in the foreground", (type) => {
+    const { container } = renderPage("luxe", type)
+    const piece = container.querySelector('[data-decor-piece="invitation"]')!
+    expect(piece.closest("[data-depth]")?.getAttribute("data-depth")).toBe("fg")
+    const lines = Array.from(piece.querySelectorAll("line"))
     expect(lines.filter((el) => el.getAttribute("stroke-width") === "1")).toHaveLength(4)
     expect(lines.filter((el) => el.getAttribute("stroke-width") === "0.5")).toHaveLength(4)
-    expect(mid.querySelectorAll("rect")).toHaveLength(0)
+    expect(piece.querySelectorAll("rect")).toHaveLength(0)
   })
 
   it("pulse cover keeps the heartbeat polyline in mid", () => {
@@ -250,10 +252,11 @@ describe("wave 8 batch 3 — midground identity survives FullSlideSvg", () => {
     expect(scope.querySelectorAll("path")).toHaveLength(0)
   })
 
-  it.each(["content", "ending"] as const)("vermilion %s keeps gold double rules in mid", (type) => {
-    const { mid } = renderPage("vermilion", type)
-    const rules = mid.querySelector('[data-decor-piece="gold-rules"]')
+  it.each(["content", "ending"] as const)("vermilion %s paints gold double rules in the foreground", (type) => {
+    const { container } = renderPage("vermilion", type)
+    const rules = container.querySelector('[data-decor-piece="gold-rules"]')
     expect(rules).not.toBeNull()
+    expect(rules!.closest("[data-depth]")?.getAttribute("data-depth")).toBe("fg")
     expect(rules!.querySelectorAll("line")).toHaveLength(2)
   })
 

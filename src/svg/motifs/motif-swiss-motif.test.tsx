@@ -89,13 +89,18 @@ describe("SwissMotif（冷白制度页缘）", () => {
     }
   })
 
-  it("chapter/ending 只有红条，字节相同。内容页红条退底。封面多三刻度", () => {
+  it("chapter/ending 只有红条，字节相同。内容页红条保持原色，不退底。封面多三刻度", () => {
     expect(draw("swiss", chapterSlide).markup).toBe(draw("swiss", endingSlide).markup)
     expect(draw("swiss", coverSlide).markup).not.toBe(draw("swiss", chapterSlide).markup)
     const content = draw("swiss", contentSlide)
     expect(content.root.querySelectorAll("rect")).toHaveLength(1)
     expect(content.root.querySelectorAll("line")).toHaveLength(0)
-    expect(content.root.querySelector("rect")?.getAttribute("opacity")).toBeTruthy()
+    expect(content.root.querySelector("rect")?.getAttribute("opacity")).toBeNull()
+    expect(content.root.querySelector("rect")?.getAttribute("fill")).toBe(resolveStyle("swiss").colors.accent)
+    expect(content.root.querySelector('[data-decor-piece="red-bar"]')?.getAttribute("data-decor-role")).toBe(
+      "structure",
+    )
+    expect(content.root.querySelector('[data-decor-piece="red-bar"]')?.getAttribute("data-identity")).toBeNull()
     expect(draw("swiss", chapterSlide).root.querySelector("rect")?.getAttribute("opacity")).toBeNull()
     expect(draw("swiss", coverSlide).root.querySelector("rect")?.getAttribute("opacity")).toBeNull()
   })

@@ -20,6 +20,41 @@ import { blendOver, contrastRatio } from "../ink"
 
 export const MAX_DECOR_PIECES = 3
 export const DECOR_PIECE_ATTR = "data-decor-piece"
+/** Three-tier depth mark: `structure` (foreground chrome) or `identity` (midground theme color). */
+export const DECOR_ROLE_ATTR = "data-decor-role"
+/** Identity-only alias kept for L1 and midground skips. Structure uses the role attribute. */
+export const IDENTITY_ATTR = "data-identity"
+
+export type DecorRole = "structure" | "identity"
+
+function ancestorAttrMatch(el: Element, name: string, accept: (value: string) => boolean): string | null {
+  let n: Element | null = el
+  while (n && n.tagName.toLowerCase() !== "svg") {
+    const v = n.getAttribute(name)
+    if (v !== null && accept(v)) return v
+    n = n.parentElement
+  }
+  return null
+}
+
+export function decorRoleOf(el: Element): DecorRole | null {
+  const role = ancestorAttrMatch(el, DECOR_ROLE_ATTR, (value) => value === "structure" || value === "identity")
+  return role === "structure" || role === "identity" ? role : null
+}
+
+export function isIdentityPaint(el: Element): boolean {
+  if (decorRoleOf(el) === "identity") return true
+  return ancestorAttrMatch(el, IDENTITY_ATTR, (value) => value !== "false") !== null
+}
+
+export function isStructurePaint(el: Element): boolean {
+  return decorRoleOf(el) === "structure"
+}
+
+/** Tiers 1 and 2: structure chrome and identity color skip the midground 3:1 ceiling. */
+export function skipsMidgroundCeiling(el: Element): boolean {
+  return isIdentityPaint(el) || isStructurePaint(el)
+}
 
 /**
  * Content-page motif ink, composited over the page ground, must stay

@@ -1,7 +1,6 @@
 import type { DecorProps } from "./types"
 import { accessibleInk } from "../ink"
 import { DecorPiece } from "./decor-piece"
-import { leafRecessOpacity } from "./decor-budget"
 import { yieldsOnSparsePin } from "./branded-frame"
 
 /**
@@ -10,7 +9,7 @@ import { yieldsOnSparsePin } from "./branded-frame"
  * `memo-head` 版式（板上的 MEMORANDUM + 双线是封面公文头，不是页缘装饰）。
  * 章节 / 内容 / 收尾仍画这一张。
  *
- * 画的两件东西（恒位，无 seed 变体）：
+ * 画的两件东西（恒位，无 seed 变体），合为一件公文头：
  *   - **顶缘红双线**：3px y26 + 1px y32，印章红（accent），x48→1232。
  *     任务书给死的坐标。比 journal 文武线（2px/0.75px 同 y）更重一档，
  *     比 heritage 藏书票双线（2px y28 / 0.75px y36）更靠上更粗。
@@ -18,6 +17,7 @@ import { yieldsOnSparsePin } from "./branded-frame"
  *     「№」先例。走 `ctx.fonts.mono`（主题 token 打头 Courier New）。
  *     设计板 Courier Prime 不在 SAFE_FONTS，落地 Courier New，等宽并未
  *     缺席，不退化成纯双线。
+ * 结构件：公文头与 swiss 顶条同类，进前景，原色满画。不是中景身份印。
  *
  * 板上不做、不进本文件的两件：
  *   1. 标题「决定」下的重笔划线（跟随内容位置，违反恒位）。
@@ -71,25 +71,25 @@ export function MemoMotif({ slide, ctx }: DecorProps) {
   const bg = ctx.defaultBg ?? ctx.colors.bg
 
   return (
-    <DecorPiece id="masthead">
-      <line
-        x1={RULE_X1}
-        y1={THICK_RULE_Y}
-        x2={RULE_X2}
-        y2={THICK_RULE_Y}
-        stroke={ink}
-        strokeWidth={THICK_RULE_STROKE}
-        opacity={leafRecessOpacity(slide.type, ink, bg)}
-      />
-      <line
-        x1={RULE_X1}
-        y1={THIN_RULE_Y}
-        x2={RULE_X2}
-        y2={THIN_RULE_Y}
-        stroke={ink}
-        strokeWidth={THIN_RULE_STROKE}
-        opacity={leafRecessOpacity(slide.type, ink, bg)}
-      />
+    <>
+      <DecorPiece id="masthead" role="structure">
+        <line
+          x1={RULE_X1}
+          y1={THICK_RULE_Y}
+          x2={RULE_X2}
+          y2={THICK_RULE_Y}
+          stroke={ink}
+          strokeWidth={THICK_RULE_STROKE}
+        />
+        <line
+          x1={RULE_X1}
+          y1={THIN_RULE_Y}
+          x2={RULE_X2}
+          y2={THIN_RULE_Y}
+          stroke={ink}
+          strokeWidth={THIN_RULE_STROKE}
+        />
+      </DecorPiece>
       <text
         x={EYEBROW_X}
         y={EYEBROW_BASELINE_Y}
@@ -103,6 +103,6 @@ export function MemoMotif({ slide, ctx }: DecorProps) {
       >
         {EYEBROW}
       </text>
-    </DecorPiece>
+    </>
   )
 }

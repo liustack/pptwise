@@ -896,7 +896,8 @@ function renderCenterMirror(args: RenderArgs): { chrome: ReactNode; contentRect:
           </text>
         ))}
         {(args.knobs.diamond || (hasSub && mirror === "gold-rule")) && (
-          <g data-decor="">
+          // Identity: champagne gold (or the theme accent) is the mark. Midground, under type, no fade.
+          <g data-decor="" data-decor-role="identity" data-identity="true">
             <path d="M 640 156 l 5 7 l -5 7 l -5 -7 z" fill={colors.accent} />
           </g>
         )}

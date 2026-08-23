@@ -4,7 +4,7 @@ import { renderEmphasisTspans } from "../../emphasis"
 import { hasCjk, heroCaption, heroValue, pullQuoteAttribution } from "../minimal-shared"
 import { fitHeroLine, fitSparseHeading } from "./shared"
 
-/** ink 稀排脸：竖排格言、验印巨数、侧标引文。不画右缘落款列。 */
+/** ink 稀排脸：竖排格言、验印巨数、竖排引文。引文页 motif 画左下半山、不画右缘落款列。 */
 
 function VerticalRun({
   segments,
@@ -171,41 +171,90 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
 
 export function pullQuote({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
-  const heading = fitSparseHeading(slide.heading, {
-    maxWidth: 960,
-    fontSize: 46,
+  const source = slide.heading ?? ""
+  const attr = pullQuoteAttribution(slide)
+  const latin = !hasCjk(source)
+
+  if (latin) {
+    const heading = fitSparseHeading(source, {
+      maxWidth: 960,
+      fontSize: 46,
+      maxLines: 2,
+      minPt: 26,
+      lineHeightRatio: 76 / 46,
+      fontFamily: fonts.heading,
+      bold: false,
+    })
+    return (
+      <>
+        <rect x={150} y={270} width={4} height={160} fill={colors.accent} />
+        {heading.lines.map((line, i) => (
+          <text
+            key={i}
+            x={200}
+            y={330 + i * heading.lineHeight}
+            fontFamily={fonts.heading}
+            fontSize={heading.fontSize}
+            fontWeight="400"
+            fill={colors.primary}
+            dominantBaseline="alphabetic"
+          >
+            {renderEmphasisTspans(heading.lineSegs[i] ?? [{ text: line, emphasized: false }], {
+              accent: colors.accent,
+              baseFill: colors.primary,
+              fontWeight: "400",
+            })}
+          </text>
+        ))}
+        {attr && (
+          <text x={200} y={530} fontFamily={fonts.body} fontSize={19} fill={colors.muted} dominantBaseline="alphabetic">
+            {attr}
+          </text>
+        )}
+      </>
+    )
+  }
+
+  // CJK: board grammar from wave8/b2 Ink cover. Vertical quote on the
+  // right, vermilion opener at the shoulder, attribution as left colophon.
+  // Motif paints the remnant mountain lower left and yields the right rail.
+  const heading = fitSparseHeading(source, {
+    maxWidth: 48 * 10,
+    fontSize: 48,
     maxLines: 2,
-    minPt: 26,
-    lineHeightRatio: 76 / 46,
+    minPt: 36,
+    lineHeightRatio: 1,
     fontFamily: fonts.heading,
     bold: false,
   })
-  const attr = pullQuoteAttribution(slide)
+  const columns = heading.lines.slice(0, 2)
+  const xs = [900, 780]
   return (
     <>
-      <rect x={150} y={270} width={4} height={160} fill={colors.accent} />
-      {heading.lines.map((line, i) => (
-        <text
-          key={i}
-          x={200}
-          y={330 + i * heading.lineHeight}
-          fontFamily={fonts.heading}
-          fontSize={heading.fontSize}
-          fontWeight="400"
-          fill={colors.primary}
-          dominantBaseline="alphabetic"
-        >
-          {renderEmphasisTspans(heading.lineSegs[i] ?? [{ text: line, emphasized: false }], {
-            accent: colors.accent,
-            baseFill: colors.primary,
-            fontWeight: "400",
-          })}
-        </text>
+      <rect x={942} y={110} width={14} height={56} fill={colors.accent} />
+      {columns.map((line, col) => (
+        <g key={col}>
+          <VerticalRun
+            segments={heading.lineSegs[col] ?? [{ text: line, emphasized: false }]}
+            x={xs[col]!}
+            y={150}
+            size={heading.fontSize}
+            baseFill={colors.primary}
+            accent={colors.accent}
+            fontFamily={fonts.heading}
+          />
+        </g>
       ))}
       {attr && (
-        <text x={200} y={530} fontFamily={fonts.body} fontSize={19} fill={colors.muted} dominantBaseline="alphabetic">
-          {attr}
-        </text>
+        <VerticalRun
+          segments={[{ text: attr, emphasized: false }]}
+          x={180}
+          y={440}
+          size={18}
+          baseFill={colors.muted}
+          accent={colors.accent}
+          fontFamily={fonts.heading}
+        />
       )}
     </>
   )

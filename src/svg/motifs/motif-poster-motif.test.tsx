@@ -183,6 +183,7 @@ describe("PosterMotif（底缘暗线）", () => {
     expect(line.getAttribute("stroke")).toBe(tokens.colors.border)
     expect(line.getAttribute("fill")).toBe("none")
     expect(line.getAttribute("stroke-width")).toBe("2")
+    expect(line.getAttribute("opacity")).toBe("0.4")
     const d = line.getAttribute("d") ?? ""
     const { start, end } = pathEndpoints(d)
     expect(start).toEqual([0, 545])
@@ -199,6 +200,7 @@ describe("PosterMotif（底缘暗线）", () => {
       expect(start, slide.type).toEqual([0, 600])
       expect(end, slide.type).toEqual([1280, 586])
       expect(line.getAttribute("stroke")).toBe(tokens.colors.border)
+      expect(line.getAttribute("opacity"), slide.type).toBe("0.4")
     }
   })
 

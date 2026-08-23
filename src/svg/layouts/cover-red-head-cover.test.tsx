@@ -92,7 +92,9 @@ describe("cover-red-head-cover — board geometry", () => {
     expect(gold?.getAttribute("x2")).toBe("1080")
     expect(gold?.getAttribute("y1")).toBe("206")
     expect(gold?.getAttribute("stroke")).toBe(tokens.colors.accent)
-    expect(gold?.getAttribute("data-depth")).toBe("mid")
+    expect(gold?.getAttribute("data-depth")).toBeNull()
+    expect(gold?.closest("[data-decor-role]")?.getAttribute("data-decor-role")).toBe("structure")
+    expect(red?.closest("[data-decor-role]")?.getAttribute("data-decor-role")).toBe("structure")
   })
 
   it("places the subtitle and the date-plus-authors presentation line", () => {
