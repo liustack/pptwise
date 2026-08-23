@@ -137,3 +137,63 @@ describe("tag_row component", () => {
     }
   })
 })
+
+function pillOrigins(container: HTMLElement) {
+  return Array.from(container.querySelectorAll("rect")).map((rect) => {
+    const group = rect.parentElement!
+    const match = /translate\(\s*(-?[\d.]+)[\s,]+(-?[\d.]+)\s*\)/.exec(group.getAttribute("transform") ?? "")
+    return {
+      x: match ? Number(match[1]) : 0,
+      y: match ? Number(match[2]) : 0,
+      h: Number(rect.getAttribute("height")),
+    }
+  })
+}
+
+describe("tag_row breathing room", () => {
+  it("splits the title band so the gap under the title is at least 0.6× title size", () => {
+    const { container } = svg(
+      tagRow.render(comp(tags(4), { title: "Tech stack" }), { x: 0, y: 0, w: 1000 }, ctx),
+    )
+    const title = Array.from(container.querySelectorAll("text")).find((node) => node.textContent === "Tech stack")!
+    const titleY = Number(title.getAttribute("y"))
+    const titleSize = Number(title.getAttribute("font-size"))
+    const firstPillTop = Math.min(...pillOrigins(container).map((pill) => pill.y))
+    expect(firstPillTop - titleY).toBeGreaterThanOrEqual(titleSize * 0.6)
+  })
+
+  it("widens wrapped row gaps past the old 8px crush", () => {
+    const { container } = svg(tagRow.render(comp(tags(12)), { x: 0, y: 0, w: 360 }, ctx))
+    const pills = pillOrigins(container)
+    const rows = [...new Set(pills.map((pill) => pill.y))].sort((a, b) => a - b)
+    expect(rows.length).toBeGreaterThan(1)
+    expect(rows[1]! - rows[0]! - pills[0]!.h).toBeGreaterThanOrEqual(12)
+  })
+
+  it("reserves air under the last pill row so measure() is not flush with the capsules", () => {
+    const c = comp(tags(4), { title: "Tech stack" })
+    const measured = tagRow.measure(c, 1000, ctx)
+    const { container } = svg(tagRow.render(c, { x: 0, y: 0, w: 1000 }, ctx))
+    const lastBottom = Math.max(...pillOrigins(container).map((pill) => pill.y + pill.h))
+    expect(measured - lastBottom).toBeGreaterThanOrEqual(12)
+  })
+
+  it("keeps schema-max ordinary tags inside a content-rect height with no ellipsis and no clip", () => {
+    const items = Array.from({ length: 16 }, (_, i) => `标签${i + 1}`)
+    const c = comp(items, { title: "能力标签" })
+    const measured = tagRow.measure(c, 1088, ctx)
+    expect(measured).toBeLessThanOrEqual(400)
+    const markup = renderToStaticMarkup(
+      <svg viewBox="0 0 1280 720">{tagRow.render(c, { x: 96, y: 206, w: 1088 }, ctx)}</svg>,
+    )
+    expect(markup).not.toContain("…")
+    expect(markup).not.toMatch(/(?<![.])\.\.\.(?![.])/)
+    expect(markup).not.toContain('data-truncated="1"')
+    expect(auditSvgMarkup(markup)).toEqual([])
+    const { container } = svg(tagRow.render(c, { x: 0, y: 0, w: 1088 }, ctx))
+    const labels = Array.from(container.querySelectorAll("text"))
+      .map((node) => node.textContent)
+      .filter((text) => text !== "能力标签")
+    expect(labels).toEqual(items)
+  })
+})

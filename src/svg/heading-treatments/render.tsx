@@ -47,6 +47,26 @@ function aabbIntersect(a: BandRect, b: BandRect): boolean {
   return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y
 }
 
+/** Shift a heading-band chrome box right of any reserved rect it hits, or
+ * that it shares a column with inside `RESERVE_GAP`. tag_box sat 2px above
+ * the rail-numbered `{chapter}.{n}` badge (enterprise p06 / playbill / arena)
+ * because the boxes did not AABB-intersect, so `leftTitleX` left the chip
+ * on the badge. */
+function nudgeXForReserve(box: BandRect, reserve: HeadingBandReserve | undefined): number {
+  if (!reserve?.rects.length) return box.x
+  let x = box.x
+  for (const r of reserve.rects) {
+    const shifted = { ...box, x }
+    const overlapX = shifted.x < r.x + r.w && shifted.x + shifted.w > r.x
+    const closeY =
+      shifted.y < r.y + r.h + RESERVE_GAP && r.y < shifted.y + shifted.h + RESERVE_GAP
+    if (aabbIntersect(shifted, r) || (overlapX && closeY)) {
+      x = Math.max(x, r.x + r.w + RESERVE_GAP)
+    }
+  }
+  return x
+}
+
 function glyphBox(
   x: number,
   y: number,
@@ -580,6 +600,9 @@ function renderTagBox(args: RenderArgs): { chrome: ReactNode; contentRect: Conte
   const label = formatChapterLabel(labelKind, args.chapterNumber, hasCjk(args.sectionName ?? ""))
   const labelY = hud ? 77 : 82
   const labelSize = hud ? 15 : box === "solid-primary" ? 17 : 18
+  const chipW = 150
+  const chipY = 56
+  const chipX = nudgeXForReserve({ x: PAGE_LEFT, y: chipY, w: chipW, h: boxH }, args.reserve)
   const titleX = leftTitleX(PAGE_LEFT, 150, 44, args.heading, fonts.heading, args.reserve)
   const title = fitTitle(args.heading, 44, titleMaxWidthFor(titleX), fonts.heading)
   const lift = extraTitleY(title)
@@ -587,9 +610,9 @@ function renderTagBox(args: RenderArgs): { chrome: ReactNode; contentRect: Conte
     contentRect: bodyRect(PAGE_LEFT, (hasSub ? 240 : 206) + lift),
     chrome: (
       <>
-        <rect x={96} y={56} width={150} height={boxH} fill={boxFill} />
+        <rect x={chipX} y={chipY} width={chipW} height={boxH} fill={boxFill} />
         <text
-          x={171}
+          x={chipX + chipW / 2}
           y={labelY}
           fontSize={labelSize}
           fontWeight={700}

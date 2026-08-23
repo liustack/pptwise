@@ -150,6 +150,31 @@ function collisionsAgainst(badge: Box, boxes: Box[]): Box[] {
   return boxes.filter((b) => aabbIntersect(badge, b))
 }
 
+/** Axis gap between two boxes. 0 when they intersect. */
+function clearance(a: Box, b: Box): number {
+  const overlapX = a.x < b.x + b.w && a.x + a.w > b.x
+  const overlapY = a.y < b.y + b.h && a.y + a.h > b.y
+  if (overlapX && overlapY) return 0
+  if (overlapX) return a.y + a.h <= b.y ? b.y - (a.y + a.h) : a.y - (b.y + b.h)
+  if (overlapY) return a.x + a.w <= b.x ? b.x - (a.x + a.w) : a.x - (b.x + b.w)
+  const dx = a.x + a.w <= b.x ? b.x - (a.x + a.w) : a.x - (b.x + b.w)
+  const dy = a.y + a.h <= b.y ? b.y - (a.y + a.h) : a.y - (b.y + b.h)
+  return Math.hypot(dx, dy)
+}
+
+function findTagBox(root: Element): Box | null {
+  const label = walkTextBoxes(root).find((t) =>
+    /第.+部分|第.+幕|ROUND \d|PART |ACT |CHAPTER /.test(t.label),
+  )
+  if (!label) return null
+  const box = walkRects(root).find(
+    (r) => aabbIntersect(r, label) && r.w >= 80 && r.h >= 20 && r.h <= 50,
+  )
+  return box ? { ...box, label: "tag-box" } : null
+}
+
+const TAG_BOX_CLEARANCE = 20
+
 function deck(themeId: string, slides: Slide[]): PptxIR {
   return {
     version: "4",
@@ -220,6 +245,27 @@ describe("assigned themes on pinned rail-numbered", () => {
   })
 })
 
+describe("tag_box chapter chip vs rail-numbered badge", () => {
+  it.each(["enterprise", "playbill", "arena"] as const)(
+    "%s: chapter chip stays a full reserve-gap clear of the {chapter}.{n} badge",
+    (themeId) => {
+      const { root } = renderPinned(themeId)
+      const badge = findRailBadge(root)
+      expect(badge, `${themeId}: rail-numbered badge must still be painted`).not.toBeNull()
+      const tagBox = findTagBox(root)
+      expect(tagBox, `${themeId}: tag_box chapter chip must still be painted`).not.toBeNull()
+      expect(
+        aabbIntersect(badge!, tagBox!),
+        `${themeId}: tag_box intersects badge\n  badge ${fmt(badge!)}\n  tag-box ${fmt(tagBox!)}`,
+      ).toBe(false)
+      expect(
+        clearance(badge!, tagBox!),
+        `${themeId}: tag_box vs badge clearance ${clearance(badge!, tagBox!).toFixed(1)}px\n  badge ${fmt(badge!)}\n  tag-box ${fmt(tagBox!)}`,
+      ).toBeGreaterThanOrEqual(TAG_BOX_CLEARANCE)
+    },
+  )
+})
+
 describe("gallery theme-table rail-numbered pages", () => {
   it("insight zh slide 6 is not a rail-numbered false positive after banner-heading retired", async () => {
     const assets = await corpusAssets(LEXICONS.zh)
@@ -258,6 +304,12 @@ describe("gallery theme-table rail-numbered pages", () => {
         ]
         if (hits.length > 0) {
           dirty.push(`${themeId} p${String(i + 1).padStart(2, "0")} ${hits.map(fmt).join(" | ")}`)
+        }
+        const tagBox = findTagBox(root)
+        if (tagBox && (aabbIntersect(badge, tagBox) || clearance(badge, tagBox) < TAG_BOX_CLEARANCE)) {
+          dirty.push(
+            `${themeId} p${String(i + 1).padStart(2, "0")} tag-box clearance ${clearance(badge, tagBox).toFixed(1)} ${fmt(tagBox)}`,
+          )
         }
       }
     }
