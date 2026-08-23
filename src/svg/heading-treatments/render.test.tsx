@@ -134,20 +134,18 @@ describe("tryContentHeadingTreatment null cases", () => {
 
 describe("ghost_index consulting", () => {
   it("renders a measured pad behind marked title text", () => {
-    const { treated, colors, fonts } = withChapter("consulting", { heading: EMPHASIZED })
+    const { treated, colors } = withChapter("consulting", { heading: EMPHASIZED })
     const root = rootOf(treated!.chrome)
     const title = textContaining(root, "算法团队的迭代节奏")
-    const pad = rects(root).find((rect) => rect.getAttribute("fill") === colors.accent)!
+    const pad = root.querySelector("[data-emphasis-pad]")!
     const emphasized = Array.from(title.querySelectorAll("tspan")).find(
       (span) => span.textContent === "算法团队的迭代节奏",
     )!
 
-    expect(pad).toBeTruthy()
+    expect(pad.tagName.toLowerCase()).toBe("path")
     expect(title.textContent).not.toContain("**")
-    expect(Number(pad.getAttribute("height"))).toBeCloseTo(42 * 1.1, 6)
-    const runWidth =
-      measureTextUnits("算法团队的迭代节奏", { bold: true, fontFamily: fonts.heading }) * 42
-    expect(Number(pad.getAttribute("width"))).toBeCloseTo(runWidth + 2 * 42 * 0.1, 6)
+    expect(pad.getAttribute("fill")).toBe(colors.accent)
+    expect(pad.getAttribute("d")?.startsWith("M ")).toBe(true)
     expect(contrastRatio(emphasized.getAttribute("fill")!, colors.accent)).toBeGreaterThanOrEqual(
       requiredContrastRatio(42),
     )

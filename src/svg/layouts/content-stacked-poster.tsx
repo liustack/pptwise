@@ -108,7 +108,6 @@ const POSTER_BOTTOM_BASE = 640
 // running straight into it.
 const POSTER_BOTTOM_FOOTNOTE_SHRINK = 40
 const HERO_BOTTOM_HALF = 520 // 2-component: hero gives up the bottom 120px
-const STRIP_DIVIDER_Y = 520
 const STRIP_Y = 532
 
 // Subheading: a 22px accent "so-what" sentence below the title, on both the
@@ -451,19 +450,7 @@ export function StackedPosterContent(props: SvgTemplateProps) {
       <>
         {treated.chrome}
         {renderPosterSlot(slide.components[0], heroRect, ctx)}
-        {isPair && (
-          <>
-            <line
-              x1={HERO_X}
-              y1={STRIP_DIVIDER_Y}
-              x2={HERO_X + HERO_W}
-              y2={STRIP_DIVIDER_Y}
-              stroke={ctx.colors.border}
-              strokeWidth="1.4"
-            />
-            {renderPosterSlot(slide.components[1], stripRect, ctx)}
-          </>
-        )}
+        {isPair && renderPosterSlot(slide.components[1], stripRect, ctx)}
         {footnote && (
           <text
             data-truncated={footnote.truncated ? "1" : undefined}
@@ -558,19 +545,7 @@ export function StackedPosterContent(props: SvgTemplateProps) {
       {/* Hero slot */}
       {renderPosterSlot(slide.components[0], heroRect, ctx)}
 
-      {isPair && (
-        <>
-          <line
-            x1={HERO_X}
-            y1={STRIP_DIVIDER_Y}
-            x2={HERO_X + HERO_W}
-            y2={STRIP_DIVIDER_Y}
-            stroke={ctx.colors.border}
-            strokeWidth="1.4"
-          />
-          {renderPosterSlot(slide.components[1], stripRect, ctx)}
-        </>
-      )}
+      {isPair && renderPosterSlot(slide.components[1], stripRect, ctx)}
 
       {footnote && (
         <text

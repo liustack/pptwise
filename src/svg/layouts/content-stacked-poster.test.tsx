@@ -148,7 +148,7 @@ describe("StackedPosterContent", () => {
     expect(root.querySelector('line[y1="520"]')).toBeNull()
   })
 
-  it("creative tokens 下 2 块：主视觉在 y=520 让位，border 分隔线，标注条 rect y=532->640", () => {
+  it("creative tokens 下 2 块：主视觉在 y=520 让位，图下不画分隔线，标注条 rect y=532->640", () => {
     const ctx = buildCtx(resolveStyle("classroom"), {})
     const deck = ir("classroom", [twoComponentSlide])
     const { root } = render(<StackedPosterContent ir={deck} slide={twoComponentSlide} index={0} ctx={ctx} />)
@@ -159,11 +159,7 @@ describe("StackedPosterContent", () => {
     const heroRect = parseAudit(heroGroup.getAttribute("data-audit-rect"))
     expect(heroRect.y! + heroRect.h!).toBe(520)
 
-    const divider = root.querySelector('line[y1="520"]')!
-    expect(divider).toBeTruthy()
-    expect(divider.getAttribute("stroke")).toBe(ctx.colors.border)
-    expect(divider.getAttribute("x1")).toBe("190")
-    expect(divider.getAttribute("x2")).toBe("1090")
+    expect(root.querySelector('line[y1="520"]')).toBeNull()
 
     const rects = Array.from(root.querySelectorAll("g")).filter((g) =>
       g.getAttribute("data-audit-rect")?.startsWith("190,"),
@@ -350,21 +346,17 @@ describe("StackedPosterContent", () => {
     expect(Number(footnote.getAttribute("y"))).toBe(footnoteBaselineFor(fontSize))
   })
 
-  it("2 components + footnote: strip bottom shrinks to 600 while the hero/divider split (520) stays put", () => {
+  it("2 components + footnote: strip bottom shrinks to 600 while the hero split (520) stays put", () => {
     const ctx = buildCtx(resolveStyle("classroom"), {})
     const slide: Slide = { ...twoComponentSlide, footnote: "数据来源：内部审计" } as Slide
     const { root } = render(<StackedPosterContent ir={ir("classroom", [slide])} slide={slide} index={0} ctx={ctx} />)
 
-    // The hero/strip split (divider) is unrelated to footnote room — it
-    // stays at 520 regardless, only the strip's own floor shrinks.
     const heroGroup = Array.from(root.querySelectorAll("g")).find((g) =>
       g.getAttribute("data-audit-rect")?.startsWith("190,"),
     )!
     const heroRect = parseAudit(heroGroup.getAttribute("data-audit-rect"))
     expect(heroRect.y! + heroRect.h!).toBe(520)
-
-    const divider = root.querySelector('line[y1="520"]')!
-    expect(divider).toBeTruthy()
+    expect(root.querySelector('line[y1="520"]')).toBeNull()
 
     const rects = Array.from(root.querySelectorAll("g")).filter((g) =>
       g.getAttribute("data-audit-rect")?.startsWith("190,"),

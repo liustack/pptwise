@@ -68,7 +68,7 @@ export const schema = z
         `tag_row.items accepts at most 16 tags — past 16 the row reads as an unsorted keyword dump; split into multiple tag_row slides or group the tags into labeled sets`,
       )
       .describe(
-        "2-16 short parallel labels laid out as a wrapping row of pills — a tech stack, a capability/skill set, a keyword set, applicable certifications/qualifications. Each item is a short nominal label (≤24 chars), NOT a sentence or a described item. Author them in the reading order you want the row to fill left-to-right, wrapping onto new lines.",
+        "2-16 short parallel labels laid out as a wrapping row — a tech stack, a capability/skill set, a keyword set, applicable certifications/qualifications. Each item is a short nominal label (≤24 chars), NOT a sentence or a described item. Author them in the reading order you want the row to fill left-to-right, wrapping onto new lines.",
       ),
     emphasis: z
       .enum(["none", "first"])
@@ -83,7 +83,7 @@ export const schema = z
   // one-line test that decides between them (裁定 3). Lean into the name the
   // models already guess.
   .describe(
-    "Lays 2-16 short parallel labels out as a wrapping row of pills — a technology stack, a capability/skill set, a keyword set, the certifications/qualifications a vendor holds, the tags that apply to something. Use tag_row when the content is short nominal labels with no from-hierarchy and no per-item description. The test: is every item a short label (a name, not a sentence)? If each item carries its own descriptive text, use `row_cards`/`icon_cards`; if it's a real prose list, use `bullets`. Optional `emphasis: \"first\"` highlights the first tag as the primary one.",
+    "Lays 2-16 short parallel labels out as a wrapping row — a technology stack, a capability/skill set, a keyword set, the certifications/qualifications a vendor holds, the tags that apply to something. Use tag_row when the content is short nominal labels with no from-hierarchy and no per-item description. The test: is every item a short label (a name, not a sentence)? If each item carries its own descriptive text, use `row_cards`/`icon_cards`; if it's a real prose list, use `bullets`. Optional `emphasis: \"first\"` highlights the first tag as the primary one.",
   )
 
 export const aliases = {} satisfies ComponentAliasSpec

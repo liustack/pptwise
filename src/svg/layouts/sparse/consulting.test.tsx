@@ -67,16 +67,11 @@ describe("consulting sparse faces", () => {
     expect(Number(heading.getAttribute("font-size"))).toBe(62)
     const em = Array.from(root.querySelectorAll("tspan")).find((t) => t.textContent === "全线推开")
     expect(em?.getAttribute("fill")).toBe(ctx.colors.primary)
-    const pad = Array.from(root.querySelectorAll("rect")).find(
-      (r) => r.getAttribute("fill") === ctx.colors.accent,
-    )
+    const pad = root.querySelector("[data-emphasis-pad]")
+    expect(pad?.tagName.toLowerCase()).toBe("path")
     expect(pad?.getAttribute("fill")).toBe(ctx.colors.accent)
-    expect(Number(pad?.getAttribute("height"))).toBeCloseTo(62 * 1.1, 6)
-    expect(Number(pad?.getAttribute("y"))).toBeCloseTo(366 - 62 * 0.85, 6)
-    const runWidth =
-      measureTextUnits("全线推开", { bold: true, fontFamily: ctx.fonts.heading }) * 62
-    expect(Number(pad?.getAttribute("width"))).toBeCloseTo(runWidth + 2 * 62 * 0.1, 6)
-    expect(markup.indexOf("<rect")).toBeLessThan(markup.indexOf("工作区订阅"))
+    expect(pad?.getAttribute("d")?.startsWith("M ")).toBe(true)
+    expect(markup.indexOf("<path")).toBeLessThan(markup.indexOf("工作区订阅"))
     expect(markup).toContain("试点复盘纪要")
     expect(markup).not.toContain("依据见后三页")
     expect(markup).not.toContain(LUXE_GOLD)

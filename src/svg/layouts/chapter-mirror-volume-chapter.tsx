@@ -2,7 +2,7 @@ import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import { chapterNumberFor } from "../../lib/derive"
 import { fitHeadingLines } from "../heading-fit"
-import { fitSvgLine } from "../../lib/svg-text-layout"
+import { fitSvgLine, measureTextUnits } from "../../lib/svg-text-layout"
 import { accessibleInk, metaInk } from "../ink"
 import { casualHan, headingIsCjk } from "../heading-treatments/labels"
 import { trackingPx } from "./minimal-shared"
@@ -17,9 +17,7 @@ import { stripEmphasis } from "../emphasis"
  * 卷号 CJK「卷」+ 汉数字，Latin `VOL.`。进共享池，零 theme id、零 baked hex。
  * 底色走主题 `defaultBackgrounds.chapter`，本文件不自绘满版。
  *
- * 板上做不到、最近落地：
- *   1. CJK 卷号与标题不加 letter-spacing。
- *   2. 空 heading 不编造篇名，对杠仍夹在中轴上。
+ * 对杠只夹副题。没有副题就不画线（空槽不画容器）。不画中轴孤立圆点。
  */
 
 const CENTER_X = 640
@@ -35,17 +33,14 @@ const TITLE_MIN_PT = 36
 const TITLE_MAX_LINES = 2
 const TITLE_LINE_HEIGHT = 76
 
-const ORNAMENT_Y = 450
-const ORNAMENT_GAP = ORNAMENT_Y - TITLE_Y
 const BAR_STROKE = 1.5
-const LEFT_BAR_X1 = 520
-const LEFT_BAR_X2 = 600
-const RIGHT_BAR_X1 = 680
-const RIGHT_BAR_X2 = 760
-const DOT_R = 4
+const BAR_LEN = 80
+const BAR_GAP = 20
+const BAR_MIN_X = 96
+const BAR_MAX_X = 1184
 
 const SUB_SIZE = 19
-const SUB_GAP = 70
+const SUB_GAP = 124
 
 function volumeLabel(n: number, cjk: boolean): string {
   const index = Math.max(1, n)
@@ -81,7 +76,6 @@ export function MirrorVolumeChapter({ ir, slide, index, ctx }: SvgTemplateProps)
   const headingLastY = showTitle
     ? TITLE_Y + Math.max(0, heading.lines.length - 1) * heading.lineHeight
     : TITLE_Y
-  const ornamentY = headingLastY + ORNAMENT_GAP
 
   const subheading = slide.subheading
     ? fitSvgLine(slide.subheading, {
@@ -91,6 +85,15 @@ export function MirrorVolumeChapter({ ir, slide, index, ctx }: SvgTemplateProps)
         fontFamily: fonts.body,
       })
     : null
+  const subY = headingLastY + SUB_GAP
+  const subWidth = subheading
+    ? measureTextUnits(subheading.text, { fontFamily: fonts.body }) * subheading.fontSize
+    : 0
+  const leftBarX2 = CENTER_X - subWidth / 2 - BAR_GAP
+  const rightBarX1 = CENTER_X + subWidth / 2 + BAR_GAP
+  const showBars =
+    Boolean(subheading) && leftBarX2 - BAR_LEN >= BAR_MIN_X && rightBarX1 + BAR_LEN <= BAR_MAX_X
+  const barY = subY - SUB_SIZE * 0.35
 
   return (
     <>
@@ -127,32 +130,33 @@ export function MirrorVolumeChapter({ ir, slide, index, ctx }: SvgTemplateProps)
           </text>
         ))}
 
-      <g>
-        <line
-          x1={LEFT_BAR_X1}
-          y1={ornamentY}
-          x2={LEFT_BAR_X2}
-          y2={ornamentY}
-          stroke={colors.accent}
-          strokeWidth={BAR_STROKE}
-        />
-        <line
-          x1={RIGHT_BAR_X1}
-          y1={ornamentY}
-          x2={RIGHT_BAR_X2}
-          y2={ornamentY}
-          stroke={colors.accent}
-          strokeWidth={BAR_STROKE}
-        />
-        <circle cx={CENTER_X} cy={ornamentY} r={DOT_R} fill={colors.primary} />
-      </g>
+      {showBars && (
+        <g>
+          <line
+            x1={leftBarX2 - BAR_LEN}
+            y1={barY}
+            x2={leftBarX2}
+            y2={barY}
+            stroke={colors.accent}
+            strokeWidth={BAR_STROKE}
+          />
+          <line
+            x1={rightBarX1}
+            y1={barY}
+            x2={rightBarX1 + BAR_LEN}
+            y2={barY}
+            stroke={colors.accent}
+            strokeWidth={BAR_STROKE}
+          />
+        </g>
+      )}
 
       {subheading && (
         <text
           data-contrast-tier="meta"
           data-truncated={subheading.truncated ? "1" : undefined}
           x={CENTER_X}
-          y={ornamentY + SUB_GAP}
+          y={subY}
           textAnchor="middle"
           fontFamily={fonts.body}
           fontSize={subheading.fontSize}
@@ -168,8 +172,8 @@ export function MirrorVolumeChapter({ ir, slide, index, ctx }: SvgTemplateProps)
 
 export const layoutDef = {
   // chapter-mirror-volume-chapter.tsx: pinOnly mirrored volume open.
-  // Accent volume kicker, centered title, paired bars clamping a primary
-  // dot under the title cluster. CJK 卷 + numeral, Latin VOL. N. Theme
+  // Accent volume kicker, centered title, paired bars only when a
+  // subtitle sits between them. CJK 卷 + numeral, Latin VOL. N. Theme
   // paints the chapter field.
   id: "mirror-volume-chapter",
   kind: "archetype",

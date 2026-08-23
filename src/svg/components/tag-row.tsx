@@ -1,7 +1,7 @@
 import type React from "react"
 import type { Component } from "@/ir"
 import { fitSvgLine, measureTextUnits, truncateToUnits } from "../../lib/svg-text-layout"
-import { readableOn } from "../ink"
+import { accessibleInk } from "../ink"
 import { mixHex } from "./color-mix"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
 
@@ -18,16 +18,11 @@ type TagRowComponent = Extract<Component, { type: "tag_row" }>
  *    CJK/Latin-mixed label ("基于 Kubernetes Operator" — CJK at 1.0em, Latin
  *    off the exact hmtx tables) is sized right and the greedy pack never
  *    wraps a line one glyph too wide.
- *  - **Two-tier fill (裁定 2):** a default pill is `colors.surface` with
- *    `colors.text` ink (low-key), the `emphasis: "first"` pill is
- *    `colors.accent` with `readableOn(accent)` ink (stands out). Both text
- *    colors are measured against their pill's own opaque rect by
- *    `deck-audit` (`PaintedShape` attribution is area-unrestricted since the
- *    defect-A fix), and both clear 4.5:1 on all 16 themes (verified: default
- *    text-on-surface ≥7.78:1, emphasis readableOn(accent)-on-accent ≥5.10:1)
- *    — so this component renders no `colors.muted` and needs no dedicated
- *    contrast fixture (`full-matrix-contrast.test.ts`'s `MUTED_SURFACE_CLASS`
- *    classifies it "no-muted-fill").
+ *  - **Two-tier outline, no fill:** a default chip is a hairline frame with
+ *    `colors.text` ink. `emphasis: "first"` keeps the same frame and uses
+ *    primary ink. No capsule radius, no solid fill — those two read as a
+ *    web button. Text sits on the page background, so contrast is the
+ *    ordinary text-on-bg pair (`MUTED_SURFACE_CLASS` still "no-muted-fill").
  *  - **Scale-to-fit (裁定 2):** one uniform font size is picked as the
  *    largest in `[MIN, MAX]` whose greedy wrap fits the height budget; a
  *    single label wider than the whole row is truncated (shrink-then-
@@ -165,15 +160,13 @@ export const tagRow: SvgComponent<TagRowComponent> = {
   render(component, box, ctx) {
     const { fontSize, placed, titleBand } = layoutTagRow(component, box.w, ctx)
     const ph = pillHeight(fontSize)
-    const radius = ph / 2 // capsule (裁定 2 — a pill is a capsule by definition)
+    const radius = 2
     const emphasisFirst = component.emphasis === "first"
     const hasTitle = !!component.title?.trim()
-    // Default-pill hairline: keep the pill visible even on a theme whose
-    // `surface` equals its page background, without changing the pill FILL
-    // (the fill stays exactly `colors.surface`, preserving the audited
-    // text-on-surface contrast pair). Prefer a theme's own card stroke, else
-    // a faint surface→text blend (device_mockup's own `mixHex` precedent).
+    const pageBg = ctx.defaultBg ?? ctx.colors.bg
     const defaultStroke = ctx.colors.cardStroke ?? ctx.colors.border ?? mixHex(ctx.colors.surface, ctx.colors.text, 0.2)
+    const emphasisStroke = ctx.colors.primary
+    const emphasisInk = accessibleInk(ctx.colors.primary, pageBg, fontSize)
     return (
       <g transform={`translate(${box.x},${box.y})`}>
         {hasTitle &&
@@ -202,8 +195,7 @@ export const tagRow: SvgComponent<TagRowComponent> = {
           })()}
         {placed.map((pill, i) => {
           const isEmph = emphasisFirst && i === 0
-          const fill = isEmph ? ctx.colors.accent : ctx.colors.surface
-          const ink = isEmph ? readableOn(ctx.colors.accent) : ctx.colors.text
+          const ink = isEmph ? emphasisInk : ctx.colors.text
           return (
             <g key={i} transform={`translate(${pill.x},${titleBand + pill.y})`}>
               <rect
@@ -212,8 +204,9 @@ export const tagRow: SvgComponent<TagRowComponent> = {
                 width={pill.w}
                 height={ph}
                 rx={radius}
-                fill={fill}
-                {...(isEmph ? {} : { stroke: defaultStroke, strokeWidth: 1 })}
+                fill="none"
+                stroke={isEmph ? emphasisStroke : defaultStroke}
+                strokeWidth={1}
               />
               <text
                 data-truncated={pill.truncated ? "1" : undefined}

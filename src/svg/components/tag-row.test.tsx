@@ -5,7 +5,7 @@ import { renderToStaticMarkup } from "react-dom/server"
 import { assertSubset } from "../subset-validate"
 import { parseSvgRoot } from "../serialize"
 import { auditSvgMarkup } from "../audit/svg-audit"
-import { readableOn } from "../ink"
+import { accessibleInk } from "../ink"
 import { tagRow } from "./tag-row"
 import type { ComponentCtx } from "./types"
 
@@ -35,46 +35,45 @@ const comp = (items: string[], overrides: Record<string, unknown> = {}) => ({
 })
 
 describe("tag_row component", () => {
-  it("renders one capsule pill (rect) and one label (text) per tag", () => {
+  it("renders one outlined chip (rect) and one label (text) per tag, never a capsule", () => {
     const { container } = svg(tagRow.render(comp(tags(6)), { x: 20, y: 20, w: 1000 }, ctx))
     const rects = Array.from(container.querySelectorAll("rect"))
     const texts = Array.from(container.querySelectorAll("text"))
     expect(rects.length).toBe(6)
-    expect(texts.length).toBe(6) // no title → text count == pill count
-    // Capsule: rx is half the pill height (rounds into a pill, not a card corner).
+    expect(texts.length).toBe(6)
     for (const r of rects) {
-      const rx = Number(r.getAttribute("rx"))
-      const h = Number(r.getAttribute("height"))
-      expect(rx).toBeCloseTo(h / 2, 5)
+      expect(Number(r.getAttribute("rx"))).toBe(2)
+      expect(r.getAttribute("fill")).toBe("none")
+      expect(r.getAttribute("stroke")).toBeTruthy()
     }
   })
 
-  it("default (no emphasis): every pill is the low-key surface fill + text ink", () => {
+  it("default (no emphasis): every chip is a hairline frame + text ink, no solid fill", () => {
     const { container } = svg(tagRow.render(comp(tags(4)), { x: 0, y: 0, w: 1000 }, ctx))
     const rects = Array.from(container.querySelectorAll("rect"))
     const texts = Array.from(container.querySelectorAll("text"))
-    for (const r of rects) expect(r.getAttribute("fill")).toBe(ctx.colors.surface)
+    for (const r of rects) {
+      expect(r.getAttribute("fill")).toBe("none")
+      expect(r.getAttribute("stroke")).not.toBe(ctx.colors.accent)
+    }
     for (const t of texts) expect(t.getAttribute("fill")).toBe(ctx.colors.text)
-    // No pill is drawn in the accent (nothing is emphasized).
-    expect(rects.some((r) => r.getAttribute("fill") === ctx.colors.accent)).toBe(false)
   })
 
-  it('emphasis "first": only the first pill gets the accent fill + a readable ink, the rest stay low-key', () => {
+  it('emphasis "first": only the first chip uses primary ink, the rest stay text-on-page', () => {
     const { container } = svg(
       tagRow.render(comp(tags(4), { emphasis: "first" }), { x: 0, y: 0, w: 1000 }, ctx),
     )
     const rects = Array.from(container.querySelectorAll("rect"))
     const texts = Array.from(container.querySelectorAll("text"))
-    // Pill 0 = accent fill + readableOn(accent) ink.
-    expect(rects[0].getAttribute("fill")).toBe(ctx.colors.accent)
-    expect(texts[0].getAttribute("fill")).toBe(readableOn(ctx.colors.accent))
-    // Pills 1..n = surface fill + text ink.
+    const emphInk = accessibleInk(ctx.colors.primary, ctx.colors.bg, 16)
+    expect(rects[0].getAttribute("fill")).toBe("none")
+    expect(rects[0].getAttribute("stroke")).toBe(ctx.colors.primary)
+    expect(texts[0].getAttribute("fill")).toBe(emphInk)
     for (let i = 1; i < rects.length; i++) {
-      expect(rects[i].getAttribute("fill")).toBe(ctx.colors.surface)
+      expect(rects[i].getAttribute("fill")).toBe("none")
+      expect(rects[i].getAttribute("stroke")).not.toBe(ctx.colors.primary)
       expect(texts[i].getAttribute("fill")).toBe(ctx.colors.text)
     }
-    // Exactly one accent pill.
-    expect(rects.filter((r) => r.getAttribute("fill") === ctx.colors.accent).length).toBe(1)
   })
 
   it("flow-wraps: a fixed set of tags needs more height in a narrow column than a wide one", () => {

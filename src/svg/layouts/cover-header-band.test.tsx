@@ -91,15 +91,14 @@ describe("cover-header-band — board geometry", () => {
   it("consulting replaces the wave treatment with one readable pad", () => {
     const marked = slide("每个孩子都能画出**自己的星球**")
     const { root, tokens } = renderCover("consulting", marked)
-    const pad = Array.from(root.querySelectorAll("rect")).find(
-      (rect) => rect.getAttribute("fill") === tokens.colors.accent && rect.getAttribute("y") !== "0",
-    )
+    const pad = root.querySelector("[data-emphasis-pad]")
     const emphasized = Array.from(root.querySelectorAll("tspan")).find(
       (span) => span.textContent === "自己的星球",
     )
 
-    expect(pad).toBeTruthy()
-    expect(root.querySelector("path")).toBeNull()
+    expect(pad?.tagName.toLowerCase()).toBe("path")
+    expect(pad?.getAttribute("fill")).toBe(tokens.colors.accent)
+    expect(pad?.getAttribute("d")?.startsWith("M ")).toBe(true)
     expect(contrastRatio(emphasized!.getAttribute("fill")!, tokens.colors.accent)).toBeGreaterThanOrEqual(
       requiredContrastRatio(Number(emphasized!.parentElement!.getAttribute("font-size"))),
     )

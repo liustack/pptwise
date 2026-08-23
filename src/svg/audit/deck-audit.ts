@@ -1772,10 +1772,10 @@ function runContrastWalk(markup: string): { issues: ContrastIssue[]; regions: Bg
     const tag = el.tagName.toLowerCase()
     // An emphasis pad is a run-local foreground surface, not a page
     // background. Its paired tspan carries the exact fill through
-    // `data-emphasis-pad-fill` below. Keeping the rect out of the global
+    // `data-emphasis-pad-fill` below. Keeping the pad out of the global
     // shape tables prevents its horizontal padding from being attributed to
     // the neighboring runs whose glyph positions remain unchanged.
-    const isEmphasisPad = tag === "rect" && el.getAttribute("data-emphasis-pad") !== null
+    const isEmphasisPad = el.getAttribute("data-emphasis-pad") !== null
     // Decoration participates in text-background *attribution* by shape, not
     // by layer (see `findContrastIssues`'s own doc comment). Never in the
     // page-level `regions` table — decoration is painted *over* the real

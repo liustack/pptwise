@@ -194,6 +194,7 @@ describe("playbill sparse faces", () => {
     expect(heading.getAttribute("x")).toBe("640")
     expect(heading.getAttribute("y")).toBe("260")
     expect(heading.getAttribute("text-anchor")).toBe("middle")
+    expect(Number(heading.getAttribute("font-size"))).toBeLessThanOrEqual(64)
     expect(root.querySelector("image")).toBeNull()
     expect(markup).not.toContain(PLACEHOLDER)
   })

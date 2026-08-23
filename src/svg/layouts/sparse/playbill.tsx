@@ -1,8 +1,10 @@
 import type { SvgTemplateProps } from "../types"
 import { sectionNameFor } from "../../../lib/derive"
+import { fitHeadingLines } from "../../heading-fit"
+import { fitSvgLine } from "../../../lib/svg-text-layout"
 import { renderEmphasisTspans } from "../../emphasis"
+import { accessibleOpacity, readableOn } from "../../ink"
 import { findImageComponent } from "../find-image"
-import { GenericMonoBleedContent } from "../generic-mono-bleed"
 import { heroCaption, heroValue } from "../minimal-shared"
 import { fitHeroLine, fitSparseHeading, isNumericHero, rotateRectPolygon, splitTrailingPercent } from "./shared"
 
@@ -108,13 +110,72 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
   )
 }
 
+const PLAYBILL_TYPE_FIT = {
+  maxWidth: 1000,
+  fontSize: 64,
+  maxLines: 3,
+  minPt: 32,
+  lineHeightRatio: 1.15,
+}
+
+function playbillTypeOnField({ slide, ctx }: SvgTemplateProps) {
+  const field = ctx.colors.primary
+  const fg = readableOn(field)
+  const heading = fitHeadingLines(slide.heading, {
+    ...PLAYBILL_TYPE_FIT,
+    fontFamily: ctx.fonts.heading,
+  })
+  const titleLastY = 260 + Math.max(0, heading.lines.length - 1) * heading.lineHeight
+  const subSource = slide.subheading?.trim()
+  const subheading = subSource
+    ? fitSvgLine(subSource, { maxWidth: PLAYBILL_TYPE_FIT.maxWidth, fontSize: 20, minFontSize: 16 })
+    : null
+  const subOpacity = subheading ? accessibleOpacity(fg, field, subheading.fontSize, 0.72) : 0.72
+  return (
+    <>
+      <rect x={0} y={0} width={1280} height={720} fill={field} />
+      {heading.lines.map((line, i) => (
+        <text
+          key={i}
+          data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
+          x={640}
+          y={260 + i * heading.lineHeight}
+          textAnchor="middle"
+          fontFamily={ctx.fonts.heading}
+          fontSize={heading.fontSize}
+          fontWeight="700"
+          fill={fg}
+          dominantBaseline="alphabetic"
+        >
+          {line}
+        </text>
+      ))}
+      {subheading && (
+        <text
+          data-truncated={subheading.truncated ? "1" : undefined}
+          x={640}
+          y={titleLastY + 48}
+          textAnchor="middle"
+          fontFamily={ctx.fonts.body}
+          fontSize={subheading.fontSize}
+          fill={fg}
+          fillOpacity={subOpacity}
+          dominantBaseline="alphabetic"
+        >
+          {subheading.text}
+        </text>
+      )}
+    </>
+  )
+}
+
 export function monoBleed(props: SvgTemplateProps) {
   const { slide, ctx } = props
   const { colors, fonts } = ctx
   const image = findImageComponent(slide)
   const src = image ? ctx.images?.[image.asset_id]?.src : undefined
   const alt = image ? ctx.images?.[image.asset_id]?.alt : undefined
-  if (!src) return GenericMonoBleedContent(props)
+  if (!src) return playbillTypeOnField(props)
   const caption = slide.heading?.trim()
   return (
     <>

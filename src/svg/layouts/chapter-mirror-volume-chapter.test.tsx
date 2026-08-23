@@ -55,7 +55,7 @@ describe("layoutDef", () => {
 })
 
 describe("chapter-mirror-volume-chapter — board geometry", () => {
-  it("places the volume kicker, paired bars, and primary dot on the mirror axis", () => {
+  it("places the volume kicker and flanks the subtitle with paired bars, with no center dot", () => {
     const { root, tokens, ctx } = renderChapter("heritage")
     const bg = ctx.defaultBg ?? tokens.colors.bg
     const volume = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "卷二")
@@ -66,22 +66,17 @@ describe("chapter-mirror-volume-chapter — board geometry", () => {
     expect(volume?.getAttribute("letter-spacing")).toBeNull()
     expect(volume?.getAttribute("fill")).toBe(metaInk(tokens.colors.accent, bg))
 
+    const sub = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === SUBHEADING)!
+    expect(sub.getAttribute("x")).toBe("640")
     const bars = Array.from(root.querySelectorAll("line"))
     expect(bars).toHaveLength(2)
-    expect(bars.every((b) => b.getAttribute("y1") === "450")).toBe(true)
     expect(bars.every((b) => b.getAttribute("stroke") === tokens.colors.accent)).toBe(true)
     expect(bars.every((b) => b.getAttribute("stroke-width") === "1.5")).toBe(true)
-    const xs = bars.map((b) => [Number(b.getAttribute("x1")), Number(b.getAttribute("x2"))] as const)
-    expect(xs).toEqual([
-      [520, 600],
-      [680, 760],
-    ])
-
-    const dot = root.querySelector("circle")
-    expect(dot?.getAttribute("cx")).toBe("640")
-    expect(dot?.getAttribute("cy")).toBe("450")
-    expect(dot?.getAttribute("r")).toBe("4")
-    expect(dot?.getAttribute("fill")).toBe(tokens.colors.primary)
+    const left = bars[0]!
+    const right = bars[1]!
+    expect(Number(left.getAttribute("x2"))).toBeLessThan(640)
+    expect(Number(right.getAttribute("x1"))).toBeGreaterThan(640)
+    expect(root.querySelector("circle")).toBeNull()
   })
 
   it("centers the heading on the mirror axis at the board baseline", () => {
@@ -94,12 +89,11 @@ describe("chapter-mirror-volume-chapter — board geometry", () => {
     expect(Number(heading?.getAttribute("font-size"))).toBe(64)
   })
 
-  it("keeps the paired bars on the title cluster, not in a corner", () => {
+  it("keeps the paired bars on the subtitle cluster, not in a corner", () => {
     const { root } = renderChapter("heritage")
     for (const bar of Array.from(root.querySelectorAll("line"))) {
       expect(Number(bar.getAttribute("x1"))).toBeGreaterThan(96)
       expect(Number(bar.getAttribute("x2"))).toBeLessThan(1184)
-      expect(bar.getAttribute("y1")).toBe("450")
     }
   })
 
@@ -124,8 +118,8 @@ describe("chapter-mirror-volume-chapter — board geometry", () => {
     expect(markup).not.toContain("传承")
     expect(markup).not.toContain("Thank you")
     expect(Array.from(root.querySelectorAll("text")).map((t) => t.textContent)).toEqual(["VOL. 1"])
-    expect(root.querySelectorAll("line")).toHaveLength(2)
-    expect(root.querySelector("circle")).toBeTruthy()
+    expect(root.querySelectorAll("line")).toHaveLength(0)
+    expect(root.querySelector("circle")).toBeNull()
   })
 })
 

@@ -68,26 +68,32 @@ describe("heritage sparse faces", () => {
     expect(markup).not.toContain(LUXE_GOLD)
   })
 
-  it("statement uses L florets and left burgundy type", () => {
+  it("statement keeps the subject smaller than the viewfinder and centered inside it", () => {
     const slide: Slide = { type: "content", layout: "statement", heading: VERSE, components: [] } as Slide
     const { root } = render(
       <StatementContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />,
     )
     expect(() => assertSubset(root)).not.toThrow()
     const florets = Array.from(root.querySelectorAll("path"))
+    expect(florets).toHaveLength(4)
     expect(florets.map((p) => p.getAttribute("d"))).toEqual([
-      "M 96 120 l 40 0 M 96 120 l 0 40",
-      "M 1184 600 l -40 0 M 1184 600 l 0 -40",
+      "M 256 120 L 200 120 L 200 176",
+      "M 1024 120 L 1080 120 L 1080 176",
+      "M 256 600 L 200 600 L 200 544",
+      "M 1024 600 L 1080 600 L 1080 544",
     ])
     expect(florets.every((p) => p.getAttribute("stroke") === ctx.colors.accent)).toBe(true)
     expect(florets.every((p) => p.getAttribute("fill") === "none")).toBe(true)
     const heading = Array.from(root.querySelectorAll("text")).find((t) =>
       (t.textContent ?? "").includes("设备不会"),
     )!
-    expect(heading.getAttribute("x")).toBe("96")
-    expect(heading.getAttribute("y")).toBe("350")
+    expect(heading.getAttribute("x")).toBe("640")
+    expect(heading.getAttribute("text-anchor")).toBe("middle")
     expect(heading.getAttribute("fill")).toBe(ctx.colors.primary)
-    expect(Number(heading.getAttribute("font-size"))).toBe(56)
+    expect(Number(heading.getAttribute("font-size"))).toBeLessThanOrEqual(44)
+    const y = Number(heading.getAttribute("y"))
+    expect(y).toBeGreaterThan(120 + 40)
+    expect(y).toBeLessThan(600 - 40)
   })
 
   it("stat-hero is a centered burgundy numeral between double rules", () => {

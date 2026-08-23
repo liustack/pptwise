@@ -102,15 +102,15 @@ describe("cover-verdict-index — board geometry", () => {
 })
 
 describe("cover-verdict-index — emphasis and bullets", () => {
-  it("with **emphasis** draws an accent rect, without it does not", () => {
+  it("with **emphasis** draws an accent pad, without it does not", () => {
     const marked = slide("下半年应加倍投入**交付侧**")
     const { root, tokens } = renderCover("consulting", marked)
-    const rects = Array.from(root.querySelectorAll("rect"))
-    expect(rects.length).toBeGreaterThan(0)
-    expect(rects[0]?.getAttribute("fill")).toBe(tokens.colors.accent)
+    const pad = root.querySelector("[data-emphasis-pad]")
+    expect(pad?.tagName.toLowerCase()).toBe("path")
+    expect(pad?.getAttribute("fill")).toBe(tokens.colors.accent)
 
     const plain = renderCover("consulting", slide(HEADING))
-    expect(Array.from(plain.root.querySelectorAll("rect"))).toHaveLength(0)
+    expect(plain.root.querySelector("[data-emphasis-pad]")).toBeNull()
   })
 
   it("with 3 bullet items draws 01/02/03 at the default columns", () => {

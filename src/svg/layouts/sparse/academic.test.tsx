@@ -121,9 +121,7 @@ describe("academic sparse faces", () => {
     )!
     expect(heading.getAttribute("y")).toBe("360")
     expect(heading.getAttribute("fill")).toBe(ctx.colors.text)
-    const dots = Array.from(root.querySelectorAll("circle"))
-    expect(dots.map((c) => c.getAttribute("cx"))).toEqual(["616", "640", "664"])
-    expect(dots.every((c) => c.getAttribute("cy") === "430" && c.getAttribute("r") === "3")).toBe(true)
+    expect(root.querySelectorAll("circle")).toHaveLength(0)
     const stamp = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "证明见后三页。")!
     expect(stamp.getAttribute("font-style")).toBe("italic")
     expect(stamp.getAttribute("fill")).toBe(ctx.colors.muted)

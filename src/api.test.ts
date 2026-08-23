@@ -2634,7 +2634,7 @@ describe("irJsonSchema", () => {
   // device_mockup's Important-1 established the precedent.
   it("surfaces tag_row's component-selection guidance (labels-not-sentences boundary + the bullets/row_cards redirects)", () => {
     const json = JSON.stringify(irJsonSchema())
-    expect(json).toContain("wrapping row of pills")
+    expect(json).toContain("wrapping row")
     expect(json).toContain("a name, not a sentence")
     expect(json).toContain("If each item carries its own descriptive text")
   })
