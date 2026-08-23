@@ -66,6 +66,36 @@ describe("midground safety contract", () => {
     expect(root.querySelector('[data-probe="clear"]')).not.toBeNull()
   })
 
+  it("keeps a theme motif leaf that intersects foreground and dims it instead of dropping it", () => {
+    const root = renderContract(
+      <g data-decor>
+        <g data-decor-piece="invitation">
+          <rect
+            data-probe="frame"
+            x={20}
+            y={20}
+            width={200}
+            height={200}
+            fill="none"
+            stroke="#FF0000"
+            strokeWidth={1}
+          />
+        </g>
+      </g>,
+      <text x={40} y={80} fontFamily="Georgia" fontSize={48} fill="#101010">
+        Title
+      </text>,
+    )
+    const frame = root.querySelector('[data-probe="frame"]')!
+    expect(frame).not.toBeNull()
+    const stroke = frame.getAttribute("stroke")!
+    const opacity = effectivePaintOpacity(frame, "stroke")
+    expect(hexSaturation(stroke)).toBeLessThanOrEqual(midgroundSaturationCeiling(colors) + 0.001)
+    expect(contrastRatio(blendOver(stroke, colors.bg, opacity), colors.bg)).toBeLessThan(
+      CONTENT_DECOR_CONTRAST_CEILING,
+    )
+  })
+
   it("moves a whole ghost label inside the canvas before painting it", () => {
     const root = renderContract(
       <text

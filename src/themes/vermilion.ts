@@ -36,7 +36,7 @@ import type { StyleTokens } from "./tokens";
  *     5.93:1，白字压红 5.88:1 → 6.78:1——红头承白字这件事从「勉强」变成
  *     「稳」，chapter 整版红与 banner 红条上的反白都受益。
  *   - `accent` `#D4A017` → `#C79A3B`：金压深半档，实测 2.22:1 → 2.26:1。
- *     仍远低于任何文字门槛，纪律不变：**金只给线、菱、芒，绝不当文字色**。
+ *     仍远低于任何文字门槛，纪律不变：**金只给线，绝不当文字色**。
  *   - `text` `#2B2020` → `#33231C`：公文墨转暖褐，13.14:1。
  *   - `muted` `#6E5A50` → `#6E5B4B`：档案灰，5.63:1，仍清 4.5:1 正文门槛。
  *   - `border` `#E7DCC8` → `#E0D2B8`：案卷线。
@@ -58,8 +58,12 @@ import type { StyleTokens } from "./tokens";
  * ——两条纪律与旧值时期完全一致，未因板上数字放宽。板上「红头能直接承
  * 白字（6.7:1）」一条与实测 6.78:1 相符。
  *
- * 装饰见 `src/svg/motifs/motif-vermilion-motif.tsx`（文件金线：顶缘金双线 +
- * 右上角金芒扇 + 底缘红细线带中点金菱）。
+ * 装饰见 `src/svg/motifs/motif-vermilion-motif.tsx`（文件金线：只留顶缘金双线。
+ * 金芒扇与底缘金菱已退役。封面与章节 motif 退让，内容/ending 画天头金线）。
+ *
+ * **第八波批 3（`.issues/2026-08-22-theme-redesign-wave8/batch3`）**：chapter
+ * 从正红整版改为公文米白 `#F6EFE3`（与 bg 同值）。板上章节是浅底红号块，
+ * 不是整版红。红身份来自红头与号块，正文页本来就不可整版红。
  */
 export const VERMILION_TOKENS: StyleTokens = {
   id: "vermilion",
@@ -67,7 +71,7 @@ export const VERMILION_TOKENS: StyleTokens = {
     bg: "#F6EFE3", // 公文米白（正文页不可整版红，红作结构色）
     surface: "#FCF8EF", // 文件页面板
     primary: "#B02318", // 正红（5.93:1；白字压它 6.78:1）
-    accent: "#C79A3B", // 金（2.26:1，只给线/菱/芒，绝不当文字色）
+    accent: "#C79A3B", // 金（2.26:1，只给线，绝不当文字色）
     text: "#33231C", // 公文墨（13.14:1）
     muted: "#6E5B4B", // 档案灰（5.63:1）
     border: "#E0D2B8", // 案卷线
@@ -95,7 +99,7 @@ export const VERMILION_TOKENS: StyleTokens = {
   },
   defaultBackgrounds: {
     cover: { kind: "color", value: "#F6EFE3" }, // 浅底（红身份来自结构型 layout + motif，见文件头背景裁定）
-    chapter: { kind: "color", value: "#B02318" }, // 正红整版（白字走 readableOn，chapter 被对比度地板豁免）
+    chapter: { kind: "color", value: "#F6EFE3" }, // 公文米白（红身份来自红头与号块，正文页不可整版红）
     content: { kind: "color", value: "#F6EFE3" },
     ending: { kind: "color", value: "#F6EFE3" },
   },

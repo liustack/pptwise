@@ -18,6 +18,12 @@ import { ReminderListEnding } from "./ending-reminder-list-ending"
 import { AfterwordEnding } from "./ending-afterword-ending"
 import { InviteFieldEnding } from "./ending-invite-field-ending"
 import { SealCloseEnding } from "./ending-seal-close-ending"
+import { GiltWordEnding } from "./ending-gilt-word-ending"
+import { WindowCloseEnding } from "./ending-window-close-ending"
+import { DeliberationEnding } from "./ending-deliberation-ending"
+import { ScorecardEnding } from "./ending-scorecard-ending"
+import { CarePlanEnding } from "./ending-care-plan-ending"
+import { SeatCtaEnding } from "./ending-seat-cta-ending"
 
 export type { EndingLayout, EndingLayoutId } from "./types"
 
@@ -43,4 +49,10 @@ export const ENDING_LAYOUTS: Record<EndingLayoutId, EndingLayout> = {
   "afterword-ending": AfterwordEnding,
   "invite-field-ending": InviteFieldEnding,
   "seal-close-ending": SealCloseEnding,
+  "gilt-word-ending": GiltWordEnding,
+  "window-close-ending": WindowCloseEnding,
+  "deliberation-ending": DeliberationEnding,
+  "scorecard-ending": ScorecardEnding,
+  "care-plan-ending": CarePlanEnding,
+  "seat-cta-ending": SeatCtaEnding,
 }

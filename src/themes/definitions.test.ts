@@ -195,6 +195,12 @@ describe("THEME_DEFINITIONS", () => {
       "journal",
       "heritage",
       "ink",
+      "luxe",
+      "runway",
+      "vermilion",
+      "terra",
+      "pulse",
+      "arena",
     ])
     for (const id of CANONICAL_THEME_IDS) {
       expect(THEME_DEFINITIONS[id].layouts.cover.length, `${id}.cover is a singleton lock`).toBe(1)
@@ -272,21 +278,21 @@ describe("THEME_DEFINITIONS", () => {
     expect(THEME_DEFINITIONS.enterprise.layoutTendencies?.cover).toEqual(["ikb-field-cover"])
     expect(THEME_DEFINITIONS.enterprise.motif).toBe("enterprise-motif")
 
-    expect(THEME_DEFINITIONS.vermilion.layouts.cover).toEqual(["band-title"])
-    expect(THEME_DEFINITIONS.vermilion.layoutTendencies?.cover).toEqual(["band-title"])
+    expect(THEME_DEFINITIONS.vermilion.layouts.cover).toEqual(["red-head-cover"])
+    expect(THEME_DEFINITIONS.vermilion.layoutTendencies?.cover).toEqual(["red-head-cover"])
 
     expect(THEME_DEFINITIONS.crayon.layouts.cover).toEqual(["capsule-open-cover"])
     expect(THEME_DEFINITIONS.crayon.layoutTendencies?.cover).toEqual(["capsule-open-cover"])
 
-    expect(THEME_DEFINITIONS.runway.layouts.cover).toEqual(["paper-masthead"])
-    expect(THEME_DEFINITIONS.runway.layoutTendencies?.cover).toEqual(["paper-masthead"])
+    expect(THEME_DEFINITIONS.runway.layouts.cover).toEqual(["lookbook-open-cover"])
+    expect(THEME_DEFINITIONS.runway.layoutTendencies?.cover).toEqual(["lookbook-open-cover"])
     expect(THEME_DEFINITIONS.runway.motif).toBeUndefined()
 
-    expect(THEME_DEFINITIONS.pulse.layouts.cover).toEqual(["horizon-wedge"])
-    expect(THEME_DEFINITIONS.pulse.layoutTendencies?.cover).toEqual(["horizon-wedge"])
+    expect(THEME_DEFINITIONS.pulse.layouts.cover).toEqual(["report-open-cover"])
+    expect(THEME_DEFINITIONS.pulse.layoutTendencies?.cover).toEqual(["report-open-cover"])
 
-    expect(THEME_DEFINITIONS.arena.layouts.cover).toEqual(["corner-wedge"])
-    expect(THEME_DEFINITIONS.arena.layoutTendencies?.cover).toEqual(["corner-wedge"])
+    expect(THEME_DEFINITIONS.arena.layouts.cover).toEqual(["cut-panel-cover"])
+    expect(THEME_DEFINITIONS.arena.layoutTendencies?.cover).toEqual(["cut-panel-cover"])
 
     expect(THEME_DEFINITIONS.ember.layouts.cover).toEqual(["corner-wedge"])
     expect(THEME_DEFINITIONS.ember.layoutTendencies?.cover).toEqual(["corner-wedge"])
@@ -305,8 +311,8 @@ describe("THEME_DEFINITIONS", () => {
     expect(THEME_DEFINITIONS.tech.layouts.cover).toEqual(["type-rule-cover"])
     expect(THEME_DEFINITIONS.tech.layoutTendencies?.cover).toEqual(["type-rule-cover"])
 
-    expect(THEME_DEFINITIONS.luxe.layouts.cover).toEqual(["poster-center"])
-    expect(THEME_DEFINITIONS.luxe.layoutTendencies?.cover).toEqual(["poster-center"])
+    expect(THEME_DEFINITIONS.luxe.layouts.cover).toEqual(["invitation-plate-cover"])
+    expect(THEME_DEFINITIONS.luxe.layoutTendencies?.cover).toEqual(["invitation-plate-cover"])
 
     expect(THEME_DEFINITIONS.journal.layouts.cover).toEqual(["issue-head-cover"])
     expect(THEME_DEFINITIONS.journal.layoutTendencies?.cover).toEqual(["issue-head-cover"])
@@ -324,8 +330,8 @@ describe("THEME_DEFINITIONS", () => {
     expect(THEME_DEFINITIONS.museum.layoutTendencies?.cover).toEqual(["poster-center"])
     expect(THEME_DEFINITIONS.museum.motif).toBeUndefined()
 
-    expect(THEME_DEFINITIONS.terra.layouts.cover).toEqual(["tone-adaptive-header"])
-    expect(THEME_DEFINITIONS.terra.layoutTendencies?.cover).toEqual(["tone-adaptive-header"])
+    expect(THEME_DEFINITIONS.terra.layouts.cover).toEqual(["pledge-open-cover"])
+    expect(THEME_DEFINITIONS.terra.layoutTendencies?.cover).toEqual(["pledge-open-cover"])
 
     expect(THEME_DEFINITIONS.heritage.layouts.cover).toEqual(["double-frame-cover"])
     expect(THEME_DEFINITIONS.heritage.layoutTendencies?.cover).toEqual(["double-frame-cover"])

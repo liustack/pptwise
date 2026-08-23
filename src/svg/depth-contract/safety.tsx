@@ -297,6 +297,10 @@ function applyPaintBudget(
   return cloneElement(element, nextProps)
 }
 
+function isThemeMotifIdentity(props: ElementProps): boolean {
+  return props["data-decor"] !== undefined || props["data-decor-piece"] !== undefined
+}
+
 function processMidgroundNode(
   node: ReactNode,
   foregroundBoxes: readonly DepthBox[],
@@ -304,6 +308,7 @@ function processMidgroundNode(
   saturationCeiling: number,
   parentMatrix: SvgMatrix = IDENTITY_MATRIX,
   parentPaint: PaintState = INITIAL_PAINT,
+  motifIdentity = false,
 ): ReactNode {
   if (node === null || node === undefined || typeof node === "boolean" || typeof node === "string" || typeof node === "number") return node
   if (!isValidElement<ElementProps>(node)) return node
@@ -312,7 +317,15 @@ function processMidgroundNode(
       <>
         {Children.toArray(node.props.children).map((child, index) => (
           <Fragment key={`mid-fragment-${index}`}>
-            {processMidgroundNode(child, foregroundBoxes, background, saturationCeiling, parentMatrix, parentPaint)}
+            {processMidgroundNode(
+              child,
+              foregroundBoxes,
+              background,
+              saturationCeiling,
+              parentMatrix,
+              parentPaint,
+              motifIdentity,
+            )}
           </Fragment>
         ))}
       </>
@@ -320,13 +333,22 @@ function processMidgroundNode(
   }
   const executed = executeFunctionElement(node)
   if (executed.handled) {
-    return processMidgroundNode(executed.node, foregroundBoxes, background, saturationCeiling, parentMatrix, parentPaint)
+    return processMidgroundNode(
+      executed.node,
+      foregroundBoxes,
+      background,
+      saturationCeiling,
+      parentMatrix,
+      parentPaint,
+      motifIdentity,
+    )
   }
   if (typeof node.type !== "string") return node
 
   const tag = node.type.toLowerCase()
   if (DEFINITION_TAGS.has(tag)) return node
   const matrix = multiplyMatrices(parentMatrix, parseSvgTransform(node.props.transform))
+  const nextIdentity = motifIdentity || isThemeMotifIdentity(node.props)
   if (LEAF_TAGS.has(tag)) {
     const paint = leafPaint(parentPaint, node.props)
     let element = node
@@ -339,14 +361,24 @@ function processMidgroundNode(
       props = clamped.props
       box = clamped.box
     }
-    if (box && foregroundBoxes.some((foreground) => boxesIntersect(box!, foreground))) return null
+    // Theme motif identity stays. Intersecting ghosts and other mid leaves
+    // still yield. Paint budget is the intensity ceiling for what remains.
+    if (
+      box &&
+      !nextIdentity &&
+      foregroundBoxes.some((foreground) => boxesIntersect(box!, foreground))
+    ) {
+      return null
+    }
     return applyPaintBudget(element, props, paint, parentPaint, background, saturationCeiling)
   }
 
   const paint = inheritedPaint(parentPaint, node.props, true)
   const originalChildren = Children.toArray(node.props.children)
   const processedChildren = originalChildren
-    .map((child) => processMidgroundNode(child, foregroundBoxes, background, saturationCeiling, matrix, paint))
+    .map((child) =>
+      processMidgroundNode(child, foregroundBoxes, background, saturationCeiling, matrix, paint, nextIdentity),
+    )
     .filter((child) => child !== null && child !== undefined && child !== false)
     .map((child, index) => <Fragment key={`mid-${index}`}>{child}</Fragment>)
   if (

@@ -128,6 +128,11 @@ function sha(svg: string): string {
 // Recaptured (wave8 batch 2, 2026-08-23). academic / classroom / crayon /
 // journal / heritage / ink covers and content motifs lock to the board.
 // consulting is not in this fixture.
+//
+// Recaptured (wave8 batch 3, 2026-08-23). luxe / runway / vermilion / terra /
+// pulse / arena covers lock to the board. lecture also moves: its chalk
+// tray is a hollow stroked rect whose bbox used to be dropped on title
+// intersect. The depth contract now keeps motif identity and dims it.
 const fixture = JSON.parse(
   readFileSync(new URL("./__fixtures__/emphasis-unassigned-bytes.json", import.meta.url), "utf-8"),
 ) as { pages: Record<string, string> }

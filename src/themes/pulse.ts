@@ -54,11 +54,11 @@ import type { StyleTokens } from "./tokens";
  * 9.54。设计板自查写的 5.5 / 3.1 / 13 / 5 / 5.5·3.1·4·3.5 与实测同向
  * （静脉蓝一格实测 3.88 略低于板上 4，仍过 3.0 装饰线），以实测为准
  * （chart 第四格已不是板上的警示褐，见上）。
- *   - chapter 底色取 primary（同 academic/consulting/terra 先例），白字对
- *     primary 6.41:1，`readableOn` 自适应两墨取优后稳态可读。
+ *   - chapter 底色（第八波批 3）：从 primary 青绿改为薄荷白 `#F2F7F4`，与
+ *     bg 同值。板上章节是浅底 + 深青竖标，不是整版青绿。
  *
- * 装饰见 `src/svg/motifs/motif-pulse-motif.tsx`（脉搏线 v2：顶缘一条极细
- * 心电线 + 右缘细胞轮廓点簇）。
+ * 装饰见 `src/svg/motifs/motif-pulse-motif.tsx`（心搏线 v3：封面页中一笔
+ * 心搏线。顶缘心电线与右缘细胞圈退役）。
  */
 export const PULSE_TOKENS: StyleTokens = {
   id: "pulse",
@@ -90,7 +90,8 @@ export const PULSE_TOKENS: StyleTokens = {
   shape: { radius: 8, gapScale: 1 }, // 圆润可亲（体检报告/诊所品牌的亲和感）
   defaultBackgrounds: {
     cover: { kind: "color", value: "#F2F7F4" },
-    chapter: { kind: "color", value: "#0E6B5C" },
+    // 第八波批 3：chapter 改薄荷白。深青竖标由 subject-rule-chapter 自己承。
+    chapter: { kind: "color", value: "#F2F7F4" },
     content: { kind: "color", value: "#F2F7F4" },
     ending: { kind: "color", value: "#F2F7F4" },
   },

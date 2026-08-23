@@ -27,6 +27,12 @@ import { CapsuleOpenCover } from "./cover-capsule-open-cover"
 import { IssueHeadCover } from "./cover-issue-head-cover"
 import { DoubleFrameCover } from "./cover-double-frame-cover"
 import { VerticalTitleCover } from "./cover-vertical-title-cover"
+import { InvitationPlateCover } from "./cover-invitation-plate-cover"
+import { LookbookOpenCover } from "./cover-lookbook-open-cover"
+import { RedHeadCover } from "./cover-red-head-cover"
+import { PledgeOpenCover } from "./cover-pledge-open-cover"
+import { ReportOpenCover } from "./cover-report-open-cover"
+import { CutPanelCover } from "./cover-cut-panel-cover"
 
 export type { CoverLayout, CoverLayoutId } from "./types"
 
@@ -61,4 +67,10 @@ export const COVER_LAYOUTS: Record<CoverLayoutId, CoverLayout> = {
   "issue-head-cover": IssueHeadCover,
   "double-frame-cover": DoubleFrameCover,
   "vertical-title-cover": VerticalTitleCover,
+  "invitation-plate-cover": InvitationPlateCover,
+  "lookbook-open-cover": LookbookOpenCover,
+  "red-head-cover": RedHeadCover,
+  "pledge-open-cover": PledgeOpenCover,
+  "report-open-cover": ReportOpenCover,
+  "cut-panel-cover": CutPanelCover,
 }

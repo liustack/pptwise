@@ -205,7 +205,7 @@ describe("memo vs heritage vs vermilion（字族用法分家）", () => {
     const heritageCtx = buildCtx(resolveStyle("heritage"), {})
     const vermilionCtx = buildCtx(resolveStyle("vermilion"), {})
     const heritageRoot = render(<HeritageMotif ir={ir("heritage")} slide={coverSlide} ctx={heritageCtx} />).root
-    const vermilionRoot = render(<VermilionMotif ir={ir("vermilion")} slide={coverSlide} ctx={vermilionCtx} />).root
+    const vermilionRoot = render(<VermilionMotif ir={ir("vermilion")} slide={contentSlide} ctx={vermilionCtx} />).root
     const vermilionThick = Array.from(vermilionRoot.querySelectorAll("line")).find((l) => l.getAttribute("stroke-width") === "2")!
 
     expect(num(memo.thickRule, "y1")).toBe(26)

@@ -53,6 +53,16 @@ function statCoverHeading(lex: Lexicon): string {
   return `${m.value}${m.unit ?? ""}`
 }
 
+/**
+ * cut-panel-cover and lookbook-open-cover lock a single display line
+ * (36pt / 48pt floor). The corpus deck title still truncates at that
+ * floor in English and mixed, which hard-blocks validate. A chapter
+ * title is the length those faces actually carry.
+ */
+function oneLineCoverHeading(lex: Lexicon): string {
+  return lex.chapters[0]!
+}
+
 function consultingLead(component: Component, slotIndex: number, lex: Lexicon): Component {
   if (slotIndex !== 1) return component
   if (component.type !== "bullets") {
@@ -332,7 +342,12 @@ export function layoutPage(layoutId: string, lex: Lexicon, assets: CorpusAssets,
       ? {
           type: "cover",
           layout: layoutId,
-          heading: def.id === "stat-cover" ? statCoverHeading(lex) : lex.deckTitle,
+          heading:
+            def.id === "stat-cover"
+              ? statCoverHeading(lex)
+              : def.id === "cut-panel-cover" || def.id === "lookbook-open-cover"
+                ? oneLineCoverHeading(lex)
+                : lex.deckTitle,
           subheading: lex.deckSubtitle,
           components: [],
         }

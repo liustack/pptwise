@@ -20,6 +20,12 @@ import { StickerNumeralChapter } from "./chapter-sticker-numeral-chapter"
 import { FascicleGhostChapter } from "./chapter-fascicle-ghost-chapter"
 import { MirrorVolumeChapter } from "./chapter-mirror-volume-chapter"
 import { VolumeSlipChapter } from "./chapter-volume-slip-chapter"
+import { GiltOrdinalChapter } from "./chapter-gilt-ordinal-chapter"
+import { LookRangeChapter } from "./chapter-look-range-chapter"
+import { SealNumeralChapter } from "./chapter-seal-numeral-chapter"
+import { FieldBandChapter } from "./chapter-field-band-chapter"
+import { SubjectRuleChapter } from "./chapter-subject-rule-chapter"
+import { RoundMarkChapter } from "./chapter-round-mark-chapter"
 
 export type { ChapterLayout, ChapterLayoutId } from "./types"
 
@@ -48,4 +54,10 @@ export const CHAPTER_LAYOUTS: Record<ChapterLayoutId, ChapterLayout> = {
   "fascicle-ghost-chapter": FascicleGhostChapter,
   "mirror-volume-chapter": MirrorVolumeChapter,
   "volume-slip-chapter": VolumeSlipChapter,
+  "gilt-ordinal-chapter": GiltOrdinalChapter,
+  "look-range-chapter": LookRangeChapter,
+  "seal-numeral-chapter": SealNumeralChapter,
+  "field-band-chapter": FieldBandChapter,
+  "subject-rule-chapter": SubjectRuleChapter,
+  "round-mark-chapter": RoundMarkChapter,
 }

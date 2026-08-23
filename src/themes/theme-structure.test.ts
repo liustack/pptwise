@@ -86,7 +86,20 @@ const WAVE8_B2_THEME_IDS = new Set<CanonicalThemeId>([
   "ink",
 ])
 
-const WAVE8_LOCKED_THEME_IDS = new Set<CanonicalThemeId>([...WAVE8_B1_THEME_IDS, ...WAVE8_B2_THEME_IDS])
+const WAVE8_B3_THEME_IDS = new Set<CanonicalThemeId>([
+  "luxe",
+  "runway",
+  "vermilion",
+  "terra",
+  "pulse",
+  "arena",
+])
+
+const WAVE8_LOCKED_THEME_IDS = new Set<CanonicalThemeId>([
+  ...WAVE8_B1_THEME_IDS,
+  ...WAVE8_B2_THEME_IDS,
+  ...WAVE8_B3_THEME_IDS,
+])
 
 const DECLARED_THEME_IDS = CANONICAL_THEME_IDS.filter((id) => THEME_DEFINITIONS[id].layoutTendencies !== undefined)
 const UNDECLARED_THEME_IDS = CANONICAL_THEME_IDS.filter((id) => THEME_DEFINITIONS[id].layoutTendencies === undefined)
@@ -266,7 +279,9 @@ describe("cover-axis divergence across the 24 structural identities", () => {
     // shares the poster-center cluster. Re-measured: 18.
     // Wave 8 batch 2 (2026-08-23): six education/humanities covers lock to
     // new pinOnly faces. Re-measured: 20.
-    expect(distinct.size).toBe(20)
+    // Wave 8 batch 3 (2026-08-23): six character covers lock to new pinOnly
+    // faces. Re-measured: 22.
+    expect(distinct.size).toBe(22)
   })
 
   it("the blind cluster is gone: 8 of 16 identities used to pick their cover exactly the way an undeclared theme does, now none do", () => {
@@ -288,20 +303,21 @@ describe("cover-axis divergence across the 24 structural identities", () => {
     expect(blind).toEqual([])
   })
 
-  it("distinct cover weightings across the 24 identities: 20, every one of them a real preference", () => {
+  it("distinct cover weightings across the 24 identities: 22, every one of them a real preference", () => {
     const groups = new Map<string, string[]>()
     for (const id of STRUCTURAL_IDENTITY_IDS) {
       const key = effectiveCoverWeightSet(id)
       groups.set(key, [...(groups.get(key) ?? []), id])
     }
-    expect(groups.size).toBe(20)
+    expect(groups.size).toBe(22)
     // The largest remaining cluster, named rather than counted, so shrinking
     // it later is a visible edit to this test and not a silent improvement.
     // Board-cover-restore wave 2: five identities lock `poster-center`
     // (insight, campaign, luxe, museum, stage). Wave 8 batch 1 moves insight
-    // to stat-cover, so the cluster is four.
+    // to stat-cover. Wave 8 batch 3 moves luxe to invitation-plate-cover, so
+    // the cluster is three.
     const largest = [...groups.values()].sort((a, b) => b.length - a.length)[0]!
-    expect(largest).toEqual(["campaign", "luxe", "museum", "stage"])
+    expect(largest).toEqual(["campaign", "museum", "stage"])
   })
 
   // ── The structural guard ──
@@ -967,8 +983,6 @@ describe("second-front wave: chapter / content / ending allocation", () => {
       }
     }
     expect(leftover.filter(([id]) => !WAVE8_LOCKED_THEME_IDS.has(id as CanonicalThemeId))).toEqual([
-      ["luxe", 1],
-      ["luxe", 5],
       ["museum", 1],
       ["museum", 5],
       ["stage", 1],
@@ -1094,8 +1108,8 @@ describe("second-front wave: chapter / content / ending allocation", () => {
     expect(collisions).toEqual([])
   })
 
-  it("seeds 1-40: 24/24 distinct sequence-bundles, slot diversity chapter 23 / content 19 / ending 19", () => {
-    // Wave 8 batch 2 locks six more chapter/ending faces. Re-measured.
+  it("seeds 1-40: 24/24 distinct sequence-bundles, slot diversity chapter 23 / content 19 / ending 23", () => {
+    // Wave 8 batch 3 locks six more chapter/ending faces. Re-measured.
     const over40 = new Set(
       STRUCTURAL_IDENTITY_IDS.map((id) =>
         JSON.stringify(Array.from({ length: 40 }, (_, i) => resolveSequence(id, i + 1))),
@@ -1116,7 +1130,7 @@ describe("second-front wave: chapter / content / ending allocation", () => {
       chapterA: 23,
       contentA: 19,
       chapterB: 23,
-      ending: 19,
+      ending: 23,
     })
   })
 
@@ -1322,7 +1336,9 @@ describe("forced theme-tendency × stress-content geometry audit (closes the T2 
     // to a single pinOnly face, so the forced-audit set shrinks 127 → 113.
     // Wave 8 batch 2 locks six more chapter/ending (and six covers already
     // singleton). Forced-audit set shrinks 113 → 100.
-    expect(combos).toHaveLength(100)
+    // Wave 8 batch 3 locks six more chapter/ending (covers already
+    // singleton). Forced-audit set shrinks 100 → 87.
+    expect(combos).toHaveLength(87)
   })
 
   for (const { themeId, slideType, layoutId } of combos) {
