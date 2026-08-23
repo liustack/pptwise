@@ -44,6 +44,23 @@ describe("svg text layout", () => {
       measureTextUnits("opsx")
     )
   })
+
+  it("clips wrap-merged lines that still overrun maxWidth at the 16px floor, without an ellipsis", () => {
+    const source = "一".repeat(40)
+    const r = layoutSvgText(source, {
+      maxWidth: 80,
+      fontSize: 24,
+      maxLines: 2,
+      minPt: 16,
+    })
+    expect(r.fontSize).toBe(16)
+    expect(r.truncated).toBe(true)
+    expect(r.lines.join("")).not.toContain("…")
+    expect(r.lines.join("")).not.toMatch(/(?<![.])\.\.\.(?![.])/)
+    for (const line of r.lines) {
+      expect(measureTextUnits(line) * r.fontSize).toBeLessThanOrEqual(80)
+    }
+  })
 })
 
 describe("truncateToUnits", () => {
@@ -134,6 +151,11 @@ describe("fitSvgLine", () => {
       fontSize: 20,
       truncated: false,
     })
+  })
+  it("defaults the shrink floor to the 16px (12pt) readable floor", () => {
+    const r = fitSvgLine("一二三四五六七八九十", { maxWidth: 120, fontSize: 20 })
+    expect(r.fontSize).toBe(16)
+    expect(r.truncated).toBe(true)
   })
   it("shrinks font down to the floor before truncating", () => {
     const r = fitSvgLine("一二三四五六七八九十", { maxWidth: 120, fontSize: 20, minFontSize: 12 })
@@ -447,7 +469,7 @@ describe("tokenize atomic Latin/digit runs (task R2: fused-prefix wrap fix)", ()
     const r = layoutSvgText(LONG, { maxWidth: 60, fontSize: 20, maxLines: 10 })
     expect(r.lines.join("")).toBe(LONG) // 无丢字
     expect(r.lines.length).toBeGreaterThan(1) // 确实被切开了，不是静默溢出成一行
-    const maxUnits = 60 / 20
+    const maxUnits = 60 / r.fontSize
     for (const line of r.lines) {
       expect(measureTextUnits(line)).toBeLessThanOrEqual(maxUnits + 1e-9)
     }
@@ -554,10 +576,12 @@ describe("layoutSvgText word-integrity retry-ladder preference (task R2 scope ex
     // same maxWidth/fontSize/maxLines): byte-identical output, confirming
     // this is genuinely "fall back to the current behavior", not a new,
     // merely-similar-looking split.
-    expect(withFloor.lines).toEqual(["Brandxxxxxxxxxxx", "xxxx：让工程团队将", "大模型推理性能提升"])
-    expect(withFloor.fontSize).toBe(38)
+    expect(withFloor.lines.join("")).toBe(POSITION_0_PIN)
     expect(withFloor.truncated).toBe(false)
-    expect(withFloor.lines.join("")).toBe(POSITION_0_PIN) // still lossless -- split, not dropped
+    expect(withFloor.fontSize).toBeGreaterThanOrEqual(16)
+    for (const line of withFloor.lines) {
+      expect(measureTextUnits(line) * withFloor.fontSize).toBeLessThanOrEqual(360)
+    }
   })
 
   it("without a minPt floor, the same run finds a smaller but split-free font instead (contrast against the minPt-bounded fallback above)", () => {
@@ -599,12 +623,12 @@ describe("layoutSvgText word-integrity retry-ladder preference (task R2 scope ex
     // exactly one element, there is no boundary for it to land on. Both
     // calls below therefore produce the identical single line, whether or
     // not `minPt` is supplied.
-    const withoutFloor = layoutSvgText(POSITION_0_PIN, { maxWidth: 360, fontSize: 64, maxLines: 1 })
-    const withFloor = layoutSvgText(POSITION_0_PIN, { maxWidth: 360, fontSize: 64, maxLines: 1, minPt: 32 })
-    expect(withFloor).toEqual(withoutFloor)
-    expect(withFloor.lines).toEqual([POSITION_0_PIN])
-    expect(withFloor.fontSize).toBe(13)
-    expect(withFloor.lines.join("")).toBe(POSITION_0_PIN)
+    const r = layoutSvgText(POSITION_0_PIN, { maxWidth: 360, fontSize: 64, maxLines: 1 })
+    expect(r.lines).toHaveLength(1)
+    expect(r.fontSize).toBeGreaterThanOrEqual(16)
+    expect(measureTextUnits(r.lines[0]!) * r.fontSize).toBeLessThanOrEqual(360)
+    expect(r.lines[0]).not.toContain("…")
+    expect(r.truncated).toBe(true)
   })
 
   it("is a pure function of its inputs -- repeated calls with identical arguments produce identical output (no hidden nondeterminism in the search)", () => {

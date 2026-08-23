@@ -50,7 +50,7 @@ export function TwoColumnContent({ ir, slide, index, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const section = sectionNameFor(ir.slides, index)
   const kicker = section
-    ? fitSvgLine(section, { maxWidth: 900, fontSize: 17, minFontSize: 13 })
+    ? fitSvgLine(section, { maxWidth: 900, fontSize: 17, minFontSize: 16 })
     : null
 
   const KICKER_Y = 96

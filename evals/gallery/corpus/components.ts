@@ -520,14 +520,13 @@ export const DENSITY_BUILDERS: Record<string, (lex: Lexicon) => Component> = {
     style: "default",
   }),
 
-  // 12 series. chart.tsx `LEGEND_ENTRY_PITCH = 72`. Editorial
-  // CAPACITY.chart.lineSeriesAdvisoryMax = 8 is not the geometric ceiling.
-  // Probe on consulting densityPage. 13 series marks on en.
+  // 8 series. chart.tsx `LEGEND_ENTRY_PITCH = 100` after the 16px type
+  // floor. Probe on consulting densityPage. 9 series marks on en.
   chart: (lex) => ({
     type: "chart",
     chart_type: "line",
     axes: { x_title: lex.periodAxis, y_title: lex.metrics[2]!.label, y_unit: lex.metrics[2]!.unit, show_grid: true },
-    series: [...lex.labels, ...lex.orgs].slice(0, 12).map((name, i) => ({
+    series: [...lex.labels, ...lex.orgs].slice(0, 8).map((name, i) => ({
       name,
       data: slice(lex.periods, 5).map((x, j) => ({ x, y: 40 + ((i * 7 + j * 11) % 45) })),
     })),
@@ -614,5 +613,49 @@ export const DENSITY_BUILDERS: Record<string, (lex: Lexicon) => Component> = {
       desc: lex.labels[i % lex.labels.length],
       highlight: i === 2,
     })),
+  }),
+
+  // 2 items per cell. bmc.tsx now stamps data-dropped when a short box
+  // cannot hold every item at the 16px floor. Probe on consulting
+  // densityPage. 3 items per cell marks on en.
+  bmc: (lex) => ({
+    type: "bmc",
+    key_partners: slice(lex.orgs, 2),
+    key_activities: lex.phrases.slice(0, 2),
+    key_resources: lex.phrases.slice(3, 5),
+    value_propositions: lex.strengths.slice(0, 2),
+    customer_relationships: lex.phrases.slice(6, 8),
+    channels: slice(lex.labels, 2, 12),
+    customer_segments: slice(lex.labels, 2, 8),
+    cost_structure: lex.weaknesses.slice(0, 2),
+    revenue_streams: lex.opportunities.slice(0, 2),
+  }),
+
+  // 3 items per quadrant. swot.tsx drop stamp at the 16px floor.
+  swot: (lex) => ({
+    type: "swot",
+    strengths: lex.strengths.slice(0, 3),
+    weaknesses: lex.weaknesses.slice(0, 3),
+    opportunities: lex.opportunities.slice(0, 3),
+    threats: lex.threats.slice(0, 3),
+  }),
+
+  // 3 items per quadrant. pest.tsx drop stamp at the 16px floor.
+  pest: (lex) => ({
+    type: "pest",
+    political: { items: lex.threats.slice(0, 3) },
+    economic: { items: lex.opportunities.slice(0, 3) },
+    social: { items: lex.strengths.slice(0, 3) },
+    technological: { items: lex.weaknesses.slice(0, 3) },
+  }),
+
+  // 2 items per force. five-forces.tsx drop stamp at the 16px floor.
+  five_forces: (lex) => ({
+    type: "five_forces",
+    rivalry: { items: lex.threats.slice(0, 2), intensity: "high" },
+    new_entrants: { items: lex.opportunities.slice(0, 2), intensity: "medium" },
+    supplier_power: { items: lex.weaknesses.slice(0, 2), intensity: "medium" },
+    buyer_power: { items: lex.strengths.slice(0, 2), intensity: "high" },
+    substitutes: { items: lex.threats.slice(2, 4), intensity: "low" },
   }),
 }

@@ -13,7 +13,7 @@ import type { RenderDef, SvgComponent } from "./types"
 
 type BulletsComponent = Extract<Component, { type: "bullets" }>
 
-const MIN_FONT = 14
+const MIN_FONT = 24
 const ITEM_GAP = 8
 const TEXT_INDENT = 26
 

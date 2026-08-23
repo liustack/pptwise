@@ -54,7 +54,7 @@ export function PillCtaEnding({ slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(slide.subheading, {
         maxWidth: CONTENT_MAX_W,
         fontSize: SUB_SIZE,
-        minFontSize: 14,
+        minFontSize: 16,
         fontFamily: fonts.body,
       })
     : null
@@ -64,7 +64,7 @@ export function PillCtaEnding({ slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(ctaRaw, {
         maxWidth: PILL_MAX_W - PILL_PAD_X * 2,
         fontSize: CTA_SIZE,
-        minFontSize: 14,
+        minFontSize: 16,
         fontFamily: fonts.heading,
       })
     : null

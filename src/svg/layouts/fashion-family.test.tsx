@@ -166,7 +166,7 @@ describe("fashion 家族（runway）", () => {
       )
       const expected = FLIPPED.includes(themeId) ? 'fill-opacity="1"' : 'fill-opacity="0.72"'
       expect(markup, themeId).toMatch(
-        new RegExp(`font-size="14"[^>]*${expected.replace(".", "\\.")}[^>]*letter-spacing="4"`),
+        new RegExp(`font-size="16"[^>]*${expected.replace(".", "\\.")}[^>]*letter-spacing="4"`),
       )
     }
   })

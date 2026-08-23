@@ -98,7 +98,7 @@ export function ResolutionEnding({ slide, ctx }: SvgTemplateProps) {
   const kicker = fitSvgLine(kickerText, {
     maxWidth: KICKER_MAX_W,
     fontSize: KICKER_SIZE,
-    minFontSize: 12,
+    minFontSize: 16,
     letterSpacing: kickerTracking,
     fontFamily: fonts.heading,
   })
@@ -119,7 +119,7 @@ export function ResolutionEnding({ slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(signoffSource, {
         maxWidth: SIGNOFF_MAX_W,
         fontSize: SIGNOFF_SIZE,
-        minFontSize: 12,
+        minFontSize: 16,
         fontFamily: fonts.body,
       })
     : null

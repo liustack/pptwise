@@ -173,12 +173,11 @@ describe("chart component", () => {
       series: [{ name: "S1", data: [{ x: longLabel, y: 10 }] }],
     }
     // A single bar spans the whole 1120px box — a 24-char CJK label at the
-    // default 13px would be far wider than that, so fitSvgLine must shrink
-    // it down to (or truncate it at) the configured minimum font size.
+    // 16px (12pt) floor is far wider than that, so fitSvgLine must clip and
+    // mark it. It never shrinks below the floor and never draws an ellipsis.
     const { container } = svg(chart.render(component, box, ctx))
     const category = container.querySelector('[data-axis-tick="x"]')!
-    expect(Number(category.getAttribute("font-size"))).toBeLessThanOrEqual(13)
-    expect(Number(category.getAttribute("font-size"))).toBeGreaterThanOrEqual(8)
+    expect(Number(category.getAttribute("font-size"))).toBe(16)
   })
 
   it("line chart renders a category label per point and value labels only at the endpoints", () => {
@@ -976,7 +975,7 @@ describe("chart component — label-tuning A (header row for legend)", () => {
     expect(names.map((t) => t.textContent)).toEqual(["冶金", "化工"])
     for (const t of names) {
       expect(t.getAttribute("y")).toBe("16")
-      expect(t.getAttribute("font-size")).toBe("12")
+      expect(t.getAttribute("font-size")).toBe("16")
     }
     const swatches = Array.from(container.querySelectorAll("rect")).filter(
       (r) => Number(r.getAttribute("width")) === 10 && Number(r.getAttribute("height")) === 10,
@@ -1010,11 +1009,11 @@ describe("chart component — label-tuning A (header row for legend)", () => {
   it("paints cartesian value labels at 13px / 600 / text, and category ticks at 13px muted", () => {
     const { container } = svg(chart.render(groupedBar, box, ctx))
     const seventyFive = Array.from(container.querySelectorAll("text")).find((t) => t.textContent === "75")!
-    expect(seventyFive.getAttribute("font-size")).toBe("13")
+    expect(seventyFive.getAttribute("font-size")).toBe("16")
     expect(seventyFive.getAttribute("font-weight")).toBe("600")
     expect(seventyFive.getAttribute("fill")).toBe(ctx.colors.text)
     const category = Array.from(container.querySelectorAll("text")).find((t) => t.textContent === "第四季度")!
-    expect(Number(category.getAttribute("font-size"))).toBe(13)
+    expect(Number(category.getAttribute("font-size"))).toBe(16)
     expect(category.getAttribute("fill")).toBe(ctx.colors.muted)
     expect(category.getAttribute("font-weight")).toBeNull()
   })

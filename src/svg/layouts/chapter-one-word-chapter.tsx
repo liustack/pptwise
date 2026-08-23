@@ -32,7 +32,7 @@ const FOOT_Y = 500
 const FOOT_SIZE = 22
 const FOOT_TRACKING_LATIN_EM = 0.08
 const FOOT_MAX_W = 920
-const FOOT_MIN_PT = 14
+const FOOT_MIN_PT = 16
 
 /** Fit 链可能给末字补上省略号。渲染侧砍掉，不画 … 或 ...。 */
 function cutMarks(text: string): string {

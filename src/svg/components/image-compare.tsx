@@ -37,7 +37,7 @@ function renderSide({
   // `fontWeight={600}` in `ctx.fonts.body` below -- bold by this codebase's
   // own threshold, and `fonts.body` resolves to Georgia for the consulting
   // theme (the same face the reported defect traced to), not just YaHei.
-  const fitted = fitSvgLine(label, { maxWidth: w - 16, fontSize: 15, minFontSize: 12, bold: true, fontFamily: ctx.fonts.body })
+  const fitted = fitSvgLine(label, { maxWidth: w - 16, fontSize: 16, minFontSize: 16, bold: true, fontFamily: ctx.fonts.body })
   return (
     <g transform={`translate(${x},0)`}>
       {src ? (
@@ -57,7 +57,7 @@ function renderSide({
             textAnchor="middle"
             x={w / 2}
             y={h / 2}
-            fontSize={14}
+            fontSize={16}
             fill={ctx.colors.muted}
             fontFamily={ctx.fonts.body}
             dominantBaseline="alphabetic"
@@ -159,15 +159,15 @@ export const imageCompare: SvgComponent<ImageCompareComponent> = {
               const chipFill = i === 0 ? ctx.colors.muted : ctx.colors.accent
               return (
                 <g key={i} transform={`translate(${x + 10},10)`}>
-                  <rect x={0} y={0} width={i === 0 ? 66 : 52} height={24} fill={chipFill} />
+                  <rect x={0} y={0} width={i === 0 ? 80 : 64} height={28} fill={chipFill} />
                   <text
-                    x={i === 0 ? 33 : 26}
-                    y={17}
+                    x={i === 0 ? 40 : 32}
+                    y={20}
                     textAnchor="middle"
-                    fontSize={13}
+                    fontSize={16}
                     fontWeight={600}
                     fontFamily={ctx.fonts.body}
-                    fill={accessibleInk(ctx.colors.surface, chipFill, 13)}
+                    fill={accessibleInk(ctx.colors.surface, chipFill, 16)}
                     dominantBaseline="alphabetic"
                   >
                     {i === 0 ? "BEFORE" : "AFTER"}

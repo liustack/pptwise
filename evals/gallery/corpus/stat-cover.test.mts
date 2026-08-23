@@ -5,7 +5,7 @@ import { LEXICONS } from "./lexicon"
 const emptyAssets = { images: {} }
 
 describe("enterprise icon_cards slot", () => {
-  it("pins two-column and keeps three cards so body text stays on the 12px floor", () => {
+  it("pins two-column and keeps three cards so body text stays on the readable floor", () => {
     const page = themeDeck("enterprise", LEXICONS.zh, emptyAssets).slides[4]!
     expect(page.layout).toBe("two-column")
     expect(page.components[0]?.type).toBe("icon_cards")

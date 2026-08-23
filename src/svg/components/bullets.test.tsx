@@ -164,13 +164,12 @@ describe("bullets component emphasis", () => {
       type: "bullets" as const,
       items: ["这是很长的开头部 **然后开始一段跨行的强调内容片段测试用例延续** 结尾还有一些文字"],
     }
-    const { container } = svg(bullets.render(component, { x: 0, y: 0, w: 220 }, ctx))
+    const { container } = svg(bullets.render(component, { x: 0, y: 0, w: 640 }, ctx))
     const texts = Array.from(container.querySelectorAll("text"))
-    expect(texts.length).toBe(2)
-    const lastLineText = texts[1].textContent
-    expect(lastLineText).toBe("结尾还有一些文字")
-    const lastLineTspans = Array.from(texts[1].querySelectorAll("tspan"))
-    expect(lastLineTspans.some((t) => t.getAttribute("fill") === "#00A878")).toBe(false)
+    const suffix = texts.find((t) => (t.textContent ?? "").includes("结尾还有一些文字"))
+    expect(suffix).toBeTruthy()
+    const suffixTspans = Array.from(suffix!.querySelectorAll("tspan"))
+    expect(suffixTspans.some((t) => t.getAttribute("fill") === "#00A878")).toBe(false)
   })
 })
 
@@ -258,7 +257,7 @@ describe("bullets component spacious-pacing shrink (MIN_FONT floor)", () => {
   const long =
     "微服务架构下的分布式事务一致性保障机制与补偿策略设计规范以及跨可用区容灾演练路径"
 
-  it("long bullets at the 32px presentation baseline shrink below it, floor at MIN_FONT=14, and never overflow", () => {
+  it("long bullets at the 32px presentation baseline shrink below it, floor at MIN_FONT=24, and never overflow", () => {
     const spaciousCtx: ComponentCtx = { ...ctx, bodyFontPx: PACING_BUDGETS.spacious.bodyBaselinePx }
     const component = { type: "bullets" as const, items: [long, long, long], style: "default" as const }
     const w = 260
@@ -273,7 +272,7 @@ describe("bullets component spacious-pacing shrink (MIN_FONT floor)", () => {
       expect(size).toBeLessThan(32)
       // The floor holds regardless of how far above it the starting
       // baseline sits.
-      expect(size).toBeGreaterThanOrEqual(14)
+      expect(size).toBeGreaterThanOrEqual(24)
     }
     // Every rendered line uses the identical unified size (bullets.tsx's own
     // "don't render items at visually inconsistent sizes" contract).

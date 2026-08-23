@@ -98,11 +98,11 @@ const BADGE_FONT = 22
 const GAP_BADGE_TITLE = 12
 
 const TITLE_SIZE = 17
-const TITLE_SIZE_MIN = 12
+const TITLE_SIZE_MIN = 16
 const GAP_HEADER_ITEMS = 14
 
-const ITEM_SIZE = 14
-const ITEM_SIZE_MIN = 11
+const ITEM_SIZE = 16
+const ITEM_SIZE_MIN = 16
 const ITEM_LH_RATIO = 1.4
 const ITEM_GAP = 6
 const BULLET_R = 2.5
@@ -273,6 +273,12 @@ function renderQuadrant(
   const badgeX = x + PAD_X
   const headerBaseline = y + layout.padTop + Math.round(layout.badgeFont * 0.86)
   let itemY = y + layout.padTop + Math.max(layout.badgeSize, layout.titleSize) + layout.gapHeaderItems
+  const itemLimit = y + h - layout.padBottom
+  const visibleItems = layout.items.filter((_, ii) => {
+    const rowY = itemY + ii * (layout.itemLH + layout.itemGap)
+    return rowY + layout.itemSize <= itemLimit
+  })
+  const dropped = layout.items.length - visibleItems.length
   return (
     <g key={q}>
       <rect x={x} y={y} width={w} height={h} rx={r} fill={panel} />
@@ -299,7 +305,7 @@ function renderQuadrant(
       >
         {layout.title.text}
       </text>
-      {layout.items.map((item, ii) => {
+      {visibleItems.map((item, ii) => {
         const rowY = itemY
         itemY += layout.itemLH + layout.itemGap
         const dotCy = rowY + layout.itemSize * 0.65
@@ -320,6 +326,7 @@ function renderQuadrant(
           </g>
         )
       })}
+      {dropped > 0 ? <g data-dropped={dropped} /> : null}
     </g>
   )
 }
@@ -343,8 +350,7 @@ export const swot: SvgComponent<SwotComponent> = {
     // fontScale === 1 and reuses `natural` as-is rather than recomputing.
     const fontScale = naturalTotal > 0 && totalH < naturalTotal ? Math.max(MIN_FONT_SCALE, totalH / naturalTotal) : 1
     const scaled = fontScale === 1 ? natural : gridGeom(component, box.w, fontScale, ctx.fonts.heading)
-    const scaledNaturalTotal = scaled.cellH * 2 + GRID_GAP
-    const finalTotalH = Math.max(scaledNaturalTotal, totalH)
+    const finalTotalH = totalH
 
     const { quadW, layouts } = scaled
     // Growth-only stretch (this file's own pre-existing idiom, kept

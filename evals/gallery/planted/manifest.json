@@ -160,6 +160,16 @@
       "l1Expected": ["axis-title-overlap"],
       "l2Expected": "rework",
       "l2Findings": ["axis-title-overlap"]
+    },
+    {
+      "id": "font-size-1",
+      "class": "font-size",
+      "sourcePageId": "planted--font-size",
+      "svg": "font-size-1.svg",
+      "png": "../rubric/examples/font-size-1.png",
+      "l1Expected": ["font-size"],
+      "l2Expected": "rework",
+      "l2Findings": ["font-size"]
     }
   ]
 }

@@ -102,7 +102,7 @@ export function HeaderBandCover({ ir, slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(org, {
         maxWidth: 720,
         fontSize: META_SIZE,
-        minFontSize: 12,
+        minFontSize: 16,
         fontFamily: fonts.body,
       })
     : null
@@ -112,7 +112,7 @@ export function HeaderBandCover({ ir, slide, ctx }: SvgTemplateProps) {
       ? fitSvgLine(rightParts.join(" · "), {
           maxWidth: 420,
           fontSize: META_SIZE,
-          minFontSize: 12,
+          minFontSize: 16,
           fontFamily: fonts.body,
         })
       : null
@@ -128,7 +128,7 @@ export function HeaderBandCover({ ir, slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(authorText, {
         maxWidth: TITLE_MAX_W,
         fontSize: BYLINE_SIZE,
-        minFontSize: 12,
+        minFontSize: 16,
         fontFamily: fonts.body,
       })
     : null

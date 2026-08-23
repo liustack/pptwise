@@ -139,7 +139,7 @@ function renderBadge(
           x={cx}
           y={cy + 7}
           textAnchor="middle"
-          fontSize={14}
+          fontSize={16}
           fontWeight="700"
           fill={readableOn(badgeFill)}
           fontFamily={ctx.fonts.body}
@@ -157,7 +157,7 @@ function renderBadge(
         x={cx}
         y={cy + 7}
         textAnchor="middle"
-        fontSize={14}
+        fontSize={16}
         fontWeight="700"
         fill={fill}
         fontFamily={ctx.fonts.body}

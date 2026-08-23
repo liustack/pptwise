@@ -1,3 +1,5 @@
+import { META_FONT_FLOOR_PX } from "../constants"
+
 /**
  * Weight/face hint threaded through the estimator (bold-metrics fix,
  * 2026-07-24 — see the calibration comment above `measureTextUnits` for
@@ -78,15 +80,13 @@ export interface SvgTextLayout {
   lines: string[]
   fontSize: number
   lineHeight: number
-  /** truncation-visibility wave, Task 2: `true` exactly when the caller had
-   *  to drop characters (an ellipsis cut) to fit. `layoutSvgText` itself
-   *  never truncates — it only wraps/merges lines, so this is always
-   *  `false` here. `fitHeadingLines` (`../svg/heading-fit.ts`) is the one
-   *  caller that can set it `true`, and only when its own `truncateToUnits`
-   *  call actually changed the string (not merely on taking that code
-   *  branch — a wrap/shrink that lands under budget without dropping a
-   *  character must stay `false`). The render layer reads it to stamp
-   *  `data-truncated="1"` on the rendered heading `<text>`. */
+  /** True when characters were dropped to keep glyphs inside `maxWidth`.
+   *  `fitHeadingLines` sets this via its own `truncateToUnits` path.
+   *  `layoutSvgText` also sets it when the wrap/merge still overruns the
+   *  width at `minPt`: the last (or any) line is clipped with
+   *  `truncateToUnits`, never an ellipsis, and the render layer stamps
+   *  `data-truncated="1"`. Wrap/shrink that lands under budget stays
+   *  `false`. */
   truncated: boolean
 }
 
@@ -851,7 +851,7 @@ export function fitSvgLine(
     letterSpacing?: number
   } & TextWeightHint,
 ): { text: string; fontSize: number; truncated: boolean } {
-  const minFontSize = opts.minFontSize ?? 12
+  const minFontSize = opts.minFontSize ?? META_FONT_FLOOR_PX
   // `letterSpacing` is an SVG attribute in absolute px, independent of
   // font-size — unlike `measureTextUnits`' per-character weights, it doesn't
   // scale down when the line shrinks to fit. A caller that renders this
@@ -895,7 +895,7 @@ export function layoutSvgText(
   const maxLines = options.maxLines ?? 2
   const lineHeightRatio = options.lineHeightRatio ?? 1.08
   const weight: TextWeightHint = { bold: options.bold, fontFamily: options.fontFamily }
-  const minPt = options.minPt
+  const minPt = options.minPt ?? META_FONT_FLOOR_PX
 
   if (!content) {
     return { lines: [], fontSize: options.fontSize, lineHeight: 0, truncated: false }
@@ -913,7 +913,7 @@ export function layoutSvgText(
 
   const fontSizeFor = (ls: string[]): number => {
     const longest = Math.max(...ls.map((l) => measureTextUnits(l, weight)), 1)
-    return Math.max(1, Math.min(options.fontSize, Math.floor(availableWidth / longest)))
+    return Math.max(minPt, Math.min(options.fontSize, Math.floor(availableWidth / longest)))
   }
 
   // Legacy search: byte-identical to this function's pre-task-R2-retry-
@@ -1051,13 +1051,39 @@ export function layoutSvgText(
     lines = balanceWrappedLines(content, lines, weight)
   }
 
-  const fontSize = fontSizeFor(lines)
+  let fontSize = fontSizeFor(lines)
+  // Floor is a hard width bound. A split-free candidate can leave a line
+  // wider than `availableWidth` once `fontSizeFor` refuses to go below
+  // `minPt`. Re-wrap at the floor's unit budget so long Latin runs split
+  // instead of overflowing. Only then clip leftover characters, never
+  // with an ellipsis.
+  const maxUnitsAtFloor = fontSize > 0 ? availableWidth / fontSize : 0
+  let truncated = false
+  const overflows = lines.some((line) => measureTextUnits(line, weight) > maxUnitsAtFloor + 1e-9)
+  if (overflows && maxUnitsAtFloor > 0) {
+    const refit = wrapWithUnits(content, maxUnitsAtFloor, weight)
+    let fitted = refit.lines
+    if (fitted.length > maxLines) {
+      const rest = fitted.slice(maxLines - 1).join("")
+      const last = truncateToUnits(rest, maxUnitsAtFloor, weight)
+      truncated = last !== rest
+      fitted = [...fitted.slice(0, maxLines - 1), last]
+    }
+    lines = fitted
+    fontSize = fontSizeFor(lines)
+  }
+  const units = fontSize > 0 ? availableWidth / fontSize : 0
+  const clipped = lines.map((line) => {
+    const next = truncateToUnits(line, units, weight)
+    if (next !== line) truncated = true
+    return next
+  })
 
   return {
-    lines,
+    lines: clipped,
     fontSize,
     lineHeight: Math.round(fontSize * lineHeightRatio),
-    truncated: false,
+    truncated,
   }
 }
 

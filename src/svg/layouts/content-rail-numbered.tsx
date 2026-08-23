@@ -81,7 +81,7 @@ const BADGE_H = 32
 const BADGE_RADIUS = 6
 const BADGE_CENTER_X = BADGE_X + BADGE_W / 2
 const BADGE_CENTER_Y = BADGE_Y + BADGE_H / 2 // 112
-const BADGE_FONT_SIZE = 14
+const BADGE_FONT_SIZE = 16
 // Inner padding so long labels (e.g. "12.10") don't touch the badge's rounded
 // corners before fitSvgLine kicks in.
 const BADGE_TEXT_MAX_W = BADGE_W - 8
@@ -127,7 +127,7 @@ export function RailNumberedContent({ ir, slide, index, ctx }: SvgTemplateProps)
   const badgeLabel = fitSvgLine(`${chNum}.${contentNum}`, {
     maxWidth: BADGE_TEXT_MAX_W,
     fontSize: BADGE_FONT_SIZE,
-    minFontSize: 10,
+    minFontSize: 16,
   })
 
   const railNodeCy =
@@ -183,7 +183,7 @@ export function RailNumberedContent({ ir, slide, index, ctx }: SvgTemplateProps)
   }
 
   const footnote = slide.footnote
-    ? fitSvgLine(slide.footnote, { maxWidth: CONTENT_W, fontSize: 14, minFontSize: 11 })
+    ? fitSvgLine(slide.footnote, { maxWidth: CONTENT_W, fontSize: 16, minFontSize: 16 })
     : null
 
   if (treated) {

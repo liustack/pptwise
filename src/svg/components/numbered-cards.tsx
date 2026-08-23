@@ -19,8 +19,8 @@ const ROW_GAP = 36
 const INDENT = 22
 const NUM_SIZE = 34
 const TITLE_SIZE = 18
-const TEXT_SIZE = 14
-const SUB_SIZE = 12.5
+const TEXT_SIZE = 16
+const SUB_SIZE = 16
 const NUM_BLOCK_H = 48
 const TITLE_BLOCK_H = 30
 const CELL_PAD_BOTTOM = 8
@@ -50,7 +50,7 @@ function cellLayout(
   const title = fitSvgLine(item.title, {
     maxWidth: contentW,
     fontSize: TITLE_SIZE,
-    minFontSize: 13,
+    minFontSize: 16,
     bold: true,
     fontFamily,
   })
@@ -63,7 +63,7 @@ function cellLayout(
       })
     : null
   const sub = item.sub
-    ? fitSvgLine(item.sub, { maxWidth: contentW, fontSize: SUB_SIZE, minFontSize: 10 })
+    ? fitSvgLine(item.sub, { maxWidth: contentW, fontSize: SUB_SIZE, minFontSize: 16 })
     : null
   const h =
     NUM_BLOCK_H +
@@ -157,6 +157,7 @@ export const numberedCards: SvgComponent<NumberedCardsComponent> = {
                 ? text.lines.map((line, li) => (
                     <text
                       key={li}
+                      data-truncated={text.truncated && li === text.lines.length - 1 ? "1" : undefined}
                       x={cellX + INDENT}
                       y={textTop + (li + 1) * text.lineHeight}
                       fontSize={text.fontSize}

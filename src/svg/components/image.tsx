@@ -80,8 +80,8 @@ export const image: SvgComponent<ImageComponent> = {
           (() => {
             const fittedCaption = fitSvgLine(component.caption, {
               maxWidth: box.w - 24,
-              fontSize: 15,
-              minFontSize: 12,
+              fontSize: 16,
+              minFontSize: 16,
             })
             return (
               // caption 底部色带（家居参考图 #3 的图卡形态）：主题主色半透明

@@ -64,7 +64,7 @@ const CHIP_CX = CHIP_RIGHT - CHIP_W / 2
 const CHIP_CY = CHIP_TOP + CHIP_H / 2
 const DATE_MAX_WIDTH = CHIP_W - 32
 const DATE_FONT_SIZE = 20
-const DATE_MIN_FONT_SIZE = 13
+const DATE_MIN_FONT_SIZE = 16
 
 const round1 = (v: number) => Math.round(v * 10) / 10
 
@@ -125,7 +125,7 @@ export function BillHeadCover({ ir, slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(venue, {
         maxWidth: 420,
         fontSize: FOOT_RIGHT_SIZE,
-        minFontSize: 12,
+        minFontSize: 16,
         letterSpacing: rightTracking,
         fontFamily: fonts.heading,
         bold: true,

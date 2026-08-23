@@ -261,8 +261,8 @@ export function ImageSplitPage({
         (() => {
           const fitted = fitSvgLine(imageComponent.caption, {
             maxWidth: SPLIT_IMG_W - 48,
-            fontSize: 15,
-            minFontSize: 12,
+            fontSize: 16,
+            minFontSize: 16,
           })
           return (
             <>
@@ -524,7 +524,7 @@ export function ImageAnnotatePage({
     lineHeightRatio: 1.3,
   })
   const caption = imageComponent.caption
-    ? fitSvgLine(imageComponent.caption, { maxWidth: 620, fontSize: 14, minFontSize: 12 })
+    ? fitSvgLine(imageComponent.caption, { maxWidth: 620, fontSize: 16, minFontSize: 16 })
     : null
 
   // 竖向从上往下紧排，间距是常量而非「剩余空间的一份」。
@@ -558,7 +558,7 @@ export function ImageAnnotatePage({
     const desc = ann.desc
       ? layoutSvgText(ann.desc, {
           maxWidth: ANN_NOTE_TEXT_W,
-          fontSize: 15,
+          fontSize: 16,
           maxLines: 2,
           lineHeightRatio: 1.4,
         })
@@ -831,8 +831,8 @@ export function ImageBottomPage({
         (() => {
           const fitted = fitSvgLine(imageComponent.caption, {
             maxWidth: W - 240,
-            fontSize: 15,
-            minFontSize: 12,
+            fontSize: 16,
+            minFontSize: 16,
           })
           return (
             <>

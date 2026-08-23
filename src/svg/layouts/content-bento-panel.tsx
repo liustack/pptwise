@@ -739,8 +739,8 @@ export function BentoPanelContent({ ir, slide, index, ctx }: SvgTemplateProps) {
   const kicker = section
     ? fitSvgLine(section, {
         maxWidth: 1088,
-        fontSize: 12,
-        minFontSize: 9,
+        fontSize: 16,
+        minFontSize: 16,
         letterSpacing: 4,
       })
     : null

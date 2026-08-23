@@ -9,7 +9,7 @@ import { accessibleInk } from "../../ink"
 
 /** User-visible type floors for component-form item titles and body (1280×720 px). */
 export const FORM_TITLE_FLOOR = 20
-export const FORM_BODY_FLOOR = 15
+export const FORM_BODY_FLOOR = 16
 
 /**
  * Card body ceiling vs the item title. Measured on academic p03

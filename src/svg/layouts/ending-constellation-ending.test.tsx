@@ -47,9 +47,9 @@ const irNoMeta = (theme: string, slide: Slide): PptxIR =>
 // Captured once from the (now-retired) legacy `BentoTechEnding` — locks the
 // byte-identical output the port preserved, without importing templates/.
 const ENDING_TECH_WITH_HEADING_MARKUP =
-  '<text x="640" y="330" font-family="Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif" font-size="88" font-weight="700" fill="#EAF1FA" text-anchor="middle" dominant-baseline="alphabetic">感谢聆听</text><rect x="610" y="420" width="60" height="3" fill="#53E0D2"></rect><text x="640" y="463" font-family="Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif" font-size="13" fill="#93A5C0" text-anchor="middle" dominant-baseline="alphabetic">维岚科技</text>'
+  '<text x="640" y="330" font-family="Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif" font-size="88" font-weight="700" fill="#EAF1FA" text-anchor="middle" dominant-baseline="alphabetic">感谢聆听</text><rect x="610" y="420" width="60" height="3" fill="#53E0D2"></rect><text x="640" y="463" font-family="Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif" font-size="16" fill="#93A5C0" text-anchor="middle" dominant-baseline="alphabetic">维岚科技</text>'
 const ENDING_TECH_BARE_MARKUP =
-  '<text x="640" y="330" font-family="Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif" font-size="88" font-weight="700" fill="#EAF1FA" text-anchor="middle" dominant-baseline="alphabetic">Thank you<tspan fill="#53E0D2">.</tspan></text><rect x="610" y="420" width="60" height="3" fill="#53E0D2"></rect><text x="640" y="463" font-family="Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif" font-size="13" fill="#93A5C0" text-anchor="middle" dominant-baseline="alphabetic">维岚科技</text>'
+  '<text x="640" y="330" font-family="Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif" font-size="88" font-weight="700" fill="#EAF1FA" text-anchor="middle" dominant-baseline="alphabetic">Thank you<tspan fill="#53E0D2">.</tspan></text><rect x="610" y="420" width="60" height="3" fill="#53E0D2"></rect><text x="640" y="463" font-family="Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif" font-size="16" fill="#93A5C0" text-anchor="middle" dominant-baseline="alphabetic">维岚科技</text>'
 
 describe("ConstellationEnding", () => {
   it("tech tokens 下与旧 BentoTechEnding 输出逐字节一致（档位一，有 heading，不兜底）", () => {

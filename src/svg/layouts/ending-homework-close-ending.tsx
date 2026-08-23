@@ -81,7 +81,7 @@ export function HomeworkCloseEnding({ slide, ctx }: SvgTemplateProps) {
   const label = fitSvgLine(labelSource, {
     maxWidth: BOX_LABEL_MAX_W,
     fontSize: BOX_LABEL_SIZE,
-    minFontSize: 12,
+    minFontSize: 16,
     fontFamily: fonts.heading,
   })
   const labelInk = readableOn(field)
@@ -103,7 +103,7 @@ export function HomeworkCloseEnding({ slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(stripEmphasis(previewSource), {
         maxWidth: PREVIEW_MAX_W,
         fontSize: PREVIEW_SIZE,
-        minFontSize: 12,
+        minFontSize: 16,
         fontFamily: fonts.body,
       })
     : null

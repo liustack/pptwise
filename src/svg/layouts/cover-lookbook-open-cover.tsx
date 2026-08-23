@@ -78,7 +78,7 @@ export function LookbookOpenCover({ ir, slide, index, ctx }: SvgTemplateProps) {
     ? fitSvgLine(org, {
         maxWidth: seasonText ? BRAND_MAX_W : BRAND_MAX_W_SOLO,
         fontSize: BRAND_SIZE,
-        minFontSize: 14,
+        minFontSize: 16,
         letterSpacing: brandTracking,
         fontFamily: fonts.heading,
       })
@@ -89,7 +89,7 @@ export function LookbookOpenCover({ ir, slide, index, ctx }: SvgTemplateProps) {
     ? fitSvgLine(seasonText, {
         maxWidth: SEASON_MAX_W,
         fontSize: SEASON_SIZE,
-        minFontSize: 12,
+        minFontSize: 16,
         fontFamily: fonts.heading,
       })
     : null
@@ -108,7 +108,7 @@ export function LookbookOpenCover({ ir, slide, index, ctx }: SvgTemplateProps) {
     ? fitSvgLine(subText, {
         maxWidth: SUB_MAX_W,
         fontSize: SUB_SIZE,
-        minFontSize: 14,
+        minFontSize: 16,
         fontFamily: fonts.heading,
       })
     : null
@@ -117,7 +117,7 @@ export function LookbookOpenCover({ ir, slide, index, ctx }: SvgTemplateProps) {
   const folio = fitSvgLine(folioLabel(index), {
     maxWidth: FOLIO_MAX_W,
     fontSize: FOLIO_SIZE,
-    minFontSize: 12,
+    minFontSize: 16,
     fontFamily: fonts.heading,
   })
   const folioPaint = dropOverflowMark(folio.text)

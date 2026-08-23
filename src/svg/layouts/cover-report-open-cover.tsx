@@ -84,7 +84,7 @@ export function ReportOpenCover({ ir, slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(org, {
         maxWidth: KICKER_MAX_W,
         fontSize: KICKER_SIZE,
-        minFontSize: 12,
+        minFontSize: 16,
         letterSpacing: kickerTracking,
         fontFamily: fonts.body,
       })
@@ -95,7 +95,7 @@ export function ReportOpenCover({ ir, slide, ctx }: SvgTemplateProps) {
         maxWidth: SUB_MAX_W,
         fontSize: SUB_SIZE,
         maxLines: 2,
-        minPt: 14,
+        minPt: 16,
         lineHeightRatio: 1.25,
         fontFamily: fonts.body,
       })
@@ -105,7 +105,7 @@ export function ReportOpenCover({ ir, slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(footSource, {
         maxWidth: FOOT_MAX_W,
         fontSize: FOOT_SIZE,
-        minFontSize: 12,
+        minFontSize: 16,
         fontFamily: fonts.body,
       })
     : null

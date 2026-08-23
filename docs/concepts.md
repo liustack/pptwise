@@ -40,7 +40,7 @@ Renamed from `scenario` (`mode`/`delivery`) in the vocabulary-v4 rewrite (spec: 
 
 Two independently-owned ceilings, `min()`'d together at validate time — never one table:
 
-- **Editorial budget** (pacing, content discipline — "how many things belong here"): `PACING_BUDGETS[pacing]` (`src/narrative/index.ts:514-518`) — `maxComponentsPerSlide` and the bullets item/length caps, plus `bodyBaselinePx` (the paragraph/bullets/callout trio's sole font-size input, nothing else): `dense`=20px/5 components/6×48-char bullets, `balanced`=24px/4/5×40 (the narrative default), `spacious`=32px/3/4×30.
+- **Editorial budget** (pacing, content discipline — "how many things belong here"): `PACING_BUDGETS[pacing]` (`src/narrative/index.ts`) — `maxComponentsPerSlide` and the bullets item/length caps, plus `bodyBaselinePx` (the paragraph/bullets/callout trio's sole font-size input, nothing else): `dense`=24px/5 components/6×27-char bullets, `balanced`=24px/4/5×25 (the narrative default), `spacious`=32px/3/4×22. Body never starts or shrinks below 18pt (24px). Secondary type (captions, footnotes, ticks) never goes below 12pt (16px).
 - **Geometric capacity** (layout, physical fact — "how many things fit"): the resolved layout's `body` slot `capacity` (`resolveEffectiveLayoutBodyCapacity`, `src/svg/layout-selection.ts`).
 
 `ir-quality.ts`'s density gate takes `min(editorial, geometric)`. This is why validate must resolve the same layout selection render will use — the parity discipline `docs/selection-and-seed.md` documents.

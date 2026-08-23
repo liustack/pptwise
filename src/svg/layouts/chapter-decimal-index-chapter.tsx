@@ -38,7 +38,7 @@ const SUB_Y = 454
 const SUB_SIZE = 20
 const SUB_DROP = 54
 const SUB_MAX_W = 1088
-const SUB_MIN_PT = 14
+const SUB_MIN_PT = 16
 
 const RULE_X1 = 96
 const RULE_X2 = 1184

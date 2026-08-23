@@ -14,8 +14,8 @@
           "type": "bullets",
           "items": [
             "Raise the floor of AI-generated decks",
-            "Native DrawingML output — every shape stays editable",
-            "Design tokens plus an archetype library, not freeform drawing"
+            "Native DrawingML, every shape editable",
+            "Tokens plus archetypes, not free drawing"
           ]
         }
       ]

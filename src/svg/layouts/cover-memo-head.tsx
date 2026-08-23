@@ -104,7 +104,7 @@ export function MemoHeadCover({ ir, slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(fromText, {
         maxWidth: 1080,
         fontSize: FOOTER_SIZE,
-        minFontSize: 12,
+        minFontSize: 16,
         letterSpacing: footerTracking,
         fontFamily: mono,
       })
@@ -113,7 +113,7 @@ export function MemoHeadCover({ ir, slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(reText, {
         maxWidth: 1080,
         fontSize: FOOTER_SIZE,
-        minFontSize: 12,
+        minFontSize: 16,
         letterSpacing: footerTracking,
         fontFamily: mono,
       })

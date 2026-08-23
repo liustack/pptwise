@@ -82,8 +82,8 @@ describe("code component", () => {
     )
     expect(codeText).not.toBeNull()
     const fontSize = Number(codeText!.getAttribute("font-size"))
-    expect(fontSize).toBeLessThan(15)
-    expect(fontSize).toBeGreaterThanOrEqual(9)
+    expect(fontSize).toBeLessThanOrEqual(16)
+    expect(fontSize).toBeGreaterThanOrEqual(16)
   })
 
   it("truncates a single unbroken long token so it stays inside the box even at the font-size floor", () => {

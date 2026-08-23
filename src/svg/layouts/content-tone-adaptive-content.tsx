@@ -276,7 +276,7 @@ export function ToneAdaptiveContent({ ir, slide, index, ctx }: SvgTemplateProps)
       ? fitSvgLine(rawSectionLabel, {
           maxWidth: 1096,
           fontSize: 22,
-          minFontSize: 12,
+          minFontSize: 16,
           letterSpacing: 2,
         })
       : null
@@ -476,7 +476,7 @@ export function ToneAdaptiveContent({ ir, slide, index, ctx }: SvgTemplateProps)
     ? fitSvgLine(rawSectionLabel, {
         maxWidth: 1152,
         fontSize: KICKER_FONT_SIZE,
-        minFontSize: 12,
+        minFontSize: 16,
         letterSpacing: 2,
       })
     : null

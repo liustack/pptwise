@@ -55,7 +55,7 @@ export function LessonBoxChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
   const label = fitSvgLine(labelSource, {
     maxWidth: BOX_LABEL_MAX_W,
     fontSize: BOX_LABEL_SIZE,
-    minFontSize: 14,
+    minFontSize: 16,
     fontFamily: fonts.heading,
   })
 
@@ -76,7 +76,7 @@ export function LessonBoxChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
     ? fitSvgLine(stripEmphasis(slide.subheading), {
         maxWidth: SUB_MAX_W,
         fontSize: SUB_SIZE,
-        minFontSize: 14,
+        minFontSize: 16,
         fontFamily: fonts.body,
       })
     : null

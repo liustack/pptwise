@@ -19,8 +19,8 @@ const MEASURED_DESCENT: ReadonlyArray<readonly [size: number, descent: number]> 
   [20, 3.75],
 ]
 
-/** Every size a footnote can render at: `fitSvgLine` floors at 11, tops out at 20. */
-const ALL_SIZES = [11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+/** Every size a footnote can render at: `fitSvgLine` floors at 16pt-px, tops out at 20. */
+const ALL_SIZES = [16, 17, 18, 19, 20]
 
 describe("footnoteBaselineFor", () => {
   it("leaves the same optical gap above the divider at every measured size", () => {

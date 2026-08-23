@@ -44,7 +44,7 @@ const PAD_BOTTOM = 10
 
 const BADGE_R = 16
 const BADGE_D = BADGE_R * 2
-const BADGE_FONT_SIZE = 12
+const BADGE_FONT_SIZE = 16
 // Same "cy + round(fontSize * 0.32)" single-line vertical-centering trick
 // as steps.tsx's own numbered badge (that file's BASELINE_FUDGE_RATIO
 // comment) — lands the initials' baseline visually centered on the
@@ -52,18 +52,18 @@ const BADGE_FONT_SIZE = 12
 const BASELINE_FUDGE_RATIO = 0.32
 
 const GAP_BADGE_NAME = 6
-const NAME_FONT_SIZE = 13
-const NAME_MIN_FONT_SIZE = 10
+const NAME_FONT_SIZE = 16
+const NAME_MIN_FONT_SIZE = 16
 const NAME_LINE_HEIGHT = Math.round(NAME_FONT_SIZE * 1.25)
 
 const GAP_NAME_ROLE = 2
-const ROLE_FONT_SIZE = 11
+const ROLE_FONT_SIZE = 16
 const ROLE_MAX_LINES = 2
 const ROLE_LINE_HEIGHT_RATIO = 1.3
 
 const GAP_ROLE_ORG = 2
-const ORG_FONT_SIZE = 10
-const ORG_MIN_FONT_SIZE = 8
+const ORG_FONT_SIZE = 16
+const ORG_MIN_FONT_SIZE = 16
 const ORG_LINE_HEIGHT = Math.round(ORG_FONT_SIZE * 1.25)
 
 // Optional overall `title` (裁定 1: "可选整体 title 按惯例") — same posture
@@ -71,7 +71,7 @@ const ORG_LINE_HEIGHT = Math.round(ORG_FONT_SIZE * 1.25)
 // grid, present in both measure() and render() only when the field is set
 // (an absent title costs nothing, no dead band).
 const TITLE_FONT_SIZE = 16
-const TITLE_MIN_FONT_SIZE = 12
+const TITLE_MIN_FONT_SIZE = 16
 // Raised from 24 on 2026-08-15, back when the title's baseline sat at
 // TITLE_FONT_SIZE (round 4 hung it off the band's bottom edge instead —
 // see TITLE_TOP_PAD). A 24px band left barely 4px between the title's
@@ -109,7 +109,7 @@ const TITLE_TOP_PAD = 4
 
 interface PersonCardLayout {
   name: { text: string; fontSize: number; truncated: boolean }
-  role: { lines: string[]; fontSize: number; lineHeight: number } | null
+  role: { lines: string[]; fontSize: number; lineHeight: number; truncated: boolean } | null
   org: { text: string; fontSize: number; truncated: boolean } | null
 }
 
@@ -253,8 +253,11 @@ export const peopleCards: SvgComponent<PeopleCardsComponent> = {
       : 0
     const grownTitleBand = titleBand + bandGrow
     const perRowGrow = (grow - bandGrow) / rows
-    const shellH = cardH + perRowGrow
-    const contentShift = perRowGrow / 2
+    const budgetH = box.h ?? measuredH
+    const rowBudget =
+      rows > 0 ? Math.max(1, (budgetH - grownTitleBand - Math.max(0, rows - 1) * GAP) / rows) : cardH
+    const shellH = Math.min(cardH + perRowGrow, rowBudget)
+    const contentShift = Math.max(0, (shellH - cardH) / 2)
     const palette = ctx.colors.chartPalette
     return (
       <g transform={`translate(${box.x},${box.y})`}>
@@ -296,8 +299,13 @@ export const peopleCards: SvgComponent<PeopleCardsComponent> = {
           const nameBaselineY = nameTopY + NAME_FONT_SIZE
           let cursorY = nameTopY + NAME_LINE_HEIGHT
           const roleTopY = cursorY + (role ? GAP_NAME_ROLE : 0)
-          if (role) cursorY = roleTopY + role.lines.length * role.lineHeight
+          const shellBottom = cardY + shellH - 2
+          const roleLines = role
+            ? role.lines.filter((_, li) => roleTopY + li * role.lineHeight + role.fontSize <= shellBottom)
+            : []
+          if (role) cursorY = roleTopY + roleLines.length * role.lineHeight
           const orgBaselineY = cursorY + (org ? GAP_ROLE_ORG : 0) + (org ? org.fontSize : 0)
+          const showOrg = Boolean(org) && orgBaselineY <= shellBottom
           const fill = palette.length > 0 ? palette[i % palette.length] : ctx.colors.primary
           return (
             <g key={i} data-audit-box={`${box.x + cardX},${box.y + cardY},${cardW}`}>
@@ -327,9 +335,10 @@ export const peopleCards: SvgComponent<PeopleCardsComponent> = {
                 {name.text}
               </text>
               {role
-                ? role.lines.map((line, li) => (
+                ? roleLines.map((line, li) => (
                     <text
                       key={li}
+                      data-truncated={role.truncated || roleLines.length < role.lines.length ? "1" : undefined}
                       x={badgeCx}
                       y={roleTopY + li * role.lineHeight + role.fontSize}
                       textAnchor="middle"
@@ -342,7 +351,7 @@ export const peopleCards: SvgComponent<PeopleCardsComponent> = {
                     </text>
                   ))
                 : null}
-              {org ? (
+              {showOrg && org ? (
                 <text
                   data-truncated={org.truncated ? "1" : undefined}
                   x={badgeCx}

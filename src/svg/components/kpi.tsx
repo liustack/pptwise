@@ -397,10 +397,10 @@ export const kpi: SvgComponent<KpiComponent> = {
           const fittedLabel = fitSvgLine(item.label, {
             maxWidth: cardW - 40,
             fontSize: 16,
-            minFontSize: 12,
+            minFontSize: 16,
           })
           const fittedSource = item.source
-            ? fitSvgLine(item.source, { maxWidth: cardW - 40, fontSize: 11, minFontSize: 9 })
+            ? fitSvgLine(item.source, { maxWidth: cardW - 40, fontSize: 16, minFontSize: 16 })
             : null
           return (
             <g key={i}>
@@ -469,7 +469,7 @@ export const kpi: SvgComponent<KpiComponent> = {
                   data-truncated={fittedSource.truncated ? "1" : undefined}
                   x={cardX + 20}
                   y={cardY + 114 + contentShift}
-                  fontSize={11}
+                  fontSize={16}
                   fill={ctx.colors.muted}
                   // Post-v0.3 W8 fix round (backlog item "D", task-2 review
                   // routed — pinned as a known gap in

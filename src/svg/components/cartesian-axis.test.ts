@@ -1,10 +1,13 @@
 import { describe, expect, it } from "vitest"
+import { META_FONT_FLOOR_PX } from "@/constants"
 import {
   formatAxisTick,
   MAX_TICK_COUNT,
   MIN_TICK_COUNT,
   niceTicks,
   paddedDomain,
+  TICK_FONT_SIZE,
+  TICK_MIN_FONT_SIZE,
   yTickGutter,
 } from "./cartesian-axis"
 
@@ -55,6 +58,13 @@ describe("formatAxisTick", () => {
     expect(formatAxisTick(2, "周")).toBe("2 周")
     expect(formatAxisTick(4, "weeks")).toBe("4 weeks")
     expect(formatAxisTick(80)).toBe("80")
+  })
+})
+
+describe("tick type floor", () => {
+  it("keeps tick labels on the 12pt readable floor and never shrinks below it", () => {
+    expect(TICK_FONT_SIZE).toBe(META_FONT_FLOOR_PX)
+    expect(TICK_MIN_FONT_SIZE).toBe(META_FONT_FLOOR_PX)
   })
 })
 

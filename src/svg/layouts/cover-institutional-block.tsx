@@ -31,7 +31,7 @@ import { accessibleInk, metaInk } from "../ink"
 
 const KICKER_X = 84
 const KICKER_Y = 96
-const KICKER_SIZE = 13
+const KICKER_SIZE = 16
 const KICKER_TRACKING_EM = 0.42
 
 const TITLE_X = 76
@@ -49,7 +49,7 @@ const SIGN_H = 14
 
 const META_X = 1108
 const META_Y = 672
-const META_SIZE = 15
+const META_SIZE = 16
 const META_TRACKING_EM = 0.18
 const META_LINE_GAP = 28
 
@@ -84,7 +84,7 @@ export function InstitutionalBlockCover({ ir, slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(latinUpper(org), {
         maxWidth: TITLE_MAX_W,
         fontSize: KICKER_SIZE,
-        minFontSize: 11,
+        minFontSize: 16,
         letterSpacing: kickerTracking,
         fontFamily: fonts.heading,
         bold: true,
@@ -100,7 +100,7 @@ export function InstitutionalBlockCover({ ir, slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(metaLine1, {
         maxWidth: 420,
         fontSize: META_SIZE,
-        minFontSize: 11,
+        minFontSize: 16,
         letterSpacing: metaTracking(metaLine1),
         fontFamily: fonts.body,
       })
@@ -109,7 +109,7 @@ export function InstitutionalBlockCover({ ir, slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(metaLine2, {
         maxWidth: 420,
         fontSize: META_SIZE,
-        minFontSize: 11,
+        minFontSize: 16,
         letterSpacing: metaTracking(metaLine2),
         fontFamily: fonts.body,
       })

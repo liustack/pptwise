@@ -8,11 +8,11 @@ import { metaInk } from "../ink"
 
 type CodeComponent = Extract<Component, { type: "code" }>
 
-const BASE_FONT_SIZE = 15
+const BASE_FONT_SIZE = 16
 const BASE_LINE_HEIGHT = 22
 const PADDING = 14
 const LINE_NUM_COL = 40
-const MIN_FONT_SIZE = 9
+const MIN_FONT_SIZE = 16
 const BG_COLOR = "#1E1E1E"
 const TEXT_COLOR = "#D4D4D4"
 /**

@@ -102,7 +102,7 @@ export function AssertionEvidence({
 
   // Evidence + supporting components: give evidence the majority of the rect,
   // then stack the rest below.
-  const SUPPORT_FONT = 14
+  const SUPPORT_FONT = 16
   const SUPPORT_GAP = 8
   // Reserve space for supporting components: at least a compact one-line-each
   // guess, but grown to fit what the components actually measure at (they render
@@ -154,7 +154,7 @@ export function AssertionEvidence({
   const oneLineH = Math.round(bodyFontPx * 1.4) // bullets.tsx layoutItems(): `lineHeight = Math.round(fontSize * 1.4)`
   const firstLineY = Math.round(bodyFontPx * 1.1) // bullets.tsx layoutItems(): `y = Math.round(fontSize * 1.1)`
   const worstItemContentBottom = firstLineY + oneLineH + bodyFontPx * 0.2 // 2-line item (firstLineY + 1 more lineHeight) + 0.2em descent, bullets.tsx's own `contentBottom`
-  const markerFontSize = Math.max(11, Math.round(bodyFontPx * 0.65)) // bullets.tsx render(): `markerFontSize`
+  const markerFontSize = Math.max(16, Math.round(bodyFontPx * 0.65)) // bullets.tsx render(): `markerFontSize`
   const markerBaselineY = worstItemContentBottom + Math.round(bodyFontPx * 0.9) // bullets.tsx render(): pill's own `y`
   const SUPPORT_FLOOR = Math.ceil(markerBaselineY + markerFontSize * 0.25)
 

@@ -507,15 +507,17 @@ export interface PacingBudget {
 }
 
 /**
- * Pinned to spec §5's pacing table (`bodyBaselinePx` / editorial budget /
- * bullets budget columns): dense 20/5/6×48, balanced 24/4/5×40, spacious
- * 32/3/4×30 — same three rows as the pre-rename `text`/`balanced`/
- * `presentation` delivery table, values byte-for-byte unchanged (spec §10).
+ * Pacing table: bodyBaselinePx / editorial budget / bullets budget.
+ * Body never starts below 18pt (24px). Dense and balanced share that
+ * size and differ by item count. Spacious still opens at 32px.
+ * Bullet unit caps sit under CAPACITY.bullets.itemOverflowUnits (29),
+ * the two-line × 24px × 398px two-column geometric ceiling after the
+ * 0.9 safety discount.
  */
 export const PACING_BUDGETS: Record<Pacing, PacingBudget> = {
-  dense: { bodyBaselinePx: 20, maxComponentsPerSlide: 5, bullets: { maxItems: 6, maxUnitsPerItem: 48 } },
-  balanced: { bodyBaselinePx: 24, maxComponentsPerSlide: 4, bullets: { maxItems: 5, maxUnitsPerItem: 40 } },
-  spacious: { bodyBaselinePx: 32, maxComponentsPerSlide: 3, bullets: { maxItems: 4, maxUnitsPerItem: 30 } },
+  dense: { bodyBaselinePx: 24, maxComponentsPerSlide: 5, bullets: { maxItems: 6, maxUnitsPerItem: 27 } },
+  balanced: { bodyBaselinePx: 24, maxComponentsPerSlide: 4, bullets: { maxItems: 5, maxUnitsPerItem: 25 } },
+  spacious: { bodyBaselinePx: 32, maxComponentsPerSlide: 3, bullets: { maxItems: 4, maxUnitsPerItem: 22 } },
 }
 
 /**

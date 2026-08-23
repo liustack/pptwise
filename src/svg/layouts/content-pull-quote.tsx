@@ -25,8 +25,8 @@ const HEADING_MAX_W = 920
 const BODY_MAX_W = 760
 const KICKER_Y = 100
 const TITLE_Y = 240
-const KICKER_SIZE = 12
-const ATTR_SIZE = 13
+const KICKER_SIZE = 16
+const ATTR_SIZE = 16
 const BODY_SIZE = 17
 const KICKER_TRACKING_EM = 0.42
 const ATTR_TRACKING_EM = 0.2
@@ -51,7 +51,7 @@ function GenericPullQuoteContent({ ir, slide, index, ctx }: SvgTemplateProps) {
     ? fitSvgLine(latinUpper(section), {
         maxWidth: HEADING_MAX_W,
         fontSize: KICKER_SIZE,
-        minFontSize: 10,
+        minFontSize: 16,
         letterSpacing: kickerTracking,
       })
     : null
@@ -69,7 +69,7 @@ function GenericPullQuoteContent({ ir, slide, index, ctx }: SvgTemplateProps) {
     ? fitSvgLine(latinUpper(attrSource), {
         maxWidth: HEADING_MAX_W,
         fontSize: ATTR_SIZE,
-        minFontSize: 10,
+        minFontSize: 16,
         letterSpacing: attrTracking,
       })
     : null
@@ -81,7 +81,7 @@ function GenericPullQuoteContent({ ir, slide, index, ctx }: SvgTemplateProps) {
         maxWidth: BODY_MAX_W,
         fontSize: BODY_SIZE,
         maxLines: BODY_MAX_LINES,
-        minPt: 14,
+        minPt: 16,
         lineHeightRatio: BODY_LINE_RATIO,
         fontFamily: fonts.body,
       })

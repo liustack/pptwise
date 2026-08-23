@@ -62,7 +62,7 @@ export function MastheadChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
   const headingLastY =
     HEADING_BASELINE + Math.max(0, heading.lines.length - 1) * heading.lineHeight
   const subheading = slide.subheading
-    ? fitSvgLine(slide.subheading, { maxWidth: HEADING_MAX_WIDTH, fontSize: 24, minFontSize: 14 })
+    ? fitSvgLine(slide.subheading, { maxWidth: HEADING_MAX_WIDTH, fontSize: 24, minFontSize: 16 })
     : null
   const subheadingY = headingLastY + 48
 

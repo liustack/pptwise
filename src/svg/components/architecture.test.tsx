@@ -140,8 +140,8 @@ describe("architecture component", () => {
     const texts = Array.from(container.querySelectorAll("text"))
     const itemsText = texts.find((t) => t.getAttribute("fill") === ctx.colors.text)!
     const fontSize = Number(itemsText.getAttribute("font-size"))
-    expect(fontSize).toBeLessThan(16)
-    expect(fontSize).toBeGreaterThanOrEqual(10)
+    expect(fontSize).toBeLessThanOrEqual(16)
+    expect(fontSize).toBeGreaterThanOrEqual(16)
     // Rendered width (auditor's model) must stay within the layer box.
     const rendered = itemsText.textContent ?? ""
     const units = Array.from(rendered).reduce((sum, ch) => {

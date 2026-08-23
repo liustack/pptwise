@@ -187,7 +187,7 @@ describe("matrix component", () => {
     const root = parseSvgRoot(markup)
     const xTitleText = Array.from(root.querySelectorAll("text")).find((t) => t.textContent?.includes("需求确定性"))
     expect(xTitleText?.textContent).toBe("需求确定性  →")
-    expect(xTitleText?.getAttribute("font-size")).toBe("13")
+    expect(xTitleText?.getAttribute("font-size")).toBe("16")
     expect(xTitleText?.hasAttribute("data-truncated")).toBe(false)
   })
 
@@ -252,7 +252,9 @@ describe("matrix component", () => {
       expect(yTitle.textContent).toBe(`${bentoLikeComponent.y_title}  ↑`)
       expect(yTitle.hasAttribute("data-truncated")).toBe(false)
       const baselineY = Number(yTitle.getAttribute("y"))
-      expect(baselineY + 13 * 0.25).toBeLessThanOrEqual(box.y + measured)
+      expect(baselineY + Number(yTitle.getAttribute("font-size")) * 0.25).toBeLessThanOrEqual(
+        box.y + measured,
+      )
     })
 
     it("keeps a long y_title as one line inside a short box, truncation-marked if needed", () => {
@@ -274,13 +276,15 @@ describe("matrix component", () => {
     it("grows measure() by a fixed band for a y_title, not by the stacked-character height", () => {
       const measured = matrix.measure(shortGridLongYTitle, 600, ctx)
       const gridOnly = matrix.measure({ ...shortGridLongYTitle, y_title: undefined }, 600, ctx)
-      expect(measured - gridOnly).toBe(24)
+      expect(measured - gridOnly).toBe(28)
     })
 
     it("grows measure() by one band for a short CJK y_title too", () => {
       const measured = matrix.measure(sixCells, 800, ctx)
+      const noYTitle = matrix.measure({ ...sixCells, y_title: undefined }, 800, ctx)
       const gridOnly = matrix.measure({ ...sixCells, x_title: undefined, y_title: undefined }, 800, ctx)
-      expect(measured - gridOnly).toBe(24)
+      expect(measured).toBe(noYTitle)
+      expect(measured - gridOnly).toBe(28)
 
       const markup = renderSvgMarkup(
         <svg xmlns="http://www.w3.org/2000/svg">{matrix.render(sixCells, { x: 0, y: 0, w: 800 }, ctx)}</svg>,
@@ -344,7 +348,7 @@ describe("matrix component", () => {
       const noYTitle = matrix.measure({ ...reported, y_title: undefined }, 900, ctx)
       const none = matrix.measure({ ...reported, x_title: undefined, y_title: undefined }, 900, ctx)
       expect(measured).toBe(noYTitle)
-      expect(measured - none).toBe(24)
+      expect(measured - none).toBe(28)
       expect(
         matrix.measure({ ...reported, y_title: "A far longer vertical axis name" }, 900, ctx),
       ).toBe(measured)

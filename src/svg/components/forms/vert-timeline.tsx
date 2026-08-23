@@ -156,7 +156,7 @@ export function renderVertTimeline(
                   x={AXIS_X}
                   y={cy - 6}
                   textAnchor="middle"
-                  fontSize={12}
+                  fontSize={16}
                   letterSpacing={2}
                   fill={ctx.colors.accent}
                   fontFamily={ctx.fonts.mono}
@@ -212,7 +212,7 @@ export function renderVertTimeline(
                   x={AXIS_X}
                   y={cy + 6}
                   textAnchor="middle"
-                  fontSize={14}
+                  fontSize={16}
                   fontWeight="700"
                   fill={ctx.colors.text}
                   fontFamily={ctx.fonts.body}

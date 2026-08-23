@@ -13,9 +13,9 @@ const PAD = 20
 /** Reserved gap on each side of a milestone label before it would collide
  * with its neighbor's label. */
 const LABEL_GAP = 12
-const MIN_FONT_SIZE = 10
+const MIN_FONT_SIZE = 16
 const TITLE_SIZE = 16
-const DESC_SIZE = 13
+const DESC_SIZE = 16
 const TITLE_TOP = AXIS_Y + 28
 const BOTTOM_PAD = 18
 
@@ -93,7 +93,7 @@ function verticalLayout(component: TimelineComponent, w: number) {
     const title = fitSvgLine(m.title, {
       maxWidth: textW,
       fontSize: V_TITLE_SIZE,
-      minFontSize: 13,
+      minFontSize: 16,
     })
     const desc = m.desc
       ? layoutSvgText(m.desc, {

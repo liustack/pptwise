@@ -83,7 +83,7 @@ export function oneEvidence({ slide, index, ctx }: SvgTemplateProps) {
   const noteY = evidence ? headingLast + 18 : 366
   const note = slide.subheading
     ? evidence
-      ? fitSvgLine(slide.subheading, { maxWidth: 720, fontSize: 22, minFontSize: 14, fontFamily: fonts.body })
+      ? fitSvgLine(slide.subheading, { maxWidth: 720, fontSize: 22, minFontSize: 16, fontFamily: fonts.body })
       : { text: slide.subheading, fontSize: 22 }
     : null
   const source = evidenceSource(slide)
@@ -120,11 +120,11 @@ export function oneEvidence({ slide, index, ctx }: SvgTemplateProps) {
       )}
       {evidence && renderFittedEvidence(evidence, evidenceRect, ctx)}
       <rect x={560} y={540} width={160} height={40} fill="none" stroke={colors.accent} strokeWidth={1} />
-      <text x={640} y={566} textAnchor="middle" fontFamily={fonts.body} fontSize={15} fill={colors.accent} dominantBaseline="alphabetic">
+      <text x={640} y={566} textAnchor="middle" fontFamily={fonts.body} fontSize={16} fill={colors.accent} dominantBaseline="alphabetic">
         {`展品 № ${pad2(index + 1)}`}
       </text>
       {source && (
-        <text x={640} y={620} textAnchor="middle" fontFamily={fonts.body} fontSize={14} fill={colors.muted} dominantBaseline="alphabetic">
+        <text x={640} y={620} textAnchor="middle" fontFamily={fonts.body} fontSize={16} fill={colors.muted} dominantBaseline="alphabetic">
           {source}
         </text>
       )}

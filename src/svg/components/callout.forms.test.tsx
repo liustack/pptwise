@@ -177,6 +177,6 @@ describe("callout morphs keep pacing and emphasis", () => {
     const body = [...container.querySelectorAll("text")].find((t) =>
       (t.textContent ?? "").includes("档位"),
     )
-    expect(body?.getAttribute("font-size")).toBe("20")
+    expect(body?.getAttribute("font-size")).toBe("24")
   })
 })

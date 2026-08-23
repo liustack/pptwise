@@ -15,7 +15,7 @@ const CELL_FONT_SIZE = 16
 // 缩字号地板：到 12px 仍放不下才走 truncate（backlog#5 截断策略——
 // 「先缩后截」，全表统一字号避免逐列参差）。12px 两行进 44px 行高都够，
 // 单行居中更无风险。
-const MIN_FONT_SIZE = 12
+const MIN_FONT_SIZE = 16
 
 /**
  * Build logical columns: [label column, ...data columns].

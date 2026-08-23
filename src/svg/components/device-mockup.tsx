@@ -141,7 +141,7 @@ function CaptionBand({
   h: number
   ctx: ComponentCtx
 }) {
-  const fitted = fitSvgLine(caption, { maxWidth: w - 24, fontSize: 15, minFontSize: 12 })
+  const fitted = fitSvgLine(caption, { maxWidth: w - 24, fontSize: 16, minFontSize: 16 })
   return (
     <>
       <rect x={0} y={h - 32} width={w} height={32} fill={ctx.colors.primary} fillOpacity={0.88} />
@@ -180,7 +180,7 @@ export const deviceMockup: SvgComponent<DeviceMockupComponent> = {
       const urlBarW = box.w - urlBarX - DOT_START_X
       const fittedUrl =
         component.url && urlBarW > URLBAR_PAD_X * 2
-          ? fitSvgLine(component.url, { maxWidth: urlBarW - URLBAR_PAD_X * 2, fontSize: 12, minFontSize: 10 })
+          ? fitSvgLine(component.url, { maxWidth: urlBarW - URLBAR_PAD_X * 2, fontSize: 16, minFontSize: 16 })
           : undefined
       // `defaultBg ?? colors.bg` — same fallback precedent as `readableOn`'s
       // other layout call sites (e.g. chapter-rail-chapter.tsx): the

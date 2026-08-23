@@ -89,7 +89,7 @@ export function FascicleGhostChapter({ ir, slide, index, ctx }: SvgTemplateProps
   const kicker = fitSvgLine(fascicleLabel(chNum, cjk), {
     maxWidth: KICKER_MAX_W,
     fontSize: KICKER_SIZE,
-    minFontSize: 12,
+    minFontSize: 16,
     letterSpacing: kickerTracking,
     fontFamily: fonts.body,
   })
@@ -110,7 +110,7 @@ export function FascicleGhostChapter({ ir, slide, index, ctx }: SvgTemplateProps
     ? fitSvgLine(subSource, {
         maxWidth: SUB_MAX_W,
         fontSize: SUB_SIZE,
-        minFontSize: 12,
+        minFontSize: 16,
         fontFamily: fonts.body,
       })
     : null

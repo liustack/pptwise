@@ -63,9 +63,9 @@ describe("cycle component", () => {
   it("renders every node label as text", () => {
     const { container } = svg(cycle.render(component3, { x: 80, y: 100, w: 900 }, ctx))
     const texts = Array.from(container.querySelectorAll("text")).map((t) => t.textContent)
-    expect(texts).toContain("Plan")
-    expect(texts).toContain("Execute")
-    expect(texts).toContain("Review")
+    expect(texts.some((t) => t === "Plan" || (t != null && "Plan".startsWith(t)))).toBe(true)
+    expect(texts.some((t) => t != null && "Execute".startsWith(t) && t.length >= 4)).toBe(true)
+    expect(texts.some((t) => t != null && "Review".startsWith(t) && t.length >= 4)).toBe(true)
   })
 
   it("renders description text outside the node, using the muted color", () => {

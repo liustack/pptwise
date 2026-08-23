@@ -80,7 +80,7 @@ export function BlockNumeralChapter({ ir, slide, index, ctx }: SvgTemplateProps)
     ? fitSvgLine(stripEmphasis(slide.subheading), {
         maxWidth: SUB_MAX_W,
         fontSize: SUB_SIZE,
-        minFontSize: 14,
+        minFontSize: 16,
         fontFamily: fonts.body,
       })
     : null

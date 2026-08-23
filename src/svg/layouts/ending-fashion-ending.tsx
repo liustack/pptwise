@@ -74,7 +74,7 @@ export function FashionEnding({ ir, slide, ctx }: SvgTemplateProps) {
   const metaParts = [org, date].filter((v): v is string => Boolean(v))
   const metaLine =
     metaParts.length > 0
-      ? fitSvgLine(metaParts.join("    ·    "), { maxWidth: 1100, fontSize: 19, minFontSize: 14 })
+      ? fitSvgLine(metaParts.join("    ·    "), { maxWidth: 1100, fontSize: 19, minFontSize: 16 })
       : null
   // meta 行的字号是 `fitSvgLine` 缩出来的（19 起，最小 14），所以按实际渲
   // 染出的字号量，而不是起始常量——量错字号就等于量错该过的那条线。

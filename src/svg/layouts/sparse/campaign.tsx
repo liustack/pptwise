@@ -113,13 +113,13 @@ export function oneEvidence({ slide, index, ctx }: SvgTemplateProps) {
   })
   const note = slide.subheading
     ? evidence
-      ? fitSvgLine(slide.subheading, { maxWidth: textW, fontSize: 21, minFontSize: 14, fontFamily: fonts.body })
+      ? fitSvgLine(slide.subheading, { maxWidth: textW, fontSize: 21, minFontSize: 16, fontFamily: fonts.body })
       : { text: slide.subheading, fontSize: 21 }
     : null
   const sourceRaw = evidenceSource(slide)
   const source = sourceRaw
     ? evidence
-      ? fitSvgLine(sourceRaw, { maxWidth: textW, fontSize: 16, minFontSize: 12, fontFamily: fonts.body })
+      ? fitSvgLine(sourceRaw, { maxWidth: textW, fontSize: 16, minFontSize: 16, fontFamily: fonts.body })
       : { text: sourceRaw, fontSize: 16 }
     : null
   return (

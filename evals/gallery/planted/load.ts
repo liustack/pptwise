@@ -15,6 +15,7 @@ export const PLANTED_CLASSES = [
   "mid-text-bleed",
   "isolated-mid-piece",
   "axis-title-overlap",
+  "font-size",
 ] as const
 export type PlantedClass = (typeof PLANTED_CLASSES)[number]
 

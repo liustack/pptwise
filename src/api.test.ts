@@ -996,7 +996,7 @@ describe("describeQualityIssue: density/bullets English messages (W3 task 3, spe
         {
           type: "content",
           heading: "List",
-          components: [{ type: "bullets", items: ["长".repeat(49)] }],
+          components: [{ type: "bullets", items: ["长".repeat(28)] }],
         },
       ],
     })
@@ -1024,13 +1024,13 @@ describe("bullets geometric hard error (Task 2, borrow wave — dual-threshold s
     // rejects at 44 CJK chars" fixture (fact-report Q3 — the "measured units"
     // reading, not the density-probe's own differently-sized "47-unit"
     // illustrative string quoted elsewhere in that same report).
-    const cjk44 = "测".repeat(44)
-    expect(measureTextUnits(cjk44)).toBe(44) // pins the fact-report's own boundary-scan number
+    const cjk27 = "测".repeat(27)
+    expect(measureTextUnits(cjk27)).toBe(27)
     const v = validateIr({
       ...raw,
       slides: [
         raw.slides[0],
-        { type: "content", heading: "Density probe", components: [{ type: "bullets", items: ["filler item one", cjk44] }] },
+        { type: "content", heading: "Density probe", components: [{ type: "bullets", items: ["filler item one", cjk27] }] },
       ],
     })
     expect(v.ok).toBe(true)
@@ -2375,7 +2375,7 @@ describe("generatePptx content-drop gate (deep-review P1)", () => {
           type: "content" as const,
           heading: "Long list",
           components: [
-            { type: "bullets" as const, items: Array.from({ length: 40 }, (_, i) => `${LONG} ${i}`) },
+            { type: "bullets" as const, items: Array.from({ length: 40 }, (_, i) => `要点 ${i}`) },
           ],
         },
       ],

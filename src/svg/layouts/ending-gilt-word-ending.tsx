@@ -83,7 +83,7 @@ export function GiltWordEnding({ ir, slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(footRaw, {
         maxWidth: FOOT_MAX_W,
         fontSize: FOOT_SIZE,
-        minFontSize: 12,
+        minFontSize: 16,
         letterSpacing: footTracking,
         fontFamily: fonts.heading,
       })

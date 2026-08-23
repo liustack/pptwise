@@ -66,7 +66,7 @@ export function DefenseCloseEnding({ slide, ctx }: SvgTemplateProps) {
   const kicker = fitSvgLine(CONCLUSIONS_KICKER, {
     maxWidth: ITEM_MAX_W,
     fontSize: KICKER_SIZE,
-    minFontSize: 12,
+    minFontSize: 16,
     letterSpacing: KICKER_TRACKING,
     fontFamily: fonts.heading,
   })
@@ -85,7 +85,7 @@ export function DefenseCloseEnding({ slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(signoffSource, {
         maxWidth: SIGNOFF_MAX_W,
         fontSize: SIGNOFF_SIZE,
-        minFontSize: 14,
+        minFontSize: 16,
         fontFamily: fonts.heading,
       })
     : null

@@ -19,7 +19,7 @@ const CENTER_X = 640
 const CONTENT_MAX_W = 920
 const KICKER_Y = 90
 const TITLE_Y = 280
-const KICKER_SIZE = 12
+const KICKER_SIZE = 16
 const SUB_SIZE = 20
 const KICKER_TRACKING_EM = 0.42
 const SUB_GAP = 48
@@ -34,7 +34,7 @@ export function VerseChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
   const kicker = fitSvgLine(kickerSource, {
     maxWidth: CONTENT_MAX_W,
     fontSize: KICKER_SIZE,
-    minFontSize: 10,
+    minFontSize: 16,
     letterSpacing: kickerTracking,
   })
 
@@ -49,7 +49,7 @@ export function VerseChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
     ? fitSvgLine(slide.subheading, {
         maxWidth: CONTENT_MAX_W,
         fontSize: SUB_SIZE,
-        minFontSize: 14,
+        minFontSize: 16,
       })
     : null
   const subY = titleLastY + SUB_GAP

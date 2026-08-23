@@ -1,6 +1,6 @@
 import type React from "react"
 import type { Component } from "@/ir"
-import { fitSvgLine } from "../../lib/svg-text-layout"
+import { fitSvgLine, layoutSvgText } from "../../lib/svg-text-layout"
 import { accessibleInk } from "../ink"
 import { mixHex } from "./color-mix"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
@@ -128,13 +128,13 @@ const PAD_TOP = 14
 const PAD_BOTTOM = 14
 const CARD_RADIUS = 8
 
-const TITLE_SIZE = 13.5
-const TITLE_SIZE_MIN = 10
+const TITLE_SIZE = 16
+const TITLE_SIZE_MIN = 16
 const TITLE_LH_RATIO = 1.3
 const GAP_TITLE_ITEMS = 10
 
-const ITEM_SIZE = 12.5
-const ITEM_SIZE_MIN = 9.5
+const ITEM_SIZE = 16
+const ITEM_SIZE_MIN = 16
 const ITEM_LH_RATIO = 1.35
 const ITEM_GAP = 5
 const BULLET_R = 2
@@ -146,7 +146,7 @@ const BULLET_INDENT = 11
 const MIN_FONT_SCALE = ITEM_SIZE_MIN / ITEM_SIZE
 
 interface BlockLayout {
-  title: { text: string; fontSize: number; truncated: boolean }
+  title: { lines: string[]; fontSize: number; truncated: boolean }
   items: { text: string; fontSize: number; truncated: boolean }[]
   contentH: number
   /** `fontScale`-applied nominal sizes/rhythm `renderBlock` positions
@@ -158,6 +158,7 @@ interface BlockLayout {
   titleSize: number
   titleLH: number
   padTop: number
+  padBottom: number
   gapTitleItems: number
   itemSize: number
   itemLH: number
@@ -205,13 +206,20 @@ function blockLayout(
   const itemGap = ITEM_GAP * fontScale
   const bulletR = BULLET_R * fontScale
 
-  const title = fitSvgLine(BLOCK_LABELS[key], {
+  const titleLaid = layoutSvgText(BLOCK_LABELS[key], {
     maxWidth: contentW,
-    fontSize: titleSize,
-    minFontSize: TITLE_SIZE_MIN * fontScale,
+    fontSize: Math.max(titleSize, TITLE_SIZE_MIN * fontScale),
+    maxLines: 2,
+    lineHeightRatio: TITLE_LH_RATIO,
+    minPt: TITLE_SIZE_MIN * fontScale,
     bold: true,
     fontFamily,
   })
+  const title = {
+    lines: titleLaid.lines,
+    fontSize: titleLaid.fontSize,
+    truncated: titleLaid.truncated,
+  }
   const fittedItems = items.map((it) =>
     fitSvgLine(it, {
       maxWidth: contentW - BULLET_INDENT,
@@ -220,7 +228,8 @@ function blockLayout(
     }),
   )
   const itemsH = fittedItems.length * itemLH + Math.max(0, fittedItems.length - 1) * itemGap
-  const contentH = padTop + titleLH + gapTitleItems + itemsH + padBottom
+  const titleBlockH = Math.max(titleLH, title.lines.length * titleLaid.lineHeight)
+  const contentH = padTop + titleBlockH + gapTitleItems + itemsH + padBottom
   return {
     title,
     items: fittedItems,
@@ -228,6 +237,7 @@ function blockLayout(
     titleSize,
     titleLH,
     padTop,
+    padBottom,
     gapTitleItems,
     itemSize,
     itemLH,
@@ -282,11 +292,12 @@ interface CellGeom {
  */
 function gridGeom(w: number, totalH: number, natTop: number, natBottom: number) {
   const natTotal = natTop + GAP + natBottom
-  // Grow both bands by the same proportion their natural heights already
-  // had — `totalH === natTotal` (the unstretched `measure()` case)
-  // reproduces the natural split exactly; a taller `totalH` scales both
-  // bands up together instead of only one ballooning.
-  const scale = natTotal > 0 ? Math.max(1, totalH / natTotal) : 1
+  // Scale both bands by the same proportion their natural heights already
+  // had — `totalH === natTotal` reproduces the natural split exactly. A
+  // taller box grows both bands. A shorter box shrinks both (font floor
+  // forbids shrinking type, so `renderBlock` then drops items that no
+  // longer fit the cell).
+  const scale = natTotal > 0 ? totalH / natTotal : 1
   const topBandH = natTop * scale
   const bottomBandH = totalH - GAP - topBandH
 
@@ -330,7 +341,14 @@ function renderBlock(
   const x = ox + cell.x
   const y = oy + cell.y
   const titleBaseline = y + layout.padTop + layout.titleSize
-  let itemY = y + layout.padTop + layout.titleLH + layout.gapTitleItems
+  const titleLineH = Math.round(layout.title.fontSize * TITLE_LH_RATIO)
+  let itemY = y + layout.padTop + layout.title.lines.length * titleLineH + layout.gapTitleItems
+  const itemLimit = y + cell.h - layout.padBottom
+  const visibleItems = layout.items.filter((_, ii) => {
+    const rowY = itemY + ii * (layout.itemLH + layout.itemGap)
+    return rowY + layout.itemSize <= itemLimit
+  })
+  const dropped = layout.items.length - visibleItems.length
   return (
     <g key={cell.key}>
       <rect
@@ -344,19 +362,22 @@ function renderBlock(
           ? { stroke: ctx.colors.cardStroke, strokeWidth: 1 }
           : {})}
       />
-      <text
-        data-truncated={layout.title.truncated ? "1" : undefined}
-        x={x + PAD_X}
-        y={titleBaseline}
-        fontSize={layout.title.fontSize}
-        fontWeight="700"
-        fill={titleInk}
-        fontFamily={ctx.fonts.heading}
-        dominantBaseline="alphabetic"
-      >
-        {layout.title.text}
-      </text>
-      {layout.items.map((item, ii) => {
+      {layout.title.lines.map((line, li) => (
+        <text
+          key={`title-${li}`}
+          data-truncated={layout.title.truncated && li === layout.title.lines.length - 1 ? "1" : undefined}
+          x={x + PAD_X}
+          y={titleBaseline + li * titleLineH}
+          fontSize={layout.title.fontSize}
+          fontWeight="700"
+          fill={titleInk}
+          fontFamily={ctx.fonts.heading}
+          dominantBaseline="alphabetic"
+        >
+          {line}
+        </text>
+      ))}
+      {visibleItems.map((item, ii) => {
         const rowY = itemY
         itemY += layout.itemLH + layout.itemGap
         const dotCy = rowY + layout.itemSize * 0.6
@@ -377,6 +398,7 @@ function renderBlock(
           </g>
         )
       })}
+      {dropped > 0 ? <g data-dropped={dropped} /> : null}
     </g>
   )
 }
@@ -406,8 +428,7 @@ export const bmc: SvgComponent<BmcComponent> = {
       fontScale === 1
         ? { topBandH: natTop, bottomBandH: natBottom }
         : naturalBandHeights(component, box.w, fontScale)
-    const scaledNaturalTotal = scaledTop + GAP + scaledBottom
-    const finalTotalH = Math.max(scaledNaturalTotal, totalH)
+    const finalTotalH = totalH
 
     const { cells } = gridGeom(box.w, finalTotalH, scaledTop, scaledBottom)
     const r = ctx.shape?.radius ?? CARD_RADIUS

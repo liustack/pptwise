@@ -49,7 +49,7 @@ function renderMissing(cellW: number, imageH: number, ctx: ComponentCtx): React.
         textAnchor="middle"
         x={cellW / 2}
         y={imageH / 2}
-        fontSize={14}
+        fontSize={16}
         fill={ctx.colors.muted}
         fontFamily={ctx.fonts.body}
         dominantBaseline="alphabetic"
@@ -131,7 +131,7 @@ export function renderNumberedPhotos(
               x={cellX + badgeW / 2}
               y={imageY + badgeH / 2 + 6}
               textAnchor="middle"
-              fontSize={kind === "specimen" ? 16 : 15}
+              fontSize={kind === "specimen" ? 16 : 16}
               fontWeight="700"
               fill={readableOn(badgeFill)}
               fontFamily={kind === "specimen" ? ctx.fonts.heading : ctx.fonts.body}

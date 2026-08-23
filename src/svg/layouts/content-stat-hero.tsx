@@ -26,10 +26,10 @@ const PAD_X = 160
 const CONTENT_MAX_W = 960
 const KICKER_Y = 80
 const VALUE_Y = 388
-const KICKER_SIZE = 12
+const KICKER_SIZE = 16
 const UNIT_SIZE = 22
 const CAPTION_SIZE = 26
-const SOURCE_SIZE = 12
+const SOURCE_SIZE = 16
 const SOURCE_Y = 656
 const KICKER_TRACKING_EM = 0.35
 const UNIT_GAP_RATIO = 0.32
@@ -53,7 +53,7 @@ function GenericStatHeroContent({ ir, slide, index, ctx }: SvgTemplateProps) {
     ? fitSvgLine(latinUpper(section), {
         maxWidth: CONTENT_MAX_W,
         fontSize: KICKER_SIZE,
-        minFontSize: 10,
+        minFontSize: 16,
         letterSpacing: kickerTracking,
       })
     : null
@@ -71,7 +71,7 @@ function GenericStatHeroContent({ ir, slide, index, ctx }: SvgTemplateProps) {
     ? fitSvgLine(unitSource, {
         maxWidth: CONTENT_MAX_W,
         fontSize: UNIT_SIZE,
-        minFontSize: 14,
+        minFontSize: 16,
       })
     : null
   const unitY = titleLastY + Math.round(heading.fontSize * UNIT_GAP_RATIO)
@@ -94,7 +94,7 @@ function GenericStatHeroContent({ ir, slide, index, ctx }: SvgTemplateProps) {
     ? fitSvgLine(sourceSource, {
         maxWidth: CONTENT_MAX_W,
         fontSize: SOURCE_SIZE,
-        minFontSize: 10,
+        minFontSize: 16,
       })
     : null
 

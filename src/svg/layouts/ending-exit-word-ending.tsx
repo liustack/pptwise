@@ -29,7 +29,7 @@ const SUB_Y = 380
 const SUB_SIZE = 21
 const SUB_DROP = 80
 const SUB_MAX_W = 960
-const SUB_MIN_PT = 14
+const SUB_MIN_PT = 16
 
 const RULE_Y = 450
 const RULE_W = 160
@@ -89,7 +89,7 @@ export function ExitWordEnding({ ir, slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(footRaw, {
         maxWidth: FOOT_MAX_W,
         fontSize: FOOT_SIZE,
-        minFontSize: 12,
+        minFontSize: 16,
         fontFamily: fonts.heading,
       })
     : null

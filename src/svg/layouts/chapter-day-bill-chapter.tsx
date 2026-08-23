@@ -34,7 +34,7 @@ const SUB_X = 96
 const SUB_Y = 540
 const SUB_SIZE = 24
 const SUB_MAX_W = 1088
-const SUB_MIN_PT = 14
+const SUB_MIN_PT = 16
 
 function dropOverflowMark(text: string): string {
   return text.replace(/(?:\u2026|\.{3})+$/u, "")

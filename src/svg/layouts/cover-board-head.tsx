@@ -30,7 +30,7 @@ import { parseEmphasis, renderEmphasisText, sliceEmphasisForLines, stripEmphasis
 
 const KICKER_X = 110
 const KICKER_Y = 118
-const KICKER_SIZE = 13
+const KICKER_SIZE = 16
 const KICKER_TRACKING_EM = 0.5
 
 const TITLE_X = 106
@@ -93,7 +93,7 @@ export function BoardHeadCover({ ir, slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(org, {
         maxWidth: TITLE_MAX_W,
         fontSize: KICKER_SIZE,
-        minFontSize: 11,
+        minFontSize: 16,
         letterSpacing: kickerTracking,
         fontFamily: fonts.heading,
       })
@@ -115,7 +115,7 @@ export function BoardHeadCover({ ir, slide, ctx }: SvgTemplateProps) {
   const subAccent = subtitle ? accessibleInk(colors.accent, bg, subtitle.fontSize) : colors.accent
 
   const byline = authorText
-    ? fitSvgLine(authorText, { maxWidth: 420, fontSize: BYLINE_SIZE, minFontSize: 14, fontFamily: fonts.body })
+    ? fitSvgLine(authorText, { maxWidth: 420, fontSize: BYLINE_SIZE, minFontSize: 16, fontFamily: fonts.body })
     : null
 
   return (

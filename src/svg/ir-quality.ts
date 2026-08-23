@@ -187,7 +187,7 @@ function checkSlide(ir: PptxIR, slide: Slide, index: number, resolvedAxes: Narra
   // rejected, not overlooked — one structural reason still blocks it:
   //   No clean geometric error derivation exists yet.
   //   `bullet_item_overflow` leans on one flat shrink floor
-  //   (bullets.tsx's MIN_FONT=14) shared by every layout. Headings
+  //   (bullets.tsx's MIN_FONT=16) shared by every layout. Headings
   //   have no equivalent single floor — `fitHeadingLines`'s `minPt`
   //   ranges from 22 (content-banner-heading.tsx,
   //   content-tone-adaptive-content.tsx) to 72 (cover-fashion-
@@ -375,7 +375,7 @@ function checkSlide(ir: PptxIR, slide: Slide, index: number, resolvedAxes: Narra
       // Task 2 (borrow wave, dual-threshold severity): geometric hard
       // ceiling, independent of pacing — see CAPACITY.bullets
       // .itemOverflowUnits's own derivation comment (capacity.ts) for the
-      // 2-line/MIN_FONT=14/narrowest-two-column-width formula and its
+      // 2-line/MIN_FONT=16/narrowest-two-column-width formula and its
       // empirical confirmation. Fires *in addition to* bullet_item_long
       // above when both cross (an item can be simultaneously "over the
       // editorial budget" and "past the render-safety edge") — the two

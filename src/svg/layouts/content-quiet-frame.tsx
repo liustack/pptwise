@@ -95,7 +95,7 @@ export function QuietFrameContent({ ir, slide, index, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const section = sectionNameFor(ir.slides, index)
   const kicker = section
-    ? fitSvgLine(section, { maxWidth: FRAME_W, fontSize: 15, minFontSize: 12, letterSpacing: 3 })
+    ? fitSvgLine(section, { maxWidth: FRAME_W, fontSize: 16, minFontSize: 16, letterSpacing: 3 })
     : null
 
   const heading = fitHeadingLines(slide.heading, {
@@ -136,7 +136,7 @@ export function QuietFrameContent({ ir, slide, index, ctx }: SvgTemplateProps) {
     : { x: FRAME_X, y: contentY, w: FRAME_W, h: contentH }
 
   const footnote = slide.footnote
-    ? fitSvgLine(slide.footnote, { maxWidth: FRAME_W, fontSize: 14, minFontSize: 11 })
+    ? fitSvgLine(slide.footnote, { maxWidth: FRAME_W, fontSize: 16, minFontSize: 16 })
     : null
 
   if (treated) {

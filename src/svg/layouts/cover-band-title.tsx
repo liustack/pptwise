@@ -98,7 +98,7 @@ export function BandTitleCover({ ir, slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(kickerSrc, {
         maxWidth: titleMaxW,
         fontSize: KICKER_SIZE,
-        minFontSize: 12,
+        minFontSize: 16,
         letterSpacing: kickerTracking,
         fontFamily: fonts.body,
       })
@@ -110,7 +110,7 @@ export function BandTitleCover({ ir, slide, ctx }: SvgTemplateProps) {
       ? fitSvgLine(rightParts.join(" · "), {
           maxWidth: 360,
           fontSize: META_SIZE,
-          minFontSize: 12,
+          minFontSize: 16,
           fontFamily: fonts.body,
         })
       : null

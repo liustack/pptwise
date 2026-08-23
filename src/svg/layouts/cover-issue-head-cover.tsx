@@ -99,7 +99,7 @@ export function IssueHeadCover({ ir, slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(org, {
         maxWidth: MASTHEAD_MAX_W,
         fontSize: MASTHEAD_SIZE,
-        minFontSize: 14,
+        minFontSize: 16,
         letterSpacing: mastheadTracking,
         fontFamily: fonts.heading,
       })
@@ -110,7 +110,7 @@ export function IssueHeadCover({ ir, slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(dateSource, {
         maxWidth: DATE_MAX_W,
         fontSize: DATE_SIZE,
-        minFontSize: 12,
+        minFontSize: 16,
         fontFamily: fonts.body,
       })
     : null
@@ -132,7 +132,7 @@ export function IssueHeadCover({ ir, slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(subSource, {
         maxWidth: SUB_MAX_W,
         fontSize: SUB_SIZE,
-        minFontSize: 14,
+        minFontSize: 16,
         fontFamily: fonts.body,
       })
     : null
@@ -146,7 +146,7 @@ export function IssueHeadCover({ ir, slide, ctx }: SvgTemplateProps) {
       ? fitSvgLine(colophonParts.join(" · "), {
           maxWidth: COLOPHON_MAX_W,
           fontSize: COLOPHON_SIZE,
-          minFontSize: 12,
+          minFontSize: 16,
           fontFamily: fonts.body,
         })
       : null

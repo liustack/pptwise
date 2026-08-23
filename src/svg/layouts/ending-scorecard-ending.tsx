@@ -94,7 +94,7 @@ export function ScorecardEnding({ slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(stripEmphasis(signoffSource), {
         maxWidth: FOOT_MAX_W,
         fontSize: FOOT_SIZE,
-        minFontSize: 12,
+        minFontSize: 16,
         fontFamily: fonts.body,
       })
     : null

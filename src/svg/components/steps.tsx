@@ -40,7 +40,7 @@ const BASELINE_FUDGE_RATIO = 0.32
 const GAP_BADGE_TITLE = 12
 
 const TITLE_FONT_SIZE = 18
-const TITLE_MIN_FONT_SIZE = 13
+const TITLE_MIN_FONT_SIZE = 16
 // Same fixed "line box" convention as icon-cards.tsx's own TITLE_LINE_HEIGHT
 // (title never wraps — fitSvgLine only shrinks/truncates a single line — so
 // this is a reserved box height, not a measured value).
@@ -48,7 +48,7 @@ const TITLE_LINE_HEIGHT_RATIO = 1.4
 const TITLE_LINE_HEIGHT = Math.round(TITLE_FONT_SIZE * TITLE_LINE_HEIGHT_RATIO) // 25
 const GAP_TITLE_TEXT = 8
 
-const TEXT_FONT_SIZE = 14
+const TEXT_FONT_SIZE = 16
 const TEXT_MAX_LINES = 2
 const TEXT_LINE_HEIGHT_RATIO = 1.4
 
@@ -111,7 +111,7 @@ function layoutStepItem(item: StepItem, contentW: number, fontFamily?: string): 
   const text = {
     ...wrapped,
     lines,
-    truncated: lines.some((line, i) => line !== wrapped.lines[i]),
+    truncated: wrapped.truncated || lines.some((line, i) => line !== wrapped.lines[i]),
   }
   return { title, text }
 }

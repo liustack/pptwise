@@ -54,7 +54,7 @@ export function FieldBandChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
   const kicker = fitSvgLine(kickerLabel, {
     maxWidth: KICKER_MAX_W,
     fontSize: KICKER_SIZE,
-    minFontSize: 12,
+    minFontSize: 16,
     letterSpacing: kickerTracking,
     fontFamily: fonts.body,
   })
@@ -77,7 +77,7 @@ export function FieldBandChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
     ? fitSvgLine(stripEmphasis(slide.subheading), {
         maxWidth: SUB_MAX_W,
         fontSize: SUB_SIZE,
-        minFontSize: 14,
+        minFontSize: 16,
         fontFamily: fonts.body,
       })
     : null

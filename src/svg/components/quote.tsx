@@ -66,7 +66,7 @@ const MARK_BASELINE = Math.round(
 const BODY_LINE_RATIO = 1.35
 const BODY_INDENT = 20
 const ATTR_FONT_SIZE = 20
-const ATTR_MIN_FONT_SIZE = 13
+const ATTR_MIN_FONT_SIZE = 16
 const ATTR_GAP = 8
 const BOTTOM_PAD = 12
 

@@ -137,10 +137,10 @@ const HEADER_BASELINE_Y = 16
 /** Legend swatch (px, square) — LabelTuning.dc.html keeps the 10px chip. */
 const LEGEND_SWATCH_SIZE = 10
 /** Legend name font size (px) — 11 → 12 to match the header unit caption. */
-const LEGEND_FONT_SIZE = 12
-const LEGEND_MIN_FONT_SIZE = 9
+const LEGEND_FONT_SIZE = 16
+const LEGEND_MIN_FONT_SIZE = 16
 /** Per-entry name budget (px) before `fitSvgLine` shrinks/truncates it. */
-const LEGEND_NAME_MAX_W = 96
+const LEGEND_NAME_MAX_W = 160
 /** Gap (px) between a swatch and its own name. */
 const LEGEND_SWATCH_GAP = 6
 /**
@@ -148,7 +148,7 @@ const LEGEND_SWATCH_GAP = 6
  * 2-character CJK names 72px apart and grows the slot when the fitted name
  * is wider than that.
  */
-const LEGEND_ENTRY_PITCH = 72
+const LEGEND_ENTRY_PITCH = 100
 
 type LegendSlot = {
   seriesIndex: number

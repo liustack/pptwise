@@ -88,7 +88,7 @@ export function SlideDecor({
             x={W - 96 - w / 2}
             y={84}
             textAnchor="middle"
-            fontSize={14}
+            fontSize={16}
             fontWeight={600}
             fontFamily={fonts.body}
             fill={colors.primary}

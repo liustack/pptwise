@@ -35,8 +35,8 @@ type TagRowComponent = Extract<Component, { type: "tag_row" }>
  *    over-long tag degrades instead of overflowing.
  */
 
-const TAG_FONT_SIZE = 14
-const TAG_MIN_FONT_SIZE = 11
+const TAG_FONT_SIZE = 16
+const TAG_MIN_FONT_SIZE = 16
 /** Horizontal padding inside a pill (label edge → capsule edge). */
 const PAD_X = 12
 /** Vertical padding inside a pill — pill height = fontSize + 2*PAD_Y. */
@@ -60,7 +60,7 @@ const MAX_ROWS_H = 300
 // The band is text height plus a named gap, not one 24px slab that had
 // to hold both (gap collapsed to ~0 against the capsules).
 const TITLE_FONT_SIZE = 16
-const TITLE_MIN_FONT_SIZE = 12
+const TITLE_MIN_FONT_SIZE = 16
 const TITLE_GAP = Math.ceil(TITLE_FONT_SIZE * 0.6)
 const TITLE_BAND = TITLE_FONT_SIZE + TITLE_GAP
 

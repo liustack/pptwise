@@ -104,8 +104,8 @@ const PAD_TOP = 10
 const PAD_BOTTOM = 10
 const CARD_RADIUS = 10
 
-const LABEL_SIZE = 13.5
-const LABEL_SIZE_MIN = 10.5
+const LABEL_SIZE = 16
+const LABEL_SIZE_MIN = 16
 /**
  * Air between the panel's title and the intensity dots under it, and
  * between that header block and the item list.
@@ -181,8 +181,8 @@ const GAP_HEADER_ITEMS = 24
 const GAP_LABEL_MARKER_TIGHT = 11
 const GAP_HEADER_ITEMS_TIGHT = 13
 
-const ITEM_SIZE = 12
-const ITEM_SIZE_MIN = 9.5
+const ITEM_SIZE = 16
+const ITEM_SIZE_MIN = 16
 const ITEM_LH_RATIO = 1.3
 const ITEM_GAP = 4
 const BULLET_R = 2
@@ -448,6 +448,12 @@ function renderPanel(
     ) : null
   if (layout.intensity != null) cursorY += layout.gapLabelMarker + layout.markerDotR * 2
   let itemY = cursorY + layout.gapHeaderItems
+  const itemLimit = y + h - layout.padBottom
+  const visibleItems = layout.items.filter((_, ii) => {
+    const rowY = itemY + ii * (layout.itemLH + layout.itemGap)
+    return rowY + layout.itemSize <= itemLimit
+  })
+  const dropped = layout.items.length - visibleItems.length
   return (
     <g key={key}>
       <rect data-force={key} x={x} y={y} width={w} height={h} rx={r} fill={panel} />
@@ -464,7 +470,7 @@ function renderPanel(
         {layout.label.text}
       </text>
       {markerRow}
-      {layout.items.map((item, ii) => {
+      {visibleItems.map((item, ii) => {
         const rowY = itemY
         itemY += layout.itemLH + layout.itemGap
         const dotCy = rowY + layout.itemSize * 0.65
@@ -485,6 +491,7 @@ function renderPanel(
           </g>
         )
       })}
+      {dropped > 0 ? <g data-dropped={dropped} /> : null}
     </g>
   )
 }
@@ -534,14 +541,13 @@ export const fiveForces: SvgComponent<FiveForcesComponent> = {
     const scaled = fontScale === 1 ? aired : crossGeom(component, box.w, fontScale, airScale, ctx.fonts.heading)
     const { topH: scaledNatTop, midH: scaledNatMid, layouts } = scaled
     const scaledNaturalTotal = crossTotal(scaled)
-    const finalTotalH = Math.max(scaledNaturalTotal, totalH)
+    const finalTotalH = totalH
 
-    // Growth-only stretch (swot.tsx/bmc.tsx's own uncapped idiom): grows all
-    // three row bands by the same proportion finalTotalH exceeds the
-    // (already fontScale-adjusted) natural total — a no-op (scale === 1)
-    // whenever finalTotalH === scaledNaturalTotal, i.e. the undersized-box
-    // case above, which has nothing left to grow.
-    const growScale = scaledNaturalTotal > 0 ? Math.max(1, finalTotalH / scaledNaturalTotal) : 1
+    // Stretch (or shrink) all three row bands by the same proportion
+    // finalTotalH vs the already fontScale-adjusted natural total. Type
+    // cannot go below the 16px floor, so a short box shrinks the bands
+    // and `renderPanel` drops items that no longer fit.
+    const growScale = scaledNaturalTotal > 0 ? finalTotalH / scaledNaturalTotal : 1
     const scaledTopH = scaledNatTop * growScale
     const scaledMidH = scaledNatMid * growScale
     const scaledBottomH = finalTotalH - GAP * 2 - scaledTopH - scaledMidH

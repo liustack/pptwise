@@ -115,7 +115,7 @@ describe("StatementContent", () => {
     expect(attr.getAttribute("fill")).toBe(
       accessibleInk(ctx.colors.accent, ctx.defaultBg ?? ctx.colors.bg, Number(attr.getAttribute("font-size"))),
     )
-    expect(Number(attr.getAttribute("font-size"))).toBeLessThanOrEqual(13)
+    expect(Number(attr.getAttribute("font-size"))).toBeGreaterThanOrEqual(16)
   })
 
   it("empty subheading and 0 components: no empty text node, heading still renders", () => {

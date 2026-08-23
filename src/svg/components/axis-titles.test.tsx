@@ -54,6 +54,8 @@ describe("renderAxisTitlePair", () => {
     expect(yTitle.getAttribute("y")).toBe(xTitle.getAttribute("y"))
     expect(yTitle.getAttribute("text-anchor")).toBeNull()
     expect(texts.every((t) => (t.textContent ?? "").length > 1)).toBe(true)
+    expect(Number(yTitle.getAttribute("font-size"))).toBeGreaterThanOrEqual(16)
+    expect(Number(xTitle.getAttribute("font-size"))).toBeGreaterThanOrEqual(16)
   })
 
   it("marks a title that cannot fit as truncated, without a stacked column", () => {

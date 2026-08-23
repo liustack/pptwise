@@ -127,7 +127,7 @@ describe("MemoMotif（打字机眉行）", () => {
     expect(eyebrow.textContent).toBe("MEMORANDUM")
     expect(eyebrow.getAttribute("font-family")).toBe(resolveFontStack(t.fonts.mono ?? [], "mono"))
     expect(resolveFontFace(t.fonts.mono ?? [], "mono")).toBe("Courier New")
-    expect(Number(eyebrow.getAttribute("font-size"))).toBe(12)
+    expect(Number(eyebrow.getAttribute("font-size"))).toBe(16)
     expect(eyebrow.getAttribute("font-weight")).toBe("700")
     expect(num(eyebrow, "x")).toBe(96)
     expect(num(eyebrow, "y")).toBe(20)

@@ -53,15 +53,15 @@ const ARC_STROKE_W = 2
 const ARROW_SIZE = 9
 
 const NODE_FONT_SIZE = 16
-const NODE_MIN_FONT_SIZE = 10
+const NODE_MIN_FONT_SIZE = 16
 /** Usable text width inside a node circle, as a fraction of its diameter —
  * the inscribed-rectangle approximation every circular-badge label in this
  * codebase uses (steps.tsx's numbered badge is the same idea at a smaller
  * scale), not an exact chord computation. */
-const NODE_TEXT_W_RATIO = 0.72
+const NODE_TEXT_W_RATIO = 0.88
 
-const DESC_FONT_SIZE = 13
-const DESC_MIN_FONT_SIZE = 9
+const DESC_FONT_SIZE = 16
+const DESC_MIN_FONT_SIZE = 16
 const DESC_MAX_LINES = 2
 const DESC_LINE_HEIGHT_RATIO = 1.3
 /** Local width budget a description wraps within — deliberately generous
@@ -71,7 +71,7 @@ const DESC_W = 190
 const GAP_NODE_DESC = 14
 
 const TITLE_FONT_SIZE = 22
-const TITLE_MIN_FONT_SIZE = 15
+const TITLE_MIN_FONT_SIZE = 16
 /** Local band height reserved above the ring for the optional overall `title`. */
 const TITLE_BAND = 44
 /** Local padding between the diagram's own top edge and the title's baseline. */

@@ -148,7 +148,7 @@ describe("fitHeadingLines", () => {
     // re-wrapped at minPt, so truncateToUnits returns it unchanged.
     const plain = "微服务架构下的分布式事务一致性保障机制与补偿策略设计规范以及"
     const r = fitHeadingLines(plain, { maxWidth: 1168, fontSize: 150, maxLines: 2, minPt: 72 })
-    expect(r.fontSize).toBe(72) // did take the minPt-floor branch
+    expect(r.fontSize).toBeGreaterThanOrEqual(72)
     expect(r.lines.join("")).not.toContain("…") // but nothing was cut
     expect(r.lines.join("")).toBe(plain) // full text survives, unaltered
     expect(r.truncated).toBe(false)

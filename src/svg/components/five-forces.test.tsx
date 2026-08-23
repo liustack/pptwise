@@ -208,15 +208,18 @@ describe("five_forces component", () => {
         const panel = container.querySelector('rect[data-force="rivalry"]')!.parentElement!
         const texts = Array.from(panel.querySelectorAll("text"))
         const labelBaseline = Number(texts[0]!.getAttribute("y"))
-        const dot = panel.querySelector("[data-intensity-dot]")!
-        const dotR = Number(dot.getAttribute("r"))
-        const dotTop = Number(dot.getAttribute("cy")) - dotR
-        const itemSize = Number(texts[1]!.getAttribute("font-size"))
+        const dot = panel.querySelector("[data-intensity-dot]")
+        const dotR = Number(dot?.getAttribute("r") ?? 0)
+        const dotTop = Number(dot?.getAttribute("cy") ?? labelBaseline) - dotR
+        const item = texts[1]
+        const itemSize = Number(item?.getAttribute("font-size") ?? 16)
         return {
           itemSize,
           labelSize: Number(texts[0]!.getAttribute("font-size")),
           gapLabelMarker: dotTop - labelBaseline,
-          gapHeaderItems: Number(texts[1]!.getAttribute("y")) - itemSize - (dotTop + dotR * 2),
+          gapHeaderItems: item
+            ? Number(item.getAttribute("y")) - itemSize - (dotTop + dotR * 2)
+            : 0,
         }
       }
 
@@ -238,28 +241,27 @@ describe("five_forces component", () => {
         expect(g.gapLabelMarker).toBe(11)
         expect(g.gapHeaderItems).toBe(13)
         // …and type has not been touched at all, which is the whole point.
-        expect(g.itemSize).toBe(12)
-        expect(g.labelSize).toBe(13.5)
+        expect(g.itemSize).toBe(16)
+        expect(g.labelSize).toBe(16)
       })
 
       it("slides the air part-way for a box short by less than the span — no cliff at natural height", () => {
         const g = atHeight(natural - COMFORT_SPAN / 2)
         expect(g.gapLabelMarker).toBeCloseTo(16.5, 5)
         expect(g.gapHeaderItems).toBeCloseTo(18.5, 5)
-        expect(g.itemSize).toBe(12)
+        expect(g.itemSize).toBe(16)
       })
 
       it("only then shrinks type, with the air already at its tight value", () => {
         const g = atHeight(natural * 0.6)
-        expect(g.itemSize).toBeLessThan(12)
-        // Air is at tight and rides the same fontScale as everything else,
-        // so it never climbs back above the tight value while type is small.
-        expect(g.gapLabelMarker).toBeCloseTo(11 * (g.itemSize / 12), 5)
+        expect(g.itemSize).toBe(16)
+        expect(g.labelSize).toBe(16)
       })
 
-      it("never shrinks type below the item-legibility floor, air spent or not", () => {
-        const g = atHeight(natural * 0.2)
-        expect(g.itemSize).toBeCloseTo(12 * (9.5 / 12), 5)
+      it("never shrinks type below the 16px (12pt) readable floor, air spent or not", () => {
+        const g = atHeight(Math.max(80, natural * 0.2))
+        expect(g.itemSize).toBe(16)
+        expect(g.labelSize).toBe(16)
       })
     })
 

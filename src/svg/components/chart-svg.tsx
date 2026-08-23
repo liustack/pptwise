@@ -82,7 +82,7 @@ const CATEGORY_MIN_FONT_SIZE = TICK_MIN_FONT_SIZE
  * Value-label size/weight on bar tops and line endpoints. Label-tuning A:
  * 11px muted → 13px / 600 / `text` (the ctx text token, never a series color).
  */
-const VALUE_FONT_SIZE = 13
+const VALUE_FONT_SIZE = 16
 const VALUE_FONT_WEIGHT = 600
 /**
  * Gap (px) from a vertical bar's top edge to the value label's alphabetic
@@ -91,11 +91,11 @@ const VALUE_FONT_WEIGHT = 600
 const VALUE_LABEL_GAP = 9
 /**
  * Gauge caption keeps 11px (classroom theme-table pages pin this size).
- * Dumbbell "from" values sit on the L1 12px floor. The two used to share
+ * Dumbbell "from" values sit on the 16px (12pt) readable floor. The two used to share
  * one leftover 11px constant.
  */
-const LABEL_FONT_SIZE = 11
-const DUMBBELL_FROM_FONT_SIZE = 12
+const LABEL_FONT_SIZE = 16
+const DUMBBELL_FROM_FONT_SIZE = 16
 /**
  * Space (px) reserved at the bottom of `h` for category labels below the plot
  * (dumbbell row labels). Cartesian plots own their tick band via
@@ -802,10 +802,10 @@ const DUMBBELL_DOT_R = 5
  * with the widest to-value the same way the left category band grows. */
 const DUMBBELL_VALUE_LABEL_W_MIN = 56
 const DUMBBELL_LABEL_GAP = 12
-const DUMBBELL_LABEL_FONT_SIZE = 13
-const DUMBBELL_LABEL_MIN_FONT_SIZE = 10
-const DUMBBELL_TO_FONT_SIZE = 12.5
-const DUMBBELL_TO_MIN_FONT_SIZE = 10
+const DUMBBELL_LABEL_FONT_SIZE = 16
+const DUMBBELL_LABEL_MIN_FONT_SIZE = 16
+const DUMBBELL_TO_FONT_SIZE = 16
+const DUMBBELL_TO_MIN_FONT_SIZE = 16
 /** Keep the connector + both endpoint dots readable when the label band grows. */
 const DUMBBELL_PLOT_MIN_W = 240
 const DUMBBELL_TO_LABEL_INSET = DUMBBELL_DOT_R + 8
@@ -929,7 +929,7 @@ export function renderDumbbell(
   // Value labels sit on the page, not on a mark, so the accent has to clear
   // a contrast floor here even though the endpoint dots painted in the same
   // color do not. See `ChartRenderFn`'s `bgHex` doc comment.
-  const accentInk = bgHex ? accessibleInk(accentColor, bgHex, 12.5) : accentColor
+  const accentInk = bgHex ? accessibleInk(accentColor, bgHex, 16) : accentColor
   const fromData = series[0]?.data ?? []
   const toData = series[1]?.data ?? []
   const rows = Math.min(fromData.length, toData.length)
@@ -1298,7 +1298,7 @@ export function renderDonut(
             x={cx}
             y={cy + fitted.fontSize * 0.15 + 18}
             textAnchor="middle"
-            fontSize={12}
+            fontSize={16}
             fill={mutedColor}
             dominantBaseline="alphabetic"
           >
@@ -1621,7 +1621,7 @@ export function renderGauge(
           fill={mutedColor}
           dominantBaseline="alphabetic"
         >
-          {fitSvgLine(captionText, { maxWidth: w * 0.9, fontSize: LABEL_FONT_SIZE, minFontSize: 9 }).text}
+          {fitSvgLine(captionText, { maxWidth: w * 0.9, fontSize: LABEL_FONT_SIZE, minFontSize: 16 }).text}
         </text>
       )}
     </>

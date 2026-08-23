@@ -91,7 +91,7 @@ export function DoubleFrameCover({ ir, slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(org, {
         maxWidth: KICKER_MAX_W,
         fontSize: KICKER_SIZE,
-        minFontSize: 14,
+        minFontSize: 16,
         letterSpacing: kickerTracking,
         fontFamily: fonts.body,
       })
@@ -102,7 +102,7 @@ export function DoubleFrameCover({ ir, slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(date, {
         maxWidth: YEAR_MAX_W,
         fontSize: YEAR_SIZE,
-        minFontSize: 14,
+        minFontSize: 16,
         letterSpacing: yearTracking,
         fontFamily: fonts.heading,
       })
@@ -112,7 +112,7 @@ export function DoubleFrameCover({ ir, slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(authorText, {
         maxWidth: COLOPHON_MAX_W,
         fontSize: COLOPHON_SIZE,
-        minFontSize: 12,
+        minFontSize: 16,
         fontFamily: fonts.body,
       })
     : null

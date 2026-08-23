@@ -232,9 +232,9 @@ describe("heatmap component", () => {
       const measured = heatmap.measure(reported, box.w, ctx)
       const noYTitle = heatmap.measure({ ...reported, y_title: undefined }, box.w, ctx)
       const none = heatmap.measure({ ...reported, x_title: undefined, y_title: undefined }, box.w, ctx)
-      // One shared band whether one title or both. Length does not change height.
+      // One shared 16px-floor band whether one title or both. Length does not change height.
       expect(measured).toBe(noYTitle)
-      expect(measured - none).toBe(24)
+      expect(measured - none).toBe(28)
       expect(heatmap.measure({ ...reported, y_title: "A far longer axis name" }, box.w, ctx)).toBe(
         measured,
       )

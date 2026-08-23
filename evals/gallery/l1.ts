@@ -8,6 +8,7 @@
  * is left to L2.
  */
 
+import { META_FONT_FLOOR_PT, META_FONT_FLOOR_PX, pxToPt } from "@/constants"
 import { measureMonoTextUnits, measureTextUnits } from "@/lib/svg-text-layout"
 import { getPlatform } from "@/platform/registry"
 import { __pathBoundingBox, findOverlapIssues } from "@/svg/audit/deck-audit"
@@ -60,7 +61,7 @@ export interface L1Result {
 const PAGE_W = 1280
 const PAGE_H = 720
 const EDGE_PX = 4
-const FONT_FLOOR = 12
+const FONT_FLOOR = META_FONT_FLOOR_PX
 const DIVIDER_MIN_W = 400
 const STRIKE_MIN_W = 40
 const CARD_MIN = 40
@@ -766,9 +767,10 @@ function walkText(
         }
 
         if (!decor && fontSizeAttr !== null && Number(fontSizeAttr) < FONT_FLOOR) {
+          const declared = Number(fontSizeAttr)
           findings.push({
             code: "font-size",
-            message: `text "${label}" is smaller than the ${FONT_FLOOR}px floor`,
+            message: `text "${label}" is ${declared.toFixed(1)}px (${pxToPt(declared).toFixed(1)}pt), below the ${FONT_FLOOR}px (${META_FONT_FLOOR_PT}pt) readable floor`,
           })
         }
 

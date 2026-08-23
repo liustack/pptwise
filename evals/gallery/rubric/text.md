@@ -34,6 +34,6 @@
 
 ## 字号地板
 
-正文常见 ≥14px，说明/来源/caption ≥12px。装饰字（`data-decor`）不受此限。
+1280×720 画布上 1pt = 4/3 px。正文不低于 18pt（24px）。说明、来源、caption、注脚、刻度不低于 12pt（16px）。装饰字（`data-decor`）不受此限。
 
-判定：可读文本 `font-size` 数值小于 12，记 `rework`。小于 14 的正文（不是 caption、不是页脚 meta）记 `limit`。组件徽章、角标、刻度若小于 12 且不是 `data-decor`，仍报。
+判定：可读文本 `font-size` 小于 16，记 `rework`。正文（不是 caption、不是页脚 meta）小于 24，记 `limit`。组件徽章、角标、刻度若小于 16 且不是 `data-decor`，仍报。

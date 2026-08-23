@@ -42,12 +42,10 @@ const NODE_H = 56
 const NODE_LINE_PITCH = 18
 /** Defensive cap — a node card is not a paragraph; extra lines merge into the last. */
 const NODE_MAX_LINES = 3
-const NODE_SEP = 30
-const RANK_SEP = 48
-const FONT_SIZE = 12
-const MIN_FONT_SIZE = 9
-/** Diamond node type never shrinks below this unless the whole diagram scale is already smaller. */
-const NODE_FONT_FLOOR = 12
+const NODE_SEP = 44
+const RANK_SEP = 72
+const FONT_SIZE = 16
+const MIN_FONT_SIZE = 16
 /**
  * Inscribed chord of a rhombus, as a fraction of bounding-box width.
  * One centered line sits on the wide diagonal (~78% after glyph half-height).
@@ -1144,11 +1142,11 @@ export const flowchart: SvgComponent<FlowchartComponent> = {
           const padX = NODE_PAD_X * scaleX
           const frac = n.kind === "diamond" ? diamondInscribedFrac(n.lines.length) : 1
           const usableW = nw * frac - padX * 2
-          // 字号与盒宽预算同源（FONT_SIZE × scale）：图缩小时框和字同步小
-          //（保底 10，diamond 在 scale≥1 时保底 12），放大时最大 18。
+          // 字号与盒宽预算同源（FONT_SIZE × scale）。图缩小时框和字同步小，
+          // 但不低于 12pt 可读地板。放大时最大 18。
           const rawScaled = FONT_SIZE * scale
           const scaledFont = Math.max(
-            n.kind === "diamond" ? Math.min(NODE_FONT_FLOOR, Math.max(MIN_FONT_SIZE, rawScaled)) : 10,
+            MIN_FONT_SIZE,
             Math.min(18, rawScaled),
           )
           const fits = n.lines.map((line) =>

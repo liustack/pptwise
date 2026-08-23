@@ -35,7 +35,7 @@ import { showsDocumentMeta } from "../document-meta"
  */
 
 /** 底部那行 org / contact / date 的字号。 */
-const META_FONT_SIZE = 13
+const META_FONT_SIZE = 16
 
 /**
  * 底部 meta 行的基线。
@@ -52,7 +52,7 @@ const META_FONT_SIZE = 13
  * 660），不是新开的坐标。右下 logo 盒 (1120,630,96×40) 与这行居中文字横向
  * 不相交。
  */
-const META_BASELINE = 660
+const META_BASELINE = 663
 
 export function MastheadEnding({ ir, slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx

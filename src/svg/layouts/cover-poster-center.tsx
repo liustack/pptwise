@@ -105,7 +105,7 @@ export function PosterCenterCover({ ir, slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(kickerSrc, {
         maxWidth: 900,
         fontSize: KICKER_SIZE,
-        minFontSize: 12,
+        minFontSize: 16,
         letterSpacing: kickerTracking,
         fontFamily: ctx.fonts.body,
       })
@@ -127,7 +127,7 @@ export function PosterCenterCover({ ir, slide, ctx }: SvgTemplateProps) {
       ? fitSvgLine(metaParts.join("    ·    "), {
           maxWidth: metaPlacement === "bottom-right" || metaPlacement === "bottom-left" ? 700 : 900,
           fontSize: 20,
-          minFontSize: 14,
+          minFontSize: 16,
         })
       : null
   // Bottom meta line: fixed at 650 for the common case, pushed down only if a

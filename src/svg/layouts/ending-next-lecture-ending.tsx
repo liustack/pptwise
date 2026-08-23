@@ -89,7 +89,7 @@ export function NextLectureEnding({ slide, ctx }: SvgTemplateProps) {
   const kicker = fitSvgLine(kickerText, {
     maxWidth: KICKER_MAX_W,
     fontSize: KICKER_SIZE,
-    minFontSize: 12,
+    minFontSize: 16,
     letterSpacing: kickerTracking,
     fontFamily: fonts.heading,
     bold: true,
@@ -110,7 +110,7 @@ export function NextLectureEnding({ slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(nextSource, {
         maxWidth: NEXT_MAX_W,
         fontSize: NEXT_SIZE,
-        minFontSize: 12,
+        minFontSize: 16,
         fontFamily: fonts.body,
       })
     : null

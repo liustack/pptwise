@@ -14,7 +14,7 @@ type RingsComponent = Extract<Component, { type: "rings" }>
 const H_PER_RING: Record<number, number> = { 2: 300, 3: 340, 4: 380 }
 const PAD = 10
 const LABEL_GAP = 40
-const DESC_SIZE = 13.5
+const DESC_SIZE = 16
 const LABEL_SIZE = 17
 
 function geometry(component: RingsComponent, w: number) {
@@ -85,7 +85,7 @@ export const rings: SvgComponent<RingsComponent> = {
           const fitted = fitSvgLine(core.label, {
             maxWidth: radii[0] * 1.7,
             fontSize: 18,
-            minFontSize: 12,
+            minFontSize: 16,
             bold: true,
             fontFamily: ctx.fonts.heading,
           })
@@ -122,7 +122,7 @@ export const rings: SvgComponent<RingsComponent> = {
           const label = fitSvgLine(item.label, {
             maxWidth: textW,
             fontSize: LABEL_SIZE,
-            minFontSize: 13,
+            minFontSize: 16,
             bold: true,
             fontFamily: ctx.fonts.heading,
           })
@@ -157,11 +157,15 @@ export const rings: SvgComponent<RingsComponent> = {
                 {label.text}
               </text>
               {desc
-                ? desc.lines.map((line, li) => (
+                ? desc.lines.map((line, li) => {
+                    const y = rowY + 8 + (li + 1) * desc.lineHeight
+                    if (y > h - 2) return null
+                    return (
                     <text
                       key={li}
+                      data-truncated={desc.truncated && li === desc.lines.length - 1 ? "1" : undefined}
                       x={textX}
-                      y={rowY + 8 + (li + 1) * desc.lineHeight}
+                      y={y}
                       fontSize={desc.fontSize}
                       fill={ctx.colors.muted}
                       fontFamily={ctx.fonts.body}
@@ -169,7 +173,8 @@ export const rings: SvgComponent<RingsComponent> = {
                     >
                       {line}
                     </text>
-                  ))
+                    )
+                  })
                 : null}
             </g>
           )

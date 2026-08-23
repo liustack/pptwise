@@ -29,7 +29,7 @@ const SUB_Y = 360
 const SUB_SIZE = 22
 const SUB_DROP = 80
 const SUB_MAX_W = 1088
-const SUB_MIN_PT = 14
+const SUB_MIN_PT = 16
 
 const CTA_X = 96
 const CTA_RIGHT = 396
@@ -39,7 +39,7 @@ const CTA_NOTCH = 22
 const CTA_TEXT_X = 238
 const CTA_TEXT_Y = 482
 const CTA_SIZE = 22
-const CTA_MIN_PT = 14
+const CTA_MIN_PT = 16
 const CTA_MAX_W = 260
 const CTA_MAX_LINES = 2
 const CTA_LINE_HEIGHT_RATIO = 1.25
@@ -48,7 +48,7 @@ const FOOT_X = 96
 const FOOT_Y = 620
 const FOOT_SIZE = 17
 const FOOT_MAX_W = 960
-const FOOT_MIN_PT = 12
+const FOOT_MIN_PT = 16
 
 function withoutFitEllipsis(text: string): string {
   return text.replace(/…+$/u, "").replace(/\.{3}$/, "")
