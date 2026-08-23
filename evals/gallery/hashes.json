@@ -322,8 +322,8 @@
       "color": "8xsp9j"
     },
     "theme--ember--zh--p05": {
-      "hash": "aezuux",
-      "geometry": "ooog77",
+      "hash": "njlerh",
+      "geometry": "d6dee7",
       "color": "f1hh4k"
     },
     "theme--ember--zh--p06": {
@@ -502,8 +502,8 @@
       "color": "164fjt0"
     },
     "theme--insight--zh--p01": {
-      "hash": "mw03r2",
-      "geometry": "187j8ha",
+      "hash": "1ubwnak",
+      "geometry": "r2vta6",
       "color": "1yk6o23"
     },
     "theme--insight--zh--p02": {
@@ -512,43 +512,43 @@
       "color": "1idnr2h"
     },
     "theme--insight--zh--p03": {
-      "hash": "1rf672p",
-      "geometry": "w73rqp",
+      "hash": "1fxh65l",
+      "geometry": "manafn",
       "color": "aic9sa"
     },
     "theme--insight--zh--p04": {
-      "hash": "1d141sf",
-      "geometry": "1x8qpxi",
+      "hash": "gpoho7",
+      "geometry": "c6qqh8",
       "color": "1699at4"
     },
     "theme--insight--zh--p05": {
-      "hash": "pjdf1u",
-      "geometry": "1djbuvu",
+      "hash": "swy4h6",
+      "geometry": "1kozbi4",
       "color": "46816z"
     },
     "theme--insight--zh--p06": {
-      "hash": "84rirq",
-      "geometry": "1u6ert9",
+      "hash": "1tqs1ou",
+      "geometry": "1fmfco7",
       "color": "8h89td"
     },
     "theme--insight--zh--p07": {
-      "hash": "1otlspf",
-      "geometry": "11iv3tw",
+      "hash": "byuzf",
+      "geometry": "t7exwi",
       "color": "xcgym2"
     },
     "theme--insight--zh--p08": {
-      "hash": "4evvvq",
-      "geometry": "14nrrqp",
+      "hash": "1reuxni",
+      "geometry": "1xirbhv",
       "color": "14hc9r9"
     },
     "theme--insight--zh--p09": {
-      "hash": "mvkpr4",
-      "geometry": "r4ckik",
+      "hash": "1evrac8",
+      "geometry": "1qsgnye",
       "color": "ziigad"
     },
     "theme--insight--zh--p10": {
-      "hash": "1yvxv24",
-      "geometry": "crchye",
+      "hash": "1p1r49c",
+      "geometry": "1hdbdzm",
       "color": "2eofxx"
     },
     "theme--journal--zh--p01": {
@@ -687,8 +687,8 @@
       "color": "1wetqb2"
     },
     "theme--luxe--zh--p08": {
-      "hash": "1ft9346",
-      "geometry": "1xx4yyb",
+      "hash": "a70u7c",
+      "geometry": "1knfyy7",
       "color": "1id6fmf"
     },
     "theme--luxe--zh--p09": {
@@ -1042,8 +1042,8 @@
       "color": "1js87cp"
     },
     "theme--swiss--zh--p09": {
-      "hash": "1rx0lry",
-      "geometry": "yrw7ax",
+      "hash": "161ytma",
+      "geometry": "g9pilt",
       "color": "l71xek"
     },
     "theme--swiss--zh--p10": {
@@ -2387,8 +2387,8 @@
       "color": "1pd3mok"
     },
     "layout--pull-quote--insight--zh": {
-      "hash": "17zvuh0",
-      "geometry": "1hpsaji",
+      "hash": "14pd1pd",
+      "geometry": "10ve5jp",
       "color": "1dud5fp"
     },
     "layout--pull-quote--journal--zh": {
@@ -3582,18 +3582,18 @@
       "color": "s91j7w"
     },
     "component--flowchart--zh": {
-      "hash": "qa2jka",
-      "geometry": "hco5m9",
+      "hash": "6g1n6s",
+      "geometry": "7ia8of",
       "color": "1qb0dsb"
     },
     "component--flowchart--en": {
-      "hash": "1fm9b3p",
-      "geometry": "q22i8f",
+      "hash": "2n87ts",
+      "geometry": "1twhfm8",
       "color": "htm7pm"
     },
     "component--flowchart--mixed": {
-      "hash": "ga1jz",
-      "geometry": "16z9pj6",
+      "hash": "sx8adc",
+      "geometry": "18fircz",
       "color": "1qb0dsb"
     },
     "component--gantt--zh": {
@@ -4017,18 +4017,18 @@
       "color": "xwitan"
     },
     "component--cycle-hub-spoke--zh": {
-      "hash": "suc65",
-      "geometry": "1hzwezw",
+      "hash": "1s0hs51",
+      "geometry": "v5yw52",
       "color": "7d6hm3"
     },
     "component--cycle-hub-spoke--en": {
-      "hash": "qiqc2r",
-      "geometry": "1tqkbp1",
+      "hash": "1evs06z",
+      "geometry": "z51y0n",
       "color": "91yskl"
     },
     "component--cycle-hub-spoke--mixed": {
-      "hash": "1ap0cyt",
-      "geometry": "797bay",
+      "hash": "10hflkt",
+      "geometry": "1353q88",
       "color": "7d6hm3"
     },
     "component--cycle-petal-wheel--zh": {
@@ -4092,18 +4092,18 @@
       "color": "108x2wh"
     },
     "component--kpi-cards-bubble-row--zh": {
-      "hash": "1svjo2c",
-      "geometry": "z67x30",
+      "hash": "1hsruu4",
+      "geometry": "n1c1wm",
       "color": "1rd3t9x"
     },
     "component--kpi-cards-bubble-row--en": {
-      "hash": "1twbrzw",
-      "geometry": "1uwtaxh",
+      "hash": "2u01ac",
+      "geometry": "4n9r6r",
       "color": "ly3ktr"
     },
     "component--kpi-cards-bubble-row--mixed": {
-      "hash": "1cv6to2",
-      "geometry": "10jh260",
+      "hash": "1hg6je2",
+      "geometry": "nv8eyq",
       "color": "b3kew5"
     },
     "component--comparison-pill-panels--zh": {
@@ -4167,18 +4167,18 @@
       "color": "1mtn168"
     },
     "component--flowchart-typed-nodes--zh": {
-      "hash": "hedepn",
-      "geometry": "11o2tsa",
+      "hash": "ujvizi",
+      "geometry": "10voevp",
       "color": "hwes65"
     },
     "component--flowchart-typed-nodes--en": {
-      "hash": "899pg",
-      "geometry": "1slzuia",
+      "hash": "1u298hg",
+      "geometry": "1ssnqos",
       "color": "srkba6"
     },
     "component--flowchart-typed-nodes--mixed": {
-      "hash": "1t3oce3",
-      "geometry": "f0vgrq",
+      "hash": "1ghc69t",
+      "geometry": "122p94m",
       "color": "hwes65"
     },
     "component--architecture-layer-stack--zh": {
@@ -4407,48 +4407,48 @@
       "color": "3npqe8"
     },
     "heading--baseline--none--zh": {
-      "hash": "132ymhh",
-      "geometry": "199mqn6",
+      "hash": "we602l",
+      "geometry": "p8qhhw",
       "color": "exbyml"
     },
     "heading--baseline--none--en": {
-      "hash": "xwfzcv",
-      "geometry": "bb8kyn",
+      "hash": "1fussd3",
+      "geometry": "1r5xrwt",
       "color": "1njzsh"
     },
     "heading--baseline--none--mixed": {
-      "hash": "xlhs92",
-      "geometry": "5tl9q0",
+      "hash": "1wqcyn2",
+      "geometry": "1caidb2",
       "color": "1sdaild"
     },
     "heading--baseline--title--zh": {
-      "hash": "1obpnxo",
-      "geometry": "1ypczyi",
+      "hash": "1xkdemc",
+      "geometry": "1ckedm0",
       "color": "1t718sz"
     },
     "heading--baseline--title--en": {
-      "hash": "1wkarfc",
-      "geometry": "1te7j2u",
+      "hash": "1ewgykg",
+      "geometry": "2l64n4",
       "color": "l8kmp1"
     },
     "heading--baseline--title--mixed": {
-      "hash": "9n8rj8",
-      "geometry": "5b1u73",
+      "hash": "84n8ho",
+      "geometry": "wpyyjl",
       "color": "1x1uek3"
     },
     "heading--baseline--subtitle--zh": {
-      "hash": "kgu4gs",
-      "geometry": "12qi1us",
+      "hash": "10kqzyc",
+      "geometry": "srsn52",
       "color": "1om2zv8"
     },
     "heading--baseline--subtitle--en": {
-      "hash": "yafuan",
-      "geometry": "ncxvg7",
+      "hash": "1bpanp3",
+      "geometry": "u5q3a1",
       "color": "1u36z50"
     },
     "heading--baseline--subtitle--mixed": {
-      "hash": "15totqd",
-      "geometry": "1gifbje",
+      "hash": "k8hqgd",
+      "geometry": "10v5gcg",
       "color": "ebh7oy"
     },
     "heading--tag-box--none--zh": {

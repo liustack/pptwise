@@ -5,6 +5,35 @@ import { fitHeroLine, fitSparseHeading, yearQuarter } from "./shared"
 
 /** insight 稀排脸：行情格言、幽灵季度、折线引文。不画顶缘刻度尺和底缘面积线。 */
 
+const PULL_QUOTE_TICKER: readonly (readonly [number, number])[] = [
+  [96, 150], [240, 142], [390, 158], [540, 138], [740, 138], [890, 158],
+  [1040, 142], [1184, 150],
+]
+
+function pathCoord(n: number): number {
+  return Math.round(n * 100) / 100
+}
+
+/** Same uniform Catmull-Rom as poster-motif. Sparse pull-quote owns this ticker because the motif yields. */
+function catmullRomCubicD(pts: readonly (readonly [number, number])[]): string {
+  if (pts.length === 0) return ""
+  const r = pathCoord
+  let d = `M ${r(pts[0]![0])} ${r(pts[0]![1])}`
+  const n = pts.length
+  for (let i = 0; i < n - 1; i++) {
+    const p0 = pts[i === 0 ? 0 : i - 1]!
+    const p1 = pts[i]!
+    const p2 = pts[i + 1]!
+    const p3 = pts[i + 2 < n ? i + 2 : n - 1]!
+    const c1x = p1[0] + (p2[0] - p0[0]) / 6
+    const c1y = p1[1] + (p2[1] - p0[1]) / 6
+    const c2x = p2[0] - (p3[0] - p1[0]) / 6
+    const c2y = p2[1] - (p3[1] - p1[1]) / 6
+    d += ` C ${r(c1x)} ${r(c1y)} ${r(c2x)} ${r(c2y)} ${r(p2[0])} ${r(p2[1])}`
+  }
+  return d
+}
+
 export function statement({ ir, slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const heading = fitSparseHeading(slide.heading, {
@@ -105,10 +134,10 @@ export function pullQuote({ slide, ctx }: SvgTemplateProps) {
   const attr = pullQuoteAttribution(slide)
   return (
     <>
-      {/* 行情折线是内容无关装饰，走中景，不与引言抢前景。 */}
+      {/* 行情走线是内容无关装饰，走中景，不与引言抢前景。 */}
       <g data-depth="mid">
-        <polyline
-          points="96,150 240,142 390,158 540,138 740,138 890,158 1040,142 1184,150"
+        <path
+          d={catmullRomCubicD(PULL_QUOTE_TICKER)}
           fill="none"
           stroke={colors.border}
           strokeWidth={2}

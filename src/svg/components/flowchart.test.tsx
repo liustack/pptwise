@@ -1202,3 +1202,300 @@ describe("flowchart edge labels: omit duplicates, stay off strokes and arrows", 
   })
 })
 
+describe("flowchart gallery back-edge U, coaxial snap, and scale", () => {
+  const galleryZh = {
+    type: "flowchart" as const,
+    direction: "LR" as const,
+    nodes: [
+      { id: "a", label: "需求确认", kind: "round" as const },
+      { id: "b", label: "方案设计" },
+      { id: "c", label: "席位开通", kind: "diamond" as const },
+      { id: "d", label: "权限配置" },
+      { id: "e", label: "验收交付", kind: "round" as const },
+    ],
+    edges: [
+      { from: "a", to: "b" },
+      { from: "b", to: "c" },
+      { from: "c", to: "d", label: "席位开通" },
+      { from: "c", to: "b", label: "用量采集" },
+      { from: "d", to: "e" },
+    ],
+  }
+
+  const BOX = { x: 96, y: 176, w: 1088 }
+
+  function parseCmds(d: string): { cmd: string; nums: number[] }[] {
+    const out: { cmd: string; nums: number[] }[] = []
+    const re = /([MLHVQCSTAZ])([^MLHVQCSTAZ]*)/gi
+    for (const m of d.matchAll(re)) {
+      const nums = m[2]!
+        .trim()
+        .split(/[\s,]+/)
+        .filter(Boolean)
+        .map(Number)
+      out.push({ cmd: m[1]!.toUpperCase(), nums })
+    }
+    return out
+  }
+
+  function pathPoints(d: string): { x: number; y: number }[] {
+    const pts: { x: number; y: number }[] = []
+    let x = 0
+    let y = 0
+    for (const c of parseCmds(d)) {
+      if (c.cmd === "M" || c.cmd === "L") {
+        x = c.nums[0]!
+        y = c.nums[1]!
+        pts.push({ x, y })
+      } else if (c.cmd === "H") {
+        x = c.nums[0]!
+        pts.push({ x, y })
+      } else if (c.cmd === "V") {
+        y = c.nums[0]!
+        pts.push({ x, y })
+      } else if (c.cmd === "Q") {
+        x = c.nums[2]!
+        y = c.nums[3]!
+        pts.push({ x, y })
+      } else if (c.cmd === "C") {
+        x = c.nums[4]!
+        y = c.nums[5]!
+        pts.push({ x, y })
+      }
+    }
+    return pts
+  }
+
+  function collapseColinear(pts: { x: number; y: number }[]): { x: number; y: number }[] {
+    const eps = 0.6
+    const almostEq = (a: number, b: number) => Math.abs(a - b) < eps
+    const cleaned: { x: number; y: number }[] = []
+    for (const p of pts) {
+      const last = cleaned[cleaned.length - 1]
+      if (last && almostEq(last.x, p.x) && almostEq(last.y, p.y)) continue
+      cleaned.push(p)
+    }
+    const out: { x: number; y: number }[] = []
+    for (let i = 0; i < cleaned.length; i++) {
+      const b = cleaned[i]!
+      if (out.length >= 1 && i < cleaned.length - 1) {
+        const a = out[out.length - 1]!
+        const c = cleaned[i + 1]!
+        const colinear =
+          (almostEq(a.x, b.x) && almostEq(b.x, c.x)) || (almostEq(a.y, b.y) && almostEq(b.y, c.y))
+        if (colinear) continue
+      }
+      out.push(b)
+    }
+    return out
+  }
+
+  function qCount(d: string): number {
+    return parseCmds(d).filter((c) => c.cmd === "Q").length
+  }
+
+  function qRadii(d: string): number[] {
+    const radii: number[] = []
+    let x = 0
+    let y = 0
+    for (const c of parseCmds(d)) {
+      if (c.cmd === "M" || c.cmd === "L") {
+        x = c.nums[0]!
+        y = c.nums[1]!
+      } else if (c.cmd === "H") {
+        x = c.nums[0]!
+      } else if (c.cmd === "V") {
+        y = c.nums[0]!
+      } else if (c.cmd === "Q") {
+        const cx = c.nums[0]!
+        const cy = c.nums[1]!
+        const ex = c.nums[2]!
+        const ey = c.nums[3]!
+        radii.push(Math.hypot(cx - x, cy - y), Math.hypot(ex - cx, ey - cy))
+        x = ex
+        y = ey
+      }
+    }
+    return radii
+  }
+
+  function assertOrthogonalNoCubic(d: string) {
+    for (const c of parseCmds(d)) {
+      expect(["M", "L", "H", "V", "Q"]).toContain(c.cmd)
+      expect(c.cmd).not.toBe("C")
+      expect(c.cmd).not.toBe("S")
+    }
+    let x = 0
+    let y = 0
+    for (const c of parseCmds(d)) {
+      if (c.cmd === "M" || c.cmd === "L") {
+        const nx = c.nums[0]!
+        const ny = c.nums[1]!
+        if (c.cmd === "L") {
+          expect(Math.abs(nx - x) < 0.05 || Math.abs(ny - y) < 0.05).toBe(true)
+        }
+        x = nx
+        y = ny
+      } else if (c.cmd === "H") {
+        x = c.nums[0]!
+      } else if (c.cmd === "V") {
+        y = c.nums[0]!
+      } else if (c.cmd === "Q") {
+        x = c.nums[2]!
+        y = c.nums[3]!
+      }
+    }
+  }
+
+  function nodeBox(g: Element): { x: number; y: number; w: number; h: number } {
+    const rect = g.querySelector(":scope > rect")
+    if (rect) {
+      return {
+        x: Number(rect.getAttribute("x")),
+        y: Number(rect.getAttribute("y")),
+        w: Number(rect.getAttribute("width")),
+        h: Number(rect.getAttribute("height")),
+      }
+    }
+    const pts = (g.querySelector(":scope > polygon")?.getAttribute("points") ?? "")
+      .trim()
+      .split(/[\s,]+/)
+      .map(Number)
+    const xs = pts.filter((_, i) => i % 2 === 0)
+    const ys = pts.filter((_, i) => i % 2 === 1)
+    return {
+      x: Math.min(...xs),
+      y: Math.min(...ys),
+      w: Math.max(...xs) - Math.min(...xs),
+      h: Math.max(...ys) - Math.min(...ys),
+    }
+  }
+
+  function labeledNode(container: HTMLElement, label: string): Element {
+    const g = Array.from(container.querySelectorAll("g[data-flow-node]")).find((el) => {
+      const joined = Array.from(el.querySelectorAll("text"))
+        .map((t) => t.textContent ?? "")
+        .join("")
+        .replace(/\s/g, "")
+      return joined === label.replace(/\s/g, "")
+    })
+    expect(g, label).toBeTruthy()
+    return g!
+  }
+
+  function distPointToBox(p: { x: number; y: number }, b: { x: number; y: number; w: number; h: number }) {
+    const cx = Math.min(Math.max(p.x, b.x), b.x + b.w)
+    const cy = Math.min(Math.max(p.y, b.y), b.y + b.h)
+    return Math.hypot(p.x - cx, p.y - cy)
+  }
+
+  it("routes the c→b back-edge as a U above the nodes (two Q, four waypoints, no corridor staircase)", () => {
+    const { container } = svg(flowchart.render(galleryZh, BOX, ctx))
+    const b = nodeBox(labeledNode(container, "方案设计"))
+    const c = nodeBox(labeledNode(container, "席位开通"))
+    const paths = Array.from(container.querySelectorAll("path")).map((p) => p.getAttribute("d") ?? "")
+    expect(paths.length).toBe(5)
+
+    const back = paths
+      .map((d) => {
+        const pts = pathPoints(d)
+        const start = pts[0]!
+        const end = pts[pts.length - 1]!
+        return {
+          d,
+          pts,
+          start,
+          end,
+          q: qCount(d),
+          nearC: distPointToBox(start, c),
+          nearB: distPointToBox(end, b),
+        }
+      })
+      .filter((p) => p.nearC < 8 && p.nearB < 8)
+      .sort((a, z) => a.nearC + a.nearB - (z.nearC + z.nearB))
+
+    expect(back.length).toBeGreaterThanOrEqual(1)
+    const edge = back[0]!
+    assertOrthogonalNoCubic(edge.d)
+    expect(edge.q).toBe(2)
+    // Public path chamfers each elbow (L into Q, Q out), so raw samples are 6.
+    // The U itself is 4 waypoints: start, two Q corners, end. A staircase has 3+ Qs.
+    const corners = parseCmds(edge.d)
+      .filter((c) => c.cmd === "Q")
+      .map((c) => ({ x: c.nums[0]!, y: c.nums[1]! }))
+    expect(corners).toHaveLength(2)
+    const waypoints = [edge.start, ...corners, edge.end]
+    expect(waypoints).toHaveLength(4)
+    expect(edge.q).toBeLessThan(3)
+
+    const run = corners[0]!
+    const run2 = corners[1]!
+    expect(Math.abs(run.y - run2.y)).toBeLessThan(0.6)
+    const nodeTop = Math.min(b.y, c.y)
+    expect(run.y).toBeLessThan(nodeTop - 4)
+    const corridorTop = Math.min(b.y, c.y)
+    const corridorBottom = Math.max(b.y + b.h, c.y + c.h)
+    const midX = (Math.max(b.x, c.x) + Math.min(b.x + b.w, c.x + c.w)) / 2
+    const inCorridor = [...corners, ...edge.pts].filter(
+      (p) =>
+        p.x > Math.min(b.x + b.w, c.x + c.w) &&
+        p.x < Math.max(b.x, c.x) &&
+        p.y >= corridorTop &&
+        p.y <= corridorBottom,
+    )
+    expect(inCorridor.length, `staircase still in b–c gap around x=${midX}`).toBe(0)
+  })
+
+  it("draws forward b→c as a snapped straight run, not a 2px staircase", () => {
+    const { container } = svg(flowchart.render(galleryZh, BOX, ctx))
+    const b = nodeBox(labeledNode(container, "方案设计"))
+    const c = nodeBox(labeledNode(container, "席位开通"))
+    const paths = Array.from(container.querySelectorAll("path")).map((p) => p.getAttribute("d") ?? "")
+    const forward = paths
+      .map((d) => {
+        const pts = pathPoints(d)
+        return { d, pts, start: pts[0]!, end: pts[pts.length - 1]! }
+      })
+      .filter((p) => distPointToBox(p.start, b) < 8 && distPointToBox(p.end, c) < 8)
+
+    expect(forward.length).toBe(1)
+    const edge = forward[0]!
+    assertOrthogonalNoCubic(edge.d)
+    expect(Math.abs(edge.start.y - edge.end.y)).toBeLessThan(0.6)
+    expect(qCount(edge.d)).toBeLessThanOrEqual(1)
+    expect(collapseColinear(edge.pts).length).toBeLessThanOrEqual(3)
+  })
+
+  it("keeps visible Q radii at least 12 page px when segments are long enough", () => {
+    const { container } = svg(flowchart.render(galleryZh, BOX, ctx))
+    const paths = Array.from(container.querySelectorAll("path")).map((p) => p.getAttribute("d") ?? "")
+    const withQ = paths.filter((d) => qCount(d) > 0)
+    expect(withQ.length).toBeGreaterThan(0)
+    for (const d of withQ) {
+      for (const r of qRadii(d)) {
+        expect(r).toBeGreaterThanOrEqual(12)
+      }
+    }
+  })
+
+  it("fills the 1088 content box instead of a 1.4-capped ribbon", () => {
+    const h = flowchart.measure(galleryZh, 1088, ctx)
+    expect(h).toBeGreaterThanOrEqual(140)
+    const { container } = svg(flowchart.render(galleryZh, BOX, ctx))
+    const boxes = Array.from(container.querySelectorAll("g[data-flow-node]")).map(nodeBox)
+    const minX = Math.min(...boxes.map((b) => b.x))
+    const maxX = Math.max(...boxes.map((b) => b.x + b.w))
+    const minY = Math.min(...boxes.map((b) => b.y))
+    const maxY = Math.max(...boxes.map((b) => b.y + b.h))
+    expect(maxX - minX).toBeGreaterThanOrEqual(900)
+    expect(maxY - minY).toBeGreaterThanOrEqual(90)
+    expect(h).toBeGreaterThan(maxY - minY)
+  })
+
+  it("is deterministic for the gallery IR", () => {
+    const a = renderToStaticMarkup(flowchart.render(galleryZh, BOX, ctx))
+    const b = renderToStaticMarkup(flowchart.render(galleryZh, BOX, ctx))
+    expect(a).toBe(b)
+  })
+})
+

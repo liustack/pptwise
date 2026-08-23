@@ -57,11 +57,13 @@ const DIAMOND_FRAC_SINGLE = 0.78
 const DIAMOND_FRAC_MULTI = 0.6
 const STROKE_W = 1.5
 const ARROW_SIZE = 6
-/** Page-space corner radius for orthogonal elbows. Tight gaps may go down to CORNER_R_MIN. */
-const CORNER_R = 8
-const CORNER_R_MIN = 6
+/** Page-space corner radius for orthogonal elbows. Baby radii below this become sharp (r=0). */
+const CORNER_R = 16
+const CORNER_R_MIN = 12
 /** Outward stub before the first bend, in local (pre-scale) units. */
 const PORT_STUB = 12
+/** Uniform fitScale ceiling. 2.0 lets a 5-node LR fill a 1088 box without a 2-node graph going giant. */
+const MAX_FIT_SCALE = 2
 /** Minimum along-side spacing between same-side attachment points, local units. */
 const PORT_FAN_MIN = 12
 /** Page-space gap from an edge-label chip's near edge to the connector stroke. */
@@ -118,8 +120,8 @@ const MIN_LABEL_WIDTH = 2 * MIN_FONT_SIZE
 
 /** Uniform scale that fits the layered layout within width `w` and MAX_FLOW_HEIGHT. */
 function fitScale(layout: Layout, w: number): number {
-  // 允许适度放大填充画布（上限 1.4，避免 3 节点小图膨胀失真）
-  return Math.min(w / layout.width, MAX_FLOW_HEIGHT / layout.height, 1.4)
+  // 允许放大填满内容宽（上限 2.0，避免 2 节点小图膨胀失真）
+  return Math.min(w / layout.width, MAX_FLOW_HEIGHT / layout.height, MAX_FIT_SCALE)
 }
 
 /**
@@ -212,11 +214,11 @@ function resolveLayout(component: FlowchartComponent, w: number): {
   // "TB" 是 schema 的历史默认值（存量 deck 全部烤死了 TB），视为自动候选。
   // 只有 TD/BT/LR/RL 这类刻意写出的方向才原样尊重。
   if (component.direction && component.direction !== "TB") {
-    const layout = computeLayout(component, component.direction)
+    const layout = computeLayout(component, component.direction, w)
     return { layout, scale: fitScale(layout, w) }
   }
-  const tb = computeLayout(component, "TB")
-  const lr = computeLayout(component, "LR")
+  const tb = computeLayout(component, "TB", w)
+  const lr = computeLayout(component, "LR", w)
   const tbScale = fitScale(tb, w)
   const lrScale = fitScale(lr, w)
   return lrScale >= tbScale
@@ -283,6 +285,79 @@ function pickSides(src: LayoutNode, tgt: LayoutNode): { from: Side; to: Side } {
   return dx >= 0 ? { from: "E", to: "W" } : { from: "W", to: "E" }
 }
 
+/** Rank-backward: target sits behind source along the resolved flow axis. */
+function isBackEdge(src: LayoutNode, tgt: LayoutNode, rankdir: Rankdir): boolean {
+  const dx = tgt.x + tgt.w / 2 - (src.x + src.w / 2)
+  const dy = tgt.y + tgt.h / 2 - (src.y + src.h / 2)
+  if (rankdir === "LR") return dx < -PATH_EPS
+  if (rankdir === "RL") return dx > PATH_EPS
+  if (rankdir === "TB") return dy < -PATH_EPS
+  return dy > PATH_EPS
+}
+
+function oppositeSides(a: Side, b: Side): boolean {
+  return (a === "E" && b === "W") || (a === "W" && b === "E") || (a === "N" && b === "S") || (a === "S" && b === "N")
+}
+
+function faceOverlap(
+  a0: number,
+  a1: number,
+  b0: number,
+  b1: number,
+): { lo: number; hi: number } | null {
+  const lo = Math.max(a0, b0)
+  const hi = Math.min(a1, b1)
+  return lo <= hi ? { lo, hi } : null
+}
+
+/**
+ * Opposite-side ports that almost share a free-axis coordinate (diamond pull vs
+ * rect, rank centering) snap onto one shared value so the run is a straight.
+ */
+function snapCoaxial(
+  start: { x: number; y: number },
+  startSide: Side,
+  end: { x: number; y: number },
+  endSide: Side,
+  src: LayoutNode,
+  tgt: LayoutNode,
+): { start: { x: number; y: number }; end: { x: number; y: number } } {
+  const SNAP = 16
+  const inset = 2
+  if (!oppositeSides(startSide, endSide)) return { start, end }
+  const horizontal = startSide === "E" || startSide === "W"
+  if (horizontal) {
+    if (Math.abs(start.y - end.y) > SNAP) return { start, end }
+    const overlap = faceOverlap(src.y + inset, src.y + src.h - inset, tgt.y + inset, tgt.y + tgt.h - inset)
+    if (!overlap) return { start, end }
+    const y = Math.min(overlap.hi, Math.max(overlap.lo, (start.y + end.y) / 2))
+    return { start: { x: start.x, y }, end: { x: end.x, y } }
+  }
+  if (Math.abs(start.x - end.x) > SNAP) return { start, end }
+  const overlap = faceOverlap(src.x + inset, src.x + src.w - inset, tgt.x + inset, tgt.x + tgt.w - inset)
+  if (!overlap) return { start, end }
+  const x = Math.min(overlap.hi, Math.max(overlap.lo, (start.x + end.x) / 2))
+  return { start: { x, y: start.y }, end: { x, y: end.y } }
+}
+
+/** Local stub long enough that page-space r is not crushed below CORNER_R_MIN. */
+function stubLocal(scale: number): number {
+  return Math.max(PORT_STUB, (2 * CORNER_R) / Math.max(scale, 0.01))
+}
+
+function capOppositeStub(
+  start: { x: number; y: number },
+  startSide: Side,
+  end: { x: number; y: number },
+  endSide: Side,
+  want: number,
+): number {
+  if (!oppositeSides(startSide, endSide)) return want
+  const gap =
+    startSide === "E" || startSide === "W" ? Math.abs(end.x - start.x) : Math.abs(end.y - start.y)
+  return Math.min(want, Math.max(PORT_STUB, gap / 2))
+}
+
 function outward(side: Side): { x: number; y: number } {
   if (side === "N") return { x: 0, y: -1 }
   if (side === "S") return { x: 0, y: 1 }
@@ -318,11 +393,12 @@ function routeOrthogonal(
   startSide: Side,
   end: { x: number; y: number },
   endSide: Side,
+  stub: number,
 ): { x: number; y: number }[] {
   const so = outward(startSide)
   const eo = outward(endSide)
-  const a1 = { x: start.x + so.x * PORT_STUB, y: start.y + so.y * PORT_STUB }
-  const b1 = { x: end.x + eo.x * PORT_STUB, y: end.y + eo.y * PORT_STUB }
+  const a1 = { x: start.x + so.x * stub, y: start.y + so.y * stub }
+  const b1 = { x: end.x + eo.x * stub, y: end.y + eo.y * stub }
   const pts: { x: number; y: number }[] = [start, a1]
   if (!(almostEq(a1.x, b1.x) || almostEq(a1.y, b1.y))) {
     if (startSide === "N" || startSide === "S") pts.push({ x: b1.x, y: a1.y })
@@ -332,7 +408,35 @@ function routeOrthogonal(
   return collapseColinear(pts)
 }
 
-function computeLayout(component: FlowchartComponent, direction: FlowDirection): Layout {
+/**
+ * Same-side U: out → along → in. 4 points after collapse. Standoff is outside
+ * both node boxes so the long run never sits in the forward corridor.
+ */
+function routeU(
+  start: { x: number; y: number },
+  end: { x: number; y: number },
+  side: Side,
+  stub: number,
+  src: LayoutNode,
+  tgt: LayoutNode,
+): { x: number; y: number }[] {
+  if (side === "N") {
+    const runY = Math.min(src.y, tgt.y) - stub
+    return collapseColinear([start, { x: start.x, y: runY }, { x: end.x, y: runY }, end])
+  }
+  if (side === "S") {
+    const runY = Math.max(src.y + src.h, tgt.y + tgt.h) + stub
+    return collapseColinear([start, { x: start.x, y: runY }, { x: end.x, y: runY }, end])
+  }
+  if (side === "W") {
+    const runX = Math.min(src.x, tgt.x) - stub
+    return collapseColinear([start, { x: runX, y: start.y }, { x: runX, y: end.y }, end])
+  }
+  const runX = Math.max(src.x + src.w, tgt.x + tgt.w) + stub
+  return collapseColinear([start, { x: runX, y: start.y }, { x: runX, y: end.y }, end])
+}
+
+function computeLayout(component: FlowchartComponent, direction: FlowDirection, w: number): Layout {
   const sized: SizedNode[] = []
   const extras: { lines: string[]; kind: LayoutNode["kind"] }[] = []
   for (const n of component.nodes) {
@@ -370,20 +474,66 @@ function computeLayout(component: FlowchartComponent, direction: FlowDirection):
   }))
 
   const nodeById = new Map(nodes.map((n) => [n.id, n]))
-  const planned = component.edges.flatMap((e, edgeI) => {
+  const rankdir = toRankdir(direction)
+  const scale = fitScale({ nodes, edges: [], width, height }, w)
+
+  type Planned = {
+    edgeI: number
+    from: LayoutNode
+    to: LayoutNode
+    sides: { from: Side; to: Side }
+    back: boolean
+    label: string
+  }
+
+  const draft: Omit<Planned, "sides">[] = component.edges.flatMap((e, edgeI) => {
     const from = nodeById.get(e.from)
     const to = nodeById.get(e.to)
     if (!from || !to) return []
-    const sides = pickSides(from, to)
     return [
       {
         edgeI,
         from,
         to,
-        sides,
+        back: isBackEdge(from, to, rankdir),
         label: (e.label ?? "").replace(/<br\s*\/?>|\n/gi, " ").trim(),
       },
     ]
+  })
+
+  const occ = new Map<string, number>()
+  const bump = (nodeId: string, side: Side) => {
+    const key = `${nodeId}\0${side}`
+    occ.set(key, (occ.get(key) ?? 0) + 1)
+  }
+  for (const p of draft) {
+    if (p.back) continue
+    const sides = pickSides(p.from, p.to)
+    bump(p.from.id, sides.from)
+    bump(p.to.id, sides.to)
+  }
+
+  const planned: Planned[] = draft.map((p) => {
+    if (!p.back) {
+      return { ...p, sides: pickSides(p.from, p.to) }
+    }
+    const north =
+      (occ.get(`${p.from.id}\0N`) ?? 0) + (occ.get(`${p.to.id}\0N`) ?? 0)
+    const south =
+      (occ.get(`${p.from.id}\0S`) ?? 0) + (occ.get(`${p.to.id}\0S`) ?? 0)
+    const west =
+      (occ.get(`${p.from.id}\0W`) ?? 0) + (occ.get(`${p.to.id}\0W`) ?? 0)
+    const east =
+      (occ.get(`${p.from.id}\0E`) ?? 0) + (occ.get(`${p.to.id}\0E`) ?? 0)
+    const face: Side =
+      rankdir === "LR" || rankdir === "RL"
+        ? north <= south
+          ? "N"
+          : "S"
+        : west <= east
+          ? "W"
+          : "E"
+    return { ...p, sides: { from: face, to: face } }
   })
 
   type FanItem = { edgeI: number; end: "from" | "to"; otherX: number; otherY: number }
@@ -430,15 +580,24 @@ function computeLayout(component: FlowchartComponent, direction: FlowDirection):
     }
   }
 
+  const wantStub = stubLocal(scale)
   const edges: LayoutEdge[] = planned.map((p) => {
     const tFrom = tOf.get(`${p.edgeI}:from`) ?? 0.5
     const tTo = tOf.get(`${p.edgeI}:to`) ?? 0.5
-    const start = portOnSide(p.from, p.sides.from, tFrom)
-    const end = portOnSide(p.to, p.sides.to, tTo)
-    return {
-      points: routeOrthogonal(start, p.sides.from, end, p.sides.to),
-      label: p.label,
-    }
+    const rawStart = portOnSide(p.from, p.sides.from, tFrom)
+    const rawEnd = portOnSide(p.to, p.sides.to, tTo)
+    const { start, end } = snapCoaxial(rawStart, p.sides.from, rawEnd, p.sides.to, p.from, p.to)
+    const points =
+      p.sides.from === p.sides.to
+        ? routeU(start, end, p.sides.from, wantStub, p.from, p.to)
+        : routeOrthogonal(
+            start,
+            p.sides.from,
+            end,
+            p.sides.to,
+            capOppositeStub(start, p.sides.from, end, p.sides.to, wantStub),
+          )
+    return { points, label: p.label }
   })
 
   return { nodes, edges, width, height }
@@ -808,6 +967,14 @@ function prepareFlow(component: FlowchartComponent, w: number): PreparedFlow {
     maxX = Math.max(maxX, n.x + n.w)
     maxY = Math.max(maxY, n.y + n.h)
   }
+  for (const stroke of strokes) {
+    for (const p of stroke) {
+      minX = Math.min(minX, p.x)
+      minY = Math.min(minY, p.y)
+      maxX = Math.max(maxX, p.x)
+      maxY = Math.max(maxY, p.y)
+    }
+  }
   for (const label of labels) {
     if (!label) continue
     minX = Math.min(minX, label.chipX)
@@ -852,8 +1019,8 @@ function pathCoord(n: number): number {
 
 /**
  * 正交圆角肘（2026-08-23 用户裁定，推翻 2026-07-14「一律曲线」）：共轴直段，
- * 非共轴走直角弯，弯角 Q r=8（紧时至少 6）。禁斜线。箭头仍用 polygon，
- * svg2pptx 会跳过 marker。
+ * 非共轴走直角弯，弯角 Q r=16（段不够长则 r=0，不画 2px 碎角）。禁斜线、禁 C。
+ * 箭头仍用 polygon，svg2pptx 会跳过 marker。
  */
 function orthogonalRoundedPath(
   points: { x: number; y: number }[],
@@ -874,7 +1041,7 @@ function orthogonalRoundedPath(
     const inLen = Math.hypot(b.x - a.x, b.y - a.y)
     const outLen = Math.hypot(c.x - b.x, c.y - b.y)
     let r = Math.min(CORNER_R, inLen / 2, outLen / 2)
-    if (r < CORNER_R_MIN) r = r < 0.5 ? 0 : r
+    if (r < CORNER_R_MIN) r = 0
     const inDirX = Math.sign(b.x - a.x)
     const inDirY = Math.sign(b.y - a.y)
     const outDirX = Math.sign(c.x - b.x)
