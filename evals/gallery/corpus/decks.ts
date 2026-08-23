@@ -157,7 +157,7 @@ export function themeDeck(themeId: string, lex: Lexicon, assets: CorpusAssets): 
     return {
       type: "content" as const,
       heading: emphasis && i === 0 ? emphasizePhrase(lex.headings[i]!, emphasis.heading) : lex.headings[i]!,
-      components: [component, ...extra.extra],
+      components: extra.extraFirst ? [...extra.extra, component] : [component, ...extra.extra],
       ...(extra.layout ? { layout: extra.layout } : {}),
       ...(component.type === "data_table" ? { footnote: lex.sources[0]!.label } : {}),
     }
@@ -194,10 +194,10 @@ function thickenThemeContent(
   themeId: string,
   slotIndex: number,
   lex: Lexicon,
-): { extra: Component[]; layout?: string } {
+): { extra: Component[]; layout?: string; extraFirst?: boolean } {
   const shortParagraph: Component = { type: "paragraph", text: lex.shortParagraph }
   if (themeId === "stage" && slotIndex === 0) {
-    return { extra: [shortParagraph], layout: "two-column" }
+    return { extra: [shortParagraph], layout: "two-column", extraFirst: true }
   }
   if (themeId === "swiss" && slotIndex === 0) {
     return { extra: [COMPONENT_BUILDERS.bullets!(lex)], layout: "two-column" }
