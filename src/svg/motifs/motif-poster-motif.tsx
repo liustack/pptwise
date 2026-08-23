@@ -6,7 +6,7 @@ import { yieldsOnSparsePin } from "./branded-frame"
 /**
  * poster-motif —— insight 的行情语汇（2026-08-22 第八波批 1 演化）：
  * 顶缘行情带、刻度齿、封面 430px 幽灵季字全部退役。留下的是板上那根
- * **底缘暗线**（polyline，stroke 走 border，中景）。
+ * **底缘暗线**（Catmull-Rom 三次贝塞尔 path，stroke 走 border，中景）。
  *
  * 设计源 `.issues/design-boards/wave8/b1/Insight.dc.html`：
  *   - 封面走线抄封面样例折点（穿在结论句与落款之间）。
@@ -34,8 +34,31 @@ const FOOT_POINTS: readonly (readonly [number, number])[] = [
 
 const STROKE = 2
 
-function pointsAttr(points: readonly (readonly [number, number])[]): string {
-  return points.map(([x, y]) => `${x},${y}`).join(" ")
+function pathCoord(n: number): number {
+  return Math.round(n * 100) / 100
+}
+
+/**
+ * 均匀 Catmull-Rom → 三次贝塞尔。端点钳制（首/末点重复）使切线沿首/末段。
+ * 同一组折点永远得到同一条 `d`。不与 flowchart 共用。
+ */
+function catmullRomCubicD(pts: readonly (readonly [number, number])[]): string {
+  if (pts.length === 0) return ""
+  const r = pathCoord
+  let d = `M ${r(pts[0]![0])} ${r(pts[0]![1])}`
+  const n = pts.length
+  for (let i = 0; i < n - 1; i++) {
+    const p0 = pts[i === 0 ? 0 : i - 1]!
+    const p1 = pts[i]!
+    const p2 = pts[i + 1]!
+    const p3 = pts[i + 2 < n ? i + 2 : n - 1]!
+    const c1x = p1[0] + (p2[0] - p0[0]) / 6
+    const c1y = p1[1] + (p2[1] - p0[1]) / 6
+    const c2x = p2[0] - (p3[0] - p1[0]) / 6
+    const c2y = p2[1] - (p3[1] - p1[1]) / 6
+    d += ` C ${r(c1x)} ${r(c1y)} ${r(c2x)} ${r(c2y)} ${r(p2[0])} ${r(p2[1])}`
+  }
+  return d
 }
 
 export function PosterMotif({ slide, ctx }: DecorProps) {
@@ -48,8 +71,8 @@ export function PosterMotif({ slide, ctx }: DecorProps) {
 
   return (
     <DecorPiece id="baseline">
-      <polyline
-        points={pointsAttr(points)}
+      <path
+        d={catmullRomCubicD(points)}
         fill="none"
         stroke={border}
         strokeWidth={STROKE}

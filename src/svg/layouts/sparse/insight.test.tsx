@@ -117,7 +117,7 @@ describe("insight sparse faces", () => {
     expect(q4).toBeTruthy()
   })
 
-  it("pull-quote follows the polyline and paints the quote in text, attribution in accent", () => {
+  it("pull-quote follows a cubic ticker and paints the quote in text, attribution in accent", () => {
     const slide: Slide = {
       type: "content",
       layout: "pull-quote",
@@ -129,19 +129,15 @@ describe("insight sparse faces", () => {
       <PullQuoteContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />,
     )
     expect(() => assertSubset(root)).not.toThrow()
-    const poly = root.querySelector("polyline")
-    const points = (poly?.getAttribute("points") ?? "")
-      .trim()
-      .split(/\s+/)
-      .map((p) => p.split(",").map(Number) as [number, number])
-    expect(points.length).toBeGreaterThanOrEqual(2)
-    const first = points[0]!
-    const last = points[points.length - 1]!
-    expect((first[0] + last[0]) / 2).toBe(640)
-    expect(first[1]).toBe(last[1])
-    expect(poly?.getAttribute("fill")).toBe("none")
-    expect(poly?.getAttribute("stroke")).toBe(ctx.colors.border)
-    expect(poly?.getAttribute("stroke-width")).toBe("2")
+    expect(root.querySelectorAll("polyline")).toHaveLength(0)
+    const ticker = root.querySelector("path")
+    const d = ticker?.getAttribute("d") ?? ""
+    expect(d).toMatch(/^M 96 150/)
+    expect(d).toMatch(/C /)
+    expect(d.endsWith(" 1184 150")).toBe(true)
+    expect(ticker?.getAttribute("fill")).toBe("none")
+    expect(ticker?.getAttribute("stroke")).toBe(ctx.colors.border)
+    expect(ticker?.getAttribute("stroke-width")).toBe("2")
     const quote = Array.from(root.querySelectorAll("text")).find((t) =>
       (t.textContent ?? "").includes("最贵的停机"),
     )!
@@ -159,7 +155,7 @@ describe("insight sparse faces", () => {
     expect(markup).not.toContain(LUXE_GOLD)
   })
 
-  it("routes cover, content, and sparse pull-quote ticker polylines to mid, not fg", () => {
+  it("routes cover, content, and sparse pull-quote ticker paths to mid, not fg", () => {
     const cases: { label: string; slide: Slide }[] = [
       { label: "cover", slide: { type: "cover", heading: "43%", components: [] } as Slide },
       {
@@ -180,8 +176,8 @@ describe("insight sparse faces", () => {
     for (const { label, slide } of cases) {
       const doc = ir([slide], { date: "2026-05-01" })
       const root = parseSvgRoot(renderSlideSvg(doc, 0))
-      const tickers = Array.from(root.querySelectorAll("polyline")).filter(
-        (el) => el.getAttribute("fill") === "none",
+      const tickers = Array.from(root.querySelectorAll("path")).filter(
+        (el) => el.getAttribute("fill") === "none" && (el.getAttribute("d") ?? "").includes("C "),
       )
       expect(tickers.length, label).toBeGreaterThan(0)
       for (const ticker of tickers) {
