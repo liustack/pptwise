@@ -2,11 +2,12 @@
 import { describe, expect, it } from "vitest"
 import { renderSvgMarkup, parseSvgRoot } from "../serialize"
 import { assertSubset } from "../subset-validate"
-import { buildCtx, resolveBackgroundHex } from "../full-slide-svg"
+import { buildCtx, FullSlideSvg, resolveBackgroundHex } from "../full-slide-svg"
 import { resolveStyle, CANONICAL_THEME_IDS } from "../../themes"
 import { contrastRatio, requiredContrastRatio, readableOn } from "../ink"
 import { textInkBox } from "../depth-contract/geometry"
 import { VerticalTitleCover, layoutDef } from "./cover-vertical-title-cover"
+import { sealStudioGlyph } from "./minimal-shared"
 import type { PptxIR, Slide } from "@/ir"
 
 const HEADING = "宋词里的江南"
@@ -97,7 +98,7 @@ describe("cover-vertical-title-cover — board geometry", () => {
       (t.textContent ?? "").includes("听雨书院"),
     )
     expect(foot?.getAttribute("x")).toBe("96")
-    expect(foot?.getAttribute("y")).toBe("662")
+    expect(foot?.getAttribute("y")).toBe("630")
     expect(foot?.getAttribute("data-contrast-tier")).toBe("meta")
   })
 
@@ -120,14 +121,14 @@ describe("cover-vertical-title-cover — board geometry", () => {
     }
   })
 
-  it("does not invent cover copy when heading is empty, and leaves the seal face empty without org CJK", () => {
+  it("does not invent cover copy when heading is empty, and draws no seal without org CJK", () => {
     const { root, markup } = renderCover("ink", slide("", { heading: "", subheading: "" }), {})
     expect(markup).not.toContain("Thank you")
     expect(markup).not.toContain("谢谢")
     expect(markup).not.toContain("宋词里的江南")
     expect(markup).not.toContain("聽")
     expect(Array.from(root.querySelectorAll("text")).filter((t) => t.getAttribute("x") === "880")).toHaveLength(0)
-    expect(root.querySelector("rect[width='72']")).toBeTruthy()
+    expect(root.querySelector("rect[width='72']")).toBeFalsy()
     expect(Array.from(root.querySelectorAll("text")).find((t) => t.getAttribute("font-size") === "34")).toBeFalsy()
   })
 
@@ -184,5 +185,114 @@ describe("cover-vertical-title-cover — shared pool", () => {
 
   it("renders byte-identically on repeat", () => {
     expect(renderCover("ink").markup).toBe(renderCover("ink").markup)
+  })
+})
+
+function titleGlyphs(root: Element, fontSize: string): Element[] {
+  return Array.from(root.querySelectorAll("text")).filter((t) => t.getAttribute("font-size") === fontSize)
+}
+
+describe("cover-vertical-title-cover — vertical overflow without ellipsis", () => {
+  it("keeps a short CJK title on the board single column", () => {
+    const { root, markup } = renderCover("ink")
+    const glyphs = Array.from(root.querySelectorAll("text")).filter((t) => t.getAttribute("x") === "880")
+    expect(glyphs.map((t) => t.textContent).join("")).toBe("宋词里的江南")
+    expect(glyphs.map((t) => t.getAttribute("y"))).toEqual(["110", "194", "278", "362", "446", "530"])
+    expect(glyphs[0]?.getAttribute("font-size")).toBe("72")
+    expect(markup).not.toContain("…")
+  })
+
+  it("sets a long CJK title with 2026 across extra columns and draws every converted glyph", () => {
+    const heading = "云觅科技 2026 年战略复盘与明年规划"
+    const { root, markup } = renderCover("ink", slide(heading))
+    const glyphs = titleGlyphs(root, "72")
+    expect(glyphs.map((t) => t.textContent).join("")).toBe("云觅科技二〇二六年战略复盘与明年规划")
+    expect(markup).not.toContain("…")
+    const xs = [...new Set(glyphs.map((t) => t.getAttribute("x")))]
+    expect(xs).toContain("880")
+    expect(xs.length).toBeGreaterThanOrEqual(2)
+    expect(xs.length).toBeLessThanOrEqual(3)
+    const leftTitle = Math.min(...glyphs.map((t) => Number(t.getAttribute("x"))))
+    const sub = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "烟")
+    expect(sub?.getAttribute("x")).toBe(String(leftTitle - 102))
+  })
+
+  it("cuts an extreme CJK title instead of painting an ellipsis", () => {
+    const heading = "江".repeat(40)
+    const { root, markup } = renderCover("ink", slide(heading, { subheading: "" }))
+    expect(markup).not.toContain("…")
+    const glyphs = Array.from(root.querySelectorAll("text")).filter((t) => t.textContent === "江")
+    expect(glyphs.length).toBeLessThan(40)
+    expect(glyphs.length).toBeGreaterThan(0)
+    expect(glyphs[glyphs.length - 1]?.getAttribute("data-truncated")).toBe("1")
+    expect(root.querySelector("[data-dropped]")?.getAttribute("data-dropped")).toBe(
+      String(40 - glyphs.length),
+    )
+  })
+})
+
+describe("cover-vertical-title-cover — vertical digits and Latin path", () => {
+  it("sets ASCII digits as CJK numerals in a vertical title", () => {
+    const { root } = renderCover("ink", slide("云觅科技 2026 年", { subheading: "" }))
+    const glyphs = Array.from(root.querySelectorAll("text")).map((t) => t.textContent ?? "")
+    expect(glyphs.join("")).toContain("二〇二六")
+    expect(glyphs.some((ch) => ch === "2")).toBe(false)
+    expect(glyphs.some((ch) => ch === "0")).toBe(false)
+    expect(glyphs.some((ch) => ch === "6")).toBe(false)
+  })
+
+  it("leaves Arabic digits on a Latin horizontal title at x96", () => {
+    const { root } = renderCover("ink", slide("Report 2026", { subheading: "" }))
+    const title = Array.from(root.querySelectorAll("text")).find((t) =>
+      (t.textContent ?? "").includes("Report"),
+    )
+    expect(title?.textContent).toContain("2026")
+    expect(title?.getAttribute("x")).toBe("96")
+    expect(root.textContent).not.toContain("二〇二六")
+  })
+})
+
+describe("sealStudioGlyph", () => {
+  it("takes the studio name's first CJK, never a baked 聽", () => {
+    expect(sealStudioGlyph("听雨书院 · 秋季雅集第四讲")).toBe("听")
+    expect(sealStudioGlyph("听雨书院")).toBe("听")
+  })
+
+  it("refuses modern department suffixes and empty org", () => {
+    expect(sealStudioGlyph("战略与运营部")).toBeUndefined()
+    expect(sealStudioGlyph(undefined)).toBeUndefined()
+    expect(sealStudioGlyph("")).toBeUndefined()
+  })
+})
+
+describe("cover-vertical-title-cover — seal rules", () => {
+  it("paints 听 from 听雨书院 and never 聽", () => {
+    const { root } = renderCover("ink")
+    const glyph = Array.from(root.querySelectorAll("text")).find((t) => t.getAttribute("font-size") === "34")
+    expect(glyph?.textContent).toBe("听")
+    expect(root.textContent).not.toContain("聽")
+  })
+
+  it("draws no 72×72 seal for 战略与运营部", () => {
+    const { root } = renderCover("ink", slide(), { organization: "战略与运营部" })
+    expect(root.querySelector("rect[width='72'][height='72']")).toBeFalsy()
+    expect(Array.from(root.querySelectorAll("text")).find((t) => t.getAttribute("font-size") === "34")).toBeFalsy()
+  })
+
+  it("draws no seal when org is missing", () => {
+    const { root } = renderCover("ink", slide(), {})
+    expect(root.querySelector("rect[width='72'][height='72']")).toBeFalsy()
+  })
+})
+
+describe("cover-vertical-title-cover — FullSlideSvg remnant", () => {
+  it("keeps the left remnant mountain when the org foot is present", () => {
+    const s = slide(HEADING, { layout: "vertical-title-cover" })
+    const markup = renderSvgMarkup(<FullSlideSvg ir={ir("ink", FULL_META, s)} slide={s} index={0} />)
+    const root = parseSvgRoot(markup)
+    const remnant = root.querySelector('[data-decor-piece="remnant"]')
+    expect(remnant).not.toBeNull()
+    expect(remnant?.innerHTML ?? "").toContain("M -40 720 Q 140 640")
+    expect(remnant?.querySelector("path")).not.toBeNull()
   })
 })

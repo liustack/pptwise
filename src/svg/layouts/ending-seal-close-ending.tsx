@@ -4,17 +4,11 @@ import { fitHeadingLines } from "../heading-fit"
 import { fitSvgLine } from "../../lib/svg-text-layout"
 import { accessibleInk, metaInk, readableOn } from "../ink"
 import { stripEmphasis } from "../emphasis"
-
-const CJK_RE = /[\u3400-\u9fff]/
-
-function firstCjkGlyph(text: string | undefined): string | undefined {
-  if (!text) return undefined
-  return CJK_RE.exec(text)?.[0]
-}
+import { sealStudioGlyph } from "./minimal-shared"
 
 /**
  * seal-close-ending（第八波 pinOnly）：居中一句收束，下一讲取 subheading，
- * 中轴印章当句点。印文取 org 首个 CJK 字，没有就留空印面，不写死印文。
+ * 中轴印章当句点。印文走 sealStudioGlyph，缺印文整印不画，不写死印文。
  * 不致谢，不兜底 Thank you。右下半山归 motif。
  *
  * 构图抄 `.issues/design-boards/wave8/b2/Ink.dc.html` ending：句 y300 /
@@ -47,7 +41,7 @@ export function SealCloseEnding({ ir, slide, ctx }: SvgTemplateProps) {
   const headingSource = slide.heading ?? ""
   const plainHeading = stripEmphasis(headingSource)
   const showTitle = plainHeading.trim().length > 0
-  const sealGlyph = firstCjkGlyph(org)
+  const sealGlyph = sealStudioGlyph(org)
   const sealFill = colors.accent
   const sealInk = readableOn(sealFill)
 
@@ -110,19 +104,21 @@ export function SealCloseEnding({ ir, slide, ctx }: SvgTemplateProps) {
         </text>
       )}
 
-      <rect x={SEAL_X} y={sealY} width={SEAL_SIZE} height={SEAL_SIZE} fill={sealFill} />
       {sealGlyph && (
-        <text
-          x={SEAL_X + SEAL_SIZE / 2}
-          y={sealGlyphY}
-          textAnchor="middle"
-          fontFamily={fonts.heading}
-          fontSize={SEAL_GLYPH_SIZE}
-          fill={sealInk}
-          dominantBaseline="alphabetic"
-        >
-          {sealGlyph}
-        </text>
+        <>
+          <rect x={SEAL_X} y={sealY} width={SEAL_SIZE} height={SEAL_SIZE} fill={sealFill} />
+          <text
+            x={SEAL_X + SEAL_SIZE / 2}
+            y={sealGlyphY}
+            textAnchor="middle"
+            fontFamily={fonts.heading}
+            fontSize={SEAL_GLYPH_SIZE}
+            fill={sealInk}
+            dominantBaseline="alphabetic"
+          >
+            {sealGlyph}
+          </text>
+        </>
       )}
     </>
   )

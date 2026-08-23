@@ -159,12 +159,13 @@ describe("ink-motif wave 8 — remnant mountain and colophon rail by page type",
     expect(Math.max(...baselines)).toBeLessThan(SEAL_TOP)
   })
 
-  it("a too-long org is truncated with an ellipsis and marked, not silently cut", () => {
-    const { root } = render("content", { organization: "云".repeat(20), date: "2026-08-15" })
+  it("a too-long org is cut and marked, never drawn as an ellipsis", () => {
+    const { root, markup } = render("content", { organization: "云".repeat(20), date: "2026-08-15" })
     const glyphs = Array.from(root.querySelectorAll("text"))
     const orgGlyphs = glyphs.filter((t) => Number(t.getAttribute("font-size")) === 19)
     expect(orgGlyphs.length).toBeLessThan(20)
-    expect(orgGlyphs[orgGlyphs.length - 1].textContent).toBe("…")
+    expect(markup).not.toContain("…")
+    expect(orgGlyphs[orgGlyphs.length - 1].textContent).toBe("云")
     expect(orgGlyphs[orgGlyphs.length - 1].getAttribute("data-truncated")).toBe("1")
     const short = render("content").root.querySelectorAll('[data-truncated="1"]')
     expect(short).toHaveLength(0)

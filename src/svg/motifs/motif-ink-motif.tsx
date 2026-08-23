@@ -1,6 +1,7 @@
 import type { DecorProps } from "./types"
 import { DecorPiece } from "./decor-piece"
 import { leafRecessOpacity } from "./decor-budget"
+import { asciiDigitsToHan, CJK_DIGITS } from "../heading-treatments/labels"
 
 /**
  * ink-motif（第八波批 2，沿用半山 + 落款列）。
@@ -48,8 +49,6 @@ const REMNANT_LEFT = "M -40 720 Q 140 640 330 690 Q 430 708 500 720 Z"
 const REMNANT_RIGHT = "M 1320 720 Q 1140 640 950 690 Q 850 708 780 720 Z"
 const REMNANT_OPACITY = 0.06
 
-const CJK_DIGITS = ["〇", "一", "二", "三", "四", "五", "六", "七", "八", "九"]
-
 /**
  * `ir.meta.date` → 竖排年月的逐字数组，如 `2026-08-15` → 二〇二六年八月。
  * 只认「四位年 + 非数字分隔 + 一到两位月」。读不懂就整块不画。
@@ -65,7 +64,7 @@ function colophonDateGlyphs(date: string | undefined): string[] {
       : month === 10
         ? ["十"]
         : ["十", CJK_DIGITS[month - 10]]
-  return [...[...m[1]].map((d) => CJK_DIGITS[Number(d)]), "年", ...monthGlyphs, "月"]
+  return [...asciiDigitsToHan(m[1]), "年", ...monthGlyphs, "月"]
 }
 
 function orgCapacity(dateGlyphCount: number): number {
@@ -77,7 +76,7 @@ function orgCapacity(dateGlyphCount: number): number {
 function fitOrgGlyphs(org: string, capacity: number): { glyphs: string[]; truncated: boolean } {
   const glyphs = [...org]
   if (glyphs.length <= capacity) return { glyphs, truncated: false }
-  return { glyphs: [...glyphs.slice(0, Math.max(0, capacity - 1)), "…"], truncated: true }
+  return { glyphs: glyphs.slice(0, capacity), truncated: true }
 }
 
 function Remnant({ d, ctx, slideType }: { d: string; ctx: DecorProps["ctx"]; slideType: string }) {

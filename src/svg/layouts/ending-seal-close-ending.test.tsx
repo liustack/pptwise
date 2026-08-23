@@ -85,7 +85,7 @@ describe("ending-seal-close-ending — board geometry", () => {
     expect(texts).not.toMatch(/谢谢/)
     expect(markup).not.toContain("词读完了，雨还没停。")
     expect(markup).not.toContain("聽")
-    expect(root.querySelector("rect")).toBeTruthy()
+    expect(root.querySelector("rect")).toBeFalsy()
   })
 
   it("reads the next-talk line from subheading", () => {
@@ -132,5 +132,17 @@ describe("ending-seal-close-ending — shared pool", () => {
 
   it("renders byte-identically on repeat", () => {
     expect(renderEnding("ink").markup).toBe(renderEnding("ink").markup)
+  })
+
+  it("still takes 听 from 听雨书院", () => {
+    const { root } = renderEnding("ink")
+    const glyph = Array.from(root.querySelectorAll("text")).find((t) => t.getAttribute("font-size") === "28")
+    expect(glyph?.textContent).toBe("听")
+  })
+
+  it("draws no axis seal for 战略与运营部", () => {
+    const { root } = renderEnding("ink", slide(), { organization: "战略与运营部" })
+    expect(root.querySelector("rect")).toBeFalsy()
+    expect(Array.from(root.querySelectorAll("text")).find((t) => t.getAttribute("font-size") === "28")).toBeFalsy()
   })
 })

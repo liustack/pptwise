@@ -22,6 +22,39 @@ export function hasCjk(text: string): boolean {
   return /[\u3400-\u9fff]/.test(text)
 }
 
+const CJK_CHAR_RE = /[\u3400-\u9fff]/
+const SEAL_SPLIT_RE = /[·•|｜/\s]+/
+const STUDIO_SUFFIXES = ["书院", "书斋", "斋", "堂", "阁", "馆", "社", "楼", "居", "轩", "庵", "园"] as const
+const ORG_SUFFIXES = ["中心", "公司", "集团", "科技", "有限", "部", "组", "处", "科", "室"] as const
+
+function cjkRun(text: string): string {
+  return [...text].filter((ch) => CJK_CHAR_RE.test(ch)).join("")
+}
+
+/**
+ * Cover / ending vermilion-seal glyph from an organization name.
+ * Empty or non-CJK → no seal. Studio suffixes take the first CJK of the
+ * prefix. Modern org suffixes, and names longer than 4 CJK that are not
+ * studio-like, refuse the seal entirely so the square is not painted empty.
+ */
+export function sealStudioGlyph(org: string | undefined): string | undefined {
+  if (!org?.trim()) return undefined
+  const first = org.split(SEAL_SPLIT_RE).find((part) => part.length > 0)
+  if (!first) return undefined
+  const cjk = cjkRun(first)
+  if (!cjk) return undefined
+  for (const suffix of STUDIO_SUFFIXES) {
+    if (!cjk.endsWith(suffix)) continue
+    const prefix = cjk.slice(0, cjk.length - suffix.length)
+    return prefix[0]
+  }
+  for (const suffix of ORG_SUFFIXES) {
+    if (cjk.endsWith(suffix)) return undefined
+  }
+  if (cjk.length >= 2 && cjk.length <= 4) return cjk[0]
+  return undefined
+}
+
 /**
  * Chapter-index kicker for `verse-chapter`. The large heading is the verse
  * itself, so the kicker carries only the index — duplicating `heading` here
