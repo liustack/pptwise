@@ -21,15 +21,15 @@ import { tryContentHeadingTreatment } from "../heading-treatments/render"
  * contract): heading band spans the usual full 1088px content width
  * (x=96..1184, matching `bento-panel`/`two-column`'s own convention of a
  * full-width header sitting above a split body). Below it: LEAD region
- * x=96, w=632 (58%); a persistent vertical divider hairline at the gap's
- * midpoint (x=744); RIGHT region x=760, w=424 (39% — deliberately equal to
+ * x=96, w=632 (58%); a vertical divider hairline at the gap's
+ * midpoint (x=744) when the right column has content; RIGHT region x=760, w=424 (39% — deliberately equal to
  * `two-column`'s own worst-case half-width at the pool's narrowest 880px
  * single-stack basis, `(880-32)/2=424` — this layout introduces no
  * width narrower than `audit/capacity.ts` already accounts for). RIGHT
- * splits vertically into a TOP and a BOTTOM sub-panel (a persistent
- * horizontal divider between them), each framed by a thin outline rect
- * drawn unconditionally — the frame exists whether or not a component
- * lands inside it.
+ * splits vertically into a TOP and a BOTTOM sub-panel (a
+ * horizontal divider between them). A region only paints its outline
+ * when it actually holds a component. Empty slots never draw a frame,
+ * a divider-to-empty, or a surface shell.
  *
  * Component placement: `components[0]` (if any) goes to LEAD alone — a
  * single hero item at the widest column, the same "one dominant subject"
@@ -43,26 +43,15 @@ import { tryContentHeadingTreatment } from "../heading-treatments/render"
  * so `layoutContentFit`'s existing gap-tier/drop safety net applies to
  * each region independently.
  *
- * Why this clears the T1 handoff's hard requirement (dense-capable
- * layouts must be visibly different from `two-column`/`rail-numbered`
- * on a *single-component* page): the LEAD/RIGHT divider and the TOP/BOTTOM
- * frame are drawn unconditionally, not derived from `slide.components`.
- * `two-column` collapses to one full-width column below 2 components (its
- * own file comment); `rail-numbered`'s only persistent mark is a 4px rail
- * at the page's far-left edge, the content region itself staying a single
- * full-width block. A 1-component asymmetric-triptych page still shows
- * three visibly bounded regions — a genuinely different silhouette, not
- * just a narrower single column.
- *
- * Assigned `instructional` (procedural, step-by-step-breakdown strategy —
- * "one lead topic + a secondary breakdown split into two framed panels"
- * reads like a main step with sub-steps, the same "分步拆解" character
- * `rail-numbered`/`two-column` already carry for this strategy) and beat
- * `dense` (three independently-filled regions is this pool's highest
- * *structural* item count after `bento-panel`'s 6-cell grid, and unlike
- * `two-column`/`rail-numbered` its density signal survives visibly even
- * with only 1 component present — see the previous paragraph, and the T1
- * handoff note this addresses directly).
+ * Empty-slot ruling (audit round-1): a 1-component page collapses like
+ * `two-column` at n<2 — the lead takes the full body width, and the two
+ * right-column outlines are not painted. A 3-component page still frames
+ * the filled TOP/BOTTOM panels. Assigned `instructional` (procedural,
+ * step-by-step-breakdown strategy — "one lead topic + a secondary
+ * breakdown split into two framed panels" reads like a main step with
+ * sub-steps) and beat `dense` (three independently-filled regions is this
+ * pool's highest *structural* item count after `bento-panel`'s 6-cell
+ * grid).
  *
  * Discipline: no theme id, no hex literal — every color is a token or an
  * `../ink` call.
@@ -125,31 +114,21 @@ export function AsymmetricTriptychContent({ ir, slide, index, ctx }: SvgTemplate
   const topHalfCount = Math.ceil(rest.length / 2)
   const topComponents = rest.slice(0, topHalfCount)
   const bottomComponents = rest.slice(topHalfCount)
-
-  const leadRect: ContentRect = { x: LEAD_X, y: bodyTop, w: LEAD_W, h: bodyH }
-  // Pool-growth-exposed pre-existing defect (content-layout expansion
-  // wave, task T1 — found via `audit-baseline.test.ts`'s
-  // `new_components_stress` fixture: registering an 11th content layout
-  // shifted seeded auto-selection onto this layout for a page it had
-  // never landed on before, exposing this). With exactly one secondary
-  // component, TOP used to be squeezed into a half-height box while BOTTOM
-  // sat empty beside it — starving a real component of half its available
-  // height for no reason (a heavy 5-item `steps` list overflowed the
-  // half-height box even after its own font-shrink floor). TOP now claims
-  // the *full* `bodyH` whenever BOTTOM has nothing to show, the same "sole
-  // occupant gets the full column" precedent LEAD itself already follows —
-  // BOTTOM's frame/divider are skipped in that case (there is no region to
-  // show). `topComponents.length > 0` scopes this to exactly that case, not
-  // the `rest.length === 0` one (both TOP/BOTTOM empty) the file header's
-  // "a lone-component page still shows 3 regions" T1-handoff guarantee is
-  // about — that case's own dedicated test (`content-asymmetric-
-  // triptych.test.tsx`, "with 0 components") is untouched by this change.
-  const bottomStarved = topComponents.length > 0 && bottomComponents.length === 0
+  const hasTop = topComponents.length > 0
+  const hasBottom = bottomComponents.length > 0
+  const collapseRight = !hasTop && !hasBottom
+  const leadW = collapseRight ? 1184 - LEAD_X : LEAD_W
+  const leadRect: ContentRect = { x: LEAD_X, y: bodyTop, w: leadW, h: bodyH }
+  // With exactly one secondary component, TOP claims the full right-column
+  // height. BOTTOM's frame and the row divider stay unpainted.
+  const bottomStarved = hasTop && !hasBottom
   const halfRowH = Math.max(60, (bodyH - ROW_GAP) / 2)
   const rowH = bottomStarved ? bodyH : halfRowH
   const topRect: ContentRect = { x: RIGHT_X, y: bodyTop, w: RIGHT_W, h: rowH }
   const dividerY = bodyTop + rowH + ROW_GAP / 2
   const bottomRect: ContentRect = { x: RIGHT_X, y: bodyTop + rowH + ROW_GAP, w: RIGHT_W, h: halfRowH }
+  const panelStroke = colors.border ?? colors.muted
+  const panelRadius = ctx.shape?.radius ?? PANEL_RADIUS
 
   const footnote = slide.footnote
     ? fitSvgLine(slide.footnote, { maxWidth: HEADING_MAX_W, fontSize: 14, minFontSize: 11 })
@@ -157,36 +136,40 @@ export function AsymmetricTriptychContent({ ir, slide, index, ctx }: SvgTemplate
 
   const triptychBody = (
     <>
-      <line
-        x1={DIVIDER_X}
-        y1={bodyTop}
-        x2={DIVIDER_X}
-        y2={bodyTop + bodyH}
-        stroke={colors.border ?? colors.muted}
-        strokeWidth={1}
-        strokeOpacity={0.6}
-      />
-      <rect
-        x={topRect.x}
-        y={topRect.y}
-        width={topRect.w}
-        height={topRect.h}
-        rx={ctx.shape?.radius ?? PANEL_RADIUS}
-        fill="none"
-        stroke={colors.border ?? colors.muted}
-        strokeOpacity={0.45}
-        strokeWidth={1}
-      />
-      {!bottomStarved && (
+      {!collapseRight && (
+        <line
+          x1={DIVIDER_X}
+          y1={bodyTop}
+          x2={DIVIDER_X}
+          y2={bodyTop + bodyH}
+          stroke={panelStroke}
+          strokeWidth={1}
+          strokeOpacity={0.6}
+        />
+      )}
+      {hasTop && (
+        <rect
+          x={topRect.x}
+          y={topRect.y}
+          width={topRect.w}
+          height={topRect.h}
+          rx={panelRadius}
+          fill="none"
+          stroke={panelStroke}
+          strokeOpacity={0.45}
+          strokeWidth={1}
+        />
+      )}
+      {hasBottom && (
         <>
           <rect
             x={bottomRect.x}
             y={bottomRect.y}
             width={bottomRect.w}
             height={bottomRect.h}
-            rx={ctx.shape?.radius ?? PANEL_RADIUS}
+            rx={panelRadius}
             fill="none"
-            stroke={colors.border ?? colors.muted}
+            stroke={panelStroke}
             strokeOpacity={0.45}
             strokeWidth={1}
           />
@@ -195,7 +178,7 @@ export function AsymmetricTriptychContent({ ir, slide, index, ctx }: SvgTemplate
             y1={dividerY}
             x2={RIGHT_X + RIGHT_W}
             y2={dividerY}
-            stroke={colors.border ?? colors.muted}
+            stroke={panelStroke}
             strokeWidth={1}
             strokeOpacity={0.3}
           />
@@ -204,10 +187,10 @@ export function AsymmetricTriptychContent({ ir, slide, index, ctx }: SvgTemplate
       {leadComponent && (
         <SvgContent arrangement={undefined} components={[leadComponent]} rect={leadRect} ctx={ctx} />
       )}
-      {topComponents.length > 0 && (
+      {hasTop && (
         <SvgContent arrangement={undefined} components={topComponents} rect={topRect} ctx={ctx} />
       )}
-      {bottomComponents.length > 0 && (
+      {hasBottom && (
         <SvgContent arrangement={undefined} components={bottomComponents} rect={bottomRect} ctx={ctx} />
       )}
       {footnote && (
@@ -289,83 +272,7 @@ export function AsymmetricTriptychContent({ ir, slide, index, ctx }: SvgTemplate
           />,
         )}
 
-      {/* Persistent structure: unconditional regardless of component count
-          (see file header — the T1 handoff's single-component visibility
-          requirement). */}
-      <line
-        x1={DIVIDER_X}
-        y1={bodyTop}
-        x2={DIVIDER_X}
-        y2={bodyTop + bodyH}
-        stroke={colors.border ?? colors.muted}
-        strokeWidth={1}
-        strokeOpacity={0.6}
-      />
-      <rect
-        x={topRect.x}
-        y={topRect.y}
-        width={topRect.w}
-        height={topRect.h}
-        rx={ctx.shape?.radius ?? PANEL_RADIUS}
-        fill="none"
-        stroke={colors.border ?? colors.muted}
-        strokeOpacity={0.45}
-        strokeWidth={1}
-      />
-      {/* BOTTOM's frame/divider are skipped when TOP has absorbed the full
-          bodyH (see `bottomStarved` above) — there is no region left to
-          outline. Untouched for every other case (0 or >=2 rest
-          components), including the 0-rest showcase this file's header
-          documents. */}
-      {!bottomStarved && (
-        <>
-          <rect
-            x={bottomRect.x}
-            y={bottomRect.y}
-            width={bottomRect.w}
-            height={bottomRect.h}
-            rx={ctx.shape?.radius ?? PANEL_RADIUS}
-            fill="none"
-            stroke={colors.border ?? colors.muted}
-            strokeOpacity={0.45}
-            strokeWidth={1}
-          />
-          <line
-            x1={RIGHT_X}
-            y1={dividerY}
-            x2={RIGHT_X + RIGHT_W}
-            y2={dividerY}
-            stroke={colors.border ?? colors.muted}
-            strokeWidth={1}
-            strokeOpacity={0.3}
-          />
-        </>
-      )}
-
-      {leadComponent && (
-        <SvgContent arrangement={undefined} components={[leadComponent]} rect={leadRect} ctx={ctx} />
-      )}
-      {topComponents.length > 0 && (
-        <SvgContent arrangement={undefined} components={topComponents} rect={topRect} ctx={ctx} />
-      )}
-      {bottomComponents.length > 0 && (
-        <SvgContent arrangement={undefined} components={bottomComponents} rect={bottomRect} ctx={ctx} />
-      )}
-
-      {footnote && (
-        <text
-          data-truncated={footnote.truncated ? "1" : undefined}
-          x="96"
-          y={footnoteBaselineFor(footnote.fontSize)}
-          fontFamily={fonts.body}
-          fontSize={footnote.fontSize}
-          fill={colors.muted}
-          fontStyle="italic"
-          dominantBaseline="alphabetic"
-        >
-          {footnote.text}
-        </text>
-      )}
+      {triptychBody}
     </>
   )
 }
@@ -387,8 +294,8 @@ export const layoutDef: LayoutDefinition = {
   // hardcode arrangement to the default single-stack (never
   // `slide.arrangement` — the three-region split is this layout's own
   // grammar, same hardcode convention as bento-panel/two-column).
-  // Persistent dividers/panel frames are unconditional frame, not
-  // component-count-dependent.
+  // Empty regions skip their frame and divider. A 1-component page
+  // collapses the lead to full body width.
   id: "asymmetric-triptych",
   kind: "archetype",
   slideTypes: ["content"],

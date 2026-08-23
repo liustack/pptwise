@@ -11,7 +11,7 @@ import type { StyleTokens } from "./tokens";
  *
  * 四轴 C / top-band / heavy / medium。最近邻 vermilion（C / top-band /
  * medium / medium），岔在装饰轴。heavy 的量在字重与满版底色，零粒子零
- * 贴纸。无 motif：板上斜黑贴片带着日期，落地成空块后被裁。heavy 不必然
+ * 贴纸。封面日期贴片由 bill-head 当前景画，motif 为空。heavy 不必然
  * 等于 motif 重。
  *
  * 逐条来历（设计板 `Playbill.dc.html`，本仓库 `svg/ink.ts` 的
@@ -40,18 +40,20 @@ import type { StyleTokens } from "./tokens";
  * 字体：heading 特粗 sans，Microsoft YaHei 打头（板上 900 落地为加粗，
  * 导出走粗/不粗两档）。body 同族。圆角 0 + gapScale 1（medium 留白档）。
  *
- * 无 motif。板上底部 5px 粗收场线也不画（落在 y620-664 第五带）。
+ * 封面日期贴片由 bill-head 当前景画，motif 为空。板上底部 5px 粗收场线
+ * 也不画（落在 y620-664 第五带）。
  *
  * 可拉伸性：荧光黄即参数（音乐节目单可把 bg 收到暖金 `#E8C40A`，招募
  * 海报可把 primary 收到纯黑 `#0A0A0A`）。
  *
  * **第八波批 4（2026-08-23，`.issues/design-boards/wave8/b4/Playbill.dc.html`）**：
- * 封面继续锁 `bill-head`，日期贴片封面几何不动。章节 / ending 改锁 pinOnly
- * `day-bill-chapter` / `ticket-cta-ending`。章节是荧光黄上的 DAY n + 特粗
- * 黑字，标题钉板上 130px，不要乘 typeScale。ending 满版 primary 由版式自绘
- * （`paintsOwnBackground`），`defaultBackgrounds.ending` 保持荧光黄
- * `#F4DD1B`，避免 contrast floor 拿深字压深底。motif 章节 / 内容继续退让，
- * ending 也退让（黑场反转页没有贴片）。角色色 hex 与 fonts 一处不改。
+ * 封面继续锁 `bill-head`。日期贴片是封面前景，几何对齐 wave 7
+ * （top 64，right 56，顺时针 4°），由 bill-head 画。motif 为空。
+ * 章节 / ending 锁 pinOnly `day-bill-chapter` / `ticket-cta-ending`。
+ * 章节是荧光黄上的 DAY n + 特粗黑字，标题钉板上 130px，不要乘 typeScale。
+ * ending 满版 primary 由版式自绘（`paintsOwnBackground`），
+ * `defaultBackgrounds.ending` 保持荧光黄 `#F4DD1B`，避免 contrast floor
+ * 拿深字压深底。角色色 hex 与 fonts 一处不改。
  */
 export const PLAYBILL_TOKENS: StyleTokens = {
   id: "playbill",

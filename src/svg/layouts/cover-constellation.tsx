@@ -186,57 +186,59 @@ export function ConstellationCover({ ir, slide, ctx }: SvgTemplateProps) {
           dot grid) connected by a single faint polyline, with the largest
           node picking up a soft concentric glow — same glow technique the
           bento KPI card body uses (no SVG filter; Chromium 103's controlled
-          subset has none). */}
-      <polyline
-        points={COVER_MOTIF_POINTS.map((p) => `${p.x},${p.y}`).join(" ")}
-        fill="none"
-        stroke={colors.accent}
-        strokeWidth="1"
-        strokeOpacity="0.25"
-      />
-      {COVER_MOTIF_POINTS.map((p, i) => (
-        <circle key={i} cx={p.x} cy={p.y} r={p.r} fill={colors.accent} />
-      ))}
-      {/* Glow around the largest node only (last in COVER_MOTIF_POINTS,
-          r=5) — same +4/+8 ring offsets and opacity convention as the KPI
-          glow, reused here so the theme's "glow" visual language reads as
-          one signature, not two unrelated effects. */}
-      <circle
-        cx={COVER_MOTIF_HERO_POINT.x}
-        cy={COVER_MOTIF_HERO_POINT.y}
-        r={COVER_MOTIF_HERO_POINT.r + 4}
-        fill="none"
-        stroke={colors.accent}
-        strokeOpacity={BENTO_KPI_GLOW_RING1_OPACITY}
-        strokeWidth={BENTO_CARD_STROKE_WIDTH}
-      />
-      <circle
-        cx={COVER_MOTIF_HERO_POINT.x}
-        cy={COVER_MOTIF_HERO_POINT.y}
-        r={COVER_MOTIF_HERO_POINT.r + 8}
-        fill="none"
-        stroke={colors.accent}
-        strokeOpacity={BENTO_KPI_GLOW_RING2_OPACITY}
-        strokeWidth={BENTO_CARD_STROKE_WIDTH}
-      />
-      <circle
-        cx={COVER_MOTIF_HERO_POINT.x}
-        cy={COVER_MOTIF_HERO_POINT.y}
-        r={COVER_MOTIF_HERO_POINT.r + 18}
-        fill="none"
-        stroke={colors.accent}
-        strokeOpacity="0.1"
-        strokeWidth={BENTO_CARD_STROKE_WIDTH}
-      />
-      <circle
-        cx={COVER_MOTIF_HERO_POINT.x}
-        cy={COVER_MOTIF_HERO_POINT.y}
-        r={COVER_MOTIF_HERO_POINT.r + 30}
-        fill="none"
-        stroke={colors.accent}
-        strokeOpacity="0.05"
-        strokeWidth={BENTO_CARD_STROKE_WIDTH}
-      />
+          subset has none). Content-agnostic decoration, so mid, not fg. */}
+      <g data-depth="mid">
+        <polyline
+          points={COVER_MOTIF_POINTS.map((p) => `${p.x},${p.y}`).join(" ")}
+          fill="none"
+          stroke={colors.accent}
+          strokeWidth="1"
+          strokeOpacity="0.25"
+        />
+        {COVER_MOTIF_POINTS.map((p, i) => (
+          <circle key={i} cx={p.x} cy={p.y} r={p.r} fill={colors.accent} />
+        ))}
+        {/* Glow around the largest node only (last in COVER_MOTIF_POINTS,
+            r=5) — same +4/+8 ring offsets and opacity convention as the KPI
+            glow, reused here so the theme's "glow" visual language reads as
+            one signature, not two unrelated effects. */}
+        <circle
+          cx={COVER_MOTIF_HERO_POINT.x}
+          cy={COVER_MOTIF_HERO_POINT.y}
+          r={COVER_MOTIF_HERO_POINT.r + 4}
+          fill="none"
+          stroke={colors.accent}
+          strokeOpacity={BENTO_KPI_GLOW_RING1_OPACITY}
+          strokeWidth={BENTO_CARD_STROKE_WIDTH}
+        />
+        <circle
+          cx={COVER_MOTIF_HERO_POINT.x}
+          cy={COVER_MOTIF_HERO_POINT.y}
+          r={COVER_MOTIF_HERO_POINT.r + 8}
+          fill="none"
+          stroke={colors.accent}
+          strokeOpacity={BENTO_KPI_GLOW_RING2_OPACITY}
+          strokeWidth={BENTO_CARD_STROKE_WIDTH}
+        />
+        <circle
+          cx={COVER_MOTIF_HERO_POINT.x}
+          cy={COVER_MOTIF_HERO_POINT.y}
+          r={COVER_MOTIF_HERO_POINT.r + 18}
+          fill="none"
+          stroke={colors.accent}
+          strokeOpacity="0.1"
+          strokeWidth={BENTO_CARD_STROKE_WIDTH}
+        />
+        <circle
+          cx={COVER_MOTIF_HERO_POINT.x}
+          cy={COVER_MOTIF_HERO_POINT.y}
+          r={COVER_MOTIF_HERO_POINT.r + 30}
+          fill="none"
+          stroke={colors.accent}
+          strokeOpacity="0.05"
+          strokeWidth={BENTO_CARD_STROKE_WIDTH}
+        />
+      </g>
     </>
   )
 }

@@ -7,12 +7,9 @@ import { resolveStyle } from "../../themes"
 import { AsymmetricTriptychContent } from "./content-asymmetric-triptych"
 import type { Component, PptxIR, Slide } from "@/ir"
 
-// P1 variety wave, task 4: this layout's whole reason for existing is a
-// persistent three-region structure that stays visible regardless of
-// component count (the T1 handoff's "dense-tendency layouts must be
-// visibly different from two-column/rail-numbered at n=1" hard requirement)
-// — this file's core assertions are about that structural persistence, not
-// the heading band (shared convention, covered elsewhere).
+// Empty slots do not paint a container. A 1-component page collapses the
+// lead to full body width. A 3-component page still frames the filled
+// right-column panels.
 
 function para(text: string): Component {
   return { type: "paragraph", text }
@@ -40,19 +37,20 @@ function render(deck: PptxIR, slide: Slide, index: number): string {
   return renderSvgMarkup(<AsymmetricTriptychContent ir={deck} slide={slide} index={index} ctx={ctx} />)
 }
 
+function outlineFrames(root: Element): Element[] {
+  return Array.from(root.querySelectorAll('rect[fill="none"]'))
+}
+
 describe("AsymmetricTriptychContent", () => {
-  it("with 0 components, the lead/divider/top/bottom frames still render (persistent frame, not derived from slide.components)", () => {
+  it("with 0 components, paints no empty frames and no divider to vacant columns", () => {
     const slide = slideWith([])
     const markup = render(ir([chapter1, slide]), slide, 1)
     const root = parseSvgRoot(`<svg xmlns="http://www.w3.org/2000/svg">${markup}</svg>`)
-    // The persistent vertical divider between LEAD and RIGHT.
-    expect(root.querySelector('line[x1="744"]')).not.toBeNull()
-    // Both TOP/BOTTOM frame outlines (stroke, fill="none").
-    const frames = Array.from(root.querySelectorAll('rect[fill="none"]'))
-    expect(frames.length).toBe(2)
+    expect(root.querySelector('line[x1="744"]')).toBeNull()
+    expect(outlineFrames(root)).toHaveLength(0)
   })
 
-  it("with 1 component, it lands in the wide LEAD column alone — TOP/BOTTOM stay empty but their frames are still drawn", () => {
+  it("with 1 component, the lead takes the full body width and the two right-column outlines stay unpainted", () => {
     const slide = slideWith([para("唯一内容")])
     const markup = render(ir([chapter1, slide]), slide, 1)
     expect(markup).toContain("唯一内容")
@@ -61,13 +59,14 @@ describe("AsymmetricTriptychContent", () => {
     expect(leadRect).not.toBeNull()
     const [x, , w] = leadRect!.getAttribute("data-audit-rect")!.split(",").map(Number)
     expect(x).toBe(96)
-    expect(w).toBe(632)
-    // No content-fed rect starts at the RIGHT column's x (760) — TOP/BOTTOM
-    // got no SvgContent call at all since `rest` is empty.
+    expect(w).toBe(1088)
     expect(root.querySelector('[data-audit-rect^="760,"]')).toBeNull()
+    expect(root.querySelector('line[x1="744"]')).toBeNull()
+    const rightOutlines = outlineFrames(root).filter((el) => Number(el.getAttribute("x")) === 760)
+    expect(rightOutlines).toHaveLength(0)
   })
 
-  it("with >=2 components, the remainder splits across TOP (first half) then BOTTOM (second half)", () => {
+  it("with 3 components, the remainder splits across TOP/BOTTOM and both filled panels stay framed", () => {
     const slide = slideWith([para("主项"), para("次项一"), para("次项二")])
     const markup = render(ir([chapter1, slide]), slide, 1)
     expect(markup).toContain("主项")
@@ -75,9 +74,10 @@ describe("AsymmetricTriptychContent", () => {
     expect(markup).toContain("次项二")
     const root = parseSvgRoot(`<svg xmlns="http://www.w3.org/2000/svg">${markup}</svg>`)
     const rightRects = Array.from(root.querySelectorAll('[data-audit-rect^="760,"]'))
-    // TOP and BOTTOM each got their own SvgContent call (2 distinct
-    // data-audit-rect wrappers at x=760).
     expect(rightRects.length).toBe(2)
+    const rightOutlines = outlineFrames(root).filter((el) => Number(el.getAttribute("x")) === 760)
+    expect(rightOutlines).toHaveLength(2)
+    expect(root.querySelector('line[x1="744"]')).not.toBeNull()
   })
 
   it("arrangement is always hardcoded to the layout's own three-region split — slide.arrangement is never consulted (registry declares [\"single\"])", () => {
@@ -92,13 +92,13 @@ describe("AsymmetricTriptychContent", () => {
   it("panel frames follow shape.radius instead of a baked capsule radius", () => {
     const tokens = resolveStyle("vermilion")
     const ctx = buildCtx(tokens, {})
-    const slide = slideWith([])
+    const slide = slideWith([para("主项"), para("次项一"), para("次项二")])
     const markup = renderSvgMarkup(
       <AsymmetricTriptychContent ir={ir([chapter1, slide])} slide={slide} index={1} ctx={ctx} />,
     )
     const root = parseSvgRoot(`<svg xmlns="http://www.w3.org/2000/svg">${markup}</svg>`)
-    const frames = Array.from(root.querySelectorAll('rect[fill="none"]'))
-    expect(frames.length).toBeGreaterThan(0)
+    const frames = outlineFrames(root)
+    expect(frames.length).toBe(2)
     for (const frame of frames) {
       expect(frame.getAttribute("rx")).toBe(String(tokens.shape?.radius))
     }

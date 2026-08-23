@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest"
+import { renderSlideSvg } from "../../../api"
 import { renderSvgMarkup, parseSvgRoot } from "../../serialize"
 import { assertSubset } from "../../subset-validate"
 import { buildCtx } from "../../full-slide-svg"
@@ -156,5 +157,36 @@ describe("insight sparse faces", () => {
     expect(attr.getAttribute("letter-spacing")).toBeNull()
     expect(markup).not.toContain(BOARD_QUOTE)
     expect(markup).not.toContain(LUXE_GOLD)
+  })
+
+  it("routes cover, content, and sparse pull-quote ticker polylines to mid, not fg", () => {
+    const cases: { label: string; slide: Slide }[] = [
+      { label: "cover", slide: { type: "cover", heading: "43%", components: [] } as Slide },
+      {
+        label: "content",
+        slide: { type: "content", heading: "行情", components: [{ type: "paragraph", text: "一段正文" }] } as Slide,
+      },
+      {
+        label: "pull-quote",
+        slide: {
+          type: "content",
+          layout: "pull-quote",
+          heading: QUOTE,
+          subheading: "陈砚清 · 首席技术官",
+          components: [],
+        } as Slide,
+      },
+    ]
+    for (const { label, slide } of cases) {
+      const doc = ir([slide], { date: "2026-05-01" })
+      const root = parseSvgRoot(renderSlideSvg(doc, 0))
+      const tickers = Array.from(root.querySelectorAll("polyline")).filter(
+        (el) => el.getAttribute("fill") === "none",
+      )
+      expect(tickers.length, label).toBeGreaterThan(0)
+      for (const ticker of tickers) {
+        expect(ticker.closest("[data-depth]")?.getAttribute("data-depth"), label).toBe("mid")
+      }
+    }
   })
 })
