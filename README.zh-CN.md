@@ -1,8 +1,8 @@
-<p align="center"><img src="assets/banner.png" alt="pptwise：PPT 不用等，马上就好" width="100%"></p>
+<p align="center"><img src="assets/banner.png" alt="pptwise：真正的 PPT，不是一张图" width="100%"></p>
 
 <h1 align="center">pptwise</h1>
 
-<p align="center"><b>PPT 不用等，马上就好。</b></p>
+<p align="center"><b>真正的 PPT，不是一张图。</b></p>
 
 <p align="center">🥇 <b>全网第一个 DeepSeek Harness PPT 生成插件</b> 🥇</p>
 
@@ -34,7 +34,7 @@
 
 **⚡ 跟 AI 说一句，PPT 就好了。** 你只管说要讲什么，版面、配色、字号、间距全由引擎排好。同一份内容做十遍是同一份，不用一遍遍重来碰运气。
 
-**✏️ 交出来的是真 PPT，不是一张图。** 每个标题、每条要点、每根柱子都能在 PowerPoint 里点开改字改色。图表和表格里的数字是例外，换数字让 AI 重做一版。24 套现成风格，也能把你公司现有 PPT 里的配色和字体抽出来直接用。
+**✏️ 打开就能接着改。** 每个标题、每条要点、每根柱子都能在 PowerPoint 里点开改字改色。图表和表格里的数字是例外，换数字让 AI 重做一版。24 套现成风格，也能把你公司现有 PPT 里的配色和字体抽出来直接用。
 
 **🔌 装进你正在用的 agent。** 一条命令装进 DeepSeek Harness、Claude Code，或任何读 skill 文件夹的 agent（Codex 等），装完就会用。
 
