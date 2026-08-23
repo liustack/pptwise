@@ -24,6 +24,10 @@ installNodePlatform()
 // Recaptured (audit round-1 group E, 2026-08-23). banner-heading dropped
 // from LAYOUTS (6 -> 5). 63 banner-heading keys removed. Remaining 315
 // hashes stay byte-identical.
+//
+// Recaptured (audit round-2 C/D, 2026-08-24). tech KEEP_NATIVE pages pick
+// up the centered constellation piece and bento card inset. Other keys
+// stay byte-identical.
 const fixture = JSON.parse(
   readFileSync(HEADING_UNASSIGNED_BYTES_URL, "utf-8"),
 ) as { pages: Record<string, string> }
