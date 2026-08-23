@@ -146,10 +146,20 @@ describe("heatmap component", () => {
   describe("x_title/y_title (chart.axes fitting idiom reused)", () => {
     const withTitles = { ...basic, x_title: "Quarter", y_title: "区域" }
 
-    it("renders x_title and y_title as one horizontal pair", () => {
+    it("renders x_title and y_title as one horizontal pair below the grid", () => {
       const { container } = svg(heatmap.render(withTitles, { x: 0, y: 0, w: 900, h: 300 }, ctx))
-      expect(container.querySelector('[data-axis-title="x"]')?.textContent).toBe("Quarter  →")
-      expect(container.querySelector('[data-axis-title="y"]')?.textContent).toBe("区域  ↑")
+      const xTitle = container.querySelector('[data-axis-title="x"]')
+      const yTitle = container.querySelector('[data-axis-title="y"]')
+      expect(xTitle?.textContent).toBe("Quarter  →")
+      expect(yTitle?.textContent).toBe("区域  ↑")
+      expect(yTitle?.getAttribute("y")).toBe(xTitle?.getAttribute("y"))
+      expect(Number(yTitle?.getAttribute("x"))).toBeLessThan(Number(xTitle?.getAttribute("x")))
+      const lastCellBottom = Math.max(
+        ...Array.from(container.querySelectorAll("rect")).map(
+          (r) => Number(r.getAttribute("y")) + Number(r.getAttribute("height")),
+        ),
+      )
+      expect(Number(yTitle?.getAttribute("y"))).toBeGreaterThan(lastCellBottom)
       expect(Array.from(container.querySelectorAll("text")).filter((t) => t.textContent === "区" || t.textContent === "域")).toHaveLength(0)
     })
 
@@ -221,9 +231,10 @@ describe("heatmap component", () => {
       const box = { x: 0, y: 0, w: 900 }
       const measured = heatmap.measure(reported, box.w, ctx)
       const noYTitle = heatmap.measure({ ...reported, y_title: undefined }, box.w, ctx)
-      // The band is a fixed height, so the growth is the band and nothing
-      // else — and it does not depend on how long the title is.
-      expect(measured - noYTitle).toBe(24)
+      const none = heatmap.measure({ ...reported, x_title: undefined, y_title: undefined }, box.w, ctx)
+      // One shared band whether one title or both. Length does not change height.
+      expect(measured).toBe(noYTitle)
+      expect(measured - none).toBe(24)
       expect(heatmap.measure({ ...reported, y_title: "A far longer axis name" }, box.w, ctx)).toBe(
         measured,
       )
@@ -235,12 +246,14 @@ describe("heatmap component", () => {
       const texts = Array.from(root.querySelectorAll("text"))
       const yTitle = texts.find((t) => t.textContent?.includes("Tempo"))!
       const xTitle = texts.find((t) => t.textContent?.includes("Q3 第 1 月"))!
-      // The two captions sit in their own bands, y above x — not sharing one
-      // line and not overlapping.
-      expect(Number(yTitle.getAttribute("y"))).toBeLessThan(Number(xTitle.getAttribute("y")))
-      // The grid's own first cell starts below both.
-      const firstCellY = Number(root.querySelector("rect")!.getAttribute("y"))
-      expect(firstCellY).toBeGreaterThan(Number(xTitle.getAttribute("y")))
+      expect(yTitle.getAttribute("y")).toBe(xTitle.getAttribute("y"))
+      expect(Number(yTitle.getAttribute("x"))).toBeLessThan(Number(xTitle.getAttribute("x")))
+      const lastCellBottom = Math.max(
+        ...Array.from(root.querySelectorAll("rect")).map(
+          (r) => Number(r.getAttribute("y")) + Number(r.getAttribute("height")),
+        ),
+      )
+      expect(Number(xTitle.getAttribute("y"))).toBeGreaterThan(lastCellBottom)
     })
 
     it("fits an egregiously long Latin y_title inside its declared box, truncation-marked", () => {

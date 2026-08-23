@@ -87,6 +87,22 @@ describe("auditL1 planted defects", () => {
     expect(codes(svg)).not.toContain("axis-title-overlap")
   })
 
+  it("flags a tick label whose box intersects a data mark", () => {
+    const svg = wrap(
+      `<text data-axis-tick="x" x="200" y="480" font-size="15" text-anchor="middle">2 周</text>` +
+        `<circle data-plot-mark="1" cx="200" cy="478" r="28" fill="#E0489A"/>`,
+    )
+    expect(codes(svg)).toContain("axis-title-overlap")
+  })
+
+  it("does not flag a tick label sitting clear of the plot marks", () => {
+    const svg = wrap(
+      `<text data-axis-tick="y" x="180" y="280" font-size="15" text-anchor="end">80%</text>` +
+        `<circle data-plot-mark="1" cx="400" cy="300" r="16" fill="#E0489A"/>`,
+    )
+    expect(codes(svg)).not.toContain("axis-title-overlap")
+  })
+
   it("classifies the same SVG identically on a dual run (0 drift)", () => {
     const svg = wrap(
       `<text x="1" y="40" font-size="10">tiny</text>` +

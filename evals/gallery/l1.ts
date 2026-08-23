@@ -364,16 +364,19 @@ function visibleFill(leaf: DepthLeaf): boolean {
 
 function findAxisTitleOverlap(root: Element, findings: L1Finding[]): void {
   const leaves = collectDepthLeaves(root)
-  const titles = leaves.filter((leaf) => leaf.el.hasAttribute("data-axis-title"))
+  const labels = leaves.filter(
+    (leaf) => leaf.el.hasAttribute("data-axis-title") || leaf.el.hasAttribute("data-axis-tick"),
+  )
   const marks = leaves.filter((leaf) => leaf.el.hasAttribute("data-plot-mark"))
-  if (titles.length === 0 || marks.length === 0) return
-  for (const title of titles) {
-    const label = (title.el.textContent ?? "").trim().slice(0, 24)
+  if (labels.length === 0 || marks.length === 0) return
+  for (const labelEl of labels) {
+    const text = (labelEl.el.textContent ?? "").trim().slice(0, 24)
+    const kind = labelEl.el.hasAttribute("data-axis-tick") ? "tick" : "title"
     for (const mark of marks) {
-      if (!boxesIntersect(title.box, mark.box)) continue
+      if (!boxesIntersect(labelEl.box, mark.box)) continue
       findings.push({
         code: "axis-title-overlap",
-        message: `axis title "${label}" intersects a ${mark.tag} data mark`,
+        message: `axis ${kind} "${text}" intersects a ${mark.tag} data mark`,
       })
       break
     }

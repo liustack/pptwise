@@ -2,6 +2,19 @@ import type { ReactElement } from "react"
 import type { ChartSeries, Component } from "@/ir"
 import { accessibleInk } from "../ink"
 import { fitSvgLine, measureTextUnits } from "../../lib/svg-text-layout"
+import { axisTitlePairHeight, renderCartesianAxisTitles } from "./axis-titles"
+import {
+  buildNumericAxis,
+  formatAxisTick,
+  layoutCartesianPlot,
+  mapToPlotX,
+  mapToPlotY,
+  renderCartesianFrame,
+  TICK_FONT_SIZE,
+  TICK_MIN_FONT_SIZE,
+  X_TICK_BAND,
+  type DomainPadMode,
+} from "./cartesian-axis"
 import { buildChartModel, zeroAxisRatio, type ChartDomain } from "./chart-model"
 
 /**
@@ -54,14 +67,17 @@ export type ChartRenderFn = (
    * working, the same way `showGrid` and `component` were added.
    */
   bgHex?: string,
+  /** Stroke for the left+bottom axis lines. Theme `border`, falling back to muted. */
+  axisColor?: string,
+  fontFamily?: string,
 ) => ReactElement
 
 /**
  * Category tick size (px) on cartesian plots (bar / line / area / scatter
  * extent labels). Label-tuning A (2026-08): 11 → 13, still `muted`.
  */
-const CATEGORY_FONT_SIZE = 13
-const CATEGORY_MIN_FONT_SIZE = 8
+const CATEGORY_FONT_SIZE = TICK_FONT_SIZE
+const CATEGORY_MIN_FONT_SIZE = TICK_MIN_FONT_SIZE
 /**
  * Value-label size/weight on bar tops and line endpoints. Label-tuning A:
  * 11px muted → 13px / 600 / `text` (the ctx text token, never a series color).
@@ -80,10 +96,10 @@ const VALUE_LABEL_GAP = 9
  */
 const LABEL_FONT_SIZE = 11
 const DUMBBELL_FROM_FONT_SIZE = 12
-/** Space (px) reserved at the top of `h` for value labels above the plot. */
-const LABEL_TOP_PAD = 14
 /**
- * Space (px) reserved at the bottom of `h` for category labels below the plot.
+ * Space (px) reserved at the bottom of `h` for category labels below the plot
+ * (dumbbell row labels). Cartesian plots own their tick band via
+ * `layoutCartesianPlot`.
  */
 const LABEL_BOTTOM_PAD = 18
 
@@ -132,10 +148,6 @@ function clampChartExtent(px: number): number {
 /** Bar gradient's lower stop keeps this fraction of the accent's original
  * per-channel brightness (0.7 → "70% 亮度变体" per the Task 8 brief). */
 const BAR_GRADIENT_SHADE_FACTOR = 0.7
-/** Count of horizontal reference lines dividing the plot's value range —
- * shared by bar and line, both of which already compute an identical
- * plotTop/plotH plot area. */
-const GRIDLINE_COUNT = 3
 /** Line chart endpoint-emphasis geometry: inner solid dot / outer soft ring. */
 const ENDPOINT_DOT_R = 4
 const ENDPOINT_RING_R = 8
@@ -216,85 +228,6 @@ function scaleHexBrightness(hex: string, factor: number): string {
 }
 
 /**
- * Horizontal reference lines dividing the plot's value range into
- * GRIDLINE_COUNT+1 equal bands (3 lines → quarter/half/three-quarter of the
- * plot height). Skips any candidate that lands on the x-axis baseline — this
- * only actually fires when `plotH` has collapsed to 0 (h too small for the
- * label paddings), in which case every candidate coincides with plotTop and
- * the baseline alike.
- */
-function renderGridlines(
-  x0: number,
-  w: number,
-  plotTop: number,
-  plotH: number,
-  mutedColor: string,
-): ReactElement {
-  const baselineY = plotTop + plotH
-  const ys: number[] = []
-  for (let i = 1; i <= GRIDLINE_COUNT; i++) {
-    const y = plotTop + (plotH * i) / (GRIDLINE_COUNT + 1)
-    if (Math.abs(y - baselineY) > 0.01) ys.push(y)
-  }
-  return (
-    <>
-      {ys.map((y, i) => (
-        <line
-          key={i}
-          data-plot-mark="1"
-          x1={x0}
-          y1={y}
-          x2={x0 + w}
-          y2={y}
-          stroke={mutedColor}
-          strokeOpacity={0.1}
-          strokeWidth={1}
-        />
-      ))}
-    </>
-  )
-}
-
-/**
- * Vertical counterpart of `renderGridlines` — divides the plot *width* into
- * GRIDLINE_COUNT+1 equal bands instead of the height, for `renderBarHorizontal`
- * whose value axis runs left-to-right rather than bottom-to-top. Skips any
- * candidate that lands on `plotX` (the value=0 baseline every bar already
- * starts from) — mirrors `renderGridlines`' own baseline skip, same
- * degenerate-`plotW===0` guard.
- */
-function renderGridlinesVertical(
-  y0: number,
-  h: number,
-  plotX: number,
-  plotW: number,
-  mutedColor: string,
-): ReactElement {
-  const xs: number[] = []
-  for (let i = 1; i <= GRIDLINE_COUNT; i++) {
-    const x = plotX + (plotW * i) / (GRIDLINE_COUNT + 1)
-    if (Math.abs(x - plotX) > 0.01) xs.push(x)
-  }
-  return (
-    <>
-      {xs.map((x, i) => (
-        <line
-          key={i}
-          data-plot-mark="1"
-          x1={x}
-          y1={y0}
-          x2={x}
-          y2={y0 + h}
-          stroke={mutedColor}
-          strokeOpacity={0.1}
-          strokeWidth={1}
-        />
-      ))}
-    </>
-  )
-}
-
-/**
  * Grouped/mixed-sign bar geometry (R1 evidence wave, Task T2 — roadmap
  * §6.1.2/§6.1.3). Shared by `renderBar` (vertical) and `renderBarHorizontal`
  * — both map a value to an *extent* from a fixed zero-baseline anchor within
@@ -362,25 +295,42 @@ function horizontalBarExtent(
   return { barX: barLeftX, barW: clampChartExtent(barRightX - barLeftX) }
 }
 
-/**
- * Line chart's per-point pixel `y` for one value — same `domain.min === 0`
- * byte-compat branch as the bar helpers above (verbatim old formula), else a
- * real zero-anchored linear map via the value's own fraction of
- * `[domain.min, domain.max]` (no separate baseline needed here — unlike bar,
- * a line point has no "extent", just one coordinate).
- */
-function lineValueY(value: number, domain: ChartDomain, plotTop: number, plotH: number): number {
-  if (domain.min === 0) {
-    return plotTop + plotH - clampChartExtent((value / domain.max) * plotH)
-  }
-  const ratio = (value - domain.min) / (domain.max - domain.min)
-  return plotTop + plotH - clampChartExtent(ratio * plotH)
-}
-
 /** Vertical bar's group edge margin (px, was the inline literals `4`/`groupW
  * - 8`) — reused unchanged as the intra-group gap between sibling bars in a
  * grouped (n>=2) category, see `renderBar`'s own group-geometry comment. */
 const BAR_GROUP_EDGE_GAP = 4
+
+function cartesianMeta(component?: ChartInput) {
+  return {
+    xTitle: component?.axes?.x_title,
+    yTitle: component?.axes?.y_title,
+    xUnit: component?.axes?.x_unit,
+    yUnit: component?.axes?.y_unit,
+    titleH: axisTitlePairHeight(component?.axes?.x_title, component?.axes?.y_title),
+  }
+}
+
+function keptValues(series: ReturnType<typeof buildChartModel>["series"]): number[] {
+  const values: number[] = []
+  for (const s of series) {
+    for (const v of s.values) if (v != null) values.push(v)
+  }
+  return values
+}
+
+function valueAxisMode(values: readonly number[]): DomainPadMode {
+  if (values.length === 0) return "fit"
+  const min = Math.min(...values)
+  const max = Math.max(...values)
+  if (min <= 0) return "zero-max"
+  if (min <= Math.max(max - min, 1) * 0.2) return "zero-max"
+  return "fit"
+}
+
+function baselineYFor(domain: { min: number; max: number }, plotY: number, plotH: number): number {
+  if (domain.min <= 0 && domain.max >= 0) return mapToPlotY(0, domain, plotY, plotH)
+  return plotY + plotH
+}
 
 export function renderBar(
   series: ChartSeries[],
@@ -413,31 +363,48 @@ export function renderBar(
    * `axes.show_grid: true`.
    */
   showGrid = false,
+  component?: ChartInput,
+  _bgHex?: string,
+  axisColor?: string,
+  fontFamily?: string,
 ): ReactElement {
-  // R1 evidence wave, Task T2: category union + shared domain replace the
-  // old series[0]-only walk (`points = series[0]?.data`) and the old
-  // all-series-scanned-but-not-all-drawn `max` (`series.flatMap(...)`,
-  // chart-model.ts's own header comment has the full defect writeup). `n<=1`
-  // is the byte-compat path: for a single series, `model.categories` is
-  // exactly that series' own `data` in order and `model.domain.max` is
-  // bit-identical to the old `Math.max(...all, 1)` (chart-model.test.ts's
-  // "single-series identity" suite) — every formula below that branches on
-  // `n<=1`/`domain.min === 0` reduces to the pre-T2 renderer's own
-  // expression, same operation order, for that shape.
   const model = buildChartModel(series)
-  const { categories, domain } = model
+  const { categories } = model
   const n = model.series.length
-  const groupW = w / Math.max(categories.length, 1)
-  const plotTop = y0 + LABEL_TOP_PAD
-  const plotH = Math.max(0, h - LABEL_TOP_PAD - LABEL_BOTTOM_PAD)
-  // One shared gradient per chart instance, only declared when it can
-  // actually be referenced — the single-series max-bar-emphasis look this
-  // gradient serves (see below) is byte-compat-pinned for n<=1 and never
-  // used for a grouped (n>=2) chart, which paints flat palette colors
-  // instead (per-series color must read consistently with that series'
-  // legend swatch, a gradient would obscure that mapping).
+  const meta = cartesianMeta(component)
+  const yAxis = buildNumericAxis(keptValues(model.series), "zero-max", meta.yUnit)
+  const domain: ChartDomain = { min: yAxis.domain.min, max: yAxis.domain.max, degenerate: yAxis.domain.max <= yAxis.domain.min }
+  const geom = layoutCartesianPlot({
+    x0,
+    y0,
+    w,
+    h,
+    yTickLabels: yAxis.labels,
+    titleH: meta.titleH,
+    fontFamily,
+  })
+  const groupW = geom.plotW / Math.max(categories.length, 1)
+  const yTicks = yAxis.ticks.map((t) => ({
+    label: formatAxisTick(t, meta.yUnit),
+    pos: mapToPlotY(t, yAxis.domain, geom.plotY, geom.plotH),
+  }))
+  const xTicks = categories.map((cat, i) => {
+    const category = fitSvgLine(String(cat.x), {
+      maxWidth: Math.max(8, groupW - BAR_GROUP_EDGE_GAP * 2),
+      fontSize: CATEGORY_FONT_SIZE,
+      minFontSize: CATEGORY_MIN_FONT_SIZE,
+      fontFamily,
+    })
+    return {
+      label: category.text,
+      pos: geom.plotX + i * groupW + groupW / 2,
+      truncated: category.truncated,
+      fontSize: category.fontSize,
+    }
+  })
   const gradientId = chartGradientId("chart-bar-grad", w, h, series)
   const gradientShade = scaleHexBrightness(accentColor, BAR_GRADIENT_SHADE_FACTOR)
+  const dataMax = Math.max(...keptValues(model.series), Number.NEGATIVE_INFINITY)
   return (
     <>
       {n <= 1 && (
@@ -448,37 +415,30 @@ export function renderBar(
           </linearGradient>
         </defs>
       )}
-      {showGrid && renderGridlines(x0, w, plotTop, plotH, mutedColor)}
+      {renderCartesianFrame({
+        plotX: geom.plotX,
+        plotY: geom.plotY,
+        plotW: geom.plotW,
+        plotH: geom.plotH,
+        xTicks,
+        yTicks,
+        showHGrid: showGrid,
+        axisColor: axisColor ?? mutedColor,
+        mutedColor,
+        fontFamily,
+      })}
       {categories.map((cat, i) => {
-        // Group geometry: BAR_GROUP_EDGE_GAP is the pre-existing
-        // single-series margin (previously the inline literals `4`/`groupW
-        // - 8`, now named and reused, not reinvented) — the group's usable
-        // inner width reserves that same gap on both outer edges regardless
-        // of how many bars share it. n<=1 keeps `perBarW === usableW`
-        // (one bar fills the whole group, no floor — exactly the old
-        // `barW = groupW - 8`); n>=2 splits `usableW` into n bars with
-        // (n-1) intra-group gaps of that same unit, so grouped bars breathe
-        // at the identical rhythm a single bar always did.
-        const groupX0 = x0 + i * groupW + BAR_GROUP_EDGE_GAP
+        const groupX0 = geom.plotX + i * groupW + BAR_GROUP_EDGE_GAP
         const usableW = groupW - BAR_GROUP_EDGE_GAP * 2
         const perBarW = n <= 1 ? usableW : Math.max(1, (usableW - (n - 1) * BAR_GROUP_EDGE_GAP) / n)
-        const category = fitSvgLine(String(cat.x), {
-          maxWidth: usableW,
-          fontSize: CATEGORY_FONT_SIZE,
-          minFontSize: CATEGORY_MIN_FONT_SIZE,
-        })
         const barElements: ReactElement[] = []
         for (const s of model.series) {
           const value = s.values[i]
-          if (value == null) continue // bar gap — this series has no data for this category
+          if (value == null) continue
           const barX = groupX0 + s.seriesIndex * (perBarW + BAR_GROUP_EDGE_GAP)
           const isSingle = n <= 1
-          const isMax = isSingle && value === domain.max
-          const { barY, barH } = verticalBarExtent(value, domain, plotTop, plotH)
-          // `LegendEntry.colorIndex` is always `=== seriesIndex` (pre-modulo
-          // — chart-model.ts's own doc comment on that field), so this reads
-          // `s.seriesIndex` directly rather than round-tripping through
-          // `model.legend`.
+          const isMax = isSingle && value === dataMax
+          const { barY, barH } = verticalBarExtent(value, domain, geom.plotY, geom.plotH)
           const fill = isSingle
             ? isMax
               ? accentColor
@@ -509,22 +469,16 @@ export function renderBar(
             </text>,
           )
         }
-        return (
-          <g key={cat.key}>
-            {barElements}
-            <text
-              data-truncated={category.truncated ? "1" : undefined}
-              x={groupX0 + usableW / 2}
-              y={y0 + h - 4}
-              textAnchor="middle"
-              fontSize={category.fontSize}
-              fill={mutedColor}
-              dominantBaseline="alphabetic"
-            >
-              {category.text}
-            </text>
-          </g>
-        )
+        return <g key={cat.key}>{barElements}</g>
+      })}
+      {renderCartesianAxisTitles({
+        plotX: geom.plotX,
+        plotBottom: geom.titleY,
+        plotW: geom.plotW,
+        xTitle: meta.xTitle,
+        yTitle: meta.yTitle,
+        fill: mutedColor,
+        fontFamily: fontFamily ?? "",
       })}
     </>
   )
@@ -546,44 +500,77 @@ export function renderLine(
    * so every interior value is read off its height alone: the reference
    * lines here are the reading aid, not duplicate ink. */
   showGrid = true,
+  component?: ChartInput,
+  _bgHex?: string,
+  axisColor?: string,
+  fontFamily?: string,
 ): ReactElement {
-  // R1 evidence wave, Task T2: every series now aligns to one shared
-  // category union and one shared value domain (chart-model.ts) instead of
-  // each series computing its own independent per-series max AND its own
-  // independent per-series x-spacing (the old `i / Math.max(s.data.length -
-  // 1, 1)` denominator used *that series'* own point count — two series of
-  // different lengths landed their points at different pixel x's even
-  // though `chart.tsx` drew one shared category axis under them). `n<=1` is
-  // the byte-compat path — see `lineValueY`'s own doc comment for the exact
-  // bit-identity derivation.
   const model = buildChartModel(series)
-  const { categories, domain } = model
+  const { categories } = model
   const n = model.series.length
   const showEndpointValues = n <= LINE_ENDPOINT_LABEL_MAX_SERIES
-  const plotTop = y0 + LABEL_TOP_PAD
-  const plotH = Math.max(0, h - LABEL_TOP_PAD - LABEL_BOTTOM_PAD)
-  // `zeroAxisRatio(domain)` is exactly `0` whenever `domain.min === 0`
-  // (n<=1's byte-compat shape), so `baselineY` reduces to the old hardcoded
-  // `plotTop + plotH` bit-identically there, while still locating the real
-  // zero-value row for a mixed-sign single series (never byte-protected —
-  // Global Constraint 1 — but still worth anchoring correctly since the
-  // tool is already in hand).
-  const baselineY = plotTop + plotH - zeroAxisRatio(domain) * plotH
-  const categoryMaxWidth = w / Math.max(categories.length - 1, 1)
-  const xForIndex = (i: number) => x0 + (i / Math.max(categories.length - 1, 1)) * w
+  const meta = cartesianMeta(component)
+  const values = keptValues(model.series)
+  const yAxis = buildNumericAxis(values, valueAxisMode(values), meta.yUnit)
+  const geom = layoutCartesianPlot({
+    x0,
+    y0,
+    w,
+    h,
+    yTickLabels: yAxis.labels,
+    titleH: meta.titleH,
+    fontFamily,
+  })
+  const baselineY = baselineYFor(yAxis.domain, geom.plotY, geom.plotH)
+  const categoryMaxWidth = geom.plotW / Math.max(categories.length - 1, 1)
+  const xForIndex = (i: number) =>
+    geom.plotX + (i / Math.max(categories.length - 1, 1)) * geom.plotW
+  const yTicks = yAxis.ticks.map((t) => ({
+    label: formatAxisTick(t, meta.yUnit),
+    pos: mapToPlotY(t, yAxis.domain, geom.plotY, geom.plotH),
+  }))
+  const xTicks = categories.map((cat, i) => {
+    const category = fitSvgLine(String(cat.x), {
+      maxWidth: categoryMaxWidth,
+      fontSize: CATEGORY_FONT_SIZE,
+      minFontSize: CATEGORY_MIN_FONT_SIZE,
+      fontFamily,
+    })
+    return {
+      label: category.text,
+      pos: xForIndex(i),
+      truncated: category.truncated,
+      fontSize: category.fontSize,
+      anchor: edgeAnchor(i, categories.length),
+    }
+  })
 
   return (
     <>
-      {showGrid && renderGridlines(x0, w, plotTop, plotH, mutedColor)}
+      {renderCartesianFrame({
+        plotX: geom.plotX,
+        plotY: geom.plotY,
+        plotW: geom.plotW,
+        plotH: geom.plotH,
+        xTicks,
+        yTicks,
+        showHGrid: showGrid,
+        axisColor: axisColor ?? mutedColor,
+        mutedColor,
+        fontFamily,
+      })}
       {model.series.map((s) => {
         const sIdx = s.seriesIndex
         type Resolved = { i: number; x: number; y: number; value: number }
-        // One slot per category, `null` for a gap — a single O(n) pass, not
-        // a per-index re-scan of a filtered array.
         const pointAt: (Resolved | null)[] = categories.map((_cat, i) => {
           const value = s.values[i]
           if (value == null) return null
-          return { i, x: xForIndex(i), y: lineValueY(value, domain, plotTop, plotH), value }
+          return {
+            i,
+            x: xForIndex(i),
+            y: mapToPlotY(value, yAxis.domain, geom.plotY, geom.plotH),
+            value,
+          }
         })
         // "Line break" for a missing category (roadmap's model-driven rule):
         // split into contiguous runs at each gap, one <polyline> per run.
@@ -644,31 +631,6 @@ export function renderLine(
                 strokeWidth={2}
               />
             ))}
-            {/* Category labels sit under the x-axis once, off the shared
-                category union — repeating them per series would stack
-                duplicate labels on the shared x-axis. */}
-            {sIdx === 0 &&
-              categories.map((cat, i) => {
-                const category = fitSvgLine(String(cat.x), {
-                  maxWidth: categoryMaxWidth,
-                  fontSize: CATEGORY_FONT_SIZE,
-                  minFontSize: CATEGORY_MIN_FONT_SIZE,
-                })
-                return (
-                  <text
-                    key={`cat-${cat.key}`}
-                    data-truncated={category.truncated ? "1" : undefined}
-                    x={xForIndex(i)}
-                    y={y0 + h - 4}
-                    textAnchor={edgeAnchor(i, categories.length)}
-                    fontSize={category.fontSize}
-                    fill={mutedColor}
-                    dominantBaseline="alphabetic"
-                  >
-                    {category.text}
-                  </text>
-                )
-              })}
             {/* Value labels only at each series' endpoints — every point would
                 clutter a many-point line, unlike bar's one-label-per-bar.
                 "Endpoints" now means the first/last *non-null* point (a
@@ -723,6 +685,15 @@ export function renderLine(
             )}
           </g>
         )
+      })}
+      {renderCartesianAxisTitles({
+        plotX: geom.plotX,
+        plotBottom: geom.titleY,
+        plotW: geom.plotW,
+        xTitle: meta.xTitle,
+        yTitle: meta.yTitle,
+        fill: mutedColor,
+        fontFamily: fontFamily ?? "",
       })}
     </>
   )
@@ -1112,23 +1083,46 @@ export function renderBarHorizontal(
    * ruler adds nothing. Only an explicit `axes.show_grid: true` draws them.
    */
   showGrid = false,
-  _component?: ChartInput,
+  component?: ChartInput,
   _bgHex?: string,
+  axisColor?: string,
+  fontFamily?: string,
 ): ReactElement {
-  // R1 evidence wave, Task T2 — same category-union/shared-domain wiring as
-  // `renderBar`, mirrored onto the perpendicular axis (rows instead of
-  // columns, `horizontalBarExtent` instead of `verticalBarExtent`). This
-  // component previously read only `series[0]?.data`, same defect class as
-  // the old `renderBar` (chart-model.ts's own header comment).
   const model = buildChartModel(series)
-  const { categories, domain } = model
+  const { categories } = model
   if (categories.length === 0) return <></>
   const n = model.series.length
-  const rowH = h / categories.length
+  const meta = cartesianMeta(component)
+  const values = keptValues(model.series)
+  const xAxis = buildNumericAxis(values, "zero-max", meta.xUnit ?? meta.yUnit)
+  const domain: ChartDomain = { min: xAxis.domain.min, max: xAxis.domain.max, degenerate: false }
+  const dataMax = Math.max(...values, Number.NEGATIVE_INFINITY)
   const plotX = x0 + BAR_H_LABEL_W + 12
   const plotW = Math.max(1, w - BAR_H_LABEL_W - 12 - 64)
+  const plotY = y0 + 4
+  const plotH = Math.max(1, h - meta.titleH - X_TICK_BAND - 4)
+  const rowH = plotH / categories.length
   const gradientId = chartGradientId("chart-barh-grad", w, h, series)
   const gradientShade = scaleHexBrightness(accentColor, BAR_GRADIENT_SHADE_FACTOR)
+  const xTicks = xAxis.ticks.map((t, i) => ({
+    label: formatAxisTick(t, meta.xUnit ?? meta.yUnit),
+    pos: mapToPlotX(t, xAxis.domain, plotX, plotW),
+    anchor: edgeAnchor(i, xAxis.ticks.length),
+  }))
+  const yTicks = categories.map((cat, i) => {
+    const label = fitSvgLine(String(cat.x), {
+      maxWidth: BAR_H_LABEL_W - BAR_H_LABEL_FIT_MARGIN,
+      fontSize: TICK_FONT_SIZE,
+      minFontSize: TICK_MIN_FONT_SIZE,
+      fontFamily,
+    })
+    return {
+      label: label.text,
+      pos: plotY + i * rowH + rowH / 2,
+      truncated: label.truncated,
+      fontSize: label.fontSize,
+    }
+  })
   return (
     <>
       {n <= 1 && (
@@ -1139,36 +1133,38 @@ export function renderBarHorizontal(
           </linearGradient>
         </defs>
       )}
-      {showGrid && renderGridlinesVertical(y0, h, plotX, plotW, mutedColor)}
+      {renderCartesianFrame({
+        plotX,
+        plotY,
+        plotW,
+        plotH,
+        xTicks,
+        yTicks,
+        showHGrid: showGrid,
+        showVGrid: false,
+        axisColor: axisColor ?? mutedColor,
+        mutedColor,
+        fontFamily,
+      })}
       {categories.map((cat, i) => {
         // Row geometry, mirrors renderBar's group geometry comment: n<=1
         // keeps the old unconditional `Math.max(4, rowH - 10)` floor
         // (`perBarH === Math.max(BAR_H_MIN_THICKNESS, usableH)`, same
         // expression, byte-identical); n>=2 splits the row into n sub-rows
         // with (n-1) intra-group gaps of the same BAR_H_ROW_EDGE_GAP unit.
-        const rowY0 = y0 + i * rowH + BAR_H_ROW_EDGE_GAP
+        const rowY0 = plotY + i * rowH + BAR_H_ROW_EDGE_GAP
         const usableH = rowH - BAR_H_ROW_EDGE_GAP * 2
         const perBarH =
           n <= 1
             ? Math.max(BAR_H_MIN_THICKNESS, usableH)
             : Math.max(BAR_H_MIN_THICKNESS, (usableH - (n - 1) * BAR_H_ROW_EDGE_GAP) / n)
-        // Category (row) label centers on the whole group, n==1 or n>=2
-        // alike — for n<=1 this is algebraically (and bit-for-bit, same
-        // expression) the single bar's own center, matching the old shared
-        // `barY + barH / 2 + 4` both the row label and value label read.
-        const labelCenterY = n <= 1 ? rowY0 + perBarH / 2 + 4 : rowY0 + usableH / 2 + 4
-        const label = fitSvgLine(String(cat.x), {
-          maxWidth: BAR_H_LABEL_W - BAR_H_LABEL_FIT_MARGIN,
-          fontSize: 13,
-          minFontSize: 10,
-        })
         const barElements: ReactElement[] = []
         for (const s of model.series) {
           const value = s.values[i]
-          if (value == null) continue // bar gap — this series has no data for this category
+          if (value == null) continue
           const barY = rowY0 + s.seriesIndex * (perBarH + BAR_H_ROW_EDGE_GAP)
           const isSingle = n <= 1
-          const isMax = isSingle && value === domain.max
+          const isMax = isSingle && value === dataMax
           const { barX, barW } = horizontalBarExtent(value, domain, plotX, plotW)
           const fill = isSingle
             ? isMax
@@ -1199,23 +1195,16 @@ export function renderBarHorizontal(
             </text>,
           )
         }
-        return (
-          <g key={cat.key}>
-            <text
-              data-truncated={label.truncated ? "1" : undefined}
-              x={x0 + BAR_H_LABEL_W}
-              y={labelCenterY}
-              textAnchor="end"
-              fontSize={label.fontSize}
-              fontWeight="600"
-              fill={textColor}
-              dominantBaseline="alphabetic"
-            >
-              {label.text}
-            </text>
-            {barElements}
-          </g>
-        )
+        return <g key={cat.key}>{barElements}</g>
+      })}
+      {renderCartesianAxisTitles({
+        plotX,
+        plotBottom: plotY + plotH + X_TICK_BAND,
+        plotW,
+        xTitle: meta.xTitle,
+        yTitle: meta.yTitle,
+        fill: mutedColor,
+        fontFamily: fontFamily ?? "",
       })}
     </>
   )
@@ -1322,23 +1311,13 @@ export function renderDonut(
 }
 
 /**
- * scatter 散点/气泡图（chart-depth wave）：数值 x/y 点集。x 与 y 都按各自数据范围
- * 适配（fit-to-data），不走 bar/line 的共享零锚定域。散点图读的是点相互之间的
- * 位置，全正的窄高数据带必须铺满绘图区，而非挤在无关的零基线之上。y 仍走
- * lineValueY（复用 line 的线性 value→pixel 路径），只是传入本函数按 [yMin,yMax]
- * 两侧各留 SCATTER_Y_PAD_FRAC 边距的拟合域，让极值点的气泡不贴边、不裁切。x 是
- * 真实数值坐标，走自己的内联 min/max 域（同 renderDumbbell 的 vx() 先例，不引入
- * 新轴系统）。x 或 y 任一为退化跨度（单点或全等值）时居中到绘图区中点。点可选
- * size：有则半径按面积（sqrt）缩放为气泡，无则统一小圆点。多 series 按调色板着
- * 色，图例由 chart.tsx 提供。
+ * scatter 散点/气泡图：数值 x/y 点集。两个轴都走拟合域（不强制含 0），
+ * 刻度在绘图区外，轴线相交于原点。点可选 size：有则半径按面积（sqrt）缩放
+ * 为气泡，无则统一小圆点。
  */
 const SCATTER_DOT_R = 5
 const SCATTER_MIN_BUBBLE_R = 6
 const SCATTER_MAX_BUBBLE_R = 26
-/** Fraction of the y data span padded onto each side of the scatter's fitted
- * y-domain, so points at the data extremes sit just inside the plot rather
- * than flush against its top/bottom edge (and their bubbles don't clip). */
-const SCATTER_Y_PAD_FRAC = 0.06
 
 export function renderScatter(
   series: ChartSeries[],
@@ -1351,53 +1330,60 @@ export function renderScatter(
   _textColor: string,
   _accentColor: string,
   /** `axes.show_grid` wiring — default **on**, for the same reason
-   * `renderLine` keeps it: a scatter prints no per-point value at all (only
-   * the two x-extent labels below), so the reference lines are the only way
-   * to read a point's height. See `renderBar`'s own `showGrid` doc comment
-   * for why the bar family goes the other way. */
+   * `renderLine` keeps it: a scatter prints no per-point value at all, so
+   * the reference lines are the only way to read a point's height. */
   showGrid = true,
-  _component?: ChartInput,
+  component?: ChartInput,
+  _bgHex?: string,
+  axisColor?: string,
+  fontFamily?: string,
 ): ReactElement {
-  const plotTop = y0 + LABEL_TOP_PAD
-  const plotH = Math.max(0, h - LABEL_TOP_PAD - LABEL_BOTTOM_PAD)
+  const meta = cartesianMeta(component)
   const numX = (x: string | number): number => (typeof x === "number" ? x : Number(x))
   const xsAll = series.flatMap((s) => s.data.map((d) => numX(d.x)))
-  const xMin = xsAll.length ? Math.min(...xsAll) : 0
-  const xMax = xsAll.length ? Math.max(...xsAll) : 1
-  const xSpan = xMax - xMin
-  // A real x-span maps full-bleed (xMin→x0, xMax→x0+w) so the two extent
-  // labels sit exactly under the leftmost/rightmost points. A degenerate span
-  // (single point, or every point sharing one x) maps to the horizontal
-  // midpoint instead of pinning to the left edge — the same centering policy
-  // the y-domain applies to a degenerate y-span just below.
-  const xForVal = xSpan > 0 ? (v: number) => x0 + ((v - xMin) / xSpan) * w : (_v: number) => x0 + w / 2
-  // scatter fits y to the data's OWN [yMin, yMax] (padded), NOT the shared
-  // zero-anchored domain bar/line use: a scatter reads point positions
-  // relative to one another, so a narrow high band must fill the plot rather
-  // than cram against the ceiling above an irrelevant zero baseline. Padding
-  // (SCATTER_Y_PAD_FRAC of span each side) keeps extreme-value bubbles off the
-  // plot edges; a degenerate span (all-equal y) pads symmetrically around the
-  // value so the point lands at the vertical midpoint. Mapped through
-  // lineValueY — the same linear value→pixel path line uses — just with this
-  // fitted domain, so no new axis machinery is introduced.
   const ysAll = series.flatMap((s) => s.data.map((d) => d.y))
-  const yMin = ysAll.length ? Math.min(...ysAll) : 0
-  const yMax = ysAll.length ? Math.max(...ysAll) : 1
-  const ySpan = yMax - yMin
-  const yPad = ySpan > 0 ? ySpan * SCATTER_Y_PAD_FRAC : Math.abs(yMax) || 1
-  const yDomain: ChartDomain = { min: yMin - yPad, max: yMax + yPad, degenerate: false }
+  const xAxis = buildNumericAxis(xsAll, "fit", meta.xUnit)
+  const yAxis = buildNumericAxis(ysAll, "fit", meta.yUnit)
+  const geom = layoutCartesianPlot({
+    x0,
+    y0,
+    w,
+    h,
+    yTickLabels: yAxis.labels,
+    titleH: meta.titleH,
+    fontFamily,
+  })
+  const xForVal = (v: number) => mapToPlotX(v, xAxis.domain, geom.plotX, geom.plotW)
   const sizes = series.flatMap((s) => s.data.map((d) => d.size)).filter((s): s is number => s != null)
   const sizeMax = sizes.length ? Math.max(...sizes) : 0
   const radiusFor = (size: number | undefined): number => {
     if (size == null || sizeMax <= 0) return SCATTER_DOT_R
-    // sqrt so bubble AREA (not radius) tracks the value — the
-    // proportional-symbol convention where a 4x value reads as 4x ink.
     const t = Math.sqrt(Math.max(0, size) / sizeMax)
     return SCATTER_MIN_BUBBLE_R + t * (SCATTER_MAX_BUBBLE_R - SCATTER_MIN_BUBBLE_R)
   }
+  const yTicks = yAxis.ticks.map((t) => ({
+    label: formatAxisTick(t, meta.yUnit),
+    pos: mapToPlotY(t, yAxis.domain, geom.plotY, geom.plotH),
+  }))
+  const xTicks = xAxis.ticks.map((t, i) => ({
+    label: formatAxisTick(t, meta.xUnit),
+    pos: xForVal(t),
+    anchor: edgeAnchor(i, xAxis.ticks.length),
+  }))
   return (
     <>
-      {showGrid && renderGridlines(x0, w, plotTop, plotH, mutedColor)}
+      {renderCartesianFrame({
+        plotX: geom.plotX,
+        plotY: geom.plotY,
+        plotW: geom.plotW,
+        plotH: geom.plotH,
+        xTicks,
+        yTicks,
+        showHGrid: showGrid,
+        axisColor: axisColor ?? mutedColor,
+        mutedColor,
+        fontFamily,
+      })}
       {series.map((s, sIdx) => (
         <g key={sIdx}>
           {s.data.map((d, di) => {
@@ -1407,7 +1393,7 @@ export function renderScatter(
                 key={di}
                 data-plot-mark="1"
                 cx={xForVal(numX(d.x))}
-                cy={lineValueY(d.y, yDomain, plotTop, plotH)}
+                cy={mapToPlotY(d.y, yAxis.domain, geom.plotY, geom.plotH)}
                 r={radiusFor(d.size)}
                 fill={color}
                 fillOpacity={0.6}
@@ -1418,22 +1404,15 @@ export function renderScatter(
           })}
         </g>
       ))}
-      {/* x-axis extent labels only — the two real endpoints of the numeric x
-          domain, anchored to grow inward (edgeAnchor convention line's own
-          category labels use). No tick machinery: this reuses line's plot
-          surface, it does not invent a second axis system. */}
-      {xsAll.length > 0 && (
-        <>
-          <text x={x0} y={y0 + h - 4} textAnchor="start" fontSize={CATEGORY_FONT_SIZE} fill={mutedColor} dominantBaseline="alphabetic">
-            {String(xMin)}
-          </text>
-          {xMax !== xMin && (
-            <text x={x0 + w} y={y0 + h - 4} textAnchor="end" fontSize={CATEGORY_FONT_SIZE} fill={mutedColor} dominantBaseline="alphabetic">
-              {String(xMax)}
-            </text>
-          )}
-        </>
-      )}
+      {renderCartesianAxisTitles({
+        plotX: geom.plotX,
+        plotBottom: geom.titleY,
+        plotW: geom.plotW,
+        xTitle: meta.xTitle,
+        yTitle: meta.yTitle,
+        fill: mutedColor,
+        fontFamily: fontFamily ?? "",
+      })}
     </>
   )
 }
@@ -1456,24 +1435,64 @@ export function renderArea(
   mutedColor: string,
   _textColor: string,
   _accentColor: string,
-  /** `axes.show_grid` wiring — default **on**, same reason as `renderLine`
-   * (whose plot surface this reuses): an area chart prints no value labels
-   * at all, so the reference lines carry the whole reading job. See
-   * `renderBar`'s own `showGrid` doc comment for the bar family's opposite
-   * default. */
+  /** `axes.show_grid` wiring — default **on**, same reason as `renderLine`. */
   showGrid = true,
-  _component?: ChartInput,
+  component?: ChartInput,
+  _bgHex?: string,
+  axisColor?: string,
+  fontFamily?: string,
 ): ReactElement {
   const model = buildChartModel(series)
-  const { categories, domain } = model
-  const plotTop = y0 + LABEL_TOP_PAD
-  const plotH = Math.max(0, h - LABEL_TOP_PAD - LABEL_BOTTOM_PAD)
-  const baselineY = plotTop + plotH - zeroAxisRatio(domain) * plotH
-  const categoryMaxWidth = w / Math.max(categories.length - 1, 1)
-  const xForIndex = (i: number) => x0 + (i / Math.max(categories.length - 1, 1)) * w
+  const { categories } = model
+  const meta = cartesianMeta(component)
+  const values = keptValues(model.series)
+  const yAxis = buildNumericAxis(values, valueAxisMode(values), meta.yUnit)
+  const geom = layoutCartesianPlot({
+    x0,
+    y0,
+    w,
+    h,
+    yTickLabels: yAxis.labels,
+    titleH: meta.titleH,
+    fontFamily,
+  })
+  const baselineY = baselineYFor(yAxis.domain, geom.plotY, geom.plotH)
+  const categoryMaxWidth = geom.plotW / Math.max(categories.length - 1, 1)
+  const xForIndex = (i: number) =>
+    geom.plotX + (i / Math.max(categories.length - 1, 1)) * geom.plotW
+  const yTicks = yAxis.ticks.map((t) => ({
+    label: formatAxisTick(t, meta.yUnit),
+    pos: mapToPlotY(t, yAxis.domain, geom.plotY, geom.plotH),
+  }))
+  const xTicks = categories.map((cat, i) => {
+    const category = fitSvgLine(String(cat.x), {
+      maxWidth: categoryMaxWidth,
+      fontSize: CATEGORY_FONT_SIZE,
+      minFontSize: CATEGORY_MIN_FONT_SIZE,
+      fontFamily,
+    })
+    return {
+      label: category.text,
+      pos: xForIndex(i),
+      truncated: category.truncated,
+      fontSize: category.fontSize,
+      anchor: edgeAnchor(i, categories.length),
+    }
+  })
   return (
     <>
-      {showGrid && renderGridlines(x0, w, plotTop, plotH, mutedColor)}
+      {renderCartesianFrame({
+        plotX: geom.plotX,
+        plotY: geom.plotY,
+        plotW: geom.plotW,
+        plotH: geom.plotH,
+        xTicks,
+        yTicks,
+        showHGrid: showGrid,
+        axisColor: axisColor ?? mutedColor,
+        mutedColor,
+        fontFamily,
+      })}
       {model.series.map((s) => {
         const sIdx = s.seriesIndex
         const color = palette[sIdx % palette.length]
@@ -1481,10 +1500,8 @@ export function renderArea(
         const pointAt: (Pt | null)[] = categories.map((_c, i) => {
           const value = s.values[i]
           if (value == null) return null
-          return { x: xForIndex(i), y: lineValueY(value, domain, plotTop, plotH) }
+          return { x: xForIndex(i), y: mapToPlotY(value, yAxis.domain, geom.plotY, geom.plotH) }
         })
-        // Contiguous runs split at each gap — one filled polygon + one stroke
-        // per run, exactly renderLine's own missing-category rule.
         const runs: Pt[][] = []
         let cur: Pt[] = []
         for (const p of pointAt) {
@@ -1517,30 +1534,17 @@ export function renderArea(
                 strokeWidth={2}
               />
             ))}
-            {sIdx === 0 &&
-              categories.map((cat, i) => {
-                const category = fitSvgLine(String(cat.x), {
-                  maxWidth: categoryMaxWidth,
-                  fontSize: CATEGORY_FONT_SIZE,
-                  minFontSize: CATEGORY_MIN_FONT_SIZE,
-                })
-                return (
-                  <text
-                    key={`cat-${cat.key}`}
-                    data-truncated={category.truncated ? "1" : undefined}
-                    x={xForIndex(i)}
-                    y={y0 + h - 4}
-                    textAnchor={edgeAnchor(i, categories.length)}
-                    fontSize={category.fontSize}
-                    fill={mutedColor}
-                    dominantBaseline="alphabetic"
-                  >
-                    {category.text}
-                  </text>
-                )
-              })}
           </g>
         )
+      })}
+      {renderCartesianAxisTitles({
+        plotX: geom.plotX,
+        plotBottom: geom.titleY,
+        plotW: geom.plotW,
+        xTitle: meta.xTitle,
+        yTitle: meta.yTitle,
+        fill: mutedColor,
+        fontFamily: fontFamily ?? "",
       })}
     </>
   )

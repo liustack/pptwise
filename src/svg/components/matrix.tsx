@@ -88,10 +88,11 @@ export const matrix: SvgComponent<MatrixComponent> = {
   },
   render(component, box, ctx) {
     const { cols, rows, cardW, cardH, gridH, titleH } = gridGeom(component, box.w)
-    const gridTop = box.y + titleH
-    // 按 box.h 把每行卡等分拉伸（内容顶对齐），铺满可用高。Two different
-    // "total height" semantics meet here, and the title pair must come off
-    // exactly once — off whichever one of them actually includes it:
+    const gridTop = box.y
+    // 按 box.h 把每行卡等分拉伸（内容顶对齐），铺满可用高。The title pair
+    // now sits *below* the grid. Two height semantics meet here, and the
+    // pair must come off exactly once — off whichever one actually includes
+    // it:
     //  - `box.h`, when a caller sets it (layout.ts's last-resort "keep the
     //    first overflowing component" branch is the one real production
     //    source: `avail = rect bottom - box.y`), is the TOTAL remaining
@@ -100,18 +101,11 @@ export const matrix: SvgComponent<MatrixComponent> = {
     //  - The fallback is grid-only, so it already lines up with `gridTop`.
     const availGridH = box.h !== undefined ? box.h - titleH : gridH
     const rowH = Math.max(cardH, (availGridH - (rows - 1) * CARD_GAP) / rows)
+    const actualGridH = rows * rowH + (rows - 1) * CARD_GAP
+    const titleY = gridTop + actualGridH
     const r = ctx.shape?.radius ?? CARD_RADIUS
     return (
       <g>
-        {renderAxisTitlePair({
-          x: box.x,
-          y: box.y,
-          width: box.w,
-          xTitle: component.x_title,
-          yTitle: component.y_title,
-          fill: ctx.colors.muted,
-          fontFamily: ctx.fonts.body,
-        })}
         {component.items.map((item, i) => {
           const col = i % cols
           const row = Math.floor(i / cols)
@@ -160,6 +154,15 @@ export const matrix: SvgComponent<MatrixComponent> = {
               ) : null}
             </g>
           )
+        })}
+        {renderAxisTitlePair({
+          x: box.x,
+          y: titleY,
+          width: box.w,
+          xTitle: component.x_title,
+          yTitle: component.y_title,
+          fill: ctx.colors.muted,
+          fontFamily: ctx.fonts.body,
         })}
       </g>
     )

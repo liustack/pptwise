@@ -107,8 +107,20 @@ const AXES_APPLICABLE_CHART_TYPES: ReadonlySet<string> = new Set(["bar", "line",
 /** True when `axes` carries at least one real setting — `axes: {}` (every
  * sub-field omitted, schema-legal since all three are optional) has nothing
  * for a non-applicable chart_type to actually ignore, so it shouldn't warn. */
-function hasAnyAxesSetting(axes: { x_title?: string; y_title?: string; show_grid?: boolean }): boolean {
-  return axes.x_title !== undefined || axes.y_title !== undefined || axes.show_grid !== undefined
+function hasAnyAxesSetting(axes: {
+  x_title?: string
+  y_title?: string
+  x_unit?: string
+  y_unit?: string
+  show_grid?: boolean
+}): boolean {
+  return (
+    axes.x_title !== undefined ||
+    axes.y_title !== undefined ||
+    axes.x_unit !== undefined ||
+    axes.y_unit !== undefined ||
+    axes.show_grid !== undefined
+  )
 }
 
 /**

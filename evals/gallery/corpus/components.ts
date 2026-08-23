@@ -75,7 +75,7 @@ export const COMPONENT_BUILDERS: Record<string, (lex: Lexicon) => Component> = {
   chart: (lex) => ({
     type: "chart",
     chart_type: "bar",
-    axes: { x_title: lex.periodAxis, y_title: lex.metrics[0]!.label },
+    axes: { x_title: lex.periodAxis, y_title: lex.metrics[0]!.label, y_unit: lex.metrics[0]!.unit },
     series: [
       { name: lex.labels[8]!, data: slice(lex.periods, 4).map((p, i) => ({ x: p, y: 42 + i * 11 })) },
       { name: lex.labels[9]!, data: slice(lex.periods, 4).map((p, i) => ({ x: p, y: 30 + i * 6 })) },
@@ -380,13 +380,14 @@ export const CHART_VARIANTS: Record<string, (lex: Lexicon) => Component> = {
     type: "chart",
     chart_type: "bar",
     direction: "horizontal",
-    series: [{ name: lex.metrics[0]!.label, data: slice(lex.phrases, 5).map((x, i) => ({ x, y: 92 - i * 13 })) }],
+    axes: { x_title: lex.metrics[0]!.label, y_title: lex.segmentAxis, x_unit: lex.metrics[0]!.unit },
+    series: [{ name: lex.labels[8]!, data: slice(lex.phrases, 5).map((x, i) => ({ x, y: 92 - i * 13 })) }],
   }),
 
   "chart · line": (lex) => ({
     type: "chart",
     chart_type: "line",
-    axes: { x_title: lex.periodAxis, y_title: lex.metrics[2]!.label, show_grid: true },
+    axes: { x_title: lex.periodAxis, y_title: lex.metrics[2]!.label, y_unit: lex.metrics[2]!.unit, show_grid: true },
     series: [
       { name: lex.labels[8]!, data: slice(lex.periods, 5).map((x, i) => ({ x, y: 58 + i * 8 })) },
       { name: lex.labels[9]!, data: slice(lex.periods, 5).map((x, i) => ({ x, y: 71 + i * 4 })) },
@@ -396,7 +397,7 @@ export const CHART_VARIANTS: Record<string, (lex: Lexicon) => Component> = {
   "chart · area": (lex) => ({
     type: "chart",
     chart_type: "area",
-    axes: { x_title: lex.periodAxis, y_title: lex.metrics[0]!.label, show_grid: true },
+    axes: { x_title: lex.periodAxis, y_title: lex.metrics[0]!.label, y_unit: lex.metrics[0]!.unit, show_grid: true },
     series: [{ name: lex.labels[8]!, data: slice(lex.periods, 5).map((x, i) => ({ x, y: 30 + i * i * 4 })) }],
   }),
 
@@ -431,7 +432,13 @@ export const CHART_VARIANTS: Record<string, (lex: Lexicon) => Component> = {
   "chart · scatter": (lex) => ({
     type: "chart",
     chart_type: "scatter",
-    axes: { x_title: lex.metrics[3]!.label, y_title: lex.metrics[2]!.label, show_grid: true },
+    axes: {
+      x_title: lex.metrics[3]!.label,
+      y_title: lex.metrics[2]!.label,
+      x_unit: lex.metrics[3]!.unit,
+      y_unit: lex.metrics[2]!.unit,
+      show_grid: true,
+    },
     series: [
       {
         name: lex.labels[8]!,
@@ -519,7 +526,7 @@ export const DENSITY_BUILDERS: Record<string, (lex: Lexicon) => Component> = {
   chart: (lex) => ({
     type: "chart",
     chart_type: "line",
-    axes: { x_title: lex.periodAxis, y_title: lex.metrics[2]!.label, show_grid: true },
+    axes: { x_title: lex.periodAxis, y_title: lex.metrics[2]!.label, y_unit: lex.metrics[2]!.unit, show_grid: true },
     series: [...lex.labels, ...lex.orgs].slice(0, 12).map((name, i) => ({
       name,
       data: slice(lex.periods, 5).map((x, j) => ({ x, y: 40 + ((i * 7 + j * 11) % 45) })),

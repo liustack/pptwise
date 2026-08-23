@@ -61,8 +61,12 @@ describe("matrix component", () => {
 
   it("renders x/y axis labels when provided", () => {
     const { container } = svg(matrix.render(sixCells, { x: 0, y: 0, w: 800 }, ctx))
-    expect(container.querySelector('[data-axis-title="x"]')?.textContent).toBe("需求确定性  →")
-    expect(container.querySelector('[data-axis-title="y"]')?.textContent).toBe("资产投入  ↑")
+    const xTitle = container.querySelector('[data-axis-title="x"]')
+    const yTitle = container.querySelector('[data-axis-title="y"]')
+    expect(xTitle?.textContent).toBe("需求确定性  →")
+    expect(yTitle?.textContent).toBe("资产投入  ↑")
+    expect(yTitle?.getAttribute("y")).toBe(xTitle?.getAttribute("y"))
+    expect(Number(yTitle?.getAttribute("x"))).toBeLessThan(Number(xTitle?.getAttribute("x")))
     expect(Array.from(container.querySelectorAll("text")).filter((t) => t.textContent === "资")).toHaveLength(0)
   })
 
@@ -275,7 +279,7 @@ describe("matrix component", () => {
 
     it("grows measure() by one band for a short CJK y_title too", () => {
       const measured = matrix.measure(sixCells, 800, ctx)
-      const gridOnly = matrix.measure({ ...sixCells, y_title: undefined }, 800, ctx)
+      const gridOnly = matrix.measure({ ...sixCells, x_title: undefined, y_title: undefined }, 800, ctx)
       expect(measured - gridOnly).toBe(24)
 
       const markup = renderSvgMarkup(
@@ -338,13 +342,15 @@ describe("matrix component", () => {
     it("measure() reports the horizontal band it renders, at a fixed height regardless of title length", () => {
       const measured = matrix.measure(reported, 900, ctx)
       const noYTitle = matrix.measure({ ...reported, y_title: undefined }, 900, ctx)
-      expect(measured - noYTitle).toBe(24)
+      const none = matrix.measure({ ...reported, x_title: undefined, y_title: undefined }, 900, ctx)
+      expect(measured).toBe(noYTitle)
+      expect(measured - none).toBe(24)
       expect(
         matrix.measure({ ...reported, y_title: "A far longer vertical axis name" }, 900, ctx),
       ).toBe(measured)
     })
 
-    it("stacks the two captions in their own bands, y above x, above the grid", () => {
+    it("keeps the two captions on one line below the grid, y first then x", () => {
       const box = { x: 0, y: 0, w: 900 }
       const markup = renderSvgMarkup(
         <svg xmlns="http://www.w3.org/2000/svg">{matrix.render(reported, box, ctx)}</svg>,
@@ -353,13 +359,16 @@ describe("matrix component", () => {
       const texts = Array.from(root.querySelectorAll("text"))
       const yTitle = texts.find((t) => t.textContent?.includes("Customers"))!
       const xTitle = texts.find((t) => t.textContent?.includes("Performance"))!
-      expect(Number(yTitle.getAttribute("y"))).toBeLessThan(Number(xTitle.getAttribute("y")))
-      // Both arrows present, one per axis — that pairing is what says which
-      // caption names which axis now that neither one sits beside its axis.
+      expect(yTitle.getAttribute("y")).toBe(xTitle.getAttribute("y"))
+      expect(Number(yTitle.getAttribute("x"))).toBeLessThan(Number(xTitle.getAttribute("x")))
       expect(yTitle.textContent).toContain("↑")
       expect(xTitle.textContent).toContain("→")
-      const firstCardY = Number(root.querySelector("rect")!.getAttribute("y"))
-      expect(firstCardY).toBeGreaterThan(Number(xTitle.getAttribute("y")))
+      const lastCardBottom = Math.max(
+        ...Array.from(root.querySelectorAll("rect")).map(
+          (r) => Number(r.getAttribute("y")) + Number(r.getAttribute("height")),
+        ),
+      )
+      expect(Number(xTitle.getAttribute("y"))).toBeGreaterThan(lastCardBottom)
     })
 
     it("fits an egregiously long Latin y_title inside its declared box, truncation-marked", () => {

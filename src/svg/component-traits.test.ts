@@ -117,9 +117,9 @@ describe("STRETCHABLE_TYPES equivalence (was layout.ts:137, plus the people_card
     // family as row_cards/icon_cards — a people_cards grid with fewer
     // people than its slot has room for should grow its cards to fill the
     // leftover height the same way, so it declares stretchable: true too.
-    // A real, intentional addition, not drift — the pre-refactor array
-    // above stays as the historical baseline this lock originally pinned.
-    const current = [...preRefactor, "people_cards"]
+    // cartesian-axis wave: chart plots stretch into leftover column height
+    // so the frame (not empty page margin) takes the extra room.
+    const current = [...preRefactor, "people_cards", "chart"]
     expect(new Set(STRETCHABLE_TYPES)).toEqual(new Set(current))
     expect(STRETCHABLE_TYPES.size).toBe(current.length)
   })

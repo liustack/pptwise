@@ -144,6 +144,12 @@ export interface Lexicon {
   readonly captions: Pool
   /** Browser address-bar text for the device mockup. */
   readonly url: string
+  /** Scatter page heading (claim, not a chart-type label). */
+  readonly scatterHeading: string
+  /** One-line scatter subhead that names the two axes. */
+  readonly scatterSubhead: string
+  /** Footnote that says what bubble area encodes. Required on bubble pages. */
+  readonly bubbleSizeNote: string
 }
 
 export type LanguageId = "zh" | "en" | "mixed"
@@ -373,6 +379,10 @@ const zh: Lexicon = {
   ],
 
   url: "portal.cloudseek.example.com/workspaces",
+
+  scatterHeading: "开通越快，周活跃率越高",
+  scatterSubhead: "四个客户分层的开通周期与活跃率对照",
+  bubbleSizeNote: "口径：2026 Q2 全量付费工作区，气泡面积为席位规模。",
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -598,6 +608,10 @@ const en: Lexicon = {
   ],
 
   url: "portal.cloudseek.example.com/workspaces",
+
+  scatterHeading: "Faster onboarding, higher weekly activation",
+  scatterSubhead: "Delivery time vs. activation across four customer bands",
+  bubbleSizeNote: "Note: 2026 Q2 paid workspaces. Bubble area is seat count.",
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -825,6 +839,10 @@ spec:
   ],
 
   url: "argocd.cloudseek.example.com/v/applications",
+
+  scatterHeading: "构建越快，Canary 越稳",
+  scatterSubhead: "平均构建时长与 P95 扩容耗时对照",
+  bubbleSizeNote: "口径：Staging 全量 service，气泡面积为纳管副本数。",
 }
 
 export const LEXICONS: Readonly<Record<LanguageId, Lexicon>> = { zh, en, mixed }

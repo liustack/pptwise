@@ -207,6 +207,14 @@ describe("chart subtypes (chart-depth wave: scatter / area / donut / gauge)", ()
     const d = chart({ chart_type: "scatter", series: [{ name: "s", data: [{ x: 1, y: 2, size: 8 }, { x: 3, y: 4 }] }] })
     expect(parsePptxIR(d).success).toBe(true)
   })
+  it("cartesian axes accept optional tick units", () => {
+    const d = chart({
+      chart_type: "scatter",
+      axes: { x_title: "周期", y_title: "活跃率", x_unit: "周", y_unit: "%" },
+      series: [{ name: "s", data: [{ x: 2, y: 61 }] }],
+    })
+    expect(parsePptxIR(d).success).toBe(true)
+  })
   it("scatter rejects a string x — the model reaching for line/bar by the wrong name", () => {
     const d = chart({ chart_type: "scatter", series: [{ name: "s", data: [{ x: "Q1", y: 2 }] }] })
     expect(parsePptxIR(d).success).toBe(false)

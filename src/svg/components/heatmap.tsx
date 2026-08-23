@@ -23,9 +23,9 @@ type HeatmapComponent = Extract<Component, { type: "heatmap" }>
  *
  * Two geometry precedents this file explicitly reuses rather than
  * reinventing:
- *  - `axis-titles.tsx`'s horizontal pair (y_title "  ↑" above x_title
- *    "  →", both outside the grid). Reserve a band's height only when the
- *    field is actually present, and subtract it from whichever one of
+ *  - `axis-titles.tsx`'s horizontal pair (y_title "  ↑" then x_title
+ *    "  →" on one line, **below** the grid). Reserve a band's height when
+ *    either field is present, and subtract it from whichever one of
  *    measure()'s-own-fallback/box.h *actually includes it* — never both
  *    (matrix.tsx's own `render` doc comment has the full incident writeup).
  *    `x_title`/`y_title` here describe the *whole* axis (optional, e.g.
@@ -238,19 +238,18 @@ export const heatmap: SvgComponent<HeatmapComponent> = {
   },
   render(component, box, ctx) {
     const { rows, gridX0, cellW, gridH, titleH } = gridGeom(component, box.w)
-    const topBandsH = titleH + COL_LABEL_H
+    const topBandsH = COL_LABEL_H
     const gridTop = box.y + topBandsH
-    // box.h-aware uniform stretch (matrix.tsx's own idiom, no
-    // STRETCH_CAP_RATIO ceiling — full-body components never go through
-    // growStretchables' capped path). Two "total height" semantics meet
-    // here exactly like matrix.tsx's render() — `box.h`, when a caller sets
-    // it, is the TOTAL remaining height from box.y downward (inclusive of
-    // every band above the grid, same convention measure() returns), so
-    // they come off it exactly once, as the one `topBandsH` sum above; the
-    // measure()-mirroring fallback already excludes all of them, so
-    // subtracting any of them from it again would double-count.
-    const availGridH = box.h !== undefined ? box.h - topBandsH : gridH
+    // box.h-aware uniform stretch (matrix.tsx's own idiom). `box.h`, when a
+    // caller sets it, is the TOTAL remaining height from box.y — inclusive
+    // of the column-label band above the grid and the title pair now sitting
+    // *below* it, same convention measure() returns. Subtract each once.
+    // The measure()-mirroring fallback is grid-only, so it already excludes
+    // both bands.
+    const availGridH = box.h !== undefined ? box.h - topBandsH - titleH : gridH
     const rowH = Math.max(NATURAL_CELL_H, (availGridH - (rows - 1) * CELL_GAP) / rows)
+    const actualGridH = rows * rowH + (rows - 1) * CELL_GAP
+    const titleY = gridTop + actualGridH
     const r = Math.min(4, ctx.shape?.radius ?? CELL_RADIUS)
     const domain = resolveDomain(component)
 
@@ -267,15 +266,6 @@ export const heatmap: SvgComponent<HeatmapComponent> = {
 
     return (
       <g>
-        {renderAxisTitlePair({
-          x: box.x,
-          y: box.y,
-          width: box.w,
-          xTitle: component.x_title,
-          yTitle: component.y_title,
-          fill: ctx.colors.muted,
-          fontFamily: ctx.fonts.body,
-        })}
         {colLabelFits.map((fit, col) => {
           const cx = box.x + gridX0 + col * (cellW + CELL_GAP) + cellW / 2
           return (
@@ -283,7 +273,7 @@ export const heatmap: SvgComponent<HeatmapComponent> = {
               key={col}
               data-truncated={fit.truncated ? "1" : undefined}
               x={cx}
-              y={box.y + titleH + COL_LABEL_H - COL_LABEL_PAD}
+              y={box.y + COL_LABEL_H - COL_LABEL_PAD}
               textAnchor="middle"
               fontSize={fit.fontSize}
               fill={ctx.colors.muted}
@@ -351,6 +341,15 @@ export const heatmap: SvgComponent<HeatmapComponent> = {
             )
           }),
         )}
+        {renderAxisTitlePair({
+          x: box.x,
+          y: titleY,
+          width: box.w,
+          xTitle: component.x_title,
+          yTitle: component.y_title,
+          fill: ctx.colors.muted,
+          fontFamily: ctx.fonts.body,
+        })}
       </g>
     )
   },

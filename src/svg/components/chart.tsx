@@ -2,7 +2,7 @@ import type { Component } from "@/ir"
 import { fitSvgLine, measureTextUnits } from "../../lib/svg-text-layout"
 import { rotateChartPalette } from "../chart-palette"
 import { accessibleInk } from "../ink"
-import { axisTitlePairHeight, renderAxisTitlePair } from "./axis-titles"
+import { axisTitlePairHeight } from "./axis-titles"
 import { buildChartModel } from "./chart-model"
 import type { RenderDef, SvgComponent } from "./types"
 import {
@@ -82,14 +82,15 @@ function resolveRenderer(component: ChartComponent): ChartRenderFn {
  * comment" precedent gantt.tsx's `vx` primitive already set rather than
  * reaching across files for two entries).
  *
- * **Axis titles (x_title / y_title) render as one horizontal pair** above
- * the plot, outside it, stacked and left-aligned: y_title as "名  ↑",
- * x_title as "名  →". Character-column stacking is forbidden for every
- * script. The pair is not the legend header — that row stays legend-only.
- * `bar` + `direction: "horizontal"` uses the same pair. show_grid still
- * toggles the reference lines. ir-quality.ts's `chart_axes_ignored`
- * warning still keys off this same applicability set: a pie with
- * `axes.x_title` still warns, a bar with `axes.x_title` does not.
+ * **Axis titles (x_title / y_title) render as one horizontal line** below
+ * the x-axis, outside the plot, left-aligned to the origin: y_title as
+ * "名  ↑" first, then a gap, then x_title as "名  →". Character-column
+ * stacking is forbidden for every script. The pair is not the legend
+ * header — that row stays legend-only. `bar` + `direction: "horizontal"`
+ * uses the same pair.
+ * show_grid still toggles the reference lines. ir-quality.ts's
+ * `chart_axes_ignored` warning still keys off this same applicability set:
+ * a pie with `axes.x_title` still warns, a bar with `axes.x_title` does not.
  */
 const AXES_APPLICABLE_TYPES: ReadonlySet<ChartComponent["chart_type"]> = new Set([
   "bar",
@@ -124,8 +125,8 @@ function legendApplicable(component: ChartComponent): boolean {
 
 /**
  * Header row (label-tuning A, 2026-08). The legend sits here, right-aligned,
- * above the axis-title pair and the plot. Axis titles no longer share this
- * row. The 52px reservation and the 16px text baseline are taken from
+ * above the plot. Axis titles sit below the x-axis, not in this row. The
+ * 52px reservation and the 16px text baseline are taken from
  * LabelTuning.dc.html: the plot group is translated down by 52 relative to
  * a header baseline at 16, which is what keeps the tallest bar's value
  * label ≥ 24px clear of the legend ink.
@@ -248,7 +249,10 @@ export const chart: SvgComponent<ChartComponent> = {
     const axes = axesApplicable(component) ? component.axes : undefined
     const headerH = hasHeaderRow(component) ? HEADER_ROW_H : 0
     const titleH = axisTitlePairHeight(axes?.x_title, axes?.y_title)
-    const plotTop = headerH + titleH
+    const allocated = (box.h ?? headerH + CHART_H + titleH) - headerH
+    const bodyH = axesApplicable(component)
+      ? Math.max(CHART_H + titleH, allocated)
+      : CHART_H
     const plotX = 0
     const plotW = box.w
 
@@ -278,30 +282,23 @@ export const chart: SvgComponent<ChartComponent> = {
           component.series,
           palette,
           plotX,
-          plotTop,
+          headerH,
           plotW,
-          CHART_H,
+          bodyH,
           ctx.colors.muted,
           ctx.colors.text,
           ctx.colors.accent,
           axes?.show_grid,
           // Threaded for the subtypes whose geometry needs component-level
-          // config (donut's center_total, gauge's min/max). The five original
-          // renderers ignore it and stay byte-identical (golden-pinned).
+          // config (donut's center_total, gauge's min/max) and for cartesian
+          // axis titles / units (bar/line/area/scatter).
           component,
           // The background the marks land on, for text ink only — see
           // `ChartRenderFn`'s own `bgHex` doc comment.
           legendBg,
+          ctx.colors.border ?? ctx.colors.muted,
+          bodyFace,
         )}
-        {renderAxisTitlePair({
-          x: 0,
-          y: headerH,
-          width: box.w,
-          xTitle: axes?.x_title,
-          yTitle: axes?.y_title,
-          fill: ctx.colors.muted,
-          fontFamily: bodyFace,
-        })}
         {legendLayout ? (
           <g>
             {legendLayout.slots.map((slot) => {
