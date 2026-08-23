@@ -6,6 +6,7 @@ import { assertSubset } from "../subset-validate"
 import { measureTextUnits } from "../../lib/svg-text-layout"
 import { readableOn } from "../ink"
 import { iconCards } from "./icon-cards"
+import { FONT_FLOOR_PX } from "../font-floors"
 import { resolveStyle } from "../../themes"
 import { buildCtx } from "../full-slide-svg"
 import type { ComponentCtx } from "./types"
@@ -257,7 +258,9 @@ describe("icon_cards forms: outline_grid", () => {
     const bodyFs = Math.max(...bodies.map((el) => Number(el.getAttribute("font-size") ?? 0)))
     expect(titleFs).toBeLessThanOrEqual(28)
     expect(bodyFs).toBeLessThan(titleFs)
-    expect(bodyFs).toBeLessThanOrEqual(Math.max(15, titleFs * 0.55) + 0.05)
+    // The step is capped by the readable floor: body may not shrink below it
+    // (`src/svg/font-floors.ts`), so the ratio only binds above that floor.
+    expect(bodyFs).toBeLessThanOrEqual(Math.max(FONT_FLOOR_PX.body, titleFs * 0.55) + 0.05)
     const cell = cells[0]!
     const title = titles[0]!
     const topGap = Number(title.getAttribute("y") ?? 0) - titleFs - Number(cell.getAttribute("y") ?? 0)
