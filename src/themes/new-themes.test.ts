@@ -483,11 +483,11 @@ describe("swiss tokens", () => {
     expect(SWISS_TOKENS.shape?.gapScale).toBe(1)
   })
 
-  it("cover/content/ending stay on the cold-white paper, chapter is the hard-black bleed", () => {
+  it("cover/chapter/content/ending stay on the cold-white paper", () => {
     expect(SWISS_TOKENS.defaultBackgrounds.cover).toEqual({ kind: "color", value: SWISS_TOKENS.colors.bg })
+    expect(SWISS_TOKENS.defaultBackgrounds.chapter).toEqual({ kind: "color", value: SWISS_TOKENS.colors.bg })
     expect(SWISS_TOKENS.defaultBackgrounds.content).toEqual({ kind: "color", value: SWISS_TOKENS.colors.bg })
     expect(SWISS_TOKENS.defaultBackgrounds.ending).toEqual({ kind: "color", value: SWISS_TOKENS.colors.bg })
-    expect(SWISS_TOKENS.defaultBackgrounds.chapter).toEqual({ kind: "color", value: SWISS_TOKENS.colors.primary })
   })
 
   it("primary is the hard black that is both body ink and the color block", () => {

@@ -95,10 +95,20 @@ const WAVE8_B3_THEME_IDS = new Set<CanonicalThemeId>([
   "arena",
 ])
 
+const WAVE8_B4_THEME_IDS = new Set<CanonicalThemeId>([
+  "stage",
+  "lecture",
+  "swiss",
+  "memo",
+  "playbill",
+  "museum",
+])
+
 const WAVE8_LOCKED_THEME_IDS = new Set<CanonicalThemeId>([
   ...WAVE8_B1_THEME_IDS,
   ...WAVE8_B2_THEME_IDS,
   ...WAVE8_B3_THEME_IDS,
+  ...WAVE8_B4_THEME_IDS,
 ])
 
 const DECLARED_THEME_IDS = CANONICAL_THEME_IDS.filter((id) => THEME_DEFINITIONS[id].layoutTendencies !== undefined)
@@ -982,12 +992,8 @@ describe("second-front wave: chapter / content / ending allocation", () => {
         }
       }
     }
-    expect(leftover.filter(([id]) => !WAVE8_LOCKED_THEME_IDS.has(id as CanonicalThemeId))).toEqual([
-      ["museum", 1],
-      ["museum", 5],
-      ["stage", 1],
-      ["stage", 5],
-    ])
+    // Wave 8 batch 4 locks museum / stage, so the leftover cover pairs drop out.
+    expect(leftover.filter(([id]) => !WAVE8_LOCKED_THEME_IDS.has(id as CanonicalThemeId))).toEqual([])
   })
 
   it("every recorded second-front non-cover move still lands, then gallery r2 content hops, then side-highlight-retire hops, and every unlisted non-cover page stays put", () => {
@@ -1108,8 +1114,8 @@ describe("second-front wave: chapter / content / ending allocation", () => {
     expect(collisions).toEqual([])
   })
 
-  it("seeds 1-40: 24/24 distinct sequence-bundles, slot diversity chapter 23 / content 19 / ending 23", () => {
-    // Wave 8 batch 3 locks six more chapter/ending faces. Re-measured.
+  it("seeds 1-40: 24/24 distinct sequence-bundles, slot diversity chapter 24 / content 18 / ending 24", () => {
+    // Wave 8 batch 4 locks six more chapter/ending faces. Re-measured.
     const over40 = new Set(
       STRUCTURAL_IDENTITY_IDS.map((id) =>
         JSON.stringify(Array.from({ length: 40 }, (_, i) => resolveSequence(id, i + 1))),
@@ -1127,16 +1133,16 @@ describe("second-front wave: chapter / content / ending allocation", () => {
     const chapterB = slotCount(4)
     const ending = slotCount(6)
     expect({ chapterA, contentA, chapterB, ending }).toEqual({
-      chapterA: 23,
-      contentA: 19,
-      chapterB: 23,
-      ending: 23,
+      chapterA: 24,
+      contentA: 18,
+      chapterB: 24,
+      ending: 24,
     })
   })
 
-  it("playbill locks cover to bill-head. chapter / content / ending stay the full set — tendencies compress probability, they do not replace a lock", () => {
+  it("playbill locks cover to bill-head, chapter to day-bill-chapter, ending to ticket-cta-ending. content stays the full set", () => {
     expect(THEME_DEFINITIONS.playbill.layouts.cover).toEqual(["bill-head"])
-    expect(THEME_DEFINITIONS.playbill.layouts.chapter).toEqual(__fullLayoutSet("chapter"))
+    expect(THEME_DEFINITIONS.playbill.layouts.chapter).toEqual(["day-bill-chapter"])
     expect(THEME_DEFINITIONS.playbill.layouts.content).toEqual(__fullLayoutSet("content"))
     expect(THEME_DEFINITIONS.consulting.layouts.content).toEqual([
       "narrow-column",
@@ -1150,11 +1156,11 @@ describe("second-front wave: chapter / content / ending allocation", () => {
       "quiet-frame",
       "split-band",
     ])
-    expect(THEME_DEFINITIONS.playbill.layouts.ending).toEqual(__fullLayoutSet("ending"))
+    expect(THEME_DEFINITIONS.playbill.layouts.ending).toEqual(["ticket-cta-ending"])
     expect(THEME_DEFINITIONS.playbill.layoutTendencies?.content).toEqual([
-      "split-band",
       "stacked-poster",
-      "banner-heading",
+      "rail-numbered",
+      "split-band",
     ])
   })
 
@@ -1338,7 +1344,9 @@ describe("forced theme-tendency × stress-content geometry audit (closes the T2 
     // singleton). Forced-audit set shrinks 113 → 100.
     // Wave 8 batch 3 locks six more chapter/ending (covers already
     // singleton). Forced-audit set shrinks 100 → 87.
-    expect(combos).toHaveLength(87)
+    // Wave 8 batch 4 locks six more chapter/ending (covers already
+    // singleton). Forced-audit set shrinks 87 → 72.
+    expect(combos).toHaveLength(72)
   })
 
   for (const { themeId, slideType, layoutId } of combos) {

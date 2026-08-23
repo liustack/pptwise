@@ -47,6 +47,12 @@ import type { StyleTokens } from "./tokens";
  * 装饰见 `../svg/motifs/motif-lecture-motif.tsx`（26px 内缩 1px 粉笔槽细框。
  * light 档，单锚。板上标题下的黄粉笔弧不进 motif，见该文件头）。
  *
+ * 第八波批 4：封面 `board-head` 锁板不动。章节 pinOnly `chalk-rule-chapter`
+ * （讲次 kicker + 黄粉笔弧是版式标题附着件）。ending pinOnly
+ * `next-lecture-ending`（课后清单 + 下讲预告）。motif 粉笔槽框几何不动，
+ * 四页都画。黄粉笔弧仍不进 motif。token hex / fonts / defaultBackgrounds
+ * 四页墨绿 `#1C2823` 都不动。
+ *
  * 四轴：L / top-band / light / tight。最近邻 enterprise（L / top / medium /
  * tight），岔装饰轴。封面倾向 banner-title / tone-adaptive-header。
  *

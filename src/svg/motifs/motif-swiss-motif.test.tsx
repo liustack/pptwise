@@ -70,30 +70,40 @@ function lineBox(l: Element): Box {
 }
 
 /**
- * swiss-motif「冷白制度」页缘（2026-08-21 wave7）。
- * 设计源：`theme-wave7/Swiss.dc.html` 的封面样例 + 任务书 motif 条款。
+ * swiss-motif「冷白制度」页缘（2026-08-21 wave7，第八波批 4 按页型退让刻度）。
+ * 设计源：封面锁板 + `wave8/b4/Swiss.dc.html`。顶边红条四页都画。
+ * 右缘三格灰刻度只留封面。
  */
 describe("SwissMotif（冷白制度页缘）", () => {
-  it("四页型画同一张：一条顶边红条 + 三根右缘灰刻度", () => {
-    for (const slide of DRAWN_SLIDES) {
+  it("四页都画一条顶边红条。三根右缘灰刻度只在封面", () => {
+    const cover = draw("swiss", coverSlide)
+    expect(cover.root.querySelectorAll("rect")).toHaveLength(1)
+    expect(cover.root.querySelectorAll("line")).toHaveLength(3)
+    expect(cover.root.querySelector('[data-decor-piece="ticks"]')).toBeTruthy()
+
+    for (const slide of [chapterSlide, contentSlide, endingSlide]) {
       const { root } = draw("swiss", slide)
       expect(Array.from(root.querySelectorAll("rect")), `bar on ${slide.type}`).toHaveLength(1)
-      expect(Array.from(root.querySelectorAll("line")), `ticks on ${slide.type}`).toHaveLength(3)
+      expect(Array.from(root.querySelectorAll("line")), `no ticks on ${slide.type}`).toHaveLength(0)
+      expect(root.querySelector('[data-decor-piece="ticks"]'), `ticks piece on ${slide.type}`).toBeNull()
     }
   })
 
-  it("cover/chapter/ending 输出完全相同。内容页退底，件数不变", () => {
-    expect(draw("swiss", coverSlide).markup).toBe(draw("swiss", chapterSlide).markup)
-    expect(draw("swiss", coverSlide).markup).toBe(draw("swiss", endingSlide).markup)
-    expect(draw("swiss", contentSlide).root.querySelectorAll("rect")).toHaveLength(1)
-    expect(draw("swiss", contentSlide).root.querySelectorAll("line")).toHaveLength(3)
+  it("chapter/ending 只有红条，字节相同。内容页红条退底。封面多三刻度", () => {
+    expect(draw("swiss", chapterSlide).markup).toBe(draw("swiss", endingSlide).markup)
+    expect(draw("swiss", coverSlide).markup).not.toBe(draw("swiss", chapterSlide).markup)
+    const content = draw("swiss", contentSlide)
+    expect(content.root.querySelectorAll("rect")).toHaveLength(1)
+    expect(content.root.querySelectorAll("line")).toHaveLength(0)
+    expect(content.root.querySelector("rect")?.getAttribute("opacity")).toBeTruthy()
+    expect(draw("swiss", chapterSlide).root.querySelector("rect")?.getAttribute("opacity")).toBeNull()
+    expect(draw("swiss", coverSlide).root.querySelector("rect")?.getAttribute("opacity")).toBeNull()
   })
 
-  it("chapter 硬黑底上红条与灰刻度都过可见度地板（红成边压黑，不是红成面）", () => {
+  it("chapter 冷白纸上红条过可见度地板（红成边，不是红成面）", () => {
     const t = resolveStyle("swiss")
-    expect(t.defaultBackgrounds.chapter).toEqual({ kind: "color", value: t.colors.primary })
-    expect(contrastRatio(t.colors.accent, t.colors.primary)).toBeGreaterThan(1.02)
-    expect(contrastRatio(t.colors.muted, t.colors.primary)).toBeGreaterThan(1.02)
+    expect(t.defaultBackgrounds.chapter).toEqual({ kind: "color", value: t.colors.bg })
+    expect(contrastRatio(t.colors.accent, t.colors.bg)).toBeGreaterThan(1.02)
   })
 
   it("颜色一律读 token：红条走 accent，刻度走 muted，线宽 1.5", () => {

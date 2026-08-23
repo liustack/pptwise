@@ -52,7 +52,8 @@ describe("LAYOUT_REGISTRY completeness (layout ids)", () => {
       ...Object.keys(ENDING_LAYOUTS),
     ])
     const layoutEntries = Object.values(LAYOUT_REGISTRY).filter((e) => e.kind === "archetype")
-    expect(layoutEntries).toHaveLength(102)
+    // Wave 8 batch 4: +6 chapter +6 ending pinOnly faces, 102 -> 114.
+    expect(layoutEntries).toHaveLength(114)
     for (const entry of layoutEntries) {
       expect(knownIds.has(entry.id), `"${entry.id}" is not a real layout id`).toBe(true)
     }
@@ -110,7 +111,10 @@ describe("content family: body slot + declared arrangements", () => {
           id === "reminder-list-ending" ||
           id === "deliberation-ending" ||
           id === "scorecard-ending" ||
-          id === "care-plan-ending"
+          id === "care-plan-ending" ||
+          id === "next-lecture-ending" ||
+          id === "resolution-ending" ||
+          id === "decision-close-ending"
         ) {
           expect(entry.slots.some((s) => s.name === "body")).toBe(true)
           expect(entry.arrangements).toBeUndefined()
@@ -229,8 +233,9 @@ describe("layoutsForSlideType", () => {
     // cover grew 13 -> 19 in board-cover-restore wave 1. chapter grew 8 -> 9
     // in the editorial-verse wave (verse-chapter, pinOnly).
     expect(layoutsForSlideType("cover")).toHaveLength(34)
-    expect(layoutsForSlideType("chapter")).toHaveLength(27)
-    expect(layoutsForSlideType("ending")).toHaveLength(25)
+    // Wave 8 batch 4: +6 chapter +6 ending pinOnly faces.
+    expect(layoutsForSlideType("chapter")).toHaveLength(33)
+    expect(layoutsForSlideType("ending")).toHaveLength(31)
   })
 
   it("content includes both the 16 layouts and the 4 takeovers (side-highlight retired, 17 -> 16, after gallery r2 D10's 18 -> 17)", () => {
@@ -370,6 +375,18 @@ describe("excludePinOnly (quote-stage wave, task T1's pinOnly tier)", () => {
       "scorecard-ending",
       "care-plan-ending",
       "seat-cta-ending",
+      "one-word-chapter",
+      "chalk-rule-chapter",
+      "decimal-index-chapter",
+      "issue-line-chapter",
+      "day-bill-chapter",
+      "hall-label-chapter",
+      "release-close-ending",
+      "next-lecture-ending",
+      "resolution-ending",
+      "decision-close-ending",
+      "ticket-cta-ending",
+      "exit-word-ending",
     ])
     for (const def of Object.values(LAYOUT_REGISTRY)) {
       if (pinOnlyIds.has(def.id)) {
@@ -447,6 +464,18 @@ describe("layout branding declaration (editorial-verse wave)", () => {
       "scorecard-ending",
       "care-plan-ending",
       "seat-cta-ending",
+      "one-word-chapter",
+      "chalk-rule-chapter",
+      "decimal-index-chapter",
+      "issue-line-chapter",
+      "day-bill-chapter",
+      "hall-label-chapter",
+      "release-close-ending",
+      "next-lecture-ending",
+      "resolution-ending",
+      "decision-close-ending",
+      "ticket-cta-ending",
+      "exit-word-ending",
     ] as const) {
       expect(LAYOUT_REGISTRY[id].branding, id).toBe("none")
     }
@@ -505,6 +534,18 @@ describe("layout branding declaration (editorial-verse wave)", () => {
       "scorecard-ending",
       "care-plan-ending",
       "seat-cta-ending",
+      "one-word-chapter",
+      "chalk-rule-chapter",
+      "decimal-index-chapter",
+      "issue-line-chapter",
+      "day-bill-chapter",
+      "hall-label-chapter",
+      "release-close-ending",
+      "next-lecture-ending",
+      "resolution-ending",
+      "decision-close-ending",
+      "ticket-cta-ending",
+      "exit-word-ending",
     ])
     for (const def of Object.values(LAYOUT_REGISTRY)) {
       if (brandingNone.has(def.id)) continue

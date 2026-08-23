@@ -30,10 +30,11 @@ import { DecorPiece } from "./decor-piece"
  * 写成 -4°（逆时针），字仍是 +4°，贴片和字差了 8°。
  *
  * AABB 约 x1059-1213、y5-45：在标题区 (96,48,1040×122) 上方、右上
- * logo 盒 (1120,48,96×40) 顶沿之上、五个保护区全不进。cover / ending
- * 画贴片。content 不画：stat-hero 版式自己有一枚单位斜贴片，motif 再画日期
- * 贴片就是一页两枚，触犯「斜贴片每页最多一枚」。chapter 让位见下。
- * fashion-masthead 满版 primary 盖住贴片是黑压黑，不是漏画。
+ * logo 盒 (1120,48,96×40) 顶沿之上、五个保护区全不进。只在 cover 画贴片。
+ * chapter / content 继续退让。ending 也退让（第八波批 4：黑场反转页没有
+ * 贴片）。content 不画还有一层：stat-hero 版式自己有一枚单位斜贴片，motif
+ * 再画日期贴片就是一页两枚，触犯「斜贴片每页最多一枚」。封面锁板的贴片
+ * 几何不得改。fashion-masthead 满版 primary 盖住贴片是黑压黑，不是漏画。
  *
  * 密页不降档：装饰只有这一枚顶带贴片，碰不到内容区，判据都不设
  * （第一版的论证原样成立）。
@@ -82,8 +83,9 @@ export function PlaybillMotif({ ir, slide, ctx }: DecorProps) {
   // chapter 让位（crayon 封面让位同款先例）：poster-chapter / roman-chapter
   // 把机构字画在右上，与贴片区 (x1059-1213, y5-45) 真实相压（加宽后的
   // 归因审计实测 2.94:1）。content 让位：把斜贴片名额让给 stat-hero 等
-  // 版式（gallery review r2 B3）。motif 不感知当页 layout，按页型整片退让。
-  if (slide.type === "chapter" || slide.type === "content") return null
+  // 版式（gallery review r2 B3）。ending 也退让：黑场反转页没有贴片。
+  // motif 不感知当页 layout，按页型整片退让。封面几何不动。
+  if (slide.type !== "cover") return null
   const date = ir.meta.date
   if (!date) return null
   const fitted = fitSvgLine(date, {

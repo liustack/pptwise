@@ -133,6 +133,10 @@ function sha(svg: string): string {
 // pulse / arena covers lock to the board. lecture also moves: its chalk
 // tray is a hollow stroked rect whose bbox used to be dropped on title
 // intersect. The depth contract now keeps motif identity and dims it.
+//
+// Recaptured (wave8 batch 4, 2026-08-23). swiss content pages drop the
+// right-edge ticks (cover-only). Covers of all 23 unassigned themes stay
+// byte-identical. consulting is not in this fixture.
 const fixture = JSON.parse(
   readFileSync(new URL("./__fixtures__/emphasis-unassigned-bytes.json", import.meta.url), "utf-8"),
 ) as { pages: Record<string, string> }

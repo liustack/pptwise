@@ -72,6 +72,10 @@ function sha(svg: string): string {
 // Recaptured (wave8 batch 2, 2026-08-23). classroom and crayon content
 // motifs change on every heading matrix key. Other unassigned themes stay
 // byte-identical.
+//
+// Recaptured (wave8 batch 4, 2026-08-23). swiss content pages drop the
+// right-edge ticks (cover-only). Other unassigned themes stay
+// byte-identical.
 const fixture = JSON.parse(
   readFileSync(new URL("./__fixtures__/unassigned-bytes.json", import.meta.url), "utf-8"),
 ) as { pages: Record<string, string> }

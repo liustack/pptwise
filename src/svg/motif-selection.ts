@@ -55,7 +55,7 @@
  * | runway | *(none — settled decision, see module doc above)* | typography-only is the adjudicated look; no candidate set |
  * | museum | *(none — corner decor struck, 2026-08-21)* | identity in palette and serif type; no candidate set |
  * | stage | *(none — undecorated black field, 2026-08-21)* | 无框 is the identity; no candidate set |
- * | playbill | playbill-motif *(singleton)* | 2026-08-22 restored by user verdict: the date chip (meta.date-driven, absent-date = no chip) is part of the board design; no sibling family shares a ticket-chip vocabulary |
+ * | playbill | playbill-motif *(singleton)* | 2026-08-22 restored by user verdict: the date chip (meta.date-driven, absent-date = no chip) is part of the cover board. Wave 8 batch 4: chapter and ending yield, so the ending invert draws no chip. No sibling family shares a ticket-chip vocabulary |
  * | journal | corner-ornament-motif *(singleton)* | board-cover-restore wave 2 (2026-08-22): locked to the cover-board motif (masthead rules + issue number) so gallery p01 cannot draw heritage's bookplate or rail. Ruling: built-in theme decoration is locked. |
  * | enterprise | enterprise-motif, banner-motif, rail-motif | enterprise's Swiss-grid IKB identity pairs only with the other minimal geometric-line motifs (banner's grid, rail's arc) — organic/wash/ornamental families would visibly clash with its industrial-design register |
  * | luxe | luxe-motif *(singleton)* | board-cover-restore wave 2 (2026-08-22): locked to the cover-board motif (gilt invitation frame) so gallery p01 cannot draw heritage florets or journal's masthead rules. Ruling: built-in theme decoration is locked. |
@@ -163,7 +163,7 @@ export const MOTIF_BASE_WEIGHT = 1
  * Theme → 2-3 style-compatible motif candidates, anchor (the theme's own
  * pre-existing `THEME_DEFINITIONS[id].motif`) always first. See this
  * module's own header comment for the full rationale table. `Partial`:
- * `runway`, `museum`, `stage`, and `playbill` have no entry (their own
+ * `runway`, `museum`, and `stage` have no entry (their own
  * motif is `undefined` by settled design, nothing to rotate).
  */
 export const MOTIF_CANDIDATES: Partial<Record<CanonicalThemeId, readonly MotifId[]>> = {
@@ -200,10 +200,10 @@ export const MOTIF_CANDIDATES: Partial<Record<CanonicalThemeId, readonly MotifId
  * that want to know a page's pick without re-deriving the salt logic.
  *
  * - `ir.theme.id` has no entry in {@link MOTIF_CANDIDATES} (a registered/
- *   custom theme, an unrecognized id, or `runway` / `museum` / `stage` /
- *   `playbill`): falls back to `getThemeDefinition(ir.theme.id).motif`
+ *   custom theme, an unrecognized id, or `runway` / `museum` / `stage`):
+ *   falls back to `getThemeDefinition(ir.theme.id).motif`
  *   directly — the exact pre-this-task behavior, so every theme outside the
- *   builtins (and the four none identities within them) renders
+ *   builtins (and the three none identities within them) renders
  *   byte-identically to before this module existed.
  * - A 1-member candidate set (`campaign`, `ink`, `classroom`,
  *   crayon, arena, lecture, swiss, memo, academic, insight, tech, luxe,

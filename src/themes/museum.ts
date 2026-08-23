@@ -36,11 +36,16 @@ import type { StyleTokens } from "./tokens";
  * 面打头保导出无 tofu。body 仍是雅黑。圆角 0 + gapScale 1.3（airy 档，
  * ink 同值）。
  *
- * 装饰见 `../svg/motifs/motif-museum-motif.tsx`（展签细框 + 角标 tick +
- * 四枚标本针点。light 档，四页型同一张）。
+ * 装饰：无 motif。2026-08-21 用户裁撤四角针点。第八波批 4 角标 tick
+ * 再次退役，不要加回来。展签细框是内容页版式结构件，不升成页缘 motif。
+ * 加 motif 会改封面，禁止。
+ *
+ * 第八波批 4（封面 poster-center 锁板不动）：章节 hall-label-chapter
+ * （展厅号当章号，铜金只给厅号），ending exit-word-ending（中轴铜金
+ * 短线依附标题簇）。内容倾向 split-band / banner-heading / quiet-frame。
  *
  * 可拉伸性：铜金即参数（自然科普可换成氧化绿 `#5E8A62`，人文讲座 bg 可
- * 收到石黑 `#1A1814`、accent 收到旧银 `#C4B8A0`）。针点与展签几何不动。
+ * 收到石黑 `#1A1814`、accent 收到旧银 `#C4B8A0`）。
  */
 export const MUSEUM_TOKENS: StyleTokens = {
   id: "museum",

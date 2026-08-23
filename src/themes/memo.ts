@@ -59,13 +59,20 @@ import type { StyleTokens } from "./tokens";
  * 是 1.0 的 medium，本主题在最近邻上只岔这一轴）。
  *
  * 装饰见 `../svg/motifs/motif-memo-motif.tsx`（顶部红双线 + Latin 等宽眉字
- * 「MEMORANDUM」。light 档，四页型同一张，单锚不借用）。
+ * 「MEMORANDUM」。light 档，单锚不借用。封面整片退让给 `memo-head`，章节 /
+ * 内容 / ending 仍画这一张）。
  *
  * 板上不做的两件（文件头记录，不进 motif）：
  *   1. 标题「决定」二字下的重笔划线。跟随内容位置，违反恒位纪律。
  *   2. 封面 FROM / RE 打字机落款。那是封面文案，不是页缘装饰。
  *
  * 四页型都走便笺纸，chapter 不整版红（红永不成面，与 vermilion 分家）。
+ *
+ * **第八波批 4（`.issues/2026-08-22-theme-redesign-wave8/batch4`）**：封面
+ * 仍锁 `memo-head`，motif 几何不动（y26/32，MEMORANDUM）。章节锁 pinOnly
+ * `issue-line-chapter`（议题 kicker，红只成字，版式不画双线）。ending 锁
+ * pinOnly `decision-close-ending`（决定两条 + 拟稿审定抄送取 subheading）。
+ * 四页 defaultBackgrounds 仍是便笺纸，角色色 hex 与 fonts 不动。
  */
 export const MEMO_TOKENS: StyleTokens = {
   id: "memo",

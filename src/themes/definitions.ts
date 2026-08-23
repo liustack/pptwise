@@ -1009,20 +1009,18 @@ const LAYOUTS: Record<CanonicalThemeId, Pick<ThemeDefinition, "layouts" | "motif
   museum: {
     // board-cover-restore wave 2 (parameter gap, no new ids): lock poster-center.
     // editorial-masthead is the second face, deferred.
-    layouts: { cover: ["poster-center"], chapter: FULL_LAYOUTS.chapter, content: FULL_LAYOUTS.content, ending: FULL_LAYOUTS.ending },
+    // Wave 8 batch 4: lock hall-label chapter and exit-word ending. Motif stays empty.
+    layouts: {
+      cover: ["poster-center"],
+      chapter: ["hall-label-chapter"],
+      content: FULL_LAYOUTS.content,
+      ending: ["exit-word-ending"],
+    },
     layoutTendencies: {
       cover: ["poster-center"],
-      // Second-front wave (2026-08-22)，四轴 C / top-band / none / airy：
-      // 覆盖本条目上方「chapter / ending / content 不声明」的旧裁剪。
-      // - chapter `masthead-chapter` + `poster-chapter`：双细线与展签编号。
-      //   前者与 briefing 重合，真实边际来自编号分节。
-      // - content `narrow-column` + `asymmetric-triptych`：窄栏加三区展签。
-      //   两个 id 都不在 briefing 的 content 偏好里。
-      // - ending `masthead-ending` + `constellation-ending`：居中报头加签名条，
-      //   厅堂不喊。前者与 briefing 重合，真实边际来自签名条。
-      chapter: ["masthead-chapter", "poster-chapter"],
-      content: ["narrow-column", "asymmetric-triptych"],
-      ending: ["masthead-ending", "constellation-ending"],
+      chapter: ["hall-label-chapter"],
+      content: ["split-band", "banner-heading", "quiet-frame"],
+      ending: ["exit-word-ending"],
     },
   },
   // stage（黑场，2026-08-21 huashu 风格库 Top 5 第 3）：冷玄黑 + sans +
@@ -1038,23 +1036,21 @@ const LAYOUTS: Record<CanonicalThemeId, Pick<ThemeDefinition, "layouts" | "motif
     // （typeScale 1.5 把 100px 提到展示级）。收窄 cover 池，软倾向保不住
     // 「一模一样」。docs/themes.md 写明的作者主动权，首次动用。
     // chapter / ending 的 layouts 收窄待下版本设计板后锁定。
-    layouts: { cover: ["poster-center"], chapter: FULL_LAYOUTS.chapter, content: FULL_LAYOUTS.content, ending: FULL_LAYOUTS.ending },
+    // Wave 8 batch 4: lock one-word chapter and release-close ending. Motif stays empty.
+    layouts: {
+      cover: ["poster-center"],
+      chapter: ["one-word-chapter"],
+      content: FULL_LAYOUTS.content,
+      ending: ["release-close-ending"],
+    },
     // motif 刻意不配：无框就是身份。runway 是「大片排印」的 none，stage
     // 是「黑场」的 none，用 heading / meta 两轴分开。照 runway 先例留空，
     // 不是漏写（theme-structure.test.ts 把两家一起钉成合法例外）。
     layoutTendencies: {
       cover: ["poster-center"],
-      // Second-front wave (2026-08-22)，四轴 C / bottom-right / none / airy：
-      // chapter / content / ending 走分配表软倾向。layouts 收窄仍待设计板。
-      // - chapter `constellation-chapter` + `tone-adaptive-chapter`：空场只留
-      //   一枚序号或一枚水印。前者与 briefing 重合，真实边际来自万金油水印。
-      // - content `quiet-frame` + `asymmetric-triptych`：留白框加三区拼板，
-      //   airy 档。两个 id 都不在 briefing 的 content 偏好里。
-      // - ending `masthead-ending` + `fashion-ending`：居中报头加满版黑场收官。
-      //   前者与 briefing 重合，真实边际来自满版收官。
-      chapter: ["constellation-chapter", "tone-adaptive-chapter"],
-      content: ["quiet-frame", "asymmetric-triptych"],
-      ending: ["masthead-ending", "fashion-ending"],
+      chapter: ["one-word-chapter"],
+      content: ["quiet-frame", "stacked-poster", "asymmetric-triptych"],
+      ending: ["release-close-ending"],
     },
   },
   // lecture（黑板夜校，2026-08-21）：墨绿板面 + 衬线 + 黄粉笔，粉笔槽细框
@@ -1070,24 +1066,20 @@ const LAYOUTS: Record<CanonicalThemeId, Pick<ThemeDefinition, "layouts" | "motif
     // 第七波封面保真：板面是左轴板书，池里没有这个构造，新建 board-head
     // 进共享池并收窄 cover。粉笔槽细框仍走 lecture-motif。
     // chapter / ending 的 layouts 收窄待下版本设计板后锁定。
-    layouts: { cover: ["board-head"], chapter: FULL_LAYOUTS.chapter, content: FRAMED_CONTENT_LAYOUTS, ending: FULL_LAYOUTS.ending },
+    // Wave 8 batch 4: lock chalk-rule chapter and next-lecture ending.
+    // Content pool stays FRAMED_CONTENT_LAYOUTS. Motif stays lecture-motif.
+    layouts: {
+      cover: ["board-head"],
+      chapter: ["chalk-rule-chapter"],
+      content: FRAMED_CONTENT_LAYOUTS,
+      ending: ["next-lecture-ending"],
+    },
     motif: "lecture-motif",
     layoutTendencies: {
       cover: ["board-head"],
-      // Second-front wave (2026-08-22)，四轴 L / top-band / light / tight：
-      // chapter / ending 走分配表软倾向。gallery r2 D20 收窄 content 池，
-      // 框底主题不抽 banner-heading / split-band / stacked-poster。
-      // - chapter `banner-chapter` + `tone-adaptive-chapter`：整版板面压白字，
-      //   或只留一枚角落水印。两个 id 里后者是万金油。
-      // - content `rail-numbered` + `bento-panel`：编号步骤加拼盘。前者与
-      //   briefing 重合，真实拉力来自拼盘。
-      // - ending 三元集 `banner-ending` + `constellation-ending` +
-      //   `masthead-ending`：池排不开的让位追加，三个都是夜校下课的读法。
-      //   `banner-ending` 与 `masthead-ending` 与 briefing 重合，真实边际来自
-      //   签名条。
-      chapter: ["banner-chapter", "tone-adaptive-chapter"],
-      content: ["rail-numbered", "bento-panel"],
-      ending: ["banner-ending", "constellation-ending", "masthead-ending"],
+      chapter: ["chalk-rule-chapter"],
+      content: ["two-column", "quiet-frame", "bento-panel"],
+      ending: ["next-lecture-ending"],
     },
   },
   // swiss（冷白制度，2026-08-21 wave7）：冷白纸 + 硬黑即正文即色块 + 瑞士红
@@ -1102,22 +1094,20 @@ const LAYOUTS: Record<CanonicalThemeId, Pick<ThemeDefinition, "layouts" | "motif
     // 第七波封面保真：板面是红边 + 左置巨黑字 + 签名块，池里没有这个构造。
     // 新建 institutional-block 进共享池并收窄 cover。顶边红条仍走 swiss-motif。
     // chapter / ending 的 layouts 收窄待下版本设计板后锁定。
-    layouts: { cover: ["institutional-block"], chapter: FULL_LAYOUTS.chapter, content: FULL_LAYOUTS.content, ending: FULL_LAYOUTS.ending },
+    // Wave 8 batch 4: lock decimal-index chapter and resolution ending.
+    // Motif stays swiss-motif (ticks cover-only).
+    layouts: {
+      cover: ["institutional-block"],
+      chapter: ["decimal-index-chapter"],
+      content: FULL_LAYOUTS.content,
+      ending: ["resolution-ending"],
+    },
     motif: "swiss-motif",
     layoutTendencies: {
       cover: ["institutional-block"],
-      // Second-front wave (2026-08-22)，四轴 L / bottom-right / light / tight：
-      // chapter / content / ending 走分配表软倾向。layouts 收窄仍待设计板。
-      // - chapter `constellation-chapter` + `poster-chapter`：编号与网格。前者
-      //   与 briefing 重合，真实边际来自左轴巨号。
-      // - content `two-column` + `split-band`：双栏加通栏头带，制度腔。前者与
-      //   briefing 重合，真实拉力来自通栏头带。
-      // - ending 三元集 `tone-adaptive-ending` + `rail-ending` +
-      //   `masthead-ending`：池排不开的让位追加，素落款打头。`masthead-ending`
-      //   与 briefing 重合，前两个有真实边际。
-      chapter: ["constellation-chapter", "poster-chapter"],
-      content: ["two-column", "split-band"],
-      ending: ["tone-adaptive-ending", "rail-ending", "masthead-ending"],
+      chapter: ["decimal-index-chapter"],
+      content: ["two-column", "split-band", "rail-numbered"],
+      ending: ["resolution-ending"],
     },
   },
   // memo（打字机决定，2026-08-21 wave7）：便笺纸 + 宋体标题 + 印章红双线。
@@ -1132,23 +1122,20 @@ const LAYOUTS: Record<CanonicalThemeId, Pick<ThemeDefinition, "layouts" | "motif
     // 第七波封面保真：板面是 MEMORANDUM 眉行 + 红双线 + 标题末词下划。
     // 新建 memo-head 进共享池并收窄 cover。motif 在封面退让，避免双份公文头。
     // chapter / ending 的 layouts 收窄待下版本设计板后锁定。
-    layouts: { cover: ["memo-head"], chapter: FULL_LAYOUTS.chapter, content: FULL_LAYOUTS.content, ending: FULL_LAYOUTS.ending },
+    // Wave 8 batch 4: lock issue-line chapter and decision-close ending.
+    // Motif stays memo-motif.
+    layouts: {
+      cover: ["memo-head"],
+      chapter: ["issue-line-chapter"],
+      content: FULL_LAYOUTS.content,
+      ending: ["decision-close-ending"],
+    },
     motif: "memo-motif",
     layoutTendencies: {
       cover: ["memo-head"],
-      // Second-front wave (2026-08-22)，四轴 L / bottom-left / light / tight：
-      // chapter / content / ending 走分配表软倾向。layouts 收窄仍待设计板。
-      // - chapter `masthead-chapter` + `banner-chapter`：文武线夹标题是打字机
-      //   双线的同一套排印，横幅吃 ink primary 不吃印章红（红永不成面）。前者
-      //   与 briefing 重合，真实边际来自整版横幅。
-      // - content `narrow-column` + `tone-adaptive-content`：窄栏加最朴素的一页。
-      //   两个 id 都不在 briefing 的 content 偏好里。
-      // - ending 三元集 `banner-ending` + `masthead-ending` +
-      //   `tone-adaptive-ending`：池排不开的让位追加，落款联系页打头。前两个
-      //   与 briefing 重合，真实边际来自万金油落款。
-      chapter: ["masthead-chapter", "banner-chapter"],
-      content: ["narrow-column", "tone-adaptive-content"],
-      ending: ["banner-ending", "masthead-ending", "tone-adaptive-ending"],
+      chapter: ["issue-line-chapter"],
+      content: ["asymmetric-triptych", "narrow-column", "tone-adaptive-content"],
+      ending: ["decision-close-ending"],
     },
   },
   // playbill（荧光嗓门，2026-08-21 第七波）：荧光黄整版 + 硬黑特粗字。
@@ -1164,26 +1151,22 @@ const LAYOUTS: Record<CanonicalThemeId, Pick<ThemeDefinition, "layouts" | "motif
     // 第七波封面保真：板面是出血巨字 + 底粗线，池里没有这个构造。新建
     // bill-head 进共享池并收窄 cover。日期贴片仍走 playbill-motif，版式不画。
     // chapter / ending 的 layouts 收窄待下版本设计板后锁定。
-    layouts: { cover: ["bill-head"], chapter: FULL_LAYOUTS.chapter, content: FULL_LAYOUTS.content, ending: FULL_LAYOUTS.ending },
+    // Wave 8 batch 4: lock day-bill chapter and ticket-cta ending.
+    // Motif stays playbill-motif. Ending inverts and yields the date chip.
+    layouts: {
+      cover: ["bill-head"],
+      chapter: ["day-bill-chapter"],
+      content: FULL_LAYOUTS.content,
+      ending: ["ticket-cta-ending"],
+    },
     // 2026-08-22 用户终审还原日期贴片：motif 读 meta.date，无日期整片
     // 不画（journal 期号先例）。heavy 的主体仍在满版黄与字重。
     motif: "playbill-motif",
     layoutTendencies: {
       cover: ["bill-head"],
-      // Second-front wave (2026-08-22)，四轴 C / top-band / heavy / medium：
-      // chapter / content / ending 走分配表软倾向。cover 已锁 bill-head。
-      // chapter / content / ending 的 layouts 仍是全集。content 用三元集把
-      // 三张海报脸占住，把概率往活动件方向压，全集兜底仍在。
-      // - chapter `fashion-chapter` + `poster-chapter`：满版黄黑两式。两个 id
-      //   都不在 briefing 的 chapter 偏好里。
-      // - content `split-band` + `stacked-poster` + `banner-heading`：通栏头带、
-      //   主视觉堆叠、全宽断言横幅。`banner-heading` 与 briefing 重合，真实
-      //   边际来自另外两张。briefing 下抽签与二元集逐字节相同，其它策略下
-      //   横幅会真的加力。
-      // - ending `fashion-ending` + `poster-ending`：满版收官加居中海报。
-      chapter: ["fashion-chapter", "poster-chapter"],
-      content: ["split-band", "stacked-poster", "banner-heading"],
-      ending: ["fashion-ending", "poster-ending"],
+      chapter: ["day-bill-chapter"],
+      content: ["stacked-poster", "rail-numbered", "split-band"],
+      ending: ["ticket-cta-ending"],
     },
   },
 }

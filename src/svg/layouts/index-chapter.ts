@@ -26,6 +26,12 @@ import { SealNumeralChapter } from "./chapter-seal-numeral-chapter"
 import { FieldBandChapter } from "./chapter-field-band-chapter"
 import { SubjectRuleChapter } from "./chapter-subject-rule-chapter"
 import { RoundMarkChapter } from "./chapter-round-mark-chapter"
+import { OneWordChapter } from "./chapter-one-word-chapter"
+import { ChalkRuleChapter } from "./chapter-chalk-rule-chapter"
+import { DecimalIndexChapter } from "./chapter-decimal-index-chapter"
+import { IssueLineChapter } from "./chapter-issue-line-chapter"
+import { DayBillChapter } from "./chapter-day-bill-chapter"
+import { HallLabelChapter } from "./chapter-hall-label-chapter"
 
 export type { ChapterLayout, ChapterLayoutId } from "./types"
 
@@ -60,4 +66,10 @@ export const CHAPTER_LAYOUTS: Record<ChapterLayoutId, ChapterLayout> = {
   "field-band-chapter": FieldBandChapter,
   "subject-rule-chapter": SubjectRuleChapter,
   "round-mark-chapter": RoundMarkChapter,
+  "one-word-chapter": OneWordChapter,
+  "chalk-rule-chapter": ChalkRuleChapter,
+  "decimal-index-chapter": DecimalIndexChapter,
+  "issue-line-chapter": IssueLineChapter,
+  "day-bill-chapter": DayBillChapter,
+  "hall-label-chapter": HallLabelChapter,
 }

@@ -44,6 +44,14 @@ import type { StyleTokens } from "./tokens";
  *
  * 可拉伸性：荧光黄即参数（音乐节目单可把 bg 收到暖金 `#E8C40A`，招募
  * 海报可把 primary 收到纯黑 `#0A0A0A`）。
+ *
+ * **第八波批 4（2026-08-23，`.issues/design-boards/wave8/b4/Playbill.dc.html`）**：
+ * 封面继续锁 `bill-head`，日期贴片封面几何不动。章节 / ending 改锁 pinOnly
+ * `day-bill-chapter` / `ticket-cta-ending`。章节是荧光黄上的 DAY n + 特粗
+ * 黑字，标题钉板上 130px，不要乘 typeScale。ending 满版 primary 由版式自绘
+ * （`paintsOwnBackground`），`defaultBackgrounds.ending` 保持荧光黄
+ * `#F4DD1B`，避免 contrast floor 拿深字压深底。motif 章节 / 内容继续退让，
+ * ending 也退让（黑场反转页没有贴片）。角色色 hex 与 fonts 一处不改。
  */
 export const PLAYBILL_TOKENS: StyleTokens = {
   id: "playbill",
