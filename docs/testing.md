@@ -165,17 +165,19 @@ It renders four tables through the real chain (`validateIr` →
 `renderSlideSvg`, the same two calls `render`/`preview` make — no
 gallery-specific rendering branch exists, and promotional images are meant
 to come from what passes review here). `evals/gallery/hashes.json` pins
-674 pages (`gallery-page-v2`):
+875 pages (`gallery-page-v2`):
 
 - **主题表** — all 24 themes running one identical ten-page deck (cover +
   chapter + 7 content + ending), so two themes differ by exactly one
   variable (240 pages)
-- **版式表** — every layout on one baseline theme, Chinese, English and
-  mixed-script content (227 pages)
-- **组件表** — every component on one baseline theme, each in Chinese,
-  English and mixed-script content (180 pages)
-- **满载表** — nine components filled to capacity without overflowing
-  (27 pages)
+- **版式表** — every registered layout including pinOnly, ordinary layouts
+  on one baseline theme across three language tracks, sparse layouts
+  expanded onto the themes that offer them (416 pages)
+- **组件表** — every component on one baseline theme, chart variants, and
+  dedicated form-variant pages, each in Chinese, English and mixed-script
+  content (195 pages)
+- **满载表** — eight components filled to capacity without overflowing
+  (24 pages)
 
 Output is `.gallery/`: per-page SVGs, a machine-readable `manifest.json`,
 and a self-contained `index.html` that can be double-clicked offline. In

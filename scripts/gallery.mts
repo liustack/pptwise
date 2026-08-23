@@ -28,6 +28,7 @@ import { installNodePlatform } from "../src/platform/node"
 import { corpusAssets, type CorpusAssets } from "../evals/gallery/corpus/decks"
 import { LANGUAGE_IDS, LEXICONS, type LanguageId } from "../evals/gallery/corpus/lexicon"
 import { buildGalleryHtml, summarize } from "../evals/gallery/html"
+import { assertInventoryCoverage } from "../evals/gallery/coverage"
 import { assertFullCoverage, buildMatrix, type TableId } from "../evals/gallery/matrix"
 import { pruneGalleryDir } from "../evals/gallery/prune"
 import { renderMatrix } from "../evals/gallery/render"
@@ -99,6 +100,7 @@ const assets = Object.fromEntries(
 ) as Record<LanguageId, CorpusAssets>
 
 const jobs = buildMatrix(themeIds, assets, { languages, themeLanguage, only })
+if (!only) assertInventoryCoverage(jobs)
 console.log(`gallery: rendering ${jobs.length} pages through the real render chain…`)
 
 mkdirSync(outDir, { recursive: true })

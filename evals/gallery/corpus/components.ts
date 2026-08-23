@@ -484,6 +484,9 @@ export const FORM_VARIANTS: readonly FormVariant[] = [
   { id: "image_grid · numbered photos", theme: "museum", build: (lex) => COMPONENT_BUILDERS.image_grid!(lex) },
   { id: "flowchart · typed nodes", theme: "swiss", build: (lex) => COMPONENT_BUILDERS.flowchart!(lex) },
   { id: "architecture · layer stack", theme: "consulting", build: (lex) => COMPONENT_BUILDERS.architecture!(lex) },
+  { id: "callout · tint panel", theme: "heritage", build: (lex) => COMPONENT_BUILDERS.callout!(lex) },
+  { id: "callout · hanging bare", theme: "memo", build: (lex) => COMPONENT_BUILDERS.callout!(lex) },
+  { id: "callout · lead word", theme: "luxe", build: (lex) => COMPONENT_BUILDERS.callout!(lex) },
 ]
 
 /** Icons for the full-load cards, cycled. One per card, none repeated. */

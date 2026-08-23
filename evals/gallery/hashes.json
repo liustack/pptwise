@@ -4211,6 +4211,51 @@
       "geometry": "vlq6rl",
       "color": "1i6uov2"
     },
+    "component--callout-tint-panel--zh": {
+      "hash": "osajet",
+      "geometry": "1tm7iu7",
+      "color": "9ls297"
+    },
+    "component--callout-tint-panel--en": {
+      "hash": "1vnzelz",
+      "geometry": "8j1apx",
+      "color": "ziaefd"
+    },
+    "component--callout-tint-panel--mixed": {
+      "hash": "1cbdntj",
+      "geometry": "y5q2xr",
+      "color": "9ls297"
+    },
+    "component--callout-hanging-bare--zh": {
+      "hash": "3htz71",
+      "geometry": "1myo5dw",
+      "color": "11w36ra"
+    },
+    "component--callout-hanging-bare--en": {
+      "hash": "rzw7gd",
+      "geometry": "1468i1s",
+      "color": "6nhsl7"
+    },
+    "component--callout-hanging-bare--mixed": {
+      "hash": "1ao2p6f",
+      "geometry": "30dej4",
+      "color": "11w36ra"
+    },
+    "component--callout-lead-word--zh": {
+      "hash": "v50xky",
+      "geometry": "ncz15s",
+      "color": "oblfr8"
+    },
+    "component--callout-lead-word--en": {
+      "hash": "11fx193",
+      "geometry": "elixb3",
+      "color": "v3hr4m"
+    },
+    "component--callout-lead-word--mixed": {
+      "hash": "1q3ny3a",
+      "geometry": "1r216iw",
+      "color": "oblfr8"
+    },
     "density--bullets--zh": {
       "hash": "1l4gwht",
       "geometry": "1z0xo52",
