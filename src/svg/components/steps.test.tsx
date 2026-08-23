@@ -507,6 +507,17 @@ describe("arrow_steps form", () => {
     expect(container.querySelector("[data-dropped]")).toBeNull()
   })
 
+  it("circle-outline badges stay inside the arrow instead of hanging off the left", () => {
+    const themeCtx = buildCtx(resolveStyle("runway"), {})
+    const { container } = svg(steps.render(three, box, themeCtx))
+    for (const c of Array.from(container.querySelectorAll("circle"))) {
+      const cx = Number(c.getAttribute("cx"))
+      const r = Number(c.getAttribute("r"))
+      const sw = Number(c.getAttribute("stroke-width") ?? 0)
+      expect(cx - r - sw / 2).toBeGreaterThanOrEqual(0)
+    }
+  })
+
   it("narrow width stacks the same arrows instead of falling back to the card face", () => {
     const themeCtx = buildCtx(resolveStyle("runway"), {})
     const narrow = { x: 0, y: 0, w: 600, h: 900 }
