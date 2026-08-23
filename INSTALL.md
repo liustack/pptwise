@@ -22,7 +22,7 @@ You are on dsh if `~/.dsh/` exists, or the conversation runs in the DeepSeek
 Harness web or desktop app. One command installs the plugin:
 
 ```sh
-npx -y @deepseek-ai/dsh plugin --profile web add @liustack/pptwise@0.21.0
+npx -y @deepseek-ai/dsh plugin --profile web add @liustack/pptwise@0.22.0
 ```
 
 The version is named on purpose: dsh installs plugins through pnpm 11, which
