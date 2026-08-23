@@ -2,11 +2,13 @@
 import { describe, it, expect } from "vitest"
 import { renderToStaticMarkup } from "react-dom/server"
 import { createElement } from "react"
-import { fitSvgLine } from "../lib/svg-text-layout"
+import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout"
 import {
   parseEmphasis,
   stripEmphasis,
   renderEmphasisTspans,
+  renderEmphasisLine,
+  resolveEmphasisForm,
   sliceEmphasisForLines,
   fitEmphasisLine,
 } from "./emphasis"
@@ -152,6 +154,90 @@ describe("sliceEmphasisForLines", () => {
     const segments = parseEmphasis("no markup here")
     const [line] = sliceEmphasisForLines(segments, ["no markup here"])
     expect(line).toEqual([{ text: "no markup here", emphasized: false }])
+  })
+})
+
+describe("resolveEmphasisForm", () => {
+  it("assigns lecture underline, consulting pad, and insight tint", () => {
+    expect(resolveEmphasisForm("lecture")).toBe("underline")
+    expect(resolveEmphasisForm("consulting")).toBe("pad")
+    expect(resolveEmphasisForm("insight")).toBe("tint")
+  })
+})
+
+function parseQuadXSpan(d: string): { start: number; width: number } {
+  const match = /^M ([-\d.]+) [-\d.]+ q [-\d.]+ [-\d.]+ ([-\d.]+) [-\d.]+$/.exec(d)
+  if (!match) throw new Error(`not a single-q chalk path: ${d}`)
+  return { start: Number(match[1]), width: Number(match[2]) }
+}
+
+function emphasisLineMarkup(
+  text: string,
+  opts: {
+    themeId?: string
+    padFill?: string
+    accent?: string
+    baseFill?: string
+    fontSize?: number
+    x?: number
+    baselineY?: number
+  } = {},
+) {
+  const fontSize = opts.fontSize ?? 40
+  const x = opts.x ?? 100
+  const rendered = renderEmphasisLine(parseEmphasis(text), {
+    accent: opts.accent ?? "#E9C46A",
+    padFill: opts.padFill,
+    baseFill: opts.baseFill ?? "#EFF3EC",
+    fontSize,
+    x,
+    baselineY: opts.baselineY ?? 200,
+    themeId: opts.themeId,
+  })
+  return renderToStaticMarkup(
+    createElement("g", null, rendered.pads, createElement("text", { x, y: 200, fontSize }, rendered.tspans)),
+  )
+}
+
+describe("renderEmphasisLine underline", () => {
+  it("draws a chalk arc under the emphasized run, not a full-title scribble", () => {
+    const fontSize = 40
+    const x = 100
+    const html = emphasisLineMarkup("囚徒**困境**与重复博弈", { themeId: "lecture", fontSize, x })
+    expect(html).toContain('data-emphasis-underline=""')
+    expect(html).not.toContain('data-emphasis-pad=""')
+    expect(html).not.toContain("q 160 8 330 3")
+    expect(html).not.toContain("q 140 -8 292 -2")
+
+    const doc = new DOMParser().parseFromString(`<svg>${html}</svg>`, "image/svg+xml")
+    const path = doc.querySelector("[data-emphasis-underline]")!
+    expect(path.getAttribute("stroke")).toBe("#E9C46A")
+    expect(path.getAttribute("fill")).toBe("none")
+    expect(path.getAttribute("stroke-linecap")).toBe("round")
+    const span = parseQuadXSpan(path.getAttribute("d")!)
+    expect(span.start).toBeCloseTo(x + measureTextUnits("囚徒") * fontSize, 6)
+    expect(span.width).toBeCloseTo(measureTextUnits("困境") * fontSize, 6)
+    expect(span.width).toBeLessThan(330)
+
+    const emph = Array.from(doc.querySelectorAll("tspan")).find((el) => el.textContent === "困境")!
+    expect(emph.getAttribute("fill")).toBe("#E9C46A")
+    expect(emph.getAttribute("data-emphasis-pad-fill")).toBeNull()
+  })
+
+  it("uses padFill as the underline stroke when provided", () => {
+    const html = emphasisLineMarkup("前**关键词**后", {
+      themeId: "lecture",
+      padFill: "#112233",
+    })
+    const doc = new DOMParser().parseFromString(`<svg>${html}</svg>`, "image/svg+xml")
+    expect(doc.querySelector("[data-emphasis-underline]")?.getAttribute("stroke")).toBe("#112233")
+  })
+
+  it("keeps unassigned themes on the tint branch with no underline path", () => {
+    const html = emphasisLineMarkup("年度**增长结论**与下一步投入", { themeId: "insight" })
+    expect(html).not.toContain("data-emphasis-underline")
+    expect(html).not.toContain("data-emphasis-pad")
+    expect(html).toContain('fill="#E9C46A"')
   })
 })
 

@@ -1948,6 +1948,84 @@ describe("runMigrate", () => {
       expect(source.components[0].type).toBe("logo_wall")
     })
   })
+
+  describe("banner-heading → two-column", () => {
+    it("a v4 IR file with a banner-heading pin writes two-column, mentions the rewrite, and does not touch the source", async () => {
+      const srcDir = await makeDeckDir()
+      const irPath = join(srcDir, "v4.json")
+      const source = {
+        ...VALID_IR,
+        slides: [
+          VALID_IR.slides[0],
+          { type: "content", heading: "Body", layout: "banner-heading" },
+        ],
+      }
+      await writeFile(irPath, JSON.stringify(source))
+      const outPath = join(await makeDeckDir(), "out.json")
+
+      const msg = await runMigrate(irPath, outPath)
+      expect(msg).toMatch(/banner-heading/)
+      expect(msg).toMatch(/two-column/)
+      expect(msg).not.toMatch(/v3 → v4/)
+
+      const written = JSON.parse(await readFile(outPath, "utf8"))
+      expect(written.slides[1].layout).toBe("two-column")
+
+      const stillThere = JSON.parse(await readFile(irPath, "utf8"))
+      expect(stillThere.slides[1].layout).toBe("banner-heading")
+    })
+
+    it("a v4 IR file with chrome, bloom, logo_wall, and banner-heading rewrites all four in one write", async () => {
+      const srcDir = await makeDeckDir()
+      const irPath = join(srcDir, "v4.json")
+      await writeFile(
+        irPath,
+        JSON.stringify({
+          ...VALID_IR,
+          chrome: "full",
+          theme: { id: "bloom" },
+          slides: [
+            VALID_IR.slides[0],
+            {
+              type: "content",
+              heading: "Body",
+              layout: "banner-heading",
+              components: [
+                {
+                  type: "logo_wall",
+                  title: "Partners",
+                  items: [
+                    { asset_id: "logo-1", label: "Acme" },
+                    { asset_id: "logo-2" },
+                    { asset_id: "logo-3" },
+                    { asset_id: "logo-4" },
+                  ],
+                },
+              ],
+            },
+          ],
+        }),
+      )
+      const outPath = join(await makeDeckDir(), "out.json")
+
+      const msg = await runMigrate(irPath, outPath)
+      expect(msg).toMatch(/chrome/)
+      expect(msg).toMatch(/branding/)
+      expect(msg).toMatch(/bloom/)
+      expect(msg).toMatch(/classroom/)
+      expect(msg).toMatch(/logo_wall/)
+      expect(msg).toMatch(/image_grid/)
+      expect(msg).toMatch(/banner-heading/)
+      expect(msg).toMatch(/two-column/)
+
+      const written = JSON.parse(await readFile(outPath, "utf8"))
+      expect(written.branding).toBe("full")
+      expect(written.chrome).toBeUndefined()
+      expect(written.theme.id).toBe("classroom")
+      expect(written.slides[1].layout).toBe("two-column")
+      expect(written.slides[1].components[0].type).toBe("image_grid")
+    })
+  })
 })
 
 describe("applyDeckConfig four-layer chain (W5 task 5): user config layer", () => {

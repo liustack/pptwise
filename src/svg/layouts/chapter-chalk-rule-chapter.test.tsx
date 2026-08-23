@@ -6,6 +6,7 @@ import { assertSubset } from "../subset-validate"
 import { buildCtx, FullSlideSvg, resolveBackgroundHex } from "../full-slide-svg"
 import { resolveStyle, CANONICAL_THEME_IDS } from "../../themes"
 import { accessibleInk, contrastRatio, metaInk, requiredContrastRatio } from "../ink"
+import { measureTextUnits } from "../../lib/svg-text-layout"
 import { ChalkRuleChapter, layoutDef } from "./chapter-chalk-rule-chapter"
 import type { PptxIR, Slide } from "@/ir"
 
@@ -62,8 +63,14 @@ function noOverflowMarks(markup: string) {
   expect(markup).not.toContain("...")
 }
 
+function parseQuadXSpan(d: string): { start: number; width: number } {
+  const match = /^M ([-\d.]+) [-\d.]+ q [-\d.]+ [-\d.]+ ([-\d.]+) [-\d.]+$/.exec(d)
+  if (!match) throw new Error(`not a single-q chalk path: ${d}`)
+  return { start: Number(match[1]), width: Number(match[2]) }
+}
+
 describe("chapter-chalk-rule-chapter — board geometry", () => {
-  it("places the lecture kicker, left title, chalk arc, and subtitle on the board", () => {
+  it("places the lecture kicker, left title, and subtitle on the board", () => {
     const { root, tokens, ctx } = renderChapter("lecture")
     const bg = ctx.defaultBg ?? tokens.colors.bg
 
@@ -84,14 +91,7 @@ describe("chapter-chalk-rule-chapter — board geometry", () => {
     expect(title?.getAttribute("letter-spacing")).toBeNull()
     expect(title?.getAttribute("fill")).toBe(accessibleInk(tokens.colors.text, bg, 56))
 
-    const arc = root.querySelector("path")
-    expect(arc?.getAttribute("d")).toBe("M 96 448 q 200 10 420 2")
-    expect(arc?.getAttribute("fill")).toBe("none")
-    expect(arc?.getAttribute("stroke")).toBe(tokens.colors.accent)
-    expect(arc?.getAttribute("stroke-width")).toBe("3")
-    expect(arc?.getAttribute("data-depth")).toBeNull()
-    const endX = 96 + 420
-    expect(endX).toBeLessThanOrEqual(1184)
+    expect(root.querySelector("path")).toBeNull()
 
     const sub = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === SUBHEADING)
     expect(sub?.getAttribute("x")).toBe("96")
@@ -101,6 +101,33 @@ describe("chapter-chalk-rule-chapter — board geometry", () => {
     expect(sub?.getAttribute("fill")).toBe(metaInk(tokens.colors.muted, bg))
 
     expect(root.querySelectorAll("rect")).toHaveLength(0)
+  })
+
+  it("draws a chalk underline under the marked run only", () => {
+    const marked = { type: "chapter", heading: "囚徒**困境**与重复博弈", subheading: SUBHEADING, components: [] } as Slide
+    const { root, tokens, markup } = renderChapter("lecture", marked, 2, [chapter1, chapter2, marked])
+    expect(markup).not.toContain("M 96 448 q 200 10 420 2")
+    expect(markup).not.toContain("**")
+
+    const title = Array.from(root.querySelectorAll("text")).find((t) => (t.textContent ?? "").includes("困境"))!
+    const path = root.querySelector("[data-emphasis-underline]")!
+    expect(path.getAttribute("stroke")).toBe(tokens.colors.accent)
+    expect(path.getAttribute("fill")).toBe("none")
+    expect(path.getAttribute("stroke-width")).toBe("3")
+    const fontSize = Number(title.getAttribute("font-size"))
+    const fontFamily = title.getAttribute("font-family") ?? undefined
+    const titleX = Number(title.getAttribute("x"))
+    const span = parseQuadXSpan(path.getAttribute("d")!)
+    const weight = { bold: true, fontFamily }
+    expect(span.start).toBeCloseTo(titleX + measureTextUnits("囚徒", weight) * fontSize, 6)
+    expect(span.width).toBeCloseTo(measureTextUnits("困境", weight) * fontSize, 6)
+    expect(span.width).toBeLessThan(420)
+  })
+
+  it("draws no chalk path when the heading has no ** run", () => {
+    const { root } = renderChapter("lecture")
+    expect(root.querySelector("path")).toBeNull()
+    expect(root.querySelector("[data-emphasis-underline]")).toBeNull()
   })
 
   it("first chapter in a CJK deck is 第一讲", () => {
@@ -203,11 +230,16 @@ describe("chapter-chalk-rule-chapter — shared pool", () => {
     expect((title?.textContent ?? "").length).toBeLessThan(80)
   })
 
-  it("keeps the chalk arc in the foreground after FullSlideSvg", () => {
-    const slide = { ...chapter3, layout: "chalk-rule-chapter" } as Slide
+  it("keeps the chalk underline in the foreground after FullSlideSvg", () => {
+    const slide = {
+      type: "chapter",
+      heading: "囚徒**困境**与重复博弈",
+      layout: "chalk-rule-chapter",
+      components: [],
+    } as Slide
     const deck = ir("lecture", [slide])
     const { container } = render(<FullSlideSvg ir={deck} slide={slide} index={0} />)
-    const arc = container.querySelector("path")
+    const arc = container.querySelector("[data-emphasis-underline]")
     expect(arc).not.toBeNull()
     expect(arc?.closest("[data-depth='fg']")).not.toBeNull()
     expect(arc?.getAttribute("stroke-width")).toBe("3")

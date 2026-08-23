@@ -105,12 +105,15 @@ export function pullQuote({ slide, ctx }: SvgTemplateProps) {
   const attr = pullQuoteAttribution(slide)
   return (
     <>
-      <polyline
-        points="96,150 240,142 390,158 540,138 740,138 890,158 1040,142 1184,150"
-        fill="none"
-        stroke={colors.border}
-        strokeWidth={2}
-      />
+      {/* 行情折线是内容无关装饰，走中景，不与引言抢前景。 */}
+      <g data-depth="mid">
+        <polyline
+          points="96,150 240,142 390,158 540,138 740,138 890,158 1040,142 1184,150"
+          fill="none"
+          stroke={colors.border}
+          strokeWidth={2}
+        />
+      </g>
       {heading.lines.map((line, i) => (
         <text
           key={i}

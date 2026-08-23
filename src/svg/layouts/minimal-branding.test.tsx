@@ -148,7 +148,6 @@ describe("pinOnly auto-pool: editorial-verse ids never enter selection", () => {
     "narrow-column",
     "two-column",
     "rail-numbered",
-    "banner-heading",
     "stacked-poster",
     "bento-panel",
     "tone-adaptive-content",
@@ -157,7 +156,7 @@ describe("pinOnly auto-pool: editorial-verse ids never enter selection", () => {
     "split-band",
   ]
 
-  it("consulting's auto content pool is the 10-id set, and no built-in theme lists a pinOnly editorial-verse id", () => {
+  it("consulting's auto content pool is the 9-id set, and no built-in theme lists a pinOnly editorial-verse id", () => {
     expect([...THEME_DEFINITIONS.consulting.layouts.content]).toEqual(AUTO_CONTENT)
     for (const id of BUILTIN_THEME_IDS) {
       expect(THEME_DEFINITIONS[id].layouts.content, id).not.toContain("statement")
@@ -201,10 +200,10 @@ describe("pinOnly auto-pool: editorial-verse ids never enter selection", () => {
     expect(ids).toEqual([
       "verdict-index",
       "ghost-rule-chapter",
-      "tone-adaptive-content",
-      "split-band",
+      "rail-numbered",
+      "two-column",
       "ghost-rule-chapter",
-      "banner-heading",
+      "split-band",
       "action-pad-ending",
     ])
     const identityTypes = new Set(["cover", "chapter", "ending"])

@@ -610,15 +610,10 @@ describe("renderDumbbell — mixed-sign value domain (2026-07-21 negative-axis e
   })
 })
 
-// Task R1 fix: dumbbell's from.y/to.y value labels rendered the raw data
-// value with no width fitting at all, unlike this same component's row
-// category label (the `label` variable a few lines up, `fitSvgLine(String(
-// from.x), ...)`) which already shrinks/truncates to fit its declared box.
-// A large value (e.g. a 10-digit number, the same magnitude the sub-EMU
-// line.ts fix's from=1e9-scale repro uses) had no such protection and could
-// overflow its row visually. Fixed by giving from.y/to.y the identical
-// fitSvgLine treatment, same mechanism, no new number-abbreviation
-// convention invented.
+// Task R1 + GROUP E item 5: from.y/to.y once rendered raw and unbounded,
+// then fitSvgLine-truncated with an ellipsis into a 56px band. They now
+// grow the right band from content (plot keeps a floor) and never paint
+// an ellipsis. No new number-abbreviation convention.
 describe("renderDumbbell — value-label width fitting (from.y/to.y)", () => {
   it("keeps normal-magnitude from.y/to.y byte-identical to the pre-fix raw rendering (no shrink, no truncation)", () => {
     const series: ChartSeries[] = [
@@ -637,36 +632,29 @@ describe("renderDumbbell — value-label width fitting (from.y/to.y)", () => {
     expect(toLabel!.getAttribute("data-truncated")).toBeNull()
   })
 
-  it("shrinks (fitSvgLine) a 10-digit value label instead of rendering it raw and unbounded", () => {
-    // 10 digits -- the same magnitude as the sub-EMU line.ts fix's own
-    // from=1e9-scale repro. `fill`/`text-anchor` (not textContent) locate
-    // the two value labels: whether fitSvgLine's shrink-only or
-    // shrink-then-truncate branch fires at this exact width budget isn't
-    // this test's concern (that's fitSvgLine's own unit tests' job,
-    // svg-text-layout.test.ts) -- only that the label is bounded at all,
-    // mirroring chart.test.tsx's own bar-chart fitSvgLine test, which
-    // likewise only asserts the resulting font-size range, not content.
+  it("grows the value band so a 10-digit from.y/to.y renders in full with no ellipsis", () => {
     const series: ChartSeries[] = [
       { name: "from", data: [{ x: "A", y: 1234567890 }] },
       { name: "to", data: [{ x: "A", y: 1987654321 }] },
     ]
     const { container } = svg(renderDumbbell(series, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
+    const markup = container.innerHTML
+    expect(markup).not.toContain("…")
+    expect(markup).not.toContain("...")
     const texts = Array.from(container.querySelectorAll("text"))
     const fromLabel = texts.find((t) => t.getAttribute("fill") === MUTED && t.getAttribute("text-anchor") === "middle")
     const toLabel = texts.find((t) => t.getAttribute("fill") === ACCENT)
     expect(fromLabel).toBeTruthy()
     expect(toLabel).toBeTruthy()
+    expect(fromLabel!.textContent).toBe("1234567890")
+    expect(toLabel!.textContent).toBe("1987654321")
+    expect(fromLabel!.getAttribute("data-truncated")).toBeNull()
+    expect(toLabel!.getAttribute("data-truncated")).toBeNull()
     expect(Number(fromLabel!.getAttribute("font-size"))).toBe(12)
-    expect(Number(toLabel!.getAttribute("font-size"))).toBeLessThan(12.5)
-    expect(Number(toLabel!.getAttribute("font-size"))).toBeGreaterThanOrEqual(10)
+    expect(Number(toLabel!.getAttribute("font-size"))).toBe(12.5)
   })
 
-  it("never leaves a from.y/to.y label unbounded — a pathologically long value (16 digits, Number.MAX_SAFE_INTEGER scale) truncates at the minimum font size instead of overflowing raw", () => {
-    // MAX_SAFE_INTEGER (not an even-longer digit string): stays a plain
-    // decimal String() representation (16 digits) with no scientific-
-    // notation formatting quirk (JS switches to exponential form only past
-    // 1e21) -- a realistic "how long can a genuine integer value's decimal
-    // string get" ceiling, well past this label's width budget either way.
+  it("grows the value band so a 16-digit from.y/to.y (MAX_SAFE_INTEGER scale) renders in full with no ellipsis", () => {
     const hugeFrom = Number.MAX_SAFE_INTEGER
     const hugeTo = hugeFrom - 1
     const series: ChartSeries[] = [
@@ -674,18 +662,94 @@ describe("renderDumbbell — value-label width fitting (from.y/to.y)", () => {
       { name: "to", data: [{ x: "A", y: hugeTo }] },
     ]
     const { container } = svg(renderDumbbell(series, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
+    const markup = container.innerHTML
+    expect(markup).not.toContain("…")
+    expect(markup).not.toContain("...")
     const texts = Array.from(container.querySelectorAll("text"))
-    // fill/text-anchor (not textContent) locate the two value labels here
-    // too -- at this length truncation is certain, so the full numeric
-    // string is never a reliable lookup key to begin with.
     const fromLabel = texts.find((t) => t.getAttribute("fill") === MUTED && t.getAttribute("text-anchor") === "middle")
     const toLabel = texts.find((t) => t.getAttribute("fill") === ACCENT)
     expect(fromLabel).toBeTruthy()
     expect(toLabel).toBeTruthy()
-    expect(Number(fromLabel!.getAttribute("font-size"))).toBe(12)
-    expect(Number(toLabel!.getAttribute("font-size"))).toBe(10)
-    expect(fromLabel!.textContent!.length).toBeLessThan(String(hugeFrom).length)
-    expect(toLabel!.textContent!.length).toBeLessThan(String(hugeTo).length)
+    expect(fromLabel!.textContent).toBe(String(hugeFrom))
+    expect(toLabel!.textContent).toBe(String(hugeTo))
+    expect(fromLabel!.getAttribute("data-truncated")).toBeNull()
+    expect(toLabel!.getAttribute("data-truncated")).toBeNull()
+  })
+})
+
+// GROUP E item 5: left-side category labels were fit into a hardcoded 96px
+// band via fitSvgLine, which shrinks then truncateToUnits (appends "…").
+// Ellipsis is a constitutional ban. The band must grow from the row labels
+// themselves (plot keeps a floor) so gallery-length English categories
+// render in full.
+describe("renderDumbbell — long English category labels (no ellipsis)", () => {
+  // evals/gallery/corpus/lexicon.ts EN `phrases` (the dumbbell gallery row
+  // uses slice(lex.phrases, 5)). Kept inline so this pin does not import
+  // the gallery corpus.
+  const CATEGORIES = [
+    "Seat expansion in existing accounts",
+    "Standardized onboarding templates",
+    "In-house workspace compute",
+    "Vertical playbook replication",
+    "Staffing-path automation",
+  ]
+
+  function series(): ChartSeries[] {
+    return [
+      { name: "from", data: CATEGORIES.map((x, i) => ({ x, y: 30 + i * 6 })) },
+      { name: "to", data: CATEGORIES.map((x, i) => ({ x, y: 55 + i * 7 })) },
+    ]
+  }
+
+  function rowLabels(container: HTMLElement): HTMLElement[] {
+    return Array.from(container.querySelectorAll('text[text-anchor="end"]'))
+  }
+
+  it("renders five gallery-length English categories in full, with no ellipsis and no data-truncated", () => {
+    const { container } = svg(renderDumbbell(series(), PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
+    const markup = container.innerHTML
+    expect(markup).not.toContain("…")
+    expect(markup).not.toContain("...")
+
+    const labels = rowLabels(container)
+    expect(labels).toHaveLength(CATEGORIES.length)
+    for (const label of labels) {
+      expect(label.getAttribute("data-truncated")).toBeNull()
+      expect(Number(label.getAttribute("font-size"))).toBe(13)
+    }
+
+    const painted = labels.map((t) => t.textContent ?? "")
+    for (const category of CATEGORIES) {
+      expect(painted).toContain(category)
+    }
+
+    const lines = Array.from(container.querySelectorAll("line"))
+    expect(lines.length).toBe(CATEGORIES.length)
+    for (const line of lines) {
+      const span = Math.abs(Number(line.getAttribute("x2")) - Number(line.getAttribute("x1")))
+      expect(span).toBeGreaterThan(40)
+    }
+  })
+
+  it("drops overflow glyphs without an ellipsis when the plot floor leaves no room to grow", () => {
+    const long = `Category ${"x".repeat(80)}`
+    const tiny: ChartSeries[] = [
+      { name: "from", data: [{ x: long, y: 10 }] },
+      { name: "to", data: [{ x: long, y: 20 }] },
+    ]
+    const { container } = svg(renderDumbbell(tiny, PALETTE, 0, 0, 200, 80, MUTED, TEXT, ACCENT))
+    const markup = container.innerHTML
+    expect(markup).not.toContain("…")
+    expect(markup).not.toContain("...")
+    const row = container.querySelector('text[text-anchor="end"]')
+    expect(row).toBeTruthy()
+    expect(row!.textContent).toBeTruthy()
+    expect(row!.textContent!.length).toBeGreaterThan(0)
+    expect(row!.textContent!.length).toBeLessThan(long.length)
+    expect(row!.textContent).not.toContain("…")
+    const line = container.querySelector("line")
+    expect(line).toBeTruthy()
+    expect(Math.abs(Number(line!.getAttribute("x2")) - Number(line!.getAttribute("x1")))).toBeGreaterThan(0)
   })
 })
 

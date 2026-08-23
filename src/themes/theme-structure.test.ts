@@ -621,6 +621,16 @@ const SIDE_HIGHLIGHT_RETIRE_MOVES = JSON.parse(
   readFileSync(path.join(__fixtureDir, "__fixtures__/side-highlight-retire-moves.json"), "utf-8"),
 ) as Record<string, Record<string, Record<string, { from: string | null; to: string | null }>>>
 
+/**
+ * Sixth hop: `banner-heading` retired from the auto content pool (10 -> 9).
+ * Tendency replacements and the framed/consulting named lists stay as the
+ * previous hop left them, minus this id. Cover, chapter, and ending are
+ * absent from every row. Historical JSON above is not recaptured.
+ */
+const BANNER_HEADING_RETIRE_MOVES = JSON.parse(
+  readFileSync(path.join(__fixtureDir, "__fixtures__/banner-heading-retire-moves.json"), "utf-8"),
+) as Record<string, Record<string, Record<string, { from: string | null; to: string | null }>>>
+
 const FIXTURE_SEEDS = [1, 2, 3, 4, 5]
 
 /**
@@ -996,11 +1006,12 @@ describe("second-front wave: chapter / content / ending allocation", () => {
     expect(leftover.filter(([id]) => !WAVE8_LOCKED_THEME_IDS.has(id as CanonicalThemeId))).toEqual([])
   })
 
-  it("every recorded second-front non-cover move still lands, then gallery r2 content hops, then side-highlight-retire hops, and every unlisted non-cover page stays put", () => {
+  it("every recorded second-front non-cover move still lands, then gallery r2 content hops, then side-highlight-retire hops, then banner-heading-retire hops, and every unlisted non-cover page stays put", () => {
     // Chain: pre-second-front + SECOND_FRONT_MOVES + GALLERY_R2_CONTENT_MOVES
-    // + SIDE_HIGHLIGHT_RETIRE_MOVES = now. Cover is the restore-wave slot
-    // (asserted above). Chapter and ending did not move on this hop. Content
-    // moves because the auto pool shrank 11 -> 10.
+    // + SIDE_HIGHLIGHT_RETIRE_MOVES + BANNER_HEADING_RETIRE_MOVES = now.
+    // Cover is the restore-wave slot (asserted above). Chapter and ending
+    // did not move on this hop. Content moves because the auto pool shrank
+    // 10 -> 9.
     for (const themeId of CANONICAL_THEME_IDS) {
       if (WAVE8_LOCKED_THEME_IDS.has(themeId)) continue
       for (const seed of FIXTURE_SEEDS) {
@@ -1021,12 +1032,18 @@ describe("second-front wave: chapter / content / ending allocation", () => {
           const retire = SIDE_HIGHLIGHT_RETIRE_MOVES[themeId]?.[String(seed)]?.[String(i)]
           if (retire) {
             expect(afterR2, `${themeId} seed=${seed} page ${i} retire from`).toBe(retire.from)
-            expect(now[i], `${themeId} seed=${seed} page ${i} retire to`).toBe(retire.to)
+          }
+          const afterSide = retire ? retire.to : afterR2
+          const banner = BANNER_HEADING_RETIRE_MOVES[themeId]?.[String(seed)]?.[String(i)]
+          if (banner) {
+            expect(afterSide, `${themeId} seed=${seed} page ${i} banner from`).toBe(banner.from)
+            expect(now[i], `${themeId} seed=${seed} page ${i} banner to`).toBe(banner.to)
           } else {
-            expect(now[i], `${themeId} seed=${seed} page ${i} should be untouched after retire`).toBe(afterR2)
+            expect(now[i], `${themeId} seed=${seed} page ${i} should be untouched after banner retire`).toBe(afterSide)
           }
           expect(now[i], `${themeId} seed=${seed} page ${i} retired id`).not.toBe("image-lead-split")
           expect(now[i], `${themeId} seed=${seed} page ${i} retired id`).not.toBe("side-highlight")
+          expect(now[i], `${themeId} seed=${seed} page ${i} retired id`).not.toBe("banner-heading")
         }
       }
     }
@@ -1052,6 +1069,17 @@ describe("second-front wave: chapter / content / ending allocation", () => {
     }
     expect([...pages].sort()).toEqual(["2", "3", "5"])
     expect(Object.keys(SIDE_HIGHLIGHT_RETIRE_MOVES).sort()).toEqual([...CANONICAL_THEME_IDS].sort())
+  })
+
+  it("banner-heading retire hops are content pages only (indices 2/3/5), never cover/chapter/ending", () => {
+    const pages = new Set<string>()
+    for (const seeds of Object.values(BANNER_HEADING_RETIRE_MOVES)) {
+      for (const hops of Object.values(seeds)) {
+        for (const page of Object.keys(hops)) pages.add(page)
+      }
+    }
+    expect([...pages].sort()).toEqual(["2", "3", "5"])
+    expect(Object.keys(BANNER_HEADING_RETIRE_MOVES).sort()).toEqual([...CANONICAL_THEME_IDS].sort())
   })
 
   it("no two structural identities share a chapter, content, or ending tendency set", () => {
@@ -1114,8 +1142,9 @@ describe("second-front wave: chapter / content / ending allocation", () => {
     expect(collisions).toEqual([])
   })
 
-  it("seeds 1-40: 24/24 distinct sequence-bundles, slot diversity chapter 24 / content 18 / ending 24", () => {
-    // Wave 8 batch 4 locks six more chapter/ending faces. Re-measured.
+  it("seeds 1-40: 24/24 distinct sequence-bundles, slot diversity chapter 24 / content 14 / ending 24", () => {
+    // Wave 8 batch 4 locks six more chapter/ending faces. banner-heading
+    // retirement (pool 10 -> 9) re-measured content-slot diversity 18 -> 14.
     const over40 = new Set(
       STRUCTURAL_IDENTITY_IDS.map((id) =>
         JSON.stringify(Array.from({ length: 40 }, (_, i) => resolveSequence(id, i + 1))),
@@ -1134,7 +1163,7 @@ describe("second-front wave: chapter / content / ending allocation", () => {
     const ending = slotCount(6)
     expect({ chapterA, contentA, chapterB, ending }).toEqual({
       chapterA: 24,
-      contentA: 18,
+      contentA: 14,
       chapterB: 24,
       ending: 24,
     })
@@ -1148,7 +1177,6 @@ describe("second-front wave: chapter / content / ending allocation", () => {
       "narrow-column",
       "two-column",
       "rail-numbered",
-      "banner-heading",
       "stacked-poster",
       "bento-panel",
       "tone-adaptive-content",
@@ -1165,13 +1193,15 @@ describe("second-front wave: chapter / content / ending allocation", () => {
   })
 
   it("lecture and luxe drop top-title / top-image content layouts, side-highlight is globally retired, none of those ids leak into live picks", () => {
-    const framedDropped = ["banner-heading", "split-band", "stacked-poster"] as const
+    const framedDropped = ["split-band", "stacked-poster"] as const
     for (const id of framedDropped) {
       expect(THEME_DEFINITIONS.lecture.layouts.content, `lecture still offers ${id}`).not.toContain(id)
       expect(THEME_DEFINITIONS.luxe.layouts.content, `luxe still offers ${id}`).not.toContain(id)
     }
     expect(THEME_DEFINITIONS.consulting.layouts.content).not.toContain("side-highlight")
     expect(THEME_DEFINITIONS.playbill.layouts.content).not.toContain("side-highlight")
+    expect(THEME_DEFINITIONS.consulting.layouts.content).not.toContain("banner-heading")
+    expect(THEME_DEFINITIONS.playbill.layouts.content).not.toContain("banner-heading")
     for (let seed = 1; seed <= 40; seed++) {
       const lecture = resolveSequence("lecture", seed)
       const luxe = resolveSequence("luxe", seed)
@@ -1182,6 +1212,8 @@ describe("second-front wave: chapter / content / ending allocation", () => {
         expect(framedDropped, `luxe seed=${seed} page ${page}`).not.toContain(luxe[page])
         expect(consulting[page], `consulting seed=${seed} page ${page}`).not.toBe("side-highlight")
         expect(playbill[page], `playbill seed=${seed} page ${page}`).not.toBe("side-highlight")
+        expect(consulting[page], `consulting seed=${seed} page ${page}`).not.toBe("banner-heading")
+        expect(playbill[page], `playbill seed=${seed} page ${page}`).not.toBe("banner-heading")
       }
     }
   })

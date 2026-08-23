@@ -10,7 +10,7 @@ import {
 // lookup contract, independent of any component renderer: missing /
 // unknown / unassigned pairs stay undefined so today's default face is
 // unchanged. campaign × cycle is hub_spoke (first-listed wins), never
-// petal_wheel. 78 rows (65 prior + 1 emphasis + 7 typed_nodes + 5
+// petal_wheel. 79 rows (65 prior + 2 emphasis + 7 typed_nodes + 5
 // architecture). classroom is listed on callout like every other
 // canonical theme.
 
@@ -23,6 +23,7 @@ type AssignmentRow = {
 
 const ASSIGNMENTS: AssignmentRow[] = [
   { componentType: "emphasis", themeId: "consulting", form: "pad" },
+  { componentType: "emphasis", themeId: "lecture", form: "underline" },
   {
     componentType: "icon_cards",
     themeId: "terra",
@@ -389,9 +390,11 @@ const FORM_COMPONENT_TYPES = [
 ] as const
 
 describe("resolveComponentForm", () => {
-  it("assigns the consulting emphasis primitive to pad and leaves other themes unassigned", () => {
+  it("assigns consulting pad and lecture underline, leaving other themes unassigned", () => {
     expect(resolveComponentForm("emphasis", "consulting")).toEqual({ form: "pad" })
+    expect(resolveComponentForm("emphasis", "lecture")).toEqual({ form: "underline" })
     expect(resolveComponentForm("emphasis", "academic")).toBeUndefined()
+    expect(resolveComponentForm("emphasis", "insight")).toBeUndefined()
   })
 
   describe("unassigned / missing themeId → undefined", () => {
@@ -487,13 +490,13 @@ describe("resolveComponentForm", () => {
     })
   })
 
-  it("assignment count is 78 (sum across the 12 assigned primitive and component types)", () => {
+  it("assignment count is 79 (sum across the 12 assigned primitive and component types)", () => {
     const total = FORM_COMPONENT_TYPES.reduce(
       (n, componentType) => n + assignedThemeIds(componentType).length,
       0,
     )
-    expect(total).toBe(78)
-    expect(ASSIGNMENTS).toHaveLength(78)
+    expect(total).toBe(79)
+    expect(ASSIGNMENTS).toHaveLength(79)
   })
 })
 

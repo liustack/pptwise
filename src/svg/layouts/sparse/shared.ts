@@ -50,7 +50,7 @@ export function fitHeroLine(
 /**
  * Bake a CSS-clockwise rotated rect into polygon points (y-down). Positive
  * `cssDeg` is SVG/CSS clockwise. The y-down matrix already turns a positive
- * angle clockwise (same as playbill-motif after PATCH_DEG = +4), so the
+ * angle clockwise (same as the bill-head date chip at +4°), so the
  * angle is not negated.
  */
 export function rotateRectPolygon(

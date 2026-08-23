@@ -127,6 +127,68 @@ export function migrateLogoWallToImageGrid(raw: unknown): unknown {
   return next ?? raw
 }
 
+function rewriteBannerHeadingField(obj: Record<string, unknown>, key: "layout" | "focus"): Record<string, unknown> | undefined {
+  if (obj[key] !== "banner-heading") return undefined
+  return { ...obj, [key]: "two-column" }
+}
+
+/**
+ * One-shot relocation of the removed `banner-heading` content layout onto
+ * `two-column`. This is not a long-term alias. After this lands,
+ * banner-heading is not a registered layout. Never mutates `raw`.
+ * Non-object / null / array input is returned as-is. Identity when there
+ * is no `layout: "banner-heading"` (or spec `focus: "banner-heading"`):
+ * the same `raw` reference, like logo_wall when logo_wall is absent.
+ *
+ * Walks IR `slides[].layout`, a spec `pages[].layout` / `pages[].focus`,
+ * and a page-shaped top-level `layout` / `focus`. Each leftover pin
+ * becomes `"two-column"` (`two-column` is always in the auto content
+ * pool). Heading treatments keep the title face.
+ */
+export function migrateBannerHeadingToTwoColumn(raw: unknown): unknown {
+  if (!isPlainRecord(raw)) return raw
+  let next: Record<string, unknown> | undefined
+  const take = (): Record<string, unknown> => {
+    if (!next) next = { ...raw }
+    return next
+  }
+
+  const topLayout = rewriteBannerHeadingField(raw, "layout")
+  const topFocus = rewriteBannerHeadingField(topLayout ?? raw, "focus")
+  if (topLayout || topFocus) {
+    const rewritten = topFocus ?? topLayout!
+    Object.assign(take(), rewritten)
+  }
+
+  if (Array.isArray(raw.slides)) {
+    let slidesChanged = false
+    const slides = raw.slides.map((slide) => {
+      if (!isPlainRecord(slide)) return slide
+      const rewritten = rewriteBannerHeadingField(slide, "layout")
+      if (!rewritten) return slide
+      slidesChanged = true
+      return rewritten
+    })
+    if (slidesChanged) take().slides = slides
+  }
+
+  if (Array.isArray(raw.pages)) {
+    let pagesChanged = false
+    const pages = raw.pages.map((page) => {
+      if (!isPlainRecord(page)) return page
+      const layoutHit = rewriteBannerHeadingField(page, "layout")
+      const focusHit = rewriteBannerHeadingField(layoutHit ?? page, "focus")
+      const rewritten = focusHit ?? layoutHit
+      if (!rewritten) return page
+      pagesChanged = true
+      return rewritten
+    })
+    if (pagesChanged) take().pages = pages
+  }
+
+  return next ?? raw
+}
+
 /**
  * `scenario.mode` → `narrative.strategy` value map (spec §9.1): only the
  * `"narrative"` mode value renames (the abstraction/instance collision spec
@@ -232,5 +294,7 @@ export function migrateIrV3ToV4(v3: PptxIRV3): PptxIR {
     ...(v3.seed !== undefined ? { seed: v3.seed } : {}),
     slides: v3.slides,
   }
-  return migrateLogoWallToImageGrid(migrateBloomToClassroom(migrateChromeToBranding(v4))) as PptxIR
+  return migrateBannerHeadingToTwoColumn(
+    migrateLogoWallToImageGrid(migrateBloomToClassroom(migrateChromeToBranding(v4))),
+  ) as PptxIR
 }

@@ -165,10 +165,6 @@ function borderFill(colors: ComponentCtx["colors"]): string {
   return colors.border ?? colors.muted
 }
 
-function warningStroke(colors: ComponentCtx["colors"]): string {
-  return colors.warning ?? colors.accent
-}
-
 function pageBg(ctx: ComponentCtx): string {
   return ctx.defaultBg ?? ctx.colors.bg
 }
@@ -748,11 +744,16 @@ function renderVerticalKicker(args: RenderArgs): { chrome: ReactNode; contentRec
   const kicker = stackable
     ? resolveKickerLayout(source, args.knobs, fonts.heading, args.reserve, false)
     : null
-  let titleX = leftTitleX(defaultTitleX, 126, 42, args.heading, fonts.heading, args.reserve)
+  const form = resolveEmphasisForm(args.ctx.themeId)
+  const headingForFit = form === "tint" ? args.heading : stripEmphasis(args.heading)
+  let titleX = leftTitleX(defaultTitleX, 126, 42, headingForFit, fonts.heading, args.reserve)
   if (kicker?.side === "right") {
     titleX = Math.max(titleX, kicker.x + kicker.fontSize + RESERVE_GAP)
   }
-  const title = fitTitle(args.heading, 42, titleMaxWidthFor(titleX), fonts.heading)
+  const title = fitTitle(headingForFit, 42, titleMaxWidthFor(titleX), fonts.heading)
+  const titleSegments = sliceEmphasisForLines(parseEmphasis(args.heading), title.lines)
+  const titleFill = ink(colors.text, args.ctx, title.fontSize)
+  const titleAccent = ink(colors.accent, args.ctx, title.fontSize)
   const contentY = (args.knobs.kickerMark === "vermilion-dot" ? 200 : 196) + extraTitleY(title)
   let contentX = defaultTitleX
   if (kicker?.side === "right") {
@@ -767,32 +768,44 @@ function renderVerticalKicker(args: RenderArgs): { chrome: ReactNode; contentRec
     chrome: (
       <>
         {stackable && kicker && verticalSign(args, source, { short: false, layout: kicker })}
-        {title.lines.map((line, i) => (
-          <text
-            key={i}
-            x={titleX}
-            y={126 + i * title.lineHeight}
-            fontSize={title.fontSize}
-            fontWeight={700}
-            fontFamily={fonts.heading}
-            fill={ink(colors.text, args.ctx, title.fontSize)}
-            dominantBaseline="alphabetic"
-          >
-            {line}
-          </text>
-        ))}
-        {args.knobs.titleRule === "chalk" && (
-          <g data-decor="">
-            <path
-              d={`M ${titleX + 2} 148 q 160 8 330 3`}
-              fill="none"
-              stroke={warningStroke(colors)}
-              strokeWidth={3}
-              opacity={0.85}
-              strokeLinecap="round"
-            />
-          </g>
-        )}
+        {form === "tint"
+          ? title.lines.map((line, i) => (
+              <text
+                key={i}
+                x={titleX}
+                y={126 + i * title.lineHeight}
+                fontSize={title.fontSize}
+                fontWeight={700}
+                fontFamily={fonts.heading}
+                fill={titleFill}
+                dominantBaseline="alphabetic"
+              >
+                {line}
+              </text>
+            ))
+          : title.lines.map((line, i) =>
+              renderEmphasisText(
+                titleSegments[i] ?? [{ text: line, emphasized: false }],
+                {
+                  accent: titleAccent,
+                  padFill: colors.accent,
+                  baseFill: titleFill,
+                  fontWeight: "700",
+                  themeId: args.ctx.themeId,
+                  measureWeight: { bold: true, fontFamily: fonts.heading },
+                },
+                <text
+                  key={i}
+                  x={titleX}
+                  y={126 + i * title.lineHeight}
+                  fontSize={title.fontSize}
+                  fontWeight={700}
+                  fontFamily={fonts.heading}
+                  fill={titleFill}
+                  dominantBaseline="alphabetic"
+                />,
+              ),
+            )}
       </>
     ),
   }

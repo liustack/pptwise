@@ -31,7 +31,6 @@ export const LAYOUTS = [
   "two-column",
   "bento-panel",
   "tone-adaptive-content",
-  "banner-heading",
   "narrow-column",
   "rail-numbered",
 ] as const

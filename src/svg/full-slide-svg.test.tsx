@@ -598,7 +598,7 @@ describe("manifest 四页型分发泛化 (P2)", () => {
     expect(THEME_DEFINITIONS.academic.layouts.chapter).toContain(id)
   })
 
-  it("content 命中 layout（tech → 允许集成员，W4 全集放开，design decision 8 排除 banner-heading 后 6 元素）", () => {
+  it("content 命中 layout（tech → 允许集成员，W4 全集放开后自动池成员）", () => {
     const contentSlide2: Slide = {
       type: "content",
       heading: "内容页",
@@ -703,22 +703,17 @@ describe("slide.layout explicit layout short-circuit (W2 task 3 new capability)"
   })
 
   it("honors the pin even outside the theme's curated family (spec §3: explicit layout bypasses selection unconditionally)", () => {
-    // "banner-heading" is tech's own W4 design-decision-8 content exclusion
-    // (baked white heading unreadable on tech's bright-cyan primary — see
-    // definitions.ts) — not a member of tech's curated content set. Per
-    // spec §3 ("要版式完全不动就显式写 layout 字段（显式指定不经选型）"), an
-    // explicit `layout` always wins over the theme's curated allowed set —
-    // it is not a soft preference that only applies within the family, so
-    // this must render banner-heading rather than falling back to tech's
-    // own curated set.
+    // "split-band" is outside luxe's framed content pool (gallery r2 D20).
+    // Per spec §3 ("要版式完全不动就显式写 layout 字段（显式指定不经选型）"),
+    // an explicit `layout` always wins over the theme's curated allowed set.
     const slide: Slide = {
       type: "content",
-      layout: "banner-heading",
+      layout: "split-band",
       heading: "标题",
       components: [{ type: "paragraph", text: "正文" }],
     } as Slide
-    const { container } = render(<FullSlideSvg ir={mkIr("tech", slide)} slide={slide} index={0} />)
-    expect(container.querySelector('[data-archetype="banner-heading"]')).not.toBeNull()
+    const { container } = render(<FullSlideSvg ir={mkIr("luxe", slide)} slide={slide} index={0} />)
+    expect(container.querySelector('[data-archetype="split-band"]')).not.toBeNull()
   })
 
   it("falls back to seed-pick (totality safety net) when the pinned id cannot be a layout for this slide type — unregistered, wrong kind, or wrong slideTypes", () => {

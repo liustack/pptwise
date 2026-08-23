@@ -55,7 +55,7 @@
  * | runway | *(none — settled decision, see module doc above)* | typography-only is the adjudicated look; no candidate set |
  * | museum | *(none — corner decor struck, 2026-08-21)* | identity in palette and serif type; no candidate set |
  * | stage | *(none — undecorated black field, 2026-08-21)* | 无框 is the identity; no candidate set |
- * | playbill | playbill-motif *(singleton)* | 2026-08-22 restored by user verdict: the date chip (meta.date-driven, absent-date = no chip) is part of the cover board. Wave 8 batch 4: chapter and ending yield, so the ending invert draws no chip. No sibling family shares a ticket-chip vocabulary |
+ * | playbill | playbill-motif *(singleton)* | Motif is empty. Cover date chip is bill-head foreground (wave 7 geometry). Chapter / content / ending do not draw a chip. |
  * | journal | corner-ornament-motif *(singleton)* | board-cover-restore wave 2 (2026-08-22): locked to the cover-board motif (masthead rules + issue number) so gallery p01 cannot draw heritage's bookplate or rail. Ruling: built-in theme decoration is locked. |
  * | enterprise | enterprise-motif, banner-motif, rail-motif | enterprise's Swiss-grid IKB identity pairs only with the other minimal geometric-line motifs (banner's grid, rail's arc) — organic/wash/ornamental families would visibly clash with its industrial-design register |
  * | luxe | luxe-motif *(singleton)* | board-cover-restore wave 2 (2026-08-22): locked to the cover-board motif (gilt invitation frame) so gallery p01 cannot draw heritage florets or journal's masthead rules. Ruling: built-in theme decoration is locked. |

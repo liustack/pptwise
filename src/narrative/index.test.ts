@@ -110,12 +110,12 @@ describe("STRATEGY_DEFINITIONS", () => {
     expect(pyramidSet).not.toEqual(briefingSet)
   })
 
-  it("pins the re-derived briefing content set: banner-heading + rail-numbered + two-column (bento-panel's dense evidence-grid swapped for rail-numbered's sequential enumeration)", () => {
-    expect(STRATEGY_DEFINITIONS.briefing.layoutTendencies).toEqual(["banner-heading", "rail-numbered", "two-column"])
+  it("pins the re-derived briefing content set: split-band + rail-numbered + two-column (banner-heading retired, split-band keeps the assertion-band grammar)", () => {
+    expect(STRATEGY_DEFINITIONS.briefing.layoutTendencies).toEqual(["split-band", "rail-numbered", "two-column"])
   })
 
-  it("pyramid's own content set is unchanged by the briefing re-derivation", () => {
-    expect(STRATEGY_DEFINITIONS.pyramid.layoutTendencies).toEqual(["bento-panel", "banner-heading", "two-column"])
+  it("pyramid's own content set swaps banner-heading for split-band and stays distinct from briefing", () => {
+    expect(STRATEGY_DEFINITIONS.pyramid.layoutTendencies).toEqual(["bento-panel", "split-band", "two-column"])
   })
 
   // ── content layoutTendencies: content-pool expansion weight placement

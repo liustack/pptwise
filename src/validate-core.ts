@@ -283,6 +283,16 @@ function checkLayoutApplicability(ir: PptxIR): ValidationIssue[] {
   const errors: ValidationIssue[] = []
   ir.slides.forEach((slide, i) => {
     if (slide.layout === undefined) return
+    if (slide.layout === "banner-heading") {
+      errors.push({
+        path: `slides.${i}.layout`,
+        page: i + 1,
+        ...(slide.id !== undefined ? { slideId: slide.id } : {}),
+        message:
+          'layout "banner-heading" was removed — run `pptpress migrate <input> -o <output>` to rewrite it to "two-column"',
+      })
+      return
+    }
     const def = getLayout(slide.layout)
     const available = layoutsForSlideType(slide.type)
       .map((l) => l.id)

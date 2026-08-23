@@ -610,7 +610,7 @@ describe("playbill tokens", () => {
     expect(t.id).toBe("playbill")
   })
 
-  it("motif is the restored date chip (meta.date-driven, 2026-08-22 user verdict)", () => {
+  it("keeps the playbill-motif id even though the cover chip lives on bill-head", () => {
     expect(THEME_DEFINITIONS.playbill.motif).toBe("playbill-motif")
   })
 

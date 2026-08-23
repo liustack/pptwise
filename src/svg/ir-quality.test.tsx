@@ -161,7 +161,7 @@ describe("checkIrQuality", () => {
         label: "balanced pacing, explicit generic layout — tie at 4",
         themeId: "consulting",
         pacing: "balanced",
-        layout: "banner-heading",
+        layout: "two-column",
         expectedLimit: 4,
       },
       {

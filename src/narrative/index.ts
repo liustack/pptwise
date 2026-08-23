@@ -264,8 +264,8 @@ export const STRATEGY_DEFINITIONS: Record<Strategy, StrategyDefinition> = {
       "heatmap",
       "sankey",
     ],
-    // MECE 结论先行——密集数据型 body（bento 卡片拼盘/横幅断言）+ 两栏对比。
-    layoutTendencies: ["bento-panel", "banner-heading", "two-column"],
+    // MECE 结论先行——密集数据型 body（bento 卡片拼盘/全出血断言头带）+ 两栏对比。
+    layoutTendencies: ["bento-panel", "split-band", "two-column"],
     // Identity tendencies (P1 variety wave, task 3): a conclusion-first
     // boardroom deck wants its cover/chapter/ending to read as direct and
     // authoritative, not atmospheric.
@@ -275,7 +275,7 @@ export const STRATEGY_DEFINITIONS: Record<Strategy, StrategyDefinition> = {
     // - cover `left-anchor`: a 40%-width primary-color block carries the
     //   heading — one declarative assertion block, the same "state the
     //   point boldly" instinct as this strategy's own content picks
-    //   (banner-heading, bento-panel).
+    //   (split-band, bento-panel).
     // - chapter `poster-chapter`: the pool's only *opaque* (not translucent)
     //   chapter-number watermark — the most visually confident "milestone
     //   stated outright" numeral treatment.
@@ -420,13 +420,14 @@ export const STRATEGY_DEFINITIONS: Record<Strategy, StrategyDefinition> = {
   briefing: {
     id: "briefing",
     tendencies: ["bullets", "row_cards", "timeline", "citation"],
-    // 中性通报可扫读——横幅断言 + 编号导轨 + 两栏，三种扫读友好排布并重。原三元
-    // 集合（banner-heading/bento-panel/two-column）与 pyramid 逐位相同——已按
-    // 两者的真实叙事性格重新提案（P1 variety wave, task 3）：bento-panel（密集
-    // MECE 证据网格）是 pyramid「结论先行、层层论证」的签名式排布，而 briefing
-    // 通报状态/事实是逐条陈述，不是论证聚合，换成 rail-numbered（编号进度轨，
-    // 天然是「第 N 条」的顺序枚举）更贴合「status/facts sequential」。
-    layoutTendencies: ["banner-heading", "rail-numbered", "two-column"],
+    // 中性通报可扫读——全出血断言头带 + 编号导轨 + 两栏，三种扫读友好排布并重。
+    // 原三元集合（banner-heading/bento-panel/two-column）与 pyramid 逐位相同——
+    // 已按两者的真实叙事性格重新提案（P1 variety wave, task 3）：bento-panel
+    // （密集 MECE 证据网格）是 pyramid「结论先行、层层论证」的签名式排布，而
+    // briefing 通报状态/事实是逐条陈述，不是论证聚合，换成 rail-numbered
+    // （编号进度轨，天然是「第 N 条」的顺序枚举）更贴合「status/facts sequential」。
+    // banner-heading 退订后换成 split-band（留下的断言横幅语法）。
+    layoutTendencies: ["split-band", "rail-numbered", "two-column"],
     // Identity tendencies: briefing's cover/chapter/ending stay plain and
     // fact-forward — briefing is also `general`'s default strategy, so most
     // no-narrative decks now see this set (see layout-selection.test.ts's

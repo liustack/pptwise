@@ -614,6 +614,10 @@ describe("auditPptxPackage — image-alt-dropped, rekeyed on rendered ops (alt-e
         {
           type: "content",
           heading: "Body",
+          // Pin a tight auto-pool layout. After banner-heading retired,
+          // consulting's free pick no longer overflows this slide, which
+          // would skip the drop this fixture is here to prove.
+          layout: "narrow-column",
           components: [
             { type: "bullets", items: Array.from({ length: 40 }, () => LONG_BULLET) },
             { type: "image_grid", items: [{ asset_id: "grid_a" }, { asset_id: "grid_b" }] },

@@ -2,6 +2,7 @@ import { createHash } from "node:crypto"
 import { renderSlideSvg } from "../api"
 import type { PptxIR, Slide } from "../ir"
 import { CANONICAL_THEME_IDS } from "../themes"
+import { resolveComponentForm } from "./components/form-assignments"
 
 /**
  * Unassigned-theme emphasis byte-nail matrix. Shared by the colocated test
@@ -9,7 +10,9 @@ import { CANONICAL_THEME_IDS } from "../themes"
  * before `computeEmphasisUnassignedPages`.
  */
 
-export const UNASSIGNED = CANONICAL_THEME_IDS.filter((themeId) => themeId !== "consulting")
+export const UNASSIGNED = CANONICAL_THEME_IDS.filter(
+  (themeId) => resolveComponentForm("emphasis", themeId) === undefined,
+)
 
 export const MARKED_HEADING = "年度**增长结论**与下一步投入"
 export const MARKED_SUBHEADING = "先看**关键判断**，再展开证据"
@@ -48,7 +51,7 @@ function deck(themeId: string): PptxIR {
         type: "paragraph",
         text: "普通正文中的**关键证据**保持原有强调画法。",
       }),
-      content("banner-heading", {
+      content("split-band", {
         type: "bullets",
         items: ["第一条包含**关键证据**", "第二条保持普通文本"],
       }),

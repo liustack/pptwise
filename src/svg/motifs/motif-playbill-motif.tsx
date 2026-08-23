@@ -1,115 +1,12 @@
-import { fitSvgLine } from "@/lib/svg-text-layout"
 import type { DecorProps } from "./types"
-import { DecorPiece } from "./decor-piece"
 
 /**
- * playbill-motif —— 「右上日期贴片」（2026-08-22 用户终审还原，设计源
- * `scratchpad/theme-wave7/Playbill.dc.html` 的封面样例贴片）。
+ * playbill-motif —— 空 motif。日期贴片改由 `cover-bill-head` 当封面前景画
+ * （wave 7 板 `right:56px; top:64px; rotate(4deg)`，有日期才画）。
+ * 仍注册为 playbill 的 motif id，chapter / content / ending 本来就不画贴片。
  *
- * 第一版落地时贴片被剥掉了字（「motif 不许携带内容」被执行成了空黑块），
- * 空块触犯「反对为装饰而装饰」被裁撤。用户终审推翻裁撤：板上那块**带日期
- * 的**斜贴片是设计的一部分，要求还原。合法性走 journal 期号先例
- * （`motif-corner-ornament-motif.tsx`：期号从 `ir.meta.date` 推）——
- * `meta.date` 是 IR 结构字段，不是渲染后文字几何，motif 读它不破确定性
- * 红线。规则因此是：
- *
- *   - `ir.meta.date` 有真值：画贴片，日期字排进贴片（`fitSvgLine` 缩字
- *     适配，贴片几何恒位不随文字变）
- *   - 没有：整片不画。**空黑块在任何情况下都不再出现**
- *   - 与密级/日期缺省隐藏（2026-08-22 `showsDocumentMeta`）的关系：
- *     motif 的日期衍生件按该案任务书豁免（journal 期号、ink 年月同批），
- *     贴片不看 `ir.branding`
- *
- * 几何：150×34 方片绕 (1136, 25) 顺时针 4°（对齐板上 CSS `rotate(4deg)`）。
- * 方片四角在模块加载时烘焙成 `<polygon points>`——导出侧 `svg2pptx/dispatch.ts`
- * 对 `<rect transform>` 的旋转不在受控子集内，烘焙顶点的 polygon 不受此限，
- * 且审计的压字归因把 polygon 当精确轮廓（fix/audit-polygon-attribution），
- * 贴片里的日期字会正确判给黑贴而不是页面黄底。贴片内的日期字用同一个
- * `PATCH_DEG` 写成 `<text transform="rotate(4 …)">`。正角在 SVG y 向下
- * 的画布上就是顺时针，和板上 CSS、pptxgenjs `rotate` 同号。旧实现把烘焙矩阵
- * 写成 -4°（逆时针），字仍是 +4°，贴片和字差了 8°。
- *
- * AABB 约 x1059-1213、y5-45：在标题区 (96,48,1040×122) 上方、右上
- * logo 盒 (1120,48,96×40) 顶沿之上、五个保护区全不进。只在 cover 画贴片。
- * chapter / content 继续退让。ending 也退让（第八波批 4：黑场反转页没有
- * 贴片）。content 不画还有一层：stat-hero 版式自己有一枚单位斜贴片，motif
- * 再画日期贴片就是一页两枚，触犯「斜贴片每页最多一枚」。封面锁板的贴片
- * 几何不得改。fashion-masthead 满版 primary 盖住贴片是黑压黑，不是漏画。
- *
- * 密页不降档：装饰只有这一枚顶带贴片，碰不到内容区，判据都不设
- * （第一版的论证原样成立）。
- *
- * 纪律：零 theme id、零 hex。贴片填 `ctx.colors.primary`，日期字填
- * `ctx.colors.bg`（板上「黑贴反出黄字」的 token 化读法）。画笔属性写在
- * 叶子上不挂 `<g>`。本 motif 是 playbill 独占的单成员候选集。
+ * 纪律：零 theme id、零 hex。本 motif 是 playbill 独占的单成员候选集。
  */
-
-const PATCH_CX = 1136
-const PATCH_CY = 25
-const PATCH_W = 150
-const PATCH_H = 34
-/** 顺时针 4°。SVG / 板上 CSS / pptxgenjs 在 y 向下画布上同号，烘焙矩阵不再取负。 */
-const PATCH_DEG = 4
-
-/** 日期字的排版预算：贴片内宽留 16px 内边距，字号 20 起缩到 13。 */
-const DATE_MAX_WIDTH = PATCH_W - 32
-const DATE_FONT_SIZE = 20
-const DATE_MIN_FONT_SIZE = 13
-
-const round1 = (v: number) => Math.round(v * 10) / 10
-
-/**
- * 150×34 方片绕中心顺时针 4°，四角算成一条闭合 path。模块加载时算一次，
- * 输入零随机，两次渲染逐字节同。
- */
-function patchPath(cx: number, cy: number, deg: number): string {
-  const a = (deg * Math.PI) / 180
-  const ca = Math.cos(a)
-  const sa = Math.sin(a)
-  const hw = PATCH_W / 2
-  const hh = PATCH_H / 2
-  const corners: [number, number][] = [
-    [-hw, -hh],
-    [hw, -hh],
-    [hw, hh],
-    [-hw, hh],
-  ]
-  return corners.map(([lx, ly]) => `${round1(cx + lx * ca - ly * sa)},${round1(cy + lx * sa + ly * ca)}`).join(" ")
-}
-
-export const PLAYBILL_PATCH_POINTS = patchPath(PATCH_CX, PATCH_CY, PATCH_DEG)
-
-export function PlaybillMotif({ ir, slide, ctx }: DecorProps) {
-  // chapter 让位（crayon 封面让位同款先例）：poster-chapter / roman-chapter
-  // 把机构字画在右上，与贴片区 (x1059-1213, y5-45) 真实相压（加宽后的
-  // 归因审计实测 2.94:1）。content 让位：把斜贴片名额让给 stat-hero 等
-  // 版式（gallery review r2 B3）。ending 也退让：黑场反转页没有贴片。
-  // motif 不感知当页 layout，按页型整片退让。封面几何不动。
-  if (slide.type !== "cover") return null
-  const date = ir.meta.date
-  if (!date) return null
-  const fitted = fitSvgLine(date, {
-    maxWidth: DATE_MAX_WIDTH,
-    fontSize: DATE_FONT_SIZE,
-    minFontSize: DATE_MIN_FONT_SIZE,
-    bold: true,
-  })
-  return (
-    <DecorPiece id="date-chip">
-      <polygon points={PLAYBILL_PATCH_POINTS} fill={ctx.colors.primary} />
-      <text
-        x={PATCH_CX}
-        y={PATCH_CY + fitted.fontSize * 0.35}
-        transform={`rotate(${PATCH_DEG} ${PATCH_CX} ${PATCH_CY})`}
-        fontFamily={ctx.fonts.heading}
-        fontSize={fitted.fontSize}
-        fontWeight={700}
-        fill={ctx.colors.bg}
-        textAnchor="middle"
-        dominantBaseline="alphabetic"
-      >
-        {fitted.text}
-      </text>
-    </DecorPiece>
-  )
+export function PlaybillMotif(_props: DecorProps) {
+  return null
 }

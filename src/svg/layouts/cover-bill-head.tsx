@@ -7,9 +7,10 @@ import { accessibleInk, metaInk } from "../ink"
 
 /**
  * bill-head cover layout（2026-08-22 第七波封面保真，新表达）：
- * **左上出血巨字 + 底粗线 + 左右分置落款**。构图抄 playbill「荧光嗓门」
- * 定稿板（`theme-wave7/Playbill.dc.html` 封面）。右上日期贴片已由
- * playbill-motif 承担（`motif-playbill-motif.tsx`），本版式不重复画。
+ * **左上出血巨字 + 底粗线 + 左右分置落款 + 右上日期贴片**。构图抄 playbill「荧光嗓门」
+ * 定稿板（`theme-wave7/Playbill.dc.html` 封面）。日期贴片是封面前景（板上
+ * 有日期），不是中景 motif。`playbill-motif` 为空，chapter / content / ending
+ * 不画贴片。
  *
  * **它进共享池，不是 playbill 专用**。零 theme id、零 hex。巨字吃 heading
  * + typeScale，底线走 primary（硬票根线），不是 accent。
@@ -28,7 +29,9 @@ import { accessibleInk, metaInk } from "../ink"
  *      accent 方块（tech 会抽到这家 motif），字压上去 1.42:1。左缘收到
  *      x96，躲开那一枚方块。左落款板上 6px 字距是 CJK，引擎不加。
  *   5. 右下落款板上顶到右缘 56px，压 logo 盒。右缘收到 x1108。
- *   6. 日期贴片不在本文件。无 `meta.date` 时 motif 整片不画，版式不补空块。
+ *   6. 日期贴片在本文件当前景画。几何对齐 wave 7：`top:64px; right:56px;
+ *      rotate(4deg)`。150×34 方片烘焙成 polygon（svg2pptx 不吃旋转 rect）。
+ *      无 `meta.date` 时整片不画，不补空黑块。
  */
 
 const TITLE_X = 56
@@ -51,6 +54,36 @@ const FOOT_LEFT_SIZE = 26
 const FOOT_RIGHT_SIZE = 16
 const FOOT_LEFT_TRACKING = 6
 const FOOT_RIGHT_TRACKING_EM = 0.3
+
+const CHIP_W = 150
+const CHIP_H = 34
+const CHIP_DEG = 4
+const CHIP_RIGHT = 1224
+const CHIP_TOP = 64
+const CHIP_CX = CHIP_RIGHT - CHIP_W / 2
+const CHIP_CY = CHIP_TOP + CHIP_H / 2
+const DATE_MAX_WIDTH = CHIP_W - 32
+const DATE_FONT_SIZE = 20
+const DATE_MIN_FONT_SIZE = 13
+
+const round1 = (v: number) => Math.round(v * 10) / 10
+
+function chipPath(cx: number, cy: number, deg: number): string {
+  const a = (deg * Math.PI) / 180
+  const ca = Math.cos(a)
+  const sa = Math.sin(a)
+  const hw = CHIP_W / 2
+  const hh = CHIP_H / 2
+  const corners: [number, number][] = [
+    [-hw, -hh],
+    [hw, -hh],
+    [hw, hh],
+    [-hw, hh],
+  ]
+  return corners.map(([lx, ly]) => `${round1(cx + lx * ca - ly * sa)},${round1(cy + lx * sa + ly * ca)}`).join(" ")
+}
+
+export const PLAYBILL_PATCH_POINTS = chipPath(CHIP_CX, CHIP_CY, CHIP_DEG)
 
 function hasCjk(text: string): boolean {
   return /[\u3400-\u9fff]/.test(text)
@@ -99,8 +132,36 @@ export function BillHeadCover({ ir, slide, ctx }: SvgTemplateProps) {
       })
     : null
 
+  const date = ir.meta.date
+  const dateFit = date
+    ? fitSvgLine(date, {
+        maxWidth: DATE_MAX_WIDTH,
+        fontSize: DATE_FONT_SIZE,
+        minFontSize: DATE_MIN_FONT_SIZE,
+        bold: true,
+      })
+    : null
+
   return (
     <>
+      {dateFit && date && (
+        <>
+          <polygon points={PLAYBILL_PATCH_POINTS} fill={colors.primary} />
+          <text
+            x={CHIP_CX}
+            y={CHIP_CY + dateFit.fontSize * 0.35}
+            transform={`rotate(${CHIP_DEG} ${CHIP_CX} ${CHIP_CY})`}
+            fontFamily={fonts.heading}
+            fontSize={dateFit.fontSize}
+            fontWeight={700}
+            fill={accessibleInk(colors.bg, colors.primary, dateFit.fontSize)}
+            textAnchor="middle"
+            dominantBaseline="alphabetic"
+          >
+            {dateFit.text}
+          </text>
+        </>
+      )}
       {title.lines.map((line, i) => (
         <text
           key={i}
@@ -158,8 +219,8 @@ export function BillHeadCover({ ir, slide, ctx }: SvgTemplateProps) {
 
 export const layoutDef: LayoutDefinition = {
   // cover-bill-head.tsx: left-bleed display type, thick primary baseline,
-  // split footer (org left, venue/subheading right). Event-bill grammar.
-  // Does not draw the date chip — that belongs to a theme motif.
+  // split footer (org left, venue/subheading right), cover date chip as
+  // foreground. Event-bill grammar. Motif is empty.
   id: "bill-head",
   kind: "archetype",
   slideTypes: ["cover"],

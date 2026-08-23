@@ -27,7 +27,7 @@ read_when:
 | `narratives [--json]` | 列出具名叙事预设（strategy/pacing/audience 轴 + theme 推荐） |
 | `preview <target> [-o <dir>] [--html] [--no-git-ignore]` | 逐页渲染为独立 SVG（`--html` 额外写出一个自包含的 `preview.html`），永远不受占位页拦截。不传 `-o` 时写到 `<项目>/.pptpress/<deck>/` |
 | `serve <target> [--port 4400] [--no-open]` | 实时预览服务：与 `preview --html` 同款审阅页，源文件变化自动刷新 |
-| `migrate <input> -o <output>` | 把 v3 IR 文件转成 v4，并把 chrome 改写成 branding、bloom 改写成 classroom、logo_wall 改写成 image_grid，或把 `deck.plan.json` 项目目录转成 `deck.spec.json`。确定性转换，不调模型 |
+| `migrate <input> -o <output>` | 把 v3 IR 文件转成 v4，并把 chrome 改写成 branding、bloom 改写成 classroom、logo_wall 改写成 image_grid、banner-heading 改写成 two-column，或把 `deck.plan.json` 项目目录转成 `deck.spec.json`。确定性转换，不调模型 |
 | `init` | 生成 `pptpress.config.json` 模板（仍会读取遗留的 `pptfast.config.json`） |
 | `config set <key> [value]` / `config show` | 把 Pexels/Pixabay/Openverse 凭据和生图开关存进 `$PPTPRESS_HOME/config.json`。省略 apiKey 或 clientSecret 的 value 则隐藏输入。`show` 掩码秘密并标 `(file)` / `(env)` |
 | `images search <query> [--orientation] [--color] [--min-width] [--min-height]` | 搜 Pexels，有 key 再 Pixabay，然后 Openverse（cc0/pdm）。打印署名行 |

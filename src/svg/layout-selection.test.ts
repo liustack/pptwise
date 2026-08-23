@@ -47,17 +47,16 @@ const CONTENT_LAYOUT_IDS = [
   "narrow-column",
   "two-column",
   "rail-numbered",
-  "banner-heading",
   "stacked-poster",
   "bento-panel",
   "tone-adaptive-content",
   // P1 variety wave, task 4: content pool 7 -> 10. side-highlight later
-  // retired.
+  // retired. banner-heading later retired. Auto-selectable content pool is 9.
   "asymmetric-triptych",
   "quiet-frame",
   // content-layout expansion wave, task T2. Gallery r2 D10 retired
-  // image-lead-split. This change retires side-highlight. Auto-selectable
-  // content pool is 10.
+  // image-lead-split. This change retires banner-heading. Auto-selectable
+  // content pool is 9.
   "split-band",
 ]
 
@@ -73,12 +72,12 @@ describe("resolveLayoutId", () => {
   })
 
   it("an explicit pin outside the allowed set is still honored when it's a registered layout applicable to the slide type (spec §3: explicit bypasses curation)", () => {
-    // "banner-heading" is outside luxe's framed content pool (gallery r2 D20:
-    // framed themes do not sample banner-heading / split-band / stacked-poster).
+    // "split-band" is outside luxe's framed content pool (gallery r2 D20:
+    // framed themes do not sample split-band / stacked-poster).
     // An explicit pin still bypasses that curation.
     expect(
-      resolveLayoutId("content", THEME_DEFINITIONS.luxe.layouts, 1, "0", "banner-heading", "briefing", null),
-    ).toBe("banner-heading")
+      resolveLayoutId("content", THEME_DEFINITIONS.luxe.layouts, 1, "0", "split-band", "briefing", null),
+    ).toBe("split-band")
   })
 
   it("falls back to seed-pick when the pin is unregistered, wrong kind, or has the wrong slideTypes", () => {
@@ -109,7 +108,7 @@ describe("resolveLayoutId", () => {
   })
 
   it("narrative weighting: a strategy's layoutTendencies members are picked more often than non-members (integration through resolveLayoutId, W4 design decisions 1 + 6)", () => {
-    const tendencyIds = STRATEGY_DEFINITIONS.pyramid.layoutTendencies // bento-panel/banner-heading/two-column, x3 weight
+    const tendencyIds = STRATEGY_DEFINITIONS.pyramid.layoutTendencies // bento-panel/split-band/two-column, x3 weight
     const N = 600
     let tendencyHits = 0
     // academic (not tech): a theme with zero W4 design-decision-8 curation
@@ -120,9 +119,9 @@ describe("resolveLayoutId", () => {
       const picked = resolveLayoutId("content", THEME_DEFINITIONS.academic.layouts, i, String(i), undefined, "pyramid", null)!
       if (tendencyIds.includes(picked)) tendencyHits++
     }
-    // 3 ids at weight 3 (=9) vs 7 ids (10-3=7) at weight 1 (=7) over the
-    // full 10-id content pool (side-highlight retired after D10's 11):
-    // expected tendency share = 9/16 = 0.5625. Wide bounds (not a tight
+    // 3 ids at weight 3 (=9) vs 6 ids (9-3=6) at weight 1 (=6) over the
+    // full 9-id content pool (banner-heading retired after the 10-id pool):
+    // expected tendency share = 9/15 = 0.6. Wide bounds (not a tight
     // equality) — this is a distribution smoke test proving the weighting
     // is wired in, `weightedPickBySeed`'s own test owns the precise ratio
     // assertion.
@@ -184,11 +183,11 @@ describe("resolveLayoutId", () => {
   it("beat weighting: a beat's tendency-set members are picked more often than non-members, on top of (not instead of) the strategy layer", () => {
     // instructional's own layoutTendencies (rail-numbered/two-column/
     // asymmetric-triptych, P1 variety wave task 4) share zero members with
-    // beat "anchor"'s tendency set (banner-heading/stacked-poster/
-    // split-band, layout-selection.ts's BEAT_TENDENCIES) —
+    // beat "anchor"'s tendency set (stacked-poster/split-band,
+    // layout-selection.ts's BEAT_TENDENCIES) —
     // an isolated pairing so this test measures the beat layer's own pull,
     // not strategy spillover onto the same ids.
-    const anchorIds = ["banner-heading", "stacked-poster", "split-band"]
+    const anchorIds = ["stacked-poster", "split-band"]
     const N = 600
     let anchorHits = 0
     for (let i = 0; i < N; i++) {
@@ -204,22 +203,22 @@ describe("resolveLayoutId", () => {
       )!
       if (anchorIds.includes(picked)) anchorHits++
     }
-    // Weights over the full 10-id pool: rail-numbered/two-column/
-    // asymmetric-triptych=3 each (strategy only, 9 total), banner-heading/
-    // stacked-poster/split-band=3 each (beat only, 9 total),
+    // Weights over the full 9-id pool: rail-numbered/two-column/
+    // asymmetric-triptych=3 each (strategy only, 9 total), stacked-poster/
+    // split-band=3 each (beat only, 6 total),
     // bento-panel/narrow-column/tone-adaptive-content/quiet-frame=1 each (4
-    // total) — total weight 22, anchor-tendency share = 9/22 ≈ 0.409.
+    // total) — total weight 19, anchor-tendency share = 6/19 ≈ 0.316.
     // Without the beat layer (see the "narrative weighting" test above) the
-    // same three ids would only carry strategy's ×1 floor — this bound
+    // same two ids would only carry strategy's ×1 floor — this bound
     // proves the beat layer independently lifts them, not just strategy's
     // own pull. Wide bounds, same smoke-test posture as the
     // narrative-weighting test above.
-    expect(anchorHits / N).toBeGreaterThan(0.3)
-    expect(anchorHits / N).toBeLessThan(0.52)
+    expect(anchorHits / N).toBeGreaterThan(0.22)
+    expect(anchorHits / N).toBeLessThan(0.42)
   })
 
   it("breathing's tendency set now has 2 members, not 1 (P1 variety wave, task 4 — closes the T1 handoff's single-member gap): both narrow-column and quiet-frame get independently lifted by beat alone, isolated from pyramid's own zero-overlap strategy pull", () => {
-    // pyramid's layoutTendencies (bento-panel/banner-heading/two-column)
+    // pyramid's layoutTendencies (bento-panel/split-band/two-column)
     // shares zero members with breathing's tendency set
     // (narrow-column/quiet-frame) — the same isolated-pairing methodology
     // the anchor test above uses, so this measures beat's own pull on
@@ -244,11 +243,11 @@ describe("resolveLayoutId", () => {
       if (picked === "narrow-column") narrowColumnHits++
       if (picked === "quiet-frame") quietFrameHits++
     }
-    // Weights: bento-panel/banner-heading/two-column=3 each (strategy only,
+    // Weights: bento-panel/split-band/two-column=3 each (strategy only,
     // 9 total), narrow-column/quiet-frame=3 each (beat only, 6 total),
-    // rail-numbered/stacked-poster/tone-adaptive-content/asymmetric-triptych/
-    // split-band=1 each (5 total) — total weight 20, combined
-    // breathing share = 6/20 = 0.3, each member individually = 3/20 = 0.15.
+    // rail-numbered/stacked-poster/tone-adaptive-content/asymmetric-triptych=1
+    // each (4 total) — total weight 19, combined
+    // breathing share = 6/19 ≈ 0.316, each member individually = 3/19 ≈ 0.158.
     // Both members must show real, comparable lift — a single-member set
     // would have one candidate carrying the whole 0.3 alone.
     expect(hits / N).toBeGreaterThan(0.22)
@@ -258,8 +257,8 @@ describe("resolveLayoutId", () => {
   })
 
   it("beat weighting composes via max, not multiplication: agreement between the two layers caps at either layer's own weight instead of squaring it (P1 fix round)", () => {
-    // pyramid's layoutTendencies includes "banner-heading"; beat "anchor"'s
-    // tendency set also includes "banner-heading" — the one pool member both
+    // pyramid's layoutTendencies includes "split-band"; beat "anchor"'s
+    // tendency set also includes "split-band" — the one pool member both
     // layers agree on. Under Math.max: weight stays 3 (max(3,3)=3), not 9
     // (3×3, the original multiplicative formula this fix round replaced).
     const N = 1000
@@ -275,17 +274,17 @@ describe("resolveLayoutId", () => {
         null,
         "anchor",
       )!
-      if (picked === "banner-heading") hits++
+      if (picked === "split-band") hits++
     }
-    // Weights over the full 10-id pool (side-highlight retired) under max
-    // composition: banner-heading=max(3,3)=3 (shared member), bento-panel/
-    // two-column=max(3,1)=3 each (strategy only), stacked-poster/
-    // split-band=max(1,3)=3 each (beat only), narrow-column/
-    // rail-numbered/tone-adaptive-content/asymmetric-triptych/quiet-frame=
-    // max(1,1)=1 each (5 ids) — total 3×5 + 1×5 = 20, banner-heading share
-    // = 3/20 = 0.15 exactly. Bounds set around that value and, deliberately,
+    // Weights over the full 9-id pool (banner-heading retired) under max
+    // composition: split-band=max(3,3)=3 (shared member), bento-panel/
+    // two-column=max(3,1)=3 each (strategy only), stacked-poster=
+    // max(1,3)=3 (beat only), narrow-column/rail-numbered/
+    // tone-adaptive-content/asymmetric-triptych/quiet-frame=
+    // max(1,1)=1 each (5 ids) — total 3×4 + 1×5 = 17, split-band share
+    // = 3/17 ≈ 0.176. Bounds set around that value and, deliberately,
     // well below what the old multiplicative formula would give on this
-    // same 10-id pool (banner-heading=3×3=9 vs. a 26-total weight ≈ 0.346)
+    // same 9-id pool (split-band=3×3=9 vs. a 23-total weight ≈ 0.391)
     // to prove the regression stays closed as the pool grows, not just at
     // the 7-id size it was originally measured against.
     expect(hits / N).toBeGreaterThan(0.08)
@@ -313,9 +312,9 @@ describe("resolveLayoutId", () => {
       )!
       if (picked === "narrow-column") narrowColumnHits++
     }
-    // Weights under Math.max, 10-id auto pool after side-highlight retired:
-    // narrow-column=3, quiet-frame=3, stacked-poster=3, the remaining 7 ids
-    // at 1 — total 16, share 3/16 = 0.1875. Bounds set with margin on both
+    // Weights under Math.max, 9-id auto pool after banner-heading retired:
+    // narrow-column=3, quiet-frame=3, stacked-poster=3, the remaining 6 ids
+    // at 1 — total 15, share 3/15 = 0.2. Bounds set with margin on both
     // sides of that point estimate for N=5000 sampling noise.
     const share = narrowColumnHits / N
     expect(share).toBeGreaterThan(0.14)
@@ -395,12 +394,12 @@ describe("resolveLayoutId", () => {
         )
         if (picked === "quiet-frame") hits++
       }
-      // Weights over the 10-id pool: bento-panel/banner-heading/two-column=3
+      // Weights over the 9-id pool: bento-panel/split-band/two-column=3
       // each (strategy only, pyramid's own layoutTendencies, 9 total),
-      // quiet-frame=3 (theme only), the remaining 6 ids=1 each (6 total) —
-      // total weight 18, quiet-frame share = 3/18 ≈ 0.167. A bare weight-1
-      // floor (no theme layer at all) would give 1/16 ≈ 0.0625 instead
-      // (9+7 denominator, quiet-frame among the 7 unmarked) — assert clearly
+      // quiet-frame=3 (theme only), the remaining 5 ids=1 each (5 total) —
+      // total weight 17, quiet-frame share = 3/17 ≈ 0.176. A bare weight-1
+      // floor (no theme layer at all) would give 1/15 ≈ 0.067 instead
+      // (9+6 denominator, quiet-frame among the 6 unmarked) — assert clearly
       // above that uniform-floor baseline.
       const share = hits / N
       expect(share).toBeGreaterThan(0.11)
@@ -408,9 +407,9 @@ describe("resolveLayoutId", () => {
     })
 
     it("composes via max, not multiplication: a strategy AND a theme both naming the same id caps its weight at 3, not 9 (the ruling most likely to be silently violated)", () => {
-      // pyramid's layoutTendencies includes "banner-heading" — declare the
+      // pyramid's layoutTendencies includes "split-band" — declare the
       // theme's own tendency for that exact same id, on the same pool.
-      expect(STRATEGY_DEFINITIONS.pyramid.layoutTendencies).toContain("banner-heading")
+      expect(STRATEGY_DEFINITIONS.pyramid.layoutTendencies).toContain("split-band")
       const N = 2000
       let hits = 0
       for (let i = 0; i < N; i++) {
@@ -423,16 +422,16 @@ describe("resolveLayoutId", () => {
           "pyramid",
           null,
           undefined,
-          ["banner-heading"],
+          ["split-band"],
         )
-        if (picked === "banner-heading") hits++
+        if (picked === "split-band") hits++
       }
-      // Weights over the 10-id pool under max: banner-heading=max(3,3)=3
+      // Weights over the 9-id pool under max: split-band=max(3,3)=3
       // (shared, capped not squared), bento-panel/two-column=3 each
-      // (strategy only), the remaining 7 ids=1 each — total 3*3 + 7*1 = 16,
-      // banner-heading share = 3/16 = 0.1875. Under the (rejected)
+      // (strategy only), the remaining 6 ids=1 each — total 3*3 + 6*1 = 15,
+      // split-band share = 3/15 = 0.2. Under the (rejected)
       // multiplicative formula it would instead be weight 9 against a total
-      // of 9+3+3+7=22, share 9/22 ≈ 0.409 — well outside these bounds, so a
+      // of 9+3+3+6=21, share 9/21 ≈ 0.429 — well outside these bounds, so a
       // regression back to multiplication would fail this assertion.
       const share = hits / N
       expect(share).toBeGreaterThan(0.12)
@@ -808,15 +807,14 @@ describe("resolveEffectiveLayoutId", () => {
     const slide: Slide = {
       type: "content",
       heading: "x",
-      layout: "banner-heading",
+      layout: "split-band",
       components: [{ type: "paragraph", text: "x" }],
     }
-    // luxe's own content set excludes banner-heading (W4 design decision 7's
-    // contrast adjudication, definitions.ts) — the one "outside the family"
-    // layout left once every other theme×layout content pair opened
-    // to the full set.
+    // luxe's own content set excludes split-band (gallery r2 D20 framed
+    // drop) — the remaining "outside the family" top-image layout once
+    // banner-heading retired.
     const ir = makeIR([slide], "luxe")
-    expect(resolveEffectiveLayoutId(ir, slide, 0)).toBe("banner-heading")
+    expect(resolveEffectiveLayoutId(ir, slide, 0)).toBe("split-band")
   })
 
   it("auto-pick lands within the theme's curated content allowed set", () => {
@@ -1076,9 +1074,9 @@ describe("render parity with FullSlideSvg", () => {
       slide: { type: "content", heading: "x", components: [{ type: "paragraph", text: "x" }] },
     },
     {
-      label: "consulting content, explicit banner-heading pin",
+      label: "consulting content, explicit two-column pin",
       themeId: "consulting",
-      slide: { type: "content", heading: "x", layout: "banner-heading", components: [{ type: "paragraph", text: "x" }] },
+      slide: { type: "content", heading: "x", layout: "two-column", components: [{ type: "paragraph", text: "x" }] },
     },
     {
       label: "tech content, explicit bento-panel pin",
@@ -1142,14 +1140,14 @@ describe("render parity with FullSlideSvg", () => {
   // multi-page collision, at index>0, run through the same render-parity
   // check as every case above.
   it("multi-page deck, index>0 anti-repetition swap-to-runner-up: resolveEffectiveLayoutId still matches the actual rendered data-archetype", () => {
-    // side-highlight retirement shrank the auto pool 11 -> 10. Seed 1 is
+    // banner-heading retirement shrank the auto pool 10 -> 9. Seed 3 is
     // the first academic 2-page fixture where page 0 and page 1's raw pick
     // both land on `narrow-column`, so the redraw still fires.
     const slides: Slide[] = [
       { type: "content", heading: "Page 0", components: [{ type: "paragraph", text: "x" }] },
       { type: "content", heading: "Page 1", components: [{ type: "paragraph", text: "x" }] },
     ]
-    const ir: PptxIR = { ...makeIR(slides, "academic"), seed: 1 }
+    const ir: PptxIR = { ...makeIR(slides, "academic"), seed: 3 }
 
     // Page 0: no previous page, ordinary auto-pick — sanity baseline for
     // what page 1 would collide with.
@@ -1171,7 +1169,7 @@ describe("render parity with FullSlideSvg", () => {
     const unswappedRawPick = resolveLayoutId(
       "content",
       THEME_DEFINITIONS.academic.layouts,
-      1,
+      3,
       "1",
       undefined,
       resolveIrStrategy(ir),
@@ -1184,9 +1182,9 @@ describe("render parity with FullSlideSvg", () => {
     expect(unswappedRawPick).toBe("narrow-column")
     // The real (redrawn) resolution differs from that raw pick — the redraw
     // branch, not some other code path, is what produced
-    // "tone-adaptive-content".
+    // "quiet-frame".
     expect(resolved).not.toBe(unswappedRawPick)
-    expect(resolved).toBe("tone-adaptive-content")
+    expect(resolved).toBe("quiet-frame")
   })
 
   it("a takeover or image-cover bypass never renders [data-archetype] (the layout branch is correctly skipped both sides)", () => {

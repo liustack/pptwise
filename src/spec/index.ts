@@ -453,6 +453,15 @@ function checkFocusVocabulary(spec: DeckSpec, strategy: Strategy): SpecValidatio
       })
       return
     }
+    if (page.focus === "banner-heading") {
+      errors.push({
+        path: `pages.${i}.focus`,
+        pageId: page.id,
+        message:
+          'layout "banner-heading" was removed — run `pptpress migrate <input> -o <output>` to rewrite it to "two-column"',
+      })
+      return
+    }
     if (tendencies.includes(page.focus) || COMPONENT_TYPES.includes(page.focus) || LAYOUT_IDS.includes(page.focus)) {
       return
     }

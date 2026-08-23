@@ -82,7 +82,7 @@ export function renderEmphasisTspans(
   )
 }
 
-export type EmphasisFormId = "tint" | "pad"
+export type EmphasisFormId = "tint" | "pad" | "underline"
 
 export interface EmphasisLineRender {
   pads: React.ReactNode
@@ -90,7 +90,18 @@ export interface EmphasisLineRender {
 }
 
 export function resolveEmphasisForm(themeId: string | undefined): EmphasisFormId {
-  return resolveComponentForm("emphasis", themeId)?.form === "pad" ? "pad" : "tint"
+  const form = resolveComponentForm("emphasis", themeId)?.form
+  if (form === "pad") return "pad"
+  if (form === "underline") return "underline"
+  return "tint"
+}
+
+/** Hand-drawn quadratic chalk stroke whose x-span equals `width`. */
+function chalkUnderlineD(x: number, width: number, y: number): string {
+  const span = Math.max(width, 1)
+  const ctrlDx = span * (200 / 420)
+  const ctrlDy = Math.max(4, Math.min(10, span * 0.05))
+  return `M ${x} ${y} q ${ctrlDx} ${ctrlDy} ${span} 2`
 }
 
 /**
@@ -98,7 +109,9 @@ export function resolveEmphasisForm(themeId: string | undefined): EmphasisFormId
  * to `renderEmphasisTspans` unchanged. A theme-assigned pad branch derives run
  * offsets and widths with the same `measureTextUnits` weight hint its caller
  * used for fitting, then returns foreground rectangles separately so callers
- * can place them immediately before their existing `<text>` element.
+ * can place them immediately before their existing `<text>` element. The
+ * underline branch reuses that run geometry for a chalk quadratic under each
+ * emphasized run and keeps tint-like ink on the tspans.
  */
 export function renderEmphasisLine(
   segments: EmphasisSegment[],
@@ -116,21 +129,21 @@ export function renderEmphasisLine(
   },
 ): EmphasisLineRender {
   const form = resolveEmphasisForm(opts.themeId)
+  const tspansTint = renderEmphasisTspans(segments, {
+    accent: opts.accent,
+    baseFill: opts.baseFill,
+    fontWeight: opts.fontWeight,
+  })
   if (form === "tint" || !segments.some((segment) => segment.emphasized && segment.text.length > 0)) {
     return {
       pads: null,
-      tspans: renderEmphasisTspans(segments, {
-        accent: opts.accent,
-        baseFill: opts.baseFill,
-        fontWeight: opts.fontWeight,
-      }),
+      tspans: tspansTint,
     }
   }
 
   const widths = segments.map(
     (segment) => measureTextUnits(segment.text, opts.measureWeight) * opts.fontSize,
   )
-  const xPadding = opts.fontSize * 0.1
   const lineWidth = widths.reduce((sum, width) => sum + width, 0)
   const startX =
     opts.textAnchor === "middle"
@@ -138,9 +151,36 @@ export function renderEmphasisLine(
       : opts.textAnchor === "end"
         ? opts.x - lineWidth
         : opts.x
+  const padFill = opts.padFill ?? opts.accent
+
+  if (form === "underline") {
+    const underlineY = opts.baselineY + opts.fontSize * 0.12
+    let cursorX = startX
+    const pads = segments.flatMap((segment, index) => {
+      const width = widths[index] ?? 0
+      const path =
+        segment.emphasized && segment.text.length > 0
+          ? [
+              React.createElement("path", {
+                key: index,
+                d: chalkUnderlineD(cursorX, width, underlineY),
+                fill: "none",
+                stroke: padFill,
+                strokeWidth: 3,
+                strokeLinecap: "round",
+                "data-emphasis-underline": "",
+              }),
+            ]
+          : []
+      cursorX += width
+      return path
+    })
+    return { pads, tspans: tspansTint }
+  }
+
+  const xPadding = opts.fontSize * 0.1
   const height = opts.fontSize * 1.1
   const y = opts.baselineY - opts.fontSize * 0.85
-  const padFill = opts.padFill ?? opts.accent
   let cursorX = startX
   const textXs: number[] = []
   const pads = segments.flatMap((segment, index) => {

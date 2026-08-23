@@ -624,6 +624,15 @@ describe("hard gate: focus vocabulary (strategy tendencies âˆª component types â
     expect(err!.message).toMatch(/image_grid/)
   })
 
+  it("rejects leftover focus banner-heading and points at migrate to two-column", () => {
+    const errors = expectErrors(wrapPage(content("p-1", { focus: "banner-heading" }), { narrative: pyramidScenario }))
+    const err = errors.find((e) => e.pageId === "p-1")
+    expect(err).toBeDefined()
+    expect(err!.message).toMatch(/removed/)
+    expect(err!.message).toMatch(/pptpress migrate/)
+    expect(err!.message).toMatch(/two-column/)
+  })
+
   it("accepts an omitted focus", () => {
     expectOk(wrapPage(content("p-1"), { narrative: pyramidScenario }))
   })
