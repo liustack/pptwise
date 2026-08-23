@@ -178,8 +178,7 @@ describe("gallery theme table corpus", () => {
     const expected = [
       ...COMPONENT_TYPES,
       ...THEME_CHART_SURFACES,
-      // lecture underline waits on corpus `**`. Do not list it until then.
-      ...COMPONENT_FORMS.filter((form) => form !== "underline").map((f) => `form:${f}`),
+      ...COMPONENT_FORMS.map((f) => `form:${f}`),
     ].sort()
     const listed = [...THEME_TABLE_REQUIRED_SURFACES].sort()
     expect(listed).toEqual(expected)
@@ -242,7 +241,7 @@ describe("gallery theme table corpus", () => {
         .filter((surface) => surface.startsWith("form:"))
         .map((surface) => surface.slice("form:".length)),
     )
-    for (const form of COMPONENT_FORMS.filter((id) => id !== "underline")) {
+    for (const form of COMPONENT_FORMS) {
       expect(forms.has(form), form).toBe(true)
     }
   })

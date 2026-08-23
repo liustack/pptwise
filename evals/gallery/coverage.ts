@@ -26,7 +26,13 @@ import { LEXICONS } from "./corpus/lexicon"
 import type { Job } from "./matrix"
 
 /** Emphasis form. It lives on the theme table via `**` markup, not as a component face. */
-const EMPHASIS_FORM: ComponentFormId = "pad"
+/**
+ * Emphasis forms draw a `**run**` inside body text, not a component face, so
+ * they can never have a dedicated component-table page: there is no component
+ * type to build one from. A theme-table page whose prose carries a marked run
+ * is the only place a reviewer sees them.
+ */
+const EMPHASIS_FORMS: readonly ComponentFormId[] = ["pad", "underline"]
 
 export type InventoryKind = "theme" | "layout" | "component" | "form" | "heading"
 
@@ -93,7 +99,7 @@ export function mapJobSubject(job: GallerySubject): MappedSubject | undefined {
 
 /** Component faces that need a dedicated `FORM_VARIANTS` page, not just a theme-table sighting. */
 export function dedicatedFormIds(): ComponentFormId[] {
-  return COMPONENT_FORMS.filter((form) => form !== EMPHASIS_FORM)
+  return COMPONENT_FORMS.filter((form) => !EMPHASIS_FORMS.includes(form))
 }
 
 export function formIdForVariant(variant: (typeof FORM_VARIANTS)[number]): ComponentFormId | undefined {
@@ -221,7 +227,7 @@ export function assertInventoryCoverage(jobs: readonly Job[]): void {
   if (gaps.missingDedicatedForms.length > 0) {
     problems.push(
       `no dedicated component-table page for form(s): ${gaps.missingDedicatedForms.join(", ")} — ` +
-        `add a FORM_VARIANTS row (pad is theme-table only and is not in this list)`,
+        `add a FORM_VARIANTS row (emphasis forms are theme-table only and are not in this list)`,
     )
   }
   if (gaps.missingHeadings.length > 0) {

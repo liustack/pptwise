@@ -88,6 +88,7 @@ export const THEME_TABLE_REQUIRED_SURFACES = [
   "form:hanging_bare",
   "form:lead_word",
   "form:pad",
+  "form:underline",
   "form:typed_nodes",
   "form:layer_stack",
 ] as const

@@ -27,13 +27,30 @@ import { THEME_CONTENT_SLOTS, buildThemeSlot } from "./theme-slots"
 
 const FIXTURE_DIR = join(dirname(fileURLToPath(import.meta.url)), "../fixtures/images")
 
-const CONSULTING_EMPHASIS_PHRASES: Record<
-  LanguageId,
-  { readonly cover: string; readonly heading: string; readonly bullet: string }
-> = {
-  zh: { cover: "业务评审", heading: "新签", bullet: "九成一" },
-  en: { cover: "Business Review", heading: "new business", bullet: "91%" },
-  mixed: { cover: "Kubernetes 托管", heading: "90 秒", bullet: "12 分钟" },
+interface EmphasisPhrases {
+  readonly cover: string
+  readonly heading: string
+  readonly bullet: string
+}
+
+/**
+ * Themes whose pages carry a `**run**` so the emphasis forms are visible on
+ * the review wall. Emphasis forms draw inside body text, so a theme-table
+ * page with a marked run is the only surface that can show them:
+ * `consulting` shows `pad`, `lecture` shows `underline`.
+ * `evals/gallery/coverage.ts` asserts every form reaches a page this way.
+ */
+const THEME_EMPHASIS_PHRASES: Record<string, Record<LanguageId, EmphasisPhrases>> = {
+  consulting: {
+    zh: { cover: "业务评审", heading: "新签", bullet: "九成一" },
+    en: { cover: "Business Review", heading: "new business", bullet: "91%" },
+    mixed: { cover: "Kubernetes 托管", heading: "90 秒", bullet: "12 分钟" },
+  },
+  lecture: {
+    zh: { cover: "业务评审", heading: "新签", bullet: "九成一" },
+    en: { cover: "Business Review", heading: "new business", bullet: "91%" },
+    mixed: { cover: "Kubernetes 托管", heading: "90 秒", bullet: "12 分钟" },
+  },
 }
 
 function emphasizePhrase(source: string, phrase: string): string {
@@ -64,12 +81,10 @@ function oneLineCoverHeading(lex: Lexicon): string {
   return lex.chapters[0]!
 }
 
-function consultingLead(component: Component, slotIndex: number, lex: Lexicon): Component {
+function emphasizedLead(themeId: string, component: Component, slotIndex: number, lex: Lexicon): Component {
   if (slotIndex !== 1) return component
-  if (component.type !== "bullets") {
-    throw new Error("consulting gallery p04 must lead with bullets")
-  }
-  const phrase = CONSULTING_EMPHASIS_PHRASES[lex.id].bullet
+  if (component.type !== "bullets") return component
+  const phrase = THEME_EMPHASIS_PHRASES[themeId]![lex.id].bullet
   return {
     ...component,
     items: component.items.map((item, index) => (index === 0 ? emphasizePhrase(item, phrase) : item)),
@@ -149,10 +164,10 @@ export function themeDeck(themeId: string, lex: Lexicon, assets: CorpusAssets): 
   if (!slots || slots.length !== 7) {
     throw new Error(`theme table has no 7-slot assignment for ${themeId}`)
   }
-  const emphasis = themeId === "consulting" ? CONSULTING_EMPHASIS_PHRASES[lex.id] : undefined
+  const emphasis = THEME_EMPHASIS_PHRASES[themeId]?.[lex.id]
   const content: Slide[] = slots.map((spec, i) => {
     const built = fitThemeLead(themeId, i, buildThemeSlot(spec, lex))
-    const component = emphasis ? consultingLead(built, i, lex) : built
+    const component = emphasis ? emphasizedLead(themeId, built, i, lex) : built
     const extra = thickenThemeContent(themeId, i, lex)
     return {
       type: "content" as const,
