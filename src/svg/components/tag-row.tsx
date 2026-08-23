@@ -41,21 +41,28 @@ const TAG_MIN_FONT_SIZE = 11
 const PAD_X = 12
 /** Vertical padding inside a pill — pill height = fontSize + 2*PAD_Y. */
 const PAD_Y = 6
-/** Gap between pills on the same row, and between wrapped rows. */
+/** Gap between pills on the same row. */
 const GAP_X = 8
-const GAP_Y = 8
-/** Total pill-stack height budget (px, excl. title band): a tag row occupies
- * one content-rect slot, not the whole slide. When 16 long tags in a
- * mid-width column would exceed it, the uniform font shrinks (more tags per
- * row → fewer rows) to protect it. */
+/** Gap between wrapped rows. 8px read as a crush at this type size. */
+const GAP_Y = 12
+/** Air under the last pill row, so the stack is not flush with the slot. */
+const BOTTOM_PAD = GAP_Y
+/** Total pill-stack height budget (px, excl. title band and bottom pad): a
+ * tag row occupies one content-rect slot, not the whole slide. When 16
+ * long tags in a mid-width column would exceed it, the uniform font
+ * shrinks (more tags per row → fewer rows) to protect it. Over that
+ * budget the layout reports its natural height and validate/audit catch
+ * a page that cannot hold the row. Never ellipsizes to squeeze. */
 const MAX_ROWS_H = 300
 
-// Optional overall `title` (裁定 1) — the same fixed reserved band as
-// people-cards.tsx: present in both measure() and render() only
-// when the field is set, an absent title costs nothing.
+// Optional overall `title` (裁定 1) — present in both measure() and
+// render() only when the field is set, an absent title costs nothing.
+// The band is text height plus a named gap, not one 24px slab that had
+// to hold both (gap collapsed to ~0 against the capsules).
 const TITLE_FONT_SIZE = 16
 const TITLE_MIN_FONT_SIZE = 12
-const TITLE_BAND = 24
+const TITLE_GAP = Math.ceil(TITLE_FONT_SIZE * 0.6)
+const TITLE_BAND = TITLE_FONT_SIZE + TITLE_GAP
 
 // Same "cy + round(fontSize * 0.32)" single-line vertical-centering trick as
 // people-cards.tsx's own badge/steps.tsx's numbered badge — lands the label's
@@ -153,7 +160,7 @@ function layoutTagRow(component: TagRowComponent, w: number, ctx: ComponentCtx):
 export const tagRow: SvgComponent<TagRowComponent> = {
   measure(component, w, ctx) {
     const { contentH, titleBand } = layoutTagRow(component, w, ctx)
-    return titleBand + contentH
+    return titleBand + contentH + BOTTOM_PAD
   },
   render(component, box, ctx) {
     const { fontSize, placed, titleBand } = layoutTagRow(component, box.w, ctx)
