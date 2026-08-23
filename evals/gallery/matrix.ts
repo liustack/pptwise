@@ -10,13 +10,25 @@
  */
 
 import { COMPONENT_TYPES, type PptxIR } from "@/ir"
+import { HEADING_TREATMENTS } from "@/svg/heading-treatments/assignments"
 import { LAYOUT_REGISTRY } from "@/svg/layouts/registry"
 import { SPARSE_LAYOUT_IDS, themeOffersSparse } from "@/themes/definitions"
 import { CHART_VARIANTS, COMPONENT_BUILDERS, DENSITY_BUILDERS, FORM_VARIANTS } from "./corpus/components"
-import { BASELINE_THEME, componentPage, densityPage, layoutPage, themeDeck, type CorpusAssets } from "./corpus/decks"
+import {
+  BASELINE_THEME,
+  componentPage,
+  densityPage,
+  HEADING_STATES,
+  HEADING_THEME,
+  headingPage,
+  layoutPage,
+  themeDeck,
+  type CorpusAssets,
+} from "./corpus/decks"
 import { LANGUAGE_IDS, LEXICONS, type LanguageId } from "./corpus/lexicon"
 
-export type TableId = "theme" | "layout" | "component" | "density"
+export const TABLE_IDS = ["theme", "layout", "component", "density", "heading"] as const
+export type TableId = (typeof TABLE_IDS)[number]
 
 export interface Job {
   /** Stable, filename-safe page id — also the key verdicts are recorded against. */
@@ -230,6 +242,35 @@ export function buildMatrix(
           ir,
           slideIndex: 0,
         })
+      }
+    }
+  }
+
+  // ── Heading table ──────────────────────────────────────────────────────
+  // Six constructions × three title states × the language axis, pinned on
+  // two-column (a layout that actually calls tryContentHeadingTreatment).
+  // Always a chapter then the content slide: ghost_index and tag_box return
+  // null when chapterNumberFor === 0, and the others read sectionName.
+  if (!opts.only || opts.only === "heading") {
+    for (const treatment of HEADING_TREATMENTS) {
+      for (const state of HEADING_STATES) {
+        for (const language of languages) {
+          const lex = LEXICONS[language]
+          const ir = headingPage(treatment, state, lex, assets[language])
+          push({
+            id: `heading--${safe(treatment)}--${state}--${language}`,
+            table: "heading",
+            subject: treatment,
+            language,
+            theme: HEADING_THEME[treatment],
+            page: 2,
+            pageCount: 2,
+            slideType: "content",
+            heading: ir.slides[1]!.heading ?? "",
+            ir,
+            slideIndex: 1,
+          })
+        }
       }
     }
   }

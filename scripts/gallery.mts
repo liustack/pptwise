@@ -28,7 +28,9 @@ import { installNodePlatform } from "../src/platform/node"
 import { corpusAssets, type CorpusAssets } from "../evals/gallery/corpus/decks"
 import { LANGUAGE_IDS, LEXICONS, type LanguageId } from "../evals/gallery/corpus/lexicon"
 import { buildGalleryHtml, summarize } from "../evals/gallery/html"
-import { assertFullCoverage, buildMatrix, type TableId } from "../evals/gallery/matrix"
+import { assertInventoryCoverage } from "../evals/gallery/coverage"
+import { assertFullCoverage, buildMatrix, TABLE_IDS, type TableId } from "../evals/gallery/matrix"
+import { pruneGalleryDir } from "../evals/gallery/prune"
 import { renderMatrix } from "../evals/gallery/render"
 
 const ROOT = resolve(fileURLToPath(new URL("..", import.meta.url)))
@@ -52,8 +54,8 @@ const outDir = resolve(ROOT, flag("out") || ".gallery")
 
 const onlyRaw = flag("only")
 const only = onlyRaw as TableId | undefined
-if (onlyRaw !== undefined && !["theme", "layout", "component", "density"].includes(onlyRaw)) {
-  fail(`--only must be one of theme, layout, component, density (got "${onlyRaw}")`)
+if (onlyRaw !== undefined && !(TABLE_IDS as readonly string[]).includes(onlyRaw)) {
+  fail(`--only must be one of ${TABLE_IDS.join(", ")} (got "${onlyRaw}")`)
 }
 
 const languagesRaw = flag("languages")
@@ -98,6 +100,7 @@ const assets = Object.fromEntries(
 ) as Record<LanguageId, CorpusAssets>
 
 const jobs = buildMatrix(themeIds, assets, { languages, themeLanguage, only })
+if (!only) assertInventoryCoverage(jobs)
 console.log(`gallery: rendering ${jobs.length} pages through the real render chain…`)
 
 mkdirSync(outDir, { recursive: true })
@@ -138,3 +141,7 @@ if (bboxRaw !== undefined) {
   console.log(`gallery: bbox report written to ${writeBBoxReport(report, outDir)}`)
   if (report.defects.length > 0) process.exitCode = 1
 }
+
+const keep = new Set(["pages", "index.html", "manifest.json"])
+if (bboxRaw !== undefined) keep.add("bbox.json")
+pruneGalleryDir(outDir, keep)
