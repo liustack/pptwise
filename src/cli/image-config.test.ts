@@ -18,33 +18,33 @@ import {
 } from "./image-config"
 import { resetProductEnvWarningsForTests } from "./product-env"
 
-const originalHome = process.env.PPTPRESS_HOME
-const originalPexels = process.env.PPTPRESS_PEXELS_API_KEY
-const originalPixabay = process.env.PPTPRESS_PIXABAY_API_KEY
-const originalOvId = process.env.PPTPRESS_OPENVERSE_CLIENT_ID
-const originalOvSecret = process.env.PPTPRESS_OPENVERSE_CLIENT_SECRET
+const originalHome = process.env.PPTWISE_HOME
+const originalPexels = process.env.PPTWISE_PEXELS_API_KEY
+const originalPixabay = process.env.PPTWISE_PIXABAY_API_KEY
+const originalOvId = process.env.PPTWISE_OPENVERSE_CLIENT_ID
+const originalOvSecret = process.env.PPTWISE_OPENVERSE_CLIENT_SECRET
 
 afterEach(() => {
   resetProductEnvWarningsForTests()
-  if (originalHome === undefined) delete process.env.PPTPRESS_HOME
-  else process.env.PPTPRESS_HOME = originalHome
-  if (originalPexels === undefined) delete process.env.PPTPRESS_PEXELS_API_KEY
-  else process.env.PPTPRESS_PEXELS_API_KEY = originalPexels
-  if (originalPixabay === undefined) delete process.env.PPTPRESS_PIXABAY_API_KEY
-  else process.env.PPTPRESS_PIXABAY_API_KEY = originalPixabay
-  if (originalOvId === undefined) delete process.env.PPTPRESS_OPENVERSE_CLIENT_ID
-  else process.env.PPTPRESS_OPENVERSE_CLIENT_ID = originalOvId
-  if (originalOvSecret === undefined) delete process.env.PPTPRESS_OPENVERSE_CLIENT_SECRET
-  else process.env.PPTPRESS_OPENVERSE_CLIENT_SECRET = originalOvSecret
+  if (originalHome === undefined) delete process.env.PPTWISE_HOME
+  else process.env.PPTWISE_HOME = originalHome
+  if (originalPexels === undefined) delete process.env.PPTWISE_PEXELS_API_KEY
+  else process.env.PPTWISE_PEXELS_API_KEY = originalPexels
+  if (originalPixabay === undefined) delete process.env.PPTWISE_PIXABAY_API_KEY
+  else process.env.PPTWISE_PIXABAY_API_KEY = originalPixabay
+  if (originalOvId === undefined) delete process.env.PPTWISE_OPENVERSE_CLIENT_ID
+  else process.env.PPTWISE_OPENVERSE_CLIENT_ID = originalOvId
+  if (originalOvSecret === undefined) delete process.env.PPTWISE_OPENVERSE_CLIENT_SECRET
+  else process.env.PPTWISE_OPENVERSE_CLIENT_SECRET = originalOvSecret
 })
 
 async function tmpHome(): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), "pptpress-imgcfg-"))
-  process.env.PPTPRESS_HOME = dir
-  delete process.env.PPTPRESS_PEXELS_API_KEY
-  delete process.env.PPTPRESS_PIXABAY_API_KEY
-  delete process.env.PPTPRESS_OPENVERSE_CLIENT_ID
-  delete process.env.PPTPRESS_OPENVERSE_CLIENT_SECRET
+  const dir = await mkdtemp(join(tmpdir(), "pptwise-imgcfg-"))
+  process.env.PPTWISE_HOME = dir
+  delete process.env.PPTWISE_PEXELS_API_KEY
+  delete process.env.PPTWISE_PIXABAY_API_KEY
+  delete process.env.PPTWISE_OPENVERSE_CLIENT_ID
+  delete process.env.PPTWISE_OPENVERSE_CLIENT_SECRET
   return dir
 }
 
@@ -61,7 +61,7 @@ describe("maskKey", () => {
 
 describe("resolveImageKeys whole-source", () => {
   it("uses the env var when the file never names the provider", () => {
-    process.env.PPTPRESS_PEXELS_API_KEY = "ENVPEXELS99"
+    process.env.PPTWISE_PEXELS_API_KEY = "ENVPEXELS99"
     const keys = resolveImageKeys({ file: null, env: process.env })
     expect(keys.pexels.apiKey).toBe("ENVPEXELS99")
     expect(keys.pexels.source).toBe("env")
@@ -69,7 +69,7 @@ describe("resolveImageKeys whole-source", () => {
   })
 
   it("ignores the env var when the file names images.pexels even as {}", () => {
-    process.env.PPTPRESS_PEXELS_API_KEY = "ENVPEXELS99"
+    process.env.PPTWISE_PEXELS_API_KEY = "ENVPEXELS99"
     const file = { images: { pexels: {} } }
     expect(providerNamedInFile(file, "pexels")).toBe(true)
     const keys = resolveImageKeys({ file, env: process.env })
@@ -79,7 +79,7 @@ describe("resolveImageKeys whole-source", () => {
   })
 
   it("uses the file key and ignores env when both are set", () => {
-    process.env.PPTPRESS_PEXELS_API_KEY = "ENVPEXELS99"
+    process.env.PPTWISE_PEXELS_API_KEY = "ENVPEXELS99"
     const file = { images: { pexels: { apiKey: "FILEPEXELS99" } } }
     const keys = resolveImageKeys({ file, env: process.env })
     expect(keys.pexels.apiKey).toBe("FILEPEXELS99")
@@ -87,8 +87,8 @@ describe("resolveImageKeys whole-source", () => {
   })
 
   it("uses Openverse env vars when the file never names images.openverse", () => {
-    process.env.PPTPRESS_OPENVERSE_CLIENT_ID = "ENVCLIENT99"
-    process.env.PPTPRESS_OPENVERSE_CLIENT_SECRET = "ENVSECRET99"
+    process.env.PPTWISE_OPENVERSE_CLIENT_ID = "ENVCLIENT99"
+    process.env.PPTWISE_OPENVERSE_CLIENT_SECRET = "ENVSECRET99"
     const keys = resolveImageKeys({ file: null, env: process.env })
     expect(keys.openverse.clientId).toBe("ENVCLIENT99")
     expect(keys.openverse.clientSecret).toBe("ENVSECRET99")
@@ -97,8 +97,8 @@ describe("resolveImageKeys whole-source", () => {
   })
 
   it("ignores Openverse env when the file names images.openverse even as {}", () => {
-    process.env.PPTPRESS_OPENVERSE_CLIENT_ID = "ENVCLIENT99"
-    process.env.PPTPRESS_OPENVERSE_CLIENT_SECRET = "ENVSECRET99"
+    process.env.PPTWISE_OPENVERSE_CLIENT_ID = "ENVCLIENT99"
+    process.env.PPTWISE_OPENVERSE_CLIENT_SECRET = "ENVSECRET99"
     const file = { images: { openverse: {} } }
     expect(providerNamedInFile(file, "openverse")).toBe(true)
     const keys = resolveImageKeys({ file, env: process.env })
@@ -108,17 +108,57 @@ describe("resolveImageKeys whole-source", () => {
     expect(keys.openverse.namedInFile).toBe(true)
   })
 
-  it("exported env constant names are the new PPTPRESS_* names", () => {
-    expect(PEXELS_ENV).toBe("PPTPRESS_PEXELS_API_KEY")
-    expect(PIXABAY_ENV).toBe("PPTPRESS_PIXABAY_API_KEY")
-    expect(OPENVERSE_CLIENT_ID_ENV).toBe("PPTPRESS_OPENVERSE_CLIENT_ID")
-    expect(OPENVERSE_CLIENT_SECRET_ENV).toBe("PPTPRESS_OPENVERSE_CLIENT_SECRET")
+  it("exported env constant names are the new PPTWISE_* names", () => {
+    expect(PEXELS_ENV).toBe("PPTWISE_PEXELS_API_KEY")
+    expect(PIXABAY_ENV).toBe("PPTWISE_PIXABAY_API_KEY")
+    expect(OPENVERSE_CLIENT_ID_ENV).toBe("PPTWISE_OPENVERSE_CLIENT_ID")
+    expect(OPENVERSE_CLIENT_SECRET_ENV).toBe("PPTWISE_OPENVERSE_CLIENT_SECRET")
   })
 
-  it("reads PPTPRESS_PEXELS_API_KEY from the passed env object", () => {
-    const keys = resolveImageKeys({ file: null, env: { PPTPRESS_PEXELS_API_KEY: "NEWPEXELS99" } })
+  it("reads PPTWISE_PEXELS_API_KEY from the passed env object", () => {
+    const keys = resolveImageKeys({ file: null, env: { PPTWISE_PEXELS_API_KEY: "NEWPEXELS99" } })
     expect(keys.pexels.apiKey).toBe("NEWPEXELS99")
     expect(keys.pexels.source).toBe("env")
+  })
+
+  it("reads PPTPRESS_PEXELS_API_KEY as an alias and warns", () => {
+    const chunks: string[] = []
+    const orig = process.stderr.write.bind(process.stderr)
+    process.stderr.write = ((chunk: unknown) => {
+      chunks.push(String(chunk))
+      return true
+    }) as typeof process.stderr.write
+    try {
+      const keys = resolveImageKeys({ file: null, env: { PPTPRESS_PEXELS_API_KEY: "PRESSPEXELS99" } })
+      expect(keys.pexels.apiKey).toBe("PRESSPEXELS99")
+      expect(keys.pexels.source).toBe("env")
+    } finally {
+      process.stderr.write = orig
+    }
+    const stderr = chunks.join("")
+    expect(stderr).toContain("PPTPRESS_PEXELS_API_KEY")
+    expect(stderr).toContain("PPTWISE_PEXELS_API_KEY")
+  })
+
+  it("lets PPTPRESS_PEXELS_API_KEY win over PPTFAST_PEXELS_API_KEY", () => {
+    const chunks: string[] = []
+    const orig = process.stderr.write.bind(process.stderr)
+    process.stderr.write = ((chunk: unknown) => {
+      chunks.push(String(chunk))
+      return true
+    }) as typeof process.stderr.write
+    try {
+      const keys = resolveImageKeys({
+        file: null,
+        env: { PPTPRESS_PEXELS_API_KEY: "PRESSPEXELS99", PPTFAST_PEXELS_API_KEY: "OLDPEXELS99" },
+      })
+      expect(keys.pexels.apiKey).toBe("PRESSPEXELS99")
+    } finally {
+      process.stderr.write = orig
+    }
+    const stderr = chunks.join("")
+    expect(stderr).toContain("PPTPRESS_PEXELS_API_KEY")
+    expect(stderr).not.toContain("PPTFAST_PEXELS_API_KEY")
   })
 
   it("reads PPTFAST_PEXELS_API_KEY as an alias and warns", () => {
@@ -137,10 +177,10 @@ describe("resolveImageKeys whole-source", () => {
     }
     const stderr = chunks.join("")
     expect(stderr).toContain("PPTFAST_PEXELS_API_KEY")
-    expect(stderr).toContain("PPTPRESS_PEXELS_API_KEY")
+    expect(stderr).toContain("PPTWISE_PEXELS_API_KEY")
   })
 
-  it("lets PPTPRESS_PEXELS_API_KEY win over PPTFAST_PEXELS_API_KEY with no warning", () => {
+  it("lets PPTWISE_PEXELS_API_KEY win over PPTFAST_PEXELS_API_KEY with no warning", () => {
     const chunks: string[] = []
     const orig = process.stderr.write.bind(process.stderr)
     process.stderr.write = ((chunk: unknown) => {
@@ -150,7 +190,7 @@ describe("resolveImageKeys whole-source", () => {
     try {
       const keys = resolveImageKeys({
         file: null,
-        env: { PPTPRESS_PEXELS_API_KEY: "NEWPEXELS99", PPTFAST_PEXELS_API_KEY: "OLDPEXELS99" },
+        env: { PPTWISE_PEXELS_API_KEY: "NEWPEXELS99", PPTFAST_PEXELS_API_KEY: "OLDPEXELS99" },
       })
       expect(keys.pexels.apiKey).toBe("NEWPEXELS99")
     } finally {
@@ -226,7 +266,7 @@ describe("runConfigSet", () => {
     })
     expect(message).toContain("Saved pexels.apiKey")
     expect(message).not.toContain("PIPEPEXELS99")
-    const parsed = JSON.parse(await readFile(join(process.env.PPTPRESS_HOME!, "config.json"), "utf8")) as {
+    const parsed = JSON.parse(await readFile(join(process.env.PPTWISE_HOME!, "config.json"), "utf8")) as {
       images: { pexels: { apiKey: string } }
     }
     expect(parsed.images.pexels.apiKey).toBe("PIPEPEXELS99")
@@ -239,7 +279,7 @@ describe("runConfigSet", () => {
     })
     expect(message).toContain("Saved openverse.clientSecret")
     expect(message).not.toContain("PIPEOVSECRET99")
-    const parsed = JSON.parse(await readFile(join(process.env.PPTPRESS_HOME!, "config.json"), "utf8")) as {
+    const parsed = JSON.parse(await readFile(join(process.env.PPTWISE_HOME!, "config.json"), "utf8")) as {
       images: { openverse: { clientSecret: string } }
     }
     expect(parsed.images.openverse.clientSecret).toBe("PIPEOVSECRET99")
@@ -264,7 +304,7 @@ describe("runConfigShow", () => {
 
   it("masks env keys and labels the source (env)", async () => {
     await tmpHome()
-    const out = await runConfigShow({ env: { PPTPRESS_PIXABAY_API_KEY: "ENVPIXABAY99" } })
+    const out = await runConfigShow({ env: { PPTWISE_PIXABAY_API_KEY: "ENVPIXABAY99" } })
     expect(out).toContain("ENVPIX...99")
     expect(out).toContain("(env)")
     expect(out).not.toContain("ENVPIXABAY99")
@@ -290,9 +330,9 @@ describe("runConfigShow", () => {
 
 describe("persistImageApiKey", () => {
   it("creates the home directory when missing", async () => {
-    const parent = await mkdtemp(join(tmpdir(), "pptpress-imgcfg-parent-"))
+    const parent = await mkdtemp(join(tmpdir(), "pptwise-imgcfg-parent-"))
     const home = join(parent, "nested-home")
-    process.env.PPTPRESS_HOME = home
+    process.env.PPTWISE_HOME = home
     await persistImageApiKey("pixabay", "TESTPIXABAY99")
     const parsed = JSON.parse(await readFile(join(home, "config.json"), "utf8")) as {
       images: { pixabay: { apiKey: string } }

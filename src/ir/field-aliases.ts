@@ -3,7 +3,7 @@
  * synonym field-name drift (a model writing kpi `title` when the schema
  * wants `label`, quote `content` when it wants `text`, and so on). Ported
  * from ops-kb's `field_aliases.py` (`_BLOCK_FIELD_ALIASES` /
- * `_ITEM_FIELD_ALIASES`, the production system pptpress was extracted from):
+ * `_ITEM_FIELD_ALIASES`, the production system pptwise was extracted from):
  * a 2026-07-12 failure-sample bucketing there found ~90% of weak-model
  * `fill` failures were exactly this shape — a pair of "unrecognized field"
  * + "field required" errors for a synonym pair (kpi `title`→`label` alone
@@ -74,7 +74,7 @@ export type FieldAliasMap = Readonly<Record<string, string>>
 /**
  * Top-level field aliases: component type → alias map applied to the
  * component object's own keys. Ported verbatim from ops-kb's
- * `_BLOCK_FIELD_ALIASES` (its "block" is pptpress's "component" post-rename).
+ * `_BLOCK_FIELD_ALIASES` (its "block" is pptwise's "component" post-rename).
  */
 export const COMPONENT_FIELD_ALIASES: Readonly<Record<string, FieldAliasMap>> = {
   quote: quoteAliases.block,
@@ -167,7 +167,7 @@ export const COMPONENT_ITEM_FIELD_ALIASES: Readonly<Record<string, readonly Item
   // any labeled-card-like item shape.
   sankey: sankeyAliases.items,
   // Real-world tech-deck mental model: layers have a "name" and hold
-  // "components" or "nodes" — pptpress's own top-level components array
+  // "components" or "nodes" — pptwise's own top-level components array
   // shares the word "components" by coincidence only; this alias is scoped
   // to one architecture layer's own item shape, never the deck-level array.
   architecture: architectureAliases.items,
@@ -332,7 +332,7 @@ export function normalizeComponentAliases(input: unknown): NormalizeAliasesResul
 // parse as an unrecognized key; `mode`/`delivery` inside `narrative` and the
 // old enum values (`"text"`, `"presentation"`, the `mode`/`strategy` value
 // `"narrative"`) fail `resolveNarrative`'s own runtime axis/value check
-// (`src/narrative`), listing the current values. `pptpress migrate`
+// (`src/narrative`), listing the current values. `pptwise migrate`
 // (`ir/migrate.ts`) remains the sanctioned bridge for a genuine v3 document —
 // v3 documents carry this exact old vocabulary by definition, and migration
 // is a distinct, declared operation from silent in-place rescue.

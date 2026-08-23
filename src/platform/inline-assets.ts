@@ -12,7 +12,7 @@
  */
 import type { PptxIR } from "@/ir"
 import { dataUriMime, decodeDataUriBytes, FORMAT_BY_MIME, MIME_BY_SNIFFED_FORMAT, sniffImageFormat } from "@/ir/asset-sniff"
-import { PptpressError } from "../errors"
+import { PptwiseError } from "../errors"
 import { getPlatform } from "./registry"
 
 /**
@@ -106,7 +106,7 @@ async function normalizeAssetDataUrl(id: string, dataUrl: string): Promise<strin
     const recode = getPlatform().recodeImageToPng
     return recode ? await recode(dataUrl) : await reencodeToPng(dataUrl)
   } catch (e) {
-    throw new PptpressError(
+    throw new PptwiseError(
       `background/illustration asset "${id}" format conversion failed (${mime}→png: ${e instanceof Error ? e.message : String(e)}), cannot produce a complete PPT — please retry or regenerate the image`,
     )
   }
@@ -170,19 +170,19 @@ export async function maybeCompressBackground(dataUrl: string): Promise<string> 
 function assertValidFetchedImageBytes(id: string, url: string, dataUrl: string): void {
   const bytes = decodeDataUriBytes(dataUrl)
   if (bytes === null || bytes.length === 0) {
-    throw new PptpressError(
+    throw new PptwiseError(
       `background/illustration asset "${id}" fetched from ${url} came back as a zero-byte or undecodable image — cannot produce a complete PPT, please retry or regenerate the image`,
     )
   }
   const sniffed = sniffImageFormat(bytes)
   if (sniffed === null) {
-    throw new PptpressError(
+    throw new PptwiseError(
       `background/illustration asset "${id}" fetched from ${url} has a corrupt or unrecognized image header (expected PNG, JPEG, WebP, or GIF) — cannot produce a complete PPT, please retry or regenerate the image`,
     )
   }
   const declaredFormat = FORMAT_BY_MIME[dataUriMime(dataUrl)]
   if (declaredFormat && declaredFormat !== sniffed) {
-    throw new PptpressError(
+    throw new PptwiseError(
       `background/illustration asset "${id}" fetched from ${url} declares "${dataUriMime(dataUrl)}" but its bytes are actually ${MIME_BY_SNIFFED_FORMAT[sniffed]} — cannot produce a complete PPT, please retry or regenerate the image`,
     )
   }
@@ -224,7 +224,7 @@ export async function inlinePptxAssets(ir: PptxIR): Promise<PptxIR> {
         }
         dataUrl = await responseToDataUrl(resp)
       } catch (e) {
-        throw new PptpressError(
+        throw new PptwiseError(
           `background/illustration asset "${id}" fetch failed (${e instanceof Error ? e.message : String(e)}), cannot produce a complete PPT — please retry or regenerate the image`,
         )
       }

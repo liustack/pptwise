@@ -4,12 +4,12 @@
  *
  *   CI= pnpm exec tsx evals/gallery/calibration/post-fix.mts
  *
- * Writes PPTPRESS_CAL_POST (default /tmp/pptpress-gallery-cal-post.json).
+ * Writes PPTWISE_CAL_POST (default /tmp/pptwise-gallery-cal-post.json).
  * Incremental L2 stores default to:
  *   evals/gallery/calibration/pre-fix-l2-replay.json
  *   evals/gallery/calibration/post-fix-l2.json
- * Override with PPTPRESS_CAL_PRE_L2 / PPTPRESS_CAL_POST_L2 so a later replay
- * can write elsewhere without clobbering the frozen stores. PPTPRESS_CAL_HEAD_SHA
+ * Override with PPTWISE_CAL_PRE_L2 / PPTWISE_CAL_POST_L2 so a later replay
+ * can write elsewhere without clobbering the frozen stores. PPTWISE_CAL_HEAD_SHA
  * labels the HEAD column (default 8b4c001, the r1 tree).
  */
 
@@ -31,8 +31,8 @@ import { replayPlanted } from "../planted/replay"
 import { renderMatrix } from "../render"
 
 const DIR = dirname(fileURLToPath(import.meta.url))
-const OLD_SVG_DIR = resolveProductEnv("CAL_SVG_DIR") ?? "/tmp/pptpress-gallery-cal-svgs"
-const OUT = resolveProductEnv("CAL_POST") ?? "/tmp/pptpress-gallery-cal-post.json"
+const OLD_SVG_DIR = resolveProductEnv("CAL_SVG_DIR") ?? "/tmp/pptwise-gallery-cal-svgs"
+const OUT = resolveProductEnv("CAL_POST") ?? "/tmp/pptwise-gallery-cal-post.json"
 const PRE_L2 = resolveProductEnv("CAL_PRE_L2") ?? join(DIR, "pre-fix-l2-replay.json")
 const POST_L2 = resolveProductEnv("CAL_POST_L2") ?? join(DIR, "post-fix-l2.json")
 const HEAD_SHA = resolveProductEnv("CAL_HEAD_SHA") ?? "8b4c001"
@@ -178,7 +178,7 @@ const assets = Object.fromEntries(
 ) as Record<LanguageId, CorpusAssets>
 const wanted = new Set(human.verdicts.map((v) => v.id))
 const jobs = buildMatrix(themeIds, assets).filter((j) => wanted.has(j.id))
-const outDir = mkdtempSync(join(tmpdir(), "pptpress-cal-head-"))
+const outDir = mkdtempSync(join(tmpdir(), "pptwise-cal-head-"))
 mkdirSync(outDir, { recursive: true })
 const { svgs } = renderMatrix(jobs, outDir, "head")
 console.log(`post-fix: rendered ${svgs.size} HEAD pages into ${outDir}`)

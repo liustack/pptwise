@@ -1,12 +1,12 @@
 {
-  "name": "@liustack/pptpress",
+  "name": "@liustack/pptwise",
   "version": "0.21.0",
   "description": "Stable, editable PPTX generation for AI agents — semantic IR in, native DrawingML out",
   "type": "module",
   "sideEffects": false,
   "license": "MIT",
   "bin": {
-    "pptpress": "./dist/cli.js"
+    "pptwise": "./dist/cli.js"
   },
   "main": "./dsh/index.js",
   "exports": {
@@ -30,10 +30,10 @@
     "dist",
     "dsh",
     "cordis.patch.yml",
-    "skills/pptpress/SKILL.md",
-    "skills/pptpress/SKILL.zh-CN.md",
-    "skills/pptpress/scripts",
-    "skills/pptpress/references",
+    "skills/pptwise/SKILL.md",
+    "skills/pptwise/SKILL.zh-CN.md",
+    "skills/pptwise/scripts",
+    "skills/pptwise/references",
     "README.zh-CN.md"
   ],
   "engines": {
@@ -77,7 +77,7 @@
   "author": "Leon Liu",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/liustack/pptpress.git"
+    "url": "git+https://github.com/liustack/pptwise.git"
   },
   "dependencies": {
     "commander": "^13.1.0",

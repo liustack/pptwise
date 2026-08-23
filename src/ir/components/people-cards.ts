@@ -70,7 +70,7 @@ export const schema = z
       ),
   })
   .strict()
-  // Schema guidance (device_mockup/cycle precedent — `pptpress schema`/
+  // Schema guidance (device_mockup/cycle precedent — `pptwise schema`/
   // `irJsonSchema()` is the surface a model actually reads before writing
   // IR): name the concrete alternative components and state the one-line
   // test that decides between them.

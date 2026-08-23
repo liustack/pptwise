@@ -1,6 +1,6 @@
 /**
- * User-level stock-image credentials. Stored in `$PPTPRESS_HOME/config.json`
- * under `images`, never in a project `pptpress.config.json`. Whole-source
+ * User-level stock-image credentials. Stored in `$PPTWISE_HOME/config.json`
+ * under `images`, never in a project `pptwise.config.json`. Whole-source
  * per provider: if the file names `images.pexels` (even as `{}`), the env
  * var is ignored for Pexels. Same for Pixabay and Openverse. Never mix
  * env + file for one provider.
@@ -8,14 +8,14 @@
 import { chmodSync, lstatSync } from "node:fs"
 import { mkdir, readFile, writeFile } from "node:fs/promises"
 import { z } from "zod"
-import { PptpressError } from "../errors"
-import { pptpressHome, userConfigPath } from "./home"
+import { PptwiseError } from "../errors"
+import { pptwiseHome, userConfigPath } from "./home"
 import { resolveProductEnv } from "./product-env"
 
-export const PEXELS_ENV = "PPTPRESS_PEXELS_API_KEY"
-export const PIXABAY_ENV = "PPTPRESS_PIXABAY_API_KEY"
-export const OPENVERSE_CLIENT_ID_ENV = "PPTPRESS_OPENVERSE_CLIENT_ID"
-export const OPENVERSE_CLIENT_SECRET_ENV = "PPTPRESS_OPENVERSE_CLIENT_SECRET"
+export const PEXELS_ENV = "PPTWISE_PEXELS_API_KEY"
+export const PIXABAY_ENV = "PPTWISE_PIXABAY_API_KEY"
+export const OPENVERSE_CLIENT_ID_ENV = "PPTWISE_OPENVERSE_CLIENT_ID"
+export const OPENVERSE_CLIENT_SECRET_ENV = "PPTWISE_OPENVERSE_CLIENT_SECRET"
 
 export const ImageProviderConfigSchema = z
   .object({
@@ -189,7 +189,7 @@ export function maskKey(value: string): string {
 export function assertSafeConfigKeyPath(key: string): void {
   for (const segment of key.split(".")) {
     if (FORBIDDEN_SEGMENTS.has(segment)) {
-      throw new PptpressError(`refusing to set "${key}": "${segment}" is not a valid config key`)
+      throw new PptwiseError(`refusing to set "${key}": "${segment}" is not a valid config key`)
     }
   }
 }
@@ -198,7 +198,7 @@ export function parseCliConfigKey(key: string): CliConfigKey {
   assertSafeConfigKeyPath(key)
   const hit = CLI_KEYS[key]
   if (!hit) {
-    throw new PptpressError(
+    throw new PptwiseError(
       `unknown config key "${key}" — expected pexels.apiKey, pixabay.apiKey, openverse.clientId, openverse.clientSecret, or images.generators.*`,
     )
   }
@@ -278,7 +278,7 @@ export function parseCliConfigValue(parsed: CliConfigKey, raw: string): Persista
   if (parsed.kind === "boolean") {
     const v = raw.trim().toLowerCase()
     if (v !== "true" && v !== "false") {
-      throw new PptpressError(`${parsed.cliKey} must be true or false`)
+      throw new PptwiseError(`${parsed.cliKey} must be true or false`)
     }
     return v === "true"
   }
@@ -289,16 +289,16 @@ export function parseCliConfigValue(parsed: CliConfigKey, raw: string): Persista
       .filter((s) => s !== "")
     const unknown = names.find((n) => !(GENERATOR_IDS as readonly string[]).includes(n))
     if (unknown) {
-      throw new PptpressError(`unknown generator "${unknown}" — expected grok, codex, or antigravity`)
+      throw new PptwiseError(`unknown generator "${unknown}" — expected grok, codex, or antigravity`)
     }
     if (names.length === 0) {
-      throw new PptpressError("images.generators.order must not be empty")
+      throw new PptwiseError("images.generators.order must not be empty")
     }
     return names
   }
   if (parsed.kind === "timeoutMs") {
     if (!/^[0-9]+$/.test(raw.trim()) || Number(raw) <= 0) {
-      throw new PptpressError(`${parsed.cliKey} must be a positive integer`)
+      throw new PptwiseError(`${parsed.cliKey} must be a positive integer`)
     }
     return Number(raw)
   }
@@ -326,7 +326,7 @@ function assertNotSymlink(path: string): void {
     throw e
   }
   if (st.isSymbolicLink()) {
-    throw new PptpressError(`refusing to write ${path}: it is a symlink`)
+    throw new PptwiseError(`refusing to write ${path}: it is a symlink`)
   }
 }
 
@@ -350,10 +350,10 @@ async function readRawUserConfig(): Promise<Record<string, unknown>> {
   try {
     raw = JSON.parse(text) as unknown
   } catch (e) {
-    throw new PptpressError(`${path} is not valid JSON: ${(e as Error).message}`)
+    throw new PptwiseError(`${path} is not valid JSON: ${(e as Error).message}`)
   }
   if (typeof raw !== "object" || raw === null || Array.isArray(raw)) {
-    throw new PptpressError(`${path} must be a JSON object`)
+    throw new PptwiseError(`${path} must be a JSON object`)
   }
   return raw as Record<string, unknown>
 }
@@ -361,11 +361,11 @@ async function readRawUserConfig(): Promise<Record<string, unknown>> {
 export async function persistUserConfigValue(path: string[], value: PersistableConfigValue | ""): Promise<string> {
   for (const segment of path) {
     if (FORBIDDEN_SEGMENTS.has(segment) || segment === "") {
-      throw new PptpressError(`refusing to set "${path.join(".")}": "${segment}" is not a valid config key`)
+      throw new PptwiseError(`refusing to set "${path.join(".")}": "${segment}" is not a valid config key`)
     }
   }
   if (path.length === 0) {
-    throw new PptpressError("refusing to set an empty config path")
+    throw new PptwiseError("refusing to set an empty config path")
   }
   const filePath = userConfigPath()
   assertNotSymlink(filePath)
@@ -383,7 +383,7 @@ export async function persistUserConfigValue(path: string[], value: PersistableC
   } else {
     cursor[leaf] = value
   }
-  await mkdir(pptpressHome(), { recursive: true })
+  await mkdir(pptwiseHome(), { recursive: true })
   const text = JSON.stringify(raw, null, 2) + "\n"
   await writeFile(filePath, text, { encoding: "utf8", mode: 0o600 })
   try {
@@ -407,13 +407,13 @@ export function pixabayApplyUrl(): string {
 }
 
 /** Hard-fail copy when fetch needs a Pexels or Pixabay key that is missing. */
-export function missingKeysError(kind: "pexels" | "pixabay"): PptpressError {
+export function missingKeysError(kind: "pexels" | "pixabay"): PptwiseError {
   if (kind === "pixabay") {
-    return new PptpressError(
-      `Pixabay is not configured. Apply at ${pixabayApplyUrl()}, then run \`pptpress config set pixabay.apiKey\`.`,
+    return new PptwiseError(
+      `Pixabay is not configured. Apply at ${pixabayApplyUrl()}, then run \`pptwise config set pixabay.apiKey\`.`,
     )
   }
-  return new PptpressError(
-    `Pexels is not configured. Apply at ${pexelsApplyUrl()}, then run \`pptpress config set pexels.apiKey\`.`,
+  return new PptwiseError(
+    `Pexels is not configured. Apply at ${pexelsApplyUrl()}, then run \`pptwise config set pexels.apiKey\`.`,
   )
 }

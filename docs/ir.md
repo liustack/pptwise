@@ -9,9 +9,9 @@ read_when:
 
 # The IR
 
-The IR is a JSON file that describes a whole deck: which pages exist, what is on them, and which theme they wear. It is what an agent writes, and it is the only input `pptpress render` needs.
+The IR is a JSON file that describes a whole deck: which pages exist, what is on them, and which theme they wear. It is what an agent writes, and it is the only input `pptwise render` needs.
 
-Run `pptpress schema` for the full JSON Schema. Feed it to a model before asking it to write IR.
+Run `pptwise schema` for the full JSON Schema. Feed it to a model before asking it to write IR.
 
 ## A deck
 
@@ -37,11 +37,11 @@ A deck can also carry a `seed`: an integer that keeps auto-selected layouts stab
 Each slide has:
 
 - `type` — `cover`, `chapter`, `content`, or `ending`.
-- `layout` — an explicit page-layout id. It always wins over auto-selection. Omit it and pptpress picks one.
+- `layout` — an explicit page-layout id. It always wins over auto-selection. Omit it and pptwise picks one.
 - `arrangement` — how a content slide's body is laid out, for example `two_column` or `kpi_focus`.
 - `components` — the typed units that fill the page (`bullets`, `kpi_cards`, `image`, `chart`, …).
 
-Any slide may also set a stable `id` (what spec pages and validation errors reference it by), `placeholder: true` (a page with no content yet — injected by `assemble` for a spec page nobody has filled in, skipped by content-quality checks, and blocking `render` unless `--draft`), and `notes` (aliases `note`/`speaker_notes`/`speakerNotes`), which exports as a native PowerPoint speaker note. Notes are for the presenter's own view: never drawn on the slide canvas, never counted toward layout capacity. The spoken script belongs in `notes`. The agent playbook's Sparse-page contract (`skills/pptpress/SKILL.md`) is the rule. If the file must stand alone as a document, put the extra words in notes or use a PDF.
+Any slide may also set a stable `id` (what spec pages and validation errors reference it by), `placeholder: true` (a page with no content yet — injected by `assemble` for a spec page nobody has filled in, skipped by content-quality checks, and blocking `render` unless `--draft`), and `notes` (aliases `note`/`speaker_notes`/`speakerNotes`), which exports as a native PowerPoint speaker note. Notes are for the presenter's own view: never drawn on the slide canvas, never counted toward layout capacity. The spoken script belongs in `notes`. The agent playbook's Sparse-page contract (`skills/pptwise/SKILL.md`) is the rule. If the file must stand alone as a document, put the extra words in notes or use a PDF.
 
 ## Field names that drift
 
@@ -68,7 +68,7 @@ Mixing one in with another component fails `validate` instead of silently droppi
 
 The v4 IR schema is frozen as of 0.4.0. Future evolution is additive only: new optional fields, new enum members. Any breaking change ships under a new top-level `version` value, with the same reject-and-migrate treatment v3 got.
 
-`pptpress migrate <v3-file.json> -o <out.json>` converts a v3 file to v4 deterministically — field renames, plus the v4 leftover rewrites `chrome` → `branding`, `bloom` → `classroom`, `logo_wall` → `image_grid`, and `banner-heading` → `two-column`. The sibling `deck.plan.json` → `deck.spec.json` conversion is under [Deck projects](#deck-projects).
+`pptwise migrate <v3-file.json> -o <out.json>` converts a v3 file to v4 deterministically — field renames, plus the v4 leftover rewrites `chrome` → `branding`, `bloom` → `classroom`, `logo_wall` → `image_grid`, and `banner-heading` → `two-column`. The sibling `deck.plan.json` → `deck.spec.json` conversion is under [Deck projects](#deck-projects).
 
 ## Narratives
 
@@ -92,11 +92,11 @@ These are editorial guidance, not hard limits: `validate` reports them as warnin
 
 Bullets shrink below their tier's baseline to fit when needed, down to a 14px floor, before any overflow handling kicks in. Across every bullet style — `default`, `plain`, `divided`, `numbered`, `checklist` — an item long enough to still overflow at that floor is a hard validate error. That is looser than the per-pacing length guidance above, and it fires for a different reason: the text genuinely loses characters to an ellipsis at render.
 
-`pptpress validate` reports the exact numbers that applied to each slide. `pptpress narratives [--json]` lists the named presets (each carrying soft theme recommendations, a suggestion rather than a constraint) plus the raw axes tables.
+`pptwise validate` reports the exact numbers that applied to each slide. `pptwise narratives [--json]` lists the named presets (each carrying soft theme recommendations, a suggestion rather than a constraint) plus the raw axes tables.
 
 ## Layout selection
 
-When a slide omits `layout`, pptpress resolves one in four deterministic steps:
+When a slide omits `layout`, pptwise resolves one in four deterministic steps:
 
 1. The page type's registered archetype pool, minus pin-only layouts.
 2. Narrowed to the theme's `layouts` set for that page type (covers lock to a board face. Content defaults to the 9-id auto set. lecture and luxe drop `split-band` / `stacked-poster` — see [Themes](./themes.md)).
@@ -108,10 +108,10 @@ An explicit `layout` skips those steps, except an unoffered sparse climax pin (`
 The pick is fully deterministic: the same IR always resolves the same way, so preview and the final render never disagree. Staying stable *across revisions* — editing one page without reshuffling every other page's auto-pick — additionally needs a persisted `seed`, resolved in this order:
 
 1. An explicit `ir.seed`. Full revision stability, always wins.
-2. A deck project's own seed. `pptpress assemble` derives one from the spec's filename and page ids the first time a spec omits `seed`, and prints the value — copy it into `deck.spec.json`'s `seed` field to persist it.
+2. A deck project's own seed. `pptwise assemble` derives one from the spec's filename and page ids the first time a spec omits `seed`, and prints the value — copy it into `deck.spec.json`'s `seed` field to persist it.
 3. Neither set: a content hash of `filename` plus every slide's `heading`. Editing any heading reshuffles every auto-picked layout deck-wide.
 
-`pptpress assemble` also writes every auto-picked `layout` back into the assembled `deck.json`, leaving a page file's own explicit `layout` untouched. The CLI notes how many pages it filled in.
+`pptwise assemble` also writes every auto-picked `layout` back into the assembled `deck.json`, leaving a page file's own explicit `layout` untouched. The CLI notes how many pages it filled in.
 
 The mechanics behind all of this are in [`selection-and-seed.md`](./selection-and-seed.md).
 
@@ -126,16 +126,16 @@ my-deck/
   assets/                local images, auto-registered by filename (image id = filename without extension)
 ```
 
-`deck.spec.json` validates on its own, before any page exists: `pptpress spec validate deck.spec.json` checks the schema plus the strategy-aware hard gates (boundary pages, heading length, beat rotation, page count vs. pacing).
+`deck.spec.json` validates on its own, before any page exists: `pptwise spec validate deck.spec.json` checks the schema plus the strategy-aware hard gates (boundary pages, heading length, beat rotation, page count vs. pacing).
 
-A spec page with no matching `pages/<id>.json` becomes a **placeholder** slide — heading only, not missing — so a partially written deck always assembles and previews. `pptpress render` refuses to export a deck with unfilled placeholders unless you pass `--draft`. `pptpress preview` never gates on them.
+A spec page with no matching `pages/<id>.json` becomes a **placeholder** slide — heading only, not missing — so a partially written deck always assembles and previews. `pptwise render` refuses to export a deck with unfilled placeholders unless you pass `--draft`. `pptwise preview` never gates on them.
 
-A directory still carrying the pre-v4 `deck.plan.json` instead of `deck.spec.json` is not read directly. `pptpress migrate <dir> -o <dir>` converts it in place: it writes `deck.spec.json` alongside, never overwrites, never deletes the source — delete `deck.plan.json` yourself once you have confirmed the new file. A directory with both files present is a hard error, never a guessed priority.
+A directory still carrying the pre-v4 `deck.plan.json` instead of `deck.spec.json` is not read directly. `pptwise migrate <dir> -o <dir>` converts it in place: it writes `deck.spec.json` alongside, never overwrites, never deletes the source — delete `deck.plan.json` yourself once you have confirmed the new file. A directory with both files present is a hard error, never a guessed priority.
 
-`pptpress assemble <dir>` materializes spec + pages + assets into a single IR JSON file (`deck.json` by default). `pptpress disassemble <ir.json> -o <dir>` does the reverse, and is lossy by design: spec-only fields like `beat`/`focus` have no IR-side home to recover. `render`/`validate`/`preview` accept a directory directly too, assembling in memory first.
+`pptwise assemble <dir>` materializes spec + pages + assets into a single IR JSON file (`deck.json` by default). `pptwise disassemble <ir.json> -o <dir>` does the reverse, and is lossy by design: spec-only fields like `beat`/`focus` have no IR-side home to recover. `render`/`validate`/`preview` accept a directory directly too, assembling in memory first.
 
-A deck project directory can be referenced by a bare name instead of a path. `pptpress render my-deck -o out.pptx` resolves `my-deck` under `$PPTPRESS_HOME/decks` (`$PPTPRESS_HOME` defaults to `~/.pptpress`) when no local file or directory of that name exists.
+A deck project directory can be referenced by a bare name instead of a path. `pptwise render my-deck -o out.pptx` resolves `my-deck` under `$PPTWISE_HOME/decks` (`$PPTWISE_HOME` defaults to `~/.pptwise`) when no local file or directory of that name exists.
 
-All deck defaults resolve in four layers, highest wins: CLI flag > project `pptpress.config.json` > user `~/.pptpress/config.json` > the deck's own values. Both config layers can set `decksDir` to redirect where bare names resolve — the project layer's value resolves against that config file's own directory (for a team that wants deck projects checked into the repo), the user layer's against `$PPTPRESS_HOME`. Project wins when both are set.
+All deck defaults resolve in four layers, highest wins: CLI flag > project `pptwise.config.json` > user `~/.pptwise/config.json` > the deck's own values. Both config layers can set `decksDir` to redirect where bare names resolve — the project layer's value resolves against that config file's own directory (for a team that wants deck projects checked into the repo), the user layer's against `$PPTWISE_HOME`. Project wins when both are set.
 
 The format's finer points are in [`deck-projects.md`](./deck-projects.md).

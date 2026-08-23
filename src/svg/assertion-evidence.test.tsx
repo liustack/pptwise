@@ -161,7 +161,7 @@ describe("assertion_evidence variant", () => {
     // exactly the blind spot that let round 1's own fix silently push
     // support (and its drop-pill) past the rect bottom, into the page
     // footer (reviewer-confirmed regression, round 2). `auditSvgMarkup` is
-    // the same overflow walker `pptpress audit` runs in production — zero
+    // the same overflow walker `pptwise audit` runs in production — zero
     // findings here means nothing in this render, evidence or support,
     // exceeds the rect `SvgContent` declared for it via `data-audit-rect`.
     expect(auditSvgMarkup(markup)).toEqual([])

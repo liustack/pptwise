@@ -1,11 +1,11 @@
-// DeepSeek Harness (DSH) plugin: registers the pptpress deck-generation
+// DeepSeek Harness (DSH) plugin: registers the pptwise deck-generation
 // skill into DSH's skill system (v0, skill-registration wave). The model
-// then drives the pptpress CLI from the DSH terminal exactly the way the
+// then drives the pptwise CLI from the DSH terminal exactly the way the
 // skill teaches every other harness.
 //
 // Loaded via the package root export (`exports["."]` → this file) and the
-// cordis.patch.yml bundle row `@liustack/pptpress` — DSH's plugin card
-// derives its label by stripping the scope, so the card reads "pptpress".
+// cordis.patch.yml bundle row `@liustack/pptwise` — DSH's plugin card
+// derives its label by stripping the scope, so the card reads "pptwise".
 //
 // Verified against DSH 0.1.0-rc.6 source:
 // - `ctx.skills.register(registration)` takes the skill *content* as a
@@ -15,11 +15,11 @@
 //   residue).
 // - The profile's `node_modules/.bin` never enters the DSH terminal's
 //   PATH (dsh-subprocess inherits the parent env untouched), so the skill
-//   body gets a runtime preamble that maps `pptpress <args>` onto
+//   body gets a runtime preamble that maps `pptwise <args>` onto
 //   `node <abs path to this package's dist/cli.js> <args>` — no PATH
 //   lookup, no npx, plugin and engine version-locked together (the
 //   modlens precedent).
-// - Registered names carry the pptpress identity ("pptpress") and collide
+// - Registered names carry the pptwise identity ("pptwise") and collide
 //   with no built-in skill (`dsh-badge`, `cordis-plugin-development`,
 //   `editing-cordis-compositions`) or provider (`runtime`, `filesystem`,
 //   `dsh-badge`).
@@ -30,14 +30,14 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { createPreviewService, TOOL_NAME } from './preview-tool.js'
 
-const SKILL_FILE_URL = new URL('../skills/pptpress/SKILL.md', import.meta.url)
-const SKILL_DIR = fileURLToPath(new URL('../skills/pptpress/', import.meta.url))
+const SKILL_FILE_URL = new URL('../skills/pptwise/SKILL.md', import.meta.url)
+const SKILL_DIR = fileURLToPath(new URL('../skills/pptwise/', import.meta.url))
 const CLI_PATH = fileURLToPath(new URL('../dist/cli.js', import.meta.url))
 
-export const name = 'pptpress'
+export const name = 'pptwise'
 export const inject = ['skills', 'tools']
 
-export const SKILL_NAME = 'pptpress'
+export const SKILL_NAME = 'pptwise'
 export const PREVIEW_TOOL_NAME = TOOL_NAME
 
 /**
@@ -69,15 +69,15 @@ export function parseSkillMarkdown(raw) {
  */
 export function dshRuntimePreamble(cliPath) {
   return [
-    '## DSH runtime note (injected by the pptpress DSH plugin)',
+    '## DSH runtime note (injected by the pptwise DSH plugin)',
     '',
-    'The `pptpress` bin is not on PATH in this environment. Whenever this playbook says `pptpress <args>`, run this in the terminal instead:',
+    'The `pptwise` bin is not on PATH in this environment. Whenever this playbook says `pptwise <args>`, run this in the terminal instead:',
     '',
     '```bash',
     `node "${cliPath}" <args>`,
     '```',
     '',
-    'That CLI ships inside this plugin\'s own package, version-locked to this skill, so it wins over the "Run it" section below: ignore the launcher scripts there, this line is the mapping. Only if that file is missing, fall back to `npx -y @liustack/pptpress <args>`.',
+    'That CLI ships inside this plugin\'s own package, version-locked to this skill, so it wins over the "Run it" section below: ignore the launcher scripts there, this line is the mapping. Only if that file is missing, fall back to `npx -y @liustack/pptwise <args>`.',
   ].join('\n')
 }
 
@@ -88,10 +88,10 @@ export function apply(ctx) {
   try {
     skill = parseSkillMarkdown(readFileSync(SKILL_FILE_URL, 'utf8'))
   } catch (error) {
-    console.error(`[pptpress] skill registration skipped (cannot read ${fileURLToPath(SKILL_FILE_URL)}): ${error}`)
+    console.error(`[pptwise] skill registration skipped (cannot read ${fileURLToPath(SKILL_FILE_URL)}): ${error}`)
     return
   }
-  // The preview tool is what gives pptpress a seat in the conversation. The
+  // The preview tool is what gives pptwise a seat in the conversation. The
   // skill alone leaves every call belonging to `bash`, whose card this plugin
   // cannot contribute to — which is why the review loop used to end in "open
   // this URL yourself". Registered first and independently: a tool failure
@@ -105,7 +105,7 @@ export function apply(ctx) {
   try {
     ctx.tools.register(preview.tool)
   } catch (error) {
-    console.error(`[pptpress] preview tool registration skipped: ${error}`)
+    console.error(`[pptwise] preview tool registration skipped: ${error}`)
   }
 
   // The route the preview card fetches a rendered deck from. `webServer`
@@ -118,7 +118,7 @@ export function apply(ctx) {
       try {
         preview.registerRoute(scope)
       } catch (error) {
-        console.error(`[pptpress] preview route skipped: ${error}`)
+        console.error(`[pptwise] preview route skipped: ${error}`)
       }
     })
   }
@@ -136,6 +136,6 @@ export function apply(ctx) {
       resourceBase: { kind: 'directory', path: SKILL_DIR },
     })
   } catch (error) {
-    console.error(`[pptpress] skill registration skipped: ${error}`)
+    console.error(`[pptwise] skill registration skipped: ${error}`)
   }
 }

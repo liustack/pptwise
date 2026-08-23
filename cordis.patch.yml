@@ -1,5 +1,5 @@
-# dsh bundle layer: mount the pptpress skill plugin (dsh/index.js via the
+# dsh bundle layer: mount the pptwise skill plugin (dsh/index.js via the
 # package root export; bin stays the CLI, nothing imports the root otherwise).
 - insert:
-    - id: pptpress
-      name: '@liustack/pptpress'
+    - id: pptwise
+      name: '@liustack/pptwise'

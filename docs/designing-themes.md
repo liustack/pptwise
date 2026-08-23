@@ -9,7 +9,7 @@ read_when:
 # Designing themes
 
 This is the contract between a visual design (drawn in any tool, by a
-person or a design agent) and what pptpress can actually compile into a
+person or a design agent) and what pptwise can actually compile into a
 native, editable PowerPoint deck. A design that breaks a hard constraint
 is not a design for this product, however good it looks.
 

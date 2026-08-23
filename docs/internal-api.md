@@ -1,7 +1,7 @@
 ---
 summary: 'Internal JS API: the SDK surface is sealed — dist entries exist for the package''s own use, no semver promise'
 read_when:
-  - tempted to import @liustack/pptpress from JS
+  - tempted to import @liustack/pptwise from JS
   - wondering why exports has no /node /browser /validate subpaths
   - wiring a new internal consumer (DSH plugin, MCP, tools)
 ---
@@ -19,10 +19,10 @@ the package had never been announced, had zero known JS consumers, and a
 public JS API is pure maintenance surface (Hyrum's law). The public support
 surface is now:
 
-- the **CLI** (`pptpress …`)
-- the **IR schema** (`pptpress schema`) and its validate/render contract
+- the **CLI** (`pptwise …`)
+- the **IR schema** (`pptwise schema`) and its validate/render contract
 - the **deck project format** (`deck.spec.json` + `pages/` + `assets/`)
-- the **agent skill** (`skills/pptpress/SKILL.md`)
+- the **agent skill** (`skills/pptwise/SKILL.md`)
 - the **DSH plugin** (the package root export)
 
 ## What still builds, and for whom
@@ -32,10 +32,10 @@ They exist so that code *inside this package* — the CLI bundle, the DSH
 plugin layer under `dsh/`, and future MCP/tool surfaces — can share the
 render core by **relative path** (`../dist/index.js`), version-locked to
 the same install. They are deliberately absent from `package.json`
-`exports`, so Node refuses a bare `@liustack/pptpress/node` import from
+`exports`, so Node refuses a bare `@liustack/pptwise/node` import from
 outside the package.
 
-If you need pptpress from your own program, shell out to the CLI: `pptpress
+If you need pptwise from your own program, shell out to the CLI: `pptwise
 validate` / `render` / `preview` speak JSON and exit codes, and that
 contract *is* covered by semver.
 

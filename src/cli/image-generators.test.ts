@@ -8,42 +8,42 @@ import { persistUserConfigValue } from "./image-config"
 import { runImagesGenerate, runImagesList, type ProcessRun, type ProcessRunner } from "./images"
 import { pathExists } from "./deck-dir"
 
-const originalHome = process.env.PPTPRESS_HOME
+const originalHome = process.env.PPTWISE_HOME
 const originalPath = process.env.PATH
-const originalPexels = process.env.PPTPRESS_PEXELS_API_KEY
-const originalPixabay = process.env.PPTPRESS_PIXABAY_API_KEY
-const originalOvId = process.env.PPTPRESS_OPENVERSE_CLIENT_ID
-const originalOvSecret = process.env.PPTPRESS_OPENVERSE_CLIENT_SECRET
+const originalPexels = process.env.PPTWISE_PEXELS_API_KEY
+const originalPixabay = process.env.PPTWISE_PIXABAY_API_KEY
+const originalOvId = process.env.PPTWISE_OPENVERSE_CLIENT_ID
+const originalOvSecret = process.env.PPTWISE_OPENVERSE_CLIENT_SECRET
 
 afterEach(() => {
-  if (originalHome === undefined) delete process.env.PPTPRESS_HOME
-  else process.env.PPTPRESS_HOME = originalHome
+  if (originalHome === undefined) delete process.env.PPTWISE_HOME
+  else process.env.PPTWISE_HOME = originalHome
   if (originalPath === undefined) delete process.env.PATH
   else process.env.PATH = originalPath
-  if (originalPexels === undefined) delete process.env.PPTPRESS_PEXELS_API_KEY
-  else process.env.PPTPRESS_PEXELS_API_KEY = originalPexels
-  if (originalPixabay === undefined) delete process.env.PPTPRESS_PIXABAY_API_KEY
-  else process.env.PPTPRESS_PIXABAY_API_KEY = originalPixabay
-  if (originalOvId === undefined) delete process.env.PPTPRESS_OPENVERSE_CLIENT_ID
-  else process.env.PPTPRESS_OPENVERSE_CLIENT_ID = originalOvId
-  if (originalOvSecret === undefined) delete process.env.PPTPRESS_OPENVERSE_CLIENT_SECRET
-  else process.env.PPTPRESS_OPENVERSE_CLIENT_SECRET = originalOvSecret
+  if (originalPexels === undefined) delete process.env.PPTWISE_PEXELS_API_KEY
+  else process.env.PPTWISE_PEXELS_API_KEY = originalPexels
+  if (originalPixabay === undefined) delete process.env.PPTWISE_PIXABAY_API_KEY
+  else process.env.PPTWISE_PIXABAY_API_KEY = originalPixabay
+  if (originalOvId === undefined) delete process.env.PPTWISE_OPENVERSE_CLIENT_ID
+  else process.env.PPTWISE_OPENVERSE_CLIENT_ID = originalOvId
+  if (originalOvSecret === undefined) delete process.env.PPTWISE_OPENVERSE_CLIENT_SECRET
+  else process.env.PPTWISE_OPENVERSE_CLIENT_SECRET = originalOvSecret
 })
 
 const JPEG_TINY = Buffer.from([0xff, 0xd8, 0xff, 0xd9])
 
 async function tmpHome(): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), "pptpress-gen-home-"))
-  process.env.PPTPRESS_HOME = dir
-  delete process.env.PPTPRESS_PEXELS_API_KEY
-  delete process.env.PPTPRESS_PIXABAY_API_KEY
-  delete process.env.PPTPRESS_OPENVERSE_CLIENT_ID
-  delete process.env.PPTPRESS_OPENVERSE_CLIENT_SECRET
+  const dir = await mkdtemp(join(tmpdir(), "pptwise-gen-home-"))
+  process.env.PPTWISE_HOME = dir
+  delete process.env.PPTWISE_PEXELS_API_KEY
+  delete process.env.PPTWISE_PIXABAY_API_KEY
+  delete process.env.PPTWISE_OPENVERSE_CLIENT_ID
+  delete process.env.PPTWISE_OPENVERSE_CLIENT_SECRET
   return dir
 }
 
 async function fakeBin(name: string): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), "pptpress-gen-bin-"))
+  const dir = await mkdtemp(join(tmpdir(), "pptwise-gen-bin-"))
   const bin = join(dir, name)
   await writeFile(bin, "#!/bin/sh\nexit 0\n")
   chmodSync(bin, 0o755)
@@ -67,7 +67,7 @@ describe.skipIf(process.platform === "win32")("runImagesGenerate", () => {
   it("errors when none are enabled, lists found-but-disabled enable commands, and does not spawn", async () => {
     await tmpHome()
     await fakeBin("grok")
-    const cwd = await mkdtemp(join(tmpdir(), "pptpress-gen-deck-"))
+    const cwd = await mkdtemp(join(tmpdir(), "pptwise-gen-deck-"))
     const runs: ProcessRun[] = []
     await expect(
       runImagesGenerate({
@@ -82,7 +82,7 @@ describe.skipIf(process.platform === "win32")("runImagesGenerate", () => {
       }),
     ).rejects.toSatisfy((e: unknown) => {
       const message = (e as Error).message
-      expect(message).toContain("pptpress config set images.generators.grok.enabled true")
+      expect(message).toContain("pptwise config set images.generators.grok.enabled true")
       expect(message).toMatch(/disabled|enabled/i)
       return true
     })
@@ -93,7 +93,7 @@ describe.skipIf(process.platform === "win32")("runImagesGenerate", () => {
     await tmpHome()
     await persistUserConfigValue(["images", "generators", "grok", "enabled"], true)
     await fakeBin("grok")
-    const cwd = await mkdtemp(join(tmpdir(), "pptpress-gen-ok-"))
+    const cwd = await mkdtemp(join(tmpdir(), "pptwise-gen-ok-"))
     const runs: ProcessRun[] = []
     const out = await runImagesGenerate({
       deck: join(cwd, "demo-deck"),
@@ -106,7 +106,7 @@ describe.skipIf(process.platform === "win32")("runImagesGenerate", () => {
     })
     expect(out).toContain("pinned")
     expect(out).toContain("hero")
-    const assets = join(cwd, ".pptpress", "demo-deck", "assets")
+    const assets = join(cwd, ".pptwise", "demo-deck", "assets")
     expect(await readFile(join(assets, "hero.jpg"))).toEqual(JPEG_TINY)
     const sidecar = JSON.parse(await readFile(join(assets, "hero.json"), "utf8")) as Record<string, unknown>
     expect(sidecar.provider).toBe("grok")
@@ -127,14 +127,14 @@ describe.skipIf(process.platform === "win32")("runImagesGenerate", () => {
     await tmpHome()
     await persistUserConfigValue(["images", "generators", "grok", "enabled"], true)
     await persistUserConfigValue(["images", "generators", "codex", "enabled"], true)
-    const grokDir = await mkdtemp(join(tmpdir(), "pptpress-bin-grok-"))
+    const grokDir = await mkdtemp(join(tmpdir(), "pptwise-bin-grok-"))
     await writeFile(join(grokDir, "grok"), "#!/bin/sh\nexit 0\n")
     chmodSync(join(grokDir, "grok"), 0o755)
-    const codexDir = await mkdtemp(join(tmpdir(), "pptpress-bin-codex-"))
+    const codexDir = await mkdtemp(join(tmpdir(), "pptwise-bin-codex-"))
     await writeFile(join(codexDir, "codex"), "#!/bin/sh\nexit 0\n")
     chmodSync(join(codexDir, "codex"), 0o755)
     process.env.PATH = `${grokDir}:${codexDir}`
-    const cwd = await mkdtemp(join(tmpdir(), "pptpress-gen-fb-"))
+    const cwd = await mkdtemp(join(tmpdir(), "pptwise-gen-fb-"))
     const out = await runImagesGenerate({
       deck: join(cwd, "demo-deck"),
       as: "hero",
@@ -155,7 +155,7 @@ describe.skipIf(process.platform === "win32")("runImagesGenerate", () => {
     })
     expect(out).toContain("hero")
     const sidecar = JSON.parse(
-      await readFile(join(cwd, ".pptpress", "demo-deck", "assets", "hero.json"), "utf8"),
+      await readFile(join(cwd, ".pptwise", "demo-deck", "assets", "hero.json"), "utf8"),
     ) as Record<string, unknown>
     expect(sidecar.provider).toBe("codex")
     expect(sidecar.license).toBe("user-generated")
@@ -166,13 +166,13 @@ describe.skipIf(process.platform === "win32")("runImagesGenerate", () => {
     await persistUserConfigValue(["images", "generators", "grok", "enabled"], true)
     await persistUserConfigValue(["images", "generators", "codex", "enabled"], true)
     await persistUserConfigValue(["images", "generators", "antigravity", "enabled"], true)
-    const grokDir = await mkdtemp(join(tmpdir(), "pptpress-bin-all-"))
+    const grokDir = await mkdtemp(join(tmpdir(), "pptwise-bin-all-"))
     for (const name of ["grok", "codex", "agy"]) {
       await writeFile(join(grokDir, name), "#!/bin/sh\nexit 0\n")
       chmodSync(join(grokDir, name), 0o755)
     }
     process.env.PATH = grokDir
-    const cwd = await mkdtemp(join(tmpdir(), "pptpress-gen-fail-"))
+    const cwd = await mkdtemp(join(tmpdir(), "pptwise-gen-fail-"))
     await expect(
       runImagesGenerate({
         deck: join(cwd, "demo-deck"),
@@ -192,15 +192,15 @@ describe.skipIf(process.platform === "win32")("runImagesGenerate", () => {
       expect(message).toContain("antigravity")
       return true
     })
-    expect(await pathExists(join(cwd, ".pptpress", "demo-deck", "assets", "hero.jpg"))).toBe(false)
+    expect(await pathExists(join(cwd, ".pptwise", "demo-deck", "assets", "hero.jpg"))).toBe(false)
   })
 
   it("does not delete a pre-existing pin when every generator fails", async () => {
     await tmpHome()
     await persistUserConfigValue(["images", "generators", "grok", "enabled"], true)
     await fakeBin("grok")
-    const cwd = await mkdtemp(join(tmpdir(), "pptpress-gen-keep-"))
-    const assets = join(cwd, ".pptpress", "demo-deck", "assets")
+    const cwd = await mkdtemp(join(tmpdir(), "pptwise-gen-keep-"))
+    const assets = join(cwd, ".pptwise", "demo-deck", "assets")
     await mkdir(assets, { recursive: true })
     await writeFile(join(assets, "hero.jpg"), JPEG_TINY)
     await writeFile(
@@ -236,7 +236,7 @@ describe.skipIf(process.platform === "win32")("runImagesGenerate", () => {
     await tmpHome()
     await persistUserConfigValue(["images", "generators", "grok", "enabled"], true)
     await fakeBin("grok")
-    const cwd = await mkdtemp(join(tmpdir(), "pptpress-gen-brief-"))
+    const cwd = await mkdtemp(join(tmpdir(), "pptwise-gen-brief-"))
     const out = await runImagesGenerate({
       deck: join(cwd, "demo-deck"),
       as: "hero",
@@ -248,7 +248,7 @@ describe.skipIf(process.platform === "win32")("runImagesGenerate", () => {
     })
     expect(out).toContain("hero")
     const sidecar = JSON.parse(
-      await readFile(join(cwd, ".pptpress", "demo-deck", "assets", "hero.json"), "utf8"),
+      await readFile(join(cwd, ".pptwise", "demo-deck", "assets", "hero.json"), "utf8"),
     ) as { prompt: string }
     expect(sidecar.prompt).toBe("brief prompt from asset-brief")
   })
@@ -257,7 +257,7 @@ describe.skipIf(process.platform === "win32")("runImagesGenerate", () => {
     await tmpHome()
     await persistUserConfigValue(["images", "generators", "grok", "enabled"], true)
     await fakeBin("grok")
-    const cwd = await mkdtemp(join(tmpdir(), "pptpress-gen-noprompt-"))
+    const cwd = await mkdtemp(join(tmpdir(), "pptwise-gen-noprompt-"))
     await expect(
       runImagesGenerate({
         deck: join(cwd, "demo-deck"),

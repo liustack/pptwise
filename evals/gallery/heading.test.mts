@@ -102,7 +102,7 @@ describe("gallery heading table", () => {
 
     const jobs = headingJobs()
     expect(jobs.length).toBe(54)
-    const outDir = mkdtempSync(join(tmpdir(), "pptpress-gallery-heading-"))
+    const outDir = mkdtempSync(join(tmpdir(), "pptwise-gallery-heading-"))
     const { manifest, svgs } = renderMatrix(jobs, outDir, "test")
 
     const skipped = manifest.pages.filter((p) => p.skipped).map((p) => `${p.id}: ${p.skipped}`)

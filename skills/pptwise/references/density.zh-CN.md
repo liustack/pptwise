@@ -1,6 +1,6 @@
 ---
-summary: 'skills/pptpress/references/density.md 的中文阅读镜像'
-mirror_of: skills/pptpress/references/density.md
+summary: 'skills/pptwise/references/density.md 的中文阅读镜像'
+mirror_of: skills/pptwise/references/density.md
 ---
 
 # 密度与 beat

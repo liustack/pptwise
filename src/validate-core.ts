@@ -17,7 +17,7 @@
  * `./api` itself, the one file allowed to reach the render/export chain.
  */
 import { z } from "zod"
-import { PptpressError } from "./errors"
+import { PptwiseError } from "./errors"
 import { PptxIRSchema, StyleOverrideSchema, type PptxIR } from "./ir"
 import { decodeDataUriBytes, dataUriMime, FORMAT_BY_MIME, MIME_BY_SNIFFED_FORMAT, sniffImageFormat } from "./ir/asset-sniff"
 import { normalizeComponentAliases, normalizeDeckRootAliases } from "./ir/field-aliases"
@@ -289,7 +289,7 @@ function checkLayoutApplicability(ir: PptxIR): ValidationIssue[] {
         page: i + 1,
         ...(slide.id !== undefined ? { slideId: slide.id } : {}),
         message:
-          'layout "banner-heading" was removed — run `pptpress migrate <input> -o <output>` to rewrite it to "two-column"',
+          'layout "banner-heading" was removed — run `pptwise migrate <input> -o <output>` to rewrite it to "two-column"',
       })
       return
     }
@@ -570,7 +570,7 @@ function checkAssetBytes(ir: PptxIR): ValidationIssue[] {
  * `image_compare`/`device_mockup` component, an `"asset"`-kind slide background,
  * `brand.logo_asset_id`) against the keys actually present in
  * `assets.images` (borrow wave, Task 2 — B5). A reference to a key that
- * doesn't exist renders as pptpress's documented graceful placeholder — a
+ * doesn't exist renders as pptwise's documented graceful placeholder — a
  * gray rect, `svg/components/image.tsx`'s `src ? <image> : <rect>` fallback,
  * a deliberate "never crash" design — with zero error or warning text
  * anywhere in the existing chain (`dr/b-weak-model.md`'s P15 probe: the only
@@ -692,7 +692,7 @@ function checkAssetReferences(ir: PptxIR): ValidationIssue[] {
  * check, listing the current values. `{id: <preset>}` was never a v3
  * `scenario` shape, so `normalizeNarrativeShape` above does not reopen this
  * door — it rescues a shape weak models invent by analogy to `theme.id`, not
- * a shape the pre-rename vocabulary ever spoke. `pptpress migrate`
+ * a shape the pre-rename vocabulary ever spoke. `pptwise migrate`
  * (`ir/migrate.ts`) remains the sanctioned bridge for a genuine v3 document —
  * see the v3 hard reject below, which points there. Hard-erroring is not the
  * same as leaving the error message unhelpful, though: the schema-parse
@@ -713,7 +713,7 @@ export function validateIr(input: unknown): ValidateResult {
 
   // IR v2 hard reject (spec §15.3): a combined mapping straight to v4 — v2
   // has no real users, so there is no reason to route it through the v3
-  // vocabulary as a stepping stone. `pptpress migrate` only accepts v3 input
+  // vocabulary as a stepping stone. `pptwise migrate` only accepts v3 input
   // (spec §15.3: "不接 v2"), so this message does not point to it — a v2
   // document must be rewritten by hand using the mapping below.
   if (version === "2") {
@@ -723,7 +723,7 @@ export function validateIr(input: unknown): ValidateResult {
         {
           path: "version",
           message:
-            'IR v2 is not supported by pptpress — set version to "4" and rewrite by hand using this mapping: theme.override is now theme.style. variant is split into layout and arrangement. blocks are now components. scenario is now narrative, with mode renamed to strategy (the "narrative" strategy value is now "storytelling") and delivery renamed to pacing (the "text" pacing value is now "dense", "presentation" is now "spacious", "balanced" is unchanged)',
+            'IR v2 is not supported by pptwise — set version to "4" and rewrite by hand using this mapping: theme.override is now theme.style. variant is split into layout and arrangement. blocks are now components. scenario is now narrative, with mode renamed to strategy (the "narrative" strategy value is now "storytelling") and delivery renamed to pacing (the "text" pacing value is now "dense", "presentation" is now "spacious", "balanced" is unchanged)',
         },
       ],
     }
@@ -732,7 +732,7 @@ export function validateIr(input: unknown): ValidateResult {
   // silently reinterpreted as v4, however it spells its axes. Full
   // field/value mapping (spec §9.1) plus the deterministic migration
   // command pointer (`migrateIrV3ToV4`, `ir/migrate.ts`, wrapped by the
-  // `pptpress migrate` CLI command, task 2).
+  // `pptwise migrate` CLI command, task 2).
   if (version === "3") {
     return {
       ok: false,
@@ -740,7 +740,7 @@ export function validateIr(input: unknown): ValidateResult {
         {
           path: "version",
           message:
-            'IR v3 is not supported by pptpress 0.4 — set version to "4", or run `pptpress migrate <input> -o <output>` to convert automatically. Mapping: scenario is now narrative. scenario.mode is now narrative.strategy (mode "narrative" is now strategy "storytelling", every other mode value is unchanged). scenario.delivery is now narrative.pacing (delivery "text" is now pacing "dense", "balanced" is unchanged, "presentation" is now "spacious"). scenario.audience is now narrative.audience (unchanged). every other field is unchanged',
+            'IR v3 is not supported by pptwise 0.4 — set version to "4", or run `pptwise migrate <input> -o <output>` to convert automatically. Mapping: scenario is now narrative. scenario.mode is now narrative.strategy (mode "narrative" is now strategy "storytelling", every other mode value is unchanged). scenario.delivery is now narrative.pacing (delivery "text" is now pacing "dense", "balanced" is unchanged, "presentation" is now "spacious"). scenario.audience is now narrative.audience (unchanged). every other field is unchanged',
         },
       ],
     }
@@ -768,11 +768,11 @@ export function validateIr(input: unknown): ValidateResult {
         // keys and old enum values inside `narrative` already self-document
         // via resolveNarrative's own errors. Kept inline (not folded into
         // ./ir/rename-hints.ts's table below) because this is the one
-        // rename whose hint also carries the `pptpress migrate` pointer for
+        // rename whose hint also carries the `pptwise migrate` pointer for
         // a genuine v3 document — see that module's own doc comment for why
         // the other, v2-only renames don't get the same pointer.
         if (path === "" && issue.keys.includes("scenario")) {
-          message += ' — "scenario" was renamed to "narrative" in IR v4 (for a v3 file run: pptpress migrate <file> -o <out>)'
+          message += ' — "scenario" was renamed to "narrative" in IR v4 (for a v3 file run: pptwise migrate <file> -o <out>)'
         }
         // The rest of the documented v2/v3 → v4 rename map (borrow-wave
         // task 3, generalizing the `scenario` rescue above to
@@ -804,8 +804,8 @@ export function validateIr(input: unknown): ValidateResult {
     const themeId = r.data.theme.id
     const message =
       themeId === "bloom"
-        ? 'theme id "bloom" was removed — run `pptpress migrate <input> -o <output>` to rewrite it to "classroom"'
-        : `unknown theme "${themeId}" — available: ${installedThemeIds.join(", ")} (see \`pptpress themes\`)`
+        ? 'theme id "bloom" was removed — run `pptwise migrate <input> -o <output>` to rewrite it to "classroom"'
+        : `unknown theme "${themeId}" — available: ${installedThemeIds.join(", ")} (see \`pptwise themes\`)`
     return withNormalized({
       ok: false,
       errors: [
@@ -854,7 +854,7 @@ export function validateIr(input: unknown): ValidateResult {
   try {
     resolvedAxes = resolveNarrative(r.data.narrative as string | Partial<NarrativeProfile> | undefined)
   } catch (err) {
-    if (!(err instanceof PptpressError)) throw err
+    if (!(err instanceof PptwiseError)) throw err
     return withNormalized({ ok: false, errors: [{ path: "narrative", message: err.message }] })
   }
   const quality = checkIrQuality(r.data, resolvedAxes)
@@ -915,7 +915,7 @@ export function formatIssues(errors: ValidationIssue[]): string {
 
 /**
  * `"warning: page 2 (p-kpi) — path: message"` per {@link ValidateResult.warnings}
- * entry (borrow wave, Task 2) — the CLI warn-line convention: `pptpress
+ * entry (borrow wave, Task 2) — the CLI warn-line convention: `pptwise
  * validate`/`render` print one of these per warn-severity finding, exit 0
  * regardless (only `errors` drives the exit code — see `cli/commands.ts`'s
  * `runValidate`/`runRender`). Formats each issue alone through

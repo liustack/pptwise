@@ -13,8 +13,8 @@ import { installNodePlatform } from "@/platform/node"
 import { auditL1 } from "../l1"
 import { judgeL2, l2SkipReason, type GalleryPageMeta, type L2Verdict } from "../l2"
 
-const OLD_SVG_DIR = resolveProductEnv("CAL_SVG_DIR") ?? "/tmp/pptpress-gallery-cal-svgs"
-const OUT = resolveProductEnv("CAL_L2") ?? "/tmp/pptpress-gallery-cal-l2.json"
+const OLD_SVG_DIR = resolveProductEnv("CAL_SVG_DIR") ?? "/tmp/pptwise-gallery-cal-svgs"
+const OUT = resolveProductEnv("CAL_L2") ?? "/tmp/pptwise-gallery-cal-l2.json"
 
 type Store = Record<string, L2Verdict | { error: string }>
 

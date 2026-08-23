@@ -103,8 +103,8 @@ async function runOne(
   mkdirSync(outDir, { recursive: true })
 
   const system = [
-    "You are the model-under-test in the pptpress benchmark, single-shot mode.",
-    "You will receive the pptpress skill playbook, the tool's current vocabulary",
+    "You are the model-under-test in the pptwise benchmark, single-shot mode.",
+    "You will receive the pptwise skill playbook, the tool's current vocabulary",
     "(IR JSON Schema, narrative presets, themes), and one deck request.",
     "Follow the playbook's content methodology to design the deck, then reply",
     "with ONLY the final IR JSON document (a single JSON object, no markdown",
@@ -113,10 +113,10 @@ async function runOne(
     "one shot.",
   ].join(" ")
   const user = [
-    "## Skill playbook (skills/pptpress/SKILL.md)\n\n" + shared.skill,
-    "## IR JSON Schema (pptpress schema)\n\n```json\n" + shared.schema + "\n```",
-    "## Narrative presets (pptpress narratives --json)\n\n```json\n" + shared.narratives + "\n```",
-    "## Themes (pptpress themes --json)\n\n```json\n" + shared.themes + "\n```",
+    "## Skill playbook (skills/pptwise/SKILL.md)\n\n" + shared.skill,
+    "## IR JSON Schema (pptwise schema)\n\n```json\n" + shared.schema + "\n```",
+    "## Narrative presets (pptwise narratives --json)\n\n```json\n" + shared.narratives + "\n```",
+    "## Themes (pptwise themes --json)\n\n```json\n" + shared.themes + "\n```",
     "## Deck request\n\n" + prompt,
     "Reply with ONLY the IR JSON document.",
   ].join("\n\n---\n\n")
@@ -208,7 +208,7 @@ async function main(): Promise<void> {
   const questions =
     qids.length > 0 ? qids : readdirSync(questionsDir).filter((d) => /^[a-z]\d\d$/.test(d)).sort()
   const shared = {
-    skill: readFileSync(join(ROOT, "skills/pptpress/SKILL.md"), "utf8"),
+    skill: readFileSync(join(ROOT, "skills/pptwise/SKILL.md"), "utf8"),
     schema: cliText(["schema"]),
     narratives: cliText(["narratives", "--json"]),
     themes: cliText(["themes", "--json"]),

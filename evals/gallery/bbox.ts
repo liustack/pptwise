@@ -191,7 +191,7 @@ export function slackFor(parsed: Pick<ParsedIssue, "axis" | "extent">, floor: nu
 export function harnessHtml(): string {
   return `<!doctype html>
 <meta charset="utf-8">
-<title>pptpress bbox audit</title>
+<title>pptwise bbox audit</title>
 <style>html,body{margin:0;padding:0;background:#fff}.pg{width:${PAGE_W}px;height:${PAGE_H}px}</style>
 <div id="stage"></div>
 <script>
@@ -247,7 +247,7 @@ function countMeasured(root) {
  *
  * `pnpm check` runs the gallery matrix on every commit and must stay free of
  * browser downloads, so this is resolved when `--bbox` asks for it and not
- * before. A global install works, as does `PPTPRESS_PLAYWRIGHT` pointing at
+ * before. A global install works, as does `PPTWISE_PLAYWRIGHT` pointing at
  * one.
  */
 async function loadPlaywright(): Promise<any> {
@@ -266,7 +266,7 @@ async function loadPlaywright(): Promise<any> {
   throw new Error(
     "--bbox needs Playwright, which this repo deliberately does not depend on (`pnpm check` must not pull a browser).\n" +
       "  Install it for this checkout — `pnpm add -D playwright && pnpm exec playwright install chromium` —\n" +
-      "  or point PPTPRESS_PLAYWRIGHT at an existing install.\n" +
+      "  or point PPTWISE_PLAYWRIGHT at an existing install.\n" +
       `  Tried:\n    ${tried.join("\n    ")}`,
   )
 }

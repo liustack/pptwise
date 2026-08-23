@@ -1,6 +1,6 @@
-// Browser half of the pptpress dsh plugin: the deck preview card.
+// Browser half of the pptwise dsh plugin: the deck preview card.
 //
-// The host half (`./preview-tool.js`) registers `pptpress_preview` and puts
+// The host half (`./preview-tool.js`) registers `pptwise_preview` and puts
 // the rendered bundle on `output.presentationMeta` — a channel persisted with
 // the session log and never shown to the model. This file is what turns that
 // payload into something a person can look at: a thumbnail strip in the tool
@@ -48,18 +48,18 @@
 // It also *views* nothing of its own any more. The modal used to be a small
 // React slideshow — arrow keys, a page counter, prev/next buttons, a stand-in
 // for pages the server had declined to send — sitting next to the finished
-// `preview.html` that `pptpress preview --html` writes for every run and that
+// `preview.html` that `pptwise preview --html` writes for every run and that
 // harnesses without a plugin UI are told to open. Two viewers, one deck, and
 // only one of them tested. The modal is now an iframe pointing at that file,
 // and keeps only the two things the file cannot do for itself: close, and hand
 // over the .pptx.
 window.__ModuleLoader__.load({
-  id: '@liustack/pptpress',
+  id: '@liustack/pptwise',
   factory: (require) => {
     var module = { exports: {} }
     var exports = module.exports
 
-    var TOOL_NAME = 'pptpress_preview'
+    var TOOL_NAME = 'pptwise_preview'
 
     /**
      * How many thumbnails the strip draws.
@@ -82,13 +82,13 @@ window.__ModuleLoader__.load({
      * label rather than its index in a strip that may be a prefix of the deck.
      */
     function previewHtmlUrl(previewId, startPage) {
-      var url = '/pptpress/preview/' + previewId + '/html'
+      var url = '/pptwise/preview/' + previewId + '/html'
       return startPage > 1 ? url + '#page=' + startPage : url
     }
 
     /** Where the deck itself lives — the bundle the strip draws from. */
     function previewBundleUrl(previewId) {
-      return '/pptpress/preview/' + previewId
+      return '/pptwise/preview/' + previewId
     }
 
     /**
@@ -143,7 +143,7 @@ window.__ModuleLoader__.load({
     }
 
     /** The header the host half stamps on every answer it writes. */
-    var ROUTE_HEADER = 'x-pptpress-preview'
+    var ROUTE_HEADER = 'x-pptwise-preview'
 
     function fromPreviewRoute(res) {
       var headers = res && res.headers
@@ -231,22 +231,22 @@ window.__ModuleLoader__.load({
      * It does not name a culprit either, and that is the same correction made
      * twice. All the route observed is that nothing is at this id under the
      * previews root this session is reading. Deletion is the usual reason and
-     * not the only one: `PPTPRESS_HOME` decides that root, so a deck written
+     * not the only one: `PPTWISE_HOME` decides that root, so a deck written
      * under a different one is alive and out of reach, which is a fact about
      * configuration and not about anything the user did wrong.
      */
     var MISSING_HINT =
       'The rendered deck for this preview is no longer on disk where this session looks for it. ' +
       'Previews are never removed on a timer, so it was either deleted or written under a different ' +
-      'PPTPRESS_HOME. Run pptpress_preview again to rebuild it.'
+      'PPTWISE_HOME. Run pptwise_preview again to rebuild it.'
 
     /** What the card says when it could not reach the route at all. */
     var UNREACHABLE_HINT =
-      'Could not reach the pptpress preview route. The deck may still be there — try again.'
+      'Could not reach the pptwise preview route. The deck may still be there — try again.'
 
     /** What the card says when the route answered, but refused. */
     var REFUSED_HINT =
-      'The pptpress preview route refused this request. The deck may still be there, ' +
+      'The pptwise preview route refused this request. The deck may still be there, ' +
       'but this browser is not allowed to read it. Trying again will be refused the same way.'
 
     /**
@@ -262,7 +262,7 @@ window.__ModuleLoader__.load({
      */
     var DAMAGED_HINT =
       'This preview cannot be opened: the file describing it is present but unreadable. ' +
-      'The rendered pages may still be on disk — run pptpress_preview again to rebuild it.'
+      'The rendered pages may still be on disk — run pptwise_preview again to rebuild it.'
 
     /** The sentence that goes with a verdict, in the one place that shows all of them. */
     function hintFor(verdict) {
@@ -307,7 +307,7 @@ window.__ModuleLoader__.load({
 
     /** The preview id the tool stamped into its own result text. */
     function previewIdOf(block) {
-      var m = /pptpress-preview:([A-Za-z0-9-]+)/.exec(resultTextOf(block))
+      var m = /pptwise-preview:([A-Za-z0-9-]+)/.exec(resultTextOf(block))
       return m ? m[1] : null
     }
 
@@ -349,7 +349,7 @@ window.__ModuleLoader__.load({
       var candidates = [block.meta, block.resultView, block.result && block.result.meta, block.presentationMeta]
       for (var i = 0; i < candidates.length; i++) {
         var c = candidates[i]
-        if (c && c.card === 'pptpress-preview' && c.bundle && Array.isArray(c.bundle.pages)) return c.bundle
+        if (c && c.card === 'pptwise-preview' && c.bundle && Array.isArray(c.bundle.pages)) return c.bundle
         if (c && c.bundle && Array.isArray(c.bundle.pages)) return c.bundle
       }
       return null
@@ -442,7 +442,7 @@ window.__ModuleLoader__.load({
        * taking the deck away is why the row exists — and the outline marks
        * the exit.
        */
-      var MODAL_STYLE_ID = 'pptpress-modal-style'
+      var MODAL_STYLE_ID = 'pptwise-modal-style'
       var MODAL_BTN_BASE =
         'font:inherit;font-size:13px;padding:7px 16px;border-radius:8px;cursor:pointer;'
       function ensureModalStyles() {
@@ -645,7 +645,7 @@ window.__ModuleLoader__.load({
             h('iframe', {
               ref: frameRef,
               src: props.src,
-              title: 'pptpress deck preview',
+              title: 'pptwise deck preview',
               style: {
                 // Takes the rest of the dialog and lets the page inside do its
                 // own layout. Its stage carries `aspect-ratio: 16/9` and sizes
@@ -707,7 +707,7 @@ window.__ModuleLoader__.load({
           // stale — or the reverse.
           var order = { lane: 'download', ticket: nextTicket() }
           setStatus('busy', order)
-          fetch('/pptpress/preview/' + props.previewId + '/pptx')
+          fetch('/pptwise/preview/' + props.previewId + '/pptx')
             .then(function (res) {
               return verdictOf(res).then(function (verdict) {
                 if (verdict !== 'alive') {
@@ -963,7 +963,7 @@ window.__ModuleLoader__.load({
       }
 
       /** The card itself: a strip of thumbnails, and a button that opens the viewer. */
-      return function PptpressPreviewCard(props) {
+      return function PptwisePreviewCard(props) {
         var direct = bundleOf(props.block)
         var previewId = previewIdOf(props.block)
         var pageCount = pageCountOf(props.block)
@@ -1337,14 +1337,14 @@ window.__ModuleLoader__.load({
       // this returned quietly, and the tool rendered in the generic row with
       // no sign anything had failed.
       if (!ctx.slots || typeof ctx.slots.inject !== 'function') {
-        console.error('[pptpress] preview card skipped: no slot registry on this context')
+        console.error('[pptwise] preview card skipped: no slot registry on this context')
         return
       }
       var react
       try {
         react = require('react')
       } catch (error) {
-        console.error('[pptpress] preview card skipped: ' + error)
+        console.error('[pptwise] preview card skipped: ' + error)
         return
       }
       var Card = PreviewCard(react)
@@ -1360,7 +1360,7 @@ window.__ModuleLoader__.load({
       try {
         registerCard(ctx)
       } catch (error) {
-        console.error('[pptpress] preview card registration skipped: ' + error)
+        console.error('[pptwise] preview card registration skipped: ' + error)
       }
     }
 

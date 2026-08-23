@@ -5,7 +5,7 @@ import { AUDIENCE_VALUES, PACING_VALUES, STRATEGY_VALUES } from "./ir/narrative-
 import { NARRATIVE_PRESETS } from "./narrative"
 import { FULL_BODY_TYPES } from "./svg/component-traits"
 
-// This test is NOT under skills/pptpress/ (where the files it guards live)
+// This test is NOT under skills/pptwise/ (where the files it guards live)
 // because vitest.config.ts's `include` only picks up `src/**/*.test.{ts,tsx}`
 // and `tests/bench/**/*.test.{ts,tsx}` — nothing under skills/ is currently
 // wired into any test runner. Rather than teach vitest a new include glob
@@ -13,7 +13,7 @@ import { FULL_BODY_TYPES } from "./svg/component-traits"
 // the skill files and their reference booklets by repo-relative path.
 
 const ROOT = process.cwd()
-const SKILL_ROOT_REL = "skills/pptpress"
+const SKILL_ROOT_REL = "skills/pptwise"
 const EN_REL = `${SKILL_ROOT_REL}/SKILL.md`
 const ZH_REL = `${SKILL_ROOT_REL}/SKILL.zh-CN.md`
 const REF = (name: string) => `${SKILL_ROOT_REL}/references/${name}`
@@ -97,8 +97,8 @@ function sectionAfter(text: string, heading: RegExp, nextHeading = /^##+ /m): st
   return next === -1 ? rest : rest.slice(0, next)
 }
 
-function pptpressCommands(section: string): string[] {
-  return [...section.matchAll(/^pptpress .+$/gm)].map((mm) => mm[0].replace(/\s+#.*$/, "").trimEnd())
+function pptwiseCommands(section: string): string[] {
+  return [...section.matchAll(/^pptwise .+$/gm)].map((mm) => mm[0].replace(/\s+#.*$/, "").trimEnd())
 }
 
 /**
@@ -156,7 +156,7 @@ describe("SKILL.zh-CN.md mirrors SKILL.md (skill-zh-cn drift guard)", () => {
   it("SKILL.md registers the skill (has a name: frontmatter field) and SKILL.zh-CN.md does not", () => {
     const enFm = frontmatter(read(EN_REL))
     const zhFm = frontmatter(read(ZH_REL))
-    expect(enFm, "SKILL.md's frontmatter should declare name: pptpress").toMatch(/^name:\s*pptpress\s*$/m)
+    expect(enFm, "SKILL.md's frontmatter should declare name: pptwise").toMatch(/^name:\s*pptwise\s*$/m)
     expect(
       zhFm,
       "SKILL.zh-CN.md must NOT have a `name:` frontmatter field — that is what registers a skill, " +
@@ -173,7 +173,7 @@ describe("SKILL.zh-CN.md mirrors SKILL.md (skill-zh-cn drift guard)", () => {
     const missing = expected.filter((rel) => !discovered.includes(rel))
     expect(
       { unexpected, missing },
-      "discovered English markdown under skills/pptpress/ is not the documented set",
+      "discovered English markdown under skills/pptwise/ is not the documented set",
     ).toEqual({ unexpected: [], missing: [] })
 
     for (const file of en) {
@@ -263,45 +263,45 @@ describe("SKILL.zh-CN.md mirrors SKILL.md (skill-zh-cn drift guard)", () => {
   it("both files carry the stock-photos section with the same CLI command lines", () => {
     const en = sectionAfter(read(REF("images.md")), /^### Stock photos$/m)
     const zh = sectionAfter(read(REF("images.zh-CN.md")), /^### 图库配图$/m)
-    expect(pptpressCommands(en).length, "references/images.md stock-photos section has no pptpress command lines").toBeGreaterThan(0)
-    expect(pptpressCommands(zh), "stock-photos sections' pptpress command lines diverge between EN and ZH").toEqual(
-      pptpressCommands(en),
+    expect(pptwiseCommands(en).length, "references/images.md stock-photos section has no pptwise command lines").toBeGreaterThan(0)
+    expect(pptwiseCommands(zh), "stock-photos sections' pptwise command lines diverge between EN and ZH").toEqual(
+      pptwiseCommands(en),
     )
-    expect(en).toContain("pptpress asset-brief")
-    expect(en).toContain("pptpress images search")
-    expect(en).toContain("pptpress images fetch")
-    expect(en).toContain("pptpress images generate")
-    expect(en).toContain("pptpress config set pexels.apiKey")
-    expect(en).toContain("pptpress config set images.generators.grok.enabled true")
+    expect(en).toContain("pptwise asset-brief")
+    expect(en).toContain("pptwise images search")
+    expect(en).toContain("pptwise images fetch")
+    expect(en).toContain("pptwise images generate")
+    expect(en).toContain("pptwise config set pexels.apiKey")
+    expect(en).toContain("pptwise config set images.generators.grok.enabled true")
   })
 
   it("both files carry the Brand-themes section with the same CLI command lines", () => {
     // brand-extract wave review noted this section's EN/ZH parity was
     // unguarded. Structural guard: both sections exist, and every backtick
-    // `pptpress …` command line inside them matches verbatim (commands are
+    // `pptwise …` command line inside them matches verbatim (commands are
     // language-invariant; prose stays free per this file's philosophy).
     // Commands live in ```bash fenced blocks (not inline backticks) — match
     // whole command lines; trailing per-line comments are language-variant
     // prose, so strip them before comparing.
-    const en = pptpressCommands(sectionAfter(read(REF("branding.md")), /^## Brand themes[^\n]*$/m, /^## /m))
-    const zh = pptpressCommands(sectionAfter(read(REF("branding.zh-CN.md")), /^## 品牌主题[^\n]*$/m, /^## /m))
-    expect(en.length, "references/branding.md Brand-themes section has no pptpress command lines").toBeGreaterThan(0)
-    expect(zh, "Brand-themes sections' pptpress command lines diverge between EN and ZH").toEqual(en)
+    const en = pptwiseCommands(sectionAfter(read(REF("branding.md")), /^## Brand themes[^\n]*$/m, /^## /m))
+    const zh = pptwiseCommands(sectionAfter(read(REF("branding.zh-CN.md")), /^## 品牌主题[^\n]*$/m, /^## /m))
+    expect(en.length, "references/branding.md Brand-themes section has no pptwise command lines").toBeGreaterThan(0)
+    expect(zh, "Brand-themes sections' pptwise command lines diverge between EN and ZH").toEqual(en)
   })
 
   it("both files carry the serve review-loop section with the same command lines", () => {
-    // `pptpress serve` is the deck's review path, in every harness: the
+    // `pptwise serve` is the deck's review path, in every harness: the
     // loop (`serve --no-open`, report the URL, read the annotations back,
     // stop the job) must exist in both files with identical command lines
     // — same structural guard as the Brand-themes test above.
     const en = sectionAfter(read(REF("validate.md")), /^### Showing the deck to the user$/m)
     const zh = sectionAfter(read(REF("validate.zh-CN.md")), /^### 把 deck 拿给用户看$/m)
-    expect(pptpressCommands(en).length, "references/validate.md serve section has no pptpress command lines").toBeGreaterThan(0)
-    expect(pptpressCommands(zh), "serve sections' pptpress command lines diverge between EN and ZH").toEqual(pptpressCommands(en))
+    expect(pptwiseCommands(en).length, "references/validate.md serve section has no pptwise command lines").toBeGreaterThan(0)
+    expect(pptwiseCommands(zh), "serve sections' pptwise command lines diverge between EN and ZH").toEqual(pptwiseCommands(en))
     for (const section of [en, zh]) {
       // The tool comes first where it exists, and the fallback still has to
       // carry its own discipline — both halves are pinned, in both languages.
-      expect(section, "the section must name the preview tool as the first choice").toContain("pptpress_preview")
+      expect(section, "the section must name the preview tool as the first choice").toContain("pptwise_preview")
       expect(section, "the serve fallback must insist on --no-open").toContain("--no-open")
       expect(section, "the serve section must name the localhost URL to report").toContain("http://127.0.0.1:4400")
       // Was: "must route annotations through revision-request.json". That
@@ -316,7 +316,7 @@ describe("SKILL.zh-CN.md mirrors SKILL.md (skill-zh-cn drift guard)", () => {
   })
 
   it("both files launch the CLI through the bundled launcher, with the same fallback commands", () => {
-    // The launcher is how the skill runs on a machine with no pptpress
+    // The launcher is how the skill runs on a machine with no pptwise
     // installed, so a translation that quietly kept the old `npm install -g`
     // preamble would hand Chinese readers a different install story.
     const launcherLines = (text: string) =>

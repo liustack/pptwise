@@ -1,5 +1,5 @@
 ---
-summary: 'Brand extraction (`pptpress brand extract`) and custom-theme loading (`--theme-file`, deck-project `theme.json`): the OOXML slot → token mapping, the muted derivation, the registerTheme contrast gate, id rules, and the known limits (ea fonts, logos, slide-master backgrounds)'
+summary: 'Brand extraction (`pptwise brand extract`) and custom-theme loading (`--theme-file`, deck-project `theme.json`): the OOXML slot → token mapping, the muted derivation, the registerTheme contrast gate, id rules, and the known limits (ea fonts, logos, slide-master backgrounds)'
 read_when:
   - touching src/themes/brand-extract.ts, src/themes/brand-theme-file.ts, or the CLI's --theme-file / theme.json loading path
   - a user's extracted theme is refused at load time (contrast floor) or renders with unexpected colors
@@ -8,8 +8,8 @@ read_when:
 
 # Brand extraction and custom-theme loading
 
-`pptpress brand extract <file.thmx|.potx|.pptx> -o my-brand.theme.json` reads
-the OOXML theme part out of a user's own Office file and writes a pptpress
+`pptwise brand extract <file.thmx|.potx|.pptx> -o my-brand.theme.json` reads
+the OOXML theme part out of a user's own Office file and writes a pptwise
 theme file — **entirely locally**, no network anywhere on the path. The file
 is pure data (tokens + label + optional brand config): no layouts curation,
 no motif, no layoutTendencies — those default to the full set at load time,
@@ -23,7 +23,7 @@ test fixtures are programmatically built minimal zips
 
 ## Slot → token mapping
 
-| OOXML slot | pptpress token | Note |
+| OOXML slot | pptwise token | Note |
 |---|---|---|
 | `dk1` / `lt1` | `text` / `bg` | Assigned by **measured lightness**, not slot name — whichever is darker becomes `text`. All 39 real themes keep the conventional order; the swap only fires for a producer that put a light color in `dk1` |
 | `lt2` | `surface` | Falls back to `bg` when absent |
@@ -44,7 +44,7 @@ Loading always goes through `registerTheme` (`src/themes/definitions.ts`) —
 there is no second code path — so its 0.9.0 contrast floor is automatically
 the quality gate: `colors.text`/`colors.muted` below 3.0:1 against a checked
 slide type's background is refused at load time, naming the token, the
-measured ratio, and the background. `pptpress brand extract` additionally
+measured ratio, and the background. `pptwise brand extract` additionally
 pre-checks the same floor and appends a warning to its output when the file
 it just wrote would be refused.
 
@@ -63,7 +63,7 @@ Id rules (`registerBrandThemeFile`, `src/themes/brand-theme-file.ts`):
 a theme file may never shadow a builtin id (hard error at both extract and
 load time — determinism: what `consulting` resolves to must not depend on
 which files were loaded). Re-loading an already-registered id is a no-op
-(`pptpress serve`'s rebuild loop re-runs the load on every rebuild), which
+(`pptwise serve`'s rebuild loop re-runs the load on every rebuild), which
 also means editing a theme file mid-`serve` needs a server restart to apply.
 
 ## Known limits

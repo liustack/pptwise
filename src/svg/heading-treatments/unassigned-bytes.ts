@@ -52,7 +52,7 @@ function deck(theme: string, slides: Slide[]): PptxIR {
     version: "4",
     filename: "heading-byte-nail.pptx",
     theme: { id: theme },
-    meta: { organization: "pptpress" },
+    meta: { organization: "pptwise" },
     assets: { images: {} },
     slides,
   } as PptxIR

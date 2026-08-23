@@ -12,8 +12,8 @@ import { installNodePlatform } from "@/platform/node"
 import { auditL1 } from "../l1"
 import { judgeL2, l2SkipReason, type GalleryPageMeta } from "../l2"
 
-const OLD_SVG_DIR = resolveProductEnv("CAL_SVG_DIR") ?? "/tmp/pptpress-gallery-cal-svgs"
-const OUT = resolveProductEnv("CAL_DUAL") ?? "/tmp/pptpress-gallery-cal-dual.json"
+const OLD_SVG_DIR = resolveProductEnv("CAL_SVG_DIR") ?? "/tmp/pptwise-gallery-cal-svgs"
+const OUT = resolveProductEnv("CAL_DUAL") ?? "/tmp/pptwise-gallery-cal-dual.json"
 const ids = ["layout--two-column--en", "component--cycle-petal-wheel--zh", "component--people-cards--zh"]
 
 await installNodePlatform()

@@ -299,7 +299,7 @@ describe("renderModelReport / renderSummaryReport", () => {
     const metas = await loadQuestionMetas(QUESTIONS_DIR)
     const report = await scoreModel("green-model", join(RESULTS_DIR, "green-model"), metas)
     const md = renderModelReport(report.modelTag, report.scores)
-    expect(md).toContain("# pptpress benchmark report — green-model")
+    expect(md).toContain("# pptwise benchmark report — green-model")
     expect(md).toContain("| fx01 |")
     expect(md).toContain("| fx02 |")
     expect(md).toContain("| fx03 |")
@@ -314,7 +314,7 @@ describe("renderModelReport / renderSummaryReport", () => {
     const green = await scoreModel("green-model", join(RESULTS_DIR, "green-model"), metas)
     const degraded = await scoreModel("degraded-model", join(RESULTS_DIR, "degraded-model"), metas)
     const md = renderSummaryReport([green, degraded])
-    expect(md).toContain("# pptpress benchmark — cross-model summary")
+    expect(md).toContain("# pptwise benchmark — cross-model summary")
     const degradedLine = md.split("\n").find((l) => l.startsWith("| degraded-model"))!
     const greenLine = md.split("\n").find((l) => l.startsWith("| green-model"))!
     expect(degradedLine).toBeDefined()

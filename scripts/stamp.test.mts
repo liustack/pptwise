@@ -14,7 +14,7 @@ describe("skill launcher version stamping", () => {
   it("keeps both launcher constants stamped to the package version", () => {
     // The launcher pin outranks every doc line: it is the version that
     // actually runs when a harness invokes the skill on a machine with no
-    // `pptpress` on PATH. A drifted constant ships a skill that fetches a
+    // `pptwise` on PATH. A drifted constant ships a skill that fetches a
     // release this repo never cut.
     const version = readPackageVersion()
     for (const launcher of readLauncherVersions()) {
@@ -33,7 +33,7 @@ describe("skill launcher version stamping", () => {
 
   it("keeps the two launchers on the same pinned version", () => {
     // run.sh and run.ps1 are the same launcher in two shells. One stamped and
-    // one missed would give a Windows user a different pptpress than everyone
+    // one missed would give a Windows user a different pptwise than everyone
     // else, silently.
     const versions = readLauncherVersions().map((launcher) => launcher.version)
     expect(new Set(versions).size, `launchers disagree: ${versions.join(" vs ")}`).toBe(1)
@@ -70,7 +70,7 @@ describe("install-command version stamping", () => {
         // The whole spec, up to whitespace or the closing quote of a command
         // cited in prose: a partial read would accept `0.18.0+local` by
         // matching only the part that looks pinned.
-        const install = line.match(/add @liustack\/pptpress(@[^\s`'")]*)?/)
+        const install = line.match(/add @liustack\/pptwise(@[^\s`'")]*)?/)
         if (install === null) continue
         const spec = (install[1] ?? "").slice(1)
         const lifted = line.includes("--config.minimumReleaseAge=0")

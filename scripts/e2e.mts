@@ -32,7 +32,7 @@ function shExpectFail(cmd: string, args: string[]): string {
 /** Runs `cmd args` and returns its exit status alongside stdout/stderr,
  *  regardless of whether it succeeded — unlike `sh` (throws on any failure)
  *  and `shExpectFail` (only ever returns stderr, and requires failure). The
- *  audit leg below needs this because `pptpress audit`'s report — clean or
+ *  audit leg below needs this because `pptwise audit`'s report — clean or
  *  with findings — is the command's normal output on stdout; the exit code
  *  alone is the pass/fail signal (same convention as eslint/tsc), unlike a
  *  `fail()`-routed CLI error (console.error → stderr → non-zero exit). */
@@ -47,12 +47,13 @@ function shCapture(cmd: string, args: string[]): { status: number; stdout: strin
   }
 }
 
-// Child CLI processes inherit this env. pptpressHome() copies ~/.pptfast into
-// ~/.pptpress when the new dir is missing, so this gate must never run against
-// the developer's real home.
-const e2eHome = mkdtempSync(join(tmpdir(), "pptpress-e2e-home-"))
+// Child CLI processes inherit this env. pptwiseHome() copies ~/.pptpress or
+// ~/.pptfast into ~/.pptwise when the new dir is missing, so this gate must
+// never run against the developer's real home.
+const e2eHome = mkdtempSync(join(tmpdir(), "pptwise-e2e-home-"))
+delete process.env.PPTPRESS_HOME
 delete process.env.PPTFAST_HOME
-process.env.PPTPRESS_HOME = e2eHome
+process.env.PPTWISE_HOME = e2eHome
 try {
 
 // 1) render via the built CLI
@@ -70,7 +71,7 @@ for (const f of mustExist) {
   if (!zip.file(f)) throw new Error(`e2e: missing ${f} in ${pptxPath}`)
 }
 const slide1 = await zip.file("ppt/slides/slide1.xml")!.async("string")
-if (!slide1.includes("pptpress")) throw new Error("e2e: cover heading text not found in slide1.xml")
+if (!slide1.includes("pptwise")) throw new Error("e2e: cover heading text not found in slide1.xml")
 
 // 2a) a:ea font-slot leg (a:ea follow-up task): examples/basic.json's
 //     consulting theme leads with Georgia (zero CJK glyphs), so every
@@ -92,7 +93,7 @@ console.log("a:ea font-slot leg OK (Georgia latin run carries a corrected Micros
 //     generatePptxBlob's own hard gate has no skip switch — every render in
 //     this whole script (basic/branded/webp/deck-dir/structures, below)
 //     already implicitly proves the gate accepted the package, since a
-//     violation would have made the CLI exit non-zero with a PptpressError
+//     violation would have made the CLI exit non-zero with a PptwiseError
 //     instead of ever writing a file. This adds direct e2e-level evidence
 //     from the *built* CLI binary's own output (src/pptx/package-audit.test.ts
 //     already covers the red/broken side at the vitest level, including
@@ -179,7 +180,7 @@ console.log("style override leg OK (--style color reached DrawingML)")
 
 // 3d) brand extraction leg (brand-extract wave, 裁定 5's e2e requirement):
 //     programmatically built fixture zip (never a real Microsoft file) →
-//     `pptpress brand extract` via the built CLI → `render --theme-file` →
+//     `pptwise brand extract` via the built CLI → `render --theme-file` →
 //     the exported PPTX's DrawingML must carry the extracted brand colors.
 //     The package-audit hard gate (leg 2b — no skip switch) already vets the
 //     branded package's structure the same way it vets every other render in
@@ -257,7 +258,7 @@ if (sharpMod) {
 
   const webpDeck = {
     version: "4",
-    filename: "pptpress-webp-smoke",
+    filename: "pptwise-webp-smoke",
     theme: { id: "consulting" },
     assets: { images: { smoke: { src: "smoke.webp" } } },
     slides: [
@@ -306,9 +307,9 @@ const deckSpec = {
   version: "1",
   narrative: "boardroom-report",
   theme: "consulting",
-  filename: "pptpress-e2e-deck-dir",
+  filename: "pptwise-e2e-deck-dir",
   pages: [
-    { id: "p-cover", type: "cover", heading: "pptpress Deck Directory Demo" },
+    { id: "p-cover", type: "cover", heading: "pptwise Deck Directory Demo" },
     { id: "p-goals", type: "content", heading: "Design goals" },
     { id: "p-roadmap", type: "content", heading: "Roadmap ahead" },
     { id: "p-ending", type: "ending", heading: "Thanks" },
@@ -426,7 +427,7 @@ if (finalSlide2.includes("Emphasize that every shape stays editable")) {
 console.log("deck-dir speaker-notes leg OK (notesSlide2.xml carries p-goals's notes text, slide2.xml canvas does not)")
 
 // 6b) migrate leg (spec §9.1/§9.2/§9.3, vocabulary-v4 rename, task 2):
-//     `pptpress migrate` for both accepted input shapes — a pre-rename
+//     `pptwise migrate` for both accepted input shapes — a pre-rename
 //     deck.plan.json project directory, and a v3 IR file — plus the
 //     "never overwrite" and dual-file hard-error contracts.
 console.log("--- migrate leg ---")
@@ -439,7 +440,7 @@ const legacyDeckPlan = {
   version: "1",
   scenario: "boardroom-report",
   theme: "consulting",
-  filename: "pptpress-e2e-migrate-deck-dir",
+  filename: "pptwise-e2e-migrate-deck-dir",
   pages: [
     { id: "p-cover", type: "cover", heading: "Migrate Demo" },
     { id: "p-a", type: "content", heading: "Segment A", rhythm: "anchor" },
@@ -515,7 +516,7 @@ console.log("migrate deck-dir leg OK end to end (spec validate + assemble green 
 //     a field rename.
 const v3Ir = {
   version: "3",
-  filename: "pptpress-e2e-migrate-v3",
+  filename: "pptwise-e2e-migrate-v3",
   scenario: { mode: "narrative", delivery: "text", audience: "public" },
   theme: { id: "consulting" },
   slides: [
@@ -547,7 +548,7 @@ if (!/already exists/.test(migrateV3OverwriteStderr)) {
 }
 console.log("migrate v3-IR-file leg OK (version + mode/delivery value mapping, validates as v4, no-overwrite enforced)")
 
-// (c) v2 is explicitly not accepted (spec §15.3: "pptpress migrate 只支持
+// (c) v2 is explicitly not accepted (spec §15.3: "pptwise migrate 只支持
 //     v3→v4，不接 v2").
 const v2Path = join(OUT, "migrate-v2-input.json")
 writeFileSync(v2Path, JSON.stringify({ version: "2", slides: [] }))
@@ -555,22 +556,22 @@ const migrateV2Stderr = shExpectFail("node", ["dist/cli.js", "migrate", v2Path, 
 if (!/v2/.test(migrateV2Stderr)) {
   throw new Error(`e2e: migrate leg — expected the v2-rejection message to mention v2, got: ${migrateV2Stderr}`)
 }
-console.log("migrate v2-rejection leg OK (pptpress migrate refuses v2 input)")
+console.log("migrate v2-rejection leg OK (pptwise migrate refuses v2 input)")
 
 // 6c) vocabulary-v4 old-command hard-fail leg (spec §8.2): no long-lived
 //     aliases — each removed command must fail and name the one new command.
 console.log("--- old-command hard-fail leg ---")
 const scenariosStderr = shExpectFail("node", ["dist/cli.js", "scenarios"])
-if (!/pptpress narratives/.test(scenariosStderr)) {
-  throw new Error(`e2e: old-command leg — expected \`pptpress scenarios\` to point at \`pptpress narratives\`, got: ${scenariosStderr}`)
+if (!/pptwise narratives/.test(scenariosStderr)) {
+  throw new Error(`e2e: old-command leg — expected \`pptwise scenarios\` to point at \`pptwise narratives\`, got: ${scenariosStderr}`)
 }
 const schemaPlanStderr = shExpectFail("node", ["dist/cli.js", "schema", "--plan"])
-if (!/pptpress schema --spec/.test(schemaPlanStderr)) {
-  throw new Error(`e2e: old-command leg — expected \`pptpress schema --plan\` to point at \`pptpress schema --spec\`, got: ${schemaPlanStderr}`)
+if (!/pptwise schema --spec/.test(schemaPlanStderr)) {
+  throw new Error(`e2e: old-command leg — expected \`pptwise schema --plan\` to point at \`pptwise schema --spec\`, got: ${schemaPlanStderr}`)
 }
 const planValidateStderr = shExpectFail("node", ["dist/cli.js", "plan", "validate", migratedSpecPath])
-if (!/pptpress spec validate/.test(planValidateStderr)) {
-  throw new Error(`e2e: old-command leg — expected \`pptpress plan validate\` to point at \`pptpress spec validate\`, got: ${planValidateStderr}`)
+if (!/pptwise spec validate/.test(planValidateStderr)) {
+  throw new Error(`e2e: old-command leg — expected \`pptwise plan validate\` to point at \`pptwise spec validate\`, got: ${planValidateStderr}`)
 }
 console.log("old-command hard-fail leg OK (scenarios / schema --plan / plan validate all point at their replacements)")
 
@@ -612,7 +613,7 @@ const VERDICT_LONG_TEXT =
 
 const lowContrastDeck = {
   version: "4",
-  filename: "pptpress-e2e-audit-low-contrast",
+  filename: "pptwise-e2e-audit-low-contrast",
   // Near consulting's own colors.bg (#F7F7F2) — validate-legal (theme.style
   // is a schema-open deep-partial override), renderer-level unreadable.
   theme: { id: "consulting", style: { colors: { text: "#F5F5F0" } } },
@@ -763,7 +764,7 @@ console.log("--- structure-components leg ---")
 
 const structuresDeck = {
   version: "4",
-  filename: "pptpress-e2e-structure-components",
+  filename: "pptwise-e2e-structure-components",
   theme: { id: "consulting" },
   slides: [
     { type: "cover", heading: "Structure Components Demo" },
@@ -1028,7 +1029,7 @@ console.log("--- dual-threshold severity leg ---")
 
 const warnOnlyDeck = {
   version: "4",
-  filename: "pptpress-e2e-warn-only",
+  filename: "pptwise-e2e-warn-only",
   theme: { id: "tech" },
   slides: [
     { type: "cover" }, // missing heading — warn only since Task 2
@@ -1066,7 +1067,7 @@ console.log("dual-threshold warn-only render leg OK (exit 0, file written, warni
 // src/ directly.
 const bulletOverflowDeck = {
   version: "4",
-  filename: "pptpress-e2e-bullet-overflow",
+  filename: "pptwise-e2e-bullet-overflow",
   theme: { id: "tech" },
   slides: [
     { type: "cover", heading: "Overflow" },
@@ -1102,15 +1103,15 @@ if (existsSync(overflowOutPath)) {
 }
 console.log("dual-threshold bullet-overflow render leg OK (exit 1, no file written)")
 
-// workspace-artifacts wave: omit -o, land under <cwd>/.pptpress/<slug>/, print
+// workspace-artifacts wave: omit -o, land under <cwd>/.pptwise/<slug>/, print
 // the absolute path. Run in os.tmpdir() so this repo's exclude file is not
 // touched (the cwd here is a git worktree).
 console.log("--- workspace default-path leg ---")
-const ws = mkdtempSync(join(tmpdir(), "pptpress-e2e-ws-"))
+const ws = mkdtempSync(join(tmpdir(), "pptwise-e2e-ws-"))
 copyFileSync("examples/basic.json", join(ws, "hello.json"))
 const cli = resolve("dist/cli.js")
 const wsRender = execFileSync("node", [cli, "render", "hello.json"], { cwd: ws, encoding: "utf8" })
-const wsPptx = join(ws, ".pptpress", "hello", "hello.pptx")
+const wsPptx = join(ws, ".pptwise", "hello", "hello.pptx")
 if (!existsSync(wsPptx)) {
   throw new Error(`e2e: workspace default-path leg — expected ${wsPptx} after render without -o`)
 }
@@ -1118,7 +1119,7 @@ if (!wsRender.includes(wsPptx)) {
   throw new Error(`e2e: workspace default-path leg — render did not print the absolute path ${wsPptx}, got: ${wsRender}`)
 }
 const wsPreview = execFileSync("node", [cli, "preview", "hello.json", "--html"], { cwd: ws, encoding: "utf8" })
-const wsDir = join(ws, ".pptpress", "hello")
+const wsDir = join(ws, ".pptwise", "hello")
 const wsFiles = readdirSync(wsDir).sort()
 const expectedWsFiles = [
   "001-cover.svg",
@@ -1141,10 +1142,10 @@ rmSync(ws, { recursive: true, force: true })
 console.log(`workspace default-path leg OK (${wsDir} tree: ${wsFiles.join(", ")})`)
 
 // Stock-photo workspace assets: an image that lives only under
-// `.pptpress/<deck>/assets/` must render, twice, to identical bytes, with no
+// `.pptwise/<deck>/assets/` must render, twice, to identical bytes, with no
 // network. The CLI binary path is the gate — same as the webp leg.
 console.log("--- workspace stock-asset render leg ---")
-const stockRoot = mkdtempSync(join(tmpdir(), "pptpress-e2e-stock-"))
+const stockRoot = mkdtempSync(join(tmpdir(), "pptwise-e2e-stock-"))
 const PNG_1PX_STOCK = Buffer.from(
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
   "base64",
@@ -1165,8 +1166,8 @@ const stockIr = {
   ],
 }
 writeFileSync(join(stockRoot, "stock.json"), JSON.stringify(stockIr))
-mkdirSync(join(stockRoot, ".pptpress", "stock", "assets"), { recursive: true })
-writeFileSync(join(stockRoot, ".pptpress", "stock", "assets", "hero.png"), PNG_1PX_STOCK)
+mkdirSync(join(stockRoot, ".pptwise", "stock", "assets"), { recursive: true })
+writeFileSync(join(stockRoot, ".pptwise", "stock", "assets", "hero.png"), PNG_1PX_STOCK)
 const stockA = join(stockRoot, "a.pptx")
 const stockB = join(stockRoot, "b.pptx")
 execFileSync("node", [cli, "render", "stock.json", "-o", stockA], { cwd: stockRoot, encoding: "utf8" })

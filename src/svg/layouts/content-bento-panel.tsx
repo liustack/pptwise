@@ -109,7 +109,7 @@ import { FRAMED_CONTENT_BOTTOM } from "./framed-content-bottom"
  * ——背景参数是 `colors.surface`，不是 `ctx.defaultBg`。数值字号固定
  * >=24px（56/72 两档，仅在极端窄卡下可能收缩到 `BENTO_KPI_VALUE_MIN_SIZE`
  * =20），大字号 3:1 门槛下实测 consulting/classroom/heritage 三个
- * 主题不达标（`pptpress audit` 实测 consulting 1.56:1，见
+ * 主题不达标（`pptwise audit` 实测 consulting 1.56:1，见
  * `full-matrix-contrast.test.ts` 的同名回归网）——与 subheading 22px 走
  * 4.5:1 门槛时不达标的五主题集合不是同一批，纯粹是字号不同导致门槛不同，非
  * 主题名单不一致的疑点。卡壳描边、发光点缀（dot/ring）仍是纯装饰形状（非
@@ -364,7 +364,7 @@ function renderKpiCardBody(
   // before calling this function — so that (not `ctx.defaultBg`) is the
   // right background to check against. Real-world catch: consulting's
   // accent `#FFC72C` on its own surface `#FFFFFF` measures ~1.56:1, well
-  // under the 3:1 large-text floor (`pptpress audit` exit 1).
+  // under the 3:1 large-text floor (`pptwise audit` exit 1).
   const valueFill = accessibleInk(ctx.colors.accent, ctx.colors.surface, fittedValue.fontSize)
 
   const valueBaselineY = innerY + iconComponentH + valueSize

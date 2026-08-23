@@ -42,14 +42,14 @@ import { PLAYBILL_TOKENS } from "./playbill";
  * museum Museum——博物·棕黑厅堂衬线铜金，2026-08-21 鹦鹉站气质立项 /
  * stage Keynote Stage——黑场·冷玄黑无框发布会演讲，2026-08-21 huashu 风格库
  * Top 5 第 3，结构身份 19 → 20 / lecture Lecture Hall——黑板夜校，2026-08-21
- * 大学/成人课程夜校板，结构身份 20 → 21）。pptpress 是独立分叉，无存量 deck
+ * 大学/成人课程夜校板，结构身份 20 → 21）。pptwise 是独立分叉，无存量 deck
  * stage Keynote Stage——黑场·无框发布会演讲，2026-08-21 huashu 风格库
  * Top 5 第 3 / swiss Swiss Institutional——冷白制度，机构年报 / 政策汇报 /
- * 审计交付，2026-08-21 wave7，结构身份 20 → 21）。pptpress 是独立分叉，无存量 deck
+ * 审计交付，2026-08-21 wave7，结构身份 20 → 21）。pptwise 是独立分叉，无存量 deck
  * Top 5 第 3，结构身份 19 → 20 / memo Decision Memo——打字机决定，备忘录，
- * 结构身份 20 → 21）。pptpress 是独立分叉，无存量 deck
+ * 结构身份 20 → 21）。pptwise 是独立分叉，无存量 deck
  * Top 5 第 3 / playbill Playbill——荧光嗓门·活动宣发节目单，2026-08-21
- * 第七波，结构身份 20 → 21）。pptpress 是独立分叉，无存量 deck
+ * 第七波，结构身份 20 → 21）。pptwise 是独立分叉，无存量 deck
  * 兼容包袱，不维护 legacy id 映射表（resolveThemeId 对未知 id 一律回落
  * consulting）。
  */

@@ -8,7 +8,7 @@ import { footnoteBaselineFor } from "../branding-geometry"
 
 /**
  * quote-stage content layout（quote-stage 波，Task T2 ——
- * `.issues/2026-07-28-quote-stage/plan.md` 裁定 3）：pptpress 第一个
+ * `.issues/2026-07-28-quote-stage/plan.md` 裁定 3）：pptwise 第一个
  * `pinOnly` 版式（`registry.ts` 的 `LayoutDefinition.pinOnly`，T1 落地的机制）
  * ——只能被模型显式钉住（`slide.layout: "quote-stage"`），永不进入任何主题
  * 的自动选型池。
@@ -222,7 +222,7 @@ export function QuoteStageContent({ slide, ctx }: SvgTemplateProps) {
 // elsewhere, e.g. `registry.ts`'s `Record<string, LayoutDefinition>`, still
 // sees the field as optional, correctly, since most layouts omit it).
 export const layoutDef = {
-  // content-quote-stage.tsx: pptpress's first pinOnly layout (quote-stage
+  // content-quote-stage.tsx: pptwise's first pinOnly layout (quote-stage
   // wave, T1's mechanism + T2's first member) — heading as the page's
   // oversized centered main visual, capacity-1 body slot rendered as a
   // small attribution annotation below it, subheading (if present) also

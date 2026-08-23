@@ -6,7 +6,7 @@
  */
 import { copyFile, readdir, stat } from "node:fs/promises"
 import { join } from "node:path"
-import { PptpressError } from "../errors"
+import { PptwiseError } from "../errors"
 import { sniffImageFormat } from "../ir/asset-sniff"
 import { ChildTimeoutError, runChild } from "./child"
 import { GENERATOR_IDS, type GeneratorId } from "./image-config"
@@ -71,7 +71,7 @@ export async function defaultProcessRunner(req: ProcessRun): Promise<{ code: num
     })
   } catch (error) {
     if (error instanceof ChildTimeoutError) {
-      throw new PptpressError(`image generator timed out after ${req.timeoutMs}ms`)
+      throw new PptwiseError(`image generator timed out after ${req.timeoutMs}ms`)
     }
     const message = error instanceof Error ? error.message : String(error)
     return { code: 1, stdout: "", stderr: message }
@@ -162,7 +162,7 @@ async function settleDest(req: AdapterRequest, result: { code: number; stdout: s
   if (await isSniffedImage(req.dest)) return
   if (await harvestNewestImage(req.workdir, req.dest)) return
   const detail = (result.stderr || result.stdout).trim().slice(0, 400)
-  throw new PptpressError(
+  throw new PptwiseError(
     result.code === 0
       ? `produced no image file at ${req.dest}${detail ? `: ${detail}` : ""}`
       : `exited ${result.code}${detail ? `: ${detail}` : ""}`,

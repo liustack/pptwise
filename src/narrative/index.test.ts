@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { PptpressError } from "../errors"
+import { PptwiseError } from "../errors"
 import { BUILTIN_THEME_IDS } from "../ir"
 import { layoutsForSlideType } from "../svg/layouts/registry"
 import {
@@ -336,7 +336,7 @@ describe("resolveNarrative", () => {
   })
 
   it("an unknown preset id throws, listing available preset ids", () => {
-    expect(() => resolveNarrative("not-a-real-preset")).toThrow(PptpressError)
+    expect(() => resolveNarrative("not-a-real-preset")).toThrow(PptwiseError)
     expect(() => resolveNarrative("not-a-real-preset")).toThrow(/unknown narrative preset/)
     expect(() => resolveNarrative("not-a-real-preset")).toThrow(/available:.*general/)
   })
@@ -383,33 +383,33 @@ describe("resolveNarrative", () => {
   })
 
   it("an unknown strategy value throws, listing valid strategy values", () => {
-    expect(() => resolveNarrative({ strategy: "bogus" as Strategy })).toThrow(PptpressError)
+    expect(() => resolveNarrative({ strategy: "bogus" as Strategy })).toThrow(PptwiseError)
     expect(() => resolveNarrative({ strategy: "bogus" as Strategy })).toThrow(/unknown strategy/)
     expect(() => resolveNarrative({ strategy: "bogus" as Strategy })).toThrow(/available:.*pyramid/)
   })
 
   it("an unknown pacing value throws, listing valid pacing values", () => {
-    expect(() => resolveNarrative({ pacing: "bogus" as Pacing })).toThrow(PptpressError)
+    expect(() => resolveNarrative({ pacing: "bogus" as Pacing })).toThrow(PptwiseError)
     expect(() => resolveNarrative({ pacing: "bogus" as Pacing })).toThrow(/unknown pacing/)
     expect(() => resolveNarrative({ pacing: "bogus" as Pacing })).toThrow(/available:.*dense/)
   })
 
   it("an unknown audience value throws, listing valid audience values", () => {
-    expect(() => resolveNarrative({ audience: "bogus" as Audience })).toThrow(PptpressError)
+    expect(() => resolveNarrative({ audience: "bogus" as Audience })).toThrow(PptwiseError)
     expect(() => resolveNarrative({ audience: "bogus" as Audience })).toThrow(/unknown audience/)
     expect(() => resolveNarrative({ audience: "bogus" as Audience })).toThrow(/available:.*executive/)
   })
 
   it("an unknown key on the partial axes object throws (strict — a typo is never silently dropped)", () => {
     const bad = { stratgey: "pyramid" } as unknown as Partial<NarrativeProfile>
-    expect(() => resolveNarrative(bad)).toThrow(PptpressError)
+    expect(() => resolveNarrative(bad)).toThrow(PptwiseError)
     expect(() => resolveNarrative(bad)).toThrow(/unknown narrative axis "stratgey"/)
     expect(() => resolveNarrative(bad)).toThrow(/available:.*strategy.*pacing.*audience/)
   })
 
   it("an explicit null axis value throws instead of silently defaulting (null ≠ omission)", () => {
     const bad = { strategy: null } as unknown as Partial<NarrativeProfile>
-    expect(() => resolveNarrative(bad)).toThrow(PptpressError)
+    expect(() => resolveNarrative(bad)).toThrow(PptwiseError)
     expect(() => resolveNarrative(bad)).toThrow(/unknown strategy "null" — available:.*pyramid/)
     expect(() => resolveNarrative({ pacing: null } as unknown as Partial<NarrativeProfile>)).toThrow(
       /unknown pacing "null"/,

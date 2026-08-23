@@ -14,7 +14,7 @@ and themes. Every one validates and audits clean against the current schema
 | [`team-onboarding.json`](team-onboarding.json) | People and process: `people_cards`, `tag_row`, `steps`, a `cycle` loop, a vertical `timeline`. Theme `classroom`. | <img src="previews/team-onboarding.svg" width="280" alt="team onboarding cover"> |
 | [`launch-deck/`](launch-deck/) | A full deck **project** (`deck.spec.json` + `pages/*.json`): the spec locks page order and headings, page files fill content, `assemble` produces the renderable IR. Theme `campaign`. | <img src="previews/launch-deck.svg" width="280" alt="launch deck cover"> |
 
-Preview images are each deck's first page, produced by `pptpress preview`
+Preview images are each deck's first page, produced by `pptwise preview`
 (regenerate with the commands below after changing an example).
 
 ## Running the examples

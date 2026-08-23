@@ -1,7 +1,7 @@
 import JSZip from "jszip"
 import type { PptxIR } from "@/ir"
 import { slideToOps } from "@/svg/render-slide"
-import { PptpressError } from "../errors"
+import { PptwiseError } from "../errors"
 import { createPptxPackageReader, type PptxPackageReader, type PackageRelationship } from "./package-reader"
 import type { ImageOp } from "./svg2pptx/image"
 
@@ -689,7 +689,7 @@ function formatViolations(violations: PackageAuditViolation[]): string {
  * bytes) that don't already have a loaded zip. Read-only either way: no
  * rule in this file ever calls a `JSZip` mutating method.
  *
- * Throws {@link PptpressError} naming every invariant it found broken (not
+ * Throws {@link PptwiseError} naming every invariant it found broken (not
  * just the first) when the package fails one or more of spec §4.4's checks.
  * No skip switch, by design — spec §4.4's closing paragraph: a violation
  * here is the generator's own bug, not a user content problem.
@@ -724,12 +724,12 @@ export async function auditPptxPackage(
       const bytes = input instanceof Blob ? await input.arrayBuffer() : input
       zip = await JSZip.loadAsync(bytes)
     } catch (e) {
-      throw new PptpressError(
+      throw new PptwiseError(
         `pptx package audit failed — invariant "zip-unreadable": the generated package is not a readable zip archive (${(e as Error).message})`,
       )
     }
   }
   const reader = createPptxPackageReader(zip)
   const violations = await collectViolations(reader, ir, imageOpsBySlide)
-  if (violations.length > 0) throw new PptpressError(formatViolations(violations))
+  if (violations.length > 0) throw new PptwiseError(formatViolations(violations))
 }

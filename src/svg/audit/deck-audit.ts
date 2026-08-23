@@ -1,13 +1,13 @@
 import type { PptxIR } from "@/ir"
 import { renderSlideSvg } from "../../api"
-import { PptpressError } from "../../errors"
+import { PptwiseError } from "../../errors"
 import { measureMonoTextUnits, measureTextUnits } from "../../lib/svg-text-layout"
 import { getPlatform } from "../../platform/registry"
 import { isBold, isMonoFontFamily } from "../fonts"
 import { auditSvgMarkup, parseNums, parseTransform, type OverflowIssue } from "./svg-audit"
 
 /**
- * `pptpress audit` finding shape (v0.3 W6, spec §7 workflow ④). `page` is
+ * `pptwise audit` finding shape (v0.3 W6, spec §7 workflow ④). `page` is
  * 1-based (matches `ValidationIssue.page` in `api.ts`); `slideId` is set
  * whenever the offending slide has a stable `id` (assemble-stamped or
  * author-supplied), same "page + optional id" convention `formatIssues`
@@ -71,7 +71,7 @@ function parseSvg(markup: string): Element {
   const Parser = getPlatform().domParser ?? globalThis.DOMParser
   if (!Parser) {
     throw new Error(
-      'DOMParser unavailable — in Node, call installNodePlatform() from "@liustack/pptpress/node" first (the pptpress CLI does this automatically)',
+      'DOMParser unavailable — in Node, call installNodePlatform() from "@liustack/pptwise/node" first (the pptwise CLI does this automatically)',
     )
   }
   const doc = new Parser().parseFromString(markup, "image/svg+xml")
@@ -2526,7 +2526,7 @@ function assertValidatedIrShape(ir: unknown): asserts ir is PptxIR {
     typeof assets.images === "object" &&
     assets.images !== null
   if (!looksValid) {
-    throw new PptpressError(
+    throw new PptwiseError(
       "auditDeck received an IR object missing slides[] or assets.images — pass the .ir returned by validateIr(input), not raw/unvalidated JSON (run validateIr first)",
     )
   }

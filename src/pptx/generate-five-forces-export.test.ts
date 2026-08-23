@@ -38,7 +38,7 @@ function makeIr(components: Component[]): PptxIR {
   } as PptxIR
 }
 
-/** A real export (zip magic "PK"), not a thrown PptpressError. */
+/** A real export (zip magic "PK"), not a thrown PptwiseError. */
 async function expectExports(components: Component[]): Promise<void> {
   const bytes = await generatePptx(makeIr(components))
   expect(bytes.length).toBeGreaterThan(10_000)

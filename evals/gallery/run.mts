@@ -97,7 +97,7 @@ async function main(): Promise<void> {
       await Promise.all(LANGUAGE_IDS.map(async (id) => [id, await corpusAssets(LEXICONS[id])] as const)),
     ) as Record<LanguageId, CorpusAssets>
     const jobs = buildMatrix(themeIds, assets)
-    const outDir = mkdtempSync(join(tmpdir(), "pptpress-evals-gallery-"))
+    const outDir = mkdtempSync(join(tmpdir(), "pptwise-evals-gallery-"))
     const rendered = renderMatrix(jobs, outDir, "eval")
     manifest = rendered.manifest
     svgs = new Map(rendered.svgs)

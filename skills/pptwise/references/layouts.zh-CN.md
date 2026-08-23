@@ -1,6 +1,6 @@
 ---
-summary: 'skills/pptpress/references/layouts.md 的中文阅读镜像'
-mirror_of: skills/pptpress/references/layouts.md
+summary: 'skills/pptwise/references/layouts.md 的中文阅读镜像'
+mirror_of: skills/pptwise/references/layouts.md
 ---
 
 # 版式与写死

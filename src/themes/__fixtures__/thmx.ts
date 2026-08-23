@@ -7,7 +7,7 @@
  * convention `themes/__fixtures__/pre-wave-undeclared-layout-sequences.json`
  * already established for this directory): `src/themes/brand-extract.test.ts`
  * and `src/themes/brand-theme-file.test.ts` both import it, and
- * `src/cli/commands.test.ts`'s `pptpress brand extract` CLI-level tests reuse
+ * `src/cli/commands.test.ts`'s `pptwise brand extract` CLI-level tests reuse
  * it too, so a fixture only needs describing once.
  *
  * Deliberately reproduces just enough of a real `.thmx`/`.pptx`/`.potx`

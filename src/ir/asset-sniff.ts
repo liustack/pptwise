@@ -1,5 +1,5 @@
 /**
- * Magic-byte sniffing for the four raster image formats pptpress's asset
+ * Magic-byte sniffing for the four raster image formats pptwise's asset
  * pipeline actually supports downstream (`platform/inline-assets.ts`'s
  * `OFFICE_SAFE_MIME` — png/jpeg/gif — plus webp, the one format that
  * pipeline always recodes away before export). Pure, dependency-free, and
@@ -103,7 +103,7 @@ export function sniffImageFormat(bytes: Uint8Array): SniffedImageFormat | null {
 
 /**
  * Decode a `data:<mime>;base64,<payload>` URI straight to bytes, or `null`
- * when it isn't a base64 data URI at all (pptpress never produces or expects
+ * when it isn't a base64 data URI at all (pptwise never produces or expects
  * any other encoding for an image asset — `AssetSchema`'s `src` is a plain
  * string, and every producer in this repo — `resolveLocalAssets`,
  * `inline-assets.ts` — always base64-encodes). Relies on the global `atob`

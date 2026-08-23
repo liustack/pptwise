@@ -1,6 +1,6 @@
 ---
-summary: 'skills/pptpress/references/spec.md 的中文阅读镜像'
-mirror_of: skills/pptpress/references/spec.md
+summary: 'skills/pptwise/references/spec.md 的中文阅读镜像'
+mirror_of: skills/pptwise/references/spec.md
 ---
 
 # Spec 写法与页型
@@ -10,10 +10,10 @@ mirror_of: skills/pptpress/references/spec.md
 ### Phase 1 — 读词汇表（每个 session 都要重新读一遍）
 
 ```bash
-pptpress schema             # IR JSON Schema: the single source of truth
-pptpress schema --spec      # deck spec schema
-pptpress narratives --json  # named narrative presets (strategy/pacing/audience axes + theme recommendations)
-pptpress themes --json      # built-in themes (id + label)
+pptwise schema             # IR JSON Schema: the single source of truth
+pptwise schema --spec      # deck spec schema
+pptwise narratives --json  # named narrative presets (strategy/pacing/audience axes + theme recommendations)
+pptwise themes --json      # built-in themes (id + label)
 ```
 
 永远不要凭上一个 session 的记忆、或凭这份文件本身的记忆去写 IR 或 spec——schema 会演进，`schema`/`narratives`/`themes` 的实际输出永远优先。
@@ -21,7 +21,7 @@ pptpress themes --json      # built-in themes (id + label)
 动手问人之前，先扫工作区。文件能回答的事实不要问人：
 
 - 已有确认过的 `deck.spec.json` 已经锁死 narrative、theme、品牌框。不要重做访谈。后续请求走阶段六
-- 已有 `theme.json`、项目 `pptpress.config.json` 钉死的 theme、用户点名的 theme id、或用户递来的 `.thmx` / `.potx` / 带品牌 `.pptx`，都是品牌信号。抽取或沿用。不要再问有没有模板
+- 已有 `theme.json`、项目 `pptwise.config.json` 钉死的 theme、用户点名的 theme id、或用户递来的 `.thmx` / `.potx` / 带品牌 `.pptx`，都是品牌信号。抽取或沿用。不要再问有没有模板
 - 请求原文已经点名受众、论证方式或疏密，这一轴就算推导出来了。不要再问
 
 品牌信号回答的是这份 deck 长什么样，从来不回答它该怎么论证。完整规则在 `references/branding.md`。
@@ -55,8 +55,8 @@ pptpress themes --json      # built-in themes (id + label)
 - 再定 theme id：从 `narratives --json` 里该预设的 `themeRecommendations` 取（如果都不合适，就从 `themes` 输出里挑一个贴合这份 deck 调性的。这只是推荐，从不构成约束）。访谈的品牌问如果返回了模板，先抽成自定义 theme，见 `references/branding.md`
 - 用户一点头，立刻把确认下来的 `narrative`、`theme`、`branding` 写进 `deck.spec.json`，再起草任何一页。不要把答案留在对话里，等页面写完再凭记忆补
 - 起草 `deck.spec.json`：每页一条记录（`id`、`type`、`heading`，可选加 `beat`/`focus`/`summary`）——以 `cover` 开篇，以 `ending` 收尾，中间的每一页都是 `content` 或 `chapter`。三轴与某个预设完全相等时，`narrative` 写预设 id 字符串，否则写 `{strategy, pacing, audience}`。不要写 `{id, pacing}` 这种混形。默认省略 `branding`。只有每一页内容页都需要品牌页脚时才写 `branding: "full"`（`meta.confidentiality` 为 `confidential` 或 `restricted` 时同样写 `"full"`）。不要在 spec 上发明 `typeScale` 字段，那个字段不存在。档是推荐。只有跳过 spec、直接写 IR 时，才允许把 `theme.style.shape.typeScale` 写进 IR
-- 跑 `pptpress spec validate deck.spec.json`，把它报出的问题都修掉，直到打印 `OK`——边界页、标题长度、beat 轮换、页数是否匹配 pacing 这些硬门都在这一步触发，早于任何一页正文的写作
-- `spec validate` 打印 `OK` 之后，在 `deck.spec.json` 里设一个 `seed`（任意整数）以保证修订稳定——现在就写一个，或者在阶段三跑一次 `pptpress assemble`，把它打印出的 `generated seed …` 值抄进 spec。没有固化的 seed，之后改一页的标题就可能打乱其余每一页自动选出的 layout
+- 跑 `pptwise spec validate deck.spec.json`，把它报出的问题都修掉，直到打印 `OK`——边界页、标题长度、beat 轮换、页数是否匹配 pacing 这些硬门都在这一步触发，早于任何一页正文的写作
+- `spec validate` 打印 `OK` 之后，在 `deck.spec.json` 里设一个 `seed`（任意整数）以保证修订稳定——现在就写一个，或者在阶段三跑一次 `pptwise assemble`，把它打印出的 `generated seed …` 值抄进 spec。没有固化的 seed，之后改一页的标题就可能打乱其余每一页自动选出的 layout
 
 **用户确认过校验通过的 spec 之后，不要再重新定 spec。** 改动一份已确认的 spec（调整顺序、改页型、删页）会悄悄浪费用户已经做过的审阅。如果确有新信息迫使必须改动，先说明理由并重新取得确认，再重新跑一次 `spec validate`。
 
@@ -103,7 +103,7 @@ brand: ?
 
 查表（theme = `narratives --json` 里该预设 `themeRecommendations` 的第一项。写三轴对象时改取最靠近预设的名单）。默认省略该字段。`meta.confidentiality` 为 `confidential` 或 `restricted`，或每一页内容页都需要品牌页脚时，才写 `"full"`。`customer` + `talk-pyramid` + `spacious` → `pitch` / 省略 / display。`executive` + `talk-pyramid` + `spacious` → `boardroom-report` / 省略 / display。`customer` + `talk-showcase` + `spacious` → `product-launch` / 省略 / display。`technical` + `teach` + `balanced` → `training` / 省略 / regular。`technical` + `read-brief` + `dense` → `weekly-brief` / 省略 / regular。`executive` + `read-brief` + `dense` → 三轴 `{pyramid, dense, executive}` / 省略 / regular，theme 取 `boardroom-report`。`public` + storytelling + `balanced` → `annual-review` / 省略 / regular。其余写三轴对象，最靠近预设：`pyramid`+`executive` → `boardroom-report`，`pyramid`+`customer` → `pitch`，`showcase` → `product-launch`，`instructional` → `training`，`briefing`+`dense` → `weekly-brief`，`storytelling` → `annual-review`，否则 `general`。
 
-typeScale 档：`dense` 或 `balanced` 用 `regular`。`spacious` 用 `display`。`hero` 只出现在把 theme 换成 `stage` 的那种换皮上。不要为了把标题加大，把董事会 deck 改成 `stage`。不要在 `deck.spec.json` 上写 `typeScale`。不要为了一个 deck 去改仓库根上的 `pptpress.config.json`。跳过 spec、直接写 IR 时，非 `regular` 的档可以写成 `theme.style.shape.typeScale` 1.3 或 1.5。
+typeScale 档：`dense` 或 `balanced` 用 `regular`。`spacious` 用 `display`。`hero` 只出现在把 theme 换成 `stage` 的那种换皮上。不要为了把标题加大，把董事会 deck 改成 `stage`。不要在 `deck.spec.json` 上写 `typeScale`。不要为了一个 deck 去改仓库根上的 `pptwise.config.json`。跳过 spec、直接写 IR 时，非 `regular` 的档可以写成 `theme.style.shape.typeScale` 1.3 或 1.5。
 
 第二候选跟着推荐包一起抛，事先准备，而且必须在机制上不同：翻疏密（`spacious` ↔ `dense`，type-scale 跟着翻），或者换由什么领头论证（`pitch` ↔ `product-launch`，`training` ↔ 同样内容的密页讲义）。同样三根轴换个主题是换皮，不算候选，只在用户否的是皮时才给，并说清叙事没动。showcase 想要更大标题时，`stage` × `hero` 属于这种换皮。不要三轴一起翻。
 

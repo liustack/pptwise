@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises"
 import { dirname, join, resolve } from "node:path"
 import { z } from "zod"
-import { PptpressError } from "../errors"
+import { PptwiseError } from "../errors"
 import { StyleOverrideSchema } from "../ir"
 import { userConfigPath } from "./home"
 import { ImagesConfigSchema } from "./image-config"
@@ -20,15 +20,15 @@ import { ImagesConfigSchema } from "./image-config"
  * used, so rejecting it here would hard-fail a command over a value that
  * was never going to apply. `applyDeckConfig` runs that check once, at
  * resolution time, against whichever layer's value actually wins the chain
- * — the same "unknown → PptpressError with the available list" UX as
+ * — the same "unknown → PptwiseError with the available list" UX as
  * `validateIr`, just applied to the resolved value instead of unconditionally
  * to every layer.
  *
  * `decksDir` (W5 task 6, spec §7: a team that wants deck project
  * directories checked into the repo instead of living under
- * `~/.pptpress/decks` declares it here): a relative value resolves against
+ * `~/.pptwise/decks` declares it here): a relative value resolves against
  * *this config file's own directory* (wherever `findConfig`'s cwd walk-up
- * found it) — never the CLI's cwd, and never `pptpressHome()`. Wins over the
+ * found it) — never the CLI's cwd, and never `pptwiseHome()`. Wins over the
  * user config's own `decksDir` (`UserConfigSchema` below) when both are
  * set, same project-beats-user precedence as `theme`/`style` above. The two
  * layers resolve against different bases, so this schema alone can't
@@ -38,7 +38,7 @@ import { ImagesConfigSchema } from "./image-config"
  * of which knows there are two possible bases, only the final one.
  *
  * `outDir` (workspace-artifacts wave): where `render`/`preview` write when
- * the caller passes no `-o`. Default `.pptpress` under this config file's own
+ * the caller passes no `-o`. Default `.pptwise` under this config file's own
  * directory (`../cli/workspace.ts`'s `WORKSPACE_DIRNAME`); a relative value
  * here resolves against that same directory, an absolute one passes through.
  * Setting it at all is also the opt-out from the automatic git-exclude line
@@ -58,7 +58,7 @@ const ConfigSchema = z
   })
   .strict()
 
-export type PptpressConfig = z.infer<typeof ConfigSchema>
+export type PptwiseConfig = z.infer<typeof ConfigSchema>
 
 /**
  * User-level config schema (spec §7's four-layer chain — the layer between
@@ -72,7 +72,7 @@ export type PptpressConfig = z.infer<typeof ConfigSchema>
  * `decksDir` is no longer project-config-free as of W5 task 6 (see
  * {@link ConfigSchema}'s own doc comment on that field), but the two layers
  * still resolve it against different bases: this user layer always resolves
- * against `pptpressHome()` (`./home.ts`'s `decksRoot`, this layer's one fixed
+ * against `pptwiseHome()` (`./home.ts`'s `decksRoot`, this layer's one fixed
  * location), the project layer against the project config file's own
  * directory. Declared as its own flat object literal rather than
  * `ConfigSchema.extend(...)` — a shape this small is not worth taking on
@@ -80,7 +80,7 @@ export type PptpressConfig = z.infer<typeof ConfigSchema>
  * independently.
  *
  * `decksDir`: a relative value resolves against this config file's own
- * directory (`./home.ts`'s `pptpressHome()` — the only directory a user
+ * directory (`./home.ts`'s `pptwiseHome()` — the only directory a user
  * config can ever live in, see `decksRoot`), never the CLI's cwd. No tilde
  * expansion — a literal `~/decks` is the literal relative path segment
  * `~/decks` under that base, not the home directory. The resulting (almost
@@ -96,16 +96,16 @@ const UserConfigSchema = z
   })
   .strict()
 
-export type UserPptpressConfig = z.infer<typeof UserConfigSchema>
+export type UserPptwiseConfig = z.infer<typeof UserConfigSchema>
 
-export const CONFIG_FILENAME = "pptpress.config.json"
-export const LEGACY_CONFIG_FILENAME = "pptfast.config.json"
+export const CONFIG_FILENAME = "pptwise.config.json"
+export const LEGACY_CONFIG_FILENAMES = ["pptpress.config.json", "pptfast.config.json"] as const
 
 /**
  * Shared read+parse+validate body for both config layers (project and user)
  * — same failure posture either way: a missing file is `null` ("fine, no
  * config at this level"), invalid JSON or a failed schema parse is a hard
- * {@link PptpressError} naming `path`. Deliberately does *not* check `theme`
+ * {@link PptwiseError} naming `path`. Deliberately does *not* check `theme`
  * against the installed set here — see {@link ConfigSchema}'s own doc
  * comment for why that moved to `applyDeckConfig` (`../cli/commands.ts`) at
  * resolution time instead, applied only to whichever layer's value actually
@@ -125,31 +125,33 @@ async function readConfigFile<T>(
   try {
     raw = JSON.parse(text) as unknown
   } catch (e) {
-    throw new PptpressError(`${path} is not valid JSON: ${(e as Error).message}`)
+    throw new PptwiseError(`${path} is not valid JSON: ${(e as Error).message}`)
   }
   const r = schema.safeParse(raw)
   if (!r.success) {
     const detail = r.error.issues
       .map((i) => `${i.path.join(".") || "(root)"}: ${i.message}`)
       .join("\n")
-    throw new PptpressError(`invalid ${path}:\n${detail}`)
+    throw new PptwiseError(`invalid ${path}:\n${detail}`)
   }
   return { path, config: r.data }
 }
 
-/** Walk from startDir up to the filesystem root looking for pptpress.config.json,
- *  then the legacy pptfast.config.json in the same directory. New name wins
- *  when both exist. Invalid config is a hard error (with the file path in the
- *  message), never silently ignored. */
+/** Walk from startDir up to the filesystem root looking for pptwise.config.json,
+ *  then pptpress.config.json, then pptfast.config.json in the same directory.
+ *  New name wins when more than one exists. Invalid config is a hard error
+ *  (with the file path in the message), never silently ignored. */
 export async function findConfig(
   startDir: string,
-): Promise<{ path: string; config: PptpressConfig } | null> {
+): Promise<{ path: string; config: PptwiseConfig } | null> {
   let dir = resolve(startDir)
   for (;;) {
     const hit = await readConfigFile(join(dir, CONFIG_FILENAME), ConfigSchema)
     if (hit) return hit
-    const legacy = await readConfigFile(join(dir, LEGACY_CONFIG_FILENAME), ConfigSchema)
-    if (legacy) return legacy
+    for (const name of LEGACY_CONFIG_FILENAMES) {
+      const legacy = await readConfigFile(join(dir, name), ConfigSchema)
+      if (legacy) return legacy
+    }
     const parent = dirname(dir)
     if (parent === dir) return null
     dir = parent
@@ -159,12 +161,12 @@ export async function findConfig(
 /**
  * User-level config (spec §7's four-layer chain, the layer below project
  * config): a single fixed path (`userConfigPath()`, `./home.ts` —
- * `$PPTPRESS_HOME` or `~/.pptpress`), no cwd walk-up — there is exactly one
+ * `$PPTWISE_HOME` or `~/.pptwise`), no cwd walk-up — there is exactly one
  * user config, unlike project config which can live at any ancestor of cwd.
  * Same missing/invalid posture as {@link findConfig}: missing file is fine
- * (`null`), invalid JSON or schema is a hard {@link PptpressError} with the
+ * (`null`), invalid JSON or schema is a hard {@link PptwiseError} with the
  * path.
  */
-export async function findUserConfig(): Promise<{ path: string; config: UserPptpressConfig } | null> {
+export async function findUserConfig(): Promise<{ path: string; config: UserPptwiseConfig } | null> {
   return readConfigFile(userConfigPath(), UserConfigSchema)
 }

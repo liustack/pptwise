@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises"
 import { basename, extname, isAbsolute, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
-import { PptpressError } from "../errors"
+import { PptwiseError } from "../errors"
 import type { PptxIR } from "../ir"
 import { FORMAT_BY_MIME, MIME_BY_SNIFFED_FORMAT, sniffImageFormat } from "../ir/asset-sniff"
 import { getPlatform } from "../platform/registry"
@@ -60,12 +60,12 @@ export async function loadIrFile(irPath: string, kind = "IR"): Promise<unknown> 
   try {
     text = await readFile(irPath, "utf8")
   } catch {
-    throw new PptpressError(`cannot read ${kind} file: ${irPath}`)
+    throw new PptwiseError(`cannot read ${kind} file: ${irPath}`)
   }
   try {
     return JSON.parse(text) as unknown
   } catch (e) {
-    throw new PptpressError(`${kind} file ${irPath} is not valid JSON: ${(e as Error).message}`)
+    throw new PptwiseError(`${kind} file ${irPath} is not valid JSON: ${(e as Error).message}`)
   }
 }
 
@@ -126,25 +126,25 @@ export async function resolveLocalAssets(ir: PptxIR, baseDir: string, workspaceA
     } catch {
       const fallback = workspaceAssetsDir && !isAbsolute(src) ? await readFromWorkspace(src, workspaceAssetsDir) : null
       if (!fallback) {
-        throw new PptpressError(`asset "${name}": cannot read image file ${abs} (from src "${src}")`)
+        throw new PptwiseError(`asset "${name}": cannot read image file ${abs} (from src "${src}")`)
       }
       bytes = fallback
     }
     if (bytes.length === 0) {
-      throw new PptpressError(`asset "${name}": image file ${abs} is zero bytes — re-export or re-select the file`)
+      throw new PptwiseError(`asset "${name}": image file ${abs} is zero bytes — re-export or re-select the file`)
     }
     const ext = extname(abs).toLowerCase()
     const mime = MIME_BY_EXT[ext]
     if (mime) {
       const sniffed = sniffImageFormat(bytes)
       if (sniffed === null) {
-        throw new PptpressError(
+        throw new PptwiseError(
           `asset "${name}": image file ${abs} has a corrupt or unrecognized header (extension claims ${mime}) — re-export or re-select the file`,
         )
       }
       const expected = FORMAT_BY_MIME[mime]
       if (expected && sniffed !== expected) {
-        throw new PptpressError(
+        throw new PptwiseError(
           `asset "${name}": image file ${abs} is named "${ext}" but its bytes are actually ${MIME_BY_SNIFFED_FORMAT[sniffed]} — rename the file to match its real format, or re-export/re-save it as a genuine ${mime}`,
         )
       }
@@ -153,7 +153,7 @@ export async function resolveLocalAssets(ir: PptxIR, baseDir: string, workspaceA
     }
     const recode = getPlatform().recodeImageToPng
     if (!recode) {
-      throw new PptpressError(
+      throw new PptwiseError(
         `asset "${name}": unsupported image format "${extname(abs)}" — install sharp or convert to png/jpeg/gif`
       )
     }

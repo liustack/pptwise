@@ -87,7 +87,7 @@ export function buildGalleryHtml(manifest: Manifest, svgs: ReadonlyMap<string, s
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>pptpress 视觉审查 · ${manifest.pages.length} 页</title>
+<title>pptwise 视觉审查 · ${manifest.pages.length} 页</title>
 <style>
 :root {
   --bg: #f4f4f2;
@@ -285,7 +285,7 @@ kbd {
 <body data-surround="light">
 
 <header class="bar">
-  <div class="title">pptpress 视觉审查<small>${esc(manifest.pptpressVersion)} · 生成于 ${esc(manifest.generatedAt.slice(0, 16).replace("T", " "))}</small></div>
+  <div class="title">pptwise 视觉审查<small>${esc(manifest.pptwiseVersion)} · 生成于 ${esc(manifest.generatedAt.slice(0, 16).replace("T", " "))}</small></div>
 
   <div class="seg" id="table-filter" role="group" aria-label="表">
     <button data-table="all" aria-pressed="true">全部</button>
@@ -368,7 +368,7 @@ kbd {
   const MANIFEST = JSON.parse(document.getElementById("manifest-data").textContent);
   const SVGS = JSON.parse(document.getElementById("svg-data").textContent);
   const EDGES = JSON.parse(document.getElementById("edge-data").textContent);
-  const STORE_KEY = "pptpress-gallery-verdicts-v1";
+  const STORE_KEY = "pptwise-gallery-verdicts-v1";
 
   // Shipped in as source rather than restated here, so the rule the reviewer
   // sees is byte-for-byte the one render.test.mts tests. See its own doc
@@ -814,8 +814,8 @@ ${inlineRule(verdictFreshness)}
     const payload = {
       // 3 since a verdict can now come back marked "recolored" instead of
       // only "stale". A reader of /2 sees the same fields it always did.
-      schema: "pptpress-gallery-verdicts/3",
-      pptpressVersion: MANIFEST.pptpressVersion,
+      schema: "pptwise-gallery-verdicts/3",
+      pptwiseVersion: MANIFEST.pptwiseVersion,
       renderedAt: MANIFEST.generatedAt,
       total: MANIFEST.pages.length,
       verdicts: MANIFEST.pages

@@ -1,4 +1,4 @@
-# @liustack/pptpress
+# @liustack/pptwise
 
 ## 0.21.0
 
