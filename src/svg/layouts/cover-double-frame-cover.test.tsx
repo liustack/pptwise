@@ -5,6 +5,7 @@ import { assertSubset } from "../subset-validate"
 import { buildCtx, resolveBackgroundHex } from "../full-slide-svg"
 import { resolveStyle, CANONICAL_THEME_IDS } from "../../themes"
 import { accessibleInk, contrastRatio, metaInk, requiredContrastRatio } from "../ink"
+import { renderSlideSvg } from "../../api"
 import { DoubleFrameCover, layoutDef } from "./cover-double-frame-cover"
 import type { PptxIR, Slide } from "@/ir"
 
@@ -165,5 +166,36 @@ describe("cover-double-frame-cover — shared pool", () => {
     const { root } = renderCover("heritage")
     const title = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === HEADING)!
     expect(title.getAttribute("letter-spacing")).toBeNull()
+  })
+})
+
+describe("double-frame-cover — no top rule on a framed page", () => {
+  it("consulting motif does not paint a top divider over the double frame", () => {
+    const deck: PptxIR = {
+      version: "4",
+      filename: "double-frame-no-top-rule.pptx",
+      theme: { id: "consulting" },
+      meta: FULL_META,
+      assets: { images: {} },
+      seed: 1,
+      slides: [{ type: "cover", layout: "double-frame-cover", heading: HEADING, components: [] }],
+    } as PptxIR
+    const root = parseSvgRoot(renderSlideSvg(deck, 0))
+    expect(root.querySelector('rect[width="1168"][height="624"]')).not.toBeNull()
+    expect(root.querySelector('rect[width="1144"][height="600"]')).not.toBeNull()
+    const topRules = Array.from(root.querySelectorAll("line, rect")).filter((el) => {
+      const y = Number(el.getAttribute("y1") ?? el.getAttribute("y") ?? NaN)
+      const w =
+        el.tagName.toLowerCase() === "line"
+          ? Math.abs(Number(el.getAttribute("x2")) - Number(el.getAttribute("x1")))
+          : Number(el.getAttribute("width"))
+      const h =
+        el.tagName.toLowerCase() === "line"
+          ? Math.abs(Number(el.getAttribute("y2")) - Number(el.getAttribute("y1")))
+          : Number(el.getAttribute("height"))
+      return y >= 20 && y < 48 && w >= 400 && h <= 4
+    })
+    expect(topRules).toHaveLength(0)
+    expect(layoutDef.pageFrame).toBe("double")
   })
 })

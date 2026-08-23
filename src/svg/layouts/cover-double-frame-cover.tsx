@@ -219,6 +219,7 @@ export const layoutDef = {
   kind: "archetype",
   pinOnly: true,
   branding: "none",
+  pageFrame: "double",
   slideTypes: ["cover"],
   slots: [
     { name: "kicker", accepts: [] },

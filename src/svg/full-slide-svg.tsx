@@ -426,6 +426,8 @@ export function FullSlideSvg({
   // declaration — but an unoffered sparse pin has already been stripped,
   // and the fallback regular layout keeps ordinary branding.
   const skipBranding = layoutOmitsBranding(pageLayout?.id) || layoutOmitsBranding(requestedLayout)
+  const layoutChrome = pageLayout ? getLayout(pageLayout.id) : undefined
+  const skipMotif = Boolean(layoutChrome?.pageFrame) || Boolean(layoutChrome?.suppressMotif)
 
   let pageBody: ReactNode = null
   if (imageCoverTakeover) {
@@ -460,7 +462,7 @@ export function FullSlideSvg({
   )
   const midground = (
     <>
-      {Decor && !imageCoverTakeover && (
+      {Decor && !imageCoverTakeover && !skipMotif && (
         <g data-decor>
           <Decor ir={ir} slide={slide} ctx={ctx} />
         </g>

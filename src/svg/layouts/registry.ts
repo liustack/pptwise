@@ -340,6 +340,17 @@ export interface LayoutDefinition {
    */
   paintsOwnBackground?: boolean
   /**
+   * This layout paints a page-scale frame (a single hairline box or a
+   * grouped double frame). A framed page does not also get a motif top
+   * rule. `FullSlideSvg` skips the theme motif when this is set.
+   */
+  pageFrame?: "single" | "double"
+  /**
+   * This layout owns the page chrome (full-bleed field, its own top rule).
+   * The theme motif recedes so a leftover top stub does not sit on it.
+   */
+  suppressMotif?: boolean
+  /**
    * Heading-overflow hard-error parameters (quote-stage wave, T2 fix round —
    * `.issues/2026-07-28-quote-stage/task-2-report.md`'s fix-report addendum):
    * when set, `ir-quality.ts`'s `checkSlide` runs `fitHeadingLines(slide
