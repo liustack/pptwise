@@ -37,7 +37,7 @@ describe("human-verdicts calibration set", () => {
     expect(Object.keys(replay.pages).sort()).toEqual(human.verdicts.map((v) => v.id).sort())
   })
 
-  it("keeps new-rubric pre-fix and HEAD L2 stores keyed by the same 44 ids", () => {
+  it("keeps new-rubric, HEAD, and wave8 L2 stores keyed by the same 44 ids", () => {
     const human = JSON.parse(readFileSync(join(DIR, "calibration/human-verdicts.json"), "utf8")) as {
       verdicts: { id: string }[]
     }
@@ -52,6 +52,16 @@ describe("human-verdicts calibration set", () => {
     >
     expect(Object.keys(pre).sort()).toEqual(ids)
     expect(Object.keys(post).sort()).toEqual(ids)
+    const wave8Pre = JSON.parse(readFileSync(join(DIR, "calibration/wave8-pre-l2.json"), "utf8")) as Record<
+      string,
+      { verdict?: string }
+    >
+    const wave8Head = JSON.parse(readFileSync(join(DIR, "calibration/wave8-head-l2.json"), "utf8")) as Record<
+      string,
+      { verdict?: string }
+    >
+    expect(Object.keys(wave8Pre).sort()).toEqual(ids)
+    expect(Object.keys(wave8Head).sort()).toEqual(ids)
   })
 })
 

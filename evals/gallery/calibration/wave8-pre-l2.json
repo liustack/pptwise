@@ -1,0 +1,810 @@
+{
+  "layout--asymmetric-triptych--en": {
+    "id": "layout--asymmetric-triptych--en",
+    "table": "layout",
+    "subject": "asymmetric-triptych",
+    "language": "en",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "rework",
+    "note": "Looking at the slide image first, then scoring against the rubric.",
+    "findings": [
+      "overflow"
+    ],
+    "source": "l2",
+    "confidence": 0.2,
+    "rubricHits": []
+  },
+  "theme--academic--zh--p01": {
+    "id": "theme--academic--zh--p01",
+    "table": "theme",
+    "subject": "academic",
+    "language": "zh",
+    "theme": "academic",
+    "page": 1,
+    "verdict": "rework",
+    "note": "The right panel has five equal dots with one filled and four hollow, the forbidden progress motif. The split cover also hangs the title and subtitle in the vertical middle, with similar empty space above and below instead of settling the mass downward.",
+    "findings": [
+      "taboo",
+      "gravity"
+    ],
+    "source": "l2",
+    "confidence": 0.93,
+    "rubricHits": [
+      "taboo: five-dot one-filled-four-hollow",
+      "gravity: cover vertically centered"
+    ]
+  },
+  "layout--asymmetric-triptych--mixed": {
+    "id": "layout--asymmetric-triptych--mixed",
+    "table": "layout",
+    "subject": "asymmetric-triptych",
+    "language": "mixed",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "rework",
+    "note": "Top-left five equal dots are one filled and four hollow, the forbidden slide-progress motif.",
+    "findings": [
+      "taboo"
+    ],
+    "source": "l2",
+    "confidence": 0.95,
+    "rubricHits": [
+      "taboo: five-dot progress (one filled, four hollow)"
+    ]
+  },
+  "component--callout--en": {
+    "id": "component--callout--en",
+    "table": "component",
+    "subject": "callout",
+    "language": "en",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "rework",
+    "note": "Top-left five equal dots are one filled and four hollow, the forbidden slide-progress motif.",
+    "findings": [
+      "taboo"
+    ],
+    "source": "l2",
+    "confidence": 0.95,
+    "rubricHits": [
+      "taboo"
+    ]
+  },
+  "component--callout--zh": {
+    "id": "component--callout--zh",
+    "table": "component",
+    "subject": "callout",
+    "language": "zh",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "rework",
+    "note": "Top-left five equal dots are one filled and four hollow, the forbidden progress motif. Callout uses a legal gold top edge, not a left bar, and title ink is not struck through.",
+    "findings": [
+      "taboo"
+    ],
+    "source": "l2",
+    "confidence": 0.95,
+    "rubricHits": [
+      "taboo"
+    ]
+  },
+  "component--callout--mixed": {
+    "id": "component--callout--mixed",
+    "table": "component",
+    "subject": "callout",
+    "language": "mixed",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "rework",
+    "note": "Top-left five equal dots are one filled and four hollow, which is the forbidden progress motif.",
+    "findings": [
+      "taboo"
+    ],
+    "source": "l2",
+    "confidence": 0.95,
+    "rubricHits": [
+      "taboo"
+    ]
+  },
+  "layout--asymmetric-triptych--zh": {
+    "id": "layout--asymmetric-triptych--zh",
+    "table": "layout",
+    "subject": "asymmetric-triptych",
+    "language": "zh",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "rework",
+    "note": "Top-left five equal dots are one filled and four hollow, the forbidden progress motif. Navy dots (H 224, S 0.42) also share the page with gold-orange rules (H 47, S 0.89).",
+    "findings": [
+      "taboo"
+    ],
+    "source": "l2",
+    "confidence": 0.93,
+    "rubricHits": [
+      "taboo.md"
+    ]
+  },
+  "theme--crayon--zh--p01": {
+    "id": "theme--crayon--zh--p01",
+    "table": "theme",
+    "subject": "crayon",
+    "language": "zh",
+    "theme": "crayon",
+    "page": 1,
+    "verdict": "limit",
+    "note": "After the star ban this crayon cover still has no hand-drawn crayon language, and the color-bar geometry reads as a recolored consulting title slide.",
+    "findings": [
+      "theme-independence"
+    ],
+    "source": "l2",
+    "confidence": 0.88,
+    "rubricHits": [
+      "theme-independence"
+    ]
+  },
+  "theme--crayon--zh--p07": {
+    "id": "theme--crayon--zh--p07",
+    "table": "theme",
+    "subject": "crayon",
+    "language": "zh",
+    "theme": "crayon",
+    "page": 7,
+    "verdict": "rework",
+    "note": "A red five-point star sits in the lower-left margin, which crayon pages must not do. The torn-paper top is vivid blue while the sun fill is vivid gold-orange, so blue and orange appear together.",
+    "findings": [
+      "taboo",
+      "theme-independence"
+    ],
+    "source": "l2",
+    "confidence": 0.93,
+    "rubricHits": [
+      "taboo",
+      "theme-independence"
+    ]
+  },
+  "theme--vermilion--zh--p07": {
+    "id": "theme--vermilion--zh--p07",
+    "table": "theme",
+    "subject": "vermilion",
+    "language": "zh",
+    "theme": "vermilion",
+    "page": 7,
+    "verdict": "rework",
+    "note": "Square vermilion cards use fully-round gold header pills, which breaks the square-seal radius rule. The footer rule also cuts through 07 instead of sitting below the baseline.",
+    "findings": [
+      "radius",
+      "strikethrough",
+      "edge-stick"
+    ],
+    "source": "l2",
+    "confidence": 0.93,
+    "rubricHits": [
+      "theme-independence.md:radius",
+      "gravity.md:strikethrough",
+      "text.md:edge-stick"
+    ]
+  },
+  "theme--crayon--zh--p04": {
+    "id": "theme--crayon--zh--p04",
+    "table": "theme",
+    "subject": "crayon",
+    "language": "zh",
+    "theme": "crayon",
+    "page": 4,
+    "verdict": "rework",
+    "note": "A crayon star sticker sits in the lower left, which this theme must not use. The 10.2 source line is under the 12px floor, and vivid blue (kicker line, 10.2 ring) shares the page with vivid gold and orange.",
+    "findings": [
+      "taboo",
+      "theme-independence",
+      "text",
+      "font-size"
+    ],
+    "source": "l2",
+    "confidence": 0.92,
+    "rubricHits": [
+      "taboo.crayon-star",
+      "taboo.blue-orange",
+      "text.font-size",
+      "theme-independence.crayon-star"
+    ]
+  },
+  "component--comparison-pill-panels--en": {
+    "id": "component--comparison-pill-panels--en",
+    "table": "component",
+    "subject": "comparison-pill-panels",
+    "language": "en",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "rework",
+    "note": "Square rectangular cards sit under fully-round gold stadium pills, which breaks the chip-radius rule that inner pills must match the card corner language.",
+    "findings": [
+      "radius"
+    ],
+    "source": "l2",
+    "confidence": 0.95,
+    "rubricHits": [
+      "theme-independence.md:贴片圆角跟卡走"
+    ]
+  },
+  "component--comparison-pill-panels--zh": {
+    "id": "component--comparison-pill-panels--zh",
+    "table": "component",
+    "subject": "comparison-pill-panels",
+    "language": "zh",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "rework",
+    "note": "Square consulting cards with gold L-corners carry fully-round stadium header pills (about 249×48, rx ≈ 24). A square card with a fully-round inner pill is a radius break.",
+    "findings": [
+      "radius"
+    ],
+    "source": "l2",
+    "confidence": 0.95,
+    "rubricHits": [
+      "radius"
+    ]
+  },
+  "theme--enterprise--zh--p01": {
+    "id": "theme--enterprise--zh--p01",
+    "table": "theme",
+    "subject": "enterprise",
+    "language": "zh",
+    "theme": "enterprise",
+    "page": 1,
+    "verdict": "rework",
+    "note": "The industrial title banner sits on the canvas midline (band y 256 to 475), with about 256px of cream above it and 245px below, so the cover is vertically centered instead of top-weighted.",
+    "findings": [
+      "gravity"
+    ],
+    "source": "l2",
+    "confidence": 0.9,
+    "rubricHits": [
+      "gravity"
+    ]
+  },
+  "component--comparison-pill-panels--mixed": {
+    "id": "component--comparison-pill-panels--mixed",
+    "table": "component",
+    "subject": "comparison-pill-panels",
+    "language": "mixed",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "rework",
+    "note": "Square comparison cards use fully-round stadium header pills. Chip radius must follow the card, so a square shell with a fully-round inner pill is a clear break.",
+    "findings": [
+      "radius"
+    ],
+    "source": "l2",
+    "confidence": 0.93,
+    "rubricHits": [
+      "theme-independence: chip radius follows the card"
+    ]
+  },
+  "theme--playbill--zh--p04": {
+    "id": "theme--playbill--zh--p04",
+    "table": "theme",
+    "subject": "playbill",
+    "language": "zh",
+    "theme": "playbill",
+    "page": 4,
+    "verdict": "rework",
+    "note": "The source caption 岭原智能 2026 年第二季度经营数据 is about 11px CJK ink, under the 12px caption floor.",
+    "findings": [
+      "font-size",
+      "text"
+    ],
+    "source": "l2",
+    "confidence": 0.9,
+    "rubricHits": [
+      "text"
+    ]
+  },
+  "theme--playbill--zh--p01": {
+    "id": "theme--playbill--zh--p01",
+    "table": "theme",
+    "subject": "playbill",
+    "language": "zh",
+    "theme": "playbill",
+    "page": 1,
+    "verdict": "rework",
+    "note": "The playbill date sticker is tilted about 21 degrees counterclockwise, but the yellow date type stays upright instead of rotating with the shape.",
+    "findings": [
+      "rotate"
+    ],
+    "source": "l2",
+    "confidence": 0.93,
+    "rubricHits": [
+      "rotate"
+    ]
+  },
+  "layout--banner-chapter--mixed": {
+    "id": "layout--banner-chapter--mixed",
+    "table": "layout",
+    "subject": "banner-chapter",
+    "language": "mixed",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "pass",
+    "note": "Gold rule under 现状盘点 sits about 7px below glyph ink, a legal underline, not a strikethrough. Banner-chapter is a centered chapter poster (layout id banner-chapter), with stacked title/subtitle, in-canvas 01, and no overflow, overlap, radius, or rotate hits.",
+    "findings": [],
+    "source": "l2",
+    "confidence": 0.86,
+    "rubricHits": []
+  },
+  "layout--banner-chapter--zh": {
+    "id": "layout--banner-chapter--zh",
+    "table": "layout",
+    "subject": "banner-chapter",
+    "language": "zh",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "pass",
+    "note": "The gold rule sits under 客户洞察 (gap ~5px below ink), not through title x-height. Title and subtitle do not overlap, nothing leaves the 1280×720 frame, and the title cluster center is below mid-canvas.",
+    "findings": [],
+    "source": "l2",
+    "confidence": 0.86,
+    "rubricHits": []
+  },
+  "layout--banner-heading--en": {
+    "id": "layout--banner-heading--en",
+    "table": "layout",
+    "subject": "banner-heading",
+    "language": "en",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "rework",
+    "note": "Top-left five equal dots are one filled and four hollow, which taboo treats as a slide progress marker. The first-card source line Lingyuan Intelligence Q2 2026 operating data is also under the 12px floor.",
+    "findings": [
+      "taboo",
+      "font-size"
+    ],
+    "source": "l2",
+    "confidence": 0.93,
+    "rubricHits": [
+      "taboo/五点进度一实四空",
+      "text/字号地板"
+    ]
+  },
+  "layout--banner-heading--zh": {
+    "id": "layout--banner-heading--zh",
+    "table": "layout",
+    "subject": "banner-heading",
+    "language": "zh",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "rework",
+    "note": "Top-left five equal dots are one filled and four hollow, the forbidden progress motif. Source line 岭原智能 2026 年第二季度经营数据 is below the 12px caption floor.",
+    "findings": [
+      "taboo",
+      "font-size"
+    ],
+    "source": "l2",
+    "confidence": 0.93,
+    "rubricHits": [
+      "taboo.five-dot-progress",
+      "text.font-size-floor"
+    ]
+  },
+  "layout--banner-chapter--en": {
+    "id": "layout--banner-chapter--en",
+    "table": "layout",
+    "subject": "banner-chapter",
+    "language": "en",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "pass",
+    "note": "Gold rule at y=522 sits about 12px under the Customers baseline (ink y 493-510), not through title x-height. Layout id banner-chapter is a centered-axis chapter poster, so gravity top-align does not apply.",
+    "findings": [],
+    "source": "l2",
+    "confidence": 0.92,
+    "rubricHits": []
+  },
+  "layout--quote-stage--en": {
+    "id": "layout--quote-stage--en",
+    "table": "layout",
+    "subject": "quote-stage",
+    "language": "en",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "rework",
+    "note": "Top-left five equal dots are one filled and four hollow, the forbidden progress motif.",
+    "findings": [
+      "taboo"
+    ],
+    "source": "l2",
+    "confidence": 0.95,
+    "rubricHits": [
+      "taboo"
+    ]
+  },
+  "layout--quote-stage--zh": {
+    "id": "layout--quote-stage--zh",
+    "table": "layout",
+    "subject": "quote-stage",
+    "language": "zh",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "rework",
+    "note": "Top-left five equal dots are one filled and four hollow, the forbidden progress motif. The quote block is also vertically centered, with nearly equal gaps above the title and below the source line.",
+    "findings": [
+      "taboo",
+      "gravity"
+    ],
+    "source": "l2",
+    "confidence": 0.93,
+    "rubricHits": [
+      "taboo",
+      "gravity"
+    ]
+  },
+  "theme--arena--zh--p01": {
+    "id": "theme--arena--zh--p01",
+    "table": "theme",
+    "subject": "arena",
+    "language": "zh",
+    "theme": "arena",
+    "page": 1,
+    "verdict": "rework",
+    "note": "Cover title 年第二季度业务评审 is crushed by the cyan subtitle 设备预测性维护业务的增长质量与下半年. Title and subtitle ink boxes overlap, a clear text overlap break.",
+    "findings": [
+      "overlap"
+    ],
+    "source": "l2",
+    "confidence": 0.96,
+    "rubricHits": [
+      "overlap"
+    ],
+    "playwrightSkip": "playwright not found"
+  },
+  "layout--corner-wedge--zh": {
+    "id": "layout--corner-wedge--zh",
+    "table": "layout",
+    "subject": "corner-wedge",
+    "language": "zh",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "rework",
+    "note": "The 70px title 年第二季度业务评审 sits on the subtitle 设备预测性维护业务的增长质量与下半年, so the two ink boxes collide. The header is also the forbidden one-filled four-empty five-dot progress row.",
+    "findings": [
+      "overlap",
+      "taboo"
+    ],
+    "source": "l2",
+    "confidence": 0.95,
+    "rubricHits": [
+      "text.md:不重叠",
+      "taboo.md:五点进度"
+    ],
+    "playwrightSkip": "playwright not found"
+  },
+  "layout--image-split--en": {
+    "id": "layout--image-split--en",
+    "table": "layout",
+    "subject": "image-split",
+    "language": "en",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "rework",
+    "note": "Top-left five equal dots are one filled and four hollow, the forbidden slide-progress motif.",
+    "findings": [
+      "taboo"
+    ],
+    "source": "l2",
+    "confidence": 0.93,
+    "rubricHits": [
+      "taboo"
+    ]
+  },
+  "layout--quote-stage--mixed": {
+    "id": "layout--quote-stage--mixed",
+    "table": "layout",
+    "subject": "quote-stage",
+    "language": "mixed",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "rework",
+    "note": "Top-left five equal dots with one filled and four hollow read as a slide progress bar, which taboo forbids.",
+    "findings": [
+      "taboo"
+    ],
+    "source": "l2",
+    "confidence": 0.93,
+    "rubricHits": [
+      "taboo: five-dot progress 一实四空"
+    ]
+  },
+  "layout--two-column--en": {
+    "id": "layout--two-column--en",
+    "table": "layout",
+    "subject": "two-column",
+    "language": "en",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "rework",
+    "note": "Top-left five-dot motif is one filled and four hollow, which is banned progress chrome. The right-rail '+2 …' overflow marker is also banned, and the Lingyuan Intelligence Q2 caption reads under the 12px floor.",
+    "findings": [
+      "taboo",
+      "overflow-marker",
+      "font-size"
+    ],
+    "source": "l2",
+    "confidence": 0.92,
+    "rubricHits": [
+      "taboo.five-dot-progress",
+      "taboo.overflow-indicator",
+      "text.font-size-floor"
+    ]
+  },
+  "layout--image-top--en": {
+    "id": "layout--image-top--en",
+    "table": "layout",
+    "subject": "image-top",
+    "language": "en",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "rework",
+    "note": "English title ink leaves its bar on the image-top layout, the same overflow defect as overflow-1.",
+    "findings": [
+      "overflow"
+    ],
+    "source": "l2",
+    "confidence": 0.92,
+    "rubricHits": [
+      "text.md"
+    ]
+  },
+  "theme--lecture--zh--p04": {
+    "id": "theme--lecture--zh--p04",
+    "table": "theme",
+    "subject": "lecture",
+    "language": "zh",
+    "theme": "lecture",
+    "page": 4,
+    "verdict": "rework",
+    "note": "The two bottom metric cards extend about 16px past the chalkboard frame, so the card shells sit outside the board.",
+    "findings": [
+      "overflow"
+    ],
+    "source": "l2",
+    "confidence": 0.93,
+    "rubricHits": [
+      "overflow"
+    ]
+  },
+  "theme--ember--zh--p05": {
+    "id": "theme--ember--zh--p05",
+    "table": "theme",
+    "subject": "ember",
+    "language": "zh",
+    "theme": "ember",
+    "page": 5,
+    "verdict": "pass",
+    "note": "Gold title rule sits below the baseline, chart labels stay on the 1280×720 canvas, and no overlap, pill-radius, rotated-type, or taboo defects.",
+    "findings": [],
+    "source": "l2",
+    "confidence": 0.86,
+    "rubricHits": []
+  },
+  "component--five-forces--zh": {
+    "id": "component--five-forces--zh",
+    "table": "component",
+    "subject": "five-forces",
+    "language": "zh",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "rework",
+    "note": "The header has five equal dots with the first filled and the other four hollow, which the taboo rule treats as a slide progress bar.",
+    "findings": [
+      "taboo"
+    ],
+    "source": "l2",
+    "confidence": 0.93,
+    "rubricHits": [
+      "taboo"
+    ]
+  },
+  "component--five-forces--en": {
+    "id": "component--five-forces--en",
+    "table": "component",
+    "subject": "five-forces",
+    "language": "en",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "rework",
+    "note": "The header row is five equal dots with one filled and four hollow, the forbidden progress track. Navy meter dots (H 224, S 0.42) share the page with gold rules and gold rivalry dots (H 47, S 0.89), the blue-orange pair.",
+    "findings": [
+      "taboo"
+    ],
+    "source": "l2",
+    "confidence": 0.93,
+    "rubricHits": [
+      "taboo"
+    ]
+  },
+  "component--quote--mixed": {
+    "id": "component--quote--mixed",
+    "table": "component",
+    "subject": "quote",
+    "language": "mixed",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "rework",
+    "note": "Top-left five equal dots are one filled and four hollow, the forbidden progress motif.",
+    "findings": [
+      "taboo"
+    ],
+    "source": "l2",
+    "confidence": 0.95,
+    "rubricHits": [
+      "taboo"
+    ]
+  },
+  "component--people-cards--zh": {
+    "id": "component--people-cards--zh",
+    "table": "component",
+    "subject": "people-cards",
+    "language": "zh",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "rework",
+    "note": "The top-left motif is five equal dots with one filled and four hollow, which is the forbidden progress row. The mustard and blue avatars also pair vivid orange with vivid blue, and the role and company captions sit under the 12px floor.",
+    "findings": [
+      "taboo",
+      "font-size"
+    ],
+    "source": "l2",
+    "confidence": 0.93,
+    "rubricHits": [
+      "taboo",
+      "text"
+    ]
+  },
+  "component--quote--zh": {
+    "id": "component--quote--zh",
+    "table": "component",
+    "subject": "quote",
+    "language": "zh",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "rework",
+    "note": "Top-left five equal dots with one filled and four hollow are the forbidden progress motif.",
+    "findings": [
+      "taboo"
+    ],
+    "source": "l2",
+    "confidence": 0.95,
+    "rubricHits": [
+      "taboo.five-dot-progress"
+    ]
+  },
+  "component--row-cards--zh": {
+    "id": "component--row-cards--zh",
+    "table": "component",
+    "subject": "row-cards",
+    "language": "zh",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "rework",
+    "note": "Top-left motif is five equal dots with one filled and four hollow, the forbidden slide-progress decoration.",
+    "findings": [
+      "taboo"
+    ],
+    "source": "l2",
+    "confidence": 0.95,
+    "rubricHits": [
+      "taboo: five-dot one-filled-four-hollow progress"
+    ]
+  },
+  "layout--rail-numbered--zh": {
+    "id": "layout--rail-numbered--zh",
+    "table": "layout",
+    "subject": "rail-numbered",
+    "language": "zh",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "rework",
+    "note": "Top-left five equal dots are one filled and four hollow, the forbidden slide-progress motif. The first-card source line 岭原智能 2026 年第二季度经营数据 is also below the 12px floor.",
+    "findings": [
+      "taboo",
+      "font-size"
+    ],
+    "source": "l2",
+    "confidence": 0.93,
+    "rubricHits": [
+      "taboo.five-dot-progress",
+      "text.font-size-floor"
+    ]
+  },
+  "component--row-cards--mixed": {
+    "id": "component--row-cards--mixed",
+    "table": "component",
+    "subject": "row-cards",
+    "language": "mixed",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "rework",
+    "note": "Top-left five equal dots with one filled and four hollow is the forbidden progress motif.",
+    "findings": [
+      "taboo"
+    ],
+    "source": "l2",
+    "confidence": 0.95,
+    "rubricHits": [
+      "taboo"
+    ]
+  },
+  "layout--rail-numbered--en": {
+    "id": "layout--rail-numbered--en",
+    "table": "layout",
+    "subject": "rail-numbered",
+    "language": "en",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "rework",
+    "note": "The top row is the forbidden five-dot progress motif: one filled navy circle and four hollow peers. The first card source line Lingyuan Intelligence Q2 2026 operating data also sits under the 12px floor.",
+    "findings": [
+      "taboo",
+      "font-size"
+    ],
+    "source": "l2",
+    "confidence": 0.93,
+    "rubricHits": [
+      "taboo",
+      "text"
+    ]
+  },
+  "layout--rail-numbered--mixed": {
+    "id": "layout--rail-numbered--mixed",
+    "table": "layout",
+    "subject": "rail-numbered",
+    "language": "mixed",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "rework",
+    "note": "Top-left five equal dots are one filled and four hollow, the banned progress motif. The source line under 40s is also below the 12px caption floor.",
+    "findings": [
+      "taboo",
+      "font-size"
+    ],
+    "source": "l2",
+    "confidence": 0.9,
+    "rubricHits": [
+      "taboo",
+      "font-size"
+    ]
+  },
+  "component--cycle-petal-wheel--zh": {
+    "id": "component--cycle-petal-wheel--zh",
+    "table": "component",
+    "subject": "cycle-petal-wheel",
+    "language": "zh",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "rework",
+    "note": "Readable stage copy on the wheel is below the 12px floor: 现场勘测 on the petal and the four spoke captions (存量客户产线扩容, 自建算力替换, 行业场景复制, 现场服务自动化).",
+    "findings": [
+      "text",
+      "font-size"
+    ],
+    "source": "l2",
+    "confidence": 0.86,
+    "rubricHits": [
+      "text.md:字号地板"
+    ]
+  },
+  "component--cycle-hub-spoke--zh": {
+    "id": "component--cycle-hub-spoke--zh",
+    "table": "component",
+    "subject": "cycle-hub-spoke",
+    "language": "zh",
+    "theme": "consulting",
+    "page": 1,
+    "verdict": "pass",
+    "note": "Consulting hub-spoke reads clean: title, capsules, hub, rail, and mountain stay inside 1280x720 with no strikethrough, overflow, overlap, radius clash, or rotated type.",
+    "findings": [],
+    "source": "l2",
+    "confidence": 0.84,
+    "rubricHits": []
+  }
+}
