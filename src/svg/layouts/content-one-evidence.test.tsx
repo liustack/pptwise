@@ -70,7 +70,7 @@ describe("layoutDef", () => {
 })
 
 describe("OneEvidenceContent", () => {
-  it("CJK claim is left-aligned, chart is the evidence, y-title stacks on the plot's left", () => {
+  it("CJK claim is left-aligned, chart is the evidence, y-title sits as a horizontal pair", () => {
     const ctx = buildCtx(resolveStyle("insight"), {})
     const slide: Slide = {
       type: "content",
@@ -83,9 +83,9 @@ describe("OneEvidenceContent", () => {
       <OneEvidenceContent ir={ir("insight", [slide])} slide={slide} index={0} ctx={ctx} />,
     )
     expect(markup).toContain(CJK_CLAIM)
-    expect(markup).toContain(">万</text>")
-    expect(markup).toContain(">人</text>")
-    expect(markup).toContain(">次</text>")
+    expect(markup).toContain("万人次  ↑")
+    expect(markup).toContain('data-axis-title="y"')
+    expect(markup).not.toContain(">万</text>")
     expect(markup).toContain("来源：监测站年报")
     const heading = Array.from(root.querySelectorAll("text")).find((t) =>
       (t.textContent ?? "").includes("迁徙路线"),

@@ -91,7 +91,7 @@ function hasKpiCardsComponent(slide: Slide): boolean {
 }
 
 /**
- * Chart types `component.axes` (x_title/y_title/show_grid) actually renders
+ * Chart types `component.axes` (x_title/y_title/show_grid) actually paint
  * for — mirrors `chart.tsx`'s own `AXES_APPLICABLE_TYPES` (a local
  * duplicate, not a cross-import: this is a pure quality-check module, that
  * one a React SVG renderer — same "small local list + comment" precedent

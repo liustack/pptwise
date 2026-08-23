@@ -2,23 +2,21 @@
  * One question, asked of a label's own characters: may this text be set as a
  * top-to-bottom column of single characters?
  *
- * Three components render a vertical-axis title (`matrix.tsx`, `heatmap.tsx`,
- * `chart.tsx`). CJK still stacks one `<text>` node per character down a
- * narrow left band. That is ordinary typography for Chinese, Japanese and
- * Korean, whose glyphs are square and carry meaning one at a time. It is
- * not typography at all for a Latin word: "Tempo" comes out as T/e/m/p/o
- * down the page, and a reader has to reassemble the word letter by letter
- * (2026-08-20 review, `component--heatmap--mixed` and
- * `component--matrix--en`). When this returns false, matrix and heatmap
- * keep the title as one horizontal line. Chart sends a Latin or digit
- * y-title back to the header row — rotating the whole string is still
- * vertical type and is forbidden. The svg2pptx rotate path stays for
- * other scenes. Chart additionally refuses ASCII digits even when this
- * function would allow them to ride along with a square script.
+ * Axis titles never call this. They sit as a horizontal pair
+ * (`axis-titles.tsx`: "名  →" / "名  ↑"). The remaining caller is ink
+ * heading treatments (`heading-treatments/render.tsx`), where a CJK
+ * heading may still stack one `<text>` node per character. That is
+ * ordinary typography for Chinese, Japanese and Korean, whose glyphs are
+ * square and carry meaning one at a time. It is not typography at all
+ * for a Latin word: "Tempo" comes out as T/e/m/p/o down the page, and a
+ * reader has to reassemble the word letter by letter (2026-08-20 review,
+ * `component--heatmap--mixed` and `component--matrix--en`). When this
+ * returns false, the heading stays as one horizontal line. The svg2pptx
+ * rotate path stays for other scenes.
  *
  * The rule is content-driven and total: same string in, same answer out, no
- * locale, config or seed involved, so a deck's axis titles look the same on
- * every machine and across every revision.
+ * locale, config or seed involved, so a deck's stacked headings look the
+ * same on every machine and across every revision.
  *
  * **Mixed-script labels do not stack.** The test is an allowlist over every
  * character, not a majority vote over the string: one Latin run inside an

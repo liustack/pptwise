@@ -144,16 +144,13 @@ describe("heatmap component", () => {
   })
 
   describe("x_title/y_title (chart.axes fitting idiom reused)", () => {
-    // y_title is CJK here, the one script that still earns the stacked
-    // character column — see the "Latin y_title" block below and
-    // `lib/text-script.ts` for the rule.
     const withTitles = { ...basic, x_title: "Quarter", y_title: "区域" }
 
-    it("renders x_title and a per-char stacked y_title", () => {
+    it("renders x_title and y_title as one horizontal pair", () => {
       const { container } = svg(heatmap.render(withTitles, { x: 0, y: 0, w: 900, h: 300 }, ctx))
-      const texts = Array.from(container.querySelectorAll("text")).map((t) => t.textContent)
-      expect(texts.some((t) => t?.includes("Quarter") && t?.includes("→"))).toBe(true)
-      expect(texts.filter((t) => "区域".includes(t ?? "\x00")).length).toBeGreaterThanOrEqual(2)
+      expect(container.querySelector('[data-axis-title="x"]')?.textContent).toBe("Quarter  →")
+      expect(container.querySelector('[data-axis-title="y"]')?.textContent).toBe("区域  ↑")
+      expect(Array.from(container.querySelectorAll("text")).filter((t) => t.textContent === "区" || t.textContent === "域")).toHaveLength(0)
     })
 
     it("measure() grows when x_title/y_title are present vs absent", () => {
@@ -182,16 +179,11 @@ describe("heatmap component", () => {
 
   // 2026-08-20 review, `component--heatmap--mixed`: the mixed-language corpus
   // page's y_title is "Tempo", and it rendered as T/e/m/p/o stacked down the
-  // left band — "非常难看", and unreadable as a word. Latin y_titles now take
-  // one horizontal line in a band above x_title's instead; CJK keeps the
-  // column (the block above pins that half).
-  describe("Latin y_title renders horizontally, never as a letter column", () => {
+  // left band. Axis titles are now a horizontal pair for every script.
+  describe("y_title renders horizontally, never as a letter column", () => {
     const reported = { ...basic, x_title: "Q3 第 1 月", y_title: "Tempo" }
 
     function stackedChars(container: Element) {
-      // The character column is the only thing in this component that renders
-      // one glyph per centered <text> — column headers are centered too, so
-      // match on single-character content as well.
       return Array.from(container.querySelectorAll("text")).filter(
         (t) => t.getAttribute("text-anchor") === "middle" && (t.textContent ?? "").length === 1,
       )
@@ -199,9 +191,7 @@ describe("heatmap component", () => {
 
     it("renders the whole word on one <text>, with no character split anywhere", () => {
       const { container } = svg(heatmap.render(reported, { x: 0, y: 0, w: 900, h: 300 }, ctx))
-      const texts = Array.from(container.querySelectorAll("text")).map((t) => t.textContent)
-      expect(texts.some((t) => t?.includes("Tempo"))).toBe(true)
-      // Not one of "T"/"e"/"m"/"p"/"o" appears as a standalone text node.
+      expect(container.querySelector('[data-axis-title="y"]')?.textContent).toBe("Tempo  ↑")
       expect(stackedChars(container).map((t) => t.textContent)).not.toContain("T")
       expect(stackedChars(container).map((t) => t.textContent)).not.toContain("o")
     })
@@ -213,12 +203,10 @@ describe("heatmap component", () => {
       )
       const firstCellX = (r: ReturnType<typeof svg>) =>
         r.container.querySelector("rect")!.getAttribute("x")
-      // Horizontal placement costs height, not width: the grid lands exactly
-      // where it would with no y_title at all.
       expect(firstCellX(withLatin)).toBe(firstCellX(noYTitle))
     })
 
-    it("keeps the left band for a CJK y_title — the grid shifts right", () => {
+    it("does not keep a left band for a CJK y_title either", () => {
       const cjk = { ...reported, y_title: "区域" }
       const withCjk = svg(heatmap.render(cjk, { x: 40, y: 0, w: 900, h: 300 }, ctx))
       const noYTitle = svg(
@@ -226,7 +214,7 @@ describe("heatmap component", () => {
       )
       const cellX = (r: ReturnType<typeof svg>) =>
         Number(r.container.querySelector("rect")!.getAttribute("x"))
-      expect(cellX(withCjk)).toBeGreaterThan(cellX(noYTitle))
+      expect(cellX(withCjk)).toBe(cellX(noYTitle))
     })
 
     it("measure() reports the horizontal band it actually renders, and render() stays inside it", () => {

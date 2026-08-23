@@ -693,6 +693,7 @@ export const sankey: SvgComponent<SankeyComponent> = {
         {bands.map((band, i) => (
           <path
             key={`l${i}`}
+            data-plot-mark="1"
             d={bandPath(band.link)}
             fill={band.fill}
             fillOpacity={BAND_OPACITY}
@@ -748,7 +749,7 @@ export const sankey: SvgComponent<SankeyComponent> = {
           const boxRight = n.isLastLayer ? n.x + NODE_W : labelX + labelW
           return (
             <g key={n.id} data-audit-box={`${boxLeft},${n.y},${boxRight - boxLeft}`}>
-              <rect x={n.x} y={n.y} width={NODE_W} height={n.h} fill={ctx.colors.surface} stroke={ctx.colors.primary} strokeWidth={1} />
+              <rect data-plot-mark="1" x={n.x} y={n.y} width={NODE_W} height={n.h} fill={ctx.colors.surface} stroke={ctx.colors.primary} strokeWidth={1} />
               {needsChip ? (
                 <rect
                   data-label-chip="1"
