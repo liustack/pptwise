@@ -368,7 +368,7 @@ describe("tag_box enterprise", () => {
 })
 
 describe("tag_box arena", () => {
-  it("hud brackets + ROUND N + mono tracking", () => {
+  it("ROUND N chip + mono tracking, no HUD corner brackets", () => {
     const { treated, colors, fonts } = withChapter("arena")
     const root = rootOf(treated!.chrome)
     const box = rectAt(root, 96, 56, 150, 30)
@@ -377,13 +377,7 @@ describe("tag_box arena", () => {
     expect(label.getAttribute("fill")).toBe(colors.accent)
     expect(label.getAttribute("font-family")).toBe(fonts.mono)
     expect(label.getAttribute("letter-spacing")).toBe("4")
-    const markup = root.innerHTML
-    expect(markup).toContain("M 96 56 l 0 -8 l 8 0")
-    expect(markup).toContain("M 246 86 l 0 8 l -8 0")
-    const paths = Array.from(root.querySelectorAll("path"))
-    expect(paths.some((p) => p.getAttribute("stroke") === colors.accent && p.getAttribute("stroke-width") === "2")).toBe(
-      true,
-    )
+    expect(root.querySelectorAll("path")).toHaveLength(0)
   })
 })
 

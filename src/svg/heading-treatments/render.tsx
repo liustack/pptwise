@@ -592,12 +592,6 @@ function renderTagBox(args: RenderArgs): { chrome: ReactNode; contentRect: Conte
     chrome: (
       <>
         <rect x={96} y={56} width={150} height={boxH} fill={boxFill} />
-        {hud && (
-          <g data-decor="">
-            <path d="M 96 56 l 0 -8 l 8 0" fill="none" stroke={colors.accent} strokeWidth={2} />
-            <path d="M 246 86 l 0 8 l -8 0" fill="none" stroke={colors.accent} strokeWidth={2} />
-          </g>
-        )}
         <text
           x={171}
           y={labelY}

@@ -213,21 +213,40 @@ describe("wave 8 batch 3 — midground identity survives FullSlideSvg", () => {
     expect(mid.querySelectorAll("line").length).toBeLessThan(4)
   })
 
-  it.each(["cover", "content", "ending"] as const)("arena %s keeps three energy bars at y 712 in mid", (type) => {
+  it.each(["cover", "content", "ending"] as const)("arena %s keeps three energy bars at y 708 in mid", (type) => {
     const { mid } = renderPage("arena", type)
     const bars = mid.querySelector('[data-decor-piece="energy-bar"]')
     expect(bars).not.toBeNull()
     const rects = bars!.querySelectorAll("rect")
     expect(rects).toHaveLength(3)
     for (const rect of Array.from(rects)) {
-      expect(rect.getAttribute("y")).toBe("712")
+      expect(rect.getAttribute("y")).toBe("708")
+      expect(Number(rect.getAttribute("height"))).toBe(8)
+      expect(Number(rect.getAttribute("x")) + Number(rect.getAttribute("width"))).toBeLessThanOrEqual(1280)
+      expect(Number(rect.getAttribute("y")) + Number(rect.getAttribute("height"))).toBeLessThan(720)
     }
+  })
+
+  it("arena content after a chapter keeps the ROUND chip and drops HUD corner brackets", () => {
+    const chapter: Slide = { type: "chapter", heading: "增长战略", components: [] } as Slide
+    const slide: Slide = {
+      type: "content",
+      heading: COVER.heading,
+      subheading: COVER.subheading,
+      components: [{ type: "paragraph", text: "证据。" }],
+    } as Slide
+    const doc = { ...ir("arena"), slides: [chapter, slide] } as PptxIR
+    const { container } = render(<FullSlideSvg ir={doc} slide={slide} index={1} />)
+    expect(container.textContent).toContain("ROUND")
+    expect(container.querySelectorAll("path")).toHaveLength(0)
+    expect(container.innerHTML).not.toContain("M 96 56 l 0 -8 l 8 0")
+    expect(container.innerHTML).not.toContain("M 246 86 l 0 8 l -8 0")
   })
 
   it("arena chapter has no energy-bar rects in mid", () => {
     const { mid } = renderPage("arena", "chapter")
     expect(mid.querySelector('[data-decor-piece="energy-bar"]')).toBeNull()
-    const energy = Array.from(mid.querySelectorAll("rect")).filter((el) => el.getAttribute("y") === "712")
+    const energy = Array.from(mid.querySelectorAll("rect")).filter((el) => el.getAttribute("y") === "708")
     expect(energy).toHaveLength(0)
   })
 })

@@ -95,10 +95,12 @@ describe("arena-motif wave 8 — lower-right energy bar", () => {
       expect(rects, type).toHaveLength(3)
       rects.forEach((r, i) => {
         expect(num(r, "x"), `${type} x${i}`).toBe(ENERGY[i]!.x)
-        expect(num(r, "y"), `${type} y${i}`).toBe(712)
+        expect(num(r, "y"), `${type} y${i}`).toBe(708)
         expect(num(r, "width"), `${type} w${i}`).toBe(ENERGY[i]!.w)
         expect(num(r, "height"), `${type} h${i}`).toBe(8)
         expect(r.getAttribute("fill")).toBe(tokens.colors.border)
+        expect(num(r, "x") + num(r, "width"), `${type} right${i}`).toBeLessThanOrEqual(1280)
+        expect(num(r, "y") + num(r, "height"), `${type} bottom${i}`).toBeLessThan(720)
       })
       expect(root.querySelectorAll("path"), type).toHaveLength(0)
       expect(root.querySelectorAll("line"), type).toHaveLength(0)
