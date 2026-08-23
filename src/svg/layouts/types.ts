@@ -61,6 +61,13 @@ export type CoverLayoutId =
   | "ikb-field-cover"
   | "stat-cover"
   | "type-rule-cover"
+  // Wave 8 batch 2 (2026-08-23): education and humanities board locks.
+  | "thesis-plate-cover"
+  | "chalk-band-cover"
+  | "capsule-open-cover"
+  | "issue-head-cover"
+  | "double-frame-cover"
+  | "vertical-title-cover"
 
 // Wave 2（chapter/ending）新增 id：每主题 1 个（命名见 Wave 2 任务表）
 export type ChapterLayoutId =
@@ -76,6 +83,13 @@ export type ChapterLayoutId =
   | "ember-index-chapter"
   | "stroke-index-chapter"
   | "act-chapter"
+  // Wave 8 batch 2 pinOnly chapter faces.
+  | "folio-ghost-chapter"
+  | "lesson-box-chapter"
+  | "sticker-numeral-chapter"
+  | "fascicle-ghost-chapter"
+  | "mirror-volume-chapter"
+  | "volume-slip-chapter"
 export type EndingLayoutId =
   | "banner-ending" | "rail-ending" | "poster-ending"
   | "constellation-ending" | "masthead-ending" | "tone-adaptive-ending"
@@ -87,6 +101,13 @@ export type EndingLayoutId =
   | "ask-ending"
   | "rule-close-ending"
   | "pill-cta-ending"
+  // Wave 8 batch 2 pinOnly ending faces.
+  | "defense-close-ending"
+  | "homework-close-ending"
+  | "reminder-list-ending"
+  | "afterword-ending"
+  | "invite-field-ending"
+  | "seal-close-ending"
 
 // Wave 3（content）新增 id
 export type ContentLayoutId =

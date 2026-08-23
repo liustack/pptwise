@@ -12,6 +12,12 @@ import { CloseWordEnding } from "./ending-close-word-ending"
 import { AskEnding } from "./ending-ask-ending"
 import { RuleCloseEnding } from "./ending-rule-close-ending"
 import { PillCtaEnding } from "./ending-pill-cta-ending"
+import { DefenseCloseEnding } from "./ending-defense-close-ending"
+import { HomeworkCloseEnding } from "./ending-homework-close-ending"
+import { ReminderListEnding } from "./ending-reminder-list-ending"
+import { AfterwordEnding } from "./ending-afterword-ending"
+import { InviteFieldEnding } from "./ending-invite-field-ending"
+import { SealCloseEnding } from "./ending-seal-close-ending"
 
 export type { EndingLayout, EndingLayoutId } from "./types"
 
@@ -31,4 +37,10 @@ export const ENDING_LAYOUTS: Record<EndingLayoutId, EndingLayout> = {
   "ask-ending": AskEnding,
   "rule-close-ending": RuleCloseEnding,
   "pill-cta-ending": PillCtaEnding,
+  "defense-close-ending": DefenseCloseEnding,
+  "homework-close-ending": HomeworkCloseEnding,
+  "reminder-list-ending": ReminderListEnding,
+  "afterword-ending": AfterwordEnding,
+  "invite-field-ending": InviteFieldEnding,
+  "seal-close-ending": SealCloseEnding,
 }
