@@ -56,7 +56,7 @@ const ASSIGNMENTS: AssignmentRow[] = [
   {
     themeId: "academic",
     treatment: "lead_accent",
-    knobs: { accentStyle: "typeface-shift", tail: "gold-dot", noTitleAnchor: "none" },
+    knobs: { accentStyle: "typeface-shift", tail: "none", noTitleAnchor: "none" },
   },
   {
     themeId: "terra",

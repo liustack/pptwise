@@ -142,6 +142,16 @@
       "l2Findings": ["isolated-mid-piece"]
     },
     {
+      "id": "isolated-mid-piece-2",
+      "class": "isolated-mid-piece",
+      "sourcePageId": "planted--isolated-mid-dot",
+      "svg": "isolated-mid-piece-2.svg",
+      "png": "../rubric/examples/isolated-mid-piece-2.png",
+      "l1Expected": ["isolated-mid-piece"],
+      "l2Expected": "rework",
+      "l2Findings": ["isolated-mid-piece"]
+    },
+    {
       "id": "axis-title-overlap-1",
       "class": "axis-title-overlap",
       "sourcePageId": "planted--axis-title-overlap",

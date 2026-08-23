@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest"
 import { renderSlideSvg } from "@/api"
 import { installNodePlatform } from "@/platform/node"
 import { COMPONENT_BUILDERS, CHART_VARIANTS } from "./corpus/components"
-import { componentPage, corpusAssets, layoutPage } from "./corpus/decks"
+import { componentPage, corpusAssets, layoutPage, themeDeck } from "./corpus/decks"
 import { LEXICONS } from "./corpus/lexicon"
 import { auditL1, classifyL1 } from "./l1"
 import { loadPlantedManifest, plantedSvg } from "./planted/load"
@@ -265,6 +265,57 @@ describe("auditL1 planted defects", () => {
     )
     expect(codes(svg)).not.toContain("isolated-mid-piece")
   })
+
+  it("flags an isolated filled midground dot", () => {
+    const svg = wrap(
+      `<g data-depth="bg"><rect width="1280" height="720" fill="#FFFFFF"/></g>` +
+        `<g data-depth="mid"><circle cx="186" cy="152" r="3" fill="#847441" fill-opacity="0.807"/></g>` +
+        `<g data-depth="fg"><text x="96" y="120" font-size="42">续约率回升</text></g>`,
+    )
+    expect(codes(svg)).toContain("isolated-mid-piece")
+  })
+
+  it("flags an isolated filled midground square of dot size", () => {
+    const svg = wrap(
+      `<g data-depth="bg"><rect width="1280" height="720" fill="#FFFFFF"/></g>` +
+        `<g data-depth="mid"><rect x="200" y="80" width="6" height="6" fill="#847441"/></g>` +
+        `<g data-depth="fg"></g>`,
+    )
+    expect(codes(svg)).toContain("isolated-mid-piece")
+  })
+
+  it("accepts three aligned midground dots as a sequence", () => {
+    const svg = wrap(
+      `<g data-depth="bg"><rect width="1280" height="720" fill="#FFFFFF"/></g>` +
+        `<g data-depth="mid">` +
+        `<circle cx="616" cy="430" r="3" fill="#A8861D"/>` +
+        `<circle cx="640" cy="430" r="3" fill="#A8861D"/>` +
+        `<circle cx="664" cy="430" r="3" fill="#A8861D"/>` +
+        `</g><g data-depth="fg"></g>`,
+    )
+    expect(codes(svg)).not.toContain("isolated-mid-piece")
+  })
+
+  it("accepts a midground dot seated on a structural rule", () => {
+    const svg = wrap(
+      `<g data-depth="bg"><rect width="1280" height="720" fill="#FFFFFF"/></g>` +
+        `<g data-depth="mid">` +
+        `<line x1="96" y1="36" x2="1104" y2="36" stroke="#999999" opacity="0.2"/>` +
+        `<circle cx="568" cy="36" r="2.5" fill="#76BDB6"/>` +
+        `<circle cx="632" cy="36" r="2.5" fill="#76BDB6"/>` +
+        `</g><g data-depth="fg"></g>`,
+    )
+    expect(codes(svg)).not.toContain("isolated-mid-piece")
+  })
+
+  it("does not treat a 10px seal square as an isolated dot", () => {
+    const svg = wrap(
+      `<g data-depth="bg"><rect width="1280" height="720" fill="#FFFFFF"/></g>` +
+        `<g data-depth="mid"><rect x="99" y="72" width="10" height="10" fill="#9D4D4F"/></g>` +
+        `<g data-depth="fg"></g>`,
+    )
+    expect(codes(svg)).not.toContain("isolated-mid-piece")
+  })
 })
 
 describe("planted L1 regression", () => {
@@ -295,6 +346,16 @@ describe("auditL1 live sample", () => {
     const result = auditL1(svg)
     expect(Array.isArray(result.findings)).toBe(true)
     expect(classifyL1(result)).toEqual(classifyL1(auditL1(svg)))
+  })
+
+  it("academic content pages have no isolated midground dot", async () => {
+    const assets = await corpusAssets(LEXICONS.zh)
+    const ir = themeDeck("academic", LEXICONS.zh, assets)
+    for (let index = 2; index <= 8; index++) {
+      const svg = renderSlideSvg(ir, index)
+      expect(classifyL1(auditL1(svg)), `p${String(index + 1).padStart(2, "0")}`).not.toContain("isolated-mid-piece")
+      expect(svg, `p${String(index + 1).padStart(2, "0")}`).not.toMatch(/<g data-decor="">\s*<circle[^>]*r="3"/)
+    }
   })
 
   it("live chart/heatmap/matrix/sankey pages have no axis-title-overlap", async () => {

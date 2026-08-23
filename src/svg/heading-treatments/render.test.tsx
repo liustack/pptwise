@@ -382,7 +382,7 @@ describe("tag_box arena", () => {
 })
 
 describe("lead_accent academic", () => {
-  it("no ** → whole title fill=text, gold-dot tail", () => {
+  it("no ** → whole title fill=text, no gold-dot tail", () => {
     const { treated, colors } = withChapter("academic")
     expect(treated!.contentRect.y).toBe(184)
     const root = rootOf(treated!.chrome)
@@ -392,11 +392,7 @@ describe("lead_accent academic", () => {
     expect(num(title, "font-size")).toBe(42)
     expect(title.getAttribute("fill")).toBe(colors.text)
     expect(root.querySelector("tspan")).toBeNull()
-    const dot = root.querySelector("circle")!
-    expect(num(dot, "cx")).toBe(102)
-    expect(num(dot, "cy")).toBe(152)
-    expect(num(dot, "r")).toBe(3)
-    expect(dot.getAttribute("fill")).toBe(colors.accent)
+    expect(root.querySelector("circle")).toBeNull()
   })
 
   it("with ** → typeface-shift tspans", () => {

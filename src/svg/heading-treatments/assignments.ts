@@ -36,7 +36,7 @@ export interface HeadingKnobs {
   chapterLabel?: "act" | "part" | "round" | "chapter" | "lecture"
   /** lead_accent */
   accentStyle?: "color" | "typeface-shift"
-  tail?: "none" | "gold-dot" | "olive-rule"
+  tail?: "none" | "olive-rule"
   /** vertical_kicker */
   kickerMark?: "vermilion-dot" | "gold-rule" | "none"
   titleRule?: "none" | "chalk"
@@ -98,7 +98,8 @@ const ASSIGNMENTS: Record<string, HeadingAssignment> = {
   },
   academic: {
     treatment: "lead_accent",
-    knobs: { accentStyle: "typeface-shift", tail: "gold-dot", noTitleAnchor: "none" },
+    // Isolated gold-dot tail retired (wave8 solo-dot ban).
+    knobs: { accentStyle: "typeface-shift", tail: "none", noTitleAnchor: "none" },
   },
   terra: {
     treatment: "lead_accent",
