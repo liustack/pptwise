@@ -70,6 +70,22 @@ describe("auditL1 planted defects", () => {
     expect(codes(wrap(`<text x="40" y="40" font-size="16" writing-mode="tb">ABC</text>`))).toContain("latin-vertical")
   })
 
+  it("flags an axis title whose box intersects a data mark", () => {
+    const svg = wrap(
+      `<text data-axis-title="y" x="80" y="280" font-size="18">营收  ↑</text>` +
+        `<circle data-plot-mark="1" cx="110" cy="272" r="28" fill="#2B6CB0"/>`,
+    )
+    expect(codes(svg)).toContain("axis-title-overlap")
+  })
+
+  it("does not flag an axis title sitting clear of the plot marks", () => {
+    const svg = wrap(
+      `<text data-axis-title="x" x="80" y="80" font-size="16">Quarter  →</text>` +
+        `<circle data-plot-mark="1" cx="400" cy="400" r="16" fill="#2B6CB0"/>`,
+    )
+    expect(codes(svg)).not.toContain("axis-title-overlap")
+  })
+
   it("classifies the same SVG identically on a dual run (0 drift)", () => {
     const svg = wrap(
       `<text x="1" y="40" font-size="10">tiny</text>` +

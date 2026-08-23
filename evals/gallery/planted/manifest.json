@@ -140,6 +140,16 @@
       "l1Expected": ["isolated-mid-piece"],
       "l2Expected": "rework",
       "l2Findings": ["isolated-mid-piece"]
+    },
+    {
+      "id": "axis-title-overlap-1",
+      "class": "axis-title-overlap",
+      "sourcePageId": "planted--axis-title-overlap",
+      "svg": "axis-title-overlap-1.svg",
+      "png": "../rubric/examples/axis-title-overlap-1.png",
+      "l1Expected": ["axis-title-overlap"],
+      "l2Expected": "rework",
+      "l2Findings": ["axis-title-overlap"]
     }
   ]
 }

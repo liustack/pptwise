@@ -4,7 +4,8 @@
  * Reuses `auditSvgMarkup` (overflow / page-overflow) and `findOverlapIssues`.
  * Extra checks: strikethrough vs underline, ink-box overlap, boxless card
  * overflow, page-edge stick, font-size floor, overflow markers, Latin
- * vertical type. Five-dot progress is left to L2.
+ * vertical type, axis-title vs data-mark intersection. Five-dot progress
+ * is left to L2.
  */
 
 import { measureMonoTextUnits, measureTextUnits } from "@/lib/svg-text-layout"
@@ -42,6 +43,7 @@ export const L1_CODES = [
   "depth-contract",
   "mid-text-bleed",
   "isolated-mid-piece",
+  "axis-title-overlap",
 ] as const
 
 export type L1Code = (typeof L1_CODES)[number]
@@ -358,6 +360,24 @@ function visibleFill(leaf: DepthLeaf): boolean {
   if (leaf.tag === "line" || leaf.tag === "polyline") return false
   const fill = inheritedAttr(leaf.el, "fill") ?? "#000000"
   return fill !== "none" && effectivePaintOpacity(leaf.el, "fill") > 0
+}
+
+function findAxisTitleOverlap(root: Element, findings: L1Finding[]): void {
+  const leaves = collectDepthLeaves(root)
+  const titles = leaves.filter((leaf) => leaf.el.hasAttribute("data-axis-title"))
+  const marks = leaves.filter((leaf) => leaf.el.hasAttribute("data-plot-mark"))
+  if (titles.length === 0 || marks.length === 0) return
+  for (const title of titles) {
+    const label = (title.el.textContent ?? "").trim().slice(0, 24)
+    for (const mark of marks) {
+      if (!boxesIntersect(title.box, mark.box)) continue
+      findings.push({
+        code: "axis-title-overlap",
+        message: `axis title "${label}" intersects a ${mark.tag} data mark`,
+      })
+      break
+    }
+  }
 }
 
 function findIsolatedMidPieces(root: Element, findings: L1Finding[]): void {
@@ -817,6 +837,7 @@ export function auditL1(svg: string): L1Result {
   findDepthContract(root, findings)
   findMidTextBleed(root, findings)
   findIsolatedMidPieces(root, findings)
+  findAxisTitleOverlap(root, findings)
   const layout = layoutOf(svg)
   walkText(root, layout, findings, collectDividers(root))
   const geo = collectGeometry(root)
