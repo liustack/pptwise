@@ -239,6 +239,31 @@ describe("icon_cards forms: outline_grid", () => {
     }
   })
 
+  it("academic body stays a step below the card title and off the cell edges", () => {
+    const ctx = themeCtx("academic")
+    const box = { ...BOX, h: 520 }
+    const { container } = svg(iconCards.render(four, box, ctx))
+    const cells = cellRects(container)
+    expect(cells.length).toBe(4)
+    const titles = Array.from(container.querySelectorAll("text")).filter((el) =>
+      (el.textContent ?? "").startsWith("断言"),
+    )
+    const bodies = Array.from(container.querySelectorAll("text")).filter((el) =>
+      (el.textContent ?? "").startsWith("简短说明"),
+    )
+    expect(titles.length).toBeGreaterThan(0)
+    expect(bodies.length).toBeGreaterThan(0)
+    const titleFs = Math.max(...titles.map((el) => Number(el.getAttribute("font-size") ?? 0)))
+    const bodyFs = Math.max(...bodies.map((el) => Number(el.getAttribute("font-size") ?? 0)))
+    expect(titleFs).toBeLessThanOrEqual(28)
+    expect(bodyFs).toBeLessThan(titleFs)
+    expect(bodyFs).toBeLessThanOrEqual(Math.max(15, titleFs * 0.55) + 0.05)
+    const cell = cells[0]!
+    const title = titles[0]!
+    const topGap = Number(title.getAttribute("y") ?? 0) - titleFs - Number(cell.getAttribute("y") ?? 0)
+    expect(topGap).toBeGreaterThanOrEqual(20)
+  })
+
   it("crayon cell stroke walks chartPalette", () => {
     const ctx = themeCtx("crayon")
     const { container } = svg(iconCards.render(four, BOX, ctx))
