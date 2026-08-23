@@ -7,12 +7,13 @@ import { leafRecessOpacity } from "./decor-budget"
  * swiss-motif —— 「冷白制度」页缘（2026-08-21 wave7，设计源
  * `theme-wave7/Swiss.dc.html` 的封面样例 + 任务书的 motif 条款）。
  *
- * light 档，两件，位置写死，四页型同一张：
- *   - **顶边 12px 红条**：y0–12 通栏，走 accent（瑞士红）。五区外（标题区
- *     上沿是 y48）。这是「红成边」的那一条边，不是横幅，上面不承字。
+ * light 档，位置写死。第八波批 4：
+ *   - **顶边 12px 红条**：y0–12 通栏，走 accent（瑞士红）。四页都画，几何
+ *     不动。五区外（标题区上沿是 y48）。这是「红成边」的那一条边，不是
+ *     横幅，上面不承字。身份件，不许整件删。
  *   - **右缘 x1252 三格灰刻度短划**：y64 / 96 / 128（32px 模数），各 16px
- *     水平短划指向页缘，走 muted。落在右缘空带，标题区/正文区右沿 x1136
- *     之外，也在右上 logo 带 (1120,48,96×40) 右沿之外。
+ *     水平短划指向页缘，走 muted。**只留封面**（封面锁板）。章节 / 内容 /
+ *     ending 不画刻度：板上这三页没有，且 tick 是孤立小件语汇。
  *
  * **板上那根 x852 整高裸格线不进本文件。** 它纵穿正文区 (96,200,1040×420)，
  * 违反 `docs/designing-themes.md` 第 5 条五个保护区。封面样例用它交代网格，
@@ -27,9 +28,8 @@ import { leafRecessOpacity } from "./decor-budget"
  *   - 三格短划 x1252–1268、y64–128，横向在标题/正文右沿与右上 logo 带之外。
  *     纵向不进第五带、不进页脚、不进右下 logo 盒。
  *
- * chapter 不退让。swiss 的 chapter 默认底是 primary 硬黑（不是红），红条压
- * 黑 3.84:1、灰刻度压黑 2.97:1，都过 motif 可见度地板 1.02。红条在黑章节页
- * 上正是制度腔的签名。
+ * 第八波批 4：chapter 默认底改为冷白纸（与 bg 同值）。红条四页都在。
+ * 刻度只在封面。红条压冷白纸 4.62:1，过 motif 可见度地板 1.02。
  *
  * 位置全部写死，不读内容、不随 seed 变。
  *
@@ -52,6 +52,7 @@ export function SwissMotif({ slide, ctx }: DecorProps) {
   const red = ctx.colors.accent
   const tick = ctx.colors.muted
   const bg = ctx.defaultBg ?? ctx.colors.bg
+  const showTicks = slide.type === "cover"
 
   return (
     <>
@@ -65,20 +66,22 @@ export function SwissMotif({ slide, ctx }: DecorProps) {
           opacity={leafRecessOpacity(slide.type, red, bg)}
         />
       </DecorPiece>
-      <DecorPiece id="ticks">
-        {TICK_YS.map((y) => (
-          <line
-            key={y}
-            x1={TICK_X}
-            y1={y}
-            x2={TICK_X + TICK_LEN}
-            y2={y}
-            stroke={tick}
-            strokeWidth={TICK_STROKE}
-            opacity={leafRecessOpacity(slide.type, tick, bg)}
-          />
-        ))}
-      </DecorPiece>
+      {showTicks && (
+        <DecorPiece id="ticks">
+          {TICK_YS.map((y) => (
+            <line
+              key={y}
+              x1={TICK_X}
+              y1={y}
+              x2={TICK_X + TICK_LEN}
+              y2={y}
+              stroke={tick}
+              strokeWidth={TICK_STROKE}
+              opacity={leafRecessOpacity(slide.type, tick, bg)}
+            />
+          ))}
+        </DecorPiece>
+      )}
     </>
   )
 }

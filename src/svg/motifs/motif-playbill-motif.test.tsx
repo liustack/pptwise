@@ -14,7 +14,7 @@ const coverSlide: Slide = { type: "cover", heading: "封面", components: [] } a
 const chapterSlide: Slide = { type: "chapter", heading: "章节", components: [] } as Slide
 const contentSlide: Slide = { type: "content", heading: "内容", components: [] } as Slide
 const endingSlide: Slide = { type: "ending", components: [] } as Slide
-const DRAWN_SLIDES = [coverSlide, endingSlide]
+const ALL_SLIDES = [coverSlide, chapterSlide, contentSlide, endingSlide]
 
 const PATCH_CX = 1136
 const PATCH_CY = 25
@@ -79,15 +79,16 @@ function polygonPoints(el: Element): { x: number; y: number }[] {
 }
 
 describe("PlaybillMotif（右上日期贴片）", () => {
-  it("有 meta.date 时 cover/ending 画同一张贴片+日期字。content 不画，把斜贴片名额让给版式", () => {
-    const markups = new Set(DRAWN_SLIDES.map((slide) => draw("playbill", slide, DATE).markup))
-    expect(markups.size).toBe(1)
+  it("有 meta.date 时只在 cover 画贴片+日期字。chapter / content / ending 整片退让", () => {
     const { root } = draw("playbill", coverSlide, DATE)
     expect(root.querySelector("polygon")).toBeTruthy()
     expect(root.querySelector("text")?.textContent).toBe(DATE)
-    const content = draw("playbill", contentSlide, DATE).root
-    expect(content.querySelector("polygon")).toBeNull()
-    expect(content.querySelector("text")).toBeNull()
+    for (const slide of [chapterSlide, contentSlide, endingSlide]) {
+      const yielded = draw("playbill", slide, DATE).root
+      expect(yielded.querySelector("polygon"), slide.type).toBeNull()
+      expect(yielded.querySelector("text"), slide.type).toBeNull()
+      expect(yielded.children).toHaveLength(0)
+    }
   })
 
   it("没有日期整片不画（空黑块不再出现）", () => {
@@ -97,9 +98,9 @@ describe("PlaybillMotif（右上日期贴片）", () => {
     expect(root.querySelector("text")).toBeNull()
   })
 
-  it("chapter 完全退让", () => {
-    const { root } = draw("playbill", chapterSlide, DATE)
-    expect(root.children).toHaveLength(0)
+  it("chapter / ending 完全退让（ending 是黑场反转，板上没有贴片）", () => {
+    expect(draw("playbill", chapterSlide, DATE).root.children).toHaveLength(0)
+    expect(draw("playbill", endingSlide, DATE).root.children).toHaveLength(0)
   })
 
   it("贴片四角与日期字共用顺时针 4°（对齐板上 CSS rotate(4deg)）", () => {
@@ -169,7 +170,7 @@ describe("PlaybillMotif（右上日期贴片）", () => {
   })
 
   it("Decor body passes subset validation", () => {
-    for (const slide of [...DRAWN_SLIDES, chapterSlide]) {
+    for (const slide of ALL_SLIDES) {
       expect(() => assertSubset(draw("playbill", slide, DATE).root)).not.toThrow()
       expect(() => assertSubset(draw("playbill", slide).root)).not.toThrow()
     }

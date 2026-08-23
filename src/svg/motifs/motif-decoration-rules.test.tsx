@@ -12,8 +12,9 @@
  * not a mark, and are skipped.
  *
  * Slanted tile (B3): at most one chip-sized 1°–20° tile per page. Motif
- * count is the lock. Playbill content yields the date chip so a layout
- * that already paints a unit chip (stat-hero) does not get a second one.
+ * count is the lock. Playbill paints the date chip on cover only. Content
+ * yields so a layout that already paints a unit chip (stat-hero) does not
+ * get a second one. Ending yields because the inverted field has no chip.
  */
 import { describe, expect, it } from "vitest"
 import type { PptxIR, Slide } from "@/ir"
@@ -147,9 +148,9 @@ describe("B3 at most one slanted tile per page", () => {
     expect(over, over.join(" | ")).toEqual([])
   })
 
-  it("playbill motif paints the date chip on cover and ending only", () => {
+  it("playbill motif paints the date chip on cover only", () => {
     expect(countSlantedTiles(drawMotif("playbill-motif", "cover").root)).toBe(1)
-    expect(countSlantedTiles(drawMotif("playbill-motif", "ending").root)).toBe(1)
+    expect(countSlantedTiles(drawMotif("playbill-motif", "ending").root)).toBe(0)
     expect(countSlantedTiles(drawMotif("playbill-motif", "content").root)).toBe(0)
     expect(countSlantedTiles(drawMotif("playbill-motif", "chapter").root)).toBe(0)
   })
