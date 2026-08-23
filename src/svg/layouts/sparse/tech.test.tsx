@@ -4,6 +4,7 @@ import { renderSvgMarkup, parseSvgRoot } from "../../serialize"
 import { assertSubset } from "../../subset-validate"
 import { buildCtx } from "../../full-slide-svg"
 import { resolveStyle } from "../../../themes"
+import { __pathBoundingBox } from "../../audit/deck-audit"
 import { StatementContent } from "../content-statement"
 import { StatHeroContent } from "../content-stat-hero"
 import { OneEvidenceContent } from "../content-one-evidence"
@@ -87,8 +88,23 @@ describe("tech sparse faces", () => {
     expect(em?.getAttribute("fill")).toBe(ctx.colors.accent)
     const arcs = Array.from(root.querySelectorAll("path"))
     expect(arcs).toHaveLength(2)
-    expect(arcs[0]?.getAttribute("d")).toBe("M 1060 40 a 190 190 0 0 1 180 130")
-    expect(arcs[1]?.getAttribute("d")).toBe("M 1120 40 a 130 130 0 0 1 122 88")
+    expect(arcs[0]?.getAttribute("d")).toBe("M 980 48 C 1140 48 1232 104 1232 208")
+    expect(arcs[1]?.getAttribute("d")).toBe("M 1060 56 C 1164 56 1220 100 1220 176")
+    const margin = 4
+    for (const arc of arcs) {
+      const d = arc.getAttribute("d") ?? ""
+      const box = __pathBoundingBox(d)
+      expect(box, d).not.toBeNull()
+      const halfStroke = Number(arc.getAttribute("stroke-width") ?? 0) / 2
+      expect(box!.x - halfStroke).toBeGreaterThanOrEqual(margin)
+      expect(box!.y - halfStroke).toBeGreaterThanOrEqual(margin)
+      expect(box!.x + box!.w + halfStroke).toBeLessThanOrEqual(1280 - margin)
+      expect(box!.y + box!.h + halfStroke).toBeLessThanOrEqual(720 - margin)
+    }
+    const dot = root.querySelector("circle")
+    expect(dot?.getAttribute("fill")).toBe(ctx.colors.accent)
+    expect(Number(dot?.getAttribute("cx"))).toBeGreaterThan(1100)
+    expect(Number(dot?.getAttribute("cy"))).toBeLessThan(80)
   })
 
   it("statement without ** keeps the verse on text fill", () => {

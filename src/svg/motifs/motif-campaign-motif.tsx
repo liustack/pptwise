@@ -35,7 +35,7 @@ type Chip = {
 const CHIPS: readonly Chip[] = [
   { cx: 1055, cy: 99, deg: 24, w: 10, h: 18, token: "accent" },
   { cx: 1144, cy: 167, deg: -18, w: 8, h: 14, token: "muted" },
-  { cx: 1248, cy: 102, deg: 40, w: 9, h: 16, token: "accent" },
+  { cx: 1224, cy: 108, deg: 40, w: 9, h: 16, token: "accent" },
 ]
 
 const round1 = (v: number) => Math.round(v * 10) / 10
