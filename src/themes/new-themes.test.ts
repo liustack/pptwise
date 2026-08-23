@@ -84,6 +84,17 @@ describe("pulse tokens", () => {
   it("shape.radius is 8 (rounded, approachable — clinic/health report register)", () => {
     expect(PULSE_TOKENS.shape?.radius).toBe(8)
   })
+
+  it("chapter default background is mint paper, not a primary bleed", () => {
+    expect(PULSE_TOKENS.defaultBackgrounds.chapter).toEqual({
+      kind: "color",
+      value: "#F2F7F4",
+    })
+    expect(PULSE_TOKENS.defaultBackgrounds.chapter).toEqual({
+      kind: "color",
+      value: PULSE_TOKENS.colors.bg,
+    })
+  })
 })
 
 // themes-16 wave, task T2 (2026-07-28): terra is the 15th built-in theme
@@ -176,11 +187,12 @@ describe("vermilion tokens", () => {
     expect(VERMILION_TOKENS.shape?.radius).toBe(2)
   })
 
-  it("chapter default background is the full-bleed primary vermilion (the signature 红底白字 section divider, white ink via readableOn)", () => {
-    // Read off the token rather than pinned to a literal: what this test is
-    // about is "chapter is the full-bleed primary", which has to survive a
-    // repalette (the warm-group reskin moved primary #C8102E → #B02318).
-    expect(VERMILION_TOKENS.defaultBackgrounds.chapter).toEqual({ kind: "color", value: VERMILION_TOKENS.colors.primary })
+  it("chapter default background is the same rice paper as cover (红身份来自红头与号块，正文页不可整版红)", () => {
+    expect(VERMILION_TOKENS.defaultBackgrounds.chapter).toEqual({
+      kind: "color",
+      value: VERMILION_TOKENS.colors.bg,
+    })
+    expect(VERMILION_TOKENS.colors.bg).toBe("#F6EFE3")
   })
 
   it("cover/content/ending default backgrounds stay the warm off-white (a red cover would fail the text/muted contrast floor — see the token file header)", () => {
@@ -565,10 +577,10 @@ describe("memo vs heritage vs vermilion (warm-paper / red-family split)", () => 
     expect(VERMILION_TOKENS.fonts.mono).toBeUndefined()
   })
 
-  it("vermilion chapter is a primary-red bleed, memo and heritage stay on paper", () => {
+  it("vermilion chapter stays on rice paper like memo and heritage, red is structure not a bleed", () => {
     expect(VERMILION_TOKENS.defaultBackgrounds.chapter).toEqual({
       kind: "color",
-      value: VERMILION_TOKENS.colors.primary,
+      value: VERMILION_TOKENS.colors.bg,
     })
     expect(MEMO_TOKENS.defaultBackgrounds.chapter).toEqual({
       kind: "color",

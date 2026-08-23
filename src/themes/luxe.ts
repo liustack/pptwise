@@ -44,8 +44,9 @@ import type { StyleTokens } from "./tokens";
  * chart 灰蓝 4.98:1。设计板自查写的古铜 3.6:1 / 灰蓝 4.4:1 低于实测，
  * accent 8:1 与 muted 7:1 与实测一致，以实测为准。
  *
- * 装饰见 `src/svg/motifs/motif-luxe-motif.tsx`（请柬金框：双层金框 + 框顶
- * 金菱）。
+ * 装饰见 `src/svg/motifs/motif-luxe-motif.tsx`（请柬金框：双层金框改到
+ * 第八波板坐标，框顶金菱退役。封面与 ending 画框，章节与内容页退让。
+ * 版式不重画金框）。
  */
 export const LUXE_TOKENS: StyleTokens = {
   id: "luxe",

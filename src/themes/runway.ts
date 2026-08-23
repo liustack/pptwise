@@ -70,6 +70,14 @@ import type { StyleTokens } from "./tokens";
  * （照 academic 上一轮同类情形的处理）。本轮 runway 的装饰侧与版式侧
  * **零改动**，只换色板——decor=none 由 `motif-selection.ts` 的守卫与
  * `new-themes.test.ts` 的断言钉住。
+ *
+ * **第八波批 3（2026-08-23，`.issues/design-boards/wave8/b3/Runway.dc.html`）**：
+ * 四页型改锁 pinOnly `lookbook-open-cover` / `look-range-chapter` /
+ * `window-close-ending`。封面是秀场米白型录头版，标题钉板上 96px，明确
+ * 禁止放大到 132 铺满。绯红只给封面页码与章节里一个强调词。ending 满版
+ * primary 由版式自绘（`paintsOwnBackground`），`defaultBackgrounds.ending`
+ * 保持米白 `#F2F0EB`，避免 contrast floor 拿深字压深底。decor=none 继续
+ * 是官方身份，本轮不补 motif，角色色 hex 与 fonts 一处不改。
  */
 export const RUNWAY_TOKENS: StyleTokens = {
   id: "runway",
