@@ -44,7 +44,7 @@ describe("LAYOUT_REGISTRY completeness (layout ids)", () => {
     }
   }
 
-  it("has exactly 50 layout-kind entries, all traceable to one of the four real registries (banner-heading retired: 51 -> 50, after side-highlight 52 -> 51)", () => {
+  it("has exactly 113 layout-kind entries, all traceable to one of the four real registries", () => {
     const knownIds = new Set([
       ...Object.keys(COVER_LAYOUTS),
       ...Object.keys(CHAPTER_LAYOUTS),
@@ -229,9 +229,9 @@ describe("layoutsForSlideType", () => {
     for (const l of covers) expect(l.slideTypes).toContain("cover")
   })
 
-  it("cover/chapter/ending each resolve to exactly their 19, 9 or 7 layouts (no takeovers)", () => {
-    // cover grew 13 -> 19 in board-cover-restore wave 1. chapter grew 8 -> 9
-    // in the editorial-verse wave (verse-chapter, pinOnly).
+  it("cover, chapter, and ending expose 34, 33, and 31 registered layouts with no takeovers", () => {
+    // The shared automatic pools remain 19, 8, and 7. Theme redesign waves
+    // added pin-only board faces without widening those pools.
     expect(layoutsForSlideType("cover")).toHaveLength(34)
     // Wave 8 batch 4: +6 chapter +6 ending pinOnly faces.
     expect(layoutsForSlideType("chapter")).toHaveLength(33)
@@ -315,7 +315,7 @@ describe("excludePinOnly (quote-stage wave, task T1's pinOnly tier)", () => {
     expect(excludePinOnly(defs).map((d) => d.id)).toEqual(["unset", "not-pinned", "also-kept"])
   })
 
-  it("real LAYOUT_REGISTRY entries: quote-stage and the three editorial-verse layouts set pinOnly", () => {
+  it("real LAYOUT_REGISTRY entries match the complete expected pin-only id set", () => {
     const pinOnlyIds = new Set([
       "quote-stage",
       "statement",

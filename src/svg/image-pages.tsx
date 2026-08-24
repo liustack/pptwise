@@ -859,7 +859,7 @@ export function ImageBottomPage({
 
 // T1d (src domain reorg wave 1): the 4 takeover LayoutDefinitions inlined
 // verbatim from registry.ts's former `TAKEOVER_LAYOUT_DEFS` entries — one file,
-// 4 named exports (not `layoutDef`, unlike the 35 layout files: all four
+// 4 named exports (not `layoutDef`, unlike the 113 layout files: all four
 // takeovers are implemented in this single file, so they need distinct
 // export names to coexist). `LayoutDefinition` is a type-only import from
 // registry.ts — registry.ts value-imports these 4 exports back, and a
