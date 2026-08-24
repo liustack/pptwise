@@ -45,8 +45,14 @@ describe("install-command version stamping", () => {
     const version = readPackageVersion()
     const stamped = readStampedVersions()
     // The pattern matching nothing would pass the loop below vacuously, so
-    // pin the floor: the two READMEs and INSTALL.md each carry at least one.
-    expect(stamped.length).toBeGreaterThanOrEqual(3)
+    // pin where it has to appear. Since the install guides were split, the
+    // only place that prints the dsh command is INSTALL-dsh.md: the READMEs
+    // and the website hand the reader a sentence for their agent instead.
+    expect(stamped.length).toBeGreaterThanOrEqual(1)
+    expect(
+      stamped.map((entry) => entry.file).filter((file) => file.endsWith("INSTALL-dsh.md")),
+      "INSTALL-dsh.md must print a pinned dsh install command",
+    ).not.toHaveLength(0)
     for (const [index, entry] of stamped.entries()) {
       expect(entry.version, `${entry.file} #${index + 1} is not stamped to ${version}`).toBe(
         version,
