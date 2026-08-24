@@ -45,13 +45,19 @@ import type { StyleTokens } from "./tokens";
  * 14.14:1，`readableOn` 两墨取优后稳态可读。
  *
  * 装饰见 `src/svg/motifs/motif-banner-motif.tsx`（批注线 v2：顶缘藏青细线
- * + 左上黄色高亮块 + 底缘页码线）——consulting 的锚点 motif 是
- * `banner-motif`，academic / enterprise 两家在各自的候选集里也借它，本轮
- * 换血因此波及那两家的借用页（归因见编辑组报告）。
+ * + 左上黄色高亮块 + 底缘页码线）。consulting 的旧锚点 motif 是
+ * `banner-motif`，academic / enterprise 两家在各自的候选集里也借它。
  *
  * 第八波（2026-08-22）：封面锁 `verdict-index`，用 `shape.cover` 的
  * verdict* knobs 把几何收到板上（kicker y150、标题 y304/60、论据
  * y560/592、底线 y640、落款 y676）。色板本轮不动。
+ *
+ * **量规重构（2026-08-25）**：consulting 从顶缘通栏批注线切换为左上
+ * 定位角标，正文轴移到 x160，meta 移到右上眉线。新建 `gauge-motif` 与
+ * 五个 `gauge-*` 版式，而不是修改 `banner-motif`、`verdict-index`、
+ * `ghost-rule-chapter` 或 `action-pad-ending`。这些旧构件仍由既有主题和页面
+ * 引用，原地修改会把 consulting 的设计变更扩散给借用方。本轮只改
+ * consulting 的锁，色板不动。
  */
 export const CONSULTING_TOKENS: StyleTokens = {
   id: "consulting",

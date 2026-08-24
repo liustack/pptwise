@@ -84,6 +84,7 @@ describe("generatePptxBlob deck-level transition switch", () => {
 function multiComponentContentSlide(): Slide {
   return {
     type: "content",
+    layout: "narrow-column",
     heading: "多块动画验证",
     components: [
       { type: "paragraph", text: "开场段落" }, // component 0 → fade

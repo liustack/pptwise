@@ -39,9 +39,9 @@ read_when:
 
 `pptwise themes [--json]` 会从你装的这一版里打印同一份清单。
 
-共享的 `LAYOUT_REGISTRY` 现有 117 项，其中 113 个标准版式，另有 4 个图片 takeover。标准版式里，43 个进入共享自动选型池，70 个标记为 `pinOnly`。主题重设计的几波为内置主题增加了专属的封面、章节和结尾构造，因此 pin-only 数量涨到 70。这些构造不进入共享自动池。在作者侧，它们只能通过显式的 `slide.layout` 钉子命中，设计板锁定结果也会物化成这样的版式 id。
+共享的 `LAYOUT_REGISTRY` 现有 122 项，其中 118 个标准版式，另有 4 个图片 takeover。标准版式里，47 个进入共享自动选型池，71 个标记为 `pinOnly`。主题重设计的几波提供了多数 pin-only 构造，consulting 量规家族又加入 4 个自动版式和 pin-only 的 `gauge-point`。pin-only 版式不进入共享自动池。在作者侧，它们只能通过显式的 `slide.layout` 钉子命中，设计板锁定结果也会物化成这样的版式 id。
 
-封面、章节、结尾三类页面现在都锁到自己的 Claude Design 设计板构造。软偏好保不住这三类页。内容页仍从可自动选型的集合里抽（`banner-heading` 退订后是 9 个 id），再按分配表加权。lecture 和 luxe 去掉 `split-band` / `stacked-poster`。Playbill 仍走完整的自动内容集。
+封面、章节、结尾三类页面现在都锁到自己的 Claude Design 设计板构造。软偏好保不住这三类页。registry 有 10 个可自动选型的内容版式，但既有内置主题保留原来的 9-id 共享集，避免 consulting 的新增版式重排它们的 seed 结果。lecture 和 luxe 再从这个基线去掉 `split-band` 与 `stacked-poster`。consulting 把内容页锁到 `gauge-stats`。省略 `layouts` 的注册自定义主题会得到全部 10 个 id。
 
 版式仍住在共享池里。锁定是主题怎么用池，不是给一家另开一份私有文件。每家内置也会点名自己更常抽到的封面、章节、内容页和结尾，所以两家主题用同一份 deck、同一个 seed，通常会抽到不同版式。软偏好（`layoutTendencies`）留给内容页，以及还没锁定的身份页。已经锁死的封面，偏好就是那把锁本身。某一页必须是某一个版式时，在那一页写 `slide.layout` 钉死。封面锁定不会因为后面某一波把另外三类页填上而跟着动。每个版式都会按主题的实际背景色自适应取色，所以池在任何主题下都保持可读。
 

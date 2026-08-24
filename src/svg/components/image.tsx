@@ -22,7 +22,7 @@ export const image: SvgComponent<ImageComponent> = {
     return Math.min(Math.round(w * 0.5), MAX_IMAGE_H)
   },
   render(component, box, ctx) {
-    const imgH = Math.min(Math.round(box.w * 0.5), MAX_IMAGE_H)
+    const imgH = Math.min(Math.round(box.w * 0.5), MAX_IMAGE_H, box.h ?? Number.POSITIVE_INFINITY)
     const src = ctx.images?.[component.asset_id]?.src
     // A11Y-01 alt 链路：`aria-label`（非 `<title>` 子元素——SVG 1.1 的
     // `<image>` 内容模型不含描述性子元素，2 起才允许，且 svg2pptx 的

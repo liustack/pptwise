@@ -14,6 +14,8 @@ import { PullQuoteContent } from "./content-pull-quote"
 import { StatHeroContent } from "./content-stat-hero"
 import { OneEvidenceContent } from "./content-one-evidence"
 import { MonoBleedContent } from "./content-mono-bleed"
+import { GaugeStatsContent } from "./content-gauge-stats"
+import { GaugePointContent } from "./content-gauge-point"
 
 export type { ContentLayout, ContentLayoutId } from "./types"
 
@@ -44,4 +46,6 @@ export const CONTENT_LAYOUTS: Record<ContentLayoutId, ContentLayout> = {
   "stat-hero": StatHeroContent,
   "one-evidence": OneEvidenceContent,
   "mono-bleed": MonoBleedContent,
+  "gauge-stats": GaugeStatsContent,
+  "gauge-point": GaugePointContent,
 }

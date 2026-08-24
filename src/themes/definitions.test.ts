@@ -89,7 +89,9 @@ describe("THEME_DEFINITIONS", () => {
   // 手工钉的字面数组（人审基线，不经 layoutsForSlideType 派生）——未来
   // registry 新增/删除 layout 时，这里必须跟着人工重推，而不是无声通过。
   // Gallery r2 D10 退订 image-lead-split，自动 content 池 12 -> 11。D20 / E22
-  // 再收窄 lecture / luxe / consulting 的 content 集合，其它主题仍用全集。
+  // 再收窄 lecture / luxe / consulting 的 content 集合。量规重构新增的
+  // 五张 gauge 脸都是 pinOnly，只有 consulting 在自己的名单里列出它们，
+  // 所以共享全集与重构前完全一致。
   const FULL_COVER = [
     "banner-title",
     "poster-center",
@@ -135,12 +137,12 @@ describe("THEME_DEFINITIONS", () => {
     "bento-panel",
     "tone-adaptive-content",
     // P1 variety wave, task 4: content pool 7 -> 10. side-highlight later
-    // retired. banner-heading later retired. Auto-selectable content pool is 9.
+    // retired. banner-heading later retired.
     "asymmetric-triptych",
     "quiet-frame",
     // content-layout expansion wave, task T2. Gallery r2 D10 retired
-    // image-lead-split. This change retires banner-heading. Auto-selectable
-    // content pool is 9.
+    // image-lead-split. This change retires banner-heading. The gauge faces
+    // are pinOnly, so consulting's own lock never joins this shared pool.
     "split-band",
   ]
   // Gallery r2 D20: framed themes do not sample split-band /
@@ -154,9 +156,8 @@ describe("THEME_DEFINITIONS", () => {
     "asymmetric-triptych",
     "quiet-frame",
   ]
-  // Gallery r2 E22: consulting used an explicit named list without
-  // side-highlight. That id is now globally retired. Playbill keeps FULL_CONTENT.
   const CONSULTING_CONTENT = [
+    "gauge-stats",
     "narrow-column",
     "two-column",
     "rail-numbered",
@@ -167,6 +168,7 @@ describe("THEME_DEFINITIONS", () => {
     "quiet-frame",
     "split-band",
   ]
+  const SHARED_CONTENT = FULL_CONTENT
   const FULL_ENDING = [
     "masthead-ending",
     "constellation-ending",
@@ -176,7 +178,7 @@ describe("THEME_DEFINITIONS", () => {
     "tone-adaptive-ending",
     "fashion-ending",
   ]
-  it("W4 全集放开基线：chapter/ending stay full except wave-8 batch-1 and batch-2 locks. content is full except lecture/luxe/consulting", () => {
+  it("W4 全集放开基线：consulting 的 gauge 脸是 pinOnly，共享池不吸收它们", () => {
     expect(__fullLayoutSet("cover")).toEqual(FULL_COVER)
     expect(__fullLayoutSet("content")).toEqual(FULL_CONTENT)
     const NARROWED_CONTENT = new Set(["lecture", "luxe", "consulting"])
@@ -213,13 +215,13 @@ describe("THEME_DEFINITIONS", () => {
         expect(THEME_DEFINITIONS[id].layouts.ending, `${id}.ending`).toEqual(FULL_ENDING)
       }
       if (!NARROWED_CONTENT.has(id)) {
-        expect(THEME_DEFINITIONS[id].layouts.content, `${id}.content`).toEqual(FULL_CONTENT)
+        expect(THEME_DEFINITIONS[id].layouts.content, `${id}.content`).toEqual(SHARED_CONTENT)
       }
     }
     expect(THEME_DEFINITIONS.lecture.layouts.content).toEqual(FRAMED_CONTENT)
     expect(THEME_DEFINITIONS.luxe.layouts.content).toEqual(FRAMED_CONTENT)
     expect(THEME_DEFINITIONS.consulting.layouts.content).toEqual(CONSULTING_CONTENT)
-    expect(THEME_DEFINITIONS.playbill.layouts.content).toEqual(FULL_CONTENT)
+    expect(THEME_DEFINITIONS.playbill.layouts.content).toEqual(SHARED_CONTENT)
     expect(THEME_DEFINITIONS.insight.motif).toBe("poster-motif")
     expect(THEME_DEFINITIONS.academic.motif).toBe("rail-motif")
     expect(THEME_DEFINITIONS.tech.motif).toBe("constellation-motif")
@@ -271,9 +273,22 @@ describe("THEME_DEFINITIONS", () => {
   })
 
   it("board-cover-restore wave 1: nine themes lock layouts.cover to the board face", () => {
-    expect(THEME_DEFINITIONS.consulting.layouts.cover).toEqual(["verdict-index"])
-    expect(THEME_DEFINITIONS.consulting.layoutTendencies?.cover).toEqual(["verdict-index"])
-    expect(THEME_DEFINITIONS.consulting.motif).toBe("banner-motif")
+    expect(THEME_DEFINITIONS.consulting.layouts).toEqual({
+      cover: ["gauge-verdict"],
+      chapter: ["gauge-section"],
+      content: CONSULTING_CONTENT,
+      ending: ["gauge-next"],
+    })
+    // Tendency is a soft weight, not the pool. content leans on the gauge
+    // face while the nine shared ids stay reachable, so the two are equal on
+    // the locked page types only.
+    expect(THEME_DEFINITIONS.consulting.layoutTendencies).toEqual({
+      cover: ["gauge-verdict"],
+      chapter: ["gauge-section"],
+      content: ["gauge-stats"],
+      ending: ["gauge-next"],
+    })
+    expect(THEME_DEFINITIONS.consulting.motif).toBe("gauge-motif")
 
     expect(THEME_DEFINITIONS.classroom.layouts.cover).toEqual(["chalk-band-cover"])
     expect(THEME_DEFINITIONS.classroom.motif).toBe("classroom-motif")

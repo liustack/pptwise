@@ -160,7 +160,7 @@ function anyHasDescription(component: CycleComponent): boolean {
  * safe over-approximation, same posture flowchart.tsx's own `fitScale`
  * takes with flowchart's fitScale on the layered layout's width/height.
  */
-function resolveGeometry(component: CycleComponent, w: number): CycleGeometry {
+function resolveGeometry(component: CycleComponent, w: number, maxHeight = MAX_CYCLE_HEIGHT): CycleGeometry {
   const n = component.items.length
   const ringR = ringRadius(n)
   const hasTitle = !!component.title?.trim()
@@ -169,7 +169,7 @@ function resolveGeometry(component: CycleComponent, w: number): CycleGeometry {
   const halfExtent = ringR + NODE_R + (hasDesc ? GAP_NODE_DESC + Math.max(DESC_W, descBlockH) : 0)
   const localWidth = 2 * halfExtent
   const localHeight = 2 * halfExtent + (hasTitle ? TITLE_BAND : 0)
-  const scale = Math.min(w / localWidth, MAX_CYCLE_HEIGHT / localHeight, MAX_UPSCALE)
+  const scale = Math.min(w / localWidth, maxHeight / localHeight, MAX_UPSCALE)
   return {
     n,
     ringR,
@@ -222,7 +222,7 @@ function measureDefault(component: CycleComponent, w: number): number {
 }
 
 function renderDefault(component: CycleComponent, box: ComponentBox, ctx: ComponentCtx): ReactElement {
-    const g = resolveGeometry(component, box.w)
+    const g = resolveGeometry(component, box.w, box.h ?? MAX_CYCLE_HEIGHT)
     const { n, ringR, scale } = g
     // Horizontal centering, same idiom as flowchart.tsx's `dx`: the local
     // footprint is a fixed square regardless of box width, so a wide

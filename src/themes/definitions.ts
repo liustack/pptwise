@@ -34,8 +34,10 @@ export interface ThemeDefinition {
    * （`src/svg/ink.ts`）的根因修复全部撤销。fix round 自身新发现的两处
    * （classroom/heritage 的 chapter 排除 fashion-chapter）也已在
    * post-v0.3 W8 fix round 随 `readableOn` 两墨实测对比度取优的根因修复一并
-   * 撤销（backlog item 2）——十三主题四页型现在均为不折不扣的全集，无任何
-   * 排除残留。页型空集 = 该页型回落调用侧兜底（十三主题四页型均非空，
+   * 撤销（backlog item 2）。2026-08-25 新增的 consulting 私有
+   * `gauge-stats` 只进入 consulting 的显式锁和注册主题的缺省全集，不进入
+   * 其他内置主题的共享 content 池，避免一次主题重构重排别家的自动选型。
+   * 页型空集 = 该页型回落调用侧兜底（内置主题四页型均非空，
    * `definitions.test.ts` 锁死）。id 是通用 string（不再按页型区分
    * layout id 联合类型）。
    */
@@ -156,12 +158,28 @@ export function __fullLayoutSet(slideType: Slide["type"]): readonly string[] {
   return fullLayoutSet(slideType)
 }
 
-/** The full-set default for every slide type (W4) — one registry walk, shared by every builtin theme below and by `registerTheme`'s own per-slide-type default. */
-const FULL_LAYOUTS: Record<Slide["type"], readonly string[]> = {
+/**
+ * Registry-wide defaults used by custom themes that omit `layouts`.
+ * Consulting's gauge layouts remain visible here because an explicitly
+ * registered theme may opt into the complete auto-selectable registry.
+ */
+const REGISTERED_THEME_DEFAULT_LAYOUTS: Record<Slide["type"], readonly string[]> = {
   cover: fullLayoutSet("cover"),
   chapter: fullLayoutSet("chapter"),
   content: fullLayoutSet("content"),
   ending: fullLayoutSet("ending"),
+}
+
+/**
+ * Shared builtin baseline. `gauge-stats` is a consulting-specific content
+ * face, so registry growth must not silently widen and reshuffle every other
+ * builtin theme. Consulting opts into it through its explicit singleton lock.
+ */
+const FULL_LAYOUTS: Record<Slide["type"], readonly string[]> = {
+  cover: REGISTERED_THEME_DEFAULT_LAYOUTS.cover,
+  chapter: REGISTERED_THEME_DEFAULT_LAYOUTS.chapter,
+  content: REGISTERED_THEME_DEFAULT_LAYOUTS.content.filter((id) => id !== "gauge-stats"),
+  ending: REGISTERED_THEME_DEFAULT_LAYOUTS.ending,
 }
 
 /**
@@ -180,27 +198,6 @@ const FRAMED_CONTENT_LAYOUTS: readonly string[] = [
   "tone-adaptive-content",
   "asymmetric-triptych",
   "quiet-frame",
-]
-
-/**
- * Gallery r2 E22: consulting used an explicit named list so it would not
- * sample `side-highlight` (its 176px primary chrome reads as a right
- * vertical card). That id is now globally retired, and `banner-heading`
- * is too. The named list stays (do not switch consulting back to
- * `FULL_LAYOUTS.content`). Playbill keeps the full auto content pool.
- * consulting's content tendencies (`split-band` / `stacked-poster`) stay
- * inside this set.
- */
-const CONSULTING_CONTENT_LAYOUTS: readonly string[] = [
-  "narrow-column",
-  "two-column",
-  "rail-numbered",
-  "stacked-poster",
-  "bento-panel",
-  "tone-adaptive-content",
-  "asymmetric-triptych",
-  "quiet-frame",
-  "split-band",
 ]
 
 /**
@@ -291,6 +288,22 @@ const BRANDS: Partial<Record<CanonicalThemeId, BrandConfig>> = {
  * 主题的 content 仍是全集。
  */
 /**
+ * consulting 自己的内容名单（gallery r2 E22 起）。量规重构把 `gauge-stats`
+ * 加在它前面，而不是取代它：内容池塌成单张会让每一页长成一个样。
+ */
+const CONSULTING_CONTENT_LAYOUTS: readonly string[] = [
+  "narrow-column",
+  "two-column",
+  "rail-numbered",
+  "stacked-poster",
+  "bento-panel",
+  "tone-adaptive-content",
+  "asymmetric-triptych",
+  "quiet-frame",
+  "split-band",
+]
+
+/**
  * classroom 自己的结构身份（theme-structure-allocation wave）。四轴是
  * heading-axis 左 / meta top-band / decor medium / whitespace medium。
  * 产品口径 24 套主题、24 个 id，classroom 独占这一行。
@@ -355,84 +368,22 @@ const CLASSROOM_LAYOUTS: ThemeDefinition["layouts"] = {
  */
 const LAYOUTS: Record<CanonicalThemeId, Pick<ThemeDefinition, "layouts" | "motif" | "layoutTendencies">> = {
   consulting: {
-    layouts: { cover: ["verdict-index"], chapter: ["ghost-rule-chapter"], content: CONSULTING_CONTENT_LAYOUTS, ending: ["action-pad-ending"] },
-    motif: "banner-motif",
-    // Theme-structure wave, task T2: consulting's own motif is
-    // `banner-motif`, and `banner-title`/`banner-chapter`/`banner-ending`
-    // are verbatim extractions of consulting's own predecessor render code
-    // (`MckinseyNavyCover`/`Chapter`/`Ending`, see each layout file's own
-    // header) — this is the theme's native "assertion banner" register, not
-    // a borrowed one.
-    //
-    // Declaration-rebalance wave (`.issues/2026-08-03-declaration-rebalance/plan.md`,
-    // 裁定 1-2): cover and ending were both dead under the default `briefing`
-    // strategy — `banner-title`/`banner-ending` are each already members of
-    // `briefing.identityTendencies` (`@/narrative`'s `STRATEGY_DEFINITIONS`),
-    // so `Math.max(strategyWeight, themeWeight)` never exceeded the
-    // strategy-only weight (max(3,3)=3) and these two axes read identically
-    // to an undeclared theme under the deck's own default narrative. Native
-    // ids kept (still real, historically-honest register for the other 4
-    // strategies); a second, honest id appended to each dead axis instead of
-    // a swap, per 裁定 1.
-    //
-    // - cover `left-anchor` (read `cover-left-anchor.tsx`, not just its id):
-    //   40%-width primary color block carries the heading, with the org
-    //   kicker, confidentiality badge, italic subheading, and an explicit
-    //   author/date/version meta row on the right panel — the same formal
-    //   "state the point, then the paper trail" report-cover convention
-    //   `banner-title` itself already uses, just with the assertion moved
-    //   into a color block instead of a banner rule. Not in
-    //   `briefing.identityTendencies.cover` (`["banner-title",
-    //   "poster-center"]`), so it's the theme's first real cover pull under
-    //   the default strategy.
-    // - ending `rail-ending` (read `ending-rail-ending.tsx`): corner
-    //   color-block accents + a heading + an explicit hairline-separated
-    //   "Contact" section + copyright — `pyramid.identityTendencies.ending`'s
-    //   own doc comment already calls this id out as reading "like a
-    //   report's closing page, not a sentimental goodbye", which is
-    //   consulting's own register verbatim.
-    // - ending `tone-adaptive-ending` (read `ending-tone-adaptive-ending.tsx`):
-    //   left-aligned heading, a divider, "Contact" + copyright, zero
-    //   ornament — the pool's "万金油" ending (`@/narrative`'s own doc
-    //   comment: never a member of any strategy's `identityTendencies`), and
-    //   the plainest possible closing register, matching consulting's own
-    //   restrained-report character.
-    //
-    // Real-pull verification (direct `resolveLayoutId` sweep, same
-    // technique the themes-16 wave's T2/T3 reviewers used, against this
-    // repo's `theme-structure.test.ts` fixture at seed=1, strategy
-    // `briefing`): a *single* appended id on `ending` cannot fix it — every
-    // valid candidate is base-weight 1 before the append and
-    // `TENDENCY_WEIGHT`(3) after, so any single append moves
-    // `weightedPickBySeed`'s modulus from 11 to 13 *regardless of which id
-    // was appended* (`variety.ts`'s `target = hash % totalWeight`) — the
-    // fixed hash for this fixture's `ending-layout:6` salt then lands in
-    // exactly one of two possible buckets no matter the choice, and both of
-    // those buckets were already occupied byte-for-byte by academic's and
-    // runway's own pre-existing sequences (see git blame on this comment for
-    // the full derivation — recorded once here, not per-line). A second
-    // appended id (modulus 15) opens a third, previously-unreachable bucket:
-    // `[banner-ending, rail-ending, tone-adaptive-ending]` resolves to
-    // `tone-adaptive-ending` at this fixture/seed, distinct from every other
-    // theme. `ThemeDefinition.layoutTendencies`'s own doc comment already
-    // notes a theme axis using more than one id is legal, just unused before
-    // this wave ("主题层至今只用 1 个是习惯不是约束").
-    //
-    // Second-front wave (2026-08-22): 断言横幅是 consulting 的母语，chapter
-    // 与 content 都从这句话延长出去。四轴 L / bottom-left / light / medium。
-    // - chapter `poster-chapter` 追加：左对齐巨幅序号 + 800 字重标题 + 两条
-    //   细线 + 右上机构名，就是同一份报告的分节页，左轴那一档的另一张脸。
-    //   不在 `briefing.identityTendencies.chapter` 里，真实边际权重。
-    // - content `stacked-poster` + `split-band`：`banner-heading` 退订后，
-    //   断言横幅这档改由 heading treatments 承担标题脸，`split-band` 仍是
-    //   同一句断言横过来占满页宽的全出血头带。`stacked-poster` 是留下的
-    //   海报级单点强调，不在 `briefing` 的 content 偏好里，真实边际权重。
-    // - ending 三元集不动（declaration-rebalance wave 的成果）。
+    // 量规重构给封面、章节、结尾各锁一张新脸。内容页把 gauge-stats 加在
+    // consulting 原有的九个之前，而不是取代它们：塌成单张会让所有内容页
+    // 长成一个样，种子选型的多样性直接消失。gauge-stats 与 gauge-point
+    // 都是 pinOnly，靠这里显式列出才可达，因此不会进别家的共享池。
+    layouts: {
+      cover: ["gauge-verdict"],
+      chapter: ["gauge-section"],
+      content: ["gauge-stats", ...CONSULTING_CONTENT_LAYOUTS],
+      ending: ["gauge-next"],
+    },
+    motif: "gauge-motif",
     layoutTendencies: {
-      cover: ["verdict-index"],
-      chapter: ["ghost-rule-chapter"],
-      content: ["two-column", "split-band", "stacked-poster"],
-      ending: ["action-pad-ending"],
+      cover: ["gauge-verdict"],
+      chapter: ["gauge-section"],
+      content: ["gauge-stats"],
+      ending: ["gauge-next"],
     },
   },
   insight: {
@@ -1418,7 +1369,7 @@ export type ThemeRegistration = Omit<ThemeDefinition, "layouts"> & {
  *   must have at least one layout id that is both registered in
  *   `LAYOUT_REGISTRY` and valid for that slide type (the same registry
  *   `resolveLayoutId`/`FullSlideSvg` select from. A theme never ships
- *   new render code, only a curated subset of the existing 113 standard
+ *   new render code, only a curated subset of the existing 118 standard
  *   layouts, per `docs/architecture.md`'s "Adding a theme" section. An
  *   *explicit* empty array for a slide type still fails this check (the
  *   default only kicks in when the key — or `layouts` itself — is omitted
@@ -1454,7 +1405,7 @@ export function registerTheme(def: ThemeRegistration): void {
   assertContrastFloor(def.id, def.style)
   const layouts = {} as Record<Slide["type"], readonly string[]>
   for (const slideType of REGISTERABLE_SLIDE_TYPES) {
-    const ids = def.layouts?.[slideType] ?? FULL_LAYOUTS[slideType]
+    const ids = def.layouts?.[slideType] ?? REGISTERED_THEME_DEFAULT_LAYOUTS[slideType]
     if (ids.length === 0) {
       throw new PptwiseError(`theme "${def.id}" must declare at least one layout for "${slideType}" slides`)
     }

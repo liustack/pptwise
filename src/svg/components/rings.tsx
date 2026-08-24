@@ -17,9 +17,10 @@ const LABEL_GAP = 40
 const DESC_SIZE = 16
 const LABEL_SIZE = 17
 
-function geometry(component: RingsComponent, w: number) {
+function geometry(component: RingsComponent, w: number, maxH?: number) {
   const n = component.items.length
-  const h = H_PER_RING[n] ?? 340
+  const naturalH = H_PER_RING[n] ?? 340
+  const h = Math.min(naturalH, maxH ?? Number.POSITIVE_INFINITY)
   const maxR = h / 2 - PAD
   const cx = maxR + PAD
   const cy = h / 2
@@ -36,7 +37,7 @@ export const rings: SvgComponent<RingsComponent> = {
     return geometry(component, _w).h
   },
   render(component, box, ctx) {
-    const { n, cx, cy, radii, textX, textW, h } = geometry(component, box.w)
+    const { n, cx, cy, radii, textX, textW, h } = geometry(component, box.w, box.h)
     // 标注行从上往下 = 外层环到内核（外环在页面上方更外侧，读序自然）
     const rowStep = n > 1 ? (h - 2 * PAD - 56) / (n - 1) : 0
     return (

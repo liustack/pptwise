@@ -44,7 +44,7 @@ describe("LAYOUT_REGISTRY completeness (layout ids)", () => {
     }
   }
 
-  it("has exactly 113 layout-kind entries, all traceable to one of the four real registries", () => {
+  it("has exactly 118 layout-kind entries, all traceable to one of the four real registries", () => {
     const knownIds = new Set([
       ...Object.keys(COVER_LAYOUTS),
       ...Object.keys(CHAPTER_LAYOUTS),
@@ -54,7 +54,9 @@ describe("LAYOUT_REGISTRY completeness (layout ids)", () => {
     const layoutEntries = Object.values(LAYOUT_REGISTRY).filter((e) => e.kind === "archetype")
     // Wave 8 batch 4: +6 chapter +6 ending pinOnly faces, 102 -> 114.
     // banner-heading retired: 114 -> 113.
-    expect(layoutEntries).toHaveLength(113)
+    // consulting gauge adds five pin-only faces: 113 -> 118. All five are
+    // theme-locked, so none of them joins the shared automatic pools.
+    expect(layoutEntries).toHaveLength(118)
     for (const entry of layoutEntries) {
       expect(knownIds.has(entry.id), `"${entry.id}" is not a real layout id`).toBe(true)
     }
@@ -104,6 +106,7 @@ describe("content family: body slot + declared arrangements", () => {
         // arguments. Empty components stay legal (capacity 1, zero drawn).
         if (
           id === "verdict-index" ||
+          id === "gauge-verdict" ||
           id === "action-pad-ending" ||
           id === "signoff-ending" ||
           id === "pill-cta-ending" ||
@@ -115,7 +118,8 @@ describe("content family: body slot + declared arrangements", () => {
           id === "care-plan-ending" ||
           id === "next-lecture-ending" ||
           id === "resolution-ending" ||
-          id === "decision-close-ending"
+          id === "decision-close-ending" ||
+          id === "gauge-next"
         ) {
           expect(entry.slots.some((s) => s.name === "body")).toBe(true)
           expect(entry.arrangements).toBeUndefined()
@@ -185,7 +189,8 @@ describe("capacity metadata: only where the inventory gives hard numbers", () =>
         id === "pull-quote" ||
         id === "stat-hero" ||
         id === "one-evidence" ||
-        id === "mono-bleed"
+        id === "mono-bleed" ||
+        id === "gauge-point"
       )
         continue
       const body = LAYOUT_REGISTRY[id].slots.find((s) => s.name === "body")
@@ -201,6 +206,10 @@ describe("capacity metadata: only where the inventory gives hard numbers", () =>
   it("statement and pull-quote body slots carry capacity 1 (editorial-verse wave — attribution/prose annotation, not a geometric flat-default)", () => {
     expect(LAYOUT_REGISTRY["statement"].slots.find((s) => s.name === "body")?.capacity).toBe(1)
     expect(LAYOUT_REGISTRY["pull-quote"].slots.find((s) => s.name === "body")?.capacity).toBe(1)
+  })
+
+  it("gauge-point carries one attribution component", () => {
+    expect(LAYOUT_REGISTRY["gauge-point"].slots.find((s) => s.name === "body")?.capacity).toBe(1)
   })
 
   it("speech-layout body capacities: stat-hero 1, one-evidence 1, mono-bleed 0", () => {
@@ -229,20 +238,19 @@ describe("layoutsForSlideType", () => {
     for (const l of covers) expect(l.slideTypes).toContain("cover")
   })
 
-  it("cover, chapter, and ending expose 34, 33, and 31 registered layouts with no takeovers", () => {
-    // The shared automatic pools remain 19, 8, and 7. Theme redesign waves
-    // added pin-only board faces without widening those pools.
-    expect(layoutsForSlideType("cover")).toHaveLength(34)
+  it("cover, chapter, and ending expose 35, 34, and 32 registered layouts with no takeovers", () => {
+    // The shared automatic pools are unchanged by the gauge family: 19, 8, 7.
+    expect(layoutsForSlideType("cover")).toHaveLength(35)
     // Wave 8 batch 4: +6 chapter +6 ending pinOnly faces.
-    expect(layoutsForSlideType("chapter")).toHaveLength(33)
-    expect(layoutsForSlideType("ending")).toHaveLength(31)
+    expect(layoutsForSlideType("chapter")).toHaveLength(34)
+    expect(layoutsForSlideType("ending")).toHaveLength(32)
   })
 
-  it("content includes both the 15 layouts and the 4 takeovers (banner-heading retired, 16 -> 15, after side-highlight 17 -> 16)", () => {
+  it("content includes both the 17 layouts and the 4 takeovers", () => {
     const contents = layoutsForSlideType("content")
-    expect(contents.filter((l) => l.kind === "archetype")).toHaveLength(15)
+    expect(contents.filter((l) => l.kind === "archetype")).toHaveLength(17)
     expect(contents.filter((l) => l.kind === "takeover")).toHaveLength(4)
-    expect(contents).toHaveLength(19)
+    expect(contents).toHaveLength(21)
   })
 })
 
@@ -387,6 +395,11 @@ describe("excludePinOnly (quote-stage wave, task T1's pinOnly tier)", () => {
       "decision-close-ending",
       "ticket-cta-ending",
       "exit-word-ending",
+      "gauge-verdict",
+      "gauge-section",
+      "gauge-stats",
+      "gauge-point",
+      "gauge-next",
     ])
     for (const def of Object.values(LAYOUT_REGISTRY)) {
       if (pinOnlyIds.has(def.id)) {
@@ -406,6 +419,7 @@ describe("layout branding declaration (editorial-verse wave)", () => {
     expect(layoutOmitsBranding("stat-hero")).toBe(true)
     expect(layoutOmitsBranding("one-evidence")).toBe(true)
     expect(layoutOmitsBranding("mono-bleed")).toBe(true)
+    expect(layoutOmitsBranding("gauge-point")).toBe(true)
     expect(layoutOmitsBranding("quote-stage")).toBe(false)
     expect(layoutOmitsBranding("two-column")).toBe(false)
     expect(layoutOmitsBranding(undefined)).toBe(false)
@@ -476,6 +490,11 @@ describe("layout branding declaration (editorial-verse wave)", () => {
       "decision-close-ending",
       "ticket-cta-ending",
       "exit-word-ending",
+      "gauge-verdict",
+      "gauge-section",
+      "gauge-stats",
+      "gauge-point",
+      "gauge-next",
     ] as const) {
       expect(LAYOUT_REGISTRY[id].branding, id).toBe("none")
     }
@@ -546,6 +565,15 @@ describe("layout branding declaration (editorial-verse wave)", () => {
       "decision-close-ending",
       "ticket-cta-ending",
       "exit-word-ending",
+      "gauge-verdict",
+      "gauge-section",
+      "gauge-stats",
+      "gauge-verdict",
+      "gauge-section",
+      "gauge-stats",
+      "gauge-point",
+      "gauge-next",
+      "gauge-next",
     ])
     for (const def of Object.values(LAYOUT_REGISTRY)) {
       if (brandingNone.has(def.id)) continue

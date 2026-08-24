@@ -144,7 +144,10 @@ describe("layout-declared branding:none (editorial-verse wave)", () => {
 })
 
 describe("pinOnly auto-pool: editorial-verse ids never enter selection", () => {
+  // consulting keeps its own nine shared faces and puts the gauge face first.
+  // Collapsing the pool to one id would make every content page identical.
   const AUTO_CONTENT = [
+    "gauge-stats",
     "narrow-column",
     "two-column",
     "rail-numbered",
@@ -156,7 +159,7 @@ describe("pinOnly auto-pool: editorial-verse ids never enter selection", () => {
     "split-band",
   ]
 
-  it("consulting's auto content pool is the 9-id set, and no built-in theme lists a pinOnly editorial-verse id", () => {
+  it("consulting auto-locks gauge-stats, and no built-in theme lists a pinOnly sparse id", () => {
     expect([...THEME_DEFINITIONS.consulting.layouts.content]).toEqual(AUTO_CONTENT)
     for (const id of BUILTIN_THEME_IDS) {
       expect(THEME_DEFINITIONS[id].layouts.content, id).not.toContain("statement")
@@ -165,6 +168,7 @@ describe("pinOnly auto-pool: editorial-verse ids never enter selection", () => {
       expect(THEME_DEFINITIONS[id].layouts.content, id).not.toContain("stat-hero")
       expect(THEME_DEFINITIONS[id].layouts.content, id).not.toContain("one-evidence")
       expect(THEME_DEFINITIONS[id].layouts.content, id).not.toContain("mono-bleed")
+      expect(THEME_DEFINITIONS[id].layouts.content, id).not.toContain("gauge-point")
       expect(THEME_DEFINITIONS[id].layouts.chapter, id).not.toContain("verse-chapter")
     }
   })
@@ -197,14 +201,17 @@ describe("pinOnly auto-pool: editorial-verse ids never enter selection", () => {
       slides,
     } as PptxIR
     const ids = slides.map((slide, i) => resolveEffectiveLayoutId(doc, slide, i))
+    // Identity pages are board-locked to the gauge faces. Content pages still
+    // sample consulting's ten-id pool (gauge-stats weighted by tendency), so
+    // one deck does not render three identical content pages.
     expect(ids).toEqual([
-      "verdict-index",
-      "ghost-rule-chapter",
-      "rail-numbered",
-      "two-column",
-      "ghost-rule-chapter",
+      "gauge-verdict",
+      "gauge-section",
+      "tone-adaptive-content",
       "split-band",
-      "action-pad-ending",
+      "gauge-section",
+      "rail-numbered",
+      "gauge-next",
     ])
     const identityTypes = new Set(["cover", "chapter", "ending"])
     for (let i = 0; i < ids.length; i++) {

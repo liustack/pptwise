@@ -92,7 +92,12 @@ interface StepItemTextLayout {
 // `.title`) can omit it — `title.fontSize` never feeds `StepsComponent`'s
 // own `measure()` height, only its own rendered width, so the measure/render
 // phases can't disagree over it.
-function layoutStepItem(item: StepItem, contentW: number, fontFamily?: string): StepItemTextLayout {
+function layoutStepItem(
+  item: StepItem,
+  contentW: number,
+  fontFamily?: string,
+  textMaxLines = TEXT_MAX_LINES,
+): StepItemTextLayout {
   const title = fitSvgLine(item.title, {
     maxWidth: contentW,
     fontSize: TITLE_FONT_SIZE,
@@ -103,7 +108,7 @@ function layoutStepItem(item: StepItem, contentW: number, fontFamily?: string): 
   const wrapped = layoutSvgText(item.text, {
     maxWidth: contentW,
     fontSize: TEXT_FONT_SIZE,
-    maxLines: TEXT_MAX_LINES,
+    maxLines: textMaxLines,
     lineHeightRatio: TEXT_LINE_HEIGHT_RATIO,
   })
   const maxUnits = contentW / wrapped.fontSize
@@ -256,20 +261,33 @@ function needsVerticalLayout(n: number, w: number): boolean {
 /** Row height (title + gap + tallest text) shared by all rows — mirrors
  * horizontal mode's "tallest card wins" convention (`cardGeometry`'s
  * `Math.max`), applied to rows instead of cards. */
-function verticalRowGeometry(component: StepsComponent, w: number) {
+function verticalRowGeometry(
+  component: StepsComponent,
+  w: number,
+  textMaxLines = TEXT_MAX_LINES,
+  titleTextGap = GAP_TITLE_TEXT_VERTICAL,
+  rowGap = ROW_GAP,
+) {
   const contentW = Math.max(1, w - TEXT_X_VERTICAL)
   const rowH =
     Math.max(
       ...component.items.map((item) => {
-        const { text } = layoutStepItem(item, contentW)
-        return TITLE_LINE_HEIGHT + GAP_TITLE_TEXT_VERTICAL + text.lines.length * text.lineHeight
+        const { text } = layoutStepItem(item, contentW, undefined, textMaxLines)
+        return TITLE_LINE_HEIGHT + titleTextGap + text.lines.length * text.lineHeight
       }),
-    ) + ROW_GAP
+    ) + rowGap
   return { contentW, rowH }
 }
 
 function renderVertical(component: StepsComponent, box: ComponentBox, ctx: ComponentCtx): React.ReactElement {
-  const { contentW, rowH } = verticalRowGeometry(component, box.w)
+  const natural = verticalRowGeometry(component, box.w)
+  const compact = box.h != null && component.items.length * natural.rowH > box.h
+  const textMaxLines = compact ? 1 : TEXT_MAX_LINES
+  const titleTextGap = compact ? 8 : GAP_TITLE_TEXT_VERTICAL
+  const rowGap = compact ? 6 : ROW_GAP
+  const { contentW, rowH } = compact
+    ? verticalRowGeometry(component, box.w, textMaxLines, titleTextGap, rowGap)
+    : natural
   const badgeCx = PAD_X + BADGE_R
   const badgeCy = (i: number) => i * rowH + TITLE_LINE_HEIGHT / 2
 
@@ -290,9 +308,9 @@ function renderVertical(component: StepsComponent, box: ComponentBox, ctx: Compo
       ))}
       {component.items.map((item, i) => {
         const rowTop = i * rowH
-        const { title, text } = layoutStepItem(item, contentW, ctx.fonts.heading)
+        const { title, text } = layoutStepItem(item, contentW, ctx.fonts.heading, textMaxLines)
         const titleBaselineY = rowTop + TITLE_FONT_SIZE
-        const textTopY = rowTop + TITLE_LINE_HEIGHT + GAP_TITLE_TEXT_VERTICAL
+        const textTopY = rowTop + TITLE_LINE_HEIGHT + titleTextGap
         return (
           <g key={i} data-audit-box={`${box.x},${box.y + rowTop},${box.w}`}>
             {renderBadge(badgeCx, badgeCy(i), i + 1, ctx)}

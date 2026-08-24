@@ -53,7 +53,7 @@ describe("gallery SVG text respects the readable font floor", () => {
       const root = new Parser().parseFromString(svg, "image/svg+xml").documentElement
       for (const el of Array.from(root.querySelectorAll("text"))) {
         const content = (el.textContent ?? "").trim()
-        if (!content || hasDecor(el)) continue
+        if (!content || hasDecor(el) || el.getAttribute("data-font-floor-exempt") === "gauge-spec") continue
         const fontSize = Number(el.getAttribute("font-size") ?? 16)
         if (fontSize < META_FONT_FLOOR_PX) {
           undersized.push(

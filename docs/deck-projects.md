@@ -48,14 +48,14 @@ A spec page with no matching `pages/<id>.json` file assembles into `{ placeholde
 
 ## Boundary-page render surface
 
-`PageContent` above is the same shape for every page type, but not every field it allows is actually drawn onto the canvas by every type. `footnote` never renders on a `cover`, `chapter`, or `ending` page. `components` follow the knowable layout's slots, not a type-level ban: `verdict-index` declares a `body` slot that accepts `bullets`, so a consulting cover (that layout is the lock) may carry one bullets block. A layout with no matching slot, or a page type whose pool has more than one id so the face is not knowable at validate time, still hard-rejects. `validate` is `checkBoundaryPageContent` in `src/validate-core.ts`. Before that gate existed, stray fields were silently dropped at render with no signal anywhere.
+`PageContent` above is the same shape for every page type, but not every field it allows is actually drawn onto the canvas by every type. `footnote` never renders on a `cover`, `chapter`, or `ending` page. `components` follow the knowable layout's slots, not a type-level ban: `verdict-index` and `gauge-verdict` declare a `body` slot that accepts `bullets`, so a locked cover may carry one bullets block when it uses either layout. A layout with no matching slot, or a page type whose pool has more than one id so the face is not knowable at validate time, still hard-rejects. `validate` is `checkBoundaryPageContent` in `src/validate-core.ts`. Before that gate existed, stray fields were silently dropped at render with no signal anywhere.
 
 | type | heading | subheading | components | footnote |
 |---|---|---|---|---|
-| `cover` | always | 28/34 layouts | `verdict-index` body accepts `bullets`. the other 33 cover layouts do not | never |
-| `chapter` | always | 29/33 layouts | 0/33 layouts | never |
-| `content` | always | 12/15 standard layouts, 3/4 image takeovers | 14/15 standard layouts, 4/4 takeovers | not `two-column` among the auto-selectable set, 0/4 takeovers |
-| `ending` | always | 27/31 layouts | 12/31 board-lock layouts declare a body slot | never |
+| `cover` | always | 29/35 layouts | `verdict-index` and `gauge-verdict` accept `bullets`. the other 33 cover layouts do not | never |
+| `chapter` | always | 30/34 layouts | 0/34 layouts | never |
+| `content` | always | 14/17 standard layouts, 3/4 image takeovers | 16/17 standard layouts, 4/4 takeovers | not `two-column` or `gauge-point`, 0/4 takeovers |
+| `ending` | always | 28/32 layouts | 13/32 layouts declare a body slot | never |
 
 `subheading` is deliberately not hard-gated on any type, on either side of the table — no type drops it on every layout, so a "this type never renders subheading" claim would be unsound and false-positive on the majority layout that does render it (this is also why `subheading` is absent from `checkBoundaryPageContent`'s rule despite being one of the fields the wave's benchmark evidence first suspected). `notes` sits outside this table entirely by design — speaker notes, never drawn onto the canvas SVG regardless of page type (see its docstring in `ir/index.ts`).
 

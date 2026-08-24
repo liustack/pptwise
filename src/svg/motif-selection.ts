@@ -48,7 +48,7 @@
  *
  * | theme | candidates (anchor first) | rationale |
  * |---|---|---|
- * | consulting | banner-motif, rail-motif, enterprise-motif | all three are quiet line/geometry marks with zero organic curve or saturated color — matches consulting's buttoned-up register; the wider organic/wash/bold-brush families are excluded outright, not merely under-weighted. Editorial-group reskin (2026-08-20): `banner-motif`'s own vocabulary changed from a faint line grid to three fixed annotation rules (a top hairline, a highlighter block, a page-number rule) — same quiet-line family, so this row's rationale still holds, but the *look* the two borrowers inherit is new. See `motifs/motif-banner-motif.tsx`. |
+ * | consulting | gauge-motif *(singleton)* | 2026-08-25 量规重构锁定左上定位角标。旧 banner-motif 保留给现有借用方，consulting 不再参与该候选。 |
  * | insight | poster-motif *(singleton)* | board-cover-restore wave 2 (2026-08-22): locked to the cover-board motif so gallery p01 cannot draw constellation's sibling glow. Ruling: built-in theme decoration is locked. |
  * | academic | rail-motif *(singleton)* | board-cover-restore wave 2 (2026-08-22): locked to the cover-board motif so gallery p01 cannot draw banner or journal's masthead rules. Ruling: built-in theme decoration is locked. |
  * | tech | constellation-motif *(singleton)* | board-cover-restore wave 2 (2026-08-22): locked to the cover-board motif so gallery p01 cannot draw poster ticker or enterprise's grid. Ruling: built-in theme decoration is locked. |
@@ -167,7 +167,7 @@ export const MOTIF_BASE_WEIGHT = 1
  * motif is `undefined` by settled design, nothing to rotate).
  */
 export const MOTIF_CANDIDATES: Partial<Record<CanonicalThemeId, readonly MotifId[]>> = {
-  consulting: ["banner-motif"],
+  consulting: ["gauge-motif"],
   insight: ["poster-motif"],
   academic: ["rail-motif"],
   tech: ["constellation-motif"],

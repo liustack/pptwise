@@ -19,11 +19,11 @@ describe("LAYOUT_REGISTRY count guard", () => {
   const definitions = Object.values(LAYOUT_REGISTRY)
 
   it("pins the registry, standard-layout, and takeover totals", () => {
-    expect(definitions, COUNT_DRIFT_MESSAGE).toHaveLength(117)
+    expect(definitions, COUNT_DRIFT_MESSAGE).toHaveLength(122)
     expect(
       definitions.filter((definition) => definition.kind === "archetype"),
       COUNT_DRIFT_MESSAGE,
-    ).toHaveLength(113)
+    ).toHaveLength(118)
     expect(
       definitions.filter((definition) => definition.kind === "takeover"),
       COUNT_DRIFT_MESSAGE,
@@ -34,7 +34,7 @@ describe("LAYOUT_REGISTRY count guard", () => {
     expect(
       definitions.filter((definition) => definition.pinOnly === true),
       COUNT_DRIFT_MESSAGE,
-    ).toHaveLength(70)
+    ).toHaveLength(75)
   })
 
   it("pins registered and auto-selectable totals by slide type", () => {
@@ -49,10 +49,10 @@ describe("LAYOUT_REGISTRY count guard", () => {
     )
 
     expect(counts, COUNT_DRIFT_MESSAGE).toEqual({
-      cover: { registered: 34, autoSelectable: 19 },
-      chapter: { registered: 33, autoSelectable: 8 },
-      ending: { registered: 31, autoSelectable: 7 },
-      content: { registered: 19, autoSelectable: 9 },
+      cover: { registered: 35, autoSelectable: 19 },
+      chapter: { registered: 34, autoSelectable: 8 },
+      ending: { registered: 32, autoSelectable: 7 },
+      content: { registered: 21, autoSelectable: 9 },
     })
   })
 })

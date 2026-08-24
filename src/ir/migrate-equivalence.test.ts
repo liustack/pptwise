@@ -934,6 +934,12 @@ describe("v3 → v4 migration equivalence (task 1 hard gate, spec §10/§12)", (
       // rail-numbered cap-dot removal, and stacked-poster strip divider
       // removal move consulting `basic` SVG/PPTX. Journal fixtures move
       // only where those layouts land. `.audit.json` stayed empty.
+      // Recaptured (consulting gauge, 2026-08-25). `basic` is the only
+      // consulting fixture. Its cover, chapter, and two content slides move
+      // to the new gauge locks. The ending keeps its explicit
+      // `banner-ending` pin and changes only because consulting now carries
+      // `gauge-motif`. All five SVG pages therefore change. The two journal
+      // fixtures stay byte-identical and were not recaptured.
       it("renders SVG byte-identical to the base-commit (pre-rename) capture, slide for slide", () => {
         const goldenSvgs = readGoldenJson<string[]>(`${name}.svg`)
         const migratedSvgs = v4.slides.map((_, i) => renderSlideSvg(v4, i))
@@ -1089,6 +1095,10 @@ describe("v3 → v4 migration equivalence (task 1 hard gate, spec §10/§12)", (
       //   - `annualReviewPreset` (`journal`): slides 2-3 content
       //     `stacked-poster` -> `narrow-column`, `tone-adaptive-content` ->
       //     `bento-panel`.
+      // Recaptured (consulting gauge, 2026-08-25). The five changed
+      // `basic` SVG pages map one-for-one to `ppt/slides/slide1.xml` through
+      // `slide5.xml`. The normalized part-name set remains unchanged.
+      // Journal fixtures remain byte-identical and were not recaptured.
       it("exports a PPTX byte-identical (docProps/core.xml timestamp excluded) to the base-commit capture", async () => {
         const goldenZipMap = readGoldenJson<Record<string, string>>(`${name}.pptx-zip`)
         const blob = await generatePptxBlob(v4)
@@ -1117,6 +1127,11 @@ describe("v3 → v4 migration equivalence (task 1 hard gate, spec §10/§12)", (
       // array — nothing else drifted. See `kpi.tsx`'s own `deltaColor`
       // comment and `full-matrix-contrast.test.ts`'s "defect B real
       // contrast fixes" sweep for the fix itself.
+      // Recaptured (consulting gauge, 2026-08-25). The legacy `basic`
+      // fixture has two KPI labels longer than the fixed gauge-stat columns.
+      // Its audit golden now records those two intentional truncation
+      // findings. The current `examples/basic.json` copy uses concise labels
+      // and remains clean. Both journal audit goldens stay unchanged.
       it("audits byte-identical findings to the base-commit (pre-rename) capture", () => {
         const goldenAudit = readGoldenJson<ReturnType<typeof auditDeck>>(`${name}.audit`)
         const migratedAudit = auditDeck(v4)

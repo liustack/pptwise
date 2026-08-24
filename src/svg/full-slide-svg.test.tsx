@@ -112,9 +112,9 @@ describe("FullSlideSvg", () => {
 
   it("enforces the shared contrast and saturation ceilings on final midground paint", () => {
     const slide: Slide = { type: "cover", heading: "封面", components: [] }
-    const doc: PptxIR = { ...ir([slide]), theme: { id: "consulting" } }
+    const doc: PptxIR = { ...ir([slide]), theme: { id: "campaign" } }
     const { container } = render(<FullSlideSvg ir={doc} slide={slide} index={0} />)
-    const tokens = resolveStyle("consulting")
+    const tokens = resolveStyle("campaign")
     const ground = resolveBackgroundHex(tokens.defaultBackgrounds.cover, tokens.colors.surface)
     const mid = container.querySelector('[data-depth="mid"]')!
     const leaves = paintedLeaves(mid).filter((leaf) => leafPaint(leaf) !== null)
@@ -696,11 +696,11 @@ describe("manifest 四页型分发泛化 (P2)", () => {
     expect(THEME_DEFINITIONS.journal.layouts.ending).toContain(id)
   })
 
-  it("motif 命中：Decor 优先取 THEME_DEFINITIONS 对应主题的 motif 对应的 MOTIFS 组件（consulting → banner-motif）", () => {
+  it("motif 命中：Decor 优先取 THEME_DEFINITIONS 对应主题的 motif 对应的 MOTIFS 组件（consulting → gauge-motif）", () => {
     // MOTIFS 是模块单例对象，spy 其上的属性能直接证明 FullSlideSvg
     // 内部确实调用了这张注册表（而不是巧合产出等价 markup——strangler 抽取
     // 本就要求新旧输出逐字节等价，纯 DOM diff 无法区分调用来源）。
-    const spy = vi.spyOn(MOTIFS, "banner-motif")
+    const spy = vi.spyOn(MOTIFS, "gauge-motif")
     const slide: Slide = { type: "cover", heading: "标题", components: [] } as Slide
     render(<FullSlideSvg ir={mkIr("consulting", slide)} slide={slide} index={0} />)
     expect(spy).toHaveBeenCalled()

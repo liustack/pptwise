@@ -99,7 +99,10 @@ export const imageCompare: SvgComponent<ImageCompareComponent> = {
     return imageAreaH(w) + LABEL_H
   },
   render(component, box, ctx) {
-    const h = imageAreaH(box.w)
+    const h = Math.min(
+      imageAreaH(box.w),
+      Math.max(1, (box.h ?? Number.POSITIVE_INFINITY) - LABEL_H),
+    )
     const half = Math.floor((box.w - GAP) / 2)
     const isVs = (component.style ?? "vs") === "vs"
     return (
