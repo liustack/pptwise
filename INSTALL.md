@@ -1,9 +1,18 @@
 # Installing pptwise (for an AI agent)
 
 You are an AI agent and your user told you to install `pptwise`. This document
-is the procedure. Follow it in order. Every step is safe to run again, and
-every step names what to do when it fails. Commands are POSIX shell (macOS or
-Linux). A Windows note follows each block that needs one.
+is the procedure for every harness that reads a **skill folder**: Claude Code,
+Codex, Grok CLI, and friends. Follow it in order.
+
+On **DeepSeek Harness (dsh)** pptwise is a native plugin instead, and that
+install lives in its own file, [`INSTALL-dsh.md`](./INSTALL-dsh.md). Do not try
+to work out which harness you are in: whoever handed you this file already
+decided that. If your user says they are on dsh, ask them for that file rather
+than guessing your way through this one.
+
+Every step is safe to run again, and every step names what to do when it
+fails. Commands are POSIX shell (macOS or Linux). A Windows note follows each
+block that needs one.
 
 There is nothing to configure to render a PPTX. pptwise renders entirely
 locally: no API key, no account, no engine to set up, no network calls at
@@ -11,42 +20,7 @@ render time. Optional stock-photo search (`pptwise images search`) needs the
 user's own Pexels key (`pptwise config set pexels.apiKey`). The only
 prerequisite is Node 22.19+ (or Bun).
 
-## Step 0: are you inside DeepSeek Harness (dsh)?
-
-If you are, stop and read this section instead of the rest of the file. On dsh
-pptwise is not a skill folder: it is a native plugin, and copying the skill
-folder there leaves the user without the plugin card and without the CLI that
-ships inside it.
-
-You are on dsh if `~/.dsh/` exists, or the conversation runs in the DeepSeek
-Harness web or desktop app. One command installs the plugin:
-
-```sh
-npx -y @deepseek-ai/dsh plugin --profile web add @liustack/pptwise@0.22.0
-```
-
-The version is named on purpose: dsh installs plugins through pnpm 11, which
-holds back anything published in the last 24 hours and silently resolves
-`@latest` to an older release. A named version is installed as a deliberate
-request. `npm view @liustack/pptwise version` prints the current one.
-
-Then tell the user to restart dsh and look at the plugin list: a card named
-"pptwise" means the plugin is live and the deck skill is registered. The skill
-it registers opens with a runtime note giving the exact `node <path>/dist/cli.js`
-command that stands in for `pptwise` inside dsh. Verify with the step 3 health
-check, using that command in the dsh terminal. Skip steps 1 and 2: there is no
-skill folder to copy and no CLI to install.
-
-**If it fails:**
-- `dsh` warns `declares no dsh.bundle` -> the release-age gate installed an
-  old version (before 0.17.0 the package had no plugin entry at all).
-  `@latest` does not avoid that: name the version instead
-  (`npm view @liustack/pptwise version` prints it), then re-run the command
-  above with that version.
-- The plugin card does not appear after a restart -> re-run the install
-  command (it is safe to repeat), then restart dsh again.
-
-For every other harness, the whole install is three steps:
+The whole install is three steps:
 
 1. Find the skill directory for your harness.
 2. Put the `skills/pptwise` folder into it.

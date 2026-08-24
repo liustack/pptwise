@@ -46,17 +46,13 @@ Issues are welcome any time. [Open one](https://github.com/liustack/pptwise/issu
 
 **Step 1, hand it to your AI.** Send it this line:
 
-> Install the pptwise deck skill following https://raw.githubusercontent.com/liustack/pptwise/main/INSTALL.md, then run the health check and tell me the result.
+> Install pptwise following https://raw.githubusercontent.com/liustack/pptwise/main/INSTALL.md, then run the health check and tell me the result.
+
+**On DeepSeek Harness, send this instead.** There pptwise is a native plugin rather than a skill folder, so it has its own guide. You pick the line, not your agent: an agent cannot reliably tell which harness it is running in.
+
+> Install pptwise following https://raw.githubusercontent.com/liustack/pptwise/main/INSTALL-dsh.md, then run the health check and tell me the result.
 
 There is no step 2. Your AI puts the skill folder where your harness reads it, and the skill brings its own version-pinned launcher, so there is no CLI to install by hand. pptwise renders a PPTX entirely locally: no API key, no account, nothing to configure for render. Optional stock-photo search needs the user's own Pexels key. The only prerequisite is Node 22.19+ (or Bun).
-
-**On DeepSeek Harness, it is one command instead.** pptwise is a native DSH plugin there, not a skill folder:
-
-```bash
-npx -y @deepseek-ai/dsh plugin --profile web add @liustack/pptwise@0.22.0
-```
-
-Name the version. Without it, the install quietly lands on an older release and you miss the newest features. `npm view @liustack/pptwise version` prints the current one. The plugin card shows up as "pptwise", registers the deck-generation skill, and carries the CLI inside its own package. Uninstalling removes the skill with no residue.
 
 ## Quick start
 

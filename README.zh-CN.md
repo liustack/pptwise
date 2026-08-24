@@ -46,17 +46,13 @@
 
 **第一步，交给你的 AI。** 把这行话发给它：
 
-> 按照 https://raw.githubusercontent.com/liustack/pptwise/main/INSTALL.md 安装 pptwise deck 技能，装完跑一遍健康检查，把结果告诉我。
+> 按照 https://raw.githubusercontent.com/liustack/pptwise/main/INSTALL.md 安装 pptwise，装完跑一遍健康检查，把结果告诉我。
+
+**在 DeepSeek Harness 上发另一句。** 那里 pptwise 是原生插件不是 skill 文件夹，所以有自己的一份指引。由你来挑发哪一句，不是让 agent 猜：agent 判断不了自己跑在哪个 harness 里。
+
+> 按照 https://raw.githubusercontent.com/liustack/pptwise/main/INSTALL-dsh.md 安装 pptwise，装完跑一遍健康检查，把结果告诉我。
 
 没有第二步。你的 AI 会把 skill 文件夹放到你这个 harness 读取的位置，skill 自带钉死版本的启动器，不需要你手动装 CLI。pptwise 在本地渲染 PPTX：渲染不要 API key、不用注册、无需配置。可选的图库搜索需要用户自己的 Pexels key。唯一前置是 Node 22.19+（或 Bun）。
-
-**在 DeepSeek Harness 上换成一条命令。** 那里 pptwise 是原生 DSH 插件，不走 skill 文件夹：
-
-```bash
-npx -y @deepseek-ai/dsh plugin --profile web add @liustack/pptwise@0.22.0
-```
-
-版本号要点名。不点名的话，安装会静默落到一个更旧的版本，拿不到最新能力。`npm view @liustack/pptwise version` 可查当前版本。插件卡片显示为「pptwise」，把整套生成流程的 skill 注册进 DSH 技能系统，驱动的 CLI 就在插件包自己里面。卸载即移除，不留残余。
 
 ## 快速开始
 
