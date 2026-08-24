@@ -53,7 +53,7 @@ function quantize(n: number): number {
 }
 
 /**
- * Fixed input shape, applied identically to all 12 layouts (T2's review
+ * Fixed input shape, applied identically to all current 15 layouts. T2's review
  * named `quiet-frame` as a layout whose own region set changes shape
  * with component *count* — its lone-non-full-body-component case narrows
  * and re-centers its content rect, full width otherwise — so "the region

@@ -169,13 +169,13 @@ collected into one big literal table. Two registries/aggregators consume
 these domain files by importing and combining them, never by holding the
 content themselves:
 
-- **A layout definition lives with its implementation.** Each of the 51
+- **A layout definition lives with its implementation.** Each of the 113
   single-layout files exports `layoutDef: LayoutDefinition` at the
   bottom of its own `src/svg/layouts/<name>.tsx` file, beside the JSX
-  that draws it (`src/svg/image-pages.tsx` — one level above `layouts/` — exports 4 uniquely-named ones instead,
+  that draws it. `src/svg/image-pages.tsx`, one level above `layouts/`, exports 4 uniquely named ones instead,
   since one file implements all 4 image takeovers and they can't share the
-  bare `layoutDef` name the 51 single-layout files use). `src/svg/layouts/registry.ts`
-  imports every one and assembles `LAYOUT_REGISTRY` from them — "take one
+  bare `layoutDef` name the 113 single-layout files use. `src/svg/layouts/registry.ts`
+  imports every one and assembles `LAYOUT_REGISTRY` from them. "Take one
   layout away whole" is a single-file operation, not a two-file
   archaeology dig.
 - **A component is two same-named domain files, one per side of the
@@ -256,9 +256,9 @@ chapter-only curation exclusions (classroom/heritage excluding
 `fashion-chapter`, an artifact of `readableOn`'s old fixed-luminance
 threshold) once `src/svg/ink.ts`'s real dual-ink contrast comparison
 confirmed all three clear 3:1 without the exclusion
-(`src/themes/definitions.ts` has the full history). Covers now lock to Claude
-Design board faces. Chapter and ending stay the full registered set until
-those boards exist. Content auto-pool is 9 ids (`banner-heading` retired).
+(`src/themes/definitions.ts` has the full history). Covers, chapters, and
+endings now lock to their Claude Design board faces. Content auto-pool is 9
+ids (`banner-heading` retired).
 Narrowing a page type below the full set is still supported and stays a
 deliberate curation act, not a requirement — see `docs/contrast-system.md`
 for why a narrowing usually turns out to be a contrast bug in disguise rather

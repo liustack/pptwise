@@ -132,12 +132,11 @@ export interface ThemeDefinition {
  * takeovers (their `slideTypes` includes `"content"` too), but a curated
  * auto-pick set may only ever contain standard layouts (`registerTheme`'s own
  * validation below enforces the same constraint on any caller-supplied
- * set — takeovers are addressed only via an explicit `slide.layout` pin,
- * never auto-selected). Also excludes any `pinOnly` layout (quote-stage
- * wave, task T1 -- see `LayoutDefinition.pinOnly`'s own doc comment,
- * `../svg/layouts/registry.ts`): a pinOnly layout must never enter any
- * pool, curated or not, so the exclusion happens here rather than as a
- * later, softer filter the way `narrativesOnly` is.
+ * set. Takeovers are addressed only via an explicit `slide.layout` pin,
+ * never auto-selected). The default also excludes every `pinOnly` layout.
+ * A builtin may still list a pin-only cover, chapter, or ending face as a
+ * deliberate one-entry board lock. See `LayoutDefinition.pinOnly` and the
+ * matching exception in `resolveLayoutId`.
  */
 function fullLayoutSet(slideType: Slide["type"]): readonly string[] {
   return excludePinOnly(layoutsForSlideType(slideType).filter((layout) => layout.kind === "archetype")).map(
@@ -1418,9 +1417,9 @@ export type ThemeRegistration = Omit<ThemeDefinition, "layouts"> & {
  * - each of the four slide types, once defaulted ({@link ThemeRegistration}),
  *   must have at least one layout id that is both registered in
  *   `LAYOUT_REGISTRY` and valid for that slide type (the same registry
- *   `resolveLayoutId`/`FullSlideSvg` select from — a theme never ships
- *   new render code, only a curated subset of the existing 30 layouts +
- *   4 takeovers, per `docs/architecture.md`'s "Adding a theme" section). An
+ *   `resolveLayoutId`/`FullSlideSvg` select from. A theme never ships
+ *   new render code, only a curated subset of the existing 113 standard
+ *   layouts, per `docs/architecture.md`'s "Adding a theme" section. An
  *   *explicit* empty array for a slide type still fails this check (the
  *   default only kicks in when the key — or `layouts` itself — is omitted
  *   entirely, `undefined`, never for a caller-supplied `[]`).
