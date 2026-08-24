@@ -22,6 +22,12 @@ const TYPES: Slide["type"][] = ["cover", "chapter", "content", "ending"]
 
 /** Adjudicated structure pieces. Lifted into the foreground at the theme color. */
 const STRUCTURE_BY_MOTIF: Partial<Record<MotifId, Partial<Record<Slide["type"], readonly string[]>>>> = {
+  "gauge-motif": {
+    cover: ["locator-corner"],
+    chapter: ["locator-corner"],
+    content: ["locator-corner"],
+    ending: ["locator-corner"],
+  },
   "swiss-motif": {
     cover: ["red-bar"],
     chapter: ["red-bar"],

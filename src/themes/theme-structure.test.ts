@@ -1142,7 +1142,7 @@ describe("second-front wave: chapter / content / ending allocation", () => {
     expect(collisions).toEqual([])
   })
 
-  it("seeds 1-40: 24/24 distinct sequence-bundles, slot diversity chapter 24 / content 14 / ending 24", () => {
+  it("seeds 1-40: 24/24 distinct sequence-bundles, slot diversity chapter 24 / content 15 / ending 24", () => {
     // Wave 8 batch 4 locks six more chapter/ending faces. banner-heading
     // retirement (pool 10 -> 9) re-measured content-slot diversity 18 -> 14.
     const over40 = new Set(
@@ -1163,27 +1163,19 @@ describe("second-front wave: chapter / content / ending allocation", () => {
     const ending = slotCount(6)
     expect({ chapterA, contentA, chapterB, ending }).toEqual({
       chapterA: 24,
-      contentA: 14,
+      contentA: 15,
       chapterB: 24,
       ending: 24,
     })
   })
 
-  it("playbill locks cover to bill-head, chapter to day-bill-chapter, ending to ticket-cta-ending. content stays the full set", () => {
+  it("playbill locks cover, chapter, and ending while content stays on the shared builtin set", () => {
     expect(THEME_DEFINITIONS.playbill.layouts.cover).toEqual(["bill-head"])
     expect(THEME_DEFINITIONS.playbill.layouts.chapter).toEqual(["day-bill-chapter"])
-    expect(THEME_DEFINITIONS.playbill.layouts.content).toEqual(__fullLayoutSet("content"))
-    expect(THEME_DEFINITIONS.consulting.layouts.content).toEqual([
-      "narrow-column",
-      "two-column",
-      "rail-numbered",
-      "stacked-poster",
-      "bento-panel",
-      "tone-adaptive-content",
-      "asymmetric-triptych",
-      "quiet-frame",
-      "split-band",
-    ])
+    expect(THEME_DEFINITIONS.playbill.layouts.content).toEqual(
+      __fullLayoutSet("content").filter((id) => id !== "gauge-stats"),
+    )
+    expect(THEME_DEFINITIONS.consulting.layouts.content).toEqual(["gauge-stats"])
     expect(THEME_DEFINITIONS.playbill.layouts.ending).toEqual(["ticket-cta-ending"])
     expect(THEME_DEFINITIONS.playbill.layoutTendencies?.content).toEqual([
       "stacked-poster",

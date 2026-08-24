@@ -142,11 +142,17 @@ describe("lecture underline reaches every shared emphasis path", () => {
   })
 })
 
-describe("consulting pad reaches every shared emphasis path", () => {
+describe("consulting gauge cover and shared emphasis paths", () => {
   const ir = consultingPadDeck()
 
+  it("gauge cover replaces the keyword pad with its one fixed gold underline", () => {
+    const svg = renderSlideSvg(ir, 0)
+    expect(svg).toContain('<rect x="160" y="432" width="504" height="8" fill="#F5C518"></rect>')
+    expect(svg).not.toContain('data-emphasis-pad=""')
+    expect(svg).not.toContain("**")
+  })
+
   it.each([
-    [0, "cover"],
     [2, "paragraph"],
     [3, "bullets"],
     [4, "callout"],

@@ -75,6 +75,7 @@ export type CoverLayoutId =
   | "pledge-open-cover"
   | "report-open-cover"
   | "cut-panel-cover"
+  | "gauge-verdict"
 
 // Wave 2（chapter/ending）新增 id：每主题 1 个（命名见 Wave 2 任务表）
 export type ChapterLayoutId =
@@ -111,6 +112,7 @@ export type ChapterLayoutId =
   | "issue-line-chapter"
   | "day-bill-chapter"
   | "hall-label-chapter"
+  | "gauge-section"
 export type EndingLayoutId =
   | "banner-ending" | "rail-ending" | "poster-ending"
   | "constellation-ending" | "masthead-ending" | "tone-adaptive-ending"
@@ -143,6 +145,7 @@ export type EndingLayoutId =
   | "decision-close-ending"
   | "ticket-cta-ending"
   | "exit-word-ending"
+  | "gauge-next"
 
 // Wave 3（content）新增 id
 export type ContentLayoutId =
@@ -175,3 +178,5 @@ export type ContentLayoutId =
   | "stat-hero"
   | "one-evidence"
   | "mono-bleed"
+  | "gauge-stats"
+  | "gauge-point"

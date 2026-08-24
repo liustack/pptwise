@@ -194,7 +194,7 @@ export function themeDeck(themeId: string, lex: Lexicon, assets: CorpusAssets): 
     },
     { type: "chapter", heading: lex.chapters[0]!, subheading: lex.kickers[0], components: [] },
     ...content,
-    themeId === "academic"
+    themeId === "academic" || themeId === "consulting"
       ? {
           type: "ending" as const,
           heading: lex.chapters[5]!,
@@ -293,12 +293,18 @@ function bodyFor(def: LayoutDefinition, lex: Lexicon): Component[] {
     if (Array.isArray(kpi.items)) kpi.items = kpi.items.slice(0, 1)
     return [kpi]
   }
+  if (def.id === "gauge-stats") {
+    const kpi = b.kpi_cards!(lex)
+    if (kpi.type === "kpi_cards") kpi.items = kpi.items.slice(0, 4)
+    return [kpi]
+  }
 
   // Sparse and a few ordinary layouts have a body slot whose declared
   // capacity is the wrong signal: citation is the capacity-1 default, but
   // these pages draw a quote, a chart, a bento grid, or a hero+strip. Match
   // the layout's own comments rather than broadening the default.
   if (def.id === "pull-quote") return [b.quote!(lex)]
+  if (def.id === "gauge-point") return [b.quote!(lex)]
   if (def.id === "one-evidence") return [b.chart!(lex)]
   if (def.id === "bento-panel") {
     const kpi = b.kpi_cards!(lex)
@@ -372,12 +378,24 @@ export function layoutPage(layoutId: string, lex: Lexicon, assets: CorpusAssets,
                 ? oneLineCoverHeading(lex)
                 : lex.deckTitle,
           subheading: lex.deckSubtitle,
-          components: [],
+          components:
+            def.id === "gauge-verdict"
+              ? [{ type: "bullets", items: lex.bullets.slice(0, 3) }]
+              : [],
         }
       : slideType === "chapter"
         ? { type: "chapter", layout: layoutId, heading: lex.chapters[1]!, subheading: lex.kickers[1], components: [] }
         : slideType === "ending"
-          ? { type: "ending", layout: layoutId, heading: lex.chapters[5]!, subheading: lex.verdicts.positive, components: [] }
+          ? {
+              type: "ending",
+              layout: layoutId,
+              heading: lex.chapters[5]!,
+              subheading: lex.verdicts.positive,
+              components:
+                def.id === "gauge-next"
+                  ? [{ type: "bullets", items: lex.bullets.slice(0, 3) }]
+                  : [],
+            }
           : {
               type: "content",
               layout: layoutId,

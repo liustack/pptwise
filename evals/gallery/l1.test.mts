@@ -61,6 +61,9 @@ describe("auditL1 planted defects", () => {
     expect(codes(wrap(`<text x="40" y="40" font-size="10">tiny body</text>`))).toContain("font-size")
     expect(codes(wrap(`<text x="40" y="40" font-size="15">almost</text>`))).toContain("font-size")
     expect(codes(wrap(`<text x="40" y="40" font-size="16">on the floor</text>`))).not.toContain("font-size")
+    expect(
+      codes(wrap(`<text x="40" y="40" font-size="14" data-font-floor-exempt="gauge-spec">approved meta</text>`)),
+    ).not.toContain("font-size")
     expect(codes(wrap(`<text x="40" y="40" font-size="10" data-decor="1">star</text>`))).not.toContain("font-size")
     expect(codes(wrap(`<g data-decor="1"><text x="40" y="40" font-size="10">star</text></g>`))).not.toContain("font-size")
   })

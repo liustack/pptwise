@@ -30,6 +30,7 @@ import { ResolutionEnding } from "./ending-resolution-ending"
 import { DecisionCloseEnding } from "./ending-decision-close-ending"
 import { TicketCtaEnding } from "./ending-ticket-cta-ending"
 import { ExitWordEnding } from "./ending-exit-word-ending"
+import { GaugeNextEnding } from "./ending-gauge-next"
 
 export type { EndingLayout, EndingLayoutId } from "./types"
 
@@ -67,4 +68,5 @@ export const ENDING_LAYOUTS: Record<EndingLayoutId, EndingLayout> = {
   "decision-close-ending": DecisionCloseEnding,
   "ticket-cta-ending": TicketCtaEnding,
   "exit-word-ending": ExitWordEnding,
+  "gauge-next": GaugeNextEnding,
 }

@@ -512,11 +512,11 @@ const CARD_ICONS = ["layers", "cpu", "database", "globe", "target", "gauge"] as 
  * ordinary corpus at the top of this file stays ordinary.
  */
 export const DENSITY_BUILDERS: Record<string, (lex: Lexicon) => Component> = {
-  // 9 items. bullets.tsx height-budget visible count. Probe on consulting
-  // densityPage. 10 items marks on en.
+  // 7 items. Re-probed after consulting moved to gauge-stats and its x160
+  // body region became deliberately shorter.
   bullets: (lex) => ({
     type: "bullets",
-    items: [...slice(lex.bullets, 6), ...slice(lex.phrases, 3)],
+    items: [...slice(lex.bullets, 5), ...slice(lex.phrases, 2)],
     style: "default",
   }),
 
@@ -532,33 +532,31 @@ export const DENSITY_BUILDERS: Record<string, (lex: Lexicon) => Component> = {
     })),
   }),
 
-  // 13 sources. citation.tsx `ROW = 28`. CAPACITY.warnSources=9 is the
+  // 11 sources. citation.tsx `ROW = 28`. CAPACITY.warnSources=9 is the
   // 277px worst-case editorial number. Probe on consulting densityPage
-  // after gallery-review-r1 × main. Coverage's 14 still fits zh/mixed.
-  // 14 sources marks on en.
+  // after gallery-review-r1 × main. Re-probed on gauge-stats.
   citation: (lex) => ({
     type: "citation",
-    sources: [...slice(lex.orgs, 12), ...slice(lex.phrases, 1)].map((label, i) => ({
+    sources: [...slice(lex.orgs, 10), ...slice(lex.phrases, 1)].map((label, i) => ({
       label,
       ref: lex.periods[i % lex.periods.length]!,
     })),
   }),
 
-  // 6 rows. comparison.tsx `ROW = 44` including header. CAPACITY.warnRows=5
+  // 5 rows. comparison.tsx `ROW = 44` including header. CAPACITY.warnRows=5
   // is the 277px worst-case editorial number. Probe on consulting
-  // densityPage. 7 rows marks on en.
+  // densityPage after the gauge-stats lock.
   comparison: (lex) => ({
     type: "comparison",
     columns: [lex.labels[8]!, lex.labels[9]!, lex.labels[10]!],
-    rows: slice(lex.phrases, 6).map((label, i) => ({
+    rows: slice(lex.phrases, 5).map((label, i) => ({
       label,
       cells: [lex.periods[i % 4]!, lex.labels[(i + 12) % lex.labels.length]!, lex.periods[(i + 1) % 4]!],
     })),
   }),
 
-  // 7 rows. Schema `.max(12)` in ir/components/data-table.ts. data-table.tsx
-  // `ROW = 44`. Probe on consulting densityPage. 8 rows marks on en, well
-  // before the schema ceiling.
+  // 5 rows. Schema `.max(12)` in ir/components/data-table.ts. data-table.tsx
+  // `ROW = 44`. Re-probed on consulting gauge-stats.
   data_table: (lex) => ({
     type: "data_table",
     columns: [
@@ -567,18 +565,16 @@ export const DENSITY_BUILDERS: Record<string, (lex: Lexicon) => Component> = {
       { key: "q2", label: lex.periods[1]!, align: "right" },
       { key: "yoy", label: lex.metrics[1]!.label, align: "right" },
     ],
-    rows: slice(lex.labels, 7).map((seg, i) => ({
+    rows: slice(lex.labels, 5).map((seg, i) => ({
       cells: { seg, q1: 402 + i * 97, q2: 431 + i * 111, yoy: `${i % 4 === 2 ? "-" : "+"}${4 + i}.${i % 10}%` },
     })),
     source: lex.sources[0]!.label,
   }),
 
-  // 6 cards. kpi.tsx `MIN_READABLE_CARD_W = 160`, `GAP = 16`. Marker when
-  // `naturalCardW < 160`. Probe on consulting densityPage. 7 cards marks
-  // on every language track.
+  // 4 cards. gauge-stats has four fixed statistic columns by design.
   kpi_cards: (lex) => ({
     type: "kpi_cards",
-    items: slice(lex.labels, 6).map((label, i) => ({
+    items: slice(lex.labels, 4).map((label, i) => ({
       value: String(28 + i * 6),
       unit: "%",
       label,
@@ -601,13 +597,13 @@ export const DENSITY_BUILDERS: Record<string, (lex: Lexicon) => Component> = {
     })),
   }),
 
-  // 5 milestones, vertical. The component table uses horizontal. Only a
+  // 4 milestones, vertical. The component table uses horizontal. Only a
   // vertical stack runs out of height. timeline.tsx height-budget visible
-  // count. Probe on consulting densityPage. 6 milestones marks on en.
+  // count. Re-probed on consulting gauge-stats.
   timeline: (lex) => ({
     type: "timeline",
     layout: "vertical",
-    milestones: slice(lex.phrases, 5).map((title, i) => ({
+    milestones: slice(lex.phrases, 4).map((title, i) => ({
       date: lex.periods[i % lex.periods.length]!,
       title,
       desc: lex.labels[i % lex.labels.length],
@@ -615,47 +611,47 @@ export const DENSITY_BUILDERS: Record<string, (lex: Lexicon) => Component> = {
     })),
   }),
 
-  // 2 items per cell. bmc.tsx now stamps data-dropped when a short box
+  // 1 item per cell. bmc.tsx stamps data-dropped when a short box
   // cannot hold every item at the 16px floor. Probe on consulting
-  // densityPage. 3 items per cell marks on en.
+  // cannot hold every item. Re-probed on consulting gauge-stats.
   bmc: (lex) => ({
     type: "bmc",
-    key_partners: slice(lex.orgs, 2),
-    key_activities: lex.phrases.slice(0, 2),
-    key_resources: lex.phrases.slice(3, 5),
-    value_propositions: lex.strengths.slice(0, 2),
-    customer_relationships: lex.phrases.slice(6, 8),
-    channels: slice(lex.labels, 2, 12),
-    customer_segments: slice(lex.labels, 2, 8),
-    cost_structure: lex.weaknesses.slice(0, 2),
-    revenue_streams: lex.opportunities.slice(0, 2),
+    key_partners: slice(lex.orgs, 1),
+    key_activities: lex.phrases.slice(0, 1),
+    key_resources: lex.phrases.slice(3, 4),
+    value_propositions: lex.strengths.slice(0, 1),
+    customer_relationships: lex.phrases.slice(6, 7),
+    channels: slice(lex.labels, 1, 12),
+    customer_segments: slice(lex.labels, 1, 8),
+    cost_structure: lex.weaknesses.slice(0, 1),
+    revenue_streams: lex.opportunities.slice(0, 1),
   }),
 
-  // 3 items per quadrant. swot.tsx drop stamp at the 16px floor.
+  // 2 items per quadrant. Re-probed on consulting gauge-stats.
   swot: (lex) => ({
     type: "swot",
-    strengths: lex.strengths.slice(0, 3),
-    weaknesses: lex.weaknesses.slice(0, 3),
-    opportunities: lex.opportunities.slice(0, 3),
-    threats: lex.threats.slice(0, 3),
+    strengths: lex.strengths.slice(0, 2),
+    weaknesses: lex.weaknesses.slice(0, 2),
+    opportunities: lex.opportunities.slice(0, 2),
+    threats: lex.threats.slice(0, 2),
   }),
 
-  // 3 items per quadrant. pest.tsx drop stamp at the 16px floor.
+  // 2 items per quadrant. Re-probed on consulting gauge-stats.
   pest: (lex) => ({
     type: "pest",
-    political: { items: lex.threats.slice(0, 3) },
-    economic: { items: lex.opportunities.slice(0, 3) },
-    social: { items: lex.strengths.slice(0, 3) },
-    technological: { items: lex.weaknesses.slice(0, 3) },
+    political: { items: lex.threats.slice(0, 2) },
+    economic: { items: lex.opportunities.slice(0, 2) },
+    social: { items: lex.strengths.slice(0, 2) },
+    technological: { items: lex.weaknesses.slice(0, 2) },
   }),
 
-  // 2 items per force. five-forces.tsx drop stamp at the 16px floor.
+  // 1 item per force. Re-probed on consulting gauge-stats.
   five_forces: (lex) => ({
     type: "five_forces",
-    rivalry: { items: lex.threats.slice(0, 2), intensity: "high" },
-    new_entrants: { items: lex.opportunities.slice(0, 2), intensity: "medium" },
-    supplier_power: { items: lex.weaknesses.slice(0, 2), intensity: "medium" },
-    buyer_power: { items: lex.strengths.slice(0, 2), intensity: "high" },
-    substitutes: { items: lex.threats.slice(2, 4), intensity: "low" },
+    rivalry: { items: lex.threats.slice(0, 1), intensity: "high" },
+    new_entrants: { items: lex.opportunities.slice(0, 1), intensity: "medium" },
+    supplier_power: { items: lex.weaknesses.slice(0, 1), intensity: "medium" },
+    buyer_power: { items: lex.strengths.slice(0, 1), intensity: "high" },
+    substitutes: { items: lex.threats.slice(2, 3), intensity: "low" },
   }),
 }

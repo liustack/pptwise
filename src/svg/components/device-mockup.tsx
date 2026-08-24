@@ -97,7 +97,12 @@ const PHONE_HOME_MARGIN = 8
  * horizontally within `w` at render time — a phone mockup is never
  * stretched to fill a wide column, it stays phone-shaped.
  */
-function phoneFrameSize(w: number): { w: number; h: number } {
+function phoneFrameSize(w: number, maxH?: number): { w: number; h: number } {
+  if (maxH != null && maxH < MAX_DEVICE_H) {
+    const deviceH = Math.max(PHONE_BEZEL * 2 + 1, Math.floor(maxH))
+    const deviceW = Math.min(w, Math.floor(deviceH / PHONE_ASPECT))
+    return { w: deviceW, h: Math.round(deviceW * PHONE_ASPECT) }
+  }
   let deviceW = Math.round(MAX_DEVICE_H / PHONE_ASPECT)
   if (deviceW > w) deviceW = w
   const deviceH = Math.round(deviceW * PHONE_ASPECT)
@@ -173,7 +178,10 @@ export const deviceMockup: SvgComponent<DeviceMockupComponent> = {
     const alt = ctx.images?.[component.asset_id]?.alt
 
     if (component.device === "browser") {
-      const frameH = browserFrameH(box.w)
+      const frameH = Math.min(
+        browserFrameH(box.w),
+        Math.max(FRAME_BAR_H + 1, box.h ?? Number.POSITIVE_INFINITY),
+      )
       const screenH = frameH - FRAME_BAR_H
       const dotsRightEdge = DOT_START_X + 2 * (DOT_R * 2 + DOT_GAP) + DOT_R
       const urlBarX = dotsRightEdge + URLBAR_GAP
@@ -274,7 +282,7 @@ export const deviceMockup: SvgComponent<DeviceMockupComponent> = {
     }
 
     // device === "phone"
-    const { w: deviceW, h: deviceH } = phoneFrameSize(box.w)
+    const { w: deviceW, h: deviceH } = phoneFrameSize(box.w, box.h)
     const offsetX = (box.w - deviceW) / 2
     const screenX = PHONE_BEZEL
     const screenY = PHONE_BEZEL

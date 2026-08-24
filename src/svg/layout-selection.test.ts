@@ -120,9 +120,9 @@ describe("resolveLayoutId", () => {
       if (tendencyIds.includes(picked)) tendencyHits++
     }
     // 3 ids at weight 3 (=9) vs 6 ids (9-3=6) at weight 1 (=6) over the
-    // full 9-id content pool (banner-heading retired after the 10-id pool):
-    // expected tendency share = 9/15 = 0.6. Wide bounds (not a tight
-    // equality) — this is a distribution smoke test proving the weighting
+    // shared 9-id content pool: expected tendency share = 9/15 = 0.6.
+    // Wide bounds (not a tight
+    // equality). This is a distribution smoke test proving the weighting
     // is wired in, `weightedPickBySeed`'s own test owns the precise ratio
     // assertion.
     expect(tendencyHits / N).toBeGreaterThan(0.45)
@@ -203,7 +203,7 @@ describe("resolveLayoutId", () => {
       )!
       if (anchorIds.includes(picked)) anchorHits++
     }
-    // Weights over the full 9-id pool: rail-numbered/two-column/
+    // Weights over the shared 9-id pool: rail-numbered/two-column/
     // asymmetric-triptych=3 each (strategy only, 9 total), stacked-poster/
     // split-band=3 each (beat only, 6 total),
     // bento-panel/narrow-column/tone-adaptive-content/quiet-frame=1 each (4
@@ -276,7 +276,7 @@ describe("resolveLayoutId", () => {
       )!
       if (picked === "split-band") hits++
     }
-    // Weights over the full 9-id pool (banner-heading retired) under max
+    // Weights over the shared 9-id pool under max
     // composition: split-band=max(3,3)=3 (shared member), bento-panel/
     // two-column=max(3,1)=3 each (strategy only), stacked-poster=
     // max(1,3)=3 (beat only), narrow-column/rail-numbered/
@@ -312,9 +312,9 @@ describe("resolveLayoutId", () => {
       )!
       if (picked === "narrow-column") narrowColumnHits++
     }
-    // Weights under Math.max, 9-id auto pool after banner-heading retired:
-    // narrow-column=3, quiet-frame=3, stacked-poster=3, the remaining 6 ids
-    // at 1 — total 15, share 3/15 = 0.2. Bounds set with margin on both
+    // Weights under Math.max over the shared 9-id auto pool: narrow-column=3,
+    // quiet-frame=3, stacked-poster=3, the remaining 6 ids at 1, total 15,
+    // share 3/15 = 0.2. Bounds set with margin on both
     // sides of that point estimate for N=5000 sampling noise.
     const share = narrowColumnHits / N
     expect(share).toBeGreaterThan(0.14)
@@ -394,9 +394,9 @@ describe("resolveLayoutId", () => {
         )
         if (picked === "quiet-frame") hits++
       }
-      // Weights over the 9-id pool: bento-panel/split-band/two-column=3
+      // Weights over the shared 9-id pool: bento-panel/split-band/two-column=3
       // each (strategy only, pyramid's own layoutTendencies, 9 total),
-      // quiet-frame=3 (theme only), the remaining 5 ids=1 each (5 total) —
+      // quiet-frame=3 (theme only), the remaining 5 ids=1 each (5 total).
       // total weight 17, quiet-frame share = 3/17 ≈ 0.176. A bare weight-1
       // floor (no theme layer at all) would give 1/15 ≈ 0.067 instead
       // (9+6 denominator, quiet-frame among the 6 unmarked) — assert clearly
@@ -426,9 +426,9 @@ describe("resolveLayoutId", () => {
         )
         if (picked === "split-band") hits++
       }
-      // Weights over the 9-id pool under max: split-band=max(3,3)=3
+      // Weights over the shared 9-id pool under max: split-band=max(3,3)=3
       // (shared, capped not squared), bento-panel/two-column=3 each
-      // (strategy only), the remaining 6 ids=1 each — total 3*3 + 6*1 = 15,
+      // (strategy only), the remaining 6 ids=1 each. Total 3*3 + 6*1 = 15,
       // split-band share = 3/15 = 0.2. Under the (rejected)
       // multiplicative formula it would instead be weight 9 against a total
       // of 9+3+3+6=21, share 9/21 ≈ 0.429 — well outside these bounds, so a
@@ -530,19 +530,18 @@ describe("resolveLayoutId", () => {
   // ── identity-page strategy weighting (P1 variety wave, task 3) ──
   // cover/chapter/ending used to be uniformly sampled (no strategy signal
   // ever reached them). academic's identity pools are each the full
-  // registry set (19 cover / 9 chapter / 7 ending — `layoutsForSlideType`,
+  // registry set (20 cover / 9 chapter / 8 ending, `layoutsForSlideType`,
   // asserted below rather than hardcoded so a future layout-pool
   // expansion can't silently desync this file's own algebra).
 
   describe("identity-page strategy weighting", () => {
     it("a strategy's cover identityTendencies members are picked more often than non-members (N=5000, algebra-derived bounds)", () => {
       // pyramid.identityTendencies.cover = [banner-title, left-anchor], 2
-      // members at weight 3 against a full 19-id cover pool (the other 17 at
-      // weight 1): total = 2*3 + 17*1 = 23, expected combined tendency share
-      // = 6/23 ≈ 0.261. (Was 13 ids / 6 of 17 ≈ 0.353, before the
-      // board-cover-restore wave registered six more covers.)
+      // members at weight 3 against a full 20-id cover pool (the other 18 at
+      // weight 1): total = 2*3 + 18*1 = 24, expected combined tendency share
+      // = 6/24 = 0.25.
       const coverPool = __fullLayoutSet("cover").length
-      expect(coverPool).toBe(19)
+      expect(coverPool).toBe(20)
       const tendencyIds = STRATEGY_DEFINITIONS.pyramid.identityTendencies.cover
       expect(tendencyIds.length).toBe(2)
       const N = 5000
@@ -566,8 +565,8 @@ describe("resolveLayoutId", () => {
 
     it("a strategy's chapter identityTendencies members are picked more often than non-members (N=5000)", () => {
       // storytelling.identityTendencies.chapter = [roman-chapter,
-      // banner-chapter], 2 members at weight 3 over a full 8-id chapter
-      // pool: total = 2*3 + 6*1 = 12, expected combined share = 6/12 = 0.5.
+      // banner-chapter], 2 members at weight 3 over a full 9-id chapter
+      // pool: total = 2*3 + 7*1 = 13, expected combined share = 6/13 ≈ 0.462.
       const tendencyIds = STRATEGY_DEFINITIONS.storytelling.identityTendencies.chapter
       const N = 5000
       let hits = 0
@@ -590,11 +589,11 @@ describe("resolveLayoutId", () => {
 
     it("a strategy's ending identityTendencies members are picked more often than non-members (N=5000)", () => {
       // showcase.identityTendencies.ending = [fashion-ending, poster-ending],
-      // 2 members at weight 3 over a full 7-id ending pool (the other 5 at
-      // weight 1): total = 2*3 + 5*1 = 11, expected combined share = 6/11 ≈
-      // 0.545.
+      // 2 members at weight 3 over a full 8-id ending pool (the other 6 at
+      // weight 1): total = 2*3 + 6*1 = 12, expected combined share = 6/12 =
+      // 0.5.
       const endingPool = __fullLayoutSet("ending").length
-      expect(endingPool).toBe(7)
+      expect(endingPool).toBe(8)
       const tendencyIds = STRATEGY_DEFINITIONS.showcase.identityTendencies.ending
       const N = 5000
       let hits = 0
@@ -1140,8 +1139,8 @@ describe("render parity with FullSlideSvg", () => {
   // multi-page collision, at index>0, run through the same render-parity
   // check as every case above.
   it("multi-page deck, index>0 anti-repetition swap-to-runner-up: resolveEffectiveLayoutId still matches the actual rendered data-archetype", () => {
-    // banner-heading retirement shrank the auto pool 10 -> 9. Seed 3 is
-    // the first academic 2-page fixture where page 0 and page 1's raw pick
+    // Seed 3 is the first academic 2-page fixture where page 0 and page 1's
+    // raw pick
     // both land on `narrow-column`, so the redraw still fires.
     const slides: Slide[] = [
       { type: "content", heading: "Page 0", components: [{ type: "paragraph", text: "x" }] },

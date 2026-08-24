@@ -2253,7 +2253,14 @@ describe("brand extract + --theme-file + deck theme.json", () => {
     const src = await writeFixtureTemplate(d)
     const themeOut = join(d, "acme.theme.json")
     await runBrandExtract(src, { output: themeOut })
-    await writeFile(join(d, "deck.json"), JSON.stringify({ ...VALID_IR, branding: "full" }))
+    const pinnedDeck = {
+      ...VALID_IR,
+      branding: "full",
+      slides: VALID_IR.slides.map((slide, index) =>
+        index === 0 ? { ...slide, layout: "left-anchor" } : slide,
+      ),
+    }
+    await writeFile(join(d, "deck.json"), JSON.stringify(pinnedDeck))
     const pptxOut = join(d, "branded.pptx")
     await runRender(join(d, "deck.json"), { output: pptxOut, themeFilePath: themeOut })
     const zip2 = await JSZip.loadAsync(await readFile(pptxOut))
@@ -2266,9 +2273,8 @@ describe("brand extract + --theme-file + deck theme.json", () => {
     ).join("")
     // The extracted brand colors must land in the DrawingML — hex appears
     // uppercase without "#" (same assertion shape as e2e's --style leg).
-    // This minimal 2-slide deck's selected layouts paint the primary token
-    // (source accent1, the content-page banner fill after side-highlight
-    // retired) and the derived muted (#666666, the mixHex walk's first step
+    // The pinned left-anchor cover paints the primary token (source accent1)
+    // and the derived muted (#666666, the mixHex walk's first step
     // clearing 4.5:1 against both white bg and the E7E6E6 surface). Muted's
     // paint site on this deck is the content-page footer rule, so the IR
     // writes branding:"full" (the omitted default is now cover-only and

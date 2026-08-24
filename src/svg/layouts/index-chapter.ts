@@ -32,6 +32,7 @@ import { DecimalIndexChapter } from "./chapter-decimal-index-chapter"
 import { IssueLineChapter } from "./chapter-issue-line-chapter"
 import { DayBillChapter } from "./chapter-day-bill-chapter"
 import { HallLabelChapter } from "./chapter-hall-label-chapter"
+import { GaugeSectionChapter } from "./chapter-gauge-section"
 
 export type { ChapterLayout, ChapterLayoutId } from "./types"
 
@@ -72,4 +73,5 @@ export const CHAPTER_LAYOUTS: Record<ChapterLayoutId, ChapterLayout> = {
   "issue-line-chapter": IssueLineChapter,
   "day-bill-chapter": DayBillChapter,
   "hall-label-chapter": HallLabelChapter,
+  "gauge-section": GaugeSectionChapter,
 }

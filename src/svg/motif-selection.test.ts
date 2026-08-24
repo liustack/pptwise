@@ -30,8 +30,8 @@ describe("MOTIF_CANDIDATES (P1 variety wave, task 2 — table shape)", () => {
     expect(MOTIF_CANDIDATES.heritage).toEqual(["heritage-motif"])
   })
 
-  it("wave 8 batch 1: consulting and enterprise lock MOTIF_CANDIDATES to a singleton", () => {
-    expect(MOTIF_CANDIDATES.consulting).toEqual(["banner-motif"])
+  it("consulting gauge and enterprise decoration stay singleton locks", () => {
+    expect(MOTIF_CANDIDATES.consulting).toEqual(["gauge-motif"])
     expect(MOTIF_CANDIDATES.enterprise).toEqual(["enterprise-motif"])
   })
 
@@ -154,8 +154,7 @@ describe("resolveMotifId — byte-inertness for the themes this task must not di
 
   it("an unrecognized theme id falls back through getThemeDefinition's own consulting fallback, motif included", () => {
     const ir = makeIR([contentSlide("p0")], "does-not-exist")
-    // consulting has a multi-member candidate set, so this just proves no crash
-    // and the result is always a member of consulting's own candidate set.
+    // Unknown ids reuse consulting's singleton fallback through getThemeDefinition.
     const result = resolveMotifId(ir, ir.slides[0]!, 0)
     expect(MOTIF_CANDIDATES.consulting).toContain(result)
   })

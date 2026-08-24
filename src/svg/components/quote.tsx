@@ -89,6 +89,11 @@ export const quote: SvgComponent<QuoteComponent> = {
 
   render(component, box, ctx) {
     const l = layBody(component.text, box.w)
+    const attributionHeight = component.attribution ? l.lineHeight + ATTR_GAP : 0
+    const bodyBudget = Math.max(1, (box.h ?? Number.POSITIVE_INFINITY) - QUOTE_ZONE - attributionHeight - BOTTOM_PAD)
+    const visibleLineCount = Math.max(1, Math.floor(bodyBudget / l.lineHeight))
+    const visibleLines = l.lines.slice(0, visibleLineCount)
+    const bodyTruncated = visibleLines.length < l.lines.length
 
     return (
       <g transform={`translate(${box.x},${box.y})`}>
@@ -115,9 +120,10 @@ export const quote: SvgComponent<QuoteComponent> = {
         </text>
 
         {/* body lines (italic) */}
-        {l.lines.map((line, i) => (
+        {visibleLines.map((line, i) => (
           <text
             key={i}
+            data-truncated={bodyTruncated && i === visibleLines.length - 1 ? "1" : undefined}
             x={BODY_INDENT}
             y={QUOTE_ZONE + i * l.lineHeight + l.fontSize}
             fontFamily={ctx.fonts.body}
@@ -143,7 +149,7 @@ export const quote: SvgComponent<QuoteComponent> = {
             <text
               data-truncated={attr.truncated ? "1" : undefined}
               x={BODY_INDENT}
-              y={QUOTE_ZONE + l.lines.length * l.lineHeight + ATTR_GAP + ATTR_FONT_SIZE}
+              y={QUOTE_ZONE + visibleLines.length * l.lineHeight + ATTR_GAP + ATTR_FONT_SIZE}
               fontFamily={ctx.fonts.body}
               fontSize={attr.fontSize}
               fill={ctx.colors.muted}
