@@ -43,8 +43,8 @@ describe("GaugeMotif", () => {
       expect(piece?.getAttribute("data-decor-role"), slide.type).toBe("structure")
       const lines = Array.from(piece!.querySelectorAll("line"))
       expect(lines.map(coords), slide.type).toEqual([
-        [96, 96, 168, 96],
-        [96, 96, 96, 168],
+        [56, 56, 128, 56],
+        [56, 56, 56, 128],
       ])
       expect(lines.map((line) => line.getAttribute("stroke-width")), slide.type).toEqual(["1.5", "1.5"])
       expect(root.querySelectorAll("[data-decor-piece]"), slide.type).toHaveLength(1)

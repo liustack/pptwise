@@ -15,8 +15,17 @@ export function GaugeMotif({ ctx }: DecorProps) {
 
   return (
     <DecorPiece id="locator-corner" role="structure">
-      <line x1={96} y1={96} x2={168} y2={96} stroke={stroke} strokeWidth={1.5} />
-      <line x1={96} y1={96} x2={96} y2={168} stroke={stroke} strokeWidth={1.5} />
+      {/* The board drew this corner at (96,96) with 72px arms, which works for
+          the gauge faces because their content starts at x160. This motif is
+          theme-wide, so it also paints on the nine shared content layouts
+          consulting still samples, and those set their heading at x96 / y150 /
+          46px — cap top y111. At (96,96) the vertical arm ran straight through
+          the heading's first glyph. Moving the whole mark into the outer
+          margin keeps designing-themes.md's "decoration stays out of the
+          heading area" true for both families: the vertical arm sits left of
+          every content left edge, the horizontal arm above every heading. */}
+      <line x1={56} y1={56} x2={128} y2={56} stroke={stroke} strokeWidth={1.5} />
+      <line x1={56} y1={56} x2={56} y2={128} stroke={stroke} strokeWidth={1.5} />
     </DecorPiece>
   )
 }
