@@ -54,7 +54,8 @@ describe("LAYOUT_REGISTRY completeness (layout ids)", () => {
     const layoutEntries = Object.values(LAYOUT_REGISTRY).filter((e) => e.kind === "archetype")
     // Wave 8 batch 4: +6 chapter +6 ending pinOnly faces, 102 -> 114.
     // banner-heading retired: 114 -> 113.
-    // consulting gauge adds four automatic faces and one pin-only face: 113 -> 118.
+    // consulting gauge adds five pin-only faces: 113 -> 118. All five are
+    // theme-locked, so none of them joins the shared automatic pools.
     expect(layoutEntries).toHaveLength(118)
     for (const entry of layoutEntries) {
       expect(knownIds.has(entry.id), `"${entry.id}" is not a real layout id`).toBe(true)
@@ -238,7 +239,7 @@ describe("layoutsForSlideType", () => {
   })
 
   it("cover, chapter, and ending expose 35, 34, and 32 registered layouts with no takeovers", () => {
-    // The shared automatic pools are 20, 9, and 8 after the gauge family.
+    // The shared automatic pools are unchanged by the gauge family: 19, 8, 7.
     expect(layoutsForSlideType("cover")).toHaveLength(35)
     // Wave 8 batch 4: +6 chapter +6 ending pinOnly faces.
     expect(layoutsForSlideType("chapter")).toHaveLength(34)
@@ -394,7 +395,11 @@ describe("excludePinOnly (quote-stage wave, task T1's pinOnly tier)", () => {
       "decision-close-ending",
       "ticket-cta-ending",
       "exit-word-ending",
+      "gauge-verdict",
+      "gauge-section",
+      "gauge-stats",
       "gauge-point",
+      "gauge-next",
     ])
     for (const def of Object.values(LAYOUT_REGISTRY)) {
       if (pinOnlyIds.has(def.id)) {
@@ -485,7 +490,11 @@ describe("layout branding declaration (editorial-verse wave)", () => {
       "decision-close-ending",
       "ticket-cta-ending",
       "exit-word-ending",
+      "gauge-verdict",
+      "gauge-section",
+      "gauge-stats",
       "gauge-point",
+      "gauge-next",
     ] as const) {
       expect(LAYOUT_REGISTRY[id].branding, id).toBe("none")
     }
@@ -559,7 +568,11 @@ describe("layout branding declaration (editorial-verse wave)", () => {
       "gauge-verdict",
       "gauge-section",
       "gauge-stats",
+      "gauge-verdict",
+      "gauge-section",
+      "gauge-stats",
       "gauge-point",
+      "gauge-next",
       "gauge-next",
     ])
     for (const def of Object.values(LAYOUT_REGISTRY)) {

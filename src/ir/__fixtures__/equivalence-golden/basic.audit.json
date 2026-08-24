@@ -1,22 +1,5 @@
 {
-  "findings": [
-    {
-      "page": 4,
-      "code": "content-truncated",
-      "message": "text \"semantic component\" was truncated to fit — widen the layout, shorten the source content, or accept the cut if the tail wasn't essential",
-      "detail": {
-        "text": "semantic component"
-      }
-    },
-    {
-      "page": 4,
-      "code": "content-truncated",
-      "message": "text \"single SVG source per\" was truncated to fit — widen the layout, shorten the source content, or accept the cut if the tail wasn't essential",
-      "detail": {
-        "text": "single SVG source per"
-      }
-    }
-  ],
+  "findings": [],
   "pagesAudited": 5,
   "pagesSkipped": 0,
   "checks": {

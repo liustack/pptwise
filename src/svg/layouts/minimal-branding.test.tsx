@@ -144,7 +144,20 @@ describe("layout-declared branding:none (editorial-verse wave)", () => {
 })
 
 describe("pinOnly auto-pool: editorial-verse ids never enter selection", () => {
-  const AUTO_CONTENT = ["gauge-stats"]
+  // consulting keeps its own nine shared faces and puts the gauge face first.
+  // Collapsing the pool to one id would make every content page identical.
+  const AUTO_CONTENT = [
+    "gauge-stats",
+    "narrow-column",
+    "two-column",
+    "rail-numbered",
+    "stacked-poster",
+    "bento-panel",
+    "tone-adaptive-content",
+    "asymmetric-triptych",
+    "quiet-frame",
+    "split-band",
+  ]
 
   it("consulting auto-locks gauge-stats, and no built-in theme lists a pinOnly sparse id", () => {
     expect([...THEME_DEFINITIONS.consulting.layouts.content]).toEqual(AUTO_CONTENT)
@@ -188,13 +201,16 @@ describe("pinOnly auto-pool: editorial-verse ids never enter selection", () => {
       slides,
     } as PptxIR
     const ids = slides.map((slide, i) => resolveEffectiveLayoutId(doc, slide, i))
+    // Identity pages are board-locked to the gauge faces. Content pages still
+    // sample consulting's ten-id pool (gauge-stats weighted by tendency), so
+    // one deck does not render three identical content pages.
     expect(ids).toEqual([
       "gauge-verdict",
       "gauge-section",
-      "gauge-stats",
-      "gauge-stats",
+      "tone-adaptive-content",
+      "split-band",
       "gauge-section",
-      "gauge-stats",
+      "rail-numbered",
       "gauge-next",
     ])
     const identityTypes = new Set(["cover", "chapter", "ending"])

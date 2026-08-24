@@ -2,7 +2,7 @@ import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import { chapterNumberFor } from "../../lib/derive"
 import { fitSvgLine } from "../../lib/svg-text-layout"
-import { accessibleInk } from "../ink"
+import { accessibleInk, metaInk } from "../ink"
 import { stripEmphasis } from "../emphasis"
 import { GaugeMeta, GAUGE_DARK_META, withoutOverflowMark } from "./gauge-shared"
 
@@ -49,6 +49,9 @@ export function GaugeSectionChapter({ ir, slide, index, ctx }: SvgTemplateProps)
     : null
   const ordinalInk = accessibleInk(colors.surface, colors.primary, ORDINAL_SIZE)
   const titleInk = accessibleInk(colors.bg, colors.primary, title?.fontSize ?? TITLE_SIZE)
+  // Derived, not baked: the board's #B7BBC4 only clears 3:1 on consulting's
+  // own navy. metaInk keeps it wherever it passes and nudges it elsewhere.
+  const subtitleInk = metaInk(GAUGE_DARK_META, colors.primary)
 
   return (
     <>
@@ -92,7 +95,7 @@ export function GaugeSectionChapter({ ir, slide, index, ctx }: SvgTemplateProps)
           y={SUBTITLE_Y}
           fontFamily={fonts.body}
           fontSize={subtitle.fontSize}
-          fill={GAUGE_DARK_META}
+          fill={subtitleInk}
           dominantBaseline="alphabetic"
         >
           {withoutOverflowMark(subtitle.text)}
@@ -121,4 +124,8 @@ export const layoutDef: LayoutDefinition = {
     maxLines: 1,
     minPt: TITLE_MIN_PT,
   },
+  // `pinOnly`: consulting locks this face by *listing* it in its own
+  // `layouts`, which `resolveLayoutId` honours. Without it the face joins
+  // `fullLayoutSet`, the pool the other 23 builtins auto-pick from.
+  pinOnly: true,
 }

@@ -34,7 +34,7 @@ describe("LAYOUT_REGISTRY count guard", () => {
     expect(
       definitions.filter((definition) => definition.pinOnly === true),
       COUNT_DRIFT_MESSAGE,
-    ).toHaveLength(71)
+    ).toHaveLength(75)
   })
 
   it("pins registered and auto-selectable totals by slide type", () => {
@@ -49,10 +49,10 @@ describe("LAYOUT_REGISTRY count guard", () => {
     )
 
     expect(counts, COUNT_DRIFT_MESSAGE).toEqual({
-      cover: { registered: 35, autoSelectable: 20 },
-      chapter: { registered: 34, autoSelectable: 9 },
-      ending: { registered: 32, autoSelectable: 8 },
-      content: { registered: 21, autoSelectable: 10 },
+      cover: { registered: 35, autoSelectable: 19 },
+      chapter: { registered: 34, autoSelectable: 8 },
+      ending: { registered: 32, autoSelectable: 7 },
+      content: { registered: 21, autoSelectable: 9 },
     })
   })
 })

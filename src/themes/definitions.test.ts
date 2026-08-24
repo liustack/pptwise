@@ -90,7 +90,8 @@ describe("THEME_DEFINITIONS", () => {
   // registry 新增/删除 layout 时，这里必须跟着人工重推，而不是无声通过。
   // Gallery r2 D10 退订 image-lead-split，自动 content 池 12 -> 11。D20 / E22
   // 再收窄 lecture / luxe / consulting 的 content 集合。量规重构新增的
-  // gauge-stats 只进 consulting 锁，其他内置主题保持原共享池。
+  // 五张 gauge 脸都是 pinOnly，只有 consulting 在自己的名单里列出它们，
+  // 所以共享全集与重构前完全一致。
   const FULL_COVER = [
     "banner-title",
     "poster-center",
@@ -117,7 +118,6 @@ describe("THEME_DEFINITIONS", () => {
     "paper-masthead",
     "horizon-wedge",
     "corner-wedge",
-    "gauge-verdict",
   ]
   const FULL_CHAPTER = [
     "masthead-chapter",
@@ -128,7 +128,6 @@ describe("THEME_DEFINITIONS", () => {
     "roman-chapter",
     "tone-adaptive-chapter",
     "fashion-chapter",
-    "gauge-section",
   ]
   const FULL_CONTENT = [
     "narrow-column",
@@ -138,14 +137,13 @@ describe("THEME_DEFINITIONS", () => {
     "bento-panel",
     "tone-adaptive-content",
     // P1 variety wave, task 4: content pool 7 -> 10. side-highlight later
-    // retired. banner-heading later retired. gauge-stats brings the pool to 10.
+    // retired. banner-heading later retired.
     "asymmetric-triptych",
     "quiet-frame",
     // content-layout expansion wave, task T2. Gallery r2 D10 retired
-    // image-lead-split. This change retires banner-heading. Auto-selectable
-    // gauge-stats brings the content pool to 10.
+    // image-lead-split. This change retires banner-heading. The gauge faces
+    // are pinOnly, so consulting's own lock never joins this shared pool.
     "split-band",
-    "gauge-stats",
   ]
   // Gallery r2 D20: framed themes do not sample split-band /
   // stacked-poster. banner-heading is globally retired.
@@ -158,8 +156,19 @@ describe("THEME_DEFINITIONS", () => {
     "asymmetric-triptych",
     "quiet-frame",
   ]
-  const CONSULTING_CONTENT = ["gauge-stats"]
-  const SHARED_CONTENT = FULL_CONTENT.filter((id) => id !== "gauge-stats")
+  const CONSULTING_CONTENT = [
+    "gauge-stats",
+    "narrow-column",
+    "two-column",
+    "rail-numbered",
+    "stacked-poster",
+    "bento-panel",
+    "tone-adaptive-content",
+    "asymmetric-triptych",
+    "quiet-frame",
+    "split-band",
+  ]
+  const SHARED_CONTENT = FULL_CONTENT
   const FULL_ENDING = [
     "masthead-ending",
     "constellation-ending",
@@ -168,9 +177,8 @@ describe("THEME_DEFINITIONS", () => {
     "poster-ending",
     "tone-adaptive-ending",
     "fashion-ending",
-    "gauge-next",
   ]
-  it("W4 全集放开基线：内置主题的共享 content 池不吸收 consulting 私有 gauge-stats", () => {
+  it("W4 全集放开基线：consulting 的 gauge 脸是 pinOnly，共享池不吸收它们", () => {
     expect(__fullLayoutSet("cover")).toEqual(FULL_COVER)
     expect(__fullLayoutSet("content")).toEqual(FULL_CONTENT)
     const NARROWED_CONTENT = new Set(["lecture", "luxe", "consulting"])
@@ -268,10 +276,18 @@ describe("THEME_DEFINITIONS", () => {
     expect(THEME_DEFINITIONS.consulting.layouts).toEqual({
       cover: ["gauge-verdict"],
       chapter: ["gauge-section"],
+      content: CONSULTING_CONTENT,
+      ending: ["gauge-next"],
+    })
+    // Tendency is a soft weight, not the pool. content leans on the gauge
+    // face while the nine shared ids stay reachable, so the two are equal on
+    // the locked page types only.
+    expect(THEME_DEFINITIONS.consulting.layoutTendencies).toEqual({
+      cover: ["gauge-verdict"],
+      chapter: ["gauge-section"],
       content: ["gauge-stats"],
       ending: ["gauge-next"],
     })
-    expect(THEME_DEFINITIONS.consulting.layoutTendencies).toEqual(THEME_DEFINITIONS.consulting.layouts)
     expect(THEME_DEFINITIONS.consulting.motif).toBe("gauge-motif")
 
     expect(THEME_DEFINITIONS.classroom.layouts.cover).toEqual(["chalk-band-cover"])

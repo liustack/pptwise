@@ -105,7 +105,7 @@ describe("ending-gauge-next", () => {
     ]).toEqual(["160", "636", "16", tokens.colors.muted])
   })
 
-  it("keeps top-right meta and declares an auto-selectable ending", () => {
+  it("keeps top-right meta and declares a theme-locked pinOnly ending", () => {
     const { root } = renderEnding()
     expect([textBy(root, "云觅咨询")?.getAttribute("x"), textBy(root, "云觅咨询")?.getAttribute("y")]).toEqual([
       "1184",
@@ -121,7 +121,7 @@ describe("ending-gauge-next", () => {
       branding: "none",
       slideTypes: ["ending"],
     })
-    expect(layoutDef.pinOnly).not.toBe(true)
+    expect(layoutDef.pinOnly).toBe(true)
     expect(layoutDef.slots.find((slot) => slot.name === "body")).toEqual({
       name: "body",
       accepts: ["bullets"],

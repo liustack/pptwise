@@ -133,14 +133,14 @@ describe("cover-gauge-verdict", () => {
     expect(() => assertSubset(root)).not.toThrow()
   })
 
-  it("declares an auto-selectable cover with one bullets slot and no shared branding footer", () => {
+  it("declares a theme-locked pinOnly cover with one bullets slot and no shared branding footer", () => {
     expect(layoutDef).toMatchObject({
       id: "gauge-verdict",
       kind: "archetype",
       slideTypes: ["cover"],
       branding: "none",
     })
-    expect(layoutDef.pinOnly).not.toBe(true)
+    expect(layoutDef.pinOnly).toBe(true)
     expect(layoutDef.slots.find((slot) => slot.name === "body")).toEqual({
       name: "body",
       accepts: ["bullets"],

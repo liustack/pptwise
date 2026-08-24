@@ -1173,9 +1173,20 @@ describe("second-front wave: chapter / content / ending allocation", () => {
     expect(THEME_DEFINITIONS.playbill.layouts.cover).toEqual(["bill-head"])
     expect(THEME_DEFINITIONS.playbill.layouts.chapter).toEqual(["day-bill-chapter"])
     expect(THEME_DEFINITIONS.playbill.layouts.content).toEqual(
-      __fullLayoutSet("content").filter((id) => id !== "gauge-stats"),
+      __fullLayoutSet("content"),
     )
-    expect(THEME_DEFINITIONS.consulting.layouts.content).toEqual(["gauge-stats"])
+    expect(THEME_DEFINITIONS.consulting.layouts.content).toEqual([
+      "gauge-stats",
+      "narrow-column",
+      "two-column",
+      "rail-numbered",
+      "stacked-poster",
+      "bento-panel",
+      "tone-adaptive-content",
+      "asymmetric-triptych",
+      "quiet-frame",
+      "split-band",
+    ])
     expect(THEME_DEFINITIONS.playbill.layouts.ending).toEqual(["ticket-cta-ending"])
     expect(THEME_DEFINITIONS.playbill.layoutTendencies?.content).toEqual([
       "stacked-poster",

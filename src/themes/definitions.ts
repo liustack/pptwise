@@ -288,6 +288,22 @@ const BRANDS: Partial<Record<CanonicalThemeId, BrandConfig>> = {
  * 主题的 content 仍是全集。
  */
 /**
+ * consulting 自己的内容名单（gallery r2 E22 起）。量规重构把 `gauge-stats`
+ * 加在它前面，而不是取代它：内容池塌成单张会让每一页长成一个样。
+ */
+const CONSULTING_CONTENT_LAYOUTS: readonly string[] = [
+  "narrow-column",
+  "two-column",
+  "rail-numbered",
+  "stacked-poster",
+  "bento-panel",
+  "tone-adaptive-content",
+  "asymmetric-triptych",
+  "quiet-frame",
+  "split-band",
+]
+
+/**
  * classroom 自己的结构身份（theme-structure-allocation wave）。四轴是
  * heading-axis 左 / meta top-band / decor medium / whitespace medium。
  * 产品口径 24 套主题、24 个 id，classroom 独占这一行。
@@ -352,12 +368,14 @@ const CLASSROOM_LAYOUTS: ThemeDefinition["layouts"] = {
  */
 const LAYOUTS: Record<CanonicalThemeId, Pick<ThemeDefinition, "layouts" | "motif" | "layoutTendencies">> = {
   consulting: {
-    // 量规重构为四页型分别锁定一张新脸。gauge-point 保持 pinOnly，
-    // 只接受作者显式指定，不进入 consulting 的自动内容池。
+    // 量规重构给封面、章节、结尾各锁一张新脸。内容页把 gauge-stats 加在
+    // consulting 原有的九个之前，而不是取代它们：塌成单张会让所有内容页
+    // 长成一个样，种子选型的多样性直接消失。gauge-stats 与 gauge-point
+    // 都是 pinOnly，靠这里显式列出才可达，因此不会进别家的共享池。
     layouts: {
       cover: ["gauge-verdict"],
       chapter: ["gauge-section"],
-      content: ["gauge-stats"],
+      content: ["gauge-stats", ...CONSULTING_CONTENT_LAYOUTS],
       ending: ["gauge-next"],
     },
     motif: "gauge-motif",

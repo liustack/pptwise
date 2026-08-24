@@ -6,6 +6,8 @@ import { buildCtx, resolveBackgroundHex } from "../full-slide-svg"
 import { parseSvgRoot, renderSvgMarkup } from "../serialize"
 import { assertSubset } from "../subset-validate"
 import { GaugeSectionChapter, layoutDef } from "./chapter-gauge-section"
+import { metaInk } from "../ink"
+import { CONSULTING_TOKENS } from "../../themes/consulting"
 import { GAUGE_DARK_META } from "./gauge-shared"
 
 const slide: Slide = {
@@ -82,7 +84,7 @@ describe("chapter-gauge-section", () => {
       subtitle.getAttribute("y"),
       subtitle.getAttribute("font-size"),
       subtitle.getAttribute("fill"),
-    ]).toEqual(["160", "496", "22", GAUGE_DARK_META])
+    ]).toEqual(["160", "496", "22", metaInk(GAUGE_DARK_META, CONSULTING_TOKENS.colors.primary)])
   })
 
   it("uses the exact dark two-line top-right meta and never puts text on gold", () => {
@@ -95,7 +97,7 @@ describe("chapter-gauge-section", () => {
     for (const text of meta) {
       expect(text.getAttribute("font-size")).toBe("14")
       expect(text.getAttribute("text-anchor")).toBe("end")
-      expect(text.getAttribute("fill")).toBe(GAUGE_DARK_META)
+      expect(text.getAttribute("fill")).toBe(metaInk(GAUGE_DARK_META, CONSULTING_TOKENS.colors.primary))
       expect(text.getAttribute("data-contrast-tier")).toBe("meta")
     }
     expect(root.querySelectorAll(`rect[fill="${tokens.colors.accent}"]`)).toHaveLength(1)
@@ -103,7 +105,7 @@ describe("chapter-gauge-section", () => {
     expect(() => assertSubset(root)).not.toThrow()
   })
 
-  it("declares an auto-selectable self-painted chapter with no shared footer", () => {
+  it("declares a theme-locked pinOnly self-painted chapter with no shared footer", () => {
     expect(layoutDef).toMatchObject({
       id: "gauge-section",
       kind: "archetype",
@@ -111,6 +113,6 @@ describe("chapter-gauge-section", () => {
       branding: "none",
       paintsOwnBackground: true,
     })
-    expect(layoutDef.pinOnly).not.toBe(true)
+    expect(layoutDef.pinOnly).toBe(true)
   })
 })
