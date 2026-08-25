@@ -257,6 +257,24 @@ describe("cover-vertical-title-cover — vertical overflow without ellipsis", ()
     }
   })
 
+  it("never leaves the drop-cap as an orphan ink when the accent cannot hold it", () => {
+    // consulting: accent is 1.51:1 at title size, so the first glyph must not
+    // fall back to accessibleInk's orphan near-black while the rest of the
+    // column stays on titleInk — the half-and-half defect from the
+    // 2026-08-25 ink-duty audit. The whole column shares one ink instead.
+    const consulting = renderCover("consulting")
+    const singles = Array.from(consulting.root.querySelectorAll("text")).filter(
+      (t) => t.textContent?.length === 1 && t.getAttribute("text-anchor") === "middle",
+    )
+    // The title column is the largest glyph run on the page; the org column
+    // and seal paint at smaller sizes with their own inks.
+    const titleSize = Math.max(...singles.map((t) => Number(t.getAttribute("font-size"))))
+    const glyphs = singles.filter((t) => Number(t.getAttribute("font-size")) === titleSize)
+    expect(glyphs.length).toBeGreaterThan(4)
+    const fills = new Set(glyphs.map((t) => t.getAttribute("fill")))
+    expect(fills.size).toBe(1)
+  })
+
   it("drops a subtitle that would ellipsize rather than painting …", () => {
     const { root, markup } = renderCover("ink", slide(HEADING, { subheading: "副".repeat(200) }))
     expect(markup).not.toContain("…")
