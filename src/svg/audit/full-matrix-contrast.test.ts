@@ -575,15 +575,19 @@ describe("split-diagonal org kicker contrast (B-tier reclassification)", () => {
     expect(contrastRatio(fill, primary)).toBeCloseTo(14.044, 2)
   })
 
-  // Scope pin: the approved crayon primary clears its actual B-tier 3:1 floor
-  // but its 92% composite sits below the old body-text floor. Keep the exact
-  // list so a future token change appears as a named diff.
-  it("crayon is the approved B-tier primary below the old 4.5:1 body floor", () => {
+  // Scope pin, kept as a named diff. crayon used to be the one theme whose
+  // 92% composite sat below the old body floor. The crayon-box palette round
+  // raised its primary from #0A78B4 to #0B87C7 — brighter, because the date
+  // and contact lines it inks are 24px bold and answer to the 3:1 large-text
+  // floor, not 4.5 — and that took the composite clear too. The list is now
+  // empty on purpose: a future token change that drops a theme back below the
+  // old floor shows up right here.
+  it("no theme's primary composite sits below the old 4.5:1 body floor", () => {
     const below = CANONICAL_THEME_IDS.filter((themeId) => {
       const primary = THEME_DEFINITIONS[themeId].style.colors.primary
       return contrastRatio(blendOver(readableOn(primary), primary, 0.92), primary) < 4.5
     })
-    expect(below).toEqual(["crayon"])
+    expect(below).toEqual([])
   })
 
   // Why `metaInk` is in the call at all, given it returns its input for all

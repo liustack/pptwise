@@ -54,10 +54,15 @@ export function EndingCrayonboxTodo({ ir, slide, ctx }: SvgTemplateProps) {
     }),
   )
   const contactSource = contactLine({ ir, slide })
+  // 24px, not the board's 22: the contact is inked with the theme's crayon
+  // blue through `accessibleInk`, and this repo's large-text line is a flat
+  // 24px. At 22 the blue answers the 4.5 body floor instead, fails it, and
+  // gets replaced by near-black — the design's blue contact line disappears.
+  // The cover's date line is already 24 for the same reason.
   const contact = contactSource
     ? fitSvgLine(contactSource, {
         maxWidth: 1088,
-        fontSize: 22,
+        fontSize: 24,
         minFontSize: 17,
         fontFamily: fonts.body,
         bold: true,

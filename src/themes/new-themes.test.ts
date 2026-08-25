@@ -246,7 +246,7 @@ describe("crayon tokens", () => {
     expect(CRAYON_TOKENS.colors).toMatchObject({
       bg: "#FFF9F0",
       surface: "#FFFFFF",
-      primary: "#0A78B4",
+      primary: "#0B87C7",
       accent: "#FF6A12",
       text: "#1E2340",
       muted: "#6E655A",
@@ -254,7 +254,7 @@ describe("crayon tokens", () => {
       danger: "#C71559",
       warning: "#A67C00",
       success: "#0E8437",
-      chartPalette: ["#0A78B4", "#FF6A12", "#0E8437", "#FFD100"],
+      chartPalette: ["#0B87C7", "#E85D00", "#0E8437", "#FFD100"],
     })
   })
 
@@ -262,8 +262,10 @@ describe("crayon tokens", () => {
     const { bg, surface, primary, accent, text, muted, danger, warning, success } = CRAYON_TOKENS.colors
     expect(contrastRatio(text, bg)).toBeCloseTo(14.65, 2)
     expect(contrastRatio(text, surface)).toBeCloseTo(15.33, 2)
-    expect(contrastRatio(primary, bg)).toBeCloseTo(4.6, 2)
-    expect(contrastRatio("#FFFFFF", primary)).toBeCloseTo(4.82, 2)
+    // primary 只给 24px 粗体的日期与联系方式上色，答 3:1 大字线。
+    // 先前按 4.5 挑到 #0A78B4，压深两档后读起来像企业链接蓝不像蜡笔。
+    expect(contrastRatio(primary, bg)).toBeCloseTo(3.78, 2)
+    expect(contrastRatio("#FFFFFF", primary)).toBeCloseTo(3.96, 2)
     expect(contrastRatio(text, accent)).toBeCloseTo(5.35, 2)
     expect(contrastRatio(muted, bg)).toBeCloseTo(5.46, 2)
     expect(contrastRatio(muted, surface)).toBeCloseTo(5.72, 2)

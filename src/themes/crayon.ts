@@ -48,7 +48,9 @@ export const CRAYON_TOKENS: StyleTokens = {
   colors: {
     bg: "#FFF9F0", // 亮暖白，正文压它 14.65:1
     surface: "#FFFFFF", // 图画纸卡白，正文压它 15.33:1
-    primary: "#0A78B4", // 蜡笔蓝，压 bg 4.60:1，承白字 4.82:1
+    primary: "#0B87C7", // 蜡笔蓝（压 bg 3.78:1，承白字 3.96:1）——它只给日期与
+    // 联系方式这两行 24px 粗体上色，answers 的是 3:1 大字门槛而不是 4.5。
+    // 先前取 #0A78B4 是按 4.5 挑的，压深两档后读起来像企业链接蓝不像蜡笔。
     accent: "#FF6A12", // 亮橘，承深蓝黑 5.35:1
     text: "#1E2340", // 深蓝黑
     muted: "#6E655A", // 铅笔灰，压 bg 5.46:1，压 surface 5.72:1
@@ -57,7 +59,12 @@ export const CRAYON_TOKENS: StyleTokens = {
     warning: "#A67C00", // 阳光黄压深，压 surface 3.82:1，只作线与图标
     success: "#0E8437", // 草绿压深，压 surface 4.80:1
     // 一盒四色蜡笔。第四格阳光黄压 bg 1.40:1，只作色块，永不承字。
-    chartPalette: ["#0A78B4", "#FF6A12", "#0E8437", "#FFD100"],
+    // 一盒四色蜡笔。前三格压 bg 3.78 / 3.35 / 4.59，都过 3.0 图表标记线。
+    // 第二格是亮橘压深一档的结果：设计给的 #FF6A12 压 bg 只有 2.74，作下划
+    // 与贴纸底没问题（那是身份装饰件），但作图表柱子会和纸底分不开。
+    // 第四格阳光黄 1.40 在线下，与改动前的 #F5B700（1.68）同属既有例外：
+    // 它只作色块与太阳笔画，永不承字。
+    chartPalette: ["#0B87C7", "#E85D00", "#0E8437", "#FFD100"],
   },
   fonts: {
     heading: ["Microsoft YaHei", "PingFang SC", "Helvetica Neue", "system-ui"],

@@ -1,5 +1,6 @@
 import type { ReactNode } from "react"
 import { DecorPiece } from "../motifs/decor-piece"
+import { CRAYON_TOKENS } from "../../themes/crayon"
 
 /**
  * 「一盒蜡笔」版式共用的糖果色与手绘太阳。糖果色只作版式填充，不进入
@@ -26,10 +27,13 @@ function crayonboxIdentityRole(colors: {
   readonly accent: string
   readonly text: string
 }): "identity" | undefined {
-  return colors.bg.toUpperCase() === "#FFF9F0" &&
-    colors.primary.toUpperCase() === "#0A78B4" &&
-    colors.accent.toUpperCase() === "#FF6A12" &&
-    colors.text.toUpperCase() === "#1E2340"
+  // Compared against the theme's own tokens, not baked hexes: a palette tweak
+  // would otherwise silently drop the exemption and let the underline recede.
+  const c = CRAYON_TOKENS.colors
+  return colors.bg.toUpperCase() === c.bg.toUpperCase() &&
+    colors.primary.toUpperCase() === c.primary.toUpperCase() &&
+    colors.accent.toUpperCase() === c.accent.toUpperCase() &&
+    colors.text.toUpperCase() === c.text.toUpperCase()
     ? "identity"
     : undefined
 }
