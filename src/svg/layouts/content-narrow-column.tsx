@@ -5,7 +5,7 @@ import { sectionNameFor } from "../../lib/derive"
 import { fitHeadingLines } from "../heading-fit"
 import { fitSvgLine } from "../../lib/svg-text-layout"
 import { fitEmphasisLine, renderEmphasisText } from "../emphasis"
-import { accessibleInk } from "../ink"
+import { accessibleInk, contrastRatio, requiredContrastRatio } from "../ink"
 import { footnoteBaselineFor } from "../branding-geometry"
 import { tryContentHeadingTreatment } from "../heading-treatments/render"
 
@@ -14,8 +14,9 @@ import { tryContentHeadingTreatment } from "../heading-treatments/render"
  * usual full-width component stack for a magazine-style narrow column (w=880 of
  * the page's 1088 content width), leaving a deliberate 208px whitespace
  * gutter on the right that carries only a large muted serif page number.
- * Kicker (section name) sits italic+accent above the heading; an optional
- * accent-italic subheading slots in below it. Extracted from
+ * Kicker (section name) sits italic above the heading and prefers accent
+ * only when it clears the 16px text floor. Its fallback is the theme text
+ * token. An optional accent-italic subheading slots in below it. Extracted from
  * templates/magazine.tsx 的 `EditorialSerifContent`（212-380 行）。
  * 随迁 helper：无——本函数消费的 `SvgContent`/`sectionNameFor`/
  * `fitHeadingLines`/`fitSvgLine`/`fitEmphasisLine`/`renderEmphasisText`
@@ -35,6 +36,8 @@ import { tryContentHeadingTreatment } from "../heading-treatments/render"
  * 该 layout 在这些主题 pre-W4 策展集里都不存在，是全集放开新暴露）。改用
  * `accessibleInk(colors.accent, ctx.defaultBg, fontSize)`——通过校验的主题
  * 原样返回、逐字节不变。
+ * A3 墨色审计把同一规则补到 16px kicker。accent 过线时原样保留，失败时
+ * 从 `colors.text` 推导，避免落到主题外的孤儿近黑。
  *
  * 纪律：本文件禁 theme id、禁颜色 hex 字面量。
  */
@@ -172,6 +175,12 @@ export function NarrowColumnContent({ ir, slide, index, ctx }: SvgTemplateProps)
   const kicker = section
     ? fitSvgLine(section, { maxWidth: COLUMN_W, fontSize: 16, minFontSize: 16 })
     : null
+  const kickerFill = kicker
+    ? contrastRatio(colors.accent, ctx.defaultBg ?? colors.bg) >=
+      requiredContrastRatio(kicker.fontSize)
+      ? colors.accent
+      : accessibleInk(colors.text, ctx.defaultBg ?? colors.bg, kicker.fontSize)
+    : colors.accent
 
   // 980 = conservative left edge of the page-number digits (1112) minus the
   // footnote's own start x (96) minus a 36px safety gap, so a
@@ -199,7 +208,7 @@ export function NarrowColumnContent({ ir, slide, index, ctx }: SvgTemplateProps)
           y={KICKER_Y}
           fontFamily={fonts.heading}
           fontSize={kicker.fontSize}
-          fill={colors.accent}
+          fill={kickerFill}
           fontStyle="italic"
           dominantBaseline="alphabetic"
         >

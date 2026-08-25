@@ -5,6 +5,8 @@ import { SvgContent } from "./svg-content"
 import type { ComponentCtx } from "./components/types"
 import type { Component } from "@/ir"
 import { measureTextUnits } from "../lib/svg-text-layout"
+import { buildCtx } from "./full-slide-svg"
+import { resolveStyle } from "../themes"
 
 const ctx: ComponentCtx = {
   colors: {
@@ -25,10 +27,10 @@ const components: Component[] = [
   { type: "paragraph", text: "受益于渠道下沉。" },
 ]
 
-function renderBig(b: Component[]) {
+function renderBig(b: Component[], renderCtx: ComponentCtx = ctx) {
   return render(
     <svg viewBox="0 0 1280 720">
-      <SvgContent arrangement="big_number" components={b} rect={{ x: 80, y: 264, w: 1120, h: 400 }} ctx={ctx} />
+      <SvgContent arrangement="big_number" components={b} rect={{ x: 80, y: 264, w: 1120, h: 400 }} ctx={renderCtx} />
     </svg>,
   )
 }
@@ -40,11 +42,23 @@ describe("big_number variant", () => {
     const hero = texts.find((t) => (t.textContent ?? "").includes("82"))
     expect(hero).toBeTruthy()
     expect(parseFloat(hero!.getAttribute("font-size") ?? "0")).toBeGreaterThanOrEqual(120)
-    expect(hero!.getAttribute("fill")).toBe("#006A4E") // primary
+    expect(hero!.getAttribute("fill")).toBe("#1A2421") // text
     // label present
     expect(container.textContent).toContain("市场渗透率")
     // supporting paragraph still rendered
     expect(container.textContent).toContain("受益于渠道下沉")
+  })
+
+  it("renders the hero value and unit in one text-derived ink", () => {
+    const themeCtx = buildCtx(resolveStyle("consulting"), {})
+    const { container } = renderBig(components, themeCtx)
+    const hero = Array.from(container.querySelectorAll("text")).find((text) =>
+      (text.textContent ?? "").includes("82"),
+    )!
+    const unit = hero.querySelector("tspan")!
+
+    expect(hero.getAttribute("fill")).toBe(themeCtx.colors.text)
+    expect(unit.getAttribute("fill")).toBeNull()
   })
 
   it("shrinks an overlong hero value and label to fit the content rect", () => {

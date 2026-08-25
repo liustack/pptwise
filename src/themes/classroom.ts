@@ -57,16 +57,18 @@ import type { StyleTokens } from "./tokens";
 export const CLASSROOM_TOKENS: StyleTokens = {
   id: "classroom",
   colors: {
-    bg: "#ECF0F2", // 雾蓝讲义纸
-    surface: "#F9FBFC", // 作业纸白
+    bg: "#ECF0F2", // 雾蓝讲义纸。页底，正文墨压它 12.95:1，答 4.5
+    surface: "#F9FBFC", // 作业纸白。卡面，正文墨压它 14.30:1，答 4.5
     primary: "#4A6B8A", // 雾蓝压深（压 bg 4.87:1，白字 5.58:1）——板书带承白字
-    accent: "#B96A5E", // 陶土红，批改笔的颜色（3.46:1）
+    accent: "#B96A5E", // 批改笔，只给线与点。压 bg 3.46:1 答 3.0，不承小字
     text: "#23282E", // 钢笔墨（12.95:1）
     muted: "#5A6470", // 铅笔灰（5.24:1）
-    border: "#D3DBE0", // 横线簿格线
-    danger: "#A04A38", // 批改笔压深（5.73:1）——比 accent 陶土更红更重
-    warning: "#9A7318", // 砂黄压深（4.18:1），与陶土 accent 分家
-    success: "#55704A", // 鼠尾草压深（5.32:1）
+    border: "#D3DBE0", // 横线簿格线。只作线，永不承字，不答文字门槛
+    danger: "#A04A38", // 批改笔压深。kpi 箭头当字，压 surface 5.73:1，答 4.5
+    warning: "#9A7318", // 砂黄压深。只作线与图标，压 surface 4.18:1，不答文字门槛
+    success: "#55704A", // 鼠尾草压深。kpi 箭头当字，压 surface 5.32:1，答 4.5
+    // 四格只作图系列与色块，可作徽章底，字走 readableOn 并答 4.5。
+    // c2 鼠尾草压 bg 3.18:1，答 3.0 装饰线。余量仅 0.18，只作标记，永不当正文。
     chartPalette: ["#4A6B8A", "#B96A5E", "#7A8B6F", "#988054"], // 雾蓝/陶土/鼠尾草/砂黄
   },
   fonts: {

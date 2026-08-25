@@ -36,7 +36,7 @@ import type { StyleTokens } from "./tokens";
  *     4.60，全过 3.0 装饰线。两两 ΔE 33-61。
  *
  * 语义三色压 `surface` 校准（kpi 箭头是字，callout 的 warning 是线与图标）：
- *   - `danger` `#E08070`：粉笔珊瑚（4.64:1）。
+ *   - `danger` `#E18474`：粉笔珊瑚（4.81:1），kpi 箭头当字，答 4.5。
  *   - `warning` `#E9C46A`：黄粉笔本色（7.79:1），只作线与图标。
  *   - `success` `#7AAB7E`：粉笔鼠尾草（4.93:1），不是 arena 电光绿。
  *
@@ -62,16 +62,18 @@ import type { StyleTokens } from "./tokens";
 export const LECTURE_TOKENS: StyleTokens = {
   id: "lecture",
   colors: {
-    bg: "#1C2823", // 墨绿板面——H 155，全仓唯一绿底
-    surface: "#26342E", // 板面同族抬升
+    bg: "#1C2823", // 墨绿板面。页底，正文墨压它 13.58:1，答 4.5
+    surface: "#26342E", // 同族面板。卡面，正文墨压它 11.59:1，答 4.5
     primary: "#2E4038", // 深色块（让 accent 唱主角，白字 11.01:1）
     accent: "#E9C46A", // 黄粉笔（9.13:1）——比 luxe 香槟金更亮更饱和
     text: "#EFF3EC", // 粉笔白（13.58:1）
     muted: "#A9BCAF", // 退淡粉笔灰（7.62:1）
-    border: "#35443C", // 粉笔槽
-    danger: "#E08070", // 粉笔珊瑚（压 surface 4.64:1）
+    border: "#35443C", // 粉笔槽。只作线，永不承字，不答文字门槛
+    danger: "#E18474", // 粉笔珊瑚。kpi 箭头当字，压 surface 4.81:1，答 4.5
     warning: "#E9C46A", // 黄粉笔本色（7.79:1），只作线与图标
     success: "#7AAB7E", // 粉笔鼠尾草（4.93:1）
+    // 四格只作图系列与色块。可作徽章底，字走 readableOn 并答 4.5。
+    // 粉笔白是浅色块，不直接充当深底上的图系列文字墨。
     chartPalette: ["#EFF3EC", "#E9C46A", "#8A9EAA", "#C47A68"], // 粉笔白/黄粉笔/灰蓝/陶土
   },
   fonts: {

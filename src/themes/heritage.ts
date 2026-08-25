@@ -49,16 +49,18 @@ import type { StyleTokens } from "./tokens";
 export const HERITAGE_TOKENS: StyleTokens = {
   id: "heritage",
   colors: {
-    bg: "#F4EDE2", // 灰调本白（旧籍纸）
-    surface: "#FBF6EC", // 衬页米
+    bg: "#F4EDE2", // 灰调本白。页底，正文墨压它 13.40:1，答 4.5
+    surface: "#FBF6EC", // 衬页米。卡面，正文墨压它 14.47:1，答 4.5
     primary: "#6E1F2A", // 勃艮第压深一档（9.54:1，可作正文级）
     accent: "#B8742C", // 焦糖只给线与纹饰（3.24:1，不承字）
     text: "#2E2119", // 烟褐墨（13.40:1）
     muted: "#6F5F51", // 旧墨注脚（5.26:1）
-    border: "#DCCDB8", // 纸纹线
-    danger: "#A32A22", // 古籍朱（6.70:1）——比勃艮第 primary 更红更亮，才叫得响
-    warning: "#9A6120", // 焦糖压深（4.75:1）
-    success: "#3F6647", // 瓶绿（6.09:1），旧纸上的沉绿
+    border: "#DCCDB8", // 纸纹线。只作线，永不承字，不答文字门槛
+    danger: "#A32A22", // 古籍朱。kpi 箭头当字，压 surface 6.70:1，答 4.5
+    warning: "#9A6120", // 焦糖压深。只作线与图标，压 surface 4.75:1，不答文字门槛
+    success: "#3F6647", // 瓶绿。kpi 箭头当字，压 surface 6.09:1，答 4.5
+    // 四格只作图系列与色块。酒红、墨蓝、橄榄褐可作徽章底，字走 readableOn 并答 4.5。
+    // c1 同 accent，只给纹饰，压 bg 3.24:1，答 3.0 装饰线。余量仅 0.24，永不承字。
     chartPalette: ["#8A2A38", "#B8742C", "#3F5361", "#7C6A4A"], // 酒红/焦糖/墨蓝/橄榄褐
   },
   fonts: {

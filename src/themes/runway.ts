@@ -82,18 +82,20 @@ import type { StyleTokens } from "./tokens";
 export const RUNWAY_TOKENS: StyleTokens = {
   id: "runway",
   colors: {
-    bg: "#F2F0EB", // 秀场米白
-    surface: "#FAF9F5", // look 卡白
+    bg: "#F2F0EB", // 秀场米白。页底，正文墨压它 15.44:1，答 4.5
+    surface: "#FAF9F5", // look 卡白。卡面，正文墨压它 16.69:1，答 4.5
     primary: "#141414", // 秀场黑（16.18:1）——黑白即全部主张
     accent: "#B0483C", // 绯红一滴（4.80:1）——只给页码与一个词
     text: "#191919", // 正文黑（15.44:1）
     muted: "#646460", // 石灰（5.22:1）——照板上自标的 5:1 压深，见文件头
-    border: "#DCD9D0", // 细栏线
-    danger: "#A32017", // 绯红压深（7.18:1）
-    warning: "#8F6A21", // 烟草金（4.69:1）
-    success: "#4A6B3F", // 橄榄绿（5.75:1）
-    cardStroke: "#DCD9D0", // 米白底浅卡靠描边区分
-    chartPalette: ["#141414", "#B0483C", "#8A8A84", "#C4C0B4"], // 黑/绯红/石灰/亚麻（末格仅底纹）
+    border: "#DCD9D0", // 细栏线。只作线，永不承字，不答文字门槛
+    danger: "#A32017", // 绯红压深。kpi 箭头当字，压 surface 7.18:1，答 4.5
+    warning: "#8F6A21", // 烟草金。只作线与图标，压 surface 4.69:1，不答文字门槛
+    success: "#4A6B3F", // 橄榄绿。kpi 箭头当字，压 surface 5.75:1，答 4.5
+    cardStroke: "#DCD9D0", // 发丝线，永不承字，不答文字门槛
+    // c0 与 c1 可作徽章底承白字并答 4.5。c2 只作标记，永不承小字。
+    // c2 压 bg 3.05:1，答 3.0 装饰线。余量仅 0.05。c3 只作底纹，不答文字门槛。
+    chartPalette: ["#141414", "#B0483C", "#8A8A84", "#C4C0B4"], // 黑/绯红/石灰/亚麻
   },
   fonts: {
     heading: ["SimSun", "宋体", "Georgia", "serif"],

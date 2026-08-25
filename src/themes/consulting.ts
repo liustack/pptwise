@@ -62,18 +62,20 @@ import type { StyleTokens } from "./tokens";
 export const CONSULTING_TOKENS: StyleTokens = {
   id: "consulting",
   colors: {
-    bg: "#F7F6F2", // 报告纸白
-    surface: "#FFFFFF", // 图表卡纯白
+    bg: "#F7F6F2", // 报告纸白。页底，正文墨压它 15.42:1，答 4.5
+    surface: "#FFFFFF", // 图表卡纯白。卡面，正文墨压它 16.68:1，答 4.5
     primary: "#1E2A4A", // 藏青（13.07:1），横幅承白字 14.14:1
     accent: "#F5C518", // 一线黄（1.51:1）——只作色块与下划，永不承字
     text: "#1C1E23", // 正文黑（15.42:1）
     muted: "#5B6069", // 脚注灰（5.85:1）
-    border: "#DDDCD4", // 表格线
-    danger: "#B3261E", // 报告红（6.54:1）
-    warning: "#9A7404", // 一线黄压到能承线的重量（4.31:1；accent 的 1.51:1 连装饰线都过不了）
-    success: "#1F6B52", // 克制森绿（6.40:1）——本板唯一的绿，只给语义
+    border: "#DDDCD4", // 表格线。只作线，永不承字，不答文字门槛
+    danger: "#B3261E", // 报告红。kpi 箭头当字，压 surface 6.54:1，答 4.5
+    warning: "#9A7404", // 只作线与图标。压 surface 4.31:1，不答文字门槛
+    success: "#1F6B52", // 克制森绿。kpi 箭头当字，压 surface 6.40:1，答 4.5
     // 藏青 / 高亮黄 / 数据蓝 / 中性灰。末格照板上自标的 3.8:1 解出，
     // 板上 hex `#8B909A` 实测 2.96:1 过不了 3.0 装饰线——见文件头。
+    // c0 可作徽章底承白字 14.14:1，答 4.5。c1 只作色块与标记，永不承字，不答文字门槛。
+    // c3 只作标记，压 bg 3.81:1 答 3.0 装饰线，永不承小字。
     chartPalette: ["#1E2A4A", "#F5C518", "#3B76A8", "#797D86"],
   },
   fonts: {

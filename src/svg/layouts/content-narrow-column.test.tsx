@@ -79,7 +79,7 @@ const ir = (theme: string, slides: Slide[] = [chapter, content]): PptxIR =>
 // `MAGAZINE_EXPECTED_BARE` 262 -> 246 (rect.y 230 + the 16px cap).
 // `MAGAZINE_EXPECTED` still untouched.
 const MAGAZINE_EXPECTED =
-  "<line x1=\"96\" y1=\"88\" x2=\"1184\" y2=\"88\" stroke=\"#D3DBE0\" stroke-width=\"1.2\"></line><text x=\"96\" y=\"124\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"16\" fill=\"#B96A5E\" font-style=\"italic\" dominant-baseline=\"alphabetic\">第一部分：市场洞察</text><text x=\"96\" y=\"190\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"60\" font-weight=\"600\" fill=\"#23282E\" dominant-baseline=\"alphabetic\">窄栏叙事：从数据到洞察</text><text x=\"96\" y=\"254\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"22\" fill=\"#0A0E14\" font-style=\"italic\" dominant-baseline=\"alphabetic\"><tspan fill=\"#23282E\" font-weight=\"700\">核心结论</tspan><tspan fill=\"#0A0E14\">：留存率显著提升</tspan></text><g data-audit-rect=\"96,298,880,322\"><g data-audit-box=\"96,298,880\"><g transform=\"translate(96,298)\"><text x=\"0\" y=\"24\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"24\" fill=\"#23282E\" dominant-baseline=\"alphabetic\">本季度用户留存呈现持续上行趋势。</text></g></g><g data-audit-box=\"96,342,880\"><g transform=\"translate(96,342)\"><circle cx=\"5\" cy=\"18.8\" r=\"3\" fill=\"#4A6B8A\"></circle><text x=\"26\" y=\"26\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"24\" fill=\"#23282E\" dominant-baseline=\"alphabetic\">留存率 +12%</text><circle cx=\"5\" cy=\"60.8\" r=\"3\" fill=\"#4A6B8A\"></circle><text x=\"26\" y=\"68\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"24\" fill=\"#23282E\" dominant-baseline=\"alphabetic\">活跃时长 +8%</text><circle cx=\"5\" cy=\"102.8\" r=\"3\" fill=\"#4A6B8A\"></circle><text x=\"26\" y=\"110\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"24\" fill=\"#23282E\" dominant-baseline=\"alphabetic\">流失率 -5%</text></g></g><g data-audit-box=\"96,496,880\"><g transform=\"translate(96,496)\"><text x=\"0\" y=\"64\" font-size=\"64\" fill=\"#B96A5E\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" dominant-baseline=\"alphabetic\">“</text><text x=\"20\" y=\"60\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"26\" font-style=\"italic\" fill=\"#23282E\" dominant-baseline=\"alphabetic\">增长的本质是留住已经信任你的人。</text><text x=\"20\" y=\"97\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"20\" fill=\"#5A6470\" dominant-baseline=\"alphabetic\">— 内部访谈</text></g></g></g><text x=\"1184\" y=\"628\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"64\" fill=\"#5A6470\" opacity=\"0.3\" text-anchor=\"end\" dominant-baseline=\"alphabetic\">02</text><text x=\"96\" y=\"644\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"20\" fill=\"#5A6470\" font-style=\"italic\" dominant-baseline=\"alphabetic\">数据来源：内部埋点，2026Q2</text>"
+  "<line x1=\"96\" y1=\"88\" x2=\"1184\" y2=\"88\" stroke=\"#D3DBE0\" stroke-width=\"1.2\"></line><text x=\"96\" y=\"124\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"16\" fill=\"#23282E\" font-style=\"italic\" dominant-baseline=\"alphabetic\">第一部分：市场洞察</text><text x=\"96\" y=\"190\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"60\" font-weight=\"600\" fill=\"#23282E\" dominant-baseline=\"alphabetic\">窄栏叙事：从数据到洞察</text><text x=\"96\" y=\"254\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"22\" fill=\"#0A0E14\" font-style=\"italic\" dominant-baseline=\"alphabetic\"><tspan fill=\"#23282E\" font-weight=\"700\">核心结论</tspan><tspan fill=\"#0A0E14\">：留存率显著提升</tspan></text><g data-audit-rect=\"96,298,880,322\"><g data-audit-box=\"96,298,880\"><g transform=\"translate(96,298)\"><text x=\"0\" y=\"24\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"24\" fill=\"#23282E\" dominant-baseline=\"alphabetic\">本季度用户留存呈现持续上行趋势。</text></g></g><g data-audit-box=\"96,342,880\"><g transform=\"translate(96,342)\"><circle cx=\"5\" cy=\"18.8\" r=\"3\" fill=\"#4A6B8A\"></circle><text x=\"26\" y=\"26\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"24\" fill=\"#23282E\" dominant-baseline=\"alphabetic\">留存率 +12%</text><circle cx=\"5\" cy=\"60.8\" r=\"3\" fill=\"#4A6B8A\"></circle><text x=\"26\" y=\"68\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"24\" fill=\"#23282E\" dominant-baseline=\"alphabetic\">活跃时长 +8%</text><circle cx=\"5\" cy=\"102.8\" r=\"3\" fill=\"#4A6B8A\"></circle><text x=\"26\" y=\"110\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"24\" fill=\"#23282E\" dominant-baseline=\"alphabetic\">流失率 -5%</text></g></g><g data-audit-box=\"96,496,880\"><g transform=\"translate(96,496)\"><text x=\"0\" y=\"64\" font-size=\"64\" fill=\"#B96A5E\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" dominant-baseline=\"alphabetic\">“</text><text x=\"20\" y=\"60\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"26\" font-style=\"italic\" fill=\"#23282E\" dominant-baseline=\"alphabetic\">增长的本质是留住已经信任你的人。</text><text x=\"20\" y=\"97\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"20\" fill=\"#5A6470\" dominant-baseline=\"alphabetic\">— 内部访谈</text></g></g></g><text x=\"1184\" y=\"628\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"64\" fill=\"#5A6470\" opacity=\"0.3\" text-anchor=\"end\" dominant-baseline=\"alphabetic\">02</text><text x=\"96\" y=\"644\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"20\" fill=\"#5A6470\" font-style=\"italic\" dominant-baseline=\"alphabetic\">数据来源：内部埋点，2026Q2</text>"
 
 const MAGAZINE_EXPECTED_BARE =
   "<line x1=\"96\" y1=\"88\" x2=\"1184\" y2=\"88\" stroke=\"#D3DBE0\" stroke-width=\"1.2\"></line><text x=\"96\" y=\"190\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"60\" font-weight=\"600\" fill=\"#23282E\" dominant-baseline=\"alphabetic\">简报</text><g data-audit-rect=\"96,230,880,410\"><g data-audit-box=\"96,246,880\"><g transform=\"translate(96,246)\"><text x=\"0\" y=\"24\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"24\" fill=\"#23282E\" dominant-baseline=\"alphabetic\">一</text></g></g></g><text x=\"1184\" y=\"628\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"64\" fill=\"#5A6470\" opacity=\"0.3\" text-anchor=\"end\" dominant-baseline=\"alphabetic\">01</text>"
@@ -116,6 +116,24 @@ describe("NarrowColumnContent", () => {
     expect(out).toContain(ctx.colors.text)
     expect(out).not.toContain("#8C4A3C") // journal accent 不得残留
     expect(out).not.toContain("#D9D3C2") // journal border 不得残留
+  })
+
+  it("falls an unreadable kicker back to the theme text ink without a heading treatment", () => {
+    const baseCtx = buildCtx(resolveStyle("consulting"), {})
+    const ctx = { ...baseCtx, themeId: undefined }
+    const deck = ir("unassigned")
+    const markup = renderSvgMarkup(
+      <svg xmlns="http://www.w3.org/2000/svg">
+        <NarrowColumnContent ir={deck} slide={content} index={1} ctx={ctx} />
+      </svg>,
+    )
+    const root = parseSvgRoot(markup)
+    const kicker = Array.from(root.querySelectorAll("text")).find(
+      (text) => text.textContent === chapter.heading,
+    )!
+
+    expect(kicker.getAttribute("fill")).toBe(ctx.colors.text)
+    expect(kicker.getAttribute("fill")).not.toBe(ctx.colors.accent)
   })
 
   it("passes assertSubset (no forbidden elements)", () => {
@@ -229,7 +247,7 @@ describe("NarrowColumnContent", () => {
     )
     const root = parseSvgRoot(markup)
     const kicker = Array.from(root.querySelectorAll("text")).find(
-      (t) => t.getAttribute("font-style") === "italic" && t.getAttribute("fill") === ctx.colors.accent,
+      (t) => t.getAttribute("font-style") === "italic" && (t.textContent ?? "").includes("微服务"),
     )
     expect(kicker).toBeDefined()
     const fontSize = Number(kicker!.getAttribute("font-size"))

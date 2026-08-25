@@ -36,16 +36,18 @@ import type { StyleTokens } from "./tokens";
 export const INK_TOKENS: StyleTokens = {
   id: "ink",
   colors: {
-    bg: "#F7F2E7", // 宣纸米（v3 提亮半档）
-    surface: "#FCF9F2",
-    primary: "#1F1C18", // 焦墨（v3：中性炭灰 → 暖调焦墨）
-    accent: "#C3272B", // 朱砂
+    bg: "#F7F2E7", // 宣纸米。页底，正文墨压它 13.86:1，答 4.5
+    surface: "#FCF9F2", // 面板纸。卡面，正文墨压它 14.72:1，答 4.5
+    primary: "#1F1C18", // 焦墨。可作正文，也可作色块承白字 16.97:1，答 4.5
+    accent: "#C3272B", // 朱砂。作大字与印，压 bg 5.16:1，答 3.0，不承小字
     text: "#262421",
     muted: "#686056", // post-v0.3 W8 fix round补测（backlog 5a，content-matrix 色调混合格底色缺口，task-2 审校发现）：明度再下调校准 4.5:1（原 #756C60 为首轮校准值，更早为 #8A8071，保色相/饱和度）。v3 换底后复测 5.54:1，仍过线，不动。
-    border: "#DCD2BD",
-    danger: "#9E1B1E", // 银朱（7.60:1）——比朱砂 accent 更沉
-    warning: "#A05A22", // 赭石（5.02:1）——传统颜料，与朱砂分家
-    success: "#2F6B4A", // 石绿（6.01:1）
+    border: "#DCD2BD", // 分隔线，永不承字，不答文字门槛
+    danger: "#9E1B1E", // 银朱。kpi 箭头当字，压 surface 7.60:1，答 4.5
+    warning: "#A05A22", // 赭石。只作线与图标，压 surface 5.02:1，不答文字门槛
+    success: "#2F6B4A", // 石绿。kpi 箭头当字，压 surface 6.01:1，答 4.5
+    // 四格只作色块与标记，永不承字。前三格不直接答文字门槛。
+    // c3 黄土压 bg 2.23:1，不答文字门槛。
     chartPalette: ["#1F1C18", "#C3272B", "#8A8071", "#B5A36F"],
   },
   fonts: {

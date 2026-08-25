@@ -2,7 +2,7 @@ import type React from "react"
 import type { Component } from "@/ir"
 import { fitSvgLine, layoutSvgText } from "../../lib/svg-text-layout"
 import type { ComponentBox, ComponentCtx, RenderDef, SvgComponent } from "./types"
-import { accessibleInk } from "../ink"
+import { accessibleInk, contrastRatio, requiredContrastRatio } from "../ink"
 import { resolveComponentForm } from "./form-assignments"
 import { measureVertTimeline, renderVertTimeline } from "./forms/vert-timeline"
 
@@ -20,6 +20,17 @@ const TITLE_TOP = AXIS_Y + 28
 const BOTTOM_PAD = 18
 
 type Anchor = "start" | "middle" | "end"
+
+function inkWithTextFallback(
+  preferredFill: string,
+  textFill: string,
+  bgHex: string,
+  fontSizePx: number,
+): string {
+  return contrastRatio(preferredFill, bgHex) >= requiredContrastRatio(fontSizePx)
+    ? preferredFill
+    : accessibleInk(textFill, bgHex, fontSizePx)
+}
 
 /**
  * Per-milestone label 布局（度量与渲染共用）。首/尾节点贴 box 边缘，居中
@@ -172,12 +183,16 @@ function renderVertical(
         const top = rowTops[i]
         const nodeCy = top + 8
         const hl = Boolean(m.highlight)
-        const keyColor = hl ? ctx.colors.accent : ctx.colors.text
+        const pageBg = ctx.defaultBg ?? ctx.colors.bg
         const date = fitSvgLine(m.date, {
           maxWidth: V_DATE_COL_W,
           fontSize: 20,
           minFontSize: MIN_FONT_SIZE,
         })
+        const titleInk = accessibleInk(ctx.colors.text, pageBg, title.fontSize)
+        const dateInk = hl
+          ? titleInk
+          : inkWithTextFallback(ctx.colors.muted, ctx.colors.text, pageBg, date.fontSize)
         return (
           <g key={i}>
             <text
@@ -187,7 +202,7 @@ function renderVertical(
               textAnchor="end"
               fontSize={date.fontSize}
               fontWeight="bold"
-              fill={accessibleInk(hl ? ctx.colors.accent : ctx.colors.muted, ctx.defaultBg ?? ctx.colors.bg, 14)}
+              fill={dateInk}
               fontFamily={ctx.fonts.heading}
               dominantBaseline="alphabetic"
             >
@@ -197,12 +212,8 @@ function renderVertical(
               cx={V_AXIS_X}
               cy={nodeCy}
               r={hl ? 10 : 7}
-              // Raw tokens, not `accessibleInk`: a filled shape carries no
-              // contrast floor, and running one through a text ink pick
-              // collapsed the highlighted and ordinary dots to the same
-              // near-black on classroom and ember — losing exactly the
-              // theme-colored distinction the highlight exists to make. The
-              // date text above is the part that needed the floor.
+              // 高亮只落在圆点。日期与标题统一从 muted/text 推导，避免
+              // 身份色与正文墨在同一高亮项里混用。
               fill={hl ? ctx.colors.accent : ctx.colors.primary}
             />
             <text
@@ -211,7 +222,7 @@ function renderVertical(
               y={nodeCy + 7}
               fontSize={title.fontSize}
               fontWeight="bold"
-              fill={keyColor}
+              fill={titleInk}
               fontFamily={ctx.fonts.body}
               dominantBaseline="alphabetic"
             >
@@ -285,13 +296,18 @@ export const timeline: SvgComponent<TimelineComponent> = {
           const descTop = TITLE_TOP + title.lines.length * title.lineHeight + 2
           return (
             <g key={i}>
-              <circle cx={x} cy={AXIS_Y} r={8} fill={ctx.colors.primary} />
+              <circle cx={x} cy={AXIS_Y} r={8} fill={ctx.colors.accent} />
               <text
                 data-truncated={date.truncated ? "1" : undefined}
                 x={tx}
                 y={AXIS_Y - 24}
                 textAnchor={anchor}
-                fill={accessibleInk(ctx.colors.accent, ctx.defaultBg ?? ctx.colors.bg, date.fontSize)}
+                fill={inkWithTextFallback(
+                  ctx.colors.muted,
+                  ctx.colors.text,
+                  ctx.defaultBg ?? ctx.colors.bg,
+                  date.fontSize,
+                )}
                 fontSize={date.fontSize}
                 fontFamily={ctx.fonts.body}
                 dominantBaseline="alphabetic"

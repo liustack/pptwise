@@ -61,18 +61,18 @@ import type { StyleTokens } from "./tokens";
 export const JOURNAL_TOKENS: StyleTokens = {
   id: "journal",
   colors: {
-    bg: "#EFEBE1", // 期刊纸——比 heritage 灰本白多一分黄
-    surface: "#F8F5EC", // 内页白
+    bg: "#EFEBE1", // 期刊纸。页底，正文墨压它 12.79:1，答 4.5
+    surface: "#F8F5EC", // 内页白。卡面，正文墨压它 13.96:1，答 4.5
     primary: "#2C2C2A", // 铅字黑（11.75:1）——期刊的主色就是墨
     accent: "#8C4A3C", // 赭红（5.58:1），木刻藏书章色，给首字母与章号
     text: "#26261F", // 油墨（12.79:1），衬线承字
     muted: "#626159", // 铅灰（5.23:1）——照板上自标的 5:1 压深，见文件头
-    border: "#D9D3C2", // 栏线
-    danger: "#9B2C1E", // 木刻红（6.95:1）
-    warning: "#96731C", // 芥黄（4.04:1），与赭红 accent 分家
-    success: "#48664A", // 苔绿（5.88:1），单色调版画里的那一点绿
-    // 铅字黑 / 赭红 / 苔绿 / 亚麻灰——单色调版画感。末格照板上自标的
-    // 3.5:1 解出，板上 hex `#9A927E` 实测 2.60:1 过不了 3.0 装饰线。
+    border: "#D9D3C2", // 栏线。只作线，永不承字，不答文字门槛
+    danger: "#9B2C1E", // 木刻红。kpi 箭头当字，压 surface 6.95:1，答 4.5
+    warning: "#96731C", // 芥黄。只作线与图标，压 surface 4.04:1，不答文字门槛
+    success: "#48664A", // 苔绿。kpi 箭头当字，压 surface 5.88:1，答 4.5
+    // c0、c1、c2 可作徽章底，承白字并答 4.5。c3 只作标记，永不承字。
+    // c3 压 bg 3.50:1，答 3.0 装饰线。板上 hex `#9A927E` 实测仅 2.60:1。
     chartPalette: ["#2C2C2A", "#8C4A3C", "#4E5E4A", "#827C6B"],
   },
   fonts: {

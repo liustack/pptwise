@@ -9,6 +9,7 @@ import {
   measureTextUnits,
   truncateToUnits,
 } from "../lib/svg-text-layout"
+import { accessibleInk } from "./ink"
 
 type KpiCardsComponent = Extract<Component, { type: "kpi_cards" }>
 
@@ -21,7 +22,8 @@ const LABEL_MIN_FONT_SIZE = 16
  * `big_number` arrangement — a "giant metric stage": the first KPI's value fills the
  * top as a hero number, with its label beneath and the remaining components stacked
  * below as supporting context. Gives a deck visual rhythm (a breather page that
- * lands one number hard) instead of every content page looking the same.
+ * lands one number hard) instead of every content page looking the same. The value
+ * and unit inherit one text-derived ink because they form one semantic number.
  */
 export function BigNumber({
   components,
@@ -93,6 +95,13 @@ export function BigNumber({
         minFontSize: LABEL_MIN_FONT_SIZE,
       })
     : null
+  const heroInk = fittedValue
+    ? accessibleInk(
+        ctx.colors.text,
+        ctx.defaultBg ?? ctx.colors.bg,
+        fittedUnit != null ? Math.min(fittedValue.fontSize, unitFontSize) : fittedValue.fontSize,
+      )
+    : ctx.colors.text
 
   return (
     <>
@@ -105,12 +114,12 @@ export function BigNumber({
             fontFamily={ctx.fonts.heading}
             fontSize={fittedValue.fontSize}
             fontWeight="bold"
-            fill={ctx.colors.primary}
+            fill={heroInk}
             dominantBaseline="alphabetic"
           >
             {fittedValue.text}
             {fittedUnit != null && (
-              <tspan fontSize={unitFontSize} fill={ctx.colors.accent}>
+              <tspan fontSize={unitFontSize}>
                 {fittedUnit}
               </tspan>
             )}
