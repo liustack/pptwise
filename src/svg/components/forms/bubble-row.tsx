@@ -1,6 +1,11 @@
 import type { Component } from "@/ir"
 import { Icon } from "../../icons"
-import { accessibleInk, readableOn } from "../../ink"
+import {
+  accessibleInk,
+  contrastRatio,
+  readableOn,
+  requiredContrastRatio,
+} from "../../ink"
 import type { FormKnobs } from "../form-assignments"
 import type { ComponentBox, ComponentCtx } from "../types"
 import { parseKpiMagnitude } from "./kpi-value"
@@ -170,13 +175,19 @@ export function renderBubbleRow(
         })
         const valueSize = valueFit.fontSize
         const inside = r >= 46
-        const valueInk = accessibleInk(
+        const preferredValueInk =
           p.fill === ctx.colors.accent
             ? readableOn(p.fill)
-            : (p.stroke && knobs.paletteStroke ? p.stroke : ctx.colors.text),
-          p.inkBg,
-          valueSize,
-        )
+            : (p.stroke && knobs.paletteStroke ? p.stroke : ctx.colors.text)
+        // A palette stroke is a graphic token, not the only valid value ink.
+        // Keep a readable ring color byte-identical. When it misses, use the
+        // theme's own text token instead of accessibleInk's orphan neutral.
+        const valueInk =
+          p.stroke && knobs.paletteStroke
+            ? contrastRatio(preferredValueInk, p.inkBg) >= requiredContrastRatio(valueSize)
+              ? preferredValueInk
+              : accessibleInk(ctx.colors.text, p.inkBg, valueSize)
+            : accessibleInk(preferredValueInk, p.inkBg, valueSize)
         const label = fitFormLine(d.item.label, {
           maxWidth: Math.max(120, r * 2.6),
           fontSize: inside ? 16 : FORM_BODY_FLOOR,

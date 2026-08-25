@@ -845,7 +845,7 @@ describe("bubble_row", () => {
     }
   })
 
-  it("crayon paletteStroke uses chartPalette tokens, not a horizontal baseline", () => {
+  it("crayon paletteStroke keeps chartPalette on circles and one text ink on all values", () => {
     const crayon = themeCtx("crayon")
     const { container } = svg(kpi.render(bubbles, { x: 0, y: 0, w: 1120 }, crayon))
     const circles = Array.from(container.querySelectorAll("circle"))
@@ -854,6 +854,11 @@ describe("bubble_row", () => {
     for (const s of strokes) {
       expect(crayon.colors.chartPalette).toContain(s)
     }
+    const values = Array.from(container.querySelectorAll("text[font-weight='bold']"))
+    expect(values).toHaveLength(bubbles.items.length)
+    expect(values.map((value) => value.getAttribute("fill"))).toEqual(
+      Array.from({ length: bubbles.items.length }, () => crayon.colors.text),
+    )
     expect(container.querySelectorAll("line")).toHaveLength(0)
   })
 
@@ -908,4 +913,3 @@ describe("kpi_cards unassigned theme equals the default face", () => {
     )
   })
 })
-
