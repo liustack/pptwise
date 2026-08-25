@@ -124,7 +124,7 @@ describe("ending-crayonbox-todo", () => {
     expect([contact.getAttribute("x"), contact.getAttribute("y"), contact.getAttribute("font-size"), contact.getAttribute("font-weight"), contact.getAttribute("fill")]).toEqual([
       "96",
       "600",
-      "22",
+      "24",
       "700",
       tokens.colors.primary,
     ])
