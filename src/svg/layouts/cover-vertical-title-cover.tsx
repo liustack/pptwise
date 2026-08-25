@@ -229,7 +229,14 @@ export function VerticalTitleCover({ ir, slide, ctx }: SvgTemplateProps) {
     : null
 
   const titleInk = accessibleInk(colors.primary, bg, titleColumn?.fontSize ?? latinTitle?.fontSize ?? TITLE_SIZE)
-  const titleAccentInk = accessibleInk(colors.accent, bg, titleColumn?.fontSize ?? TITLE_SIZE)
+  const titleAccentCandidate = accessibleInk(colors.accent, bg, titleColumn?.fontSize ?? TITLE_SIZE)
+  // The accent first glyph is this face's own drop-cap. On a theme whose
+  // accent cannot carry the glyph, accessibleInk swaps in its orphan
+  // near-black — one character in a different ink than the rest of the
+  // column, the same half-and-half defect the timeline sweep removed
+  // (`.issues/2026-08-25-ink-duty-audit`). If the accent does not hold,
+  // the whole column stays on titleInk instead.
+  const titleAccentInk = titleAccentCandidate === colors.accent ? titleAccentCandidate : null
   const subInk = metaInk(colors.muted, bg)
   const latinSubY = showTitle && !verticalTitle ? latinTitleLastY + LATIN_SUB_GAP : LATIN_Y
   const showSealDot = !sealGlyph && !(titleColumn && titleColumn.glyphs.length > 0)
@@ -246,7 +253,7 @@ export function VerticalTitleCover({ ir, slide, ctx }: SvgTemplateProps) {
               y={glyphRowY(TITLE_FIRST_Y, i, titleColumn.perColumn, titleColumn.step)}
               fontFamily={fonts.heading}
               fontSize={titleColumn.fontSize}
-              fill={i === 0 && !sealGlyph ? titleAccentInk : titleInk}
+              fill={i === 0 && !sealGlyph && titleAccentInk ? titleAccentInk : titleInk}
               textAnchor="middle"
               dominantBaseline="alphabetic"
             >
