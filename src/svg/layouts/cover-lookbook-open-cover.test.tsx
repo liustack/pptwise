@@ -141,7 +141,7 @@ describe("cover-lookbook-open-cover — board geometry", () => {
 
   it("renders a cover subheading once when the document date is absent", () => {
     const subheading = "Where the second half goes"
-    const cover = slide("The quarter in review", { subheading })
+    const cover = slide("The quarter in review", { layout: "lookbook-open-cover", subheading })
     const root = parseSvgRoot(renderSlideSvg(ir("runway", {}, cover), 0))
     const matches = Array.from(root.querySelectorAll("text")).filter((text) => text.textContent === subheading)
 

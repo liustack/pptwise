@@ -32,6 +32,7 @@ import { TicketCtaEnding } from "./ending-ticket-cta-ending"
 import { ExitWordEnding } from "./ending-exit-word-ending"
 import { GaugeNextEnding } from "./ending-gauge-next"
 import { EndingCrayonboxTodo } from "./ending-crayonbox-todo"
+import { ShowFinaleEnding } from "./ending-show-finale"
 
 export type { EndingLayout, EndingLayoutId } from "./types"
 
@@ -71,4 +72,5 @@ export const ENDING_LAYOUTS: Record<EndingLayoutId, EndingLayout> = {
   "exit-word-ending": ExitWordEnding,
   "gauge-next": GaugeNextEnding,
   "crayonbox-todo": EndingCrayonboxTodo,
+  "show-finale": ShowFinaleEnding,
 }

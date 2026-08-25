@@ -56,6 +56,24 @@ describe("IR v4 omission defaults (weak-model friendly)", () => {
   })
 })
 
+describe("image_grid component", () => {
+  const imageGrid = (count: number) => ({
+    type: "image_grid",
+    items: Array.from({ length: count }, (_, index) => ({ asset_id: `image-${index + 1}` })),
+  })
+
+  it("accepts 2 to 6 images and rejects a seventh", () => {
+    for (const count of [2, 4, 6]) {
+      const d: any = minimal()
+      d.slides = [{ type: "content", components: [imageGrid(count)] }]
+      expect(parsePptxIR(d).success, String(count)).toBe(true)
+    }
+    const d: any = minimal()
+    d.slides = [{ type: "content", components: [imageGrid(7)] }]
+    expect(parsePptxIR(d).success).toBe(false)
+  })
+})
+
 describe("pptx-ir v4", () => {
   it("parses minimal v4", () => {
     const r = parsePptxIR(minimal()); expect(r.success).toBe(true)

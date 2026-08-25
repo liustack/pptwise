@@ -18,6 +18,10 @@ import { GaugeStatsContent } from "./content-gauge-stats"
 import { GaugePointContent } from "./content-gauge-point"
 import { CrayonboxCardsContent } from "./content-crayonbox-cards"
 import { CrayonboxPointContent } from "./content-crayonbox-point"
+import { ShowGalleryContent } from "./content-show-gallery"
+import { ShowSpotlightContent } from "./content-show-spotlight"
+import { ShowStatementContent } from "./content-show-statement"
+import { ShowFiguresContent } from "./content-show-figures"
 
 export type { ContentLayout, ContentLayoutId } from "./types"
 
@@ -30,8 +34,9 @@ export type { ContentLayout, ContentLayoutId } from "./types"
 // quote-stage / editorial-verse / speech-layouts waves：pinOnly members
 // (quote-stage, statement, pull-quote, stat-hero, one-evidence, mono-bleed).
 // Gallery r2 D10 retired image-lead-split. side-highlight retired next.
-// This change retires banner-heading. Auto-selectable content pool is 9,
-// plus 6 pin-only (16 registered -> 15).
+// This change retires banner-heading. Auto-selectable content pool is 9.
+// consulting, crayon, and runway families bring the pin-only count to 14,
+// for 23 registered content layouts in total.
 export const CONTENT_LAYOUTS: Record<ContentLayoutId, ContentLayout> = {
   "narrow-column": NarrowColumnContent,
   "two-column": TwoColumnContent,
@@ -52,4 +57,8 @@ export const CONTENT_LAYOUTS: Record<ContentLayoutId, ContentLayout> = {
   "gauge-point": GaugePointContent,
   "crayonbox-cards": CrayonboxCardsContent,
   "crayonbox-point": CrayonboxPointContent,
+  "show-gallery": ShowGalleryContent,
+  "show-spotlight": ShowSpotlightContent,
+  "show-statement": ShowStatementContent,
+  "show-figures": ShowFiguresContent,
 }

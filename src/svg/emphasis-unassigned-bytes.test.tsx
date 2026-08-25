@@ -103,6 +103,10 @@ function consultingPadDeck(): PptxIR {
 // Recaptured (audit round-2 C/D, 2026-08-24). campaign cover kicker air
 // and tech constellation / bento inset move. Other unassigned pages stay
 // byte-identical.
+//
+// Recaptured (runway show, 2026-08-26). The runway cover lock moves from
+// lookbook-open-cover to show-headline. Only `runway|0` changes. The other
+// 109 paths stay byte-identical.
 const fixture = JSON.parse(
   readFileSync(EMPHASIS_UNASSIGNED_BYTES_URL, "utf-8"),
 ) as { pages: Record<string, string> }

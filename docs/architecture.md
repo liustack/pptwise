@@ -169,12 +169,12 @@ collected into one big literal table. Two registries/aggregators consume
 these domain files by importing and combining them, never by holding the
 content themselves:
 
-- **A layout definition lives with its implementation.** Each of the 123
+- **A layout definition lives with its implementation.** Each of the 130
   single-layout files exports `layoutDef: LayoutDefinition` at the
   bottom of its own `src/svg/layouts/<name>.tsx` file, beside the JSX
   that draws it. `src/svg/image-pages.tsx`, one level above `layouts/`, exports 4 uniquely named ones instead,
   since one file implements all 4 image takeovers and they can't share the
-  bare `layoutDef` name the 123 single-layout files use. `src/svg/layouts/registry.ts`
+  bare `layoutDef` name the 130 single-layout files use. `src/svg/layouts/registry.ts`
   imports every one and assembles `LAYOUT_REGISTRY` from them. "Take one
   layout away whole" is a single-file operation, not a two-file
   archaeology dig.

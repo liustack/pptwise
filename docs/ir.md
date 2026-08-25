@@ -98,8 +98,8 @@ Body copy never shrinks below 24px (18pt). Captions, footnotes, ticks, and other
 
 When a slide omits `layout`, pptwise resolves one in four deterministic steps:
 
-1. The page type's registered archetype pool, minus pin-only layouts. The shared pool has 43 ids: 19 cover, 8 chapter, 7 ending, and 9 content. The other 80 standard layouts require an explicit `slide.layout` pin or a theme-curated board lock.
-2. Narrowed to the theme's `layouts` set for that page type. Built-in covers lock to a board face. Most built-in content themes use the 9-id shared set. consulting and crayon each prepend one theme-locked pin-only content face, while lecture and luxe drop `split-band` and `stacked-poster`. A registered custom theme that omits `layouts` receives all 9 auto-selectable content ids. See [Themes](./themes.md).
+1. The page type's registered archetype pool, minus pin-only layouts. The shared pool has 43 ids: 19 cover, 8 chapter, 7 ending, and 9 content. The other 87 standard layouts require an explicit `slide.layout` pin or a theme-curated board lock.
+2. Narrowed to the theme's `layouts` set for that page type. Built-in covers lock to a board face. Most built-in content themes use the 9-id shared set. consulting and crayon each prepend one theme-locked pin-only content face. runway prepends show-statement and show-figures, while show-gallery and show-spotlight remain explicit-pin only. lecture and luxe drop `split-band` and `stacked-poster`. A registered custom theme that omits `layouts` receives all 9 auto-selectable content ids. See [Themes](./themes.md).
 3. Soft weights via `Math.max`: the narrative `strategy`'s `layoutTendencies` (content) or `identityTendencies` (cover/chapter/ending), an optional slide `beat`, and the theme's `layoutTendencies`. Favored ids ×3, everything else ×1. Cover, chapter, and ending pages are weighted via `identityTendencies`.
 4. A seeded weighted pick, swapped deterministically to the runner-up when it would repeat the immediately preceding slide's layout.
 

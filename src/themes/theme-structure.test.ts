@@ -1142,7 +1142,7 @@ describe("second-front wave: chapter / content / ending allocation", () => {
     expect(collisions).toEqual([])
   })
 
-  it("seeds 1-40: 24/24 distinct sequence-bundles, slot diversity chapter 24 / content 15 / ending 24", () => {
+  it("seeds 1-40: 24/24 distinct sequence-bundles, slot diversity chapter 24 / content 16 / ending 24", () => {
     // Wave 8 batch 4 locks six more chapter/ending faces. banner-heading
     // retirement (pool 10 -> 9) re-measured content-slot diversity 18 -> 14.
     const over40 = new Set(
@@ -1163,7 +1163,7 @@ describe("second-front wave: chapter / content / ending allocation", () => {
     const ending = slotCount(6)
     expect({ chapterA, contentA, chapterB, ending }).toEqual({
       chapterA: 24,
-      contentA: 15,
+      contentA: 16,
       chapterB: 24,
       ending: 24,
     })
