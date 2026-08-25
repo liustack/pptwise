@@ -34,6 +34,7 @@ import { PledgeOpenCover } from "./cover-pledge-open-cover"
 import { ReportOpenCover } from "./cover-report-open-cover"
 import { CutPanelCover } from "./cover-cut-panel-cover"
 import { GaugeVerdictCover } from "./cover-gauge-verdict"
+import { CrayonboxOpenCover } from "./cover-crayonbox-open"
 
 export type { CoverLayout, CoverLayoutId } from "./types"
 
@@ -75,4 +76,5 @@ export const COVER_LAYOUTS: Record<CoverLayoutId, CoverLayout> = {
   "report-open-cover": ReportOpenCover,
   "cut-panel-cover": CutPanelCover,
   "gauge-verdict": GaugeVerdictCover,
+  "crayonbox-open": CrayonboxOpenCover,
 }

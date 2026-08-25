@@ -37,3 +37,4 @@ export type MotifId =
   | "memo-motif" // 2026-08-21：顶部红双线 + Latin 等宽眉字 MEMORANDUM（memo 专属，单锚不借用。红只成线与字）
   | "playbill-motif" // 空 motif。封面日期贴片由 bill-head 当前景画
   | "gauge-motif" // 2026-08-25：consulting 量规定位角标，左上两条直线构成 ⌐
+  | "crayonbox-motif" // 2026-08-25：一盒蜡笔右上角阳光黄太阳与星贴纸组

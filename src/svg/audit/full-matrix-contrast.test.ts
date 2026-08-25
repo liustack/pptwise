@@ -575,23 +575,15 @@ describe("split-diagonal org kicker contrast (B-tier reclassification)", () => {
     expect(contrastRatio(fill, primary)).toBeCloseTo(14.044, 2)
   })
 
-  // Scope pin: insight was the only theme that ever failed here, so the fix
-  // must not read as "16 themes were quietly repaired too". Every other
-  // theme already cleared 4.5:1 before the reclassification and still does.
-  //
-  // 2026-08-19: the list is now empty. insight was the last member and it
-  // left by having its `primary` redesigned to a near-black (深底组皮肤重
-  // 设计), not by anything this block does. The assertion is kept — and kept
-  // as an exact list rather than a `toHaveLength(0)` — because its job is
-  // unchanged: say out loud which themes sit under the old body floor, so
-  // that a future token change putting one back in the band shows up here as
-  // a named diff instead of passing quietly.
-  it("no theme sits under the old 4.5:1 body floor — insight, the last one, left when its primary went near-black", () => {
+  // Scope pin: the approved crayon primary clears its actual B-tier 3:1 floor
+  // but its 92% composite sits below the old body-text floor. Keep the exact
+  // list so a future token change appears as a named diff.
+  it("crayon is the approved B-tier primary below the old 4.5:1 body floor", () => {
     const below = CANONICAL_THEME_IDS.filter((themeId) => {
       const primary = THEME_DEFINITIONS[themeId].style.colors.primary
       return contrastRatio(blendOver(readableOn(primary), primary, 0.92), primary) < 4.5
     })
-    expect(below).toEqual([])
+    expect(below).toEqual(["crayon"])
   })
 
   // Why `metaInk` is in the call at all, given it returns its input for all

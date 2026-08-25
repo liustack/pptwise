@@ -44,7 +44,7 @@ describe("LAYOUT_REGISTRY completeness (layout ids)", () => {
     }
   }
 
-  it("has exactly 118 layout-kind entries, all traceable to one of the four real registries", () => {
+  it("has exactly 123 layout-kind entries, all traceable to one of the four real registries", () => {
     const knownIds = new Set([
       ...Object.keys(COVER_LAYOUTS),
       ...Object.keys(CHAPTER_LAYOUTS),
@@ -56,7 +56,8 @@ describe("LAYOUT_REGISTRY completeness (layout ids)", () => {
     // banner-heading retired: 114 -> 113.
     // consulting gauge adds five pin-only faces: 113 -> 118. All five are
     // theme-locked, so none of them joins the shared automatic pools.
-    expect(layoutEntries).toHaveLength(118)
+    // One-box-of-crayons adds five theme-locked pin-only faces: 118 -> 123.
+    expect(layoutEntries).toHaveLength(123)
     for (const entry of layoutEntries) {
       expect(knownIds.has(entry.id), `"${entry.id}" is not a real layout id`).toBe(true)
     }
@@ -119,7 +120,8 @@ describe("content family: body slot + declared arrangements", () => {
           id === "next-lecture-ending" ||
           id === "resolution-ending" ||
           id === "decision-close-ending" ||
-          id === "gauge-next"
+          id === "gauge-next" ||
+          id === "crayonbox-todo"
         ) {
           expect(entry.slots.some((s) => s.name === "body")).toBe(true)
           expect(entry.arrangements).toBeUndefined()
@@ -150,13 +152,14 @@ describe("content family: body slot + declared arrangements", () => {
     expect(LAYOUT_REGISTRY["stacked-poster"].arrangements).toBe("all")
   })
 
-  it("the remaining five arrangement-respecting layouts declare arrangements: \"all\" (P1 variety wave task 4 added quiet-frame, side-highlight and banner-heading retired)", () => {
+  it("the remaining arrangement-respecting layouts declare arrangements: \"all\"", () => {
     for (const id of [
       "narrow-column",
       "rail-numbered",
       "tone-adaptive-content",
       "stacked-poster",
       "quiet-frame",
+      "crayonbox-cards",
     ]) {
       expect(LAYOUT_REGISTRY[id].arrangements).toBe("all")
     }
@@ -190,7 +193,8 @@ describe("capacity metadata: only where the inventory gives hard numbers", () =>
         id === "stat-hero" ||
         id === "one-evidence" ||
         id === "mono-bleed" ||
-        id === "gauge-point"
+        id === "gauge-point" ||
+        id === "crayonbox-point"
       )
         continue
       const body = LAYOUT_REGISTRY[id].slots.find((s) => s.name === "body")
@@ -210,6 +214,10 @@ describe("capacity metadata: only where the inventory gives hard numbers", () =>
 
   it("gauge-point carries one attribution component", () => {
     expect(LAYOUT_REGISTRY["gauge-point"].slots.find((s) => s.name === "body")?.capacity).toBe(1)
+  })
+
+  it("crayonbox-point carries one attribution component", () => {
+    expect(LAYOUT_REGISTRY["crayonbox-point"].slots.find((s) => s.name === "body")?.capacity).toBe(1)
   })
 
   it("speech-layout body capacities: stat-hero 1, one-evidence 1, mono-bleed 0", () => {
@@ -238,19 +246,19 @@ describe("layoutsForSlideType", () => {
     for (const l of covers) expect(l.slideTypes).toContain("cover")
   })
 
-  it("cover, chapter, and ending expose 35, 34, and 32 registered layouts with no takeovers", () => {
+  it("cover, chapter, and ending expose 36, 35, and 33 registered layouts with no takeovers", () => {
     // The shared automatic pools are unchanged by the gauge family: 19, 8, 7.
-    expect(layoutsForSlideType("cover")).toHaveLength(35)
+    expect(layoutsForSlideType("cover")).toHaveLength(36)
     // Wave 8 batch 4: +6 chapter +6 ending pinOnly faces.
-    expect(layoutsForSlideType("chapter")).toHaveLength(34)
-    expect(layoutsForSlideType("ending")).toHaveLength(32)
+    expect(layoutsForSlideType("chapter")).toHaveLength(35)
+    expect(layoutsForSlideType("ending")).toHaveLength(33)
   })
 
-  it("content includes both the 17 layouts and the 4 takeovers", () => {
+  it("content includes both the 19 layouts and the 4 takeovers", () => {
     const contents = layoutsForSlideType("content")
-    expect(contents.filter((l) => l.kind === "archetype")).toHaveLength(17)
+    expect(contents.filter((l) => l.kind === "archetype")).toHaveLength(19)
     expect(contents.filter((l) => l.kind === "takeover")).toHaveLength(4)
-    expect(contents).toHaveLength(21)
+    expect(contents).toHaveLength(23)
   })
 })
 
@@ -400,6 +408,11 @@ describe("excludePinOnly (quote-stage wave, task T1's pinOnly tier)", () => {
       "gauge-stats",
       "gauge-point",
       "gauge-next",
+      "crayonbox-open",
+      "crayonbox-sticker",
+      "crayonbox-cards",
+      "crayonbox-point",
+      "crayonbox-todo",
     ])
     for (const def of Object.values(LAYOUT_REGISTRY)) {
       if (pinOnlyIds.has(def.id)) {
@@ -420,6 +433,8 @@ describe("layout branding declaration (editorial-verse wave)", () => {
     expect(layoutOmitsBranding("one-evidence")).toBe(true)
     expect(layoutOmitsBranding("mono-bleed")).toBe(true)
     expect(layoutOmitsBranding("gauge-point")).toBe(true)
+    expect(layoutOmitsBranding("crayonbox-point")).toBe(true)
+    expect(layoutOmitsBranding("crayonbox-cards")).toBe(false)
     expect(layoutOmitsBranding("quote-stage")).toBe(false)
     expect(layoutOmitsBranding("two-column")).toBe(false)
     expect(layoutOmitsBranding(undefined)).toBe(false)
@@ -495,6 +510,10 @@ describe("layout branding declaration (editorial-verse wave)", () => {
       "gauge-stats",
       "gauge-point",
       "gauge-next",
+      "crayonbox-open",
+      "crayonbox-sticker",
+      "crayonbox-point",
+      "crayonbox-todo",
     ] as const) {
       expect(LAYOUT_REGISTRY[id].branding, id).toBe("none")
     }
@@ -574,6 +593,10 @@ describe("layout branding declaration (editorial-verse wave)", () => {
       "gauge-point",
       "gauge-next",
       "gauge-next",
+      "crayonbox-open",
+      "crayonbox-sticker",
+      "crayonbox-point",
+      "crayonbox-todo",
     ])
     for (const def of Object.values(LAYOUT_REGISTRY)) {
       if (brandingNone.has(def.id)) continue

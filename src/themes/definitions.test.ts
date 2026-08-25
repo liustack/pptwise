@@ -168,6 +168,7 @@ describe("THEME_DEFINITIONS", () => {
     "quiet-frame",
     "split-band",
   ]
+  const CRAYON_CONTENT = ["crayonbox-cards", ...FULL_CONTENT]
   const SHARED_CONTENT = FULL_CONTENT
   const FULL_ENDING = [
     "masthead-ending",
@@ -181,7 +182,7 @@ describe("THEME_DEFINITIONS", () => {
   it("W4 全集放开基线：consulting 的 gauge 脸是 pinOnly，共享池不吸收它们", () => {
     expect(__fullLayoutSet("cover")).toEqual(FULL_COVER)
     expect(__fullLayoutSet("content")).toEqual(FULL_CONTENT)
-    const NARROWED_CONTENT = new Set(["lecture", "luxe", "consulting"])
+    const NARROWED_CONTENT = new Set(["lecture", "luxe", "consulting", "crayon"])
     const WAVE8_LOCKED = new Set([
       "consulting",
       "enterprise",
@@ -300,8 +301,19 @@ describe("THEME_DEFINITIONS", () => {
     expect(THEME_DEFINITIONS.vermilion.layouts.cover).toEqual(["red-head-cover"])
     expect(THEME_DEFINITIONS.vermilion.layoutTendencies?.cover).toEqual(["red-head-cover"])
 
-    expect(THEME_DEFINITIONS.crayon.layouts.cover).toEqual(["capsule-open-cover"])
-    expect(THEME_DEFINITIONS.crayon.layoutTendencies?.cover).toEqual(["capsule-open-cover"])
+    expect(THEME_DEFINITIONS.crayon.layouts).toEqual({
+      cover: ["crayonbox-open"],
+      chapter: ["crayonbox-sticker"],
+      content: CRAYON_CONTENT,
+      ending: ["crayonbox-todo"],
+    })
+    expect(THEME_DEFINITIONS.crayon.layoutTendencies).toEqual({
+      cover: ["crayonbox-open"],
+      chapter: ["crayonbox-sticker"],
+      content: ["crayonbox-cards"],
+      ending: ["crayonbox-todo"],
+    })
+    expect(THEME_DEFINITIONS.crayon.motif).toBe("crayonbox-motif")
 
     expect(THEME_DEFINITIONS.runway.layouts.cover).toEqual(["lookbook-open-cover"])
     expect(THEME_DEFINITIONS.runway.layoutTendencies?.cover).toEqual(["lookbook-open-cover"])

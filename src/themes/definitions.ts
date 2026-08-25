@@ -902,32 +902,22 @@ const LAYOUTS: Record<CanonicalThemeId, Pick<ThemeDefinition, "layouts" | "motif
       ending: ["deliberation-ending"],
     },
   },
-  // crayon（蜡笔卡纸，2026-08-21 场景审计 #27 第六组新主题·低龄教育）：卡纸奶油底 + 蜡笔
-  // 四原色，页缘蜡笔描边由专属 crayon-motif 承载。结构行 L / top-band /
-  // heavy / medium，最近邻 classroom（L / top-band / medium / medium），
-  // 装饰浓度岔开——classroom 是拍纸簿的 medium，crayon 是满场 heavy 在密页
-  // 降成顶＋底半场。封面构造：
-  //   - `tone-adaptive-header`：克制的自适应留白封面，标题黑字写在卡纸上、
-  //     蓝带只到顶（封面样例自己的读法）。`narrative/index.ts` 明确「从不
-  //     出现在任何 strategy 的 identityTendencies 里」的万金油 identity
-  //     layout 之一，默认 briefing 下拿满额边际权重（max(3,1)=3），是这一
-  //     对里真正把 crayon 从盲主题默认序列上撬开的那一个。
-  //   - `banner-title`：整幅深色横幅压住标题，板书带的读法。briefing 已锁
-  //     权重 3，单独声明空转，保留为真实主张（declaration-rebalance wave
-  //     裁定 1 的追加先例）。写在第二个，3:1 软权重照现有写法，两个 id
-  //     都拿 TENDENCY_WEIGHT。
-  // layouts 仍是四页型全集（各家无一收窄，heavy 身份用 motif 降档表达，
-  // 不靠策展砍 layout）。
+  // crayon「一盒蜡笔」：封面、章节、满内容与结尾锁四张专属脸。内容池仍
+  // 保留共享九张，避免整副 deck 塌成同一构图。疏内容 crayonbox-point 只
+  // 接受显式 pin。五张专属脸都是 pinOnly，不进入其他主题的自动候选集。
   crayon: {
-    // Wave 8 batch 2: lock the capsule-open cover, sticker-numeral chapter,
-    // and reminder-list ending. Motif stays the sun doodle (cover only).
-    layouts: { cover: ["capsule-open-cover"], chapter: ["sticker-numeral-chapter"], content: FULL_LAYOUTS.content, ending: ["reminder-list-ending"] },
-    motif: "crayon-motif",
+    layouts: {
+      cover: ["crayonbox-open"],
+      chapter: ["crayonbox-sticker"],
+      content: ["crayonbox-cards", ...FULL_LAYOUTS.content],
+      ending: ["crayonbox-todo"],
+    },
+    motif: "crayonbox-motif",
     layoutTendencies: {
-      cover: ["capsule-open-cover"],
-      chapter: ["sticker-numeral-chapter"],
-      content: ["asymmetric-triptych", "tone-adaptive-content"],
-      ending: ["reminder-list-ending"],
+      cover: ["crayonbox-open"],
+      chapter: ["crayonbox-sticker"],
+      content: ["crayonbox-cards"],
+      ending: ["crayonbox-todo"],
     },
   },
   // arena（竞技场紫黑，2026-08-21 场景审计 #27 第六组新主题·娱乐电竞）：紫黑灯灭 + 电光绿 HUD，由专属
@@ -1369,7 +1359,7 @@ export type ThemeRegistration = Omit<ThemeDefinition, "layouts"> & {
  *   must have at least one layout id that is both registered in
  *   `LAYOUT_REGISTRY` and valid for that slide type (the same registry
  *   `resolveLayoutId`/`FullSlideSvg` select from. A theme never ships
- *   new render code, only a curated subset of the existing 118 standard
+ *   new render code, only a curated subset of the existing 123 standard
  *   layouts, per `docs/architecture.md`'s "Adding a theme" section. An
  *   *explicit* empty array for a slide type still fails this check (the
  *   default only kicks in when the key — or `layouts` itself — is omitted

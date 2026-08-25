@@ -53,7 +53,7 @@ function quantize(n: number): number {
 }
 
 /**
- * Fixed input shape, applied identically to all current 15 layouts. T2's review
+ * Fixed input shape, applied identically to all current 19 layouts. T2's review
  * named `quiet-frame` as a layout whose own region set changes shape
  * with component *count* — its lone-non-full-body-component case narrows
  * and re-centers its content rect, full width otherwise — so "the region
@@ -146,8 +146,8 @@ function skeletonKey(skeleton: readonly RegionTuple[]): string {
 const ALL_CONTENT_IDS = Object.keys(CONTENT_LAYOUTS) as ContentLayoutId[]
 
 describe("content layout skeleton diversity (content-layout expansion wave, T3 acceptance metric)", () => {
-  it("covers all 17 registered content layouts", () => {
-    expect(ALL_CONTENT_IDS).toHaveLength(17)
+  it("covers all 19 registered content layouts", () => {
+    expect(ALL_CONTENT_IDS).toHaveLength(19)
   })
 
   it("the full-region skeleton set resolves to >= 6 distinct classes across the pool (was ~4 under the rejected first-box-only reading)", () => {

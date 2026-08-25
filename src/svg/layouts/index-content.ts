@@ -16,6 +16,8 @@ import { OneEvidenceContent } from "./content-one-evidence"
 import { MonoBleedContent } from "./content-mono-bleed"
 import { GaugeStatsContent } from "./content-gauge-stats"
 import { GaugePointContent } from "./content-gauge-point"
+import { CrayonboxCardsContent } from "./content-crayonbox-cards"
+import { CrayonboxPointContent } from "./content-crayonbox-point"
 
 export type { ContentLayout, ContentLayoutId } from "./types"
 
@@ -48,4 +50,6 @@ export const CONTENT_LAYOUTS: Record<ContentLayoutId, ContentLayout> = {
   "mono-bleed": MonoBleedContent,
   "gauge-stats": GaugeStatsContent,
   "gauge-point": GaugePointContent,
+  "crayonbox-cards": CrayonboxCardsContent,
+  "crayonbox-point": CrayonboxPointContent,
 }

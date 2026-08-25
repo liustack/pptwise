@@ -242,8 +242,39 @@ describe("crayon tokens", () => {
     }
   })
 
-  it("chartPalette fourth swatch is sunflower yellow, which never carries text", () => {
-    expect(CRAYON_TOKENS.colors.chartPalette[3]).toBe("#F5B700")
+  it("uses the approved warm-paper crayon-box palette verbatim", () => {
+    expect(CRAYON_TOKENS.colors).toMatchObject({
+      bg: "#FFF9F0",
+      surface: "#FFFFFF",
+      primary: "#0A78B4",
+      accent: "#FF6A12",
+      text: "#1E2340",
+      muted: "#6E655A",
+      border: "#F0E6D6",
+      danger: "#C71559",
+      warning: "#A67C00",
+      success: "#0E8437",
+      chartPalette: ["#0A78B4", "#FF6A12", "#0E8437", "#FFD100"],
+    })
+  })
+
+  it("clears the measured text and semantic contrast floors", () => {
+    const { bg, surface, primary, accent, text, muted, danger, warning, success } = CRAYON_TOKENS.colors
+    expect(contrastRatio(text, bg)).toBeCloseTo(14.65, 2)
+    expect(contrastRatio(text, surface)).toBeCloseTo(15.33, 2)
+    expect(contrastRatio(primary, bg)).toBeCloseTo(4.6, 2)
+    expect(contrastRatio("#FFFFFF", primary)).toBeCloseTo(4.82, 2)
+    expect(contrastRatio(text, accent)).toBeCloseTo(5.35, 2)
+    expect(contrastRatio(muted, bg)).toBeCloseTo(5.46, 2)
+    expect(contrastRatio(muted, surface)).toBeCloseTo(5.72, 2)
+    expect(contrastRatio(danger!, surface)).toBeCloseTo(5.71, 2)
+    expect(contrastRatio(warning!, surface)).toBeCloseTo(3.82, 2)
+    expect(contrastRatio(success!, surface)).toBeCloseTo(4.8, 2)
+  })
+
+  it("keeps sunflower yellow shape-only because it cannot carry text", () => {
+    expect(CRAYON_TOKENS.colors.chartPalette[3]).toBe("#FFD100")
+    expect(contrastRatio(CRAYON_TOKENS.colors.chartPalette[3]!, CRAYON_TOKENS.colors.bg)).toBeLessThan(1.5)
   })
 })
 
@@ -644,9 +675,9 @@ describe("playbill tokens", () => {
     }
   })
 
-  it("bg is the warehouse's only fluorescent yellow, distinct from crayon's chart sunflower", () => {
+  it("bg is the warehouse's only fluorescent yellow, distinct from crayon's chart sunshine yellow", () => {
     expect(PLAYBILL_TOKENS.colors.bg).toBe("#F4DD1B")
-    expect(PLAYBILL_TOKENS.colors.chartPalette).not.toContain("#F5B700")
+    expect(PLAYBILL_TOKENS.colors.chartPalette).not.toContain("#FFD100")
     expect(PLAYBILL_TOKENS.colors.chartPalette).not.toContain("#F4DD1B")
   })
 
@@ -656,10 +687,10 @@ describe("playbill tokens", () => {
     expect(contrastRatio(PLAYBILL_TOKENS.colors.primary, PLAYBILL_TOKENS.colors.bg)).toBeGreaterThanOrEqual(12)
   })
 
-  it("accent is kraft ochre, not the hard black and not crayon's sunflower", () => {
+  it("accent is kraft ochre, not the hard black and not crayon's sunshine yellow", () => {
     expect(PLAYBILL_TOKENS.colors.accent).toBe("#8B6914")
     expect(PLAYBILL_TOKENS.colors.accent).not.toBe(PLAYBILL_TOKENS.colors.primary)
-    expect(PLAYBILL_TOKENS.colors.accent).not.toBe("#F5B700")
+    expect(PLAYBILL_TOKENS.colors.accent).not.toBe("#FFD100")
   })
 
   it("semantic trio is derived from the yellow-paper register and clears the surface floors", () => {
@@ -772,4 +803,3 @@ describe("lecture tokens", () => {
     expect(otherDarkGreen).toEqual([])
   })
 })
-

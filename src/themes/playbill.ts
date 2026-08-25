@@ -5,8 +5,8 @@ import type { StyleTokens } from "./tokens";
  * 节目单，荧光黄整版就是装饰，硬黑特粗字是嗓门。目标场景：活动宣发、
  * 招募、音乐节目单。定位 10 页内活动件，不是长汇报。
  *
- * 全仓唯一黄底。crayon 的向日黄 `#F5B700` 只活在 chart 第四格（卡纸奶油
- * 底上的色块，1.68:1，永不承字）。playbill 把荧光黄 `#F4DD1B` 铺成整版
+ * 全仓唯一黄底。crayon 的阳光黄 `#FFD100` 只活在 chart 第四格（亮暖白
+ * 底上的色块，1.40:1，永不承字）。playbill 把荧光黄 `#F4DD1B` 铺成整版
  * 纸，图表里不再出现任何黄。两家不是深浅号，是角色不同。
  *
  * 四轴 C / top-band / heavy / medium。最近邻 vermilion（C / top-band /
@@ -22,7 +22,7 @@ import type { StyleTokens } from "./tokens";
  *   - `primary` `#131313`：硬黑。压 bg 13.45:1（板写 12:1 起步，实测更高）。
  *     白字压它 18.58:1。反贴（黑底黄字）吃的就是这枚。
  *   - `accent` `#8B6914`：焦茶。黄纸上的第二嗓门，暖褐一类，不是 crayon
- *     向日黄。压 bg 3.68:1，只给强调词与色块，不作正文。fashion-chapter
+ *     阳光黄。压 bg 3.68:1，只给强调词与色块，不作正文。fashion-chapter
  *     满版吃 accent，水印是 accent 与 readableOn 的 22% 实色混合，硬黑
  *     当 accent 时这层混合测得 2.00:1，落在该 layout 已裁定的淡水印带
  *     [1.2, 1.8] 之外。焦茶测得 1.53:1，落在带内。
@@ -30,7 +30,7 @@ import type { StyleTokens } from "./tokens";
  *   - `muted` `#6B5E4A`：沥青（4.57:1，压 surface 6.32:1）。
  *   - `border` `#131313`：硬票根线。
  *   - `chartPalette` 四色：反贴黑 / 深灰 / 暖褐 / 焦茶。白只做 surface，
- *     不进图表（1.38:1）。焦茶与 accent 同枚，不是 crayon 向日黄。
+ *     不进图表（1.38:1）。焦茶与 accent 同枚，不是 crayon 阳光黄。
  *
  * 语义三色压 `surface` 校准（kpi 箭头是字，callout 的 warning 是线与图标）：
  *   - `danger` `#8C1810`：深朱（9.32:1）。
@@ -68,7 +68,7 @@ export const PLAYBILL_TOKENS: StyleTokens = {
     danger: "#8C1810", // 深朱（压 surface 9.32:1）
     warning: "#7A5A18", // 焦茶压深（6.36:1），只作线与图标
     success: "#3D5A32", // 闷橄榄（7.76:1）
-    // 反贴黑 / 深灰 / 暖褐 / 焦茶。白只做 surface。焦茶不是 crayon 向日黄。
+    // 反贴黑 / 深灰 / 暖褐 / 焦茶。白只做 surface。焦茶不是 crayon 阳光黄。
     chartPalette: ["#131313", "#3D4248", "#6B5E4A", "#8B6914"],
   },
   fonts: {

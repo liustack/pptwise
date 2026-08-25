@@ -33,6 +33,7 @@ import { IssueLineChapter } from "./chapter-issue-line-chapter"
 import { DayBillChapter } from "./chapter-day-bill-chapter"
 import { HallLabelChapter } from "./chapter-hall-label-chapter"
 import { GaugeSectionChapter } from "./chapter-gauge-section"
+import { CrayonboxStickerChapter } from "./chapter-crayonbox-sticker"
 
 export type { ChapterLayout, ChapterLayoutId } from "./types"
 
@@ -74,4 +75,5 @@ export const CHAPTER_LAYOUTS: Record<ChapterLayoutId, ChapterLayout> = {
   "day-bill-chapter": DayBillChapter,
   "hall-label-chapter": HallLabelChapter,
   "gauge-section": GaugeSectionChapter,
+  "crayonbox-sticker": CrayonboxStickerChapter,
 }
