@@ -29,6 +29,7 @@ import type { StyleTokens } from "./tokens";
  *     19.03:1。横幅、斜切、签名块走它，不走红。章节页改走冷白纸。
  *   - `accent` `#D7282F`：瑞士红（4.62:1）。只给页缘边条与小色块，永不承字
  *     成横幅。白字压它 4.96:1，刚过 4.5，但本主题纪律禁止把它当成横幅底。
+ *     正文 4.5 门槛的余量只有 0.12，字号掉档会翻车。
  *   - `text` `#101010`：与 primary 同一格，制度腔就是「墨即结构」。
  *   - `muted` `#5F5F5C`：注脚灰（5.97:1 / 压 surface 6.41:1）。
  *   - `border` `#E3E3E0`：网格线，跟着纸底走。
@@ -61,13 +62,13 @@ import type { StyleTokens } from "./tokens";
 export const SWISS_TOKENS: StyleTokens = {
   id: "swiss",
   colors: {
-    bg: "#F7F7F5", // 冷白纸
-    surface: "#FFFFFF", // 制度卡纯白
+    bg: "#F7F7F5", // 冷白纸。页底，正文墨压它 17.74:1，答 4.5
+    surface: "#FFFFFF", // 制度卡纯白。卡面，正文墨压它 19.03:1，答 4.5
     primary: "#101010", // 硬黑（17.74:1）。即正文即色块，白字 19.03:1
     accent: "#D7282F", // 瑞士红（4.62:1）——只给页缘边条与小色块，永不承字成横幅
     text: "#101010", // 与 primary 同一格
     muted: "#5F5F5C", // 注脚灰（5.97:1）
-    border: "#E3E3E0", // 网格线
+    border: "#E3E3E0", // 网格线。只作线，永不承字，不答文字门槛
     danger: "#C41F26", // 瑞士红压深（压 surface 5.88:1）
     warning: "#6B5A3A", // 墨青铜（6.67:1），只作线与图标
     success: "#2F6B52", // 克制森绿（6.28:1）

@@ -28,6 +28,10 @@ installNodePlatform()
 // Recaptured (audit round-2 C/D, 2026-08-24). tech KEEP_NATIVE pages pick
 // up the centered constellation piece and bento card inset. Other keys
 // stay byte-identical.
+//
+// Recaptured (ink duty sweep, 2026-08-25). The no-treatment narrow-column
+// kicker now resolves its 16px ink against the page background. Only the
+// nine chapter-context keys for classroom, crayon, and pulse move.
 const fixture = JSON.parse(
   readFileSync(HEADING_UNASSIGNED_BYTES_URL, "utf-8"),
 ) as { pages: Record<string, string> }

@@ -58,16 +58,18 @@ import type { StyleTokens } from "./tokens";
 export const TERRA_TOKENS: StyleTokens = {
   id: "terra",
   colors: {
-    bg: "#EFE9DC", // 沙色压灰
-    surface: "#F7F3E8", // 浅沙面板
+    bg: "#EFE9DC", // 沙色页底，正文墨压它 11.91:1，答 4.5
+    surface: "#F7F3E8", // 浅沙面板。卡面，正文墨压它 13.00:1，答 4.5
     primary: "#4D5D39", // 橄榄绿（5.90:1），校准记录见文件头注释
     accent: "#B25E38", // 赭石（3.81:1，装饰/图表/大字，不作正文色）
     text: "#2B2A22", // 腐殖土墨（11.91:1）
     muted: "#656155", // 干草灰（5.11:1），校准记录见文件头注释
-    border: "#D8D0BC", // 沙纹线
-    danger: "#9E3A1F", // 陶红（6.15:1）——比赭石 accent 更红更深
-    warning: "#96661C", // 深土黄（4.49:1）
-    success: "#456B36", // 叶绿（5.56:1），橄榄 primary 提饱和
+    border: "#D8D0BC", // 沙纹线。只作线，永不承字，不答文字门槛
+    danger: "#9E3A1F", // 陶红。kpi 箭头当字，压 surface 6.15:1，答 4.5
+    warning: "#96661C", // 深土黄。只作线与图标，压 surface 4.49:1，不答文字门槛
+    success: "#456B36", // 叶绿。kpi 箭头当字，压 surface 5.56:1，答 4.5
+    // 四格只作图系列与色块。c0、c2、c3 可作徽章底，字走 readableOn 并答 4.5。
+    // c1 同 accent，只作装饰与大字，压 bg 3.81:1，答 3.0，不作正文。
     chartPalette: ["#4D5D39", "#B25E38", "#3E6B63", "#8C7B54"], // 橄榄/赭石/深湖/沙褐
   },
   // Microsoft YaHei first: resolveFontFace picks the first SAFE_FONTS match,

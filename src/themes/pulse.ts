@@ -22,6 +22,7 @@ import type { StyleTokens } from "./tokens";
  *   - `accent` `#F4A259` → `#3D9B82`：暖琥珀 → 浅青。**这是双胞胎拆分的
  *     主要手段**：pulse 从此全程冷配角，暖色一律不出场；academic 那边反过来
  *     用学者金作暖配角。浅青只给线与点，实测 3.12:1（板上自标 3.1:1）。
+ *     大字 3.0 门槛的余量只有 0.12，字号掉到 24px 以下就会翻车。
  *   - `text` `#10312E` → `#1E2B27`：墨青 → 墨绿黑，13.56:1。
  *   - `muted` `#5A6E6A` → `#5A6C66`：手术服灰。**设计板给的是 `#5C6E68`，
  *     实测压 bg 4.99:1、压 surface 5.29:1 都过，但压 `content-matrix` 组件
@@ -63,16 +64,18 @@ import type { StyleTokens } from "./tokens";
 export const PULSE_TOKENS: StyleTokens = {
   id: "pulse",
   colors: {
-    bg: "#F2F7F4", // 薄荷白，诊室晨光
-    surface: "#FBFDFC", // 净白面板
-    primary: "#0E6B5C", // 深青绿偏蓝（5.92:1）——与 academic 的绿分家
+    bg: "#F2F7F4", // 薄荷白。页底，正文墨压它 13.56:1，答 4.5
+    surface: "#FBFDFC", // 净白面板。卡面，正文墨压它 14.38:1，答 4.5
+    primary: "#0E6B5C", // 深青绿色块，承白字 6.41:1，答 4.5。压 bg 5.92:1
     accent: "#3D9B82", // 浅青（3.12:1，只给线与点，不作正文色）
     text: "#1E2B27", // 墨绿黑（13.56:1）
     muted: "#5A6C66", // 手术服灰（5.14:1），校准记录见文件头注释
-    border: "#D5E2DC", // 病历线
-    danger: "#B3282B", // 诊室红（6.32:1）
+    border: "#D5E2DC", // 病历线。只作线，永不承字，不答文字门槛
+    danger: "#B3282B", // 诊室红。kpi 箭头当字，压 surface 6.32:1，答 4.5
     warning: "#B9722F", // 警示褐（压 surface 3.73:1，只作线与图标）——第四轮起不再兼任 chartPalette 第四色
-    success: "#157A52", // 青绿偏绿（5.22:1），与 primary 同族
+    success: "#157A52", // 青绿偏绿。kpi 箭头当字，压 surface 5.22:1，答 4.5
+    // 四格只作图系列与色块。c0、c2、c3 可作徽章底，字走 readableOn 并答 4.5。
+    // c1 同 accent，只给线与点，压 bg 3.12:1，答 3.0 装饰线。余量仅 0.12，永不承正文。
     chartPalette: ["#0E6B5C", "#3D9B82", "#4A7FB5", "#2E4257"], // 青绿/浅青/静脉蓝/墨蓝灰
   },
   // Microsoft YaHei first (not Segoe UI): resolveFontFace picks the first

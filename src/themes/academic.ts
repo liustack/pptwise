@@ -19,6 +19,7 @@ import type { StyleTokens } from "./tokens";
  *     高饱和亮版，与 primary 同色相、只差明度，等于没有配角；学者金是绿的
  *     暖配角，也是与 pulse 全冷配角形成对照的那一处。只给线与点，不承小字，
  *     实测 3.10:1（板上自标 3.1:1）。
+ *     大字 3.0 门槛的余量只有 0.10，字号掉到 24px 以下就会翻车。
  *   - `text` `#1A2421` → `#23251F`：墨绿黑 → 油墨黑，13.95:1。
  *   - `muted` `#5D6B65` → `#62655B`：铅笔灰（脱开青绿色相，走中性暖灰）。
  *     实测压 bg 5.36:1、压 surface 5.74:1、压 `content-matrix` 的三档 tone
@@ -51,16 +52,18 @@ import type { StyleTokens } from "./tokens";
 export const ACADEMIC_TOKENS: StyleTokens = {
   id: "academic",
   colors: {
-    bg: "#F5F3EC", // 暖象牙纸——压住绿的寒气，书页而非实验室
-    surface: "#FCFBF6", // 稿纸白
+    bg: "#F5F3EC", // 暖象牙纸。页底，正文墨压它 13.95:1，答 4.5
+    surface: "#FCFBF6", // 稿纸白。卡面，正文墨压它 14.95:1，答 4.5
     primary: "#0E6245", // 祖母绿偏绿（6.63:1），色块直接承白字
     accent: "#A8861D", // 学者金（3.10:1，只给线与点，不承小字）
     text: "#23251F", // 油墨黑（13.95:1）
     muted: "#62655B", // 铅笔灰（5.36:1）
-    border: "#DDD9C8", // 稿纸格线
+    border: "#DDD9C8", // 稿纸格线。只作线，永不承字，不答文字门槛
     danger: "#9E2B25", // 朱批红（压 surface 7.17:1，可作正文级）
-    warning: "#9C5A18", // 焦茶褐——学者金压到能承线的重量（5.21:1）
-    success: "#16704F", // 祖母绿一档亮（5.85:1），与 primary 同族
+    warning: "#9C5A18", // 焦茶褐。只作线与图标，压 surface 5.21:1，不答文字门槛
+    success: "#16704F", // 祖母绿一档亮。kpi 箭头当字，压 surface 5.85:1，答 4.5
+    // 四格只作图系列。c0、c2、c3 可作徽章底，字走 readableOn 并答 4.5。
+    // c1 同 accent，只作线与点，压 bg 3.10:1，答 3.0 装饰线。余量仅 0.10，永不承小字。
     chartPalette: ["#0E6245", "#A8861D", "#3F5B8C", "#8A8471"], // 祖母绿/学者金/靛青/卵石灰
   },
   fonts: {

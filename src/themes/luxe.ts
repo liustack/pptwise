@@ -51,16 +51,19 @@ import type { StyleTokens } from "./tokens";
 export const LUXE_TOKENS: StyleTokens = {
   id: "luxe",
   colors: {
-    bg: "#0B0908", // 暖调真黑
-    surface: "#14110E", // 丝绒面板（抬升几不可察）
-    primary: "#171310", // 与底几乎同黑——奢侈品不用色块喊话
+    bg: "#0B0908", // 暖调真黑。页底，正文墨压它 17.35:1，答 4.5
+    surface: "#14110E", // 丝绒面板。卡面，正文墨压它 16.43:1，答 4.5
+    primary: "#171310", // 同黑色块底，不是字。承白字 18.47:1，答 4.5
     accent: "#C6A15B", // 香槟金（压 bg 8.19:1，可作大标题）
     text: "#F5EFE3", // 象牙白
     muted: "#A89A82", // 旧金注脚（7.20:1）
-    border: "#2E2822", // 暗檀分隔
-    danger: "#CB6055", // 石榴红（压 surface 4.79:1）——丝绒黑上要够亮
-    warning: "#E29234", // 炙金（7.52:1），比香槟金 accent 更饱和
-    success: "#6FA98A", // 翡翠（6.91:1）
+    border: "#2E2822", // 暗檀分隔。只作线，永不承字，不答文字门槛
+    danger: "#CB6156", // 石榴红。kpi 箭头当字，压 surface 4.82:1，答 4.5
+    warning: "#E29234", // 炙金。只作线与图标，压 surface 7.52:1，不答文字门槛
+    success: "#6FA98A", // 翡翠。kpi 箭头当字，压 surface 6.91:1，答 4.5
+    // 四格只作图系列。c0 香槟压 bg 8.19:1，只承大字并答 3.0，不承小字。
+    // c1 象牙纱只作浅色块，永不充当正文墨。c2、c3 可作徽章底。
+    // 徽章底的字走 readableOn 并答 4.5。
     chartPalette: ["#C6A15B", "#E5DAC2", "#8C6F45", "#77808E"], // 香槟 / 象牙纱 / 古铜 / 灰蓝
   },
   fonts: {

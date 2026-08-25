@@ -41,16 +41,18 @@ import type { StyleTokens } from "./tokens";
 export const ARENA_TOKENS: StyleTokens = {
   id: "arena",
   colors: {
-    bg: "#120B22", // 紫黑，灯灭
-    surface: "#1B1233", // 选手席面板，一档抬升
+    bg: "#120B22", // 紫黑灯灭。页底，正文墨压它 17.27:1，答 4.5
+    surface: "#1B1233", // 选手席面板。卡面，正文墨压它 16.04:1，答 4.5
     primary: "#241847", // 色块深紫（让 accent 唱主角）
     accent: "#52F2A8", // 电光绿（13.34:1）——可直接承大标题
     text: "#F2F3F7", // 灯光白（17.27:1）
     muted: "#A79FC4", // 观众席紫灰（7.66:1）
-    border: "#3A2D63", // HUD 界线
-    danger: "#FF4D9D", // 品红，与 chartPalette 同一枚（压 surface 5.76:1）
-    warning: "#FFD84D", // 电金，与 chartPalette 同一枚（12.86:1）
-    success: "#52F2A8", // 电光绿，与 accent 同一枚（12.38:1）
+    border: "#3A2D63", // HUD 界线。只作线，永不承字，不答文字门槛
+    danger: "#FF4D9D", // 品红。kpi 箭头当字，压 surface 5.76:1，答 4.5
+    warning: "#FFD84D", // 电金。只作线与图标，压 surface 12.86:1，不答文字门槛
+    success: "#52F2A8", // 电光绿。kpi 箭头当字，压 surface 12.38:1，答 4.5
+    // 四格只作图系列。可作徽章底，字走 readableOn 并答 4.5。
+    // 电金不作正文小字，图系列色不直接充当文字墨。
     chartPalette: ["#52F2A8", "#FF4D9D", "#4DC3FF", "#FFD84D"], // 电光绿/品红/冰蓝/电金
   },
   fonts: {

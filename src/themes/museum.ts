@@ -50,16 +50,18 @@ import type { StyleTokens } from "./tokens";
 export const MUSEUM_TOKENS: StyleTokens = {
   id: "museum",
   colors: {
-    bg: "#211A12", // 棕黑厅堂——R>G≫B，与 insight 终端暖黑 / luxe 真黑岔开
-    surface: "#2B241A", // 展柜衬板，一档抬升
+    bg: "#211A12", // 棕黑厅堂。页底，正文墨压它 14.61:1，答 4.5
+    surface: "#2B241A", // 展柜衬板。卡面，正文墨压它 13.02:1，答 4.5
     primary: "#322A1E", // 深色块（让 accent 唱主角，白字 14.14:1）
     accent: "#BE7A28", // 展签铜金（4.92:1）——比 luxe 香槟金更橙更暗
     text: "#F4ECD8", // 暖纸白（14.61:1）
     muted: "#C2B394", // 旧纸注脚（8.33:1）
-    border: "#403628", // 展柜接缝
+    border: "#403628", // 展柜接缝。只作线，永不承字，不答文字门槛
     danger: "#E0705C", // 氧化红（压 surface 4.85:1）
     warning: "#D4A04A", // 铜金提亮（6.52:1），只作线与图标
     success: "#8A9A52", // 标本苔绿（4.98:1）
+    // 四格只作图系列与色块。可作徽章底，字走 readableOn 并答 4.5。
+    // 深底上取深墨，永不让白色小字直接压这些系列色。
     chartPalette: ["#BE7A28", "#7A8B4A", "#C45A45", "#9A8E78"], // 铜金/苔绿/氧化红/暖石
   },
   fonts: {

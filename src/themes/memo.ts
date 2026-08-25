@@ -77,13 +77,13 @@ import type { StyleTokens } from "./tokens";
 export const MEMO_TOKENS: StyleTokens = {
   id: "memo",
   colors: {
-    bg: "#F6F1E7", // 便笺纸
-    surface: "#FBF8F1", // 衬页
+    bg: "#F6F1E7", // 便笺纸。页底，正文墨压它 14.72:1，答 4.5
+    surface: "#FBF8F1", // 衬页。卡面，正文墨压它 15.63:1，答 4.5
     primary: "#221E18", // 墨（14.72:1，白字 16.58:1）——唯一成面的深色
     accent: "#A63A2B", // 印章红（5.72:1），只成线与字，永不成面
     text: "#221E18", // 墨（14.72:1）
     muted: "#675E51", // 档案褐注脚（5.66:1）——板上 #6B6255 压 matrix 混色失守，见文件头
-    border: "#E4DFD2", // 便笺栏线
+    border: "#E4DFD2", // 便笺栏线。只作线，永不承字，不答文字门槛
     danger: "#8B2418", // 沉朱（压 surface 8.38:1）
     warning: "#8A6230", // 牛皮褐压深（5.12:1），只作线与图标
     success: "#3F5E48", // 档案绿（6.81:1）

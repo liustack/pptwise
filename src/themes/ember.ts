@@ -38,8 +38,8 @@ import type { StyleTokens } from "./tokens";
 export const EMBER_TOKENS: StyleTokens = {
   id: "ember",
   colors: {
-    bg: "#241B14", // 炭黑舞台
-    surface: "#2C221A", // 炭卡，比底亮一档
+    bg: "#241B14", // 炭黑舞台。页底，正文墨压它 14.09:1，答 4.5
+    surface: "#2C221A", // 炭卡。卡面，正文墨压它 12.95:1，答 4.5
     primary: "#E56A2C", // 火橙（压 bg 5.18:1，近黑墨压它 5.92:1），校准见文件头
     accent: "#E56A2C", // 与 primary 同一枚火橙，巨号与强调也走它
     text: "#F2E9DF", // 米白（14.09:1）
@@ -48,6 +48,8 @@ export const EMBER_TOKENS: StyleTokens = {
     danger: "#FF6B5C", // 亮余烬红（压 surface 5.56:1），kpi 箭头当字
     warning: "#E8A13C", // 琥珀，只给警示线（压 surface 7.10:1）
     success: "#8FBB70", // 暖苔绿（压 surface 7.04:1），不进蓝
+    // 四格只作图系列与色块。可作徽章底，字走 readableOn 并答 4.5。
+    // 火橙可作大字，近黑墨压它 5.92:1，不承白色小字。
     chartPalette: ["#E56A2C", "#E8A13C", "#C48AA8", "#A89888"], // 火橙/琥珀/浅余烬紫/暖沙
   },
   // Microsoft YaHei first (not Verdana/Segoe UI): resolveFontFace picks the

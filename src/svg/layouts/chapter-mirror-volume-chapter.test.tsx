@@ -64,7 +64,7 @@ describe("chapter-mirror-volume-chapter — board geometry", () => {
     expect(volume?.getAttribute("text-anchor")).toBe("middle")
     expect(volume?.getAttribute("data-contrast-tier")).toBe("meta")
     expect(volume?.getAttribute("letter-spacing")).toBeNull()
-    expect(volume?.getAttribute("fill")).toBe(metaInk(tokens.colors.accent, bg))
+    expect(volume?.getAttribute("fill")).toBe(metaInk(tokens.colors.muted, bg))
 
     const sub = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === SUBHEADING)!
     expect(sub.getAttribute("x")).toBe("640")
@@ -87,6 +87,19 @@ describe("chapter-mirror-volume-chapter — board geometry", () => {
     expect(heading?.getAttribute("text-anchor")).toBe("middle")
     expect(heading?.getAttribute("font-weight")).toBe("700")
     expect(Number(heading?.getAttribute("font-size"))).toBe(64)
+  })
+
+  it("derives the volume meta from muted while the mirrored bars keep accent", () => {
+    const { root, tokens, ctx } = renderChapter("heritage")
+    const bg = ctx.defaultBg ?? tokens.colors.bg
+    const volume = Array.from(root.querySelectorAll("text")).find(
+      (text) => text.textContent === "卷二",
+    )!
+
+    expect(volume.getAttribute("fill")).toBe(metaInk(tokens.colors.muted, bg))
+    expect(
+      Array.from(root.querySelectorAll("line")).map((line) => line.getAttribute("stroke")),
+    ).toEqual([tokens.colors.accent, tokens.colors.accent])
   })
 
   it("keeps the paired bars on the subtitle cluster, not in a corner", () => {

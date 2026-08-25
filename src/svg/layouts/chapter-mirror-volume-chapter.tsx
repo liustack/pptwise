@@ -9,7 +9,7 @@ import { trackingPx } from "./minimal-shared"
 import { stripEmphasis } from "../emphasis"
 
 /**
- * mirror-volume-chapter（第八波 pinOnly）：中轴对镜。accent 卷号在上，
+ * mirror-volume-chapter（第八波 pinOnly）：中轴对镜。muted 卷号在上，
  * 标题居中，对杠夹一点（accent 线 + primary 圆点）依附标题簇，不是角落
  * tick。构图抄 `.issues/design-boards/wave8/b2/Heritage.dc.html` 章节：
  * 卷号 y290、标题 y396 / 64px、对杠与圆点 y450、副题 y520。
@@ -105,7 +105,7 @@ export function MirrorVolumeChapter({ ir, slide, index, ctx }: SvgTemplateProps)
         textAnchor="middle"
         fontFamily={fonts.body}
         fontSize={volume.fontSize}
-        fill={metaInk(colors.accent, defaultBg)}
+        fill={metaInk(colors.muted, defaultBg)}
         letterSpacing={volumeTracking}
         dominantBaseline="alphabetic"
       >
@@ -172,7 +172,7 @@ export function MirrorVolumeChapter({ ir, slide, index, ctx }: SvgTemplateProps)
 
 export const layoutDef = {
   // chapter-mirror-volume-chapter.tsx: pinOnly mirrored volume open.
-  // Accent volume kicker, centered title, paired bars only when a
+  // Muted volume kicker, centered title, paired accent bars only when a
   // subtitle sits between them. CJK 卷 + numeral, Latin VOL. N. Theme
   // paints the chapter field.
   id: "mirror-volume-chapter",

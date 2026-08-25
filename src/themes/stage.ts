@@ -59,16 +59,18 @@ import type { StyleTokens } from "./tokens";
 export const STAGE_TOKENS: StyleTokens = {
   id: "stage",
   colors: {
-    bg: "#0F0F12", // 冷玄黑——B≥R，与 luxe 暖真黑 #0B0908 分家
-    surface: "#1A1A1F", // 一档冷抬升
+    bg: "#0F0F12", // 冷玄黑。页底，正文墨压它 16.69:1，答 4.5
+    surface: "#1A1A1F", // 冷抬升面板。卡面，正文墨压它 15.12:1，答 4.5
     primary: "#1E1E22", // 深色块（让 accent 唱主角，白字 14.49:1）
     accent: "#C4BFB6", // 哑银（10.46:1）——旧冰蓝 #6BB7E8 退役
     text: "#F3EFE7", // 暖纸白（16.69:1）
     muted: "#B0A694", // 暖砂注脚（7.95:1，板上 #8E8778 在 matrix 格子上不够）
-    border: "#4A463F", // 发丝线
+    border: "#4A463F", // 发丝线，永不承字，不答文字门槛
     danger: "#B88880", // 铁锈（压 surface 5.67:1）
     warning: "#C4B49A", // 暖砂（8.54:1），只作线与图标
     success: "#8A9480", // 钢青苔（5.47:1）
+    // 四格只作图系列与色块。可作徽章底，字走 readableOn 并答 4.5。
+    // 深底上取深墨，永不让白色小字直接压这些系列色。
     chartPalette: ["#C4BFB6", "#B8A888", "#6F6A61", "#8A96A2"], // 哑银/暖砂/石墨/钢灰
   },
   fonts: {

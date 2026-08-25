@@ -46,16 +46,18 @@ import type { StyleTokens } from "./tokens";
 export const CAMPAIGN_TOKENS: StyleTokens = {
   id: "campaign",
   colors: {
-    bg: "#2A1E3F", // 幕布深紫——舞台开灯前
-    surface: "#35284E", // 侧幕紫，一档抬升
+    bg: "#2A1E3F", // 幕布深紫。页底，正文墨压它 14.00:1，答 4.5
+    surface: "#35284E", // 侧幕紫。卡面，正文墨压它 12.13:1，答 4.5
     primary: "#23173A", // 更深一档给横幅/色块（白字 16.73:1）
-    accent: "#E84F8A", // 荧光洋红（4.36:1）——营销的主音
+    accent: "#E84F8A", // 营销主音，只承大字。压 bg 4.36:1 答 3.0，不承小字
     text: "#F6F2F9", // 灯光白（14.00:1）
     muted: "#B3A6C7", // 幕影紫灰（6.78:1）
-    border: "#4A3A66", // 幕缝线
-    danger: "#F07764", // 追光珊瑚（压 surface 4.81:1）——暗紫幕布上要够亮
-    warning: "#F0B429", // 鎏金，纸屑四色之一（7.20:1）
-    success: "#9BE36D", // 荧绿，纸屑四色之一（8.69:1）
+    border: "#4A3A66", // 幕缝线。只作线，永不承字，不答文字门槛
+    danger: "#F07764", // 追光珊瑚。kpi 箭头当字，压 surface 4.81:1，答 4.5
+    warning: "#F0B429", // 鎏金。只作线与图标，压 surface 7.20:1，不答文字门槛
+    success: "#9BE36D", // 荧绿。kpi 箭头当字，压 surface 8.69:1，答 4.5
+    // 四格是图系列与纸屑色块，可作徽章底，字走 readableOn 并答 4.5。
+    // c0 洋红压 bg 4.36:1，只承大字并答 3.0，不承小字。
     chartPalette: ["#E84F8A", "#F0B429", "#4FC1E9", "#9BE36D"], // 洋红/鎏金/天青/荧绿=纸屑四色
   },
   fonts: {

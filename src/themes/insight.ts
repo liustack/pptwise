@@ -41,16 +41,18 @@ import type { StyleTokens } from "./tokens";
 export const INSIGHT_TOKENS: StyleTokens = {
   id: "insight",
   colors: {
-    bg: "#0F1216", // 暖黑终端底
-    surface: "#171C22", // 数据面板（抬一档）
-    primary: "#16202B", // 墨蓝色块（让 accent 唱主角）
+    bg: "#0F1216", // 暖黑终端底。页底，正文墨压它 16.35:1，答 4.5
+    surface: "#171C22", // 数据面板。卡面，正文墨压它 14.92:1，答 4.5
+    primary: "#16202B", // 墨蓝色块，不作 bg 上的字。承白字 16.46:1，答 4.5
     accent: "#F0A63C", // 终端琥珀
     text: "#F2EFE8", // 暖纸白
     muted: "#9AA7B4", // 青灰注脚（压 bg 7.65:1，压渐变起点 7.06:1）
-    border: "#2A3440", // 行情表格线
-    danger: "#D95D4E", // 跌红，与 chartPalette 同一枚（压 surface 4.59:1）
-    warning: "#E0863A", // 深琥珀（6.23:1），与终端琥珀 accent 拉开一档
-    success: "#2FA97C", // 涨绿，与 chartPalette 同一枚（5.78:1）
+    border: "#2A3440", // 行情表格线。只作线，永不承字，不答文字门槛
+    danger: "#DA6354", // 跌红。kpi 箭头当字，压 surface 4.81:1，答 4.5
+    warning: "#E0863A", // 深琥珀。只作线与图标，压 surface 6.23:1，不答文字门槛
+    success: "#2FA97C", // 涨绿。kpi 箭头当字，压 surface 5.78:1，答 4.5
+    // 四格只作图系列与色块。可作徽章底，字走 readableOn 并答 4.5。
+    // 跌红保留涨跌语义，不直接充当正文墨。
     chartPalette: ["#F0A63C", "#2FA97C", "#D95D4E", "#7E93A8"], // 琥珀 / 涨绿 / 跌红 / 中性青灰
   },
   fonts: {

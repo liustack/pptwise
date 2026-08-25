@@ -58,17 +58,18 @@ import type { StyleTokens } from "./tokens";
 export const PLAYBILL_TOKENS: StyleTokens = {
   id: "playbill",
   colors: {
-    bg: "#F4DD1B", // 荧光黄——全仓唯一黄底，整版即装饰
-    surface: "#FFFFFF", // 票根白（1.38:1 压黄，只做卡面不当图表色）
+    bg: "#F4DD1B", // 荧光黄页底。正文墨压它 13.45:1，答 4.5
+    surface: "#FFFFFF", // 票根白卡面。正文墨压它 18.58:1，答 4.5
     primary: "#131313", // 硬黑（压 bg 13.45:1）——反贴与特粗字的嗓门
     accent: "#8B6914", // 焦茶（3.68:1）——强调词与色块，fashion-chapter 满版底
     text: "#131313", // 硬黑正文（13.45:1）
     muted: "#6B5E4A", // 沥青（4.57:1）
-    border: "#131313", // 硬票根线
+    border: "#131313", // 硬票根线。只作线，永不承字，不答文字门槛
     danger: "#8C1810", // 深朱（压 surface 9.32:1）
     warning: "#7A5A18", // 焦茶压深（6.36:1），只作线与图标
     success: "#3D5A32", // 闷橄榄（7.76:1）
-    // 反贴黑 / 深灰 / 暖褐 / 焦茶。白只做 surface。焦茶不是 crayon 阳光黄。
+    // 四格只作图系列与色块，可作徽章底承白字，四格都答 4.5。
+    // c3 焦茶不直接充当正文墨。白只作 surface。
     chartPalette: ["#131313", "#3D4248", "#6B5E4A", "#8B6914"],
   },
   fonts: {

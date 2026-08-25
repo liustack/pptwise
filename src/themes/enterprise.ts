@@ -70,10 +70,8 @@ import type { StyleTokens } from "./tokens";
  *     代价记在这里：四色全冷之后彼此的 ΔE 从炸橘时代的 82-127 掉到
  *     35-47，比暖冷对撞时低，但四格仍两两可辨，色盲模拟最近的一格
  *     ΔE 28.6（deuteranopia，对工业青）。
- *     **`accent` 仍是炸橘，本次未动**：那是方块与强调线的岗位，属于 motif
- *     与版式的作用面，不在「图表配色」这一刀的范围里。用户 p09/p10 看到的
- *     蓝橘其实来自 motif（右上 IKB 方块阶 + 左下一枚炸橘方块），要一并治
- *     得单独立一刀，见 `motif-enterprise-motif.tsx`。
+ *     **`accent` 已与第二格同步为工业蓝**：方块、强调线与图表都归入同一
+ *     冷阶。用户 p09/p10 否掉的蓝橘组合已经从 token 与 motif 两边清除。
  *   - `panel` / `cardStroke` 板上没给（板的角色表只列七格 + chart）。两者
  *     按它们与 `bg`/`border` 的旧关系平移进新的中性族，免得白墙上浮一张
  *     冷灰卡：`panel` 取 bg 与 border 之间的一档 `#F0F0EC`，`cardStroke`
@@ -101,19 +99,20 @@ import type { StyleTokens } from "./tokens";
 export const ENTERPRISE_TOKENS: StyleTokens = {
   id: "enterprise",
   colors: {
-    bg: "#F7F7F4", // 画廊白墙（微暖不刺）
-    surface: "#FFFFFF", // 纯白卡，Swiss 的干净
-    panel: "#F0F0EC", // 板上未给，按旧 panel↔bg 关系平移进新中性族（见文件头）
+    bg: "#F7F7F4", // 画廊白墙。页底，正文墨压它 16.55:1，答 4.5
+    surface: "#FFFFFF", // 纯白卡。卡面，正文墨压它 17.77:1，答 4.5
+    panel: "#F0F0EC", // 中性卡底，承正文并答 4.5。取值来历见文件头
     primary: "#0032A0", // 正 IKB（9.96:1），横幅直接承白字
     accent: "#2F6FBF", // 工业蓝（4.72:1）——蓝配橙禁忌，炸橘退场，见文件头
     text: "#17181A", // 硬黑（16.55:1），工业铭牌
     muted: "#5C6066", // 机械灰（5.89:1）
-    border: "#DEE0DB", // 网格线
-    danger: "#C0231A", // 信号红（6.01:1）——瑞士工业的警示色
-    warning: "#A85F00", // 深琥珀（4.88:1）——刻意压暗（原因是不与当时的炸橘 accent 混，
-    // accent 换成工业蓝之后这条理由失效，但语义色本轮不动，hex 原样保留）
-    success: "#0F7355", // 工业青绿（5.83:1），与 chart 的工业青同族
-    cardStroke: "#E4E6E1", // 板上未给，按旧 cardStroke↔border 关系平移（见文件头）
+    border: "#DEE0DB", // 网格线。只作线，永不承字，不答文字门槛
+    danger: "#C0231A", // 信号红。kpi 箭头当字，压 surface 6.01:1，答 4.5
+    warning: "#A85F00", // 深琥珀。只作线与图标，压 surface 4.88:1，不答文字门槛
+    success: "#0F7355", // 工业青绿。kpi 箭头当字，压 surface 5.83:1，答 4.5
+    cardStroke: "#E4E6E1", // 发丝线，永不承字，不答文字门槛。取值来历见文件头
+    // 四格只作图系列与色块。徽章底的字走 readableOn 并答 4.5。
+    // IKB、工业蓝、工业青取白墨，机灰取深墨。
     chartPalette: ["#0032A0", "#2F6FBF", "#0E7C86", "#7A7F87"], // IKB/工业蓝/工业青/机灰
   },
   fonts: {

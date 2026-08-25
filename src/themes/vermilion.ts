@@ -68,16 +68,18 @@ import type { StyleTokens } from "./tokens";
 export const VERMILION_TOKENS: StyleTokens = {
   id: "vermilion",
   colors: {
-    bg: "#F6EFE3", // 公文米白（正文页不可整版红，红作结构色）
-    surface: "#FCF8EF", // 文件页面板
+    bg: "#F6EFE3", // 公文米白页底，正文墨压它 13.14:1，答 4.5
+    surface: "#FCF8EF", // 文件页面板。卡面，正文墨压它 14.17:1，答 4.5
     primary: "#B02318", // 正红（5.93:1；白字压它 6.78:1）
     accent: "#C79A3B", // 金（2.26:1，只给线，绝不当文字色）
     text: "#33231C", // 公文墨（13.14:1）
     muted: "#6E5B4B", // 档案灰（5.63:1）
-    border: "#E0D2B8", // 案卷线
-    danger: "#8C1810", // 深朱（8.79:1）——比正红 primary 更沉，警示压得住
-    warning: "#8E6A18", // 金压深（4.69:1；accent 的 2.26:1 连装饰线都过不了）
-    success: "#4C6B3C", // 松绿压深（5.70:1）
+    border: "#E0D2B8", // 案卷线。只作线，永不承字，不答文字门槛
+    danger: "#8C1810", // 深朱。kpi 箭头当字，压 surface 8.79:1，答 4.5
+    warning: "#8E6A18", // 金压深。只作线与图标，压 surface 4.69:1，不答文字门槛
+    success: "#4C6B3C", // 松绿。kpi 箭头当字，压 surface 5.70:1，答 4.5
+    // 四格只作图系列与色块。c0、c2、c3 可作徽章底，字走 readableOn 并答 4.5。
+    // c1 同 accent，只给线，压 bg 2.26:1，永不承字，不答文字门槛。
     chartPalette: ["#B02318", "#C79A3B", "#4A5C6E", "#66754F"], // 正红/金/靛灰/松绿
   },
   // Microsoft YaHei first: resolveFontFace picks the first SAFE_FONTS match,

@@ -940,6 +940,10 @@ describe("v3 → v4 migration equivalence (task 1 hard gate, spec §10/§12)", (
       // `banner-ending` pin and changes only because consulting now carries
       // `gauge-motif`. All five SVG pages therefore change. The two journal
       // fixtures stay byte-identical and were not recaptured.
+      // Recaptured (ink duty sweep, 2026-08-25). Only `scenarioBearing`
+      // SVG slide 2 changes. Its horizontal timeline dates move from accent
+      // to muted while the axis dots move from primary to accent under B1.
+      // The audit golden stays byte-identical.
       it("renders SVG byte-identical to the base-commit (pre-rename) capture, slide for slide", () => {
         const goldenSvgs = readGoldenJson<string[]>(`${name}.svg`)
         const migratedSvgs = v4.slides.map((_, i) => renderSlideSvg(v4, i))
@@ -1099,6 +1103,9 @@ describe("v3 → v4 migration equivalence (task 1 hard gate, spec §10/§12)", (
       // `basic` SVG pages map one-for-one to `ppt/slides/slide1.xml` through
       // `slide5.xml`. The normalized part-name set remains unchanged.
       // Journal fixtures remain byte-identical and were not recaptured.
+      // Recaptured (ink duty sweep, 2026-08-25). Only `scenarioBearing`
+      // `ppt/slides/slide3.xml` changes, matching SVG slide 2 exactly.
+      // The normalized part-name set remains unchanged.
       it("exports a PPTX byte-identical (docProps/core.xml timestamp excluded) to the base-commit capture", async () => {
         const goldenZipMap = readGoldenJson<Record<string, string>>(`${name}.pptx-zip`)
         const blob = await generatePptxBlob(v4)

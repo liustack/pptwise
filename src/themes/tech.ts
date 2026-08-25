@@ -47,21 +47,23 @@ import type { StyleTokens } from "./tokens";
 export const TECH_TOKENS: StyleTokens = {
   id: "tech",
   colors: {
-    bg: "#0A0F1E", // 蓝黑深空
+    bg: "#0A0F1E", // 蓝黑深空。页底，正文墨压它 16.78:1，答 4.5
     // No `panel` override (Task 1, electric-cyan single-accent redesign):
     // the old lighter-than-surface "card-on-card" tier read as a muddy
     // blue-grey that fought the new near-black system, so bento now falls
     // back to `colors.surface` for its card fill like most of the other
     // theme token files already do (only `custom` sets a distinct `panel`).
-    surface: "#121A30", // 舱内面板蓝
+    surface: "#121A30", // 舱内面板蓝。卡面，正文墨压它 15.18:1，答 4.5
     primary: "#14294A", // 横幅深蓝（承 readableOn 反白）
-    accent: "#53E0D2", // 青瓷青光
+    accent: "#53E0D2", // 青瓷青光。承大标题，压 bg 11.78:1，答 3.0，不承白字
     text: "#EAF1FA", // 冷白
     muted: "#93A5C0", // 舱灰注脚（压 bg 7.62:1，压渐变起点 7.13:1）
-    border: "#24304A", // 界格即规线（motif 细规同色，永不亮色）
-    danger: "#FF6B7D", // 警示玫红（压 surface 6.29:1）——冷板上不用橙红
+    border: "#24304A", // 界格规线。只作线，永不承字，不答文字门槛
+    danger: "#FF6B7D", // 警示玫红。kpi 箭头当字，压 surface 6.29:1，答 4.5
     warning: "#FFC14D", // 警示琥珀（压 surface 10.68:1）——第四轮起不再兼任 chartPalette 第四色
-    success: "#4BD98A", // 薄荷绿（9.53:1），与青瓷 accent 同一冷序列
+    success: "#4BD98A", // 薄荷绿。kpi 箭头当字，压 surface 9.53:1，答 4.5
+    // 四格只作图系列与色块。可作徽章底，字走 readableOn 取深墨并答 4.5。
+    // 深底上的系列色永不直接承白色小字。
     chartPalette: ["#53E0D2", "#5B8CFF", "#9A7CFF", "#4BD98A"], // 青/蓝/紫/薄荷绿，整条冷序列
   },
   fonts: {

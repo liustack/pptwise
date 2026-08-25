@@ -48,14 +48,14 @@ describe("timeline component", () => {
     expect(line?.getAttribute("stroke-width")).toBe("2")
   })
 
-  it("renders 3 circle nodes with primary fill", () => {
+  it("renders 3 circle nodes with accent fill", () => {
     const { container } = svg(
       timeline.render(component, { x: 0, y: 0, w: 1000 }, ctx),
     )
     const circles = container.querySelectorAll("circle")
     expect(circles.length).toBe(3)
     circles.forEach((c) => {
-      expect(c.getAttribute("fill")).toBe("#006A4E")
+      expect(c.getAttribute("fill")).toBe("#00A878")
     })
   })
 
@@ -88,6 +88,30 @@ describe("timeline component", () => {
     expect(titleTexts[0].textContent).toBe("启动")
   })
 
+  it("uses muted ink for horizontal dates and reserves accent for axis dots", () => {
+    const themeCtx = buildCtx(resolveStyle("enterprise"), {})
+    const { container } = svg(
+      timeline.render(component, { x: 0, y: 0, w: 1000 }, themeCtx),
+    )
+    const texts = Array.from(container.querySelectorAll("text"))
+    const dates = component.milestones.map((milestone) =>
+      texts.find((text) => text.textContent === milestone.date)!,
+    )
+    const titles = component.milestones.map((milestone) =>
+      texts.find((text) => text.textContent === milestone.title)!,
+    )
+
+    expect(dates.map((date) => date.getAttribute("fill"))).toEqual(
+      component.milestones.map(() => themeCtx.colors.muted),
+    )
+    expect(titles.map((title) => title.getAttribute("fill"))).toEqual(
+      component.milestones.map(() => themeCtx.colors.text),
+    )
+    expect(
+      Array.from(container.querySelectorAll("circle")).map((dot) => dot.getAttribute("fill")),
+    ).toEqual(component.milestones.map(() => themeCtx.colors.accent))
+  })
+
   it("does not contain nested svg elements", () => {
     const { container } = svg(
       timeline.render(component, { x: 0, y: 0, w: 1000 }, ctx),
@@ -116,8 +140,11 @@ describe("timeline component", () => {
       timeline.render(longComponent, { x: 0, y: 0, w: 1120 }, ctx),
     )
     const texts = Array.from(container.querySelectorAll("text"))
+    const dates = new Set(longComponent.milestones.map((milestone) => milestone.date))
     const titleTexts = texts.filter((t) => t.getAttribute("fill") === "#1A2421")
-    const descTexts = texts.filter((t) => t.getAttribute("fill") === "#5D6B65")
+    const descTexts = texts.filter(
+      (t) => t.getAttribute("fill") === "#5D6B65" && !dates.has(t.textContent ?? ""),
+    )
     // 2026-07-09 改多行：长标题/描述换行（每 milestone title ≤2 行、desc ≤3 行）
     // 而不是缩到 10px 再省略号——text 元素数超过 milestone 数即证明换行生效
     expect(titleTexts.length).toBeGreaterThan(6)
@@ -147,6 +174,29 @@ describe("timeline component", () => {
       const line = container.querySelector("line")
       expect(line).not.toBeNull()
       expect(line?.getAttribute("x1")).toBe(line?.getAttribute("x2"))
+    })
+
+    it("keeps the highlight on the dot while its date and title share the theme text ink", () => {
+      const themeCtx = buildCtx(resolveStyle("consulting"), {})
+      const highlighted = {
+        type: "timeline" as const,
+        layout: "vertical" as const,
+        milestones: [
+          { date: "第一季度", title: "基线" },
+          { date: "第二季度", title: "自建基建替换", highlight: true },
+        ],
+      }
+      const { container } = svg(
+        timeline.render(highlighted, { x: 0, y: 0, w: 800 }, themeCtx),
+      )
+      const texts = Array.from(container.querySelectorAll("text"))
+      const date = texts.find((text) => text.textContent === "第二季度")!
+      const title = texts.find((text) => text.textContent === "自建基建替换")!
+      const dots = Array.from(container.querySelectorAll("circle"))
+
+      expect(date.getAttribute("fill")).toBe(themeCtx.colors.text)
+      expect(title.getAttribute("fill")).toBe(date.getAttribute("fill"))
+      expect(dots[1]?.getAttribute("fill")).toBe(themeCtx.colors.accent)
     })
 
     // P0 hardening (robustness deep-review D1, family-sweep sibling of
