@@ -194,7 +194,7 @@ export function themeDeck(themeId: string, lex: Lexicon, assets: CorpusAssets): 
     },
     { type: "chapter", heading: lex.chapters[0]!, subheading: lex.kickers[0], components: [] },
     ...content,
-    themeId === "academic" || themeId === "consulting"
+    themeId === "academic" || themeId === "consulting" || themeId === "crayon"
       ? {
           type: "ending" as const,
           heading: lex.chapters[5]!,
@@ -298,6 +298,18 @@ function bodyFor(def: LayoutDefinition, lex: Lexicon): Component[] {
     if (kpi.type === "kpi_cards") kpi.items = kpi.items.slice(0, 4)
     return [kpi]
   }
+  if (def.id === "crayonbox-cards") {
+    const cards = b.numbered_cards!(lex)
+    if (cards.type === "numbered_cards") {
+      cards.items = cards.items.slice(0, 3).map((item, index) => ({
+        ...item,
+        title: lex.labels[index]!,
+        text: lex.labels[index + 3]!,
+        sub: lex.periods[index]!,
+      }))
+    }
+    return [cards]
+  }
 
   // Sparse and a few ordinary layouts have a body slot whose declared
   // capacity is the wrong signal: citation is the capacity-1 default, but
@@ -305,6 +317,7 @@ function bodyFor(def: LayoutDefinition, lex: Lexicon): Component[] {
   // the layout's own comments rather than broadening the default.
   if (def.id === "pull-quote") return [b.quote!(lex)]
   if (def.id === "gauge-point") return [b.quote!(lex)]
+  if (def.id === "crayonbox-point") return [b.quote!(lex)]
   if (def.id === "one-evidence") return [b.chart!(lex)]
   if (def.id === "bento-panel") {
     const kpi = b.kpi_cards!(lex)
@@ -392,7 +405,7 @@ export function layoutPage(layoutId: string, lex: Lexicon, assets: CorpusAssets,
               heading: lex.chapters[5]!,
               subheading: lex.verdicts.positive,
               components:
-                def.id === "gauge-next"
+                def.id === "gauge-next" || def.id === "crayonbox-todo"
                   ? [{ type: "bullets", items: lex.bullets.slice(0, 3) }]
                   : [],
             }

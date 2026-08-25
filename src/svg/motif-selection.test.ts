@@ -135,6 +135,10 @@ describe("resolveMotifId — byte-inertness for the themes this task must not di
     }
   })
 
+  it("locks crayon to the crayonbox motif without mutating the legacy crayon motif", () => {
+    expect(MOTIF_CANDIDATES.crayon).toEqual(["crayonbox-motif"])
+  })
+
   it("a registered (custom) theme keeps its own single fixed motif untouched — the candidate table only covers the 13 builtins", () => {
     __resetRegisteredThemes()
     registerTheme({

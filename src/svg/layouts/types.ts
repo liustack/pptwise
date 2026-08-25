@@ -76,6 +76,7 @@ export type CoverLayoutId =
   | "report-open-cover"
   | "cut-panel-cover"
   | "gauge-verdict"
+  | "crayonbox-open"
 
 // Wave 2（chapter/ending）新增 id：每主题 1 个（命名见 Wave 2 任务表）
 export type ChapterLayoutId =
@@ -113,6 +114,7 @@ export type ChapterLayoutId =
   | "day-bill-chapter"
   | "hall-label-chapter"
   | "gauge-section"
+  | "crayonbox-sticker"
 export type EndingLayoutId =
   | "banner-ending" | "rail-ending" | "poster-ending"
   | "constellation-ending" | "masthead-ending" | "tone-adaptive-ending"
@@ -146,6 +148,7 @@ export type EndingLayoutId =
   | "ticket-cta-ending"
   | "exit-word-ending"
   | "gauge-next"
+  | "crayonbox-todo"
 
 // Wave 3（content）新增 id
 export type ContentLayoutId =
@@ -180,3 +183,5 @@ export type ContentLayoutId =
   | "mono-bleed"
   | "gauge-stats"
   | "gauge-point"
+  | "crayonbox-cards"
+  | "crayonbox-point"

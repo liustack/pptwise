@@ -98,8 +98,8 @@ v4 IR schema 自 0.4.0 起冻结，后续演进只走加法：新增可选字段
 
 当某页省略 `layout` 时，pptwise 按四个确定性步骤自动选型：
 
-1. 该页型已注册的 archetype 池，去掉 pin-only 版式。共享池现有 47 个 id：封面 20 个、章节 9 个、结尾 8 个、内容 10 个。其余 71 个标准版式需要显式 `slide.layout` 钉子或已经物化的设计板锁定。
-2. 收窄到主题为该页型准备的 `layouts` 集合。内置主题的封面锁到板面，多数内置主题的内容页保留原来的 9-id 共享集，consulting 锁到 `gauge-stats`，lecture 和 luxe 再去掉 `split-band` 与 `stacked-poster`。省略 `layouts` 的注册自定义主题会得到全部 10 个可自动选型的内容版式。见[主题](./themes.zh-CN.md)。
+1. 该页型已注册的 archetype 池，去掉 pin-only 版式。共享池现有 43 个 id：封面 19 个、章节 8 个、结尾 7 个、内容 9 个。其余 80 个标准版式需要显式 `slide.layout` 钉子或主题策展的设计板锁定。
+2. 收窄到主题为该页型准备的 `layouts` 集合。内置主题的封面锁到板面，多数内置主题的内容页使用 9-id 共享集。consulting 与 crayon 各自追加一张主题锁定的 pin-only 内容脸，lecture 和 luxe 再去掉 `split-band` 与 `stacked-poster`。省略 `layouts` 的注册自定义主题会得到全部 9 个可自动选型内容版式。见[主题](./themes.zh-CN.md)。
 3. 用 `Math.max` 做软加权：叙事 `strategy` 的 `layoutTendencies`（content）或 `identityTendencies`（cover/chapter/ending），可选的页级 `beat`，以及主题的 `layoutTendencies`。被偏好的 id 是 ×3，其余是 ×1。cover、chapter、ending 三个页型会走 `identityTendencies` 加权。
 4. 按 seed 加权取样，若命中结果与紧邻的上一页版式相同，则确定性地换成次优候选。
 

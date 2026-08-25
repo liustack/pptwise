@@ -22,6 +22,7 @@ import { SwissMotif } from "./motif-swiss-motif"
 import { MemoMotif } from "./motif-memo-motif"
 import { PlaybillMotif } from "./motif-playbill-motif"
 import { GaugeMotif } from "./motif-gauge-motif"
+import { CrayonboxMotif } from "./motif-crayonbox-motif"
 
 export type { Motif, MotifId } from "./types"
 
@@ -53,4 +54,5 @@ export const MOTIFS: Record<MotifId, Motif> = {
   "memo-motif": MemoMotif,
   "playbill-motif": PlaybillMotif,
   "gauge-motif": GaugeMotif,
+  "crayonbox-motif": CrayonboxMotif,
 }

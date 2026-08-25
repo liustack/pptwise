@@ -42,6 +42,7 @@ const STRUCTURE_BY_MOTIF: Partial<Record<MotifId, Partial<Record<Slide["type"], 
 
 /** Adjudicated identity pieces. Midground, original color, no intensity cap. */
 const IDENTITY_BY_MOTIF: Partial<Record<MotifId, Partial<Record<Slide["type"], readonly string[]>>>> = {
+  "crayonbox-motif": { content: ["crayonbox-stars", "crayonbox-sun"] },
   "ink-motif": { content: ["seal"] },
   "pulse-motif": { cover: ["heartbeat"] },
 }

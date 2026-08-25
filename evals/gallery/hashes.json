@@ -252,54 +252,54 @@
       "color": "iog3d9"
     },
     "theme--crayon--zh--p01": {
-      "hash": "1uqhcwf",
-      "geometry": "1ke4f3u",
-      "color": "4jiss4"
+      "hash": "1lleuzz",
+      "geometry": "ptnjgy",
+      "color": "1yqltc2"
     },
     "theme--crayon--zh--p02": {
-      "hash": "12gv5kf",
-      "geometry": "12zixxp",
-      "color": "1ahkawx"
+      "hash": "75z795",
+      "geometry": "18i1fzj",
+      "color": "1ymg8ae"
     },
     "theme--crayon--zh--p03": {
-      "hash": "dr968o",
-      "geometry": "11fexet",
-      "color": "1deci8q"
+      "hash": "12d501j",
+      "geometry": "yjjvyh",
+      "color": "1upivfr"
     },
     "theme--crayon--zh--p04": {
-      "hash": "grqvtn",
-      "geometry": "x1fzc",
-      "color": "f9t5a0"
+      "hash": "qts9w9",
+      "geometry": "fq49nl",
+      "color": "1p87nsh"
     },
     "theme--crayon--zh--p05": {
-      "hash": "1qxm1vq",
-      "geometry": "18slsjr",
-      "color": "1i5uxu"
+      "hash": "1vhbfwv",
+      "geometry": "1kjh8mb",
+      "color": "17vku90"
     },
     "theme--crayon--zh--p06": {
-      "hash": "1q2yafn",
-      "geometry": "17lw30c",
-      "color": "1ez1a88"
+      "hash": "1ckoqea",
+      "geometry": "s0jaow",
+      "color": "5p3fdd"
     },
     "theme--crayon--zh--p07": {
-      "hash": "1bxi1lp",
-      "geometry": "10rwvzg",
-      "color": "1foy3kw"
+      "hash": "gvybmx",
+      "geometry": "1wtoo8m",
+      "color": "1vr2g36"
     },
     "theme--crayon--zh--p08": {
-      "hash": "iifv1",
-      "geometry": "abk6ng",
-      "color": "1nvmws7"
+      "hash": "b2ibwj",
+      "geometry": "y5r73",
+      "color": "sq8pml"
     },
     "theme--crayon--zh--p09": {
-      "hash": "ubbn1f",
-      "geometry": "lpkq92",
-      "color": "1ycrayp"
+      "hash": "et0zhr",
+      "geometry": "lcg3ye",
+      "color": "1owchyh"
     },
     "theme--crayon--zh--p10": {
-      "hash": "s31rf1",
-      "geometry": "1v4pvcf",
-      "color": "ma98j5"
+      "hash": "2v6v8c",
+      "geometry": "8li1tq",
+      "color": "1lfbb6h"
     },
     "theme--ember--zh--p01": {
       "hash": "n61d97",
@@ -1545,6 +1545,81 @@
       "hash": "f0fmv2",
       "geometry": "uf5t01",
       "color": "1vz7rkl"
+    },
+    "layout--crayonbox-cards--zh": {
+      "hash": "ctypcf",
+      "geometry": "kl2q2t",
+      "color": "eqorve"
+    },
+    "layout--crayonbox-cards--en": {
+      "hash": "ym9ysn",
+      "geometry": "bsakw1",
+      "color": "eqorve"
+    },
+    "layout--crayonbox-cards--mixed": {
+      "hash": "1a7rnfq",
+      "geometry": "r0wwsy",
+      "color": "eqorve"
+    },
+    "layout--crayonbox-open--zh": {
+      "hash": "isywi7",
+      "geometry": "i9o2ty",
+      "color": "qzqjzr"
+    },
+    "layout--crayonbox-open--en": {
+      "hash": "ankj5c",
+      "geometry": "13ljj47",
+      "color": "qzqjzr"
+    },
+    "layout--crayonbox-open--mixed": {
+      "hash": "ortp3z",
+      "geometry": "1ovxpv6",
+      "color": "qzqjzr"
+    },
+    "layout--crayonbox-point--zh": {
+      "hash": "17fvofr",
+      "geometry": "1s0z5xs",
+      "color": "s1fw76"
+    },
+    "layout--crayonbox-point--en": {
+      "hash": "4iq1nh",
+      "geometry": "gkbuqa",
+      "color": "s1fw76"
+    },
+    "layout--crayonbox-point--mixed": {
+      "hash": "1jslufz",
+      "geometry": "x519o",
+      "color": "s1fw76"
+    },
+    "layout--crayonbox-sticker--zh": {
+      "hash": "lu0vln",
+      "geometry": "gk8h9g",
+      "color": "1xd9ail"
+    },
+    "layout--crayonbox-sticker--en": {
+      "hash": "1kmnbm",
+      "geometry": "1iz8slb",
+      "color": "1xd9ail"
+    },
+    "layout--crayonbox-sticker--mixed": {
+      "hash": "1ny5mf3",
+      "geometry": "1cnnmku",
+      "color": "1xd9ail"
+    },
+    "layout--crayonbox-todo--zh": {
+      "hash": "vp14o9",
+      "geometry": "17be99b",
+      "color": "1c4hc6n"
+    },
+    "layout--crayonbox-todo--en": {
+      "hash": "x7i8id",
+      "geometry": "1uf8q77",
+      "color": "1c4hc6n"
+    },
+    "layout--crayonbox-todo--mixed": {
+      "hash": "1jkj651",
+      "geometry": "o224nz",
+      "color": "1c4hc6n"
     },
     "layout--cut-panel-cover--zh": {
       "hash": "pfuytc",

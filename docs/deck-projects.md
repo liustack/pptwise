@@ -52,10 +52,10 @@ A spec page with no matching `pages/<id>.json` file assembles into `{ placeholde
 
 | type | heading | subheading | components | footnote |
 |---|---|---|---|---|
-| `cover` | always | 29/35 layouts | `verdict-index` and `gauge-verdict` accept `bullets`. the other 33 cover layouts do not | never |
-| `chapter` | always | 30/34 layouts | 0/34 layouts | never |
-| `content` | always | 14/17 standard layouts, 3/4 image takeovers | 16/17 standard layouts, 4/4 takeovers | not `two-column` or `gauge-point`, 0/4 takeovers |
-| `ending` | always | 28/32 layouts | 13/32 layouts declare a body slot | never |
+| `cover` | always | 30/36 layouts | `verdict-index` and `gauge-verdict` accept `bullets`. the other 34 cover layouts do not | never |
+| `chapter` | always | 31/35 layouts | 0/35 layouts | never |
+| `content` | always | 15/19 standard layouts, 3/4 image takeovers | 18/19 standard layouts, 4/4 takeovers | not `two-column`, `gauge-point`, or `crayonbox-point`, 0/4 takeovers |
+| `ending` | always | 29/33 layouts | 14/33 layouts declare a body slot | never |
 
 `subheading` is deliberately not hard-gated on any type, on either side of the table — no type drops it on every layout, so a "this type never renders subheading" claim would be unsound and false-positive on the majority layout that does render it (this is also why `subheading` is absent from `checkBoundaryPageContent`'s rule despite being one of the fields the wave's benchmark evidence first suspected). `notes` sits outside this table entirely by design — speaker notes, never drawn onto the canvas SVG regardless of page type (see its docstring in `ir/index.ts`).
 
