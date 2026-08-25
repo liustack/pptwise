@@ -1,6 +1,6 @@
 import type { Component } from "@/ir"
 import { Icon } from "../../icons"
-import { accessibleInk, resolveSemanticColor } from "../../ink"
+import { accessibleInk, groupValueInks, resolveSemanticColor } from "../../ink"
 import type { FormKnobs } from "../form-assignments"
 import type { ComponentBox, ComponentCtx } from "../types"
 import { parseKpiRatio } from "./kpi-value"
@@ -110,44 +110,70 @@ export function renderDonutTrio(
     })
   }
 
-  return (
-    <g transform={`translate(${box.x},${box.y})`}>
-      {component.items.map((item, i) => {
-        const col = i % G.cols
-        const row = Math.floor(i / G.cols)
-        const x0 = col * G.cellW
-        const y0 = row * G.cellH
-        const cx = x0 + G.cellW / 2
-        const cy = y0 + PAD + G.r + G.strokeW / 2
-        const t = parseKpiRatio(String(item.value), item.unit)
-        const hot = knobs.dangerOnMin && i === minI
-        const arc = hot ? danger : defaultArc
-        const d = t != null && t > 0 ? donutArcPath(cx, cy, G.r, t) : ""
-        const { head, tail } = splitValue(String(item.value), item.unit)
-        const innerW = Math.max(8, (G.r - G.strokeW) * 1.5)
-        const rawValue = tail ? `${head}${tail}` : head
-        const preferred = Math.max(FORM_BODY_FLOOR, Math.min(40, G.r * 0.55))
-        const lineOpts = {
+  const values = component.items.map((item, i) => {
+    const col = i % G.cols
+    const row = Math.floor(i / G.cols)
+    const x0 = col * G.cellW
+    const y0 = row * G.cellH
+    const cx = x0 + G.cellW / 2
+    const cy = y0 + PAD + G.r + G.strokeW / 2
+    const t = parseKpiRatio(String(item.value), item.unit)
+    const hot = knobs.dangerOnMin && i === minI
+    const arc = hot ? danger : defaultArc
+    const d = t != null && t > 0 ? donutArcPath(cx, cy, G.r, t) : ""
+    const { head, tail } = splitValue(String(item.value), item.unit)
+    const innerW = Math.max(8, (G.r - G.strokeW) * 1.5)
+    const rawValue = tail ? `${head}${tail}` : head
+    const preferred = Math.max(FORM_BODY_FLOOR, Math.min(40, G.r * 0.55))
+    const lineOpts = {
+      maxWidth: innerW,
+      fontSize: preferred,
+      floor: FORM_BODY_FLOOR,
+      bold: true,
+      fontFamily: ctx.fonts.heading,
+    }
+    const valueFit = fitFormLine(rawValue, lineOpts)
+    const stackUnit = Boolean(tail && valueFit.truncated)
+    const headFit = stackUnit ? fitFormLine(head, lineOpts) : valueFit
+    const tailFit = stackUnit
+      ? fitFormLine(tail!, {
           maxWidth: innerW,
-          fontSize: preferred,
+          fontSize: FORM_BODY_FLOOR,
           floor: FORM_BODY_FLOOR,
           bold: true,
           fontFamily: ctx.fonts.heading,
-        }
-        const valueFit = fitFormLine(rawValue, lineOpts)
-        const stackUnit = Boolean(tail && valueFit.truncated)
-        const headFit = stackUnit ? fitFormLine(head, lineOpts) : valueFit
-        const tailFit = stackUnit
-          ? fitFormLine(tail!, {
-              maxWidth: innerW,
-              fontSize: FORM_BODY_FLOOR,
-              floor: FORM_BODY_FLOOR,
-              bold: true,
-              fontFamily: ctx.fonts.heading,
-            })
-          : null
-        const valueSize = headFit.fontSize
-        const valueInk = hot ? accessibleInk(danger, pageBg, valueSize) : accessibleInk(arc, pageBg, valueSize)
+        })
+      : null
+    return {
+      item,
+      cx,
+      cy,
+      hot,
+      arc,
+      d,
+      headFit,
+      tailFit,
+      valueSize: headFit.fontSize,
+    }
+  })
+  const valueInks = groupValueInks(
+    values.map(({ arc, valueSize }) => ({
+      preferredFill: arc,
+      backgroundFill: pageBg,
+      fontSizePx: valueSize,
+    })),
+    ctx.colors.text,
+  )
+
+  return (
+    <g transform={`translate(${box.x},${box.y})`}>
+      {values.map(({ item, cx, cy, hot, arc, d, headFit, tailFit, valueSize }, i) => {
+        const valueInk = valueInks[i]!
+        // The danger-colored hot label is semantic copy, not part of the
+        // numeric sibling group. Preserve its original per-item ink choice.
+        const labelInk = hot
+          ? accessibleInk(arc, pageBg, valueSize)
+          : ctx.colors.text
         const label = fitFormLine(item.label, {
           maxWidth: G.cellW - 16,
           fontSize: 16,
@@ -231,7 +257,7 @@ export function renderDonutTrio(
               textAnchor="middle"
               fontSize={label.fontSize}
               fontWeight="bold"
-              fill={hot ? valueInk : ctx.colors.text}
+              fill={labelInk}
               fontFamily={ctx.fonts.body}
               dominantBaseline="alphabetic"
             >

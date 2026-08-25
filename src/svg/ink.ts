@@ -138,6 +138,41 @@ export function accessibleInk(preferredFill: string, bgHex: string, fontSizePx: 
     : readableOn(bgHex)
 }
 
+/** One sibling value's preferred graphic ink and the surface it renders on. */
+export interface GroupValueInkInput {
+  readonly preferredFill: string
+  readonly backgroundFill: string
+  readonly fontSizePx: number
+}
+
+/**
+ * Resolve the ink mode for one sibling group of comparable values.
+ *
+ * The crayon bubble-row regression exposed why this decision cannot happen
+ * item by item. Its candy palette straddled the contrast floor, so passing
+ * values stayed colored while failing values fell back to dark text in the
+ * same row. A comparison group must either keep every graphic color or fall
+ * every value back to the theme's text token. It must never render the
+ * half-colored, half-fallback state that made those values look unrelated.
+ *
+ * Each fallback still measures against the surface and font size that item
+ * actually renders with. Callers pass `colors.text` as `fallbackFill`.
+ */
+export function groupValueInks(
+  inputs: readonly GroupValueInkInput[],
+  fallbackFill: string,
+): string[] {
+  const keepGraphicInks = inputs.every(
+    ({ preferredFill, backgroundFill, fontSizePx }) =>
+      contrastRatio(preferredFill, backgroundFill) >= requiredContrastRatio(fontSizePx),
+  )
+  return inputs.map(({ preferredFill, backgroundFill, fontSizePx }) =>
+    keepGraphicInks
+      ? preferredFill
+      : accessibleInk(fallbackFill, backgroundFill, fontSizePx),
+  )
+}
+
 /**
  * The meanings a shared component renderer can ask a theme to color: an
  * error state (`danger`), a caution state (`warning`), a good result

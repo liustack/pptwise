@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { accessibleInk, accessibleOpacity, contrastRatio, metaInk, readableOn, requiredContrastRatio, resolveSemanticColor } from "./ink"
+import { accessibleInk, accessibleOpacity, contrastRatio, groupValueInks, metaInk, readableOn, requiredContrastRatio, resolveSemanticColor } from "./ink"
 import { CANONICAL_THEME_IDS, resolveStyle } from "../themes"
 
 // `readableOn`'s own behavior is unchanged by the W4 fix-round extraction
@@ -89,6 +89,35 @@ describe("accessibleInk", () => {
     expect(ratio).toBeLessThan(4.5)
     expect(accessibleInk(fill, bg, 24)).toBe(fill) // large text: 3:1 clears
     expect(accessibleInk(fill, bg, 16)).toBe(readableOn(bg)) // body text: needs 4.5:1, falls back
+  })
+})
+
+describe("groupValueInks", () => {
+  const backgroundFill = "#FFFFFF"
+  const fallbackFill = "#1A2421"
+
+  it("falls the whole sibling group back when one graphic color misses its own floor", () => {
+    expect(
+      groupValueInks(
+        [
+          { preferredFill: "#006A4E", backgroundFill, fontSizePx: 34 },
+          { preferredFill: "#FFD100", backgroundFill, fontSizePx: 34 },
+        ],
+        fallbackFill,
+      ),
+    ).toEqual([fallbackFill, fallbackFill])
+  })
+
+  it("keeps every preferred graphic color when the whole sibling group clears", () => {
+    expect(
+      groupValueInks(
+        [
+          { preferredFill: "#006A4E", backgroundFill, fontSizePx: 34 },
+          { preferredFill: "#7A0B12", backgroundFill, fontSizePx: 34 },
+        ],
+        fallbackFill,
+      ),
+    ).toEqual(["#006A4E", "#7A0B12"])
   })
 })
 

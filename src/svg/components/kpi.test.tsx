@@ -751,6 +751,63 @@ describe("donut_trio", () => {
     expect(end.large).toBe(0)
   })
 
+  it("falls every donut value back when one arc color misses its floor", () => {
+    const swiss = themeCtx("swiss")
+    const mixed: ComponentCtx = {
+      ...swiss,
+      defaultBg: "#FFFFFF",
+      colors: {
+        ...swiss.colors,
+        bg: "#FFFFFF",
+        primary: "#006A4E",
+        danger: "#FFD100",
+        text: "#1A2421",
+      },
+    }
+    const { container } = svg(kpi.render(RATES, { x: 0, y: 0, w: 1120 }, mixed))
+    const texts = Array.from(container.querySelectorAll("text"))
+    const valueFills = RATES.items.map((item) =>
+      texts.find((text) => text.textContent === item.value)?.getAttribute("fill"),
+    )
+    expect(valueFills).toEqual(RATES.items.map(() => mixed.colors.text))
+
+    const hotItem = RATES.items.at(-1)!
+    const hotValue = texts.find((text) => text.textContent === hotItem.value)!
+    const hotLabel = texts.find((text) => text.textContent === hotItem.label)!
+    expect(hotLabel.getAttribute("fill")).toBe(
+      accessibleInk(
+        mixed.colors.danger!,
+        mixed.defaultBg!,
+        Number(hotValue.getAttribute("font-size")),
+      ),
+    )
+  })
+
+  it("keeps every donut value's arc color when the whole group clears", () => {
+    const swiss = themeCtx("swiss")
+    const passing: ComponentCtx = {
+      ...swiss,
+      defaultBg: "#FFFFFF",
+      colors: {
+        ...swiss.colors,
+        bg: "#FFFFFF",
+        primary: "#006A4E",
+        danger: "#7A0B12",
+        text: "#1A2421",
+      },
+    }
+    const { container } = svg(kpi.render(RATES, { x: 0, y: 0, w: 1120 }, passing))
+    const texts = Array.from(container.querySelectorAll("text"))
+    const valueFills = RATES.items.map((item) =>
+      texts.find((text) => text.textContent === item.value)?.getAttribute("fill"),
+    )
+    expect(valueFills).toEqual([
+      passing.colors.primary,
+      passing.colors.primary,
+      passing.colors.danger,
+    ])
+  })
+
   it("does not invent an icon when IR has none, and omits the arc for a count above 100", () => {
     const luxe = themeCtx("luxe")
     const counts = {
@@ -860,6 +917,55 @@ describe("bubble_row", () => {
       Array.from({ length: bubbles.items.length }, () => crayon.colors.text),
     )
     expect(container.querySelectorAll("line")).toHaveLength(0)
+  })
+
+  it("falls every bubble value back when one chartPalette swatch misses its floor", () => {
+    const crayon = themeCtx("crayon")
+    const mixed: ComponentCtx = {
+      ...crayon,
+      colors: {
+        ...crayon.colors,
+        chartPalette: ["#006A4E", "#FFD100"],
+      },
+    }
+    const pair = {
+      type: "kpi_cards" as const,
+      items: [
+        { value: "90%", label: "甲", icon: "server" },
+        { value: "80%", label: "乙" },
+      ],
+    }
+    const { container } = svg(kpi.render(pair, { x: 0, y: 0, w: 600 }, mixed))
+    const values = Array.from(container.querySelectorAll("text[font-weight='bold']"))
+    expect(values.map((value) => value.getAttribute("fill"))).toEqual([
+      mixed.colors.text,
+      mixed.colors.text,
+    ])
+    const iconPrimitive = container.querySelector('g[transform*="scale"] [stroke]')
+    expect(iconPrimitive?.getAttribute("stroke")).toBe(mixed.colors.chartPalette[0])
+  })
+
+  it("keeps every bubble value's chartPalette swatch when the whole group clears", () => {
+    const crayon = themeCtx("crayon")
+    const passing: ComponentCtx = {
+      ...crayon,
+      colors: {
+        ...crayon.colors,
+        chartPalette: ["#006A4E", "#7A0B12"],
+      },
+    }
+    const pair = {
+      type: "kpi_cards" as const,
+      items: [
+        { value: "90%", label: "甲" },
+        { value: "80%", label: "乙" },
+      ],
+    }
+    const { container } = svg(kpi.render(pair, { x: 0, y: 0, w: 600 }, passing))
+    const values = Array.from(container.querySelectorAll("text[font-weight='bold']"))
+    expect(values.map((value) => value.getAttribute("fill"))).toEqual(
+      passing.colors.chartPalette,
+    )
   })
 
   it("unparseable values get the min radius and sit on the outside, stable on index", () => {

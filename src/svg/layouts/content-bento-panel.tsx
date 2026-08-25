@@ -31,7 +31,7 @@ import {
 } from "../components/kpi"
 import { iconCardContentHeight, renderIconCardBody } from "../components/icon-cards"
 import { fitEmphasisLine, renderEmphasisText } from "../emphasis"
-import { accessibleInk } from "../ink"
+import { accessibleInk, groupValueInks } from "../ink"
 import { tryContentHeadingTreatment } from "../heading-treatments/render"
 import { FRAMED_CONTENT_BOTTOM } from "./framed-content-bottom"
 import { CARD_INSET_PX } from "../spacing"
@@ -106,8 +106,10 @@ import { CARD_INSET_PX } from "../spacing"
  * 同一处遗漏。背景不同：subheading 画在页面背景上（`ctx.defaultBg`），KPI
  * 数值画在卡片自己的壳上（`renderKpiCard`/`onlyUnit` 单卡分支都先画
  * `colors.surface` 再调用本函数），所以改用
- * `accessibleInk(colors.accent, ctx.colors.surface, fittedValue.fontSize)`
- * ——背景参数是 `colors.surface`，不是 `ctx.defaultBg`。数值字号固定
+ * `accessibleInk(colors.accent, ctx.colors.surface, fittedValue.fontSize)`。
+ * 本轮又把逐 item 判定升级为 `groupValueInks`。同一个 `kpi_cards` 的兄弟项
+ * 必须整组保留 accent，或整组回到 `colors.text`。背景参数仍是
+ * `colors.surface`，不是 `ctx.defaultBg`。数值字号固定
  * >=24px（56/72 两档，仅在极端窄卡下可能收缩到 `BENTO_KPI_VALUE_MIN_SIZE`
  * =20），大字号 3:1 门槛下实测 consulting/classroom/heritage 三个
  * 主题不达标（`pptwise audit` 实测 consulting 1.56:1，见
@@ -258,6 +260,92 @@ function kpiContentHeight(hasIcon: boolean, hero: boolean): number {
   return iconComponentH + valueSize + valueLabelGap
 }
 
+type KpiBentoUnit = Extract<BentoCell["unit"], { kind: "kpi-item" }>
+type BentoCardBox = { x: number; y: number; w: number; h: number }
+
+function fitBentoKpiValue(
+  item: KpiItem,
+  box: BentoCardBox,
+  ctx: ComponentCtx,
+) {
+  const innerW = box.w - BENTO_CARD_PAD * 2
+  const hero = box.h > BENTO_KPI_HERO_MIN_CELL_H
+  const valueSize = hero ? BENTO_KPI_HERO_VALUE_SIZE : BENTO_KPI_VALUE_SIZE
+  // Same value/unit width split as kpi.tsx. The value keeps its budget when
+  // the number and unit cannot both fit.
+  const valueStr = String(item.value)
+  // 冗余单位去重（同 components/kpi.tsx：value 已含 unit 结尾时丢弃，防 "35%%"）。
+  const unit = dedupeKpiUnit(valueStr, item.unit)
+  const valueScale: KpiValueScale = {
+    fontSize: valueSize,
+    minFontSize: BENTO_KPI_VALUE_MIN_SIZE,
+    unitRatio: BENTO_KPI_UNIT_RATIO,
+    fontFamily: ctx.fonts.heading,
+  }
+  const { valueMaxWidth, unitMaxWidth } = splitKpiValueWidths(
+    valueStr,
+    unit,
+    innerW,
+    valueScale,
+  )
+  // This text and its unit tspan both render bold in the heading face, so
+  // the fit must use the same weight and family as the emitted SVG.
+  const fittedValue = fitSvgLine(valueStr, {
+    maxWidth: valueMaxWidth,
+    fontSize: valueSize,
+    minFontSize: BENTO_KPI_VALUE_MIN_SIZE,
+    bold: true,
+    fontFamily: ctx.fonts.heading,
+  })
+  const unitFontSize = Math.round(fittedValue.fontSize * BENTO_KPI_UNIT_RATIO)
+  const fittedUnit = fitKpiUnit(unit, unitMaxWidth, unitFontSize, ctx.fonts.heading)
+  return { hero, innerW, valueSize, fittedValue, unitFontSize, fittedUnit }
+}
+
+type BentoKpiValueLayout = ReturnType<typeof fitBentoKpiValue>
+
+interface BentoKpiValuePaint {
+  readonly layout: BentoKpiValueLayout
+  readonly fill: string
+}
+
+/** Group exploded cells by their source component, not by bento position. */
+function prepareBentoKpiValuePaints(
+  cells: readonly BentoCell[],
+  ctx: ComponentCtx,
+): ReadonlyMap<KpiBentoUnit, BentoKpiValuePaint> {
+  const groups = new Map<
+    KpiBentoUnit["component"],
+    Array<{ unit: KpiBentoUnit; layout: BentoKpiValueLayout }>
+  >()
+  for (const cell of cells) {
+    if (cell.unit.kind !== "kpi-item") continue
+    const entry = {
+      unit: cell.unit,
+      layout: fitBentoKpiValue(cell.unit.item, cell.box, ctx),
+    }
+    const group = groups.get(cell.unit.component)
+    if (group) group.push(entry)
+    else groups.set(cell.unit.component, [entry])
+  }
+
+  const paints = new Map<KpiBentoUnit, BentoKpiValuePaint>()
+  for (const group of groups.values()) {
+    const fills = groupValueInks(
+      group.map(({ layout }) => ({
+        preferredFill: ctx.colors.accent,
+        backgroundFill: ctx.colors.surface,
+        fontSizePx: layout.fittedValue.fontSize,
+      })),
+      ctx.colors.text,
+    )
+    group.forEach((entry, index) => {
+      paints.set(entry.unit, { layout: entry.layout, fill: fills[index]! })
+    })
+  }
+  return paints
+}
+
 /**
  * Render one KPI item's content (icon/value/unit/label/delta/glow) inside
  * `box`, at bento card padding. Does not paint the card shell (surface fill +
@@ -276,11 +364,19 @@ function kpiContentHeight(hasIcon: boolean, hero: boolean): number {
  */
 function renderKpiCardBody(
   item: KpiItem,
-  box: { x: number; y: number; w: number; h: number },
-  ctx: ComponentCtx
+  box: BentoCardBox,
+  ctx: ComponentCtx,
+  valuePaint: BentoKpiValuePaint,
 ): React.ReactElement {
   const innerX = box.x + BENTO_CARD_PAD
-  const innerW = box.w - BENTO_CARD_PAD * 2
+  const {
+    hero,
+    innerW,
+    valueSize,
+    fittedValue,
+    unitFontSize,
+    fittedUnit,
+  } = valuePaint.layout
   const hasIcon = Boolean(item.icon)
   const iconComponentH = hasIcon ? BENTO_KPI_ICON_SIZE + BENTO_KPI_ICON_GAP : 0
 
@@ -290,8 +386,6 @@ function renderKpiCardBody(
   // value `cellOverBudget` sees), never from `fittedValue.fontSize`, so the
   // degrade-gate budget check and this render can't disagree about which
   // tier a given cell is in.
-  const hero = box.h > BENTO_KPI_HERO_MIN_CELL_H
-  const valueSize = hero ? BENTO_KPI_HERO_VALUE_SIZE : BENTO_KPI_VALUE_SIZE
   const valueLabelGap = hero
     ? BENTO_KPI_HERO_VALUE_LABEL_GAP
     : BENTO_KPI_VALUE_LABEL_GAP
@@ -318,55 +412,16 @@ function renderKpiCardBody(
     ? accessibleInk(dp.color || ctx.colors.muted, ctx.colors.surface, BENTO_KPI_DELTA_SIZE)
     : ctx.colors.muted
 
-  // Same value/unit width-split technique as kpi.tsx (shared via
-  // `splitKpiValueWidths`, see components/kpi.tsx): the overflow auditor
-  // measures a <text>'s whole textContent at the outer element's font-size,
-  // so the value's width budget is shrunk in proportion to the unit's share
-  // of the combined text instead of a flat pixel reserve — and where the two
-  // cannot both fit, the number keeps its budget and the unit gives way.
-  // The scale is this cell's own (56/20, not the row card's 40/22), so the
-  // shared function judges "would this shrink the number past legibility?"
-  // against the size the number will really render at here.
-  const valueStr = String(item.value)
-  // 冗余单位去重（同 components/kpi.tsx：value 已含 unit 结尾时丢弃，防 "35%%"）。
-  const unit = dedupeKpiUnit(valueStr, item.unit)
-  const valueScale: KpiValueScale = {
-    fontSize: valueSize,
-    minFontSize: BENTO_KPI_VALUE_MIN_SIZE,
-    unitRatio: BENTO_KPI_UNIT_RATIO,
-    fontFamily: ctx.fonts.heading,
-  }
-  const { valueMaxWidth, unitMaxWidth } = splitKpiValueWidths(valueStr, unit, innerW, valueScale)
-  // bold-metrics fix (2026-07-24): same defect class as components/kpi.tsx's
-  // own value text (see that file's identical fix and comment) — this text
-  // renders `fontWeight="bold"` in `ctx.fonts.heading` below, and
-  // `fittedUnit`'s tspan inherits that bold.
-  const fittedValue = fitSvgLine(valueStr, {
-    maxWidth: valueMaxWidth,
-    fontSize: valueSize,
-    minFontSize: BENTO_KPI_VALUE_MIN_SIZE,
-    bold: true,
-    fontFamily: ctx.fonts.heading,
-  })
-  const unitFontSize = Math.round(fittedValue.fontSize * BENTO_KPI_UNIT_RATIO)
-  const fittedUnit = fitKpiUnit(unit, unitMaxWidth, unitFontSize, ctx.fonts.heading)
   const fittedLabel = fitSvgLine(item.label, {
     maxWidth: innerW,
     fontSize: BENTO_KPI_LABEL_SIZE,
     minFontSize: BENTO_KPI_LABEL_MIN_SIZE,
   })
 
-  // W8 fix round: same defect class as the subheading's own W4 fix (see
-  // file header) — this value text baked ctx.colors.accent with no check
-  // against the background it's actually painted on. Unlike the
-  // subheading (painted straight on the page background), the value always
-  // sits on *this card's own shell* — `renderKpiCard`/the `onlyUnit`
-  // single-card branch both always paint that shell `colors.surface`
-  // before calling this function — so that (not `ctx.defaultBg`) is the
-  // right background to check against. Real-world catch: consulting's
-  // accent `#FFC72C` on its own surface `#FFFFFF` measures ~1.56:1, well
-  // under the 3:1 large-text floor (`pptwise audit` exit 1).
-  const valueFill = accessibleInk(ctx.colors.accent, ctx.colors.surface, fittedValue.fontSize)
+  // Prepared once for the source kpi_cards group. The shell background is
+  // colors.surface, and any failing sibling moves the whole group to the
+  // theme's text token.
+  const valueFill = valuePaint.fill
 
   const valueBaselineY = innerY + iconComponentH + valueSize
   const labelBaselineY = valueBaselineY + valueLabelGap
@@ -480,9 +535,10 @@ function renderKpiCardBody(
  * corner stripe) and its content. */
 function renderKpiCard(
   item: KpiItem,
-  box: { x: number; y: number; w: number; h: number },
+  box: BentoCardBox,
   ctx: ComponentCtx,
-  colors: StyleColors
+  colors: StyleColors,
+  valuePaint: BentoKpiValuePaint,
 ): React.ReactElement {
   return (
     <>
@@ -498,7 +554,7 @@ function renderKpiCard(
         strokeOpacity={BENTO_CARD_STROKE_OPACITY}
         strokeWidth={BENTO_CARD_STROKE_WIDTH}
       />
-      {renderKpiCardBody(item, box, ctx)}
+      {renderKpiCardBody(item, box, ctx, valuePaint)}
     </>
   )
 }
@@ -624,7 +680,8 @@ function renderCell(
   cell: BentoCell,
   i: number,
   ctx: ComponentCtx,
-  colors: StyleColors
+  colors: StyleColors,
+  kpiValuePaints: ReadonlyMap<KpiBentoUnit, BentoKpiValuePaint>,
 ): React.ReactElement {
   const { unit, box } = cell
   // Card-level rect (h = box.h) so svg-audit's v-overflow check treats each
@@ -649,9 +706,11 @@ function renderCell(
   const blkAttr = blk != null ? { "data-blk": blk } : {}
 
   if (unit.kind === "kpi-item") {
+    const valuePaint = kpiValuePaints.get(unit)
+    if (!valuePaint) throw new Error("missing grouped KPI value ink")
     return (
       <g key={i} {...auditAttrs} {...blkAttr}>
-        {renderKpiCard(unit.item, box, ctx, colors)}
+        {renderKpiCard(unit.item, box, ctx, colors, valuePaint)}
       </g>
     )
   }
@@ -826,7 +885,8 @@ export function BentoPanelContent({ ir, slide, index, ctx }: SvgTemplateProps) {
       w: SINGLE_KPI_CARD_W,
       h: SINGLE_KPI_CARD_H,
     }
-    body = renderCell({ unit: onlyUnit, box }, 0, ctx, colors)
+    const cell = { unit: onlyUnit, box }
+    body = renderCell(cell, 0, ctx, colors, prepareBentoKpiValuePaints([cell], ctx))
   } else if (onlyUnit && onlyUnit.kind === "icon-card-item") {
     // Unreachable in practice — `icon_cards.items` schema-enforces >=2, so
     // an `icon_cards` component always explodes into >=2 units — but the type
@@ -837,7 +897,8 @@ export function BentoPanelContent({ ir, slide, index, ctx }: SvgTemplateProps) {
       w: SINGLE_ICON_CARD_W,
       h: SINGLE_ICON_CARD_H,
     }
-    body = renderCell({ unit: onlyUnit, box }, 0, ctx, colors)
+    const cell = { unit: onlyUnit, box }
+    body = renderCell(cell, 0, ctx, colors, prepareBentoKpiValuePaints([cell], ctx))
   } else if (onlyUnit) {
     body = (
       <SvgContent
@@ -874,20 +935,25 @@ export function BentoPanelContent({ ir, slide, index, ctx }: SvgTemplateProps) {
     // either way.
     const degraded =
       units.length > 6 || cells.some((cell) => cellOverBudget(cell, ctx))
-    body = degraded ? (
-      <SvgContent
-        arrangement="single"
-        components={slide.components}
-        rect={bentoRect}
-        ctx={ctx}
-      />
-    ) : (
-      <g
-        data-audit-rect={`${bentoRect.x},${bentoRect.y},${bentoRect.w},${bentoRect.h}`}
-      >
-        {cells.map((cell, i) => renderCell(cell, i, ctx, colors))}
-      </g>
-    )
+    if (degraded) {
+      body = (
+        <SvgContent
+          arrangement="single"
+          components={slide.components}
+          rect={bentoRect}
+          ctx={ctx}
+        />
+      )
+    } else {
+      const kpiValuePaints = prepareBentoKpiValuePaints(cells, ctx)
+      body = (
+        <g
+          data-audit-rect={`${bentoRect.x},${bentoRect.y},${bentoRect.w},${bentoRect.h}`}
+        >
+          {cells.map((cell, i) => renderCell(cell, i, ctx, colors, kpiValuePaints))}
+        </g>
+      )
+    }
   }
 
   if (treated) {
