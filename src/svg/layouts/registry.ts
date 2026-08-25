@@ -1,6 +1,6 @@
 /**
  * Layout registry (W2 task 1, spec §3/§6/§8): an explicit, statically-checked
- * description of what the render chain's 123 standard layouts and 4
+ * description of what the render chain's 130 standard layouts and 4
  * page-level image takeovers already draw. This is a metadata layer only.
  * It formalizes today's implicit page structure (layout JSX + the
  * FullSlideSvg takeover dispatch) into named `slots`, it does not change any
@@ -12,7 +12,7 @@
  * `export const layoutDef: LayoutDefinition` at the bottom of the matching
  * `layouts/*.tsx` file, or one of 4 uniquely-named exports at the bottom
  * of `image-pages.tsx` for the takeovers (one file implements all 4, so they
- * can't share the uniform `layoutDef` name the 123 single-layout
+ * can't share the uniform `layoutDef` name the 130 single-layout
  * files use) — so "take one layout away whole" is a single-file operation
  * instead of a two-file archaeology dig. This file's own job is now purely
  * computational aggregation: import every `layoutDef`, assemble the five
@@ -60,9 +60,9 @@
 // `resolveLayoutId`).
 import type { STRATEGY_VALUES } from "@/ir/narrative-values"
 
-// layoutDef imports (src domain reorg wave 1, task T1d): 123 layout files
+// layoutDef imports (src domain reorg wave 1, task T1d): 130 layout files
 // (one `layoutDef` each) plus image-pages.tsx's 4 uniquely named takeover
-// exports, 127 bindings total. The original migration covered 33 layout
+// exports, 134 bindings total. The original migration covered 33 layout
 // files and 4 takeovers. Later content expansion and theme redesign waves
 // grew the registry, mostly through pin-only cover, chapter, and ending faces.
 // Grouped by family, each group in the exact
@@ -70,7 +70,7 @@ import type { STRATEGY_VALUES } from "@/ir/narrative-values"
 // `Object.values` walk below, which feeds `theme.layouts[type]`'s array
 // order, which `resolveLayoutId`'s `weightedPickBySeed` samples from
 // positionally — see registry.migration-guard.test.ts). Aliased to a
-// family-prefixed camelCase name (mirrors each file's own name) since 123
+// family-prefixed camelCase name (mirrors each file's own name) since 130
 // files all export the same bare `layoutDef`.
 import { layoutDef as coverBannerTitle } from "./cover-banner-title"
 import { layoutDef as coverPosterCenter } from "./cover-poster-center"
@@ -108,6 +108,7 @@ import { layoutDef as coverReportOpenCover } from "./cover-report-open-cover"
 import { layoutDef as coverCutPanelCover } from "./cover-cut-panel-cover"
 import { layoutDef as coverGaugeVerdict } from "./cover-gauge-verdict"
 import { layoutDef as coverCrayonboxOpen } from "./cover-crayonbox-open"
+import { layoutDef as coverShowHeadline } from "./cover-show-headline"
 
 import { layoutDef as chapterMastheadChapter } from "./chapter-masthead-chapter"
 import { layoutDef as chapterConstellationChapter } from "./chapter-constellation-chapter"
@@ -144,6 +145,7 @@ import { layoutDef as chapterDayBillChapter } from "./chapter-day-bill-chapter"
 import { layoutDef as chapterHallLabelChapter } from "./chapter-hall-label-chapter"
 import { layoutDef as chapterGaugeSection } from "./chapter-gauge-section"
 import { layoutDef as chapterCrayonboxSticker } from "./chapter-crayonbox-sticker"
+import { layoutDef as chapterShowPlate } from "./chapter-show-plate"
 
 import { layoutDef as endingMastheadEnding } from "./ending-masthead-ending"
 import { layoutDef as endingConstellationEnding } from "./ending-constellation-ending"
@@ -178,6 +180,7 @@ import { layoutDef as endingTicketCtaEnding } from "./ending-ticket-cta-ending"
 import { layoutDef as endingExitWordEnding } from "./ending-exit-word-ending"
 import { layoutDef as endingGaugeNext } from "./ending-gauge-next"
 import { layoutDef as endingCrayonboxTodo } from "./ending-crayonbox-todo"
+import { layoutDef as endingShowFinale } from "./ending-show-finale"
 
 import { layoutDef as contentNarrowColumn } from "./content-narrow-column"
 import { layoutDef as contentTwoColumn } from "./content-two-column"
@@ -198,6 +201,10 @@ import { layoutDef as contentGaugeStats } from "./content-gauge-stats"
 import { layoutDef as contentGaugePoint } from "./content-gauge-point"
 import { layoutDef as contentCrayonboxCards } from "./content-crayonbox-cards"
 import { layoutDef as contentCrayonboxPoint } from "./content-crayonbox-point"
+import { layoutDef as contentShowGallery } from "./content-show-gallery"
+import { layoutDef as contentShowSpotlight } from "./content-show-spotlight"
+import { layoutDef as contentShowStatement } from "./content-show-statement"
+import { layoutDef as contentShowFigures } from "./content-show-figures"
 
 import {
   imageSplitLayoutDef,
@@ -211,7 +218,7 @@ export type Strategy = (typeof STRATEGY_VALUES)[number]
 export type SlideType = "cover" | "chapter" | "content" | "ending"
 
 /** The 20-word slot vocabulary: the union of every distinct visual region
- * observed across all 123 standard layouts and 4 takeovers (inventory's "建议 slot
+ * observed across all 130 standard layouts and 4 takeovers (inventory's "建议 slot
  * 词汇表"). Not every word is used by every entry, and `aside` currently
  * has zero occurrences as a *slot* (it only exists today as a body
  * `arrangement` — see `Arrangement` below) — kept in the vocabulary because
@@ -311,7 +318,7 @@ export interface LayoutDefinition {
    * `FULL_LAYOUTS`) never samples it. That is how quote-stage, the speech
    * faces, and the wave-8 board locks stay out of everyone else's lottery.
    *
-   * 80 of the 123 standard layouts are pin-only today. The theme redesign
+   * 87 of the 130 standard layouts are pin-only today. The theme redesign
    * waves raised that count by adding dedicated cover, chapter, and ending
    * constructions for the built-in themes. Those faces stay outside the
    * shared 43-layout automatic pool. An explicit `slide.layout` pin is the
@@ -464,7 +471,7 @@ export function excludePinOnly<T extends { pinOnly?: boolean }>(defs: readonly T
 }
 
 // ─────────────────────────────────────────────────────────────────────────
-// Cover layouts (36 total: 19 auto-selectable and 17 pin-only).
+// Cover layouts (37 total: 19 auto-selectable and 18 pin-only).
 // The board-cover-fidelity wave grew the group from 9 to 13 in 2026-08-22.
 // It added institutional-block / memo-head / board-head / bill-head, four
 // board constructions that were not in the pool. They were appended after
@@ -525,10 +532,11 @@ const COVER_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [coverCutPanelCover.id]: coverCutPanelCover,
   [coverGaugeVerdict.id]: coverGaugeVerdict,
   [coverCrayonboxOpen.id]: coverCrayonboxOpen,
+  [coverShowHeadline.id]: coverShowHeadline,
 }
 
 // ─────────────────────────────────────────────────────────────────────────
-// Chapter layouts (35 total: 8 auto-selectable and 27 pin-only).
+// Chapter layouts (36 total: 8 auto-selectable and 28 pin-only).
 // The original eight carry a chapter-number `watermark`. Later theme-specific
 // faces may express the ordinal through a different named slot.
 // Chapter layouts do not read components, so none has a body slot.
@@ -569,12 +577,13 @@ const CHAPTER_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [chapterHallLabelChapter.id]: chapterHallLabelChapter,
   [chapterGaugeSection.id]: chapterGaugeSection,
   [chapterCrayonboxSticker.id]: chapterCrayonboxSticker,
+  [chapterShowPlate.id]: chapterShowPlate,
 }
 
 // ─────────────────────────────────────────────────────────────────────────
-// Ending layouts (33 total: 7 auto-selectable and 26 pin-only).
+// Ending layouts (34 total: 7 auto-selectable and 27 pin-only).
 // Fourteen endings declare a body slot for their own constrained closing-page
-// content. The other 19 have no body slot.
+// content. The other 20 have no body slot.
 // ─────────────────────────────────────────────────────────────────────────
 const ENDING_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [endingMastheadEnding.id]: endingMastheadEnding,
@@ -610,10 +619,11 @@ const ENDING_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [endingExitWordEnding.id]: endingExitWordEnding,
   [endingGaugeNext.id]: endingGaugeNext,
   [endingCrayonboxTodo.id]: endingCrayonboxTodo,
+  [endingShowFinale.id]: endingShowFinale,
 }
 
 // ─────────────────────────────────────────────────────────────────────────
-// Content standard layouts (19 total: 9 auto-selectable and 10 pin-only).
+// Content standard layouts (23 total: 9 auto-selectable and 14 pin-only).
 // The quote-stage wave grew the group from 12 to 13 with quote-stage,
 // pptwise's first `pinOnly` member (see {@link LayoutDefinition.pinOnly}):
 // reachable only through an explicit `slide.layout` pin, never auto-picked,
@@ -718,7 +728,7 @@ const ENDING_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
 // comment means by "see registry.ts's CONTENT_LAYOUT_DEFS header for the
 // derivation" (src domain reorg wave 1, task T1d — reworded from the
 // pre-migration "see file header derivation" once each entry moved into its
-// own layout file). It stays here, comparative across all 19, rather
+// own layout file). It stays here, comparative across all 23, rather
 // than traveling with any one entry.
 // ─────────────────────────────────────────────────────────────────────────
 const CONTENT_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
@@ -741,11 +751,15 @@ const CONTENT_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [contentGaugePoint.id]: contentGaugePoint,
   [contentCrayonboxCards.id]: contentCrayonboxCards,
   [contentCrayonboxPoint.id]: contentCrayonboxPoint,
+  [contentShowGallery.id]: contentShowGallery,
+  [contentShowSpotlight.id]: contentShowSpotlight,
+  [contentShowStatement.id]: contentShowStatement,
+  [contentShowFigures.id]: contentShowFigures,
 }
 
 // ─────────────────────────────────────────────────────────────────────────
-// Image takeover layouts (4). With the 19 standard content layouts above,
-// the content page type has 23 registered entries. These are `slide.layout`
+// Image takeover layouts (4). With the 23 standard content layouts above,
+// the content page type has 27 registered entries. These are `slide.layout`
 // ids for the page-level
 // `image-split`/`image-top`/`image-bottom`/`image-annotate` takeovers
 // (full-slide-svg.tsx's splitTakeover branch, keyed off `getLayout(slide.
@@ -766,7 +780,7 @@ const TAKEOVER_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [imageAnnotateLayoutDef.id]: imageAnnotateLayoutDef,
 }
 
-/** All 123 standard layouts and 4 takeover layouts, 127 entries keyed by id.
+/** All 130 standard layouts and 4 takeover layouts, 134 entries keyed by id.
  *  `kind` still spells the standard tier `"archetype"`, a wire-format fossil. See
  *  {@link LayoutDefinition.kind}. */
 export const LAYOUT_REGISTRY: Record<string, LayoutDefinition> = {

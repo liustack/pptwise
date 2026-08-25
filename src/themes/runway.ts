@@ -3,11 +3,9 @@ import type { StyleTokens } from "./tokens";
 /**
  * runway（时尚秀场）——2026-07-10 拆分后的新主题（初名 magazine，用户
  * 裁决时尚主题不叫 magazine；magazine 转为 legacy id 指向 journal，存量
- * 人文观感 deck 回放不再突变）。高对比时尚大片风：秀场米白 + 秀场黑报头 +
- * 绯红一滴，面向时尚品牌/潮流生活/品牌大片场景。
- * **零版式代码**：与 journal 共享 masthead 报头家族（报头体正是时尚杂志
- * 的语言，同版式不同 tokens 气质大变——luxe 借 creative 家族的同款先例），
- * corner-ornament 角饰是人文感，本主题不带 motif。
+ * 人文观感 deck 回放不再突变）。高对比秀场风：秀场米白 + 秀场黑报头 +
+ * 绯红一滴。runway 是氛围，不预设时装题材，观点页和数据页保持通用。
+ * 当前由七张 pinOnly show 版式承担身份。主题级 motif 保持空值。
  * 报头字体保持衬线（SimSun 承载 CJK，Didot 类报头是时尚杂志国际惯例），
  * 正文无衬线。
  *
@@ -71,13 +69,12 @@ import type { StyleTokens } from "./tokens";
  * **零改动**，只换色板——decor=none 由 `motif-selection.ts` 的守卫与
  * `new-themes.test.ts` 的断言钉住。
  *
- * **第八波批 3（2026-08-23，`.issues/design-boards/wave8/b3/Runway.dc.html`）**：
- * 四页型改锁 pinOnly `lookbook-open-cover` / `look-range-chapter` /
- * `window-close-ending`。封面是秀场米白型录头版，标题钉板上 96px，明确
- * 禁止放大到 132 铺满。绯红只给封面页码与章节里一个强调词。ending 满版
- * primary 由版式自绘（`paintsOwnBackground`），`defaultBackgrounds.ending`
- * 保持米白 `#F2F0EB`，避免 contrast floor 拿深字压深底。decor=none 继续
- * 是官方身份，本轮不补 motif，角色色 hex 与 fonts 一处不改。
+ * **show 定稿（2026-08-26）**：封面、章节、结尾分别锁到 pinOnly
+ * `show-headline`、`show-plate`、`show-finale`。内容池在共享自动池前加入
+ * `show-statement` 与 `show-figures`，其中 `show-gallery` 和
+ * `show-spotlight` 只通过显式 `slide.layout` 到达。展示字级解锁到
+ * 132 至 240px，满版色场与留白交替制造秀场节奏。七张脸每页只允许一组
+ * accent。`show-finale` 自绘满版 primary，主题级 motif 继续留空。
  */
 export const RUNWAY_TOKENS: StyleTokens = {
   id: "runway",

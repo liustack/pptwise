@@ -81,6 +81,11 @@ function oneLineCoverHeading(lex: Lexicon): string {
   return lex.chapters[0]!
 }
 
+/** show-headline reserves 132px for one sharp cover claim. */
+function showHeadlineCoverHeading(lex: Lexicon): string {
+  return lex.kickers[0]!
+}
+
 function emphasizedLead(themeId: string, component: Component, slotIndex: number, lex: Lexicon): Component {
   if (slotIndex !== 1) return component
   if (component.type !== "bullets") return component
@@ -183,9 +188,11 @@ export function themeDeck(themeId: string, lex: Lexicon, assets: CorpusAssets): 
       heading:
         themeId === "insight"
           ? statCoverHeading(lex)
-          : emphasis
-            ? emphasizePhrase(lex.deckTitle, emphasis.cover)
-            : lex.deckTitle,
+          : themeId === "runway"
+            ? showHeadlineCoverHeading(lex)
+            : emphasis
+              ? emphasizePhrase(lex.deckTitle, emphasis.cover)
+              : lex.deckTitle,
       subheading: lex.deckSubtitle,
       components:
         themeId === "consulting"
@@ -310,6 +317,30 @@ function bodyFor(def: LayoutDefinition, lex: Lexicon): Component[] {
     }
     return [cards]
   }
+  if (def.id === "show-gallery") {
+    return [{
+      type: "image_grid",
+      items: Array.from({ length: 6 }, (_, index) => ({
+        asset_id: PHOTO_ASSETS[index % PHOTO_ASSETS.length]!,
+        caption: lex.captions[index % lex.captions.length]!,
+      })),
+    }]
+  }
+  if (def.id === "show-spotlight") {
+    const panel = b.insight_panel!(lex)
+    if (panel.type === "insight_panel") panel.rows = panel.rows.slice(0, 3)
+    return [b.image!(lex), panel]
+  }
+  if (def.id === "show-statement") {
+    const cards = b.numbered_cards!(lex)
+    if (cards.type === "numbered_cards") cards.items = cards.items.slice(0, 3)
+    return [cards]
+  }
+  if (def.id === "show-figures") {
+    const kpi = b.kpi_cards!(lex)
+    if (kpi.type === "kpi_cards") kpi.items = kpi.items.slice(0, 3)
+    return [kpi]
+  }
 
   // Sparse and a few ordinary layouts have a body slot whose declared
   // capacity is the wrong signal: citation is the capacity-1 default, but
@@ -387,9 +418,11 @@ export function layoutPage(layoutId: string, lex: Lexicon, assets: CorpusAssets,
           heading:
             def.id === "stat-cover"
               ? statCoverHeading(lex)
-              : def.id === "cut-panel-cover" || def.id === "lookbook-open-cover"
-                ? oneLineCoverHeading(lex)
-                : lex.deckTitle,
+              : def.id === "show-headline"
+                ? showHeadlineCoverHeading(lex)
+                : def.id === "cut-panel-cover" || def.id === "lookbook-open-cover"
+                  ? oneLineCoverHeading(lex)
+                  : lex.deckTitle,
           subheading: lex.deckSubtitle,
           components:
             def.id === "gauge-verdict"
@@ -477,6 +510,10 @@ export function componentPage(
 
   const slide: Slide = {
     type: "content",
+    // This runway-only form-variant page predates the show curation. Pin the
+    // old deterministic pick so a theme redesign cannot masquerade as a
+    // steps-component byte change in the component comparison table.
+    layout: componentId === "steps · arrow band" ? "stacked-poster" : undefined,
     heading: cartesian && component.chart_type === "scatter" ? lex.scatterHeading : lex.headings[8]!,
     subheading: cartesian
       ? component.chart_type === "scatter"

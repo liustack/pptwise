@@ -448,24 +448,22 @@ const LAYOUTS: Record<CanonicalThemeId, Pick<ThemeDefinition, "layouts" | "motif
       ending: ["rule-close-ending"],
     },
   },
-  // runway（时尚杂志，2026-07-10 拆分）：冲击力=超大排印+满版色块（检索背书），
-  // fashion-masthead/fashion-chapter/fashion-ending 是 runway 专属新表达。
-  // journal 与其共享 masthead 报头家族但 tokens 气质大变。
+  // runway 的 show 版式以极端报头、满版色场和留白节奏承担身份。
+  // 七张 show 脸全部 pinOnly。gallery 与 spotlight 只接受显式 pin。
   runway: {
-    layouts: { cover: ["lookbook-open-cover"], chapter: ["look-range-chapter"], content: FULL_LAYOUTS.content, ending: ["window-close-ending"] },
-    // motif 刻意不配（2026-07-10 全覆盖时曾加「时尚编辑标记」，两版均被
-    // 用户裁难看后撤销）：runway 的语言=满版色块+超大排印+留白，排印至上是
-    // 终审裁决——十三主题中唯一留空 motif 的一个。
-    // Theme-structure wave, task T2: `fashion-masthead`/`fashion-chapter`/
-    // `fashion-ending` were built exclusively for runway (2026-07-10, pure
-    // new writes, extreme-scale full-bleed typography) — with no motif of
-    // its own, this layout family is runway's only structural signature
-    // beyond token colors.
+    layouts: {
+      cover: ["show-headline"],
+      chapter: ["show-plate"],
+      content: ["show-statement", "show-figures", ...FULL_LAYOUTS.content],
+      ending: ["show-finale"],
+    },
+    // runway 的主题级 motif 曾两次加入「时尚编辑标记」，两次都被用户裁掉。
+    // 保持留空。T 台中线只存在于 show-finale 内部。
     layoutTendencies: {
-      cover: ["lookbook-open-cover"],
-      chapter: ["look-range-chapter"],
-      content: ["split-band", "bento-panel", "narrow-column"],
-      ending: ["window-close-ending"],
+      cover: ["show-headline"],
+      chapter: ["show-plate"],
+      content: ["show-statement"],
+      ending: ["show-finale"],
     },
   },
   // journal（人文期刊，原 magazine 改名）：masthead 报头家族，角饰是人文感。
@@ -1359,7 +1357,7 @@ export type ThemeRegistration = Omit<ThemeDefinition, "layouts"> & {
  *   must have at least one layout id that is both registered in
  *   `LAYOUT_REGISTRY` and valid for that slide type (the same registry
  *   `resolveLayoutId`/`FullSlideSvg` select from. A theme never ships
- *   new render code, only a curated subset of the existing 123 standard
+ *   new render code, only a curated subset of the existing 130 standard
  *   layouts, per `docs/architecture.md`'s "Adding a theme" section. An
  *   *explicit* empty array for a slide type still fails this check (the
  *   default only kicks in when the key — or `layouts` itself — is omitted

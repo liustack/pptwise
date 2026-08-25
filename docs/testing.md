@@ -13,7 +13,7 @@ read_when:
 
 ## Layers
 
-1. **Unit + snapshot** (`pnpm test`, vitest) — 405 files / 12540 cases, colocated
+1. **Unit + snapshot** (`pnpm test`, vitest): 422 files / 13480 cases, colocated
    with source as `*.test.ts(x)`. Covers the IR schema, every layout/component,
    the svg2pptx element converters, style tokens, the animation/gradient/
    ea-font/media-dedupe JSZip patches, the deck spec schema and hard gates,
@@ -165,19 +165,19 @@ It renders five tables through the real chain (`validateIr` →
 `renderSlideSvg`, the same two calls `render`/`preview` make — no
 gallery-specific rendering branch exists, and promotional images are meant
 to come from what passes review here). `evals/gallery/hashes.json` pins
-929 pages (`gallery-page-v2`):
+989 pages (`gallery-page-v2`):
 
 - **主题表** — all 24 themes running one identical ten-page deck (cover +
   chapter + 7 content + ending), so two themes differ by exactly one
   variable (240 pages)
 - **版式表** — every registered layout including pinOnly, ordinary layouts
   on one baseline theme across three language tracks, sparse layouts
-  expanded onto the themes that offer them (416 pages)
+  expanded onto the themes that offer them (464 pages)
 - **组件表** — every component on one baseline theme, chart variants, and
   dedicated form-variant pages, each in Chinese, English and mixed-script
   content (195 pages)
 - **满载表** — eight components filled to capacity without overflowing
-  (24 pages)
+  (36 pages)
 - **标题构造表** — six heading constructions × three title states (none /
   title / subtitle) × three language tracks, pinned on two-column after a
   chapter slide (54 pages)

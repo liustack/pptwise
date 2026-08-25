@@ -39,9 +39,9 @@ read_when:
 
 `pptwise themes [--json]` 会从你装的这一版里打印同一份清单。
 
-共享的 `LAYOUT_REGISTRY` 现有 127 项，其中 123 个标准版式，另有 4 个图片 takeover。标准版式里，43 个进入共享自动选型池，80 个标记为 `pinOnly`。主题重设计的几波提供了多数 pin-only 构造，consulting 量规家族和 crayon 蜡笔盒家族各加入 5 张 pin-only 脸。pin-only 版式不进入共享自动池，除非主题在自己的策展名单中显式列出它。作者也可以用显式 `slide.layout` 钉子命中。
+共享的 `LAYOUT_REGISTRY` 现有 134 项，其中 130 个标准版式，另有 4 个图片 takeover。标准版式里，43 个进入共享自动选型池，87 个标记为 `pinOnly`。主题重设计的几波提供了多数 pin-only 构造，consulting 量规家族和 crayon 蜡笔盒家族各加入 5 张 pin-only 脸，runway 秀场家族加入 7 张。pin-only 版式不进入共享自动池，除非主题在自己的策展名单中显式列出它。作者也可以用显式 `slide.layout` 钉子命中。
 
-封面、章节、结尾三类页面现在都锁到自己的 Claude Design 设计板构造。软偏好保不住这三类页。registry 有 9 个可自动选型的内容版式。consulting 与 crayon 各自在这 9 个共享选择前追加一张主题锁定的 pin-only 内容脸。lecture 和 luxe 再从这个基线去掉 `split-band` 与 `stacked-poster`。省略 `layouts` 的注册自定义主题会得到这 9 个可自动选型内容版式。
+封面、章节、结尾三类页面现在都锁到自己的 Claude Design 设计板构造。软偏好保不住这三类页。registry 有 9 个可自动选型的内容版式。consulting 与 crayon 各自在这 9 个共享选择前追加一张主题锁定的 pin-only 内容脸。runway 追加 show-statement 与 show-figures，show-gallery 与 show-spotlight 仍只接受显式 pin。lecture 和 luxe 再从这个基线去掉 `split-band` 与 `stacked-poster`。省略 `layouts` 的注册自定义主题会得到这 9 个可自动选型内容版式。
 
 版式仍住在共享池里。锁定是主题怎么用池，不是给一家另开一份私有文件。每家内置也会点名自己更常抽到的封面、章节、内容页和结尾，所以两家主题用同一份 deck、同一个 seed，通常会抽到不同版式。软偏好（`layoutTendencies`）留给内容页，以及还没锁定的身份页。已经锁死的封面，偏好就是那把锁本身。某一页必须是某一个版式时，在那一页写 `slide.layout` 钉死。封面锁定不会因为后面某一波把另外三类页填上而跟着动。每个版式都会按主题的实际背景色自适应取色，所以池在任何主题下都保持可读。
 

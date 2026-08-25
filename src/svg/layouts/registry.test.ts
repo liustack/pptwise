@@ -44,7 +44,7 @@ describe("LAYOUT_REGISTRY completeness (layout ids)", () => {
     }
   }
 
-  it("has exactly 123 layout-kind entries, all traceable to one of the four real registries", () => {
+  it("has exactly 130 layout-kind entries, all traceable to one of the four real registries", () => {
     const knownIds = new Set([
       ...Object.keys(COVER_LAYOUTS),
       ...Object.keys(CHAPTER_LAYOUTS),
@@ -57,7 +57,8 @@ describe("LAYOUT_REGISTRY completeness (layout ids)", () => {
     // consulting gauge adds five pin-only faces: 113 -> 118. All five are
     // theme-locked, so none of them joins the shared automatic pools.
     // One-box-of-crayons adds five theme-locked pin-only faces: 118 -> 123.
-    expect(layoutEntries).toHaveLength(123)
+    // Runway show adds seven pin-only faces: 123 -> 130.
+    expect(layoutEntries).toHaveLength(130)
     for (const entry of layoutEntries) {
       expect(knownIds.has(entry.id), `"${entry.id}" is not a real layout id`).toBe(true)
     }
@@ -194,7 +195,11 @@ describe("capacity metadata: only where the inventory gives hard numbers", () =>
         id === "one-evidence" ||
         id === "mono-bleed" ||
         id === "gauge-point" ||
-        id === "crayonbox-point"
+        id === "crayonbox-point" ||
+        id === "show-gallery" ||
+        id === "show-spotlight" ||
+        id === "show-statement" ||
+        id === "show-figures"
       )
         continue
       const body = LAYOUT_REGISTRY[id].slots.find((s) => s.name === "body")
@@ -218,6 +223,20 @@ describe("capacity metadata: only where the inventory gives hard numbers", () =>
 
   it("crayonbox-point carries one attribution component", () => {
     expect(LAYOUT_REGISTRY["crayonbox-point"].slots.find((s) => s.name === "body")?.capacity).toBe(1)
+  })
+
+  it("show content faces declare their gated component capacities", () => {
+    expect(LAYOUT_REGISTRY["show-gallery"].slots.find((s) => s.name === "body")?.capacity).toBe(1)
+    expect(LAYOUT_REGISTRY["show-spotlight"].slots.find((s) => s.name === "body")?.capacity).toBe(2)
+    expect(LAYOUT_REGISTRY["show-statement"].slots.find((s) => s.name === "body")?.capacity).toBe(1)
+    expect(LAYOUT_REGISTRY["show-figures"].slots.find((s) => s.name === "body")?.capacity).toBe(1)
+  })
+
+  it("show content faces declare every slide field their exact composition renders", () => {
+    for (const id of ["show-gallery", "show-spotlight", "show-figures"] as const) {
+      expect(LAYOUT_REGISTRY[id].slots.some((slot) => slot.name === "subheading"), id).toBe(true)
+    }
+    expect(LAYOUT_REGISTRY["show-statement"].slots.some((slot) => slot.name === "subheading")).toBe(false)
   })
 
   it("speech-layout body capacities: stat-hero 1, one-evidence 1, mono-bleed 0", () => {
@@ -246,19 +265,19 @@ describe("layoutsForSlideType", () => {
     for (const l of covers) expect(l.slideTypes).toContain("cover")
   })
 
-  it("cover, chapter, and ending expose 36, 35, and 33 registered layouts with no takeovers", () => {
+  it("cover, chapter, and ending expose 37, 36, and 34 registered layouts with no takeovers", () => {
     // The shared automatic pools are unchanged by the gauge family: 19, 8, 7.
-    expect(layoutsForSlideType("cover")).toHaveLength(36)
+    expect(layoutsForSlideType("cover")).toHaveLength(37)
     // Wave 8 batch 4: +6 chapter +6 ending pinOnly faces.
-    expect(layoutsForSlideType("chapter")).toHaveLength(35)
-    expect(layoutsForSlideType("ending")).toHaveLength(33)
+    expect(layoutsForSlideType("chapter")).toHaveLength(36)
+    expect(layoutsForSlideType("ending")).toHaveLength(34)
   })
 
-  it("content includes both the 19 layouts and the 4 takeovers", () => {
+  it("content includes both the 23 layouts and the 4 takeovers", () => {
     const contents = layoutsForSlideType("content")
-    expect(contents.filter((l) => l.kind === "archetype")).toHaveLength(19)
+    expect(contents.filter((l) => l.kind === "archetype")).toHaveLength(23)
     expect(contents.filter((l) => l.kind === "takeover")).toHaveLength(4)
-    expect(contents).toHaveLength(23)
+    expect(contents).toHaveLength(27)
   })
 })
 
@@ -413,6 +432,13 @@ describe("excludePinOnly (quote-stage wave, task T1's pinOnly tier)", () => {
       "crayonbox-cards",
       "crayonbox-point",
       "crayonbox-todo",
+      "show-headline",
+      "show-plate",
+      "show-gallery",
+      "show-spotlight",
+      "show-statement",
+      "show-figures",
+      "show-finale",
     ])
     for (const def of Object.values(LAYOUT_REGISTRY)) {
       if (pinOnlyIds.has(def.id)) {

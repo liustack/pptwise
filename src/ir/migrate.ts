@@ -71,8 +71,8 @@ function rewriteLogoWallItem(item: unknown): unknown {
 }
 
 /**
- * One leftover `logo_wall` component → one `image_grid`. Extra logos past 4
- * are dropped because image_grid's own ceiling is 4. A 4-item wall maps 1:1.
+ * One leftover `logo_wall` component → one `image_grid`. Extra logos past 6
+ * are dropped because image_grid's own ceiling is 6. Walls with up to 6 items map 1:1.
  * `title` and every other leftover key are dropped. Non-array `items` stay
  * as-is (mechanical, not validating).
  */
@@ -81,7 +81,7 @@ function rewriteLogoWallComponent(component: Record<string, unknown>): Record<st
   if (!Array.isArray(items)) {
     return { type: "image_grid", items }
   }
-  return { type: "image_grid", items: items.slice(0, 4).map(rewriteLogoWallItem) }
+  return { type: "image_grid", items: items.slice(0, 6).map(rewriteLogoWallItem) }
 }
 
 function rewriteComponentsArray(components: unknown[]): unknown[] {
@@ -99,8 +99,8 @@ function rewriteComponentsArray(components: unknown[]): unknown[] {
  * Walks IR `slides[].components[]` and a page-shaped top-level
  * `components[]`. Each leftover wall becomes `{ type: "image_grid", items }`
  * with `asset_id` copied and `label` renamed to `caption`. Extra items past
- * 4 are dropped because image_grid's own ceiling is 4. A 4-item wall maps
- * 1:1.
+ * 6 are dropped because image_grid's own ceiling is 6. Walls with up to 6
+ * items map 1:1.
  */
 export function migrateLogoWallToImageGrid(raw: unknown): unknown {
   if (!isPlainRecord(raw)) return raw

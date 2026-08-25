@@ -384,15 +384,22 @@ describe("migrateLogoWallToImageGrid", () => {
     })
   })
 
-  it("keeps only the first 4 items of an 8-item wall (image_grid ceiling is 4)", () => {
+  it("keeps only the first 6 items of an 8-item wall (image_grid ceiling is 6)", () => {
     const items = Array.from({ length: 8 }, (_, i) => ({ asset_id: `logo-${i + 1}` }))
     const result = migrateLogoWallToImageGrid(irWith({ type: "logo_wall", title: "Partners", items })) as {
       slides: Array<{ components: Array<{ type: string; items: Array<{ asset_id: string }> }> }>
     }
     const rewritten = result.slides[0]!.components[0]!
     expect(rewritten.type).toBe("image_grid")
-    expect(rewritten.items).toHaveLength(4)
-    expect(rewritten.items.map((item) => item.asset_id)).toEqual(["logo-1", "logo-2", "logo-3", "logo-4"])
+    expect(rewritten.items).toHaveLength(6)
+    expect(rewritten.items.map((item) => item.asset_id)).toEqual([
+      "logo-1",
+      "logo-2",
+      "logo-3",
+      "logo-4",
+      "logo-5",
+      "logo-6",
+    ])
   })
 
   it("IR with only paragraph / omitted components / already image_grid is identity: same reference", () => {

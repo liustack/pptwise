@@ -169,6 +169,7 @@ describe("THEME_DEFINITIONS", () => {
     "split-band",
   ]
   const CRAYON_CONTENT = ["crayonbox-cards", ...FULL_CONTENT]
+  const RUNWAY_CONTENT = ["show-statement", "show-figures", ...FULL_CONTENT]
   const SHARED_CONTENT = FULL_CONTENT
   const FULL_ENDING = [
     "masthead-ending",
@@ -182,7 +183,7 @@ describe("THEME_DEFINITIONS", () => {
   it("W4 全集放开基线：consulting 的 gauge 脸是 pinOnly，共享池不吸收它们", () => {
     expect(__fullLayoutSet("cover")).toEqual(FULL_COVER)
     expect(__fullLayoutSet("content")).toEqual(FULL_CONTENT)
-    const NARROWED_CONTENT = new Set(["lecture", "luxe", "consulting", "crayon"])
+    const NARROWED_CONTENT = new Set(["lecture", "luxe", "consulting", "crayon", "runway"])
     const WAVE8_LOCKED = new Set([
       "consulting",
       "enterprise",
@@ -222,6 +223,7 @@ describe("THEME_DEFINITIONS", () => {
     expect(THEME_DEFINITIONS.lecture.layouts.content).toEqual(FRAMED_CONTENT)
     expect(THEME_DEFINITIONS.luxe.layouts.content).toEqual(FRAMED_CONTENT)
     expect(THEME_DEFINITIONS.consulting.layouts.content).toEqual(CONSULTING_CONTENT)
+    expect(THEME_DEFINITIONS.runway.layouts.content).toEqual(RUNWAY_CONTENT)
     expect(THEME_DEFINITIONS.playbill.layouts.content).toEqual(SHARED_CONTENT)
     expect(THEME_DEFINITIONS.insight.motif).toBe("poster-motif")
     expect(THEME_DEFINITIONS.academic.motif).toBe("rail-motif")
@@ -315,8 +317,18 @@ describe("THEME_DEFINITIONS", () => {
     })
     expect(THEME_DEFINITIONS.crayon.motif).toBe("crayonbox-motif")
 
-    expect(THEME_DEFINITIONS.runway.layouts.cover).toEqual(["lookbook-open-cover"])
-    expect(THEME_DEFINITIONS.runway.layoutTendencies?.cover).toEqual(["lookbook-open-cover"])
+    expect(THEME_DEFINITIONS.runway.layouts).toEqual({
+      cover: ["show-headline"],
+      chapter: ["show-plate"],
+      content: RUNWAY_CONTENT,
+      ending: ["show-finale"],
+    })
+    expect(THEME_DEFINITIONS.runway.layoutTendencies).toEqual({
+      cover: ["show-headline"],
+      chapter: ["show-plate"],
+      content: ["show-statement"],
+      ending: ["show-finale"],
+    })
     expect(THEME_DEFINITIONS.runway.motif).toBeUndefined()
 
     expect(THEME_DEFINITIONS.pulse.layouts.cover).toEqual(["report-open-cover"])

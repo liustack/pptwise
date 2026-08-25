@@ -11,7 +11,7 @@ import { LAYOUT_REGISTRY, type SlideType } from "./registry"
  * and `AGENTS.md`.
  */
 const COUNT_DRIFT_MESSAGE =
-  "LAYOUT_REGISTRY counts changed. Recount it, then update registry.ts count comments, docs/concepts.md, docs/architecture.md, docs/themes.md, docs/themes.zh-CN.md, docs/deck-projects.md, and AGENTS.md."
+  "LAYOUT_REGISTRY counts changed. Recount it, then update registry.ts count comments, docs/concepts.md, docs/architecture.md, docs/selection-and-seed.md, docs/ir.md, docs/ir.zh-CN.md, docs/themes.md, docs/themes.zh-CN.md, docs/deck-projects.md, and AGENTS.md."
 
 const SLIDE_TYPES = ["cover", "chapter", "ending", "content"] as const satisfies readonly SlideType[]
 
@@ -19,11 +19,11 @@ describe("LAYOUT_REGISTRY count guard", () => {
   const definitions = Object.values(LAYOUT_REGISTRY)
 
   it("pins the registry, standard-layout, and takeover totals", () => {
-    expect(definitions, COUNT_DRIFT_MESSAGE).toHaveLength(127)
+    expect(definitions, COUNT_DRIFT_MESSAGE).toHaveLength(134)
     expect(
       definitions.filter((definition) => definition.kind === "archetype"),
       COUNT_DRIFT_MESSAGE,
-    ).toHaveLength(123)
+    ).toHaveLength(130)
     expect(
       definitions.filter((definition) => definition.kind === "takeover"),
       COUNT_DRIFT_MESSAGE,
@@ -34,7 +34,7 @@ describe("LAYOUT_REGISTRY count guard", () => {
     expect(
       definitions.filter((definition) => definition.pinOnly === true),
       COUNT_DRIFT_MESSAGE,
-    ).toHaveLength(80)
+    ).toHaveLength(87)
   })
 
   it("pins registered and auto-selectable totals by slide type", () => {
@@ -49,10 +49,10 @@ describe("LAYOUT_REGISTRY count guard", () => {
     )
 
     expect(counts, COUNT_DRIFT_MESSAGE).toEqual({
-      cover: { registered: 36, autoSelectable: 19 },
-      chapter: { registered: 35, autoSelectable: 8 },
-      ending: { registered: 33, autoSelectable: 7 },
-      content: { registered: 23, autoSelectable: 9 },
+      cover: { registered: 37, autoSelectable: 19 },
+      chapter: { registered: 36, autoSelectable: 8 },
+      ending: { registered: 34, autoSelectable: 7 },
+      content: { registered: 27, autoSelectable: 9 },
     })
   })
 })

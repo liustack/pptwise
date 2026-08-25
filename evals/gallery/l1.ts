@@ -843,7 +843,9 @@ function walkText(
           })
         }
 
-        const fontFloorExempt = el.getAttribute("data-font-floor-exempt") === "gauge-spec"
+        const fontFloorExempt = ["gauge-spec", "show-spec"].includes(
+          el.getAttribute("data-font-floor-exempt") ?? "",
+        )
         if (!decor && !fontFloorExempt && fontSizeAttr !== null && Number(fontSizeAttr) < FONT_FLOOR) {
           const declared = Number(fontSizeAttr)
           findings.push({

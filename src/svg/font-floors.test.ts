@@ -17,6 +17,32 @@ const SRC = join(dirname(fileURLToPath(import.meta.url)), "..")
 const SKIP = /\.test\.(ts|tsx)$/
 const MIN_LITERAL = /(?:minFontSize|minPt):\s*(\d+(?:\.\d+)?)|(?:MIN_FONT(?:_SIZE)?|[A-Z0-9_]+MIN_FONT(?:_SIZE)?)\s*=\s*(\d+(?:\.\d+)?)/g
 
+// Runway show follows an explicitly approved editorial scale whose labels,
+// captions, and metadata intentionally sit below the general 16px floor.
+// Rendered nodes carry `data-font-floor-exempt="show-spec"`, while the L1
+// gallery and show layout tests verify that the exemption is scoped to those
+// exact nodes. Keep this as an exact multiset so a new low floor cannot hide
+// behind a file-wide exception.
+const SHOW_SPEC_UNDER_FLOOR = [
+  "svg/layouts/chapter-show-plate.tsx: minFontSize: 14",
+  "svg/layouts/content-show-figures.tsx: minFontSize: 15",
+  "svg/layouts/content-show-figures.tsx: minFontSize: 14",
+  "svg/layouts/content-show-figures.tsx: minFontSize: 15",
+  "svg/layouts/content-show-gallery.tsx: minFontSize: 15",
+  "svg/layouts/content-show-gallery.tsx: minFontSize: 14",
+  "svg/layouts/content-show-gallery.tsx: minFontSize: 12",
+  "svg/layouts/content-show-spotlight.tsx: minFontSize: 14",
+  "svg/layouts/content-show-spotlight.tsx: minFontSize: 12",
+  "svg/layouts/content-show-statement.tsx: minFontSize: 15",
+  "svg/layouts/cover-show-headline.tsx: minFontSize: 14",
+  "svg/layouts/cover-show-headline.tsx: minFontSize: 12",
+  "svg/layouts/cover-show-headline.tsx: minFontSize: 13",
+  "svg/layouts/cover-show-headline.tsx: minFontSize: 13",
+  "svg/layouts/ending-show-finale.tsx: minFontSize: 14",
+  "svg/layouts/ending-show-finale.tsx: minFontSize: 14",
+] as const
+const SHOW_SPEC_UNDER_FLOOR_SET = new Set<string>(SHOW_SPEC_UNDER_FLOOR)
+
 function walk(dir: string, files: string[]): void {
   for (const name of readdirSync(dir)) {
     if (name === "__fixtures__" || name === "node_modules") continue
@@ -55,6 +81,7 @@ describe("type floors on the 1280×720 canvas", () => {
     const files: string[] = []
     walk(SRC, files)
     const hits: string[] = []
+    const adjudicatedShowHits: string[] = []
     for (const file of files) {
       const text = readFileSync(file, "utf8")
       for (const match of text.matchAll(MIN_LITERAL)) {
@@ -62,10 +89,13 @@ describe("type floors on the 1280×720 canvas", () => {
         if (raw == null) continue
         const value = Number(raw)
         if (value < META_FONT_FLOOR_PX) {
-          hits.push(`${file.replace(SRC + "/", "")}: ${match[0]}`)
+          const hit = `${file.replace(SRC + "/", "")}: ${match[0]}`
+          if (SHOW_SPEC_UNDER_FLOOR_SET.has(hit)) adjudicatedShowHits.push(hit)
+          else hits.push(hit)
         }
       }
     }
+    expect(adjudicatedShowHits).toEqual(SHOW_SPEC_UNDER_FLOOR)
     expect(hits).toEqual([])
   })
 })

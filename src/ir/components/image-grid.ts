@@ -15,12 +15,12 @@ export const schema = z
           .strict()
       )
       .min(2)
-      .max(4),
+      .max(6),
     emphasis: z.enum(["none", "first"]).optional(),
   })
   .strict()
   .describe(
-    "A 2-4 photo/screenshot grid with cover-crop cells.",
+    "A 2-6 photo/screenshot grid with cover-crop cells.",
   )
 
 export const aliases = {} satisfies ComponentAliasSpec
