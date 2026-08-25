@@ -300,10 +300,10 @@ describe("BentoPanelContent", () => {
     expect(valueTexts).toHaveLength(2) // kpiComponent's 2 items
 
     for (const valueText of valueTexts) {
-      // Fell back to readableOn's neutral dark ink (colors.accent itself
-      // measures ~1.56:1 against this card's own colors.surface — the same
-      // ratio the W8 walkthrough's live `pptwise audit` run caught).
-      expect(valueText.getAttribute("fill")).toBe("#0A0E14")
+      // The whole sibling group falls back to consulting's own text token.
+      // colors.accent itself measures ~1.56:1 against this card's surface,
+      // the same ratio the W8 walkthrough's live `pptwise audit` run caught.
+      expect(valueText.getAttribute("fill")).toBe(consultingTheme.colors.text)
       expect(valueText.getAttribute("fill")).not.toBe(consultingTheme.colors.accent)
     }
 
@@ -314,6 +314,90 @@ describe("BentoPanelContent", () => {
       (r) => r.getAttribute("data-bento-shell") === "true",
     )
     expect(shell?.getAttribute("stroke")).toBe(consultingTheme.colors.accent)
+  })
+
+  it("falls every sibling KPI value back when one narrow card crosses below the large-text floor", () => {
+    const base = buildCtx(resolveStyle("tech"), {})
+    const mixed = {
+      ...base,
+      defaultBg: "#3D2E78",
+      colors: {
+        ...base.colors,
+        bg: "#3D2E78",
+        surface: "#3D2E78",
+        accent: "#F0559E",
+        text: "#FFFFFF",
+      },
+    }
+    const component: Component = {
+      type: "kpi_cards",
+      items: [
+        { value: "88", label: "宽卡" },
+        { value: "123456789012345678901234567890", label: "窄卡" },
+      ],
+    }
+    const slide: Slide = {
+      type: "content",
+      heading: "混合门槛",
+      components: [component],
+    } as Slide
+    const deck = ir("tech", [slide])
+    const root = parseSvgRoot(
+      renderSvgMarkup(
+        <svg xmlns="http://www.w3.org/2000/svg">
+          <BentoPanelContent ir={deck} slide={slide} index={0} ctx={mixed} />
+        </svg>,
+      ),
+    )
+    const values = Array.from(root.querySelectorAll('text[font-weight="bold"]'))
+    expect(values).toHaveLength(2)
+    expect(Number(values[0]!.getAttribute("font-size"))).toBeGreaterThanOrEqual(24)
+    expect(Number(values[1]!.getAttribute("font-size"))).toBeLessThan(24)
+    expect(values.map((value) => value.getAttribute("fill"))).toEqual([
+      mixed.colors.text,
+      mixed.colors.text,
+    ])
+  })
+
+  it("keeps every sibling KPI value's accent when the whole bento group clears", () => {
+    const base = buildCtx(resolveStyle("tech"), {})
+    const passing = {
+      ...base,
+      defaultBg: "#FFFFFF",
+      colors: {
+        ...base.colors,
+        bg: "#FFFFFF",
+        surface: "#FFFFFF",
+        accent: "#006A4E",
+        text: "#1A2421",
+      },
+    }
+    const component: Component = {
+      type: "kpi_cards",
+      items: [
+        { value: "88", label: "宽卡" },
+        { value: "123456789012345678901234567890", label: "窄卡" },
+      ],
+    }
+    const slide: Slide = {
+      type: "content",
+      heading: "全组过线",
+      components: [component],
+    } as Slide
+    const deck = ir("tech", [slide])
+    const root = parseSvgRoot(
+      renderSvgMarkup(
+        <svg xmlns="http://www.w3.org/2000/svg">
+          <BentoPanelContent ir={deck} slide={slide} index={0} ctx={passing} />
+        </svg>,
+      ),
+    )
+    const values = Array.from(root.querySelectorAll('text[font-weight="bold"]'))
+    expect(values).toHaveLength(2)
+    expect(values.map((value) => value.getAttribute("fill"))).toEqual([
+      passing.colors.accent,
+      passing.colors.accent,
+    ])
   })
 
   // ── 以下为从 templates/tech.test.tsx 回填的 Content/bento 场景覆盖 ──

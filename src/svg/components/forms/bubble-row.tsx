@@ -1,11 +1,6 @@
 import type { Component } from "@/ir"
 import { Icon } from "../../icons"
-import {
-  accessibleInk,
-  contrastRatio,
-  readableOn,
-  requiredContrastRatio,
-} from "../../ink"
+import { accessibleInk, groupValueInks, readableOn } from "../../ink"
 import type { FormKnobs } from "../form-assignments"
 import type { ComponentBox, ComponentCtx } from "../types"
 import { parseKpiMagnitude } from "./kpi-value"
@@ -157,37 +152,52 @@ export function renderBubbleRow(
   const extraBottom = (L.anyUnder ? UNDER_LABEL : 8) + (L.anySource ? SOURCE_BAND : 0)
   const cy = PAD + L.maxR + Math.max(0, (h - PAD * 2 - L.maxR * 2 - extraBottom) / 2)
   const pageBg = ctx.defaultBg ?? ctx.colors.bg
+  const values = L.ranked.map((d) => {
+    const r = L.r[d.rank]!
+    const cx = cx0 + L.xs[d.rank]!
+    const p = paint(d.rank, d.index, knobs, ctx)
+    const valueFit = fitFormLine(String(d.item.value), {
+      maxWidth: Math.max(8, r * 1.4),
+      fontSize: Math.max(FORM_BODY_FLOOR, Math.min(r * 0.42, 40)),
+      floor: FORM_BODY_FLOOR,
+      bold: true,
+      fontFamily: ctx.fonts.heading,
+    })
+    const preferredFill =
+      p.fill === ctx.colors.accent
+        ? readableOn(p.fill)
+        : (p.stroke && knobs.paletteStroke ? p.stroke : ctx.colors.text)
+    // The optional icon is a graphic, not one of the sibling value texts.
+    // A singleton decision preserves its original per-bubble ink behavior.
+    const iconInk = groupValueInks(
+      [{ preferredFill, backgroundFill: p.inkBg, fontSizePx: valueFit.fontSize }],
+      ctx.colors.text,
+    )[0]!
+    return {
+      d,
+      r,
+      cx,
+      p,
+      valueFit,
+      valueSize: valueFit.fontSize,
+      inside: r >= 46,
+      preferredFill,
+      iconInk,
+    }
+  })
+  const valueInks = groupValueInks(
+    values.map(({ preferredFill, p, valueSize }) => ({
+      preferredFill,
+      backgroundFill: p.inkBg,
+      fontSizePx: valueSize,
+    })),
+    ctx.colors.text,
+  )
 
   return (
     <g transform={`translate(${box.x},${box.y})`}>
-      {L.ranked.map((d) => {
-        const r = L.r[d.rank]!
-        const cx = cx0 + L.xs[d.rank]!
-        const p = paint(d.rank, d.index, knobs, ctx)
-        const value = String(d.item.value)
-        const innerW = Math.max(8, r * 1.4)
-        const valueFit = fitFormLine(value, {
-          maxWidth: innerW,
-          fontSize: Math.max(FORM_BODY_FLOOR, Math.min(r * 0.42, 40)),
-          floor: FORM_BODY_FLOOR,
-          bold: true,
-          fontFamily: ctx.fonts.heading,
-        })
-        const valueSize = valueFit.fontSize
-        const inside = r >= 46
-        const preferredValueInk =
-          p.fill === ctx.colors.accent
-            ? readableOn(p.fill)
-            : (p.stroke && knobs.paletteStroke ? p.stroke : ctx.colors.text)
-        // A palette stroke is a graphic token, not the only valid value ink.
-        // Keep a readable ring color byte-identical. When it misses, use the
-        // theme's own text token instead of accessibleInk's orphan neutral.
-        const valueInk =
-          p.stroke && knobs.paletteStroke
-            ? contrastRatio(preferredValueInk, p.inkBg) >= requiredContrastRatio(valueSize)
-              ? preferredValueInk
-              : accessibleInk(ctx.colors.text, p.inkBg, valueSize)
-            : accessibleInk(preferredValueInk, p.inkBg, valueSize)
+      {values.map(({ d, r, cx, p, valueFit, valueSize, inside, iconInk }, valueIndex) => {
+        const valueInk = valueInks[valueIndex]!
         const label = fitFormLine(d.item.label, {
           maxWidth: Math.max(120, r * 2.6),
           fontSize: inside ? 16 : FORM_BODY_FLOOR,
@@ -220,7 +230,7 @@ export function renderBubbleRow(
                 x={cx - iconSize / 2}
                 y={cy - r * 0.55}
                 size={iconSize}
-                color={valueInk}
+                color={iconInk}
               />
             ) : null}
             <text
