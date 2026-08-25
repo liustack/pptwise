@@ -1,8 +1,8 @@
-<p align="center"><img src="assets/banner.png" alt="pptwise — a real PowerPoint file, not a picture of one" width="100%"></p>
+<p align="center"><img src="assets/banner.png" alt="pptwise: A real PowerPoint, not a picture or HTML." width="100%"></p>
 
 <h1 align="center">pptwise</h1>
 
-<p align="center"><b>A real PowerPoint file. Not a picture of one.</b></p>
+<p align="center"><b>A real PowerPoint, not a picture or HTML.</b></p>
 
 <p align="center">🥇 <b>The FIRST deck-generation plugin for DeepSeek Harness (dsh)</b> 🥇</p>
 
