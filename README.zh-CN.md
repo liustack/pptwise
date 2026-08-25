@@ -1,8 +1,8 @@
-<p align="center"><img src="assets/banner.png" alt="pptwise：真正的 PPT，不是一张图" width="100%"></p>
+<p align="center"><img src="assets/banner.png" alt="pptwise：真正的 PPT，不是图片也不是 HTML" width="100%"></p>
 
 <h1 align="center">pptwise</h1>
 
-<p align="center"><b>真正的 PPT，不是一张图。</b></p>
+<p align="center"><b>真正的 PPT，不是图片也不是 HTML</b></p>
 
 <p align="center">🥇 <b>全网第一个 DeepSeek Harness PPT 生成插件</b> 🥇</p>
 
