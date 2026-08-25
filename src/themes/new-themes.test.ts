@@ -254,7 +254,7 @@ describe("crayon tokens", () => {
       danger: "#C71559",
       warning: "#A67C00",
       success: "#0E8437",
-      chartPalette: ["#0B87C7", "#E85D00", "#0E8437", "#FFD100"],
+      chartPalette: ["#14B4FF", "#FF6A12", "#15D157", "#FFD100"],
     })
   })
 

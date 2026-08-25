@@ -1,10 +1,10 @@
 // crayon 色板的对比度地板。每一格的门槛由它**实际扮演的角色**决定，不是
-// 一律 4.5：24px 粗体的日期与联系方式答的是 3:1 大字线，图表标记答的是
-// 3.0 装饰可见线，只作色块的黄不承字所以不答任何文字门槛。
+// 一律 4.5：24px 粗体的日期与联系方式答的是 3:1 大字线。chartPalette
+// 是设计裁定的图形色例外，四格只作厚笔画与色块，不承字。
 //
 // 这个文件存在的理由：crayon-box 换血那一轮，primary 按 4.5 挑，压深两档
-// 后读起来像企业链接蓝；chartPalette 的亮橘掉到 2.74，图表柱子会和纸底
-// 分不开。两处都是人眼事后发现的。这里把 14 个值全部钉住。
+// 后读起来像企业链接蓝。chartPalette 也曾为追 3.0 压深，丢掉了蜡笔糖果盘
+// 的主题身份。两处都是人眼事后发现的。这里把 14 个值全部钉住。
 import { describe, expect, it } from "vitest"
 import { contrastRatio, readableOn } from "../svg/ink"
 import { CRAYON_TOKENS } from "./crayon"
@@ -34,14 +34,12 @@ describe("crayon 色板对比度地板", () => {
     expect(ratio(c.warning!, c.surface)).toBeGreaterThanOrEqual(3)
   })
 
-  it("chartPalette 前三格过 3.0 图表标记线，第四格是写明在案的例外", () => {
-    const [blue, orange, green, yellow] = c.chartPalette
-    for (const hex of [blue, orange, green]) {
-      expect(ratio(hex!, c.bg), hex).toBeGreaterThanOrEqual(3)
+  it("chartPalette 固定为四格亮糖果色，全部属于 3.0 线下的设计裁定例外", () => {
+    expect(c.chartPalette).toEqual(["#14B4FF", "#FF6A12", "#15D157", "#FFD100"])
+    expect(c.chartPalette.map((hex) => ratio(hex, c.bg))).toEqual([2.23, 2.74, 1.95, 1.4])
+    for (const hex of c.chartPalette) {
+      expect(ratio(hex, c.bg), hex).toBeLessThan(3)
     }
-    // 阳光黄只作色块与太阳笔画，永不承字。改动前的 #F5B700 同样在线下
-    // （1.68）。钉住这个数字，让它哪天被当成文字色用时立刻暴露。
-    expect(ratio(yellow!, c.bg)).toBeLessThan(3)
   })
 
   it("chartPalette 每格作徽章底时两墨取优过 4.5", () => {
