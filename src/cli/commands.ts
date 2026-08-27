@@ -32,6 +32,7 @@ import { buildAssetBrief, type AssetBrief, type AssetBriefItem } from "../render
 import { assertContrastFloor, getInstalledThemeIds } from "../themes/definitions"
 import { extractBrandTheme, slugify } from "../themes/extract/brand-extract"
 import { parseBrandThemeFile, registerBrandThemeFile } from "../themes/brand-theme-file"
+import { REGISTERED_THEMES } from "../themes/registered-themes"
 import { CANONICAL_THEME_IDS } from "../themes"
 import { THEME_OCCASIONS } from "../themes/occasions"
 import { LAYOUT_REGISTRY } from "../layouts/registry"
@@ -91,13 +92,16 @@ async function loadStyleFile(path: string): Promise<StyleOverride> {
  * (`parseBrandThemeFile`'s own path-naming message), a builtin-id collision
  * (裁定 4 — a theme file must never shadow a builtin), or a contrast-floor
  * failure (`registerTheme`'s `assertContrastFloor`, whose message names the
- * failing token, the measured ratio, and the background). Re-loading a file
- * whose id is already registered is a no-op (`registerBrandThemeFile`'s own
- * idempotency — `pptwise serve`'s rebuild loop re-runs this every rebuild).
+ * failing token, the measured ratio, and the background). Custom ids live
+ * only in `REGISTERED_THEMES`: delete then re-register so `pptwise serve`
+ * rebuilds pick up edits to the theme file. Builtin collisions still throw
+ * inside `registerBrandThemeFile`.
  */
 async function loadThemeFile(path: string): Promise<string> {
   const raw = await loadIrFile(path, "theme")
-  return registerBrandThemeFile(parseBrandThemeFile(raw, path))
+  const file = parseBrandThemeFile(raw, path)
+  REGISTERED_THEMES.delete(file.id)
+  return registerBrandThemeFile(file)
 }
 
 /**

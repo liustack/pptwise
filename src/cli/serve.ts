@@ -42,12 +42,12 @@
  * own `resolvedTarget`/`isDir` — the exact path `loadDeckTarget`
  * (`./commands.ts`) already resolved `target` to — rather than this module
  * re-deriving the bare-name/`decksDir` resolution a second time: a deck
- * project directory watches `deck.spec.json` + `pages/` + `assets/`
- * (non-recursive `fs.watch` on each — three flat, non-nested directories
- * cover the whole deck-project layout anyway, `docs/deck-projects.md`, so
+ * project directory watches `deck.spec.json` + `pages/` + `assets/` +
+ * `theme.json` (non-recursive `fs.watch` on each — these flat, non-nested
+ * paths cover the whole deck-project layout anyway, `docs/deck-projects.md`, so
  * `{recursive: true}` buys nothing here even now that the repo's floor
  * (Node 22.19, `package.json#engines`) has it on every platform); a bare IR
- * target watches that one file. Multiple `fs.watch` events firing for a
+ * target watches that one file, plus `--theme-file` when set. Multiple `fs.watch` events firing for a
  * single logical save (editors that write via a temp file + rename, or
  * saving several page files in one "save all") are coalesced by a 200ms
  * debounce into one rebuild.
@@ -70,7 +70,7 @@ import { PptwiseError } from "../errors"
 import { spawnHidden } from "./child"
 import { buildDeckPreview } from "./commands"
 import { findConfig } from "./config"
-import { ASSETS_DIRNAME, PAGES_DIRNAME, SPEC_FILENAME } from "./deck-dir"
+import { ASSETS_DIRNAME, PAGES_DIRNAME, SPEC_FILENAME, THEME_FILENAME } from "./deck-dir"
 import { resolveWorkspaceLocation } from "./workspace"
 
 /** `pptwise serve`'s own default (spec-plan.md §2's worked example,
@@ -98,12 +98,10 @@ export interface ServeOptions {
   port?: number
   cwd?: string
   /** `--theme-file <path>` (brand-extract wave) — threaded into every
-   *  `buildDeckPreview` call (initial and each rebuild). The registration is
-   *  idempotent per id (`registerBrandThemeFile`, `../themes/brand-theme-file.ts`),
-   *  so re-running it every rebuild is safe — but note the flip side: the
-   *  first successful registration wins for the process's lifetime, so
-   *  editing the theme file itself mid-serve does not live-reload the brand
-   *  (restart `pptwise serve` for that). */
+   *  `buildDeckPreview` call (initial and each rebuild). `loadThemeFile`
+   *  deletes the custom id from `REGISTERED_THEMES` then re-registers, so
+   *  editing the theme file mid-serve live-reloads the brand on the next
+   *  rebuild. */
   themeFilePath?: string
 }
 
@@ -126,11 +124,18 @@ export interface ServeHandle {
 
 /** The concrete paths `createServeServer` should `fs.watch` for `target`,
  *  given `buildDeckPreview`'s own `resolvedTarget`/`isDir` for it — see this
- *  module's own doc comment for why these three (deck-dir mode) or this one
- *  (bare-IR mode) are the whole watch surface. */
-function watchRoots(resolvedTarget: string, isDir: boolean, extra: string[] = []): string[] {
+ *  module's own doc comment for why these (deck-dir mode) or this one
+ *  (bare-IR mode) are the whole watch surface. Deck-dir mode also watches
+ *  `theme.json`. Callers pass `--theme-file` and workspace assets via
+ *  `extra`. */
+export function watchRoots(resolvedTarget: string, isDir: boolean, extra: string[] = []): string[] {
   const roots = isDir
-    ? [join(resolvedTarget, SPEC_FILENAME), join(resolvedTarget, PAGES_DIRNAME), join(resolvedTarget, ASSETS_DIRNAME)]
+    ? [
+        join(resolvedTarget, SPEC_FILENAME),
+        join(resolvedTarget, PAGES_DIRNAME),
+        join(resolvedTarget, ASSETS_DIRNAME),
+        join(resolvedTarget, THEME_FILENAME),
+      ]
     : [resolvedTarget]
   return [...roots, ...extra]
 }
@@ -371,8 +376,11 @@ export async function createServeServer(options: ServeOptions): Promise<ServeHan
     ASSETS_DIRNAME,
   )
 
+  const extraWatch = [workspaceAssets]
+  if (options.themeFilePath !== undefined) extraWatch.push(options.themeFilePath)
+
   const watchers: FSWatcher[] = []
-  for (const path of watchRoots(initial.resolvedTarget, initial.isDir, [workspaceAssets])) {
+  for (const path of watchRoots(initial.resolvedTarget, initial.isDir, extraWatch)) {
     try {
       watchers.push(watch(path, () => scheduleRebuild()))
     } catch (e) {
