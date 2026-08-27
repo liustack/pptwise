@@ -1,0 +1,419 @@
+// @vitest-environment jsdom
+import { describe, expect, it } from "vitest"
+import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
+import { assertSubset } from "../render/subset-validate"
+import { measureTextUnits } from "../lib/svg-text-layout"
+import { buildCtx } from "../render/full-slide-svg"
+import { resolveStyle } from "../themes"
+import { accessibleInk } from "../render/ink"
+import { NarrowColumnContent } from "./content-narrow-column"
+import { footnoteBaselineFor } from "../render/branding-geometry"
+import type { Component, PptxIR, Slide } from "@/ir"
+
+const CJK_LONG =
+  "微服务架构下的分布式事务一致性保障机制与补偿策略设计规范以及跨可用区容灾演练的完整落地路径说明"
+
+function para(text: string): Component {
+  return { type: "paragraph", text }
+}
+
+// Deck with a preceding chapter so `sectionNameFor` resolves a kicker for
+// the content slide, and a content slide carrying multiple component types
+// (paragraph + bullets + quote) plus subheading/footnote to exercise every
+// conditional slot the layout renders.
+const chapter: Slide = { type: "chapter", heading: "第一部分：市场洞察", components: [] } as Slide
+const content: Slide = {
+  type: "content",
+  heading: "窄栏叙事：从数据到洞察",
+  subheading: "**核心结论**：留存率显著提升",
+  footnote: "数据来源：内部埋点，2026Q2",
+  components: [
+    { type: "paragraph", text: "本季度用户留存呈现持续上行趋势。" },
+    { type: "bullets", items: ["留存率 +12%", "活跃时长 +8%", "流失率 -5%"], style: "default" },
+    { type: "quote", text: "增长的本质是留住已经信任你的人。", attribution: "内部访谈" },
+  ],
+} as Slide
+
+const ir = (theme: string, slides: Slide[] = [chapter, content]): PptxIR =>
+  ({
+    version: "3",
+    filename: "x.pptx",
+    theme: { id: theme },
+    meta: {},
+    assets: { images: {} },
+    slides,
+  }) as unknown as PptxIR
+
+// Captured from NarrowColumnContent (magazine tokens, fixtures above) —
+// pinned as literals so this test no longer depends on the legacy
+// `templates/magazine` module (slated for deletion).
+// W4 task 3 re-pin: balanced delivery's 24px body baseline (was a fixed
+// 20px) — the paragraph/bullets components grow taller (28px -> 34px line
+// height) and push the quote block down; quote's own fixed 26px text and
+// 20px attribution line, and every layout-bespoke element (kicker,
+// heading, subheading, page number, footnote), are untouched, confirming
+// the diff is confined to the paragraph/bullets trio.
+// Footnote-clearance re-pin (2026-08-20): the column floor drops 20px when a
+// footnote is present (rect h 342 -> 322), so the two inner blocks close up
+// (348 -> 342, 508 -> 496), and the baseline goes 648 -> 644
+// (`footnoteBaselineFor(20)`). This layout's 20px footnote is the largest of
+// the ten, so it was the worst off both ways: 11.50px of real gap above the
+// divider, and an outright 7.75px overlap between its ink and a column that
+// floored at 640. All three blocks survive the tighter floor — 50 tokens
+// before, 50 after. `MAGAZINE_EXPECTED_BARE` has no footnote and does not
+// move.
+// Quote-mark re-pin (2026-08-20): the decorative open-quote mark's baseline
+// now comes from where its ink actually stops (`quote.tsx`'s
+// `MARK_INK_DEPTH_RATIO`) instead of a hand-tuned 40, which moves that one
+// `<text>` 16px down to `y="56"`. That single attribute is the entire diff —
+// this string was the only place in the repo pinning the mark's geometry,
+// and the quote block's `data-audit-box`, its body baseline (60), its
+// attribution baseline (97) and every other element here are unchanged,
+// because `measure()` never reads the mark's baseline.
+// Golden-top-cap re-pin (2026-08-21, fifth review): only
+// `MAGAZINE_EXPECTED_BARE` moves, and only in two tokens — its lone
+// block's `data-audit-box` y and the `translate` that renders it, 372.88
+// -> 262 (rect.y 230 + the 32px cap). `MAGAZINE_EXPECTED` is untouched:
+// its three blocks already reach 640 with nothing left over.
+// Sixth-review re-pin (2026-08-21): the cap drops from two gaps to one.
+// `MAGAZINE_EXPECTED_BARE` 262 -> 246 (rect.y 230 + the 16px cap).
+// `MAGAZINE_EXPECTED` still untouched.
+const MAGAZINE_EXPECTED =
+  "<line x1=\"96\" y1=\"88\" x2=\"1184\" y2=\"88\" stroke=\"#D3DBE0\" stroke-width=\"1.2\"></line><text x=\"96\" y=\"124\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"16\" fill=\"#23282E\" font-style=\"italic\" dominant-baseline=\"alphabetic\">第一部分：市场洞察</text><text x=\"96\" y=\"190\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"60\" font-weight=\"600\" fill=\"#23282E\" dominant-baseline=\"alphabetic\">窄栏叙事：从数据到洞察</text><text x=\"96\" y=\"254\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"22\" fill=\"#0A0E14\" font-style=\"italic\" dominant-baseline=\"alphabetic\"><tspan fill=\"#23282E\" font-weight=\"700\">核心结论</tspan><tspan fill=\"#0A0E14\">：留存率显著提升</tspan></text><g data-audit-rect=\"96,298,880,322\"><g data-audit-box=\"96,298,880\"><g transform=\"translate(96,298)\"><text x=\"0\" y=\"24\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"24\" fill=\"#23282E\" dominant-baseline=\"alphabetic\">本季度用户留存呈现持续上行趋势。</text></g></g><g data-audit-box=\"96,342,880\"><g transform=\"translate(96,342)\"><circle cx=\"5\" cy=\"18.8\" r=\"3\" fill=\"#4A6B8A\"></circle><text x=\"26\" y=\"26\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"24\" fill=\"#23282E\" dominant-baseline=\"alphabetic\">留存率 +12%</text><circle cx=\"5\" cy=\"60.8\" r=\"3\" fill=\"#4A6B8A\"></circle><text x=\"26\" y=\"68\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"24\" fill=\"#23282E\" dominant-baseline=\"alphabetic\">活跃时长 +8%</text><circle cx=\"5\" cy=\"102.8\" r=\"3\" fill=\"#4A6B8A\"></circle><text x=\"26\" y=\"110\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"24\" fill=\"#23282E\" dominant-baseline=\"alphabetic\">流失率 -5%</text></g></g><g data-audit-box=\"96,496,880\"><g transform=\"translate(96,496)\"><text x=\"0\" y=\"64\" font-size=\"64\" fill=\"#B96A5E\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" dominant-baseline=\"alphabetic\">“</text><text x=\"20\" y=\"60\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"26\" font-style=\"italic\" fill=\"#23282E\" dominant-baseline=\"alphabetic\">增长的本质是留住已经信任你的人。</text><text x=\"20\" y=\"97\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"20\" fill=\"#5A6470\" dominant-baseline=\"alphabetic\">— 内部访谈</text></g></g></g><text x=\"1184\" y=\"628\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"64\" fill=\"#5A6470\" opacity=\"0.3\" text-anchor=\"end\" dominant-baseline=\"alphabetic\">02</text><text x=\"96\" y=\"644\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"20\" fill=\"#5A6470\" font-style=\"italic\" dominant-baseline=\"alphabetic\">数据来源：内部埋点，2026Q2</text>"
+
+const MAGAZINE_EXPECTED_BARE =
+  "<line x1=\"96\" y1=\"88\" x2=\"1184\" y2=\"88\" stroke=\"#D3DBE0\" stroke-width=\"1.2\"></line><text x=\"96\" y=\"190\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"60\" font-weight=\"600\" fill=\"#23282E\" dominant-baseline=\"alphabetic\">简报</text><g data-audit-rect=\"96,230,880,410\"><g data-audit-box=\"96,246,880\"><g transform=\"translate(96,246)\"><text x=\"0\" y=\"24\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"24\" fill=\"#23282E\" dominant-baseline=\"alphabetic\">一</text></g></g></g><text x=\"1184\" y=\"628\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"64\" fill=\"#5A6470\" opacity=\"0.3\" text-anchor=\"end\" dominant-baseline=\"alphabetic\">01</text>"
+
+describe("NarrowColumnContent", () => {
+  it("magazine tokens 下输出与固化的基准 markup 逐字节一致（档位一，含多种 component/kicker/subheading/footnote，档案来自旧 EditorialSerifContent）", () => {
+    const ctx = buildCtx({ ...resolveStyle("classroom"), shape: undefined }, {})
+    const deck = ir("classroom")
+
+    const next = renderSvgMarkup(<NarrowColumnContent ir={deck} slide={content} index={1} ctx={ctx} />)
+    expect(next).toBe(MAGAZINE_EXPECTED)
+    // Sanity: the multi-component content, kicker (section name), subheading and
+    // footnote all actually rendered, not silently dropped.
+    expect(next).toContain("第一部分：市场洞察")
+    expect(next).toContain("留存率 +12%")
+    expect(next).toContain("增长的本质是留住已经信任你的人。")
+    expect(next).toContain("数据来源：内部埋点，2026Q2")
+    expect(next).toContain(">02<") // zero-padded page number, index 1 -> "02"
+  })
+
+  it("单块 slide（无 subheading/footnote）同样与固化基准逐字节一致", () => {
+    const ctx = buildCtx({ ...resolveStyle("classroom"), shape: undefined }, {})
+    const bare: Slide = { type: "content", heading: "简报", components: [{ type: "paragraph", text: "一" }] } as Slide
+    const deck = ir("classroom", [bare])
+
+    const next = renderSvgMarkup(<NarrowColumnContent ir={deck} slide={bare} index={0} ctx={ctx} />)
+    expect(next).toBe(MAGAZINE_EXPECTED_BARE)
+  })
+
+  it("consulting tokens 下用 consulting 的色（证明 token 化成立，无 baked hex）", () => {
+    const ctx = buildCtx(resolveStyle("consulting"), {})
+    const deck = ir("consulting")
+    const out = renderSvgMarkup(<NarrowColumnContent ir={deck} slide={content} index={1} ctx={ctx} />)
+    expect(out).toContain(ctx.colors.text)
+    expect(out).not.toContain("#8C4A3C") // journal accent 不得残留
+    expect(out).not.toContain("#D9D3C2") // journal border 不得残留
+  })
+
+  it("falls an unreadable kicker back to the theme text ink without a heading treatment", () => {
+    const baseCtx = buildCtx(resolveStyle("consulting"), {})
+    const ctx = { ...baseCtx, themeId: undefined }
+    const deck = ir("unassigned")
+    const markup = renderSvgMarkup(
+      <svg xmlns="http://www.w3.org/2000/svg">
+        <NarrowColumnContent ir={deck} slide={content} index={1} ctx={ctx} />
+      </svg>,
+    )
+    const root = parseSvgRoot(markup)
+    const kicker = Array.from(root.querySelectorAll("text")).find(
+      (text) => text.textContent === chapter.heading,
+    )!
+
+    expect(kicker.getAttribute("fill")).toBe(ctx.colors.text)
+    expect(kicker.getAttribute("fill")).not.toBe(ctx.colors.accent)
+  })
+
+  it("passes assertSubset (no forbidden elements)", () => {
+    const ctx = buildCtx({ ...resolveStyle("classroom"), shape: undefined }, {})
+    const deck = ir("classroom")
+    const markup = renderSvgMarkup(
+      <svg xmlns="http://www.w3.org/2000/svg">
+        <NarrowColumnContent ir={deck} slide={content} index={1} ctx={ctx} />
+      </svg>,
+    )
+    expect(markup).not.toContain("foreignObject")
+    const root = parseSvgRoot(markup)
+    expect(() => assertSubset(root)).not.toThrow()
+  })
+
+  it("lays components into the deliberately narrow 880-wide column (not the full 1088 width)", () => {
+    const ctx = buildCtx({ ...resolveStyle("classroom"), shape: undefined }, {})
+    const slide: Slide = {
+      type: "content",
+      heading: "窄栏叙事",
+      components: [para("一"), para("二"), para("三")],
+    } as Slide
+    const deck = ir("classroom", [slide])
+    const markup = renderSvgMarkup(
+      <svg xmlns="http://www.w3.org/2000/svg">
+        <NarrowColumnContent ir={deck} slide={slide} index={0} ctx={ctx} />
+      </svg>,
+    )
+    const root = parseSvgRoot(markup)
+    const rectEl = root.querySelector('[data-audit-rect^="96,"]')
+    expect(rectEl).not.toBeNull()
+    const auditRect = rectEl!.getAttribute("data-audit-rect") ?? ""
+    expect(auditRect).toContain(",880,")
+    const [x, , w] = auditRect.split(",").map(Number)
+    expect(x).toBe(96)
+    expect(w).toBe(880)
+  })
+
+  it("renders a large, 30%-opacity, zero-padded page number anchored to the right gutter", () => {
+    const ctx = buildCtx({ ...resolveStyle("classroom"), shape: undefined }, {})
+    const slide: Slide = { type: "content", heading: "标题", components: [para("一")] } as Slide
+    // 9th slide (index 8) => page label "09"
+    const slides = Array.from({ length: 9 }, () => ({ ...slide }))
+    const deck = ir("classroom", slides)
+    const markup = renderSvgMarkup(
+      <svg xmlns="http://www.w3.org/2000/svg">
+        <NarrowColumnContent ir={deck} slide={slide} index={8} ctx={ctx} />
+      </svg>,
+    )
+    const root = parseSvgRoot(markup)
+    const pageNum = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "09")
+    expect(pageNum).toBeDefined()
+    expect(pageNum!.getAttribute("opacity")).toBe("0.3")
+    expect(pageNum!.getAttribute("text-anchor")).toBe("end")
+    expect(pageNum!.getAttribute("x")).toBe("1184")
+    expect(pageNum!.getAttribute("font-size")).toBe("64")
+
+    // Single-digit pages are still zero-padded.
+    const markupFirst = renderSvgMarkup(
+      <svg xmlns="http://www.w3.org/2000/svg">
+        <NarrowColumnContent ir={ir("classroom", [slide])} slide={slide} index={0} ctx={ctx} />
+      </svg>,
+    )
+    const rootFirst = parseSvgRoot(markupFirst)
+    const firstPage = Array.from(rootFirst.querySelectorAll("text")).find((t) => t.textContent === "01")
+    expect(firstPage).toBeDefined()
+  })
+
+  it("converges a pathologically long (48-char) heading to <32pt or 2 lines within the 880 column", () => {
+    const ctx = buildCtx({ ...resolveStyle("classroom"), shape: undefined }, {})
+    const longHeading = "微服务架构下分布式事务一致性保障机制补偿策略设计".repeat(3).slice(0, 48)
+    expect(longHeading.length).toBe(48)
+    const slide: Slide = {
+      type: "content",
+      heading: longHeading,
+      components: [para("概要")],
+    } as Slide
+    const deck = ir("classroom", [slide])
+    const markup = renderSvgMarkup(
+      <svg xmlns="http://www.w3.org/2000/svg">
+        <NarrowColumnContent ir={deck} slide={slide} index={0} ctx={ctx} />
+      </svg>,
+    )
+    const root = parseSvgRoot(markup)
+    expect(() => assertSubset(root)).not.toThrow()
+
+    const headingTexts = Array.from(root.querySelectorAll("text")).filter(
+      (t) => t.getAttribute("font-weight") === "600" && t.getAttribute("fill") === ctx.colors.text,
+    )
+    expect(headingTexts.length).toBeGreaterThanOrEqual(1)
+    expect(headingTexts.length).toBeLessThanOrEqual(2)
+    const converged =
+      headingTexts.length === 2 || Number(headingTexts[0].getAttribute("font-size")) < 32
+    expect(converged).toBe(true)
+    expect(headingTexts.every((t) => t.textContent !== longHeading)).toBe(true)
+  })
+
+  it("kicker fits an overlong section name instead of overflowing at fixed 16px", () => {
+    const ctx = buildCtx({ ...resolveStyle("classroom"), shape: undefined }, {})
+    const chapterSlide: Slide = { type: "chapter", heading: CJK_LONG.repeat(2), components: [] } as Slide
+    const contentSlide: Slide = {
+      type: "content",
+      heading: "小节标题",
+      components: [para("一")],
+    } as Slide
+    const deck = ir("classroom", [chapterSlide, contentSlide])
+    const markup = renderSvgMarkup(
+      <svg xmlns="http://www.w3.org/2000/svg">
+        <NarrowColumnContent ir={deck} slide={contentSlide} index={1} ctx={ctx} />
+      </svg>,
+    )
+    const root = parseSvgRoot(markup)
+    const kicker = Array.from(root.querySelectorAll("text")).find(
+      (t) => t.getAttribute("font-style") === "italic" && (t.textContent ?? "").includes("微服务"),
+    )
+    expect(kicker).toBeDefined()
+    const fontSize = Number(kicker!.getAttribute("font-size"))
+    const truncated = kicker!.getAttribute("data-truncated") === "1"
+    expect(kicker!.textContent).not.toContain("…")
+    expect(fontSize < 16 || truncated).toBe(true)
+  })
+
+  it("footnote stays within the 980-wide budget instead of colliding with the page number", () => {
+    const ctx = buildCtx({ ...resolveStyle("classroom"), shape: undefined }, {})
+    const longFootnote = "数据来源：" + "内部报告与季度审计草案汇总说明".repeat(6)
+    const slide: Slide = {
+      type: "content",
+      heading: "标题",
+      components: [para("一")],
+      footnote: longFootnote,
+    } as Slide
+    const deck = ir("classroom", [slide])
+    const markup = renderSvgMarkup(
+      <svg xmlns="http://www.w3.org/2000/svg">
+        <NarrowColumnContent ir={deck} slide={slide} index={0} ctx={ctx} />
+      </svg>,
+    )
+    const root = parseSvgRoot(markup)
+    // Found by role, not by coordinate: the baseline is derived from the
+    // rendered size (`footnoteBaselineFor`), so pinning a y here would just
+    // re-break the moment a footnote shrinks.
+    const footnoteEl = Array.from(root.querySelectorAll("text")).find(
+      (t) => t.getAttribute("font-style") === "italic" && (t.textContent ?? "").startsWith("数据来源"),
+    )
+    expect(footnoteEl).toBeDefined()
+    const fontSize = Number(footnoteEl!.getAttribute("font-size"))
+    const text = footnoteEl!.textContent ?? ""
+    expect(measureTextUnits(text) * fontSize).toBeLessThanOrEqual(980)
+    expect(Number(footnoteEl!.getAttribute("y"))).toBe(footnoteBaselineFor(fontSize))
+  })
+
+  describe("subheading (Task 5)", () => {
+    const base: Slide = {
+      type: "content",
+      heading: "四大支柱",
+      components: [para("一"), para("二")],
+    } as Slide
+
+    function columnRectY(root: Element): number {
+      const rectEl = root.querySelector('[data-audit-rect^="96,"]')!
+      return Number(rectEl.getAttribute("data-audit-rect")!.split(",")[1])
+    }
+
+    it("no subheading: narrow column y stays at the pre-subheading formula (headingLastY + 40)", () => {
+      const ctx = buildCtx({ ...resolveStyle("classroom"), shape: undefined }, {})
+      const deck = ir("classroom", [base])
+      const markup = renderSvgMarkup(
+        <svg xmlns="http://www.w3.org/2000/svg">
+          <NarrowColumnContent ir={deck} slide={base} index={0} ctx={ctx} />
+        </svg>,
+      )
+      const root = parseSvgRoot(markup)
+      expect(columnRectY(root)).toBe(190 + 40)
+      expect(root.querySelector('text[y="220"]')).toBeNull()
+    })
+
+    it("with subheading: italic accent text below the heading, and pushes the narrow column down 68 (S3b: headingLastY+64)", () => {
+      const ctx = buildCtx({ ...resolveStyle("classroom"), shape: undefined }, {})
+      const slide: Slide = { ...base, subheading: "效率提升三成，风险敞口下降" } as Slide
+      const deck = ir("classroom", [slide])
+      const markup = renderSvgMarkup(
+        <svg xmlns="http://www.w3.org/2000/svg">
+          <NarrowColumnContent ir={deck} slide={slide} index={0} ctx={ctx} />
+        </svg>,
+      )
+      const root = parseSvgRoot(markup)
+      const sub = Array.from(root.querySelectorAll("text")).find((t) =>
+        (t.textContent ?? "").includes("效率提升三成"),
+      )!
+      expect(sub.getAttribute("fill")).toBe(
+        accessibleInk(ctx.colors.accent, ctx.defaultBg ?? ctx.colors.bg, Number(sub.getAttribute("font-size"))),
+      )
+      expect(sub.getAttribute("font-style")).toBe("italic")
+      expect(sub.getAttribute("y")).toBe(String(190 + 64))
+      expect(columnRectY(root)).toBe(190 + 40 + 68)
+    })
+
+    it("W4 fix round Important I1：consulting 的 colors.accent（#FFC72C）对自己的 content 默认背景只有 ~1.45:1，副题不再是几乎不可读的黄字压米白底", () => {
+      const consultingTokens = resolveStyle("consulting")
+      const ctx = buildCtx(consultingTokens, {})
+      const slide: Slide = { ...base, subheading: "效率提升三成，风险敞口下降" } as Slide
+      const deck = ir("consulting", [slide])
+      const markup = renderSvgMarkup(
+        <svg xmlns="http://www.w3.org/2000/svg">
+          <NarrowColumnContent ir={deck} slide={slide} index={0} ctx={ctx} />
+        </svg>,
+      )
+      const root = parseSvgRoot(markup)
+      const sub = Array.from(root.querySelectorAll("text")).find((t) =>
+        (t.textContent ?? "").includes("效率提升三成"),
+      )!
+      // Fell back to readableOn's neutral dark ink (colors.accent itself
+      // measures ~1.45:1 against consulting's own light content background
+      // — squarely in Important I1's cited 1.45-2.92:1 range).
+      expect(sub.getAttribute("fill")).toBe("#0A0E14")
+      expect(sub.getAttribute("fill")).not.toBe(consultingTokens.colors.accent)
+    })
+
+    it("unassigned theme subheading fill is accessibleInk(accent), not a raw failing accent", () => {
+      const ctx = buildCtx({ ...resolveStyle("classroom"), shape: undefined }, {})
+      const slide: Slide = { ...base, subheading: "效率提升三成，风险敞口下降" } as Slide
+      const deck = ir("classroom", [slide])
+      const markup = renderSvgMarkup(
+        <svg xmlns="http://www.w3.org/2000/svg">
+          <NarrowColumnContent ir={deck} slide={slide} index={0} ctx={ctx} />
+        </svg>,
+      )
+      const root = parseSvgRoot(markup)
+      const sub = Array.from(root.querySelectorAll("text")).find((t) =>
+        (t.textContent ?? "").includes("效率提升三成"),
+      )!
+      expect(sub.getAttribute("fill")).toBe(
+        accessibleInk(ctx.colors.accent, ctx.defaultBg ?? ctx.colors.bg, Number(sub.getAttribute("font-size"))),
+      )
+    })
+
+    it("emphasis markup: ** ** segments invert to colors.text at fontWeight 700, staying italic", () => {
+      const ctx = buildCtx({ ...resolveStyle("classroom"), shape: undefined }, {})
+      const slide: Slide = { ...base, subheading: "**效率提升三成**，风险敞口下降" } as Slide
+      const deck = ir("classroom", [slide])
+      const markup = renderSvgMarkup(
+        <svg xmlns="http://www.w3.org/2000/svg">
+          <NarrowColumnContent ir={deck} slide={slide} index={0} ctx={ctx} />
+        </svg>,
+      )
+      const root = parseSvgRoot(markup)
+      const parent = Array.from(root.querySelectorAll("text")).find((t) =>
+        (t.textContent ?? "").includes("效率提升三成"),
+      )!
+      expect(parent.getAttribute("font-style")).toBe("italic")
+      const tspan = Array.from(parent.querySelectorAll("tspan")).find((t) =>
+        (t.textContent ?? "").includes("效率提升三成"),
+      )!
+      expect(tspan.getAttribute("fill")).toBe(ctx.colors.text)
+      expect(tspan.getAttribute("font-weight")).toBe("700")
+      const plainTspan = Array.from(parent.querySelectorAll("tspan")).find((t) =>
+        (t.textContent ?? "").includes("风险敞口下降"),
+      )!
+      expect(plainTspan.getAttribute("fill")).toBe(
+        accessibleInk(ctx.colors.accent, ctx.defaultBg ?? ctx.colors.bg, Number(parent.getAttribute("font-size"))),
+      )
+    })
+
+    it("overly long subheading shrinks to 16px then truncates", () => {
+      const ctx = buildCtx({ ...resolveStyle("classroom"), shape: undefined }, {})
+      const slide: Slide = { ...base, subheading: CJK_LONG.repeat(2) } as Slide
+      const deck = ir("classroom", [slide])
+      const markup = renderSvgMarkup(
+        <svg xmlns="http://www.w3.org/2000/svg">
+          <NarrowColumnContent ir={deck} slide={slide} index={0} ctx={ctx} />
+        </svg>,
+      )
+      const root = parseSvgRoot(markup)
+      const sub = Array.from(root.querySelectorAll("text")).find((t) =>
+        (t.textContent ?? "").includes("微服务"),
+      )!
+      expect(sub.getAttribute("font-size")).toBe("16")
+      expect(sub.getAttribute("data-truncated")).toBe("1")
+      expect(sub.textContent).not.toContain("…")
+      expect(sub.textContent).not.toBe(CJK_LONG.repeat(2))
+    })
+  })
+})

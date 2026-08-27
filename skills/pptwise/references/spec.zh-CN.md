@@ -13,7 +13,8 @@ mirror_of: skills/pptwise/references/spec.md
 pptwise schema             # IR JSON Schema: the single source of truth
 pptwise schema --spec      # deck spec schema
 pptwise narratives --json  # named narrative presets (strategy/pacing/audience axes + theme recommendations)
-pptwise themes --json      # built-in themes (id + label)
+pptwise themes --json      # built-in themes (id, label, occasions, identity, colors)
+pptwise layouts --json     # standard layouts, slots, capacities, and pin-only status
 ```
 
 永远不要凭上一个 session 的记忆、或凭这份文件本身的记忆去写 IR 或 spec——schema 会演进，`schema`/`narratives`/`themes` 的实际输出永远优先。
@@ -26,21 +27,54 @@ pptwise themes --json      # built-in themes (id + label)
 
 品牌信号回答的是这份 deck 长什么样，从来不回答它该怎么论证。完整规则在 `references/branding.md`。
 
+<!-- generated:begin themes -->
+### 内置主题全量表
 
-**边界页规则——现在就记住，这是最常见的错误：** `chapter` 和 `ending` 永远不渲染 `components` 或 `footnote`。`cover` 永远不渲染 `footnote`。封面只有在锁定版式声明了对应槽位时才能带 `components`。今天这只发生在 `verdict-index`（consulting）：它读第一个 `bullets` 块，画成最多三条编号论据。其余封面版式仍会丢掉 components。正文放到 `content` 页，除非你在填 consulting 封面那三列论据。`validate` 会用 `"<type>" slides do not render components/footnote — move this content to a content slide or remove it` 抓住多余字段。
+本段由 canonical theme registry 与场合路由表生成。`identity` 表示视觉个性强度。
+
+| id | label | occasions | identity |
+| --- | --- | --- | --- |
+| `consulting` | Business Consulting | business | medium |
+| `enterprise` | Enterprise | business, institutional | low |
+| `academic` | Academic | education | medium |
+| `insight` | Financial Insight | finance | medium |
+| `campaign` | Marketing Campaign | marketing, event | high |
+| `classroom` | Classroom | education | medium |
+| `ink` | Ink Wash | culture | high |
+| `tech` | Tech | tech | medium |
+| `runway` | Fashion Runway | fashion | high |
+| `journal` | Editorial Journal | editorial | medium |
+| `luxe` | Luxe | luxury, event | high |
+| `heritage` | Heritage | culture, luxury | medium |
+| `pulse` | Health & Life Science | health | medium |
+| `terra` | Sustainability & ESG | sustainability | medium |
+| `ember` | Startup Pitch | startup | high |
+| `vermilion` | Official Report | government, institutional | low |
+| `crayon` | Kids Education | kids, education | high |
+| `arena` | Esports & Entertainment | entertainment | high |
+| `museum` | Museum | museum, culture | high |
+| `stage` | Keynote Stage | keynote | high |
+| `lecture` | Lecture Hall | education | high |
+| `swiss` | Swiss Institutional | institutional | low |
+| `memo` | Decision Memo | business, institutional | low |
+| `playbill` | Playbill | event, entertainment | high |
+<!-- generated:end themes -->
+
+
+**边界页规则：** `chapter` 永远不渲染 `components` 或 `footnote`。`cover` 与 `ending` 永远不渲染 `footnote`。边界页只有在已知版式声明了兼容槽位时才能带 `components`。目前 `verdict-index` 与 `gauge-verdict` 封面各接受一个 `bullets` component，部分 ending 版式接受自己声明的 body 内容。普通正文放到 `content` 页。`validate` 会点名已知版式会丢掉的字段，并要求把内容移走。
 
 ```json
-// pages/closing.json — spec type "ending" — WRONG: components never render on an ending page
-{ "components": [{ "type": "bullets", "items": ["Thank you", "Questions? sales@example.com"] }] }
+// pages/market.json，spec type "chapter"：WRONG，chapter 版式不渲染 components
+{ "components": [{ "type": "bullets", "items": ["市场规模", "买家分层"] }] }
 ```
 
 ```json
-// pages/wrap-up.json — spec type "content", inserted right before the ending page — CORRECT
-{ "components": [{ "type": "bullets", "items": ["Thank you", "Questions? sales@example.com"] }] }
+// pages/market-detail.json，spec type "content"：CORRECT
+{ "components": [{ "type": "bullets", "items": ["市场规模", "买家分层"] }] }
 ```
 
 ```json
-// pages/closing.json — spec type "ending" — stays bare, nothing to move here
+// pages/market.json，spec type "chapter"：保持空白，内容已移走
 {}
 ```
 
@@ -52,7 +86,9 @@ pptwise themes --json      # built-in themes (id + label)
 
 - 先锁定叙事包：具名预设（或显式三轴）、theme id、品牌框姿态、以及 typeScale 档（封面 / 章 / 演讲页标题有多大：`regular` 省略/1，`display` 1.3，`hero` 1.5）。这是位于 theme 之上的一层决策，不是视觉选择。任一轴仍未知且用户在场时，走下方「叙事访谈」。这种情况下不要自己静默挑一个预设
 - 疏密（留白还是铺满）在访谈里判定（或从请求推导）。钉高潮页、金句页、证据页版式和写 `notes` 时走 `references/layouts.md` 的稀排页合同。`pacing` 不会为此多出第四档
-- 再定 theme id：从 `narratives --json` 里该预设的 `themeRecommendations` 取（如果都不合适，就从 `themes` 输出里挑一个贴合这份 deck 调性的。这只是推荐，从不构成约束）。访谈的品牌问如果返回了模板，先抽成自定义 theme，见 `references/branding.md`
+- 从请求和工作区提取受控场合信号，例如 `business`、`education`、`event` 或 `institutional`。先用 `themes --json` 的 `occasions` 筛出两到三套，再用 `identity` 决定视觉表达要克制还是鲜明。叙事里的 `themeRecommendations` 只在这两层之后作参考和平手裁决，不得压过场合或 identity 匹配。没有场合命中时，才按路由回落顺序用它，随后是仅按 identity 的列表与 `consulting`。访谈的品牌问如果返回模板，先抽成候选主题文件。用户确认前，不要把它命名为项目 `theme.json`，见 `references/branding.md`
+- 用户想比较内置视觉方向时，带两到四个候选 id 跑 `pptwise preview deck-dir/ --themes consulting,swiss,memo`。命令会把同一套已解析封面与第一张内容页用每个主题 repaint，再排成对比图。把图给用户看，让用户按图选择。尚未落盘的自定义候选要单独跑 `pptwise preview deck-dir/ --theme-file <candidate> --theme <id> --html`，因为注册不会选中主题。无人运行时，采用场合与个性强度排序后的第一个确定性候选，并明确说出选择
+- 确认后，把选中的 id 写进 `deck.spec.json`。自定义主题文件落在 `deck-dir/theme.json`，spec 引用它的 id。项目路径后续不需要 `--theme-file` 或 `--theme`。选择内置主题时不需要复制一份 `theme.json`
 - 用户一点头，立刻把确认下来的 `narrative`、`theme`、`branding` 写进 `deck.spec.json`，再起草任何一页。不要把答案留在对话里，等页面写完再凭记忆补
 - 起草 `deck.spec.json`：每页一条记录（`id`、`type`、`heading`，可选加 `beat`/`focus`/`summary`）——以 `cover` 开篇，以 `ending` 收尾，中间的每一页都是 `content` 或 `chapter`。三轴与某个预设完全相等时，`narrative` 写预设 id 字符串，否则写 `{strategy, pacing, audience}`。不要写 `{id, pacing}` 这种混形。默认省略 `branding`。只有每一页内容页都需要品牌页脚时才写 `branding: "full"`（`meta.confidentiality` 为 `confidential` 或 `restricted` 时同样写 `"full"`）。不要在 spec 上发明 `typeScale` 字段，那个字段不存在。档是推荐。只有跳过 spec、直接写 IR 时，才允许把 `theme.style.shape.typeScale` 写进 IR
 - 跑 `pptwise spec validate deck.spec.json`，把它报出的问题都修掉，直到打印 `OK`——边界页、标题长度、beat 轮换、页数是否匹配 pacing 这些硬门都在这一步触发，早于任何一页正文的写作
@@ -101,7 +137,7 @@ brand: ?
 `推荐：<预设或三轴> × <theme> × branding 省略|full × typeScale regular|display|hero`
 `改口条件：<一句>`。最常见的一条：这份会在没有主讲人的情况下被转发，把多出来的字写进 notes，或者建议改用 PDF，不要把幻灯片塞满。
 
-查表（theme = `narratives --json` 里该预设 `themeRecommendations` 的第一项。写三轴对象时改取最靠近预设的名单）。默认省略该字段。`meta.confidentiality` 为 `confidential` 或 `restricted`，或每一页内容页都需要品牌页脚时，才写 `"full"`。`customer` + `talk-pyramid` + `spacious` → `pitch` / 省略 / display。`executive` + `talk-pyramid` + `spacious` → `boardroom-report` / 省略 / display。`customer` + `talk-showcase` + `spacious` → `product-launch` / 省略 / display。`technical` + `teach` + `balanced` → `training` / 省略 / regular。`technical` + `read-brief` + `dense` → `weekly-brief` / 省略 / regular。`executive` + `read-brief` + `dense` → 三轴 `{pyramid, dense, executive}` / 省略 / regular，theme 取 `boardroom-report`。`public` + storytelling + `balanced` → `annual-review` / 省略 / regular。其余写三轴对象，最靠近预设：`pyramid`+`executive` → `boardroom-report`，`pyramid`+`customer` → `pitch`，`showcase` → `product-launch`，`instructional` → `training`，`briefing`+`dense` → `weekly-brief`，`storytelling` → `annual-review`，否则 `general`。
+下面的查表只决定叙事预设、品牌框姿态和 type-scale 档。主题单独走上面的场合与 `identity` 路由。相符预设里的 `themeRecommendations` 可以裁决最后的平手，但从不作为主选择器。默认省略品牌框字段。`meta.confidentiality` 为 `confidential` 或 `restricted`，或每一页内容页都需要品牌页脚时，才写 `"full"`。`customer` + `talk-pyramid` + `spacious` → `pitch` / 省略 / display。`executive` + `talk-pyramid` + `spacious` → `boardroom-report` / 省略 / display。`customer` + `talk-showcase` + `spacious` → `product-launch` / 省略 / display。`technical` + `teach` + `balanced` → `training` / 省略 / regular。`technical` + `read-brief` + `dense` → `weekly-brief` / 省略 / regular。`executive` + `read-brief` + `dense` → 三轴 `{pyramid, dense, executive}` / 省略 / regular。`public` + storytelling + `balanced` → `annual-review` / 省略 / regular。其余写三轴对象，取最接近的预设：`pyramid`+`executive` → `boardroom-report`，`pyramid`+`customer` → `pitch`，`showcase` → `product-launch`，`instructional` → `training`，`briefing`+`dense` → `weekly-brief`，`storytelling` → `annual-review`，否则 `general`。
 
 typeScale 档：`dense` 或 `balanced` 用 `regular`。`spacious` 用 `display`。`hero` 只出现在把 theme 换成 `stage` 的那种换皮上。不要为了把标题加大，把董事会 deck 改成 `stage`。不要在 `deck.spec.json` 上写 `typeScale`。不要为了一个 deck 去改仓库根上的 `pptwise.config.json`。跳过 spec、直接写 IR 时，非 `regular` 的档可以写成 `theme.style.shape.typeScale` 1.3 或 1.5。
 

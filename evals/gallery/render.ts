@@ -19,7 +19,7 @@ import { mkdirSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { renderSlideSvg, validateIr } from "@/api"
 import { CANVAS_H_PX, CANVAS_W_PX } from "@/constants"
-import { auditDeck } from "@/svg/audit/deck-audit"
+import { auditDeck } from "@/audit/deck-audit"
 import { TABLE_IDS, type Job, type TableId } from "./matrix"
 import { pruneGalleryDir } from "./prune"
 
@@ -192,7 +192,7 @@ export function splitPaint(markup: string): PageFingerprint {
  * Self-contained on purpose: `html.ts` ships this function's own source into
  * the review page instead of restating the rule there, so what the reviewer
  * sees and what is tested here cannot drift apart. No module references, no
- * TS-only constructs — the same discipline `src/svg/audit/browser-audit.ts`
+ * TS-only constructs — the same discipline `src/audit/browser-audit.ts`
  * documents for its own in-page function.
  *
  * `entry` is a stored verdict, `page` is its manifest entry as rendered now.

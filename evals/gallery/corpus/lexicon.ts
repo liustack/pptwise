@@ -1,7 +1,7 @@
 /**
  * Review-corpus vocabulary, one entry per language track.
  *
- * This is deliberately NOT `src/svg/audit/stress-fixtures.ts`. Those decks
+ * This is deliberately NOT `src/audit/stress-fixtures.ts`. Those decks
  * are pathological by design (that file says so in its own header: "do not
  * tune the renderers to make these fixtures look good"). They answer "does
  * anything overflow". The visual review answers a different question —

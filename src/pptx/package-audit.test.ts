@@ -19,8 +19,8 @@ import { describe, it, expect, beforeAll } from "vitest"
 import JSZip from "jszip"
 import type { PptxIR } from "@/ir"
 import { installNodePlatform } from "../platform/node"
-import { slideToOps, slideToSvgMarkup } from "@/svg/render-slide"
-import { parseSvgRoot } from "@/svg/serialize"
+import { slideToOps, slideToSvgMarkup } from "@/render/render-slide"
+import { parseSvgRoot } from "@/render/serialize"
 import { generatePptxBlob } from "./generate"
 import { auditPptxPackage } from "./package-audit"
 import { svgToOps } from "./svg2pptx/dispatch"
@@ -588,7 +588,7 @@ describe("auditPptxPackage — image-alt-dropped, device_mockup closure", () => 
 // Alt-emission-closure fix wave: `checkImageAltExported` rewritten to key
 // off actually-rendered image ops (`ImageOp[]`) instead of the IR's
 // *declared* `slide.components` list — the reviewer-caught defect fixed
-// here is `layoutContentFit` (`src/svg/layout.ts`) silently dropping a
+// here is `layoutContentFit` (`src/render/layout.ts`) silently dropping a
 // trailing component on overflow (a deliberate graceful-degrade path, not a
 // bug) and the old component-list-keyed rule hard-failing a legitimately
 // degraded export because the dropped component's alt could never have a

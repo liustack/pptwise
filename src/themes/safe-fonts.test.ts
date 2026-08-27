@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest"
 import { BUILTIN_THEME_IDS } from "@/ir"
 import { resolveStyle } from "./index"
-import { resolveFontFace, SAFE_FONTS } from "../svg/fonts"
+import { resolveFontFace, SAFE_FONTS } from "../render/fonts"
 
 // The export writes a single resolved fontFace per role. This guards that every
 // theme resolves heading/body/mono to a font that ships on a stock Windows, so a

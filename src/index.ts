@@ -33,8 +33,8 @@ export type { ThemeDefinition, ThemeRegistration } from "./themes/definitions"
 // pure theme-file JSON out (jszip only, browser-safe) — and load such a file
 // back through the registerTheme seam (with its contrast hard gate). The
 // `pptwise brand extract` CLI command and `--theme-file` flag wrap these.
-export { extractBrandTheme } from "./themes/brand-extract"
-export type { BrandThemeFile, ExtractBrandThemeOptions } from "./themes/brand-extract"
+export { extractBrandTheme } from "./themes/extract/brand-extract"
+export type { BrandThemeFile, ExtractBrandThemeOptions } from "./themes/extract/brand-extract"
 export { parseBrandThemeFile, registerBrandThemeFile, BrandThemeFileSchema } from "./themes/brand-theme-file"
 export {
   resolveNarrative,
@@ -81,7 +81,7 @@ export {
   type AuditFinding,
   type AuditChecks,
   type AuditDeckOptions,
-} from "./svg/audit/deck-audit"
+} from "./audit/deck-audit"
 export {
   buildAssetBrief,
   type AssetBrief,
@@ -91,4 +91,4 @@ export {
   type AssetBriefFit,
   type AssetBriefPalette,
   type AssetBriefMood,
-} from "./svg/asset-brief"
+} from "./render/asset-brief"

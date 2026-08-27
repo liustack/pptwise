@@ -39,8 +39,8 @@ import {
   type Pacing,
   type Strategy,
 } from "../narrative"
-import { CAPACITY } from "../svg/audit/capacity"
-import { LAYOUT_REGISTRY, type SlideType } from "../svg/layouts/registry"
+import { CAPACITY } from "../audit/capacity"
+import { LAYOUT_REGISTRY, type SlideType } from "../layouts/registry"
 import { getInstalledThemeIds } from "../themes/definitions"
 
 // ── schema ───────────────────────────────────────────────────────────────
@@ -85,7 +85,7 @@ export const PageSpecSchema = z
      *  `Slide.beat` field, where it combines with a soft selection-weight
      *  onto layout picking (`Math.max`, not multiplication — see
      *  `SlideSchema.beat`'s own doc comment, `../ir/index.ts`, and
-     *  `BEAT_TENDENCY_WEIGHT`'s in `../svg/layout-selection.ts` for why) —
+     *  `BEAT_TENDENCY_WEIGHT`'s in `../render/layout-selection.ts` for why) —
      *  the checks below (rotation shape) and that downstream weighting
      *  (which layouts a given beat favors) are two independent consumers
      *  of the same declared value, not two views of one mechanism. */
@@ -141,7 +141,7 @@ export const DeckSpecSchema = z
      *  shape, same pattern as `meta` just above. Unlike `meta`, no
      *  `.default({})`: IR's own `brand` field is a bare `.optional()` with no
      *  default either (`undefined` means "no brand", not "an empty brand
-     *  object") — consumed by `Branding` (`src/svg/branding.tsx`) for
+     *  object") — consumed by `Branding` (`src/render/branding.tsx`) for
      *  the deck's logo image and corner position. */
     brand: BrandSchema.optional(),
     /**
@@ -705,6 +705,23 @@ function pageIdFromRawInput(input: unknown, index: number): string | undefined {
  * has.
  */
 export function validateSpec(input: unknown): SpecValidateResult {
+  if (
+    typeof input === "object" &&
+    input !== null &&
+    !Array.isArray(input) &&
+    Object.hasOwn(input, "chrome") &&
+    Object.hasOwn(input, "branding")
+  ) {
+    return {
+      ok: false,
+      errors: [
+        {
+          path: "branding",
+          message: 'cannot use both legacy "chrome" and canonical "branding" in one spec',
+        },
+      ],
+    }
+  }
   const rootAliasPass = normalizeDeckRootAliases(input)
   const narrativeShapePass = normalizeNarrativeShape(rootAliasPass.value)
   const normalizedInput = narrativeShapePass.value

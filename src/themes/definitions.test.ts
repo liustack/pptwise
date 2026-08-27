@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { CANONICAL_THEME_IDS, THEME_STYLES, resolveThemeId } from "./index"
+import { BUILTIN_THEME_FILES, CANONICAL_THEME_IDS, THEME_STYLES, resolveThemeId } from "./index"
 import {
   __fullLayoutSet,
   __resetRegisteredThemes,
@@ -14,14 +14,15 @@ import {
   type ThemeDefinition,
   type ThemeRegistration,
 } from "./definitions"
-import { FACES } from "../svg/layouts/sparse/registry"
-import { COVER_LAYOUTS } from "../svg/layouts/index-cover"
-import { CHAPTER_LAYOUTS } from "../svg/layouts/index-chapter"
-import { CONTENT_LAYOUTS } from "../svg/layouts/index-content"
-import { ENDING_LAYOUTS } from "../svg/layouts/index-ending"
-import { MOTIFS } from "../svg/motifs"
-import { LAYOUT_REGISTRY, layoutsForSlideType, excludePinOnly, type LayoutDefinition } from "../svg/layouts/registry"
-import { hasExactWidthTable, resolveFontFace } from "../svg/fonts"
+import { FACES } from "../layouts/sparse/registry"
+import { COVER_LAYOUTS } from "../layouts/index-cover"
+import { CHAPTER_LAYOUTS } from "../layouts/index-chapter"
+import { CONTENT_LAYOUTS } from "../layouts/index-content"
+import { ENDING_LAYOUTS } from "../layouts/index-ending"
+import { MOTIFS } from "../motifs"
+import { LAYOUT_REGISTRY, layoutsForSlideType, excludePinOnly, type LayoutDefinition } from "../layouts/registry"
+import { hasExactWidthTable, resolveFontFace } from "../render/fonts"
+import type { BuiltinThemeDeclaration } from "./schema"
 
 // 四页型注册表按 id 分发用的宽字符串索引视图（PAGE_LAYOUT_REGISTRIES 在
 // full-slide-svg.tsx 用的同一模式）：THEME_DEFINITIONS.layouts 的 id 是通用
@@ -33,13 +34,39 @@ const CONTENT_REGISTRY: Record<string, unknown> = CONTENT_LAYOUTS
 const ENDING_REGISTRY: Record<string, unknown> = ENDING_LAYOUTS
 
 describe("THEME_DEFINITIONS", () => {
-  it("covers all 13 canonical ids with theme tokens and brand", () => {
+  it("covers all 24 canonical ids with theme tokens and brand", () => {
     for (const id of CANONICAL_THEME_IDS) {
       const def = THEME_DEFINITIONS[id]
       expect(def.id).toBe(id)
       expect(def.style).toBe(THEME_STYLES[id])
       expect(def.brand).toBeDefined()
       expect(Array.isArray(def.tags)).toBe(true)
+    }
+  })
+
+  it("compiles every built-in from its colocated v1 declaration without structural drift", () => {
+    expect(Object.keys(BUILTIN_THEME_FILES)).toEqual([...CANONICAL_THEME_IDS])
+    for (const id of CANONICAL_THEME_IDS) {
+      const file: BuiltinThemeDeclaration = BUILTIN_THEME_FILES[id]
+      const def = THEME_DEFINITIONS[id]
+      const faceIds = (type: "cover" | "chapter" | "content" | "ending") =>
+        file.faces[type].map((face) => (typeof face === "string" ? face : face.id))
+
+      expect(file.version, id).toBe(1)
+      expect(file.id, id).toBe(id)
+      expect(file.style.id, id).toBe(id)
+      expect(def.label, id).toBe(file.label)
+      expect(def.style, id).toBe(file.style)
+      expect(def.layouts, id).toEqual({
+        cover: faceIds("cover"),
+        chapter: faceIds("chapter"),
+        content: faceIds("content"),
+        ending: faceIds("ending"),
+      })
+      expect(def.faces, id).toBe(file.faces)
+      expect(def.motif, id).toBe(file.motif?.id)
+      expect(def.layoutTendencies, id).toBe(file.tendencies)
+      expect(def.sparseLayouts, id).toBe(file.sparse)
     }
   })
 
@@ -54,7 +81,7 @@ describe("THEME_DEFINITIONS", () => {
   // W2 任务 2（选择源迁居）：src/themes/manifest.ts 已删除（原主题清单常量
   // 随之死亡），其存留断言迁入本文件，验证对象换成 THEME_DEFINITIONS[id]
   // 的 .layouts/.motif。
-  it("十三主题四页型 layouts 均非空（模板已全量迁移，删 templates/*.tsx 是安全的）。motif 可选（spec §3，runway 留空验证）", () => {
+  it("24 主题四页型 layouts 均非空。motif 可选", () => {
     for (const id of CANONICAL_THEME_IDS) {
       const def = THEME_DEFINITIONS[id]
       expect(def.layouts.cover.length, `${id}.cover`).toBeGreaterThan(0)
@@ -83,7 +110,7 @@ describe("THEME_DEFINITIONS", () => {
   // 裁定（luxe/campaign/classroom 的 content 排除 banner-heading）、design
   // decision 8 新增的三处阳性裁定（tech 的 cover/content、consulting 的
   // chapter）、以及 W4 fix round 全矩阵扫描新发现的两处（classroom/
-  // heritage 的 chapter 排除 fashion-chapter）——共八处——已随 `src/svg/ink.ts`
+  // heritage 的 chapter 排除 fashion-chapter）——共八处——已随 `src/render/ink.ts`
   // 的 readableOn 两轮根因修复（W4 引入自适应 ink helper；post-v0.3 W8 把
   // 固定 0.4 明度阈值换成两墨实测对比度取优）全部撤销。四个 FULL_* 常量是
   // 手工钉的字面数组（人审基线，不经 layoutsForSlideType 派生）——未来
@@ -510,7 +537,7 @@ describe("registerTheme", () => {
           },
         }),
       ),
-    ).toThrow(/"image-split" is a takeover layout — curated sets may only contain archetype layouts/)
+    ).toThrow(/"image-split" is a takeover layout\. Curated sets may only contain archetype layouts/)
   })
 
   it("rejects a theme missing layout coverage for one of the four slide types", () => {
@@ -678,7 +705,7 @@ describe("registerTheme", () => {
 // structural personality (`ThemeDefinition.layoutTendencies`,
 // `Partial<Record<Slide["type"], readonly string[]>>`) must only ever name
 // ids already inside that same slide type's own curated `layouts` pool — an
-// id outside it can never be scored by `weightOf` (`../svg/layout-selection.ts`
+// id outside it can never be scored by `weightOf` (`../render/layout-selection.ts`
 // builds its candidate pool from `layouts[slideType]` before any tendency is
 // consulted), so declaring one is a theme-author mistake, not a legal
 // no-op. ──────────────────────────────────────────────────────────────────
@@ -851,7 +878,7 @@ describe("registerTheme: unmeasured-font-width console.warn", () => {
 
 describe("assertContrastFloor", () => {
   // Scoping decision (backlog-sweep task I2, confirmed by reading the
-  // source): the 13 builtins do NOT go through `registerTheme` —
+  // source): the 24 builtins do NOT go through `registerTheme` —
   // `THEME_DEFINITIONS` is built directly from `THEME_STYLES`
   // (`Object.fromEntries(CANONICAL_THEME_IDS.map(...))` in `./definitions`),
   // and `registered-themes.ts`'s own docstring explains this is load-bearing
@@ -859,11 +886,11 @@ describe("assertContrastFloor", () => {
   // with a TDZ error). A repo-wide grep for `registerTheme(` confirms zero
   // production call sites outside its own declaration — every call site is
   // this file (or a sibling test) registering a synthetic test theme, never
-  // one of the 13 canonical ids. So `registerTheme`'s new contrast check
+  // one of the 24 canonical ids. So `registerTheme`'s new contrast check
   // never actually runs against a builtin; this test sweeps all 13 directly
   // through the underlying validation function instead, per the task brief's
   // own scoping fallback for exactly this case.
-  it("all 13 canonical themes clear the 3.0 floor for colors.text and colors.muted on every slide type", () => {
+  it("all 24 canonical themes clear the 3.0 floor for colors.text and colors.muted on every slide type", () => {
     for (const id of CANONICAL_THEME_IDS) {
       expect(() => assertContrastFloor(id, THEME_DEFINITIONS[id].style)).not.toThrow()
     }
@@ -875,7 +902,7 @@ describe("getInstalledThemeIds", () => {
     __resetRegisteredThemes()
   })
 
-  it("starts as exactly the 13 builtins", () => {
+  it("starts as exactly the 24 builtins", () => {
     expect(getInstalledThemeIds()).toEqual(CANONICAL_THEME_IDS)
   })
 

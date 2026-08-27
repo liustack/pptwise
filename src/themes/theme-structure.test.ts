@@ -15,9 +15,9 @@ import { describe, expect, it } from "vitest"
 import type { PptxIR, Slide } from "@/ir"
 import { STRATEGY_DEFINITIONS, type Strategy } from "@/narrative"
 import { renderSlideSvg } from "../api"
-import { auditDeck, type AuditFinding } from "../svg/audit/deck-audit"
-import { CJK_LONG, MIXED_LONG, STRESS_DECKS } from "../svg/audit/stress-fixtures"
-import { resolveLayoutId, resolveEffectiveLayoutId } from "../svg/layout-selection"
+import { auditDeck, type AuditFinding } from "../audit/deck-audit"
+import { CJK_LONG, MIXED_LONG, STRESS_DECKS } from "../audit/stress-fixtures"
+import { resolveLayoutId, resolveEffectiveLayoutId } from "../render/layout-selection"
 import { CANONICAL_THEME_IDS, type CanonicalThemeId } from "./index"
 import { __fullLayoutSet, THEME_DEFINITIONS, type ThemeDefinition } from "./definitions"
 
@@ -530,8 +530,8 @@ describe("determinism", () => {
 // ── 3. Control-group byte identity ──
 //
 // Migration-period guard — deletable once the wave is trusted (the repo's
-// established convention, see `../svg/layouts/registry.migration-guard.test.ts`'s
-// own header). `__fixtures__/pre-wave-undeclared-layout-sequences.json` is a
+// established convention, see `../layouts/registry.migration-guard.test.ts`'s
+// own header). `extract/__fixtures__/pre-wave-undeclared-layout-sequences.json` is a
 // one-time capture: `git archive 709605a` (the commit immediately before
 // task T1 landed) into a scratch checkout, then running this exact file's
 // `fixedSlides`/`makeFixedIr`/`resolveSequence` helpers against that
@@ -541,7 +541,7 @@ describe("determinism", () => {
 // report) — this test locks that invariant going forward.
 //
 // Deliberately `fileURLToPath(import.meta.url)` + `path.join`, not the
-// `new URL("./__fixtures__/...", import.meta.url)` idiom
+// `new URL("./extract/__fixtures__/...", import.meta.url)` idiom
 // `registry.migration-guard.test.ts` uses: that file pins `@vitest-environment
 // node`, where the literal-`new URL(str, import.meta.url)` pattern resolves
 // to a real `file://` URL. This file's other blocks need `jsdom` (theme
@@ -552,7 +552,7 @@ describe("determinism", () => {
 // the textual pattern the rewrite matches on.
 const __fixtureDir = path.dirname(fileURLToPath(import.meta.url))
 const preWaveFixture = JSON.parse(
-  readFileSync(path.join(__fixtureDir, "__fixtures__/pre-wave-undeclared-layout-sequences.json"), "utf-8"),
+  readFileSync(path.join(__fixtureDir, "extract/__fixtures__/pre-wave-undeclared-layout-sequences.json"), "utf-8"),
 ) as Record<string, Record<string, (string | null)[]>>
 
 /**
@@ -569,7 +569,7 @@ const preWaveFixture = JSON.parse(
  * delete the only thing it proves.
  */
 const preAllocationFixture = JSON.parse(
-  readFileSync(path.join(__fixtureDir, "__fixtures__/pre-allocation-layout-sequences.json"), "utf-8"),
+  readFileSync(path.join(__fixtureDir, "extract/__fixtures__/pre-allocation-layout-sequences.json"), "utf-8"),
 ) as Record<string, Record<string, (string | null)[]>>
 
 /**
@@ -585,7 +585,7 @@ const preAllocationFixture = JSON.parse(
  * the file would keep the suite green and delete the only thing it proves.
  */
 const preSecondFrontFixture = JSON.parse(
-  readFileSync(path.join(__fixtureDir, "__fixtures__/pre-second-front-layout-sequences.json"), "utf-8"),
+  readFileSync(path.join(__fixtureDir, "extract/__fixtures__/pre-second-front-layout-sequences.json"), "utf-8"),
 ) as Record<string, Record<string, (string | null)[]>>
 
 /**
@@ -595,7 +595,7 @@ const preSecondFrontFixture = JSON.parse(
  * asserted to be untouched against `preSecondFrontFixture`.
  */
 const SECOND_FRONT_MOVES = JSON.parse(
-  readFileSync(path.join(__fixtureDir, "__fixtures__/second-front-moves.json"), "utf-8"),
+  readFileSync(path.join(__fixtureDir, "extract/__fixtures__/second-front-moves.json"), "utf-8"),
 ) as Record<string, Record<string, Record<string, { from: string | null; to: string | null }>>>
 
 /**
@@ -608,7 +608,7 @@ const SECOND_FRONT_MOVES = JSON.parse(
  * not recaptured.
  */
 const GALLERY_R2_CONTENT_MOVES = JSON.parse(
-  readFileSync(path.join(__fixtureDir, "__fixtures__/gallery-r2-content-moves.json"), "utf-8"),
+  readFileSync(path.join(__fixtureDir, "extract/__fixtures__/gallery-r2-content-moves.json"), "utf-8"),
 ) as Record<string, Record<string, Record<string, { from: string | null; to: string | null }>>>
 
 /**
@@ -618,7 +618,7 @@ const GALLERY_R2_CONTENT_MOVES = JSON.parse(
  * every row. Historical JSON above is not recaptured.
  */
 const SIDE_HIGHLIGHT_RETIRE_MOVES = JSON.parse(
-  readFileSync(path.join(__fixtureDir, "__fixtures__/side-highlight-retire-moves.json"), "utf-8"),
+  readFileSync(path.join(__fixtureDir, "extract/__fixtures__/side-highlight-retire-moves.json"), "utf-8"),
 ) as Record<string, Record<string, Record<string, { from: string | null; to: string | null }>>>
 
 /**
@@ -628,7 +628,7 @@ const SIDE_HIGHLIGHT_RETIRE_MOVES = JSON.parse(
  * absent from every row. Historical JSON above is not recaptured.
  */
 const BANNER_HEADING_RETIRE_MOVES = JSON.parse(
-  readFileSync(path.join(__fixtureDir, "__fixtures__/banner-heading-retire-moves.json"), "utf-8"),
+  readFileSync(path.join(__fixtureDir, "extract/__fixtures__/banner-heading-retire-moves.json"), "utf-8"),
 ) as Record<string, Record<string, Record<string, { from: string | null; to: string | null }>>>
 
 const FIXTURE_SEEDS = [1, 2, 3, 4, 5]
@@ -1426,7 +1426,7 @@ describe("forced theme-tendency × stress-content geometry audit (closes the T2 
 //   not fixed or allowlisted by this task.
 //   **Resolved (contrast-policy wave, Task T1):** both `COPYRIGHT_FAINT`
 //   orphan constants are gone, replaced by `metaInk(colors.muted, bg)`
-//   (`../svg/ink.ts`) tagged `data-contrast-tier="meta"` — see
+//   (`../render/ink.ts`) tagged `data-contrast-tier="meta"` — see
 //   `ending-banner-ending.tsx`/`ending-rail-ending.tsx`'s own rewritten
 //   header comments for the new ruling (docs/contrast-system.md's B-tier
 //   meta-information-text policy) and `deck-audit.test.ts`'s "meta" tests

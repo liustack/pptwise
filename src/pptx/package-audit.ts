@@ -1,6 +1,6 @@
 import JSZip from "jszip"
 import type { PptxIR } from "@/ir"
-import { slideToOps } from "@/svg/render-slide"
+import { slideToOps } from "@/render/render-slide"
 import { PptwiseError } from "../errors"
 import { createPptxPackageReader, type PptxPackageReader, type PackageRelationship } from "./package-reader"
 import type { ImageOp } from "./svg2pptx/image"
@@ -421,7 +421,7 @@ function assetIdsDeclaredOnSlide(slide: PptxIR["slides"][number] | undefined): R
  * `.issues/2026-08-04-bench-agentic/q15-root-cause.md`).
  *
  * Reviewer-caught defect this rewrite fixes: `layoutContentFit`
- * (`src/svg/layout.ts`) can silently drop a trailing component on overflow —
+ * (`src/render/layout.ts`) can silently drop a trailing component on overflow —
  * a deliberate graceful-degrade path (see that function's own doc comment),
  * not a bug. A dropped `image`/`image_grid`/`image_compare` component with
  * IR alt text never renders at all, so no `descr` can possibly exist for

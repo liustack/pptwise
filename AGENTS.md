@@ -6,7 +6,7 @@
 
 ## Architecture
 
-IR (zod, `src/ir`) → React SVG templates (`src/svg`: layouts/components, `src/themes`: tokens+definitions)
+IR (zod, `src/ir`) → React SVG page system (`src/layouts`, `src/components`, `src/motifs`, `src/render`, with checks in `src/audit`) plus theme tokens and declarations (`src/themes`, built-ins in `src/themes/builtin`)
 → `renderToStaticMarkup` → svg2pptx (`src/pptx`) → pptxgenjs + JSZip patches (animations/gradients) → `.pptx`.
 Browser APIs are isolated behind `src/platform` (registry seam, node impl = linkedom + sharp).
 See `docs/architecture.md` for the full five-dimension model and render-chain diagram.

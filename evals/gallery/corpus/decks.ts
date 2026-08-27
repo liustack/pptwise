@@ -18,9 +18,9 @@ import { readFileSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 import type { Component, PptxIR, Slide } from "@/ir"
-import { FULL_BODY_TYPES } from "@/svg/component-traits"
-import type { HeadingTreatmentId } from "@/svg/heading-treatments/assignments"
-import { LAYOUT_REGISTRY, type LayoutDefinition } from "@/svg/layouts/registry"
+import { FULL_BODY_TYPES } from "@/render/component-traits"
+import type { HeadingTreatmentId } from "@/render/heading-treatments/assignments"
+import { LAYOUT_REGISTRY, type LayoutDefinition } from "@/layouts/registry"
 import { COMPONENT_BUILDERS, PHOTO_ASSETS, SCREENSHOT_ASSET } from "./components"
 import type { LanguageId, Lexicon } from "./lexicon"
 import { THEME_CONTENT_SLOTS, buildThemeSlot } from "./theme-slots"
@@ -134,7 +134,7 @@ function deckShell(lex: Lexicon, assets: CorpusAssets, themeId: string, filename
     // footer rule, meta, or logo, and `date`/`confidentiality` below stay
     // off the canvas even though they are set — that is exactly what a
     // reviewer needs to see. `branding: "full"` is the explicit declaration that
-    // paints them (`src/svg/document-meta.ts`).
+    // paints them (`src/render/document-meta.ts`).
     meta: {
       organization: lex.author,
       authors: lex.people.slice(0, 2).map((p) => ({ name: p.name, role: p.role, org: p.org })),

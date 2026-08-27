@@ -5,7 +5,7 @@
  * Every builder aims at the *ordinary* case, not the extreme one: item
  * counts in the middle of the schema's range, text at the length a real
  * author writes. The overflow auditors already own the extremes
- * (`src/svg/audit/stress-fixtures.ts`). What a human reviewer can judge and
+ * (`src/audit/stress-fixtures.ts`). What a human reviewer can judge and
  * a test cannot is whether the ordinary case looks like something you would
  * put in front of a customer, so the ordinary case is what this corpus
  * renders.

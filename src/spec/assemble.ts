@@ -23,11 +23,11 @@
  * own `layout` field when the page file omitted one (W4 design decision 10):
  * once the IR above is built and schema-validated, every slide whose
  * `layout` is still unset gets exactly what `resolveEffectiveLayoutId`
- * (`../svg/layout-selection.ts`) resolves for it — the same function the
+ * (`../render/layout-selection.ts`) resolves for it — the same function the
  * render chain itself calls, so `deck.json` never carries a second,
  * independently-derived guess at what a page will render as (see this
  * module's own {@link materializeEffectiveLayouts} for the mechanics). A page
- * whose file already set `layout` is left untouched. `../svg/layout-selection.ts`
+ * whose file already set `layout` is left untouched. `../render/layout-selection.ts`
  * is a pure function with no Node-only import anywhere in its own closure and
  * nothing in that closure imports back from `src/spec`, so depending on it
  * from here adds a new edge, not a cycle, and does not pull anything
@@ -46,7 +46,7 @@
  */
 import { PptwiseError } from "../errors"
 import { PptxIRSchema, type BackgroundSpec, type Component, type PptxIR, type Slide } from "../ir"
-import { resolveEffectiveLayoutId } from "../svg/layout-selection"
+import { resolveEffectiveLayoutId } from "../render/layout-selection"
 import { formatInvalidSpecError, validateSpec, type DeckSpec, type PageSpec } from "./index"
 
 // ── PageContent (per-page authoring record, spec §7's `pages/<id>.json`) ──
@@ -108,7 +108,7 @@ export interface AssembleResult {
  * domain-reorg wave, a mechanical follow-up now that every artifact concept
  * it exports was already called "spec", see this file's own top comment).
  * `src/spec` sits beside `src/ir` (an IR-adjacent, pre-render authoring
- * concern). `src/svg` is a *consumer* of IR (the render chain), not a
+ * concern). `src/render` is a *consumer* of IR (the render chain), not a
  * neighbor of `spec` — reaching "up" into it here would point the
  * dependency arrow the wrong way for what is conceptually a lower-level
  * module. The two hashes are also semantically independent on purpose (see
@@ -352,7 +352,7 @@ export function assembleDeck(spec: unknown, pages: Record<string, PageContent>):
  * Reads every slide off the *same* `ir` object across the whole pass, and
  * builds a fresh `slides` array instead of mutating one in place — required
  * by `resolveEffectiveLayoutId`'s own adjacent-anti-repetition fold
- * (`../svg/layout-selection.ts`'s `resolveDeckEffectiveLayoutIds`), which
+ * (`../render/layout-selection.ts`'s `resolveDeckEffectiveLayoutIds`), which
  * walks the deck once against `ir.slides` exactly as given and caches by
  * `ir` object identity: feeding it a slide whose `layout` this function's
  * own earlier iteration had already overwritten would corrupt "slide i-1's
@@ -476,7 +476,7 @@ const UNTITLED_HEADING = "Untitled"
  * Round-trip-safe despite the above, worth calling out because of that name
  * collision: the top-level `brand` field (`BrandSchema` — `logo_asset_id` /
  * `position`, the deck logo/position `Branding` reads,
- * `src/svg/branding.tsx`) is a plain passthrough on both sides
+ * `src/render/branding.tsx`) is a plain passthrough on both sides
  * ({@link assembleDeck} step 6 reads `spec.brand` into `ir.brand` — this
  * function reads `ir.brand` back into `spec.brand` below) — carried through
  * unmodified, same as `narrative`/`filename`/`seed`/`branding`, never

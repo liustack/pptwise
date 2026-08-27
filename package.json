@@ -54,6 +54,7 @@
     "bench:score": "tsx tests/bench/score.mts",
     "docs:list": "node scripts/docs-list.js",
     "gallery": "tsx scripts/gallery.mts",
+    "gen:skill-refs": "tsx scripts/gen-skill-refs.mts",
     "evals:gallery": "tsx evals/gallery/run.mts",
     "fixtures:unassigned-bytes": "tsx scripts/write-unassigned-bytes.mts",
     "prepublishOnly": "pnpm check && pnpm e2e",

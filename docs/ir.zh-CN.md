@@ -98,10 +98,10 @@ v4 IR schema 自 0.4.0 起冻结，后续演进只走加法：新增可选字段
 
 当某页省略 `layout` 时，pptwise 按四个确定性步骤自动选型：
 
-1. 该页型已注册的 archetype 池，去掉 pin-only 版式。共享池现有 43 个 id：封面 19 个、章节 8 个、结尾 7 个、内容 9 个。其余 87 个标准版式需要显式 `slide.layout` 钉子或主题策展的设计板锁定。
-2. 收窄到主题为该页型准备的 `layouts` 集合。内置主题的封面锁到板面，多数内置主题的内容页使用 9-id 共享集。consulting 与 crayon 各自追加一张主题锁定的 pin-only 内容脸。runway 追加 show-statement 与 show-figures，show-gallery 与 show-spotlight 仍只接受显式 pin。lecture 和 luxe 再去掉 `split-band` 与 `stacked-poster`。省略 `layouts` 的注册自定义主题会得到全部 9 个可自动选型内容版式。见[主题](./themes.zh-CN.md)。
-3. 用 `Math.max` 做软加权：叙事 `strategy` 的 `layoutTendencies`（content）或 `identityTendencies`（cover/chapter/ending），可选的页级 `beat`，以及主题的 `layoutTendencies`。被偏好的 id 是 ×3，其余是 ×1。cover、chapter、ending 三个页型会走 `identityTendencies` 加权。
-4. 按 seed 加权取样，若命中结果与紧邻的上一页版式相同，则确定性地换成次优候选。
+1. 从所选主题为该页型编译出的 face pool 开始。partial 自定义主题从 `base` 继承这条边界，complete 自定义主题自己声明四类 pool。共享 registry 有 43 个可自动选择的标准版式，另有 87 个 pin-only 标准版式。见[主题](./themes.zh-CN.md)。
+2. 按已解析 strategy 应用少见的 `narrativesOnly` 硬过滤。
+3. 用 `Math.max` 合并 strategy、可选页级 `beat` 与主题 tendency，再按 seed 加权取样。
+4. 如果结果与紧邻上一页重复，且还有别的候选，就排除重复 id 后确定性重抽一次。
 
 显式 `layout` 跳过以上四步，但主题不提供的稀排高潮钉（`SPARSE_LAYOUT_IDS`）除外：`effectiveRequestedLayout` 会剥掉它，自动选型继续跑，`validate` 给出警告，`ok` 仍为 true。`quote-stage` 是 pin-only，但不是稀排。内容装不装得下由 `validate` 的密度门单独标记，从不参与选型，所以改一页的内容不会悄悄翻转它的版式。
 
@@ -122,7 +122,8 @@ v4 IR schema 自 0.4.0 起冻结，后续演进只走加法：新增可选字段
 ```
 my-deck/
   deck.spec.json         锁定的 spec：每一页的顺序、type、heading
-  pages/<page-id>.json   每个已填页面一个文件（components/layout/arrangement/background/image_side/footnote）
+  theme.json             可选的版本 1 自定义主题，项目自动注册
+  pages/<page-id>.json   每个已填页面一个文件（components/layout/arrangement/background/image_side/footnote/notes）
   assets/                本地图片，按文件名自动注册（图片 id = 去掉扩展名的文件名）
 ```
 
@@ -136,6 +137,6 @@ spec 里某一页如果没有对应的 `pages/<id>.json`，会成为一个**占�
 
 deck 项目目录可以用裸名代替路径引用。`pptwise render my-deck -o out.pptx` 在本地找不到同名文件或目录时，会到 `$PPTWISE_HOME/decks` 下找 `my-deck`（`$PPTWISE_HOME` 缺省是 `~/.pptwise`）。
 
-所有 deck 默认值按四层优先级解析，从高到低：CLI flag > 项目级 `pptwise.config.json` > 用户级 `~/.pptwise/config.json` > deck 自身的值。两个配置层都可以设置 `decksDir` 来重定向裸名的解析位置：项目层的值相对该配置文件自身所在目录解析（给想把 deck 项目入库的团队用），用户层的值相对 `$PPTWISE_HOME` 解析，两者都设置时项目层优先。
+主题选择共五级，从高到低是 CLI `--theme`、产物作者写下的选择（项目用 `deck.spec.json`，裸 IR 用 `theme.id`）、项目 `pptwise.config.json`、用户 `~/.pptwise/config.json`、schema 默认值 `consulting`。项目 `theme.json` 与 `--theme-file` 只注册自定义 id，不选择。两个配置层都可以设置 `decksDir` 来重定向裸名解析位置。项目值相对配置文件解析，用户值相对 `$PPTWISE_HOME` 解析。
 
 格式的更多细节见 [`deck-projects.md`](./deck-projects.md)（英文）。

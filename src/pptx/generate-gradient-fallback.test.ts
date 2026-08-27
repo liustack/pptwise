@@ -36,7 +36,7 @@ const GRADIENT_FIXTURE = vi.hoisted(() => ({
   },
 }))
 
-vi.mock("@/svg/render-slide", async () => {
+vi.mock("@/render/render-slide", async () => {
   const { gradientMidpointHex: midpoint } = await import("./svg2pptx/gradient")
   const op = {
     kind: "shape",

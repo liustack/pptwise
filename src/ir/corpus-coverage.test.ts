@@ -44,7 +44,7 @@ import { fileURLToPath } from "node:url"
 import { describe, expect, it } from "vitest"
 import { validateIr } from "@/api"
 import { COMPONENT_TYPES } from "@/ir"
-import { STRESS_DECKS } from "@/svg/audit/stress-fixtures"
+import { STRESS_DECKS } from "@/audit/stress-fixtures"
 
 const EXAMPLES_DIR = new URL("../../examples/", import.meta.url)
 

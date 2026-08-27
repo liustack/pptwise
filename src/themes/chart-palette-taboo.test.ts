@@ -50,7 +50,7 @@
 // measured numbers.
 import { describe, expect, it } from "vitest"
 import { THEME_STYLES, CANONICAL_THEME_IDS } from "./index"
-import { contrastRatio } from "@/svg/ink"
+import { contrastRatio } from "@/render/ink"
 
 function hexToRgb(hex: string): [number, number, number] {
   const v = parseInt(hex.slice(1), 16)

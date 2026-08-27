@@ -8,9 +8,10 @@ import JSZip from "jszip"
 import { afterAll, afterEach, describe, expect, it, beforeAll } from "vitest"
 import { installNodePlatform } from "@/platform/node"
 import { NARRATIVE_PRESETS } from "../narrative"
-import { CAPACITY } from "../svg/audit/capacity"
+import { CAPACITY } from "../audit/capacity"
 import { __resetRegisteredThemes } from "../themes/definitions"
-import { buildThmxBytes, DEFAULT_THMX_COLORS, PATHOLOGICAL_THMX_COLORS } from "../themes/__fixtures__/thmx"
+import { THEME_OCCASIONS } from "../themes/occasions"
+import { buildThmxBytes, DEFAULT_THMX_COLORS, PATHOLOGICAL_THMX_COLORS } from "../themes/extract/__fixtures__/thmx"
 import {
   applyDeckConfig,
   runAssemble,
@@ -45,6 +46,9 @@ const VALID_IR = {
     { type: "content", heading: "Body", components: [{ type: "paragraph", text: "hello from the CLI test" }] },
   ],
 }
+
+/** Same slides as VALID_IR but no theme key, so project/user config can win. */
+const IR_NO_THEME = { version: "4", filename: "cli-test", slides: VALID_IR.slides }
 
 const IR_WITH_LOCAL_ASSET = {
   version: "4",
@@ -87,7 +91,7 @@ const IR_WITH_PLACEHOLDER = {
 // which auditDeck's low-contrast check (not validateIr — schema/quality gates
 // have no opinion on color pairing) is the one thing that catches. Mirrors
 // deck-audit.test.ts's own "low-contrast via a real style-token override"
-// fixture (`src/svg/audit/deck-audit.test.ts`).
+// fixture (`src/audit/deck-audit.test.ts`).
 const IR_LOW_CONTRAST = {
   version: "4",
   filename: "cli-test-low-contrast",
@@ -485,11 +489,11 @@ describe("runAudit (W6 task 2)", () => {
     )
     await writeFile(
       join(deckDir, "pages", "p-b.json"),
-      JSON.stringify({ components: [{ type: "paragraph", text: "Segment B detail" }] }),
+      JSON.stringify({ components: [{ type: "bullets", items: ["Segment B point"] }] }),
     )
     await writeFile(
       join(deckDir, "pages", "p-c.json"),
-      JSON.stringify({ components: [{ type: "paragraph", text: "Segment C detail" }] }),
+      JSON.stringify({ components: [{ type: "kpi_cards", items: [{ value: "3", label: "Wins" }] }] }),
     )
     await writeFile(join(deckDir, "pages", "p-ending.json"), "{}")
     const result = await runAudit(deckDir)
@@ -605,6 +609,24 @@ describe("runSchema / runThemes", () => {
   it("prints 24 themes, json mode parses", () => {
     expect(runThemes(false).split("\n")).toHaveLength(24)
     expect(JSON.parse(runThemes(true))).toHaveLength(24)
+  })
+  it("JSON objects include occasions and identity without replacing listThemes label", () => {
+    const rows = JSON.parse(runThemes(true)) as Array<{
+      id: string
+      label: string
+      colors: unknown
+      occasions: unknown
+      identity: unknown
+    }>
+    expect(rows).toHaveLength(24)
+    expect(Object.keys(rows[0]!)).toEqual(expect.arrayContaining(["id", "label", "colors", "occasions", "identity"]))
+    for (const row of rows) {
+      const rec = THEME_OCCASIONS[row.id as keyof typeof THEME_OCCASIONS]
+      expect(row.occasions).toEqual(rec.occasions)
+      expect(row.identity).toBe(rec.identity)
+      expect(typeof row.label).toBe("string")
+      expect(row.label.length).toBeGreaterThan(0)
+    }
   })
 })
 
@@ -763,6 +785,52 @@ describe("runPreview --html audit overlay (notes+preview wave, task 2)", () => {
   })
 })
 
+describe("runPreview --themes contact sheet", () => {
+  it("writes a self-contained contact-sheet.html with cover+content inlined per theme", async () => {
+    const out = join(dir, "contact-3")
+    const msg = await runPreview(join(dir, "deck.json"), out, { themes: "consulting,tech,ink" })
+    expect(msg).toContain("contact-sheet.html")
+    const html = await readFile(join(out, "contact-sheet.html"), "utf8")
+    expect(html).toContain("consulting")
+    expect(html).toContain("tech")
+    expect(html).toContain("ink")
+    expect((html.match(/<svg\b/g) ?? []).length).toBeGreaterThanOrEqual(6)
+    expect(html).toContain("<style")
+    expect(html).not.toMatch(/<img\b[^>]*\ssrc=/)
+  })
+
+  it("does not write contact-sheet.html when --themes is omitted", async () => {
+    const out = join(dir, "svgs-no-contact")
+    await runPreview(join(dir, "deck.json"), out)
+    const files = await readdir(out)
+    expect(files).not.toContain("contact-sheet.html")
+  })
+
+  it("throws when fewer than 2 theme ids are given", async () => {
+    await expect(runPreview(join(dir, "deck.json"), join(dir, "contact-1"), { themes: "consulting" })).rejects.toThrow(
+      /pptwise preview --themes expects 2-4 theme ids, got 1/,
+    )
+  })
+
+  it("throws when more than 4 theme ids are given", async () => {
+    await expect(
+      runPreview(join(dir, "deck.json"), join(dir, "contact-5"), { themes: "consulting,tech,ink,journal,swiss" }),
+    ).rejects.toThrow(/pptwise preview --themes expects 2-4 theme ids, got 5/)
+  })
+
+  it("throws naming an unknown theme id", async () => {
+    await expect(
+      runPreview(join(dir, "deck.json"), join(dir, "contact-unknown"), { themes: "consulting,not-a-real-theme" }),
+    ).rejects.toThrow(/unknown theme "not-a-real-theme".*pptwise themes/)
+  })
+
+  it("throws on duplicate theme ids", async () => {
+    await expect(
+      runPreview(join(dir, "deck.json"), join(dir, "contact-dup"), { themes: "consulting, consulting" }),
+    ).rejects.toThrow(/duplicate/i)
+  })
+})
+
 describe("runSchema --style", () => {
   it("prints the StyleOverride schema", () => {
     const s = JSON.parse(runSchema("style")) as { properties?: Record<string, unknown> }
@@ -802,10 +870,18 @@ describe("applyDeckConfig resolution (flag > config > IR)", () => {
       join(d, "pptwise.config.json"),
       JSON.stringify({ theme: "ink", style: { colors: { primary: "#111111" } } }),
     )
-    const raw: any = structuredClone(VALID_IR)
+    const raw: any = structuredClone(IR_NO_THEME)
     await applyDeckConfig(raw, { cwd: d })
     expect(raw.theme.id).toBe("ink")
     expect(raw.theme.style.colors.primary).toBe("#111111")
+  })
+
+  it("authored IR theme beats project config", async () => {
+    const d = await freshDir()
+    await writeFile(join(d, "pptwise.config.json"), JSON.stringify({ theme: "ink" }))
+    const raw: any = structuredClone(VALID_IR)
+    await applyDeckConfig(raw, { cwd: d })
+    expect(raw.theme.id).toBe("tech")
   })
 
   it("--theme flag beats config and keeps IR-authored style", async () => {
@@ -837,7 +913,7 @@ describe("applyDeckConfig resolution (flag > config > IR)", () => {
   it("runValidate reports the config-resolved theme", async () => {
     const d = await freshDir()
     await writeFile(join(d, "pptwise.config.json"), JSON.stringify({ theme: "ink" }))
-    await writeFile(join(d, "deck.json"), JSON.stringify(VALID_IR))
+    await writeFile(join(d, "deck.json"), JSON.stringify(IR_NO_THEME))
     await expect(runValidate(join(d, "deck.json"), d)).resolves.toMatch(/theme "ink"/)
   })
 
@@ -845,7 +921,7 @@ describe("applyDeckConfig resolution (flag > config > IR)", () => {
     it("throws unknown-theme naming the config path when a stale project-config theme actually wins", async () => {
       const d = await freshDir()
       await writeFile(join(d, "pptwise.config.json"), JSON.stringify({ theme: "not-a-real-theme" }))
-      const raw: any = structuredClone(VALID_IR)
+      const raw: any = structuredClone(IR_NO_THEME)
       await expect(applyDeckConfig(raw, { cwd: d })).rejects.toThrow(
         /unknown theme "not-a-real-theme" \(from .*pptwise\.config\.json\)/,
       )
@@ -2034,7 +2110,7 @@ describe("applyDeckConfig four-layer chain (W5 task 5): user config layer", () =
     const home = await makeDeckDir()
     await writeFile(join(home, "config.json"), JSON.stringify({ theme: "ink" }))
     await withPptwiseHome(home, async () => {
-      const raw: any = structuredClone(VALID_IR)
+      const raw: any = structuredClone(IR_NO_THEME)
       await applyDeckConfig(raw, { cwd: projectDir })
       expect(raw.theme.id).toBe("ink")
     })
@@ -2042,13 +2118,13 @@ describe("applyDeckConfig four-layer chain (W5 task 5): user config layer", () =
 
   it("project config wins over user config", async () => {
     const projectDir = await makeDeckDir()
-    await writeFile(join(projectDir, "pptwise.config.json"), JSON.stringify({ theme: "tech" }))
+    await writeFile(join(projectDir, "pptwise.config.json"), JSON.stringify({ theme: "ink" }))
     const home = await makeDeckDir()
-    await writeFile(join(home, "config.json"), JSON.stringify({ theme: "ink" }))
+    await writeFile(join(home, "config.json"), JSON.stringify({ theme: "journal" }))
     await withPptwiseHome(home, async () => {
-      const raw: any = structuredClone(VALID_IR)
+      const raw: any = structuredClone(IR_NO_THEME)
       await applyDeckConfig(raw, { cwd: projectDir })
-      expect(raw.theme.id).toBe("tech")
+      expect(raw.theme.id).toBe("ink")
     })
   })
 
@@ -2091,7 +2167,7 @@ describe("applyDeckConfig four-layer chain (W5 task 5): user config layer", () =
       const home = await makeDeckDir()
       await writeFile(join(home, "config.json"), JSON.stringify({ theme: "not-a-real-theme" }))
       await withPptwiseHome(home, async () => {
-        const raw: any = structuredClone(VALID_IR)
+        const raw: any = structuredClone(IR_NO_THEME)
         await expect(applyDeckConfig(raw, { cwd: projectDir })).rejects.toThrow(
           /unknown theme "not-a-real-theme" \(from .*config\.json\)/,
         )
@@ -2116,13 +2192,13 @@ describe("applyDeckConfig four-layer chain (W5 task 5): user config layer", () =
 
     it("a valid project config theme overrides a stale/unknown user-config theme (project still beats user, no validation error)", async () => {
       const projectDir = await makeDeckDir()
-      await writeFile(join(projectDir, "pptwise.config.json"), JSON.stringify({ theme: "tech" }))
+      await writeFile(join(projectDir, "pptwise.config.json"), JSON.stringify({ theme: "ink" }))
       const home = await makeDeckDir()
       await writeFile(join(home, "config.json"), JSON.stringify({ theme: "not-a-real-theme" }))
       await withPptwiseHome(home, async () => {
-        const raw: any = structuredClone(VALID_IR)
+        const raw: any = structuredClone(IR_NO_THEME)
         await applyDeckConfig(raw, { cwd: projectDir })
-        expect(raw.theme.id).toBe("tech")
+        expect(raw.theme.id).toBe("ink")
       })
     })
   })
@@ -2262,7 +2338,7 @@ describe("brand extract + --theme-file + deck theme.json", () => {
     }
     await writeFile(join(d, "deck.json"), JSON.stringify(pinnedDeck))
     const pptxOut = join(d, "branded.pptx")
-    await runRender(join(d, "deck.json"), { output: pptxOut, themeFilePath: themeOut })
+    await runRender(join(d, "deck.json"), { output: pptxOut, themeFilePath: themeOut, theme: "acme" })
     const zip2 = await JSZip.loadAsync(await readFile(pptxOut))
     const slideXml = (
       await Promise.all(
@@ -2285,18 +2361,53 @@ describe("brand extract + --theme-file + deck theme.json", () => {
     expect(slideXml).toContain("666666")
   })
 
-  it("--theme-file registers the theme but an explicit --theme still wins the selection", async () => {
+  it("--theme-file alone does not override an authored IR theme", async () => {
     const d = await freshDir()
     const src = await writeFixtureTemplate(d)
     const themeOut = join(d, "acme.theme.json")
     await runBrandExtract(src, { output: themeOut })
     await writeFile(join(d, "deck.json"), JSON.stringify(VALID_IR))
     const report = await runValidate(join(d, "deck.json"), process.cwd(), { themeFilePath: themeOut })
+    expect(report).toContain('theme "tech"')
+  })
+
+  it("--theme-file + --theme <file id> selects the custom theme", async () => {
+    const d = await freshDir()
+    const src = await writeFixtureTemplate(d)
+    const themeOut = join(d, "acme.theme.json")
+    await runBrandExtract(src, { output: themeOut })
+    await writeFile(join(d, "deck.json"), JSON.stringify(VALID_IR))
+    const report = await runValidate(join(d, "deck.json"), process.cwd(), {
+      themeFilePath: themeOut,
+      theme: "acme",
+    })
     expect(report).toContain('theme "acme"')
-    __resetRegisteredThemes()
+  })
+
+  it("--theme-file + IR that names the custom id selects it", async () => {
+    const d = await freshDir()
+    const src = await writeFixtureTemplate(d)
+    const themeOut = join(d, "acme.theme.json")
+    await runBrandExtract(src, { output: themeOut })
+    await writeFile(join(d, "deck.json"), JSON.stringify({ ...IR_NO_THEME, theme: { id: "acme" } }))
+    const report = await runValidate(join(d, "deck.json"), process.cwd(), { themeFilePath: themeOut })
+    expect(report).toContain('theme "acme"')
+  })
+
+  it("--theme builtin still wins over a registered file", async () => {
+    const d = await freshDir()
+    const src = await writeFixtureTemplate(d)
+    const themeOut = join(d, "acme.theme.json")
+    await runBrandExtract(src, { output: themeOut })
+    await writeFile(join(d, "deck.json"), JSON.stringify(VALID_IR))
     const pptxOut = join(d, "tech.pptx")
     const msg = await runRender(join(d, "deck.json"), { output: pptxOut, themeFilePath: themeOut, theme: "tech" })
     expect(msg).toContain("wrote")
+    const report = await runValidate(join(d, "deck.json"), process.cwd(), {
+      themeFilePath: themeOut,
+      theme: "consulting",
+    })
+    expect(report).toContain('theme "consulting"')
   })
 
   it("--theme-file with a builtin-shadowing id fails with the fix in the message", async () => {

@@ -126,7 +126,7 @@ describe("chart zero/negative data value through the real generatePptx (deep-acc
  * Note-6 sweep from the acceptance report: "chart-svg.tsx's unguarded ratio
  * geometry is worth a general pass ... did not exhaustively fuzz every
  * chart_type × direction × style × multi-series-sign combination." Every
- * chart_type × pathological-value combination `src/svg/components/
+ * chart_type × pathological-value combination `src/components/
  * chart-svg.tsx` actually renders (line/pie/donut/dumbbell were already
  * confirmed safe pre-fix — the review's own finding — and stay in this
  * matrix as regression/contrast coverage, not because they needed fixing).

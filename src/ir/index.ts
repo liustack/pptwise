@@ -5,7 +5,7 @@
  * for `migrateIrV3ToV4`'s input parsing (spec §9.3).
  *
  * **The `ComponentSchema` union below is a pure aggregator (src domain reorg
- * wave 2, spec §4.3), same discipline as `src/svg/layouts/registry.ts`'s T1d
+ * wave 2, spec §4.3), same discipline as `src/layouts/registry.ts`'s T1d
  * precedent.** Every one of the component schemas used to live here as a
  * literal `z.object({...})` entry directly inside the `discriminatedUnion`
  * array. Each now lives in its own `src/ir/components/<name>.ts` domain file
@@ -208,7 +208,7 @@ export const BrandConfigSchema = z
      * slides — for themes whose motif already carries that information
      * somewhere else on the page, where leaving the footer row on would print
      * the same organization and date twice (ink v3's right-edge colophon
-     * rail, `src/svg/motifs/motif-ink-motif.tsx`).
+     * rail, `src/motifs/motif-ink-motif.tsx`).
      *
      * Scoped to the ordinary footer row only. The image-bottom overlay footer
      * (a light-on-dark scrim over a full-bleed photo) is untouched: a motif
@@ -401,12 +401,12 @@ export const SlideSchema = z
     // `{ draft: true }` 时对含占位页的 deck 硬拦（api.ts 的 draft
     // gate），renderSlideSvg（预览）永远不拦。
     placeholder: z.literal(true).optional(),
-    // Layout registry id（layout 或 takeover 皆可，src/svg/layouts/registry.ts
+    // Layout registry id（layout 或 takeover 皆可，src/layouts/registry.ts
     // 的 LAYOUT_REGISTRY 键）。schema 层是开放 string——已注册 + slideTypes 适用
     // 是 validateIr 的硬门（api.ts，报错带可用清单与页号），同 theme.id「schema
     // 开放、validate 收口」的分层哲学（spec §6）。省略 = 四步确定性选型（页型
     // 全集 → theme.layouts 边界 → scenario 加权 → 加权 seed 取样加相邻防重复，
-    // src/svg/layout-selection.ts。容量归 validate 密度门，不参与选型）。4 个图文接管 id
+    // src/render/layout-selection.ts。容量归 validate 密度门，不参与选型）。4 个图文接管 id
     // （image-split/image-top/image-bottom/image-annotate，原「图文范式族」
     // P3～2026-07-09 研究 ppt-master showcase 借鉴的 image_split/image_top/
     // image_bottom/image_annotate 四个 variant 值）的具体版式行为详见
@@ -483,7 +483,7 @@ export const SlideSchema = z
      * identically to before this field existed. Never reaches the canvas
      * SVG, so it carries no geometry to overflow and no ink to contrast-check
      * — out of scope for capacity/audit measurement
-     * (`src/svg/audit/deck-audit.ts`) by construction, not by an added
+     * (`src/audit/deck-audit.ts`) by construction, not by an added
      * exemption.
      */
     notes: z.string().optional(),

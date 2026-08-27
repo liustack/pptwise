@@ -12,7 +12,7 @@ import { measureTextUnits } from "./svg-text-layout"
 // role by replacing the heuristic with an exact, hmtx-derived model and
 // pinning it against real Consolas advance widths read straight from the
 // font file (`measureMonoTextUnits`'s golden anchors,
-// `src/svg/components/code.test.tsx`, commits bf6131e/f585f6a). The
+// `src/components/code.test.tsx`, commits bf6131e/f585f6a). The
 // PROPORTIONAL roles (heading/body) can't get the same treatment -- Georgia
 // and Microsoft YaHei are genuinely variable-width, so "exact model" isn't
 // on the table -- but Task 3's original measurement round already read the
@@ -165,7 +165,7 @@ describe("measureTextUnits — golden proportional widths (data-anchored, breaks
   describe("CJK under a Georgia-declared role", () => {
     // Georgia's own `cmap` has zero CJK glyphs (task-3-report.md S4.1), so
     // there is no "real Georgia CJK advance" to measure -- but that doesn't
-    // make CJK-under-Georgia untestable. `eaFontFaceFor` (`src/svg/fonts.ts`)
+    // make CJK-under-Georgia untestable. `eaFontFaceFor` (`src/render/fonts.ts`)
     // deterministically resolves the `<a:ea>` slot for any non-CJK-capable
     // SAFE_FONTS face, Georgia included, to `EA_FALLBACK_FACE` (Microsoft
     // YaHei) -- so a CJK character under a Georgia-declared heading/body role

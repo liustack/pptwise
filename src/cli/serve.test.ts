@@ -1,11 +1,15 @@
 // @vitest-environment node
-import { mkdir, mkdtemp, writeFile } from "node:fs/promises"
+import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises"
 import http from "node:http"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { afterEach, describe, expect, it } from "vitest"
 import { installNodePlatform } from "@/platform/node"
-import { createServeServer, SERVE_CLIENT_SCRIPT_ID, type ServeHandle } from "./serve"
+import { __resetRegisteredThemes } from "../themes/definitions"
+import { buildThmxBytes, DEFAULT_THMX_COLORS } from "../themes/extract/__fixtures__/thmx"
+import { runBrandExtract } from "./commands"
+import { THEME_FILENAME } from "./deck-dir"
+import { createServeServer, SERVE_CLIENT_SCRIPT_ID, watchRoots, type ServeHandle } from "./serve"
 
 installNodePlatform()
 
@@ -186,14 +190,23 @@ function connectSSE(port: number): {
 }
 
 const openHandles: ServeHandle[] = []
-async function startServe(target: string, opts: { port?: number; cwd?: string } = {}): Promise<ServeHandle> {
-  const handle = await createServeServer({ target, port: opts.port ?? 0, cwd: opts.cwd })
+async function startServe(
+  target: string,
+  opts: { port?: number; cwd?: string; themeFilePath?: string } = {},
+): Promise<ServeHandle> {
+  const handle = await createServeServer({
+    target,
+    port: opts.port ?? 0,
+    cwd: opts.cwd,
+    themeFilePath: opts.themeFilePath,
+  })
   openHandles.push(handle)
   return handle
 }
 
 afterEach(async () => {
   await Promise.all(openHandles.splice(0).map((h) => h.close()))
+  __resetRegisteredThemes()
 })
 
 describe("createServeServer — GET /", () => {
@@ -432,5 +445,53 @@ describe("createServeServer — /revision-request, removed", () => {
     const handle = await startServe(irPath)
     const res = await post(handle.port, "/revision-request", JSON.stringify({ version: 1, requests: [] }))
     expect(res.status).toBe(404)
+  })
+})
+
+describe("watchRoots — theme files", () => {
+  it("includes deck-dir theme.json and a --theme-file extra path", () => {
+    const deckDir = "/tmp/some-deck"
+    const roots = watchRoots(deckDir, true, ["/tmp/custom.theme.json"])
+    expect(roots).toContain(join(deckDir, THEME_FILENAME))
+    expect(roots).toContain("/tmp/custom.theme.json")
+  })
+})
+
+describe("createServeServer — theme-file live reload", () => {
+  it("rebuild() re-reads a mutated --theme-file and serves the new primary color", async () => {
+    const dir = await makeDir("pptwise-serve-theme-")
+    const src = join(dir, "corp.pptx")
+    await writeFile(src, Buffer.from(await buildThmxBytes({ schemeName: "Acme" })))
+    const themePath = join(dir, "acme-serve.theme.json")
+    await runBrandExtract(src, { output: themePath, id: "acme-serve" })
+    const irPath = join(dir, "deck.json")
+    await writeFile(
+      irPath,
+      JSON.stringify({
+        version: "4",
+        filename: "serve-theme",
+        theme: { id: "acme-serve" },
+        slides: [
+          { type: "cover", heading: "Serve Theme" },
+          { type: "content", heading: "Body", components: [{ type: "paragraph", text: "hello from serve" }] },
+        ],
+      }),
+    )
+
+    const handle = await startServe(irPath, { themeFilePath: themePath })
+    const before = await get(handle.port, "/")
+    const oldPrimary = DEFAULT_THMX_COLORS.accent1
+    expect(before.body.toUpperCase()).toContain(oldPrimary)
+
+    const themeFile = JSON.parse(await readFile(themePath, "utf8")) as {
+      style: { colors: { primary: string } }
+    }
+    themeFile.style.colors.primary = "#0B5FFF"
+    await writeFile(themePath, JSON.stringify(themeFile, null, 2) + "\n")
+
+    await handle.rebuild()
+    const after = await get(handle.port, "/")
+    expect(after.body.toUpperCase()).toContain("0B5FFF")
+    expect(after.body.toUpperCase()).not.toContain(oldPrimary)
   })
 })

@@ -1,10 +1,16 @@
 import { describe, expect, it } from "vitest"
-import { buildPreviewHtml, type PreviewHtmlChecks, type PreviewHtmlFinding, type PreviewHtmlSlideInput } from "./preview-html"
+import {
+  buildContactSheetHtml,
+  buildPreviewHtml,
+  type PreviewHtmlChecks,
+  type PreviewHtmlFinding,
+  type PreviewHtmlSlideInput,
+} from "./preview-html"
 
 /** Minimal-but-realistic standalone slide SVG, matching what `renderSlideSvg`
  *  (`../api.ts`) actually produces: a `viewBox="0 0 1280 720"` root with the
  *  SVG namespace declared — the one `http` substring every real slide
- *  contains (`../svg/serialize.ts`'s `renderSvgMarkup`). The embedded text
+ *  contains (`../render/serialize.ts`'s `renderSvgMarkup`). The embedded text
  *  node includes a literal `&` on purpose (already-valid SVG/XML, pre-escaped
  *  as `&amp;`) so a test can catch the builder double-escaping raw SVG it
  *  must instead pass through byte-for-byte. */
@@ -490,5 +496,40 @@ describe("buildPreviewHtml — the box under the slide (`../lib/slide-edge.ts`)"
     const html = buildPreviewHtml({ title: "deck", slides: [slide({ index: 0, svg: photo })] })
     expect(html).toContain(`<div id="pf-stage">`)
     expect(html).not.toContain("data-edge=")
+  })
+})
+
+describe("buildContactSheetHtml", () => {
+  it("inlines namespaced SVGs per theme and row, never img src of a file", () => {
+    const cell = (label: string) =>
+      `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" id="root"><text>${label}</text></svg>`
+    const html = buildContactSheetHtml({
+      title: "cli-test",
+      themes: [
+        {
+          id: "consulting",
+          slides: [
+            { type: "cover", svg: cell("cover-consulting") },
+            { type: "content", svg: cell("content-consulting") },
+          ],
+        },
+        {
+          id: "tech",
+          slides: [
+            { type: "cover", svg: cell("cover-tech") },
+            { type: "content", svg: cell("content-tech") },
+          ],
+        },
+      ],
+    })
+    expect(html).toContain("consulting")
+    expect(html).toContain("tech")
+    expect(html).toContain("cover-consulting")
+    expect(html).toContain("content-tech")
+    expect((html.match(/<svg\b/g) ?? []).length).toBe(4)
+    expect(html).toContain("<style")
+    expect(html).not.toMatch(/<img\b[^>]*\ssrc=/)
+    expect(html).toContain('id="t0-cover-root"')
+    expect(html).toContain('id="t1-content-root"')
   })
 })

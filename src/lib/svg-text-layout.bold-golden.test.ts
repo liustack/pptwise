@@ -222,7 +222,7 @@ describe("measureTextUnits — bold golden widths (data-anchored, bold-metrics f
     const GEORGIA_ROLE_FONT_FAMILY = CONSULTING_HEADING
 
     it("\"Maximum Momentum Wave\" wraps to 'Maximum' / 'Momentum Wave' and 'Momentum Wave's exact-model width fits 1168px at the fitted fontSize", async () => {
-      const { fitHeadingLines } = await import("../svg/heading-fit")
+      const { fitHeadingLines } = await import("../render/heading-fit")
       const r = fitHeadingLines("Maximum Momentum Wave", {
         maxWidth: 1168,
         fontSize: 150,
@@ -238,7 +238,7 @@ describe("measureTextUnits — bold golden widths (data-anchored, bold-metrics f
     })
 
     it("\"MEGAMARKET MOMENTUM\" wraps to 'MEGAMARKET' / 'MOMENTUM' and 'MEGAMARKET's exact-model width fits 1168px at the fitted fontSize", async () => {
-      const { fitHeadingLines } = await import("../svg/heading-fit")
+      const { fitHeadingLines } = await import("../render/heading-fit")
       const r = fitHeadingLines("MEGAMARKET MOMENTUM", {
         maxWidth: 1168,
         fontSize: 150,

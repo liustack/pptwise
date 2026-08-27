@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest"
 import { PptwiseError } from "../errors"
 import { BUILTIN_THEME_IDS } from "../ir"
-import { layoutsForSlideType } from "../svg/layouts/registry"
+import { layoutsForSlideType } from "../layouts/registry"
 import {
   STRATEGY_DEFINITIONS,
   PACING_BUDGETS,

@@ -1,0 +1,345 @@
+// @vitest-environment jsdom
+import { describe, it, expect } from "vitest"
+import { render } from "@testing-library/react"
+import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
+import { assertSubset } from "../render/subset-validate"
+import { measureTextUnits } from "../lib/svg-text-layout"
+import { iconCards, iconCardContentHeight } from "./icon-cards"
+import type { ComponentCtx } from "./types"
+import { CANONICAL_THEME_IDS, resolveStyle } from "../themes"
+import { buildCtx } from "../render/full-slide-svg"
+import { LEGACY_ICON_NAMES } from "../icons/legacy-names"
+import { resolveComponentForm } from "./form-assignments"
+
+const ctx: ComponentCtx = {
+  colors: {
+    bg: "#FFFFFF",
+    surface: "#F4F4F4",
+    primary: "#006A4E",
+    accent: "#00A878",
+    text: "#1A2421",
+    muted: "#5D6B65",
+    chartPalette: ["#006A4E", "#00A878"],
+  },
+  fonts: { heading: "Georgia", body: "Microsoft YaHei", mono: "Consolas" },
+  bodyFontPx: 24, // balanced default — this suite doesn't exercise body-text sizing
+}
+
+function svg(node: React.ReactElement) {
+  return render(<svg>{node}</svg>)
+}
+
+function card(title: string, text: string) {
+  return { icon: "rocket", title, text }
+}
+
+const component = {
+  type: "icon_cards" as const,
+  items: [
+    card("断言一", "简短说明一"),
+    card("断言二", "简短说明二"),
+    card("断言三", "简短说明三"),
+    card("断言四", "简短说明四"),
+  ],
+}
+
+describe("icon_cards component: measure", () => {
+  it("grows card height when an item's text wraps to 2 lines vs 1", () => {
+    const oneLine = {
+      type: "icon_cards" as const,
+      items: [card("断言", "短"), card("断言", "短")],
+    }
+    const twoLines = {
+      type: "icon_cards" as const,
+      items: [
+        card(
+          "断言",
+          "这是一段足够长的说明文字，会在给定的卡片宽度下换行到第二行显示"
+        ),
+        card("断言", "短"),
+      ],
+    }
+    const h1 = iconCards.measure(oneLine, 600, ctx)
+    const h2 = iconCards.measure(twoLines, 600, ctx)
+    expect(h2).toBeGreaterThan(h1)
+  })
+
+  it("takes the tallest item's content height for all 4 equal-width cards", () => {
+    const mixed = {
+      type: "icon_cards" as const,
+      items: [
+        card("断言一", "短"),
+        card(
+          "断言二",
+          "这是一段足够长的说明文字，会在给定的卡片宽度下换行到第二行显示"
+        ),
+        card("断言三", "短"),
+        card("断言四", "短"),
+      ],
+    }
+    const w = 1088
+    const n = mixed.items.length
+    const cardW = (w - 16 * (n - 1)) / n
+    const contentW = cardW - 24 * 2 // PAD_X on each side (icon-cards.tsx)
+    const PAD_TOP = 20
+    const PAD_BOTTOM = 20
+    const expectedH = Math.max(
+      ...mixed.items.map(
+        (item) => PAD_TOP + iconCardContentHeight(item, contentW) + PAD_BOTTOM
+      )
+    )
+    expect(iconCards.measure(mixed, w, ctx)).toBeCloseTo(expectedH)
+    // The wrapping item's own content height must be the binding one here
+    // (2 lines strictly taller than every 1-line sibling).
+    const wrappingH = iconCardContentHeight(mixed.items[1], contentW)
+    const shortH = iconCardContentHeight(mixed.items[0], contentW)
+    expect(wrappingH).toBeGreaterThan(shortH)
+  })
+})
+
+describe("icon_cards component: render", () => {
+  it("lays out 4 equal-width cards with x offset = i * (cardW + 16)", () => {
+    const { container } = svg(
+      iconCards.render(component, { x: 80, y: 100, w: 1088 }, ctx)
+    )
+    const cardRects = Array.from(container.querySelectorAll("rect")).filter(
+      (r) => r.getAttribute("rx") === "8"
+    )
+    expect(cardRects).toHaveLength(4)
+    const n = component.items.length
+    const cardW = (1088 - 16 * (n - 1)) / n
+    cardRects.forEach((r, i) => {
+      expect(Number(r.getAttribute("x"))).toBeCloseTo(i * (cardW + 16))
+      expect(Number(r.getAttribute("width"))).toBeCloseTo(cardW)
+    })
+  })
+
+  it("renders an icon, a title, and description text for every card, with no accent bar", () => {
+    const { container } = svg(
+      iconCards.render(component, { x: 0, y: 0, w: 1088 }, ctx)
+    )
+    const accentBars = Array.from(container.querySelectorAll("rect")).filter(
+      (r) => r.getAttribute("height") === "3"
+    )
+    expect(accentBars).toHaveLength(0)
+
+    const paths = container.querySelectorAll("path")
+    expect(paths.length).toBeGreaterThanOrEqual(4) // >=1 icon glyph per card
+
+    const texts = Array.from(container.querySelectorAll("text"))
+    for (const item of component.items) {
+      expect(texts.some((t) => t.textContent === item.title)).toBe(true)
+      expect(texts.some((t) => t.textContent === item.text)).toBe(true)
+    }
+
+    // Default path (no `titleFontSize` opt, i.e. every theme except bento's
+    // own exploded-card renderer) renders titles at TITLE_FONT_SIZE=20 — a
+    // direct lock so a future bento-only tweak (or an accidental default
+    // change) can't silently drift the 5-theme standalone row layout. bento
+    // itself asserts its own 22px override in templates/tech.test.tsx.
+    const titleTexts = texts.filter((t) =>
+      component.items.some((item) => item.title === t.textContent)
+    )
+    expect(titleTexts).toHaveLength(4)
+    titleTexts.forEach((t) => {
+      expect(t.getAttribute("font-size")).toBe("20")
+    })
+  })
+
+  it("shrinks an overlong title to fit inside its card", () => {
+    const longTitleComponent = {
+      type: "icon_cards" as const,
+      items: [
+        card(
+          "这是一句非常非常非常非常非常非常长的断言短句超出正常卡片宽度",
+          "说明"
+        ),
+        card("短", "说明"),
+      ],
+    }
+    const { container } = svg(
+      iconCards.render(longTitleComponent, { x: 0, y: 0, w: 400 }, ctx)
+    )
+    // Titles are the only <text>s rendered with fontWeight="600" (text
+    // lines use no font-weight), so this reliably targets the title
+    // regardless of whether it also got truncated at the font-size floor.
+    const titleText = Array.from(container.querySelectorAll("text")).find(
+      (t) => t.getAttribute("font-weight") === "600"
+    )!
+    expect(Number(titleText.getAttribute("font-size"))).toBeLessThan(20)
+  })
+
+  it("annotates every card with its own page-coordinate data-audit-box", () => {
+    const markup = renderSvgMarkup(
+      <svg xmlns="http://www.w3.org/2000/svg">
+        {iconCards.render(component, { x: 80, y: 100, w: 1088 }, ctx)}
+      </svg>
+    )
+    const root = parseSvgRoot(markup)
+    const boxes = Array.from(root.querySelectorAll("[data-audit-box]"))
+    expect(boxes).toHaveLength(4)
+    const n = component.items.length
+    const cardW = (1088 - 16 * (n - 1)) / n
+    boxes.forEach((el, i) => {
+      const [x, y, w] = (el.getAttribute("data-audit-box") ?? "")
+        .split(",")
+        .map(Number)
+      expect(x).toBeCloseTo(80 + i * (cardW + 16))
+      expect(y).toBe(100)
+      expect(w).toBeCloseTo(cardW)
+    })
+  })
+
+  it("stays within the controlled SVG subset (assertSubset)", () => {
+    const markup = renderSvgMarkup(
+      <svg xmlns="http://www.w3.org/2000/svg">
+        {iconCards.render(component, { x: 80, y: 100, w: 1088 }, ctx)}
+      </svg>
+    )
+    expect(markup).not.toContain("foreignObject")
+    expect(markup).not.toContain("linearGradient")
+    expect(markup).not.toContain("url(#")
+    const root = parseSvgRoot(markup)
+    expect(() => assertSubset(root)).not.toThrow()
+  })
+})
+
+describe("icon_cards card stroke (Task 5d)", () => {
+  function cardRects(container: HTMLElement) {
+    // 卡壳识别按尺寸而非 rx 值——shape token 开值后各主题 rx 不同
+    // （luxe/runway 直角 0、enterprise 8），rx 不再是卡壳的判别特征。
+    return Array.from(container.querySelectorAll("rect")).filter(
+      (r) => Number(r.getAttribute("width") ?? 0) > 100,
+    )
+  }
+
+  it("does not draw a stroke when ctx.colors.cardStroke is unset (every theme before this task)", () => {
+    const { container } = svg(iconCards.render(component, { x: 0, y: 0, w: 1088 }, ctx))
+    const cards = cardRects(container)
+    expect(cards).toHaveLength(4)
+    cards.forEach((r) => expect(r.getAttribute("stroke")).toBeNull())
+  })
+
+  it("draws a 1px stroke in cardStroke's color when the token is set", () => {
+    const strokedCtx: ComponentCtx = {
+      ...ctx,
+      colors: { ...ctx.colors, cardStroke: "#ABCDEF" },
+    }
+    const { container } = svg(iconCards.render(component, { x: 0, y: 0, w: 1088 }, strokedCtx))
+    const cards = cardRects(container)
+    expect(cards).toHaveLength(4)
+    cards.forEach((r) => {
+      expect(r.getAttribute("stroke")).toBe("#ABCDEF")
+      expect(r.getAttribute("stroke-width")).toBe("1")
+    })
+  })
+
+  it("regression lock: only enterprise/runway's real tokens set cardStroke — the other canonical themes stay stroke-free", () => {
+    for (const id of CANONICAL_THEME_IDS) {
+      if (resolveComponentForm("icon_cards", id) !== undefined) continue
+      const themeCtx = buildCtx(resolveStyle(id), {})
+      const { container } = svg(iconCards.render(component, { x: 0, y: 0, w: 1088 }, themeCtx))
+      const card = cardRects(container)[0]
+      if (id === "enterprise" || id === "runway") {
+        expect(card.getAttribute("stroke")).toBe(themeCtx.colors.cardStroke)
+      } else {
+        expect(card.getAttribute("stroke")).toBeNull()
+      }
+    }
+  })
+})
+
+describe("icon_cards component: text overflow fallback", () => {
+  // Regression guard for a real bug the pptx overflow-audit stress fixtures
+  // (audit/stress-fixtures.ts `new_components_stress`) caught: `layoutSvgText`
+  // shrinks its returned font size so the widest wrapped line fits
+  // `contentW`, but that shrink floors at 1px — text long enough that the
+  // merged tail line (past its 2-line cap) still exceeds `contentW` even at
+  // 1px/unit came back unfit, a genuine h-overflow. `layoutIconCard` now
+  // truncates defensively at the fitted size (see icon-cards.tsx).
+  it("keeps every rendered text line within its card's content width, even far past the shrink floor", () => {
+    const w = 1088
+    const n = 4
+    const cardW = (w - 16 * (n - 1)) / n
+    const contentW = cardW - 24 * 2
+    const veryLongText = "说".repeat(300)
+    const longTextComponent = {
+      type: "icon_cards" as const,
+      items: [
+        card("断言一", veryLongText),
+        card("断言二", "短"),
+        card("断言三", "短"),
+        card("断言四", "短"),
+      ],
+    }
+    const { container } = svg(
+      iconCards.render(longTextComponent, { x: 0, y: 0, w }, ctx)
+    )
+    const bodyTexts = Array.from(container.querySelectorAll("text")).filter(
+      (t) => t.getAttribute("font-weight") !== "600" // titles are 600; text lines aren't
+    )
+    expect(bodyTexts.length).toBeGreaterThan(0)
+    for (const t of bodyTexts) {
+      const fontSize = Number(t.getAttribute("font-size"))
+      const width = measureTextUnits(t.textContent ?? "") * fontSize
+      expect(width).toBeLessThanOrEqual(contentW + 1) // +1 float rounding slack
+    }
+    // 300 repeated wide chars can't fit in 2 lines even at the 1px shrink
+    // floor — truncation must have kicked in.
+    expect(bodyTexts.some((t) => t.getAttribute("data-truncated") === "1")).toBe(true)
+    expect(bodyTexts.every((t) => !(t.textContent ?? "").includes("…"))).toBe(true)
+  })
+})
+
+describe("icon_cards component: W2.5 full lucide catalog (new icons)", () => {
+  // Sampled from the icons the W2.5 regeneration added — absent from the
+  // pre-W2.5 curated 431 (icons/legacy-names.ts), present only once
+  // gen-pptx-icons.mts pulls in the full lucide set. Doesn't touch the
+  // existing pinned "rocket" fixtures above.
+  const NEW_ICON_NAMES = ["cat", "backpack", "glasses", "hand"]
+
+  function newIconCardsComponent() {
+    return {
+      type: "icon_cards" as const,
+      items: NEW_ICON_NAMES.map((icon, i) => ({
+        icon,
+        title: `新图标 ${i + 1}`,
+        text: "W2.5 全量目录抽样",
+      })),
+    }
+  }
+
+  it("samples icons outside the pre-W2.5 curated catalog", () => {
+    for (const name of NEW_ICON_NAMES) {
+      expect(LEGACY_ICON_NAMES).not.toContain(name)
+    }
+  })
+
+  it("renders a card for each newly imported icon with its title/text and no accent bar", () => {
+    const component = newIconCardsComponent()
+    const { container } = svg(
+      iconCards.render(component, { x: 0, y: 0, w: 1088 }, ctx)
+    )
+    const accentBars = Array.from(container.querySelectorAll("rect")).filter(
+      (r) => r.getAttribute("height") === "3"
+    )
+    expect(accentBars).toHaveLength(0)
+
+    const texts = Array.from(container.querySelectorAll("text"))
+    for (const item of component.items) {
+      expect(texts.some((t) => t.textContent === item.title)).toBe(true)
+      expect(texts.some((t) => t.textContent === item.text)).toBe(true)
+    }
+  })
+
+  it("stays within the controlled SVG subset for every newly imported icon", () => {
+    const component = newIconCardsComponent()
+    const markup = renderSvgMarkup(
+      <svg xmlns="http://www.w3.org/2000/svg">
+        {iconCards.render(component, { x: 80, y: 100, w: 1088 }, ctx)}
+      </svg>
+    )
+    const root = parseSvgRoot(markup)
+    expect(() => assertSubset(root)).not.toThrow()
+  })
+})

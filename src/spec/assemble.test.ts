@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 import { PptwiseError } from "../errors"
 import { PptxIRSchema, type PptxIR } from "../ir"
-import { resolveEffectiveLayoutId } from "../svg/layout-selection"
+import { resolveEffectiveLayoutId } from "../render/layout-selection"
 import { assembleDeck, disassembleDeck, type PageContent } from "./assemble"
 
 // ── fixtures ─────────────────────────────────────────────────────────────
@@ -406,7 +406,7 @@ describe("assembleDeck", () => {
       // Independently rebuilt pre-materialization shape (assembleDeck's own
       // step 6, minus the materialization this test exists to check) — a
       // fresh object, so `resolveEffectiveLayoutId`'s WeakMap cache (keyed by
-      // `ir` identity, `../svg/layout-selection.ts`) can't be silently
+      // `ir` identity, `../render/layout-selection.ts`) can't be silently
       // reading back assembleDeck's own answer. If assembleDeck ever grew a
       // second, drifted copy of the selection logic instead of calling this
       // function, this is the test that would catch it.

@@ -13,14 +13,14 @@ read_when:
 
 ## Layers
 
-1. **Unit + snapshot** (`pnpm test`, vitest): 422 files / 13480 cases, colocated
-   with source as `*.test.ts(x)`. Covers the IR schema, every layout/component,
+1. **Unit + snapshot** (`pnpm test`, vitest): source tests are colocated as
+   `*.test.ts(x)`, and script tests live under `scripts/*.test.mts`. The suite covers the IR schema, every layout/component,
    the svg2pptx element converters, style tokens, the animation/gradient/
    ea-font/media-dedupe JSZip patches, the deck spec schema and hard gates,
    assemble/disassemble plus the deck-project-directory CLI shell, the v3→v4
    and deck.plan.json→deck.spec.json migration functions, the
    deterministic deck audit (overflow/out-of-bounds/low-contrast/overlap/
-   content-truncated/content-dropped), the optional pixel-contrast audit
+   content-truncated/content-dropped/monotony), the optional pixel-contrast audit
    (`--pixels` — real-Sharp end-to-end coverage plus a dedicated no-platform
    file for the "nothing can rasterize" contract, see `docs/contrast-system.md`),
    and the PPTX package-audit reader and rules (see "Package-audit hard gate"
@@ -57,8 +57,30 @@ read_when:
    (`soffice`) when it's installed on the machine — a real render, not a mock.
 
 `pnpm check` runs typecheck + lint + `pnpm test` and is the default merge gate.
-`pnpm e2e` is not part of `pnpm check` (it needs a build and is slower) — run
-it whenever the render chain (`src/svg/`, `src/pptx/`, `src/themes/`) changes.
+`pnpm e2e` is not part of `pnpm check` because it needs a build and is slower.
+Run it whenever the render chain (`src/layouts/`, `src/components/`,
+`src/motifs/`, `src/render/`, `src/audit/`, `src/pptx/`, or
+`src/themes/builtin/`) changes.
+
+## Generated SKILL reference drift
+
+`scripts/gen-skill-refs.mts` derives the complete 130-row standard-layout
+catalog from `src/layouts/registry.ts` and the complete 24-row theme catalog
+from canonical theme labels plus `src/themes/occasions.ts`. It replaces only
+the content inside `generated:begin` and `generated:end` comments. Handwritten
+guidance outside those markers is preserved.
+
+Run the generator after changing a layout definition, theme label, occasion,
+or identity band:
+
+```bash
+pnpm gen:skill-refs
+```
+
+`scripts/gen-skill-refs.test.mts` renders the same sections in memory and
+compares them byte for byte with all four English and Chinese SKILL reference
+files. Vitest includes `scripts/**/*.test.mts`, so drift fails `pnpm test` and
+therefore fails `pnpm check`.
 
 ## Installed DSH plugin E2E
 
@@ -213,7 +235,7 @@ until they are re-stamped — `manifest.json` is at `manifestVersion: 2` and the
 exported payload at `pptwise-gallery-verdicts/3`, both additive.
 
 The corpus (`evals/gallery/corpus/`) is deliberately **not**
-`src/svg/audit/stress-fixtures.ts` — those decks are pathological on
+`src/audit/stress-fixtures.ts` contains decks that are pathological on
 purpose. This one is ordinary, plausible content at the length a real
 author writes, because the ordinary case is what a human can judge and a
 test cannot.
@@ -287,8 +309,8 @@ Silently accepting a snapshot update is how visual regressions slip past
 review.
 
 The two unassigned-theme byte nails
-(`src/svg/__fixtures__/emphasis-unassigned-bytes.json` and
-`src/svg/heading-treatments/__fixtures__/unassigned-bytes.json`) recapture
+(`src/render/__fixtures__/emphasis-unassigned-bytes.json` and
+`src/render/heading-treatments/__fixtures__/unassigned-bytes.json`) recapture
 with `pnpm fixtures:unassigned-bytes` after an intended renderer change,
 never by editing hashes by hand.
 

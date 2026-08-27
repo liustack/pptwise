@@ -1,0 +1,294 @@
+import type React from "react"
+import type { Component } from "@/ir"
+import { fitSvgLine, layoutSvgText, measureTextUnits } from "../lib/svg-text-layout"
+import { accessibleInk } from "../render/ink"
+import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
+
+type RoadmapComponent = Extract<Component, { type: "roadmap" }>
+type RoadmapItem = RoadmapComponent["items"][number]
+
+/**
+ * 阶段路线图卡（2026-07-14 用户 showcase deck 借鉴，取代手绘补页）：2-4 个
+ * 阶段横排圆角卡，自动编号 01..N。每卡＝顶部 accent 条（上圆角，随卡片
+ * 圆角，修手绘直角戳圆角的旧缺陷）+ 圆形深色编号徽章 + 可选时段 + 粗标题
+ * + 若干 `label:value` 指标行。文本全实测决定卡高。
+ */
+const GAP = 24
+const PAD_X = 22
+const PAD_BOTTOM = 18
+const CARD_RADIUS = 8
+const BAR_H = 8
+
+const BADGE_R = 19
+const BADGE_FONT = 16
+const BASELINE_FUDGE = 0.32
+const BADGE_TOP = BAR_H + 16 // 徽章顶到卡顶
+
+const PERIOD_SIZE = 14
+const TITLE_SIZE = 19
+const TITLE_LH = Math.round(TITLE_SIZE * 1.4)
+const GAP_BADGE_TITLE = 14
+const GAP_TITLE_ROWS = 16
+
+const LABEL_SIZE = 16
+const VALUE_SIZE = 14.5
+const VALUE_LH = Math.round(VALUE_SIZE * 1.4)
+const ROW_GAP = 12
+const LABEL_VALUE_GAP = 12
+
+interface RowLayout {
+  label: { text: string; fontSize: number; truncated: boolean }
+  value: { lines: string[]; fontSize: number; lineHeight: number }
+  height: number
+}
+interface CardLayout {
+  period: { text: string; fontSize: number; truncated: boolean } | null
+  title: { text: string; fontSize: number; truncated: boolean }
+  rows: RowLayout[]
+  labelColW: number
+  contentH: number
+  cardH: number
+}
+
+/** Rounded-top, square-bottom bar path — top corners follow the card radius
+ * so the accent bar never overhangs the card's rounded corners (the手绘 bug).
+ * svg2pptx 的 A(弧) 段已支持，导出为 custGeom 圆角。 */
+function roundedTopBarPath(x: number, y: number, w: number, h: number, r: number): string {
+  const rr = Math.min(r, w / 2, h)
+  return (
+    `M ${x} ${y + rr} ` +
+    `A ${rr} ${rr} 0 0 1 ${x + rr} ${y} ` +
+    `L ${x + w - rr} ${y} ` +
+    `A ${rr} ${rr} 0 0 1 ${x + w} ${y + rr} ` +
+    `L ${x + w} ${y + h} ` +
+    `L ${x} ${y + h} Z`
+  )
+}
+
+// `headingFontFamily`/`bodyFontFamily` (bold-metrics fix, round 2,
+// 2026-07-24): `title` renders `fontWeight="700"` in `ctx.fonts.heading`,
+// `period` and `value` both render `fontWeight="600"`/`"600"` in
+// `ctx.fonts.body` (`renderCard` below) -- all three are bold by this
+// codebase's own threshold, so all three need weight-aware fitting, same as
+// every other bold text this task's audit-baseline sweep found and fixed.
+//
+// Unlike this task's other layout functions, `value` is a *multi-line*
+// (`layoutSvgText`, not `fitSvgLine`) bold field, and `rows[].height` --
+// which `contentH`/`cardH` are built from -- genuinely depends on
+// `value.lines.length`, itself a function of which face/weight `layoutSvgText`
+// assumed while wrapping. Leaving `measure()` on the cheap envelope-only
+// fallback the way this task's other components safely do for their
+// (height-inert) bold titles would risk `measure()` and `render()` picking a
+// *different line count* for the same value string -- a real measure/render
+// divergence bug, not just a cosmetic one. So both `measure()` and `render()`
+// below thread the *same* real `ctx.fonts.heading`/`ctx.fonts.body` into
+// every call here (not the envelope-in-measure pattern), guaranteeing
+// identical wrap decisions regardless of caller. `title`/`period` didn't
+// strictly need this (their `contentH` contribution comes from the fixed
+// `TITLE_LH`/badge constants, never their own fitted `.fontSize`) but take
+// the same real values for consistency now that this function threads them
+// anyway.
+function cardLayout(
+  item: RoadmapItem,
+  cardW: number,
+  headingFontFamily?: string,
+  bodyFontFamily?: string,
+): CardLayout {
+  const contentW = cardW - PAD_X * 2
+  const period = item.period
+    ? fitSvgLine(item.period, {
+        maxWidth: contentW - BADGE_R * 2 - 12,
+        fontSize: PERIOD_SIZE,
+        minFontSize: 16,
+        bold: true,
+        fontFamily: bodyFontFamily,
+      })
+    : null
+  const title = fitSvgLine(item.title, {
+    maxWidth: contentW,
+    fontSize: TITLE_SIZE,
+    minFontSize: 16,
+    bold: true,
+    fontFamily: headingFontFamily,
+  })
+  const rowItems = item.rows ?? []
+  // Label column width = widest fitted label, clamped so the value column keeps
+  // a usable width.
+  const labelWidths = rowItems.map((r) => measureTextUnits(r.label) * LABEL_SIZE)
+  const labelColW = rowItems.length
+    ? Math.min(Math.max(48, Math.max(...labelWidths) + LABEL_VALUE_GAP), Math.round(contentW * 0.42))
+    : 0
+  const valueW = Math.max(40, contentW - labelColW)
+  const rows: RowLayout[] = rowItems.map((r) => {
+    const label = fitSvgLine(r.label, { maxWidth: labelColW, fontSize: LABEL_SIZE, minFontSize: 16 })
+    const value = layoutSvgText(r.value, {
+      maxWidth: valueW,
+      fontSize: VALUE_SIZE,
+      maxLines: 2,
+      lineHeightRatio: 1.4,
+      bold: true,
+      fontFamily: bodyFontFamily,
+    })
+    return { label, value, height: Math.max(VALUE_LH, value.lines.length * value.lineHeight) }
+  })
+  const rowsH = rows.reduce((s, r) => s + r.height, 0) + Math.max(0, rows.length - 1) * ROW_GAP
+  const contentH =
+    BADGE_TOP +
+    BADGE_R * 2 +
+    GAP_BADGE_TITLE +
+    TITLE_LH +
+    (rows.length ? GAP_TITLE_ROWS + rowsH : 0)
+  return {
+    period,
+    title,
+    rows,
+    labelColW,
+    contentH,
+    cardH: contentH + PAD_BOTTOM,
+  }
+}
+
+function renderCard(
+  layout: CardLayout,
+  index: number,
+  x: number,
+  y: number,
+  cardW: number,
+  cardH: number,
+  ctx: ComponentCtx,
+): React.ReactElement {
+  const r = ctx.shape?.radius ?? CARD_RADIUS
+  const cx = x + PAD_X + BADGE_R
+  const cy = y + BADGE_TOP + BADGE_R
+  const num = String(index + 1).padStart(2, "0")
+  const titleBaseline = y + BADGE_TOP + BADGE_R * 2 + GAP_BADGE_TITLE + TITLE_SIZE
+  let rowY = titleBaseline + GAP_TITLE_ROWS
+  return (
+    <g key={index}>
+      <rect
+        x={x}
+        y={y}
+        width={cardW}
+        height={cardH}
+        rx={r}
+        fill={ctx.colors.surface}
+        {...(ctx.colors.cardStroke ? { stroke: ctx.colors.cardStroke, strokeWidth: 1 } : {})}
+      />
+      <path d={roundedTopBarPath(x, y, cardW, BAR_H, r)} fill={ctx.colors.accent} />
+      <circle cx={cx} cy={cy} r={BADGE_R} fill={ctx.colors.primary} />
+      {/* Bench-driven fix round, defect A reclassification (Task 3
+          handoff): same unguarded `fill="#FFFFFF"`-on-`colors.primary`
+          pattern as steps.tsx's own badge digit, separate call site — see
+          that file's `renderBadge` comment for the full defect history.
+          `accessibleInk` is a no-op (byte-identical) on every theme where
+          white already clears 4.5:1. */}
+      <text
+        x={cx}
+        y={cy + Math.round(BADGE_FONT * BASELINE_FUDGE)}
+        textAnchor="middle"
+        fontSize={BADGE_FONT}
+        fontWeight="700"
+        fill={accessibleInk("#FFFFFF", ctx.colors.primary, BADGE_FONT)}
+        fontFamily={ctx.fonts.body}
+        dominantBaseline="alphabetic"
+      >
+        {num}
+      </text>
+      {layout.period ? (
+        // Arc-bbox root fix (fix/arc-bbox): same defect family as this
+        // file's own badge-digit `accessibleInk` guard above — `deck-
+        // audit.ts`'s `pathBoundingBox` used to mismeasure this period
+        // text's real background (the card's `colors.surface` rect) as the
+        // accent bar's own fill (an audit-tool SVG-arc-grammar bug, not
+        // this component), making an unguarded `colors.accent` period read
+        // as a trivial 1:1-on-itself "pass" on every theme. Fixed audit
+        // measures the real (accent-on-surface) pair, which genuinely fails
+        // 4.5:1 on 8/13 themes.
+        <text
+          data-truncated={layout.period.truncated ? "1" : undefined}
+          x={x + PAD_X + BADGE_R * 2 + 12}
+          y={cy + Math.round(layout.period.fontSize * BASELINE_FUDGE)}
+          fontSize={layout.period.fontSize}
+          fontWeight="600"
+          fill={accessibleInk(ctx.colors.accent, ctx.colors.surface, layout.period.fontSize)}
+          fontFamily={ctx.fonts.body}
+          dominantBaseline="alphabetic"
+        >
+          {layout.period.text}
+        </text>
+      ) : null}
+      <text
+        data-truncated={layout.title.truncated ? "1" : undefined}
+        x={x + PAD_X}
+        y={titleBaseline}
+        fontSize={layout.title.fontSize}
+        fontWeight="700"
+        fill={ctx.colors.text}
+        fontFamily={ctx.fonts.heading}
+        dominantBaseline="alphabetic"
+      >
+        {layout.title.text}
+      </text>
+      {layout.rows.map((row, ri) => {
+        const rowTop = rowY
+        rowY += row.height + ROW_GAP
+        return (
+          <g key={ri}>
+            <text
+              data-truncated={row.label.truncated ? "1" : undefined}
+              x={x + PAD_X}
+              y={rowTop + LABEL_SIZE}
+              fontSize={row.label.fontSize}
+              fill={ctx.colors.muted}
+              fontFamily={ctx.fonts.body}
+              dominantBaseline="alphabetic"
+            >
+              {row.label.text}
+            </text>
+            {row.value.lines.map((line, li) => (
+              <text
+                key={li}
+                x={x + PAD_X + layout.labelColW}
+                y={rowTop + VALUE_SIZE + li * row.value.lineHeight}
+                fontSize={row.value.fontSize}
+                fontWeight="600"
+                fill={ctx.colors.text}
+                fontFamily={ctx.fonts.body}
+                dominantBaseline="alphabetic"
+              >
+                {line}
+              </text>
+            ))}
+          </g>
+        )
+      })}
+    </g>
+  )
+}
+
+export const roadmap: SvgComponent<RoadmapComponent> = {
+  measure(component, w, ctx) {
+    const n = component.items.length
+    const cardW = (w - GAP * (n - 1)) / n
+    return Math.max(
+      ...component.items.map((it) => cardLayout(it, cardW, ctx.fonts.heading, ctx.fonts.body).cardH),
+    )
+  },
+  render(component, box, ctx) {
+    const n = component.items.length
+    const cardW = (box.w - GAP * (n - 1)) / n
+    const layouts = component.items.map((it) => cardLayout(it, cardW, ctx.fonts.heading, ctx.fonts.body))
+    const measuredH = Math.max(...layouts.map((l) => l.cardH))
+    // 均分密度拉伸：box.h 由布局分配时，卡高吃满（内容顶对齐，底部留白）。
+    const cardH = Math.max(measuredH, box.h ?? measuredH)
+    return (
+      <g>
+        {layouts.map((layout, i) =>
+          renderCard(layout, i, box.x + i * (cardW + GAP), box.y, cardW, cardH, ctx),
+        )}
+      </g>
+    )
+  },
+}
+
+export const renderDef: RenderDef<RoadmapComponent> = { type: "roadmap", measure: roadmap.measure, render: roadmap.render }

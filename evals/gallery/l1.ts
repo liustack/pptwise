@@ -11,8 +11,8 @@
 import { META_FONT_FLOOR_PT, META_FONT_FLOOR_PX, pxToPt } from "@/constants"
 import { measureMonoTextUnits, measureTextUnits } from "@/lib/svg-text-layout"
 import { getPlatform } from "@/platform/registry"
-import { __pathBoundingBox, findOverlapIssues } from "@/svg/audit/deck-audit"
-import { auditSvgMarkup, parseTransform } from "@/svg/audit/svg-audit"
+import { __pathBoundingBox, findOverlapIssues } from "@/audit/deck-audit"
+import { auditSvgMarkup, parseTransform } from "@/audit/svg-audit"
 import {
   IDENTITY_MATRIX,
   boxesIntersect,
@@ -22,14 +22,14 @@ import {
   transformBox,
   type DepthBox,
   type SvgMatrix,
-} from "@/svg/depth-contract/geometry"
-import { isBold, isMonoFontFamily } from "@/svg/fonts"
-import { blendOver, contrastRatio } from "@/svg/ink"
+} from "@/render/depth-contract/geometry"
+import { isBold, isMonoFontFamily } from "@/render/fonts"
+import { blendOver, contrastRatio } from "@/render/ink"
 import {
   CONTENT_DECOR_CONTRAST_CEILING,
   effectivePaintOpacity,
   skipsMidgroundCeiling,
-} from "@/svg/motifs/decor-budget"
+} from "@/motifs/decor-budget"
 import { bleedExemption } from "./bbox-exemptions"
 import { layoutOf } from "./bbox"
 

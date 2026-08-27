@@ -11,7 +11,7 @@ import { COMPONENT_TYPES, type Component, type PptxIR, type Slide } from "@/ir"
  * `<image>` backed by a real, resolvable asset (the `image` op case →
  * pptxgenjs `addImage`). Every other leaf — `<rect>`/`<circle>`/`<ellipse>`/
  * `<line>`/`<polygon>`/`<polyline>`/`<path>`/`<text>`, including every
- * lucide icon primitive in `src/svg/icons.tsx` — lands as a native shape,
+ * lucide icon primitive in `src/render/icons.tsx` — lands as a native shape,
  * connector, custGeom, or text run, never a picture. Every `<image>`-
  * emitting call site (`image.tsx`, `image-grid.tsx`, `image-compare.tsx`,
  * `background.tsx`'s asset background, `branding.tsx`'s logo, and

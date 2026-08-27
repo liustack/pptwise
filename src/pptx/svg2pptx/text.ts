@@ -1,5 +1,5 @@
 import { pxToIn, pxToPt, SLIDE_W_IN } from "../../constants"
-import { isBold } from "../../svg/fonts"
+import { isBold } from "../../render/fonts"
 import { svgColorToHex } from "./color"
 import { elementOpacity } from "./style"
 

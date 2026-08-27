@@ -3,7 +3,7 @@ import { findRemoteAssetRef, type RasterizedImage } from "./registry"
 /**
  * Browser default for `rasterizeSvg` (audit-v2 phase B, spec §4.3/§11.8) —
  * native `Image` + `OffscreenCanvas`/`<canvas>` only, zero new dependency.
- * Applied at the pixel-audit call site (`../svg/audit/pixel-audit.ts`) the
+ * Applied at the pixel-audit call site (`../audit/pixel-audit.ts`) the
  * same way `domParser`'s `?? globalThis.DOMParser` fallback already works
  * (`deck-audit.ts`'s `parseSvg`) — nothing calls `installPlatform()`
  * automatically in a browser, so this is a plain fallback function, not

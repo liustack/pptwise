@@ -4,7 +4,7 @@ Read this when running assemble / validate / audit / preview / serve, or revisin
 
 ### Phase 3 — Fill pages in batches of at most 4, validate immediately
 
-For each page in the confirmed spec, write `pages/<page-id>.json` with its content (`components`, and optionally `layout`/`arrangement`/`background`/`image_side`/`footnote`/`notes` — never `type`/`heading`, those are locked by the spec). Remember Phase 1's boundary-page rule while drafting `cover`/`chapter`/`ending` pages — do not give them `components` or `footnote` and then have to move it. `notes` is speaker notes prose for whoever presents the deck — writing a good speaking script is a model strength. Draft `notes` whenever the page needs a spoken walkthrough beyond what is on the slide (Sparse-page contract). That is the default, not optional.
+For each page in the confirmed spec, write `pages/<page-id>.json` with its content (`components`, and optionally `layout`/`arrangement`/`background`/`image_side`/`footnote`/`notes`). Never write `type` or `heading` because the spec locks them. Remember Phase 1's boundary-page rule while drafting `cover`/`chapter`/`ending` pages. Footnotes never render there. Components require a known layout with a compatible slot, and current chapter layouts have none. `notes` is speaker notes prose for whoever presents the deck. Writing a good speaking script is a model strength. Draft `notes` whenever the page needs a spoken walkthrough beyond what is on the slide (Sparse-page contract). That is the default, not optional.
 
 ```bash
 pptwise assemble deck-dir/     # materializes deck.json — catches structural drift: orphan page files, locked-field violations, a broken spec
@@ -21,7 +21,9 @@ pptwise render deck-dir/
 
 The `.pptx` lands in `.pptwise/<deck>/`. The command prints the absolute path. Report that line to the user.
 
-`--theme <id>` overrides the deck theme without editing the spec. `--style <path>` layers a style-token override on top (re-color without forking a theme, schema: `pptwise schema --style`). Render refuses a deck with unfilled placeholder pages unless you add `--draft` — reach for that only when the user explicitly wants a look before every page is done. It also refuses a deck where a page holds more than fits, so the layout left blocks out with nothing on the slide to say so: the error names the pages and how many blocks each lost. Fix it by shortening that page or splitting it in two, and re-render — `--allow-dropped-content` ships the file with the content missing, so only pass it if the user says to.
+`--theme <id>` is a repaint. It changes the visual skin without editing the spec, while the already assembled `deck.json` keeps every materialized layout id. It does not replace those pinned faces with the new theme's structural faces. To use the new theme's full structure, change `theme` in `deck.spec.json`, run `pptwise assemble deck-dir/` again, then repeat validate, audit, and render. `--style <path>` layers a style-token override on top. Its schema is `pptwise schema --style`.
+
+Render refuses a deck with unfilled placeholder pages unless you add `--draft`. Reach for that only when the user explicitly wants a look before every page is done. It also refuses a deck where a page holds more than fits, so the layout left blocks out with nothing on the slide to say so. The error names the pages and how many blocks each lost. Fix it by shortening that page or splitting it in two, and render again. `--allow-dropped-content` ships the file with the content missing, so only pass it if the user says to.
 
 If the project has a `pptwise.config.json`, its theme/style are project defaults — do not fight them with `--theme` unless the user asks. Any page `notes` you wrote in phase 3 export as native PowerPoint speaker notes (View → Notes in PowerPoint/Keynote) — never drawn onto the slide itself.
 
@@ -33,7 +35,7 @@ Once every page is filled (no placeholders left), run the deterministic geometry
 pptwise audit deck-dir/
 ```
 
-Zero-token, zero-variance — it renders each page off-screen and checks overflow, out-of-bounds, low-contrast, overlap, content-truncated (an ellipsis cut real text), and content-dropped (an item or whole component silently clamped out, tagged data-dropped in the SVG), exiting 1 when it finds anything (0 when clean). Each finding names its page (and id) and carries a fix. Fix the flagged page's content — same "restructure, don't delete" discipline as a `validate` error — then re-run `pptwise audit deck-dir/` alone (no need to re-render) until it exits 0. This is the deck's visual QA. Do not rely on eyeballing a screenshot instead.
+Zero-token and deterministic, it renders each page off-screen and checks overflow, out-of-bounds, low-contrast, overlap, content-truncated, and content-dropped. It also reports `monotony` when three or more consecutive non-placeholder pages lead with the same component type. Pages with no components break that streak. A finding makes the command exit 1, while a clean deck exits 0. Each finding names its page and carries a fix. Fix the flagged content with the same "restructure, don't delete" discipline as a `validate` error, vary repetitive lead components when `monotony` appears, then run `pptwise audit deck-dir/` alone until it exits 0. This is the deck's visual QA. Do not rely on eyeballing a screenshot instead.
 
 If any page has a cover/chapter photo background, add `--pixels` — it rasterizes the page and samples real pixels to catch text sitting directly on an unscrimmed photo, the one case the SVG-only checks above can't see.
 

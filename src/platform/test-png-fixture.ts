@@ -2,9 +2,9 @@ import { deflateSync } from "node:zlib"
 
 /**
  * Minimal, dependency-free PNG encoder — test support only (no `.test.ts`
- * suffix so both `node-rasterize.test.ts` and `../svg/audit/pixel-audit.test.ts`
+ * suffix so both `node-rasterize.test.ts` and `../audit/pixel-audit.test.ts`
  * can import it, same "shared fixture module living next to what it tests"
- * convention `../svg/audit/stress-fixtures.ts` already establishes).
+ * convention `../audit/stress-fixtures.ts` already establishes).
  *
  * Hand-rolled rather than generated through Sharp itself on purpose: the
  * whole point of `node-rasterize.test.ts`'s probe suite is to verify Sharp's

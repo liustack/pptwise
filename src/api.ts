@@ -4,7 +4,7 @@
  * for why) and is re-exported below unchanged, so every existing consumer
  * of this module keeps working exactly as before. `renderSlideSvg` and
  * `generatePptx` stay defined here — this is the one file allowed to reach
- * into `./svg/render-slide` and `./pptx/generate` (react-dom/server, jszip,
+ * into `./render/render-slide` and `./pptx/generate` (react-dom/server, jszip,
  * pptxgenjs).
  */
 export {
@@ -22,7 +22,7 @@ export {
 import { PptwiseError } from "./errors"
 import type { PptxIR } from "./ir"
 import { generatePptxBlob } from "./pptx/generate"
-import { slideToSvgMarkup } from "./svg/render-slide"
+import { slideToSvgMarkup } from "./render/render-slide"
 import { formatIssues, validateIr } from "./validate-core"
 
 /** Render a single slide to standalone SVG markup (preview / self-check). */
