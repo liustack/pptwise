@@ -39,15 +39,16 @@ powershell -ExecutionPolicy Bypass -File <skill-dir>\scripts\run.ps1 <args>  # W
 pptwise schema             # IR JSON Schema: the single source of truth
 pptwise schema --spec      # deck spec schema
 pptwise narratives --json  # named narrative presets (strategy/pacing/audience axes + theme recommendations)
-pptwise themes --json      # built-in themes (id + label)
+pptwise themes --json      # built-in themes (id, label, occasions, identity, colors)
+pptwise layouts --json     # all standard layouts, slots, capacities, and pin-only status
 ```
 
 动手问人之前，先扫工作区。已有确认过的 `deck.spec.json` 已经锁死 narrative、theme、品牌框：不要重做访谈，改那份 deck。已有 `theme.json`、项目 `pptwise.config.json` 钉死的 theme、用户点名的 theme id、或用户递来的 `.thmx` / `.potx` / 带品牌 `.pptx`，都是品牌信号：抽取或沿用。不要再问有没有模板。
 
-**边界页规则：** `chapter` 和 `ending` 永远不渲染 `components` 或 `footnote`。`cover` 永远不渲染 `footnote`。封面只有在锁定版式声明了对应槽位时才能带 `components`。今天这只发生在 `verdict-index`（consulting）：它读第一个 `bullets` 块，画成最多三条编号论据。其余封面版式仍会丢掉 components。正文放到 `content` 页，除非你在填 consulting 封面那三列论据。对错 JSON 和 spec 写法：`references/spec.md`。
+**边界页规则：** `chapter` 永远不渲染 `components` 或 `footnote`。`cover` 与 `ending` 永远不渲染 `footnote`。边界页只有在已知版式声明了兼容槽位时才能带 `components`。目前 `verdict-index` 与 `gauge-verdict` 封面各接受一个 `bullets` component，部分 ending 版式接受自己声明的 body 内容。普通正文放到 `content` 页。对错 JSON 和 spec 写法：`references/spec.md`。
 
 1. **访谈**（最多一轮）：用户在场，且受众、怎么讲、pacing 任一轴仍未知时，把未决的问放进**一条**消息，然后停。不要自己填。Q1–Q4、★ 默认、查表、`NARRATIVE_INTERVIEW` 闸：`references/spec.md`。
-2. **定 spec 并确认**，再写任何页面。写 `deck.spec.json`（以 `cover` 开篇，以 `ending` 收尾，中间是 `content` 或 `chapter`）。跑 `pptwise spec validate` 直到 `OK`，然后固化 `seed`。已确认的 spec 不要重定。写法：`references/spec.md`。品牌框姿态：`references/branding.md`。
+2. **定主题、spec 并确认**，再写任何页面。从请求和工作区提取场合信号，再按 `themes --json` 的 `occasions` 与 `identity` 筛出 2 到 3 套主题。叙事里的 `themeRecommendations` 只作参考信号。内置视觉方向仍未定时，用 `preview <target> --themes <ids>` 给用户看对比图，让用户按图选择。预览自定义候选时同时传 `--theme-file` 与 `--theme`。只在确认后把它落成项目 `theme.json`，把 id 写入 `deck.spec.json`，后续零 flag。写 spec（以 `cover` 开篇，以 `ending` 收尾，中间是 `content` 或 `chapter`），跑 `pptwise spec validate` 直到 `OK`，然后固化 `seed`。已确认的 spec 不要重定。完整流程：`references/spec.md`。主题文件与品牌框姿态：`references/branding.md`。
 3. **填页面**，每批至多 4 页。写 `pages/<id>.json`（`components`，可选 `layout`/`notes`）。绝不写 `type`/`heading`。Pin-only 与稀排高潮页：`references/layouts.md`。组件形态：`references/components.md`。密度、beat、容量：`references/density.md`。配图：`references/images.md`。
 4. **Validate** 每批之后：`pptwise assemble deck-dir/`，再 `pptwise validate deck-dir/`，直到两者都打印 `OK`。重组被标出的内容，不要删。assemble / validate / audit / preview / serve 回路：`references/validate.md`。
 5. **Audit** 所有页面填完后：`pptwise audit deck-dir/` 直到 exit 0。不要用截图代替。然后把 deck 交给用户（有 `pptwise_preview` 就调它，否则 `preview --html`，再否则 `serve --no-open`）：`references/validate.md`。

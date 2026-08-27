@@ -8,7 +8,8 @@ Read this when writing `deck.spec.json`, choosing page types (`cover` / `chapter
 pptwise schema             # IR JSON Schema: the single source of truth
 pptwise schema --spec      # deck spec schema
 pptwise narratives --json  # named narrative presets (strategy/pacing/audience axes + theme recommendations)
-pptwise themes --json      # built-in themes (id + label)
+pptwise themes --json      # built-in themes (id, label, occasions, identity, colors)
+pptwise layouts --json     # standard layouts, slots, capacities, and pin-only status
 ```
 
 Never write IR or a spec from memory of a previous session or from this file — the schema evolves and `schema`/`narratives`/`themes` output always wins.
@@ -21,21 +22,54 @@ Also scan the workspace before asking anyone anything. Facts the files can answe
 
 A brand signal answers what the deck should look like, never how it should argue. The full rule lives in `references/branding.md`.
 
+<!-- generated:begin themes -->
+### Complete built-in theme catalog
 
-**Boundary-page rule — learn this now, it is the single most common mistake:** `chapter` and `ending` pages never render `components` or `footnote`. `cover` pages never render `footnote`. A `cover` may carry `components` only when its locked layout declares a slot for them. Today that is `verdict-index` (consulting), which reads the first `bullets` block as up to three numbered arguments. Every other cover layout still drops components. Put body content on a `content` page unless you are filling that consulting argument row. `validate` catches a stray field with `"<type>" slides do not render components/footnote — move this content to a content slide or remove it`.
+This section is generated from the canonical theme registry and occasion routing table. `identity` is the strength of the visual voice.
+
+| id | label | occasions | identity |
+| --- | --- | --- | --- |
+| `consulting` | Business Consulting | business | medium |
+| `enterprise` | Enterprise | business, institutional | low |
+| `academic` | Academic | education | medium |
+| `insight` | Financial Insight | finance | medium |
+| `campaign` | Marketing Campaign | marketing, event | high |
+| `classroom` | Classroom | education | medium |
+| `ink` | Ink Wash | culture | high |
+| `tech` | Tech | tech | medium |
+| `runway` | Fashion Runway | fashion | high |
+| `journal` | Editorial Journal | editorial | medium |
+| `luxe` | Luxe | luxury, event | high |
+| `heritage` | Heritage | culture, luxury | medium |
+| `pulse` | Health & Life Science | health | medium |
+| `terra` | Sustainability & ESG | sustainability | medium |
+| `ember` | Startup Pitch | startup | high |
+| `vermilion` | Official Report | government, institutional | low |
+| `crayon` | Kids Education | kids, education | high |
+| `arena` | Esports & Entertainment | entertainment | high |
+| `museum` | Museum | museum, culture | high |
+| `stage` | Keynote Stage | keynote | high |
+| `lecture` | Lecture Hall | education | high |
+| `swiss` | Swiss Institutional | institutional | low |
+| `memo` | Decision Memo | business, institutional | low |
+| `playbill` | Playbill | event, entertainment | high |
+<!-- generated:end themes -->
+
+
+**Boundary-page rule:** `chapter` pages never render `components` or `footnote`. `cover` and `ending` pages never render `footnote`. A boundary page may carry `components` only when its known layout declares a compatible slot. Today `verdict-index` and `gauge-verdict` each accept one `bullets` component on a cover, while selected ending layouts accept their declared body content. Put ordinary body content on a `content` page. `validate` names any field that the known layout would drop and tells you to move it.
 
 ```json
-// pages/closing.json — spec type "ending" — WRONG: components never render on an ending page
-{ "components": [{ "type": "bullets", "items": ["Thank you", "Questions? sales@example.com"] }] }
+// pages/market.json, spec type "chapter": WRONG because chapter layouts do not render components
+{ "components": [{ "type": "bullets", "items": ["Market size", "Buyer segments"] }] }
 ```
 
 ```json
-// pages/wrap-up.json — spec type "content", inserted right before the ending page — CORRECT
-{ "components": [{ "type": "bullets", "items": ["Thank you", "Questions? sales@example.com"] }] }
+// pages/market-detail.json, spec type "content": CORRECT
+{ "components": [{ "type": "bullets", "items": ["Market size", "Buyer segments"] }] }
 ```
 
 ```json
-// pages/closing.json — spec type "ending" — stays bare, nothing to move here
+// pages/market.json, spec type "chapter": stays bare, nothing to move here
 {}
 ```
 
@@ -47,7 +81,9 @@ Propose and confirm before writing any page content.
 
 - Lock a narrative package first: named preset (or explicit axes), theme id, branding posture, and a type-scale band (how large cover / chapter / speech headings render: `regular` omit/1, `display` 1.3, `hero` 1.5). This is a decision layer above theme, not a visual choice. Use the Narrative interview below when any axis is still unknown and a user is present. Do not silently pick a preset in that case.
 - Density (leave air vs pack the page) is decided in that interview (or derived). Follow the Sparse-page contract in `references/layouts.md` when you pin climax, quote, and evidence layouts and write `notes`. `pacing` does not grow a fourth value for this.
-- Theme id comes from the chosen narrative's `themeRecommendations` in `narratives --json` (or from `themes` output if none fit — a recommendation, never a constraint). If the interview's brand question returned a template, extract it first — see `references/branding.md`.
+- Derive controlled occasion signals from the request and workspace, such as `business`, `education`, `event`, or `institutional`. Use `themes --json` to shortlist two or three themes whose `occasions` match, then use `identity` to choose how quiet or expressive the look should be. Narrative `themeRecommendations` are a reference signal and tie-break after those keys. They never override an occasion or identity match. With no occasion match, use them only as the router's fallback before an identity-only list and `consulting`. If the interview's brand question returned a template, extract it to a candidate theme file first. Do not name it project `theme.json` until the user confirms it. See `references/branding.md`.
+- When the user wants to compare built-in looks, run `pptwise preview deck-dir/ --themes consulting,swiss,memo` with two to four shortlisted ids. It writes a contact sheet containing the same resolved cover and first content page repainted in every theme. Show that image and let the user choose visually. Preview a not-yet-persisted custom candidate separately with `pptwise preview deck-dir/ --theme-file <candidate> --theme <id> --html`, because registration does not select it. In a run with no user, take the first deterministic occasion and identity match and state the choice.
+- After confirmation, write the chosen id into `deck.spec.json`. A custom theme file belongs at `deck-dir/theme.json`, and its id belongs in the spec. That project path needs no `--theme-file` or `--theme` flags. A built-in choice needs no `theme.json` copy.
 - Write the confirmed `narrative`, `theme`, and `branding` into `deck.spec.json` as soon as the user agrees, before drafting any page. Do not hold them in the conversation and reconstruct them once pages exist.
 - Draft `deck.spec.json`: one entry per page (`id`, `type`, `heading`, optionally `beat`/`focus`/`summary`) — opens on `cover`, closes on `ending`, everything in between is `content` or `chapter`. Write `narrative` as a preset id string when the three axes match a preset exactly, otherwise as `{strategy, pacing, audience}`. Never write `{id, pacing}` mixed shapes. Omit `branding` by default. Write `branding: "full"` only when every content page needs the brand footer (and whenever `meta.confidentiality` is `confidential` or `restricted`). Do not invent a `typeScale` field on the spec — it does not exist. The band is a recommendation. Only a bare IR (spec skipped) may put `theme.style.shape.typeScale` on the IR itself.
 - Run `pptwise spec validate deck.spec.json` and fix whatever it reports until it prints `OK` — the hard gates (boundary pages, heading length, beat rotation, page count vs. pacing) all fire here, before a single page is written
@@ -96,7 +132,7 @@ After the reply, emit one package and one backup, one sentence of reason, one cl
 `recommend: <preset-or-axes> × <theme> × branding omit|full × typeScale regular|display|hero`
 `what would change it: <one clause>` — most often: this will be forwarded without a speaker, so put the extra words in notes, or recommend a PDF instead of packing the slide.
 
-Lookup (theme = first `themeRecommendations` entry from `narratives --json` for that preset, or for the nearest preset when writing axes). Omit the field by default. Write `"full"` when `meta.confidentiality` is `confidential` or `restricted`, or every content page needs the brand footer. `customer` + `talk-pyramid` + `spacious` → `pitch` / omit / display. `executive` + `talk-pyramid` + `spacious` → `boardroom-report` / omit / display. `customer` + `talk-showcase` + `spacious` → `product-launch` / omit / display. `technical` + `teach` + `balanced` → `training` / omit / regular. `technical` + `read-brief` + `dense` → `weekly-brief` / omit / regular. `executive` + `read-brief` + `dense` → axes `{pyramid, dense, executive}` / omit / regular, theme from `boardroom-report`. `public` + storytelling + `balanced` → `annual-review` / omit / regular. Else write the axes object and take the nearest preset's theme list: `pyramid`+`executive` → `boardroom-report`, `pyramid`+`customer` → `pitch`, `showcase` → `product-launch`, `instructional` → `training`, `briefing`+`dense` → `weekly-brief`, `storytelling` → `annual-review`, else `general`.
+Lookup below chooses the narrative preset, branding posture, and type-scale band. Theme selection follows the occasion and identity route above. A matching preset's `themeRecommendations` may break a remaining tie, but it is never the primary selector. Omit the branding field by default. Write `"full"` when `meta.confidentiality` is `confidential` or `restricted`, or every content page needs the brand footer. `customer` + `talk-pyramid` + `spacious` → `pitch` / omit / display. `executive` + `talk-pyramid` + `spacious` → `boardroom-report` / omit / display. `customer` + `talk-showcase` + `spacious` → `product-launch` / omit / display. `technical` + `teach` + `balanced` → `training` / omit / regular. `technical` + `read-brief` + `dense` → `weekly-brief` / omit / regular. `executive` + `read-brief` + `dense` → axes `{pyramid, dense, executive}` / omit / regular. `public` + storytelling + `balanced` → `annual-review` / omit / regular. Else write the axes object using the nearest preset: `pyramid`+`executive` → `boardroom-report`, `pyramid`+`customer` → `pitch`, `showcase` → `product-launch`, `instructional` → `training`, `briefing`+`dense` → `weekly-brief`, `storytelling` → `annual-review`, else `general`.
 
 Type-scale band: `regular` when `dense` or `balanced`. `display` when `spacious`. `hero` only on a repaint that switches the theme to `stage`. Do not retarget a boardroom deck to `stage` just to enlarge titles. Do not write `typeScale` onto `deck.spec.json`. Do not edit a repo-root `pptwise.config.json` for one deck. On a bare IR (spec skipped) a non-`regular` band may be written as `theme.style.shape.typeScale` 1.3 or 1.5.
 

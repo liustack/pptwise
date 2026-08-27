@@ -9,7 +9,7 @@ mirror_of: skills/pptwise/references/validate.md
 
 ### Phase 3 — 分批填页面（每批至多 4 页），随填随 validate
 
-对已确认 spec 里的每一页，写一个 `pages/<page-id>.json` 存放它的内容（`components`，以及可选的 `layout`/`arrangement`/`background`/`image_side`/`footnote`/`notes`——绝不写 `type`/`heading`，这两个字段被 spec 锁定）。撰写 `cover`/`chapter`/`ending` 页面时记住 Phase 1 的边界页规则——不要先给它们塞 `components` 或 `footnote`，然后再回头搬走。`notes` 是给主讲人看的演讲稿——写一份好的讲稿是模型的强项。只要页面需要一段超出幻灯片本身的口头讲解，就起草 `notes`（稀排页合同）。这是默认动作，不是可选项。
+对已确认 spec 里的每一页，写一个 `pages/<page-id>.json` 存放它的内容（`components`，以及可选的 `layout`/`arrangement`/`background`/`image_side`/`footnote`/`notes`，绝不写 `type`/`heading`，这两个字段被 spec 锁定）。撰写 `cover`/`chapter`/`ending` 页面时记住 Phase 1 的边界页规则。footnote 在这些页都不渲染。component 需要已知版式声明兼容槽位，当前 chapter 版式没有这类槽位。`notes` 是给主讲人看的演讲稿。写一份好的讲稿是模型的强项。只要页面需要一段超出幻灯片本身的口头讲解，就起草 `notes`（稀排页合同）。这是默认动作，不是可选项。
 
 ```bash
 pptwise assemble deck-dir/     # materializes deck.json — catches structural drift: orphan page files, locked-field violations, a broken spec
@@ -26,7 +26,9 @@ pptwise render deck-dir/
 
 `.pptx` 落在 `.pptwise/<deck>/`。命令会打印绝对路径，把那一行报给用户。
 
-`--theme <id>` 在不改动 spec 的前提下覆盖 deck 的 theme。`--style <path>` 在其上叠加一层 style-token 覆盖（不用分叉 theme 就能重新配色，schema 见 `pptwise schema --style`）。deck 里还有未填的占位页时，render 会拒绝导出，除非加上 `--draft`——只有当用户明确想在所有页面都写完之前先看一眼时，才用它。某一页装不下、版面丢掉了放不下的块而页面上毫无提示时，render 同样拒绝导出，报错会写清哪几页各丢了几块。正确做法是把那一页缩短或拆成两页再重新渲染，`--allow-dropped-content` 会带着缺失的内容出片，只有用户明确要求时才用。
+`--theme <id>` 是 repaint，只在不改 spec 的情况下换视觉皮肤。已经 assemble 的 `deck.json` 会保留所有已物化的 layout id，不会自动换成新主题的结构骨相。要吃到新主题的完整结构，先改 `deck.spec.json` 的 `theme`，再跑一次 `pptwise assemble deck-dir/`，随后重跑 validate、audit、render。`--style <path>` 在主题上叠加 style-token 覆盖，schema 见 `pptwise schema --style`。
+
+deck 里还有未填的占位页时，render 会拒绝导出，除非加上 `--draft`。只有用户明确想在所有页面都写完之前先看一眼时，才用它。某一页装不下、版面丢掉了放不下的块而页面上毫无提示时，render 同样拒绝导出，报错会写清哪几页各丢了几块。正确做法是把那一页缩短或拆成两页再重新渲染。`--allow-dropped-content` 会带着缺失内容出片，只有用户明确要求时才用。
 
 如果项目里有 `pptwise.config.json`，它的 theme/style 就是项目默认值——除非用户要求，不要用 `--theme` 跟它对着干。阶段三里写的任何页面 `notes` 都会导出成原生 PowerPoint 演讲者备注（PowerPoint/Keynote 里的 View → Notes）——从不会画到幻灯片本身上。
 
@@ -38,7 +40,7 @@ pptwise render deck-dir/
 pptwise audit deck-dir/
 ```
 
-零 token、零方差——它离屏渲染每一页，检查溢出（overflow）、越界（out-of-bounds）、低对比度（low-contrast）、重叠（overlap）、内容截断（content-truncated，省略号截掉了真实文字）、内容丢失（content-dropped，某个条目或整个 component 被静默截掉，SVG 里标成 data-dropped），发现问题就 exit 1（干净则是 0）。每条 finding 都标出所在页面（和 id），并带一个修法。修那一页被标出的内容——和处理 `validate` 报错一样遵循「重组，不要删除」的纪律——然后单独重跑一次 `pptwise audit deck-dir/`（不用重新渲染）直到 exit 0。这是这份 deck 的视觉 QA。不要用肉眼看截图来代替它。
+它不消耗 token，输出确定。命令会离屏渲染每一页，检查 overflow、out-of-bounds、low-contrast、overlap、content-truncated 与 content-dropped。连续三张或更多非占位页以同一种 component 开头时，还会报告 `monotony`。没有 component 的页面会打断这段连续区间。出现任一 finding 时 exit 1，干净则是 0。每条 finding 都标出页面并带修法。按处理 `validate` 报错时的「重组，不要删除」纪律修内容。看到 `monotony` 时更换重复的领头组件。随后单独重跑 `pptwise audit deck-dir/`，直到 exit 0。这是 deck 的视觉 QA，不要用肉眼看截图代替。
 
 如果有页面用了 cover/chapter 照片背景，加上 `--pixels`——它会把该页光栅化并采样真实像素，抓住文字直接压在一张没有遮罩的照片上的情况，这是上面纯 SVG 检查唯一看不到的一种。
 
