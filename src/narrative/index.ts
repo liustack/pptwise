@@ -535,11 +535,17 @@ export interface NarrativePreset {
   id: string
   axes: NarrativeProfile
   /**
-   * Soft theme recommendations — a suggestion, never a hard constraint
-   * (spec §5). Surfaced in workflow step ① so an agent can open with a
-   * themed proposal — the user may still pick any theme. Every entry here
-   * must be a real `BUILTIN_THEME_IDS` member (`ir/index.ts`) — enforced by
-   * this module's test suite, which imports and tests against it.
+   * Narrative-side reference signal, never a hard constraint (spec §5).
+   * Theme reachability is authored on the theme itself
+   * (`src/themes/occasions.ts`). The selection entry is
+   * `src/themes/select.ts`, which may consult this list as a tie-break
+   * or as a fallback when no occasion signal is present. This field used
+   * to be the authority that made a new theme reachable, an inverted
+   * edge: new builtins had to edit the narrative table to be discovered,
+   * and fourteen of twenty-four sat undiscoverable as a result. Values
+   * here are unchanged. Every entry must still be a real
+   * `BUILTIN_THEME_IDS` member (`ir/index.ts`). This module's test
+   * suite enforces that.
    */
   themeRecommendations: readonly string[]
 }

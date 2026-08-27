@@ -83,7 +83,7 @@ const CommonThemeFileFields = {
   label: z.string().min(1).optional(),
   style: StyleTokensFileSchema,
   brand: BrandConfigSchema.optional(),
-  occasions: z.array(z.enum(OCCASION_VOCAB)).min(1).optional(),
+  occasions: z.array(z.enum(Object.keys(OCCASION_VOCAB) as [Occasion, ...Occasion[]])).min(1).optional(),
   identity: z.enum(["low", "medium", "high"]).optional(),
 }
 
