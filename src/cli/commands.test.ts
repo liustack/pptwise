@@ -10,6 +10,7 @@ import { installNodePlatform } from "@/platform/node"
 import { NARRATIVE_PRESETS } from "../narrative"
 import { CAPACITY } from "../audit/capacity"
 import { __resetRegisteredThemes } from "../themes/definitions"
+import { THEME_OCCASIONS } from "../themes/occasions"
 import { buildThmxBytes, DEFAULT_THMX_COLORS, PATHOLOGICAL_THMX_COLORS } from "../themes/extract/__fixtures__/thmx"
 import {
   applyDeckConfig,
@@ -620,9 +621,9 @@ describe("runSchema / runThemes", () => {
     expect(rows).toHaveLength(24)
     expect(Object.keys(rows[0]!)).toEqual(expect.arrayContaining(["id", "label", "colors", "occasions", "identity"]))
     for (const row of rows) {
-      expect(Array.isArray(row.occasions)).toBe(true)
-      expect(row.occasions).toEqual([])
-      expect(row.identity).toBeNull()
+      const rec = THEME_OCCASIONS[row.id as keyof typeof THEME_OCCASIONS]
+      expect(row.occasions).toEqual(rec.occasions)
+      expect(row.identity).toBe(rec.identity)
       expect(typeof row.label).toBe("string")
       expect(row.label.length).toBeGreaterThan(0)
     }

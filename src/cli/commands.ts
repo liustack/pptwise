@@ -893,13 +893,18 @@ export function runThemes(asJson: boolean): string {
   const themes = listThemes()
   if (asJson) {
     return JSON.stringify(
-      themes.map((t) => ({
-        id: t.id,
-        label: t.label,
-        colors: t.colors,
-        occasions: THEME_OCCASIONS[t.id]?.occasions ?? [],
-        identity: THEME_OCCASIONS[t.id]?.identity ?? null,
-      })),
+      themes.map((t) => {
+        const rec = Object.hasOwn(THEME_OCCASIONS, t.id)
+          ? THEME_OCCASIONS[t.id as keyof typeof THEME_OCCASIONS]
+          : undefined
+        return {
+          id: t.id,
+          label: t.label,
+          colors: t.colors,
+          occasions: rec?.occasions ?? [],
+          identity: rec?.identity ?? null,
+        }
+      }),
       null,
       2,
     )
