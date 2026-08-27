@@ -73,11 +73,15 @@ cat > deck.json <<'EOF'
 EOF
 pptwise validate deck.json                              # → OK — 3 slides, theme "consulting"
 pptwise render deck.json -o out/hello.pptx              # → wrote out/hello.pptx (3 slides, ~24 KB)
-pptwise render deck.json -o out/tech.pptx --theme tech  # 同一份 deck，换个主题
+pptwise render deck.json -o out/tech.pptx --theme tech  # 同一份裸 IR，显式覆盖主题
 pptwise preview deck.json -o out/svgs                   # 每页一张 SVG，供人工目检
 ```
 
-只有一条形状规则：`cover`/`chapter`/`ending` 页只有 heading + subheading，组件都放在 `content` 页上。写混了 `validate` 会原话告诉你。
+边界页只有在已解析版式声明了兼容槽位时才渲染 component。内容会消失时，`validate` 会明确指出。
+
+按 `pptwise themes --json` 的任务 `occasions` 与所需 `identity` 选择视觉方向。多个主题都合适时，用 `pptwise preview <target> --themes <id,id,...>` 看对比图。自定义版本 1 主题分两种，partial 主题带内置 `base`，complete 主题声明四类 face pool。
+
+对已经 assemble 的 deck，`--theme` 是保留已物化 layout id 的 repaint。要采用另一套主题的结构骨相，请修改项目 spec 的主题并重新 assemble。
 
 不想安装也行：`npx -y @liustack/pptwise validate deck.json`。源码仓库里则用 `node dist/cli.js` 代替 `pptwise`，`examples/` 下有现成的 IR 文件可以直接试。
 
@@ -87,10 +91,11 @@ pptwise preview deck.json -o out/svgs                   # 每页一张 SVG，供
 |---|---|
 | `validate <target>` | 校验 IR，每条报错都带页码 |
 | `render <target> [-o <out.pptx>] [--theme <id>]` | 渲染出 `.pptx`。省略 `-o` 则写到 `.pptwise/<deck>/<deck>.pptx` |
-| `preview <target> [-o <dir>] [--html]` | 每页一张 SVG，外加一个自包含的审阅页。省略 `-o` 则写到 `.pptwise/<deck>/` |
+| `preview <target> [-o <dir>] [--html] [--themes <id,id,...>]` | 每页一张 SVG、自包含审阅页，或封面与内容页主题对比图。省略 `-o` 则写到 `.pptwise/<deck>/` |
 | `serve <target>` | 随改动自动刷新的实时预览 |
-| `audit <target>` | 几何审查：溢出、越界、低对比度、重叠 |
-| `themes` | 列出 24 套内置主题（24 个 id） |
+| `audit <target>` | 确定性审查：几何、内容丢失与单调性 |
+| `themes [--json]` | 列出 24 套内置主题及场合和个性强度元数据 |
+| `layouts [--json]` | 列出版式、pin-only 状态、容量与槽位 |
 | `doctor` | 体检这套安装：运行时、skill 副本、可选能力、自检渲染 |
 
 完整命令表见 [`docs/cli.zh-CN.md`](./docs/cli.zh-CN.md)。
@@ -103,7 +108,7 @@ pptwise preview deck.json -o out/svgs                   # 每页一张 SVG，供
 | [Agent skill](./skills/pptwise/SKILL.zh-CN.md) | 了解 pptwise 教给 agent 的完整工作流 |
 | [CLI 手册](./docs/cli.zh-CN.md) | 查询命令、参数、审查、预览与健康检查 |
 | [IR 参考](./docs/ir.zh-CN.md) | 用 JSON 编写 deck、页面、组件与叙事 |
-| [主题](./docs/themes.zh-CN.md) | 挑选内置主题，或从自家 PPT 提取品牌 |
+| [主题](./docs/themes.zh-CN.md) | 按场合路由、对比外观，或编写 partial 与 complete 主题 |
 | [核心概念](./docs/concepts.md) | 理解主题、版式、组件、叙事与容量模型 |
 | [架构](./docs/architecture.md) | 修改渲染链，或新增主题、版式与组件 |
 | [Deck 项目](./docs/deck-projects.md) | 用锁定 spec、页面文件、素材与实时审阅制作复杂 PPT |
