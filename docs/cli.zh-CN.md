@@ -1,5 +1,5 @@
 ---
-summary: 'CLI 完整命令表、audit 的六类检查、配图简报，以及推荐给 agent 的生成回路'
+summary: 'CLI 完整命令表、audit 的七类检查、配图简报，以及推荐给 agent 的生成回路'
 read_when:
   - 找一条 README 上没列的命令
   - 读到 audit 的报错，想知道这条检查在查什么
@@ -22,10 +22,11 @@ read_when:
 | `assemble <dir\|name> [-o <file>]` | 把 deck 项目目录合并成单个 IR JSON 文件 |
 | `disassemble <ir.json> -o <dir>` | 把 IR JSON 文件拆成 deck 项目目录 |
 | `schema [--style \| --spec]` | 输出 IR 的 JSON Schema（或 style 覆盖 schema，或 deck spec schema） |
-| `themes [--json]` | 列出 24 套内置主题（24 个 id） |
+| `themes [--json]` | 列出 24 套内置主题（24 个 id）。`--json` 还会带上 `occasions` 和 `identity`（场合表落地前为空） |
+| `layouts [--json]` | 列出已注册版式：id、页型、是否 pin-only、容量、槽位概要 |
 | `brand extract <file> -o <out.theme.json> [--id] [--label]` | 从 `.thmx`/`.potx`/`.pptx` 本地抽取品牌配色与字体生成主题文件（见[主题](./themes.zh-CN.md#你自己的品牌)） |
 | `narratives [--json]` | 列出具名叙事预设（strategy/pacing/audience 轴 + theme 推荐） |
-| `preview <target> [-o <dir>] [--html] [--no-git-ignore]` | 逐页渲染为独立 SVG（`--html` 额外写出一个自包含的 `preview.html`），永远不受占位页拦截。不传 `-o` 时写到 `<项目>/.pptwise/<deck>/` |
+| `preview <target> [-o <dir>] [--html] [--theme <id>] [--themes <id,id,...>] [--no-git-ignore]` | 逐页渲染为独立 SVG（`--html` 额外写出一个自包含的 `preview.html`）。`--themes`（2-4 个 id）写出 `contact-sheet.html`，把封面和第一页 content 按主题并排对比。永远不受占位页拦截。不传 `-o` 时写到 `<项目>/.pptwise/<deck>/` |
 | `serve <target> [--port 4400] [--no-open]` | 实时预览服务：与 `preview --html` 同款审阅页，源文件变化自动刷新 |
 | `migrate <input> -o <output>` | 把 v3 IR 文件转成 v4，并把 chrome 改写成 branding、bloom 改写成 classroom、logo_wall 改写成 image_grid、banner-heading 改写成 two-column，或把 `deck.plan.json` 项目目录转成 `deck.spec.json`。确定性转换，不调模型 |
 | `init` | 生成 `pptwise.config.json` 模板（仍会读取遗留的 `pptpress.config.json` 与 `pptfast.config.json`） |
@@ -37,7 +38,11 @@ read_when:
 | `doctor [--json]` | 体检本机安装：skill 副本、dsh 插件、运行时、可选能力、自检渲染、图库 key、本机生图 CLI（见[体检](#体检)） |
 | `check-update` / `self-update` | 检查 npm 上的新版本 / 更新全局安装 |
 
-`--theme-file` 在 `render`、`validate`、`audit`、`preview`、`serve` 上都可用。
+`--theme-file` 在 `render`、`validate`、`audit`、`preview`、`serve` 上都可用。它只装载并注册自定义主题，并不选中它。要用这个 id，请再传 `--theme <id>`，或在 spec/IR 里写上该主题。
+
+主题选择顺序是 `--theme`，然后（目标是 deck 项目且 spec 真写了 `theme` 时的）`deck.spec.json`，然后裸 IR 文件里作者写的 `theme.id`，然后项目 `pptwise.config.json`，然后用户 `$PPTWISE_HOME/config.json`，最后才是 schema 默认值 `consulting`。组装 deck 目录时即使 spec 没写 `theme` 也会填上 `theme.id`。那份填出来的默认值不算作者层，所以省略 spec 主题时不会用 `consulting` 压过项目配置。目录里的 `theme.json` 和 `--theme-file` 只负责注册。
+
+`pptwise preview --themes consulting,tech,ink` 在同一输出目录写出 `contact-sheet.html`：一列一个主题，行是封面和第一页 content，SVG 内联进页面。不必再加 `--html`。
 
 省略 `-o` 时，`render` / `preview` 把产物写到项目根下的 `.pptwise/<deck>/`（项目根是 `pptwise.config.json` 所在目录，找不到配置就用 cwd）。命令每次都打印绝对路径。第一次创建该目录时，CLI 会把 `.pptwise/` 追加进 `.git/info/exclude`，产物留在本地。`--no-git-ignore` 跳过这一步。项目配置里的 `outDir` 会整体替换 `.pptwise`，同时也跳过 exclude。显式的 `-o` 永远优先，那个路径既不清扫，也不代写忽略。
 
@@ -47,7 +52,7 @@ read_when:
 
 `pptwise audit <target> [--json]` 离屏渲染每一页，跑一遍确定性几何审查，不靠模型看截图，两次跑出来的结果一样。
 
-六类检查：
+七类检查：
 
 - **溢出**：文字超出自己的框或列。
 - **越界**：内容超出页面边缘。
@@ -55,6 +60,7 @@ read_when:
 - **重叠**：两个组件的区域大面积相交。
 - **内容截断**：渲染器为适配版面切了字，打上 `data-truncated="1"`，画面上不画溢出标记。
 - **内容丢失**：一张卡片列表被截断到放得下的条数，或者整个组件放不下被整块丢掉。渲染器打上静默的 `data-dropped`（页级还有 `data-dropped-silent`），页面上不出现「+N 更多」。
+- **单调**：连续三页或更多已审计页以同一组件类型开头。占位页和没有组件的页会打断这段连续。finding 会写出类型和页码范围，并建议把相邻页的首个组件错开（bullets、chart、kpi、quote），避免整段读起来像同一套模板。
 
 audit 是建议性工具，不是硬门。结构非法或密度超标的 deck 由 `validate` 拦下，audit 抓的是一份*合法* deck 在渲染层仍可能出现的问题：作者选了一个贴近背景色的文字颜色、两个组件的内容恰好撞在一起、一张卡片列表放不下丢了一条。
 
