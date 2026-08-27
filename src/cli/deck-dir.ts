@@ -385,6 +385,12 @@ export interface DeckDirResult extends AssembleResult {
   /** Absolute path to the deck directory — the base `resolveLocalAssets`
    *  should resolve this IR's (relative) asset paths against. */
   deckDir: string
+  /** Absolute path to `deck.spec.json`. */
+  specPath: string
+  /** Spec's own `theme` string, omitted when the spec did not set one.
+   *  Extracted from the raw spec before assemble, which always fills
+   *  `theme.id` (schema default consulting) even when the spec omitted it. */
+  specTheme?: string
 }
 
 /**
@@ -432,14 +438,29 @@ export interface DeckDirResult extends AssembleResult {
  * cache keys on, not just correct because of what today's two caches happen
  * to skip.
  */
+function specThemeFromRaw(spec: unknown): string | undefined {
+  if (typeof spec !== "object" || spec === null) return undefined
+  const theme = (spec as Record<string, unknown>).theme
+  return typeof theme === "string" ? theme : undefined
+}
+
 export async function readDeckDir(dir: string): Promise<DeckDirResult> {
   const deckDir = resolve(dir)
+  const specPath = join(deckDir, SPEC_FILENAME)
   const spec = await readSpecFile(deckDir)
+  const specTheme = specThemeFromRaw(spec)
   const pages = await readPages(deckDir)
   const { ir, generatedSeed, materializedLayoutCount } = assembleDeck(spec, pages as Record<string, PageContent>)
   const images = await scanAssets(deckDir)
   const merged = { ...ir, assets: { images: { ...ir.assets.images, ...images } } }
-  return { ir: merged, generatedSeed, materializedLayoutCount, deckDir }
+  return {
+    ir: merged,
+    generatedSeed,
+    materializedLayoutCount,
+    deckDir,
+    specPath,
+    ...(specTheme !== undefined ? { specTheme } : {}),
+  }
 }
 
 // ── assets/ (write direction — disassemble) ─────────────────────────────

@@ -22,10 +22,11 @@ Every command that takes a `<target>` accepts the same three forms: an IR JSON f
 | `assemble <dir\|name> [-o <file>]` | Materialize a deck project directory into a single IR JSON file |
 | `disassemble <ir.json> -o <dir>` | Split an IR JSON file into a deck project directory |
 | `schema [--style \| --spec]` | Print the IR JSON Schema (or the style-override schema, or the deck spec schema) |
-| `themes [--json]` | List the built-in themes |
+| `themes [--json]` | List the built-in themes. `--json` also includes `occasions` and `identity` (empty until the occasion table lands) |
+| `layouts [--json]` | List registered layouts: id, slide types, pin-only, capacity, slots |
 | `brand extract <file> -o <out.theme.json> [--id] [--label]` | Extract brand colors and fonts from a `.thmx`/`.potx`/`.pptx` into a theme file, entirely locally (see [Themes](./themes.md#your-own-brand)) |
 | `narratives [--json]` | List named narrative presets (strategy/pacing/audience axes + theme recommendations) |
-| `preview <target> [-o <dir>] [--html] [--no-git-ignore]` | Render each slide to a standalone SVG (`--html` also writes a self-contained `preview.html`), never gated on placeholder pages. Without `-o`, writes `<project>/.pptwise/<deck>/` |
+| `preview <target> [-o <dir>] [--html] [--theme <id>] [--themes <id,id,...>] [--no-git-ignore]` | Render each slide to a standalone SVG (`--html` also writes a self-contained `preview.html`). `--themes` (2-4 ids) writes `contact-sheet.html` comparing cover and first content across those themes. Never gated on placeholder pages. Without `-o`, writes `<project>/.pptwise/<deck>/` |
 | `serve <target> [--port 4400] [--no-open]` | Live-preview server: the same review page as `preview --html`, auto-reloading on source changes |
 | `migrate <input> -o <output>` | Convert a v3 IR file to v4, rewrite chrome to branding, bloom to classroom, logo_wall to image_grid, or banner-heading to two-column, or convert a `deck.plan.json` project directory to `deck.spec.json`. Deterministic, no model call |
 | `init` | Scaffold `pptwise.config.json` (still reads leftover `pptpress.config.json` and `pptfast.config.json`) |
@@ -37,7 +38,11 @@ Every command that takes a `<target>` accepts the same three forms: an IR JSON f
 | `doctor [--json]` | Diagnose this machine's install: skill copies, dsh plugin, runtime, optional capabilities, self-test render, stock-photo keys, and local image generators (see [Doctor](#doctor)) |
 | `check-update` / `self-update` | Check npm for a newer release / update the global install |
 
-`--theme-file` works on `render`, `validate`, `audit`, `preview`, and `serve`.
+`--theme-file` works on `render`, `validate`, `audit`, `preview`, and `serve`. It loads and registers a custom theme. It does not select it. Pass `--theme <id>` or set the spec/IR theme to use that id.
+
+Theme selection is `--theme`, then `deck.spec.json` `theme` when the target is a deck project and the spec names one, then an authored IR `theme.id` on a bare file, then project `pptwise.config.json`, then user `$PPTWISE_HOME/config.json`, then the schema default `consulting`. Assembling a deck dir fills `theme.id` even when the spec omitted it. That filled default is not an authored layer, so an omitted spec theme does not beat project config with `consulting`. `theme.json` in a deck dir and `--theme-file` only register.
+
+`pptwise preview --themes consulting,tech,ink` writes `contact-sheet.html` in the same output directory: one column per theme, rows for the cover and the first content page, SVGs inlined. No extra `--html` flag is required.
 
 Omit `-o` and `render`/`preview` write under `.pptwise/<deck>/` at the project root (the directory that holds `pptwise.config.json`, or cwd if there is no project config). The command always prints the absolute path. The first time that directory is created, the CLI appends `.pptwise/` to `.git/info/exclude` so the artifacts stay local. `--no-git-ignore` skips that. A project config `outDir` replaces `.pptwise` wholesale and also skips the exclude line. An explicit `-o` still wins, and that path is never pruned or ignored on the tool's behalf.
 
@@ -47,7 +52,7 @@ Omit `-o` and `render`/`preview` write under `.pptwise/<deck>/` at the project r
 
 `pptwise audit <target> [--json]` renders every page off-screen and runs a deterministic geometry review — no screenshots for a model to squint at, no variance between runs.
 
-Six checks:
+Seven checks:
 
 - **overflow** — text past its own box or column.
 - **out-of-bounds** — anything past the page edge.
@@ -55,6 +60,7 @@ Six checks:
 - **overlap** — two components' regions substantially colliding.
 - **content-truncated** — text the renderer had to cut to fit. It stamps `data-truncated="1"` and paints no overflow mark.
 - **content-dropped** — a card list trimmed to what fits, or a whole component the page had no room for. The renderer stamps silent `data-dropped` (page-level also `data-dropped-silent`). The slide does not show "+N …".
+- **monotony**: three or more consecutive audited pages open with the same component type. Placeholder pages and pages with no components break the streak. The finding names the type and the page range, and asks you to mix the lead component (bullets, chart, kpi, quote) so neighbouring pages do not read as the same template.
 
 Audit is advisory, not a hard gate. `validate` already rejects a structurally invalid or over-dense deck. Audit catches what a *valid* deck can still get wrong at render time: an author-chosen text color that sits too close to the background, two components whose combined content collides, a card list that had to drop an item.
 

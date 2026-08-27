@@ -32,7 +32,10 @@ import { buildAssetBrief, type AssetBrief, type AssetBriefItem } from "../render
 import { assertContrastFloor, getInstalledThemeIds } from "../themes/definitions"
 import { extractBrandTheme, slugify } from "../themes/extract/brand-extract"
 import { parseBrandThemeFile, registerBrandThemeFile } from "../themes/brand-theme-file"
+import { REGISTERED_THEMES } from "../themes/registered-themes"
 import { CANONICAL_THEME_IDS } from "../themes"
+import { THEME_OCCASIONS } from "../themes/occasions"
+import { LAYOUT_REGISTRY } from "../layouts/registry"
 import { CONFIG_FILENAME, findConfig, findUserConfig } from "./config"
 import {
   assertSafeFileSegment,
@@ -48,7 +51,7 @@ import {
   THEME_FILENAME,
 } from "./deck-dir"
 import { loadIrFile, resolveLocalAssets } from "./load-ir"
-import { buildPreviewHtml } from "./preview-html"
+import { buildContactSheetHtml, buildPreviewHtml } from "./preview-html"
 import { buildPreviewManifest } from "./preview-manifest"
 import {
   prepareWorkspaceDir,
@@ -89,13 +92,16 @@ async function loadStyleFile(path: string): Promise<StyleOverride> {
  * (`parseBrandThemeFile`'s own path-naming message), a builtin-id collision
  * (裁定 4 — a theme file must never shadow a builtin), or a contrast-floor
  * failure (`registerTheme`'s `assertContrastFloor`, whose message names the
- * failing token, the measured ratio, and the background). Re-loading a file
- * whose id is already registered is a no-op (`registerBrandThemeFile`'s own
- * idempotency — `pptwise serve`'s rebuild loop re-runs this every rebuild).
+ * failing token, the measured ratio, and the background). Custom ids live
+ * only in `REGISTERED_THEMES`: delete then re-register so `pptwise serve`
+ * rebuilds pick up edits to the theme file. Builtin collisions still throw
+ * inside `registerBrandThemeFile`.
  */
 async function loadThemeFile(path: string): Promise<string> {
   const raw = await loadIrFile(path, "theme")
-  return registerBrandThemeFile(parseBrandThemeFile(raw, path))
+  const file = parseBrandThemeFile(raw, path)
+  REGISTERED_THEMES.delete(file.id)
+  return registerBrandThemeFile(file)
 }
 
 /**
@@ -114,19 +120,21 @@ async function registerDeckThemeFile(deckDir: string): Promise<void> {
   if (await pathExists(themePath)) await loadThemeFile(themePath)
 }
 
-/** Names which of the four precedence layers the (invalid) resolved `theme`
- *  value came from, for {@link applyDeckConfig}'s unknown-theme error — a
- *  config-file layer names its own path, `--theme` names itself, and the
- *  IR's own default has no path to name at all. */
+/** Names which selection layer the (invalid) resolved `theme` value came
+ *  from, for {@link applyDeckConfig}'s unknown-theme error. Registration
+ *  (`--theme-file` / deck `theme.json`) is not a selection layer. */
 function describeThemeSource(
-  opts: { theme?: string },
+  opts: { theme?: string; specTheme?: string; specPath?: string; fromDeckDir?: boolean },
+  irThemeId: unknown,
   projectHit: { path: string; config: { theme?: string } } | null,
   userHit: UserConfigHit,
 ): string {
   if (opts.theme !== undefined) return "--theme"
+  if (opts.specTheme !== undefined) return opts.specPath ?? "the deck spec"
+  if (!opts.fromDeckDir && typeof irThemeId === "string") return "the IR/schema default"
   if (projectHit?.config.theme !== undefined) return projectHit.path
   if (userHit?.config.theme !== undefined) return userHit.path
-  return "the deck's own theme"
+  return "the IR/schema default"
 }
 
 /**
@@ -163,18 +171,16 @@ function resolveDecksDirSource(
 
 /**
  * Resolve deck defaults onto the raw (pre-validation) IR.
- * Precedence (spec §7's four-layer chain, W5 task 5): CLI flag > project
- * `pptwise.config.json` (walked up from cwd) > user `~/.pptwise/config.json`
- * (`findUserConfig`, no cwd walk-up — a single fixed path, see `./config.ts`)
- * > whatever the artifact itself already carries (an authored IR's own
- * `theme`, or `PptxIRSchema`'s own "consulting" default when nothing
- * anywhere sets one — that bottom fallback is `irTheme.id`/`irTheme.style`
- * below, left `undefined` here for the schema to fill in). `--theme` only
- * swaps theme.id — IR-authored style survives. `--theme-file` (brand-extract
- * wave) slots in between `--theme` and the project config: it registers the
- * file's theme first (see `opts.themeFilePath`'s own doc comment below),
- * then its id competes at flag precedence, losing only to an explicit
- * `--theme`.
+ * Selection (`--theme` > spec theme > authored IR `theme.id` on a bare IR
+ * file > project config > user config > schema default). Registration
+ * (`--theme-file` / deck `theme.json`) is not a selection layer: those
+ * paths only call `registerBrandThemeFile` so the id can be named by a
+ * higher layer. `--theme` only swaps theme.id — IR-authored style survives.
+ *
+ * Assembled deck-dir IR always carries `theme.id` (schema default
+ * consulting) even when the spec omitted `theme`. That filled default is
+ * not an authored layer: pass `fromDeckDir: true` and `specTheme` from the
+ * raw spec instead of reading `ir.theme.id` after assemble.
  *
  * `opts.projectHit`/`opts.userHit` are the caller's own already-fetched
  * `findConfig(cwd)`/`findUserConfig()` results (`undefined` when the caller
@@ -189,24 +195,27 @@ function resolveDecksDirSource(
  * The installed-theme check used to run at config *read* time
  * (`readConfigFile`, `./config.ts`) — eagerly, against every layer's value,
  * whether or not it would ever actually apply. It now runs here instead,
- * once, against `theme` (the value that actually wins the four-layer
- * chain): a stale/unknown theme sitting in a config layer that a `--theme`
- * flag (or a higher-precedence config layer) overrides anyway must not
- * hard-fail a command over a value nothing was ever going to use.
+ * once, against `theme` (the value that actually wins the chain): a
+ * stale/unknown theme sitting in a config layer that a `--theme` flag (or a
+ * higher-precedence layer) overrides anyway must not hard-fail a command
+ * over a value nothing was ever going to use.
  */
 export async function applyDeckConfig(
   raw: unknown,
   opts: {
     theme?: string
-    /** `--theme-file <path>` (brand-extract wave): loads + registers the
-     *  theme file ({@link loadThemeFile} — `registerTheme`'s contrast gate
-     *  fires here, before `validateIr`), then applies the loaded id at the
-     *  CLI-flag precedence layer — an explicit `--theme` still wins the id
-     *  *selection* (the file stays registered either way, so `--theme
-     *  <the-file's-own-id>` is redundant-but-harmless, and `--theme
-     *  <some-builtin>` deliberately renders that builtin while the file's
-     *  theme sits unused). */
+    /** `--theme-file <path>`: loads + registers the theme file
+     *  ({@link loadThemeFile} — `registerTheme`'s contrast gate fires here,
+     *  before `validateIr`). Does not select the id. Pass `--theme <id>` or
+     *  set the spec/IR theme to use it. */
     themeFilePath?: string
+    /** Raw `deck.spec.json` `theme` when the target is a deck project and
+     *  the spec actually named one. Omitted when the spec omitted `theme`. */
+    specTheme?: string
+    specPath?: string
+    /** True when `raw` came from assembling a deck project directory.
+     *  Assembled IR's filled `theme.id` is not an authored selection layer. */
+    fromDeckDir?: boolean
     stylePath?: string
     cwd: string
     projectHit?: ProjectConfigHit
@@ -219,13 +228,17 @@ export async function applyDeckConfig(
     typeof deck.theme === "object" && deck.theme !== null
       ? (deck.theme as Record<string, unknown>)
       : {}
-  const themeFileId = opts.themeFilePath !== undefined ? await loadThemeFile(opts.themeFilePath) : undefined
+  if (opts.themeFilePath !== undefined) await loadThemeFile(opts.themeFilePath)
   const [projectHit, userHit] = await Promise.all([
     opts.projectHit !== undefined ? Promise.resolve(opts.projectHit) : findConfig(opts.cwd),
     opts.userHit !== undefined ? Promise.resolve(opts.userHit) : findUserConfig(),
   ])
   const theme =
-    opts.theme ?? themeFileId ?? projectHit?.config.theme ?? userHit?.config.theme ?? (irTheme.id as string | undefined)
+    opts.theme
+    ?? opts.specTheme
+    ?? (opts.fromDeckDir ? undefined : (irTheme.id as string | undefined))
+    ?? projectHit?.config.theme
+    ?? userHit?.config.theme
   const style = opts.stylePath
     ? await loadStyleFile(opts.stylePath)
     : (projectHit?.config.style ?? userHit?.config.style ?? irTheme.style)
@@ -233,12 +246,16 @@ export async function applyDeckConfig(
     const installedThemeIds = getInstalledThemeIds()
     if (!installedThemeIds.includes(theme)) {
       throw new PptwiseError(
-        `unknown theme "${theme}" (from ${describeThemeSource(opts, projectHit, userHit)}) — available: ${installedThemeIds.join(", ")} (see \`pptwise themes\`)`,
+        `unknown theme "${theme}" (from ${describeThemeSource(opts, irTheme.id, projectHit, userHit)}) — available: ${installedThemeIds.join(", ")} (see \`pptwise themes\`)`,
       )
     }
   }
   if (theme === undefined && style === undefined) return
-  deck.theme = { ...irTheme, id: theme, ...(style !== undefined ? { style } : {}) }
+  deck.theme = {
+    ...irTheme,
+    ...(theme !== undefined ? { id: theme } : {}),
+    ...(style !== undefined ? { style } : {}),
+  }
 }
 
 /**
@@ -307,14 +324,22 @@ async function loadDeckTarget(
   cwd: string,
   projectHit: ProjectConfigHit,
   userHit: UserConfigHit,
-): Promise<{ raw: unknown; baseDir: string; isDir: boolean; resolvedTarget: string; workspaceAssetsDir: string }> {
+): Promise<{
+  raw: unknown
+  baseDir: string
+  isDir: boolean
+  resolvedTarget: string
+  workspaceAssetsDir: string
+  specTheme?: string
+  specPath?: string
+}> {
   const target = await resolveDeckTarget(arg, resolveDecksDirSource(projectHit, userHit), cwd)
   if (await isDeckDirectory(target)) {
     // Brand-extract wave: a deck-local theme.json must be registered before
     // readDeckDir's own assemble step spec-validates the theme id — see
     // registerDeckThemeFile's doc comment.
     await registerDeckThemeFile(target)
-    const { ir, deckDir } = await readDeckDir(target)
+    const { ir, deckDir, specTheme, specPath } = await readDeckDir(target)
     const stock = await loadWorkspaceStock(cwd, projectHit, deckDir, true)
     return {
       raw: mergeWorkspaceImages(ir, stock.images),
@@ -322,6 +347,8 @@ async function loadDeckTarget(
       isDir: true,
       resolvedTarget: deckDir,
       workspaceAssetsDir: stock.workspaceAssetsDir,
+      specTheme,
+      specPath,
     }
   }
   const raw = await loadIrFile(target)
@@ -341,8 +368,8 @@ async function loadDeckTarget(
  *  `suggested_prompt` without duplicating the chain. */
 export async function loadValidatedDeckIr(target: string, cwd: string): Promise<PptxIR> {
   const [projectHit, userHit] = await Promise.all([findConfig(cwd), findUserConfig()])
-  const { raw, baseDir, workspaceAssetsDir } = await loadDeckTarget(target, cwd, projectHit, userHit)
-  await applyDeckConfig(raw, { cwd, projectHit, userHit })
+  const { raw, baseDir, workspaceAssetsDir, isDir, specTheme, specPath } = await loadDeckTarget(target, cwd, projectHit, userHit)
+  await applyDeckConfig(raw, { cwd, projectHit, userHit, specTheme, specPath, fromDeckDir: isDir })
   const v = validateIr(raw)
   if (!v.ok) {
     throw new PptwiseError(
@@ -402,10 +429,13 @@ export interface RenderOptions {
 export async function runRender(irPath: string, opts: RenderOptions): Promise<string> {
   const cwd = opts.cwd ?? process.cwd()
   const [projectHit, userHit] = await Promise.all([findConfig(cwd), findUserConfig()])
-  const { raw, baseDir, isDir, resolvedTarget, workspaceAssetsDir } = await loadDeckTarget(irPath, cwd, projectHit, userHit)
+  const { raw, baseDir, isDir, resolvedTarget, workspaceAssetsDir, specTheme, specPath } = await loadDeckTarget(irPath, cwd, projectHit, userHit)
   await applyDeckConfig(raw, {
     theme: opts.theme,
     themeFilePath: opts.themeFilePath,
+    specTheme,
+    specPath,
+    fromDeckDir: isDir,
     stylePath: opts.stylePath,
     cwd,
     projectHit,
@@ -541,11 +571,20 @@ function placeholderNote(ir: PptxIR): string | undefined {
 export async function runValidate(
   irPath: string,
   cwd = process.cwd(),
-  opts: { themeFilePath?: string } = {},
+  opts: { themeFilePath?: string; theme?: string } = {},
 ): Promise<string> {
   const [projectHit, userHit] = await Promise.all([findConfig(cwd), findUserConfig()])
-  const { raw, baseDir, isDir, workspaceAssetsDir } = await loadDeckTarget(irPath, cwd, projectHit, userHit)
-  await applyDeckConfig(raw, { themeFilePath: opts.themeFilePath, cwd, projectHit, userHit })
+  const { raw, baseDir, isDir, workspaceAssetsDir, specTheme, specPath } = await loadDeckTarget(irPath, cwd, projectHit, userHit)
+  await applyDeckConfig(raw, {
+    theme: opts.theme,
+    themeFilePath: opts.themeFilePath,
+    specTheme,
+    specPath,
+    fromDeckDir: isDir,
+    cwd,
+    projectHit,
+    userHit,
+  })
   const v = validateIr(raw)
   if (!v.ok)
     throw new PptwiseError(
@@ -631,6 +670,8 @@ export interface AuditOptions {
    *  existing invalid-IR `PptwiseError` path) rather than silently
    *  reporting a clean pixel check that never ran. */
   pixels?: boolean
+  /** `--theme <id>` — override the deck theme. */
+  theme?: string
   /** `--theme-file <path>` — see `applyDeckConfig`'s own `themeFilePath` doc comment. */
   themeFilePath?: string
 }
@@ -678,8 +719,17 @@ export interface AuditCliResult {
 export async function runAudit(target: string, opts: AuditOptions = {}): Promise<AuditCliResult> {
   const cwd = opts.cwd ?? process.cwd()
   const [projectHit, userHit] = await Promise.all([findConfig(cwd), findUserConfig()])
-  const { raw, baseDir, workspaceAssetsDir } = await loadDeckTarget(target, cwd, projectHit, userHit)
-  await applyDeckConfig(raw, { themeFilePath: opts.themeFilePath, cwd, projectHit, userHit })
+  const { raw, baseDir, workspaceAssetsDir, isDir, specTheme, specPath } = await loadDeckTarget(target, cwd, projectHit, userHit)
+  await applyDeckConfig(raw, {
+    theme: opts.theme,
+    themeFilePath: opts.themeFilePath,
+    specTheme,
+    specPath,
+    fromDeckDir: isDir,
+    cwd,
+    projectHit,
+    userHit,
+  })
   const v = validateIr(raw)
   if (!v.ok) {
     throw new PptwiseError(
@@ -750,6 +800,8 @@ function formatAssetBriefReport(brief: AssetBrief): string {
 export interface AssetBriefOptions {
   json?: boolean
   cwd?: string
+  theme?: string
+  themeFilePath?: string
 }
 
 /**
@@ -769,8 +821,17 @@ export interface AssetBriefOptions {
 export async function runAssetBrief(target: string, opts: AssetBriefOptions = {}): Promise<string> {
   const cwd = opts.cwd ?? process.cwd()
   const [projectHit, userHit] = await Promise.all([findConfig(cwd), findUserConfig()])
-  const { raw, baseDir, workspaceAssetsDir } = await loadDeckTarget(target, cwd, projectHit, userHit)
-  await applyDeckConfig(raw, { cwd, projectHit, userHit })
+  const { raw, baseDir, workspaceAssetsDir, isDir, specTheme, specPath } = await loadDeckTarget(target, cwd, projectHit, userHit)
+  await applyDeckConfig(raw, {
+    theme: opts.theme,
+    themeFilePath: opts.themeFilePath,
+    specTheme,
+    specPath,
+    fromDeckDir: isDir,
+    cwd,
+    projectHit,
+    userHit,
+  })
   const v = validateIr(raw)
   if (!v.ok) {
     throw new PptwiseError(
@@ -830,8 +891,91 @@ export function runSchema(mode?: "style" | "spec"): string {
 
 export function runThemes(asJson: boolean): string {
   const themes = listThemes()
-  if (asJson) return JSON.stringify(themes, null, 2)
+  if (asJson) {
+    return JSON.stringify(
+      themes.map((t) => ({
+        id: t.id,
+        label: t.label,
+        colors: t.colors,
+        occasions: THEME_OCCASIONS[t.id]?.occasions ?? [],
+        identity: THEME_OCCASIONS[t.id]?.identity ?? null,
+      })),
+      null,
+      2,
+    )
+  }
   return themes.map((t) => `${t.id.padEnd(12)} ${t.label}`).join("\n")
+}
+
+interface LayoutDiscoverySlot {
+  name: string
+  accepts: readonly string[] | "any"
+  capacity?: number
+}
+
+interface LayoutDiscoveryRow {
+  id: string
+  slideTypes: readonly string[]
+  pinOnly: boolean
+  capacity?: number
+  slots: LayoutDiscoverySlot[]
+  arrangements?: readonly string[] | "all"
+}
+
+function layoutCapacity(slots: readonly { capacity?: number }[]): number | undefined {
+  let sum = 0
+  let any = false
+  for (const slot of slots) {
+    if (slot.capacity !== undefined) {
+      sum += slot.capacity
+      any = true
+    }
+  }
+  return any ? sum : undefined
+}
+
+function listLayouts(): LayoutDiscoveryRow[] {
+  return Object.values(LAYOUT_REGISTRY).map((layout) => {
+    const capacity = layoutCapacity(layout.slots)
+    const row: LayoutDiscoveryRow = {
+      id: layout.id,
+      slideTypes: layout.slideTypes,
+      pinOnly: layout.pinOnly ?? false,
+      slots: layout.slots.map((slot) => {
+        const compact: LayoutDiscoverySlot = { name: slot.name, accepts: slot.accepts }
+        if (slot.capacity !== undefined) compact.capacity = slot.capacity
+        return compact
+      }),
+    }
+    if (capacity !== undefined) row.capacity = capacity
+    if (layout.arrangements !== undefined) row.arrangements = layout.arrangements
+    return row
+  })
+}
+
+/** `pptwise layouts [--json]` — compact discovery surface over LAYOUT_REGISTRY. */
+export function runLayouts(asJson: boolean): string {
+  const layouts = listLayouts()
+  if (asJson) return JSON.stringify(layouts, null, 2)
+  const rows = layouts.map((l) => ({
+    id: l.id,
+    types: l.slideTypes.join(","),
+    pin: l.pinOnly ? "pin-only" : "-",
+    cap: l.capacity !== undefined ? String(l.capacity) : "-",
+    slots: l.slots.map((s) => s.name).join(", "),
+    arrangements: l.arrangements === undefined ? "-" : l.arrangements === "all" ? "all" : l.arrangements.join(","),
+  }))
+  const idWidth = Math.max(...rows.map((r) => r.id.length))
+  const typesWidth = Math.max(...rows.map((r) => r.types.length))
+  const pinWidth = Math.max(...rows.map((r) => r.pin.length))
+  const capWidth = Math.max(...rows.map((r) => r.cap.length))
+  const slotsWidth = Math.max(...rows.map((r) => r.slots.length))
+  return rows
+    .map(
+      (r) =>
+        `${r.id.padEnd(idWidth + 2)}${r.types.padEnd(typesWidth + 2)}${r.pin.padEnd(pinWidth + 2)}${r.cap.padEnd(capWidth + 2)}${r.slots.padEnd(slotsWidth + 2)}${r.arrangements}`,
+    )
+    .join("\n")
 }
 
 export interface BrandExtractOptions {
@@ -889,7 +1033,7 @@ export async function runBrandExtract(file: string, opts: BrandExtractOptions): 
     `wrote ${opts.output} (theme "${theme.id}", label "${theme.label}")`,
     `  colors: bg ${c.bg}, text ${c.text}, primary ${c.primary}, accent ${c.accent}, muted ${c.muted} (derived), ${c.chartPalette.length} chart colors`,
     `  fonts: heading "${theme.style.fonts.heading[0]}", body "${theme.style.fonts.body[0]}"`,
-    `use it: pptwise render <deck> --theme-file ${opts.output} — or drop it into a deck project directory as ${THEME_FILENAME} and reference "${theme.id}" as the deck's theme`,
+    `use it: pptwise render <deck> --theme-file ${opts.output} --theme ${theme.id} — or drop it into a deck project directory as ${THEME_FILENAME} and reference "${theme.id}" as the deck's theme`,
   ]
   try {
     assertContrastFloor(theme.id, theme.style)
@@ -969,6 +1113,10 @@ export interface PreviewOptions {
   gitIgnore?: boolean
   /** Injectable git runner for tests. Production leaves this unset. */
   runGit?: GitRunner
+  /** `--theme <id>` — override the deck theme for a single-theme preview. */
+  theme?: string
+  /** `--themes <id,id,...>` — 2-4 theme ids for a contact-sheet comparison. */
+  themes?: string
   /** `--theme-file <path>` — see `applyDeckConfig`'s own `themeFilePath` doc comment. */
   themeFilePath?: string
   /** `--html` (v0.3 W7 task 1, spec §7 workflow ⑤): also write a
@@ -1025,12 +1173,21 @@ interface DeckRenderResult {
 
 async function renderDeckSlides(
   target: string,
-  opts: { cwd?: string; themeFilePath?: string } = {},
+  opts: { cwd?: string; themeFilePath?: string; theme?: string } = {},
 ): Promise<DeckRenderResult> {
   const cwd = opts.cwd ?? process.cwd()
   const [projectHit, userHit] = await Promise.all([findConfig(cwd), findUserConfig()])
-  const { raw, baseDir, isDir, resolvedTarget, workspaceAssetsDir } = await loadDeckTarget(target, cwd, projectHit, userHit)
-  await applyDeckConfig(raw, { themeFilePath: opts.themeFilePath, cwd, projectHit, userHit })
+  const { raw, baseDir, isDir, resolvedTarget, workspaceAssetsDir, specTheme, specPath } = await loadDeckTarget(target, cwd, projectHit, userHit)
+  await applyDeckConfig(raw, {
+    theme: opts.theme,
+    themeFilePath: opts.themeFilePath,
+    specTheme,
+    specPath,
+    fromDeckDir: isDir,
+    cwd,
+    projectHit,
+    userHit,
+  })
   const v = validateIr(raw)
   if (!v.ok) throw new PptwiseError(`invalid IR:\n${formatIssues(v.errors)}`)
   await resolveLocalAssets(v.ir!, baseDir, workspaceAssetsDir)
@@ -1112,7 +1269,7 @@ export interface DeckPreviewResult extends DeckRenderResult {
 
 export async function buildDeckPreview(
   target: string,
-  opts: { cwd?: string; themeFilePath?: string } = {},
+  opts: { cwd?: string; themeFilePath?: string; theme?: string } = {},
 ): Promise<DeckPreviewResult> {
   const rendered = await renderDeckSlides(target, opts)
   const { html, findings, checks } = buildDeckAuditAndHtml(rendered.ir, rendered.svgs)
@@ -1148,31 +1305,103 @@ export async function buildDeckPreview(
  * to fail" posture `runDisassemble`'s own path-traversal guard already
  * established elsewhere in this file.
  */
+function parseContactSheetThemes(raw: string): string[] {
+  const ids = raw.split(",").map((s) => s.trim()).filter((s) => s.length > 0)
+  if (ids.length < 2 || ids.length > 4) {
+    throw new PptwiseError(`pptwise preview --themes expects 2-4 theme ids, got ${ids.length}`)
+  }
+  const seen = new Set<string>()
+  for (const id of ids) {
+    if (seen.has(id)) throw new PptwiseError(`pptwise preview --themes has duplicate theme id "${id}"`)
+    seen.add(id)
+  }
+  const installed = getInstalledThemeIds()
+  for (const id of ids) {
+    if (!installed.includes(id)) {
+      throw new PptwiseError(
+        `unknown theme "${id}" (from --themes) — available: ${installed.join(", ")} (see \`pptwise themes\`)`,
+      )
+    }
+  }
+  return ids
+}
+
+function pickContactSheetSlides(ir: PptxIR, svgs: string[]): { type: string; svg: string }[] {
+  const picked: { type: string; svg: string }[] = []
+  const cover = ir.slides.findIndex((s) => s.type === "cover")
+  const content = ir.slides.findIndex((s) => s.type === "content")
+  if (cover >= 0) picked.push({ type: "cover", svg: svgs[cover]! })
+  if (content >= 0) picked.push({ type: "content", svg: svgs[content]! })
+  if (picked.length === 0) {
+    throw new PptwiseError("pptwise preview --themes needs a cover or content slide, found neither")
+  }
+  return picked
+}
+
+async function resolvePreviewOutDir(
+  cwd: string,
+  outDir: string | undefined,
+  resolvedTarget: string,
+  isDir: boolean,
+  opts: PreviewOptions,
+): Promise<{ resolvedOut: string; extraNotes: string[] }> {
+  if (outDir !== undefined) {
+    const resolvedOut = resolve(cwd, outDir)
+    await mkdir(resolvedOut, { recursive: true })
+    return { resolvedOut, extraNotes: [] }
+  }
+  const projectHit = await findConfig(cwd)
+  const location = resolveWorkspaceLocation({
+    cwd,
+    projectConfigPath: projectHit?.path,
+    outDir: projectHit?.config.outDir,
+    target: resolvedTarget,
+    isDir,
+  })
+  const extraNotes = await prepareWorkspaceDir(location, { gitIgnore: opts.gitIgnore, runGit: opts.runGit })
+  await pruneRenderedSvgs(location.dir)
+  return { resolvedOut: location.dir, extraNotes }
+}
+
+async function runContactSheetPreview(
+  irPath: string,
+  outDir: string | undefined,
+  opts: PreviewOptions,
+  cwd: string,
+): Promise<string> {
+  const ids = parseContactSheetThemes(opts.themes!)
+  const columns: { id: string; slides: { type: string; svg: string }[] }[] = []
+  let resolvedTarget = ""
+  let isDir = false
+  let title = irPath
+  for (const id of ids) {
+    const rendered = await renderDeckSlides(irPath, {
+      cwd,
+      theme: id,
+      themeFilePath: opts.themeFilePath,
+    })
+    resolvedTarget = rendered.resolvedTarget
+    isDir = rendered.isDir
+    title = rendered.ir.filename
+    columns.push({ id, slides: pickContactSheetSlides(rendered.ir, rendered.svgs) })
+  }
+  const { resolvedOut, extraNotes } = await resolvePreviewOutDir(cwd, outDir, resolvedTarget, isDir, opts)
+  const htmlPath = join(resolvedOut, "contact-sheet.html")
+  await writeFile(htmlPath, buildContactSheetHtml({ title, themes: columns }))
+  const ok = `wrote contact sheet to ${htmlPath}`
+  return extraNotes.length > 0 ? `${ok}\n${extraNotes.join("\n")}` : ok
+}
+
 export async function runPreview(irPath: string, outDir?: string, opts: PreviewOptions = {}): Promise<string> {
   const cwd = opts.cwd ?? process.cwd()
+  if (opts.themes !== undefined) return runContactSheetPreview(irPath, outDir, opts, cwd)
   const { ir, svgs, normalized, isDir, resolvedTarget } = await renderDeckSlides(irPath, {
     cwd,
+    theme: opts.theme,
     themeFilePath: opts.themeFilePath,
   })
   // After render, not before (S1 review carry) — see this function's own doc comment.
-  const extraNotes: string[] = []
-  let resolvedOut: string
-  if (outDir !== undefined) {
-    resolvedOut = resolve(cwd, outDir)
-    await mkdir(resolvedOut, { recursive: true })
-  } else {
-    const projectHit = await findConfig(cwd)
-    const location = resolveWorkspaceLocation({
-      cwd,
-      projectConfigPath: projectHit?.path,
-      outDir: projectHit?.config.outDir,
-      target: resolvedTarget,
-      isDir,
-    })
-    extraNotes.push(...(await prepareWorkspaceDir(location, { gitIgnore: opts.gitIgnore, runGit: opts.runGit })))
-    await pruneRenderedSvgs(location.dir)
-    resolvedOut = location.dir
-  }
+  const { resolvedOut, extraNotes } = await resolvePreviewOutDir(cwd, outDir, resolvedTarget, isDir, opts)
   const svgNames: string[] = []
   for (let i = 0; i < ir.slides.length; i++) {
     const name = `${String(i + 1).padStart(3, "0")}-${ir.slides[i]!.type}.svg`

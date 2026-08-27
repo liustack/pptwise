@@ -135,6 +135,7 @@ describe("auditDeck — clean deck baseline", () => {
             "overlap",
             "content-truncated",
             "content-dropped",
+            "monotony",
           ]).toContain(f.code)
           expect(f.message.length).toBeGreaterThan(0)
         }
@@ -2207,6 +2208,7 @@ describe("auditDeck — finding shape contract", () => {
         "overlap",
         "content-truncated",
         "content-dropped",
+        "monotony",
       ]).toContain(f.code)
       expect(typeof f.message).toBe("string")
     }
