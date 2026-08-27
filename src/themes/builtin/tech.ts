@@ -1,4 +1,6 @@
 import type { StyleTokens } from "../tokens";
+import type { BuiltinThemeDeclaration } from "../schema";
+import { DEFAULT_CONTENT_FACES } from "./shared";
 
 /**
  * **深底组皮肤重设计（2026-08-19，`.issues/2026-08-18-theme-redesign/skins/`
@@ -92,3 +94,24 @@ export const TECH_TOKENS: StyleTokens = {
     ending: { kind: "gradient", from: "#0E1630", to: "#070B16", direction: "diagonal" },
   },
 };
+
+export const TECH_THEME = {
+  version: 1,
+  id: "tech",
+  label: "Tech",
+  style: TECH_TOKENS,
+  faces: {
+    cover: ["type-rule-cover"],
+    chapter: ["stroke-index-chapter"],
+    content: DEFAULT_CONTENT_FACES,
+    ending: ["rule-close-ending"],
+  },
+  motif: { id: "constellation-motif" },
+  tendencies: {
+    cover: ["type-rule-cover"],
+    chapter: ["stroke-index-chapter"],
+    content: ["bento-panel", "rail-numbered", "split-band"],
+    ending: ["rule-close-ending"],
+  },
+  sparse: ["stat-hero", "statement", "one-evidence", "verse-chapter"],
+} satisfies BuiltinThemeDeclaration;

@@ -1,4 +1,6 @@
 import type { StyleTokens } from "../tokens";
+import type { BuiltinThemeDeclaration } from "../schema";
+import { DEFAULT_CONTENT_FACES } from "./shared";
 
 /**
  * arena（竞技场紫黑）——2026-08-21 新增第 18 个内置主题（娱乐电竞）。
@@ -71,3 +73,24 @@ export const ARENA_TOKENS: StyleTokens = {
     ending: { kind: "color", value: "#120B22" },
   },
 };
+
+export const ARENA_THEME = {
+  version: 1,
+  id: "arena",
+  label: "Esports & Entertainment",
+  style: ARENA_TOKENS,
+  faces: {
+    cover: ["cut-panel-cover"],
+    chapter: ["round-mark-chapter"],
+    content: DEFAULT_CONTENT_FACES,
+    ending: ["seat-cta-ending"],
+  },
+  motif: { id: "arena-motif" },
+  tendencies: {
+    cover: ["cut-panel-cover"],
+    chapter: ["round-mark-chapter"],
+    content: ["bento-panel", "asymmetric-triptych"],
+    ending: ["seat-cta-ending"],
+  },
+  sparse: ["stat-hero", "statement", "one-evidence", "verse-chapter"],
+} satisfies BuiltinThemeDeclaration;

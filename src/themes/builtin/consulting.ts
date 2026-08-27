@@ -1,4 +1,6 @@
 import type { StyleTokens } from "../tokens";
+import type { BuiltinThemeDeclaration } from "../schema";
+import { CONSULTING_CONTENT_FACES } from "./shared";
 
 /**
  * consulting（先结论报告）——藏青 + 一线黄的咨询报告腔。
@@ -102,3 +104,24 @@ export const CONSULTING_TOKENS: StyleTokens = {
     ending: { kind: "color", value: "#F7F6F2" },
   },
 };
+
+export const CONSULTING_THEME = {
+  version: 1,
+  id: "consulting",
+  label: "Business Consulting",
+  style: CONSULTING_TOKENS,
+  faces: {
+    cover: ["gauge-verdict"],
+    chapter: ["gauge-section"],
+    content: CONSULTING_CONTENT_FACES,
+    ending: ["gauge-next"],
+  },
+  motif: { id: "gauge-motif" },
+  tendencies: {
+    cover: ["gauge-verdict"],
+    chapter: ["gauge-section"],
+    content: ["gauge-stats"],
+    ending: ["gauge-next"],
+  },
+  sparse: ["statement", "stat-hero", "one-evidence", "verse-chapter"],
+} satisfies BuiltinThemeDeclaration;

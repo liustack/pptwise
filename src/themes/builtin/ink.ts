@@ -1,4 +1,6 @@
 import type { StyleTokens } from "../tokens";
+import type { BuiltinThemeDeclaration } from "../schema";
+import { DEFAULT_CONTENT_FACES } from "./shared";
 
 /**
  * ink（水墨国风）——2026-07-10 用户裁决新增的「真创意」子类之二（用户
@@ -62,3 +64,25 @@ export const INK_TOKENS: StyleTokens = {
     ending: { kind: "color", value: "#F7F2E7" },
   },
 };
+
+export const INK_THEME = {
+  version: 1,
+  id: "ink",
+  label: "Ink Wash",
+  style: INK_TOKENS,
+  brand: { suppressFooterRule: true, suppressFooterMeta: true },
+  faces: {
+    cover: ["vertical-title-cover"],
+    chapter: ["volume-slip-chapter"],
+    content: DEFAULT_CONTENT_FACES,
+    ending: ["seal-close-ending"],
+  },
+  motif: { id: "ink-motif" },
+  tendencies: {
+    cover: ["vertical-title-cover"],
+    chapter: ["volume-slip-chapter"],
+    content: ["quiet-frame", "split-band"],
+    ending: ["seal-close-ending"],
+  },
+  sparse: ["statement", "stat-hero", "pull-quote", "verse-chapter"],
+} satisfies BuiltinThemeDeclaration;

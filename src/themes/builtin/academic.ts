@@ -1,4 +1,6 @@
 import type { StyleTokens } from "../tokens";
+import type { BuiltinThemeDeclaration } from "../schema";
+import { DEFAULT_CONTENT_FACES } from "./shared";
 
 /**
  * academic（学术/研究报告）——祖母绿 + 稿纸白的书卷气质。
@@ -82,3 +84,24 @@ export const ACADEMIC_TOKENS: StyleTokens = {
     ending: { kind: "color", value: "#F5F3EC" },
   },
 };
+
+export const ACADEMIC_THEME = {
+  version: 1,
+  id: "academic",
+  label: "Academic",
+  style: ACADEMIC_TOKENS,
+  faces: {
+    cover: ["thesis-plate-cover"],
+    chapter: ["folio-ghost-chapter"],
+    content: DEFAULT_CONTENT_FACES,
+    ending: ["defense-close-ending"],
+  },
+  motif: { id: "rail-motif" },
+  tendencies: {
+    cover: ["thesis-plate-cover"],
+    chapter: ["folio-ghost-chapter"],
+    content: ["two-column", "narrow-column"],
+    ending: ["defense-close-ending"],
+  },
+  sparse: ["pull-quote", "stat-hero", "statement", "verse-chapter"],
+} satisfies BuiltinThemeDeclaration;

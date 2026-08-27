@@ -1,4 +1,6 @@
 import type { StyleTokens } from "../tokens";
+import type { BuiltinThemeDeclaration } from "../schema";
+import { DEFAULT_CONTENT_FACES } from "./shared";
 
 /**
  * enterprise（企业蓝）——原 custom→gallery→avant 的最终定名
@@ -132,3 +134,25 @@ export const ENTERPRISE_TOKENS: StyleTokens = {
     ending: { kind: "color", value: "#F7F7F4" },
   },
 };
+
+export const ENTERPRISE_THEME = {
+  version: 1,
+  id: "enterprise",
+  label: "Enterprise",
+  style: ENTERPRISE_TOKENS,
+  brand: { suppressFooterOnCardContent: true },
+  faces: {
+    cover: ["ikb-field-cover"],
+    chapter: ["block-numeral-chapter"],
+    content: DEFAULT_CONTENT_FACES,
+    ending: ["signoff-ending"],
+  },
+  motif: { id: "enterprise-motif" },
+  tendencies: {
+    cover: ["ikb-field-cover"],
+    chapter: ["block-numeral-chapter"],
+    content: ["rail-numbered", "two-column", "bento-panel"],
+    ending: ["signoff-ending"],
+  },
+  sparse: [],
+} satisfies BuiltinThemeDeclaration;

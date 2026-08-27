@@ -1,4 +1,6 @@
 import type { StyleTokens } from "../tokens";
+import type { BuiltinThemeDeclaration } from "../schema";
+import { DEFAULT_CONTENT_FACES } from "./shared";
 
 /**
  * pulse（医疗健康/生命科学）——2026-07-28 themes-16 wave task T1（第 14
@@ -99,3 +101,24 @@ export const PULSE_TOKENS: StyleTokens = {
     ending: { kind: "color", value: "#F2F7F4" },
   },
 };
+
+export const PULSE_THEME = {
+  version: 1,
+  id: "pulse",
+  label: "Health & Life Science",
+  style: PULSE_TOKENS,
+  faces: {
+    cover: ["report-open-cover"],
+    chapter: ["subject-rule-chapter"],
+    content: DEFAULT_CONTENT_FACES,
+    ending: ["care-plan-ending"],
+  },
+  motif: { id: "pulse-motif" },
+  tendencies: {
+    cover: ["report-open-cover"],
+    chapter: ["subject-rule-chapter"],
+    content: ["bento-panel", "rail-numbered"],
+    ending: ["care-plan-ending"],
+  },
+  sparse: [],
+} satisfies BuiltinThemeDeclaration;

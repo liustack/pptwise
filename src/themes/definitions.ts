@@ -5,45 +5,46 @@ import { hasExactWidthTable, resolveFontFace } from "../render/fonts"
 import { contrastRatio } from "../render/ink"
 import { excludePinOnly, getLayout, layoutsForSlideType } from "../layouts/registry"
 import { REGISTERED_THEMES } from "./registered-themes"
+import {
+  SPARSE_LAYOUT_IDS,
+  ThemeFileSchema,
+  type BuiltinThemeDeclaration,
+  type FaceReference,
+  type ThemeFile,
+} from "./schema"
+import type { Occasion } from "./occasions"
 import type { StyleTokens } from "./tokens"
-import { CANONICAL_THEME_IDS, THEME_STYLES, resolveThemeId, type CanonicalThemeId } from "./index"
+import { BUILTIN_THEME_FILES, CANONICAL_THEME_IDS, resolveThemeId, type CanonicalThemeId } from "./index"
 
 /**
  * A theme = distributable bundle: `style` (style tokens) + `brand` (brand
  * frame) + affinity tags (filled in W4).
  *
- * `id` is a plain `string`, not `CanonicalThemeId` — the 13 builtins satisfy
+ * `id` is a plain `string`, not `CanonicalThemeId` — the 24 built-ins satisfy
  * this (`CanonicalThemeId` is a subtype of `string`), but `registerTheme`
  * below (W3 task 4's SDK registration seam) must also accept ids outside that
  * closed union.
  */
 export interface ThemeDefinition {
   id: string
+  label?: string
   style: StyleTokens
   brand: BrandConfig
   tags: readonly string[]
-  /**
-   * 主题的「选择权」配置（spec §3 theme.layouts 命名裁决；W2 任务 2 由
-   * src/themes/manifest.ts〔已删除〕的旧选择权类型原地迁居于此）——四页型
-   * 各自允许哪些 layout 参与自动选型。排印/色彩在 style，这里只放集合。
-   * **W4 全集放开**（spec §3「缺省 = 全集，策展收窄塑造个性」，design
-   * decision 7）：十三内置主题四页型默认均为 {@link fullLayoutSet} 的
-   * 全集。design decision 7/8 曾经的六处对比度策展排除（luxe/campaign/
-   * classroom 的 content 排除 banner-heading、tech 的 cover/content、
-   * consulting 的 chapter）已在 W4 fix round 随对比度自适应 ink helper
-   * （`src/render/ink.ts`）的根因修复全部撤销。fix round 自身新发现的两处
-   * （classroom/heritage 的 chapter 排除 fashion-chapter）也已在
-   * post-v0.3 W8 fix round 随 `readableOn` 两墨实测对比度取优的根因修复一并
-   * 撤销（backlog item 2）。2026-08-25 新增的 consulting 私有
-   * `gauge-stats` 只进入 consulting 的显式锁和注册主题的缺省全集，不进入
-   * 其他内置主题的共享 content 池，避免一次主题重构重排别家的自动选型。
-   * 页型空集 = 该页型回落调用侧兜底（内置主题四页型均非空，
-   * `definitions.test.ts` 锁死）。id 是通用 string（不再按页型区分
-   * layout id 联合类型）。
-   */
+  occasions?: readonly Occasion[]
+  identity?: "low" | "medium" | "high"
+  /** Curated layout ids eligible for each page type. Built-ins and public
+   * complete themes compile their `faces` pools into this total record.
+   * Legacy programmatic registrations may omit a page type and receive the
+   * registry-wide fallback once at registration. Public complete files must
+   * declare all four pools, so they never take that fallback. */
   layouts: Record<Slide["type"], readonly string[]>
-  /** Motif：单值，非 allowed-set（spec §3 示意）。undefined = 该主题无 motif 装饰（十三主题中 runway 留空，其余均已设）。 */
+  /** Original declarative face entries when the theme came from the v1
+   * theme schema. Render selection consumes the compiled `layouts` ids. */
+  faces?: Record<Slide["type"], readonly FaceReference[]>
+  /** One registered motif id. `undefined` means the theme has no motif. */
   motif?: MotifId
+  motifParameters?: { intensity?: "subtle" | "normal" }
   /**
    * A theme's own structural personality (theme-structure wave, task T1 —
    * `.issues/2026-07-26-theme-structure/plan.md`'s 控制器设计裁定 2): per
@@ -75,7 +76,7 @@ export interface ThemeDefinition {
    * scored — it is invisible to `weightOf`, not merely down-weighted. That
    * silent no-op is exactly why it counts as a theme-author mistake rather
    * than a legal (if unusual) declaration — `definitions.test.ts`'s
-   * consistency sweep over the 13 builtins, and `registerTheme`'s own
+   * consistency sweep over the 24 built-ins, and `registerTheme`'s own
    * validation below for any future custom theme, both fail loudly the
    * moment a `layoutTendencies` entry names an id outside its own page
    * type's `layouts` set, so the mistake surfaces at registration/test time
@@ -149,9 +150,9 @@ function fullLayoutSet(slideType: Slide["type"]): readonly string[] {
 /**
  * Test-only: `fullLayoutSet` under a `__`-prefixed name (same convention
  * as `__resetRegisteredThemes` below) so a pinOnly regression test can call
- * it directly against a synthetic `LAYOUT_REGISTRY` mutation -- `FULL_LAYOUTS`
- * below only ever snapshots `fullLayoutSet`'s result once, at module
- * load, long before any test could inject a fixture entry. Deliberately not
+ * it directly against a synthetic `LAYOUT_REGISTRY` mutation. The
+ * registration fallback snapshots `fullLayoutSet` at module load, long
+ * before any test could inject a fixture entry. Deliberately not
  * exported from `src/index.ts` (the public SDK barrel).
  */
 export function __fullLayoutSet(slideType: Slide["type"]): readonly string[] {
@@ -171,1015 +172,40 @@ const REGISTERED_THEME_DEFAULT_LAYOUTS: Record<Slide["type"], readonly string[]>
 }
 
 /**
- * Shared builtin baseline. `gauge-stats` is a consulting-specific content
- * face, so registry growth must not silently widen and reshuffle every other
- * builtin theme. Consulting opts into it through its explicit singleton lock.
+ * Built-ins compile from the same declarative face model as public complete
+ * themes. Their declaration type additionally permits internal constructor
+ * metadata that public files cannot express.
  */
-const FULL_LAYOUTS: Record<Slide["type"], readonly string[]> = {
-  cover: REGISTERED_THEME_DEFAULT_LAYOUTS.cover,
-  chapter: REGISTERED_THEME_DEFAULT_LAYOUTS.chapter,
-  content: REGISTERED_THEME_DEFAULT_LAYOUTS.content.filter((id) => id !== "gauge-stats"),
-  ending: REGISTERED_THEME_DEFAULT_LAYOUTS.ending,
+function compileBuiltinTheme(file: BuiltinThemeDeclaration): ThemeDefinition {
+  const layouts: ThemeDefinition["layouts"] = {
+    cover: file.faces.cover.map(faceId),
+    chapter: file.faces.chapter.map(faceId),
+    content: file.faces.content.map(faceId),
+    ending: file.faces.ending.map(faceId),
+  }
+  return {
+    id: file.id,
+    label: file.label,
+    style: file.style,
+    brand: file.brand ?? {},
+    tags: file.occasions ?? [],
+    occasions: file.occasions,
+    identity: file.identity,
+    layouts,
+    faces: file.faces,
+    motif: file.motif?.id,
+    motifParameters: file.motif?.params,
+    layoutTendencies: file.tendencies,
+    sparseLayouts: file.sparse,
+  }
 }
 
-/**
- * Gallery r2 D20: outer-frame themes must not receive top-title / top-image
- * layouts. Framed themes do not sample split-band / stacked-poster.
- * `banner-heading` is globally retired (heading treatments keep the title
- * face). lecture and luxe share this explicit set. Tendency ids
- * (`rail-numbered` / `bento-panel` for lecture, `quiet-frame` /
- * `tone-adaptive-content` for luxe) stay inside it.
- */
-const FRAMED_CONTENT_LAYOUTS: readonly string[] = [
-  "narrow-column",
-  "two-column",
-  "rail-numbered",
-  "bento-panel",
-  "tone-adaptive-content",
-  "asymmetric-triptych",
-  "quiet-frame",
-]
-
-/**
- * Formerly "the full chapter set minus `fashion-chapter`" — two W4
- * fix-round exclusions (classroom/heritage), **reverted** in the
- * post-v0.3 W8 fix round (backlog item 2,
- * `.issues/notes/engineering-history.md` #2) now that the root cause
- * is actually fixed. History, for the git-blame reader:
- * `chapter-fashion-chapter.tsx` already picked its own ink via
- * `readableOn(ctx.colors.accent)`, but `readableOn`'s old fixed-0.4-luminance
- * threshold didn't guarantee the 3:1 large-text ratio the way comparing both
- * inks' real contrast does — classroom (`#D89A88`),
- * heritage (`#C98A4B`) all have an accent luminance in the old threshold's
- * blind gap (~0.19-0.4), where white ink measured under 3:1 (
- * classroom 2.36, heritage 2.91) even though dark ink was always the better
- * option there. `readableOn` now compares both inks' actual contrast and
- * picks the higher one (`src/render/ink.ts`) — re-measured post-fix (`pnpm exec
- * tsx` against a real render of both, 2026-07-19): dark ink measures
- * 8.19:1 (classroom), 6.65:1 (heritage) against the same
- * accent colors, and `auditDeck` reports zero low-contrast findings for the
- * heading/"CHAPTER NN" label on both — comfortably above 3:1, so the
- * curation workaround is no longer needed. (The decorative watermark digit's
- * own already-adjudicated sub-3:1 blend — `full-matrix-contrast.test.ts`'s
- * ratio-banded allowlist entry — is unaffected: its post-fix ratios, 1.537/
- * 1.498, still land inside that entry's existing [1.2, 1.8] band.)
- * `LAYOUTS` below now gives all 13 themes the plain {@link FULL_LAYOUTS.chapter}
- * — no remaining exclusion of any kind in this file.
- */
-
-const BRANDS: Partial<Record<CanonicalThemeId, BrandConfig>> = {
-  enterprise: { suppressFooterOnCardContent: true },
-  // ink v3（2026-08-18 主题重设计第一期）：两个开关都开，理由各不相同，
-  // 不是一件事的两半。
-  //   - `suppressFooterRule` 是 2026-07-10 的旧裁决（motif 自带版框线会与
-  //     页脚分隔线撞成双线）。v3 已经把版框线删了，但这条继续留着——落款列
-  //     那条 x1220 竖界线加上一条横分隔线仍是两道线交叉在右下角，正是当初
-  //     要避免的观感。
-  //   - `suppressFooterMeta` 是本期新增：ink-motif v3 的右缘落款列已经把
-  //     机构名和年月排在页面右缘，页脚再排一遍就是同一页上印两份。
-  //
-  //     **两处代价写清楚，都是本期裁决的已知后果，不是漏了：**
-  //     1. 密级标与版本号只活在页脚这一行，ink 的内容页因此不再显示这两项
-  //        （落款列按设计只收机构名 + 年月 + 印）。
-  //     2. 落款列是逐字竖排，一列排得下 11 个字（带年月时；不带年月 17 个）
-  //        ——`motif-ink-motif.tsx` 的 `orgCapacity()` 按几何算的。超过这个
-  //        长度的机构名会被截断并挂 `data-truncated`，`pptwise audit` 照常
-  //        报 content-truncated。**这不是小概率**：`Meridian Analytics`
-  //        （18）、`北京云帆科技有限责任公司`（12）都超。竖排是 CJK 短款识的
-  //        写法，拉丁长名逐字母竖排本来也不成体统——落款列吃不下的机构名，
-  //        正确的出路是 IR 里写 `theme.brand.suppressFooterMeta: false` 把
-  //        页脚这一行要回来（`resolveBrand` 的浅合并，override 胜出），
-  //        或者换个短名。审计会大声说出来，不会无声吞掉。
-  ink: { suppressFooterRule: true, suppressFooterMeta: true },
-}
-
-/**
- * 每主题的 layouts + motif。**W4 全集放开**（spec §3「缺省 = 全集，策展收窄
- * 塑造个性」，design decision 7）：十三主题的 cover/chapter/content/ending
- * 均是 {@link FULL_LAYOUTS} 对应页型的全集，本表下面各条目因此不再需要逐
- * layout 罗列——只保留仍然成立的策展叙事（motif/tokens 气质的由来）。
- * W2 任务 2～W4 之前的窄策展集（chapter=1、ending=1、content=2、cover=1-3）
- * 随本表一起退役：那段历史留在 git blame，不再复述于此。与 BRANDS 分开维护
- * 是因为这两块是全量 Record（十三主题每个都必须有非空 layouts），不像
- * BRANDS 那样是 Partial。
- *
- * **W4 fix round（design decision 8 的根因处置收官）**：design decision 7 的
- * 三处既有对比度裁定（luxe/campaign/classroom 的 content 排除
- * banner-heading）与本任务实现期新增的三处阳性裁定（tech 的 cover/content、
- * consulting 的 chapter）——共六处——全部源于同一枚缺陷模式：layout 画在
- * 一块自己不控制（或自画但未检查明度）的背景上、baked 死一个文字色。fix
- * round 引入的对比度自适应 ink helper（`src/render/ink.ts` 的
- * `readableOn`/`accessibleInk`）从根上修复了这枚缺陷，六处例外逐一用
- * `auditDeck` 复核（对应 layout 现在自适应取色）后确认全部转为可读，予以
- * 撤销——`LAYOUTS` 现在是十三主题的纯 {@link FULL_LAYOUTS} 全集（A 方案纯
- * 终态），不再有任何 content/cover/chapter 排除残留于这六处。
- *
- * fix round 全矩阵扫描曾额外发现一类——classroom/heritage 的 chapter
- * 排除 `fashion-chapter`（`readableOn(ctx.colors.accent)` 固定 0.4 明度阈值
- * 对这两个主题的 accent 色不够精确，产出 <3:1）——但这处排除已在 post-v0.3
- * W8 fix round（backlog item 2，`readableOn` 改为两墨实测对比度取优）随根因
- * 一起撤销：两个主题重测后的 accent-ink 对比度分别是 8.19:1/6.65:1，
- * `auditDeck` 复核零 low-contrast 发现。W4 当时的终态是十三主题不折不扣的
- * {@link FULL_LAYOUTS} 全集。Gallery r2（2026-08-22）在 content 轴重新收窄：
- * D10 退订 image-lead-split 后自动池 11。随后 side-highlight 退订，自动池
- * 10。随后 banner-heading 退订，自动池 9。D20 把 lecture / luxe 换成
- * `FRAMED_CONTENT_LAYOUTS`。E22 把 consulting 换成
- * `CONSULTING_CONTENT_LAYOUTS`（显式名单，id 全局退订后仍保持名单）。其余
- * 主题的 content 仍是全集。
- */
-/**
- * consulting 自己的内容名单（gallery r2 E22 起）。量规重构把 `gauge-stats`
- * 加在它前面，而不是取代它：内容池塌成单张会让每一页长成一个样。
- */
-const CONSULTING_CONTENT_LAYOUTS: readonly string[] = [
-  "narrow-column",
-  "two-column",
-  "rail-numbered",
-  "stacked-poster",
-  "bento-panel",
-  "tone-adaptive-content",
-  "asymmetric-triptych",
-  "quiet-frame",
-  "split-band",
-]
-
-/**
- * classroom 自己的结构身份（theme-structure-allocation wave）。四轴是
- * heading-axis 左 / meta top-band / decor medium / whitespace medium。
- * 产品口径 24 套主题、24 个 id，classroom 独占这一行。
- */
-const CLASSROOM_STRUCTURE: NonNullable<ThemeDefinition["layoutTendencies"]> = {
-  // Wave 8 batch 2: lock the chalkboard-band cover, lesson-box chapter, and
-  // homework ending. Content leans two-column (lecture + figure), bento-panel
-  // (four-cell drill), and tone-adaptive-content (plain adult handout).
-  cover: ["chalk-band-cover"],
-  chapter: ["lesson-box-chapter"],
-  content: ["two-column", "bento-panel", "tone-adaptive-content"],
-  ending: ["homework-close-ending"],
-}
-
-/** classroom 自己的 layouts 对象，与 {@link CLASSROOM_STRUCTURE} 成对。 */
-const CLASSROOM_LAYOUTS: ThemeDefinition["layouts"] = {
-  cover: ["chalk-band-cover"],
-  chapter: ["lesson-box-chapter"],
-  content: FULL_LAYOUTS.content,
-  ending: ["homework-close-ending"],
-}
-
-/**
- * 内容页分配表（second front，2026-08-22，`.issues/2026-08-21-content-allocation/`）
- * ——会话 0 的结构分配表只填了封面轴，chapter / content / ending 三轴一直空着。
- * 落地前实测：25 个 theme id 里 content 页 23 家全盲，chapter 页 13 家全盲 1 家
- * 空转，ending 页 13 家全盲 1 家空转；同一份 IR 同一枚 seed 下 24 个结构身份
- * 只渲出 11 组不同的 7 页序列。本波给 24 个结构身份 × 三个页型各填 2 到 3 个
- * 倾向 id，四条硬规则由 `theme-structure.test.ts` 的 second-front 块逐条机器
- * 验证，不靠人眼：
- *
- *   1. 查重：任何两个结构身份在同一页型的倾向集不得全同（严格版，24/24）。
- *   2. 防空转：每一格都至少含一个默认叙事 `briefing` 不偏好的 id。比封面轴的
- *      守卫更严——封面轴只要求「每家至少一格」，这里是每一格。
- *   3. 在池内：每个 id 都必须在该主题该页型自己的 `layouts` 集合里，否则它对
- *      `weightOf` 不可见（不是被降权，是根本不参与打分）。
- *   4. 只追加不替换：本波之前声明过的每一个 id 都活着（declaration-rebalance
- *      wave 裁定 1 的先例）。
- *
- * 每个页型由不同的轴主导，这是本表的填表方法：
- *   - **chapter 由 heading-axis 与 decoration-weight 主导**。断章页只有标题、
- *     序号和一块底，画面上能分家的就是「标题站左还是站中」以及「底给多重」。
- *   - **ending 由 meta 与 whitespace 主导**。收尾页的实质内容是联系方式、版权
- *     与落款，meta 落在哪里决定了它长什么样。
- *   - **content 由 whitespace 与密度主导**。正文页的性格是「一页塞多少、留多少
- *     白」，不是标题对齐。
- *
- * 池容量是数数问题，不是口味问题，先写在这里免得下一个新主题撞墙：ending 池
- * 只有 7 个 id，非空转二元集共 20 个，**少于 24 家**，所以至少 4 家必须用三元集
- * （本波 5 家：consulting 既有、luxe 出于设计、lecture / swiss / memo 是排不开
- * 的让位）。chapter 池 8 个 id，非空转二元集 27 个，24 家排完只剩 3 个位。
- * content 池当时 12 个自动 id（gallery r2 D10 退订 image-lead-split 后自动
- * 池 11，二元集 55），宽裕。**下一个新主题落地时 ending 轴基本
- * 无位可加**，只能走三元集或扩池。
- *
- * playbill 不收窄 `layouts`。content 格用三元集（split-band / stacked-poster /
- * rail-numbered）把三张海报脸占住。 banner-heading 已退订。
- *
- * 封面轴本波零移动（实测：24 家 × 40 seed × 7 页 = 6720 次抽签里 4278 次移动，
- * 按槽计数 `{1:582, 2:780, 3:836, 4:652, 5:778, 6:650}`，槽 0 一次都没动）。
- * 这是本波对旧 deck 的硬承诺：没写 `slide.layout` 的非封面页会换脸，封面不会。
- */
-const LAYOUTS: Record<CanonicalThemeId, Pick<ThemeDefinition, "layouts" | "motif" | "layoutTendencies">> = {
-  consulting: {
-    // 量规重构给封面、章节、结尾各锁一张新脸。内容页把 gauge-stats 加在
-    // consulting 原有的九个之前，而不是取代它们：塌成单张会让所有内容页
-    // 长成一个样，种子选型的多样性直接消失。gauge-stats 与 gauge-point
-    // 都是 pinOnly，靠这里显式列出才可达，因此不会进别家的共享池。
-    layouts: {
-      cover: ["gauge-verdict"],
-      chapter: ["gauge-section"],
-      content: ["gauge-stats", ...CONSULTING_CONTENT_LAYOUTS],
-      ending: ["gauge-next"],
-    },
-    motif: "gauge-motif",
-    layoutTendencies: {
-      cover: ["gauge-verdict"],
-      chapter: ["gauge-section"],
-      content: ["gauge-stats"],
-      ending: ["gauge-next"],
-    },
-  },
-  insight: {
-    // Wave 8 batch 1: lock the board faces.
-    layouts: { cover: ["stat-cover"], chapter: ["ghost-section-chapter"], content: FULL_LAYOUTS.content, ending: ["close-word-ending"] },
-    motif: "poster-motif",
-    // Theme-structure wave, task T2: insight's own motif is `poster-motif`,
-    // and `poster-center`/`poster-chapter`/`poster-ending` are verbatim
-    // extractions of insight's own predecessor creative.tsx render code
-    // (`EditorialDarkCover`/`Chapter`/`Ending`) — matches the
-    // terminal/Economist-style bold, information-forward register this
-    // theme's own token comment names ("原 creative 改名...其实是
-    // terminal/Economist 财经信息图风").
-    layoutTendencies: {
-      // `editorial-masthead` appended (inert-declaration fix, 2026-08-19).
-      // `poster-center` alone was a declaration a default deck could never
-      // see: it is one of `briefing.identityTendencies.cover`'s own two ids,
-      // so `Math.max(3, 3) = 3` and insight picked its cover exactly the way
-      // a theme declaring nothing does. The allocation table was drawn on
-      // structural grounds without checking it against the composition rule.
-      //
-      // `editorial-masthead` (verified absent from briefing's set, and pinned
-      // by this file's own guard) is the honest second id rather than a
-      // modulus escape: double rules across the top over a serif masthead is
-      // the ticker-and-rule furniture of a financial daily, which is the
-      // register insight's deep ground and running band already speak. It is
-      // journal's declared id too — journal is the black-and-white humanities
-      // masthead, insight is the same construction on a near-black field with
-      // a red accent, and the layout bakes no hex, so one composition carries
-      // two registers.
-      cover: ["stat-cover"],
-      chapter: ["ghost-section-chapter"],
-      content: ["bento-panel", "two-column"],
-      ending: ["close-word-ending"],
-    },
-  },
-  academic: {
-    // Wave 8 batch 2: lock the thesis-plate cover, folio ghost chapter, and
-    // defense-close ending. Motif id stays rail-motif (gold opening rule).
-    layouts: { cover: ["thesis-plate-cover"], chapter: ["folio-ghost-chapter"], content: FULL_LAYOUTS.content, ending: ["defense-close-ending"] },
-    motif: "rail-motif",
-    layoutTendencies: {
-      cover: ["thesis-plate-cover"],
-      chapter: ["folio-ghost-chapter"],
-      content: ["two-column", "narrow-column"],
-      ending: ["defense-close-ending"],
-    },
-  },
-  tech: {
-    // Wave 8 batch 1: lock the board faces.
-    layouts: { cover: ["type-rule-cover"], chapter: ["stroke-index-chapter"], content: FULL_LAYOUTS.content, ending: ["rule-close-ending"] },
-    motif: "constellation-motif",
-    // Theme-structure wave, task T2: tech's own motif is
-    // `constellation-motif`, and `constellation`/`constellation-chapter`/
-    // `constellation-ending` are verbatim extractions of tech's own
-    // predecessor render code (`BentoTechCover`/`Chapter`/`Ending`) — this
-    // theme's native visual family, not a borrowed one.
-    layoutTendencies: {
-      cover: ["type-rule-cover"],
-      chapter: ["stroke-index-chapter"],
-      content: ["bento-panel", "rail-numbered", "split-band"],
-      ending: ["rule-close-ending"],
-    },
-  },
-  // runway 的 show 版式以极端报头、满版色场和留白节奏承担身份。
-  // 七张 show 脸全部 pinOnly。gallery 与 spotlight 只接受显式 pin。
-  runway: {
-    layouts: {
-      cover: ["show-headline"],
-      chapter: ["show-plate"],
-      content: ["show-statement", "show-figures", ...FULL_LAYOUTS.content],
-      ending: ["show-finale"],
-    },
-    // runway 的主题级 motif 曾两次加入「时尚编辑标记」，两次都被用户裁掉。
-    // 保持留空。T 台中线只存在于 show-finale 内部。
-    layoutTendencies: {
-      cover: ["show-headline"],
-      chapter: ["show-plate"],
-      content: ["show-statement"],
-      ending: ["show-finale"],
-    },
-  },
-  // journal（人文期刊，原 magazine 改名）：masthead 报头家族，角饰是人文感。
-  journal: {
-    // Wave 8 batch 2: lock the issue-head cover, fascicle ghost chapter, and
-    // afterword ending. Motif stays the masthead double rule.
-    layouts: { cover: ["issue-head-cover"], chapter: ["fascicle-ghost-chapter"], content: FULL_LAYOUTS.content, ending: ["afterword-ending"] },
-    motif: "corner-ornament-motif",
-    // Theme-structure wave, task T2: journal's own motif is
-    // `corner-ornament-motif` (editorial ornamentation), and
-    // `editorial-masthead`/`masthead-chapter`/`masthead-ending` are verbatim
-    // extractions of journal's own predecessor magazine.tsx render code
-    // (`EditorialSerifCover`/`Chapter`/`Ending`) — this theme's native
-    // masthead register.
-    //
-    // Declaration-rebalance wave (`.issues/2026-08-03-declaration-rebalance/plan.md`,
-    // 裁定 1-2): chapter and ending were both dead under the default
-    // `briefing` strategy — `masthead-chapter`/`masthead-ending` are each
-    // already members of `briefing.identityTendencies`, so both axes read
-    // identically to an undeclared theme under the deck's own default
-    // narrative (same `Math.max` no-op `banner-title`/`banner-ending` hit
-    // for consulting, see that theme's own comment above for the full
-    // mechanism). `editorial-masthead` (cover) already has real pull under
-    // `briefing` — not touched. Native chapter/ending ids kept; a second,
-    // honest id appended to each dead axis instead of a swap, per 裁定 1.
-    //
-    // - chapter `roman-chapter` (read `chapter-roman-chapter.tsx`, not just
-    //   its id): giant roman-numeral watermark + heading + optional italic
-    //   subheading + a seed/chapter-rotated arc ornament — the pool's most
-    //   literary, magazine-editorial chapter break (storytelling's own
-    //   `identityTendencies` comment already reads it the same way: "the
-    //   pool's most literary, ornamental chapter break"). Journal is a
-    //   humanities-magazine register (`corner-ornament-motif`, italic
-    //   subheadings on its own `editorial-masthead` cover) — a roman-numeral
-    //   section marker is the same editorial-magazine vocabulary, not a
-    //   borrowed one. Not in `briefing.identityTendencies.chapter`
-    //   (`["masthead-chapter", "constellation-chapter"]`), and — unlike
-    //   every other chapter id in the registry — not yet claimed by any
-    //   other theme's own `layoutTendencies.chapter` as of this wave either.
-    // - chapter `tone-adaptive-chapter` (read
-    //   `chapter-tone-adaptive-chapter.tsx`): centered heading + a large
-    //   translucent corner watermark, zero other ornament — the pool's
-    //   "万金油" chapter id (`@/narrative`'s own doc comment: never a member
-    //   of any strategy's `identityTendencies`). Appended alongside
-    //   `roman-chapter` purely for the modulus-escape reason documented
-    //   below, not for its own competing character claim — its plain,
-    //   unadorned register doesn't contradict roman-chapter's literary one,
-    //   it just never outweighs it (both share `TENDENCY_WEIGHT`, so
-    //   whichever the deterministic sampler favors for a given seed is
-    //   still one of journal's own two honest picks).
-    // - ending `poster-ending` (read `ending-poster-ending.tsx`): fully
-    //   centered, italic serif heading + italic subheading + a short accent
-    //   bar — the same italic-serif literary voice journal's own
-    //   `editorial-masthead` cover already opens with (that layout's own
-    //   "centered literary masthead + italic subheading" register), now
-    //   closing the deck in the same voice it opened in. Not in
-    //   `briefing.identityTendencies.ending` (`["masthead-ending",
-    //   "banner-ending"]`).
-    //
-    // Real-pull verification (direct `resolveLayoutId` sweep, same
-    // technique the themes-16 wave's T2/T3 reviewers used, against this
-    // repo's `theme-structure.test.ts` fixture at seed=1, strategy
-    // `briefing`): a *single* appended id on `chapter` cannot fix the first
-    // chapter slide (fixture index 1) without colliding — same modulus
-    // mechanism as consulting's ending above (`variety.ts`'s
-    // `target = hash % totalWeight`): any single append moves the chapter
-    // pool's modulus from 12 to 14 regardless of which id is appended, and
-    // the fixed hash for this fixture's `chapter-layout:1` salt always
-    // lands on `fashion-chapter` at that modulus — a value already occupied
-    // (together with journal's own already-live `poster-center` cover pick
-    // at this fixture) by academic's and runway's own pre-existing
-    // sequences. A second appended id (modulus 16) opens a previously
-    // unreachable bucket: `[masthead-chapter, roman-chapter,
-    // tone-adaptive-chapter]` resolves to `constellation-chapter` at fixture
-    // index 1 and to `roman-chapter` itself at fixture index 4 (the deck's
-    // second chapter slide) — both distinct from every other theme. `ending`
-    // only needed a single append here (`poster-ending`) precisely because
-    // this chapter fix already moved journal off the crowded
-    // `poster-center` + `fashion-chapter` bucket group other themes share.
-    layoutTendencies: {
-      cover: ["issue-head-cover"],
-      chapter: ["fascicle-ghost-chapter"],
-      content: ["two-column", "narrow-column", "bento-panel"],
-      ending: ["afterword-ending"],
-    },
-  },
-  // enterprise（原 custom→gallery 二次返工，2026-07-10）：白墙+正 IKB+accent
-  // 的高色彩版式组合，banner 横幅 baked 白字在 IKB #002FA7 上对比充足（无需
-  // 排除 banner-heading）。（accent 当时是炸橘，第四轮评审换成工业蓝，蓝配橙
-  // 入禁忌——见 `themes/enterprise.ts` 的文件头。版式选择不受影响。）
-  //
-  // cover 声明（theme-structure-allocation wave）：分配表给 enterprise 的四轴
-  // 是 左轴 / top-band / medium / tight，cover-picks = banner-title +
-  // split-diagonal。tight 那一档是关键——Swiss 网格的紧排，两个候选都是「先用
-  // 一块实心几何切开画面，再把标题压进去」的构图：
-  //   - `banner-title`：满宽深色横幅 + 横幅内标题，top-band 这一轴最直白的读法。
-  //     briefing.identityTendencies.cover 已经把它锁在权重 3，所以它单独声明是
-  //     空转；保留它是因为它确实是这个主题的母语，追加而非替换（declaration-
-  //     rebalance wave 裁定 1 的先例）。
-  //   - `split-diagonal`：IKB 色块以硬斜切线收边——正 IKB 的整块蓝配一道果断的
-  //     斜切，比横幅更紧、更有工业感。它不在 briefing 的 cover 集合里，
-  //     max(3,1)=3，是这一对里真正产生边际权重的那个。
-  enterprise: {
-    layouts: { cover: ["ikb-field-cover"], chapter: ["block-numeral-chapter"], content: FULL_LAYOUTS.content, ending: ["signoff-ending"] },
-    motif: "enterprise-motif",
-    layoutTendencies: {
-      cover: ["ikb-field-cover"],
-      chapter: ["block-numeral-chapter"],
-      content: ["rail-numbered", "two-column", "bento-panel"],
-      ending: ["signoff-ending"],
-    },
-  },
-  // luxe（原 retail 黑金重定位，2026-07-10）：黑金深底 poster 家族，
-  // readableOn 出深字。
-  //
-  // cover 声明（theme-structure-allocation wave）：luxe 与 heritage 曾是审计
-  // 实测出的「孪生对」——双双全盲，同 IR 同 seed 渲染出逐字节相同的结构。会话 0
-  // 裁决 1 判它们彻底分开、不砍不并，用四轴全岔根治：luxe = 居中 / bottom-right
-  // / light / airy（黑金请柬的大留白），heritage = 左轴 / bottom-left / medium /
-  // medium（藏书票的密排）。封面族也随之分开：
-  //   - `poster-center`：引首 + 居中大标题，中轴对称的请柬构图，airy 那一档的
-  //     天然归宿。briefing 已锁权重 3，单独声明空转，保留为真实主张。
-  //   - `fashion-masthead`：满版 primary 深底 + 超大报头 + 极简 meta 行，黑金
-  //     在这块满版底上正是它最贵的样子。不在 briefing 的 cover 集合里，
-  //     max(3,1)=3，是这一对里产生边际权重的那个。与 runway 共用同一构造：
-  //     runway 是 #0A0A0A 上的时装刊，luxe 是黑底烫金请柬——layout 零 baked
-  //     hex，全吃 ctx.colors，同一构图两种气质。
-  luxe: {
-    // Wave 8 batch 3: lock the invitation-plate cover, gilt ordinal chapter,
-    // and gilt-word ending. Motif keeps the double gilt frame on cover/ending.
-    layouts: { cover: ["invitation-plate-cover"], chapter: ["gilt-ordinal-chapter"], content: FRAMED_CONTENT_LAYOUTS, ending: ["gilt-word-ending"] },
-    // 2026-07-10 motif 全覆盖：烫金细线（原 P3「motif 可选」验证品，补齐）
-    motif: "luxe-motif",
-    layoutTendencies: {
-      cover: ["invitation-plate-cover"],
-      chapter: ["gilt-ordinal-chapter"],
-      content: ["quiet-frame", "rail-numbered", "two-column"],
-      ending: ["gilt-word-ending"],
-    },
-  },
-  // campaign（活力营销，2026-07-13 memphis 拆分 A）：深紫底多彩笔刷由专属
-  // campaign-motif 承载。
-  //
-  // cover 声明（theme-structure-allocation wave）：分配表四轴 = 居中 /
-  // bottom-left / heavy / medium。heavy 是全表唯一的一档装饰权重（多彩笔刷
-  // 本来就是全表最重的 motif），所以封面构造反而要让位——把画面中轴让出来给
-  // motif，标题居中站上去：
-  //   - `poster-center`：引首 + 居中大标题，营销舞台的正面构图。briefing 已锁
-  //     权重 3，单独声明空转，保留为真实主张。
-  //   - `split-diagonal`：深紫色块以硬斜切线收边——笔刷的斜向笔势和这道斜切是
-  //     一路的。不在 briefing 的 cover 集合里，max(3,1)=3，产生真实边际权重。
-  campaign: {
-    layouts: { cover: ["poster-center"], chapter: ["act-chapter"], content: FULL_LAYOUTS.content, ending: ["pill-cta-ending"] },
-    motif: "campaign-motif",
-    layoutTendencies: {
-      cover: ["poster-center"],
-      chapter: ["act-chapter"],
-      content: ["stacked-poster", "split-band"],
-      ending: ["pill-cta-ending"],
-    },
-  },
-  // classroom（教学课堂，2026-07-13 第 13 主题）：讲义雾蓝 + 拍纸簿装饰由
-  // 专属 classroom-motif 承载（2026-08-20 柔和组重设计）。chapter 曾排除
-  // fashion-chapter（W4 fix round 新发现），post-v0.3 W8 fix round 随
-  // readableOn 根因修复一起撤销——见上方 LAYOUTS 块注释。
-  // cover 声明（theme-structure-allocation wave）见 `CLASSROOM_STRUCTURE`。
-  classroom: {
-    layouts: CLASSROOM_LAYOUTS,
-    motif: "classroom-motif",
-    layoutTendencies: CLASSROOM_STRUCTURE,
-  },
-  // ink（水墨国风，2026-07-10 真创意子类②，用户点名例子）：宣纸/墨/朱砂/
-  // 楷体靠 tokens + 专属 ink-motif。**v3 重设计（2026-08-18 第一期）**把
-  // motif 换成了右缘落款列 + 一角残山（旧的版框线/大远山/旧印位全部删，见
-  // `../motifs/motif-ink-motif.tsx` 的文件头），页脚 branding 的两个抑制
-  // 开关见上方 `BRANDS.ink`。
-  //
-  // layoutTendencies（本期新声明——ink 此前是 `structure-map.md` 点名的七个
-  // 「全盲」主题之一：不声明任何结构倾向，同 IR 同 seed 与其它全盲主题渲染
-  // 出逐字节相同的版式序列）。定稿分配表给 ink 的四轴是
-  // 左轴 / side-rail / light / airy，cover-picks 是 colophon + fashion-masthead：
-  //   - cover `colophon`：本期新造的构造（`../layouts/cover-colophon.tsx`），
-  //     左轴大标题 + 引首块，右边界收在 x1180——它和落款列（x>=1220）是配套
-  //     设计的一对，side-rail 这一轴的完整表达只在这个组合里成立。
-  //   - cover `fashion-masthead`：第二选择，满版焦墨底 + 超大报头。与 ink 的
-  //     「素」不冲突：宋人也画过满幅浓墨，且这是 runway 之外无人声明的构造，
-  //     两个 cover 候选让抽签结果不至于只有一种脸。
-  //   - content `quiet-frame` / `narrow-column`：分配表的 airy 留白档在 content
-  //     池里就这两位——一个居中留白框、一个窄单栏，都是「疏可走马」那一路。
-  //     content 页型此前全 17 主题无人声明（`inventory.md` 的第二病），ink 是
-  //     第一个开口的。
-  //   - chapter / ending 本期不声明：chapter-inkfield 与 ending-seal 两个构造
-  //     推到二期（decisions.md），在它们落地之前，从通用池里硬挑一个 id 只是
-  //     为了填表，不是结构判断。
-  ink: {
-    // Wave 8 batch 2: lock the vertical-title cover, volume-slip chapter, and
-    // seal-close ending. Motif stays the residual mountain plus colophon rail
-    // (cover draws mountain only).
-    layouts: { cover: ["vertical-title-cover"], chapter: ["volume-slip-chapter"], content: FULL_LAYOUTS.content, ending: ["seal-close-ending"] },
-    motif: "ink-motif",
-    layoutTendencies: {
-      cover: ["vertical-title-cover"],
-      chapter: ["volume-slip-chapter"],
-      content: ["quiet-frame", "split-band"],
-      ending: ["seal-close-ending"],
-    },
-  },
-  // heritage（第 8 主题，2026-07-10）：勃艮第×焦糖 putty 浅底混搭，酒红横幅
-  // 上 baked 白字对比充足。chapter 曾排除 fashion-chapter，post-v0.3 W8 fix
-  // round 撤销——见上方 LAYOUTS 块注释。
-  // cover 声明（theme-structure-allocation wave）：heritage 是上面 luxe 那条
-  // 注释里的孪生另一半，四轴取 左轴 / bottom-left / medium / medium 与 luxe
-  // 全岔。封面族也整族让开——luxe 走 poster/fashion，heritage 走 masthead/
-  // anchor，两家不再共用任何一个 cover id：
-  //   - `editorial-masthead`：顶部双规则线 + 衬线报头，藏书票和扉页的排印惯例，
-  //     勃艮第配焦糖正是这套排印的底色。不在 briefing 的 cover 集合里，
-  //     max(3,1)=3，真实边际权重。与 journal 共用同一构造（journal 是人文期刊
-  //     的黑白报头，heritage 是酒红典藏），layout 零 baked hex。
-  //   - `left-anchor`：左侧竖向色条 + 左上标题，密排那一路的起手式，bottom-left
-  //     的 meta 轴在这个构图里落得最自然。同样不在 briefing 里，真实边际权重。
-  heritage: {
-    // Wave 8 batch 2: lock the double-frame cover, mirror-volume chapter, and
-    // invite-field ending. Motif id stays heritage-motif (now empty: frames
-    // live on the cover layout).
-    layouts: { cover: ["double-frame-cover"], chapter: ["mirror-volume-chapter"], content: FULL_LAYOUTS.content, ending: ["invite-field-ending"] },
-    motif: "heritage-motif",
-    layoutTendencies: {
-      cover: ["double-frame-cover"],
-      chapter: ["mirror-volume-chapter"],
-      content: ["rail-numbered", "asymmetric-triptych"],
-      ending: ["invite-field-ending"],
-    },
-  },
-  // pulse（医疗健康/生命科学，2026-07-28 themes-16 wave task T1，第 14 主题）：
-  // 极浅薄荷白底+深青绿主色的清洁诊疗气质，细脉搏线+胶囊/细胞圆点簇由专属
-  // pulse-motif 承载。pulse 没有 legacy 预兆代码可提炼（不像 academic/tech
-  // 等六个既有声明主题那样有自己的原生 layout 家族——那六家各自占用
-  // cover/chapter/ending 三池里互不重叠的一整个「家族」：banner/poster/
-  // rail/constellation/fashion/masthead），layoutTendencies 因此从通用
-  // layout 池里挑选气质相符的 id（plan 裁定 3）：
-  //   - cover `split-diagonal`：primary 色块以硬斜切线收边，标题在净空区
-  //     跨近斜切线——一道果断的斜切像心电图尖峰的陡直落笔，呼应 pulse 自己
-  //     的脉搏节律气质，同时是 P3「新表达」layout，不与任何既有声明
-  //     主题的 cover 家族重合（重合仅 strategy 层的 instructional 一家，
-  //     不与默认 briefing 重合）。
-  //   - chapter `tone-adaptive-chapter`：居中大标题+右下角编号水印，朴素
-  //     无花哨——`narrative/index.ts` 里明确"从不出现在任何 strategy 的
-  //     identityTendencies 字段里"的三个"万金油" identity layout 之一
-  //     （该文件自己的文档用语），pulse 在它上面永远拿到满额差异化权重，
-  //     零 strategy 重合。
-  //   - ending `banner-ending`："联系"区块+版权行的务实收尾——生物医药 BD/
-  //     诊所品牌很自然需要一条联系方式收尾。重合 instructional/briefing
-  //     两家（三选一里代价最小：cover/chapter 已经零重合，ending 让一步）。
-  // 实测校验（`theme-structure.test.ts` 的"每个声明主题的 resolveSequence
-  // 两两不同"）：weightedPickBySeed 的候选池抽签值只取决于 (seed,
-  // pageKey)、与 theme id 无关——两个主题若对同一页型声明完全相同的单一
-  // tendency id，会在该页型上产出完全相同的选中结果（非小概率巧合，是
-  // weightedPickBySeed 的确定性推论）。左侧色块+留白（left-anchor）、
-  // 底部进度点轨（rail-chapter）等更"显然贴题"的候选逐一试过，但它们已是
-  // academic 自己的 cover/chapter 声明，会在 fixture 固定 IR 的 seed=1 上
-  // 与 academic 撞出字节相同的 7 页序列（brute-force 扫过 cover×chapter×
-  // ending 全部 448 组合验证，仅 160 组不与既有 6 个声明主题碰撞）——上面
-  // 三选是其中同时兼顾气质贴合、strategy 零/低重合、且实测通过的一组。
-  pulse: {
-    layouts: { cover: ["report-open-cover"], chapter: ["subject-rule-chapter"], content: FULL_LAYOUTS.content, ending: ["care-plan-ending"] },
-    motif: "pulse-motif",
-    layoutTendencies: {
-      cover: ["report-open-cover"],
-      chapter: ["subject-rule-chapter"],
-      content: ["bento-panel", "rail-numbered"],
-      ending: ["care-plan-ending"],
-    },
-  },
-  // terra（可持续/ESG，2026-07-28 themes-16 wave task T2，第 15 主题）：
-  // 沙色底+橄榄绿主色的朴素大地气质，等高线+叶脉/种子点由专属 terra-motif
-  // 承载。同 pulse 一样没有 legacy 预兆代码可提炼，layoutTendencies 从通用
-  // layout 池里挑（plan 裁定 3）——挑选时先盘点 8 个既有声明主题（含
-  // pulse）已经用掉的 id：cover 池 8 个 id 里 7 个已被声明（banner-title/
-  // poster-center/left-anchor/constellation/fashion-masthead/editorial-
-  // masthead/split-diagonal），ending 池 7 个里 6 个已被声明（banner-ending/
-  // poster-ending/rail-ending/constellation-ending/fashion-ending/masthead-
-  // ending）——两池各自只剩一个从未被任何主题声明过的 id：
-  //   - cover `tone-adaptive-header`：唯一零主题重合的 cover id，同时是
-  //     `narrative/index.ts` 里"从不出现在任何 strategy 的 identityTendencies
-  //     字段里"的万金油 identity layout——自适应留白的克制封面，恰好呼应
-  //     terra「朴素、根系」气质里"朴素"的那一半：不靠硬构图抢眼，靠底色和
-  //     motif 本身的地形线说话。
-  //   - ending `tone-adaptive-ending`：唯一零主题重合的 ending id，同 cover
-  //     一样是万金油 identity layout，零 strategy 重合——"长期主义"收尾
-  //     不需要一句响亮的收官宣言，克制留白比横幅更贴题。
-  //   - chapter 轴刻意不声明：masthead-chapter 落在 strategy `briefing` 的
-  //     identityTendencies.chapter 里，默认 strategy 下 max(3,3)=3，声明它
-  //     不产生任何边际权重；它同时是 journal 已声明的 chapter id，声明了也
-  //     只是重复 journal 在 chapter 轴上的性格。剩下能让完整序列岔开的选项
-  //     （见上一版注释的 brute-force 结果）都要么撞权重、要么撞别的主题
-  //     已声明的轴，没有一个能不靠这两种代价拿到区分度——没有区分度的声明
-  //     就是噪音，裁剪（Partial 只声明 cover/ending）比硬凑一个更诚实。
-  // 实测校验（`theme-structure.test.ts` 的"每个声明主题的 resolveSequence
-  // 两两不同"）：terra 的完整 resolveSequence 靠 cover/ending 两个万金油 id
-  // 已经与其余 7 个既有声明主题（含 pulse）逐一比对均不同，也不与 7 个未声明
-  // 主题共享的默认序列相同，chapter 轴不需要额外声明来撑区分度。
-  terra: {
-    // Wave 8 batch 3: lock the pledge-open cover, olive field chapter, and
-    // scorecard ending. Motif keeps the top-left contour lines.
-    layouts: { cover: ["pledge-open-cover"], chapter: ["field-band-chapter"], content: FULL_LAYOUTS.content, ending: ["scorecard-ending"] },
-    motif: "terra-motif",
-    layoutTendencies: {
-      cover: ["pledge-open-cover"],
-      chapter: ["field-band-chapter"],
-      content: ["two-column", "quiet-frame"],
-      ending: ["scorecard-ending"],
-    },
-  },
-  // ember（创业路演/暖色能量，2026-07-28 themes-16 wave task T3，第 16、
-  // 本波最后一个主题）：暖白底+火橙主色的明快上升气质，上升火花由专属
-  // ember-motif 承载。task T3 brief 明确警告：找"没人用过的 id"这条路在
-  // cover/ending 两个轴上已经走绝——terra 落地后 cover 池 8 个 id 已全部被
-  // 既有声明主题占用（banner-title/left-anchor/poster-center/constellation/
-  // fashion-masthead/editorial-masthead/split-diagonal/tone-adaptive-
-  // header），ending 池 7 个也已全占（masthead-ending/constellation-ending/
-  // rail-ending/banner-ending/poster-ending/tone-adaptive-ending/fashion-
-  // ending 的等价重合形态），chapter 池仅剩 roman-chapter 未被声明过。ember
-  // 因此不找"未占用 id"，改用 brief 指定的工具：复用 id + 组合交互 +
-  // 部分声明。
-  //
-  // 实测穷举（`resolveLayoutId` 直连，同 T2 terra 的 brute-force 方法，
-  // 脚本临时写在仓库外未入库）：先按气质从每轴挑 2-3 个候选——cover
-  // {fashion-masthead, poster-center, split-diagonal}（满版色块/居中海报/
-  // 硬切对角，都读"发布感"）、chapter {fashion-chapter, poster-chapter,
-  // rail-chapter}（杂志感章节标/自信里程碑数字/进度点轨，都读"上升/推进"）、
-  // ending {fashion-ending, constellation-ending, banner-ending}（响亮
-  // 收官/"Thank you."签名条/联系方式）。逐一用 theme-structure.test.ts 同款
-  // fixture（seed=1）实测发现：**该 fixture 上 8 个 cover id 的单声明只
-  // 收敛到 2 个可达结果**（banner-title 或 poster-center——briefing 默认
-  // strategy 自己已把 banner-title/poster-center 权重锁到 3，任何主题
-  // 声明的第三个 id 只是把总权重从 12 抬到 14，被同一个固定哈希目标值
-  // 打进同一个 poster-center 桶，声明具体是哪个 id 不影响这一结果）；chapter
-  // 同理只收敛到 2 个结果（masthead-chapter 或 fashion-chapter，8 个非
-  // masthead/constellation 的单声明全部落在 fashion-chapter，含 roman-
-  // chapter——T3 brief 转述的"roman-chapter 与 runway 全组合撞车"结论就是
-  // 这枚硬币的另一面：声明 roman-chapter 与声明 rail-chapter/banner-chapter/
-  // fashion-chapter 等价，都收敛到 fashion-chapter，不是 roman-chapter 本身
-  // 有什么特殊之处）；ending 收敛到 3 个结果（masthead-ending/banner-ending/
-  // poster-ending）。8 declared + undeclared 控制组在这套 (cover, chapter,
-  // ending) 三元组空间里已经占满 12 种可达组合里的 9 种，只剩 3 种未被
-  // 使用，全部要求 cover 落在 banner-title（即 cover 轴不声明或声明一个
-  // 与 briefing 完全打平的零边际权重 id——两者对这枚 fixture 而言等价）。
-  //
-  // 结论：cover 轴对本主题没有任何真实分化空间——声明它要么是零边际权重
-  // 的空动作（同 terra 修复前 masthead-chapter 的教训：declare 与不 declare
-  // 字节相同），要么把结果推进已经 6/8 主题挤占的 poster-center 桶，两条
-  // 路都不产生区分度，因此**刻意不声明 cover**（Partial 裁剪，terra 先例
-  // 的同一处理，这次轮到 cover 轴让步）。chapter/ending 两轴改为服务两个
-  // 目的：(a) 挑到未被使用的三元组之一，(b) 气质对得上——最终选
-  // chapter `rail-chapter`（进度点轨，"pitch deck 里程碑推进"的具象读法，
-  // 呼应"上升"气质；复用 academic 的声明 id，但 academic 是 BCG 绿的
-  // 咨询进度轨，ember 是橙色发布倒计时式的进度轨，同一构图两种气质）+
-  // ending `constellation-ending`（"Thank you."+accent 句号+签名条，干脆
-  // 自信的收尾，呼应"发布感"；复用 tech 的声明 id，但 tech 是深空星域
-  // 冷调，ember 是暖橙调——归档件本身零 baked hex，全部吃 ctx.colors，
-  // 视觉观感由 tokens 决定，不是同一张脸）——落到 (banner-title[cover
-  // 轴不声明的默认值], fashion-chapter, tone-adaptive-content, split-band,
-  // rail-chapter, banner-heading, banner-ending) 这一未被使用的三元组。
-  //
-  // 实测校验（`theme-structure.test.ts` 的"每个声明主题的 resolveSequence
-  // 两两不同"）：ember 的完整 resolveSequence（seed=1）与其余 8 个既有
-  // 声明主题（含 pulse/terra）逐一比对均不同，也不与 7 个未声明主题共享的
-  // 默认序列相同。
-  ember: {
-    layouts: { cover: ["corner-wedge"], chapter: ["ember-index-chapter"], content: FULL_LAYOUTS.content, ending: ["ask-ending"] },
-    motif: "ember-motif",
-    layoutTendencies: {
-      cover: ["corner-wedge"],
-      chapter: ["ember-index-chapter"],
-      content: ["bento-panel", "two-column", "stacked-poster"],
-      ending: ["ask-ending"],
-    },
-  },
-  // vermilion（庄重公务汇报，2026-08-06 gov-theme wave，第 17 主题）：暖米白底
-  // + 正红主色的庄重红金公务气质，旗帜感绸带弧线 + 金色光芒细线由专属
-  // vermilion-motif 承载。同 pulse/terra/ember 一样没有 legacy 预兆代码可提炼，
-  // layoutTendencies 从通用 layout 池里挑气质相符的 id（plan 裁定 3：汇报体
-  // 的结构性格 = banner 族「横幅/庄重」+ rail 族「条理」，避开与 consulting
-  // 完全同套）。cover/chapter/ending 三池的 id 到 ember 落地时已被既有 9 个
-  // 声明主题全占（cover 8/8、chapter 除 roman-chapter 外全占、ending 7/7），
-  // 故不找「未占用 id」，改用 brief 指定的工具：复用 id + 组合交互 + 部分声明
-  // （ember 先例）。真穷举（`resolveLayoutId` 直连，同 T2/T3 的 brute-force
-  // 方法，脚本临时写在仓库外未入库）先按 ruling 3 气质挑候选，逐一在
-  // `theme-structure.test.ts` 同款 fixture（seed=1，默认 briefing）实测——
-  // 关键发现：**chapter/ending 各自单声明只收敛到少数可达结果**（chapter 非
-  // masthead/constellation 单声明全落 fashion-chapter@idx1，ending 单声明只落
-  // masthead/banner/poster-ending 三者之一，同 ember 注释详述的硬币），最初
-  // 选的 {chapter:[banner-chapter], ending:[rail-ending]} 与 **ember 完整序列
-  // 逐字节相同**（两者都塌进同一组桶）。最终选组合交互更强的一组：
-  //   - chapter `["banner-chapter", "rail-chapter"]`（两 id 都是真实性格主张，
-  //     非纯 modulus-escape）：banner-chapter = 居中白字压整版 primary 正红
-  //     色块，正是本主题 chapter 默认背景（正红整版）+ readableOn 反白的具象
-  //     读法，庄重红底白字的断章正是汇报体的签名；rail-chapter = 底部进度点轨，
-  //     「第 N 章」的条理读法。**两 id 均有真实边际权重**（都不在
-  //     briefing.identityTendencies.chapter=["masthead-chapter",
-  //     "constellation-chapter"] 里，max(3,1)=3）。二元集合把 chapter 模数从
-  //     单声明的塌缩桶里撬开，在本 fixture 上 idx1 落 constellation-chapter、
-  //     **idx4 真的落到 banner-chapter**（签名红断章在 fixture 里实际浮现，
-  //     不是纯软权重空转）。复用 consulting 的 banner-chapter / academic 的
-  //     rail-chapter，但两者是麦肯锡藏青 / BCG 绿，vermilion 是正红金黄——
-  //     归档件零 baked hex 全吃 ctx.colors，同一构图两种气质。
-  //   - ending `rail-ending`（角落色块 + 显式「Contact」区块 + 版权）：条理化
-  //     的收尾，像一份报告的落款联系页——汇报体的收尾正是「联系方式 + 落款」
-  //     而非煽情告别。**有真实边际权重**（不在 briefing.ending=["masthead-
-  //     ending", "banner-ending"] 里，max(3,1)=3）。本 fixture/seed 上采样落到
-  //     banner-ending（同属「Contact 区块 + 版权」的务实收尾家族，语域一致，
-  //     是 rail-ending 软权重在这枚种子上的实际着陆点，非另一种气质）。
-  //   - cover 轴刻意不声明（Partial 裁剪，terra/ember 先例）：cover 池对本
-  //     fixture/seed 的单声明只收敛到 banner-title 或 poster-center 两个可达
-  //     结果（ember 注释已详述：briefing 已把两者锁到权重 3，任何第三个 cover
-  //     id 的声明要么零边际权重、要么被同一固定哈希打进 poster-center 桶），
-  //     无真实分化空间。汇报封面的庄重红金身份本就由红色结构型 layout
-  //     （banner-title 红强调条——浅底红字直接达标 / left-anchor 40% 红块与
-  //     split-diagonal 红斜切——readableOn 反白）+ 红金 motif 承载，不靠声明一个零区分度的 cover
-  //     tendency——没有区分度的声明是噪音，裁剪比硬凑更诚实。
-  // 实测校验（`theme-structure.test.ts` 的「每个声明主题的 resolveSequence
-  // 两两不同」+ divergence）：vermilion 完整 resolveSequence（seed=1）=
-  // ["banner-title", "constellation-chapter", "tone-adaptive-content",
-  // "split-band", "banner-chapter", "banner-heading", "banner-ending"]，与其余
-  // 9 个既有声明主题（含 pulse/terra/ember）逐一比对均不同，也不与 7 个未声明
-  // 主题共享的默认序列相同（派生结果见 task-1-report.md）。
-  vermilion: {
-    layouts: { cover: ["red-head-cover"], chapter: ["seal-numeral-chapter"], content: FULL_LAYOUTS.content, ending: ["deliberation-ending"] },
-    motif: "vermilion-motif",
-    layoutTendencies: {
-      cover: ["red-head-cover"],
-      chapter: ["seal-numeral-chapter"],
-      content: ["rail-numbered", "narrow-column"],
-      ending: ["deliberation-ending"],
-    },
-  },
-  // crayon「一盒蜡笔」：封面、章节、满内容与结尾锁四张专属脸。内容池仍
-  // 保留共享九张，避免整副 deck 塌成同一构图。疏内容 crayonbox-point 只
-  // 接受显式 pin。五张专属脸都是 pinOnly，不进入其他主题的自动候选集。
-  crayon: {
-    layouts: {
-      cover: ["crayonbox-open"],
-      chapter: ["crayonbox-sticker"],
-      content: ["crayonbox-cards", ...FULL_LAYOUTS.content],
-      ending: ["crayonbox-todo"],
-    },
-    motif: "crayonbox-motif",
-    layoutTendencies: {
-      cover: ["crayonbox-open"],
-      chapter: ["crayonbox-sticker"],
-      content: ["crayonbox-cards"],
-      ending: ["crayonbox-todo"],
-    },
-  },
-  // arena（竞技场紫黑，2026-08-21 场景审计 #27 第六组新主题·娱乐电竞）：紫黑灯灭 + 电光绿 HUD，由专属
-  // arena-motif 承载。结构行 center / bottom-left / heavy / tight，最近邻
-  // campaign（C/BL/heavy/medium），岔在留白轴。封面硬锁 `corner-wedge`：
-  // 板上是居中标题加右下品红角楔。`split-diagonal` 是全高侧栏，不是这只楔。
-  arena: {
-    layouts: { cover: ["cut-panel-cover"], chapter: ["round-mark-chapter"], content: FULL_LAYOUTS.content, ending: ["seat-cta-ending"] },
-    motif: "arena-motif",
-    layoutTendencies: {
-      cover: ["cut-panel-cover"],
-      chapter: ["round-mark-chapter"],
-      content: ["bento-panel", "asymmetric-triptych"],
-      ending: ["seat-cta-ending"],
-    },
-  },
-  // museum（博物，2026-08-21 鹦鹉站气质立项）：棕黑厅堂 + 衬线 + 展签铜金。
-  // 无 motif——落地版的展签框 + 四角针点被用户终审裁撤（2026-08-21：四角
-  // 装饰「没必要，也太丑」），气质全部由色板与衬线排印承担，装饰浓度为
-  // none（runway 先例之后第二家）。结构行 C / top-band / none / airy，最近邻
-  // insight（C / top-band / light / tight），岔在留白轴。封面构造
-  // poster-center / editorial-masthead（与 insight 同构图，insight 是夜刊、
-  // museum 是展厅，layout 零 baked hex）：
-  //   - `poster-center`：展览开幕的正面站位。briefing 已锁权重 3，单独声明
-  //     空转，保留为真实主张（裁定 1 的追加先例）。
-  //   - `editorial-masthead`：衬线报头，目录册封面。不在 briefing 的 cover
-  //     集合里，max(3,1)=3，产生真实边际权重。
-  // chapter / ending / content 不声明：身份靠封面 + light motif + airy
-  // gapScale，不靠再声明一个与 insight 同形的轴去硬凑区分度。
-  museum: {
-    // board-cover-restore wave 2 (parameter gap, no new ids): lock poster-center.
-    // editorial-masthead is the second face, deferred.
-    // Wave 8 batch 4: lock hall-label chapter and exit-word ending. Motif stays empty.
-    layouts: {
-      cover: ["poster-center"],
-      chapter: ["hall-label-chapter"],
-      content: FULL_LAYOUTS.content,
-      ending: ["exit-word-ending"],
-    },
-    layoutTendencies: {
-      cover: ["poster-center"],
-      chapter: ["hall-label-chapter"],
-      content: ["split-band", "two-column", "quiet-frame"],
-      ending: ["exit-word-ending"],
-    },
-  },
-  // stage（黑场，2026-08-21 huashu 风格库 Top 5 第 3）：冷玄黑 + sans +
-  // 哑银，**无 motif**。结构行 C / bottom-right / none / airy，最近邻
-  // luxe（C / bottom-right / light / airy），岔在 decor 轴——无框对请柬框。
-  // runway 已占 L / bottom-left / none / airy，heading 与 meta 都岔开。
-  // 封面锁定 `poster-center`（板面是居中巨字海报，构图已被池中
-  // poster-center 覆盖。历史曾软倾向 poster-center / tone-adaptive-header）。
-  // chapter / ending 的 layouts 收窄待下版本设计板后锁定。content 走全集加
-  // 分配表倾向。statement 是 pinOnly，不进倾向池。
-  stage: {
-    // 第七波封面保真：板面是居中巨字海报。构图已被 poster-center 覆盖
-    // （typeScale 1.5 把 100px 提到展示级）。收窄 cover 池，软倾向保不住
-    // 「一模一样」。docs/themes.md 写明的作者主动权，首次动用。
-    // chapter / ending 的 layouts 收窄待下版本设计板后锁定。
-    // Wave 8 batch 4: lock one-word chapter and release-close ending. Motif stays empty.
-    layouts: {
-      cover: ["poster-center"],
-      chapter: ["one-word-chapter"],
-      content: FULL_LAYOUTS.content,
-      ending: ["release-close-ending"],
-    },
-    // motif 刻意不配：无框就是身份。runway 是「大片排印」的 none，stage
-    // 是「黑场」的 none，用 heading / meta 两轴分开。照 runway 先例留空，
-    // 不是漏写（theme-structure.test.ts 把两家一起钉成合法例外）。
-    layoutTendencies: {
-      cover: ["poster-center"],
-      chapter: ["one-word-chapter"],
-      content: ["quiet-frame", "stacked-poster", "asymmetric-triptych"],
-      ending: ["release-close-ending"],
-    },
-  },
-  // lecture（黑板夜校，2026-08-21）：墨绿板面 + 衬线 + 黄粉笔，粉笔槽细框
-  // 由专属 lecture-motif 承载。结构行 L / top-band / light / tight，最近邻
-  // enterprise（L / top / medium / tight），岔装饰轴——enterprise 是 IKB
-  // 方块秩序的 medium，lecture 是 26px 内缩细框的 light。封面锁定
-  // `board-head`（板面是左轴板书，池里没有这个构造，新建进共享池。
-  // 历史曾软倾向 banner-title / tone-adaptive-header）。
-  // chapter / ending 的 layouts 收窄待下版本设计板后锁定。content 走框底
-  // 池（gallery r2 D20），不加顶标题 / 顶图 layout。classroom 是白日讲义纸，
-  // lecture 是夜校黑板。
-  lecture: {
-    // 第七波封面保真：板面是左轴板书，池里没有这个构造，新建 board-head
-    // 进共享池并收窄 cover。粉笔槽细框仍走 lecture-motif。
-    // chapter / ending 的 layouts 收窄待下版本设计板后锁定。
-    // Wave 8 batch 4: lock chalk-rule chapter and next-lecture ending.
-    // Content pool stays FRAMED_CONTENT_LAYOUTS. Motif stays lecture-motif.
-    layouts: {
-      cover: ["board-head"],
-      chapter: ["chalk-rule-chapter"],
-      content: FRAMED_CONTENT_LAYOUTS,
-      ending: ["next-lecture-ending"],
-    },
-    motif: "lecture-motif",
-    layoutTendencies: {
-      cover: ["board-head"],
-      chapter: ["chalk-rule-chapter"],
-      content: ["two-column", "quiet-frame", "bento-panel"],
-      ending: ["next-lecture-ending"],
-    },
-  },
-  // swiss（冷白制度，2026-08-21 wave7）：冷白纸 + 硬黑即正文即色块 + 瑞士红
-  // 成边，由专属 swiss-motif 承载。结构行 L / bottom-right / light / tight，
-  // 最近邻 tech（L / BR / medium / tight），岔在装饰轴。consulting 是报告腔、
-  // vermilion 是公文腔、swiss 是制度腔，三家不是换色。封面锁定
-  // `institutional-block`（板面是红边 + 左置巨黑字 + 签名块，池里没有这个
-  // 构造。历史曾软倾向 left-anchor / split-diagonal）。
-  // chapter / ending 的 layouts 收窄待下版本设计板后锁定。content 走全集加
-  // 分配表倾向。
-  swiss: {
-    // 第七波封面保真：板面是红边 + 左置巨黑字 + 签名块，池里没有这个构造。
-    // 新建 institutional-block 进共享池并收窄 cover。顶边红条仍走 swiss-motif。
-    // chapter / ending 的 layouts 收窄待下版本设计板后锁定。
-    // Wave 8 batch 4: lock decimal-index chapter and resolution ending.
-    // Motif stays swiss-motif (ticks cover-only).
-    layouts: {
-      cover: ["institutional-block"],
-      chapter: ["decimal-index-chapter"],
-      content: FULL_LAYOUTS.content,
-      ending: ["resolution-ending"],
-    },
-    motif: "swiss-motif",
-    layoutTendencies: {
-      cover: ["institutional-block"],
-      chapter: ["decimal-index-chapter"],
-      content: ["two-column", "narrow-column", "rail-numbered"],
-      ending: ["resolution-ending"],
-    },
-  },
-  // memo（打字机决定，2026-08-21 wave7）：便笺纸 + 宋体标题 + 印章红双线。
-  // 结构行 L / bottom-left / light / tight，最近邻 consulting
-  // （L / BL / light / medium），岔留白轴。红成线不成面，与 vermilion
-  // 红条承白字、heritage 藏书票衬线分家。封面锁定 `memo-head`（板面是
-  // MEMORANDUM 眉行 + 红双线 + 标题末词下划。历史曾软倾向 banner-title /
-  // editorial-masthead）。
-  // chapter / ending 的 layouts 收窄待下版本设计板后锁定。content 走全集加
-  // 分配表倾向。branding 仍归 deck 声明，不在本行绑定。
-  memo: {
-    // 第七波封面保真：板面是 MEMORANDUM 眉行 + 红双线 + 标题末词下划。
-    // 新建 memo-head 进共享池并收窄 cover。motif 在封面退让，避免双份公文头。
-    // chapter / ending 的 layouts 收窄待下版本设计板后锁定。
-    // Wave 8 batch 4: lock issue-line chapter and decision-close ending.
-    // Motif stays memo-motif.
-    layouts: {
-      cover: ["memo-head"],
-      chapter: ["issue-line-chapter"],
-      content: FULL_LAYOUTS.content,
-      ending: ["decision-close-ending"],
-    },
-    motif: "memo-motif",
-    layoutTendencies: {
-      cover: ["memo-head"],
-      chapter: ["issue-line-chapter"],
-      content: ["asymmetric-triptych", "narrow-column", "tone-adaptive-content"],
-      ending: ["decision-close-ending"],
-    },
-  },
-  // playbill（荧光嗓门，2026-08-21 第七波）：荧光黄整版 + 硬黑特粗字。
-  // 日期贴片由 bill-head 当封面前景画（wave 7 几何），motif 为空。
-  // heavy 的量在满版黄、typeScale 1.3 和字重。
-  // **heavy 不必然等于 motif 重**：结构行 C / top-band / heavy / medium，
-  // 最近邻 vermilion（C / top-band / medium / medium），岔在装饰轴。
-  // 封面锁定 `bill-head`（板面是出血巨字 + 底粗线，池里没有这个构造。
-  // 历史曾软倾向 poster-center / fashion-masthead）。
-  // chapter / ending 的 layouts 收窄待下版本设计板后锁定。content 走全集加
-  // 分配表倾向。定位 10 页内活动件（宣发 / 招募 / 节目单）。
-  playbill: {
-    // 第七波封面保真：板面是出血巨字 + 底粗线，池里没有这个构造。新建
-    // bill-head 进共享池并收窄 cover。日期贴片由 bill-head 当前景画，motif 为空。
-    // Wave 8 batch 4: lock day-bill chapter and ticket-cta ending.
-    layouts: {
-      cover: ["bill-head"],
-      chapter: ["day-bill-chapter"],
-      content: FULL_LAYOUTS.content,
-      ending: ["ticket-cta-ending"],
-    },
-    // Motif id 保留，贴片改由 bill-head 画。heavy 的主体仍在满版黄与字重。
-    motif: "playbill-motif",
-    layoutTendencies: {
-      cover: ["bill-head"],
-      chapter: ["day-bill-chapter"],
-      content: ["stacked-poster", "rail-numbered", "split-band"],
-      ending: ["ticket-cta-ending"],
-    },
-  },
-}
-
-/**
- * The six pinOnly sparse climax layouts. One list, reused by
- * {@link themeOffersSparse}, {@link registerTheme}'s validation, and the
- * gallery speech table (`SPEECH_LAYOUT_IDS` re-exports this). Do not
- * hand-copy the six names into those call sites.
- */
-export const SPARSE_LAYOUT_IDS = [
-  "statement",
-  "pull-quote",
-  "verse-chapter",
-  "stat-hero",
-  "one-evidence",
-  "mono-bleed",
-] as const
-
-const NO_SPARSE: readonly string[] = []
-
-/**
- * Per-theme sparse offer table, projected onto {@link THEME_DEFINITIONS}
- * below. Kept off the `LAYOUTS` literals so cover-lock tests that pin
- * `layoutTendencies` object identity stay
- * untouched. Omitted keys stay `undefined` through the projection (offer
- * every sparse id). `[]` offers none. A list is the three boarded content
- * faces in `FACES` insertion order, then `verse-chapter`.
- */
-const SPARSE_LAYOUTS: Partial<Record<CanonicalThemeId, readonly string[]>> = {
-  crayon: NO_SPARSE,
-  classroom: NO_SPARSE,
-  enterprise: NO_SPARSE,
-  pulse: NO_SPARSE,
-  runway: NO_SPARSE,
-  ember: NO_SPARSE,
-  stage: ["statement", "stat-hero", "pull-quote", "verse-chapter"],
-  lecture: ["statement", "stat-hero", "one-evidence", "verse-chapter"],
-  swiss: ["stat-hero", "statement", "one-evidence", "verse-chapter"],
-  memo: ["pull-quote", "stat-hero", "statement", "verse-chapter"],
-  playbill: ["statement", "stat-hero", "mono-bleed", "verse-chapter"],
-  museum: ["statement", "one-evidence", "stat-hero", "verse-chapter"],
-  luxe: ["pull-quote", "stat-hero", "statement", "verse-chapter"],
-  ink: ["statement", "stat-hero", "pull-quote", "verse-chapter"],
-  consulting: ["statement", "stat-hero", "one-evidence", "verse-chapter"],
-  insight: ["statement", "stat-hero", "pull-quote", "verse-chapter"],
-  tech: ["stat-hero", "statement", "one-evidence", "verse-chapter"],
-  heritage: ["pull-quote", "statement", "stat-hero", "verse-chapter"],
-  vermilion: ["statement", "stat-hero", "one-evidence", "verse-chapter"],
-  journal: ["pull-quote", "stat-hero", "statement", "verse-chapter"],
-  campaign: ["statement", "stat-hero", "one-evidence", "verse-chapter"],
-  arena: ["stat-hero", "statement", "one-evidence", "verse-chapter"],
-  terra: ["statement", "stat-hero", "one-evidence", "verse-chapter"],
-  academic: ["pull-quote", "stat-hero", "statement", "verse-chapter"],
-}
+/** The sparse vocabulary is shared with validation and gallery speech. */
+export { SPARSE_LAYOUT_IDS } from "./schema"
 
 export const THEME_DEFINITIONS: Record<CanonicalThemeId, ThemeDefinition> = Object.fromEntries(
-  CANONICAL_THEME_IDS.map((id) => [
-    id,
-    {
-      id,
-      style: THEME_STYLES[id],
-      brand: BRANDS[id] ?? {},
-      tags: [] as const,
-      layouts: LAYOUTS[id].layouts,
-      motif: LAYOUTS[id].motif,
-      // Theme-structure wave, task T1 fix round (reviewer's Minor): projected
-      // through now, even though no builtin's `LAYOUTS` entry sets it yet
-      // (task T2's job) — so a future entry that adds `layoutTendencies` is
-      // mechanical (just another key on that entry's object literal) instead
-      // of also requiring a matching edit here, and `tsc` would have caught
-      // the omission had this projection itself been forgotten.
-      layoutTendencies: LAYOUTS[id].layoutTendencies,
-      sparseLayouts: SPARSE_LAYOUTS[id],
-    },
-  ]),
-) as unknown as Record<CanonicalThemeId, ThemeDefinition>
+  CANONICAL_THEME_IDS.map((id) => [id, compileBuiltinTheme(BUILTIN_THEME_FILES[id])]),
+) as Record<CanonicalThemeId, ThemeDefinition>
 
 /** Theme brand config + optional IR-level override (shallow merge, override wins). */
 export function resolveBrand(id: string, override?: BrandConfig): BrandConfig {
@@ -1241,7 +267,7 @@ function resolveBackgroundHex(spec: BackgroundSpec, surfaceFallback: string): st
  * legitimately land in [3.0, 4.5) and should not be hard-rejected at
  * registration — that higher bar is a theme author's own self-audit
  * concern, already covered by `full-matrix-contrast.test.ts`'s
- * `colors.muted contrast` suite for the 13 builtins (all measure >= 4.5
+ * `colors.muted contrast` suite for the 24 built-ins (all measure >= 4.5
  * there today).
  */
 const CONTRAST_FLOOR = 3.0
@@ -1261,7 +287,7 @@ const CONTRAST_FLOOR = 3.0
  * chapter-layout set — so the raw-token-vs-chapter-background pairing
  * this check would otherwise measure is structurally never what actually
  * renders, for any theme this function could ever accept, not just the 13
- * builtins. A probe against all 13 builtins' real tokens confirms this is
+ * built-ins. A probe against all 24 built-ins' real tokens confirms this is
  * load-bearing, not theoretical: `academic`/`classroom`/`consulting` are the
  * 3 builtins whose `defaultBackgrounds.chapter` intentionally diverges from
  * their own `colors.bg` (a dark divider tone, see {@link resolveBackgroundHex}'s
@@ -1280,11 +306,9 @@ const CONTRAST_CHECKED_SLIDE_TYPES = ["cover", "content", "ending"] as const
  * background — see that constant's doc comment for the 3.0 rationale and
  * {@link CONTRAST_CHECKED_SLIDE_TYPES}'s for why `chapter` is out of scope.
  *
- * Exported so a test can sweep it directly against the 13 builtins: they
- * never call {@link registerTheme} (`THEME_DEFINITIONS` is built straight
- * from `THEME_STYLES`, not through this seam — see `registered-themes.ts`'s
- * own docstring for why that separation is load-bearing), so this is the
- * only way to lock their contrast floor as part of this task.
+ * Exported so a test can sweep it directly against the 24 built-ins. They
+ * compile from trusted in-package declarations instead of entering through
+ * the public registration seam, so this direct sweep locks the same floor.
  */
 export function assertContrastFloor(id: string, style: StyleTokens): void {
   for (const slideType of CONTRAST_CHECKED_SLIDE_TYPES) {
@@ -1334,9 +358,9 @@ function warnUnmeasuredFace(id: string, role: "heading" | "body", stack: string[
  * each of its four slide-type entries is independently optional too. A
  * slide type this theme doesn't narrow (its own key omitted, or the whole
  * `layouts` object omitted) defaults to that type's full registered-
- * layout set ({@link FULL_LAYOUTS}) — the exact same default every
- * builtin theme in `LAYOUTS` above resolves to for a slide type it doesn't
- * curate away from. `getThemeDefinition`/`REGISTERED_THEMES` still only ever
+ * layout set ({@link fullLayoutSet}). Public complete files cannot reach
+ * this legacy fallback because their schema requires all four face pools.
+ * `getThemeDefinition`/`REGISTERED_THEMES` still only ever
  * hold the fully-resolved `ThemeDefinition` shape (`layouts` total over all
  * four types) — `registerTheme` performs the defaulting once, here, so
  * every downstream reader (`resolveLayoutId` foremost) can keep assuming
@@ -1345,6 +369,90 @@ function warnUnmeasuredFace(id: string, role: "heading" | "body", stack: string[
  */
 export type ThemeRegistration = Omit<ThemeDefinition, "layouts"> & {
   layouts?: Partial<Record<Slide["type"], readonly string[]>>
+}
+
+function faceId(face: FaceReference): string {
+  return typeof face === "string" ? face : face.id
+}
+
+function facesFromLayouts(layouts: ThemeDefinition["layouts"]): ThemeDefinition["faces"] {
+  return {
+    cover: [...layouts.cover],
+    chapter: [...layouts.chapter],
+    content: [...layouts.content],
+    ending: [...layouts.ending],
+  }
+}
+
+function isVersionedThemeFile(value: ThemeRegistration | ThemeFile): boolean {
+  return typeof value === "object" && value !== null && Object.hasOwn(value, "version")
+}
+
+function parseVersionedThemeFile(value: ThemeRegistration | ThemeFile): ThemeFile {
+  const result = ThemeFileSchema.safeParse(value)
+  if (!result.success) {
+    const detail = result.error.issues
+      .map((issue) => `${issue.path.join(".") || "(root)"}: ${issue.message}`)
+      .join("\n")
+    throw new PptwiseError(`invalid theme definition:\n${detail}`)
+  }
+  return result.data as ThemeFile
+}
+
+/** Compile the public declaration into the total internal shape consumed by
+ * layout, motif, brand, and sparse selection. */
+function compileThemeFile(file: ThemeFile): ThemeRegistration {
+  if ("base" in file) {
+    const base = THEME_DEFINITIONS[file.base]
+    const style: StyleTokens = {
+      ...file.style,
+      id: file.base,
+      ...(base.style.shape?.cover
+        ? { shape: { ...file.style.shape, cover: base.style.shape.cover } }
+        : {}),
+    }
+    return {
+      id: file.id,
+      label: file.label,
+      // Component forms, emphasis treatments, and sparse boarded faces use
+      // ComponentCtx.themeId, which is sourced from StyleTokens.id. Keep the
+      // public file id for registration, but dispatch those structural tables
+      // through the declared base so partial truly inherits all structure.
+      style,
+      brand: { ...base.brand, ...file.brand },
+      tags: file.occasions ?? base.tags,
+      occasions: file.occasions ?? base.occasions,
+      identity: file.identity ?? base.identity,
+      layouts: base.layouts,
+      faces: base.faces ?? facesFromLayouts(base.layouts),
+      motif: base.motif,
+      motifParameters: base.motifParameters,
+      layoutTendencies: base.layoutTendencies,
+      sparseLayouts: base.sparseLayouts,
+    }
+  }
+
+  const faces = file.faces
+  return {
+    id: file.id,
+    label: file.label,
+    style: file.style,
+    brand: file.brand ?? {},
+    tags: file.occasions ?? [],
+    occasions: file.occasions,
+    identity: file.identity,
+    layouts: {
+      cover: faces.cover.map(faceId),
+      chapter: faces.chapter.map(faceId),
+      content: faces.content.map(faceId),
+      ending: faces.ending.map(faceId),
+    },
+    faces,
+    motif: file.motif?.id,
+    motifParameters: file.motif?.params,
+    layoutTendencies: file.tendencies,
+    sparseLayouts: file.sparse,
+  }
 }
 
 /**
@@ -1383,7 +491,9 @@ export type ThemeRegistration = Omit<ThemeDefinition, "layouts"> & {
  * every internal theme lookup, with no separate "registered theme" branch
  * for callers to remember.
  */
-export function registerTheme(def: ThemeRegistration): void {
+export function registerTheme(input: ThemeRegistration | ThemeFile): void {
+  const fromThemeFile = isVersionedThemeFile(input)
+  const def = fromThemeFile ? compileThemeFile(parseVersionedThemeFile(input)) : (input as ThemeRegistration)
   if ((CANONICAL_THEME_IDS as readonly string[]).includes(def.id) || REGISTERED_THEMES.has(def.id)) {
     throw new PptwiseError(`theme "${def.id}" is already installed`)
   }
@@ -1397,22 +507,43 @@ export function registerTheme(def: ThemeRegistration): void {
     if (ids.length === 0) {
       throw new PptwiseError(`theme "${def.id}" must declare at least one layout for "${slideType}" slides`)
     }
-    for (const id of ids) {
+    for (const [index, id] of ids.entries()) {
       const layout = getLayout(id)
+      const pathRoot = fromThemeFile ? `faces.${slideType}` : `layouts.${slideType}`
       if (!layout) {
-        throw new PptwiseError(`theme "${def.id}" layouts.${slideType} references unknown layout id "${id}"`)
+        throw new PptwiseError(`theme "${def.id}" ${pathRoot} references unknown layout id "${id}"`)
       }
       // Curated sets feed the auto-selection path, which assumes layout ids
       // only — a takeover id here would crash at render (undefined component).
       if (layout.kind !== "archetype") {
         throw new PptwiseError(
-          `theme "${def.id}" layouts.${slideType}: "${id}" is a ${layout.kind} layout — curated sets may only contain archetype layouts`,
+          `theme "${def.id}" ${pathRoot}: "${id}" is a ${layout.kind} layout. Curated sets may only contain archetype layouts`,
         )
       }
       if (!layout.slideTypes.includes(slideType)) {
         throw new PptwiseError(
-          `theme "${def.id}" layouts.${slideType}: layout "${id}" is not valid for "${slideType}" slides`,
+          `theme "${def.id}" ${pathRoot}: layout "${id}" is not valid for "${slideType}" slides`,
         )
+      }
+      const face = def.faces?.[slideType]?.[index]
+      const capacity = typeof face === "string" ? undefined : face?.params?.capacity
+      if (capacity) {
+        const slot = layout.slots.find((candidate) => candidate.name === capacity.slot)
+        if (!slot) {
+          throw new PptwiseError(
+            `theme "${def.id}" faces.${slideType}.${index}.params.capacity references unknown slot "${capacity.slot}" on layout "${id}"`,
+          )
+        }
+        if (slot.capacity === undefined) {
+          throw new PptwiseError(
+            `theme "${def.id}" faces.${slideType}.${index}.params.capacity cannot adapt slot "${capacity.slot}" on layout "${id}" because the registry declares no capacity`,
+          )
+        }
+        if (capacity.max > slot.capacity) {
+          throw new PptwiseError(
+            `theme "${def.id}" faces.${slideType}.${index}.params.capacity.max is ${capacity.max}, above layout "${id}" slot "${capacity.slot}" capacity ${slot.capacity}`,
+          )
+        }
       }
     }
     layouts[slideType] = ids
@@ -1459,7 +590,7 @@ export function registerTheme(def: ThemeRegistration): void {
   REGISTERED_THEMES.set(def.id, { ...def, layouts })
 }
 
-/** Every installed theme id: the 13 builtins, then registered themes in registration order. */
+/** Every installed theme id: the 24 built-ins, then registered themes in registration order. */
 export function getInstalledThemeIds(): readonly string[] {
   return [...CANONICAL_THEME_IDS, ...REGISTERED_THEMES.keys()]
 }

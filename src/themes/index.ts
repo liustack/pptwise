@@ -1,30 +1,31 @@
 import type { StyleOverride } from "@/ir";
 import { applyStyleOverride, type StyleTokens } from "./tokens";
 import { REGISTERED_THEMES } from "./registered-themes";
-import { CONSULTING_TOKENS } from "./builtin/consulting";
-import { ENTERPRISE_TOKENS } from "./builtin/enterprise";
-import { ACADEMIC_TOKENS } from "./builtin/academic";
-import { INSIGHT_TOKENS } from "./builtin/insight";
-import { CAMPAIGN_TOKENS } from "./builtin/campaign";
-import { CLASSROOM_TOKENS } from "./builtin/classroom";
-import { INK_TOKENS } from "./builtin/ink";
-import { TECH_TOKENS } from "./builtin/tech";
-import { RUNWAY_TOKENS } from "./builtin/runway";
-import { JOURNAL_TOKENS } from "./builtin/journal";
-import { LUXE_TOKENS } from "./builtin/luxe";
-import { HERITAGE_TOKENS } from "./builtin/heritage";
-import { PULSE_TOKENS } from "./builtin/pulse";
-import { TERRA_TOKENS } from "./builtin/terra";
-import { EMBER_TOKENS } from "./builtin/ember";
-import { VERMILION_TOKENS } from "./builtin/vermilion";
-import { CRAYON_TOKENS } from "./builtin/crayon";
-import { ARENA_TOKENS } from "./builtin/arena";
-import { MUSEUM_TOKENS } from "./builtin/museum";
-import { STAGE_TOKENS } from "./builtin/stage";
-import { LECTURE_TOKENS } from "./builtin/lecture";
-import { SWISS_TOKENS } from "./builtin/swiss";
-import { MEMO_TOKENS } from "./builtin/memo";
-import { PLAYBILL_TOKENS } from "./builtin/playbill";
+import { CONSULTING_THEME } from "./builtin/consulting";
+import { ENTERPRISE_THEME } from "./builtin/enterprise";
+import { ACADEMIC_THEME } from "./builtin/academic";
+import { INSIGHT_THEME } from "./builtin/insight";
+import { CAMPAIGN_THEME } from "./builtin/campaign";
+import { CLASSROOM_THEME } from "./builtin/classroom";
+import { INK_THEME } from "./builtin/ink";
+import { TECH_THEME } from "./builtin/tech";
+import { RUNWAY_THEME } from "./builtin/runway";
+import { JOURNAL_THEME } from "./builtin/journal";
+import { LUXE_THEME } from "./builtin/luxe";
+import { HERITAGE_THEME } from "./builtin/heritage";
+import { PULSE_THEME } from "./builtin/pulse";
+import { TERRA_THEME } from "./builtin/terra";
+import { EMBER_THEME } from "./builtin/ember";
+import { VERMILION_THEME } from "./builtin/vermilion";
+import { CRAYON_THEME } from "./builtin/crayon";
+import { ARENA_THEME } from "./builtin/arena";
+import { MUSEUM_THEME } from "./builtin/museum";
+import { STAGE_THEME } from "./builtin/stage";
+import { LECTURE_THEME } from "./builtin/lecture";
+import { SWISS_THEME } from "./builtin/swiss";
+import { MEMO_THEME } from "./builtin/memo";
+import { PLAYBILL_THEME } from "./builtin/playbill";
+import type { BuiltinThemeDeclaration } from "./schema";
 
 /**
  * The 24 canonical theme ids, registered/renderable（产品口径 24 套主题、
@@ -82,33 +83,38 @@ export const CANONICAL_THEME_IDS = [
 
 export type CanonicalThemeId = (typeof CANONICAL_THEME_IDS)[number];
 
+/** Canonical declaration source shared by built-in registration and style lookup. */
+export const BUILTIN_THEME_FILES = {
+  consulting: CONSULTING_THEME,
+  enterprise: ENTERPRISE_THEME,
+  academic: ACADEMIC_THEME,
+  insight: INSIGHT_THEME,
+  campaign: CAMPAIGN_THEME,
+  classroom: CLASSROOM_THEME,
+  ink: INK_THEME,
+  tech: TECH_THEME,
+  runway: RUNWAY_THEME,
+  journal: JOURNAL_THEME,
+  luxe: LUXE_THEME,
+  heritage: HERITAGE_THEME,
+  pulse: PULSE_THEME,
+  terra: TERRA_THEME,
+  ember: EMBER_THEME,
+  vermilion: VERMILION_THEME,
+  crayon: CRAYON_THEME,
+  arena: ARENA_THEME,
+  museum: MUSEUM_THEME,
+  stage: STAGE_THEME,
+  lecture: LECTURE_THEME,
+  swiss: SWISS_THEME,
+  memo: MEMO_THEME,
+  playbill: PLAYBILL_THEME,
+} satisfies Record<CanonicalThemeId, BuiltinThemeDeclaration>;
+
 /** 场景 id → 英文场景名（plan 卡片徽章等对用户展示处用，接口统一英文）。 */
-export const THEME_LABELS: Record<CanonicalThemeId, string> = {
-  consulting: "Business Consulting",
-  academic: "Academic",
-  insight: "Financial Insight",
-  campaign: "Marketing Campaign",
-  classroom: "Classroom",
-  ink: "Ink Wash",
-  tech: "Tech",
-  runway: "Fashion Runway",
-  journal: "Editorial Journal",
-  enterprise: "Enterprise",
-  luxe: "Luxe",
-  heritage: "Heritage",
-  pulse: "Health & Life Science",
-  terra: "Sustainability & ESG",
-  ember: "Startup Pitch",
-  vermilion: "Official Report",
-  crayon: "Kids Education",
-  arena: "Esports & Entertainment",
-  museum: "Museum",
-  stage: "Keynote Stage",
-  lecture: "Lecture Hall",
-  swiss: "Swiss Institutional",
-  memo: "Decision Memo",
-  playbill: "Playbill",
-};
+export const THEME_LABELS = Object.fromEntries(
+  CANONICAL_THEME_IDS.map((id) => [id, BUILTIN_THEME_FILES[id].label]),
+) as Record<CanonicalThemeId, string>;
 
 /** Map any theme id onto a canonical, registered theme id. Unknown ids fall back to consulting. */
 export function resolveThemeId(id: string): CanonicalThemeId {
@@ -117,32 +123,9 @@ export function resolveThemeId(id: string): CanonicalThemeId {
     : "consulting";
 }
 
-export const THEME_STYLES: Record<CanonicalThemeId, StyleTokens> = {
-  consulting: CONSULTING_TOKENS,
-  enterprise: ENTERPRISE_TOKENS,
-  academic: ACADEMIC_TOKENS,
-  insight: INSIGHT_TOKENS,
-  campaign: CAMPAIGN_TOKENS,
-  classroom: CLASSROOM_TOKENS,
-  ink: INK_TOKENS,
-  tech: TECH_TOKENS,
-  runway: RUNWAY_TOKENS,
-  journal: JOURNAL_TOKENS,
-  luxe: LUXE_TOKENS,
-  heritage: HERITAGE_TOKENS,
-  pulse: PULSE_TOKENS,
-  terra: TERRA_TOKENS,
-  ember: EMBER_TOKENS,
-  vermilion: VERMILION_TOKENS,
-  crayon: CRAYON_TOKENS,
-  arena: ARENA_TOKENS,
-  museum: MUSEUM_TOKENS,
-  stage: STAGE_TOKENS,
-  lecture: LECTURE_TOKENS,
-  swiss: SWISS_TOKENS,
-  memo: MEMO_TOKENS,
-  playbill: PLAYBILL_TOKENS,
-};
+export const THEME_STYLES = Object.fromEntries(
+  CANONICAL_THEME_IDS.map((id) => [id, BUILTIN_THEME_FILES[id].style]),
+) as Record<CanonicalThemeId, StyleTokens>;
 
 /**
  * Resolve a theme's style tokens: base tokens → deep `style` override.

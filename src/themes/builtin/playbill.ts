@@ -1,4 +1,6 @@
 import type { StyleTokens } from "../tokens";
+import type { BuiltinThemeDeclaration } from "../schema";
+import { DEFAULT_CONTENT_FACES } from "./shared";
 
 /**
  * playbill（荧光嗓门）——2026-08-21 第七波新主题。性格：开演前十分钟的
@@ -88,3 +90,24 @@ export const PLAYBILL_TOKENS: StyleTokens = {
     ending: { kind: "color", value: "#F4DD1B" },
   },
 };
+
+export const PLAYBILL_THEME = {
+  version: 1,
+  id: "playbill",
+  label: "Playbill",
+  style: PLAYBILL_TOKENS,
+  faces: {
+    cover: ["bill-head"],
+    chapter: ["day-bill-chapter"],
+    content: DEFAULT_CONTENT_FACES,
+    ending: ["ticket-cta-ending"],
+  },
+  motif: { id: "playbill-motif" },
+  tendencies: {
+    cover: ["bill-head"],
+    chapter: ["day-bill-chapter"],
+    content: ["stacked-poster", "rail-numbered", "split-band"],
+    ending: ["ticket-cta-ending"],
+  },
+  sparse: ["statement", "stat-hero", "mono-bleed", "verse-chapter"],
+} satisfies BuiltinThemeDeclaration;

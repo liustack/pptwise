@@ -2,6 +2,8 @@
 // 气质其实是 terminal/Economist 财经信息图风，不配叫 creative；真正的
 // 创意子类由 doodle/ink 两新主题承接）。
 import type { StyleTokens } from "../tokens";
+import type { BuiltinThemeDeclaration } from "../schema";
+import { DEFAULT_CONTENT_FACES } from "./shared";
 
 /**
  * **深底组皮肤重设计（2026-08-19，`.issues/2026-08-18-theme-redesign/skins/`
@@ -71,3 +73,24 @@ export const INSIGHT_TOKENS: StyleTokens = {
     ending: { kind: "gradient", from: "#151B23", to: "#0C1016", direction: "tb" },
   },
 };
+
+export const INSIGHT_THEME = {
+  version: 1,
+  id: "insight",
+  label: "Financial Insight",
+  style: INSIGHT_TOKENS,
+  faces: {
+    cover: ["stat-cover"],
+    chapter: ["ghost-section-chapter"],
+    content: DEFAULT_CONTENT_FACES,
+    ending: ["close-word-ending"],
+  },
+  motif: { id: "poster-motif" },
+  tendencies: {
+    cover: ["stat-cover"],
+    chapter: ["ghost-section-chapter"],
+    content: ["bento-panel", "two-column"],
+    ending: ["close-word-ending"],
+  },
+  sparse: ["statement", "stat-hero", "pull-quote", "verse-chapter"],
+} satisfies BuiltinThemeDeclaration;

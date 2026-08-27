@@ -1,4 +1,6 @@
 import type { StyleTokens } from "../tokens";
+import type { BuiltinThemeDeclaration } from "../schema";
+import { DEFAULT_CONTENT_FACES } from "./shared";
 
 /**
  * campaign（活力营销）——2026-07-13 memphis 拆分主题 A（用户拍板：场景命名
@@ -76,3 +78,24 @@ export const CAMPAIGN_TOKENS: StyleTokens = {
     ending: { kind: "color", value: "#2A1E3F" },
   },
 };
+
+export const CAMPAIGN_THEME = {
+  version: 1,
+  id: "campaign",
+  label: "Marketing Campaign",
+  style: CAMPAIGN_TOKENS,
+  faces: {
+    cover: ["poster-center"],
+    chapter: ["act-chapter"],
+    content: DEFAULT_CONTENT_FACES,
+    ending: ["pill-cta-ending"],
+  },
+  motif: { id: "campaign-motif" },
+  tendencies: {
+    cover: ["poster-center"],
+    chapter: ["act-chapter"],
+    content: ["stacked-poster", "split-band"],
+    ending: ["pill-cta-ending"],
+  },
+  sparse: ["statement", "stat-hero", "one-evidence", "verse-chapter"],
+} satisfies BuiltinThemeDeclaration;

@@ -53,24 +53,13 @@ import JSZip from "jszip"
 import { PptwiseError } from "../../errors"
 import { contrastRatio } from "../../render/ink"
 import { mixHex } from "../../components/color-mix"
-import type { BrandConfig } from "@/ir"
+import type { PartialThemeFile } from "../schema"
 import type { StyleTokens } from "../tokens"
 
-/** The theme-file JSON shape written by `pptwise brand extract` / SDK
- *  {@link extractBrandTheme}, and read back by `--theme-file` /
- *  `brand-theme-file.ts`'s `registerBrandThemeFile`. Pure data (裁定 3): no
- *  `layouts`/`motif`/`layoutTendencies` — those default to the full set,
- *  same as any other `registerTheme` caller that omits them. `label` is
- *  informational only (a human-readable name for the CLI/UI to show); the
- *  render chain never reads it — the theme's own `id` is what everything
- *  else keys off. */
-export interface BrandThemeFile {
-  id: string
-  label: string
-  style: StyleTokens
-  brand: BrandConfig
-  tags: string[]
-}
+/** The v1 partial theme-file shape written by `pptwise brand extract`.
+ * Extraction has no layout knowledge, so it always names a built-in `base`
+ * and never emits complete-theme structural fields. */
+export type BrandThemeFile = PartialThemeFile
 
 export interface ExtractBrandThemeOptions {
   /** Theme id — defaults to a slug of {@link ExtractBrandThemeOptions.label},
@@ -82,6 +71,9 @@ export interface ExtractBrandThemeOptions {
   /** Human-readable label — defaults to the source theme part's own
    *  `<a:clrScheme name="…">`. */
   label?: string
+  /** Built-in structure inherited by the partial output. Defaults to
+   * `consulting`. Edit the written file's `base` to choose another built-in. */
+  base?: PartialThemeFile["base"]
 }
 
 /** Every OOXML color-scheme slot this parser reads. `hlink`/`folHlink` are
@@ -342,5 +334,5 @@ export async function extractBrandTheme(
     },
   }
 
-  return { id, label, style, brand: {}, tags: [] }
+  return { version: 1, id, label, base: opts.base ?? "consulting", style, brand: {} }
 }

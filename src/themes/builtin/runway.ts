@@ -1,4 +1,6 @@
 import type { StyleTokens } from "../tokens";
+import type { BuiltinThemeDeclaration } from "../schema";
+import { RUNWAY_CONTENT_FACES } from "./shared";
 
 /**
  * runway（时尚秀场）——2026-07-10 拆分后的新主题（初名 magazine，用户
@@ -106,3 +108,23 @@ export const RUNWAY_TOKENS: StyleTokens = {
     ending: { kind: "color", value: "#F2F0EB" },
   },
 };
+
+export const RUNWAY_THEME = {
+  version: 1,
+  id: "runway",
+  label: "Fashion Runway",
+  style: RUNWAY_TOKENS,
+  faces: {
+    cover: ["show-headline"],
+    chapter: ["show-plate"],
+    content: RUNWAY_CONTENT_FACES,
+    ending: ["show-finale"],
+  },
+  tendencies: {
+    cover: ["show-headline"],
+    chapter: ["show-plate"],
+    content: ["show-statement"],
+    ending: ["show-finale"],
+  },
+  sparse: [],
+} satisfies BuiltinThemeDeclaration;

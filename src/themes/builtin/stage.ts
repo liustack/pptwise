@@ -1,4 +1,6 @@
 import type { StyleTokens } from "../tokens";
+import type { BuiltinThemeDeclaration } from "../schema";
+import { DEFAULT_CONTENT_FACES } from "./shared";
 
 /**
  * stage（黑场）——2026-08-21 新增第 21 个 theme id（第 20 个结构身份）。
@@ -85,3 +87,23 @@ export const STAGE_TOKENS: StyleTokens = {
     ending: { kind: "color", value: "#0F0F12" },
   },
 };
+
+export const STAGE_THEME = {
+  version: 1,
+  id: "stage",
+  label: "Keynote Stage",
+  style: STAGE_TOKENS,
+  faces: {
+    cover: ["poster-center"],
+    chapter: ["one-word-chapter"],
+    content: DEFAULT_CONTENT_FACES,
+    ending: ["release-close-ending"],
+  },
+  tendencies: {
+    cover: ["poster-center"],
+    chapter: ["one-word-chapter"],
+    content: ["quiet-frame", "stacked-poster", "asymmetric-triptych"],
+    ending: ["release-close-ending"],
+  },
+  sparse: ["statement", "stat-hero", "pull-quote", "verse-chapter"],
+} satisfies BuiltinThemeDeclaration;

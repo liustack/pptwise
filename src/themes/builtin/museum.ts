@@ -1,4 +1,6 @@
 import type { StyleTokens } from "../tokens";
+import type { BuiltinThemeDeclaration } from "../schema";
+import { DEFAULT_CONTENT_FACES } from "./shared";
 
 /**
  * museum（博物）——2026-08-21 新增第 20 个 theme id（第 19 个结构身份）。
@@ -82,3 +84,23 @@ export const MUSEUM_TOKENS: StyleTokens = {
     ending: { kind: "color", value: "#211A12" },
   },
 };
+
+export const MUSEUM_THEME = {
+  version: 1,
+  id: "museum",
+  label: "Museum",
+  style: MUSEUM_TOKENS,
+  faces: {
+    cover: ["poster-center"],
+    chapter: ["hall-label-chapter"],
+    content: DEFAULT_CONTENT_FACES,
+    ending: ["exit-word-ending"],
+  },
+  tendencies: {
+    cover: ["poster-center"],
+    chapter: ["hall-label-chapter"],
+    content: ["split-band", "two-column", "quiet-frame"],
+    ending: ["exit-word-ending"],
+  },
+  sparse: ["statement", "one-evidence", "stat-hero", "verse-chapter"],
+} satisfies BuiltinThemeDeclaration;
