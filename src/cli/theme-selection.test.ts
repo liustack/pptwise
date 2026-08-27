@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { mkdir, mkdtemp, writeFile } from "node:fs/promises"
+import { mkdtemp, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest"
