@@ -15,19 +15,19 @@ Every command that takes a `<target>` accepts the same three forms: an IR JSON f
 | Command | Does |
 |---|---|
 | `render <target> [-o <out.pptx>] [--theme <id>] [--theme-file <file>] [--style <file>] [--draft] [--allow-dropped-content] [--no-git-ignore]` | Validate + render to a `.pptx`. Without `-o`, writes `<project>/.pptwise/<deck>/<deck>.pptx` |
-| `validate <target>` | Check the IR, print page-scoped errors and advisory warnings |
-| `audit <target> [--json] [--pixels]` | Deterministic geometry review, exits 1 when it finds anything (see [Auditing](#auditing)) |
+| `validate <target> [--theme <id>] [--theme-file <file>]` | Check the IR, print page-scoped errors and advisory warnings |
+| `audit <target> [--json] [--pixels] [--theme <id>] [--theme-file <file>]` | Deterministic deck review, including geometry and monotony, exits 1 when it finds anything (see [Auditing](#auditing)) |
 | `asset-brief <target> [--json]` | Image-generation brief for every `image` component (see [Asset briefs](#asset-briefs)) |
 | `spec validate <spec.json>` | Check a deck spec against the schema and the strategy-aware hard gates |
 | `assemble <dir\|name> [-o <file>]` | Materialize a deck project directory into a single IR JSON file |
 | `disassemble <ir.json> -o <dir>` | Split an IR JSON file into a deck project directory |
 | `schema [--style \| --spec]` | Print the IR JSON Schema (or the style-override schema, or the deck spec schema) |
-| `themes [--json]` | List the built-in themes. `--json` also includes `occasions` and `identity` (empty until the occasion table lands) |
-| `layouts [--json]` | List registered layouts: id, slide types, pin-only, capacity, slots |
-| `brand extract <file> -o <out.theme.json> [--id] [--label]` | Extract brand colors and fonts from a `.thmx`/`.potx`/`.pptx` into a theme file, entirely locally (see [Themes](./themes.md#your-own-brand)) |
+| `themes [--json]` | List the 24 built-in themes. `--json` includes id, label, colors, controlled `occasions`, and `identity` |
+| `layouts [--json]` | List all registered layouts with id, slide types, pin-only status, summed declared capacity, slots, and arrangements |
+| `brand extract <file> -o <out.theme.json> [--id] [--label]` | Extract brand colors and fonts from a `.thmx`/`.potx`/`.pptx` into a partial theme with base `consulting`, entirely locally (see [Themes](./themes.md#extract-your-own-brand)) |
 | `narratives [--json]` | List named narrative presets (strategy/pacing/audience axes + theme recommendations) |
-| `preview <target> [-o <dir>] [--html] [--theme <id>] [--themes <id,id,...>] [--no-git-ignore]` | Render each slide to a standalone SVG (`--html` also writes a self-contained `preview.html`). `--themes` (2-4 ids) writes `contact-sheet.html` comparing cover and first content across those themes. Never gated on placeholder pages. Without `-o`, writes `<project>/.pptwise/<deck>/` |
-| `serve <target> [--port 4400] [--no-open]` | Live-preview server: the same review page as `preview --html`, auto-reloading on source changes |
+| `preview <target> [-o <dir>] [--html] [--theme <id>] [--themes <id,id,...>] [--theme-file <file>] [--no-git-ignore]` | Render each slide to a standalone SVG (`--html` also writes a self-contained `preview.html`). `--themes` (2-4 ids) writes `contact-sheet.html` comparing cover and first content across those themes. Never gated on placeholder pages. Without `-o`, writes `<project>/.pptwise/<deck>/` |
+| `serve <target> [--port 4400] [--no-open] [--theme-file <file>]` | Live-preview server: the same review page as `preview --html`, auto-reloading on source changes |
 | `migrate <input> -o <output>` | Convert a v3 IR file to v4, rewrite chrome to branding, bloom to classroom, logo_wall to image_grid, or banner-heading to two-column, or convert a `deck.plan.json` project directory to `deck.spec.json`. Deterministic, no model call |
 | `init` | Scaffold `pptwise.config.json` (still reads leftover `pptpress.config.json` and `pptfast.config.json`) |
 | `config set <key> [value]` / `config show` | Store Pexels/Pixabay/Openverse credentials and generator switches in `$PPTWISE_HOME/config.json`. Omit the value for an apiKey or clientSecret to enter it hidden. `show` masks secrets and labels `(file)` / `(env)` |
@@ -38,11 +38,17 @@ Every command that takes a `<target>` accepts the same three forms: an IR JSON f
 | `doctor [--json]` | Diagnose this machine's install: skill copies, dsh plugin, runtime, optional capabilities, self-test render, stock-photo keys, and local image generators (see [Doctor](#doctor)) |
 | `check-update` / `self-update` | Check npm for a newer release / update the global install |
 
-`--theme-file` works on `render`, `validate`, `audit`, `preview`, and `serve`. It loads and registers a custom theme. It does not select it. Pass `--theme <id>` or set the spec/IR theme to use that id.
+`--theme-file` works on `render`, `validate`, `audit`, `preview`, and `serve`. It loads and registers a custom theme. It does not select it. Render, validate, audit, and preview can pair it with `--theme <id>`. Serve has no `--theme` flag, so its target spec or IR must already select the custom id.
 
-Theme selection is `--theme`, then `deck.spec.json` `theme` when the target is a deck project and the spec names one, then an authored IR `theme.id` on a bare file, then project `pptwise.config.json`, then user `$PPTWISE_HOME/config.json`, then the schema default `consulting`. Assembling a deck dir fills `theme.id` even when the spec omitted it. That filled default is not an authored layer, so an omitted spec theme does not beat project config with `consulting`. `theme.json` in a deck dir and `--theme-file` only register.
+Theme selection has five levels. They are CLI `--theme`, authored artifact selection (`deck.spec.json` for a project or `theme.id` for a bare IR), project `pptwise.config.json`, user `$PPTWISE_HOME/config.json`, then the schema default `consulting`. Assembling a deck dir fills `theme.id` even when the spec omitted it. That filled default is not an authored artifact layer, so it does not beat project config. `theme.json` in a deck dir and `--theme-file` only register.
 
-`pptwise preview --themes consulting,tech,ink` writes `contact-sheet.html` in the same output directory: one column per theme, rows for the cover and the first content page, SVGs inlined. No extra `--html` flag is required.
+`pptwise preview --themes consulting,tech,ink` writes `contact-sheet.html` in the same output directory: one column per theme, rows for the cover and the first content page, SVGs inlined. No extra `--html` flag is required. Use this form for installed built-in ids. Preview an unpersisted custom candidate separately with `preview <target> --theme-file <file> --theme <id> --html`. For a deck project, the sheet repaints layouts already materialized by assembly and does not reassemble each theme's structural faces. A bare IR with omitted layout ids still performs normal selection under each theme override.
+
+Public version 1 theme files share one strict schema with two completeness modes. A partial file has `base` and inherits structural faces. A complete file omits `base` and must declare non-empty cover, chapter, content, and ending face pools. `brand extract` always writes a partial file with `base: "consulting"`. Old unversioned `{ id, style }` files hard-fail with an upgrade message.
+
+After a custom look is confirmed for a deck project, put the file at `theme.json` beside `deck.spec.json` and write its id in the spec. Project commands then need no theme flags. `serve` watches this file. A bare IR can use `--theme-file` for registration, but must also select the id through `--theme` or authored `theme.id`.
+
+`--theme <id>` on render or preview is a repaint. It keeps layout ids already materialized in `deck.json`. To adopt another theme's structural faces, change the spec theme and run `assemble` again.
 
 Omit `-o` and `render`/`preview` write under `.pptwise/<deck>/` at the project root (the directory that holds `pptwise.config.json`, or cwd if there is no project config). The command always prints the absolute path. The first time that directory is created, the CLI appends `.pptwise/` to `.git/info/exclude` so the artifacts stay local. `--no-git-ignore` skips that. A project config `outDir` replaces `.pptwise` wholesale and also skips the exclude line. An explicit `-o` still wins, and that path is never pruned or ignored on the tool's behalf.
 
@@ -124,17 +130,17 @@ pptwise doctor
 
 The loop an agent should run when it generates a deck:
 
-1. `pptwise schema` — read the vocabulary before writing anything.
-2. Write the IR JSON.
-3. `pptwise validate` and fix what it reports. Errors carry a page number and a message that can be applied in place, so the loop closes without a human.
-4. `pptwise asset-brief` before generating art for any image slot. The real rendered frame and crop mode are not visible in the IR, and a mismatched aspect ratio is the most common reason a generated image looks wrong once it is placed.
-5. `pptwise audit` for the same kind of feedback on what a valid deck can still get wrong at render time. The exit code alone says whether it is clean.
-6. `pptwise preview` to write SVG files the agent can look at and self-check the layout.
-7. `pptwise render`.
+1. Run `pptwise schema`, `schema --spec`, `narratives --json`, `themes --json`, and `layouts --json` before authoring.
+2. Route task occasions and desired identity through the theme metadata. Use narrative recommendations as reference only. When needed, compare two to four candidates with `preview --themes`.
+3. Write the spec and page JSON, or a bare IR.
+4. Run `pptwise validate` and fix what it reports. Errors carry a page number and an actionable message.
+5. Run `pptwise asset-brief` before generating art for any image slot. The real rendered frame and crop mode are not visible in the IR.
+6. Run `pptwise audit`. Its exit code alone says whether the deck is clean.
+7. Run `pptwise preview` for visual review, then `pptwise render`.
 
 `pptwise preview --html` also writes a self-contained `preview.html` for a human reviewer: keyboard navigation, placeholder badges, zero network calls once it is open in a tab (a remote-URL image asset stays remote, the one gap in self-containment). When every page is filled, that page also overlays the same `audit` findings — per-page badges plus a findings panel, click to jump to the page. A deck with any placeholder page shows a one-line "audit skipped" notice instead.
 
-`preview.html` is read-only: it shows the deck and never writes to it. A reviewer who wants something changed says so in the conversation — a screenshot of the page is the fastest hand-off — and the agent routes it through `pages/*.json`. `pptwise serve <target>` runs the same page live: a browser tab that auto-reloads on every source change, so each revision lands in the tab the reviewer already has open.
+`preview.html` is read-only: it shows the deck and never writes to it. A reviewer who wants something changed says so in the conversation, usually with a screenshot, and the agent routes it through `pages/*.json`. `pptwise serve <target>` runs the same page live and auto-reloads after source changes. Deck projects watch `theme.json`, and bare IR targets also watch the file supplied through `--theme-file`. Theme edits are reread without restarting the server.
 
 Alongside `preview.html`, `preview --html` also writes `manifest.json`: a flat page list with stable ids, the SVG file each page lives in, the canvas size, and the audit findings per page. That is the half a *program* can read — a harness with its own UI draws the deck from it, one without opens the HTML instead, and neither has to re-render the deck to do it.
 

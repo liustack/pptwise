@@ -15,7 +15,7 @@ is not a design for this product, however good it looks.
 
 The code translation is not the designer's job. Approved artboards come
 back to the codebase as theme tokens (`src/themes/tokens.ts`), motifs
-(`src/svg/motifs/`), and layouts (`src/svg/layouts/`), and are verified
+(`src/motifs/`), and layouts (`src/layouts/`), and are verified
 by re-rendering the full gallery matrix. The designer owns direction;
 the codebase owns fidelity.
 
@@ -95,7 +95,7 @@ the codebase owns fidelity.
      cover copy, but the intensity ceiling does not touch it.
    Cover, chapter, and ending may keep the designed strength for ordinary
    decor. They are the theme's face. Tune the fade per motif from tokens,
-   never a baked hex (`leafRecessOpacity` in `src/svg/motifs/decor-budget.ts`).
+   never a baked hex (`leafRecessOpacity` in `src/motifs/decor-budget.ts`).
    Hairlines already under the ceiling stay as they are. Do not mark a
    whole motif to dodge the ceiling.
 9. **At most one slanted tile per page.** A slanted tile is a chip-sized
@@ -145,9 +145,12 @@ today).
 
 ## Where the current state lives
 
-- Theme palettes and structural leanings: `src/themes/definitions.ts`
-- Decoration geometry: `src/svg/motifs/`
-- Page compositions: `src/svg/layouts/`
+- Built-in theme declarations: `src/themes/builtin/`
+- Public theme-file schema: `src/themes/schema.ts`
+- Occasion and identity routing: `src/themes/occasions.ts`
+- Compiled runtime definitions: `src/themes/definitions.ts`
+- Decoration geometry: `src/motifs/`
+- Page compositions: `src/layouts/`
 - Rendered current output: `examples/previews/`
 - Vocabulary: `docs/concepts.md` (layout, component, motif, narrative)
 

@@ -73,11 +73,15 @@ cat > deck.json <<'EOF'
 EOF
 pptwise validate deck.json                              # → OK — 3 slides, theme "consulting"
 pptwise render deck.json -o out/hello.pptx              # → wrote out/hello.pptx (3 slides, ~24 KB)
-pptwise render deck.json -o out/tech.pptx --theme tech  # same deck, different theme
+pptwise render deck.json -o out/tech.pptx --theme tech  # same bare IR, explicit theme override
 pptwise preview deck.json -o out/svgs                   # SVG per slide, for a visual self-check
 ```
 
-One shape rule: `cover`/`chapter`/`ending` slides are heading + subheading only, components live on `content` slides. `validate` says exactly this if you mix them up.
+Boundary pages render components only when their resolved layout declares a compatible slot. `validate` names content that would otherwise disappear.
+
+Choose a look from `pptwise themes --json` by matching task `occasions` and desired `identity`. If several fit, compare them with `pptwise preview <target> --themes <id,id,...>`. Custom version 1 theme files are either partial with a built-in `base`, or complete with all four face pools.
+
+On an assembled deck, `--theme` is a repaint that keeps materialized layout ids. To adopt another theme's structural faces, change the project spec theme and assemble again.
 
 No install at all also works: `npx -y @liustack/pptwise validate deck.json`. In a source checkout, `node dist/cli.js` replaces `pptwise`, and `examples/` has ready-made IR files to try.
 
@@ -87,10 +91,11 @@ The commands you will reach for most:
 |---|---|
 | `validate <target>` | Check the IR, with page numbers on every error |
 | `render <target> [-o <out.pptx>] [--theme <id>]` | Render a `.pptx`. Omit `-o` to write `.pptwise/<deck>/<deck>.pptx` |
-| `preview <target> [-o <dir>] [--html]` | One SVG per slide, plus a self-contained review page. Omit `-o` to write `.pptwise/<deck>/` |
+| `preview <target> [-o <dir>] [--html] [--themes <id,id,...>]` | One SVG per slide, a review page, or a cover and content theme contact sheet. Omit `-o` to write `.pptwise/<deck>/` |
 | `serve <target>` | Live preview that reloads on every change |
-| `audit <target>` | Geometry review: overflow, out-of-bounds, low contrast, overlap |
-| `themes` | List the built-in themes |
+| `audit <target>` | Deterministic review: geometry, dropped content, and monotony |
+| `themes [--json]` | List built-in themes, including occasion and identity metadata |
+| `layouts [--json]` | List layouts, pin-only status, capacities, and slots |
 | `doctor` | Check the install: runtime, skill copies, optional capabilities, self-test render |
 
 Full reference: [`docs/cli.md`](./docs/cli.md).
@@ -103,7 +108,7 @@ Full reference: [`docs/cli.md`](./docs/cli.md).
 | [Agent skill](./skills/pptwise/SKILL.md) | Learning the workflow pptwise teaches an agent |
 | [CLI manual](./docs/cli.md) | Looking up commands, flags, audits, previews, and health checks |
 | [IR reference](./docs/ir.md) | Writing a deck, slide, component, or narrative in JSON |
-| [Themes](./docs/themes.md) | Picking a built-in theme or extracting your own brand |
+| [Themes](./docs/themes.md) | Routing by occasion, comparing looks, or authoring a partial or complete theme |
 | [Core concepts](./docs/concepts.md) | Understanding themes, layouts, components, narratives, and capacity |
 | [Architecture](./docs/architecture.md) | Working on the render chain or adding a theme, layout, or component |
 | [Deck projects](./docs/deck-projects.md) | Building a multi-file deck with locked specs, assets, and live review |

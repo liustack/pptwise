@@ -1,94 +1,125 @@
 ---
-summary: 'Deck project directory layout, the six-phase CLI workflow, the live `pptwise serve` preview loop, the `pptwise asset-brief` image-generation brief, placeholder/--draft semantics, locked fields, the boundary-page render surface, the four-layer config/home directory scheme, and workspace `.pptwise/` artifacts'
+summary: 'Deck project files, the spec and fill workflow, custom theme persistence, live preview, placeholders, locked fields, selection precedence, and workspace artifacts'
 read_when:
-  - authoring or debugging a deck project directory (deck.spec.json + pages/ + assets/)
-  - touching src/spec, src/cli/deck-dir.ts, src/cli/home.ts, src/cli/config.ts, src/cli/workspace.ts, or src/cli/serve.ts
-  - a placeholder/--draft, orphan-file, or locked-field error needs tracing
-  - a cover/chapter/ending page's components or footnote go missing at render, or you need to know which fields a page type actually renders
-  - deciding whether a revision-loop change belongs to the download form (`preview --html`) or the live form (`serve`)
-  - generating art for an image slot and needing its real rendered frame/crop mode/palette (`pptwise asset-brief`, `src/svg/asset-brief.ts`)
+  - authoring or debugging a deck project directory
+  - touching src/spec or deck-related CLI modules
+  - tracing placeholder, orphan-file, locked-field, or boundary-page errors
+  - running the live review loop or generating an image asset brief
 ---
 
 # Deck projects
 
 ## Directory layout
 
-```
+```text
 my-deck/
-  deck.spec.json         locked spec — page order, type, heading. Sole order-of-truth
-  pages/<page-id>.json  one file per filled page, components only (no type/heading)
-  assets/                local images, auto-registered by filename
+  deck.spec.json         page order, type, heading, narrative, theme, branding, seed
+  theme.json             optional version 1 custom theme, registered automatically
+  pages/<page-id>.json   one file per filled page, no type or heading
+  assets/                local image assets, registered by filename
+  deck.json              materialized IR written by assemble
 ```
 
-Layout and fs-safety discipline live in `src/cli/deck-dir.ts` (header comment restates the layout). The pure assembly logic is `assembleDeck`/`disassembleDeck` in `src/spec/assemble.ts` — zero-fs by design (`AGENTS.md`'s `src/index.ts` closure rule), so it's the CLI shell (`deck-dir.ts`, Node-only) that actually reads `deck.spec.json`/`pages/*.json`/`assets/*` off disk. `assertSafeFileSegment` (`deck-dir.ts:95`) is the CWE-22 defense every id-to-path join goes through — a `slide.id`/asset-id is an open `z.string()` at the schema layer, so this is a real, tested guard, not defense-in-depth theater. A directory that still has `deck.plan.json` (the pre-vocabulary-v4 filename) instead of `deck.spec.json` is not read directly — `readSpecFile` (`deck-dir.ts`) points at `pptwise migrate` instead; both files present at once is a hard error, never a guessed priority (spec §9.2).
+`deck.spec.json` is the sole source of page order and locked page fields. `pages/` owns page content. `theme.json` owns a custom theme definition, while the spec owns the selected theme id.
 
-## Six-phase CLI workflow
+Filesystem handling lives in `src/cli/deck-dir.ts`. Pure assembly and disassembly live in `src/spec/assemble.ts` and do no filesystem work. Every page or asset id passes through the safe-file-segment check before becoming a path.
 
-`skills/pptwise/SKILL.md` is the authored playbook. The phases map onto commands as: **align** (`pptwise schema` / `schema --spec` / `narratives --json` / `themes --json`) → **spec** (write `deck.spec.json`, `pptwise spec validate <file>` — strategy-aware hard gates: boundary pages, heading length, beat rotation, page count vs. pacing, `validateSpec`/`formatInvalidSpecError` in `src/spec/index.ts`) → **fill** (`pages/<id>.json` in small batches, `pptwise assemble <dir> -o deck.json` after each batch, then `pptwise validate`) → **audit** (`pptwise audit <target> [--json]`, `docs/*` cross-reference: `src/svg/audit/deck-audit.ts`) → **preview** (`pptwise preview <target> -o <dir> --html` — once every page is filled, this also overlays the same `audit` findings on `preview.html`, and writes a machine-readable `manifest.json` beside it) → **revise** (edit one `pages/<id>.json` by hand, then re-`assemble` → `validate`/`audit` → re-render). Every consumer command (`validate`/`render`/`preview`/`audit`) accepts a single IR file, a deck project directory, or a bare name — `isDeckDirectory` (`deck-dir.ts`) is the dispatch. Preview is read-only end to end: a reviewer who wants something changed says so in the conversation, usually with a screenshot, and the agent makes the edit through the same `pages/*.json` gate everything else passes — see `skills/pptwise/SKILL.md`'s phase 6.
+A legacy `deck.plan.json` is not read as a current project. `pptwise migrate` converts it to `deck.spec.json`. Keeping both names in one directory is a hard error.
 
-## Live preview (`pptwise serve`)
+## Authoring workflow
 
-`pptwise serve <target> [--port 4400] [--no-open]` (same `target` forms as every other deck-accepting command above) is the **preview** phase's review loop in live form, not a separate workflow — the identical `preview.html` markup, running off a local `node:http` server bound to `127.0.0.1` instead of a file `pptwise preview --html` writes once. A source edit (`deck.spec.json`/`pages/`/`assets/` for a deck project directory, or the file itself for a bare IR target) triggers a rebuild and pushes a whole-page reload to the open browser tab over SSE, 200ms-debounced so a multi-file save coalesces into one refresh. A rebuild that fails (a mid-edit invalid JSON save is the common case) shows a recoverable error banner instead of taking the server down, and clears itself on the next successful save.
+The skill in `skills/pptwise/SKILL.md` maps to these phases:
 
-The one behavioral difference from the download form is liveness: the tab re-renders on every source change, so a revision the agent saves appears in the tab the reviewer already has open, with no new link and nothing for them to click. Neither form writes to the deck — an annotation panel and a `POST /revision-request` endpoint existed here until 2026-08-16 and were removed together, because a reviewer describing a change in conversation (with a screenshot) reaches the agent faster than one typing into a panel whose output then has to be exported and read back. Both forms stay valid, for different needs: `serve` for a live local loop where the agent and a reviewer are both watching the same running deck, `preview --html` for a static, shareable artifact (attach to a ticket, review offline, nothing to keep running). No auth and no remote bind (`127.0.0.1` only, no `--host` flag) — a local dev tool, not a hosted review server.
+1. **Read vocabulary.** Run `schema`, `schema --spec`, `narratives --json`, `themes --json`, and `layouts --json` fresh.
+2. **Choose the theme and lock the spec.** Route occasion signals through `themes --json` metadata. Use narrative recommendations only as a reference. When a built-in visual direction remains open, run `preview <target> --themes <id,id,...>` and let the user choose from the cover and content contact sheet. Keep an extracted custom theme under a candidate filename while previewing it with both `--theme-file` and `--theme`. Only after confirmation, persist it as project `theme.json`, put its id in the spec, validate the spec, and persist a seed.
+3. **Fill pages.** Write `pages/<id>.json` in small batches and run `assemble` plus `validate` after each batch.
+4. **Audit.** Run `audit` after all pages are filled. Geometry findings and the monotony advisory come from `src/audit/deck-audit.ts`.
+5. **Preview and review.** Use `preview --html` for a file or `serve` for a live browser loop. Preview is read-only.
+6. **Revise and render.** Edit the smallest source file, then assemble, validate, audit, and render again.
 
-## Asset briefs (`pptwise asset-brief`)
+Consumer commands accept a bare IR file, a deck project directory, or a bare deck name. `src/cli/deck-dir.ts` dispatches the target form.
 
-`pptwise asset-brief <target> [--json]` (`src/svg/asset-brief.ts`, `buildAssetBrief`) closes the same knowledge gap for image assets that `audit` closes for layout defects: an image slot's real rendered frame (`image.tsx`'s `measure` — `Math.min(round(w * 0.5), MAX_IMAGE_H)`, then cover/contain cropping) is engine-internal geometry no amount of reading the IR reveals, and generating art at the wrong aspect ratio is the single most common reason a placed image looks wrong. The brief comes from an actual off-screen render pass, never a copied constant — every `asset_id` an `image` component references, resolved or not, gets its own dummy 1×1 PNG injected into an in-memory copy of the IR for that render (never the real `ir`, never the export path), so the geometry extracted afterward is always real. A slide whose selected layout never actually draws the component (e.g. a cover layout, which never reads `slide.components` at all) reports `rendered: false` rather than being silently dropped. Same `target` resolution as every other deck-accepting command; purely informational, no exit-code gate. v1 scope is `image` components only — `image_grid`/`image_compare` and `background` asset specs are a natural v2 extension of the same shape, not yet covered. Each item also carries `alt` (A11Y-01 alt chain wave) when `ir.assets.images[asset_id].alt` is set — the same accessibility description that lands in the exported PPTX — so a generator agent filling in `missing`/`suggested_prompt` items can see at a glance which ids still need one written.
+## Custom project theme
 
-## Placeholder pages and the `--draft` gate
+Project `theme.json` is a registration source for a confirmed custom theme. It is loaded before `assemble` so `deck.spec.json` can name the custom id. Validate, audit, preview, serve, and render also register it automatically. No `--theme-file` or `--theme` flag is required.
 
-A spec page with no matching `pages/<id>.json` file assembles into `{ placeholder: true, type, heading, subheading? }` from the spec's `summary`, if set. This is never an error (`buildSlide`, `src/spec/assemble.ts`). Once a boundary page (`cover`, `chapter`, or `ending`) has a page file, its summary remains visible as `subheading`. A filled `content` page keeps summary as a fill-only prompt so it does not duplicate the authored body. `validate` and `preview` pass placeholder pages through unconditionally. `render` hard-refuses a deck containing one unless `--draft` is passed (SDK: `generatePptx(ir, { draft?: boolean })`), and `audit` skips them (`auditDeck`, `pagesSkipped`). Assemble's exact contract says a missing page always succeeds as a placeholder. A structural contradiction, such as an orphan `pages/<id>.json` with no matching spec id or a locked-field violation, always throws.
+`--theme-file` serves the equivalent registration role for a bare IR. It never selects the id. The IR must name the id in `theme.id`, or the command must also pass `--theme <id>`.
+
+Changing `theme.json` style tokens keeps the selected id and project workflow unchanged. Changing the spec to another theme requires assemble again if the deck should adopt the new theme's face pools. A one-off `--theme` repaint keeps layout ids already materialized in `deck.json`.
+
+## Live preview
+
+`pptwise serve <target> [--port 4400] [--no-open]` serves the same review page as `preview --html` on `127.0.0.1`. It is a local review tool, not a remote server.
+
+For a deck project it watches `deck.spec.json`, `pages/`, `assets/`, and `theme.json`. For a bare IR it watches the IR and any `--theme-file`. Saves are debounced, successful rebuilds refresh the open tab, and a temporary invalid JSON save displays a recoverable error until the next valid rebuild.
+
+Each rebuild rereads a custom theme and replaces the previous registration. Theme edits therefore apply without restarting `serve`.
+
+## Asset briefs
+
+`pptwise asset-brief <target> [--json]` is implemented in `src/render/asset-brief.ts`. It performs an off-screen render to report each `image` component's real frame, aspect ratio, crop mode, palette, and suggested prompt. It does not copy nominal layout constants.
+
+An unresolved asset still receives a full brief with `missing: true`. A component the selected layout does not draw reports `rendered: false`. The command is informational and does not change the IR or call an image service.
+
+## Placeholders and draft rendering
+
+A spec page without `pages/<id>.json` assembles into a heading-only placeholder. Assemble, validate, preview, and serve accept it. Audit skips it. Render refuses it unless the caller explicitly passes `--draft`.
+
+An orphan page file, duplicate id, unsafe id, or locked-field contradiction remains a hard error. Placeholder support is for incremental filling, not structural ambiguity.
 
 ## Locked fields
 
-`type` and `heading` are spec-owned (`LOCKED_KEYS`, `src/spec/assemble.ts:150`) — a page file that redeclares either (even set to `undefined`, caught via `Object.hasOwn`, not `!== undefined`) throws before assembly proceeds. `PageContent` (`assemble.ts:64-72`) is the exhaustive shape a page file may set: `components`, `layout`, `arrangement`, `background`, `image_side`, `footnote`, `notes` (speaker notes — content, not locked, exported as native PowerPoint speaker notes, never rendered onto the canvas SVG).
+`type` and `heading` belong to `deck.spec.json`. A page file that declares either key fails assembly, even if its value is `undefined`.
 
-`branding` is a deck-level field on `deck.spec.json` (`"full"` | `"cover-only"` | `"minimal"`), not a page-file field. Assemble copies it onto the IR as a plain passthrough, the same way it copies `brand` and `seed`. Omitted equals `"cover-only"` (brand logo on cover and chapter pages, no footer rule, meta, or logo on content and ending pages). `"full"` is the explicit declaration that draws the content-page footer and logo, and that paints confidentiality and date on cover and ending meta rows. Other postures leave those two fields off the canvas even when `meta` carries them. `"minimal"` drops the content-page footer rule and meta but keeps the logo. Layout-declared `branding: "none"` still wins. Theme motifs are not this field. Omitted by default. Write `"full"` only when every content page needs the brand footer. Assemble never infers branding from narrative.
+Page files may supply `components`, `layout`, `arrangement`, `background`, `image_side`, `footnote`, and `notes`. Notes become native speaker notes and never enter the canvas.
+
+`branding` is a deck-level spec field. Omitted behaves like `cover-only`. Use `full` only when every content page needs the brand frame, including confidential or restricted decks. A layout with `branding: "none"` can still suppress the frame on its own page.
 
 ## Boundary-page render surface
 
-`PageContent` above is the same shape for every page type, but not every field it allows is actually drawn onto the canvas by every type. `footnote` never renders on a `cover`, `chapter`, or `ending` page. `components` follow the knowable layout's slots, not a type-level ban: `verdict-index` and `gauge-verdict` declare a `body` slot that accepts `bullets`, so a locked cover may carry one bullets block when it uses either layout. A layout with no matching slot, or a page type whose pool has more than one id so the face is not knowable at validate time, still hard-rejects. `validate` is `checkBoundaryPageContent` in `src/validate-core.ts`. Before that gate existed, stray fields were silently dropped at render with no signal anywhere.
+The page-file shape is shared, but fields render only when the resolved layout has a matching surface.
 
-| type | heading | subheading | components | footnote |
-|---|---|---|---|---|
-| `cover` | always | 31/37 layouts | `verdict-index` and `gauge-verdict` accept `bullets`. the other 35 cover layouts do not | never |
-| `chapter` | always | 32/36 layouts | 0/36 layouts | never |
-| `content` | always | 18/23 standard layouts, 3/4 image takeovers | 22/23 standard layouts, 4/4 takeovers | not `two-column`, `gauge-point`, or `crayonbox-point`, 0/4 takeovers |
-| `ending` | always | 30/34 layouts | 14/34 layouts declare a body slot | never |
+| Page type | Components | Footnote |
+| --- | --- | --- |
+| `cover` | Only when the known cover layout declares a slot that accepts the component type | Never |
+| `chapter` | Rejected by current chapter layouts | Never |
+| `content` | Rendered through the selected standard layout or image takeover | Depends on the selected content layout |
+| `ending` | Only when the known ending layout declares a compatible body slot | Never |
 
-`subheading` is deliberately not hard-gated on any type, on either side of the table — no type drops it on every layout, so a "this type never renders subheading" claim would be unsound and false-positive on the majority layout that does render it (this is also why `subheading` is absent from `checkBoundaryPageContent`'s rule despite being one of the fields the wave's benchmark evidence first suspected). `notes` sits outside this table entirely by design — speaker notes, never drawn onto the canvas SVG regardless of page type (see its docstring in `ir/index.ts`).
+`checkBoundaryPageContent` in `src/validate-core.ts` resolves a known pin or single-item theme pool before deciding. A multi-item boundary pool cannot promise a matching slot and therefore rejects authored components. `subheading` is not globally banned because many boundary layouts render it. Notes remain outside the canvas for every page type.
 
-## `~/.pptwise` home and four-layer config
+## Theme and style precedence
 
-`pptwiseHome()` (`src/cli/home.ts`) is `$PPTWISE_HOME` or `~/.pptwise`, read fresh every call — one predictable dotdir (same posture as `.ssh`/`.npmrc`/`~/.claude`), not a per-OS XDG/AppData split. `$PPTPRESS_HOME` and `$PPTFAST_HOME` remain aliases (one stderr warning when one supplies the value). Empty string counts as unset. If `~/.pptwise` is missing, `~/.pptpress` is copied when present, otherwise `~/.pptfast`. Old directories stay in place. `decksRoot()` is `$PPTWISE_HOME/decks` by default, where a bare deck name resolves (`pptwise render my-deck -o out.pptx`) when no local file/directory of that name exists. `userConfigPath()` is `$PPTWISE_HOME/config.json`.
+Theme selection has five levels:
 
-Four-layer precedence, highest wins: **CLI flag** > **project config** (`pptwise.config.json`, found by walking up from cwd — `findConfig`, `src/cli/config.ts`. Leftover `pptpress.config.json` and `pptfast.config.json` are still read. The new name wins when more than one exists, and they are not merged) > **user config** (`~/.pptwise/config.json`, `findUserConfig`, same file) > **the artifact's own value** (an authored IR's `theme`, or the schema's `consulting` default). Both config layers can set `decksDir` to redirect bare-name resolution — project's resolves against that config file's own directory (for a team that wants deck projects checked into the repo), user's against `pptwiseHome()`. `theme`/`style` values aren't validated against the installed set at file-read time — only once, at whichever layer actually wins (`applyDeckConfig`, `src/cli/commands.ts`). Project config also accepts `outDir`, the artifact root `render`/`preview` use when `-o` is omitted (default `.pptwise` under that config file, or a leftover `.pptpress/` or `.pptfast/` when the new directory is missing). There is no user-layer `outDir`: an artifact directory is a property of this working tree.
+1. CLI `--theme`
+2. Authored artifact selection, meaning project `deck.spec.json` or bare IR `theme.id`
+3. Project `pptwise.config.json`
+4. User `$PPTWISE_HOME/config.json`
+5. Schema default `consulting`
 
-## Workspace artifacts (`.pptwise/`)
+Project `theme.json` and `--theme-file` register ids but do not add selection levels. For style overrides, the chain is CLI `--style`, project config, user config, then IR-authored `theme.style`.
 
-`render` and `preview` write here when `-o` is omitted (`src/cli/workspace.ts`):
+`pptwiseHome()` in `src/cli/home.ts` resolves `$PPTWISE_HOME` or `~/.pptwise`. Bare deck names resolve under its `decks/` directory unless a local target or configured `decksDir` wins. Project config paths resolve relative to the config file. User config paths resolve relative to the pptwise home.
 
+## Workspace artifacts
+
+Without `-o`, render and preview write under the nearest project root:
+
+```text
+.pptwise/<deck>/
+  preview.html
+  contact-sheet.html
+  manifest.json
+  001-cover.svg
+  <deck>.pptx
+  assets/
 ```
-<anchor>/.pptwise/
-  <deck-slug>/
-    preview.html
-    manifest.json
-    001-cover.svg
-    <deck-slug>.pptx
-    assets/             pinned stock photos (not regenerable)
-      hero.jpg
-      hero.json
-```
 
-The anchor is the directory of the nearest `pptwise.config.json`, else cwd. The slug is the deck directory name, or the IR filename without its extension.
+Preview and render outputs are regenerable. Downloaded stock assets and sidecars under the artifact `assets/` directory are pinned inputs and are not regenerable by deletion alone.
 
-Two zones live here. Render output (pptx, preview.html, `NNN-*.svg`, manifest.json) is regenerable: delete those files and re-run, they grow back. Stock-photo files under `.pptwise/<deck>/assets/` (plus sidecars) are pinned downloads. Deleting the whole `.pptwise/` directory drops those photos. `deck.spec.json`, `pages/`, project `assets/`, `theme.json`, `pptwise.config.json`, and assemble's `deck.json` stay where they already are.
+The CLI adds `.pptwise/` to `.git/info/exclude` when it creates the default artifact root. It does not edit the shared `.gitignore`. `--no-git-ignore`, an explicit `-o`, or a configured `outDir` changes that behavior as documented in [`cli.md`](./cli.md).
 
-On a default-path preview, leftover files matching `^\d{3}-[a-z-]+\.svg$` in that deck directory are deleted first, so a shorter deck does not leave orphan SVGs. An explicit `-o` is never pruned.
+## Disassembly
 
-The first time the CLI creates `.pptwise/` it appends `.pptwise/` to `.git/info/exclude` (via `git rev-parse --git-common-dir`, so a worktree writes the main repo's exclude). It never edits the shared `.gitignore`. `--no-git-ignore`, or a project `outDir`, skips that step. DSH previews stay under `~/.pptwise/previews/` and do not copy into the workspace.
-
-## Disassemble
-
-`disassembleDeck` (`src/spec/assemble.ts`) is the IR → project-directory inverse and remains intentionally lossy. Boundary-page subheadings are recovered as `PageSpec.summary`, which preserves summary across assemble → disassemble → assemble. A filled content slide's subheading is not reinterpreted as summary because content summary is a fill-only prompt and `PageContent` has no subheading field. `focus` has no `Slide`-side home. `theme.style` and `theme.brand` overrides collapse to a bare theme-id string. A `deck.json` produced by `assembleDeck`, whose omitted layouts are already materialized, disassembles every auto-pick back out as if it had been an explicit pin. This is an accepted narrowing of revision stability for that specific reuse pattern, not a bug.
+`disassembleDeck` in `src/spec/assemble.ts` converts a single IR into a project and is intentionally lossy. It preserves page identity and recoverable summary fields, but inline theme overrides collapse to a theme id. Layout ids already materialized by assembly return as explicit page pins. Reassembling such a project keeps those pins until the author removes them.

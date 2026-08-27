@@ -4,15 +4,31 @@ Read this when extracting a company template, or deciding whether to write `bran
 
 A brand signal answers what the deck should look like, never how it should argue. Turning "this company's palette looks like a consulting firm" into a narrative is a guess wearing a fact's clothes, and it is how a deck ends up arguing in a shape nobody chose.
 
-## Brand themes — the user's own company template
+## Brand themes: the user's own company template
 
-When the user hands over (or mentions having) a company template — a `.thmx` theme, `.potx` template, or any branded `.pptx` — extract its colors and fonts into a custom theme **before** picking a built-in theme in phase 2. Extraction runs entirely locally; the file never leaves the machine.
+When the user hands over or mentions a `.thmx` theme, `.potx` template, or branded `.pptx`, extract its colors and fonts into a custom theme before choosing the final look. Extraction is local. The file never leaves the machine.
 
 ```bash
-pptwise brand extract corp-template.pptx -o deck-dir/theme.json --id acme
-pptwise render deck-dir/     # theme.json auto-loads; set "theme": "acme" in deck.spec.json
+pptwise brand extract corp-template.pptx -o deck-dir/acme.theme.json --id acme
+pptwise preview deck-dir/ --theme-file deck-dir/acme.theme.json --theme acme --html
 ```
 
-A `theme.json` sitting in the deck project directory auto-loads on every command (validate/render/audit/preview/serve) — reference its id from `deck.spec.json` and no flag is needed. For a single IR file, pass `--theme-file deck-dir/theme.json` instead (works on the same five commands). Loading enforces a contrast floor: a template whose text/background tones are too close is refused with the failing token and ratio named — relay that message and ask the user whether to adjust the extracted file's colors or fall back to a built-in theme.
+Extraction writes a version 1 partial theme. It contains style and brand tokens, sets `base` to `consulting`, and inherits that base theme's structural faces. Edit the written `base` field before loading only when another built-in structure is intentional. Keep it as a candidate file while comparing looks. In the preview command, `--theme-file` registers the candidate and `--theme acme` selects it without turning it into the project default.
+
+After the user confirms the custom look, save that exact file as `deck-dir/theme.json` and write its id into `deck.spec.json`. The project registers it before assemble and auto-loads it for validate, render, audit, preview, and serve, so every project command stays free of theme flags. `serve` rereads `theme.json` after edits and refreshes the open preview.
+
+```bash
+pptwise render deck-dir/
+```
+
+`--theme-file` only registers ids. It never selects one. A bare IR file must also use `--theme <id>` or already name that id in `theme.id`:
+
+```bash
+pptwise render deck.json --theme-file acme.theme.json --theme acme
+```
+
+A deck project with `theme.json` and a spec reference needs neither flag.
+
+Loading enforces a contrast floor. A template whose text and background tones are too close is refused with the failing token and ratio named. Relay that message and ask whether to adjust the extracted colors or use a built-in theme.
 
 Leave `branding` off the spec and the IR unless every content page needs the brand footer. Write `branding: "full"` whenever `meta.confidentiality` is `confidential` or `restricted`, or the file needs an organization colophon. Confidentiality and date then appear on the cover. They stay off every other posture.

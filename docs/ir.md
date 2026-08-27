@@ -98,10 +98,10 @@ Body copy never shrinks below 24px (18pt). Captions, footnotes, ticks, and other
 
 When a slide omits `layout`, pptwise resolves one in four deterministic steps:
 
-1. The page type's registered archetype pool, minus pin-only layouts. The shared pool has 43 ids: 19 cover, 8 chapter, 7 ending, and 9 content. The other 87 standard layouts require an explicit `slide.layout` pin or a theme-curated board lock.
-2. Narrowed to the theme's `layouts` set for that page type. Built-in covers lock to a board face. Most built-in content themes use the 9-id shared set. consulting and crayon each prepend one theme-locked pin-only content face. runway prepends show-statement and show-figures, while show-gallery and show-spotlight remain explicit-pin only. lecture and luxe drop `split-band` and `stacked-poster`. A registered custom theme that omits `layouts` receives all 9 auto-selectable content ids. See [Themes](./themes.md).
-3. Soft weights via `Math.max`: the narrative `strategy`'s `layoutTendencies` (content) or `identityTendencies` (cover/chapter/ending), an optional slide `beat`, and the theme's `layoutTendencies`. Favored ids ×3, everything else ×1. Cover, chapter, and ending pages are weighted via `identityTendencies`.
-4. A seeded weighted pick, swapped deterministically to the runner-up when it would repeat the immediately preceding slide's layout.
+1. Start from the selected theme's compiled face pool for that page type. A partial custom theme inherits this boundary from its `base`. A complete custom theme declares all four pools itself. The shared registry has 43 auto-selectable standard layouts and 87 pin-only standard layouts. See [Themes](./themes.md).
+2. Apply the rare `narrativesOnly` hard filter for the resolved strategy.
+3. Combine strategy, optional slide `beat`, and theme tendencies with `Math.max`, then make a seeded weighted pick.
+4. When that pick repeats the immediately preceding page and another candidate exists, redraw deterministically without the repeated id.
 
 An explicit `layout` skips those steps, except an unoffered sparse climax pin (`SPARSE_LAYOUT_IDS`): `effectiveRequestedLayout` strips it, auto-pick runs, `validate` warns, and `ok` stays true. `quote-stage` is pin-only but not sparse. Whether the content fits is flagged separately by `validate`'s density gate, never by selection — so editing a page's content cannot silently flip its layout.
 
@@ -122,7 +122,8 @@ A deck can be authored two ways, and every command that takes IR accepts either:
 ```
 my-deck/
   deck.spec.json         the locked spec: page order, type, and heading for every page
-  pages/<page-id>.json   one file per filled page (components/layout/arrangement/background/image_side/footnote)
+  theme.json             optional custom version 1 theme, registered automatically
+  pages/<page-id>.json   one file per filled page (components/layout/arrangement/background/image_side/footnote/notes)
   assets/                local images, auto-registered by filename (image id = filename without extension)
 ```
 
@@ -136,6 +137,6 @@ A directory still carrying the pre-v4 `deck.plan.json` instead of `deck.spec.jso
 
 A deck project directory can be referenced by a bare name instead of a path. `pptwise render my-deck -o out.pptx` resolves `my-deck` under `$PPTWISE_HOME/decks` (`$PPTWISE_HOME` defaults to `~/.pptwise`) when no local file or directory of that name exists.
 
-All deck defaults resolve in four layers, highest wins: CLI flag > project `pptwise.config.json` > user `~/.pptwise/config.json` > the deck's own values. Both config layers can set `decksDir` to redirect where bare names resolve — the project layer's value resolves against that config file's own directory (for a team that wants deck projects checked into the repo), the user layer's against `$PPTWISE_HOME`. Project wins when both are set.
+Theme selection has five levels, highest first: CLI `--theme`, authored artifact selection (`deck.spec.json` for a project or `theme.id` for a bare IR), project `pptwise.config.json`, user `~/.pptwise/config.json`, then the schema default `consulting`. Project `theme.json` and `--theme-file` register custom ids but do not select them. Both config layers can set `decksDir` to redirect where bare names resolve. The project value resolves against its config file, while the user value resolves against `$PPTWISE_HOME`.
 
 The format's finer points are in [`deck-projects.md`](./deck-projects.md).
