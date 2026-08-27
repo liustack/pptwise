@@ -33,6 +33,7 @@ import { assertContrastFloor, getInstalledThemeIds } from "../themes/definitions
 import { extractBrandTheme, slugify } from "../themes/extract/brand-extract"
 import { parseBrandThemeFile, registerBrandThemeFile } from "../themes/brand-theme-file"
 import { CANONICAL_THEME_IDS } from "../themes"
+import { LAYOUT_REGISTRY } from "../layouts/registry"
 import { CONFIG_FILENAME, findConfig, findUserConfig } from "./config"
 import {
   assertSafeFileSegment,
@@ -832,6 +833,77 @@ export function runThemes(asJson: boolean): string {
   const themes = listThemes()
   if (asJson) return JSON.stringify(themes, null, 2)
   return themes.map((t) => `${t.id.padEnd(12)} ${t.label}`).join("\n")
+}
+
+interface LayoutDiscoverySlot {
+  name: string
+  accepts: readonly string[] | "any"
+  capacity?: number
+}
+
+interface LayoutDiscoveryRow {
+  id: string
+  slideTypes: readonly string[]
+  pinOnly: boolean
+  capacity?: number
+  slots: LayoutDiscoverySlot[]
+  arrangements?: readonly string[] | "all"
+}
+
+function layoutCapacity(slots: readonly { capacity?: number }[]): number | undefined {
+  let sum = 0
+  let any = false
+  for (const slot of slots) {
+    if (slot.capacity !== undefined) {
+      sum += slot.capacity
+      any = true
+    }
+  }
+  return any ? sum : undefined
+}
+
+function listLayouts(): LayoutDiscoveryRow[] {
+  return Object.values(LAYOUT_REGISTRY).map((layout) => {
+    const capacity = layoutCapacity(layout.slots)
+    const row: LayoutDiscoveryRow = {
+      id: layout.id,
+      slideTypes: layout.slideTypes,
+      pinOnly: layout.pinOnly ?? false,
+      slots: layout.slots.map((slot) => {
+        const compact: LayoutDiscoverySlot = { name: slot.name, accepts: slot.accepts }
+        if (slot.capacity !== undefined) compact.capacity = slot.capacity
+        return compact
+      }),
+    }
+    if (capacity !== undefined) row.capacity = capacity
+    if (layout.arrangements !== undefined) row.arrangements = layout.arrangements
+    return row
+  })
+}
+
+/** `pptwise layouts [--json]` — compact discovery surface over LAYOUT_REGISTRY. */
+export function runLayouts(asJson: boolean): string {
+  const layouts = listLayouts()
+  if (asJson) return JSON.stringify(layouts, null, 2)
+  const rows = layouts.map((l) => ({
+    id: l.id,
+    types: l.slideTypes.join(","),
+    pin: l.pinOnly ? "pin-only" : "-",
+    cap: l.capacity !== undefined ? String(l.capacity) : "-",
+    slots: l.slots.map((s) => s.name).join(", "),
+    arrangements: l.arrangements === undefined ? "-" : l.arrangements === "all" ? "all" : l.arrangements.join(","),
+  }))
+  const idWidth = Math.max(...rows.map((r) => r.id.length))
+  const typesWidth = Math.max(...rows.map((r) => r.types.length))
+  const pinWidth = Math.max(...rows.map((r) => r.pin.length))
+  const capWidth = Math.max(...rows.map((r) => r.cap.length))
+  const slotsWidth = Math.max(...rows.map((r) => r.slots.length))
+  return rows
+    .map(
+      (r) =>
+        `${r.id.padEnd(idWidth + 2)}${r.types.padEnd(typesWidth + 2)}${r.pin.padEnd(pinWidth + 2)}${r.cap.padEnd(capWidth + 2)}${r.slots.padEnd(slotsWidth + 2)}${r.arrangements}`,
+    )
+    .join("\n")
 }
 
 export interface BrandExtractOptions {

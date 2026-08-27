@@ -9,6 +9,7 @@ import {
   runDisassemble,
   runInit,
   runMigrate,
+  runLayouts,
   runNarratives,
   runPreview,
   runRender,
@@ -220,6 +221,12 @@ program
   .description("List built-in themes")
   .option("--json", "machine-readable output")
   .action((opts: { json?: boolean }) => console.log(runThemes(Boolean(opts.json))))
+
+program
+  .command("layouts")
+  .description("List registered layouts")
+  .option("--json", "machine-readable output")
+  .action((opts: { json?: boolean }) => console.log(runLayouts(Boolean(opts.json))))
 
 // `brand` is a command group (not a bare `brand-extract` command) to leave
 // room for future brand-asset extraction (logo from the slide master, etc.)
