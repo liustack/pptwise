@@ -606,6 +606,24 @@ describe("runSchema / runThemes", () => {
     expect(runThemes(false).split("\n")).toHaveLength(24)
     expect(JSON.parse(runThemes(true))).toHaveLength(24)
   })
+  it("JSON objects include occasions and identity without replacing listThemes label", () => {
+    const rows = JSON.parse(runThemes(true)) as Array<{
+      id: string
+      label: string
+      colors: unknown
+      occasions: unknown
+      identity: unknown
+    }>
+    expect(rows).toHaveLength(24)
+    expect(Object.keys(rows[0]!)).toEqual(expect.arrayContaining(["id", "label", "colors", "occasions", "identity"]))
+    for (const row of rows) {
+      expect(Array.isArray(row.occasions)).toBe(true)
+      expect(row.occasions).toEqual([])
+      expect(row.identity).toBeNull()
+      expect(typeof row.label).toBe("string")
+      expect(row.label.length).toBeGreaterThan(0)
+    }
+  })
 })
 
 describe("runNarratives", () => {

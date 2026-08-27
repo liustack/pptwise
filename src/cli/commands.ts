@@ -33,6 +33,7 @@ import { assertContrastFloor, getInstalledThemeIds } from "../themes/definitions
 import { extractBrandTheme, slugify } from "../themes/extract/brand-extract"
 import { parseBrandThemeFile, registerBrandThemeFile } from "../themes/brand-theme-file"
 import { CANONICAL_THEME_IDS } from "../themes"
+import { THEME_OCCASIONS } from "../themes/occasions"
 import { LAYOUT_REGISTRY } from "../layouts/registry"
 import { CONFIG_FILENAME, findConfig, findUserConfig } from "./config"
 import {
@@ -831,7 +832,19 @@ export function runSchema(mode?: "style" | "spec"): string {
 
 export function runThemes(asJson: boolean): string {
   const themes = listThemes()
-  if (asJson) return JSON.stringify(themes, null, 2)
+  if (asJson) {
+    return JSON.stringify(
+      themes.map((t) => ({
+        id: t.id,
+        label: t.label,
+        colors: t.colors,
+        occasions: THEME_OCCASIONS[t.id]?.occasions ?? [],
+        identity: THEME_OCCASIONS[t.id]?.identity ?? null,
+      })),
+      null,
+      2,
+    )
+  }
   return themes.map((t) => `${t.id.padEnd(12)} ${t.label}`).join("\n")
 }
 
