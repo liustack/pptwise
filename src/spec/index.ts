@@ -705,6 +705,23 @@ function pageIdFromRawInput(input: unknown, index: number): string | undefined {
  * has.
  */
 export function validateSpec(input: unknown): SpecValidateResult {
+  if (
+    typeof input === "object" &&
+    input !== null &&
+    !Array.isArray(input) &&
+    Object.hasOwn(input, "chrome") &&
+    Object.hasOwn(input, "branding")
+  ) {
+    return {
+      ok: false,
+      errors: [
+        {
+          path: "branding",
+          message: 'cannot use both legacy "chrome" and canonical "branding" in one spec',
+        },
+      ],
+    }
+  }
   const rootAliasPass = normalizeDeckRootAliases(input)
   const narrativeShapePass = normalizeNarrativeShape(rootAliasPass.value)
   const normalizedInput = narrativeShapePass.value
