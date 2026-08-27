@@ -781,6 +781,52 @@ describe("runPreview --html audit overlay (notes+preview wave, task 2)", () => {
   })
 })
 
+describe("runPreview --themes contact sheet", () => {
+  it("writes a self-contained contact-sheet.html with cover+content inlined per theme", async () => {
+    const out = join(dir, "contact-3")
+    const msg = await runPreview(join(dir, "deck.json"), out, { themes: "consulting,tech,ink" })
+    expect(msg).toContain("contact-sheet.html")
+    const html = await readFile(join(out, "contact-sheet.html"), "utf8")
+    expect(html).toContain("consulting")
+    expect(html).toContain("tech")
+    expect(html).toContain("ink")
+    expect((html.match(/<svg\b/g) ?? []).length).toBeGreaterThanOrEqual(6)
+    expect(html).toContain("<style")
+    expect(html).not.toMatch(/<img\b[^>]*\ssrc=/)
+  })
+
+  it("does not write contact-sheet.html when --themes is omitted", async () => {
+    const out = join(dir, "svgs-no-contact")
+    await runPreview(join(dir, "deck.json"), out)
+    const files = await readdir(out)
+    expect(files).not.toContain("contact-sheet.html")
+  })
+
+  it("throws when fewer than 2 theme ids are given", async () => {
+    await expect(runPreview(join(dir, "deck.json"), join(dir, "contact-1"), { themes: "consulting" })).rejects.toThrow(
+      /pptwise preview --themes expects 2-4 theme ids, got 1/,
+    )
+  })
+
+  it("throws when more than 4 theme ids are given", async () => {
+    await expect(
+      runPreview(join(dir, "deck.json"), join(dir, "contact-5"), { themes: "consulting,tech,ink,journal,swiss" }),
+    ).rejects.toThrow(/pptwise preview --themes expects 2-4 theme ids, got 5/)
+  })
+
+  it("throws naming an unknown theme id", async () => {
+    await expect(
+      runPreview(join(dir, "deck.json"), join(dir, "contact-unknown"), { themes: "consulting,not-a-real-theme" }),
+    ).rejects.toThrow(/unknown theme "not-a-real-theme".*pptwise themes/)
+  })
+
+  it("throws on duplicate theme ids", async () => {
+    await expect(
+      runPreview(join(dir, "deck.json"), join(dir, "contact-dup"), { themes: "consulting, consulting" }),
+    ).rejects.toThrow(/duplicate/i)
+  })
+})
+
 describe("runSchema --style", () => {
   it("prints the StyleOverride schema", () => {
     const s = JSON.parse(runSchema("style")) as { properties?: Record<string, unknown> }

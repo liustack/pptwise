@@ -380,13 +380,17 @@ program
   .argument("<target>", "IR JSON file, deck project directory, or bare name under ~/.pptwise/decks")
   .option("-o, --output <dir>", "output directory (default: .pptwise/<deck>/ under the project root)")
   .option("--html", "also write a self-contained preview.html (all slides inlined — thumbnail strip, keyboard navigation) for human review")
+  .option("--theme <id>", "override the deck theme (see `pptwise themes`)")
+  .option("--themes <ids>", "comma-separated theme ids (2-4) to write a contact-sheet comparison")
   .option("--theme-file <path>", "load a custom theme file (see `pptwise brand extract`) and preview with it")
   .option("--no-git-ignore", "do not add .pptwise/ to this repository's local exclude file")
-  .action(async (target: string, opts: { output?: string; html?: boolean; themeFile?: string; gitIgnore?: boolean }) => {
+  .action(async (target: string, opts: { output?: string; html?: boolean; theme?: string; themes?: string; themeFile?: string; gitIgnore?: boolean }) => {
     try {
       console.log(
         await runPreview(target, opts.output, {
           htmlOut: opts.html,
+          theme: opts.theme,
+          themes: opts.themes,
           themeFilePath: opts.themeFile,
           gitIgnore: opts.gitIgnore,
           cwd: process.cwd(),

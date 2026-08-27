@@ -50,7 +50,7 @@ import {
   THEME_FILENAME,
 } from "./deck-dir"
 import { loadIrFile, resolveLocalAssets } from "./load-ir"
-import { buildPreviewHtml } from "./preview-html"
+import { buildContactSheetHtml, buildPreviewHtml } from "./preview-html"
 import { buildPreviewManifest } from "./preview-manifest"
 import {
   prepareWorkspaceDir,
@@ -1054,6 +1054,10 @@ export interface PreviewOptions {
   gitIgnore?: boolean
   /** Injectable git runner for tests. Production leaves this unset. */
   runGit?: GitRunner
+  /** `--theme <id>` — override the deck theme for a single-theme preview. */
+  theme?: string
+  /** `--themes <id,id,...>` — 2-4 theme ids for a contact-sheet comparison. */
+  themes?: string
   /** `--theme-file <path>` — see `applyDeckConfig`'s own `themeFilePath` doc comment. */
   themeFilePath?: string
   /** `--html` (v0.3 W7 task 1, spec §7 workflow ⑤): also write a
@@ -1110,12 +1114,12 @@ interface DeckRenderResult {
 
 async function renderDeckSlides(
   target: string,
-  opts: { cwd?: string; themeFilePath?: string } = {},
+  opts: { cwd?: string; themeFilePath?: string; theme?: string } = {},
 ): Promise<DeckRenderResult> {
   const cwd = opts.cwd ?? process.cwd()
   const [projectHit, userHit] = await Promise.all([findConfig(cwd), findUserConfig()])
   const { raw, baseDir, isDir, resolvedTarget, workspaceAssetsDir } = await loadDeckTarget(target, cwd, projectHit, userHit)
-  await applyDeckConfig(raw, { themeFilePath: opts.themeFilePath, cwd, projectHit, userHit })
+  await applyDeckConfig(raw, { theme: opts.theme, themeFilePath: opts.themeFilePath, cwd, projectHit, userHit })
   const v = validateIr(raw)
   if (!v.ok) throw new PptwiseError(`invalid IR:\n${formatIssues(v.errors)}`)
   await resolveLocalAssets(v.ir!, baseDir, workspaceAssetsDir)
@@ -1197,7 +1201,7 @@ export interface DeckPreviewResult extends DeckRenderResult {
 
 export async function buildDeckPreview(
   target: string,
-  opts: { cwd?: string; themeFilePath?: string } = {},
+  opts: { cwd?: string; themeFilePath?: string; theme?: string } = {},
 ): Promise<DeckPreviewResult> {
   const rendered = await renderDeckSlides(target, opts)
   const { html, findings, checks } = buildDeckAuditAndHtml(rendered.ir, rendered.svgs)
@@ -1233,31 +1237,103 @@ export async function buildDeckPreview(
  * to fail" posture `runDisassemble`'s own path-traversal guard already
  * established elsewhere in this file.
  */
+function parseContactSheetThemes(raw: string): string[] {
+  const ids = raw.split(",").map((s) => s.trim()).filter((s) => s.length > 0)
+  if (ids.length < 2 || ids.length > 4) {
+    throw new PptwiseError(`pptwise preview --themes expects 2-4 theme ids, got ${ids.length}`)
+  }
+  const seen = new Set<string>()
+  for (const id of ids) {
+    if (seen.has(id)) throw new PptwiseError(`pptwise preview --themes has duplicate theme id "${id}"`)
+    seen.add(id)
+  }
+  const installed = getInstalledThemeIds()
+  for (const id of ids) {
+    if (!installed.includes(id)) {
+      throw new PptwiseError(
+        `unknown theme "${id}" (from --themes) — available: ${installed.join(", ")} (see \`pptwise themes\`)`,
+      )
+    }
+  }
+  return ids
+}
+
+function pickContactSheetSlides(ir: PptxIR, svgs: string[]): { type: string; svg: string }[] {
+  const picked: { type: string; svg: string }[] = []
+  const cover = ir.slides.findIndex((s) => s.type === "cover")
+  const content = ir.slides.findIndex((s) => s.type === "content")
+  if (cover >= 0) picked.push({ type: "cover", svg: svgs[cover]! })
+  if (content >= 0) picked.push({ type: "content", svg: svgs[content]! })
+  if (picked.length === 0) {
+    throw new PptwiseError("pptwise preview --themes needs a cover or content slide, found neither")
+  }
+  return picked
+}
+
+async function resolvePreviewOutDir(
+  cwd: string,
+  outDir: string | undefined,
+  resolvedTarget: string,
+  isDir: boolean,
+  opts: PreviewOptions,
+): Promise<{ resolvedOut: string; extraNotes: string[] }> {
+  if (outDir !== undefined) {
+    const resolvedOut = resolve(cwd, outDir)
+    await mkdir(resolvedOut, { recursive: true })
+    return { resolvedOut, extraNotes: [] }
+  }
+  const projectHit = await findConfig(cwd)
+  const location = resolveWorkspaceLocation({
+    cwd,
+    projectConfigPath: projectHit?.path,
+    outDir: projectHit?.config.outDir,
+    target: resolvedTarget,
+    isDir,
+  })
+  const extraNotes = await prepareWorkspaceDir(location, { gitIgnore: opts.gitIgnore, runGit: opts.runGit })
+  await pruneRenderedSvgs(location.dir)
+  return { resolvedOut: location.dir, extraNotes }
+}
+
+async function runContactSheetPreview(
+  irPath: string,
+  outDir: string | undefined,
+  opts: PreviewOptions,
+  cwd: string,
+): Promise<string> {
+  const ids = parseContactSheetThemes(opts.themes!)
+  const columns: { id: string; slides: { type: string; svg: string }[] }[] = []
+  let resolvedTarget = ""
+  let isDir = false
+  let title = irPath
+  for (const id of ids) {
+    const rendered = await renderDeckSlides(irPath, {
+      cwd,
+      theme: id,
+      themeFilePath: opts.themeFilePath,
+    })
+    resolvedTarget = rendered.resolvedTarget
+    isDir = rendered.isDir
+    title = rendered.ir.filename
+    columns.push({ id, slides: pickContactSheetSlides(rendered.ir, rendered.svgs) })
+  }
+  const { resolvedOut, extraNotes } = await resolvePreviewOutDir(cwd, outDir, resolvedTarget, isDir, opts)
+  const htmlPath = join(resolvedOut, "contact-sheet.html")
+  await writeFile(htmlPath, buildContactSheetHtml({ title, themes: columns }))
+  const ok = `wrote contact sheet to ${htmlPath}`
+  return extraNotes.length > 0 ? `${ok}\n${extraNotes.join("\n")}` : ok
+}
+
 export async function runPreview(irPath: string, outDir?: string, opts: PreviewOptions = {}): Promise<string> {
   const cwd = opts.cwd ?? process.cwd()
+  if (opts.themes !== undefined) return runContactSheetPreview(irPath, outDir, opts, cwd)
   const { ir, svgs, normalized, isDir, resolvedTarget } = await renderDeckSlides(irPath, {
     cwd,
+    theme: opts.theme,
     themeFilePath: opts.themeFilePath,
   })
   // After render, not before (S1 review carry) — see this function's own doc comment.
-  const extraNotes: string[] = []
-  let resolvedOut: string
-  if (outDir !== undefined) {
-    resolvedOut = resolve(cwd, outDir)
-    await mkdir(resolvedOut, { recursive: true })
-  } else {
-    const projectHit = await findConfig(cwd)
-    const location = resolveWorkspaceLocation({
-      cwd,
-      projectConfigPath: projectHit?.path,
-      outDir: projectHit?.config.outDir,
-      target: resolvedTarget,
-      isDir,
-    })
-    extraNotes.push(...(await prepareWorkspaceDir(location, { gitIgnore: opts.gitIgnore, runGit: opts.runGit })))
-    await pruneRenderedSvgs(location.dir)
-    resolvedOut = location.dir
-  }
+  const { resolvedOut, extraNotes } = await resolvePreviewOutDir(cwd, outDir, resolvedTarget, isDir, opts)
   const svgNames: string[] = []
   for (let i = 0; i < ir.slides.length; i++) {
     const name = `${String(i + 1).padStart(3, "0")}-${ir.slides[i]!.type}.svg`

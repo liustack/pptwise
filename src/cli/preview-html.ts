@@ -173,7 +173,7 @@ export interface PreviewHtmlInput {
 import { slideEdgeFill } from "../lib/slide-edge"
 import { namespaceSvgIds, svgIdPrefix } from "../lib/svg-ids"
 
-function escapeHtml(s: string): string {
+export function escapeHtml(s: string): string {
   return s
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -634,6 +634,82 @@ ${checksLine}
 <nav id="pf-filmstrip" aria-label="slides">${thumbs}</nav>
 ${findingsDataScript}
 <script>${JS}</script>
+</body>
+</html>
+`
+}
+
+export interface ContactSheetSlide {
+  type: string
+  svg: string
+}
+
+export interface ContactSheetColumn {
+  id: string
+  slides: ContactSheetSlide[]
+}
+
+export interface ContactSheetInput {
+  title: string
+  themes: ContactSheetColumn[]
+}
+
+const CONTACT_SHEET_CSS = `
+:root { color-scheme: light; }
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font: 14px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  color: #111;
+  background: #f4f4f1;
+  padding: 24px;
+}
+h1 { font-size: 18px; font-weight: 600; margin: 0 0 16px; }
+table.cs { width: 100%; border-collapse: collapse; table-layout: fixed; }
+table.cs th, table.cs td { vertical-align: top; padding: 8px; }
+table.cs thead th { text-align: left; font-size: 13px; font-weight: 600; }
+table.cs tbody th { text-align: left; font-weight: 500; color: #555; width: 88px; }
+.cs-cell svg { display: block; width: 100%; height: auto; background: #fff; }
+`.trim()
+
+/** Self-contained HTML comparison: columns = themes, rows = cover / first content. */
+export function buildContactSheetHtml(input: ContactSheetInput): string {
+  const { title, themes } = input
+  const rowTypes: string[] = []
+  for (const col of themes) {
+    for (const slide of col.slides) {
+      if (!rowTypes.includes(slide.type)) rowTypes.push(slide.type)
+    }
+  }
+  const head = themes.map((t) => `<th scope="col">${escapeHtml(t.id)}</th>`).join("")
+  const body = rowTypes
+    .map((type) => {
+      const cells = themes
+        .map((t, colIdx) => {
+          const slide = t.slides.find((s) => s.type === type)
+          if (!slide) return "<td></td>"
+          const svg = namespaceSvgIds(slide.svg, `t${colIdx}-${type}-`)
+          return `<td class="cs-cell">${svg}</td>`
+        })
+        .join("")
+      return `<tr><th scope="row">${escapeHtml(type)}</th>${cells}</tr>`
+    })
+    .join("")
+  const escapedTitle = escapeHtml(title)
+  return `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${escapedTitle} — theme comparison</title>
+<style>${CONTACT_SHEET_CSS}</style>
+</head>
+<body>
+<h1>${escapedTitle}</h1>
+<table class="cs">
+<thead><tr><th></th>${head}</tr></thead>
+<tbody>${body}</tbody>
+</table>
 </body>
 </html>
 `
