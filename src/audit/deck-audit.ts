@@ -23,6 +23,7 @@ export interface AuditFinding {
     | "overlap"
     | "content-truncated"
     | "content-dropped"
+    | "monotony"
   message: string
   detail?: Record<string, unknown>
 }
@@ -2451,6 +2452,69 @@ function droppedFindings(markup: string, page: number, slideId: string | undefin
 }
 
 // ────────────────────────────────────────────────────────────────────────
+// Monotony — IR-level consecutive lead-component streak (C-stream). Walks
+// `ir.slides` in order; no SVG. Dominant type is `components[0].type`.
+// Placeholder pages are skipped (same as geometry) and break a streak.
+// Pages with zero components still count as audited for geometry, but
+// break / never start a monotony streak (covers/chapters/endings).
+// ────────────────────────────────────────────────────────────────────────
+
+function monotonyMessage(componentType: string, fromPage: number, toPage: number, length: number): string {
+  return (
+    `pages ${fromPage}-${toPage} repeat component type "${componentType}" (${length} consecutive pages) — ` +
+    `vary the lead component across neighbouring pages (mix bullets, chart, kpi, quote) so the deck does not read as a repeating template`
+  )
+}
+
+function monotonyFindings(ir: PptxIR): AuditFinding[] {
+  const findings: AuditFinding[] = []
+  let streakType: string | undefined
+  let fromPage = 0
+  let slideId: string | undefined
+  let length = 0
+
+  const flush = () => {
+    if (length >= 3 && streakType !== undefined) {
+      const toPage = fromPage + length - 1
+      findings.push({
+        page: fromPage,
+        ...(slideId !== undefined ? { slideId } : {}),
+        code: "monotony",
+        message: monotonyMessage(streakType, fromPage, toPage, length),
+        detail: { componentType: streakType, fromPage, toPage, length },
+      })
+    }
+    streakType = undefined
+    fromPage = 0
+    slideId = undefined
+    length = 0
+  }
+
+  ir.slides.forEach((slide, i) => {
+    if (slide.placeholder) {
+      flush()
+      return
+    }
+    const componentType = slide.components?.[0]?.type
+    if (!componentType) {
+      flush()
+      return
+    }
+    if (componentType === streakType) {
+      length++
+      return
+    }
+    flush()
+    streakType = componentType
+    fromPage = i + 1
+    slideId = slide.id
+    length = 1
+  })
+  flush()
+  return findings
+}
+
+// ────────────────────────────────────────────────────────────────────────
 // auditDeck — the SDK entry point.
 // ────────────────────────────────────────────────────────────────────────
 
@@ -2458,13 +2522,14 @@ function droppedFindings(markup: string, page: number, slideId: string | undefin
  * Deterministic geometry audit over an already-valid deck (v0.3 W6, spec §7
  * workflow ④): render every non-placeholder slide off-screen
  * (`renderSlideSvg`, the same single-source SVG the preview and exporter
- * both use) and run five check families against the rendered markup —
+ * both use) and run the SVG check families against the rendered markup —
  * overflow/out-of-bounds (reusing `svg-audit.ts`'s existing walker
  * verbatim), low-contrast (WCAG relative luminance), overlap (pairwise
  * `data-audit-box` intersection), and content-truncated/content-dropped
  * (bench-driven fix round, defect E — reading the `data-truncated`/
  * `data-dropped` markers the render chain now stamps at its own silent
- * content-loss paths). Pure — no I/O, no Node dependency (see
+ * content-loss paths) — plus an IR-level monotony check (consecutive
+ * lead-component streaks; no SVG). Pure — no I/O, no Node dependency (see
  * `parseSvg`'s doc comment).
  *
  * Split out from `auditDeck` (audit-v2 phase B) so the optional pixel audit
@@ -2495,6 +2560,7 @@ function runDeterministicAudit(ir: PptxIR): { findings: AuditFinding[]; pagesAud
     findings.push(...droppedFindings(markup, page, slideId))
   })
 
+  findings.push(...monotonyFindings(ir))
   return { findings, pagesAudited, pagesSkipped }
 }
 
