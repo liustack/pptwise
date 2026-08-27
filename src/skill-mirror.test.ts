@@ -3,7 +3,7 @@ import { join, relative } from "node:path"
 
 import { AUDIENCE_VALUES, PACING_VALUES, STRATEGY_VALUES } from "./ir/narrative-values"
 import { NARRATIVE_PRESETS } from "./narrative"
-import { FULL_BODY_TYPES } from "./svg/component-traits"
+import { FULL_BODY_TYPES } from "./render/component-traits"
 
 // This test is NOT under skills/pptwise/ (where the files it guards live)
 // because vitest.config.ts's `include` only picks up `src/**/*.test.{ts,tsx}`
@@ -256,7 +256,7 @@ describe("SKILL.zh-CN.md mirrors SKILL.md (skill-zh-cn drift guard)", () => {
     const missingFromDocs = [...FULL_BODY_TYPES].filter((id) => !enDecl.includes(id))
     expect(
       { missingFromCode, missingFromDocs },
-      "references/components.md's declared full-body list no longer matches FULL_BODY_TYPES in src/svg/component-traits.ts",
+      "references/components.md's declared full-body list no longer matches FULL_BODY_TYPES in src/render/component-traits.ts",
     ).toEqual({ missingFromCode: [], missingFromDocs: [] })
   })
 

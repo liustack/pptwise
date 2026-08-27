@@ -4,7 +4,7 @@ import { buildPreviewHtml, type PreviewHtmlChecks, type PreviewHtmlFinding, type
 /** Minimal-but-realistic standalone slide SVG, matching what `renderSlideSvg`
  *  (`../api.ts`) actually produces: a `viewBox="0 0 1280 720"` root with the
  *  SVG namespace declared — the one `http` substring every real slide
- *  contains (`../svg/serialize.ts`'s `renderSvgMarkup`). The embedded text
+ *  contains (`../render/serialize.ts`'s `renderSvgMarkup`). The embedded text
  *  node includes a literal `&` on purpose (already-valid SVG/XML, pre-escaped
  *  as `&amp;`) so a test can catch the builder double-escaping raw SVG it
  *  must instead pass through byte-for-byte. */

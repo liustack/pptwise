@@ -23,7 +23,7 @@ import { listThemes } from "@/api"
 import { COMPONENT_TYPES, type Component } from "@/ir"
 import { CHART_VARIANTS, COMPONENT_BUILDERS, DENSITY_BUILDERS, FORM_VARIANTS } from "../evals/gallery/corpus/components"
 import { THEME_TABLE_REQUIRED_SURFACES } from "../evals/gallery/corpus/theme-slots"
-import { COMPONENT_FORMS, resolveComponentForm } from "@/svg/components/form-assignments"
+import { COMPONENT_FORMS, resolveComponentForm } from "@/components/form-assignments"
 import { BASELINE_THEME, corpusAssets, type CorpusAssets } from "../evals/gallery/corpus/decks"
 import { LANGUAGE_IDS, LEXICONS, type LanguageId } from "../evals/gallery/corpus/lexicon"
 import { buildGalleryHtml } from "../evals/gallery/html"
@@ -559,7 +559,7 @@ describe("gallery density table", () => {
     // Counted from the renderers rather than from a list kept here by hand:
     // a tenth component growing the same branch must fail this, or it joins
     // the review unseen exactly the way the first nine did.
-    const dir = join(fileURLToPath(new URL("..", import.meta.url)), "src/svg/components")
+    const dir = join(fileURLToPath(new URL("..", import.meta.url)), "src/components")
     const drawers = readdirSync(dir)
       .filter((f) => f.endsWith(".tsx") && !f.endsWith(".test.tsx"))
       .filter((f) => /data-dropped=\{/.test(readFileSync(join(dir, f), "utf8")))

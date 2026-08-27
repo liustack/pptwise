@@ -1,5 +1,5 @@
 /**
- * Load an on-disk {@link BrandThemeFile} (`./brand-extract.ts`'s output, or
+ * Load an on-disk {@link BrandThemeFile} (`./extract/brand-extract.ts`'s output, or
  * a hand-authored equivalent) into the theme registry (brand-extract wave,
  * 裁定 3: "装载走 registerTheme"). Split from `brand-extract.ts` because this
  * module's job is untrusted-input validation + registration — a theme file
@@ -14,7 +14,7 @@
 import { z } from "zod"
 import { PptwiseError } from "../errors"
 import { BrandConfigSchema } from "@/ir"
-import type { BrandThemeFile } from "./brand-extract"
+import type { BrandThemeFile } from "./extract/brand-extract"
 import { getInstalledThemeIds, registerTheme } from "./definitions"
 import { CANONICAL_THEME_IDS } from "./index"
 
@@ -116,7 +116,7 @@ export function parseBrandThemeFile(raw: unknown, source: string): BrandThemeFil
     throw new PptwiseError(`invalid theme file ${source}:\n${detail}`)
   }
   // BrandThemeFileSchema is a structural mirror of BrandThemeFile (every
-  // field name/optionality matches `./brand-extract.ts`'s interface) — the
+  // field name/optionality matches `./extract/brand-extract.ts`'s interface) — the
   // cast documents that equivalence rather than papering over a real
   // mismatch; `brand-theme-file.test.ts` round-trips a real
   // `extractBrandTheme` output through this exact parse to keep the two

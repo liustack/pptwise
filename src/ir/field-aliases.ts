@@ -30,7 +30,7 @@
  *
  * **`COMPONENT_FIELD_ALIASES`/`COMPONENT_ITEM_FIELD_ALIASES` are pure
  * aggregators (src domain reorg wave 2, spec §4.3), same discipline as
- * `src/svg/layouts/registry.ts`'s T1d precedent.** Every row used to be a
+ * `src/layouts/registry.ts`'s T1d precedent.** Every row used to be a
  * hand-copied literal directly inside one of these two tables. Each
  * component's own alias rows now live beside its IR schema instead — the
  * `aliases: ComponentAliasSpec` export at the bottom of the matching

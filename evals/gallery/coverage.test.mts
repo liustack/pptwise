@@ -4,8 +4,8 @@
 // Cheap: walks `buildMatrix` page ids, no render.
 
 import { describe, expect, it } from "vitest"
-import { COMPONENT_FORMS } from "@/svg/components/form-assignments"
-import { LAYOUT_REGISTRY } from "@/svg/layouts/registry"
+import { COMPONENT_FORMS } from "@/components/form-assignments"
+import { LAYOUT_REGISTRY } from "@/layouts/registry"
 import { CANONICAL_THEME_IDS } from "@/themes"
 import { CHART_VARIANTS, FORM_VARIANTS } from "./corpus/components"
 import type { CorpusAssets } from "./corpus/decks"

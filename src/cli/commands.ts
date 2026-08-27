@@ -27,10 +27,10 @@ import { disassembleDeck, type PageContent } from "../spec/assemble"
 import { formatInvalidSpecError, specJsonSchema, resolveSpecThemeId, validateSpec } from "../spec"
 import { migrateDeckPlanToSpec } from "../spec/migrate"
 import { AUDIENCE_VALUES, PACING_BUDGETS, STRATEGY_DEFINITIONS, NARRATIVE_PRESETS, resolveNarrative, type NarrativeProfile } from "../narrative"
-import { auditDeck, type AuditChecks, type AuditFinding, type AuditReport } from "../svg/audit/deck-audit"
-import { buildAssetBrief, type AssetBrief, type AssetBriefItem } from "../svg/asset-brief"
+import { auditDeck, type AuditChecks, type AuditFinding, type AuditReport } from "../audit/deck-audit"
+import { buildAssetBrief, type AssetBrief, type AssetBriefItem } from "../render/asset-brief"
 import { assertContrastFloor, getInstalledThemeIds } from "../themes/definitions"
-import { extractBrandTheme, slugify } from "../themes/brand-extract"
+import { extractBrandTheme, slugify } from "../themes/extract/brand-extract"
 import { parseBrandThemeFile, registerBrandThemeFile } from "../themes/brand-theme-file"
 import { CANONICAL_THEME_IDS } from "../themes"
 import { CONFIG_FILENAME, findConfig, findUserConfig } from "./config"
@@ -570,7 +570,7 @@ export async function runValidate(
  * echoing `formatIssues`' own `"page N (id) — path: message"` convention
  * (`../api.ts`) with a bracketed `[code]` standing in for `path` — an
  * `AuditFinding` has no `path` (it is not a schema-location error, see that
- * interface's own doc comment in `../svg/audit/deck-audit.ts`), and `code`
+ * interface's own doc comment in `../audit/deck-audit.ts`), and `code`
  * is the closest equivalent "what kind of problem" tag. The bracket keeps an
  * audit-finding line visually distinct from a validate-error line at a
  * glance, per the plan's own worked example.
@@ -584,7 +584,7 @@ function formatAuditFinding(f: AuditFinding): string {
  * Human-readable `pptwise audit` report (W6 task 2, spec §7 workflow ④):
  * every finding as its own {@link formatAuditFinding} line — already
  * naturally grouped by page, since `auditDeck` pushes findings in slide
- * order (`../svg/audit/deck-audit.ts`) — followed by a trailing summary line
+ * order (`../audit/deck-audit.ts`) — followed by a trailing summary line
  * in the plan's own literal wording ("audited N pages, M skipped, K
  * findings") so an agent can read just the last line to decide whether to
  * keep iterating, instead of counting findings itself. {@link placeholderNote}
@@ -652,7 +652,7 @@ export interface AuditCliResult {
  * `target` through the exact same `loadDeckTarget` path `runValidate`/
  * `runRender`/`runPreview` already use (IR file / deck project directory /
  * bare name under `~/.pptwise/decks`), validate first, then hand the
- * validated IR to `auditDeck` (`../svg/audit/deck-audit.ts`, pure, no I/O).
+ * validated IR to `auditDeck` (`../audit/deck-audit.ts`, pure, no I/O).
  *
  * An invalid deck fails exactly like `pptwise validate` — same message
  * shape, same `PptwiseError` → CLI exit-1 path — and never reaches
@@ -757,7 +757,7 @@ export interface AssetBriefOptions {
  * `target` through the exact same `loadDeckTarget` path `audit`/`validate`/
  * `render`/`preview` already use, validate first (same error shape/exit-1
  * path as every other command in this file), then hand the validated IR to
- * `buildAssetBrief` (`../svg/asset-brief.ts`, pure, no I/O beyond the render
+ * `buildAssetBrief` (`../render/asset-brief.ts`, pure, no I/O beyond the render
  * pass it runs internally).
  *
  * No exit-1 gating on `missing`/`rendered` the way `audit` gates on
@@ -853,7 +853,7 @@ function defaultThemeIdFor(output: string): string {
  * (brand-extract wave, roadmap §2.0.1): extract brand colors/fonts from a
  * user's own `.thmx`/`.potx`/`.pptx` **locally** — the file's bytes never
  * leave the machine; there is no network call anywhere in this path — into a
- * pptwise theme file (`extractBrandTheme`, `../themes/brand-extract.ts`).
+ * pptwise theme file (`extractBrandTheme`, `../themes/extract/brand-extract.ts`).
  *
  * Two fail-fast checks beyond extraction itself, both mirroring what the
  * load path would reject later, surfaced here where the fix is cheapest:
@@ -988,7 +988,7 @@ export interface PreviewOptions {
    *
    *  Also gates the audit overlay (notes+preview wave, task 2): when set
    *  and the deck has no placeholder page, `runPreview` runs `auditDeck`
-   *  (`../svg/audit/deck-audit.ts`) and embeds its findings and `checks`
+   *  (`../audit/deck-audit.ts`) and embeds its findings and `checks`
    *  into `preview.html` (per-page badges + a findings panel + a one-line
    *  checks summary, `buildPreviewHtml`). A deck with any placeholder page
    *  skips the audit entirely instead of running it partially — see
@@ -1054,7 +1054,7 @@ async function renderDeckSlides(
  * the whole overlay, one-line notice instead" — implemented here as
  * `hasPlaceholder`, and threaded into `buildPreviewHtml` as either
  * `findings` + `checks` (clean run) or `auditNote` (skipped), never both.
- * `checks` (`AuditReport.checks`, `../svg/audit/deck-audit.ts`) rides along
+ * `checks` (`AuditReport.checks`, `../audit/deck-audit.ts`) rides along
  * with `findings` on every clean run, not just a partial/findings-only one —
  * `buildPreviewHtml` renders it as its own one-line summary regardless of
  * `findings.length`, so a deck that audited clean because nothing was wrong

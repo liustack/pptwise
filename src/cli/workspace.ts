@@ -42,7 +42,7 @@ import { existsSync } from "node:fs"
 import { appendFile, mkdir, readFile, readdir, stat, unlink } from "node:fs/promises"
 import { basename, dirname, extname, join, resolve } from "node:path"
 import { PptwiseError } from "../errors"
-import { slugify } from "../themes/brand-extract"
+import { slugify } from "../themes/extract/brand-extract"
 import { runChild } from "./child"
 import { ASSETS_DIRNAME, assertSafeFileSegment } from "./deck-dir"
 

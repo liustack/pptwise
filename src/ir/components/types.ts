@@ -44,7 +44,7 @@ export interface ComponentAliasSpec {
 }
 
 /**
- * The render-time behavior axes `src/svg/component-traits.ts` classifies
+ * The render-time behavior axes `src/render/component-traits.ts` classifies
  * as independent `ReadonlySet<ComponentType>` collections
  * (`STRETCHABLE_TYPES`/`SELF_VISUAL_TYPES`/`SCALABLE_TYPES`/
  * `PASSTHROUGH_SHELL_TYPES`/`FULL_BODY_TYPES`/`COLUMN_SPANNING_TYPES`),
@@ -60,7 +60,7 @@ export interface ComponentAliasSpec {
  * fails a test, per spec §4.1's own closing sentence).
  *
  * Field-for-field identical to the axes documented in
- * `src/svg/component-traits.ts`'s own module doc comment — this interface
+ * `src/render/component-traits.ts`'s own module doc comment — this interface
  * doesn't redefine their semantics, only gives the per-component boolean
  * declaration a name once domain files start producing them (W2b/W2c). Kept
  * here (ir side) rather than in `component-traits.ts` (svg side) because the
@@ -90,7 +90,7 @@ export interface ComponentTraits {
  * The full per-component domain-file contract: `schema` (feeds
  * `ComponentSchema`'s `discriminatedUnion` in `src/ir/index.ts`), `aliases`
  * (feeds `src/ir/field-aliases.ts`'s two tables), `traits` (feeds
- * `src/svg/component-traits.ts`'s sets). See this module's own top doc
+ * `src/render/component-traits.ts`'s sets). See this module's own top doc
  * comment for why this type documents the convention rather than being
  * `satisfies`-checked against each domain file directly.
  */

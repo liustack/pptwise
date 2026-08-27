@@ -31,7 +31,7 @@ import { migrateIrV3ToV4 } from "./migrate"
 import { V3_EQUIVALENCE_DECKS } from "./__fixtures__/v3-equivalence-decks"
 import { renderSlideSvg } from "@/api"
 import { generatePptxBlob } from "@/pptx/generate"
-import { auditDeck } from "@/svg/audit/deck-audit"
+import { auditDeck } from "@/audit/deck-audit"
 import { installNodePlatform } from "@/platform/node"
 
 const GOLDEN_DIR = new URL("./__fixtures__/equivalence-golden/", import.meta.url)
@@ -371,7 +371,7 @@ describe("v3 → v4 migration equivalence (task 1 hard gate, spec §10/§12)", (
       //
       // Re-recaptured again (theme-redesign wave, ink v3 —
       // `.issues/2026-08-18-theme-redesign/ink/decisions.md`): registering a
-      // 9th cover layout (`colophon`, `@/svg/layouts/cover-colophon.tsx`)
+      // 9th cover layout (`colophon`, `@/layouts/cover-colophon.tsx`)
       // grows the cover pool's weighted-sampling denominator on every theme
       // that curates the full set — which is all 17 — so a fixed seed's
       // `target = hash % total` lands on a different candidate. Exactly the
@@ -405,7 +405,7 @@ describe("v3 → v4 migration equivalence (task 1 hard gate, spec §10/§12)", (
       // `heritage-motif` was redrawn from three seed variants (corner
       // diamond studs / a centered emblem / page-edge vertical rules) into
       // one fixed bookplate border. `journal` carries `heritage-motif` in
-      // its own rotation set (`@/svg/motif-selection`'s `MOTIF_CANDIDATES`
+      // its own rotation set (`@/render/motif-selection`'s `MOTIF_CANDIDATES`
       // — `["corner-ornament-motif", "heritage-motif", "rail-motif"]`), so
       // the two `journal` fixtures here draw the new mark on whichever
       // pages their seed picks it for. A real, intended decor change on a
@@ -435,7 +435,7 @@ describe("v3 → v4 migration equivalence (task 1 hard gate, spec §10/§12)", (
       // squares) into one fixed mark — a top ruler with ticks, a stepped
       // run of three squares top-right, and a single accent square at the
       // lower left. `consulting` carries `enterprise-motif` in its own
-      // rotation set (`@/svg/motif-selection`'s `MOTIF_CANDIDATES` —
+      // rotation set (`@/render/motif-selection`'s `MOTIF_CANDIDATES` —
       // `["banner-motif", "rail-motif", "enterprise-motif"]`), so the
       // `basic` fixture draws the new mark on whichever pages its seed
       // picks it for. Same posture as the warm group's `journal` recapture
@@ -506,7 +506,7 @@ describe("v3 → v4 migration equivalence (task 1 hard gate, spec §10/§12)", (
       // contrast finding).
       //
       // Only `basic` recaptured (visual review round 4, C — the chapter
-      // banner's accent rule, `../svg/layouts/chapter-banner-chapter.tsx`):
+      // banner's accent rule, `../layouts/chapter-banner-chapter.tsx`):
       // that rule was a fixed 160px dash sitting under the block, near
       // enough the text's width to read as an underline and too far below
       // it to be one. It is now an underline in fact — as wide as the line
@@ -578,7 +578,7 @@ describe("v3 → v4 migration equivalence (task 1 hard gate, spec §10/§12)", (
       // wave — 用户裁定「页面的下方可以空，但不要上方空」). A slide whose
       // content area holds exactly one component used to have that
       // component pushed 38% of the leftover height down the rect
-      // (`../svg/svg-content.tsx`, a 2026-07-10 answer to the same
+      // (`../render/svg-content.tsx`, a 2026-07-10 answer to the same
       // complaint at 50%). On the review's own pages that put 105-122px of
       // nothing between the heading band and the only thing on the slide.
       // The block now starts at the content rect's top and the leftover

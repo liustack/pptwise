@@ -3,7 +3,7 @@
  * browser-distribution wave, task 1) so the light `./validate` SDK entry
  * (`src/validate.ts`) can import this file directly and, by simple
  * file-level reachability, never touch `./pptx/generate` or
- * `./svg/render-slide` (react-dom/server, jszip, pptxgenjs) at all —
+ * `./render/render-slide` (react-dom/server, jszip, pptxgenjs) at all —
  * a physical module boundary, not a bet on a bundler's cross-file
  * tree-shaking of an unused re-export (tried first; esbuild's CJS-interop
  * wrapper for jszip/react-dom's `require()`-based deps kept pulling their
@@ -23,10 +23,10 @@ import { decodeDataUriBytes, dataUriMime, FORMAT_BY_MIME, MIME_BY_SNIFFED_FORMAT
 import { normalizeComponentAliases, normalizeDeckRootAliases } from "./ir/field-aliases"
 import { isSlideLevelPath, renameHintsFor, SLIDE_LEVEL_UNKNOWN_KEY_HINT } from "./ir/rename-hints"
 import { normalizeNarrativeShape, resolveNarrative, type NarrativeProfile } from "./narrative"
-import { CAPACITY } from "./svg/audit/capacity"
-import { FULL_BODY_TYPES } from "./svg/component-traits"
-import { checkIrQuality, type QualityIssue } from "./svg/ir-quality"
-import { getLayout, layoutsForSlideType } from "./svg/layouts/registry"
+import { CAPACITY } from "./audit/capacity"
+import { FULL_BODY_TYPES } from "./render/component-traits"
+import { checkIrQuality, type QualityIssue } from "./render/ir-quality"
+import { getLayout, layoutsForSlideType } from "./layouts/registry"
 import { CANONICAL_THEME_IDS, THEME_LABELS, THEME_STYLES } from "./themes"
 import { getInstalledThemeIds, getThemeDefinition, SPARSE_LAYOUT_IDS, themeOffersSparse } from "./themes/definitions"
 

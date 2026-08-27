@@ -26,7 +26,7 @@
  * breaking the zero-network-request guarantee for that one slide. Barring
  * that case, the only `http(s)` substrings that can appear anywhere in the
  * output are SVG namespace URIs (`xmlns="http://www.w3.org/2000/svg"`,
- * emitted by `../svg/serialize.ts` on every slide) — XML namespace
+ * emitted by `../render/serialize.ts` on every slide) — XML namespace
  * identifiers, not network requests.
  *
  * Embed strategy (one `<svg>` per slide, not two): the thumbnail filmstrip
@@ -46,9 +46,9 @@
  * of the slide's markup ever exists.
  *
  * Audit overlay + annotations (notes+preview wave, task 2): `buildPreviewHtml`
- * is still a pure renderer — `findings` (`../svg/audit/deck-audit.ts`'s
+ * is still a pure renderer — `findings` (`../audit/deck-audit.ts`'s
  * `AuditFinding`, reshaped locally as {@link PreviewHtmlFinding} so this file
- * still has no `../ir`/`../svg` import) and the placeholder-skip
+ * still has no `../ir`/`../render` import) and the placeholder-skip
  * {@link PreviewHtmlInput.auditNote} both arrive as plain input, the same way
  * `slides` already does; the caller (`runPreview`, `./commands.ts`) decides
  * *whether* to run `auditDeck` at all (skipped whenever the deck has any
@@ -104,9 +104,9 @@ export interface PreviewHtmlSlideInput {
 }
 
 /**
- * One `auditDeck` finding (`AuditFinding`, `../svg/audit/deck-audit.ts`),
+ * One `auditDeck` finding (`AuditFinding`, `../audit/deck-audit.ts`),
  * reshaped to this module's own minimal fields only — dropping `detail`
- * (never shown) keeps this file dependency-free of `../svg` the same way it
+ * (never shown) keeps this file dependency-free of `../render` the same way it
  * is already dependency-free of `../ir` (see the module doc comment). `page`
  * is 1-based, matching `PreviewHtmlSlideInput.index + 1` for the slide it
  * belongs to (both ultimately trace back to the same `ir.slides` array
@@ -122,9 +122,9 @@ export interface PreviewHtmlFinding {
 }
 
 /**
- * `AuditChecks` (`../svg/audit/deck-audit.ts`), reshaped locally the same
+ * `AuditChecks` (`../audit/deck-audit.ts`), reshaped locally the same
  * way `findings` is reshaped to {@link PreviewHtmlFinding} — keeps this file
- * free of a `../svg` import (see the module doc comment). Literal state
+ * free of a `../render` import (see the module doc comment). Literal state
  * words only, mirroring the source type exactly: this wave's soul
  * constraint is "not checked must never read as passed", so `pixels` being
  * `"not-requested"` has to survive unchanged all the way into the rendered
@@ -141,7 +141,7 @@ export interface PreviewHtmlInput {
    *  User content — HTML-escaped wherever it is shown. */
   title: string
   slides: PreviewHtmlSlideInput[]
-  /** `auditDeck(ir).findings` (`../svg/audit/deck-audit.ts`), reshaped to
+  /** `auditDeck(ir).findings` (`../audit/deck-audit.ts`), reshaped to
    *  {@link PreviewHtmlFinding} — omit or pass `[]` when the caller skipped
    *  the audit (no findings to show at all, e.g. the deck has a placeholder
    *  page, see {@link auditNote}) or the deck audited clean. Drives the
@@ -158,7 +158,7 @@ export interface PreviewHtmlInput {
    *  deck content — HTML-escaped like everything else in this file
    *  regardless. */
   auditNote?: string
-  /** `auditDeck(...).checks` (`../svg/audit/deck-audit.ts`), reshaped to
+  /** `auditDeck(...).checks` (`../audit/deck-audit.ts`), reshaped to
    *  {@link PreviewHtmlChecks} — omit whenever the caller skipped the audit
    *  (the same condition {@link auditNote}/{@link findings} already use: a
    *  deck with a placeholder page never calls `auditDeck` at all, so there

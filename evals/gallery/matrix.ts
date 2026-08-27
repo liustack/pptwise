@@ -10,8 +10,8 @@
  */
 
 import { COMPONENT_TYPES, type PptxIR } from "@/ir"
-import { HEADING_TREATMENTS } from "@/svg/heading-treatments/assignments"
-import { LAYOUT_REGISTRY } from "@/svg/layouts/registry"
+import { HEADING_TREATMENTS } from "@/render/heading-treatments/assignments"
+import { LAYOUT_REGISTRY } from "@/layouts/registry"
 import { SPARSE_LAYOUT_IDS, themeOffersSparse } from "@/themes/definitions"
 import { CHART_VARIANTS, COMPONENT_BUILDERS, DENSITY_BUILDERS, FORM_VARIANTS } from "./corpus/components"
 import {

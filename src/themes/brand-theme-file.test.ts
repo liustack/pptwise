@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest"
 import { __resetRegisteredThemes, getInstalledThemeIds, getThemeDefinition } from "./definitions"
-import { buildThmxBytes, PATHOLOGICAL_THMX_COLORS } from "./__fixtures__/thmx"
-import { extractBrandTheme, type BrandThemeFile } from "./brand-extract"
+import { buildThmxBytes, PATHOLOGICAL_THMX_COLORS } from "./extract/__fixtures__/thmx"
+import { extractBrandTheme, type BrandThemeFile } from "./extract/brand-extract"
 import { parseBrandThemeFile, registerBrandThemeFile } from "./brand-theme-file"
 
 afterEach(() => {

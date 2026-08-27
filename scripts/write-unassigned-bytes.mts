@@ -1,7 +1,7 @@
 /**
  * Refresh the two unassigned-theme SVG byte nails:
- *   src/svg/__fixtures__/emphasis-unassigned-bytes.json
- *   src/svg/heading-treatments/__fixtures__/unassigned-bytes.json
+ *   src/render/__fixtures__/emphasis-unassigned-bytes.json
+ *   src/render/heading-treatments/__fixtures__/unassigned-bytes.json
  *
  *   pnpm fixtures:unassigned-bytes
  *
@@ -16,13 +16,13 @@ import { installNodePlatform } from "../src/platform/node"
 import {
   computeEmphasisUnassignedPages,
   EMPHASIS_UNASSIGNED_BYTES_URL,
-} from "../src/svg/emphasis-unassigned-bytes"
+} from "../src/render/emphasis-unassigned-bytes"
 import {
   computeHeadingUnassignedPages,
   HEADING_UNASSIGNED_ALGORITHM,
   HEADING_UNASSIGNED_BYTES_URL,
   HEADING_UNASSIGNED_CAPTURED_AT,
-} from "../src/svg/heading-treatments/unassigned-bytes"
+} from "../src/render/heading-treatments/unassigned-bytes"
 
 installNodePlatform()
 

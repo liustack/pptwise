@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { contrastRatio } from "../svg/ink"
+import { contrastRatio } from "../render/ink"
 import { resolveStyle } from "./index"
 
 const DANGER_TEXT_HEADROOM = 4.8

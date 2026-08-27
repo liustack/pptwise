@@ -50,7 +50,7 @@ import { beforeAll, describe, expect, it } from "vitest"
 import type { PptxIR } from "@/ir"
 import { generatePptx, renderSlideSvg, validateIr } from "@/api"
 import { installNodePlatform } from "../platform/node"
-import { CAPACITY } from "../svg/audit/capacity"
+import { CAPACITY } from "../audit/capacity"
 
 beforeAll(() => {
   installNodePlatform()

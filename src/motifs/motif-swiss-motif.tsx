@@ -1,0 +1,82 @@
+import { CANVAS_W_PX } from "../constants"
+import type { DecorProps } from "./types"
+import { DecorPiece } from "./decor-piece"
+import { leafRecessOpacity } from "./decor-budget"
+
+/**
+ * swiss-motif —— 「冷白制度」页缘（2026-08-21 wave7，设计源
+ * `theme-wave7/Swiss.dc.html` 的封面样例 + 任务书的 motif 条款）。
+ *
+ * light 档，位置写死。第八波批 4：
+ *   - **顶边 12px 红条**：y0–12 通栏，走 accent（瑞士红）。四页都画，几何
+ *     不动。五区外（标题区上沿是 y48）。这是「红成边」的那一条边，不是
+ *     横幅，上面不承字。结构件：版式/页面顶部粗横线是主题也是主体，进前景，
+ *     原色满画，不减淡、不受强度上限。
+ *   - **右缘 x1252 三格灰刻度短划**：y64 / 96 / 128（32px 模数），各 16px
+ *     水平短划指向页缘，走 muted。**只留封面**（封面锁板）。章节 / 内容 /
+ *     ending 不画刻度：板上这三页没有，且 tick 是孤立小件语汇。普通中景装饰，
+ *     受强度上限。
+ *
+ * **板上那根 x852 整高裸格线不进本文件。** 它纵穿正文区 (96,200,1040×420)，
+ * 违反 `docs/designing-themes.md` 第 5 条五个保护区。封面样例用它交代网格，
+ * 引擎里网格感改由右缘三格短划承担，格线本身不做。
+ *
+ * 板上左下 150×14 红签名块跟随标题位置，不进 motif（恒位红线：内容位置
+ * 派生的装饰不画）。
+ *
+ * 安全区：标题区 (96,48,1040×122)、正文区 (96,200,1040×420)、页脚 meta 带
+ * (48,664,1184×44)、右下 logo 盒 (1120,630,96×40)、第五带 y620–664。
+ *   - 红条 y0–12，整条在标题区上沿之上，也在第五带之上。
+ *   - 三格短划 x1252–1268、y64–128，横向在标题/正文右沿与右上 logo 带之外。
+ *     纵向不进第五带、不进页脚、不进右下 logo 盒。
+ *
+ * 第八波批 4：chapter 默认底改为冷白纸（与 bg 同值）。红条四页都在。
+ * 刻度只在封面。红条压冷白纸 4.62:1，过 motif 可见度地板 1.02。
+ *
+ * 位置全部写死，不读内容、不随 seed 变。
+ *
+ * 纪律：零 theme id、零 hex，颜色只来自 ctx（accent = 瑞士红、muted = 灰刻度）。
+ * 本 motif 是 swiss 独占的单成员候选集（`motif-selection.ts` 的
+ * `MOTIF_CANDIDATES`），没有别的主题借用它。短划用真正的 `<line>`，不用
+ * `<path>`（svg2pptx 会把纯水平 path 转成 custGeom，包围盒零高度会被
+ * package-audit 拒绝，vermilion-motif 同款）。
+ */
+
+const BAR_Y = 0
+const BAR_H = 12
+
+const TICK_X = 1252
+const TICK_LEN = 16
+const TICK_YS = [64, 96, 128] as const
+const TICK_STROKE = 1.5
+
+export function SwissMotif({ slide, ctx }: DecorProps) {
+  const red = ctx.colors.accent
+  const tick = ctx.colors.muted
+  const bg = ctx.defaultBg ?? ctx.colors.bg
+  const showTicks = slide.type === "cover"
+
+  return (
+    <>
+      <DecorPiece id="red-bar" role="structure">
+        <rect x={0} y={BAR_Y} width={CANVAS_W_PX} height={BAR_H} fill={red} />
+      </DecorPiece>
+      {showTicks && (
+        <DecorPiece id="ticks">
+          {TICK_YS.map((y) => (
+            <line
+              key={y}
+              x1={TICK_X}
+              y1={y}
+              x2={TICK_X + TICK_LEN}
+              y2={y}
+              stroke={tick}
+              strokeWidth={TICK_STROKE}
+              opacity={leafRecessOpacity(slide.type, tick, bg)}
+            />
+          ))}
+        </DecorPiece>
+      )}
+    </>
+  )
+}

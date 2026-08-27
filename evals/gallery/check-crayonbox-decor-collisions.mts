@@ -20,7 +20,7 @@ import {
   transformBox,
   type DepthBox,
   type SvgMatrix,
-} from "@/svg/depth-contract/geometry"
+} from "@/render/depth-contract/geometry"
 import type { Manifest } from "./render"
 
 const PROTECTED_ZONES = {

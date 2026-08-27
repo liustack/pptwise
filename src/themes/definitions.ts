@@ -1,9 +1,9 @@
 import type { BackgroundSpec, BrandConfig, Slide } from "@/ir"
 import { PptwiseError } from "../errors"
-import type { MotifId } from "../svg/motifs/types"
-import { hasExactWidthTable, resolveFontFace } from "../svg/fonts"
-import { contrastRatio } from "../svg/ink"
-import { excludePinOnly, getLayout, layoutsForSlideType } from "../svg/layouts/registry"
+import type { MotifId } from "../motifs/types"
+import { hasExactWidthTable, resolveFontFace } from "../render/fonts"
+import { contrastRatio } from "../render/ink"
+import { excludePinOnly, getLayout, layoutsForSlideType } from "../layouts/registry"
 import { REGISTERED_THEMES } from "./registered-themes"
 import type { StyleTokens } from "./tokens"
 import { CANONICAL_THEME_IDS, THEME_STYLES, resolveThemeId, type CanonicalThemeId } from "./index"
@@ -31,7 +31,7 @@ export interface ThemeDefinition {
    * 全集。design decision 7/8 曾经的六处对比度策展排除（luxe/campaign/
    * classroom 的 content 排除 banner-heading、tech 的 cover/content、
    * consulting 的 chapter）已在 W4 fix round 随对比度自适应 ink helper
-   * （`src/svg/ink.ts`）的根因修复全部撤销。fix round 自身新发现的两处
+   * （`src/render/ink.ts`）的根因修复全部撤销。fix round 自身新发现的两处
    * （classroom/heritage 的 chapter 排除 fashion-chapter）也已在
    * post-v0.3 W8 fix round 随 `readableOn` 两墨实测对比度取优的根因修复一并
    * 撤销（backlog item 2）。2026-08-25 新增的 consulting 私有
@@ -48,7 +48,7 @@ export interface ThemeDefinition {
    * A theme's own structural personality (theme-structure wave, task T1 —
    * `.issues/2026-07-26-theme-structure/plan.md`'s 控制器设计裁定 2): per
    * page type, the layout ids this theme's author wants `resolveLayoutId`
-   * (`src/svg/layout-selection.ts`) to lean toward. Shape mirrors
+   * (`src/render/layout-selection.ts`) to lean toward. Shape mirrors
    * `StrategyDefinition.layoutTendencies` (`@/narrative`) — the same "named
    * ids get a soft weight bump, everyone else stays at the floor" contract —
    * but declared **per slide type** rather than content-only: a strategy's
@@ -214,7 +214,7 @@ const FRAMED_CONTENT_LAYOUTS: readonly string[] = [
  * blind gap (~0.19-0.4), where white ink measured under 3:1 (
  * classroom 2.36, heritage 2.91) even though dark ink was always the better
  * option there. `readableOn` now compares both inks' actual contrast and
- * picks the higher one (`src/svg/ink.ts`) — re-measured post-fix (`pnpm exec
+ * picks the higher one (`src/render/ink.ts`) — re-measured post-fix (`pnpm exec
  * tsx` against a real render of both, 2026-07-19): dark ink measures
  * 8.19:1 (classroom), 6.65:1 (heritage) against the same
  * accent colors, and `auditDeck` reports zero low-contrast findings for the
@@ -268,7 +268,7 @@ const BRANDS: Partial<Record<CanonicalThemeId, BrandConfig>> = {
  * banner-heading）与本任务实现期新增的三处阳性裁定（tech 的 cover/content、
  * consulting 的 chapter）——共六处——全部源于同一枚缺陷模式：layout 画在
  * 一块自己不控制（或自画但未检查明度）的背景上、baked 死一个文字色。fix
- * round 引入的对比度自适应 ink helper（`src/svg/ink.ts` 的
+ * round 引入的对比度自适应 ink helper（`src/render/ink.ts` 的
  * `readableOn`/`accessibleInk`）从根上修复了这枚缺陷，六处例外逐一用
  * `auditDeck` 复核（对应 layout 现在自适应取色）后确认全部转为可读，予以
  * 撤销——`LAYOUTS` 现在是十三主题的纯 {@link FULL_LAYOUTS} 全集（A 方案纯
@@ -638,14 +638,14 @@ const LAYOUTS: Record<CanonicalThemeId, Pick<ThemeDefinition, "layouts" | "motif
   // ink（水墨国风，2026-07-10 真创意子类②，用户点名例子）：宣纸/墨/朱砂/
   // 楷体靠 tokens + 专属 ink-motif。**v3 重设计（2026-08-18 第一期）**把
   // motif 换成了右缘落款列 + 一角残山（旧的版框线/大远山/旧印位全部删，见
-  // `../svg/motifs/motif-ink-motif.tsx` 的文件头），页脚 branding 的两个抑制
+  // `../motifs/motif-ink-motif.tsx` 的文件头），页脚 branding 的两个抑制
   // 开关见上方 `BRANDS.ink`。
   //
   // layoutTendencies（本期新声明——ink 此前是 `structure-map.md` 点名的七个
   // 「全盲」主题之一：不声明任何结构倾向，同 IR 同 seed 与其它全盲主题渲染
   // 出逐字节相同的版式序列）。定稿分配表给 ink 的四轴是
   // 左轴 / side-rail / light / airy，cover-picks 是 colophon + fashion-masthead：
-  //   - cover `colophon`：本期新造的构造（`../svg/layouts/cover-colophon.tsx`），
+  //   - cover `colophon`：本期新造的构造（`../layouts/cover-colophon.tsx`），
   //     左轴大标题 + 引首块，右边界收在 x1180——它和落款列（x>=1220）是配套
   //     设计的一对，side-rail 这一轴的完整表达只在这个组合里成立。
   //   - cover `fashion-masthead`：第二选择，满版焦墨底 + 超大报头。与 ink 的
@@ -1251,7 +1251,7 @@ const CONTRAST_FLOOR = 3.0
  * excluded, same as `full-matrix-contrast.test.ts`'s `colors.muted contrast`
  * suite (see that block's own comment). Verified by reading, not assumed:
  * every one of the 8 chapter layouts (`chapter-*.tsx`) imports
- * `accessibleInk`/`readableOn` from `../svg/ink` and routes *both*
+ * `accessibleInk`/`readableOn` from `../render/ink` and routes *both*
  * `colors.text` and `colors.muted` through it before ever painting a fill —
  * none paints either token raw against `ctx.defaultBg`. This isn't a
  * per-theme coincidence this function would need to re-verify per
@@ -1304,7 +1304,7 @@ export function assertContrastFloor(id: string, style: StyleTokens): void {
  * `console.warn`s a single line when `stack` (a theme's `fonts.heading` or
  * `fonts.body`) resolves — via `resolveFontFace`, the exact same resolution
  * `full-slide-svg.tsx`'s render path uses — to a face with no exact
- * per-character width table (`hasExactWidthTable`, `../svg/fonts` ->
+ * per-character width table (`hasExactWidthTable`, `../render/fonts` ->
  * `svg-text-layout.ts`). Not a hard rejection: an unmeasured designer font
  * (Cambria, a theme's own custom stack, …) is a legitimate design choice,
  * not a defect — `measureTextUnits`'s class-average envelope still sizes it,

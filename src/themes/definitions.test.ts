@@ -14,14 +14,14 @@ import {
   type ThemeDefinition,
   type ThemeRegistration,
 } from "./definitions"
-import { FACES } from "../svg/layouts/sparse/registry"
-import { COVER_LAYOUTS } from "../svg/layouts/index-cover"
-import { CHAPTER_LAYOUTS } from "../svg/layouts/index-chapter"
-import { CONTENT_LAYOUTS } from "../svg/layouts/index-content"
-import { ENDING_LAYOUTS } from "../svg/layouts/index-ending"
-import { MOTIFS } from "../svg/motifs"
-import { LAYOUT_REGISTRY, layoutsForSlideType, excludePinOnly, type LayoutDefinition } from "../svg/layouts/registry"
-import { hasExactWidthTable, resolveFontFace } from "../svg/fonts"
+import { FACES } from "../layouts/sparse/registry"
+import { COVER_LAYOUTS } from "../layouts/index-cover"
+import { CHAPTER_LAYOUTS } from "../layouts/index-chapter"
+import { CONTENT_LAYOUTS } from "../layouts/index-content"
+import { ENDING_LAYOUTS } from "../layouts/index-ending"
+import { MOTIFS } from "../motifs"
+import { LAYOUT_REGISTRY, layoutsForSlideType, excludePinOnly, type LayoutDefinition } from "../layouts/registry"
+import { hasExactWidthTable, resolveFontFace } from "../render/fonts"
 
 // 四页型注册表按 id 分发用的宽字符串索引视图（PAGE_LAYOUT_REGISTRIES 在
 // full-slide-svg.tsx 用的同一模式）：THEME_DEFINITIONS.layouts 的 id 是通用
@@ -83,7 +83,7 @@ describe("THEME_DEFINITIONS", () => {
   // 裁定（luxe/campaign/classroom 的 content 排除 banner-heading）、design
   // decision 8 新增的三处阳性裁定（tech 的 cover/content、consulting 的
   // chapter）、以及 W4 fix round 全矩阵扫描新发现的两处（classroom/
-  // heritage 的 chapter 排除 fashion-chapter）——共八处——已随 `src/svg/ink.ts`
+  // heritage 的 chapter 排除 fashion-chapter）——共八处——已随 `src/render/ink.ts`
   // 的 readableOn 两轮根因修复（W4 引入自适应 ink helper；post-v0.3 W8 把
   // 固定 0.4 明度阈值换成两墨实测对比度取优）全部撤销。四个 FULL_* 常量是
   // 手工钉的字面数组（人审基线，不经 layoutsForSlideType 派生）——未来
@@ -678,7 +678,7 @@ describe("registerTheme", () => {
 // structural personality (`ThemeDefinition.layoutTendencies`,
 // `Partial<Record<Slide["type"], readonly string[]>>`) must only ever name
 // ids already inside that same slide type's own curated `layouts` pool — an
-// id outside it can never be scored by `weightOf` (`../svg/layout-selection.ts`
+// id outside it can never be scored by `weightOf` (`../render/layout-selection.ts`
 // builds its candidate pool from `layouts[slideType]` before any tendency is
 // consulted), so declaring one is a theme-author mistake, not a legal
 // no-op. ──────────────────────────────────────────────────────────────────

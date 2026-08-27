@@ -25,7 +25,7 @@
 // vocabulary-v4 rename (task 1): not itself one of spec §8.1's named public
 // symbols, but this leaf module's entire content is the narrative axis value
 // tuples, so its filename follows the same rename for internal consistency.
-// Only two importers (`src/narrative/index.ts`, `src/svg/layouts/registry.ts`
+// Only two importers (`src/narrative/index.ts`, `src/layouts/registry.ts`
 // — both updated in the same commit), no external/public path reference.
 export const STRATEGY_VALUES = ["pyramid", "storytelling", "instructional", "showcase", "briefing"] as const
 export const PACING_VALUES = ["dense", "balanced", "spacious"] as const

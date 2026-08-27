@@ -49,7 +49,7 @@ export interface PptwisePlatform {
    * Rasterize SVG markup to a fixed-size pixel buffer (audit-v2 phase B,
    * spec §4.3/§11.7) — the one primitive the optional pixel-contrast audit
    * needs and the *only* one Sharp/canvas-shaped work is allowed to hide
-   * behind (`src/svg/audit/pixel-audit.ts` never imports a rasterizer
+   * behind (`src/audit/pixel-audit.ts` never imports a rasterizer
    * itself). `installNodePlatform()` wires this to Sharp; a real browser
    * gets its own default (`./browser.ts`'s `rasterizeSvgInBrowser`) applied
    * at the call site the same way `domParser`'s `?? globalThis.DOMParser`

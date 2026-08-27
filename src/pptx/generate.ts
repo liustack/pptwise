@@ -18,7 +18,7 @@ import {
   applyGradientFills,
   type GradientFillPatch,
 } from "./svg2pptx/render"
-import { slideToRender } from "@/svg/render-slide"
+import { slideToRender } from "@/render/render-slide"
 import type { ImageOp } from "./svg2pptx/image"
 import { dedupeMediaInZip } from "./pptx-dedupe-media"
 import { applySlideTransitions, applyElementAnimations } from "./pptx-animations"

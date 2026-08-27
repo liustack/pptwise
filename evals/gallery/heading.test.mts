@@ -5,7 +5,7 @@
 // tryContentHeadingTreatment, always after a chapter slide.
 
 import { describe, expect, it } from "vitest"
-import { HEADING_TREATMENTS } from "@/svg/heading-treatments/assignments"
+import { HEADING_TREATMENTS } from "@/render/heading-treatments/assignments"
 import { installNodePlatform } from "@/platform/node"
 import { CANONICAL_THEME_IDS } from "@/themes"
 import type { CorpusAssets } from "./corpus/decks"

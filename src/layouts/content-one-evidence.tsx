@@ -1,0 +1,135 @@
+import type { SvgTemplateProps } from "./types"
+import type { LayoutDefinition } from "./registry"
+import type { ContentRect } from "../render/layout"
+import { pickEvidence } from "../render/component-traits"
+import { fitHeadingLines } from "../render/heading-fit"
+import { fitSvgLine } from "../lib/svg-text-layout"
+import { accessibleInk } from "../render/ink"
+import { renderFittedEvidence } from "./fitted-evidence"
+import { sparseFace } from "./sparse/registry"
+
+/**
+ * 未注册的 (themeId, layoutId) 与自定义主题仍走此脸。
+ *
+ * one-evidence 通用脸：整句断言 + 独占一张图或一个表。`pinOnly` +
+ * `branding: "none"`。容量 1，超过走既有 `pin_only_over_capacity`。品牌页脚 /
+ * logo 不画。motif 仍画。
+ * 证据挑选复用 `pickEvidence`（和 `assertion_evidence` 同一份优先级），没有
+ * 命中证据类型时退回唯一组件。等比缩小以适配剩余框，不放大。
+ *
+ * 纪律：本文件禁 theme id、禁颜色 hex 字面量，颜色 / 字体全部来自 ctx。
+ */
+
+const HEADING_X = 80
+const HEADING_Y = 72
+const HEADING_MAX_W = 1120
+const EVIDENCE_X = 160
+const EVIDENCE_TOP = 180
+const EVIDENCE_W = 960
+const EVIDENCE_BOTTOM = 640
+const FOOTNOTE_Y = 656
+const FOOTNOTE_SIZE = 12
+
+export function OneEvidenceContent(props: SvgTemplateProps) {
+  const Face = sparseFace("one-evidence", props.ir.theme.id)
+  if (Face) return Face(props)
+  return GenericOneEvidenceContent(props)
+}
+
+function GenericOneEvidenceContent({ slide, ctx }: SvgTemplateProps) {
+  const { colors, fonts } = ctx
+  const defaultBg = ctx.defaultBg ?? colors.bg
+
+  const heading = fitHeadingLines(slide.heading, {
+    ...layoutDef.headingFit,
+    fontFamily: fonts.heading,
+    typeScale: ctx.shape?.typeScale,
+  })
+
+  const evidence = pickEvidence(slide.components) ?? slide.components[0]
+  const headingBottom =
+    HEADING_Y + Math.max(0, heading.lines.length - 1) * heading.lineHeight + heading.fontSize * 0.25
+  const evidenceY = Math.max(EVIDENCE_TOP, Math.ceil(headingBottom + 16))
+  const evidenceRect: ContentRect = {
+    x: EVIDENCE_X,
+    y: evidenceY,
+    w: EVIDENCE_W,
+    h: EVIDENCE_BOTTOM - evidenceY,
+  }
+
+  const footnoteSource = slide.footnote?.trim()
+  const footnote = footnoteSource
+    ? fitSvgLine(footnoteSource, {
+        maxWidth: HEADING_MAX_W,
+        fontSize: FOOTNOTE_SIZE,
+        minFontSize: 16,
+      })
+    : null
+
+  return (
+    <>
+      <g
+        data-text-rect={`${HEADING_X},${HEADING_Y - heading.fontSize},${HEADING_MAX_W},${headingBottom - (HEADING_Y - heading.fontSize)}`}
+      >
+        {heading.lines.map((line, i) => (
+          <text
+            key={i}
+            data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
+            x={HEADING_X}
+            y={HEADING_Y + i * heading.lineHeight}
+            fontFamily={fonts.heading}
+            fontSize={heading.fontSize}
+            fontWeight="600"
+            fill={accessibleInk(colors.text, defaultBg, heading.fontSize)}
+            dominantBaseline="alphabetic"
+          >
+            {line}
+          </text>
+        ))}
+      </g>
+
+      {evidence && renderFittedEvidence(evidence, evidenceRect, ctx)}
+
+      {footnote && (
+        <text
+          data-truncated={footnote.truncated ? "1" : undefined}
+          x={HEADING_X}
+          y={FOOTNOTE_Y}
+          fontFamily={fonts.body}
+          fontSize={footnote.fontSize}
+          fill={accessibleInk(colors.muted, defaultBg, footnote.fontSize)}
+          dominantBaseline="alphabetic"
+        >
+          {footnote.text}
+        </text>
+      )}
+    </>
+  )
+}
+
+export const layoutDef = {
+  // content-one-evidence.tsx: a pinOnly assertion + single evidence page.
+  // Heading is a full-sentence claim. Body capacity 1 is the evidence
+  // (chart / table / image / whatever pickEvidence returns, else the sole
+  // component). branding: "none" skips brand footer and logo. The theme motif
+  // still paints. The fifth-band decoration safe-zone does not apply — the
+  // whole canvas is the layout's.
+  id: "one-evidence",
+  kind: "archetype",
+  pinOnly: true,
+  branding: "none",
+  slideTypes: ["content"],
+  slots: [
+    { name: "heading", accepts: [] },
+    { name: "body", accepts: "any", capacity: 1 },
+    { name: "meta", accepts: [] },
+  ],
+  arrangements: ["single"],
+  headingFit: {
+    maxWidth: HEADING_MAX_W,
+    fontSize: 36,
+    maxLines: 3,
+    minPt: 22,
+    lineHeightRatio: 1.2,
+  },
+} satisfies LayoutDefinition

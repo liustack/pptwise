@@ -78,7 +78,7 @@ if (!slide1.includes("pptwise")) throw new Error("e2e: cover heading text not fo
 //     exported run's <a:ea> must be corrected to Microsoft YaHei by
 //     applyEaFontFaces (src/pptx/pptx-ea-fonts.ts) — asserted here against
 //     the *built* CLI binary's real output, not a vitest mock. Unconditional
-//     per the feature's own design (src/svg/fonts.ts's eaFontFaceFor doc
+//     per the feature's own design (src/render/fonts.ts's eaFontFaceFor doc
 //     comment): this holds even though basic.json's own text is all-English,
 //     since the declaration doesn't depend on the run's content.
 if (!/<a:latin typeface="Georgia"[^>]*\/><a:ea typeface="Microsoft YaHei"/.test(slide1)) {
@@ -187,7 +187,7 @@ console.log("style override leg OK (--style color reached DrawingML)")
 //     this script; the interactive PowerPoint repair-dialog probe stays a
 //     release-time manual step (docs/testing.md), same as for every leg.
 console.log("--- brand extraction leg ---")
-const { buildThmxBytes, DEFAULT_THMX_COLORS } = await import("../src/themes/__fixtures__/thmx")
+const { buildThmxBytes, DEFAULT_THMX_COLORS } = await import("../src/themes/extract/__fixtures__/thmx")
 const brandFixturePath = join(OUT, "brand-fixture.pptx")
 writeFileSync(brandFixturePath, Buffer.from(await buildThmxBytes({ schemeName: "E2E Brand" })))
 const brandThemePath = join(OUT, "e2e-brand.theme.json")
@@ -701,7 +701,7 @@ console.log("audit --json leg OK (machine-readable AuditReport, exit 1, low-cont
 //     actual runtime dependency resolution), not vitest's in-process call.
 //     examples/basic.json has no asset backgrounds, so this only proves the
 //     pass runs and completes cleanly, not that it can find something —
-//     src/svg/audit/pixel-audit.test.ts's own real-Sharp suite already
+//     src/audit/pixel-audit.test.ts's own real-Sharp suite already
 //     covers the sampling/threshold logic end to end.
 console.log("--- audit --pixels leg ---")
 
@@ -758,7 +758,7 @@ console.log("audit --pixels leg OK (real Sharp through dist/cli.js, checks.pixel
 //    schema max of 8 columns/12 rows) — this leg's job is proving the full
 //    CLI render -> package-audit -> CLI-audit chain accepts both new
 //    behaviors end to end, not re-running T3's own dedicated 13-theme
-//    stress-fixture coverage (src/svg/audit/stress-fixtures.ts's own
+//    stress-fixture coverage (src/audit/stress-fixtures.ts's own
 //    "数据表压力测试" page already does that at schema-max scale).
 console.log("--- structure-components leg ---")
 
@@ -1013,7 +1013,7 @@ console.log("structure-components audit leg OK (exit 0, 0 findings)")
 //    severity recalibration): a warn-only deck (missing heading — editorial,
 //    not content-loss) must still validate/render successfully with a
 //    "warning: ..." note, exit 0. A bullet item past the new geometric error
-//    ceiling (CAPACITY.bullets.itemOverflowUnits = 50, src/svg/audit/
+//    ceiling (CAPACITY.bullets.itemOverflowUnits = 50, src/audit/
 //    capacity.ts — genuinely gets truncated at render) must still hard-block
 //    both commands, exit 1. Exercises the *built* dist/cli.js binary, not
 //    just the vitest-level src/api.test.ts/src/cli/commands.test.ts coverage

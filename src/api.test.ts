@@ -4,8 +4,8 @@ import { measureTextUnits } from "@/lib/svg-text-layout"
 import { makeSolidRegionPngDataUri } from "@/platform/test-png-fixture"
 import { formatIssues, formatWarnings, generatePptx, irJsonSchema, listThemes, renderSlideSvg, validateIr } from "./api"
 import { ENUM_ERROR_MESSAGE_MAX_LENGTH } from "./ir/schema-error-hints"
-import { CAPACITY } from "./svg/audit/capacity"
-import { LAYOUT_REGISTRY } from "./svg/layouts/registry"
+import { CAPACITY } from "./audit/capacity"
+import { LAYOUT_REGISTRY } from "./layouts/registry"
 import { __resetRegisteredThemes, registerTheme, type ThemeDefinition } from "./themes/definitions"
 
 /** A real, minimal, decodable PNG data URI — every "byte-inertness" and

@@ -6,7 +6,7 @@
  * `measureTextUnits`, the same estimator the layout code uses to decide how
  * much text fits a box. That shared source is a blind spot: when the estimate
  * is wrong, the layout and the audit are wrong together and agree with each
- * other. `src/svg/audit/browser-audit.ts` exists to break the tie by asking a
+ * other. `src/audit/browser-audit.ts` exists to break the tie by asking a
  * real browser for `getBBox()` — it was written for a consumer
  * (`scripts/pptx-browser-audit.mts`) that was never committed, so until now
  * nothing had ever run it against real pages.
@@ -30,7 +30,7 @@
 import { writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { resolveProductEnv } from "@/cli/product-env"
-import { collectBBoxOverflows, serializePageFunction } from "@/svg/audit/browser-audit"
+import { collectBBoxOverflows, serializePageFunction } from "@/audit/browser-audit"
 import { namespaceSvgIds, svgIdPrefix } from "@/lib/svg-ids"
 import { bleedExemption, DESIGNED_BLEED, type BleedExemption } from "./bbox-exemptions"
 

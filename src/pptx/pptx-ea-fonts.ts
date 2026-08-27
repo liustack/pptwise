@@ -1,5 +1,5 @@
 import JSZip from "jszip"
-import { eaFontFaceFor } from "@/svg/fonts"
+import { eaFontFaceFor } from "@/render/fonts"
 
 /**
  * CJK east-asian font-slot patch (follow-up to borrow-wave Task 3's

@@ -17,9 +17,9 @@
  */
 
 import { COMPONENT_TYPES } from "@/ir"
-import { COMPONENT_FORMS, resolveComponentForm, type ComponentFormId } from "@/svg/components/form-assignments"
-import { HEADING_TREATMENTS } from "@/svg/heading-treatments/assignments"
-import { LAYOUT_REGISTRY } from "@/svg/layouts/registry"
+import { COMPONENT_FORMS, resolveComponentForm, type ComponentFormId } from "@/components/form-assignments"
+import { HEADING_TREATMENTS } from "@/render/heading-treatments/assignments"
+import { LAYOUT_REGISTRY } from "@/layouts/registry"
 import { CANONICAL_THEME_IDS } from "@/themes"
 import { CHART_VARIANTS, DENSITY_BUILDERS, FORM_VARIANTS } from "./corpus/components"
 import { LEXICONS } from "./corpus/lexicon"

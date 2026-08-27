@@ -9,7 +9,7 @@ import { META_FONT_FLOOR_PX } from "../constants"
  */
 export interface TextWeightHint {
   /** True when the consuming text renders `font-weight >= 600` (this
-   * codebase's own bold threshold — `isBold()` in `src/svg/fonts.ts`,
+   * codebase's own bold threshold — `isBold()` in `src/render/fonts.ts`,
    * shared with the export converter's OOXML `b="1"` decision, is the
    * canonical judgment this mirrors). Default `false`. */
   bold?: boolean
@@ -156,7 +156,7 @@ const WIDE_CHAR_RE = /[\u2014\u2018-\u201f\u2e80-\u9fff\uff00-\uffef]/
 //
 // Separately (not a width-calibration finding, recorded here since it
 // surfaced during this same measurement): neither Georgia nor Consolas
-// (src/svg/components/code.tsx) has any CJK glyph in its `cmap` at all --
+// (src/components/code.tsx) has any CJK glyph in its `cmap` at all --
 // a CJK character in text declared under either face never renders from
 // that face -- PowerPoint substitutes some other, currently uncontrolled
 // font at the glyph level. That is a font-identity gap, not a width-
@@ -169,7 +169,7 @@ const WIDE_CHAR_RE = /[\u2014\u2018-\u201f\u2e80-\u9fff\uff00-\uffef]/
 // "class-average factors" in old comments elsewhere in this codebase).
 // 96% of this codebase's layout heading `<text>` declarations render
 // `font-weight >= 600` (root-cause.md S5), and OOXML export collapses any
-// of those into a real Bold glyph outline (`isBold()`, `src/svg/fonts.ts`).
+// of those into a real Bold glyph outline (`isBold()`, `src/render/fonts.ts`).
 // The user-reported defect is exactly this gap: cover-fashion-masthead.tsx's
 // "Components Demo" line measured 1166.21 units-as-px (fits the 1168px
 // budget) under this file's original unweighted estimate, but Georgia
@@ -1106,7 +1106,7 @@ export function layoutSvgText(
  * envelope instead.
  *
  * Exported (backlog-sweep task I2) so a registration-time caller
- * (`themes/definitions.ts`'s `registerTheme`, via the `../svg/fonts`
+ * (`themes/definitions.ts`'s `registerTheme`, via the `../render/fonts`
  * forwarding re-export next to `isMonoFontFamily`/`isBold`) can warn a theme
  * author that their chosen heading/body face falls back to that envelope,
  * without duplicating `classifyFaceKey`'s own matching rules.

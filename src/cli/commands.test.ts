@@ -8,9 +8,9 @@ import JSZip from "jszip"
 import { afterAll, afterEach, describe, expect, it, beforeAll } from "vitest"
 import { installNodePlatform } from "@/platform/node"
 import { NARRATIVE_PRESETS } from "../narrative"
-import { CAPACITY } from "../svg/audit/capacity"
+import { CAPACITY } from "../audit/capacity"
 import { __resetRegisteredThemes } from "../themes/definitions"
-import { buildThmxBytes, DEFAULT_THMX_COLORS, PATHOLOGICAL_THMX_COLORS } from "../themes/__fixtures__/thmx"
+import { buildThmxBytes, DEFAULT_THMX_COLORS, PATHOLOGICAL_THMX_COLORS } from "../themes/extract/__fixtures__/thmx"
 import {
   applyDeckConfig,
   runAssemble,
@@ -87,7 +87,7 @@ const IR_WITH_PLACEHOLDER = {
 // which auditDeck's low-contrast check (not validateIr — schema/quality gates
 // have no opinion on color pairing) is the one thing that catches. Mirrors
 // deck-audit.test.ts's own "low-contrast via a real style-token override"
-// fixture (`src/svg/audit/deck-audit.test.ts`).
+// fixture (`src/audit/deck-audit.test.ts`).
 const IR_LOW_CONTRAST = {
   version: "4",
   filename: "cli-test-low-contrast",
