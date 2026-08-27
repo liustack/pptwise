@@ -44,7 +44,7 @@ program
   .argument("<target>", "IR JSON file, deck project directory, or bare name under ~/.pptwise/decks")
   .option("-o, --output <file>", "output .pptx path (default: .pptwise/<deck>/<deck>.pptx under the project root)")
   .option("--theme <id>", "override the deck theme (see `pptwise themes`)")
-  .option("--theme-file <path>", "load a custom theme file (see `pptwise brand extract`) and render with it")
+  .option("--theme-file <path>", "load and register a custom theme file (does not select it, pass --theme <id> or set the spec/IR theme)")
   .option("--style <path>", "style overrides JSON re-coloring the theme (see `pptwise schema --style`)")
   .option("--draft", "allow unfilled placeholder pages (skip the draft gate)")
   .option(
@@ -88,10 +88,11 @@ program
   .command("validate")
   .description("Validate an IR JSON file, deck project directory, or bare deck name against the schema")
   .argument("<target>", "IR JSON file, deck project directory, or bare name under ~/.pptwise/decks")
-  .option("--theme-file <path>", "load a custom theme file (see `pptwise brand extract`) before validating")
-  .action(async (target: string, opts: { themeFile?: string }) => {
+  .option("--theme <id>", "override the deck theme (see `pptwise themes`)")
+  .option("--theme-file <path>", "load and register a custom theme file (does not select it, pass --theme <id> or set the spec/IR theme)")
+  .action(async (target: string, opts: { theme?: string; themeFile?: string }) => {
     try {
-      console.log(await runValidate(target, process.cwd(), { themeFilePath: opts.themeFile }))
+      console.log(await runValidate(target, process.cwd(), { theme: opts.theme, themeFilePath: opts.themeFile }))
     } catch (e) {
       fail(e)
     }
@@ -105,12 +106,14 @@ program
   .argument("<target>", "IR JSON file, deck project directory, or bare name under ~/.pptwise/decks")
   .option("--json", "machine-readable output (the full AuditReport)")
   .option("--pixels", "also run the optional pixel-contrast pass over image-backed text (requires sharp)")
-  .option("--theme-file <path>", "load a custom theme file (see `pptwise brand extract`) and audit with it")
-  .action(async (target: string, opts: { json?: boolean; pixels?: boolean; themeFile?: string }) => {
+  .option("--theme <id>", "override the deck theme (see `pptwise themes`)")
+  .option("--theme-file <path>", "load and register a custom theme file (does not select it, pass --theme <id> or set the spec/IR theme)")
+  .action(async (target: string, opts: { json?: boolean; pixels?: boolean; theme?: string; themeFile?: string }) => {
     try {
       const { output, hasFindings } = await runAudit(target, {
         json: opts.json,
         pixels: opts.pixels,
+        theme: opts.theme,
         themeFilePath: opts.themeFile,
       })
       console.log(output)
@@ -382,7 +385,7 @@ program
   .option("--html", "also write a self-contained preview.html (all slides inlined — thumbnail strip, keyboard navigation) for human review")
   .option("--theme <id>", "override the deck theme (see `pptwise themes`)")
   .option("--themes <ids>", "comma-separated theme ids (2-4) to write a contact-sheet comparison")
-  .option("--theme-file <path>", "load a custom theme file (see `pptwise brand extract`) and preview with it")
+  .option("--theme-file <path>", "load and register a custom theme file (does not select it, pass --theme <id> or set the spec/IR theme)")
   .option("--no-git-ignore", "do not add .pptwise/ to this repository's local exclude file")
   .action(async (target: string, opts: { output?: string; html?: boolean; theme?: string; themes?: string; themeFile?: string; gitIgnore?: boolean }) => {
     try {
@@ -407,7 +410,7 @@ program
   .argument("<target>", "IR JSON file, deck project directory, or bare name under ~/.pptwise/decks")
   .option("--port <number>", `port to listen on (default ${DEFAULT_PORT})`)
   .option("--no-open", "do not open the URL in a browser after starting")
-  .option("--theme-file <path>", "load a custom theme file (see `pptwise brand extract`) and serve with it")
+  .option("--theme-file <path>", "load and register a custom theme file (does not select it, pass --theme <id> or set the spec/IR theme)")
   .action(async (target: string, opts: { port?: string; open: boolean; themeFile?: string }) => {
     try {
       let port: number | undefined

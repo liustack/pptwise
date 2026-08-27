@@ -207,7 +207,7 @@ if (brandThemeFile.style.colors.primary !== `#${DEFAULT_THMX_COLORS.accent1}`) {
 }
 const brandPptxPath = join(OUT, "brand-themed.pptx")
 console.log(
-  sh("node", ["dist/cli.js", "render", "examples/basic.json", "-o", brandPptxPath, "--theme-file", brandThemePath]),
+  sh("node", ["dist/cli.js", "render", "examples/basic.json", "-o", brandPptxPath, "--theme-file", brandThemePath, "--theme", "e2e-brand"]),
 )
 const brandThemedZip = await JSZip.loadAsync(readFileSync(brandPptxPath))
 const brandThemedSlideXml = (
