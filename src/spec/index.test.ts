@@ -160,9 +160,13 @@ describe("DeckSpecSchema / validateSpec structural pass", () => {
     expect(r.normalized).toEqual(["(root): chrome → branding"])
   })
 
-  it("both chrome and branding present is a zod reject", () => {
+  it("both chrome and branding present is a hard error naming both sources", () => {
     const r = validateSpec(minimalValidPlan({ chrome: "full", branding: "minimal" }))
     expect(r.ok).toBe(false)
+    const message = formatSpecIssues(r.errors)
+    expect(message).toMatch(/chrome/)
+    expect(message).toMatch(/branding/)
+    expect(r.normalized).toBeUndefined()
   })
 
   it("rejects unknown page-level keys (strict)", () => {

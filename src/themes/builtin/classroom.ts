@@ -1,4 +1,6 @@
 import type { StyleTokens } from "../tokens";
+import type { BuiltinThemeDeclaration } from "../schema";
+import { DEFAULT_CONTENT_FACES } from "./shared";
 
 /**
  * classroom（教学课堂）——2026-07-13 第 13 主题（用户参考三张莫兰迪教学
@@ -88,3 +90,24 @@ export const CLASSROOM_TOKENS: StyleTokens = {
     ending: { kind: "color", value: "#ECF0F2" },
   },
 };
+
+export const CLASSROOM_THEME = {
+  version: 1,
+  id: "classroom",
+  label: "Classroom",
+  style: CLASSROOM_TOKENS,
+  faces: {
+    cover: ["chalk-band-cover"],
+    chapter: ["lesson-box-chapter"],
+    content: DEFAULT_CONTENT_FACES,
+    ending: ["homework-close-ending"],
+  },
+  motif: { id: "classroom-motif" },
+  tendencies: {
+    cover: ["chalk-band-cover"],
+    chapter: ["lesson-box-chapter"],
+    content: ["two-column", "bento-panel", "tone-adaptive-content"],
+    ending: ["homework-close-ending"],
+  },
+  sparse: [],
+} satisfies BuiltinThemeDeclaration;

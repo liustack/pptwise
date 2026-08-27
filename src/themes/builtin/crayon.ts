@@ -1,4 +1,6 @@
 import type { StyleTokens } from "../tokens";
+import type { BuiltinThemeDeclaration } from "../schema";
+import { CRAYON_CONTENT_FACES } from "./shared";
 
 /**
  * crayon（蜡笔卡纸）。2026-08-21 第 18 主题（场景审计低龄教育立项，
@@ -77,3 +79,24 @@ export const CRAYON_TOKENS: StyleTokens = {
     ending: { kind: "color", value: "#FFF9F0" },
   },
 };
+
+export const CRAYON_THEME = {
+  version: 1,
+  id: "crayon",
+  label: "Kids Education",
+  style: CRAYON_TOKENS,
+  faces: {
+    cover: ["crayonbox-open"],
+    chapter: ["crayonbox-sticker"],
+    content: CRAYON_CONTENT_FACES,
+    ending: ["crayonbox-todo"],
+  },
+  motif: { id: "crayonbox-motif" },
+  tendencies: {
+    cover: ["crayonbox-open"],
+    chapter: ["crayonbox-sticker"],
+    content: ["crayonbox-cards"],
+    ending: ["crayonbox-todo"],
+  },
+  sparse: [],
+} satisfies BuiltinThemeDeclaration;

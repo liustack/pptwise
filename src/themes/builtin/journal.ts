@@ -1,4 +1,6 @@
 import type { StyleTokens } from "../tokens";
+import type { BuiltinThemeDeclaration } from "../schema";
+import { DEFAULT_CONTENT_FACES } from "./shared";
 
 /**
  * journal（人文期刊）——原 magazine 主题纯改名（2026-07-10 用户裁决拆分：
@@ -95,3 +97,24 @@ export const JOURNAL_TOKENS: StyleTokens = {
     ending: { kind: "color", value: "#EFEBE1" },
   },
 };
+
+export const JOURNAL_THEME = {
+  version: 1,
+  id: "journal",
+  label: "Editorial Journal",
+  style: JOURNAL_TOKENS,
+  faces: {
+    cover: ["issue-head-cover"],
+    chapter: ["fascicle-ghost-chapter"],
+    content: DEFAULT_CONTENT_FACES,
+    ending: ["afterword-ending"],
+  },
+  motif: { id: "corner-ornament-motif" },
+  tendencies: {
+    cover: ["issue-head-cover"],
+    chapter: ["fascicle-ghost-chapter"],
+    content: ["two-column", "narrow-column", "bento-panel"],
+    ending: ["afterword-ending"],
+  },
+  sparse: ["pull-quote", "stat-hero", "statement", "verse-chapter"],
+} satisfies BuiltinThemeDeclaration;

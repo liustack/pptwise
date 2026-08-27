@@ -1,4 +1,6 @@
 import type { StyleTokens } from "../tokens";
+import type { BuiltinThemeDeclaration } from "../schema";
+import { DEFAULT_CONTENT_FACES } from "./shared";
 
 /**
  * ember（融资路演 / 炭黑火橙）——第八波批 1 把暖纸路演翻成炭黑路演。
@@ -83,3 +85,24 @@ export const EMBER_TOKENS: StyleTokens = {
     ending: { kind: "color", value: "#241B14" },
   },
 };
+
+export const EMBER_THEME = {
+  version: 1,
+  id: "ember",
+  label: "Startup Pitch",
+  style: EMBER_TOKENS,
+  faces: {
+    cover: ["corner-wedge"],
+    chapter: ["ember-index-chapter"],
+    content: DEFAULT_CONTENT_FACES,
+    ending: ["ask-ending"],
+  },
+  motif: { id: "ember-motif" },
+  tendencies: {
+    cover: ["corner-wedge"],
+    chapter: ["ember-index-chapter"],
+    content: ["bento-panel", "two-column", "stacked-poster"],
+    ending: ["ask-ending"],
+  },
+  sparse: [],
+} satisfies BuiltinThemeDeclaration;

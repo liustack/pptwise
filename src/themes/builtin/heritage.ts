@@ -1,4 +1,6 @@
 import type { StyleTokens } from "../tokens";
+import type { BuiltinThemeDeclaration } from "../schema";
+import { DEFAULT_CONTENT_FACES } from "./shared";
 
 /**
  * heritage（典藏传承）——第 8 主题（2026-07-10 用户从视觉伴侣六方向中
@@ -81,3 +83,24 @@ export const HERITAGE_TOKENS: StyleTokens = {
     ending: { kind: "color", value: "#F4EDE2" },
   },
 };
+
+export const HERITAGE_THEME = {
+  version: 1,
+  id: "heritage",
+  label: "Heritage",
+  style: HERITAGE_TOKENS,
+  faces: {
+    cover: ["double-frame-cover"],
+    chapter: ["mirror-volume-chapter"],
+    content: DEFAULT_CONTENT_FACES,
+    ending: ["invite-field-ending"],
+  },
+  motif: { id: "heritage-motif" },
+  tendencies: {
+    cover: ["double-frame-cover"],
+    chapter: ["mirror-volume-chapter"],
+    content: ["rail-numbered", "asymmetric-triptych"],
+    ending: ["invite-field-ending"],
+  },
+  sparse: ["pull-quote", "statement", "stat-hero", "verse-chapter"],
+} satisfies BuiltinThemeDeclaration;

@@ -1,4 +1,6 @@
 import type { StyleTokens } from "../tokens";
+import type { BuiltinThemeDeclaration } from "../schema";
+import { FRAMED_CONTENT_FACES } from "./shared";
 
 /**
  * luxe（高端品牌）——原 retail 主题改名+黑金重定位（2026-07-10 用户视觉
@@ -84,3 +86,24 @@ export const LUXE_TOKENS: StyleTokens = {
     ending: { kind: "color", value: "#0B0908" },
   },
 };
+
+export const LUXE_THEME = {
+  version: 1,
+  id: "luxe",
+  label: "Luxe",
+  style: LUXE_TOKENS,
+  faces: {
+    cover: ["invitation-plate-cover"],
+    chapter: ["gilt-ordinal-chapter"],
+    content: FRAMED_CONTENT_FACES,
+    ending: ["gilt-word-ending"],
+  },
+  motif: { id: "luxe-motif" },
+  tendencies: {
+    cover: ["invitation-plate-cover"],
+    chapter: ["gilt-ordinal-chapter"],
+    content: ["quiet-frame", "rail-numbered", "two-column"],
+    ending: ["gilt-word-ending"],
+  },
+  sparse: ["pull-quote", "stat-hero", "statement", "verse-chapter"],
+} satisfies BuiltinThemeDeclaration;

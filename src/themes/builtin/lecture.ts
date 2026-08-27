@@ -1,4 +1,6 @@
 import type { StyleTokens } from "../tokens";
+import type { BuiltinThemeDeclaration } from "../schema";
+import { FRAMED_CONTENT_FACES } from "./shared";
 
 /**
  * lecture（黑板夜校）——2026-08-21 新增第 22 个 theme id（第 21 个结构身份）。
@@ -90,3 +92,24 @@ export const LECTURE_TOKENS: StyleTokens = {
     ending: { kind: "color", value: "#1C2823" },
   },
 };
+
+export const LECTURE_THEME = {
+  version: 1,
+  id: "lecture",
+  label: "Lecture Hall",
+  style: LECTURE_TOKENS,
+  faces: {
+    cover: ["board-head"],
+    chapter: ["chalk-rule-chapter"],
+    content: FRAMED_CONTENT_FACES,
+    ending: ["next-lecture-ending"],
+  },
+  motif: { id: "lecture-motif" },
+  tendencies: {
+    cover: ["board-head"],
+    chapter: ["chalk-rule-chapter"],
+    content: ["two-column", "quiet-frame", "bento-panel"],
+    ending: ["next-lecture-ending"],
+  },
+  sparse: ["statement", "stat-hero", "one-evidence", "verse-chapter"],
+} satisfies BuiltinThemeDeclaration;

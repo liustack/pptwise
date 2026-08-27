@@ -1,4 +1,6 @@
 import type { StyleTokens } from "../tokens";
+import type { BuiltinThemeDeclaration } from "../schema";
+import { DEFAULT_CONTENT_FACES } from "./shared";
 
 /**
  * memo（打字机决定）——2026-08-21 新增第 22 个 theme id（第 21 个结构身份）。
@@ -106,3 +108,24 @@ export const MEMO_TOKENS: StyleTokens = {
     ending: { kind: "color", value: "#F6F1E7" },
   },
 };
+
+export const MEMO_THEME = {
+  version: 1,
+  id: "memo",
+  label: "Decision Memo",
+  style: MEMO_TOKENS,
+  faces: {
+    cover: ["memo-head"],
+    chapter: ["issue-line-chapter"],
+    content: DEFAULT_CONTENT_FACES,
+    ending: ["decision-close-ending"],
+  },
+  motif: { id: "memo-motif" },
+  tendencies: {
+    cover: ["memo-head"],
+    chapter: ["issue-line-chapter"],
+    content: ["asymmetric-triptych", "narrow-column", "tone-adaptive-content"],
+    ending: ["decision-close-ending"],
+  },
+  sparse: ["pull-quote", "stat-hero", "statement", "verse-chapter"],
+} satisfies BuiltinThemeDeclaration;

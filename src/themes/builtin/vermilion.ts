@@ -1,4 +1,6 @@
 import type { StyleTokens } from "../tokens";
+import type { BuiltinThemeDeclaration } from "../schema";
+import { DEFAULT_CONTENT_FACES } from "./shared";
 
 /**
  * vermilion（庄重公务汇报——工作汇报/述职/年度总结语域）——2026-08-06 gov-theme
@@ -106,3 +108,24 @@ export const VERMILION_TOKENS: StyleTokens = {
     ending: { kind: "color", value: "#F6EFE3" },
   },
 };
+
+export const VERMILION_THEME = {
+  version: 1,
+  id: "vermilion",
+  label: "Official Report",
+  style: VERMILION_TOKENS,
+  faces: {
+    cover: ["red-head-cover"],
+    chapter: ["seal-numeral-chapter"],
+    content: DEFAULT_CONTENT_FACES,
+    ending: ["deliberation-ending"],
+  },
+  motif: { id: "vermilion-motif" },
+  tendencies: {
+    cover: ["red-head-cover"],
+    chapter: ["seal-numeral-chapter"],
+    content: ["rail-numbered", "narrow-column"],
+    ending: ["deliberation-ending"],
+  },
+  sparse: ["statement", "stat-hero", "one-evidence", "verse-chapter"],
+} satisfies BuiltinThemeDeclaration;

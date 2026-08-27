@@ -1,4 +1,6 @@
 import type { StyleTokens } from "../tokens";
+import type { BuiltinThemeDeclaration } from "../schema";
+import { DEFAULT_CONTENT_FACES } from "./shared";
 
 /**
  * swiss（冷白制度）——2026-08-21 新增第 22 个 theme id（第 21 个结构身份）。
@@ -89,3 +91,24 @@ export const SWISS_TOKENS: StyleTokens = {
     ending: { kind: "color", value: "#F7F7F5" },
   },
 };
+
+export const SWISS_THEME = {
+  version: 1,
+  id: "swiss",
+  label: "Swiss Institutional",
+  style: SWISS_TOKENS,
+  faces: {
+    cover: ["institutional-block"],
+    chapter: ["decimal-index-chapter"],
+    content: DEFAULT_CONTENT_FACES,
+    ending: ["resolution-ending"],
+  },
+  motif: { id: "swiss-motif" },
+  tendencies: {
+    cover: ["institutional-block"],
+    chapter: ["decimal-index-chapter"],
+    content: ["two-column", "narrow-column", "rail-numbered"],
+    ending: ["resolution-ending"],
+  },
+  sparse: ["stat-hero", "statement", "one-evidence", "verse-chapter"],
+} satisfies BuiltinThemeDeclaration;

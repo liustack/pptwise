@@ -23,7 +23,8 @@ describe("extractBrandTheme — light theme (the common case)", () => {
     expect(theme.label).toBe("Acme Corp")
     expect(theme.id).toBe("acme-corp")
     expect(theme.brand).toEqual({})
-    expect(theme.tags).toEqual([])
+    expect(theme).toMatchObject({ version: 1, base: "consulting" })
+    expect(theme).not.toHaveProperty("faces")
   })
 
   it("leads the font stack with the source theme's major/minor faces, sans fallback for a non-serif face", async () => {
@@ -73,6 +74,12 @@ describe("extractBrandTheme — light theme (the common case)", () => {
     const a = await extractBrandTheme(bytes)
     const b = await extractBrandTheme(bytes)
     expect(JSON.stringify(a)).toBe(JSON.stringify(b))
+  })
+
+  it("allows the caller to choose a different built-in base", async () => {
+    const bytes = await buildThmxBytes({ schemeName: "Acme Corp" })
+    const theme = await extractBrandTheme(bytes, { base: "academic" })
+    expect(theme.base).toBe("academic")
   })
 })
 

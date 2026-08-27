@@ -1,4 +1,6 @@
 import type { StyleTokens } from "../tokens";
+import type { BuiltinThemeDeclaration } from "../schema";
+import { DEFAULT_CONTENT_FACES } from "./shared";
 
 /**
  * terra（可持续/ESG/大地色）——2026-07-28 themes-16 wave task T2（第 15
@@ -95,3 +97,24 @@ export const TERRA_TOKENS: StyleTokens = {
     ending: { kind: "color", value: "#EFE9DC" },
   },
 };
+
+export const TERRA_THEME = {
+  version: 1,
+  id: "terra",
+  label: "Sustainability & ESG",
+  style: TERRA_TOKENS,
+  faces: {
+    cover: ["pledge-open-cover"],
+    chapter: ["field-band-chapter"],
+    content: DEFAULT_CONTENT_FACES,
+    ending: ["scorecard-ending"],
+  },
+  motif: { id: "terra-motif" },
+  tendencies: {
+    cover: ["pledge-open-cover"],
+    chapter: ["field-band-chapter"],
+    content: ["two-column", "quiet-frame"],
+    ending: ["scorecard-ending"],
+  },
+  sparse: ["statement", "stat-hero", "one-evidence", "verse-chapter"],
+} satisfies BuiltinThemeDeclaration;
