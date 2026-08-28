@@ -86,6 +86,7 @@ function mapHeading(job: GallerySubject): MappedSubject | undefined {
  */
 const TABLE_SUBJECT_MAPPERS: Record<string, (job: GallerySubject) => MappedSubject | undefined> = {
   theme: mapTheme,
+  skeleton: mapLayout,
   layout: mapLayout,
   component: mapComponent,
   density: mapDensity,

@@ -12,7 +12,7 @@
 import { COMPONENT_TYPES, type PptxIR } from "@/ir"
 import { HEADING_TREATMENTS } from "@/render/heading-treatments/assignments"
 import { LAYOUT_REGISTRY } from "@/layouts/registry"
-import { SPARSE_LAYOUT_IDS, themeOffersSparse } from "@/themes/definitions"
+import { SPARSE_LAYOUT_IDS, getThemeDefinition, themeOffersSparse } from "@/themes/definitions"
 import { CHART_VARIANTS, COMPONENT_BUILDERS, DENSITY_BUILDERS, FORM_VARIANTS } from "./corpus/components"
 import {
   BASELINE_THEME,
@@ -27,7 +27,7 @@ import {
 } from "./corpus/decks"
 import { LANGUAGE_IDS, LEXICONS, type LanguageId } from "./corpus/lexicon"
 
-export const TABLE_IDS = ["theme", "layout", "component", "density", "heading"] as const
+export const TABLE_IDS = ["theme", "skeleton", "layout", "component", "density", "heading"] as const
 export type TableId = (typeof TABLE_IDS)[number]
 
 export interface Job {
@@ -110,6 +110,42 @@ export function buildMatrix(
           slideIndex: i,
         })
       })
+    }
+  }
+
+  // ── Skeleton table ─────────────────────────────────────────────────────
+  // 每套主题的骨相原样铺开：四页型各自策展/锁定的脸（该页型在这套主题下
+  // 真实可解析到的池），加上这套主题开放的 sparse 钉面。每脸一页、显式
+  // 钉住、用主题自己渲，语料随主题表单语料，两页之间只差「脸」这一个变量。
+  if (!opts.only || opts.only === "skeleton") {
+    const lex = LEXICONS[themeLanguage]
+    for (const themeId of themeIds) {
+      const def = getThemeDefinition(themeId)
+      const groups: ReadonlyArray<readonly [string, readonly string[]]> = [
+        ["cover", def.layouts.cover],
+        ["chapter", def.layouts.chapter],
+        ["content", def.layouts.content],
+        ["ending", def.layouts.ending],
+        ["sparse", (SPARSE_LAYOUT_IDS as readonly string[]).filter((id) => themeOffersSparse(themeId, id))],
+      ]
+      for (const [slot, faces] of groups) {
+        for (const layoutId of faces) {
+          const ir = layoutPage(layoutId, lex, assets[themeLanguage], themeId)
+          push({
+            id: `skeleton--${safe(themeId)}--${slot}--${safe(layoutId)}`,
+            table: "skeleton",
+            subject: layoutId,
+            language: themeLanguage,
+            theme: themeId,
+            page: 1,
+            pageCount: 1,
+            slideType: ir.slides[0]!.type ?? "content",
+            heading: ir.slides[0]!.heading ?? "",
+            ir,
+            slideIndex: 0,
+          })
+        }
+      }
     }
   }
 
