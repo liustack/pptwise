@@ -2,6 +2,20 @@
  * Builds the gallery shell. SVG pages stay as standalone files and every
  * HTML surface references them through lazy images. Keeping each SVG in its
  * own document also isolates gradient and clip-path ids without rewriting.
+ *
+ * The shell is a specimen catalogue, not a dashboard. Three rules follow
+ * from that, and every layout decision here is one of them:
+ *
+ * 1. The slide is the content and everything else is apparatus. Chrome gets
+ *    hairlines, mono captions and the smallest type that still reads. No
+ *    surface competes with a slide for attention.
+ * 2. Scanning beats clicking. A reviewer's judgement of 24 themes is made in
+ *    the vertical scroll, so thumbnails are sized to show composition, the
+ *    strips align to one grid, and the verdict controls stay dim until the
+ *    pointer is on the card that owns them.
+ * 3. Nothing is loaded from anywhere. Fonts are whatever the machine has,
+ *    marks are drawn in CSS, and the slides are lazy `<img>` references to
+ *    files sitting next to the page.
  */
 
 import { verdictFreshness, type Manifest, type ManifestPage } from "./render"
@@ -33,11 +47,15 @@ function safe(value: string): string {
     .replace(/^-|-$/g, "")
 }
 
-function pageImage(page: ManifestPage, alt: string, className = "slide-image"): string {
+function ordinal(index: number): string {
+  return String(index + 1).padStart(2, "0")
+}
+
+function pageImage(page: ManifestPage, alt: string): string {
   if (!page.file) {
-    return `<div class="missing-slide" role="img" aria-label="${esc(alt)} 未能渲染">${esc(page.skipped ?? "未能渲染")}</div>`
+    return `<span class="missing" role="img" aria-label="${esc(alt)} 未能渲染">${esc(page.skipped ?? "未能渲染")}</span>`
   }
-  return `<img class="${className}" loading="lazy" src="${esc(page.file)}" width="${page.width}" height="${page.height}" alt="${esc(alt)}">`
+  return `<img loading="lazy" src="${esc(page.file)}" width="${page.width}" height="${page.height}" alt="${esc(alt)}">`
 }
 
 function badge(text: string, tone = "neutral"): string {
@@ -47,51 +65,67 @@ function badge(text: string, tone = "neutral"): string {
 function themeBadges(theme: GalleryThemeCatalogEntry, detailed = false): string {
   const out: string[] = []
   if (theme.source === "builtin") {
-    if (theme.identity) out.push(badge(`identity ${theme.identity}`, theme.identity))
+    if (theme.identity) out.push(badge(`identity ${theme.identity}`, `identity-${theme.identity}`))
     out.push(...theme.occasions.map((occasion) => badge(occasion)))
   } else {
-    out.push(badge(theme.source, theme.source === "complete" ? "high" : "medium"))
+    out.push(badge(theme.source, "source"))
     if (theme.base) out.push(badge(`base ${theme.base}`))
-    if (theme.identity) out.push(badge(`identity ${theme.identity}`, theme.identity))
-    if (theme.pinOnlyFaces.length > 0) out.push(badge(`pin-only ${theme.pinOnlyFaces.length}`))
+    if (theme.identity) out.push(badge(`identity ${theme.identity}`, `identity-${theme.identity}`))
   }
   if (detailed) {
-    if (theme.source === "builtin" && theme.pinOnlyFaces.length > 0) {
-      out.push(badge(`pin-only ${theme.pinOnlyFaces.length}`))
-    }
-    out.push(badge(theme.motif ? `motif ${theme.motif}` : "motif none", theme.motif ? "motif" : "quiet"))
+    if (theme.pinOnlyFaces.length > 0) out.push(badge(`pin-only ${theme.pinOnlyFaces.length}`))
+    out.push(theme.motif ? badge(`motif ${theme.motif}`, "motif") : badge("no motif", "quiet"))
+  } else if (theme.source !== "builtin" && theme.pinOnlyFaces.length > 0) {
+    out.push(badge(`pin-only ${theme.pinOnlyFaces.length}`))
   }
-  return out.join("")
+  return `<span class="badges">${out.join("")}</span>`
 }
 
-function head(title: string, description: string, version: string): string {
-  return `<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="${esc(description)}">
-<link rel="icon" href="data:,">
-<title>${esc(title)}</title>
-<style>${BASE_CSS}</style>
-</head>
-<body>
-<header class="site-header">
-  <a class="wordmark" href="index.html" aria-label="回到全主题总览"><span>pptwise</span><small>${esc(version)}</small></a>
-  <nav class="site-nav" aria-label="Gallery 导航">
-    <a href="index.html">总览</a>
-    <a href="themes.html">主题详情</a>
-    <a href="skeleton.html">骨架表</a>
-    <a href="layouts.html">版式表</a>
-    <a href="components.html">组件表</a>
-  </nav>
-</header>`
-}
+const NAV: readonly (readonly [string, string])[] = [
+  ["index.html", "总览"],
+  ["themes.html", "主题详情"],
+  ["skeleton.html", "骨架表"],
+  ["layouts.html", "版式表"],
+  ["components.html", "组件表"],
+]
 
-function documentPage(title: string, description: string, version: string, body: string, script = ""): string {
+function documentPage(options: {
+  file: string
+  title: string
+  description: string
+  version: string
+  slide: { width: number; height: number }
+  body: string
+  script?: string
+}): string {
+  const nav = NAV.map(
+    ([href, label]) =>
+      `<a href="${href}"${href === options.file ? ' aria-current="page"' : ""}>${esc(label)}</a>`,
+  ).join("")
   return `<!doctype html>
 <html lang="zh-CN">
-${head(title, description, version)}
-${body}
-${script}
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="${esc(options.description)}">
+<link rel="icon" href="data:,">
+<title>${esc(options.title)}</title>
+<style>${BASE_CSS}
+:root { --ar: ${options.slide.width} / ${options.slide.height}; }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <a class="mark" href="index.html" aria-label="回到全主题总览"><b>pptwise</b><i>视觉审查</i><em>${esc(options.version)}</em></a>
+  <nav class="topnav" aria-label="审查材料">${nav}</nav>
+  <div class="surround" role="group" aria-label="底色">
+    <button type="button" data-surround-set="light" aria-pressed="true">浅</button>
+    <button type="button" data-surround-set="dark" aria-pressed="false">深</button>
+  </div>
+</header>
+${options.body}
+${SHELL_SCRIPT}
+${options.script ?? ""}
 </body>
 </html>
 `
@@ -101,10 +135,12 @@ function tableCount(manifest: Manifest, id: string): number {
   return manifest.tables.find((table) => table.id === id)?.pages.length ?? 0
 }
 
+const SLIDE_TYPES = ["cover", "chapter", "content", "ending"] as const
+
 function representativePage(
   manifest: Manifest,
   theme: GalleryThemeCatalogEntry,
-  slideType: "cover" | "chapter" | "content" | "ending",
+  slideType: (typeof SLIDE_TYPES)[number],
 ): ManifestPage | undefined {
   const layoutId = theme.faces[slideType][0]
   const table = theme.source === "builtin" ? "skeleton" : "custom"
@@ -114,30 +150,29 @@ function representativePage(
   )
 }
 
-function overviewTheme(theme: GalleryThemeCatalogEntry, manifest: Manifest): string {
-  const types = ["cover", "chapter", "content", "ending"] as const
-  const thumbs = types
-    .map((slideType) => {
-      const page = representativePage(manifest, theme, slideType)
-      const layoutId = theme.faces[slideType][0] ?? "未配置"
-      const content = page
-        ? pageImage(page, `${theme.label} ${slideType} ${layoutId}`, "overview-image")
-        : `<div class="missing-slide">本次未生成</div>`
-      return `<a class="overview-thumb" href="themes.html#theme-${safe(theme.id)}">
-  <span class="thumb-stage">${content}</span>
-  <span class="thumb-caption"><b>${slideType}</b><code>${esc(layoutId)}</code></span>
+function overviewBand(theme: GalleryThemeCatalogEntry, manifest: Manifest, index: number): string {
+  const href = `themes.html#theme-${safe(theme.id)}`
+  const thumbs = SLIDE_TYPES.map((slideType) => {
+    const page = representativePage(manifest, theme, slideType)
+    const layoutId = theme.faces[slideType][0] ?? "未配置"
+    const shot = page
+      ? pageImage(page, `${theme.label} ${slideType} ${layoutId}`)
+      : `<span class="missing">本次未生成</span>`
+    return `<a class="plate" href="${href}">
+  <span class="stage">${shot}</span>
+  <span class="plate-cap"><i>${slideType}</i><code>${esc(layoutId)}</code></span>
 </a>`
-    })
-    .join("")
+  }).join("")
 
-  return `<article class="theme-overview" id="overview-${safe(theme.id)}" data-theme-source="${theme.source}">
-  <div class="theme-overview-meta">
-    <p class="theme-sequence">${esc(theme.id)}</p>
-    <h2>${esc(theme.label)}</h2>
-    <div class="badges">${themeBadges(theme)}</div>
-    <a class="detail-link" href="themes.html#theme-${safe(theme.id)}">查看大图详情 <span aria-hidden="true">→</span></a>
-  </div>
-  <div class="overview-strip">${thumbs}</div>
+  return `<article class="band" id="overview-${safe(theme.id)}" data-theme-source="${theme.source}">
+  <header class="band-head">
+    <span class="band-no">${ordinal(index)}</span>
+    <h3><a href="${href}">${esc(theme.label)}</a></h3>
+    <code class="band-id">${esc(theme.id)}</code>
+    ${themeBadges(theme)}
+    <a class="band-more" href="${href}">详情</a>
+  </header>
+  <div class="strip">${thumbs}</div>
 </article>`
 }
 
@@ -145,84 +180,135 @@ function buildIndex(manifest: Manifest, catalog: readonly GalleryThemeCatalogEnt
   const builtin = catalog.filter((theme) => theme.source === "builtin")
   const samples = catalog.filter((theme) => theme.source !== "builtin")
   const generatedAt = manifest.generatedAt.slice(0, 16).replace("T", " ")
+  const jump = catalog
+    .map((theme) => `<a href="#overview-${safe(theme.id)}">${esc(theme.id)}</a>`)
+    .join("")
 
-  const body = `<main class="overview-main">
-  <section class="overview-hero">
-    <div>
-      <p class="eyebrow">THEME REVIEW INDEX</p>
-      <h1>全主题缩略总览</h1>
-      <p class="lede">先扫四页型骨架，再进入大图判断细节。24 套内置主题保持一套一个区块，页面从上到下连续浏览。</p>
-    </div>
-    <dl class="build-facts">
-      <div><dt>内置主题</dt><dd>${builtin.length}</dd></div>
-      <div><dt>自定义样例</dt><dd>${samples.length}</dd></div>
-      <div><dt>生成时间</dt><dd>${esc(generatedAt)}</dd></div>
-    </dl>
-  </section>
+  const routes = [
+    ["themes.html", "主题详情", tableCount(manifest, "theme") + tableCount(manifest, "custom"), "每套主题的十页整套"],
+    ["skeleton.html", "骨架表", tableCount(manifest, "skeleton"), "四页型锁定面与 sparse"],
+    ["layouts.html", "版式表", tableCount(manifest, "layout"), "注册版式的真实样张"],
+    ["components.html", "组件表", tableCount(manifest, "component"), "组件与图表变体"],
+  ] as const
 
-  <nav class="review-routes" aria-label="审查材料">
-    <a href="themes.html"><span>01</span><b>主题详情</b><small>${tableCount(manifest, "theme") + tableCount(manifest, "custom")} 张大图</small></a>
-    <a href="skeleton.html"><span>02</span><b>骨架表</b><small>${tableCount(manifest, "skeleton")} 张锁定面</small></a>
-    <a href="layouts.html"><span>03</span><b>版式表</b><small>${tableCount(manifest, "layout")} 张样张</small></a>
-    <a href="components.html"><span>04</span><b>组件表</b><small>${tableCount(manifest, "component")} 张样张</small></a>
+  const body = `<main class="sheet">
+  <div class="masthead">
+    <h1>全主题缩略总览</h1>
+    <p class="deck">每套主题四张锁定面，先扫骨架和配色，再点进详情看整套十页。${builtin.length} 套内置主题与 ${samples.length} 套自定义样张走同一条渲染链。</p>
+    <p class="colophon"><span>pptwise ${esc(manifest.pptwiseVersion)}</span><span>${manifest.pages.length} 张</span><span>生成于 ${esc(generatedAt)}</span></p>
+  </div>
+
+  <nav class="routes" aria-label="次级材料">
+    ${routes
+      .map(
+        ([href, label, count, note]) =>
+          `<a href="${href}"><b>${esc(label)}</b><em>${count}</em><i>${esc(note)}</i></a>`,
+      )
+      .join("")}
   </nav>
 
-  <section class="overview-section" aria-labelledby="builtin-heading">
-    <div class="section-heading"><p>BUILT IN</p><h2 id="builtin-heading">24 套内置主题</h2></div>
-    <div class="theme-overview-list">${builtin.map((theme) => overviewTheme(theme, manifest)).join("")}</div>
+  <nav class="jump" aria-label="跳到主题">${jump}</nav>
+
+  <section class="chapter" aria-labelledby="builtin-heading">
+    <h2 id="builtin-heading">内置主题<em>${builtin.length}</em></h2>
+    <div class="bands">${builtin.map((theme, index) => overviewBand(theme, manifest, index)).join("")}</div>
   </section>
 
-  <section class="overview-section custom-section" aria-labelledby="custom-heading">
-    <div class="section-heading"><p>THEME FILE V1</p><h2 id="custom-heading">自定义主题对照样张</h2><span>partial 换色板，complete 换骨架与 motif</span></div>
-    <div class="theme-overview-list">${samples.map((theme) => overviewTheme(theme, manifest)).join("")}</div>
+  <section class="chapter chapter-custom" aria-labelledby="custom-heading">
+    <h2 id="custom-heading">自定义主题对照<em>${samples.length}</em><small>partial 只换色板，complete 换骨架与 motif</small></h2>
+    <div class="bands">${samples.map((theme, index) => overviewBand(theme, manifest, index)).join("")}</div>
   </section>
 </main>`
 
-  return documentPage("pptwise 全主题缩略总览", "24 套主题的人工视觉审查入口", manifest.pptwiseVersion, body)
+  return documentPage({
+    file: "index.html",
+    title: "pptwise 全主题缩略总览",
+    description: "24 套内置主题与 2 套自定义样张的人工视觉审查入口",
+    version: manifest.pptwiseVersion,
+    slide: manifest.slide,
+    body,
+  })
 }
 
 function findingMarkup(page: ManifestPage): string {
   if (!page.findings?.length) return ""
   const counts = new Map<string, number>()
   for (const finding of page.findings) counts.set(finding.code, (counts.get(finding.code) ?? 0) + 1)
-  return `<div class="machine-flags">${[...counts]
-    .map(([code, count]) => badge(`${code}${count > 1 ? ` ×${count}` : ""}`, "finding"))
-    .join("")}</div>`
+  const chips = [...counts]
+    .map(([code, count]) => {
+      const label = FINDING_LABELS[code] ?? code
+      const severe = SEVERE_FINDINGS.has(code)
+      return `<span class="flag${severe ? " flag-severe" : ""}" title="${esc(code)}">${esc(label)}${count > 1 ? `×${count}` : ""}</span>`
+    })
+    .join("")
+  return `<span class="flags">${chips}</span>`
 }
 
-function reviewCard(page: ManifestPage, caption?: string): string {
-  const facts = [page.slideType, page.theme, page.languageLabel].filter(Boolean).join(" · ")
-  const alt = `${page.subject}，${facts}`
+const FINDING_LABELS: Record<string, string> = {
+  overflow: "溢出",
+  "out-of-bounds": "出血",
+  "low-contrast": "对比度",
+  overlap: "重叠",
+  "content-truncated": "截断",
+  "content-dropped": "丢内容",
+}
+
+const SEVERE_FINDINGS = new Set(["content-dropped", "out-of-bounds", "overflow"])
+
+/** What a card writes under its slide, per table — never the group's own label twice. */
+function caption(page: ManifestPage): { lead: string; sub: string } {
+  if (page.table === "theme" || page.table === "custom") {
+    const position = `p${String(page.page).padStart(2, "0")} · ${page.slideType}`
+    return { lead: page.languageLabel === "中文" ? position : `${position} · ${page.languageLabel}`, sub: page.heading }
+  }
+  if (page.table === "skeleton") return { lead: page.subject, sub: page.slideType }
+  // The subject already labels the row, so the card spends its two lines on
+  // what actually varies inside it.
+  return { lead: page.languageLabel, sub: page.theme }
+}
+
+function reviewCard(page: ManifestPage): string {
+  const { lead, sub } = caption(page)
+  const alt = `${page.subject}，${[page.slideType, page.theme, page.languageLabel].filter(Boolean).join(" · ")}`
   return `<article class="review-card" data-page-id="${esc(page.id)}" data-search="${esc(
     `${page.subject} ${page.theme} ${page.heading} ${page.languageLabel}`.toLowerCase(),
   )}">
-  <button class="slide-button" type="button" data-open-page="${esc(page.id)}" aria-label="放大 ${esc(page.subject)}">
-    <span class="card-stage">${pageImage(page, alt)}</span>
+  <button class="shot" type="button" data-open-page="${esc(page.id)}" aria-label="放大 ${esc(page.subject)}">
+    <span class="stage">${pageImage(page, alt)}</span>
   </button>
-  <div class="card-meta">
-    <div><code>${esc(caption ?? page.subject)}</code><p>${esc(facts)}</p></div>
+  <div class="card-cap">
+    <span class="card-text"><b>${esc(lead)}</b><i>${esc(sub)}</i></span>
     ${findingMarkup(page)}
+    <span class="verdicts" role="group" aria-label="${esc(page.subject)} 结论">
+      <button type="button" data-verdict="pass" title="通过" aria-label="通过">通</button>
+      <button type="button" data-verdict="limit" title="限制" aria-label="限制">限</button>
+      <button type="button" data-verdict="rework" title="返工" aria-label="返工">返</button>
+      <button type="button" data-note-toggle title="备注" aria-label="备注">·</button>
+    </span>
   </div>
-  <div class="verdict-row" role="group" aria-label="${esc(page.subject)} 结论">
-    <button type="button" data-verdict="pass">通过</button>
-    <button type="button" data-verdict="limit">限制</button>
-    <button type="button" data-verdict="rework">返工</button>
-  </div>
-  <textarea class="review-note" rows="1" placeholder="备注" aria-label="${esc(page.subject)} 备注"></textarea>
-  <div class="freshness-slot" aria-live="polite"></div>
+  <textarea class="note" rows="2" placeholder="备注，自动保存" aria-label="${esc(page.subject)} 备注"></textarea>
+  <span class="freshness" aria-live="polite"></span>
 </article>`
 }
 
-function reviewToolbar(title: string, count: number, intro: string, filter = true): string {
-  return `<section class="review-intro">
-  <p class="eyebrow">VISUAL REVIEW</p>
-  <div class="review-title-row"><div><h1>${esc(title)}</h1><p>${esc(intro)}</p></div><strong>${count}<small> 张</small></strong></div>
-  <div class="review-tools">
-    ${filter ? '<input id="page-filter" type="search" placeholder="搜索主题、版式或标题" aria-label="搜索当前页面">' : ""}
-    <span class="review-progress"><b id="done-count">0</b> / ${count} 已评</span>
-    <button class="export-button" id="export-verdicts" type="button">复制当前结论</button>
+function toolbar(count: number): string {
+  return `<div class="toolbar">
+  <input id="page-filter" type="search" placeholder="搜索主题、版式或标题" aria-label="搜索当前页面">
+  <div class="chips" id="verdict-filter" role="group" aria-label="按结论过滤">
+    <button type="button" data-filter="all" aria-pressed="true">全部</button>
+    <button type="button" data-filter="none">未评</button>
+    <button type="button" data-filter="pass">通过</button>
+    <button type="button" data-filter="limit">限制</button>
+    <button type="button" data-filter="rework">返工</button>
   </div>
-</section>`
+  <p class="tally">
+    <span class="t-pass"><b id="n-pass">0</b></span>
+    <span class="t-limit"><b id="n-limit">0</b></span>
+    <span class="t-rework"><b id="n-rework">0</b></span>
+    <span class="t-done"><b id="done-count">0</b>/${count}</span>
+  </p>
+  <button class="copy" id="export-verdicts" type="button">复制结论</button>
+</div>`
 }
 
 function themeDetailGroups(
@@ -235,16 +321,23 @@ function themeDetailGroups(
       const table = theme.source === "builtin" ? "theme" : "custom"
       const group = manifest.pages.filter((page) => page.table === table && page.theme === theme.id)
       pages.push(...group)
-      return `<section class="detail-group" id="theme-${safe(theme.id)}" data-review-group>
-  <header class="detail-group-head">
-    <div><p>${String(index + 1).padStart(2, "0")} · ${esc(theme.id)}</p><h2>${esc(theme.label)}</h2></div>
-    <div class="badges">${themeBadges(theme, true)}</div>
-  </header>
-  <div class="review-grid">${group.map((page) => reviewCard(page)).join("") || '<p class="empty-state">本次未生成这一组。</p>'}</div>
+      return `<section class="group" id="theme-${safe(theme.id)}" data-review-group>
+  ${groupHead(index, theme, `${group.length} 张`)}
+  <div class="grid">${group.map((page) => reviewCard(page)).join("") || '<p class="empty">本次未生成这一组。</p>'}</div>
 </section>`
     })
     .join("")
   return { pages, markup }
+}
+
+function groupHead(index: number, theme: GalleryThemeCatalogEntry, count: string): string {
+  return `<header class="group-head">
+    <span class="band-no">${ordinal(index)}</span>
+    <h3>${esc(theme.label)}</h3>
+    <code class="band-id">${esc(theme.id)}</code>
+    ${themeBadges(theme, true)}
+    <span class="group-count">${esc(count)}</span>
+  </header>`
 }
 
 function skeletonGroups(
@@ -257,23 +350,20 @@ function skeletonGroups(
     .map((theme, index) => {
       const row = pages.filter((page) => page.theme === theme.id)
       const sparseIds = new Set(theme.sparse)
-      const group = (label: string, selected: ManifestPage[]) =>
+      // Curated faces run in one grid rather than one strip per page type:
+      // most themes pin a single cover, chapter and ending, and a labelled
+      // row each would spend four screens on twelve slides.
+      const family = (label: string, note: string, selected: ManifestPage[]) =>
         selected.length
-          ? `<div class="bone-family"><h3>${esc(label)}<span>${selected.length}</span></h3><div class="bone-strip">${selected
-              .map((page) => reviewCard(page, page.subject))
+          ? `<div class="family"><h4>${esc(label)}<em>${selected.length}</em><i>${esc(note)}</i></h4><div class="grid grid-tight">${selected
+              .map((page) => reviewCard(page))
               .join("")}</div></div>`
           : ""
-      return `<section class="skeleton-theme" id="skeleton-${safe(theme.id)}" data-review-group>
-  <header class="skeleton-theme-head">
-    <div><p>${String(index + 1).padStart(2, "0")} · ${esc(theme.id)}</p><h2>${esc(theme.label)}</h2></div>
-    <div class="badges">${themeBadges(theme, true)}</div>
-  </header>
-  <div class="bone-families">
-    ${group("cover", row.filter((page) => page.slideType === "cover" && !sparseIds.has(page.subject)))}
-    ${group("chapter", row.filter((page) => page.slideType === "chapter" && !sparseIds.has(page.subject)))}
-    ${group("content pool", row.filter((page) => page.slideType === "content" && !sparseIds.has(page.subject)))}
-    ${group("ending", row.filter((page) => page.slideType === "ending" && !sparseIds.has(page.subject)))}
-    ${group("sparse offers", row.filter((page) => sparseIds.has(page.subject)))}
+      return `<section class="group" id="skeleton-${safe(theme.id)}" data-review-group>
+  ${groupHead(index, theme, `${row.length} 张`)}
+  <div class="families">
+    ${family("locked faces", "cover · chapter · content pool · ending", row.filter((page) => !sparseIds.has(page.subject)))}
+    ${family("sparse offers", "只在有资格的主题上展开", row.filter((page) => sparseIds.has(page.subject)))}
   </div>
 </section>`
     })
@@ -285,34 +375,59 @@ function flatTable(manifest: Manifest, table: "layout" | "component"): { pages: 
   const pages = manifest.pages.filter((page) => page.table === table)
   const subjects = [...new Set(pages.map((page) => page.subject))].sort((a, b) => a.localeCompare(b))
   const markup = subjects
-    .map((subject) => {
+    .map((subject, index) => {
       const group = pages.filter((page) => page.subject === subject)
-      return `<section class="flat-group" data-review-group>
-  <header><h2>${esc(subject)}</h2><span>${group.length} 张</span></header>
-  <div class="review-grid compact-grid">${group.map((page) => reviewCard(page)).join("")}</div>
+      return `<section class="group-flat" data-review-group>
+  <header class="flat-head">
+    <span class="band-no">${ordinal(index)}</span>
+    <h3><code>${esc(subject)}</code></h3>
+    <span class="group-count">${group.length} 张</span>
+  </header>
+  <div class="grid grid-tight">${group.map((page) => reviewCard(page)).join("")}</div>
 </section>`
     })
     .join("")
   return { pages, markup }
 }
 
-function reviewDialog(initialPage: ManifestPage): string {
+function viewer(initialPage: ManifestPage): string {
   return `<dialog class="viewer" id="viewer">
-  <div class="viewer-shell">
-    <button class="viewer-close" type="button" data-close-viewer aria-label="关闭大图">关闭</button>
-    <div class="viewer-stage">${initialPage.file ? `<img id="viewer-image" loading="lazy" src="${esc(initialPage.file)}" alt="${esc(initialPage.subject)}">` : ""}</div>
-    <div class="viewer-meta">
-      <div><code id="viewer-subject"></code><p id="viewer-facts"></p></div>
-      <div class="verdict-row" id="viewer-verdicts" role="group" aria-label="大图结论">
-        <button type="button" data-verdict="pass">通过 <kbd>1</kbd></button>
-        <button type="button" data-verdict="limit">限制 <kbd>2</kbd></button>
-        <button type="button" data-verdict="rework">返工 <kbd>3</kbd></button>
-      </div>
-      <input id="viewer-note" class="viewer-note" placeholder="备注，自动保存" aria-label="大图备注">
-    </div>
+  <div class="viewer-stage">${initialPage.file ? `<img id="viewer-image" loading="lazy" src="${esc(initialPage.file)}" alt="${esc(initialPage.subject)}">` : ""}</div>
+  <div class="viewer-bar">
+    <span class="viewer-text"><b id="viewer-subject"></b><i id="viewer-facts"></i></span>
+    <span class="verdicts verdicts-big" id="viewer-verdicts" role="group" aria-label="大图结论">
+      <button type="button" data-verdict="pass">通过<kbd>1</kbd></button>
+      <button type="button" data-verdict="limit">限制<kbd>2</kbd></button>
+      <button type="button" data-verdict="rework">返工<kbd>3</kbd></button>
+    </span>
+    <input id="viewer-note" class="viewer-note" placeholder="备注，自动保存" aria-label="大图备注">
+    <span class="viewer-keys"><kbd>←</kbd><kbd>→</kbd>翻页<kbd>Esc</kbd>关闭</span>
+    <button class="viewer-close" type="button" data-close-viewer aria-label="关闭大图">✕</button>
   </div>
 </dialog>`
 }
+
+const SHELL_SCRIPT = `<script>
+(() => {
+  "use strict";
+  const KEY = "pptwise-gallery-surround";
+  const root = document.documentElement;
+  try { if (localStorage.getItem(KEY) === "dark") root.dataset.surround = "dark"; } catch (_) {}
+  const buttons = document.querySelectorAll("[data-surround-set]");
+  const paint = () => {
+    const current = root.dataset.surround || "light";
+    for (const button of buttons) button.setAttribute("aria-pressed", String(button.dataset.surroundSet === current));
+  };
+  for (const button of buttons) {
+    button.addEventListener("click", () => {
+      root.dataset.surround = button.dataset.surroundSet;
+      try { localStorage.setItem(KEY, button.dataset.surroundSet); } catch (_) {}
+      paint();
+    });
+  }
+  paint();
+})();
+</script>`
 
 function reviewScript(pages: readonly ManifestPage[]): string {
   return `<script id="manifest-data" type="application/json">${jsonScript({ pages })}</script>
@@ -345,11 +460,14 @@ ${inlineRule(verdictFreshness)}
   for (const page of PAGES) {
     const entry = verdicts[page.id];
     if (verdictFreshness(entry, page) !== "stale") continue;
-    archive[page.id] = { ...entry, archivedAt: new Date().toISOString() };
+    archive[page.id] = Object.assign({}, entry, { archivedAt: new Date().toISOString() });
     delete verdicts[page.id];
   }
   save();
   saveArchive();
+
+  const cards = new Map();
+  for (const card of document.querySelectorAll("[data-page-id]")) cards.set(card.dataset.pageId, card);
 
   function setVerdict(id, value) {
     const entry = verdicts[id] || (verdicts[id] = {});
@@ -370,62 +488,101 @@ ${inlineRule(verdictFreshness)}
   }
 
   function refresh(id) {
-    const card = document.querySelector('[data-page-id="' + CSS.escape(id) + '"]');
+    const card = cards.get(id);
     if (!card) return;
     const entry = verdicts[id] || {};
     card.dataset.verdict = entry.verdict || "";
-    for (const button of card.querySelectorAll("[data-verdict]")) {
+    for (const button of card.querySelectorAll(".card-cap [data-verdict]")) {
       button.setAttribute("aria-pressed", String(button.dataset.verdict === entry.verdict));
     }
-    const note = card.querySelector(".review-note");
+    const note = card.querySelector(".note");
     if (note && note.value !== (entry.note || "")) note.value = entry.note || "";
-    const slot = card.querySelector(".freshness-slot");
+    if (entry.note) card.dataset.note = "on";
+    const slot = card.querySelector(".freshness");
     if (slot) {
       const state = verdictFreshness(entry, PAGE_BY_ID.get(id));
-      slot.textContent = archive[id] ? "旧结论已归档" : state === "recolored" ? "仅换肤" : "";
+      slot.textContent = archive[id] ? "旧结论已归档" : state === "recolored" ? "自评起只换过配色" : "";
     }
-    refreshProgress();
+    tally();
   }
 
-  function refreshProgress() {
-    const count = PAGES.filter((page) => verdicts[page.id] && verdicts[page.id].verdict).length;
-    const target = document.getElementById("done-count");
-    if (target) target.textContent = String(count);
+  function tally() {
+    const counts = { pass: 0, limit: 0, rework: 0 };
+    for (const page of PAGES) {
+      const verdict = verdicts[page.id] && verdicts[page.id].verdict;
+      if (verdict) counts[verdict] += 1;
+    }
+    const write = (elementId, value) => {
+      const target = document.getElementById(elementId);
+      if (target) target.textContent = String(value);
+    };
+    write("n-pass", counts.pass);
+    write("n-limit", counts.limit);
+    write("n-rework", counts.rework);
+    write("done-count", counts.pass + counts.limit + counts.rework);
   }
 
-  for (const card of document.querySelectorAll("[data-page-id]")) {
-    const id = card.dataset.pageId;
-    for (const button of card.querySelectorAll("[data-verdict]")) {
+  for (const [id, card] of cards) {
+    for (const button of card.querySelectorAll(".card-cap [data-verdict]")) {
       button.addEventListener("click", () => setVerdict(id, button.dataset.verdict));
     }
-    card.querySelector(".review-note").addEventListener("input", (event) => setNote(id, event.target.value));
+    const toggle = card.querySelector("[data-note-toggle]");
+    const note = card.querySelector(".note");
+    if (toggle && note) {
+      toggle.addEventListener("click", () => {
+        card.dataset.note = card.dataset.note === "on" ? "" : "on";
+        if (card.dataset.note === "on") note.focus();
+      });
+    }
+    if (note) note.addEventListener("input", (event) => setNote(id, event.target.value));
     refresh(id);
   }
 
-  const filter = document.getElementById("page-filter");
-  if (filter) {
-    filter.addEventListener("input", () => {
-      const query = filter.value.trim().toLowerCase();
-      for (const card of document.querySelectorAll("[data-page-id]")) {
-        card.hidden = Boolean(query && !card.dataset.search.includes(query));
+  // Filtering is applied on demand only. Re-running it after every verdict
+  // would make each judged card vanish under the pointer mid-pass.
+  const search = document.getElementById("page-filter");
+  let mode = "all";
+
+  function applyFilter() {
+    const query = search ? search.value.trim().toLowerCase() : "";
+    for (const [id, card] of cards) {
+      const verdict = (verdicts[id] || {}).verdict || "";
+      const byText = !query || card.dataset.search.includes(query);
+      const byMode = mode === "all" || (mode === "none" ? !verdict : verdict === mode);
+      card.hidden = !(byText && byMode);
+    }
+    for (const group of document.querySelectorAll("[data-review-group]")) {
+      group.hidden = !group.querySelector("[data-page-id]:not([hidden])");
+    }
+    for (const family of document.querySelectorAll(".family")) {
+      family.hidden = !family.querySelector("[data-page-id]:not([hidden])");
+    }
+  }
+
+  if (search) search.addEventListener("input", applyFilter);
+  for (const button of document.querySelectorAll("#verdict-filter [data-filter]")) {
+    button.addEventListener("click", () => {
+      mode = button.dataset.filter;
+      for (const other of document.querySelectorAll("#verdict-filter [data-filter]")) {
+        other.setAttribute("aria-pressed", String(other === button));
       }
-      for (const group of document.querySelectorAll("[data-review-group]")) {
-        group.hidden = !group.querySelector("[data-page-id]:not([hidden])");
-      }
+      applyFilter();
     });
   }
 
-  const viewer = document.getElementById("viewer");
-  const viewerImage = document.getElementById("viewer-image");
+  const dialog = document.getElementById("viewer");
+  const image = document.getElementById("viewer-image");
   const viewerNote = document.getElementById("viewer-note");
   let activeId = "";
+
+  const visibleIds = () => [...cards].filter(([, card]) => !card.hidden).map(([id]) => id);
 
   function paintViewer(id) {
     const page = PAGE_BY_ID.get(id);
     if (!page || !page.file) return;
     activeId = id;
-    viewerImage.src = page.file;
-    viewerImage.alt = page.subject;
+    image.src = page.file;
+    image.alt = page.subject;
     document.getElementById("viewer-subject").textContent = page.subject;
     document.getElementById("viewer-facts").textContent = [page.slideType, page.theme, page.languageLabel].join(" · ");
     viewerNote.value = (verdicts[id] || {}).note || "";
@@ -435,13 +592,23 @@ ${inlineRule(verdictFreshness)}
     }
   }
 
+  function step(delta) {
+    const ids = visibleIds();
+    const at = ids.indexOf(activeId);
+    if (at === -1) return;
+    const next = ids[(at + delta + ids.length) % ids.length];
+    paintViewer(next);
+    const card = cards.get(next);
+    if (card) card.scrollIntoView({ block: "center" });
+  }
+
   document.addEventListener("click", (event) => {
     const open = event.target.closest("[data-open-page]");
-    if (open) {
+    if (open && dialog) {
       paintViewer(open.dataset.openPage);
-      viewer.showModal();
+      dialog.showModal();
     }
-    if (event.target.closest("[data-close-viewer]")) viewer.close();
+    if (event.target.closest("[data-close-viewer]")) dialog.close();
   });
   for (const button of document.querySelectorAll("#viewer-verdicts [data-verdict]")) {
     button.addEventListener("click", () => {
@@ -450,13 +617,18 @@ ${inlineRule(verdictFreshness)}
       paintViewer(activeId);
     });
   }
-  viewerNote.addEventListener("input", () => activeId && setNote(activeId, viewerNote.value));
-  viewer.addEventListener("click", (event) => {
-    if (event.target === viewer) viewer.close();
-  });
+  if (viewerNote) viewerNote.addEventListener("input", () => activeId && setNote(activeId, viewerNote.value));
+  if (dialog) {
+    dialog.addEventListener("click", (event) => {
+      if (event.target === dialog) dialog.close();
+    });
+  }
   document.addEventListener("keydown", (event) => {
-    if (!viewer.open || !activeId) return;
-    if (["1", "2", "3"].includes(event.key) && !(event.target instanceof HTMLInputElement)) {
+    if (!dialog || !dialog.open || !activeId) return;
+    if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return;
+    if (event.key === "ArrowRight") { event.preventDefault(); step(1); }
+    if (event.key === "ArrowLeft") { event.preventDefault(); step(-1); }
+    if (["1", "2", "3"].includes(event.key)) {
       setVerdict(activeId, ["pass", "limit", "rework"][Number(event.key) - 1]);
       paintViewer(activeId);
     }
@@ -485,31 +657,39 @@ ${inlineRule(verdictFreshness)}
         console.log(text);
         exportButton.textContent = "已输出到控制台";
       }
-      setTimeout(() => { exportButton.textContent = "复制当前结论"; }, 1600);
+      setTimeout(() => { exportButton.textContent = "复制结论"; }, 1600);
     });
   }
+  tally();
 })();
 </script>`
 }
 
 function buildReviewDocument(
   manifest: Manifest,
+  file: string,
   title: string,
   intro: string,
   content: { pages: ManifestPage[]; markup: string },
 ): string {
-  const body = `<main class="review-main">
-  ${reviewToolbar(title, content.pages.length, intro)}
-  <div class="review-content">${content.markup || '<p class="empty-state">本次未生成这一张表。</p>'}</div>
+  const body = `<main class="sheet sheet-review">
+  <div class="masthead masthead-review">
+    <h1>${esc(title)}<em>${content.pages.length}</em></h1>
+    <p class="deck">${esc(intro)}</p>
+  </div>
+  ${toolbar(content.pages.length)}
+  <div class="review-body">${content.markup || '<p class="empty">本次未生成这一张表。</p>'}</div>
 </main>
-${content.pages[0] ? reviewDialog(content.pages[0]) : ""}`
-  return documentPage(
-    `pptwise ${title}`,
-    intro,
-    manifest.pptwiseVersion,
+${content.pages[0] ? viewer(content.pages[0]) : ""}`
+  return documentPage({
+    file,
+    title: `pptwise ${title}`,
+    description: intro,
+    version: manifest.pptwiseVersion,
+    slide: manifest.slide,
     body,
-    content.pages.length > 0 ? reviewScript(content.pages) : "",
-  )
+    script: content.pages.length > 0 ? reviewScript(content.pages) : "",
+  })
 }
 
 export function buildGalleryPages(
@@ -527,8 +707,9 @@ export function buildGalleryPages(
       "themes.html",
       buildReviewDocument(
         manifest,
+        "themes.html",
         "主题详情",
-        "每套内置主题运行同一组十页内容。自定义主题各保留四页型对照样张。",
+        "每套内置主题运行同一组十页内容，自定义主题各保留四页型对照样张。点图放大，1/2/3 记结论，←→ 翻页。",
         themes,
       ),
     ],
@@ -536,18 +717,25 @@ export function buildGalleryPages(
       "skeleton.html",
       buildReviewDocument(
         manifest,
+        "skeleton.html",
         "骨架表",
-        "逐主题展开四页型全部策展面、sparse offers 与 motif 状态，版式 id 写在每张图下。",
+        "逐主题展开四页型全部锁定面、sparse offers 与 motif 状态，版式 id 写在每张图下。",
         skeleton,
       ),
     ],
     [
       "layouts.html",
-      buildReviewDocument(manifest, "版式表", "全部注册版式按语料和适用主题展开。", layouts),
+      buildReviewDocument(manifest, "layouts.html", "版式表", "全部注册版式按语料和适用主题展开。", layouts),
     ],
     [
       "components.html",
-      buildReviewDocument(manifest, "组件表", "全部组件、图表变体和主题 form 的真实渲染样张。", components),
+      buildReviewDocument(
+        manifest,
+        "components.html",
+        "组件表",
+        "全部组件、图表变体和主题 form 的真实渲染样张。",
+        components,
+      ),
     ],
   ])
 }
@@ -561,194 +749,412 @@ export function summarize(manifest: Manifest): string {
 
 const BASE_CSS = String.raw`
 :root {
-  --paper: #f2f1ed;
-  --panel: #fffefa;
-  --panel-strong: #ffffff;
-  --ink: #1d211d;
-  --muted: #6d716b;
-  --line: #d7d8d1;
-  --line-strong: #b8bbb2;
-  --accent: #245b45;
-  --accent-soft: #e3eee8;
-  --amber: #93671c;
-  --red: #9b3b32;
-  --stage: #e6e7e2;
-  --radius: 8px;
+  --paper: #f6f5f1;
+  --card: #fcfbf8;
+  --stage: #eceae4;
+  --ink: #17181a;
+  --ink-2: #5c5d5a;
+  --ink-3: #8a8b86;
+  --line: #dfddd5;
+  --line-2: #c7c4b9;
+  --mark: #a8391c;
+  --ring: rgba(23, 24, 26, 0.14);
+  --pass: #2d6a46;
+  --limit: #8a6413;
+  --rework: #a8391c;
+  --serif: "Iowan Old Style", Charter, "Palatino Linotype", Palatino, "Songti SC", "Source Han Serif SC", "Noto Serif CJK SC", serif;
+  --sans: "Avenir Next", Avenir, "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, "Cascadia Mono", "Liberation Mono", monospace;
+  --gutter: clamp(18px, 2.4vw, 40px);
   color-scheme: light;
   font-synthesis: none;
 }
+[data-surround="dark"] {
+  --paper: #16171a;
+  --card: #1d1f22;
+  --stage: #0f1012;
+  --ink: #edece8;
+  --ink-2: #a3a49f;
+  --ink-3: #75766f;
+  --line: #2e3135;
+  --line-2: #43464b;
+  --mark: #e0774f;
+  --ring: rgba(255, 255, 255, 0.16);
+  --pass: #6bb187;
+  --limit: #c9a44a;
+  --rework: #e0774f;
+  color-scheme: dark;
+}
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; scroll-padding-top: 84px; }
+html { scroll-behavior: smooth; scroll-padding-top: 104px; }
 body {
   margin: 0;
   background: var(--paper);
   color: var(--ink);
-  font-family: "Avenir Next", Avenir, "PingFang SC", "Microsoft YaHei", sans-serif;
-  font-size: 14px;
-  line-height: 1.5;
+  font-family: var(--sans);
+  font-size: 13px;
+  line-height: 1.45;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 a { color: inherit; text-decoration: none; }
-button, input, textarea { font: inherit; }
-code, .eyebrow, .theme-sequence, .detail-group-head p, .skeleton-theme-head p {
-  font-family: "SFMono-Regular", "Cascadia Code", "Liberation Mono", monospace;
-}
-.site-header {
+button, input, textarea { font: inherit; color: inherit; }
+h1, h2, h3, h4, p { margin: 0; }
+code, kbd { font-family: var(--mono); }
+[hidden] { display: none !important; }
+:focus-visible { outline: 2px solid var(--mark); outline-offset: 2px; }
+.viewer :focus-visible { outline-color: #e0774f; }
+::selection { background: var(--mark); color: #fff; }
+
+/* ── shell ─────────────────────────────────────────────────────────── */
+.topbar {
   position: sticky;
   top: 0;
-  z-index: 20;
-  min-height: 58px;
+  z-index: 30;
+  display: flex;
+  align-items: stretch;
+  gap: 24px;
+  height: 46px;
+  padding: 0 var(--gutter);
+  background: color-mix(in srgb, var(--paper) 88%, transparent);
+  backdrop-filter: saturate(1.4) blur(12px);
+  border-bottom: 1px solid var(--line-2);
+}
+.mark { display: flex; align-items: baseline; gap: 8px; align-self: center; }
+.mark b { font-family: var(--serif); font-size: 17px; font-weight: 600; letter-spacing: 0.01em; }
+.mark i { font-style: normal; font-size: 12px; color: var(--ink-2); }
+.mark em { font-family: var(--mono); font-style: normal; font-size: 10px; color: var(--ink-3); }
+.topnav { display: flex; align-items: stretch; margin-left: auto; }
+.topnav a {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  padding: 10px clamp(20px, 4vw, 64px);
-  background: color-mix(in srgb, var(--panel) 94%, transparent);
-  border-bottom: 1px solid var(--line);
-  backdrop-filter: blur(14px);
+  padding: 0 13px;
+  color: var(--ink-2);
+  font-size: 12.5px;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
 }
-.wordmark { display: inline-flex; align-items: baseline; gap: 10px; font-weight: 750; letter-spacing: -0.03em; }
-.wordmark small { color: var(--muted); font-size: 11px; font-weight: 500; letter-spacing: 0; }
-.site-nav { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
-.site-nav a { padding: 6px 10px; color: var(--muted); border-radius: 5px; font-size: 12px; }
-.site-nav a:hover, .site-nav a:focus-visible { color: var(--ink); background: var(--paper); outline: none; }
-.overview-main, .review-main { width: min(1600px, 100%); margin: 0 auto; padding: 0 clamp(20px, 4vw, 64px) 96px; }
-.overview-hero {
-  min-height: 285px;
+.topnav a:hover { color: var(--ink); }
+.topnav a[aria-current="page"] { color: var(--ink); border-bottom-color: var(--mark); }
+.surround { display: flex; align-self: center; border: 1px solid var(--line-2); border-radius: 3px; overflow: hidden; }
+.surround button {
+  padding: 3px 8px;
+  font-size: 11px;
+  color: var(--ink-3);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+.surround button[aria-pressed="true"] { color: var(--paper); background: var(--ink); }
+
+.sheet { width: 100%; max-width: 1840px; margin: 0 auto; padding: 0 var(--gutter) 120px; }
+
+/* ── mastheads ─────────────────────────────────────────────────────── */
+.masthead { padding: 46px 0 18px; border-bottom: 1px solid var(--ink); }
+.masthead h1 {
+  font-family: var(--serif);
+  font-size: clamp(30px, 3.4vw, 42px);
+  font-weight: 500;
+  line-height: 1.12;
+  letter-spacing: 0.01em;
+}
+.masthead h1 em {
+  margin-left: 12px;
+  font-family: var(--mono);
+  font-style: normal;
+  font-size: 13px;
+  color: var(--mark);
+  vertical-align: 0.6em;
+}
+.deck { max-width: 760px; margin-top: 12px; color: var(--ink-2); font-size: 14px; line-height: 1.65; }
+.colophon { display: flex; flex-wrap: wrap; gap: 18px; margin-top: 18px; font-family: var(--mono); font-size: 10.5px; color: var(--ink-3); }
+.colophon span + span { position: relative; }
+.colophon span + span::before { content: ""; position: absolute; left: -10px; top: 4px; bottom: 4px; border-left: 1px solid var(--line-2); }
+.masthead-review { padding: 34px 0 14px; }
+.masthead-review h1 { font-size: clamp(24px, 2.4vw, 32px); }
+
+/* ── index navigation ──────────────────────────────────────────────── */
+.routes { display: grid; grid-template-columns: repeat(4, 1fr); border-bottom: 1px solid var(--line); }
+.routes a {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 56px;
-  align-items: end;
-  padding: 64px 0 38px;
-  border-bottom: 1px solid var(--line-strong);
+  grid-template-columns: 1fr auto;
+  align-items: baseline;
+  gap: 2px 10px;
+  padding: 14px 16px 13px 0;
+  border-right: 1px solid var(--line);
 }
-.eyebrow { margin: 0 0 12px; color: var(--accent); font-size: 11px; font-weight: 700; letter-spacing: 0.15em; }
-h1, h2, h3, p { margin-top: 0; }
-.overview-hero h1, .review-intro h1 { margin: 0; font-size: clamp(36px, 5vw, 66px); line-height: 0.98; letter-spacing: -0.055em; font-weight: 670; }
-.lede { max-width: 660px; margin: 22px 0 0; color: var(--muted); font-size: 17px; }
-.build-facts { display: grid; grid-template-columns: repeat(3, auto); gap: 1px; margin: 0; background: var(--line); border: 1px solid var(--line); }
-.build-facts div { min-width: 116px; padding: 14px 16px; background: var(--panel); }
-.build-facts dt { color: var(--muted); font-size: 11px; }
-.build-facts dd { margin: 4px 0 0; font-weight: 700; font-variant-numeric: tabular-nums; }
-.review-routes { display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--line-strong); border-top: 0; background: var(--panel); }
-.review-routes a { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; padding: 18px; border-right: 1px solid var(--line); }
-.review-routes a:last-child { border-right: 0; }
-.review-routes a:hover { background: var(--accent-soft); }
-.review-routes span { grid-row: 1 / 3; color: var(--accent); font: 11px/1 "SFMono-Regular", monospace; }
-.review-routes b { font-size: 14px; }
-.review-routes small { color: var(--muted); font-size: 11px; }
-.overview-section { margin-top: 72px; }
-.section-heading { display: flex; align-items: end; gap: 14px; padding-bottom: 14px; border-bottom: 1px solid var(--line-strong); }
-.section-heading p { margin: 0 0 4px; color: var(--accent); font: 10px/1 "SFMono-Regular", monospace; letter-spacing: .14em; }
-.section-heading h2 { margin: 0; font-size: 24px; letter-spacing: -0.035em; }
-.section-heading span { margin-left: auto; color: var(--muted); font-size: 12px; }
-.theme-overview-list { display: grid; }
-.theme-overview {
+.routes a:last-child { border-right: 0; }
+.routes a + a { padding-left: 16px; }
+.routes a:hover b { color: var(--mark); }
+.routes b { font-size: 14px; font-weight: 600; }
+.routes em { font-family: var(--mono); font-style: normal; font-size: 12px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.routes i { grid-column: 1 / -1; font-style: normal; font-size: 11.5px; color: var(--ink-3); }
+.jump { display: flex; flex-wrap: wrap; gap: 0 14px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.jump a { font-family: var(--mono); font-size: 10.5px; color: var(--ink-3); }
+.jump a:hover { color: var(--mark); }
+
+/* ── chapters and bands ────────────────────────────────────────────── */
+.chapter { margin-top: 44px; }
+.chapter h2 {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--ink);
+  font-family: var(--serif);
+  font-size: 19px;
+  font-weight: 500;
+}
+.chapter h2 em { font-family: var(--mono); font-style: normal; font-size: 11px; color: var(--mark); }
+.chapter h2 small { margin-left: auto; font-size: 11.5px; color: var(--ink-3); font-family: var(--sans); }
+.chapter-custom { margin-top: 64px; }
+.band { padding: 18px 0 20px; border-bottom: 1px solid var(--line); }
+.band-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; min-width: 0; }
+.band-no { font-family: var(--mono); font-size: 10px; color: var(--mark); letter-spacing: 0.04em; }
+.band-head h3 { font-family: var(--serif); font-size: 18px; font-weight: 600; letter-spacing: 0.01em; }
+.band-head h3 a:hover { color: var(--mark); }
+.band-id { font-size: 10.5px; color: var(--ink-3); }
+.band-more { margin-left: auto; font-size: 11.5px; color: var(--ink-2); white-space: nowrap; }
+.band-more::after { content: " →"; }
+.band-more:hover { color: var(--mark); }
+.badges { display: flex; flex-wrap: wrap; gap: 4px; min-width: 0; }
+.badge {
+  padding: 1px 6px;
+  border: 1px solid var(--line-2);
+  border-radius: 2px;
+  color: var(--ink-2);
+  font-size: 10px;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+.badge-identity-high { color: var(--mark); border-color: color-mix(in srgb, var(--mark) 40%, var(--line-2)); }
+.badge-identity-medium { border-style: dashed; }
+.badge-identity-low, .badge-quiet { color: var(--ink-3); border-style: dotted; }
+.badge-source { color: var(--paper); background: var(--ink); border-color: var(--ink); }
+.badge-motif { color: var(--ink); border-color: var(--ink-2); }
+
+.strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.plate { display: block; min-width: 0; }
+.stage {
+  display: block;
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: var(--ar);
+  background: var(--stage);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+.stage img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.plate:hover .stage { box-shadow: inset 0 0 0 1px var(--mark), 0 2px 14px color-mix(in srgb, var(--ink) 14%, transparent); }
+.plate-cap { display: flex; align-items: baseline; gap: 7px; margin-top: 6px; min-width: 0; }
+.plate-cap i { font-style: normal; font-family: var(--mono); font-size: 9.5px; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.06em; }
+.plate-cap code { overflow: hidden; font-size: 10.5px; color: var(--ink-2); text-overflow: ellipsis; white-space: nowrap; }
+.plate:hover .plate-cap code { color: var(--ink); }
+.missing {
   display: grid;
-  grid-template-columns: minmax(220px, 0.82fr) minmax(0, 3.2fr);
-  gap: clamp(24px, 4vw, 56px);
-  padding: 30px 0;
-  border-bottom: 1px solid var(--line);
+  place-items: center;
+  height: 100%;
+  padding: 10px;
+  color: var(--rework);
+  text-align: center;
+  font-size: 10.5px;
 }
-.theme-overview-meta { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; }
-.theme-sequence { margin: 0 0 7px; color: var(--accent); font-size: 11px; }
-.theme-overview h2 { margin: 0 0 12px; font-size: clamp(22px, 2.3vw, 34px); line-height: 1.05; letter-spacing: -0.045em; }
-.badges { display: flex; flex-wrap: wrap; gap: 5px; }
-.badge { display: inline-flex; align-items: center; min-height: 21px; padding: 2px 7px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); background: var(--panel); font-size: 10px; white-space: nowrap; }
-.badge-low, .badge-quiet { color: #60645f; background: #f0f0ec; }
-.badge-medium { color: #265d48; border-color: #b8d0c3; background: #ebf4ef; }
-.badge-high { color: #7a4222; border-color: #dfc2aa; background: #f9eee5; }
-.badge-motif { color: #3f4d7d; border-color: #c8cee2; background: #f0f2f9; }
-.badge-finding { color: var(--red); border-color: #dfc2be; background: #faefed; }
-.detail-link { margin-top: auto; padding-top: 18px; color: var(--accent); font-size: 12px; font-weight: 650; }
-.overview-strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; min-width: 0; }
-.overview-thumb { min-width: 0; }
-.thumb-stage, .card-stage { display: block; overflow: hidden; background: var(--stage); border: 1px solid var(--line); aspect-ratio: 16 / 9; }
-.overview-image, .slide-image { display: block; width: 100%; height: 100%; object-fit: contain; }
-.overview-thumb:hover .thumb-stage { border-color: var(--accent); }
-.thumb-caption { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 7px; align-items: baseline; margin-top: 7px; min-width: 0; }
-.thumb-caption b { color: var(--muted); font-size: 9px; font-weight: 600; text-transform: uppercase; }
-.thumb-caption code { overflow: hidden; color: var(--ink); font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
-.custom-section { margin-top: 88px; padding-top: 38px; border-top: 5px solid var(--ink); }
-.review-intro { padding: 52px 0 22px; border-bottom: 1px solid var(--line-strong); }
-.review-title-row { display: flex; justify-content: space-between; gap: 24px; align-items: end; }
-.review-title-row p { max-width: 760px; margin: 15px 0 0; color: var(--muted); font-size: 15px; }
-.review-title-row strong { font-size: 42px; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -0.05em; }
-.review-title-row strong small { color: var(--muted); font-size: 12px; letter-spacing: 0; }
-.review-tools { display: flex; align-items: center; gap: 10px; margin-top: 24px; }
-.review-tools input { min-width: min(380px, 55vw); padding: 9px 11px; color: var(--ink); background: var(--panel); border: 1px solid var(--line-strong); border-radius: 5px; }
-.review-progress { margin-left: auto; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
-.review-progress b { color: var(--ink); }
-.export-button { padding: 9px 13px; border: 1px solid var(--ink); border-radius: 5px; color: var(--panel); background: var(--ink); cursor: pointer; font-size: 12px; }
-.review-content { padding-top: 22px; }
-.detail-group, .skeleton-theme { padding: 34px 0 44px; border-bottom: 1px solid var(--line-strong); }
-.detail-group-head, .skeleton-theme-head { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 17px; }
-.detail-group-head p, .skeleton-theme-head p { margin: 0 0 5px; color: var(--accent); font-size: 10px; }
-.detail-group-head h2, .skeleton-theme-head h2 { margin: 0; font-size: 26px; letter-spacing: -0.04em; }
-.review-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
-.compact-grid { grid-template-columns: repeat(auto-fill, minmax(245px, 1fr)); }
-.review-card { overflow: hidden; min-width: 0; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); }
-.review-card[data-verdict="pass"] { border-color: #6b9b7d; }
-.review-card[data-verdict="limit"] { border-color: #c09a55; }
-.review-card[data-verdict="rework"] { border-color: #c17870; }
-.slide-button { display: block; width: 100%; padding: 0; border: 0; background: transparent; cursor: zoom-in; }
-.slide-button:hover .card-stage { filter: brightness(.97); }
-.card-meta { display: flex; align-items: start; justify-content: space-between; gap: 8px; padding: 10px 11px 7px; }
-.card-meta code { display: block; overflow-wrap: anywhere; font-size: 11px; font-weight: 650; }
-.card-meta p { margin: 3px 0 0; color: var(--muted); font-size: 10px; }
-.machine-flags { display: flex; flex-wrap: wrap; justify-content: end; gap: 3px; }
-.verdict-row { display: flex; gap: 5px; padding: 4px 10px 8px; }
-.verdict-row button { flex: 1 1 0; padding: 5px 3px; color: var(--muted); background: transparent; border: 1px solid var(--line); border-radius: 4px; cursor: pointer; font-size: 10px; }
-.verdict-row button:hover { color: var(--ink); border-color: var(--line-strong); }
-.verdict-row button[aria-pressed="true"] { color: white; background: var(--ink); border-color: var(--ink); }
-.review-note { display: block; width: 100%; min-height: 34px; padding: 8px 10px; resize: vertical; color: var(--ink); background: #fafaf7; border: 0; border-top: 1px solid var(--line); font-size: 11px; }
-.freshness-slot { min-height: 0; padding: 0 10px; color: var(--muted); font-size: 9px; }
-.freshness-slot:not(:empty) { min-height: 24px; padding-top: 5px; padding-bottom: 5px; border-top: 1px solid var(--line); }
-.bone-families { display: grid; gap: 22px; }
-.bone-family h3 { display: flex; align-items: baseline; gap: 8px; margin: 0 0 8px; color: var(--muted); font-size: 11px; font-weight: 650; text-transform: uppercase; letter-spacing: .08em; }
-.bone-family h3 span { font-size: 9px; font-weight: 500; }
-.bone-strip { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px; }
-.bone-strip .review-card { border-radius: 4px; }
-.flat-group { padding: 18px 0 30px; border-bottom: 1px solid var(--line); }
-.flat-group > header { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin-bottom: 10px; }
-.flat-group > header h2 { margin: 0; font: 650 14px/1.3 "SFMono-Regular", monospace; }
-.flat-group > header span { color: var(--muted); font-size: 10px; }
-.missing-slide { display: grid; width: 100%; height: 100%; place-items: center; padding: 12px; color: var(--red); background: #f6e9e7; text-align: center; font-size: 11px; aspect-ratio: 16 / 9; }
-.empty-state { grid-column: 1 / -1; padding: 32px; color: var(--muted); background: var(--panel); border: 1px dashed var(--line-strong); text-align: center; }
-.viewer { width: 100vw; max-width: none; height: 100vh; max-height: none; padding: 0; border: 0; background: rgba(18, 20, 18, .96); }
-.viewer::backdrop { background: rgba(18, 20, 18, .96); }
-.viewer-shell { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; width: 100%; height: 100%; padding: 18px; }
-.viewer-close { justify-self: end; padding: 7px 11px; color: white; background: transparent; border: 1px solid #5e625e; border-radius: 4px; cursor: pointer; }
-.viewer-stage { display: grid; min-height: 0; place-items: center; padding: 14px; }
-.viewer-stage img { display: block; width: auto; max-width: 100%; height: auto; max-height: 100%; box-shadow: 0 18px 70px rgba(0,0,0,.45); }
-.viewer-meta { display: grid; grid-template-columns: minmax(180px, 1fr) minmax(260px, 420px) minmax(220px, 1fr); gap: 18px; align-items: center; padding: 10px 14px; color: var(--ink); background: var(--panel); border-radius: 6px; }
-.viewer-meta code { font-size: 12px; font-weight: 650; }
-.viewer-meta p { margin: 2px 0 0; color: var(--muted); font-size: 10px; }
-.viewer-meta .verdict-row { padding: 0; }
-.viewer-note { width: 100%; padding: 8px 9px; color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-radius: 4px; }
-kbd { font: inherit; font-size: 9px; }
-[hidden] { display: none !important; }
-@media (max-width: 980px) {
-  .overview-hero { grid-template-columns: 1fr; gap: 28px; }
-  .build-facts { grid-template-columns: repeat(3, 1fr); }
-  .theme-overview { grid-template-columns: 1fr; }
-  .detail-link { margin-top: 0; }
-  .review-routes { grid-template-columns: repeat(2, 1fr); }
-  .review-routes a:nth-child(2) { border-right: 0; }
-  .review-routes a:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
-  .viewer-meta { grid-template-columns: 1fr; gap: 8px; }
+
+/* ── review toolbar ────────────────────────────────────────────────── */
+.toolbar {
+  position: sticky;
+  top: 46px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+  background: color-mix(in srgb, var(--paper) 92%, transparent);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line-2);
 }
-@media (max-width: 680px) {
-  .site-header { align-items: flex-start; }
-  .site-nav { justify-content: flex-end; }
-  .overview-strip { grid-template-columns: repeat(2, 1fr); }
-  .build-facts { grid-template-columns: 1fr; }
-  .review-title-row, .detail-group-head, .skeleton-theme-head { align-items: flex-start; flex-direction: column; }
-  .review-tools { align-items: stretch; flex-direction: column; }
-  .review-tools input { min-width: 0; width: 100%; }
-  .review-progress { margin-left: 0; }
+.toolbar input {
+  width: min(300px, 40vw);
+  padding: 5px 9px;
+  background: var(--card);
+  border: 1px solid var(--line-2);
+  border-radius: 3px;
+  font-size: 12px;
+}
+.toolbar input:focus-visible { outline-offset: -1px; }
+.chips { display: flex; border: 1px solid var(--line-2); border-radius: 3px; overflow: hidden; }
+.chips button {
+  padding: 5px 10px;
+  font-size: 11.5px;
+  color: var(--ink-2);
+  background: transparent;
+  border: 0;
+  border-right: 1px solid var(--line);
+  cursor: pointer;
+}
+.chips button:last-child { border-right: 0; }
+.chips button:hover { color: var(--ink); }
+.chips button[aria-pressed="true"] { color: var(--paper); background: var(--ink); }
+.tally { display: flex; align-items: center; gap: 14px; margin-left: auto; font-family: var(--mono); font-size: 11px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.tally span::before { content: ""; display: inline-block; width: 6px; height: 6px; margin-right: 5px; border-radius: 50%; }
+.tally .t-pass::before { background: var(--pass); }
+.tally .t-limit::before { background: var(--limit); }
+.tally .t-rework::before { background: var(--rework); }
+.tally .t-done::before { display: none; }
+.tally b { color: var(--ink); font-weight: 600; }
+.copy { padding: 5px 11px; color: var(--paper); background: var(--ink); border: 1px solid var(--ink); border-radius: 3px; font-size: 11.5px; cursor: pointer; }
+.copy:hover { background: var(--mark); border-color: var(--mark); }
+
+/* ── review groups ─────────────────────────────────────────────────── */
+.review-body { padding-top: 4px; }
+.group { padding: 26px 0 30px; border-bottom: 1px solid var(--line-2); }
+.group-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px; }
+.group-head h3 { font-family: var(--serif); font-size: 18px; font-weight: 600; }
+.group-count { margin-left: auto; font-family: var(--mono); font-size: 10.5px; color: var(--ink-3); }
+/* A flat table is a specimen list: the subject is a label in the margin and
+   its samples run along the row, so 150-odd subjects do not each spend a
+   heading's worth of vertical space. */
+.group-flat { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 0 20px; padding: 16px 0; border-bottom: 1px solid var(--line); }
+.flat-head { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: baseline; gap: 2px 7px; align-content: start; }
+.flat-head h3 { font-family: var(--mono); font-size: 12px; font-weight: 600; overflow-wrap: anywhere; }
+.flat-head .group-count { grid-column: 2; margin-left: 0; }
+.families { display: grid; gap: 18px; }
+.family h4 {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  margin-bottom: 7px;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--ink-3);
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+}
+.family h4 em { font-style: normal; color: var(--ink-3); }
+.family h4 i { font-style: normal; text-transform: none; letter-spacing: 0; color: var(--ink-3); opacity: 0.85; }
+.family h4::after { content: ""; flex: 1; border-bottom: 1px solid var(--line); transform: translateY(-3px); }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(272px, 1fr)); gap: 14px 12px; }
+.grid-tight { grid-template-columns: repeat(auto-fill, minmax(236px, 1fr)); }
+.empty { padding: 28px; color: var(--ink-3); border: 1px dashed var(--line-2); text-align: center; }
+
+/* ── card ──────────────────────────────────────────────────────────── */
+.review-card { position: relative; min-width: 0; }
+.review-card[data-verdict]:not([data-verdict=""])::before {
+  content: "";
+  position: absolute;
+  left: -6px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+}
+.review-card[data-verdict="pass"]::before { background: var(--pass); }
+.review-card[data-verdict="limit"]::before { background: var(--limit); }
+.review-card[data-verdict="rework"]::before { background: var(--rework); }
+.shot { display: block; width: 100%; padding: 0; background: none; border: 0; cursor: zoom-in; }
+.shot:focus-visible .stage { box-shadow: inset 0 0 0 2px var(--mark); }
+.shot:hover .stage { box-shadow: inset 0 0 0 1px var(--line-2), 0 2px 14px color-mix(in srgb, var(--ink) 14%, transparent); }
+.card-cap { display: flex; align-items: baseline; gap: 8px; margin-top: 6px; min-width: 0; }
+.card-text { min-width: 0; flex: 1; }
+.card-text b {
+  display: block;
+  overflow: hidden;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.card-text i { display: block; overflow: hidden; font-style: normal; font-size: 10.5px; color: var(--ink-3); text-overflow: ellipsis; white-space: nowrap; }
+.flags { display: flex; flex-wrap: wrap; gap: 3px; }
+.flag { padding: 0 5px; border: 1px solid var(--line-2); border-radius: 2px; color: var(--ink-3); font-size: 9.5px; line-height: 15px; }
+.flag-severe { color: var(--rework); border-color: color-mix(in srgb, var(--rework) 45%, transparent); }
+/* Apparatus, not content: the three marks sit at a quarter strength until
+   the pointer or the keyboard is on the card that owns them, or the card
+   already carries a verdict worth seeing from across the grid. */
+.verdicts { display: flex; gap: 2px; opacity: 0.25; transition: opacity 120ms ease; }
+.review-card:hover .verdicts,
+.review-card:focus-within .verdicts,
+.review-card[data-verdict]:not([data-verdict=""]) .verdicts { opacity: 1; }
+.verdicts button {
+  width: 19px;
+  height: 19px;
+  padding: 0;
+  color: var(--ink-3);
+  background: transparent;
+  border: 1px solid var(--line-2);
+  border-radius: 2px;
+  font-size: 10px;
+  line-height: 1;
+  cursor: pointer;
+}
+.verdicts button:hover { color: var(--ink); border-color: var(--ink-2); }
+.verdicts [data-verdict="pass"][aria-pressed="true"] { color: #fff; background: var(--pass); border-color: var(--pass); }
+.verdicts [data-verdict="limit"][aria-pressed="true"] { color: #fff; background: var(--limit); border-color: var(--limit); }
+.verdicts [data-verdict="rework"][aria-pressed="true"] { color: #fff; background: var(--rework); border-color: var(--rework); }
+.note { display: none; width: 100%; margin-top: 5px; padding: 6px 8px; resize: vertical; background: var(--card); border: 1px solid var(--line-2); border-radius: 3px; font-size: 11px; }
+.review-card[data-note="on"] .note { display: block; }
+.note:focus-visible { outline-offset: -1px; }
+.freshness { display: block; font-size: 9.5px; color: var(--ink-3); }
+.freshness:not(:empty) { margin-top: 3px; }
+
+/* ── viewer ────────────────────────────────────────────────────────── */
+.viewer {
+  width: 100vw;
+  max-width: none;
+  height: 100vh;
+  max-height: none;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  padding: 0;
+  border: 0;
+  background: #101112;
+}
+.viewer:not([open]) { display: none; }
+.viewer::backdrop { background: #101112; }
+.viewer-stage { display: grid; place-items: center; min-height: 0; padding: 26px; }
+.viewer-stage img { display: block; max-width: 100%; max-height: 100%; box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55); }
+.viewer-bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 16px;
+  background: #17181a;
+  border-top: 1px solid #2b2d30;
+  color: #e9e8e4;
+}
+.viewer-text b { font-family: var(--mono); font-size: 12px; }
+.viewer-text i { display: block; font-style: normal; font-size: 10.5px; color: #8f908b; }
+.verdicts-big { opacity: 1; }
+.verdicts-big button { width: auto; height: 26px; padding: 0 11px; display: inline-flex; align-items: center; gap: 6px; color: #c9c8c3; border-color: #3a3c40; font-size: 12px; }
+.verdicts-big kbd { color: #7c7d78; font-size: 9.5px; }
+.viewer-note { flex: 1; min-width: 120px; padding: 5px 9px; color: #e9e8e4; background: #202225; border: 1px solid #34363a; border-radius: 3px; font-size: 12px; }
+.viewer-keys { display: flex; align-items: center; gap: 5px; color: #75766f; font-size: 10.5px; }
+.viewer-keys kbd { padding: 1px 4px; border: 1px solid #3a3c40; border-radius: 3px; font-size: 9.5px; }
+.viewer-close { width: 28px; height: 26px; color: #c9c8c3; background: transparent; border: 1px solid #3a3c40; border-radius: 3px; cursor: pointer; }
+.viewer-close:hover { color: #fff; border-color: #75766f; }
+
+@media (max-width: 900px) {
+  .group-flat { grid-template-columns: 1fr; gap: 8px; }
+  .flat-head { grid-template-columns: auto auto minmax(0, 1fr); }
+  .flat-head .group-count { grid-column: auto; margin-left: auto; }
+}
+@media (max-width: 1100px) {
+  .routes { grid-template-columns: repeat(2, 1fr); }
+  .routes a:nth-child(2) { border-right: 0; }
+  .routes a:nth-child(-n + 2) { border-bottom: 1px solid var(--line); }
+  .routes a:nth-child(3) { padding-left: 0; }
+}
+@media (max-width: 760px) {
+  .topbar { height: auto; flex-wrap: wrap; gap: 8px 14px; padding: 8px var(--gutter); }
+  .topnav { margin-left: 0; }
+  .strip { grid-template-columns: repeat(2, 1fr); }
+  .toolbar { position: static; flex-wrap: wrap; }
+  .tally { margin-left: 0; }
+  .viewer-bar { flex-wrap: wrap; }
 }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
+  * { transition: none !important; }
 }
 `
