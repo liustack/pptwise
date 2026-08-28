@@ -383,7 +383,7 @@ function flatTable(manifest: Manifest, table: "layout" | "component"): { pages: 
     <h3><code>${esc(subject)}</code></h3>
     <span class="group-count">${group.length} 张</span>
   </header>
-  <div class="grid grid-tight">${group.map((page) => reviewCard(page)).join("")}</div>
+  <div class="grid grid-tri">${group.map((page) => reviewCard(page)).join("")}</div>
 </section>`
     })
     .join("")
@@ -754,7 +754,7 @@ const BASE_CSS = String.raw`
   --stage: #eceae4;
   --ink: #17181a;
   --ink-2: #5c5d5a;
-  --ink-3: #8a8b86;
+  --ink-3: #74756f;
   --line: #dfddd5;
   --line-2: #c7c4b9;
   --mark: #a8391c;
@@ -775,7 +775,7 @@ const BASE_CSS = String.raw`
   --stage: #0f1012;
   --ink: #edece8;
   --ink-2: #a3a49f;
-  --ink-3: #75766f;
+  --ink-3: #7f8079;
   --line: #2e3135;
   --line-2: #43464b;
   --mark: #e0774f;
@@ -890,7 +890,7 @@ code, kbd { font-family: var(--mono); }
 .routes em { font-family: var(--mono); font-style: normal; font-size: 12px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
 .routes i { grid-column: 1 / -1; font-style: normal; font-size: 11.5px; color: var(--ink-3); }
 .jump { display: flex; flex-wrap: wrap; gap: 0 14px; padding: 10px 0; border-bottom: 1px solid var(--line); }
-.jump a { font-family: var(--mono); font-size: 10.5px; color: var(--ink-3); }
+.jump a { font-family: var(--mono); font-size: 10.5px; color: var(--ink-2); }
 .jump a:hover { color: var(--mark); }
 
 /* ── chapters and bands ────────────────────────────────────────────── */
@@ -1035,6 +1035,10 @@ code, kbd { font-family: var(--mono); }
 .family h4::after { content: ""; flex: 1; border-bottom: 1px solid var(--line); transform: translateY(-3px); }
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(272px, 1fr)); gap: 14px 12px; }
 .grid-tight { grid-template-columns: repeat(auto-fill, minmax(236px, 1fr)); }
+/* One column per language, always three: the row reads as one subject
+   rendered in 中文 / English / 中英混排, so the columns split the width
+   evenly instead of leaving trailing gaps at wide viewports. */
+.grid-tri { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .empty { padding: 28px; color: var(--ink-3); border: 1px dashed var(--line-2); text-align: center; }
 
 /* ── card ──────────────────────────────────────────────────────────── */
@@ -1145,10 +1149,14 @@ code, kbd { font-family: var(--mono); }
   .routes a:nth-child(-n + 2) { border-bottom: 1px solid var(--line); }
   .routes a:nth-child(3) { padding-left: 0; }
 }
+@media (max-width: 900px) {
+  .grid-tri { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 @media (max-width: 760px) {
   .topbar { height: auto; flex-wrap: wrap; gap: 8px 14px; padding: 8px var(--gutter); }
   .topnav { margin-left: 0; }
   .strip { grid-template-columns: repeat(2, 1fr); }
+  .grid-tri { grid-template-columns: 1fr; }
   .toolbar { position: static; flex-wrap: wrap; }
   .tally { margin-left: 0; }
   .viewer-bar { flex-wrap: wrap; }

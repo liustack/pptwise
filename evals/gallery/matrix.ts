@@ -56,7 +56,7 @@ function safe(s: string): string {
 }
 
 export interface MatrixOptions {
-  /** Languages for the layout, component and density tables. */
+  /** Languages for the layout and component tables. */
   readonly languages?: readonly LanguageId[]
   /**
    * Language for the theme table. The source issue attaches the
