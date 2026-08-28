@@ -94,17 +94,9 @@ export interface Manifest {
 
 const TABLE_META: Record<TableId, { label: string; question: string }> = {
   theme: {
-    label: "主题详情",
+    label: "主题表",
     question:
       "每个主题仍是十页（封面/章节/七页内容/结尾），七个内容页按固定分配表轮换组件——这个主题好不好看？",
-  },
-  skeleton: {
-    label: "骨架表",
-    question: "逐主题展开四页型策展面、sparse offers 与 motif 状态——换骨相后结构是否成立？",
-  },
-  custom: {
-    label: "自定义主题样张",
-    question: "partial 换色板与 complete 换骨架是否和内置主题走同一条真实渲染链？",
   },
   layout: {
     label: "版式表",
@@ -115,11 +107,20 @@ const TABLE_META: Record<TableId, { label: string; question: string }> = {
     label: "组件表",
     question: "固定基准主题，每个组件一页，三种语料各跑一遍——这个组件画出来能不能看？",
   },
+  density: {
+    label: "满载表",
+    question: "九个组件各一页，条目数打满容量上限但不超——这一页是满载、不溢出的状态。",
+  },
+  heading: {
+    label: "标题构造表",
+    question:
+      "六种构造 × 三态（无标题 / 仅标题 / 带副题），三种语料各跑一遍——这个标题构造在真实内容页上站不站得住？",
+  },
 }
 
 export interface RenderResult {
   readonly manifest: Manifest
-  /** Page id → SVG markup, kept in memory for bbox and focused render tests. */
+  /** Page id → SVG markup, kept in memory for the HTML builder to inline. */
   readonly svgs: ReadonlyMap<string, string>
 }
 
