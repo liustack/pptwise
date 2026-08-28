@@ -21,14 +21,25 @@
 import { describe, expect, it } from "vitest"
 import { listThemes } from "@/api"
 import { COMPONENT_TYPES, type Component } from "@/ir"
-import { CHART_VARIANTS, COMPONENT_BUILDERS, DENSITY_BUILDERS, FORM_VARIANTS } from "../evals/gallery/corpus/components"
+import { CHART_VARIANTS, COMPONENT_BUILDERS, FORM_VARIANTS } from "../evals/gallery/corpus/components"
 import { THEME_TABLE_REQUIRED_SURFACES } from "../evals/gallery/corpus/theme-slots"
 import { COMPONENT_FORMS, resolveComponentForm } from "@/components/form-assignments"
 import { BASELINE_THEME, corpusAssets, type CorpusAssets } from "../evals/gallery/corpus/decks"
 import { LANGUAGE_IDS, LEXICONS, type LanguageId } from "../evals/gallery/corpus/lexicon"
-import { buildGalleryHtml } from "../evals/gallery/html"
+import { buildGalleryPages } from "../evals/gallery/html"
+import { buildGalleryThemeCatalog } from "../evals/gallery/catalog"
 import { assertFullCoverage, buildMatrix } from "../evals/gallery/matrix"
-import { SPARSE_LAYOUT_IDS, THEME_DEFINITIONS, themeOffersSparse } from "@/themes/definitions"
+import {
+  GALLERY_COMPLETE_THEME_ID,
+  GALLERY_PARTIAL_THEME_ID,
+} from "../evals/gallery/sample-themes"
+import {
+  SPARSE_LAYOUT_IDS,
+  THEME_DEFINITIONS,
+  getThemeDefinition,
+  themeOffersSparse,
+} from "@/themes/definitions"
+import { THEME_OCCASIONS } from "@/themes/occasions"
 import { installNodePlatform } from "@/platform/node"
 
 // `renderMatrix` audits every page it renders, and the auditor parses SVG
@@ -113,13 +124,13 @@ describe("gallery coverage", () => {
     expect(sparse).toHaveLength(derived)
   })
 
-  it("emits the theme, layout, component, density, and heading tables", async () => {
+  it("emits theme review, skeleton, custom sample, layout, and component tables", async () => {
     const jobs = buildMatrix(themeIds, await assets())
     expect([...new Set(jobs.map((j) => j.table))].sort()).toEqual([
       "component",
-      "density",
-      "heading",
+      "custom",
       "layout",
+      "skeleton",
       "theme",
     ])
   })
@@ -174,6 +185,89 @@ function themeTableSurfaces(
 }
 
 describe("gallery theme table corpus", () => {
+  it("derives every skeleton row and badge from the registered theme definition", () => {
+    const catalog = buildGalleryThemeCatalog(themeIds)
+    expect(catalog).toHaveLength(themeIds.length)
+
+    for (const entry of catalog) {
+      const definition = THEME_DEFINITIONS[entry.id as keyof typeof THEME_DEFINITIONS]
+      const faceIds = (type: keyof typeof entry.faces) =>
+        definition.faces![type].map((face) => (typeof face === "string" ? face : face.id))
+
+      expect(entry.faces, `${entry.id}.faces`).toEqual({
+        cover: faceIds("cover"),
+        chapter: faceIds("chapter"),
+        content: faceIds("content"),
+        ending: faceIds("ending"),
+      })
+      expect(entry.sparse, `${entry.id}.sparse`).toEqual(definition.sparseLayouts ?? SPARSE_LAYOUT_IDS)
+      expect(entry.motif, `${entry.id}.motif`).toBe(definition.motif)
+      const route = THEME_OCCASIONS[entry.id as keyof typeof THEME_OCCASIONS]
+      expect(entry.identity, `${entry.id}.identity`).toBe(route.identity)
+      expect(entry.occasions, `${entry.id}.occasions`).toEqual(route.occasions)
+    }
+  })
+
+  it("keeps partial palette inheritance and complete structural ownership visible", () => {
+    const catalog = buildGalleryThemeCatalog(themeIds, { includeSamples: true })
+    const partial = catalog.find((entry) => entry.id === GALLERY_PARTIAL_THEME_ID)!
+    const complete = catalog.find((entry) => entry.id === GALLERY_COMPLETE_THEME_ID)!
+    const consulting = catalog.find((entry) => entry.id === "consulting")!
+
+    expect(partial.source).toBe("partial")
+    expect(partial.base).toBe("consulting")
+    expect(partial.faces).toEqual(consulting.faces)
+    expect(getThemeDefinition(partial.id).style.colors).not.toEqual(getThemeDefinition("consulting").style.colors)
+
+    expect(complete.source).toBe("complete")
+    expect(complete.faces).toEqual({
+      cover: ["poster-center"],
+      chapter: ["one-word-chapter"],
+      content: ["two-column"],
+      ending: ["poster-ending"],
+    })
+    expect(complete.pinOnlyFaces).toEqual(["one-word-chapter"])
+    expect(complete.motif).toBe("poster-motif")
+  })
+
+  it("keeps all eight custom comparison slides clean and renderable", async () => {
+    const { renderMatrix } = await import("../evals/gallery/render")
+    const { mkdtempSync } = await import("node:fs")
+    const { tmpdir } = await import("node:os")
+    const { join } = await import("node:path")
+
+    const jobs = buildMatrix(themeIds, await assets(), { only: "custom" })
+    const outDir = mkdtempSync(join(tmpdir(), "pptwise-gallery-custom-"))
+    const { manifest } = renderMatrix(jobs, outDir, "test")
+
+    expect(manifest.pages).toHaveLength(8)
+    expect(manifest.pages.filter((page) => page.skipped)).toEqual([])
+    expect(
+      manifest.pages.flatMap((page) =>
+        (page.findings ?? []).map((finding) => page.id + ": " + finding.code),
+      ),
+    ).toEqual([])
+  }, 60_000)
+
+  it("renders every curated face and sparse offer exactly once per skeleton row", async () => {
+    const catalog = buildGalleryThemeCatalog(themeIds)
+    const jobs = buildMatrix(themeIds, await assets(), { only: "skeleton" })
+
+    for (const theme of catalog) {
+      const expected = [
+        ...theme.faces.cover,
+        ...theme.faces.chapter,
+        ...theme.faces.content,
+        ...theme.faces.ending,
+        ...theme.sparse,
+      ]
+      const row = jobs.filter((job) => job.theme === theme.id)
+      expect(row.map((job) => job.subject), theme.id).toEqual(expected)
+      expect(row.every((job) => job.pageCount === expected.length), theme.id).toBe(true)
+      expect(row.filter((job) => job.id.includes("--sparse--"))).toHaveLength(theme.sparse.length)
+    }
+  })
+
   it("keeps the coverage list aligned with IR types, chart surfaces, and forms", () => {
     const expected = [
       ...COMPONENT_TYPES,
@@ -379,13 +473,11 @@ describe("gallery corpus content", () => {
   }
 
   it("names the dimension in an axis title, never repeats one of that axis's own ticks", () => {
-    // Prefixed rather than merged: the three tables key several builders by
-    // the same name ("chart"), and a plain spread would silently drop two of
-    // the three from the sweep.
+    // Prefixed rather than merged: the two tables key chart by related names,
+    // and a plain spread would silently drop one side from the sweep.
     const builders = [
       ...Object.entries(COMPONENT_BUILDERS).map(([k, v]) => [`component/${k}`, v] as const),
       ...Object.entries(CHART_VARIANTS).map(([k, v]) => [`variant/${k}`, v] as const),
-      ...Object.entries(DENSITY_BUILDERS).map(([k, v]) => [`density/${k}`, v] as const),
     ]
     const clashes: string[] = []
     for (const language of LANGUAGE_IDS) {
@@ -402,6 +494,48 @@ describe("gallery corpus content", () => {
 })
 
 describe("gallery page", () => {
+  it("builds a 24-theme overview and secondary review pages from lazy SVG images", async () => {
+    const { renderMatrix } = await import("../evals/gallery/render")
+    const { mkdtempSync } = await import("node:fs")
+    const { tmpdir } = await import("node:os")
+    const { join } = await import("node:path")
+
+    const matrix = [
+      ...buildMatrix(themeIds, await assets(), { only: "skeleton" }),
+      ...buildMatrix(themeIds, await assets(), { only: "custom" }),
+    ]
+    const outDir = mkdtempSync(join(tmpdir(), "pptwise-gallery-pages-"))
+    const { manifest } = renderMatrix(matrix, outDir, "test")
+    const catalog = buildGalleryThemeCatalog(themeIds, { includeSamples: true })
+    const pages = buildGalleryPages(manifest, catalog)
+
+    expect([...pages.keys()].sort()).toEqual([
+      "components.html",
+      "index.html",
+      "layouts.html",
+      "skeleton.html",
+      "themes.html",
+    ])
+
+    const index = pages.get("index.html")!
+    expect(index.match(/data-theme-source="builtin"/g)).toHaveLength(24)
+    expect(index.match(/data-theme-source="(?:partial|complete)"/g)).toHaveLength(2)
+    expect(index).toContain('href="themes.html#theme-consulting"')
+    expect(index).toContain('href="skeleton.html"')
+    expect(index).toContain('href="layouts.html"')
+    expect(index).toContain('href="components.html"')
+
+    for (const html of pages.values()) {
+      expect(html).not.toContain("<svg")
+      expect(html).not.toContain('id="svg-data"')
+      const images = [...html.matchAll(/<img\b[^>]*>/g)].map((match) => match[0])
+      for (const image of images) {
+        expect(image).toContain('loading="lazy"')
+        expect(image).toMatch(/src="pages\/[a-z0-9-]+\.svg"/)
+      }
+    }
+  }, 60_000)
+
   it("stays self-contained — nothing in it reaches the network", async () => {
     const { renderMatrix } = await import("../evals/gallery/render")
     const { mkdtempSync } = await import("node:fs")
@@ -411,19 +545,22 @@ describe("gallery page", () => {
     const jobs = buildMatrix(themeIds, await assets(), { only: "component", languages: ["zh"] })
     const outDir = mkdtempSync(join(tmpdir(), "pptwise-gallery-html-"))
     const { manifest, svgs } = renderMatrix(jobs, outDir, "test")
-    const html = buildGalleryHtml(manifest, svgs)
+    const catalog = buildGalleryThemeCatalog(themeIds, { includeSamples: true })
+    const htmlPages = buildGalleryPages(manifest, catalog)
 
     // A reviewer opens this file offline, from wherever it was copied to.
     // Any absolute URL in it is a page that renders differently — or not at
     // all — depending on the network, which would make the review's own
     // evidence unreproducible.
-    const external = html.match(/(?:src|href)\s*=\s*"https?:\/\/[^"]+"/g) ?? []
-    expect(external).toEqual([])
+    for (const html of htmlPages.values()) {
+      const external = html.match(/(?:src|href)\s*=\s*"https?:\/\/[^"]+"/g) ?? []
+      expect(external).toEqual([])
+    }
 
     // The corpus deliberately contains an https link as *content* (a source
     // citation), so the check above must not be satisfied by the corpus
     // simply having no URLs in it.
-    expect(html).toContain("example.com")
+    expect([...svgs.values()].join("\n")).toContain("example.com")
   }, 60_000)
 
   it("emits a script that actually parses", async () => {
@@ -440,8 +577,9 @@ describe("gallery page", () => {
 
     const jobs = buildMatrix(themeIds, await assets(), { only: "component", languages: ["zh"] })
     const outDir = mkdtempSync(join(tmpdir(), "pptwise-gallery-parse-"))
-    const { manifest, svgs } = renderMatrix(jobs, outDir, "test")
-    const html = buildGalleryHtml(manifest, svgs)
+    const { manifest } = renderMatrix(jobs, outDir, "test")
+    const catalog = buildGalleryThemeCatalog(themeIds, { includeSamples: true })
+    const html = buildGalleryPages(manifest, catalog).get("components.html")!
 
     const scripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => m[1]!)
     expect(scripts.length).toBeGreaterThan(0)
@@ -463,8 +601,9 @@ describe("gallery page", () => {
 
     const jobs = buildMatrix(themeIds, await assets(), { only: "component", languages: ["zh"] })
     const outDir = mkdtempSync(join(tmpdir(), "pptwise-gallery-rule-"))
-    const { manifest, svgs } = renderMatrix(jobs, outDir, "test")
-    const html = buildGalleryHtml(manifest, svgs)
+    const { manifest } = renderMatrix(jobs, outDir, "test")
+    const catalog = buildGalleryThemeCatalog(themeIds, { includeSamples: true })
+    const html = buildGalleryPages(manifest, catalog).get("components.html")!
 
     expect(html).toContain("function verdictFreshness")
     expect(html).toContain('"recolored"')
@@ -480,14 +619,14 @@ describe("gallery page", () => {
 
     const jobs = buildMatrix(themeIds, await assets(), { only: "component", languages: ["zh"] })
     const outDir = mkdtempSync(join(tmpdir(), "pptwise-gallery-esc-"))
-    const { manifest, svgs } = renderMatrix(jobs, outDir, "test")
-    const html = buildGalleryHtml(manifest, svgs)
+    const { manifest } = renderMatrix(jobs, outDir, "test")
+    const catalog = buildGalleryThemeCatalog(themeIds, { includeSamples: true })
+    const html = buildGalleryPages(manifest, catalog).get("components.html")!
 
-    // Every SVG payload is full of `<`. If any of it survived unescaped
-    // inside the JSON script blocks, the browser would end the block at the
-    // first `</...>` and the page would come up blank.
-    const blocks = html.match(/<script id="(?:manifest|svg|edge)-data"[^>]*>([\s\S]*?)<\/script>/g) ?? []
-    expect(blocks.length).toBe(3)
+    // Page headings and findings are arbitrary text. Escaping the manifest
+    // payload keeps any closing-tag-shaped content inside the JSON block.
+    const blocks = html.match(/<script id="manifest-data"[^>]*>([\s\S]*?)<\/script>/g) ?? []
+    expect(blocks.length).toBe(1)
     for (const block of blocks) {
       const body = block.slice(block.indexOf(">") + 1, block.lastIndexOf("<"))
       expect(body.includes("<")).toBe(false)
@@ -495,11 +634,7 @@ describe("gallery page", () => {
     }
   }, 60_000)
 
-  it("carries a paint for the box under every page it can name one for", async () => {
-    // A stage left its own neutral grey survives in the slide's antialiased
-    // edge column and reads as a pale line down the page — see
-    // `src/lib/slide-edge.ts`. Reported against five pages of the 2026-08-20
-    // review, on three unrelated themes.
+  it("keeps every review slide in its own referenced SVG document", async () => {
     const { renderMatrix } = await import("../evals/gallery/render")
     const { mkdtempSync } = await import("node:fs")
     const { tmpdir } = await import("node:os")
@@ -507,67 +642,13 @@ describe("gallery page", () => {
 
     const jobs = buildMatrix(themeIds, await assets(), { only: "theme", themeLanguage: "zh" })
     const outDir = mkdtempSync(join(tmpdir(), "pptwise-gallery-edge-"))
-    const { manifest, svgs } = renderMatrix(jobs, outDir, "test")
-    const html = buildGalleryHtml(manifest, svgs)
+    const { manifest } = renderMatrix(jobs, outDir, "test")
+    const catalog = buildGalleryThemeCatalog(themeIds, { includeSamples: true })
+    const html = buildGalleryPages(manifest, catalog).get("themes.html")!
 
-    const block = /<script id="edge-data"[^>]*>([\s\S]*?)<\/script>/.exec(html)![1]!
-    const edges = JSON.parse(block.replace(/\\u003c/g, "<")) as Record<string, string>
-    // Every theme page has a colour or a gradient behind it; none is a photo.
-    expect(Object.keys(edges).sort()).toEqual(manifest.pages.map((p) => p.id).sort())
-    for (const [id, value] of Object.entries(edges)) {
-      expect(value, id).toMatch(/^(#[0-9A-Fa-f]{6}|linear-gradient\()/)
-    }
-    // The stage is repainted on mount, not left on the stylesheet's neutral.
-    expect(html).toContain('container.style.background = EDGES[id] || ""')
+    expect(html.match(/<article class="review-card" data-page-id=/g)).toHaveLength(manifest.pages.length)
+    expect(html).not.toContain('id="edge-data"')
+    expect(html).not.toContain("<svg")
+    for (const page of manifest.pages) expect(html, page.id).toContain('src="' + page.file + '"')
   }, 60_000)
-})
-
-// The full-load table (满载表) fills each of nine components to the largest
-// count that still fits the consulting density page. Authoring cuts or
-// splits content. These pages must not stamp a silent `data-dropped`
-// overflow attribute or drop the block whole. Gallery review r1 retired
-// the painted "+N …" copy. The drop path is now the attribute, and a
-// full-load page should not reach it. A tenth component that grows a
-
-// drop branch still fails the coverage test below until a builder is added.
-describe("gallery density table", () => {
-  it("renders every page at full load, with no drop marker and no silent drop", async () => {
-    const { renderMatrix } = await import("../evals/gallery/render")
-    const { mkdtempSync } = await import("node:fs")
-    const { tmpdir } = await import("node:os")
-    const { join } = await import("node:path")
-
-    const jobs = buildMatrix(themeIds, await assets(), { only: "density" })
-    const outDir = mkdtempSync(join(tmpdir(), "pptwise-gallery-density-"))
-    const { svgs } = renderMatrix(jobs, outDir, "test")
-
-    const marked = [...svgs].filter(([, svg]) => /data-dropped="[1-9]/.test(svg)).map(([id]) => id)
-    expect(marked, "these full-load pages still stamp data-dropped. lower their item counts").toEqual([])
-
-    const painted = [...svgs].filter(([, svg]) => /\+\d+ …/.test(svg)).map(([id]) => id)
-    expect(painted, "painted +N copy must stay gone").toEqual([])
-
-    const swallowed = [...svgs].filter(([, svg]) => svg.includes("data-dropped-silent")).map(([id]) => id)
-    expect(swallowed, "the component was dropped whole instead of fitting").toEqual([])
-  }, 60_000)
-
-  it("covers every component that can draw a drop marker", async () => {
-    const { readFileSync, readdirSync } = await import("node:fs")
-    const { join } = await import("node:path")
-    const { fileURLToPath } = await import("node:url")
-
-    // Counted from the renderers rather than from a list kept here by hand:
-    // a tenth component growing the same branch must fail this, or it joins
-    // the review unseen exactly the way the first nine did.
-    const dir = join(fileURLToPath(new URL("..", import.meta.url)), "src/components")
-    const drawers = readdirSync(dir)
-      .filter((f) => f.endsWith(".tsx") && !f.endsWith(".test.tsx"))
-      .filter((f) => /data-dropped=\{/.test(readFileSync(join(dir, f), "utf8")))
-
-    expect(
-      Object.keys(DENSITY_BUILDERS).length,
-      `${drawers.length} components draw a data-dropped marker (${drawers.join(", ")}) but the density ` +
-        `table covers ${Object.keys(DENSITY_BUILDERS).length} — add a builder to DENSITY_BUILDERS`,
-    ).toBe(drawers.length)
-  })
 })

@@ -1,58 +1,24 @@
 /**
- * Builds the self-contained review page from a manifest plus the rendered
- * SVG markup.
- *
- * Three things drive every decision in here:
- *
- * 1. The reviewer's time is the scarce resource. Four hundred pages is a
- *    long sitting, so the page optimizes for keeping a rhythm — keyboard
- *    verdicts, no dialogs, no confirmations, no page reloads.
- * 2. The shell must not compete with the slide. Themes are judged on
- *    color and weight, so the surround is neutral and switchable between
- *    light and dark rather than opinionated.
- * 3. Verdicts must survive. They are written to localStorage on every
- *    keystroke and exportable as JSON at any point, because losing three
- *    hours of judgements to a closed tab would end this exercise for good.
- *
- * Everything is inlined — markup, styles, script and all 400-odd SVGs — so
- * the file survives being emailed, moved, or opened from a USB stick with
- * no network. SVGs are mounted lazily and their internal ids namespaced on
- * mount, because a few hundred documents sharing one DOM would otherwise
- * cross-wire each other's gradients.
+ * Builds the gallery shell. SVG pages stay as standalone files and every
+ * HTML surface references them through lazy images. Keeping each SVG in its
+ * own document also isolates gradient and clip-path ids without rewriting.
  */
 
-import { slideEdgeFill } from "@/lib/slide-edge"
-import { namespaceSvgIds, svgIdPrefix } from "@/lib/svg-ids"
-import { verdictFreshness, type Manifest } from "./render"
+import { verdictFreshness, type Manifest, type ManifestPage } from "./render"
+import type { GalleryThemeCatalogEntry } from "./catalog"
 
-/**
- * Embed a function's own source in the page's script block.
- *
- * `tsx` and Vite run esbuild with `keepNames: true`, which appends a
- * `__name(fn, "fn")` call after every named declaration — referencing a
- * helper that exists in the Node module scope and nowhere in a standalone
- * page. Stripping it is what makes the embedded copy actually runnable, the
- * same problem `serializePageFunction` solves for the browser audit.
- */
 function inlineRule(fn: (...args: never[]) => unknown): string {
   return fn.toString().replace(/__name\([^)]*\);?/g, "")
 }
 
-/** Escape for embedding arbitrary text inside an HTML text node/attribute. */
-function esc(s: string): string {
-  return s
+function esc(value: string): string {
+  return value
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
 }
 
-/**
- * Escape a JSON payload for safe embedding inside a `<script>` block: `<`
- * so no substring can close the tag early, and the two Unicode line
- * separators, which are legal inside a JSON string but terminate a
- * JavaScript line and would break the parse.
- */
 function jsonScript(value: unknown): string {
   return JSON.stringify(value)
     .replace(/</g, "\\u003c")
@@ -60,836 +26,729 @@ function jsonScript(value: unknown): string {
     .replace(/\u2029/g, "\\u2029")
 }
 
-export function buildGalleryHtml(manifest: Manifest, svgs: ReadonlyMap<string, string>): string {
-  // Namespaced here rather than in the browser: several hundred standalone
-  // SVG documents share one page, and their id spaces would otherwise merge
-  // (see `src/lib/svg-ids.ts`). Doing it at build time is the same transform
-  // `preview --html` applies, and it keeps the client script to mounting.
-  const svgRecord: Record<string, string> = {}
-  // What each stage should be painted with while the slide sits on it — see
-  // `src/lib/slide-edge.ts` for why a neutral grey behind the slide surfaces
-  // as a pale hairline down the page edge.
-  const edgeRecord: Record<string, string> = {}
-  let seq = 0
-  for (const [id, markup] of svgs) {
-    svgRecord[id] = namespaceSvgIds(markup, svgIdPrefix(seq++))
-    const edge = slideEdgeFill(markup)
-    if (edge) edgeRecord[id] = edge
+function safe(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+}
+
+function pageImage(page: ManifestPage, alt: string, className = "slide-image"): string {
+  if (!page.file) {
+    return `<div class="missing-slide" role="img" aria-label="${esc(alt)} 未能渲染">${esc(page.skipped ?? "未能渲染")}</div>`
   }
+  return `<img class="${className}" loading="lazy" src="${esc(page.file)}" width="${page.width}" height="${page.height}" alt="${esc(alt)}">`
+}
 
-  const themes = [...new Set(manifest.pages.map((p) => p.theme))].sort()
-  const languages = [...new Set(manifest.pages.map((p) => p.language))]
-  const languageLabels: Record<string, string> = {}
-  for (const p of manifest.pages) languageLabels[p.language] = p.languageLabel
+function badge(text: string, tone = "neutral"): string {
+  return `<span class="badge badge-${tone}">${esc(text)}</span>`
+}
 
-  return `<!doctype html>
-<html lang="zh-CN">
-<head>
+function themeBadges(theme: GalleryThemeCatalogEntry, detailed = false): string {
+  const out: string[] = []
+  if (theme.source === "builtin") {
+    if (theme.identity) out.push(badge(`identity ${theme.identity}`, theme.identity))
+    out.push(...theme.occasions.map((occasion) => badge(occasion)))
+  } else {
+    out.push(badge(theme.source, theme.source === "complete" ? "high" : "medium"))
+    if (theme.base) out.push(badge(`base ${theme.base}`))
+    if (theme.identity) out.push(badge(`identity ${theme.identity}`, theme.identity))
+    if (theme.pinOnlyFaces.length > 0) out.push(badge(`pin-only ${theme.pinOnlyFaces.length}`))
+  }
+  if (detailed) {
+    if (theme.source === "builtin" && theme.pinOnlyFaces.length > 0) {
+      out.push(badge(`pin-only ${theme.pinOnlyFaces.length}`))
+    }
+    out.push(badge(theme.motif ? `motif ${theme.motif}` : "motif none", theme.motif ? "motif" : "quiet"))
+  }
+  return out.join("")
+}
+
+function head(title: string, description: string, version: string): string {
+  return `<head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>pptwise 视觉审查 · ${manifest.pages.length} 页</title>
-<style>
-:root {
-  --bg: #f4f4f2;
-  --panel: #ffffff;
-  --line: #d9d9d4;
-  --ink: #1b1b19;
-  --ink-dim: #6d6d66;
-  --pass: #2f7d4f;
-  --limit: #9a6b16;
-  --rework: #a8342d;
-  --focus: #2f5fd0;
-  --stage: #e8e8e4;
-  --radius: 10px;
-  font-synthesis-weight: none;
-}
-[data-surround="dark"] {
-  --bg: #17181a;
-  --panel: #1f2124;
-  --line: #34373c;
-  --ink: #e9eaec;
-  --ink-dim: #9195a0;
-  --stage: #101113;
-}
-* { box-sizing: border-box; }
-html, body { margin: 0; padding: 0; }
-body {
-  background: var(--bg);
-  color: var(--ink);
-  font: 14px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-  -webkit-font-smoothing: antialiased;
-}
-a { color: inherit; }
-
-header.bar {
-  position: sticky; top: 0; z-index: 20;
-  display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
-  padding: 12px 20px;
-  background: var(--panel);
-  border-bottom: 1px solid var(--line);
-}
-.title { font-weight: 650; letter-spacing: -0.01em; margin-right: 4px; }
-.title small { display: block; font-weight: 400; color: var(--ink-dim); font-size: 12px; letter-spacing: 0; }
-.spacer { flex: 1 1 auto; }
-
-.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
-.seg button {
-  appearance: none; border: 0; background: transparent; color: var(--ink);
-  font: inherit; font-size: 13px; padding: 5px 11px; cursor: pointer;
-  border-right: 1px solid var(--line);
-}
-.seg button:last-child { border-right: 0; }
-.seg button[aria-pressed="true"] { background: var(--ink); color: var(--panel); }
-.seg button:hover:not([aria-pressed="true"]) { background: var(--stage); }
-
-select, input[type="search"] {
-  font: inherit; font-size: 13px; padding: 5px 9px;
-  background: var(--panel); color: var(--ink);
-  border: 1px solid var(--line); border-radius: 8px;
-}
-input[type="search"] { min-width: 190px; }
-
-.btn {
-  appearance: none; font: inherit; font-size: 13px; padding: 5px 12px; cursor: pointer;
-  background: var(--panel); color: var(--ink);
-  border: 1px solid var(--line); border-radius: 8px;
-}
-.btn:hover { background: var(--stage); }
-.btn.primary { background: var(--ink); color: var(--panel); border-color: var(--ink); }
-
-.progress { font-variant-numeric: tabular-nums; font-size: 13px; color: var(--ink-dim); white-space: nowrap; }
-.progress b { color: var(--ink); font-weight: 650; }
-.tally { display: inline-flex; gap: 10px; font-size: 13px; font-variant-numeric: tabular-nums; }
-.tally span::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; vertical-align: 1px; }
-.tally .t-pass::before { background: var(--pass); }
-.tally .t-limit::before { background: var(--limit); }
-.tally .t-rework::before { background: var(--rework); }
-
-main { padding: 20px; }
-.tablehead { margin: 26px 0 14px; }
-.tablehead:first-child { margin-top: 4px; }
-.tablehead h2 { margin: 0; font-size: 16px; letter-spacing: -0.01em; }
-.tablehead p { margin: 3px 0 0; color: var(--ink-dim); font-size: 13px; max-width: 70ch; }
-
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
-
-.card {
-  background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
-  overflow: hidden; display: flex; flex-direction: column;
-}
-.card.is-pass { border-color: var(--pass); }
-.card.is-limit { border-color: var(--limit); }
-.card.is-rework { border-color: var(--rework); }
-
-.stage {
-  position: relative; background: var(--stage); cursor: zoom-in;
-  aspect-ratio: ${manifest.slide.width} / ${manifest.slide.height};
-  overflow: hidden;
-}
-.stage svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-.stage .skip {
-  position: absolute; inset: 0; display: grid; place-items: center; padding: 16px;
-  color: var(--rework); font-size: 12px; text-align: center; line-height: 1.5;
-}
-
-.meta { padding: 9px 11px 4px; }
-.meta .subject { font-weight: 600; font-size: 13px; word-break: break-word; }
-.meta .facts { color: var(--ink-dim); font-size: 12px; margin-top: 2px; }
-.meta .facts span + span::before { content: " · "; }
-
-.verdicts { display: flex; gap: 6px; padding: 8px 11px 0; }
-.verdicts button {
-  flex: 1 1 0; appearance: none; font: inherit; font-size: 12px; padding: 5px 0; cursor: pointer;
-  background: transparent; color: var(--ink-dim);
-  border: 1px solid var(--line); border-radius: 7px;
-}
-.verdicts button:hover { background: var(--stage); }
-.verdicts button[aria-pressed="true"] { color: var(--panel); font-weight: 600; }
-.verdicts button.v-pass[aria-pressed="true"] { background: var(--pass); border-color: var(--pass); }
-.verdicts button.v-limit[aria-pressed="true"] { background: var(--limit); border-color: var(--limit); }
-.verdicts button.v-rework[aria-pressed="true"] { background: var(--rework); border-color: var(--rework); }
-
-.note {
-  width: 100%; margin: 8px 0 0; padding: 7px 11px 10px; resize: vertical; min-height: 34px;
-  font: inherit; font-size: 12px; color: var(--ink);
-  background: transparent; border: 0; border-top: 1px solid var(--line);
-}
-.note:focus { outline: 2px solid var(--focus); outline-offset: -2px; }
-.note::placeholder { color: var(--ink-dim); }
-
-dialog.viewer {
-  padding: 0; border: 0; background: transparent; max-width: 100vw; max-height: 100vh; width: 100%; height: 100%;
-}
-dialog.viewer::backdrop { background: rgba(0,0,0,0.82); }
-.viewer-inner { display: flex; flex-direction: column; height: 100%; padding: 18px; gap: 12px; }
-.viewer-stage {
-  flex: 1 1 auto; display: grid; place-items: center; min-height: 0;
-}
-.viewer-stage .frame {
-  background: var(--stage); box-shadow: 0 18px 60px rgba(0,0,0,0.45);
-  aspect-ratio: ${manifest.slide.width} / ${manifest.slide.height};
-  max-width: min(100%, calc((100vh - 150px) * ${manifest.slide.width} / ${manifest.slide.height}));
-  max-height: 100%; width: 100%; position: relative; overflow: hidden;
-}
-.viewer-stage svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-.viewer-bar {
-  display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
-  background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 14px;
-}
-.viewer-bar .subject { font-weight: 600; }
-.viewer-bar .facts { color: var(--ink-dim); font-size: 12px; }
-.viewer-bar .note { border: 1px solid var(--line); border-radius: 7px; padding: 6px 9px; min-height: 0; margin: 0; flex: 1 1 240px; }
-.viewer-bar .verdicts { padding: 0; flex: 0 0 300px; }
-
-.hint { color: var(--ink-dim); font-size: 12px; }
-kbd {
-  font: inherit; font-size: 11px; padding: 1px 5px; border: 1px solid var(--line);
-  border-bottom-width: 2px; border-radius: 4px; background: var(--panel);
-}
-.empty { color: var(--ink-dim); padding: 40px 0; text-align: center; }
-
-/* The whole gallery is one self-contained file, so the browser parses
-   several megabytes of inline SVG before the first card can exist —
-   measured at roughly 240ms to first paint and 370ms to first card on the
-   full 431-page build. Fast, but not instant, and the gap grows with the
-   corpus. The header and this notice sit ahead of the payload in the
-   document, so something is on screen for that gap instead of white. The
-   first render pass replaces this. */
-.booting { color: var(--ink-dim); padding: 60px 0; text-align: center; line-height: 2; }
-
-/* Machine findings. Deliberately quiet — the auditor is an assistant to the
-   reviewer's eye, not a verdict. A loud red panel on 90 of 431 cards would
-   train the reviewer to stop reading it. */
-.flags { display: flex; flex-wrap: wrap; gap: 4px; padding: 8px 11px 0; }
-.flag {
-  font-size: 11px; padding: 1px 7px; border-radius: 999px;
-  background: var(--stage); color: var(--ink-dim); border: 1px solid var(--line);
-  cursor: default;
-}
-.flag.sev { color: var(--rework); border-color: var(--rework); }
-/* A verdict recorded against a version of the page that no longer exists is
-   auto-archived at load — the card returns to the unjudged state and only
-   this quiet chip records that an older judgement was filed away. The page
-   is current, so the slide is not dimmed. */
-.flag.stale { color: var(--ink-dim); border-color: var(--line); }
-/* A verdict whose page only changed color since it was made. Quieter than
-   stale and the slide is not dimmed: the judgement still stands, the reviewer
-   is only being told the palette moved under it. */
-.flag.recolored { color: var(--ink-dim); border-color: var(--line); }
-.findings-list { margin: 0; padding: 0 0 0 16px; font-size: 12px; color: var(--ink-dim); max-height: 84px; overflow-y: auto; }
-.findings-list li { margin: 2px 0; }
-.viewer-bar .findings-list { flex: 1 1 260px; }
-.booting small { font-size: 12px; }
-</style>
+<meta name="description" content="${esc(description)}">
+<link rel="icon" href="data:,">
+<title>${esc(title)}</title>
+<style>${BASE_CSS}</style>
 </head>
-<body data-surround="light">
+<body>
+<header class="site-header">
+  <a class="wordmark" href="index.html" aria-label="回到全主题总览"><span>pptwise</span><small>${esc(version)}</small></a>
+  <nav class="site-nav" aria-label="Gallery 导航">
+    <a href="index.html">总览</a>
+    <a href="themes.html">主题详情</a>
+    <a href="skeleton.html">骨架表</a>
+    <a href="layouts.html">版式表</a>
+    <a href="components.html">组件表</a>
+  </nav>
+</header>`
+}
 
-<header class="bar">
-  <div class="title">pptwise 视觉审查<small>${esc(manifest.pptwiseVersion)} · 生成于 ${esc(manifest.generatedAt.slice(0, 16).replace("T", " "))}</small></div>
-
-  <div class="seg" id="table-filter" role="group" aria-label="表">
-    <button data-table="all" aria-pressed="true">全部</button>
-    ${manifest.tables.map((t) => `<button data-table="${t.id}" aria-pressed="false">${esc(t.label)}</button>`).join("\n    ")}
-  </div>
-
-  <select id="lang-filter" aria-label="语料">
-    <option value="all">全部语料</option>
-    ${languages.map((l) => `<option value="${esc(l)}">${esc(languageLabels[l] ?? l)}</option>`).join("\n    ")}
-  </select>
-
-  <select id="theme-filter" aria-label="主题">
-    <option value="all">全部主题</option>
-    ${themes.map((t) => `<option value="${esc(t)}">${esc(t)}</option>`).join("\n    ")}
-  </select>
-
-  <select id="verdict-filter" aria-label="结论">
-    <option value="all">全部结论</option>
-    <option value="none">未评</option>
-    <option value="pass">通过</option>
-    <option value="limit">限制使用</option>
-    <option value="rework">返工</option>
-  </select>
-
-  <select id="finding-filter" aria-label="机器发现">
-    <option value="all">全部页面</option>
-    <option value="any">机器有发现</option>
-    <option value="clean">机器无发现</option>
-    <option value="stale">已归档旧结论</option>
-    <option value="recolored">仅换肤</option>
-  </select>
-
-  <input type="search" id="search" placeholder="搜标题或 id" aria-label="搜索">
-
-  <div class="spacer"></div>
-
-  <div class="progress"><b id="done-count">0</b> / ${manifest.pages.length} 已评</div>
-  <div class="tally">
-    <span class="t-pass"><b id="n-pass">0</b></span>
-    <span class="t-limit"><b id="n-limit">0</b></span>
-    <span class="t-rework"><b id="n-rework">0</b></span>
-  </div>
-
-  <div class="seg" id="surround" role="group" aria-label="背景">
-    <button data-surround="light" aria-pressed="true">浅</button>
-    <button data-surround="dark" aria-pressed="false">深</button>
-  </div>
-
-  <button class="btn primary" id="export">复制结论</button>
-</header>
-
-<main id="main"><p class="booting">正在装入 ${manifest.pages.length} 页……<br><small>整页自包含，所有幻灯片都在这个文件里，首次装入约需几秒。</small></p></main>
-
-<dialog class="viewer" id="viewer">
-  <div class="viewer-inner">
-    <div class="viewer-stage"><div class="frame" id="viewer-frame"></div></div>
-    <div class="viewer-bar">
-      <div>
-        <div class="subject" id="viewer-subject"></div>
-        <div class="facts" id="viewer-facts"></div>
-      </div>
-      <div class="verdicts" id="viewer-verdicts">
-        <button class="v-pass" data-verdict="pass" aria-pressed="false">通过 <kbd>1</kbd></button>
-        <button class="v-limit" data-verdict="limit" aria-pressed="false">限制 <kbd>2</kbd></button>
-        <button class="v-rework" data-verdict="rework" aria-pressed="false">返工 <kbd>3</kbd></button>
-      </div>
-      <ul class="findings-list" id="viewer-findings"></ul>
-      <input class="note" id="viewer-note" placeholder="备注（自动保存）">
-      <span class="hint"><kbd>←</kbd><kbd>→</kbd> 翻页 · <kbd>Esc</kbd> 关闭</span>
-    </div>
-  </div>
-</dialog>
-
-<script id="manifest-data" type="application/json">${jsonScript(manifest)}</script>
-<script id="svg-data" type="application/json">${jsonScript(svgRecord)}</script>
-<script id="edge-data" type="application/json">${jsonScript(edgeRecord)}</script>
-<script>
-(() => {
-  "use strict";
-  const MANIFEST = JSON.parse(document.getElementById("manifest-data").textContent);
-  const SVGS = JSON.parse(document.getElementById("svg-data").textContent);
-  const EDGES = JSON.parse(document.getElementById("edge-data").textContent);
-  const STORE_KEY = "pptwise-gallery-verdicts-v1";
-
-  // Shipped in as source rather than restated here, so the rule the reviewer
-  // sees is byte-for-byte the one render.test.mts tests. See its own doc
-  // comment in render.ts for why it is written to survive toString().
-${inlineRule(verdictFreshness)}
-
-  const VERDICT_LABELS = { pass: "通过", limit: "限制使用", rework: "返工" };
-  // Short Chinese labels for the auditor's codes, plus which ones are worth
-  // drawing in the alarm color. Truncation and dropped content mean the
-  // reader is missing text outright; the rest are worth knowing but are
-  // judgement calls the human is making anyway.
-  const FINDING_LABELS = {
-    "overflow": "溢出",
-    "out-of-bounds": "出血",
-    "low-contrast": "对比度",
-    "overlap": "重叠",
-    "content-truncated": "截断",
-    "content-dropped": "内容丢失",
-  };
-  const SEVERE = new Set(["content-dropped", "out-of-bounds", "overflow"]);
-
-  function summarizeFindings(findings) {
-    const counts = new Map();
-    for (const f of findings || []) counts.set(f.code, (counts.get(f.code) || 0) + 1);
-    return [...counts].map(([code, n]) => ({
-      code,
-      label: (FINDING_LABELS[code] || code) + (n > 1 ? " ×" + n : ""),
-      severe: SEVERE.has(code),
-    }));
-  }
-
-  // ── verdict state ──────────────────────────────────────────────────────
-  // Keyed by page id, which is derived from theme/layout/component identity
-  // rather than from render order — so re-running the gallery after a code
-  // change keeps every judgement that still applies.
-  let verdicts = {};
-  try { verdicts = JSON.parse(localStorage.getItem(STORE_KEY) || "{}"); } catch (_) { verdicts = {}; }
-
-  const save = () => {
-    try { localStorage.setItem(STORE_KEY, JSON.stringify(verdicts)); }
-    catch (_) { /* private mode: the export button is still the escape hatch */ }
-  };
-
-  const entry = (id) => verdicts[id] || (verdicts[id] = {});
-
-  // Every write stamps the page's current fingerprints. That is what makes a
-  // later run able to say "this judgement was made about a page that has
-  // since changed" instead of presenting it as current — and, since the
-  // fingerprint comes in two halves, to tell a redrawn page from a recolored
-  // one. The whole-markup hash is still written too, so a verdict exported
-  // from here stays readable by anything holding the older single-hash shape.
-  const pageById = new Map(MANIFEST.pages.map((p) => [p.id, p]));
-  const stampHash = (id, e) => {
-    const page = pageById.get(id);
-    if (!page) return;
-    e.hash = page.hash;
-    if (page.fingerprint) { e.geo = page.fingerprint.geometry; e.col = page.fingerprint.color; }
-  };
-  const freshness = (id) => verdictFreshness(verdicts[id], pageById.get(id));
-  const isRecolored = (id) => freshness(id) === "recolored";
-
-  // A stale verdict was made about a page version that no longer exists —
-  // almost always because the flagged defect got fixed. Presenting it as a
-  // live judgement on every open forces the reviewer to re-dismiss the same
-  // ghosts. So on load, stale entries move out of the active store into an
-  // archive (nothing is destroyed; the "已归档旧结论" filter lists them),
-  // and the card returns to the unjudged state ready for a fresh look.
-  let archive = {};
-  try { archive = JSON.parse(localStorage.getItem(STORE_KEY + ":archive") || "{}"); } catch (_) { archive = {}; }
-  {
-    let moved = false;
-    for (const id of Object.keys(verdicts)) {
-      if (verdictFreshness(verdicts[id], pageById.get(id)) === "stale") {
-        archive[id] = { ...verdicts[id], archivedAt: new Date().toISOString() };
-        delete verdicts[id];
-        moved = true;
-      }
-    }
-    if (moved) {
-      try { localStorage.setItem(STORE_KEY + ":archive", JSON.stringify(archive)); } catch (_) { /* export remains the escape hatch */ }
-      save();
-    }
-  }
-  const isArchived = (id) => Boolean(archive[id]);
-
-  function setVerdict(id, value) {
-    const e = entry(id);
-    e.verdict = e.verdict === value ? undefined : value;
-    stampHash(id, e);
-    if (!e.verdict && !e.note) delete verdicts[id];
-    save(); refreshCard(id); refreshTally();
-  }
-  function setNote(id, text) {
-    const e = entry(id);
-    e.note = text || undefined;
-    stampHash(id, e);
-    if (!e.verdict && !e.note) delete verdicts[id];
-    save(); refreshCard(id); refreshTally();
-  }
-
-  // ── svg mounting ───────────────────────────────────────────────────────
-  // Ids were already namespaced at build time (src/lib/svg-ids.ts), so
-  // mounting is a plain innerHTML — no rewriting in the hot path.
-  //
-  // Opening the viewer does put a second copy of one slide in the DOM
-  // alongside its card, and those two copies share a namespace. That is the
-  // one duplicate this scheme allows, and it is safe by construction rather
-  // than by luck: both copies are the same document, so every colliding id
-  // resolves to a byte-identical definition.
-  //
-  // The stage is repainted in the slide's own edge colour on the way in. A
-  // stage box rarely lands on whole device pixels, and whatever is painted
-  // under the slide survives in the boundary column as a one-to-two pixel
-  // strip — a neutral grey there reads as a pale line down the page edge.
-  // See src/lib/slide-edge.ts.
-  function mountSvg(container, id) {
-    const markup = SVGS[id];
-    if (!markup) return false;
-    container.innerHTML = markup;
-    container.style.background = EDGES[id] || "";
-    return true;
-  }
-
-  // ── card rendering ─────────────────────────────────────────────────────
-  const cards = new Map();
-
-  function cardFacts(p) {
-    const bits = [];
-    if (p.table === "theme") bits.push("第 " + p.page + " / " + p.pageCount + " 页", p.slideType);
-    else bits.push(p.slideType, p.theme);
-    bits.push(p.languageLabel);
-    return bits;
-  }
-
-  function buildCard(p) {
-    const card = document.createElement("article");
-    card.className = "card";
-    card.dataset.id = p.id;
-
-    const stage = document.createElement("div");
-    stage.className = "stage";
-    stage.setAttribute("role", "button");
-    stage.setAttribute("tabindex", "0");
-    stage.setAttribute("aria-label", "放大 " + p.subject);
-    if (p.skipped) {
-      const s = document.createElement("div");
-      s.className = "skip";
-      s.textContent = "未能渲染 — " + p.skipped;
-      stage.appendChild(s);
-    }
-    stage.addEventListener("click", () => openViewer(p.id));
-    stage.addEventListener("keydown", (ev) => {
-      if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); openViewer(p.id); }
-    });
-
-    const meta = document.createElement("div");
-    meta.className = "meta";
-    const subject = document.createElement("div");
-    subject.className = "subject";
-    subject.textContent = p.subject;
-    const facts = document.createElement("div");
-    facts.className = "facts";
-    for (const bit of cardFacts(p)) {
-      const span = document.createElement("span");
-      span.textContent = bit;
-      facts.appendChild(span);
-    }
-    meta.append(subject, facts);
-
-    const verdictsRow = document.createElement("div");
-    verdictsRow.className = "verdicts";
-    for (const key of ["pass", "limit", "rework"]) {
-      const btn = document.createElement("button");
-      btn.className = "v-" + key;
-      btn.dataset.verdict = key;
-      btn.type = "button";
-      btn.textContent = VERDICT_LABELS[key];
-      btn.addEventListener("click", () => setVerdict(p.id, key));
-      verdictsRow.appendChild(btn);
-    }
-
-    const note = document.createElement("textarea");
-    note.className = "note";
-    note.rows = 1;
-    note.placeholder = "备注";
-    // Stored verbatim while typing. Trimming on every input event and writing
-    // the trimmed value straight back deleted a space the moment it was
-    // typed, so "needs more spacing" came out "needsmore spacing". Trimming
-    // is an export-time concern, not a per-keystroke one.
-    note.addEventListener("input", () => setNote(p.id, note.value));
-
-    card.append(stage, meta, verdictsRow, note);
-
-    // Machine findings ride along with the page instead of the reviewer
-    // re-deriving them by eye. Placed under the verdict row so they inform
-    // the judgement without pre-empting it.
-    const flags = summarizeFindings(p.findings);
-    if (isArchived(p.id)) {
-      flags.unshift({ code: "stale", label: "旧结论已归档", severe: false, mark: "stale" });
-    } else if (isRecolored(p.id)) {
-      flags.unshift({ code: "recolored", label: "仅换肤", severe: false, mark: "recolored" });
-    }
-    if (flags.length > 0) {
-      const row = document.createElement("div");
-      row.className = "flags";
-      for (const f of flags) {
-        const chip = document.createElement("span");
-        chip.className = "flag" + (f.severe ? " sev" : "") + (f.mark ? " " + f.mark : "");
-        chip.textContent = f.label;
-        chip.title = f.mark === "stale"
-          ? "上一轮的结论是对这一页的旧版本做出的，那一版已经修掉了 — 旧结论收进档案，这一页等你重新看"
-          : f.mark === "recolored"
-          ? "这一页自上次评审以来只换了配色，几何没动 — 结论仍然有效，除非它本来就是在说颜色"
-          : (p.findings || []).filter((x) => x.code === f.code).map((x) => x.message).join("\\n");
-        row.appendChild(chip);
-      }
-      card.insertBefore(row, note);
-    }
-    cards.set(p.id, { card, stage, verdictsRow, note, page: p, mounted: false });
-    refreshCard(p.id);
-    return card;
-  }
-
-  function refreshCard(id) {
-    const c = cards.get(id);
-    if (!c) return;
-    const v = (verdicts[id] || {}).verdict;
-    c.card.classList.toggle("is-pass", v === "pass");
-    c.card.classList.toggle("is-limit", v === "limit");
-    c.card.classList.toggle("is-rework", v === "rework");
-    for (const btn of c.verdictsRow.children) {
-      btn.setAttribute("aria-pressed", String(btn.dataset.verdict === v));
-    }
-    const note = (verdicts[id] || {}).note || "";
-    if (c.note.value !== note) c.note.value = note;
-  }
-
-  function refreshTally() {
-    // Counted over this build's own pages, not over everything in storage.
-    // Verdicts persist across runs by design (that is what makes the ids
-    // stable), so a narrowed run (--only=layout, fewer languages) still
-    // sees the full matrix's judgements in localStorage. Tallying those
-    // would report more pages reviewed than the page even has, and would
-    // disagree with the export, which already filters to the manifest.
-    let pass = 0, limit = 0, rework = 0;
-    for (const p of MANIFEST.pages) {
-      const v = (verdicts[p.id] || {}).verdict;
-      if (v === "pass") pass++;
-      else if (v === "limit") limit++;
-      else if (v === "rework") rework++;
-    }
-    document.getElementById("n-pass").textContent = String(pass);
-    document.getElementById("n-limit").textContent = String(limit);
-    document.getElementById("n-rework").textContent = String(rework);
-    document.getElementById("done-count").textContent = String(pass + limit + rework);
-  }
-
-  // Only slides near the viewport are mounted: several hundred inline SVG
-  // documents in one DOM at once is what makes a page like this crawl. The
-  // observer watches the card element, which carries the page id.
-  const io = new IntersectionObserver((entries) => {
-    for (const e of entries) {
-      if (!e.isIntersecting) continue;
-      const c = cards.get(e.target.dataset.id);
-      if (c && !c.mounted && !c.page.skipped) {
-        c.mounted = mountSvg(c.stage, c.page.id);
-        if (c.mounted) io.unobserve(e.target);
-      }
-    }
-  }, { rootMargin: "600px 0px" });
-
-  // ── filtering and layout ───────────────────────────────────────────────
-  const state = { table: "all", language: "all", theme: "all", verdict: "all", finding: "all", query: "" };
-  let visible = [];
-
-  function matches(p) {
-    if (state.table !== "all" && p.table !== state.table) return false;
-    if (state.language !== "all" && p.language !== state.language) return false;
-    if (state.theme !== "all" && p.theme !== state.theme) return false;
-    if (state.verdict !== "all") {
-      const v = (verdicts[p.id] || {}).verdict;
-      if (state.verdict === "none" ? Boolean(v) : v !== state.verdict) return false;
-    }
-    if (state.finding === "stale") {
-      if (!isArchived(p.id)) return false;
-    } else if (state.finding === "recolored") {
-      if (!isRecolored(p.id)) return false;
-    } else if (state.finding !== "all") {
-      const has = (p.findings || []).length > 0;
-      if (state.finding === "any" ? !has : has) return false;
-    }
-    if (state.query) {
-      const hay = (p.subject + " " + p.heading + " " + p.id).toLowerCase();
-      if (!hay.includes(state.query)) return false;
-    }
-    return true;
-  }
-
-  function render() {
-    const main = document.getElementById("main");
-    // Every past filter pass left its cards observed: they leave the DOM but
-    // stay in the observer, so switching theme or typing in the search box
-    // accumulated dead references and callbacks for the life of the page.
-    io.disconnect();
-    main.textContent = "";
-    cards.clear();
-    visible = MANIFEST.pages.filter(matches);
-
-    if (visible.length === 0) {
-      const empty = document.createElement("p");
-      empty.className = "empty";
-      empty.textContent = "没有符合条件的页面。";
-      main.appendChild(empty);
-      return;
-    }
-
-    for (const table of MANIFEST.tables) {
-      const pages = visible.filter((p) => p.table === table.id);
-      if (pages.length === 0) continue;
-
-      const head = document.createElement("div");
-      head.className = "tablehead";
-      const h2 = document.createElement("h2");
-      h2.textContent = table.label + " — " + pages.length + " 页";
-      const q = document.createElement("p");
-      q.textContent = table.question;
-      head.append(h2, q);
-
-      const grid = document.createElement("div");
-      grid.className = "grid";
-      for (const p of pages) grid.appendChild(buildCard(p));
-      main.append(head, grid);
-    }
-
-    // Observed after insertion, so the first screenful has real geometry
-    // and mounts immediately instead of one frame late.
-    for (const [, c] of cards) io.observe(c.card);
-    refreshTally();
-  }
-
-  // ── viewer ─────────────────────────────────────────────────────────────
-  const viewer = document.getElementById("viewer");
-  const frame = document.getElementById("viewer-frame");
-  let viewerIndex = -1;
-
-  function openViewer(id) {
-    viewerIndex = visible.findIndex((p) => p.id === id);
-    if (viewerIndex < 0) return;
-    paintViewer();
-    if (!viewer.open) viewer.showModal();
-  }
-
-  function paintViewer() {
-    const p = visible[viewerIndex];
-    if (!p) return;
-    frame.textContent = "";
-    frame.style.background = "";
-    if (p.skipped) {
-      const s = document.createElement("div");
-      s.className = "skip";
-      s.textContent = "未能渲染 — " + p.skipped;
-      frame.appendChild(s);
-    } else {
-      mountSvg(frame, p.id);
-    }
-    document.getElementById("viewer-subject").textContent = p.subject;
-    document.getElementById("viewer-facts").textContent =
-      cardFacts(p).join(" · ") + " · " + (viewerIndex + 1) + " / " + visible.length;
-    const v = (verdicts[p.id] || {}).verdict;
-    for (const btn of document.getElementById("viewer-verdicts").children) {
-      btn.setAttribute("aria-pressed", String(btn.dataset.verdict === v));
-    }
-    document.getElementById("viewer-note").value = (verdicts[p.id] || {}).note || "";
-    const list = document.getElementById("viewer-findings");
-    list.textContent = "";
-    for (const f of p.findings || []) {
-      const li = document.createElement("li");
-      li.textContent = (FINDING_LABELS[f.code] || f.code) + " — " + f.message;
-      list.appendChild(li);
-    }
-  }
-
-  function step(delta) {
-    if (viewerIndex < 0) return;
-    viewerIndex = Math.min(visible.length - 1, Math.max(0, viewerIndex + delta));
-    paintViewer();
-  }
-
-  for (const btn of document.getElementById("viewer-verdicts").children) {
-    btn.addEventListener("click", () => {
-      const p = visible[viewerIndex];
-      if (p) { setVerdict(p.id, btn.dataset.verdict); paintViewer(); }
-    });
-  }
-  document.getElementById("viewer-note").addEventListener("input", (ev) => {
-    const p = visible[viewerIndex];
-    if (p) { setNote(p.id, ev.target.value); refreshCard(p.id); }
-  });
-
-  document.addEventListener("keydown", (ev) => {
-    if (!viewer.open) return;
-    const typing = ev.target instanceof HTMLInputElement || ev.target instanceof HTMLTextAreaElement;
-    if (ev.key === "ArrowRight") { ev.preventDefault(); step(1); }
-    else if (ev.key === "ArrowLeft") { ev.preventDefault(); step(-1); }
-    else if (!typing && (ev.key === "1" || ev.key === "2" || ev.key === "3")) {
-      ev.preventDefault();
-      const p = visible[viewerIndex];
-      if (p) { setVerdict(p.id, ["pass", "limit", "rework"][Number(ev.key) - 1]); paintViewer(); }
-    }
-  });
-
-  // ── controls ───────────────────────────────────────────────────────────
-  document.getElementById("table-filter").addEventListener("click", (ev) => {
-    const btn = ev.target.closest("button");
-    if (!btn) return;
-    state.table = btn.dataset.table;
-    for (const b of ev.currentTarget.children) b.setAttribute("aria-pressed", String(b === btn));
-    render();
-  });
-  document.getElementById("surround").addEventListener("click", (ev) => {
-    const btn = ev.target.closest("button");
-    if (!btn) return;
-    document.body.dataset.surround = btn.dataset.surround;
-    for (const b of ev.currentTarget.children) b.setAttribute("aria-pressed", String(b === btn));
-  });
-  document.getElementById("lang-filter").addEventListener("change", (e) => { state.language = e.target.value; render(); });
-  document.getElementById("theme-filter").addEventListener("change", (e) => { state.theme = e.target.value; render(); });
-  document.getElementById("verdict-filter").addEventListener("change", (e) => { state.verdict = e.target.value; render(); });
-  document.getElementById("finding-filter").addEventListener("change", (e) => { state.finding = e.target.value; render(); });
-  let searchTimer;
-  document.getElementById("search").addEventListener("input", (e) => {
-    clearTimeout(searchTimer);
-    const value = e.target.value.trim().toLowerCase();
-    searchTimer = setTimeout(() => { state.query = value; render(); }, 160);
-  });
-
-  // Copy, not download. The judgements exist to be handed to an agent, and
-  // a file on disk has to be found and attached before that can happen —
-  // whereas a clipboard paste goes straight into the conversation. The
-  // 2026-08-16 round was handed over by pasting, which is what prompted this.
-  document.getElementById("export").addEventListener("click", async () => {
-    const btn = document.getElementById("export");
-    const payload = {
-      // 3 since a verdict can now come back marked "recolored" instead of
-      // only "stale". A reader of /2 sees the same fields it always did.
-      schema: "pptwise-gallery-verdicts/3",
-      pptwiseVersion: MANIFEST.pptwiseVersion,
-      renderedAt: MANIFEST.generatedAt,
-      total: MANIFEST.pages.length,
-      verdicts: MANIFEST.pages
-        .filter((p) => verdicts[p.id] && (verdicts[p.id].verdict || verdicts[p.id].note))
-        .map((p) => ({
-          id: p.id,
-          table: p.table,
-          subject: p.subject,
-          language: p.language,
-          theme: p.theme,
-          page: p.page,
-          verdict: verdicts[p.id].verdict || null,
-          note: (verdicts[p.id].note || "").trim() || null,
-          findings: (p.findings || []).map((f) => f.code),
-          // Stale verdicts never reach this export: they are auto-archived
-          // at load, so an active entry here is always about the page as it
-          // renders now.
-          // Set when the page changed color and nothing else since. The
-          // judgement still holds — unless it was about the color — so it
-          // travels flagged rather than either dropped or silently passed on
-          // as untouched.
-          ...(isRecolored(p.id) ? { recolored: true } : {}),
-        })),
-    };
-    const text = JSON.stringify(payload, null, 2);
-
-    const flash = (msg) => {
-      const original = btn.textContent;
-      btn.textContent = msg;
-      setTimeout(() => { btn.textContent = original; }, 1600);
-    };
-
-    try {
-      await navigator.clipboard.writeText(text);
-      const n = payload.verdicts.length;
-      const stale = payload.verdicts.filter((v) => v.stale).length;
-      const recolored = payload.verdicts.filter((v) => v.recolored).length;
-      const notes = [];
-      if (stale > 0) notes.push(stale + " 条已过期");
-      if (recolored > 0) notes.push(recolored + " 条仅换肤");
-      flash(notes.length > 0 ? "已复制 " + n + " 条（" + notes.join("，") + "）" : "已复制 " + n + " 条");
-      return;
-    } catch (_) {
-      // Clipboard API unavailable or permission-denied (some browsers gate
-      // it on file:// despite it being a secure context). Fall through.
-    }
-    try {
-      const ta = document.createElement("textarea");
-      ta.value = text;
-      ta.style.cssText = "position:fixed;top:-1000px;left:-1000px";
-      document.body.appendChild(ta);
-      ta.select();
-      const ok = document.execCommand("copy");
-      ta.remove();
-      flash(ok ? "已复制 " + payload.verdicts.length + " 条" : "复制失败，见控制台");
-      if (!ok) console.log(text);
-    } catch (_) {
-      flash("复制失败，见控制台");
-      console.log(text);
-    }
-  });
-
-  render();
-})();
-</script>
+function documentPage(title: string, description: string, version: string, body: string, script = ""): string {
+  return `<!doctype html>
+<html lang="zh-CN">
+${head(title, description, version)}
+${body}
+${script}
 </body>
 </html>
 `
 }
 
-/** One-line summary for the CLI to print after a run. */
+function tableCount(manifest: Manifest, id: string): number {
+  return manifest.tables.find((table) => table.id === id)?.pages.length ?? 0
+}
+
+function representativePage(
+  manifest: Manifest,
+  theme: GalleryThemeCatalogEntry,
+  slideType: "cover" | "chapter" | "content" | "ending",
+): ManifestPage | undefined {
+  const layoutId = theme.faces[slideType][0]
+  const table = theme.source === "builtin" ? "skeleton" : "custom"
+  return manifest.pages.find(
+    (page) =>
+      page.table === table && page.theme === theme.id && page.slideType === slideType && page.subject === layoutId,
+  )
+}
+
+function overviewTheme(theme: GalleryThemeCatalogEntry, manifest: Manifest): string {
+  const types = ["cover", "chapter", "content", "ending"] as const
+  const thumbs = types
+    .map((slideType) => {
+      const page = representativePage(manifest, theme, slideType)
+      const layoutId = theme.faces[slideType][0] ?? "未配置"
+      const content = page
+        ? pageImage(page, `${theme.label} ${slideType} ${layoutId}`, "overview-image")
+        : `<div class="missing-slide">本次未生成</div>`
+      return `<a class="overview-thumb" href="themes.html#theme-${safe(theme.id)}">
+  <span class="thumb-stage">${content}</span>
+  <span class="thumb-caption"><b>${slideType}</b><code>${esc(layoutId)}</code></span>
+</a>`
+    })
+    .join("")
+
+  return `<article class="theme-overview" id="overview-${safe(theme.id)}" data-theme-source="${theme.source}">
+  <div class="theme-overview-meta">
+    <p class="theme-sequence">${esc(theme.id)}</p>
+    <h2>${esc(theme.label)}</h2>
+    <div class="badges">${themeBadges(theme)}</div>
+    <a class="detail-link" href="themes.html#theme-${safe(theme.id)}">查看大图详情 <span aria-hidden="true">→</span></a>
+  </div>
+  <div class="overview-strip">${thumbs}</div>
+</article>`
+}
+
+function buildIndex(manifest: Manifest, catalog: readonly GalleryThemeCatalogEntry[]): string {
+  const builtin = catalog.filter((theme) => theme.source === "builtin")
+  const samples = catalog.filter((theme) => theme.source !== "builtin")
+  const generatedAt = manifest.generatedAt.slice(0, 16).replace("T", " ")
+
+  const body = `<main class="overview-main">
+  <section class="overview-hero">
+    <div>
+      <p class="eyebrow">THEME REVIEW INDEX</p>
+      <h1>全主题缩略总览</h1>
+      <p class="lede">先扫四页型骨架，再进入大图判断细节。24 套内置主题保持一套一个区块，页面从上到下连续浏览。</p>
+    </div>
+    <dl class="build-facts">
+      <div><dt>内置主题</dt><dd>${builtin.length}</dd></div>
+      <div><dt>自定义样例</dt><dd>${samples.length}</dd></div>
+      <div><dt>生成时间</dt><dd>${esc(generatedAt)}</dd></div>
+    </dl>
+  </section>
+
+  <nav class="review-routes" aria-label="审查材料">
+    <a href="themes.html"><span>01</span><b>主题详情</b><small>${tableCount(manifest, "theme") + tableCount(manifest, "custom")} 张大图</small></a>
+    <a href="skeleton.html"><span>02</span><b>骨架表</b><small>${tableCount(manifest, "skeleton")} 张锁定面</small></a>
+    <a href="layouts.html"><span>03</span><b>版式表</b><small>${tableCount(manifest, "layout")} 张样张</small></a>
+    <a href="components.html"><span>04</span><b>组件表</b><small>${tableCount(manifest, "component")} 张样张</small></a>
+  </nav>
+
+  <section class="overview-section" aria-labelledby="builtin-heading">
+    <div class="section-heading"><p>BUILT IN</p><h2 id="builtin-heading">24 套内置主题</h2></div>
+    <div class="theme-overview-list">${builtin.map((theme) => overviewTheme(theme, manifest)).join("")}</div>
+  </section>
+
+  <section class="overview-section custom-section" aria-labelledby="custom-heading">
+    <div class="section-heading"><p>THEME FILE V1</p><h2 id="custom-heading">自定义主题对照样张</h2><span>partial 换色板，complete 换骨架与 motif</span></div>
+    <div class="theme-overview-list">${samples.map((theme) => overviewTheme(theme, manifest)).join("")}</div>
+  </section>
+</main>`
+
+  return documentPage("pptwise 全主题缩略总览", "24 套主题的人工视觉审查入口", manifest.pptwiseVersion, body)
+}
+
+function findingMarkup(page: ManifestPage): string {
+  if (!page.findings?.length) return ""
+  const counts = new Map<string, number>()
+  for (const finding of page.findings) counts.set(finding.code, (counts.get(finding.code) ?? 0) + 1)
+  return `<div class="machine-flags">${[...counts]
+    .map(([code, count]) => badge(`${code}${count > 1 ? ` ×${count}` : ""}`, "finding"))
+    .join("")}</div>`
+}
+
+function reviewCard(page: ManifestPage, caption?: string): string {
+  const facts = [page.slideType, page.theme, page.languageLabel].filter(Boolean).join(" · ")
+  const alt = `${page.subject}，${facts}`
+  return `<article class="review-card" data-page-id="${esc(page.id)}" data-search="${esc(
+    `${page.subject} ${page.theme} ${page.heading} ${page.languageLabel}`.toLowerCase(),
+  )}">
+  <button class="slide-button" type="button" data-open-page="${esc(page.id)}" aria-label="放大 ${esc(page.subject)}">
+    <span class="card-stage">${pageImage(page, alt)}</span>
+  </button>
+  <div class="card-meta">
+    <div><code>${esc(caption ?? page.subject)}</code><p>${esc(facts)}</p></div>
+    ${findingMarkup(page)}
+  </div>
+  <div class="verdict-row" role="group" aria-label="${esc(page.subject)} 结论">
+    <button type="button" data-verdict="pass">通过</button>
+    <button type="button" data-verdict="limit">限制</button>
+    <button type="button" data-verdict="rework">返工</button>
+  </div>
+  <textarea class="review-note" rows="1" placeholder="备注" aria-label="${esc(page.subject)} 备注"></textarea>
+  <div class="freshness-slot" aria-live="polite"></div>
+</article>`
+}
+
+function reviewToolbar(title: string, count: number, intro: string, filter = true): string {
+  return `<section class="review-intro">
+  <p class="eyebrow">VISUAL REVIEW</p>
+  <div class="review-title-row"><div><h1>${esc(title)}</h1><p>${esc(intro)}</p></div><strong>${count}<small> 张</small></strong></div>
+  <div class="review-tools">
+    ${filter ? '<input id="page-filter" type="search" placeholder="搜索主题、版式或标题" aria-label="搜索当前页面">' : ""}
+    <span class="review-progress"><b id="done-count">0</b> / ${count} 已评</span>
+    <button class="export-button" id="export-verdicts" type="button">复制当前结论</button>
+  </div>
+</section>`
+}
+
+function themeDetailGroups(
+  manifest: Manifest,
+  catalog: readonly GalleryThemeCatalogEntry[],
+): { pages: ManifestPage[]; markup: string } {
+  const pages: ManifestPage[] = []
+  const markup = catalog
+    .map((theme, index) => {
+      const table = theme.source === "builtin" ? "theme" : "custom"
+      const group = manifest.pages.filter((page) => page.table === table && page.theme === theme.id)
+      pages.push(...group)
+      return `<section class="detail-group" id="theme-${safe(theme.id)}" data-review-group>
+  <header class="detail-group-head">
+    <div><p>${String(index + 1).padStart(2, "0")} · ${esc(theme.id)}</p><h2>${esc(theme.label)}</h2></div>
+    <div class="badges">${themeBadges(theme, true)}</div>
+  </header>
+  <div class="review-grid">${group.map((page) => reviewCard(page)).join("") || '<p class="empty-state">本次未生成这一组。</p>'}</div>
+</section>`
+    })
+    .join("")
+  return { pages, markup }
+}
+
+function skeletonGroups(
+  manifest: Manifest,
+  catalog: readonly GalleryThemeCatalogEntry[],
+): { pages: ManifestPage[]; markup: string } {
+  const builtin = catalog.filter((theme) => theme.source === "builtin")
+  const pages = manifest.pages.filter((page) => page.table === "skeleton")
+  const markup = builtin
+    .map((theme, index) => {
+      const row = pages.filter((page) => page.theme === theme.id)
+      const sparseIds = new Set(theme.sparse)
+      const group = (label: string, selected: ManifestPage[]) =>
+        selected.length
+          ? `<div class="bone-family"><h3>${esc(label)}<span>${selected.length}</span></h3><div class="bone-strip">${selected
+              .map((page) => reviewCard(page, page.subject))
+              .join("")}</div></div>`
+          : ""
+      return `<section class="skeleton-theme" id="skeleton-${safe(theme.id)}" data-review-group>
+  <header class="skeleton-theme-head">
+    <div><p>${String(index + 1).padStart(2, "0")} · ${esc(theme.id)}</p><h2>${esc(theme.label)}</h2></div>
+    <div class="badges">${themeBadges(theme, true)}</div>
+  </header>
+  <div class="bone-families">
+    ${group("cover", row.filter((page) => page.slideType === "cover" && !sparseIds.has(page.subject)))}
+    ${group("chapter", row.filter((page) => page.slideType === "chapter" && !sparseIds.has(page.subject)))}
+    ${group("content pool", row.filter((page) => page.slideType === "content" && !sparseIds.has(page.subject)))}
+    ${group("ending", row.filter((page) => page.slideType === "ending" && !sparseIds.has(page.subject)))}
+    ${group("sparse offers", row.filter((page) => sparseIds.has(page.subject)))}
+  </div>
+</section>`
+    })
+    .join("")
+  return { pages, markup }
+}
+
+function flatTable(manifest: Manifest, table: "layout" | "component"): { pages: ManifestPage[]; markup: string } {
+  const pages = manifest.pages.filter((page) => page.table === table)
+  const subjects = [...new Set(pages.map((page) => page.subject))].sort((a, b) => a.localeCompare(b))
+  const markup = subjects
+    .map((subject) => {
+      const group = pages.filter((page) => page.subject === subject)
+      return `<section class="flat-group" data-review-group>
+  <header><h2>${esc(subject)}</h2><span>${group.length} 张</span></header>
+  <div class="review-grid compact-grid">${group.map((page) => reviewCard(page)).join("")}</div>
+</section>`
+    })
+    .join("")
+  return { pages, markup }
+}
+
+function reviewDialog(initialPage: ManifestPage): string {
+  return `<dialog class="viewer" id="viewer">
+  <div class="viewer-shell">
+    <button class="viewer-close" type="button" data-close-viewer aria-label="关闭大图">关闭</button>
+    <div class="viewer-stage">${initialPage.file ? `<img id="viewer-image" loading="lazy" src="${esc(initialPage.file)}" alt="${esc(initialPage.subject)}">` : ""}</div>
+    <div class="viewer-meta">
+      <div><code id="viewer-subject"></code><p id="viewer-facts"></p></div>
+      <div class="verdict-row" id="viewer-verdicts" role="group" aria-label="大图结论">
+        <button type="button" data-verdict="pass">通过 <kbd>1</kbd></button>
+        <button type="button" data-verdict="limit">限制 <kbd>2</kbd></button>
+        <button type="button" data-verdict="rework">返工 <kbd>3</kbd></button>
+      </div>
+      <input id="viewer-note" class="viewer-note" placeholder="备注，自动保存" aria-label="大图备注">
+    </div>
+  </div>
+</dialog>`
+}
+
+function reviewScript(pages: readonly ManifestPage[]): string {
+  return `<script id="manifest-data" type="application/json">${jsonScript({ pages })}</script>
+<script>
+(() => {
+  "use strict";
+  const PAGES = JSON.parse(document.getElementById("manifest-data").textContent).pages;
+  const PAGE_BY_ID = new Map(PAGES.map((page) => [page.id, page]));
+  const STORE_KEY = "pptwise-gallery-verdicts-v1";
+${inlineRule(verdictFreshness)}
+  let verdicts = {};
+  let archive = {};
+  try { verdicts = JSON.parse(localStorage.getItem(STORE_KEY) || "{}"); } catch (_) {}
+  try { archive = JSON.parse(localStorage.getItem(STORE_KEY + ":archive") || "{}"); } catch (_) {}
+
+  const save = () => {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(verdicts)); } catch (_) {}
+  };
+  const saveArchive = () => {
+    try { localStorage.setItem(STORE_KEY + ":archive", JSON.stringify(archive)); } catch (_) {}
+  };
+  const stamp = (id, entry) => {
+    const page = PAGE_BY_ID.get(id);
+    if (!page) return;
+    entry.hash = page.hash;
+    entry.geo = page.fingerprint && page.fingerprint.geometry;
+    entry.col = page.fingerprint && page.fingerprint.color;
+  };
+
+  for (const page of PAGES) {
+    const entry = verdicts[page.id];
+    if (verdictFreshness(entry, page) !== "stale") continue;
+    archive[page.id] = { ...entry, archivedAt: new Date().toISOString() };
+    delete verdicts[page.id];
+  }
+  save();
+  saveArchive();
+
+  function setVerdict(id, value) {
+    const entry = verdicts[id] || (verdicts[id] = {});
+    entry.verdict = entry.verdict === value ? undefined : value;
+    stamp(id, entry);
+    if (!entry.verdict && !entry.note) delete verdicts[id];
+    save();
+    refresh(id);
+  }
+
+  function setNote(id, value) {
+    const entry = verdicts[id] || (verdicts[id] = {});
+    entry.note = value || undefined;
+    stamp(id, entry);
+    if (!entry.verdict && !entry.note) delete verdicts[id];
+    save();
+    refresh(id);
+  }
+
+  function refresh(id) {
+    const card = document.querySelector('[data-page-id="' + CSS.escape(id) + '"]');
+    if (!card) return;
+    const entry = verdicts[id] || {};
+    card.dataset.verdict = entry.verdict || "";
+    for (const button of card.querySelectorAll("[data-verdict]")) {
+      button.setAttribute("aria-pressed", String(button.dataset.verdict === entry.verdict));
+    }
+    const note = card.querySelector(".review-note");
+    if (note && note.value !== (entry.note || "")) note.value = entry.note || "";
+    const slot = card.querySelector(".freshness-slot");
+    if (slot) {
+      const state = verdictFreshness(entry, PAGE_BY_ID.get(id));
+      slot.textContent = archive[id] ? "旧结论已归档" : state === "recolored" ? "仅换肤" : "";
+    }
+    refreshProgress();
+  }
+
+  function refreshProgress() {
+    const count = PAGES.filter((page) => verdicts[page.id] && verdicts[page.id].verdict).length;
+    const target = document.getElementById("done-count");
+    if (target) target.textContent = String(count);
+  }
+
+  for (const card of document.querySelectorAll("[data-page-id]")) {
+    const id = card.dataset.pageId;
+    for (const button of card.querySelectorAll("[data-verdict]")) {
+      button.addEventListener("click", () => setVerdict(id, button.dataset.verdict));
+    }
+    card.querySelector(".review-note").addEventListener("input", (event) => setNote(id, event.target.value));
+    refresh(id);
+  }
+
+  const filter = document.getElementById("page-filter");
+  if (filter) {
+    filter.addEventListener("input", () => {
+      const query = filter.value.trim().toLowerCase();
+      for (const card of document.querySelectorAll("[data-page-id]")) {
+        card.hidden = Boolean(query && !card.dataset.search.includes(query));
+      }
+      for (const group of document.querySelectorAll("[data-review-group]")) {
+        group.hidden = !group.querySelector("[data-page-id]:not([hidden])");
+      }
+    });
+  }
+
+  const viewer = document.getElementById("viewer");
+  const viewerImage = document.getElementById("viewer-image");
+  const viewerNote = document.getElementById("viewer-note");
+  let activeId = "";
+
+  function paintViewer(id) {
+    const page = PAGE_BY_ID.get(id);
+    if (!page || !page.file) return;
+    activeId = id;
+    viewerImage.src = page.file;
+    viewerImage.alt = page.subject;
+    document.getElementById("viewer-subject").textContent = page.subject;
+    document.getElementById("viewer-facts").textContent = [page.slideType, page.theme, page.languageLabel].join(" · ");
+    viewerNote.value = (verdicts[id] || {}).note || "";
+    const current = (verdicts[id] || {}).verdict;
+    for (const button of document.querySelectorAll("#viewer-verdicts [data-verdict]")) {
+      button.setAttribute("aria-pressed", String(button.dataset.verdict === current));
+    }
+  }
+
+  document.addEventListener("click", (event) => {
+    const open = event.target.closest("[data-open-page]");
+    if (open) {
+      paintViewer(open.dataset.openPage);
+      viewer.showModal();
+    }
+    if (event.target.closest("[data-close-viewer]")) viewer.close();
+  });
+  for (const button of document.querySelectorAll("#viewer-verdicts [data-verdict]")) {
+    button.addEventListener("click", () => {
+      if (!activeId) return;
+      setVerdict(activeId, button.dataset.verdict);
+      paintViewer(activeId);
+    });
+  }
+  viewerNote.addEventListener("input", () => activeId && setNote(activeId, viewerNote.value));
+  viewer.addEventListener("click", (event) => {
+    if (event.target === viewer) viewer.close();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (!viewer.open || !activeId) return;
+    if (["1", "2", "3"].includes(event.key) && !(event.target instanceof HTMLInputElement)) {
+      setVerdict(activeId, ["pass", "limit", "rework"][Number(event.key) - 1]);
+      paintViewer(activeId);
+    }
+  });
+
+  const exportButton = document.getElementById("export-verdicts");
+  if (exportButton) {
+    exportButton.addEventListener("click", async () => {
+      const payload = {
+        schema: "pptwise-gallery-verdicts/3",
+        total: PAGES.length,
+        verdicts: PAGES.filter((page) => verdicts[page.id] && (verdicts[page.id].verdict || verdicts[page.id].note)).map((page) => ({
+          id: page.id,
+          table: page.table,
+          subject: page.subject,
+          theme: page.theme,
+          verdict: verdicts[page.id].verdict || null,
+          note: (verdicts[page.id].note || "").trim() || null,
+        })),
+      };
+      const text = JSON.stringify(payload, null, 2);
+      try {
+        await navigator.clipboard.writeText(text);
+        exportButton.textContent = "已复制 " + payload.verdicts.length + " 条";
+      } catch (_) {
+        console.log(text);
+        exportButton.textContent = "已输出到控制台";
+      }
+      setTimeout(() => { exportButton.textContent = "复制当前结论"; }, 1600);
+    });
+  }
+})();
+</script>`
+}
+
+function buildReviewDocument(
+  manifest: Manifest,
+  title: string,
+  intro: string,
+  content: { pages: ManifestPage[]; markup: string },
+): string {
+  const body = `<main class="review-main">
+  ${reviewToolbar(title, content.pages.length, intro)}
+  <div class="review-content">${content.markup || '<p class="empty-state">本次未生成这一张表。</p>'}</div>
+</main>
+${content.pages[0] ? reviewDialog(content.pages[0]) : ""}`
+  return documentPage(
+    `pptwise ${title}`,
+    intro,
+    manifest.pptwiseVersion,
+    body,
+    content.pages.length > 0 ? reviewScript(content.pages) : "",
+  )
+}
+
+export function buildGalleryPages(
+  manifest: Manifest,
+  catalog: readonly GalleryThemeCatalogEntry[],
+): ReadonlyMap<string, string> {
+  const themes = themeDetailGroups(manifest, catalog)
+  const skeleton = skeletonGroups(manifest, catalog)
+  const layouts = flatTable(manifest, "layout")
+  const components = flatTable(manifest, "component")
+
+  return new Map([
+    ["index.html", buildIndex(manifest, catalog)],
+    [
+      "themes.html",
+      buildReviewDocument(
+        manifest,
+        "主题详情",
+        "每套内置主题运行同一组十页内容。自定义主题各保留四页型对照样张。",
+        themes,
+      ),
+    ],
+    [
+      "skeleton.html",
+      buildReviewDocument(
+        manifest,
+        "骨架表",
+        "逐主题展开四页型全部策展面、sparse offers 与 motif 状态，版式 id 写在每张图下。",
+        skeleton,
+      ),
+    ],
+    [
+      "layouts.html",
+      buildReviewDocument(manifest, "版式表", "全部注册版式按语料和适用主题展开。", layouts),
+    ],
+    [
+      "components.html",
+      buildReviewDocument(manifest, "组件表", "全部组件、图表变体和主题 form 的真实渲染样张。", components),
+    ],
+  ])
+}
+
 export function summarize(manifest: Manifest): string {
-  const rendered = manifest.pages.filter((p) => p.file).length
+  const rendered = manifest.pages.filter((page) => page.file).length
   const skipped = manifest.pages.length - rendered
-  const byTable = manifest.tables.map((t) => `${t.label} ${t.pages.length}`).join(" · ")
+  const byTable = manifest.tables.map((table) => `${table.label} ${table.pages.length}`).join(" · ")
   return `${rendered} pages rendered${skipped > 0 ? `, ${skipped} skipped` : ""} (${byTable})`
 }
+
+const BASE_CSS = String.raw`
+:root {
+  --paper: #f2f1ed;
+  --panel: #fffefa;
+  --panel-strong: #ffffff;
+  --ink: #1d211d;
+  --muted: #6d716b;
+  --line: #d7d8d1;
+  --line-strong: #b8bbb2;
+  --accent: #245b45;
+  --accent-soft: #e3eee8;
+  --amber: #93671c;
+  --red: #9b3b32;
+  --stage: #e6e7e2;
+  --radius: 8px;
+  color-scheme: light;
+  font-synthesis: none;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 84px; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "Avenir Next", Avenir, "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: inherit; text-decoration: none; }
+button, input, textarea { font: inherit; }
+code, .eyebrow, .theme-sequence, .detail-group-head p, .skeleton-theme-head p {
+  font-family: "SFMono-Regular", "Cascadia Code", "Liberation Mono", monospace;
+}
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  min-height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 10px clamp(20px, 4vw, 64px);
+  background: color-mix(in srgb, var(--panel) 94%, transparent);
+  border-bottom: 1px solid var(--line);
+  backdrop-filter: blur(14px);
+}
+.wordmark { display: inline-flex; align-items: baseline; gap: 10px; font-weight: 750; letter-spacing: -0.03em; }
+.wordmark small { color: var(--muted); font-size: 11px; font-weight: 500; letter-spacing: 0; }
+.site-nav { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.site-nav a { padding: 6px 10px; color: var(--muted); border-radius: 5px; font-size: 12px; }
+.site-nav a:hover, .site-nav a:focus-visible { color: var(--ink); background: var(--paper); outline: none; }
+.overview-main, .review-main { width: min(1600px, 100%); margin: 0 auto; padding: 0 clamp(20px, 4vw, 64px) 96px; }
+.overview-hero {
+  min-height: 285px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 56px;
+  align-items: end;
+  padding: 64px 0 38px;
+  border-bottom: 1px solid var(--line-strong);
+}
+.eyebrow { margin: 0 0 12px; color: var(--accent); font-size: 11px; font-weight: 700; letter-spacing: 0.15em; }
+h1, h2, h3, p { margin-top: 0; }
+.overview-hero h1, .review-intro h1 { margin: 0; font-size: clamp(36px, 5vw, 66px); line-height: 0.98; letter-spacing: -0.055em; font-weight: 670; }
+.lede { max-width: 660px; margin: 22px 0 0; color: var(--muted); font-size: 17px; }
+.build-facts { display: grid; grid-template-columns: repeat(3, auto); gap: 1px; margin: 0; background: var(--line); border: 1px solid var(--line); }
+.build-facts div { min-width: 116px; padding: 14px 16px; background: var(--panel); }
+.build-facts dt { color: var(--muted); font-size: 11px; }
+.build-facts dd { margin: 4px 0 0; font-weight: 700; font-variant-numeric: tabular-nums; }
+.review-routes { display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--line-strong); border-top: 0; background: var(--panel); }
+.review-routes a { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; padding: 18px; border-right: 1px solid var(--line); }
+.review-routes a:last-child { border-right: 0; }
+.review-routes a:hover { background: var(--accent-soft); }
+.review-routes span { grid-row: 1 / 3; color: var(--accent); font: 11px/1 "SFMono-Regular", monospace; }
+.review-routes b { font-size: 14px; }
+.review-routes small { color: var(--muted); font-size: 11px; }
+.overview-section { margin-top: 72px; }
+.section-heading { display: flex; align-items: end; gap: 14px; padding-bottom: 14px; border-bottom: 1px solid var(--line-strong); }
+.section-heading p { margin: 0 0 4px; color: var(--accent); font: 10px/1 "SFMono-Regular", monospace; letter-spacing: .14em; }
+.section-heading h2 { margin: 0; font-size: 24px; letter-spacing: -0.035em; }
+.section-heading span { margin-left: auto; color: var(--muted); font-size: 12px; }
+.theme-overview-list { display: grid; }
+.theme-overview {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.82fr) minmax(0, 3.2fr);
+  gap: clamp(24px, 4vw, 56px);
+  padding: 30px 0;
+  border-bottom: 1px solid var(--line);
+}
+.theme-overview-meta { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; }
+.theme-sequence { margin: 0 0 7px; color: var(--accent); font-size: 11px; }
+.theme-overview h2 { margin: 0 0 12px; font-size: clamp(22px, 2.3vw, 34px); line-height: 1.05; letter-spacing: -0.045em; }
+.badges { display: flex; flex-wrap: wrap; gap: 5px; }
+.badge { display: inline-flex; align-items: center; min-height: 21px; padding: 2px 7px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); background: var(--panel); font-size: 10px; white-space: nowrap; }
+.badge-low, .badge-quiet { color: #60645f; background: #f0f0ec; }
+.badge-medium { color: #265d48; border-color: #b8d0c3; background: #ebf4ef; }
+.badge-high { color: #7a4222; border-color: #dfc2aa; background: #f9eee5; }
+.badge-motif { color: #3f4d7d; border-color: #c8cee2; background: #f0f2f9; }
+.badge-finding { color: var(--red); border-color: #dfc2be; background: #faefed; }
+.detail-link { margin-top: auto; padding-top: 18px; color: var(--accent); font-size: 12px; font-weight: 650; }
+.overview-strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; min-width: 0; }
+.overview-thumb { min-width: 0; }
+.thumb-stage, .card-stage { display: block; overflow: hidden; background: var(--stage); border: 1px solid var(--line); aspect-ratio: 16 / 9; }
+.overview-image, .slide-image { display: block; width: 100%; height: 100%; object-fit: contain; }
+.overview-thumb:hover .thumb-stage { border-color: var(--accent); }
+.thumb-caption { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 7px; align-items: baseline; margin-top: 7px; min-width: 0; }
+.thumb-caption b { color: var(--muted); font-size: 9px; font-weight: 600; text-transform: uppercase; }
+.thumb-caption code { overflow: hidden; color: var(--ink); font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+.custom-section { margin-top: 88px; padding-top: 38px; border-top: 5px solid var(--ink); }
+.review-intro { padding: 52px 0 22px; border-bottom: 1px solid var(--line-strong); }
+.review-title-row { display: flex; justify-content: space-between; gap: 24px; align-items: end; }
+.review-title-row p { max-width: 760px; margin: 15px 0 0; color: var(--muted); font-size: 15px; }
+.review-title-row strong { font-size: 42px; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -0.05em; }
+.review-title-row strong small { color: var(--muted); font-size: 12px; letter-spacing: 0; }
+.review-tools { display: flex; align-items: center; gap: 10px; margin-top: 24px; }
+.review-tools input { min-width: min(380px, 55vw); padding: 9px 11px; color: var(--ink); background: var(--panel); border: 1px solid var(--line-strong); border-radius: 5px; }
+.review-progress { margin-left: auto; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.review-progress b { color: var(--ink); }
+.export-button { padding: 9px 13px; border: 1px solid var(--ink); border-radius: 5px; color: var(--panel); background: var(--ink); cursor: pointer; font-size: 12px; }
+.review-content { padding-top: 22px; }
+.detail-group, .skeleton-theme { padding: 34px 0 44px; border-bottom: 1px solid var(--line-strong); }
+.detail-group-head, .skeleton-theme-head { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 17px; }
+.detail-group-head p, .skeleton-theme-head p { margin: 0 0 5px; color: var(--accent); font-size: 10px; }
+.detail-group-head h2, .skeleton-theme-head h2 { margin: 0; font-size: 26px; letter-spacing: -0.04em; }
+.review-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+.compact-grid { grid-template-columns: repeat(auto-fill, minmax(245px, 1fr)); }
+.review-card { overflow: hidden; min-width: 0; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); }
+.review-card[data-verdict="pass"] { border-color: #6b9b7d; }
+.review-card[data-verdict="limit"] { border-color: #c09a55; }
+.review-card[data-verdict="rework"] { border-color: #c17870; }
+.slide-button { display: block; width: 100%; padding: 0; border: 0; background: transparent; cursor: zoom-in; }
+.slide-button:hover .card-stage { filter: brightness(.97); }
+.card-meta { display: flex; align-items: start; justify-content: space-between; gap: 8px; padding: 10px 11px 7px; }
+.card-meta code { display: block; overflow-wrap: anywhere; font-size: 11px; font-weight: 650; }
+.card-meta p { margin: 3px 0 0; color: var(--muted); font-size: 10px; }
+.machine-flags { display: flex; flex-wrap: wrap; justify-content: end; gap: 3px; }
+.verdict-row { display: flex; gap: 5px; padding: 4px 10px 8px; }
+.verdict-row button { flex: 1 1 0; padding: 5px 3px; color: var(--muted); background: transparent; border: 1px solid var(--line); border-radius: 4px; cursor: pointer; font-size: 10px; }
+.verdict-row button:hover { color: var(--ink); border-color: var(--line-strong); }
+.verdict-row button[aria-pressed="true"] { color: white; background: var(--ink); border-color: var(--ink); }
+.review-note { display: block; width: 100%; min-height: 34px; padding: 8px 10px; resize: vertical; color: var(--ink); background: #fafaf7; border: 0; border-top: 1px solid var(--line); font-size: 11px; }
+.freshness-slot { min-height: 0; padding: 0 10px; color: var(--muted); font-size: 9px; }
+.freshness-slot:not(:empty) { min-height: 24px; padding-top: 5px; padding-bottom: 5px; border-top: 1px solid var(--line); }
+.bone-families { display: grid; gap: 22px; }
+.bone-family h3 { display: flex; align-items: baseline; gap: 8px; margin: 0 0 8px; color: var(--muted); font-size: 11px; font-weight: 650; text-transform: uppercase; letter-spacing: .08em; }
+.bone-family h3 span { font-size: 9px; font-weight: 500; }
+.bone-strip { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px; }
+.bone-strip .review-card { border-radius: 4px; }
+.flat-group { padding: 18px 0 30px; border-bottom: 1px solid var(--line); }
+.flat-group > header { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin-bottom: 10px; }
+.flat-group > header h2 { margin: 0; font: 650 14px/1.3 "SFMono-Regular", monospace; }
+.flat-group > header span { color: var(--muted); font-size: 10px; }
+.missing-slide { display: grid; width: 100%; height: 100%; place-items: center; padding: 12px; color: var(--red); background: #f6e9e7; text-align: center; font-size: 11px; aspect-ratio: 16 / 9; }
+.empty-state { grid-column: 1 / -1; padding: 32px; color: var(--muted); background: var(--panel); border: 1px dashed var(--line-strong); text-align: center; }
+.viewer { width: 100vw; max-width: none; height: 100vh; max-height: none; padding: 0; border: 0; background: rgba(18, 20, 18, .96); }
+.viewer::backdrop { background: rgba(18, 20, 18, .96); }
+.viewer-shell { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; width: 100%; height: 100%; padding: 18px; }
+.viewer-close { justify-self: end; padding: 7px 11px; color: white; background: transparent; border: 1px solid #5e625e; border-radius: 4px; cursor: pointer; }
+.viewer-stage { display: grid; min-height: 0; place-items: center; padding: 14px; }
+.viewer-stage img { display: block; width: auto; max-width: 100%; height: auto; max-height: 100%; box-shadow: 0 18px 70px rgba(0,0,0,.45); }
+.viewer-meta { display: grid; grid-template-columns: minmax(180px, 1fr) minmax(260px, 420px) minmax(220px, 1fr); gap: 18px; align-items: center; padding: 10px 14px; color: var(--ink); background: var(--panel); border-radius: 6px; }
+.viewer-meta code { font-size: 12px; font-weight: 650; }
+.viewer-meta p { margin: 2px 0 0; color: var(--muted); font-size: 10px; }
+.viewer-meta .verdict-row { padding: 0; }
+.viewer-note { width: 100%; padding: 8px 9px; color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-radius: 4px; }
+kbd { font: inherit; font-size: 9px; }
+[hidden] { display: none !important; }
+@media (max-width: 980px) {
+  .overview-hero { grid-template-columns: 1fr; gap: 28px; }
+  .build-facts { grid-template-columns: repeat(3, 1fr); }
+  .theme-overview { grid-template-columns: 1fr; }
+  .detail-link { margin-top: 0; }
+  .review-routes { grid-template-columns: repeat(2, 1fr); }
+  .review-routes a:nth-child(2) { border-right: 0; }
+  .review-routes a:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+  .viewer-meta { grid-template-columns: 1fr; gap: 8px; }
+}
+@media (max-width: 680px) {
+  .site-header { align-items: flex-start; }
+  .site-nav { justify-content: flex-end; }
+  .overview-strip { grid-template-columns: repeat(2, 1fr); }
+  .build-facts { grid-template-columns: 1fr; }
+  .review-title-row, .detail-group-head, .skeleton-theme-head { align-items: flex-start; flex-direction: column; }
+  .review-tools { align-items: stretch; flex-direction: column; }
+  .review-tools input { min-width: 0; width: 100%; }
+  .review-progress { margin-left: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+`

@@ -51,9 +51,13 @@ describe("mapJobSubject", () => {
       inventory: "form",
       id: "layer_stack",
     })
-    expect(mapJobSubject({ table: "density", subject: "bullets" })).toEqual({
-      inventory: "component",
-      id: "bullets",
+    expect(mapJobSubject({ table: "skeleton", subject: "one-word-chapter" })).toEqual({
+      inventory: "layout",
+      id: "one-word-chapter",
+    })
+    expect(mapJobSubject({ table: "custom", subject: "two-column", theme: "gallery-complete-studio" })).toEqual({
+      inventory: "custom",
+      id: "gallery-complete-studio",
     })
   })
 

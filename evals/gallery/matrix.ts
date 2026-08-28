@@ -10,24 +10,21 @@
  */
 
 import { COMPONENT_TYPES, type PptxIR } from "@/ir"
-import { HEADING_TREATMENTS } from "@/render/heading-treatments/assignments"
 import { LAYOUT_REGISTRY } from "@/layouts/registry"
-import { SPARSE_LAYOUT_IDS, themeOffersSparse } from "@/themes/definitions"
-import { CHART_VARIANTS, COMPONENT_BUILDERS, DENSITY_BUILDERS, FORM_VARIANTS } from "./corpus/components"
+import { SPARSE_LAYOUT_IDS, getThemeDefinition, themeOffersSparse } from "@/themes/definitions"
+import type { FaceReference } from "@/themes/schema"
+import { CHART_VARIANTS, COMPONENT_BUILDERS, FORM_VARIANTS } from "./corpus/components"
 import {
   BASELINE_THEME,
   componentPage,
-  densityPage,
-  HEADING_STATES,
-  HEADING_THEME,
-  headingPage,
   layoutPage,
   themeDeck,
   type CorpusAssets,
 } from "./corpus/decks"
 import { LANGUAGE_IDS, LEXICONS, type LanguageId } from "./corpus/lexicon"
+import { GALLERY_SAMPLE_THEME_IDS, registerGallerySampleThemes } from "./sample-themes"
 
-export const TABLE_IDS = ["theme", "layout", "component", "density", "heading"] as const
+export const TABLE_IDS = ["theme", "skeleton", "custom", "layout", "component"] as const
 export type TableId = (typeof TABLE_IDS)[number]
 
 export interface Job {
@@ -77,6 +74,35 @@ export function galleryThemes(listThemeIds: readonly string[]): readonly string[
   return [...listThemeIds].sort()
 }
 
+function faceId(face: FaceReference): string {
+  return typeof face === "string" ? face : face.id
+}
+
+/**
+ * Custom comparisons inspect the selected face, not maximum citation width.
+ * Keep the ordinary KPI source row visible, but use the corpus' compact ref
+ * text so narrow curated faces render the sample without truncation noise.
+ */
+function fitCustomSample(ir: PptxIR, lex: (typeof LEXICONS)[LanguageId]): PptxIR {
+  const source = lex.sources[0]!.ref ?? lex.sources[0]!.label
+  return {
+    ...ir,
+    slides: ir.slides.map((slide) => ({
+      ...slide,
+      components: slide.components.map((component) =>
+        component.type === "kpi_cards"
+          ? {
+              ...component,
+              items: component.items.map((item) =>
+                item.source ? { ...item, source } : item,
+              ),
+            }
+          : component,
+      ),
+    })),
+  }
+}
+
 export function buildMatrix(
   themeIds: readonly string[],
   assets: Readonly<Record<LanguageId, CorpusAssets>>,
@@ -108,6 +134,79 @@ export function buildMatrix(
           heading: slide.heading ?? "",
           ir,
           slideIndex: i,
+        })
+      })
+    }
+  }
+
+  // ── Theme skeleton table ──────────────────────────────────────────────
+  // The theme declaration is the authority here. Every curated face is
+  // pinned once, followed by every sparse face the theme explicitly offers.
+  // This makes a palette-preserving skeleton swap visible without asking a
+  // reviewer to infer selection from the ordinary ten-page theme deck.
+  if (!opts.only || opts.only === "skeleton") {
+    const lex = LEXICONS[themeLanguage]
+    for (const themeId of themeIds) {
+      const def = getThemeDefinition(themeId)
+      const curated = (["cover", "chapter", "content", "ending"] as const).flatMap((slideType) =>
+        (def.faces?.[slideType] ?? def.layouts[slideType]).map((face) => ({
+          slideType,
+          layoutId: typeof face === "string" ? face : faceId(face),
+          source: "face" as const,
+        })),
+      )
+      const sparse = (def.sparseLayouts ?? SPARSE_LAYOUT_IDS).map((layoutId) => ({
+        slideType: LAYOUT_REGISTRY[layoutId]!.slideTypes[0]!,
+        layoutId,
+        source: "sparse" as const,
+      }))
+      const row = [...curated, ...sparse]
+      row.forEach(({ slideType, layoutId, source }, index) => {
+        const ir = layoutPage(layoutId, lex, assets[themeLanguage], themeId)
+        push({
+          id: `skeleton--${safe(themeId)}--${source}--${slideType}--${String(index + 1).padStart(2, "0")}--${safe(layoutId)}`,
+          table: "skeleton",
+          subject: layoutId,
+          language: themeLanguage,
+          theme: themeId,
+          page: index + 1,
+          pageCount: row.length,
+          slideType,
+          heading: ir.slides[0]!.heading ?? "",
+          ir,
+          slideIndex: 0,
+        })
+      })
+    }
+  }
+
+  // ── Custom theme comparison samples ───────────────────────────────────
+  // Both examples enter through the public v1 theme-file registration seam.
+  // The partial sample inherits consulting structure under a new palette.
+  // The complete sample owns all four faces, one pin-only face, and a motif.
+  if (!opts.only || opts.only === "custom") {
+    registerGallerySampleThemes()
+    const lex = LEXICONS[themeLanguage]
+    for (const themeId of GALLERY_SAMPLE_THEME_IDS) {
+      const def = getThemeDefinition(themeId)
+      const representatives = (["cover", "chapter", "content", "ending"] as const).map((slideType) => ({
+        slideType,
+        layoutId: faceId(def.faces![slideType][0]!),
+      }))
+      representatives.forEach(({ slideType, layoutId }, index) => {
+        const ir = fitCustomSample(layoutPage(layoutId, lex, assets[themeLanguage], themeId), lex)
+        push({
+          id: `custom--${safe(themeId)}--${slideType}--${safe(layoutId)}`,
+          table: "custom",
+          subject: layoutId,
+          language: themeLanguage,
+          theme: themeId,
+          page: index + 1,
+          pageCount: representatives.length,
+          slideType,
+          heading: ir.slides[0]!.heading ?? "",
+          ir,
+          slideIndex: 0,
         })
       })
     }
@@ -214,63 +313,6 @@ export function buildMatrix(
           ir,
           slideIndex: 0,
         })
-      }
-    }
-  }
-
-  // ── Full-load table (id stays "density") ───────────────────────────────
-  // One component per page, filled to the largest count that still fits.
-  // Kept as its own table rather than mixed into the component table
-  // because it answers a different question (full load, not the ordinary
-  // case). Table id stays "density" so `--only=density` and job ids
-  // `density--…` keep working.
-  if (!opts.only || opts.only === "density") {
-    for (const [componentId, build] of Object.entries(DENSITY_BUILDERS).sort(([a], [b]) => a.localeCompare(b))) {
-      for (const language of languages) {
-        const lex = LEXICONS[language]
-        const ir = densityPage(componentId, build!, lex, assets[language])
-        push({
-          id: `density--${safe(componentId)}--${language}`,
-          table: "density",
-          subject: componentId,
-          language,
-          theme: BASELINE_THEME,
-          page: 1,
-          pageCount: 1,
-          slideType: "content",
-          heading: ir.slides[0]!.heading ?? "",
-          ir,
-          slideIndex: 0,
-        })
-      }
-    }
-  }
-
-  // ── Heading table ──────────────────────────────────────────────────────
-  // Six constructions × three title states × the language axis, pinned on
-  // two-column (a layout that actually calls tryContentHeadingTreatment).
-  // Always a chapter then the content slide: ghost_index and tag_box return
-  // null when chapterNumberFor === 0, and the others read sectionName.
-  if (!opts.only || opts.only === "heading") {
-    for (const treatment of HEADING_TREATMENTS) {
-      for (const state of HEADING_STATES) {
-        for (const language of languages) {
-          const lex = LEXICONS[language]
-          const ir = headingPage(treatment, state, lex, assets[language])
-          push({
-            id: `heading--${safe(treatment)}--${state}--${language}`,
-            table: "heading",
-            subject: treatment,
-            language,
-            theme: HEADING_THEME[treatment],
-            page: 2,
-            pageCount: 2,
-            slideType: "content",
-            heading: ir.slides[1]!.heading ?? "",
-            ir,
-            slideIndex: 1,
-          })
-        }
       }
     }
   }
