@@ -5,11 +5,8 @@
  * a step in this repo's own release process, not a capability the product
  * offers its users.
  *
- * See `.issues/2026-08-15-release-readiness/spec.md` for what the two
- * tables are and why the matrix is cut the way it is.
- *
  *   pnpm gallery                        # everything, into .gallery/
- *   pnpm gallery --only=theme           # one table
+ *   pnpm gallery --only=skeleton        # one table
  *   pnpm gallery --languages=zh,en      # narrow the language axis
  *   pnpm gallery --out=/tmp/g           # somewhere else
  *   pnpm gallery --bbox                 # + a real-browser geometry pass
@@ -27,7 +24,8 @@ import { listThemes } from "../src/api"
 import { installNodePlatform } from "../src/platform/node"
 import { corpusAssets, type CorpusAssets } from "../evals/gallery/corpus/decks"
 import { LANGUAGE_IDS, LEXICONS, type LanguageId } from "../evals/gallery/corpus/lexicon"
-import { buildGalleryHtml, summarize } from "../evals/gallery/html"
+import { buildGalleryPages, summarize } from "../evals/gallery/html"
+import { buildGalleryThemeCatalog } from "../evals/gallery/catalog"
 import { assertInventoryCoverage } from "../evals/gallery/coverage"
 import { assertFullCoverage, buildMatrix, TABLE_IDS, type TableId } from "../evals/gallery/matrix"
 import { pruneGalleryDir } from "../evals/gallery/prune"
@@ -107,7 +105,9 @@ mkdirSync(outDir, { recursive: true })
 const { manifest, svgs } = renderMatrix(jobs, outDir, pkg.version)
 
 const htmlPath = join(outDir, "index.html")
-writeFileSync(htmlPath, buildGalleryHtml(manifest, svgs), "utf8")
+const catalog = buildGalleryThemeCatalog(themeIds, { includeSamples: true })
+const htmlPages = buildGalleryPages(manifest, catalog)
+for (const [name, html] of htmlPages) writeFileSync(join(outDir, name), html, "utf8")
 
 const elapsed = ((Date.now() - started) / 1000).toFixed(1)
 console.log(`gallery: ${summarize(manifest)} in ${elapsed}s`)
@@ -142,6 +142,6 @@ if (bboxRaw !== undefined) {
   if (report.defects.length > 0) process.exitCode = 1
 }
 
-const keep = new Set(["pages", "index.html", "manifest.json"])
+const keep = new Set(["pages", "manifest.json", ...htmlPages.keys()])
 if (bboxRaw !== undefined) keep.add("bbox.json")
 pruneGalleryDir(outDir, keep)
