@@ -1,5 +1,30 @@
 # @liustack/pptwise
 
+## 0.23.0
+
+### Minor Changes
+
+- e7767dd: Cartesian charts (bar, line, area, scatter) draw a left+bottom axis with ticks outside the plot. Axis titles sit under the drawing on one line: y-name with ↑, then x-name with →. Heatmap and matrix use the same pair under the grid. Scatter domains pad so points sit in the middle of the frame, not against the edge. Optional `axes.x_unit` / `axes.y_unit` print on the ticks. Bubble pages need a footnote that says what bubble area means.
+- ddef74e: Raise the readable type floor on the 1280×720 canvas to 12pt (16px) for captions, footnotes, ticks, and other secondary text, and to 18pt (24px) for body copy. Shrink-to-fit no longer drops below those sizes. Wrap that still overruns at the floor is clipped and marked, never drawn with an ellipsis. Validate's bullet length ceiling and the density table follow the new capacity.
+- Theme architecture round: one unified theme schema with two completeness levels — a `base` file (partial) reskins a builtin, a complete file picks its own faces per page type (pin-only board faces included), motif, tendencies, and sparse offers, with the same rights as a builtin theme. The old theme-file shape is rejected with a migration hint, and `brand extract` now emits the new partial format (base defaults to `consulting`).
+
+  Reachability: every builtin theme now carries occasion tags and an identity band (`pptwise themes --json` prints them), theme suggestion routes on them deterministically, and the new `pptwise layouts [--json]` command lists every standard layout including pin-only faces. `pptwise preview --themes a,b,c` renders a contact sheet for side-by-side theme choice.
+
+  Workflow: theme selection precedence is settled as `--theme` > `deck.spec.json` > project config > user config > default, loading a theme file registers it without selecting it, `pptwise serve` hot-reloads a changed theme file, and `audit` gains a `monotony` advisory for runs of consecutive same-type pages. Internally, `src/` is reorganized into business-domain directories and the skill's theme/layout reference tables are generated from the registry with a drift test.
+
+### Patch Changes
+
+- 594d773: Academic pages no longer paint leftover decorative dots, and the ending kicker follows the language of the page. Stacked-poster drops the hairline under a photo. Mirror-volume chapter rules only draw when a subtitle sits between them.
+- 565adef: Flowchart back-edges route as a rounded U outside the forward corridor. Elbow radius is 16px. A typical five-node chart fills the content width.
+- 4da5d2e: Icon-card body copy is a step smaller than the card title (0.55) and the cell keeps 24px inner pad, so the supporting line no longer fills the card.
+- d32ba9a: Theme chrome and identity color no longer get the midground fade. A Swiss top bar, a memo rule, a vermilion head rule, and a luxe invitation frame paint in the foreground at the theme color. An ink vermilion seal stays under type but keeps cinnabar. Ordinary pattern still recedes under the 3:1 ceiling.
+- 73946b5: Ink pull-quote in Chinese now sets vertical type on the right with a vermilion opener, and a muted attribution column on the left. The motif yields the right-edge colophon on that pin and paints the remnant mountain as counterweight.
+- 888aec7: Insight ticker lines are now smooth Catmull-Rom cubics. The same control points still produce the same path.
+- 5bcd7bc: Consulting emphasis pads now follow the word like a marker stroke, with a content-hashed edge instead of a hard rectangle. Date lines and tag rows no longer use filled capsules, so they stop reading as web buttons. Playbill type-on-field is one step smaller. Heritage statement puts the line inside a four-corner viewfinder.
+- d47fbff: Midground decoration can no longer paint an isolated dot, circle, or tiny square. L1 flags the same class so it cannot leak back through a leftover motif or heading tail.
+- 41db0f3: Chart value labels that collide now stagger, indent, or drop (never an ellipsis). L1 flags leftover collisions. Band titles, quote rules, tech's star track, memo underlines, and rail badges also sit on their intended axes.
+- db26151: Cover kickers, invitation date rules, tag-row titles, chalkboard bylines, evidence-card headings, and bento card insets now share a 24px sibling-air / card-inset scale, so those neighbors no longer sit on each other.
+
 ## 0.22.0
 
 ### Minor Changes
