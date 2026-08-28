@@ -168,6 +168,13 @@ input[type="search"] { min-width: 190px; }
 main { padding: 20px; }
 .tablehead { margin: 26px 0 14px; }
 .tablehead:first-child { margin-top: 4px; }
+#quickmap { display: grid; grid-template-columns: repeat(auto-fill, minmax(148px, 1fr)); gap: 10px; padding: 14px 18px 4px; }
+.qm { border: 1px solid var(--line); border-radius: 8px; background: var(--panel); padding: 0; cursor: pointer; overflow: hidden; text-align: left; }
+.qm:hover { border-color: var(--ink-dim); }
+.qm[aria-pressed="true"] { outline: 2px solid var(--focus); outline-offset: 1px; }
+.qm .qm-stage { aspect-ratio: 16 / 9; background: var(--stage); overflow: hidden; }
+.qm .qm-stage svg { display: block; width: 100%; height: 100%; }
+.qm .qm-name { display: block; padding: 5px 8px 6px; font: 500 11px/1.3 ui-monospace, "SF Mono", Menlo, monospace; color: var(--ink); }
 .tablehead h2 { margin: 0; font-size: 16px; letter-spacing: -0.01em; }
 .tablehead p { margin: 3px 0 0; color: var(--ink-dim); font-size: 13px; max-width: 70ch; }
 
@@ -336,6 +343,8 @@ kbd {
 
   <button class="btn primary" id="export">复制结论</button>
 </header>
+
+<section id="quickmap" aria-label="主题速览"></section>
 
 <main id="main"><p class="booting">正在装入 ${manifest.pages.length} 页……<br><small>整页自包含，所有幻灯片都在这个文件里，首次装入约需几秒。</small></p></main>
 
@@ -795,7 +804,46 @@ ${inlineRule(verdictFreshness)}
     for (const b of ev.currentTarget.children) b.setAttribute("aria-pressed", String(b === btn));
   });
   document.getElementById("lang-filter").addEventListener("change", (e) => { state.language = e.target.value; render(); });
-  document.getElementById("theme-filter").addEventListener("change", (e) => { state.theme = e.target.value; render(); });
+  document.getElementById("theme-filter").addEventListener("change", (e) => { state.theme = e.target.value; render(); syncQuickmap(); });
+
+  // ── 主题速览 ────────────────────────────────────────────────────────────
+  // 24 格缩略导航：每格取该主题在主题表里的第一张封面，点击等于在主题下拉
+  // 框里选中它（再点一次回到全部）。只是给现有 theme-filter 一个可视入口，
+  // 不引入第二套筛选状态。
+  function syncQuickmap() {
+    for (const b of document.querySelectorAll("#quickmap .qm")) {
+      b.setAttribute("aria-pressed", String(b.dataset.theme === state.theme));
+    }
+  }
+
+  function buildQuickmap() {
+    const host = document.getElementById("quickmap");
+    const themes = [...new Set(MANIFEST.pages.map((p) => p.theme))].sort();
+    const select = document.getElementById("theme-filter");
+    for (const theme of themes) {
+      const sample =
+        MANIFEST.pages.find((p) => p.theme === theme && p.table === "theme" && p.slideType === "cover") ||
+        MANIFEST.pages.find((p) => p.theme === theme && !p.skipped);
+      if (!sample) continue;
+      const cell = document.createElement("button");
+      cell.className = "qm";
+      cell.dataset.theme = theme;
+      cell.setAttribute("aria-pressed", "false");
+      cell.title = "只看 " + theme;
+      const stage = document.createElement("div");
+      stage.className = "qm-stage";
+      mountSvg(stage, sample.id);
+      const name = document.createElement("span");
+      name.className = "qm-name";
+      name.textContent = theme;
+      cell.append(stage, name);
+      cell.addEventListener("click", () => {
+        select.value = state.theme === theme ? "all" : theme;
+        select.dispatchEvent(new Event("change"));
+      });
+      host.appendChild(cell);
+    }
+  }
   document.getElementById("verdict-filter").addEventListener("change", (e) => { state.verdict = e.target.value; render(); });
   document.getElementById("finding-filter").addEventListener("change", (e) => { state.finding = e.target.value; render(); });
   let searchTimer;
@@ -878,6 +926,7 @@ ${inlineRule(verdictFreshness)}
     }
   });
 
+  buildQuickmap();
   render();
 })();
 </script>
