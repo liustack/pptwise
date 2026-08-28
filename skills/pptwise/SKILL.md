@@ -25,8 +25,8 @@ Right after an install, and any time a command misbehaves in a way the error mes
 If your harness forbids running scripts, work down the same order by hand and use the first line that applies:
 
 1. A `pptwise` on `PATH` at the same major version as the pin below and no older: `pptwise <args>`.
-2. Otherwise, if `npx` exists: `npx --yes --package @liustack/pptwise@0.22.0 pptwise <args>`.
-3. Otherwise, if `bunx` exists: `bunx --bun @liustack/pptwise@0.22.0 <args>`.
+2. Otherwise, if `npx` exists: `npx --yes --package @liustack/pptwise@0.23.0 pptwise <args>`.
+3. Otherwise, if `bunx` exists: `bunx --bun @liustack/pptwise@0.23.0 <args>`.
 4. Otherwise tell the user no JavaScript runtime was found, and that installing Node 22.19+ (https://nodejs.org) or Bun (https://bun.sh) is the next step. Do not report pptwise itself as broken.
 
 ## Workflow
