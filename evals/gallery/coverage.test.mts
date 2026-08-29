@@ -51,10 +51,6 @@ describe("mapJobSubject", () => {
       inventory: "form",
       id: "layer_stack",
     })
-    expect(mapJobSubject({ table: "density", subject: "bullets" })).toEqual({
-      inventory: "component",
-      id: "bullets",
-    })
   })
 
   it("leaves retired subjects unmapped, including bloom / logo-wall / side-highlight", () => {

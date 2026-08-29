@@ -9,7 +9,6 @@
  *   layout     Object.keys(LAYOUT_REGISTRY), including pinOnly
  *   component  COMPONENT_TYPES (chart via the chart-variant pages)
  *   form       COMPONENT_FORMS
- *   heading    HEADING_TREATMENTS
  *
  * Adding a table later is a new key on TABLE_SUBJECT_MAPPERS. Unknown
  * tables (and subjects that match nothing) stay unmapped, which fails
@@ -18,10 +17,9 @@
 
 import { COMPONENT_TYPES } from "@/ir"
 import { COMPONENT_FORMS, resolveComponentForm, type ComponentFormId } from "@/components/form-assignments"
-import { HEADING_TREATMENTS } from "@/render/heading-treatments/assignments"
 import { LAYOUT_REGISTRY } from "@/layouts/registry"
 import { CANONICAL_THEME_IDS } from "@/themes"
-import { CHART_VARIANTS, DENSITY_BUILDERS, FORM_VARIANTS } from "./corpus/components"
+import { CHART_VARIANTS, FORM_VARIANTS } from "./corpus/components"
 import { LEXICONS } from "./corpus/lexicon"
 import type { Job } from "./matrix"
 
@@ -33,7 +31,7 @@ import type { Job } from "./matrix"
  */
 const EMPHASIS_FORMS: readonly ComponentFormId[] = ["pad", "underline"]
 
-export type InventoryKind = "theme" | "layout" | "component" | "form" | "heading"
+export type InventoryKind = "theme" | "layout" | "component" | "form"
 
 export interface MappedSubject {
   readonly inventory: InventoryKind
@@ -49,7 +47,6 @@ export interface GallerySubject {
 const COMPONENT_TYPE_SET = new Set<string>(COMPONENT_TYPES)
 const THEME_SET = new Set<string>(CANONICAL_THEME_IDS)
 const FORM_SET = new Set<string>(COMPONENT_FORMS)
-const HEADING_SET = new Set<string>(HEADING_TREATMENTS)
 
 function mapTheme(job: GallerySubject): MappedSubject | undefined {
   return THEME_SET.has(job.subject) ? { inventory: "theme", id: job.subject } : undefined
@@ -69,27 +66,15 @@ function mapComponent(job: GallerySubject): MappedSubject | undefined {
   return form && FORM_SET.has(form) ? { inventory: "form", id: form } : undefined
 }
 
-function mapDensity(job: GallerySubject): MappedSubject | undefined {
-  if (job.subject in DENSITY_BUILDERS || COMPONENT_TYPE_SET.has(job.subject)) {
-    return { inventory: "component", id: job.subject }
-  }
-  return undefined
-}
-
-function mapHeading(job: GallerySubject): MappedSubject | undefined {
-  return HEADING_SET.has(job.subject) ? { inventory: "heading", id: job.subject } : undefined
-}
-
 /**
  * Table → subject mapper. A new table is one more key. Jobs whose table is
  * missing here, or whose subject matches nothing, are unmapped.
  */
 const TABLE_SUBJECT_MAPPERS: Record<string, (job: GallerySubject) => MappedSubject | undefined> = {
   theme: mapTheme,
+  skeleton: mapLayout,
   layout: mapLayout,
   component: mapComponent,
-  density: mapDensity,
-  heading: mapHeading,
 }
 
 export function mapJobSubject(job: GallerySubject): MappedSubject | undefined {
@@ -121,7 +106,6 @@ export interface CoverageGaps {
   readonly missingComponents: readonly string[]
   readonly missingForms: readonly string[]
   readonly missingDedicatedForms: readonly string[]
-  readonly missingHeadings: readonly string[]
   readonly missingPinnedPages: readonly string[]
   readonly unmapped: readonly string[]
 }
@@ -159,7 +143,6 @@ export function galleryCoverageGaps(jobs: readonly Job[]): CoverageGaps {
   const components = new Set<string>()
   const forms = new Set<string>()
   const dedicatedForms = new Set<string>()
-  const headings = new Set<string>()
   const ids = new Set(jobs.map((job) => job.id))
   const unmapped: string[] = []
 
@@ -173,7 +156,6 @@ export function galleryCoverageGaps(jobs: readonly Job[]): CoverageGaps {
     if (mapped.inventory === "layout") layouts.add(mapped.id)
     if (mapped.inventory === "component" && job.table === "component") components.add(mapped.id)
     if (mapped.inventory === "form" && job.table === "component") dedicatedForms.add(mapped.id)
-    if (mapped.inventory === "heading") headings.add(mapped.id)
     for (const form of formsVisibleOn(job)) forms.add(form)
   }
 
@@ -184,7 +166,6 @@ export function galleryCoverageGaps(jobs: readonly Job[]): CoverageGaps {
   const missingComponents = COMPONENT_TYPES.filter((id) => !components.has(id))
   const missingForms = COMPONENT_FORMS.filter((id) => !forms.has(id) && !EMPHASIS_FORMS.includes(id))
   const missingDedicatedForms = dedicatedFormIds().filter((id) => !dedicatedForms.has(id))
-  const missingHeadings = HEADING_TREATMENTS.filter((id) => !headings.has(id))
   const missingPinnedPages = PINNED_FORM_PAGE_IDS.filter((id) => !ids.has(id))
 
   return {
@@ -193,7 +174,6 @@ export function galleryCoverageGaps(jobs: readonly Job[]): CoverageGaps {
     missingComponents,
     missingForms,
     missingDedicatedForms,
-    missingHeadings,
     missingPinnedPages,
     unmapped,
   }
@@ -227,11 +207,6 @@ export function assertInventoryCoverage(jobs: readonly Job[]): void {
     problems.push(
       `no dedicated component-table page for form(s): ${gaps.missingDedicatedForms.join(", ")} — ` +
         `add a FORM_VARIANTS row (emphasis forms are theme-table only and are not in this list)`,
-    )
-  }
-  if (gaps.missingHeadings.length > 0) {
-    problems.push(
-      `no gallery page for heading treatment(s): ${gaps.missingHeadings.join(", ")}`,
     )
   }
   if (gaps.missingPinnedPages.length > 0) {

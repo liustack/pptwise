@@ -107,14 +107,9 @@ const TABLE_META: Record<TableId, { label: string; question: string }> = {
     label: "组件表",
     question: "固定基准主题，每个组件一页，三种语料各跑一遍——这个组件画出来能不能看？",
   },
-  density: {
-    label: "满载表",
-    question: "九个组件各一页，条目数打满容量上限但不超——这一页是满载、不溢出的状态。",
-  },
-  heading: {
-    label: "标题构造表",
-    question:
-      "六种构造 × 三态（无标题 / 仅标题 / 带副题），三种语料各跑一遍——这个标题构造在真实内容页上站不站得住？",
+  skeleton: {
+    label: "骨架表",
+    question: "每套主题四页型各自锁定与策展的脸，加上它开放的 sparse 钉面，全部用这套主题自己渲——这套主题的骨相成不成立？",
   },
 }
 

@@ -10,24 +10,19 @@
  */
 
 import { COMPONENT_TYPES, type PptxIR } from "@/ir"
-import { HEADING_TREATMENTS } from "@/render/heading-treatments/assignments"
 import { LAYOUT_REGISTRY } from "@/layouts/registry"
-import { SPARSE_LAYOUT_IDS, themeOffersSparse } from "@/themes/definitions"
-import { CHART_VARIANTS, COMPONENT_BUILDERS, DENSITY_BUILDERS, FORM_VARIANTS } from "./corpus/components"
+import { SPARSE_LAYOUT_IDS, getThemeDefinition, themeOffersSparse } from "@/themes/definitions"
+import { CHART_VARIANTS, COMPONENT_BUILDERS, FORM_VARIANTS } from "./corpus/components"
 import {
   BASELINE_THEME,
   componentPage,
-  densityPage,
-  HEADING_STATES,
-  HEADING_THEME,
-  headingPage,
   layoutPage,
   themeDeck,
   type CorpusAssets,
 } from "./corpus/decks"
 import { LANGUAGE_IDS, LEXICONS, type LanguageId } from "./corpus/lexicon"
 
-export const TABLE_IDS = ["theme", "layout", "component", "density", "heading"] as const
+export const TABLE_IDS = ["theme", "skeleton", "layout", "component"] as const
 export type TableId = (typeof TABLE_IDS)[number]
 
 export interface Job {
@@ -59,7 +54,7 @@ function safe(s: string): string {
 }
 
 export interface MatrixOptions {
-  /** Languages for the layout, component and density tables. */
+  /** Languages for the layout and component tables. */
   readonly languages?: readonly LanguageId[]
   /**
    * Language for the theme table. The source issue attaches the
@@ -110,6 +105,42 @@ export function buildMatrix(
           slideIndex: i,
         })
       })
+    }
+  }
+
+  // ── Skeleton table ─────────────────────────────────────────────────────
+  // 每套主题的骨相原样铺开：四页型各自策展/锁定的脸（该页型在这套主题下
+  // 真实可解析到的池），加上这套主题开放的 sparse 钉面。每脸一页、显式
+  // 钉住、用主题自己渲，语料随主题表单语料，两页之间只差「脸」这一个变量。
+  if (!opts.only || opts.only === "skeleton") {
+    const lex = LEXICONS[themeLanguage]
+    for (const themeId of themeIds) {
+      const def = getThemeDefinition(themeId)
+      const groups: ReadonlyArray<readonly [string, readonly string[]]> = [
+        ["cover", def.layouts.cover],
+        ["chapter", def.layouts.chapter],
+        ["content", def.layouts.content],
+        ["ending", def.layouts.ending],
+        ["sparse", (SPARSE_LAYOUT_IDS as readonly string[]).filter((id) => themeOffersSparse(themeId, id))],
+      ]
+      for (const [slot, faces] of groups) {
+        for (const layoutId of faces) {
+          const ir = layoutPage(layoutId, lex, assets[themeLanguage], themeId)
+          push({
+            id: `skeleton--${safe(themeId)}--${slot}--${safe(layoutId)}`,
+            table: "skeleton",
+            subject: layoutId,
+            language: themeLanguage,
+            theme: themeId,
+            page: 1,
+            pageCount: 1,
+            slideType: ir.slides[0]!.type ?? "content",
+            heading: ir.slides[0]!.heading ?? "",
+            ir,
+            slideIndex: 0,
+          })
+        }
+      }
     }
   }
 
@@ -214,63 +245,6 @@ export function buildMatrix(
           ir,
           slideIndex: 0,
         })
-      }
-    }
-  }
-
-  // ── Full-load table (id stays "density") ───────────────────────────────
-  // One component per page, filled to the largest count that still fits.
-  // Kept as its own table rather than mixed into the component table
-  // because it answers a different question (full load, not the ordinary
-  // case). Table id stays "density" so `--only=density` and job ids
-  // `density--…` keep working.
-  if (!opts.only || opts.only === "density") {
-    for (const [componentId, build] of Object.entries(DENSITY_BUILDERS).sort(([a], [b]) => a.localeCompare(b))) {
-      for (const language of languages) {
-        const lex = LEXICONS[language]
-        const ir = densityPage(componentId, build!, lex, assets[language])
-        push({
-          id: `density--${safe(componentId)}--${language}`,
-          table: "density",
-          subject: componentId,
-          language,
-          theme: BASELINE_THEME,
-          page: 1,
-          pageCount: 1,
-          slideType: "content",
-          heading: ir.slides[0]!.heading ?? "",
-          ir,
-          slideIndex: 0,
-        })
-      }
-    }
-  }
-
-  // ── Heading table ──────────────────────────────────────────────────────
-  // Six constructions × three title states × the language axis, pinned on
-  // two-column (a layout that actually calls tryContentHeadingTreatment).
-  // Always a chapter then the content slide: ghost_index and tag_box return
-  // null when chapterNumberFor === 0, and the others read sectionName.
-  if (!opts.only || opts.only === "heading") {
-    for (const treatment of HEADING_TREATMENTS) {
-      for (const state of HEADING_STATES) {
-        for (const language of languages) {
-          const lex = LEXICONS[language]
-          const ir = headingPage(treatment, state, lex, assets[language])
-          push({
-            id: `heading--${safe(treatment)}--${state}--${language}`,
-            table: "heading",
-            subject: treatment,
-            language,
-            theme: HEADING_THEME[treatment],
-            page: 2,
-            pageCount: 2,
-            slideType: "content",
-            heading: ir.slides[1]!.heading ?? "",
-            ir,
-            slideIndex: 1,
-          })
-        }
       }
     }
   }
