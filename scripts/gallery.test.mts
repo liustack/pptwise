@@ -21,7 +21,7 @@
 import { describe, expect, it } from "vitest"
 import { listThemes } from "@/api"
 import { COMPONENT_TYPES, type Component } from "@/ir"
-import { CHART_VARIANTS, COMPONENT_BUILDERS, DENSITY_BUILDERS, FORM_VARIANTS } from "../evals/gallery/corpus/components"
+import { CHART_VARIANTS, COMPONENT_BUILDERS, FORM_VARIANTS } from "../evals/gallery/corpus/components"
 import { THEME_TABLE_REQUIRED_SURFACES } from "../evals/gallery/corpus/theme-slots"
 import { COMPONENT_FORMS, resolveComponentForm } from "@/components/form-assignments"
 import { BASELINE_THEME, corpusAssets, type CorpusAssets } from "../evals/gallery/corpus/decks"
@@ -113,12 +113,10 @@ describe("gallery coverage", () => {
     expect(sparse).toHaveLength(derived)
   })
 
-  it("emits the theme, skeleton, layout, component, density, and heading tables", async () => {
+  it("emits the theme, skeleton, layout, and component tables", async () => {
     const jobs = buildMatrix(themeIds, await assets())
     expect([...new Set(jobs.map((j) => j.table))].sort()).toEqual([
       "component",
-      "density",
-      "heading",
       "layout",
       "skeleton",
       "theme",
@@ -386,7 +384,6 @@ describe("gallery corpus content", () => {
     const builders = [
       ...Object.entries(COMPONENT_BUILDERS).map(([k, v]) => [`component/${k}`, v] as const),
       ...Object.entries(CHART_VARIANTS).map(([k, v]) => [`variant/${k}`, v] as const),
-      ...Object.entries(DENSITY_BUILDERS).map(([k, v]) => [`density/${k}`, v] as const),
     ]
     const clashes: string[] = []
     for (const language of LANGUAGE_IDS) {
@@ -521,54 +518,4 @@ describe("gallery page", () => {
     // The stage is repainted on mount, not left on the stylesheet's neutral.
     expect(html).toContain('container.style.background = EDGES[id] || ""')
   }, 60_000)
-})
-
-// The full-load table (满载表) fills each of nine components to the largest
-// count that still fits the consulting density page. Authoring cuts or
-// splits content. These pages must not stamp a silent `data-dropped`
-// overflow attribute or drop the block whole. Gallery review r1 retired
-// the painted "+N …" copy. The drop path is now the attribute, and a
-// full-load page should not reach it. A tenth component that grows a
-
-// drop branch still fails the coverage test below until a builder is added.
-describe("gallery density table", () => {
-  it("renders every page at full load, with no drop marker and no silent drop", async () => {
-    const { renderMatrix } = await import("../evals/gallery/render")
-    const { mkdtempSync } = await import("node:fs")
-    const { tmpdir } = await import("node:os")
-    const { join } = await import("node:path")
-
-    const jobs = buildMatrix(themeIds, await assets(), { only: "density" })
-    const outDir = mkdtempSync(join(tmpdir(), "pptwise-gallery-density-"))
-    const { svgs } = renderMatrix(jobs, outDir, "test")
-
-    const marked = [...svgs].filter(([, svg]) => /data-dropped="[1-9]/.test(svg)).map(([id]) => id)
-    expect(marked, "these full-load pages still stamp data-dropped. lower their item counts").toEqual([])
-
-    const painted = [...svgs].filter(([, svg]) => /\+\d+ …/.test(svg)).map(([id]) => id)
-    expect(painted, "painted +N copy must stay gone").toEqual([])
-
-    const swallowed = [...svgs].filter(([, svg]) => svg.includes("data-dropped-silent")).map(([id]) => id)
-    expect(swallowed, "the component was dropped whole instead of fitting").toEqual([])
-  }, 60_000)
-
-  it("covers every component that can draw a drop marker", async () => {
-    const { readFileSync, readdirSync } = await import("node:fs")
-    const { join } = await import("node:path")
-    const { fileURLToPath } = await import("node:url")
-
-    // Counted from the renderers rather than from a list kept here by hand:
-    // a tenth component growing the same branch must fail this, or it joins
-    // the review unseen exactly the way the first nine did.
-    const dir = join(fileURLToPath(new URL("..", import.meta.url)), "src/components")
-    const drawers = readdirSync(dir)
-      .filter((f) => f.endsWith(".tsx") && !f.endsWith(".test.tsx"))
-      .filter((f) => /data-dropped=\{/.test(readFileSync(join(dir, f), "utf8")))
-
-    expect(
-      Object.keys(DENSITY_BUILDERS).length,
-      `${drawers.length} components draw a data-dropped marker (${drawers.join(", ")}) but the density ` +
-        `table covers ${Object.keys(DENSITY_BUILDERS).length} — add a builder to DENSITY_BUILDERS`,
-    ).toBe(drawers.length)
-  })
 })
