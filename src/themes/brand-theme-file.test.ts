@@ -30,7 +30,7 @@ describe("parseBrandThemeFile", () => {
   it("rejects a non-hex color value", async () => {
     const theme = JSON.parse(JSON.stringify(await extractFixtureTheme())) as Record<string, unknown>
     ;(theme.style as { colors: Record<string, unknown> }).colors.text = "red"
-    expect(() => parseBrandThemeFile(theme, "bad.theme.json")).toThrow(/hex color/)
+    expect(() => parseBrandThemeFile(theme, "bad.theme.json")).toThrow(/expected #RGB/)
   })
 
   it("hard-rejects every retired v1 shape by naming the current format, with no migration offer", async () => {
@@ -154,7 +154,7 @@ describe("registerBrandThemeFile", () => {
 
   it("contrast floor blocks a pathological palette with an actionable message", async () => {
     const bytes = await buildThmxBytes({ colors: PATHOLOGICAL_THMX_COLORS })
-    const theme = await extractBrandTheme(bytes, { id: "gray-soup" })
+    const theme = await extractBrandTheme(bytes, { id: "gray-soup", unchecked: true })
     // The message names the token, the measured ratio, the background, and
     // the floor — error quality is part of this wave's acceptance.
     expect(() => registerBrandThemeFile(theme)).toThrow(
@@ -165,7 +165,7 @@ describe("registerBrandThemeFile", () => {
 
   it("applies the same contrast floor to a complete theme", async () => {
     const bytes = await buildThmxBytes({ colors: PATHOLOGICAL_THMX_COLORS })
-    const extracted = await extractBrandTheme(bytes, { id: "gray-complete" })
+    const extracted = await extractBrandTheme(bytes, { id: "gray-complete", unchecked: true })
     const file: ThemeFile = {
       version: 2,
       id: "gray-complete",
