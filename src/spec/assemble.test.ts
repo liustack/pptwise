@@ -46,8 +46,8 @@ function spec(extra: Record<string, unknown> = {}): unknown {
 
 describe("assembleDeck", () => {
   it("routes invalid specs through the spec validator", () => {
-    expect(() => assembleDeck({ pages: [] }, {})).toThrow(PptwiseError)
-    expect(() => assembleDeck({ pages: [] }, {})).toThrow(/invalid spec.*no pages/s)
+    expect(() => assembleDeck({ theme: TEST_THEME_ID, pages: [] }, {})).toThrow(PptwiseError)
+    expect(() => assembleDeck({ theme: TEST_THEME_ID, pages: [] }, {})).toThrow(/invalid spec.*no pages/s)
   })
 
   it.each(["type", "kind", "heading"])("protects spec-owned field %s", (field) => {

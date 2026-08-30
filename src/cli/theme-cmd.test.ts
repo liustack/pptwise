@@ -40,11 +40,49 @@ describe("runThemeNew", () => {
     expect(written.style.shape?.cover).toBeUndefined()
   })
 
-  it("refuses a builtin id collision", async () => {
-    const cwd = await tmp("pptwise-theme-new-collide-")
-    await expect(runThemeNew({ from: "consulting", id: "consulting", cwd })).rejects.toThrow(
-      /collides with a built-in pptwise theme/,
-    )
+  it("materializes lecture-motif onto copied menu entries", async () => {
+    const cwd = await tmp("pptwise-theme-new-lecture-")
+    const out = join(cwd, "themes", "lecture-copy.theme.json")
+    await runThemeNew({ from: "lecture", output: out, id: "lecture-copy", cwd })
+    const written = JSON.parse(await readFile(out, "utf8")) as {
+      id: string
+      menu: { cover: { decor?: { kind: string; id: string } }; content: { points?: { decor?: { id: string } } } }
+    }
+    expect(written.id).toBe("lecture-copy")
+    expect(written.menu.cover.decor).toEqual({ kind: "motif", id: "lecture-motif" })
+    expect(written.menu.content.points?.decor?.id).toBe("lecture-motif")
+  })
+
+  it("freezes a builtin under the same id into deck/theme.json", async () => {
+    const cwd = await tmp("pptwise-theme-new-freeze-")
+    const out = join(cwd, "deck", "theme.json")
+    const msg = await runThemeNew({ from: "consulting", output: out, id: "consulting", cwd })
+    expect(msg).toContain('theme "consulting"')
+    const written = JSON.parse(await readFile(out, "utf8")) as { id: string }
+    expect(written.id).toBe("consulting")
+  })
+
+  it("refuses a path-like id before joining an output path", async () => {
+    const cwd = await tmp("pptwise-theme-new-escape-")
+    await expect(runThemeNew({ from: "consulting", id: "../../escape", cwd })).rejects.toThrow(/a-z0-9-/)
+    await expect(runThemeNew({ from: "consulting", id: "Consulting", cwd })).rejects.toThrow(/a-z0-9-/)
+    await expect(runThemeNew({ from: "consulting", id: "foo_bar", cwd })).rejects.toThrow(/a-z0-9-/)
+  })
+
+  it("refuses to overwrite an existing file unless --force", async () => {
+    const cwd = await tmp("pptwise-theme-new-force-")
+    const out = join(cwd, "themes", "acme.theme.json")
+    await runThemeNew({ from: "consulting", output: out, cwd })
+    const original = await readFile(out)
+    await expect(runThemeNew({ from: "lecture", output: out, id: "acme", cwd })).rejects.toThrow(/--force/)
+    expect(await readFile(out)).toEqual(original)
+    await runThemeNew({ from: "lecture", output: out, id: "acme", cwd, force: true })
+    const rewritten = JSON.parse(await readFile(out, "utf8")) as {
+      id: string
+      menu: { cover: { decor?: { id: string } } }
+    }
+    expect(rewritten.id).toBe("acme")
+    expect(rewritten.menu.cover.decor?.id).toBe("lecture-motif")
   })
 })
 

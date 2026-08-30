@@ -1,11 +1,11 @@
 import { dirname, join, resolve } from "node:path"
+import { THEME_ID_CONSTRAINT, THEME_ID_PATTERN } from "@/ir"
 import { PptwiseError } from "../errors"
-import { parseBrandThemeFile, registerBrandThemeFile } from "../themes/brand-theme-file"
-import { getThemeDefinition, type ThemeDefinition } from "../themes/definitions"
+import { parseBrandThemeFile } from "../themes/brand-theme-file"
+import { getThemeDefinition, installThemeFile, type ThemeDefinition } from "../themes/definitions"
 import { CANONICAL_THEME_IDS } from "../themes"
-import { REGISTERED_THEMES } from "../themes/registered-themes"
+import { copyThemePreset } from "../themes/presets"
 import {
-  MenuSchema,
   ThemeFileSchema,
   type Menu,
   type ThemeFile,
@@ -19,25 +19,44 @@ export type ResolvedTheme =
   | { kind: "file"; id: string; path: string; file: ThemeFile }
   | { kind: "builtin"; id: string }
 
-export function menusEqual(a: Menu, b: Menu): boolean {
-  return JSON.stringify(MenuSchema.parse(a)) === JSON.stringify(MenuSchema.parse(b))
+function sortKeysDeep(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(sortKeysDeep)
+  if (value !== null && typeof value === "object") {
+    const sorted: Record<string, unknown> = {}
+    for (const key of Object.keys(value as Record<string, unknown>).sort()) {
+      sorted[key] = sortKeysDeep((value as Record<string, unknown>)[key])
+    }
+    return sorted
+  }
+  return value
 }
 
-/** Read, parse, and register a theme file. Deletes any previous registration
- *  of the same id first so serve rebuilds pick up new bytes. */
+export function menusEqual(a: Menu, b: Menu): boolean {
+  return JSON.stringify(sortKeysDeep(a)) === JSON.stringify(sortKeysDeep(b))
+}
+
+export function assertThemeId(id: string): void {
+  if (!THEME_ID_PATTERN.test(id)) {
+    throw new PptwiseError(`invalid theme id "${id}". ${THEME_ID_CONSTRAINT}`)
+  }
+}
+
+/** Read, parse, and register a theme file. The previous registration of the
+ *  same id is replaced only after every gate passes. */
 export async function loadThemeFile(path: string): Promise<ThemeFile> {
-  const raw = await loadIrFile(path, "theme")
-  const file = parseBrandThemeFile(raw, path)
-  REGISTERED_THEMES.delete(file.id)
-  registerBrandThemeFile(file)
+  const file = await readThemeFile(path)
+  installThemeFile(file)
   return file
+}
+
+async function readThemeFile(path: string): Promise<ThemeFile> {
+  const raw = await loadIrFile(path, "theme")
+  return parseBrandThemeFile(raw, path)
 }
 
 function isCanonicalThemeId(name: string): boolean {
   return (CANONICAL_THEME_IDS as readonly string[]).includes(name)
 }
-
-
 
 export function menuForThemeId(id: string): Menu {
   const def = getThemeDefinition(id)
@@ -68,30 +87,22 @@ function publicStyle(style: ThemeDefinition["style"], id: string): ThemeFile["st
   return out
 }
 
-/** Copy a built-in preset into a self-contained v2 ThemeFile. Engine-only
- *  `style.shape.cover` is stripped. The new id must not collide with a builtin. */
-export function materializeBuiltinTheme(
+/** Copy a factory preset into a public v2 ThemeFile. Engine-only
+ *  `style.shape.cover` is stripped. Motif is materialized per menu entry. */
+export function themeFileFromPreset(
   presetId: string,
   identity: { id: string; label?: string },
 ): ThemeFile {
-  if (!isCanonicalThemeId(presetId)) {
-    throw new PptwiseError(`unknown built-in theme "${presetId}"`)
-  }
-  if (isCanonicalThemeId(identity.id)) {
-    throw new PptwiseError(
-      `theme id "${identity.id}" collides with a built-in pptwise theme. Pick a different id with --id (or a different output filename)`,
-    )
-  }
-  const def = getThemeDefinition(presetId)
+  const copy = copyThemePreset(presetId, identity.id)
   const file = {
     version: 2 as const,
     id: identity.id,
-    label: identity.label ?? def.label,
-    style: publicStyle(def.style, identity.id),
-    brand: def.brand,
-    occasions: def.occasions !== undefined ? [...def.occasions] : undefined,
-    identity: def.identity,
-    menu: def.menu,
+    label: identity.label ?? copy.label,
+    style: publicStyle(copy.style, identity.id),
+    brand: copy.brand,
+    occasions: copy.occasions !== undefined ? [...copy.occasions] : undefined,
+    identity: copy.identity,
+    menu: copy.menu,
   }
   return ThemeFileSchema.parse(file) as ThemeFile
 }
@@ -103,9 +114,17 @@ async function tryParseThemeFile(path: string): Promise<ThemeFile | undefined> {
 }
 
 async function acceptThemeFile(path: string, file: ThemeFile): Promise<ResolvedTheme> {
-  REGISTERED_THEMES.delete(file.id)
-  registerBrandThemeFile(file)
+  installThemeFile(file)
   return { kind: "file", id: file.id, path, file }
+}
+
+async function acceptIfNameMatches(
+  path: string,
+  name: string,
+  file: ThemeFile,
+): Promise<ResolvedTheme | undefined> {
+  if (file.id !== name) return undefined
+  return acceptThemeFile(path, file)
 }
 
 async function resolveDeckThemeFile(
@@ -114,20 +133,25 @@ async function resolveDeckThemeFile(
 ): Promise<ResolvedTheme | undefined> {
   const boundPath = join(deckDir, THEME_FILENAME)
   if (await pathExists(boundPath)) {
-    const file = await loadThemeFile(boundPath)
-    if (file.id === name) return { kind: "file", id: file.id, path: boundPath, file }
+    const file = await readThemeFile(boundPath)
+    const hit = await acceptIfNameMatches(boundPath, name, file)
+    if (hit !== undefined) return hit
   }
 
   const namedTheme = join(deckDir, `${name}.theme.json`)
   if (await pathExists(namedTheme)) {
-    const file = await loadThemeFile(namedTheme)
-    if (file.id === name) return { kind: "file", id: file.id, path: namedTheme, file }
+    const file = await readThemeFile(namedTheme)
+    const hit = await acceptIfNameMatches(namedTheme, name, file)
+    if (hit !== undefined) return hit
   }
 
   const namedJson = join(deckDir, `${name}.json`)
   if (await pathExists(namedJson)) {
     const file = await tryParseThemeFile(namedJson)
-    if (file !== undefined && file.id === name) return acceptThemeFile(namedJson, file)
+    if (file !== undefined) {
+      const hit = await acceptIfNameMatches(namedJson, name, file)
+      if (hit !== undefined) return hit
+    }
   }
 
   return undefined
@@ -149,11 +173,15 @@ async function resolveWorkspaceThemeFile(
       const isLooseJson = candidate.endsWith(`${name}.json`) && !candidate.endsWith(`${name}.theme.json`)
       if (isLooseJson) {
         const file = await tryParseThemeFile(candidate)
-        if (file !== undefined && file.id === name) return acceptThemeFile(candidate, file)
+        if (file !== undefined) {
+          const hit = await acceptIfNameMatches(candidate, name, file)
+          if (hit !== undefined) return hit
+        }
         continue
       }
-      const file = await loadThemeFile(candidate)
-      if (file.id === name) return { kind: "file", id: file.id, path: candidate, file }
+      const file = await readThemeFile(candidate)
+      const hit = await acceptIfNameMatches(candidate, name, file)
+      if (hit !== undefined) return hit
     }
     const parent = dirname(dir)
     if (parent === dir) return undefined
@@ -165,16 +193,14 @@ export async function resolveThemeByName(
   name: string,
   opts: { startDir: string; deckDir?: string },
 ): Promise<ResolvedTheme> {
+  assertThemeId(name)
   if (opts.deckDir !== undefined) {
     const deckHit = await resolveDeckThemeFile(opts.deckDir, name)
     if (deckHit !== undefined) return deckHit
   }
 
-  // A workspace file must never steal a built-in name.
-  if (!isCanonicalThemeId(name)) {
-    const workspaceHit = await resolveWorkspaceThemeFile(opts.startDir, name)
-    if (workspaceHit !== undefined) return workspaceHit
-  }
+  const workspaceHit = await resolveWorkspaceThemeFile(opts.startDir, name)
+  if (workspaceHit !== undefined) return workspaceHit
 
   if (isCanonicalThemeId(name)) return { kind: "builtin", id: name }
 

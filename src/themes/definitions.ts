@@ -420,8 +420,8 @@ function assertMenuContract(themeId: string, menu: Menu): void {
  * Hard gates, in order:
  *
  * - the file must parse against {@link ThemeFileSchema} (which already
- *   rejects a built-in id collision and a `style.id` that disagrees with
- *   `id`, and requires a non-empty content-kind subset).
+ *   rejects a `style.id` that disagrees with `id`, and requires a
+ *   non-empty content-kind subset).
  * - `id` must not collide with a built-in or an already-registered theme.
  * - `style.colors.text`/`style.colors.muted` must each clear the
  *   {@link CONTRAST_FLOOR} against a {@link CONTRAST_CHECKED_SLIDE_TYPES}
@@ -439,25 +439,45 @@ function assertMenuContract(themeId: string, menu: Menu): void {
  * Once registered, the theme participates in `getInstalledThemeIds`,
  * `getThemeDefinition`, and `themes/index.ts`'s `resolveStyle` — every
  * internal theme lookup, with no separate "registered theme" branch.
+ *
+ * File loading that may shadow a builtin or replace a previous custom
+ * registration uses {@link installThemeFile} instead.
  */
 export function registerTheme(input: unknown): void {
-  const def = compileThemeFile(parseThemeFile(input))
-  if ((CANONICAL_THEME_IDS as readonly string[]).includes(def.id) || REGISTERED_THEMES.has(def.id)) {
-    throw new PptwiseError(`theme "${def.id}" is already installed`)
+  const file = parseThemeFile(input)
+  if ((CANONICAL_THEME_IDS as readonly string[]).includes(file.id) || REGISTERED_THEMES.has(file.id)) {
+    throw new PptwiseError(`theme "${file.id}" is already installed`)
   }
+  installParsedThemeFile(file)
+}
+
+/**
+ * Validate a complete v2 theme file, then replace any previous registration
+ * of the same id. Built-in ids may be shadowed. A failed gate leaves the
+ * previous registration untouched.
+ */
+export function installThemeFile(input: unknown): ThemeDefinition {
+  return installParsedThemeFile(parseThemeFile(input))
+}
+
+function installParsedThemeFile(file: ThemeFile): ThemeDefinition {
+  const def = compileThemeFile(file)
   assertContrastFloor(def.id, def.style)
   assertMenuContract(def.id, def.menu)
-  // Soft checks last, only once every hard check above has confirmed this
-  // registration will actually succeed — a registration that goes on to
-  // throw never warns for an unrelated font choice.
   warnUnmeasuredFace(def.id, "heading", def.style.fonts.heading)
   warnUnmeasuredFace(def.id, "body", def.style.fonts.body)
   REGISTERED_THEMES.set(def.id, def)
+  return def
 }
 
-/** Every installed theme id: the 24 built-ins, then registered themes in registration order. */
+/** Every installed theme id: the 24 built-ins, then registered custom ids.
+ *  A shadowed builtin is listed once. */
 export function getInstalledThemeIds(): readonly string[] {
-  return [...CANONICAL_THEME_IDS, ...REGISTERED_THEMES.keys()]
+  const ids: string[] = [...CANONICAL_THEME_IDS]
+  for (const id of REGISTERED_THEMES.keys()) {
+    if (!ids.includes(id)) ids.push(id)
+  }
+  return ids
 }
 
 /**

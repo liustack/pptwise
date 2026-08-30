@@ -6,7 +6,18 @@
  */
 import { z } from "zod"
 import { PptwiseError } from "../errors"
-import { BrandSchema, COMPONENT_TYPES, DeckBrandingSchema, KIND_VALUES, MetaSchema, NarrativeProfileInputSchema } from "../ir"
+import {
+  BrandSchema,
+  COMPONENT_TYPES,
+  DeckBrandingSchema,
+  KIND_VALUES,
+  MetaSchema,
+  NarrativeProfileInputSchema,
+  THEME_ID_CONSTRAINT,
+  THEME_ID_PATTERN,
+  THEME_REQUIRED_MESSAGE,
+  themeIssueMessage,
+} from "../ir"
 import { normalizeDeckRootAliases } from "../ir/field-aliases"
 import {
   normalizeNarrativeShape,
@@ -56,9 +67,9 @@ export const PageSpecSchema = z.discriminatedUnion("type", [
 export type PageSpec = z.infer<typeof PageSpecSchema>
 
 /**
- * Top-level deck spec shape. Narrative and theme defaults are resolved by
- * validation and assembly without being written back into the parsed spec.
- * The spec version is independent from the IR version.
+ * Top-level deck spec shape. Narrative defaults are resolved by validation
+ * and assembly without being written back into the parsed spec. Theme is
+ * required. The spec version is independent from the IR version.
  */
 export const DeckSpecSchema = z
   .object({
@@ -72,7 +83,11 @@ export const DeckSpecSchema = z
     // (vocabulary-v4 rename) — `resolveNarrative` below is what actually
     // enforces that.
     narrative: z.union([z.string(), NarrativeProfileInputSchema]).optional(),
-    theme: z.string().optional(),
+    theme: z
+      .string({
+        error: (iss) => (iss.input === undefined ? THEME_REQUIRED_MESSAGE : undefined),
+      })
+      .regex(THEME_ID_PATTERN, THEME_ID_CONSTRAINT),
     filename: z.string().optional(),
     meta: MetaSchema.default({}),
     /** Deck logo placement — reused verbatim from the IR's own `brand` field
@@ -156,14 +171,11 @@ export function formatInvalidSpecError(errors: SpecValidationIssue[]): string {
 }
 
 /**
- * Deck-spec-level theme default (spec §5's defaults chain: "theme omitted →
- * consulting") — the same default IR's own `theme.id` field carries
- * (`ThemeSchema` in `ir/index.ts`). Exported so a caller already holding a
- * validated {@link DeckSpec} (the CLI's OK-summary line) doesn't re-derive
- * the fallback itself.
+ * Bound theme id on a validated spec. Theme is required. There is no
+ * consulting fallback.
  */
 export function resolveSpecThemeId(spec: DeckSpec): string {
-  return spec.theme ?? "consulting"
+  return spec.theme
 }
 
 // ── hard gate: pages non-empty ──────────────────────────────────────────
@@ -572,7 +584,11 @@ export function validateSpec(input: unknown): SpecValidateResult {
     const errors = r.error.issues.map((issue) => {
       const path = issue.path.join(".")
       const m = /^pages\.(\d+)/.exec(path)
-      return { path, message: issue.message, pageId: m ? pageIdFromRawInput(normalizedInput, Number(m[1])) : undefined }
+      return {
+        path,
+        message: themeIssueMessage(path, issue.message, issue.input, issue.code),
+        pageId: m ? pageIdFromRawInput(normalizedInput, Number(m[1])) : undefined,
+      }
     })
     return withNormalized({ ok: false, errors })
   }

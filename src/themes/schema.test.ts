@@ -58,13 +58,19 @@ describe("ThemeFileSchema", () => {
     }
   })
 
-  it("rejects a public theme id that shadows a built-in", () => {
+  it("accepts a public theme id that shadows a built-in", () => {
     const result = ThemeFileSchema.safeParse(theme({ id: "consulting", style: publicStyle("consulting") }))
-    expect(result.success).toBe(false)
-    if (!result.success) {
-      expect(result.error.issues.map((issue) => issue.message).join("\n")).toMatch(/built-in/i)
-    }
+    expect(result.success).toBe(true)
+    if (result.success) expect(result.data.id).toBe("consulting")
   })
+
+  it.each(["../../escape", "Consulting", "foo_bar", "foo.bar", ""])(
+    "rejects theme id %j as outside the slug character set",
+    (id) => {
+      const result = ThemeFileSchema.safeParse(theme({ id, style: publicStyle(id || "x") }))
+      expect(result.success).toBe(false)
+    },
+  )
 
   it("rejects a style id that differs from the theme id", () => {
     const result = ThemeFileSchema.safeParse(theme({ style: publicStyle("not-acme") }))

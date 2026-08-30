@@ -6,6 +6,8 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest"
 import { installNodePlatform } from "@/platform/node"
 import { __resetRegisteredThemes } from "../themes/definitions"
 import { buildThmxBytes } from "../themes/extract/__fixtures__/thmx"
+import { getThemeDefinition } from "../themes/definitions"
+import { DEFAULT_THMX_COLORS } from "../themes/extract/__fixtures__/thmx"
 import { applyDeckConfig, runBrandExtract, runSpecValidate, runValidate } from "./commands"
 
 installNodePlatform()
@@ -126,11 +128,11 @@ describe("theme selection chain", () => {
     await expect(runValidate(irPath, projectDir)).resolves.toMatch(/theme "tech"/)
   })
 
-  it("7. bare IR with no theme key -> schema default consulting, config cannot override", async () => {
+  it("7. bare IR with no theme key is a hard error pointing at theme new", async () => {
     const irPath = await writeIrFile(IR_NO_THEME)
     const projectDir = await projectWith("ink")
-    await expect(runValidate(irPath, projectDir)).resolves.toMatch(/theme "consulting"/)
-    expect(await runValidate(irPath, projectDir)).not.toMatch(/theme "ink"/)
+    await expect(runValidate(irPath, projectDir)).rejects.toThrow(/pptwise theme new --from/)
+    await expect(runValidate(irPath, projectDir)).rejects.toThrow(/"theme": \{ "id": "<id>" \}/)
   })
 
   it("8. unknown name errors, no consulting fallback", async () => {
@@ -173,13 +175,24 @@ describe("theme selection chain", () => {
     await expect(runValidate(deckDir, projectDir)).resolves.toMatch(/theme "acme-blue"/)
   })
 
-  it("11. workspace file cannot shadow a builtin id", async () => {
+  it("11. workspace and deck files can shadow a builtin id", async () => {
     const root = await tmp("pptwise-sel-shadow-")
     await mkdir(join(root, "themes"))
-    await extractTheme(join(root, "themes"), "acme", "consulting.theme.json")
+    await extractTheme(join(root, "themes"), "consulting", "consulting.theme.json")
     const deckDir = await writeDeckDir(makeDeckPlan({ theme: "consulting" }))
     await expect(runValidate(deckDir, root)).resolves.toMatch(/theme "consulting"/)
-    expect(await runValidate(deckDir, root)).not.toMatch(/theme "acme"/)
+    expect(getThemeDefinition("consulting").style.colors.primary).toBe(`#${DEFAULT_THMX_COLORS.accent1}`)
+
+    __resetRegisteredThemes()
+    const frozenDeck = await writeDeckDir(makeDeckPlan({ theme: "consulting" }))
+    await extractTheme(frozenDeck, "consulting", "theme.json")
+    await expect(runValidate(frozenDeck, await projectWith(undefined))).resolves.toMatch(/theme "consulting"/)
+    expect(getThemeDefinition("consulting").style.colors.primary).toBe(`#${DEFAULT_THMX_COLORS.accent1}`)
+
+    __resetRegisteredThemes()
+    const plainDeck = await writeDeckDir(makeDeckPlan({ theme: "consulting" }))
+    await expect(runValidate(plainDeck, await projectWith(undefined))).resolves.toMatch(/theme "consulting"/)
+    expect(getThemeDefinition("consulting").style.colors.primary).not.toBe(`#${DEFAULT_THMX_COLORS.accent1}`)
   })
 
   it("12. runSpecValidate sees a workspace custom id", async () => {

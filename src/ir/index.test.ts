@@ -29,25 +29,41 @@ describe("IR v5 theme field", () => {
     d.theme = { id: "consulting", override: { primary: "#123456" } }
     expect(parsePptxIR(d).success).toBe(false)
   })
+  it("keeps an unrecognized theme key as an unrecognized-key error, not a missing-theme error", () => {
+    const d: any = minimal()
+    d.theme = { id: "consulting", colour: "#ff0000" }
+    const r = parsePptxIR(d)
+    expect(r.success).toBe(false)
+    if (!r.success) {
+      expect(r.error).toMatch(/Unrecognized key: "colour"/)
+      expect(r.error).not.toMatch(/pptwise theme new/)
+    }
+  })
+  it.each(["../../escape", "Consulting", "foo_bar", "foo.bar", ""])(
+    "rejects theme id %j",
+    (id) => {
+      const d: any = minimal()
+      d.theme = { id }
+      expect(parsePptxIR(d).success).toBe(false)
+    },
+  )
 })
 
 describe("IR v5 omission defaults (weak-model friendly)", () => {
-  it("a bare slides-only deck parses with all defaults", () => {
+  it("a bare slides-only deck still fills version and filename but missing theme is a hard error", () => {
     const r = parsePptxIR({ slides: [{ kind: "points", heading: "只有一页", components: [] }] })
-    expect(r.success).toBe(true)
-    if (r.success) {
-      expect(r.data.version).toBe("5")
-      expect(r.data.filename).toBe("presentation")
-      expect(r.data.theme.id).toBe("consulting")
-      expect(r.data.slides[0]!.type).toBe("content")
+    expect(r.success).toBe(false)
+    if (!r.success) {
+      expect(r.error).toMatch(/pptwise theme new --from/)
+      expect(r.error).toMatch(/"theme": \{ "id": "<id>" \}/)
     }
   })
-  it("theme with style but no id defaults to consulting", () => {
+  it("theme with style but no id is a hard error", () => {
     const d: any = minimal()
     d.theme = { style: { colors: { primary: "#0B5FFF" } } }
     const r = parsePptxIR(d)
-    expect(r.success).toBe(true)
-    if (r.success) expect(r.data.theme.id).toBe("consulting")
+    expect(r.success).toBe(false)
+    if (!r.success) expect(r.error).toMatch(/pptwise theme new --from|"id"/)
   })
   it("a wrong value is still a hard error (omission ≠ typo)", () => {
     const d: any = minimal()

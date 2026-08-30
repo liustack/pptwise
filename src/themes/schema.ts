@@ -1,5 +1,12 @@
 import { z } from "zod"
-import { BrandConfigSchema, BUILTIN_THEME_IDS, KIND_VALUES, type BrandConfig } from "@/ir"
+import {
+  BrandConfigSchema,
+  KIND_VALUES,
+  THEME_ID_CONSTRAINT,
+  THEME_ID_PATTERN,
+  type BrandConfig,
+  type BUILTIN_THEME_IDS,
+} from "@/ir"
 import type { MotifId } from "../motifs/types"
 import { OCCASION_VOCAB, type Occasion } from "./occasions"
 import type { StyleTokens } from "./tokens"
@@ -77,7 +84,7 @@ export const StyleTokensFileSchema = z
   .strict()
 
 const CommonThemeFileFields = {
-  id: z.string().min(1),
+  id: z.string().regex(THEME_ID_PATTERN, THEME_ID_CONSTRAINT),
   label: z.string().min(1).optional(),
   style: StyleTokensFileSchema,
   brand: BrandConfigSchema.optional(),
@@ -86,13 +93,6 @@ const CommonThemeFileFields = {
 }
 
 function validateCommonThemeFields(value: { id: string; style: { id: string } }, ctx: z.RefinementCtx): void {
-  if ((BUILTIN_THEME_IDS as readonly string[]).includes(value.id)) {
-    ctx.addIssue({
-      code: "custom",
-      path: ["id"],
-      message: `theme id "${value.id}" collides with a built-in pptwise theme`,
-    })
-  }
   if (value.style.id !== value.id) {
     ctx.addIssue({
       code: "custom",
