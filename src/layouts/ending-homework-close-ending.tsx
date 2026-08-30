@@ -175,7 +175,6 @@ export const layoutDef: LayoutDefinition = {
   id: "homework-close-ending",
   kind: "archetype",
   pinOnly: true,
-  branding: "none",
   slideTypes: ["ending"],
   slots: [
     { name: "kicker", accepts: [] },

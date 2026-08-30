@@ -126,7 +126,6 @@ describe("cover-double-frame-cover — shared pool", () => {
     expect(layoutDef.kind).toBe("archetype")
     expect(layoutDef.pinOnly).toBe(true)
     expect("paintsOwnBackground" in layoutDef).toBe(false)
-    expect(layoutDef.branding).toBe("none")
     expect(layoutDef.slideTypes).toEqual(["cover"])
   })
 
@@ -196,6 +195,5 @@ describe("double-frame-cover — no top rule on a framed page", () => {
       return y >= 20 && y < 48 && w >= 400 && h <= 4
     })
     expect(topRules).toHaveLength(0)
-    expect(layoutDef.pageFrame).toBe("double")
   })
 })

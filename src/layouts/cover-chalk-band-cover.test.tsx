@@ -149,7 +149,6 @@ describe("cover-chalk-band-cover — shared pool", () => {
     expect(layoutDef.kind).toBe("archetype")
     expect(layoutDef.pinOnly).toBe(true)
     expect("paintsOwnBackground" in layoutDef).toBe(false)
-    expect(layoutDef.branding).toBe("none")
     expect(layoutDef.slideTypes).toEqual(["cover"])
   })
 

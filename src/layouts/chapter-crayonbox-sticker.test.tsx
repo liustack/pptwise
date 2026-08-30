@@ -117,8 +117,6 @@ describe("chapter-crayonbox-sticker", () => {
       id: "crayonbox-sticker",
       kind: "archetype",
       pinOnly: true,
-      branding: "none",
-      suppressMotif: true,
       slideTypes: ["chapter"],
     })
     expect(() => assertSubset(renderChapter().root)).not.toThrow()

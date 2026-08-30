@@ -1,31 +1,8 @@
 /**
- * Deck spec schema + validation (spec §5 "plan artifact and hard gates", W5
- * task 2 — renamed to "Deck Spec" per the vocabulary-v4 rename, spec §6/§8.1;
- * "spec §N" citations throughout this file that predate this rename still
- * point at that original W5 design doc, not this rename's own spec — left
- * as historical citations, not renumbered). That rename originally covered
- * the exported concepts and CLI vocabulary only — this module's own
- * directory stayed `src/plan` for a while after, a known stale name the
- * src domain-reorg wave's task T1c closed by moving it to `src/spec`
- * (mechanical `git mv`, every exported symbol unchanged): the path now
- * matches the vocabulary this header already used throughout.
- *
- * A deck spec is a workflow artifact, not a render prerequisite (spec §5's
- * "escape hatch": a bare IR v3 renders directly, `spec validate` is a
- * separate, optional gate for the spec-authoring stage of the six-phase
- * workflow). This module stays pure and Node-free — no `fs`, no CLI concerns
- * — so it can sit in `src/index.ts`'s dependency closure exactly like
- * `src/ir` and `src/narrative` already do (`AGENTS.md`'s layout rule).
- * `src/cli/commands.ts` owns the one Node-touching wrapper
- * (`runSpecValidate`: read file, call {@link validateSpec}, format the
- * result).
- *
- * Design mirrors `api.ts`'s `validateIr`/`ValidateResult` throughout
- * (structural zod pass first, then a sequential chain of hard-gate
- * categories, each short-circuiting the chain on its own failure — see
- * {@link validateSpec}'s own comment for why): same overall shape, adapted
- * for spec pages being keyed by an author-assigned `id` instead of IR's
- * positional slide index.
+ * Deck spec schema and validation. A spec binds one theme, then names the
+ * semantic kind of each content page. It never stores render selection state.
+ * This module stays pure and Node-free so it remains inside `src/index.ts`'s
+ * browser-safe dependency closure.
  */
 import { z } from "zod"
 import { PptwiseError } from "../errors"
@@ -41,36 +18,18 @@ import {
 } from "../narrative"
 import { CAPACITY } from "../audit/capacity"
 import { LAYOUT_REGISTRY, type SlideType } from "../layouts/registry"
-import { getInstalledThemeIds } from "../themes/definitions"
+import { offeredContentKinds, resolveLayoutId } from "../render/layout-selection"
+import { getInstalledThemeIds, getThemeDefinition } from "../themes/definitions"
 
 // ── schema ───────────────────────────────────────────────────────────────
 
-/**
- * Mirrors `SlideSchema.type` / `SlideType` (`ir/index.ts`,
- * `svg/layouts/registry.ts`) exactly. Kept as an independent literal tuple
- * here (not imported from either) — a page spec's `type` is a 4-value enum
- * on its own schema, not a re-export of IR's — but the `satisfies` clause
- * makes any future drift between the two a compile error instead of a
- * silent mismatch.
- */
-const PAGE_TYPES = ["cover", "chapter", "content", "ending"] as const satisfies readonly SlideType[]
-
-export type PageSpecType = (typeof PAGE_TYPES)[number]
+export type PageSpecType = SlideType
 export type PageKind = (typeof KIND_VALUES)[number]
-type RetiredPageBeat = "anchor" | "dense" | "breathing"
-
-function retiredPageBeat(page: PageSpec): RetiredPageBeat | undefined {
-  return (page as unknown as { beat?: RetiredPageBeat }).beat
-}
 
 /**
- * A single page spec (spec §5, §6). `type`/`heading` are required — unlike
- * IR's own `SlideSchema` (where both default/omit for weak-model
- * friendliness), a deck spec is the authoring artifact those fields get
- * *locked* from at assemble time (W5 task 3), so leaving either implicit
- * here would defeat the point. `beat`/`focus`/`summary` stay optional per
- * spec §5's defaults chain ("beat omitted → auto-rotates by page position —
- * focus/summary/layout/slot can all be omitted").
+ * Every page locks its id, type, and heading. Content pages additionally lock
+ * a semantic `kind`, which must be offered by the bound theme menu. `focus`
+ * and `summary` remain optional authoring hints.
  */
 const CommonPageSpecFields = {
   id: z.string(),
@@ -97,21 +56,9 @@ export const PageSpecSchema = z.discriminatedUnion("type", [
 export type PageSpec = z.infer<typeof PageSpecSchema>
 
 /**
- * Top-level deck spec shape (spec §5, §6). `narrative`/`theme` deliberately
- * have no schema-level `.default(...)` — same reasoning as `PptxIRSchema`'s
- * own `narrative` field (`ir/index.ts`): the resolved value is never baked
- * back into the parsed shape, {@link validateSpec} (here) and, later,
- * assemble (W5 task 3) each resolve it themselves. `seed` is accepted but
- * entirely unexamined by this module — "not validateSpec's concern" (spec's
- * own wording): assemble generates and suggests writing one back on first
- * materialization.
- *
- * `version` stays the literal `"1"` (unchanged value) but now carries an
- * independent Deck Spec versioning scheme (spec §6: "`deck.spec.json` 使用
- * 独立的 spec 版本 1。它是新工件，不继承 `deck.plan.json` 的版本号语义") —
- * this "1" is the Deck Spec artifact's own first version, not a continuation
- * of the old deck-plan artifact's version counter, even though the digit is
- * the same.
+ * Top-level deck spec shape. Narrative and theme defaults are resolved by
+ * validation and assembly without being written back into the parsed spec.
+ * The spec version is independent from the IR version.
  */
 export const DeckSpecSchema = z
   .object({
@@ -143,8 +90,8 @@ export const DeckSpecSchema = z
      * does not write `"cover-only"` into the IR. The renderer treats that
      * as `"cover-only"`. Omitted by default. Write `"full"` only when every
      * content page needs the brand footer. `"full"` also paints confidentiality
-     * and date on cover and ending meta rows. Layout `branding: "none"` still
-     * wins at render.
+     * and date on cover and ending meta rows. A silent menu entry can suppress
+     * branding for its own page.
      */
     branding: DeckBrandingSchema.optional(),
     pages: z.array(PageSpecSchema),
@@ -174,6 +121,8 @@ export interface SpecValidateResult {
   ok: boolean
   spec?: DeckSpec
   errors: SpecValidationIssue[]
+  /** Editorial advisories never change `ok`. */
+  warnings?: SpecValidationIssue[]
   /**
    * Same shape and channel as `ValidateResult.normalized` (`../validate-core.ts`)
    * — human-readable `path: alias → canonical`-style rewrite entries for every
@@ -230,9 +179,7 @@ function checkPagesNonEmpty(spec: DeckSpec): SpecValidationIssue[] {
  * Structural boundary gate (spec §5): the deck must open on a cover page and
  * close on an ending page, and no interior page may claim either type —
  * cover/ending are reserved for the two boundary positions. `content` and
- * `chapter` are both legal interior types (chapter divider pages are not
- * boundary types, and are excluded from the beat-rotation streak checks
- * below for that same reason). Called only when `spec.pages` is non-empty
+ * `chapter` are both legal interior types. Called only when `spec.pages` is non-empty
  * (see {@link validateSpec}) — on a single-page spec `first`/`last` are the
  * same page and both checks run against it independently, so a lone page
  * that is neither cover nor ending reports both violations.
@@ -469,159 +416,64 @@ function checkFocusVocabulary(spec: DeckSpec, strategy: Strategy): SpecValidatio
   return errors
 }
 
-// ── hard gate: beat rotation (parameterized by strategy's beatPolicy) ──
+// ── theme-menu hard gate and kind-distribution advisory ─────────────────
 
-type DeclaredBeatPage = { index: number; id: string; beat: RetiredPageBeat }
+function checkThemeMenuKinds(spec: DeckSpec): SpecValidationIssue[] {
+  const menu = getThemeDefinition(resolveSpecThemeId(spec)).menu
+  if (menu === undefined) {
+    return [
+      {
+        path: "theme",
+        message: `theme "${resolveSpecThemeId(spec)}" has no menu`,
+      },
+    ]
+  }
 
-/**
- * Content-type pages (cover/chapter/ending excluded, per the brief's streak
- * rule) that declared an explicit `beat` — the exact population every
- * beat-policy check below reasons over. A content page that leaves
- * `beat` unset is filtered out here too, not treated as a streak-breaker —
- * see {@link checkAlternatePolicy}'s doc comment for why that matters.
- */
-function declaredBeatContentPages(spec: DeckSpec): DeclaredBeatPage[] {
-  const result: DeclaredBeatPage[] = []
-  spec.pages.forEach((page, index) => {
-    const beat = retiredPageBeat(page)
-    if (page.type === "content" && beat !== undefined) {
-      result.push({ index, id: page.id, beat })
-    }
+  const offered = offeredContentKinds(menu)
+  return spec.pages.flatMap((page, index) => {
+    if (page.type !== "content" || resolveLayoutId("content", page.kind, menu) !== null) return []
+    return [
+      {
+        path: `pages.${index}.kind`,
+        pageId: page.id,
+        message: `kind "${page.kind}" is not offered by theme "${resolveSpecThemeId(
+          spec,
+        )}". Available content kinds: ${offered.join(", ")}`,
+      },
+    ]
   })
-  return result
 }
 
-/**
- * `alternate` policy (storytelling strategy): no run of 3 or more consecutive
- * content pages may declare the *same* beat. "Consecutive" is evaluated
- * on the declared-beat content-page subsequence
- * ({@link declaredBeatContentPages}), not on raw array adjacency —
- * cover/chapter/ending pages are excluded per the brief, and a content page
- * that leaves `beat` unset is *also* transparent to this scan (filtered
- * out, neither breaking nor extending a run) rather than treated as a
- * guaranteed streak-breaker: nothing at validate time knows what an unset
- * beat will resolve to (assemble's later auto-alternation step decides
- * that), so a run of declared "anchor" pages either side of one undeclared
- * page is still a real 3-in-a-row risk once that gap gets filled, and
- * treating it as already-safe would let the loudest form of the violation
- * (every visible declaration identical) through silently. A maximal run
- * reports exactly one error naming every member, not one error per
- * overlapping triple within it.
- */
-function checkAlternatePolicy(spec: DeckSpec, strategy: Strategy): SpecValidationIssue[] {
-  const seq = declaredBeatContentPages(spec)
-  const errors: SpecValidationIssue[] = []
-  let i = 0
-  while (i < seq.length) {
-    let j = i + 1
-    while (j < seq.length && seq[j]!.beat === seq[i]!.beat) j++
-    const runLength = j - i
-    if (runLength >= 3) {
-      const members = seq.slice(i, j)
-      errors.push({
+/** Report each maximal run of three or more identical content-page kinds. */
+function checkKindDistribution(spec: DeckSpec): SpecValidationIssue[] {
+  const contentPages = spec.pages
+    .map((page, index) => ({ page, index }))
+    .filter(
+      (
+        entry,
+      ): entry is {
+        page: Extract<PageSpec, { type: "content" }>
+        index: number
+      } => entry.page.type === "content",
+    )
+  const warnings: SpecValidationIssue[] = []
+  let start = 0
+  while (start < contentPages.length) {
+    let end = start + 1
+    while (end < contentPages.length && contentPages[end]!.page.kind === contentPages[start]!.page.kind) end++
+    if (end - start >= 3) {
+      const run = contentPages.slice(start, end)
+      warnings.push({
         path: "pages",
-        pageId: members[0]!.id,
-        message:
-          `${runLength} consecutive content pages declare beat "${seq[i]!.beat}" ` +
-          `(${members.map((m) => m.id).join(", ")}) — strategy "${strategy}" requires beat to alternate, ` +
-          `vary at least one of them`,
+        pageId: run[0]!.page.id,
+        message: `${run.length} consecutive content pages use kind "${run[0]!.page.kind}" (${run
+          .map((entry) => entry.page.id)
+          .join(", ")}). Vary the explanation pattern where the argument allows it`,
       })
     }
-    i = j
+    start = end
   }
-  return errors
-}
-
-/**
- * `anchor-open` policy (pyramid strategy): only the deck's *first* content page
- * is checked — it must declare beat "anchor" if it declares a beat at
- * all. An unset beat on that first content page is not a violation (spec:
- * omission always defers to the later auto-fill step). Every other content
- * page's beat is left alone by this policy, by design (spec's own words:
- * "only checks the opening"). Vacuously fine when the spec has no content
- * pages at all (e.g. cover → chapter → ending).
- */
-function checkAnchorOpenPolicy(spec: DeckSpec, strategy: Strategy): SpecValidationIssue[] {
-  const firstContentIndex = spec.pages.findIndex((page) => page.type === "content")
-  if (firstContentIndex === -1) return []
-  const firstContent = spec.pages[firstContentIndex]!
-  const beat = retiredPageBeat(firstContent)
-  if (beat === undefined || beat === "anchor") return []
-  return [
-    {
-      path: `pages.${firstContentIndex}.beat`,
-      pageId: firstContent.id,
-      message: `first content page declares beat "${beat}" — strategy "${strategy}" requires the deck to open its first content page on "anchor" beat when a beat is declared`,
-    },
-  ]
-}
-
-/**
- * `anchor-sparse` policy (showcase strategy): among content pages that declare a
- * beat, "anchor" must stay a minority (at most half). Showcase's own
- * beat *default* leans anchor-heavy (spec §5's beat-default column:
- * "anchor-dominant" — applied by the later auto-alternation step when beat is
- * omitted), but this gate only ever looks at pages the author explicitly
- * marked — its job is guarding against an agent mechanically stamping
- * "anchor" on every page it writes. An anchor page is meant to read as a
- * deliberate, occasional high-impact beat. If every page claims that beat,
- * none of them keep it. Zero declared-beat content pages is not a
- * violation — there is nothing to compute a ratio over (same "absence never
- * violates" posture as every other policy here).
- */
-function checkAnchorSparsePolicy(spec: DeckSpec, strategy: Strategy): SpecValidationIssue[] {
-  const declared = declaredBeatContentPages(spec)
-  if (declared.length === 0) return []
-  const anchorPages = declared.filter((page) => page.beat === "anchor")
-  if (anchorPages.length / declared.length <= 0.5) return []
-  const pct = Math.round((anchorPages.length / declared.length) * 100)
-  return [
-    {
-      path: "pages",
-      // First offending anchor page, same "representative pageId" shape
-      // checkAlternatePolicy's own issue carries (members[0]!.id there) —
-      // this gate's violation is deck-wide (a ratio, not one page), but a
-      // representative id still gives a CLI/agent caller something to jump
-      // to rather than only a bare "pages" path.
-      pageId: anchorPages[0]!.id,
-      message:
-        `${anchorPages.length} of ${declared.length} content pages with a declared beat are "anchor" ` +
-        `(${pct}%: ${anchorPages.map((page) => page.id).join(", ")}) — strategy "${strategy}" requires "anchor" to ` +
-        `stay a minority of declared beats, vary some to "dense" or "breathing"`,
-    },
-  ]
-}
-
-/**
- * Dispatches to the resolved strategy's beat-rotation rule (spec §5's spec
- * hard-gate section, "beat-rotation rule parameterized by strategy" — a single universal "no 3
- * same-beat pages in a row" rule would reject e.g. briefing's own correct
- * default, the exact self-contradiction the spec's codex-review pass
- * flagged, hence a per-`beatPolicy` rule set instead of one rule for
- * everyone). See `StrategyDefinition.beatPolicy`'s own doc comment
- * (`narrative/index.ts`) for which of the five strategies maps to which policy.
- */
-function checkBeatRotation(spec: DeckSpec, strategy: Strategy): SpecValidationIssue[] {
-  const policy = STRATEGY_DEFINITIONS[strategy].beatPolicy
-  switch (policy) {
-    case "uniform-dense":
-    case "repetition-ok":
-      // Exempt entirely — uniform/repeated beat across content pages is
-      // these strategies' own correct default (briefing's "uniform dense",
-      // instructional's "dense tolerated, structure repeats across pages"), not a violation of
-      // anything a generic streak rule would otherwise flag.
-      return []
-    case "alternate":
-      return checkAlternatePolicy(spec, strategy)
-    case "anchor-open":
-      return checkAnchorOpenPolicy(spec, strategy)
-    case "anchor-sparse":
-      return checkAnchorSparsePolicy(spec, strategy)
-    default: {
-      const exhaustive: never = policy
-      throw new Error(`unhandled beat policy: ${String(exhaustive)}`)
-    }
-  }
+  return warnings
 }
 
 // ── hard gate: page count vs pacing ─────────────────────────────────────
@@ -672,24 +524,16 @@ function pageIdFromRawInput(input: unknown, index: number): string | undefined {
 }
 
 /**
- * Validate raw JSON against the spec schema, then — once it parses — run the
- * spec §5 hard-gate chain. Mirrors `validateIr`'s (`api.ts`) overall shape: a
- * structural zod pass first, then a sequence of isolated hard-gate
- * categories, each short-circuiting the whole chain on its own failure
- * (rather than accumulating errors across categories) so a later category
- * never has to guess at what an earlier, already-broken one would have
- * meant — e.g. beat-rotation and page-count both need a resolved
- * narrative, so nothing past the narrative/theme stage runs until that
- * resolves cleanly. Every spec-gate philosophy here is "hard block, no soft
- * warning" (spec §5's "escape hatch" section — a spec that doesn't fit this shape
- * should be authored as bare IR instead, not warned-and-shipped).
+ * Parse raw JSON, then run isolated hard-gate categories in order. A hard
+ * failure short-circuits later categories. Kind distribution runs last as an
+ * editorial advisory and never changes `ok`.
  *
  * Before the schema parse, {@link normalizeNarrativeShape} (`../narrative`,
  * T0b fix 2 scope extension) runs on the raw input, exactly mirroring
  * `validateIr`'s own pre-parse pass (`../validate-core.ts`) — a top-level
  * `narrative: {id: "<preset>"}` shape is rewritten to the bare preset
  * string before `DeckSpecSchema.safeParse` ever sees it, so the correction
- * lands in the returned `spec` itself (read again by `checkBeatRotation`/
+ * lands in the returned `spec` itself (read again by
  * `checkFocusVocabulary`/`checkPageCount` below, and by `runSpecValidate`'s
  * own OK-summary line, `../cli/commands.ts`), not just this function's own
  * local `resolveNarrative` call below. Every return path is wrapped in
@@ -749,6 +593,9 @@ export function validateSpec(input: unknown): SpecValidateResult {
   const themeErrors = checkTheme(spec)
   if (themeErrors.length > 0) return withNormalized({ ok: false, errors: themeErrors })
 
+  const menuErrors = checkThemeMenuKinds(spec)
+  if (menuErrors.length > 0) return withNormalized({ ok: false, errors: menuErrors })
+
   // Narrative resolution (spec §5's defaults chain), same open-schema/
   // closed-semantic split as validateIr's own (api.ts) — see that
   // function's comment for the full rationale. `spec.narrative`'s inferred
@@ -769,14 +616,17 @@ export function validateSpec(input: unknown): SpecValidateResult {
     return withNormalized({ ok: false, errors: [{ path: "narrative", message: err.message }] })
   }
 
-  const beatErrors = checkBeatRotation(spec, resolvedAxes.strategy)
-  if (beatErrors.length > 0) return withNormalized({ ok: false, errors: beatErrors })
-
   const focusErrors = checkFocusVocabulary(spec, resolvedAxes.strategy)
   if (focusErrors.length > 0) return withNormalized({ ok: false, errors: focusErrors })
 
   const pageCountErrors = checkPageCount(spec, resolvedAxes.pacing)
   if (pageCountErrors.length > 0) return withNormalized({ ok: false, errors: pageCountErrors })
 
-  return withNormalized({ ok: true, spec, errors: [] })
+  const warnings = checkKindDistribution(spec)
+  return withNormalized({
+    ok: true,
+    spec,
+    errors: [],
+    ...(warnings.length > 0 ? { warnings } : {}),
+  })
 }

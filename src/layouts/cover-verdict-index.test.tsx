@@ -8,6 +8,7 @@ import { contrastRatio, requiredContrastRatio } from "../render/ink"
 import { VerdictIndexCover, layoutDef } from "./cover-verdict-index"
 import type { StyleTokens } from "../themes/tokens"
 import type { PptxIR, Slide } from "@/ir"
+import type { SvgTemplateProps } from "./types"
 
 const HEADING = "工作区订阅增长优质，下半年应加倍投入交付侧"
 const SUBHEADING = "云觅科技 2026 年第二季度业务评审 · 三个论据支撑，附敏感性分析"
@@ -39,6 +40,7 @@ function renderCover(
   s: Slide = slide(),
   meta: PptxIR["meta"] = FULL_META,
   tokens: StyleTokens = resolveStyle(themeId),
+  params: SvgTemplateProps["params"] = tokens.shape?.cover as SvgTemplateProps["params"],
 ) {
   const ctx = buildCtx(
     tokens,
@@ -48,7 +50,7 @@ function renderCover(
   )
   const markup = renderSvgMarkup(
     <svg viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg">
-      <VerdictIndexCover ir={ir(themeId, meta, s)} slide={s} index={0} ctx={ctx} />
+      <VerdictIndexCover ir={ir(themeId, meta, s)} slide={s} index={0} ctx={ctx} params={params} />
     </svg>,
   )
   return { markup, root: parseSvgRoot(markup), tokens }
@@ -147,6 +149,11 @@ describe("cover-verdict-index — shared pool", () => {
     expect(layoutDef.id).toBe("verdict-index")
     expect(layoutDef.kind).toBe("archetype")
     expect(layoutDef.slideTypes).toEqual(["cover"])
+    expect(layoutDef.params?.verdictTitleY).toEqual({
+      type: "number",
+      min: 180,
+      max: 480,
+    })
   })
 
   it("every text run clears its contrast tier against the cover background", () => {

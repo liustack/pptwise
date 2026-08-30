@@ -9,17 +9,8 @@ import type { PptxIR, Slide } from "@/ir"
 import { PACING_BUDGETS, resolveNarrative, type NarrativeProfile, type Pacing } from "@/narrative"
 import { CAPACITY } from "../audit/capacity"
 import { resolveEffectiveLayoutBodyCapacity } from "./layout-selection"
-import { getLayout } from "../layouts/registry"
 import { measureTextUnits } from "../lib/svg-text-layout"
-// `fitHeadingLines` is a pure text-layout function (no React, no DOM — see
-// its own file's imports), the same tier as `measureTextUnits` above, so
-// importing it here doesn't touch the render chain this module (part of the
-// light `./validate` SDK bundle, see `validate-core.ts`'s own file header)
-// must stay clear of.
-import { fitHeadingLines } from "./heading-fit"
 import { buildChartModel } from "../components/chart-model"
-import { resolveStyle } from "../themes"
-import { effectiveRequestedLayout } from "../themes/definitions"
 
 export type QualityIssue = {
   slide: number
@@ -66,17 +57,6 @@ export type QualityIssue = {
    * `chart_duplicate_category`'s own "one per occurrence, not one per row"
    * granularity. */
   dataTableMissingCell?: { rowIndex: number; key: string }
-  /** `code: "pin_only_over_capacity"` only (quote-stage wave, task T2,
-   * 裁定 2) — the pinned `pinOnly` layout's id, its declared `body`-slot
-   * capacity, and the slide's actual component count, for the same
-   * English-translation reason as `density`/`bulletsBudget` above. */
-  pinOnlyCapacity?: { layoutId: string; capacity: number; componentCount: number }
-  /** `code: "pinned_heading_overflow"` only (quote-stage wave, task T2;
-   * renamed from `quote_stage_heading_overflow` in task T3 once the check
-   * went metadata-driven off `headingFit` — see that field's own doc
-   * comment) — the pinned layout's id, for the same English-translation
-   * reason as `pinOnlyCapacity` above. */
-  pinnedHeadingOverflow?: { layoutId: string }
 }
 
 // ── helpers ──
@@ -84,10 +64,6 @@ export type QualityIssue = {
 /** Count characters. CJK characters count as 1 each (same as .length). */
 function charLen(s: string): number {
   return s.length
-}
-
-function hasKpiCardsComponent(slide: Slide): boolean {
-  return slide.components.some((b) => b.type === "kpi_cards")
 }
 
 /**
@@ -222,11 +198,11 @@ function checkSlide(ir: PptxIR, slide: Slide, index: number, resolvedAxes: Narra
   // (`./layout-selection`) — the exact selection path `FullSlideSvg` renders
   // through, never re-derived here, so what this gate flags is guaranteed to
   // match what render would actually overflow. `layoutCapacity: undefined`
-  // (image-cover bypass, or a takeover with no `body` slot capacity — the 4
-  // image-family layouts) means no geometric term: only the editorial budget
+  // means the selected face declares no `body` slot capacity, as with the
+  // four image-family takeovers. In that case only the editorial budget
   // applies.
   if (slide.type === "content") {
-    const { layoutId, capacity: layoutCapacity } = resolveEffectiveLayoutBodyCapacity(ir, slide, index)
+    const { layoutId, capacity: layoutCapacity } = resolveEffectiveLayoutBodyCapacity(ir, slide)
     const limit = Math.min(budget.maxComponentsPerSlide, layoutCapacity ?? Infinity)
     if (slide.components.length > limit) {
       issues.push({
@@ -242,86 +218,6 @@ function checkSlide(ir: PptxIR, slide: Slide, index: number, resolvedAxes: Narra
           layoutCapacity,
         },
       })
-    }
-  }
-
-  // Two pinned-layout hard errors below share one `getLayout` lookup
-  // (T2 fix round — whole-branch review flagged the pre-fix version's
-  // heading check as a shadow copy: it hardcoded `slide.layout ===
-  // "quote-stage"` and hand-mirrored this layout's four fit constants
-  // with no sync guard, the one place in this file that knew an individual
-  // layout id — everything else here, including the capacity check right
-  // below, is metadata-driven). Both checks only look at the pinned
-  // layout's own declared `LayoutDefinition` fields now — no layout id
-  // appears in either condition.
-  const effectivePin: string | undefined = undefined
-  if (effectivePin !== undefined) {
-    const pinnedDef = getLayout(effectivePin)
-
-    // pin-only over-capacity hard error (quote-stage wave, task T2, 裁定 2):
-    // an explicit pin onto a `pinOnly` layout (`registry.ts`'s
-    // `LayoutDefinition.pinOnly` — reachable *only* through this exact path,
-    // never auto-pick) already declares author intent, so the generic
-    // degrade every other over-capacity slide gets today —
-    // `layoutContentFit`'s "+N more" pill, flagged only as the `density`
-    // *warn* above — would silently drop content the author explicitly
-    // asked to keep. Scope strictly to `pinOnly` layouts: an ordinary
-    // layout pinned over its own declared body capacity keeps today's
-    // `density` warn above, completely unchanged (regression-tested in
-    // ir-quality.test.tsx) — this is an *additional* error, not a
-    // replacement for that warn (both fire together when a pinOnly layout
-    // is over capacity, same "different questions, both fire" posture
-    // `bullet_item_long`/`bullet_item_overflow` already established).
-    const pinnedCapacity = pinnedDef?.slots.find((s) => s.name === "body")?.capacity
-    if (pinnedDef?.pinOnly && pinnedCapacity !== undefined && slide.components.length > pinnedCapacity) {
-      issues.push({
-        slide: index,
-        severity: "error",
-        code: "pin_only_over_capacity",
-        message: `钉住的版式 "${effectivePin}" 容量为 ${pinnedCapacity}，当前有 ${slide.components.length} 个组件，超出容量——请拆分内容或去掉钉住`,
-        pinOnlyCapacity: {
-          layoutId: effectivePin,
-          capacity: pinnedCapacity,
-          componentCount: slide.components.length,
-        },
-      })
-    }
-
-    // heading width-limit hard error (quote-stage wave, task T2; made
-    // metadata-driven in the T2 fix round; code renamed from
-    // `quote_stage_heading_overflow` to `pinned_heading_overflow` in task T3
-    // to match — the check itself was already metadata-driven, the old code
-    // name was the only thing still naming quote-stage specifically): fires
-    // for *any* pinned layout that declares `headingFit` (`registry.ts`'s
-    // `LayoutDefinition.headingFit` — see that field's own doc comment for
-    // the full rationale and why it replaces a hardcoded layout-id
-    // check), running the exact same `fitHeadingLines` call the layout's
-    // own layout file uses to render — one declared source, not two
-    // hand-mirrored copies. Only `quote-stage` sets `headingFit` as of this
-    // task, so behavior is unchanged: unlike an ordinary layout's heading
-    // — decorative relative to its own body content, hence `long_heading`'s
-    // warn-only posture above (see that block's own comment on why a
-    // *general* per-layout minPt-bucket error derivation was evaluated
-    // and deferred, not overlooked) — a `headingFit`-declaring pinned
-    // layout's heading *is* the page's entire content (裁定 3: heading as
-    // the page's oversized main visual, quote-stage being the first such
-    // member). `fitHeadingLines` truncating even at its own `minPt` floor is
-    // real, silent content loss, the same class `bullet_item_overflow`
-    // below already hard-blocks for bullets. A future `pinOnly` member can
-    // opt into this same error tier simply by declaring its own
-    // `headingFit` — no change needed here.
-    if (pinnedDef?.headingFit && slide.heading) {
-      const typeScale = resolveStyle(ir.theme.id, ir.theme.style).shape?.typeScale
-      const fit = fitHeadingLines(slide.heading, { ...pinnedDef.headingFit, typeScale })
-      if (fit.truncated) {
-        issues.push({
-          slide: index,
-          severity: "error",
-          code: "pinned_heading_overflow",
-          message: `钉住的版式 "${effectivePin}" 正文过长，缩小到最低字号仍会被截断——请精简正文或拆分为多页`,
-          pinnedHeadingOverflow: { layoutId: effectivePin },
-        })
-      }
     }
   }
 

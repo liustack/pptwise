@@ -17,7 +17,7 @@ import { stripEmphasis } from "../render/emphasis"
  * 构图抄 `.issues/design-boards/wave8/b2/Ink.dc.html` 封面：竖题 x880
  * 首字 y110 / 72px，簇底 y530，第二列 x784，副题 x778 首字 y130 / 22px，
  * 印 1048,480 72×72，底款 y630（半山之上）。零 theme id、零 baked hex。
- * `branding: "none"`。
+ * 主题菜单应声明 `decor: silent`。
  */
 
 const TITLE_X = 880
@@ -368,11 +368,10 @@ export const layoutDef = {
   // cover-vertical-title-cover.tsx: right-axis per-glyph CJK title, short
   // vertical subtitle, vermilion seal, organization foot line. Latin titles
   // stay horizontal and left-aligned. Empty heading invents no cover copy.
-  // Motif owns the remnant mountain. branding none.
+  // Motif owns the remnant mountain. The theme-menu entry owns brand silence.
   id: "vertical-title-cover",
   kind: "archetype",
   pinOnly: true,
-  branding: "none",
   slideTypes: ["cover"],
   slots: [
     { name: "heading", accepts: [] },

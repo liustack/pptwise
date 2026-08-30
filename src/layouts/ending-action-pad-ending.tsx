@@ -210,7 +210,6 @@ export const layoutDef: LayoutDefinition = {
   id: "action-pad-ending",
   kind: "archetype",
   pinOnly: true,
-  branding: "none",
   slideTypes: ["ending"],
   slots: [
     { name: "kicker", accepts: [] },

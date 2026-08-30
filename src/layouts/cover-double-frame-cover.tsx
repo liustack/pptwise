@@ -17,7 +17,7 @@ import { stripEmphasis } from "../render/emphasis"
  * 进共享池，不是 heritage 专用。零 theme id、零 baked hex。双框是封面
  * 规制，由本版式画，motif 不再画顶缘双线或藏书票章。不自绘满版
  * （`paintsOwnBackground` 关掉），纸底仍走主题 `defaultBackgrounds.cover`。
- * `branding: "none"`，避免 logo 压框。
+ * 主题菜单应声明 `decor: silent`，避免 logo 压框。
  *
  * 板上做不到、最近落地：
  *   1. CJK 标题与 kicker 不加 letter-spacing。
@@ -218,8 +218,6 @@ export const layoutDef = {
   id: "double-frame-cover",
   kind: "archetype",
   pinOnly: true,
-  branding: "none",
-  pageFrame: "double",
   slideTypes: ["cover"],
   slots: [
     { name: "kicker", accepts: [] },

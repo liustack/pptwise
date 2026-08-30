@@ -142,7 +142,6 @@ export const layoutDef = {
   kind: "archetype",
   pinOnly: true,
   paintsOwnBackground: true,
-  suppressMotif: true,
   slideTypes: ["ending"],
   slots: [
     { name: "kicker", accepts: [] },

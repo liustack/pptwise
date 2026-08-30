@@ -4,6 +4,7 @@ import { fitHeadingLines } from "../render/heading-fit"
 import { fitSvgLine, layoutSvgText } from "../lib/svg-text-layout"
 import { accessibleInk, metaInk } from "../render/ink"
 import { parseEmphasis, renderEmphasisText, sliceEmphasisForLines, stripEmphasis } from "../render/emphasis"
+import { faceParam } from "./face-params"
 
 /**
  * verdict-index cover layout（2026-08-22 封面还原第一波，新表达）：
@@ -26,7 +27,7 @@ import { parseEmphasis, renderEmphasisText, sliceEmphasisForLines, stripEmphasis
  *   3. CJK 标题不加 letter-spacing。
  *   4. 左下落款收到 x96、y688，让开 logo 盒 (1120,630,96×40)。
  *
- * 第八波（2026-08-22）：几何改走 `style.shape.cover` 的 verdict* knobs。
+ * 第八波（2026-08-22）：几何由菜单中本脸的 verdict* 参数控制。
  * 缺省等于上面这组常量，别的主题抽到本版式时逐字节不变。consulting 把
  * kicker / 标题 / 论据 / 落款收到板上，并打开底缘规矩线。列间竖线板上
  * 没有：一旦写入 wave8 列位或底线 knobs，竖线不画。
@@ -74,18 +75,17 @@ function coverBulletItems(slide: SvgTemplateProps["slide"]): string[] {
   return block.items.slice(0, 3)
 }
 
-export function VerdictIndexCover({ ir, slide, ctx }: SvgTemplateProps) {
+export function VerdictIndexCover({ ir, slide, ctx, params }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const bg = ctx.defaultBg ?? colors.bg
-  const cover = ctx.shape?.cover
-  const titleY = cover?.verdictTitleY ?? TITLE_Y
-  const titleSize = cover?.verdictTitleSize ?? TITLE_SIZE
-  const kickerY = cover?.verdictKickerY ?? KICKER_Y
-  const colNumY = cover?.verdictColNumY ?? COL_NUM_Y
-  const colBodyY = cover?.verdictColBodyY ?? COL_BODY_Y
-  const footY = cover?.verdictFootY ?? FOOT_Y
-  const footRule = cover?.verdictFootRule === true
-  const showColRules = cover?.verdictColNumY == null && cover?.verdictFootRule !== true
+  const titleY = faceParam(params, "verdictTitleY", TITLE_Y)
+  const titleSize = faceParam(params, "verdictTitleSize", TITLE_SIZE)
+  const kickerY = faceParam(params, "verdictKickerY", KICKER_Y)
+  const colNumY = faceParam(params, "verdictColNumY", COL_NUM_Y)
+  const colBodyY = faceParam(params, "verdictColBodyY", COL_BODY_Y)
+  const footY = faceParam(params, "verdictFootY", FOOT_Y)
+  const footRule = faceParam(params, "verdictFootRule", false)
+  const showColRules = params?.verdictColNumY === undefined && !footRule
   const org = ir.meta.organization
   const author = ir.meta.authors?.[0]
   const authorText = author ? [author.name, author.role].filter(Boolean).join(" · ") : null
@@ -287,6 +287,15 @@ export const layoutDef: LayoutDefinition = {
   id: "verdict-index",
   kind: "archetype",
   slideTypes: ["cover"],
+  params: {
+    verdictTitleY: { type: "number", min: 180, max: 480 },
+    verdictTitleSize: { type: "number", min: 40, max: 100 },
+    verdictKickerY: { type: "number", min: 60, max: 240 },
+    verdictColNumY: { type: "number", min: 400, max: 640 },
+    verdictColBodyY: { type: "number", min: 430, max: 680 },
+    verdictFootY: { type: "number", min: 580, max: 704 },
+    verdictFootRule: { type: "boolean" },
+  },
   slots: [
     { name: "kicker", accepts: [] },
     { name: "heading", accepts: [] },

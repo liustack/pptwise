@@ -141,7 +141,6 @@ export const layoutDef = {
   id: "lesson-box-chapter",
   kind: "archetype",
   pinOnly: true,
-  branding: "none",
   slideTypes: ["chapter"],
   slots: [
     { name: "kicker", accepts: [] },

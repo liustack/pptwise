@@ -227,7 +227,6 @@ export const layoutDef: LayoutDefinition = {
   id: "fashion-masthead",
   kind: "archetype",
   paintsOwnBackground: true,
-  suppressMotif: true,
   slideTypes: ["cover"],
   slots: [
     { name: "kicker", accepts: [] },

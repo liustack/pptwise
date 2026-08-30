@@ -115,7 +115,6 @@ export const layoutDef = {
   id: "gauge-point",
   kind: "archetype",
   pinOnly: true,
-  branding: "none",
   slideTypes: ["content"],
   slots: [
     { name: "kicker", accepts: [] },

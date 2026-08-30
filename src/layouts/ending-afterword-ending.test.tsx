@@ -110,7 +110,6 @@ describe("ending-afterword-ending — shared pool", () => {
     expect(layoutDef.id).toBe("afterword-ending")
     expect(layoutDef.kind).toBe("archetype")
     expect(layoutDef.pinOnly).toBe(true)
-    expect(layoutDef.branding).toBe("none")
     expect(layoutDef.slideTypes).toEqual(["ending"])
   })
 

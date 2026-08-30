@@ -165,7 +165,6 @@ export const layoutDef = {
   id: "release-close-ending",
   kind: "archetype",
   pinOnly: true,
-  branding: "none",
   slideTypes: ["ending"],
   slots: [
     { name: "heading", accepts: [] },

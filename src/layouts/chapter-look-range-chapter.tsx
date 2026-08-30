@@ -176,7 +176,6 @@ export const layoutDef = {
   id: "look-range-chapter",
   kind: "archetype",
   pinOnly: true,
-  branding: "none",
   slideTypes: ["chapter"],
   slots: [
     { name: "kicker", accepts: [] },

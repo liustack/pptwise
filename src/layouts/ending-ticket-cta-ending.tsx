@@ -198,7 +198,6 @@ export const layoutDef = {
   id: "ticket-cta-ending",
   kind: "archetype",
   pinOnly: true,
-  branding: "none",
   paintsOwnBackground: true,
   slideTypes: ["ending"],
   slots: [

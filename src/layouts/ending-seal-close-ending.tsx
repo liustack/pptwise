@@ -131,7 +131,6 @@ export const layoutDef = {
   id: "seal-close-ending",
   kind: "archetype",
   pinOnly: true,
-  branding: "none",
   slideTypes: ["ending"],
   slots: [
     { name: "heading", accepts: [] },

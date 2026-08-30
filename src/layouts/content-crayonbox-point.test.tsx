@@ -121,8 +121,6 @@ describe("content-crayonbox-point", () => {
       id: "crayonbox-point",
       kind: "archetype",
       pinOnly: true,
-      branding: "none",
-      suppressMotif: true,
       slideTypes: ["content"],
       arrangements: ["single"],
     })

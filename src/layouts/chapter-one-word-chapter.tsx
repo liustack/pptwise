@@ -128,7 +128,6 @@ export const layoutDef = {
   id: "one-word-chapter",
   kind: "archetype",
   pinOnly: true,
-  branding: "none",
   slideTypes: ["chapter"],
   slots: [
     { name: "heading", accepts: [] },

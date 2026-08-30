@@ -208,7 +208,6 @@ export const layoutDef = {
   id: "show-statement",
   kind: "archetype",
   pinOnly: true,
-  suppressMotif: true,
   slideTypes: ["content"],
   slots: [
     { name: "kicker", accepts: [] },

@@ -15,7 +15,7 @@ import { stripEmphasis } from "../render/emphasis"
  * 进共享池，不是 runway 专用。零 theme id、零 baked hex。无 motif。绯红
  * 只落页码。标题钉死板上 96，不吃 typeScale，禁止放大到 132 铺满。空
  * heading 不编造封面句。不要竖排年份。CJK 不加 letter-spacing。渲染不画
- * 省略号。`branding: "none"`。底色走主题 `defaultBackgrounds.cover`，本
+ * 省略号。主题菜单应声明 `decor: silent`。底色走主题 `defaultBackgrounds.cover`，本
  * 文件不自绘满版。
  */
 
@@ -227,7 +227,6 @@ export const layoutDef = {
   id: "lookbook-open-cover",
   kind: "archetype",
   pinOnly: true,
-  branding: "none",
   slideTypes: ["cover"],
   slots: [
     { name: "kicker", accepts: [] },

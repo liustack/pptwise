@@ -143,7 +143,6 @@ export const layoutDef = {
   id: "gilt-ordinal-chapter",
   kind: "archetype",
   pinOnly: true,
-  branding: "none",
   slideTypes: ["chapter"],
   slots: [
     { name: "kicker", accepts: [] },

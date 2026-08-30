@@ -26,9 +26,10 @@ import { normalizeNarrativeShape, resolveNarrative, type NarrativeProfile } from
 import { CAPACITY } from "./audit/capacity"
 import { FULL_BODY_TYPES } from "./render/component-traits"
 import { checkIrQuality, type QualityIssue } from "./render/ir-quality"
-import { getLayout, layoutsForSlideType } from "./layouts/registry"
+import { resolveEffectiveFace } from "./render/layout-selection"
+import type { LayoutDefinition } from "./layouts/registry"
 import { CANONICAL_THEME_IDS, THEME_LABELS, THEME_STYLES } from "./themes"
-import { getInstalledThemeIds, getThemeDefinition, SPARSE_LAYOUT_IDS, themeOffersSparse } from "./themes/definitions"
+import { getInstalledThemeIds, getThemeDefinition } from "./themes/definitions"
 
 export interface ValidationIssue {
   path: string
@@ -40,9 +41,9 @@ export interface ValidationIssue {
    * whole-branch review finding 2: the README already claimed "validation
    * error messages reference [a slide] by [its] id"; this is what makes
    * that true. Set by every page-scoped issue producer
-   * ({@link checkLayoutApplicability}, {@link checkBoundaryPageContent},
-   * the content-quality-gate translation in {@link validateIr},
-   * {@link checkDuplicateSlideIds}, {@link checkUnofferedSparsePins})
+   * ({@link checkThemeMenuFaces}, {@link checkBoundaryPageContent},
+   * the content-quality-gate translation in {@link validateIr}, and
+   * {@link checkDuplicateSlideIds})
    * when the slide in question has an `id` — absent when the slide has
    * none (bare, pre-W5 IR) or the issue is deck-level, not scoped to any
    * single slide. {@link formatIssues} appends it in parens after the page
@@ -76,7 +77,7 @@ export interface ValidateResult {
    * moved these findings off `errors` and onto here. Can be present alongside
    * a failing (`ok:false`) result too, whenever `checkIrQuality`/
    * `checkAssetReferences` themselves ran (an *earlier* hard gate — schema,
-   * theme id, layout applicability, full-body exclusivity, boundary-page
+   * theme id, theme menu, full-body exclusivity, boundary-page
    * content, duplicate ids, asset bytes, narrative — short-circuits before
    * either runs at all, so a deck rejected by one of those never reaches
    * this field either way, see `validateIr`'s own body for the exact gate
@@ -120,8 +121,8 @@ function describeQualityIssue(issue: QualityIssue): string {
       if (!d) return "too many components on this slide — split into multiple slides"
       const { limit, pacing, pacingBudget, layoutId, layoutCapacity } = d
       if (layoutCapacity === undefined || layoutCapacity === pacingBudget) {
-        // No geometric term (image-cover bypass or a takeover with no body
-        // capacity), or it agrees with the editorial budget — nothing extra
+        // No geometric term because the face has no body capacity, or it
+        // agrees with the editorial budget. Nothing extra
         // to disambiguate, name the pacing alone.
         return `too many components on this slide (max ${limit} for ${pacing} pacing) — split into multiple slides`
       }
@@ -233,67 +234,34 @@ function describeQualityIssue(issue: QualityIssue): string {
         ? `data table row ${d.rowIndex} is missing a value for column "${d.key}" — that cell will render empty`
         : "a data table row is missing a value for a declared column — that cell will render empty"
     }
-    case "pin_only_over_capacity": {
-      // quote-stage wave, task T2, 裁定 2: a `pinOnly` layout (registry.ts's
-      // `LayoutDefinition.pinOnly`) pinned over its own declared `body`
-      // capacity — severity "error", so this is one of the two quote-stage
-      // messages that actually blocks `ok`. Names the layout id and both
-      // numbers via `issue.pinOnlyCapacity`, same structured-field
-      // convention as `density`/`bulletsBudget` above.
-      const p = issue.pinOnlyCapacity
-      return p
-        ? `pinned layout "${p.layoutId}" allows at most ${p.capacity} component${p.capacity === 1 ? "" : "s"} but this slide has ${p.componentCount} — split the content or remove the pin`
-        : "a pinned layout is over its declared capacity — split the content or remove the pin"
-    }
-    case "pinned_heading_overflow": {
-      // quote-stage wave, task T2; renamed from `quote_stage_heading_overflow`
-      // in task T3 to match the check going metadata-driven off `headingFit`
-      // (ir-quality.ts's own comment on that field) — fires for any pinned
-      // layout that declares `headingFit`, whose heading *is* the page's
-      // entire content (unlike an ordinary layout's decorative heading,
-      // long_heading's warn-only case above) — a heading that still can't
-      // fit even at fitHeadingLines's own minimum font size is real content
-      // loss, the same class bullet_item_overflow already hard-blocks for
-      // bullets below. Names the layout id via `issue.pinnedHeadingOverflow`,
-      // same structured-field convention as `pinOnlyCapacity` above.
-      const p = issue.pinnedHeadingOverflow
-      return p
-        ? `pinned layout "${p.layoutId}"'s heading exceeds the render-safety limit even at its minimum font size and would be truncated — shorten the heading or split it across slides`
-        : "a pinned layout's heading exceeds the render-safety limit even at its minimum font size and would be truncated — shorten the heading or split it across slides"
-    }
     default:
       return `content quality issue (${issue.code})`
   }
 }
 
-/**
- * Layout applicability hard gate (W2 task 3, spec §6): when a slide names an
- * explicit `layout`, it must (a) exist in `LAYOUT_REGISTRY` and (b) declare
- * that slide's `type` in its `slideTypes`. (b) is what fixes the "cover
- * hijack" flaw the W2 pre-flight inventory flagged — before this task, a
- * cover slide could set `variant: "image_top"` (a content-only takeover) and
- * get silently hijacked by it at render time; now it's a validate error with
- * the slide's page number, same shape as every other validation issue.
- *
- * Deliberately does *not* check `arrangement` against the layout's declared
- * `arrangements` — that compatibility stays declarative metadata this wave
- * (W3 decides its gate semantics, spec §8 W2 row).
- */
-function checkLayoutApplicability(_ir: PptxIR): ValidationIssue[] {
-  return []
-}
-
-/**
- * Unoffered sparse-pin warning (sparse climax wave, phase 2): an explicit
- * `slide.layout` naming one of the six sparse ids that this theme does not
- * offer. Same path/page/slideId shape as {@link checkLayoutApplicability},
- * but a warning, not an error — `ok` stays true and render strips the pin
- * (`effectiveRequestedLayout`) so auto-pick runs on the ordinary content
- * or chapter pool. The id is still a real layout, so this does not fail
- * applicability, and it is not a `checkIrQuality` error.
- */
-function checkUnofferedSparsePins(_ir: PptxIR): ValidationIssue[] {
-  return []
+/** Resolve every page through the same menu route the renderer consumes. */
+function checkThemeMenuFaces(ir: PptxIR): ValidationIssue[] {
+  const menu = getThemeDefinition(ir.theme.id).menu
+  if (menu === undefined) {
+    return [
+      {
+        path: "theme.id",
+        message: `theme "${ir.theme.id}" has no menu`,
+      },
+    ]
+  }
+  return ir.slides.flatMap((slide, index) => {
+    const effective = resolveEffectiveFace(ir, slide)
+    if (effective.route !== "unresolved") return []
+    return [
+      {
+        path: slide.type === "content" ? `slides.${index}.kind` : `slides.${index}.type`,
+        page: index + 1,
+        ...(slide.id !== undefined ? { slideId: slide.id } : {}),
+        message: effective.error ?? `theme "${ir.theme.id}" could not resolve a face for "${slide.type}" pages`,
+      },
+    ]
+  })
 }
 
 /**
@@ -306,7 +274,7 @@ function checkUnofferedSparsePins(_ir: PptxIR): ValidationIssue[] {
  * pairs one with *any* other component (another full-body type included)
  * has nowhere left to put that sibling, so this is a hard validation error,
  * not a silent "drop the extra component(s) and render anyway" degrade.
- * Same shape as {@link checkLayoutApplicability} right above: one
+ * Same shape as the menu-face gate above: one
  * page-scoped `ValidationIssue` per offending slide, naming the offending
  * full-body type(s) so the message is actionable without needing to open
  * the slide's own JSON.
@@ -327,23 +295,12 @@ function checkFullBodyExclusivity(ir: PptxIR): ValidationIssue[] {
   return errors
 }
 
-/**
- * The layout a boundary page will actually draw, when that is knowable at
- * validate time. An explicit pin wins. A theme that locked the page type
- * to a single id is equally knowable. A multi-member pool is not: auto-pick
- * has not run yet, so the gate cannot claim a slot that only some of the
- * candidates declare.
- */
-function knownBoundaryLayout(ir: PptxIR, slide: PptxIR["slides"][number]) {
-  const pool = getThemeDefinition(ir.theme.id).layouts[slide.type]
-  if (pool.length !== 1) return undefined
-  return getLayout(pool[0]!)
+/** The face bound by the theme menu makes every boundary surface knowable. */
+function boundBoundaryLayout(ir: PptxIR, slide: PptxIR["slides"][number]) {
+  return resolveEffectiveFace(ir, slide).layout
 }
 
-function layoutAcceptsComponent(
-  layout: NonNullable<ReturnType<typeof getLayout>>,
-  componentType: string,
-): boolean {
+function layoutAcceptsComponent(layout: LayoutDefinition, componentType: string): boolean {
   return layout.slots.some((slot) => slot.accepts === "any" || slot.accepts.includes(componentType))
 }
 
@@ -354,9 +311,8 @@ function layoutAcceptsComponent(
  * that was coarser than the slot model, and it sealed `verdict-index`'s
  * declared `body accepts: ["bullets"]` behind a type-level reject the
  * layout already knew how to draw. The gate now consults the knowable
- * layout's slots: a component type a slot accepts is live content, not
- * dead IR. A multi-member pool (or a layout with no matching slot) still
- * hard-rejects, same signal as before.
+ * menu-bound face's slots. A component type a slot accepts is live content,
+ * not dead IR. A face with no matching slot hard-rejects.
  *
  * `content` is deliberately never gated on any field. `subheading` is
  * still absent from this rule: no type drops it on every layout. Placeholder
@@ -368,7 +324,7 @@ function checkBoundaryPageContent(ir: PptxIR): ValidationIssue[] {
     if (slide.placeholder) return
     if (slide.type !== "cover" && slide.type !== "chapter" && slide.type !== "ending") return
     const ignored: string[] = []
-    const layout = knownBoundaryLayout(ir, slide)
+    const layout = boundBoundaryLayout(ir, slide)
     const stray = slide.components.filter((component) => !layout || !layoutAcceptsComponent(layout, component.type))
     if (stray.length > 0) ignored.push("components")
     if (slide.footnote) ignored.push("footnote")
@@ -397,7 +353,7 @@ function checkBoundaryPageContent(ir: PptxIR): ValidationIssue[] {
  * `slideId` (W5 whole-branch review finding 2) is set to the *first*
  * duplicated id, the same "representative id" shape `src/spec/index.ts`'s
  * own deck/plan-wide checks already use (e.g. `checkAlternatePolicy`) for an
- * issue that — unlike `checkLayoutApplicability`'s — is not itself scoped to
+ * issue that is not itself scoped to
  * one single slide: this issue can list more than one distinct duplicated id
  * (`"a" (pages 1,2), "b" (pages 3,4)`), so a single `slideId` field is never
  * more than a representative pointer into that list, not a full account of
@@ -578,7 +534,7 @@ function checkAssetReferences(ir: PptxIR): ValidationIssue[] {
  * `narrative` (`resolveNarrative`, spec §5: an unrecognized preset name is a
  * `narrative`-path error, page-less) and run the content-quality gate
  * (`checkIrQuality`, passed the resolved axes) against the parsed IR. Every
- * hard-gate stage (schema, theme id, layout applicability, full-body
+ * hard-gate stage (schema, theme id, theme menu, full-body
  * exclusivity, boundary-page content, duplicate ids, asset bytes, narrative)
  * must pass for `ok: true`, same as before. Quality findings are reported
  * the same way as schema errors (page-scoped, 1-based).
@@ -715,8 +671,8 @@ export function validateIr(input: unknown): ValidateResult {
       ],
     })
   }
-  const layoutErrors = checkLayoutApplicability(r.data)
-  if (layoutErrors.length > 0) return withNormalized({ ok: false, errors: layoutErrors })
+  const menuFaceErrors = checkThemeMenuFaces(r.data)
+  if (menuFaceErrors.length > 0) return withNormalized({ ok: false, errors: menuFaceErrors })
   const fullBodyErrors = checkFullBodyExclusivity(r.data)
   if (fullBodyErrors.length > 0) return withNormalized({ ok: false, errors: fullBodyErrors })
   const boundaryPageErrors = checkBoundaryPageContent(r.data)
@@ -762,7 +718,7 @@ export function validateIr(input: unknown): ValidateResult {
   // bookkeeping in ir-quality.ts's checkIrQuality — an early return makes it
   // the sole issue whenever it fires) — safe to read `.id` off it unguarded.
   // `slideId` (W5 whole-branch review finding 2) set only when that slide
-  // itself has one, same as checkLayoutApplicability's own producer above.
+  // itself has one, same as the other page-scoped producers above.
   const toIssue = (issue: QualityIssue): ValidationIssue =>
     issue.code === "empty_deck"
       ? { path: "slides", message: describeQualityIssue(issue) }
@@ -781,8 +737,7 @@ export function validateIr(input: unknown): ValidateResult {
   // a clean one's.
   const warnFindings = quality.filter((issue) => issue.severity === "warn").map(toIssue)
   const assetRefWarnings = checkAssetReferences(r.data)
-  const sparseOfferWarnings = checkUnofferedSparsePins(r.data)
-  const allWarnings = [...warnFindings, ...assetRefWarnings, ...sparseOfferWarnings]
+  const allWarnings = [...warnFindings, ...assetRefWarnings]
   const warnings = allWarnings.length > 0 ? allWarnings : undefined
   const errorFindings = quality.filter((issue) => issue.severity === "error")
   if (errorFindings.length > 0) {

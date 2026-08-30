@@ -15,7 +15,7 @@ import { CANVAS_H_PX } from "../constants"
  * **它进共享池，不是 insight 专用**。零 theme id、零 hex。章号从
  * `chapterNumberFor` 推，不写死 02。
  *
- * `branding: "none"`：右下是幽灵序号的位置，默认 br logo 盒会整枚吃掉这层
+ * 主题菜单应声明 `decor: silent`。右下是幽灵序号的位置，默认 br logo 盒会整枚吃掉这层
  * 中景字（depth-contract 相交即丢叶子）。板上也没有 logo。
  *
  * 板上 y620 / 480px 按 0.25em 下伸会越过底缘。基线收到能整字落在画布内，
@@ -160,11 +160,10 @@ export function GhostSectionChapter({ ir, slide, index, ctx }: SvgTemplateProps)
 export const layoutDef = {
   // chapter-ghost-section-chapter.tsx: SECTION kicker, left heading,
   // optional muted subheading, bottom-right ghost index inside the canvas.
-  // branding none so the default br logo does not eat the ghost. pinOnly.
+  // The theme-menu entry owns brand silence so the default br logo does not eat the ghost. pinOnly.
   id: "ghost-section-chapter",
   kind: "archetype",
   pinOnly: true,
-  branding: "none",
   slideTypes: ["chapter"],
   slots: [
     { name: "kicker", accepts: [] },

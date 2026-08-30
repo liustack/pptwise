@@ -7,6 +7,7 @@ import { resolveStyle } from "../themes"
 import { ConstellationCover } from "./cover-constellation"
 import type { PptxIR, Slide } from "@/ir"
 import type { StyleTokens } from "../themes/tokens"
+import type { SvgTemplateProps } from "./types"
 
 function tokensWithoutCover(themeId: string): StyleTokens {
   const tokens = resolveStyle(themeId)
@@ -154,11 +155,10 @@ function renderConstellation(
   s: Slide = slide,
 ) {
   const tokens = resolveStyle(themeId)
-  const shaped: StyleTokens = { ...tokens, shape: { ...tokens.shape, cover: { ...tokens.shape?.cover, ...cover } } }
-  const ctx = buildCtx(shaped, {})
+  const ctx = buildCtx(tokens, {})
   const markup = renderSvgMarkup(
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">
-      <ConstellationCover ir={ir(themeId)} slide={s} index={0} ctx={ctx} />
+      <ConstellationCover ir={ir(themeId)} slide={s} index={0} ctx={ctx} params={cover as SvgTemplateProps["params"]} />
     </svg>,
   )
   return { root: parseSvgRoot(markup), tokens, markup }

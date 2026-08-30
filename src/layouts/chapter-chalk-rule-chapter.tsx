@@ -174,7 +174,6 @@ export const layoutDef = {
   id: "chalk-rule-chapter",
   kind: "archetype",
   pinOnly: true,
-  branding: "none",
   slideTypes: ["chapter"],
   slots: [
     { name: "kicker", accepts: [] },

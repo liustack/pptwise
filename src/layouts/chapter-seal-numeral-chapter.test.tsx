@@ -126,7 +126,6 @@ describe("chapter-seal-numeral-chapter — shared pool", () => {
     expect(layoutDef.id).toBe("seal-numeral-chapter")
     expect(layoutDef.kind).toBe("archetype")
     expect(layoutDef.pinOnly).toBe(true)
-    expect(layoutDef.branding).toBe("none")
     expect(layoutDef.slideTypes).toEqual(["chapter"])
     expect("paintsOwnBackground" in layoutDef).toBe(false)
   })

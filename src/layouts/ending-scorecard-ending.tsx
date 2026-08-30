@@ -170,7 +170,6 @@ export const layoutDef = {
   id: "scorecard-ending",
   kind: "archetype",
   pinOnly: true,
-  branding: "none",
   slideTypes: ["ending"],
   slots: [
     { name: "heading", accepts: [] },

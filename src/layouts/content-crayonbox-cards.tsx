@@ -246,7 +246,6 @@ export const layoutDef = {
   id: "crayonbox-cards",
   kind: "archetype",
   pinOnly: true,
-  suppressMotif: true,
   slideTypes: ["content"],
   slots: [
     { name: "kicker", accepts: [] },

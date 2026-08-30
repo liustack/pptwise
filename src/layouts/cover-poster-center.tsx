@@ -7,6 +7,7 @@ import { showsDocumentMeta } from "../render/document-meta"
 import { accessibleInk } from "../render/ink"
 import { hasCjk, latinUpper, trackingPx } from "./minimal-shared"
 import { SIBLING_AIR_PX } from "../render/spacing"
+import { faceParam } from "./face-params"
 
 /**
  * poster-center cover layout（spec §3.2）：全居中"海报"式封面——超大居中标题、
@@ -50,7 +51,7 @@ const META_TOP_Y = 56
 const META_BOTTOM_LEFT = { x: 48, y: 700 }
 const META_BOTTOM_RIGHT = { x: 1208, y: 684 }
 
-export function PosterCenterCover({ ir, slide, ctx }: SvgTemplateProps) {
+export function PosterCenterCover({ ir, slide, ctx, params }: SvgTemplateProps) {
   const org = ir.meta.organization
   const date = showsDocumentMeta(ir) ? ir.meta.date : undefined
   const conf = showsDocumentMeta(ir) ? ir.meta.confidentiality : undefined
@@ -60,11 +61,15 @@ export function PosterCenterCover({ ir, slide, ctx }: SvgTemplateProps) {
     ? [author.name, author.role].filter(Boolean).join(" · ")
     : null
   const version = ir.meta.version
-  const cover = ctx.shape?.cover
-  const showKicker = cover?.showKicker === true
-  const barFill = cover?.barFill === "accent" ? ctx.colors.accent : ctx.colors.primary
-  const metaPlacement = cover?.metaPlacement ?? "center"
-  const textAnchor = cover?.textAnchor === "start" ? "start" : "middle"
+  const showKicker = faceParam(params, "showKicker", false)
+  const barFill =
+    faceParam<"primary" | "accent">(params, "barFill", "primary") === "accent" ? ctx.colors.accent : ctx.colors.primary
+  const metaPlacement = faceParam<"center" | "bottom-left" | "bottom-right" | "top" | "none">(
+    params,
+    "metaPlacement",
+    "center",
+  )
+  const textAnchor = faceParam<"start" | "middle">(params, "textAnchor", "middle")
   const textX = textAnchor === "start" ? START_X : CENTER_X
   const barX = textAnchor === "start" ? START_X : CENTER_X - ACCENT_BAR_W / 2
   const pageBg = ctx.defaultBg ?? ctx.colors.bg
@@ -237,6 +242,15 @@ export const layoutDef: LayoutDefinition = {
   id: "poster-center",
   kind: "archetype",
   slideTypes: ["cover"],
+  params: {
+    showKicker: { type: "boolean" },
+    barFill: { type: "string", values: ["primary", "accent"] },
+    metaPlacement: {
+      type: "string",
+      values: ["center", "bottom-left", "bottom-right", "top", "none"],
+    },
+    textAnchor: { type: "string", values: ["start", "middle"] },
+  },
   slots: [
     { name: "heading", accepts: [] },
     { name: "rule", accepts: [] },

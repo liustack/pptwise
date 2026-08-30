@@ -11,8 +11,8 @@ import { sparseFace } from "./sparse/registry"
  * 未注册的 (themeId, layoutId) 与自定义主题仍走此脸。
  *
  * pull-quote 通用脸：居中引言页。章节眉 + 大引言 + 出处小字 + 一段散文。
- * `pinOnly` + `branding: "none"`。不自己铺暗底，暗不暗由主题 `colors.bg` /
- * `slide.background` 决定。品牌页脚 / logo 不画。motif 仍画。
+ * 不自己铺暗底，暗不暗由主题 `colors.bg` / `slide.background` 决定。菜单可用
+ * silent 同时关掉 motif 与页级品牌。
  *
  * 出处优先 blockquote 组件的 attribution，否则 subheading。正文只接受一个
  * paragraph，走 layoutSvgText，不走 SvgContent 卡片。
@@ -163,13 +163,11 @@ function GenericPullQuoteContent({ ir, slide, index, ctx }: SvgTemplateProps) {
 export const layoutDef = {
   // content-pull-quote.tsx: a pinOnly centered-quote page. Kicker (section
   // name) + italic heading + accent attribution + one muted paragraph.
-  // branding: "none" skips brand footer, logo, and page numbers. The theme
-  // motif still paints. The fifth-band decoration safe-zone does not apply
-  // — the whole canvas is the layout's.
+  // Page decor and branding posture belong to the menu entry. The whole page
+  // is intentionally sparse.
   id: "pull-quote",
   kind: "archetype",
   pinOnly: true,
-  branding: "none",
   slideTypes: ["content"],
   slots: [
     { name: "kicker", accepts: [] },

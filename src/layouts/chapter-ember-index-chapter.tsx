@@ -12,7 +12,7 @@ import { accessibleInk } from "../render/ink"
  *
  * pinOnly，不进 fullLayoutSet。零 theme id、零 hex。颜色只走 ctx。
  * 巨号是实色强调，不是幽灵水印，整字落在 1280×720 内。
- * branding: "none"：右下小楔占了默认 logo 盒，关掉品牌角标避免叠角。
+ * 主题菜单应声明 `decor: silent`。右下小楔占了默认 logo 盒，关掉品牌角标避免叠角。
  *
  * 服务场景：路演章节开场、pitch 段落切页。任何需要「大火号 + 左齐题 +
  * 角楔灯」而不是居中水印的主题都可以钉。
@@ -121,12 +121,11 @@ export function EmberIndexChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
 
 export const layoutDef: LayoutDefinition = {
   // chapter-ember-index-chapter.tsx: opaque accent chapter index, left
-  // title, small lower-right wedge. pinOnly board lock. branding none so
+  // title, small lower-right wedge. pinOnly board lock. The theme-menu entry owns brand silence so
   // the wedge keeps the corner.
   id: "ember-index-chapter",
   kind: "archetype",
   pinOnly: true,
-  branding: "none",
   slideTypes: ["chapter"],
   slots: [
     { name: "watermark", accepts: [] },

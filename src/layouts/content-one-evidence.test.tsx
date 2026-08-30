@@ -60,10 +60,9 @@ function render(body: React.ReactElement): { markup: string; root: Element } {
 }
 
 describe("layoutDef", () => {
-  it("declares pinOnly, branding none, capacity-1 body, content slide type", () => {
+  it("declares pinOnly, capacity-1 body, and content slide type", () => {
     expect(layoutDef.id).toBe("one-evidence")
     expect(layoutDef.pinOnly).toBe(true)
-    expect(layoutDef.branding).toBe("none")
     expect(layoutDef.slideTypes).toEqual(["content"])
     expect(layoutDef.slots.find((s) => s.name === "body")?.capacity).toBe(1)
   })

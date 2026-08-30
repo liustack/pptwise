@@ -50,11 +50,10 @@ function renderEnding(themeId: string, s: Slide = endingSlide()) {
 }
 
 describe("layoutDef", () => {
-  it("declares pinOnly pill-cta-ending on ending, branding none", () => {
+  it("declares pinOnly pill-cta-ending on ending", () => {
     expect(layoutDef.id).toBe("pill-cta-ending")
     expect(layoutDef.kind).toBe("archetype")
     expect(layoutDef.pinOnly).toBe(true)
-    expect(layoutDef.branding).toBe("none")
     expect(layoutDef.slideTypes).toEqual(["ending"])
     expect(layoutDef.slots.map((s) => s.name)).toEqual(["heading", "subheading", "body"])
   })

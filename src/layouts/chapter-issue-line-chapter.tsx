@@ -148,7 +148,6 @@ export const layoutDef = {
   id: "issue-line-chapter",
   kind: "archetype",
   pinOnly: true,
-  branding: "none",
   slideTypes: ["chapter"],
   slots: [
     { name: "kicker", accepts: [] },

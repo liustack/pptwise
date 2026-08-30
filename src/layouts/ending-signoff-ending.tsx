@@ -167,7 +167,6 @@ export const layoutDef = {
   id: "signoff-ending",
   kind: "archetype",
   pinOnly: true,
-  branding: "none",
   paintsOwnBackground: true,
   slideTypes: ["ending"],
   slots: [

@@ -144,7 +144,6 @@ export const layoutDef = {
   id: "gilt-word-ending",
   kind: "archetype",
   pinOnly: true,
-  branding: "none",
   slideTypes: ["ending"],
   slots: [
     { name: "heading", accepts: [] },

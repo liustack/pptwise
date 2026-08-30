@@ -145,7 +145,6 @@ export const layoutDef = {
   id: "field-band-chapter",
   kind: "archetype",
   pinOnly: true,
-  branding: "none",
   paintsOwnBackground: true,
   slideTypes: ["chapter"],
   slots: [

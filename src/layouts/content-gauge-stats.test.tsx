@@ -210,7 +210,6 @@ describe("content-gauge-stats", () => {
       id: "gauge-stats",
       kind: "archetype",
       slideTypes: ["content"],
-      branding: "none",
       arrangements: "all",
     })
     expect(layoutDef.pinOnly).toBe(true)

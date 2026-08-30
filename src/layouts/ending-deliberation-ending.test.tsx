@@ -128,7 +128,6 @@ describe("ending-deliberation-ending — shared pool", () => {
     expect(layoutDef.id).toBe("deliberation-ending")
     expect(layoutDef.kind).toBe("archetype")
     expect(layoutDef.pinOnly).toBe(true)
-    expect(layoutDef.branding).toBe("none")
     expect(layoutDef.slideTypes).toEqual(["ending"])
     const body = layoutDef.slots.find((slot) => slot.name === "body")
     expect(body?.accepts).toEqual(["bullets"])

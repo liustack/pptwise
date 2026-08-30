@@ -8,6 +8,7 @@ import { ToneAdaptiveHeaderCover } from "./cover-tone-adaptive-header"
 import type { PptxIR, Slide } from "@/ir"
 import { LEGACY_CUSTOM_TOKENS } from "./legacy-custom-tokens"
 import type { StyleTokens } from "../themes/tokens"
+import type { SvgTemplateProps } from "./types"
 
 function wrap(el: React.ReactElement): React.ReactElement {
   return <svg viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg">{el}</svg>
@@ -199,11 +200,18 @@ function renderTone(
   branding: PptxIR["branding"] = "full",
 ) {
   const tokens = resolveStyle(themeId)
-  const shaped: StyleTokens = { ...tokens, shape: { ...tokens.shape, cover: { ...tokens.shape?.cover, ...cover } } }
-  const ctx = buildCtx(shaped, {})
+  const ctx = buildCtx(tokens, {})
   const doc = ir(themeId, {}, branding)
   const markup = renderSvgMarkup(
-    wrap(<ToneAdaptiveHeaderCover ir={doc} slide={slide} index={0} ctx={ctx} />),
+    wrap(
+      <ToneAdaptiveHeaderCover
+        ir={doc}
+        slide={slide}
+        index={0}
+        ctx={ctx}
+        params={cover as SvgTemplateProps["params"]}
+      />,
+    ),
   )
   return { root: parseSvgRoot(markup), tokens, markup }
 }

@@ -167,7 +167,6 @@ export const layoutDef: LayoutDefinition = {
   id: "volume-slip-chapter",
   kind: "archetype",
   pinOnly: true,
-  branding: "none",
   slideTypes: ["chapter"],
   slots: [
     { name: "kicker", accepts: [] },

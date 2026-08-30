@@ -154,7 +154,6 @@ export const layoutDef = {
   id: "ikb-field-cover",
   kind: "archetype",
   pinOnly: true,
-  branding: "none",
   paintsOwnBackground: true,
   slideTypes: ["cover"],
   slots: [
