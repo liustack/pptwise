@@ -40,6 +40,26 @@ describe("ThemeFileSchema", () => {
     }
   })
 
+  it("rejects five-digit and seven-digit hex colors", () => {
+    for (const invalid of ["#12345", "#1234567"]) {
+      const value = theme()
+      value.style.colors.bg = invalid
+      const result = ThemeFileSchema.safeParse(value)
+      expect(result.success).toBe(false)
+    }
+  })
+
+  it("normalizes shorthand and alpha hex colors to opaque six-digit tokens", () => {
+    const value = theme()
+    value.style.colors.bg = "#abc"
+    value.style.colors.surface = "#abc8"
+    value.style.colors.primary = "#abcdef80"
+    const parsed = ThemeFileSchema.parse(value)
+    expect(parsed.style.colors.bg).toBe("#AABBCC")
+    expect(parsed.style.colors.surface).toBe("#AABBCC")
+    expect(parsed.style.colors.primary).toBe("#ABCDEF")
+  })
+
   it("rejects occasions outside the controlled vocabulary", () => {
     const result = ThemeFileSchema.safeParse(theme({ occasions: ["quarterly-vibes"] }))
     expect(result.success).toBe(false)
