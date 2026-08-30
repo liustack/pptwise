@@ -54,7 +54,7 @@ function makePlan(pages: Record<string, unknown>[], extra: Record<string, unknow
  *  insertion (which shifts every later page's array index) can still be
  *  compared page-by-page against the pre-insertion baseline. */
 function layoutsById(ir: PptxIR): Record<string, string | undefined> {
-  return Object.fromEntries(ir.slides.map((s) => [s.id as string, s.layout]))
+  return Object.fromEntries(ir.slides.map((s) => [s.id as string, (s as unknown as { layout?: string }).layout]))
 }
 
 // ── explicit seed: full revision stability (spec §6 seed ladder's top tier) ──

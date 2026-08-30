@@ -20,7 +20,7 @@ function slide(heading = HEADING, extras: Partial<Slide> = {}): Slide {
 
 function ir(themeId: string, meta: PptxIR["meta"] = {}, s: Slide = slide()): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "lookbook-open-cover.pptx",
     theme: { id: themeId },
     meta,
@@ -141,7 +141,7 @@ describe("cover-lookbook-open-cover — board geometry", () => {
 
   it("renders a cover subheading once when the document date is absent", () => {
     const subheading = "Where the second half goes"
-    const cover = slide("The quarter in review", { layout: "lookbook-open-cover", subheading })
+    const cover = slide("The quarter in review", {  subheading })
     const root = parseSvgRoot(renderSlideSvg(ir("runway", {}, cover), 0))
     const matches = Array.from(root.querySelectorAll("text")).filter((text) => text.textContent === subheading)
 

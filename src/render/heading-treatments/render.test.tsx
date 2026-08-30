@@ -18,7 +18,7 @@ const EMPHASIZED = "**算法团队的迭代节奏**与业务预期存在落差"
 
 function deck(themeId: string, slides: Slide[]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "heading-treatments.pptx",
     theme: { id: themeId },
     meta: {},
@@ -34,6 +34,7 @@ function chapterSlide(heading = CHAPTER): Slide {
 function contentSlide(opts: { heading?: string; subheading?: string } = {}): Slide {
   return {
     type: "content",
+    kind: "points",
     heading: opts.heading,
     subheading: opts.subheading,
     components: [{ type: "paragraph", text: "正文占位" }],

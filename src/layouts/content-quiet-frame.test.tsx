@@ -21,12 +21,14 @@ const chapter1: Slide = { type: "chapter", heading: "第一部分", components: 
 // dedicated 2-component fixture instead (see `withSubTwoComponents`).
 const withSub: Slide = {
   type: "content",
+  kind: "points",
   heading: "静谧留白",
   subheading: "以留白为叙事节奏",
   components: [{ type: "paragraph", text: "正文内容。" }],
 } as Slide
 const withSubTwoComponents: Slide = {
   type: "content",
+  kind: "points",
   heading: "静谧留白",
   subheading: "以留白为叙事节奏",
   components: [{ type: "paragraph", text: "正文内容一。" }, { type: "paragraph", text: "正文内容二。" }],
@@ -34,7 +36,7 @@ const withSubTwoComponents: Slide = {
 
 function ir(slides: Slide[]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "x.pptx",
     theme: { id: "classroom" },
     meta: {},
@@ -84,6 +86,7 @@ describe("QuietFrameContent", () => {
     it("a full-body component (e.g. swot) is exempt — keeps the full 880 rect instead of being cramped to 640", () => {
       const slide: Slide = {
         type: "content",
+        kind: "points",
         heading: "全幅组件",
         components: [
           {
@@ -131,8 +134,8 @@ describe("QuietFrameContent", () => {
   it("arrangement passes through unchanged (registry declares \"all\") — two_column actually splits the centered body", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       heading: "两栏留白",
-      arrangement: "two_column",
       components: [{ type: "paragraph", text: "左" }, { type: "paragraph", text: "右" }],
     } as Slide
     const markup = render(ir([chapter1, slide]), slide, 1)

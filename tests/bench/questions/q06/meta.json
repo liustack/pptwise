@@ -6,7 +6,7 @@
     "pacing": "balanced",
     "expects_components": [
       "timeline",
-      "quote",
+      "blockquote",
       "image"
     ],
     "workflow": "deck-project",

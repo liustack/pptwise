@@ -19,7 +19,7 @@ function slide(heading: string): Slide {
 
 function ir(themeId: string, meta: PptxIR["meta"] = {}, s: Slide): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "corner-wedge.pptx",
     theme: { id: themeId },
     meta,

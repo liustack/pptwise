@@ -2,7 +2,7 @@ import type { Component } from "@/ir"
 import type { ComponentTraits } from "@/ir/components/types"
 import { traits as bulletsTraits } from "@/ir/components/bullets"
 import { traits as paragraphTraits } from "@/ir/components/paragraph"
-import { traits as quoteTraits } from "@/ir/components/quote"
+import { traits as blockquoteTraits } from "@/ir/components/blockquote"
 import { traits as calloutTraits } from "@/ir/components/callout"
 import { traits as codeTraits } from "@/ir/components/code"
 import { traits as kpiCardsTraits } from "@/ir/components/kpi-cards"
@@ -116,7 +116,7 @@ export type ComponentType = Component["type"]
 const ALL_TRAITS: Record<ComponentType, ComponentTraits> = {
   bullets: bulletsTraits,
   paragraph: paragraphTraits,
-  quote: quoteTraits,
+  blockquote: blockquoteTraits,
   callout: calloutTraits,
   code: codeTraits,
   kpi_cards: kpiCardsTraits,
@@ -182,7 +182,7 @@ export const COLUMN_SPANNING_TYPES: ReadonlySet<ComponentType> = typesWith("colu
 /**
  * Component types that already paint their own card/frame — callout's
  * left-bar-and-fill, code's dark panel, comparison's header row + rule
- * lines, quote's decorative mark/attribution treatment, verdict_banner's own
+ * lines, blockquote's decorative mark/attribution treatment, verdict_banner's own
  * editorial rule and typography. Consulted by `bento-layout.ts`'s
  * `sortUnitsByHeroWeight` (hero-weight ranking) and
  * `content-bento-panel.tsx`'s `renderCell`/`cellOverBudget` (these render
@@ -212,7 +212,7 @@ export const SCALABLE_TYPES: ReadonlySet<ComponentType> = typesWith("scalable")
  * steps' numbered-badge cards, flowchart's bordered node boxes,
  * architecture's filled layer bands, timeline's axis/dots — plus paragraph
  * (bare text reads better unframed in a bento grid, 2026-07-09 redesign) and
- * quote (its own decorative mark/attribution treatment).
+ * blockquote (its own decorative mark/attribution treatment).
  * `content-bento-panel.tsx`'s `renderCell` skips painting the bento outline
  * shell (no fill/stroke) for these — "双壳治理" (double-shell governance): a
  * panel+stroke shell painted behind an already-carded diagram/bare paragraph

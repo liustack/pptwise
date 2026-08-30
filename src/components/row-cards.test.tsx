@@ -228,7 +228,7 @@ describe("row_cards EN gallery trio is not silently dropped (r2 A6)", () => {
     installNodePlatform()
     const assets = await corpusAssets(LEXICONS.en)
     const ir = componentPage("row_cards", COMPONENT_BUILDERS.row_cards!, LEXICONS.en, assets)
-    ir.slides[0]!.layout = "bento-panel"
+    ;(ir.slides[0]! as unknown as { layout?: string }).layout = "bento-panel"
     const svg = renderSlideSvg(ir, 0)
     expect(svg).not.toMatch(/data-dropped-silent/)
     const rows = COMPONENT_BUILDERS.row_cards!(LEXICONS.en)

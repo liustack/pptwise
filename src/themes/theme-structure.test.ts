@@ -34,25 +34,25 @@ function fixedSlides(): Slide[] {
   return [
     { type: "cover", heading: "Q3 Strategy Review", components: [] },
     { type: "chapter", heading: "Chapter One: Market Landscape", components: [] },
-    { type: "content", heading: "Key Findings", components: [{ type: "paragraph", text: "x" }] },
+    { type: "content", kind: "points", heading: "Key Findings", components: [{ type: "paragraph", text: "x" }] },
     {
       type: "content",
+      kind: "points",
       heading: "Supporting Data",
-      arrangement: "two_column",
       components: [
         { type: "bullets", items: ["a", "b"] },
         { type: "bullets", items: ["c", "d"] },
       ],
     },
     { type: "chapter", heading: "Chapter Two: Recommendations", components: [] },
-    { type: "content", heading: "Next Steps", components: [{ type: "bullets", items: ["1", "2", "3"] }] },
+    { type: "content", kind: "points", heading: "Next Steps", components: [{ type: "bullets", items: ["1", "2", "3"] }] },
     { type: "ending", heading: "Thank You", components: [] },
   ] as Slide[]
 }
 
 function makeFixedIr(themeId: string, seed: number): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "theme-structure-fixture.pptx",
     theme: { id: themeId },
     meta: {},
@@ -1302,7 +1302,7 @@ function forcedStressIr(themeId: CanonicalThemeId, slideType: "cover" | "chapter
     components: [],
   } as Slide
   return {
-    version: "4",
+    version: "5",
     filename: "theme-structure-forced-stress.pptx",
     theme: { id: themeId },
     // Reuses the "heading" stress deck's own meta (organization + contact +

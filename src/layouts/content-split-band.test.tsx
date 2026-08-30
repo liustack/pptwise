@@ -29,9 +29,10 @@ function rectsOverlap(
   return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y
 }
 
-const zeroComponents: Slide = { type: "content", heading: "占位标题", components: [] } as Slide
+const zeroComponents: Slide = { type: "content", kind: "points", heading: "占位标题", components: [] } as Slide
 const withComponents: Slide = {
   type: "content",
+  kind: "points",
   heading: "季度业绩总结",
   subheading: "核心指标全面向好",
   components: [
@@ -42,7 +43,7 @@ const withComponents: Slide = {
 
 function ir(slides: Slide[]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "x.pptx",
     theme: { id: "consulting" },
     meta: {},
@@ -150,6 +151,7 @@ describe("SplitBandContent pathological content", () => {
     it(`${themeId}: zero overflow/out-of-bounds/overlap findings on a pathological CJK_LONG + MIXED_LONG deck`, () => {
       const slide: Slide = {
         type: "content",
+        kind: "points",
         layout: "split-band",
         heading: CJK_LONG,
         subheading: MIXED_LONG,
@@ -168,6 +170,7 @@ describe("SplitBandContent pathological content", () => {
     it(`${themeId}: zero overflow/out-of-bounds/overlap findings on a pathological footnote deck`, () => {
       const slide: Slide = {
         type: "content",
+        kind: "points",
         layout: "split-band",
         heading: CJK_LONG,
         footnote: MIXED_LONG,
@@ -246,7 +249,7 @@ describe("SplitBandContent lower-band capacity (the ratio the measurement chose)
     const contentFor = pacing === "spacious" ? sparseComponents : moderateComponents
 
     it(`${pacing} pacing (n=${n} components, bodyFontPx=${budget.bodyBaselinePx}): zero data-dropped, no footnote (h=400)`, () => {
-      const slide: Slide = { type: "content", heading: "容量压测", components: contentFor(n) } as Slide
+      const slide: Slide = { type: "content", kind: "points", heading: "容量压测", components: contentFor(n) } as Slide
       const ctx = buildCtx(resolveStyle("consulting"), {}, undefined, undefined, budget.bodyBaselinePx)
       const markup = renderSvgMarkup(
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">
@@ -261,6 +264,7 @@ describe("SplitBandContent lower-band capacity (the ratio the measurement chose)
     it(`${pacing} pacing (n=${n} components, bodyFontPx=${budget.bodyBaselinePx}): zero data-dropped, with a footnote (h=380)`, () => {
       const slide: Slide = {
         type: "content",
+        kind: "points",
         heading: "容量压测",
         footnote: "来源：内部数据",
         components: contentFor(n),

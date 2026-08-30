@@ -32,7 +32,7 @@ import type { PptxIR, Slide } from "@/ir"
 
 function makeIR(slides: Slide[]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "determinism.pptx",
     theme: { id: "consulting" },
     meta: {},
@@ -50,6 +50,7 @@ function deck(): PptxIR {
     { type: "cover", heading: "pptwise", subheading: "Whole-file determinism", components: [] },
     {
       type: "content",
+      kind: "points",
       heading: "Design goals",
       components: [{ type: "bullets", items: ["one", "two", "three"] }],
     },

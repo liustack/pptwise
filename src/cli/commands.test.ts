@@ -38,26 +38,26 @@ const PNG_1PX = Buffer.from(
 )
 
 const VALID_IR = {
-  version: "4",
+  version: "5",
   filename: "cli-test",
   theme: { id: "tech" },
   slides: [
     { type: "cover", heading: "CLI" },
-    { type: "content", heading: "Body", components: [{ type: "paragraph", text: "hello from the CLI test" }] },
+    { type: "content", kind: "points", heading: "Body", components: [{ type: "paragraph", text: "hello from the CLI test" }] },
   ],
 }
 
 /** Same slides as VALID_IR but no theme key, so project/user config can win. */
-const IR_NO_THEME = { version: "4", filename: "cli-test", slides: VALID_IR.slides }
+const IR_NO_THEME = { version: "5", filename: "cli-test", slides: VALID_IR.slides }
 
 const IR_WITH_LOCAL_ASSET = {
-  version: "4",
+  version: "5",
   filename: "cli-test-asset",
   theme: { id: "tech" },
   assets: { images: { logo: { src: "logo.png" } } },
   slides: [
     { type: "cover", heading: "CLI" },
-    { type: "content", heading: "Body", components: [{ type: "image", asset_id: "logo" }] },
+    { type: "content", kind: "points", heading: "Body", components: [{ type: "image", asset_id: "logo" }] },
   ],
 }
 
@@ -66,23 +66,23 @@ const IR_WITH_LOCAL_ASSET = {
 // that `runValidate` now rejects this the same way `runRender` already did,
 // instead of printing OK on a deck that render/audit/preview would reject.
 const IR_WITH_CORRUPT_LOCAL_ASSET = {
-  version: "4",
+  version: "5",
   filename: "cli-test-corrupt-asset",
   theme: { id: "tech" },
   assets: { images: { logo: { src: "corrupt-logo.png" } } },
   slides: [
     { type: "cover", heading: "CLI" },
-    { type: "content", heading: "Body", components: [{ type: "image", asset_id: "logo" }] },
+    { type: "content", kind: "points", heading: "Body", components: [{ type: "image", asset_id: "logo" }] },
   ],
 }
 
 const IR_WITH_PLACEHOLDER = {
-  version: "4",
+  version: "5",
   filename: "cli-test-placeholder",
   theme: { id: "tech" },
   slides: [
     { type: "cover", heading: "CLI" },
-    { type: "content", id: "p-2", placeholder: true },
+    { type: "content", kind: "points", id: "p-2", placeholder: true },
   ],
 }
 
@@ -93,12 +93,13 @@ const IR_WITH_PLACEHOLDER = {
 // deck-audit.test.ts's own "low-contrast via a real style-token override"
 // fixture (`src/audit/deck-audit.test.ts`).
 const IR_LOW_CONTRAST = {
-  version: "4",
+  version: "5",
   filename: "cli-test-low-contrast",
   theme: { id: "consulting", style: { colors: { text: "#F5F5F0" } } },
   slides: [
     {
       type: "content",
+      kind: "points",
       id: "p-body",
       heading: "readable heading",
       components: [{ type: "paragraph", text: "some body copy" }],
@@ -109,12 +110,12 @@ const IR_LOW_CONTRAST = {
 // kpi_cards item uses "title" instead of "label" — W5 task 4's field-alias
 // normalizer should silently adopt it and runValidate should note it.
 const IR_WITH_FIELD_ALIAS = {
-  version: "4",
+  version: "5",
   filename: "cli-test-alias",
   theme: { id: "tech" },
   slides: [
     { type: "cover", heading: "CLI" },
-    { type: "content", heading: "Body", components: [{ type: "kpi_cards", items: [{ value: "42", title: "Revenue" }] }] },
+    { type: "content", kind: "points", heading: "Body", components: [{ type: "kpi_cards", items: [{ value: "42", title: "Revenue" }] }] },
   ],
 }
 
@@ -124,8 +125,8 @@ const VALID_PLAN = {
   theme: "consulting",
   pages: [
     { id: "p-cover", type: "cover", heading: "CLI Plan" },
-    { id: "p-kpi", type: "content", heading: "Body content page", beat: "anchor", focus: "kpi_cards" },
-    { id: "p-detail", type: "content", heading: "More detail" },
+    { id: "p-kpi", type: "content", kind: "points", heading: "Body content page", beat: "anchor", focus: "kpi_cards" },
+    { id: "p-detail", type: "content", kind: "points", heading: "More detail" },
     { id: "p-ending", type: "ending", heading: "Thanks" },
   ],
 }
@@ -142,8 +143,8 @@ const PLAN_WITH_NARRATIVE_ID_SHAPE = {
   theme: "consulting",
   pages: [
     { id: "p-cover", type: "cover", heading: "CLI Plan" },
-    { id: "p-kpi", type: "content", heading: "Body content page", beat: "anchor", focus: "kpi_cards" },
-    { id: "p-detail", type: "content", heading: "More detail" },
+    { id: "p-kpi", type: "content", kind: "points", heading: "Body content page", beat: "anchor", focus: "kpi_cards" },
+    { id: "p-detail", type: "content", kind: "points", heading: "More detail" },
     { id: "p-ending", type: "ending", heading: "Thanks" },
   ],
 }
@@ -153,12 +154,12 @@ const PLAN_WITH_NARRATIVE_ID_SHAPE = {
 // must both still succeed, printing a "warning: ..." note rather than
 // throwing.
 const IR_WITH_WARN_ONLY = {
-  version: "4",
+  version: "5",
   filename: "cli-test-warn-only",
   theme: { id: "tech" },
   slides: [
     { type: "cover" }, // missing heading — warn only since Task 2
-    { type: "content", heading: "Body", components: [{ type: "paragraph", text: "hello" }] },
+    { type: "content", kind: "points", heading: "Body", components: [{ type: "paragraph", text: "hello" }] },
   ],
 }
 
@@ -166,13 +167,14 @@ const IR_WITH_WARN_ONLY = {
 // error-severity geometric ceiling (Task 2) — genuinely gets truncated at
 // render, so this must still hard-block validate/render.
 const IR_WITH_BULLET_OVERFLOW = {
-  version: "4",
+  version: "5",
   filename: "cli-test-bullet-overflow",
   theme: { id: "tech" },
   slides: [
     { type: "cover", heading: "CLI" },
     {
       type: "content",
+      kind: "points",
       heading: "Body",
       components: [{ type: "bullets", items: ["测".repeat(CAPACITY.bullets.itemOverflowUnits + 1)] }],
     },
@@ -183,13 +185,14 @@ const IR_WITH_BULLET_OVERFLOW = {
 // drops the surplus blocks and the slide says nothing about it, which is
 // what `generatePptx`'s content-drop gate refuses to export.
 const IR_WITH_DROPPED_CONTENT = {
-  version: "4",
+  version: "5",
   filename: "cli-test-dropped",
   theme: { id: "tech" },
   slides: [
     { type: "cover", heading: "CLI" },
     {
       type: "content",
+      kind: "points",
       id: "p-2",
       heading: "Too much",
       components: Array.from({ length: 8 }, () => ({
@@ -206,7 +209,7 @@ beforeAll(async () => {
   installNodePlatform()
   dir = await mkdtemp(join(tmpdir(), "pptwise-cli-"))
   await writeFile(join(dir, "deck.json"), JSON.stringify(VALID_IR))
-  await writeFile(join(dir, "bad.json"), JSON.stringify({ version: "4" }))
+  await writeFile(join(dir, "bad.json"), JSON.stringify({ version: "5" }))
   await writeFile(join(dir, "logo.png"), PNG_1PX)
   await writeFile(join(dir, "corrupt-logo.png"), Buffer.from([0x00, 0x01, 0x02, 0x03]))
   await writeFile(join(dir, "deck-with-asset.json"), JSON.stringify(IR_WITH_LOCAL_ASSET))
@@ -258,9 +261,9 @@ function makeDeckPlan(extra: Record<string, unknown> = {}): Record<string, unkno
     filename: "q3-review",
     pages: [
       { id: "p-cover", type: "cover", heading: "Q3 Review" },
-      { id: "p-a", type: "content", heading: "Segment A" },
-      { id: "p-b", type: "content", heading: "Segment B" },
-      { id: "p-c", type: "content", heading: "Segment C" },
+      { id: "p-a", type: "content", kind: "points", heading: "Segment A" },
+      { id: "p-b", type: "content", kind: "points", heading: "Segment B" },
+      { id: "p-c", type: "content", kind: "points", heading: "Segment C" },
       { id: "p-ending", type: "ending", heading: "Thanks" },
     ],
     ...extra,
@@ -278,14 +281,14 @@ function makeDeckDir(prefix = "pptwise-deck-"): Promise<string> {
  *  *spec* (no ending page), so re-assembling its disassembled output would
  *  fail `checkBoundaryTypes` before ever reaching a render. */
 const ROUNDTRIPPABLE_IR = {
-  version: "4",
+  version: "5",
   filename: "roundtrip-test",
   theme: { id: "tech" },
   narrative: { pacing: "spacious" },
   slides: [
     { id: "s-cover", type: "cover", heading: "Cover" },
-    { id: "s-body", type: "content", heading: "Body", components: [{ type: "paragraph", text: "hi" }] },
-    { id: "s-body2", type: "content", heading: "Body 2" },
+    { id: "s-body", type: "content", kind: "points", heading: "Body", components: [{ type: "paragraph", text: "hi" }] },
+    { id: "s-body2", type: "content", kind: "points", heading: "Body 2" },
     { id: "s-ending", type: "ending", heading: "End" },
   ],
 }
@@ -297,15 +300,15 @@ const ROUNDTRIPPABLE_IR = {
  *  data URI so the later `runRender` on the disassembled directory actually
  *  embeds the image again, not just produces a structurally valid pptx. */
 const ROUNDTRIPPABLE_IR_WITH_ASSET = {
-  version: "4",
+  version: "5",
   filename: "roundtrip-asset-test",
   theme: { id: "tech" },
   narrative: { pacing: "spacious" },
   assets: { images: { logo: { src: `data:image/png;base64,${PNG_1PX.toString("base64")}` } } },
   slides: [
     { id: "s-cover", type: "cover", heading: "Cover" },
-    { id: "s-body", type: "content", heading: "Body", components: [{ type: "image", asset_id: "logo" }] },
-    { id: "s-body2", type: "content", heading: "Body 2" },
+    { id: "s-body", type: "content", kind: "points", heading: "Body", components: [{ type: "image", asset_id: "logo" }] },
+    { id: "s-body2", type: "content", kind: "points", heading: "Body 2" },
     { id: "s-ending", type: "ending", heading: "End" },
   ],
 }
@@ -315,12 +318,12 @@ const ROUNDTRIPPABLE_IR_WITH_ASSET = {
  *  `runDisassemble` summary must not claim to have written a `pages/`
  *  directory that was never created). */
 const IR_ALL_PLACEHOLDERS = {
-  version: "4",
+  version: "5",
   filename: "cli-test-all-placeholder",
   theme: { id: "tech" },
   slides: [
     { id: "p-1", type: "cover", placeholder: true },
-    { id: "p-2", type: "content", placeholder: true },
+    { id: "p-2", type: "content", kind: "points", placeholder: true },
   ],
 }
 
@@ -1577,7 +1580,7 @@ const V3_IR = {
   theme: { id: "consulting" },
   slides: [
     { type: "cover", heading: "Migrate CLI Test" },
-    { type: "content", heading: "Body", components: [{ type: "paragraph", text: "hi" }] },
+    { type: "content", kind: "points", heading: "Body", components: [{ type: "paragraph", text: "hi" }] },
   ],
 }
 
@@ -1589,8 +1592,8 @@ function makeLegacyDeckPlan(extra: Record<string, unknown> = {}): Record<string,
     filename: "migrate-deck-dir-test",
     pages: [
       { id: "p-cover", type: "cover", heading: "Cover" },
-      { id: "p-a", type: "content", heading: "Segment A", rhythm: "anchor" },
-      { id: "p-b", type: "content", heading: "Segment B" },
+      { id: "p-a", type: "content", kind: "points", heading: "Segment A", rhythm: "anchor" },
+      { id: "p-b", type: "content", kind: "points", heading: "Segment B" },
       { id: "p-ending", type: "ending", heading: "Thanks" },
     ],
     ...extra,
@@ -1742,7 +1745,7 @@ describe("runMigrate", () => {
   describe("chrome → branding", () => {
     const specPages = [
       { id: "p-cover", type: "cover", heading: "Cover" },
-      { id: "p-a", type: "content", heading: "Body" },
+      { id: "p-a", type: "content", kind: "points", heading: "Body" },
       { id: "p-ending", type: "ending", heading: "Thanks" },
     ]
 
@@ -1846,7 +1849,7 @@ describe("runMigrate", () => {
   describe("bloom → classroom", () => {
     const specPages = [
       { id: "p-cover", type: "cover", heading: "Cover" },
-      { id: "p-a", type: "content", heading: "Body" },
+      { id: "p-a", type: "content", kind: "points", heading: "Body" },
       { id: "p-ending", type: "ending", heading: "Thanks" },
     ]
 
@@ -1915,7 +1918,7 @@ describe("runMigrate", () => {
   describe("logo_wall → image_grid", () => {
     const specPages = [
       { id: "p-cover", type: "cover", heading: "Cover" },
-      { id: "p-a", type: "content", heading: "Body" },
+      { id: "p-a", type: "content", kind: "points", heading: "Body" },
       { id: "p-ending", type: "ending", heading: "Thanks" },
     ]
     const logoWallItems = [
@@ -1937,7 +1940,7 @@ describe("runMigrate", () => {
         ...VALID_IR,
         slides: [
           VALID_IR.slides[0],
-          { type: "content", heading: "Body", components: [logoWallComponent] },
+          { type: "content", kind: "points", heading: "Body", components: [logoWallComponent] },
         ],
       }
       await writeFile(irPath, JSON.stringify(source))
@@ -1974,7 +1977,7 @@ describe("runMigrate", () => {
           theme: { id: "bloom" },
           slides: [
             VALID_IR.slides[0],
-            { type: "content", heading: "Body", components: [logoWallComponent] },
+            { type: "content", kind: "points", heading: "Body", components: [logoWallComponent] },
           ],
         }),
       )
@@ -2033,7 +2036,7 @@ describe("runMigrate", () => {
         ...VALID_IR,
         slides: [
           VALID_IR.slides[0],
-          { type: "content", heading: "Body", layout: "banner-heading" },
+          { type: "content", kind: "points", heading: "Body", layout: "banner-heading" },
         ],
       }
       await writeFile(irPath, JSON.stringify(source))
@@ -2064,6 +2067,7 @@ describe("runMigrate", () => {
             VALID_IR.slides[0],
             {
               type: "content",
+              kind: "points",
               heading: "Body",
               layout: "banner-heading",
               components: [
@@ -2542,7 +2546,7 @@ describe("workspace artifacts (default -o)", () => {
       filename: "wide",
       slides: [
         ...VALID_IR.slides,
-        { type: "content", heading: "More", components: [{ type: "paragraph", text: "third" }] },
+        { type: "content", kind: "points", heading: "More", components: [{ type: "paragraph", text: "third" }] },
       ],
     }
     await writeFile(join(cwd, "wide.json"), JSON.stringify(three))

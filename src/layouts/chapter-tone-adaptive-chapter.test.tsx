@@ -32,7 +32,7 @@ const EXPECTED_CHAPTER_WITH_BG =
 // `chapterNumberFor` has something to derive from — index 0 is chapter "01",
 // index 2 is chapter "02" out of the deck (章节序号水印 + 多 chapter index 覆盖).
 const chapter1: Slide = { type: "chapter", heading: "第一部分：市场回顾", components: [] } as Slide
-const content: Slide = { type: "content", heading: "现状", components: [] } as Slide
+const content: Slide = { type: "content", kind: "points", heading: "现状", components: [] } as Slide
 const chapter2: Slide = {
   type: "chapter",
   heading: "第二部分：策略与执行路径",

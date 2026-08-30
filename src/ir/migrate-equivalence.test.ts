@@ -367,7 +367,7 @@ describe("v3 → v4 migration equivalence (task 1 hard gate, spec §10/§12)", (
       // element, attribute, or file changed; `.audit.json` needed no
       // recapture for any of the three (findings byte-identical, the shift
       // introduces no new geometry or contrast finding), and `basic` needed
-      // no recapture at all (it has no quote component).
+      // no recapture at all (it has no blockquote component).
       //
       // Re-recaptured again (theme-redesign wave, ink v3 —
       // `.issues/2026-08-18-theme-redesign/ink/decisions.md`): registering a
@@ -499,7 +499,7 @@ describe("v3 → v4 migration equivalence (task 1 hard gate, spec §10/§12)", (
       //   - `annualReviewPreset`: SVG slide 3 (same attribute) and
       //     `ppt/slides/slide4.xml` (one `<a:off>` y, 2703767 -> 2856167).
       // Both EMU deltas are 152400 = exactly the 16px the baseline moved
-      // (9525 EMU per px at this canvas). `basic` has no quote component and
+      // (9525 EMU per px at this canvas). `basic` has no blockquote component and
       // was not recaptured at all, and `.audit.json` needed no recapture for
       // any of the three (recomputed fresh against both goldens — a mark
       // that moves 16px down inside its own block introduces no geometry or

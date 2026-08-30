@@ -13,9 +13,9 @@ mirror_of: skills/pptwise/references/layouts.md
 
 `quote-stage` 是 content 页上的论断页：一句短而有力的标题是整页主视觉，最多再配一个短附注 component（出处、署名、一句补充）。0 个 component 合法。这一页仍会画主题的品牌页脚和 motif。
 
-`statement` 是 content 页上的整页诗行或金句。最多一个 component，渲成出处小字（quote / paragraph / citation），不走卡片。可选 kicker 来自上一章。品牌页脚和 logo 不画。主题 motif 仍画。脸是主题专属的（已定稿的主题不是通用斜体 500 行）。
+`statement` 是 content 页上的整页诗行或金句。最多一个 component，渲成出处小字（blockquote / paragraph / citation），不走卡片。可选 kicker 来自上一章。品牌页脚和 logo 不画。主题 motif 仍画。脸是主题专属的（已定稿的主题不是通用斜体 500 行）。
 
-`pull-quote` 是 content 页上的引言页：标题、出处小字、可选 muted 散文。出处优先 quote 的 `attribution`，否则 `subheading`。品牌页脚和 logo 不画。主题 motif 仍画。
+`pull-quote` 是 content 页上的引言页：标题、出处小字、可选 muted 散文。出处优先 blockquote 的 `attribution`，否则 `subheading`。品牌页脚和 logo 不画。主题 motif 仍画。
 
 `verse-chapter` 是居中诗行章首（`type: "chapter"`）。tracking 章号眉、两行标题、可选斜体副题。没有水印大数字，没有 body，没有 footnote，chapter 页的既有边界照旧。logo 不画。主题 motif 仍画。
 
@@ -145,15 +145,15 @@ mirror_of: skills/pptwise/references/layouts.md
 | `quiet-frame` | 否 | 4 | 提供 `kicker`、`heading`、`subheading`、`rule`、`body`、`meta` 槽位，其中 `body` 槽接收 任意组件，容量 4。 |
 | `split-band` | 否 | 4 | 提供 `kicker`、`heading`、`subheading`、`body`、`meta` 槽位，其中 `body` 槽接收 任意组件，容量 4。 |
 | `quote-stage` | 是 | 1 | 提供 `heading`、`subheading`、`body`、`meta` 槽位，其中 `body` 槽接收 任意组件，容量 1。 |
-| `statement` | 是 | 1 | 提供 `kicker`、`heading`、`body`、`meta` 槽位，其中 `body` 槽接收 `paragraph`、`quote`、`citation` 组件，容量 1。 |
-| `pull-quote` | 是 | 1 | 提供 `kicker`、`heading`、`subheading`、`body`、`meta` 槽位，其中 `body` 槽接收 `paragraph`、`quote`、`citation` 组件，容量 1。 |
+| `statement` | 是 | 1 | 提供 `kicker`、`heading`、`body`、`meta` 槽位，其中 `body` 槽接收 `paragraph`、`blockquote`、`citation` 组件，容量 1。 |
+| `pull-quote` | 是 | 1 | 提供 `kicker`、`heading`、`subheading`、`body`、`meta` 槽位，其中 `body` 槽接收 `paragraph`、`blockquote`、`citation` 组件，容量 1。 |
 | `stat-hero` | 是 | 1 | 提供 `kicker`、`heading`、`body`、`meta` 槽位，其中 `body` 槽接收 `kpi_cards`、`paragraph`、`citation` 组件，容量 1。 |
 | `one-evidence` | 是 | 1 | 提供 `heading`、`body`、`meta` 槽位，其中 `body` 槽接收 任意组件，容量 1。 |
 | `mono-bleed` | 是 | 0 | 提供 `heading`、`subheading`、`body` 槽位，其中 `body` 槽承载派生内容，容量 0。 |
 | `gauge-stats` | 是 | 4 | 提供 `kicker`、`heading`、`subheading`、`body`、`rule`、`meta` 槽位，其中 `body` 槽接收 任意组件，容量 4。 |
-| `gauge-point` | 是 | 1 | 提供 `kicker`、`heading`、`body`、`meta` 槽位，其中 `body` 槽接收 `quote`、`paragraph`、`citation` 组件，容量 1。 |
+| `gauge-point` | 是 | 1 | 提供 `kicker`、`heading`、`body`、`meta` 槽位，其中 `body` 槽接收 `blockquote`、`paragraph`、`citation` 组件，容量 1。 |
 | `crayonbox-cards` | 是 | 4 | 提供 `kicker`、`heading`、`subheading`、`body`、`meta` 槽位，其中 `body` 槽接收 任意组件，容量 4。 |
-| `crayonbox-point` | 是 | 1 | 提供 `kicker`、`heading`、`body`、`meta` 槽位，其中 `body` 槽接收 `quote`、`paragraph`、`citation` 组件，容量 1。 |
+| `crayonbox-point` | 是 | 1 | 提供 `kicker`、`heading`、`body`、`meta` 槽位，其中 `body` 槽接收 `blockquote`、`paragraph`、`citation` 组件，容量 1。 |
 | `show-gallery` | 是 | 1 | 提供 `kicker`、`heading`、`subheading`、`body`、`meta` 槽位，其中 `body` 槽接收 任意组件，容量 1。 |
 | `show-spotlight` | 是 | 3 | 提供 `kicker`、`heading`、`subheading`、`image`、`body`、`meta` 槽位，其中 `image` 槽接收 `image` 组件，容量 1、`body` 槽接收 任意组件，容量 2。 |
 | `show-statement` | 是 | 1 | 提供 `kicker`、`heading`、`body`、`rule` 槽位，其中 `body` 槽接收 任意组件，容量 1。 |

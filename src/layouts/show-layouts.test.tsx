@@ -9,21 +9,19 @@ import { FullSlideSvg } from "../render/full-slide-svg"
 const slides: Slide[] = [
   {
     type: "cover",
-    layout: "show-headline",
     heading: "破界",
     subheading: "年度战略发布",
     components: [],
   },
   {
     type: "chapter",
-    layout: "show-plate",
     heading: "增长引擎",
     subheading: "从共识走向行动",
     components: [],
   },
   {
     type: "content",
-    layout: "show-gallery",
+    kind: "points",
     heading: "六个关键场景",
     subheading: "从真实场景中提炼可复制的方法",
     components: [
@@ -38,7 +36,7 @@ const slides: Slide[] = [
   },
   {
     type: "content",
-    layout: "show-spotlight",
+    kind: "points",
     heading: "旗舰方案",
     subheading: "把复杂约束压缩成一条清晰路径",
     components: [
@@ -56,7 +54,7 @@ const slides: Slide[] = [
   },
   {
     type: "content",
-    layout: "show-statement",
+    kind: "points",
     heading: "真正的增长来自\n持续创造不可替代性",
     components: [
       {
@@ -71,7 +69,7 @@ const slides: Slide[] = [
   },
   {
     type: "content",
-    layout: "show-figures",
+    kind: "points",
     heading: "关键数字",
     subheading: "三项指标共同验证增长质量",
     components: [
@@ -87,7 +85,6 @@ const slides: Slide[] = [
   },
   {
     type: "ending",
-    layout: "show-finale",
     heading: "谢谢",
     subheading: "THE SHOW GOES ON",
     components: [],
@@ -95,7 +92,7 @@ const slides: Slide[] = [
 ]
 
 const ir: PptxIR = {
-  version: "4",
+  version: "5",
   filename: "runway-show.pptx",
   theme: { id: "runway" },
   meta: {
@@ -273,14 +270,14 @@ describe("runway show layouts", () => {
     for (const [index, slide] of slides.entries()) {
       const root = draw(index)
       const groups = root.querySelectorAll('[data-show-accent="true"]')
-      expect(groups, slide.layout).toHaveLength(1)
+      expect(groups, (slide as unknown as { layout?: string }).layout).toHaveLength(1)
       const redLeaves = Array.from(root.querySelectorAll("rect, line, path, circle, text")).filter((node) =>
         [node.getAttribute("fill"), node.getAttribute("stroke")].some((paint) => paint?.toLowerCase() === accent),
       )
-      expect(redLeaves.length, slide.layout).toBeGreaterThan(0)
-      expect(redLeaves.every((node) => node.closest('[data-show-accent="true"]') === groups[0]), slide.layout).toBe(true)
-      expect(root.querySelectorAll("text[fill-opacity]"), slide.layout).toHaveLength(0)
-      expect(root.querySelectorAll("[data-decor-piece]").length, slide.layout).toBeLessThanOrEqual(3)
+      expect(redLeaves.length, (slide as unknown as { layout?: string }).layout).toBeGreaterThan(0)
+      expect(redLeaves.every((node) => node.closest('[data-show-accent="true"]') === groups[0]), (slide as unknown as { layout?: string }).layout).toBe(true)
+      expect(root.querySelectorAll("text[fill-opacity]"), (slide as unknown as { layout?: string }).layout).toHaveLength(0)
+      expect(root.querySelectorAll("[data-decor-piece]").length, (slide as unknown as { layout?: string }).layout).toBeLessThanOrEqual(3)
     }
   })
 
@@ -289,11 +286,11 @@ describe("runway show layouts", () => {
     for (const index of [1, 2, 3]) {
       const root = draw(index)
       const placeholders = Array.from(root.querySelectorAll('[data-show-placeholder="true"]'))
-      expect(placeholders.length, slides[index]!.layout).toBeGreaterThan(0)
+      expect(placeholders.length, (slides[index]! as unknown as { layout?: string }).layout).toBeGreaterThan(0)
       for (const placeholder of placeholders) {
         const ink = placeholder.getAttribute("fill")!
-        expect(contrastRatio(ink, "#D8D4C8"), slides[index]!.layout).toBeGreaterThanOrEqual(4.5)
-        expect(ink, slides[index]!.layout).not.toBe(tokens.colors.muted)
+        expect(contrastRatio(ink, "#D8D4C8"), (slides[index]! as unknown as { layout?: string }).layout).toBeGreaterThanOrEqual(4.5)
+        expect(ink, (slides[index]! as unknown as { layout?: string }).layout).not.toBe(tokens.colors.muted)
       }
     }
   })
@@ -302,34 +299,34 @@ describe("runway show layouts", () => {
     const cases: Slide[] = [
       {
         type: "content",
-        layout: "show-gallery",
+        kind: "points",
         heading: "三图不走六格",
         components: [{ type: "paragraph", text: "画廊回退正文" }],
       },
       {
         type: "content",
-        layout: "show-spotlight",
+        kind: "points",
         heading: "无图不走焦点",
         components: [{ type: "paragraph", text: "焦点回退正文" }],
       },
       {
         type: "content",
-        layout: "show-statement",
+        kind: "points",
         heading: "四点不走观点",
         components: [{ type: "bullets", items: ["一", "二", "三", "观点回退正文"] }],
       },
       {
         type: "content",
-        layout: "show-figures",
+        kind: "points",
         heading: "非指标不走数字",
         components: [{ type: "paragraph", text: "数字回退正文" }],
       },
     ]
     for (const slide of cases) {
       const root = draw(0, slide)
-      expect(root.querySelector('[data-show-mode="fallback"]'), slide.layout).not.toBeNull()
-      expect(root.textContent, slide.layout).toContain("回退正文")
-      expect(root.querySelectorAll('[data-show-accent="true"]'), slide.layout).toHaveLength(1)
+      expect(root.querySelector('[data-show-mode="fallback"]'), (slide as unknown as { layout?: string }).layout).not.toBeNull()
+      expect(root.textContent, (slide as unknown as { layout?: string }).layout).toContain("回退正文")
+      expect(root.querySelectorAll('[data-show-accent="true"]'), (slide as unknown as { layout?: string }).layout).toHaveLength(1)
     }
   })
 })

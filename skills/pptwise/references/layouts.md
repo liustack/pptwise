@@ -8,9 +8,9 @@ The generated catalog below is the complete pin-only inventory. The seven layout
 
 `quote-stage` is a thesis page on a content slide: one short, powerful heading is the entire visual, with at most one short attribution component (a source, a name, a one-line follow-up). Zero components is legitimate — a pure quote needs no attribution. This one still draws the theme's brand footer and motif.
 
-`statement` is a whole-page verse or epigram on a content slide. At most one component, rendered as a small source line (quote / paragraph / citation), never as a card. Optional kicker from the preceding chapter. Brand footer and logo stay off. The theme motif still paints. The face is theme-specific (a boarded theme is not the generic italic 500 lines).
+`statement` is a whole-page verse or epigram on a content slide. At most one component, rendered as a small source line (blockquote / paragraph / citation), never as a card. Optional kicker from the preceding chapter. Brand footer and logo stay off. The theme motif still paints. The face is theme-specific (a boarded theme is not the generic italic 500 lines).
 
-`pull-quote` is a quotation page on a content slide: heading, source line, optional muted paragraph. Source comes from a quote component's `attribution` when present, otherwise `subheading`. Brand footer and logo stay off. The theme motif still paints.
+`pull-quote` is a quotation page on a content slide: heading, source line, optional muted paragraph. Source comes from a blockquote component's `attribution` when present, otherwise `subheading`. Brand footer and logo stay off. The theme motif still paints.
 
 `verse-chapter` is a centered verse as a chapter open (`type: "chapter"`). Tracking chapter-index kicker, 2-line heading, optional italic subheading. No watermark numeral, no body, no footnote — the usual chapter boundary still applies. Logo stays off. The theme motif still paints.
 
@@ -140,15 +140,15 @@ This section is generated from the layout registry and each layout's slot metada
 | `quiet-frame` | no | 4 | Provides `kicker`, `heading`, `subheading`, `rule`, `body`, and `meta` slots, where the `body` slot accepts any component with capacity 4. |
 | `split-band` | no | 4 | Provides `kicker`, `heading`, `subheading`, `body`, and `meta` slots, where the `body` slot accepts any component with capacity 4. |
 | `quote-stage` | yes | 1 | Provides `heading`, `subheading`, `body`, and `meta` slots, where the `body` slot accepts any component with capacity 1. |
-| `statement` | yes | 1 | Provides `kicker`, `heading`, `body`, and `meta` slots, where the `body` slot accepts `paragraph`, `quote`, and `citation` components with capacity 1. |
-| `pull-quote` | yes | 1 | Provides `kicker`, `heading`, `subheading`, `body`, and `meta` slots, where the `body` slot accepts `paragraph`, `quote`, and `citation` components with capacity 1. |
+| `statement` | yes | 1 | Provides `kicker`, `heading`, `body`, and `meta` slots, where the `body` slot accepts `paragraph`, `blockquote`, and `citation` components with capacity 1. |
+| `pull-quote` | yes | 1 | Provides `kicker`, `heading`, `subheading`, `body`, and `meta` slots, where the `body` slot accepts `paragraph`, `blockquote`, and `citation` components with capacity 1. |
 | `stat-hero` | yes | 1 | Provides `kicker`, `heading`, `body`, and `meta` slots, where the `body` slot accepts `kpi_cards`, `paragraph`, and `citation` components with capacity 1. |
 | `one-evidence` | yes | 1 | Provides `heading`, `body`, and `meta` slots, where the `body` slot accepts any component with capacity 1. |
 | `mono-bleed` | yes | 0 | Provides `heading`, `subheading`, and `body` slots, where the `body` slot holds derived content with capacity 0. |
 | `gauge-stats` | yes | 4 | Provides `kicker`, `heading`, `subheading`, `body`, `rule`, and `meta` slots, where the `body` slot accepts any component with capacity 4. |
-| `gauge-point` | yes | 1 | Provides `kicker`, `heading`, `body`, and `meta` slots, where the `body` slot accepts `quote`, `paragraph`, and `citation` components with capacity 1. |
+| `gauge-point` | yes | 1 | Provides `kicker`, `heading`, `body`, and `meta` slots, where the `body` slot accepts `blockquote`, `paragraph`, and `citation` components with capacity 1. |
 | `crayonbox-cards` | yes | 4 | Provides `kicker`, `heading`, `subheading`, `body`, and `meta` slots, where the `body` slot accepts any component with capacity 4. |
-| `crayonbox-point` | yes | 1 | Provides `kicker`, `heading`, `body`, and `meta` slots, where the `body` slot accepts `quote`, `paragraph`, and `citation` components with capacity 1. |
+| `crayonbox-point` | yes | 1 | Provides `kicker`, `heading`, `body`, and `meta` slots, where the `body` slot accepts `blockquote`, `paragraph`, and `citation` components with capacity 1. |
 | `show-gallery` | yes | 1 | Provides `kicker`, `heading`, `subheading`, `body`, and `meta` slots, where the `body` slot accepts any component with capacity 1. |
 | `show-spotlight` | yes | 3 | Provides `kicker`, `heading`, `subheading`, `image`, `body`, and `meta` slots, where the `image` slot accepts a `image` component with capacity 1 and the `body` slot accepts any component with capacity 2. |
 | `show-statement` | yes | 1 | Provides `kicker`, `heading`, `body`, and `rule` slots, where the `body` slot accepts any component with capacity 1. |

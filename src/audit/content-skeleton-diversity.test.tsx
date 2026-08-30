@@ -92,6 +92,7 @@ function quantize(n: number): number {
 function fixedSlide(): Slide {
   return {
     type: "content",
+    kind: "points",
     heading: "Skeleton diversity fixture heading",
     components: [
       { type: "image", asset_id: "fixture-shot", caption: "Fixture image" },
@@ -102,7 +103,7 @@ function fixedSlide(): Slide {
 
 function fixedIr(): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "skeleton-diversity-fixture.pptx",
     theme: { id: "consulting" },
     meta: {},

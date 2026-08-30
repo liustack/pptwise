@@ -18,7 +18,7 @@ function slide(heading = HEADING): Slide {
 
 function ir(themeId: string, meta: PptxIR["meta"] = {}): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "band-title.pptx",
     theme: { id: themeId },
     branding: "full",

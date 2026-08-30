@@ -22,7 +22,7 @@ const ctx: ComponentCtx = {
 
 function ir(themeId: PptxIR["theme"]["id"], slides: Slide[], branding?: PptxIR["branding"]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "deck.pptx",
     theme: { id: themeId },
     meta: { organization: "ACME", confidentiality: "internal", version: "v1", date: "2026" },
@@ -36,6 +36,7 @@ function ir(themeId: PptxIR["theme"]["id"], slides: Slide[], branding?: PptxIR["
 
 const cardBgContentSlide: Slide = {
   type: "content",
+  kind: "points",
   heading: "带背景卡片",
   components: [{ type: "paragraph", text: "卡内文字。" }],
   background: { kind: "asset", asset_id: "bg", fit: "cover" },
@@ -77,6 +78,7 @@ describe("Branding footer suppression (W1: theme brand.suppressFooterOnCardConte
 
 const plainContentSlide: Slide = {
   type: "content",
+  kind: "points",
   heading: "普通内容页",
   components: [{ type: "paragraph", text: "正文。" }],
 }
@@ -124,7 +126,7 @@ const chapterSlide: Slide = { type: "chapter", heading: "章节", components: []
 const endingSlide: Slide = { type: "ending", heading: "收束", components: [] }
 const statementSlide: Slide = {
   type: "content",
-  layout: "statement",
+  kind: "points",
   heading: "一句就够",
   components: [],
 }

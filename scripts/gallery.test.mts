@@ -265,7 +265,7 @@ describe("gallery layout table corpus", () => {
       return job!.ir.slides[0]!.components.map((c) => c.type)
     }
 
-    expect(typesOf("pull-quote")).toContain("quote")
+    expect(typesOf("pull-quote")).toContain("blockquote")
     expect(typesOf("one-evidence")).toContain("chart")
     expect(typesOf("bento-panel")).toEqual(expect.arrayContaining(["kpi_cards", "icon_cards"]))
     expect(typesOf("stacked-poster")).toContain("image")

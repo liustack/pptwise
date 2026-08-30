@@ -120,7 +120,7 @@ export async function corpusAssets(lex: Lexicon): Promise<CorpusAssets> {
 
 function deckShell(lex: Lexicon, assets: CorpusAssets, themeId: string, filename: string, slides: Slide[]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename,
     theme: { id: themeId },
     // Meta drives the cover's own rows (organization line, author credits),
@@ -171,6 +171,7 @@ export function themeDeck(themeId: string, lex: Lexicon, assets: CorpusAssets): 
     const extra = thickenThemeContent(themeId, i, lex)
     return {
       type: "content" as const,
+      kind: "points",
       heading: emphasis && i === 0 ? emphasizePhrase(lex.headings[i]!, emphasis.heading) : lex.headings[i]!,
       components: [component, ...extra.extra],
       ...(extra.layout ? { layout: extra.layout } : {}),
@@ -341,9 +342,9 @@ function bodyFor(def: LayoutDefinition, lex: Lexicon): Component[] {
   // capacity is the wrong signal: citation is the capacity-1 default, but
   // these pages draw a quote, a chart, a bento grid, or a hero+strip. Match
   // the layout's own comments rather than broadening the default.
-  if (def.id === "pull-quote") return [b.quote!(lex)]
-  if (def.id === "gauge-point") return [b.quote!(lex)]
-  if (def.id === "crayonbox-point") return [b.quote!(lex)]
+  if (def.id === "pull-quote") return [b.blockquote!(lex)]
+  if (def.id === "gauge-point") return [b.blockquote!(lex)]
+  if (def.id === "crayonbox-point") return [b.blockquote!(lex)]
   if (def.id === "one-evidence") return [b.chart!(lex)]
   if (def.id === "bento-panel") {
     const kpi = b.kpi_cards!(lex)
@@ -380,13 +381,13 @@ function bodyFor(def: LayoutDefinition, lex: Lexicon): Component[] {
     "narrow-column": [b.callout!(lex), b.numbered_cards!(lex)],
     "rail-numbered": [b.steps!(lex), shortCitation(lex)],
     "banner-heading": [b.icon_cards!(lex), b.bullets!(lex)],
-    "tone-adaptive-content": [b.quote!(lex), b.kpi_cards!(lex)],
+    "tone-adaptive-content": [b.blockquote!(lex), b.kpi_cards!(lex)],
     "quiet-frame": [b.tag_row!(lex), b.callout!(lex)],
     "split-band": [b.icon_cards!(lex), shortCitation(lex)],
-    "asymmetric-triptych": [b.image!(lex), b.quote!(lex)],
+    "asymmetric-triptych": [b.image!(lex), b.blockquote!(lex)],
     "image-split": [b.image!(lex), b.bullets!(lex), shortParagraph],
     "image-top": [b.image!(lex), b.callout!(lex), shortParagraph],
-    "image-bottom": [b.image!(lex), b.quote!(lex), shortParagraph],
+    "image-bottom": [b.image!(lex), b.blockquote!(lex), shortParagraph],
     "image-annotate": [b.image!(lex), b.bullets!(lex)],
   }
 
@@ -405,7 +406,7 @@ export function layoutPage(layoutId: string, lex: Lexicon, assets: CorpusAssets,
   if (!def) throw new Error(`unknown layout id: ${layoutId}`)
   const slideType = def.slideTypes[0]!
 
-  const slide: Slide =
+  const slide =
     slideType === "cover"
       ? {
           type: "cover",
@@ -439,6 +440,7 @@ export function layoutPage(layoutId: string, lex: Lexicon, assets: CorpusAssets,
             }
           : {
               type: "content",
+              kind: "points",
               layout: layoutId,
               // stat-hero's heading is a hero caption capped at two short
               // lines — the corpus' default row overruns its render-safety
@@ -451,11 +453,12 @@ export function layoutPage(layoutId: string, lex: Lexicon, assets: CorpusAssets,
 
   // A takeover layout draws the picture itself from the slide's own image
   // component, so it needs one present whatever its body capacity says.
-  if (def.kind === "takeover" && slide.components.every((c) => c.type !== "image")) {
-    slide.components = [COMPONENT_BUILDERS.image!(lex), ...slide.components].slice(0, 2)
+  const typedSlide = slide as unknown as Slide
+  if (def.kind === "takeover" && typedSlide.components.every((c) => c.type !== "image")) {
+    typedSlide.components = [COMPONENT_BUILDERS.image!(lex), ...typedSlide.components].slice(0, 2)
   }
 
-  return deckShell(lex, assets, themeId, `layout-${layoutId}-${themeId === BASELINE_THEME ? lex.id : `${themeId}-${lex.id}`}`, [slide])
+  return deckShell(lex, assets, themeId, `layout-${layoutId}-${themeId === BASELINE_THEME ? lex.id : `${themeId}-${lex.id}`}`, [typedSlide])
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -503,8 +506,9 @@ export function componentPage(
   // lead-in instead of the thing it exists to show, on 40 pages.
   const leadIn: Component = { type: "paragraph", text: lex.sentences[0]! }
 
-  const slide: Slide = {
+  const slide = {
     type: "content",
+    kind: "points",
     // This runway-only form-variant page predates the show curation. Pin the
     // old deterministic pick so a theme redesign cannot masquerade as a
     // steps-component byte change in the component comparison table.
@@ -517,7 +521,7 @@ export function componentPage(
       : undefined,
     components: solo ? [component] : [leadIn, component],
     footnote: bubble ? lex.bubbleSizeNote : cartesian || !solo ? lex.sources[2]!.label : undefined,
-  }
+  } as unknown as Slide
   const safeId = componentId.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "")
   return deckShell(lex, assets, themeId, `component-${safeId}-${lex.id}`, [slide])
 }

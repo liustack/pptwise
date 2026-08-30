@@ -16,14 +16,15 @@ import type { Meta, PptxIR, Slide } from "@/ir"
 function slide(type: Slide["type"]): Slide {
   return {
     type,
+    ...(type === "content" ? { kind: "points" as const } : {}),
     heading: "动画开关验证",
     components: type === "content" || type === "ending" ? [{ type: "paragraph", text: "正文" }] : [],
-  }
+  } as Slide
 }
 
 function makeIR(slides: Slide[], animation?: Meta["animation"]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "animations.pptx",
     theme: { id: "consulting" },
     meta: animation ? { animation } : {},
@@ -84,7 +85,7 @@ describe("generatePptxBlob deck-level transition switch", () => {
 function multiComponentContentSlide(): Slide {
   return {
     type: "content",
-    layout: "narrow-column",
+    kind: "points",
     heading: "多块动画验证",
     components: [
       { type: "paragraph", text: "开场段落" }, // component 0 → fade
@@ -195,8 +196,8 @@ describe("generatePptxBlob per-component entrance animations (wave-C S3)", () =>
 function overflowShapeContentSlide(): Slide {
   return {
     type: "content",
+    kind: "points",
     heading: "多形状 id 碰撞回归",
-    layout: "two-column",
     components: [
       { type: "paragraph", text: "开场段落，占一个 fade 块。" }, // component 0 → fade
       {

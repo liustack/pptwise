@@ -1,9 +1,10 @@
-import type { Component, Slide } from "@/ir"
+import type { Component } from "@/ir"
+import type { Arrangement } from "@/layouts/registry"
 import type { ComponentBox, ComponentCtx } from "../components/types"
 import { COLUMN_SPANNING_TYPES, STRETCHABLE_TYPES } from "./component-traits"
 import { measureComponent } from "../components"
 
-export type Arrangement = NonNullable<Slide["arrangement"]>
+export type { Arrangement }
 
 /** The content region rect (px) a slide gives its components to lay out within. */
 export interface ContentRect {

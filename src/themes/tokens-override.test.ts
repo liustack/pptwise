@@ -29,7 +29,7 @@ describe("theme.style override merging", () => {
 
   it("theme.style reaches the rendered SVG", () => {
     const v = validateIr({
-      version: "4",
+      version: "5",
       filename: "t.pptx",
       theme: { id: "consulting", style: { colors: { primary: "#0B5FFF" } } },
       // Explicit `layout` pin (P1 variety wave, task 3 re-pin): this test

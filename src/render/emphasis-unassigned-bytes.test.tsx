@@ -17,7 +17,7 @@ installNodePlatform()
 function consultingPadDeck(): PptxIR {
   const plain = { type: "paragraph" as const, text: "普通正文" }
   return {
-    version: "4",
+    version: "5",
     filename: "emphasis-consulting-pad-paths.pptx",
     theme: { id: "consulting" },
     meta: { organization: "pptwise" },
@@ -27,31 +27,36 @@ function consultingPadDeck(): PptxIR {
       { type: "chapter", heading: "增长战略", components: [] } as Slide,
       {
         type: "content",
+        kind: "points",
         layout: "two-column",
         heading: "普通标题",
         components: [{ type: "paragraph", text: "正文中的**关键证据**" }],
       } as Slide,
       {
         type: "content",
+        kind: "points",
         layout: "rail-numbered",
         heading: "普通标题",
         components: [{ type: "bullets", items: ["要点中的**关键证据**"] }],
       } as Slide,
       {
         type: "content",
+        kind: "points",
         layout: "bento-panel",
         heading: "普通标题",
         components: [{ type: "callout", variant: "info", text: "提示中的**关键证据**" }],
       } as Slide,
       {
         type: "content",
+        kind: "points",
         layout: "quiet-frame",
         heading: "普通标题",
         components: [{ type: "verdict_banner", tone: "positive", text: "结论中的**关键证据**" }],
       } as Slide,
-      { type: "content", layout: "two-column", heading: MARKED_HEADING, components: [plain] } as Slide,
+      { type: "content", kind: "points", layout: "two-column", heading: MARKED_HEADING, components: [plain] } as Slide,
       {
         type: "content",
+        kind: "points",
         layout: "split-band",
         heading: "普通标题",
         subheading: MARKED_SUBHEADING,

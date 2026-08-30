@@ -31,6 +31,7 @@ function rectsOverlap(
 const chapter1: Slide = { type: "chapter", heading: "第一部分：研究背景", components: [] } as Slide
 const content1a: Slide = {
   type: "content",
+  kind: "points",
   heading: "编号导轨：从章节到小节",
   subheading: "**核心结论**：证据链完整",
   footnote: "数据来源：内部埋点，2026Q2",
@@ -41,12 +42,14 @@ const content1a: Slide = {
 } as Slide
 const content1b: Slide = {
   type: "content",
+  kind: "points",
   heading: "同一章节的第二小节",
   components: [{ type: "paragraph", text: "承接上一小节继续展开。" }],
 } as Slide
 const chapter2: Slide = { type: "chapter", heading: "第二部分：方法与证据", components: [] } as Slide
 const content2a: Slide = {
   type: "content",
+  kind: "points",
   heading: "第二章节的首个小节",
   components: [{ type: "paragraph", text: "方法论概述。" }],
 } as Slide
@@ -129,7 +132,7 @@ describe("RailNumberedContent", () => {
 
   it("单块 slide（无 subheading/footnote，单章节 deck）同样逐字节一致", () => {
     const ctx = buildCtx({ ...resolveStyle("classroom"), shape: undefined }, {})
-    const bare: Slide = { type: "content", heading: "简报", components: [{ type: "paragraph", text: "一" }] } as Slide
+    const bare: Slide = { type: "content", kind: "points", heading: "简报", components: [{ type: "paragraph", text: "一" }] } as Slide
     const soloChapter: Slide = { type: "chapter", heading: "唯一章节", components: [] } as Slide
     const deck: PptxIR = {
       version: "3",
@@ -202,6 +205,7 @@ describe("RailNumberedContent", () => {
     }))
     const tenContent = Array.from({ length: 10 }, (_, i) => ({
       type: "content" as const,
+      kind: "points" as const,
       heading: `内容${i + 1}`,
       components: [],
     }))
@@ -228,6 +232,7 @@ describe("RailNumberedContent", () => {
     }))
     const thousandContent = Array.from({ length: 1000 }, (_, i) => ({
       type: "content" as const,
+      kind: "points" as const,
       heading: `内容${i + 1}`,
       components: [],
     }))
@@ -252,6 +257,7 @@ describe("RailNumberedContent", () => {
     const ctx = buildCtx(tokens, {})
     const slide: Slide = {
       type: "content",
+      kind: "points",
       heading: "编号导轨",
       components: [{ type: "paragraph", text: "正文。" }],
     } as Slide
@@ -278,6 +284,7 @@ describe("RailNumberedContent", () => {
     const ctx = buildCtx({ ...resolveStyle("classroom"), shape: undefined }, {})
     const slide: Slide = {
       type: "content",
+      kind: "points",
       heading: "验证子集",
       components: [
         { type: "paragraph", text: "文本段落。" },
@@ -305,6 +312,7 @@ describe("RailNumberedContent", () => {
       "微服务架构下的分布式事务一致性保障机制与补偿策略设计规范以及跨可用区容灾演练的完整落地路径说明"
     const slide: Slide = {
       type: "content",
+      kind: "points",
       heading: CJK_LONG,
       components: [{ type: "paragraph", text: "概要。" }],
     } as Slide
@@ -345,6 +353,7 @@ describe("RailNumberedContent", () => {
       "微服务架构下的分布式事务一致性保障机制与补偿策略设计规范以及跨可用区容灾演练的完整落地路径说明"
     const slide: Slide = {
       type: "content",
+      kind: "points",
       heading: "三大支柱",
       subheading: CJK_LONG.repeat(2),
       components: [{ type: "paragraph", text: "核心概要。" }],

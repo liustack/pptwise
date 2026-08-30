@@ -49,7 +49,7 @@ const ARENA_HEX = [
 
 function ir(theme = "arena", filename = "arena-motif.pptx"): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename,
     theme: { id: theme },
     meta: {},

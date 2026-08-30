@@ -13,7 +13,7 @@ import type { PptxIR, Slide } from "@/ir"
 
 const coverSlide: Slide = { type: "cover", heading: "封面", components: [] } as Slide
 const chapterSlide: Slide = { type: "chapter", heading: "章节", components: [] } as Slide
-const contentSlide: Slide = { type: "content", heading: "内容", components: [] } as Slide
+const contentSlide: Slide = { type: "content", kind: "points", heading: "内容", components: [] } as Slide
 const endingSlide: Slide = { type: "ending", components: [] } as Slide
 const ALL_SLIDES = [coverSlide, chapterSlide, contentSlide, endingSlide]
 
@@ -25,7 +25,7 @@ const LOGO_BOX_TL = { x: 64, y: 48, w: 96, h: 40 }
 
 const ir = (theme: string): PptxIR =>
   ({
-    version: "4",
+    version: "5",
     filename: "x.pptx",
     theme: { id: theme },
     meta: {},
@@ -71,7 +71,7 @@ describe("MemoMotif（打字机眉行）", () => {
 
   it("content 稀排钉 pin 整片退让，不和 statement 等脸的横线叠预算", () => {
     for (const layout of ["statement", "pull-quote", "stat-hero", "one-evidence", "mono-bleed"] as const) {
-      const slide = { ...contentSlide, layout } as Slide
+      const slide = { ...contentSlide, layout } as unknown as Slide
       const { root } = draw("memo", slide)
       expect(root.querySelectorAll("line"), layout).toHaveLength(0)
       expect(root.querySelectorAll("text"), layout).toHaveLength(0)

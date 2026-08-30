@@ -49,7 +49,7 @@ const CHAPTER = "增长战略"
 
 function deck(theme: string, slides: Slide[]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "heading-byte-nail.pptx",
     theme: { id: theme },
     meta: { organization: "pptwise" },
@@ -61,6 +61,7 @@ function deck(theme: string, slides: Slide[]): PptxIR {
 function content(opts: { heading?: string; subheading?: string; layout: string }): Slide {
   return {
     type: "content",
+    kind: "points",
     heading: opts.heading,
     subheading: opts.subheading,
     layout: opts.layout,

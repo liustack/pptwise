@@ -598,10 +598,10 @@
     "confidence": 0,
     "rubricHits": []
   },
-  "component--quote--zh": {
-    "id": "component--quote--zh",
+  "component--blockquote--zh": {
+    "id": "component--blockquote--zh",
     "table": "component",
-    "subject": "quote",
+    "subject": "blockquote",
     "language": "zh",
     "theme": "consulting",
     "page": 1,
@@ -727,10 +727,10 @@
       "text/字号地板"
     ]
   },
-  "component--quote--mixed": {
-    "id": "component--quote--mixed",
+  "component--blockquote--mixed": {
+    "id": "component--blockquote--mixed",
     "table": "component",
-    "subject": "quote",
+    "subject": "blockquote",
     "language": "mixed",
     "theme": "consulting",
     "page": 1,

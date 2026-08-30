@@ -26,13 +26,13 @@ function chapterCtx(themeId: string) {
 }
 
 const chapter1: Slide = { type: "chapter", heading: HEADING, subheading: SUBHEADING, components: [] } as Slide
-const content: Slide = { type: "content", heading: "现状", components: [] } as Slide
+const content: Slide = { type: "content", kind: "points", heading: "现状", components: [] } as Slide
 const chapter2: Slide = { type: "chapter", heading: HEADING, subheading: SUBHEADING, components: [] } as Slide
 const chapter3: Slide = { type: "chapter", heading: HEADING, subheading: SUBHEADING, components: [] } as Slide
 
 function ir(themeId: string, slides: Slide[] = [chapter1, content, chapter2, content, chapter3]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "folio-ghost-chapter.pptx",
     theme: { id: themeId },
     meta: {},

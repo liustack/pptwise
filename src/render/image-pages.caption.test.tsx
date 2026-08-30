@@ -9,8 +9,8 @@ import type { PptxIR, Slide } from "@/ir"
 // 页脚悬空 40px（2026-08-22 根因修复的回归钉）。
 const slide: Slide = {
   type: "content",
+  kind: "points",
   heading: "底图页标题",
-  layout: "image-bottom",
   components: [
     { type: "image", asset_id: "hero", fit: "cover", caption: "样例底图" },
     { type: "paragraph", text: "正文段落。" },
@@ -19,7 +19,7 @@ const slide: Slide = {
 
 function makeIr(branding?: PptxIR["branding"]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "deck.pptx",
     theme: { id: "consulting" },
     meta: { organization: "ACME", date: "2026-08-22" },

@@ -12,8 +12,26 @@ export {
   type ValidationIssue,
   type ThemeInfo,
 } from "./api"
-export { PptxIRSchema, ThemeSchema, StyleOverrideSchema, BUILTIN_THEME_IDS, BrandConfigSchema, COMPONENT_TYPES } from "./ir"
-export type { PptxIR, Slide, Component, Meta, Assets, BackgroundSpec, StyleOverride, BrandConfig } from "./ir"
+export {
+  PptxIRSchema,
+  ThemeSchema,
+  StyleOverrideSchema,
+  BUILTIN_THEME_IDS,
+  COMPONENT_TYPES,
+  KIND_VALUES,
+  BrandConfigSchema,
+} from "./ir"
+export type {
+  PptxIR,
+  Slide,
+  PageKind,
+  Component,
+  Meta,
+  Assets,
+  BackgroundSpec,
+  StyleOverride,
+  BrandConfig,
+} from "./ir"
 // v3 (frozen, spec §9.3) — kept on the SDK surface only for the deterministic
 // migration primitive below and a caller that still needs to parse a
 // genuinely v3-shaped document (e.g. the `pptwise migrate` CLI command, task
@@ -65,7 +83,6 @@ export {
   type DeckSpec,
   type PageSpec,
   type PageSpecType,
-  type PageBeat,
   type SpecValidateResult,
   type SpecValidationIssue,
 } from "./spec"

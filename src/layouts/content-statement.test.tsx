@@ -17,7 +17,7 @@ const CJK_VERSE = "记得的事会变成下个世纪的天气"
 
 function ir(theme: string, slides: Slide[]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "x.pptx",
     theme: { id: theme },
     meta: {},
@@ -37,6 +37,7 @@ function render(body: React.ReactElement): { markup: string; root: Element } {
 
 const zeroSlide: Slide = {
   type: "content",
+  kind: "points",
   layout: "statement",
   heading: CJK_VERSE,
   components: [],
@@ -84,7 +85,7 @@ describe("StatementContent", () => {
   it("mixed long heading shrinks/wraps to at most 4 lines and never dumps the raw source verbatim", () => {
     const ctx = buildCtx(resolveStyle("crayon"), {})
     const extreme = `${CJK_LONG}${CJK_LONG}${MIXED_LONG}`
-    const slide: Slide = { type: "content", layout: "statement", heading: extreme, components: [] } as Slide
+    const slide: Slide = { type: "content", kind: "points", layout: "statement", heading: extreme, components: [] } as Slide
     const { markup, root } = render(
       <StatementContent ir={ir("crayon", [slide])} slide={slide} index={0} ctx={ctx} />,
     )
@@ -97,11 +98,11 @@ describe("StatementContent", () => {
     expect(markup).not.toContain(extreme)
   })
 
-  it("1 quote component renders as a small accent attribution, not a card", () => {
+  it("1 blockquote component renders as a small accent attribution, not a card", () => {
     const ctx = buildCtx(resolveStyle("crayon"), {})
     const slide: Slide = {
       ...zeroSlide,
-      components: [{ type: "quote", text: "unused body", attribution: "Irene Pepperberg" }],
+      components: [{ type: "blockquote", text: "unused body", attribution: "Irene Pepperberg" }],
     } as Slide
     const { markup, root } = render(
       <StatementContent ir={ir("crayon", [slide])} slide={slide} index={0} ctx={ctx} />,

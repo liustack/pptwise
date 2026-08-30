@@ -12,11 +12,11 @@ installNodePlatform()
 
 const SLIDES = [
   { type: "cover", heading: "CLI" },
-  { type: "content", heading: "Body", components: [{ type: "paragraph", text: "hello from the CLI test" }] },
+  { type: "content", kind: "points", heading: "Body", components: [{ type: "paragraph", text: "hello from the CLI test" }] },
 ]
 
-const IR_TECH = { version: "4", filename: "cli-test", theme: { id: "tech" }, slides: SLIDES }
-const IR_NO_THEME = { version: "4", filename: "cli-test", slides: SLIDES }
+const IR_TECH = { version: "5", filename: "cli-test", theme: { id: "tech" }, slides: SLIDES }
+const IR_NO_THEME = { version: "5", filename: "cli-test", slides: SLIDES }
 
 const originalPptwiseHome = process.env.PPTWISE_HOME
 beforeAll(async () => {
@@ -49,9 +49,9 @@ function makeDeckPlan(extra: Record<string, unknown> = {}): Record<string, unkno
     filename: "q3-review",
     pages: [
       { id: "p-cover", type: "cover", heading: "Q3 Review" },
-      { id: "p-a", type: "content", heading: "Segment A" },
-      { id: "p-b", type: "content", heading: "Segment B" },
-      { id: "p-c", type: "content", heading: "Segment C" },
+      { id: "p-a", type: "content", kind: "points", heading: "Segment A" },
+      { id: "p-b", type: "content", kind: "points", heading: "Segment B" },
+      { id: "p-c", type: "content", kind: "points", heading: "Segment C" },
       { id: "p-ending", type: "ending", heading: "Thanks" },
     ],
     ...extra,

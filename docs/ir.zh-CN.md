@@ -45,7 +45,7 @@ IR 是一份描述整份 PPT 内容的 JSON 文件：有哪些页、每页上有
 
 ## 会漂移的字段名
 
-跨 component 类型共 55 组同义词，例如 kpi 的 `title`→`label`、quote 的 `content`→`text`、swot 的 `strength`→`strengths`、bmc 的 `partners`→`key_partners`，都会在校验时静默改写成规范名。`validate`/`render`/`preview` 会打印一条改了什么的提示，从不因此报错。
+跨 component 类型共 55 组同义词，例如 kpi 的 `title`→`label`、blockquote 的 `content`→`text`、swot 的 `strength`→`strengths`、bmc 的 `partners`→`key_partners`，都会在校验时静默改写成规范名。`validate`/`render`/`preview` 会打印一条改了什么的提示，从不因此报错。
 
 这套救援只覆盖弱模型的同义词漂移，不覆盖 v4 之前的旧词汇。标着 v4 却仍写 `scenario`（而不是 `narrative`）、`mode`/`delivery`（而不是 `strategy`/`pacing`）、或轴值还停留在旧的 `narrative`/`text`/`presentation` 的文档，会直接硬报错，并列出当前正确的名称和取值。显式写 `version: "3"`（或 `"2"`）同样硬拒绝，并给出迁移指引。
 

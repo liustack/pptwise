@@ -46,7 +46,6 @@
  */
 import { PptwiseError } from "../errors"
 import { PptxIRSchema, type BackgroundSpec, type Component, type PptxIR, type Slide } from "../ir"
-import { resolveEffectiveLayoutId } from "../render/layout-selection"
 import { formatInvalidSpecError, validateSpec, type DeckSpec, type PageSpec } from "./index"
 
 // ── PageContent (per-page authoring record, spec §7's `pages/<id>.json`) ──
@@ -63,8 +62,6 @@ import { formatInvalidSpecError, validateSpec, type DeckSpec, type PageSpec } fr
  */
 export interface PageContent {
   components?: Component[]
-  layout?: string
-  arrangement?: NonNullable<Slide["arrangement"]>
   background?: BackgroundSpec
   image_side?: "left" | "right"
   footnote?: string
@@ -277,22 +274,15 @@ export function assembleDeck(spec: unknown, pages: Record<string, PageContent>):
   // Steps 4 + 5 — build each slide
   const slides = deckSpec.pages.map((page) => buildSlide(page, pages[page.id]))
 
-  // Step 7 — seed (computed before step 6's raw object so it can be spliced
-  // straight in — spec-only, never reads `pages`, see generateSeed's own doc).
-  const generatedSeed =
-    deckSpec.seed === undefined ? generateSeed(deckSpec.filename, deckSpec.pages.map((page) => page.id)) : undefined
-  const seed = deckSpec.seed ?? generatedSeed!
-
   // Step 6 — top-level IR fields
   const rawIr = {
-    version: "4" as const,
+    version: "5" as const,
     ...(deckSpec.narrative !== undefined ? { narrative: deckSpec.narrative } : {}),
     ...(deckSpec.theme !== undefined ? { theme: { id: deckSpec.theme } } : {}),
     ...(deckSpec.filename !== undefined ? { filename: deckSpec.filename } : {}),
     ...(deckSpec.brand !== undefined ? { brand: deckSpec.brand } : {}),
     ...(deckSpec.branding !== undefined ? { branding: deckSpec.branding } : {}),
     meta: deckSpec.meta,
-    seed,
     slides,
   }
 
@@ -302,18 +292,7 @@ export function assembleDeck(spec: unknown, pages: Record<string, PageContent>):
     throw new PptwiseError(`assembled deck did not produce valid IR:\n${detail}`)
   }
 
-  // Materialization (W4 design decision 10) — must run after the schema
-  // parse above, not on `rawIr`: `resolveEffectiveLayoutId` needs the fully
-  // *defaulted* IR (a spec that omits `theme`, for instance, needs
-  // `parsed.data.theme.id === "consulting"` already filled in by the schema,
-  // not the bare `rawIr` that simply omits the key).
-  const { ir, materializedCount } = materializeEffectiveLayouts(parsed.data)
-
-  return {
-    ir,
-    ...(generatedSeed !== undefined ? { generatedSeed } : {}),
-    ...(materializedCount > 0 ? { materializedLayoutCount: materializedCount } : {}),
-  }
+  return { ir: parsed.data }
 }
 
 /**
@@ -369,15 +348,7 @@ export function assembleDeck(spec: unknown, pages: Record<string, PageContent>):
  * bug.
  */
 function materializeEffectiveLayouts(ir: PptxIR): { ir: PptxIR; materializedCount: number } {
-  let materializedCount = 0
-  const slides = ir.slides.map((slide, index) => {
-    if (slide.layout !== undefined) return slide
-    const effectiveLayoutId = resolveEffectiveLayoutId(ir, slide, index)
-    if (effectiveLayoutId === null) return slide
-    materializedCount++
-    return { ...slide, layout: effectiveLayoutId }
-  })
-  return materializedCount === 0 ? { ir, materializedCount } : { ir: { ...ir, slides }, materializedCount }
+  return { ir, materializedCount: 0 }
 }
 
 /** Step 4 (no content record → placeholder) / step 5 (content record → full slide). */
@@ -387,8 +358,8 @@ function buildSlide(page: PageSpec, raw: PageContent | undefined): Record<string
       id: page.id,
       type: page.type,
       heading: page.heading,
+      ...(page.type === "content" ? { kind: page.kind } : {}),
       placeholder: true,
-      ...(page.beat !== undefined ? { beat: page.beat } : {}),
       ...(page.summary !== undefined ? { subheading: page.summary } : {}),
     }
   }
@@ -396,11 +367,9 @@ function buildSlide(page: PageSpec, raw: PageContent | undefined): Record<string
     id: page.id,
     type: page.type,
     heading: page.heading,
-    ...(page.beat !== undefined ? { beat: page.beat } : {}),
+    ...(page.type === "content" ? { kind: page.kind } : {}),
     ...(page.type !== "content" && page.summary !== undefined ? { subheading: page.summary } : {}),
     ...(raw.components !== undefined ? { components: raw.components } : {}),
-    ...(raw.layout !== undefined ? { layout: raw.layout } : {}),
-    ...(raw.arrangement !== undefined ? { arrangement: raw.arrangement } : {}),
     ...(raw.background !== undefined ? { background: raw.background } : {}),
     ...(raw.image_side !== undefined ? { image_side: raw.image_side } : {}),
     ...(raw.footnote !== undefined ? { footnote: raw.footnote } : {}),
@@ -532,15 +501,15 @@ export function disassembleDeck(ir: PptxIR): { spec: DeckSpec; pages: Record<str
   const pageSpecs: PageSpec[] = ir.slides.map((slide, index) => {
     const id = slide.id ?? `p-${index + 1}-${slide.type}`
     const heading = slide.heading !== undefined && slide.heading.trim() !== "" ? slide.heading : UNTITLED_HEADING
-    const pageSpec: PageSpec = {
+    const pageSpec = {
       id,
       type: slide.type,
       heading,
-      ...(slide.beat !== undefined ? { beat: slide.beat } : {}),
+      ...(slide.type === "content" ? { kind: slide.kind } : {}),
       ...((slide.placeholder === true || slide.type !== "content") && slide.subheading !== undefined
         ? { summary: slide.subheading }
         : {}),
-    }
+    } as PageSpec
     if (slide.placeholder !== true) pages[id] = extractPageContent(slide)
     return pageSpec
   })
@@ -553,7 +522,6 @@ export function disassembleDeck(ir: PptxIR): { spec: DeckSpec; pages: Record<str
     ...(ir.narrative !== undefined ? { narrative: ir.narrative } : {}),
     theme: ir.theme.id,
     filename: ir.filename,
-    ...(ir.seed !== undefined ? { seed: ir.seed } : {}),
     ...(ir.brand !== undefined ? { brand: ir.brand } : {}),
     ...(ir.branding !== undefined ? { branding: ir.branding } : {}),
     meta: ir.meta,
@@ -573,8 +541,6 @@ export function disassembleDeck(ir: PptxIR): { spec: DeckSpec; pages: Record<str
 function extractPageContent(slide: Slide): PageContent {
   const content: PageContent = {}
   if (slide.components.length > 0) content.components = slide.components
-  if (slide.layout !== undefined) content.layout = slide.layout
-  if (slide.arrangement !== undefined) content.arrangement = slide.arrangement
   if (slide.background !== undefined) content.background = slide.background
   if (slide.image_side !== undefined) content.image_side = slide.image_side
   if (slide.footnote !== undefined) content.footnote = slide.footnote

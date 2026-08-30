@@ -25,7 +25,7 @@ function slide(heading = HEADING, subheading: string | null = SUBHEADING): Slide
 
 function ir(themeId: string, meta: PptxIR["meta"] = {}, branding?: PptxIR["branding"]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "colophon.pptx",
     theme: { id: themeId },
     meta,

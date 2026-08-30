@@ -67,7 +67,7 @@ function tendencyIdsFor(slideType: Slide["type"], strategy: Strategy): readonly 
  * `undefined` (the far more common case — most slides never declare one)
  * always means "no beat weighting layer", never "the `undefined` beat".
  */
-type PageBeat = NonNullable<Slide["beat"]>
+type PageBeat = "anchor" | "dense" | "breathing"
 
 /**
  * Beat→content-layout tendency sets (spec: beat's weight layer is a
@@ -434,23 +434,16 @@ function resolveOneEffectiveLayoutId(
   const imageCoverTakeover = bgSpec.kind === "asset" && (slide.type === "cover" || slide.type === "chapter")
   if (imageCoverTakeover) return null
 
-  if (slide.layout) {
-    const requestedLayoutDef = getLayout(slide.layout)
-    if (requestedLayoutDef?.kind === "takeover" && findImageComponent(slide) != null) {
-      return slide.layout
-    }
-  }
-
   const themeDef = getThemeDefinition(ir.theme.id)
   return resolveLayoutId(
     slide.type,
     themeDef.layouts,
     seed,
     pageKey,
-    effectiveRequestedLayout(ir.theme.id, slide.layout),
+    undefined,
     strategy,
     previousEffectiveLayoutId,
-    slide.beat,
+    undefined,
     themeDef.layoutTendencies?.[slide.type],
   )
 }

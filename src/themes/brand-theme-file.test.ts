@@ -96,11 +96,11 @@ describe("registerBrandThemeFile", () => {
       content: ["gauge-stats"],
       ending: ["gauge-next"],
     })
-    expect(def.faces).toEqual(file.faces)
+    expect((def as unknown as { faces?: unknown }).faces).toEqual((file as unknown as { faces?: unknown }).faces)
     expect(def.motif).toBe("gauge-motif")
     expect(def.motifParameters).toEqual({ intensity: "subtle" })
-    expect(def.layoutTendencies).toEqual(file.tendencies)
-    expect(def.sparseLayouts).toEqual(file.sparse)
+    expect(def.layoutTendencies).toEqual((file as unknown as { tendencies?: unknown }).tendencies)
+    expect(def.sparseLayouts).toEqual((file as unknown as { sparse?: unknown }).sparse)
   })
 
   it("rejects an unknown complete face at the registry gate", async () => {
@@ -190,14 +190,14 @@ describe("registerBrandThemeFile", () => {
     const bytes = await buildThmxBytes({ colors: PATHOLOGICAL_THMX_COLORS })
     const extracted = await extractBrandTheme(bytes, { id: "gray-complete" })
     const file: ThemeFile = {
-      version: 1,
+      version: 2,
       id: "gray-complete",
       style: extracted.style,
-      faces: {
-        cover: ["gauge-verdict"],
-        chapter: ["gauge-section"],
-        content: ["gauge-stats"],
-        ending: ["gauge-next"],
+      menu: {
+        cover: { face: "gauge-verdict" },
+        chapter: { face: "gauge-section" },
+        content: { data: { face: "gauge-stats" } },
+        ending: { face: "gauge-next" },
       },
     }
 

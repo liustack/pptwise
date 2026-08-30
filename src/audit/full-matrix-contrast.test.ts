@@ -95,7 +95,7 @@ const SUBHEADING = "示例副标题：用于穷举扫描的**所见即所得**�
 
 function deckFor(themeId: string, slide: Slide, images: PptxIR["assets"]["images"] = {}): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "full-matrix-contrast-fixture",
     theme: { id: themeId },
     meta: {},
@@ -331,6 +331,7 @@ describe("rail-numbered badge attribution (bench-driven fix round, defect A)", (
     it(`${themeId}: the "{chapter}.{content}" badge text clears contrast against its own self-painted background`, () => {
       const slide: Slide = {
         type: "content",
+        kind: "points",
         heading: HEADING,
         subheading: SUBHEADING,
         layout: "rail-numbered",
@@ -382,6 +383,7 @@ describe("full-matrix contrast/overflow regression net (W4 fix round)", () => {
         for (const layout of layouts.content) {
           const slide: Slide = {
             type: "content",
+            kind: "points",
             heading: HEADING,
             subheading: SUBHEADING,
             layout,
@@ -418,7 +420,7 @@ describe("full-matrix contrast/overflow regression net (W4 fix round)", () => {
 describe("fashion-masthead meta line contrast (contrast-policy wave, metaInk migration)", () => {
   function mastheadDeck(themeId: string): PptxIR {
     return {
-      version: "4",
+      version: "5",
       filename: "fashion-masthead-meta-fixture",
       theme: { id: themeId },
       meta: { organization: "pptwise", date: "2026-08" },
@@ -512,7 +514,7 @@ describe("fashion-masthead meta line contrast (contrast-policy wave, metaInk mig
 describe("split-diagonal org kicker contrast (B-tier reclassification)", () => {
   function splitDiagonalDeck(themeId: string): PptxIR {
     return {
-      version: "4",
+      version: "5",
       filename: "split-diagonal-kicker-fixture",
       theme: { id: themeId },
       meta: { organization: "pptwise", date: "2026-08" },
@@ -711,6 +713,7 @@ describe("bento-panel kpi_cards contrast (W8 fix round, targeted — see comment
   // path (not the single-card degrade) renders both through renderKpiCard.
   const KPI_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
     layout: "bento-panel",
     components: [
@@ -777,12 +780,14 @@ describe("bento-panel kpi_cards contrast (W8 fix round, targeted — see comment
 describe("B-group ink fixes — full 13-theme sweep (bench-driven fix round, defect A handoff, Task 3)", () => {
   const STEPS_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
     layout: "narrow-column",
     components: [{ type: "steps", items: [{ title: "Step one", text: "do the first thing" }] }],
   } as Slide
   const ROADMAP_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
     layout: "narrow-column",
     components: [
@@ -791,12 +796,14 @@ describe("B-group ink fixes — full 13-theme sweep (bench-driven fix round, def
   } as Slide
   const RINGS_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
     layout: "narrow-column",
     components: [{ type: "rings", items: [{ label: "Core", desc: "inner layer" }] }],
   } as Slide
   const IMAGE_COMPARE_VS_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
     layout: "narrow-column",
     components: [
@@ -805,6 +812,7 @@ describe("B-group ink fixes — full 13-theme sweep (bench-driven fix round, def
   } as Slide
   const IMAGE_COMPARE_BEFORE_AFTER_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
     layout: "narrow-column",
     components: [
@@ -890,16 +898,19 @@ describe("B-group ink fixes — full 13-theme sweep (bench-driven fix round, def
 describe("defect B real contrast fixes (bench-driven fix round, Task 3)", () => {
   const KPI_UP_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
     components: [{ type: "kpi_cards", items: [{ value: "1", label: "x", delta: "up" }] }],
   } as Slide
   const KPI_DOWN_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
     components: [{ type: "kpi_cards", items: [{ value: "1", label: "x", delta: "down" }] }],
   } as Slide
   const BENTO_KPI_UP_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
     layout: "bento-panel",
     components: [
@@ -914,6 +925,7 @@ describe("defect B real contrast fixes (bench-driven fix round, Task 3)", () => 
   } as Slide
   const BENTO_KPI_DOWN_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
     layout: "bento-panel",
     components: [
@@ -928,6 +940,7 @@ describe("defect B real contrast fixes (bench-driven fix round, Task 3)", () => 
   } as Slide
   const NUMBERED_CARDS_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
     components: [
       {
@@ -941,9 +954,9 @@ describe("defect B real contrast fixes (bench-driven fix round, Task 3)", () => 
   } as Slide
   const QUOTE_SLIDE: Slide = {
     type: "content",
-    arrangement: "quote",
+    kind: "points",
     heading: HEADING,
-    components: [{ type: "quote", text: "an attributed quotation", attribution: "Someone" }],
+    components: [{ type: "blockquote", text: "an attributed quotation", attribution: "Someone" }],
   } as Slide
 
   for (const themeId of CANONICAL_THEME_IDS) {
@@ -1013,6 +1026,7 @@ describe("defect B ink guards hold on the asset-scrim ctx.defaultBg branch (Task
   const ASSET_BG_IMAGES: PptxIR["assets"]["images"] = { bg: { src: "data:image/png;base64,AAAA" } }
   const NUMBERED_CARDS_ASSET_BG_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     layout: "narrow-column",
     heading: HEADING,
     background: { kind: "asset", asset_id: "bg" },
@@ -1028,11 +1042,11 @@ describe("defect B ink guards hold on the asset-scrim ctx.defaultBg branch (Task
   } as Slide
   const QUOTE_ASSET_BG_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     layout: "narrow-column",
-    arrangement: "quote",
     heading: HEADING,
     background: { kind: "asset", asset_id: "bg" },
-    components: [{ type: "quote", text: "an attributed quotation", attribution: "Someone" }],
+    components: [{ type: "blockquote", text: "an attributed quotation", attribution: "Someone" }],
   } as Slide
 
   for (const themeId of CANONICAL_THEME_IDS) {
@@ -1117,6 +1131,7 @@ describe("colors.muted contrast (post-v0.3 W8 fix round, backlog item 5a)", () =
     it(`${themeId}: colors.muted clears the required ratio against the bento-panel kpi card's own rendered surface (value+unit and label)`, () => {
       const slide: Slide = {
         type: "content",
+        kind: "points",
         heading: HEADING,
         layout: "bento-panel",
         components: [
@@ -1539,6 +1554,7 @@ describe("colors.muted component-type coverage (task-2 fix round, backlog 5a com
   // ambient page background, already covered by the page-bg check above).
   const MATRIX_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
     layout: "narrow-column",
     components: [
@@ -1585,6 +1601,7 @@ describe("swot/bmc tinted-panel contrast (structure-components wave task 1, deci
   // quadrant so both the header and the item-list ink paths render.
   const SWOT_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
     layout: "narrow-column",
     components: [
@@ -1602,6 +1619,7 @@ describe("swot/bmc tinted-panel contrast (structure-components wave task 1, deci
   // (`value_propositions`) alongside the 8 flat-surface ones.
   const BMC_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
     layout: "narrow-column",
     components: [
@@ -1648,6 +1666,7 @@ describe("pest tinted-panel contrast (structure-components wave 2 task 1, decisi
   // renders too.
   const PEST_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
     layout: "narrow-column",
     components: [
@@ -1679,6 +1698,7 @@ describe("five_forces tinted-panel contrast (structure-components wave 2 task 1,
   // (including the center `rivalry` panel), and the native connector lines.
   const FIVE_FORCES_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
     layout: "narrow-column",
     components: [
@@ -1725,6 +1745,7 @@ describe("five_forces tinted-panel contrast (structure-components wave 2 task 1,
 describe("bmc bottom-row overflow (bench-driven fix round, defect F)", () => {
   const BMC_SCHEMA_MAX_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
     layout: "narrow-column",
     components: [
@@ -1760,6 +1781,7 @@ describe("bmc bottom-row overflow (bench-driven fix round, defect F)", () => {
 describe("swot schema-max content (fix round, controller scope addition)", () => {
   const SWOT_SCHEMA_MAX_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
     layout: "narrow-column",
     components: [
@@ -1793,6 +1815,7 @@ describe("swot schema-max content (fix round, controller scope addition)", () =>
 describe("swot zero-residual under a 2-line-wrapped heading + schema-max content (fix round)", () => {
   const SWOT_LONG_HEADING_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: "Competitive Landscape Deep-Dive",
     layout: "narrow-column",
     components: [
@@ -1821,6 +1844,7 @@ describe("swot zero-residual under a 2-line-wrapped heading + schema-max content
 describe("pest schema-max content (structure-components wave 2 task 1)", () => {
   const PEST_SCHEMA_MAX_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
     layout: "narrow-column",
     components: [
@@ -1862,6 +1886,7 @@ describe("pest schema-max content (structure-components wave 2 task 1)", () => {
 describe("pest zero-residual under a 2-line-wrapped heading + schema-max content (fix round)", () => {
   const PEST_LONG_HEADING_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: "Competitive Landscape Deep-Dive",
     layout: "narrow-column",
     components: [
@@ -1894,6 +1919,7 @@ describe("pest zero-residual under a 2-line-wrapped heading + schema-max content
 describe("five_forces schema-max content (structure-components wave 2 task 1)", () => {
   const FIVE_FORCES_SCHEMA_MAX_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
     layout: "narrow-column",
     components: [
@@ -1948,6 +1974,7 @@ describe("five_forces schema-max content (structure-components wave 2 task 1)", 
 describe("heatmap contrast (structure-components wave 2 task 2)", () => {
   const HEATMAP_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
     layout: "narrow-column",
     components: [
@@ -1976,6 +2003,7 @@ describe("heatmap contrast (structure-components wave 2 task 2)", () => {
   const heatmapLabels = (n: number, prefix: string) => Array.from({ length: n }, (_, i) => `${prefix}${i}`)
   const HEATMAP_SCHEMA_MAX_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
     layout: "narrow-column",
     components: [
@@ -2009,6 +2037,7 @@ describe("heatmap contrast (structure-components wave 2 task 2)", () => {
 describe("heatmap cell-fill x ink (structure-components wave 2 task 2, decision 7 — the hard part named by the controller ruling)", () => {
   const EXTREMES_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
     layout: "narrow-column",
     components: [
@@ -2024,6 +2053,7 @@ describe("heatmap cell-fill x ink (structure-components wave 2 task 2, decision 
 
   const NEGATIVE_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
     layout: "narrow-column",
     components: [
@@ -2039,6 +2069,7 @@ describe("heatmap cell-fill x ink (structure-components wave 2 task 2, decision 
 
   const DEGENERATE_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
     layout: "narrow-column",
     components: [
@@ -2076,6 +2107,7 @@ describe("heatmap cell-fill x ink (structure-components wave 2 task 2, decision 
 describe("data_table contrast (R1 evidence wave, Task T3)", () => {
   const DATA_TABLE_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
     layout: "narrow-column",
     components: [
@@ -2115,6 +2147,7 @@ describe("data_table contrast (R1 evidence wave, Task T3)", () => {
     }))
     return {
       type: "content",
+      kind: "points",
       heading: HEADING,
       layout: "narrow-column",
       components: [{ type: "data_table", columns, rows, source: "示例数据来源脚注文本" }],
@@ -2140,6 +2173,7 @@ describe("data_table contrast (R1 evidence wave, Task T3)", () => {
 describe("data_table emphasis-row ink (R1 evidence wave, Task T3 — self-painted-surface discipline)", () => {
   const HIGHLIGHT_ONLY_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
     layout: "narrow-column",
     components: [
@@ -2153,6 +2187,7 @@ describe("data_table emphasis-row ink (R1 evidence wave, Task T3 — self-painte
 
   const TOTAL_ONLY_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
     layout: "narrow-column",
     components: [
@@ -2194,6 +2229,7 @@ describe("data_table emphasis-row ink (R1 evidence wave, Task T3 — self-painte
 // approximation of them.
 const SANKEY_SIMPLE_SLIDE: Slide = {
   type: "content",
+  kind: "points",
   heading: HEADING,
   layout: "narrow-column",
   components: [
@@ -2214,6 +2250,7 @@ const SANKEY_SIMPLE_SLIDE: Slide = {
 
 const SANKEY_MULTI_LAYER_SLIDE: Slide = {
   type: "content",
+  kind: "points",
   heading: HEADING,
   layout: "narrow-column",
   components: [
@@ -2249,6 +2286,7 @@ const SANKEY_MULTI_LAYER_SLIDE: Slide = {
 // pre-fix).
 const SANKEY_DENSE_CROSSING_SLIDE: Slide = {
   type: "content",
+  kind: "points",
   heading: HEADING,
   layout: "narrow-column",
   components: [
@@ -2280,6 +2318,7 @@ const SANKEY_DENSE_CROSSING_SLIDE: Slide = {
 const sankeyLabels = (n: number, prefix: string) => Array.from({ length: n }, (_, i) => `${prefix}${i}`)
 const SANKEY_SCHEMA_MAX_SLIDE: Slide = {
   type: "content",
+  kind: "points",
   heading: HEADING,
   layout: "narrow-column",
   components: [
@@ -2436,6 +2475,7 @@ describe("waterfall/gantt contrast (structure-components wave task 2, decision 7
   // (5 authored + 1 auto).
   const WATERFALL_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
     layout: "narrow-column",
     components: [
@@ -2457,6 +2497,7 @@ describe("waterfall/gantt contrast (structure-components wave task 2, decision 7
   // including the first/last edge-anchored labels) alongside 4 ordinary bars.
   const GANTT_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
     layout: "narrow-column",
     components: [
@@ -2540,6 +2581,7 @@ describe("colors.muted opacity-blend fix (post-v0.3 W8 fix round, task-2 review 
   it("kpi.tsx row-card source line (fillOpacity via accessibleOpacity): clears 4.5:1 on all 13 themes", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       heading: HEADING,
       layout: "narrow-column",
       components: [
@@ -2556,6 +2598,7 @@ describe("colors.muted opacity-blend fix (post-v0.3 W8 fix round, task-2 review 
   it("numbered-cards.tsx sub line (opacity via accessibleOpacity): clears 4.5:1 on all 13 themes", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       heading: HEADING,
       layout: "narrow-column",
       components: [
@@ -2659,6 +2702,7 @@ describe("asset-background content contrast (final-review Major finding, backlog
       for (const layout of THEME_DEFINITIONS[themeId].layouts.content) {
         const slide: Slide = {
           type: "content",
+          kind: "points",
           heading: HEADING,
           subheading: SUBHEADING,
           layout,
@@ -2693,6 +2737,7 @@ describe("asset-background content contrast (final-review Major finding, backlog
 describe("chart legend contrast (R1 evidence wave, Task T2)", () => {
   const LEGEND_BAR_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
     components: [
       {
@@ -2715,6 +2760,7 @@ describe("chart legend contrast (R1 evidence wave, Task T2)", () => {
 
   const LEGEND_LINE_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
     components: [
       {
@@ -2746,6 +2792,7 @@ describe("chart legend contrast (R1 evidence wave, Task T2)", () => {
   }))
   const LEGEND_OVERFLOW_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
     components: [{ type: "chart", chart_type: "bar", series: legendStressSeries }],
   } as Slide
@@ -2772,6 +2819,7 @@ describe("chart legend contrast (R1 evidence wave, Task T2)", () => {
 describe("chart-depth subtypes contrast + wedge attribution (16-theme sweep, 裁定 3)", () => {
   const SCATTER_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
     components: [
       {
@@ -2786,6 +2834,7 @@ describe("chart-depth subtypes contrast + wedge attribution (16-theme sweep, 裁
   } as Slide
   const AREA_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
     components: [
       {
@@ -2800,6 +2849,7 @@ describe("chart-depth subtypes contrast + wedge attribution (16-theme sweep, 裁
   } as Slide
   const DONUT_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
     components: [
       {
@@ -2813,6 +2863,7 @@ describe("chart-depth subtypes contrast + wedge attribution (16-theme sweep, 裁
   const gaugeSlide = (y: number): Slide =>
     ({
       type: "content",
+      kind: "points",
       heading: HEADING,
       components: [{ type: "chart", chart_type: "gauge", series: [{ name: "Completion", data: [{ x: "Toward goal", y }] }] }],
     }) as Slide

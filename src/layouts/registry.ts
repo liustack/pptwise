@@ -276,6 +276,29 @@ export interface LayoutSlot {
   selection?: "first" | "all"
 }
 
+/** Numeric parameter contract exported by a face. */
+export interface LayoutNumberParam {
+  type: "number"
+  integer?: boolean
+  min?: number
+  max?: number
+}
+
+/** String parameter contract exported by a face. */
+export interface LayoutStringParam {
+  type: "string"
+  values?: readonly string[]
+  minLength?: number
+  maxLength?: number
+}
+
+/** Boolean parameters have no range beyond their primitive type. */
+export interface LayoutBooleanParam {
+  type: "boolean"
+}
+
+export type LayoutParamDeclaration = LayoutNumberParam | LayoutStringParam | LayoutBooleanParam
+
 export interface LayoutDefinition {
   id: string
   /**
@@ -292,6 +315,12 @@ export interface LayoutDefinition {
   kind: "archetype" | "takeover"
   slideTypes: readonly SlideType[]
   slots: readonly LayoutSlot[]
+  /**
+   * Adjustable face parameters and their complete value boundaries. Theme
+   * menu entries may set only names declared here, and `registerTheme`
+   * validates every supplied value before installing the theme.
+   */
+  params?: Readonly<Record<string, LayoutParamDeclaration>>
   /** content layouts only: which body arrangements this layout honors
    *  (inventory's 4 直接尊重全部 + stacked-poster（W2 任务 3 裁决，条件接管
    *  路径见其注释）共 5 个 → "all"，two-column → ["two_column"]，

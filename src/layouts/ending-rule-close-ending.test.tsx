@@ -17,7 +17,7 @@ function slide(heading = HEADING, extras: Partial<Slide> = {}): Slide {
 
 function ir(themeId: string, s: Slide = slide(), meta: PptxIR["meta"] = {}): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "rule-close-ending.pptx",
     theme: { id: themeId },
     meta,

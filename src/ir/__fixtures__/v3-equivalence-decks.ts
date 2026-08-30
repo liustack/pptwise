@@ -33,6 +33,7 @@ export const V3_EQUIVALENCE_DECKS: Record<string, unknown> = {
       { type: "chapter", heading: "Why an IR" },
       {
         type: "content",
+        kind: "points",
         heading: "Design goals",
         components: [
           {
@@ -47,8 +48,8 @@ export const V3_EQUIVALENCE_DECKS: Record<string, unknown> = {
       },
       {
         type: "content",
+        kind: "points",
         heading: "At a glance",
-        arrangement: "kpi_focus",
         components: [
           {
             type: "kpi_cards",
@@ -73,11 +74,13 @@ export const V3_EQUIVALENCE_DECKS: Record<string, unknown> = {
       { type: "cover", heading: "Origin Story", subheading: "How we got here" },
       {
         type: "content",
+        kind: "points",
         heading: "The tension",
-        components: [{ type: "quote", text: "We almost shipped the wrong thing.", attribution: "Team lead" }],
+        components: [{ type: "blockquote", text: "We almost shipped the wrong thing.", attribution: "Team lead" }],
       },
       {
         type: "content",
+        kind: "points",
         heading: "The turning point",
         components: [
           {
@@ -92,6 +95,7 @@ export const V3_EQUIVALENCE_DECKS: Record<string, unknown> = {
       },
       {
         type: "content",
+        kind: "points",
         heading: "What changed",
         components: [{ type: "bullets", items: ["Faster iteration", "Clearer ownership", "Happier customers"] }],
       },
@@ -109,6 +113,7 @@ export const V3_EQUIVALENCE_DECKS: Record<string, unknown> = {
       { type: "chapter", heading: "Revenue" },
       {
         type: "content",
+        kind: "points",
         heading: "Growth came from high-value expansion",
         components: [
           {
@@ -123,8 +128,9 @@ export const V3_EQUIVALENCE_DECKS: Record<string, unknown> = {
       },
       {
         type: "content",
+        kind: "points",
         heading: "A quarter of steady wins",
-        components: [{ type: "quote", text: "The team compounded small wins into a real trend.", attribution: "CFO" }],
+        components: [{ type: "blockquote", text: "The team compounded small wins into a real trend.", attribution: "CFO" }],
       },
       { type: "ending", heading: "Thanks", layout: "banner-ending" },
     ],

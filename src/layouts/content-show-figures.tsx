@@ -225,7 +225,6 @@ export function ShowFiguresContent({ ir, slide, index, ctx }: SvgTemplateProps) 
             <rect x={64} y={214} width={96} height={4} fill={colors.accent} />
           </g>
           <SvgContent
-            arrangement={slide.arrangement}
             components={slide.components}
             rect={{ x: 64, y: 244, w: 1152, h: 350 }}
             ctx={showNeutralFallbackCtx(ctx)}

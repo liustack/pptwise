@@ -20,7 +20,7 @@ beforeAll(() => {
 
 function stockIr(opts: { includeAsset: boolean; assetId: string }): unknown {
   return {
-    version: "4",
+    version: "5",
     filename: "stock",
     theme: { id: "consulting" },
     assets: opts.includeAsset ? { images: { [opts.assetId]: { src: `${opts.assetId}.png` } } } : { images: {} },
@@ -28,6 +28,7 @@ function stockIr(opts: { includeAsset: boolean; assetId: string }): unknown {
       { type: "cover", heading: "Cover" },
       {
         type: "content",
+        kind: "points",
         heading: "Hero",
         layout: "image-top",
         components: [{ type: "image", asset_id: opts.assetId }],

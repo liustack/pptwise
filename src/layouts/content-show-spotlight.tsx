@@ -249,7 +249,6 @@ export function ShowSpotlightContent({ slide, ctx }: SvgTemplateProps) {
             </text>
           )}
           <SvgContent
-            arrangement={slide.arrangement}
             components={slide.components}
             rect={{ x: 64, y: 124, w: 1152, h: 500 }}
             ctx={showNeutralFallbackCtx(ctx)}

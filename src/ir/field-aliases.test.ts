@@ -10,11 +10,11 @@ import {
 import { PptxIRSchema } from "./index"
 
 function deck(slides: unknown[]) {
-  return { version: "4", theme: { id: "consulting" }, slides }
+  return { version: "5", theme: { id: "consulting" }, slides }
 }
 
 function slideWith(components: unknown[]) {
-  return { type: "content", heading: "h", components }
+  return { type: "content", kind: "points", heading: "h", components }
 }
 
 // ── every COMPONENT_FIELD_ALIASES row round-trips ──────────────────────────
@@ -28,9 +28,9 @@ interface BlockCase {
 }
 
 const BLOCK_CASES: readonly BlockCase[] = [
-  { type: "quote", alias: "content", canonical: "text", component: { type: "quote", content: "hello" }, expected: "hello" },
-  { type: "quote", alias: "author", canonical: "attribution", component: { type: "quote", text: "hi", author: "Ada" }, expected: "Ada" },
-  { type: "quote", alias: "by", canonical: "attribution", component: { type: "quote", text: "hi", by: "Ada" }, expected: "Ada" },
+  { type: "blockquote", alias: "content", canonical: "text", component: { type: "blockquote", content: "hello" }, expected: "hello" },
+  { type: "blockquote", alias: "author", canonical: "attribution", component: { type: "blockquote", text: "hi", author: "Ada" }, expected: "Ada" },
+  { type: "blockquote", alias: "by", canonical: "attribution", component: { type: "blockquote", text: "hi", by: "Ada" }, expected: "Ada" },
   { type: "code", alias: "content", canonical: "code", component: { type: "code", language: "python", content: "print(1)" }, expected: "print(1)" },
   { type: "code", alias: "source", canonical: "code", component: { type: "code", language: "python", source: "print(1)" }, expected: "print(1)" },
   { type: "code", alias: "snippet", canonical: "code", component: { type: "code", language: "python", snippet: "print(1)" }, expected: "print(1)" },
@@ -378,9 +378,9 @@ interface SlideCase {
 }
 
 const SLIDE_CASES: readonly SlideCase[] = [
-  { alias: "note", slide: { type: "content", heading: "h", note: "say this out loud", components: [] }, expected: "say this out loud" },
-  { alias: "speaker_notes", slide: { type: "content", heading: "h", speaker_notes: "remember the Q3 caveat", components: [] }, expected: "remember the Q3 caveat" },
-  { alias: "speakerNotes", slide: { type: "content", heading: "h", speakerNotes: "pause here", components: [] }, expected: "pause here" },
+  { alias: "note", slide: { type: "content", kind: "points", heading: "h", note: "say this out loud", components: [] }, expected: "say this out loud" },
+  { alias: "speaker_notes", slide: { type: "content", kind: "points", heading: "h", speaker_notes: "remember the Q3 caveat", components: [] }, expected: "remember the Q3 caveat" },
+  { alias: "speakerNotes", slide: { type: "content", kind: "points", heading: "h", speakerNotes: "pause here", components: [] }, expected: "pause here" },
 ]
 
 describe("SLIDE_FIELD_ALIASES: every row round-trips", () => {
@@ -401,7 +401,7 @@ describe("SLIDE_FIELD_ALIASES: every row round-trips", () => {
   })
 
   it("both alias and canonical present: left untouched for zod strict to reject", () => {
-    const slide = { type: "content", heading: "h", notes: "real", note: "ignored", components: [] }
+    const slide = { type: "content", kind: "points", heading: "h", notes: "real", note: "ignored", components: [] }
     const input = deck([slide])
     const { value, normalized } = normalizeComponentAliases(input)
     expect(normalized).toEqual([])
@@ -410,17 +410,17 @@ describe("SLIDE_FIELD_ALIASES: every row round-trips", () => {
   })
 
   it("applies alongside a component-level rewrite on the same slide", () => {
-    const slide = { type: "content", heading: "h", note: "say this", components: [{ type: "quote", content: "hello" }] }
+    const slide = { type: "content", kind: "quote", heading: "h", note: "say this", components: [{ type: "blockquote", content: "hello" }] }
     const input = deck([slide])
     const { value, normalized } = normalizeComponentAliases(input)
     expect(normalized).toEqual(["slides[0]: note → notes", "slides[0].components[0]: content → text"])
     const out = (value as any).slides[0]
     expect(out.notes).toBe("say this")
-    expect(out.components[0]).toEqual({ type: "quote", text: "hello" })
+    expect(out.components[0]).toEqual({ type: "blockquote", text: "hello" })
   })
 
   it("a slide with no components array still gets its own notes alias rewritten", () => {
-    const input = deck([{ type: "content", heading: "h", note: "still works" }])
+    const input = deck([{ type: "content", kind: "points", heading: "h", note: "still works" }])
     const { value, normalized } = normalizeComponentAliases(input)
     expect(normalized).toEqual(["slides[0]: note → notes"])
     expect((value as any).slides[0].notes).toBe("still works")
@@ -574,8 +574,8 @@ describe("total synonym-pair count", () => {
 // ── both alias and canonical present: left untouched, zod strict rejects ───
 
 describe("both alias and canonical present: left untouched for zod strict to reject", () => {
-  it("quote: content + text both present", () => {
-    const component = { type: "quote", text: "real", content: "ignored" }
+  it("blockquote: content + text both present", () => {
+    const component = { type: "blockquote", text: "real", content: "ignored" }
     const input = deck([slideWith([component])])
     const { value, normalized } = normalizeComponentAliases(input)
     expect(normalized).toEqual([])
@@ -620,7 +620,7 @@ describe("both alias and canonical present: left untouched for zod strict to rej
 describe("no aliases present: zero change", () => {
   it("a fully-canonical multi-slide deck comes back reference-equal, no clone", () => {
     const input = deck([
-      slideWith([{ type: "quote", text: "hi", attribution: "Ada" }]),
+      slideWith([{ type: "blockquote", text: "hi", attribution: "Ada" }]),
       slideWith([{ type: "kpi_cards", items: [{ value: "1", label: "Revenue" }] }]),
     ])
     const { value, normalized } = normalizeComponentAliases(input)
@@ -649,16 +649,16 @@ describe("no aliases present: zero change", () => {
   })
 
   it("never mutates a deeply frozen input", () => {
-    const component = Object.freeze({ type: "quote", content: "hello" })
+    const component = Object.freeze({ type: "blockquote", content: "hello" })
     const components = Object.freeze([component])
-    const slide = Object.freeze({ type: "content", heading: "h", components })
+    const slide = Object.freeze({ type: "content", kind: "points", heading: "h", components })
     const slides = Object.freeze([slide])
-    const input = Object.freeze({ version: "4", theme: Object.freeze({ id: "consulting" }), slides })
+    const input = Object.freeze({ version: "5", theme: Object.freeze({ id: "consulting" }), slides })
 
     expect(() => normalizeComponentAliases(input)).not.toThrow()
     const { value } = normalizeComponentAliases(input)
-    expect((value as any).slides[0].components[0]).toEqual({ type: "quote", text: "hello" })
-    expect(component).toEqual({ type: "quote", content: "hello" }) // original untouched
+    expect((value as any).slides[0].components[0]).toEqual({ type: "blockquote", text: "hello" })
+    expect(component).toEqual({ type: "blockquote", content: "hello" }) // original untouched
   })
 })
 
@@ -686,7 +686,7 @@ describe("nested item-array paths", () => {
   it("records one entry per rewritten item, in walk order, across multiple components on one slide", () => {
     const input = deck([
       slideWith([
-        { type: "quote", content: "q" },
+        { type: "blockquote", content: "q" },
         { type: "kpi_cards", items: [{ value: "1", title: "A" }, { value: "2", name: "B" }] },
       ]),
     ])

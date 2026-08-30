@@ -5846,17 +5846,17 @@
       "geometry": "1tddi7a",
       "color": "c9qucq"
     },
-    "component--quote--zh": {
+    "component--blockquote--zh": {
       "hash": "16dpj3r",
       "geometry": "1677tu9",
       "color": "y4bu58"
     },
-    "component--quote--en": {
+    "component--blockquote--en": {
       "hash": "1ulfqn9",
       "geometry": "srw89r",
       "color": "1988art"
     },
-    "component--quote--mixed": {
+    "component--blockquote--mixed": {
       "hash": "fkmu98",
       "geometry": "wz6tls",
       "color": "1i75217"

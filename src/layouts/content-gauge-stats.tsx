@@ -156,10 +156,7 @@ export function GaugeStatsContent({ ir, slide, index, ctx }: SvgTemplateProps) {
     decline: item.delta === "down",
   }))
   const danger = resolveSemanticColor("danger", colors)
-  const fallbackArrangement =
-    slide.arrangement === "big_number" || slide.arrangement === "assertion_evidence"
-      ? "single"
-      : slide.arrangement
+  const fallbackArrangement = "single" as const
 
   return (
     <>

@@ -257,13 +257,13 @@ if (sharpMod) {
   await sharpMod(PNG_1PX).webp().toFile(webpPath)
 
   const webpDeck = {
-    version: "4",
+    version: "5",
     filename: "pptwise-webp-smoke",
     theme: { id: "consulting" },
     assets: { images: { smoke: { src: "smoke.webp" } } },
     slides: [
       { type: "cover", heading: "webp smoke" },
-      { type: "content", heading: "Body", components: [{ type: "image", asset_id: "smoke" }] },
+      { type: "content", kind: "points", heading: "Body", components: [{ type: "image", asset_id: "smoke" }] },
     ],
   }
   const webpDeckPath = join(OUT, "webp-deck.json")
@@ -310,8 +310,8 @@ const deckSpec = {
   filename: "pptwise-e2e-deck-dir",
   pages: [
     { id: "p-cover", type: "cover", heading: "pptwise Deck Directory Demo" },
-    { id: "p-goals", type: "content", heading: "Design goals" },
-    { id: "p-roadmap", type: "content", heading: "Roadmap ahead" },
+    { id: "p-goals", type: "content", kind: "points", heading: "Design goals" },
+    { id: "p-roadmap", type: "content", kind: "points", heading: "Roadmap ahead" },
     { id: "p-ending", type: "ending", heading: "Thanks" },
   ],
 }
@@ -383,7 +383,6 @@ console.log("deck-dir --draft leg OK (placeholder page rendered as a real slide)
 writeFileSync(
   join(deckDir, "pages", "p-roadmap.json"),
   JSON.stringify({
-    arrangement: "kpi_focus",
     components: [
       {
         type: "kpi_cards",
@@ -443,8 +442,8 @@ const legacyDeckPlan = {
   filename: "pptwise-e2e-migrate-deck-dir",
   pages: [
     { id: "p-cover", type: "cover", heading: "Migrate Demo" },
-    { id: "p-a", type: "content", heading: "Segment A", rhythm: "anchor" },
-    { id: "p-b", type: "content", heading: "Segment B" },
+    { id: "p-a", type: "content", kind: "points", heading: "Segment A", rhythm: "anchor" },
+    { id: "p-b", type: "content", kind: "points", heading: "Segment B" },
     { id: "p-ending", type: "ending", heading: "Thanks" },
   ],
 }
@@ -521,7 +520,7 @@ const v3Ir = {
   theme: { id: "consulting" },
   slides: [
     { type: "cover", heading: "Migrate v3 Demo" },
-    { type: "content", heading: "Body", components: [{ type: "paragraph", text: "migrated from v3" }] },
+    { type: "content", kind: "points", heading: "Body", components: [{ type: "paragraph", text: "migrated from v3" }] },
   ],
 }
 const v3IrPath = join(OUT, "migrate-v3-input.json")
@@ -612,7 +611,7 @@ const VERDICT_LONG_TEXT =
   "微服务架构下的分布式事务一致性保障机制与补偿策略设计规范以及跨可用区容灾演练的完整落地路径说明".repeat(6)
 
 const lowContrastDeck = {
-  version: "4",
+  version: "5",
   filename: "pptwise-e2e-audit-low-contrast",
   // Near consulting's own colors.bg (#F7F7F2) — validate-legal (theme.style
   // is a schema-open deep-partial override), renderer-level unreadable.
@@ -621,12 +620,14 @@ const lowContrastDeck = {
     { type: "cover", heading: "Audit Fixture" },
     {
       type: "content",
+      kind: "points",
       id: "p-body",
       heading: "readable heading",
       components: [{ type: "paragraph", text: "some body copy that should read as low-contrast" }],
     },
     {
       type: "content",
+      kind: "points",
       id: "p-dropped",
       heading: "row_cards over capacity",
       components: [
@@ -642,6 +643,7 @@ const lowContrastDeck = {
     },
     {
       type: "content",
+      kind: "points",
       id: "p-truncated",
       heading: "verdict_banner over budget",
       components: [{ type: "verdict_banner", tone: "positive", text: VERDICT_LONG_TEXT }],
@@ -763,13 +765,14 @@ console.log("audit --pixels leg OK (real Sharp through dist/cli.js, checks.pixel
 console.log("--- structure-components leg ---")
 
 const structuresDeck = {
-  version: "4",
+  version: "5",
   filename: "pptwise-e2e-structure-components",
   theme: { id: "consulting" },
   slides: [
     { type: "cover", heading: "Structure Components Demo" },
     {
       type: "content",
+      kind: "points",
       id: "p-swot",
       heading: "SWOT",
       layout: "narrow-column",
@@ -785,6 +788,7 @@ const structuresDeck = {
     },
     {
       type: "content",
+      kind: "points",
       id: "p-bmc",
       heading: "Business Model Canvas",
       layout: "narrow-column",
@@ -808,6 +812,7 @@ const structuresDeck = {
     },
     {
       type: "content",
+      kind: "points",
       id: "p-waterfall",
       heading: "Revenue Bridge",
       layout: "narrow-column",
@@ -827,6 +832,7 @@ const structuresDeck = {
     },
     {
       type: "content",
+      kind: "points",
       id: "p-gantt",
       heading: "Project Timeline",
       layout: "narrow-column",
@@ -845,6 +851,7 @@ const structuresDeck = {
     },
     {
       type: "content",
+      kind: "points",
       id: "p-pest",
       heading: "PEST Analysis",
       layout: "narrow-column",
@@ -860,6 +867,7 @@ const structuresDeck = {
     },
     {
       type: "content",
+      kind: "points",
       id: "p-five-forces",
       heading: "Porter's Five Forces",
       layout: "narrow-column",
@@ -876,6 +884,7 @@ const structuresDeck = {
     },
     {
       type: "content",
+      kind: "points",
       id: "p-heatmap",
       heading: "Regional Performance Heatmap",
       layout: "narrow-column",
@@ -897,6 +906,7 @@ const structuresDeck = {
     },
     {
       type: "content",
+      kind: "points",
       id: "p-sankey",
       heading: "Energy Flow",
       layout: "narrow-column",
@@ -926,6 +936,7 @@ const structuresDeck = {
     // neither pins `layout`.
     {
       type: "content",
+      kind: "points",
       id: "p-data-table",
       heading: "Regional Performance",
       components: [
@@ -950,6 +961,7 @@ const structuresDeck = {
     },
     {
       type: "content",
+      kind: "points",
       id: "p-multi-series-chart",
       heading: "Revenue vs Target",
       components: [
@@ -1021,12 +1033,12 @@ console.log("structure-components audit leg OK (exit 0, 0 findings)")
 console.log("--- dual-threshold severity leg ---")
 
 const warnOnlyDeck = {
-  version: "4",
+  version: "5",
   filename: "pptwise-e2e-warn-only",
   theme: { id: "tech" },
   slides: [
     { type: "cover" }, // missing heading — warn only since Task 2
-    { type: "content", heading: "Body", components: [{ type: "paragraph", text: "hello" }] },
+    { type: "content", kind: "points", heading: "Body", components: [{ type: "paragraph", text: "hello" }] },
   ],
 }
 const warnOnlyPath = join(OUT, "warn-only.json")
@@ -1059,12 +1071,12 @@ console.log("dual-threshold warn-only render leg OK (exit 0, file written, warni
 // since this script only shells out to the built CLI, it does not import
 // src/ directly.
 const bulletOverflowDeck = {
-  version: "4",
+  version: "5",
   filename: "pptwise-e2e-bullet-overflow",
   theme: { id: "tech" },
   slides: [
     { type: "cover", heading: "Overflow" },
-    { type: "content", heading: "Body", components: [{ type: "bullets", items: ["测".repeat(51)] }] },
+    { type: "content", kind: "points", heading: "Body", components: [{ type: "bullets", items: ["测".repeat(51)] }] },
   ],
 }
 const bulletOverflowPath = join(OUT, "bullet-overflow.json")
@@ -1144,13 +1156,14 @@ const PNG_1PX_STOCK = Buffer.from(
   "base64",
 )
 const stockIr = {
-  version: "4",
+  version: "5",
   filename: "stock",
   theme: { id: "consulting" },
   slides: [
     { type: "cover", heading: "Stock" },
     {
       type: "content",
+      kind: "points",
       heading: "Hero",
       layout: "image-top",
       components: [{ type: "image", asset_id: "hero" }],

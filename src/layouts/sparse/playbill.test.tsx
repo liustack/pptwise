@@ -18,7 +18,7 @@ const PLACEHOLDER = "客户现场图"
 
 function ir(slides: Slide[]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "x.pptx",
     theme: { id: "playbill" },
     meta: {},
@@ -41,7 +41,7 @@ describe("playbill sparse faces", () => {
 
   it("statement is three-line heavy type with an accent run and a closer bar", () => {
     const chapter: Slide = { type: "chapter", heading: "工作区订阅 · 开演", components: [] } as Slide
-    const slide: Slide = { type: "content", layout: "statement", heading: VERSE, components: [] } as Slide
+    const slide: Slide = { type: "content", kind: "points", layout: "statement", heading: VERSE, components: [] } as Slide
     const { markup, root } = render(
       <StatementContent ir={ir([chapter, slide])} slide={slide} index={1} ctx={ctx} />,
     )
@@ -66,7 +66,7 @@ describe("playbill sparse faces", () => {
   })
 
   it("statement without ** keeps the verse on text fill", () => {
-    const slide: Slide = { type: "content", layout: "statement", heading: VERSE_PLAIN, components: [] } as Slide
+    const slide: Slide = { type: "content", kind: "points", layout: "statement", heading: VERSE_PLAIN, components: [] } as Slide
     const { root } = render(
       <StatementContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />,
     )
@@ -79,6 +79,7 @@ describe("playbill sparse faces", () => {
   it("stat-hero bleeds a 380px numeral and bakes a rotated unit chip", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "stat-hero",
       heading: "-43%",
       subheading: "席位净流失 · 试点 90 天",
@@ -105,6 +106,7 @@ describe("playbill sparse faces", () => {
   it("stat-hero chip polygon is clockwise 4° (top-right corner drops in y-down)", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "stat-hero",
       heading: "-43%",
       subheading: "席位净流失 · 试点 90 天",
@@ -131,6 +133,7 @@ describe("playbill sparse faces", () => {
   it("stat-hero numeral does not cross the caption or the unit chip", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "stat-hero",
       heading: "10.2",
       subheading: "下半年的三项确定性投入",
@@ -178,6 +181,7 @@ describe("playbill sparse faces", () => {
   it("mono-bleed without an image falls back to the generic type-on-field face", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "mono-bleed",
       heading: "凌晨两点的会议，以后交给工作区",
       components: [],

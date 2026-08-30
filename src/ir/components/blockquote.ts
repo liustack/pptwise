@@ -3,7 +3,7 @@ import type { ComponentAliasSpec, ComponentTraits } from "./types"
 
 export const schema = z
   .object({
-    type: z.literal("quote"),
+    type: z.literal("blockquote"),
     text: z.string(),
     attribution: z.string().optional(),
   })

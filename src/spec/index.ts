@@ -29,7 +29,7 @@
  */
 import { z } from "zod"
 import { PptwiseError } from "../errors"
-import { BEAT_VALUES, BrandSchema, COMPONENT_TYPES, DeckBrandingSchema, MetaSchema, NarrativeProfileInputSchema } from "../ir"
+import { BrandSchema, COMPONENT_TYPES, DeckBrandingSchema, KIND_VALUES, MetaSchema, NarrativeProfileInputSchema } from "../ir"
 import { normalizeDeckRootAliases } from "../ir/field-aliases"
 import {
   normalizeNarrativeShape,
@@ -56,7 +56,12 @@ import { getInstalledThemeIds } from "../themes/definitions"
 const PAGE_TYPES = ["cover", "chapter", "content", "ending"] as const satisfies readonly SlideType[]
 
 export type PageSpecType = (typeof PAGE_TYPES)[number]
-export type PageBeat = (typeof BEAT_VALUES)[number]
+export type PageKind = (typeof KIND_VALUES)[number]
+type RetiredPageBeat = "anchor" | "dense" | "breathing"
+
+function retiredPageBeat(page: PageSpec): RetiredPageBeat | undefined {
+  return (page as unknown as { beat?: RetiredPageBeat }).beat
+}
 
 /**
  * A single page spec (spec §5, §6). `type`/`heading` are required — unlike
@@ -67,39 +72,27 @@ export type PageBeat = (typeof BEAT_VALUES)[number]
  * spec §5's defaults chain ("beat omitted → auto-rotates by page position —
  * focus/summary/layout/slot can all be omitted").
  */
-export const PageSpecSchema = z
-  .object({
-    id: z.string(),
-    type: z.enum(PAGE_TYPES),
-    heading: z.string(),
-    /** One of the three beat values, or omitted entirely — an omitted
-     *  beat is never a hard-gate violation on its own (see
-     *  {@link checkBeatRotation}'s policy functions below). It gets
-     *  auto-alternated at assemble time (W5 task 3, not this task — still
-     *  unimplemented as of the P1 variety wave's task 1). Renamed
-     *  from `rhythm` (vocabulary-v4 rename, spec §4.3/§6/§8.1) — same
-     *  three values, same semantics, page-level term only, distinct from
-     *  the deck-level `pacing` axis. A *declared* value here is no longer
-     *  spec-only advisory material (P1 variety wave, task 1): `assembleDeck`
-     *  (`./assemble.ts`) now carries it straight into the IR's own
-     *  `Slide.beat` field, where it combines with a soft selection-weight
-     *  onto layout picking (`Math.max`, not multiplication — see
-     *  `SlideSchema.beat`'s own doc comment, `../ir/index.ts`, and
-     *  `BEAT_TENDENCY_WEIGHT`'s in `../render/layout-selection.ts` for why) —
-     *  the checks below (rotation shape) and that downstream weighting
-     *  (which layouts a given beat favors) are two independent consumers
-     *  of the same declared value, not two views of one mechanism. */
-    beat: z.enum(BEAT_VALUES).optional(),
-    /** Optional authoring hint pointing fill/select at a preferred
-     *  component type or layout id — see {@link checkFocusVocabulary}. */
-    focus: z.string().optional(),
-    /** Free-text content anchor read by the fill step and never validated or
-     *  interpreted here. Assemble also surfaces it as `subheading` on
-     *  boundary pages, which have no page-content field for that line. On a
-     *  filled content page it remains a fill-only authoring hint. */
-    summary: z.string().optional(),
-  })
-  .strict()
+const CommonPageSpecFields = {
+  id: z.string(),
+  heading: z.string(),
+  /** Optional authoring hint pointing fill/select at a preferred component type. */
+  focus: z.string().optional(),
+  /** Free-text content anchor read by the fill step. */
+  summary: z.string().optional(),
+}
+
+export const PageSpecSchema = z.discriminatedUnion("type", [
+  z.object({ type: z.literal("cover"), ...CommonPageSpecFields }).strict(),
+  z.object({ type: z.literal("chapter"), ...CommonPageSpecFields }).strict(),
+  z
+    .object({
+      type: z.literal("content"),
+      kind: z.enum(KIND_VALUES),
+      ...CommonPageSpecFields,
+    })
+    .strict(),
+  z.object({ type: z.literal("ending"), ...CommonPageSpecFields }).strict(),
+])
 
 export type PageSpec = z.infer<typeof PageSpecSchema>
 
@@ -134,7 +127,6 @@ export const DeckSpecSchema = z
     narrative: z.union([z.string(), NarrativeProfileInputSchema]).optional(),
     theme: z.string().optional(),
     filename: z.string().optional(),
-    seed: z.number().int().optional(),
     meta: MetaSchema.default({}),
     /** Deck logo placement — reused verbatim from the IR's own `brand` field
      *  (`BrandSchema`, `../ir`) so the deck spec and IR can't drift apart on
@@ -479,7 +471,7 @@ function checkFocusVocabulary(spec: DeckSpec, strategy: Strategy): SpecValidatio
 
 // ── hard gate: beat rotation (parameterized by strategy's beatPolicy) ──
 
-type DeclaredBeatPage = { index: number; id: string; beat: PageBeat }
+type DeclaredBeatPage = { index: number; id: string; beat: RetiredPageBeat }
 
 /**
  * Content-type pages (cover/chapter/ending excluded, per the brief's streak
@@ -491,8 +483,9 @@ type DeclaredBeatPage = { index: number; id: string; beat: PageBeat }
 function declaredBeatContentPages(spec: DeckSpec): DeclaredBeatPage[] {
   const result: DeclaredBeatPage[] = []
   spec.pages.forEach((page, index) => {
-    if (page.type === "content" && page.beat !== undefined) {
-      result.push({ index, id: page.id, beat: page.beat })
+    const beat = retiredPageBeat(page)
+    if (page.type === "content" && beat !== undefined) {
+      result.push({ index, id: page.id, beat })
     }
   })
   return result
@@ -552,12 +545,13 @@ function checkAnchorOpenPolicy(spec: DeckSpec, strategy: Strategy): SpecValidati
   const firstContentIndex = spec.pages.findIndex((page) => page.type === "content")
   if (firstContentIndex === -1) return []
   const firstContent = spec.pages[firstContentIndex]!
-  if (firstContent.beat === undefined || firstContent.beat === "anchor") return []
+  const beat = retiredPageBeat(firstContent)
+  if (beat === undefined || beat === "anchor") return []
   return [
     {
       path: `pages.${firstContentIndex}.beat`,
       pageId: firstContent.id,
-      message: `first content page declares beat "${firstContent.beat}" — strategy "${strategy}" requires the deck to open its first content page on "anchor" beat when a beat is declared`,
+      message: `first content page declares beat "${beat}" — strategy "${strategy}" requires the deck to open its first content page on "anchor" beat when a beat is declared`,
     },
   ]
 }

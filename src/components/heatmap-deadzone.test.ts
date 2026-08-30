@@ -85,6 +85,7 @@ function confinedTheme(id: string, surface: string, primary: string) {
 
 const HEATMAP_SLIDE: Slide = {
   type: "content",
+  kind: "points",
   heading: "Deadzone probe",
   layout: "narrow-column",
   components: [
@@ -100,7 +101,7 @@ const HEATMAP_SLIDE: Slide = {
 
 function deckFor(themeId: string): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "heatmap-deadzone-fixture",
     theme: { id: themeId },
     meta: {},

@@ -140,7 +140,7 @@ export const layoutDef = {
   slots: [
     { name: "kicker", accepts: [] },
     { name: "heading", accepts: [] },
-    { name: "body", accepts: ["paragraph", "quote", "citation"], capacity: 1 },
+    { name: "body", accepts: ["paragraph", "blockquote", "citation"], capacity: 1 },
     { name: "meta", accepts: [] },
   ],
   arrangements: ["single"],

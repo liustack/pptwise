@@ -20,7 +20,7 @@ import type { PptxIR, Slide } from "@/ir"
 
 const coverSlide: Slide = { type: "cover", heading: "封面", components: [] } as Slide
 const chapterSlide: Slide = { type: "chapter", heading: "章节", components: [] } as Slide
-const contentSlide: Slide = { type: "content", heading: "内容", components: [] } as Slide
+const contentSlide: Slide = { type: "content", kind: "points", heading: "内容", components: [] } as Slide
 const endingSlide: Slide = { type: "ending", components: [] } as Slide
 const DRAWN_SLIDES = [contentSlide, endingSlide]
 const ALL_SLIDES = [coverSlide, chapterSlide, contentSlide, endingSlide]
@@ -72,7 +72,7 @@ function goldRules(root: Element) {
 describe("VermilionMotif（文件金线）", () => {
   it("content 稀排钉 pin 整片退让，不和 statement 等脸的横线叠预算", () => {
     for (const layout of ["statement", "pull-quote", "stat-hero", "one-evidence", "mono-bleed"] as const) {
-      const slide = { ...contentSlide, layout } as Slide
+      const slide = { ...contentSlide, layout } as unknown as Slide
       const { root } = draw("vermilion", slide)
       expect(root.querySelectorAll("line"), layout).toHaveLength(0)
       expect(countDecorPieces(root), layout).toBe(0)

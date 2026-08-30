@@ -58,6 +58,7 @@ vi.mock("@/render/render-slide", async () => {
 function makeSlide(): Slide {
   return {
     type: "content",
+    kind: "points",
     heading: "标题",
     components: [{ type: "paragraph", text: "正文内容" }],
   }
@@ -65,7 +66,7 @@ function makeSlide(): Slide {
 
 function makeIR(): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "gradient-fallback.pptx",
     theme: { id: "tech" },
     meta: {},

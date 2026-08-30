@@ -188,7 +188,7 @@ const BOLD_STRESS_PHRASES = [
 
 function deck(slides: Slide[]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "stress.pptx",
     theme: { id: "consulting" },
     meta: { organization: "压力测试" },
@@ -232,6 +232,7 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
       { type: "chapter", heading: CJK_LONG, subheading: MIXED_LONG, components: [] },
       {
         type: "content",
+        kind: "points",
         heading: CJK_LONG_WITH_DASH,
         subheading: MIXED_LONG,
         components: [],
@@ -261,7 +262,6 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
         // Locked by `deck-audit.test.ts`'s dedicated "constellation-ending
         // accent period contrast" 16-theme sweep.
         type: "ending",
-        layout: "constellation-ending",
         heading: "Thank you.",
         subheading: MIXED_LONG,
         components: [],
@@ -279,6 +279,7 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
   bullets: deck([
     {
       type: "content",
+      kind: "points",
       heading: "要点压力测试",
       components: [
         {
@@ -297,7 +298,7 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
     },
     {
       type: "content",
-      arrangement: "two_column",
+      kind: "points",
       heading: "要点双栏压力测试",
       components: [
         {
@@ -321,7 +322,7 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
   kpi: deck([
     {
       type: "content",
-      arrangement: "kpi_focus",
+      kind: "points",
       heading: "KPI 压力测试",
       components: [
         {
@@ -352,7 +353,7 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
     },
     {
       type: "content",
-      arrangement: "big_number",
+      kind: "points",
       heading: "大数字压力测试",
       components: [
         {
@@ -363,7 +364,7 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
     },
     {
       type: "content",
-      arrangement: "big_number",
+      kind: "points",
       heading: "大数字支撑内容压力测试",
       components: [
         {
@@ -392,6 +393,7 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
   citation: deck([
     {
       type: "content",
+      kind: "points",
       heading: "引用压力测试",
       components: [
         {
@@ -422,6 +424,7 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
   paragraph_stack: deck([
     {
       type: "content",
+      kind: "points",
       heading: "段落堆叠压力测试",
       components: Array.from(
         { length: 6 },
@@ -438,6 +441,7 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
   diagram: deck([
     {
       type: "content",
+      kind: "points",
       heading: "流程图压力测试",
       components: [
         {
@@ -456,6 +460,7 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
     },
     {
       type: "content",
+      kind: "points",
       heading: "架构图压力测试",
       components: [
         {
@@ -475,6 +480,7 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
     },
     {
       type: "content",
+      kind: "points",
       heading: "时间线压力测试",
       components: [
         {
@@ -499,7 +505,7 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
   chart: deck([
     {
       type: "content",
-      arrangement: "two_column",
+      kind: "points",
       heading: "图表压力测试",
       components: [
         {
@@ -558,7 +564,7 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
     },
     {
       type: "content",
-      arrangement: "assertion_evidence",
+      kind: "points",
       heading: "论证证据支撑内容压力测试",
       components: [
         {
@@ -597,7 +603,7 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
   chart_depth: deck([
     {
       type: "content",
-      arrangement: "two_column",
+      kind: "points",
       heading: "散点与面积压力测试",
       components: [
         {
@@ -636,7 +642,7 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
     },
     {
       type: "content",
-      arrangement: "two_column",
+      kind: "points",
       heading: "仪表盘边界压力测试",
       components: [
         // 0% and 100% gauges, each with a long CJK caption (data-point x) to
@@ -652,7 +658,7 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
     },
     {
       type: "content",
-      arrangement: "two_column",
+      kind: "points",
       heading: "环形与气泡压力测试",
       components: [
         {
@@ -695,6 +701,7 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
   comparison_quote_code: deck([
     {
       type: "content",
+      kind: "points",
       heading: "对比表压力测试",
       components: [
         {
@@ -709,11 +716,11 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
     },
     {
       type: "content",
-      arrangement: "quote",
+      kind: "points",
       heading: "引言压力测试",
       components: [
         {
-          type: "quote",
+          type: "blockquote",
           text: `${CJK_LONG} ${CJK_LONG} ${CJK_LONG} ${PUNCTUATION_STRESS}`,
           attribution: MIXED_LONG,
         },
@@ -721,7 +728,7 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
     },
     {
       type: "content",
-      arrangement: "code",
+      kind: "points",
       heading: "代码压力测试",
       components: [
         {
@@ -740,7 +747,7 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
     // `SCREAMING_SNAKE_LONG`'s own derivation comment above.
     {
       type: "content",
-      arrangement: "code",
+      kind: "points",
       heading: "代码压力测试（全大写常量名）",
       components: [
         {
@@ -752,6 +759,7 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
     },
     {
       type: "content",
+      kind: "points",
       heading: "标注压力测试",
       components: [
         {
@@ -763,6 +771,7 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
     },
     {
       type: "content",
+      kind: "points",
       heading: "配图压力测试",
       components: [
         {
@@ -787,6 +796,7 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
   new_components_stress: deck([
     {
       type: "content",
+      kind: "points",
       heading: "图标卡片压力测试",
       components: [
         {
@@ -806,6 +816,7 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
       // COLUMN_W=880 already tips into vertical mode here), so this page
       // targets the *horizontal* card layout's own narrow per-card width.
       type: "content",
+      kind: "points",
       heading: "步骤压力测试（横排）",
       components: [
         {
@@ -822,7 +833,7 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
       // n=5 vertical-degrade threshold (needsVerticalLayout: 5*180+4*40=1060)
       // on every theme — this page targets the *vertical* (degraded) mode.
       type: "content",
-      arrangement: "two_column",
+      kind: "points",
       heading: "步骤压力测试（纵排降级）",
       components: [
         {
@@ -843,6 +854,7 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
     },
     {
       type: "content",
+      kind: "points",
       heading: "结论横幅压力测试",
       components: [
         {
@@ -855,6 +867,7 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
     },
     {
       type: "content",
+      kind: "points",
       heading: "混排内容压力测试",
       subheading: MIXED_LONG,
       components: [
@@ -898,6 +911,7 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
   flowchart_edge_labels: deck([
     {
       type: "content",
+      kind: "points",
       heading: "流程图边标签压力测试（纵向）",
       components: [
         {
@@ -919,6 +933,7 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
     },
     {
       type: "content",
+      kind: "points",
       heading: "流程图边标签压力测试（横向）",
       components: [
         {
@@ -1002,6 +1017,7 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
   structure_bold_headings: deck([
     {
       type: "content",
+      kind: "points",
       heading: "圆环压力测试",
       components: [
         {
@@ -1017,6 +1033,7 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
     },
     {
       type: "content",
+      kind: "points",
       heading: "路线图压力测试",
       components: [
         {
@@ -1046,6 +1063,7 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
     },
     {
       type: "content",
+      kind: "points",
       heading: "编号卡片压力测试",
       components: [
         {
@@ -1061,6 +1079,7 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
     },
     {
       type: "content",
+      kind: "points",
       heading: "洞察面板压力测试",
       components: [
         {
@@ -1077,6 +1096,7 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
     },
     {
       type: "content",
+      kind: "points",
       heading: "图片对比压力测试",
       components: [
         {
@@ -1089,6 +1109,7 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
     },
     {
       type: "content",
+      kind: "points",
       heading: "SWOT 压力测试",
       components: [
         {
@@ -1108,6 +1129,7 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
     },
     {
       type: "content",
+      kind: "points",
       heading: "PEST 压力测试",
       components: [
         {
@@ -1121,6 +1143,7 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
     },
     {
       type: "content",
+      kind: "points",
       heading: "五力模型压力测试",
       components: [
         {
@@ -1135,6 +1158,7 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
     },
     {
       type: "content",
+      kind: "points",
       heading: "商业模式画布压力测试",
       components: [
         {
@@ -1153,6 +1177,7 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
     },
     {
       type: "content",
+      kind: "points",
       heading: "矩阵压力测试",
       components: [
         {
@@ -1212,6 +1237,7 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
     },
     {
       type: "content",
+      kind: "points",
       heading: "长卡列表压力测试",
       components: [
         {
@@ -1278,6 +1304,7 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
     // just CJK's.
     {
       type: "content",
+      kind: "points",
       heading: "数据表压力测试",
       components: [
         {
@@ -1353,13 +1380,13 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
   quote_stage: deck([
     {
       type: "content",
-      layout: "quote-stage",
+      kind: "points",
       heading: `${CJK_LONG}${CJK_LONG}`,
       components: [],
     },
     {
       type: "content",
-      layout: "quote-stage",
+      kind: "points",
       heading: MIXED_LONG,
       subheading: MIXED_LONG,
       components: [{ type: "paragraph", text: MIXED_LONG }],
@@ -1377,6 +1404,7 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
   device_mockup: deck([
     {
       type: "content",
+      kind: "points",
       heading: "设备样机压力测试（浏览器）",
       components: [
         {
@@ -1390,7 +1418,7 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
     },
     {
       type: "content",
-      arrangement: "two_column",
+      kind: "points",
       heading: "设备样机压力测试（手机，双栏窄列）",
       components: [
         {
@@ -1421,6 +1449,7 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
   cycle: deck([
     {
       type: "content",
+      kind: "points",
       heading: "循环压力测试（8 节点）",
       components: [
         {
@@ -1434,6 +1463,7 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
     },
     {
       type: "content",
+      kind: "points",
       heading: "循环压力测试（3 节点，混排）",
       components: [
         {
@@ -1465,6 +1495,7 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
   people_cards: deck([
     {
       type: "content",
+      kind: "points",
       heading: "人员卡片压力测试（12 人满配）",
       components: [
         {
@@ -1480,6 +1511,7 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
     },
     {
       type: "content",
+      kind: "points",
       heading: "人员卡片压力测试（2 人，混排）",
       components: [
         {
@@ -1507,6 +1539,7 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
   tag_row: deck([
     {
       type: "content",
+      kind: "points",
       heading: "标签行压力测试（16 个满配，混排到长度上限）",
       components: [
         {
@@ -1524,6 +1557,7 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
     },
     {
       type: "content",
+      kind: "points",
       heading: "标签行压力测试（2 个，默认低调）",
       components: [
         {

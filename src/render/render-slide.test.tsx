@@ -6,6 +6,7 @@ import type { PptxIR, Slide } from "@/ir"
 
 const slide: Slide = {
   type: "content",
+  kind: "points",
   heading: "导出验证",
   components: [
     { type: "paragraph", text: "段落用于导出 ops。" },
@@ -15,7 +16,7 @@ const slide: Slide = {
 
 // Mirror the exporter: the slide is a member of ir.slides at `index`.
 const ir: PptxIR = {
-  version: "4",
+  version: "5",
   filename: "deck.pptx",
   theme: { id: "academic" },
   meta: { organization: "ACME" },
@@ -43,6 +44,7 @@ describe("slideToOps export entry", () => {
   it("keeps a tall flowchart slide within the slide height (no overflow)", () => {
     const flowSlide: Slide = {
       type: "content",
+      kind: "points",
       heading: "流程",
       components: [
         {

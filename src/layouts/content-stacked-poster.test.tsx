@@ -36,6 +36,7 @@ const chapter1: Slide = { type: "chapter", heading: "第一章", components: [] 
 // 1 块：海报路径的单主视觉 rect。
 const oneComponentSlide: Slide = {
   type: "content",
+  kind: "points",
   heading: "核心指标",
   components: [{ type: "paragraph", text: "本季度表现优异。" }],
 } as Slide
@@ -43,6 +44,7 @@ const oneComponentSlide: Slide = {
 // 2 块：海报路径的主视觉 + 标注条。
 const twoComponentSlide: Slide = {
   type: "content",
+  kind: "points",
   heading: "双栏演示",
   components: [
     { type: "paragraph", text: "主视觉说明文字。" },
@@ -53,6 +55,7 @@ const twoComponentSlide: Slide = {
 // >=3 块：降级为原始左对齐堆叠构图。
 const threeComponentSlide: Slide = {
   type: "content",
+  kind: "points",
   heading: "多块降级",
   components: [
     { type: "paragraph", text: "第一段。" },
@@ -227,7 +230,7 @@ describe("StackedPosterContent", () => {
   })
 
   it("degrade path (≥3 components) honors a non-default arrangement — W2 task 3: registry declares arrangements \"all\" for this layout because the degrade path passes slide.arrangement straight through unchanged", () => {
-    const twoColThreeComponentSlide: Slide = { ...threeComponentSlide, arrangement: "two_column" } as Slide
+    const twoColThreeComponentSlide: Slide = { ...threeComponentSlide, arrangement: "two_column" } as unknown as Slide
     const ctx = buildCtx(resolveStyle("classroom"), {})
     const deck = ir("classroom", [chapter1, twoColThreeComponentSlide])
     const { root } = render(
@@ -290,6 +293,7 @@ describe("StackedPosterContent", () => {
     const ctx = buildCtx(resolveStyle("classroom"), {})
     const chartSlide: Slide = {
       type: "content",
+      kind: "points",
       heading: "增长趋势",
       components: [
         {
@@ -371,6 +375,7 @@ describe("StackedPosterContent", () => {
     const ctx = buildCtx(resolveStyle("classroom"), {})
     const slide: Slide = {
       type: "content",
+      kind: "points",
       heading: "溢出降级",
       components: [
         { type: "paragraph", text: "主视觉。" },
@@ -395,7 +400,7 @@ describe("StackedPosterContent", () => {
 
   it("a 0-component content slide degrades without crashing", () => {
     const ctx = buildCtx(resolveStyle("classroom"), {})
-    const slide: Slide = { type: "content", heading: "空白页", components: [] } as Slide
+    const slide: Slide = { type: "content", kind: "points", heading: "空白页", components: [] } as Slide
     expect(() =>
       render(<StackedPosterContent ir={ir("classroom", [slide])} slide={slide} index={0} ctx={ctx} />),
     ).not.toThrow()
@@ -405,6 +410,7 @@ describe("StackedPosterContent", () => {
     const ctx = buildCtx(resolveStyle("classroom"), {})
     const slide: Slide = {
       type: "content",
+      kind: "points",
       heading: "版位安全校验",
       components: [
         { type: "paragraph", text: "第一块。" },
@@ -440,11 +446,13 @@ describe("StackedPosterContent", () => {
     const ctx = buildCtx(resolveStyle("classroom"), {})
     const oneComponent: Slide = {
       type: "content",
+      kind: "points",
       heading: "验证子集",
       components: [{ type: "bullets", items: ["项目一", "项目二"], style: "default" }],
     } as Slide
     const twoComponents: Slide = {
       type: "content",
+      kind: "points",
       heading: "验证子集双块",
       components: [{ type: "paragraph", text: "一" }, { type: "paragraph", text: "二" }],
     } as Slide
@@ -460,6 +468,7 @@ describe("StackedPosterContent", () => {
     const ctx = buildCtx(resolveStyle("classroom"), {})
     const slide: Slide = {
       type: "content",
+      kind: "points",
       heading: CJK_LONG,
       components: [{ type: "paragraph", text: "概要。" }],
     } as Slide
@@ -491,6 +500,7 @@ describe("StackedPosterContent", () => {
     const ctx = buildCtx(resolveStyle("classroom"), {})
     const slide: Slide = {
       type: "content",
+      kind: "points",
       heading: CJK_LONG,
       components: [
         { type: "paragraph", text: "第一段。" },
@@ -620,6 +630,7 @@ describe("StackedPosterContent subheading", () => {
 
     const withoutSubheading: Slide = {
       type: "content",
+      kind: "points",
       heading: "核心指标",
       components: [component],
     } as Slide

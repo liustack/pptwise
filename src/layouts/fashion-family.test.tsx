@@ -30,7 +30,7 @@ const endingLongSub: Slide = {
 
 function ir(slides: Slide[]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "f.pptx",
     theme: { id: "runway" },
     meta: { organization: "时尚编辑部", date: "2026-10" },

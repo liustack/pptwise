@@ -17,7 +17,7 @@ function slide(extras: Partial<Slide> = {}): Slide {
 
 function ir(themeId: string, s: Slide, meta: PptxIR["meta"] = {}): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "action-pad-ending.pptx",
     theme: { id: themeId },
     meta,

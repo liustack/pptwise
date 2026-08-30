@@ -24,7 +24,7 @@ import { __pixelFindingsForPage, stripTextNodes } from "./pixel-audit"
 
 function deck(themeId: string, slides: Slide[], overrides: Partial<PptxIR> = {}): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "pixel-audit-fixture",
     theme: { id: themeId },
     meta: {},
@@ -309,7 +309,7 @@ describe("auditDeck({ pixels: true }) — real Sharp rasterization", () => {
   it("never calls the rasterizer at all when no page has image-backed text (a solid-color-only deck stays cheap)", async () => {
     const ir = deck("consulting", [
       { type: "cover", heading: "Plain Cover", components: [] },
-      { type: "content", heading: "Body", components: [{ type: "paragraph", text: "hello" }] },
+      { type: "content", kind: "points", heading: "Body", components: [{ type: "paragraph", text: "hello" }] },
     ])
     const report = await auditDeck(ir, { pixels: true })
     expect(report.checks).toEqual({ svg: "completed", pixels: "completed" })

@@ -1,22 +1,18 @@
-/**
- * Two public theme-file examples kept inside the gallery as permanent
- * visual regression surfaces. They enter through the same parser and
- * registration seam as a user's theme.json.
- */
+/** Self-contained public theme-file examples used by the gallery. */
 
 import { registerBrandThemeFile } from "@/themes/brand-theme-file"
 import { THEME_DEFINITIONS } from "@/themes/definitions"
-import type { CompleteThemeFile, PartialThemeFile, ThemeFile } from "@/themes/schema"
+import type { ThemeFile } from "@/themes/schema"
 
-export const GALLERY_PARTIAL_THEME_ID = "gallery-partial-tide"
-export const GALLERY_COMPLETE_THEME_ID = "gallery-complete-studio"
-export const GALLERY_SAMPLE_THEME_IDS = [GALLERY_PARTIAL_THEME_ID, GALLERY_COMPLETE_THEME_ID] as const
+export const GALLERY_TIDE_THEME_ID = "gallery-tide"
+export const GALLERY_STUDIO_THEME_ID = "gallery-studio"
+export const GALLERY_SAMPLE_THEME_IDS = [GALLERY_TIDE_THEME_ID, GALLERY_STUDIO_THEME_ID] as const
 
 const consulting = THEME_DEFINITIONS.consulting.style
 
 function publicStyle(
   id: string,
-  colors: Partial<PartialThemeFile["style"]["colors"]> & {
+  colors: Partial<ThemeFile["style"]["colors"]> & {
     bg: string
     surface: string
     primary: string
@@ -25,7 +21,7 @@ function publicStyle(
     muted: string
     chartPalette: string[]
   },
-): PartialThemeFile["style"] {
+): ThemeFile["style"] {
   return {
     id,
     colors: { ...consulting.colors, ...colors },
@@ -48,14 +44,13 @@ function publicStyle(
   }
 }
 
-export const GALLERY_PARTIAL_THEME: PartialThemeFile = {
-  version: 1,
-  id: GALLERY_PARTIAL_THEME_ID,
+export const GALLERY_TIDE_THEME: ThemeFile = {
+  version: 2,
+  id: GALLERY_TIDE_THEME_ID,
   label: "Tide Consulting",
-  base: "consulting",
   occasions: ["business"],
   identity: "medium",
-  style: publicStyle(GALLERY_PARTIAL_THEME_ID, {
+  style: publicStyle(GALLERY_TIDE_THEME_ID, {
     bg: "#F2F6F4",
     surface: "#FFFFFF",
     primary: "#124E57",
@@ -68,15 +63,21 @@ export const GALLERY_PARTIAL_THEME: PartialThemeFile = {
     success: "#23694F",
     chartPalette: ["#124E57", "#D56F45", "#3D7691", "#7B8C67"],
   }),
+  menu: {
+    cover: { face: "poster-center" },
+    chapter: { face: "masthead-chapter" },
+    content: { points: { face: "two-column" }, data: { face: "gauge-stats" } },
+    ending: { face: "poster-ending" },
+  },
 }
 
-export const GALLERY_COMPLETE_THEME: CompleteThemeFile = {
-  version: 1,
-  id: GALLERY_COMPLETE_THEME_ID,
+export const GALLERY_STUDIO_THEME: ThemeFile = {
+  version: 2,
+  id: GALLERY_STUDIO_THEME_ID,
   label: "Studio Proof",
   occasions: ["event"],
   identity: "high",
-  style: publicStyle(GALLERY_COMPLETE_THEME_ID, {
+  style: publicStyle(GALLERY_STUDIO_THEME_ID, {
     bg: "#F7F2E9",
     surface: "#FFFDF8",
     primary: "#27364A",
@@ -89,17 +90,18 @@ export const GALLERY_COMPLETE_THEME: CompleteThemeFile = {
     success: "#286847",
     chartPalette: ["#27364A", "#BC503B", "#C48B33", "#71816B"],
   }),
-  faces: {
-    cover: ["poster-center"],
-    chapter: ["one-word-chapter"],
-    content: ["two-column"],
-    ending: ["poster-ending"],
+  menu: {
+    cover: { face: "poster-center", decor: { kind: "motif", id: "poster-motif" } },
+    chapter: { face: "one-word-chapter", decor: { kind: "motif", id: "poster-motif" } },
+    content: {
+      points: { face: "two-column" },
+      statement: { face: "statement", decor: { kind: "silent" } },
+    },
+    ending: { face: "poster-ending", decor: { kind: "motif", id: "poster-motif" } },
   },
-  motif: { id: "poster-motif", params: { intensity: "subtle" } },
-  sparse: ["statement"],
 }
 
-export const GALLERY_SAMPLE_THEMES: readonly ThemeFile[] = [GALLERY_PARTIAL_THEME, GALLERY_COMPLETE_THEME]
+export const GALLERY_SAMPLE_THEMES: readonly ThemeFile[] = [GALLERY_TIDE_THEME, GALLERY_STUDIO_THEME]
 
 export function registerGallerySampleThemes(): void {
   for (const theme of GALLERY_SAMPLE_THEMES) registerBrandThemeFile(theme)

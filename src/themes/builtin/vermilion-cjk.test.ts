@@ -28,7 +28,7 @@ function geometryFindings(ir: PptxIR): string[] {
 /** A vermilion deck of `slides`, reusing the "heading" stress deck's own worst-case org/contact/copyright meta chain. */
 function vermilionDeck(slides: Slide[]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "vermilion-cjk.pptx",
     theme: { id: "vermilion" },
     meta: STRESS_DECKS.heading.meta,
@@ -58,7 +58,7 @@ describe("vermilion CJK-first typography (plan 裁定 4)", () => {
     const ir = vermilionDeck([
       { type: "cover", heading: CJK_LONG, subheading: MIXED_LONG, components: [] },
       { type: "chapter", heading: CJK_LONG_WITH_DASH, subheading: MIXED_LONG, components: [] },
-      { type: "content", heading: CJK_LONG, subheading: MIXED_LONG, components: CJK_BODY },
+      { type: "content", kind: "points", heading: CJK_LONG, subheading: MIXED_LONG, components: CJK_BODY },
       { type: "ending", heading: CJK_LONG, subheading: MIXED_LONG, components: [] },
     ] as Slide[])
     expect(geometryFindings(ir)).toEqual([])
@@ -79,7 +79,7 @@ describe("vermilion CJK-first typography (plan 裁定 4)", () => {
     it(`red-forward ${slideType}/${layout} with a pathological CJK heading audits clean`, () => {
       const ir = vermilionDeck([
         { type: slideType, heading: CJK_LONG, subheading: MIXED_LONG, layout, components: [] },
-      ] as Slide[])
+      ] as unknown as Slide[])
       expect(geometryFindings(ir)).toEqual([])
     })
   }
@@ -88,7 +88,7 @@ describe("vermilion CJK-first typography (plan 裁定 4)", () => {
     const ir = vermilionDeck([
       { type: "cover", heading: CJK_LONG, subheading: MIXED_LONG, components: [] },
       { type: "chapter", heading: CJK_LONG, subheading: MIXED_LONG, components: [] },
-      { type: "content", heading: CJK_LONG, components: CJK_BODY },
+      { type: "content", kind: "points", heading: CJK_LONG, components: CJK_BODY },
       { type: "ending", heading: CJK_LONG, components: [] },
     ] as Slide[])
     for (let i = 0; i < ir.slides.length; i++) {

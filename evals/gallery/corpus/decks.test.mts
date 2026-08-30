@@ -10,14 +10,14 @@ describe("themeDeck corpus thicken (gallery r2 D10/D11/D12/D21)", () => {
   it("stage p03 is two-column with a timeline lead and a companion paragraph", () => {
     const deck = themeDeck("stage", zh, emptyAssets)
     const page = deck.slides[2]!
-    expect(page.layout).toBe("two-column")
+    expect((page as unknown as { layout?: string }).layout).toBe("two-column")
     expect(page.components.map((c) => c.type)).toEqual(["timeline", "paragraph"])
   })
 
   it("swiss p03 is a two-column pie plus bullets", () => {
     const deck = themeDeck("swiss", zh, emptyAssets)
     const page = deck.slides[2]!
-    expect(page.layout).toBe("two-column")
+    expect((page as unknown as { layout?: string }).layout).toBe("two-column")
     expect(page.components[0]?.type).toBe("chart")
     expect(page.components[1]?.type).toBe("bullets")
   })

@@ -240,7 +240,7 @@ function resolvePageLayout(
   requestedLayout: string | undefined,
   strategy: Strategy,
   previousEffectiveLayoutId: string | null,
-  beat: Slide["beat"],
+  beat: "anchor" | "dense" | "breathing" | undefined,
   // Theme-structure wave, task T1 fix-round: the theme's own structural
   // personality (`ThemeDefinition.layoutTendencies`, `../themes/definitions.ts`),
   // already sliced to this slide type by the caller below — threaded through
@@ -380,7 +380,7 @@ export function FullSlideSvg({
   // 任务 3：分派钥匙由 slide.variant 改为 slide.layout，4 个版式各自的行为
   // 不变）：出血图 bespoke 版式，heading 由版式自画，跳过模板 Body 防重复
   // 标题。无 image 块回落模板路径。
-  const requestedLayoutDef = slide.layout ? getLayout(slide.layout) : undefined
+  const requestedLayoutDef = getLayout("")
   const isTakeoverLayout = requestedLayoutDef?.kind === "takeover"
   const splitTakeover = isTakeoverLayout && findImageComponent(slide) != null
   // theme.layouts 层（P1 cover-only → P2 Task 24 泛化四页型，spec
@@ -396,7 +396,7 @@ export function FullSlideSvg({
   const pageKey = slide.id ?? String(index)
   const strategy = resolveIrStrategy(ir)
   const previousEffectiveLayoutId = index > 0 ? resolveEffectiveLayoutId(ir, ir.slides[index - 1], index - 1) : null
-  const requestedLayout = effectiveRequestedLayout(ir.theme.id, slide.layout)
+  const requestedLayout = undefined
   const pageLayout =
     imageCoverTakeover || splitTakeover
       ? null
@@ -408,7 +408,7 @@ export function FullSlideSvg({
           requestedLayout,
           strategy,
           previousEffectiveLayoutId,
-          slide.beat,
+          undefined,
           themeDef.layoutTendencies?.[slide.type],
         )
   // A layout that opens with its own full-bleed colour field hides the theme
@@ -432,11 +432,11 @@ export function FullSlideSvg({
   let pageBody: ReactNode = null
   if (imageCoverTakeover) {
     pageBody = ImageCoverPage({ ir, slide, index, ctx })
-  } else if (splitTakeover && slide.layout === "image-top") {
+  } else if (splitTakeover && requestedLayoutDef?.id === "image-top") {
     pageBody = ImageTopPage({ ir, slide, ctx })
-  } else if (splitTakeover && slide.layout === "image-bottom") {
+  } else if (splitTakeover && requestedLayoutDef?.id === "image-bottom") {
     pageBody = ImageBottomPage({ ir, slide, ctx })
-  } else if (splitTakeover && slide.layout === "image-annotate") {
+  } else if (splitTakeover && requestedLayoutDef?.id === "image-annotate") {
     pageBody = ImageAnnotatePage({ ir, slide, ctx })
   } else if (splitTakeover) {
     pageBody = ImageSplitPage({ ir, slide, ctx })

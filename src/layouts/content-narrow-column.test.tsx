@@ -24,13 +24,14 @@ function para(text: string): Component {
 const chapter: Slide = { type: "chapter", heading: "第一部分：市场洞察", components: [] } as Slide
 const content: Slide = {
   type: "content",
+  kind: "points",
   heading: "窄栏叙事：从数据到洞察",
   subheading: "**核心结论**：留存率显著提升",
   footnote: "数据来源：内部埋点，2026Q2",
   components: [
     { type: "paragraph", text: "本季度用户留存呈现持续上行趋势。" },
     { type: "bullets", items: ["留存率 +12%", "活跃时长 +8%", "流失率 -5%"], style: "default" },
-    { type: "quote", text: "增长的本质是留住已经信任你的人。", attribution: "内部访谈" },
+    { type: "blockquote", text: "增长的本质是留住已经信任你的人。", attribution: "内部访谈" },
   ],
 } as Slide
 
@@ -63,7 +64,7 @@ const ir = (theme: string, slides: Slide[] = [chapter, content]): PptxIR =>
 // before, 50 after. `MAGAZINE_EXPECTED_BARE` has no footnote and does not
 // move.
 // Quote-mark re-pin (2026-08-20): the decorative open-quote mark's baseline
-// now comes from where its ink actually stops (`quote.tsx`'s
+// now comes from where its ink actually stops (`blockquote.tsx`'s
 // `MARK_INK_DEPTH_RATIO`) instead of a hand-tuned 40, which moves that one
 // `<text>` 16px down to `y="56"`. That single attribute is the entire diff —
 // this string was the only place in the repo pinning the mark's geometry,
@@ -102,7 +103,7 @@ describe("NarrowColumnContent", () => {
 
   it("单块 slide（无 subheading/footnote）同样与固化基准逐字节一致", () => {
     const ctx = buildCtx({ ...resolveStyle("classroom"), shape: undefined }, {})
-    const bare: Slide = { type: "content", heading: "简报", components: [{ type: "paragraph", text: "一" }] } as Slide
+    const bare: Slide = { type: "content", kind: "points", heading: "简报", components: [{ type: "paragraph", text: "一" }] } as Slide
     const deck = ir("classroom", [bare])
 
     const next = renderSvgMarkup(<NarrowColumnContent ir={deck} slide={bare} index={0} ctx={ctx} />)
@@ -153,6 +154,7 @@ describe("NarrowColumnContent", () => {
     const ctx = buildCtx({ ...resolveStyle("classroom"), shape: undefined }, {})
     const slide: Slide = {
       type: "content",
+      kind: "points",
       heading: "窄栏叙事",
       components: [para("一"), para("二"), para("三")],
     } as Slide
@@ -174,7 +176,7 @@ describe("NarrowColumnContent", () => {
 
   it("renders a large, 30%-opacity, zero-padded page number anchored to the right gutter", () => {
     const ctx = buildCtx({ ...resolveStyle("classroom"), shape: undefined }, {})
-    const slide: Slide = { type: "content", heading: "标题", components: [para("一")] } as Slide
+    const slide: Slide = { type: "content", kind: "points", heading: "标题", components: [para("一")] } as Slide
     // 9th slide (index 8) => page label "09"
     const slides = Array.from({ length: 9 }, () => ({ ...slide }))
     const deck = ir("classroom", slides)
@@ -208,6 +210,7 @@ describe("NarrowColumnContent", () => {
     expect(longHeading.length).toBe(48)
     const slide: Slide = {
       type: "content",
+      kind: "points",
       heading: longHeading,
       components: [para("概要")],
     } as Slide
@@ -236,6 +239,7 @@ describe("NarrowColumnContent", () => {
     const chapterSlide: Slide = { type: "chapter", heading: CJK_LONG.repeat(2), components: [] } as Slide
     const contentSlide: Slide = {
       type: "content",
+      kind: "points",
       heading: "小节标题",
       components: [para("一")],
     } as Slide
@@ -261,6 +265,7 @@ describe("NarrowColumnContent", () => {
     const longFootnote = "数据来源：" + "内部报告与季度审计草案汇总说明".repeat(6)
     const slide: Slide = {
       type: "content",
+      kind: "points",
       heading: "标题",
       components: [para("一")],
       footnote: longFootnote,
@@ -288,6 +293,7 @@ describe("NarrowColumnContent", () => {
   describe("subheading (Task 5)", () => {
     const base: Slide = {
       type: "content",
+      kind: "points",
       heading: "四大支柱",
       components: [para("一"), para("二")],
     } as Slide

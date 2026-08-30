@@ -75,13 +75,14 @@ const SKILL_ROOTS = [
  *  minimal on purpose — two pages is enough to exercise cover + content +
  *  a component, and the point is proving the chain runs, not covering it. */
 const SELF_TEST_DECK = {
-  version: "4",
+  version: "5",
   filename: "pptwise-doctor-self-test.pptx",
   theme: { id: "consulting" },
   slides: [
     { type: "cover", heading: "pptwise doctor", subheading: "self-test render" },
     {
       type: "content",
+      kind: "points",
       heading: "Core chain",
       components: [{ type: "bullets", items: ["validate the IR", "render a slide to SVG", "generate the .pptx bytes"] }],
     },

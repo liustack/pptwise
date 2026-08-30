@@ -3,7 +3,7 @@ import { findImageComponent } from "./find-image"
 import type { Slide } from "@/ir"
 
 function slide(components: Slide["components"]): Slide {
-  return { type: "content", heading: "h", components }
+  return { type: "content", kind: "points", heading: "h", components }
 }
 
 describe("findImageComponent", () => {

@@ -27,14 +27,14 @@ beforeAll(() => {
 
 function makeIr(components: Component[]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "pest-export-fixture",
     theme: { id: "consulting" },
     meta: {},
     assets: { images: {} },
     slides: [
       { type: "cover", heading: "Cover" },
-      { type: "content", heading: "PEST", components },
+      { type: "content", kind: "points", heading: "PEST", components },
       { type: "ending", heading: "Thanks" },
     ],
   } as PptxIR
@@ -95,7 +95,7 @@ describe("pest pathological content through the real generatePptx", () => {
 
   it("schema-max content on the narrowest curated layout (defect-F fontScale floor) still exports cleanly", async () => {
     const bytes = await generatePptx({
-      version: "4",
+      version: "5",
       filename: "pest-narrow-fixture",
       theme: { id: "consulting" },
       meta: {},
@@ -104,6 +104,7 @@ describe("pest pathological content through the real generatePptx", () => {
         { type: "cover", heading: "Cover" },
         {
           type: "content",
+          kind: "points",
           heading: "PEST Analysis Under A Deliberately Long Heading To Force Two Lines",
           layout: "narrow-column",
           components: [
@@ -112,7 +113,7 @@ describe("pest pathological content through the real generatePptx", () => {
         },
         { type: "ending", heading: "Thanks" },
       ],
-    } as PptxIR)
+    } as unknown as PptxIR)
     expect(bytes.length).toBeGreaterThan(10_000)
     expect([bytes[0], bytes[1]]).toEqual([0x50, 0x4b])
   })

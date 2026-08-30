@@ -29,7 +29,6 @@ export function Branding({
   // Honour the *offered* pin, not a discarded sparse pin: crayon +
   // statement falls back to a regular content layout and still paints
   // this fragment under branding:full. Consulting + statement still skips.
-  if (layoutOmitsBranding(effectiveRequestedLayout(ir.theme.id, slide.layout))) return null
   // Deck-level branding posture. Omitted = "cover-only": cover and chapter keep
   // the brand logo, content and ending skip the whole fragment (rule, meta,
   // logo). "full" is the explicit declaration that draws the content-page
@@ -73,13 +72,11 @@ export function Branding({
   // image-split 通栏页（2026-07-09 用户裁决图列垂直铺满）：图占整列到页底，
   // 页脚分隔线与文字会压图——同 cardBgSuppressesFooter 先例整页抑制页脚
   // （org 已在该版式的 kicker 里，无信息损失）。
-  const imageSplitBleed =
-    slide.layout === "image-split" && slide.components.some((b) => b.type === "image")
+  const imageSplitBleed = false
 
   // image-bottom 通栏页（2026-07-09 用户裁决）：底图铺满页缘，meta 信息
   // 改用遮罩浮层 footer（暗条白字压图），无 meta 则什么都不画。
-  const imageBottomBleed =
-    slide.layout === "image-bottom" && slide.components.some((b) => b.type === "image")
+  const imageBottomBleed = false
 
   const hideFooterByPosture = posture === "minimal"
   const showFooter =

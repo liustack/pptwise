@@ -17,7 +17,7 @@ const slide: Slide = {
 } as Slide
 
 const ir: PptxIR = {
-  version: "4",
+  version: "5",
   filename: "crayonbox-sticker.pptx",
   theme: { id: "crayon" },
   meta: {},

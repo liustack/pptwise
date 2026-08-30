@@ -14,7 +14,7 @@ import { sparseFace } from "./sparse/registry"
  * `pinOnly` + `branding: "none"`。不自己铺暗底，暗不暗由主题 `colors.bg` /
  * `slide.background` 决定。品牌页脚 / logo 不画。motif 仍画。
  *
- * 出处优先 quote 组件的 attribution，否则 subheading。正文只接受一个
+ * 出处优先 blockquote 组件的 attribution，否则 subheading。正文只接受一个
  * paragraph，走 layoutSvgText，不走 SvgContent 卡片。
  *
  * 纪律：本文件禁 theme id、禁颜色 hex 字面量，颜色 / 字体全部来自 ctx。
@@ -175,7 +175,7 @@ export const layoutDef = {
     { name: "kicker", accepts: [] },
     { name: "heading", accepts: [] },
     { name: "subheading", accepts: [] },
-    { name: "body", accepts: ["paragraph", "quote", "citation"], capacity: 1 },
+    { name: "body", accepts: ["paragraph", "blockquote", "citation"], capacity: 1 },
     { name: "meta", accepts: [] },
   ],
   arrangements: ["single"],

@@ -21,6 +21,7 @@ const LATIN_DESCENT = 0.22
 function makeSlide(layout: "image-split" | "image-top", heading: string): Slide {
   return {
     type: "content",
+    kind: "points",
     layout,
     heading,
     components: [
@@ -35,7 +36,7 @@ function makeSlide(layout: "image-split" | "image-top", heading: string): Slide 
 
 function makeIr(theme: string, slide: Slide): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "deck.pptx",
     theme: { id: theme },
     meta: { organization: "Strategy & Operations" },

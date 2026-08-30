@@ -32,12 +32,12 @@ function chapterSlide(heading = HEADING, extras: Partial<Slide> = {}): Slide {
 }
 
 const chapter1 = chapterSlide("开场")
-const content: Slide = { type: "content", heading: "阵容", components: [] } as Slide
+const content: Slide = { type: "content", kind: "points", heading: "阵容", components: [] } as Slide
 const chapter2 = chapterSlide()
 
 function ir(themeId: string, slides: Slide[] = [chapter1, content, chapter2], date?: string): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "day-bill-chapter.pptx",
     theme: { id: themeId },
     meta: date === undefined ? {} : { date },

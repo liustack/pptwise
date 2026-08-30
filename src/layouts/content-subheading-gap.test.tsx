@@ -71,7 +71,7 @@ const SUBHEADING = "效率提升三成，风险敞口下降"
 
 function ir(themeId: CanonicalThemeId, slides: Slide[]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "deck.pptx",
     theme: { id: themeId },
     meta: { organization: "ACME" },
@@ -140,6 +140,7 @@ const CJK_THEME_CASES: ThemeCase[] = [
     renderContent: (contentLayout, ctx, heading) => {
       const slide: Slide = {
         type: "content",
+        kind: "points",
         heading,
         subheading: SUBHEADING,
         components: [{ type: "paragraph", text: "核心概要。" }],
@@ -154,6 +155,7 @@ const CJK_THEME_CASES: ThemeCase[] = [
     renderContent: (contentLayout, ctx, heading) => {
       const slide: Slide = {
         type: "content",
+        kind: "points",
         heading,
         subheading: SUBHEADING,
         components: [{ type: "paragraph", text: "一" }, { type: "paragraph", text: "二" }],
@@ -172,6 +174,7 @@ const CJK_THEME_CASES: ThemeCase[] = [
       // No background asset -> the (simpler) no-bg branch.
       const slide: Slide = {
         type: "content",
+        kind: "points",
         heading,
         subheading: SUBHEADING,
         components: [{ type: "paragraph", text: "围绕三个方向推进。" }],
@@ -190,6 +193,7 @@ const CJK_THEME_CASES: ThemeCase[] = [
       // lock (see creative.test.tsx's "poster path, with subheading").
       const slide: Slide = {
         type: "content",
+        kind: "points",
         heading,
         subheading: SUBHEADING,
         components: [
@@ -208,6 +212,7 @@ const CJK_THEME_CASES: ThemeCase[] = [
     renderContent: (contentLayout, ctx, heading) => {
       const slide: Slide = {
         type: "content",
+        kind: "points",
         heading,
         subheading: SUBHEADING,
         components: [{ type: "paragraph", text: "一" }, { type: "paragraph", text: "二" }],

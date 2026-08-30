@@ -53,7 +53,7 @@ function slideOf(type: Slide["type"]): Slide {
 
 function irOf(theme: string, slide: Slide): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "x.pptx",
     theme: { id: theme },
     meta: { date: "2026-07-15", organization: "CloudSeek" },
@@ -159,7 +159,7 @@ describe("B3 at most one slanted tile per page", () => {
 
   it("playbill stat-hero page paints at most one slanted tile (layout chip, not a second date chip)", () => {
     const ir = {
-      version: "4",
+      version: "5",
       filename: "playbill-stat.pptx",
       theme: { id: "playbill" },
       meta: { date: "2026-07-15" },
@@ -168,6 +168,7 @@ describe("B3 at most one slanted tile per page", () => {
       slides: [
         {
           type: "content",
+          kind: "points",
           layout: "stat-hero",
           heading: "-43%",
           subheading: "unplanned downtime, 90-day pilot",

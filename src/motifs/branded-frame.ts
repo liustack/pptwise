@@ -16,7 +16,7 @@ export const LUXE_FRAME_BOTTOM_BOARD = 696
 export const SPARSE_PIN_LAYOUTS = ["statement", "pull-quote", "stat-hero", "one-evidence", "mono-bleed"] as const
 
 export function yieldsOnSparsePin(slide: Slide): boolean {
-  return slide.type === "content" && slide.layout !== undefined && (SPARSE_PIN_LAYOUTS as readonly string[]).includes(slide.layout)
+  return false
 }
 
 /**
@@ -26,6 +26,5 @@ export function yieldsOnSparsePin(slide: Slide): boolean {
  * Omitted branding (gallery default) drops to the board inset.
  */
 export function frameBottomY(ir: PptxIR, slide: Slide, boardY: number): number {
-  if (layoutOmitsBranding(slide.layout)) return boardY
   return ir.branding === "full" ? FRAME_BOTTOM_BRANDED : boardY
 }

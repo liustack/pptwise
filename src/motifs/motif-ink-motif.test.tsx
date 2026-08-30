@@ -31,7 +31,7 @@ const BR_LOGO = { x: 1120, y: 630, w: 96, h: 40 }
 
 function ir(meta: PptxIR["meta"] = { organization: "云帆科技", date: "2026-08-15" }): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "ink-motif.pptx",
     theme: { id: "ink" },
     meta,
@@ -137,7 +137,7 @@ describe("ink-motif wave 8 — remnant mountain and colophon rail by page type",
   })
 
   it("a sparse pull-quote pin yields the rail and paints the left remnant", () => {
-    const slide = { type: "content", layout: "pull-quote", heading: "引", components: [] } as Slide
+    const slide = { type: "content", kind: "points", layout: "pull-quote", heading: "引", components: [] } as Slide
     const defaultBg = resolveBackgroundHex(tokens.defaultBackgrounds.content, tokens.colors.surface)
     const pageCtx = buildCtx(tokens, {}, undefined, defaultBg)
     const markup = renderSvgMarkup(

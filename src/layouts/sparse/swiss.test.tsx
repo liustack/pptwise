@@ -15,7 +15,7 @@ const LUXE_GOLD = "#C6A15B"
 
 function ir(slides: Slide[]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "x.pptx",
     theme: { id: "swiss" },
     meta: {},
@@ -37,7 +37,7 @@ describe("swiss sparse faces", () => {
   const ctx = buildCtx(resolveStyle("swiss"), {})
 
   it("does not paint a top accent bar (that belongs to the motif)", () => {
-    const slide: Slide = { type: "content", layout: "statement", heading: VERSE_PLAIN, components: [] } as Slide
+    const slide: Slide = { type: "content", kind: "points", layout: "statement", heading: VERSE_PLAIN, components: [] } as Slide
     const { root } = render(
       <StatementContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />,
     )
@@ -48,7 +48,7 @@ describe("swiss sparse faces", () => {
   })
 
   it("statement is left superblack type with a text-fill closer bar", () => {
-    const slide: Slide = { type: "content", layout: "statement", heading: VERSE, components: [] } as Slide
+    const slide: Slide = { type: "content", kind: "points", layout: "statement", heading: VERSE, components: [] } as Slide
     const { markup, root } = render(
       <StatementContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />,
     )
@@ -71,7 +71,7 @@ describe("swiss sparse faces", () => {
   })
 
   it("statement without ** keeps the verse on text fill", () => {
-    const slide: Slide = { type: "content", layout: "statement", heading: VERSE_PLAIN, components: [] } as Slide
+    const slide: Slide = { type: "content", kind: "points", layout: "statement", heading: VERSE_PLAIN, components: [] } as Slide
     const { root } = render(
       <StatementContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />,
     )
@@ -84,9 +84,9 @@ describe("swiss sparse faces", () => {
 
   it("stat-hero is a 360px left numeral with a padded page index", () => {
     const slides: Slide[] = [
-      { type: "content", layout: "stat-hero", heading: "43%", subheading: "订阅续约率同比回升", footnote: "试点客户 · 90 天 · 2026 Q2", components: [] } as Slide,
-      { type: "content", heading: "x", components: [] } as Slide,
-      { type: "content", heading: "y", components: [] } as Slide,
+      { type: "content", kind: "points", layout: "stat-hero", heading: "43%", subheading: "订阅续约率同比回升", footnote: "试点客户 · 90 天 · 2026 Q2", components: [] } as Slide,
+      { type: "content", kind: "points", heading: "x", components: [] } as Slide,
+      { type: "content", kind: "points", heading: "y", components: [] } as Slide,
     ]
     const { root } = render(
       <StatHeroContent ir={ir(slides)} slide={slides[0]} index={0} ctx={ctx} />,
@@ -106,6 +106,7 @@ describe("swiss sparse faces", () => {
   it("one-evidence sits the claim on a surface card with a red index", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "one-evidence",
       heading: "维护工单平均提前 6.5 天生成",
       subheading: "217 张工单全量统计，无一例外",

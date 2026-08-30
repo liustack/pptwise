@@ -18,7 +18,7 @@ const LUXE_GOLD = "#C6A15B"
 
 function ir(slides: Slide[]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "x.pptx",
     theme: { id: "consulting" },
     meta: {},
@@ -42,6 +42,7 @@ describe("consulting sparse faces", () => {
   it("statement is left navy serif with a 结论先行 stamp and a yellow pad only on the first ** run", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "statement",
       heading: VERSE,
       components: [{ type: "paragraph", text: "试点复盘纪要" }],
@@ -78,7 +79,7 @@ describe("consulting sparse faces", () => {
   })
 
   it("statement without ** draws no yellow pad", () => {
-    const slide: Slide = { type: "content", layout: "statement", heading: VERSE_PLAIN, components: [] } as Slide
+    const slide: Slide = { type: "content", kind: "points", layout: "statement", heading: VERSE_PLAIN, components: [] } as Slide
     const { root } = render(
       <StatementContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />,
     )
@@ -91,6 +92,7 @@ describe("consulting sparse faces", () => {
   it("stat-hero is a left navy numeral with a yellow structure bar", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "stat-hero",
       heading: "43%",
       subheading: "订阅续约率同比回升",
@@ -125,6 +127,7 @@ describe("consulting sparse faces", () => {
   it("stat-hero yellow bar sits below the caption ink, not through it", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "stat-hero",
       heading: "10.2",
       subheading: "下半年的三项确定性投入",
@@ -160,6 +163,7 @@ describe("consulting sparse faces", () => {
   it("one-evidence sits the claim on a white card with a primary top bar and 依据 index", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "one-evidence",
       heading: "维护工单平均提前 6.5 天生成",
       subheading: "217 张工单全量统计 · 无一例外",

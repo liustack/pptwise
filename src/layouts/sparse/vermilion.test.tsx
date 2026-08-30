@@ -15,7 +15,7 @@ const BOARD_CLAIM = "#3A2E24"
 
 function ir(slides: Slide[], meta: Record<string, string> = {}): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "x.pptx",
     theme: { id: "vermilion" },
     meta,
@@ -37,7 +37,7 @@ describe("vermilion sparse faces", () => {
   const ctx = buildCtx(resolveStyle("vermilion"), {})
 
   it("statement is a centered red line between gold doubles, with org · date at the end", () => {
-    const slide: Slide = { type: "content", layout: "statement", heading: VERSE, components: [] } as Slide
+    const slide: Slide = { type: "content", kind: "points", layout: "statement", heading: VERSE, components: [] } as Slide
     const { markup, root } = render(
       <StatementContent ir={ir([slide], { organization: "云觅科技", date: "2026-08" })} slide={slide} index={0} ctx={ctx} />,
     )
@@ -66,6 +66,7 @@ describe("vermilion sparse faces", () => {
   it("statement ** runs stay primary, gold never paints glyphs", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "statement",
       heading: "设备不会突然坏，只是没人**听它说话**。",
       components: [],
@@ -85,7 +86,7 @@ describe("vermilion sparse faces", () => {
   })
 
   it("statement omits the meta line when organization and date are both missing", () => {
-    const slide: Slide = { type: "content", layout: "statement", heading: VERSE, components: [] } as Slide
+    const slide: Slide = { type: "content", kind: "points", layout: "statement", heading: VERSE, components: [] } as Slide
     const { markup } = render(
       <StatementContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />,
     )
@@ -95,6 +96,7 @@ describe("vermilion sparse faces", () => {
   it("stat-hero is a centered red numeral over a gold diamond", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "stat-hero",
       heading: "43%",
       subheading: "订阅续约率同比回升 · 试点客户九十日",
@@ -119,6 +121,7 @@ describe("vermilion sparse faces", () => {
   it("one-evidence is a dossier card with a red spine and 案卷 index", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "one-evidence",
       heading: "维护工单平均提前 6.5 天生成",
       subheading: "217 张工单全量统计 · 2026 Q2",

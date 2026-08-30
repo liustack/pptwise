@@ -12,7 +12,7 @@ import type { PptxIR, Slide } from "@/ir"
 
 const coverSlide: Slide = { type: "cover", heading: "封面", components: [] } as Slide
 const chapterSlide: Slide = { type: "chapter", heading: "章节", components: [] } as Slide
-const contentSlide: Slide = { type: "content", heading: "内容", components: [] } as Slide
+const contentSlide: Slide = { type: "content", kind: "points", heading: "内容", components: [] } as Slide
 const endingSlide: Slide = { type: "ending", components: [] } as Slide
 const ALL_SLIDES = [coverSlide, chapterSlide, contentSlide, endingSlide]
 
@@ -57,7 +57,7 @@ describe("HeritageMotif（藏书票退役）", () => {
 
   it("content 稀排钉 pin 也是空的，不假装还在画角花", () => {
     for (const layout of ["statement", "pull-quote", "stat-hero", "one-evidence", "mono-bleed"] as const) {
-      const slide = { ...contentSlide, layout } as Slide
+      const slide = { ...contentSlide, layout } as unknown as Slide
       const { root } = draw("heritage", slide)
       expect(root.querySelectorAll("line"), layout).toHaveLength(0)
       expect(root.querySelectorAll("rect"), layout).toHaveLength(0)
@@ -74,7 +74,7 @@ describe("HeritageMotif（藏书票退役）", () => {
   it("封面整页渲染：中景不再有藏书票章或顶缘双线", () => {
     const svg = renderSlideSvg(
       {
-        version: "4",
+        version: "5",
         filename: "heritage-cover.pptx",
         theme: { id: "heritage" },
         meta: {},

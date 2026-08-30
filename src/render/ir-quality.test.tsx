@@ -12,7 +12,7 @@ import type { Component, PptxIR, Slide } from "@/ir"
 
 function makeIR(slides: Slide[], themeId: PptxIR["theme"]["id"] = "consulting"): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "test.pptx",
     theme: { id: themeId },
     meta: {},
@@ -49,7 +49,7 @@ function pacingAxes(pacing: Pacing): NarrativeProfile {
 function findAutoPickHeading(themeId: string, targetLayoutId: string): string {
   for (let i = 0; i < 500; i++) {
     const heading = `probe-${i}`
-    const ir = makeIR([{ type: "content", heading, components: [] }], themeId)
+    const ir = makeIR([{ type: "content", kind: "points", heading, components: [] }], themeId)
     if (resolveEffectiveLayoutId(ir, ir.slides[0], 0) === targetLayoutId) return heading
   }
   throw new Error(`no auto-pick fixture landing on "${targetLayoutId}" for theme "${themeId}" within 500 tries`)
@@ -67,6 +67,7 @@ describe("checkIrQuality", () => {
       },
       {
         type: "content",
+        kind: "points",
         heading: "内容页",
         components: [
           { type: "bullets", items: ["a", "b", "c"] },
@@ -221,8 +222,8 @@ describe("checkIrQuality", () => {
       it(`${c.label} → limit ${c.expectedLimit}`, () => {
         const build = (n: number): Slide => ({
           type: "content",
+          kind: "points",
           heading: "标题",
-          layout: c.layout,
           components: [
             ...(c.image ? [{ type: "image" as const, asset_id: "hero", fit: "cover" as const }] : []),
             ...paragraphs(n - (c.image ? 1 : 0)),
@@ -251,7 +252,7 @@ describe("checkIrQuality", () => {
       // selection algorithm or tech's curated set ever changes).
       const heading = findAutoPickHeading("tech", "bento-panel")
       const axes = pacingAxes("balanced")
-      const build = (n: number): Slide => ({ type: "content", heading, components: paragraphs(n) })
+      const build = (n: number): Slide => ({ type: "content", kind: "points", heading, components: paragraphs(n) })
 
       const atLimit = makeIR([build(4)], "tech")
       expect(resolveEffectiveLayoutId(atLimit, atLimit.slides[0], 0)).toBe("bento-panel")
@@ -277,8 +278,8 @@ describe("checkIrQuality", () => {
       const axes = pacingAxes("balanced")
       const build = (n: number): Slide => ({
         type: "content",
+        kind: "points",
         heading,
-        layout: "image-split",
         components: paragraphs(n),
       })
 
@@ -293,10 +294,10 @@ describe("checkIrQuality", () => {
     })
 
     it("narrative omitted defaults to the general preset (briefing x balanced x public) — density limit 4", () => {
-      const atLimit = makeIR([{ type: "content", heading: "标题", components: paragraphs(4) }])
+      const atLimit = makeIR([{ type: "content", kind: "points", heading: "标题", components: paragraphs(4) }])
       expect(codes(checkIrQuality(atLimit))).not.toContain("density")
 
-      const overLimit = makeIR([{ type: "content", heading: "标题", components: paragraphs(5) }])
+      const overLimit = makeIR([{ type: "content", kind: "points", heading: "标题", components: paragraphs(5) }])
       const issues = checkIrQuality(overLimit)
       expect(codes(issues)).toContain("density")
       const density = issues.find((i) => i.code === "density")!.density!
@@ -314,7 +315,7 @@ describe("checkIrQuality", () => {
   describe("pin_only_over_capacity (pinOnly layouts only — a hard error, scope-distinct from the density warn above)", () => {
     it("pinning quote-stage (capacity 1) with 2 components is a hard error", () => {
       const ir = makeIR([
-        { type: "content", heading: "金句", layout: "quote-stage", components: paragraphs(2) },
+        { type: "content", kind: "points", heading: "金句",  components: paragraphs(2) },
       ])
       const issues = checkIrQuality(ir)
       expect(codes(issues)).toContain("pin_only_over_capacity")
@@ -325,14 +326,14 @@ describe("checkIrQuality", () => {
 
     it("pinning quote-stage with exactly 1 component (at capacity) passes clean", () => {
       const ir = makeIR([
-        { type: "content", heading: "金句", layout: "quote-stage", components: paragraphs(1) },
+        { type: "content", kind: "points", heading: "金句",  components: paragraphs(1) },
       ])
       expect(codes(checkIrQuality(ir))).not.toContain("pin_only_over_capacity")
     })
 
     it("pinning quote-stage with 0 components (a pure quote) passes clean", () => {
       const ir = makeIR([
-        { type: "content", heading: "金句", layout: "quote-stage", components: [] },
+        { type: "content", kind: "points", heading: "金句",  components: [] },
       ])
       expect(codes(checkIrQuality(ir))).not.toContain("pin_only_over_capacity")
     })
@@ -341,7 +342,7 @@ describe("checkIrQuality", () => {
       "pinning %s (capacity 1) with 2 components is a hard error",
       (layoutId) => {
         const ir = makeIR(
-          [{ type: "content", heading: "金句", layout: layoutId, components: paragraphs(2) }],
+          [{ type: "content", kind: "points", heading: "金句",  components: paragraphs(2) }],
           layoutId === "pull-quote" ? "heritage" : "consulting",
         )
         const issues = checkIrQuality(ir)
@@ -359,7 +360,7 @@ describe("checkIrQuality", () => {
       // today's behavior: a `density` warn, `ok:true`-equivalent (checked at
       // the checkIrQuality level via severity), never the new hard error.
       const ir = makeIR([
-        { type: "content", heading: "标题", layout: "two-column", components: paragraphs(5) },
+        { type: "content", kind: "points", heading: "标题",  components: paragraphs(5) },
       ])
       const issues = checkIrQuality(ir)
       expect(codes(issues)).toContain("density")
@@ -369,7 +370,7 @@ describe("checkIrQuality", () => {
 
     it("regression: pinning bento-panel (capacity 6, not pinOnly) over its own capacity still only warns density", () => {
       const ir = makeIR([
-        { type: "content", heading: "标题", layout: "bento-panel", components: paragraphs(7) },
+        { type: "content", kind: "points", heading: "标题",  components: paragraphs(7) },
       ])
       const issues = checkIrQuality(ir)
       expect(codes(issues)).toContain("density")
@@ -378,7 +379,7 @@ describe("checkIrQuality", () => {
 
     it("pinning one-evidence (capacity 1) with 2 components is a hard error", () => {
       const ir = makeIR([
-        { type: "content", heading: "断言", layout: "one-evidence", components: paragraphs(2) },
+        { type: "content", kind: "points", heading: "断言",  components: paragraphs(2) },
       ])
       const issues = checkIrQuality(ir)
       expect(codes(issues)).toContain("pin_only_over_capacity")
@@ -389,14 +390,14 @@ describe("checkIrQuality", () => {
 
     it("pinning one-evidence with exactly 1 component passes clean of that error", () => {
       const ir = makeIR([
-        { type: "content", heading: "断言", layout: "one-evidence", components: paragraphs(1) },
+        { type: "content", kind: "points", heading: "断言",  components: paragraphs(1) },
       ])
       expect(codes(checkIrQuality(ir))).not.toContain("pin_only_over_capacity")
     })
 
     it("pinning mono-bleed (capacity 0) with 1 component is a hard error", () => {
       const ir = makeIR(
-        [{ type: "content", heading: "把灯关掉", layout: "mono-bleed", components: paragraphs(1) }],
+        [{ type: "content", kind: "points", heading: "把灯关掉",  components: paragraphs(1) }],
         "playbill",
       )
       const issues = checkIrQuality(ir)
@@ -410,14 +411,14 @@ describe("checkIrQuality", () => {
 
     it("pinning stat-hero with 2 components is a hard error", () => {
       const ir = makeIR([
-        { type: "content", heading: "95.7%", layout: "stat-hero", components: paragraphs(2) },
+        { type: "content", kind: "points", heading: "95.7%",  components: paragraphs(2) },
       ])
       expect(codes(checkIrQuality(ir))).toContain("pin_only_over_capacity")
     })
 
     it("an unoffered sparse pin does not fire pin_only_over_capacity (render falls back)", () => {
       const ir = makeIR(
-        [{ type: "content", heading: "断言", layout: "statement", components: paragraphs(2) }],
+        [{ type: "content", kind: "points", heading: "断言",  components: paragraphs(2) }],
         "crayon",
       )
       expect(codes(checkIrQuality(ir))).not.toContain("pin_only_over_capacity")
@@ -433,14 +434,14 @@ describe("checkIrQuality", () => {
 
     it("an ordinary-length heading fits comfortably and never fires", () => {
       const ir = makeIR([
-        { type: "content", heading: "简洁是最终的复杂", layout: "quote-stage", components: [] },
+        { type: "content", kind: "points", heading: "简洁是最终的复杂",  components: [] },
       ])
       expect(codes(checkIrQuality(ir))).not.toContain("pinned_heading_overflow")
     })
 
     it("a single CJK_LONG heading still fits within quote-stage's own budget (maxLines 4 gives real room) and does not fire", () => {
       const ir = makeIR([
-        { type: "content", heading: CJK_LONG, layout: "quote-stage", components: [] },
+        { type: "content", kind: "points", heading: CJK_LONG,  components: [] },
       ])
       expect(codes(checkIrQuality(ir))).not.toContain("pinned_heading_overflow")
     })
@@ -449,8 +450,8 @@ describe("checkIrQuality", () => {
       const ir = makeIR([
         {
           type: "content",
+          kind: "points",
           heading: `${CJK_LONG}${CJK_LONG}${MIXED_LONG}`,
-          layout: "quote-stage",
           components: [],
         },
       ])
@@ -463,8 +464,8 @@ describe("checkIrQuality", () => {
       const ir = makeIR([
         {
           type: "content",
+          kind: "points",
           heading: `${MIXED_LONG}${MIXED_LONG}${MIXED_LONG}`,
-          layout: "quote-stage",
           components: [],
         },
       ])
@@ -474,7 +475,7 @@ describe("checkIrQuality", () => {
 
     it("the exact same pathologically long heading on a non-quote-stage layout never fires this code (scope-distinct from long_heading's warn above)", () => {
       const ir = makeIR([
-        { type: "content", heading: `${CJK_LONG}${CJK_LONG}`, components: [] },
+        { type: "content", kind: "points", heading: `${CJK_LONG}${CJK_LONG}`, components: [] },
       ])
       const issues = checkIrQuality(ir)
       expect(codes(issues)).not.toContain("pinned_heading_overflow")
@@ -496,6 +497,7 @@ describe("checkIrQuality", () => {
         const ir = makeIR([
           {
             type: "content",
+            kind: "points",
             heading: "列表页",
             components: [
               { type: "bullets", items: Array.from({ length: budget.bullets.maxItems }, (_, i) => String(i)) },
@@ -509,6 +511,7 @@ describe("checkIrQuality", () => {
         const ir = makeIR([
           {
             type: "content",
+            kind: "points",
             heading: "列表页",
             components: [
               { type: "bullets", items: Array.from({ length: budget.bullets.maxItems + 1 }, (_, i) => String(i)) },
@@ -529,7 +532,7 @@ describe("checkIrQuality", () => {
       it(`${pacing} pacing: does NOT warn bullet_item_long at exactly ${budget.bullets.maxUnitsPerItem} measureTextUnits`, () => {
         const ok = "长".repeat(budget.bullets.maxUnitsPerItem) // CJK weight = 1.0/字
         const ir = makeIR([
-          { type: "content", heading: "列表页", components: [{ type: "bullets", items: [ok] }] },
+          { type: "content", kind: "points", heading: "列表页", components: [{ type: "bullets", items: [ok] }] },
         ])
         expect(codes(checkIrQuality(ir, axes))).not.toContain("bullet_item_long")
       })
@@ -537,7 +540,7 @@ describe("checkIrQuality", () => {
       it(`${pacing} pacing: warns bullet_item_long over ${budget.bullets.maxUnitsPerItem} measureTextUnits`, () => {
         const long = "长".repeat(budget.bullets.maxUnitsPerItem + 1)
         const ir = makeIR([
-          { type: "content", heading: "列表页", components: [{ type: "bullets", items: [long] }] },
+          { type: "content", kind: "points", heading: "列表页", components: [{ type: "bullets", items: [long] }] },
         ])
         const issues = checkIrQuality(ir, axes)
         expect(codes(issues)).toContain("bullet_item_long")
@@ -551,6 +554,7 @@ describe("checkIrQuality", () => {
       const ir = makeIR([
         {
           type: "content",
+          kind: "points",
           heading: "列表页",
           components: [{ type: "bullets", items: Array.from({ length: 6 }, (_, i) => String(i)) }],
         },
@@ -578,7 +582,7 @@ describe("checkIrQuality", () => {
     it(`does NOT report bullet_item_overflow at exactly ${CAPACITY.bullets.itemOverflowUnits} measureTextUnits`, () => {
       const atCeiling = "长".repeat(CAPACITY.bullets.itemOverflowUnits) // CJK weight = 1.0/字
       const ir = makeIR([
-        { type: "content", heading: "列表页", components: [{ type: "bullets", items: [atCeiling] }] },
+        { type: "content", kind: "points", heading: "列表页", components: [{ type: "bullets", items: [atCeiling] }] },
       ])
       expect(codes(checkIrQuality(ir))).not.toContain("bullet_item_overflow")
     })
@@ -586,7 +590,7 @@ describe("checkIrQuality", () => {
     it(`reports bullet_item_overflow (severity error) over ${CAPACITY.bullets.itemOverflowUnits} measureTextUnits, alongside bullet_item_long (different questions, neither supersedes the other)`, () => {
       const over = "长".repeat(CAPACITY.bullets.itemOverflowUnits + 1)
       const ir = makeIR([
-        { type: "content", heading: "列表页", components: [{ type: "bullets", items: [over] }] },
+        { type: "content", kind: "points", heading: "列表页", components: [{ type: "bullets", items: [over] }] },
       ])
       const issues = checkIrQuality(ir)
       expect(codes(issues)).toContain("bullet_item_overflow")
@@ -597,7 +601,7 @@ describe("checkIrQuality", () => {
     it("fires the same regardless of pacing (flat geometric ceiling, not PACING_BUDGETS-scoped)", () => {
       const over = "长".repeat(CAPACITY.bullets.itemOverflowUnits + 1)
       const ir = makeIR([
-        { type: "content", heading: "列表页", components: [{ type: "bullets", items: [over] }] },
+        { type: "content", kind: "points", heading: "列表页", components: [{ type: "bullets", items: [over] }] },
       ])
       for (const pacing of ["dense", "balanced", "spacious"] as Pacing[]) {
         const issues = checkIrQuality(ir, pacingAxes(pacing))
@@ -622,6 +626,7 @@ describe("checkIrQuality", () => {
       const ir = makeIR([
         {
           type: "content",
+          kind: "points",
           heading: "列表页",
           components: [{ type: "bullets", items: Array.from({ length: threshold }, (_, i) => String(i)) }],
         },
@@ -637,6 +642,7 @@ describe("checkIrQuality", () => {
       const ir = makeIR([
         {
           type: "content",
+          kind: "points",
           heading: "列表页",
           components: [{ type: "bullets", items: Array.from({ length: threshold + 1 }, (_, i) => String(i)) }],
         },
@@ -651,6 +657,7 @@ describe("checkIrQuality", () => {
       const ir = makeIR([
         {
           type: "content",
+          kind: "points",
           heading: "列表页",
           components: [{ type: "bullets", items: Array.from({ length: threshold + 1 }, (_, i) => String(i)) }],
         },
@@ -671,6 +678,7 @@ describe("checkIrQuality", () => {
       const ir = makeIR([
         {
           type: "content",
+          kind: "points",
           heading: "500-item bullets stress",
           components: [{ type: "bullets", items: Array.from({ length: 500 }, (_, i) => `item ${i}`) }],
         },
@@ -682,6 +690,7 @@ describe("checkIrQuality", () => {
       const ir = makeIR([
         {
           type: "content",
+          kind: "points",
           heading: "extreme bullets",
           components: [{ type: "bullets", items: Array.from({ length: 20_000 }, (_, i) => `item ${i}`) }],
         },
@@ -715,6 +724,7 @@ describe("checkIrQuality", () => {
       const ir = makeIR([
         {
           type: "content",
+          kind: "points",
           heading: "对比页",
           components: [{ type: "comparison", columns: ["A", "B"], rows: comparisonRows(threshold) }],
         },
@@ -726,6 +736,7 @@ describe("checkIrQuality", () => {
       const ir = makeIR([
         {
           type: "content",
+          kind: "points",
           heading: "对比页",
           components: [{ type: "comparison", columns: ["A", "B"], rows: comparisonRows(threshold + 1) }],
         },
@@ -743,6 +754,7 @@ describe("checkIrQuality", () => {
       const ir = makeIR([
         {
           type: "content",
+          kind: "points",
           heading: "对比压力测试",
           components: [{ type: "comparison", columns: ["A", "B"], rows: comparisonRows(threshold) }],
         },
@@ -754,6 +766,7 @@ describe("checkIrQuality", () => {
       const ir = makeIR([
         {
           type: "content",
+          kind: "points",
           heading: "对比压力测试",
           components: [{ type: "comparison", columns: ["A", "B"], rows: comparisonRows(threshold + 1) }],
         },
@@ -771,6 +784,7 @@ describe("checkIrQuality", () => {
       const ir = makeIR([
         {
           type: "content",
+          kind: "points",
           heading: "300-row comparison stress",
           components: [{ type: "comparison", columns: ["A", "B"], rows: comparisonRows(300) }],
         },
@@ -784,6 +798,7 @@ describe("checkIrQuality", () => {
       const ir = makeIR([
         {
           type: "content",
+          kind: "points",
           heading: "extreme comparison",
           components: [{ type: "comparison", columns: ["A", "B"], rows: comparisonRows(20_000) }],
         },
@@ -803,6 +818,7 @@ describe("checkIrQuality", () => {
       const ir = makeIR([
         {
           type: "content",
+          kind: "points",
           heading: "引用页",
           components: [{ type: "citation", sources: citationSources(threshold) }],
         },
@@ -814,6 +830,7 @@ describe("checkIrQuality", () => {
       const ir = makeIR([
         {
           type: "content",
+          kind: "points",
           heading: "引用页",
           components: [{ type: "citation", sources: citationSources(threshold + 1) }],
         },
@@ -831,6 +848,7 @@ describe("checkIrQuality", () => {
       const ir = makeIR([
         {
           type: "content",
+          kind: "points",
           heading: "引用压力测试",
           components: [{ type: "citation", sources: citationSources(threshold) }],
         },
@@ -842,6 +860,7 @@ describe("checkIrQuality", () => {
       const ir = makeIR([
         {
           type: "content",
+          kind: "points",
           heading: "引用压力测试",
           components: [{ type: "citation", sources: citationSources(threshold + 1) }],
         },
@@ -860,6 +879,7 @@ describe("checkIrQuality", () => {
       const ir = makeIR([
         {
           type: "content",
+          kind: "points",
           heading: "300-source citation stress",
           components: [{ type: "citation", sources: citationSources(300) }],
         },
@@ -871,6 +891,7 @@ describe("checkIrQuality", () => {
       const ir = makeIR([
         {
           type: "content",
+          kind: "points",
           heading: "extreme citation",
           components: [{ type: "citation", sources: citationSources(20_000) }],
         },
@@ -890,6 +911,7 @@ describe("checkIrQuality", () => {
       const ir = makeIR([
         {
           type: "content",
+          kind: "points",
           heading: "架构页",
           components: [{ type: "architecture", layers: architectureLayers(threshold) }],
         },
@@ -901,6 +923,7 @@ describe("checkIrQuality", () => {
       const ir = makeIR([
         {
           type: "content",
+          kind: "points",
           heading: "架构页",
           components: [{ type: "architecture", layers: architectureLayers(threshold + 1) }],
         },
@@ -918,6 +941,7 @@ describe("checkIrQuality", () => {
       const ir = makeIR([
         {
           type: "content",
+          kind: "points",
           heading: "架构压力测试",
           components: [{ type: "architecture", layers: architectureLayers(threshold) }],
         },
@@ -929,6 +953,7 @@ describe("checkIrQuality", () => {
       const ir = makeIR([
         {
           type: "content",
+          kind: "points",
           heading: "架构压力测试",
           components: [{ type: "architecture", layers: architectureLayers(threshold + 1) }],
         },
@@ -942,6 +967,7 @@ describe("checkIrQuality", () => {
       const ir = makeIR([
         {
           type: "content",
+          kind: "points",
           heading: "150-layer architecture stress",
           components: [{ type: "architecture", layers: architectureLayers(150) }],
         },
@@ -953,6 +979,7 @@ describe("checkIrQuality", () => {
       const ir = makeIR([
         {
           type: "content",
+          kind: "points",
           heading: "extreme architecture",
           components: [{ type: "architecture", layers: architectureLayers(20_000) }],
         },
@@ -964,7 +991,7 @@ describe("checkIrQuality", () => {
   // ── placeholder pages (W5 task 1): quality gate skips all content rules ──
 
   it("a placeholder page reports no issues even though it is missing a heading", () => {
-    const ir = makeIR([{ type: "content", placeholder: true, components: [] }])
+    const ir = makeIR([{ type: "content", kind: "points", placeholder: true, components: [] }])
     expect(checkIrQuality(ir)).toEqual([])
   })
 
@@ -972,6 +999,7 @@ describe("checkIrQuality", () => {
     const ir = makeIR([
       {
         type: "content",
+        kind: "points",
         placeholder: true,
         heading: "标".repeat(CAPACITY.headingMaxChars + 1),
         components: paragraphs(20),
@@ -982,8 +1010,8 @@ describe("checkIrQuality", () => {
 
   it("does not let placeholder:true on one slide suppress a real issue on another slide", () => {
     const ir = makeIR([
-      { type: "content", placeholder: true, components: [] },
-      { type: "content", components: [{ type: "paragraph", text: "hi" }] }, // no heading — real issue
+      { type: "content", kind: "points", placeholder: true, components: [] },
+      { type: "content", kind: "points", components: [{ type: "paragraph", text: "hi" }] }, // no heading — real issue
     ])
     const issues = checkIrQuality(ir)
     expect(issues).toHaveLength(1)
@@ -997,6 +1025,7 @@ describe("checkIrQuality", () => {
     const ir = makeIR([
       {
         type: "content",
+        kind: "points",
         components: [{ type: "paragraph", text: "hi" }],
       },
     ])
@@ -1037,6 +1066,7 @@ describe("checkIrQuality", () => {
     const ir = makeIR([
       {
         type: "content",
+        kind: "points",
         components: [{ type: "image", asset_id: "hero", fit: "cover" }],
       },
     ])
@@ -1049,6 +1079,7 @@ describe("checkIrQuality", () => {
     const ir = makeIR([
       {
         type: "content",
+        kind: "points",
         heading:
           "这是一个超过四十个字符的标题用来测试标题过长告警功能是否正常工作的完整长句子啊你好世界。这句真的很长",
         components: [],
@@ -1065,6 +1096,7 @@ describe("checkIrQuality", () => {
     const ir = makeIR([
       {
         type: "content",
+        kind: "points",
         heading: "a".repeat(CAPACITY.headingMaxChars),
         components: [],
       },
@@ -1078,8 +1110,8 @@ describe("checkIrQuality", () => {
     const ir = makeIR([
       {
         type: "content",
+        kind: "points",
         heading: "大数字",
-        arrangement: "big_number",
         components: [{ type: "paragraph", text: "oops" }],
       },
     ])
@@ -1090,8 +1122,8 @@ describe("checkIrQuality", () => {
     const ir = makeIR([
       {
         type: "content",
+        kind: "points",
         heading: "大数字",
-        arrangement: "big_number",
         components: [
           {
             type: "kpi_cards",
@@ -1113,6 +1145,7 @@ describe("checkIrQuality", () => {
     const ir = makeIR([
       {
         type: "content",
+        kind: "points",
         heading: "Share",
         components: [
           {
@@ -1132,6 +1165,7 @@ describe("checkIrQuality", () => {
       const ir = makeIR([
         {
           type: "content",
+          kind: "points",
           heading: "Pipeline",
           components: [
             {
@@ -1158,6 +1192,7 @@ describe("checkIrQuality", () => {
       const ir = makeIR([
         {
           type: "content",
+          kind: "points",
           heading: "Trend",
           components: [
             {
@@ -1177,6 +1212,7 @@ describe("checkIrQuality", () => {
     const ir = makeIR([
       {
         type: "content",
+        kind: "points",
         heading: "Share",
         components: [
           {
@@ -1194,6 +1230,7 @@ describe("checkIrQuality", () => {
     const ir = makeIR([
       {
         type: "content",
+        kind: "points",
         heading: "Share",
         components: [
           {
@@ -1256,7 +1293,7 @@ describe("checkIrQuality", () => {
       )
       const renders = markup.includes("Probe")
 
-      const ir = makeIR([{ type: "content", heading: "h", components: [component] }])
+      const ir = makeIR([{ type: "content", kind: "points", heading: "h", components: [component] }])
       const warns = codes(checkIrQuality(ir)).includes("chart_axes_ignored")
 
       expect(renders).toBe(!warns)
@@ -1274,6 +1311,7 @@ describe("checkIrQuality", () => {
     const ir = makeIR([
       {
         type: "content",
+        kind: "points",
         heading: "Revenue",
         components: [
           {
@@ -1291,6 +1329,7 @@ describe("checkIrQuality", () => {
     const ir = makeIR([
       {
         type: "content",
+        kind: "points",
         heading: "Revenue",
         components: [
           {
@@ -1308,6 +1347,7 @@ describe("checkIrQuality", () => {
     const ir = makeIR([
       {
         type: "content",
+        kind: "points",
         heading: "Revenue",
         components: [
           {
@@ -1328,6 +1368,7 @@ describe("checkIrQuality", () => {
     const ir = makeIR([
       {
         type: "content",
+        kind: "points",
         heading: "Revenue",
         components: [
           {
@@ -1352,7 +1393,7 @@ describe("checkIrQuality", () => {
             ]
           : [{ name: "S1", data: [{ x: "A", y: 10 }, { x: "A", y: 20 }, { x: "B", y: 15 }] }]
       const ir = makeIR([
-        { type: "content", heading: "h", components: [{ type: "chart", chart_type, series }] },
+        { type: "content", kind: "points", heading: "h", components: [{ type: "chart", chart_type, series }] },
       ])
       expect(codes(checkIrQuality(ir))).toContain("chart_duplicate_category")
     }
@@ -1362,6 +1403,7 @@ describe("checkIrQuality", () => {
     const ir = makeIR([
       {
         type: "content",
+        kind: "points",
         heading: "Revenue",
         components: [
           {
@@ -1397,6 +1439,7 @@ describe("checkIrQuality", () => {
     const ir = makeIR([
       {
         type: "content",
+        kind: "points",
         heading: "Trend",
         components: [{ type: "chart", chart_type: "line", series: nSeries(9) }],
       },
@@ -1412,6 +1455,7 @@ describe("checkIrQuality", () => {
     const ir = makeIR([
       {
         type: "content",
+        kind: "points",
         heading: "Trend",
         components: [{ type: "chart", chart_type: "line", series: nSeries(8) }],
       },
@@ -1424,6 +1468,7 @@ describe("checkIrQuality", () => {
       const ir = makeIR([
         {
           type: "content",
+          kind: "points",
           heading: "Trend",
           components: [{ type: "chart", chart_type, series: nSeries(9) }],
         },
@@ -1444,6 +1489,7 @@ describe("checkIrQuality", () => {
     makeIR([
       {
         type: "content",
+        kind: "points",
         heading: "Metrics",
         components: [
           {
@@ -1491,6 +1537,7 @@ describe("checkIrQuality", () => {
     const ir = makeIR([
       {
         type: "content",
+        kind: "points",
         // no heading + over the density limit + bullets overflow
         components: [
           { type: "bullets", items: Array.from({ length: budget.bullets.maxItems + 1 }, (_, i) => String(i)) },
@@ -1511,6 +1558,7 @@ describe("checkIrQuality", () => {
       { type: "cover", heading: "OK", components: [] },
       {
         type: "content",
+        kind: "points",
         // no heading
         components: [{ type: "paragraph", text: "x" }],
       },

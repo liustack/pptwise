@@ -14,19 +14,19 @@ import { createServeServer, SERVE_CLIENT_SCRIPT_ID, watchRoots, type ServeHandle
 installNodePlatform()
 
 const VALID_IR = {
-  version: "4",
+  version: "5",
   filename: "serve-test",
   theme: { id: "tech" },
   slides: [
     { type: "cover", heading: "Serve Test" },
-    { type: "content", heading: "Body", components: [{ type: "paragraph", text: "hello from serve" }] },
+    { type: "content", kind: "points", heading: "Body", components: [{ type: "paragraph", text: "hello from serve" }] },
   ],
 }
 
 // Same shape commands.test.ts's own `bad.json` uses to pin runValidate's
 // "invalid IR" rejection — reused here to trigger the exact same rejection
 // out of createServeServer's own initial build.
-const INVALID_IR_SHAPE = { version: "4" }
+const INVALID_IR_SHAPE = { version: "5" }
 
 // 1x1 red PNG — the same fixture commands.test.ts uses to exercise a real
 // deck-dir `assets/` asset (see its own "assets/ auto-registration reaches
@@ -52,9 +52,9 @@ function makeDeckPlan(): Record<string, unknown> {
     filename: "serve-deck",
     pages: [
       { id: "p-cover", type: "cover", heading: "Serve Deck" },
-      { id: "p-a", type: "content", heading: "Segment A" },
-      { id: "p-b", type: "content", heading: "Segment B" },
-      { id: "p-c", type: "content", heading: "Segment C" },
+      { id: "p-a", type: "content", kind: "points", heading: "Segment A" },
+      { id: "p-b", type: "content", kind: "points", heading: "Segment B" },
+      { id: "p-c", type: "content", kind: "points", heading: "Segment C" },
       { id: "p-ending", type: "ending", heading: "Thanks" },
     ],
   }
@@ -468,12 +468,12 @@ describe("createServeServer — theme-file live reload", () => {
     await writeFile(
       irPath,
       JSON.stringify({
-        version: "4",
+        version: "5",
         filename: "serve-theme",
         theme: { id: "acme-serve" },
         slides: [
           { type: "cover", heading: "Serve Theme" },
-          { type: "content", heading: "Body", components: [{ type: "paragraph", text: "hello from serve" }] },
+          { type: "content", kind: "points", heading: "Body", components: [{ type: "paragraph", text: "hello from serve" }] },
         ],
       }),
     )

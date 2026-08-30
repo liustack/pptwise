@@ -45,7 +45,7 @@ Any slide may also set a stable `id` (what spec pages and validation errors refe
 
 ## Field names that drift
 
-55 synonym pairs across component types — kpi `title`→`label`, quote `content`→`text`, swot `strength`→`strengths`, bmc `partners`→`key_partners`, and so on — are silently normalized to the canonical name at validate time. `validate`/`render`/`preview` print a note listing what changed, never a hard error.
+Across component types, 55 synonym pairs are silently normalized to the canonical name at validate time. Examples include kpi `title`→`label`, blockquote `content`→`text`, swot `strength`→`strengths`, and bmc `partners`→`key_partners`. `validate`/`render`/`preview` print a note listing what changed, never a hard error.
 
 That rescue covers weak-model synonym drift only. It does not cover pre-v4 vocabulary. A v4-labeled document that writes `scenario` instead of `narrative`, `mode`/`delivery` instead of `strategy`/`pacing`, or the old `narrative`/`text`/`presentation` axis values is rejected outright, with the current names and values listed. An explicit `version: "3"` (or `"2"`) is rejected the same way, with a migration pointer.
 

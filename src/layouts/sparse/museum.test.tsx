@@ -15,7 +15,7 @@ const BOARD_TEXT = "#E8DFC9"
 
 function ir(slides: Slide[], meta: { organization?: string; date?: string } = {}): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "x.pptx",
     theme: { id: "museum" },
     meta,
@@ -38,7 +38,7 @@ describe("museum sparse faces", () => {
 
   it("statement is a centered wall label with an accent hairline and org/date footer", () => {
     const chapter: Slide = { type: "chapter", heading: "第二展厅 · 预测", components: [] } as Slide
-    const slide: Slide = { type: "content", layout: "statement", heading: VERSE, components: [] } as Slide
+    const slide: Slide = { type: "content", kind: "points", layout: "statement", heading: VERSE, components: [] } as Slide
     const doc = ir([chapter, slide], { organization: "云觅科技藏", date: "2026" })
     const { markup, root } = render(
       <StatementContent ir={doc} slide={slide} index={1} ctx={ctx} />,
@@ -69,6 +69,7 @@ describe("museum sparse faces", () => {
   it("one-evidence sits the claim on a surface panel with an exhibit number", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "one-evidence",
       heading: "工单平均提前 **6.5 天**",
       subheading: "试点客户 90 天 · 217 张工单",
@@ -96,6 +97,7 @@ describe("museum sparse faces", () => {
   it("one-evidence without ** keeps the claim on text fill", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "one-evidence",
       heading: "工单平均提前 6.5 天",
       components: [],
@@ -113,6 +115,7 @@ describe("museum sparse faces", () => {
   it("stat-hero is a centered accent numeral over a seam line", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "stat-hero",
       heading: "43%",
       subheading: "订阅续约率同比回升 · 90 天",

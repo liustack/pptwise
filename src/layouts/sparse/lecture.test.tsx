@@ -17,7 +17,7 @@ const BOARD_TEXT = "#EDEAE0"
 
 function ir(slides: Slide[]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "x.pptx",
     theme: { id: "lecture" },
     meta: {},
@@ -41,6 +41,7 @@ describe("lecture sparse faces", () => {
   it("statement is left-axis chalkboard type with a chalk arc only when emphasized", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "statement",
       heading: VERSE,
       components: [{ type: "paragraph", text: "工作区订阅开课第一句" }],
@@ -71,6 +72,7 @@ describe("lecture sparse faces", () => {
       "试点客户九十天运行数据表明席位净流失从每周两次降到每月不到一次，维护工单平均提前六点五天生成，并且故障预测准确率已经稳定在百分之八十八以上。"
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "statement",
       heading: VERSE_PLAIN,
       components: [{ type: "paragraph", text: long }],
@@ -86,7 +88,7 @@ describe("lecture sparse faces", () => {
   })
 
   it("statement without ** draws no chalk arc", () => {
-    const slide: Slide = { type: "content", layout: "statement", heading: VERSE_PLAIN, components: [] } as Slide
+    const slide: Slide = { type: "content", kind: "points", layout: "statement", heading: VERSE_PLAIN, components: [] } as Slide
     const { root } = render(
       <StatementContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />,
     )
@@ -96,6 +98,7 @@ describe("lecture sparse faces", () => {
   it("stat-hero is a left yellow numeral with a hand stroke underneath", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "stat-hero",
       heading: "43%",
       subheading: "订阅续约率同比回升",
@@ -118,6 +121,7 @@ describe("lecture sparse faces", () => {
   it("one-evidence uses a dashed muted frame and centers the claim when there is no visual", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "one-evidence",
       heading: "维护工单平均提前 **6.5 天** 生成",
       subheading: "试点客户 90 天 · 全部 217 张工单",

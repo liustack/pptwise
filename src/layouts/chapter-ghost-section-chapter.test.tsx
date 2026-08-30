@@ -18,7 +18,7 @@ function chapter(heading = HEADING, extras: Partial<Slide> = {}): Slide {
 
 function ir(themeId: string, slides: Slide[]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "ghost-section.pptx",
     theme: { id: themeId },
     meta: {},
@@ -52,7 +52,7 @@ function ghostEl(root: Element): Element {
 
 describe("chapter-ghost-section-chapter — board geometry", () => {
   it("sinks a ghost index to the bottom right, whole glyph inside the canvas", () => {
-    const { root, tokens } = renderChapter("insight", [chapter(), { type: "content", heading: "x", components: [] } as Slide, chapter()], 2)
+    const { root, tokens } = renderChapter("insight", [chapter(), { type: "content", kind: "points", heading: "x", components: [] } as Slide, chapter()], 2)
     const ghost = ghostEl(root)
     expect(ghost.textContent).toBe("02")
     expect(ghost.getAttribute("text-anchor")).toBe("end")

@@ -236,7 +236,6 @@ function renderStackedContent(
       <>
         {treated.chrome}
         <SvgContent
-          arrangement={slide.arrangement}
           components={slide.components}
           rect={{ x: 56, y: contentRectY, w: 1168, h: contentRectH }}
           ctx={ctx}
@@ -329,7 +328,6 @@ function renderStackedContent(
 
       {/* Content components (was a foreignObject) */}
       <SvgContent
-        arrangement={slide.arrangement}
         components={slide.components}
         rect={{ x: 56, y: contentRectY, w: 1168, h: contentRectH }}
         ctx={ctx}

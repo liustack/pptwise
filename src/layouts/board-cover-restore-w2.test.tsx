@@ -30,7 +30,7 @@ const WAVE2 = [
 
 function ir(themeId: string): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "w2-cover.pptx",
     theme: { id: themeId },
     branding: "full",
@@ -285,6 +285,7 @@ describe("wave 8 batch 3 — midground identity survives FullSlideSvg", () => {
     const chapter: Slide = { type: "chapter", heading: "增长战略", components: [] } as Slide
     const slide: Slide = {
       type: "content",
+      kind: "points",
       heading: COVER.heading,
       subheading: COVER.subheading,
       components: [{ type: "paragraph", text: "证据。" }],

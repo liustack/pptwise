@@ -32,7 +32,7 @@ const para: Component = { type: "paragraph", text: "测试段落，占据一定�
 const list: Component = { type: "bullets", items: ["甲", "乙", "丙"] }
 const kpi: Component = { type: "kpi_cards", items: [{ value: "9", label: "x" }] }
 const img: Component = { type: "image", asset_id: "a", fit: "cover" }
-const quote: Component = { type: "quote", text: "一句引言。" }
+const blockquote: Component = { type: "blockquote", text: "一句引言。" }
 const verdict: Component = {
   type: "verdict_banner",
   tone: "warning",
@@ -97,8 +97,8 @@ describe("layoutContent variants", () => {
   })
 
   it("quote centers the component group vertically in the rect", () => {
-    const placed = layoutContent("quote", [quote], rect, ctx)
-    const h = measureComponent(quote, 1120, ctx)
+    const placed = layoutContent("quote", [blockquote], rect, ctx)
+    const h = measureComponent(blockquote, 1120, ctx)
     expect(placed[0].box.y).toBeCloseTo(264 + (400 - h) / 2, 0)
   })
 })

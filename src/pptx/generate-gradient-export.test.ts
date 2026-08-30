@@ -18,14 +18,15 @@ import type { PptxIR, Slide } from "@/ir"
 function slide(type: Slide["type"]): Slide {
   return {
     type,
+    ...(type === "content" ? { kind: "points" as const } : {}),
     heading: "渐变装饰验证",
     components: type === "content" || type === "ending" ? [{ type: "paragraph", text: "正文" }] : [],
-  }
+  } as Slide
 }
 
 function makeIR(themeId: PptxIR["theme"]["id"], slides: Slide[]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "decor-gradient.pptx",
     theme: { id: themeId },
     meta: {},
@@ -59,6 +60,7 @@ describe("generatePptxBlob real theme decor gradients", () => {
     const { generatePptxBlob } = await import("./generate")
     const chartSlide: Slide = {
       type: "content",
+      kind: "points",
       heading: "渐变柱",
       components: [
         {
@@ -79,7 +81,7 @@ describe("generatePptxBlob real theme decor gradients", () => {
     const RED_PNG =
       "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
     const ir: PptxIR = {
-      version: "4",
+      version: "5",
       filename: "decor-gradient-bg.pptx",
       theme: { id: "enterprise" },
       meta: {},

@@ -34,14 +34,14 @@ beforeAll(() => {
 
 function makeIr(components: Component[]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "chart-export-fixture",
     theme: { id: "consulting" },
     meta: {},
     assets: { images: {} },
     slides: [
       { type: "cover", heading: "Cover" },
-      { type: "content", heading: "Body", components },
+      { type: "content", kind: "points", heading: "Body", components },
       { type: "ending", heading: "Thanks" },
     ],
   } as PptxIR

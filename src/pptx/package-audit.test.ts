@@ -34,14 +34,14 @@ const BASIC_IR_PATH = new URL("../../examples/basic.json", import.meta.url)
 
 function makeIr(overrides: Partial<PptxIR> = {}): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "package-audit-fixture",
     theme: { id: "consulting" },
     meta: {},
     assets: { images: {} },
     slides: [
       { type: "cover", heading: "Package Audit Fixture" },
-      { type: "content", heading: "Body", components: [{ type: "bullets", items: ["one", "two"] }] },
+      { type: "content", kind: "points", heading: "Body", components: [{ type: "bullets", items: ["one", "two"] }] },
       { type: "ending", heading: "Thanks" },
     ],
     ...overrides,
@@ -316,6 +316,7 @@ describe("auditPptxPackage — image-alt-dropped (A11Y-01)", () => {
         { type: "cover", heading: "Package Audit Fixture", components: [] },
         {
           type: "content",
+          kind: "points",
           heading: "Body",
           components: [{ type: "image", asset_id: "hero", fit: "cover" }],
         },
@@ -387,6 +388,7 @@ describe("auditPptxPackage — image-alt-dropped (A11Y-01)", () => {
         { type: "cover", heading: "Package Audit Fixture", components: [] },
         {
           type: "content",
+          kind: "points",
           heading: "Body",
           components: [{ type: "image", asset_id: "hero", fit: "cover" }],
         },
@@ -416,8 +418,8 @@ describe("auditPptxPackage — image-alt-dropped, image-takeover closure (q15 mi
         { type: "cover", heading: "Package Audit Fixture", components: [] },
         {
           type: "content",
+          kind: "points",
           heading: "Where you will do your best work",
-          layout: "image-split",
           components: [
             { type: "image", asset_id: "office_photo", fit: "cover" },
             { type: "bullets", items: ["Remote-first", "Flexible hours"] },
@@ -441,8 +443,8 @@ describe("auditPptxPackage — image-alt-dropped, image-takeover closure (q15 mi
         { type: "cover", heading: "Package Audit Fixture", components: [] },
         {
           type: "content",
+          kind: "points",
           heading: "Our culture",
-          layout: "image-top",
           components: [
             { type: "image", asset_id: "team_photo", fit: "cover" },
             { type: "bullets", items: ["Ownership", "Craft"] },
@@ -475,6 +477,7 @@ describe("auditPptxPackage — image-alt-dropped, image_grid/background closure"
         { type: "cover", heading: "Package Audit Fixture", components: [] },
         {
           type: "content",
+          kind: "points",
           heading: "Body",
           components: [
             {
@@ -507,6 +510,7 @@ describe("auditPptxPackage — image-alt-dropped, image_grid/background closure"
         { type: "cover", heading: "Package Audit Fixture", components: [] },
         {
           type: "content",
+          kind: "points",
           heading: "Body",
           background: { kind: "asset", asset_id: "bg_photo" },
           components: [{ type: "bullets", items: ["one", "two"] }],
@@ -540,6 +544,7 @@ describe("auditPptxPackage — image-alt-dropped, device_mockup closure", () => 
         { type: "cover", heading: "Package Audit Fixture", components: [] },
         {
           type: "content",
+          kind: "points",
           heading: "Body",
           components: [
             {
@@ -569,6 +574,7 @@ describe("auditPptxPackage — image-alt-dropped, device_mockup closure", () => 
         { type: "cover", heading: "Package Audit Fixture", components: [] },
         {
           type: "content",
+          kind: "points",
           heading: "Body",
           components: [{ type: "device_mockup", device: "phone", asset_id: "app_shot" }],
         },
@@ -613,11 +619,11 @@ describe("auditPptxPackage — image-alt-dropped, rekeyed on rendered ops (alt-e
         { type: "cover", heading: "Package Audit Fixture", components: [] },
         {
           type: "content",
+          kind: "points",
           heading: "Body",
           // Pin a tight auto-pool layout. After banner-heading retired,
           // consulting's free pick no longer overflows this slide, which
           // would skip the drop this fixture is here to prove.
-          layout: "narrow-column",
           components: [
             { type: "bullets", items: Array.from({ length: 40 }, () => LONG_BULLET) },
             { type: "image_grid", items: [{ asset_id: "grid_a" }, { asset_id: "grid_b" }] },
@@ -663,6 +669,7 @@ describe("auditPptxPackage — image-alt-dropped, rekeyed on rendered ops (alt-e
         { type: "cover", heading: "Package Audit Fixture", components: [] },
         {
           type: "content",
+          kind: "points",
           heading: "Body",
           components: [{ type: "image", asset_id: "hero", fit: "cover" }],
         },

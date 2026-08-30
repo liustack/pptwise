@@ -21,12 +21,13 @@ await installNodePlatform()
 
 function deck(style?: Record<string, unknown>): PptxIR {
   const ir = {
-    version: "4",
+    version: "5",
     filename: "fingerprint-probe",
     theme: style ? { id: "consulting", style } : { id: "consulting" },
     slides: [
       {
         type: "content",
+        kind: "points",
         heading: "指纹拆分",
         components: [
           {

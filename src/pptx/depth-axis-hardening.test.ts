@@ -63,7 +63,7 @@ beforeAll(() => {
 // `as PptxIR` cast).
 function baseIr(overrides: Record<string, any> = {}): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "depth-axis-hardening-fixture",
     theme: { id: "consulting" },
     meta: {},
@@ -87,11 +87,13 @@ describe("500-item bullets + 300-row comparison: graceful landing (D1 pathologic
       { type: "cover", heading: "Cover" },
       {
         type: "content",
+        kind: "points",
         heading: "500-item bullets stress",
         components: [{ type: "bullets", items: bigBullets }],
       },
       {
         type: "content",
+        kind: "points",
         heading: "300-row comparison stress",
         components: [{ type: "comparison", columns: ["A", "B"], rows: bigComparisonRows }],
       },
@@ -139,6 +141,7 @@ describe("extreme bullets item count: bullets_count_overflow blocks at validate 
         { type: "cover", heading: "Cover" },
         {
           type: "content",
+          kind: "points",
           heading: "extreme bullets",
           components: [{ type: "bullets", items: Array.from({ length: n }, (_, i) => `item ${i}`) }],
         },
@@ -198,6 +201,7 @@ describe("byte-inertness for normal decks (hard requirement)", () => {
         { type: "cover", heading: "Cover" },
         {
           type: "content",
+          kind: "points",
           heading: "Ordinary content",
           components: [
             { type: "bullets", items: ["first point", "second point", "third point"] },
@@ -210,7 +214,6 @@ describe("byte-inertness for normal decks (hard requirement)", () => {
               ],
             },
           ],
-          arrangement: "two_column",
         },
         { type: "ending", heading: "Thanks" },
       ],
@@ -236,7 +239,7 @@ describe("kpi_cards horizontal-axis sibling: 50-item deck with delta (review rou
   const ir = baseIr({
     slides: [
       { type: "cover", heading: "Cover" },
-      { type: "content", heading: "50 KPI cards", components: [{ type: "kpi_cards", items: fiftyKpis }] },
+      { type: "content", kind: "points", heading: "50 KPI cards", components: [{ type: "kpi_cards", items: fiftyKpis }] },
       { type: "ending", heading: "Thanks" },
     ],
   })
@@ -269,6 +272,7 @@ describe("kpi_cards horizontal-axis sibling: 50-item deck with delta (review rou
         { type: "cover", heading: "Cover" },
         {
           type: "content",
+          kind: "points",
           heading: "3 KPI cards",
           components: [{ type: "kpi_cards", items: fiftyKpis.slice(0, 3) }],
         },

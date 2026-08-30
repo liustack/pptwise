@@ -17,7 +17,7 @@ const slide: Slide = {
 } as Slide
 
 const ir: PptxIR = {
-  version: "4",
+  version: "5",
   filename: "crayonbox-open.pptx",
   theme: { id: "crayon" },
   meta: { organization: "一盒蜡笔", date: "2026 秋季" },

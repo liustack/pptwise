@@ -24,7 +24,7 @@ function endingSlide(extras: Partial<Slide> = {}): Slide {
 
 function ir(themeId: string, s: Slide): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "pill-cta-ending.pptx",
     theme: { id: themeId },
     meta: {},

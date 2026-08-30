@@ -17,7 +17,7 @@ function chapterSlide(heading = HEADING, extras: Partial<Slide> = {}): Slide {
 
 function ir(themeId: string, slides: Slide[]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "mirror-volume-chapter.pptx",
     theme: { id: themeId },
     meta: {},

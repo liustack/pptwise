@@ -17,7 +17,7 @@ const BOARD_QUOTE = "#E8E2D6"
 
 function ir(slides: Slide[], meta: Record<string, string> = {}): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "x.pptx",
     theme: { id: "insight" },
     meta,
@@ -39,7 +39,7 @@ describe("insight sparse faces", () => {
   const ctx = buildCtx(resolveStyle("insight"), {})
 
   it("statement is a prompt line with a muted >, amber verse, and a cursor", () => {
-    const slide: Slide = { type: "content", layout: "statement", heading: VERSE, components: [] } as Slide
+    const slide: Slide = { type: "content", kind: "points", layout: "statement", heading: VERSE, components: [] } as Slide
     const doc = ir([slide], { date: "2026-05-01" })
     const { markup, root } = render(
       <StatementContent ir={doc} slide={slide} index={0} ctx={ctx} />,
@@ -66,14 +66,14 @@ describe("insight sparse faces", () => {
   })
 
   it("SESSION and the ghost quarter stay off when the date cannot be read", () => {
-    const slide: Slide = { type: "content", layout: "statement", heading: VERSE, components: [] } as Slide
+    const slide: Slide = { type: "content", kind: "points", layout: "statement", heading: VERSE, components: [] } as Slide
     const { markup } = render(
       <StatementContent ir={ir([slide], { date: "sometime soon" })} slide={slide} index={0} ctx={ctx} />,
     )
     expect(markup).not.toContain("SESSION")
     expect(markup).not.toMatch(/\bQ[1-4]\b/)
 
-    const missing: Slide = { type: "content", layout: "stat-hero", heading: "43%", components: [] } as Slide
+    const missing: Slide = { type: "content", kind: "points", layout: "stat-hero", heading: "43%", components: [] } as Slide
     const { markup: noDate } = render(
       <StatHeroContent ir={ir([missing])} slide={missing} index={0} ctx={ctx} />,
     )
@@ -84,6 +84,7 @@ describe("insight sparse faces", () => {
   it("stat-hero paints a ghost quarter from meta.date and keeps a leading minus in the value", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "stat-hero",
       heading: "-43%",
       subheading: "席位净流失 · 环比",
@@ -109,7 +110,7 @@ describe("insight sparse faces", () => {
     expect(hero.textContent).toBe("-43%")
     expect(markup).toContain("PILOT LINE · 90D WINDOW")
 
-    const q4slide: Slide = { type: "content", layout: "stat-hero", heading: "12%", components: [] } as Slide
+    const q4slide: Slide = { type: "content", kind: "points", layout: "stat-hero", heading: "12%", components: [] } as Slide
     const { root: q4root } = render(
       <StatHeroContent ir={ir([q4slide], { date: "2026-11-20" })} slide={q4slide} index={0} ctx={ctx} />,
     )
@@ -120,6 +121,7 @@ describe("insight sparse faces", () => {
   it("pull-quote follows a cubic ticker and paints the quote in text, attribution in accent", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "pull-quote",
       heading: QUOTE,
       subheading: "陈砚清 · 首席技术官",
@@ -160,12 +162,13 @@ describe("insight sparse faces", () => {
       { label: "cover", slide: { type: "cover", heading: "43%", components: [] } as Slide },
       {
         label: "content",
-        slide: { type: "content", heading: "行情", components: [{ type: "paragraph", text: "一段正文" }] } as Slide,
+        slide: { type: "content", kind: "points", heading: "行情", components: [{ type: "paragraph", text: "一段正文" }] } as Slide,
       },
       {
         label: "pull-quote",
         slide: {
           type: "content",
+          kind: "points",
           layout: "pull-quote",
           heading: QUOTE,
           subheading: "陈砚清 · 首席技术官",

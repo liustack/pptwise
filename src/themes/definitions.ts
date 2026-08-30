@@ -3,13 +3,21 @@ import { PptwiseError } from "../errors"
 import type { MotifId } from "../motifs/types"
 import { hasExactWidthTable, resolveFontFace } from "../render/fonts"
 import { contrastRatio } from "../render/ink"
-import { excludePinOnly, getLayout, layoutsForSlideType } from "../layouts/registry"
+import {
+  excludePinOnly,
+  getLayout,
+  layoutsForSlideType,
+  type LayoutParamDeclaration,
+} from "../layouts/registry"
 import { REGISTERED_THEMES } from "./registered-themes"
 import {
   SPARSE_LAYOUT_IDS,
   ThemeFileSchema,
+  type BuiltinFaceReference,
   type BuiltinThemeDeclaration,
-  type FaceReference,
+  type Menu,
+  type MenuEntry,
+  type MenuParamValue,
   type ThemeFile,
 } from "./schema"
 import type { Occasion } from "./occasions"
@@ -33,15 +41,15 @@ export interface ThemeDefinition {
   tags: readonly string[]
   occasions?: readonly Occasion[]
   identity?: "low" | "medium" | "high"
-  /** Curated layout ids eligible for each page type. Built-ins and public
-   * complete themes compile their `faces` pools into this total record.
+  /** Semantic page menu. Built-ins acquire this field in S1-B. */
+  menu?: Menu
+  /** Transitional curated layout record used by the pre-S1-A renderer.
+   * Public v2 themes carry their authoritative structure in `menu` above.
    * Legacy programmatic registrations may omit a page type and receive the
-   * registry-wide fallback once at registration. Public complete files must
-   * declare all four pools, so they never take that fallback. */
+   * registry-wide fallback once at registration. */
   layouts: Record<Slide["type"], readonly string[]>
-  /** Original declarative face entries when the theme came from the v1
-   * theme schema. Render selection consumes the compiled `layouts` ids. */
-  faces?: Record<Slide["type"], readonly FaceReference[]>
+  /** Transitional built-in v1 declarations retained only until S1-B. */
+  faces?: Record<Slide["type"], readonly BuiltinFaceReference[]>
   /** One registered motif id. `undefined` means the theme has no motif. */
   motif?: MotifId
   motifParameters?: { intensity?: "subtle" | "normal" }
@@ -371,17 +379,8 @@ export type ThemeRegistration = Omit<ThemeDefinition, "layouts"> & {
   layouts?: Partial<Record<Slide["type"], readonly string[]>>
 }
 
-function faceId(face: FaceReference): string {
+function faceId(face: BuiltinFaceReference): string {
   return typeof face === "string" ? face : face.id
-}
-
-function facesFromLayouts(layouts: ThemeDefinition["layouts"]): ThemeDefinition["faces"] {
-  return {
-    cover: [...layouts.cover],
-    chapter: [...layouts.chapter],
-    content: [...layouts.content],
-    ending: [...layouts.ending],
-  }
 }
 
 function isVersionedThemeFile(value: ThemeRegistration | ThemeFile): boolean {
@@ -399,40 +398,17 @@ function parseVersionedThemeFile(value: ThemeRegistration | ThemeFile): ThemeFil
   return result.data as ThemeFile
 }
 
-/** Compile the public declaration into the total internal shape consumed by
- * layout, motif, brand, and sparse selection. */
-function compileThemeFile(file: ThemeFile): ThemeRegistration {
-  if ("base" in file) {
-    const base = THEME_DEFINITIONS[file.base]
-    const style: StyleTokens = {
-      ...file.style,
-      id: file.base,
-      ...(base.style.shape?.cover
-        ? { shape: { ...file.style.shape, cover: base.style.shape.cover } }
-        : {}),
-    }
-    return {
-      id: file.id,
-      label: file.label,
-      // Component forms, emphasis treatments, and sparse boarded faces use
-      // ComponentCtx.themeId, which is sourced from StyleTokens.id. Keep the
-      // public file id for registration, but dispatch those structural tables
-      // through the declared base so partial truly inherits all structure.
-      style,
-      brand: { ...base.brand, ...file.brand },
-      tags: file.occasions ?? base.tags,
-      occasions: file.occasions ?? base.occasions,
-      identity: file.identity ?? base.identity,
-      layouts: base.layouts,
-      faces: base.faces ?? facesFromLayouts(base.layouts),
-      motif: base.motif,
-      motifParameters: base.motifParameters,
-      layoutTendencies: base.layoutTendencies,
-      sparseLayouts: base.sparseLayouts,
-    }
-  }
+function uniqueFaces(entries: readonly MenuEntry[]): string[] {
+  return [...new Set(entries.map((entry) => entry.face))]
+}
 
-  const faces = file.faces
+function legacyArchetypeFaces(entries: readonly MenuEntry[]): string[] {
+  return uniqueFaces(entries).filter((id) => getLayout(id)?.kind === "archetype")
+}
+
+/** Compile the public v2 declaration into the transitional internal shape. */
+function compileThemeFile(file: ThemeFile): ThemeRegistration {
+  const contentEntries = Object.values(file.menu.content).filter((entry): entry is MenuEntry => entry !== undefined)
   return {
     id: file.id,
     label: file.label,
@@ -441,17 +417,132 @@ function compileThemeFile(file: ThemeFile): ThemeRegistration {
     tags: file.occasions ?? [],
     occasions: file.occasions,
     identity: file.identity,
+    menu: file.menu,
     layouts: {
-      cover: faces.cover.map(faceId),
-      chapter: faces.chapter.map(faceId),
-      content: faces.content.map(faceId),
-      ending: faces.ending.map(faceId),
+      cover: [file.menu.cover.face],
+      chapter: [file.menu.chapter.face],
+      // The v2 menu may legitimately point photo at a takeover. Until S1-A
+      // replaces the legacy curated-pool reader with direct menu lookup, do
+      // not leak those ids into the old archetype-only pool.
+      content: legacyArchetypeFaces(contentEntries),
+      ending: [file.menu.ending.face],
     },
-    faces,
-    motif: file.motif?.id,
-    motifParameters: file.motif?.params,
-    layoutTendencies: file.tendencies,
-    sparseLayouts: file.sparse,
+  }
+}
+
+interface MenuEntryLocation {
+  path: string
+  slideType: Slide["type"]
+  entry: MenuEntry
+}
+
+function menuEntryLocations(menu: Menu): MenuEntryLocation[] {
+  const content = Object.entries(menu.content).flatMap(([kind, entry]) =>
+    entry === undefined ? [] : [{ path: `menu.content.${kind}`, slideType: "content" as const, entry }],
+  )
+  return [
+    { path: "menu.cover", slideType: "cover", entry: menu.cover },
+    { path: "menu.chapter", slideType: "chapter", entry: menu.chapter },
+    ...content,
+    { path: "menu.ending", slideType: "ending", entry: menu.ending },
+  ]
+}
+
+function assertNumberParam(
+  themeId: string,
+  path: string,
+  value: MenuParamValue,
+  declaration: Extract<LayoutParamDeclaration, { type: "number" }>,
+): void {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    throw new PptwiseError(`theme "${themeId}" ${path} expected number`)
+  }
+  if (declaration.integer && !Number.isInteger(value)) {
+    throw new PptwiseError(`theme "${themeId}" ${path} expected an integer`)
+  }
+  if (declaration.min !== undefined && value < declaration.min) {
+    throw new PptwiseError(`theme "${themeId}" ${path} is ${value}, below minimum ${declaration.min}`)
+  }
+  if (declaration.max !== undefined && value > declaration.max) {
+    throw new PptwiseError(`theme "${themeId}" ${path} is ${value}, above maximum ${declaration.max}`)
+  }
+}
+
+function assertStringParam(
+  themeId: string,
+  path: string,
+  value: MenuParamValue,
+  declaration: Extract<LayoutParamDeclaration, { type: "string" }>,
+): void {
+  if (typeof value !== "string") {
+    throw new PptwiseError(`theme "${themeId}" ${path} expected string`)
+  }
+  if (declaration.values !== undefined && !declaration.values.includes(value)) {
+    throw new PptwiseError(
+      `theme "${themeId}" ${path} is "${value}". Allowed values: ${declaration.values.join(", ")}`,
+    )
+  }
+  if (declaration.minLength !== undefined && value.length < declaration.minLength) {
+    throw new PptwiseError(
+      `theme "${themeId}" ${path} has length ${value.length}, below minimum length ${declaration.minLength}`,
+    )
+  }
+  if (declaration.maxLength !== undefined && value.length > declaration.maxLength) {
+    throw new PptwiseError(
+      `theme "${themeId}" ${path} has length ${value.length}, above maximum length ${declaration.maxLength}`,
+    )
+  }
+}
+
+function assertMenuParam(
+  themeId: string,
+  path: string,
+  value: MenuParamValue,
+  declaration: LayoutParamDeclaration,
+): void {
+  if (declaration.type === "number") {
+    assertNumberParam(themeId, path, value, declaration)
+    return
+  }
+  if (declaration.type === "string") {
+    assertStringParam(themeId, path, value, declaration)
+    return
+  }
+  if (typeof value !== "boolean") {
+    throw new PptwiseError(`theme "${themeId}" ${path} expected boolean`)
+  }
+}
+
+/** Validate menu faces and every face-owned adjustable parameter before registration. */
+function assertMenuContract(themeId: string, menu: Menu): void {
+  for (const { path, slideType, entry } of menuEntryLocations(menu)) {
+    const layout = getLayout(entry.face)
+    if (!layout) {
+      throw new PptwiseError(`theme "${themeId}" ${path}.face references unknown layout id "${entry.face}"`)
+    }
+    if (!layout.slideTypes.includes(slideType)) {
+      throw new PptwiseError(
+        `theme "${themeId}" ${path}.face layout "${entry.face}" is not valid for "${slideType}" slides`,
+      )
+    }
+
+    const values = Object.entries(entry.params ?? {})
+    if (values.length === 0) continue
+    if (layout.params === undefined) {
+      throw new PptwiseError(
+        `theme "${themeId}" ${path}.params cannot set values because layout "${entry.face}" declares no adjustable parameters`,
+      )
+    }
+    for (const [name, value] of values) {
+      const declaration = layout.params[name]
+      const paramPath = `${path}.params.${name}`
+      if (declaration === undefined) {
+        throw new PptwiseError(
+          `theme "${themeId}" ${paramPath} is not declared by layout "${entry.face}"`,
+        )
+      }
+      assertMenuParam(themeId, paramPath, value, declaration)
+    }
   }
 }
 
@@ -501,49 +592,33 @@ export function registerTheme(input: ThemeRegistration | ThemeFile): void {
     throw new PptwiseError(`theme "${def.id}" is missing style tokens`)
   }
   assertContrastFloor(def.id, def.style)
+  if (def.menu !== undefined) assertMenuContract(def.id, def.menu)
   const layouts = {} as Record<Slide["type"], readonly string[]>
   for (const slideType of REGISTERABLE_SLIDE_TYPES) {
-    const ids = def.layouts?.[slideType] ?? REGISTERED_THEME_DEFAULT_LAYOUTS[slideType]
+    const declaredIds = def.layouts?.[slideType]
+    const ids =
+      fromThemeFile && declaredIds?.length === 0
+        ? REGISTERED_THEME_DEFAULT_LAYOUTS[slideType]
+        : declaredIds ?? REGISTERED_THEME_DEFAULT_LAYOUTS[slideType]
     if (ids.length === 0) {
       throw new PptwiseError(`theme "${def.id}" must declare at least one layout for "${slideType}" slides`)
     }
-    for (const [index, id] of ids.entries()) {
+    for (const id of ids) {
       const layout = getLayout(id)
-      const pathRoot = fromThemeFile ? `faces.${slideType}` : `layouts.${slideType}`
       if (!layout) {
-        throw new PptwiseError(`theme "${def.id}" ${pathRoot} references unknown layout id "${id}"`)
+        throw new PptwiseError(`theme "${def.id}" layouts.${slideType} references unknown layout id "${id}"`)
       }
       // Curated sets feed the auto-selection path, which assumes layout ids
       // only — a takeover id here would crash at render (undefined component).
       if (layout.kind !== "archetype") {
         throw new PptwiseError(
-          `theme "${def.id}" ${pathRoot}: "${id}" is a ${layout.kind} layout. Curated sets may only contain archetype layouts`,
+          `theme "${def.id}" layouts.${slideType}: "${id}" is a ${layout.kind} layout. Curated sets may only contain archetype layouts`,
         )
       }
       if (!layout.slideTypes.includes(slideType)) {
         throw new PptwiseError(
-          `theme "${def.id}" ${pathRoot}: layout "${id}" is not valid for "${slideType}" slides`,
+          `theme "${def.id}" layouts.${slideType}: layout "${id}" is not valid for "${slideType}" slides`,
         )
-      }
-      const face = def.faces?.[slideType]?.[index]
-      const capacity = typeof face === "string" ? undefined : face?.params?.capacity
-      if (capacity) {
-        const slot = layout.slots.find((candidate) => candidate.name === capacity.slot)
-        if (!slot) {
-          throw new PptwiseError(
-            `theme "${def.id}" faces.${slideType}.${index}.params.capacity references unknown slot "${capacity.slot}" on layout "${id}"`,
-          )
-        }
-        if (slot.capacity === undefined) {
-          throw new PptwiseError(
-            `theme "${def.id}" faces.${slideType}.${index}.params.capacity cannot adapt slot "${capacity.slot}" on layout "${id}" because the registry declares no capacity`,
-          )
-        }
-        if (capacity.max > slot.capacity) {
-          throw new PptwiseError(
-            `theme "${def.id}" faces.${slideType}.${index}.params.capacity.max is ${capacity.max}, above layout "${id}" slot "${capacity.slot}" capacity ${slot.capacity}`,
-          )
-        }
       }
     }
     layouts[slideType] = ids

@@ -16,7 +16,7 @@ const FAKE_JPEG_BYTES = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0, 0, 0, 0])
 
 function ir(images: Record<string, { src: string }>): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "t.pptx",
     theme: { id: "enterprise" },
     meta: {},

@@ -12,7 +12,7 @@ import { fitHeadingLines, scaleTypePx } from "./heading-fit"
 
 function coverIr(themeId: string, heading: string, style?: StyleOverride): PptxIR {
   const v = validateIr({
-    version: "4",
+    version: "5",
     filename: "type-scale.pptx",
     theme: { id: themeId, style },
     meta: {},
@@ -25,7 +25,7 @@ function coverIr(themeId: string, heading: string, style?: StyleOverride): PptxI
 
 function contentIr(style?: StyleOverride): PptxIR {
   const v = validateIr({
-    version: "4",
+    version: "5",
     filename: "type-scale.pptx",
     theme: { id: "consulting", style },
     meta: { organization: "ACME", date: "2026-08" },
@@ -33,6 +33,7 @@ function contentIr(style?: StyleOverride): PptxIR {
     slides: [
       {
         type: "content",
+        kind: "points",
         heading: "发现",
         layout: "rail-numbered",
         footnote: "来源：内部调研",
@@ -150,12 +151,12 @@ describe("typeScale multiplies heading/display size before fit", () => {
     try {
       const ir = (typeScale?: number) => {
         const v = validateIr({
-          version: "4",
+          version: "5",
           filename: "type-scale.pptx",
           theme: { id: "acme-type-scale", style: typeScale ? { shape: { typeScale } } : undefined },
           meta: {},
           assets: { images: {} },
-          slides: [{ type: "content", heading: "灯灭", layout: "statement" }],
+          slides: [{ type: "content", kind: "points", heading: "灯灭", layout: "statement" }],
         })
         if (!v.ok) throw new Error(v.errors.map((e) => e.message).join("\n"))
         return v.ir!

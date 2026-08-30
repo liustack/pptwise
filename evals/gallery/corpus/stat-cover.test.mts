@@ -7,7 +7,7 @@ const emptyAssets = { images: {} }
 describe("enterprise icon_cards slot", () => {
   it("pins two-column and keeps three cards so body text stays on the readable floor", () => {
     const page = themeDeck("enterprise", LEXICONS.zh, emptyAssets).slides[4]!
-    expect(page.layout).toBe("two-column")
+    expect((page as unknown as { layout?: string }).layout).toBe("two-column")
     expect(page.components[0]?.type).toBe("icon_cards")
     if (page.components[0]?.type !== "icon_cards") throw new Error("expected icon_cards")
     expect(page.components[0].items).toHaveLength(3)

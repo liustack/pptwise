@@ -107,7 +107,7 @@ describe("generatePptxBlob v2 master wiring", () => {
     // dedupeMediaInZip. consulting's decor is solid-fill only, keeping this
     // master-wiring test clear of that path entirely.
     const ir: PptxIR = {
-      version: "4",
+      version: "5",
       filename: "master.pptx",
       theme: { id: "consulting" },
       meta: {},
@@ -115,6 +115,7 @@ describe("generatePptxBlob v2 master wiring", () => {
       slides: [
         {
           type: "content",
+          kind: "points",
           heading: "Title",
           components: [{ type: "paragraph", text: "Body" }],
         },

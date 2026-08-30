@@ -8,7 +8,7 @@ import { MOTIF_ANCHOR_WEIGHT, MOTIF_BASE_WEIGHT, MOTIF_CANDIDATES, resolveMotifI
 
 function makeIR(slides: Slide[], themeId: string, seed?: number): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "test.pptx",
     theme: { id: themeId },
     meta: {},
@@ -18,7 +18,7 @@ function makeIR(slides: Slide[], themeId: string, seed?: number): PptxIR {
   } as PptxIR
 }
 
-const contentSlide = (id: string): Slide => ({ type: "content", id, heading: id, components: [] }) as Slide
+const contentSlide = (id: string): Slide => ({ type: "content", kind: "points", id, heading: id, components: [] }) as Slide
 
 describe("MOTIF_CANDIDATES (P1 variety wave, task 2 — table shape)", () => {
   it("board-cover-restore wave 2: six themes lock MOTIF_CANDIDATES to the cover-board motif", () => {

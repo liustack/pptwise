@@ -104,7 +104,7 @@ describe("DeckSpecSchema / validateSpec structural pass", () => {
       ],
     })
     expect(plan.filename).toBe("q3-review")
-    expect(plan.seed).toBe(12345)
+    expect((plan as unknown as { seed?: number }).seed).toBe(12345)
   })
 
   it("defaults version to '1' when omitted", () => {
@@ -125,7 +125,7 @@ describe("DeckSpecSchema / validateSpec structural pass", () => {
     expect(plan.theme).toBeUndefined()
     expect(plan.narrative).toBeUndefined()
     expect(plan.filename).toBeUndefined()
-    expect(plan.seed).toBeUndefined()
+    expect((plan as unknown as { seed?: number }).seed).toBeUndefined()
   })
 
   it("rejects an explicit wrong version literal", () => {

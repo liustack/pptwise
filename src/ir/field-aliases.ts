@@ -1,7 +1,7 @@
 /**
  * Deterministic field-alias normalization — a rescue layer for weak-model
  * synonym field-name drift (a model writing kpi `title` when the schema
- * wants `label`, quote `content` when it wants `text`, and so on). Ported
+ * wants `label`, blockquote `content` when it wants `text`, and so on). Ported
  * from ops-kb's `field_aliases.py` (`_BLOCK_FIELD_ALIASES` /
  * `_ITEM_FIELD_ALIASES`, the production system pptwise was extracted from):
  * a 2026-07-12 failure-sample bucketing there found ~90% of weak-model
@@ -48,7 +48,7 @@
  * content itself, and is unchanged by this wave.
  */
 
-import { aliases as quoteAliases } from "./components/quote"
+import { aliases as blockquoteAliases } from "./components/blockquote"
 import { aliases as codeAliases } from "./components/code"
 import { aliases as paragraphAliases } from "./components/paragraph"
 import { aliases as calloutAliases } from "./components/callout"
@@ -77,7 +77,7 @@ export type FieldAliasMap = Readonly<Record<string, string>>
  * `_BLOCK_FIELD_ALIASES` (its "block" is pptwise's "component" post-rename).
  */
 export const COMPONENT_FIELD_ALIASES: Readonly<Record<string, FieldAliasMap>> = {
-  quote: quoteAliases.block,
+  blockquote: blockquoteAliases.block,
   // Mental model overlap with "code snippet" / "code text" / "source code".
   code: codeAliases.block,
   paragraph: paragraphAliases.block,

@@ -14,7 +14,7 @@ const LOGO_SRC =
 
 function brandingDeck(theme: string, slides: Slide[]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "minimal-branding.pptx",
     theme: { id: theme },
     branding: "full",
@@ -37,6 +37,7 @@ describe("layout-declared branding:none (editorial-verse wave)", () => {
   it("statement skips footer rule, footer meta, and logo on consulting", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "statement",
       heading: "记得的事会变成下个世纪的天气",
       components: [],
@@ -49,6 +50,7 @@ describe("layout-declared branding:none (editorial-verse wave)", () => {
   it("statement on lecture still paints the theme motif while skipping the footer", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "statement",
       heading: "记得的事会变成下个世纪的天气",
       components: [],
@@ -64,6 +66,7 @@ describe("layout-declared branding:none (editorial-verse wave)", () => {
   it("pull-quote skips branding on heritage (light) the same way", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "pull-quote",
       heading: "A parrot never forgets a face.",
       components: [{ type: "paragraph", text: "Alex could count to six." }],
@@ -88,6 +91,7 @@ describe("layout-declared branding:none (editorial-verse wave)", () => {
   it("stat-hero skips branding on insight (dark)", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "stat-hero",
       heading: "3.2 亿",
       components: [],
@@ -100,6 +104,7 @@ describe("layout-declared branding:none (editorial-verse wave)", () => {
   it("one-evidence skips branding on consulting (light)", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "one-evidence",
       heading: "迁徙路线在十年里缩短了四成",
       components: [
@@ -118,6 +123,7 @@ describe("layout-declared branding:none (editorial-verse wave)", () => {
   it("mono-bleed skips branding and paints its own primary field", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "mono-bleed",
       heading: "把灯关掉",
       components: [],
@@ -130,6 +136,7 @@ describe("layout-declared branding:none (editorial-verse wave)", () => {
   it("quote-stage still draws footer meta and motif (negative control)", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "quote-stage",
       heading: "简洁是最终的复杂",
       components: [],
@@ -177,22 +184,22 @@ describe("pinOnly auto-pool: editorial-verse ids never enter selection", () => {
     const slides: Slide[] = [
       { type: "cover", heading: "Q3 Strategy Review", components: [] },
       { type: "chapter", heading: "Chapter One: Market Landscape", components: [] },
-      { type: "content", heading: "Key Findings", components: [{ type: "paragraph", text: "x" }] },
+      { type: "content", kind: "points", heading: "Key Findings", components: [{ type: "paragraph", text: "x" }] },
       {
         type: "content",
+        kind: "points",
         heading: "Supporting Data",
-        arrangement: "two_column",
         components: [
           { type: "bullets", items: ["a", "b"] },
           { type: "bullets", items: ["c", "d"] },
         ],
       },
       { type: "chapter", heading: "Chapter Two: Recommendations", components: [] },
-      { type: "content", heading: "Next Steps", components: [{ type: "bullets", items: ["1", "2", "3"] }] },
+      { type: "content", kind: "points", heading: "Next Steps", components: [{ type: "bullets", items: ["1", "2", "3"] }] },
       { type: "ending", heading: "Thank You", components: [] },
     ] as Slide[]
     const doc = {
-      version: "4",
+      version: "5",
       filename: "theme-structure-fixture.pptx",
       theme: { id: "consulting" },
       meta: {},
@@ -224,7 +231,7 @@ describe("pinOnly auto-pool: editorial-verse ids never enter selection", () => {
   })
 
   it("never auto-selects statement / pull-quote / verse-chapter / speech layouts across a seed spread", () => {
-    const slide: Slide = { type: "content", heading: "x", components: [{ type: "paragraph", text: "y" }] } as Slide
+    const slide: Slide = { type: "content", kind: "points", heading: "x", components: [{ type: "paragraph", text: "y" }] } as Slide
     for (let seed = 0; seed < 40; seed++) {
       const doc = { ...brandingDeck("consulting", [slide]), seed } as PptxIR
       const picked = resolveEffectiveLayoutId(doc, slide, 0)
@@ -243,6 +250,7 @@ describe("sparse pages are not density-blocked", () => {
     const doc = brandingDeck("consulting", [
       {
         type: "content",
+        kind: "points",
         layout: "statement",
         heading: "记得的事\n会变成天气",
         components: [],
@@ -255,6 +263,7 @@ describe("sparse pages are not density-blocked", () => {
     const doc = brandingDeck("consulting", [
       {
         type: "content",
+        kind: "points",
         layout: "pull-quote",
         heading: "一句引言",
         components: [{ type: "paragraph", text: "一段散文。" }],
@@ -265,14 +274,14 @@ describe("sparse pages are not density-blocked", () => {
 
   it("stat-hero with 0 components has no density warning", () => {
     const doc = brandingDeck("consulting", [
-      { type: "content", layout: "stat-hero", heading: "95.7%", components: [] } as Slide,
+      { type: "content", kind: "points", layout: "stat-hero", heading: "95.7%", components: [] } as Slide,
     ])
     expect(checkIrQuality(doc).filter((i) => i.code === "density")).toEqual([])
   })
 
   it("mono-bleed with 0 components has no density warning", () => {
     const doc = brandingDeck("consulting", [
-      { type: "content", layout: "mono-bleed", heading: "把灯关掉", components: [] } as Slide,
+      { type: "content", kind: "points", layout: "mono-bleed", heading: "把灯关掉", components: [] } as Slide,
     ])
     expect(checkIrQuality(doc).filter((i) => i.code === "density")).toEqual([])
   })
@@ -283,15 +292,17 @@ describe("schema / validate accept the three new layout ids", () => {
     const cover: Slide = { type: "cover", heading: "封面", components: [] } as Slide
     const statement: Slide = {
       type: "content",
+      kind: "points",
       layout: "statement",
       heading: "金句",
       components: [],
     } as Slide
     const pull: Slide = {
       type: "content",
+      kind: "points",
       layout: "pull-quote",
       heading: "引言",
-      components: [{ type: "quote", text: "q", attribution: "a" }],
+      components: [{ type: "blockquote", text: "q", attribution: "a" }],
     } as Slide
     const verse: Slide = {
       type: "chapter",
@@ -301,12 +312,14 @@ describe("schema / validate accept the three new layout ids", () => {
     } as Slide
     const stat: Slide = {
       type: "content",
+      kind: "points",
       layout: "stat-hero",
       heading: "95.7%",
       components: [],
     } as Slide
     const evidence: Slide = {
       type: "content",
+      kind: "points",
       layout: "one-evidence",
       heading: "迁徙路线在十年里缩短了四成",
       components: [
@@ -319,6 +332,7 @@ describe("schema / validate accept the three new layout ids", () => {
     } as Slide
     const bleed: Slide = {
       type: "content",
+      kind: "points",
       layout: "mono-bleed",
       heading: "把灯关掉",
       components: [],
@@ -350,12 +364,14 @@ describe("19-theme smoke: each new layout renders on every built-in theme", () =
   it.each([...BUILTIN_THEME_IDS])("%s renders statement, pull-quote, verse-chapter, and the three speech layouts without throwing", (themeId) => {
     const statement: Slide = {
       type: "content",
+      kind: "points",
       layout: "statement",
       heading: "记得的事会变成下个世纪的天气",
       components: [],
     } as Slide
     const pull: Slide = {
       type: "content",
+      kind: "points",
       layout: "pull-quote",
       heading: "鹦鹉从不忘记一张它决定去爱的脸",
       subheading: "佩珀伯格",
@@ -369,12 +385,14 @@ describe("19-theme smoke: each new layout renders on every built-in theme", () =
     } as Slide
     const stat: Slide = {
       type: "content",
+      kind: "points",
       layout: "stat-hero",
       heading: "3.2 亿",
       components: [],
     } as Slide
     const evidence: Slide = {
       type: "content",
+      kind: "points",
       layout: "one-evidence",
       heading: "迁徙路线在十年里缩短了四成",
       components: [
@@ -387,6 +405,7 @@ describe("19-theme smoke: each new layout renders on every built-in theme", () =
     } as Slide
     const bleed: Slide = {
       type: "content",
+      kind: "points",
       layout: "mono-bleed",
       heading: "把灯关掉",
       components: [],

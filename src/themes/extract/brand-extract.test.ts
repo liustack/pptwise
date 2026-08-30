@@ -76,10 +76,12 @@ describe("extractBrandTheme — light theme (the common case)", () => {
     expect(JSON.stringify(a)).toBe(JSON.stringify(b))
   })
 
-  it("allows the caller to choose a different built-in base", async () => {
+  it("materializes a self-contained v2 menu", async () => {
     const bytes = await buildThmxBytes({ schemeName: "Acme Corp" })
-    const theme = await extractBrandTheme(bytes, { base: "academic" })
-    expect(theme.base).toBe("academic")
+    const theme = await extractBrandTheme(bytes)
+    expect(theme.version).toBe(2)
+    expect(theme.menu.content.points?.face).toBe("two-column")
+    expect(theme).not.toHaveProperty("base")
   })
 })
 

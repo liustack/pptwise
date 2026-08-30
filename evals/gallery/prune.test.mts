@@ -19,12 +19,13 @@ await installNodePlatform()
 
 function probeJob(): Job {
   const ir = {
-    version: "4",
+    version: "5",
     filename: "prune-probe.pptx",
     theme: { id: "consulting" },
     slides: [
       {
         type: "content",
+        kind: "points",
         heading: "Prune probe",
         components: [{ type: "paragraph", text: "A short paragraph so the page renders." }],
       },

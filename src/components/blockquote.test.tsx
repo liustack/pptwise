@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from "vitest"
 import { render } from "@testing-library/react"
-import { quote } from "./quote"
+import { blockquote } from "./blockquote"
 import type { ComponentCtx } from "./types"
 
 const ctx: ComponentCtx = {
@@ -22,24 +22,24 @@ function svg(node: React.ReactElement) {
   return render(<svg>{node}</svg>)
 }
 
-describe("quote component", () => {
-  const componentNoAttr = { type: "quote" as const, text: "知识就是力量。" }
+describe("blockquote component", () => {
+  const componentNoAttr = { type: "blockquote" as const, text: "知识就是力量。" }
   const componentWithAttr = {
-    type: "quote" as const,
+    type: "blockquote" as const,
     text: "知识就是力量。",
     attribution: "Francis Bacon",
   }
 
   it("measure with attribution is greater than without", () => {
-    const hNoAttr = quote.measure(componentNoAttr, 1120, ctx)
-    const hWithAttr = quote.measure(componentWithAttr, 1120, ctx)
+    const hNoAttr = blockquote.measure(componentNoAttr, 1120, ctx)
+    const hWithAttr = blockquote.measure(componentWithAttr, 1120, ctx)
     expect(hNoAttr).toBeGreaterThan(0)
     expect(hWithAttr).toBeGreaterThan(hNoAttr)
   })
 
   it("renders a translated group with correct transform", () => {
     const { container } = svg(
-      quote.render(componentWithAttr, { x: 80, y: 200, w: 1120 }, ctx),
+      blockquote.render(componentWithAttr, { x: 80, y: 200, w: 1120 }, ctx),
     )
     const g = container.querySelector("g")
     expect(g?.getAttribute("transform")).toBe("translate(80,200)")
@@ -47,7 +47,7 @@ describe("quote component", () => {
 
   it("renders body text with text color and italic style", () => {
     const { container } = svg(
-      quote.render(componentNoAttr, { x: 0, y: 0, w: 1120 }, ctx),
+      blockquote.render(componentNoAttr, { x: 0, y: 0, w: 1120 }, ctx),
     )
     const texts = container.querySelectorAll("text")
     expect(texts.length).toBeGreaterThanOrEqual(1)
@@ -65,7 +65,7 @@ describe("quote component", () => {
   })
 
   it("sets the decorative mark on an ink-derived baseline just above the first body line", () => {
-    const { container } = svg(quote.render(componentWithAttr, { x: 0, y: 0, w: 1120 }, ctx))
+    const { container } = svg(blockquote.render(componentWithAttr, { x: 0, y: 0, w: 1120 }, ctx))
     const mark = Array.from(container.querySelectorAll("text")).find((t) => t.textContent === "“")
     const firstBody = container.querySelector('text[font-style="italic"]')
 
@@ -82,14 +82,14 @@ describe("quote component", () => {
   // The mark hangs off the block's own height rather than driving it: moving
   // its baseline must not move the quote inside its layout by a pixel.
   it("measures the block without reference to the mark's baseline", () => {
-    const h = quote.measure(componentWithAttr, 1120, ctx)
+    const h = blockquote.measure(componentWithAttr, 1120, ctx)
     // QUOTE_ZONE 34 + one 35px body line + (35 + ATTR_GAP 8) + BOTTOM_PAD 12
     expect(h).toBe(124)
   })
 
   it("renders attribution line with muted color when present", () => {
     const { container } = svg(
-      quote.render(componentWithAttr, { x: 0, y: 0, w: 1120 }, ctx),
+      blockquote.render(componentWithAttr, { x: 0, y: 0, w: 1120 }, ctx),
     )
     const texts = Array.from(container.querySelectorAll("text"))
 

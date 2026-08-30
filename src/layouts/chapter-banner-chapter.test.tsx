@@ -26,7 +26,7 @@ const CJK_LONG =
 // `chapterNumberFor` has something to derive from — index 0 is chapter "01",
 // index 2 is chapter "02" out of 2 total chapters.
 const chapter1: Slide = { type: "chapter", heading: "第一章：市场洞察", components: [] } as Slide
-const content: Slide = { type: "content", heading: "现状", components: [] } as Slide
+const content: Slide = { type: "content", kind: "points", heading: "现状", components: [] } as Slide
 const chapter2: Slide = {
   type: "chapter",
   heading: "第二章：战略选择与路径",

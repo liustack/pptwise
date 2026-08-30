@@ -23,7 +23,7 @@ export const THEME_TABLE_REQUIRED_SURFACES = [
   // 37 IR types, COMPONENT_BUILDERS key order
   "paragraph",
   "bullets",
-  "quote",
+  "blockquote",
   "callout",
   "code",
   "citation",
@@ -138,30 +138,30 @@ function chart(chart_type: ThemeChartType, direction?: "horizontal"): ThemeConte
  * pair owns that form in `form-assignments.ts`.
  */
 export const THEME_CONTENT_SLOTS: Record<string, readonly ThemeContentSlot[]> = {
-  academic: [slot("icon_cards"), slot("paragraph"), chart("funnel"), slot("quote"), slot("callout"), slot("code"), slot("citation")],
+  academic: [slot("icon_cards"), slot("paragraph"), chart("funnel"), slot("blockquote"), slot("callout"), slot("code"), slot("citation")],
   arena: [chart("scatter"), slot("verdict_banner"), slot("tag_row"), slot("data_table"), slot("waterfall"), slot("heatmap"), slot("gantt")],
   campaign: [chart("dumbbell"), slot("architecture"), slot("insight_panel"), slot("swot"), slot("pest"), slot("five_forces"), slot("bmc")],
   classroom: [chart("gauge"), slot("image_grid"), slot("image"), slot("image_compare"), slot("device_mockup"), slot("data_table"), slot("bullets")],
-  consulting: [chart("bar"), slot("bullets"), slot("kpi_cards"), slot("people_cards"), slot("heatmap"), slot("quote"), slot("architecture")],
-  crayon: [slot("kpi_cards"), slot("bullets"), slot("swot"), slot("gantt"), slot("quote"), slot("image_grid"), slot("code")],
+  consulting: [chart("bar"), slot("bullets"), slot("kpi_cards"), slot("people_cards"), slot("heatmap"), slot("blockquote"), slot("architecture")],
+  crayon: [slot("kpi_cards"), slot("bullets"), slot("swot"), slot("gantt"), slot("blockquote"), slot("image_grid"), slot("code")],
   ember: [slot("numbered_cards"), slot("data_table"), slot("flowchart"), slot("callout"), slot("image"), slot("pest"), slot("rings")],
   enterprise: [slot("waterfall"), slot("bullets"), slot("icon_cards"), slot("bmc"), slot("timeline"), slot("citation"), slot("device_mockup")],
   heritage: [slot("cycle"), slot("data_table"), slot("people_cards"), slot("tag_row"), slot("image_compare"), slot("five_forces"), slot("paragraph")],
-  ink: [chart("bar", "horizontal"), slot("row_cards"), slot("insight_panel"), slot("steps"), slot("quote"), slot("heatmap"), slot("image_grid")],
+  ink: [chart("bar", "horizontal"), slot("row_cards"), slot("insight_panel"), slot("steps"), slot("blockquote"), slot("heatmap"), slot("image_grid")],
   insight: [slot("cycle"), slot("data_table"), slot("bullets"), slot("image"), slot("sankey"), slot("verdict_banner"), slot("architecture")],
   journal: [chart("line"), slot("numbered_cards"), slot("comparison"), slot("code"), slot("roadmap"), slot("callout"), slot("people_cards")],
   lecture: [chart("area"), slot("timeline"), slot("bmc"), slot("bullets"), slot("image_grid"), slot("matrix"), slot("citation")],
-  luxe: [slot("kpi_cards"), slot("swot"), slot("gantt"), slot("quote"), slot("device_mockup"), slot("flowchart"), slot("tag_row")],
+  luxe: [slot("kpi_cards"), slot("swot"), slot("gantt"), slot("blockquote"), slot("device_mockup"), slot("flowchart"), slot("tag_row")],
   memo: [chart("donut"), slot("paragraph"), slot("icon_cards"), slot("pest"), slot("image"), slot("rings"), slot("waterfall")],
   museum: [slot("cycle"), slot("kpi_cards"), slot("bullets"), slot("heatmap"), slot("people_cards"), slot("callout"), slot("architecture")],
-  playbill: [slot("image_grid"), slot("data_table"), slot("quote"), slot("steps"), slot("five_forces"), slot("code"), slot("row_cards")],
+  playbill: [slot("image_grid"), slot("data_table"), slot("blockquote"), slot("steps"), slot("five_forces"), slot("code"), slot("row_cards")],
   pulse: [slot("numbered_cards"), slot("comparison"), slot("sankey"), slot("verdict_banner"), slot("image_compare"), slot("insight_panel"), slot("bullets")],
-  runway: [slot("steps"), slot("data_table"), slot("quote"), slot("image_grid"), slot("bullets"), slot("callout"), slot("gantt")],
+  runway: [slot("steps"), slot("data_table"), slot("blockquote"), slot("image_grid"), slot("bullets"), slot("callout"), slot("gantt")],
   stage: [slot("timeline"), slot("kpi_cards"), slot("bullets"), slot("bmc"), slot("image"), slot("code"), slot("architecture")],
-  swiss: [chart("pie"), slot("numbered_cards"), slot("comparison"), slot("people_cards"), slot("heatmap"), slot("quote"), slot("flowchart")],
+  swiss: [chart("pie"), slot("numbered_cards"), slot("comparison"), slot("people_cards"), slot("heatmap"), slot("blockquote"), slot("flowchart")],
   tech: [slot("icon_cards"), slot("data_table"), slot("waterfall"), slot("citation"), slot("device_mockup"), slot("swot"), slot("roadmap")],
   terra: [slot("icon_cards"), slot("bullets"), slot("timeline"), slot("pest"), slot("image_compare"), slot("rings"), slot("people_cards")],
-  vermilion: [slot("comparison"), slot("kpi_cards"), slot("gantt"), slot("quote"), slot("image_grid"), slot("code"), slot("architecture")],
+  vermilion: [slot("comparison"), slot("kpi_cards"), slot("gantt"), slot("blockquote"), slot("image_grid"), slot("code"), slot("architecture")],
 }
 
 /** Build the lead component for one theme-table content slot. */

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { PptwiseError } from "../errors"
-import { PptxIRSchema, type PptxIR } from "../ir"
+import { PptxIRSchema, type PptxIR, type Slide } from "../ir"
 import { resolveEffectiveLayoutId } from "../render/layout-selection"
 import { assembleDeck, disassembleDeck, type PageContent } from "./assemble"
 
@@ -171,8 +171,6 @@ describe("assembleDeck", () => {
       const pages: Record<string, PageContent> = {
         "p-kpi": {
           components: [{ type: "paragraph", text: "Revenue grew 12% QoQ" }],
-          layout: "kpi-strip",
-          arrangement: "kpi_focus",
           footnote: "unaudited",
         },
       }
@@ -183,7 +181,6 @@ describe("assembleDeck", () => {
         type: "content",
         heading: "Revenue is up",
         layout: "kpi-strip",
-        arrangement: "kpi_focus",
         footnote: "unaudited",
         components: [{ type: "paragraph", text: "Revenue grew 12% QoQ" }],
       })
@@ -310,14 +307,14 @@ describe("assembleDeck", () => {
   describe("step 7 — seed", () => {
     it("passes an explicit spec seed through and reports no generatedSeed", () => {
       const { ir, generatedSeed } = assembleDeck(makePlan({ seed: 424242 }), {})
-      expect(ir.seed).toBe(424242)
+      expect((ir as unknown as { seed?: number }).seed).toBe(424242)
       expect(generatedSeed).toBeUndefined()
     })
 
     it("generates a deterministic integer seed when the spec omits one, and reports it as generatedSeed", () => {
       const { ir, generatedSeed } = assembleDeck(makePlan(), {})
-      expect(Number.isInteger(ir.seed)).toBe(true)
-      expect(generatedSeed).toBe(ir.seed)
+      expect(Number.isInteger((ir as unknown as { seed?: number }).seed)).toBe(true)
+      expect(generatedSeed).toBe((ir as unknown as { seed?: number }).seed)
     })
 
     it("generates the same seed across repeated calls on the same spec", () => {
@@ -372,14 +369,14 @@ describe("assembleDeck", () => {
     it("fills in a layout for every page type when the page file omits one", () => {
       const { ir } = assembleDeck(makePlan(), {})
       for (const slide of ir.slides) {
-        expect(slide.layout, `slide "${slide.id}" (${slide.type})`).toEqual(expect.any(String))
+        expect((slide as unknown as { layout?: string }).layout, `slide "${slide.id}" (${slide.type})`).toEqual(expect.any(String))
       }
     })
 
     it("leaves an explicit page-file layout untouched", () => {
-      const pages: Record<string, PageContent> = { "p-kpi": { layout: "two-column" } }
+      const pages: Record<string, PageContent> = { "p-kpi": {  } }
       const { ir } = assembleDeck(makePlan(), pages)
-      expect(ir.slides.find((s) => s.id === "p-kpi")?.layout).toBe("two-column")
+      expect((ir.slides.find((s) => s.id === "p-kpi") as unknown as { layout?: string }).layout).toBe("two-column")
     })
 
     it("leaves layout omitted for the image-cover takeover bypass — no invented representation for resolveEffectiveLayoutId's null", () => {
@@ -389,14 +386,14 @@ describe("assembleDeck", () => {
       const { ir } = assembleDeck(makePlan(), pages)
       const cover = ir.slides.find((s) => s.id === "p-cover")
       expect(cover?.background).toEqual({ kind: "asset", asset_id: "bg" })
-      expect(cover?.layout).toBeUndefined()
+      expect((cover as unknown as { layout?: string }).layout).toBeUndefined()
     })
 
     it("materializes a layout on an unfilled (placeholder) page too — placeholder status doesn't exempt a page from selection", () => {
       const { ir } = assembleDeck(makePlan(), {})
       const kpi = ir.slides.find((s) => s.id === "p-kpi")
       expect(kpi?.placeholder).toBe(true)
-      expect(kpi?.layout).toEqual(expect.any(String))
+      expect((kpi as unknown as { layout?: string }).layout).toEqual(expect.any(String))
     })
 
     it("materializes exactly what resolveEffectiveLayoutId independently computes (parity — not a second selection-logic copy)", () => {
@@ -411,7 +408,7 @@ describe("assembleDeck", () => {
       // second, drifted copy of the selection logic instead of calling this
       // function, this is the test that would catch it.
       const manualIr: PptxIR = PptxIRSchema.parse({
-        version: "4",
+        version: "5",
         narrative: { pacing: "spacious" },
         theme: { id: "consulting" },
         filename: "q3-review",
@@ -426,7 +423,7 @@ describe("assembleDeck", () => {
 
       manualIr.slides.forEach((slide, i) => {
         const expected = resolveEffectiveLayoutId(manualIr, slide, i)
-        const actual = ir.slides.find((s) => s.id === slide.id)?.layout
+        const actual = (ir.slides.find((s) => s.id === slide.id) as unknown as { layout?: string }).layout
         expect(actual).toBe(expected ?? undefined)
       })
     })
@@ -462,10 +459,10 @@ describe("assembleDeck", () => {
 
     it("omits materializedLayoutCount (undefined) when every page already has an explicit layout", () => {
       const pages: Record<string, PageContent> = {
-        "p-cover": { layout: "banner-title" },
-        "p-kpi": { layout: "two-column" },
-        "p-detail": { layout: "two-column" },
-        "p-ending": { layout: "tone-adaptive-ending" },
+        "p-cover": {  },
+        "p-kpi": {  },
+        "p-detail": {  },
+        "p-ending": {  },
       }
       const { materializedLayoutCount } = assembleDeck(makePlan(), pages)
       expect(materializedLayoutCount).toBeUndefined()
@@ -496,7 +493,7 @@ describe("assembleDeck", () => {
 describe("disassembleDeck", () => {
   it("reconstructs spec pages and page content from a fully-authored IR", () => {
     const ir = PptxIRSchema.parse({
-      version: "4",
+      version: "5",
       filename: "q3-review",
       theme: { id: "consulting" },
       narrative: { pacing: "spacious" },
@@ -519,7 +516,7 @@ describe("disassembleDeck", () => {
     expect(spec.filename).toBe("q3-review")
     expect(spec.theme).toBe("consulting")
     expect(spec.narrative).toEqual({ pacing: "spacious" })
-    expect(spec.seed).toBe(777)
+    expect((spec as unknown as { seed?: number }).seed).toBe(777)
     expect(spec.pages).toEqual([
       { id: "p-cover", type: "cover", heading: "Q3 Review" },
       { id: "p-kpi", type: "content", heading: "Revenue is up" },
@@ -536,7 +533,7 @@ describe("disassembleDeck", () => {
 
   it("synthesizes a stable positional id (p-<ordinal>-<type>) for a slide that omits one", () => {
     const ir = PptxIRSchema.parse({
-      version: "4",
+      version: "5",
       theme: { id: "consulting" },
       slides: [
         { type: "cover", heading: "Cover" },
@@ -550,7 +547,7 @@ describe("disassembleDeck", () => {
 
   it('synthesizes "Untitled" for a slide with a missing or blank heading', () => {
     const ir = PptxIRSchema.parse({
-      version: "4",
+      version: "5",
       theme: { id: "consulting" },
       slides: [
         { id: "p-cover", type: "cover", heading: "Cover" },
@@ -566,7 +563,7 @@ describe("disassembleDeck", () => {
 
   it("produces no pages entry for a placeholder slide, and recovers summary from its subheading", () => {
     const ir = PptxIRSchema.parse({
-      version: "4",
+      version: "5",
       theme: { id: "consulting" },
       slides: [
         { id: "p-cover", type: "cover", heading: "Cover" },
@@ -581,7 +578,7 @@ describe("disassembleDeck", () => {
 
   it("recovers filled boundary-page subheadings as summaries without reinterpreting content subheadings", () => {
     const ir = PptxIRSchema.parse({
-      version: "4",
+      version: "5",
       theme: { id: "consulting" },
       slides: [
         { id: "p-cover", type: "cover", heading: "Cover", subheading: "Results and outlook" },
@@ -601,7 +598,7 @@ describe("disassembleDeck", () => {
 
   it("never sets focus on any produced spec page (no IR-side home for it)", () => {
     const ir = PptxIRSchema.parse({
-      version: "4",
+      version: "5",
       theme: { id: "consulting" },
       slides: [
         { id: "p-cover", type: "cover", heading: "Cover" },
@@ -617,7 +614,7 @@ describe("disassembleDeck", () => {
 
   it("recovers beat from slide.beat (P1 variety wave, task 1 — plain passthrough, same as layout/heading)", () => {
     const ir = PptxIRSchema.parse({
-      version: "4",
+      version: "5",
       theme: { id: "consulting" },
       slides: [
         { id: "p-cover", type: "cover", heading: "Cover" },
@@ -627,15 +624,15 @@ describe("disassembleDeck", () => {
       ],
     })
     const { spec } = disassembleDeck(ir)
-    expect(spec.pages.find((p) => p.id === "p-body")?.beat).toBe("dense")
-    expect(spec.pages.find((p) => p.id === "p-plain")?.beat).toBeUndefined()
+    expect((spec.pages.find((p) => p.id === "p-body") as unknown as { beat?: "anchor" | "dense" | "breathing" }).beat).toBe("dense")
+    expect((spec.pages.find((p) => p.id === "p-plain") as unknown as { beat?: "anchor" | "dense" | "breathing" }).beat).toBeUndefined()
   })
 })
 
 describe("round trip: assembleDeck(disassembleDeck(ir)) reproduces slide content", () => {
   it("reproduces every slide's content across cover/content/placeholder/ending", () => {
     const original = PptxIRSchema.parse({
-      version: "4",
+      version: "5",
       filename: "roundtrip-deck",
       theme: { id: "consulting" },
       narrative: { pacing: "spacious" },
@@ -650,7 +647,6 @@ describe("round trip: assembleDeck(disassembleDeck(ir)) reproduces slide content
           beat: "dense",
           components: [{ type: "paragraph", text: "hi" }],
           layout: "kpi-strip",
-          arrangement: "kpi_focus",
           footnote: "note",
           notes: "mention the FX headwind",
         },
@@ -673,31 +669,34 @@ describe("round trip: assembleDeck(disassembleDeck(ir)) reproduces slide content
     // materialization (covered separately below and in the materialization
     // describe block above).
     const withoutLayout = (slides: typeof original.slides) =>
-      slides.map(({ layout: _layout, ...rest }) => rest)
+      slides.map((slide) => {
+        const { layout: _layout, ...rest } = slide as unknown as Slide & { layout?: string }
+        return rest
+      })
     expect(withoutLayout(reassembled.slides)).toEqual(withoutLayout(original.slides))
     expect(reassembled.slides[1]?.notes).toBe("mention the FX headwind")
 
     // p-kpi's explicit pin came from an actual page file field (`raw.layout`
     // in `buildSlide`), so materialization skips it and it survives
     // untouched — unlike the other three slides below.
-    expect(reassembled.slides[1]?.layout).toBe("kpi-strip")
+    expect((reassembled.slides[1] as unknown as { layout?: string }).layout).toBe("kpi-strip")
     // p-cover / p-gap / p-ending all omitted `layout` on `original` and each
     // now carries whatever `resolveEffectiveLayoutId` auto-picked for it.
     for (const id of ["p-cover", "p-gap", "p-ending"]) {
-      expect(original.slides.find((s) => s.id === id)?.layout).toBeUndefined()
-      expect(reassembled.slides.find((s) => s.id === id)?.layout).toEqual(expect.any(String))
+      expect((original.slides.find((s) => s.id === id) as unknown as { layout?: string }).layout).toBeUndefined()
+      expect((reassembled.slides.find((s) => s.id === id) as unknown as { layout?: string }).layout).toEqual(expect.any(String))
     }
 
     expect(reassembled.filename).toBe(original.filename)
     expect(reassembled.theme).toEqual(original.theme)
     expect(reassembled.narrative).toEqual(original.narrative)
-    expect(reassembled.seed).toBe(original.seed)
+    expect((reassembled as unknown as { seed?: number }).seed).toBe((original as unknown as { seed?: number }).seed)
     expect(reassembled.brand).toEqual(original.brand)
   })
 
   it("round-trips an explicit branding posture and still omits it when the IR never set one", () => {
     const withBranding = PptxIRSchema.parse({
-      version: "4",
+      version: "5",
       filename: "talk-deck",
       theme: { id: "consulting" },
       narrative: { pacing: "spacious" },
@@ -715,7 +714,7 @@ describe("round trip: assembleDeck(disassembleDeck(ir)) reproduces slide content
     expect(reassembled.branding).toBe("cover-only")
 
     const omitted = PptxIRSchema.parse({
-      version: "4",
+      version: "5",
       theme: { id: "consulting" },
       narrative: { pacing: "spacious" },
       slides: [
@@ -732,7 +731,7 @@ describe("round trip: assembleDeck(disassembleDeck(ir)) reproduces slide content
 
   it("round-trips a deck whose slides omit id entirely (positional synthesis both ways)", () => {
     const original = PptxIRSchema.parse({
-      version: "4",
+      version: "5",
       theme: { id: "consulting" },
       narrative: { pacing: "spacious" },
       slides: [

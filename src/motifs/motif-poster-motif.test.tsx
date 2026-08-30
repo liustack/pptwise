@@ -11,7 +11,7 @@ import type { PptxIR, Slide } from "@/ir"
 
 const coverSlide: Slide = { type: "cover", heading: "封面", components: [] } as Slide
 const chapterSlide: Slide = { type: "chapter", heading: "章节", components: [] } as Slide
-const contentSlide: Slide = { type: "content", heading: "内容", components: [] } as Slide
+const contentSlide: Slide = { type: "content", kind: "points", heading: "内容", components: [] } as Slide
 const endingSlide: Slide = { type: "ending", components: [] } as Slide
 
 const LOGO_BR = { x: 1120, y: 630, w: 96, h: 40 }
@@ -123,7 +123,7 @@ function pathYRange(d: string): { minY: number; maxY: number } {
 describe("PosterMotif（底缘暗线）", () => {
   it("content 稀排钉 pin 整片退让", () => {
     for (const layout of ["statement", "pull-quote", "stat-hero", "one-evidence", "mono-bleed"] as const) {
-      const slide = { ...contentSlide, layout } as Slide
+      const slide = { ...contentSlide, layout } as unknown as Slide
       const { root } = draw("insight", slide)
       expect(root.querySelectorAll("path"), layout).toHaveLength(0)
       expect(root.querySelectorAll("polyline"), layout).toHaveLength(0)

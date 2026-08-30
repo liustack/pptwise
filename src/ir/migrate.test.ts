@@ -137,7 +137,7 @@ describe("migrateIrV3ToV4", () => {
     expect(v4.meta).toEqual(v3.meta)
     expect(v4.assets).toEqual(v3.assets)
     expect(v4.brand).toEqual(v3.brand)
-    expect(v4.seed).toBe(v3.seed)
+    expect((v4 as unknown as { seed?: number }).seed).toBe((v3 as unknown as { seed?: number }).seed)
     expect(v4.slides).toEqual(v3.slides)
   })
 
@@ -198,7 +198,7 @@ describe("migrateIrV3ToV4", () => {
   it("omits brand/seed on the v4 output when the v3 input omits them (no synthesized defaults)", () => {
     const v4 = migrateIrV3ToV4(baseV3())
     expect(v4.brand).toBeUndefined()
-    expect(v4.seed).toBeUndefined()
+    expect((v4 as unknown as { seed?: number }).seed).toBeUndefined()
   })
 
   it("is pure: never mutates its input", () => {
@@ -442,7 +442,7 @@ describe("migrateLogoWallToImageGrid", () => {
     const v3 = {
       ...baseV3(),
       slides: [{ type: "content", heading: "h", components: [wall] }],
-    } as PptxIRV3
+    } as unknown as PptxIRV3
     const v4 = migrateIrV3ToV4(v3)
     const rewritten = v4.slides[0]!.components[0] as Record<string, unknown>
     expect(rewritten).toEqual({ type: "image_grid", items: mappedFourItems })
@@ -528,8 +528,8 @@ describe("migrateBannerHeadingToTwoColumn", () => {
     const v3 = {
       ...baseV3(),
       slides: [{ type: "content", heading: "h", layout: "banner-heading", components: [{ type: "paragraph", text: "p" }] }],
-    } as PptxIRV3
+    } as unknown as PptxIRV3
     const v4 = migrateIrV3ToV4(v3)
-    expect(v4.slides[0]!.layout).toBe("two-column")
+    expect((v4.slides[0]! as unknown as { layout?: string }).layout).toBe("two-column")
   })
 })

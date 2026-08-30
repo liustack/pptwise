@@ -147,20 +147,20 @@ met, several by the same question:
 | q03 | New-Hire Onboarding Curriculum | instructional | balanced | en | deck-project | | numbered_cards, row_cards |
 | q04 | Leadership Offsite Strategy Slide | pyramid | spacious | en | bare-ir | | swot |
 | q05 | Weekly Engineering Status Update | briefing | dense | en | bare-ir | | bullets, row_cards |
-| q06 | Year-in-Review All-Hands Story | storytelling | balanced | en | deck-project | | timeline, quote, image |
+| q06 | Year-in-Review All-Hands Story | storytelling | balanced | en | deck-project | | timeline, blockquote, image |
 | q07 | 新业务方向内部评审 | pyramid | balanced | zh | bare-ir | | bmc |
 | q08 | Data Center Migration Runbook | instructional | dense | en | deck-project | | gantt |
 | q09 | Checkout Outage Postmortem | briefing | dense | en | bare-ir | | bullets, row_cards |
 | q10 | Brazil Market Entry Recommendation | pyramid | spacious | en | bare-ir | | chart, matrix, verdict_banner |
 | q11 | Open Enrollment Reference Guide | instructional | dense | en | bare-ir | | numbered_cards, row_cards |
-| q12 | Annual Impact Report | storytelling | balanced | en | bare-ir | yes | image, kpi_cards, quote |
+| q12 | Annual Impact Report | storytelling | balanced | en | bare-ir | yes | image, kpi_cards, blockquote |
 | q13 | Seed Round Pitch Deck | pyramid | spacious | en | deck-project | | kpi_cards, chart, comparison |
 | q14 | 一线安全培训课程 | instructional | balanced | zh | bare-ir | | numbered_cards, row_cards |
 | q15 | University Recruiting Keynote | showcase | spacious | en | bare-ir | yes | image_grid, kpi_cards, image |
 | q16 | Weekly Support Metrics Brief | briefing | dense | en | bare-ir | | kpi_cards, row_cards |
 | q17 | H2 Engineering Planning Review | pyramid | balanced | en | deck-project | | roadmap |
 | q18 | 内部工程师认证课程手册 | instructional | dense | zh | bare-ir | | numbered_cards |
-| q19 | Annual Shareholder Meeting Keynote | storytelling | spacious | en | bare-ir | | quote, verdict_banner |
+| q19 | Annual Shareholder Meeting Keynote | storytelling | spacious | en | bare-ir | | blockquote, verdict_banner |
 | q20 | Analytics Dashboard Launch Readiness Review | showcase | balanced | en | bare-ir | | kpi_cards, row_cards |
 
 Totals: strategy — pyramid 6, instructional 5, briefing 3, storytelling 3, showcase 3 (all ≥3).

@@ -29,7 +29,7 @@ import {
 
 function makeIR(slides: Slide[], themeId: string = "consulting"): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "test.pptx",
     theme: { id: themeId },
     meta: {},
@@ -754,8 +754,8 @@ describe("resolveEffectiveLayoutId", () => {
     let sawADifference = false
     for (let seed = 0; seed < 30; seed++) {
       const slide: Slide = { type: "cover", heading: "x", components: [] }
-      const irPyramid: PptxIR = { ...makeIR([slide], "full-cover-fixture"), seed, narrative: { strategy: "pyramid" } }
-      const irStorytelling: PptxIR = { ...makeIR([slide], "full-cover-fixture"), seed, narrative: { strategy: "storytelling" } }
+      const irPyramid: PptxIR = { ...makeIR([slide], "full-cover-fixture"),  narrative: { strategy: "pyramid" } }
+      const irStorytelling: PptxIR = { ...makeIR([slide], "full-cover-fixture"),  narrative: { strategy: "storytelling" } }
       if (resolveEffectiveLayoutId(irPyramid, slide, 0) !== resolveEffectiveLayoutId(irStorytelling, slide, 0)) {
         sawADifference = true
         break
@@ -775,7 +775,13 @@ describe("resolveEffectiveLayoutId", () => {
 
   it("content/ending with an asset background does NOT bypass — stays on the normal layout path (P1 frosted scrim, not a takeover)", () => {
     for (const type of ["content", "ending"] as const) {
-      const slide: Slide = { type, heading: "x", background: { kind: "asset", asset_id: "bg" }, components: [] }
+      const slide = {
+        type,
+        ...(type === "content" ? { kind: "points" as const } : {}),
+        heading: "x",
+        background: { kind: "asset" as const, asset_id: "bg" },
+        components: [],
+      } as Slide
       const ir = makeIR([slide])
       expect(resolveEffectiveLayoutId(ir, slide, 0)).not.toBeNull()
     }
@@ -784,8 +790,8 @@ describe("resolveEffectiveLayoutId", () => {
   it("a pinned takeover layout with an image component present resolves to that takeover id", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       heading: "x",
-      layout: "image-annotate",
       components: [{ type: "image", asset_id: "a", fit: "cover" }],
     }
     const ir = makeIR([slide])
@@ -795,8 +801,8 @@ describe("resolveEffectiveLayoutId", () => {
   it("a pinned takeover layout with NO image component falls through to layout auto-pick (mirrors FullSlideSvg's splitTakeover guard)", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       heading: "x",
-      layout: "image-top",
       components: [{ type: "paragraph", text: "no image here" }],
     }
     const ir = makeIR([slide], "tech")
@@ -806,8 +812,8 @@ describe("resolveEffectiveLayoutId", () => {
   it("an explicit layout pin is honored even outside the theme's curated family", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       heading: "x",
-      layout: "split-band",
       components: [{ type: "paragraph", text: "x" }],
     }
     // luxe's own content set excludes split-band (gallery r2 D20 framed
@@ -818,7 +824,7 @@ describe("resolveEffectiveLayoutId", () => {
   })
 
   it("auto-pick lands within the theme's curated content allowed set", () => {
-    const slide: Slide = { type: "content", heading: "x", components: [{ type: "paragraph", text: "x" }] }
+    const slide: Slide = { type: "content", kind: "points", heading: "x", components: [{ type: "paragraph", text: "x" }] }
     const ir = makeIR([slide], "academic")
     expect(THEME_DEFINITIONS.academic.layouts.content).toContain(resolveEffectiveLayoutId(ir, slide, 0))
   })
@@ -844,11 +850,12 @@ describe("resolveEffectiveLayoutId", () => {
     // actually about: pageKey stability under reorder.
     const stable: Slide = {
       type: "content",
+      kind: "points",
       id: "stable-page",
       heading: "x",
       components: [{ type: "paragraph", text: "x" }],
     }
-    const irAtFront: PptxIR = { ...makeIR([stable], "academic"), seed: 777 }
+    const irAtFront: PptxIR = { ...makeIR([stable], "academic") }
     const irAfterInsert: PptxIR = {
       ...makeIR(
         [
@@ -858,13 +865,12 @@ describe("resolveEffectiveLayoutId", () => {
         ],
         "academic",
       ),
-      seed: 777,
     }
     expect(resolveEffectiveLayoutId(irAtFront, stable, 0)).toBe(resolveEffectiveLayoutId(irAfterInsert, stable, 2))
   })
 
   it("a page with no id salts off its absolute index — matches resolveLayoutId called directly with pageKey=String(index)", () => {
-    const slide: Slide = { type: "content", heading: "no-id-probe", components: [{ type: "paragraph", text: "x" }] }
+    const slide: Slide = { type: "content", kind: "points", heading: "no-id-probe", components: [{ type: "paragraph", text: "x" }] }
     const ir = makeIR([slide], "academic")
     const expected = resolveLayoutId(
       "content",
@@ -888,6 +894,7 @@ describe("resolveEffectiveLayoutId", () => {
     // has exactly 1 member, which none of the 13 built-ins do post-W4).
     const slides: Slide[] = Array.from({ length: 6 }, (_, i) => ({
       type: "content",
+      kind: "points",
       heading: `内容页 ${i}`,
       components: [{ type: "paragraph", text: "x" }],
     }))
@@ -900,8 +907,8 @@ describe("resolveEffectiveLayoutId", () => {
 
   it("an explicit layout pin on one page is never rewritten by adjacent anti-repetition, even when it matches the previous page's auto-pick", () => {
     const slides: Slide[] = [
-      { type: "content", heading: "自动选型", layout: undefined, components: [{ type: "paragraph", text: "x" }] },
-      { type: "content", heading: "显式钉值", layout: "two-column", components: [{ type: "paragraph", text: "x" }] },
+      { type: "content", kind: "points", heading: "自动选型",  components: [{ type: "paragraph", text: "x" }] },
+      { type: "content", kind: "points", heading: "显式钉值",  components: [{ type: "paragraph", text: "x" }] },
     ]
     const ir = makeIR(slides, "consulting")
     // Whatever slide 0 auto-picks, slide 1's explicit "two-column" pin must
@@ -911,7 +918,7 @@ describe("resolveEffectiveLayoutId", () => {
   })
 
   it("the first slide has no previous page, so anti-repetition never applies to it", () => {
-    const slide: Slide = { type: "content", heading: "x", components: [{ type: "paragraph", text: "x" }] }
+    const slide: Slide = { type: "content", kind: "points", heading: "x", components: [{ type: "paragraph", text: "x" }] }
     const ir = makeIR([slide], "academic")
     expect(THEME_DEFINITIONS.academic.layouts.content).toContain(resolveEffectiveLayoutId(ir, slide, 0))
   })
@@ -926,10 +933,10 @@ describe("resolveEffectiveLayoutId", () => {
     // resolveLayoutId's own weightOf accepts the parameter.
     let sawADifference = false
     for (let seed = 0; seed < 30; seed++) {
-      const plain: Slide = { type: "content", heading: "x", components: [{ type: "paragraph", text: "x" }] }
-      const anchored: Slide = { ...plain, beat: "anchor" }
-      const irPlain: PptxIR = { ...makeIR([plain], "academic"), seed }
-      const irAnchored: PptxIR = { ...makeIR([anchored], "academic"), seed }
+      const plain: Slide = { type: "content", kind: "points", heading: "x", components: [{ type: "paragraph", text: "x" }] }
+      const anchored: Slide = { ...plain }
+      const irPlain: PptxIR = { ...makeIR([plain], "academic") }
+      const irAnchored: PptxIR = { ...makeIR([anchored], "academic") }
       if (resolveEffectiveLayoutId(irPlain, plain, 0) !== resolveEffectiveLayoutId(irAnchored, anchored, 0)) {
         sawADifference = true
         break
@@ -941,14 +948,14 @@ describe("resolveEffectiveLayoutId", () => {
   describe("beat revision-stability (P1 variety wave, task 1 — per-page independence)", () => {
     it("changing one page's beat never changes an earlier page's pick (selection walks forward-only)", () => {
       const base: Slide[] = [
-        { type: "content", id: "p0", heading: "p0", components: [{ type: "paragraph", text: "x" }] },
-        { type: "content", id: "p1", heading: "p1", components: [{ type: "paragraph", text: "x" }] },
+        { type: "content", kind: "points", id: "p0", heading: "p0", components: [{ type: "paragraph", text: "x" }] },
+        { type: "content", kind: "points", id: "p1", heading: "p1", components: [{ type: "paragraph", text: "x" }] },
       ]
       const beats = [undefined, "anchor", "dense", "breathing"] as const
       const p0Picks = new Set<string | null>()
       for (const beat of beats) {
         const slides = base.map((s) => (s.id === "p1" ? { ...s, beat } : s))
-        const ir: PptxIR = { ...makeIR(slides, "academic"), seed: 100 }
+        const ir: PptxIR = { ...makeIR(slides, "academic") }
         p0Picks.add(resolveEffectiveLayoutId(ir, ir.slides[0]!, 0))
       }
       expect(p0Picks.size).toBe(1)
@@ -966,11 +973,11 @@ describe("resolveEffectiveLayoutId", () => {
         const groups = new Map<string, Set<string | null>>()
         for (const beat of beats) {
           const slides: Slide[] = [
-            { type: "content", id: "p0", heading: "p0", components: [{ type: "paragraph", text: "x" }] },
-            { type: "content", id: "p1", heading: "p1", beat, components: [{ type: "paragraph", text: "x" }] },
-            { type: "content", id: "p2", heading: "p2", components: [{ type: "paragraph", text: "x" }] },
+            { type: "content", kind: "points", id: "p0", heading: "p0", components: [{ type: "paragraph", text: "x" }] },
+            { type: "content", kind: "points", id: "p1", heading: "p1",  components: [{ type: "paragraph", text: "x" }] },
+            { type: "content", kind: "points", id: "p2", heading: "p2", components: [{ type: "paragraph", text: "x" }] },
           ]
-          const ir: PptxIR = { ...makeIR(slides, "academic"), seed }
+          const ir: PptxIR = { ...makeIR(slides, "academic") }
           const p1Pick = resolveEffectiveLayoutId(ir, ir.slides[1]!, 1)
           const p2Pick = resolveEffectiveLayoutId(ir, ir.slides[2]!, 2)
           const key = String(p1Pick)
@@ -991,20 +998,20 @@ describe("resolveEffectiveLayoutId", () => {
 
 describe("resolveEffectiveLayoutBodyCapacity", () => {
   it("a generic content layout (explicit pin) reports capacity 4", () => {
-    const slide: Slide = { type: "content", heading: "x", layout: "two-column", components: [] }
+    const slide: Slide = { type: "content", kind: "points", heading: "x",  components: [] }
     const ir = makeIR([slide])
     expect(resolveEffectiveLayoutBodyCapacity(ir, slide, 0)).toEqual({ layoutId: "two-column", capacity: 4 })
   })
 
   it("bento-panel (explicit pin) reports its own capacity 6, not the flat single-stack default", () => {
-    const slide: Slide = { type: "content", heading: "x", layout: "bento-panel", components: [] }
+    const slide: Slide = { type: "content", kind: "points", heading: "x",  components: [] }
     const ir = makeIR([slide], "tech")
     expect(resolveEffectiveLayoutBodyCapacity(ir, slide, 0)).toEqual({ layoutId: "bento-panel", capacity: 6 })
   })
 
   it("every content layout's reported capacity matches its own LAYOUT_REGISTRY body-slot entry (consistency with registry.test.ts's pinned numbers)", () => {
     for (const id of CONTENT_LAYOUT_IDS) {
-      const slide: Slide = { type: "content", heading: "x", layout: id, components: [] }
+      const slide: Slide = { type: "content", kind: "points", heading: "x",  components: [] }
       const ir = makeIR([slide], "tech") // explicit pin bypasses curation, so any theme works for every id
       const expected = getLayout(id)?.slots.find((s) => s.name === "body")?.capacity
       expect(resolveEffectiveLayoutBodyCapacity(ir, slide, 0).capacity).toBe(expected)
@@ -1014,8 +1021,8 @@ describe("resolveEffectiveLayoutBodyCapacity", () => {
   it("a takeover layout reports undefined capacity (no geometric term) while still naming its own id", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       heading: "x",
-      layout: "image-split",
       components: [{ type: "image", asset_id: "a", fit: "cover" }],
     }
     const ir = makeIR([slide])
@@ -1025,8 +1032,8 @@ describe("resolveEffectiveLayoutBodyCapacity", () => {
   it("image-annotate (no body slot at all) also reports undefined capacity", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       heading: "x",
-      layout: "image-annotate",
       components: [{ type: "image", asset_id: "a", fit: "cover" }],
     }
     const ir = makeIR([slide])
@@ -1071,17 +1078,17 @@ describe("render parity with FullSlideSvg", () => {
     {
       label: "academic content, auto-pick",
       themeId: "academic",
-      slide: { type: "content", heading: "x", components: [{ type: "paragraph", text: "x" }] },
+      slide: { type: "content", kind: "points", heading: "x", components: [{ type: "paragraph", text: "x" }] },
     },
     {
       label: "consulting content, explicit two-column pin",
       themeId: "consulting",
-      slide: { type: "content", heading: "x", layout: "two-column", components: [{ type: "paragraph", text: "x" }] },
+      slide: { type: "content", kind: "points", heading: "x",  components: [{ type: "paragraph", text: "x" }] },
     },
     {
       label: "tech content, explicit bento-panel pin",
       themeId: "tech",
-      slide: { type: "content", heading: "x", layout: "bento-panel", components: [{ type: "paragraph", text: "x" }] },
+      slide: { type: "content", kind: "points", heading: "x",  components: [{ type: "paragraph", text: "x" }] },
     },
     {
       label: "journal ending, auto-pick",
@@ -1097,12 +1104,12 @@ describe("render parity with FullSlideSvg", () => {
       // "validate sees what render draws" promise for beat specifically.
       label: "academic content with a declared beat, auto-pick",
       themeId: "academic",
-      slide: { type: "content", heading: "x", beat: "dense", components: [{ type: "paragraph", text: "x" }] },
+      slide: { type: "content", kind: "points", heading: "x",  components: [{ type: "paragraph", text: "x" }] },
     },
     {
       label: "crayon content, unoffered statement pin falls back",
       themeId: "crayon",
-      slide: { type: "content", heading: "x", layout: "statement", components: [] },
+      slide: { type: "content", kind: "points", heading: "x",  components: [] },
     },
   ]
 
@@ -1111,14 +1118,14 @@ describe("render parity with FullSlideSvg", () => {
       const ir = makeIR([c.slide], c.themeId)
       const resolved = resolveEffectiveLayoutId(ir, c.slide, 0)
       expect(resolved).toBe(renderedLayoutId(ir, c.slide, 0))
-      if (c.themeId === "crayon" && c.slide.layout === "statement") {
+      if (c.themeId === "crayon" && (c.slide as unknown as { layout?: string }).layout === "statement") {
         expect(resolved).not.toBe("statement")
       }
     })
   }
 
   it("crayon + statement + branding full paints brand frame on the fallback content layout", () => {
-    const slide: Slide = { type: "content", layout: "statement", heading: "One line is enough", components: [] }
+    const slide: Slide = { type: "content", kind: "points",  heading: "One line is enough", components: [] }
     const ir: PptxIR = { ...makeIR([slide], "crayon"), branding: "full", meta: { organization: "ACME" } }
     const { container } = render(createElement(FullSlideSvg, { ir, slide, index: 0 }))
     const archetype = container.querySelector("[data-archetype]")?.getAttribute("data-archetype")
@@ -1144,10 +1151,10 @@ describe("render parity with FullSlideSvg", () => {
     // the first academic 2-page fixture where page 0 and page 1's raw pick
     // both land on `narrow-column`, so the redraw still fires.
     const slides: Slide[] = [
-      { type: "content", heading: "Page 0", components: [{ type: "paragraph", text: "x" }] },
-      { type: "content", heading: "Page 1", components: [{ type: "paragraph", text: "x" }] },
+      { type: "content", kind: "points", heading: "Page 0", components: [{ type: "paragraph", text: "x" }] },
+      { type: "content", kind: "points", heading: "Page 1", components: [{ type: "paragraph", text: "x" }] },
     ]
-    const ir: PptxIR = { ...makeIR(slides, "academic"), seed: 3 }
+    const ir: PptxIR = { ...makeIR(slides, "academic") }
 
     // Page 0: no previous page, ordinary auto-pick — sanity baseline for
     // what page 1 would collide with.
@@ -1197,8 +1204,8 @@ describe("render parity with FullSlideSvg", () => {
         themeId: "consulting",
         slide: {
           type: "content",
+          kind: "points",
           heading: "x",
-          layout: "image-split",
           components: [{ type: "image", asset_id: "a", fit: "cover" }],
         },
       },
@@ -1256,10 +1263,11 @@ describe("render parity with FullSlideSvg", () => {
       for (let seed = 0; seed < 40; seed++) {
         const slide: Slide = {
           type: "content",
+          kind: "points",
           heading: `seed ${seed}`,
           components: [{ type: "paragraph", text: "x" }],
         }
-        const ir: PptxIR = { ...makeIR([slide], "t1-fixture-theme-render-parity"), seed }
+        const ir: PptxIR = { ...makeIR([slide], "t1-fixture-theme-render-parity") }
         const validated = resolveEffectiveLayoutId(ir, slide, 0)
         const rendered = renderedLayoutId(ir, slide, 0)
         expect(rendered, `seed ${seed}: rendered "${rendered}" vs. validated "${validated}"`).toBe(validated)
@@ -1365,8 +1373,8 @@ describe("unoffered sparse pins warn and fall back", () => {
   it("crayon + statement: ok true, warning, fallback to a non-pinOnly content layout", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       id: "p-climax",
-      layout: "statement",
       heading: "One line is enough",
       components: [],
     }
@@ -1383,7 +1391,7 @@ describe("unoffered sparse pins warn and fall back", () => {
   it("stage + one-evidence (not in stage's faces): warning and fallback, not one-evidence", () => {
     const slide: Slide = {
       type: "content",
-      layout: "one-evidence",
+      kind: "points",
       heading: "The route shortened",
       components: [{ type: "paragraph", text: "a" }],
     }
@@ -1397,7 +1405,7 @@ describe("unoffered sparse pins warn and fall back", () => {
   })
 
   it("stage + statement: no warning, still statement", () => {
-    const slide: Slide = { type: "content", layout: "statement", heading: "One line is enough", components: [] }
+    const slide: Slide = { type: "content", kind: "points",  heading: "One line is enough", components: [] }
     const ir = makeIR([slide], "stage")
     const v = validateIr(ir)
     expect(v.ok).toBe(true)
@@ -1406,7 +1414,7 @@ describe("unoffered sparse pins warn and fall back", () => {
   })
 
   it("consulting + statement: no warning, still statement", () => {
-    const slide: Slide = { type: "content", layout: "statement", heading: "One line is enough", components: [] }
+    const slide: Slide = { type: "content", kind: "points",  heading: "One line is enough", components: [] }
     const ir = makeIR([slide], "consulting")
     const v = validateIr(ir)
     expect(v.ok).toBe(true)
@@ -1416,8 +1424,8 @@ describe("unoffered sparse pins warn and fall back", () => {
 
   it("classroom refuses statement and verse-chapter", () => {
     for (const themeId of ["classroom"] as const) {
-      const statement: Slide = { type: "content", layout: "statement", heading: "One line is enough", components: [] }
-      const verse: Slide = { type: "chapter", layout: "verse-chapter", heading: "Chapter", components: [] }
+      const statement: Slide = { type: "content", kind: "points",  heading: "One line is enough", components: [] }
+      const verse: Slide = { type: "chapter",  heading: "Chapter", components: [] }
       const statementIr = makeIR([statement], themeId)
       const verseIr = makeIR([verse], themeId)
       const statementV = validateIr(statementIr)
@@ -1446,7 +1454,7 @@ describe("unoffered sparse pins warn and fall back", () => {
       brand: {},
       tags: [],
     })
-    const slide: Slide = { type: "content", layout: "statement", heading: "One line is enough", components: [] }
+    const slide: Slide = { type: "content", kind: "points",  heading: "One line is enough", components: [] }
     const ir = makeIR([slide], "acme-omitted-sparse")
     const v = validateIr(ir)
     expect(v.ok).toBe(true)

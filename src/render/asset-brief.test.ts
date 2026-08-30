@@ -17,7 +17,7 @@ beforeAll(() => {
 
 function deck(themeId: string, slides: Slide[], overrides: Partial<PptxIR> = {}): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "asset-brief-fixture",
     theme: { id: themeId },
     meta: {},
@@ -47,6 +47,7 @@ function probeDeck(assetId = "pic"): PptxIR {
   return deck("consulting", [
     {
       type: "content",
+      kind: "points",
       id: "p1",
       layout: "two-column",
       heading: "Regional growth engine",
@@ -171,6 +172,7 @@ describe("buildAssetBrief — shared asset_id across multiple components on one 
     const ir = deck("consulting", [
       {
         type: "content",
+        kind: "points",
         id: "p1",
         layout: "two-column",
         heading: "Regional growth engine",

@@ -20,7 +20,6 @@ function stableHash(s: string): number {
  * 「未显式 seed 时不承诺修订稳定性」的记录在案代价（spec §6），不是 bug。
  */
 export function deckSeed(ir: PptxIR): number {
-  if (ir.seed !== undefined) return ir.seed
   const parts = [ir.filename ?? "", ...ir.slides.map((s) => s.heading ?? "")]
   return stableHash(parts.join("\n"))
 }

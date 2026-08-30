@@ -53,7 +53,7 @@ const SUBHEADING = "候选贴纸对比度回归探针副标题"
 
 function deckFor(themeId: string, slide: Slide, seed: number): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "motif-candidate-contrast-fixture",
     theme: { id: themeId },
     meta: {},
@@ -101,7 +101,7 @@ function auditFindings(ir: PptxIR): AuditFinding[] {
  * so this probe's own slide type is irrelevant to what it finds.
  */
 function findSeedFor(themeId: string, target: string): number {
-  const probe: Slide = { type: "content", id: "0", heading: "probe", components: [] } as Slide
+  const probe: Slide = { type: "content", kind: "points", id: "0", heading: "probe", components: [] } as Slide
   for (let seed = 0; seed < 200; seed++) {
     const ir = deckFor(themeId, probe, seed)
     if (resolveMotifId(ir, ir.slides[0]!, 0) === target) return seed
@@ -128,6 +128,7 @@ describe("motif candidate contrast sweep (P1 variety wave, task 2)", () => {
             { type: "chapter", id: "0", heading: HEADING, subheading: SUBHEADING, components: [] } as Slide,
             {
               type: "content",
+              kind: "points",
               id: "0",
               heading: HEADING,
               subheading: SUBHEADING,

@@ -272,7 +272,7 @@ describe("cover-fashion-masthead — letter-spacing wrap budget (round-3 D-clust
 describe("cover-fashion-masthead — no leftover top-left motif stub", () => {
   it("consulting banner-motif does not paint the yellow lead on this cover", () => {
     const deck: PptxIR = {
-      version: "4",
+      version: "5",
       filename: "fashion-masthead-no-stub.pptx",
       theme: { id: "consulting" },
       meta: { organization: "Platform Engineering 团队" },
@@ -287,7 +287,7 @@ describe("cover-fashion-masthead — no leftover top-left motif stub", () => {
           components: [],
         },
       ],
-    } as PptxIR
+    } as unknown as PptxIR
     const root = parseSvgRoot(renderSlideSvg(deck, 0))
     const stub = Array.from(root.querySelectorAll("line")).filter((el) => Number(el.getAttribute("y1")) === 32)
     expect(stub).toHaveLength(0)

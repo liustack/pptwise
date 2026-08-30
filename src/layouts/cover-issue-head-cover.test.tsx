@@ -18,7 +18,7 @@ function slide(heading = HEADING, extras: Partial<Slide> = {}): Slide {
 
 function ir(themeId: string, meta: PptxIR["meta"] = {}, s: Slide = slide()): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "issue-head-cover.pptx",
     theme: { id: themeId },
     meta,
@@ -176,14 +176,14 @@ describe("cover-issue-head-cover — shared pool", () => {
 describe("cover-issue-head-cover — optical center", () => {
   it("does not stack a motif foot line under the layout foot, and hangs the title closer to the masthead", () => {
     const deck: PptxIR = {
-      version: "4",
+      version: "5",
       filename: "issue-head-center.pptx",
       theme: { id: "journal" },
       meta: FULL_META,
       assets: { images: {} },
       seed: 1,
       slides: [{ type: "cover", layout: "issue-head-cover", heading: HEADING, subheading: SUBHEADING, components: [] }],
-    } as PptxIR
+    } as unknown as PptxIR
     const root = parseSvgRoot(renderSlideSvg(deck, 0))
     expect(root.querySelector('line[y1="712"]')).toBeNull()
     expect(Array.from(root.querySelectorAll("text")).some((t) => (t.textContent ?? "").includes("№"))).toBe(false)

@@ -12,13 +12,14 @@ import { CREATIVE_PURPLE, GRASS_GREEN, SKY_BLUE, SUN_YELLOW } from "./crayonbox-
 const chapter: Slide = { type: "chapter", heading: "创作心得", components: [] } as Slide
 const slide: Slide = {
   type: "content",
+  kind: "points",
   layout: "crayonbox-point",
   heading: "大胆下笔\n颜色会带你去远方",
-  components: [{ type: "quote", text: "大胆下笔。", attribution: "小小创作者手册" }],
+  components: [{ type: "blockquote", text: "大胆下笔。", attribution: "小小创作者手册" }],
 } as Slide
 
 const ir: PptxIR = {
-  version: "4",
+  version: "5",
   filename: "crayonbox-point.pptx",
   theme: { id: "crayon" },
   meta: {},
@@ -127,7 +128,7 @@ describe("content-crayonbox-point", () => {
     })
     expect(layoutDef.slots.find((slot) => slot.name === "body")).toEqual({
       name: "body",
-      accepts: ["quote", "paragraph", "citation"],
+      accepts: ["blockquote", "paragraph", "citation"],
       capacity: 1,
     })
     expect(() => assertSubset(renderPoint().root)).not.toThrow()

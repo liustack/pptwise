@@ -256,7 +256,7 @@ const COMPONENT_BY_TYPE: Record<Component["type"], Component> = {
     footnote: "n=42",
   },
   verdict_banner: { type: "verdict_banner", text: "Ship it.", tone: "positive", icon: "check" },
-  quote: { type: "quote", text: "Simplicity is the ultimate sophistication.", attribution: "da Vinci" },
+  blockquote: { type: "blockquote", text: "Simplicity is the ultimate sophistication.", attribution: "da Vinci" },
   paragraph: { type: "paragraph", text: "This is a plain paragraph of body text for the probe deck." },
   bullets: { type: "bullets", items: ["one", "two", "three"] },
   code: { type: "code", language: "ts", code: "const x = 1" },
@@ -300,14 +300,14 @@ function contentSlide(heading: string, components: Component[]): Slide {
   // Pin a dense-but-roomy layout. This file is about rasterization, not
   // auto-pick, and consulting's second-front content tendencies would
   // otherwise land a tight layout that drops a block on one of these pages.
-  return { type: "content", heading, layout: "two-column", components }
+  return { type: "content", kind: "points", heading,  components }
 }
 
 /** A rich deck covering every registered component type, with
  *  `assets.images` empty — the "zero real assets anywhere" baseline. */
 function noAssetIr(): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "fidelity-no-asset",
     theme: { id: "consulting" },
     meta: {},
@@ -338,7 +338,7 @@ function noAssetIr(): PptxIR {
       contentSlide("Rings + Numbered", [COMPONENT_BY_TYPE.rings, COMPONENT_BY_TYPE.numbered_cards]),
       contentSlide("Roadmap + Matrix", [COMPONENT_BY_TYPE.roadmap, COMPONENT_BY_TYPE.matrix]),
       contentSlide("Insight + Verdict", [COMPONENT_BY_TYPE.insight_panel, COMPONENT_BY_TYPE.verdict_banner]),
-      contentSlide("Quote + Paragraph", [COMPONENT_BY_TYPE.quote, COMPONENT_BY_TYPE.paragraph]),
+      contentSlide("Blockquote + Paragraph", [COMPONENT_BY_TYPE.blockquote, COMPONENT_BY_TYPE.paragraph]),
       contentSlide("Bullets + Code", [COMPONENT_BY_TYPE.bullets, COMPONENT_BY_TYPE.code]),
       contentSlide("Citation", [COMPONENT_BY_TYPE.citation]),
       contentSlide("Data Table", [COMPONENT_BY_TYPE.data_table]),

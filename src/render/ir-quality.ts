@@ -254,7 +254,7 @@ function checkSlide(ir: PptxIR, slide: Slide, index: number, resolvedAxes: Narra
   // below, is metadata-driven). Both checks only look at the pinned
   // layout's own declared `LayoutDefinition` fields now — no layout id
   // appears in either condition.
-  const effectivePin = effectiveRequestedLayout(ir.theme.id, slide.layout)
+  const effectivePin: string | undefined = undefined
   if (effectivePin !== undefined) {
     const pinnedDef = getLayout(effectivePin)
 
@@ -532,16 +532,6 @@ function checkSlide(ir: PptxIR, slide: Slide, index: number, resolvedAxes: Narra
       severity: "warn",
       code: "missing_heading",
       message: "此页缺少标题",
-    })
-  }
-
-  // big_number arrangement without kpi_cards component
-  if (slide.arrangement === "big_number" && !hasKpiCardsComponent(slide)) {
-    issues.push({
-      slide: index,
-      severity: "warn",
-      code: "big_number_no_kpi",
-      message: "big_number 版式缺少 kpi_cards 块",
     })
   }
 

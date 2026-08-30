@@ -112,13 +112,13 @@ describe("pptx-ir v4", () => {
       d.slides = [{ type: "content", heading: "x", beat, components: [] }]
       const r = parsePptxIR(d)
       expect(r.success).toBe(true)
-      if (r.success) expect(r.data.slides[0]!.beat).toBe(beat)
+      if (r.success) expect((r.data.slides[0]! as unknown as { beat?: "anchor" | "dense" | "breathing" }).beat).toBe(beat)
     }
   })
   it("a slide with no beat omits the field entirely (no default, unlike type/version)", () => {
     const r = parsePptxIR(minimal())
     expect(r.success).toBe(true)
-    if (r.success) expect(r.data.slides[0]!.beat).toBeUndefined()
+    if (r.success) expect((r.data.slides[0]! as unknown as { beat?: "anchor" | "dense" | "breathing" }).beat).toBeUndefined()
   })
   it("rejects an unknown beat value (typo, not omission)", () => {
     const d: any = minimal()
@@ -1756,7 +1756,7 @@ describe("IR v4 seed field (W5 task 1)", () => {
   it("omits cleanly — stays undefined, no default baked in by the schema", () => {
     const r = parsePptxIR(minimal())
     expect(r.success).toBe(true)
-    if (r.success) expect(r.data.seed).toBeUndefined()
+    if (r.success) expect((r.data as unknown as { seed?: number }).seed).toBeUndefined()
   })
   it("rejects a non-integer seed", () => {
     const d: any = minimal()

@@ -21,7 +21,7 @@ function slide(heading = HEADING, subheading: string | null = VENUE): Slide {
 
 function ir(themeId: string, meta: PptxIR["meta"] = {}): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "bill-head.pptx",
     theme: { id: themeId },
     meta,

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 import { COMPONENT_TYPES } from "@/ir"
 import { traits as bulletsTraits } from "@/ir/components/bullets"
 import { traits as paragraphTraits } from "@/ir/components/paragraph"
-import { traits as quoteTraits } from "@/ir/components/quote"
+import { traits as blockquoteTraits } from "@/ir/components/blockquote"
 import { traits as calloutTraits } from "@/ir/components/callout"
 import { traits as codeTraits } from "@/ir/components/code"
 import { traits as kpiCardsTraits } from "@/ir/components/kpi-cards"
@@ -61,7 +61,7 @@ const COLUMN_SPANNING_TYPES = (
 const DOMAIN_FILE_TRAITS: readonly (readonly [string, { readonly evidence: boolean }])[] = [
   ["bullets", bulletsTraits],
   ["paragraph", paragraphTraits],
-  ["quote", quoteTraits],
+  ["blockquote", blockquoteTraits],
   ["callout", calloutTraits],
   ["code", codeTraits],
   ["kpi_cards", kpiCardsTraits],
@@ -135,8 +135,8 @@ describe("COLUMN_SPANNING_TYPES", () => {
 describe("SELF_VISUAL_TYPES equivalence (was bento-layout.ts:210-216, plus R1's data_table addition)", () => {
   it("matches the pre-refactor members plus data_table (R1 evidence wave, Task T3 — first new selfVisual:true declaration since the W2 task 5 refactor)", () => {
     // bento-layout.ts:210-216 (pre-refactor):
-    // new Set(["callout", "code", "comparison", "quote", "verdict_banner"])
-    const preRefactor = ["callout", "code", "comparison", "quote", "verdict_banner"]
+    // new Set(["callout", "code", "comparison", "blockquote", "verdict_banner"])
+    const preRefactor = ["callout", "code", "comparison", "blockquote", "verdict_banner"]
     // R1 evidence wave, Task T3 (plan's explicit traits contract): data_table
     // declares selfVisual: true too — it draws its own rule-line table shell
     // (header rule + row separators + emphasis-row tint), so painting bento's
@@ -181,8 +181,8 @@ describe("SCALABLE_TYPES duplication verdict (content-bento-panel.tsx:105 vs con
 describe("PASSTHROUGH_SHELL_TYPES equivalence (was content-bento-panel.tsx:134-143, plus R1's data_table addition)", () => {
   it("matches the pre-refactor members plus data_table and cycle (R1 evidence wave, Task T3 — first new passthroughShell:true declaration since the W2 task 5 refactor; cycle wave adds a second)", () => {
     // content-bento-panel.tsx:134-143 (pre-refactor):
-    // new Set(["steps", "flowchart", "architecture", "timeline", "paragraph", "quote"])
-    const preRefactor = ["steps", "flowchart", "architecture", "timeline", "paragraph", "quote"]
+    // new Set(["steps", "flowchart", "architecture", "timeline", "paragraph", "blockquote"])
+    const preRefactor = ["steps", "flowchart", "architecture", "timeline", "paragraph", "blockquote"]
     // R1 evidence wave, Task T3 (plan's explicit traits contract): data_table
     // declares passthroughShell: true too — same reasoning as
     // flowchart/architecture/timeline above (draws its own internal frame,

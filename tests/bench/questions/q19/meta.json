@@ -5,7 +5,7 @@
     "strategy": "storytelling",
     "pacing": "spacious",
     "expects_components": [
-      "quote",
+      "blockquote",
       "verdict_banner"
     ],
     "workflow": "bare-ir",

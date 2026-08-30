@@ -24,7 +24,7 @@ import type { PptxIR, Slide } from "@/ir"
 
 function ir(slides: Slide[]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "deck.pptx",
     theme: { id: "academic" },
     meta: { organization: "ACME", confidentiality: "internal", version: "v1", date: "2026" },
@@ -36,6 +36,7 @@ function ir(slides: Slide[]): PptxIR {
 const coverSlide: Slide = { type: "cover", heading: "年度战略回顾", subheading: "增长与韧性", components: [] }
 const contentSlide: Slide = {
   type: "content",
+  kind: "points",
   heading: "三大支柱",
   components: [
     { type: "paragraph", text: "我们围绕三个方向推进。" },
@@ -75,7 +76,6 @@ describe("FullSlideSvg", () => {
     const chapter: Slide = {
       type: "chapter",
       heading: "第一部分：市场洞察",
-      layout: "masthead-chapter",
       components: [],
     }
     const doc = ir([chapter])
@@ -96,7 +96,6 @@ describe("FullSlideSvg", () => {
     const chapter: Slide = {
       type: "chapter",
       heading: "第一部分：市场洞察",
-      layout: "ghost-rule-chapter",
       components: [],
     }
     const doc: PptxIR = { ...ir([chapter]), theme: { id: "consulting" } }
@@ -148,6 +147,7 @@ describe("FullSlideSvg", () => {
   it("keeps the ink vermilion seal at the theme accent, unfaded", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       heading: "一句留白",
       components: [{ type: "paragraph", text: "正文" }],
     }
@@ -168,7 +168,7 @@ describe("FullSlideSvg", () => {
   })
 
   it("paints the memo masthead in the foreground at the theme accent", () => {
-    const slide: Slide = { type: "content", heading: "决定", components: [{ type: "paragraph", text: "正文" }] }
+    const slide: Slide = { type: "content", kind: "points", heading: "决定", components: [{ type: "paragraph", text: "正文" }] }
     const doc: PptxIR = { ...ir([slide]), theme: { id: "memo" } }
     const { container } = render(<FullSlideSvg ir={doc} slide={slide} index={0} />)
     const piece = container.querySelector('[data-decor-piece="masthead"]')!
@@ -210,8 +210,8 @@ describe("FullSlideSvg", () => {
     const chapter: Slide = { type: "chapter", heading: "第一部分", components: [] }
     const content: Slide = {
       type: "content",
+      kind: "points",
       heading: "市场洞察",
-      layout: "rail-numbered",
       components: [{ type: "paragraph", text: "正文" }],
     }
     const doc: PptxIR = { ...ir([chapter, content]), theme: { id: "consulting" } }
@@ -359,6 +359,7 @@ describe("asset background auto scrim (image-layouts P1)", () => {
   it("design theme content page keeps the frosted page-color scrim", () => {
     const contentBg: Slide = {
       type: "content",
+      kind: "points",
       heading: "正文压图",
       components: [{ type: "paragraph", text: "文" }],
       background: { kind: "asset", asset_id: "bg1" },
@@ -437,7 +438,7 @@ describe("resolveOverrideBackgroundHex (post-v0.3 W8 fix round, backlog item 1)"
 // now uses a dark `#4A6B8A` override to pick white ink.
 describe("ctx.defaultBg prefers slide.background (post-v0.3 W8 fix round, backlog item 1)", () => {
   const classroomIr = (slide: Slide): PptxIR => ({
-    version: "4",
+    version: "5",
     filename: "deck.pptx",
     theme: { id: "classroom" },
     meta: {},
@@ -494,6 +495,7 @@ describe("ctx.defaultBg prefers slide.background (post-v0.3 W8 fix round, backlo
     // and the P1 frosted auto-scrim still applies.
     const slide: Slide = {
       type: "content",
+      kind: "points",
       heading: HEADING,
       components: [{ type: "paragraph", text: "文" }],
       background: { kind: "asset", asset_id: "bg1" },
@@ -527,6 +529,7 @@ describe("ctx.defaultBg prefers slide.background (post-v0.3 W8 fix round, backlo
     const SUBHEADING = "背景覆盖探针副题"
     const slide: Slide = {
       type: "content",
+      kind: "points",
       heading: HEADING,
       subheading: SUBHEADING,
       layout: "narrow-column",
@@ -534,7 +537,7 @@ describe("ctx.defaultBg prefers slide.background (post-v0.3 W8 fix round, backlo
       background: { kind: "asset", asset_id: "bg1" },
     } as Slide
     const doc: PptxIR = {
-      version: "4",
+      version: "5",
       filename: "deck.pptx",
       theme: { id: "classroom" },
       meta: {},
@@ -582,6 +585,7 @@ describe("image_grid / image_compare export round-trip (image-layouts P2)", () =
   it("image_grid serializes to an export-safe svg with 2 image ops", () => {
     const ops = roundTrip({
       type: "content",
+      kind: "points",
       heading: "图片网格",
       components: [
         {
@@ -599,6 +603,7 @@ describe("image_grid / image_compare export round-trip (image-layouts P2)", () =
   it("image_compare serializes with 2 image ops and label text", () => {
     const ops = roundTrip({
       type: "content",
+      kind: "points",
       heading: "前后对比",
       components: [
         {
@@ -618,7 +623,7 @@ describe("image_grid / image_compare export round-trip (image-layouts P2)", () =
 describe("manifest cover dispatch (P1)", () => {
   const coverSlide: Slide = { type: "cover", heading: "标题", components: [] } as Slide
   const mkIr = (theme: string): PptxIR =>
-    ({ version: "4", filename: "m.pptx", theme: { id: theme }, meta: {}, assets: { images: {} }, slides: [coverSlide] }) as unknown as PptxIR
+    ({ version: "5", filename: "m.pptx", theme: { id: theme }, meta: {}, assets: { images: {} }, slides: [coverSlide] }) as unknown as PptxIR
 
   it("consulting cover 命中允许集成员（W4 全集放开后 8 元素，seed 决定具体落点）", () => {
     const { container } = render(<FullSlideSvg ir={mkIr("consulting")} slide={coverSlide} index={0} />)
@@ -656,7 +661,7 @@ describe("manifest cover dispatch (P1)", () => {
 describe("manifest 四页型分发泛化 (P2)", () => {
   const mkIr = (theme: string, slide: Slide): PptxIR =>
     ({
-      version: "4",
+      version: "5",
       filename: "m.pptx",
       theme: { id: theme },
       meta: {},
@@ -676,6 +681,7 @@ describe("manifest 四页型分发泛化 (P2)", () => {
   it("content 命中 layout（tech → 允许集成员，W4 全集放开后自动池成员）", () => {
     const contentSlide2: Slide = {
       type: "content",
+      kind: "points",
       heading: "内容页",
       components: [{ type: "paragraph", text: "正文" }],
     } as Slide
@@ -714,10 +720,10 @@ describe("content 页相邻防重复 (W4 design decision 4, retires P3 item ②'
   // 严格周期性交替（那个保证只在 2 元素允许集下才成立，全集放开后不再有
   // 任何主题的 content 允许集是 2 元素）。
   const contentPage = (heading: string): Slide =>
-    ({ type: "content", heading, components: [{ type: "paragraph", text: "正文" }] }) as Slide
+    ({ type: "content", kind: "points", heading, components: [{ type: "paragraph", text: "正文" }] }) as Slide
 
   const deck: PptxIR = {
-    version: "4",
+    version: "5",
     filename: "rotation.pptx",
     theme: { id: "academic" },
     meta: {},
@@ -752,7 +758,7 @@ describe("content 页相邻防重复 (W4 design decision 4, retires P3 item ②'
 describe("slide.layout explicit layout short-circuit (W2 task 3 new capability)", () => {
   const mkIr = (theme: string, slide: Slide): PptxIR =>
     ({
-      version: "4",
+      version: "5",
       filename: "m.pptx",
       theme: { id: theme },
       meta: {},
@@ -783,6 +789,7 @@ describe("slide.layout explicit layout short-circuit (W2 task 3 new capability)"
     // an explicit `layout` always wins over the theme's curated allowed set.
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "split-band",
       heading: "标题",
       components: [{ type: "paragraph", text: "正文" }],
@@ -807,6 +814,7 @@ describe("slide.layout explicit layout short-circuit (W2 task 3 new capability)"
     ]) {
       const slide: Slide = {
         type: "content",
+        kind: "points",
         layout: badLayout,
         heading: "标题",
         components: [{ type: "paragraph", text: "正文" }],
@@ -845,6 +853,7 @@ describe("pacing bodyFontPx injection seam (W4 task 3 fix round — Major)", () 
   const PROBE_TEXT = "档位注入回归探针段落"
   const probeSlide: Slide = {
     type: "content",
+    kind: "points",
     heading: "缝隙回归探针",
     layout: "narrow-column",
     components: [{ type: "paragraph", text: PROBE_TEXT }],
@@ -880,7 +889,7 @@ describe("pacing bodyFontPx injection seam (W4 task 3 fix round — Major)", () 
 describe("motif candidate rotation (P1 variety wave, task 2)", () => {
   function decorMarkup(themeId: string, pageId: string, seed: number): string | null {
     const doc: PptxIR = { ...ir([]), theme: { id: themeId }, seed } as PptxIR
-    const slide: Slide = { type: "content", id: pageId, heading: "x", components: [] } as Slide
+    const slide: Slide = { type: "content", kind: "points", id: pageId, heading: "x", components: [] } as Slide
     doc.slides = [slide]
     const { container } = render(<FullSlideSvg ir={doc} slide={slide} index={0} />)
     return container.querySelector("[data-decor]")?.innerHTML ?? null
@@ -904,7 +913,7 @@ describe("motif candidate rotation (P1 variety wave, task 2)", () => {
     const ids = new Set(
       Array.from({ length: 10 }, (_, i) => {
         const doc: PptxIR = { ...ir([]), theme: { id: "campaign" }, seed: 99 } as PptxIR
-        const slide: Slide = { type: "content", id: `page-${i}`, heading: "x", components: [] } as Slide
+        const slide: Slide = { type: "content", kind: "points", id: `page-${i}`, heading: "x", components: [] } as Slide
         doc.slides = [slide]
         return resolveMotifId(doc, slide, 0)
       }),
@@ -929,6 +938,7 @@ describe("motif candidate rotation (P1 variety wave, task 2)", () => {
         const doc: PptxIR = { ...ir([]), theme: { id: "campaign" }, seed } as PptxIR
         const slide: Slide = {
           type: "content",
+          kind: "points",
           id: "same-page",
           heading: "x",
           layout: "two-column",
@@ -967,6 +977,7 @@ describe("chart palette phase rotation (P1 variety wave, task 2)", () => {
 
   const pieSlide: Slide = {
     type: "content",
+    kind: "points",
     heading: "图表色板轮换探针",
     layout: "narrow-column",
     components: [
@@ -1037,7 +1048,7 @@ describe("chart palette phase rotation (P1 variety wave, task 2)", () => {
 describe("layouts that paint their own full-bleed field (LayoutDefinition.paintsOwnBackground)", () => {
   const mkIr = (theme: string, slide: Slide): PptxIR =>
     ({
-      version: "4",
+      version: "5",
       filename: "m.pptx",
       theme: { id: theme },
       meta: {},
@@ -1092,7 +1103,7 @@ describe("layouts that paint their own full-bleed field (LayoutDefinition.paints
 describe("deck branding posture vs theme motif", () => {
   const pinnedContent: Slide = {
     type: "content",
-    layout: "quiet-frame",
+    kind: "points",
     heading: "三大支柱",
     components: [{ type: "paragraph", text: "我们围绕三个方向推进。" }],
   }

@@ -180,7 +180,6 @@ export function ShowGalleryContent({ ir, slide, index, ctx }: SvgTemplateProps) 
         </g>
       ) : (
         <SvgContent
-          arrangement={slide.arrangement}
           components={slide.components}
           rect={{ x: 64, y: 222, w: 1152, h: 390 }}
           ctx={showNeutralFallbackCtx(ctx)}

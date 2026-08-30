@@ -12,7 +12,7 @@ const VERSE = "设备不会突然坏，只是没人听它说话。"
 
 function ir(theme: string, slides: Slide[]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "x.pptx",
     theme: { id: theme },
     meta: {},
@@ -41,7 +41,7 @@ describe("sparseFace dispatch", () => {
   })
 
   it("the same statement IR is centered on stage, left on lecture, italic 500 on crayon", () => {
-    const slide: Slide = { type: "content", layout: "statement", heading: VERSE, components: [] } as Slide
+    const slide: Slide = { type: "content", kind: "points", layout: "statement", heading: VERSE, components: [] } as Slide
 
     const stageCtx = buildCtx(resolveStyle("stage"), {})
     const stageRoot = render(
@@ -89,6 +89,7 @@ describe("sparseFace dispatch", () => {
   it("an unregistered pair (stage, one-evidence) keeps the generic face", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "one-evidence",
       heading: "迁徙路线在十年里缩短了四成",
       components: [],

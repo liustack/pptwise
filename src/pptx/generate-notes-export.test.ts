@@ -21,7 +21,7 @@ import type { PptxIR, Slide } from "@/ir"
 
 function makeIR(slides: Slide[]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "notes-export.pptx",
     theme: { id: "consulting" },
     meta: {},
@@ -47,8 +47,8 @@ describe("generatePptxBlob speaker notes export", () => {
     const ir = makeIR([
       {
         type: "content",
+        kind: "points",
         heading: "Stay hungry",
-        layout: "statement",
         components: [],
         notes: "pause. then the next slide is the product.",
       },
@@ -61,7 +61,7 @@ describe("generatePptxBlob speaker notes export", () => {
   it("a slide's notes field exports as native PowerPoint speaker notes text", async () => {
     const { generatePptxBlob } = await import("./generate")
     const ir = makeIR([
-      { type: "content", heading: "Body", components: [], notes: "mention the FX headwind before Q&A" },
+      { type: "content", kind: "points", heading: "Body", components: [], notes: "mention the FX headwind before Q&A" },
     ])
     const blob = await generatePptxBlob(ir)
     const notesXml = await zipEntry(blob, "ppt/notesSlides/notesSlide1.xml")
@@ -72,7 +72,7 @@ describe("generatePptxBlob speaker notes export", () => {
     const { generatePptxBlob } = await import("./generate")
     const ir = makeIR([
       { type: "cover", heading: "Cover", components: [] },
-      { type: "content", heading: "Body", components: [], notes: "second-slide note" },
+      { type: "content", kind: "points", heading: "Body", components: [], notes: "second-slide note" },
       { type: "ending", heading: "Thanks", components: [] },
     ])
     const blob = await generatePptxBlob(ir)
@@ -87,7 +87,7 @@ describe("generatePptxBlob speaker notes export", () => {
 
   it("a deck that never sets notes still carries a notesSlide part per slide (pptxgenjs's own unconditional behavior), but with empty placeholder text — not new zip structure introduced by this feature", async () => {
     const { generatePptxBlob } = await import("./generate")
-    const ir = makeIR([{ type: "cover", heading: "Cover", components: [] }, { type: "content", heading: "Body", components: [] }])
+    const ir = makeIR([{ type: "cover", heading: "Cover", components: [] }, { type: "content", kind: "points", heading: "Body", components: [] }])
     const blob = await generatePptxBlob(ir)
 
     const notes1 = await zipEntry(blob, "ppt/notesSlides/notesSlide1.xml")
@@ -104,6 +104,7 @@ describe("generatePptxBlob speaker notes export", () => {
       { type: "chapter", heading: "Why an IR", components: [] },
       {
         type: "content",
+        kind: "points",
         heading: "Design goals",
         components: [
           {
@@ -116,7 +117,7 @@ describe("generatePptxBlob speaker notes export", () => {
           },
         ],
       },
-      { type: "ending", heading: "Thanks", layout: "banner-ending", components: [] },
+      { type: "ending", heading: "Thanks",  components: [] },
     ])
 
     const blobA = await generatePptxBlob(ir)

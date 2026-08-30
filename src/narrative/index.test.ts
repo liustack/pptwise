@@ -454,7 +454,7 @@ describe("resolveNarrative", () => {
 
 describe("normalizeNarrativeShape", () => {
   it("leaves a non-object input untouched (no narrative field at all)", () => {
-    const input = { version: "4", slides: [] }
+    const input = { version: "5", slides: [] }
     const result = normalizeNarrativeShape(input)
     expect(result.value).toBe(input) // same reference — no rewrite
     expect(result.normalized).toEqual([])
@@ -475,9 +475,9 @@ describe("normalizeNarrativeShape", () => {
   })
 
   it("rescues the exact bench-failing shape {id: \"training\"} to the bare preset string", () => {
-    const input = { version: "4", narrative: { id: "training" }, slides: [] }
+    const input = { version: "5", narrative: { id: "training" }, slides: [] }
     const result = normalizeNarrativeShape(input)
-    expect(result.value).toEqual({ version: "4", narrative: "training", slides: [] })
+    expect(result.value).toEqual({ version: "5", narrative: "training", slides: [] })
     expect(result.value).not.toBe(input) // never mutates the original
     expect(input.narrative).toEqual({ id: "training" }) // original untouched
     expect(result.normalized).toHaveLength(1)

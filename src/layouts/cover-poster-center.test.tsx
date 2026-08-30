@@ -140,7 +140,7 @@ const FULL_META: PptxIR["meta"] = {
 
 function fullIr(themeId: string): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "deck.pptx",
     theme: { id: themeId },
     branding: "full",

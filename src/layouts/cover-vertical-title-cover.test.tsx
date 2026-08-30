@@ -20,7 +20,7 @@ function slide(heading = HEADING, extras: Partial<Slide> = {}): Slide {
 
 function ir(themeId: string, meta: PptxIR["meta"] = {}, s: Slide = slide()): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "vertical-title-cover.pptx",
     theme: { id: themeId },
     meta,
@@ -386,7 +386,7 @@ describe("cover-vertical-title-cover — seal rules", () => {
 
 describe("cover-vertical-title-cover — FullSlideSvg remnant", () => {
   it("keeps the left remnant mountain when the org foot is present", () => {
-    const s = slide(HEADING, { layout: "vertical-title-cover" })
+    const s = slide(HEADING, {  })
     const markup = renderSvgMarkup(<FullSlideSvg ir={ir("ink", FULL_META, s)} slide={s} index={0} />)
     const root = parseSvgRoot(markup)
     const remnant = root.querySelector('[data-decor-piece="remnant"]')

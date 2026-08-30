@@ -220,7 +220,7 @@ export function RailNumberedContent({ ir, slide, index, ctx }: SvgTemplateProps)
         >
           {badgeLabel.text}
         </text>
-        <SvgContent arrangement={slide.arrangement} components={slide.components} rect={treatedRect} ctx={ctx} />
+        <SvgContent components={slide.components} rect={treatedRect} ctx={ctx} />
         {footnote && (
           <text
             data-truncated={footnote.truncated ? "1" : undefined}
@@ -312,7 +312,7 @@ export function RailNumberedContent({ ir, slide, index, ctx }: SvgTemplateProps)
         )}
 
       {/* Content components below the title row (was a divider + foreignObject) */}
-      <SvgContent arrangement={slide.arrangement} components={slide.components} rect={contentRect} ctx={ctx} />
+      <SvgContent components={slide.components} rect={contentRect} ctx={ctx} />
 
       {/* Footnote only — Branding already renders the y=664 footer
        * hairline for content pages, so this layout must not draw its own

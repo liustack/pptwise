@@ -9,7 +9,7 @@ import { BUILTIN_THEME_IDS, type PptxIR, type Slide, type Component } from "@/ir
 const allComponents: Component[] = [
   { type: "paragraph", text: "本页用于覆盖所有 component 类型的导出往返。" },
   { type: "bullets", items: ["要点一", "要点二"], style: "numbered" },
-  { type: "quote", text: "引用一句话。", attribution: "某人" },
+  { type: "blockquote", text: "引用一句话。", attribution: "某人" },
   { type: "callout", variant: "tip", text: "提示信息。" },
   { type: "code", language: "ts", code: "const a = 1\nconst b = 2" },
   { type: "kpi_cards", items: [{ value: "42", unit: "%", label: "增长", delta: "up" }] },
@@ -39,11 +39,11 @@ function deck(themeId: (typeof BUILTIN_THEME_IDS)[number]): { ir: PptxIR; slides
   const slides: Slide[] = [
     { type: "cover", heading: "封面标题", subheading: "副标题", components: [] },
     { type: "chapter", heading: "第一章", components: [] },
-    { type: "content", heading: "正文页", components: allComponents, footnote: "注脚" },
+    { type: "content", kind: "points", heading: "正文页", components: allComponents, footnote: "注脚" },
     { type: "ending", heading: "谢谢", components: [] },
   ]
   const ir: PptxIR = {
-    version: "4",
+    version: "5",
     filename: "deck.pptx",
     theme: { id: themeId },
     meta: { organization: "ACME", confidentiality: "internal", version: "v1", date: "2026" },

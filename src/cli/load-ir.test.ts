@@ -45,7 +45,7 @@ describe("resolveLocalAssets", () => {
     const dir = await mkdtemp(join(tmpdir(), "pptwise-"))
     await writeFile(join(dir, "logo.png"), PNG_1PX)
     const ir = PptxIRSchema.parse({
-      version: "4",
+      version: "5",
       filename: "t",
       theme: { id: "consulting" },
       assets: { images: { logo: { src: "logo.png" } } },
@@ -57,7 +57,7 @@ describe("resolveLocalAssets", () => {
 
   it("leaves data URIs and http(s) URLs untouched", async () => {
     const ir = PptxIRSchema.parse({
-      version: "4",
+      version: "5",
       filename: "t",
       theme: { id: "consulting" },
       assets: { images: { a: { src: "data:image/png;base64,AAAA" }, b: { src: "https://x.test/i.png" } } },
@@ -76,7 +76,7 @@ describe("resolveLocalAssets", () => {
     const src = pathToFileURL(file).href
     expect(src).toContain("%23")
     const ir = PptxIRSchema.parse({
-      version: "4",
+      version: "5",
       filename: "t",
       theme: { id: "consulting" },
       assets: { images: { photo: { src } } },
@@ -92,7 +92,7 @@ describe("resolveLocalAssets", () => {
 
   it("fails loud with the resolved path for a missing file", async () => {
     const ir = PptxIRSchema.parse({
-      version: "4",
+      version: "5",
       filename: "t",
       theme: { id: "consulting" },
       assets: { images: { gone: { src: "missing.png" } } },
@@ -109,7 +109,7 @@ describe("resolveLocalAssets", () => {
     await mkdir(workspace, { recursive: true })
     await writeFile(join(workspace, "hero.png"), PNG_1PX)
     const ir = PptxIRSchema.parse({
-      version: "4",
+      version: "5",
       filename: "t",
       theme: { id: "consulting" },
       assets: { images: { hero: { src: "hero.png" } } },
@@ -129,7 +129,7 @@ describe("resolveLocalAssets", () => {
       const dir = await mkdtemp(join(tmpdir(), "pptwise-"))
       await writeFile(join(dir, "empty.png"), Buffer.alloc(0))
       const ir = PptxIRSchema.parse({
-        version: "4",
+        version: "5",
         filename: "t",
         theme: { id: "consulting" },
         assets: { images: { photo: { src: "empty.png" } } },
@@ -142,7 +142,7 @@ describe("resolveLocalAssets", () => {
       const dir = await mkdtemp(join(tmpdir(), "pptwise-"))
       await writeFile(join(dir, "garbage.png"), Buffer.from([0x00, 0x01, 0x02, 0x03]))
       const ir = PptxIRSchema.parse({
-        version: "4",
+        version: "5",
         filename: "t",
         theme: { id: "consulting" },
         assets: { images: { photo: { src: "garbage.png" } } },
@@ -155,7 +155,7 @@ describe("resolveLocalAssets", () => {
       const dir = await mkdtemp(join(tmpdir(), "pptwise-"))
       await writeFile(join(dir, "photo.jpg"), PNG_1PX)
       const ir = PptxIRSchema.parse({
-        version: "4",
+        version: "5",
         filename: "t",
         theme: { id: "consulting" },
         assets: { images: { photo: { src: "photo.jpg" } } },
@@ -170,7 +170,7 @@ describe("resolveLocalAssets", () => {
       const dir = await mkdtemp(join(tmpdir(), "pptwise-"))
       await writeFile(join(dir, "logo.png"), PNG_1PX)
       const ir = PptxIRSchema.parse({
-        version: "4",
+        version: "5",
         filename: "t",
         theme: { id: "consulting" },
         assets: { images: { logo: { src: "logo.png" } } },

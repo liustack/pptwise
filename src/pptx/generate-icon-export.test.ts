@@ -36,14 +36,14 @@ beforeAll(() => {
 
 function makeIr(components: Component[]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "icon-export-fixture",
     theme: { id: "consulting" },
     meta: {},
     assets: { images: {} },
     slides: [
       { type: "cover", heading: "Cover" },
-      { type: "content", heading: "Body", components },
+      { type: "content", kind: "points", heading: "Body", components },
       { type: "ending", heading: "Thanks" },
     ],
   } as PptxIR
@@ -135,6 +135,7 @@ describe("icon catalog sample survives the real export pipeline (task 1 blocking
       const names = sample.slice(i, i + PER_SLIDE)
       slides.push({
         type: "content",
+        kind: "points",
         heading: `Slide ${i / PER_SLIDE}`,
         components: [
           {
@@ -146,7 +147,7 @@ describe("icon catalog sample survives the real export pipeline (task 1 blocking
     }
     slides.push({ type: "ending", heading: "Thanks", components: [] })
     const ir: PptxIR = {
-      version: "4",
+      version: "5",
       filename: "icon-catalog-sample",
       theme: { id: "consulting" },
       meta: {},

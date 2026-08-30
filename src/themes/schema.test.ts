@@ -16,7 +16,7 @@ describe("ThemeFileSchema", () => {
     })
 
     expect(result.success).toBe(true)
-    if (result.success) expect(result.data.base).toBe("consulting")
+    if (result.success) expect((result.data as unknown as { base?: string }).base).toBe("consulting")
   })
 
   it("rejects structural fields on a partial theme with a complete-theme hint", () => {

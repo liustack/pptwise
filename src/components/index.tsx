@@ -5,7 +5,7 @@ import type { ComponentType } from "../render/component-traits"
 import type { ComponentBox, ComponentCtx, RenderDef } from "./types"
 import { renderDef as paragraphRenderDef } from "./paragraph"
 import { renderDef as bulletsRenderDef } from "./bullets"
-import { renderDef as quoteRenderDef } from "./quote"
+import { renderDef as blockquoteRenderDef } from "./blockquote"
 import { renderDef as calloutRenderDef } from "./callout"
 import { renderDef as codeRenderDef } from "./code"
 import { renderDef as kpiRenderDef } from "./kpi"
@@ -64,7 +64,7 @@ import { renderDef as tagRowRenderDef } from "./tag-row"
 const RENDER_DEFS: Record<ComponentType, RenderDef> = {
   paragraph: paragraphRenderDef,
   bullets: bulletsRenderDef,
-  quote: quoteRenderDef,
+  blockquote: blockquoteRenderDef,
   callout: calloutRenderDef,
   code: codeRenderDef,
   kpi_cards: kpiRenderDef,

@@ -10,7 +10,7 @@ import type { PptxIR, Slide } from "@/ir"
 
 const coverSlide: Slide = { type: "cover", heading: "封面", components: [] } as Slide
 const chapterSlide: Slide = { type: "chapter", heading: "章节", components: [] } as Slide
-const contentSlide: Slide = { type: "content", heading: "内容", components: [] } as Slide
+const contentSlide: Slide = { type: "content", kind: "points", heading: "内容", components: [] } as Slide
 const endingSlide: Slide = { type: "ending", components: [] } as Slide
 const ALL_SLIDES = [coverSlide, chapterSlide, contentSlide, endingSlide]
 
@@ -201,7 +201,7 @@ describe("LectureMotif（粉笔槽细框）", () => {
   })
 
   it("layout branding none drops the frame even on a full deck", () => {
-    const slide = { ...contentSlide, layout: "stat-hero" } as Slide
+    const slide = { ...contentSlide, layout: "stat-hero" } as unknown as Slide
     const { root } = draw("lecture", slide, undefined, "full")
     expect(num(frame(root)!, "y") + num(frame(root)!, "height")).toBe(694)
   })

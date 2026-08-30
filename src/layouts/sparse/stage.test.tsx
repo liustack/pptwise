@@ -18,7 +18,7 @@ const BOARD_TEXT = "#EDEAE4"
 
 function ir(slides: Slide[]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "x.pptx",
     theme: { id: "stage" },
     meta: {},
@@ -40,7 +40,7 @@ describe("stage sparse faces", () => {
   const ctx = buildCtx(resolveStyle("stage"), {})
 
   it("statement is centered light type with a border hairline, accent only on **runs**", () => {
-    const slide: Slide = { type: "content", layout: "statement", heading: VERSE, components: [] } as Slide
+    const slide: Slide = { type: "content", kind: "points", layout: "statement", heading: VERSE, components: [] } as Slide
     const { markup, root } = render(
       <StatementContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />,
     )
@@ -71,6 +71,7 @@ describe("stage sparse faces", () => {
       "试点客户九十天运行数据表明席位净流失从每周两次降到每月不到一次，维护工单平均提前六点五天生成，并且故障预测准确率已经稳定在百分之八十八以上。"
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "statement",
       heading: VERSE_PLAIN,
       components: [{ type: "paragraph", text: long }],
@@ -90,7 +91,7 @@ describe("stage sparse faces", () => {
   })
 
   it("statement without ** keeps the whole verse on text fill", () => {
-    const slide: Slide = { type: "content", layout: "statement", heading: VERSE_PLAIN, components: [] } as Slide
+    const slide: Slide = { type: "content", kind: "points", layout: "statement", heading: VERSE_PLAIN, components: [] } as Slide
     const { root } = render(
       <StatementContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />,
     )
@@ -104,6 +105,7 @@ describe("stage sparse faces", () => {
   it("stat-hero centers a 300px numeral and splits a trailing % into accent", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "stat-hero",
       heading: "43%",
       subheading: "试点客户 · 90 天",
@@ -128,6 +130,7 @@ describe("stage sparse faces", () => {
   it("pull-quote sandwiches the line between two border hairlines", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "pull-quote",
       heading: QUOTE,
       subheading: "陈砚清 · 首席技术官",

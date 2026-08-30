@@ -17,7 +17,7 @@ const EN_LINE = "Turn the lights off."
 
 function ir(theme: string, slides: Slide[]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "x.pptx",
     theme: { id: theme },
     meta: {},
@@ -51,6 +51,7 @@ describe("MonoBleedContent", () => {
     const ctx = buildCtx(resolveStyle("consulting"), {})
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "mono-bleed",
       heading: CJK_LINE,
       subheading: "然后只留一句",
@@ -76,7 +77,7 @@ describe("MonoBleedContent", () => {
 
   it("English heading renders on academic against academic primary, not consulting navy", () => {
     const ctx = buildCtx(resolveStyle("academic"), {})
-    const slide: Slide = { type: "content", layout: "mono-bleed", heading: EN_LINE, components: [] } as Slide
+    const slide: Slide = { type: "content", kind: "points", layout: "mono-bleed", heading: EN_LINE, components: [] } as Slide
     const { markup, root } = render(
       <MonoBleedContent ir={ir("academic", [slide])} slide={slide} index={0} ctx={ctx} />,
     )
@@ -88,7 +89,7 @@ describe("MonoBleedContent", () => {
 
   it("insight primary field is not luxe champagne gold", () => {
     const ctx = buildCtx(resolveStyle("insight"), {})
-    const slide: Slide = { type: "content", layout: "mono-bleed", heading: CJK_LINE, components: [] } as Slide
+    const slide: Slide = { type: "content", kind: "points", layout: "mono-bleed", heading: CJK_LINE, components: [] } as Slide
     const { markup, root } = render(
       <MonoBleedContent ir={ir("insight", [slide])} slide={slide} index={0} ctx={ctx} />,
     )
@@ -100,7 +101,7 @@ describe("MonoBleedContent", () => {
   it("mixed long heading shrinks/wraps to at most 3 lines and never dumps the raw source verbatim", () => {
     const ctx = buildCtx(resolveStyle("insight"), {})
     const extreme = `${CJK_LONG}${MIXED_LONG}`
-    const slide: Slide = { type: "content", layout: "mono-bleed", heading: extreme, components: [] } as Slide
+    const slide: Slide = { type: "content", kind: "points", layout: "mono-bleed", heading: extreme, components: [] } as Slide
     const { markup, root } = render(
       <MonoBleedContent ir={ir("insight", [slide])} slide={slide} index={0} ctx={ctx} />,
     )
@@ -115,7 +116,7 @@ describe("MonoBleedContent", () => {
 
   it("empty subheading: no empty text node, heading still renders", () => {
     const ctx = buildCtx(resolveStyle("consulting"), {})
-    const slide: Slide = { type: "content", layout: "mono-bleed", heading: CJK_LINE, components: [] } as Slide
+    const slide: Slide = { type: "content", kind: "points", layout: "mono-bleed", heading: CJK_LINE, components: [] } as Slide
     const { root } = render(
       <MonoBleedContent ir={ir("consulting", [slide])} slide={slide} index={0} ctx={ctx} />,
     )

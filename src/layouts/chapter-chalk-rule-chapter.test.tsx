@@ -38,7 +38,7 @@ const chapter3: Slide = {
 
 function ir(themeId: string, slides: Slide[] = [chapter1, chapter2, chapter3]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "chalk-rule-chapter.pptx",
     theme: { id: themeId },
     meta: {},

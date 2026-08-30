@@ -18,12 +18,12 @@ function para(text: string): Component {
 const chapter1: Slide = { type: "chapter", heading: "第一部分", components: [] } as Slide
 
 function slideWith(components: Component[]): Slide {
-  return { type: "content", heading: "三区构图验证", components } as Slide
+  return { type: "content", kind: "points", heading: "三区构图验证", components } as Slide
 }
 
 function ir(slides: Slide[]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "x.pptx",
     theme: { id: "consulting" },
     meta: {},
@@ -81,7 +81,7 @@ describe("AsymmetricTriptychContent", () => {
   })
 
   it("arrangement is always hardcoded to the layout's own three-region split — slide.arrangement is never consulted (registry declares [\"single\"])", () => {
-    const slide: Slide = { ...slideWith([para("一"), para("二")]), arrangement: "two_column" } as Slide
+    const slide: Slide = { ...slideWith([para("一"), para("二")]), arrangement: "two_column" } as unknown as Slide
     const markup = render(ir([chapter1, slide]), slide, 1)
     // Still renders through the lead/top split, not a two_column layout —
     // sanity: both components are present and the divider/frames exist.

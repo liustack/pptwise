@@ -15,7 +15,7 @@ const LUXE_GOLD = "#C6A15B"
 
 function ir(slides: Slide[]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "x.pptx",
     theme: { id: "heritage" },
     meta: {},
@@ -39,6 +39,7 @@ describe("heritage sparse faces", () => {
   it("pull-quote sits between burgundy double rules with a caramel underline", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "pull-quote",
       heading: QUOTE,
       subheading: "陈砚清 · 首席技术官",
@@ -69,7 +70,7 @@ describe("heritage sparse faces", () => {
   })
 
   it("statement keeps the subject smaller than the viewfinder and centered inside it", () => {
-    const slide: Slide = { type: "content", layout: "statement", heading: VERSE, components: [] } as Slide
+    const slide: Slide = { type: "content", kind: "points", layout: "statement", heading: VERSE, components: [] } as Slide
     const { root } = render(
       <StatementContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />,
     )
@@ -99,6 +100,7 @@ describe("heritage sparse faces", () => {
   it("stat-hero is a centered burgundy numeral between double rules", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "stat-hero",
       heading: "43%",
       subheading: "订阅续约率同比回升 · 九十日",

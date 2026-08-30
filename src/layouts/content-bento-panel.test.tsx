@@ -62,6 +62,7 @@ const iconCardsComponent: Component = {
 }
 const bentoSlide: Slide = {
   type: "content",
+  kind: "points",
   heading: "架构拼盘",
   subheading: "**核心指标**一屏可见",
   footnote: "数据来源：监控平台",
@@ -72,6 +73,7 @@ const bentoSlide: Slide = {
 // 而非满 rect 空壳大卡。
 const soloKpiSlide: Slide = {
   type: "content",
+  kind: "points",
   heading: "单指标",
   components: [{ type: "kpi_cards", items: [{ value: "88", label: "达成率" }] }],
 } as Slide
@@ -151,6 +153,7 @@ describe("BentoPanelContent", () => {
   it("lecture 4-kpi cards stay inside the content rect and do not run past the framed floor", () => {
     const kpiSlide: Slide = {
       type: "content",
+      kind: "points",
       heading: "设备接入量首次突破十万台",
       components: [
         {
@@ -233,6 +236,7 @@ describe("BentoPanelContent", () => {
     }))
     const overflowSlide: Slide = {
       type: "content",
+      kind: "points",
       heading: "七项要点",
       components: overflowComponents,
     } as Slide
@@ -338,6 +342,7 @@ describe("BentoPanelContent", () => {
     }
     const slide: Slide = {
       type: "content",
+      kind: "points",
       heading: "混合门槛",
       components: [component],
     } as Slide
@@ -381,6 +386,7 @@ describe("BentoPanelContent", () => {
     }
     const slide: Slide = {
       type: "content",
+      kind: "points",
       heading: "全组过线",
       components: [component],
     } as Slide
@@ -406,6 +412,7 @@ describe("BentoPanelContent", () => {
     const ctx = buildCtx(resolveStyle("tech"), {})
     const slide: Slide = {
       type: "content",
+      kind: "points",
       heading: "四大支柱",
       components: [para("一"), para("二"), para("三"), para("四")],
     } as Slide
@@ -424,6 +431,7 @@ describe("BentoPanelContent", () => {
     const ctx = buildCtx(resolveStyle("tech"), {})
     const slide: Slide = {
       type: "content",
+      kind: "points",
       heading: "四大支柱",
       components: [para("一"), para("二"), para("三"), para("四")],
     } as Slide
@@ -468,6 +476,7 @@ describe("BentoPanelContent", () => {
     }
     const slide: Slide = {
       type: "content",
+      kind: "points",
       heading: "核心指标",
       components: [kpiComponent4],
     } as Slide
@@ -507,6 +516,7 @@ describe("BentoPanelContent", () => {
     }
     const slide: Slide = {
       type: "content",
+      kind: "points",
       heading: "三大原则",
       components: [iconCardsComponent3],
     } as Slide
@@ -557,6 +567,7 @@ describe("BentoPanelContent", () => {
     }
     const slide: Slide = {
       type: "content",
+      kind: "points",
       heading: "操作流程",
       components: [stepsComponent, para("补充说明")],
     } as Slide
@@ -624,6 +635,7 @@ describe("BentoPanelContent", () => {
       const paragraphComponent: Component = para("普通块仍然有卡壳")
       const slide: Slide = {
         type: "content",
+        kind: "points",
         heading: "双壳治理",
         components: [component, paragraphComponent],
       } as Slide
@@ -668,6 +680,7 @@ describe("BentoPanelContent", () => {
     }
     const slide: Slide = {
       type: "content",
+      kind: "points",
       heading: "核心指标",
       components: [kpiComponent4],
     } as Slide
@@ -708,6 +721,7 @@ describe("BentoPanelContent", () => {
     }
     const slide: Slide = {
       type: "content",
+      kind: "points",
       heading: "核心指标",
       components: [kpiComponent4],
     } as Slide
@@ -777,6 +791,7 @@ describe("BentoPanelContent", () => {
     }
     const slide: Slide = {
       type: "content",
+      kind: "points",
       heading: "核心指标",
       components: [kpiComponent2],
     } as Slide
@@ -853,6 +868,7 @@ describe("BentoPanelContent", () => {
     }
     const slide: Slide = {
       type: "content",
+      kind: "points",
       heading: "混合拼盘",
       components: [kpiComponent2, chartComponent],
     } as Slide
@@ -882,6 +898,7 @@ describe("BentoPanelContent", () => {
     }
     const slide: Slide = {
       type: "content",
+      kind: "points",
       heading: "双元混排",
       components: [kpiComponent1, para("这里是配对展示的另一块说明文字。")],
     } as Slide
@@ -913,6 +930,7 @@ describe("BentoPanelContent", () => {
     const components = texts.map(para)
     const slide: Slide = {
       type: "content",
+      kind: "points",
       heading: "五项要点",
       components,
     } as Slide
@@ -940,6 +958,7 @@ describe("BentoPanelContent", () => {
     const components = texts.map(para)
     const slide: Slide = {
       type: "content",
+      kind: "points",
       heading: "六项要点",
       components,
     } as Slide
@@ -968,6 +987,7 @@ describe("BentoPanelContent", () => {
     }))
     const slide: Slide = {
       type: "content",
+      kind: "points",
       heading: "六项要点",
       components,
     } as Slide
@@ -1001,6 +1021,7 @@ describe("BentoPanelContent", () => {
     const paragraphComponent: Component = para("普通块仍然有卡壳")
     const slide: Slide = {
       type: "content",
+      kind: "points",
       heading: "卡壳感知",
       components: [calloutComponent, codeComponent, paragraphComponent],
     } as Slide
@@ -1039,6 +1060,7 @@ describe("BentoPanelContent", () => {
     const paragraphComponent: Component = para("普通块仍然有卡壳")
     const slide: Slide = {
       type: "content",
+      kind: "points",
       heading: "结论条卡壳感知",
       components: [verdictComponent, paragraphComponent],
     } as Slide
@@ -1074,6 +1096,7 @@ describe("BentoPanelContent", () => {
     const ctx = buildCtx(resolveStyle("tech"), {})
     const slide: Slide = {
       type: "content",
+      kind: "points",
       heading: "唯一要点",
       components: [para("独占一页的普通块。")],
     } as Slide
@@ -1103,6 +1126,7 @@ describe("BentoPanelContent", () => {
     }
     const slide: Slide = {
       type: "content",
+      kind: "points",
       heading: "单一指标",
       components: [kpiComponent1],
     } as Slide
@@ -1144,6 +1168,7 @@ describe("BentoPanelContent", () => {
     const components: Component[] = [para("一"), { type: "bullets", items: longItems, style: "default" }, para("三"), para("四")]
     const slide: Slide = {
       type: "content",
+      kind: "points",
       heading: "四大支柱",
       components,
     } as Slide
@@ -1178,6 +1203,7 @@ describe("BentoPanelContent", () => {
     const components: Component[] = [para("概览"), chartComponent, para("结论"), para("展望")]
     const slide: Slide = {
       type: "content",
+      kind: "points",
       heading: "四项要点",
       components,
     } as Slide
@@ -1209,6 +1235,7 @@ describe("BentoPanelContent", () => {
     const ctx = buildCtx(resolveStyle("tech"), {})
     const slide: Slide = {
       type: "content",
+      kind: "points",
       heading: "四大支柱",
       components: [para("一"), para("二"), para("三"), para("四")],
     } as Slide
@@ -1239,6 +1266,7 @@ describe("BentoPanelContent", () => {
     expect(longHeading.length).toBe(48)
     const slide: Slide = {
       type: "content",
+      kind: "points",
       heading: longHeading,
       components: [para("概要")],
     } as Slide
@@ -1266,6 +1294,7 @@ describe("BentoPanelContent", () => {
   describe("Content subheading (Task 5)", () => {
     const base: Slide = {
       type: "content",
+      kind: "points",
       heading: "三大支柱",
       components: [para("一"), para("二")],
     } as Slide

@@ -25,6 +25,7 @@ export const EMPHASIS_UNASSIGNED_BYTES_URL = new URL(
 function content(layout: string, component: Slide["components"][number]): Slide {
   return {
     type: "content",
+    kind: "points",
     layout,
     heading: MARKED_HEADING,
     subheading: MARKED_SUBHEADING,
@@ -34,7 +35,7 @@ function content(layout: string, component: Slide["components"][number]): Slide 
 
 function deck(themeId: string): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "emphasis-unassigned-byte-nail.pptx",
     theme: { id: themeId },
     meta: { organization: "pptwise" },

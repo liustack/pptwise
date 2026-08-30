@@ -75,7 +75,7 @@
       "arrangement": "quote",
       "components": [
         {
-          "type": "quote",
+          "type": "blockquote",
           "text": "Atlas cleared our Black Friday backlog in one shift. We stopped planning around seasonal hiring entirely.",
           "attribution": "COO, Nordic 3PL operator"
         }

@@ -177,7 +177,7 @@ const TAG_BOX_CLEARANCE = 20
 
 function deck(themeId: string, slides: Slide[]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "heading-collision.pptx",
     theme: { id: themeId },
     meta: { organization: "pptwise" },
@@ -193,6 +193,7 @@ function chapterSlide(heading = CHAPTER): Slide {
 function contentSlide(heading = GALLERY_HEADING): Slide {
   return {
     type: "content",
+    kind: "points",
     heading,
     layout: "rail-numbered",
     components: [{ type: "paragraph", text: "正文占位" }],

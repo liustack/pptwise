@@ -219,7 +219,6 @@ export function CrayonboxCardsContent({ ir, slide, index, ctx }: SvgTemplateProp
         </g>
       ) : (
         <SvgContent
-          arrangement={slide.arrangement}
           components={slide.components}
           rect={{ x: 96, y: 248, w: 1088, h: 330 }}
           ctx={ctx}

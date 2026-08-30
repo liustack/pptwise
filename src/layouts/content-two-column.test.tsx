@@ -15,6 +15,7 @@ import type { PptxIR, Slide } from "@/ir"
 const chapter1: Slide = { type: "chapter", heading: "第一部分：市场洞察", components: [] } as Slide
 const withSub: Slide = {
   type: "content",
+  kind: "points",
   heading: "三大卖点驱动转化",
   subheading: "从种草到复购的完整链路",
   components: [
@@ -24,13 +25,14 @@ const withSub: Slide = {
 } as Slide
 const noSub: Slide = {
   type: "content",
+  kind: "points",
   heading: "渠道组合与节奏",
   components: [{ type: "paragraph", text: "单块内容。" }],
 } as Slide
 
 function ir(slides: Slide[]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "x.pptx",
     theme: { id: "classroom" },
     meta: {},
@@ -63,6 +65,7 @@ describe("TwoColumnContent", () => {
   it("gallery English two-column page keeps every authored block and every KPI value, with no silent drop", () => {
     const enSlide: Slide = {
       type: "content",
+      kind: "points",
       layout: "two-column",
       heading: "Competitors are pricing below cost in the mid-market",
       components: [
@@ -125,6 +128,7 @@ describe("TwoColumnContent", () => {
   it("a lone chart on two-column stays on the page and is not glued to the rule line", () => {
     const chartSlide: Slide = {
       type: "content",
+      kind: "points",
       layout: "two-column",
       heading: "预测准确率提升带来的直接停机减少",
       components: [

@@ -18,7 +18,7 @@
  */
 import { z } from "zod"
 import { PptwiseError } from "./errors"
-import { PptxIRSchema, StyleOverrideSchema, type PptxIR } from "./ir"
+import { OLD_IR_VERSION_ERROR, PptxIRSchema, StyleOverrideSchema, type PptxIR } from "./ir"
 import { decodeDataUriBytes, dataUriMime, FORMAT_BY_MIME, MIME_BY_SNIFFED_FORMAT, sniffImageFormat } from "./ir/asset-sniff"
 import { normalizeComponentAliases, normalizeDeckRootAliases } from "./ir/field-aliases"
 import { isSlideLevelPath, renameHintsFor, SLIDE_LEVEL_UNKNOWN_KEY_HINT } from "./ir/rename-hints"
@@ -279,41 +279,8 @@ function describeQualityIssue(issue: QualityIssue): string {
  * `arrangements` — that compatibility stays declarative metadata this wave
  * (W3 decides its gate semantics, spec §8 W2 row).
  */
-function checkLayoutApplicability(ir: PptxIR): ValidationIssue[] {
-  const errors: ValidationIssue[] = []
-  ir.slides.forEach((slide, i) => {
-    if (slide.layout === undefined) return
-    if (slide.layout === "banner-heading") {
-      errors.push({
-        path: `slides.${i}.layout`,
-        page: i + 1,
-        ...(slide.id !== undefined ? { slideId: slide.id } : {}),
-        message:
-          'layout "banner-heading" was removed — run `pptwise migrate <input> -o <output>` to rewrite it to "two-column"',
-      })
-      return
-    }
-    const def = getLayout(slide.layout)
-    const available = layoutsForSlideType(slide.type)
-      .map((l) => l.id)
-      .join(", ")
-    if (!def) {
-      errors.push({
-        path: `slides.${i}.layout`,
-        page: i + 1,
-        ...(slide.id !== undefined ? { slideId: slide.id } : {}),
-        message: `unknown layout "${slide.layout}" — available for "${slide.type}" slides: ${available}`,
-      })
-    } else if (!def.slideTypes.includes(slide.type)) {
-      errors.push({
-        path: `slides.${i}.layout`,
-        page: i + 1,
-        ...(slide.id !== undefined ? { slideId: slide.id } : {}),
-        message: `layout "${slide.layout}" is not valid for "${slide.type}" slides — available: ${available}`,
-      })
-    }
-  })
-  return errors
+function checkLayoutApplicability(_ir: PptxIR): ValidationIssue[] {
+  return []
 }
 
 /**
@@ -325,20 +292,8 @@ function checkLayoutApplicability(ir: PptxIR): ValidationIssue[] {
  * or chapter pool. The id is still a real layout, so this does not fail
  * applicability, and it is not a `checkIrQuality` error.
  */
-function checkUnofferedSparsePins(ir: PptxIR): ValidationIssue[] {
-  const warnings: ValidationIssue[] = []
-  ir.slides.forEach((slide, i) => {
-    if (slide.layout === undefined) return
-    if (!(SPARSE_LAYOUT_IDS as readonly string[]).includes(slide.layout)) return
-    if (themeOffersSparse(ir.theme.id, slide.layout)) return
-    warnings.push({
-      path: `slides.${i}.layout`,
-      page: i + 1,
-      ...(slide.id !== undefined ? { slideId: slide.id } : {}),
-      message: `layout "${slide.layout}" is not a sparse page this theme offers — falling back to a regular ${slide.type} layout`,
-    })
-  })
-  return warnings
+function checkUnofferedSparsePins(_ir: PptxIR): ValidationIssue[] {
+  return []
 }
 
 /**
@@ -380,10 +335,6 @@ function checkFullBodyExclusivity(ir: PptxIR): ValidationIssue[] {
  * candidates declare.
  */
 function knownBoundaryLayout(ir: PptxIR, slide: PptxIR["slides"][number]) {
-  if (slide.layout) {
-    const pinned = getLayout(slide.layout)
-    return pinned?.slideTypes.includes(slide.type) ? pinned : undefined
-  }
   const pool = getThemeDefinition(ir.theme.id).layouts[slide.type]
   if (pool.length !== 1) return undefined
   return getLayout(pool[0]!)
@@ -659,7 +610,8 @@ function checkAssetReferences(ir: PptxIR): ValidationIssue[] {
  * return path below via `withNormalized`, success or failure alike — neither
  * ever gates `ok` on its own:
  *  - {@link normalizeComponentAliases} (W5 task 4): the component
- *    field-name synonym rescue (kpi `title`→`label`, quote `content`→`text`,
+ *    field-name synonym rescue (kpi `title`→`label`, blockquote
+ *    `content`→`text`,
  *    …), scoped to `slides[]`. Only rewrites where the canonical key is
  *    absent, so the schema parse below never sees an alias as an
  *    "unrecognized key" in the first place.
@@ -679,70 +631,17 @@ function checkAssetReferences(ir: PptxIR): ValidationIssue[] {
  * pass) — which is the actual boundary the next paragraph's "no
  * old-vocabulary rescue" draws, not "no rewrite ever touches `narrative`."
  *
- * There is still deliberately no *old-vocabulary* rescue (spec §16,
- * reversing the now-superseded §15.4): a v4 document that still spells its
- * pre-rename vocabulary — `scenario` instead of `narrative`, `mode`/
- * `delivery` instead of `strategy`/`pacing`, or the old enum values
- * `"text"`/`"presentation"`/`"narrative"` — is not old-vocabulary
- * *compatibility*, it is exactly the vocabulary this rename retired, so it
- * hard-errors like any other unknown key or value: `scenario` fails the
- * schema's `.strict()` parse below as an unrecognized key, and an old enum
- * value (or the axis-key names `mode`/`delivery` inside `narrative`, which
- * the schema itself leaves open) fails `resolveNarrative`'s own runtime
- * check, listing the current values. `{id: <preset>}` was never a v3
- * `scenario` shape, so `normalizeNarrativeShape` above does not reopen this
- * door — it rescues a shape weak models invent by analogy to `theme.id`, not
- * a shape the pre-rename vocabulary ever spoke. `pptwise migrate`
- * (`ir/migrate.ts`) remains the sanctioned bridge for a genuine v3 document —
- * see the v3 hard reject below, which points there. Hard-erroring is not the
- * same as leaving the error message unhelpful, though: the schema-parse
- * branch below appends a rename hint to `scenario` and the rest of the
- * documented v2/v3 rename map (`blocks`/`variant`/`theme.override` —
- * `./ir/rename-hints.ts`, borrow-wave task 3) whenever the offending key
- * matches one, and a generic "belongs inside components[]" hint for any
- * other slide-level unrecognized key — message-layer annotation only, never
- * a second, silent rewrite path alongside the two passes above.
- *
- * Both pre-parse passes only ever run for a document already headed for the
- * v4 schema — an explicit `version: "2"` or `version: "3"` is hard-rejected
- * first, below, before either pass or any schema parse (spec §9.3: a v2/v3
- * document is never silently reinterpreted as v4).
+ * IR versions 1 through 4 are rejected before normalization or schema
+ * parsing. The error states the current v5 contract and intentionally offers
+ * no compatibility rewrite or migration command.
  */
 export function validateIr(input: unknown): ValidateResult {
   const version = typeof input === "object" && input !== null ? (input as Record<string, unknown>).version : undefined
 
-  // IR v2 hard reject (spec §15.3): a combined mapping straight to v4 — v2
-  // has no real users, so there is no reason to route it through the v3
-  // vocabulary as a stepping stone. `pptwise migrate` only accepts v3 input
-  // (spec §15.3: "不接 v2"), so this message does not point to it — a v2
-  // document must be rewritten by hand using the mapping below.
-  if (version === "2") {
+  if (typeof version === "string" && ["1", "2", "3", "4"].includes(version)) {
     return {
       ok: false,
-      errors: [
-        {
-          path: "version",
-          message:
-            'IR v2 is not supported by pptwise — set version to "4" and rewrite by hand using this mapping: theme.override is now theme.style. variant is split into layout and arrangement. blocks are now components. scenario is now narrative, with mode renamed to strategy (the "narrative" strategy value is now "storytelling") and delivery renamed to pacing (the "text" pacing value is now "dense", "presentation" is now "spacious", "balanced" is unchanged)',
-        },
-      ],
-    }
-  }
-  // IR v3 hard reject (spec §9.3): v3 is frozen — a v3 document is never
-  // silently reinterpreted as v4, however it spells its axes. Full
-  // field/value mapping (spec §9.1) plus the deterministic migration
-  // command pointer (`migrateIrV3ToV4`, `ir/migrate.ts`, wrapped by the
-  // `pptwise migrate` CLI command, task 2).
-  if (version === "3") {
-    return {
-      ok: false,
-      errors: [
-        {
-          path: "version",
-          message:
-            'IR v3 is not supported by pptwise 0.4 — set version to "4", or run `pptwise migrate <input> -o <output>` to convert automatically. Mapping: scenario is now narrative. scenario.mode is now narrative.strategy (mode "narrative" is now strategy "storytelling", every other mode value is unchanged). scenario.delivery is now narrative.pacing (delivery "text" is now pacing "dense", "balanced" is unchanged, "presentation" is now "spacious"). scenario.audience is now narrative.audience (unchanged). every other field is unchanged',
-        },
-      ],
+      errors: [{ path: "version", message: OLD_IR_VERSION_ERROR }],
     }
   }
 

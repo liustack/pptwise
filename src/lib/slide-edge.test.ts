@@ -67,11 +67,11 @@ describe("slideEdgeFill", () => {
 
   it("answers for every slide of a real deck", () => {
     const result = validateIr({
-      version: "4",
+      version: "5",
       theme: { id: "ink" },
       slides: [
         { type: "cover", heading: "封面", components: [] },
-        { type: "content", heading: "正文", components: [{ type: "paragraph", text: "一段正文。" }] },
+        { type: "content", kind: "points", heading: "正文", components: [{ type: "paragraph", text: "一段正文。" }] },
         { type: "ending", heading: "结束", components: [] },
       ],
     })

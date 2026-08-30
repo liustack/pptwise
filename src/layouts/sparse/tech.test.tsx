@@ -18,7 +18,7 @@ const BOARD_TEXT = "#E6ECF5"
 
 function ir(slides: Slide[]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "x.pptx",
     theme: { id: "tech" },
     meta: {},
@@ -42,6 +42,7 @@ describe("tech sparse faces", () => {
   it("stat-hero is a cyan numeral with a four-dot star chain, none of the constellation", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "stat-hero",
       heading: "43%",
       subheading: "订阅续约率同比回升",
@@ -79,7 +80,7 @@ describe("tech sparse faces", () => {
   })
 
   it("statement paints orbit arcs and fills the ** run with accent", () => {
-    const slide: Slide = { type: "content", layout: "statement", heading: VERSE, components: [] } as Slide
+    const slide: Slide = { type: "content", kind: "points", layout: "statement", heading: VERSE, components: [] } as Slide
     const { root } = render(
       <StatementContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />,
     )
@@ -115,7 +116,7 @@ describe("tech sparse faces", () => {
   })
 
   it("statement without ** keeps the verse on text fill", () => {
-    const slide: Slide = { type: "content", layout: "statement", heading: VERSE_PLAIN, components: [] } as Slide
+    const slide: Slide = { type: "content", kind: "points", layout: "statement", heading: VERSE_PLAIN, components: [] } as Slide
     const { root } = render(
       <StatementContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />,
     )
@@ -129,6 +130,7 @@ describe("tech sparse faces", () => {
   it("one-evidence is a panel with a node lamp and NODE index", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "one-evidence",
       heading: "维护工单平均提前 6.5 天生成",
       subheading: "217 张工单全量统计 · 2026 Q2",

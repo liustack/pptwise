@@ -20,7 +20,7 @@ function slide(heading = HEADING, extras: Partial<Slide> = {}): Slide {
 
 function ir(themeId: string, meta: PptxIR["meta"] = {}, s: Slide = slide()): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "double-frame-cover.pptx",
     theme: { id: themeId },
     branding: "full",
@@ -172,14 +172,14 @@ describe("cover-double-frame-cover — shared pool", () => {
 describe("double-frame-cover — no top rule on a framed page", () => {
   it("consulting motif does not paint a top divider over the double frame", () => {
     const deck: PptxIR = {
-      version: "4",
+      version: "5",
       filename: "double-frame-no-top-rule.pptx",
       theme: { id: "consulting" },
       meta: FULL_META,
       assets: { images: {} },
       seed: 1,
       slides: [{ type: "cover", layout: "double-frame-cover", heading: HEADING, components: [] }],
-    } as PptxIR
+    } as unknown as PptxIR
     const root = parseSvgRoot(renderSlideSvg(deck, 0))
     expect(root.querySelector('rect[width="1168"][height="624"]')).not.toBeNull()
     expect(root.querySelector('rect[width="1144"][height="600"]')).not.toBeNull()
