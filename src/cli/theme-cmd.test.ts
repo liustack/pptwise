@@ -121,9 +121,18 @@ describe("runThemeNew", () => {
     // can only fail with the overwrite hint. Whatever the interleaving, the
     // target ends as one writer's complete document, with no temp debris.
     expect(results[1]!.status).toBe("fulfilled")
+    // The target pre-exists, so the no-force writer must always fail — and
+    // since it never publishes, the force writer's bytes are the only
+    // possible final content.
+    expect(results[0]!.status).toBe("rejected")
     if (results[0]!.status === "rejected") expect(String(results[0]!.reason)).toMatch(/--force/)
-    const final = JSON.parse(await readFile(out, "utf8")) as { version: number; id: string }
+    const final = JSON.parse(await readFile(out, "utf8")) as {
+      version: number
+      id: string
+      menu: { cover: { face: string } }
+    }
     expect(final).toMatchObject({ version: 2, id: "acme" })
+    expect(final.menu.cover.face).toBe("institutional-block")
     const leftovers = (await readdir(join(cwd, "themes"))).filter((name) => name.endsWith(".tmp"))
     expect(leftovers).toEqual([])
   })
