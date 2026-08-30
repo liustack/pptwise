@@ -12,8 +12,19 @@ describe("renameHintsFor", () => {
     ])
   })
 
-  it("hints theme.override -> theme.style scoped to the theme path", () => {
-    expect(renameHintsFor(["override"], "theme")).toEqual([' — "theme.override" was renamed to "theme.style" in IR v4'])
+  it("hints theme.override was removed, scoped to the theme path", () => {
+    expect(renameHintsFor(["override"], "theme")).toEqual([
+      ' — "theme.override" was removed — theme is { id }. Recolor with `pptwise theme fork`',
+    ])
+  })
+
+  it("hints leftover theme.style and theme.brand overlays", () => {
+    expect(renameHintsFor(["style"], "theme")).toEqual([
+      ' — "style" was removed — theme is { id }. Recolor with `pptwise theme fork`',
+    ])
+    expect(renameHintsFor(["brand"], "theme")).toEqual([
+      ' — "brand" was removed — theme is { id }. Brand config lives on the theme file, not the IR overlay',
+    ])
   })
 
   it("does not hint override outside the theme path", () => {

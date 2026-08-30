@@ -1691,10 +1691,14 @@ describe("unrecognized-key rescue hints (borrow-wave task 3, generalizing the sc
     expect(v.errors.some((e) => e.message.includes('Unrecognized key: "variant"'))).toBe(true)
   })
 
-  it("hints theme.override -> theme.style, scoped to the theme object", () => {
+  it("hints theme.override was removed, scoped to the theme object", () => {
     const v = validateIr({ ...raw, theme: { id: "consulting", override: { accent: "#ff0000" } } })
     expect(v.ok).toBe(false)
-    expect(v.errors.some((e) => e.message.includes('"theme.override" was renamed to "theme.style" in IR v4'))).toBe(true)
+    expect(
+      v.errors.some((e) =>
+        e.message.includes('"theme.override" was removed — theme is { id }. Recolor with `pptwise theme fork`'),
+      ),
+    ).toBe(true)
   })
 
   it("P2: a non-rename unrecognized key directly on a slide gets the generic components[] location hint instead", () => {
@@ -2034,12 +2038,12 @@ describe("generatePptx", () => {
 })
 
 describe("validateIr deck branding alias", () => {
-  it("rewrites chrome to branding when branding is absent and records the note", () => {
+  it("rejects leftover chrome with the branding rename hint", () => {
     const v = validateIr({ ...raw, chrome: "full" })
-    expect(v.ok).toBe(true)
-    expect(v.ir?.branding).toBe("full")
-    expect(v.ir).not.toHaveProperty("chrome")
-    expect(v.normalized).toEqual(["(root): chrome → branding"])
+    expect(v.ok).toBe(false)
+    expect(v.errors.some((e) => e.message.includes('Unrecognized key: "chrome"'))).toBe(true)
+    expect(v.errors.some((e) => e.message.includes('"chrome" was renamed to "branding"'))).toBe(true)
+    expect(v.normalized).toBeUndefined()
   })
 
   it("both chrome and branding present is left for zod strict to reject", () => {

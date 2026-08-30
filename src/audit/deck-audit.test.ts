@@ -28,6 +28,7 @@ import {
 } from "./deck-audit"
 import { STRESS_DECKS } from "./stress-fixtures"
 import { contrastRatio } from "../render/ink"
+import { getThemeDefinition } from "../themes/definitions"
 import { registerTestTheme } from "../themes/test-fixtures"
 
 beforeAll(() => {
@@ -1992,9 +1993,8 @@ describe("findContrastIssues — text painted on a decor shape resolves against 
     // `#3A4E60` measures 2.02:1 against the decor square and 8.01:1 against
     // the page background `#F7F7F2`, so a finding could only appear if
     // attribution reached the square, and its reported background said
-    // which one it found. `theme.style` is a schema-legal deep-partial
-    // override (same mechanism the "low-contrast via a real style-token
-    // override" block below uses), not a test-only hook.
+    // which one it found. The worst-case muted token lives on a complete
+    // registered theme, not an IR overlay.
     //
     // 2026-08-20 (冷调组皮肤重设计): `enterprise-motif` — the motif all
     // three of these consulting/tech cases actually render — was redrawn.
@@ -2018,9 +2018,11 @@ describe("findContrastIssues — text painted on a decor shape resolves against 
     // "routes a gradient-filled <rect> inside <g data-decor> to
     // pixel-audit" — which is where that proof always belonged, since it
     // does not depend on any one theme's decoration staying put.
-    const ir = quarterly("consulting", {
-      theme: { id: "consulting", style: { colors: { muted: "#3A4E60" } } },
+    const mutedId = registerTestTheme("audit-quarterly-consulting-muted", "consulting", {
+      cover: "tone-adaptive-header",
     })
+    getThemeDefinition(mutedId).style.colors.muted = "#3A4E60"
+    const ir: PptxIR = { ...QUARTERLY, theme: { id: mutedId } }
     const dateFindings = contrastFindings(ir).filter(
       (f) => f.page === 1 && (f.detail as { text?: string }).text === "2026-08-15",
     )
@@ -2066,24 +2068,7 @@ describe("findContrastIssues — text painted on a decor shape resolves against 
   })
 })
 
-describe("auditDeck — low-contrast via a real style-token override (validate-legal)", () => {
-  it("flags a theme.style.colors.text override that lands near colors.bg", () => {
-    // `theme.style` is a schema-legal deep-partial override — this is
-    // content a real deck author (or an over-eager model) could actually
-    // author and have pass `validateIr`; it just happens to render
-    // unreadable text, which is exactly the "renderer-level, not
-    // validate-level" problem this audit exists to catch.
-    const ir = deck(
-      "consulting",
-      [{ type: "content", kind: "points", heading: "readable heading", components: [{ type: "paragraph", text: "some body copy" }] }],
-      { theme: { id: "consulting", style: { colors: { text: "#F5F5F0" } } } },
-    )
-    const report = auditDeck(ir)
-    const contrast = report.findings.filter((f) => f.code === "low-contrast")
-    expect(contrast.length).toBeGreaterThan(0)
-    expect(contrast[0].message).toMatch(/contrast/)
-  })
-
+describe("auditDeck — photo background robustness", () => {
   it("never throws on an asset (photo) background slide, resolved or not", () => {
     // `background.tsx` falls back to a solid `#1A1A1A` rect for an
     // unresolved asset id (not `null`/indeterminate — a real, checkable

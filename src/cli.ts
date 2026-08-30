@@ -45,7 +45,6 @@ program
   .description("Render an IR JSON file, deck project directory, or bare deck name to a .pptx")
   .argument("<target>", "IR JSON file, deck project directory, or bare name under ~/.pptwise/decks")
   .option("-o, --output <file>", "output .pptx path (default: .pptwise/<deck>/<deck>.pptx under the project root)")
-  .option("--style <path>", "style overrides JSON re-coloring the theme (see `pptwise schema --style`)")
   .option("--draft", "allow unfilled placeholder pages (skip the draft gate)")
   .option(
     "--allow-dropped-content",
@@ -57,7 +56,6 @@ program
       target: string,
       opts: {
         output?: string
-        style?: string
         draft?: boolean
         allowDroppedContent?: boolean
         gitIgnore?: boolean
@@ -67,7 +65,6 @@ program
         console.log(
           await runRender(target, {
             output: opts.output,
-            stylePath: opts.style,
             draft: opts.draft,
             allowDroppedContent: opts.allowDroppedContent,
             gitIgnore: opts.gitIgnore,
@@ -131,17 +128,16 @@ program
 program
   .command("schema")
   .description("Print the IR JSON Schema (feed this to a model before it writes IR)")
-  .option("--style", "print the style-override schema instead")
   .option("--spec", "print the deck spec schema instead")
   .option("--plan", "removed — use --spec instead")
-  .action((opts: { style?: boolean; spec?: boolean; plan?: boolean }) => {
+  .action((opts: { spec?: boolean; plan?: boolean }) => {
     // vocabulary-v4 rename (spec §8.2): `--plan` renamed to `--spec`, no
     // long-lived alias — hard-fail pointing at the one new flag rather than
     // silently keep serving the plan schema under its old name.
     if (opts.plan) {
       fail(new Error("`pptwise schema --plan` has been renamed to `pptwise schema --spec` — run `pptwise schema --spec` instead"))
     }
-    console.log(runSchema(opts.spec ? "spec" : opts.style ? "style" : undefined))
+    console.log(runSchema(opts.spec ? "spec" : undefined))
   })
 
 // vocabulary-v4 rename (spec §8.2): `pptwise plan validate` renamed to
@@ -303,16 +299,6 @@ program
   .description("List named narrative presets (strategy/pacing/audience axes + theme recommendations)")
   .option("--json", "machine-readable output")
   .action((opts: { json?: boolean }) => console.log(runNarratives(Boolean(opts.json))))
-
-// vocabulary-v4 rename (spec §8.2): `pptwise scenarios` renamed to
-// `pptwise narratives`, no long-lived alias — hard-fail pointing at the new
-// command name.
-program
-  .command("scenarios")
-  .description("Removed — use `pptwise narratives` instead")
-  .action(() => {
-    fail(new Error("`pptwise scenarios` has been renamed to `pptwise narratives` — run `pptwise narratives` instead"))
-  })
 
 const config = program.command("config").description("User-level settings (API keys for optional stock-photo search)")
 config

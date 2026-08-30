@@ -107,14 +107,14 @@ describe("Branding footer meta suppression (brand.suppressFooterMeta, ink v3)", 
     },
   )
 
-  it("IR 级 brand override 能把 ink 的抑制关掉（resolveBrand 的浅合并，override 胜出）", () => {
-    const doc = ir("ink", [plainContentSlide], "full")
-    const withOverride: PptxIR = {
-      ...doc,
-      theme: { id: "ink", brand: { suppressFooterMeta: false } },
-    }
-    const { container } = svg(<Branding ir={withOverride} slide={plainContentSlide} ctx={ctx} />)
-    expect(container.textContent).toContain("ACME")
+  it("密级/机构组在左，版本/日期组在右", () => {
+    const doc = ir("consulting", [plainContentSlide], "full")
+    const { container } = svg(<Branding ir={doc} slide={plainContentSlide} ctx={ctx} />)
+    const texts = Array.from(container.querySelectorAll("text"))
+    const left = texts.find((el) => el.getAttribute("x") === "56")
+    const right = texts.find((el) => el.getAttribute("x") === "1224")
+    expect(left?.textContent).toBe("Internal · ACME")
+    expect(right?.textContent).toBe("v1 · 2026")
   })
 })
 

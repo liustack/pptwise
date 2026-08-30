@@ -10,14 +10,19 @@ const minimal = () => ({
 })
 
 describe("IR v5 theme field", () => {
-  it("accepts theme with style and brand overrides", () => {
-    const d: any = minimal()
-    d.theme = {
+  it("rejects theme.style and theme.brand overlays", () => {
+    const withStyle: any = minimal()
+    withStyle.theme = {
       id: "ink",
       style: { colors: { primary: "#0B5FFF" } },
+    }
+    expect(parsePptxIR(withStyle).success).toBe(false)
+    const withBrand: any = minimal()
+    withBrand.theme = {
+      id: "ink",
       brand: { suppressFooterRule: false },
     }
-    expect(parsePptxIR(d).success).toBe(true)
+    expect(parsePptxIR(withBrand).success).toBe(false)
   })
   it("rejects the retired top-level style field (strict)", () => {
     const d: any = minimal()
@@ -42,12 +47,10 @@ describe("IR v5 omission defaults (weak-model friendly)", () => {
       expect(r.data.slides[0]!.type).toBe("content")
     }
   })
-  it("theme with style but no id defaults to consulting", () => {
+  it("rejects theme.style even when id is omitted", () => {
     const d: any = minimal()
     d.theme = { style: { colors: { primary: "#0B5FFF" } } }
-    const r = parsePptxIR(d)
-    expect(r.success).toBe(true)
-    if (r.success) expect(r.data.theme.id).toBe("consulting")
+    expect(parsePptxIR(d).success).toBe(false)
   })
   it("a wrong value is still a hard error (omission ≠ typo)", () => {
     const d: any = minimal()
@@ -1833,8 +1836,8 @@ describe("IR v5 slide notes field (notes+preview wave, task 1)", () => {
   })
 })
 
-describe("theme.style override", () => {
-  it("accepts a palette/fonts/shape override", () => {
+describe("theme.style overlay", () => {
+  it("rejects theme.style as an extra key", () => {
     const d: any = minimal()
     d.theme = {
       id: "consulting",
@@ -1844,26 +1847,11 @@ describe("theme.style override", () => {
         shape: { radius: 10, gapScale: 1.1, typeScale: 1.5 },
       },
     }
-    expect(parsePptxIR(d).success).toBe(true)
-  })
-  it("rejects a non-hex color", () => {
-    const d: any = minimal()
-    d.theme = { id: "consulting", style: { colors: { primary: "blue" } } }
     expect(parsePptxIR(d).success).toBe(false)
   })
-  it("rejects unknown keys (strict)", () => {
+  it("rejects theme.brand as an extra key", () => {
     const d: any = minimal()
-    d.theme = { id: "consulting", style: { colours: {} } }
-    expect(parsePptxIR(d).success).toBe(false)
-  })
-  it("rejects gapScale outside the documented range", () => {
-    const d: any = minimal()
-    d.theme = { id: "consulting", style: { shape: { gapScale: 2 } } }
-    expect(parsePptxIR(d).success).toBe(false)
-  })
-  it("rejects typeScale outside the documented range", () => {
-    const d: any = minimal()
-    d.theme = { id: "consulting", style: { shape: { typeScale: 3 } } }
+    d.theme = { id: "consulting", brand: { suppressFooterRule: false } }
     expect(parsePptxIR(d).success).toBe(false)
   })
 })

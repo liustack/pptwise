@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { rotateChartPalette, resolveChartPaletteOffset } from "./chart-palette"
+import { rotateChartPalette } from "./chart-palette"
 
 describe("rotateChartPalette", () => {
   const palette = ["a", "b", "c", "d"]
@@ -55,36 +55,5 @@ describe("rotateChartPalette", () => {
 
   it("a single-color palette is always its own rotation", () => {
     expect(rotateChartPalette(["only"], 5)).toEqual(["only"])
-  })
-})
-
-describe("resolveChartPaletteOffset", () => {
-  it("is deterministic: same seed + same paletteLength always resolves the same offset", () => {
-    for (let seed = 0; seed < 20; seed++) {
-      expect(resolveChartPaletteOffset(seed, 4)).toBe(resolveChartPaletteOffset(seed, 4))
-    }
-  })
-
-  it("always resolves within [0, paletteLength)", () => {
-    for (let seed = 0; seed < 50; seed++) {
-      const offset = resolveChartPaletteOffset(seed, 5)
-      expect(offset).toBeGreaterThanOrEqual(0)
-      expect(offset).toBeLessThan(5)
-    }
-  })
-
-  it("resolves offset 0 for a paletteLength of 0 or 1 (nothing to rotate into)", () => {
-    expect(resolveChartPaletteOffset(123, 0)).toBe(0)
-    expect(resolveChartPaletteOffset(123, 1)).toBe(0)
-  })
-
-  it("varies across seeds — different decks land on different phases (not always 0)", () => {
-    const offsets = new Set(Array.from({ length: 30 }, (_, seed) => resolveChartPaletteOffset(seed, 4)))
-    expect(offsets.size).toBeGreaterThan(1)
-  })
-
-  it("every reachable offset in [0, paletteLength) is actually reached over a wide seed sweep", () => {
-    const offsets = new Set(Array.from({ length: 200 }, (_, seed) => resolveChartPaletteOffset(seed, 4)))
-    expect(offsets).toEqual(new Set([0, 1, 2, 3]))
   })
 })

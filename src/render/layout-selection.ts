@@ -103,7 +103,7 @@ export function resolveEffectiveFace(ir: PptxIR, slide: Slide): EffectiveFace {
     }
   }
 
-  const tokens = resolveStyle(ir.theme.id, ir.theme.style)
+  const tokens = resolveStyle(ir.theme.id)
   const background = slide.background ?? tokens.defaultBackgrounds[slide.type]
   if (background.kind === "asset" && (slide.type === "cover" || slide.type === "chapter")) {
     return { route: "image-cover", entry, layoutId, layout }

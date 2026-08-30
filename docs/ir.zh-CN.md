@@ -55,7 +55,7 @@ pptwise validate deck.json
 | `version` | `"5"` | 唯一接受的 IR 版本。省略时按 v5 处理。 |
 | `filename` | string | 输出文件名，默认 `presentation`。 |
 | `narrative` | 预设字符串或部分三轴 | 论证、节奏与受众决定。 |
-| `theme` | object | 绑定主题 id，以及可选的底层 style 或 brand 覆盖。默认 `consulting`。 |
+| `theme` | object | 只绑定主题 id：`{ "id": "consulting" }`。默认 `consulting`。改颜色用 `pptwise theme fork`。品牌配置写在主题文件上。 |
 | `meta` | object | 机构、作者、日期、版本、保密级别、联系信息、版权与动画。 |
 | `assets` | object | `assets.images` 下的命名图片来源。 |
 | `brand` | object | Deck logo 的资产 id 与角落位置。 |
@@ -104,12 +104,13 @@ pptwise validate deck.json
 
 ## 不存在的字段
 
-IR v5 没有 `seed`、`layout`、`beat` 或 `arrangement`，也不接受这些字段的别名。
+IR v5 没有 `seed`、`layout`、`beat` 或 `arrangement`，也不接受这些字段的别名。`theme` 只有 `{ id }`，没有 `theme.style` 或 `theme.brand` 覆盖。
 
 - Spec 选择 `kind`。
 - 主题菜单把 kind 映射到一张脸。
 - 脸根据填入的组件自适应几何。
 - 渲染无需保存随机状态也能保持确定性。
+- 改颜色用 `pptwise theme fork`。品牌配置写在主题文件上。
 
 旧 IR 版本与退役字段会被拒绝，并说明当前格式要求。没有迁移命令，应把源输入重写为 v5。
 

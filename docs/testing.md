@@ -38,7 +38,7 @@ Do not replace the configured commands with a guessed build tool.
 pnpm e2e
 ```
 
-The E2E script builds the package, drives `dist/cli.js`, renders real examples and a deck project, exercises validation, audit, preview, placeholders, brand extraction, workspace theme lookup, style overrides, image formats, package invariants, and native PPTX output. It converts representative output with LibreOffice when `soffice` is installed.
+The E2E script builds the package, drives `dist/cli.js`, renders real examples and a deck project, exercises validation, audit, preview, placeholders, brand extraction, workspace theme lookup, image formats, package invariants, and native PPTX output. It converts representative output with LibreOffice when `soffice` is installed. Color changes go through `pptwise theme fork`, not a render-time overlay.
 
 Run E2E when changing themes, menus, faces, components, motifs, render code, audit, CLI target loading, assets, or PPTX export. It is intentionally separate from `pnpm check` because it builds the package and may use external local applications.
 

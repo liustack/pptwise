@@ -52,7 +52,15 @@ const RENAME_HINTS: Readonly<Record<string, RenameHint>> = {
   },
   override: {
     at: (path) => path === "theme",
-    hint: '"theme.override" was renamed to "theme.style" in IR v4',
+    hint: '"theme.override" was removed — theme is { id }. Recolor with `pptwise theme fork`',
+  },
+  style: {
+    at: (path) => path === "theme",
+    hint: '"style" was removed — theme is { id }. Recolor with `pptwise theme fork`',
+  },
+  brand: {
+    at: (path) => path === "theme",
+    hint: '"brand" was removed — theme is { id }. Brand config lives on the theme file, not the IR overlay',
   },
   chrome: {
     at: (path) => path === "",

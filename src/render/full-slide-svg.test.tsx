@@ -20,7 +20,6 @@ import {
   paintedLeaves,
 } from "../motifs/decor-budget"
 import { textInkBox } from "./depth-contract/geometry"
-import { resolveMotifId } from "./motif-selection"
 import type { PptxIR, Slide } from "@/ir"
 
 let testThemeSerial = 0
@@ -857,15 +856,7 @@ describe("menu decoration determinism", () => {
   })
 
   it("campaign 的菜单装饰 id 不随页面 id 改变", () => {
-    const ids = new Set(
-      Array.from({ length: 10 }, (_, i) => {
-        const doc: PptxIR = { ...ir([]), theme: { id: "campaign" } } as PptxIR
-        const slide: Slide = { type: "content", kind: "points", id: `page-${i}`, heading: "x", components: [] } as Slide
-        doc.slides = [slide]
-        return resolveMotifId(doc, slide, 0)
-      }),
-    )
-    expect(ids).toEqual(new Set(["campaign-motif"]))
+    expect(THEME_DEFINITIONS.campaign.motif).toBe("campaign-motif")
   })
 
   it("campaign 的同一菜单条目重复渲染字节一致", () => {

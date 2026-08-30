@@ -7,14 +7,13 @@ import {
   irJsonSchema,
   listThemes,
   renderSlideSvg,
-  styleJsonSchema,
   validateIr,
   type ValidationIssue,
 } from "../api"
 import { CANVAS_H_PX, CANVAS_W_PX } from "../constants"
 import { PptwiseError } from "../errors"
 import { VERSION } from "../version"
-import { StyleOverrideSchema, type PptxIR, type StyleOverride } from "../ir"
+import type { PptxIR } from "../ir"
 import { disassembleDeck, type PageContent } from "../spec/assemble"
 import { formatInvalidSpecError, specJsonSchema, resolveSpecThemeId, validateSpec } from "../spec"
 import { AUDIENCE_VALUES, PACING_BUDGETS, STRATEGY_DEFINITIONS, NARRATIVE_PRESETS, resolveNarrative, type NarrativeProfile } from "../narrative"
@@ -70,18 +69,6 @@ type UserConfigHit = Awaited<ReturnType<typeof findUserConfig>>
  *  `decksDir` — see {@link resolveDecksDirSource}). */
 type ProjectConfigHit = Awaited<ReturnType<typeof findConfig>>
 
-async function loadStyleFile(path: string): Promise<StyleOverride> {
-  const raw = await loadIrFile(path)
-  const r = StyleOverrideSchema.safeParse(raw)
-  if (!r.success) {
-    const detail = r.error.issues
-      .map((i) => `${i.path.join(".") || "(root)"}: ${i.message}`)
-      .join("\n")
-    throw new PptwiseError(`invalid style file ${path}:\n${detail}`)
-  }
-  return r.data
-}
-
 async function registerThemesFromSpecSource(
   specPath: string,
   opts: { startDir: string; deckDir?: string },
@@ -98,7 +85,7 @@ async function registerThemesFromSpecSource(
  * `pptwise.config.json`'s own `decksDir` (spec §7's project-level escape
  * hatch, `ConfigSchema` in `./config.ts`, W5 task 6) wins over the user
  * config's (`UserConfigSchema`) when both are set — same project-beats-user
- * precedence as `theme`/`style` (see `applyDeckConfig` below) — but the two
+ * precedence as other project config — but the two
  * layers resolve against different bases (project against the config file's
  * own directory, user against `pptwiseHome()`, `decksRoot`'s one fixed
  * base), so a winning project value is resolved to an absolute path *here*,
@@ -126,11 +113,10 @@ function resolveDecksDirSource(
 /**
  * Resolve deck defaults onto the raw (pre-validation) IR.
  * Selection authority is spec.theme (deck project) or authored IR theme.id
- * (bare file). Config.theme is not a selection layer. Style flags/config
- * still apply. Assembled deck-dir IR always carries theme.id even when the
- * spec omitted theme. That filled default is not an authored layer: pass
- * `fromDeckDir: true` and `specTheme` from the raw spec instead of reading
- * `ir.theme.id` after assemble.
+ * (bare file). Config.theme is not a selection layer. Assembled deck-dir IR
+ * always carries theme.id even when the spec omitted theme. That filled
+ * default is not an authored layer: pass `fromDeckDir: true` and `specTheme`
+ * from the raw spec instead of reading `ir.theme.id` after assemble.
  */
 export async function applyDeckConfig(
   raw: unknown,
@@ -144,7 +130,6 @@ export async function applyDeckConfig(
     fromDeckDir?: boolean
     /** Deck project directory, used for three-level lookup and the rebind guard. */
     deckDir?: string
-    stylePath?: string
     cwd: string
     projectHit?: ProjectConfigHit
     userHit?: UserConfigHit
@@ -156,27 +141,15 @@ export async function applyDeckConfig(
     typeof deck.theme === "object" && deck.theme !== null
       ? (deck.theme as Record<string, unknown>)
       : {}
-  const [projectHit, userHit] = await Promise.all([
-    opts.projectHit !== undefined ? Promise.resolve(opts.projectHit) : findConfig(opts.cwd),
-    opts.userHit !== undefined ? Promise.resolve(opts.userHit) : findUserConfig(),
-  ])
   const authoredName =
     opts.specTheme
     ?? (opts.fromDeckDir ? undefined : (typeof irTheme.id === "string" ? irTheme.id : undefined))
-  let theme: string | undefined
-  if (authoredName !== undefined) {
-    const resolved = await resolveThemeByName(authoredName, { startDir: opts.cwd, deckDir: opts.deckDir })
-    await assertThemeRebind(opts.deckDir, resolved)
-    theme = resolved.id
-  }
-  const style = opts.stylePath
-    ? await loadStyleFile(opts.stylePath)
-    : (projectHit?.config.style ?? userHit?.config.style ?? irTheme.style)
-  if (theme === undefined && style === undefined) return
+  if (authoredName === undefined) return
+  const resolved = await resolveThemeByName(authoredName, { startDir: opts.cwd, deckDir: opts.deckDir })
+  await assertThemeRebind(opts.deckDir, resolved)
   deck.theme = {
     ...irTheme,
-    ...(theme !== undefined ? { id: theme } : {}),
-    ...(style !== undefined ? { style } : {}),
+    id: resolved.id,
   }
 }
 
@@ -315,7 +288,6 @@ export interface RenderOptions {
    *  workspace default is never consulted: an explicit path is always the
    *  final word, and nothing gets created or ignored on its behalf. */
   output?: string
-  stylePath?: string
   cwd?: string
   /** `--no-git-ignore` sets this false: skip the one-time
    *  `.git/info/exclude` line the workspace default would otherwise add
@@ -359,7 +331,6 @@ export async function runRender(irPath: string, opts: RenderOptions): Promise<st
     specPath,
     fromDeckDir: isDir,
     deckDir: isDir ? resolvedTarget : undefined,
-    stylePath: opts.stylePath,
     cwd,
     projectHit,
     userHit,
@@ -627,7 +598,7 @@ export interface AuditCliResult {
  * auditing a slide shape that doesn't match what `render`/`preview` actually
  * produce for the same deck.
  *
- * Theme selection is spec.theme or IR theme.id. Style config still applies.
+ * Theme selection is spec.theme or IR theme.id.
  */
 export async function runAudit(target: string, opts: AuditOptions = {}): Promise<AuditCliResult> {
   const cwd = opts.cwd ?? process.cwd()
@@ -791,13 +762,9 @@ export async function runSpecValidate(specPath: string): Promise<string> {
   return lines.join("\n")
 }
 
-/** `mode` selects which JSON Schema to print (`pptwise schema [--style|--spec]`,
- *  spec §8.2's `schema --plan`→`schema --spec` rename, task 2) — `"plan"` was
- *  the pre-rename flag value, no longer accepted (`../cli.ts` hard-fails a
- *  bare `--plan` before this function is ever called, see that file's own
- *  comment). */
-export function runSchema(mode?: "style" | "spec"): string {
-  const schema = mode === "style" ? styleJsonSchema() : mode === "spec" ? specJsonSchema() : irJsonSchema()
+/** `mode` selects which JSON Schema to print (`pptwise schema [--spec]`). */
+export function runSchema(mode?: "spec"): string {
+  const schema = mode === "spec" ? specJsonSchema() : irJsonSchema()
   return JSON.stringify(schema, null, 2)
 }
 
@@ -833,10 +800,8 @@ interface LayoutDiscoverySlot {
 interface LayoutDiscoveryRow {
   id: string
   slideTypes: readonly string[]
-  pinOnly: boolean
   capacity?: number
   slots: LayoutDiscoverySlot[]
-  arrangements?: readonly string[] | "all"
 }
 
 function layoutCapacity(slots: readonly { capacity?: number }[]): number | undefined {
@@ -857,7 +822,6 @@ function listLayouts(): LayoutDiscoveryRow[] {
     const row: LayoutDiscoveryRow = {
       id: layout.id,
       slideTypes: layout.slideTypes,
-      pinOnly: layout.pinOnly ?? false,
       slots: layout.slots.map((slot) => {
         const compact: LayoutDiscoverySlot = { name: slot.name, accepts: slot.accepts }
         if (slot.capacity !== undefined) compact.capacity = slot.capacity
@@ -865,7 +829,6 @@ function listLayouts(): LayoutDiscoveryRow[] {
       }),
     }
     if (capacity !== undefined) row.capacity = capacity
-    if (layout.arrangements !== undefined) row.arrangements = layout.arrangements
     return row
   })
 }
@@ -877,20 +840,16 @@ export function runLayouts(asJson: boolean): string {
   const rows = layouts.map((l) => ({
     id: l.id,
     types: l.slideTypes.join(","),
-    pin: l.pinOnly ? "pin-only" : "-",
     cap: l.capacity !== undefined ? String(l.capacity) : "-",
     slots: l.slots.map((s) => s.name).join(", "),
-    arrangements: l.arrangements === undefined ? "-" : l.arrangements === "all" ? "all" : l.arrangements.join(","),
   }))
   const idWidth = Math.max(...rows.map((r) => r.id.length))
   const typesWidth = Math.max(...rows.map((r) => r.types.length))
-  const pinWidth = Math.max(...rows.map((r) => r.pin.length))
   const capWidth = Math.max(...rows.map((r) => r.cap.length))
-  const slotsWidth = Math.max(...rows.map((r) => r.slots.length))
   return rows
     .map(
       (r) =>
-        `${r.id.padEnd(idWidth + 2)}${r.types.padEnd(typesWidth + 2)}${r.pin.padEnd(pinWidth + 2)}${r.cap.padEnd(capWidth + 2)}${r.slots.padEnd(slotsWidth + 2)}${r.arrangements}`,
+        `${r.id.padEnd(idWidth + 2)}${r.types.padEnd(typesWidth + 2)}${r.cap.padEnd(capWidth + 2)}${r.slots}`,
     )
     .join("\n")
 }
@@ -1166,11 +1125,7 @@ export function runNarratives(asJson: boolean): string {
     .join("\n")
 }
 
-const CONFIG_TEMPLATE = {
-  style: {
-    colors: { primary: "#0B5FFF", accent: "#FF6A00" },
-  },
-} as const
+const CONFIG_TEMPLATE = {} as const
 
 /** Scaffold pptwise.config.json in cwd. Never overwrites. */
 export async function runInit(cwd = process.cwd()): Promise<string> {
@@ -1183,7 +1138,7 @@ export async function runInit(cwd = process.cwd()): Promise<string> {
     }
     throw e
   }
-  return `wrote ${target} — themes: \`pptwise themes\`, style schema: \`pptwise schema --style\``
+  return `wrote ${target} — themes: \`pptwise themes\``
 }
 
 export interface PreviewOptions {

@@ -1,6 +1,5 @@
-import type { StyleOverride } from "@/ir";
 import { PptwiseError } from "../errors";
-import { applyStyleOverride, type StyleTokens } from "./tokens";
+import type { StyleTokens } from "./tokens";
 import { REGISTERED_THEMES } from "./registered-themes";
 import { CONSULTING_THEME } from "./builtin/consulting";
 import { ENTERPRISE_THEME } from "./builtin/enterprise";
@@ -135,17 +134,16 @@ export const THEME_STYLES = Object.fromEntries(
 ) as Record<CanonicalThemeId, StyleTokens>;
 
 /**
- * Resolve a theme's style tokens: base tokens → deep `style` override.
- * A registered theme's own style tokens (see `themes/definitions.ts`'s
- * `registerTheme`) win over the builtin fallback — same "registered lookup
- * first, then builtin via resolveThemeId" precedence as that module's
- * `getThemeDefinition` (see `registered-themes.ts`'s docstring for why this
- * function reads that shared map directly instead of calling
- * `getThemeDefinition` itself).
+ * Resolve a theme's style tokens. A registered theme's own style tokens
+ * (see `themes/definitions.ts`'s `registerTheme`) win over the builtin
+ * fallback — same "registered lookup first, then builtin via resolveThemeId"
+ * precedence as that module's `getThemeDefinition` (see
+ * `registered-themes.ts`'s docstring for why this function reads that shared
+ * map directly instead of calling `getThemeDefinition` itself). Recolor by
+ * registering a complete theme, not by passing a partial overlay.
  */
-export function resolveStyle(id: string, override?: StyleOverride): StyleTokens {
-  const base = REGISTERED_THEMES.get(id)?.style ?? THEME_STYLES[resolveThemeId(id)];
-  return applyStyleOverride(base, override);
+export function resolveStyle(id: string): StyleTokens {
+  return REGISTERED_THEMES.get(id)?.style ?? THEME_STYLES[resolveThemeId(id)];
 }
 
 export type {
@@ -154,4 +152,3 @@ export type {
   StyleFonts,
   LayoutType,
 } from "./tokens";
-export { applyStyleOverride } from "./tokens";
