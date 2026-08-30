@@ -9,6 +9,7 @@ import {
   FORM_BODY_FLOOR,
   FORM_TITLE_FLOOR,
   fitFormLine,
+  formTextClipMarker,
   layoutFormBody,
   layoutFormTitle,
 } from "./legibility"
@@ -306,6 +307,7 @@ export function renderPetalWheel(
             </text>
             {descLine ? (
               <text
+                data-truncated={formTextClipMarker(descLayout!, 0)}
                 x={tx}
                 y={descY}
                 textAnchor={anchor}

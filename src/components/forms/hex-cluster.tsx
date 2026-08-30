@@ -3,7 +3,14 @@ import { mixHex } from "../color-mix"
 import { accessibleInk, readableOn } from "../../render/ink"
 import type { FormKnobs } from "../form-assignments"
 import type { ComponentBox, ComponentCtx } from "../types"
-import { FORM_BODY_FLOOR, FORM_TITLE_FLOOR, layoutFormBody, layoutFormTitle } from "./legibility"
+import {
+  FORM_BODY_FLOOR,
+  FORM_TITLE_FLOOR,
+  formTextClipMarker,
+  formTextOmissionMarker,
+  layoutFormBody,
+  layoutFormTitle,
+} from "./legibility"
 
 type NumberedCardsComponent = Extract<Component, { type: "numbered_cards" }>
 
@@ -203,7 +210,10 @@ export function renderHexCluster(
         const titleTop = stackTop + numSize + numTitleGap
         const bodyTop = titleTop + titleH + (body ? bodyGap : 0)
         return (
-          <g key={i}>
+          <g
+            key={i}
+            data-truncated={formTextOmissionMarker(item.text ?? "", body ?? { lines: [] })}
+          >
             <polygon
               points={hexPoints(cx, cy, g.size)}
               fill={fill}
@@ -226,7 +236,7 @@ export function renderHexCluster(
             {title.lines.map((line, li) => (
               <text
                 key={`t-${li}`}
-                data-truncated={title.truncated && li === title.lines.length - 1 ? "1" : undefined}
+                data-truncated={formTextClipMarker(title, li)}
                 x={cx}
                 y={titleTop + li * title.lineHeight + title.fontSize}
                 textAnchor="middle"
@@ -243,6 +253,7 @@ export function renderHexCluster(
               ? body.lines.map((line, li) => (
                   <text
                     key={li}
+                    data-truncated={formTextClipMarker(body, li)}
                     x={cx}
                     y={bodyTop + li * body.lineHeight + body.fontSize}
                     textAnchor="middle"

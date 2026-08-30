@@ -5,7 +5,12 @@ import { mixHex } from "../color-mix"
 import { readableOn } from "../../render/ink"
 import type { FormKnobs } from "../form-assignments"
 import type { ComponentBox, ComponentCtx } from "../types"
-import { FORM_BODY_FLOOR, FORM_TITLE_FLOOR, fitFormTitleLine } from "./legibility"
+import {
+  FORM_BODY_FLOOR,
+  FORM_TITLE_FLOOR,
+  fitFormTitleLine,
+  formTextClipMarker,
+} from "./legibility"
 
 type StepsComponent = Extract<Component, { type: "steps" }>
 
@@ -239,6 +244,7 @@ export function renderArrowSteps(
             {foot.lines.map((line, li) => (
               <text
                 key={li}
+                data-truncated={formTextClipMarker(foot, li)}
                 x={x}
                 y={y + arrowH + FOOT_GAP + (li + 1) * foot.lineHeight}
                 fontSize={foot.fontSize}

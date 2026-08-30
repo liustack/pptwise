@@ -7,6 +7,8 @@ import {
   FORM_BODY_FLOOR,
   FORM_TITLE_FLOOR,
   capFormBody,
+  formTextClipMarker,
+  formTextOmissionMarker,
   layoutFormBody,
   layoutFormTitle,
 } from "./legibility"
@@ -302,7 +304,10 @@ export function renderHubSpoke(
         const labelY = cap.y + cap.h / 2 - blockH / 2 + labelFit.fontSize * 0.9
         const descY = labelY + (descLayout ? descLayout.lineHeight : 0)
         return (
-          <g key={`cap-${cap.i}`}>
+          <g
+            key={`cap-${cap.i}`}
+            data-truncated={formTextOmissionMarker(desc ?? "", descLayout ?? { lines: [] })}
+          >
             <rect
               x={cap.x}
               y={cap.y}
@@ -347,6 +352,7 @@ export function renderHubSpoke(
             </text>
             {descLine ? (
               <text
+                data-truncated={formTextClipMarker(descLayout!, 0)}
                 x={tx}
                 y={descY}
                 textAnchor={anchor}

@@ -459,6 +459,66 @@ describe("auditDeck — content-truncated / content-dropped (bench-driven fix ro
     expect((truncated[0].detail as { text?: string }).text).not.toMatch(/…$/)
   })
 
+  it("surfaces a clipped assigned icon-card form body as content-truncated", () => {
+    const ir = deck("terra", [
+      {
+        type: "content",
+        kind: "data",
+        id: "card-form-clip",
+        heading: "竞品在中小客户市场的价格压力",
+        components: [
+          {
+            type: "icon_cards",
+            items: [
+              { icon: "target", title: "自建基建替换", text: "自建基建替换公有云托管，单个席位的月度成本下降三成一。" },
+              { icon: "gauge", title: "客群场景复制", text: "华东区域的渗透率是华南的一半，销售覆盖密度是主要原因。" },
+              { icon: "shield", title: "开通流程自动化", text: "客户成功工程师的人均负荷已经接近上限，扩张速度受制于招聘。" },
+              { icon: "rocket", title: "渠道伙伴培育", text: "两家竞品在中小客户市场以低于成本的价格投标，短期内难以正面应对。" },
+            ],
+          },
+        ],
+      },
+    ])
+    const markup = renderSlideSvg(ir, 0)
+    expect(markup).not.toContain("自建基建替换公有云托管，单个席位的月度成本下降三成一。")
+    expect(markup).toContain('data-truncated="1"')
+    expect(auditDeck(ir).findings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ page: 1, slideId: "card-form-clip", code: "content-truncated" }),
+      ]),
+    )
+  })
+
+  it("surfaces a clipped citation ref as content-truncated", () => {
+    const ir = deck("classroom", [
+      {
+        type: "content",
+        kind: "data",
+        id: "citation-ref-clip",
+        heading: "经营数据口径",
+        components: [
+          {
+            type: "citation",
+            sources: [
+              {
+                label: "云觅科技 2026 年第二季度经营数据",
+                ref: LONG_CJK.repeat(4),
+              },
+            ],
+          },
+        ],
+      },
+    ])
+    const markup = renderSlideSvg(ir, 0)
+    expect(markup).toContain('data-truncated="1"')
+    expect(markup).not.toContain("…")
+    expect(auditDeck(ir).findings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ page: 1, slideId: "citation-ref-clip", code: "content-truncated" }),
+      ]),
+    )
+  })
+
   it("surfaces layoutContentFit's fully-dropped components as 'content-dropped' findings", () => {
     // Same fixture shape as svg-content.test.tsx's own "renders a
     // dropped-count marker" case, run through the real auditDeck path

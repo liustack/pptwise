@@ -8,6 +8,8 @@ import {
   fillCardType,
   formIconColumnCols,
   formLineHeight,
+  formTextClipMarker,
+  formTextOmissionMarker,
   layoutFormBody,
   layoutFormTitle,
   linesThatFit,
@@ -215,6 +217,7 @@ export function renderIconColumns(
         return (
           <g
             key={i}
+            data-truncated={formTextOmissionMarker(item.text, layout.text)}
             data-audit-box={`${box.x + col * g.colW},${box.y + rowY},${g.colW}`}
           >
             {square ? (
@@ -248,7 +251,7 @@ export function renderIconColumns(
             {layout.title.lines.map((line, li) => (
               <text
                 key={`t-${li}`}
-                data-truncated={layout.title.truncated && li === layout.title.lines.length - 1 ? "1" : undefined}
+                data-truncated={formTextClipMarker(layout.title, li)}
                 x={cx}
                 y={titleTop + li * layout.title.lineHeight + layout.title.fontSize}
                 textAnchor="middle"
@@ -264,6 +267,7 @@ export function renderIconColumns(
             {layout.text.lines.map((line, li) => (
               <text
                 key={li}
+                data-truncated={formTextClipMarker(layout.text, li)}
                 x={cx}
                 y={textTop + li * layout.text.lineHeight + layout.text.fontSize}
                 textAnchor="middle"

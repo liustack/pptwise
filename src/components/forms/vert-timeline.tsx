@@ -8,6 +8,7 @@ import {
   FORM_TITLE_FLOOR,
   fitFormLine,
   fitFormTitleLine,
+  formTextClipMarker,
   layoutFormBody,
 } from "./legibility"
 
@@ -260,6 +261,7 @@ export function renderVertTimeline(
               ? row.desc.lines.map((line, li) => (
                   <text
                     key={li}
+                    data-truncated={formTextClipMarker(row.desc!, li)}
                     x={tx}
                     y={textCursor + row.dateH + row.titleH + (li + 1) * row.desc!.lineHeight}
                     fontSize={row.desc!.fontSize}

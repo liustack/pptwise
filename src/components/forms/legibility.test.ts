@@ -121,6 +121,27 @@ function bodyNodes(container: ParentNode, body: string, title: string): Element[
   )
 }
 
+function assertBodyCompleteOrMarked(
+  container: ParentNode,
+  item: { title: string; text: string },
+) {
+  const hits = bodyNodes(container, item.text, item.title)
+  const itemGroup = titleNodes(container, item.title)[0]?.parentElement
+  if (hits.length === 0) {
+    expect(
+      itemGroup?.getAttribute("data-truncated"),
+      `omitted body must mark its item group: "${item.text}"`,
+    ).toBe("1")
+    return
+  }
+  const rendered = hits.map((node) => node.textContent ?? "").join("")
+  const marked = hits.some((node) => node.getAttribute("data-truncated") === "1")
+  expect(
+    rendered === item.text || marked,
+    `body must render fully or carry data-truncated: "${rendered}"`,
+  ).toBe(true)
+}
+
 function textsMatching(container: ParentNode, snippets: string[]): Element[] {
   return Array.from(container.querySelectorAll("text")).filter((t) => {
     const s = t.textContent ?? ""
@@ -300,6 +321,29 @@ describe("outline_grid legibility", () => {
   })
 })
 
+describe("assigned icon-card form clipping markers", () => {
+  const overflowTails = ["甲", "乙", "丙", "丁"]
+  const component = {
+    type: "icon_cards" as const,
+    items: GALLERY_FOUR.items.map((item, index) => ({
+      ...item,
+      text: `${item.text}${overflowTails[index]!.repeat(48)}`,
+    })),
+  }
+  const cases = [
+    { theme: "terra", box: { x: 0, y: 0, w: 1088, h: 320 } },
+    { theme: "academic", box: { x: 0, y: 0, w: 640, h: 320 } },
+    { theme: "tech", box: { x: 0, y: 0, w: 640, h: 320 } },
+  ]
+
+  for (const { theme, box } of cases) {
+    it(`${theme} renders every body completely or marks its clipped final line`, () => {
+      const { container } = svg(iconCards.render(component, box, themeCtx(theme)))
+      for (const item of component.items) assertBodyCompleteOrMarked(container, item)
+    })
+  }
+})
+
 describe("numbered_pills legibility", () => {
   it("pulse 4 items keep title ≥20 and body ≥15 (or omit body, never 13)", () => {
     const ctx = themeCtx("pulse")
@@ -384,6 +428,20 @@ describe("hex_cluster legibility", () => {
         expect(pointInPolygon(x + textW / 2, y, pts), `"${content}" right`).toBe(true)
       }
     }
+  })
+
+  it("ember marks each omitted or clipped card body", () => {
+    const ctx = themeCtx("ember")
+    const component = {
+      type: "numbered_cards" as const,
+      items: GALLERY_FOUR.items.map(({ title }, index) => ({
+        title,
+        text: `${["甲", "乙", "丙", "丁"][index]!.repeat(36)}。`,
+      })),
+    }
+    const box = { x: 0, y: 0, w: 880, h: 345 }
+    const { container } = svg(numberedCards.render(component, box, ctx))
+    for (const item of component.items) assertBodyCompleteOrMarked(container, item)
   })
 })
 
