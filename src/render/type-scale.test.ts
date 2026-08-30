@@ -4,10 +4,10 @@
 // heading-fit shrinks to the box. Body/meta/kicker/footnote stay put.
 // Omitted (or 1) is a byte-identical no-op — the first lock below.
 import { afterEach, describe, expect, it } from "vitest"
-import type { PptxIR, StyleOverride } from "@/ir"
+import type { PptxIR } from "@/ir"
 import { renderSlideSvg, validateIr } from "../api"
 import { CANONICAL_THEME_IDS, THEME_STYLES, type CanonicalThemeId } from "../themes"
-import { __resetRegisteredThemes } from "../themes/definitions"
+import { __resetRegisteredThemes, getThemeDefinition } from "../themes/definitions"
 import { registerTestTheme } from "../themes/test-fixtures"
 import { fitHeadingLines, scaleTypePx } from "./heading-fit"
 
@@ -17,12 +17,22 @@ afterEach(() => {
   __resetRegisteredThemes()
 })
 
-function coverIr(themeId: CanonicalThemeId, heading: string, style?: StyleOverride): PptxIR {
-  const registeredId = registerTestTheme(`type-scale-cover-${themeSerial++}`, themeId, { cover: "poster-center" })
+function applyTypeScale(id: string, typeScale: number): string {
+  const style = getThemeDefinition(id).style
+  style.shape = { ...style.shape, typeScale }
+  return id
+}
+
+function coverTheme(source: CanonicalThemeId, typeScale?: number): string {
+  const id = registerTestTheme(`type-scale-cover-${themeSerial++}`, source, { cover: "poster-center" })
+  return typeScale === undefined ? id : applyTypeScale(id, typeScale)
+}
+
+function coverIr(source: CanonicalThemeId, heading: string, typeScale?: number): PptxIR {
   const v = validateIr({
     version: "5",
     filename: "type-scale.pptx",
-    theme: { id: registeredId, style },
+    theme: { id: coverTheme(source, typeScale) },
     meta: {},
     assets: { images: {} },
     slides: [{ type: "cover", heading }],
@@ -31,11 +41,13 @@ function coverIr(themeId: CanonicalThemeId, heading: string, style?: StyleOverri
   return v.ir!
 }
 
-function contentIr(style?: StyleOverride): PptxIR {
+function contentIr(typeScale?: number): PptxIR {
+  const themeId = registerTestTheme(`type-scale-content-${themeSerial++}`, "consulting")
+  if (typeScale !== undefined) applyTypeScale(themeId, typeScale)
   const v = validateIr({
     version: "5",
     filename: "type-scale.pptx",
-    theme: { id: "consulting", style },
+    theme: { id: themeId },
     meta: { organization: "ACME", date: "2026-08" },
     assets: { images: {} },
     slides: [
@@ -66,7 +78,7 @@ describe("typeScale omitted is a byte-identical no-op", () => {
     for (const id of CANONICAL_THEME_IDS) {
       if (THEME_STYLES[id].shape?.typeScale != null) continue
       const omitted = renderSlideSvg(coverIr(id, "战略"), 0)
-      const one = renderSlideSvg(coverIr(id, "战略", { shape: { typeScale: 1 } }), 0)
+      const one = renderSlideSvg(coverIr(id, "战略", 1), 0)
       expect(one, id).toBe(omitted)
     }
   })
@@ -83,15 +95,15 @@ describe("typeScale omitted is a byte-identical no-op", () => {
     }
   })
 
-  it("stage's declared typeScale 1.5 matches an explicit override of 1.5", () => {
+  it("stage's declared typeScale 1.5 matches an explicit complete-theme typeScale of 1.5", () => {
     const omitted = renderSlideSvg(coverIr("stage", "战略"), 0)
-    const explicit = renderSlideSvg(coverIr("stage", "战略", { shape: { typeScale: 1.5 } }), 0)
+    const explicit = renderSlideSvg(coverIr("stage", "战略", 1.5), 0)
     expect(explicit).toBe(omitted)
   })
 
   it("stage cover heading is 1.5× the same page forced to typeScale 1", () => {
     const scaled = renderSlideSvg(coverIr("stage", "战略"), 0)
-    const unscaled = renderSlideSvg(coverIr("stage", "战略", { shape: { typeScale: 1 } }), 0)
+    const unscaled = renderSlideSvg(coverIr("stage", "战略", 1), 0)
     expect(fontSizeFor(scaled, "战略")).toBe(Math.round(fontSizeFor(unscaled, "战略") * 1.5))
   })
 })
@@ -136,38 +148,36 @@ describe("typeScale multiplies heading/display size before fit", () => {
 
   it("poster-center heading at typeScale 1.5 is 1.5× the omitted size", () => {
     const baseSvg = renderSlideSvg(coverIr("consulting", "战略"), 0)
-    const scaledSvg = renderSlideSvg(coverIr("consulting", "战略", { shape: { typeScale: 1.5 } }), 0)
+    const scaledSvg = renderSlideSvg(coverIr("consulting", "战略", 1.5), 0)
     expect(fontSizeFor(scaledSvg, "战略")).toBe(Math.round(fontSizeFor(baseSvg, "战略") * 1.5))
   })
 
   it("body paragraph, footnote, and a content-page title do not move", () => {
     const baseSvg = renderSlideSvg(contentIr(), 0)
-    const scaledSvg = renderSlideSvg(contentIr({ shape: { typeScale: 1.5 } }), 0)
+    const scaledSvg = renderSlideSvg(contentIr(1.5), 0)
     expect(fontSizeFor(scaledSvg, "原字号。")).toBe(fontSizeFor(baseSvg, "原字号。"))
     expect(fontSizeFor(scaledSvg, "来源：内部调研")).toBe(fontSizeFor(baseSvg, "来源：内部调研"))
     expect(fontSizeFor(scaledSvg, "发现")).toBe(fontSizeFor(baseSvg, "发现"))
   })
 
   it("a statement heading is display type and does grow", () => {
-    registerTestTheme("acme-type-scale", "consulting", { content: { statement: "statement" } })
-    try {
-      const ir = (typeScale?: number) => {
-        const v = validateIr({
-          version: "5",
-          filename: "type-scale.pptx",
-          theme: { id: "acme-type-scale", style: typeScale ? { shape: { typeScale } } : undefined },
-          meta: {},
-          assets: { images: {} },
-          slides: [{ type: "content", kind: "statement", heading: "灯灭" }],
-        })
-        if (!v.ok) throw new Error(v.errors.map((e) => e.message).join("\n"))
-        return v.ir!
-      }
-      const baseSvg = renderSlideSvg(ir(), 0)
-      const scaledSvg = renderSlideSvg(ir(1.5), 0)
-      expect(fontSizeFor(scaledSvg, "灯灭")).toBe(Math.round(fontSizeFor(baseSvg, "灯灭") * 1.5))
-    } finally {
-      __resetRegisteredThemes()
+    const baseId = registerTestTheme("acme-type-scale", "consulting", { content: { statement: "statement" } })
+    const scaledId = registerTestTheme("acme-type-scale-15", "consulting", { content: { statement: "statement" } })
+    applyTypeScale(scaledId, 1.5)
+    const ir = (themeId: string) => {
+      const v = validateIr({
+        version: "5",
+        filename: "type-scale.pptx",
+        theme: { id: themeId },
+        meta: {},
+        assets: { images: {} },
+        slides: [{ type: "content", kind: "statement", heading: "灯灭" }],
+      })
+      if (!v.ok) throw new Error(v.errors.map((e) => e.message).join("\n"))
+      return v.ir!
     }
+    const baseSvg = renderSlideSvg(ir(baseId), 0)
+    const scaledSvg = renderSlideSvg(ir(scaledId), 0)
+    expect(fontSizeFor(scaledSvg, "灯灭")).toBe(Math.round(fontSizeFor(baseSvg, "灯灭") * 1.5))
   })
 })

@@ -1,4 +1,4 @@
-import type { BackgroundSpec, StyleOverride } from "@/ir";
+import type { BackgroundSpec } from "@/ir";
 
 export type LayoutType = "cover" | "chapter" | "content" | "ending";
 
@@ -109,8 +109,7 @@ export interface StyleShape {
    * `constellation`: last line on y520, 84×4 bar.
    * `tone-adaptive-header`: title 92, right-bottom date shown.
    * `editorial-masthead`: middle anchor, no kicker).
-   * Not part of `StyleOverrideSchema`. IR overrides stay
-   * `{ radius, gapScale, typeScale }`.
+   * Cover knobs live on the complete theme file only.
    */
   cover?: {
     textAnchor?: "start" | "middle"
@@ -156,22 +155,4 @@ export interface StyleShape {
     wedgeInnerStartX?: number
     wedgeInnerPeakY?: number
   }
-}
-
-/**
- * Deep-partial style override (zod-validated as IR theme.style — see
- * ir/index.ts StyleOverrideSchema). See themes/index.ts resolveStyle. Absent
- * override returns the base reference untouched (zero observable change).
- */
-export function applyStyleOverride(
-  base: StyleTokens,
-  override?: StyleOverride,
-): StyleTokens {
-  if (!override) return base;
-  return {
-    ...base,
-    colors: { ...base.colors, ...override.colors },
-    fonts: { ...base.fonts, ...override.fonts },
-    shape: override.shape ? { ...base.shape, ...override.shape } : base.shape,
-  };
 }

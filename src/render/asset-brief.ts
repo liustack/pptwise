@@ -355,7 +355,7 @@ function buildPrompt(mood: AssetBriefMood, palette: AssetBriefPalette, frame: As
  */
 export function buildAssetBrief(ir: PptxIR): AssetBrief {
   const themeDef = getThemeDefinition(ir.theme.id)
-  const tokens = resolveStyle(ir.theme.id, ir.theme.style)
+  const tokens = resolveStyle(ir.theme.id)
   const palette = buildPalette(tokens.colors)
   const mood = buildMood(ir.theme.id, themeDef)
 

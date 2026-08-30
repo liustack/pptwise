@@ -1,8 +1,7 @@
 /** Theme metadata consumed by the gallery shell and skeleton audit. */
 
 import type { Slide } from "@/ir"
-import { LAYOUT_REGISTRY } from "@/layouts/registry"
-import { SPARSE_LAYOUT_IDS, getInstalledThemeIds, getThemeDefinition } from "@/themes/definitions"
+import { getInstalledThemeIds, getThemeDefinition } from "@/themes/definitions"
 import { THEME_OCCASIONS } from "@/themes/occasions"
 import {
   GALLERY_STUDIO_THEME_ID,
@@ -20,8 +19,6 @@ export interface GalleryThemeCatalogEntry {
   readonly identity?: "low" | "medium" | "high"
   readonly occasions: readonly string[]
   readonly faces: Record<Slide["type"], readonly string[]>
-  readonly pinOnlyFaces: readonly string[]
-  readonly sparse: readonly string[]
   readonly motif?: string
 }
 
@@ -52,7 +49,6 @@ export function buildGalleryThemeCatalog(
       content: Object.values(definition.menu.content).flatMap((entry) => entry === undefined ? [] : [entry.face]),
       ending: [definition.menu.ending.face],
     }
-    const menuFaces = [...new Set(Object.values(faces).flat())]
 
     return {
       id,
@@ -61,8 +57,6 @@ export function buildGalleryThemeCatalog(
       identity: metadata.identity,
       occasions: [...metadata.occasions],
       faces,
-      pinOnlyFaces: menuFaces.filter((layoutId) => LAYOUT_REGISTRY[layoutId]?.pinOnly),
-      sparse: menuFaces.filter((layoutId) => (SPARSE_LAYOUT_IDS as readonly string[]).includes(layoutId)),
       motif: definition.motif,
     }
   })

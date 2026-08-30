@@ -22,13 +22,11 @@ import { normalizeDeckRootAliases } from "../ir/field-aliases"
 import {
   normalizeNarrativeShape,
   resolveNarrative,
-  STRATEGY_DEFINITIONS,
   type NarrativeProfile,
   type Pacing,
-  type Strategy,
 } from "../narrative"
 import { CAPACITY } from "../audit/capacity"
-import { LAYOUT_REGISTRY, type SlideType } from "../layouts/registry"
+import { type SlideType } from "../layouts/registry"
 import { offeredContentKinds, resolveLayoutId } from "../render/layout-selection"
 import { getInstalledThemeIds, getThemeDefinition } from "../themes/definitions"
 
@@ -45,7 +43,7 @@ export type PageKind = (typeof KIND_VALUES)[number]
 const CommonPageSpecFields = {
   id: z.string(),
   heading: z.string(),
-  /** Optional authoring hint pointing fill/select at a preferred component type. */
+  /** Optional authoring hint pointing fill at a preferred content kind or component type, not a face. */
   focus: z.string().optional(),
   /** Free-text content anchor read by the fill step. */
   summary: z.string().optional(),
@@ -142,7 +140,7 @@ export interface SpecValidateResult {
    * Same shape and channel as `ValidateResult.normalized` (`../validate-core.ts`)
    * — human-readable `path: alias → canonical`-style rewrite entries for every
    * deterministic pre-parse rewrite `validateSpec` applied before parsing.
-   * Sources: `normalizeDeckRootAliases` (`chrome` → `branding`) and
+   * Sources: `normalizeDeckRootAliases` (identity, no current root aliases) and
    * `normalizeNarrativeShape` (`../narrative`, T0b fix 2): a top-level
    * `narrative: {id: "<preset>"}` shape rewritten to the bare preset string.
    * Present only when at least one rewrite happened; informational, never
@@ -362,36 +360,21 @@ function checkTheme(spec: DeckSpec): SpecValidationIssue[] {
   if (installed.includes(themeId)) return []
   const message =
     themeId === "bloom"
-      ? 'theme id "bloom" was removed — run `pptwise migrate <input> -o <output>` to rewrite it to "classroom"'
+      ? 'theme id "bloom" was removed — current format uses an installed theme id (see `pptwise themes`)'
       : `unknown theme "${themeId}" — available: ${installed.join(", ")} (see \`pptwise themes\`)`
   return [{ path: "theme", message }]
 }
 
 // ── hard gate: focus vocabulary ─────────────────────────────────────────
 
-const LAYOUT_IDS: readonly string[] = Object.keys(LAYOUT_REGISTRY)
-
 /**
- * Focus vocabulary gate (spec §5): `focus` is optional authoring guidance
- * pointing a later fill/select step at a preferred component or layout —
- * when present it must resolve against one of three vocabularies: the
- * resolved strategy's own tendency set (`STRATEGY_DEFINITIONS[strategy].tendencies`, W3
- * data), the full component-type vocabulary ({@link COMPONENT_TYPES}, every
- * component-type name), or the full layout-id vocabulary ({@link LAYOUT_IDS},
- * `LAYOUT_REGISTRY`'s keys).
- *
- * The strategy tendency set is currently always a subset of the other two
- * (every entry in every `StrategyDefinition.tendencies` array already resolves
- * against either component types or layout ids — see that field's own doc
- * comment in `narrative/index.ts`) — checked explicitly anyway, both because
- * the brief's wording keeps it a first-class term of the union (a future
- * tendency value from some other vocabulary would still resolve correctly
- * without touching this function) and because the strategy-specific list is the
- * one most useful to show first in the error message, ahead of the two much
- * longer global lists.
+ * Focus vocabulary gate: `focus` is optional authoring guidance pointing a
+ * later fill step at a preferred content kind or component type. Face ids
+ * and layout ids are not authoring vocabulary. When present it must be one
+ * of {@link KIND_VALUES} or {@link COMPONENT_TYPES}.
  */
-function checkFocusVocabulary(spec: DeckSpec, strategy: Strategy): SpecValidationIssue[] {
-  const tendencies = STRATEGY_DEFINITIONS[strategy].tendencies
+function checkFocusVocabulary(spec: DeckSpec): SpecValidationIssue[] {
+  const kinds: readonly string[] = KIND_VALUES
   const errors: SpecValidationIssue[] = []
   spec.pages.forEach((page, i) => {
     if (page.focus === undefined) return
@@ -399,8 +382,7 @@ function checkFocusVocabulary(spec: DeckSpec, strategy: Strategy): SpecValidatio
       errors.push({
         path: `pages.${i}.focus`,
         pageId: page.id,
-        message:
-          'component type "logo_wall" was removed — run `pptwise migrate <input> -o <output>` to rewrite it to "image_grid"',
+        message: 'component type "logo_wall" is not in the current vocabulary — use "image_grid"',
       })
       return
     }
@@ -409,20 +391,19 @@ function checkFocusVocabulary(spec: DeckSpec, strategy: Strategy): SpecValidatio
         path: `pages.${i}.focus`,
         pageId: page.id,
         message:
-          'layout "banner-heading" was removed — run `pptwise migrate <input> -o <output>` to rewrite it to "two-column"',
+          '"banner-heading" is a face id, not authoring vocabulary — focus accepts a content kind or a component type',
       })
       return
     }
-    if (tendencies.includes(page.focus) || COMPONENT_TYPES.includes(page.focus) || LAYOUT_IDS.includes(page.focus)) {
+    if (kinds.includes(page.focus) || COMPONENT_TYPES.includes(page.focus)) {
       return
     }
     errors.push({
       path: `pages.${i}.focus`,
       pageId: page.id,
       message:
-        `unknown focus "${page.focus}" for strategy "${strategy}" — expected one of this strategy's tendencies ` +
-        `(${tendencies.join(", ")}), a component type (${COMPONENT_TYPES.join(", ")}), ` +
-        `or a layout id (${LAYOUT_IDS.join(", ")})`,
+        `unknown focus "${page.focus}" — expected a content kind (${KIND_VALUES.join(", ")}) ` +
+        `or a component type (${COMPONENT_TYPES.join(", ")})`,
     })
   })
   return errors
@@ -555,23 +536,6 @@ function pageIdFromRawInput(input: unknown, index: number): string | undefined {
  * has.
  */
 export function validateSpec(input: unknown): SpecValidateResult {
-  if (
-    typeof input === "object" &&
-    input !== null &&
-    !Array.isArray(input) &&
-    Object.hasOwn(input, "chrome") &&
-    Object.hasOwn(input, "branding")
-  ) {
-    return {
-      ok: false,
-      errors: [
-        {
-          path: "branding",
-          message: 'cannot use both legacy "chrome" and canonical "branding" in one spec',
-        },
-      ],
-    }
-  }
   const rootAliasPass = normalizeDeckRootAliases(input)
   const narrativeShapePass = normalizeNarrativeShape(rootAliasPass.value)
   const normalizedInput = narrativeShapePass.value
@@ -632,7 +596,7 @@ export function validateSpec(input: unknown): SpecValidateResult {
     return withNormalized({ ok: false, errors: [{ path: "narrative", message: err.message }] })
   }
 
-  const focusErrors = checkFocusVocabulary(spec, resolvedAxes.strategy)
+  const focusErrors = checkFocusVocabulary(spec)
   if (focusErrors.length > 0) return withNormalized({ ok: false, errors: focusErrors })
 
   const pageCountErrors = checkPageCount(spec, resolvedAxes.pacing)

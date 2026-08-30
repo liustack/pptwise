@@ -23,7 +23,7 @@ import { buildCtx, resolveBackgroundHex } from "../render/full-slide-svg"
 import { renderSlideSvg } from "../api"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { resolveStyle } from "../themes"
-import { MOTIF_CANDIDATES } from "../render/motif-selection"
+import { THEME_DEFINITIONS } from "../themes/definitions"
 import { MOTIFS } from "./index"
 import type { MotifId } from "./types"
 import {
@@ -41,8 +41,8 @@ import {
 const TYPES: Slide["type"][] = ["cover", "chapter", "content", "ending"]
 
 function themeForMotif(id: MotifId): string {
-  for (const [theme, ids] of Object.entries(MOTIF_CANDIDATES)) {
-    if (ids?.includes(id)) return theme
+  for (const [theme, def] of Object.entries(THEME_DEFINITIONS)) {
+    if (def.motif === id) return theme
   }
   return "consulting"
 }

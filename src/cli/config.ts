@@ -2,7 +2,6 @@ import { readFile } from "node:fs/promises"
 import { dirname, join, resolve } from "node:path"
 import { z } from "zod"
 import { PptwiseError } from "../errors"
-import { StyleOverrideSchema } from "../ir"
 import { userConfigPath } from "./home"
 import { ImagesConfigSchema } from "./image-config"
 
@@ -30,7 +29,7 @@ import { ImagesConfigSchema } from "./image-config"
  * *this config file's own directory* (wherever `findConfig`'s cwd walk-up
  * found it) — never the CLI's cwd, and never `pptwiseHome()`. Wins over the
  * user config's own `decksDir` (`UserConfigSchema` below) when both are
- * set, same project-beats-user precedence as `theme`/`style` above. The two
+ * set, same project-beats-user precedence as `theme` above. The two
  * layers resolve against different bases, so this schema alone can't
  * express the final answer — `commands.ts`'s `resolveDecksDirSource`
  * computes the already-resolved absolute path before handing it down to
@@ -52,7 +51,6 @@ import { ImagesConfigSchema } from "./image-config"
 const ConfigSchema = z
   .object({
     theme: z.string().optional(),
-    style: StyleOverrideSchema.optional(),
     decksDir: z.string().optional(),
     outDir: z.string().optional(),
   })
@@ -62,8 +60,8 @@ export type PptwiseConfig = z.infer<typeof ConfigSchema>
 
 /**
  * User-level config schema (spec §7's four-layer chain — the layer between
- * project config and the artifact's own value): the same three deck-default
- * fields as {@link ConfigSchema} (`theme`/`style`/`decksDir`), plus optional
+ * project config and the artifact's own value): the same deck-default
+ * fields as {@link ConfigSchema} (`theme`/`decksDir`), plus optional
  * `images` (Pexels/Pixabay keys and Openverse OAuth for stock-photo search). `outDir` is
  * deliberately absent — an artifact root belongs to this working tree, not
  * to the user's identity (see {@link ConfigSchema}'s own `outDir` comment).
@@ -90,7 +88,6 @@ export type PptwiseConfig = z.infer<typeof ConfigSchema>
 const UserConfigSchema = z
   .object({
     theme: z.string().optional(),
-    style: StyleOverrideSchema.optional(),
     decksDir: z.string().optional(),
     images: ImagesConfigSchema.optional(),
   })

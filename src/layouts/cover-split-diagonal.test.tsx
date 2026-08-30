@@ -193,13 +193,12 @@ describe("SplitDiagonalCover", () => {
   })
 })
 
-// board-cover-restore wave 2: every builtin locks layouts.cover. split-diagonal
-// stays in the shared pool. It is no longer in any theme's curated cover set.
-describe("split-diagonal is in the pool, not in any builtin cover lock", () => {
-  it("no canonical theme still curates the full cover set. every cover lock is a singleton", () => {
+// board-cover-restore wave 2: every builtin locks menu.cover. split-diagonal
+// is not any theme's cover face.
+describe("split-diagonal is not any builtin cover face", () => {
+  it("every canonical theme names a cover face other than split-diagonal", () => {
     for (const id of CANONICAL_THEME_IDS) {
-      expect(THEME_DEFINITIONS[id].layouts.cover, id).toHaveLength(1)
-      expect(THEME_DEFINITIONS[id].layouts.cover, id).not.toContain("split-diagonal")
+      expect(THEME_DEFINITIONS[id].menu.cover.face, id).not.toBe("split-diagonal")
     }
   })
 })

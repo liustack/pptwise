@@ -715,21 +715,21 @@ describe("value type mismatches survive the rename (no _coerce_str port — fiel
   })
 })
 
-// Deck-root alias chrome → branding via normalizeDeckRootAliases
+// Deck-root aliases are empty: normalizeDeckRootAliases must not rewrite chrome.
 describe("normalizeDeckRootAliases", () => {
-  it("maps DECK_ROOT_ALIASES chrome → branding", () => {
-    expect(DECK_ROOT_ALIASES).toEqual({ chrome: "branding" })
+  it("keeps DECK_ROOT_ALIASES empty (no chrome → branding rewrite)", () => {
+    expect(DECK_ROOT_ALIASES).toEqual({})
   })
 
-  it("rewrites chrome → branding when branding is absent", () => {
+  it("does not rewrite chrome to branding", () => {
     const input = { chrome: "full", filename: "x" }
     const { value, normalized } = normalizeDeckRootAliases(input)
-    expect(normalized).toEqual(["(root): chrome → branding"])
-    expect(value).toEqual({ branding: "full", filename: "x" })
-    expect("chrome" in (value as object)).toBe(false)
+    expect(normalized).toEqual([])
+    expect(value).toBe(input)
+    expect(value).toEqual({ chrome: "full", filename: "x" })
   })
 
-  it("both present: no rewrite, both keys remain, normalized empty", () => {
+  it("both chrome and branding present: no rewrite, both keys remain", () => {
     const input = { chrome: "full", branding: "minimal" }
     const { value, normalized } = normalizeDeckRootAliases(input)
     expect(normalized).toEqual([])
@@ -742,7 +742,7 @@ describe("normalizeDeckRootAliases", () => {
     const snapshot = JSON.parse(JSON.stringify(input))
     const { value } = normalizeDeckRootAliases(input)
     expect(input).toEqual(snapshot)
-    expect(value).not.toBe(input)
+    expect(value).toBe(input)
   })
 
   it.each<[string, unknown]>([

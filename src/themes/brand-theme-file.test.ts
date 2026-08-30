@@ -33,11 +33,14 @@ describe("parseBrandThemeFile", () => {
     expect(() => parseBrandThemeFile(theme, "bad.theme.json")).toThrow(/expected #RGB/)
   })
 
-  it("hard-rejects every retired v1 shape by naming the current format, with no migration offer", async () => {
+  it("rejects retired v1 fields through the ordinary v2 schema, naming the current format", async () => {
     const current = await extractFixtureTheme()
     for (const retired of [{ version: 1 }, { base: "consulting" }, { faces: { cover: ["poster-center"] } }]) {
       expect(() => parseBrandThemeFile({ ...current, ...retired }, "legacy.theme.json")).toThrow(
-        /current theme format is version 2.*self-contained.*No migration tool is provided/is,
+        /current theme format is version 2.*self-contained/is,
+      )
+      expect(() => parseBrandThemeFile({ ...current, ...retired }, "legacy.theme.json")).not.toThrow(
+        /migrat/i,
       )
     }
   })
@@ -59,10 +62,10 @@ describe("registerBrandThemeFile", () => {
     expect(def.menu).toEqual(theme.menu)
     expect(def.motif).toBeUndefined()
     const consulting = getThemeDefinition("consulting")
-    expect(def.layouts).not.toEqual(consulting.layouts)
+    expect(def.menu).not.toEqual(consulting.menu)
   })
 
-  it("loads a complete v2 menu, deriving the transitional layout record from it", async () => {
+  it("loads a complete v2 menu", async () => {
     const extracted = await extractFixtureTheme("acme-complete")
     const file = parseBrandThemeFile(
       {
@@ -85,14 +88,11 @@ describe("registerBrandThemeFile", () => {
     registerBrandThemeFile(file)
     const def = getThemeDefinition("acme-complete")
     expect(def.menu).toEqual(file.menu)
-    // The takeover face a menu may legitimately name stays out of the
-    // archetype-only pool the pre-S1-A selector samples.
-    expect(def.layouts).toEqual({
-      cover: ["gauge-verdict"],
-      chapter: ["gauge-section"],
-      content: ["gauge-stats"],
-      ending: ["gauge-next"],
-    })
+    expect(def.menu.cover.face).toBe("gauge-verdict")
+    expect(def.menu.chapter.face).toBe("gauge-section")
+    expect(def.menu.content.data?.face).toBe("gauge-stats")
+    expect(def.menu.content.photo?.face).toBe("image-split")
+    expect(def.menu.ending.face).toBe("gauge-next")
     expect(def.menu.content.data?.decor).toEqual({ kind: "silent" })
   })
 

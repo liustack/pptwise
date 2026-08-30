@@ -20,12 +20,12 @@
  *   assets/                local images, auto-registered by filename
  * ```
  *
- * A directory carrying the pre-rename `deck.plan.json` only (no
- * `deck.spec.json` yet) is no longer read directly — `pptwise migrate
- * <dir> -o <dir>` (`./commands.ts`'s `runMigrate`) converts it in place per
- * spec §9.2's field mapping. A directory carrying *both* files at once is a
- * hard error ({@link readSpecFile} below) — spec §9.2: "目录中同时出现
- * `deck.plan.json` 和 `deck.spec.json` 时应硬报错，不能猜测优先级".
+ * A directory carrying the retired `deck.plan.json` only (no
+ * `deck.spec.json`) is not a current deck project — {@link readSpecFile}
+ * reports that directories now use `deck.spec.json`. A directory carrying
+ * both files at once is a hard error ({@link readSpecFile} below) — spec
+ * §9.2: "目录中同时出现 `deck.plan.json` 和 `deck.spec.json` 时应硬报错，
+ * 不能猜测优先级".
  */
 import { copyFile, mkdir, readFile, readdir, stat, writeFile } from "node:fs/promises"
 import { basename, extname, isAbsolute, join, relative, resolve } from "node:path"
@@ -34,13 +34,9 @@ import { assembleDeck, type AssembleResult, type PageContent } from "../spec/ass
 import { decksRoot } from "./home"
 import { EXT_BY_MIME, loadIrFile } from "./load-ir"
 
-/** The pre-rename artifact name (vocabulary-v4 rename, spec §6/§9.2) — no
- *  longer read directly by {@link readSpecFile}, but still needed to (a)
- *  detect the dual-file hard-error case and (b) as the migrate command's own
- *  read source (`./commands.ts`'s `runMigrate`). Both exported for that
- *  second reason — `runMigrate` needs the exact same two filenames, and
- *  duplicating the literal strings there would risk the two modules drifting
- *  on spelling. */
+/** Retired artifact name. Not read as a spec. Still exported so
+ *  {@link readSpecFile} can detect a plan-only directory and a both-files
+ *  ambiguity. */
 export const PLAN_FILENAME = "deck.plan.json"
 export const SPEC_FILENAME = "deck.spec.json"
 // Exported (serve wave, task S1) so `./serve.ts` can build its fs.watch
@@ -236,16 +232,12 @@ function expectedLayoutHint(): string {
  * - both `deck.plan.json` and `deck.spec.json` present — a hard error, spec
  *   §9.2: "目录中同时出现 `deck.plan.json` 和 `deck.spec.json` 时应硬报错，
  *   不能猜测优先级" ("hard error, never guess which one wins"). Checked
- *   before the missing-file branch below so a caller that just ran
- *   `pptwise migrate <dir> -o <dir>` (which writes `deck.spec.json`
- *   *alongside* the pre-existing `deck.plan.json`, never deleting it) gets
- *   pointed at deleting the old file, not a generic "not a deck project"
- *   message.
- * - only `deck.plan.json` present (no `deck.spec.json` yet) — this
- *   directory predates the rename and is no longer read directly; the
- *   message points at `pptwise migrate` instead of the generic missing-file
- *   hint, since the fix here is a one-command conversion, not authoring a
- *   fresh file from scratch.
+ *   before the missing-file branch below so a leftover `deck.plan.json`
+ *   next to a current `deck.spec.json` is pointed at deleting the old file,
+ *   not a generic "not a deck project" message.
+ * - only `deck.plan.json` present (no `deck.spec.json`) — this directory
+ *   predates the current format and is no longer read. The message names
+ *   `deck.spec.json` as the current file, not a generic missing-file hint.
  * - neither file present — the pre-existing "friendlier message over
  *   `loadIrFile`'s generic "cannot read"" this function has always had: the
  *   one failure a deck-directory caller is most likely to hit by typo or by
@@ -259,12 +251,12 @@ async function readSpecFile(dir: string): Promise<unknown> {
   const [specExists, planExists] = await Promise.all([pathExists(specPath), pathExists(planPath)])
   if (specExists && planExists) {
     throw new PptwiseError(
-      `both ${SPEC_FILENAME} and ${PLAN_FILENAME} exist in ${dir} — ambiguous, refusing to guess which one wins. Delete ${PLAN_FILENAME} once you have confirmed ${SPEC_FILENAME} is correct (\`pptwise migrate\` never deletes the source file it read)`,
+      `both ${SPEC_FILENAME} and ${PLAN_FILENAME} exist in ${dir} — ambiguous, refusing to guess which one wins. Delete ${PLAN_FILENAME} once you have confirmed ${SPEC_FILENAME} is correct`,
     )
   }
   if (!specExists && planExists) {
     throw new PptwiseError(
-      `${dir} has ${PLAN_FILENAME} but no ${SPEC_FILENAME} — deck project directories now use ${SPEC_FILENAME}. Run \`pptwise migrate ${dir} -o ${dir}\` to convert it`,
+      `${dir} has ${PLAN_FILENAME} but no ${SPEC_FILENAME} — deck project directories now use ${SPEC_FILENAME}`,
     )
   }
   let text: string
@@ -422,20 +414,9 @@ export interface DeckDirResult extends AssembleResult {
  * The merged result is spliced in via a shallow clone of the whole `ir`
  * object (`{ ...ir, assets: ... }`), not a `ir.assets = ...` reassignment
  * onto the object `assembleDeck` returned (post-v0.3 W8 fix round, backlog
- * item 4, `.issues/notes/engineering-history.md` #4): the earlier
- * version mutated `assembleDeck`'s own return value in place, which is
- * harmless *today* only because `variety.ts`'s `deckSeedCache` and
- * `layout-selection.ts`'s `deckEffectiveLayoutIdsCache` — the only two
- * consumers that key a `WeakMap` off an `ir` object's identity — never read
- * `.assets` (confirmed by reading both cache-populating functions: they only
- * touch `seed`/`filename`/`theme.id`/`theme.style`/`narrative`/
- * `slides[].heading`/`.id`/`.type`/`.layout`/`.background`). Cloning
- * instead of mutating means the object
- * `assembleDeck` returned is never touched, and this function's own return
- * value is a distinct identity no earlier reference could have already
- * cached against — correct-by-construction regardless of what a future
- * cache keys on, not just correct because of what today's two caches happen
- * to skip.
+ * item 4, `.issues/notes/engineering-history.md` #4). Cloning instead of
+ * mutating means the object `assembleDeck` returned is never touched, and
+ * this function's own return value is a distinct identity.
  */
 function specThemeFromRaw(spec: unknown): string | undefined {
   if (typeof spec !== "object" || spec === null) return undefined

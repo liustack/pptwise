@@ -135,11 +135,9 @@ const BackgroundSpecSchema = z.discriminatedUnion("kind", [
 // ── Theme / Meta / Assets / Brand ──
 
 /**
- * Style-token override (theme.style): deep-partial palette/fonts/shape
- * merged over the built-in theme (see themes/index.ts resolveStyle). Scope is
- * deliberately palette-level (spec §11): no defaultBackgrounds or manifest
- * overrides. gapScale / typeScale ranges mirror the documented sane ranges
- * in themes/tokens.ts StyleShape.
+ * Leftover deep-partial palette/fonts/shape schema. Not an IR ThemeSchema
+ * field. Recolor goes through `pptwise theme fork`. validate-core still
+ * builds styleJsonSchema() from this object.
  */
 export const StyleOverrideSchema = z
   .object({
@@ -234,8 +232,6 @@ export const ThemeSchema = z
     // Open string, not an enum — installed-theme check happens in validateIr
     // so a v0.4 registry can add themes without a schema change (spec §4).
     id: ThemeIdSchema,
-    style: StyleOverrideSchema.optional(),
-    brand: BrandConfigSchema.optional(),
   })
   .strict()
 

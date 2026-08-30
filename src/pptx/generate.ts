@@ -98,7 +98,7 @@ export async function generatePptxBlob(
   pptx.defineLayout({ name: "LAYOUT_WIDE", width: 13.33, height: 7.5 })
   pptx.layout = "LAYOUT_WIDE"
 
-  const tokens = resolveStyle(ir.theme.id, ir.theme.style)
+  const tokens = resolveStyle(ir.theme.id)
   defineMastersForIR(pptx, tokens)
 
   const gradientPatches: GradientFillPatch[] = []

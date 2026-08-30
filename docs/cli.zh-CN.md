@@ -65,13 +65,12 @@ pptwise preview deck-dir/ --html
 ```bash
 pptwise render <target> \
   [-o <out.pptx>] \
-  [--style <override.json>] \
   [--draft] \
   [--allow-dropped-content] \
   [--no-git-ignore]
 ```
 
-省略 `-o` 时，输出写到项目根目录下的 `.pptwise/<deck>/<deck>.pptx`。`--style` 应用由 `pptwise schema --style` 描述的底层样式 token 覆盖。它不是主题切换，也不会改变菜单。
+省略 `-o` 时，输出写到项目根目录下的 `.pptwise/<deck>/<deck>.pptx`。改颜色用 `pptwise theme fork`，它写出一份完整主题。Render 不接受局部改色覆盖。
 
 `--draft` 允许占位页。`--allow-dropped-content` 允许已知内容丢失，只能在用户明确同意时使用。正常处理方式是缩短或拆页。
 
@@ -101,7 +100,6 @@ Audit 渲染确定性 SVG，并检查：
 ```bash
 pptwise schema
 pptwise schema --spec
-pptwise schema --style
 pptwise spec validate deck-dir/deck.spec.json
 ```
 

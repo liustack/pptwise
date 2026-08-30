@@ -120,11 +120,16 @@ describe("deck spec schema", () => {
     expect(validateSpec(valid({ branding: "none" })).ok).toBe(false)
   })
 
-  it("normalizes the root chrome alias", () => {
-    const result = validateSpec(valid({ chrome: "full" }))
-    expect(result.ok).toBe(true)
-    expect(result.spec?.branding).toBe("full")
-    expect(result.normalized).toEqual(["(root): chrome → branding"])
+  it("rejects chrome as an unrecognized root field", () => {
+    const chromeOnly = validateSpec(valid({ chrome: "full" }))
+    expect(chromeOnly.ok).toBe(false)
+    expect(formatSpecIssues(chromeOnly.errors)).toMatch(/unrecognized key: "chrome"/i)
+    expect(chromeOnly.normalized).toBeUndefined()
+
+    const both = validateSpec(valid({ chrome: "full", branding: "minimal" }))
+    expect(both.ok).toBe(false)
+    expect(formatSpecIssues(both.errors)).toMatch(/unrecognized key: "chrome"/i)
+    expect(formatSpecIssues(both.errors)).not.toMatch(/cannot use both/)
   })
 })
 
@@ -179,6 +184,15 @@ describe("deck spec hard gates", () => {
     expect(formatSpecIssues(result.errors)).toContain('unknown theme "not-installed"')
   })
 
+  it("rejects the removed bloom theme without a migrate pointer", () => {
+    const result = validateSpec(valid({ theme: "bloom" }))
+    expect(result.ok).toBe(false)
+    const text = formatSpecIssues(result.errors)
+    expect(text).toMatch(/bloom/)
+    expect(text).toMatch(/installed theme id/)
+    expect(text).not.toMatch(/pptwise migrate/)
+  })
+
   it("resolves narrative values and normalizes the preset object shape", () => {
     const result = validateSpec(valid({ narrative: { id: "boardroom-report" } }))
     expect(result.ok).toBe(true)
@@ -190,7 +204,7 @@ describe("deck spec hard gates", () => {
     expect(formatSpecIssues(invalid.errors)).toContain('unknown pacing "impossible"')
   })
 
-  it("keeps focus as a validated authoring hint", () => {
+  it("accepts focus as a content kind or component type", () => {
     expect(
       expectOk(
         valid({
@@ -198,13 +212,69 @@ describe("deck spec hard gates", () => {
         }),
       ).pages[1],
     ).toMatchObject({ focus: "chart" })
+    expect(
+      expectOk(
+        valid({
+          pages: [cover(), content("a", { focus: "points" }), content("b"), content("c"), content("d"), ending()],
+        }),
+      ).pages[1],
+    ).toMatchObject({ focus: "points" })
+  })
+
+  it("rejects a face id as focus", () => {
+    const invalid = validateSpec(
+      valid({
+        pages: [cover(), content("a", { focus: "image-top" }), content("b"), content("c"), content("d"), ending()],
+      }),
+    )
+    expect(invalid.ok).toBe(false)
+    const text = formatSpecIssues(invalid.errors)
+    expect(text).toContain('unknown focus "image-top"')
+    expect(text).toContain("content kind")
+    expect(text).toContain("component type")
+    expect(text).not.toMatch(/layout id/)
+    expect(text).not.toMatch(/tendenc/)
+    expect(text).not.toMatch(/pptwise migrate/)
+  })
+
+  it("rejects logo_wall and banner-heading focus without a migrate pointer", () => {
+    const logoWall = validateSpec(
+      valid({
+        pages: [cover(), content("a", { focus: "logo_wall" }), content("b"), content("c"), content("d"), ending()],
+      }),
+    )
+    expect(logoWall.ok).toBe(false)
+    const logoText = formatSpecIssues(logoWall.errors)
+    expect(logoText).toContain("logo_wall")
+    expect(logoText).toContain("image_grid")
+    expect(logoText).not.toMatch(/pptwise migrate/)
+
+    const banner = validateSpec(
+      valid({
+        pages: [cover(), content("a", { focus: "banner-heading" }), content("b"), content("c"), content("d"), ending()],
+      }),
+    )
+    expect(banner.ok).toBe(false)
+    const bannerText = formatSpecIssues(banner.errors)
+    expect(bannerText).toContain("banner-heading")
+    expect(bannerText).toMatch(/face id/)
+    expect(bannerText).not.toMatch(/pptwise migrate/)
+  })
+
+  it("rejects an unknown focus without listing layout ids or tendencies", () => {
     const invalid = validateSpec(
       valid({
         pages: [cover(), content("a", { focus: "bogus" }), content("b"), content("c"), content("d"), ending()],
       }),
     )
     expect(invalid.ok).toBe(false)
-    expect(formatSpecIssues(invalid.errors)).toContain('unknown focus "bogus"')
+    const text = formatSpecIssues(invalid.errors)
+    expect(text).toContain('unknown focus "bogus"')
+    expect(text).toContain("points")
+    expect(text).toContain("chart")
+    expect(text).not.toMatch(/layout id/)
+    expect(text).not.toMatch(/tendenc/)
+    expect(text).not.toMatch(/pptwise migrate/)
   })
 
   it("keeps pacing page-count budgets unchanged", () => {
