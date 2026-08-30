@@ -125,6 +125,7 @@ export function SealCloseEnding({ ir, slide, ctx }: SvgTemplateProps) {
 }
 
 export const layoutDef = {
+  branding: "none",
   // ending-seal-close-ending.tsx: pinOnly centered close sentence, next-talk
   // line from subheading, axis seal as the period. Empty heading invents no
   // close copy and no thank-you. Motif owns the right remnant mountain.

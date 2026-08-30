@@ -3,7 +3,8 @@ import { mkdtemp, mkdir, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { afterEach, describe, expect, it } from "vitest"
-import { __resetRegisteredThemes, registerTheme } from "../themes/definitions"
+import { __resetRegisteredThemes } from "../themes/definitions"
+import { registerTestTheme } from "../themes/test-fixtures"
 import { findConfig, findUserConfig } from "./config"
 
 function tmp(): Promise<string> {
@@ -76,36 +77,7 @@ describe("findConfig", () => {
   })
 
   it("accepts a registered theme id (W3 task 4: installed-check widened to getInstalledThemeIds)", async () => {
-    registerTheme({
-      id: "acme-config",
-      style: {
-        id: "acme-config",
-        colors: {
-          bg: "#FFFFFF",
-          surface: "#F0F0F0",
-          primary: "#112233",
-          accent: "#AA00FF",
-          text: "#000000",
-          muted: "#888888",
-          chartPalette: ["#112233", "#AA00FF"],
-        },
-        fonts: { heading: ["Arial"], body: ["Arial"] },
-        defaultBackgrounds: {
-          cover: { kind: "color", value: "#FFFFFF" },
-          chapter: { kind: "color", value: "#FFFFFF" },
-          content: { kind: "color", value: "#FFFFFF" },
-          ending: { kind: "color", value: "#FFFFFF" },
-        },
-      },
-      brand: {},
-      tags: [],
-      layouts: {
-        cover: ["poster-center"],
-        chapter: ["banner-chapter"],
-        content: ["two-column"],
-        ending: ["banner-ending"],
-      },
-    })
+    registerTestTheme("acme-config", "consulting")
     const root = await tmp()
     await writeFile(join(root, "pptwise.config.json"), JSON.stringify({ theme: "acme-config" }))
     const hit = await findConfig(root)

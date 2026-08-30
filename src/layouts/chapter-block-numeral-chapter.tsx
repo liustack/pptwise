@@ -153,6 +153,7 @@ export function BlockNumeralChapter({ ir, slide, index, ctx }: SvgTemplateProps)
 }
 
 export const layoutDef = {
+  branding: "none",
   // chapter-block-numeral-chapter.tsx: square primary numeral block, title
   // to its right, midground tick rule showing chapter progress. Light page
   // ground comes from the theme. No body slot (chapter pages never render

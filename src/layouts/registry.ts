@@ -368,6 +368,18 @@ export interface LayoutDefinition {
    */
   pinOnly?: boolean
   /**
+   * Structural fact of the face: it leaves no room for the brand frame
+   * (footer rule, meta, logo). A menu entry may additionally silence the
+   * brand on a face that does have room; it can never paint one here.
+   */
+  branding?: "none"
+  /**
+   * Structural fact of the face: it paints its own full identity and the
+   * theme motif must stay off. A menu entry's `decor` can silence a motif
+   * on other faces, or swap which motif paints; it cannot force one here.
+   */
+  suppressMotif?: true
+  /**
    * This layout opens by painting its own full-bleed colour field over the
    * whole canvas, so the theme background underneath it is never seen —
    * `FullSlideSvg` (`../render/full-slide-svg.tsx`) skips `Background` entirely for

@@ -167,6 +167,8 @@ export function WindowCloseEnding({ ir, slide, ctx }: SvgTemplateProps) {
 }
 
 export const layoutDef = {
+  branding: "none",
+  suppressMotif: true,
   // ending-window-close-ending.tsx: full-bleed primary field, inverted
   // title, window note, border rule, contact/org foot. pinOnly.
   // paintsOwnBackground. Empty heading invents no close and no email.

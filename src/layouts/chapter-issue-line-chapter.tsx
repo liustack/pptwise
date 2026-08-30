@@ -141,6 +141,7 @@ export function IssueLineChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
 }
 
 export const layoutDef = {
+  branding: "none",
   // chapter-issue-line-chapter.tsx: pinOnly issue-line chapter. Accent
   // type kicker (议题 n / ISSUE nn), left title, optional sub. Motif
   // draws the double rule. Empty heading invents no issue name. Red is

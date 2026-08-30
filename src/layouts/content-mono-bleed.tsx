@@ -23,6 +23,7 @@ export function MonoBleedContent(props: SvgTemplateProps) {
 }
 
 export const layoutDef = {
+  branding: "none",
   // content-mono-bleed.tsx: a pinOnly full-bleed primary field with inverted
   // type. Capacity 0 (write the words in heading). paintsOwnBackground so
   // FullSlideSvg does not paint the theme bg underneath. Page decor and

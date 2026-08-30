@@ -205,6 +205,7 @@ export function ShowStatementContent({ ir, slide, index, ctx }: SvgTemplateProps
 }
 
 export const layoutDef = {
+  suppressMotif: true,
   id: "show-statement",
   kind: "archetype",
   pinOnly: true,

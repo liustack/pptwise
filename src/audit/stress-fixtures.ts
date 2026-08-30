@@ -279,7 +279,7 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
   bullets: deck([
     {
       type: "content",
-      kind: "points",
+      kind: "list",
       heading: "要点压力测试",
       components: [
         {
@@ -298,7 +298,7 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
     },
     {
       type: "content",
-      kind: "points",
+      kind: "list",
       heading: "要点双栏压力测试",
       components: [
         {
@@ -1539,7 +1539,7 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
   tag_row: deck([
     {
       type: "content",
-      kind: "points",
+      kind: "list",
       heading: "标签行压力测试（16 个满配，混排到长度上限）",
       components: [
         {
@@ -1557,7 +1557,7 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
     },
     {
       type: "content",
-      kind: "points",
+      kind: "list",
       heading: "标签行压力测试（2 个，默认低调）",
       components: [
         {

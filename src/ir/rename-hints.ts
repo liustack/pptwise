@@ -48,7 +48,7 @@ const RENAME_HINTS: Readonly<Record<string, RenameHint>> = {
   },
   variant: {
     at: SLIDE_LEVEL,
-    hint: '"variant" was split into "layout" and "arrangement" in IR v4',
+    hint: '"variant" was removed — a content page declares its "kind" and the theme menu picks the face',
   },
   override: {
     at: (path) => path === "theme",

@@ -215,6 +215,7 @@ export function ChalkBandCover({ ir, slide, ctx }: SvgTemplateProps) {
 }
 
 export const layoutDef = {
+  branding: "none",
   // cover-chalk-band-cover.tsx: inset primary chalk band, inverted title
   // and subtitle inside, lesson/focus row under the band. Motif owns the
   // notebook rules. Empty heading invents no lesson title.

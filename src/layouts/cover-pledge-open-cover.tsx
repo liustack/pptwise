@@ -155,6 +155,7 @@ export function PledgeOpenCover({ ir, slide, ctx }: SvgTemplateProps) {
 }
 
 export const layoutDef = {
+  branding: "none",
   // cover-pledge-open-cover.tsx: left-aligned pledge sentence on paper.
   // Org kicker, **emphasis** in primary, date at the foot. Motif owns the
   // contour lines. Empty heading draws no title. Missing date skips the foot.

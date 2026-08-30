@@ -126,6 +126,7 @@ function GenericStatementContent({ ir, slide, index, ctx }: SvgTemplateProps) {
 }
 
 export const layoutDef = {
+  branding: "none",
   // content-statement.tsx: a pinOnly editorial-verse page. Heading is the
   // whole visual (2 to 4 italic lines, weight 500). Capacity-1 body is an
   // attribution caption, never a card. Page decor and branding posture belong

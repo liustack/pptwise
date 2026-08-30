@@ -17,6 +17,7 @@ import { CHAPTER_LAYOUTS } from "../layouts/index-chapter"
 import { CONTENT_LAYOUTS } from "../layouts/index-content"
 import { ENDING_LAYOUTS } from "../layouts/index-ending"
 import { MOTIFS } from "../motifs"
+import { getThemeDefinition } from "../themes/definitions"
 import { resolveChartPaletteOffset } from "./chart-palette"
 import { cachedDeckSeed } from "./variety"
 import { resolveEffectiveFace } from "./layout-selection"
@@ -310,8 +311,24 @@ export function FullSlideSvg({
     throw new Error(effectiveFace.error ?? `cannot resolve a theme-menu face for "${slide.type}" page`)
   }
   const menuDecor = effectiveFace.entry?.decor
-  const Decor = menuDecor?.kind === "motif" ? MOTIFS[menuDecor.id] : undefined
-  const motifOpacity = menuDecor?.kind === "motif" && menuDecor.params?.intensity === "subtle" ? 0.62 : undefined
+  // Decoration resolution (charter ruling 6, face-default + menu-override):
+  // the face's own `suppressMotif` is a structural fact no menu can undo; a
+  // menu entry may silence the motif on other faces or swap which motif
+  // paints; with no entry opinion the theme's own motif is the ordinary
+  // posture.
+  const themeDef = getThemeDefinition(ir.theme.id)
+  const faceSuppressesMotif = effectiveFace.layout?.suppressMotif === true
+  const Decor =
+    menuDecor?.kind === "silent" || faceSuppressesMotif
+      ? undefined
+      : menuDecor?.kind === "motif"
+        ? MOTIFS[menuDecor.id]
+        : themeDef.motif !== undefined
+          ? MOTIFS[themeDef.motif]
+          : undefined
+  const motifIntensity =
+    menuDecor?.kind === "motif" ? menuDecor.params?.intensity : themeDef.motifParameters?.intensity
+  const motifOpacity = motifIntensity === "subtle" ? 0.62 : undefined
   let bgSpec = slide.background ?? tokens.defaultBackgrounds[slide.type]
   // 压图页接管（图片排版 polish，2026-07-09 用户反馈）：cover/chapter 的
   // asset 背景 → 暗遮罩 + 白字 bespoke 版式（ImageCoverPage）——图保持清晰
@@ -360,10 +377,11 @@ export function FullSlideSvg({
   // column and reads as a pale hairline down the page. See
   // `LayoutDefinition.paintsOwnBackground` (`../layouts/registry.ts`).
   const layoutPaintsBackground = effectiveFace.route === "layout" && effectiveFace.layout?.paintsOwnBackground === true
-  // Page-level brand silence belongs to the menu entry. Deck-level
-  // full/cover-only/minimal posture remains inside Branding and is applied
-  // only when this page has not opted out.
-  const skipBranding = menuDecor?.kind === "silent"
+  // Page-level brand silence: the face's structural `branding: "none"` and
+  // the menu entry's `brand: "none"` each switch the brand frame off.
+  // Deck-level full/cover-only/minimal posture remains inside Branding and
+  // is applied only when this page has not opted out.
+  const skipBranding = effectiveFace.layout?.branding === "none" || effectiveFace.entry?.brand === "none"
 
   let pageBody: ReactNode = null
   if (imageCoverTakeover) {
@@ -385,23 +403,22 @@ export function FullSlideSvg({
       params: effectiveFace.entry?.params,
     })
   }
-  const motif = Decor && !imageCoverTakeover ? <Decor ir={ir} slide={slide} ctx={ctx} /> : null
+  const motif =
+    Decor && !imageCoverTakeover ? (
+      <g data-decor>
+        <Decor ir={ir} slide={slide} ctx={ctx} />
+      </g>
+    ) : null
   const motifDepth: SvgDepthLayers = motif
     ? partitionSvgDepth(motif, { slideType: slide.type })
     : { bg: [], mid: [], fg: [] }
   const keyedMotif = (depth: keyof SvgDepthLayers) => {
-    if (!motif) return []
     const nodes = motifDepth[depth]
-    if (nodes.length === 0 && depth !== "mid") return []
     const paintedNodes =
       motifOpacity === undefined ? nodes : nodes.map((node) => scaleMotifLeafOpacity(node, motifOpacity))
-    return [
-      <g key={`motif-${depth}`} data-decor>
-        {paintedNodes.map((node, nodeIndex) => (
-          <Fragment key={`motif-${depth}-${nodeIndex}`}>{node}</Fragment>
-        ))}
-      </g>,
-    ]
+    return paintedNodes.map((node, nodeIndex) => (
+      <Fragment key={`motif-${depth}-${nodeIndex}`}>{node}</Fragment>
+    ))
   }
   const bodyDepth: SvgDepthLayers = partitionSvgDepth(pageBody, {
     slideType: slide.type,

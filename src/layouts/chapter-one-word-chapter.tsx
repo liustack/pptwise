@@ -122,6 +122,7 @@ export function OneWordChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
 }
 
 export const layoutDef = {
+  branding: "none",
   // chapter-one-word-chapter.tsx: pinOnly one-word keynote chapter.
   // Centered 120px title (no typeScale), act label + subheading as a
   // muted footnote. No decor. Empty heading invents no 性能.

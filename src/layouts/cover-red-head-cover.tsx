@@ -217,6 +217,7 @@ export function RedHeadCover({ ir, slide, ctx }: SvgTemplateProps) {
 }
 
 export const layoutDef = {
+  branding: "none",
   // cover-red-head-cover.tsx: centered red-head cover, org in primary, a
   // 4px primary rule plus 1px accent rule, document-ink title. Motif
   // yields on cover. Empty heading draws no title. Missing org skips the

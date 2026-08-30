@@ -171,6 +171,7 @@ export function MirrorVolumeChapter({ ir, slide, index, ctx }: SvgTemplateProps)
 }
 
 export const layoutDef = {
+  branding: "none",
   // chapter-mirror-volume-chapter.tsx: pinOnly mirrored volume open.
   // Muted volume kicker, centered title, paired accent bars only when a
   // subtitle sits between them. CJK 卷 + numeral, Latin VOL. N. Theme

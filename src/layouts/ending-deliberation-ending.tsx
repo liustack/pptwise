@@ -194,6 +194,7 @@ export function DeliberationEnding({ slide, ctx }: SvgTemplateProps) {
 }
 
 export const layoutDef: LayoutDefinition = {
+  branding: "none",
   // ending-deliberation-ending.tsx: pinOnly three-item arrangements list,
   // short heading or English ARRANGEMENTS kicker, accent closing rule,
   // optional subheading sign-off. No thank-you and no invented 请审议.

@@ -148,6 +148,7 @@ export function HallLabelChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
 }
 
 export const layoutDef = {
+  branding: "none",
   // chapter-hall-label-chapter.tsx: pinOnly hall-number kicker in accent,
   // left title, no frame, no tick, no rule. Empty heading invents no hall
   // name. Copper gold is the hall label only.

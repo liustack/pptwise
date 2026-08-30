@@ -169,6 +169,7 @@ export function CapsuleOpenCover({ ir, slide, ctx }: SvgTemplateProps) {
 }
 
 export const layoutDef = {
+  branding: "none",
   // cover-capsule-open-cover.tsx: left-aligned title on paper, primary
   // date line (not a pill). Motif owns the sun. Empty heading draws no
   // title. No header band.

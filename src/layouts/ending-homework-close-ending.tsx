@@ -169,6 +169,7 @@ export function HomeworkCloseEnding({ slide, ctx }: SvgTemplateProps) {
 }
 
 export const layoutDef: LayoutDefinition = {
+  branding: "none",
   // ending-homework-close-ending.tsx: pinOnly homework list, accent box
   // label, foot rule, preview from subheading. No thank-you. Optional
   // bullets fill the list.

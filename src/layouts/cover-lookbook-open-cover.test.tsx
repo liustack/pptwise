@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it } from "vitest"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
 import { buildCtx, resolveBackgroundHex } from "../render/full-slide-svg"
@@ -9,6 +9,12 @@ import { LookbookOpenCover, layoutDef } from "./cover-lookbook-open-cover"
 import { renderSlideSvg } from "../api"
 import type { LayoutDefinition } from "./registry"
 import type { PptxIR, Slide } from "@/ir"
+import { __resetRegisteredThemes } from "../themes/definitions"
+import { registerTestTheme } from "../themes/test-fixtures"
+
+afterEach(() => {
+  __resetRegisteredThemes()
+})
 
 const HEADING = "回声，穿在身上"
 const SUBHEADING = "秋冬系列 · 三十六个 look · 九月十日 上海"
@@ -142,7 +148,10 @@ describe("cover-lookbook-open-cover — board geometry", () => {
   it("renders a cover subheading once when the document date is absent", () => {
     const subheading = "Where the second half goes"
     const cover = slide("The quarter in review", {  subheading })
-    const root = parseSvgRoot(renderSlideSvg(ir("runway", {}, cover), 0))
+    const themeId = registerTestTheme("lookbook-full-slide", "runway", {
+      cover: "lookbook-open-cover",
+    })
+    const root = parseSvgRoot(renderSlideSvg(ir(themeId, {}, cover), 0))
     const matches = Array.from(root.querySelectorAll("text")).filter((text) => text.textContent === subheading)
 
     expect(matches).toHaveLength(1)

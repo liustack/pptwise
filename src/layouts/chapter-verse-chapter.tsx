@@ -107,6 +107,7 @@ export function VerseChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
 }
 
 export const layoutDef = {
+  branding: "none",
   // chapter-verse-chapter.tsx: a pinOnly centered verse-as-chapter-open.
   // Tracking chapter-index kicker, 2-line heading, optional italic
   // subheading. No watermark numeral, no body slot (chapter pages never

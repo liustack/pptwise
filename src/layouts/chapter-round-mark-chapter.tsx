@@ -155,6 +155,7 @@ export function RoundMarkChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
 }
 
 export const layoutDef = {
+  branding: "none",
   // chapter-round-mark-chapter.tsx: pinOnly match-strip chapter. Accent
   // vertical mark plus ROUND nn kicker, left title, HUD foot rule.
   // Motif yields on chapter. Empty heading invents no section name.

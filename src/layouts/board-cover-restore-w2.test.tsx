@@ -1,9 +1,12 @@
 // @vitest-environment jsdom
-import { describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it } from "vitest"
 import { render } from "@testing-library/react"
 import { FullSlideSvg } from "../render/full-slide-svg"
-import { THEME_DEFINITIONS } from "../themes/definitions"
-import { resolveMotifId } from "../render/motif-selection"
+import { getLayout } from "./registry"
+import { __resetRegisteredThemes, getThemeDefinition, THEME_DEFINITIONS } from "../themes/definitions"
+import { registerTestTheme } from "../themes/test-fixtures"
+import type { CanonicalThemeId } from "../themes"
+import type { MenuDecor } from "../themes/schema"
 import { HEARTBEAT_POINTS } from "../motifs/motif-pulse-motif"
 import type { PptxIR, Slide } from "@/ir"
 
@@ -15,17 +18,28 @@ const COVER: Slide = {
 } as Slide
 
 const WAVE2 = [
-  { id: "academic", layout: "thesis-plate-cover", motif: "rail-motif" },
-  { id: "campaign", layout: "poster-center", motif: "campaign-motif" },
-  { id: "insight", layout: "stat-cover", motif: "poster-motif" },
-  { id: "tech", layout: "type-rule-cover", motif: "constellation-motif" },
-  { id: "luxe", layout: "invitation-plate-cover", motif: "luxe-motif" },
-  { id: "journal", layout: "issue-head-cover", motif: "corner-ornament-motif" },
-  { id: "ink", layout: "vertical-title-cover", motif: "ink-motif" },
-  { id: "museum", layout: "poster-center", motif: undefined },
-  { id: "terra", layout: "pledge-open-cover", motif: "terra-motif" },
-  { id: "heritage", layout: "double-frame-cover", motif: "heritage-motif" },
+  { id: "academic", face: "thesis-plate-cover" },
+  { id: "campaign", face: "poster-center" },
+  { id: "insight", face: "stat-cover" },
+  { id: "tech", face: "type-rule-cover" },
+  { id: "luxe", face: "invitation-plate-cover" },
+  { id: "journal", face: "issue-head-cover" },
+  { id: "ink", face: "vertical-title-cover" },
+  { id: "museum", face: "poster-center" },
+  { id: "terra", face: "pledge-open-cover" },
+  { id: "heritage", face: "double-frame-cover" },
 ] as const
+
+type BoundaryType = "cover" | "chapter" | "ending"
+
+function expectedDecor(themeId: CanonicalThemeId, type: BoundaryType): MenuDecor | undefined {
+  const source = THEME_DEFINITIONS[themeId]
+  const explicit = source.menu[type].decor
+  if (explicit !== undefined || source.motif === undefined) return explicit
+  return source.motifParameters
+    ? { kind: "motif", id: source.motif, params: { ...source.motifParameters } }
+    : { kind: "motif", id: source.motif }
+}
 
 function ir(themeId: string): PptxIR {
   return {
@@ -41,22 +55,36 @@ function ir(themeId: string): PptxIR {
     },
     assets: { images: {} },
     slides: [COVER],
-    seed: 20260815,
   } as unknown as PptxIR
 }
 
+let themeSerial = 0
+
+afterEach(() => {
+  __resetRegisteredThemes()
+})
+
+function materializedIr(themeId: CanonicalThemeId): PptxIR {
+  const registeredId = registerTestTheme(`board-cover-${themeSerial++}`, themeId)
+  return ir(registeredId)
+}
+
 describe("board-cover-restore wave 2 — locked cover faces", () => {
-  it.each(WAVE2)("$id cover renders $layout with pinned motif", ({ id, layout, motif }) => {
-    expect(THEME_DEFINITIONS[id].layouts.cover).toEqual([layout])
-    const doc = ir(id)
+  it.each(WAVE2)("$id cover renders the menu face and decor", ({ id, face }) => {
+    expect(THEME_DEFINITIONS[id].menu.cover.face).toBe(face)
+    const doc = materializedIr(id)
     const { container } = render(<FullSlideSvg ir={doc} slide={COVER} index={0} />)
-    expect(container.querySelector("[data-archetype]")?.getAttribute("data-archetype")).toBe(layout)
+    expect(container.querySelector("[data-archetype]")?.getAttribute("data-archetype")).toBe(face)
     const decor = container.querySelector("[data-decor]")
-    if (motif === undefined) {
+    const menuDecor = getThemeDefinition(doc.theme.id).menu.cover.decor
+    const expected = expectedDecor(id, "cover")
+    expect(menuDecor).toEqual(expected)
+    const faceSuppresses = getLayout(face)?.suppressMotif === true
+    if (expected?.kind !== "motif" || faceSuppresses) {
+      // A face that paints its own identity keeps every motif off, whatever
+      // the menu entry says.
       expect(decor).toBeNull()
-      expect(resolveMotifId(doc, COVER, 0)).toBeUndefined()
     } else {
-      expect(resolveMotifId(doc, COVER, 0)).toBe(motif)
       const painted = container.querySelector("[data-decor], [data-decor-piece]")
       expect(painted).not.toBeNull()
     }
@@ -64,29 +92,29 @@ describe("board-cover-restore wave 2 — locked cover faces", () => {
 })
 
 const WAVE8_B2_LOCKS = [
-  { id: "academic", type: "cover" as const, layout: "thesis-plate-cover", motif: "rail-motif" },
-  { id: "academic", type: "chapter" as const, layout: "folio-ghost-chapter", motif: "rail-motif" },
-  { id: "academic", type: "ending" as const, layout: "defense-close-ending", motif: "rail-motif" },
-  { id: "classroom", type: "cover" as const, layout: "chalk-band-cover", motif: "classroom-motif" },
-  { id: "classroom", type: "chapter" as const, layout: "lesson-box-chapter", motif: "classroom-motif" },
-  { id: "classroom", type: "ending" as const, layout: "homework-close-ending", motif: "classroom-motif" },
-  { id: "crayon", type: "cover" as const, layout: "crayonbox-open", motif: "crayonbox-motif" },
-  { id: "crayon", type: "chapter" as const, layout: "crayonbox-sticker", motif: "crayonbox-motif" },
-  { id: "crayon", type: "ending" as const, layout: "crayonbox-todo", motif: "crayonbox-motif" },
-  { id: "journal", type: "cover" as const, layout: "issue-head-cover", motif: "corner-ornament-motif" },
-  { id: "journal", type: "chapter" as const, layout: "fascicle-ghost-chapter", motif: "corner-ornament-motif" },
-  { id: "journal", type: "ending" as const, layout: "afterword-ending", motif: "corner-ornament-motif" },
-  { id: "heritage", type: "cover" as const, layout: "double-frame-cover", motif: "heritage-motif" },
-  { id: "heritage", type: "chapter" as const, layout: "mirror-volume-chapter", motif: "heritage-motif" },
-  { id: "heritage", type: "ending" as const, layout: "invite-field-ending", motif: "heritage-motif" },
-  { id: "ink", type: "cover" as const, layout: "vertical-title-cover", motif: "ink-motif" },
-  { id: "ink", type: "chapter" as const, layout: "volume-slip-chapter", motif: "ink-motif" },
-  { id: "ink", type: "ending" as const, layout: "seal-close-ending", motif: "ink-motif" },
+  { id: "academic", type: "cover" as const, face: "thesis-plate-cover" },
+  { id: "academic", type: "chapter" as const, face: "folio-ghost-chapter" },
+  { id: "academic", type: "ending" as const, face: "defense-close-ending" },
+  { id: "classroom", type: "cover" as const, face: "chalk-band-cover" },
+  { id: "classroom", type: "chapter" as const, face: "lesson-box-chapter" },
+  { id: "classroom", type: "ending" as const, face: "homework-close-ending" },
+  { id: "crayon", type: "cover" as const, face: "crayonbox-open" },
+  { id: "crayon", type: "chapter" as const, face: "crayonbox-sticker" },
+  { id: "crayon", type: "ending" as const, face: "crayonbox-todo" },
+  { id: "journal", type: "cover" as const, face: "issue-head-cover" },
+  { id: "journal", type: "chapter" as const, face: "fascicle-ghost-chapter" },
+  { id: "journal", type: "ending" as const, face: "afterword-ending" },
+  { id: "heritage", type: "cover" as const, face: "double-frame-cover" },
+  { id: "heritage", type: "chapter" as const, face: "mirror-volume-chapter" },
+  { id: "heritage", type: "ending" as const, face: "invite-field-ending" },
+  { id: "ink", type: "cover" as const, face: "vertical-title-cover" },
+  { id: "ink", type: "chapter" as const, face: "volume-slip-chapter" },
+  { id: "ink", type: "ending" as const, face: "seal-close-ending" },
 ] as const
 
 describe("wave 8 batch 2 — locked cover / chapter / ending faces", () => {
-  it.each(WAVE8_B2_LOCKS)("$id $type renders $layout with pinned motif", ({ id, type, layout, motif }) => {
-    expect(THEME_DEFINITIONS[id].layouts[type]).toEqual([layout])
+  it.each(WAVE8_B2_LOCKS)("$id $type renders the menu face and decor", ({ id, type, face }) => {
+    expect(THEME_DEFINITIONS[id].menu[type].face).toBe(face)
     const slide: Slide = {
       type,
       heading: type === "ending" ? "收束" : COVER.heading,
@@ -94,40 +122,40 @@ describe("wave 8 batch 2 — locked cover / chapter / ending faces", () => {
       components: [],
     } as Slide
     const doc = {
-      ...ir(id),
+      ...materializedIr(id),
       slides: type === "chapter" ? [COVER, slide] : [slide],
     } as PptxIR
     const index = type === "chapter" ? 1 : 0
     const { container } = render(<FullSlideSvg ir={doc} slide={slide} index={index} />)
-    expect(container.querySelector("[data-archetype]")?.getAttribute("data-archetype")).toBe(layout)
-    expect(resolveMotifId(doc, slide, index)).toBe(motif)
+    expect(container.querySelector("[data-archetype]")?.getAttribute("data-archetype")).toBe(face)
+    expect(getThemeDefinition(doc.theme.id).menu[type].decor).toEqual(expectedDecor(id, type))
   })
 })
 
 const WAVE8_B3_LOCKS = [
-  { id: "luxe", type: "cover" as const, layout: "invitation-plate-cover", motif: "luxe-motif" },
-  { id: "luxe", type: "chapter" as const, layout: "gilt-ordinal-chapter", motif: "luxe-motif" },
-  { id: "luxe", type: "ending" as const, layout: "gilt-word-ending", motif: "luxe-motif" },
-  { id: "runway", type: "cover" as const, layout: "show-headline", motif: undefined },
-  { id: "runway", type: "chapter" as const, layout: "show-plate", motif: undefined },
-  { id: "runway", type: "ending" as const, layout: "show-finale", motif: undefined },
-  { id: "vermilion", type: "cover" as const, layout: "red-head-cover", motif: "vermilion-motif" },
-  { id: "vermilion", type: "chapter" as const, layout: "seal-numeral-chapter", motif: "vermilion-motif" },
-  { id: "vermilion", type: "ending" as const, layout: "deliberation-ending", motif: "vermilion-motif" },
-  { id: "terra", type: "cover" as const, layout: "pledge-open-cover", motif: "terra-motif" },
-  { id: "terra", type: "chapter" as const, layout: "field-band-chapter", motif: "terra-motif" },
-  { id: "terra", type: "ending" as const, layout: "scorecard-ending", motif: "terra-motif" },
-  { id: "pulse", type: "cover" as const, layout: "report-open-cover", motif: "pulse-motif" },
-  { id: "pulse", type: "chapter" as const, layout: "subject-rule-chapter", motif: "pulse-motif" },
-  { id: "pulse", type: "ending" as const, layout: "care-plan-ending", motif: "pulse-motif" },
-  { id: "arena", type: "cover" as const, layout: "cut-panel-cover", motif: "arena-motif" },
-  { id: "arena", type: "chapter" as const, layout: "round-mark-chapter", motif: "arena-motif" },
-  { id: "arena", type: "ending" as const, layout: "seat-cta-ending", motif: "arena-motif" },
+  { id: "luxe", type: "cover" as const, face: "invitation-plate-cover" },
+  { id: "luxe", type: "chapter" as const, face: "gilt-ordinal-chapter" },
+  { id: "luxe", type: "ending" as const, face: "gilt-word-ending" },
+  { id: "runway", type: "cover" as const, face: "show-headline" },
+  { id: "runway", type: "chapter" as const, face: "show-plate" },
+  { id: "runway", type: "ending" as const, face: "show-finale" },
+  { id: "vermilion", type: "cover" as const, face: "red-head-cover" },
+  { id: "vermilion", type: "chapter" as const, face: "seal-numeral-chapter" },
+  { id: "vermilion", type: "ending" as const, face: "deliberation-ending" },
+  { id: "terra", type: "cover" as const, face: "pledge-open-cover" },
+  { id: "terra", type: "chapter" as const, face: "field-band-chapter" },
+  { id: "terra", type: "ending" as const, face: "scorecard-ending" },
+  { id: "pulse", type: "cover" as const, face: "report-open-cover" },
+  { id: "pulse", type: "chapter" as const, face: "subject-rule-chapter" },
+  { id: "pulse", type: "ending" as const, face: "care-plan-ending" },
+  { id: "arena", type: "cover" as const, face: "cut-panel-cover" },
+  { id: "arena", type: "chapter" as const, face: "round-mark-chapter" },
+  { id: "arena", type: "ending" as const, face: "seat-cta-ending" },
 ] as const
 
 describe("wave 8 batch 3 — locked cover / chapter / ending faces", () => {
-  it.each(WAVE8_B3_LOCKS)("$id $type renders $layout with pinned motif", ({ id, type, layout, motif }) => {
-    expect(THEME_DEFINITIONS[id].layouts[type]).toEqual([layout])
+  it.each(WAVE8_B3_LOCKS)("$id $type renders the menu face and decor", ({ id, type, face }) => {
+    expect(THEME_DEFINITIONS[id].menu[type].face).toBe(face)
     const slide: Slide = {
       type,
       heading: type === "ending" ? "收束" : COVER.heading,
@@ -135,44 +163,40 @@ describe("wave 8 batch 3 — locked cover / chapter / ending faces", () => {
       components: [],
     } as Slide
     const doc = {
-      ...ir(id),
+      ...materializedIr(id),
       slides: type === "chapter" ? [COVER, slide] : [slide],
     } as PptxIR
     const index = type === "chapter" ? 1 : 0
     const { container } = render(<FullSlideSvg ir={doc} slide={slide} index={index} />)
-    expect(container.querySelector("[data-archetype]")?.getAttribute("data-archetype")).toBe(layout)
-    if (motif === undefined) {
-      expect(resolveMotifId(doc, slide, index)).toBeUndefined()
-    } else {
-      expect(resolveMotifId(doc, slide, index)).toBe(motif)
-    }
+    expect(container.querySelector("[data-archetype]")?.getAttribute("data-archetype")).toBe(face)
+    expect(getThemeDefinition(doc.theme.id).menu[type].decor).toEqual(expectedDecor(id, type))
   })
 })
 
 const WAVE8_B4_LOCKS = [
-  { id: "stage", type: "cover" as const, layout: "poster-center", motif: undefined },
-  { id: "stage", type: "chapter" as const, layout: "one-word-chapter", motif: undefined },
-  { id: "stage", type: "ending" as const, layout: "release-close-ending", motif: undefined },
-  { id: "lecture", type: "cover" as const, layout: "board-head", motif: "lecture-motif" },
-  { id: "lecture", type: "chapter" as const, layout: "chalk-rule-chapter", motif: "lecture-motif" },
-  { id: "lecture", type: "ending" as const, layout: "next-lecture-ending", motif: "lecture-motif" },
-  { id: "swiss", type: "cover" as const, layout: "institutional-block", motif: "swiss-motif" },
-  { id: "swiss", type: "chapter" as const, layout: "decimal-index-chapter", motif: "swiss-motif" },
-  { id: "swiss", type: "ending" as const, layout: "resolution-ending", motif: "swiss-motif" },
-  { id: "memo", type: "cover" as const, layout: "memo-head", motif: "memo-motif" },
-  { id: "memo", type: "chapter" as const, layout: "issue-line-chapter", motif: "memo-motif" },
-  { id: "memo", type: "ending" as const, layout: "decision-close-ending", motif: "memo-motif" },
-  { id: "playbill", type: "cover" as const, layout: "bill-head", motif: "playbill-motif" },
-  { id: "playbill", type: "chapter" as const, layout: "day-bill-chapter", motif: "playbill-motif" },
-  { id: "playbill", type: "ending" as const, layout: "ticket-cta-ending", motif: "playbill-motif" },
-  { id: "museum", type: "cover" as const, layout: "poster-center", motif: undefined },
-  { id: "museum", type: "chapter" as const, layout: "hall-label-chapter", motif: undefined },
-  { id: "museum", type: "ending" as const, layout: "exit-word-ending", motif: undefined },
+  { id: "stage", type: "cover" as const, face: "poster-center" },
+  { id: "stage", type: "chapter" as const, face: "one-word-chapter" },
+  { id: "stage", type: "ending" as const, face: "release-close-ending" },
+  { id: "lecture", type: "cover" as const, face: "board-head" },
+  { id: "lecture", type: "chapter" as const, face: "chalk-rule-chapter" },
+  { id: "lecture", type: "ending" as const, face: "next-lecture-ending" },
+  { id: "swiss", type: "cover" as const, face: "institutional-block" },
+  { id: "swiss", type: "chapter" as const, face: "decimal-index-chapter" },
+  { id: "swiss", type: "ending" as const, face: "resolution-ending" },
+  { id: "memo", type: "cover" as const, face: "memo-head" },
+  { id: "memo", type: "chapter" as const, face: "issue-line-chapter" },
+  { id: "memo", type: "ending" as const, face: "decision-close-ending" },
+  { id: "playbill", type: "cover" as const, face: "bill-head" },
+  { id: "playbill", type: "chapter" as const, face: "day-bill-chapter" },
+  { id: "playbill", type: "ending" as const, face: "ticket-cta-ending" },
+  { id: "museum", type: "cover" as const, face: "poster-center" },
+  { id: "museum", type: "chapter" as const, face: "hall-label-chapter" },
+  { id: "museum", type: "ending" as const, face: "exit-word-ending" },
 ] as const
 
 describe("wave 8 batch 4 — locked cover / chapter / ending faces", () => {
-  it.each(WAVE8_B4_LOCKS)("$id $type renders $layout with pinned motif", ({ id, type, layout, motif }) => {
-    expect(THEME_DEFINITIONS[id].layouts[type]).toEqual([layout])
+  it.each(WAVE8_B4_LOCKS)("$id $type renders the menu face and decor", ({ id, type, face }) => {
+    expect(THEME_DEFINITIONS[id].menu[type].face).toBe(face)
     const slide: Slide = {
       type,
       heading: type === "ending" ? "收束" : COVER.heading,
@@ -180,29 +204,26 @@ describe("wave 8 batch 4 — locked cover / chapter / ending faces", () => {
       components: [],
     } as Slide
     const doc = {
-      ...ir(id),
+      ...materializedIr(id),
       slides: type === "chapter" ? [COVER, slide] : [slide],
     } as PptxIR
     const index = type === "chapter" ? 1 : 0
     const { container } = render(<FullSlideSvg ir={doc} slide={slide} index={index} />)
-    expect(container.querySelector("[data-archetype]")?.getAttribute("data-archetype")).toBe(layout)
-    if (motif === undefined) {
-      expect(resolveMotifId(doc, slide, index)).toBeUndefined()
-    } else {
-      expect(resolveMotifId(doc, slide, index)).toBe(motif)
-    }
+    expect(container.querySelector("[data-archetype]")?.getAttribute("data-archetype")).toBe(face)
+    expect(getThemeDefinition(doc.theme.id).menu[type].decor).toEqual(expectedDecor(id, type))
   })
 })
 
 function renderPage(themeId: string, type: "cover" | "chapter" | "content" | "ending") {
   const slide: Slide = {
     type,
+    ...(type === "content" ? { kind: "points" as const } : {}),
     heading: type === "ending" ? "收束" : COVER.heading,
     subheading: COVER.subheading,
     components: type === "content" ? [{ type: "paragraph", text: "证据。" }] : [],
   } as Slide
   const doc = {
-    ...ir(themeId),
+    ...materializedIr(themeId as CanonicalThemeId),
     slides: type === "chapter" ? [COVER, slide] : [slide],
   } as PptxIR
   const index = type === "chapter" ? 1 : 0
@@ -235,15 +256,13 @@ describe("wave 8 batch 3 — midground identity survives FullSlideSvg", () => {
   })
 
   it.each(["cover", "content", "ending"] as const)("terra %s keeps three contour paths", (type) => {
-    const { container, mid } = renderPage("terra", type)
-    const scope = container.querySelector("[data-decor]") ?? mid
-    expect(scope.querySelectorAll("path")).toHaveLength(3)
+    const { mid } = renderPage("terra", type)
+    expect(mid.querySelectorAll("path")).toHaveLength(3)
   })
 
   it("terra chapter has no contour paths", () => {
-    const { container, mid } = renderPage("terra", "chapter")
-    const scope = container.querySelector("[data-decor]") ?? mid
-    expect(scope.querySelectorAll("path")).toHaveLength(0)
+    const { mid } = renderPage("terra", "chapter")
+    expect(mid.querySelectorAll("path")).toHaveLength(0)
   })
 
   it.each(["content", "ending"] as const)("vermilion %s paints gold double rules in the foreground", (type) => {

@@ -267,6 +267,7 @@ export function ShowHeadlineCover({ ir, slide, ctx }: SvgTemplateProps) {
 }
 
 export const layoutDef = {
+  suppressMotif: true,
   id: "show-headline",
   kind: "archetype",
   pinOnly: true,

@@ -178,6 +178,7 @@ function GenericStatHeroContent({ ir, slide, index, ctx }: SvgTemplateProps) {
 }
 
 export const layoutDef = {
+  branding: "none",
   // content-stat-hero.tsx: a pinOnly whole-page number. Hero value from
   // kpi_cards[0] or the heading, one caption line, optional source.
   // Page decor and branding posture belong to the menu entry. The page is

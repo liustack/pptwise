@@ -14,7 +14,7 @@ import { PptxIRSchema, type ChartSeries, type Component, type PptxIR, type Slide
 import { renderSlideSvg } from "../api"
 import { PptwiseError } from "../errors"
 import { installNodePlatform } from "../platform/node"
-import { CANONICAL_THEME_IDS } from "../themes"
+import { CANONICAL_THEME_IDS, type CanonicalThemeId } from "../themes"
 import { renderDonut, renderPie } from "../components/chart-svg"
 import {
   auditDeck,
@@ -28,6 +28,7 @@ import {
 } from "./deck-audit"
 import { STRESS_DECKS } from "./stress-fixtures"
 import { contrastRatio } from "../render/ink"
+import { registerTestTheme } from "../themes/test-fixtures"
 
 beforeAll(() => {
   installNodePlatform()
@@ -507,13 +508,16 @@ describe("auditDeck — content-truncated / content-dropped (bench-driven fix ro
   // internal `truncateToUnits` cut, fired when even the layout's `minPt`
   // floor can't fit the text) used to have zero render-time visibility, so
   // `content-truncated` never fired for it the way it does for every other
-  // `fitSvgLine`-based text role. `layout: "fashion-masthead"` pins
-  // `cover-fashion-masthead.tsx` deterministically — it declares the
+  // `fitSvgLine`-based text role. A registered test theme offers
+  // `fashion-masthead` as its cover face. That face declares the
   // highest `minPt` (72) of any layout (`ir-quality.ts`'s own survey),
   // so the least amount of shrink headroom before a pathological heading
   // hits the truncate branch.
   it("surfaces a heading that outgrows even its layout's minPt floor as 'content-truncated'", () => {
-    const ir = deck("campaign", [
+    const themeId = registerTestTheme("audit-fashion-masthead-positive", "campaign", {
+      cover: "fashion-masthead",
+    })
+    const ir = deck(themeId, [
       {
         type: "cover",
         id: "s1",
@@ -540,7 +544,10 @@ describe("auditDeck — content-truncated / content-dropped (bench-driven fix ro
   // permanently, next to the positive one above.
   it("does not mark or report a heading that only shrinks to its layout's minPt floor", () => {
     const plain = "微服务架构下的分布式事务一致性保障机制与补偿策略设计规范以及"
-    const ir = deck("campaign", [
+    const themeId = registerTestTheme("audit-fashion-masthead-negative", "campaign", {
+      cover: "fashion-masthead",
+    })
+    const ir = deck(themeId, [
       {
         type: "cover",
         id: "s1",
@@ -1768,10 +1775,8 @@ describe("findContrastIssues — decor/motif subtrees excluded from background-r
   // accept as real backgrounds — inside the `<g data-decor>` wrapper
   // `full-slide-svg.tsx` renders around every theme motif's output.
   //
-  // `layout: "split-diagonal"` pins the cover layout deterministically
-  // (an explicit `slide.layout` short-circuits the seed-based pick per
-  // `resolveLayoutId`'s own doc comment in `layout-selection.ts`) to
-  // `cover-split-diagonal.tsx` — chosen specifically because it exercises
+  // A registered test theme offers `split-diagonal` as its cover face.
+  // That face is chosen specifically because it exercises
   // `pathBoundingBox`'s one remaining *exact* (non-decor) solid-path case
   // side-by-side with the decor exclusion in the same render, tying both
   // halves of this fix together. That gives an exact, hand-verified
@@ -1785,7 +1790,10 @@ describe("findContrastIssues — decor/motif subtrees excluded from background-r
   // a cover slide with no `ir.brand` configured. If the decor exclusion
   // regressed, this count would jump well past 2.
   it("sees exactly the two legitimate background regions on a real campaign-theme cover, none from the motif", () => {
-    const ir = deck("campaign", [
+    const themeId = registerTestTheme("audit-campaign-split", "campaign", {
+      cover: "split-diagonal",
+    })
+    const ir = deck(themeId, [
       { type: "cover", heading: "Launch Day",  components: [] },
     ])
     const markup = renderSlideSvg(ir, 0)
@@ -1811,10 +1819,10 @@ describe("findContrastIssues — decor/motif subtrees excluded from background-r
 // own doc comment for the two halves of the fix.
 //
 // Fixture is the task's own reproduction, unchanged: `examples/
-// quarterly-review-zh.json` (which carries `seed: 22`, `meta.organization`
+// quarterly-review-zh.json` (which carries `meta.organization`
 // and `meta.date` — the matrix sweep in `full-matrix-contrast.test.ts`
 // deliberately sets no meta, which is exactly why that sweep never saw any of
-// this), theme swapped, cover layout pinned to `tone-adaptive-header`.
+// this). A registered test theme carries `tone-adaptive-header` in its cover menu.
 describe("findContrastIssues — text painted on a decor shape resolves against that shape (fix/decor-contrast-attribution)", () => {
   // Through the real schema, same as the `examples/basic.json` baseline at
   // the top of this file — `assets` is optional in the authored JSON and
@@ -1823,15 +1831,22 @@ describe("findContrastIssues — text painted on a decor shape resolves against 
     JSON.parse(readFileSync(new URL("../../examples/quarterly-review-zh.json", import.meta.url), "utf8")),
   ) as PptxIR
 
-  /** The task's own repro deck, theme-swapped, cover layout pinned. */
-  function quarterly(themeId: string, overrides: Partial<PptxIR> = {}): PptxIR {
+  const QUARTERLY_THEMES = new Map<CanonicalThemeId, string>()
+
+  /** The task's own repro deck, theme-swapped, with the cover face carried by the menu. */
+  function quarterly(themeId: CanonicalThemeId, overrides: Partial<PptxIR> = {}): PptxIR {
+    let registeredId = QUARTERLY_THEMES.get(themeId)
+    if (registeredId === undefined) {
+      registeredId = registerTestTheme(`audit-quarterly-${themeId}`, themeId, {
+        cover: "tone-adaptive-header",
+      })
+      QUARTERLY_THEMES.set(themeId, registeredId)
+    }
+    const overrideTheme = overrides.theme
     return {
       ...QUARTERLY,
-      theme: { id: themeId },
-      slides: QUARTERLY.slides.map((slide, i) =>
-        i === 0 ? ({ ...slide, layout: "tone-adaptive-header" } as unknown as Slide) : slide,
-      ),
       ...overrides,
+      theme: { ...overrideTheme, id: registeredId },
     }
   }
 

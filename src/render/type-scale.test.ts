@@ -3,21 +3,29 @@
 // `StyleShape.typeScale`: heading/display size multiplier, applied before
 // heading-fit shrinks to the box. Body/meta/kicker/footnote stay put.
 // Omitted (or 1) is a byte-identical no-op — the first lock below.
-import { describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it } from "vitest"
 import type { PptxIR, StyleOverride } from "@/ir"
 import { renderSlideSvg, validateIr } from "../api"
-import { CANONICAL_THEME_IDS, THEME_STYLES } from "../themes"
-import { THEME_DEFINITIONS, __resetRegisteredThemes, registerTheme } from "../themes/definitions"
+import { CANONICAL_THEME_IDS, THEME_STYLES, type CanonicalThemeId } from "../themes"
+import { __resetRegisteredThemes } from "../themes/definitions"
+import { registerTestTheme } from "../themes/test-fixtures"
 import { fitHeadingLines, scaleTypePx } from "./heading-fit"
 
-function coverIr(themeId: string, heading: string, style?: StyleOverride): PptxIR {
+let themeSerial = 0
+
+afterEach(() => {
+  __resetRegisteredThemes()
+})
+
+function coverIr(themeId: CanonicalThemeId, heading: string, style?: StyleOverride): PptxIR {
+  const registeredId = registerTestTheme(`type-scale-cover-${themeSerial++}`, themeId, { cover: "poster-center" })
   const v = validateIr({
     version: "5",
     filename: "type-scale.pptx",
-    theme: { id: themeId, style },
+    theme: { id: registeredId, style },
     meta: {},
     assets: { images: {} },
-    slides: [{ type: "cover", heading, layout: "poster-center" }],
+    slides: [{ type: "cover", heading }],
   })
   if (!v.ok) throw new Error(v.errors.map((e) => e.message).join("\n"))
   return v.ir!
@@ -33,9 +41,8 @@ function contentIr(style?: StyleOverride): PptxIR {
     slides: [
       {
         type: "content",
-        kind: "points",
+        kind: "process",
         heading: "发现",
-        layout: "rail-numbered",
         footnote: "来源：内部调研",
         components: [{ type: "paragraph", text: "原字号。" }],
       },
@@ -142,12 +149,7 @@ describe("typeScale multiplies heading/display size before fit", () => {
   })
 
   it("a statement heading is display type and does grow", () => {
-    registerTheme({
-      id: "acme-type-scale",
-      style: THEME_DEFINITIONS.consulting.style,
-      brand: {},
-      tags: [],
-    })
+    registerTestTheme("acme-type-scale", "consulting", { content: { statement: "statement" } })
     try {
       const ir = (typeScale?: number) => {
         const v = validateIr({
@@ -156,7 +158,7 @@ describe("typeScale multiplies heading/display size before fit", () => {
           theme: { id: "acme-type-scale", style: typeScale ? { shape: { typeScale } } : undefined },
           meta: {},
           assets: { images: {} },
-          slides: [{ type: "content", kind: "points", heading: "灯灭", layout: "statement" }],
+          slides: [{ type: "content", kind: "statement", heading: "灯灭" }],
         })
         if (!v.ok) throw new Error(v.errors.map((e) => e.message).join("\n"))
         return v.ir!

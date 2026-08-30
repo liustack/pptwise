@@ -1,12 +1,13 @@
 // @vitest-environment jsdom
-import { describe, it, expect, vi } from "vitest"
+import { afterEach, describe, it, expect, vi } from "vitest"
 import { render } from "@testing-library/react"
 import { FullSlideSvg, resolveBackgroundHex, resolveOverrideBackgroundHex } from "./full-slide-svg"
 import { renderSvgMarkup, parseSvgRoot } from "./serialize"
 import { assertSubset } from "./subset-validate"
 import { svgToOps } from "../pptx/svg2pptx/dispatch"
 import { MOTIFS } from "../motifs"
-import { THEME_DEFINITIONS } from "../themes/definitions"
+import { __resetRegisteredThemes, THEME_DEFINITIONS } from "../themes/definitions"
+import { registerTestTheme, type TestThemeFaces } from "../themes/test-fixtures"
 import { accessibleInk, blendOver, contrastRatio, readableOn } from "./ink"
 import { resolveStyle } from "../themes"
 import {
@@ -21,6 +22,21 @@ import {
 import { textInkBox } from "./depth-contract/geometry"
 import { resolveMotifId } from "./motif-selection"
 import type { PptxIR, Slide } from "@/ir"
+
+let testThemeSerial = 0
+
+function irWithFace(
+  slide: Slide,
+  sourceThemeId: Parameters<typeof registerTestTheme>[1],
+  faces: TestThemeFaces,
+): PptxIR {
+  const themeId = registerTestTheme(`full-slide-svg-${testThemeSerial++}`, sourceThemeId, faces)
+  return { ...ir([slide]), theme: { id: themeId } }
+}
+
+afterEach(() => {
+  __resetRegisteredThemes()
+})
 
 function ir(slides: Slide[]): PptxIR {
   return {
@@ -58,7 +74,7 @@ describe("FullSlideSvg", () => {
   })
 
   it("emits one bg, mid, and fg group in fixed paint order", () => {
-    const doc: PptxIR = { ...ir([contentSlide]), branding: "full" }
+    const doc: PptxIR = { ...irWithFace(contentSlide, "academic", {}), branding: "full" }
     const { container } = render(<FullSlideSvg ir={doc} slide={contentSlide} index={0} />)
     const groups = Array.from(container.querySelectorAll("svg > g[data-depth]"))
 
@@ -72,13 +88,13 @@ describe("FullSlideSvg", () => {
     expect(groups[2]!.querySelector('line[y1="664"]')).not.toBeNull()
   })
 
-  it("routes a layout-owned ghost chapter number to mid without moving the heading out of fg", () => {
+  it("routes a menu-face-owned ghost chapter number to mid without moving the heading out of fg", () => {
     const chapter: Slide = {
       type: "chapter",
       heading: "第一部分：市场洞察",
       components: [],
     }
-    const doc = ir([chapter])
+    const doc = irWithFace(chapter, "academic", { chapter: "masthead-chapter" })
     const { container } = render(<FullSlideSvg ir={doc} slide={chapter} index={0} />)
     const ghost = Array.from(container.querySelectorAll("text")).find(
       (text) => text.textContent === "01" && Number(text.getAttribute("font-size")) >= 160,
@@ -92,13 +108,13 @@ describe("FullSlideSvg", () => {
     expect(heading?.closest("[data-depth]")?.getAttribute("data-depth")).toBe("fg")
   })
 
-  it("strips layout-declared data-depth after routing so the page keeps exactly three groups", () => {
+  it("strips menu-face-declared data-depth after routing so the page keeps exactly three groups", () => {
     const chapter: Slide = {
       type: "chapter",
       heading: "第一部分：市场洞察",
       components: [],
     }
-    const doc: PptxIR = { ...ir([chapter]), theme: { id: "consulting" } }
+    const doc = irWithFace(chapter, "consulting", { chapter: "masthead-chapter" })
     const { container } = render(<FullSlideSvg ir={doc} slide={chapter} index={0} />)
     const depths = Array.from(container.querySelectorAll("[data-depth]")).map((el) => el.getAttribute("data-depth"))
     expect(depths).toEqual(["bg", "mid", "fg"])
@@ -111,7 +127,7 @@ describe("FullSlideSvg", () => {
 
   it("enforces the shared contrast and saturation ceilings on final midground paint", () => {
     const slide: Slide = { type: "cover", heading: "封面", components: [] }
-    const doc: PptxIR = { ...ir([slide]), theme: { id: "campaign" } }
+    const doc = irWithFace(slide, "campaign", {})
     const { container } = render(<FullSlideSvg ir={doc} slide={slide} index={0} />)
     const tokens = resolveStyle("campaign")
     const ground = resolveBackgroundHex(tokens.defaultBackgrounds.cover, tokens.colors.surface)
@@ -134,7 +150,7 @@ describe("FullSlideSvg", () => {
 
   it("paints the swiss red bar in the foreground at the theme accent", () => {
     const slide: Slide = { type: "cover", heading: "年度战略回顾", components: [] }
-    const doc: PptxIR = { ...ir([slide]), theme: { id: "swiss" } }
+    const doc = irWithFace(slide, "swiss", {})
     const { container } = render(<FullSlideSvg ir={doc} slide={slide} index={0} />)
     const accent = resolveStyle("swiss").colors.accent
     const bar = container.querySelector('[data-decor-piece="red-bar"] rect')!
@@ -152,8 +168,7 @@ describe("FullSlideSvg", () => {
       components: [{ type: "paragraph", text: "正文" }],
     }
     const doc: PptxIR = {
-      ...ir([slide]),
-      theme: { id: "ink" },
+      ...irWithFace(slide, "ink", {}),
       meta: { organization: "云觅", date: "2026-08-15" },
     }
     const { container } = render(<FullSlideSvg ir={doc} slide={slide} index={0} />)
@@ -169,7 +184,7 @@ describe("FullSlideSvg", () => {
 
   it("paints the memo masthead in the foreground at the theme accent", () => {
     const slide: Slide = { type: "content", kind: "points", heading: "决定", components: [{ type: "paragraph", text: "正文" }] }
-    const doc: PptxIR = { ...ir([slide]), theme: { id: "memo" } }
+    const doc = irWithFace(slide, "memo", {})
     const { container } = render(<FullSlideSvg ir={doc} slide={slide} index={0} />)
     const piece = container.querySelector('[data-decor-piece="masthead"]')!
     expect(piece.getAttribute("data-decor-role")).toBe("structure")
@@ -183,7 +198,7 @@ describe("FullSlideSvg", () => {
 
   it("paints the luxe invitation frame in the foreground at the theme accent", () => {
     const slide: Slide = { type: "cover", heading: "封面", components: [] }
-    const doc: PptxIR = { ...ir([slide]), theme: { id: "luxe" } }
+    const doc = irWithFace(slide, "luxe", {})
     const { container } = render(<FullSlideSvg ir={doc} slide={slide} index={0} />)
     const piece = container.querySelector('[data-decor-piece="invitation"]')!
     expect(piece.getAttribute("data-decor-role")).toBe("structure")
@@ -196,7 +211,7 @@ describe("FullSlideSvg", () => {
 
   it("keeps the pulse heartbeat in midground at the theme accent", () => {
     const slide: Slide = { type: "cover", heading: "封面", components: [] }
-    const doc: PptxIR = { ...ir([slide]), theme: { id: "pulse" } }
+    const doc = irWithFace(slide, "pulse", {})
     const { container } = render(<FullSlideSvg ir={doc} slide={slide} index={0} />)
     const piece = container.querySelector('[data-decor-piece="heartbeat"]')!
     expect(piece.getAttribute("data-decor-role")).toBe("identity")
@@ -437,20 +452,15 @@ describe("resolveOverrideBackgroundHex (post-v0.3 W8 fix round, backlog item 1)"
 // `#ECF0F2` (dark ink). The flip that proves the override is really read
 // now uses a dark `#4A6B8A` override to pick white ink.
 describe("ctx.defaultBg prefers slide.background (post-v0.3 W8 fix round, backlog item 1)", () => {
-  const classroomIr = (slide: Slide): PptxIR => ({
-    version: "5",
-    filename: "deck.pptx",
-    theme: { id: "classroom" },
-    meta: {},
-    assets: { images: {} },
-    slides: [slide],
-  })
+  const classroomIr = (slide: Slide): PptxIR =>
+    slide.type === "chapter"
+      ? irWithFace(slide, "classroom", { chapter: "rail-chapter" })
+      : { ...ir([slide]), theme: { id: "classroom" } }
   const HEADING = "背景覆盖探针"
   const railChapter = (background?: Slide["background"]): Slide =>
     ({
       type: "chapter",
       heading: HEADING,
-      layout: "rail-chapter",
       components: [],
       ...(background ? { background } : {}),
     }) as Slide
@@ -532,7 +542,6 @@ describe("ctx.defaultBg prefers slide.background (post-v0.3 W8 fix round, backlo
       kind: "points",
       heading: HEADING,
       subheading: SUBHEADING,
-      layout: "narrow-column",
       components: [{ type: "paragraph", text: "文" }],
       background: { kind: "asset", asset_id: "bg1" },
     } as Slide
@@ -620,21 +629,21 @@ describe("image_grid / image_compare export round-trip (image-layouts P2)", () =
   })
 })
 
-describe("manifest cover dispatch (P1)", () => {
+describe("theme menu cover dispatch", () => {
   const coverSlide: Slide = { type: "cover", heading: "标题", components: [] } as Slide
   const mkIr = (theme: string): PptxIR =>
     ({ version: "5", filename: "m.pptx", theme: { id: theme }, meta: {}, assets: { images: {} }, slides: [coverSlide] }) as unknown as PptxIR
 
-  it("consulting cover 命中允许集成员（W4 全集放开后 8 元素，seed 决定具体落点）", () => {
+  it("consulting cover 命中菜单唯一脸", () => {
     const { container } = render(<FullSlideSvg ir={mkIr("consulting")} slide={coverSlide} index={0} />)
     const g = container.querySelector("[data-archetype]")
     expect(g).not.toBeNull()
-    expect(THEME_DEFINITIONS.consulting.layouts.cover).toContain(g!.getAttribute("data-archetype"))
+    expect(g!.getAttribute("data-archetype")).toBe(THEME_DEFINITIONS.consulting.menu.cover.face)
   })
-  it("tech cover 命中允许集成员（W4 全集放开，design decision 8 排除 left-anchor 后 7 元素）", () => {
+  it("tech cover 命中菜单唯一脸", () => {
     const { container } = render(<FullSlideSvg ir={mkIr("tech")} slide={coverSlide} index={0} />)
     const id = container.querySelector("[data-archetype]")?.getAttribute("data-archetype")
-    expect(THEME_DEFINITIONS.tech.layouts.cover).toContain(id)
+    expect(id).toBe(THEME_DEFINITIONS.tech.menu.cover.face)
   })
   it("asset 背景 cover 仍走 ImageCoverPage 接管（优先级高于 manifest）", () => {
     const bgCover: Slide = { ...coverSlide, background: { kind: "asset", asset_id: "a" } } as Slide
@@ -642,23 +651,25 @@ describe("manifest cover dispatch (P1)", () => {
     const { container } = render(<FullSlideSvg ir={ir} slide={bgCover} index={0} />)
     expect(container.querySelector("image")).not.toBeNull()
   })
-  it("cover + image_split（schema 合法组合）仍走图文版式接管，优先级高于 manifest layout", () => {
-    const splitCover: Slide = {
-      ...coverSlide,
-      layout: "image-split",
-      components: [{ type: "image", asset_id: "a" }],
-    } as unknown as Slide
-    const ir = {
+  it("content photo 菜单脸为 image-split 时走图文版式接管", () => {
+    const splitContent: Slide = {
+      type: "content",
+      kind: "photo",
+      heading: "图片页",
+      components: [{ type: "image", asset_id: "a", fit: "cover" }],
+    }
+    const doc = {
       ...mkIr("consulting"),
       assets: { images: { a: { src: "data:image/png;base64,iVBORw0KGgo=" } } },
-      slides: [splitCover],
+      slides: [splitContent],
     } as unknown as PptxIR
-    const { container } = render(<FullSlideSvg ir={ir} slide={splitCover} index={0} />)
+    const { container } = render(<FullSlideSvg ir={doc} slide={splitContent} index={0} />)
     expect(container.querySelector("[data-archetype]")).toBeNull()
+    expect(container.querySelector("image")).not.toBeNull()
   })
 })
 
-describe("manifest 四页型分发泛化 (P2)", () => {
+describe("主题菜单四页型分发", () => {
   const mkIr = (theme: string, slide: Slide): PptxIR =>
     ({
       version: "5",
@@ -669,16 +680,16 @@ describe("manifest 四页型分发泛化 (P2)", () => {
       slides: [slide],
     }) as unknown as PptxIR
 
-  it("chapter 命中 layout（academic → 允许集成员，W4 全集放开后 8 元素）", () => {
+  it("chapter 命中 academic 菜单唯一脸", () => {
     const chapterSlide: Slide = { type: "chapter", heading: "第一章", components: [] } as Slide
     const { container } = render(
       <FullSlideSvg ir={mkIr("academic", chapterSlide)} slide={chapterSlide} index={0} />,
     )
     const id = container.querySelector("[data-archetype]")?.getAttribute("data-archetype")
-    expect(THEME_DEFINITIONS.academic.layouts.chapter).toContain(id)
+    expect(id).toBe(THEME_DEFINITIONS.academic.menu.chapter.face)
   })
 
-  it("content 命中 layout（tech → 允许集成员，W4 全集放开后自动池成员）", () => {
+  it("content 命中 tech 对应 kind 的菜单脸", () => {
     const contentSlide2: Slide = {
       type: "content",
       kind: "points",
@@ -689,17 +700,16 @@ describe("manifest 四页型分发泛化 (P2)", () => {
       <FullSlideSvg ir={mkIr("tech", contentSlide2)} slide={contentSlide2} index={0} />,
     )
     const id = container.querySelector("[data-archetype]")?.getAttribute("data-archetype")
-    expect(THEME_DEFINITIONS.tech.layouts.content).toContain(id)
-    expect(id).not.toBe("banner-heading")
+    expect(id).toBe(THEME_DEFINITIONS.tech.menu.content.points?.face)
   })
 
-  it("ending 命中 layout（journal → 允许集成员，W4 全集放开后 7 元素）", () => {
+  it("ending 命中 journal 菜单唯一脸", () => {
     const endingSlide: Slide = { type: "ending", heading: "谢谢", components: [] } as Slide
     const { container } = render(
       <FullSlideSvg ir={mkIr("journal", endingSlide)} slide={endingSlide} index={0} />,
     )
     const id = container.querySelector("[data-archetype]")?.getAttribute("data-archetype")
-    expect(THEME_DEFINITIONS.journal.layouts.ending).toContain(id)
+    expect(id).toBe(THEME_DEFINITIONS.journal.menu.ending.face)
   })
 
   it("motif 命中：Decor 优先取 THEME_DEFINITIONS 对应主题的 motif 对应的 MOTIFS 组件（consulting → gauge-motif）", () => {
@@ -708,54 +718,14 @@ describe("manifest 四页型分发泛化 (P2)", () => {
     // 本就要求新旧输出逐字节等价，纯 DOM diff 无法区分调用来源）。
     const spy = vi.spyOn(MOTIFS, "gauge-motif")
     const slide: Slide = { type: "cover", heading: "标题", components: [] } as Slide
-    render(<FullSlideSvg ir={mkIr("consulting", slide)} slide={slide} index={0} />)
+    const doc = irWithFace(slide, "consulting", {})
+    render(<FullSlideSvg ir={doc} slide={slide} index={0} />)
     expect(spy).toHaveBeenCalled()
     spy.mockRestore()
   })
 })
 
-describe("content 页相邻防重复 (W4 design decision 4, retires P3 item ②'s ordinal rotation)", () => {
-  // academic content 允许集 = W4 全集放开后的 7 元素——相邻防重复保证的是
-  // "紧邻两页不同"，不再是旧 ordinal 轮换机制"奇数页与偶数页各自为一组"的
-  // 严格周期性交替（那个保证只在 2 元素允许集下才成立，全集放开后不再有
-  // 任何主题的 content 允许集是 2 元素）。
-  const contentPage = (heading: string): Slide =>
-    ({ type: "content", kind: "points", heading, components: [{ type: "paragraph", text: "正文" }] }) as Slide
-
-  const deck: PptxIR = {
-    version: "5",
-    filename: "rotation.pptx",
-    theme: { id: "academic" },
-    meta: {},
-    assets: { images: {} },
-    slides: [
-      { type: "cover", heading: "封面", components: [] },
-      contentPage("内容一"),
-      contentPage("内容二"),
-      contentPage("内容三"),
-    ],
-  } as unknown as PptxIR
-
-  it("同 deck 相邻 content 页渲染不同 layout（打破 deck 内雷同），均落在允许集内", () => {
-    const layoutOf = (slideIdx: number): string | null => {
-      const { container } = render(
-        <FullSlideSvg ir={deck} slide={deck.slides[slideIdx]} index={slideIdx} />,
-      )
-      return container.querySelector("[data-archetype]")?.getAttribute("data-archetype") ?? null
-    }
-    const a1 = layoutOf(1)
-    const a2 = layoutOf(2)
-    const a3 = layoutOf(3)
-    // 相邻防重复只约束紧邻页——a1 与 a3 不相邻，不受约束，允许相同也允许不同。
-    expect(a1).not.toBe(a2)
-    expect(a2).not.toBe(a3)
-    for (const a of [a1, a2, a3]) {
-      expect(THEME_DEFINITIONS.academic.layouts.content).toContain(a)
-    }
-  })
-})
-
-describe("slide.layout explicit layout short-circuit (W2 task 3 new capability)", () => {
+describe("content kind 确定性菜单分发", () => {
   const mkIr = (theme: string, slide: Slide): PptxIR =>
     ({
       version: "5",
@@ -766,70 +736,57 @@ describe("slide.layout explicit layout short-circuit (W2 task 3 new capability)"
       slides: [slide],
     }) as unknown as PptxIR
 
-  it("uses the exact requested layout id, bypassing seed selection, when it belongs to the theme's allowed family", () => {
-    // consulting's cover allowed set has 3 members — a seed-pick could land
-    // on any of them, so a deterministic hit on the requested id proves the
-    // short-circuit fired rather than a lucky seed roll.
-    const slide: Slide = { type: "cover", heading: "标题", layout: "poster-center", components: [] } as Slide
-    const { container } = render(<FullSlideSvg ir={mkIr("consulting", slide)} slide={slide} index={0} />)
+  it("同一种 kind 的相邻页始终命中同一菜单脸", () => {
+    const slides: Slide[] = ["内容一", "内容二", "内容三"].map((heading) => ({
+      type: "content",
+      kind: "points",
+      heading,
+      components: [{ type: "paragraph", text: "正文" }],
+    }))
+    const doc: PptxIR = { ...ir(slides), theme: { id: "academic" } }
+    const ids = slides.map((slide, index) => {
+      const { container } = render(<FullSlideSvg ir={doc} slide={slide} index={index} />)
+      return container.querySelector("[data-archetype]")?.getAttribute("data-archetype")
+    })
+    expect(ids).toEqual(Array(3).fill(THEME_DEFINITIONS.academic.menu.content.points?.face))
+  })
+
+  it.each([
+    ["points", "narrow-column"],
+    ["list", "bento-panel"],
+    ["comparison", "two-column"],
+    ["process", "rail-numbered"],
+    ["data", "split-band"],
+  ] as const)("academic 的 %s kind 命中 %s", (kind, face) => {
+    const slide: Slide = {
+      type: "content",
+      kind,
+      heading: "标题",
+      components: [{ type: "paragraph", text: "正文" }],
+    }
+    const { container } = render(<FullSlideSvg ir={mkIr("academic", slide)} slide={slide} index={0} />)
+    expect(container.querySelector(`[data-archetype="${face}"]`)).not.toBeNull()
+  })
+})
+
+describe("registered theme menu faces", () => {
+  it("通过 cover 菜单承载指定边界脸", () => {
+    const slide: Slide = { type: "cover", heading: "标题", components: [] }
+    const doc = irWithFace(slide, "consulting", { cover: "poster-center" })
+    const { container } = render(<FullSlideSvg ir={doc} slide={slide} index={0} />)
     expect(container.querySelector('[data-archetype="poster-center"]')).not.toBeNull()
   })
 
-  it("uses the requested id for every member of a multi-element allowed set, not just one", () => {
-    for (const id of ["banner-title", "poster-center", "split-diagonal"]) {
-      const slide: Slide = { type: "cover", heading: "标题", layout: id, components: [] } as Slide
-      const { container } = render(<FullSlideSvg ir={mkIr("consulting", slide)} slide={slide} index={0} />)
-      expect(container.querySelector(`[data-archetype="${id}"]`)).not.toBeNull()
-    }
-  })
-
-  it("honors the pin even outside the theme's curated family (spec §3: explicit layout bypasses selection unconditionally)", () => {
-    // "split-band" is outside luxe's framed content pool (gallery r2 D20).
-    // Per spec §3 ("要版式完全不动就显式写 layout 字段（显式指定不经选型）"),
-    // an explicit `layout` always wins over the theme's curated allowed set.
+  it("通过 content kind 菜单承载源主题菜单外的指定脸", () => {
     const slide: Slide = {
       type: "content",
       kind: "points",
-      layout: "split-band",
       heading: "标题",
       components: [{ type: "paragraph", text: "正文" }],
-    } as Slide
-    const { container } = render(<FullSlideSvg ir={mkIr("luxe", slide)} slide={slide} index={0} />)
-    expect(container.querySelector('[data-archetype="split-band"]')).not.toBeNull()
-  })
-
-  it("falls back to seed-pick (totality safety net) when the pinned id cannot be a layout for this slide type — unregistered, wrong kind, or wrong slideTypes", () => {
-    // validateIr's checkLayoutApplicability (api.ts) rejects all three of
-    // these at the validate boundary for a validated IR — registry
-    // existence and slideTypes applicability are both hard errors there.
-    // This exercises the render-side defensive fallback that must still
-    // hold for IRs that reach FullSlideSvg without going through validate
-    // first (SDK callers, preview-without-validate): an id resolvePageLayout
-    // cannot honor never crashes the render, it just degrades to seed-pick
-    // — the same total-function philosophy as resolveThemeId.
-    for (const badLayout of [
-      "not-a-real-layout", // unregistered
-      "image-split", // registered, but kind "takeover" not "archetype" (and no image component below, so splitTakeover doesn't intercept first)
-      "banner-title", // registered layout, but slideTypes is ["cover"] — not applicable to "content"
-    ]) {
-      const slide: Slide = {
-        type: "content",
-        kind: "points",
-        layout: badLayout,
-        heading: "标题",
-        components: [{ type: "paragraph", text: "正文" }],
-      } as Slide
-      const { container } = render(<FullSlideSvg ir={mkIr("tech", slide)} slide={slide} index={0} />)
-      const id = container.querySelector("[data-archetype]")?.getAttribute("data-archetype")
-      expect(THEME_DEFINITIONS.tech.layouts.content).toContain(id)
     }
-  })
-
-  it("falls back to seed-pick when slide.layout is undefined (no regression to the pre-existing dispatch)", () => {
-    const slide: Slide = { type: "cover", heading: "标题", components: [] } as Slide
-    const { container } = render(<FullSlideSvg ir={mkIr("tech", slide)} slide={slide} index={0} />)
-    const id = container.querySelector("[data-archetype]")?.getAttribute("data-archetype")
-    expect(THEME_DEFINITIONS.tech.layouts.cover).toContain(id)
+    const doc = irWithFace(slide, "luxe", { content: { points: "split-band" } })
+    const { container } = render(<FullSlideSvg ir={doc} slide={slide} index={0} />)
+    expect(container.querySelector('[data-archetype="split-band"]')).not.toBeNull()
   })
 })
 
@@ -845,17 +802,15 @@ describe("slide.layout explicit layout short-circuit (W2 task 3 new capability)"
 // simulated, because `balanced`/24px is *both* the narrative default and
 // `buildCtx`'s own fallback. This block renders THROUGH `FullSlideSvg` (the
 // real production entry point, not a direct `paragraph.render(...)` call)
-// so it exercises the one and only call site the seam lives at. `layout` is
-// pinned (same short-circuit mechanism the block above already exercises)
-// so both renders share identical layout geometry — only `bodyFontPx`
-// differs between the two assertions.
+// so it exercises the one and only call site the seam lives at. Both renders
+// use the same `points` menu face, so only `bodyFontPx` differs between the
+// two assertions.
 describe("pacing bodyFontPx injection seam (W4 task 3 fix round — Major)", () => {
   const PROBE_TEXT = "档位注入回归探针段落"
   const probeSlide: Slide = {
     type: "content",
     kind: "points",
     heading: "缝隙回归探针",
-    layout: "narrow-column",
     components: [{ type: "paragraph", text: PROBE_TEXT }],
   } as Slide
 
@@ -877,42 +832,34 @@ describe("pacing bodyFontPx injection seam (W4 task 3 fix round — Major)", () 
   })
 })
 
-// P1 variety wave, task 2 — motif candidate-set rotation
-// (`./motif-selection.ts`'s own header has the design rationale). These
-// tests exercise the real production entry point (`FullSlideSvg`), not the
-// pure `resolveMotifId` function directly (already covered exhaustively in
-// `motif-selection.test.ts`) — proving the wiring at `Decor`'s own call
-// site is actually live, and that the themes this task must leave alone
-// (`runway`, and any 1-member candidate set) really do render
-// byte-identically through the whole component, not just at the selection
-// function's own return value.
-describe("motif candidate rotation (P1 variety wave, task 2)", () => {
-  function decorMarkup(themeId: string, pageId: string, seed: number): string | null {
-    const doc: PptxIR = { ...ir([]), theme: { id: themeId }, seed } as PptxIR
+describe("menu decoration determinism", () => {
+  function decorMarkup(themeId: string, pageId: string): string | null {
+    const doc: PptxIR = { ...ir([]), theme: { id: themeId } } as PptxIR
     const slide: Slide = { type: "content", kind: "points", id: pageId, heading: "x", components: [] } as Slide
     doc.slides = [slide]
     const { container } = render(<FullSlideSvg ir={doc} slide={slide} index={0} />)
     return container.querySelector("[data-decor]")?.innerHTML ?? null
   }
 
-  it("consulting (1-member candidate set): decor markup is identical across page keys at a fixed seed", () => {
+  it("consulting 的 points 菜单装饰不随页面 id 改变", () => {
+    const themeId = registerTestTheme(`full-slide-svg-${testThemeSerial++}`, "consulting")
     const markups = new Set(
-      Array.from({ length: 8 }, (_, i) => decorMarkup("consulting", `page-${i}`, 7)),
+      Array.from({ length: 8 }, (_, i) => decorMarkup(themeId, `page-${i}`)),
     )
     expect(markups.size).toBe(1)
     expect([...markups][0]).not.toBeNull()
   })
 
-  it("runway (no motif, settled decision): the decor slot never renders anything, for any pageKey or seed", () => {
+  it("runway 的静默菜单条目不渲染装饰", () => {
     for (let i = 0; i < 10; i++) {
-      expect(decorMarkup("runway", `page-${i}`, i)).toBeNull()
+      expect(decorMarkup("runway", `page-${i}`)).toBeNull()
     }
   })
 
-  it("campaign (1-member candidate set): the selected motif id never varies by pageKey at a fixed seed", () => {
+  it("campaign 的菜单装饰 id 不随页面 id 改变", () => {
     const ids = new Set(
       Array.from({ length: 10 }, (_, i) => {
-        const doc: PptxIR = { ...ir([]), theme: { id: "campaign" }, seed: 99 } as PptxIR
+        const doc: PptxIR = { ...ir([]), theme: { id: "campaign" } } as PptxIR
         const slide: Slide = { type: "content", kind: "points", id: `page-${i}`, heading: "x", components: [] } as Slide
         doc.slides = [slide]
         return resolveMotifId(doc, slide, 0)
@@ -921,38 +868,28 @@ describe("motif candidate rotation (P1 variety wave, task 2)", () => {
     expect(ids).toEqual(new Set(["campaign-motif"]))
   })
 
-  // Review fix round (Major finding): the pre-fix `chartPaletteOffset`
-  // rotation lived inside `ctx.colors.chartPalette` itself, the exact token
-  // `campaign-motif` destructures by fixed position for its own decorative
-  // fill — campaign's decor markup silently differed across seeds even
-  // though `resolveMotifId` always picked "campaign-motif" for every one of
-  // them (this is the pageKey-at-one-seed check above; it can't see a
-  // cross-seed color drift under the same, correctly-resolved motif id).
-  // This test varies *seed* at a fixed pageKey to catch exactly that gap —
-  // must stay green post-fix (`motif-chart-palette-isolation.test.tsx`
-  // covers the same seam at the unit level, this covers it end-to-end
-  // through the real render entry point).
-  it("campaign: decor markup is byte-identical across a seed sweep at a fixed pageKey — chart-palette rotation must not leak into decorative color choice", () => {
+  it("campaign 的同一菜单条目重复渲染字节一致", () => {
+    const themeId = registerTestTheme(`full-slide-svg-${testThemeSerial++}`, "campaign")
     const markups = new Set(
-      Array.from({ length: 20 }, (_, seed) => {
-        const doc: PptxIR = { ...ir([]), theme: { id: "campaign" }, seed } as PptxIR
+      Array.from({ length: 20 }, () => {
+        const doc: PptxIR = { ...ir([]), theme: { id: themeId } } as PptxIR
         const slide: Slide = {
           type: "content",
           kind: "points",
           id: "same-page",
           heading: "x",
-          layout: "two-column",
           components: [],
         } as Slide
         doc.slides = [slide]
         return render(<FullSlideSvg ir={doc} slide={slide} index={0} />).container.querySelector("[data-decor]")?.innerHTML
       }),
     )
-    expect(markups.size, "campaign decor varied across seeds at a fixed pageKey").toBe(1)
+    expect(markups.size, "campaign decor varied across repeated renders").toBe(1)
   })
 
   it("same (ir, slide, index) renders byte-identical decor markup across repeated renders (double-render determinism)", () => {
-    const doc: PptxIR = { ...ir([]), theme: { id: "heritage" }, seed: 3 } as PptxIR
+    const themeId = registerTestTheme(`full-slide-svg-${testThemeSerial++}`, "heritage")
+    const doc: PptxIR = { ...ir([]), theme: { id: themeId } } as PptxIR
     const slide: Slide = { type: "chapter", id: "p1", heading: "x", components: [] } as Slide
     doc.slides = [slide]
     const first = render(<FullSlideSvg ir={doc} slide={slide} index={0} />).container.querySelector(
@@ -965,21 +902,13 @@ describe("motif candidate rotation (P1 variety wave, task 2)", () => {
   })
 })
 
-// P1 variety wave, task 2 — chart palette phase rotation
-// (`./chart-palette.ts`'s own header has the design rationale). `runway` is
-// used here specifically because it has no motif (see the describe block
-// above) — the chart's own `<path fill="…">` elements are the only
-// hex-filled paths a decor-free page can render, so no filtering by hex
-// value against the motif's own ctx-derived colors is needed to isolate
-// them.
-describe("chart palette phase rotation (P1 variety wave, task 2)", () => {
+describe("chart palette determinism", () => {
   const RUNWAY_CHART_PALETTE = ["#141414", "#B0483C", "#8A8A84", "#C4C0B4"]
 
   const pieSlide: Slide = {
     type: "content",
     kind: "points",
     heading: "图表色板轮换探针",
-    layout: "narrow-column",
     components: [
       {
         type: "chart",
@@ -999,42 +928,32 @@ describe("chart palette phase rotation (P1 variety wave, task 2)", () => {
     ],
   } as Slide
 
-  function pieFills(seed: number): string[] {
-    const doc: PptxIR = { ...ir([pieSlide]), theme: { id: "runway" }, seed } as PptxIR
+  function pieFills(): string[] {
+    const doc: PptxIR = { ...ir([pieSlide]), theme: { id: "runway" } } as PptxIR
     const { container } = render(<FullSlideSvg ir={doc} slide={pieSlide} index={0} />)
     return Array.from(container.querySelectorAll("path"))
       .map((p) => p.getAttribute("fill"))
       .filter((f): f is string => !!f && RUNWAY_CHART_PALETTE.includes(f))
   }
 
-  it("renders all 4 wedges in the theme's own palette, just phase-shifted — same multiset, cyclic order preserved", () => {
-    for (let seed = 0; seed < 12; seed++) {
-      const fills = pieFills(seed)
-      expect(fills).toHaveLength(4)
-      expect([...fills].sort()).toEqual([...RUNWAY_CHART_PALETTE].sort())
-      // Cyclic order: rotating `fills` back to start at index 0's position
-      // in the original palette must reproduce the original palette exactly.
-      const start = RUNWAY_CHART_PALETTE.indexOf(fills[0]!)
-      const reconstructed = [...RUNWAY_CHART_PALETTE.slice(start), ...RUNWAY_CHART_PALETTE.slice(0, start)]
-      expect(fills).toEqual(reconstructed)
-    }
+  it("四个扇区保持主题色板的循环顺序", () => {
+    const fills = pieFills()
+    expect(fills).toHaveLength(4)
+    expect([...fills].sort()).toEqual([...RUNWAY_CHART_PALETTE].sort())
+    const start = RUNWAY_CHART_PALETTE.indexOf(fills[0]!)
+    expect(fills).toEqual([...RUNWAY_CHART_PALETTE.slice(start), ...RUNWAY_CHART_PALETTE.slice(0, start)])
   })
 
-  it("different seeds commonly start the wedge sequence at a different palette color (phase varies across decks)", () => {
-    const firstFills = new Set(Array.from({ length: 12 }, (_, seed) => pieFills(seed)[0]))
-    expect(firstFills.size, "every seed started on the same wedge color").toBeGreaterThan(1)
+  it("重复渲染得到相同扇区颜色", () => {
+    expect(pieFills()).toEqual(pieFills())
   })
 
-  it("same seed renders byte-identical wedge colors across repeated renders (double-render determinism, one shared phase per deck)", () => {
-    expect(pieFills(5)).toEqual(pieFills(5))
-  })
-
-  it("a chart on every page of the same deck shares the identical rotated phase (deck-scoped, not page-scoped)", () => {
+  it("同一 deck 的每页图表使用相同色板顺序", () => {
     const twoPageDeck: Slide[] = [
       { ...pieSlide, id: "p0" } as Slide,
       { ...pieSlide, id: "p1", heading: "第二页" } as Slide,
     ]
-    const doc: PptxIR = { ...ir(twoPageDeck), theme: { id: "runway" }, seed: 9 } as PptxIR
+    const doc: PptxIR = { ...ir(twoPageDeck), theme: { id: "runway" } } as PptxIR
     const fillsFor = (index: number) => {
       const { container } = render(<FullSlideSvg ir={doc} slide={doc.slides[index]!} index={index} />)
       return Array.from(container.querySelectorAll("path"))
@@ -1046,16 +965,6 @@ describe("chart palette phase rotation (P1 variety wave, task 2)", () => {
 })
 
 describe("layouts that paint their own full-bleed field (LayoutDefinition.paintsOwnBackground)", () => {
-  const mkIr = (theme: string, slide: Slide): PptxIR =>
-    ({
-      version: "5",
-      filename: "m.pptx",
-      theme: { id: theme },
-      meta: {},
-      assets: { images: {} },
-      slides: [slide],
-    }) as unknown as PptxIR
-
   /** Every rect covering the whole canvas, in paint order. */
   const fullBleedFills = (container: HTMLElement) =>
     Array.from(container.querySelectorAll("rect"))
@@ -1082,20 +991,27 @@ describe("layouts that paint their own full-bleed field (LayoutDefinition.paints
 
   for (const [layout, type] of CASES) {
     it(`${layout} is the only full-bleed paint on the page`, () => {
-      const slide = { type, heading: "标题", layout, components: [] } as unknown as Slide
+      const slide =
+        type === "content"
+          ? ({ type, kind: "statement", heading: "标题", components: [] } satisfies Slide)
+          : ({ type, heading: "标题", components: [] } satisfies Slide)
       // ink does not offer mono-bleed (boarded faces are statement /
       // stat-hero / pull-quote). playbill does, and its face still paints
       // one full-bleed field, which is what this paintsOwnBackground check needs.
       const theme = layout === "mono-bleed" ? "playbill" : "ink"
-      const { container } = render(<FullSlideSvg ir={mkIr(theme, slide)} slide={slide} index={0} />)
+      const faces: TestThemeFaces =
+        type === "content" ? { content: { statement: layout } } : { [type]: layout }
+      const doc = irWithFace(slide, theme, faces)
+      const { container } = render(<FullSlideSvg ir={doc} slide={slide} index={0} />)
       expect(container.querySelector(`[data-archetype="${layout}"]`)).not.toBeNull()
       expect(fullBleedFills(container)).toHaveLength(1)
     })
   }
 
   it("an ordinary layout still gets the theme background under it", () => {
-    const slide = { type: "cover", heading: "标题", layout: "poster-center", components: [] } as unknown as Slide
-    const { container } = render(<FullSlideSvg ir={mkIr("ink", slide)} slide={slide} index={0} />)
+    const slide: Slide = { type: "cover", heading: "标题", components: [] }
+    const doc = irWithFace(slide, "ink", { cover: "poster-center" })
+    const { container } = render(<FullSlideSvg ir={doc} slide={slide} index={0} />)
     expect(fullBleedFills(container)).toContain("#F7F2E7")
   })
 })

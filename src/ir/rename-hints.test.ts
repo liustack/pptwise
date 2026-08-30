@@ -6,9 +6,9 @@ describe("renameHintsFor", () => {
     expect(renameHintsFor(["blocks"], "slides.2")).toEqual([' — "blocks" was renamed to "components" in IR v4'])
   })
 
-  it("hints variant -> layout/arrangement at slide level", () => {
+  it("hints variant -> kind at slide level", () => {
     expect(renameHintsFor(["variant"], "slides.0")).toEqual([
-      ' — "variant" was split into "layout" and "arrangement" in IR v4',
+      ' — "variant" was removed — a content page declares its "kind" and the theme menu picks the face',
     ])
   })
 

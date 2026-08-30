@@ -208,14 +208,16 @@ describe("theme-menu layout lookup", () => {
     }
     const { container } = render(<FullSlideSvg ir={deck(id, [slide])} slide={slide} index={0} />)
     const locator = container.querySelector('[data-decor-piece="locator-corner"]')
-    const decor = locator?.closest("g[data-decor]")
 
+    // A structure-role piece lifts to the foreground bare; the data-decor
+    // container marker stays on the midground group. Both come from the one
+    // motif the entry named.
     expect(locator).not.toBeNull()
-    expect(decor).not.toBeNull()
+    expect(container.querySelector("g[data-decor]")).not.toBeNull()
     expect(locator?.querySelector("line")?.getAttribute("opacity")).toBe("0.62")
   })
 
-  it("keeps deck branding unless the selected menu entry is silent", () => {
+  it("decor silent kills the motif; brand silence is the entry's own switch", () => {
     const ordinaryId = "menu-decor-ordinary"
     const silentId = "menu-decor-silent"
     installTheme(ordinaryId, {
@@ -225,7 +227,7 @@ describe("theme-menu layout lookup", () => {
     installTheme(silentId, {
       ...MENU,
       content: {
-        points: { face: "bento-panel", decor: { kind: "silent" } },
+        points: { face: "bento-panel", decor: { kind: "silent" }, brand: "none" },
       },
     })
     const slide: Slide = {

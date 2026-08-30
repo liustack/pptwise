@@ -167,6 +167,8 @@ export const MenuEntrySchema = z
     face: z.string().min(1),
     params: z.record(z.string().min(1), MenuParamValueSchema).optional(),
     decor: MenuDecorSchema.optional(),
+    /** Switch the brand frame (footer rule, meta, logo) off on this page. */
+    brand: z.literal("none").optional(),
   })
   .strict()
 

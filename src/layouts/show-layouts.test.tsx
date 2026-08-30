@@ -1,10 +1,12 @@
 // @vitest-environment jsdom
 import { render } from "@testing-library/react"
-import { describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it } from "vitest"
 import type { PptxIR, Slide } from "@/ir"
 import { resolveStyle } from "../themes"
 import { contrastRatio } from "../render/ink"
 import { FullSlideSvg } from "../render/full-slide-svg"
+import { __resetRegisteredThemes } from "../themes/definitions"
+import { registerTestTheme, type TestThemeFaces } from "../themes/test-fixtures"
 
 const slides: Slide[] = [
   {
@@ -21,7 +23,7 @@ const slides: Slide[] = [
   },
   {
     type: "content",
-    kind: "points",
+    kind: "photo",
     heading: "六个关键场景",
     subheading: "从真实场景中提炼可复制的方法",
     components: [
@@ -36,7 +38,7 @@ const slides: Slide[] = [
   },
   {
     type: "content",
-    kind: "points",
+    kind: "photo",
     heading: "旗舰方案",
     subheading: "把复杂约束压缩成一条清晰路径",
     components: [
@@ -54,7 +56,7 @@ const slides: Slide[] = [
   },
   {
     type: "content",
-    kind: "points",
+    kind: "statement",
     heading: "真正的增长来自\n持续创造不可替代性",
     components: [
       {
@@ -69,7 +71,7 @@ const slides: Slide[] = [
   },
   {
     type: "content",
-    kind: "points",
+    kind: "data",
     heading: "关键数字",
     subheading: "三项指标共同验证增长质量",
     components: [
@@ -106,8 +108,30 @@ const ir: PptxIR = {
   slides,
 } as PptxIR
 
+const FACE_BY_INDEX = [
+  "show-headline",
+  "show-plate",
+  "show-gallery",
+  "show-spotlight",
+  "show-statement",
+  "show-figures",
+  "show-finale",
+] as const
+let themeSerial = 0
+
+afterEach(() => {
+  __resetRegisteredThemes()
+})
+
 function draw(index: number, slide: Slide = slides[index]!) {
-  return render(<FullSlideSvg ir={{ ...ir, slides: slide === slides[index] ? slides : [slide] }} slide={slide} index={slide === slides[index] ? index : 0} />).container
+  const face = FACE_BY_INDEX[index]!
+  const faces: TestThemeFaces =
+    slide.type === "content" ? { content: { [slide.kind]: face } } : { [slide.type]: face }
+  const themeId = registerTestTheme(`show-layout-${themeSerial++}`, "runway", faces)
+  const doc = { ...ir, theme: { id: themeId }, slides: slide === slides[index] ? slides : [slide] }
+  return render(
+    <FullSlideSvg ir={doc} slide={slide} index={slide === slides[index] ? index : 0} />,
+  ).container
 }
 
 function textBy(root: ParentNode, value: string): Element {
@@ -296,37 +320,37 @@ describe("runway show layouts", () => {
   })
 
   it("falls back without losing content when a gated content face receives the wrong component shape", () => {
-    const cases: Slide[] = [
-      {
+    const cases: Array<{ index: number; slide: Slide }> = [
+      { index: 2, slide: {
         type: "content",
-        kind: "points",
+        kind: "photo",
         heading: "三图不走六格",
         components: [{ type: "paragraph", text: "画廊回退正文" }],
-      },
-      {
+      } },
+      { index: 3, slide: {
         type: "content",
-        kind: "points",
+        kind: "photo",
         heading: "无图不走焦点",
         components: [{ type: "paragraph", text: "焦点回退正文" }],
-      },
-      {
+      } },
+      { index: 4, slide: {
         type: "content",
-        kind: "points",
+        kind: "statement",
         heading: "四点不走观点",
         components: [{ type: "bullets", items: ["一", "二", "三", "观点回退正文"] }],
-      },
-      {
+      } },
+      { index: 5, slide: {
         type: "content",
-        kind: "points",
+        kind: "data",
         heading: "非指标不走数字",
         components: [{ type: "paragraph", text: "数字回退正文" }],
-      },
+      } },
     ]
-    for (const slide of cases) {
-      const root = draw(0, slide)
-      expect(root.querySelector('[data-show-mode="fallback"]'), (slide as unknown as { layout?: string }).layout).not.toBeNull()
-      expect(root.textContent, (slide as unknown as { layout?: string }).layout).toContain("回退正文")
-      expect(root.querySelectorAll('[data-show-accent="true"]'), (slide as unknown as { layout?: string }).layout).toHaveLength(1)
+    for (const { index, slide } of cases) {
+      const root = draw(index, slide)
+      expect(root.querySelector('[data-show-mode="fallback"]'), FACE_BY_INDEX[index]).not.toBeNull()
+      expect(root.textContent, FACE_BY_INDEX[index]).toContain("回退正文")
+      expect(root.querySelectorAll('[data-show-accent="true"]'), FACE_BY_INDEX[index]).toHaveLength(1)
     }
   })
 })

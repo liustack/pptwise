@@ -112,6 +112,7 @@ export function GaugePointContent({ ir, slide, index, ctx }: SvgTemplateProps) {
 }
 
 export const layoutDef = {
+  branding: "none",
   id: "gauge-point",
   kind: "archetype",
   pinOnly: true,

@@ -148,6 +148,7 @@ export function IkbFieldCover({ ir, slide, ctx }: SvgTemplateProps) {
 }
 
 export const layoutDef = {
+  branding: "none",
   // cover-ikb-field-cover.tsx: full-bleed primary field, left-aligned
   // inverted title, short rule under the last title line. Motif owns the
   // square steps. Empty heading draws no title and no rule.

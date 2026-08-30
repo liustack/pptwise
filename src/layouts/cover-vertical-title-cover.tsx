@@ -365,6 +365,7 @@ export function VerticalTitleCover({ ir, slide, ctx }: SvgTemplateProps) {
 }
 
 export const layoutDef = {
+  branding: "none",
   // cover-vertical-title-cover.tsx: right-axis per-glyph CJK title, short
   // vertical subtitle, vermilion seal, organization foot line. Latin titles
   // stay horizontal and left-aligned. Empty heading invents no cover copy.

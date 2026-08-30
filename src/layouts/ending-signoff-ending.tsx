@@ -160,6 +160,7 @@ export function SignoffEnding({ ir, slide, ctx }: SvgTemplateProps) {
 }
 
 export const layoutDef = {
+  branding: "none",
   // ending-signoff-ending.tsx: full-bleed primary field, action heading,
   // sign-off list from the first bullets component, short rule, colophon.
   // Empty heading does not fall back to a thank-you. Empty components draw

@@ -193,6 +193,7 @@ export function FascicleGhostChapter({ ir, slide, index, ctx }: SvgTemplateProps
 }
 
 export const layoutDef = {
+  branding: "none",
   // chapter-fascicle-ghost-chapter.tsx: accent fascicle kicker, left
   // heading, short accent rule under the title cluster, roman ghost
   // numeral inset to the canvas. pinOnly. The theme-menu entry owns brand silence so the default

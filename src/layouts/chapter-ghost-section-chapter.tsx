@@ -158,6 +158,7 @@ export function GhostSectionChapter({ ir, slide, index, ctx }: SvgTemplateProps)
 }
 
 export const layoutDef = {
+  branding: "none",
   // chapter-ghost-section-chapter.tsx: SECTION kicker, left heading,
   // optional muted subheading, bottom-right ghost index inside the canvas.
   // The theme-menu entry owns brand silence so the default br logo does not eat the ghost. pinOnly.

@@ -260,6 +260,7 @@ export function ShowSpotlightContent({ slide, ctx }: SvgTemplateProps) {
 }
 
 export const layoutDef = {
+  suppressMotif: true,
   id: "show-spotlight",
   kind: "archetype",
   pinOnly: true,

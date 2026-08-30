@@ -1,7 +1,9 @@
 // @vitest-environment jsdom
-import { describe, it, expect } from "vitest"
+import { afterEach, beforeEach, describe, it, expect } from "vitest"
 import { slideToSvgMarkup } from "./render-slide"
 import type { PptxIR, Slide } from "@/ir"
+import { __resetRegisteredThemes } from "../themes/definitions"
+import { registerTestTheme } from "../themes/test-fixtures"
 
 // image-bottom 的 caption 遮罩条只在 Branding 真会画内容页脚时才上移
 // 让位。页脚绘制条件是 branding:"full"（cover-only 默认与 minimal 都不画
@@ -9,7 +11,7 @@ import type { PptxIR, Slide } from "@/ir"
 // 页脚悬空 40px（2026-08-22 根因修复的回归钉）。
 const slide: Slide = {
   type: "content",
-  kind: "points",
+  kind: "photo",
   heading: "底图页标题",
   components: [
     { type: "image", asset_id: "hero", fit: "cover", caption: "样例底图" },
@@ -17,11 +19,21 @@ const slide: Slide = {
   ],
 }
 
+const TEST_THEME_ID = "image-bottom-caption"
+
+beforeEach(() => {
+  registerTestTheme(TEST_THEME_ID, "consulting", { content: { photo: "image-bottom" } })
+})
+
+afterEach(() => {
+  __resetRegisteredThemes()
+})
+
 function makeIr(branding?: PptxIR["branding"]): PptxIR {
   return {
     version: "5",
     filename: "deck.pptx",
-    theme: { id: "consulting" },
+    theme: { id: TEST_THEME_ID },
     meta: { organization: "ACME", date: "2026-08-22" },
     assets: {
       images: {

@@ -172,6 +172,7 @@ export function ThesisPlateCover({ ir, slide, ctx }: SvgTemplateProps) {
 }
 
 export const layoutDef = {
+  branding: "none",
   // cover-thesis-plate-cover.tsx: ivory title plate, kicker above the
   // opening rule, two-line serif title, primary meta block, foot rule.
   // Motif owns the gold rule at y120. Empty heading draws no title.

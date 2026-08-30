@@ -1,7 +1,5 @@
 import { dirname, join, resolve } from "node:path"
 import { PptwiseError } from "../errors"
-import { KIND_VALUES } from "../ir"
-import { getLayout } from "../layouts/registry"
 import { parseBrandThemeFile, registerBrandThemeFile } from "../themes/brand-theme-file"
 import { getThemeDefinition, type ThemeDefinition } from "../themes/definitions"
 import { CANONICAL_THEME_IDS } from "../themes"
@@ -10,7 +8,6 @@ import {
   MenuSchema,
   ThemeFileSchema,
   type Menu,
-  type MenuEntry,
   type ThemeFile,
 } from "../themes/schema"
 import { THEME_FILENAME, pathExists } from "./deck-dir"
@@ -39,11 +36,6 @@ export async function loadThemeFile(path: string): Promise<ThemeFile> {
 function isCanonicalThemeId(name: string): boolean {
   return (CANONICAL_THEME_IDS as readonly string[]).includes(name)
 }
-
-function faceId(face: string | { id: string }): string {
-  return typeof face === "string" ? face : face.id
-}
-
 
 
 

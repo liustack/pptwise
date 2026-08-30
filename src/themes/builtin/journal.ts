@@ -105,7 +105,7 @@ export const JOURNAL_THEME = {
   label: "Editorial Journal",
   style: JOURNAL_TOKENS,
   menu: {
-    cover: { face: "issue-head-cover", decor: { kind: "silent" } },
+    cover: { face: "issue-head-cover" },
     chapter: { face: "fascicle-ghost-chapter" },
     content: {
       points: { face: "narrow-column" },
@@ -114,9 +114,9 @@ export const JOURNAL_THEME = {
       process: { face: "rail-numbered" },
       data: { face: "split-band" },
       photo: { face: "image-split" },
-      statement: { face: "statement", decor: { kind: "silent" } },
-      quote: { face: "pull-quote", decor: { kind: "silent" } },
-      fact: { face: "stat-hero", decor: { kind: "silent" } },
+      statement: { face: "statement" },
+      quote: { face: "pull-quote" },
+      fact: { face: "stat-hero" },
       hierarchy: { face: "asymmetric-triptych" },
     },
     ending: { face: "afterword-ending" },

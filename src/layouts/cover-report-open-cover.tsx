@@ -181,6 +181,7 @@ export function ReportOpenCover({ ir, slide, ctx }: SvgTemplateProps) {
 }
 
 export const layoutDef = {
+  branding: "none",
   // cover-report-open-cover.tsx: left-aligned report title on paper.
   // Motif owns the mid-page heartbeat. Empty heading draws no title.
   // Missing date/authors skips the sign-off. No invented privacy line.

@@ -87,17 +87,17 @@ export const CRAYON_THEME = {
   label: "Kids Education",
   style: CRAYON_TOKENS,
   menu: {
-    cover: { face: "crayonbox-open", decor: { kind: "silent" } },
-    chapter: { face: "crayonbox-sticker", decor: { kind: "silent" } },
+    cover: { face: "crayonbox-open" },
+    chapter: { face: "crayonbox-sticker" },
     content: {
       points: { face: "narrow-column" },
-      list: { face: "crayonbox-cards", decor: { kind: "silent" } },
+      list: { face: "crayonbox-cards" },
       comparison: { face: "two-column" },
       process: { face: "rail-numbered" },
       photo: { face: "image-top" },
-      statement: { face: "crayonbox-point", decor: { kind: "silent" } },
+      statement: { face: "crayonbox-point" },
     },
-    ending: { face: "crayonbox-todo", decor: { kind: "silent" } },
+    ending: { face: "crayonbox-todo" },
   },
   motif: { id: "crayonbox-motif" },
 } satisfies BuiltinThemeDeclaration;

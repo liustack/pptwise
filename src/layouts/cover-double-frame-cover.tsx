@@ -211,6 +211,7 @@ export function DoubleFrameCover({ ir, slide, ctx }: SvgTemplateProps) {
 }
 
 export const layoutDef = {
+  branding: "none",
   // cover-double-frame-cover.tsx: pinOnly centered double frame. Outer
   // border hairline, inner accent hairline, grouped. Burgundy only on the
   // display title. Year and colophon centered. Empty heading invents no

@@ -116,17 +116,17 @@ export const RUNWAY_THEME = {
   label: "Fashion Runway",
   style: RUNWAY_TOKENS,
   menu: {
-    cover: { face: "show-headline", decor: { kind: "silent" } },
-    chapter: { face: "show-plate", decor: { kind: "silent" } },
+    cover: { face: "show-headline" },
+    chapter: { face: "show-plate" },
     content: {
       points: { face: "narrow-column" },
       list: { face: "bento-panel" },
       comparison: { face: "two-column" },
       process: { face: "rail-numbered" },
-      data: { face: "show-figures", decor: { kind: "silent" } },
-      photo: { face: "show-spotlight", decor: { kind: "silent" } },
-      statement: { face: "show-statement", decor: { kind: "silent" } },
+      data: { face: "show-figures" },
+      photo: { face: "show-spotlight" },
+      statement: { face: "show-statement" },
     },
-    ending: { face: "show-finale", decor: { kind: "silent" } },
+    ending: { face: "show-finale" },
   },
 } satisfies BuiltinThemeDeclaration;

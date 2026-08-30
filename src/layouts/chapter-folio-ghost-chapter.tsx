@@ -177,6 +177,7 @@ export function FolioGhostChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
 }
 
 export const layoutDef: LayoutDefinition = {
+  branding: "none",
   // chapter-folio-ghost-chapter.tsx: pinOnly folio chapter open. Chapter
   // kicker plus a 96×2 accent rule, left title, bottom-right ghost numeral
   // kept inside the canvas. Theme paints the ivory field.

@@ -115,6 +115,7 @@ function walkSchema(node: unknown, path: string, findings: EnumFinding[], unhand
     case "nan":
     case "void":
     case "custom":
+    case "transform":
       return
     default:
       unhandled.add(def.type)
@@ -178,14 +179,11 @@ describe("large-enum sweep (borrow-wave task 3, review-round strengthening)", ()
     expect(message.length).toBeGreaterThan(500)
   })
 
-  it("theme.id and slide.layout are open z.string() fields, not zod enums — their own hard gates live outside the schema (../api.ts's installed-theme check, checkLayoutApplicability), each with a short message", () => {
-    // Reflected in the walk above too: neither field surfaces as an "enum"
-    // finding at all, large or small — this is the deliberate design (an
-    // open, registry-backed vocabulary, not a closed one), not a gap in the
-    // walker, which is what this explicit source-level check documents.
+  it("theme.id stays registry-backed while content kind is the closed eleven-word vocabulary", () => {
     const findings: EnumFinding[] = []
     walkSchema(PptxIRSchema, "", findings, new Set(), new Set())
     expect(findings.some((f) => f.path.endsWith(".theme.id"))).toBe(false)
-    expect(findings.some((f) => f.path.endsWith(".slides[].layout"))).toBe(false)
+    const kinds = findings.filter((f) => f.path.endsWith(".kind") && f.optionCount === 11)
+    expect(kinds.length).toBeGreaterThan(0)
   })
 })

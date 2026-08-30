@@ -170,6 +170,7 @@ export function LookRangeChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
 }
 
 export const layoutDef = {
+  branding: "none",
   // chapter-look-range-chapter.tsx: LOOK + padded chapter number, left
   // title, optional **emphasis** on the subtitle, foot border rule. pinOnly.
   // Does not invent a look range. Empty heading draws no title.

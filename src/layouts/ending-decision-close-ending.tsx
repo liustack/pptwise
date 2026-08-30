@@ -200,6 +200,7 @@ export function DecisionCloseEnding({ slide, ctx }: SvgTemplateProps) {
 }
 
 export const layoutDef: LayoutDefinition = {
+  branding: "none",
   // ending-decision-close-ending.tsx: pinOnly two-decision close. CJK
   // 决定 / Latin DECISION kicker in accent type, bullets or split heading
   // as the two lines, border rule, optional multi-line subheading sign-off.

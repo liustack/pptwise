@@ -135,6 +135,7 @@ export function LessonBoxChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
 }
 
 export const layoutDef = {
+  branding: "none",
   // chapter-lesson-box-chapter.tsx: pinOnly lesson box with inverted
   // index, left-aligned title under the box. Notebook rules belong to
   // the motif. Theme paints the chapter paper.

@@ -29,16 +29,14 @@ function installTheme(id: string): void {
 
 function installThemeWithoutMenu(id: string): void {
   registerTheme({
+    version: 2,
     id,
-    style: { ...CONSULTING_TOKENS, id },
-    brand: {},
-    tags: [],
-    layouts: {
-      cover: ["poster-center"],
-      chapter: ["masthead-chapter"],
-      content: ["two-column"],
-      ending: ["poster-ending"],
+    style: {
+      ...CONSULTING_TOKENS,
+      id,
+      shape: { radius: 2, gapScale: 1, typeScale: 1 },
     },
+    brand: {},
   })
 }
 
@@ -65,19 +63,9 @@ afterEach(() => {
 })
 
 describe("deck spec theme menu", () => {
-  it("hard-rejects a bound theme that has no menu", () => {
+  it("hard-rejects a public v2 theme that has no menu at registration", () => {
     const themeId = "spec-missing-menu"
-    installThemeWithoutMenu(themeId)
-
-    const result = validateSpec(spec(themeId, ["points", "list"]))
-
-    expect(result.ok).toBe(false)
-    expect(result.errors).toEqual([
-      expect.objectContaining({
-        path: "theme",
-        message: expect.stringContaining(`theme "${themeId}" has no menu`),
-      }),
-    ])
+    expect(() => installThemeWithoutMenu(themeId)).toThrow(/menu/i)
   })
 
   it("hard-rejects a content kind outside the bound theme menu and lists the offer", () => {

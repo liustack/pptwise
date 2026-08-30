@@ -221,6 +221,7 @@ export function LookbookOpenCover({ ir, slide, index, ctx }: SvgTemplateProps) {
 }
 
 export const layoutDef = {
+  branding: "none",
   // cover-lookbook-open-cover.tsx: lookbook masthead, full-width primary
   // rule, left display title at 96px, season/date, crimson folio. pinOnly.
   // Empty heading draws no title. No motif, no vertical year.

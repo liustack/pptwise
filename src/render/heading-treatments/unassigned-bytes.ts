@@ -1,6 +1,8 @@
 import { createHash } from "node:crypto"
 import { renderSlideSvg } from "../../api"
 import type { PptxIR, Slide } from "../../ir"
+import { __resetRegisteredThemes } from "../../themes/definitions"
+import { registerTestTheme } from "../../themes/test-fixtures"
 
 /**
  * Unassigned-theme heading-treatment byte-nail matrix. Shared by the
@@ -58,15 +60,14 @@ function deck(theme: string, slides: Slide[]): PptxIR {
   } as PptxIR
 }
 
-function content(opts: { heading?: string; subheading?: string; layout: string }): Slide {
+function content(opts: { heading?: string; subheading?: string }): Slide {
   return {
     type: "content",
     kind: "points",
     heading: opts.heading,
     subheading: opts.subheading,
-    layout: opts.layout,
     components: [{ type: "paragraph", text: "正文占位，用来钉头区几何。" }],
-  } as Slide
+  }
 }
 
 function sha(svg: string): string {
@@ -74,27 +75,31 @@ function sha(svg: string): string {
 }
 
 export function computeHeadingUnassignedPages(): Record<string, string> {
+  __resetRegisteredThemes()
   const pages: Record<string, string> = {}
 
   for (const theme of UNASSIGNED) {
     for (const layout of LAYOUTS) {
+      const themeId = registerTestTheme(`heading-${theme}-${layout}`, theme, {
+        content: { points: layout },
+      })
       const withChapter: Slide[] = [
         { type: "chapter", heading: CHAPTER, components: [] } as Slide,
-        content({ heading: HEADING, layout }),
-        content({ heading: HEADING, subheading: SUB, layout }),
-        content({ heading: undefined, layout }),
+        content({ heading: HEADING }),
+        content({ heading: HEADING, subheading: SUB }),
+        content({ heading: undefined }),
       ]
-      const irChapter = deck(theme, withChapter)
+      const irChapter = deck(themeId, withChapter)
       pages[`${theme}|${layout}|title-only|chapter`] = sha(renderSlideSvg(irChapter, 1))
       pages[`${theme}|${layout}|title-sub|chapter`] = sha(renderSlideSvg(irChapter, 2))
       pages[`${theme}|${layout}|no-title|chapter`] = sha(renderSlideSvg(irChapter, 3))
 
       const noChapter: Slide[] = [
-        content({ heading: HEADING, layout }),
-        content({ heading: HEADING, subheading: SUB, layout }),
-        content({ heading: undefined, layout }),
+        content({ heading: HEADING }),
+        content({ heading: HEADING, subheading: SUB }),
+        content({ heading: undefined }),
       ]
-      const irNone = deck(theme, noChapter)
+      const irNone = deck(themeId, noChapter)
       pages[`${theme}|${layout}|title-only|none`] = sha(renderSlideSvg(irNone, 0))
       pages[`${theme}|${layout}|title-sub|none`] = sha(renderSlideSvg(irNone, 1))
       pages[`${theme}|${layout}|no-title|none`] = sha(renderSlideSvg(irNone, 2))
@@ -103,17 +108,21 @@ export function computeHeadingUnassignedPages(): Record<string, string> {
 
   for (const theme of KEEP_NATIVE_WITHOUT_CHAPTER) {
     for (const layout of LAYOUTS) {
+      const themeId = registerTestTheme(`heading-${theme}-${layout}`, theme, {
+        content: { points: layout },
+      })
       const noChapter: Slide[] = [
-        content({ heading: HEADING, layout }),
-        content({ heading: HEADING, subheading: SUB, layout }),
-        content({ heading: undefined, layout }),
+        content({ heading: HEADING }),
+        content({ heading: HEADING, subheading: SUB }),
+        content({ heading: undefined }),
       ]
-      const irNone = deck(theme, noChapter)
+      const irNone = deck(themeId, noChapter)
       pages[`${theme}|${layout}|title-only|none`] = sha(renderSlideSvg(irNone, 0))
       pages[`${theme}|${layout}|title-sub|none`] = sha(renderSlideSvg(irNone, 1))
       pages[`${theme}|${layout}|no-title|none`] = sha(renderSlideSvg(irNone, 2))
     }
   }
 
+  __resetRegisteredThemes()
   return pages
 }

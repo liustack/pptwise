@@ -12,12 +12,14 @@
  * Decoration is pushed down on the way out. A built-in declares one
  * theme-wide `motif` anchor, but the public menu contract carries decoration
  * per entry, so {@link copyThemePreset} writes the anchor into every entry
- * that has not already silenced its own decoration. The copy therefore
- * needs no theme-level anchor to look like its source.
+ * that has not already declared its own decoration and whose face does not
+ * structurally suppress the motif. The copy therefore needs no theme-level
+ * anchor to look like its source.
  */
 import { PptwiseError } from "../errors"
 import { BUILTIN_THEME_FILES, CANONICAL_THEME_IDS, type CanonicalThemeId } from "./index"
 import { THEME_OCCASIONS, type IdentityStrength, type Occasion } from "./occasions"
+import { getLayout } from "../layouts/registry"
 import type { BuiltinThemeDeclaration, Menu, MenuEntry } from "./schema"
 
 /** One shelf entry: what a picker needs to choose a starting point. */
@@ -54,6 +56,9 @@ export function getThemePreset(id: string): ThemePresetSummary {
 
 function withDecor(entry: MenuEntry, motif: BuiltinThemeDeclaration["motif"]): MenuEntry {
   if (entry.decor !== undefined || motif === undefined) return structuredClone(entry)
+  // A face that paints its own identity never receives the theme motif, so
+  // writing the anchor onto it would only mislead a reader of the copy.
+  if (getLayout(entry.face)?.suppressMotif === true) return structuredClone(entry)
   return {
     ...structuredClone(entry),
     decor: motif.params ? { kind: "motif", id: motif.id, params: { ...motif.params } } : { kind: "motif", id: motif.id },

@@ -140,6 +140,7 @@ export function DayBillChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
 }
 
 export const layoutDef = {
+  branding: "none",
   // chapter-day-bill-chapter.tsx: pinOnly day bill. DAY n kicker, display
   // title at 130px unscaled, muted sub. No chip, no corner mark. Empty
   // heading invents no show name.

@@ -137,9 +137,9 @@ describe("determinism", () => {
   it("same theme + same fixed IR, resolved repeatedly, is always identical", () => {
     for (const themeId of CANONICAL_THEME_IDS) {
       const ir = makeFixedIr(themeId)
-      const first = ir.slides.map((slide, i) => resolveEffectiveFace(ir, slide).layoutId)
+      const first = ir.slides.map((slide) => resolveEffectiveFace(ir, slide).layoutId)
       for (let n = 0; n < 20; n++) {
-        const again = ir.slides.map((slide, i) => resolveEffectiveFace(ir, slide).layoutId)
+        const again = ir.slides.map((slide) => resolveEffectiveFace(ir, slide).layoutId)
         expect(again, `${themeId} run ${n}`).toEqual(first)
       }
     }

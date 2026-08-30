@@ -161,6 +161,7 @@ function GenericPullQuoteContent({ ir, slide, index, ctx }: SvgTemplateProps) {
 }
 
 export const layoutDef = {
+  branding: "none",
   // content-pull-quote.tsx: a pinOnly centered-quote page. Kicker (section
   // name) + italic heading + accent attribution + one muted paragraph.
   // Page decor and branding posture belong to the menu entry. The whole page

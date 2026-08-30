@@ -193,14 +193,13 @@ function chapterSlide(heading = CHAPTER): Slide {
 function contentSlide(heading = GALLERY_HEADING): Slide {
   return {
     type: "content",
-    kind: "points",
+    kind: "process",
     heading,
-    layout: "rail-numbered",
     components: [{ type: "paragraph", text: "正文占位" }],
   } as Slide
 }
 
-function renderPinned(themeId: string, heading = GALLERY_HEADING): { svg: string; root: Element } {
+function renderRailPage(themeId: string, heading = GALLERY_HEADING): { svg: string; root: Element } {
   const ir = deck(themeId, [chapterSlide(), contentSlide(heading)])
   const svg = renderSlideSvg(ir, 1)
   return { svg, root: parseSvgRoot(svg) }
@@ -227,21 +226,21 @@ function expectBadgeClear(themeId: string, root: Element, heading: string): void
 
 describe("rail-numbered badge vs heading treatment", () => {
   it("playbill title does not intersect the {chapter}.{n} badge", () => {
-    const { root } = renderPinned("playbill")
+    const { root } = renderRailPage("playbill")
     expectBadgeClear("playbill", root, GALLERY_HEADING)
   })
 
   it("ink title and vertical-kicker chars do not intersect the badge", () => {
-    const { root } = renderPinned("ink")
+    const { root } = renderRailPage("ink")
     expectBadgeClear("ink", root, GALLERY_HEADING)
     const kickers = kickerBoxes(walkTextBoxes(root))
     expect(kickers.length, "ink should still paint a stacked kicker").toBeGreaterThan(0)
   })
 })
 
-describe("assigned themes on pinned rail-numbered", () => {
+describe("assigned themes on menu-selected rail-numbered", () => {
   it.each(assignedThemeIds())("%s: badge vs title and kicker zero intersect", (themeId) => {
-    const { root } = renderPinned(themeId)
+    const { root } = renderRailPage(themeId)
     expectBadgeClear(themeId, root, GALLERY_HEADING)
   })
 })
@@ -250,7 +249,7 @@ describe("tag_box chapter chip vs rail-numbered badge", () => {
   it.each(["enterprise", "playbill", "arena"] as const)(
     "%s: chapter chip stays a full reserve-gap clear of the {chapter}.{n} badge",
     (themeId) => {
-      const { root } = renderPinned(themeId)
+      const { root } = renderRailPage(themeId)
       const badge = findRailBadge(root)
       expect(badge, `${themeId}: rail-numbered badge must still be painted`).not.toBeNull()
       const tagBox = findTagBox(root)
@@ -271,8 +270,8 @@ describe("gallery theme-table rail-numbered pages", () => {
   it("insight zh slide 6 is not a rail-numbered false positive after banner-heading retired", async () => {
     const assets = await corpusAssets(LEXICONS.zh)
     const ir = themeDeck("insight", LEXICONS.zh, assets)
-    expect(ir.slides[6]?.type).toBe("content")
-    const svg = renderSlideSvg(ir, 6)
+    expect(ir.slides[5]?.type).toBe("content")
+    const svg = renderSlideSvg(ir, 5)
     const root = parseSvgRoot(svg)
     expect(root.querySelector('[data-archetype="side-highlight"]')).toBeNull()
     expect(root.querySelector('[data-archetype="banner-heading"]')).toBeNull()

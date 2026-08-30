@@ -169,6 +169,7 @@ export function ExitWordEnding({ ir, slide, ctx }: SvgTemplateProps) {
 }
 
 export const layoutDef = {
+  branding: "none",
   // ending-exit-word-ending.tsx: pinOnly centered close, tour line,
   // accent rule under the title cluster, org/date foot. No thank-you
   // and no invented 看完了.

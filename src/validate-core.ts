@@ -627,7 +627,7 @@ export function validateIr(input: unknown): ValidateResult {
         // a genuine v3 document — see that module's own doc comment for why
         // the other, v2-only renames don't get the same pointer.
         if (path === "" && issue.keys.includes("scenario")) {
-          message += ' — "scenario" was renamed to "narrative" in IR v4 (for a v3 file run: pptwise migrate <file> -o <out>)'
+          message += ' — "scenario" was renamed to "narrative"; rewrite the file to the current IR'
         }
         // The rest of the documented v2/v3 → v4 rename map (borrow-wave
         // task 3, generalizing the `scenario` rescue above to

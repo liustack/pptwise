@@ -107,6 +107,7 @@ function GenericOneEvidenceContent({ slide, ctx }: SvgTemplateProps) {
 }
 
 export const layoutDef = {
+  branding: "none",
   // content-one-evidence.tsx: a pinOnly assertion + single evidence page.
   // Heading is a full-sentence claim. Body capacity 1 is the evidence
   // (chart / table / image / whatever pickEvidence returns, else the sole

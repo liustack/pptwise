@@ -22,7 +22,7 @@ afterEach(() => {
   __resetRegisteredThemes()
 })
 
-function installTheme(id: string, decor?: MenuDecor): void {
+function installTheme(id: string, extra?: Partial<{ brand: "none" }>): void {
   registerTheme({
     version: 2,
     id,
@@ -34,7 +34,10 @@ function installTheme(id: string, decor?: MenuDecor): void {
     menu: {
       cover: { face: "poster-center" },
       chapter: { face: "masthead-chapter" },
-      content: { points: { face: "statement", ...(decor ? { decor } : {}) } },
+      content: {
+        points: { face: "two-column", ...(extra ?? {}) },
+        statement: { face: "statement" },
+      },
       ending: { face: "poster-ending" },
     },
   })
@@ -64,14 +67,22 @@ describe("menu-owned page branding posture", () => {
     expect(root.querySelector("image")).not.toBeNull()
   })
 
-  it("silences branding through the selected menu entry, not the face", () => {
-    installTheme("menu-branding-silent", { kind: "silent" })
+  it("silences branding through the menu entry's own brand switch", () => {
+    installTheme("menu-branding-silent", { brand: "none" })
     const markup = renderSlideSvg(deck("menu-branding-silent", "full"), 0)
     const root = parseSvgRoot(markup)
 
     expect(markup).not.toContain("ACME")
     expect(root.querySelector(`line[y1="${FOOTER_DIVIDER_Y}"]`)).toBeNull()
     expect(root.querySelector("image")).toBeNull()
+  })
+
+  it("keeps a structurally frameless face unbranded even under full", () => {
+    installTheme("menu-branding-frameless")
+    const ir = deck("menu-branding-frameless", "full")
+    ir.slides = [{ type: "content", kind: "statement", heading: "Menu-owned brand posture", components: [] }]
+    const markup = renderSlideSvg(ir, 0)
+    expect(markup).not.toContain("ACME")
   })
 
   it("leaves the deck-level minimal posture unchanged", () => {

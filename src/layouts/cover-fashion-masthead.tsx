@@ -222,6 +222,7 @@ export function FashionMastheadCover({ ir, slide, ctx }: SvgTemplateProps) {
 // cycle with the registry aggregator (which value-imports this export) — see
 // registry.ts's slot-`accepts` convention doc for what `[]` means.
 export const layoutDef: LayoutDefinition = {
+  suppressMotif: true,
   // cover-fashion-masthead.tsx: full-bleed primary block, org kicker, thin
   // rule above the masthead heading, accent color band, subheading, meta.
   id: "fashion-masthead",
