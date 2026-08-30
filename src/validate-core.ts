@@ -77,7 +77,7 @@ export interface ValidateResult {
    * moved these findings off `errors` and onto here. Can be present alongside
    * a failing (`ok:false`) result too, whenever `checkIrQuality`/
    * `checkAssetReferences` themselves ran (an *earlier* hard gate — schema,
-   * theme id, layout applicability, full-body exclusivity, boundary-page
+   * theme id, theme menu, full-body exclusivity, boundary-page
    * content, duplicate ids, asset bytes, narrative — short-circuits before
    * either runs at all, so a deck rejected by one of those never reaches
    * this field either way, see `validateIr`'s own body for the exact gate
@@ -274,7 +274,7 @@ function checkThemeMenuFaces(ir: PptxIR): ValidationIssue[] {
  * pairs one with *any* other component (another full-body type included)
  * has nowhere left to put that sibling, so this is a hard validation error,
  * not a silent "drop the extra component(s) and render anyway" degrade.
- * Same shape as {@link checkLayoutApplicability} right above: one
+ * Same shape as the menu-face gate above: one
  * page-scoped `ValidationIssue` per offending slide, naming the offending
  * full-body type(s) so the message is actionable without needing to open
  * the slide's own JSON.
@@ -353,7 +353,7 @@ function checkBoundaryPageContent(ir: PptxIR): ValidationIssue[] {
  * `slideId` (W5 whole-branch review finding 2) is set to the *first*
  * duplicated id, the same "representative id" shape `src/spec/index.ts`'s
  * own deck/plan-wide checks already use (e.g. `checkAlternatePolicy`) for an
- * issue that — unlike `checkLayoutApplicability`'s — is not itself scoped to
+ * issue that is not itself scoped to
  * one single slide: this issue can list more than one distinct duplicated id
  * (`"a" (pages 1,2), "b" (pages 3,4)`), so a single `slideId` field is never
  * more than a representative pointer into that list, not a full account of
@@ -718,7 +718,7 @@ export function validateIr(input: unknown): ValidateResult {
   // bookkeeping in ir-quality.ts's checkIrQuality — an early return makes it
   // the sole issue whenever it fires) — safe to read `.id` off it unguarded.
   // `slideId` (W5 whole-branch review finding 2) set only when that slide
-  // itself has one, same as checkLayoutApplicability's own producer above.
+  // itself has one, same as the other page-scoped producers above.
   const toIssue = (issue: QualityIssue): ValidationIssue =>
     issue.code === "empty_deck"
       ? { path: "slides", message: describeQualityIssue(issue) }
