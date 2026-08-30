@@ -642,6 +642,8 @@ ${findingsDataScript}
 export interface ContactSheetSlide {
   type: string
   svg: string
+  /** Row label. Kind rows use the kind so they do not collapse. */
+  label?: string
 }
 
 export interface ContactSheetColumn {
@@ -675,24 +677,25 @@ table.cs tbody th { text-align: left; font-weight: 500; color: #555; width: 88px
 /** Self-contained HTML comparison: columns = themes, rows = cover / first content. */
 export function buildContactSheetHtml(input: ContactSheetInput): string {
   const { title, themes } = input
-  const rowTypes: string[] = []
+  const rowLabels: string[] = []
   for (const col of themes) {
     for (const slide of col.slides) {
-      if (!rowTypes.includes(slide.type)) rowTypes.push(slide.type)
+      const label = slide.label ?? slide.type
+      if (!rowLabels.includes(label)) rowLabels.push(label)
     }
   }
   const head = themes.map((t) => `<th scope="col">${escapeHtml(t.id)}</th>`).join("")
-  const body = rowTypes
-    .map((type) => {
+  const body = rowLabels
+    .map((label) => {
       const cells = themes
         .map((t, colIdx) => {
-          const slide = t.slides.find((s) => s.type === type)
+          const slide = t.slides.find((s) => (s.label ?? s.type) === label)
           if (!slide) return "<td></td>"
-          const svg = namespaceSvgIds(slide.svg, `t${colIdx}-${type}-`)
+          const svg = namespaceSvgIds(slide.svg, `t${colIdx}-${label}-`)
           return `<td class="cs-cell">${svg}</td>`
         })
         .join("")
-      return `<tr><th scope="row">${escapeHtml(type)}</th>${cells}</tr>`
+      return `<tr><th scope="row">${escapeHtml(label)}</th>${cells}</tr>`
     })
     .join("")
   const escapedTitle = escapeHtml(title)

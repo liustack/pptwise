@@ -30,7 +30,6 @@ function stockIr(opts: { includeAsset: boolean; assetId: string }): unknown {
         type: "content",
         kind: "points",
         heading: "Hero",
-        layout: "image-top",
         components: [{ type: "image", asset_id: opts.assetId }],
       },
       { type: "ending", heading: "End" },

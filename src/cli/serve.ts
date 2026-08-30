@@ -47,7 +47,8 @@
  * paths cover the whole deck-project layout anyway, `docs/deck-projects.md`, so
  * `{recursive: true}` buys nothing here even now that the repo's floor
  * (Node 22.19, `package.json#engines`) has it on every platform); a bare IR
- * target watches that one file, plus `--theme-file` when set. Multiple `fs.watch` events firing for a
+ * target watches that one file, plus a resolved workspace theme file when
+ * the bound theme is a file. Multiple `fs.watch` events firing for a
  * single logical save (editors that write via a temp file + rename, or
  * saving several page files in one "save all") are coalesced by a 200ms
  * debounce into one rebuild.
@@ -71,6 +72,7 @@ import { spawnHidden } from "./child"
 import { buildDeckPreview } from "./commands"
 import { findConfig } from "./config"
 import { ASSETS_DIRNAME, PAGES_DIRNAME, SPEC_FILENAME, THEME_FILENAME } from "./deck-dir"
+import { resolveThemeByName } from "./theme-resolve"
 import { resolveWorkspaceLocation } from "./workspace"
 
 /** `pptwise serve`'s own default (spec-plan.md §2's worked example,
@@ -97,12 +99,6 @@ export interface ServeOptions {
    *  auto-increments). */
   port?: number
   cwd?: string
-  /** `--theme-file <path>` (brand-extract wave) — threaded into every
-   *  `buildDeckPreview` call (initial and each rebuild). `loadThemeFile`
-   *  deletes the custom id from `REGISTERED_THEMES` then re-registers, so
-   *  editing the theme file mid-serve live-reloads the brand on the next
-   *  rebuild. */
-  themeFilePath?: string
 }
 
 export interface ServeHandle {
@@ -126,8 +122,8 @@ export interface ServeHandle {
  *  given `buildDeckPreview`'s own `resolvedTarget`/`isDir` for it — see this
  *  module's own doc comment for why these (deck-dir mode) or this one
  *  (bare-IR mode) are the whole watch surface. Deck-dir mode also watches
- *  `theme.json`. Callers pass `--theme-file` and workspace assets via
- *  `extra`. */
+ *  `theme.json`. Callers pass workspace assets (and later a resolved
+ *  workspace theme file) via `extra`. */
 export function watchRoots(resolvedTarget: string, isDir: boolean, extra: string[] = []): string[] {
   const roots = isDir
     ? [
@@ -299,7 +295,7 @@ export async function createServeServer(options: ServeOptions): Promise<ServeHan
   // there is no previous-good HTML to fall back to yet, so an invalid target
   // must fail this call outright (CLI exit 1, same as every other command)
   // rather than start a server with nothing to show at `GET /`.
-  const initial = await buildDeckPreview(options.target, { cwd, themeFilePath: options.themeFilePath })
+  const initial = await buildDeckPreview(options.target, { cwd })
   let cachedHtml = injectServeClient(initial.html)
   const sseClients = new Set<ServerResponse>()
 
@@ -322,7 +318,7 @@ export async function createServeServer(options: ServeOptions): Promise<ServeHan
 
   async function rebuild(): Promise<void> {
     try {
-      const result = await buildDeckPreview(options.target, { cwd, themeFilePath: options.themeFilePath })
+      const result = await buildDeckPreview(options.target, { cwd })
       cachedHtml = injectServeClient(result.html)
       broadcast("reload", {})
     } catch (e) {
@@ -377,7 +373,15 @@ export async function createServeServer(options: ServeOptions): Promise<ServeHan
   )
 
   const extraWatch = [workspaceAssets]
-  if (options.themeFilePath !== undefined) extraWatch.push(options.themeFilePath)
+  try {
+    const resolvedTheme = await resolveThemeByName(initial.ir.theme.id, {
+      startDir: cwd,
+      deckDir: initial.isDir ? initial.resolvedTarget : undefined,
+    })
+    if (resolvedTheme.kind === "file") extraWatch.push(resolvedTheme.path)
+  } catch {
+    // Bound theme already rendered. A resolve miss here must not block serve.
+  }
 
   const watchers: FSWatcher[] = []
   for (const path of watchRoots(initial.resolvedTarget, initial.isDir, extraWatch)) {
@@ -491,8 +495,6 @@ export interface RunServeOptions {
   /** `false` suppresses the browser launch (`--no-open`). Default `true`. */
   open?: boolean
   cwd?: string
-  /** `--theme-file <path>` — see {@link ServeOptions.themeFilePath}. */
-  themeFilePath?: string
 }
 
 /**
@@ -506,7 +508,7 @@ export interface RunServeOptions {
  * blocking on anything.
  */
 export async function runServe(target: string, opts: RunServeOptions = {}): Promise<void> {
-  const handle = await createServeServer({ target, port: opts.port, cwd: opts.cwd, themeFilePath: opts.themeFilePath })
+  const handle = await createServeServer({ target, port: opts.port, cwd: opts.cwd })
   console.log(`pptwise serve: ${handle.url} (Ctrl+C to stop)`)
   if (opts.open !== false) openBrowser(handle.url)
   process.on("SIGINT", () => {

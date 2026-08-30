@@ -532,4 +532,26 @@ describe("buildContactSheetHtml", () => {
     expect(html).toContain('id="t0-cover-root"')
     expect(html).toContain('id="t1-content-root"')
   })
+
+  it("keeps kind rows from collapsing when slides share type content", () => {
+    const cell = (label: string) =>
+      `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" id="root"><text>${label}</text></svg>`
+    const html = buildContactSheetHtml({
+      title: "kinds",
+      themes: [
+        {
+          id: "consulting",
+          slides: [
+            { type: "content", label: "points", svg: cell("points-consulting") },
+            { type: "content", label: "list", svg: cell("list-consulting") },
+          ],
+        },
+      ],
+    })
+    expect(html).toContain("points")
+    expect(html).toContain("list")
+    expect(html).toContain("points-consulting")
+    expect(html).toContain("list-consulting")
+    expect((html.match(/<svg\b/g) ?? []).length).toBe(2)
+  })
 })

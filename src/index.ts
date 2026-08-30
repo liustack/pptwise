@@ -54,10 +54,12 @@ export type { ThemePresetSummary } from "./themes/presets"
 // colors/fonts from a user's own .thmx/.potx/.pptx locally — zip bytes in,
 // pure theme-file JSON out (jszip only, browser-safe) — and load such a file
 // back through the registerTheme seam (with its contrast hard gate). The
-// `pptwise brand extract` CLI command and `--theme-file` flag wrap these.
+// `pptwise brand extract` CLI command wraps these.
 export { extractBrandTheme } from "./themes/extract/brand-extract"
 export type { BrandThemeFile, ExtractBrandThemeOptions } from "./themes/extract/brand-extract"
 export { parseBrandThemeFile, registerBrandThemeFile, BrandThemeFileSchema } from "./themes/brand-theme-file"
+export { forkTheme } from "./cli/theme-fork"
+export type { ForkThemeAnchors, ForkThemeIdentity } from "./cli/theme-fork"
 export {
   resolveNarrative,
   NARRATIVE_PRESETS,
