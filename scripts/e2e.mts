@@ -174,7 +174,7 @@ writeFileSync(brandFixturePath, Buffer.from(await buildThmxBytes({ schemeName: "
 const brandWorkspace = resolve(OUT, "brand-workspace")
 mkdirSync(join(brandWorkspace, "themes"), { recursive: true })
 const brandThemePath = join(brandWorkspace, "themes", "e2e-brand.theme.json")
-const extractMsg = sh("node", ["dist/cli.js", "brand", "extract", brandFixturePath, "-o", brandThemePath])
+const extractMsg = sh("node", ["dist/cli.js", "brand", "extract", brandFixturePath, "--force", "-o", brandThemePath])
 console.log(extractMsg)
 if (!extractMsg.includes('theme "e2e-brand"')) {
   throw new Error("e2e: brand leg — extract output does not carry the expected theme id (output-filename slug)")

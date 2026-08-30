@@ -166,7 +166,7 @@ describe("IR validation against the bound theme menu", () => {
         page: 1,
         slideId: "photo",
       })
-      expect(result.errors[0]?.message).toContain(`layout "${face}" requires an image component`)
+      expect(result.errors[0]?.message).toContain(`layout "${face}" requires an image or image_grid or image_compare or device_mockup component`)
     },
   )
 

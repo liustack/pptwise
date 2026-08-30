@@ -2,8 +2,14 @@
   "version": "5",
   "filename": "market-entry-analysis",
   "narrative": "boardroom-report",
-  "theme": { "id": "academic" },
-  "meta": { "organization": "Harbor Advisory", "date": "2026-08-15", "confidentiality": "confidential" },
+  "theme": {
+    "id": "academic"
+  },
+  "meta": {
+    "organization": "Harbor Advisory",
+    "date": "2026-08-15",
+    "confidentiality": "confidential"
+  },
   "slides": [
     {
       "type": "cover",
@@ -17,10 +23,22 @@
       "components": [
         {
           "type": "swot",
-          "strengths": ["Trusted enterprise brand", "Existing banking licenses"],
-          "weaknesses": ["No self-serve onboarding", "High cost per account"],
-          "opportunities": ["SMB segment growing 19% a year", "Incumbents raising prices"],
-          "threats": ["Fintechs undercut on fees", "Regulatory scrutiny rising"]
+          "strengths": [
+            "Trusted enterprise brand",
+            "Existing banking licenses"
+          ],
+          "weaknesses": [
+            "No self-serve onboarding",
+            "High cost per account"
+          ],
+          "opportunities": [
+            "SMB segment growing 19% a year",
+            "Incumbents raising prices"
+          ],
+          "threats": [
+            "Fintechs undercut on fees",
+            "Regulatory scrutiny rising"
+          ]
         }
       ]
     },
@@ -31,11 +49,36 @@
       "components": [
         {
           "type": "five_forces",
-          "rivalry": { "items": ["Three incumbents hold 70% share"], "intensity": "high" },
-          "new_entrants": { "items": ["Licensing takes 18+ months"], "intensity": "low" },
-          "supplier_power": { "items": ["Card networks set the floor"], "intensity": "medium" },
-          "buyer_power": { "items": ["SMBs switch on price alone"], "intensity": "high" },
-          "substitutes": { "items": ["Wallets bypass cards entirely"], "intensity": "medium" }
+          "rivalry": {
+            "items": [
+              "Three incumbents hold 70% share"
+            ],
+            "intensity": "high"
+          },
+          "new_entrants": {
+            "items": [
+              "Licensing takes 18+ months"
+            ],
+            "intensity": "low"
+          },
+          "supplier_power": {
+            "items": [
+              "Card networks set the floor"
+            ],
+            "intensity": "medium"
+          },
+          "buyer_power": {
+            "items": [
+              "SMBs switch on price alone"
+            ],
+            "intensity": "high"
+          },
+          "substitutes": {
+            "items": [
+              "Wallets bypass cards entirely"
+            ],
+            "intensity": "medium"
+          }
         }
       ]
     },
@@ -50,10 +93,26 @@
           "y_title": "Investment required",
           "cols": 2,
           "items": [
-            { "title": "Build in-house", "tag": "24 mo", "tone": "neutral" },
-            { "title": "Acquire a fintech", "tag": "9 mo", "tone": "accent" },
-            { "title": "White-label partner", "tag": "6 mo", "tone": "info" },
-            { "title": "Do nothing", "tag": "0 mo", "tone": "neutral" }
+            {
+              "title": "Build in-house",
+              "tag": "24 mo",
+              "tone": "neutral"
+            },
+            {
+              "title": "Acquire a fintech",
+              "tag": "9 mo",
+              "tone": "accent"
+            },
+            {
+              "title": "White-label partner",
+              "tag": "6 mo",
+              "tone": "info"
+            },
+            {
+              "title": "Do nothing",
+              "tag": "0 mo",
+              "tone": "neutral"
+            }
           ]
         }
       ]
@@ -64,8 +123,7 @@
       "heading": "Recommendation",
       "components": [
         {
-          "type": "verdict_banner",
-          "tone": "positive",
+          "type": "paragraph",
           "text": "Acquire: the 9-month path captures the growth window before incumbents reprice, and the license backlog blocks fast followers."
         }
       ]

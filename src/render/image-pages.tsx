@@ -918,7 +918,7 @@ export const imageSplitLayoutDef: LayoutDefinition = {
   kind: "takeover",
   slideTypes: ["content"],
   slots: [
-    { name: "image", accepts: ["image"], required: true, selection: "first" },
+    { name: "image", accepts: ["image", "image_grid", "image_compare", "device_mockup"], required: true, selection: "first" },
     { name: "caption", accepts: [] },
     { name: "body", accepts: "any" },
   ],
@@ -933,7 +933,7 @@ export const imageTopLayoutDef: LayoutDefinition = {
   kind: "takeover",
   slideTypes: ["content"],
   slots: [
-    { name: "image", accepts: ["image"], required: true, selection: "first" },
+    { name: "image", accepts: ["image", "image_grid", "image_compare", "device_mockup"], required: true, selection: "first" },
     { name: "body", accepts: "any" },
   ],
 }
@@ -948,7 +948,7 @@ export const imageBottomLayoutDef: LayoutDefinition = {
   slideTypes: ["content"],
   slots: [
     { name: "body", accepts: "any" },
-    { name: "image", accepts: ["image"], required: true, selection: "first" },
+    { name: "image", accepts: ["image", "image_grid", "image_compare", "device_mockup"], required: true, selection: "first" },
     { name: "caption", accepts: [] },
   ],
 }
@@ -968,7 +968,7 @@ export const imageAnnotateLayoutDef: LayoutDefinition = {
   kind: "takeover",
   slideTypes: ["content"],
   slots: [
-    { name: "image", accepts: ["image"], required: true, selection: "first" },
+    { name: "image", accepts: ["image", "image_grid", "image_compare", "device_mockup"], required: true, selection: "first" },
     { name: "annotation", accepts: ["bullets"], capacity: 4, capacityUnit: "items" },
     { name: "caption", accepts: [] },
   ],

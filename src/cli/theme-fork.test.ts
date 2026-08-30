@@ -60,7 +60,7 @@ describe("forkTheme", () => {
   })
 
   it("keeps primary and accent dependencies separate when Ember anchors coincide", () => {
-    const ember = materializeBuiltinTheme("ember", { id: "ember-source" })
+    const ember = themeFileFromPreset("ember", { id: "ember-source" })
     ember.style.colors.accentPool = [ember.style.colors.accent, "#E8A13C"]
     const forked = forkTheme(
       ember,
@@ -140,7 +140,7 @@ describe("forkTheme", () => {
   })
 
   it("rebuilds non-anchor default background colors by page role", () => {
-    const insight = materializeBuiltinTheme("insight", { id: "insight-source" })
+    const insight = themeFileFromPreset("insight", { id: "insight-source" })
     const before = insight.style.defaultBackgrounds.cover
     expect(before.kind).toBe("gradient")
     const forked = forkTheme(
