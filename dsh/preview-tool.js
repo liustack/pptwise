@@ -1207,10 +1207,6 @@ async function captureSnapshot(cliPath, target, outDir, signal) {
   return { snapshot, themeFile: undefined }
 }
 
-function themeArgs(record) {
-  return record.themeFile ? ['--theme-file', record.themeFile] : []
-}
-
 /**
  * Read what the card's thumbnail strip needs: the manifest, plus the SVG of
  * every page the strip will actually draw, inlined so the card needs no
@@ -1726,7 +1722,7 @@ export function createPreviewService(cliPath) {
     // that everything the user later does with this preview refers back to.
     await runCli(
       cliPath,
-      ['preview', snapshot, '-o', outDir, '--html', ...themeArgs({ themeFile })],
+      ['preview', snapshot, '-o', outDir, '--html'],
       exec?.signal,
     )
     const bundle = await readPreviewBundle(outDir)
@@ -1754,7 +1750,7 @@ export function createPreviewService(cliPath) {
       const draftArgs = bundle.draft ? ['--draft'] : []
       await runCli(
         cliPath,
-        ['render', snapshot, '-o', pptxPath, ...draftArgs, ...themeArgs({ themeFile })],
+        ['render', snapshot, '-o', pptxPath, ...draftArgs],
         exec?.signal,
       )
     } catch (error) {
