@@ -1,4 +1,5 @@
 import type { StyleOverride } from "@/ir";
+import { PptwiseError } from "../errors";
 import { applyStyleOverride, type StyleTokens } from "./tokens";
 import { REGISTERED_THEMES } from "./registered-themes";
 import { CONSULTING_THEME } from "./builtin/consulting";
@@ -51,8 +52,7 @@ import type { BuiltinThemeDeclaration } from "./schema";
  * 结构身份 20 → 21）。pptwise 是独立分叉，无存量 deck
  * Top 5 第 3 / playbill Playbill——荧光嗓门·活动宣发节目单，2026-08-21
  * 第七波，结构身份 20 → 21）。pptwise 是独立分叉，无存量 deck
- * 兼容包袱，不维护 legacy id 映射表（resolveThemeId 对未知 id 一律回落
- * consulting）。
+ * 兼容包袱，不维护 legacy id 映射表（resolveThemeId 对未知 id 一律硬错）。
  */
 export const CANONICAL_THEME_IDS = [
   "consulting",
@@ -116,11 +116,18 @@ export const THEME_LABELS = Object.fromEntries(
   CANONICAL_THEME_IDS.map((id) => [id, BUILTIN_THEME_FILES[id].label]),
 ) as Record<CanonicalThemeId, string>;
 
-/** Map any theme id onto a canonical, registered theme id. Unknown ids fall back to consulting. */
+/**
+ * Narrow a theme id to a canonical built-in id. An unknown id is an error,
+ * never a silent fallback: a deck that names a theme nobody installed must
+ * say so out loud rather than quietly render as some other theme.
+ */
 export function resolveThemeId(id: string): CanonicalThemeId {
-  return (CANONICAL_THEME_IDS as readonly string[]).includes(id)
-    ? (id as CanonicalThemeId)
-    : "consulting";
+  if (!(CANONICAL_THEME_IDS as readonly string[]).includes(id)) {
+    throw new PptwiseError(
+      `unknown theme "${id}". Installed built-in themes: ${CANONICAL_THEME_IDS.join(", ")}`,
+    );
+  }
+  return id as CanonicalThemeId;
 }
 
 export const THEME_STYLES = Object.fromEntries(
@@ -138,7 +145,6 @@ export const THEME_STYLES = Object.fromEntries(
  */
 export function resolveStyle(id: string, override?: StyleOverride): StyleTokens {
   const base = REGISTERED_THEMES.get(id)?.style ?? THEME_STYLES[resolveThemeId(id)];
-  if (!base) throw new Error(`Unknown theme id: ${id}`);
   return applyStyleOverride(base, override);
 }
 
