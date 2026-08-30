@@ -3577,4 +3577,21 @@ describe("DSH theme lookup without --theme-file", () => {
     expect(await readFile(join(outDir, "theme.json"), "utf8")).toBe('{"id":"acme"}\n')
   })
 
+  it("copies a single-file IR's adjacent theme.json next to the snapshot", async () => {
+    const { __testing } = await loadPreviewTool()
+    const { writeFile, readFile } = await import("node:fs/promises")
+    const { join } = await import("node:path")
+    const sourceDir = await scratchTmp("dsh-theme-ir-")
+    const target = join(sourceDir, "deck.json")
+    await writeFile(target, JSON.stringify({ filename: "single-file" }))
+    await writeFile(join(sourceDir, "theme.json"), '{"id":"acme-file"}\n')
+    const outDir = await scratchTmp("dsh-theme-ir-out-")
+
+    const result = await __testing.captureSnapshot("/unused-cli.js", target, outDir)
+
+    expect(result.snapshot).toBe(join(outDir, "snapshot.ir.json"))
+    expect(result.themeFile).toBe(join(outDir, "theme.json"))
+    expect(await readFile(join(outDir, "theme.json"), "utf8")).toBe('{"id":"acme-file"}\n')
+  })
+
 })

@@ -80,7 +80,7 @@
 
 import { randomUUID } from 'node:crypto'
 import { cpSync, existsSync, realpathSync, renameSync, rmSync } from 'node:fs'
-import { mkdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises'
+import { copyFile, mkdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import { basename, dirname, isAbsolute, join, resolve } from 'node:path'
 import { runChild } from './spawnHidden.js'
@@ -1021,8 +1021,8 @@ async function isFile(path) {
 }
 
 /**
- * Where a deck project directory target actually lives, for the one thing
- * `assemble` cannot carry into the snapshot: a deck-local `theme.json`.
+ * Where a deck project directory target actually lives so its adjacent
+ * `theme.json` can be copied into the snapshot directory.
  *
  * The CLI auto-loads that file for a deck *directory* only, so an assembled
  * IR naming a brand theme would fail to render from anywhere else. Path-form
@@ -1041,6 +1041,15 @@ async function locateDeckDir(target) {
   const named = join(dirname(previewRoot()), 'decks', target)
   if (await isDirectory(named)) return named
   return undefined
+}
+
+/** Copy an adjacent theme file into the immutable snapshot directory. */
+async function snapshotThemeFile(sourceDir, outDir) {
+  const source = join(sourceDir, THEME_FILE)
+  if (!(await isFile(source))) return undefined
+  const themeFile = join(outDir, THEME_FILE)
+  await copyFile(source, themeFile)
+  return themeFile
 }
 
 /**
@@ -1184,25 +1193,23 @@ async function inlineLocalImages(snapshotPath) {
  * snapshot on its own pins *which* deck rather than the bytes it is made of —
  * which left every later run free to re-read those files. `inlineLocalImages`
  * closes that for the formats it can (see its own note for the ones it
- * cannot).
+ * cannot). An adjacent `theme.json` is copied into the same directory for
+ * both single-file IR and deck-directory targets.
  */
 async function captureSnapshot(cliPath, target, outDir, signal) {
   const snapshot = join(outDir, SNAPSHOT_FILE)
   if (await isFile(target)) {
     await snapshotIrFile(target, snapshot)
     await inlineLocalImages(snapshot)
-    return { snapshot, themeFile: undefined }
+    const themeFile = await snapshotThemeFile(dirname(resolve(target)), outDir)
+    return { snapshot, themeFile }
   }
   await runCli(cliPath, ['assemble', target, '-o', snapshot], signal)
   await inlineLocalImages(snapshot)
   const deckDir = await locateDeckDir(target)
   if (deckDir) {
-    const source = join(deckDir, THEME_FILE)
-    if (await isFile(source)) {
-      const themeFile = join(outDir, THEME_FILE)
-      await writeFile(themeFile, await readFile(source, 'utf8'))
-      return { snapshot, themeFile }
-    }
+    const themeFile = await snapshotThemeFile(deckDir, outDir)
+    if (themeFile) return { snapshot, themeFile }
   }
   return { snapshot, themeFile: undefined }
 }
