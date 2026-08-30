@@ -8,10 +8,9 @@
 // 100-step search can escape to — `safeEased` degrades to "best-available
 // ink" rather than a guaranteed-safe one. No canonical theme does this
 // today (`full-matrix-contrast.test.ts` covers all 13 green), and
-// `registerTheme` (`themes/definitions.ts`) performs zero color/contrast
-// validation on a caller-supplied `style` — a real, if currently
-// hypothetical, extensibility gap the rest of this codebase's contrast
-// machinery shares (not heatmap-specific).
+// `registerTheme` (`themes/definitions.ts`) checks raw text tokens against
+// `surface`, but it cannot validate every generated heatmap interpolation
+// cell. The remaining gap is specific to the component's derived fills.
 //
 // This file answers the question the review protocol asked first:
 // **is the confined case audit-visible?** Runs the reviewer's own two
@@ -63,7 +62,7 @@ function confinedTheme(id: string, surface: string, primary: string) {
         primary,
         accent: "#AA00FF",
         text: "#051C2C", // consulting's own colors.text — a realistic dark ink, not pure #000000
-        muted: "#888888",
+        muted: "#051C2C",
         chartPalette: [primary, "#AA00FF"],
       },
       fonts: { heading: ["Arial"], body: ["Arial"] },

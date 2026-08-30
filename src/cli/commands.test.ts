@@ -1693,13 +1693,63 @@ describe("brand extract + deck theme.json / workspace themes/", () => {
     expect(written.id).toBe("consulting")
   })
 
-  it("brand extract on a pathological palette still writes the file but warns it will be refused at load", async () => {
+  it("brand extract --unchecked writes a pathological palette with a load-time warning", async () => {
     const d = await freshDir()
     const src = await writeFixtureTemplate(d, { colors: PATHOLOGICAL_THMX_COLORS })
     const out = join(d, "gray.theme.json")
-    const msg = await runBrandExtract(src, { output: out })
+    const msg = await runBrandExtract(src, { output: out, unchecked: true })
     expect(msg).toMatch(/warning: this theme will be refused at load time.*contrast ratio/)
     await expect(stat(out)).resolves.toBeDefined()
+  })
+
+  it("brand extract rejects a pathological palette before writing by default", async () => {
+    const d = await freshDir()
+    const src = await writeFixtureTemplate(d, { colors: PATHOLOGICAL_THMX_COLORS })
+    const out = join(d, "gray.theme.json")
+    await expect(runBrandExtract(src, { output: out })).rejects.toThrow(/cannot derive colors\.muted/)
+    await expect(stat(out)).rejects.toMatchObject({ code: "ENOENT" })
+  })
+
+  it("brand extract runs the fork contrast gate before writing", async () => {
+    const d = await freshDir()
+    const themesDir = join(d, "themes")
+    await mkdir(themesDir)
+    const src = await writeFixtureTemplate(d)
+    const donorPath = join(themesDir, "dark-donor.theme.json")
+    await runBrandExtract(src, { output: donorPath, id: "dark-donor" })
+    const donor = JSON.parse(await readFile(donorPath, "utf8")) as {
+      style: {
+        colors: Record<string, unknown>
+        defaultBackgrounds: Record<string, unknown>
+      }
+    }
+    donor.style.colors = {
+      ...donor.style.colors,
+      bg: "#FFFFFF",
+      surface: "#000000",
+      primary: "#111111",
+      accent: "#666666",
+      text: "#FFFFFF",
+      muted: "#AAAAAA",
+      chartPalette: ["#111111", "#666666"],
+    }
+    donor.style.defaultBackgrounds = {
+      cover: { kind: "color", value: "#111111" },
+      chapter: { kind: "color", value: "#111111" },
+      content: { kind: "color", value: "#111111" },
+      ending: { kind: "color", value: "#111111" },
+    }
+    await writeFile(donorPath, JSON.stringify(donor))
+    __resetRegisteredThemes()
+
+    const badAnchorSource = await writeFixtureTemplate(d, {
+      colors: { ...DEFAULT_THMX_COLORS, accent1: "222222" },
+    })
+    const out = join(d, "bad-anchor.theme.json")
+    await expect(
+      runBrandExtract(badAnchorSource, { output: out, from: "dark-donor" }),
+    ).rejects.toThrow(/contrast ratio/)
+    await expect(stat(out)).rejects.toMatchObject({ code: "ENOENT" })
   })
 
   it("end to end: extract → workspace themes/ + IR theme.id → exported PPTX carries the extracted brand colors", async () => {
@@ -1796,7 +1846,7 @@ describe("brand extract + deck theme.json / workspace themes/", () => {
     const src = await writeFixtureTemplate(d, { colors: PATHOLOGICAL_THMX_COLORS })
     await mkdir(join(d, "themes"))
     const themeOut = join(d, "themes", "gray.theme.json")
-    await runBrandExtract(src, { output: themeOut, id: "gray" })
+    await runBrandExtract(src, { output: themeOut, id: "gray", unchecked: true })
     await writeFile(join(d, "deck.json"), JSON.stringify({ ...IR_NO_THEME, theme: { id: "gray" } }))
     await expect(
       runRender(join(d, "deck.json"), { output: join(d, "x.pptx"), cwd: d }),

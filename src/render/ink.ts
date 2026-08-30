@@ -44,20 +44,19 @@ const CONTRAST_RATIO_LARGE = 3
 const CONTRAST_RATIO_BODY = 4.5
 
 /**
- * sRGB relative luminance (WCAG 2.1): 0 (black) – 1 (white). Handles the
- * IR's full `HexColor` range (3–8 digits, see the `pptx-ir` schema's `Hex`
- * pattern): 3/4-digit shorthand is doubled per channel, an 8-digit value's
- * trailing alpha pair is dropped. Ported verbatim from
- * `cover-split-diagonal.tsx`'s hardened version (2026-07-10 fix: the
- * original 6-digit-only parser mis-scored short hex overrides like `#FFC`
- * as zero luminance and picked the wrong ink).
+ * sRGB relative luminance (WCAG 2.1): 0 is black and 1 is white. Accepts
+ * the same 3, 4, 6, and 8 digit forms as the theme schema. Shorthand is
+ * expanded per channel. Contrast treats tokens as opaque, so trailing alpha
+ * is deliberately excluded from the calculation.
  */
-function relativeLuminance(hex: string): number {
-  let h = hex.trim().replace(/^#/, "")
-  if (h.length === 3 || h.length === 4) h = [...h].map((c) => c + c).join("")
-  if (h.length === 8) h = h.slice(0, 6)
-  if (!/^[0-9a-fA-F]{6}$/.test(h)) return 0
-  const n = parseInt(h, 16)
+export function relativeLuminance(hex: string): number {
+  const match = /^#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.exec(hex)
+  if (!match) throw new Error(`invalid hex color "${hex}"`)
+  const body = match[1]!
+  const expanded = body.length === 3 || body.length === 4
+    ? [...body].map((channel) => channel.repeat(2)).join("")
+    : body
+  const n = parseInt(expanded.slice(0, 6), 16)
   const chan = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => {
     const c = v / 255
     return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)

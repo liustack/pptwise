@@ -1837,7 +1837,7 @@ describe("registerTheme end-to-end (W3 task 4)", () => {
         id,
         colors: {
           bg: "#123ABC",
-          surface: "#FFFFFF",
+          surface: "#123ABC",
           primary: "#123ABC",
           accent: "#FF00AA",
           // White/light-gray text — every `defaultBackgrounds` entry below is

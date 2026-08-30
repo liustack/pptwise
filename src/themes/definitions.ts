@@ -239,6 +239,14 @@ export function assertContrastFloor(id: string, style: StyleTokens): void {
       }
     }
   }
+  for (const token of ["text", "muted"] as const) {
+    const ratio = contrastRatio(style.colors[token], style.colors.surface)
+    if (ratio < CONTRAST_FLOOR) {
+      throw new PptwiseError(
+        `theme "${id}" colors.${token} has a contrast ratio of ${ratio.toFixed(2)}:1 against colors.surface (${style.colors.surface}). It must be at least ${CONTRAST_FLOOR.toFixed(1)}:1`,
+      )
+    }
+  }
 }
 
 /**
