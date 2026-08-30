@@ -188,12 +188,11 @@ export function CarePlanEnding({ slide, ctx }: SvgTemplateProps) {
 
 export const layoutDef: LayoutDefinition = {
   branding: "none",
-  // ending-care-plan-ending.tsx: pinOnly three-item care plan, foot rule,
+  // ending-care-plan-ending.tsx: three-item care plan, foot rule,
   // optional subheading sign-off. No thank-you. No invented privacy line.
   // Optional bullets fill the list.
   id: "care-plan-ending",
   kind: "standard",
-  pinOnly: true,
   slideTypes: ["ending"],
   slots: [
     { name: "heading", accepts: [] },

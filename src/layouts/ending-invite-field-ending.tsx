@@ -173,13 +173,12 @@ export function InviteFieldEnding({ ir, slide, ctx }: SvgTemplateProps) {
 
 export const layoutDef = {
   branding: "none",
-  // ending-invite-field-ending.tsx: pinOnly full-bleed primary invite.
+  // ending-invite-field-ending.tsx: full-bleed primary invite.
   // Heading is the invitation. Accent short rule. Colophon in faded
   // readableOn ink. Empty heading invents no date-and-place sentence and
   // draws no rule. Theme ending paper stays light.
   id: "invite-field-ending",
   kind: "standard",
-  pinOnly: true,
   paintsOwnBackground: true,
   slideTypes: ["ending"],
   slots: [

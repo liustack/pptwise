@@ -217,10 +217,9 @@ export function TypeRuleCover({ ir, slide, ctx }: SvgTemplateProps) {
 
 export const layoutDef = {
   // cover-type-rule-cover.tsx: left-aligned type cover, short border rule
-  // under the title block, cyan only on **emphasis**. pinOnly board lock.
+  // under the title block, cyan only on **emphasis**. board lock.
   id: "type-rule-cover",
   kind: "standard",
-  pinOnly: true,
   slideTypes: ["cover"],
   slots: [
     { name: "kicker", accepts: [] },

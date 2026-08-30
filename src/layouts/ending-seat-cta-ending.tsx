@@ -199,12 +199,11 @@ export function SeatCtaEnding({ ir, slide, ctx }: SvgTemplateProps) {
 
 export const layoutDef = {
   branding: "none",
-  // ending-seat-cta-ending.tsx: pinOnly scarce-seat close. Cut-corner
+  // ending-seat-cta-ending.tsx: scarce-seat close. Cut-corner
   // accent CTA. Label from contact.name, else subheading. No thank-you.
   // Motif owns the energy bar.
   id: "seat-cta-ending",
   kind: "standard",
-  pinOnly: true,
   slideTypes: ["ending"],
   slots: [
     { name: "heading", accepts: [] },

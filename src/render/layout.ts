@@ -1,10 +1,20 @@
 import type { Component } from "@/ir"
-import type { Arrangement } from "@/layouts/registry"
 import type { ComponentBox, ComponentCtx } from "../components/types"
 import { COLUMN_SPANNING_TYPES, STRETCHABLE_TYPES } from "./component-traits"
 import { measureComponent } from "../components"
 
-export type { Arrangement }
+/** Internal body-flow word. Faces pass one to SvgContent; nothing external
+ * authors it any more (the IR field died with the theme-model round). */
+export type Arrangement =
+  | "single"
+  | "two_column"
+  | "kpi_focus"
+  | "image_focus"
+  | "code"
+  | "quote"
+  | "big_number"
+  | "assertion_evidence"
+  | "aside"
 
 /** The content region rect (px) a slide gives its components to lay out within. */
 export interface ContentRect {

@@ -189,12 +189,11 @@ export function CutPanelCover({ ir, slide, ctx }: SvgTemplateProps) {
 
 export const layoutDef = {
   branding: "none",
-  // cover-cut-panel-cover.tsx: pinOnly cut player-bench panel carrying
+  // cover-cut-panel-cover.tsx: cut player-bench panel carrying
   // the title, accent light-strip on the cut. Motif owns the energy bar.
   // Empty heading invents no ignition line. Title stays inside the panel.
   id: "cut-panel-cover",
   kind: "standard",
-  pinOnly: true,
   slideTypes: ["cover"],
   slots: [
     { name: "kicker", accepts: [] },

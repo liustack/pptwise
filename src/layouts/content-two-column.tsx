@@ -172,5 +172,4 @@ export const layoutDef: LayoutDefinition = {
     { name: "rule", accepts: [] },
     { name: "body", accepts: "any", capacity: 4 }, // two narrower columns, same height budget — see registry.ts's CONTENT_LAYOUT_DEFS header for the derivation
   ],
-  arrangements: ["two_column"],
 }

@@ -309,5 +309,4 @@ export const layoutDef: LayoutDefinition = {
     { name: "bottom", accepts: "any" },
     { name: "meta", accepts: [] },
   ],
-  arrangements: ["single"],
 }

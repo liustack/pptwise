@@ -169,12 +169,11 @@ export function ChalkRuleChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
 
 export const layoutDef = {
   branding: "none",
-  // chapter-chalk-rule-chapter.tsx: pinOnly lecture-index chapter. Lecture
+  // chapter-chalk-rule-chapter.tsx: lecture-index chapter. Lecture
   // kicker, left title, emphasis chalk arc under ** runs. Motif draws the
   // tray frame. Empty heading invents no lecture title and skips the arc.
   id: "chalk-rule-chapter",
   kind: "standard",
-  pinOnly: true,
   slideTypes: ["chapter"],
   slots: [
     { name: "kicker", accepts: [] },

@@ -28,29 +28,20 @@ describe("LAYOUT_REGISTRY count guard", () => {
     ).toHaveLength(4)
   })
 
-  it("pins the pin-only total", () => {
-    expect(
-      definitions.filter((definition) => definition.pinOnly === true),
-      COUNT_DRIFT_MESSAGE,
-    ).toHaveLength(87)
-  })
 
-  it("pins registered and auto-selectable totals by slide type", () => {
+  it("pins registered totals by slide type", () => {
     const counts = Object.fromEntries(
       SLIDE_TYPES.map((slideType) => {
         const registered = definitions.filter((definition) => definition.slideTypes.includes(slideType))
-        const autoSelectable = registered.filter(
-          (definition) => definition.kind === "standard" && definition.pinOnly !== true,
-        )
-        return [slideType, { registered: registered.length, autoSelectable: autoSelectable.length }]
+        return [slideType, { registered: registered.length }]
       }),
     )
 
     expect(counts, COUNT_DRIFT_MESSAGE).toEqual({
-      cover: { registered: 37, autoSelectable: 19 },
-      chapter: { registered: 36, autoSelectable: 8 },
-      ending: { registered: 34, autoSelectable: 7 },
-      content: { registered: 27, autoSelectable: 9 },
+      cover: { registered: 37 },
+      chapter: { registered: 36 },
+      ending: { registered: 34 },
+      content: { registered: 27 },
     })
   })
 })

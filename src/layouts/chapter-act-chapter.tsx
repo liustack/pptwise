@@ -124,12 +124,11 @@ export function ActChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
 
 export const layoutDef = {
   branding: "none",
-  // chapter-act-chapter.tsx: pinOnly mirrored act-open. Accent bars
+  // chapter-act-chapter.tsx: mirrored act-open. Accent bars
   // clamp the act kicker. Centered heading and optional subheading.
   // No body slot. The theme-menu entry owns brand silence because the canvas belongs to the face.
   id: "act-chapter",
   kind: "standard",
-  pinOnly: true,
   slideTypes: ["chapter"],
   slots: [
     { name: "kicker", accepts: [] },

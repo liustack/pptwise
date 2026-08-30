@@ -139,7 +139,6 @@ describe("cover-crayonbox-open", () => {
     expect(layoutDef).toMatchObject({
       id: "crayonbox-open",
       kind: "standard",
-      pinOnly: true,
       slideTypes: ["cover"],
     })
     expect(() => assertSubset(renderCover().root)).not.toThrow()

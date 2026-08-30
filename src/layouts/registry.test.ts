@@ -85,12 +85,11 @@ describe("LAYOUT_REGISTRY completeness (takeover ids)", () => {
   })
 })
 
-describe("content family: body slot + declared arrangements", () => {
+describe("content family: body slot", () => {
   for (const id of Object.keys(CONTENT_LAYOUTS)) {
-    it(`"${id}" has a body slot and declares arrangements`, () => {
+    it(`"${id}" has a body slot`, () => {
       const entry = LAYOUT_REGISTRY[id]
       expect(entry.slots.some((s) => s.name === "body"), `"${id}" is missing a body slot`).toBe(true)
-      expect(entry.arrangements, `"${id}" has not declared arrangements`).toBeDefined()
     })
   }
 
@@ -120,46 +119,20 @@ describe("content family: body slot + declared arrangements", () => {
           id === "crayonbox-todo"
         ) {
           expect(entry.slots.some((s) => s.name === "body")).toBe(true)
-          expect(entry.arrangements).toBeUndefined()
           continue
         }
         expect(
           entry.slots.some((s) => s.name === "body"),
           `${slideType} layout "${id}" should not declare a body slot`,
         ).toBe(false)
-        expect(entry.arrangements, `${slideType} layout "${id}" should not declare arrangements`).toBeUndefined()
       }
     }
   })
 
-  it("two-column only honors the two_column arrangement (hardcoded, per inventory)", () => {
-    expect(LAYOUT_REGISTRY["two-column"].arrangements).toEqual(["two_column"])
-  })
 
-  it("bento-panel only honors single (hardcoded, per inventory)", () => {
-    expect(LAYOUT_REGISTRY["bento-panel"].arrangements).toEqual(["single"])
-  })
 
-  it("asymmetric-triptych only honors single (hardcoded — its own three-region split is its arrangement, P1 variety wave task 4)", () => {
-    expect(LAYOUT_REGISTRY["asymmetric-triptych"].arrangements).toEqual(["single"])
-  })
 
-  it("stacked-poster retains its legacy arrangements metadata until the CLI inventory migrates", () => {
-    expect(LAYOUT_REGISTRY["stacked-poster"].arrangements).toBe("all")
-  })
 
-  it("the remaining arrangement-respecting layouts declare arrangements: \"all\"", () => {
-    for (const id of [
-      "narrow-column",
-      "rail-numbered",
-      "tone-adaptive-content",
-      "stacked-poster",
-      "quiet-frame",
-      "crayonbox-cards",
-    ]) {
-      expect(LAYOUT_REGISTRY[id].arrangements).toBe("all")
-    }
-  })
 })
 
 describe("capacity metadata: only where the inventory gives hard numbers", () => {

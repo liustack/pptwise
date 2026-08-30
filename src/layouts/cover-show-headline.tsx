@@ -270,7 +270,6 @@ export const layoutDef = {
   suppressMotif: true,
   id: "show-headline",
   kind: "standard",
-  pinOnly: true,
   paintsOwnBackground: true,
   slideTypes: ["cover"],
   slots: [

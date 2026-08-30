@@ -171,7 +171,6 @@ export const layoutDef = {
   suppressMotif: true,
   id: "crayonbox-open",
   kind: "standard",
-  pinOnly: true,
   slideTypes: ["cover"],
   slots: [
     { name: "kicker", accepts: [] },

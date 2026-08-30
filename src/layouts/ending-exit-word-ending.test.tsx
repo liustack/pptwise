@@ -127,10 +127,9 @@ describe("ending-exit-word-ending — board geometry", () => {
 })
 
 describe("ending-exit-word-ending — shared pool", () => {
-  it("is a pinOnly ending archetype named by composition, not theme", () => {
+  it("is an ending face named by composition, not theme", () => {
     expect(layoutDef.id).toBe("exit-word-ending")
     expect(layoutDef.kind).toBe("standard")
-    expect(layoutDef.pinOnly).toBe(true)
     expect(layoutDef.slideTypes).toEqual(["ending"])
     expect("paintsOwnBackground" in layoutDef).toBe(false)
   })

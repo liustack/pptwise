@@ -5,7 +5,6 @@
 
 import { describe, expect, it } from "vitest"
 import { COMPONENT_FORMS } from "@/components/form-assignments"
-import { LAYOUT_REGISTRY } from "@/layouts/registry"
 import { CANONICAL_THEME_IDS } from "@/themes"
 import { CHART_VARIANTS, FORM_VARIANTS } from "./corpus/components"
 import type { CorpusAssets } from "./corpus/decks"
@@ -72,21 +71,13 @@ describe("mapJobSubject", () => {
 })
 
 describe("gallery inventory coverage", () => {
-  it("covers every canonical theme, registered layout (incl pinOnly), and IR component type", () => {
+  it("covers every canonical theme, registered layout, and IR component type", () => {
     const matrix = jobs()
     const gaps = galleryCoverageGaps(matrix)
 
     expect(gaps.missingThemes, `missing themes: ${gaps.missingThemes.join(", ")}`).toEqual([])
     expect(gaps.missingLayouts, `missing layouts: ${gaps.missingLayouts.join(", ")}`).toEqual([])
     expect(gaps.missingComponents, `missing components: ${gaps.missingComponents.join(", ")}`).toEqual([])
-
-    const pinOnly = Object.values(LAYOUT_REGISTRY)
-      .filter((def) => def.pinOnly)
-      .map((def) => def.id)
-      .sort()
-    const layoutSubjects = new Set(matrix.filter((job) => job.table === "layout").map((job) => job.subject))
-    expect(pinOnly.filter((id) => !layoutSubjects.has(id))).toEqual([])
-    expect(layoutSubjects.size).toBe(Object.keys(LAYOUT_REGISTRY).length)
   })
 
   it("keeps flowchart typed_nodes and architecture layer_stack as findable component pages", () => {

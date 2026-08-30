@@ -187,7 +187,6 @@ export const layoutDef = {
   // Missing date/authors skips the sign-off. No invented privacy line.
   id: "report-open-cover",
   kind: "standard",
-  pinOnly: true,
   slideTypes: ["cover"],
   slots: [
     { name: "kicker", accepts: [] },

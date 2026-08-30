@@ -141,12 +141,11 @@ export function SubjectRuleChapter({ ir, slide, index, ctx }: SvgTemplateProps) 
 
 export const layoutDef = {
   branding: "none",
-  // chapter-subject-rule-chapter.tsx: pinOnly part kicker plus an 8×120
+  // chapter-subject-rule-chapter.tsx: part kicker plus an 8×120
   // primary rule, left title. The rule is a structural mark, not a card
   // edge. Motif yields. Theme paints the mint paper.
   id: "subject-rule-chapter",
   kind: "standard",
-  pinOnly: true,
   slideTypes: ["chapter"],
   slots: [
     { name: "rule", accepts: [] },

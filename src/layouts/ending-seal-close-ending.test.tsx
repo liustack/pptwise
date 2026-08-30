@@ -101,10 +101,9 @@ describe("ending-seal-close-ending — board geometry", () => {
 })
 
 describe("ending-seal-close-ending — shared pool", () => {
-  it("is a pinOnly ending archetype", () => {
+  it("is an ending face", () => {
     expect(layoutDef.id).toBe("seal-close-ending")
     expect(layoutDef.kind).toBe("standard")
-    expect(layoutDef.pinOnly).toBe(true)
     expect(layoutDef.slideTypes).toEqual(["ending"])
   })
 

@@ -320,5 +320,4 @@ export const layoutDef: LayoutDefinition = {
     { name: "watermark", accepts: [] },
     { name: "meta", accepts: [] },
   ],
-  arrangements: "all",
 }

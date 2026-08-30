@@ -1081,5 +1081,4 @@ export const layoutDef: LayoutDefinition = {
     { name: "grid", accepts: "any", capacity: 6 },
     { name: "meta", accepts: [] },
   ],
-  arrangements: ["single"],
 }

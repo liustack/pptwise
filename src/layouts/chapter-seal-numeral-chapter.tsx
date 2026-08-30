@@ -160,7 +160,6 @@ export const layoutDef = {
   // theme. Motif yields on chapter. Empty heading draws no title.
   id: "seal-numeral-chapter",
   kind: "standard",
-  pinOnly: true,
   slideTypes: ["chapter"],
   slots: [
     { name: "kicker", accepts: [] },

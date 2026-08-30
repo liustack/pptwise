@@ -174,7 +174,6 @@ export const layoutDef = {
   // paintsOwnBackground. Empty heading invents no close and no email.
   id: "window-close-ending",
   kind: "standard",
-  pinOnly: true,
   paintsOwnBackground: true,
   slideTypes: ["ending"],
   slots: [

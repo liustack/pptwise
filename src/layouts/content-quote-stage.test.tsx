@@ -51,7 +51,6 @@ const oneComponentSlide: Slide = {
 describe("layoutDef", () => {
   it("declares pinOnly, a capacity-1 body slot, and the content slide type", () => {
     expect(layoutDef.id).toBe("quote-stage")
-    expect(layoutDef.pinOnly).toBe(true)
     expect(layoutDef.kind).toBe("standard")
     expect(layoutDef.slideTypes).toEqual(["content"])
     const body = layoutDef.slots.find((s) => s.name === "body")

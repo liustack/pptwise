@@ -185,10 +185,9 @@ export function StatCover({ ir, slide, ctx }: SvgTemplateProps) {
 export const layoutDef = {
   // cover-stat-cover.tsx: left-aligned giant heading from slide.heading,
   // serif conclusion from subheading, org/date kicker, author/version foot.
-  // Does not invent a statistic. pinOnly board lock.
+  // Does not invent a statistic. board lock.
   id: "stat-cover",
   kind: "standard",
-  pinOnly: true,
   slideTypes: ["cover"],
   slots: [
     { name: "kicker", accepts: [] },

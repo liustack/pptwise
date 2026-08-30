@@ -135,7 +135,6 @@ export const layoutDef = {
   suppressMotif: true,
   id: "crayonbox-sticker",
   kind: "standard",
-  pinOnly: true,
   slideTypes: ["chapter"],
   slots: [
     { name: "kicker", accepts: [] },

@@ -122,11 +122,10 @@ export function EmberIndexChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
 export const layoutDef: LayoutDefinition = {
   branding: "none",
   // chapter-ember-index-chapter.tsx: opaque accent chapter index, left
-  // title, small lower-right wedge. pinOnly board lock. The theme-menu entry owns brand silence so
+  // title, small lower-right wedge. board lock. The theme-menu entry owns brand silence so
   // the wedge keeps the corner.
   id: "ember-index-chapter",
   kind: "standard",
-  pinOnly: true,
   slideTypes: ["chapter"],
   slots: [
     { name: "watermark", accepts: [] },

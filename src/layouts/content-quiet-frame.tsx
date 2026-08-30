@@ -278,5 +278,4 @@ export const layoutDef: LayoutDefinition = {
     { name: "body", accepts: "any", capacity: 4 }, // single-stack, 880px centered column — see registry.ts's CONTENT_LAYOUT_DEFS header for the derivation
     { name: "meta", accepts: [] },
   ],
-  arrangements: "all",
 }

@@ -176,7 +176,6 @@ export const layoutDef = {
   // Does not invent a look range. Empty heading draws no title.
   id: "look-range-chapter",
   kind: "standard",
-  pinOnly: true,
   slideTypes: ["chapter"],
   slots: [
     { name: "kicker", accepts: [] },

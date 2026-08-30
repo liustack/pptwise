@@ -134,10 +134,9 @@ describe("cover-stat-cover — board geometry", () => {
 })
 
 describe("cover-stat-cover — shared pool", () => {
-  it("is registered for cover only, as a pinOnly archetype", () => {
+  it("is registered for cover only, as a archetype", () => {
     expect(layoutDef.id).toBe("stat-cover")
     expect(layoutDef.kind).toBe("standard")
-    expect(layoutDef.pinOnly).toBe(true)
     expect(layoutDef.slideTypes).toEqual(["cover"])
   })
 

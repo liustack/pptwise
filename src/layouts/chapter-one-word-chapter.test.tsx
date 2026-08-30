@@ -120,10 +120,9 @@ describe("chapter-one-word-chapter — board geometry", () => {
 })
 
 describe("chapter-one-word-chapter — shared pool", () => {
-  it("is a pinOnly chapter archetype", () => {
+  it("is a chapter face", () => {
     expect(layoutDef.id).toBe("one-word-chapter")
     expect(layoutDef.kind).toBe("standard")
-    expect(layoutDef.pinOnly).toBe(true)
     expect(layoutDef.slideTypes).toEqual(["chapter"])
     expect("paintsOwnBackground" in layoutDef).toBe(false)
   })

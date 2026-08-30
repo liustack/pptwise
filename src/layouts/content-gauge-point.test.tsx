@@ -107,9 +107,7 @@ describe("content-gauge-point", () => {
     expect(layoutDef).toMatchObject({
       id: "gauge-point",
       kind: "standard",
-      pinOnly: true,
       slideTypes: ["content"],
-      arrangements: ["single"],
     })
     expect(layoutDef.slots.find((slot) => slot.name === "body")).toEqual({
       name: "body",

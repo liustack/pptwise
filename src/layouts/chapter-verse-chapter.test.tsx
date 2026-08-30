@@ -53,7 +53,6 @@ const chapterEn: Slide = {
 describe("layoutDef", () => {
   it("declares pinOnly, chapter slide type, and no body slot", () => {
     expect(layoutDef.id).toBe("verse-chapter")
-    expect(layoutDef.pinOnly).toBe(true)
     expect(layoutDef.slideTypes).toEqual(["chapter"])
     expect(layoutDef.slots.map((s) => s.name)).toEqual(["kicker", "heading", "subheading"])
   })

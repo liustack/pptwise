@@ -157,12 +157,11 @@ export function DecimalIndexChapter({ ir, slide, index, ctx }: SvgTemplateProps)
 
 export const layoutDef = {
   branding: "none",
-  // chapter-decimal-index-chapter.tsx: pinOnly decimal index chapter.
+  // chapter-decimal-index-chapter.tsx: decimal index chapter.
   // Display `${n}.0`, left title, grouped measuring-rule ticks. Motif
   // paints the top red bar. Empty heading invents no section name.
   id: "decimal-index-chapter",
   kind: "standard",
-  pinOnly: true,
   slideTypes: ["chapter"],
   slots: [
     { name: "kicker", accepts: [] },

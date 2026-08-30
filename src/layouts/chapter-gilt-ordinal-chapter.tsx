@@ -138,12 +138,11 @@ export function GiltOrdinalChapter({ ir, slide, index, ctx }: SvgTemplateProps) 
 
 export const layoutDef = {
   branding: "none",
-  // chapter-gilt-ordinal-chapter.tsx: pinOnly centered gilt ordinal.
+  // chapter-gilt-ordinal-chapter.tsx: centered gilt ordinal.
   // CJK 其 + numeral, Latin roman. Short border rule under the title.
   // Motif yields. Empty heading invents no chapter title.
   id: "gilt-ordinal-chapter",
   kind: "standard",
-  pinOnly: true,
   slideTypes: ["chapter"],
   slots: [
     { name: "kicker", accepts: [] },

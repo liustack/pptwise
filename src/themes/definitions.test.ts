@@ -500,7 +500,6 @@ describe("a menu may name a pinOnly face", () => {
       kind: "standard",
       slideTypes: ["content"],
       slots: [],
-      pinOnly: true,
     } satisfies LayoutDefinition
   })
   afterEach(() => {

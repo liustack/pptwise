@@ -353,5 +353,4 @@ export const layoutDef: LayoutDefinition = {
   ],
   // The body band is a lone ordinary rect (like narrow-column/side-
   // highlight/quiet-frame/image-lead-split) and honors every arrangement.
-  arrangements: "all",
 }

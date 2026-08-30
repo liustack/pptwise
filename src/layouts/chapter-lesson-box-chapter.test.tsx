@@ -111,10 +111,9 @@ describe("chapter-lesson-box-chapter — board geometry", () => {
 })
 
 describe("chapter-lesson-box-chapter — shared pool", () => {
-  it("is a pinOnly chapter archetype named by composition, not theme", () => {
+  it("is a chapter face named by composition, not theme", () => {
     expect(layoutDef.id).toBe("lesson-box-chapter")
     expect(layoutDef.kind).toBe("standard")
-    expect(layoutDef.pinOnly).toBe(true)
     expect(layoutDef.slideTypes).toEqual(["chapter"])
   })
 

@@ -247,20 +247,6 @@ export type SlotName =
   | "top"
   | "bottom"
 
-/** Body-arrangement enum (the retired `variant` field's 9-value non-image
- * subset — W2 task 3 split the other 4 image values off into first-class
- * takeover layouts — see `TAKEOVER_LAYOUT_DEFS` below). snake_case, matching
- * component-type naming convention. */
-export type Arrangement =
-  | "single"
-  | "two_column"
-  | "kpi_focus"
-  | "image_focus"
-  | "code"
-  | "quote"
-  | "big_number"
-  | "assertion_evidence"
-  | "aside"
 
 export interface LayoutSlot {
   name: SlotName
@@ -323,22 +309,6 @@ export interface LayoutDefinition {
    * validates every supplied value before installing the theme.
    */
   params?: Readonly<Record<string, LayoutParamDeclaration>>
-  /** content layouts only: which body arrangements this layout honors
-   *  (inventory's 4 直接尊重全部 + stacked-poster（W2 任务 3 裁决，条件接管
-   *  路径见其注释）共 5 个 → "all"，two-column → ["two_column"]，
-   *  bento-panel → ["single"]). Historical metadata. Face choice now
-   *  comes from the theme menu, not from sampling this list. */
-  arrangements?: readonly Arrangement[] | "all"
-  /**
-   * Historical auto-selection strategy allowlist. Unused by the menu
-   * route. Kept on the type because layoutDef files still declare it.
-   */
-  narrativesOnly?: readonly Strategy[]
-  /**
-   * Historical opt-out from the retired auto-pick lottery. Unused by the
-   * menu route. Kept on the type because layoutDef files still declare it.
-   */
-  pinOnly?: boolean
   /**
    * Structural fact of the face: it leaves no room for the brand frame
    * (footer rule, meta, logo). A menu entry may additionally silence the

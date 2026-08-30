@@ -198,7 +198,6 @@ export const layoutDef: LayoutDefinition = {
   // heading, foot rule, next-issue preview from subheading. No thank-you.
   id: "afterword-ending",
   kind: "standard",
-  pinOnly: true,
   slideTypes: ["ending"],
   slots: [
     { name: "kicker", accepts: [] },

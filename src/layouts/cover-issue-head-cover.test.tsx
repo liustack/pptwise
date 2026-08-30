@@ -119,10 +119,9 @@ describe("cover-issue-head-cover — board geometry", () => {
 })
 
 describe("cover-issue-head-cover — shared pool", () => {
-  it("is registered as a pinOnly cover", () => {
+  it("is registered as a cover face", () => {
     expect(layoutDef.id).toBe("issue-head-cover")
     expect(layoutDef.kind).toBe("standard")
-    expect(layoutDef.pinOnly).toBe(true)
     expect(layoutDef.slideTypes).toEqual(["cover"])
   })
 

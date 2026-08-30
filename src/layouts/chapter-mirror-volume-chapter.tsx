@@ -172,13 +172,12 @@ export function MirrorVolumeChapter({ ir, slide, index, ctx }: SvgTemplateProps)
 
 export const layoutDef = {
   branding: "none",
-  // chapter-mirror-volume-chapter.tsx: pinOnly mirrored volume open.
+  // chapter-mirror-volume-chapter.tsx: mirrored volume open.
   // Muted volume kicker, centered title, paired accent bars only when a
   // subtitle sits between them. CJK 卷 + numeral, Latin VOL. N. Theme
   // paints the chapter field.
   id: "mirror-volume-chapter",
   kind: "standard",
-  pinOnly: true,
   slideTypes: ["chapter"],
   slots: [
     { name: "kicker", accepts: [] },

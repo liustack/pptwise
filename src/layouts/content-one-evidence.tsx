@@ -108,20 +108,18 @@ function GenericOneEvidenceContent({ slide, ctx }: SvgTemplateProps) {
 
 export const layoutDef = {
   branding: "none",
-  // content-one-evidence.tsx: a pinOnly assertion + single evidence page.
+  // content-one-evidence.tsx: a assertion + single evidence page.
   // Heading is a full-sentence claim. Body capacity 1 is the evidence
   // (chart / table / image / whatever pickEvidence returns, else the sole
   // component). Page decor and branding posture belong to the menu entry.
   id: "one-evidence",
   kind: "standard",
-  pinOnly: true,
   slideTypes: ["content"],
   slots: [
     { name: "heading", accepts: [] },
     { name: "body", accepts: "any", capacity: 1 },
     { name: "meta", accepts: [] },
   ],
-  arrangements: ["single"],
   headingFit: {
     maxWidth: HEADING_MAX_W,
     fontSize: 36,

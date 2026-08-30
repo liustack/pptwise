@@ -164,7 +164,6 @@ export const layoutDef = {
   // The theme-menu entry owns brand silence so the default br logo does not eat the ghost. pinOnly.
   id: "ghost-section-chapter",
   kind: "standard",
-  pinOnly: true,
   slideTypes: ["chapter"],
   slots: [
     { name: "kicker", accepts: [] },

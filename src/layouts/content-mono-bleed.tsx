@@ -24,13 +24,12 @@ export function MonoBleedContent(props: SvgTemplateProps) {
 
 export const layoutDef = {
   branding: "none",
-  // content-mono-bleed.tsx: a pinOnly full-bleed primary field with inverted
+  // content-mono-bleed.tsx: a full-bleed primary field with inverted
   // type. Capacity 0 (write the words in heading). paintsOwnBackground so
   // FullSlideSvg does not paint the theme bg underneath. Page decor and
   // branding posture belong to the menu entry.
   id: "mono-bleed",
   kind: "standard",
-  pinOnly: true,
   paintsOwnBackground: true,
   slideTypes: ["content"],
   slots: [
@@ -38,6 +37,5 @@ export const layoutDef = {
     { name: "subheading", accepts: [] },
     { name: "body", accepts: [], capacity: 0 },
   ],
-  arrangements: ["single"],
   headingFit: MONO_BLEED_HEADING_FIT,
 } satisfies LayoutDefinition

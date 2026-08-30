@@ -206,11 +206,10 @@ export function ActionPadEnding({ ir, slide, ctx }: SvgTemplateProps) {
 
 export const layoutDef: LayoutDefinition = {
   branding: "none",
-  // ending-action-pad-ending.tsx: pinOnly next-step list, accent pad CTA,
+  // ending-action-pad-ending.tsx: next-step list, accent pad CTA,
   // foot rule and sign-off. No thank-you. Optional bullets fill the list.
   id: "action-pad-ending",
   kind: "standard",
-  pinOnly: true,
   slideTypes: ["ending"],
   slots: [
     { name: "kicker", accepts: [] },

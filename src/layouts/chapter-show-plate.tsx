@@ -187,7 +187,6 @@ export const layoutDef = {
   suppressMotif: true,
   id: "show-plate",
   kind: "standard",
-  pinOnly: true,
   slideTypes: ["chapter"],
   slots: [
     { name: "kicker", accepts: [] },

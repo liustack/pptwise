@@ -222,7 +222,7 @@ export function QuoteStageContent({ slide, ctx }: SvgTemplateProps) {
 // elsewhere, e.g. `registry.ts`'s `Record<string, LayoutDefinition>`, still
 // sees the field as optional, correctly, since most layouts omit it).
 export const layoutDef = {
-  // content-quote-stage.tsx: pptwise's first pinOnly layout (quote-stage
+  // content-quote-stage.tsx: pptwise's first layout (quote-stage
   // wave, T1's mechanism + T2's first member) — heading as the page's
   // oversized centered main visual, capacity-1 body slot rendered as a
   // small attribution annotation below it, subheading (if present) also
@@ -230,7 +230,6 @@ export const layoutDef = {
   // whitespace and the oversized heading are the whole composition.
   id: "quote-stage",
   kind: "standard",
-  pinOnly: true,
   slideTypes: ["content"],
   slots: [
     { name: "heading", accepts: [] },
@@ -238,7 +237,6 @@ export const layoutDef = {
     { name: "body", accepts: "any", capacity: 1 },
     { name: "meta", accepts: [] },
   ],
-  arrangements: ["single"],
   // Heading-overflow hard-error params (T2 fix round — see
   // `LayoutDefinition.headingFit`'s own doc comment, registry.ts, for the
   // full rationale): `ir-quality.ts` reads this generically off

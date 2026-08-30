@@ -134,10 +134,9 @@ describe("chapter-decimal-index-chapter — board geometry", () => {
 })
 
 describe("chapter-decimal-index-chapter — shared pool", () => {
-  it("is a pinOnly chapter archetype", () => {
+  it("is a chapter face", () => {
     expect(layoutDef.id).toBe("decimal-index-chapter")
     expect(layoutDef.kind).toBe("standard")
-    expect(layoutDef.pinOnly).toBe(true)
     expect(layoutDef.slideTypes).toEqual(["chapter"])
   })
 

@@ -179,7 +179,6 @@ export const layoutDef = {
   // Missing authors/date skips the plate.
   id: "thesis-plate-cover",
   kind: "standard",
-  pinOnly: true,
   slideTypes: ["cover"],
   slots: [
     { name: "kicker", accepts: [] },

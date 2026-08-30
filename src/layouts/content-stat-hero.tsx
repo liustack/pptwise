@@ -179,13 +179,12 @@ function GenericStatHeroContent({ ir, slide, index, ctx }: SvgTemplateProps) {
 
 export const layoutDef = {
   branding: "none",
-  // content-stat-hero.tsx: a pinOnly whole-page number. Hero value from
+  // content-stat-hero.tsx: a whole-page number. Hero value from
   // kpi_cards[0] or the heading, one caption line, optional source.
   // Page decor and branding posture belong to the menu entry. The page is
   // intentionally sparse and uses the full canvas.
   id: "stat-hero",
   kind: "standard",
-  pinOnly: true,
   slideTypes: ["content"],
   slots: [
     { name: "kicker", accepts: [] },
@@ -193,7 +192,6 @@ export const layoutDef = {
     { name: "body", accepts: ["kpi_cards", "paragraph", "citation"], capacity: 1 },
     { name: "meta", accepts: [] },
   ],
-  arrangements: ["single"],
   headingFit: {
     maxWidth: CONTENT_MAX_W,
     fontSize: 180,

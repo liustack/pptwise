@@ -224,7 +224,6 @@ export const layoutDef = {
   // red-head line, not a fake agency name.
   id: "red-head-cover",
   kind: "standard",
-  pinOnly: true,
   slideTypes: ["cover"],
   slots: [
     { name: "kicker", accepts: [] },
