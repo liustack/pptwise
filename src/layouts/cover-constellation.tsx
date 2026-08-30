@@ -4,6 +4,7 @@ import { fitHeadingLines } from "../render/heading-fit"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { CONF_LABEL } from "../lib/conf-labels"
 import { showsDocumentMeta } from "../render/document-meta"
+import { faceParam } from "./face-params"
 
 /**
  * constellation cover layout（spec §3.2）：底锚英雄标题 + 右侧半区的 9 点
@@ -62,11 +63,10 @@ const STAR_CHAIN = [
   { x: 180, r: 2.5 },
 ] as const
 
-export function ConstellationCover({ ir, slide, ctx }: SvgTemplateProps) {
+export function ConstellationCover({ ir, slide, ctx, params }: SvgTemplateProps) {
   const { colors, fonts } = ctx
-  const cover = ctx.shape?.cover
-  const titleBottomAnchor = cover?.titleBottomAnchor !== false
-  const ruleStyle = cover?.ruleStyle ?? "bar"
+  const titleBottomAnchor = faceParam(params, "titleBottomAnchor", true)
+  const ruleStyle = faceParam<"bar" | "star-chain">(params, "ruleStyle", "bar")
   const org = ir.meta.organization
   const conf = showsDocumentMeta(ir) ? ir.meta.confidentiality : undefined
   const confLabel = conf ? CONF_LABEL[conf] : null
@@ -257,6 +257,10 @@ export const layoutDef: LayoutDefinition = {
   id: "constellation",
   kind: "archetype",
   slideTypes: ["cover"],
+  params: {
+    titleBottomAnchor: { type: "boolean" },
+    ruleStyle: { type: "string", values: ["bar", "star-chain"] },
+  },
   slots: [
     { name: "kicker", accepts: [] },
     { name: "rule", accepts: [] },

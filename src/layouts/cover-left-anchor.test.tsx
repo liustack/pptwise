@@ -10,6 +10,7 @@ import { LeftAnchorCover } from "./cover-left-anchor"
 import type { PptxIR, Slide } from "@/ir"
 import type { StyleTokens } from "../themes/tokens"
 import { accessibleInk } from "../render/ink"
+import type { SvgTemplateProps } from "./types"
 
 function tokensWithoutCover(themeId: string): StyleTokens {
   const tokens = resolveStyle(themeId)
@@ -25,11 +26,16 @@ function renderCover(
   doc?: PptxIR,
 ) {
   const tokens = resolveStyle(themeId)
-  const shaped: StyleTokens = { ...tokens, shape: { ...tokens.shape, cover: { ...tokens.shape?.cover, ...cover } } }
-  const ctx = buildCtx(shaped, {})
+  const ctx = buildCtx(tokens, {})
   const irDoc = doc ?? ir(themeId)
-  const out = renderSvgMarkup(<LeftAnchorCover ir={irDoc} slide={s} index={0} ctx={ctx} />)
-  return { out, root: parseSvgRoot(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">${out}</svg>`), tokens }
+  const out = renderSvgMarkup(
+    <LeftAnchorCover ir={irDoc} slide={s} index={0} ctx={ctx} params={cover as SvgTemplateProps["params"]} />,
+  )
+  return {
+    out,
+    root: parseSvgRoot(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">${out}</svg>`),
+    tokens,
+  }
 }
 
 // Branding's brand logo bands (see templates/academic.test.tsx's own

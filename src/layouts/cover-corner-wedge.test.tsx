@@ -7,6 +7,7 @@ import { resolveStyle, CANONICAL_THEME_IDS } from "../themes"
 import { contrastRatio, requiredContrastRatio } from "../render/ink"
 import type { StyleTokens } from "../themes/tokens"
 import { CornerWedgeCover, layoutDef } from "./cover-corner-wedge"
+import type { SvgTemplateProps } from "./types"
 import type { PptxIR, Slide } from "@/ir"
 
 const HEADING_ARENA = "巅峰之夜"
@@ -40,16 +41,21 @@ function renderCover(
   meta: PptxIR["meta"] = FULL_META,
 ) {
   const tokens = resolveStyle(themeId)
-  const shaped: StyleTokens = { ...tokens, shape: { ...tokens.shape, cover: { ...tokens.shape?.cover, ...cover } } }
   const ctx = buildCtx(
-    shaped,
+    tokens,
     {},
     undefined,
     resolveBackgroundHex(tokens.defaultBackgrounds.cover, tokens.colors.surface),
   )
   const markup = renderSvgMarkup(
     <svg viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg">
-      <CornerWedgeCover ir={ir(themeId, meta, s)} slide={s} index={0} ctx={ctx} />
+      <CornerWedgeCover
+        ir={ir(themeId, meta, s)}
+        slide={s}
+        index={0}
+        ctx={ctx}
+        params={cover as SvgTemplateProps["params"]}
+      />
     </svg>,
   )
   return { markup, root: parseSvgRoot(markup), tokens }
@@ -118,7 +124,13 @@ describe("cover-corner-wedge — board geometry", () => {
   })
 
   it("ember theme knobs place the board dual wedge without baking hex", () => {
-    const { root, tokens } = renderCover("ember", slide(HEADING_EMBER))
+    const { root, tokens } = renderCover("ember", slide(HEADING_EMBER), {
+      textAnchor: "start",
+      wedgePeakY: 260,
+      wedgeStartX: 900,
+      wedgeInnerStartX: 860,
+      wedgeInnerPeakY: 212,
+    })
     const paths = Array.from(root.querySelectorAll("path"))
     expect(paths[0]?.getAttribute("d")?.replace(/\s+/g, "")).toBe("M900,720L1280,260L1280,720Z")
     expect(paths[2]?.getAttribute("d")?.replace(/\s+/g, "")).toBe("M860,720L1280,212L1280,260L900,720Z")

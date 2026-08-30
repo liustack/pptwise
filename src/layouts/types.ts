@@ -1,6 +1,7 @@
 import type React from "react"
 import type { PptxIR, Slide } from "@/ir"
 import type { ComponentCtx } from "../components/types"
+import type { MenuParamValue } from "../themes/schema"
 
 /**
  * Props every layout receives（原 templates/types.ts 的 SvgTemplateProps，
@@ -11,6 +12,8 @@ export interface SvgTemplateProps {
   slide: Slide
   index: number
   ctx: ComponentCtx
+  /** Values validated against this face's registry declaration at theme registration. */
+  params?: Readonly<Record<string, MenuParamValue>>
 }
 
 /**
@@ -47,7 +50,7 @@ export type CoverLayoutId =
   // band-title = 通栏色带承反白标题，header-band = 顶栏只承 meta、标题落纸面，
   // paper-masthead = 纸底巨号+右缘年份一字一行，horizon-wedge = 底缘缓坡楔，
   // corner-wedge = 右下角三角楔。单 signer 坐标写在文件常量里，共用构造的
-  // 对齐/带高/峰点走 `style.shape.cover`，零 theme id。
+  // 对齐、带高、峰点走菜单脸参数，零 theme id。
   | "verdict-index"
   | "band-title"
   | "header-band"
