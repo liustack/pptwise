@@ -7,7 +7,6 @@ export {
   generatePptx,
   listThemes,
   irJsonSchema,
-  styleJsonSchema,
   type ValidateResult,
   type ValidationIssue,
   type ThemeInfo,
@@ -15,7 +14,6 @@ export {
 export {
   PptxIRSchema,
   ThemeSchema,
-  StyleOverrideSchema,
   BUILTIN_THEME_IDS,
   COMPONENT_TYPES,
   KIND_VALUES,
@@ -29,7 +27,6 @@ export type {
   Meta,
   Assets,
   BackgroundSpec,
-  StyleOverride,
   BrandConfig,
 } from "./ir"
 export { registerTheme, getInstalledThemeIds, getThemeDefinition } from "./themes/definitions"

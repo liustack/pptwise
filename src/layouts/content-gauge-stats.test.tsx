@@ -205,14 +205,12 @@ describe("content-gauge-stats", () => {
     expect(textBy(root, "额外指标 · %")).toBeUndefined()
   })
 
-  it("declares a theme-locked pinOnly full-density content layout", () => {
+  it("declares a theme-locked full-density content layout", () => {
     expect(layoutDef).toMatchObject({
       id: "gauge-stats",
       kind: "standard",
       slideTypes: ["content"],
-      arrangements: "all",
     })
-    expect(layoutDef.pinOnly).toBe(true)
     expect(layoutDef.slots.find((slot) => slot.name === "body")).toEqual({
       name: "body",
       accepts: "any",

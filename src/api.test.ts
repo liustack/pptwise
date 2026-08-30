@@ -32,6 +32,26 @@ describe("validateIr", () => {
     expect(r.ir?.slides[0]?.components).toEqual([])
   })
 
+  it.each([
+    ["#abc", "#AABBCC"],
+    ["#abc8", "#AABBCC"],
+    ["#abcdef", "#ABCDEF"],
+    ["#abcdef80", "#ABCDEF"],
+  ])("renders normalized slide background %s as opaque %s", (input, expected) => {
+    const candidate = {
+      ...raw,
+      slides: raw.slides.map((slide, index) =>
+        index === 1 ? { ...slide, background: { kind: "color", value: input } } : slide,
+      ),
+    }
+
+    const result = validateIr(candidate)
+
+    expect(result.ok).toBe(true)
+    expect(result.ir?.slides[1]?.background).toEqual({ kind: "color", value: expected })
+    expect(renderSlideSvg(result.ir!, 1)).toContain(`fill="${expected}"`)
+  })
+
   it.each(["1", "2", "3", "4"])("hard-rejects IR v%s with the current v5 contract and no migration pointer", (version) => {
     const v = validateIr({ version, filename: "x", theme: { id: "tech" }, slides: [] })
     expect(v.ok).toBe(false)
@@ -47,7 +67,7 @@ describe("validateIr", () => {
     const v = validateIr({ theme: { id: "neon" }, slides: [{ kind: "points", heading: "x" }] })
     expect(v.ok).toBe(false)
     expect(v.errors[0]!.message).toMatch(/unknown theme "neon"/)
-    expect(v.errors[0]!.message).toMatch(/available:.*consulting/)
+    expect(v.errors[0]!.message).toMatch(/available:.*consulting/i)
     expect(v.errors[0]!.message).not.toMatch(/pptwise migrate/)
     expect(v.errors[0]!.message).not.toMatch(/was removed/)
   })
@@ -56,7 +76,9 @@ describe("validateIr", () => {
     const v = validateIr({ theme: { id: "bloom" }, slides: [{ kind: "points", heading: "x" }] })
     expect(v.ok).toBe(false)
     expect(v.errors[0]!.path).toBe("theme.id")
-    expect(v.errors[0]!.message).toMatch(/bloom/)
+    expect(v.errors[0]!.message).toMatch(/unknown theme "bloom"/)
+    expect(v.errors[0]!.message).toMatch(/available:.*consulting/)
+    expect(v.errors[0]!.message).not.toMatch(/migrate|was removed/i)
   })
 
   it("hard-rejects leftover logo_wall without pointing at a removed migration command", () => {
@@ -162,7 +184,18 @@ describe("validateIr", () => {
     })
 
     it("accepts a kind offered by the bound theme menu", () => {
-      expect(validateIr({ ...raw, slides: [{ type: "content", kind: "photo", heading: "Photo", components: [] }] }).ok).toBe(true)
+      expect(validateIr({
+        ...raw,
+        assets: { images: { hero: { src: realPngDataUri, alt: "Hero" } } },
+        slides: [
+          {
+            type: "content",
+            kind: "photo",
+            heading: "Photo",
+            components: [{ type: "image", asset_id: "hero", fit: "cover" }],
+          },
+        ],
+      }).ok).toBe(true)
     })
 
     it("hard-rejects a kind outside the bound theme menu and lists the offer", () => {
@@ -818,7 +851,7 @@ describe("describeQualityIssue: density/bullets English messages (W3 task 3, spe
     const v = validateIr({
       ...raw,
       narrative: { pacing: "spacious" },
-      slides: [raw.slides[0], denseSlide(4, { kind: "photo", withImage: true })],
+      slides: [raw.slides[0], denseSlide(5, { kind: "photo", withImage: true })],
     })
     expect(v.ok).toBe(true)
     expect(densityMessage(v)).toBe(
@@ -1691,10 +1724,14 @@ describe("unrecognized-key rescue hints (borrow-wave task 3, generalizing the sc
     expect(v.errors.some((e) => e.message.includes('Unrecognized key: "variant"'))).toBe(true)
   })
 
-  it("hints theme.override -> theme.style, scoped to the theme object", () => {
+  it("hints theme.override was removed, scoped to the theme object", () => {
     const v = validateIr({ ...raw, theme: { id: "consulting", override: { accent: "#ff0000" } } })
     expect(v.ok).toBe(false)
-    expect(v.errors.some((e) => e.message.includes('"theme.override" was renamed to "theme.style" in IR v4'))).toBe(true)
+    expect(
+      v.errors.some((e) =>
+        e.message.includes('"theme.override" was removed — theme is { id }. Recolor with `pptwise theme fork`'),
+      ),
+    ).toBe(true)
   })
 
   it("P2: a non-rename unrecognized key directly on a slide gets the generic components[] location hint instead", () => {
@@ -1826,7 +1863,7 @@ describe("registerTheme end-to-end (W3 task 4)", () => {
         id,
         colors: {
           bg: "#123ABC",
-          surface: "#FFFFFF",
+          surface: "#123ABC",
           primary: "#123ABC",
           accent: "#FF00AA",
           // White/light-gray text — every `defaultBackgrounds` entry below is
@@ -2034,12 +2071,12 @@ describe("generatePptx", () => {
 })
 
 describe("validateIr deck branding alias", () => {
-  it("rewrites chrome to branding when branding is absent and records the note", () => {
+  it("rejects leftover chrome with the branding rename hint", () => {
     const v = validateIr({ ...raw, chrome: "full" })
-    expect(v.ok).toBe(true)
-    expect(v.ir?.branding).toBe("full")
-    expect(v.ir).not.toHaveProperty("chrome")
-    expect(v.normalized).toEqual(["(root): chrome → branding"])
+    expect(v.ok).toBe(false)
+    expect(v.errors.some((e) => e.message.includes('Unrecognized key: "chrome"'))).toBe(true)
+    expect(v.errors.some((e) => e.message.includes('"chrome" was renamed to "branding"'))).toBe(true)
+    expect(v.normalized).toBeUndefined()
   })
 
   it("both chrome and branding present is left for zod strict to reject", () => {
@@ -2132,6 +2169,38 @@ describe("generatePptx content-drop gate (deep-review P1)", () => {
   it("throws PptwiseError naming the page, the count and the way out", async () => {
     await expect(generatePptx(dropping)).rejects.toThrow(
       /deck drops \d+ content blocks that do not fit the content area, on 1 page: p-2 \(page 2, \d+\) — shorten the content, split the page in two, or pass --allow-dropped-content/,
+    )
+  })
+
+  it("blocks an image-top takeover that omits its fourth body component", async () => {
+    const themeId = registerTestTheme("api-image-top-drop", "consulting", {
+      content: { photo: "image-top" },
+    })
+    const takeoverDropping = {
+      ...raw,
+      theme: { id: themeId },
+      assets: { images: { hero: { src: realPngDataUri, alt: "Hero" } } },
+      slides: [
+        raw.slides[0],
+        {
+          type: "content" as const,
+          kind: "photo" as const,
+          id: "photo-2",
+          heading: "Four supporting points",
+          components: [
+            { type: "image" as const, asset_id: "hero", fit: "cover" as const },
+            ...["One", "Two", "Three", "Four"].map((text) => ({
+              type: "paragraph" as const,
+              text,
+            })),
+          ],
+        },
+      ],
+    }
+
+    expect(validateIr(takeoverDropping).ok).toBe(true)
+    await expect(generatePptx(takeoverDropping)).rejects.toThrow(
+      /deck drops 1 content block.*photo-2 \(page 2, 1\).*--allow-dropped-content/,
     )
   })
 

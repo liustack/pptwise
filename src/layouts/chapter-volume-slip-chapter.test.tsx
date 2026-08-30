@@ -133,10 +133,9 @@ describe("chapter-volume-slip-chapter — board geometry", () => {
 })
 
 describe("chapter-volume-slip-chapter — shared pool", () => {
-  it("is a pinOnly chapter archetype", () => {
+  it("is a chapter face", () => {
     expect(layoutDef.id).toBe("volume-slip-chapter")
     expect(layoutDef.kind).toBe("standard")
-    expect(layoutDef.pinOnly).toBe(true)
     expect(layoutDef.slideTypes).toEqual(["chapter"])
   })
 

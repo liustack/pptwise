@@ -200,7 +200,6 @@ export const layoutDef = {
   // br logo does not eat the ghost.
   id: "fascicle-ghost-chapter",
   kind: "standard",
-  pinOnly: true,
   slideTypes: ["chapter"],
   slots: [
     { name: "kicker", accepts: [] },

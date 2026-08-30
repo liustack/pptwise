@@ -141,7 +141,6 @@ export const layoutDef = {
   suppressMotif: true,
   id: "show-finale",
   kind: "standard",
-  pinOnly: true,
   paintsOwnBackground: true,
   slideTypes: ["ending"],
   slots: [

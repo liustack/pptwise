@@ -69,7 +69,7 @@ There is no partial format, base reference, or load-time inheritance. Creating a
 }
 ```
 
-`version`, `id`, `style`, and `menu` are required. `style.id` must equal the theme `id`. A workspace theme id cannot collide with a factory preset id.
+`version`, `id`, `style`, and `menu` are required. `style.id` must equal the theme `id`. A theme id is a slug of lowercase letters, digits, and hyphens. Deck and workspace files may keep a factory preset id and shadow it.
 
 The style object is complete. Its required core contains background, surface, primary, accent, text, muted, chart palette, heading fonts, body fonts, and four default backgrounds. Additional colors, mono fonts, shape controls, and `allowCustomBackground` are optional.
 
@@ -126,7 +126,7 @@ Name resolution uses three levels in order:
 2. Workspace `themes/` directories while walking upward from the starting directory.
 3. The 24 factory presets.
 
-Workspace files cannot shadow preset ids. Unknown names fail loudly and report the searched locations.
+Deck and workspace files may shadow a factory preset by keeping the same id. Freeze is a copy that preserves the bound name, for example `pptwise theme new --from consulting -o deck-dir/theme.json --id consulting`. Unknown names fail loudly and report the searched locations.
 
 To freeze a workspace theme for one deck, copy it into the deck directory as `theme.json` while preserving its id:
 
@@ -150,7 +150,7 @@ pptwise theme fork acme-report \
   --id acme-blue
 ```
 
-The fork preserves the source menu byte for byte, derives dependent tokens such as muted color, and runs the contrast gate. The source stays unchanged.
+The fork preserves the source menu byte for byte, derives dependent tokens such as muted color, and runs the contrast gate. The source stays unchanged. If a donor's primary and accent anchors are identical, an ambiguous default-background tie resolves to primary deterministically.
 
 A same-menu fork may replace a deck binding inside the workflow. If menus differ, return to theme selection and revise the spec and affected page fills. Useful claims, data, images, and copy can be reused, but the old semantic page sequence is not assumed to fit.
 

@@ -4,7 +4,7 @@ import { measureTextUnits } from "../lib/svg-text-layout"
 import { CANVAS_W_PX } from "../constants"
 import { isBold } from "./fonts"
 import { parseSvgRoot } from "./serialize"
-import { slideToSvgMarkup } from "./render-slide"
+import { slideToRender, slideToSvgMarkup } from "./render-slide"
 import type { PptxIR, Slide } from "@/ir"
 import type { CanonicalThemeId } from "../themes"
 import { __resetRegisteredThemes } from "../themes/definitions"
@@ -148,5 +148,127 @@ describe("image-split / image-top gallery English heading overflow", () => {
     const colY = Number(/translate\(\s*96[\s,]+([\d.]+)/.exec(col.getAttribute("transform") ?? "")?.[1])
     expect(colY).toBeGreaterThan(Number(hairline.getAttribute("y")))
     expect(colY).toBeGreaterThan(442)
+  })
+})
+
+describe("image takeover dropped-content propagation", () => {
+  it.each(["image-split", "image-top", "image-bottom", "image-annotate"] as const)(
+    "%s marks the page as dropped when its required image is absent",
+    (face) => {
+      const slide: Slide = {
+        type: "content",
+        kind: "photo",
+        heading: "Missing required image",
+        components: [{ type: "paragraph", text: "This content cannot be rendered by the takeover." }],
+      }
+      const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "consulting", {
+        content: { photo: face },
+      })
+      const doc = makeIr(themeId, slide)
+
+      expect(slideToRender(doc, slide, 0).dropped).toBeGreaterThan(0)
+    },
+  )
+
+  it("image-top marks the fourth body component omitted by its three-column surface", () => {
+    const slide: Slide = {
+      type: "content",
+      kind: "photo",
+      heading: "Four supporting points",
+      components: [
+        { type: "image", asset_id: "hero", fit: "cover" },
+        ...["One", "Two", "Three", "Four"].map((text) => ({ type: "paragraph" as const, text })),
+      ],
+    }
+    const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "consulting", {
+      content: { photo: "image-top" },
+    })
+    const doc = makeIr(themeId, slide)
+
+    expect(slideToRender(doc, slide, 0).dropped).toBe(1)
+  })
+
+  it("image-top consumes an image_compare once as its selected image family source", () => {
+    const slide: Slide = {
+      type: "content",
+      kind: "photo",
+      heading: "One selected image",
+      components: [
+        {
+          type: "image_compare",
+          left: { asset_id: "hero", label: "Before" },
+          right: { asset_id: "hero", label: "After" },
+        },
+      ],
+    }
+    const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "consulting", {
+      content: { photo: "image-top" },
+    })
+    const root = parseSvgRoot(slideToSvgMarkup(makeIr(themeId, slide), slide, 0))
+
+    expect(root.querySelectorAll("image")).toHaveLength(1)
+    expect(root.textContent).not.toContain("Before")
+    expect(root.textContent).not.toContain("After")
+  })
+
+  it("image-annotate does not mark its selected image_compare source as dropped", () => {
+    const slide: Slide = {
+      type: "content",
+      kind: "photo",
+      heading: "Selected comparison anchor",
+      components: [
+        {
+          type: "image_compare",
+          left: { asset_id: "hero", label: "Before" },
+          right: { asset_id: "hero", label: "After" },
+        },
+      ],
+    }
+    const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "consulting", {
+      content: { photo: "image-annotate" },
+    })
+    const doc = makeIr(themeId, slide)
+
+    expect(slideToRender(doc, slide, 0).dropped).toBe(0)
+  })
+
+  it("image-annotate marks annotation overflow and unsupported sibling components", () => {
+    const slide: Slide = {
+      type: "content",
+      kind: "photo",
+      heading: "Annotated image",
+      components: [
+        { type: "image", asset_id: "hero", fit: "cover" },
+        { type: "bullets", items: ["One", "Two", "Three", "Four", "Five"] },
+        { type: "paragraph", text: "This component has no slot on the annotation surface." },
+      ],
+    }
+    const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "consulting", {
+      content: { photo: "image-annotate" },
+    })
+    const doc = makeIr(themeId, slide)
+
+    expect(slideToRender(doc, slide, 0).dropped).toBe(2)
+  })
+
+  it("image-bottom propagates components rejected by layoutContentFit", () => {
+    const slide: Slide = {
+      type: "content",
+      kind: "photo",
+      heading: "Crowded image footer",
+      components: [
+        { type: "image", asset_id: "hero", fit: "cover" },
+        ...Array.from({ length: 12 }, (_, index) => ({
+          type: "paragraph" as const,
+          text: `Supporting paragraph ${index + 1} with enough text to require its own vertical region.`,
+        })),
+      ],
+    }
+    const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "consulting", {
+      content: { photo: "image-bottom" },
+    })
+    const doc = makeIr(themeId, slide)
+
+    expect(slideToRender(doc, slide, 0).dropped).toBeGreaterThan(0)
   })
 })

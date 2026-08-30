@@ -1,4 +1,5 @@
-import type { PptxIR, Slide } from "@/ir"
+import type { PageRenderContext } from "../render/page-context"
+import type { Slide } from "@/ir"
 
 /** Outer frame bottom when branding paints the logo/footer strip. */
 export const FRAME_BOTTOM_BRANDED = 624
@@ -8,22 +9,20 @@ export const LECTURE_FRAME_BOTTOM_BOARD = 694
 export const LUXE_FRAME_BOTTOM_BOARD = 696
 
 /**
- * Sparse pin-only faces that already paint their own rules. Motifs that
- * carry horizontal furniture yield on these content pins so the face stays
+ * Sparse faces that already paint their own rules. Motifs that carry
+ * horizontal furniture yield on these faces so the face stays
  * inside the 2-group budget (gallery review r2 B4).
  */
-export const SPARSE_PIN_LAYOUTS = ["statement", "pull-quote", "stat-hero", "one-evidence", "mono-bleed"] as const
+export const SPARSE_FACES = ["statement", "pull-quote", "stat-hero", "one-evidence", "mono-bleed"] as const
 
-export function yieldsOnSparsePin(_slide: Slide): boolean {
+export function yieldsOnSparseFace(_slide: Slide): boolean {
   return false
 }
 
 /**
- * Outer-frame bottom edge. `ir.branding === "full"` is the only posture that
- * paints the content-page logo/footer, so the frame clears y630. Omitted
- * branding drops to the board inset. A menu entry that silences branding also
- * silences its motif, so this frame is not rendered for that entry.
+ * Outer-frame bottom edge. The page context owns the effective branding
+ * decision and supplies the adjusted edge when the footer strip is present.
  */
-export function frameBottomY(ir: PptxIR, _slide: Slide, boardY: number): number {
-  return ir.branding === "full" ? FRAME_BOTTOM_BRANDED : boardY
+export function frameBottomY(page: PageRenderContext | undefined, boardY: number): number {
+  return page?.geometry.brandedFrameBottomY ?? boardY
 }

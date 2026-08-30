@@ -181,13 +181,12 @@ export function NextLectureEnding({ slide, ctx }: SvgTemplateProps) {
 
 export const layoutDef: LayoutDefinition = {
   branding: "none",
-  // ending-next-lecture-ending.tsx: pinOnly after-class list plus next
+  // ending-next-lecture-ending.tsx: after-class list plus next
   // lecture preview. CJK 课后 / Latin AFTER kicker, first two bullets or
   // newline-split heading, border rule, optional subheading. No thank-you
   // and no invented homework.
   id: "next-lecture-ending",
   kind: "standard",
-  pinOnly: true,
   slideTypes: ["ending"],
   slots: [
     { name: "kicker", accepts: [] },

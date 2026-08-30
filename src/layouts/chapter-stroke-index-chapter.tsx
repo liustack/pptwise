@@ -147,10 +147,9 @@ export function StrokeIndexChapter({ ir, slide, index, ctx }: SvgTemplateProps) 
 
 export const layoutDef = {
   // chapter-stroke-index-chapter.tsx: hollow stroked chapter index, title
-  // below, progress rule with an accent segment. pinOnly board lock.
+  // below, progress rule with an accent segment. board lock.
   id: "stroke-index-chapter",
   kind: "standard",
-  pinOnly: true,
   slideTypes: ["chapter"],
   slots: [
     { name: "watermark", accepts: [] },

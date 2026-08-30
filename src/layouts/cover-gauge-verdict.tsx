@@ -211,5 +211,4 @@ export const layoutDef: LayoutDefinition = {
   // `pinOnly`: consulting locks this face by *listing* it in its own
   // `layouts`, which `resolveLayoutId` honours. Without it the face joins
   // `fullLayoutSet`, the pool the other 23 builtins auto-pick from.
-  pinOnly: true,
 }

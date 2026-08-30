@@ -20,20 +20,24 @@ const slide: Slide = {
 }
 
 const TEST_THEME_ID = "image-bottom-caption"
+const SILENT_THEME_ID = "image-bottom-caption-silent"
 
 beforeEach(() => {
   registerTestTheme(TEST_THEME_ID, "consulting", { content: { photo: "image-bottom" } })
+  registerTestTheme(SILENT_THEME_ID, "consulting", {
+    content: { photo: { face: "image-bottom", brand: "none" } },
+  })
 })
 
 afterEach(() => {
   __resetRegisteredThemes()
 })
 
-function makeIr(branding?: PptxIR["branding"]): PptxIR {
+function makeIr(branding?: PptxIR["branding"], themeId = TEST_THEME_ID): PptxIR {
   return {
     version: "5",
     filename: "deck.pptx",
-    theme: { id: TEST_THEME_ID },
+    theme: { id: themeId },
     meta: { organization: "ACME", date: "2026-08-22" },
     assets: {
       images: {
@@ -66,5 +70,9 @@ describe("image-bottom caption band vs branding posture", () => {
 
   it('lifts 40px above the drawn footer only under branding:"full"', () => {
     expect(bandYs(slideToSvgMarkup(makeIr("full"), slide, 0))).toContain(640)
+  })
+
+  it("stays flush when the menu entry silences full deck branding", () => {
+    expect(bandYs(slideToSvgMarkup(makeIr("full", SILENT_THEME_ID), slide, 0))).toEqual([680])
   })
 })

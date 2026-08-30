@@ -57,10 +57,10 @@ import { blendOver, metaInk, readableOn } from "../render/ink"
  * 早已清 B 层 3:1，不是当前缺陷，保持`theme-structure.test.ts`已有的"deferred
  * to a future theme-polish pass"记录不变。
  */
-export function FashionMastheadCover({ ir, slide, ctx }: SvgTemplateProps) {
+export function FashionMastheadCover({ ir, slide, ctx, page }: SvgTemplateProps) {
   const org = ir.meta.organization
-  const date = showsDocumentMeta(ir) ? ir.meta.date : undefined
-  const conf = showsDocumentMeta(ir) ? ir.meta.confidentiality : undefined
+  const date = showsDocumentMeta(page, ir, slide) ? ir.meta.date : undefined
+  const conf = showsDocumentMeta(page, ir, slide) ? ir.meta.confidentiality : undefined
   const confLabel = conf ? CONF_LABEL[conf] : null
   const version = ir.meta.version
   const fg = readableOn(ctx.colors.primary)

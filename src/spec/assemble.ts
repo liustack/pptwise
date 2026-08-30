@@ -78,7 +78,7 @@ export function assembleDeck(spec: unknown, pages: Record<string, PageContent>):
   const rawIr = {
     version: "5" as const,
     ...(deckSpec.narrative !== undefined ? { narrative: deckSpec.narrative } : {}),
-    ...(deckSpec.theme !== undefined ? { theme: { id: deckSpec.theme } } : {}),
+    theme: { id: deckSpec.theme },
     ...(deckSpec.filename !== undefined ? { filename: deckSpec.filename } : {}),
     ...(deckSpec.brand !== undefined ? { brand: deckSpec.brand } : {}),
     ...(deckSpec.branding !== undefined ? { branding: deckSpec.branding } : {}),

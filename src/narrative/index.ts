@@ -14,8 +14,7 @@ import { AUDIENCE_VALUES, PACING_VALUES, STRATEGY_VALUES } from "../ir/narrative
 // A narrative profile is three independent axes. Nothing in this module
 // touches rendering or selection yet — this wave (W3 task 1) only lays the
 // axes types, the strategy/pacing data tables, the named presets, and the
-// omission-defaults resolver described by spec §5. Weighted layout/component
-// selection off `STRATEGY_DEFINITIONS.tendencies` is W4's job. Wiring
+// omission-defaults resolver described by spec §5. Wiring
 // `PACING_BUDGETS` into the content-quality gate is this wave's task 3.
 // Putting `narrative` on the IR itself is a later task.
 //
@@ -36,11 +35,7 @@ import { AUDIENCE_VALUES, PACING_VALUES, STRATEGY_VALUES } from "../ir/narrative
 
 /**
  * Narrative argument style (spec §5's five-way strategy classification,
- * renamed from "mode" — spec §8.1). Each strategy carries a
- * component/layout tendency set (soft-weight material, consumed by W4's
- * weighted selection — nothing consumes it this wave) and a beat policy
- * (renamed from "rhythm policy" — spec §2.3's deck/page beat split; consumed
- * by W5's spec-validate rotation gate).
+ * renamed from "mode" — spec §8.1).
  */
 export type Strategy = (typeof STRATEGY_VALUES)[number]
 
@@ -78,121 +73,14 @@ export { AUDIENCE_VALUES }
 
 export interface StrategyDefinition {
   id: Strategy
-  /**
-   * Layout/component tendency set (soft-weight material). Filled row-for-row
-   * from spec §5's strategy table for W4's weighted selection step (spec §6
-   * step 4: in-set candidates get ×3 weight, out-of-set ×1 floor — not
-   * implemented yet, this module only stores the data).
-   *
-   * The set deliberately mixes two different vocabularies: component `type`
-   * names (e.g. "kpi_cards", "chart" — see the `Component` discriminated
-   * union in `ir/index.ts`) and layout `id`s (e.g. "image-split" — see
-   * `LAYOUT_REGISTRY` in `svg/layouts/registry.ts`). This is intentional,
-   * not an oversight: W4's weighting step resolves each entry against
-   * whichever vocabulary it belongs to (component types when scoring a
-   * candidate's components, layout ids when scoring the candidate layout
-   * itself). Nothing in this wave (W3) reads this field.
-   */
-  tendencies: readonly string[]
-  /**
-   * Beat template descriptor (spec §5's per-strategy beat-default column,
-   * renamed from "rhythm" — spec §2.3), parameterized by strategy for W5's
-   * spec-validate rotation gate — e.g. briefing is exempt from a generic
-   * "three same-beat pages in a row is an error" rule because uniform-dense
-   * *is* briefing's correct default, not a violation of it (spec §5's
-   * spec-gate section calls out that a generic same-beat-streak rule would
-   * reject briefing's own default). Not consumed this wave.
-   */
-  beatPolicy: "anchor-open" | "alternate" | "repetition-ok" | "anchor-sparse" | "uniform-dense"
 }
 
 export const STRATEGY_DEFINITIONS: Record<Strategy, StrategyDefinition> = {
-  pyramid: {
-    id: "pyramid",
-    // swot/bmc/waterfall/gantt (structure-components wave task 3, decision
-    // 9) all join pyramid's tendency set — every one of the four full-body
-    // types is itself a "conclusion-first, dense-evidence" shape (a 2x2
-    // assessment, a nine-block canvas, a running-total bridge, a shared-axis
-    // schedule), the same MECE-first argument style pyramid already favors.
-    //
-    // pest/five_forces/heatmap/sankey (structure-components wave 2 task 4)
-    // join the same set on the identical rationale — every one of them is
-    // also a `FULL_BODY_TYPES` member (`svg/component-traits.ts`), i.e. a
-    // dense, self-contained analytical shape read as a single conclusion (a
-    // macro-environment scan, a competitive-forces panel set, a value grid,
-    // a flow decomposition), not a sequential narrative device. Considered
-    // and declined a *second* membership for each, the way gantt alone also
-    // joined `instructional` below (decision 9's own precedent: not every
-    // full-body type gets one, only gantt did, for a specific reason — "a
-    // shared-axis schedule is itself a step-by-step breakdown"). None of
-    // the four wave-2 components has an equally clean, literal
-    // "this is inherently a sequence of steps" reading: pest/five_forces
-    // are simultaneous-factor frameworks (nothing about them is ordered),
-    // heatmap is an unordered value grid, and sankey — the closest
-    // candidate, since a layered DAG reads left-to-right — is fundamentally
-    // a *proportional-flow decomposition* (quantity conservation across
-    // paths), categorically different from `flowchart`'s procedural
-    // decision-branching that actually earned instructional's set. Forcing
-    // a second join here would be inventing a parallel decision 9 itself
-    // never needed for 3 of its own 4 members either. All four therefore
-    // get exactly the same single-strategy treatment swot/bmc/waterfall got
-    // above, not a lesser one.
-    tendencies: [
-      "kpi_cards",
-      "verdict_banner",
-      "chart",
-      "comparison",
-      "matrix",
-      "roadmap",
-      "swot",
-      "bmc",
-      "waterfall",
-      "gantt",
-      "pest",
-      "five_forces",
-      "heatmap",
-      "sankey",
-    ],
-    beatPolicy: "anchor-open",
-  },
-  storytelling: {
-    id: "storytelling",
-    // Spec's "image family" entry normalizes to the four kebab image-family
-    // layout ids (W2 promoted them from a `variant` value to first-class
-    // layouts — see the "image-split"/"image-top"/"image-bottom"/
-    // "image-annotate" entries in `LAYOUT_REGISTRY`). image_grid is a
-    // distinct component type, not part of this family — it only shows up
-    // in showcase's row below, matching the spec table.
-    tendencies: ["quote", "image-split", "image-top", "image-bottom", "image-annotate", "timeline", "callout"],
-    beatPolicy: "alternate",
-  },
-  instructional: {
-    id: "instructional",
-    // gantt also joins instructional's tendency set (decision 9) — a shared-
-    // axis schedule is itself a step-by-step breakdown (phase 1, phase 2, …
-    // laid end to end), the same "分步拆解" shape instructional already
-    // favors, on top of already belonging to pyramid's evidence-dense set.
-    tendencies: ["steps", "numbered_cards", "flowchart", "architecture", "code", "gantt"],
-    beatPolicy: "repetition-ok",
-  },
-  showcase: {
-    id: "showcase",
-    // Spec's giant-number-kpi entry normalizes to the kpi_cards component
-    // type — the "giant" sizing itself is an arrangement-level concern (the
-    // "big_number" arrangement value on content slides, see `ir/index.ts`),
-    // a third vocabulary outside this field's documented two-vocabulary
-    // scope (component types + layout ids). W4's weighting step only
-    // resolves tendencies against those two, so a bare "big_number" entry
-    // here would be unresolvable — kpi_cards is the correct, resolvable
-    // normalization.
-    tendencies: ["image-split", "image-top", "image-bottom", "image-annotate", "image_grid", "kpi_cards"],
-    beatPolicy: "anchor-sparse",
-  },
-  briefing: {
-    id: "briefing",
-    tendencies: ["bullets", "row_cards", "timeline", "citation"],
-    beatPolicy: "uniform-dense",
-  },
+  pyramid: { id: "pyramid" },
+  storytelling: { id: "storytelling" },
+  instructional: { id: "instructional" },
+  showcase: { id: "showcase" },
+  briefing: { id: "briefing" },
 }
 
 /**

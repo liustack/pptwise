@@ -208,7 +208,6 @@ export const layoutDef = {
   suppressMotif: true,
   id: "show-statement",
   kind: "standard",
-  pinOnly: true,
   slideTypes: ["content"],
   slots: [
     { name: "kicker", accepts: [] },
@@ -216,7 +215,6 @@ export const layoutDef = {
     { name: "body", accepts: "any", capacity: 1 },
     { name: "rule", accepts: [] },
   ],
-  arrangements: "all",
   headingFit: {
     maxWidth: 1152,
     fontSize: 62,

@@ -108,14 +108,13 @@ export function VerseChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
 
 export const layoutDef = {
   branding: "none",
-  // chapter-verse-chapter.tsx: a pinOnly centered verse-as-chapter-open.
+  // chapter-verse-chapter.tsx: a centered verse-as-chapter-open.
   // Tracking chapter-index kicker, 2-line heading, optional italic
   // subheading. No watermark numeral, no body slot (chapter pages never
   // render components or footnote). Page decor and branding posture belong to
   // the menu entry. The fifth-band decoration safe-zone does not apply.
   id: "verse-chapter",
   kind: "standard",
-  pinOnly: true,
   slideTypes: ["chapter"],
   slots: [
     { name: "kicker", accepts: [] },

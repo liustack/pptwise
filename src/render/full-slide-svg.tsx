@@ -10,7 +10,7 @@ import type { SvgTemplateProps } from "../layouts/types"
 import { Background } from "./background"
 import { Branding } from "./branding"
 import { SlideDecor } from "./slide-decor"
-import { ImageAnnotatePage, ImageBottomPage, ImageCoverPage, ImageSplitPage, ImageTopPage } from "./image-pages"
+import { getTakeoverRenderer, ImageCoverPage } from "./image-pages"
 import { gradientBands } from "./gradient-bands"
 import { COVER_LAYOUTS } from "../layouts/index-cover"
 import { CHAPTER_LAYOUTS } from "../layouts/index-chapter"
@@ -18,11 +18,10 @@ import { CONTENT_LAYOUTS } from "../layouts/index-content"
 import { ENDING_LAYOUTS } from "../layouts/index-ending"
 import { MOTIFS } from "../motifs"
 import { getThemeDefinition } from "../themes/definitions"
-import { resolveChartPaletteOffset } from "./chart-palette"
-import { cachedDeckSeed } from "./variety"
 import { resolveEffectiveFace } from "./layout-selection"
 import { partitionSvgDepth, type SvgDepthLayers } from "./depth-contract/partition"
 import { enforceMidgroundContract, resolveMidgroundBackground } from "./depth-contract/safety"
+import { resolvePageRenderContext } from "./page-context"
 
 /**
  * Reduce a `BackgroundSpec` to one representative hex color — a color spec
@@ -152,20 +151,12 @@ export function resolveOverrideBackgroundHex(
  * so a test that doesn't care about body-text sizing still gets the
  * ambient value a caller with an omitted/default narrative would.
  *
- * `chartPaletteOffset` (P1 variety wave, task 2 — `./chart-palette.ts`'s own
- * header comment has the full rationale): the caller supplies
- * `resolveChartPaletteOffset(cachedDeckSeed(ir), tokens.colors.chartPalette.length)`.
- * **Passed through as its own `ComponentCtx` field, `colors.chartPalette`
- * itself is never rotated here** (review fix round, Major finding — see
- * `ComponentCtx.chartPaletteOffset`'s own doc comment for the full leak this
- * corrects): rotating `colors.chartPalette` in place used to silently reach
- * every consumer of that token, not just the chart component, including
- * several motifs that destructure it by fixed position for decoration
- * unrelated to any chart. `components/chart.tsx` — the only reader of this
- * field — is responsible for rotating `colors.chartPalette` itself before
- * use. Every `buildCtx(...)` call site that omits this 6th argument (every
- * test in this repo except this task's own) is unaffected either way,
- * before or after this fix.
+ * `chartPaletteOffset` (`./chart-palette.ts`): passed through as its own
+ * `ComponentCtx` field so `components/chart.tsx` can rotate
+ * `colors.chartPalette` at the chart seam. `colors.chartPalette` itself is
+ * never rotated here — motifs that destructure it by fixed position for
+ * decoration must see the theme's declared order. FullSlideSvg always
+ * passes `0`, so the declared `chartPalette` order is the series order.
  */
 export function buildCtx(
   tokens: StyleTokens,
@@ -252,7 +243,7 @@ export function FullSlideSvg({
   className,
   preserveAspectRatio,
 }: FullSlideSvgProps) {
-  const tokens = resolveStyle(ir.theme.id, ir.theme.style)
+  const tokens = resolveStyle(ir.theme.id)
   // The theme's own default background for this slide type, independent of
   // any per-slide `slide.background` override — still needed below as
   // `autoScrimColor`'s source (an asset background's scrim always pulls
@@ -288,12 +279,9 @@ export function FullSlideSvg({
   const bodyFontPx =
     PACING_BUDGETS[resolveNarrative(ir.narrative as string | Partial<NarrativeProfile> | undefined).pacing]
       .bodyBaselinePx
-  // P1 variety wave, task 2 (`./chart-palette.ts`'s own header comment has
-  // the full rationale): one offset per deck (seed-derived, no pageKey), so
-  // every chart on every page of this deck agrees on the same rotated
-  // phase — computed here, not memoized, since it's a cheap pure function of
-  // `cachedDeckSeed(ir)` + this theme's own palette length.
-  const chartPaletteOffset = resolveChartPaletteOffset(cachedDeckSeed(ir), tokens.colors.chartPalette.length)
+  // Theme `chartPalette` declared order is the series order. Offset 0 is
+  // the identity rotation (`./chart-palette.ts`).
+  const chartPaletteOffset = 0
   const ctx = buildCtx(
     tokens,
     ir.assets.images,
@@ -310,25 +298,16 @@ export function FullSlideSvg({
   if (effectiveFace.route === "unresolved") {
     throw new Error(effectiveFace.error ?? `cannot resolve a theme-menu face for "${slide.type}" page`)
   }
-  const menuDecor = effectiveFace.entry?.decor
-  // Decoration resolution (charter ruling 6, face-default + menu-override):
-  // the face's own `suppressMotif` is a structural fact no menu can undo; a
-  // menu entry may silence the motif on other faces or swap which motif
-  // paints; with no entry opinion the theme's own motif is the ordinary
-  // posture.
   const themeDef = getThemeDefinition(ir.theme.id)
-  const faceSuppressesMotif = effectiveFace.layout?.suppressMotif === true
-  const Decor =
-    menuDecor?.kind === "silent" || faceSuppressesMotif
-      ? undefined
-      : menuDecor?.kind === "motif"
-        ? MOTIFS[menuDecor.id]
-        : themeDef.motif !== undefined
-          ? MOTIFS[themeDef.motif]
-          : undefined
-  const motifIntensity =
-    menuDecor?.kind === "motif" ? menuDecor.params?.intensity : themeDef.motifParameters?.intensity
-  const motifOpacity = motifIntensity === "subtle" ? 0.62 : undefined
+  const page = resolvePageRenderContext(ir, slide, effectiveFace, themeDef)
+  const renderIr: PptxIR = page.metadataOn
+    ? ir
+    : {
+        ...ir,
+        meta: ir.meta.animation === undefined ? {} : { animation: ir.meta.animation },
+      }
+  const Decor = page.motifOn && page.motifId !== undefined ? MOTIFS[page.motifId] : undefined
+  const motifOpacity = page.motifIntensity === "subtle" ? 0.62 : undefined
   let bgSpec = slide.background ?? tokens.defaultBackgrounds[slide.type]
   // 压图页接管（图片排版 polish，2026-07-09 用户反馈）：cover/chapter 的
   // asset 背景 → 暗遮罩 + 白字 bespoke 版式（ImageCoverPage）——图保持清晰
@@ -377,36 +356,31 @@ export function FullSlideSvg({
   // column and reads as a pale hairline down the page. See
   // `LayoutDefinition.paintsOwnBackground` (`../layouts/registry.ts`).
   const layoutPaintsBackground = effectiveFace.route === "layout" && effectiveFace.layout?.paintsOwnBackground === true
-  // Page-level brand silence: the face's structural `branding: "none"` and
-  // the menu entry's `brand: "none"` each switch the brand frame off.
-  // Deck-level full/cover-only/minimal posture remains inside Branding and
-  // is applied only when this page has not opted out.
-  const skipBranding = effectiveFace.layout?.branding === "none" || effectiveFace.entry?.brand === "none"
-
   let pageBody: ReactNode = null
   if (imageCoverTakeover) {
-    pageBody = ImageCoverPage({ ir, slide, index, ctx })
-  } else if (effectiveFace.route === "takeover" && effectiveFace.layoutId === "image-top") {
-    pageBody = ImageTopPage({ ir, slide, ctx })
-  } else if (effectiveFace.route === "takeover" && effectiveFace.layoutId === "image-bottom") {
-    pageBody = ImageBottomPage({ ir, slide, ctx })
-  } else if (effectiveFace.route === "takeover" && effectiveFace.layoutId === "image-annotate") {
-    pageBody = ImageAnnotatePage({ ir, slide, ctx })
-  } else if (effectiveFace.route === "takeover" && effectiveFace.layoutId === "image-split") {
-    pageBody = ImageSplitPage({ ir, slide, ctx })
+    pageBody = ImageCoverPage({ ir: renderIr, slide, index, ctx, page })
+  } else if (effectiveFace.route === "takeover" && effectiveFace.layoutId !== null) {
+    const renderTakeover = getTakeoverRenderer(effectiveFace.layoutId)
+    if (renderTakeover === undefined) {
+      throw new Error(
+        `layout registry invariant failed: takeover "${effectiveFace.layoutId}" has no renderer dispatcher`,
+      )
+    }
+    pageBody = renderTakeover({ ir: renderIr, slide, index, ctx, page })
   } else if (pageLayout) {
     pageBody = pageLayout.Component({
-      ir,
+      ir: renderIr,
       slide,
       index,
       ctx,
+      page,
       params: effectiveFace.entry?.params,
     })
   }
   const motif =
     Decor && !imageCoverTakeover ? (
       <g data-decor>
-        <Decor ir={ir} slide={slide} ctx={ctx} />
+        <Decor ir={renderIr} slide={slide} ctx={ctx} page={page} />
       </g>
     ) : null
   const motifDepth: SvgDepthLayers = motif
@@ -432,7 +406,7 @@ export function FullSlideSvg({
   ) : (
     keyedBody("fg")
   )
-  const branding = skipBranding ? null : <Branding ir={ir} slide={slide} ctx={ctx} />
+  const branding = page.brandOn ? <Branding ir={renderIr} slide={slide} ctx={ctx} page={page} /> : null
   const foreground = (
     <>
       {keyedMotif("fg")}

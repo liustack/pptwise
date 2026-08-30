@@ -75,6 +75,7 @@ describe("deck spec schema", () => {
   it.each(["beat", "layout"])("rejects retired page field %s", (field) => {
     const result = validateSpec({
       narrative: { pacing: "spacious" },
+      theme: TEST_THEME_ID,
       pages: [cover(), content("a", { [field]: "retired" }), content("b"), ending()],
     })
     expect(result.ok).toBe(false)
@@ -87,14 +88,29 @@ describe("deck spec schema", () => {
     expect(formatSpecIssues(result.errors)).toContain("seed")
   })
 
-  it("defaults version and meta without materializing other defaults", () => {
+  it("defaults version and meta, and requires an explicit theme", () => {
+    const omitted = DeckSpecSchema.safeParse({
+      pages: [cover(), content("a"), content("b"), content("c"), content("d"), ending()],
+    })
+    expect(omitted.success).toBe(false)
+
     const spec = DeckSpecSchema.parse({
+      theme: TEST_THEME_ID,
       pages: [cover(), content("a"), content("b"), content("c"), content("d"), ending()],
     })
     expect(spec.version).toBe("1")
     expect(spec.meta).toEqual({})
-    expect(spec.theme).toBeUndefined()
-    expect(resolveSpecThemeId(spec)).toBe("consulting")
+    expect(spec.theme).toBe(TEST_THEME_ID)
+    expect(resolveSpecThemeId(spec)).toBe(TEST_THEME_ID)
+  })
+
+  it("validateSpec fails when theme is omitted", () => {
+    const result = validateSpec({
+      pages: [cover(), content("a"), content("b"), content("c"), content("d"), ending()],
+    })
+    expect(result.ok).toBe(false)
+    expect(formatSpecIssues(result.errors)).toMatch(/pptwise theme new --from/)
+    expect(formatSpecIssues(result.errors)).toMatch(/"theme": "<id>"/)
   })
 
   it("keeps deck branding as the existing three-state field", () => {
@@ -104,11 +120,16 @@ describe("deck spec schema", () => {
     expect(validateSpec(valid({ branding: "none" })).ok).toBe(false)
   })
 
-  it("normalizes the root chrome alias", () => {
-    const result = validateSpec(valid({ chrome: "full" }))
-    expect(result.ok).toBe(true)
-    expect(result.spec?.branding).toBe("full")
-    expect(result.normalized).toEqual(["(root): chrome → branding"])
+  it("rejects chrome as an unrecognized root field", () => {
+    const chromeOnly = validateSpec(valid({ chrome: "full" }))
+    expect(chromeOnly.ok).toBe(false)
+    expect(formatSpecIssues(chromeOnly.errors)).toMatch(/unrecognized key: "chrome"/i)
+    expect(chromeOnly.normalized).toBeUndefined()
+
+    const both = validateSpec(valid({ chrome: "full", branding: "minimal" }))
+    expect(both.ok).toBe(false)
+    expect(formatSpecIssues(both.errors)).toMatch(/unrecognized key: "chrome"/i)
+    expect(formatSpecIssues(both.errors)).not.toMatch(/cannot use both/)
   })
 })
 
@@ -116,6 +137,7 @@ describe("deck spec hard gates", () => {
   it("requires cover and ending boundaries", () => {
     const result = validateSpec({
       narrative: { pacing: "spacious" },
+      theme: TEST_THEME_ID,
       pages: [content("a"), content("b"), content("c"), content("d")],
     })
     expect(result.ok).toBe(false)
@@ -126,12 +148,14 @@ describe("deck spec hard gates", () => {
   it("requires safe unique page ids", () => {
     const duplicate = validateSpec({
       narrative: { pacing: "spacious" },
+      theme: TEST_THEME_ID,
       pages: [cover(), content("dup"), content("dup"), ending()],
     })
     expect(formatSpecIssues(duplicate.errors)).toContain('duplicate page id "dup"')
 
     const unsafe = validateSpec({
       narrative: { pacing: "spacious" },
+      theme: TEST_THEME_ID,
       pages: [cover(), content("../escape"), content("b"), ending()],
     })
     expect(formatSpecIssues(unsafe.errors)).toContain("not a safe file name")
@@ -140,12 +164,14 @@ describe("deck spec hard gates", () => {
   it("requires concise non-empty headings", () => {
     const empty = validateSpec({
       narrative: { pacing: "spacious" },
+      theme: TEST_THEME_ID,
       pages: [cover(), content("a", { heading: " " }), content("b"), ending()],
     })
     expect(formatSpecIssues(empty.errors)).toContain("missing a required heading")
 
     const long = validateSpec({
       narrative: { pacing: "spacious" },
+      theme: TEST_THEME_ID,
       pages: [cover(), content("a", { heading: "x".repeat(49) }), content("b"), ending()],
     })
     expect(formatSpecIssues(long.errors)).toContain("48-character limit")
@@ -156,6 +182,15 @@ describe("deck spec hard gates", () => {
     const result = validateSpec(valid({ theme: "not-installed" }))
     expect(result.ok).toBe(false)
     expect(formatSpecIssues(result.errors)).toContain('unknown theme "not-installed"')
+  })
+
+  it("rejects the removed bloom theme without a migrate pointer", () => {
+    const result = validateSpec(valid({ theme: "bloom" }))
+    expect(result.ok).toBe(false)
+    const text = formatSpecIssues(result.errors)
+    expect(text).toMatch(/bloom/)
+    expect(text).toMatch(/installed theme id/)
+    expect(text).not.toMatch(/pptwise migrate/)
   })
 
   it("resolves narrative values and normalizes the preset object shape", () => {
@@ -169,7 +204,7 @@ describe("deck spec hard gates", () => {
     expect(formatSpecIssues(invalid.errors)).toContain('unknown pacing "impossible"')
   })
 
-  it("keeps focus as a validated authoring hint", () => {
+  it("accepts focus as a content kind or component type", () => {
     expect(
       expectOk(
         valid({
@@ -177,13 +212,69 @@ describe("deck spec hard gates", () => {
         }),
       ).pages[1],
     ).toMatchObject({ focus: "chart" })
+    expect(
+      expectOk(
+        valid({
+          pages: [cover(), content("a", { focus: "points" }), content("b"), content("c"), content("d"), ending()],
+        }),
+      ).pages[1],
+    ).toMatchObject({ focus: "points" })
+  })
+
+  it("rejects a face id as focus", () => {
+    const invalid = validateSpec(
+      valid({
+        pages: [cover(), content("a", { focus: "image-top" }), content("b"), content("c"), content("d"), ending()],
+      }),
+    )
+    expect(invalid.ok).toBe(false)
+    const text = formatSpecIssues(invalid.errors)
+    expect(text).toContain('unknown focus "image-top"')
+    expect(text).toContain("content kind")
+    expect(text).toContain("component type")
+    expect(text).not.toMatch(/layout id/)
+    expect(text).not.toMatch(/tendenc/)
+    expect(text).not.toMatch(/pptwise migrate/)
+  })
+
+  it("rejects logo_wall and banner-heading focus without a migrate pointer", () => {
+    const logoWall = validateSpec(
+      valid({
+        pages: [cover(), content("a", { focus: "logo_wall" }), content("b"), content("c"), content("d"), ending()],
+      }),
+    )
+    expect(logoWall.ok).toBe(false)
+    const logoText = formatSpecIssues(logoWall.errors)
+    expect(logoText).toContain("logo_wall")
+    expect(logoText).toContain("image_grid")
+    expect(logoText).not.toMatch(/pptwise migrate/)
+
+    const banner = validateSpec(
+      valid({
+        pages: [cover(), content("a", { focus: "banner-heading" }), content("b"), content("c"), content("d"), ending()],
+      }),
+    )
+    expect(banner.ok).toBe(false)
+    const bannerText = formatSpecIssues(banner.errors)
+    expect(bannerText).toContain("banner-heading")
+    expect(bannerText).toMatch(/face id/)
+    expect(bannerText).not.toMatch(/pptwise migrate/)
+  })
+
+  it("rejects an unknown focus without listing layout ids or tendencies", () => {
     const invalid = validateSpec(
       valid({
         pages: [cover(), content("a", { focus: "bogus" }), content("b"), content("c"), content("d"), ending()],
       }),
     )
     expect(invalid.ok).toBe(false)
-    expect(formatSpecIssues(invalid.errors)).toContain('unknown focus "bogus"')
+    const text = formatSpecIssues(invalid.errors)
+    expect(text).toContain('unknown focus "bogus"')
+    expect(text).toContain("points")
+    expect(text).toContain("chart")
+    expect(text).not.toMatch(/layout id/)
+    expect(text).not.toMatch(/tendenc/)
+    expect(text).not.toMatch(/pptwise migrate/)
   })
 
   it("keeps pacing page-count budgets unchanged", () => {

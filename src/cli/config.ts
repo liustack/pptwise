@@ -2,27 +2,11 @@ import { readFile } from "node:fs/promises"
 import { dirname, join, resolve } from "node:path"
 import { z } from "zod"
 import { PptwiseError } from "../errors"
-import { StyleOverrideSchema } from "../ir"
 import { userConfigPath } from "./home"
 import { ImagesConfigSchema } from "./image-config"
 
 /**
- * Project-level deck defaults. Precedence (spec §7's four-layer chain, W5
- * task 5): CLI flag > project config (this schema, cwd walk-up) > user
- * config (`UserConfigSchema` below) > whatever the artifact itself already
- * carries (an authored IR's own `theme`, or the schema's own "consulting"
- * default when nothing anywhere sets one) — see `commands.ts`'s
- * `applyDeckConfig` for where all four layers actually get merged. `theme`
- * is kept an open string at this schema layer (mirrors `ThemeSchema` in
- * `ir/index.ts`) on purpose: `readConfigFile` below no longer checks it
- * against the installed set at read time — a config file's theme value
- * might sit behind a CLI flag or another layer that never actually gets
- * used, so rejecting it here would hard-fail a command over a value that
- * was never going to apply. `applyDeckConfig` runs that check once, at
- * resolution time, against whichever layer's value actually wins the chain
- * — the same "unknown → PptwiseError with the available list" UX as
- * `validateIr`, just applied to the resolved value instead of unconditionally
- * to every layer.
+ * Project-level filesystem defaults.
  *
  * `decksDir` (W5 task 6, spec §7: a team that wants deck project
  * directories checked into the repo instead of living under
@@ -30,7 +14,7 @@ import { ImagesConfigSchema } from "./image-config"
  * *this config file's own directory* (wherever `findConfig`'s cwd walk-up
  * found it) — never the CLI's cwd, and never `pptwiseHome()`. Wins over the
  * user config's own `decksDir` (`UserConfigSchema` below) when both are
- * set, same project-beats-user precedence as `theme`/`style` above. The two
+ * set. The two
  * layers resolve against different bases, so this schema alone can't
  * express the final answer — `commands.ts`'s `resolveDecksDirSource`
  * computes the already-resolved absolute path before handing it down to
@@ -51,8 +35,6 @@ import { ImagesConfigSchema } from "./image-config"
  */
 const ConfigSchema = z
   .object({
-    theme: z.string().optional(),
-    style: StyleOverrideSchema.optional(),
     decksDir: z.string().optional(),
     outDir: z.string().optional(),
   })
@@ -61,9 +43,7 @@ const ConfigSchema = z
 export type PptwiseConfig = z.infer<typeof ConfigSchema>
 
 /**
- * User-level config schema (spec §7's four-layer chain — the layer between
- * project config and the artifact's own value): the same three deck-default
- * fields as {@link ConfigSchema} (`theme`/`style`/`decksDir`), plus optional
+ * User-level config schema. It supports `decksDir` plus optional
  * `images` (Pexels/Pixabay keys and Openverse OAuth for stock-photo search). `outDir` is
  * deliberately absent — an artifact root belongs to this working tree, not
  * to the user's identity (see {@link ConfigSchema}'s own `outDir` comment).
@@ -89,8 +69,6 @@ export type PptwiseConfig = z.infer<typeof ConfigSchema>
  */
 const UserConfigSchema = z
   .object({
-    theme: z.string().optional(),
-    style: StyleOverrideSchema.optional(),
     decksDir: z.string().optional(),
     images: ImagesConfigSchema.optional(),
   })
@@ -102,14 +80,9 @@ export const CONFIG_FILENAME = "pptwise.config.json"
 export const LEGACY_CONFIG_FILENAMES = ["pptpress.config.json", "pptfast.config.json"] as const
 
 /**
- * Shared read+parse+validate body for both config layers (project and user)
- * — same failure posture either way: a missing file is `null` ("fine, no
- * config at this level"), invalid JSON or a failed schema parse is a hard
- * {@link PptwiseError} naming `path`. Deliberately does *not* check `theme`
- * against the installed set here — see {@link ConfigSchema}'s own doc
- * comment for why that moved to `applyDeckConfig` (`../cli/commands.ts`) at
- * resolution time instead, applied only to whichever layer's value actually
- * wins the four-layer chain.
+ * Shared read, parse, and validation body for both config layers. A missing
+ * file is `null`. Invalid JSON or a failed schema parse is a hard
+ * {@link PptwiseError} naming `path`.
  */
 async function readConfigFile<T>(
   path: string,

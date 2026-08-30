@@ -116,7 +116,6 @@ describe("chapter-crayonbox-sticker", () => {
     expect(layoutDef).toMatchObject({
       id: "crayonbox-sticker",
       kind: "standard",
-      pinOnly: true,
       slideTypes: ["chapter"],
     })
     expect(() => assertSubset(renderChapter().root)).not.toThrow()

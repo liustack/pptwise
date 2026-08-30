@@ -71,14 +71,14 @@ function yearGlyphs(date: string | undefined): string[] {
   return [...[...m[1]!].map((d) => CJK_DIGITS[Number(d)]!), "年", ...monthGlyphs, "月"]
 }
 
-export function PaperMastheadCover({ ir, slide, ctx }: SvgTemplateProps) {
+export function PaperMastheadCover({ ir, slide, ctx, page }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const bg = ctx.defaultBg ?? colors.bg
   const org = ir.meta.organization
   const author = ir.meta.authors?.[0]
   const authorText = author ? [author.name, author.role].filter(Boolean).join(" · ") : null
   const version = ir.meta.version
-  const date = showsDocumentMeta(ir) ? ir.meta.date : undefined
+  const date = showsDocumentMeta(page, ir, slide) ? ir.meta.date : undefined
   const glyphs = yearGlyphs(date)
 
   const headingSource = slide.heading ?? ""

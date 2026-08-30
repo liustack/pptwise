@@ -1,7 +1,7 @@
 import type { DecorProps } from "./types"
 import { accessibleInk } from "../render/ink"
 import { DecorPiece } from "./decor-piece"
-import { yieldsOnSparsePin } from "./branded-frame"
+import { yieldsOnSparseFace } from "./branded-frame"
 
 /**
  * memo-motif —— 「打字机眉行」（2026-08-21 wave7 memo，设计源
@@ -66,7 +66,7 @@ export function MemoMotif({ slide, ctx }: DecorProps) {
   // 装饰。版式按板面坐标画那一份，motif 再画顶缘那一份就会叠成两行。
   // 内容 / 章节 / 收尾仍走页缘（playbill 在 chapter 退让的同一写法）。
   if (slide.type === "cover") return null
-  if (yieldsOnSparsePin(slide)) return null
+  if (yieldsOnSparseFace(slide)) return null
   const ink = ctx.colors.accent
   const bg = ctx.defaultBg ?? ctx.colors.bg
 

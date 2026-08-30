@@ -30,7 +30,7 @@ import { showsDocumentMeta } from "../render/document-meta"
  * 装饰用的 primary（标题下的短粗条、密级框描边）不动——那是色块与描边，
  * 归 `motif-candidate-contrast.test.ts` 的装饰可见度地板管，不归文字对比度管。
  */
-export function BannerTitleCover({ ir, slide, ctx }: SvgTemplateProps) {
+export function BannerTitleCover({ ir, slide, ctx, page }: SvgTemplateProps) {
   // 本版式不画自己的背景面板，文字直接压在页面级背景上——与
   // ending-banner-ending.tsx 同一条 `ctx.defaultBg ?? colors.bg` 回退。
   const pageBg = ctx.defaultBg ?? ctx.colors.bg
@@ -73,13 +73,13 @@ export function BannerTitleCover({ ir, slide, ctx }: SvgTemplateProps) {
   const subtitleY = titleLastY + 96
 
   const org = ir.meta.organization
-  const conf = showsDocumentMeta(ir) ? ir.meta.confidentiality : undefined
+  const conf = showsDocumentMeta(page, ir, slide) ? ir.meta.confidentiality : undefined
   const confLabel = conf ? CONF_LABEL[conf] : null
   const author = ir.meta.authors?.[0]
   const authorText = author
     ? [author.name, author.role].filter(Boolean).join(" · ")
     : null
-  const date = showsDocumentMeta(ir) ? ir.meta.date : undefined
+  const date = showsDocumentMeta(page, ir, slide) ? ir.meta.date : undefined
   const version = ir.meta.version
 
   const metaDividerY =

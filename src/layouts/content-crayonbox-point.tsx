@@ -137,7 +137,6 @@ export const layoutDef = {
   suppressMotif: true,
   id: "crayonbox-point",
   kind: "standard",
-  pinOnly: true,
   slideTypes: ["content"],
   slots: [
     { name: "kicker", accepts: [] },
@@ -145,7 +144,6 @@ export const layoutDef = {
     { name: "body", accepts: ["blockquote", "paragraph", "citation"], capacity: 1 },
     { name: "meta", accepts: [] },
   ],
-  arrangements: ["single"],
   headingFit: {
     maxWidth: TITLE_MAX_W,
     fontSize: TITLE_SIZE,

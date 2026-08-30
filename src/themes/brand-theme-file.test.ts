@@ -30,14 +30,17 @@ describe("parseBrandThemeFile", () => {
   it("rejects a non-hex color value", async () => {
     const theme = JSON.parse(JSON.stringify(await extractFixtureTheme())) as Record<string, unknown>
     ;(theme.style as { colors: Record<string, unknown> }).colors.text = "red"
-    expect(() => parseBrandThemeFile(theme, "bad.theme.json")).toThrow(/hex color/)
+    expect(() => parseBrandThemeFile(theme, "bad.theme.json")).toThrow(/expected #RGB/)
   })
 
-  it("hard-rejects every retired v1 shape by naming the current format, with no migration offer", async () => {
+  it("rejects retired v1 fields through the ordinary v2 schema, naming the current format", async () => {
     const current = await extractFixtureTheme()
     for (const retired of [{ version: 1 }, { base: "consulting" }, { faces: { cover: ["poster-center"] } }]) {
       expect(() => parseBrandThemeFile({ ...current, ...retired }, "legacy.theme.json")).toThrow(
-        /current theme format is version 2.*self-contained.*No migration tool is provided/is,
+        /current theme format is version 2.*self-contained/is,
+      )
+      expect(() => parseBrandThemeFile({ ...current, ...retired }, "legacy.theme.json")).not.toThrow(
+        /migrat/i,
       )
     }
   })
@@ -59,10 +62,10 @@ describe("registerBrandThemeFile", () => {
     expect(def.menu).toEqual(theme.menu)
     expect(def.motif).toBeUndefined()
     const consulting = getThemeDefinition("consulting")
-    expect(def.layouts).not.toEqual(consulting.layouts)
+    expect(def.menu).not.toEqual(consulting.menu)
   })
 
-  it("loads a complete v2 menu, deriving the transitional layout record from it", async () => {
+  it("loads a complete v2 menu", async () => {
     const extracted = await extractFixtureTheme("acme-complete")
     const file = parseBrandThemeFile(
       {
@@ -85,14 +88,11 @@ describe("registerBrandThemeFile", () => {
     registerBrandThemeFile(file)
     const def = getThemeDefinition("acme-complete")
     expect(def.menu).toEqual(file.menu)
-    // The takeover face a menu may legitimately name stays out of the
-    // archetype-only pool the pre-S1-A selector samples.
-    expect(def.layouts).toEqual({
-      cover: ["gauge-verdict"],
-      chapter: ["gauge-section"],
-      content: ["gauge-stats"],
-      ending: ["gauge-next"],
-    })
+    expect(def.menu.cover.face).toBe("gauge-verdict")
+    expect(def.menu.chapter.face).toBe("gauge-section")
+    expect(def.menu.content.data?.face).toBe("gauge-stats")
+    expect(def.menu.content.photo?.face).toBe("image-split")
+    expect(def.menu.ending.face).toBe("gauge-next")
     expect(def.menu.content.data?.decor).toEqual({ kind: "silent" })
   })
 
@@ -140,9 +140,13 @@ describe("registerBrandThemeFile", () => {
     )
   })
 
-  it("refuses to shadow a builtin id, naming the fix", async () => {
+  it("shadows a builtin id so getThemeDefinition reads the file", async () => {
     const theme = await extractFixtureTheme("consulting")
-    expect(() => registerBrandThemeFile(theme)).toThrow(/collides with a built-in pptwise theme.*--id/)
+    expect(registerBrandThemeFile(theme)).toBe("consulting")
+    const def = getThemeDefinition("consulting")
+    expect(def.style.colors.primary).toBe(theme.style.colors.primary)
+    expect(def.menu).toEqual(theme.menu)
+    expect(getInstalledThemeIds().filter((id) => id === "consulting")).toHaveLength(1)
   })
 
   it("is idempotent for the same already-registered id (serve rebuild loop)", async () => {
@@ -152,24 +156,32 @@ describe("registerBrandThemeFile", () => {
     expect(getInstalledThemeIds().filter((id) => id === "acme")).toHaveLength(1)
   })
 
-  it("contrast floor blocks a pathological palette with an actionable message", async () => {
+  it("brand extraction rejects a pathological palette before it can be registered", async () => {
     const bytes = await buildThmxBytes({ colors: PATHOLOGICAL_THMX_COLORS })
-    const theme = await extractBrandTheme(bytes, { id: "gray-soup" })
-    // The message names the token, the measured ratio, the background, and
-    // the floor — error quality is part of this wave's acceptance.
-    expect(() => registerBrandThemeFile(theme)).toThrow(
-      /theme "gray-soup" colors\.(text|muted) has a contrast ratio of \d+\.\d+:1 against its "(cover|content|ending)" background \(#[0-9A-Fa-f]{6}\) — must be at least 3\.0:1/,
-    )
+    await expect(extractBrandTheme(bytes, { id: "gray-soup" })).rejects.toThrow(/cannot derive colors\.muted/)
     expect(getInstalledThemeIds()).not.toContain("gray-soup")
   })
 
   it("applies the same contrast floor to a complete theme", async () => {
-    const bytes = await buildThmxBytes({ colors: PATHOLOGICAL_THMX_COLORS })
-    const extracted = await extractBrandTheme(bytes, { id: "gray-complete" })
+    const extracted = await extractFixtureTheme("gray-complete")
+    const style = structuredClone(extracted.style)
+    style.colors = {
+      ...style.colors,
+      bg: "#868686",
+      surface: "#888888",
+      text: "#808080",
+      muted: "#808080",
+    }
+    style.defaultBackgrounds = {
+      cover: { kind: "color", value: "#868686" },
+      chapter: { kind: "color", value: "#868686" },
+      content: { kind: "color", value: "#868686" },
+      ending: { kind: "color", value: "#868686" },
+    }
     const file: ThemeFile = {
       version: 2,
       id: "gray-complete",
-      style: extracted.style,
+      style,
       menu: {
         cover: { face: "gauge-verdict" },
         chapter: { face: "gauge-section" },

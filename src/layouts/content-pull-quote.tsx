@@ -162,13 +162,12 @@ function GenericPullQuoteContent({ ir, slide, index, ctx }: SvgTemplateProps) {
 
 export const layoutDef = {
   branding: "none",
-  // content-pull-quote.tsx: a pinOnly centered-quote page. Kicker (section
+  // content-pull-quote.tsx: a centered-quote page. Kicker (section
   // name) + italic heading + accent attribution + one muted paragraph.
   // Page decor and branding posture belong to the menu entry. The whole page
   // is intentionally sparse.
   id: "pull-quote",
   kind: "standard",
-  pinOnly: true,
   slideTypes: ["content"],
   slots: [
     { name: "kicker", accepts: [] },
@@ -177,7 +176,6 @@ export const layoutDef = {
     { name: "body", accepts: ["paragraph", "blockquote", "citation"], capacity: 1 },
     { name: "meta", accepts: [] },
   ],
-  arrangements: ["single"],
   headingFit: {
     maxWidth: HEADING_MAX_W,
     fontSize: 40,

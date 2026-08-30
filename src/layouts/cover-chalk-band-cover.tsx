@@ -221,7 +221,6 @@ export const layoutDef = {
   // notebook rules. Empty heading invents no lesson title.
   id: "chalk-band-cover",
   kind: "standard",
-  pinOnly: true,
   slideTypes: ["cover"],
   slots: [
     { name: "kicker", accepts: [] },

@@ -28,8 +28,13 @@ describe("the factory preset shelf", () => {
     expect(copy.occasions).toEqual(THEME_OCCASIONS.consulting.occasions)
   })
 
-  it("refuses to copy onto a preset id", () => {
-    expect(() => copyThemePreset("consulting", "academic")).toThrow(PptwiseError)
+  it("allows a freeze copy that keeps the preset id", () => {
+    const frozen = copyThemePreset("consulting", "consulting")
+    expect(frozen.id).toBe("consulting")
+    expect(frozen.style.id).toBe("consulting")
+    const shadowed = copyThemePreset("consulting", "academic")
+    expect(shadowed.id).toBe("academic")
+    expect(shadowed.style.id).toBe("academic")
   })
 
   it("shares no mutable state with the preset it copied", () => {

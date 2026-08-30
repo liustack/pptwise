@@ -109,10 +109,9 @@ describe("chapter-sticker-numeral-chapter — board geometry", () => {
 })
 
 describe("chapter-sticker-numeral-chapter — shared pool", () => {
-  it("is a pinOnly chapter archetype", () => {
+  it("is a chapter face", () => {
     expect(layoutDef.id).toBe("sticker-numeral-chapter")
     expect(layoutDef.kind).toBe("standard")
-    expect(layoutDef.pinOnly).toBe(true)
     expect(layoutDef.slideTypes).toEqual(["chapter"])
   })
 

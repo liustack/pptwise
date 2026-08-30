@@ -40,6 +40,26 @@ describe("ThemeFileSchema", () => {
     }
   })
 
+  it("rejects five-digit and seven-digit hex colors", () => {
+    for (const invalid of ["#12345", "#1234567"]) {
+      const value = theme()
+      value.style.colors.bg = invalid
+      const result = ThemeFileSchema.safeParse(value)
+      expect(result.success).toBe(false)
+    }
+  })
+
+  it("normalizes shorthand and alpha hex colors to opaque six-digit tokens", () => {
+    const value = theme()
+    value.style.colors.bg = "#abc"
+    value.style.colors.surface = "#abc8"
+    value.style.colors.primary = "#abcdef80"
+    const parsed = ThemeFileSchema.parse(value)
+    expect(parsed.style.colors.bg).toBe("#AABBCC")
+    expect(parsed.style.colors.surface).toBe("#AABBCC")
+    expect(parsed.style.colors.primary).toBe("#ABCDEF")
+  })
+
   it("rejects occasions outside the controlled vocabulary", () => {
     const result = ThemeFileSchema.safeParse(theme({ occasions: ["quarterly-vibes"] }))
     expect(result.success).toBe(false)
@@ -58,13 +78,19 @@ describe("ThemeFileSchema", () => {
     }
   })
 
-  it("rejects a public theme id that shadows a built-in", () => {
+  it("accepts a public theme id that shadows a built-in", () => {
     const result = ThemeFileSchema.safeParse(theme({ id: "consulting", style: publicStyle("consulting") }))
-    expect(result.success).toBe(false)
-    if (!result.success) {
-      expect(result.error.issues.map((issue) => issue.message).join("\n")).toMatch(/built-in/i)
-    }
+    expect(result.success).toBe(true)
+    if (result.success) expect(result.data.id).toBe("consulting")
   })
+
+  it.each(["../../escape", "Consulting", "foo_bar", "foo.bar", ""])(
+    "rejects theme id %j as outside the slug character set",
+    (id) => {
+      const result = ThemeFileSchema.safeParse(theme({ id, style: publicStyle(id || "x") }))
+      expect(result.success).toBe(false)
+    },
+  )
 
   it("rejects a style id that differs from the theme id", () => {
     const result = ThemeFileSchema.safeParse(theme({ style: publicStyle("not-acme") }))

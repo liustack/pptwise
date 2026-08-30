@@ -61,11 +61,11 @@ const COLOPHON_Y = 600
 const COLOPHON_SIZE = 18
 const COLOPHON_MAX_W = 1040
 
-export function DoubleFrameCover({ ir, slide, ctx }: SvgTemplateProps) {
+export function DoubleFrameCover({ ir, slide, ctx, page }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const bg = ctx.defaultBg ?? colors.bg
   const org = ir.meta.organization
-  const date = showsDocumentMeta(ir) ? ir.meta.date : undefined
+  const date = showsDocumentMeta(page, ir, slide) ? ir.meta.date : undefined
   const author = ir.meta.authors?.[0]
   const authorText = author ? [author.name, author.role].filter(Boolean).join(" · ") : null
   const headingSource = slide.heading ?? ""
@@ -212,13 +212,12 @@ export function DoubleFrameCover({ ir, slide, ctx }: SvgTemplateProps) {
 
 export const layoutDef = {
   branding: "none",
-  // cover-double-frame-cover.tsx: pinOnly centered double frame. Outer
+  // cover-double-frame-cover.tsx: centered double frame. Outer
   // border hairline, inner accent hairline, grouped. Burgundy only on the
   // display title. Year and colophon centered. Empty heading invents no
   // cover sentence. Paper field stays on the theme default background.
   id: "double-frame-cover",
   kind: "standard",
-  pinOnly: true,
   slideTypes: ["cover"],
   slots: [
     { name: "kicker", accepts: [] },

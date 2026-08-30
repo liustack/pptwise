@@ -345,19 +345,18 @@ export function normalizeComponentAliases(input: unknown): NormalizeAliasesResul
 // name — see that function's own doc comment for the full boundary against
 // this section's old-vocabulary rule.
 //
-// `chrome` → `branding` is a root-field alias (weak-model / old-key rescue
-// at validate time via {@link DECK_ROOT_ALIASES}). Dual-source here leaves
-// both keys for zod `.strict()` to reject. It is not folded into
-// `PptxIRSchema`: the schema only has `branding`, so a direct `parsePptxIR`
-// of `{ chrome: "full" }` still fails.
+// `chrome` is not a root-field alias. {@link DECK_ROOT_ALIASES} is empty, so
+// {@link normalizeDeckRootAliases} is an identity. `chrome` fails as an
+// unrecognized key under zod `.strict()`. The function remains because
+// `validate-core.ts` still calls it.
 
-/** Root-level IR/spec field aliases applied by {@link normalizeDeckRootAliases}. */
-export const DECK_ROOT_ALIASES: FieldAliasMap = { chrome: "branding" }
+/** Root-level IR/spec field aliases applied by {@link normalizeDeckRootAliases}. Empty: no current root aliases. */
+export const DECK_ROOT_ALIASES: FieldAliasMap = {}
 
 /**
- * Rewrite deck-root `chrome` → `branding` when `branding` is absent.
- * Dual-source leaves both keys (no rewrite). Does not mutate `input`.
- * Non-object / null / array input is returned as-is.
+ * Deck-root field-alias pass. {@link DECK_ROOT_ALIASES} is empty, so this is
+ * an identity: no rewrite, and a plain object comes back as `value === input`.
+ * Does not mutate `input`. Non-object / null / array input is returned as-is.
  */
 export function normalizeDeckRootAliases(input: unknown): NormalizeAliasesResult {
   const normalized: string[] = []

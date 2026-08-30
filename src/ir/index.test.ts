@@ -10,14 +10,19 @@ const minimal = () => ({
 })
 
 describe("IR v5 theme field", () => {
-  it("accepts theme with style and brand overrides", () => {
-    const d: any = minimal()
-    d.theme = {
+  it("rejects theme.style and theme.brand overlays", () => {
+    const withStyle: any = minimal()
+    withStyle.theme = {
       id: "ink",
       style: { colors: { primary: "#0B5FFF" } },
+    }
+    expect(parsePptxIR(withStyle).success).toBe(false)
+    const withBrand: any = minimal()
+    withBrand.theme = {
+      id: "ink",
       brand: { suppressFooterRule: false },
     }
-    expect(parsePptxIR(d).success).toBe(true)
+    expect(parsePptxIR(withBrand).success).toBe(false)
   })
   it("rejects the retired top-level style field (strict)", () => {
     const d: any = minimal()
@@ -29,25 +34,66 @@ describe("IR v5 theme field", () => {
     d.theme = { id: "consulting", override: { primary: "#123456" } }
     expect(parsePptxIR(d).success).toBe(false)
   })
+  it("keeps an unrecognized theme key as an unrecognized-key error, not a missing-theme error", () => {
+    const d: any = minimal()
+    d.theme = { id: "consulting", colour: "#ff0000" }
+    const r = parsePptxIR(d)
+    expect(r.success).toBe(false)
+    if (!r.success) {
+      expect(r.error).toMatch(/Unrecognized key: "colour"/)
+      expect(r.error).not.toMatch(/pptwise theme new/)
+    }
+  })
+  it.each(["../../escape", "Consulting", "foo_bar", "foo.bar", ""])(
+    "rejects theme id %j",
+    (id) => {
+      const d: any = minimal()
+      d.theme = { id }
+      expect(parsePptxIR(d).success).toBe(false)
+    },
+  )
+})
+
+describe("IR slide background hex colors", () => {
+  it.each([
+    ["#abc", "#AABBCC"],
+    ["#abc8", "#AABBCC"],
+    ["#abcdef", "#ABCDEF"],
+    ["#abcdef80", "#ABCDEF"],
+  ])("normalizes %s to opaque six-digit %s", (input, expected) => {
+    const d: any = minimal()
+    d.slides[0].background = { kind: "color", value: input }
+
+    const result = parsePptxIR(d)
+
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.slides[0]?.background).toEqual({ kind: "color", value: expected })
+    }
+  })
+
+  it.each(["#12345", "#1234567"])("rejects unsupported hex length %s", (input) => {
+    const d: any = minimal()
+    d.slides[0].background = { kind: "color", value: input }
+    expect(parsePptxIR(d).success).toBe(false)
+  })
 })
 
 describe("IR v5 omission defaults (weak-model friendly)", () => {
-  it("a bare slides-only deck parses with all defaults", () => {
+  it("a bare slides-only deck still fills version and filename but missing theme is a hard error", () => {
     const r = parsePptxIR({ slides: [{ kind: "points", heading: "只有一页", components: [] }] })
-    expect(r.success).toBe(true)
-    if (r.success) {
-      expect(r.data.version).toBe("5")
-      expect(r.data.filename).toBe("presentation")
-      expect(r.data.theme.id).toBe("consulting")
-      expect(r.data.slides[0]!.type).toBe("content")
+    expect(r.success).toBe(false)
+    if (!r.success) {
+      expect(r.error).toMatch(/pptwise theme new --from/)
+      expect(r.error).toMatch(/"theme": \{ "id": "<id>" \}/)
     }
   })
-  it("theme with style but no id defaults to consulting", () => {
+  it("theme with style but no id is a hard error", () => {
     const d: any = minimal()
     d.theme = { style: { colors: { primary: "#0B5FFF" } } }
     const r = parsePptxIR(d)
-    expect(r.success).toBe(true)
-    if (r.success) expect(r.data.theme.id).toBe("consulting")
+    expect(r.success).toBe(false)
+    if (!r.success) expect(r.error).toMatch(/pptwise theme new --from|"id"/)
   })
   it("a wrong value is still a hard error (omission ≠ typo)", () => {
     const d: any = minimal()
@@ -1833,8 +1879,8 @@ describe("IR v5 slide notes field (notes+preview wave, task 1)", () => {
   })
 })
 
-describe("theme.style override", () => {
-  it("accepts a palette/fonts/shape override", () => {
+describe("theme.style overlay", () => {
+  it("rejects theme.style as an extra key", () => {
     const d: any = minimal()
     d.theme = {
       id: "consulting",
@@ -1844,26 +1890,11 @@ describe("theme.style override", () => {
         shape: { radius: 10, gapScale: 1.1, typeScale: 1.5 },
       },
     }
-    expect(parsePptxIR(d).success).toBe(true)
-  })
-  it("rejects a non-hex color", () => {
-    const d: any = minimal()
-    d.theme = { id: "consulting", style: { colors: { primary: "blue" } } }
     expect(parsePptxIR(d).success).toBe(false)
   })
-  it("rejects unknown keys (strict)", () => {
+  it("rejects theme.brand as an extra key", () => {
     const d: any = minimal()
-    d.theme = { id: "consulting", style: { colours: {} } }
-    expect(parsePptxIR(d).success).toBe(false)
-  })
-  it("rejects gapScale outside the documented range", () => {
-    const d: any = minimal()
-    d.theme = { id: "consulting", style: { shape: { gapScale: 2 } } }
-    expect(parsePptxIR(d).success).toBe(false)
-  })
-  it("rejects typeScale outside the documented range", () => {
-    const d: any = minimal()
-    d.theme = { id: "consulting", style: { shape: { typeScale: 3 } } }
+    d.theme = { id: "consulting", brand: { suppressFooterRule: false } }
     expect(parsePptxIR(d).success).toBe(false)
   })
 })

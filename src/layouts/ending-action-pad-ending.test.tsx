@@ -106,10 +106,9 @@ describe("ending-action-pad-ending — board geometry", () => {
 })
 
 describe("ending-action-pad-ending — shared pool", () => {
-  it("is a pinOnly ending archetype with a bullets body slot", () => {
+  it("is an ending face with a bullets body slot", () => {
     expect(layoutDef.id).toBe("action-pad-ending")
     expect(layoutDef.kind).toBe("standard")
-    expect(layoutDef.pinOnly).toBe(true)
     expect(layoutDef.slideTypes).toEqual(["ending"])
     const body = layoutDef.slots.find((slot) => slot.name === "body")
     expect(body?.accepts).toEqual(["bullets"])

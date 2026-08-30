@@ -168,9 +168,7 @@ describe("content-crayonbox-cards", () => {
     expect(layoutDef).toMatchObject({
       id: "crayonbox-cards",
       kind: "standard",
-      pinOnly: true,
       slideTypes: ["content"],
-      arrangements: "all",
     })
     expect(layoutDef).not.toHaveProperty("branding")
     expect(layoutDef.slots.find((slot) => slot.name === "body")).toEqual({

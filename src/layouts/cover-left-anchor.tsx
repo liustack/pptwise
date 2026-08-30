@@ -89,7 +89,7 @@ const IN_BLOCK_KICKER_SIZE = 16
 const IN_BLOCK_KICKER_TRACKING_EM = 0.22
 const TITLE_UPPER_FIRST_Y = 340
 
-export function LeftAnchorCover({ ir, slide, ctx, params }: SvgTemplateProps) {
+export function LeftAnchorCover({ ir, slide, ctx, page, params }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const showCornerTriangle = faceParam(params, "showCornerTriangle", true)
   const titleUpper = faceParam<"center" | "upper">(params, "titleBlockAlign", "center") === "upper"
@@ -122,10 +122,10 @@ export function LeftAnchorCover({ ir, slide, ctx, params }: SvgTemplateProps) {
   })
 
   const org = ir.meta.organization
-  const conf = showsDocumentMeta(ir) ? ir.meta.confidentiality : undefined
+  const conf = showsDocumentMeta(page, ir, slide) ? ir.meta.confidentiality : undefined
   const confLabel = conf ? CONF_LABEL[conf] : null
   const author = ir.meta.authors?.[0]
-  const date = showsDocumentMeta(ir) ? ir.meta.date : undefined
+  const date = showsDocumentMeta(page, ir, slide) ? ir.meta.date : undefined
   const version = ir.meta.version
 
   // The meta line is composed from up to three parts and used to be painted

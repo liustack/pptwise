@@ -2,8 +2,8 @@ import type { PptxIR, Slide } from "@/ir"
 import type { ComponentCtx } from "../components/types"
 import { CONF_LABEL } from "../lib/conf-labels"
 import { resolveBrand } from "../themes/definitions"
-import { cachedDeckSeed, pickBySeed } from "./variety"
 import { FOOTER_DIVIDER_Y } from "./branding-geometry"
+import { resolveDeckBranding, type PageRenderContext } from "./page-context"
 
 /**
  * Shared footer/logo branding as an SVG fragment. Ported from MasterFrame so the
@@ -15,17 +15,20 @@ export function Branding({
   ir,
   slide,
   ctx,
+  page,
 }: {
   ir: PptxIR
   slide: Slide
   ctx: ComponentCtx
+  page?: PageRenderContext
 }) {
   const { meta, brand, assets } = ir
   // Deck-level branding posture. Omitted = "cover-only": cover and chapter keep
   // the brand logo, content and ending skip the whole fragment (rule, meta,
   // logo). "full" is the explicit declaration that draws the content-page
   // footer. Menu-level silence is applied by FullSlideSvg before this fragment.
-  const posture = ir.branding ?? "cover-only"
+  const posture = page?.branding ?? resolveDeckBranding(ir)
+  if (posture === "none") return null
   if (posture === "cover-only" && (slide.type === "content" || slide.type === "ending")) {
     return null
   }
@@ -54,7 +57,7 @@ export function Branding({
   // enterprise 持有 suppressFooterOnCardContent，其余主题不设 = 默认 false）。
   const bgAsset =
     slide.background?.kind === "asset" ? assets.images[slide.background.asset_id] : null
-  const brandConfig = resolveBrand(ir.theme.id, ir.theme.brand)
+  const brandConfig = resolveBrand(ir.theme.id)
   const cardBgSuppressesFooter =
     Boolean(brandConfig.suppressFooterOnCardContent) &&
     slide.type === "content" &&
@@ -103,8 +106,7 @@ export function Branding({
             <line x1="56" y1={FOOTER_DIVIDER_Y} x2="1224" y2={FOOTER_DIVIDER_Y} stroke={border} strokeWidth="1.2" />
           )}
           {/* meta 两端排布（2026-07-10 用户裁决：时间居中而右侧空很奇怪）：
-              org 组与 date 组各占一端，左右归属随 deck seed 交换（多样性——
-              固定位置会千篇一律）。
+              密级/机构组固定在左，版本/日期组固定在右。
 
               整行可被 theme 的 brand.suppressFooterMeta 抑制（2026-08-18
               ink v3：主题的 motif 自己已经把机构名/日期排在别处时，这一行会
@@ -114,17 +116,14 @@ export function Branding({
           {!brandConfig.suppressFooterMeta && (() => {
             const orgGroup = [conf ? CONF_LABEL[conf] : null, org].filter(Boolean).join(" · ")
             const dateGroup = [version, date].filter(Boolean).join(" · ")
-            const swapped = pickBySeed(cachedDeckSeed(ir), "footer-side", [false, true])
-            const leftText = swapped ? dateGroup : orgGroup
-            const rightText = swapped ? orgGroup : dateGroup
             return (
               <>
-                {leftText && (
+                {orgGroup && (
                   <text x="56" y="700" fontSize="20" fill={muted} fontFamily={font} dominantBaseline="alphabetic">
-                    {leftText}
+                    {orgGroup}
                   </text>
                 )}
-                {rightText && (
+                {dateGroup && (
                   <text
                     x="1224"
                     y="700"
@@ -134,7 +133,7 @@ export function Branding({
                     fontFamily={font}
                     dominantBaseline="alphabetic"
                   >
-                    {rightText}
+                    {dateGroup}
                   </text>
                 )}
               </>

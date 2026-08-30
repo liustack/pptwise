@@ -1,16 +1,17 @@
-import { Fragment } from "react"
+import { Fragment, type ReactNode } from "react"
 import type { PptxIR, Slide } from "@/ir"
 import type { ComponentCtx } from "../components/types"
 import type { LayoutDefinition } from "../layouts/registry"
 import { renderComponent } from "../components"
 import { layoutContentFit, stackBottom } from "./layout"
 import { DroppedContentMarker } from "./drop-marker"
-import { findImageComponent } from "../layouts/find-image"
+import { findImageSelection } from "../layouts/find-image"
 import { CANVAS_W_PX, CANVAS_H_PX } from "../constants"
 import { layoutSvgText, fitSvgLine } from "../lib/svg-text-layout"
 import { fitHeadingLines, scaleTypePx } from "./heading-fit"
 import { accessibleInk } from "./ink"
 import { showsDocumentMeta } from "./document-meta"
+import type { PageRenderContext } from "./page-context"
 
 /**
  * 压图页与出血 split 页（图片排版 polish，2026-07-09 用户反馈驱动）。
@@ -37,6 +38,10 @@ import { showsDocumentMeta } from "./document-meta"
 const W = CANVAS_W_PX
 const H = CANVAS_H_PX
 
+function MissingRequiredImageMarker({ slide }: { slide: Slide }) {
+  return <DroppedContentMarker count={Math.max(1, slide.components.length)} />
+}
+
 /** 暗 scrim：上浅下深三段（文字集中在中下部），图保持清晰可辨。 */
 function DarkScrim() {
   return (
@@ -56,16 +61,18 @@ export function ImageCoverPage({
   slide,
   index,
   ctx,
+  page,
 }: {
   ir: PptxIR
   slide: Slide
   index: number
   ctx: ComponentCtx
+  page: PageRenderContext
 }) {
   const accent = ctx.colors.accent
   const isChapter = slide.type === "chapter"
-  const org = ir.meta.organization
-  const date = showsDocumentMeta(ir) ? ir.meta.date : undefined
+  const org = page.metadataOn ? ir.meta.organization : undefined
+  const date = showsDocumentMeta(page, ir, slide) ? ir.meta.date : undefined
 
   const title = layoutSvgText(slide.heading, {
     maxWidth: 1030,
@@ -164,6 +171,7 @@ export function ImageCoverPage({
           {date}
         </text>
       )}
+      <DroppedContentMarker count={slide.components.length} />
     </g>
   )
 }
@@ -184,13 +192,16 @@ export function ImageSplitPage({
   ir,
   slide,
   ctx,
+  page,
 }: {
   ir: PptxIR
   slide: Slide
   ctx: ComponentCtx
+  page: PageRenderContext
 }) {
-  const imageComponent = findImageComponent(slide)
-  if (!imageComponent) return null
+  const imageSelection = findImageSelection(slide)
+  if (!imageSelection) return <MissingRequiredImageMarker slide={slide} />
+  const { image: imageComponent, source: imageSource } = imageSelection
   // 图文范式族（ppt-master P04 右图出血）：image_side=right 时整页镜像——
   // 图列贴右缘、文字区在左。
   const rightSide = slide.image_side === "right"
@@ -202,8 +213,8 @@ export function ImageSplitPage({
   // dispatch), so it needs its own `aria-label` emission — same
   // only-when-present rule as that file's own `<image>`.
   const alt = ctx.images?.[imageComponent.asset_id]?.alt
-  const rest = slide.components.filter((b) => b !== imageComponent)
-  const org = ir.meta.organization
+  const rest = slide.components.filter((component) => component !== imageSource)
+  const org = page.metadataOn ? ir.meta.organization : undefined
 
   // fontWeight 600 而非 700：magazine/creative 的衬线 heading（SimSun/Lora）
   // 被 700 合成加粗抹掉衬线特征——降字重提字号保气势。拟合必须带 bold +
@@ -351,13 +362,15 @@ export function ImageTopPage({
   ir: PptxIR
   slide: Slide
   ctx: ComponentCtx
+  page: PageRenderContext
 }) {
-  const imageComponent = findImageComponent(slide)
-  if (!imageComponent) return null
+  const imageSelection = findImageSelection(slide)
+  if (!imageSelection) return <MissingRequiredImageMarker slide={slide} />
+  const { image: imageComponent, source: imageSource } = imageSelection
   const src = ctx.images?.[imageComponent.asset_id]?.src
   // A11Y-01 alt 链路收尾（q15 根因）：见 ImageSplitPage 同名变量的注释。
   const alt = ctx.images?.[imageComponent.asset_id]?.alt
-  const rest = slide.components.filter((b) => b !== imageComponent)
+  const rest = slide.components.filter((component) => component !== imageSource)
 
   const titleMaxW = W - BAND_PAD_X * 2 - 120
   const title = fitHeadingLines(slide.heading, {
@@ -379,16 +392,16 @@ export function ImageTopPage({
   const n = Math.max(1, Math.min(rest.length, 3))
   const colGap = 40
   const colW = (W - BAND_PAD_X * 2 - colGap * (n - 1)) / n
-  const cols = rest.slice(0, 3).map((b, i) => {
+  const fits = rest.slice(0, 3).map((b, i) => {
     const rect = {
       x: BAND_PAD_X + i * (colW + colGap),
       y: componentsTop,
       w: colW,
       h: Math.max(100, componentsH),
     }
-    const { placed } = layoutContentFit("single", [b], rect, ctx)
-    return placed
+    return layoutContentFit("single", [b], rect, ctx)
   })
+  const dropped = rest.length - fits.length + fits.reduce((count, fit) => count + fit.dropped, 0)
 
   return (
     <g>
@@ -423,13 +436,14 @@ export function ImageTopPage({
         </text>
       ))}
       <rect x={BAND_PAD_X} y={ruleY} width={W - BAND_PAD_X * 2} height={1} fill={ctx.colors.border} />
-      {cols.map((placed, ci) => (
+      {fits.map(({ placed }, ci) => (
         <Fragment key={ci}>
           {placed.map((p, i) => (
             <Fragment key={i}>{renderComponent(p.component, p.box, ctx)}</Fragment>
           ))}
         </Fragment>
       ))}
+      <DroppedContentMarker count={dropped} />
     </g>
   )
 }
@@ -498,9 +512,11 @@ export function ImageAnnotatePage({
   ir: PptxIR
   slide: Slide
   ctx: ComponentCtx
+  page: PageRenderContext
 }) {
-  const imageComponent = findImageComponent(slide)
-  if (!imageComponent) return null
+  const imageSelection = findImageSelection(slide)
+  if (!imageSelection) return <MissingRequiredImageMarker slide={slide} />
+  const { image: imageComponent, source: imageSource } = imageSelection
   const src = ctx.images?.[imageComponent.asset_id]?.src
   // A11Y-01 alt 链路收尾（q15 根因）：见 ImageSplitPage 同名变量的注释。
   const alt = ctx.images?.[imageComponent.asset_id]?.alt
@@ -508,6 +524,9 @@ export function ImageAnnotatePage({
     (b): b is Extract<Slide["components"][number], { type: "bullets" }> => b.type === "bullets",
   )
   const annotations = (bulletsComponent?.items ?? []).slice(0, 4).map(splitAnnotation)
+  const dropped =
+    Math.max(0, (bulletsComponent?.items.length ?? 0) - 4) +
+    slide.components.filter((component) => component !== imageSource && component !== bulletsComponent).length
   const hasNotes = annotations.length > 0
 
   const bg = ctx.defaultBg ?? ctx.colors.bg
@@ -702,6 +721,7 @@ export function ImageAnnotatePage({
           ))}
         </g>
       ))}
+      <DroppedContentMarker count={dropped} />
     </g>
   )
 }
@@ -716,20 +736,23 @@ const MAX_BOTTOM_IMG = 360
  * components 居中排布，下半全幅出血图（贴底三边）。
  */
 export function ImageBottomPage({
-  ir,
+  ir: _ir,
   slide,
   ctx,
+  page,
 }: {
   ir: PptxIR
   slide: Slide
   ctx: ComponentCtx
+  page: PageRenderContext
 }) {
-  const imageComponent = findImageComponent(slide)
-  if (!imageComponent) return null
+  const imageSelection = findImageSelection(slide)
+  if (!imageSelection) return <MissingRequiredImageMarker slide={slide} />
+  const { image: imageComponent, source: imageSource } = imageSelection
   const src = ctx.images?.[imageComponent.asset_id]?.src
   // A11Y-01 alt 链路收尾（q15 根因）：见 ImageSplitPage 同名变量的注释。
   const alt = ctx.images?.[imageComponent.asset_id]?.alt
-  const rest = slide.components.filter((b) => b !== imageComponent)
+  const rest = slide.components.filter((component) => component !== imageSource)
 
   const title = layoutSvgText(slide.heading, {
     maxWidth: 900,
@@ -748,11 +771,7 @@ export function ImageBottomPage({
   // 让位条件必须与 Branding 的实际绘制一致：内容页脚只在 branding:"full"
   // 时画（cover-only 默认与 minimal 都不画 meta 行），只看 meta 字段会为
   // 不存在的页脚悬空 40px。
-  const meta = ir.meta
-  const hasMetaFooter =
-    ir.branding === "full" &&
-    Boolean(meta.confidentiality || meta.organization || meta.version || meta.date)
-  const captionBottom = hasMetaFooter ? H - 40 : H
+  const captionBottom = page.geometry.imageBottomCaptionBottomY
   let cursor = 96
   const titleY = cursor + title.lineHeight - 10
   cursor += title.lines.length * title.lineHeight + 14
@@ -766,7 +785,7 @@ export function ImageBottomPage({
   // 正文实际底部下方，图高 MIN_BOTTOM_IMG..MAX_BOTTOM_IMG 自适应——短内容
   // 大图、长内容小图，正文与图永不碰撞。
   const contentZoneBottom = H - MIN_BOTTOM_IMG - 20
-  const { placed } = layoutContentFit(
+  const { placed, dropped } = layoutContentFit(
     "single",
     rest,
     { x: 240, y: componentsTop, w: W - 480, h: Math.max(60, contentZoneBottom - componentsTop) },
@@ -853,8 +872,35 @@ export function ImageBottomPage({
             </>
           )
         })()}
+      <DroppedContentMarker count={dropped} />
     </g>
   )
+}
+
+export interface TakeoverRendererProps {
+  ir: PptxIR
+  slide: Slide
+  index: number
+  ctx: ComponentCtx
+  page: PageRenderContext
+}
+
+export type TakeoverRenderer = (props: TakeoverRendererProps) => ReactNode
+
+/** The render dispatcher consumed by FullSlideSvg and the theme menu gate. */
+export const TAKEOVER_RENDERERS = {
+  "image-split": ({ index: _index, ...props }) => ImageSplitPage(props),
+  "image-top": ({ index: _index, ...props }) => ImageTopPage(props),
+  "image-bottom": ({ index: _index, ...props }) => ImageBottomPage(props),
+  "image-annotate": ({ index: _index, ...props }) => ImageAnnotatePage(props),
+} satisfies Record<string, TakeoverRenderer>
+
+export function getTakeoverRenderer(id: string): TakeoverRenderer | undefined {
+  return (TAKEOVER_RENDERERS as Record<string, TakeoverRenderer>)[id]
+}
+
+export function hasTakeoverRenderer(id: string): boolean {
+  return getTakeoverRenderer(id) !== undefined
 }
 
 // T1d (src domain reorg wave 1): the 4 takeover LayoutDefinitions inlined
@@ -867,67 +913,65 @@ export function ImageBottomPage({
 // reference never becomes a runtime cycle.
 export const imageSplitLayoutDef: LayoutDefinition = {
   // image-pages.tsx ImageSplitPage: full-height bleed image in a fixed
-  // column (first image component; optional caption overlay), kicker + heading
-  // + rule + subheading in the text column, then the remaining components as
-  // body — hardcoded arrangement "single" (layoutContentFit("single", ...),
-  // image-pages.tsx:209-214), not exposed via `arrangements` (takeover
-  // kind, not layout).
+  // column. The first image-family source supplies one image anchor and an
+  // optional caption overlay. Kicker, heading, rule, and subheading occupy
+  // the text column, followed by the components left after consuming that
+  // source as body. The body uses hardcoded arrangement "single".
+  // Takeovers do not expose standard layout arrangements.
   id: "image-split",
   kind: "takeover",
   slideTypes: ["content"],
   slots: [
-    { name: "image", accepts: ["image"], selection: "first" },
+    { name: "image", accepts: ["image", "image_grid", "image_compare", "device_mockup"], required: true, selection: "first" },
     { name: "caption", accepts: [] },
     { name: "body", accepts: "any" },
   ],
 }
 
 export const imageTopLayoutDef: LayoutDefinition = {
-  // image-pages.tsx ImageTopPage: full-width top-band bleed image (first
-  // image component, no caption render), heading band, remaining components split
-  // into up to 3 columns as body — each column hardcoded "single"
+  // image-pages.tsx ImageTopPage: full-width top-band bleed image from the
+  // first image-family selection, no caption render, then a heading band.
+  // Components left after consuming the source split into up to 3 body
+  // columns, with each column hardcoded "single"
   // (image-pages.tsx:360).
   id: "image-top",
   kind: "takeover",
   slideTypes: ["content"],
   slots: [
-    { name: "image", accepts: ["image"], selection: "first" },
+    { name: "image", accepts: ["image", "image_grid", "image_compare", "device_mockup"], required: true, selection: "first" },
     { name: "body", accepts: "any" },
   ],
 }
 
 export const imageBottomLayoutDef: LayoutDefinition = {
   // image-pages.tsx ImageBottomPage: centered heading/rule/subheading,
-  // remaining components as body (hardcoded "single", image-pages.tsx:682-687),
-  // then a full-width bottom-band bleed image (first image component) with an
-  // optional caption overlay.
+  // components left after consuming the first image-family source as body,
+  // then a full-width bottom-band bleed image from its derived anchor with
+  // an optional caption overlay.
   id: "image-bottom",
   kind: "takeover",
   slideTypes: ["content"],
   slots: [
     { name: "body", accepts: "any" },
-    { name: "image", accepts: ["image"], selection: "first" },
+    { name: "image", accepts: ["image", "image_grid", "image_compare", "device_mockup"], required: true, selection: "first" },
     { name: "caption", accepts: [] },
   ],
 }
 
 export const imageAnnotateLayoutDef: LayoutDefinition = {
   // image-pages.tsx ImageAnnotatePage: centered heading + subheading,
-  // framed center image (first image component) with optional caption, and up
-  // to 4 corner annotations sourced from the *first bullets component's* items
-  // (bulletsComponent.items.slice(0, 4), image-pages.tsx:479-482). Deliberate
-  // deviation from the brief's base "image + body" takeover shape: unlike
-  // the other 3 takeovers, this renderer never builds a `rest` of
-  // leftover components — nothing besides the found image + bullets component is
-  // read, so declaring a `body` slot here would claim capacity the code
-  // does not actually offer. `annotation` is the real substitute for body
-  // in this one takeover.
+  // framed center image from the first image-family selection with optional
+  // caption, and up to 4 annotations sourced from the first bullets component
+  // items. Unlike the other 3 takeovers, this renderer only consumes the
+  // selected image source and bullets component. Declaring a `body` slot
+  // would claim capacity the renderer does not offer. `annotation` is the
+  // substitute for body on this face.
   id: "image-annotate",
   kind: "takeover",
   slideTypes: ["content"],
   slots: [
-    { name: "image", accepts: ["image"], selection: "first" },
-    { name: "annotation", accepts: ["bullets"], capacity: 4 },
+    { name: "image", accepts: ["image", "image_grid", "image_compare", "device_mockup"], required: true, selection: "first" },
+    { name: "annotation", accepts: ["bullets"], capacity: 4, capacityUnit: "items" },
     { name: "caption", accepts: [] },
   ],
 }

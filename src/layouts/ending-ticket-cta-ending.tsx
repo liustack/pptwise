@@ -198,7 +198,6 @@ export const layoutDef = {
   // price and no canned ticket CTA.
   id: "ticket-cta-ending",
   kind: "standard",
-  pinOnly: true,
   paintsOwnBackground: true,
   slideTypes: ["ending"],
   slots: [

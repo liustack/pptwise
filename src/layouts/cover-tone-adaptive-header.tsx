@@ -69,7 +69,7 @@ function hasBgImage(
   return !!(asset?.src && !asset.error)
 }
 
-export function ToneAdaptiveHeaderCover({ ir, slide, ctx, params }: SvgTemplateProps) {
+export function ToneAdaptiveHeaderCover({ ir, slide, ctx, page, params }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const withBg = hasBgImage(ir, slide)
   // INK 语境映射（见文件头「替换表」）：文字填色 → text，强调/描边 → primary。
@@ -80,13 +80,13 @@ export function ToneAdaptiveHeaderCover({ ir, slide, ctx, params }: SvgTemplateP
   const borderOpacity = withBg ? 0.18 : 1
 
   const org = ir.meta.organization
-  const conf = showsDocumentMeta(ir) ? ir.meta.confidentiality : undefined
+  const conf = showsDocumentMeta(page, ir, slide) ? ir.meta.confidentiality : undefined
   const confLabel = conf ? CONF_LABEL[conf] : null
   const author = ir.meta.authors?.[0]
   const authorText = author
     ? [author.name, author.role].filter(Boolean).join(" · ")
     : null
-  const date = showsDocumentMeta(ir) ? ir.meta.date : undefined
+  const date = showsDocumentMeta(page, ir, slide) ? ir.meta.date : undefined
   const version = ir.meta.version
   // 右侧 meta 单元格：date 现在只在 branding:"full" 下有值。省略 branding 且
   // 没有 version 时这格会空掉。空 `<text>` 在 svg2pptx 里照样变成一只空文本框

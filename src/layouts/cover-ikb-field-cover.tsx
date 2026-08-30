@@ -154,7 +154,6 @@ export const layoutDef = {
   // square steps. Empty heading draws no title and no rule.
   id: "ikb-field-cover",
   kind: "standard",
-  pinOnly: true,
   paintsOwnBackground: true,
   slideTypes: ["cover"],
   slots: [

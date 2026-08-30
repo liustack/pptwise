@@ -44,9 +44,8 @@ const zeroSlide: Slide = {
 } as Slide
 
 describe("layoutDef", () => {
-  it("declares pinOnly, capacity-1 body, and content slide type", () => {
+  it("declares a capacity-1 body, and content slide type", () => {
     expect(layoutDef.id).toBe("statement")
-    expect(layoutDef.pinOnly).toBe(true)
     expect(layoutDef.slideTypes).toEqual(["content"])
     expect(layoutDef.slots.find((s) => s.name === "body")?.capacity).toBe(1)
   })

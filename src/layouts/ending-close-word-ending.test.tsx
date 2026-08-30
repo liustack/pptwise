@@ -88,10 +88,9 @@ describe("ending-close-word-ending — board geometry", () => {
 })
 
 describe("ending-close-word-ending — shared pool", () => {
-  it("is registered for ending only, as a pinOnly archetype", () => {
+  it("is registered for ending only, as a archetype", () => {
     expect(layoutDef.id).toBe("close-word-ending")
     expect(layoutDef.kind).toBe("standard")
-    expect(layoutDef.pinOnly).toBe(true)
     expect(layoutDef.slideTypes).toEqual(["ending"])
   })
 

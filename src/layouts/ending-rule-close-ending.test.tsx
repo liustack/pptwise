@@ -94,10 +94,9 @@ describe("ending-rule-close-ending — board geometry", () => {
 })
 
 describe("ending-rule-close-ending — shared pool", () => {
-  it("is a pinOnly ending archetype named by composition, not theme", () => {
+  it("is an ending face named by composition, not theme", () => {
     expect(layoutDef.id).toBe("rule-close-ending")
     expect(layoutDef.kind).toBe("standard")
-    expect(layoutDef.pinOnly).toBe(true)
     expect(layoutDef.slideTypes).toEqual(["ending"])
   })
 

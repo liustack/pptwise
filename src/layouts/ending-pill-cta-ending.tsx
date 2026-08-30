@@ -149,12 +149,11 @@ export function PillCtaEnding({ slide, ctx }: SvgTemplateProps) {
 
 export const layoutDef = {
   branding: "none",
-  // ending-pill-cta-ending.tsx: pinOnly centered date-line heading,
+  // ending-pill-cta-ending.tsx: centered date-line heading,
   // optional subheading, accent capsule CTA from the first bullets item.
   // Empty components draw no pill and invent no thank-you. The theme-menu entry owns brand silence.
   id: "pill-cta-ending",
   kind: "standard",
-  pinOnly: true,
   slideTypes: ["ending"],
   slots: [
     { name: "heading", accepts: [] },

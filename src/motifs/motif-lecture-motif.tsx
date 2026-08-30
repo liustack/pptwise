@@ -2,6 +2,7 @@ import type { DecorProps } from "./types"
 import { DecorPiece } from "./decor-piece"
 import { leafRecessOpacity } from "./decor-budget"
 import { LECTURE_FRAME_BOTTOM_BOARD, frameBottomY } from "./branded-frame"
+import { resolveDeckBrandedFrameBottomY } from "../render/page-context"
 
 /**
  * lecture-motif —— 「粉笔槽细框」（2026-08-21 黑板夜校主题。设计源
@@ -52,10 +53,12 @@ const FRAME_Y = 26
 const FRAME_RIGHT = 1254
 const FRAME_STROKE = 1
 
-export function LectureMotif({ ir, slide, ctx }: DecorProps) {
+export function LectureMotif({ ir, slide, ctx, page }: DecorProps) {
   const tray = ctx.colors.border ?? ctx.colors.muted
   const bg = ctx.defaultBg ?? ctx.colors.bg
-  const bottom = frameBottomY(ir, slide, LECTURE_FRAME_BOTTOM_BOARD)
+  const bottom = page
+    ? frameBottomY(page, LECTURE_FRAME_BOTTOM_BOARD)
+    : resolveDeckBrandedFrameBottomY(ir, LECTURE_FRAME_BOTTOM_BOARD)
 
   return (
     <DecorPiece id="frame">

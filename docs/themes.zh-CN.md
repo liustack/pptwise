@@ -69,7 +69,7 @@ read_when:
 }
 ```
 
-`version`、`id`、`style` 与 `menu` 必填。`style.id` 必须等于主题 `id`。工作区主题 id 不能与出厂预设 id 冲突。
+`version`、`id`、`style` 与 `menu` 必填。`style.id` 必须等于主题 `id`。主题 id 是小写字母、数字和连字符组成的 slug。Deck 与工作区文件可以保名遮蔽出厂预设。
 
 `style` 对象是完整的。必需核心包括背景、表面、主色、强调色、正文色、弱化色、图表色板、标题字体、正文字体和四类默认背景。额外颜色、等宽字体、形状控制与 `allowCustomBackground` 可选。
 
@@ -126,7 +126,7 @@ Deck spec 按名称绑定主题：
 2. 从起始目录向上查找各级工作区 `themes/`。
 3. 24 个出厂预设。
 
-工作区文件不能遮蔽预设 id。未知名称会明确报错，并列出查过的位置。
+Deck 与工作区文件可以保名遮蔽出厂预设。冻结就是下沉拷贝并保留绑定名，例如 `pptwise theme new --from consulting -o deck-dir/theme.json --id consulting`。未知名称会明确报错，并列出查过的位置。
 
 要把工作区主题冻结给一份 deck，保留 id 并拷入 deck 目录的 `theme.json`：
 

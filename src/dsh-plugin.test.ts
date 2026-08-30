@@ -1595,6 +1595,7 @@ describe("preview route (the handler DSH actually calls)", () => {
     const { handler, route, value, cliPath } = await servedPreview("route-pptx")
     // Two runs so far: the preview and the export, both inside `execute`.
     expect((await cliInvocations(cliPath)).map((line) => line.split(" ")[0])).toEqual(["preview", "render"])
+    expect((await cliInvocations(cliPath)).some((line) => line.includes("--theme-file"))).toBe(false)
 
     const res = await request(handler, `${route}/${value.previewId}/pptx`)
     expect(res.status).toBe(200)
@@ -3540,4 +3541,57 @@ describe("preview record — fields, not just shape", () => {
     expect(JSON.parse(res.body.toString("utf8")).code).toBe(FAILURE_CODES.missing)
     expect((await request(handler, `${PREVIEW_ROUTE}/${id}`)).status).toBe(200)
   })
+})
+
+describe("DSH theme lookup without --theme-file", () => {
+  it("does not pass --theme-file to preview or render", async () => {
+    const src = readFileSync(join(ROOT, "dsh/preview-tool.js"), "utf8")
+    expect(src).not.toContain("--theme-file")
+    expect(src).not.toMatch(/function themeArgs/)
+  })
+
+  it("copies deck-local theme.json next to the snapshot", async () => {
+    const { __testing } = await loadPreviewTool()
+    const { writeFile, readFile, mkdir } = await import("node:fs/promises")
+    const { join } = await import("node:path")
+    const cliHome = await scratchTmp("dsh-assemble-cli-")
+    const cliPath = join(cliHome, "cli.mjs")
+    await writeFile(
+      cliPath,
+      [
+        'import { mkdirSync, writeFileSync } from "node:fs"',
+        'import { dirname } from "node:path"',
+        "const argv = process.argv.slice(2)",
+        'const out = argv[argv.indexOf("-o") + 1]',
+        "mkdirSync(dirname(out), { recursive: true })",
+        'writeFileSync(out, JSON.stringify({ filename: "snap" }))',
+        "",
+      ].join("\n"),
+    )
+    const deck = await scratchTmp("dsh-theme-deck-")
+    await writeFile(join(deck, "theme.json"), '{"id":"acme"}\n')
+    await mkdir(join(deck, "pages"), { recursive: true })
+    const outDir = await scratchTmp("dsh-theme-out-")
+    const result = await __testing.captureSnapshot(cliPath, deck, outDir)
+    expect(result.themeFile).toBe(join(outDir, "theme.json"))
+    expect(await readFile(join(outDir, "theme.json"), "utf8")).toBe('{"id":"acme"}\n')
+  })
+
+  it("copies a single-file IR's adjacent theme.json next to the snapshot", async () => {
+    const { __testing } = await loadPreviewTool()
+    const { writeFile, readFile } = await import("node:fs/promises")
+    const { join } = await import("node:path")
+    const sourceDir = await scratchTmp("dsh-theme-ir-")
+    const target = join(sourceDir, "deck.json")
+    await writeFile(target, JSON.stringify({ filename: "single-file" }))
+    await writeFile(join(sourceDir, "theme.json"), '{"id":"acme-file"}\n')
+    const outDir = await scratchTmp("dsh-theme-ir-out-")
+
+    const result = await __testing.captureSnapshot("/unused-cli.js", target, outDir)
+
+    expect(result.snapshot).toBe(join(outDir, "snapshot.ir.json"))
+    expect(result.themeFile).toBe(join(outDir, "theme.json"))
+    expect(await readFile(join(outDir, "theme.json"), "utf8")).toBe('{"id":"acme-file"}\n')
+  })
+
 })

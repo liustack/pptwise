@@ -11,8 +11,7 @@
  * and the CLI-shell half of `disassembleDeck`'s otherwise-lossy asset
  * handling (see that function's own doc comment in `../spec/assemble.ts`).
  *
- * Directory layout (spec §6/§7 — the locked artifact renamed from
- * `deck.plan.json` to `deck.spec.json`, vocabulary-v4 rename, task 2):
+ * Directory layout:
  * ```
  * my-deck/
  *   deck.spec.json        the locked spec — page order's sole source of truth
@@ -20,12 +19,6 @@
  *   assets/                local images, auto-registered by filename
  * ```
  *
- * A directory carrying the pre-rename `deck.plan.json` only (no
- * `deck.spec.json` yet) is no longer read directly — `pptwise migrate
- * <dir> -o <dir>` (`./commands.ts`'s `runMigrate`) converts it in place per
- * spec §9.2's field mapping. A directory carrying *both* files at once is a
- * hard error ({@link readSpecFile} below) — spec §9.2: "目录中同时出现
- * `deck.plan.json` 和 `deck.spec.json` 时应硬报错，不能猜测优先级".
  */
 import { copyFile, mkdir, readFile, readdir, stat, writeFile } from "node:fs/promises"
 import { basename, extname, isAbsolute, join, relative, resolve } from "node:path"
@@ -34,14 +27,6 @@ import { assembleDeck, type AssembleResult, type PageContent } from "../spec/ass
 import { decksRoot } from "./home"
 import { EXT_BY_MIME, loadIrFile } from "./load-ir"
 
-/** The pre-rename artifact name (vocabulary-v4 rename, spec §6/§9.2) — no
- *  longer read directly by {@link readSpecFile}, but still needed to (a)
- *  detect the dual-file hard-error case and (b) as the migrate command's own
- *  read source (`./commands.ts`'s `runMigrate`). Both exported for that
- *  second reason — `runMigrate` needs the exact same two filenames, and
- *  duplicating the literal strings there would risk the two modules drifting
- *  on spelling. */
-export const PLAN_FILENAME = "deck.plan.json"
 export const SPEC_FILENAME = "deck.spec.json"
 // Exported (serve wave, task S1) so `./serve.ts` can build its fs.watch
 // roots from the exact same directory names this module already treats as
@@ -228,45 +213,9 @@ function expectedLayoutHint(): string {
   return rows.map(([name, desc]) => `  ${name.padEnd(width)}${desc}`).join("\n")
 }
 
-/**
- * Reads `deck.spec.json` out of `dir` (vocabulary-v4 rename, task 2 —
- * this function used to read the pre-rename `deck.plan.json` directly; it
- * no longer does). Three failure shapes, each with its own message:
- *
- * - both `deck.plan.json` and `deck.spec.json` present — a hard error, spec
- *   §9.2: "目录中同时出现 `deck.plan.json` 和 `deck.spec.json` 时应硬报错，
- *   不能猜测优先级" ("hard error, never guess which one wins"). Checked
- *   before the missing-file branch below so a caller that just ran
- *   `pptwise migrate <dir> -o <dir>` (which writes `deck.spec.json`
- *   *alongside* the pre-existing `deck.plan.json`, never deleting it) gets
- *   pointed at deleting the old file, not a generic "not a deck project"
- *   message.
- * - only `deck.plan.json` present (no `deck.spec.json` yet) — this
- *   directory predates the rename and is no longer read directly; the
- *   message points at `pptwise migrate` instead of the generic missing-file
- *   hint, since the fix here is a one-command conversion, not authoring a
- *   fresh file from scratch.
- * - neither file present — the pre-existing "friendlier message over
- *   `loadIrFile`'s generic "cannot read"" this function has always had: the
- *   one failure a deck-directory caller is most likely to hit by typo or by
- *   pointing at a directory that was never a deck project in the first
- *   place, so the error spells out the expected layout and points at
- *   `pptwise spec validate` rather than leaving the caller to guess.
- */
+/** Reads `deck.spec.json` and reports the current expected layout when absent. */
 async function readSpecFile(dir: string): Promise<unknown> {
   const specPath = join(dir, SPEC_FILENAME)
-  const planPath = join(dir, PLAN_FILENAME)
-  const [specExists, planExists] = await Promise.all([pathExists(specPath), pathExists(planPath)])
-  if (specExists && planExists) {
-    throw new PptwiseError(
-      `both ${SPEC_FILENAME} and ${PLAN_FILENAME} exist in ${dir} — ambiguous, refusing to guess which one wins. Delete ${PLAN_FILENAME} once you have confirmed ${SPEC_FILENAME} is correct (\`pptwise migrate\` never deletes the source file it read)`,
-    )
-  }
-  if (!specExists && planExists) {
-    throw new PptwiseError(
-      `${dir} has ${PLAN_FILENAME} but no ${SPEC_FILENAME} — deck project directories now use ${SPEC_FILENAME}. Run \`pptwise migrate ${dir} -o ${dir}\` to convert it`,
-    )
-  }
   let text: string
   try {
     text = await readFile(specPath, "utf8")
@@ -387,9 +336,8 @@ export interface DeckDirResult extends AssembleResult {
   deckDir: string
   /** Absolute path to `deck.spec.json`. */
   specPath: string
-  /** Spec's own `theme` string, omitted when the spec did not set one.
-   *  Extracted from the raw spec before assemble, which always fills
-   *  `theme.id` (schema default consulting) even when the spec omitted it. */
+  /** Spec's own `theme` string. Extracted from the raw spec before assemble,
+   *  which always writes `theme.id` from the required spec theme. */
   specTheme?: string
 }
 
@@ -423,20 +371,9 @@ export interface DeckDirResult extends AssembleResult {
  * The merged result is spliced in via a shallow clone of the whole `ir`
  * object (`{ ...ir, assets: ... }`), not a `ir.assets = ...` reassignment
  * onto the object `assembleDeck` returned (post-v0.3 W8 fix round, backlog
- * item 4, `.issues/notes/engineering-history.md` #4): the earlier
- * version mutated `assembleDeck`'s own return value in place, which is
- * harmless *today* only because `variety.ts`'s `deckSeedCache` and
- * `layout-selection.ts`'s `deckEffectiveLayoutIdsCache` — the only two
- * consumers that key a `WeakMap` off an `ir` object's identity — never read
- * `.assets` (confirmed by reading both cache-populating functions: they only
- * touch `seed`/`filename`/`theme.id`/`theme.style`/`narrative`/
- * `slides[].heading`/`.id`/`.type`/`.layout`/`.background`). Cloning
- * instead of mutating means the object
- * `assembleDeck` returned is never touched, and this function's own return
- * value is a distinct identity no earlier reference could have already
- * cached against — correct-by-construction regardless of what a future
- * cache keys on, not just correct because of what today's two caches happen
- * to skip.
+ * item 4, `.issues/notes/engineering-history.md` #4). Cloning instead of
+ * mutating means the object `assembleDeck` returned is never touched, and
+ * this function's own return value is a distinct identity.
  */
 function specThemeFromRaw(spec: unknown): string | undefined {
   if (typeof spec !== "object" || spec === null) return undefined

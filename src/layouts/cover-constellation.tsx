@@ -63,14 +63,14 @@ const STAR_CHAIN = [
   { x: 180, r: 2.5 },
 ] as const
 
-export function ConstellationCover({ ir, slide, ctx, params }: SvgTemplateProps) {
+export function ConstellationCover({ ir, slide, ctx, page, params }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const titleBottomAnchor = faceParam(params, "titleBottomAnchor", true)
   const ruleStyle = faceParam<"bar" | "star-chain">(params, "ruleStyle", "bar")
   const org = ir.meta.organization
-  const conf = showsDocumentMeta(ir) ? ir.meta.confidentiality : undefined
+  const conf = showsDocumentMeta(page, ir, slide) ? ir.meta.confidentiality : undefined
   const confLabel = conf ? CONF_LABEL[conf] : null
-  const date = showsDocumentMeta(ir) ? ir.meta.date : undefined
+  const date = showsDocumentMeta(page, ir, slide) ? ir.meta.date : undefined
   const metaParts = [confLabel, date].filter((v): v is string => Boolean(v))
 
   const title = fitHeadingLines(slide.heading, {

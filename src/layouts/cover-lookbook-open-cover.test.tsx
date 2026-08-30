@@ -165,10 +165,9 @@ describe("cover-lookbook-open-cover — board geometry", () => {
 })
 
 describe("cover-lookbook-open-cover — shared pool", () => {
-  it("is registered as a pinOnly cover named by composition, not theme", () => {
+  it("is registered as a cover face named by composition, not theme", () => {
     expect(layoutDef.id).toBe("lookbook-open-cover")
     expect(layoutDef.kind).toBe("standard")
-    expect(layoutDef.pinOnly).toBe(true)
     expect((layoutDef as LayoutDefinition).paintsOwnBackground).toBeUndefined()
     expect(layoutDef.slideTypes).toEqual(["cover"])
   })

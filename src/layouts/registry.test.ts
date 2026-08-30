@@ -1,16 +1,12 @@
 import { describe, expect, it } from "vitest"
-import { STRATEGY_VALUES, type Strategy } from "@/narrative"
 import { COVER_LAYOUTS } from "./index-cover"
 import { CHAPTER_LAYOUTS } from "./index-chapter"
 import { CONTENT_LAYOUTS } from "./index-content"
 import { ENDING_LAYOUTS } from "./index-ending"
 import {
-  excludePinOnly,
-  filterByNarrativesOnly,
   getLayout,
   LAYOUT_REGISTRY,
   layoutsForSlideType,
-  type LayoutDefinition,
   type SlideType,
 } from "./registry"
 
@@ -89,12 +85,11 @@ describe("LAYOUT_REGISTRY completeness (takeover ids)", () => {
   })
 })
 
-describe("content family: body slot + declared arrangements", () => {
+describe("content family: body slot", () => {
   for (const id of Object.keys(CONTENT_LAYOUTS)) {
-    it(`"${id}" has a body slot and declares arrangements`, () => {
+    it(`"${id}" has a body slot`, () => {
       const entry = LAYOUT_REGISTRY[id]
       expect(entry.slots.some((s) => s.name === "body"), `"${id}" is missing a body slot`).toBe(true)
-      expect(entry.arrangements, `"${id}" has not declared arrangements`).toBeDefined()
     })
   }
 
@@ -124,46 +119,20 @@ describe("content family: body slot + declared arrangements", () => {
           id === "crayonbox-todo"
         ) {
           expect(entry.slots.some((s) => s.name === "body")).toBe(true)
-          expect(entry.arrangements).toBeUndefined()
           continue
         }
         expect(
           entry.slots.some((s) => s.name === "body"),
           `${slideType} layout "${id}" should not declare a body slot`,
         ).toBe(false)
-        expect(entry.arrangements, `${slideType} layout "${id}" should not declare arrangements`).toBeUndefined()
       }
     }
   })
 
-  it("two-column only honors the two_column arrangement (hardcoded, per inventory)", () => {
-    expect(LAYOUT_REGISTRY["two-column"].arrangements).toEqual(["two_column"])
-  })
 
-  it("bento-panel only honors single (hardcoded, per inventory)", () => {
-    expect(LAYOUT_REGISTRY["bento-panel"].arrangements).toEqual(["single"])
-  })
 
-  it("asymmetric-triptych only honors single (hardcoded — its own three-region split is its arrangement, P1 variety wave task 4)", () => {
-    expect(LAYOUT_REGISTRY["asymmetric-triptych"].arrangements).toEqual(["single"])
-  })
 
-  it("stacked-poster retains its legacy arrangements metadata until the CLI inventory migrates", () => {
-    expect(LAYOUT_REGISTRY["stacked-poster"].arrangements).toBe("all")
-  })
 
-  it("the remaining arrangement-respecting layouts declare arrangements: \"all\"", () => {
-    for (const id of [
-      "narrow-column",
-      "rail-numbered",
-      "tone-adaptive-content",
-      "stacked-poster",
-      "quiet-frame",
-      "crayonbox-cards",
-    ]) {
-      expect(LAYOUT_REGISTRY[id].arrangements).toBe("all")
-    }
-  })
 })
 
 describe("capacity metadata: only where the inventory gives hard numbers", () => {
@@ -277,174 +246,5 @@ describe("layoutsForSlideType", () => {
     expect(contents.filter((l) => l.kind === "standard")).toHaveLength(23)
     expect(contents.filter((l) => l.kind === "takeover")).toHaveLength(4)
     expect(contents).toHaveLength(27)
-  })
-})
-
-describe("filterByNarrativesOnly (W4, spec §6 step 4's rare narratives_only hard constraint)", () => {
-  // Synthetic fixtures, not real registry entries — the whole point of this
-  // being a standalone pure function (design decision 5) is that it can be
-  // unit-tested without any real LAYOUT_REGISTRY id or a live selection
-  // pass through `resolveLayoutId`.
-  function synthetic(id: string, narrativesOnly?: readonly Strategy[]): LayoutDefinition {
-    return { id, kind: "standard", slideTypes: ["content"], slots: [], narrativesOnly }
-  }
-
-  it("keeps a layout whose narrativesOnly list includes the resolved strategy", () => {
-    const defs = [synthetic("a", ["pyramid", "storytelling"])]
-    expect(filterByNarrativesOnly(defs, "pyramid")).toEqual(defs)
-  })
-
-  it("drops a layout whose narrativesOnly list excludes the resolved strategy", () => {
-    const defs = [synthetic("a", ["pyramid"])]
-    expect(filterByNarrativesOnly(defs, "briefing")).toEqual([])
-  })
-
-  it("keeps a layout with no narrativesOnly regardless of strategy (unrestricted default — every built-in layout today)", () => {
-    const defs = [synthetic("a")]
-    for (const strategy of STRATEGY_VALUES) {
-      expect(filterByNarrativesOnly(defs, strategy)).toEqual(defs)
-    }
-  })
-
-  it("filters a mixed pool: keeps unrestricted + in-list members, drops out-of-list members, preserves order", () => {
-    const defs = [
-      synthetic("unrestricted"),
-      synthetic("in-list", ["showcase"]),
-      synthetic("out-of-list", ["pyramid"]),
-    ]
-    expect(filterByNarrativesOnly(defs, "showcase").map((d) => d.id)).toEqual(["unrestricted", "in-list"])
-  })
-
-  it("real LAYOUT_REGISTRY entries: none set narrativesOnly yet (mechanism lands ahead of any real consumer, W4 design decision 5)", () => {
-    for (const def of Object.values(LAYOUT_REGISTRY)) {
-      expect(def.narrativesOnly, `"${def.id}" unexpectedly sets narrativesOnly`).toBeUndefined()
-    }
-  })
-})
-
-describe("excludePinOnly (quote-stage wave, task T1's pinOnly tier)", () => {
-  // Synthetic fixtures, not real registry entries — same "standalone pure
-  // function" testability `filterByNarrativesOnly`'s own describe block
-  // above already established for its own field.
-  function synthetic(id: string, pinOnly?: boolean): LayoutDefinition {
-    return { id, kind: "standard", slideTypes: ["content"], slots: [], pinOnly }
-  }
-
-  it("keeps a layout with pinOnly unset", () => {
-    const defs = [synthetic("a")]
-    expect(excludePinOnly(defs)).toEqual(defs)
-  })
-
-  it("keeps a layout with pinOnly: false", () => {
-    const defs = [synthetic("a", false)]
-    expect(excludePinOnly(defs)).toEqual(defs)
-  })
-
-  it("drops a layout with pinOnly: true", () => {
-    expect(excludePinOnly([synthetic("a", true)])).toEqual([])
-  })
-
-  it("filters a mixed pool: keeps unset/false members, drops pinOnly members, preserves order", () => {
-    const defs = [synthetic("unset"), synthetic("not-pinned", false), synthetic("pinned", true), synthetic("also-kept")]
-    expect(excludePinOnly(defs).map((d) => d.id)).toEqual(["unset", "not-pinned", "also-kept"])
-  })
-
-  it("real LAYOUT_REGISTRY entries match the complete expected pin-only id set", () => {
-    const pinOnlyIds = new Set([
-      "quote-stage",
-      "statement",
-      "pull-quote",
-      "verse-chapter",
-      "stat-hero",
-      "one-evidence",
-      "mono-bleed",
-      "ikb-field-cover",
-      "stat-cover",
-      "type-rule-cover",
-      "ghost-rule-chapter",
-      "block-numeral-chapter",
-      "ghost-section-chapter",
-      "ember-index-chapter",
-      "stroke-index-chapter",
-      "act-chapter",
-      "action-pad-ending",
-      "signoff-ending",
-      "close-word-ending",
-      "ask-ending",
-      "rule-close-ending",
-      "pill-cta-ending",
-      "thesis-plate-cover",
-      "chalk-band-cover",
-      "capsule-open-cover",
-      "issue-head-cover",
-      "double-frame-cover",
-      "vertical-title-cover",
-      "folio-ghost-chapter",
-      "lesson-box-chapter",
-      "sticker-numeral-chapter",
-      "fascicle-ghost-chapter",
-      "mirror-volume-chapter",
-      "volume-slip-chapter",
-      "defense-close-ending",
-      "homework-close-ending",
-      "reminder-list-ending",
-      "afterword-ending",
-      "invite-field-ending",
-      "seal-close-ending",
-      "invitation-plate-cover",
-      "lookbook-open-cover",
-      "red-head-cover",
-      "pledge-open-cover",
-      "report-open-cover",
-      "cut-panel-cover",
-      "gilt-ordinal-chapter",
-      "look-range-chapter",
-      "seal-numeral-chapter",
-      "field-band-chapter",
-      "subject-rule-chapter",
-      "round-mark-chapter",
-      "gilt-word-ending",
-      "window-close-ending",
-      "deliberation-ending",
-      "scorecard-ending",
-      "care-plan-ending",
-      "seat-cta-ending",
-      "one-word-chapter",
-      "chalk-rule-chapter",
-      "decimal-index-chapter",
-      "issue-line-chapter",
-      "day-bill-chapter",
-      "hall-label-chapter",
-      "release-close-ending",
-      "next-lecture-ending",
-      "resolution-ending",
-      "decision-close-ending",
-      "ticket-cta-ending",
-      "exit-word-ending",
-      "gauge-verdict",
-      "gauge-section",
-      "gauge-stats",
-      "gauge-point",
-      "gauge-next",
-      "crayonbox-open",
-      "crayonbox-sticker",
-      "crayonbox-cards",
-      "crayonbox-point",
-      "crayonbox-todo",
-      "show-headline",
-      "show-plate",
-      "show-gallery",
-      "show-spotlight",
-      "show-statement",
-      "show-figures",
-      "show-finale",
-    ])
-    for (const def of Object.values(LAYOUT_REGISTRY)) {
-      if (pinOnlyIds.has(def.id)) {
-        expect(def.pinOnly, `"${def.id}" should set pinOnly`).toBe(true)
-      } else {
-        expect(def.pinOnly, `"${def.id}" unexpectedly sets pinOnly`).toBeUndefined()
-      }
-    }
   })
 })

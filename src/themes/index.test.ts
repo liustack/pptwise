@@ -14,13 +14,6 @@ describe("resolveStyle", () => {
     }
   });
 
-  it("tokens 覆盖 primary 但保留灰阶", () => {
-    const original = resolveStyle("tech");
-    const overridden = resolveStyle("tech", { colors: { primary: "#FF0000" } });
-    expect(overridden.colors.primary).toBe("#FF0000");
-    expect(overridden.colors.muted).toBe(original.colors.muted);
-  });
-
   // 2026-08-19 深底组皮肤重设计：insight 从「深底红金」换成「暖黑终端底 +
   // 终端琥珀」。primary 不再是抢眼的正红，而是让位给 accent 的墨蓝色块底
   // （设计稿的角色定义，见 themes/insight.ts 的改动来历）。

@@ -160,7 +160,6 @@ export const layoutDef = {
   // components).
   id: "block-numeral-chapter",
   kind: "standard",
-  pinOnly: true,
   slideTypes: ["chapter"],
   slots: [
     { name: "kicker", accepts: [] },

@@ -85,10 +85,9 @@ describe("ending-ask-ending — board geometry", () => {
 })
 
 describe("ending-ask-ending — shared pool", () => {
-  it("is pinOnly for ending", () => {
+  it("is for ending", () => {
     expect(layoutDef.id).toBe("ask-ending")
     expect(layoutDef.kind).toBe("standard")
-    expect(layoutDef.pinOnly).toBe(true)
     expect(layoutDef.slideTypes).toEqual(["ending"])
   })
 

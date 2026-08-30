@@ -144,10 +144,9 @@ export function AskEnding({ slide, ctx }: SvgTemplateProps) {
 
 export const layoutDef: LayoutDefinition = {
   // ending-ask-ending.tsx: fundraising ask as the heading, one primary
-  // CTA block. pinOnly board lock. No thank-you fallback.
+  // CTA block. board lock. No thank-you fallback.
   id: "ask-ending",
   kind: "standard",
-  pinOnly: true,
   slideTypes: ["ending"],
   slots: [
     { name: "heading", accepts: [] },

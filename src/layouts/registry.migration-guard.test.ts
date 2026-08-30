@@ -39,9 +39,20 @@ const fixture = JSON.parse(
 /** Layouts retired after the capture. Compare the rest, skip these ids. */
 const RETIRED_LAYOUT_IDS = new Set(["image-lead-split", "side-highlight", "banner-heading"])
 
-/** `live`, cut down to the keys `captured` has — nothing else is this guard's business. */
-function capturedFieldsOf(live: Record<string, unknown>, captured: Record<string, unknown>) {
-  return Object.fromEntries(Object.keys(captured).map((k) => [k, live[k]]))
+/** `live`, recursively cut down to the shape `captured` has. */
+function capturedShapeOf(live: unknown, captured: unknown): unknown {
+  if (Array.isArray(captured)) {
+    if (!Array.isArray(live)) return live
+    return captured.map((value, index) => capturedShapeOf(live[index], value))
+  }
+  if (captured !== null && typeof captured === "object") {
+    if (live === null || typeof live !== "object") return live
+    const liveRecord = live as Record<string, unknown>
+    return Object.fromEntries(
+      Object.entries(captured).map(([key, value]) => [key, capturedShapeOf(liveRecord[key], value)]),
+    )
+  }
+  return live
 }
 
 describe("LAYOUT_REGISTRY migration guard (registry.ts aggregator conversion, T1d)", () => {
@@ -60,7 +71,7 @@ describe("LAYOUT_REGISTRY migration guard (registry.ts aggregator conversion, T1
     for (const [id, captured] of Object.entries(fixture.registry)) {
       if (RETIRED_LAYOUT_IDS.has(id)) continue
       expect(live[id], id).toBeDefined()
-      expect(capturedFieldsOf(live[id]!, captured), id).toEqual(captured)
+      expect(capturedShapeOf(live[id]!, captured), id).toEqual(captured)
     }
   })
 })

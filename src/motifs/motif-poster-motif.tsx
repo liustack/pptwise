@@ -1,7 +1,7 @@
 import type { DecorProps } from "./types"
 import { DecorPiece } from "./decor-piece"
 import { leafRecessOpacity } from "./decor-budget"
-import { yieldsOnSparsePin } from "./branded-frame"
+import { yieldsOnSparseFace } from "./branded-frame"
 
 /**
  * poster-motif —— insight 的行情语汇（2026-08-22 第八波批 1 演化）：
@@ -66,7 +66,7 @@ function catmullRomCubicD(pts: readonly (readonly [number, number])[]): string {
 }
 
 export function PosterMotif({ slide, ctx }: DecorProps) {
-  if (yieldsOnSparsePin(slide)) return null
+  if (yieldsOnSparseFace(slide)) return null
   if (slide.type === "chapter") return null
   const { colors } = ctx
   const bg = ctx.defaultBg ?? colors.bg

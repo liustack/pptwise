@@ -18,7 +18,7 @@
  */
 import { z } from "zod"
 import { PptwiseError } from "./errors"
-import { OLD_IR_VERSION_ERROR, PptxIRSchema, StyleOverrideSchema, type PptxIR } from "./ir"
+import { OLD_IR_VERSION_ERROR, PptxIRSchema, themeIssueMessage, type PptxIR } from "./ir"
 import { decodeDataUriBytes, dataUriMime, FORMAT_BY_MIME, MIME_BY_SNIFFED_FORMAT, sniffImageFormat } from "./ir/asset-sniff"
 import { normalizeComponentAliases, normalizeDeckRootAliases } from "./ir/field-aliases"
 import { isSlideLevelPath, renameHintsFor, SLIDE_LEVEL_UNKNOWN_KEY_HINT } from "./ir/rename-hints"
@@ -27,6 +27,7 @@ import { CAPACITY } from "./audit/capacity"
 import { FULL_BODY_TYPES } from "./render/component-traits"
 import { checkIrQuality, type QualityIssue } from "./render/ir-quality"
 import { resolveEffectiveFace } from "./render/layout-selection"
+import { findImageSelection } from "./layouts/find-image"
 import type { LayoutDefinition } from "./layouts/registry"
 import { CANONICAL_THEME_IDS, THEME_LABELS, THEME_STYLES } from "./themes"
 import { getInstalledThemeIds, getThemeDefinition } from "./themes/definitions"
@@ -120,6 +121,9 @@ function describeQualityIssue(issue: QualityIssue): string {
       // of this file's `?.`/`??` guards); never actually hit.
       if (!d) return "too many components on this slide — split into multiple slides"
       const { limit, pacing, pacingBudget, layoutId, layoutCapacity } = d
+      if (d.unit === "items" && d.slotName !== undefined) {
+        return `too many ${d.slotName} items (max ${limit} — ${layoutId} layout's ${d.slotName} capacity is ${layoutCapacity}) — trim them or split into multiple slides`
+      }
       if (layoutCapacity === undefined || layoutCapacity === pacingBudget) {
         // No geometric term because the face has no body capacity, or it
         // agrees with the editorial budget. Nothing extra
@@ -295,13 +299,59 @@ function checkFullBodyExclusivity(ir: PptxIR): ValidationIssue[] {
   return errors
 }
 
-/** The face bound by the theme menu makes every boundary surface knowable. */
+/** Resolve the component surface that actually paints a boundary page. */
 function boundBoundaryLayout(ir: PptxIR, slide: PptxIR["slides"][number]) {
-  return resolveEffectiveFace(ir, slide).layout
+  const effective = resolveEffectiveFace(ir, slide)
+  return effective.route === "image-cover" ? undefined : effective.layout
 }
 
 function layoutAcceptsComponent(layout: LayoutDefinition, componentType: string): boolean {
   return layout.slots.some((slot) => slot.accepts === "any" || slot.accepts.includes(componentType))
+}
+
+/** Content components must satisfy the slots of the exact resolved render surface. */
+function checkContentPageSlots(ir: PptxIR): ValidationIssue[] {
+  const errors: ValidationIssue[] = []
+  ir.slides.forEach((slide, i) => {
+    if (slide.placeholder || slide.type !== "content") return
+    const layout = resolveEffectiveFace(ir, slide).layout
+    if (!layout) return
+    const imageSlot = layout.kind === "takeover"
+      ? layout.slots.find((slot) => slot.name === "image" && slot.selection === "first")
+      : undefined
+    const imageSelection = imageSlot === undefined ? undefined : findImageSelection(slide)
+    for (const slot of layout.slots) {
+      if (slot.required !== true || slot.accepts === "any") continue
+      const present = slot === imageSlot
+        ? imageSelection !== undefined && slot.accepts.includes(imageSelection.source.type)
+        : slide.components.some((component) => slot.accepts.includes(component.type))
+      if (present) continue
+      const expected = slot.accepts.join(" or ")
+      errors.push({
+        path: `slides.${i}.components`,
+        page: i + 1,
+        ...(slide.id !== undefined ? { slideId: slide.id } : {}),
+        message: `layout "${layout.id}" requires an ${expected} component for its ${slot.name} slot`,
+      })
+    }
+    const unsupported = slide.components.filter((component) => {
+      if (component === imageSelection?.source) return false
+      return !layout.slots.some((slot) => {
+        if (slot === imageSlot) return false
+        return slot.accepts === "any" || slot.accepts.includes(component.type)
+      })
+    })
+    if (unsupported.length > 0) {
+      const types = [...new Set(unsupported.map((component) => component.type))].join(", ")
+      errors.push({
+        path: `slides.${i}.components`,
+        page: i + 1,
+        ...(slide.id !== undefined ? { slideId: slide.id } : {}),
+        message: `layout "${layout.id}" does not render ${types} components`,
+      })
+    }
+  })
+  return errors
 }
 
 /**
@@ -614,29 +664,16 @@ export function validateIr(input: unknown): ValidateResult {
     const errors = r.error.issues.map((issue) => {
       const path = issue.path.join(".")
       const m = /^slides\.(\d+)/.exec(path)
-      let message = issue.message
+      let message = themeIssueMessage(path, issue.message, issue.input, issue.code)
       if (issue.code === "unrecognized_keys") {
-        // The one retired key a hand-migrated v4 document most plausibly
-        // still carries (spec §16 hard-rejects it, no rescue) — the bare
-        // zod "Unrecognized key" line names the key but not its successor,
-        // so point at the rename and the sanctioned bridge here. The axis
-        // keys and old enum values inside `narrative` already self-document
-        // via resolveNarrative's own errors. Kept inline (not folded into
-        // ./ir/rename-hints.ts's table below) because this is the one
-        // rename whose hint also carries the `pptwise migrate` pointer for
-        // a genuine v3 document — see that module's own doc comment for why
-        // the other, v2-only renames don't get the same pointer.
+        // The retired `scenario` key needs the current `narrative` spelling
+        // in its error instead of zod's generic unrecognized-key message.
         if (path === "" && issue.keys.includes("scenario")) {
-          message += ' — "scenario" was renamed to "narrative"; rewrite the file to the current IR'
+          message += '. "scenario" was renamed to "narrative". Rewrite the file to the current IR'
         }
-        // The rest of the documented v2/v3 → v4 rename map (borrow-wave
-        // task 3, generalizing the `scenario` rescue above to
-        // `blocks`/`variant`/`theme.override` — ./ir/rename-hints.ts), plus
-        // a generic "content belongs inside components[]" fallback for a
-        // slide-level unrecognized key that isn't one of those documented
-        // renames (the `items`-directly-on-a-slide probe, borrow-wave B
-        // report §3.3 #3). Never both on the same key: a documented rename
-        // is always the more specific, more useful hint.
+        // Keep the documented rename table and the generic slide-level
+        // placement hint. A documented rename remains the more specific
+        // message when both could apply.
         const renameHints = renameHintsFor(issue.keys, path)
         if (renameHints.length > 0) {
           message += renameHints.join("")
@@ -657,22 +694,20 @@ export function validateIr(input: unknown): ValidateResult {
   const installedThemeIds = getInstalledThemeIds()
   if (!installedThemeIds.includes(r.data.theme.id)) {
     const themeId = r.data.theme.id
-    const message =
-      themeId === "bloom"
-        ? 'theme id "bloom" was removed — run `pptwise migrate <input> -o <output>` to rewrite it to "classroom"'
-        : `unknown theme "${themeId}" — available: ${installedThemeIds.join(", ")} (see \`pptwise themes\`)`
     return withNormalized({
       ok: false,
       errors: [
         {
           path: "theme.id",
-          message,
+          message: `unknown theme "${themeId}". Themes available: ${installedThemeIds.join(", ")} (see \`pptwise themes\`)`,
         },
       ],
     })
   }
   const menuFaceErrors = checkThemeMenuFaces(r.data)
   if (menuFaceErrors.length > 0) return withNormalized({ ok: false, errors: menuFaceErrors })
+  const contentSlotErrors = checkContentPageSlots(r.data)
+  if (contentSlotErrors.length > 0) return withNormalized({ ok: false, errors: contentSlotErrors })
   const fullBodyErrors = checkFullBodyExclusivity(r.data)
   if (fullBodyErrors.length > 0) return withNormalized({ ok: false, errors: fullBodyErrors })
   const boundaryPageErrors = checkBoundaryPageContent(r.data)
@@ -799,9 +834,4 @@ export function listThemes(): ThemeInfo[] {
 /** JSON Schema for the IR — feed this to a model before it writes IR. */
 export function irJsonSchema(): Record<string, unknown> {
   return z.toJSONSchema(PptxIRSchema) as Record<string, unknown>
-}
-
-/** JSON Schema for style-token overrides (IR theme.style, --style files, config "style"). */
-export function styleJsonSchema(): Record<string, unknown> {
-  return z.toJSONSchema(StyleOverrideSchema) as Record<string, unknown>
 }

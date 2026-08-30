@@ -161,12 +161,11 @@ export function DefenseCloseEnding({ slide, ctx }: SvgTemplateProps) {
 
 export const layoutDef: LayoutDefinition = {
   branding: "none",
-  // ending-defense-close-ending.tsx: pinOnly conclusions list, English
+  // ending-defense-close-ending.tsx: conclusions list, English
   // CONCLUSIONS kicker, foot rule, optional subheading sign-off. No
   // thank-you fallback. Optional bullets fill the list.
   id: "defense-close-ending",
   kind: "standard",
-  pinOnly: true,
   slideTypes: ["ending"],
   slots: [
     { name: "kicker", accepts: [] },

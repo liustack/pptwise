@@ -66,7 +66,7 @@
 import { type FSWatcher, watch } from "node:fs"
 import { createServer, type Server, type ServerResponse } from "node:http"
 import { platform as osPlatform } from "node:os"
-import { join } from "node:path"
+import { dirname, join } from "node:path"
 import { PptwiseError } from "../errors"
 import { spawnHidden } from "./child"
 import { buildDeckPreview } from "./commands"
@@ -376,7 +376,7 @@ export async function createServeServer(options: ServeOptions): Promise<ServeHan
   try {
     const resolvedTheme = await resolveThemeByName(initial.ir.theme.id, {
       startDir: cwd,
-      deckDir: initial.isDir ? initial.resolvedTarget : undefined,
+      deckDir: initial.isDir ? initial.resolvedTarget : dirname(initial.resolvedTarget),
     })
     if (resolvedTheme.kind === "file") extraWatch.push(resolvedTheme.path)
   } catch {

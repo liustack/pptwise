@@ -49,6 +49,11 @@ describe("contrastRatio", () => {
   it("is symmetric (argument order doesn't matter)", () => {
     expect(contrastRatio("#051C2C", "#F7F7F2")).toBeCloseTo(contrastRatio("#F7F7F2", "#051C2C"), 10)
   })
+
+  it("rejects five-digit and seven-digit hex colors", () => {
+    expect(() => contrastRatio("#12345", "#FFFFFF")).toThrow(/invalid hex color "#12345"/)
+    expect(() => contrastRatio("#FFFFFF", "#1234567")).toThrow(/invalid hex color "#1234567"/)
+  })
 })
 
 describe("requiredContrastRatio", () => {

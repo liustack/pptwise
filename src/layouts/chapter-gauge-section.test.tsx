@@ -105,13 +105,12 @@ describe("chapter-gauge-section", () => {
     expect(() => assertSubset(root)).not.toThrow()
   })
 
-  it("declares a theme-locked pinOnly self-painted chapter with no shared footer", () => {
+  it("declares a theme-locked self-painted chapter with no shared footer", () => {
     expect(layoutDef).toMatchObject({
       id: "gauge-section",
       kind: "standard",
       slideTypes: ["chapter"],
       paintsOwnBackground: true,
     })
-    expect(layoutDef.pinOnly).toBe(true)
   })
 })

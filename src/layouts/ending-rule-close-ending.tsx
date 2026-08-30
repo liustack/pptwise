@@ -39,7 +39,7 @@ const FOOT_X = 96
 const FOOT_Y = 580
 const FOOT_SIZE = 17
 
-export function RuleCloseEnding({ ir, slide, ctx }: SvgTemplateProps) {
+export function RuleCloseEnding({ ir, slide, ctx, page }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const bg = ctx.defaultBg ?? colors.bg
   const headingSource = slide.heading ?? ""
@@ -67,7 +67,7 @@ export function RuleCloseEnding({ ir, slide, ctx }: SvgTemplateProps) {
     : null
   const author = ir.meta.authors?.[0]
   const authorText = author ? [author.name, author.role].filter(Boolean).join(" · ") : null
-  const date = showsDocumentMeta(ir) ? ir.meta.date : undefined
+  const date = showsDocumentMeta(page, ir, slide) ? ir.meta.date : undefined
   const footParts = [org, contactText, authorText, date].filter((v): v is string => Boolean(v))
   const foot =
     footParts.length > 0
@@ -149,10 +149,9 @@ export function RuleCloseEnding({ ir, slide, ctx }: SvgTemplateProps) {
 
 export const layoutDef = {
   // ending-rule-close-ending.tsx: closing sentence, full-width border rule
-  // with a short accent start. pinOnly board lock. No thank-you fallback.
+  // with a short accent start. board lock. No thank-you fallback.
   id: "rule-close-ending",
   kind: "standard",
-  pinOnly: true,
   slideTypes: ["ending"],
   slots: [
     { name: "heading", accepts: [] },

@@ -120,9 +120,7 @@ describe("content-crayonbox-point", () => {
     expect(layoutDef).toMatchObject({
       id: "crayonbox-point",
       kind: "standard",
-      pinOnly: true,
       slideTypes: ["content"],
-      arrangements: ["single"],
     })
     expect(layoutDef.slots.find((slot) => slot.name === "body")).toEqual({
       name: "body",

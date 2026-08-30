@@ -19,9 +19,8 @@
  * Records below (`{ [def.id]: def }`-style, preserving the exact key order
  * the pre-migration literals held — order is load-bearing, not cosmetic, see
  * `registry.migration-guard.test.ts`'s own header comment), merge them into
- * `LAYOUT_REGISTRY`, and keep every type, query function
- * (`getLayout`/`layoutsForSlideType`), and validation function
- * (`filterByNarrativesOnly`) that reads the result. Never a re-export relay
+ * `LAYOUT_REGISTRY`, and keep every type and query function
+ * (`getLayout`/`layoutsForSlideType`) that reads the result. Never a re-export relay
  * — every line below either constructs a Record or queries/validates one
  * (this wave's aggregator discipline).
  *
@@ -67,9 +66,8 @@ import type { STRATEGY_VALUES } from "@/ir/narrative-values"
 // grew the registry, mostly through pin-only cover, chapter, and ending faces.
 // Grouped by family, each group in the exact
 // order its former literal Record held (order feeds `layoutsForSlideType`'s
-// `Object.values` walk below, which feeds `theme.layouts[type]`'s array
-// order, which `resolveLayoutId`'s `weightedPickBySeed` samples from
-// positionally — see registry.migration-guard.test.ts). Aliased to a
+// `Object.values` walk below). `weightedPickBySeed` layout lottery is
+// historical. Aliased to a
 // family-prefixed camelCase name (mirrors each file's own name) since 130
 // files all export the same bare `layoutDef`.
 import { layoutDef as coverBannerTitle } from "./cover-banner-title"
@@ -249,29 +247,19 @@ export type SlotName =
   | "top"
   | "bottom"
 
-/** Body-arrangement enum (the retired `variant` field's 9-value non-image
- * subset — W2 task 3 split the other 4 image values off into first-class
- * takeover layouts — see `TAKEOVER_LAYOUT_DEFS` below). snake_case, matching
- * component-type naming convention. */
-export type Arrangement =
-  | "single"
-  | "two_column"
-  | "kpi_focus"
-  | "image_focus"
-  | "code"
-  | "quote"
-  | "big_number"
-  | "assertion_evidence"
-  | "aside"
 
 export interface LayoutSlot {
   name: SlotName
   /** component type names this slot accepts, or "any" */
   accepts: readonly string[] | "any"
+  /** Authored content must provide at least one component accepted by this slot. */
+  required?: true
   /** declarative editorial capacity — how many components this slot holds. W3's
    *  min(pacing editorial budget, layout capacity) gate is the consumer —
    *  absent = frame slot, not subject to counting. */
   capacity?: number
+  /** Capacity counts components unless the renderer consumes items within one component. */
+  capacityUnit?: "components" | "items"
   /** for image slots: today's two coexisting conventions (inventory §variant 速查) */
   selection?: "first" | "all"
 }
@@ -321,52 +309,6 @@ export interface LayoutDefinition {
    * validates every supplied value before installing the theme.
    */
   params?: Readonly<Record<string, LayoutParamDeclaration>>
-  /** content layouts only: which body arrangements this layout honors
-   *  (inventory's 4 直接尊重全部 + stacked-poster（W2 任务 3 裁决，条件接管
-   *  路径见其注释）共 5 个 → "all"，two-column → ["two_column"]，
-   *  bento-panel → ["single"]) */
-  arrangements?: readonly Arrangement[] | "all"
-  /**
-   * Auto-selection strategy allowlist (W4, spec §6 step 4's rare
-   * `narratives_only` hard constraint — distinct from the soft ×3/×1
-   * `layoutTendencies` weighting in `STRATEGY_DEFINITIONS`, `src/narrative`):
-   * when set, `resolveLayoutId` (`../render/layout-selection.ts`) drops this
-   * layout from the auto-pick pool unless the resolved narrative's
-   * `strategy` is a member. An explicit `slide.layout` pin bypasses
-   * selection entirely (spec §3: "显式指定不经选型"), so this field never
-   * blocks a pin — only auto-pick. `undefined` (every built-in layout today
-   * — the mechanism lands ahead of any real consumer) means unrestricted:
-   * every strategy is eligible. See {@link filterByNarrativesOnly} for the
-   * pure filter this field feeds.
-   */
-  narrativesOnly?: readonly Strategy[]
-  /**
-   * Opt-out from the default auto-pick set (quote-stage wave, task T1,
-   * retargeted in wave 8 batch 1). `fullLayoutSet` drops every `pinOnly`
-   * id, so a theme that omits `layouts[slideType]` (or points at
-   * `FULL_LAYOUTS`) never samples it. That is how quote-stage, the speech
-   * faces, and the wave-8 board locks stay out of everyone else's lottery.
-   *
-   * 87 of the 130 standard layouts are pin-only today. The theme redesign
-   * waves raised that count by adding dedicated cover, chapter, and ending
-   * constructions for the built-in themes. Those faces stay outside the
-   * shared 43-layout automatic pool. An explicit `slide.layout` pin is the
-   * author-facing route to any pin-only layout.
-   *
-   * A theme that *lists* the id in its own `layouts[slideType]` is locking
-   * that face and `resolveLayoutId` will sample it. Builtins only do this
-   * for a board-locked cover/chapter/ending. quote-stage and the other
-   * speech faces stay unlisted on every builtin, so they still reach
-   * render solely through an explicit `slide.layout` pin.
-   *
-   * `resolveLayoutId`'s `requestedLayout` short-circuit and
-   * `checkLayoutApplicability` (`../validate-core.ts`) are unchanged:
-   * an explicit pin bypasses selection regardless of this flag, and
-   * applicability only checks registry existence + `slideTypes`.
-   *
-   * See {@link excludePinOnly} for the filter `fullLayoutSet` uses.
-   */
-  pinOnly?: boolean
   /**
    * Structural fact of the face: it leaves no room for the brand frame
    * (footer rule, meta, logo). A menu entry may additionally silence the
@@ -442,34 +384,6 @@ export interface LayoutDefinition {
   }
 }
 
-/**
- * Pure `narrativesOnly` filter (W4, spec §6 step 4's hard constraint): keep a
- * layout when its `narrativesOnly` is unset, drop it when set and `strategy`
- * is not a member. Generic over any `narrativesOnly`-shaped record (not just
- * `LayoutDefinition`) so a unit test can exercise it against synthetic
- * fixtures without touching the real registry.
- */
-export function filterByNarrativesOnly<T extends { narrativesOnly?: readonly Strategy[] }>(
-  defs: readonly T[],
-  strategy: Strategy,
-): T[] {
-  return defs.filter((def) => def.narrativesOnly === undefined || def.narrativesOnly.includes(strategy))
-}
-
-/**
- * Pure `pinOnly` filter (quote-stage wave, task T1 — see
- * {@link LayoutDefinition.pinOnly}'s own doc comment for the full tier
- * semantics): drop every layout whose `pinOnly` is `true`, keep the rest.
- * Generic over any `pinOnly`-shaped record, same synthetic-fixture-testable
- * shape {@link filterByNarrativesOnly} already established. One real call
- * site after wave 8: `../themes/definitions.ts`'s `fullLayoutSet`. A theme
- * that lists a pinOnly id in its own curated set is locking that face, so
- * `resolveLayoutId` no longer re-excludes it.
- */
-export function excludePinOnly<T extends { pinOnly?: boolean }>(defs: readonly T[]): T[] {
-  return defs.filter((def) => !def.pinOnly)
-}
-
 // ─────────────────────────────────────────────────────────────────────────
 // Cover layouts (37 total: 19 auto-selectable and 18 pin-only).
 // The board-cover-fidelity wave grew the group from 9 to 13 in 2026-08-22.
@@ -492,22 +406,21 @@ const COVER_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   // Theme-redesign wave (2026-08-18, cover pool 8 -> 9): appended at the end
   // of the cover group, same position discipline every earlier pool growth
   // used (image-lead-split / split-band / quote-stage each landed last in
-  // their own family) — key insertion order is what `weightedPickBySeed`
-  // samples positionally, so a new member goes on the end rather than in the
-  // middle of the existing ones.
+  // their own family). Key insertion order used to feed a `weightedPickBySeed`
+  // lottery. That lottery is historical. New members still go on the end.
   [coverColophon.id]: coverColophon,
   // Board-cover-fidelity wave (2026-08-22, cover pool 9 -> 13): appended at
-  // the end of the cover group. Key insertion order is what
-  // `weightedPickBySeed` samples positionally, so new members go on the end
-  // rather than in the middle of the existing ones.
+  // the end of the cover group. Key insertion order used to feed a
+  // `weightedPickBySeed` lottery. That lottery is historical. New members
+  // still go on the end.
   [coverInstitutionalBlock.id]: coverInstitutionalBlock,
   [coverMemoHead.id]: coverMemoHead,
   [coverBoardHead.id]: coverBoardHead,
   [coverBillHead.id]: coverBillHead,
   // Board-cover-restore wave 1 (2026-08-22, cover pool 13 -> 19): appended
-  // at the end of the cover group. Key insertion order is what
-  // `weightedPickBySeed` samples positionally, so new members go on the end
-  // rather than in the middle of the existing ones.
+  // at the end of the cover group. Key insertion order used to feed a
+  // `weightedPickBySeed` lottery. That lottery is historical. New members
+  // still go on the end.
   [coverVerdictIndex.id]: coverVerdictIndex,
   [coverBandTitle.id]: coverBandTitle,
   [coverHeaderBand.id]: coverHeaderBand,

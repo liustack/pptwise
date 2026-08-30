@@ -45,7 +45,6 @@ program
   .description("Render an IR JSON file, deck project directory, or bare deck name to a .pptx")
   .argument("<target>", "IR JSON file, deck project directory, or bare name under ~/.pptwise/decks")
   .option("-o, --output <file>", "output .pptx path (default: .pptwise/<deck>/<deck>.pptx under the project root)")
-  .option("--style <path>", "style overrides JSON re-coloring the theme (see `pptwise schema --style`)")
   .option("--draft", "allow unfilled placeholder pages (skip the draft gate)")
   .option(
     "--allow-dropped-content",
@@ -57,7 +56,6 @@ program
       target: string,
       opts: {
         output?: string
-        style?: string
         draft?: boolean
         allowDroppedContent?: boolean
         gitIgnore?: boolean
@@ -67,7 +65,6 @@ program
         console.log(
           await runRender(target, {
             output: opts.output,
-            stylePath: opts.style,
             draft: opts.draft,
             allowDroppedContent: opts.allowDroppedContent,
             gitIgnore: opts.gitIgnore,
@@ -131,30 +128,9 @@ program
 program
   .command("schema")
   .description("Print the IR JSON Schema (feed this to a model before it writes IR)")
-  .option("--style", "print the style-override schema instead")
   .option("--spec", "print the deck spec schema instead")
-  .option("--plan", "removed — use --spec instead")
-  .action((opts: { style?: boolean; spec?: boolean; plan?: boolean }) => {
-    // vocabulary-v4 rename (spec §8.2): `--plan` renamed to `--spec`, no
-    // long-lived alias — hard-fail pointing at the one new flag rather than
-    // silently keep serving the plan schema under its old name.
-    if (opts.plan) {
-      fail(new Error("`pptwise schema --plan` has been renamed to `pptwise schema --spec` — run `pptwise schema --spec` instead"))
-    }
-    console.log(runSchema(opts.spec ? "spec" : opts.style ? "style" : undefined))
-  })
-
-// vocabulary-v4 rename (spec §8.2): `pptwise plan validate` renamed to
-// `pptwise spec validate`. The `plan` command group stays registered only so
-// `pptwise plan validate <file>` fails with a message pointing at the new
-// command, rather than commander's own generic "unknown command" error.
-const plan = program.command("plan").description("Removed — use `pptwise spec` instead")
-plan
-  .command("validate")
-  .description("Removed — use `pptwise spec validate` instead")
-  .argument("<file>")
-  .action(() => {
-    fail(new Error("`pptwise plan validate` has been renamed to `pptwise spec validate` — run `pptwise spec validate <file>` instead"))
+  .action((opts: { spec?: boolean }) => {
+    console.log(runSchema(opts.spec ? "spec" : undefined))
   })
 
 const spec = program.command("spec").description("Deck spec commands (spec §6)")
@@ -210,10 +186,11 @@ theme
   .option("-o, --output <path>", "output theme JSON path")
   .option("--id <id>", "theme id (default: slug of the output filename)")
   .option("--label <label>", "human-readable theme label")
+  .option("--force", "overwrite an existing theme file")
   .addHelpText("after", "\nExample:\n  $ pptwise theme new --from consulting -o themes/acme.theme.json")
-  .action(async (opts: { from: string; output?: string; id?: string; label?: string }) => {
+  .action(async (opts: { from: string; output?: string; id?: string; label?: string; force?: boolean }) => {
     try {
-      console.log(await runThemeNew({ from: opts.from, output: opts.output, id: opts.id, label: opts.label, cwd: process.cwd() }))
+      console.log(await runThemeNew({ from: opts.from, output: opts.output, id: opts.id, label: opts.label, force: opts.force, cwd: process.cwd() }))
     } catch (e) {
       fail(e)
     }
@@ -230,11 +207,12 @@ theme
   .option("-o, --output <path>", "output theme JSON path")
   .option("--id <id>", "theme id (default: slug of the output filename)")
   .option("--label <label>", "human-readable theme label")
+  .option("--force", "overwrite an existing theme file")
   .addHelpText("after", "\nExample:\n  $ pptwise theme fork acme --primary #0B5FFF -o themes/acme-blue.theme.json")
   .action(
     async (
       name: string,
-      opts: { primary: string; bg?: string; accent?: string; text?: string; surface?: string; output?: string; id?: string; label?: string },
+      opts: { primary: string; bg?: string; accent?: string; text?: string; surface?: string; output?: string; id?: string; label?: string; force?: boolean },
     ) => {
       try {
         console.log(
@@ -247,6 +225,7 @@ theme
             output: opts.output,
             id: opts.id,
             label: opts.label,
+            force: opts.force,
             cwd: process.cwd(),
           }),
         )
@@ -289,10 +268,17 @@ brand
   .option("--id <id>", "theme id to register under (default: slug of the output filename)")
   .option("--label <label>", "human-readable theme label (default: the source theme's color-scheme name)")
   .option("--from <preset>", "donor preset whose menu is copied (default: consulting)")
+  .option("--force", "overwrite an existing theme file")
   .addHelpText("after", "\nExample:\n  $ pptwise brand extract corp.pptx -o themes/acme.theme.json --from consulting")
-  .action(async (file: string, opts: { output: string; id?: string; label?: string; from?: string }) => {
+  .action(async (file: string, opts: { output: string; id?: string; label?: string; from?: string; force?: boolean }) => {
     try {
-      console.log(await runBrandExtract(file, { output: opts.output, id: opts.id, label: opts.label, from: opts.from }))
+      console.log(await runBrandExtract(file, {
+        output: opts.output,
+        id: opts.id,
+        label: opts.label,
+        from: opts.from,
+        force: opts.force,
+      }))
     } catch (e) {
       fail(e)
     }
@@ -303,16 +289,6 @@ program
   .description("List named narrative presets (strategy/pacing/audience axes + theme recommendations)")
   .option("--json", "machine-readable output")
   .action((opts: { json?: boolean }) => console.log(runNarratives(Boolean(opts.json))))
-
-// vocabulary-v4 rename (spec §8.2): `pptwise scenarios` renamed to
-// `pptwise narratives`, no long-lived alias — hard-fail pointing at the new
-// command name.
-program
-  .command("scenarios")
-  .description("Removed — use `pptwise narratives` instead")
-  .action(() => {
-    fail(new Error("`pptwise scenarios` has been renamed to `pptwise narratives` — run `pptwise narratives` instead"))
-  })
 
 const config = program.command("config").description("User-level settings (API keys for optional stock-photo search)")
 config

@@ -127,13 +127,12 @@ function GenericStatementContent({ ir, slide, index, ctx }: SvgTemplateProps) {
 
 export const layoutDef = {
   branding: "none",
-  // content-statement.tsx: a pinOnly editorial-verse page. Heading is the
+  // content-statement.tsx: a editorial-verse page. Heading is the
   // whole visual (2 to 4 italic lines, weight 500). Capacity-1 body is an
   // attribution caption, never a card. Page decor and branding posture belong
   // to the menu entry, not this face declaration.
   id: "statement",
   kind: "standard",
-  pinOnly: true,
   slideTypes: ["content"],
   slots: [
     { name: "kicker", accepts: [] },
@@ -141,7 +140,6 @@ export const layoutDef = {
     { name: "body", accepts: ["paragraph", "blockquote", "citation"], capacity: 1 },
     { name: "meta", accepts: [] },
   ],
-  arrangements: ["single"],
   headingFit: {
     maxWidth: CONTENT_MAX_W,
     fontSize: 48,

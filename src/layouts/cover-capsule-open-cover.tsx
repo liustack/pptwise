@@ -175,7 +175,6 @@ export const layoutDef = {
   // title. No header band.
   id: "capsule-open-cover",
   kind: "standard",
-  pinOnly: true,
   slideTypes: ["cover"],
   slots: [
     { name: "kicker", accepts: [] },

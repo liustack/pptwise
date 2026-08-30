@@ -161,7 +161,6 @@ export const layoutDef = {
   // contour lines. Empty heading draws no title. Missing date skips the foot.
   id: "pledge-open-cover",
   kind: "standard",
-  pinOnly: true,
   slideTypes: ["cover"],
   slots: [
     { name: "kicker", accepts: [] },

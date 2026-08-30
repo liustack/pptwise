@@ -372,7 +372,6 @@ export const layoutDef = {
   // Motif owns the remnant mountain. The theme-menu entry owns brand silence.
   id: "vertical-title-cover",
   kind: "standard",
-  pinOnly: true,
   slideTypes: ["cover"],
   slots: [
     { name: "heading", accepts: [] },

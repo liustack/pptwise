@@ -13,7 +13,6 @@ export {
   formatWarnings,
   listThemes,
   irJsonSchema,
-  styleJsonSchema,
   type ValidateResult,
   type ValidationIssue,
   type ThemeInfo,

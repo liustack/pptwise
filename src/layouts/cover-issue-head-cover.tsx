@@ -272,7 +272,6 @@ export const layoutDef = {
   // Empty heading draws no title. pinOnly.
   id: "issue-head-cover",
   kind: "standard",
-  pinOnly: true,
   slideTypes: ["cover"],
   slots: [
     { name: "kicker", accepts: [] },

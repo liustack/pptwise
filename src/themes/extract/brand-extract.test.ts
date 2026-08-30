@@ -156,9 +156,14 @@ describe("deriveMuted", () => {
     expect(contrastRatio(muted, `#${DEFAULT_THMX_COLORS.lt2}`)).toBeGreaterThanOrEqual(4.5)
   })
 
-  it("is a no-op fallback (returns text) when even text itself can't clear the floor against bg", () => {
-    const muted = deriveMuted(`#${PATHOLOGICAL_THMX_COLORS.dk1}`, `#${PATHOLOGICAL_THMX_COLORS.lt1}`, `#${PATHOLOGICAL_THMX_COLORS.lt2}`)
-    expect(muted).toBe(`#${PATHOLOGICAL_THMX_COLORS.dk1}`)
+  it("throws when no muted candidate clears both background anchors", () => {
+    expect(() =>
+      deriveMuted(
+        `#${PATHOLOGICAL_THMX_COLORS.dk1}`,
+        `#${PATHOLOGICAL_THMX_COLORS.lt1}`,
+        `#${PATHOLOGICAL_THMX_COLORS.lt2}`,
+      ),
+    ).toThrow(/cannot derive colors\.muted.*4\.5:1.*colors\.bg.*colors\.surface/)
   })
 
   it("is deterministic across repeated calls", () => {

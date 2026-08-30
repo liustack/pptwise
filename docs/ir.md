@@ -55,7 +55,7 @@ pptwise validate deck.json
 | `version` | `"5"` | The only accepted IR version. Omission is authored as v5. |
 | `filename` | string | Output filename. Defaults to `presentation`. |
 | `narrative` | preset string or partial axes | Argument, pacing, and audience decision. |
-| `theme` | object | Bound theme id, plus optional low-level style or brand overrides. Defaults to `consulting`. |
+| `theme` | object | Bound theme id only: `{ "id": "acme" }`. Required — bind a workspace theme or a factory preset. Recolor with `pptwise theme fork`. Brand config lives on the theme file. |
 | `meta` | object | Organization, authors, date, version, confidentiality, contact, copyright, and animation. |
 | `assets` | object | Named image sources under `assets.images`. |
 | `brand` | object | Deck logo asset id and corner position. |
@@ -104,12 +104,13 @@ The bound theme may offer only a subset. A requested kind outside that menu is a
 
 ## Fields that do not exist
 
-IR v5 has no `seed`, `layout`, `beat`, or `arrangement`. It also does not accept aliases for them.
+IR v5 has no `seed`, `layout`, `beat`, or `arrangement`. It also does not accept aliases for them. `theme` is `{ id }` only. There is no `theme.style` or `theme.brand` overlay.
 
 - The spec chooses `kind`.
 - The theme menu maps that kind to one face.
 - The face adapts its own geometry to the filled components.
 - Rendering is deterministic without stored random state.
+- Recolor with `pptwise theme fork`. Brand config lives on the theme file.
 
 Old IR versions and retired fields are rejected with the current-format requirement. There is no migration command. Rewrite the source as v5.
 

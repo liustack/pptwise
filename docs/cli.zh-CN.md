@@ -65,13 +65,12 @@ pptwise preview deck-dir/ --html
 ```bash
 pptwise render <target> \
   [-o <out.pptx>] \
-  [--style <override.json>] \
   [--draft] \
   [--allow-dropped-content] \
   [--no-git-ignore]
 ```
 
-省略 `-o` 时，输出写到项目根目录下的 `.pptwise/<deck>/<deck>.pptx`。`--style` 应用由 `pptwise schema --style` 描述的底层样式 token 覆盖。它不是主题切换，也不会改变菜单。
+省略 `-o` 时，输出写到项目根目录下的 `.pptwise/<deck>/<deck>.pptx`。改颜色用 `pptwise theme fork`，它写出一份完整主题。Render 不接受局部改色覆盖。
 
 `--draft` 允许占位页。`--allow-dropped-content` 允许已知内容丢失，只能在用户明确同意时使用。正常处理方式是缩短或拆页。
 
@@ -101,7 +100,6 @@ Audit 渲染确定性 SVG，并检查：
 ```bash
 pptwise schema
 pptwise schema --spec
-pptwise schema --style
 pptwise spec validate deck-dir/deck.spec.json
 ```
 
@@ -139,7 +137,7 @@ pptwise theme try <id,id,...> [-o <dir>]
 
 `theme try` 要求两个到四个互不重复的名称。默认把对比图写到 `.pptwise/theme-try/`。它永远不会修改 deck 绑定。
 
-主题名称先从 deck 目录解析，再从向上查找的工作区 `themes/` 目录解析，最后查出厂预设。未知名称报错。工作区主题不能遮蔽预设 id。
+主题名称先从 deck 目录解析，再从向上查找的工作区 `themes/` 目录解析，最后查出厂预设。未知名称报错。Deck 与工作区文件可以保名遮蔽出厂预设。主题 id 必须匹配 `^[a-z0-9-]+$`。覆盖已有主题文件需要 `--force`。
 
 ## 品牌抽取
 

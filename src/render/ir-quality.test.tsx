@@ -167,6 +167,30 @@ describe("checkIrQuality", () => {
       })
     })
 
+    it("excludes the selected image-family source from takeover body density", () => {
+      installMenuTheme("quality-takeover-selection", { photo: { face: "image-top" } })
+      const ir = makeIR(
+        [
+          {
+            type: "content",
+            kind: "photo",
+            heading: "Photo",
+            components: [
+              {
+                type: "image_compare",
+                left: { asset_id: "before", label: "Before" },
+                right: { asset_id: "after", label: "After" },
+              },
+              ...paragraphs(4),
+            ],
+          },
+        ],
+        "quality-takeover-selection",
+      )
+
+      expect(codes(checkIrQuality(ir, pacingAxes("balanced")))).not.toContain("density")
+    })
+
     it("does not apply the content density gate to boundary pages", () => {
       installMenuTheme("quality-boundary", { points: { face: "two-column" } })
       const ir = makeIR([{ type: "cover", heading: "Cover", components: paragraphs(8) }], "quality-boundary")

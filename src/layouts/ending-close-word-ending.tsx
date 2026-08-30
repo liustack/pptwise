@@ -112,7 +112,6 @@ export const layoutDef = {
   // fallback. Bottom ticker belongs to the motif. pinOnly.
   id: "close-word-ending",
   kind: "standard",
-  pinOnly: true,
   slideTypes: ["ending"],
   slots: [
     { name: "heading", accepts: [] },

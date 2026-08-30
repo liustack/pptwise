@@ -3,8 +3,10 @@ import { BUILTIN_THEME_FILES, CANONICAL_THEME_IDS, THEME_STYLES, resolveThemeId 
 import {
   __resetRegisteredThemes,
   assertContrastFloor,
+  compileBuiltinTheme,
   getInstalledThemeIds,
   getThemeDefinition,
+  installThemeFile,
   registerTheme,
   resolveBrand,
   THEME_DEFINITIONS,
@@ -12,7 +14,6 @@ import {
 import { THEME_OCCASIONS } from "./occasions"
 import { COVER_LAYOUTS } from "../layouts/index-cover"
 import { CHAPTER_LAYOUTS } from "../layouts/index-chapter"
-import { CONTENT_LAYOUTS } from "../layouts/index-content"
 import { ENDING_LAYOUTS } from "../layouts/index-ending"
 import { MOTIFS } from "../motifs"
 import { LAYOUT_REGISTRY, type LayoutDefinition } from "../layouts/registry"
@@ -20,168 +21,53 @@ import { hasExactWidthTable, resolveFontFace } from "../render/fonts"
 import type { BuiltinThemeDeclaration, Menu, ThemeFile } from "./schema"
 
 // Wide string-indexed views over the four page-type registries: a theme's
-// `layouts` ids are plain strings, so a narrow Record type cannot index them.
+// menu face ids are plain strings, so a narrow Record type cannot index them.
 const COVER_REGISTRY: Record<string, unknown> = COVER_LAYOUTS
 const CHAPTER_REGISTRY: Record<string, unknown> = CHAPTER_LAYOUTS
-const CONTENT_REGISTRY: Record<string, unknown> = CONTENT_LAYOUTS
 const ENDING_REGISTRY: Record<string, unknown> = ENDING_LAYOUTS
 
 /**
- * The human-audited board table (S1-B): each theme's three boundary faces
- * and the archetype faces its content menu reaches, in menu order. Written
- * by hand, never derived from the declarations it checks, so a menu edit has
- * to be re-审 here instead of passing silently. Image takeovers a `photo`
- * entry may name are deliberately absent: they never enter the transitional
- * `layouts` record.
+ * The human-audited board table (S1-B): each theme's three boundary faces.
+ * Written by hand, never derived from the declarations it checks, so a menu
+ * edit has to be re-审 here instead of passing silently.
  */
-const BOARD: Record<string, { cover: string; chapter: string; ending: string; content: readonly string[] }> = {
-  consulting: {
-    cover: "gauge-verdict",
-    chapter: "gauge-section",
-    ending: "gauge-next",
-    content: ["narrow-column", "bento-panel", "two-column", "rail-numbered", "gauge-stats", "gauge-point", "stat-hero", "one-evidence", "asymmetric-triptych"],
-  },
-  enterprise: {
-    cover: "ikb-field-cover",
-    chapter: "block-numeral-chapter",
-    ending: "signoff-ending",
-    content: ["narrow-column", "bento-panel", "two-column", "rail-numbered", "split-band", "asymmetric-triptych"],
-  },
-  academic: {
-    cover: "thesis-plate-cover",
-    chapter: "folio-ghost-chapter",
-    ending: "defense-close-ending",
-    content: ["narrow-column", "bento-panel", "two-column", "rail-numbered", "split-band", "statement", "pull-quote", "stat-hero", "one-evidence", "asymmetric-triptych"],
-  },
-  insight: {
-    cover: "stat-cover",
-    chapter: "ghost-section-chapter",
-    ending: "close-word-ending",
-    content: ["narrow-column", "bento-panel", "two-column", "rail-numbered", "split-band", "statement", "pull-quote", "stat-hero", "asymmetric-triptych"],
-  },
-  campaign: {
-    cover: "poster-center",
-    chapter: "act-chapter",
-    ending: "pill-cta-ending",
-    content: ["narrow-column", "bento-panel", "two-column", "rail-numbered", "stacked-poster", "statement", "stat-hero", "one-evidence", "asymmetric-triptych"],
-  },
-  classroom: {
-    cover: "chalk-band-cover",
-    chapter: "lesson-box-chapter",
-    ending: "homework-close-ending",
-    content: ["narrow-column", "bento-panel", "two-column", "rail-numbered", "split-band", "asymmetric-triptych"],
-  },
-  ink: {
-    cover: "vertical-title-cover",
-    chapter: "volume-slip-chapter",
-    ending: "seal-close-ending",
-    content: ["quiet-frame", "bento-panel", "two-column", "rail-numbered", "split-band", "statement", "pull-quote", "stat-hero", "asymmetric-triptych"],
-  },
-  tech: {
-    cover: "type-rule-cover",
-    chapter: "stroke-index-chapter",
-    ending: "rule-close-ending",
-    content: ["narrow-column", "bento-panel", "two-column", "rail-numbered", "split-band", "statement", "stat-hero", "one-evidence", "asymmetric-triptych"],
-  },
-  runway: {
-    cover: "show-headline",
-    chapter: "show-plate",
-    ending: "show-finale",
-    content: ["narrow-column", "bento-panel", "two-column", "rail-numbered", "show-figures", "show-spotlight", "show-statement"],
-  },
-  journal: {
-    cover: "issue-head-cover",
-    chapter: "fascicle-ghost-chapter",
-    ending: "afterword-ending",
-    content: ["narrow-column", "bento-panel", "two-column", "rail-numbered", "split-band", "statement", "pull-quote", "stat-hero", "asymmetric-triptych"],
-  },
-  luxe: {
-    cover: "invitation-plate-cover",
-    chapter: "gilt-ordinal-chapter",
-    ending: "gilt-word-ending",
-    content: ["quiet-frame", "bento-panel", "two-column", "rail-numbered", "tone-adaptive-content", "statement", "pull-quote", "stat-hero", "asymmetric-triptych"],
-  },
-  heritage: {
-    cover: "double-frame-cover",
-    chapter: "mirror-volume-chapter",
-    ending: "invite-field-ending",
-    content: ["narrow-column", "bento-panel", "two-column", "rail-numbered", "split-band", "statement", "pull-quote", "stat-hero", "asymmetric-triptych"],
-  },
-  pulse: {
-    cover: "report-open-cover",
-    chapter: "subject-rule-chapter",
-    ending: "care-plan-ending",
-    content: ["narrow-column", "bento-panel", "two-column", "rail-numbered", "split-band", "asymmetric-triptych"],
-  },
-  terra: {
-    cover: "pledge-open-cover",
-    chapter: "field-band-chapter",
-    ending: "scorecard-ending",
-    content: ["narrow-column", "bento-panel", "two-column", "rail-numbered", "split-band", "statement", "stat-hero", "one-evidence", "asymmetric-triptych"],
-  },
-  ember: {
-    cover: "corner-wedge",
-    chapter: "ember-index-chapter",
-    ending: "ask-ending",
-    content: ["narrow-column", "bento-panel", "two-column", "rail-numbered", "stacked-poster", "asymmetric-triptych"],
-  },
-  vermilion: {
-    cover: "red-head-cover",
-    chapter: "seal-numeral-chapter",
-    ending: "deliberation-ending",
-    content: ["narrow-column", "bento-panel", "two-column", "rail-numbered", "split-band", "statement", "stat-hero", "one-evidence", "asymmetric-triptych"],
-  },
-  crayon: {
-    cover: "crayonbox-open",
-    chapter: "crayonbox-sticker",
-    ending: "crayonbox-todo",
-    content: ["narrow-column", "crayonbox-cards", "two-column", "rail-numbered", "crayonbox-point"],
-  },
-  arena: {
-    cover: "cut-panel-cover",
-    chapter: "round-mark-chapter",
-    ending: "seat-cta-ending",
-    content: ["narrow-column", "bento-panel", "two-column", "rail-numbered", "split-band", "statement", "stat-hero", "one-evidence", "asymmetric-triptych"],
-  },
-  museum: {
-    cover: "poster-center",
-    chapter: "hall-label-chapter",
-    ending: "exit-word-ending",
-    content: ["quiet-frame", "bento-panel", "two-column", "rail-numbered", "split-band", "statement", "stat-hero", "one-evidence", "asymmetric-triptych"],
-  },
-  stage: {
-    cover: "poster-center",
-    chapter: "one-word-chapter",
-    ending: "release-close-ending",
-    content: ["quiet-frame", "bento-panel", "two-column", "rail-numbered", "stacked-poster", "statement", "pull-quote", "stat-hero", "asymmetric-triptych"],
-  },
-  lecture: {
-    cover: "board-head",
-    chapter: "chalk-rule-chapter",
-    ending: "next-lecture-ending",
-    content: ["narrow-column", "bento-panel", "two-column", "rail-numbered", "tone-adaptive-content", "statement", "stat-hero", "one-evidence", "asymmetric-triptych"],
-  },
-  swiss: {
-    cover: "institutional-block",
-    chapter: "decimal-index-chapter",
-    ending: "resolution-ending",
-    content: ["narrow-column", "bento-panel", "two-column", "rail-numbered", "split-band", "statement", "stat-hero", "one-evidence", "asymmetric-triptych"],
-  },
-  memo: {
-    cover: "memo-head",
-    chapter: "issue-line-chapter",
-    ending: "decision-close-ending",
-    content: ["narrow-column", "bento-panel", "two-column", "rail-numbered", "split-band", "statement", "pull-quote", "stat-hero", "asymmetric-triptych"],
-  },
-  playbill: {
-    cover: "bill-head",
-    chapter: "day-bill-chapter",
-    ending: "ticket-cta-ending",
-    content: ["narrow-column", "bento-panel", "two-column", "rail-numbered", "stacked-poster", "mono-bleed", "stat-hero", "asymmetric-triptych"],
-  },
+const BOARD: Record<string, { cover: string; chapter: string; ending: string }> = {
+  consulting: { cover: "gauge-verdict", chapter: "gauge-section", ending: "gauge-next" },
+  enterprise: { cover: "ikb-field-cover", chapter: "block-numeral-chapter", ending: "signoff-ending" },
+  academic: { cover: "thesis-plate-cover", chapter: "folio-ghost-chapter", ending: "defense-close-ending" },
+  insight: { cover: "stat-cover", chapter: "ghost-section-chapter", ending: "close-word-ending" },
+  campaign: { cover: "poster-center", chapter: "act-chapter", ending: "pill-cta-ending" },
+  classroom: { cover: "chalk-band-cover", chapter: "lesson-box-chapter", ending: "homework-close-ending" },
+  ink: { cover: "vertical-title-cover", chapter: "volume-slip-chapter", ending: "seal-close-ending" },
+  tech: { cover: "type-rule-cover", chapter: "stroke-index-chapter", ending: "rule-close-ending" },
+  runway: { cover: "show-headline", chapter: "show-plate", ending: "show-finale" },
+  journal: { cover: "issue-head-cover", chapter: "fascicle-ghost-chapter", ending: "afterword-ending" },
+  luxe: { cover: "invitation-plate-cover", chapter: "gilt-ordinal-chapter", ending: "gilt-word-ending" },
+  heritage: { cover: "double-frame-cover", chapter: "mirror-volume-chapter", ending: "invite-field-ending" },
+  pulse: { cover: "report-open-cover", chapter: "subject-rule-chapter", ending: "care-plan-ending" },
+  terra: { cover: "pledge-open-cover", chapter: "field-band-chapter", ending: "scorecard-ending" },
+  ember: { cover: "corner-wedge", chapter: "ember-index-chapter", ending: "ask-ending" },
+  vermilion: { cover: "red-head-cover", chapter: "seal-numeral-chapter", ending: "deliberation-ending" },
+  crayon: { cover: "crayonbox-open", chapter: "crayonbox-sticker", ending: "crayonbox-todo" },
+  arena: { cover: "cut-panel-cover", chapter: "round-mark-chapter", ending: "seat-cta-ending" },
+  museum: { cover: "poster-center", chapter: "hall-label-chapter", ending: "exit-word-ending" },
+  stage: { cover: "poster-center", chapter: "one-word-chapter", ending: "release-close-ending" },
+  lecture: { cover: "board-head", chapter: "chalk-rule-chapter", ending: "next-lecture-ending" },
+  swiss: { cover: "institutional-block", chapter: "decimal-index-chapter", ending: "resolution-ending" },
+  memo: { cover: "memo-head", chapter: "issue-line-chapter", ending: "decision-close-ending" },
+  playbill: { cover: "bill-head", chapter: "day-bill-chapter", ending: "ticket-cta-ending" },
 }
 
 describe("THEME_DEFINITIONS", () => {
+  it("runs built-in declarations through the shared menu contract gate", () => {
+    const invalid = structuredClone(BUILTIN_THEME_FILES.consulting)
+    invalid.menu.cover.face = "missing-builtin-face"
+
+    expect(() => compileBuiltinTheme(invalid)).toThrow(
+      /theme "consulting" menu\.cover\.face references unknown layout id "missing-builtin-face"/i,
+    )
+  })
+
   it("covers all 24 canonical ids with theme tokens and brand", () => {
     for (const id of CANONICAL_THEME_IDS) {
       const def = THEME_DEFINITIONS[id]
@@ -222,25 +108,31 @@ describe("THEME_DEFINITIONS", () => {
     expect(THEME_DEFINITIONS.consulting.brand).toEqual({})
   })
 
-  it("24 主题四页型 layouts 均非空。motif 可选", () => {
+  it("24 主题四页型菜单均非空。motif 可选", () => {
     for (const id of CANONICAL_THEME_IDS) {
       const def = THEME_DEFINITIONS[id]
-      expect(def.layouts.cover.length, id + ".cover").toBeGreaterThan(0)
-      expect(def.layouts.chapter.length, id + ".chapter").toBeGreaterThan(0)
-      expect(def.layouts.content.length, id + ".content").toBeGreaterThan(0)
-      expect(def.layouts.ending.length, id + ".ending").toBeGreaterThan(0)
+      expect(def.menu.cover.face, id + ".cover").toBeTruthy()
+      expect(def.menu.chapter.face, id + ".chapter").toBeTruthy()
+      expect(
+        Object.values(def.menu.content).some((entry) => entry !== undefined),
+        id + ".content",
+      ).toBe(true)
+      expect(def.menu.ending.face, id + ".ending").toBeTruthy()
       // motif 是可选的（undefined = 该主题无装饰层，FullSlideSvg 的 Decor 跳过
       // 渲染，安全）——runway/museum/stage 留空，故这里不强制 defined。
     }
   })
 
-  it("清单-注册表一致性锁：四页型 layouts + motif 里的每个 id 都已在对应 layout 注册表注册", () => {
+  it("清单-注册表一致性锁：菜单四页型 + motif 里的每个 id 都已在对应 layout 注册表注册", () => {
     for (const id of CANONICAL_THEME_IDS) {
       const def = THEME_DEFINITIONS[id]
-      for (const lid of def.layouts.cover) expect(COVER_REGISTRY[lid]).toBeTypeOf("function")
-      for (const lid of def.layouts.chapter) expect(CHAPTER_REGISTRY[lid]).toBeTypeOf("function")
-      for (const lid of def.layouts.content) expect(CONTENT_REGISTRY[lid]).toBeTypeOf("function")
-      for (const lid of def.layouts.ending) expect(ENDING_REGISTRY[lid]).toBeTypeOf("function")
+      expect(COVER_REGISTRY[def.menu.cover.face]).toBeTypeOf("function")
+      expect(CHAPTER_REGISTRY[def.menu.chapter.face]).toBeTypeOf("function")
+      expect(ENDING_REGISTRY[def.menu.ending.face]).toBeTypeOf("function")
+      for (const entry of Object.values(def.menu.content)) {
+        if (entry === undefined) continue
+        expect(LAYOUT_REGISTRY[entry.face], id + " content face " + entry.face).toBeDefined()
+      }
       if (def.motif !== undefined) expect(MOTIFS[def.motif]).toBeTypeOf("function")
     }
   })
@@ -252,20 +144,7 @@ describe("THEME_DEFINITIONS", () => {
       expect(menu.cover.face, id + ".cover").toBe(board.cover)
       expect(menu.chapter.face, id + ".chapter").toBe(board.chapter)
       expect(menu.ending.face, id + ".ending").toBe(board.ending)
-      expect(THEME_DEFINITIONS[id].layouts.cover, id).toEqual([board.cover])
-      expect(THEME_DEFINITIONS[id].layouts.chapter, id).toEqual([board.chapter])
-      expect(THEME_DEFINITIONS[id].layouts.ending, id).toEqual([board.ending])
     }
-  })
-
-  it("derives layouts.content from the menu in menu order, dropping any image takeover a photo entry names", () => {
-    for (const id of CANONICAL_THEME_IDS) {
-      expect(THEME_DEFINITIONS[id].layouts.content, id + ".layouts.content").toEqual(BOARD[id]!.content)
-    }
-    // consulting serves `photo` through the image-split takeover, which the
-    // curated pool must not absorb.
-    expect(BUILTIN_THEME_FILES.consulting.menu.content.photo?.face).toBe("image-split")
-    expect(THEME_DEFINITIONS.consulting.layouts.content).not.toContain("image-split")
   })
 
   it("每套主题各自的专属脸只出现在自己的菜单里，不外溢", () => {
@@ -293,14 +172,8 @@ describe("THEME_DEFINITIONS", () => {
 })
 
 describe("resolveBrand", () => {
-  it("returns the style default when no override", () => {
+  it("returns the theme definition brand", () => {
     expect(resolveBrand("ink")).toEqual({ suppressFooterRule: true, suppressFooterMeta: true })
-  })
-  it("merges IR-level override over the default", () => {
-    expect(resolveBrand("ink", { suppressFooterRule: false })).toEqual({
-      suppressFooterRule: false,
-      suppressFooterMeta: true,
-    })
   })
   it("throws for an unknown id instead of borrowing consulting's brand frame", () => {
     expect(() => resolveBrand("nope")).toThrow(/unknown theme "nope"/)
@@ -361,12 +234,20 @@ describe("registerTheme", () => {
   it("registers a theme, visible to getThemeDefinition and getInstalledThemeIds", () => {
     registerTheme(testTheme())
     expect(getInstalledThemeIds()).toContain("acme")
-    expect(getThemeDefinition("acme").layouts.cover).toEqual(["poster-center"])
+    expect(getThemeDefinition("acme").menu.cover.face).toBe("poster-center")
     expect(getThemeDefinition("acme").menu).toEqual(TEST_MENU)
   })
 
-  it("rejects a built-in id at the schema gate, before the installed check", () => {
-    expect(() => registerTheme(themeNamed("consulting"))).toThrow(/built-in pptwise theme/)
+  it("rejects a built-in id as already installed on the SDK seam", () => {
+    expect(() => registerTheme(themeNamed("consulting"))).toThrow(/theme "consulting" is already installed/)
+  })
+
+  it("installThemeFile shadows a builtin and dedupes getInstalledThemeIds", () => {
+    const factoryPrimary = getThemeDefinition("consulting").style.colors.primary
+    installThemeFile(themeNamed("consulting"))
+    expect(getThemeDefinition("consulting").style.colors.primary).toBe("#112233")
+    expect(getThemeDefinition("consulting").style.colors.primary).not.toBe(factoryPrimary)
+    expect(getInstalledThemeIds().filter((id) => id === "consulting")).toHaveLength(1)
   })
 
   it("rejects a duplicate already-registered id", () => {
@@ -425,6 +306,19 @@ describe("registerTheme", () => {
     expect(() =>
       registerTheme({ ...base, style: { ...base.style, colors: { ...base.style.colors, muted: "#FAFAFA" } } }),
     ).toThrow(/colors\.muted/)
+  })
+
+  it("rejects text and muted tokens that fail against colors.surface", () => {
+    const base = themeNamed("acme-black-surface")
+    expect(() =>
+      registerTheme({
+        ...base,
+        style: {
+          ...base.style,
+          colors: { ...base.style.colors, surface: "#000000" },
+        },
+      }),
+    ).toThrow(/colors\.text.*colors\.surface.*3\.0:1/)
   })
 
   it("checks content and ending too, not just cover", () => {
@@ -557,15 +451,15 @@ describe("getInstalledThemeIds", () => {
   })
 
   it("starts as exactly the 24 builtins", () => {
-    expect(getInstalledThemeIds()).toEqual(CANONICAL_THEME_IDS)
+    expect(getInstalledThemeIds()).toEqual([...CANONICAL_THEME_IDS].sort())
   })
 
-  it("stable order: builtins first, then registration order", () => {
+  it("sorts builtin and registered ids independently of registration order", () => {
     registerTheme(themeNamed("zzz-first"))
     registerTheme(themeNamed("aaa-second"))
-    const ids = getInstalledThemeIds()
-    expect(ids.slice(0, CANONICAL_THEME_IDS.length)).toEqual(CANONICAL_THEME_IDS)
-    expect(ids.slice(CANONICAL_THEME_IDS.length)).toEqual(["zzz-first", "aaa-second"])
+    expect(getInstalledThemeIds()).toEqual(
+      [...CANONICAL_THEME_IDS, "aaa-second", "zzz-first"].sort(),
+    )
   })
 })
 
@@ -579,12 +473,10 @@ describe("getThemeDefinition", () => {
     const def = getThemeDefinition("acme")
     expect(def.id).toBe("acme")
     expect(def.menu).toEqual(TEST_MENU)
-    expect(def.layouts).toEqual({
-      cover: ["poster-center"],
-      chapter: ["banner-chapter"],
-      content: ["two-column"],
-      ending: ["banner-ending"],
-    })
+    expect(def.menu.cover.face).toBe("poster-center")
+    expect(def.menu.chapter.face).toBe("banner-chapter")
+    expect(def.menu.content.points?.face).toBe("two-column")
+    expect(def.menu.ending.face).toBe("banner-ending")
   })
 
   it("throws for an unknown id instead of falling back to consulting", () => {
@@ -608,7 +500,6 @@ describe("a menu may name a pinOnly face", () => {
       kind: "standard",
       slideTypes: ["content"],
       slots: [],
-      pinOnly: true,
     } satisfies LayoutDefinition
   })
   afterEach(() => {
@@ -620,6 +511,6 @@ describe("a menu may name a pinOnly face", () => {
     expect(() =>
       registerTheme(themeNamed("acme-pin-only", { menu: { ...TEST_MENU, content: { points: { face: PIN_ONLY_TEST_ID } } } })),
     ).not.toThrow()
-    expect(getThemeDefinition("acme-pin-only").layouts.content).toEqual([PIN_ONLY_TEST_ID])
+    expect(getThemeDefinition("acme-pin-only").menu.content.points?.face).toBe(PIN_ONLY_TEST_ID)
   })
 })

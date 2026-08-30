@@ -41,6 +41,15 @@ function expectedDecor(themeId: CanonicalThemeId, type: BoundaryType): MenuDecor
     : { kind: "motif", id: source.motif }
 }
 
+function materializedDecor(
+  themeId: CanonicalThemeId,
+  type: BoundaryType,
+  face: string,
+): MenuDecor | undefined {
+  const expected = expectedDecor(themeId, type)
+  return expected?.kind === "motif" && getLayout(face)?.suppressMotif === true ? undefined : expected
+}
+
 function ir(themeId: string): PptxIR {
   return {
     version: "5",
@@ -77,7 +86,7 @@ describe("board-cover-restore wave 2 — locked cover faces", () => {
     expect(container.querySelector("[data-face]")?.getAttribute("data-face")).toBe(face)
     const decor = container.querySelector("[data-decor]")
     const menuDecor = getThemeDefinition(doc.theme.id).menu.cover.decor
-    const expected = expectedDecor(id, "cover")
+    const expected = materializedDecor(id, "cover", face)
     expect(menuDecor).toEqual(expected)
     const faceSuppresses = getLayout(face)?.suppressMotif === true
     if (expected?.kind !== "motif" || faceSuppresses) {
@@ -128,7 +137,7 @@ describe("wave 8 batch 2 — locked cover / chapter / ending faces", () => {
     const index = type === "chapter" ? 1 : 0
     const { container } = render(<FullSlideSvg ir={doc} slide={slide} index={index} />)
     expect(container.querySelector("[data-face]")?.getAttribute("data-face")).toBe(face)
-    expect(getThemeDefinition(doc.theme.id).menu[type].decor).toEqual(expectedDecor(id, type))
+    expect(getThemeDefinition(doc.theme.id).menu[type].decor).toEqual(materializedDecor(id, type, face))
   })
 })
 

@@ -65,13 +65,12 @@ Fill no more than four pages between validation passes. Use `serve` when a revie
 ```bash
 pptwise render <target> \
   [-o <out.pptx>] \
-  [--style <override.json>] \
   [--draft] \
   [--allow-dropped-content] \
   [--no-git-ignore]
 ```
 
-Without `-o`, output goes to `.pptwise/<deck>/<deck>.pptx` under the project root. `--style` applies a low-level style-token override described by `pptwise schema --style`. It is not a theme switch and does not change the menu.
+Without `-o`, output goes to `.pptwise/<deck>/<deck>.pptx` under the project root. Change colors with `pptwise theme fork`. That writes a complete theme. Render does not take a partial recolor overlay.
 
 `--draft` permits placeholder pages. `--allow-dropped-content` permits known content loss and should be used only with explicit user approval. The normal response is to shorten or split the page.
 
@@ -101,7 +100,6 @@ Any finding exits with code 1. `--pixels` adds image-backed text contrast sampli
 ```bash
 pptwise schema
 pptwise schema --spec
-pptwise schema --style
 pptwise spec validate deck-dir/deck.spec.json
 ```
 
@@ -139,7 +137,7 @@ pptwise theme try <id,id,...> [-o <dir>]
 
 `theme try` requires two to four distinct names. It writes a contact sheet under `.pptwise/theme-try/` by default. It never changes a deck binding.
 
-Theme names resolve from the deck directory, then workspace `themes/` directories while walking upward, then factory presets. Unknown names fail. Workspace themes cannot shadow preset ids.
+Theme names resolve from the deck directory, then workspace `themes/` directories while walking upward, then factory presets. Unknown names fail. Deck and workspace files may keep a factory id and shadow the preset. A theme id is `^[a-z0-9-]+$`. Pass `--force` to overwrite an existing theme file.
 
 ## Brand extraction
 

@@ -191,23 +191,29 @@ const MUTED_TARGET_RATIO = 4.5
  * `contrastRatio` (`../../render/ink.ts`) — no new color math, per this wave's own
  * discipline. Walks from the most-muted end (`t=1`, blended fully toward
  * `bg`) down to `t=0` (`text` itself, the highest-contrast endpoint) and
- * returns the *first* candidate — i.e. the most-muted one — that clears
+ * returns the *first* candidate, meaning the most-muted one, that clears
  * {@link MUTED_TARGET_RATIO} against **both** `bg` and `surface` (the two
- * backgrounds `colors.muted` can actually render against). Falls back to
- * `text` unchanged when no step clears the floor even at `t=0` — a
- * pathological source palette (near-identical text/bg/accent tones) that
- * `registerTheme`'s own `assertContrastFloor` (`../definitions.ts`, 3.0:1) is
- * the intended backstop for, not this function's job to paper over.
+ * backgrounds `colors.muted` can actually render against). Throws when no
+ * step clears the floor, because returning `text` would hide an unusable
+ * anchor combination and could still fail on `surface`.
  */
-export function deriveMuted(text: string, bg: string, surface: string): string {
+function findMutedCandidate(text: string, bg: string, surface: string): string | undefined {
   for (let step = MUTED_STEPS; step >= 0; step--) {
     const t = step / MUTED_STEPS
     const candidate = mixHex(text, bg, t)
     if (contrastRatio(candidate, bg) >= MUTED_TARGET_RATIO && contrastRatio(candidate, surface) >= MUTED_TARGET_RATIO) {
-      return candidate
+      return candidate.toUpperCase()
     }
   }
-  return text
+  return undefined
+}
+
+export function deriveMuted(text: string, bg: string, surface: string): string {
+  const candidate = findMutedCandidate(text, bg, surface)
+  if (candidate !== undefined) return candidate
+  throw new PptwiseError(
+    `cannot derive colors.muted with a contrast ratio of ${MUTED_TARGET_RATIO.toFixed(1)}:1 against both colors.bg (${bg}) and colors.surface (${surface}) from colors.text (${text}). Choose compatible background and text anchors`,
+  )
 }
 
 /** Keywords (lower-cased, substring match) that mark a font name as
@@ -298,11 +304,8 @@ export function slugify(input: string, fallback = "brand"): string {
  * `accent1` falls back to `dk2` then to the first available chart color, a
  * missing font falls back to a Windows-safe generic stack — so a real-world
  * theme missing a slot or two (this wave's own fixture matrix covers
- * several) still produces a usable, if plainer, theme. A palette that
- * degrades all the way into unreadable territory (near-identical
- * text/bg/muted tones) is *not* rejected here — that's `registerTheme`'s
- * own `assertContrastFloor` (`../definitions.ts`) job, at load time, with a
- * message naming the actual failing token/ratio (see `brand-theme-file.ts`).
+ * several) still produces a usable, if plainer, theme. An unreadable palette
+ * is rejected while deriving `muted`.
  */
 export async function extractBrandTheme(
   bytes: Uint8Array | ArrayBuffer,

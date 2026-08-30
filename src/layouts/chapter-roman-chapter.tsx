@@ -2,8 +2,8 @@ import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import { chapterNumberFor } from "../lib/derive"
 import { fitHeadingLines, scaleTypePx } from "../render/heading-fit"
-import { cachedDeckSeed, pickBySeed } from "../render/variety"
 import { accessibleInk } from "../render/ink"
+import { faceParam } from "./face-params"
 
 /**
  * roman-chapter layout（2026-07-12 借鉴财经简报章节页，新表达非提炼）：
@@ -11,8 +11,9 @@ import { accessibleInk } from "../render/ink"
  * 圆弧意象装饰。
  * v2（用户两连裁决）：①霓虹光晕环被裁「不好看」——改细线质感（参考
  * 页是日食弧/唱片密纹，不是发光甜甜圈）。②固定装饰章节间千篇一律——
- * 同一圆弧语法做三构图变体，**按章节序号轮换**（deck 内章章不同），
- * deck 间起点由 seed 决定：variant = (seedBase + 章节号) % 3。
+ * 同一圆弧语法做三构图变体，由 face param `ornament` 择一：
+ * `eclipse` | `grooves` | `chord`。省略时默认 `eclipse`（旧轮换的
+ * 第 1 章 / seedBase-0 构图）。不再按章节号或 heading-hash 轮换。
  *   A 日食弧：大圆细亮边只亮 3/4 弧 + 端点高光
  *   B 同心细环组：4 圈不等距细圆（唱片密纹）+ 单段 accent 短弧
  *   C 页缘切弧：更大的圆右缘出血只露左弧，弦切构图
@@ -72,7 +73,7 @@ function arcPath(cx: number, cy: number, r: number, a0: number, a1: number): str
   return `M ${x0.toFixed(1)} ${y0.toFixed(1)} A ${r} ${r} 0 ${large} 1 ${x1.toFixed(1)} ${y1.toFixed(1)}`
 }
 
-export function RomanChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
+export function RomanChapter({ ir, slide, index, ctx, params }: SvgTemplateProps) {
   const chNum = chapterNumberFor(ir.slides, index)
   const org = ir.meta.organization
 
@@ -88,9 +89,8 @@ export function RomanChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
   const headingLastY = headingY + Math.max(0, heading.lines.length - 1) * heading.lineHeight
   const subY = headingLastY + 52
 
-  // 装饰构图：deck 级 seed 定起点，章节号步进——deck 内章章不同
-  const seedBase = pickBySeed(cachedDeckSeed(ir), "roman-chapter-decor", [0, 1, 2])
-  const variant = (["eclipse", "grooves", "chord"] as const)[(seedBase + chNum - 1) % 3]
+  // 装饰构图：face param `ornament` 择一，省略则 eclipse。
+  const ornament = faceParam<"eclipse" | "grooves" | "chord">(params, "ornament", "eclipse")
   const accent = ctx.colors.primary
   // `ctx.defaultBg` is optional (ComponentCtx's own doc comment: a
   // hand-built ctx in a test may omit it) — falls back to the same
@@ -102,8 +102,8 @@ export function RomanChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
 
   return (
     <>
-      {/* 右侧圆弧意象装饰（细线质感，三构图按章节轮换） */}
-      {variant === "eclipse" && (
+      {/* 右侧圆弧意象装饰（细线质感，构图由 ornament 参数择一） */}
+      {ornament === "eclipse" && (
         <>
           {/* 日食弧：3/4 细亮弧 + 端点高光 + 内侧极淡整圆 */}
           <circle cx={990} cy={392} r={218} fill="none" stroke={ctx.colors.border} strokeWidth={0.8} strokeOpacity={0.35} />
@@ -112,7 +112,7 @@ export function RomanChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
           <circle cx={990 + 246 * Math.cos((65 * Math.PI) / 180)} cy={392 + 246 * Math.sin((65 * Math.PI) / 180)} r={5} fill={accent} />
         </>
       )}
-      {variant === "grooves" && (
+      {ornament === "grooves" && (
         <>
           {/* 同心细环组（唱片密纹）+ 单段 accent 短弧 */}
           <circle cx={1000} cy={392} r={252} fill="none" stroke={ctx.colors.border} strokeWidth={0.8} strokeOpacity={0.4} />
@@ -122,7 +122,7 @@ export function RomanChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
           <path d={arcPath(1000, 392, 238, -74, -18)} fill="none" stroke={accent} strokeWidth={2.5} strokeOpacity={0.9} strokeLinecap="round" />
         </>
       )}
-      {variant === "chord" && (
+      {ornament === "chord" && (
         <>
           {/* 页缘切弧：大圆右缘出血只露左弧，双细线 + accent 弧段 */}
           <path d={arcPath(1385, 392, 360, 128, 232)} fill="none" stroke={ctx.colors.border} strokeWidth={1} strokeOpacity={0.45} />
@@ -214,11 +214,14 @@ export function RomanChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
 // registry.ts's slot-`accepts` convention doc for what `[]` means.
 export const layoutDef: LayoutDefinition = {
   // chapter-roman-chapter.tsx: top-right org kicker, giant roman-numeral
-  // watermark, heading + italic subheading with its own short rule, and a
-  // seed/chapter-rotated arc ornament (eclipse/grooves/chord) → decor.
+  // watermark, heading + italic subheading with its own short rule, and an
+  // `ornament` face param (eclipse/grooves/chord, default eclipse) → decor.
   id: "roman-chapter",
   kind: "standard",
   slideTypes: ["chapter"],
+  params: {
+    ornament: { type: "string", values: ["eclipse", "grooves", "chord"] },
+  },
   slots: [
     { name: "kicker", accepts: [] },
     { name: "watermark", accepts: [] },

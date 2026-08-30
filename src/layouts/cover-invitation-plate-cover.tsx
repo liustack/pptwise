@@ -215,12 +215,11 @@ export function InvitationPlateCover({ ir, slide, ctx }: SvgTemplateProps) {
 
 export const layoutDef = {
   branding: "none",
-  // cover-invitation-plate-cover.tsx: pinOnly centered invitation plate.
+  // cover-invitation-plate-cover.tsx: centered invitation plate.
   // Gold title on the theme paper. Motif owns the double gilt frame.
   // Empty heading invents no invitation line and skips the short rule.
   id: "invitation-plate-cover",
   kind: "standard",
-  pinOnly: true,
   slideTypes: ["cover"],
   slots: [
     { name: "kicker", accepts: [] },

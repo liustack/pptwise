@@ -596,5 +596,4 @@ export const layoutDef: LayoutDefinition = {
     { name: "strip", accepts: "any", capacity: 1 },
     { name: "meta", accepts: [] },
   ],
-  arrangements: "all",
 }

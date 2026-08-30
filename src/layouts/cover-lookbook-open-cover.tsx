@@ -227,7 +227,6 @@ export const layoutDef = {
   // Empty heading draws no title. No motif, no vertical year.
   id: "lookbook-open-cover",
   kind: "standard",
-  pinOnly: true,
   slideTypes: ["cover"],
   slots: [
     { name: "kicker", accepts: [] },

@@ -15,15 +15,18 @@ import { describe, expect, it } from "vitest"
 import { renderSlideSvg, validateIr } from "@/api"
 import type { PptxIR } from "@/ir"
 import { installNodePlatform } from "@/platform/node"
+import { registerTheme } from "@/themes/definitions"
+import { forkTheme } from "@/cli/theme-fork"
+import { themeFileFromPreset } from "@/cli/theme-resolve"
 import { splitPaint, verdictFreshness } from "./render"
 
 await installNodePlatform()
 
-function deck(style?: Record<string, unknown>): PptxIR {
+function deck(themeId = "consulting"): PptxIR {
   const ir = {
     version: "5",
     filename: "fingerprint-probe",
-    theme: style ? { id: "consulting", style } : { id: "consulting" },
+    theme: { id: themeId },
     slides: [
       {
         type: "content",
@@ -46,10 +49,18 @@ function deck(style?: Record<string, unknown>): PptxIR {
 const render = (ir: PptxIR) => renderSlideSvg(ir, 0)
 
 describe("splitPaint, against a real recolor", () => {
-  const plain = render(deck())
-  const recolored = render(
-    deck({ colors: { bg: "#FFF4F7", surface: "#FFF9FB", text: "#3D1022", primary: "#7A1F3D", accent: "#0E7C66" } }),
+  // The modern recolor is a fork: same menu, different skin. Geometry must
+  // hold while every paint value moves.
+  const donor = themeFileFromPreset("consulting", { id: "recolor-donor" })
+  const forked = forkTheme(
+    donor,
+    { bg: "#FFF4F7", surface: "#FFF9FB", text: "#3D1022", primary: "#7A1F3D", accent: "#0E7C66" },
+    { id: "recolor-fork" },
   )
+  registerTheme(donor)
+  registerTheme(forked)
+  const plain = render(deck("recolor-donor"))
+  const recolored = render(deck("recolor-fork"))
 
   it("is measuring two genuinely different renders", () => {
     // Without this the rest of the block would pass just as well on a

@@ -26,7 +26,7 @@ import type JSZip from "jszip"
 export async function dedupeMediaInZip(zip: JSZip): Promise<boolean> {
   const mediaFiles = Object.keys(zip.files).filter(
     (p) => p.startsWith("ppt/media/") && !zip.files[p].dir,
-  )
+  ).sort()
   if (mediaFiles.length < 2) return false
 
   // 1. Hash each media part; map duplicate filenames → canonical filename.

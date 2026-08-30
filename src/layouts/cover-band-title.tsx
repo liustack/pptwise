@@ -59,7 +59,7 @@ function hangingBaseline(top: number, fontSize: number): number {
   return top + Math.round(fontSize * 0.8)
 }
 
-export function BandTitleCover({ ir, slide, ctx, params }: SvgTemplateProps) {
+export function BandTitleCover({ ir, slide, ctx, page, params }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const bg = ctx.defaultBg ?? colors.bg
   const bandY = faceParam(params, "bandY", DEFAULT_BAND_Y)
@@ -75,8 +75,8 @@ export function BandTitleCover({ ir, slide, ctx, params }: SvgTemplateProps) {
   const onBand = readableOn(colors.primary)
 
   const org = ir.meta.organization
-  const date = showsDocumentMeta(ir) ? ir.meta.date : undefined
-  const conf = showsDocumentMeta(ir) ? ir.meta.confidentiality : undefined
+  const date = showsDocumentMeta(page, ir, slide) ? ir.meta.date : undefined
+  const conf = showsDocumentMeta(page, ir, slide) ? ir.meta.confidentiality : undefined
   const confLabel = conf ? CONF_LABEL[conf] : null
   const author = ir.meta.authors?.[0]
   const authorText = author ? [author.name, author.role].filter(Boolean).join(" · ") : null

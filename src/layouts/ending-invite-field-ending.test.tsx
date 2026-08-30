@@ -108,10 +108,9 @@ describe("ending-invite-field-ending — board geometry", () => {
 })
 
 describe("ending-invite-field-ending — shared pool", () => {
-  it("is a pinOnly ending that paints its own background", () => {
+  it("is a ending that paints its own background", () => {
     expect(layoutDef.id).toBe("invite-field-ending")
     expect(layoutDef.kind).toBe("standard")
-    expect(layoutDef.pinOnly).toBe(true)
     expect(layoutDef.paintsOwnBackground).toBe(true)
     expect(layoutDef.slideTypes).toEqual(["ending"])
   })

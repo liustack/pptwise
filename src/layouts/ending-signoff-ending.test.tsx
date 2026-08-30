@@ -103,10 +103,9 @@ describe("ending-signoff-ending — board geometry", () => {
 })
 
 describe("ending-signoff-ending — shared pool", () => {
-  it("is registered as a pinOnly ending that paints its own background", () => {
+  it("is registered as a ending that paints its own background", () => {
     expect(layoutDef.id).toBe("signoff-ending")
     expect(layoutDef.kind).toBe("standard")
-    expect(layoutDef.pinOnly).toBe(true)
     expect(layoutDef.paintsOwnBackground).toBe(true)
     expect(layoutDef.slideTypes).toEqual(["ending"])
     expect(layoutDef.slots.find((s) => s.name === "body")?.accepts).toEqual(["bullets"])

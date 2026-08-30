@@ -131,7 +131,6 @@ describe("ending-crayonbox-todo", () => {
     expect(layoutDef).toMatchObject({
       id: "crayonbox-todo",
       kind: "standard",
-      pinOnly: true,
       slideTypes: ["ending"],
     })
     expect(layoutDef.slots.find((slot) => slot.name === "body")).toEqual({

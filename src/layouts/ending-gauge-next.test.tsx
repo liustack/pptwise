@@ -105,7 +105,7 @@ describe("ending-gauge-next", () => {
     ]).toEqual(["160", "636", "16", tokens.colors.muted])
   })
 
-  it("keeps top-right meta and declares a theme-locked pinOnly ending", () => {
+  it("keeps top-right meta and declares a theme-locked ending", () => {
     const { root } = renderEnding()
     expect([textBy(root, "云觅咨询")?.getAttribute("x"), textBy(root, "云觅咨询")?.getAttribute("y")]).toEqual([
       "1184",
@@ -120,7 +120,6 @@ describe("ending-gauge-next", () => {
       kind: "standard",
       slideTypes: ["ending"],
     })
-    expect(layoutDef.pinOnly).toBe(true)
     expect(layoutDef.slots.find((slot) => slot.name === "body")).toEqual({
       name: "body",
       accepts: ["bullets"],
