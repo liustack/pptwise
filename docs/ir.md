@@ -55,7 +55,7 @@ pptwise validate deck.json
 | `version` | `"5"` | The only accepted IR version. Omission is authored as v5. |
 | `filename` | string | Output filename. Defaults to `presentation`. |
 | `narrative` | preset string or partial axes | Argument, pacing, and audience decision. |
-| `theme` | object | Bound theme id, plus optional low-level style or brand overrides. Defaults to `consulting`. |
+| `theme` | object | Bound theme id, plus optional low-level style or brand overrides. Required. |
 | `meta` | object | Organization, authors, date, version, confidentiality, contact, copyright, and animation. |
 | `assets` | object | Named image sources under `assets.images`. |
 | `brand` | object | Deck logo asset id and corner position. |

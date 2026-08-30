@@ -218,11 +218,22 @@ export const BrandConfigSchema = z
 
 export type BrandConfig = z.infer<typeof BrandConfigSchema>
 
+/** Theme file ids, IR `theme.id`, spec `theme`, and CLI lookup names share this slug. */
+export const THEME_ID_PATTERN = /^[a-z0-9-]+$/
+
+export const THEME_ID_CONSTRAINT =
+  "theme id must match ^[a-z0-9-]+$ (lowercase letters, digits, and hyphens)"
+
+export const THEME_REQUIRED_MESSAGE =
+  'theme is required. Create one with `pptwise theme new --from <preset> --id <id>`, then bind it. Bare IR uses `"theme": { "id": "<id>" }`. Deck spec uses `"theme": "<id>"`.'
+
+export const ThemeIdSchema = z.string().regex(THEME_ID_PATTERN, THEME_ID_CONSTRAINT)
+
 export const ThemeSchema = z
   .object({
     // Open string, not an enum — installed-theme check happens in validateIr
     // so a v0.4 registry can add themes without a schema change (spec §4).
-    id: z.string().default("consulting"),
+    id: ThemeIdSchema,
     style: StyleOverrideSchema.optional(),
     brand: BrandConfigSchema.optional(),
   })
@@ -507,7 +518,7 @@ export const PptxIRSchema = z
     // see `NarrativeProfileInputSchema` above) but are caught one level down
     // by `resolveNarrative`'s own runtime axis-key check (`src/narrative`).
     narrative: z.union([z.string(), NarrativeProfileInputSchema]).optional(),
-    theme: ThemeSchema.default({ id: "consulting" }),
+    theme: ThemeSchema,
     meta: MetaSchema.default({}),
     assets: AssetsSchema.default({ images: {} }),
     brand: BrandSchema.optional(),
@@ -564,6 +575,19 @@ function isRetiredIrVersion(input: unknown): boolean {
   return typeof version === "string" && ["1", "2", "3", "4"].includes(version)
 }
 
+export function themeIssueMessage(
+  path: string,
+  message: string,
+  input: unknown,
+  code?: string,
+): string {
+  // Zod reports some object-level issues (unrecognized keys) with
+  // `input === undefined`. Those are not an omitted theme.
+  if (code === "unrecognized_keys") return message
+  if ((path === "theme" || path === "theme.id") && input === undefined) return THEME_REQUIRED_MESSAGE
+  return message
+}
+
 export function parsePptxIR(
   json: unknown,
 ): { success: true; data: PptxIR } | { success: false; error: string } {
@@ -573,7 +597,7 @@ export function parsePptxIR(
   return {
     success: false,
     error: result.error.issues
-      .map((i) => `${i.path.join(".")}: ${i.message}`)
+      .map((i) => `${i.path.join(".")}: ${themeIssueMessage(i.path.join("."), i.message, i.input, i.code)}`)
       .join("\n"),
   }
 }

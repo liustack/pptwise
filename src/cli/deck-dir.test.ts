@@ -369,7 +369,7 @@ describe("readDeckDir", () => {
   describe("invalid spec", () => {
     it("surfaces validateSpec's own formatted error", async () => {
       const dir = await tmp()
-      await writeDeckSpec(dir, { pages: [] })
+      await writeDeckSpec(dir, { theme: "consulting", pages: [] })
       await expect(readDeckDir(dir)).rejects.toThrow(/invalid spec.*no pages/s)
     })
   })

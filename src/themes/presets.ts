@@ -16,6 +16,7 @@
  * structurally suppress the motif. The copy therefore needs no theme-level
  * anchor to look like its source.
  */
+import { THEME_ID_CONSTRAINT, THEME_ID_PATTERN } from "@/ir"
 import { PptwiseError } from "../errors"
 import { BUILTIN_THEME_FILES, CANONICAL_THEME_IDS, type CanonicalThemeId } from "./index"
 import { THEME_OCCASIONS, type IdentityStrength, type Occasion } from "./occasions"
@@ -83,15 +84,13 @@ function copyMenu(menu: Menu, motif: BuiltinThemeDeclaration["motif"]): Menu {
  * preset: style tokens, brand, and menu are all fresh objects, and the
  * theme-wide motif anchor has been written into the menu entries.
  *
- * `targetId` may not be a preset id — a workspace theme never shadows the
- * shelf it was copied from.
+ * `targetId` may equal a preset id. That is how a freeze copy keeps the
+ * bound name while the file shadows the factory shelf.
  */
 export function copyThemePreset(presetId: string, targetId: string): BuiltinThemeDeclaration {
   getThemePreset(presetId)
-  if (isThemePresetId(targetId)) {
-    throw new PptwiseError(
-      `theme id "${targetId}" is a factory preset id. Pick a workspace id that does not collide with the shelf`,
-    )
+  if (!THEME_ID_PATTERN.test(targetId)) {
+    throw new PptwiseError(`invalid theme id "${targetId}". ${THEME_ID_CONSTRAINT}`)
   }
   const preset: BuiltinThemeDeclaration = BUILTIN_THEME_FILES[presetId as CanonicalThemeId]
   const record = THEME_OCCASIONS[preset.id]

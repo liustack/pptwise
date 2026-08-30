@@ -9,7 +9,7 @@ import { afterAll, afterEach, describe, expect, it, beforeAll } from "vitest"
 import { installNodePlatform } from "@/platform/node"
 import { NARRATIVE_PRESETS } from "../narrative"
 import { CAPACITY } from "../audit/capacity"
-import { __resetRegisteredThemes } from "../themes/definitions"
+import { __resetRegisteredThemes, getThemeDefinition } from "../themes/definitions"
 import { THEME_OCCASIONS } from "../themes/occasions"
 import { buildThmxBytes, DEFAULT_THMX_COLORS, PATHOLOGICAL_THMX_COLORS } from "../themes/extract/__fixtures__/thmx"
 import {
@@ -130,7 +130,7 @@ const VALID_PLAN = {
   ],
 }
 
-const BAD_PLAN = { pages: [] }
+const BAD_PLAN = { theme: "consulting", pages: [] }
 
 // T0b fix 2 (scope-extended, controller ruling): same shape as VALID_PLAN,
 // but narrative written as the {id: <preset>} wrapper shape a weak model
@@ -875,11 +875,11 @@ describe("applyDeckConfig resolution (spec/IR > style config)", () => {
     ).rejects.toThrow(/style\.json/)
   })
 
-  it("runValidate ignores config.theme and uses the schema default", async () => {
+  it("runValidate ignores config.theme and hard-errors when the IR omits theme", async () => {
     const d = await freshDir()
     await writeFile(join(d, "pptwise.config.json"), JSON.stringify({ theme: "ink" }))
     await writeFile(join(d, "deck.json"), JSON.stringify(IR_NO_THEME))
-    await expect(runValidate(join(d, "deck.json"), d)).resolves.toMatch(/theme "consulting"/)
+    await expect(runValidate(join(d, "deck.json"), d)).rejects.toThrow(/pptwise theme new --from/)
   })
 
   describe("stale config.theme is not a selection layer", () => {
@@ -1059,7 +1059,7 @@ describe("structural deck-directory errors surface through the CLI shell (W5 tas
 
   it("surfaces an invalid-spec error through runAssemble", async () => {
     const deckDir = await makeDeckDir()
-    await writeFile(join(deckDir, "deck.spec.json"), JSON.stringify({ pages: [] }))
+    await writeFile(join(deckDir, "deck.spec.json"), JSON.stringify({ theme: "consulting", pages: [] }))
     await expect(runAssemble(deckDir)).rejects.toThrow(/invalid spec.*no pages/s)
   })
 })
@@ -1683,12 +1683,14 @@ describe("brand extract + deck theme.json / workspace themes/", () => {
     expect(written.menu).toEqual(expect.objectContaining({ cover: expect.anything(), chapter: expect.anything() }))
   })
 
-  it("brand extract refuses a builtin id collision up front", async () => {
+  it("brand extract can freeze onto a builtin id", async () => {
     const d = await freshDir()
     const src = await writeFixtureTemplate(d)
-    await expect(runBrandExtract(src, { output: join(d, "out.theme.json"), id: "consulting" })).rejects.toThrow(
-      /collides with a built-in pptwise theme.*--id/,
-    )
+    const out = join(d, "consulting.theme.json")
+    const msg = await runBrandExtract(src, { output: out, id: "consulting" })
+    expect(msg).toContain('theme "consulting"')
+    const written = JSON.parse(await readFile(out, "utf8")) as { id: string }
+    expect(written.id).toBe("consulting")
   })
 
   it("brand extract on a pathological palette still writes the file but warns it will be refused at load", async () => {
@@ -1768,20 +1770,25 @@ describe("brand extract + deck theme.json / workspace themes/", () => {
     expect(report).toContain('theme "consulting"')
   })
 
-  it("a workspace file whose id collides with a builtin is refused", async () => {
+  it("a workspace file named consulting.theme.json with id=consulting shadows the builtin", async () => {
     const d = await freshDir()
     const src = await writeFixtureTemplate(d)
     await mkdir(join(d, "themes"))
-    const themeOut = join(d, "themes", "acme.theme.json")
-    await runBrandExtract(src, { output: themeOut, id: "acme" })
-    const file = JSON.parse(await readFile(themeOut, "utf8")) as { id: string; style: { id: string } }
-    file.id = "consulting"
-    file.style.id = "consulting"
-    await writeFile(themeOut, JSON.stringify(file))
+    const themeOut = join(d, "themes", "consulting.theme.json")
+    await runBrandExtract(src, { output: themeOut, id: "consulting" })
+    await writeFile(join(d, "deck.json"), JSON.stringify({ ...IR_NO_THEME, theme: { id: "consulting" } }))
+    const report = await runValidate(join(d, "deck.json"), d)
+    expect(report).toContain('theme "consulting"')
+    expect(getThemeDefinition("consulting").style.colors.primary).toBe(`#${DEFAULT_THMX_COLORS.accent1}`)
+  })
+
+  it("an IR file uses its directory as the deck lookup layer for sibling theme.json", async () => {
+    const d = await freshDir()
+    const src = await writeFixtureTemplate(d)
+    await runBrandExtract(src, { output: join(d, "theme.json"), id: "acme" })
     await writeFile(join(d, "deck.json"), JSON.stringify({ ...IR_NO_THEME, theme: { id: "acme" } }))
-    await expect(
-      runRender(join(d, "deck.json"), { output: join(d, "x.pptx"), cwd: d }),
-    ).rejects.toThrow(/collides with a built-in pptwise theme/)
+    const report = await runValidate(join(d, "deck.json"), d)
+    expect(report).toContain('theme "acme"')
   })
 
   it("loading a pathological theme file is blocked by the contrast floor with a token-naming message", async () => {

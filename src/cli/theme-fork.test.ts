@@ -3,12 +3,12 @@ import { describe, expect, it } from "vitest"
 import { installNodePlatform } from "@/platform/node"
 import { deriveMuted } from "../themes/extract/brand-extract"
 import { forkTheme } from "./theme-fork"
-import { materializeBuiltinTheme, menusEqual } from "./theme-resolve"
+import { menusEqual, themeFileFromPreset } from "./theme-resolve"
 
 installNodePlatform()
 
 describe("forkTheme", () => {
-  const source = materializeBuiltinTheme("consulting", { id: "acme", label: "Acme" })
+  const source = themeFileFromPreset("consulting", { id: "acme", label: "Acme" })
 
   it("keeps the menu byte-identical", () => {
     const forked = forkTheme(source, { primary: "#0B5FFF" }, { id: "acme-blue", label: "Acme Blue" })

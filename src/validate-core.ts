@@ -18,7 +18,7 @@
  */
 import { z } from "zod"
 import { PptwiseError } from "./errors"
-import { OLD_IR_VERSION_ERROR, PptxIRSchema, StyleOverrideSchema, type PptxIR } from "./ir"
+import { OLD_IR_VERSION_ERROR, PptxIRSchema, StyleOverrideSchema, themeIssueMessage, type PptxIR } from "./ir"
 import { decodeDataUriBytes, dataUriMime, FORMAT_BY_MIME, MIME_BY_SNIFFED_FORMAT, sniffImageFormat } from "./ir/asset-sniff"
 import { normalizeComponentAliases, normalizeDeckRootAliases } from "./ir/field-aliases"
 import { isSlideLevelPath, renameHintsFor, SLIDE_LEVEL_UNKNOWN_KEY_HINT } from "./ir/rename-hints"
@@ -651,7 +651,7 @@ export function validateIr(input: unknown): ValidateResult {
     const errors = r.error.issues.map((issue) => {
       const path = issue.path.join(".")
       const m = /^slides\.(\d+)/.exec(path)
-      let message = issue.message
+      let message = themeIssueMessage(path, issue.message, issue.input, issue.code)
       if (issue.code === "unrecognized_keys") {
         // The one retired key a hand-migrated v4 document most plausibly
         // still carries (spec §16 hard-rejects it, no rescue) — the bare

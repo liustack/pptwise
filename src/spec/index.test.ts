@@ -75,6 +75,7 @@ describe("deck spec schema", () => {
   it.each(["beat", "layout"])("rejects retired page field %s", (field) => {
     const result = validateSpec({
       narrative: { pacing: "spacious" },
+      theme: TEST_THEME_ID,
       pages: [cover(), content("a", { [field]: "retired" }), content("b"), ending()],
     })
     expect(result.ok).toBe(false)
@@ -87,14 +88,29 @@ describe("deck spec schema", () => {
     expect(formatSpecIssues(result.errors)).toContain("seed")
   })
 
-  it("defaults version and meta without materializing other defaults", () => {
+  it("defaults version and meta, and requires an explicit theme", () => {
+    const omitted = DeckSpecSchema.safeParse({
+      pages: [cover(), content("a"), content("b"), content("c"), content("d"), ending()],
+    })
+    expect(omitted.success).toBe(false)
+
     const spec = DeckSpecSchema.parse({
+      theme: TEST_THEME_ID,
       pages: [cover(), content("a"), content("b"), content("c"), content("d"), ending()],
     })
     expect(spec.version).toBe("1")
     expect(spec.meta).toEqual({})
-    expect(spec.theme).toBeUndefined()
-    expect(resolveSpecThemeId(spec)).toBe("consulting")
+    expect(spec.theme).toBe(TEST_THEME_ID)
+    expect(resolveSpecThemeId(spec)).toBe(TEST_THEME_ID)
+  })
+
+  it("validateSpec fails when theme is omitted", () => {
+    const result = validateSpec({
+      pages: [cover(), content("a"), content("b"), content("c"), content("d"), ending()],
+    })
+    expect(result.ok).toBe(false)
+    expect(formatSpecIssues(result.errors)).toMatch(/pptwise theme new --from/)
+    expect(formatSpecIssues(result.errors)).toMatch(/"theme": "<id>"/)
   })
 
   it("keeps deck branding as the existing three-state field", () => {
@@ -116,6 +132,7 @@ describe("deck spec hard gates", () => {
   it("requires cover and ending boundaries", () => {
     const result = validateSpec({
       narrative: { pacing: "spacious" },
+      theme: TEST_THEME_ID,
       pages: [content("a"), content("b"), content("c"), content("d")],
     })
     expect(result.ok).toBe(false)
@@ -126,12 +143,14 @@ describe("deck spec hard gates", () => {
   it("requires safe unique page ids", () => {
     const duplicate = validateSpec({
       narrative: { pacing: "spacious" },
+      theme: TEST_THEME_ID,
       pages: [cover(), content("dup"), content("dup"), ending()],
     })
     expect(formatSpecIssues(duplicate.errors)).toContain('duplicate page id "dup"')
 
     const unsafe = validateSpec({
       narrative: { pacing: "spacious" },
+      theme: TEST_THEME_ID,
       pages: [cover(), content("../escape"), content("b"), ending()],
     })
     expect(formatSpecIssues(unsafe.errors)).toContain("not a safe file name")
@@ -140,12 +159,14 @@ describe("deck spec hard gates", () => {
   it("requires concise non-empty headings", () => {
     const empty = validateSpec({
       narrative: { pacing: "spacious" },
+      theme: TEST_THEME_ID,
       pages: [cover(), content("a", { heading: " " }), content("b"), ending()],
     })
     expect(formatSpecIssues(empty.errors)).toContain("missing a required heading")
 
     const long = validateSpec({
       narrative: { pacing: "spacious" },
+      theme: TEST_THEME_ID,
       pages: [cover(), content("a", { heading: "x".repeat(49) }), content("b"), ending()],
     })
     expect(formatSpecIssues(long.errors)).toContain("48-character limit")

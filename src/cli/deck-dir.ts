@@ -387,9 +387,8 @@ export interface DeckDirResult extends AssembleResult {
   deckDir: string
   /** Absolute path to `deck.spec.json`. */
   specPath: string
-  /** Spec's own `theme` string, omitted when the spec did not set one.
-   *  Extracted from the raw spec before assemble, which always fills
-   *  `theme.id` (schema default consulting) even when the spec omitted it. */
+  /** Spec's own `theme` string. Extracted from the raw spec before assemble,
+   *  which always writes `theme.id` from the required spec theme. */
   specTheme?: string
 }
 

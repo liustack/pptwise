@@ -210,10 +210,11 @@ theme
   .option("-o, --output <path>", "output theme JSON path")
   .option("--id <id>", "theme id (default: slug of the output filename)")
   .option("--label <label>", "human-readable theme label")
+  .option("--force", "overwrite an existing theme file")
   .addHelpText("after", "\nExample:\n  $ pptwise theme new --from consulting -o themes/acme.theme.json")
-  .action(async (opts: { from: string; output?: string; id?: string; label?: string }) => {
+  .action(async (opts: { from: string; output?: string; id?: string; label?: string; force?: boolean }) => {
     try {
-      console.log(await runThemeNew({ from: opts.from, output: opts.output, id: opts.id, label: opts.label, cwd: process.cwd() }))
+      console.log(await runThemeNew({ from: opts.from, output: opts.output, id: opts.id, label: opts.label, force: opts.force, cwd: process.cwd() }))
     } catch (e) {
       fail(e)
     }
@@ -230,11 +231,12 @@ theme
   .option("-o, --output <path>", "output theme JSON path")
   .option("--id <id>", "theme id (default: slug of the output filename)")
   .option("--label <label>", "human-readable theme label")
+  .option("--force", "overwrite an existing theme file")
   .addHelpText("after", "\nExample:\n  $ pptwise theme fork acme --primary #0B5FFF -o themes/acme-blue.theme.json")
   .action(
     async (
       name: string,
-      opts: { primary: string; bg?: string; accent?: string; text?: string; surface?: string; output?: string; id?: string; label?: string },
+      opts: { primary: string; bg?: string; accent?: string; text?: string; surface?: string; output?: string; id?: string; label?: string; force?: boolean },
     ) => {
       try {
         console.log(
@@ -247,6 +249,7 @@ theme
             output: opts.output,
             id: opts.id,
             label: opts.label,
+            force: opts.force,
             cwd: process.cwd(),
           }),
         )
@@ -289,10 +292,11 @@ brand
   .option("--id <id>", "theme id to register under (default: slug of the output filename)")
   .option("--label <label>", "human-readable theme label (default: the source theme's color-scheme name)")
   .option("--from <preset>", "donor preset whose menu is copied (default: consulting)")
+  .option("--force", "overwrite an existing theme file")
   .addHelpText("after", "\nExample:\n  $ pptwise brand extract corp.pptx -o themes/acme.theme.json --from consulting")
-  .action(async (file: string, opts: { output: string; id?: string; label?: string; from?: string }) => {
+  .action(async (file: string, opts: { output: string; id?: string; label?: string; from?: string; force?: boolean }) => {
     try {
-      console.log(await runBrandExtract(file, { output: opts.output, id: opts.id, label: opts.label, from: opts.from }))
+      console.log(await runBrandExtract(file, { output: opts.output, id: opts.id, label: opts.label, from: opts.from, force: opts.force }))
     } catch (e) {
       fail(e)
     }

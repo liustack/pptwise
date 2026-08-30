@@ -140,9 +140,13 @@ describe("registerBrandThemeFile", () => {
     )
   })
 
-  it("refuses to shadow a builtin id, naming the fix", async () => {
+  it("shadows a builtin id so getThemeDefinition reads the file", async () => {
     const theme = await extractFixtureTheme("consulting")
-    expect(() => registerBrandThemeFile(theme)).toThrow(/collides with a built-in pptwise theme.*--id/)
+    expect(registerBrandThemeFile(theme)).toBe("consulting")
+    const def = getThemeDefinition("consulting")
+    expect(def.style.colors.primary).toBe(theme.style.colors.primary)
+    expect(def.menu).toEqual(theme.menu)
+    expect(getInstalledThemeIds().filter((id) => id === "consulting")).toHaveLength(1)
   })
 
   it("is idempotent for the same already-registered id (serve rebuild loop)", async () => {

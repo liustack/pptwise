@@ -456,6 +456,32 @@ describe("watchRoots — theme files", () => {
   })
 })
 
+describe("createServeServer — IR file sibling theme.json", () => {
+  it("resolves a custom id from theme.json next to an IR file", async () => {
+    const dir = await makeDir("pptwise-serve-ir-theme-")
+    const src = join(dir, "corp.pptx")
+    await writeFile(src, Buffer.from(await buildThmxBytes({ schemeName: "Acme" })))
+    await runBrandExtract(src, { output: join(dir, THEME_FILENAME), id: "acme-serve" })
+    const irPath = join(dir, "deck.json")
+    await writeFile(
+      irPath,
+      JSON.stringify({
+        version: "5",
+        filename: "serve-ir-theme",
+        theme: { id: "acme-serve" },
+        slides: [
+          { type: "cover", heading: "Serve Theme" },
+          { type: "content", kind: "points", heading: "Body", components: [{ type: "paragraph", text: "hello from serve" }] },
+        ],
+      }),
+    )
+    const handle = await startServe(irPath)
+    const res = await get(handle.port, "/")
+    expect(res.status).toBe(200)
+    expect(res.body).toContain("Serve Theme")
+  })
+})
+
 describe("createServeServer — theme-file live reload", () => {
   it("rebuild() re-reads a mutated workspace theme file and serves the new primary color", async () => {
     const dir = await makeDir("pptwise-serve-ws-theme-")

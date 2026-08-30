@@ -139,7 +139,7 @@ pptwise theme try <id,id,...> [-o <dir>]
 
 `theme try` requires two to four distinct names. It writes a contact sheet under `.pptwise/theme-try/` by default. It never changes a deck binding.
 
-Theme names resolve from the deck directory, then workspace `themes/` directories while walking upward, then factory presets. Unknown names fail. Workspace themes cannot shadow preset ids.
+Theme names resolve from the deck directory, then workspace `themes/` directories while walking upward, then factory presets. Unknown names fail. Deck and workspace files may keep a factory id and shadow the preset. A theme id is `^[a-z0-9-]+$`. Pass `--force` to overwrite an existing theme file.
 
 ## Brand extraction
 

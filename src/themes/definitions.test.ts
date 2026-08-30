@@ -6,6 +6,7 @@ import {
   compileBuiltinTheme,
   getInstalledThemeIds,
   getThemeDefinition,
+  installThemeFile,
   registerTheme,
   resolveBrand,
   THEME_DEFINITIONS,
@@ -375,8 +376,16 @@ describe("registerTheme", () => {
     expect(getThemeDefinition("acme").menu).toEqual(TEST_MENU)
   })
 
-  it("rejects a built-in id at the schema gate, before the installed check", () => {
-    expect(() => registerTheme(themeNamed("consulting"))).toThrow(/built-in pptwise theme/)
+  it("rejects a built-in id as already installed on the SDK seam", () => {
+    expect(() => registerTheme(themeNamed("consulting"))).toThrow(/theme "consulting" is already installed/)
+  })
+
+  it("installThemeFile shadows a builtin and dedupes getInstalledThemeIds", () => {
+    const factoryPrimary = getThemeDefinition("consulting").style.colors.primary
+    installThemeFile(themeNamed("consulting"))
+    expect(getThemeDefinition("consulting").style.colors.primary).toBe("#112233")
+    expect(getThemeDefinition("consulting").style.colors.primary).not.toBe(factoryPrimary)
+    expect(getInstalledThemeIds().filter((id) => id === "consulting")).toHaveLength(1)
   })
 
   it("rejects a duplicate already-registered id", () => {
