@@ -28,7 +28,7 @@ const KICKER_SIZE = 16
 const KICKER_TRACKING_EM = 0.22
 const KICKER_PREFERRED_Y = 252
 
-export function EditorialMastheadCover({ ir, slide, ctx, params }: SvgTemplateProps) {
+export function EditorialMastheadCover({ ir, slide, ctx, page, params }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const textAnchor = faceParam<"start" | "middle">(params, "textAnchor", "middle")
   const centered = textAnchor === "middle"
@@ -38,9 +38,9 @@ export function EditorialMastheadCover({ ir, slide, ctx, params }: SvgTemplatePr
   const showKicker = faceParam(params, "showKicker", false)
   const pageBg = ctx.defaultBg ?? colors.bg
   const org = ir.meta.organization
-  const conf = showsDocumentMeta(ir) ? ir.meta.confidentiality : undefined
+  const conf = showsDocumentMeta(page, ir, slide) ? ir.meta.confidentiality : undefined
   const confLabel = conf ? CONF_LABEL[conf] : null
-  const date = showsDocumentMeta(ir) ? ir.meta.date : undefined
+  const date = showsDocumentMeta(page, ir, slide) ? ir.meta.date : undefined
   const metaParts = [showKicker ? undefined : org, date, confLabel].filter((v): v is string => Boolean(v))
 
   // Last-line-anchored: whether the title wraps to 1 or 2 lines, its final

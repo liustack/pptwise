@@ -54,12 +54,12 @@ function signoffItems(slide: SvgTemplateProps["slide"]): string[] {
   return block.items.map((item) => stripEmphasis(item)).filter((item) => item.trim().length > 0).slice(0, ITEM_MAX)
 }
 
-export function SignoffEnding({ ir, slide, ctx }: SvgTemplateProps) {
+export function SignoffEnding({ ir, slide, ctx, page }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const field = colors.primary
   const ink = readableOn(field)
   const org = ir.meta.organization
-  const date = showsDocumentMeta(ir) ? ir.meta.date : undefined
+  const date = showsDocumentMeta(page, ir, slide) ? ir.meta.date : undefined
   const author = ir.meta.authors?.[0]
   const authorText = author ? [author.name, author.role].filter(Boolean).join(" · ") : null
 

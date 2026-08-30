@@ -78,13 +78,13 @@ const FOOTER_MIN_SIZE = 12
 /** 元信息各段之间的分隔（与 cover-left-anchor / editorial-masthead 同款）。 */
 const META_SEPARATOR = "    ·    "
 
-export function ColophonCover({ ir, slide, ctx }: SvgTemplateProps) {
+export function ColophonCover({ ir, slide, ctx, page }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   // 本版式不画背板，测的是页面底色（见文件头）。
   const bg = ctx.defaultBg ?? colors.bg
 
   const org = ir.meta.organization
-  const conf = showsDocumentMeta(ir) ? ir.meta.confidentiality : undefined
+  const conf = showsDocumentMeta(page, ir, slide) ? ir.meta.confidentiality : undefined
   const confLabel = conf ? CONF_LABEL[conf] : null
   const author = ir.meta.authors?.[0]
   const authorText = author ? [author.name, author.role].filter(Boolean).join(" · ") : null
@@ -132,7 +132,7 @@ export function ColophonCover({ ir, slide, ctx }: SvgTemplateProps) {
   const footerParts = [
     authorText,
     confLabel,
-    showsDocumentMeta(ir) ? ir.meta.date : undefined,
+    showsDocumentMeta(page, ir, slide) ? ir.meta.date : undefined,
     ir.meta.version,
   ].filter(
     (v): v is string => Boolean(v),

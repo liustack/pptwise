@@ -1,4 +1,5 @@
 import type { PageKind } from "@/ir"
+import { getLayout } from "../layouts/registry"
 import { registerTheme, THEME_DEFINITIONS } from "./definitions"
 import type { CanonicalThemeId } from "./index"
 import type { Menu, MenuDecor, MenuEntry, ThemeFile } from "./schema"
@@ -23,6 +24,7 @@ function sourceDecor(themeId: CanonicalThemeId): MenuDecor | undefined {
 function materializeEntry(entry: MenuEntry, fallbackDecor: MenuDecor | undefined): MenuEntry {
   const copy = structuredClone(entry)
   if (copy.decor !== undefined || fallbackDecor === undefined) return copy
+  if (getLayout(copy.face)?.suppressMotif === true) return copy
   return { ...copy, decor: structuredClone(fallbackDecor) }
 }
 
@@ -36,6 +38,7 @@ function replaceFace(
   }
   if (typeof choice !== "string") return structuredClone(choice)
   const decor = current?.decor ?? fallbackDecor
+  if (decor?.kind === "motif" && getLayout(choice)?.suppressMotif === true) return { face: choice }
   return decor === undefined ? { face: choice } : { face: choice, decor: structuredClone(decor) }
 }
 

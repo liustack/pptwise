@@ -10,7 +10,7 @@ import type { SvgTemplateProps } from "../layouts/types"
 import { Background } from "./background"
 import { Branding } from "./branding"
 import { SlideDecor } from "./slide-decor"
-import { ImageAnnotatePage, ImageBottomPage, ImageCoverPage, ImageSplitPage, ImageTopPage } from "./image-pages"
+import { getTakeoverRenderer, ImageCoverPage } from "./image-pages"
 import { gradientBands } from "./gradient-bands"
 import { COVER_LAYOUTS } from "../layouts/index-cover"
 import { CHAPTER_LAYOUTS } from "../layouts/index-chapter"
@@ -23,6 +23,7 @@ import { cachedDeckSeed } from "./variety"
 import { resolveEffectiveFace } from "./layout-selection"
 import { partitionSvgDepth, type SvgDepthLayers } from "./depth-contract/partition"
 import { enforceMidgroundContract, resolveMidgroundBackground } from "./depth-contract/safety"
+import { resolvePageRenderContext } from "./page-context"
 
 /**
  * Reduce a `BackgroundSpec` to one representative hex color — a color spec
@@ -310,25 +311,16 @@ export function FullSlideSvg({
   if (effectiveFace.route === "unresolved") {
     throw new Error(effectiveFace.error ?? `cannot resolve a theme-menu face for "${slide.type}" page`)
   }
-  const menuDecor = effectiveFace.entry?.decor
-  // Decoration resolution (charter ruling 6, face-default + menu-override):
-  // the face's own `suppressMotif` is a structural fact no menu can undo; a
-  // menu entry may silence the motif on other faces or swap which motif
-  // paints; with no entry opinion the theme's own motif is the ordinary
-  // posture.
   const themeDef = getThemeDefinition(ir.theme.id)
-  const faceSuppressesMotif = effectiveFace.layout?.suppressMotif === true
-  const Decor =
-    menuDecor?.kind === "silent" || faceSuppressesMotif
-      ? undefined
-      : menuDecor?.kind === "motif"
-        ? MOTIFS[menuDecor.id]
-        : themeDef.motif !== undefined
-          ? MOTIFS[themeDef.motif]
-          : undefined
-  const motifIntensity =
-    menuDecor?.kind === "motif" ? menuDecor.params?.intensity : themeDef.motifParameters?.intensity
-  const motifOpacity = motifIntensity === "subtle" ? 0.62 : undefined
+  const page = resolvePageRenderContext(ir, slide, effectiveFace, themeDef)
+  const renderIr: PptxIR = page.metadataOn
+    ? ir
+    : {
+        ...ir,
+        meta: ir.meta.animation === undefined ? {} : { animation: ir.meta.animation },
+      }
+  const Decor = page.motifOn && page.motifId !== undefined ? MOTIFS[page.motifId] : undefined
+  const motifOpacity = page.motifIntensity === "subtle" ? 0.62 : undefined
   let bgSpec = slide.background ?? tokens.defaultBackgrounds[slide.type]
   // 压图页接管（图片排版 polish，2026-07-09 用户反馈）：cover/chapter 的
   // asset 背景 → 暗遮罩 + 白字 bespoke 版式（ImageCoverPage）——图保持清晰
@@ -377,36 +369,31 @@ export function FullSlideSvg({
   // column and reads as a pale hairline down the page. See
   // `LayoutDefinition.paintsOwnBackground` (`../layouts/registry.ts`).
   const layoutPaintsBackground = effectiveFace.route === "layout" && effectiveFace.layout?.paintsOwnBackground === true
-  // Page-level brand silence: the face's structural `branding: "none"` and
-  // the menu entry's `brand: "none"` each switch the brand frame off.
-  // Deck-level full/cover-only/minimal posture remains inside Branding and
-  // is applied only when this page has not opted out.
-  const skipBranding = effectiveFace.layout?.branding === "none" || effectiveFace.entry?.brand === "none"
-
   let pageBody: ReactNode = null
   if (imageCoverTakeover) {
-    pageBody = ImageCoverPage({ ir, slide, index, ctx })
-  } else if (effectiveFace.route === "takeover" && effectiveFace.layoutId === "image-top") {
-    pageBody = ImageTopPage({ ir, slide, ctx })
-  } else if (effectiveFace.route === "takeover" && effectiveFace.layoutId === "image-bottom") {
-    pageBody = ImageBottomPage({ ir, slide, ctx })
-  } else if (effectiveFace.route === "takeover" && effectiveFace.layoutId === "image-annotate") {
-    pageBody = ImageAnnotatePage({ ir, slide, ctx })
-  } else if (effectiveFace.route === "takeover" && effectiveFace.layoutId === "image-split") {
-    pageBody = ImageSplitPage({ ir, slide, ctx })
+    pageBody = ImageCoverPage({ ir: renderIr, slide, index, ctx, page })
+  } else if (effectiveFace.route === "takeover" && effectiveFace.layoutId !== null) {
+    const renderTakeover = getTakeoverRenderer(effectiveFace.layoutId)
+    if (renderTakeover === undefined) {
+      throw new Error(
+        `layout registry invariant failed: takeover "${effectiveFace.layoutId}" has no renderer dispatcher`,
+      )
+    }
+    pageBody = renderTakeover({ ir: renderIr, slide, index, ctx, page })
   } else if (pageLayout) {
     pageBody = pageLayout.Component({
-      ir,
+      ir: renderIr,
       slide,
       index,
       ctx,
+      page,
       params: effectiveFace.entry?.params,
     })
   }
   const motif =
     Decor && !imageCoverTakeover ? (
       <g data-decor>
-        <Decor ir={ir} slide={slide} ctx={ctx} />
+        <Decor ir={renderIr} slide={slide} ctx={ctx} page={page} />
       </g>
     ) : null
   const motifDepth: SvgDepthLayers = motif
@@ -432,7 +419,7 @@ export function FullSlideSvg({
   ) : (
     keyedBody("fg")
   )
-  const branding = skipBranding ? null : <Branding ir={ir} slide={slide} ctx={ctx} />
+  const branding = page.brandOn ? <Branding ir={renderIr} slide={slide} ctx={ctx} page={page} /> : null
   const foreground = (
     <>
       {keyedMotif("fg")}

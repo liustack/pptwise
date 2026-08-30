@@ -50,14 +50,14 @@ const BLOCK_PATH = `M 0,0 L ${BLOCK_TOP_W},0 L ${BLOCK_BOTTOM_W},720 L 0,720 Z`
 const TITLE_X = 596
 const TITLE_MAX_W = 1280 - TITLE_X - 96
 
-export function SplitDiagonalCover({ ir, slide, ctx }: SvgTemplateProps) {
-  const org = ir.meta.organization
-  const date = showsDocumentMeta(ir) ? ir.meta.date : undefined
-  const conf = showsDocumentMeta(ir) ? ir.meta.confidentiality : undefined
+export function SplitDiagonalCover({ ir, slide, ctx, page }: SvgTemplateProps) {
+  const org = page?.metadataOn === false ? undefined : ir.meta.organization
+  const date = showsDocumentMeta(page, ir, slide) ? ir.meta.date : undefined
+  const conf = showsDocumentMeta(page, ir, slide) ? ir.meta.confidentiality : undefined
   const confLabel = conf ? CONF_LABEL[conf] : null
-  const author = ir.meta.authors?.[0]
+  const author = page?.metadataOn === false ? undefined : ir.meta.authors?.[0]
   const authorText = author ? [author.name, author.role].filter(Boolean).join(" · ") : null
-  const version = ir.meta.version
+  const version = page?.metadataOn === false ? undefined : ir.meta.version
 
   const onBlock = readableOn(ctx.colors.primary)
   // B 层 meta 取色（见文件头 "org kicker 的取色"）：ORG_ALPHA 保留这行机构名

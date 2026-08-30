@@ -2,6 +2,7 @@ import type { BackgroundSpec, BrandConfig, Slide } from "@/ir"
 import { PptwiseError } from "../errors"
 import type { MotifId } from "../motifs/types"
 import { hasExactWidthTable, resolveFontFace } from "../render/fonts"
+import { hasTakeoverRenderer } from "../render/image-pages"
 import { contrastRatio } from "../render/ink"
 import { getLayout, type LayoutParamDeclaration } from "../layouts/registry"
 import { REGISTERED_THEMES } from "./registered-themes"
@@ -100,7 +101,8 @@ function menuLayouts(menu: Menu): Record<Slide["type"], readonly string[]> {
  * (`style.shape.cover` knobs, the theme-wide motif anchor) that public
  * files cannot express.
  */
-function compileBuiltinTheme(file: BuiltinThemeDeclaration): ThemeDefinition {
+export function compileBuiltinTheme(file: BuiltinThemeDeclaration): ThemeDefinition {
+  assertMenuContract(file.id, file.menu)
   const record = THEME_OCCASIONS[file.id]
   return {
     id: file.id,
@@ -387,6 +389,16 @@ function assertMenuContract(themeId: string, menu: Menu): void {
     if (!layout.slideTypes.includes(slideType)) {
       throw new PptwiseError(
         `theme "${themeId}" ${path}.face layout "${entry.face}" is not valid for "${slideType}" slides`,
+      )
+    }
+    if (layout.suppressMotif === true && entry.decor?.kind === "motif") {
+      throw new PptwiseError(
+        `theme "${themeId}" ${path}.decor selects a motif but layout "${entry.face}" suppresses motifs`,
+      )
+    }
+    if (layout.kind === "takeover" && !hasTakeoverRenderer(entry.face)) {
+      throw new PptwiseError(
+        `theme "${themeId}" ${path}.face takeover "${entry.face}" has no renderer dispatcher`,
       )
     }
 

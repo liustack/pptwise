@@ -93,4 +93,118 @@ describe("menu-owned page branding posture", () => {
     expect(root.querySelector(`line[y1="${FOOTER_DIVIDER_Y}"]`)).toBeNull()
     expect(root.querySelector("image")).not.toBeNull()
   })
+
+  it("silences document metadata painted inside a cover face", () => {
+    const id = "menu-branding-cover-silent"
+    registerTheme({
+      version: 2,
+      id,
+      style: {
+        ...CONSULTING_TOKENS,
+        id,
+        shape: { radius: 2, gapScale: 1, typeScale: 1 },
+      },
+      menu: {
+        cover: { face: "split-diagonal", brand: "none" },
+        chapter: { face: "masthead-chapter" },
+        content: { points: { face: "two-column" } },
+        ending: { face: "poster-ending" },
+      },
+    })
+    const cover: Slide = { type: "cover", heading: "Silent cover", components: [] }
+    const ir: PptxIR = {
+      ...deck(id, "full"),
+      meta: {
+        organization: "ACME",
+        confidentiality: "internal",
+        version: "v1",
+        date: "2026-08-31",
+      },
+      slides: [cover],
+    }
+
+    const markup = renderSlideSvg(ir, 0)
+    expect(markup).not.toContain("ACME")
+    expect(markup).not.toContain("Internal")
+    expect(markup).not.toContain("v1")
+    expect(markup).not.toContain("2026-08-31")
+  })
+
+  it("silences every metadata field even when the selected face reads IR meta directly", () => {
+    const id = "menu-branding-direct-meta-silent"
+    registerTheme({
+      version: 2,
+      id,
+      style: {
+        ...CONSULTING_TOKENS,
+        id,
+        shape: { radius: 2, gapScale: 1, typeScale: 1 },
+      },
+      menu: {
+        cover: { face: "poster-center", brand: "none" },
+        chapter: { face: "masthead-chapter" },
+        content: { points: { face: "two-column" } },
+        ending: { face: "poster-ending" },
+      },
+    })
+    const cover: Slide = { type: "cover", heading: "Direct metadata cover", components: [] }
+    const ir: PptxIR = {
+      ...deck(id, "full"),
+      meta: {
+        organization: "ACME",
+        confidentiality: "internal",
+        version: "v1",
+        date: "2026-08-31",
+        authors: [{ name: "Ada", role: "Author" }],
+      },
+      slides: [cover],
+    }
+
+    const markup = renderSlideSvg(ir, 0)
+    expect(markup).toContain("Direct metadata")
+    for (const value of ["ACME", "Internal", "v1", "2026-08-31", "Ada", "Author"]) {
+      expect(markup).not.toContain(value)
+    }
+  })
+
+  it("silences metadata when an asset background hands the cover to image-cover", () => {
+    const id = "menu-branding-image-cover-silent"
+    registerTheme({
+      version: 2,
+      id,
+      style: {
+        ...CONSULTING_TOKENS,
+        id,
+        shape: { radius: 2, gapScale: 1, typeScale: 1 },
+      },
+      menu: {
+        cover: { face: "split-diagonal", brand: "none" },
+        chapter: { face: "masthead-chapter" },
+        content: { points: { face: "two-column" } },
+        ending: { face: "poster-ending" },
+      },
+    })
+    const cover: Slide = {
+      type: "cover",
+      heading: "Silent image cover",
+      background: { kind: "asset", asset_id: "hero" },
+      components: [],
+    }
+    const ir: PptxIR = {
+      ...deck(id, "full"),
+      meta: { organization: "ACME", date: "2026-08-31" },
+      assets: {
+        images: {
+          logo: { src: LOGO_SRC, alt: "logo" },
+          hero: { src: LOGO_SRC, alt: "hero" },
+        },
+      },
+      slides: [cover],
+    }
+
+    const markup = renderSlideSvg(ir, 0)
+    expect(markup).toContain("Silent image cover")
+    expect(markup).not.toContain("ACME")
+    expect(markup).not.toContain("2026-08-31")
+  })
 })

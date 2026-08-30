@@ -51,10 +51,10 @@ const META_TOP_Y = 56
 const META_BOTTOM_LEFT = { x: 48, y: 700 }
 const META_BOTTOM_RIGHT = { x: 1208, y: 684 }
 
-export function PosterCenterCover({ ir, slide, ctx, params }: SvgTemplateProps) {
+export function PosterCenterCover({ ir, slide, ctx, page, params }: SvgTemplateProps) {
   const org = ir.meta.organization
-  const date = showsDocumentMeta(ir) ? ir.meta.date : undefined
-  const conf = showsDocumentMeta(ir) ? ir.meta.confidentiality : undefined
+  const date = showsDocumentMeta(page, ir, slide) ? ir.meta.date : undefined
+  const conf = showsDocumentMeta(page, ir, slide) ? ir.meta.confidentiality : undefined
   const confLabel = conf ? CONF_LABEL[conf] : null
   const author = ir.meta.authors?.[0]
   const authorText = author

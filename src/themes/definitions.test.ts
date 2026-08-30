@@ -3,6 +3,7 @@ import { BUILTIN_THEME_FILES, CANONICAL_THEME_IDS, THEME_STYLES, resolveThemeId 
 import {
   __resetRegisteredThemes,
   assertContrastFloor,
+  compileBuiltinTheme,
   getInstalledThemeIds,
   getThemeDefinition,
   registerTheme,
@@ -182,6 +183,15 @@ const BOARD: Record<string, { cover: string; chapter: string; ending: string; co
 }
 
 describe("THEME_DEFINITIONS", () => {
+  it("runs built-in declarations through the shared menu contract gate", () => {
+    const invalid = structuredClone(BUILTIN_THEME_FILES.consulting)
+    invalid.menu.cover.face = "missing-builtin-face"
+
+    expect(() => compileBuiltinTheme(invalid)).toThrow(
+      /theme "consulting" menu\.cover\.face references unknown layout id "missing-builtin-face"/i,
+    )
+  })
+
   it("covers all 24 canonical ids with theme tokens and brand", () => {
     for (const id of CANONICAL_THEME_IDS) {
       const def = THEME_DEFINITIONS[id]

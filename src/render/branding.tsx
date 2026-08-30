@@ -4,6 +4,7 @@ import { CONF_LABEL } from "../lib/conf-labels"
 import { resolveBrand } from "../themes/definitions"
 import { cachedDeckSeed, pickBySeed } from "./variety"
 import { FOOTER_DIVIDER_Y } from "./branding-geometry"
+import { resolveDeckBranding, type PageRenderContext } from "./page-context"
 
 /**
  * Shared footer/logo branding as an SVG fragment. Ported from MasterFrame so the
@@ -15,17 +16,20 @@ export function Branding({
   ir,
   slide,
   ctx,
+  page,
 }: {
   ir: PptxIR
   slide: Slide
   ctx: ComponentCtx
+  page?: PageRenderContext
 }) {
   const { meta, brand, assets } = ir
   // Deck-level branding posture. Omitted = "cover-only": cover and chapter keep
   // the brand logo, content and ending skip the whole fragment (rule, meta,
   // logo). "full" is the explicit declaration that draws the content-page
   // footer. Menu-level silence is applied by FullSlideSvg before this fragment.
-  const posture = ir.branding ?? "cover-only"
+  const posture = page?.branding ?? resolveDeckBranding(ir)
+  if (posture === "none") return null
   if (posture === "cover-only" && (slide.type === "content" || slide.type === "ending")) {
     return null
   }

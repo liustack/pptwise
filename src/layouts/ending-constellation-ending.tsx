@@ -61,7 +61,7 @@ function splitTrailingPeriod(line: string): {
   return { rest: line, period: null }
 }
 
-export function ConstellationEnding({ ir, slide, ctx }: SvgTemplateProps) {
+export function ConstellationEnding({ ir, slide, ctx, page }: SvgTemplateProps) {
   const { colors, fonts } = ctx
 
   const HEADING_LAST_BASELINE = 330
@@ -93,7 +93,7 @@ export function ConstellationEnding({ ir, slide, ctx }: SvgTemplateProps) {
   const contactText = contact
     ? [contact.name, contact.email].filter(Boolean).join(" · ")
     : null
-  const date = showsDocumentMeta(ir) ? ir.meta.date : undefined
+  const date = showsDocumentMeta(page, ir, slide) ? ir.meta.date : undefined
 
   const metaLines: string[] = []
   if (org) metaLines.push(org)

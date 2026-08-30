@@ -2,6 +2,7 @@ import type React from "react"
 import type { PptxIR, Slide } from "@/ir"
 import type { ComponentCtx } from "../components/types"
 import type { MenuParamValue } from "../themes/schema"
+import type { PageRenderContext } from "../render/page-context"
 
 /**
  * Props every layout receives（原 templates/types.ts 的 SvgTemplateProps，
@@ -12,6 +13,8 @@ export interface SvgTemplateProps {
   slide: Slide
   index: number
   ctx: ComponentCtx
+  /** Effective page-level motif and brand decisions resolved by FullSlideSvg. */
+  page?: PageRenderContext
   /** Values validated against this face's registry declaration at theme registration. */
   params?: Readonly<Record<string, MenuParamValue>>
 }

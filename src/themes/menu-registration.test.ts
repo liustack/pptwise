@@ -4,7 +4,9 @@ import { __resetRegisteredThemes, registerTheme } from "./definitions"
 import { CONSULTING_TOKENS } from "./builtin/consulting"
 
 const twoColumn = LAYOUT_REGISTRY["two-column"]!
+const ORPHAN_TAKEOVER_ID = "orphan-takeover"
 let originalParams: LayoutDefinition["params"]
+let originalSuppressMotif: LayoutDefinition["suppressMotif"]
 
 function file(id: string, params?: Record<string, string | number | boolean>) {
   return {
@@ -26,6 +28,7 @@ function file(id: string, params?: Record<string, string | number | boolean>) {
 
 beforeEach(() => {
   originalParams = twoColumn.params
+  originalSuppressMotif = twoColumn.suppressMotif
   twoColumn.params = {
     gutter: { type: "number", min: 16, max: 64 },
     columns: { type: "number", integer: true, min: 1, max: 2 },
@@ -36,10 +39,30 @@ beforeEach(() => {
 
 afterEach(() => {
   twoColumn.params = originalParams
+  twoColumn.suppressMotif = originalSuppressMotif
+  delete LAYOUT_REGISTRY[ORPHAN_TAKEOVER_ID]
   __resetRegisteredThemes()
 })
 
 describe("registerTheme menu parameter gate", () => {
+  it("rejects motif decor on a face that suppresses motifs", () => {
+    twoColumn.suppressMotif = true
+    const input = file("suppressed-motif")
+
+    expect(() => registerTheme({
+      ...input,
+      menu: {
+        ...input.menu,
+        content: {
+          points: {
+            face: "two-column",
+            decor: { kind: "motif", id: "gauge-motif" },
+          },
+        },
+      },
+    })).toThrow(/menu\.content\.points\.decor.*suppresses motifs/i)
+  })
+
   it("accepts a content menu entry backed by an image takeover face", () => {
     const input = file("photo-takeover")
     expect(() => registerTheme({
@@ -49,6 +72,24 @@ describe("registerTheme menu parameter gate", () => {
         content: { photo: { face: "image-split" } },
       },
     })).not.toThrow()
+  })
+
+  it("rejects a takeover face with no renderer dispatcher", () => {
+    LAYOUT_REGISTRY[ORPHAN_TAKEOVER_ID] = {
+      id: ORPHAN_TAKEOVER_ID,
+      kind: "takeover",
+      slideTypes: ["content"],
+      slots: [],
+    }
+    const input = file("orphan-takeover")
+
+    expect(() => registerTheme({
+      ...input,
+      menu: {
+        ...input.menu,
+        content: { photo: { face: ORPHAN_TAKEOVER_ID } },
+      },
+    })).toThrow(/menu\.content\.photo\.face.*no renderer dispatcher/i)
   })
 
   it("accepts values inside the selected face declarations", () => {

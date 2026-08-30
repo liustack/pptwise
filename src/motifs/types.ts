@@ -1,6 +1,7 @@
 import type React from "react"
 import type { PptxIR, Slide } from "@/ir"
 import type { ComponentCtx } from "../components/types"
+import type { PageRenderContext } from "../render/page-context"
 
 /**
  * Props for a motif（原 templates/types.ts 的 DecorProps）。与
@@ -11,6 +12,7 @@ export interface DecorProps {
   ir: PptxIR
   slide: Slide
   ctx: ComponentCtx
+  page?: PageRenderContext
 }
 
 /** Motif（原 per-theme Decor）：签名对齐 templates/types.ts 的 DecorProps，可为 null。 */
