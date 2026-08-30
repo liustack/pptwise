@@ -54,7 +54,7 @@ const META_FONT_SIZE = 16
  */
 const META_BASELINE = 663
 
-export function MastheadEnding({ ir, slide, ctx }: SvgTemplateProps) {
+export function MastheadEnding({ ir, slide, ctx, page }: SvgTemplateProps) {
   const { colors, fonts } = ctx
 
   const HEADING_LAST_BASELINE = 340
@@ -81,7 +81,7 @@ export function MastheadEnding({ ir, slide, ctx }: SvgTemplateProps) {
   const org = ir.meta.organization
   const contact = ir.meta.contact
   const contactText = contact ? [contact.name, contact.email].filter(Boolean).join(" · ") : null
-  const date = showsDocumentMeta(ir) ? ir.meta.date : undefined
+  const date = showsDocumentMeta(page, ir, slide) ? ir.meta.date : undefined
   const metaParts = [org, contactText, date].filter((v): v is string => Boolean(v))
 
   return (

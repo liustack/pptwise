@@ -8,7 +8,7 @@
 import type { PptxIR, Slide } from "@/ir"
 import { PACING_BUDGETS, resolveNarrative, type NarrativeProfile, type Pacing } from "@/narrative"
 import { CAPACITY } from "../audit/capacity"
-import { resolveEffectiveLayoutBodyCapacity } from "./layout-selection"
+import { resolveEffectiveFace, resolveEffectiveLayoutBodyCapacity } from "./layout-selection"
 import { measureTextUnits } from "../lib/svg-text-layout"
 import { buildChartModel } from "../components/chart-model"
 
@@ -32,6 +32,8 @@ export type QualityIssue = {
     pacingBudget: number
     layoutId: string | null
     layoutCapacity: number | undefined
+    slotName?: string
+    unit?: "components" | "items"
   }
   /** `code: "bullets_overflow"` / `"bullet_item_long"` only — the resolved
    * pacing's bullets budget (spec §5 pacing table), for the same
@@ -218,6 +220,33 @@ function checkSlide(ir: PptxIR, slide: Slide, index: number, resolvedAxes: Narra
           layoutCapacity,
         },
       })
+    }
+
+    const effective = resolveEffectiveFace(ir, slide)
+    const itemCapacitySlot = effective.layout?.slots.find(
+      (slot) => slot.capacity !== undefined && slot.capacityUnit === "items" && slot.accepts !== "any",
+    )
+    if (itemCapacitySlot?.capacity !== undefined && itemCapacitySlot.accepts !== "any") {
+      const itemCount = slide.components
+        .filter((component) => itemCapacitySlot.accepts.includes(component.type))
+        .reduce((count, component) => count + ("items" in component ? component.items.length : 0), 0)
+      if (itemCount > itemCapacitySlot.capacity) {
+        issues.push({
+          slide: index,
+          severity: "warn",
+          code: "density",
+          message: `每页至多 ~${itemCapacitySlot.capacity} 个标注，建议精简`,
+          density: {
+            limit: itemCapacitySlot.capacity,
+            pacing: resolvedAxes.pacing,
+            pacingBudget: budget.maxComponentsPerSlide,
+            layoutId: effective.layoutId,
+            layoutCapacity: itemCapacitySlot.capacity,
+            slotName: itemCapacitySlot.name,
+            unit: "items",
+          },
+        })
+      }
     }
   }
 

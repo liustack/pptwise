@@ -54,15 +54,15 @@ const SUBTITLE_SIZE = 23
 const BYLINE_Y = 546
 const BYLINE_SIZE = 17
 
-export function HeaderBandCover({ ir, slide, ctx }: SvgTemplateProps) {
+export function HeaderBandCover({ ir, slide, ctx, page }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const bg = ctx.defaultBg ?? colors.bg
   const onBand = readableOn(colors.primary)
   const metaFill = metaInk(blendOver(onBand, colors.primary, META_ALPHA), colors.primary)
 
   const org = ir.meta.organization
-  const date = showsDocumentMeta(ir) ? ir.meta.date : undefined
-  const conf = showsDocumentMeta(ir) ? ir.meta.confidentiality : undefined
+  const date = showsDocumentMeta(page, ir, slide) ? ir.meta.date : undefined
+  const conf = showsDocumentMeta(page, ir, slide) ? ir.meta.confidentiality : undefined
   const confLabel = conf ? CONF_LABEL[conf] : null
   const author = ir.meta.authors?.[0]
   const authorText = author ? [author.name, author.role].filter(Boolean).join(" · ") : null

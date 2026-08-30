@@ -61,11 +61,11 @@ const COLOPHON_Y = 600
 const COLOPHON_SIZE = 18
 const COLOPHON_MAX_W = 1040
 
-export function DoubleFrameCover({ ir, slide, ctx }: SvgTemplateProps) {
+export function DoubleFrameCover({ ir, slide, ctx, page }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const bg = ctx.defaultBg ?? colors.bg
   const org = ir.meta.organization
-  const date = showsDocumentMeta(ir) ? ir.meta.date : undefined
+  const date = showsDocumentMeta(page, ir, slide) ? ir.meta.date : undefined
   const author = ir.meta.authors?.[0]
   const authorText = author ? [author.name, author.role].filter(Boolean).join(" · ") : null
   const headingSource = slide.heading ?? ""

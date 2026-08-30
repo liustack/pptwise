@@ -268,10 +268,14 @@ export interface LayoutSlot {
   name: SlotName
   /** component type names this slot accepts, or "any" */
   accepts: readonly string[] | "any"
+  /** Authored content must provide at least one component accepted by this slot. */
+  required?: true
   /** declarative editorial capacity — how many components this slot holds. W3's
    *  min(pacing editorial budget, layout capacity) gate is the consumer —
    *  absent = frame slot, not subject to counting. */
   capacity?: number
+  /** Capacity counts components unless the renderer consumes items within one component. */
+  capacityUnit?: "components" | "items"
   /** for image slots: today's two coexisting conventions (inventory §variant 速查) */
   selection?: "first" | "all"
 }

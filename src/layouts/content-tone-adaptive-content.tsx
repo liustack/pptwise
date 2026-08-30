@@ -167,7 +167,7 @@ const KICKER_FONT_SIZE = 22
  */
 const KICKER_BASELINE = TITLE_ZONE_TOP + KICKER_FONT_SIZE
 
-export function ToneAdaptiveContent({ ir, slide, index, ctx }: SvgTemplateProps) {
+export function ToneAdaptiveContent({ ir, slide, index, ctx, page }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const withBg = hasBgImage(ir, slide)
   const section = sectionNameFor(ir.slides, index)
@@ -223,7 +223,7 @@ export function ToneAdaptiveContent({ ir, slide, index, ctx }: SvgTemplateProps)
             dominantBaseline="alphabetic"
           >
             {[
-              showsDocumentMeta(ir) && ir.meta.confidentiality
+              showsDocumentMeta(page, ir, slide) && ir.meta.confidentiality
                 ? CONF_LABEL[ir.meta.confidentiality]
                 : null,
               ir.meta.organization,
@@ -454,7 +454,7 @@ export function ToneAdaptiveContent({ ir, slide, index, ctx }: SvgTemplateProps)
           dominantBaseline="alphabetic"
         >
           {[
-            showsDocumentMeta(ir) && ir.meta.confidentiality
+            showsDocumentMeta(page, ir, slide) && ir.meta.confidentiality
               ? CONF_LABEL[ir.meta.confidentiality]
               : null,
             ir.meta.organization,

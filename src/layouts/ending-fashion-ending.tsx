@@ -13,9 +13,9 @@ import { showsDocumentMeta } from "../render/document-meta"
  * 自适应。兜底纪律沿 ending 家族先例：heading 缺省才兜底文案。
  * 纪律：零 theme id、零 hex（readableOn 中性黑白豁免），颜色来自 ctx。
  */
-export function FashionEnding({ ir, slide, ctx }: SvgTemplateProps) {
+export function FashionEnding({ ir, slide, ctx, page }: SvgTemplateProps) {
   const org = ir.meta.organization
-  const date = showsDocumentMeta(ir) ? ir.meta.date : undefined
+  const date = showsDocumentMeta(page, ir, slide) ? ir.meta.date : undefined
   const fg = readableOn(ctx.colors.primary)
   // 顶部 org 小字与底部 meta 行各自固定叠 0.72 / 0.6 不透明度，混到满版
   // primary 底上就可能跌破正文的 4.5:1——`chapter-fashion-chapter.tsx` 的

@@ -120,6 +120,9 @@ function describeQualityIssue(issue: QualityIssue): string {
       // of this file's `?.`/`??` guards); never actually hit.
       if (!d) return "too many components on this slide — split into multiple slides"
       const { limit, pacing, pacingBudget, layoutId, layoutCapacity } = d
+      if (d.unit === "items" && d.slotName !== undefined) {
+        return `too many ${d.slotName} items (max ${limit} — ${layoutId} layout's ${d.slotName} capacity is ${layoutCapacity}) — trim them or split into multiple slides`
+      }
       if (layoutCapacity === undefined || layoutCapacity === pacingBudget) {
         // No geometric term because the face has no body capacity, or it
         // agrees with the editorial budget. Nothing extra
@@ -295,13 +298,47 @@ function checkFullBodyExclusivity(ir: PptxIR): ValidationIssue[] {
   return errors
 }
 
-/** The face bound by the theme menu makes every boundary surface knowable. */
+/** Resolve the component surface that actually paints a boundary page. */
 function boundBoundaryLayout(ir: PptxIR, slide: PptxIR["slides"][number]) {
-  return resolveEffectiveFace(ir, slide).layout
+  const effective = resolveEffectiveFace(ir, slide)
+  return effective.route === "image-cover" ? undefined : effective.layout
 }
 
 function layoutAcceptsComponent(layout: LayoutDefinition, componentType: string): boolean {
   return layout.slots.some((slot) => slot.accepts === "any" || slot.accepts.includes(componentType))
+}
+
+/** Content components must satisfy the slots of the exact resolved render surface. */
+function checkContentPageSlots(ir: PptxIR): ValidationIssue[] {
+  const errors: ValidationIssue[] = []
+  ir.slides.forEach((slide, i) => {
+    if (slide.placeholder || slide.type !== "content") return
+    const layout = resolveEffectiveFace(ir, slide).layout
+    if (!layout) return
+    for (const slot of layout.slots) {
+      if (slot.required !== true || slot.accepts === "any") continue
+      const present = slide.components.some((component) => slot.accepts.includes(component.type))
+      if (present) continue
+      const expected = slot.accepts.join(" or ")
+      errors.push({
+        path: `slides.${i}.components`,
+        page: i + 1,
+        ...(slide.id !== undefined ? { slideId: slide.id } : {}),
+        message: `layout "${layout.id}" requires an ${expected} component for its ${slot.name} slot`,
+      })
+    }
+    const unsupported = slide.components.filter((component) => !layoutAcceptsComponent(layout, component.type))
+    if (unsupported.length > 0) {
+      const types = [...new Set(unsupported.map((component) => component.type))].join(", ")
+      errors.push({
+        path: `slides.${i}.components`,
+        page: i + 1,
+        ...(slide.id !== undefined ? { slideId: slide.id } : {}),
+        message: `layout "${layout.id}" does not render ${types} components`,
+      })
+    }
+  })
+  return errors
 }
 
 /**
@@ -673,6 +710,8 @@ export function validateIr(input: unknown): ValidateResult {
   }
   const menuFaceErrors = checkThemeMenuFaces(r.data)
   if (menuFaceErrors.length > 0) return withNormalized({ ok: false, errors: menuFaceErrors })
+  const contentSlotErrors = checkContentPageSlots(r.data)
+  if (contentSlotErrors.length > 0) return withNormalized({ ok: false, errors: contentSlotErrors })
   const fullBodyErrors = checkFullBodyExclusivity(r.data)
   if (fullBodyErrors.length > 0) return withNormalized({ ok: false, errors: fullBodyErrors })
   const boundaryPageErrors = checkBoundaryPageContent(r.data)

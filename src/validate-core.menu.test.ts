@@ -73,7 +73,7 @@ describe("IR validation against the bound theme menu", () => {
     expect(result.ok).toBe(true)
   })
 
-  it("uses the bound cover face for slots even when an asset background takes over rendering", () => {
+  it("rejects bound-face components when the image-cover surface takes over rendering", () => {
     const id = "boundary-menu-image-cover"
     installTheme(id, BASE_MENU)
 
@@ -87,7 +87,13 @@ describe("IR validation against the bound theme menu", () => {
       }),
     )
 
-    expect(result.ok).toBe(true)
+    expect(result.ok).toBe(false)
+    expect(result.errors[0]).toMatchObject({
+      path: "slides.0",
+      page: 1,
+      slideId: "cover",
+    })
+    expect(result.errors[0]?.message).toContain("do not render components")
   })
 
   it("rejects cover components absent from the menu-bound cover face", () => {
@@ -133,5 +139,96 @@ describe("IR validation against the bound theme menu", () => {
       slideId: "content",
     })
     expect(result.errors[0]?.message).toContain("points")
+  })
+
+  it.each(["image-top", "image-bottom", "image-split", "image-annotate"] as const)(
+    "requires an image component for the %s takeover surface",
+    (face) => {
+      const id = `required-${face}`
+      installTheme(id, {
+        ...BASE_MENU,
+        content: { photo: { face } },
+      })
+
+      const result = validateIr(
+        deck(id, {
+          id: "photo",
+          type: "content",
+          kind: "photo",
+          heading: "Photo story",
+          components: [{ type: "paragraph", text: "Body without a photo" }],
+        }),
+      )
+
+      expect(result.ok).toBe(false)
+      expect(result.errors[0]).toMatchObject({
+        path: "slides.0.components",
+        page: 1,
+        slideId: "photo",
+      })
+      expect(result.errors[0]?.message).toContain(`layout "${face}" requires an image component`)
+    },
+  )
+
+  it("reports image-annotate items beyond its annotation capacity as density", () => {
+    const id = "annotation-capacity"
+    installTheme(id, {
+      ...BASE_MENU,
+      content: { photo: { face: "image-annotate" } },
+    })
+
+    const result = validateIr(
+      deck(id, {
+        id: "annotated-photo",
+        type: "content",
+        kind: "photo",
+        heading: "Five observations",
+        components: [
+          { type: "image", asset_id: "hero", fit: "cover" },
+          { type: "bullets", items: ["One", "Two", "Three", "Four", "Five"] },
+        ],
+      }),
+    )
+
+    expect(result.ok).toBe(true)
+    expect(result.warnings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          path: "slides.0",
+          page: 1,
+          slideId: "annotated-photo",
+          message: expect.stringContaining('image-annotate layout\'s annotation capacity is 4'),
+        }),
+      ]),
+    )
+  })
+
+  it("rejects a content component that the resolved takeover surface has no slot for", () => {
+    const id = "annotation-component-contract"
+    installTheme(id, {
+      ...BASE_MENU,
+      content: { photo: { face: "image-annotate" } },
+    })
+
+    const result = validateIr(
+      deck(id, {
+        id: "annotated-photo",
+        type: "content",
+        kind: "photo",
+        heading: "Unsupported prose",
+        components: [
+          { type: "image", asset_id: "hero", fit: "cover" },
+          { type: "paragraph", text: "The annotation surface has no body slot." },
+        ],
+      }),
+    )
+
+    expect(result.ok).toBe(false)
+    expect(result.errors[0]).toMatchObject({
+      path: "slides.0.components",
+      page: 1,
+      slideId: "annotated-photo",
+    })
+    expect(result.errors[0]?.message).toContain('layout "image-annotate" does not render paragraph components')
   })
 })

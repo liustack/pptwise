@@ -22,6 +22,7 @@ import {
 import { textInkBox } from "./depth-contract/geometry"
 import { resolveMotifId } from "./motif-selection"
 import type { PptxIR, Slide } from "@/ir"
+import { slideToRender } from "./render-slide"
 
 let testThemeSerial = 0
 
@@ -369,6 +370,16 @@ describe("asset background auto scrim (image-layouts P1)", () => {
       (t) => t.textContent === "压图封面" && t.getAttribute("fill") === "#FFFFFF",
     )
     expect(whiteTitle).not.toBeUndefined()
+  })
+
+  it("marks components ignored by the image-cover surface as dropped", () => {
+    const slide: Slide = {
+      ...bgSlide,
+      components: [{ type: "bullets", items: ["Bound face content"] }],
+    }
+    const doc: PptxIR = { ...withAsset("academic"), slides: [slide] }
+
+    expect(slideToRender(doc, slide, 0).dropped).toBe(1)
   })
 
   it("design theme content page keeps the frosted page-color scrim", () => {
@@ -1045,5 +1056,24 @@ describe("deck branding posture vs theme motif", () => {
     const markup = renderSvgMarkup(<FullSlideSvg ir={full} slide={pinnedContent} index={0} />)
     expect(markup).toContain('y1="664"')
     expect(markup).toContain("ACME")
+  })
+
+  it("uses the effective brand silence when sizing the lecture frame", () => {
+    const slide: Slide = {
+      type: "content",
+      kind: "statement",
+      heading: "A structural statement",
+      components: [],
+    }
+    const doc: PptxIR = {
+      ...ir([slide]),
+      theme: { id: "lecture" },
+      branding: "full",
+    }
+    const { container } = render(<FullSlideSvg ir={doc} slide={slide} index={0} />)
+    const frame = container.querySelector('[data-decor-piece="frame"] rect')
+
+    expect(frame?.getAttribute("height")).toBe(String(694 - 26))
+    expect(container.querySelector('line[y1="664"]')).toBeNull()
   })
 })
