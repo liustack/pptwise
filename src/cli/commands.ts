@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto"
-import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises"
+import { mkdir, open, readFile, rename, rm, writeFile } from "node:fs/promises"
 import { basename, dirname, join, relative, resolve } from "node:path"
 import {
   formatIssues,
@@ -915,15 +915,36 @@ async function themeFileFromResolved(resolved: ResolvedTheme, identity: { id: st
 async function writeThemeFile(path: string, file: ThemeFile, force = false): Promise<void> {
   const dir = dirname(path)
   await mkdir(dir, { recursive: true })
-  if (!force && (await pathExists(path))) {
-    throw new PptwiseError(`theme file already exists: ${path}. Pass --force to overwrite.`)
+
+  let claimed = false
+  if (!force) {
+    let opened = false
+    try {
+      const handle = await open(path, "wx")
+      opened = true
+      try {
+        await handle.close()
+      } catch (error) {
+        await rm(path, { force: true })
+        throw error
+      }
+      claimed = true
+    } catch (error) {
+      if (!opened && (error as NodeJS.ErrnoException).code === "EEXIST") {
+        throw new PptwiseError(`theme file already exists: ${path}. Pass --force to overwrite.`)
+      }
+      throw error
+    }
   }
-  const tmp = join(dir, `.${basename(path)}.${randomBytes(8).toString("hex")}.tmp`)
+
+  let tmp: string | undefined
   try {
+    tmp = join(dir, `.${basename(path)}.${randomBytes(8).toString("hex")}.tmp`)
     await writeFile(tmp, JSON.stringify(file, null, 2) + "\n")
     await rename(tmp, path)
   } catch (error) {
-    await rm(tmp, { force: true })
+    if (tmp !== undefined) await rm(tmp, { force: true })
+    if (claimed) await rm(path, { force: true })
     throw error
   }
 }

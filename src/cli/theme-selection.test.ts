@@ -203,4 +203,19 @@ describe("theme selection chain", () => {
     await writeFile(specPath, JSON.stringify(makeDeckPlan({ theme: "acme" })))
     await expect(runSpecValidate(specPath)).resolves.toMatch(/theme "acme"/)
   })
+
+  it("does not register a mismatched deck theme through the validation wrapper", async () => {
+    const deckDir = await writeDeckDir(makeDeckPlan({ theme: "acme" }))
+    await extractTheme(deckDir, "other", "theme.json")
+
+    await expect(runValidate(deckDir, await projectWith(undefined))).rejects.toThrow(/unknown theme "acme"/)
+    expect(() => getThemeDefinition("other")).toThrow(/unknown theme "other"/)
+  })
+
+  it("reports a missing spec theme before reading a malformed deck theme file", async () => {
+    const deckDir = await writeDeckDir(makeDeckPlan({ theme: undefined }))
+    await writeFile(join(deckDir, "theme.json"), "{ malformed theme")
+
+    await expect(runValidate(deckDir, await projectWith(undefined))).rejects.toThrow(/pptwise theme new --from/)
+  })
 })

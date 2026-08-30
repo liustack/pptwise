@@ -84,6 +84,24 @@ describe("runThemeNew", () => {
     expect(rewritten.id).toBe("acme")
     expect(rewritten.menu.cover.decor?.id).toBe("lecture-motif")
   })
+
+  it("allows exactly one concurrent writer to claim a new target without --force", async () => {
+    const cwd = await tmp("pptwise-theme-new-race-")
+    const out = join(cwd, "themes", "acme.theme.json")
+
+    const results = await Promise.allSettled([
+      runThemeNew({ from: "consulting", output: out, id: "acme", cwd }),
+      runThemeNew({ from: "lecture", output: out, id: "acme", cwd }),
+    ])
+
+    expect(results.filter((result) => result.status === "fulfilled")).toHaveLength(1)
+    const rejected = results.find((result) => result.status === "rejected")
+    expect(rejected).toBeDefined()
+    if (rejected?.status === "rejected") expect(String(rejected.reason)).toMatch(/--force/)
+
+    const written = JSON.parse(await readFile(out, "utf8")) as { version: number; id: string }
+    expect(written).toMatchObject({ version: 2, id: "acme" })
+  })
 })
 
 describe("runThemeFork", () => {

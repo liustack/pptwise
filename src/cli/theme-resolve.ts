@@ -228,16 +228,14 @@ export async function assertThemeRebind(deckDir: string | undefined, resolved: R
   throw new PptwiseError(`cannot rebind theme "${bound.id}" to "${nextId}": menus differ. ${REBIND_SUFFIX}`)
 }
 
-/** Register a deck-local theme.json (fail-loud) and resolve `name` so
- *  `getInstalledThemeIds` sees a custom id before spec/IR validation. */
+/** Resolve and register the requested theme through the ordinary lookup
+ * route. A missing authored name wins before any adjacent theme file is
+ * read. A deck-local theme.json is installed only when its id matches the
+ * requested name. */
 export async function registerThemeSelection(
   name: string | undefined,
   opts: { startDir: string; deckDir?: string },
 ): Promise<ResolvedTheme | undefined> {
-  if (opts.deckDir !== undefined) {
-    const boundPath = join(opts.deckDir, THEME_FILENAME)
-    if (await pathExists(boundPath)) await loadThemeFile(boundPath)
-  }
   if (name === undefined || name.length === 0) return undefined
   return resolveThemeByName(name, opts)
 }
