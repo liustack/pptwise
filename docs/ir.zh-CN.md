@@ -1,142 +1,158 @@
 ---
-summary: 'IR 详解：deck 与 slide 的字段、满幅组件、叙事三轴、版式选型与 seed，以及 deck 项目目录格式'
+summary: 'IR v5：deck 字段、内容页必填 kind、页面字段、组件、资产、叙事 pacing、品牌，以及选型字段的严格删除'
 read_when:
-  - 手写 IR，或要教模型写 IR
-  - 某个字段名或版本号在校验时被拒
-  - 在单文件 IR 和 deck 项目目录之间做选择
-  - 某页选到了意外的版式，或者版式在多次修订之间乱跳
+  - 编写或验证裸 IR 文件
+  - 某个字段、页面 kind、组件或版本被拒绝
+  - 在裸 IR 与 deck 项目之间选择
+  - 确认哪些语义字段会进入渲染
 ---
 
-# IR
+# IR v5
 
-IR 是一份描述整份 PPT 内容的 JSON 文件：有哪些页、每页上有什么、整体用哪个主题。agent 写的就是它，`pptwise render` 需要的输入也只有它。
+IR 是 pptwise 的类型化语义输入。版本 5 描述 deck 说什么、绑定哪个主题，以及每张页面由哪些组件填充。它不保存脸的选择或随机状态。
 
-运行 `pptwise schema` 获取完整 JSON Schema，让模型写 IR 之前先把它喂进去。
+```json
+{
+  "version": "5",
+  "filename": "hello.pptx",
+  "narrative": "general",
+  "theme": { "id": "consulting" },
+  "meta": { "organization": "Acme", "date": "2026-08-30" },
+  "assets": { "images": {} },
+  "slides": [
+    {
+      "type": "cover",
+      "heading": "Hello pptwise",
+      "subheading": "A native editable deck"
+    },
+    {
+      "type": "content",
+      "kind": "points",
+      "heading": "Why it works",
+      "components": [
+        {
+          "type": "bullets",
+          "items": ["Semantic input", "Theme-menu lookup", "Editable PowerPoint output"]
+        }
+      ]
+    },
+    { "type": "ending", "heading": "Thanks" }
+  ]
+}
+```
 
-## 一份 deck
+应查询当前安装的 schema，不要盲目复制示例：
 
-一份 deck（`PptxIR`）包含：
+```bash
+pptwise schema > ir.schema.json
+pptwise validate deck.json
+```
 
-- `version`：现为 `"4"`，省略时默认就是它。
-- `filename`。
-- `narrative`：预设 id 字符串，或部分轴对象（见[叙事](#叙事)）。
-- `theme`：`id` 加可选的 `style`/`brand` 覆盖。
-- `meta` 与 `assets`。
-- `brand`：logo 位置。
-- `branding`：品牌页脚和 logo 出现在哪些页。`"cover-only"` 只留 logo 在 cover 和 chapter 页，content 和 ending 页不画页脚细线、meta 和 logo。`"full"` 是显式声明，内容页画出页脚和 logo，密级和日期也上封面和收束页的 meta 行。其余姿态即使 `meta` 里写了这两项也不画。`"minimal"` 关掉内容页的页脚细线和 meta，logo 留下。省略等于 `"cover-only"`。版式 `branding: "none"` 仍优先。主题 motif 不受这个字段影响。默认省略。只有每一页内容页都需要品牌页脚时才写 `"full"`。
-- `slides`：必填，有序。
+## 顶层字段
 
-除 `slides` 外都可省略，且都有合理默认值。
+| field | 结构 | 含义 |
+| --- | --- | --- |
+| `version` | `"5"` | 唯一接受的 IR 版本。省略时按 v5 处理。 |
+| `filename` | string | 输出文件名，默认 `presentation`。 |
+| `narrative` | 预设字符串或部分三轴 | 论证、节奏与受众决定。 |
+| `theme` | object | 绑定主题 id，以及可选的底层 style 或 brand 覆盖。默认 `consulting`。 |
+| `meta` | object | 机构、作者、日期、版本、保密级别、联系信息、版权与动画。 |
+| `assets` | object | `assets.images` 下的命名图片来源。 |
+| `brand` | object | Deck logo 的资产 id 与角落位置。 |
+| `branding` | enum | `full`、`cover-only` 或 `minimal`。省略等于 `cover-only`。 |
+| `slides` | array | 有序页面。 |
 
-`assets` 的形状是 `{ images: { [id]: { src, alt? } } }`。component 通过 `asset_id` 引用图片，同一张图可以在多页复用而不必重复内嵌。`alt` 一旦设置，会落进导出 PPTX 里该图片的标准无障碍描述槽位，也就是 PowerPoint「编辑替换文字」面板读写的那一栏。资产没写 `alt` 的 `image` 组件，导出结果和这个字段存在之前完全一致。
+根对象是严格结构，未知字段会让验证失败。
 
-一份 deck 还可以携带 `seed`：一个整数，让自动选型的版式在多次修订之间保持稳定（见[版式选型](#版式选型)）。
+## 页型与页面字段
 
-## 一张 slide
+四种页型是 `cover`、`chapter`、`content` 与 `ending`。省略 `type` 时按 content 处理，因此仍然必须填写 `kind`。
 
-每张 slide 有：
+通用页面字段包括：
 
-- `type`：`cover`、`chapter`、`content`、`ending`。
-- `layout`：显式指定的页面版式 id，恒优先于自动选型。省略则由 pptwise 自动选。
-- `arrangement`：content 页正文的排布方式，例如 `two_column`、`kpi_focus`。
-- `components`：填充页面的带类型单元（`bullets`、`kpi_cards`、`image`、`chart` 等）。
+- `id`，可选的稳定页面标识
+- `placeholder: true`，通常由未完成的 deck 项目产生
+- `heading` 与 `subheading`
+- `components`
+- `background`
+- `decor`，一个受控的局部装饰原语
+- `image_side`，支持该偏好的脸可读取 `left` 或 `right`
+- `footnote`
+- `notes`，导出为原生演讲者备注
 
-任意 slide 还可以设置稳定的 `id`（spec 的页面和校验报错都靠它引用）、`placeholder: true`（还没有内容的占位页，由 `assemble` 为 spec 里没人填写的页面注入，内容质量检查会跳过它，`render` 也会因它拒绝导出，除非加 `--draft`），以及 `notes`（同义词 `note`/`speaker_notes`/`speakerNotes`），导出为原生 PowerPoint 演讲者备注。备注只给主讲人自己看，不会画到幻灯片画布上，也不计入任何版式容量。讲稿写进 `notes`。agent 操作手册里的稀排页合同（`skills/pptwise/SKILL.md`）是这条规则。如果文件必须作为文档独立站住，把多出来的字写进 notes，或者改用 PDF。
+只有内容页携带 `kind`，边界页不携带。边界页组件只有在主题菜单绑定的脸声明兼容槽位时才会渲染。输出前会按实际脸验证内容。
 
-## 会漂移的字段名
+## 内容页 kind
 
-跨 component 类型共 55 组同义词，例如 kpi 的 `title`→`label`、blockquote 的 `content`→`text`、swot 的 `strength`→`strengths`、bmc 的 `partners`→`key_partners`，都会在校验时静默改写成规范名。`validate`/`render`/`preview` 会打印一条改了什么的提示，从不因此报错。
+每张内容页必须且只能有一个 kind。kind 命名页面的语义动作，永远不从组件反推。
 
-这套救援只覆盖弱模型的同义词漂移，不覆盖 v4 之前的旧词汇。标着 v4 却仍写 `scenario`（而不是 `narrative`）、`mode`/`delivery`（而不是 `strategy`/`pacing`）、或轴值还停留在旧的 `narrative`/`text`/`presentation` 的文档，会直接硬报错，并列出当前正确的名称和取值。显式写 `version: "3"`（或 `"2"`）同样硬拒绝，并给出迁移指引。
+| kind | 何时使用 | 最近边界 |
+| --- | --- | --- |
+| `points` | 论证按不可调换的顺序推进。 | 可换序并列项属于 `list`。 |
+| `list` | 并列条目可以换序。 | 有顺序的论证属于 `points`。 |
+| `comparison` | 方案或维度需要直接对照。 | 方向属于 `process`，包含属于 `hierarchy`。 |
+| `process` | 步骤、时间或闭环具有方向。 | 没有运动关系的有序论点属于 `points`。 |
+| `data` | 一组数字、图表或表格是主角。 | 一个数字承担整页时用 `fact`。 |
+| `photo` | 图像本身就是内容。 | 展品为断言服务时用 `evidence`。 |
+| `statement` | 作者自己的立论需要占据整页。 | 有外部归属的话属于 `quote`。 |
+| `quote` | 页面中心是他人或外部来源的话。 | 作者自己的立论属于 `statement`。 |
+| `fact` | 一个数字就是全部信息。 | 要读出结构的一组数字属于 `data`。 |
+| `evidence` | 一个断言配一件支持它的展品。 | 独立存在的图像属于 `photo`。 |
+| `hierarchy` | 页面表达包含、层级或组成关系。 | 先后属于 `process`，并排对照属于 `comparison`。 |
 
-## 满幅组件
+已绑定主题可以只提供词表子集。请求菜单外 kind 会硬报错，并列出可用讲法。
 
-八种 component 类型独占整张 slide 的内容区域，必须是该页唯一的 component：
+## 不存在的字段
 
-- `swot`：strengths/weaknesses/opportunities/threats 四象限。
-- `bmc`：九宫格商业模式画布。
-- `waterfall`：运行合计瀑布图。
-- `gantt`：共享数轴上的甘特条形图。
-- `pest`：政治/经济/社会/技术宏观环境扫描。
-- `five_forces`：波特五力竞争结构轮辐图。
-- `heatmap`：值驱动色阶网格。
-- `sankey`：分层且量值成比例的流向图，导出为原生可编辑矢量，而不是这类图表在别处常见的栅格图片。
+IR v5 没有 `seed`、`layout`、`beat` 或 `arrangement`，也不接受这些字段的别名。
 
-混入其他 component 会在校验时报错，而不是静默丢弃。
+- Spec 选择 `kind`。
+- 主题菜单把 kind 映射到一张脸。
+- 脸根据填入的组件自适应几何。
+- 渲染无需保存随机状态也能保持确定性。
 
-## schema 稳定性
-
-v4 IR schema 自 0.4.0 起冻结，后续演进只走加法：新增可选字段、新增枚举值。任何破坏性变更都会启用新的顶层 `version` 值，并沿用 v3 那套硬拒绝加迁移提示的处理方式。
-
-`pptwise migrate <v3-file.json> -o <out.json>` 确定性地把 v3 文件转成 v4，做字段改名，以及 v4 遗留改写：`chrome` → `branding`、`bloom` → `classroom`、`logo_wall` → `image_grid`、`banner-heading` → `two-column`。`deck.plan.json` → `deck.spec.json` 的姊妹转换见 [Deck 项目](#deck-项目)。
+旧 IR 版本与退役字段会被拒绝，并说明当前格式要求。没有迁移命令，应把源输入重写为 v5。
 
 ## 叙事
 
-叙事（narrative）是三条轴，独立于主题的视觉风格，用来定编辑纪律：
+可以使用命名预设，也可以写三轴中的任意部分：
 
-- `strategy`：论证方式，`pyramid`、`storytelling`、`instructional`、`showcase`、`briefing`。
-- `pacing`：内容密度，`dense`、`balanced`、`spacious`。
-- `audience`：语气锚点，`executive`、`technical`、`customer`、`public`，目前无渲染效果。
-
-把 IR 顶层的 `narrative` 设为具名预设字符串（如 `"boardroom-report"`），或部分轴对象（如 `{ "pacing": "spacious" }`）。省略任意一轴、或整个省略 `narrative` 字段，均回落到 `general` 预设（`briefing` × `balanced` × `public`）。未知的预设名或轴值会硬报错并列出可用项。
-
-`pacing` 驱动内容质量门，也驱动正文字号基线（仅 paragraph/bullets/callout 三件套，其余组件各自的字阶与标题体系不受影响）。每页的 component 数预算与 bullets 预算随 `pacing` 从 `dense` 向 `spacious` 收紧，正文字号则反向增长。密度上限还会再叠加所选 layout 的容量，取两者中更紧的一个。
-
-| pacing | 正文字号 | 每页 component 数 | bullets |
-|---|---|---|---|
-| `dense` | 24px（18pt） | 5 | 至多 6 条，每条约 27 字 |
-| `balanced`（默认） | 24px（18pt） | 4 | 至多 5 条，每条约 25 字 |
-| `spacious` | 32px | 3 | 至多 4 条，每条约 22 字 |
-
-这些是编辑性指导，不是硬限制，`validate` 只报成警告，仍然校验通过。真正能拦下生成的只有渲染安全上限。
-
-正文不会收缩到 24px（18pt）以下。说明、注脚、刻度等次要文字不会收缩到 16px（12pt）以下。一条内容在这个地板字号下仍然放不下，会是一条硬校验错误。渲染器不画省略号。
-
-`pptwise validate` 会报出每页实际生效的具体数值。`pptwise narratives [--json]` 列出全部具名预设（各自带一份软性 theme 推荐，仅供参考，不构成约束）及三轴的原始数据表。
-
-## 版式选型
-
-当某页省略 `layout` 时，pptwise 按四个确定性步骤自动选型：
-
-1. 从所选主题为该页型编译出的 face pool 开始。partial 自定义主题从 `base` 继承这条边界，complete 自定义主题自己声明四类 pool。共享 registry 有 43 个可自动选择的标准版式，另有 87 个 pin-only 标准版式。见[主题](./themes.zh-CN.md)。
-2. 按已解析 strategy 应用少见的 `narrativesOnly` 硬过滤。
-3. 用 `Math.max` 合并 strategy、可选页级 `beat` 与主题 tendency，再按 seed 加权取样。
-4. 如果结果与紧邻上一页重复，且还有别的候选，就排除重复 id 后确定性重抽一次。
-
-显式 `layout` 跳过以上四步，但主题不提供的稀排高潮钉（`SPARSE_LAYOUT_IDS`）除外：`effectiveRequestedLayout` 会剥掉它，自动选型继续跑，`validate` 给出警告，`ok` 仍为 true。`quote-stage` 是 pin-only，但不是稀排。内容装不装得下由 `validate` 的密度门单独标记，从不参与选型，所以改一页的内容不会悄悄翻转它的版式。
-
-选型本身完全确定：同一份 IR 永远选出同一个结果，预览与最终渲染绝不会不一致。但要在**多次修订之间**保持稳定（改一页不搅动其余页的自动选型），还需要一个持久化的 `seed`，按以下顺序解析：
-
-1. 显式 `ir.seed`，完全修订稳定，恒优先。
-2. deck 项目自己的 seed。spec 省略 `seed` 时，`pptwise assemble` 首次运行会用 spec 的 filename 加页面 id 列表派生一个并打印出来，把这个值写进 `deck.spec.json` 的 `seed` 字段即可固化。
-3. 以上均未设置：回落到 `filename` 加每页 `heading` 的内容哈希。改动任何一页标题都会重排全 deck 的自动选型。
-
-`pptwise assemble` 还会把每一页的自动选型结果写回合并后的 `deck.json`（页面文件里已显式指定的 `layout` 不受影响），CLI 会提示本次填写了多少页。
-
-这套机制的实现细节见 [`selection-and-seed.md`](./selection-and-seed.md)（英文）。
-
-## Deck 项目
-
-一份 deck 有两种写法，接受 IR 的每个命令两种都认：单个 **IR JSON 文件**（如上文所述），或者一个 **deck 项目目录**，把同样的内容拆到多个文件里，方便 agent 先规划整体结构，再逐页撰写和修订，而不必把一份不断增长的 JSON 塞进上下文。
-
-```
-my-deck/
-  deck.spec.json         锁定的 spec：每一页的顺序、type、heading
-  theme.json             可选的版本 1 自定义主题，项目自动注册
-  pages/<page-id>.json   每个已填页面一个文件（components/layout/arrangement/background/image_side/footnote/notes）
-  assets/                本地图片，按文件名自动注册（图片 id = 去掉扩展名的文件名）
+```json
+{ "strategy": "pyramid", "pacing": "spacious", "audience": "executive" }
 ```
 
-`deck.spec.json` 可以在任何页面填写之前单独校验：`pptwise spec validate deck.spec.json` 检查 schema，以及一组随 strategy 变化的硬门（边界页类型、标题长度、beat 轮换、页数是否匹配 pacing）。
+有效值如下：
 
-spec 里某一页如果没有对应的 `pages/<id>.json`，会成为一个**占位页**，只有标题，不算缺失，所以写到一半的 deck 也能正常 assemble 和预览。`pptwise render` 遇到未填的占位页会拒绝导出，除非加 `--draft`。`pptwise preview` 则永远不会因占位页被拦。
+- `strategy`：`pyramid`、`storytelling`、`instructional`、`showcase`、`briefing`
+- `pacing`：`dense`、`balanced`、`spacious`
+- `audience`：`executive`、`technical`、`customer`、`public`
 
-目录里如果还留着改名前的 `deck.plan.json` 而不是 `deck.spec.json`，不会被直接读取。用 `pptwise migrate <dir> -o <dir>` 原地转换：会在旁边写出 `deck.spec.json`，不覆盖也不删除原文件，确认新文件无误后自己删掉 `deck.plan.json`。目录里两个文件同时存在会硬报错，绝不猜测优先级。
+命名预设有 `general`、`boardroom-report`、`pitch`、`training`、`product-launch`、`weekly-brief` 与 `annual-review`。省略时解析为 `general`，即 `briefing`、`balanced` 与 `public`。
 
-`pptwise assemble <dir>` 把 spec、pages、assets 合并成一个 IR JSON 文件（默认写到 `deck.json`）。`pptwise disassemble <ir.json> -o <dir>` 做反向操作，是有据可查的有损转换：`beat`/`focus` 这类只属于 spec 的字段在 IR 里没有对应位置，无法还原。`render`/`validate`/`preview` 也都能直接接受一个目录，会先在内存里 assemble 一遍。
+叙事指导论证、语气、主题选择、正文字号基线与编辑容量。它不负责选脸。主题推荐只提供方向。
 
-deck 项目目录可以用裸名代替路径引用。`pptwise render my-deck -o out.pptx` 在本地找不到同名文件或目录时，会到 `$PPTWISE_HOME/decks` 下找 `my-deck`（`$PPTWISE_HOME` 缺省是 `~/.pptwise`）。
+## 组件
 
-主题选择共五级，从高到低是 CLI `--theme`、产物作者写下的选择（项目用 `deck.spec.json`，裸 IR 用 `theme.id`）、项目 `pptwise.config.json`、用户 `~/.pptwise/config.json`、schema 默认值 `consulting`。项目 `theme.json` 与 `--theme-file` 只注册自定义 id，不选择。两个配置层都可以设置 `decksDir` 来重定向裸名解析位置。项目值相对配置文件解析，用户值相对 `$PPTWISE_HOME` 解析。
+`components` 是由 37 种类型化单元组成的可辨识联合。精确字段应查询当前安装的 schema：
 
-格式的更多细节见 [`deck-projects.md`](./deck-projects.md)（英文）。
+```bash
+pptwise schema > ir.schema.json
+```
+
+带归属的引文组件叫 `blockquote`。不存在名为 `quote` 的组件类型。
+
+`swot`、`bmc`、`waterfall`、`gantt`、`pest`、`five_forces`、`heatmap` 与 `sankey` 会占满正文区，必须独占页面。
+
+组件的 kind 归属与相近选择见 [SKILL 组件指南](../skills/pptwise/references/components.zh-CN.md)。
+
+## 资产与背景
+
+每个 `assets.images` 条目包含 `src`，还可以带 `alt` 或 `error`。`src` 可以是 data URI，也可以是装载器支持的本地或远程来源。组件通过 `asset_id` 引用条目。
+
+背景分为 `color`、`gradient` 与 `asset`。封面和章节页的资产背景会采用专门的可读压图处理。为图片内容找素材前先运行 `pptwise asset-brief <target>`，取得真实画框与裁切方式。
+
+## Deck 项目还是裸 IR
+
+小型生成输入或直接 API 边界可以使用裸 IR。迭代工作建议使用 deck 项目。项目把主题绑定与页面语义放在 `deck.spec.json`，把内容放在 `pages/<id>.json`，再组装为同一个 IR v5，不把渲染选择写回源文件。
+
+详见 [Deck 项目](./deck-projects.md)（英文）与 [菜单查表](./menu-lookup.md)（英文）。

@@ -1,337 +1,184 @@
 ---
-summary: 'Test layers: vitest+snapshots, node smoke, CLI and DSH e2e, the visual review gallery, PowerPoint repair-dialog gate'
+summary: 'Acceptance gates, generated-reference drift, menu and render coverage, visual gallery review, golden and byte-fixture rerecording, E2E, package audit, and PowerPoint repair checks'
 read_when:
   - adding or debugging tests
-  - before publishing a release
-  - export XML structure changed
-  - validating the installed DSH plugin
-  - reviewing how themes/layouts/components actually look (`pnpm gallery`)
-  - a text box measured by the estimator disagrees with what a browser draws (`pnpm gallery --bbox`)
+  - changing IR, specs, themes, menus, faces, components, motifs, rendering, or export
+  - a snapshot, gallery hash, golden, or byte fixture changed
+  - preparing a release or validating the installed DSH plugin
 ---
 
 # Testing
 
-## Layers
+## Default gates
 
-1. **Unit + snapshot** (`pnpm test`, vitest): source tests are colocated as
-   `*.test.ts(x)`, and script tests live under `scripts/*.test.mts`. The suite covers the IR schema, every layout/component,
-   the svg2pptx element converters, style tokens, the animation/gradient/
-   ea-font/media-dedupe JSZip patches, the deck spec schema and hard gates,
-   assemble/disassemble plus the deck-project-directory CLI shell, the v3→v4
-   and deck.plan.json→deck.spec.json migration functions, the
-   deterministic deck audit (overflow/out-of-bounds/low-contrast/overlap/
-   content-truncated/content-dropped/monotony), the optional pixel-contrast audit
-   (`--pixels` — real-Sharp end-to-end coverage plus a dedicated no-platform
-   file for the "nothing can rasterize" contract, see `docs/contrast-system.md`),
-   and the PPTX package-audit reader and rules (see "Package-audit hard gate"
-   below).
-   Snapshots pin rendered SVG/DrawingML output.
-   `src/pptx/examples-export.test.ts` renders every `examples/*.json` through
-   the full export chain, discovering them from disk rather than listing them —
-   the shipped examples are the first thing a new user runs, and before this
-   guard existed only `examples/basic.json` was rendered anywhere (e2e), which
-   let a broken example ship for two releases.
-2. **Node smoke** (`src/platform/node.smoke.test.ts`) — exercises the
-   `installNodePlatform()` seam (linkedom DOM parsing, sharp re-encode) against
-   real inputs, catching browser/Node DOM behavior drift early.
-   `src/platform/node-rasterize.test.ts` does the same for `rasterizeSvg`,
-   plus the red-first Sharp/librsvg fidelity probe against a real subset of
-   this repo's own SVG output (spec §11.9's escape-clause evidence).
-3. **E2E** (`pnpm e2e`) — builds the package, drives the *built* CLI binary
-   (`dist/cli.js`, not the vitest-transpiled source) through render/validate/
-   preview on `examples/basic.json`, a deck project directory leg (a temp
-   spec + pages directory left with one unfilled page → `assemble` reports it
-   as a placeholder → a plain `render` is refused → `render --draft` succeeds
-   with the placeholder as a real slide → filling the page and re-assembling
-   drops the placeholder count to zero → a plain `render` then succeeds too),
-   an audit leg (`examples/basic.json` audits clean and exits 0, while a
-   deliberately near-background text color, set via a validate-legal
-   `theme.style` override, exits 1 with a low-contrast finding in both human
-   and `--json` output, plus an `--pixels` leg exercising real Sharp through
-   the built binary), a migrate leg (a pre-rename `deck.plan.json`
-   project directory migrates to `deck.spec.json` with `scenario`→`narrative`
-   and `rhythm`→`beat` renamed and the source file left untouched, both files
-   present is a hard error, migrate never overwrites an existing output),
-   asserts on the produced pptx's zip structure
-   (required XML parts, embedded text), and converts to PDF with LibreOffice
-   (`soffice`) when it's installed on the machine — a real render, not a mock.
+```bash
+pnpm check
+```
 
-`pnpm check` runs typecheck + lint + `pnpm test` and is the default merge gate.
-`pnpm e2e` is not part of `pnpm check` because it needs a build and is slower.
-Run it whenever the render chain (`src/layouts/`, `src/components/`,
-`src/motifs/`, `src/render/`, `src/audit/`, `src/pptx/`, or
-`src/themes/builtin/`) changes.
+This is the default acceptance gate. It runs:
 
-## Generated SKILL reference drift
+1. `pnpm typecheck`
+2. `pnpm lint`
+3. `pnpm test`
 
-`scripts/gen-skill-refs.mts` derives the complete 130-row standard-layout
-catalog from `src/layouts/registry.ts` and the complete 24-row theme catalog
-from canonical theme labels plus `src/themes/occasions.ts`. It replaces only
-the content inside `generated:begin` and `generated:end` comments. Handwritten
-guidance outside those markers is preserved.
+Vitest tests are colocated as `*.test.ts`, `*.test.tsx`, and script tests under `scripts/*.test.mts`. The suite covers IR v5, spec v1, theme v2, menu validation, all registered components and faces, SVG rendering, audit, theme lookup and creation, CLI shells, PPTX conversion, ZIP patches, package audit, and the visual gallery matrix.
 
-Run the generator after changing a layout definition, theme label, occasion,
-or identity band:
+Run a focused test while developing, then finish with the full gate:
+
+```bash
+pnpm exec vitest run src/spec/theme-menu.test.ts
+pnpm check
+```
+
+Do not replace the configured commands with a guessed build tool.
+
+## End-to-end export
+
+```bash
+pnpm e2e
+```
+
+The E2E script builds the package, drives `dist/cli.js`, renders real examples and a deck project, exercises validation, audit, preview, placeholders, brand extraction, workspace theme lookup, style overrides, image formats, package invariants, and native PPTX output. It converts representative output with LibreOffice when `soffice` is installed.
+
+Run E2E when changing themes, menus, faces, components, motifs, render code, audit, CLI target loading, assets, or PPTX export. It is intentionally separate from `pnpm check` because it builds the package and may use external local applications.
+
+For the installed DSH plugin path:
+
+```bash
+pnpm e2e:dsh --workspace /tmp/pptwise-dsh-e2e --profile web
+```
+
+Use an isolated workspace and profile. This host-level smoke proves plugin discovery and installed CLI execution. It does not replace the deterministic source E2E.
+
+## Generated SKILL references
+
+`scripts/gen-skill-refs.mts` owns four generated sections:
+
+- English and Chinese kind tables in `skills/pptwise/references/layouts*.md`
+- English and Chinese preset tables in `skills/pptwise/references/spec*.md`
+
+The kind table derives from IR v5 `KIND_VALUES` plus every built-in theme menu. It contains all eleven kinds, boundary guidance, and preset availability counts.
+
+The preset table derives from `THEME_PRESETS` plus `BUILTIN_THEME_FILES`. It contains all 24 ids, labels, occasions, identity strength, content-menu word count, and offered kinds.
+
+After changing any source field that affects those tables, run:
 
 ```bash
 pnpm gen:skill-refs
 ```
 
-`scripts/gen-skill-refs.test.mts` renders the same sections in memory and
-compares them byte for byte with all four English and Chinese SKILL reference
-files. Vitest includes `scripts/**/*.test.mts`, so drift fails `pnpm test` and
-therefore fails `pnpm check`.
+`scripts/gen-skill-refs.test.mts` renders the same sections in memory and compares every committed target byte for byte. Drift therefore fails `pnpm check`. Edit prose outside the generated markers and let the generator own the marked sections.
 
-## Installed DSH plugin E2E
-
-The DSH browser flow is a host-level smoke test. It proves that the selected
-profile loads the published plugin, the model sees the registered skill, and
-the plugin's packaged CLI can make a PPTX in a real workspace. Prepare an
-isolated existing directory, then run the read-only preflight:
+## Visual gallery
 
 ```bash
-mkdir -p /tmp/pptwise-dsh-e2e
-pnpm e2e:dsh --workspace /tmp/pptwise-dsh-e2e --profile web
+pnpm gallery
+pnpm gallery --only=theme
+pnpm gallery --languages=zh,en
+pnpm gallery --bbox
 ```
 
-The preflight checks four boundaries. The selected profile must declare
-`@liustack/pptwise`. Its own `node_modules` must contain the same version as
-this checkout plus the plugin entry, bundle patch, skill, and packaged CLI.
-DSH's composed config must mount the `pptwise` row. The workspace path is
-resolved with `fs.realpath`, matching DSH's `WorkspaceRegistry.create`
-identity rule, and the canonical value is printed for the browser leg.
+The gallery renders the review matrix through the production validation and SVG path. It has no alternate renderer. Output goes to `.gallery/` by default and includes SVG pages, `manifest.json`, and a self-contained `index.html`.
 
-On macOS this distinction is observable because `/tmp/...` normally resolves
-to `/private/tmp/...`. Add the workspace through DSH's own directory picker
-when testing by hand. The picker crosses the host API and preserves the
-registry invariant. Chromium automation cannot drive the native directory
-picker. If a browser fixture must be seeded outside the UI, store the exact
-`canonical workspace` value printed by the preflight. Do not write the
-unresolved `/tmp` spelling into the storage fixture. A fresh session records
-its canonical cwd, and DSH rejects attachment when that value differs from a
-fixture path by strict string comparison.
+The matrix covers themes, internal faces, components, full-load cases, and heading constructions across language tracks. `scripts/gallery.test.mts` exercises the matrix during `pnpm check`, including inventory coverage. A new component or theme must not disappear from review merely because its builder was forgotten.
 
-Start the web profile from the same canonical workspace, then open its URL in
-Chromium:
+`--bbox` mounts SVG in a real browser and compares `getBBox()` against declared boxes. It is optional because it needs Playwright and depends on installed fonts. Findings go to `.gallery/bbox.json` and make the command fail.
+
+For automated gallery audit:
 
 ```bash
-cd /private/tmp/pptwise-dsh-e2e
-npx -y @deepseek-ai/dsh web
+pnpm evals:gallery
+pnpm evals:gallery --full
+pnpm evals:gallery --l1-only
 ```
 
-Create a fresh session in that workspace and ask DSH to make a small deck with
-pptwise, saving its source as `dsh-pptwise-e2e.json` and its output as
-`dsh-pptwise-e2e.pptx`. The source must pass the installed CLI's validate and
-audit commands. The result must be a non-empty package and render through
-LibreOffice when available:
+Default mode compares current page fingerprints with `evals/gallery/hashes.json` and audits changed or added pages. L1 is deterministic. L2 runs only when its local vision CLI is available and the environment permits it. Live findings are written to a gitignored verdict report.
+
+## Golden rerecording discipline
+
+A golden diff is behavior evidence, not routine noise. Never accept it blindly and never run a broad snapshot update merely to make the suite green.
+
+Before rerecording any snapshot, hash set, SVG serialization, DrawingML sample, or package fixture:
+
+1. Reproduce the failing test on the old expectation.
+2. Trace the first source boundary that changed behavior.
+3. State why the new output is intended and which outputs should remain unchanged.
+4. Inspect a focused before and after diff. For visual changes, render the affected gallery pages and review them.
+5. Use the repository's dedicated writer when one exists.
+6. Review the committed diff for unrelated churn, unstable ordering, local paths, dates, and environment-dependent bytes.
+7. Run the focused test, then `pnpm check`. Run E2E when the render or export chain changed.
+
+Vitest's `-u` is allowed only after this analysis and only for the smallest intentional target. Do not pass it automatically after a failure.
+
+### Gallery hash goldens
+
+`evals/gallery/hashes.json` pins whole-page, geometry, and color fingerprints. Rerecord it only after the affected pages have passed human review:
 
 ```bash
-test -s /private/tmp/pptwise-dsh-e2e/dsh-pptwise-e2e.pptx
-unzip -tq /private/tmp/pptwise-dsh-e2e/dsh-pptwise-e2e.pptx
-node ~/.dsh/profiles/web/node_modules/@liustack/pptwise/dist/cli.js \
-  validate /private/tmp/pptwise-dsh-e2e/dsh-pptwise-e2e.json
-node ~/.dsh/profiles/web/node_modules/@liustack/pptwise/dist/cli.js \
-  audit /private/tmp/pptwise-dsh-e2e/dsh-pptwise-e2e.json
-soffice --headless --convert-to pdf --outdir /private/tmp/pptwise-dsh-e2e \
-  /private/tmp/pptwise-dsh-e2e/dsh-pptwise-e2e.pptx
+pnpm gallery
+pnpm evals:gallery --from=.gallery --full
+pnpm exec tsx evals/gallery/write-hashes.mts
 ```
 
-The browser session, generated file, audit output, and rendered PDF together
-are the DSH plugin evidence. The normal `pnpm e2e` remains the deterministic
-render-chain gate and does not require DSH or model credentials.
+Inspect the hash diff and page inventory. Do not edit individual hashes by hand.
+
+### Byte fixtures
+
+Two fixtures pin the exact output for unassigned theme behavior:
+
+- `src/render/__fixtures__/emphasis-unassigned-bytes.json`
+- `src/render/heading-treatments/__fixtures__/unassigned-bytes.json`
+
+Rerecord both through the single writer:
+
+```bash
+pnpm fixtures:unassigned-bytes
+```
+
+Do this only when an intended renderer change reaches those cases. Review the resulting byte-level diff. Never repair these files manually.
+
+### Hand-authored goldens
+
+Some tests use hand-derived SVG or structural expectations rather than generated snapshots. Update those expectations by reasoning from the contract and inspecting the emitted structure. Do not convert a precise test into an opaque snapshot to reduce maintenance.
 
 ## Package-audit hard gate
 
-`generatePptxBlob` (`src/pptx/generate.ts`) runs a package-structure audit
-(`src/pptx/package-audit.ts`) on every export, right after the last JSZip
-patch (media dedupe) and before returning bytes — piggybacking that patch's
-own `JSZip.loadAsync` rather than re-reading the package. It checks OOXML
-invariants a broken patch could plausibly violate (core parts present,
-`[Content_Types].xml`/relationships parse, `presentation.xml`'s slide list
-agrees with its relationships and the actual slide parts, every internal
-relationship target resolves, `p:cNvPr` ids are unique per slide, shape
-transforms are finite integers with positive `cx`/`cy` except a connector's
-one allowed zero axis, animation timing references a real shape on the
-same slide, and — IR-aware, via the call's own optional second `ir`
-argument (alt-emission-closure fix wave, rewriting the original A11Y-01 alt
-chain rule) — a two-sided alt-preservation invariant keyed on the ops that
-actually reached svg2pptx, never the IR's *declared* `slide.components`
-list (a component `layoutContentFit` gracefully drops on overflow is
-correctly not checked at all): (a) every rendered image op that carries
-`alt` (from the SVG's `aria-label`) exports that exact string as its
-shape's `descr`, and (b) every alt-bearing IR asset that was actually
-rendered on the slide has at least one matching rendered `<image>` that
-carries its alt as `aria-label` (catches an emission site that draws the
-image but forgets to wire the attribute) and
-throws a `PptwiseError` naming the broken invariant — there is no opt-out. `src/pptx/package-audit.test.ts` renders a real deck and
-surgically breaks it via JSZip to prove each invariant actually rejects the
-right corruption. `scripts/e2e.mts`'s package-audit leg re-asserts the
-three-way slide consistency and id-uniqueness invariants directly against
-the built CLI's own output. Read-only by construction —
-`PptxPackageReader` (`src/pptx/package-reader.ts`) exposes no mutating
-method.
+Every `generatePptxBlob` export runs `src/pptx/package-audit.ts` after ZIP patches and before returning bytes. There is no skip switch.
 
-## Visual review gallery
+The gate checks required OOXML parts, content types, relationships, slide-list consistency, relationship targets, unique shape ids, finite positive transforms, animation references, and two-sided image-alt preservation for rendered image operations.
 
-Automated checks answer "does anything overflow, clip, or fall below the
-contrast floor". They cannot answer "would you put this in front of a
-customer". `pnpm gallery` produces the material for the second question:
+`src/pptx/package-audit.test.ts` creates real packages and surgically breaks one invariant at a time. The E2E script repeats key consistency checks against the built CLI output. When adding a ZIP patch, add a broken-package test that proves the audit rejects the failure mode.
+
+## Platform smoke
+
+`src/platform/node.smoke.test.ts` exercises the installed Node platform seam with real DOM parsing and image re-encoding. Raster tests exercise sharp and SVG fidelity. Browser-safe modules must not import Node-only dependencies through `src/index.ts`.
+
+## Documentation checks
 
 ```bash
-pnpm gallery                    # every table, into .gallery/
-pnpm gallery --only=layout      # one table
-pnpm gallery --languages=zh,en  # narrow the language axis
+pnpm docs:list
 ```
 
-It renders five tables through the real chain (`validateIr` →
-`renderSlideSvg`, the same two calls `render`/`preview` make — no
-gallery-specific rendering branch exists, and promotional images are meant
-to come from what passes review here). `evals/gallery/hashes.json` pins
-989 pages (`gallery-page-v2`):
-
-- **主题表** — all 24 themes running one identical ten-page deck (cover +
-  chapter + 7 content + ending), so two themes differ by exactly one
-  variable (240 pages)
-- **版式表** — every registered layout including pinOnly, ordinary layouts
-  on one baseline theme across three language tracks, sparse layouts
-  expanded onto the themes that offer them (464 pages)
-- **组件表** — every component on one baseline theme, chart variants, and
-  dedicated form-variant pages, each in Chinese, English and mixed-script
-  content (195 pages)
-- **满载表** — eight components filled to capacity without overflowing
-  (36 pages)
-- **标题构造表** — six heading constructions × three title states (none /
-  title / subtitle) × three language tracks, pinned on two-column after a
-  chapter slide (54 pages)
-
-Output is `.gallery/`: per-page SVGs, a machine-readable `manifest.json`,
-and a self-contained `index.html` that can be double-clicked offline. In
-that page each slide takes one of three verdicts (通过 / 限制使用 / 返工)
-plus a note; judgements persist in `localStorage` and export as
-`verdicts.json`, keyed by page ids derived from identity rather than
-position so they survive a re-run.
-
-Surviving a re-run raises the question of whether a judgement still applies,
-which is what the page fingerprint answers. It comes in two halves
-(`splitPaint`, `evals/gallery/render.ts`): a shape hash over the markup with
-every paint value blanked, and a paint hash over exactly those values. A
-verdict is stamped with both when it is written, and a later run reads them
-back through one rule (`verdictFreshness`, shipped into the page as source so
-the reviewer and the tests cannot be running different versions of it):
-
-| shape | paint | the page says | the verdict |
-| --- | --- | --- | --- |
-| same | same | nothing | live |
-| same | changed | 仅换肤 | live — the slide is not dimmed |
-| changed | either | 结论已过期 | re-look before acting on it |
-
-That middle row is the point. A theme redesign rewrites every color in the
-corpus and moves no layout: under the old single whole-markup hash it
-invalidated every verdict at once, and the 2026-08-19 round handed back seven
-of thirty marked stale that a human then re-made by hand, all of them about
-geometry that had not moved. Verdicts written before the split carry one hash
-and no way to tell the two apart, so they keep the old all-or-nothing rule
-until they are re-stamped — `manifest.json` is at `manifestVersion: 2` and the
-exported payload at `pptwise-gallery-verdicts/3`, both additive.
-
-The corpus (`evals/gallery/corpus/`) is deliberately **not**
-`src/audit/stress-fixtures.ts` contains decks that are pathological on
-purpose. This one is ordinary, plausible content at the length a real
-author writes, because the ordinary case is what a human can judge and a
-test cannot.
-
-`scripts/gallery.test.mts` runs the whole matrix on every `pnpm check`, so a
-renderer change that breaks a corpus page fails there rather than turning up
-as a hole partway through a review sitting. It also fails if a component
-type gains no corpus builder — silently dropping a component off the table
-would let the review sign off on something nobody looked at.
-
-### Real-geometry pass (`--bbox`)
-
-Every other automated check measures text with `measureTextUnits`, the same
-estimator the layout code uses to decide what fits. When that estimate is
-wrong, the layout and the audit are wrong together and agree with each other.
-`--bbox` breaks the tie by mounting each rendered page in a real browser and
-asking it for `getBBox()`:
-
-```bash
-pnpm gallery --bbox                 # + a real-browser geometry pass
-pnpm gallery --bbox --bbox-floor=4  # loosen the fixed part of the slack
-```
-
-It needs Playwright, which this repo deliberately does **not** depend on —
-`pnpm check` runs the same matrix on every commit and must never pull a
-browser. Install it into the checkout (`pnpm add -D playwright && pnpm exec
-playwright install chromium`) or point `PPTWISE_PLAYWRIGHT` at an existing
-install; a machine that already has Chromium installed needs no download at all. Results are
-written to `.gallery/bbox.json` and depend on the fonts installed on the
-machine, the same caveat the PowerPoint output carries.
-
-Each measured overflow lands in one of three buckets
-(`evals/gallery/bbox.ts`):
-
-- **measurement slack** — `getBBox()` reports the *ink* box while the declared
-  boxes are laid out against advance widths, and the disagreement accumulates
-  along a line. So the horizontal allowance is proportional (1% of the box,
-  2px floor, 8px cap) rather than flat: on an earlier 461-page corpus one cause — a
-  full-width Chinese serif line — measures 3px past a 435px column and 6px
-  past a 1088px one, and a flat threshold would call the first clean and the
-  second a defect. Nothing accumulates down a baseline, so vertical overflow
-  is judged against the flat floor alone.
-- **designed bleed** — `evals/gallery/bbox-exemptions.ts`, keyed on layout
-  *plus* the text allowed to bleed, so a real defect landing on the same page
-  still gets reported. Kept there rather than as a `data-bleed` attribute
-  because marking it in the renderer would move bytes that committed goldens
-  and preview files pin.
-- **defect** — everything else. Reported, and the run exits non-zero.
-
-Background and the reasoning behind how the matrix is cut:
-`.issues/2026-08-15-release-readiness/spec.md`.
-
-### Automated visual audit (`pnpm evals:gallery`)
-
-`pnpm evals:gallery` is the agent audit over the same matrix. L1 is a
-zero-model geometry pass (overflow, out-of-bounds, overlap, strikethrough,
-edge-stick, font-size, overflow markers, Latin vertical type). L2 is grok
-vision against `evals/gallery/rubric/`.
-Default mode is incremental: re-render, diff `evals/gallery/hashes.json`
-(`gallery-page-v2`), and audit `changed ∪ added`. `--full` audits every
-page. `--l1-only` skips L2. L2 is also skipped when `CI=true` or grok is
-not on PATH. The skip reason is printed. Verdicts land in
-`evals/gallery/verdicts/` and that directory is gitignored. Live corpus
-findings are written to the report and do not fail the process.
-
-## Snapshot policy
-
-**Never blind-update with `-u`.** A snapshot diff *is* a behavior change —
-before regenerating, read the diff and confirm it's the change you intended.
-Silently accepting a snapshot update is how visual regressions slip past
-review.
-
-The two unassigned-theme byte nails
-(`src/render/__fixtures__/emphasis-unassigned-bytes.json` and
-`src/render/heading-treatments/__fixtures__/unassigned-bytes.json`) recapture
-with `pnpm fixtures:unassigned-bytes` after an intended renderer change,
-never by editing hashes by hand.
+Every operational document keeps `summary` and `read_when` front matter. Before adding a document, inspect the list for overlapping scope. When renaming a document, update all incoming links and any count-guard maintenance messages.
 
 ## PowerPoint repair-dialog gate
 
-Native PowerPoint is stricter than LibreOffice and pptxgenjs about DrawingML
-well-formedness. A file that opens fine in `soffice` can still trigger
-PowerPoint's "we found a problem with some content" repair dialog. Before
-publishing a release that touched the export XML (`src/pptx/`, especially
-`svg2pptx/` or the animation/gradient/ea-font JSZip patches), run a local repair-dialog
-probe on a real macOS + PowerPoint install:
+LibreOffice and package audit cannot reproduce every native PowerPoint parser decision. Any change to exported XML structure, especially under `src/pptx/svg2pptx` or animation, gradient, font, relationship, or media ZIP patches, requires the macOS PowerPoint probe before release:
 
 ```bash
-pnpm e2e   # produce .e2e-out/*.pptx first
-osascript scripts/ppt-repair-check.applescript "$PWD/.e2e-out/basic.pptx"   # → OK
-osascript scripts/ppt-repair-check.applescript "$PWD/.e2e-out/webp.pptx"    # → OK
+pnpm e2e
+osascript scripts/ppt-repair-check.applescript "$PWD/.e2e-out/basic.pptx"
+osascript scripts/ppt-repair-check.applescript "$PWD/.e2e-out/webp.pptx"
 ```
 
-The script quits PowerPoint, opens the file, and polls for the repair dialog
-(`REPAIR_DIALOG`), a repaired-title window (`REPAIRED_TITLE`), a clean open
-(`OK`), or `TIMEOUT` (~30s per file). A clean open across the example decks
-is the release gate — no automated substitute reliably catches this class of
-bug, since neither LibreOffice nor pptxgenjs's own validation reproduces
-PowerPoint's parser.
+The required result is `OK`. A repair dialog, repaired-title window, or timeout is a release blocker. Record which representative files were probed when handing off an export change.
+
+## Acceptance by change type
+
+| change | minimum evidence |
+| --- | --- |
+| Docs only | `pnpm docs:list`, relevant link and terminology checks, then `pnpm check` when generated or tested docs are involved. |
+| IR, spec, or menu schema | Focused schema tests, red and green behavior, generated refs, `pnpm check`. |
+| Theme palette or menu | Theme validation, `theme try`, affected gallery review, `pnpm check`, `pnpm e2e`. |
+| Face, component, motif, render, or audit | Focused tests, affected gallery pages, `pnpm check`, `pnpm e2e`. |
+| PPTX or ZIP structure | Focused package tests, `pnpm check`, `pnpm e2e`, LibreOffice result, PowerPoint repair probe. |

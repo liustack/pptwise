@@ -1,112 +1,131 @@
 ---
-summary: 'Architecture: five owning dimensions, one SVG render chain, platform seams, domain files, themes, and audit boundaries'
+summary: 'Architecture: serial authoring chain, IR v5, self-contained theme menus, shared face resolution, React SVG rendering, audit parity, PPTX export, and platform seams'
 read_when:
-  - first time in this repo
-  - adding themes, components, or layouts
-  - touching rendering, audit, or PPTX export
+  - first time working in this repository
+  - changing IR, specs, themes, menus, faces, components, motifs, or branding
+  - touching validation, rendering, audit, platform code, or PPTX export
 ---
 
 # Architecture
 
-pptwise separates a deck into five concerns. Each concern has one owning layer, which keeps style changes out of layout code and geometry decisions out of authored content.
+pptwise turns semantic input into native editable PowerPoint through one causal chain:
 
-| Dimension | Owning layer | Location |
+```text
+intent -> narrative -> theme -> spec -> fill -> render
+```
+
+The first two steps are editorial decisions. The theme is selected before the spec because its menu determines which semantic page moves the deck can ask for. The spec orders those moves. Page files fill them with typed components. Render remains deterministic for the same bound inputs.
+
+## Owning domains
+
+| domain | owner | responsibility |
 | --- | --- | --- |
-| Content model | Strict semantic IR and typed components | `src/ir/` |
-| 2D layout | Page layouts, component renderers, layout selection, variety, and render composition | `src/layouts/`, `src/components/`, `src/render/` |
-| Visual style | Public theme schema, built-in declarations, tokens, motifs, and compiled definitions | `src/themes/`, `src/themes/builtin/`, `src/motifs/` |
-| Time-based interaction | IR animation metadata and DrawingML patches | `src/pptx/` |
-| Narrative | Strategy, pacing, audience, deck spec, assembly, and authoring workflow | `src/narrative/`, `src/spec/`, `skills/` |
+| IR | `src/ir` | Strict v5 deck, page, asset, metadata, brand, and 37-component schemas. |
+| narrative | `src/narrative` | Strategy, pacing, audience, presets, body baseline, and editorial budgets. |
+| themes | `src/themes` | Public v2 schema, 24 presets, built-in declarations, workspace registration, tokens, occasions, and identity. |
+| specs | `src/spec` | Version 1 theme binding, page semantics, menu-kind validation, placeholders, and pure assembly. |
+| faces | `src/layouts` | Internal page drawing code, slots, capacities, parameter declarations, and structural motif or brand facts. |
+| components | `src/components` | Typed content renderers that fill face slots. |
+| motifs | `src/motifs` | Reusable decorative drawing code selected by theme menus. |
+| render | `src/render` | Theme-menu resolution, context construction, SVG composition, branding, image routes, and static markup. |
+| audit | `src/audit` | Deterministic SVG, browser, package, and optional pixel checks. |
+| PPTX | `src/pptx` | SVG to native DrawingML conversion, PptxGenJS packaging, and ZIP-level patches. |
+| CLI | `src/cli.ts`, `src/cli` | Filesystem boundary, theme lookup, commands, review server, image providers, and install operations. |
+| platform | `src/platform` | Registry seam for browser services. Node installs linkedom and sharp implementations. |
 
-Visual variety comes from tokens, curated layout faces, tendencies, and a deterministic seed. A theme can change both palette and the layout sequence selected at assembly time. [`selection-and-seed.md`](./selection-and-seed.md) documents that path.
+The public model has four nouns: theme, spec, component, and kind. Internal faces are engine parts reached only through a theme menu.
+
+## Theme and spec boundary
+
+A public theme file is complete and self-contained:
+
+```text
+theme v2 = style + optional brand + occasions + identity + menu
+```
+
+The menu maps every boundary page and a non-empty subset of the eleven content kinds to one face each. It may also supply declared face parameters, motif posture, and page-level brand silence.
+
+Theme creation is copy-based. `theme new` copies any resolved theme. `theme fork` copies a theme, preserves the menu, rederives the palette, and checks contrast. `brand extract` copies a donor menu and applies locally extracted Office anchors.
+
+The CLI resolves a bound name from the deck directory, then upward workspace `themes/` directories, then factory presets. Render has no theme override path.
+
+The spec locks theme, narrative, page order, id, type, heading, and content kind. Page fills carry only components, background, image side, footnote, and notes. `assembleDeck` is a pure function that combines them into IR v5 without storing a rendering decision.
+
+## Shared face resolution
+
+`src/render/layout-selection.ts` retains a historical filename, but its active job is direct menu lookup. The route is:
+
+```text
+boundary page type -> theme.menu boundary entry -> face
+content page kind  -> theme.menu.content[kind] -> face
+```
+
+Cover and chapter asset backgrounds take the dedicated image-cover route. Content image routes are still selected by content kind through the menu.
+
+One resolved route record is consumed by:
+
+- spec and IR validation
+- slot compatibility checks
+- physical body-capacity calculation
+- rendering
+- asset briefs
+
+This shared route is a parity invariant. Do not recreate menu lookup in a second consumer.
+
+Pacing contributes a separate editorial capacity and body baseline. The effective component limit is the smaller of pacing budget and face capacity. Pacing never changes the chosen face.
 
 ## Render chain
 
-Every slide uses one render path:
-
 ```text
-validated IR
-  -> src/render/full-slide-svg.tsx
-  -> one flat 1280 x 720 SVG
-  -> src/pptx/svg2pptx native DrawingML operations
-  -> pptxgenjs plus JSZip patches
-  -> editable .pptx bytes
+IR v5
+  -> validate schema, theme, menu, components, assets, narrative, and capacity
+  -> resolve theme tokens and one face per page
+  -> build component context
+  -> compose background, motif, local decor, face body, and branding in React SVG
+  -> renderToStaticMarkup
+  -> svg2pptx native shapes and text
+  -> PptxGenJS package
+  -> JSZip animation and gradient patches
+  -> package audit
+  -> .pptx
 ```
 
-`renderSlideSvg` and PPTX generation both begin with the same `FullSlideSvg`. Preview, audit, and export therefore inspect the same page composition.
+The SVG page is the single drawing source for preview and export. Shared text measurement, ink selection, and audit annotations keep browser review close to exported DrawingML.
 
-Layout selection is centralized in `src/render/layout-selection.ts`. Page layouts live under `src/layouts/`. Typed component renderers live under `src/components/`. Backgrounds, branding, heading treatments, ink resolution, icons, and slide composition live under `src/render/`.
+## Decoration and branding
 
-## SVG fidelity boundary
+`src/render/full-slide-svg.tsx` resolves decoration before composing the page:
 
-The SVG to PPTX dispatcher is closed. Recognized leaves become native DrawingML. Unsupported leaves are skipped and are never rasterized as a fallback.
+1. A face with `suppressMotif: true` is structurally silent.
+2. Otherwise a menu entry may request `decor.kind: "silent"` or another registered motif.
+3. Without a menu override, the built-in theme's ordinary motif is used.
 
-| SVG leaf | PPTX result |
-| --- | --- |
-| `<rect>` | Editable native rectangle or rounded rectangle |
-| `<circle>` and `<ellipse>` | Editable native ellipse |
-| `<line>` | Editable native line |
-| `<polygon>`, `<polyline>`, and `<path>` | Editable custom geometry |
-| `<text>` | Editable native text box and runs |
-| `<image>` | Picture part backed by a resolved asset |
+The face fact wins over the menu. A copied public preset has ordinary motif choices written into its menu entries, so it needs no hidden inheritance.
 
-Icons in `src/render/icons.tsx` use the same vector primitives and follow the same conversion path.
+Branding is independent. A face with `branding: "none"` or a menu entry with `brand: "none"` suppresses the shared fragment. Otherwise `src/render/branding.tsx` applies the deck's `full`, `cover-only`, or `minimal` posture. Omission equals `cover-only`.
 
-The only raster exit in PPTX export is a real resolved `<image>` asset. Missing image assets degrade to vector placeholders or omission. SVG rasterization is a separate audit capability in `src/audit/pixel-audit.ts` and is not called by PPTX generation. `src/pptx/generate-fidelity-export.test.ts` guards this boundary.
+## Strict boundaries
 
-## Audit and information passes
+`src/index.ts` and its dependency closure must remain free of Node-only dependencies. Filesystem, Commander, linkedom, sharp, and other Node services belong under `src/cli` or the Node platform installer.
 
-Deterministic deck auditing lives in `src/audit/`. `src/audit/deck-audit.ts` combines SVG findings with the IR-level monotony advisory. `src/audit/pixel-audit.ts` optionally samples rasterized pixels for photo-background contrast.
+The alias `@/*` maps to `src/*` in both TypeScript and Vitest configuration. Change both declarations together.
 
-`src/render/asset-brief.ts` is another read-only render pass. It measures real image frames and crop modes for prompt construction. Neither audit nor asset briefs mutate the IR or export path.
+Source files stay grouped by business domain. Adding a component means its IR schema, renderer, tests, and related helpers live together. Adding a theme means one complete declaration or v2 file, menu, validation coverage, and visual evidence.
 
-## Platform seam
+## Extension paths
 
-The dependency closure of `src/index.ts` must remain browser-safe. It cannot import Commander, Linkedom, Sharp, or other Node-only modules.
+### Add a component
 
-`src/platform/registry.ts` defines the runtime seams for DOM parsing, image recoding, and SVG rasterization. `src/platform/node.ts` installs Linkedom and Sharp for CLI use. `src/platform/browser.ts` provides browser rasterization where the platform supports canvas. Node SDK consumers install the Node platform before rendering.
+Define its schema under `src/ir/components`, register it in the IR union, implement the renderer under `src/components`, declare its normal kind ownership, and add component, export, capacity, and audit tests. A component addition does not automatically add a new kind.
 
-The CLI is isolated in `src/cli.ts` and `src/cli/`. Node-specific dependency wiring stays there or under `src/platform/node.ts`.
+### Add or change a face
 
-The supported public surface is CLI commands, IR and spec schemas, deck projects, the skill, and the DSH plugin. JavaScript internals do not carry a semantic-versioning promise. See [`internal-api.md`](./internal-api.md).
+Implement it under `src/layouts`, declare slots, capacity, parameters, and structural motif or brand facts, register it, then reference it from one or more theme menus. Validate every menu parameter against the face declaration.
 
-## Domain files and aggregators
+### Add a theme
 
-Definitions live beside the behavior they describe:
+Start with a complete copied theme, establish style and menu together, validate every offered kind, run the full matrix and gallery review, and compare it through `theme try`. A palette variation is another independent complete theme.
 
-- Each standard layout file under `src/layouts/<name>.tsx` exports both its React implementation and `layoutDef`. `src/layouts/registry.ts` imports and aggregates all 130 definitions. The four image takeovers are implemented and declared in `src/render/image-pages.tsx`.
-- Each component has an IR domain file under `src/ir/components/<name>.ts` and a render domain file under `src/components/<name>.tsx`. The IR file owns schema, aliases, and traits. The render file owns measure and render behavior.
-- `src/ir/index.ts` builds the component union. `src/components/index.tsx` builds render definitions. `src/render/component-traits.ts` builds shared trait sets. `src/ir/field-aliases.ts` builds alias tables.
-- `src/themes/builtin/<id>.ts` declares each built-in theme. `src/themes/index.ts` owns canonical registration. `src/themes/occasions.ts` owns occasion and identity metadata. `src/themes/select.ts` owns deterministic routing. `src/themes/definitions.ts` compiles and validates the runtime form.
+### Change exported XML
 
-Aggregators construct total records from imported domain values. They do not repeat component, layout, or theme definitions as a second hand-maintained source.
-
-## Adding a layout
-
-Create the layout under `src/layouts/` and keep its `layoutDef` in the same file. Add its import and ordered registry entry in `src/layouts/registry.ts`. Registry order is load-bearing because deterministic weighted sampling walks candidates positionally.
-
-Choose `pinOnly` when the face should never enter the shared automatic pool. Declare slot capacities as physical facts. Do not infer capacity from current example content.
-
-Update registry migration guards, rendering tests, and the generated SKILL reference table by running `pnpm gen:skill-refs`.
-
-## Adding a component
-
-At minimum, add the matched pair under `src/ir/components/` and `src/components/`, then wire these total aggregators and coverage points:
-
-1. Component schema union in `src/ir/index.ts`.
-2. Render definitions in `src/components/index.tsx`.
-3. Traits in `src/render/component-traits.ts`.
-4. Validation corpus coverage in `src/ir/corpus-coverage.test.ts`.
-5. Fidelity export fixture in `src/pptx/generate-fidelity-export.test.ts`.
-6. Muted-surface classification in `src/audit/full-matrix-contrast.test.ts`.
-7. Agent authoring guidance in `skills/pptwise/SKILL.md` when the type needs a new selection rule.
-
-`pnpm check` catches missing total-record entries and most coverage gaps.
-
-## Adding a theme
-
-A built-in theme is a complete version 1 declaration in `src/themes/builtin/<id>.ts`. It must provide all four face pools and a complete style. Add its id to the canonical lists in `src/themes/index.ts` and `src/ir/index.ts`, then add occasion and identity metadata in `src/themes/occasions.ts`. `suggestThemes` in `src/themes/select.ts` consumes that metadata without a per-theme routing branch.
-
-Faces reference shared layouts. Motifs reference the finite implementations in `src/motifs/`. Tendencies may only name ids inside the matching face pool. `registerTheme` validates these invariants and the contrast floor.
-
-A user-authored custom theme follows the public partial or complete schema in `src/themes/schema.ts`. [`themes.md`](./themes.md) describes both modes and the five-level selection chain.
+Run the normal acceptance gate, end-to-end export, package audit, LibreOffice probe, and the PowerPoint repair-dialog probe described in [Testing](./testing.md).

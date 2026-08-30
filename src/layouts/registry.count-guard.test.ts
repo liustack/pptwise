@@ -5,13 +5,11 @@ import { LAYOUT_REGISTRY, type SlideType } from "./registry"
  * This is a guard, not a lookup. If an intentional registry change breaks it,
  * recount first, then update the count comments in `registry.ts`,
  * `image-pages.tsx`, `src/themes/definitions.ts`, and `registry.test.ts`.
- * Also update `docs/concepts.md`, `docs/architecture.md`,
- * `docs/selection-and-seed.md`, `docs/ir.md`, `docs/ir.zh-CN.md`,
- * `docs/themes.md`, `docs/themes.zh-CN.md`, `docs/deck-projects.md`,
- * and `AGENTS.md`.
+ * Also review `docs/architecture.md`, `docs/menu-lookup.md`,
+ * `docs/designing-themes.md`, and `AGENTS.md` for any engine inventory claim.
  */
 const COUNT_DRIFT_MESSAGE =
-  "LAYOUT_REGISTRY counts changed. Recount it, then update registry.ts count comments, docs/concepts.md, docs/architecture.md, docs/selection-and-seed.md, docs/ir.md, docs/ir.zh-CN.md, docs/themes.md, docs/themes.zh-CN.md, docs/deck-projects.md, and AGENTS.md."
+  "LAYOUT_REGISTRY counts changed. Recount it, then update registry.ts count comments and review docs/architecture.md, docs/menu-lookup.md, docs/designing-themes.md, and AGENTS.md for engine inventory claims."
 
 const SLIDE_TYPES = ["cover", "chapter", "ending", "content"] as const satisfies readonly SlideType[]
 

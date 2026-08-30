@@ -32,9 +32,9 @@
 
 ## 亮点
 
-**⚡ 跟 AI 说一句，PPT 就好了。** 你只管说要讲什么，版面、配色、字号、间距全由引擎排好。同一份内容做十遍是同一份，不用一遍遍重来碰运气。
+**⚡ 跟 AI 说一句，PPT 就好了。** 你给出意图，引擎把语义讲法与类型化组件做成一份主题统一的 deck。同一份绑定输入每次都会渲成同一份结果。
 
-**✏️ 打开就能接着改。** 每个标题、每条要点、每根柱子都能在 PowerPoint 里点开改字改色。图表和表格里的数字是例外，换数字让 AI 重做一版。24 套现成风格，也能把你公司现有 PPT 里的配色和字体抽出来直接用。
+**✏️ 打开就能接着改。** 每个标题、每条要点、每根柱子都能在 PowerPoint 里点开改字改色。图表和表格里的数字是例外，换数字让 AI 重做一版。可以从 24 个出厂主题起步，拷进工作区继续改，也能从公司现有 PPT 抽取配色与字体。
 
 **🔌 装进你正在用的 agent。** 一条命令装进 DeepSeek Harness、Claude Code，或任何读 skill 文件夹的 agent（Codex 等），装完就会用。
 
@@ -56,47 +56,76 @@
 
 ## 快速开始
 
-IR 就是一份描述整份 PPT 内容的 JSON 文件。写一个最小的，跑一遍 validate → render → preview 回路：
+IR v5 是一份描述完整绑定 deck 的 JSON 文件。每张内容页都要写明语义 `kind`，主题菜单再把这个 kind 变成视觉脸。
 
-```bash
-cat > deck.json <<'EOF'
+```json
 {
+  "version": "5",
   "filename": "hello.pptx",
   "theme": { "id": "consulting" },
   "slides": [
-    { "type": "cover", "heading": "Hello pptwise", "subheading": "A first deck in ten minutes" },
-    { "type": "content", "heading": "Why it works", "components": [
-      { "type": "bullets", "items": ["Semantic IR in", "Native DrawingML out", "Every shape stays editable"] } ] },
+    {
+      "type": "cover",
+      "heading": "Hello pptwise",
+      "subheading": "A first native deck"
+    },
+    {
+      "type": "content",
+      "kind": "points",
+      "heading": "Why it works",
+      "components": [
+        {
+          "type": "bullets",
+          "items": ["Semantic IR in", "Theme-menu lookup", "Native DrawingML out"]
+        }
+      ]
+    },
     { "type": "ending", "heading": "Thanks" }
   ]
 }
-EOF
-pptwise validate deck.json                              # → OK — 3 slides, theme "consulting"
-pptwise render deck.json -o out/hello.pptx              # → wrote out/hello.pptx (3 slides, ~24 KB)
-pptwise render deck.json -o out/tech.pptx --theme tech  # 同一份裸 IR，显式覆盖主题
-pptwise preview deck.json -o out/svgs                   # 每页一张 SVG，供人工目检
 ```
 
-边界页只有在已解析版式声明了兼容槽位时才渲染 component。内容会消失时，`validate` 会明确指出。
+保存为 `deck.json`，然后运行：
 
-按 `pptwise themes --json` 的任务 `occasions` 与所需 `identity` 选择视觉方向。多个主题都合适时，用 `pptwise preview <target> --themes <id,id,...>` 看对比图。自定义版本 1 主题分两种，partial 主题带内置 `base`，complete 主题声明四类 face pool。
+```bash
+pptwise validate deck.json
+pptwise render deck.json -o out/hello.pptx
+pptwise preview deck.json -o out/review --html
+```
 
-对已经 assemble 的 deck，`--theme` 是保留已物化 layout id 的 repaint。要采用另一套主题的结构骨相，请修改项目 spec 的主题并重新 assemble。
+按 `pptwise themes --json` 的 `occasions` 与 `identity` 选择主题。绑定前可以比较两到四个候选：
 
-不想安装也行：`npx -y @liustack/pptwise validate deck.json`。源码仓库里则用 `node dist/cli.js` 代替 `pptwise`，`examples/` 下有现成的 IR 文件可以直接试。
+```bash
+pptwise theme try consulting,swiss,memo
+```
 
-最常用的几条命令：
+可以通过拷贝预设、创建配色分叉，或抽取 Office 品牌，得到完整独立的 v2 主题：
 
-| 命令 | 作用 |
-|---|---|
-| `validate <target>` | 校验 IR，每条报错都带页码 |
-| `render <target> [-o <out.pptx>] [--theme <id>]` | 渲染出 `.pptx`。省略 `-o` 则写到 `.pptwise/<deck>/<deck>.pptx` |
-| `preview <target> [-o <dir>] [--html] [--themes <id,id,...>]` | 每页一张 SVG、自包含审阅页，或封面与内容页主题对比图。省略 `-o` 则写到 `.pptwise/<deck>/` |
-| `serve <target>` | 随改动自动刷新的实时预览 |
-| `audit <target>` | 确定性审查：几何、内容丢失与单调性 |
-| `themes [--json]` | 列出 24 套内置主题及场合和个性强度元数据 |
-| `layouts [--json]` | 列出版式、pin-only 状态、容量与槽位 |
-| `doctor` | 体检这套安装：运行时、skill 副本、可选能力、自检渲染 |
+```bash
+pptwise theme new --from consulting -o themes/acme.theme.json --id acme
+pptwise theme fork acme --primary "#0B5FFF" -o themes/acme-blue.theme.json --id acme-blue
+pptwise brand extract corp.pptx -o themes/acme-brand.theme.json --id acme-brand --from consulting
+```
+
+Deck 项目在 `deck.spec.json` 中绑定唯一主题，再把页面内容放进 `pages/<id>.json`。渲染阶段没有临时主题切换。菜单相同的配色分叉可以替换绑定。菜单不同则需要回到主题选择，再修订 spec、受影响的 kind 与页面填充。
+
+不安装也能运行：`npx -y @liustack/pptwise validate deck.json`。源码仓库中用 `node dist/cli.js` 代替 `pptwise`。`examples/` 下有可直接尝试的 v5 文件。
+
+最常用的命令：
+
+| command | 作用 |
+| --- | --- |
+| `spec validate <spec.json>` | 验证页面顺序、kind、标题、叙事与主题菜单适配。 |
+| `assemble <dir>` | 把 deck 项目组合成派生 IR v5，不保存渲染选择。 |
+| `validate <target>` | 检查 IR、绑定、菜单、组件、资产与内容质量。 |
+| `render <target> [-o <out.pptx>]` | 渲染原生可编辑 PPTX。 |
+| `audit <target>` | 检查几何、对比度、截断、内容丢失与单调性。 |
+| `preview <target> [--html]` | 写出 SVG 页面与可选的自包含评审文件。 |
+| `serve <target>` | 启动随源文件变化自动刷新的实时评审。 |
+| `themes [--json]` | 列出带场合与个性强度元数据的出厂主题。 |
+| `theme try <id,id,...>` | 用两到四个主题对比固定样稿。 |
+| `theme new`、`theme fork` | 拷贝完整主题，或创建整套配色分叉。 |
+| `doctor` | 检查运行时、skill 副本、可选能力与自检渲染。 |
 
 完整命令表见 [`docs/cli.zh-CN.md`](./docs/cli.zh-CN.md)。
 
@@ -107,12 +136,12 @@ pptwise preview deck.json -o out/svgs                   # 每页一张 SVG，供
 | [安装手册](./INSTALL.md) | 把安装交给 agent，或检查运行前提 |
 | [Agent skill](./skills/pptwise/SKILL.zh-CN.md) | 了解 pptwise 教给 agent 的完整工作流 |
 | [CLI 手册](./docs/cli.zh-CN.md) | 查询命令、参数、审查、预览与健康检查 |
-| [IR 参考](./docs/ir.zh-CN.md) | 用 JSON 编写 deck、页面、组件与叙事 |
-| [主题](./docs/themes.zh-CN.md) | 按场合路由、对比外观，或编写 partial 与 complete 主题 |
-| [核心概念](./docs/concepts.md) | 理解主题、版式、组件、叙事与容量模型 |
-| [架构](./docs/architecture.md) | 修改渲染链，或新增主题、版式与组件 |
-| [Deck 项目](./docs/deck-projects.md) | 用锁定 spec、页面文件、素材与实时审阅制作复杂 PPT |
-| [版式选型与 seed](./docs/selection-and-seed.md) | 排查版式为何被选中，或保持多次修订稳定 |
+| [IR 参考](./docs/ir.zh-CN.md) | 用 JSON 编写 IR v5 页面、kind、组件、资产与叙事 |
+| [主题](./docs/themes.zh-CN.md) | 拷贝、对比、分叉、绑定或编写完整 v2 主题 |
+| [核心概念](./docs/concepts.md) | 理解主题、spec、组件、讲法、菜单与容量模型 |
+| [架构](./docs/architecture.md) | 修改菜单路径、渲染链或导出边界 |
+| [Deck 项目](./docs/deck-projects.md) | 用绑定主题、锁定 spec、页面文件、素材与实时评审制作 PPT |
+| [菜单查表](./docs/menu-lookup.md) | 排查页面 kind 如何在验证与渲染中到达同一张脸 |
 | [对比度系统](./docs/contrast-system.md) | 排查文字颜色、自绘背景与低对比度问题 |
 | [测试](./docs/testing.md) | 选择验证命令、检查快照，或修改导出 XML |
 | [内部 API](./docs/internal-api.md) | 了解 JavaScript 内部模块为何不承诺 semver 稳定性 |

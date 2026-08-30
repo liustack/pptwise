@@ -1,76 +1,94 @@
 ---
-summary: 'The theme, layout, component, and narrative model, plus the split between editorial and geometric capacity'
+summary: 'The four public nouns in pptwise: theme, spec, component, and kind, plus the theme-menu contract that connects them'
 read_when:
   - first time touching the pptwise vocabulary
-  - adding a theme, layout, or component
-  - deciding whether a rule belongs to pacing or layout capacity
+  - deciding whether a fact belongs to a theme, spec, component, or kind
+  - changing theme menus, pacing budgets, decoration, or branding
 ---
 
 # Concepts
 
-Four nouns divide responsibility. Theme owns visual language and curated page faces. Layout owns page geometry. Component owns a typed content unit. Narrative owns argument strategy and editorial density. [`selection-and-seed.md`](./selection-and-seed.md) explains layout choice, and [`contrast-system.md`](./contrast-system.md) explains readable ink selection.
+pptwise follows one causal chain:
 
-## Theme
+```text
+intent -> narrative -> theme -> spec -> fill -> render
+```
 
-The public theme contract is the strict version 1 `ThemeFileSchema` in `src/themes/schema.ts`. It contains a complete public `style`, optional `brand`, optional `occasions`, and optional `identity`. The file then has one of two completeness modes:
+Intent states who the deck is for, what outcome it should produce, whether it will be presented or read, and how much time it has. Narrative chooses the argument, pacing, and tone. Theme is bound before the spec. The spec orders semantic page moves from that theme's menu. Components fill those moves. Rendering turns the bound inputs into editable PowerPoint.
 
-- A partial theme includes `base`. It changes style and brand while inheriting faces, motif, tendencies, and sparse support from a built-in theme. Complete-only fields are rejected.
-- A complete theme omits `base` and provides non-empty `faces` for cover, chapter, content, and ending. It may also provide motif parameters, per-page-type tendencies, and sparse layout support.
+## The four public nouns
 
-Both modes compile into the internal `ThemeDefinition` in `src/themes/definitions.ts`. That internal form carries `layouts`, resolved style tokens, brand, motif, tendencies, and sparse layout ids. `registerTheme` validates layout ids, page types, face parameters, tendency boundaries, contrast, and id collisions before adding a custom theme to `src/themes/registered-themes.ts`.
+### Theme
 
-The 24 built-ins live in `src/themes/builtin/`. Their canonical ids and labels come from `src/themes/index.ts`. `src/themes/occasions.ts` is the source of truth for controlled occasion tags and the `low`, `medium`, or `high` identity band exposed by `pptwise themes --json`. `suggestThemes` in `src/themes/select.ts` ranks occasion hits first, then identity match, narrative recommendations, and canonical catalog order.
+A theme is one self-contained version 2 file. It owns the full visual system: style tokens, optional brand tokens, occasion metadata, identity strength, and a menu. There is no base theme, partial theme, or load-time inheritance. Reuse happens by copying.
 
-A theme is not appearance-only. Its face pools are a hard curation boundary. Its `tendencies` softly favor ids already inside that boundary. Its motif comes from `src/motifs/`. Theme selection uses task occasion and desired identity first. Narrative `themeRecommendations` remain a reference or no-occasion fallback signal.
+Twenty-four factory presets are starting points. A workspace theme becomes independent the moment it is copied.
 
-## Layout
+### Spec
 
-A layout is a page-level React template with named slots. Each of the 130 standard layout files under `src/layouts/<name>.tsx` keeps its JSX and exported `layoutDef` together. `src/layouts/registry.ts` imports and aggregates those definitions. The four image takeovers are defined in `src/render/image-pages.tsx` and join the same registry.
+`deck.spec.json` is the locked semantic contract for one intent. It binds one theme by name and owns narrative, page order, page type, content kind, heading, and optional summary. Page files cannot override those fields.
 
-`LayoutDefinition` declares `id`, `kind`, `slideTypes`, `slots`, optional `arrangements`, optional `narrativesOnly`, and optional `pinOnly`. Each slot declares a name, accepted component types, and an optional capacity. The registry has 134 entries in total:
+The spec is shaped by the bound theme menu. Changing to a theme with another menu means revisiting the spec. It is not a visual repaint.
 
-- 130 standard layouts, still serialized internally as `kind: "archetype"`
-- 43 standard layouts in the shared auto-selectable pool
-- 87 standard layouts marked `pinOnly`
-- 4 image takeovers
+### Component
 
-`pinOnly` keeps a layout out of the shared automatic pool. A page reaches one through an explicit `slide.layout` pin, or through a theme that deliberately lists it in a curated face pool. `src/render/layout-selection.ts` resolves the effective id for validation and rendering.
+A component is one typed content unit such as `bullets`, `chart`, `blockquote`, `image`, or `sankey`. Components fill pages after the spec has chosen their semantic move. The current IR exposes 37 component types.
 
-Layout is not arrangement. A layout is the whole page template. An arrangement controls how components flow inside a layout body slot, such as `single`, `two_column`, or `assertion_evidence`.
+The component is named `blockquote`. `quote` is reserved for the page kind.
 
-## Component
+### Kind
 
-The 37 component types are the discriminated `Component` union in `src/ir/`. Their render definitions live under `src/components/`, and `src/components/index.tsx` aggregates them. Shared rendering traits, including full-body ownership, live in `src/render/component-traits.ts`.
+A kind is the semantic move made by one content page. It is the only load-bearing interface between spec authors and theme authors:
 
-Components express meaning without coordinates. Examples include `chart`, `timeline`, `roadmap`, `comparison`, `image`, `data_table`, `device_mockup`, `people_cards`, and `tag_row`. The model chooses a type and supplies structured fields. The component renderer and layout decide geometry.
+| kind | move |
+| --- | --- |
+| `points` | Advance an argument whose order matters. |
+| `list` | Present peer items that can be reordered. |
+| `comparison` | Put alternatives or dimensions in direct contrast. |
+| `process` | Show directed steps, time, or a cycle. |
+| `data` | Make a numeric set, chart, or table the subject. |
+| `photo` | Make the image itself the content. |
+| `statement` | Give the author's own proposition a full page. |
+| `quote` | Center words attributed to another source. |
+| `fact` | Build the page around one number. |
+| `evidence` | Pair one assertion with one supporting exhibit. |
+| `hierarchy` | Express containment, levels, or composition. |
 
-Full-body components such as `swot`, `bmc`, `waterfall`, `gantt`, `pest`, `five_forces`, `heatmap`, and `sankey` must be the only component on a slide. `src/validate-core.ts` enforces that invariant.
+Every content page requires exactly one kind, including content pages in a bare IR file. `cover`, `chapter`, and `ending` are boundary page types and carry no kind.
 
-## Narrative
+## The menu model
 
-Narrative is a three-axis profile in `src/narrative/`:
+A theme menu is a pure table. It maps `cover`, `chapter`, each offered content kind, and `ending` to exactly one face. A theme may offer only a subset of the eleven content kinds. Omission is a design decision, not an incomplete theme.
 
-- `strategy` controls argument structure and contributes layout tendencies.
-- `pacing` controls editorial density and type scale.
-- `audience` records who the deck addresses. It currently affects authoring guidance, not render geometry.
+The selected face owns geometry, slots, physical capacity, self-adaptation, and the truth source for its configurable parameters. A menu entry supplies parameter values and may control motif or brand visibility. Authors never write face identifiers.
 
-Named presets resolve to those axes and include `themeRecommendations`. Theme routing uses `occasions` and `identity` first, with recommendations available as a reference, tie-break, or no-occasion fallback. The theme id is selected separately through the CLI, authored artifact, configuration, or default chain.
-
-A slide's optional `beat` adds a local soft layout tendency. Strategy, beat, and theme tendencies combine inside `src/render/layout-selection.ts` with `Math.max`. Agreement reinforces a candidate without multiplying its weight.
+If a spec asks for a kind outside the bound menu, validation fails and lists the offered kinds. Validation, capacity checks, and rendering consume the same lookup result. See [Menu lookup](./menu-lookup.md).
 
 ## Capacity has two owners
 
-Capacity is the minimum of two independent ceilings:
+Narrative pacing owns the editorial budget and body-text baseline. The face selected by the menu owns physical capacity. The effective page limit is the smaller value. Pacing never selects a face.
 
-- Editorial capacity comes from `PACING_BUDGETS` in `src/narrative/`. It answers how much content belongs on a page.
-- Geometric capacity comes from the resolved layout's slot metadata in `src/layouts/registry.ts`. It answers how many components physically fit.
+| pacing | body baseline | components | bullet items | bullet width units |
+| --- | ---: | ---: | ---: | ---: |
+| `dense` | 24px | 5 | 6 | 27 |
+| `balanced` | 24px | 4 | 5 | 25 |
+| `spacious` | 32px | 3 | 4 | 22 |
 
-`src/render/ir-quality.ts` resolves the same layout as the render path and applies the lower ceiling. This keeps validation and rendering in agreement. A component's own item bound is a separate schema rule. Speaker notes are also separate because they never enter the canvas.
+## Settled rules
 
-## Stable source boundaries
+1. Face code declares configurable parameters and their bounds. Menu entries supply valid values.
+2. Menu lookup is one-to-one. It has no rotation or conditional branch.
+3. Pacing controls editorial capacity and the body baseline, never face choice.
+4. A kind outside the bound menu is a hard validation error.
+5. Boundary-page component support comes from the bound face and is validated there.
+6. Deck branding keeps `full`, `cover-only`, and `minimal`. Page silence belongs to the face or menu entry.
+7. Page arrangement belongs to face self-adaptation, not IR.
+8. Visual comparison uses `theme try` with a fixed sample. Render has no theme override.
+9. `heading` and `summary` remain semantic spec fields.
+10. Narrative recommendations guide theme choice and writing, not menu lookup.
+11. Reusable facts, claims, numbers, images, and copy are working material, not a persisted selection format.
+12. The component rename to `blockquote` affects only component type space. The page kind remains `quote`.
 
-The v4 IR schema in `src/ir/` evolves additively. A future breaking shape needs a new top-level version and an explicit migration path.
+Decoration follows the same ownership discipline. A face may structurally suppress motifs. Otherwise a menu entry may silence or replace the motif. With no menu override, the theme's ordinary motif paints. Branding is independent. A face or menu entry can suppress the shared brand fragment even when the deck posture is `full`.
 
-The deck project's authored sources are `deck.spec.json`, `pages/*.json`, optional `theme.json`, and assets. Preview remains read-only. Every revision returns through assemble, validate, and audit.
-
-The model owns semantics. The engine owns geometry. Public authoring never asks a model to produce coordinates or free-form SVG.
+Changing colors always creates a fork and rederives the full token system. A same-menu fork can replace the binding inside the workflow. A different menu requires a return to the theme step, followed by spec and fill revision. The original theme remains unchanged.

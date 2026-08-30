@@ -1,154 +1,203 @@
 ---
-summary: 'CLI 完整命令表、audit 的七类检查、配图简报，以及推荐给 agent 的生成回路'
+summary: '当前 CLI 命令面：IR v5、主题 v2、deck 项目、固定样张主题对比、验证、审计、图片、预览与安装体检'
 read_when:
-  - 找一条 README 上没列的命令
-  - 读到 audit 的报错，想知道这条检查在查什么
-  - 给图片位生成美术之前（`asset-brief`）
-  - 给 agent 接上 validate → audit → render 回路
-  - 装完之后想确认这台机器上一切正常（`doctor`）
+  - 查询受支持的命令或参数
+  - 给 agent 接上 spec、填充、validate、audit 与 render 回路
+  - 创建、分叉、对比、抽取或解析主题
+  - 排查 audit 输出、图片获取或安装状态
 ---
 
-# CLI 命令参考
+# CLI
 
-所有带 `<target>` 的命令都接受同样三种形式：IR JSON 文件、[deck 项目目录](./ir.zh-CN.md#deck-项目)，或者一个裸名。
+大多数 deck 操作都接受 IR v5 文件、deck 项目目录或裸 deck 名。裸名称在已配置的 deck 根目录下解析。显式路径优先。
 
-| 命令 | 作用 |
-|---|---|
-| `render <target> [-o <out.pptx>] [--theme <id>] [--theme-file <file>] [--style <file>] [--draft] [--allow-dropped-content] [--no-git-ignore]` | 校验并渲染成 `.pptx`。不传 `-o` 时写到 `<项目>/.pptwise/<deck>/<deck>.pptx` |
-| `validate <target> [--theme <id>] [--theme-file <file>]` | 校验 IR，输出带页码的错误信息与提示性警告 |
-| `audit <target> [--json] [--pixels] [--theme <id>] [--theme-file <file>]` | 确定性 deck 审查，包含几何检查与单调性检查，发现问题 exit 1（见[审查](#审查)） |
-| `asset-brief <target> [--json]` | 为每个 `image` 组件生成一份配图简报（见[配图简报](#配图简报)） |
-| `spec validate <spec.json>` | 校验 deck spec 是否符合 schema 与随 strategy 变化的硬门 |
-| `assemble <dir\|name> [-o <file>]` | 把 deck 项目目录合并成单个 IR JSON 文件 |
-| `disassemble <ir.json> -o <dir>` | 把 IR JSON 文件拆成 deck 项目目录 |
-| `schema [--style \| --spec]` | 输出 IR 的 JSON Schema（或 style 覆盖 schema，或 deck spec schema） |
-| `themes [--json]` | 列出 24 套内置主题。`--json` 包含 id、label、颜色、受控 `occasions` 与 `identity` |
-| `layouts [--json]` | 列出全部已注册版式，包括 id、页型、pin-only 状态、已声明容量之和、槽位与 arrangement |
-| `brand extract <file> -o <out.theme.json> [--id] [--label]` | 在本地从 `.thmx`/`.potx`/`.pptx` 抽取品牌配色与字体，生成以 `consulting` 为 base 的 partial 主题（见[主题](./themes.zh-CN.md#抽取自己的品牌)） |
-| `narratives [--json]` | 列出具名叙事预设（strategy/pacing/audience 轴 + theme 推荐） |
-| `preview <target> [-o <dir>] [--html] [--theme <id>] [--themes <id,id,...>] [--theme-file <file>] [--no-git-ignore]` | 逐页渲染为独立 SVG（`--html` 额外写出一个自包含的 `preview.html`）。`--themes`（2-4 个 id）写出 `contact-sheet.html`，把封面和第一页 content 按主题并排对比。永远不受占位页拦截。不传 `-o` 时写到 `<项目>/.pptwise/<deck>/` |
-| `serve <target> [--port 4400] [--no-open] [--theme-file <file>]` | 实时预览服务：与 `preview --html` 同款审阅页，源文件变化自动刷新 |
-| `migrate <input> -o <output>` | 把 v3 IR 文件转成 v4，并把 chrome 改写成 branding、bloom 改写成 classroom、logo_wall 改写成 image_grid、banner-heading 改写成 two-column，或把 `deck.plan.json` 项目目录转成 `deck.spec.json`。确定性转换，不调模型 |
-| `init` | 生成 `pptwise.config.json` 模板（仍会读取遗留的 `pptpress.config.json` 与 `pptfast.config.json`） |
-| `config set <key> [value]` / `config show` | 把 Pexels/Pixabay/Openverse 凭据和生图开关存进 `$PPTWISE_HOME/config.json`。省略 apiKey 或 clientSecret 的 value 则隐藏输入。`show` 掩码秘密并标 `(file)` / `(env)` |
-| `images search <query> [--orientation] [--color] [--min-width] [--min-height]` | 搜 Pexels，有 key 再 Pixabay，然后 Openverse（cc0/pdm）。打印署名行 |
-| `images fetch <provider>:<id> --deck <dir> --as <asset_id>` | 下载照片到 `.pptwise/<deck>/assets/`，带 sidecar |
-| `images list --deck <dir>` | 列出该 deck 已钉的图库照片 |
-| `images generate --deck <dir> --as <asset_id> [--prompt]` | 用本机 CLI 生图（默认关闭，需显式打开）并钉进 `.pptwise/<deck>/assets/` |
-| `doctor [--json]` | 体检本机安装：skill 副本、dsh 插件、运行时、可选能力、自检渲染、图库 key、本机生图 CLI（见[体检](#体检)） |
-| `check-update` / `self-update` | 检查 npm 上的新版本 / 更新全局安装 |
+渲染阶段没有临时主题选项。项目在 `deck.spec.json` 中绑定主题，裸 IR 在 `theme.id` 中绑定。编写 spec 前用 `theme try` 比较尚未绑定的候选。
 
-`--theme-file` 在 `render`、`validate`、`audit`、`preview`、`serve` 上都可用。它只装载并注册自定义主题，并不选中它。render、validate、audit、preview 可以同时传 `--theme <id>`。serve 没有 `--theme` flag，所以目标 spec 或 IR 必须已经选中该自定义 id。
-
-主题选择共五级：CLI `--theme`，产物作者写下的选择（项目用 `deck.spec.json`，裸 IR 用 `theme.id`），项目 `pptwise.config.json`，用户 `$PPTWISE_HOME/config.json`，最后是 schema 默认值 `consulting`。组装 deck 目录时即使 spec 没写 `theme` 也会填上 `theme.id`。那份填出来的默认值不算作者层，所以不会用 `consulting` 压过项目配置。目录里的 `theme.json` 和 `--theme-file` 只负责注册。
-
-`pptwise preview --themes consulting,tech,ink` 在同一输出目录写出 `contact-sheet.html`：一列一个主题，行是封面和第一页 content，SVG 内联进页面。不必再加 `--html`。这个形式用于已安装的内置 id。尚未落盘的自定义候选要另跑 `preview <target> --theme-file <file> --theme <id> --html`。对 deck 项目，对比图会 repaint assemble 已经物化的版式，不会为每个主题重新 assemble 结构骨相。裸 IR 没写 layout id 时，仍会在每套主题覆盖下正常选择版式。
-
-公共版本 1 主题文件共用一套严格 schema，只分两种完备度。partial 文件含 `base` 并继承结构骨相。complete 文件不含 `base`，必须声明非空的 cover、chapter、content、ending face pool。`brand extract` 固定写出 `base: "consulting"` 的 partial 文件。旧的无版本 `{ id, style }` 文件会硬报错并给出升级说明。
-
-deck 项目确认自定义视觉后，把文件放在 `deck.spec.json` 同级并命名为 `theme.json`，再把 id 写进 spec。项目命令不需要主题 flag。`serve` 会监视该文件。裸 IR 可以用 `--theme-file` 注册，但还必须用 `--theme` 或 IR 自己的 `theme.id` 选择。
-
-render 或 preview 上的 `--theme <id>` 是 repaint，会保留 `deck.json` 里已经物化的 layout id。要采用另一套主题的结构骨相，先改 spec 主题，再跑一次 `assemble`。
-
-省略 `-o` 时，`render` / `preview` 把产物写到项目根下的 `.pptwise/<deck>/`（项目根是 `pptwise.config.json` 所在目录，找不到配置就用 cwd）。命令每次都打印绝对路径。第一次创建该目录时，CLI 会把 `.pptwise/` 追加进 `.git/info/exclude`，产物留在本地。`--no-git-ignore` 跳过这一步。项目配置里的 `outDir` 会整体替换 `.pptwise`，同时也跳过 exclude。显式的 `-o` 永远优先，那个路径既不清扫，也不代写忽略。
-
-`render` 不会把一份悄悄缺内容的文件交给你。deck 里有未填的占位页时，要加 `--draft`。某一页装的内容超过内容区容量、版面只能丢掉放不下的块，而页面上没有任何提示时，要加 `--allow-dropped-content`，报错会写清哪几页各丢了几块。真正的修法是把这一页缩短或拆成两页，`audit` 会指向同样这几页。这两个开关是给「我知道，我就要这份文件」的场合用的。两道闸门都不影响 `preview` 和 `serve`：看半成品正是它们的用途。
-
-## 审查
-
-`pptwise audit <target> [--json]` 离屏渲染每一页，跑一遍确定性几何审查，不靠模型看截图，两次跑出来的结果一样。
-
-七类检查：
-
-- **溢出**：文字超出自己的框或列。
-- **越界**：内容超出页面边缘。
-- **低对比度**：文字与其所在背景的 WCAG 相对亮度对比度不达标。
-- **重叠**：两个组件的区域大面积相交。
-- **内容截断**：渲染器为适配版面切了字，打上 `data-truncated="1"`，画面上不画溢出标记。
-- **内容丢失**：一张卡片列表被截断到放得下的条数，或者整个组件放不下被整块丢掉。渲染器打上静默的 `data-dropped`（页级还有 `data-dropped-silent`），页面上不出现「+N 更多」。
-- **单调**：连续三页或更多已审计页以同一组件类型开头。占位页和没有组件的页会打断这段连续。finding 会写出类型和页码范围，并建议把相邻页的首个组件错开（bullets、chart、kpi、blockquote），避免整段读起来像同一套模板。
-
-audit 是建议性工具，不是硬门。结构非法或密度超标的 deck 由 `validate` 拦下，audit 抓的是一份*合法* deck 在渲染层仍可能出现的问题：作者选了一个贴近背景色的文字颜色、两个组件的内容恰好撞在一起、一张卡片列表放不下丢了一条。
-
-加上 `--pixels`（仅 Node，需要可选依赖 `sharp`）还能抓住文字直接压在没有遮罩的照片背景上这一种情况，做法是把该页光栅化成真实像素再采样。每次结果都带一个 `checks` 字段（`{ svg: "completed", pixels: "not-requested" | "completed" }`），让调用方分得清「没查」和「查了没问题」。像素层自身的跨平台一致性说明见 [`contrast-system.md`](./contrast-system.md)。
-
-建议在所有页面填完之后跑一遍。人读输出按页分组报错（`page 3 (p-kpi): [low-contrast] …`，每条消息都带修正建议），末尾附一行汇总。`--json` 输出完整的机器可读报告。exit code 本身即可供 agent 判断：干净是 `0`，发现问题是 `1`。按报错修那一页再单独重跑一次 `audit` 即可，不必重新渲染。被跳过的占位页会在汇总里注明。
+## 推荐项目回路
 
 ```bash
-pptwise audit examples/basic.json
-# → audited 5 pages, 0 skipped, 0 findings
+pptwise spec validate deck-dir/deck.spec.json
+pptwise assemble deck-dir/
+pptwise validate deck-dir/
+pptwise audit deck-dir/
+pptwise render deck-dir/
+pptwise preview deck-dir/ --html
 ```
 
-## 配图简报
+每轮验证之间最多填四页。需要用户在浏览器中实时评审时使用 `serve`。
 
-`pptwise asset-brief <target> [--json]` 输出一份生图提示词需要、调用方却看不到的简报：每个 `image` 组件的真实渲染框，而不是版式的名义槽位。
+## 命令索引
 
-每个 `image` 组件的条目包含渲染出的 `frame`（x/y/w/h 加宽高比，来自一次离屏渲染，不是手抄的常量）、带裁切安全区说明的 `fit` 模式、`suggested_pixels`（框的 2 倍分辨率）、该主题的 `palette` 与 `mood`，以及一段可直接粘贴的英文 `suggested_prompt`。
+| command | 作用 |
+| --- | --- |
+| `render <target>` | 渲染原生可编辑 PPTX。 |
+| `validate <target>` | 验证 IR、主题绑定、菜单 kind、组件、资产与内容质量。 |
+| `audit <target>` | 运行确定性视觉与几何检查。 |
+| `asset-brief <target>` | 报告真实图片画框、裁切、配色、安全区与提示词。 |
+| `schema` | 打印 IR、spec 或 style 覆盖 JSON Schema。 |
+| `spec validate <file>` | 验证主题形状的 deck spec。 |
+| `assemble <dir|name>` | 把 deck 项目合并成派生 IR v5。 |
+| `disassemble <ir.json>` | 把 IR v5 拆成 spec、页面文件与资产。 |
+| `themes` | 列出 24 个出厂预设及元数据。 |
+| `theme new` | 把命名主题拷贝为自包含 v2 文件。 |
+| `theme fork` | 拷贝主题，并围绕新锚色重推导配色。 |
+| `theme try` | 用两到四个主题渲染固定试衣样稿。 |
+| `brand extract` | 从 Office 文件抽取颜色与字体，产出完整 v2 主题。 |
+| `narratives` | 列出命名叙事预设与三轴。 |
+| `layouts` | 为引擎维护检查内部脸注册表。 |
+| `images search` | 搜索已配置的图库来源。 |
+| `images fetch` | 把一张选定图库图片固定到 deck。 |
+| `images list` | 列出某 deck 已固定的图片。 |
+| `images generate` | 通过已启用的本地 CLI 生成并固定图片。 |
+| `config set` | 设置可选用户配置。 |
+| `config show` | 显示已生效配置，秘密会遮盖。 |
+| `init` | 在当前目录创建 `pptwise.config.json`。 |
+| `preview <target>` | 写出 SVG 页面与可选的自包含评审文件。 |
+| `serve <target>` | 启动自动刷新的评审服务。 |
+| `doctor` | 检查运行时、skill 副本、插件状态、可选能力与自检渲染。 |
+| `check-update` | 检查 npm 是否有新版本。 |
+| `self-update` | 更新全局安装。 |
 
-`assets.images` 里没有可用资产的 `asset_id` 依然会拿到完整条目，标为 `missing: true`，这就是待生成清单。选中的版式实际没画出来的组件标为 `rendered: false`，而不是被悄悄丢掉。
+`layouts` 暴露的是维护者使用的引擎词汇。Deck 作者与创作 agent 只选择内容 `kind`，不写内部脸 id。
 
-简报是纯信息性输出：不设 exit code 硬门，不改动渲染管线，也不调用任何生图 API。
+## Render
 
 ```bash
-pptwise asset-brief my-deck/
-# → page 3 (content, p-hero) — pic (missing)
-#     frame: 613x307 @ (571,203), aspect 2:1, cover
-#     suggested pixels: 1226x614
-#     ...
+pptwise render <target> \
+  [-o <out.pptx>] \
+  [--style <override.json>] \
+  [--draft] \
+  [--allow-dropped-content] \
+  [--no-git-ignore]
 ```
 
-## 体检
+省略 `-o` 时，输出写到项目根目录下的 `.pptwise/<deck>/<deck>.pptx`。`--style` 应用由 `pptwise schema --style` 描述的底层样式 token 覆盖。它不是主题切换，也不会改变菜单。
 
-`pptwise doctor [--json]` 体检本机的安装状况。它只读本地状态：不写任何文件，不发任何网络请求。渲染 PPTX 仍然不需要凭据。images 段只报告 Pexels/Pixabay/Openverse 凭据有没有、来自文件还是环境变量，从不打印值。随后的 generators 段报告 grok、codex、antigravity 是否在 PATH 上，以及是否已打开。
+`--draft` 允许占位页。`--allow-dropped-content` 允许已知内容丢失，只能在用户明确同意时使用。正常处理方式是缩短或拆页。
 
-八段内容，报告按这个顺序输出：
-
-- **已安装的 skill 副本。** 装好的 skill 是一份*拷贝*：[`INSTALL.md`](../INSTALL.md) 第 2 步把整个文件夹复制进 harness 的 skill 目录，那份拷贝就永远停在复制当天的启动器上。升级 CLI 不会碰它，于是 `pptwise --version` 报着新版本，机器上的副本却可能停在几个月前。doctor 会扫 `~/.claude/skills`、`~/.codex/skills`、`~/.agents/skills`（Pi 和 OpenCode 都读最后这个）下有没有 `pptwise/` 文件夹，从每份副本的 `scripts/run.sh` 里读出 `PINNED` 版本，落后于当前 CLI 的标为 stale，并给出就地覆盖它的那一条 clone + copy（就是 [`INSTALL.md`](../INSTALL.md) 第 2 步的命令，指向那份副本）。一份副本都没找到是正常状态，不是问题：dsh 上 skill 随插件一起发，CLI 本身也能单独用。副本里没有 `run.sh`、或者 `run.sh` 里没有 `PINNED` 行，报成「版本未知」，而不是让扫描失败。
-- **DSH 插件。** `~/.dsh/` 存在时，逐个检查 `~/.dsh/profiles/` 下的每个 profile 有没有装 `@liustack/pptwise`，版本优先从该 profile 自己的 `node_modules` 里读（那才是真正会被加载的那份），读不到再退回它 `package.json` 里声明的版本。落后于当前 CLI 的 profile 会给出带版本号的安装命令 `npx -y @deepseek-ai/dsh plugin --profile <profile> add @liustack/pptwise@<version>`：版本是故意写死的，因为 dsh 走的 pnpm 会压住 24 小时内发布的版本，`@latest` 会被悄悄解析成一个更旧的版本。没有 `~/.dsh/` 就是这项不适用，跟没通过不是一回事。
-- **运行时。** Node 版本对照 `engines` 下限（22.19）；跑在 Bun 上时额外报出 Bun 自己的版本。
-- **可选能力。** `sharp` 能不能 import、`soffice` 在不在 PATH 上。没有 sharp，预览光栅化和 `audit --pixels` 用不了，纯 SVG 预览和 `.pptx` 渲染不受影响。没有 soffice，PDF 导出这条路用不了，同样不影响主流程。
-- **自检渲染。** 一份内置的小 deck 走一遍真实管线，全程在内存里：校验、渲染一页 SVG、生成 `.pptx` 字节，不落盘。报告里带耗时毫秒数。其余几项都是在观察环境，这一项直接证明东西是能用的。
-- **工作区产物。** 从 cwd 解析出的项目根、`.pptwise/`（或配置的 `outDir`）的绝对路径、git 是否已经忽略它。只报告，不因此失败，也不写 exclude。
-- **Images。** 可选的图库搜索。每个源标 present 或 missing，带来源 `(file)` / `(env)`。缺 key 只是说明，不是硬失败。POSIX 上用户配置文件对组/其他人可读也是 warning（`chmod 600`）。值从不打印。
-- **Image generators。** 可选的本机生图 CLI（grok、codex、antigravity）。每个标 found 或 not found，enabled 或 disabled。没找到或未打开只是说明，不算 warning，也不是硬失败。打开用 `pptwise config set images.generators.<id>.enabled true`。
-
-exit code 只有硬失败才是 `1`：Node 低于下限，或自检渲染没跑通。skill 副本落后、dsh 插件落后、可选能力缺失、图库 key 未配都算 warning，仍然 exit `0`，因为写 IR → validate → render 这条主流程在这些情况下照样能走完。`--json` 输出完整的结构化报告（`skills.copies[]`、`dsh.profiles[]`、`capabilities[]`、`selfTest`、`workspace`、`images`、`generators`，以及 exit code 所依据的 `errors`/`warnings` 两个数组）。
+## Validate 与 audit
 
 ```bash
-pptwise doctor
-# → Installed skill copies (a copy keeps its install-time version forever)
-#     [!] Codex: /Users/me/.codex/skills/pptwise — pins 0.14.0 (stale)
-#         fix: rm -rf /tmp/pptwise-src && git clone --depth 1 https://github.com/liustack/pptwise.git /tmp/pptwise-src && cp -R /tmp/pptwise-src/skills/pptwise/. /Users/me/.codex/skills/pptwise/
-#   ...
-#   Self-test render (a built-in deck through the real pipeline, in memory)
-#     [ok] 2 slides validated, rendered, and packed into 20952 bytes in 244ms
-#
-#   0 errors, 1 warning
+pptwise validate <target>
+pptwise audit <target> [--json] [--pixels]
 ```
 
-## agent 回路
+Validation 覆盖严格 IR v5 结构、已安装主题、主题菜单 kind、有效边界脸、组件规则、重复 id、资产、叙事、物理容量与编辑警告。错误会阻止 `OK`，警告不会。
 
-推荐给 agent 的生成回路：
+Audit 渲染确定性 SVG，并检查：
 
-1. 编写前跑 `pptwise schema`、`schema --spec`、`narratives --json`、`themes --json` 与 `layouts --json`。
-2. 用任务场合与所需 `identity` 路由主题，叙事推荐只作参考。需要时用 `preview --themes` 比较两到四个候选。
-3. 写 spec 与页面 JSON，或写裸 IR。
-4. 跑 `pptwise validate` 并按带页码的可执行信息修正。
-5. 给任何图片位生成美术之前跑 `pptwise asset-brief`。真实渲染框和裁切模式在 IR 里看不出来。
-6. 跑 `pptwise audit`，exit code 本身就说明是否干净。
-7. 跑 `pptwise preview` 做视觉审阅，再跑 `pptwise render`。
+- `overflow`
+- `out-of-bounds`
+- `low-contrast`
+- `overlap`
+- `content-truncated`
+- `content-dropped`
+- `monotony`
 
-`pptwise preview --html` 还会额外写出一个自包含的 `preview.html` 供人工审查：支持键盘翻页、占位页角标，打开后零网络请求（远程 URL 的图片资产仍是远程链接，这是自包含性上唯一的缺口）。所有页面都填好之后，这份页面还会叠加同一份 `audit` 结果：每页一个数量角标，加一个可点击跳转的 findings 面板。deck 里还有占位页时，显示一行「audit 已跳过」的提示代替。
+任意发现都会让退出码变为 1。`--pixels` 增加压图文字的像素对比度采样，需要 `sharp`。
 
-`preview.html` 是只读的：它只呈现 deck，从不写入。审阅者想改什么就在对话里说，通常附上页面截图，再由 agent 改回 `pages/*.json`。`pptwise serve <target>` 把同一个页面做成实时版本，源文件变化后自动刷新。deck 项目会监视 `theme.json`，裸 IR 还会监视 `--theme-file` 传入的文件。主题编辑无需重启服务就会重新读取。
+## Schema 与 spec
 
-除了 `preview.html`，`preview --html` 还会写出 `manifest.json`：一份扁平的页面清单，含稳定 id、每页对应的 SVG 文件、画布尺寸，以及逐页的审计发现。这是给**程序**读的那一半——自带 UI 的 harness 据此把 deck 画出来，没有 UI 的就打开那个 HTML，两边都不需要重新渲染一遍。
+```bash
+pptwise schema
+pptwise schema --spec
+pptwise schema --style
+pptwise spec validate deck-dir/deck.spec.json
+```
 
-这套回路由 skill 封装给 agent 使用（[`skills/pptwise/SKILL.zh-CN.md`](../skills/pptwise/SKILL.zh-CN.md)），不论装的是 skill 文件夹还是 DSH 插件。回路本身由一个模型无关的内部基准测试（`tests/bench/`，不发布到 npm）机械化验证，固定题库，评估模型跟随该 skill 的表现，细节见 `tests/bench/README.md`。
+IR 版本是 `"5"`，deck spec 版本是 `"1"`，主题文件版本是数字 `2`。当前 IR 没有 `seed`、`layout`、`beat` 或 `arrangement` 字段。
 
-## 延伸
+## Assemble 与 disassemble
 
-- [`ir.zh-CN.md`](./ir.zh-CN.md)：IR 里写什么、叙事、版式选型、deck 项目。
-- [`themes.zh-CN.md`](./themes.zh-CN.md)：24 套内置主题（24 个 id）、品牌抽取、style 覆盖。
-- [`concepts.md`](./concepts.md)：theme/layout/component/narrative 概念模型（英文）。
-- [`deck-projects.md`](./deck-projects.md)：deck 项目格式详解（英文）。
+```bash
+pptwise assemble <dir|name> [-o <deck.json>]
+pptwise disassemble <ir.json> -o <dir>
+```
+
+Assembly 组合 spec 拥有的语义、只含内容的页面文件与本地资产。缺失页面文件会变成占位页。它不持久化脸的选择或其他渲染状态。
+
+Disassembly 拒绝覆盖已有 `deck.spec.json`。它保留页面 id，并在输入来源可复制或解码时写出资产文件。
+
+## 主题
+
+```bash
+pptwise themes [--json]
+
+pptwise theme new --from <preset-or-name> \
+  [-o <theme.json>] [--id <id>] [--label <label>]
+
+pptwise theme fork <name> --primary "#0B5FFF" \
+  [--bg <hex>] [--accent <hex>] [--text <hex>] [--surface <hex>] \
+  [-o <theme.json>] [--id <id>] [--label <label>]
+
+pptwise theme try <id,id,...> [-o <dir>]
+```
+
+`theme new` 拷贝一个预设或已解析的工作区主题。输出路径与 id 至少传一个。新主题是完整且独立的对象。
+
+`theme fork` 保留菜单，重推导依赖样式 token，并运行对比度门。在把 `#` 识别为注释起点的 shell 中，应给 hex 加引号。
+
+`theme try` 要求两个到四个互不重复的名称。默认把对比图写到 `.pptwise/theme-try/`。它永远不会修改 deck 绑定。
+
+主题名称先从 deck 目录解析，再从向上查找的工作区 `themes/` 目录解析，最后查出厂预设。未知名称报错。工作区主题不能遮蔽预设 id。
+
+## 品牌抽取
+
+```bash
+pptwise brand extract <file.thmx|file.potx|file.pptx> \
+  -o <theme.json> \
+  [--id <id>] [--label <label>] [--from <donor>]
+```
+
+抽取完全在本机运行。它复制供体的完整菜单，把抽出的颜色与字体锚点送入整套配色推导，并写出完整 v2 主题。`--from` 默认是 `consulting`。
+
+## 叙事与引擎检查
+
+```bash
+pptwise narratives [--json]
+pptwise layouts [--json]
+```
+
+Narratives 报告命名预设、具体 strategy、pacing、audience 三轴与主题推荐。推荐用于 spec 前的主题选择，不参与选脸。
+
+`layouts` 报告内部注册记录、容量、槽位与引擎标记。开发脸或检查菜单注册时使用。它的 id 不应出现在 IR v5 或 deck spec 中。
+
+## 图片
+
+```bash
+pptwise asset-brief <target> [--json]
+pptwise images search <query> \
+  [--orientation landscape|portrait|square] \
+  [--color <name-or-hex>] [--min-width <px>] [--min-height <px>]
+pptwise images fetch <provider:id> --deck <dir> --as <asset_id> [--query <text>]
+pptwise images list --deck <dir>
+pptwise images generate --deck <dir> --as <asset_id> [--prompt <text>]
+```
+
+搜索依次检查 Pexels、已配置的 Pixabay 和经过商业用途过滤的 Openverse 来源。Fetch 把选定文件与来源 sidecar 固定在 `.pptwise/<deck>/assets/`。Generate 使用已启用的本地生成器，省略 `--prompt` 时读取 asset brief 提示词。
+
+## Preview 与 serve
+
+```bash
+pptwise preview <target> [-o <dir>] [--html] [--no-git-ignore]
+pptwise serve <target> [--port <number>] [--no-open]
+```
+
+Preview 为每页写一个 SVG。`--html` 还会写一个内联评审界面，带缩略图、键盘导航、占位页标记，以及完整 deck 的 audit 输出。
+
+Serve 监听 IR 或项目源文件，包括 deck 本地的 `theme.json`，并刷新浏览器。Agent 应传 `--no-open`，报告准确 URL，结束时只停止自己启动的进程。
+
+## 配置与体检
+
+```bash
+pptwise init
+pptwise config set <key> [value]
+pptwise config show
+pptwise doctor [--json]
+pptwise check-update
+pptwise self-update
+```
+
+设置秘密时省略 `config set` 的 value，可以通过隐藏输入填写。`doctor` 只在硬失败时以退出码 1 结束。可选的 `sharp` 与 LibreOffice 能力会单独报告。
+
+除非命令收到 `--no-git-ignore`，生成的 `.pptwise/` 会加入仓库本地 exclude 文件。
