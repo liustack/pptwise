@@ -3,9 +3,8 @@
  * (brand-extract wave, 裁定 5: **never commit a real Microsoft theme file**
  * — copyright — so every fixture this wave's tests use is built here, in
  * code, from a minimal hand-written `<a:theme>` XML string wrapped in a
- * JSZip package). Not test-only despite living under `__fixtures__/` (same
- * convention `themes/__fixtures__/pre-wave-undeclared-layout-sequences.json`
- * already established for this directory): `src/themes/extract/brand-extract.test.ts`
+ * JSZip package). Not test-only despite living under `__fixtures__/`:
+ * `src/themes/extract/brand-extract.test.ts`
  * and `src/themes/brand-theme-file.test.ts` both import it, and
  * `src/cli/commands.test.ts`'s `pptwise brand extract` CLI-level tests reuse
  * it too, so a fixture only needs describing once.

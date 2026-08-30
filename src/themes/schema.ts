@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { BrandConfigSchema, BUILTIN_THEME_IDS, KIND_VALUES, type BrandConfig, type Slide } from "@/ir"
+import { BrandConfigSchema, BUILTIN_THEME_IDS, KIND_VALUES, type BrandConfig } from "@/ir"
 import type { MotifId } from "../motifs/types"
 import { OCCASION_VOCAB, type Occasion } from "./occasions"
 import type { StyleTokens } from "./tokens"
@@ -221,38 +221,24 @@ export type MenuEntry = z.infer<typeof MenuEntrySchema>
 export type Menu = z.infer<typeof MenuSchema>
 export type ThemeFile = z.infer<typeof ThemeFileSchema>
 
-/** Transitional input used only by the built-in v1 declarations until S1-B rewrites them as menus. */
-export type BuiltinFaceReference =
-  | string
-  | {
-      id: string
-      params?: {
-        morph?: { variant: string }
-        decor?: { pieces: number }
-        capacity?: { slot: string; max: number }
-      }
-    }
-
 /**
  * Internal declaration accepted from `builtin/`. It is intentionally a
- * superset of the public complete-theme contract. Existing built-in board
- * constructor knobs remain in the engine-only `style.shape.cover` field.
- * The public style schema rejects that field, and limited decorations remain
- * inside the registered motif implementations.
+ * superset of the public complete-theme contract: built-in board constructor
+ * knobs stay in the engine-only `style.shape.cover` field (the public style
+ * schema rejects it), and the theme-wide `motif` anchor stays here because
+ * the public contract expresses decoration per menu entry only.
  */
 export interface BuiltinThemeDeclaration {
-  version: 1
+  version: 2
   id: (typeof BUILTIN_THEME_IDS)[number]
   label: string
   style: StyleTokens
   brand?: BrandConfig
   occasions?: readonly Occasion[]
   identity?: "low" | "medium" | "high"
-  faces: Record<Slide["type"], readonly BuiltinFaceReference[]>
+  menu: Menu
   motif?: {
     id: MotifId
     params?: { intensity?: "subtle" | "normal" }
   }
-  tendencies?: Partial<Record<Slide["type"], readonly string[]>>
-  sparse?: readonly (typeof SPARSE_LAYOUT_IDS)[number][]
 }

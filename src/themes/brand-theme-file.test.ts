@@ -33,134 +33,111 @@ describe("parseBrandThemeFile", () => {
     expect(() => parseBrandThemeFile(theme, "bad.theme.json")).toThrow(/hex color/)
   })
 
-  it("hard-rejects the legacy BrandThemeFile shape with the v1 migration outline", async () => {
+  it("hard-rejects every retired v1 shape by naming the current format, with no migration offer", async () => {
     const current = await extractFixtureTheme()
-    const legacy = { id: current.id, label: current.label, style: current.style, brand: {}, tags: [] }
-    expect(() => parseBrandThemeFile(legacy, "legacy.theme.json")).toThrow(
-      /legacy BrandThemeFile.*version.*base.*faces.*docs\/brand-extraction\.md/i,
-    )
+    for (const retired of [{ version: 1 }, { base: "consulting" }, { faces: { cover: ["poster-center"] } }]) {
+      expect(() => parseBrandThemeFile({ ...current, ...retired }, "legacy.theme.json")).toThrow(
+        /current theme format is version 2.*self-contained.*No migration tool is provided/is,
+      )
+    }
   })
 })
 
 describe("registerBrandThemeFile", () => {
-  it("registers a partial through registerTheme and inherits every structural field from its base", async () => {
+  it("registers an extracted file as its own self-contained theme, inheriting nothing", async () => {
     const theme = await extractFixtureTheme()
-    const base = getThemeDefinition("consulting")
     const id = registerBrandThemeFile(theme)
     expect(id).toBe("acme")
     expect(getInstalledThemeIds()).toContain("acme")
+
     const def = getThemeDefinition("acme")
     expect(def.style.colors.text).toBe(theme.style.colors.text)
-    // Component forms and sparse boarded faces dispatch through
-    // StyleTokens.id. A partial uses its base id there so it inherits those
-    // structural tables too, while its public file id remains "acme".
-    expect(def.style.id).toBe("consulting")
-    expect(Object.prototype.hasOwnProperty.call(theme.style.shape ?? {}, "cover")).toBe(false)
-    expect(def.style.shape?.cover).toBe(base.style.shape?.cover)
-    expect(def.layouts).toEqual(base.layouts)
-    expect(def.motif).toBe(base.motif)
-    expect(def.layoutTendencies).toEqual(base.layoutTendencies)
-    expect(def.sparseLayouts).toEqual(base.sparseLayouts)
+    // Its own id everywhere: no donor theme lends its structural tables, and
+    // the engine-only board knobs never reach a public file.
+    expect(def.style.id).toBe("acme")
+    expect(def.style.shape?.cover).toBeUndefined()
+    expect(def.menu).toEqual(theme.menu)
+    expect(def.motif).toBeUndefined()
+    const consulting = getThemeDefinition("consulting")
+    expect(def.layouts).not.toEqual(consulting.layouts)
   })
 
-  it("loads a complete theme with curated pin-only faces, parameters, motif, tendencies, and sparse offers", async () => {
+  it("loads a complete v2 menu, deriving the transitional layout record from it", async () => {
     const extracted = await extractFixtureTheme("acme-complete")
     const file = parseBrandThemeFile(
       {
-        version: 1,
+        version: 2,
         id: "acme-complete",
         style: extracted.style,
-        faces: {
-          cover: ["gauge-verdict"],
-          chapter: ["gauge-section"],
-          content: [{ id: "gauge-stats", params: { capacity: { slot: "body", max: 3 } } }],
-          ending: ["gauge-next"],
+        menu: {
+          cover: { face: "gauge-verdict" },
+          chapter: { face: "gauge-section" },
+          content: {
+            data: { face: "gauge-stats", decor: { kind: "silent" } },
+            photo: { face: "image-split" },
+          },
+          ending: { face: "gauge-next" },
         },
-        motif: { id: "gauge-motif", params: { intensity: "subtle" } },
-        tendencies: {
-          cover: ["gauge-verdict"],
-          chapter: ["gauge-section"],
-          content: ["gauge-stats"],
-          ending: ["gauge-next"],
-        },
-        sparse: ["statement", "verse-chapter"],
       },
       "complete.theme.json",
     )
 
     registerBrandThemeFile(file)
     const def = getThemeDefinition("acme-complete")
+    expect(def.menu).toEqual(file.menu)
+    // The takeover face a menu may legitimately name stays out of the
+    // archetype-only pool the pre-S1-A selector samples.
     expect(def.layouts).toEqual({
       cover: ["gauge-verdict"],
       chapter: ["gauge-section"],
       content: ["gauge-stats"],
       ending: ["gauge-next"],
     })
-    expect((def as unknown as { faces?: unknown }).faces).toEqual((file as unknown as { faces?: unknown }).faces)
-    expect(def.motif).toBe("gauge-motif")
-    expect(def.motifParameters).toEqual({ intensity: "subtle" })
-    expect(def.layoutTendencies).toEqual((file as unknown as { tendencies?: unknown }).tendencies)
-    expect(def.sparseLayouts).toEqual((file as unknown as { sparse?: unknown }).sparse)
+    expect(def.menu.content.data?.decor).toEqual({ kind: "silent" })
   })
 
-  it("rejects an unknown complete face at the registry gate", async () => {
+  it("rejects an unknown menu face at the registry gate", async () => {
     const extracted = await extractFixtureTheme("acme-unknown-face")
     const file = parseBrandThemeFile(
       {
-        version: 1,
+        version: 2,
         id: "acme-unknown-face",
         style: extracted.style,
-        faces: {
-          cover: ["not-a-layout"],
-          chapter: ["gauge-section"],
-          content: ["gauge-stats"],
-          ending: ["gauge-next"],
+        menu: {
+          cover: { face: "not-a-layout" },
+          chapter: { face: "gauge-section" },
+          content: { data: { face: "gauge-stats" } },
+          ending: { face: "gauge-next" },
         },
       },
       "unknown-face.theme.json",
     )
 
-    expect(() => registerBrandThemeFile(file)).toThrow(/faces\.cover.*unknown layout id "not-a-layout"/)
+    expect(() => registerBrandThemeFile(file)).toThrow(
+      /menu\.cover\.face references unknown layout id "not-a-layout"/,
+    )
   })
 
-  it("rejects a complete face whose registry entry belongs to another page type", async () => {
+  it("rejects a menu face whose registry entry belongs to another page type", async () => {
     const extracted = await extractFixtureTheme("acme-wrong-face")
     const file = parseBrandThemeFile(
       {
-        version: 1,
+        version: 2,
         id: "acme-wrong-face",
         style: extracted.style,
-        faces: {
-          cover: ["two-column"],
-          chapter: ["gauge-section"],
-          content: ["gauge-stats"],
-          ending: ["gauge-next"],
+        menu: {
+          cover: { face: "two-column" },
+          chapter: { face: "gauge-section" },
+          content: { data: { face: "gauge-stats" } },
+          ending: { face: "gauge-next" },
         },
       },
       "wrong-face.theme.json",
     )
 
-    expect(() => registerBrandThemeFile(file)).toThrow(/faces\.cover.*"two-column".*not valid for "cover"/)
-  })
-
-  it("rejects a face capacity adjustment above the registry slot capacity", async () => {
-    const extracted = await extractFixtureTheme("acme-capacity")
-    const file = parseBrandThemeFile(
-      {
-        version: 1,
-        id: "acme-capacity",
-        style: extracted.style,
-        faces: {
-          cover: ["gauge-verdict"],
-          chapter: ["gauge-section"],
-          content: [{ id: "two-column", params: { capacity: { slot: "body", max: 5 } } }],
-          ending: ["gauge-next"],
-        },
-      },
-      "capacity.theme.json",
+    expect(() => registerBrandThemeFile(file)).toThrow(
+      /menu\.cover\.face layout "two-column" is not valid for "cover" slides/,
     )
-
-    expect(() => registerBrandThemeFile(file)).toThrow(/params\.capacity\.max is 5.*capacity 4/)
   })
 
   it("refuses to shadow a builtin id, naming the fix", async () => {

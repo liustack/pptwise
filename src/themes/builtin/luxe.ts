@@ -1,6 +1,5 @@
 import type { StyleTokens } from "../tokens";
 import type { BuiltinThemeDeclaration } from "../schema";
-import { FRAMED_CONTENT_FACES } from "./shared";
 
 /**
  * luxe（高端品牌）——原 retail 主题改名+黑金重定位（2026-07-10 用户视觉
@@ -49,6 +48,8 @@ import { FRAMED_CONTENT_FACES } from "./shared";
  * 装饰见 `src/motifs/motif-luxe-motif.tsx`（请柬金框：双层金框改到
  * 第八波板坐标，框顶金菱退役。封面与 ending 画框，章节与内容页退让。
  * 版式不重画金框）。
+ *
+ * **菜单分派（S1-B）**：请柬语域用的是有框脸池，没有通栏 split-band，data 落在同样满幅但收边的 tone-adaptive-content。points 走 quiet-frame 保住留白，evidence 不上。
  */
 export const LUXE_TOKENS: StyleTokens = {
   id: "luxe",
@@ -88,22 +89,26 @@ export const LUXE_TOKENS: StyleTokens = {
 };
 
 export const LUXE_THEME = {
-  version: 1,
+  version: 2,
   id: "luxe",
   label: "Luxe",
   style: LUXE_TOKENS,
-  faces: {
-    cover: ["invitation-plate-cover"],
-    chapter: ["gilt-ordinal-chapter"],
-    content: FRAMED_CONTENT_FACES,
-    ending: ["gilt-word-ending"],
+  menu: {
+    cover: { face: "invitation-plate-cover" },
+    chapter: { face: "gilt-ordinal-chapter" },
+    content: {
+      points: { face: "quiet-frame" },
+      list: { face: "bento-panel" },
+      comparison: { face: "two-column" },
+      process: { face: "rail-numbered" },
+      data: { face: "tone-adaptive-content" },
+      photo: { face: "image-split" },
+      statement: { face: "statement", decor: { kind: "silent" } },
+      quote: { face: "pull-quote", decor: { kind: "silent" } },
+      fact: { face: "stat-hero", decor: { kind: "silent" } },
+      hierarchy: { face: "asymmetric-triptych" },
+    },
+    ending: { face: "gilt-word-ending" },
   },
   motif: { id: "luxe-motif" },
-  tendencies: {
-    cover: ["invitation-plate-cover"],
-    chapter: ["gilt-ordinal-chapter"],
-    content: ["quiet-frame", "rail-numbered", "two-column"],
-    ending: ["gilt-word-ending"],
-  },
-  sparse: ["pull-quote", "stat-hero", "statement", "verse-chapter"],
 } satisfies BuiltinThemeDeclaration;

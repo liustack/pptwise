@@ -1,6 +1,5 @@
 import type { StyleTokens } from "../tokens";
 import type { BuiltinThemeDeclaration } from "../schema";
-import { DEFAULT_CONTENT_FACES } from "./shared";
 
 /**
  * **深底组皮肤重设计（2026-08-19，`.issues/2026-08-18-theme-redesign/skins/`
@@ -45,6 +44,8 @@ import { DEFAULT_CONTENT_FACES } from "./shared";
  * 装饰见 `src/motifs/motif-constellation-motif.tsx`（第八波：星座链与
  * 碎点退役，改为顶缘细规线，border，永不亮色。内容页青点睛必须骑在线上。
  * chapter 退让，空心序号与底规青段归 `stroke-index-chapter`）。
+ *
+ * **菜单分派（S1-B）**：工程件的图是要标注的架构图，photo 因此选 image-annotate，evidence 承担跑分与实测这类断言配展品的页，quote 不上。
  */
 export const TECH_TOKENS: StyleTokens = {
   id: "tech",
@@ -96,22 +97,26 @@ export const TECH_TOKENS: StyleTokens = {
 };
 
 export const TECH_THEME = {
-  version: 1,
+  version: 2,
   id: "tech",
   label: "Tech",
   style: TECH_TOKENS,
-  faces: {
-    cover: ["type-rule-cover"],
-    chapter: ["stroke-index-chapter"],
-    content: DEFAULT_CONTENT_FACES,
-    ending: ["rule-close-ending"],
+  menu: {
+    cover: { face: "type-rule-cover" },
+    chapter: { face: "stroke-index-chapter" },
+    content: {
+      points: { face: "narrow-column" },
+      list: { face: "bento-panel" },
+      comparison: { face: "two-column" },
+      process: { face: "rail-numbered" },
+      data: { face: "split-band" },
+      photo: { face: "image-annotate" },
+      statement: { face: "statement", decor: { kind: "silent" } },
+      fact: { face: "stat-hero", decor: { kind: "silent" } },
+      evidence: { face: "one-evidence", decor: { kind: "silent" } },
+      hierarchy: { face: "asymmetric-triptych" },
+    },
+    ending: { face: "rule-close-ending" },
   },
   motif: { id: "constellation-motif" },
-  tendencies: {
-    cover: ["type-rule-cover"],
-    chapter: ["stroke-index-chapter"],
-    content: ["bento-panel", "rail-numbered", "split-band"],
-    ending: ["rule-close-ending"],
-  },
-  sparse: ["stat-hero", "statement", "one-evidence", "verse-chapter"],
 } satisfies BuiltinThemeDeclaration;

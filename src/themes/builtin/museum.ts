@@ -1,6 +1,5 @@
 import type { StyleTokens } from "../tokens";
 import type { BuiltinThemeDeclaration } from "../schema";
-import { DEFAULT_CONTENT_FACES } from "./shared";
 
 /**
  * museum（博物）——2026-08-21 新增第 20 个 theme id（第 19 个结构身份）。
@@ -48,6 +47,8 @@ import { DEFAULT_CONTENT_FACES } from "./shared";
  *
  * 可拉伸性：铜金即参数（自然科普可换成氧化绿 `#5E8A62`，人文讲座 bg 可
  * 收到石黑 `#1A1814`、accent 收到旧银 `#C4B8A0`）。
+ *
+ * **菜单分派（S1-B）**：厅堂靠留白与展签，points 用居中的 quiet-frame，evidence 正是一件展品配一句说明的展签格式，photo 用图文对开的 image-split，quote 不上。
  */
 export const MUSEUM_TOKENS: StyleTokens = {
   id: "museum",
@@ -86,21 +87,25 @@ export const MUSEUM_TOKENS: StyleTokens = {
 };
 
 export const MUSEUM_THEME = {
-  version: 1,
+  version: 2,
   id: "museum",
   label: "Museum",
   style: MUSEUM_TOKENS,
-  faces: {
-    cover: ["poster-center"],
-    chapter: ["hall-label-chapter"],
-    content: DEFAULT_CONTENT_FACES,
-    ending: ["exit-word-ending"],
+  menu: {
+    cover: { face: "poster-center" },
+    chapter: { face: "hall-label-chapter" },
+    content: {
+      points: { face: "quiet-frame" },
+      list: { face: "bento-panel" },
+      comparison: { face: "two-column" },
+      process: { face: "rail-numbered" },
+      data: { face: "split-band" },
+      photo: { face: "image-split" },
+      statement: { face: "statement", decor: { kind: "silent" } },
+      fact: { face: "stat-hero", decor: { kind: "silent" } },
+      evidence: { face: "one-evidence", decor: { kind: "silent" } },
+      hierarchy: { face: "asymmetric-triptych" },
+    },
+    ending: { face: "exit-word-ending" },
   },
-  tendencies: {
-    cover: ["poster-center"],
-    chapter: ["hall-label-chapter"],
-    content: ["split-band", "two-column", "quiet-frame"],
-    ending: ["exit-word-ending"],
-  },
-  sparse: ["statement", "one-evidence", "stat-hero", "verse-chapter"],
 } satisfies BuiltinThemeDeclaration;

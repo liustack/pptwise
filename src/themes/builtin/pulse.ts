@@ -1,6 +1,5 @@
 import type { StyleTokens } from "../tokens";
 import type { BuiltinThemeDeclaration } from "../schema";
-import { DEFAULT_CONTENT_FACES } from "./shared";
 
 /**
  * pulse（医疗健康/生命科学）——2026-07-28 themes-16 wave task T1（第 14
@@ -62,6 +61,8 @@ import { DEFAULT_CONTENT_FACES } from "./shared";
  *
  * 装饰见 `src/motifs/motif-pulse-motif.tsx`（心搏线 v3：封面页中一笔
  * 心搏线。顶缘心电线与右缘细胞圈退役）。
+ *
+ * **菜单分派（S1-B）**：诊疗件求稳，七道常规讲法就够，photo 用可加角注的 image-annotate 承影像图。高潮页会把临床语气带偏，宣言、引用、大数字、单证据都不上。
  */
 export const PULSE_TOKENS: StyleTokens = {
   id: "pulse",
@@ -103,22 +104,23 @@ export const PULSE_TOKENS: StyleTokens = {
 };
 
 export const PULSE_THEME = {
-  version: 1,
+  version: 2,
   id: "pulse",
   label: "Health & Life Science",
   style: PULSE_TOKENS,
-  faces: {
-    cover: ["report-open-cover"],
-    chapter: ["subject-rule-chapter"],
-    content: DEFAULT_CONTENT_FACES,
-    ending: ["care-plan-ending"],
+  menu: {
+    cover: { face: "report-open-cover" },
+    chapter: { face: "subject-rule-chapter" },
+    content: {
+      points: { face: "narrow-column" },
+      list: { face: "bento-panel" },
+      comparison: { face: "two-column" },
+      process: { face: "rail-numbered" },
+      data: { face: "split-band" },
+      photo: { face: "image-annotate" },
+      hierarchy: { face: "asymmetric-triptych" },
+    },
+    ending: { face: "care-plan-ending" },
   },
   motif: { id: "pulse-motif" },
-  tendencies: {
-    cover: ["report-open-cover"],
-    chapter: ["subject-rule-chapter"],
-    content: ["bento-panel", "rail-numbered"],
-    ending: ["care-plan-ending"],
-  },
-  sparse: [],
 } satisfies BuiltinThemeDeclaration;

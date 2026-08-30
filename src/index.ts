@@ -45,7 +45,11 @@ export type { PptxIRV3 } from "./ir/legacy-v3"
 // rewrites content, never re-selects a layout.
 export { migrateIrV3ToV4 } from "./ir/migrate"
 export { registerTheme, getInstalledThemeIds, getThemeDefinition } from "./themes/definitions"
-export type { ThemeDefinition, ThemeRegistration } from "./themes/definitions"
+export type { ThemeDefinition } from "./themes/definitions"
+// The factory preset shelf: the read source for "create a theme = copy a
+// preset into the workspace". A copy shares nothing with its preset.
+export { THEME_PRESETS, getThemePreset, isThemePresetId, copyThemePreset } from "./themes/presets"
+export type { ThemePresetSummary } from "./themes/presets"
 // Brand extraction (brand-extract wave, roadmap §2.0.1): extract brand
 // colors/fonts from a user's own .thmx/.potx/.pptx locally — zip bytes in,
 // pure theme-file JSON out (jszip only, browser-safe) — and load such a file

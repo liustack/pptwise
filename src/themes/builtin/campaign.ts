@@ -1,6 +1,5 @@
 import type { StyleTokens } from "../tokens";
 import type { BuiltinThemeDeclaration } from "../schema";
-import { DEFAULT_CONTENT_FACES } from "./shared";
 
 /**
  * campaign（活力营销）——2026-07-13 memphis 拆分主题 A（用户拍板：场景命名
@@ -44,6 +43,8 @@ import { DEFAULT_CONTENT_FACES } from "./shared";
  *
  * 装饰见 `../../motifs/motif-campaign-motif.tsx`（右上一簇纸屑，最多三枚
  * 斜方片，opacity 0.5，避字。封面口号左齐走 poster-center 的 textAnchor start）。
+ *
+ * **菜单分派（S1-B）**：海报腔：data 交给居中的 stacked-poster（一张图当主角的海报路径），photo 用顶部满幅的 image-top，营销讲自己的话，quote 不上。
  */
 export const CAMPAIGN_TOKENS: StyleTokens = {
   id: "campaign",
@@ -80,22 +81,26 @@ export const CAMPAIGN_TOKENS: StyleTokens = {
 };
 
 export const CAMPAIGN_THEME = {
-  version: 1,
+  version: 2,
   id: "campaign",
   label: "Marketing Campaign",
   style: CAMPAIGN_TOKENS,
-  faces: {
-    cover: ["poster-center"],
-    chapter: ["act-chapter"],
-    content: DEFAULT_CONTENT_FACES,
-    ending: ["pill-cta-ending"],
+  menu: {
+    cover: { face: "poster-center" },
+    chapter: { face: "act-chapter" },
+    content: {
+      points: { face: "narrow-column" },
+      list: { face: "bento-panel" },
+      comparison: { face: "two-column" },
+      process: { face: "rail-numbered" },
+      data: { face: "stacked-poster" },
+      photo: { face: "image-top" },
+      statement: { face: "statement", decor: { kind: "silent" } },
+      fact: { face: "stat-hero", decor: { kind: "silent" } },
+      evidence: { face: "one-evidence", decor: { kind: "silent" } },
+      hierarchy: { face: "asymmetric-triptych" },
+    },
+    ending: { face: "pill-cta-ending" },
   },
   motif: { id: "campaign-motif" },
-  tendencies: {
-    cover: ["poster-center"],
-    chapter: ["act-chapter"],
-    content: ["stacked-poster", "split-band"],
-    ending: ["pill-cta-ending"],
-  },
-  sparse: ["statement", "stat-hero", "one-evidence", "verse-chapter"],
 } satisfies BuiltinThemeDeclaration;

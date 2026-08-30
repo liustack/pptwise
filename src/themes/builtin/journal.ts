@@ -1,6 +1,5 @@
 import type { StyleTokens } from "../tokens";
 import type { BuiltinThemeDeclaration } from "../schema";
-import { DEFAULT_CONTENT_FACES } from "./shared";
 
 /**
  * journal（人文期刊）——原 magazine 主题纯改名（2026-07-10 用户裁决拆分：
@@ -58,6 +57,8 @@ import { DEFAULT_CONTENT_FACES } from "./shared";
  * 四页 `defaultBackgrounds` 仍是期刊纸 `#EFEBE1`。角色色与字体一处不改。
  * 报头双线 motif 留下：封面版式自己画刊头双线，motif 封面不再画 y26/32。
  * 内容 / ending 继续页缘文武双线 + 期号，chapter 继续退让。
+ *
+ * **菜单分派（S1-B）**：铅字编辑腔：quote 是期刊的看家页（pull-quote），photo 用图文对开的 image-split，evidence 的实证格式属于论文不属于特稿，不上。
  */
 
 export const JOURNAL_TOKENS: StyleTokens = {
@@ -99,22 +100,26 @@ export const JOURNAL_TOKENS: StyleTokens = {
 };
 
 export const JOURNAL_THEME = {
-  version: 1,
+  version: 2,
   id: "journal",
   label: "Editorial Journal",
   style: JOURNAL_TOKENS,
-  faces: {
-    cover: ["issue-head-cover"],
-    chapter: ["fascicle-ghost-chapter"],
-    content: DEFAULT_CONTENT_FACES,
-    ending: ["afterword-ending"],
+  menu: {
+    cover: { face: "issue-head-cover", decor: { kind: "silent" } },
+    chapter: { face: "fascicle-ghost-chapter" },
+    content: {
+      points: { face: "narrow-column" },
+      list: { face: "bento-panel" },
+      comparison: { face: "two-column" },
+      process: { face: "rail-numbered" },
+      data: { face: "split-band" },
+      photo: { face: "image-split" },
+      statement: { face: "statement", decor: { kind: "silent" } },
+      quote: { face: "pull-quote", decor: { kind: "silent" } },
+      fact: { face: "stat-hero", decor: { kind: "silent" } },
+      hierarchy: { face: "asymmetric-triptych" },
+    },
+    ending: { face: "afterword-ending" },
   },
   motif: { id: "corner-ornament-motif" },
-  tendencies: {
-    cover: ["issue-head-cover"],
-    chapter: ["fascicle-ghost-chapter"],
-    content: ["two-column", "narrow-column", "bento-panel"],
-    ending: ["afterword-ending"],
-  },
-  sparse: ["pull-quote", "stat-hero", "statement", "verse-chapter"],
 } satisfies BuiltinThemeDeclaration;
