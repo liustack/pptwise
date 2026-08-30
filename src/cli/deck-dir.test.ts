@@ -278,20 +278,12 @@ describe("readDeckDir", () => {
     ])
   })
 
-  it("reports the seed generation the same way assembleDeck does (no spec.seed set)", async () => {
+  it("does not generate a seed (seed is no longer a spec or IR field)", async () => {
     const dir = await tmp()
     await writeDeckSpec(dir)
     const { generatedSeed, ir } = await readDeckDir(dir)
-    expect(generatedSeed).toBeDefined()
-    expect((ir as unknown as { seed?: number }).seed).toBe(generatedSeed)
-  })
-
-  it("passes an explicit spec.seed through with no generatedSeed", async () => {
-    const dir = await tmp()
-    await writeDeckSpec(dir, makePlan({ seed: 999 }))
-    const { generatedSeed, ir } = await readDeckDir(dir)
     expect(generatedSeed).toBeUndefined()
-    expect((ir as unknown as { seed?: number }).seed).toBe(999)
+    expect((ir as unknown as { seed?: number }).seed).toBeUndefined()
   })
 
   describe("missing spec file", () => {
