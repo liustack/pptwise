@@ -1,7 +1,7 @@
 import type { BackgroundSpec } from "../ir"
 import { PptwiseError } from "../errors"
 import { assertContrastFloor } from "../themes/definitions"
-import { deriveMuted } from "../themes/extract/brand-extract"
+import { deriveMuted, deriveMutedUnchecked } from "../themes/extract/brand-extract"
 import { ThemeFileSchema, type ThemeFile } from "../themes/schema"
 
 export interface ForkThemeAnchors {
@@ -41,13 +41,20 @@ function remapBackground(spec: BackgroundSpec, map: Map<string, string>): Backgr
   return spec
 }
 
-function buildForkedTheme(source: ThemeFile, anchors: ForkThemeAnchors, identity: ForkThemeIdentity): ThemeFile {
+function buildForkedTheme(
+  source: ThemeFile,
+  anchors: ForkThemeAnchors,
+  identity: ForkThemeIdentity,
+  unchecked: boolean,
+): ThemeFile {
   const bg = anchors.bg ?? source.style.colors.bg
   const primary = anchors.primary
   const accent = anchors.accent ?? source.style.colors.accent
   const text = anchors.text ?? source.style.colors.text
   const surface = anchors.surface ?? source.style.colors.surface
-  const muted = deriveMuted(text, bg, surface)
+  const muted = unchecked
+    ? deriveMutedUnchecked(text, bg, surface)
+    : deriveMuted(text, bg, surface)
 
   const map = new Map<string, string>()
   map.set(normHex(source.style.colors.bg), bg)
@@ -108,18 +115,18 @@ export function forkTheme(
   anchors: ForkThemeAnchors,
   identity: ForkThemeIdentity,
 ): ThemeFile {
-  const file = buildForkedTheme(source, anchors, identity)
+  const file = buildForkedTheme(source, anchors, identity, false)
   assertContrastFloor(file.id, file.style)
   return file
 }
 
-/** Same as {@link forkTheme} but contrast failure is the caller's to handle. */
+/** Explicit bypass for emitting a file that will be repaired by hand. */
 export function forkThemeUnchecked(
   source: ThemeFile,
   anchors: ForkThemeAnchors,
   identity: ForkThemeIdentity,
 ): ThemeFile {
-  return buildForkedTheme(source, anchors, identity)
+  return buildForkedTheme(source, anchors, identity, true)
 }
 
 export function contrastFloorError(id: string, style: ThemeFile["style"]): string | undefined {

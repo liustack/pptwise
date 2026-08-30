@@ -427,6 +427,19 @@ describe("registerTheme", () => {
     ).toThrow(/colors\.muted/)
   })
 
+  it("rejects text and muted tokens that fail against colors.surface", () => {
+    const base = themeNamed("acme-black-surface")
+    expect(() =>
+      registerTheme({
+        ...base,
+        style: {
+          ...base.style,
+          colors: { ...base.style.colors, surface: "#000000" },
+        },
+      }),
+    ).toThrow(/colors\.text.*colors\.surface.*3\.0:1/)
+  })
+
   it("checks content and ending too, not just cover", () => {
     const base = themeNamed("acme-ending-bad")
     expect(() =>

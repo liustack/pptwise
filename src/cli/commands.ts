@@ -903,6 +903,8 @@ export interface BrandExtractOptions {
   label?: string
   /** Donor preset whose menu and remaining tokens are copied. Default consulting. */
   from?: string
+  /** Write an unchecked file for manual color repair. */
+  unchecked?: boolean
 }
 
 /** `basename(output)` minus a trailing `.theme.json`/`.json`, slugged — the
@@ -960,8 +962,8 @@ async function writeThemeFile(path: string, file: ThemeFile): Promise<void> {
 /**
  * `pptwise brand extract <file> -o <out.theme.json> [--id] [--label] [--from]`
  * extracts colors/fonts locally, copies the donor preset's menu, then
- * `forkTheme`s the donor around the extracted anchors. Contrast failure
- * still writes the file and appends a warning.
+ * `forkTheme`s the donor around the extracted anchors. Contrast failure is
+ * a hard error unless the caller explicitly requests an unchecked file.
  */
 export async function runBrandExtract(file: string, opts: BrandExtractOptions): Promise<string> {
   let bytes: Buffer
@@ -972,12 +974,17 @@ export async function runBrandExtract(file: string, opts: BrandExtractOptions): 
   }
   const id = opts.id ?? defaultThemeIdFor(opts.output)
   assertCustomThemeId(id)
-  const extracted = await extractBrandTheme(bytes, { id, label: opts.label })
+  const extracted = await extractBrandTheme(bytes, {
+    id,
+    label: opts.label,
+    unchecked: opts.unchecked,
+  })
   const from = opts.from ?? "consulting"
   const cwd = dirname(resolve(opts.output))
   const donorResolved = await resolveThemeByName(from, { startDir: cwd })
   const donor = await themeFileFromResolved(donorResolved, { id: extracted.id, label: extracted.label })
-  const theme = forkThemeUnchecked(
+  const buildTheme = opts.unchecked ? forkThemeUnchecked : forkTheme
+  const theme = buildTheme(
     donor,
     {
       primary: extracted.style.colors.primary,

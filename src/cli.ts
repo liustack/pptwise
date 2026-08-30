@@ -289,10 +289,17 @@ brand
   .option("--id <id>", "theme id to register under (default: slug of the output filename)")
   .option("--label <label>", "human-readable theme label (default: the source theme's color-scheme name)")
   .option("--from <preset>", "donor preset whose menu is copied (default: consulting)")
+  .option("--unchecked", "write an unchecked theme file for manual color repair")
   .addHelpText("after", "\nExample:\n  $ pptwise brand extract corp.pptx -o themes/acme.theme.json --from consulting")
-  .action(async (file: string, opts: { output: string; id?: string; label?: string; from?: string }) => {
+  .action(async (file: string, opts: { output: string; id?: string; label?: string; from?: string; unchecked?: boolean }) => {
     try {
-      console.log(await runBrandExtract(file, { output: opts.output, id: opts.id, label: opts.label, from: opts.from }))
+      console.log(await runBrandExtract(file, {
+        output: opts.output,
+        id: opts.id,
+        label: opts.label,
+        from: opts.from,
+        unchecked: opts.unchecked,
+      }))
     } catch (e) {
       fail(e)
     }
