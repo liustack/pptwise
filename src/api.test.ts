@@ -162,7 +162,18 @@ describe("validateIr", () => {
     })
 
     it("accepts a kind offered by the bound theme menu", () => {
-      expect(validateIr({ ...raw, slides: [{ type: "content", kind: "photo", heading: "Photo", components: [] }] }).ok).toBe(true)
+      expect(validateIr({
+        ...raw,
+        assets: { images: { hero: { src: realPngDataUri, alt: "Hero" } } },
+        slides: [
+          {
+            type: "content",
+            kind: "photo",
+            heading: "Photo",
+            components: [{ type: "image", asset_id: "hero", fit: "cover" }],
+          },
+        ],
+      }).ok).toBe(true)
     })
 
     it("hard-rejects a kind outside the bound theme menu and lists the offer", () => {
@@ -2132,6 +2143,38 @@ describe("generatePptx content-drop gate (deep-review P1)", () => {
   it("throws PptwiseError naming the page, the count and the way out", async () => {
     await expect(generatePptx(dropping)).rejects.toThrow(
       /deck drops \d+ content blocks that do not fit the content area, on 1 page: p-2 \(page 2, \d+\) — shorten the content, split the page in two, or pass --allow-dropped-content/,
+    )
+  })
+
+  it("blocks an image-top takeover that omits its fourth body component", async () => {
+    const themeId = registerTestTheme("api-image-top-drop", "consulting", {
+      content: { photo: "image-top" },
+    })
+    const takeoverDropping = {
+      ...raw,
+      theme: { id: themeId },
+      assets: { images: { hero: { src: realPngDataUri, alt: "Hero" } } },
+      slides: [
+        raw.slides[0],
+        {
+          type: "content" as const,
+          kind: "photo" as const,
+          id: "photo-2",
+          heading: "Four supporting points",
+          components: [
+            { type: "image" as const, asset_id: "hero", fit: "cover" as const },
+            ...["One", "Two", "Three", "Four"].map((text) => ({
+              type: "paragraph" as const,
+              text,
+            })),
+          ],
+        },
+      ],
+    }
+
+    expect(validateIr(takeoverDropping).ok).toBe(true)
+    await expect(generatePptx(takeoverDropping)).rejects.toThrow(
+      /deck drops 1 content block.*photo-2 \(page 2, 1\).*--allow-dropped-content/,
     )
   })
 
