@@ -39,12 +39,7 @@ const SLIDE_LEVEL = (path: string): boolean => /^slides\.\d+$/.test(path)
  * message — this table exists because that message only fires for an
  * *explicit* `version: "2"` document, while a hand-edited `version: "4"`
  * document can still carry the same stale field names as plain schema
- * violations. `scenario` is the one exception: it stays inline in
- * `validateIr` rather than here, because its hint also carries the
- * `pptwise migrate` pointer for genuine v3 documents (a distinction that
- * doesn't apply to the v2-only renames below — `blocks`/`variant`/`override`
- * are not valid under v3 either, so pointing at a v3-only migration tool for
- * them would be misleading).
+ * violations.
  */
 const RENAME_HINTS: Readonly<Record<string, RenameHint>> = {
   blocks: {

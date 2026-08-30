@@ -332,10 +332,7 @@ export function normalizeComponentAliases(input: unknown): NormalizeAliasesResul
 // parse as an unrecognized key; `mode`/`delivery` inside `narrative` and the
 // old enum values (`"text"`, `"presentation"`, the `mode`/`strategy` value
 // `"narrative"`) fail `resolveNarrative`'s own runtime axis/value check
-// (`src/narrative`), listing the current values. `pptwise migrate`
-// (`ir/migrate.ts`) remains the sanctioned bridge for a genuine v3 document —
-// v3 documents carry this exact old vocabulary by definition, and migration
-// is a distinct, declared operation from silent in-place rescue.
+// (`src/narrative`), listing the current values.
 //
 // This absence is scoped to *old vocabulary* specifically, not to "no
 // narrative-level rewrite of any kind" — `src/narrative/index.ts`'s
@@ -349,11 +346,10 @@ export function normalizeComponentAliases(input: unknown): NormalizeAliasesResul
 // this section's old-vocabulary rule.
 //
 // `chrome` → `branding` is a root-field alias (weak-model / old-key rescue
-// at validate time via {@link DECK_ROOT_ALIASES}), distinct from migrate's
-// hard dual-source error. Dual-source here leaves both keys for zod
-// `.strict()` to reject. It is not folded into `PptxIRSchema`: the schema
-// only has `branding`, so a direct `parsePptxIR` of `{ chrome: "full" }`
-// still fails.
+// at validate time via {@link DECK_ROOT_ALIASES}). Dual-source here leaves
+// both keys for zod `.strict()` to reject. It is not folded into
+// `PptxIRSchema`: the schema only has `branding`, so a direct `parsePptxIR`
+// of `{ chrome: "full" }` still fails.
 
 /** Root-level IR/spec field aliases applied by {@link normalizeDeckRootAliases}. */
 export const DECK_ROOT_ALIASES: FieldAliasMap = { chrome: "branding" }
