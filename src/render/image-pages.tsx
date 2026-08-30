@@ -2,7 +2,7 @@ import { Fragment, type ReactNode } from "react"
 import type { PptxIR, Slide } from "@/ir"
 import type { ComponentCtx } from "../components/types"
 import type { LayoutDefinition } from "../layouts/registry"
-import { renderComponent } from "../components"
+import { renderComponent, measureComponent } from "../components"
 import { layoutContentFit, stackBottom } from "./layout"
 import { DroppedContentMarker } from "./drop-marker"
 import { findImageSelection } from "../layouts/find-image"
@@ -346,7 +346,30 @@ export function ImageSplitPage({
   )
 }
 
-const TOP_IMG_H = 356
+/**
+ * image_top 顶图的高度边界（2026-08-31 金样人审 L 项）。
+ *
+ * 原来顶图是一个固定 356 的常量，下方文字轻的时候（一个 heading + 一条
+ * callout）页底会空出近 180px 死白。治本的分工是：文字块按内容量出自然高度，
+ * 图片当弹性件吃掉剩下的空间。
+ *
+ * MIN 取 356 就是今天的固定值，作为不回归的锚：内容重的页面算出来的图高会
+ * 撞到下界，与改动前逐字节相同。MAX 取 480 是上界，防止内容极轻时顶图涨到
+ * 把整页压成封面式的压图页，丢掉 P05「顶图 + 图下分栏」的版式识别度。
+ */
+const TOP_IMG_H_MIN = 356
+const TOP_IMG_H_MAX = 480
+/** 正文带的最薄高度，沿用原来分栏 rect 里 `Math.max(100, ...)` 的下限语义。 */
+const TOP_BODY_MIN_H = 100
+/**
+ * 图底缘到分栏顶的「标题带」节奏，三个数字原样保留自固定图高时代的几何：
+ * 图底到首行基线 42，基线到贯穿细线 12，细线到分栏顶 32。
+ */
+const TOP_TITLE_GAP = 42
+const TOP_RULE_GAP = 12
+const TOP_BODY_GAP = 32
+/** 页底安全边距。 */
+const TOP_SAFE_BOTTOM = 84
 const BAND_PAD_X = 96
 
 /**
@@ -372,6 +395,12 @@ export function ImageTopPage({
   const alt = ctx.images?.[imageComponent.asset_id]?.alt
   const rest = slide.components.filter((component) => component !== imageSource)
 
+  // 2-3 个文字块横向分列（P05 三栏），单块全宽。列宽只跟块数有关，不依赖图高，
+  // 所以可以先定列宽，再按列宽量文字，最后才算图高。
+  const n = Math.max(1, Math.min(rest.length, 3))
+  const colGap = 40
+  const colW = (W - BAND_PAD_X * 2 - colGap * (n - 1)) / n
+
   const titleMaxW = W - BAND_PAD_X * 2 - 120
   const title = fitHeadingLines(slide.heading, {
     maxWidth: titleMaxW,
@@ -382,22 +411,30 @@ export function ImageTopPage({
     fontFamily: ctx.fonts.heading,
     bold: true,
   })
-  // 单行标题保持原 y（398 / 发丝 410 / 正文 442）。换行时发丝和分栏整体下移。
-  const firstTitleY = TOP_IMG_H + 42
+
+  // 文字块按内容量自然高度（最高的一列决定正文带）。这里必须用
+  // `measureComponent` 的自然高度，不能拿 `layoutContentFit` 的结果反推：
+  // fit 内部会 distributeSurplus 拉伸再 settleToGolden 下沉，结果总会撑满
+  // 给它的框，反推出来的高度只会等于框本身。
+  const naturalH = rest.slice(0, 3).reduce((max, block) => Math.max(max, measureComponent(block, colW, ctx)), 0)
+  const neededH = Math.max(naturalH, TOP_BODY_MIN_H)
+  const headBandH = TOP_TITLE_GAP + Math.max(0, title.lines.length - 1) * title.lineHeight + TOP_RULE_GAP + TOP_BODY_GAP
+  // 图吃掉正文带和标题带之外的所有空间，上下界见常量注释。
+  const imgH = Math.min(TOP_IMG_H_MAX, Math.max(TOP_IMG_H_MIN, H - TOP_SAFE_BOTTOM - neededH - headBandH))
+
+  // 单行标题时几何跟着图底缘走（原固定图高下为 398 / 发丝 410 / 正文 442）。
+  // 换行时发丝和分栏整体下移。
+  const firstTitleY = imgH + TOP_TITLE_GAP
   const lastTitleY = firstTitleY + Math.max(0, title.lines.length - 1) * title.lineHeight
-  const ruleY = lastTitleY + 12
-  const componentsTop = ruleY + 32
-  const componentsH = H - 84 - componentsTop
-  // 2-3 个文字块横向分列（P05 三栏），单块全宽
-  const n = Math.max(1, Math.min(rest.length, 3))
-  const colGap = 40
-  const colW = (W - BAND_PAD_X * 2 - colGap * (n - 1)) / n
+  const ruleY = lastTitleY + TOP_RULE_GAP
+  const componentsTop = ruleY + TOP_BODY_GAP
+  const componentsH = H - TOP_SAFE_BOTTOM - componentsTop
   const fits = rest.slice(0, 3).map((b, i) => {
     const rect = {
       x: BAND_PAD_X + i * (colW + colGap),
       y: componentsTop,
       w: colW,
-      h: Math.max(100, componentsH),
+      h: Math.max(TOP_BODY_MIN_H, componentsH),
     }
     return layoutContentFit("single", [b], rect, ctx)
   })
@@ -411,12 +448,12 @@ export function ImageTopPage({
           x={0}
           y={0}
           width={W}
-          height={TOP_IMG_H}
+          height={imgH}
           preserveAspectRatio="xMidYMid slice"
           aria-label={alt || undefined}
         />
       ) : (
-        <rect x={0} y={0} width={W} height={TOP_IMG_H} fill={ctx.colors.surface} />
+        <rect x={0} y={0} width={W} height={imgH} fill={ctx.colors.surface} />
       )}
       {/* 标题行：kicker 点 + 标题 + 贯穿细线（图眉/脚注的杂志结构） */}
       <rect x={BAND_PAD_X} y={firstTitleY - 12} width={13} height={13} fill={ctx.colors.accent} />
