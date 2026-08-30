@@ -30,6 +30,7 @@
  * elsewhere.
  */
 import { z } from "zod"
+import { HexTokenSchema } from "../themes/hex"
 import { KIND_VALUES } from "./narrative-values"
 import { componentTypeError } from "./schema-error-hints"
 import { schema as bulletsSchema } from "./components/bullets"
@@ -105,17 +106,15 @@ export const BUILTIN_THEME_IDS = [
   "playbill",
 ] as const
 
-const Hex = z.string().regex(/^#[0-9A-Fa-f]{3,8}$/)
-
 // ── Background（slide 级受限覆写）──
 
 const BackgroundSpecSchema = z.discriminatedUnion("kind", [
-  z.object({ kind: z.literal("color"), value: Hex }).strict(),
+  z.object({ kind: z.literal("color"), value: HexTokenSchema }).strict(),
   z
     .object({
       kind: z.literal("gradient"),
-      from: Hex,
-      to: Hex,
+      from: HexTokenSchema,
+      to: HexTokenSchema,
       direction: z.enum(["tb", "lr", "diagonal"]).optional(),
     })
     .strict(),
@@ -124,7 +123,7 @@ const BackgroundSpecSchema = z.discriminatedUnion("kind", [
       kind: z.literal("asset"),
       asset_id: z.string(),
       overlay: z
-        .object({ color: Hex, opacity: z.number().min(0).max(1) })
+        .object({ color: HexTokenSchema, opacity: z.number().min(0).max(1) })
         .strict()
         .optional(),
       fit: z.enum(["cover", "contain"]).optional(),
@@ -143,17 +142,17 @@ export const StyleOverrideSchema = z
   .object({
     colors: z
       .object({
-        bg: Hex.optional(),
-        surface: Hex.optional(),
-        panel: Hex.optional(),
-        primary: Hex.optional(),
-        accent: Hex.optional(),
-        text: Hex.optional(),
-        muted: Hex.optional(),
-        border: Hex.optional(),
-        chartPalette: z.array(Hex).min(1).optional(),
-        accentPool: z.array(Hex).min(1).optional(),
-        cardStroke: Hex.optional(),
+        bg: HexTokenSchema.optional(),
+        surface: HexTokenSchema.optional(),
+        panel: HexTokenSchema.optional(),
+        primary: HexTokenSchema.optional(),
+        accent: HexTokenSchema.optional(),
+        text: HexTokenSchema.optional(),
+        muted: HexTokenSchema.optional(),
+        border: HexTokenSchema.optional(),
+        chartPalette: z.array(HexTokenSchema).min(1).optional(),
+        accentPool: z.array(HexTokenSchema).min(1).optional(),
+        cardStroke: HexTokenSchema.optional(),
       })
       .strict()
       .optional(),

@@ -168,7 +168,7 @@ console.log("preview --html leg OK (self-contained: 5 embedded svgs, keyboard-na
 //     this script; the interactive PowerPoint repair-dialog probe stays a
 //     release-time manual step (docs/testing.md), same as for every leg.
 console.log("--- brand extraction leg ---")
-const { buildThmxBytes, DEFAULT_THMX_COLORS } = await import("../src/themes/extract/__fixtures__/thmx")
+const { buildThmxBytes, DEFAULT_THMX_COLORS, PATHOLOGICAL_THMX_COLORS } = await import("../src/themes/extract/__fixtures__/thmx")
 const brandFixturePath = join(OUT, "brand-fixture.pptx")
 writeFileSync(brandFixturePath, Buffer.from(await buildThmxBytes({ schemeName: "E2E Brand" })))
 const brandWorkspace = resolve(OUT, "brand-workspace")
@@ -215,6 +215,39 @@ if (!expectedBrandHexes.some((hex) => brandThemedSlideXml.includes(hex))) {
 }
 if (!brandThemedSlideXml.includes(brandThemeFile.style.colors.muted.replace("#", ""))) {
   throw new Error("e2e: brand leg — the derived muted color did not reach the DrawingML")
+}
+
+const invalidBrandFixturePath = join(OUT, "brand-fixture-invalid.pptx")
+writeFileSync(
+  invalidBrandFixturePath,
+  Buffer.from(await buildThmxBytes({ schemeName: "Invalid E2E Brand", colors: PATHOLOGICAL_THMX_COLORS })),
+)
+const invalidBrandThemePath = join(brandWorkspace, "themes", "invalid-e2e-brand.theme.json")
+const invalidBrandStderr = shExpectFail("node", [
+  "dist/cli.js",
+  "brand",
+  "extract",
+  invalidBrandFixturePath,
+  "-o",
+  invalidBrandThemePath,
+])
+if (!/pptwise theme new --from <preset>/.test(invalidBrandStderr)) {
+  throw new Error(`e2e: brand leg — invalid anchors did not print the manual recolor guidance: ${invalidBrandStderr}`)
+}
+if (existsSync(invalidBrandThemePath)) {
+  throw new Error("e2e: brand leg — invalid anchors wrote a theme file before the contrast gate")
+}
+const uncheckedStderr = shExpectFail("node", [
+  "dist/cli.js",
+  "brand",
+  "extract",
+  brandFixturePath,
+  "-o",
+  invalidBrandThemePath,
+  "--unchecked",
+])
+if (!/unknown option.*--unchecked/i.test(uncheckedStderr)) {
+  throw new Error(`e2e: brand leg — retired --unchecked option was still accepted: ${uncheckedStderr}`)
 }
 console.log("brand extraction leg OK (fixture → extract → workspace theme lookup → brand colors in DrawingML)")
 

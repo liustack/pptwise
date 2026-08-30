@@ -1627,20 +1627,13 @@ describe("brand extract + deck theme.json / workspace themes/", () => {
     expect(written.id).toBe("consulting")
   })
 
-  it("brand extract --unchecked writes a pathological palette with a load-time warning", async () => {
-    const d = await freshDir()
-    const src = await writeFixtureTemplate(d, { colors: PATHOLOGICAL_THMX_COLORS })
-    const out = join(d, "gray.theme.json")
-    const msg = await runBrandExtract(src, { output: out, unchecked: true })
-    expect(msg).toMatch(/warning: this theme will be refused at load time.*contrast ratio/)
-    await expect(stat(out)).resolves.toBeDefined()
-  })
-
   it("brand extract rejects a pathological palette before writing by default", async () => {
     const d = await freshDir()
     const src = await writeFixtureTemplate(d, { colors: PATHOLOGICAL_THMX_COLORS })
     const out = join(d, "gray.theme.json")
-    await expect(runBrandExtract(src, { output: out })).rejects.toThrow(/cannot derive colors\.muted/)
+    await expect(runBrandExtract(src, { output: out })).rejects.toThrow(
+      /cannot derive colors\.muted.*pptwise theme new --from <preset>.*hand.*bind/is,
+    )
     await expect(stat(out)).rejects.toMatchObject({ code: "ENOENT" })
   })
 
@@ -1777,10 +1770,27 @@ describe("brand extract + deck theme.json / workspace themes/", () => {
 
   it("loading a pathological theme file is blocked by the contrast floor with a token-naming message", async () => {
     const d = await freshDir()
-    const src = await writeFixtureTemplate(d, { colors: PATHOLOGICAL_THMX_COLORS })
+    const src = await writeFixtureTemplate(d)
     await mkdir(join(d, "themes"))
     const themeOut = join(d, "themes", "gray.theme.json")
-    await runBrandExtract(src, { output: themeOut, id: "gray", unchecked: true })
+    await runBrandExtract(src, { output: themeOut, id: "gray" })
+    const theme = JSON.parse(await readFile(themeOut, "utf8")) as {
+      style: {
+        colors: Record<string, unknown>
+        defaultBackgrounds: Record<string, unknown>
+      }
+    }
+    theme.style.colors = {
+      ...theme.style.colors,
+      bg: "#868686",
+      surface: "#888888",
+      text: "#808080",
+      muted: "#808080",
+    }
+    theme.style.defaultBackgrounds = Object.fromEntries(
+      ["cover", "chapter", "content", "ending"].map((type) => [type, { kind: "color", value: "#868686" }]),
+    )
+    await writeFile(themeOut, JSON.stringify(theme))
     await writeFile(join(d, "deck.json"), JSON.stringify({ ...IR_NO_THEME, theme: { id: "gray" } }))
     await expect(
       runRender(join(d, "deck.json"), { output: join(d, "x.pptx"), cwd: d }),

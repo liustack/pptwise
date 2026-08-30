@@ -54,6 +54,31 @@ describe("IR v5 theme field", () => {
   )
 })
 
+describe("IR slide background hex colors", () => {
+  it.each([
+    ["#abc", "#AABBCC"],
+    ["#abc8", "#AABBCC"],
+    ["#abcdef", "#ABCDEF"],
+    ["#abcdef80", "#ABCDEF"],
+  ])("normalizes %s to opaque six-digit %s", (input, expected) => {
+    const d: any = minimal()
+    d.slides[0].background = { kind: "color", value: input }
+
+    const result = parsePptxIR(d)
+
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.slides[0]?.background).toEqual({ kind: "color", value: expected })
+    }
+  })
+
+  it.each(["#12345", "#1234567"])("rejects unsupported hex length %s", (input) => {
+    const d: any = minimal()
+    d.slides[0].background = { kind: "color", value: input }
+    expect(parsePptxIR(d).success).toBe(false)
+  })
+})
+
 describe("IR v5 omission defaults (weak-model friendly)", () => {
   it("a bare slides-only deck still fills version and filename but missing theme is a hard error", () => {
     const r = parsePptxIR({ slides: [{ kind: "points", heading: "只有一页", components: [] }] })

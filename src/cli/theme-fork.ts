@@ -2,7 +2,7 @@ import type { BackgroundSpec } from "../ir"
 import { PptwiseError } from "../errors"
 import { contrastRatio } from "../render/ink"
 import { assertContrastFloor } from "../themes/definitions"
-import { deriveMuted, deriveMutedUnchecked } from "../themes/extract/brand-extract"
+import { deriveMuted } from "../themes/extract/brand-extract"
 import { HexTokenSchema, ThemeFileSchema, type ThemeFile } from "../themes/schema"
 
 export interface ForkThemeAnchors {
@@ -110,6 +110,10 @@ function rgbDistance(a: string, b: string): number {
   return Math.hypot(ar - br, ag - bg, ab - bb)
 }
 
+/** Resolve a background to its nearest semantic anchor. A donor can carry
+ * identical primary and accent anchors. Equal distances keep the first role
+ * in the ordered list, so that ambiguous tie resolves to primary
+ * deterministically. */
 function resolveBackgroundAnchor(
   color: string,
   slideRole: SlideBackgroundRole,
@@ -195,7 +199,6 @@ function calibrateStatusColor(
   color: string,
   bg: string,
   surface: string,
-  unchecked: boolean,
 ): string {
   const source = hexToHsl(color)
   const original = hslToHex(source)
@@ -213,7 +216,6 @@ function calibrateStatusColor(
     if (best === undefined || distance < best.distance) best = { color: candidate, distance }
   }
   if (best !== undefined) return best.color
-  if (unchecked) return original
   throw new PptwiseError(
     `cannot calibrate colors.${role} to a ${STATUS_CONTRAST_RATIO.toFixed(1)}:1 contrast ratio against both colors.bg (${bg}) and colors.surface (${surface}) while preserving its hue`,
   )
@@ -223,16 +225,13 @@ function buildForkedTheme(
   source: ThemeFile,
   anchors: ForkThemeAnchors,
   identity: ForkThemeIdentity,
-  unchecked: boolean,
 ): ThemeFile {
   const bg = HexTokenSchema.parse(anchors.bg ?? source.style.colors.bg)
   const primary = HexTokenSchema.parse(anchors.primary)
   const accent = HexTokenSchema.parse(anchors.accent ?? source.style.colors.accent)
   const text = HexTokenSchema.parse(anchors.text ?? source.style.colors.text)
   const surface = HexTokenSchema.parse(anchors.surface ?? source.style.colors.surface)
-  const muted = unchecked
-    ? deriveMutedUnchecked(text, bg, surface)
-    : deriveMuted(text, bg, surface)
+  const muted = deriveMuted(text, bg, surface)
 
   const sourceColors = source.style.colors
   const sourceAnchors: FiveAnchors = {
@@ -268,13 +267,13 @@ function buildForkedTheme(
     colors.cardStroke = rebaseRelativeColor(sourceColors.cardStroke, sourceColors.surface, surface, sourceColors.text, text)
   }
   if (sourceColors.danger !== undefined) {
-    colors.danger = calibrateStatusColor("danger", sourceColors.danger, bg, surface, unchecked)
+    colors.danger = calibrateStatusColor("danger", sourceColors.danger, bg, surface)
   }
   if (sourceColors.warning !== undefined) {
-    colors.warning = calibrateStatusColor("warning", sourceColors.warning, bg, surface, unchecked)
+    colors.warning = calibrateStatusColor("warning", sourceColors.warning, bg, surface)
   }
   if (sourceColors.success !== undefined) {
-    colors.success = calibrateStatusColor("success", sourceColors.success, bg, surface, unchecked)
+    colors.success = calibrateStatusColor("success", sourceColors.success, bg, surface)
   }
 
   const defaultBackgrounds = {
@@ -308,25 +307,7 @@ export function forkTheme(
   anchors: ForkThemeAnchors,
   identity: ForkThemeIdentity,
 ): ThemeFile {
-  const file = buildForkedTheme(source, anchors, identity, false)
+  const file = buildForkedTheme(source, anchors, identity)
   assertContrastFloor(file.id, file.style)
   return file
-}
-
-/** Explicit bypass for emitting a file that will be repaired by hand. */
-export function forkThemeUnchecked(
-  source: ThemeFile,
-  anchors: ForkThemeAnchors,
-  identity: ForkThemeIdentity,
-): ThemeFile {
-  return buildForkedTheme(source, anchors, identity, true)
-}
-
-export function contrastFloorError(id: string, style: ThemeFile["style"]): string | undefined {
-  try {
-    assertContrastFloor(id, style)
-    return undefined
-  } catch (error) {
-    return error instanceof PptwiseError || error instanceof Error ? error.message : String(error)
-  }
 }

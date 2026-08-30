@@ -56,7 +56,7 @@ import {
   WORKSPACE_THEMES_DIRNAME,
   type ResolvedTheme,
 } from "./theme-resolve"
-import { contrastFloorError, forkTheme, forkThemeUnchecked } from "./theme-fork"
+import { forkTheme } from "./theme-fork"
 import { THEME_TRY_SAMPLE_IR } from "./fixtures/theme-try-sample"
 
 /** `findUserConfig()`'s own return shape, named here so it can be threaded as
@@ -868,8 +868,6 @@ export interface BrandExtractOptions {
   /** Donor preset whose menu and remaining tokens are copied. Default consulting. */
   from?: string
   force?: boolean
-  /** Write an unchecked file for manual color repair. */
-  unchecked?: boolean
 }
 
 /** `basename(output)` minus a trailing `.theme.json`/`.json`, slugged — the
@@ -949,11 +947,21 @@ async function writeThemeFile(path: string, file: ThemeFile, force = false): Pro
   }
 }
 
+function rethrowBrandColorError(error: unknown, id: string): never {
+  const message = error instanceof Error ? error.message : String(error)
+  if (/colors\.|contrast ratio|calibrate/i.test(message)) {
+    throw new PptwiseError(
+      `${message}. Run \`pptwise theme new --from <preset> --id ${id}\`, adjust the copied theme colors by hand, then bind that theme`,
+    )
+  }
+  throw error
+}
+
 /**
  * `pptwise brand extract <file> -o <out.theme.json> [--id] [--label] [--from]`
  * extracts colors/fonts locally, copies the donor preset's menu, then
  * `forkTheme`s the donor around the extracted anchors. Contrast failure is
- * a hard error unless the caller explicitly requests an unchecked file.
+ * a hard error.
  */
 export async function runBrandExtract(file: string, opts: BrandExtractOptions): Promise<string> {
   let bytes: Buffer
@@ -964,28 +972,33 @@ export async function runBrandExtract(file: string, opts: BrandExtractOptions): 
   }
   const id = opts.id ?? defaultThemeIdFor(opts.output)
   assertThemeId(id)
-  const extracted = await extractBrandTheme(bytes, {
-    id,
-    label: opts.label,
-    unchecked: opts.unchecked,
-  })
+  let extracted: Awaited<ReturnType<typeof extractBrandTheme>>
+  try {
+    extracted = await extractBrandTheme(bytes, { id, label: opts.label })
+  } catch (error) {
+    rethrowBrandColorError(error, id)
+  }
   const from = opts.from ?? "consulting"
   const cwd = dirname(resolve(opts.output))
   const donorResolved = await resolveThemeByName(from, { startDir: cwd })
   const donor = await themeFileFromResolved(donorResolved, { id: extracted.id, label: extracted.label })
-  const buildTheme = opts.unchecked ? forkThemeUnchecked : forkTheme
-  const theme = buildTheme(
-    donor,
-    {
-      primary: extracted.style.colors.primary,
-      accent: extracted.style.colors.accent,
-      bg: extracted.style.colors.bg,
-      text: extracted.style.colors.text,
-      surface: extracted.style.colors.surface,
-      chartPalette: extracted.style.colors.chartPalette,
-    },
-    { id: extracted.id, label: extracted.label, fonts: extracted.style.fonts },
-  )
+  let theme: ThemeFile
+  try {
+    theme = forkTheme(
+      donor,
+      {
+        primary: extracted.style.colors.primary,
+        accent: extracted.style.colors.accent,
+        bg: extracted.style.colors.bg,
+        text: extracted.style.colors.text,
+        surface: extracted.style.colors.surface,
+        chartPalette: extracted.style.colors.chartPalette,
+      },
+      { id: extracted.id, label: extracted.label, fonts: extracted.style.fonts },
+    )
+  } catch (error) {
+    rethrowBrandColorError(error, id)
+  }
   const outPath = resolve(opts.output)
   await writeThemeFile(outPath, theme, opts.force === true)
   const c = theme.style.colors
@@ -995,12 +1008,6 @@ export async function runBrandExtract(file: string, opts: BrandExtractOptions): 
     `  fonts: heading "${theme.style.fonts.heading[0]}", body "${theme.style.fonts.body[0]}"`,
     `Drop the file in a deck ${THEME_FILENAME} or workspace themes/ and set spec.theme to "${theme.id}".`,
   ]
-  const contrastWarning = contrastFloorError(theme.id, theme.style)
-  if (contrastWarning !== undefined) {
-    lines.push(
-      `warning: this theme will be refused at load time — ${contrastWarning}. Edit the written file's colors (darker text, or a lighter bg) before using it`,
-    )
-  }
   return lines.join("\n")
 }
 

@@ -10,21 +10,9 @@ import {
 import type { MotifId } from "../motifs/types"
 import { OCCASION_VOCAB, type Occasion } from "./occasions"
 import type { StyleTokens } from "./tokens"
+import { HexTokenSchema } from "./hex"
 
-function normalizeHexToken(value: string): string {
-  const body = value.slice(1)
-  const expanded = body.length === 3 || body.length === 4
-    ? [...body].map((channel) => channel.repeat(2)).join("")
-    : body
-  // Theme color tokens are opaque. Alpha is discarded at this public entry
-  // boundary, so contrast decisions always use the visible RGB channels.
-  return `#${expanded.slice(0, 6).toUpperCase()}`
-}
-
-export const HexTokenSchema = z
-  .string()
-  .regex(/^#(?:[0-9A-Fa-f]{3,4}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$/, "expected #RGB, #RGBA, #RRGGBB, or #RRGGBBAA")
-  .transform(normalizeHexToken)
+export { HexTokenSchema } from "./hex"
 
 const BackgroundSpecFileSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("color"), value: HexTokenSchema }).strict(),

@@ -150,7 +150,7 @@ pptwise theme fork acme-report \
   --id acme-blue
 ```
 
-The fork preserves the source menu byte for byte, derives dependent tokens such as muted color, and runs the contrast gate. The source stays unchanged.
+The fork preserves the source menu byte for byte, derives dependent tokens such as muted color, and runs the contrast gate. The source stays unchanged. If a donor's primary and accent anchors are identical, an ambiguous default-background tie resolves to primary deterministically.
 
 A same-menu fork may replace a deck binding inside the workflow. If menus differ, return to theme selection and revise the spec and affected page fills. Useful claims, data, images, and copy can be reused, but the old semantic page sequence is not assumed to fit.
 

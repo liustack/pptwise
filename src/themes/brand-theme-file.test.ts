@@ -156,24 +156,32 @@ describe("registerBrandThemeFile", () => {
     expect(getInstalledThemeIds().filter((id) => id === "acme")).toHaveLength(1)
   })
 
-  it("contrast floor blocks a pathological palette with an actionable message", async () => {
+  it("brand extraction rejects a pathological palette before it can be registered", async () => {
     const bytes = await buildThmxBytes({ colors: PATHOLOGICAL_THMX_COLORS })
-    const theme = await extractBrandTheme(bytes, { id: "gray-soup", unchecked: true })
-    // The message names the token, the measured ratio, the background, and
-    // the floor — error quality is part of this wave's acceptance.
-    expect(() => registerBrandThemeFile(theme)).toThrow(
-      /theme "gray-soup" colors\.(text|muted) has a contrast ratio of \d+\.\d+:1 against its "(cover|content|ending)" background \(#[0-9A-Fa-f]{6}\) — must be at least 3\.0:1/,
-    )
+    await expect(extractBrandTheme(bytes, { id: "gray-soup" })).rejects.toThrow(/cannot derive colors\.muted/)
     expect(getInstalledThemeIds()).not.toContain("gray-soup")
   })
 
   it("applies the same contrast floor to a complete theme", async () => {
-    const bytes = await buildThmxBytes({ colors: PATHOLOGICAL_THMX_COLORS })
-    const extracted = await extractBrandTheme(bytes, { id: "gray-complete", unchecked: true })
+    const extracted = await extractFixtureTheme("gray-complete")
+    const style = structuredClone(extracted.style)
+    style.colors = {
+      ...style.colors,
+      bg: "#868686",
+      surface: "#888888",
+      text: "#808080",
+      muted: "#808080",
+    }
+    style.defaultBackgrounds = {
+      cover: { kind: "color", value: "#868686" },
+      chapter: { kind: "color", value: "#868686" },
+      content: { kind: "color", value: "#868686" },
+      ending: { kind: "color", value: "#868686" },
+    }
     const file: ThemeFile = {
       version: 2,
       id: "gray-complete",
-      style: extracted.style,
+      style,
       menu: {
         cover: { face: "gauge-verdict" },
         chapter: { face: "gauge-section" },

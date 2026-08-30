@@ -69,8 +69,6 @@ export interface ExtractBrandThemeOptions {
   /** Human-readable label — defaults to the source theme part's own
    *  `<a:clrScheme name="…">`. */
   label?: string
-  /** Permit an unreadable palette to be emitted for manual repair. */
-  unchecked?: boolean
 }
 
 /** Materialized consulting-style menu used by shallow brand extraction. */
@@ -218,11 +216,6 @@ export function deriveMuted(text: string, bg: string, surface: string): string {
   )
 }
 
-/** Explicit bypass used only by the CLI's manual-repair escape hatch. */
-export function deriveMutedUnchecked(text: string, bg: string, surface: string): string {
-  return findMutedCandidate(text, bg, surface) ?? text
-}
-
 /** Keywords (lower-cased, substring match) that mark a font name as
  *  belonging to the serif family — used only to pick which of two
  *  `SAFE_FONTS` fallback chains {@link buildFontStack} appends after the
@@ -312,8 +305,7 @@ export function slugify(input: string, fallback = "brand"): string {
  * missing font falls back to a Windows-safe generic stack — so a real-world
  * theme missing a slot or two (this wave's own fixture matrix covers
  * several) still produces a usable, if plainer, theme. An unreadable palette
- * is rejected while deriving `muted`. The explicit `unchecked` option is the
- * only path that permits such a file for manual repair.
+ * is rejected while deriving `muted`.
  */
 export async function extractBrandTheme(
   bytes: Uint8Array | ArrayBuffer,
@@ -339,9 +331,7 @@ export async function extractBrandTheme(
   const surface = slots.lt2 ?? bg
   const primary = slots.accent1 ?? slots.dk2 ?? chartPalette[0]!
   const accent = slots.accent2 ?? primary
-  const muted = opts.unchecked
-    ? deriveMutedUnchecked(text, bg, surface)
-    : deriveMuted(text, bg, surface)
+  const muted = deriveMuted(text, bg, surface)
 
   const fonts = parseFonts(part.xml)
   const heading = buildFontStack(fonts.major)
