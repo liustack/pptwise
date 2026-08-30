@@ -666,27 +666,14 @@ export function validateIr(input: unknown): ValidateResult {
       const m = /^slides\.(\d+)/.exec(path)
       let message = themeIssueMessage(path, issue.message, issue.input, issue.code)
       if (issue.code === "unrecognized_keys") {
-        // The one retired key a hand-migrated v4 document most plausibly
-        // still carries (spec §16 hard-rejects it, no rescue) — the bare
-        // zod "Unrecognized key" line names the key but not its successor,
-        // so point at the rename and the sanctioned bridge here. The axis
-        // keys and old enum values inside `narrative` already self-document
-        // via resolveNarrative's own errors. Kept inline (not folded into
-        // ./ir/rename-hints.ts's table below) because this is the one
-        // rename whose hint also carries the `pptwise migrate` pointer for
-        // a genuine v3 document — see that module's own doc comment for why
-        // the other, v2-only renames don't get the same pointer.
+        // The retired `scenario` key needs the current `narrative` spelling
+        // in its error instead of zod's generic unrecognized-key message.
         if (path === "" && issue.keys.includes("scenario")) {
-          message += ' — "scenario" was renamed to "narrative"; rewrite the file to the current IR'
+          message += '. "scenario" was renamed to "narrative". Rewrite the file to the current IR'
         }
-        // The rest of the documented v2/v3 → v4 rename map (borrow-wave
-        // task 3, generalizing the `scenario` rescue above to
-        // `blocks`/`variant`/`theme.override` — ./ir/rename-hints.ts), plus
-        // a generic "content belongs inside components[]" fallback for a
-        // slide-level unrecognized key that isn't one of those documented
-        // renames (the `items`-directly-on-a-slide probe, borrow-wave B
-        // report §3.3 #3). Never both on the same key: a documented rename
-        // is always the more specific, more useful hint.
+        // Keep the documented rename table and the generic slide-level
+        // placement hint. A documented rename remains the more specific
+        // message when both could apply.
         const renameHints = renameHintsFor(issue.keys, path)
         if (renameHints.length > 0) {
           message += renameHints.join("")

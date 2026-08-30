@@ -101,7 +101,8 @@ export function renameHintsFor(keys: readonly string[], path: string): string[] 
  * Generic "content belongs inside components[]" hint for an unrecognized key
  * found directly on a slide object, only ever offered when none of `keys`
  * matched a documented rename (a rename hint is always more specific and
- * takes priority — see {@link renameHintsFor}'s caller in `../api.ts`).
+ * takes priority. See {@link renameHintsFor}'s caller in
+ * `../validate-core.ts`.
  */
 export const SLIDE_LEVEL_UNKNOWN_KEY_HINT =
   " — unexpected fields at slide level usually belong inside one of the slide's components[] entries, not the slide itself (see `pptwise schema`)"
