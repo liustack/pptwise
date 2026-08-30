@@ -1,6 +1,5 @@
 import type { StyleTokens } from "../tokens";
 import type { BuiltinThemeDeclaration } from "../schema";
-import { FRAMED_CONTENT_FACES } from "./shared";
 
 /**
  * lecture（黑板夜校）——2026-08-21 新增第 22 个 theme id（第 21 个结构身份）。
@@ -60,6 +59,8 @@ import { FRAMED_CONTENT_FACES } from "./shared";
  *
  * 可拉伸性：黄粉笔即参数（夜校品牌分享可换成品牌色，仍避开香槟金 / 铜金）。
  * 细框几何不动，不升级成双线，不加印章。
+ *
+ * **菜单分派（S1-B）**：黑板课用的是有框脸池，data 落在满幅收边的 tone-adaptive-content，photo 用能挂角注的 image-annotate，课堂不引名人语录，quote 不上。
  */
 export const LECTURE_TOKENS: StyleTokens = {
   id: "lecture",
@@ -94,22 +95,26 @@ export const LECTURE_TOKENS: StyleTokens = {
 };
 
 export const LECTURE_THEME = {
-  version: 1,
+  version: 2,
   id: "lecture",
   label: "Lecture Hall",
   style: LECTURE_TOKENS,
-  faces: {
-    cover: ["board-head"],
-    chapter: ["chalk-rule-chapter"],
-    content: FRAMED_CONTENT_FACES,
-    ending: ["next-lecture-ending"],
+  menu: {
+    cover: { face: "board-head" },
+    chapter: { face: "chalk-rule-chapter" },
+    content: {
+      points: { face: "narrow-column" },
+      list: { face: "bento-panel" },
+      comparison: { face: "two-column" },
+      process: { face: "rail-numbered" },
+      data: { face: "tone-adaptive-content" },
+      photo: { face: "image-annotate" },
+      statement: { face: "statement", decor: { kind: "silent" } },
+      fact: { face: "stat-hero", decor: { kind: "silent" } },
+      evidence: { face: "one-evidence", decor: { kind: "silent" } },
+      hierarchy: { face: "asymmetric-triptych" },
+    },
+    ending: { face: "next-lecture-ending" },
   },
   motif: { id: "lecture-motif" },
-  tendencies: {
-    cover: ["board-head"],
-    chapter: ["chalk-rule-chapter"],
-    content: ["two-column", "quiet-frame", "bento-panel"],
-    ending: ["next-lecture-ending"],
-  },
-  sparse: ["statement", "stat-hero", "one-evidence", "verse-chapter"],
 } satisfies BuiltinThemeDeclaration;

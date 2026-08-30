@@ -1,6 +1,5 @@
 import type { StyleTokens } from "../tokens";
 import type { BuiltinThemeDeclaration } from "../schema";
-import { DEFAULT_CONTENT_FACES } from "./shared";
 
 /**
  * enterprise（企业蓝）——原 custom→gallery→avant 的最终定名
@@ -97,6 +96,8 @@ import { DEFAULT_CONTENT_FACES } from "./shared";
  * （`paintsOwnBackground`），本文件 `defaultBackgrounds.cover/ending` 仍走
  * 浅底，避免 `assertContrastFloor` 拿深字压深底判红。chapter / content 保持
  * 画廊白墙。
+ *
+ * **菜单分派（S1-B）**：企业蓝白墙是机构低调档，只上七道常规讲法（编号轨承 process，卡组承 list），宣言、引用、大数字、单证据这类高潮页原本就不在它的供给里，一律不上。
  */
 export const ENTERPRISE_TOKENS: StyleTokens = {
   id: "enterprise",
@@ -136,23 +137,24 @@ export const ENTERPRISE_TOKENS: StyleTokens = {
 };
 
 export const ENTERPRISE_THEME = {
-  version: 1,
+  version: 2,
   id: "enterprise",
   label: "Enterprise",
   style: ENTERPRISE_TOKENS,
   brand: { suppressFooterOnCardContent: true },
-  faces: {
-    cover: ["ikb-field-cover"],
-    chapter: ["block-numeral-chapter"],
-    content: DEFAULT_CONTENT_FACES,
-    ending: ["signoff-ending"],
+  menu: {
+    cover: { face: "ikb-field-cover" },
+    chapter: { face: "block-numeral-chapter" },
+    content: {
+      points: { face: "narrow-column" },
+      list: { face: "bento-panel" },
+      comparison: { face: "two-column" },
+      process: { face: "rail-numbered" },
+      data: { face: "split-band" },
+      photo: { face: "image-split" },
+      hierarchy: { face: "asymmetric-triptych" },
+    },
+    ending: { face: "signoff-ending" },
   },
   motif: { id: "enterprise-motif" },
-  tendencies: {
-    cover: ["ikb-field-cover"],
-    chapter: ["block-numeral-chapter"],
-    content: ["rail-numbered", "two-column", "bento-panel"],
-    ending: ["signoff-ending"],
-  },
-  sparse: [],
 } satisfies BuiltinThemeDeclaration;

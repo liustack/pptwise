@@ -1,6 +1,5 @@
 import type { StyleTokens } from "../tokens";
 import type { BuiltinThemeDeclaration } from "../schema";
-import { DEFAULT_CONTENT_FACES } from "./shared";
 
 /**
  * classroom（教学课堂）——2026-07-13 第 13 主题（用户参考三张莫兰迪教学
@@ -55,6 +54,8 @@ import { DEFAULT_CONTENT_FACES } from "./shared";
  *
  * 装饰见 `../../motifs/motif-classroom-motif.tsx`（横线簿格线：装订孔排与
  * 铅笔虚线退役）。
+ *
+ * **菜单分派（S1-B）**：讲义纸只做讲清楚的七道常规讲法，课堂不喊口号也不刷大数字，宣言、引用、大数字、单证据一律不上。
  */
 export const CLASSROOM_TOKENS: StyleTokens = {
   id: "classroom",
@@ -92,22 +93,23 @@ export const CLASSROOM_TOKENS: StyleTokens = {
 };
 
 export const CLASSROOM_THEME = {
-  version: 1,
+  version: 2,
   id: "classroom",
   label: "Classroom",
   style: CLASSROOM_TOKENS,
-  faces: {
-    cover: ["chalk-band-cover"],
-    chapter: ["lesson-box-chapter"],
-    content: DEFAULT_CONTENT_FACES,
-    ending: ["homework-close-ending"],
+  menu: {
+    cover: { face: "chalk-band-cover" },
+    chapter: { face: "lesson-box-chapter" },
+    content: {
+      points: { face: "narrow-column" },
+      list: { face: "bento-panel" },
+      comparison: { face: "two-column" },
+      process: { face: "rail-numbered" },
+      data: { face: "split-band" },
+      photo: { face: "image-top" },
+      hierarchy: { face: "asymmetric-triptych" },
+    },
+    ending: { face: "homework-close-ending" },
   },
   motif: { id: "classroom-motif" },
-  tendencies: {
-    cover: ["chalk-band-cover"],
-    chapter: ["lesson-box-chapter"],
-    content: ["two-column", "bento-panel", "tone-adaptive-content"],
-    ending: ["homework-close-ending"],
-  },
-  sparse: [],
 } satisfies BuiltinThemeDeclaration;

@@ -1,6 +1,5 @@
 import type { StyleTokens } from "../tokens";
 import type { BuiltinThemeDeclaration } from "../schema";
-import { DEFAULT_CONTENT_FACES } from "./shared";
 
 /**
  * heritage（典藏传承）——第 8 主题（2026-07-10 用户从视觉伴侣六方向中
@@ -47,6 +46,8 @@ import { DEFAULT_CONTENT_FACES } from "./shared";
  * （版式 `paintsOwnBackground`，本文件 ending 底仍走旧籍纸，避免 contrast
  * floor 拿深字压深底）。motif 退役顶缘双线、藏书票章、底缘中点金菱，四页
  * 可空。四页 `defaultBackgrounds` 保持旧籍纸。角色色与字体不动。
+ *
+ * **菜单分派（S1-B）**：传承腔按编号轨讲源流（process 走 rail-numbered），hierarchy 用主次三分的 asymmetric-triptych 讲世系与构成，evidence 的实证页不上。
  */
 export const HERITAGE_TOKENS: StyleTokens = {
   id: "heritage",
@@ -85,22 +86,26 @@ export const HERITAGE_TOKENS: StyleTokens = {
 };
 
 export const HERITAGE_THEME = {
-  version: 1,
+  version: 2,
   id: "heritage",
   label: "Heritage",
   style: HERITAGE_TOKENS,
-  faces: {
-    cover: ["double-frame-cover"],
-    chapter: ["mirror-volume-chapter"],
-    content: DEFAULT_CONTENT_FACES,
-    ending: ["invite-field-ending"],
+  menu: {
+    cover: { face: "double-frame-cover" },
+    chapter: { face: "mirror-volume-chapter" },
+    content: {
+      points: { face: "narrow-column" },
+      list: { face: "bento-panel" },
+      comparison: { face: "two-column" },
+      process: { face: "rail-numbered" },
+      data: { face: "split-band" },
+      photo: { face: "image-split" },
+      statement: { face: "statement", decor: { kind: "silent" } },
+      quote: { face: "pull-quote", decor: { kind: "silent" } },
+      fact: { face: "stat-hero", decor: { kind: "silent" } },
+      hierarchy: { face: "asymmetric-triptych" },
+    },
+    ending: { face: "invite-field-ending" },
   },
   motif: { id: "heritage-motif" },
-  tendencies: {
-    cover: ["double-frame-cover"],
-    chapter: ["mirror-volume-chapter"],
-    content: ["rail-numbered", "asymmetric-triptych"],
-    ending: ["invite-field-ending"],
-  },
-  sparse: ["pull-quote", "statement", "stat-hero", "verse-chapter"],
 } satisfies BuiltinThemeDeclaration;

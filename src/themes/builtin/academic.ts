@@ -1,6 +1,5 @@
 import type { StyleTokens } from "../tokens";
 import type { BuiltinThemeDeclaration } from "../schema";
-import { DEFAULT_CONTENT_FACES } from "./shared";
 
 /**
  * academic（学术/研究报告）——祖母绿 + 稿纸白的书卷气质。
@@ -50,6 +49,8 @@ import { DEFAULT_CONTENT_FACES } from "./shared";
  * 装饰见 `src/motifs/motif-rail-motif.tsx`（第八波批 2 演化：封面开卷
  * 金线，退役五枚空心点与右上双线角标）。academic 的锚点 motif 仍是
  * `rail-motif`，id 不改。章节金短线与幽灵章号归章节版式，不进 motif。
+ *
+ * **菜单分派（S1-B）**：论文腔十一词全上：photo 用带角注的 image-annotate（学术里的图就是配注的图版），evidence 是断言加展品的本行，虽然旧 sparse 表没给 one-evidence，本轮按词表补齐。
  */
 export const ACADEMIC_TOKENS: StyleTokens = {
   id: "academic",
@@ -86,22 +87,27 @@ export const ACADEMIC_TOKENS: StyleTokens = {
 };
 
 export const ACADEMIC_THEME = {
-  version: 1,
+  version: 2,
   id: "academic",
   label: "Academic",
   style: ACADEMIC_TOKENS,
-  faces: {
-    cover: ["thesis-plate-cover"],
-    chapter: ["folio-ghost-chapter"],
-    content: DEFAULT_CONTENT_FACES,
-    ending: ["defense-close-ending"],
+  menu: {
+    cover: { face: "thesis-plate-cover" },
+    chapter: { face: "folio-ghost-chapter" },
+    content: {
+      points: { face: "narrow-column" },
+      list: { face: "bento-panel" },
+      comparison: { face: "two-column" },
+      process: { face: "rail-numbered" },
+      data: { face: "split-band" },
+      photo: { face: "image-annotate" },
+      statement: { face: "statement", decor: { kind: "silent" } },
+      quote: { face: "pull-quote", decor: { kind: "silent" } },
+      fact: { face: "stat-hero", decor: { kind: "silent" } },
+      evidence: { face: "one-evidence", decor: { kind: "silent" } },
+      hierarchy: { face: "asymmetric-triptych" },
+    },
+    ending: { face: "defense-close-ending" },
   },
   motif: { id: "rail-motif" },
-  tendencies: {
-    cover: ["thesis-plate-cover"],
-    chapter: ["folio-ghost-chapter"],
-    content: ["two-column", "narrow-column"],
-    ending: ["defense-close-ending"],
-  },
-  sparse: ["pull-quote", "stat-hero", "statement", "verse-chapter"],
 } satisfies BuiltinThemeDeclaration;

@@ -1,6 +1,5 @@
 import type { StyleTokens } from "../tokens";
 import type { BuiltinThemeDeclaration } from "../schema";
-import { DEFAULT_CONTENT_FACES } from "./shared";
 
 /**
  * playbill（荧光嗓门）——2026-08-21 第七波新主题。性格：开演前十分钟的
@@ -56,6 +55,8 @@ import { DEFAULT_CONTENT_FACES } from "./shared";
  * ending 满版 primary 由版式自绘（`paintsOwnBackground`），
  * `defaultBackgrounds.ending` 保持荧光黄 `#F4DD1B`，避免 contrast floor
  * 拿深字压深底。角色色 hex 与 fonts 一处不改。
+ *
+ * **菜单分派（S1-B）**：节目单的嗓门在满版色块，statement 因此选 mono-bleed 而不是排字克制的 statement，data 走海报式的 stacked-poster，quote 与 evidence 不上。
  */
 export const PLAYBILL_TOKENS: StyleTokens = {
   id: "playbill",
@@ -92,22 +93,25 @@ export const PLAYBILL_TOKENS: StyleTokens = {
 };
 
 export const PLAYBILL_THEME = {
-  version: 1,
+  version: 2,
   id: "playbill",
   label: "Playbill",
   style: PLAYBILL_TOKENS,
-  faces: {
-    cover: ["bill-head"],
-    chapter: ["day-bill-chapter"],
-    content: DEFAULT_CONTENT_FACES,
-    ending: ["ticket-cta-ending"],
+  menu: {
+    cover: { face: "bill-head" },
+    chapter: { face: "day-bill-chapter" },
+    content: {
+      points: { face: "narrow-column" },
+      list: { face: "bento-panel" },
+      comparison: { face: "two-column" },
+      process: { face: "rail-numbered" },
+      data: { face: "stacked-poster" },
+      photo: { face: "image-top" },
+      statement: { face: "mono-bleed", decor: { kind: "silent" } },
+      fact: { face: "stat-hero", decor: { kind: "silent" } },
+      hierarchy: { face: "asymmetric-triptych" },
+    },
+    ending: { face: "ticket-cta-ending" },
   },
   motif: { id: "playbill-motif" },
-  tendencies: {
-    cover: ["bill-head"],
-    chapter: ["day-bill-chapter"],
-    content: ["stacked-poster", "rail-numbered", "split-band"],
-    ending: ["ticket-cta-ending"],
-  },
-  sparse: ["statement", "stat-hero", "mono-bleed", "verse-chapter"],
 } satisfies BuiltinThemeDeclaration;

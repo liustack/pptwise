@@ -1,6 +1,5 @@
 import type { StyleTokens } from "../tokens";
 import type { BuiltinThemeDeclaration } from "../schema";
-import { DEFAULT_CONTENT_FACES } from "./shared";
 
 /**
  * vermilion（庄重公务汇报——工作汇报/述职/年度总结语域）——2026-08-06 gov-theme
@@ -66,6 +65,8 @@ import { DEFAULT_CONTENT_FACES } from "./shared";
  * **第八波批 3（`.issues/2026-08-22-theme-redesign-wave8/batch3`）**：chapter
  * 从正红整版改为公文米白 `#F6EFE3`（与 bg 同值）。板上章节是浅底红号块，
  * 不是整版红。红身份来自红头与号块，正文页本来就不可整版红。
+ *
+ * **菜单分派（S1-B）**：公文按条分述，points 的窄栏是主力，statement 承一句话的表态。红头文件不铺满版照片也不借他人之口，photo 与 quote 都不上。
  */
 export const VERMILION_TOKENS: StyleTokens = {
   id: "vermilion",
@@ -110,22 +111,25 @@ export const VERMILION_TOKENS: StyleTokens = {
 };
 
 export const VERMILION_THEME = {
-  version: 1,
+  version: 2,
   id: "vermilion",
   label: "Official Report",
   style: VERMILION_TOKENS,
-  faces: {
-    cover: ["red-head-cover"],
-    chapter: ["seal-numeral-chapter"],
-    content: DEFAULT_CONTENT_FACES,
-    ending: ["deliberation-ending"],
+  menu: {
+    cover: { face: "red-head-cover" },
+    chapter: { face: "seal-numeral-chapter" },
+    content: {
+      points: { face: "narrow-column" },
+      list: { face: "bento-panel" },
+      comparison: { face: "two-column" },
+      process: { face: "rail-numbered" },
+      data: { face: "split-band" },
+      statement: { face: "statement", decor: { kind: "silent" } },
+      fact: { face: "stat-hero", decor: { kind: "silent" } },
+      evidence: { face: "one-evidence", decor: { kind: "silent" } },
+      hierarchy: { face: "asymmetric-triptych" },
+    },
+    ending: { face: "deliberation-ending" },
   },
   motif: { id: "vermilion-motif" },
-  tendencies: {
-    cover: ["red-head-cover"],
-    chapter: ["seal-numeral-chapter"],
-    content: ["rail-numbered", "narrow-column"],
-    ending: ["deliberation-ending"],
-  },
-  sparse: ["statement", "stat-hero", "one-evidence", "verse-chapter"],
 } satisfies BuiltinThemeDeclaration;

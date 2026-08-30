@@ -1,6 +1,5 @@
 import type { StyleTokens } from "../tokens";
 import type { BuiltinThemeDeclaration } from "../schema";
-import { DEFAULT_CONTENT_FACES } from "./shared";
 
 /**
  * memo（打字机决定）——2026-08-21 新增第 22 个 theme id（第 21 个结构身份）。
@@ -75,6 +74,8 @@ import { DEFAULT_CONTENT_FACES } from "./shared";
  * `issue-line-chapter`（议题 kicker，红只成字，版式不画双线）。ending 锁
  * pinOnly `decision-close-ending`（决定两条 + 拟稿审定抄送取 subheading）。
  * 四页 defaultBackgrounds 仍是便笺纸，角色色 hex 与 fonts 不动。
+ *
+ * **菜单分派（S1-B）**：打字机备忘录是纯文本件，hierarchy 用主次三分讲选项与从属，photo 会破掉它的纸面语域，不上，evidence 的展品页同理不上。
  */
 export const MEMO_TOKENS: StyleTokens = {
   id: "memo",
@@ -110,22 +111,25 @@ export const MEMO_TOKENS: StyleTokens = {
 };
 
 export const MEMO_THEME = {
-  version: 1,
+  version: 2,
   id: "memo",
   label: "Decision Memo",
   style: MEMO_TOKENS,
-  faces: {
-    cover: ["memo-head"],
-    chapter: ["issue-line-chapter"],
-    content: DEFAULT_CONTENT_FACES,
-    ending: ["decision-close-ending"],
+  menu: {
+    cover: { face: "memo-head" },
+    chapter: { face: "issue-line-chapter" },
+    content: {
+      points: { face: "narrow-column" },
+      list: { face: "bento-panel" },
+      comparison: { face: "two-column" },
+      process: { face: "rail-numbered" },
+      data: { face: "split-band" },
+      statement: { face: "statement", decor: { kind: "silent" } },
+      quote: { face: "pull-quote", decor: { kind: "silent" } },
+      fact: { face: "stat-hero", decor: { kind: "silent" } },
+      hierarchy: { face: "asymmetric-triptych" },
+    },
+    ending: { face: "decision-close-ending" },
   },
   motif: { id: "memo-motif" },
-  tendencies: {
-    cover: ["memo-head"],
-    chapter: ["issue-line-chapter"],
-    content: ["asymmetric-triptych", "narrow-column", "tone-adaptive-content"],
-    ending: ["decision-close-ending"],
-  },
-  sparse: ["pull-quote", "stat-hero", "statement", "verse-chapter"],
 } satisfies BuiltinThemeDeclaration;

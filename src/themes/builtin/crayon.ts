@@ -1,6 +1,5 @@
 import type { StyleTokens } from "../tokens";
 import type { BuiltinThemeDeclaration } from "../schema";
-import { CRAYON_CONTENT_FACES } from "./shared";
 
 /**
  * crayon（蜡笔卡纸）。2026-08-21 第 18 主题（场景审计低龄教育立项，
@@ -45,6 +44,8 @@ import { CRAYON_CONTENT_FACES } from "./shared";
  *
  * 可拉伸性：四色蜡笔即参数（K12 学科课换学科色组、亲子活动 bg 可提饱和至
  * `#FFF1D6`）。阳光黄永不承字。
+ *
+ * **菜单分派（S1-B）**：蜡笔盒家族接管并列与宣言（list 走 crayonbox-cards，statement 走本来无人认领的 crayonbox-point），低龄课不摆数据也不讲层级，data、hierarchy、quote、fact、evidence 都不上。
  */
 export const CRAYON_TOKENS: StyleTokens = {
   id: "crayon",
@@ -81,22 +82,22 @@ export const CRAYON_TOKENS: StyleTokens = {
 };
 
 export const CRAYON_THEME = {
-  version: 1,
+  version: 2,
   id: "crayon",
   label: "Kids Education",
   style: CRAYON_TOKENS,
-  faces: {
-    cover: ["crayonbox-open"],
-    chapter: ["crayonbox-sticker"],
-    content: CRAYON_CONTENT_FACES,
-    ending: ["crayonbox-todo"],
+  menu: {
+    cover: { face: "crayonbox-open", decor: { kind: "silent" } },
+    chapter: { face: "crayonbox-sticker", decor: { kind: "silent" } },
+    content: {
+      points: { face: "narrow-column" },
+      list: { face: "crayonbox-cards", decor: { kind: "silent" } },
+      comparison: { face: "two-column" },
+      process: { face: "rail-numbered" },
+      photo: { face: "image-top" },
+      statement: { face: "crayonbox-point", decor: { kind: "silent" } },
+    },
+    ending: { face: "crayonbox-todo", decor: { kind: "silent" } },
   },
   motif: { id: "crayonbox-motif" },
-  tendencies: {
-    cover: ["crayonbox-open"],
-    chapter: ["crayonbox-sticker"],
-    content: ["crayonbox-cards"],
-    ending: ["crayonbox-todo"],
-  },
-  sparse: [],
 } satisfies BuiltinThemeDeclaration;
