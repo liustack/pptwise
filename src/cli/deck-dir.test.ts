@@ -281,8 +281,7 @@ describe("readDeckDir", () => {
   it("does not generate a seed (seed is no longer a spec or IR field)", async () => {
     const dir = await tmp()
     await writeDeckSpec(dir)
-    const { generatedSeed, ir } = await readDeckDir(dir)
-    expect(generatedSeed).toBeUndefined()
+    const { ir } = await readDeckDir(dir)
     expect((ir as unknown as { seed?: number }).seed).toBeUndefined()
   })
 

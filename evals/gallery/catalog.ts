@@ -50,10 +50,7 @@ export function buildGalleryThemeCatalog(
       source.source === "builtin"
         ? THEME_OCCASIONS[id as keyof typeof THEME_OCCASIONS]
         : { identity: definition.identity, occasions: definition.occasions ?? [] }
-    const idsFor = (slideType: Slide["type"]) =>
-      (definition.faces?.[slideType] ?? definition.layouts[slideType]).map((face) =>
-        typeof face === "string" ? face : faceId(face),
-      )
+    const idsFor = (slideType: Slide["type"]) => [...definition.layouts[slideType]]
     const faces: GalleryThemeCatalogEntry["faces"] = {
       cover: idsFor("cover"),
       chapter: idsFor("chapter"),

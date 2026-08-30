@@ -2054,7 +2054,7 @@ describe("registerTheme end-to-end (W3 task 4)", () => {
     __resetRegisteredThemes()
   })
 
-  function registeredTheme(id: string): ThemeDefinition {
+  function registeredTheme(id: string) {
     return {
       id,
       style: {
@@ -2086,14 +2086,13 @@ describe("registerTheme end-to-end (W3 task 4)", () => {
       },
       brand: {},
       tags: [],
-      // Narrow (single-layout) curated set per slide type — proves
-      // selection actually respects the registered theme's own curation
-      // rather than falling back to consulting's allowed set.
-      layouts: {
-        cover: ["poster-center"],
-        chapter: ["banner-chapter"],
-        content: ["two-column"],
-        ending: ["banner-ending"],
+      // Narrow (single-face) menu — proves resolution actually respects the
+      // registered theme's own menu rather than any built-in's.
+      menu: {
+        cover: { face: "poster-center" },
+        chapter: { face: "banner-chapter" },
+        content: { points: { face: "two-column" } },
+        ending: { face: "banner-ending" },
       },
     }
   }

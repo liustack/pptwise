@@ -44,55 +44,12 @@ function faceId(face: string | { id: string }): string {
   return typeof face === "string" ? face : face.id
 }
 
-function archetypeIds(ids: readonly string[]): string[] {
-  return ids.filter((id) => getLayout(id)?.kind === "archetype")
-}
 
-function idsForSlideType(def: ThemeDefinition, slideType: "cover" | "chapter" | "content" | "ending"): string[] {
-  const faces = def.faces?.[slideType]
-  if (faces && faces.length > 0) return faces.map(faceId)
-  return [...def.layouts[slideType]]
-}
 
-function synthesizeMenu(def: ThemeDefinition): Menu {
-  const motifDecor =
-    def.motif === undefined
-      ? undefined
-      : def.motifParameters?.intensity !== undefined
-        ? { kind: "motif" as const, id: def.motif, params: { intensity: def.motifParameters.intensity } }
-        : { kind: "motif" as const, id: def.motif }
-
-  const entry = (face: string): MenuEntry => (motifDecor ? { face, decor: motifDecor } : { face })
-
-  const firstArchetype = (slideType: "cover" | "chapter" | "content" | "ending"): string => {
-    const faces = archetypeIds(idsForSlideType(def, slideType))
-    if (faces.length === 0) {
-      throw new PptwiseError(`cannot materialize theme "${def.id}": no archetype face for ${slideType}`)
-    }
-    return faces[0]!
-  }
-
-  const contentFaces = archetypeIds(idsForSlideType(def, "content"))
-  if (contentFaces.length === 0) {
-    throw new PptwiseError(`cannot materialize theme "${def.id}": no archetype face for content`)
-  }
-
-  const content: Menu["content"] = {}
-  KIND_VALUES.forEach((kind, index) => {
-    content[kind] = entry(contentFaces[index % contentFaces.length]!)
-  })
-
-  return MenuSchema.parse({
-    cover: entry(firstArchetype("cover")),
-    chapter: entry(firstArchetype("chapter")),
-    content,
-    ending: entry(firstArchetype("ending")),
-  })
-}
 
 export function menuForThemeId(id: string): Menu {
   const def = getThemeDefinition(id)
-  return def.menu ?? synthesizeMenu(def)
+  return def.menu
 }
 
 function publicStyle(style: ThemeDefinition["style"], id: string): ThemeFile["style"] {
@@ -142,7 +99,7 @@ export function materializeBuiltinTheme(
     brand: def.brand,
     occasions: def.occasions !== undefined ? [...def.occasions] : undefined,
     identity: def.identity,
-    menu: def.menu ?? synthesizeMenu(def),
+    menu: def.menu,
   }
   return ThemeFileSchema.parse(file) as ThemeFile
 }

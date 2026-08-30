@@ -450,13 +450,11 @@ export async function readDeckDir(dir: string): Promise<DeckDirResult> {
   const spec = await readSpecFile(deckDir)
   const specTheme = specThemeFromRaw(spec)
   const pages = await readPages(deckDir)
-  const { ir, generatedSeed, materializedLayoutCount } = assembleDeck(spec, pages as Record<string, PageContent>)
+  const { ir } = assembleDeck(spec, pages as Record<string, PageContent>)
   const images = await scanAssets(deckDir)
   const merged = { ...ir, assets: { images: { ...ir.assets.images, ...images } } }
   return {
     ir: merged,
-    generatedSeed,
-    materializedLayoutCount,
     deckDir,
     specPath,
     ...(specTheme !== undefined ? { specTheme } : {}),

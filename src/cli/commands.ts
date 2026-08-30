@@ -34,6 +34,7 @@ import {
   resolveDeckTarget,
   writeDeckAssets,
   ASSETS_DIRNAME,
+  SPEC_FILENAME,
   THEME_FILENAME,
 } from "./deck-dir"
 import { loadIrFile, resolveLocalAssets } from "./load-ir"
@@ -1511,14 +1512,12 @@ function withRewrittenAssetPaths(ir: PptxIR, deckDir: string, outDir: string): P
  * fail to resolve from wherever `-o` actually put the file.
  *
  * When the spec omitted `seed`, `readDeckDir` (via `assembleDeck`) generates
- * one deterministically and reports it as `generatedSeed` — surfaced here as
  * a suggestion to add it back to `deck.spec.json` for revision stability
  * (spec §5's seed-generation semantics). Never written automatically:
  * `assembleDeck` stays a pure function with no fs side effects, and silently
  * rewriting a file the user did not ask this command to touch would be a
  * worse surprise than asking them to paste one line in.
  *
- * `materializedLayoutCount` (also from `assembleDeck`, unset when every page
  * already named its own `layout` or landed on the image-cover bypass) gets
  * its own one-line note the same way, listed after the seed note when both
  * apply — purely informational, telling the caller how many pages just had
@@ -1540,7 +1539,7 @@ export async function runAssemble(target: string, opts: AssembleOptions = {}): P
   if (await isDeckDirectory(dir)) {
     await registerThemesFromSpecSource(join(dir, SPEC_FILENAME), { startDir: cwd, deckDir: dir })
   }
-  const { ir, generatedSeed, materializedLayoutCount, deckDir } = await readDeckDir(dir)
+  const { ir, deckDir } = await readDeckDir(dir)
   const outPath = opts.output ? resolve(cwd, opts.output) : join(deckDir, "deck.json")
   const outDir = dirname(outPath)
   const outIr = outDir === deckDir ? ir : withRewrittenAssetPaths(ir, deckDir, outDir)
@@ -1548,16 +1547,7 @@ export async function runAssemble(target: string, opts: AssembleOptions = {}): P
   await writeFile(outPath, JSON.stringify(outIr, null, 2) + "\n")
   const placeholderCount = outIr.slides.filter((s) => s.placeholder).length
   const summary = `wrote ${outPath} (${outIr.slides.length} slides, ${placeholderCount} placeholder${placeholderCount === 1 ? "" : "s"})`
-  const notes: string[] = []
-  if (generatedSeed !== undefined) {
-    notes.push(`note: generated seed ${generatedSeed} — add "seed": ${generatedSeed} to deck.spec.json for revision stability`)
-  }
-  if (materializedLayoutCount !== undefined) {
-    notes.push(
-      `note: ${materializedLayoutCount} layout${materializedLayoutCount === 1 ? "" : "s"} auto-selected into deck.json — pin "layout" in a page file to lock one`,
-    )
-  }
-  return [summary, ...notes].join("\n")
+  return summary
 }
 
 /**
