@@ -47,7 +47,7 @@ describe("validateIr", () => {
     const v = validateIr({ theme: { id: "neon" }, slides: [{ kind: "points", heading: "x" }] })
     expect(v.ok).toBe(false)
     expect(v.errors[0]!.message).toMatch(/unknown theme "neon"/)
-    expect(v.errors[0]!.message).toMatch(/available:.*consulting/)
+    expect(v.errors[0]!.message).toMatch(/available:.*consulting/i)
     expect(v.errors[0]!.message).not.toMatch(/pptwise migrate/)
     expect(v.errors[0]!.message).not.toMatch(/was removed/)
   })
@@ -56,7 +56,9 @@ describe("validateIr", () => {
     const v = validateIr({ theme: { id: "bloom" }, slides: [{ kind: "points", heading: "x" }] })
     expect(v.ok).toBe(false)
     expect(v.errors[0]!.path).toBe("theme.id")
-    expect(v.errors[0]!.message).toMatch(/bloom/)
+    expect(v.errors[0]!.message).toMatch(/unknown theme "bloom"/)
+    expect(v.errors[0]!.message).toMatch(/available:.*consulting/)
+    expect(v.errors[0]!.message).not.toMatch(/migrate|was removed/i)
   })
 
   it("hard-rejects leftover logo_wall without pointing at a removed migration command", () => {

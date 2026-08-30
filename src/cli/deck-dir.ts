@@ -11,8 +11,7 @@
  * and the CLI-shell half of `disassembleDeck`'s otherwise-lossy asset
  * handling (see that function's own doc comment in `../spec/assemble.ts`).
  *
- * Directory layout (spec §6/§7 — the locked artifact renamed from
- * `deck.plan.json` to `deck.spec.json`, vocabulary-v4 rename, task 2):
+ * Directory layout:
  * ```
  * my-deck/
  *   deck.spec.json        the locked spec — page order's sole source of truth
@@ -20,12 +19,6 @@
  *   assets/                local images, auto-registered by filename
  * ```
  *
- * A directory carrying the retired `deck.plan.json` only (no
- * `deck.spec.json`) is not a current deck project — {@link readSpecFile}
- * reports that directories now use `deck.spec.json`. A directory carrying
- * both files at once is a hard error ({@link readSpecFile} below) — spec
- * §9.2: "目录中同时出现 `deck.plan.json` 和 `deck.spec.json` 时应硬报错，
- * 不能猜测优先级".
  */
 import { copyFile, mkdir, readFile, readdir, stat, writeFile } from "node:fs/promises"
 import { basename, extname, isAbsolute, join, relative, resolve } from "node:path"
@@ -34,10 +27,6 @@ import { assembleDeck, type AssembleResult, type PageContent } from "../spec/ass
 import { decksRoot } from "./home"
 import { EXT_BY_MIME, loadIrFile } from "./load-ir"
 
-/** Retired artifact name. Not read as a spec. Still exported so
- *  {@link readSpecFile} can detect a plan-only directory and a both-files
- *  ambiguity. */
-export const PLAN_FILENAME = "deck.plan.json"
 export const SPEC_FILENAME = "deck.spec.json"
 // Exported (serve wave, task S1) so `./serve.ts` can build its fs.watch
 // roots from the exact same directory names this module already treats as
@@ -224,41 +213,9 @@ function expectedLayoutHint(): string {
   return rows.map(([name, desc]) => `  ${name.padEnd(width)}${desc}`).join("\n")
 }
 
-/**
- * Reads `deck.spec.json` out of `dir` (vocabulary-v4 rename, task 2 —
- * this function used to read the pre-rename `deck.plan.json` directly; it
- * no longer does). Three failure shapes, each with its own message:
- *
- * - both `deck.plan.json` and `deck.spec.json` present — a hard error, spec
- *   §9.2: "目录中同时出现 `deck.plan.json` 和 `deck.spec.json` 时应硬报错，
- *   不能猜测优先级" ("hard error, never guess which one wins"). Checked
- *   before the missing-file branch below so a leftover `deck.plan.json`
- *   next to a current `deck.spec.json` is pointed at deleting the old file,
- *   not a generic "not a deck project" message.
- * - only `deck.plan.json` present (no `deck.spec.json`) — this directory
- *   predates the current format and is no longer read. The message names
- *   `deck.spec.json` as the current file, not a generic missing-file hint.
- * - neither file present — the pre-existing "friendlier message over
- *   `loadIrFile`'s generic "cannot read"" this function has always had: the
- *   one failure a deck-directory caller is most likely to hit by typo or by
- *   pointing at a directory that was never a deck project in the first
- *   place, so the error spells out the expected layout and points at
- *   `pptwise spec validate` rather than leaving the caller to guess.
- */
+/** Reads `deck.spec.json` and reports the current expected layout when absent. */
 async function readSpecFile(dir: string): Promise<unknown> {
   const specPath = join(dir, SPEC_FILENAME)
-  const planPath = join(dir, PLAN_FILENAME)
-  const [specExists, planExists] = await Promise.all([pathExists(specPath), pathExists(planPath)])
-  if (specExists && planExists) {
-    throw new PptwiseError(
-      `both ${SPEC_FILENAME} and ${PLAN_FILENAME} exist in ${dir} — ambiguous, refusing to guess which one wins. Delete ${PLAN_FILENAME} once you have confirmed ${SPEC_FILENAME} is correct`,
-    )
-  }
-  if (!specExists && planExists) {
-    throw new PptwiseError(
-      `${dir} has ${PLAN_FILENAME} but no ${SPEC_FILENAME} — deck project directories now use ${SPEC_FILENAME}`,
-    )
-  }
   let text: string
   try {
     text = await readFile(specPath, "utf8")

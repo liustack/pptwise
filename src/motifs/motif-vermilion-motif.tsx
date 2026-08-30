@@ -1,6 +1,6 @@
 import type { DecorProps } from "./types"
 import { DecorPiece } from "./decor-piece"
-import { yieldsOnSparsePin } from "./branded-frame"
+import { yieldsOnSparseFace } from "./branded-frame"
 
 /**
  * vermilion-motif v3 —— 「文件金线」（第八波批 3，设计源
@@ -14,7 +14,7 @@ import { yieldsOnSparsePin } from "./branded-frame"
  * 封面退让：红杠+金线双杠由 `red-head-cover` 自己画，motif 再画顶缘双线
  * 会叠成四条线。
  * 章节退让：收界金线由 `seal-numeral-chapter` 自己画。
- * 内容 / ending 画顶缘金双线。内容稀排钉 pin 继续让位。
+ * 内容 / ending 画顶缘金双线。稀疏 face 继续让位。
  *
  * 金双线是红头文件的天头结构，进前景，原色满画。位置写死，不读内容、不随
  * seed 变。零 theme id、零 hex，颜色只来自 ctx。accent 2.26:1 绝不当文字色。
@@ -32,7 +32,7 @@ export function VermilionMotif({ slide, ctx }: DecorProps) {
   const gold = ctx.colors.accent
 
   if (slide.type === "cover" || slide.type === "chapter") return null
-  if (yieldsOnSparsePin(slide)) return null
+  if (yieldsOnSparseFace(slide)) return null
 
   return (
     <DecorPiece id="gold-rules" role="structure">

@@ -114,8 +114,8 @@ function resolveDecksDirSource(
 /**
  * Resolve deck defaults onto the raw (pre-validation) IR.
  * Selection authority is spec.theme (deck project) or authored IR theme.id
- * (bare file). Config.theme is not a selection layer. Assembled deck-dir IR
- * always carries theme.id from the required spec theme. Pass
+ * (bare file). Assembled deck-dir IR always carries theme.id from the
+ * required spec theme. Pass
  * `fromDeckDir: true` and `specTheme` from the raw spec instead of reading
  * `ir.theme.id` after assemble.
  */
@@ -729,8 +729,7 @@ export async function runAssetBrief(target: string, opts: AssetBriefOptions = {}
 }
 
 /**
- * Validate a deck spec JSON file (W5 task 2: `pptwise plan validate`, renamed
- * to `pptwise spec validate` — vocabulary-v4 rename, task 2, spec §8.2).
+ * Validate a deck spec JSON file with `pptwise spec validate`.
  * `loadIrFile` is a generic "read + JSON-parse with a readable failure
  * message" helper despite its IR-scoped name (`./load-ir.ts`) — reused as-is
  * rather than duplicated, same pattern `runValidate` above uses for IR.

@@ -129,28 +129,8 @@ program
   .command("schema")
   .description("Print the IR JSON Schema (feed this to a model before it writes IR)")
   .option("--spec", "print the deck spec schema instead")
-  .option("--plan", "removed — use --spec instead")
-  .action((opts: { spec?: boolean; plan?: boolean }) => {
-    // vocabulary-v4 rename (spec §8.2): `--plan` renamed to `--spec`, no
-    // long-lived alias — hard-fail pointing at the one new flag rather than
-    // silently keep serving the plan schema under its old name.
-    if (opts.plan) {
-      fail(new Error("`pptwise schema --plan` has been renamed to `pptwise schema --spec` — run `pptwise schema --spec` instead"))
-    }
+  .action((opts: { spec?: boolean }) => {
     console.log(runSchema(opts.spec ? "spec" : undefined))
-  })
-
-// vocabulary-v4 rename (spec §8.2): `pptwise plan validate` renamed to
-// `pptwise spec validate`. The `plan` command group stays registered only so
-// `pptwise plan validate <file>` fails with a message pointing at the new
-// command, rather than commander's own generic "unknown command" error.
-const plan = program.command("plan").description("Removed — use `pptwise spec` instead")
-plan
-  .command("validate")
-  .description("Removed — use `pptwise spec validate` instead")
-  .argument("<file>")
-  .action(() => {
-    fail(new Error("`pptwise plan validate` has been renamed to `pptwise spec validate` — run `pptwise spec validate <file>` instead"))
   })
 
 const spec = program.command("spec").description("Deck spec commands (spec §6)")

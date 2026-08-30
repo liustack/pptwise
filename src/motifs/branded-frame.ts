@@ -9,13 +9,13 @@ export const LECTURE_FRAME_BOTTOM_BOARD = 694
 export const LUXE_FRAME_BOTTOM_BOARD = 696
 
 /**
- * Sparse pin-only faces that already paint their own rules. Motifs that
- * carry horizontal furniture yield on these content pins so the face stays
+ * Sparse faces that already paint their own rules. Motifs that carry
+ * horizontal furniture yield on these faces so the face stays
  * inside the 2-group budget (gallery review r2 B4).
  */
-export const SPARSE_PIN_LAYOUTS = ["statement", "pull-quote", "stat-hero", "one-evidence", "mono-bleed"] as const
+export const SPARSE_FACES = ["statement", "pull-quote", "stat-hero", "one-evidence", "mono-bleed"] as const
 
-export function yieldsOnSparsePin(_slide: Slide): boolean {
+export function yieldsOnSparseFace(_slide: Slide): boolean {
   return false
 }
 

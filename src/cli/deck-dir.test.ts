@@ -294,43 +294,27 @@ describe("readDeckDir", () => {
     })
   })
 
-  // vocabulary-v4 rename (spec §9.2, task 2): deck.plan.json -> deck.spec.json.
-  // readDeckDir (via readSpecFile, ./deck-dir.ts) must (a) never fall back to
-  // reading the retired deck.plan.json directly, (b) hard-error, not guess,
-  // when both files are present in the same directory, and (c) name
-  // deck.spec.json as the current file for a plan-only directory.
-  describe("legacy deck.plan.json handling (spec §9.2)", () => {
-    it("does not read a deck.plan.json directly — a plan-only directory is treated as missing a spec", async () => {
+  describe("unrelated deck.plan.json files", () => {
+    it("treats a plan-only directory like any directory missing deck.spec.json", async () => {
       const dir = await tmp()
       await writeFile(join(dir, "deck.plan.json"), JSON.stringify(makePlan()))
       await expect(readDeckDir(dir)).rejects.toThrow(PptwiseError)
-      await expect(readDeckDir(dir)).rejects.toThrow(/deck\.plan\.json/)
       await expect(readDeckDir(dir)).rejects.toThrow(/deck\.spec\.json/)
-      await expect(readDeckDir(dir)).rejects.toThrow(/now use/)
       const err = await readDeckDir(dir).then(
         () => {
           throw new Error("expected rejection")
         },
         (e) => e,
       )
-      expect(String(err)).not.toMatch(/pptwise migrate/)
+      expect(String(err)).not.toMatch(/deck\.plan\.json|migrate/i)
     })
 
-    it("hard-errors when both deck.plan.json and deck.spec.json exist — never guesses which one wins", async () => {
+    it("ignores deck.plan.json when the current deck.spec.json exists", async () => {
       const dir = await tmp()
       await writeFile(join(dir, "deck.plan.json"), JSON.stringify(makePlan()))
       await writeDeckSpec(dir)
-      await expect(readDeckDir(dir)).rejects.toThrow(PptwiseError)
-      await expect(readDeckDir(dir)).rejects.toThrow(/deck\.plan\.json/)
-      await expect(readDeckDir(dir)).rejects.toThrow(/deck\.spec\.json/)
-      await expect(readDeckDir(dir)).rejects.toThrow(/ambiguous/)
-      const err = await readDeckDir(dir).then(
-        () => {
-          throw new Error("expected rejection")
-        },
-        (e) => e,
-      )
-      expect(String(err)).not.toMatch(/pptwise migrate/)
+      const { ir } = await readDeckDir(dir)
+      expect(ir.slides.map((slide) => slide.id)).toEqual(["p-cover", "p-kpi", "p-detail", "p-ending"])
     })
 
     it("reads deck.spec.json normally once deck.plan.json has been removed", async () => {

@@ -805,9 +805,8 @@ describe("runSchema --spec", () => {
 describe("applyDeckConfig resolution (spec/IR theme id)", () => {
   const freshDir = () => mkdtemp(join(tmpdir(), "pptwise-deckcfg-"))
 
-  it("authored IR theme beats project config", async () => {
+  it("resolves an authored IR theme", async () => {
     const d = await freshDir()
-    await writeFile(join(d, "pptwise.config.json"), JSON.stringify({ theme: "ink" }))
     const raw: any = structuredClone(VALID_IR)
     await applyDeckConfig(raw, { cwd: d })
     expect(raw.theme.id).toBe("tech")
@@ -820,29 +819,10 @@ describe("applyDeckConfig resolution (spec/IR theme id)", () => {
     expect(raw).toEqual(VALID_IR)
   })
 
-  it("runValidate ignores config.theme and hard-errors when the IR omits theme", async () => {
+  it("runValidate hard-errors when the IR omits theme", async () => {
     const d = await freshDir()
-    await writeFile(join(d, "pptwise.config.json"), JSON.stringify({ theme: "ink" }))
     await writeFile(join(d, "deck.json"), JSON.stringify(IR_NO_THEME))
     await expect(runValidate(join(d, "deck.json"), d)).rejects.toThrow(/pptwise theme new --from/)
-  })
-
-  describe("stale config.theme is not a selection layer", () => {
-    it("does not throw when project config names an unknown theme", async () => {
-      const d = await freshDir()
-      await writeFile(join(d, "pptwise.config.json"), JSON.stringify({ theme: "not-a-real-theme" }))
-      const raw: any = structuredClone(IR_NO_THEME)
-      await applyDeckConfig(raw, { cwd: d })
-      expect(raw.theme?.id).toBeUndefined()
-    })
-
-    it("authored IR theme still resolves when project config names an unknown theme", async () => {
-      const d = await freshDir()
-      await writeFile(join(d, "pptwise.config.json"), JSON.stringify({ theme: "not-a-real-theme" }))
-      const raw: any = structuredClone(VALID_IR)
-      await applyDeckConfig(raw, { cwd: d })
-      expect(raw.theme.id).toBe("tech")
-    })
   })
 })
 
@@ -1423,89 +1403,6 @@ describe("runDisassemble", () => {
   })
 })
 
-describe("applyDeckConfig four-layer chain (W5 task 5): user config layer", () => {
-  it("user config theme is ignored when the IR omits theme.id", async () => {
-    const projectDir = await makeDeckDir()
-    const home = await makeDeckDir()
-    await writeFile(join(home, "config.json"), JSON.stringify({ theme: "ink" }))
-    await withPptwiseHome(home, async () => {
-      const raw: any = structuredClone(IR_NO_THEME)
-      await applyDeckConfig(raw, { cwd: projectDir })
-      expect(raw.theme?.id).toBeUndefined()
-    })
-  })
-
-  it("project config.theme is ignored the same way user config.theme is", async () => {
-    const projectDir = await makeDeckDir()
-    await writeFile(join(projectDir, "pptwise.config.json"), JSON.stringify({ theme: "ink" }))
-    const home = await makeDeckDir()
-    await writeFile(join(home, "config.json"), JSON.stringify({ theme: "journal" }))
-    await withPptwiseHome(home, async () => {
-      const raw: any = structuredClone(IR_NO_THEME)
-      await applyDeckConfig(raw, { cwd: projectDir })
-      expect(raw.theme?.id).toBeUndefined()
-    })
-  })
-
-  it("authored IR theme is the selection authority over project and user config", async () => {
-    const projectDir = await makeDeckDir()
-    await writeFile(join(projectDir, "pptwise.config.json"), JSON.stringify({ theme: "tech" }))
-    const home = await makeDeckDir()
-    await writeFile(join(home, "config.json"), JSON.stringify({ theme: "ink" }))
-    await withPptwiseHome(home, async () => {
-      const raw: any = structuredClone(VALID_IR)
-      await applyDeckConfig(raw, { cwd: projectDir })
-      expect(raw.theme.id).toBe("tech")
-    })
-  })
-
-  it("falls back to the IR-authored theme when no layer (flag/project/user) sets one", async () => {
-    const projectDir = await makeDeckDir()
-    const home = await makeDeckDir()
-    await withPptwiseHome(home, async () => {
-      const raw: any = structuredClone(VALID_IR) // theme.id: "tech"
-      await applyDeckConfig(raw, { cwd: projectDir })
-      expect(raw.theme.id).toBe("tech")
-    })
-  })
-
-  describe("stale config.theme is not a selection layer", () => {
-    it("does not throw when user config names an unknown theme", async () => {
-      const projectDir = await makeDeckDir()
-      const home = await makeDeckDir()
-      await writeFile(join(home, "config.json"), JSON.stringify({ theme: "not-a-real-theme" }))
-      await withPptwiseHome(home, async () => {
-        const raw: any = structuredClone(IR_NO_THEME)
-        await applyDeckConfig(raw, { cwd: projectDir })
-        expect(raw.theme?.id).toBeUndefined()
-      })
-    })
-
-    it("authored IR theme still resolves when user config names an unknown theme", async () => {
-      const projectDir = await makeDeckDir()
-      const home = await makeDeckDir()
-      await writeFile(join(home, "config.json"), JSON.stringify({ theme: "not-a-real-theme" }))
-      await withPptwiseHome(home, async () => {
-        const raw: any = structuredClone(VALID_IR)
-        await applyDeckConfig(raw, { cwd: projectDir })
-        expect(raw.theme.id).toBe("tech")
-      })
-    })
-
-    it("stale user-config and project-config themes are both ignored", async () => {
-      const projectDir = await makeDeckDir()
-      await writeFile(join(projectDir, "pptwise.config.json"), JSON.stringify({ theme: "ink" }))
-      const home = await makeDeckDir()
-      await writeFile(join(home, "config.json"), JSON.stringify({ theme: "not-a-real-theme" }))
-      await withPptwiseHome(home, async () => {
-        const raw: any = structuredClone(IR_NO_THEME)
-        await applyDeckConfig(raw, { cwd: projectDir })
-        expect(raw.theme?.id).toBeUndefined()
-      })
-    })
-  })
-})
-
 describe("decksDir redirect (W5 task 5)", () => {
   it("resolves a bare deck name under the user config's decksDir override", async () => {
     const home = await makeDeckDir()
@@ -1568,7 +1465,7 @@ describe("decksDir redirect — project config precedence (W5 task 6, controller
     await writeFile(join(home, "config.json"), JSON.stringify({ decksDir: userDecks }))
 
     const projectRoot = await makeDeckDir("pptwise-project-partial-")
-    await writeFile(join(projectRoot, "pptwise.config.json"), JSON.stringify({ theme: "tech" }))
+    await writeFile(join(projectRoot, "pptwise.config.json"), JSON.stringify({ outDir: "artifacts" }))
 
     const deckDir = join(userDecks, "q3-review")
     await mkdir(deckDir, { recursive: true })
@@ -1861,7 +1758,7 @@ describe("workspace artifacts (default -o)", () => {
 
   it("anchors at the project config's directory when cwd is nested", async () => {
     const root = await freshCwd()
-    await writeFile(join(root, "pptwise.config.json"), JSON.stringify({ theme: "tech" }))
+    await writeFile(join(root, "pptwise.config.json"), JSON.stringify({}))
     const nested = join(root, "nested")
     await mkdir(nested)
     await writeFile(join(nested, "hello.json"), JSON.stringify(VALID_IR))

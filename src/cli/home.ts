@@ -99,7 +99,7 @@ export function decksRoot(config?: { decksDir?: string }, opts?: PptwiseHomeOpts
   return resolve(pptwiseHome(opts), config?.decksDir ?? "decks")
 }
 
-/** Path to the user-level config file (theme/style defaults + `decksDir` redirect, spec §7's four-layer chain). */
+/** Path to the user-level config file for `decksDir` and image-provider settings. */
 export function userConfigPath(opts?: PptwiseHomeOpts): string {
   return join(pptwiseHome(opts), "config.json")
 }

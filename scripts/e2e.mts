@@ -448,8 +448,7 @@ if (finalSlide2.includes("Emphasize that every shape stays editable")) {
 }
 console.log("deck-dir speaker-notes leg OK (notesSlide2.xml carries p-goals's notes text, slide2.xml canvas does not)")
 
-// 6c) old-command hard-fail leg: `scenarios` is unknown (no dedicated stub).
-//     `schema --plan` and `plan validate` still point at current command names.
+// 6c) removed commands are ordinary unknown commands and options.
 console.log("--- old-command hard-fail leg ---")
 const scenariosStderr = shExpectFail("node", ["dist/cli.js", "scenarios"])
 if (!/unknown command/i.test(scenariosStderr)) {
@@ -459,14 +458,14 @@ if (/pptwise narratives/.test(scenariosStderr)) {
   throw new Error(`e2e: old-command leg — \`pptwise scenarios\` must not point at \`pptwise narratives\`, got: ${scenariosStderr}`)
 }
 const schemaPlanStderr = shExpectFail("node", ["dist/cli.js", "schema", "--plan"])
-if (!/pptwise schema --spec/.test(schemaPlanStderr)) {
-  throw new Error(`e2e: old-command leg — expected \`pptwise schema --plan\` to point at \`pptwise schema --spec\`, got: ${schemaPlanStderr}`)
+if (!/unknown option.*--plan/i.test(schemaPlanStderr) || /pptwise schema --spec/.test(schemaPlanStderr)) {
+  throw new Error(`e2e: old-command leg, expected \`pptwise schema --plan\` to be an unknown option with no replacement pointer, got: ${schemaPlanStderr}`)
 }
 const planValidateStderr = shExpectFail("node", ["dist/cli.js", "plan", "validate", join(deckDir, "deck.spec.json")])
-if (!/pptwise spec validate/.test(planValidateStderr)) {
-  throw new Error(`e2e: old-command leg — expected \`pptwise plan validate\` to point at \`pptwise spec validate\`, got: ${planValidateStderr}`)
+if (!/unknown command.*plan/i.test(planValidateStderr) || /pptwise spec validate/.test(planValidateStderr)) {
+  throw new Error(`e2e: old-command leg, expected \`pptwise plan validate\` to be an unknown command with no replacement pointer, got: ${planValidateStderr}`)
 }
-console.log("old-command hard-fail leg OK (scenarios is unknown, schema --plan / plan validate point at their replacements)")
+console.log("old-command hard-fail leg OK (removed commands and options are unknown with no replacement pointers)")
 
 // 7) audit leg (W6 task 2, spec §7 workflow ④): a clean deck must exit 0.
 //    A fixture on a normal theme (consulting, no style override) carries a

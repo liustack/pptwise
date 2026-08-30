@@ -134,50 +134,6 @@ const BackgroundSpecSchema = z.discriminatedUnion("kind", [
 // ── Theme / Meta / Assets / Brand ──
 
 /**
- * Leftover deep-partial palette/fonts/shape schema. Not an IR ThemeSchema
- * field. Recolor goes through `pptwise theme fork`. validate-core still
- * builds styleJsonSchema() from this object.
- */
-export const StyleOverrideSchema = z
-  .object({
-    colors: z
-      .object({
-        bg: HexTokenSchema.optional(),
-        surface: HexTokenSchema.optional(),
-        panel: HexTokenSchema.optional(),
-        primary: HexTokenSchema.optional(),
-        accent: HexTokenSchema.optional(),
-        text: HexTokenSchema.optional(),
-        muted: HexTokenSchema.optional(),
-        border: HexTokenSchema.optional(),
-        chartPalette: z.array(HexTokenSchema).min(1).optional(),
-        accentPool: z.array(HexTokenSchema).min(1).optional(),
-        cardStroke: HexTokenSchema.optional(),
-      })
-      .strict()
-      .optional(),
-    fonts: z
-      .object({
-        heading: z.array(z.string()).min(1).optional(),
-        body: z.array(z.string()).min(1).optional(),
-        mono: z.array(z.string()).min(1).optional(),
-      })
-      .strict()
-      .optional(),
-    shape: z
-      .object({
-        radius: z.number().min(0).max(32).optional(),
-        gapScale: z.number().min(0.8).max(1.3).optional(),
-        typeScale: z.number().min(0.5).max(2).optional(),
-      })
-      .strict()
-      .optional(),
-  })
-  .strict()
-
-export type StyleOverride = z.infer<typeof StyleOverrideSchema>
-
-/**
  * Brand (logical slide-master) config: branding behavior owned by a theme.
  * W1 scope was exactly the two flags migrated from the old theme-manifest footer flags;
  * the ink v3 redesign (2026-08-18) added a third, orthogonal one.

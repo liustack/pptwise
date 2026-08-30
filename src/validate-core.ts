@@ -18,7 +18,7 @@
  */
 import { z } from "zod"
 import { PptwiseError } from "./errors"
-import { OLD_IR_VERSION_ERROR, PptxIRSchema, StyleOverrideSchema, themeIssueMessage, type PptxIR } from "./ir"
+import { OLD_IR_VERSION_ERROR, PptxIRSchema, themeIssueMessage, type PptxIR } from "./ir"
 import { decodeDataUriBytes, dataUriMime, FORMAT_BY_MIME, MIME_BY_SNIFFED_FORMAT, sniffImageFormat } from "./ir/asset-sniff"
 import { normalizeComponentAliases, normalizeDeckRootAliases } from "./ir/field-aliases"
 import { isSlideLevelPath, renameHintsFor, SLIDE_LEVEL_UNKNOWN_KEY_HINT } from "./ir/rename-hints"
@@ -694,16 +694,12 @@ export function validateIr(input: unknown): ValidateResult {
   const installedThemeIds = getInstalledThemeIds()
   if (!installedThemeIds.includes(r.data.theme.id)) {
     const themeId = r.data.theme.id
-    const message =
-      themeId === "bloom"
-        ? 'theme id "bloom" was removed — run `pptwise migrate <input> -o <output>` to rewrite it to "classroom"'
-        : `unknown theme "${themeId}" — available: ${installedThemeIds.join(", ")} (see \`pptwise themes\`)`
     return withNormalized({
       ok: false,
       errors: [
         {
           path: "theme.id",
-          message,
+          message: `unknown theme "${themeId}". Themes available: ${installedThemeIds.join(", ")} (see \`pptwise themes\`)`,
         },
       ],
     })
@@ -838,9 +834,4 @@ export function listThemes(): ThemeInfo[] {
 /** JSON Schema for the IR — feed this to a model before it writes IR. */
 export function irJsonSchema(): Record<string, unknown> {
   return z.toJSONSchema(PptxIRSchema) as Record<string, unknown>
-}
-
-/** JSON Schema for style-token overrides (IR theme.style, --style files, config "style"). */
-export function styleJsonSchema(): Record<string, unknown> {
-  return z.toJSONSchema(StyleOverrideSchema) as Record<string, unknown>
 }
