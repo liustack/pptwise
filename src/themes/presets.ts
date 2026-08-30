@@ -1,0 +1,103 @@
+/**
+ * The factory preset library.
+ *
+ * The 24 built-ins are no longer a closed set of "the themes pptwise has".
+ * They are the shelf a new workspace theme is copied off (charter: 创建 =
+ * 拷贝, `.issues/2026-08-30-theme-first-principles/charter.md`). This module
+ * is the read source for that copy: it names what is on the shelf, what
+ * occasion each preset answers, and it hands out an independent copy that
+ * the copier owns outright. Nothing here keeps a link back to the preset —
+ * a copy never inherits later, which is the whole point of copying.
+ *
+ * Decoration is pushed down on the way out. A built-in declares one
+ * theme-wide `motif` anchor, but the public menu contract carries decoration
+ * per entry, so {@link copyThemePreset} writes the anchor into every entry
+ * that has not already silenced its own decoration. The copy therefore
+ * needs no theme-level anchor to look like its source.
+ */
+import { PptwiseError } from "../errors"
+import { BUILTIN_THEME_FILES, CANONICAL_THEME_IDS, type CanonicalThemeId } from "./index"
+import { THEME_OCCASIONS, type IdentityStrength, type Occasion } from "./occasions"
+import type { BuiltinThemeDeclaration, Menu, MenuEntry } from "./schema"
+
+/** One shelf entry: what a picker needs to choose a starting point. */
+export interface ThemePresetSummary {
+  readonly id: CanonicalThemeId
+  readonly label: string
+  readonly occasions: readonly Occasion[]
+  readonly identity: IdentityStrength
+}
+
+/** Every preset on the shelf, in canonical order. */
+export const THEME_PRESETS: readonly ThemePresetSummary[] = CANONICAL_THEME_IDS.map((id) => ({
+  id,
+  label: BUILTIN_THEME_FILES[id].label,
+  occasions: THEME_OCCASIONS[id].occasions,
+  identity: THEME_OCCASIONS[id].identity,
+}))
+
+/** Whether `id` names a factory preset. */
+export function isThemePresetId(id: string): id is CanonicalThemeId {
+  return (CANONICAL_THEME_IDS as readonly string[]).includes(id)
+}
+
+/** One shelf entry by id. Unknown ids are an error, never a silent fallback. */
+export function getThemePreset(id: string): ThemePresetSummary {
+  const summary = THEME_PRESETS.find((preset) => preset.id === id)
+  if (!summary) {
+    throw new PptwiseError(
+      `unknown theme preset "${id}". Installed presets: ${CANONICAL_THEME_IDS.join(", ")}`,
+    )
+  }
+  return summary
+}
+
+function withDecor(entry: MenuEntry, motif: BuiltinThemeDeclaration["motif"]): MenuEntry {
+  if (entry.decor !== undefined || motif === undefined) return structuredClone(entry)
+  return {
+    ...structuredClone(entry),
+    decor: motif.params ? { kind: "motif", id: motif.id, params: { ...motif.params } } : { kind: "motif", id: motif.id },
+  }
+}
+
+function copyMenu(menu: Menu, motif: BuiltinThemeDeclaration["motif"]): Menu {
+  const content: Menu["content"] = {}
+  for (const [kind, entry] of Object.entries(menu.content) as [keyof Menu["content"], MenuEntry][]) {
+    content[kind] = withDecor(entry, motif)
+  }
+  return {
+    cover: withDecor(menu.cover, motif),
+    chapter: withDecor(menu.chapter, motif),
+    content,
+    ending: withDecor(menu.ending, motif),
+  }
+}
+
+/**
+ * Copy one preset under a new id. The result shares nothing with the
+ * preset: style tokens, brand, and menu are all fresh objects, and the
+ * theme-wide motif anchor has been written into the menu entries.
+ *
+ * `targetId` may not be a preset id — a workspace theme never shadows the
+ * shelf it was copied from.
+ */
+export function copyThemePreset(presetId: string, targetId: string): BuiltinThemeDeclaration {
+  getThemePreset(presetId)
+  if (isThemePresetId(targetId)) {
+    throw new PptwiseError(
+      `theme id "${targetId}" is a factory preset id. Pick a workspace id that does not collide with the shelf`,
+    )
+  }
+  const preset: BuiltinThemeDeclaration = BUILTIN_THEME_FILES[presetId as CanonicalThemeId]
+  const record = THEME_OCCASIONS[preset.id]
+  return {
+    version: 2,
+    id: targetId as BuiltinThemeDeclaration["id"],
+    label: preset.label,
+    style: { ...structuredClone(preset.style), id: targetId },
+    ...(preset.brand ? { brand: structuredClone(preset.brand) } : {}),
+    occasions: [...record.occasions],
+    identity: record.identity,
+    menu: copyMenu(preset.menu, preset.motif),
+  }
+}
