@@ -1725,17 +1725,17 @@ describe("brand extract + deck theme.json / workspace themes/", () => {
       ...donor.style.colors,
       bg: "#FFFFFF",
       surface: "#000000",
-      primary: "#000000",
+      primary: "#111111",
       accent: "#666666",
       text: "#FFFFFF",
       muted: "#AAAAAA",
-      chartPalette: ["#000000", "#666666"],
+      chartPalette: ["#111111", "#666666"],
     }
     donor.style.defaultBackgrounds = {
-      cover: { kind: "color", value: "#000000" },
-      chapter: { kind: "color", value: "#000000" },
-      content: { kind: "color", value: "#000000" },
-      ending: { kind: "color", value: "#000000" },
+      cover: { kind: "color", value: "#111111" },
+      chapter: { kind: "color", value: "#111111" },
+      content: { kind: "color", value: "#111111" },
+      ending: { kind: "color", value: "#111111" },
     }
     await writeFile(donorPath, JSON.stringify(donor))
     __resetRegisteredThemes()
