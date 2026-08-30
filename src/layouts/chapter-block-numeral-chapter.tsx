@@ -160,7 +160,6 @@ export const layoutDef = {
   id: "block-numeral-chapter",
   kind: "archetype",
   pinOnly: true,
-  branding: "none",
   slideTypes: ["chapter"],
   slots: [
     { name: "kicker", accepts: [] },

@@ -122,7 +122,6 @@ export const layoutDef: LayoutDefinition = {
   id: "ghost-rule-chapter",
   kind: "archetype",
   pinOnly: true,
-  branding: "none",
   slideTypes: ["chapter"],
   slots: [
     { name: "watermark", accepts: [] },

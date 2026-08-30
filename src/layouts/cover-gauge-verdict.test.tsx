@@ -138,7 +138,6 @@ describe("cover-gauge-verdict", () => {
       id: "gauge-verdict",
       kind: "archetype",
       slideTypes: ["cover"],
-      branding: "none",
     })
     expect(layoutDef.pinOnly).toBe(true)
     expect(layoutDef.slots.find((slot) => slot.name === "body")).toEqual({

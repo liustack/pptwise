@@ -254,7 +254,6 @@ export const layoutDef = {
   id: "show-figures",
   kind: "archetype",
   pinOnly: true,
-  suppressMotif: true,
   slideTypes: ["content"],
   slots: [
     { name: "kicker", accepts: [] },

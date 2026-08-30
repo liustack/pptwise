@@ -118,7 +118,6 @@ describe("ending-gauge-next", () => {
     expect(layoutDef).toMatchObject({
       id: "gauge-next",
       kind: "archetype",
-      branding: "none",
       slideTypes: ["ending"],
     })
     expect(layoutDef.pinOnly).toBe(true)

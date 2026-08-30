@@ -198,7 +198,6 @@ export const layoutDef: LayoutDefinition = {
   id: "afterword-ending",
   kind: "archetype",
   pinOnly: true,
-  branding: "none",
   slideTypes: ["ending"],
   slots: [
     { name: "kicker", accepts: [] },

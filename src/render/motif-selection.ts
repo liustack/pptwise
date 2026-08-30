@@ -192,12 +192,9 @@ export const MOTIF_CANDIDATES: Partial<Record<CanonicalThemeId, readonly MotifId
 }
 
 /**
- * Resolve which motif id `slide` (the `index`-th page of `ir`)
- * should draw its decor with. Mirrors `layout-selection.ts`'s
- * `resolveEffectiveLayoutId` signature/posture for the same reason: a single
- * authoritative function callable from both the render path
- * (`full-slide-svg.tsx`) and tests/tooling (`motif-candidate-contrast.test.ts`)
- * that want to know a page's pick without re-deriving the salt logic.
+ * Resolve the legacy seed-selected motif id for tests and migration tooling.
+ * The page renderer now reads `MenuEntry.decor` directly and does not call
+ * this compatibility helper.
  *
  * - `ir.theme.id` has no entry in {@link MOTIF_CANDIDATES} (a registered/
  *   custom theme, an unrecognized id, or `runway` / `museum` / `stage`):

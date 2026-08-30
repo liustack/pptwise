@@ -162,7 +162,6 @@ export const layoutDef = {
   id: "decimal-index-chapter",
   kind: "archetype",
   pinOnly: true,
-  branding: "none",
   slideTypes: ["chapter"],
   slots: [
     { name: "kicker", accepts: [] },

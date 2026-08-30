@@ -204,7 +204,6 @@ export const layoutDef = {
   id: "seat-cta-ending",
   kind: "archetype",
   pinOnly: true,
-  branding: "none",
   slideTypes: ["ending"],
   slots: [
     { name: "heading", accepts: [] },

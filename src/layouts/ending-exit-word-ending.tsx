@@ -175,7 +175,6 @@ export const layoutDef = {
   id: "exit-word-ending",
   kind: "archetype",
   pinOnly: true,
-  branding: "none",
   slideTypes: ["ending"],
   slots: [
     { name: "heading", accepts: [] },

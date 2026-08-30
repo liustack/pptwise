@@ -110,7 +110,6 @@ describe("chapter-gauge-section", () => {
       id: "gauge-section",
       kind: "archetype",
       slideTypes: ["chapter"],
-      branding: "none",
       paintsOwnBackground: true,
     })
     expect(layoutDef.pinOnly).toBe(true)

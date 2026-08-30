@@ -157,7 +157,6 @@ describe("ending-next-lecture-ending — shared pool", () => {
     expect(layoutDef.id).toBe("next-lecture-ending")
     expect(layoutDef.kind).toBe("archetype")
     expect(layoutDef.pinOnly).toBe(true)
-    expect(layoutDef.branding).toBe("none")
     expect(layoutDef.slideTypes).toEqual(["ending"])
     expect("paintsOwnBackground" in layoutDef).toBe(false)
     const body = layoutDef.slots.find((slot) => slot.name === "body")

@@ -124,7 +124,6 @@ describe("ending-seat-cta-ending — shared pool", () => {
     expect(layoutDef.id).toBe("seat-cta-ending")
     expect(layoutDef.kind).toBe("archetype")
     expect(layoutDef.pinOnly).toBe(true)
-    expect(layoutDef.branding).toBe("none")
     expect(layoutDef.slideTypes).toEqual(["ending"])
   })
 

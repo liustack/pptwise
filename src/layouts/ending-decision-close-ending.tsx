@@ -207,7 +207,6 @@ export const layoutDef: LayoutDefinition = {
   id: "decision-close-ending",
   kind: "archetype",
   pinOnly: true,
-  branding: "none",
   slideTypes: ["ending"],
   slots: [
     { name: "kicker", accepts: [] },

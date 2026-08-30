@@ -146,7 +146,6 @@ export const layoutDef = {
   id: "day-bill-chapter",
   kind: "archetype",
   pinOnly: true,
-  branding: "none",
   slideTypes: ["chapter"],
   slots: [
     { name: "kicker", accepts: [] },

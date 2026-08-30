@@ -44,11 +44,10 @@ function renderChapter(themeId: string, slides: Slide[] = [chapterSlide("开篇"
 }
 
 describe("layoutDef", () => {
-  it("declares pinOnly mirror-volume-chapter on chapter, branding none", () => {
+  it("declares pinOnly mirror-volume-chapter on chapter", () => {
     expect(layoutDef.id).toBe("mirror-volume-chapter")
     expect(layoutDef.kind).toBe("archetype")
     expect(layoutDef.pinOnly).toBe(true)
-    expect(layoutDef.branding).toBe("none")
     expect(layoutDef.slideTypes).toEqual(["chapter"])
     expect("paintsOwnBackground" in layoutDef).toBe(false)
   })

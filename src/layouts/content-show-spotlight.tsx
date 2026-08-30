@@ -263,7 +263,6 @@ export const layoutDef = {
   id: "show-spotlight",
   kind: "archetype",
   pinOnly: true,
-  suppressMotif: true,
   slideTypes: ["content"],
   slots: [
     { name: "kicker", accepts: [] },

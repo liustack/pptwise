@@ -105,7 +105,6 @@ describe("ending-seal-close-ending — shared pool", () => {
     expect(layoutDef.id).toBe("seal-close-ending")
     expect(layoutDef.kind).toBe("archetype")
     expect(layoutDef.pinOnly).toBe(true)
-    expect(layoutDef.branding).toBe("none")
     expect(layoutDef.slideTypes).toEqual(["ending"])
   })
 

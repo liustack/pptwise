@@ -229,22 +229,21 @@ describe("StackedPosterContent", () => {
     ).toBeUndefined()
   })
 
-  it("degrade path (≥3 components) honors a non-default arrangement — W2 task 3: registry declares arrangements \"all\" for this layout because the degrade path passes slide.arrangement straight through unchanged", () => {
-    const twoColThreeComponentSlide: Slide = { ...threeComponentSlide, arrangement: "two_column" } as unknown as Slide
+  it("degrade path (≥3 components) self-arranges as one full-width stack", () => {
     const ctx = buildCtx(resolveStyle("classroom"), {})
-    const deck = ir("classroom", [chapter1, twoColThreeComponentSlide])
+    const deck = ir("classroom", [chapter1, threeComponentSlide])
     const { root } = render(
-      <StackedPosterContent ir={deck} slide={twoColThreeComponentSlide} index={1} ctx={ctx} />,
+      <StackedPosterContent ir={deck} slide={threeComponentSlide} index={1} ctx={ctx} />,
     )
-    // two_column splits the 3 components into two x-columns (ceil(3/2)=2 left,
-    // 1 right) instead of one full-width (x=56, w=1168) stack.
+    // Arrangement is no longer an authored page field. The face owns this
+    // choice and keeps its degrade path as one full-width stack.
     const boxes = Array.from(root.querySelectorAll("g[data-audit-box]")).map((g) =>
       parseAudit(g.getAttribute("data-audit-box")),
     )
     expect(boxes.length).toBe(3)
     const xs = new Set(boxes.map((b) => b.x))
-    expect(xs.size).toBe(2)
-    for (const b of boxes) expect(b.w).toBeLessThan(1168)
+    expect(xs).toEqual(new Set([56]))
+    for (const b of boxes) expect(b.w).toBe(1168)
   })
 
   it("footnote 存在时海报/降级两条路径都走 muted（孤儿色 META_MUTED 已并入，#666670 不残留）", () => {

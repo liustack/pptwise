@@ -108,7 +108,6 @@ describe("content-gauge-point", () => {
       id: "gauge-point",
       kind: "archetype",
       pinOnly: true,
-      branding: "none",
       slideTypes: ["content"],
       arrangements: ["single"],
     })

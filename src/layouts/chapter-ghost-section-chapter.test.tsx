@@ -110,7 +110,6 @@ describe("chapter-ghost-section-chapter — shared pool", () => {
     expect(layoutDef.id).toBe("ghost-section-chapter")
     expect(layoutDef.kind).toBe("archetype")
     expect(layoutDef.pinOnly).toBe(true)
-    expect(layoutDef.branding).toBe("none")
     expect(layoutDef.slideTypes).toEqual(["chapter"])
   })
 

@@ -138,7 +138,6 @@ describe("chapter-decimal-index-chapter — shared pool", () => {
     expect(layoutDef.id).toBe("decimal-index-chapter")
     expect(layoutDef.kind).toBe("archetype")
     expect(layoutDef.pinOnly).toBe(true)
-    expect(layoutDef.branding).toBe("none")
     expect(layoutDef.slideTypes).toEqual(["chapter"])
   })
 

@@ -132,7 +132,6 @@ export const layoutDef = {
   id: "sticker-numeral-chapter",
   kind: "archetype",
   pinOnly: true,
-  branding: "none",
   slideTypes: ["chapter"],
   slots: [
     { name: "kicker", accepts: [] },

@@ -166,7 +166,6 @@ export const layoutDef: LayoutDefinition = {
   id: "defense-close-ending",
   kind: "archetype",
   pinOnly: true,
-  branding: "none",
   slideTypes: ["ending"],
   slots: [
     { name: "kicker", accepts: [] },

@@ -1,12 +1,14 @@
-import { describe, it, expect } from "vitest"
+import { afterEach, describe, expect, it } from "vitest"
 import { checkIrQuality, type QualityIssue } from "./ir-quality"
 import { CAPACITY } from "../audit/capacity"
-import { resolveEffectiveLayoutId } from "./layout-selection"
 import { renderSvgMarkup } from "./serialize"
 import { chart } from "../components/chart"
 import type { ComponentCtx } from "../components/types"
 import { PACING_BUDGETS, resolveNarrative, type Pacing, type NarrativeProfile } from "@/narrative"
 import type { Component, PptxIR, Slide } from "@/ir"
+import { CONSULTING_TOKENS } from "../themes/builtin/consulting"
+import { __resetRegisteredThemes, registerTheme } from "../themes/definitions"
+import type { Menu } from "../themes/schema"
 
 // ── helpers ──
 
@@ -34,26 +36,27 @@ function pacingAxes(pacing: Pacing): NarrativeProfile {
   return resolveNarrative({ pacing })
 }
 
-/**
- * Search for a heading string that makes a single-content-slide `themeId`
- * deck's auto-pick (content ordinal 0) land on `targetLayoutId` — via the
- * real `resolveEffectiveLayoutId` (`./layout-selection`), never a
- * reimplemented copy of its seed/hash mechanics, so this fixture can never
- * silently drift from what selection actually does (same "must reuse, not
- * reimplement" concern `layout-selection.ts` itself documents). Only needed
- * for theme "tech", whose content allowed set (`["bento-panel",
- * "two-column"]`) mixes two different body capacities (6 vs 4) — every
- * other built-in theme's content allowed set is two same-capacity (4)
- * layouts, so which one gets picked never changes the expected limit.
- */
-function findAutoPickHeading(themeId: string, targetLayoutId: string): string {
-  for (let i = 0; i < 500; i++) {
-    const heading = `probe-${i}`
-    const ir = makeIR([{ type: "content", kind: "points", heading, components: [] }], themeId)
-    if (resolveEffectiveLayoutId(ir, ir.slides[0], 0) === targetLayoutId) return heading
-  }
-  throw new Error(`no auto-pick fixture landing on "${targetLayoutId}" for theme "${themeId}" within 500 tries`)
+function installMenuTheme(id: string, content: Menu["content"]): void {
+  registerTheme({
+    version: 2,
+    id,
+    style: {
+      ...CONSULTING_TOKENS,
+      id,
+      shape: { radius: 2, gapScale: 1, typeScale: 1 },
+    },
+    menu: {
+      cover: { face: "poster-center" },
+      chapter: { face: "masthead-chapter" },
+      content,
+      ending: { face: "poster-ending" },
+    },
+  })
 }
+
+afterEach(() => {
+  __resetRegisteredThemes()
+})
 
 // ── tests ──
 
@@ -87,400 +90,88 @@ describe("checkIrQuality", () => {
     expect(issues[0].code).toBe("empty_deck")
   })
 
-  // ── density (W3 task 3, spec §5 dual-attribute capacity split) ──
-  //
-  // limit = min(PACING_BUDGETS[pacing].maxComponentsPerSlide,
-  // resolveEffectiveLayoutBodyCapacity(...).capacity ?? Infinity). The
-  // matrix below deliberately covers: all 3 pacings, explicit vs.
-  // auto-picked layout, the bento-panel capacity-6 exception (both
-  // auto-picked and explicit-pinned), and takeover layouts (no geometric
-  // term at all).
-  //
-  // W4 amendment: every built-in theme's content curated set is now a
-  // 6-7-layout full set (`definitions.ts`) that *can* include bento-panel
-  // (capacity 6) for any auto-pick case, not just tech — the pre-W4 "every
-  // non-tech theme's content set is 2 same-capacity layouts" premise this
-  // comment used to state is gone. In practice this only makes the
-  // *balanced*/*spacious* auto-pick cases below ambiguity-proof by
-  // arithmetic coincidence (pacing's own budget, 4 and 3 respectively, is
-  // <= bento-panel's capacity, so it binds either way — same expectedLimit
-  // regardless of which layout gets picked); *dense* pacing's budget (5)
-  // sits strictly between the two possible layout capacities (4 and 6), so
-  // it's the one case where the auto-picked layout's identity actually
-  // changes the expected limit. The "journal / dense" case below has been
-  // re-verified empirically against W4's weighted+anti-repetition algorithm
-  // (not assumed): for this fixture's exact heading/seed it still resolves
-  // to narrow-column (capacity 4), so `expectedLimit: 4` is unchanged — not
-  // a coincidence this test skipped updating, a fact confirmed by direct
-  // reproduction (`resolveEffectiveLayoutId`) during this task, not by
-  // re-deriving the seed/weighting mechanics inline here (same "must reuse,
-  // not reimplement" rule `findAutoPickHeading` below already documents).
-  // If a future change to the weighting/seed mechanics ever flips this
-  // specific fixture onto bento-panel, this is the one line in the matrix
-  // that would need `expectedLimit: 5`.
-
-  describe("density gate matrix", () => {
-    const cases: {
-      label: string
-      themeId: string
-      pacing: Pacing
-      layout?: string
-      image?: boolean
-      expectedLimit: number
-    }[] = [
-      // dense pacing (editorial budget 5)
-      {
-        label: "dense pacing, explicit generic layout — the layout's own capacity (4) binds under pacing's 5",
-        themeId: "consulting",
-        pacing: "dense",
-        layout: "two-column",
-        expectedLimit: 4,
-      },
-      {
-        label: "dense pacing, explicit bento-panel — pacing's 5 binds under the layout's own capacity (6)",
-        themeId: "consulting",
-        pacing: "dense",
-        layout: "bento-panel",
-        expectedLimit: 5,
-      },
-      {
-        label: "dense pacing, auto-picked layout (non-tech theme) — layout capacity (4) binds under pacing's 5",
-        themeId: "journal",
-        pacing: "dense",
-        expectedLimit: 4,
-      },
-      {
-        label: "dense pacing, takeover layout — no geometric term, pure pacing budget (5)",
-        themeId: "consulting",
-        pacing: "dense",
-        layout: "image-top",
-        image: true,
-        expectedLimit: 5,
-      },
-      // balanced pacing (editorial budget 4)
-      {
-        label: "balanced pacing, explicit generic layout — tie at 4",
-        themeId: "consulting",
-        pacing: "balanced",
-        layout: "two-column",
-        expectedLimit: 4,
-      },
-      {
-        label: "balanced pacing, auto-picked layout (non-tech theme) — tie at 4",
-        themeId: "consulting",
-        pacing: "balanced",
-        expectedLimit: 4,
-      },
-      {
-        label: "balanced pacing, explicit bento-panel — pacing's 4 binds under the layout's own capacity (6)",
-        themeId: "tech",
-        pacing: "balanced",
-        layout: "bento-panel",
-        expectedLimit: 4,
-      },
-      {
-        label: "balanced pacing, takeover layout — no geometric term, pure pacing budget (4)",
-        themeId: "consulting",
-        pacing: "balanced",
-        layout: "image-split",
-        image: true,
-        expectedLimit: 4,
-      },
-      // spacious pacing (editorial budget 3) — every content layout's own
-      // capacity is >= 4, so pacing always binds regardless of layout.
-      {
-        label: "spacious pacing, explicit generic layout — pacing's 3 always binds",
-        themeId: "consulting",
-        pacing: "spacious",
-        layout: "two-column",
-        expectedLimit: 3,
-      },
-      {
-        label: "spacious pacing, explicit bento-panel — pacing's 3 always binds",
-        themeId: "tech",
-        pacing: "spacious",
-        layout: "bento-panel",
-        expectedLimit: 3,
-      },
-      {
-        label: "spacious pacing, auto-picked layout — pacing's 3 always binds",
-        themeId: "consulting",
-        pacing: "spacious",
-        expectedLimit: 3,
-      },
-      {
-        label: "spacious pacing, takeover layout — no geometric term, pure pacing budget (3)",
-        themeId: "consulting",
-        pacing: "spacious",
-        layout: "image-bottom",
-        image: true,
-        expectedLimit: 3,
-      },
-    ]
-
-    for (const c of cases) {
-      it(`${c.label} → limit ${c.expectedLimit}`, () => {
-        const build = (n: number): Slide => ({
-          type: "content",
-          kind: "points",
-          heading: "标题",
-          components: [
-            ...(c.image ? [{ type: "image" as const, asset_id: "hero", fit: "cover" as const }] : []),
-            ...paragraphs(n - (c.image ? 1 : 0)),
-          ],
-        })
-        const axes = pacingAxes(c.pacing)
-
-        const atLimit = makeIR([build(c.expectedLimit)], c.themeId)
-        expect(codes(checkIrQuality(atLimit, axes))).not.toContain("density")
-
-        const overLimit = makeIR([build(c.expectedLimit + 1)], c.themeId)
-        const issues = checkIrQuality(overLimit, axes)
-        expect(codes(issues)).toContain("density")
-        const density = issues.find((i) => i.code === "density")!
-        expect(density.density?.limit).toBe(c.expectedLimit)
-        expect(density.density?.pacing).toBe(c.pacing)
-        expect(density.message).toContain(String(c.expectedLimit))
+  describe("density gate uses the menu face plus the unchanged pacing budget", () => {
+    it("lets a capacity-4 face bind below dense pacing's budget of 5", () => {
+      installMenuTheme("quality-capacity-four", {
+        points: { face: "two-column" },
       })
-    }
-
-    it("auto-selected bento-panel under balanced pacing: limit is 4 (pacing), not 6 (the layout's own capacity)", () => {
-      // The headline case spec §5's W3 amendment calls out by name: a
-      // generous-looking auto-picked layout must not let editorial
-      // discipline slip. Confirms the fixture really lands on bento-panel
-      // (guards this test against silently testing the wrong branch if the
-      // selection algorithm or tech's curated set ever changes).
-      const heading = findAutoPickHeading("tech", "bento-panel")
-      const axes = pacingAxes("balanced")
-      const build = (n: number): Slide => ({ type: "content", kind: "points", heading, components: paragraphs(n) })
-
-      const atLimit = makeIR([build(4)], "tech")
-      expect(resolveEffectiveLayoutId(atLimit, atLimit.slides[0], 0)).toBe("bento-panel")
-      expect(codes(checkIrQuality(atLimit, axes))).not.toContain("density")
-
-      const overLimit = makeIR([build(5)], "tech")
-      const issues = checkIrQuality(overLimit, axes)
-      expect(codes(issues)).toContain("density")
-      const density = issues.find((i) => i.code === "density")!.density!
-      expect(density.limit).toBe(4)
-      expect(density.layoutId).toBe("bento-panel")
-      expect(density.layoutCapacity).toBe(6)
-      expect(density.pacingBudget).toBe(4)
-    })
-
-    it("a pinned takeover id with no image component falls through to layout auto-pick (mirrors FullSlideSvg's own fallback — validate=render)", () => {
-      // "image-split" is registered and kind "takeover", but render's own
-      // splitTakeover check (and this module's mirror of it) only fires
-      // when an image component is present too — with none here it falls
-      // back to tech's curated content set, landing on two-column
-      // (capacity 4), not the takeover's "no geometric term" behavior.
-      const heading = findAutoPickHeading("tech", "two-column")
-      const axes = pacingAxes("balanced")
-      const build = (n: number): Slide => ({
-        type: "content",
-        kind: "points",
-        heading,
-        components: paragraphs(n),
-      })
-
-      const atLimit = makeIR([build(4)], "tech")
-      expect(resolveEffectiveLayoutId(atLimit, atLimit.slides[0], 0)).toBe("two-column")
-      expect(codes(checkIrQuality(atLimit, axes))).not.toContain("density")
-
-      const overLimit = makeIR([build(5)], "tech")
-      const issues = checkIrQuality(overLimit, axes)
-      expect(codes(issues)).toContain("density")
-      expect(issues.find((i) => i.code === "density")!.density?.layoutId).toBe("two-column")
-    })
-
-    it("narrative omitted defaults to the general preset (briefing x balanced x public) — density limit 4", () => {
-      const atLimit = makeIR([{ type: "content", kind: "points", heading: "标题", components: paragraphs(4) }])
-      expect(codes(checkIrQuality(atLimit))).not.toContain("density")
-
-      const overLimit = makeIR([{ type: "content", kind: "points", heading: "标题", components: paragraphs(5) }])
-      const issues = checkIrQuality(overLimit)
-      expect(codes(issues)).toContain("density")
-      const density = issues.find((i) => i.code === "density")!.density!
-      expect(density.limit).toBe(4)
-      expect(density.pacing).toBe("balanced")
-    })
-
-    it("does NOT warn density for a non-content slide regardless of component count (density gate is content-only)", () => {
-      const ir = makeIR([{ type: "cover", heading: "封面", components: paragraphs(6) }])
-      expect(codes(checkIrQuality(ir))).not.toContain("density")
-    })
-  })
-
-  // ── pin-only over-capacity hard error (quote-stage wave, task T2, 裁定 2) ──
-  describe("pin_only_over_capacity (pinOnly layouts only — a hard error, scope-distinct from the density warn above)", () => {
-    it("pinning quote-stage (capacity 1) with 2 components is a hard error", () => {
-      const ir = makeIR([
-        { type: "content", kind: "points", heading: "金句",  components: paragraphs(2) },
-      ])
-      const issues = checkIrQuality(ir)
-      expect(codes(issues)).toContain("pin_only_over_capacity")
-      const found = issues.find((i) => i.code === "pin_only_over_capacity")!
-      expect(found.severity).toBe("error")
-      expect(found.pinOnlyCapacity).toEqual({ layoutId: "quote-stage", capacity: 1, componentCount: 2 })
-    })
-
-    it("pinning quote-stage with exactly 1 component (at capacity) passes clean", () => {
-      const ir = makeIR([
-        { type: "content", kind: "points", heading: "金句",  components: paragraphs(1) },
-      ])
-      expect(codes(checkIrQuality(ir))).not.toContain("pin_only_over_capacity")
-    })
-
-    it("pinning quote-stage with 0 components (a pure quote) passes clean", () => {
-      const ir = makeIR([
-        { type: "content", kind: "points", heading: "金句",  components: [] },
-      ])
-      expect(codes(checkIrQuality(ir))).not.toContain("pin_only_over_capacity")
-    })
-
-    it.each(["statement", "pull-quote"] as const)(
-      "pinning %s (capacity 1) with 2 components is a hard error",
-      (layoutId) => {
-        const ir = makeIR(
-          [{ type: "content", kind: "points", heading: "金句",  components: paragraphs(2) }],
-          layoutId === "pull-quote" ? "heritage" : "consulting",
-        )
-        const issues = checkIrQuality(ir)
-        expect(codes(issues)).toContain("pin_only_over_capacity")
-        const found = issues.find((i) => i.code === "pin_only_over_capacity")!
-        expect(found.severity).toBe("error")
-        expect(found.pinOnlyCapacity).toEqual({ layoutId, capacity: 1, componentCount: 2 })
-      },
-    )
-
-    it("regression: pinning an ordinary (non-pinOnly) layout over its own declared capacity still only warns density, never this new error", () => {
-      // two-column's body capacity is 4 (registry.ts) — 5 components pins it
-      // over capacity, same shape as quote-stage's own over-capacity case
-      // above, but two-column is *not* pinOnly, so this must stay exactly
-      // today's behavior: a `density` warn, `ok:true`-equivalent (checked at
-      // the checkIrQuality level via severity), never the new hard error.
-      const ir = makeIR([
-        { type: "content", kind: "points", heading: "标题",  components: paragraphs(5) },
-      ])
-      const issues = checkIrQuality(ir)
-      expect(codes(issues)).toContain("density")
-      expect(issues.find((i) => i.code === "density")!.severity).toBe("warn")
-      expect(codes(issues)).not.toContain("pin_only_over_capacity")
-    })
-
-    it("regression: pinning bento-panel (capacity 6, not pinOnly) over its own capacity still only warns density", () => {
-      const ir = makeIR([
-        { type: "content", kind: "points", heading: "标题",  components: paragraphs(7) },
-      ])
-      const issues = checkIrQuality(ir)
-      expect(codes(issues)).toContain("density")
-      expect(codes(issues)).not.toContain("pin_only_over_capacity")
-    })
-
-    it("pinning one-evidence (capacity 1) with 2 components is a hard error", () => {
-      const ir = makeIR([
-        { type: "content", kind: "points", heading: "断言",  components: paragraphs(2) },
-      ])
-      const issues = checkIrQuality(ir)
-      expect(codes(issues)).toContain("pin_only_over_capacity")
-      const found = issues.find((i) => i.code === "pin_only_over_capacity")!
-      expect(found.severity).toBe("error")
-      expect(found.pinOnlyCapacity).toEqual({ layoutId: "one-evidence", capacity: 1, componentCount: 2 })
-    })
-
-    it("pinning one-evidence with exactly 1 component passes clean of that error", () => {
-      const ir = makeIR([
-        { type: "content", kind: "points", heading: "断言",  components: paragraphs(1) },
-      ])
-      expect(codes(checkIrQuality(ir))).not.toContain("pin_only_over_capacity")
-    })
-
-    it("pinning mono-bleed (capacity 0) with 1 component is a hard error", () => {
       const ir = makeIR(
-        [{ type: "content", kind: "points", heading: "把灯关掉",  components: paragraphs(1) }],
-        "playbill",
+        [
+          {
+            type: "content",
+            kind: "points",
+            heading: "Capacity",
+            components: paragraphs(5),
+          },
+        ],
+        "quality-capacity-four",
       )
-      const issues = checkIrQuality(ir)
-      expect(codes(issues)).toContain("pin_only_over_capacity")
-      expect(issues.find((i) => i.code === "pin_only_over_capacity")!.pinOnlyCapacity).toEqual({
-        layoutId: "mono-bleed",
-        capacity: 0,
-        componentCount: 1,
+      const issue = checkIrQuality(ir, pacingAxes("dense")).find((candidate) => candidate.code === "density")
+
+      expect(issue?.density).toEqual({
+        limit: 4,
+        pacing: "dense",
+        pacingBudget: 5,
+        layoutId: "two-column",
+        layoutCapacity: 4,
       })
     })
 
-    it("pinning stat-hero with 2 components is a hard error", () => {
-      const ir = makeIR([
-        { type: "content", kind: "points", heading: "95.7%",  components: paragraphs(2) },
-      ])
-      expect(codes(checkIrQuality(ir))).toContain("pin_only_over_capacity")
-    })
-
-    it("an unoffered sparse pin does not fire pin_only_over_capacity (render falls back)", () => {
+    it("lets pacing bind below a capacity-6 face", () => {
+      installMenuTheme("quality-capacity-six", {
+        points: { face: "bento-panel" },
+      })
       const ir = makeIR(
-        [{ type: "content", kind: "points", heading: "断言",  components: paragraphs(2) }],
-        "crayon",
+        [
+          {
+            type: "content",
+            kind: "points",
+            heading: "Capacity",
+            components: paragraphs(6),
+          },
+        ],
+        "quality-capacity-six",
       )
-      expect(codes(checkIrQuality(ir))).not.toContain("pin_only_over_capacity")
-    })
-  })
+      const issue = checkIrQuality(ir, pacingAxes("dense")).find((candidate) => candidate.code === "density")
 
-  // ── quote-stage heading width-limit hard error (quote-stage wave, task T2) ──
-  describe("pinned_heading_overflow (quote-stage only — never fires for any other layout's heading)", () => {
-    const CJK_LONG =
-      "微服务架构下的分布式事务一致性保障机制与补偿策略设计规范以及跨可用区容灾演练的完整落地路径说明"
-    const MIXED_LONG =
-      "基于 Kubernetes Operator 的 StatefulSet 滚动升级与 PodDisruptionBudget 联动策略 v2.3.1-rc.4 说明"
-
-    it("an ordinary-length heading fits comfortably and never fires", () => {
-      const ir = makeIR([
-        { type: "content", kind: "points", heading: "简洁是最终的复杂",  components: [] },
-      ])
-      expect(codes(checkIrQuality(ir))).not.toContain("pinned_heading_overflow")
+      expect(issue?.density).toEqual({
+        limit: 5,
+        pacing: "dense",
+        pacingBudget: 5,
+        layoutId: "bento-panel",
+        layoutCapacity: 6,
+      })
     })
 
-    it("a single CJK_LONG heading still fits within quote-stage's own budget (maxLines 4 gives real room) and does not fire", () => {
-      const ir = makeIR([
-        { type: "content", kind: "points", heading: CJK_LONG,  components: [] },
-      ])
-      expect(codes(checkIrQuality(ir))).not.toContain("pinned_heading_overflow")
+    it("uses only pacing when the selected takeover declares no body capacity", () => {
+      installMenuTheme("quality-takeover", { photo: { face: "image-top" } })
+      const ir = makeIR(
+        [
+          {
+            type: "content",
+            kind: "photo",
+            heading: "Photo",
+            components: paragraphs(6),
+          },
+        ],
+        "quality-takeover",
+      )
+      const issue = checkIrQuality(ir, pacingAxes("dense")).find((candidate) => candidate.code === "density")
+
+      expect(issue?.density).toEqual({
+        limit: 5,
+        pacing: "dense",
+        pacingBudget: 5,
+        layoutId: "image-top",
+        layoutCapacity: undefined,
+      })
     })
 
-    it("a pathologically long CJK+mixed heading (2x CJK_LONG + MIXED_LONG) that still truncates at minPt is a hard error", () => {
-      const ir = makeIR([
-        {
-          type: "content",
-          kind: "points",
-          heading: `${CJK_LONG}${CJK_LONG}${MIXED_LONG}`,
-          components: [],
-        },
-      ])
-      const issues = checkIrQuality(ir)
-      expect(codes(issues)).toContain("pinned_heading_overflow")
-      expect(issues.find((i) => i.code === "pinned_heading_overflow")!.severity).toBe("error")
-    })
+    it("does not apply the content density gate to boundary pages", () => {
+      installMenuTheme("quality-boundary", { points: { face: "two-column" } })
+      const ir = makeIR([{ type: "cover", heading: "Cover", components: paragraphs(8) }], "quality-boundary")
 
-    it("a pathologically long MIXED_LONG heading (CJK + Latin/digit mix) that still truncates at minPt is a hard error", () => {
-      const ir = makeIR([
-        {
-          type: "content",
-          kind: "points",
-          heading: `${MIXED_LONG}${MIXED_LONG}${MIXED_LONG}`,
-          components: [],
-        },
-      ])
-      const issues = checkIrQuality(ir)
-      expect(codes(issues)).toContain("pinned_heading_overflow")
-    })
-
-    it("the exact same pathologically long heading on a non-quote-stage layout never fires this code (scope-distinct from long_heading's warn above)", () => {
-      const ir = makeIR([
-        { type: "content", kind: "points", heading: `${CJK_LONG}${CJK_LONG}`, components: [] },
-      ])
-      const issues = checkIrQuality(ir)
-      expect(codes(issues)).not.toContain("pinned_heading_overflow")
-      // long_heading (warn, char-count based) may or may not fire depending
-      // on CAPACITY.headingMaxChars — irrelevant to this test's own claim.
+      expect(codes(checkIrQuality(ir, pacingAxes("spacious")))).not.toContain("density")
     })
   })
 
@@ -1102,37 +793,6 @@ describe("checkIrQuality", () => {
       },
     ])
     expect(codes(checkIrQuality(ir))).not.toContain("long_heading")
-  })
-
-  // ── big_number_no_kpi ──
-
-  it("warns when big_number variant lacks kpi_cards component", () => {
-    const ir = makeIR([
-      {
-        type: "content",
-        kind: "points",
-        heading: "大数字",
-        components: [{ type: "paragraph", text: "oops" }],
-      },
-    ])
-    expect(codes(checkIrQuality(ir))).toContain("big_number_no_kpi")
-  })
-
-  it("does NOT warn big_number_no_kpi when kpi_cards present", () => {
-    const ir = makeIR([
-      {
-        type: "content",
-        kind: "points",
-        heading: "大数字",
-        components: [
-          {
-            type: "kpi_cards",
-            items: [{ value: "99%", label: "完成率" }],
-          },
-        ],
-      },
-    ])
-    expect(codes(checkIrQuality(ir))).not.toContain("big_number_no_kpi")
   })
 
   // ── chart_axes_ignored (chart-axes feature) ──

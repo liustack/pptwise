@@ -175,7 +175,6 @@ export const layoutDef = {
   id: "capsule-open-cover",
   kind: "archetype",
   pinOnly: true,
-  branding: "none",
   slideTypes: ["cover"],
   slots: [
     { name: "kicker", accepts: [] },

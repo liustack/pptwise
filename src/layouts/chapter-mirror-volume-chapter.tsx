@@ -178,7 +178,6 @@ export const layoutDef = {
   id: "mirror-volume-chapter",
   kind: "archetype",
   pinOnly: true,
-  branding: "none",
   slideTypes: ["chapter"],
   slots: [
     { name: "kicker", accepts: [] },

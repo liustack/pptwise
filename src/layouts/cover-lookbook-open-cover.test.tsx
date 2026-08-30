@@ -160,7 +160,6 @@ describe("cover-lookbook-open-cover — shared pool", () => {
     expect(layoutDef.id).toBe("lookbook-open-cover")
     expect(layoutDef.kind).toBe("archetype")
     expect(layoutDef.pinOnly).toBe(true)
-    expect(layoutDef.branding).toBe("none")
     expect((layoutDef as LayoutDefinition).paintsOwnBackground).toBeUndefined()
     expect(layoutDef.slideTypes).toEqual(["cover"])
   })

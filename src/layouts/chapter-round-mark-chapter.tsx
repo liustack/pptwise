@@ -161,7 +161,6 @@ export const layoutDef = {
   id: "round-mark-chapter",
   kind: "archetype",
   pinOnly: true,
-  branding: "none",
   slideTypes: ["chapter"],
   slots: [
     { name: "rail", accepts: [] },

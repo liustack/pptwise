@@ -172,8 +172,6 @@ export const layoutDef = {
   id: "crayonbox-todo",
   kind: "archetype",
   pinOnly: true,
-  branding: "none",
-  suppressMotif: true,
   slideTypes: ["ending"],
   slots: [
     { name: "kicker", accepts: [] },

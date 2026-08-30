@@ -134,7 +134,6 @@ describe("ending-release-close-ending — shared pool", () => {
     expect(layoutDef.id).toBe("release-close-ending")
     expect(layoutDef.kind).toBe("archetype")
     expect(layoutDef.pinOnly).toBe(true)
-    expect(layoutDef.branding).toBe("none")
     expect(layoutDef.slideTypes).toEqual(["ending"])
     expect("paintsOwnBackground" in layoutDef).toBe(false)
   })

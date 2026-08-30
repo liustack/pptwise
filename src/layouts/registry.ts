@@ -391,17 +391,6 @@ export interface LayoutDefinition {
    */
   paintsOwnBackground?: boolean
   /**
-   * This layout paints a page-scale frame (a single hairline box or a
-   * grouped double frame). A framed page does not also get a motif top
-   * rule. `FullSlideSvg` skips the theme motif when this is set.
-   */
-  pageFrame?: "single" | "double"
-  /**
-   * This layout owns the page chrome (full-bleed field, its own top rule).
-   * The theme motif recedes so a leftover top stub does not sit on it.
-   */
-  suppressMotif?: boolean
-  /**
    * Heading-overflow hard-error parameters (quote-stage wave, T2 fix round —
    * `.issues/2026-07-28-quote-stage/task-2-report.md`'s fix-report addendum):
    * when set, `ir-quality.ts`'s `checkSlide` runs `fitHeadingLines(slide
@@ -439,36 +428,6 @@ export interface LayoutDefinition {
     bold?: boolean
     lineHeightRatio?: number
   }
-  /**
-   * Branding posture this layout declares (editorial-verse wave).
-   *
-   * `"none"`: `FullSlideSvg` skips `Branding` entirely (footer rule,
-   * footer meta, logo — page numbers were already removed globally). The
-   * theme motif still paints. `slide.decor`, when the author sets it
-   * explicitly, still draws. The fifth-band decoration safe-zone in
-   * `docs/designing-themes.md` does not apply: the whole 1280×720 canvas
-   * is the layout's, there is no reserved footer strip to keep clear of.
-   *
-   * `undefined` (every layout except the branding-free pinOnly members
-   * `statement` / `pull-quote` / `verse-chapter` / `stat-hero` /
-   * `one-evidence` / `mono-bleed`) means ordinary branding:
-   * `Branding` and the theme motif paint as they do today. `"default"`
-   * is accepted as an explicit spelling of that same ordinary path.
-   *
-   * This is a layout-level declaration, not a slide-level IR field. A
-   * page gets it only by pinning this layout (`pinOnly` members of the
-   * editorial-verse set all set `"none"`). Existing decks that never pin
-   * those ids are byte-identical.
-   */
-  branding?: "default" | "none"
-}
-
-/**
- * True when the named layout declares `branding: "none"`. `undefined` id or
- * a layout that omits the field (the ordinary path) returns false.
- */
-export function layoutOmitsBranding(id: string | undefined): boolean {
-  return id !== undefined && getLayout(id)?.branding === "none"
 }
 
 /**

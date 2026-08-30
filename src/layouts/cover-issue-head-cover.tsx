@@ -271,8 +271,6 @@ export const layoutDef = {
   id: "issue-head-cover",
   kind: "archetype",
   pinOnly: true,
-  branding: "none",
-  suppressMotif: true,
   slideTypes: ["cover"],
   slots: [
     { name: "kicker", accepts: [] },

@@ -173,9 +173,7 @@ export const layoutDef = {
   id: "window-close-ending",
   kind: "archetype",
   pinOnly: true,
-  branding: "none",
   paintsOwnBackground: true,
-  suppressMotif: true,
   slideTypes: ["ending"],
   slots: [
     { name: "heading", accepts: [] },

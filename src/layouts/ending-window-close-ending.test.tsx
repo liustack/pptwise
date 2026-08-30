@@ -116,7 +116,6 @@ describe("ending-window-close-ending — shared pool", () => {
     expect(layoutDef.kind).toBe("archetype")
     expect(layoutDef.pinOnly).toBe(true)
     expect(layoutDef.paintsOwnBackground).toBe(true)
-    expect(layoutDef.branding).toBe("none")
     expect(layoutDef.slideTypes).toEqual(["ending"])
   })
 
@@ -178,6 +177,5 @@ describe("ending-window-close-ending — no leftover top-left motif stub", () =>
     const root = parseSvgRoot(renderSlideSvg(deck, 0))
     const stub = Array.from(root.querySelectorAll("line")).filter((el) => Number(el.getAttribute("y1")) === 32)
     expect(stub).toHaveLength(0)
-    expect(layoutDef.suppressMotif).toBe(true)
   })
 })

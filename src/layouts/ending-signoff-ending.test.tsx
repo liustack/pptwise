@@ -108,7 +108,6 @@ describe("ending-signoff-ending — shared pool", () => {
     expect(layoutDef.kind).toBe("archetype")
     expect(layoutDef.pinOnly).toBe(true)
     expect(layoutDef.paintsOwnBackground).toBe(true)
-    expect(layoutDef.branding).toBe("none")
     expect(layoutDef.slideTypes).toEqual(["ending"])
     expect(layoutDef.slots.find((s) => s.name === "body")?.accepts).toEqual(["bullets"])
   })

@@ -183,7 +183,6 @@ export const layoutDef: LayoutDefinition = {
   id: "folio-ghost-chapter",
   kind: "archetype",
   pinOnly: true,
-  branding: "none",
   slideTypes: ["chapter"],
   slots: [
     { name: "watermark", accepts: [] },

@@ -140,8 +140,6 @@ describe("cover-crayonbox-open", () => {
       id: "crayonbox-open",
       kind: "archetype",
       pinOnly: true,
-      branding: "none",
-      suppressMotif: true,
       slideTypes: ["cover"],
     })
     expect(() => assertSubset(renderCover().root)).not.toThrow()

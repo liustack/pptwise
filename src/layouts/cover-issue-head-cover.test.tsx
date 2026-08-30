@@ -123,7 +123,6 @@ describe("cover-issue-head-cover — shared pool", () => {
     expect(layoutDef.id).toBe("issue-head-cover")
     expect(layoutDef.kind).toBe("archetype")
     expect(layoutDef.pinOnly).toBe(true)
-    expect(layoutDef.branding).toBe("none")
     expect(layoutDef.slideTypes).toEqual(["cover"])
   })
 
@@ -189,6 +188,5 @@ describe("cover-issue-head-cover — optical center", () => {
     expect(Array.from(root.querySelectorAll("text")).some((t) => (t.textContent ?? "").includes("№"))).toBe(false)
     const title = Array.from(root.querySelectorAll("text")).find((t) => (t.textContent ?? "").includes("县城咖啡"))
     expect(title?.getAttribute("y")).toBe("280")
-    expect(layoutDef.suppressMotif).toBe(true)
   })
 })

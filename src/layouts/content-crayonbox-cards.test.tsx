@@ -169,7 +169,6 @@ describe("content-crayonbox-cards", () => {
       id: "crayonbox-cards",
       kind: "archetype",
       pinOnly: true,
-      suppressMotif: true,
       slideTypes: ["content"],
       arrangements: "all",
     })

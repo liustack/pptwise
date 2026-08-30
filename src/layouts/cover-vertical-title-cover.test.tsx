@@ -165,7 +165,6 @@ describe("cover-vertical-title-cover — shared pool", () => {
     expect(layoutDef.id).toBe("vertical-title-cover")
     expect(layoutDef.kind).toBe("archetype")
     expect(layoutDef.pinOnly).toBe(true)
-    expect(layoutDef.branding).toBe("none")
     expect("paintsOwnBackground" in layoutDef).toBe(false)
     expect(layoutDef.slideTypes).toEqual(["cover"])
   })

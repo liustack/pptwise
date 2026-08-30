@@ -161,7 +161,6 @@ export const layoutDef: LayoutDefinition = {
   id: "reminder-list-ending",
   kind: "archetype",
   pinOnly: true,
-  branding: "none",
   slideTypes: ["ending"],
   slots: [
     { name: "heading", accepts: [] },

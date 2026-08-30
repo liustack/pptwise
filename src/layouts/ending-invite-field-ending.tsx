@@ -179,7 +179,6 @@ export const layoutDef = {
   id: "invite-field-ending",
   kind: "archetype",
   pinOnly: true,
-  branding: "none",
   paintsOwnBackground: true,
   slideTypes: ["ending"],
   slots: [

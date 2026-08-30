@@ -146,7 +146,6 @@ export const layoutDef = {
   id: "subject-rule-chapter",
   kind: "archetype",
   pinOnly: true,
-  branding: "none",
   slideTypes: ["chapter"],
   slots: [
     { name: "rule", accepts: [] },

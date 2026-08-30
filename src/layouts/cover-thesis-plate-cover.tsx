@@ -179,7 +179,6 @@ export const layoutDef = {
   id: "thesis-plate-cover",
   kind: "archetype",
   pinOnly: true,
-  branding: "none",
   slideTypes: ["cover"],
   slots: [
     { name: "kicker", accepts: [] },

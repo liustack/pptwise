@@ -11,7 +11,7 @@ import { accessibleInk, readableOn } from "../render/ink"
  * 走 `shape.radius`，封顶半高，不烤板上的 31。CTA 文案取第一条 bullets
  * 项，没有就不画胶囊，不编造致谢。
  *
- * `pinOnly` + `branding: "none"`。
+ * `pinOnly`。品牌静默由主题菜单条目声明。
  */
 
 const CENTER_X = 640
@@ -150,11 +150,10 @@ export function PillCtaEnding({ slide, ctx }: SvgTemplateProps) {
 export const layoutDef = {
   // ending-pill-cta-ending.tsx: pinOnly centered date-line heading,
   // optional subheading, accent capsule CTA from the first bullets item.
-  // Empty components draw no pill and invent no thank-you. branding none.
+  // Empty components draw no pill and invent no thank-you. The theme-menu entry owns brand silence.
   id: "pill-cta-ending",
   kind: "archetype",
   pinOnly: true,
-  branding: "none",
   slideTypes: ["ending"],
   slots: [
     { name: "heading", accepts: [] },

@@ -16,7 +16,7 @@ import { RULE_TYPE_AIR_EM, SIBLING_AIR_PX } from "../render/spacing"
  * y368 / 72px、副题 y442、短线 y520 宽 160、底句 y620。
  *
  * 进共享池，不是 luxe 专用。零 theme id、零 baked hex。这是明确的中轴
- * 请柬，垂直居中允许。`branding: "none"`。
+ * 请柬，垂直居中允许。主题菜单应声明 `decor: silent`。
  *
  * 板上做不到、最近落地：
  *   1. CJK 不加 letter-spacing。
@@ -220,7 +220,6 @@ export const layoutDef = {
   id: "invitation-plate-cover",
   kind: "archetype",
   pinOnly: true,
-  branding: "none",
   slideTypes: ["cover"],
   slots: [
     { name: "kicker", accepts: [] },

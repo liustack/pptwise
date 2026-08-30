@@ -17,9 +17,8 @@ const SUN_RAYS: readonly DoodleRay[] = [
 ]
 
 /**
- * 一盒蜡笔主题角标。专属五张脸自己画完整涂鸦并声明 suppressMotif，本 motif
- * 只服务仍在 content 池里的共享版式。太阳和星组缩在右上角 x1220 以右，避开
- * 标题、正文、页脚与两处 logo 保护区。
+ * 一盒蜡笔主题角标。专属脸自己画完整涂鸦时，菜单条目不再选择本 motif。
+ * 太阳和星组缩在右上角 x1220 以右，避开标题、正文、页脚与两处 logo 保护区。
  */
 export function CrayonboxMotif({ slide, ctx }: DecorProps) {
   if (slide.type !== "content") return null
