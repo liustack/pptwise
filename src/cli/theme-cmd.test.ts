@@ -101,6 +101,31 @@ describe("runThemeNew", () => {
 
     const written = JSON.parse(await readFile(out, "utf8")) as { version: number; id: string }
     expect(written).toMatchObject({ version: 2, id: "acme" })
+    // The loser's temp file must be swept, and the target must never have
+    // held anything but a complete document (publish is link/rename).
+    const leftovers = (await readdir(join(cwd, "themes"))).filter((name) => name.endsWith(".tmp"))
+    expect(leftovers).toEqual([])
+  })
+
+  it("keeps overwrite linearizable when --force and no-force writers interleave", async () => {
+    const cwd = await tmp("pptwise-theme-new-mixed-")
+    const out = join(cwd, "themes", "acme.theme.json")
+    await runThemeNew({ from: "consulting", output: out, id: "acme", cwd })
+
+    const results = await Promise.allSettled([
+      runThemeNew({ from: "lecture", output: out, id: "acme", cwd }),
+      runThemeNew({ from: "swiss", output: out, id: "acme", cwd, force: true }),
+    ])
+
+    // A forced writer never loses; a no-force writer over a published target
+    // can only fail with the overwrite hint. Whatever the interleaving, the
+    // target ends as one writer's complete document, with no temp debris.
+    expect(results[1]!.status).toBe("fulfilled")
+    if (results[0]!.status === "rejected") expect(String(results[0]!.reason)).toMatch(/--force/)
+    const final = JSON.parse(await readFile(out, "utf8")) as { version: number; id: string }
+    expect(final).toMatchObject({ version: 2, id: "acme" })
+    const leftovers = (await readdir(join(cwd, "themes"))).filter((name) => name.endsWith(".tmp"))
+    expect(leftovers).toEqual([])
   })
 })
 

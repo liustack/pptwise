@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto"
-import { mkdir, open, readFile, rename, rm, writeFile } from "node:fs/promises"
+import { link, mkdir, readFile, rename, rm, writeFile } from "node:fs/promises"
 import { basename, dirname, join, relative, resolve } from "node:path"
 import {
   formatIssues,
@@ -913,35 +913,31 @@ async function writeThemeFile(path: string, file: ThemeFile, force = false): Pro
   const dir = dirname(path)
   await mkdir(dir, { recursive: true })
 
-  let claimed = false
-  if (!force) {
-    let opened = false
+  // Atomic in both senses (charter ruling on theme assets): the target path
+  // only ever holds a complete file (publish is a single link/rename), and a
+  // no-force writer publishes exclusively (link fails EEXIST when anyone
+  // else got there first — there is no reserve step that could strand an
+  // empty target, only a private temp file to sweep on failure). --force is
+  // an atomic replace of whatever is published at that instant, which is
+  // the linearizable overwrite semantics the flag promises.
+  const tmp = join(dir, `.${basename(path)}.${randomBytes(8).toString("hex")}.tmp`)
+  try {
+    await writeFile(tmp, JSON.stringify(file, null, 2) + "\n")
+    if (force) {
+      await rename(tmp, path)
+      return
+    }
     try {
-      const handle = await open(path, "wx")
-      opened = true
-      try {
-        await handle.close()
-      } catch (error) {
-        await rm(path, { force: true })
-        throw error
-      }
-      claimed = true
+      await link(tmp, path)
     } catch (error) {
-      if (!opened && (error as NodeJS.ErrnoException).code === "EEXIST") {
+      if ((error as NodeJS.ErrnoException).code === "EEXIST") {
         throw new PptwiseError(`theme file already exists: ${path}. Pass --force to overwrite.`)
       }
       throw error
     }
-  }
-
-  let tmp: string | undefined
-  try {
-    tmp = join(dir, `.${basename(path)}.${randomBytes(8).toString("hex")}.tmp`)
-    await writeFile(tmp, JSON.stringify(file, null, 2) + "\n")
-    await rename(tmp, path)
+    await rm(tmp, { force: true })
   } catch (error) {
-    if (tmp !== undefined) await rm(tmp, { force: true })
-    if (claimed) await rm(path, { force: true })
+    await rm(tmp, { force: true })
     throw error
   }
 }
