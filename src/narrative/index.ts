@@ -95,117 +95,6 @@ export interface StrategyDefinition {
    */
   tendencies: readonly string[]
   /**
-   * Content-layout soft-weight set for W4's weighted layout selection
-   * (spec §6 step 4: in-set candidates get `TENDENCY_WEIGHT` (×3), out-of-set
-   * get the `BASE_WEIGHT` floor (×1) — both named constants live in
-   * `svg/layout-selection.ts`, next to `resolveLayoutId`, the sole
-   * consumer). Deliberately a separate field from {@link tendencies} above,
-   * not a reinterpretation of it: `tendencies` mixes component-type names and
-   * layout ids drawn from spec §5's strategy table verbatim and also feeds W5's
-   * spec `focus` vocabulary gate, so narrowing its meaning here would be a
-   * breaking change to an existing consumer. This field holds only
-   * `LAYOUT_REGISTRY` content-layout ids (`svg/layouts/registry.ts`'s
-   * `CONTENT_LAYOUT_DEFS` keys) — cover/chapter/ending ids never appear in this
-   * field's list, `resolveLayoutId` reads {@link identityTendencies}
-   * below for those three slide types instead, so the two fields' id
-   * namespaces stay disjoint by construction rather than by convention.
-   * `tone-adaptive-content` appears in no strategy's list here (spec's "万金
-   * 油" call-out: it is the one content layout meant to read as
-   * strategy-neutral, so it always gets the ×1 floor).
-   *
-   * **`image-lead-split` (content-layout expansion wave, task T3) joins
-   * it, deliberately, as this field's third permanently-neutral member** — a
-   * decision, not an oversight (T1's own review flagged its absence here as
-   * looking accidental, so this note exists to close that off explicitly).
-   * Its defining trait is an *asset-availability* choice, not an
-   * *argument-style* one: the unconditional visual/text split depends on
-   * whether the deck's author actually has a chart/photo worth leading with
-   * (see `content-image-lead-split.tsx`'s own file header) — a pyramid deck,
-   * a storytelling deck, a showcase deck, and a briefing deck can equally
-   * have (or lack) a strong image to lead with, so no single strategy's
-   * rhetorical register (MECE evidence-first, editorial restraint,
-   * step-by-step procedure, glossy visual punch, plain scannability) owns
-   * this composition more than another's. **Reconsidered specifically
-   * against `showcase`** (the wave's final review, see `split-band`'s own
-   * entry in `showcase.layoutTendencies` below): showcase's register is
-   * visual *punch* (bold color blocks, opaque highlight panels), not visual
-   * *presence* — having an image at all doesn't say anything about how
-   * loudly the page asserts itself, so this layout's asset-dependence
-   * still doesn't map onto showcase's own membership criterion the way
-   * `split-band`'s full-bleed color band does. It still went back to
-   * neutral, not out of inertia. It *does* carry a beat-level personality
-   * instead (`BEAT_TENDENCIES`, `svg/layout-selection.ts` — `breathing`) —
-   * that axis measures page-level density character, a question this
-   * field's argument-style axis doesn't ask.
-   *
-   * **`split-band` (same wave, same task) does NOT join this field** — it
-   * was originally proposed here on the same "frame, not argument" theory
-   * above, but the wave's final review refuted that specific claim with
-   * in-file evidence: `split-band`'s defining feature, a full-bleed
-   * (x=0, w=1280) `colors.primary` header band, is the "bold opaque color
-   * block" idiom that earns `showcase.layoutTendencies` membership (the
-   * retired `side-highlight` panel used to share that register), and
-   * showcase's identity picks (`fashion-masthead`/`fashion-chapter`/
-   * `fashion-ending`) are themselves built from full-bleed color blocks —
-   * visual weight *is* showcase's rhetorical register, not a
-   * register-neutral frame choice. `split-band` is listed in
-   * `showcase.layoutTendencies` below instead of here.
-   *
-   * **Historical note (corrected P1 variety wave, task 3):** this field's
-   * doc comment used to claim cover/chapter/ending stayed uniformly sampled
-   * because "身份页个性来自 theme 不来自 strategy" — that claim was already
-   * false when written (`theme.layouts` only curates the candidate *pool*,
-   * spec §6 step 3 — the 13 built-in themes' pools are all the full registry
-   * set for every slide type, so `theme.id` contributes zero shaping either —
-   * see `.issues/.../dr/c-diversity.md`'s §1.1 measurement). Identity pages
-   * now get their own strategy-driven soft weighting via
-   * {@link identityTendencies} — theme's role stays exactly what step 3
-   * always said it was — pool curation, not per-layout preference — for
-   * both content and identity slides alike.
-   */
-  layoutTendencies: readonly string[]
-  /**
-   * Cover/chapter/ending soft-weight sets (P1 variety wave, task 3 — "身份页
-   * strategy 软加权"), one per identity slide type. Same ×3/×1 mechanics as
-   * {@link layoutTendencies} (`TENDENCY_WEIGHT`/`BASE_WEIGHT`,
-   * `svg/layout-selection.ts`) and the same consumer (`resolveLayoutId`),
-   * just scoped to a disjoint id namespace: this field holds only
-   * `LAYOUT_REGISTRY` cover/chapter/ending layout ids
-   * (`svg/layouts/registry.ts`'s `COVER_LAYOUT_DEFS`/`CHAPTER_LAYOUT_DEFS`/
-   * `ENDING_LAYOUT_DEFS` keys), never a content id — `resolveLayoutId` picks
-   * this field or {@link layoutTendencies} based on the slide type being
-   * resolved, never both for the same candidate.
-   *
-   * Deliberately small (2-3 members per page type, out of a 7-8-id pool) —
-   * spec: "映射表提案是内容决策...权重不是排除", so every non-member layout
-   * still stays reachable at the `BASE_WEIGHT` floor, just less often. Each
-   * member's rationale is documented next to its own strategy entry below,
-   * grounded in that layout's own body comment in
-   * `svg/layouts/registry.ts` (`COVER_LAYOUT_DEFS`/`CHAPTER_LAYOUT_DEFS`/
-   * `ENDING_LAYOUT_DEFS`), not its name alone.
-   *
-   * `tone-adaptive-header`/`tone-adaptive-chapter`/`tone-adaptive-ending`
-   * never appear in any strategy's set here, mirroring
-   * `tone-adaptive-content`'s absence from every {@link layoutTendencies}
-   * list: each is its page type's "万金油" (registry.ts's own convention),
-   * the one layout each identity slide type is meant to keep reading as
-   * strategy-neutral.
-   *
-   * Supersedes the old design note this field replaces (formerly recorded
-   * on {@link layoutTendencies} below, now corrected there): identity pages
-   * were never actually reading `theme.id` for their character either
-   * (`theme.layouts` only curates the *pool*, spec §6 step 3 — it was never
-   * a per-layout weighting signal, for content or identity slides alike)
-   * — this field is what now gives cover/chapter/ending a strategy-driven
-   * personality, the same soft-weight mechanism content pages have had since
-   * W4.
-   */
-  identityTendencies: {
-    readonly cover: readonly string[]
-    readonly chapter: readonly string[]
-    readonly ending: readonly string[]
-  }
-  /**
    * Beat template descriptor (spec §5's per-strategy beat-default column,
    * renamed from "rhythm" — spec §2.3), parameterized by strategy for W5's
    * spec-validate rotation gate — e.g. briefing is exempt from a generic
@@ -264,33 +153,6 @@ export const STRATEGY_DEFINITIONS: Record<Strategy, StrategyDefinition> = {
       "heatmap",
       "sankey",
     ],
-    // MECE 结论先行——密集数据型 body（bento 卡片拼盘/全出血断言头带）+ 两栏对比。
-    layoutTendencies: ["bento-panel", "split-band", "two-column"],
-    // Identity tendencies (P1 variety wave, task 3): a conclusion-first
-    // boardroom deck wants its cover/chapter/ending to read as direct and
-    // authoritative, not atmospheric.
-    // - cover `banner-title`: org kicker + conf badge + accent bar + an
-    //   explicit author/date/version meta row — the formal report-title
-    //   convention a boardroom deck opens with.
-    // - cover `left-anchor`: a 40%-width primary-color block carries the
-    //   heading — one declarative assertion block, the same "state the
-    //   point boldly" instinct as this strategy's own content picks
-    //   (split-band, bento-panel).
-    // - chapter `poster-chapter`: the pool's only *opaque* (not translucent)
-    //   chapter-number watermark — the most visually confident "milestone
-    //   stated outright" numeral treatment.
-    // - chapter `masthead-chapter`: top/bottom hairlines bracket a
-    //   left-aligned heading, zero ornament — a clean, formal section break.
-    // - ending `masthead-ending`: centered heading + a single org/contact/
-    //   date meta line — the plainest, most conclusive close.
-    // - ending `rail-ending`: corner color-block accents + an explicit
-    //   "Contact" section + copyright — a structured, sectioned wrap-up that
-    //   reads like a report's closing page, not a sentimental goodbye.
-    identityTendencies: {
-      cover: ["banner-title", "left-anchor"],
-      chapter: ["poster-chapter", "masthead-chapter"],
-      ending: ["masthead-ending", "rail-ending"],
-    },
     beatPolicy: "anchor-open",
   },
   storytelling: {
@@ -302,36 +164,6 @@ export const STRATEGY_DEFINITIONS: Record<Strategy, StrategyDefinition> = {
     // distinct component type, not part of this family — it only shows up
     // in showcase's row below, matching the spec table.
     tendencies: ["quote", "image-split", "image-top", "image-bottom", "image-annotate", "timeline", "callout"],
-    // 情境→张力→解决——单栏行文（narrow-column）+ 海报式单点强调（stacked-
-    // poster）+ 留白居中的静谧构图（quiet-frame，P1 variety wave task 4：
-    // content 池扩容新增的 breathing 适格 layout——storytelling 本就是
-    // 池里唯一同时偏好 narrow-column/stacked-poster 两个「从容」版式的
-    // strategy，quiet-frame 的对称留白构图是同一气质的第三种表达，不是
-    // 勉强凑数）。
-    layoutTendencies: ["narrow-column", "stacked-poster", "quiet-frame"],
-    // Identity tendencies: storytelling's cover/chapter/ending want suspense
-    // and an editorial voice, not a business report's directness.
-    // - cover `editorial-masthead`: centered literary masthead + italic
-    //   subheading + a single merged meta line — reads like a magazine
-    //   feature opener, not a title page.
-    // - cover `constellation`: bottom-anchored hero heading + the signature
-    //   9-point constellation motif — the pool's most atmospheric,
-    //   scene-setting cover, matching a "situation → tension" arc.
-    // - chapter `roman-chapter`: a giant roman-numeral watermark + a
-    //   seed-rotated arc ornament — the pool's most literary, ornamental
-    //   chapter break.
-    // - chapter `banner-chapter`: centered white heading over the theme's
-    //   full primary-color block — a dramatic, full-bleed scene change.
-    // - ending `constellation-ending`: "Thank you." with an accent trailing
-    //   period + accent rule bar — echoes the cover's own constellation
-    //   branding, closing the arc it opened.
-    // - ending `poster-ending`: centered italic heading — an editorial,
-    //   poster-style close.
-    identityTendencies: {
-      cover: ["editorial-masthead", "constellation"],
-      chapter: ["roman-chapter", "banner-chapter"],
-      ending: ["constellation-ending", "poster-ending"],
-    },
     beatPolicy: "alternate",
   },
   instructional: {
@@ -341,36 +173,6 @@ export const STRATEGY_DEFINITIONS: Record<Strategy, StrategyDefinition> = {
     // laid end to end), the same "分步拆解" shape instructional already
     // favors, on top of already belonging to pyramid's evidence-dense set.
     tendencies: ["steps", "numbered_cards", "flowchart", "architecture", "code", "gantt"],
-    // 分步拆解——编号导轨（rail-numbered）+ 两栏步骤对照 + 主次分层的三区
-    // 版式（asymmetric-triptych，P1 variety wave task 4：content 池扩容
-    // 优先落给代表性不足的 instructional，此前仅 2 项。「一个主题项 + 拆成
-    // 两个次要区块」的构图本身就是「主步骤 + 子步骤」的视觉转译，与
-    // instructional 的分步拆解性格直接对应，不是借用凑数）。
-    layoutTendencies: ["rail-numbered", "two-column", "asymmetric-triptych"],
-    // Identity tendencies: instructional's cover/chapter/ending favor
-    // structured, procedural clarity over either boardroom directness or
-    // storytelling atmosphere.
-    // - cover `split-diagonal`: a hard diagonal cut partitions kicker/decor
-    //   from heading/subheading/meta — the one cover whose own geometry is
-    //   a literal division, echoing a step-by-step handout's structure.
-    // - cover `banner-title`: the same formal-document convention pyramid
-    //   borrows, doubly apt for training material that also states a
-    //   version number in its meta row.
-    // - chapter `rail-chapter`: the only chapter layout carrying an
-    //   explicit progress-dot rail/track — a literal "step N of M" cue.
-    // - chapter `constellation-chapter`: left opaque accent number +
-    //   right-aligned heading — a crisp, numbered division between
-    //   procedure blocks.
-    // - ending `rail-ending`: an explicit "Contact" section + copyright — a
-    //   reference page a trainee can act on, not a sentimental sign-off.
-    // - ending `banner-ending`: italic "Thank you." plus its own explicit
-    //   "Contact" section + copyright — practical next-steps information
-    //   over sentiment.
-    identityTendencies: {
-      cover: ["split-diagonal", "banner-title"],
-      chapter: ["rail-chapter", "constellation-chapter"],
-      ending: ["rail-ending", "banner-ending"],
-    },
     beatPolicy: "repetition-ok",
   },
   showcase: {
@@ -384,71 +186,11 @@ export const STRATEGY_DEFINITIONS: Record<Strategy, StrategyDefinition> = {
     // here would be unresolvable — kpi_cards is the correct, resolvable
     // normalization.
     tendencies: ["image-split", "image-top", "image-bottom", "image-annotate", "image_grid", "kpi_cards"],
-    // 视觉冲击——海报式单点强调（stacked-poster）+ 卡片拼盘（bento-panel）+
-    // 满版色块通栏（split-band：header 是一块贯穿整页宽度（x=0, w=1280）
-    // 的不透明 colors.primary 通栏，覆盖「大胆不透明色块」这一档。
-    // showcase 自己的门面页选型（fashion-masthead 的满版主色块+强调色带、
-    // fashion-chapter/fashion-ending 的满版强调色块）本身就是这套「满版
-    // 色块」气质，split-band 是这套气质在 content 页上的自然延伸。
-    // 原 side-highlight 常驻侧栏已退订）。
-    layoutTendencies: ["stacked-poster", "bento-panel", "split-band"],
-    // Identity tendencies: showcase's cover/chapter/ending want the same
-    // glossy, visual-impact-first punch as its content picks.
-    // - cover `poster-center`: fully centered, no kicker, a single bottom
-    //   meta line — the boldest, most minimal typographic poster in the
-    //   pool, all visual weight on the headline itself.
-    // - cover `fashion-masthead`: a full-bleed primary block + accent color
-    //   band — glossy, product-launch-grade visual punch.
-    // - chapter `fashion-chapter`: a full-bleed accent block + an explicit
-    //   "CHAPTER NN" kicker — the glossiest, most magazine-tag-like chapter
-    //   marker in the pool.
-    // - chapter `poster-chapter`: shares pyramid's bold opaque numeral —
-    //   showcase wants that same visual confidence for a milestone
-    //   announcement.
-    // - ending `fashion-ending`: a full-bleed primary block + a giant
-    //   heading — the boldest, most visually loud close, matching this
-    //   strategy's cover/chapter picks.
-    // - ending `poster-ending`: centered italic poster style — glossy and
-    //   minimal.
-    identityTendencies: {
-      cover: ["poster-center", "fashion-masthead"],
-      chapter: ["fashion-chapter", "poster-chapter"],
-      ending: ["fashion-ending", "poster-ending"],
-    },
     beatPolicy: "anchor-sparse",
   },
   briefing: {
     id: "briefing",
     tendencies: ["bullets", "row_cards", "timeline", "citation"],
-    // 中性通报可扫读——全出血断言头带 + 编号导轨 + 两栏，三种扫读友好排布并重。
-    // 原三元集合（banner-heading/bento-panel/two-column）与 pyramid 逐位相同——
-    // 已按两者的真实叙事性格重新提案（P1 variety wave, task 3）：bento-panel
-    // （密集 MECE 证据网格）是 pyramid「结论先行、层层论证」的签名式排布，而
-    // briefing 通报状态/事实是逐条陈述，不是论证聚合，换成 rail-numbered
-    // （编号进度轨，天然是「第 N 条」的顺序枚举）更贴合「status/facts sequential」。
-    // banner-heading 退订后换成 split-band（留下的断言横幅语法）。
-    layoutTendencies: ["split-band", "rail-numbered", "two-column"],
-    // Identity tendencies: briefing's cover/chapter/ending stay plain and
-    // fact-forward — briefing is also `general`'s default strategy, so most
-    // no-narrative decks now see this set (see layout-selection.test.ts's
-    // "default narrative" coverage for the byte-inertness boundary this
-    // implies).
-    // - cover `banner-title`: the same formal-report convention pyramid
-    //   borrows, apt for a status briefing's "who/when/version" opening.
-    // - cover `poster-center`: centered and unadorned — a plain, no-flourish
-    //   open that reads as neutral rather than narrative-driven.
-    // - chapter `masthead-chapter`: a plain hairline-bracketed heading — the
-    //   least decorated, most scannable section marker.
-    // - chapter `constellation-chapter`: left-accent numbered division —
-    //   orderly and fact-forward, no watermark drama.
-    // - ending `masthead-ending`: a plain centered close, no flourish.
-    // - ending `banner-ending`: an explicit "Contact" section + copyright —
-    //   a status report's practical sign-off, facts over sentiment.
-    identityTendencies: {
-      cover: ["banner-title", "poster-center"],
-      chapter: ["masthead-chapter", "constellation-chapter"],
-      ending: ["masthead-ending", "banner-ending"],
-    },
     beatPolicy: "uniform-dense",
   },
 }
@@ -670,16 +412,6 @@ function rescueIdShape(value: unknown): string | undefined {
  * reasonable default. A mixed `{id, strategy}`-style shape is exactly this
  * case ({@link rescueIdShape} declines it): `id` is simply an unrecognized
  * key, so it hard-errors the same as any other typo.
- *
- * Renamed from `resolveScenario` (spec §8.1). Callers that still hold a
- * pre-rename `mode`/`delivery` shaped input (e.g. a v3 IR's `scenario`
- * field) must migrate it first — see `migrateIrV3ToV4`
- * (`src/ir/migrate.ts`) for the deterministic field/value mapping. A
- * v4-track document that still writes the old field/value spelling gets no
- * such rescue (spec §16, reversing the now-superseded §15.4): this function
- * hard-errors on it, same as any other unknown axis key or value. The
- * `{id}` shape above is not that — it was never a v3 `scenario` shape, just
- * a new confusion weak models invent by analogy to `theme.id`.
  */
 export function resolveNarrative(input: string | Partial<NarrativeProfile> | undefined): NarrativeProfile {
   if (input === undefined) return DEFAULT_NARRATIVE

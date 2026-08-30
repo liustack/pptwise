@@ -1,9 +1,7 @@
 /**
  * The v5 IR schema root: theme/meta/assets/brand/branding/background/slide/narrative
  * and the top-level `PptxIRSchema` a deck document parses against
- * (`parsePptxIR`). Versions 1 through 4 are rejected at this boundary. The
- * frozen v3 shape remains isolated in `./legacy-v3.ts` for the later
- * compatibility-module removal task.
+ * (`parsePptxIR`). Versions 1 through 4 are rejected at this boundary.
  *
  * **The `ComponentSchema` union below is a pure aggregator (src domain reorg
  * wave 2, spec §4.3), same discipline as `src/layouts/registry.ts`'s T1d
@@ -286,9 +284,6 @@ const AssetSchema = z
   })
   .strict()
 
-// Exported (not just used internally) so `./legacy-v3.ts` (the frozen v3
-// schema) can reuse this exact schema — assets never changed shape between
-// v3 and v4 (spec §9.1: "其余 IR 字段保持不变").
 export const AssetsSchema = z
   .object({ images: z.record(z.string(), AssetSchema).default({}) })
   .strict()
@@ -470,11 +465,7 @@ export const SlideSchema = z.preprocess((input) => {
  * Renamed from `ScenarioAxesInputSchema` in the vocabulary-v4 rename (task
  * 1) — not itself named in spec §8.1's table, but derived from
  * `ScenarioAxes`→`NarrativeProfile` the same way the rest of this module's
- * axis vocabulary was. `./legacy-v3.ts`'s frozen `PptxIRV3Schema` reuses this
- * exact schema for its own `scenario` field too — the object shape (any
- * string key, any value) never changed between v3 and v4, only which field
- * name and which axis-key vocabulary `resolveNarrative`/`resolveScenario`
- * validate against it downstream.
+ * axis vocabulary was.
  */
 export const NarrativeProfileInputSchema = z.record(z.string(), z.unknown())
 

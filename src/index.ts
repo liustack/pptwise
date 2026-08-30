@@ -32,18 +32,6 @@ export type {
   StyleOverride,
   BrandConfig,
 } from "./ir"
-// v3 (frozen, spec §9.3) — kept on the SDK surface only for the deterministic
-// migration primitive below and a caller that still needs to parse a
-// genuinely v3-shaped document (e.g. the `pptwise migrate` CLI command, task
-// 2) before migrating it. `validateIr`'s own v3 path never calls either of
-// these — it hard-rejects an explicit `version: "3"` before any schema parse.
-export { PptxIRV3Schema } from "./ir/legacy-v3"
-export type { PptxIRV3 } from "./ir/legacy-v3"
-// Deterministic, pure IR v3 → v4 migration (spec §9.1/§9.3, vocabulary-v4
-// rename task 1) — the primitive the `pptwise migrate` CLI command (task 2)
-// wraps. Field-for-field, value-for-value; never runs a model, never
-// rewrites content, never re-selects a layout.
-export { migrateIrV3ToV4 } from "./ir/migrate"
 export { registerTheme, getInstalledThemeIds, getThemeDefinition } from "./themes/definitions"
 export type { ThemeDefinition } from "./themes/definitions"
 // The factory preset shelf: the read source for "create a theme = copy a
@@ -93,11 +81,6 @@ export {
   type SpecValidationIssue,
 } from "./spec"
 export { assembleDeck, disassembleDeck, type PageContent, type AssembleResult } from "./spec/assemble"
-// Deterministic, pure deck.plan.json → deck.spec.json migration (spec §9.2,
-// vocabulary-v4 rename, task 2) — the primitive the `pptwise migrate` CLI
-// command wraps for the deck-project-directory input shape, mirroring
-// `migrateIrV3ToV4` above for the single-IR-file shape.
-export { migrateDeckPlanToSpec } from "./spec/migrate"
 export {
   auditDeck,
   type AuditReport,

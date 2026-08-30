@@ -8,7 +8,6 @@ import {
   runBrandExtract,
   runDisassemble,
   runInit,
-  runMigrate,
   runLayouts,
   runNarratives,
   runPreview,
@@ -192,19 +191,6 @@ program
   .action(async (irPath: string, opts: { output: string }) => {
     try {
       console.log(await runDisassemble(irPath, opts.output))
-    } catch (e) {
-      fail(e)
-    }
-  })
-
-program
-  .command("migrate")
-  .description("Convert a v3 IR file to v4, rewrite chrome → branding, bloom → classroom, logo_wall → image_grid, or banner-heading → two-column on a v4 IR or deck spec, or convert a deck.plan.json project directory to deck.spec.json — deterministic, no model")
-  .argument("<input>", "IR v3 JSON file, a v4 IR or deck spec still carrying chrome, bloom, logo_wall, or banner-heading, or a deck project directory containing deck.plan.json")
-  .requiredOption("-o, --output <output>", "output path — an IR JSON file for a file input, a directory for a deck-project-directory input")
-  .action(async (input: string, opts: { output: string }) => {
-    try {
-      console.log(await runMigrate(input, opts.output))
     } catch (e) {
       fail(e)
     }
