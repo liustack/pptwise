@@ -60,6 +60,25 @@ describe("dedupeMediaInZip", () => {
     expect(s9).toContain("image-9-1.png")
   })
 
+  it("chooses the same canonical media path regardless of zip insertion order", async () => {
+    async function survivingMedia(order: readonly string[]): Promise<string[]> {
+      const zip = new JSZip()
+      for (const name of order) {
+        zip.file(`ppt/media/${name}`, A)
+        zip.file(`ppt/slides/_rels/${name}.rels`, rels(name))
+      }
+      await dedupeMediaInZip(zip)
+      return Object.keys(zip.files)
+        .filter((path) => path.startsWith("ppt/media/") && !zip.files[path].dir)
+        .sort()
+    }
+
+    const ascending = await survivingMedia(["image-1-1.png", "image-2-1.png", "image-3-1.png"])
+    const descending = await survivingMedia(["image-3-1.png", "image-2-1.png", "image-1-1.png"])
+    expect(ascending).toEqual(["ppt/media/image-1-1.png"])
+    expect(descending).toEqual(ascending)
+  })
+
   it("returns false and leaves the zip untouched when there is nothing to dedupe (single media file)", async () => {
     const zip = new JSZip()
     zip.file("ppt/media/image-1-1.png", A)

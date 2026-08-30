@@ -451,15 +451,15 @@ describe("getInstalledThemeIds", () => {
   })
 
   it("starts as exactly the 24 builtins", () => {
-    expect(getInstalledThemeIds()).toEqual(CANONICAL_THEME_IDS)
+    expect(getInstalledThemeIds()).toEqual([...CANONICAL_THEME_IDS].sort())
   })
 
-  it("stable order: builtins first, then registration order", () => {
+  it("sorts builtin and registered ids independently of registration order", () => {
     registerTheme(themeNamed("zzz-first"))
     registerTheme(themeNamed("aaa-second"))
-    const ids = getInstalledThemeIds()
-    expect(ids.slice(0, CANONICAL_THEME_IDS.length)).toEqual(CANONICAL_THEME_IDS)
-    expect(ids.slice(CANONICAL_THEME_IDS.length)).toEqual(["zzz-first", "aaa-second"])
+    expect(getInstalledThemeIds()).toEqual(
+      [...CANONICAL_THEME_IDS, "aaa-second", "zzz-first"].sort(),
+    )
   })
 })
 

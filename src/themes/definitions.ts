@@ -351,7 +351,9 @@ function assertMenuContract(themeId: string, menu: Menu): void {
       )
     }
 
-    const values = Object.entries(entry.params ?? {})
+    const values = Object.entries(entry.params ?? {}).sort(([left], [right]) =>
+      left < right ? -1 : left > right ? 1 : 0,
+    )
     if (values.length === 0) continue
     if (layout.params === undefined) {
       throw new PptwiseError(
@@ -431,14 +433,9 @@ function installParsedThemeFile(file: ThemeFile): ThemeDefinition {
   return def
 }
 
-/** Every installed theme id: the 24 built-ins, then registered custom ids.
- *  A shadowed builtin is listed once. */
+/** Every installed theme id in deterministic lexical order. */
 export function getInstalledThemeIds(): readonly string[] {
-  const ids: string[] = [...CANONICAL_THEME_IDS]
-  for (const id of REGISTERED_THEMES.keys()) {
-    if (!ids.includes(id)) ids.push(id)
-  }
-  return ids
+  return [...new Set([...CANONICAL_THEME_IDS, ...REGISTERED_THEMES.keys()])].sort()
 }
 
 /**

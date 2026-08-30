@@ -107,6 +107,23 @@ describe("registerTheme menu parameter gate", () => {
     )
   })
 
+  it("reports the same first parameter error regardless of object insertion order", () => {
+    const messages = [
+      { mystery: 1, gutter: "wide" },
+      { gutter: "wide", mystery: 1 },
+    ].map((params, index) => {
+      try {
+        registerTheme(file(`params-order-${index}`, params))
+      } catch (error) {
+        return (error as Error).message.replace(`params-order-${index}`, "params-order")
+      }
+      throw new Error("expected invalid parameters to fail")
+    })
+
+    expect(messages[0]).toBe(messages[1])
+    expect(messages[0]).toMatch(/params\.gutter.*expected number/i)
+  })
+
   it.each([
     ["wrong type", { gutter: "wide" }, /gutter.*expected number/i],
     ["below minimum", { gutter: 8 }, /gutter.*below minimum 16/i],
