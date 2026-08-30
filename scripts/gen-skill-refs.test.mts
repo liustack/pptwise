@@ -2,8 +2,10 @@
 
 import { readFileSync } from "node:fs"
 import { describe, expect, it } from "vitest"
-import { CANONICAL_THEME_IDS } from "@/themes"
-import { LAYOUT_REGISTRY } from "@/layouts/registry"
+import { KIND_VALUES } from "@/ir"
+import { BUILTIN_THEME_FILES } from "@/themes"
+import { THEME_PRESETS } from "@/themes/presets"
+import type { Menu } from "@/themes/schema"
 import {
   generatedReferenceFiles,
   renderSkillReferenceFiles,
@@ -19,34 +21,40 @@ describe("generated SKILL reference data", () => {
     }
   })
 
-  it("covers every standard layout and every built-in theme", () => {
+  it("covers every content kind from preset menus without exposing engine layouts", () => {
     const generated = generatedReferenceFiles()
-    const layouts = Object.values(LAYOUT_REGISTRY).filter((layout) => layout.kind === "archetype")
-    const layoutIds = layouts.map((layout) => `\`${layout.id}\``)
-    const themeIds = CANONICAL_THEME_IDS.map((id) => `\`${id}\``)
+    expect(KIND_VALUES).toHaveLength(11)
+    expect(generated.kindsEn.match(/^\| `[^`]+` \|/gm)).toHaveLength(11)
+    expect(generated.kindsZh.match(/^\| `[^`]+` \|/gm)).toHaveLength(11)
+    expect(generated.kindsEn).not.toMatch(/pinOnly|layout id/i)
+    expect(generated.kindsZh).not.toMatch(/pinOnly|版式 id/i)
+    for (const kind of KIND_VALUES) {
+      const offeredBy = THEME_PRESETS.filter(
+        (preset) => {
+          const menu: Menu["content"] = BUILTIN_THEME_FILES[preset.id].menu.content
+          return menu[kind] !== undefined
+        },
+      ).length
+      const enRow = generated.kindsEn.split("\n").find((line) => line.startsWith(`| \`${kind}\` |`))
+      const zhRow = generated.kindsZh.split("\n").find((line) => line.startsWith(`| \`${kind}\` |`))
+      expect(enRow).toMatch(new RegExp(`\\| ${offeredBy}/24 \\|$`))
+      expect(zhRow).toMatch(new RegExp(`\\| ${offeredBy}/24 \\|$`))
+    }
+  })
 
-    expect(layouts).toHaveLength(130)
-    expect(generated.layoutsEn.match(/^\| `[^`]+` \|/gm)).toHaveLength(130)
-    expect(generated.layoutsZh.match(/^\| `[^`]+` \|/gm)).toHaveLength(130)
-    expect(generated.layoutsEn.match(/\| yes \|/g)).toHaveLength(87)
-    expect(generated.layoutsZh.match(/\| 是 \|/g)).toHaveLength(87)
-    for (const heading of ["Cover", "Chapter", "Content", "Ending"]) {
-      expect(generated.layoutsEn).toContain(`#### ${heading}`)
-    }
-    for (const heading of ["封面", "章节", "内容", "结尾"]) {
-      expect(generated.layoutsZh).toContain(`#### ${heading}`)
-    }
-    for (const id of layoutIds) {
-      expect(generated.layoutsEn).toContain(`| ${id} |`)
-      expect(generated.layoutsZh).toContain(`| ${id} |`)
-    }
-
-    expect(CANONICAL_THEME_IDS).toHaveLength(24)
+  it("covers every preset with its occasion, identity, and menu word count", () => {
+    const generated = generatedReferenceFiles()
+    expect(THEME_PRESETS).toHaveLength(24)
     expect(generated.themesEn.match(/^\| `[^`]+` \|/gm)).toHaveLength(24)
     expect(generated.themesZh.match(/^\| `[^`]+` \|/gm)).toHaveLength(24)
-    for (const id of themeIds) {
-      expect(generated.themesEn).toContain(`| ${id} |`)
-      expect(generated.themesZh).toContain(`| ${id} |`)
+    for (const preset of THEME_PRESETS) {
+      const menu: Menu["content"] = BUILTIN_THEME_FILES[preset.id].menu.content
+      const kinds = KIND_VALUES.filter(
+        (kind) => menu[kind] !== undefined,
+      )
+      const row = `| \`${preset.id}\` | ${preset.label} | ${preset.occasions.join(", ")} | ${preset.identity} | ${kinds.length} | ${kinds.map((kind) => `\`${kind}\``).join(", ")} |`
+      expect(generated.themesEn).toContain(row)
+      expect(generated.themesZh).toContain(row)
     }
   })
 })

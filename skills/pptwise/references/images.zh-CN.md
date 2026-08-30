@@ -5,36 +5,51 @@ mirror_of: skills/pptwise/references/images.md
 
 # 配图
 
-何时读：声明资产、搜图库、或生图时。
+何时读：声明图片资产，选择 `photo` 或 `evidence`，搜索图库，或生成图片时。
 
-### 图片页
+## 先选择语义动作
 
-在 `assets.images` 里统一声明图片，用 `asset_id` 引用——务必逐个核对 `asset_id` 拼写，写错 key 只会渲染出一个静默的占位符，不会报错。显式的 `layout` id 永远优先于 pptwise 的自动选型，否则自动选型会从该页型对应的 theme layout 集合里挑（默认是全部已注册版式，除非 theme 主动收窄）——对于以图片为核心的 slide，把 `layout` 设成某个 image takeover：`image-split`（半页图片 + 侧边文字，`image_side: left|right`）、`image-top`（顶部通版图片 + 下方文字分栏）、`image-bottom`（上方文字，下方图片）、`image-annotate`（居中图片 + 从前 4 条 bullets 取出的放射状标注）。**每个 image layout 都需要 `components` 里至少有一个 `image` component**——不论它在数组里的位置，pptwise 都会用找到的第一个作为图片来源，其余的 component 全部成为该 layout 的文字正文。
+图像本身就是主角时用 `kind: "photo"`。一件展品支持一个断言时用 `kind: "evidence"`。已绑定主题的菜单为这个 kind 选择脸。作者不点名图片几何。
 
-给任何 `asset_id` 还没有真实文件的 `image` component 生成美术之前，先跑一遍 `pptwise asset-brief <target>`——它会真的渲染一遍 deck，报告每个图片位实际的渲染框（不是版式的名义槽位尺寸）、带安全区说明的裁切模式、建议的生成像素、主题色板，以及一段可直接粘贴的提示词。宽高比和色调对上了，生成的图片摆上去才会显得是设计好的，而不是被拉伸、裁错或跑色。
+封面与章节页可以使用资产背景。渲染器会采用专门的压图处理，并加深色可读性遮罩。内容页与结尾页的资产背景保留主题色调遮罩。只有页面确实需要全画布场景时才使用背景图。
 
-### 图库配图
+每张图片只在 `assets.images` 中声明一次，再由 `image`、`image_grid`、`image_compare` 或 `device_mockup` 通过 `asset_id` 引用。逐个检查 key。`validate` 会报告悬空引用，没有解析到来源的资产不能变成真实图片。
 
-先跑 `pptwise asset-brief <target>`，拿到真实框、裁切和色板。
+`image_side: "left"` 或 `"right"` 是给支持侧图的脸使用的可选偏好。其他脸不需要处理作者几何，因为作者没有提供这类信息。
 
-查询词：短而具体的名词，英文 2 到 4 个词（`office desk`、`wind farm`）。中文只作变体，不要当唯一查询。不要加情绪或画质词（`beautiful`、`4k`、`cinematic`）。不要写负向词（`not office`、`no people`）。
+## 先取简报再找图
 
-搜索顺序是 Pexels，有 key 再 Pixabay，然后 Openverse（cc0/pdm，commercial 过滤）。
+为任何缺失资产找图之前，先运行真实渲染器：
+
+```bash
+pptwise asset-brief <target>
+```
+
+简报会给出实际画框、裁切方式、安全区、建议像素尺寸、主题配色和可直接使用的提示词。素材应匹配它报告的宽高比与色调。
+
+## 图库照片
+
+使用两到四个词的具体英文查询，例如 `office desk` 或 `wind farm`。查询中不要写情绪词、质量描述或否定关键词。搜索顺序是 Pexels，已配置时再查 Pixabay，最后查经过商业用途过滤的 Openverse 来源。
 
 ```bash
 pptwise config set pexels.apiKey
 pptwise images search "office desk" --orientation landscape
 ```
 
-不要自动收第一条。人（或视觉模型）从大约 8 张缩略图里挑。然后下载：
+不要自动选择第一张结果。由人或视觉模型从缩略图中选择，再拉取目标资产。
 
 ```bash
 pptwise images fetch pexels:123 --deck <dir> --as hero
 pptwise images list --deck <dir>
+```
+
+## 生成图片
+
+```bash
 pptwise images generate --deck <dir> --as <asset_id>
 ```
 
-本地生图默认关闭，要显式打开：
+本地生成器默认关闭，只有用户启用后才使用：
 
 ```bash
 pptwise config set images.generators.grok.enabled true
@@ -42,6 +57,4 @@ pptwise config set images.generators.codex.enabled true
 pptwise config set images.generators.antigravity.enabled true
 ```
 
-文件落在 `.pptwise/<deck>/assets/<asset_id>.jpg`，旁边是 sidecar。页面用这个 `asset_id` 引用。不要为了「重跑」整目录删掉 `.pptwise/`，已钉的图会一起没。
-
-没有 key：槽位保持 `missing`（灰框）。不要编一张图。不要刮网页。不要用 Unsplash。这是本机客户端，用用户自己的 key 去拉。幻灯里商用可以。不要把原图单独转卖。署名打在终端，默认不印在画面上。
+拉取与生成的文件存放在 `.pptwise/<deck>/assets/`，旁边带 sidecar。不要为了重跑某一步而删除整个目录，因为其中保存了已经选定的资产。没有可用来源时，保留缺失状态并如实汇报。不要虚构照片，也不要抓取未支持的提供方。除非许可或用户要求在页面署名，归属信息默认打印在终端。

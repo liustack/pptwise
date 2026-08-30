@@ -86,7 +86,8 @@ describe("dsh plugin (skill registration, v0)", () => {
     // registry treats content as body verbatim, no frontmatter parsing)
     expect(reg!.content).not.toMatch(/^---/m)
     expect(reg!.content).not.toContain("name: pptwise")
-    expect(reg!.content).toContain("# pptwise — deck generation playbook")
+    expect(reg!.content).toContain("# pptwise deck generation playbook")
+    expect(reg!.content).toContain("intent -> narrative -> theme binding -> spec with kind -> fill -> render")
     expect(reg!.source).toBe("bundled")
   })
 

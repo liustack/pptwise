@@ -1,101 +1,163 @@
 ---
 name: pptwise
-description: Generate a native, editable PPTX deck from an outline, notes, or a document using the pptwise CLI (semantic IR → validate → render). Use when the user asks to create a PPT, deck, presentation, or slides (做PPT/生成PPT/制作演示文稿/幻灯片) and wants a stable, editable, brand-consistent result rather than freeform drawn slides.
+description: Generate a native, editable PPTX deck from an outline, notes, or source material with the pptwise CLI. Use when the user asks to create a PPT, deck, presentation, or slides and wants a deterministic, editable, theme-consistent result.
 ---
 
-# pptwise — deck generation playbook
+# pptwise deck generation playbook
 
-pptwise turns a JSON IR (intermediate representation) into a native DrawingML `.pptx` — every shape stays editable in PowerPoint. You own the content model. The tool owns layout, style, and motion. You never draw SVG or position anything: pick from a controlled vocabulary and let the validate gate catch what will not fit.
+pptwise turns semantic JSON into native DrawingML `.pptx` files. Text and shapes stay editable in PowerPoint. Authors describe what each page is doing and which typed components it contains. The theme and engine own the page face, geometry, color, type, and decoration.
 
-## Run it
+Use this one-way chain. Do not skip backward or decide two layers at once.
 
-Everything in this playbook runs through the CLI: schema, spec/assemble, validate, render, audit, preview, serve, brand extract. Every one of those commands goes through the launcher bundled with this skill, which resolves a working runtime for you. Replace `<skill-dir>` with the directory this SKILL.md lives in:
+```text
+intent -> narrative -> theme binding -> spec with kind -> fill -> render
+```
+
+## Run the CLI
+
+Run every command through the launcher bundled beside this file. Replace `<skill-dir>` with this skill directory.
 
 ```bash
 bash <skill-dir>/scripts/run.sh <args>                                       # macOS / Linux
 powershell -ExecutionPolicy Bypass -File <skill-dir>\scripts\run.ps1 <args>  # Windows
 ```
 
-It tries a compatible `pptwise` on `PATH` first, then `npx`, then `bunx`, forwarding your arguments and its exit code unchanged. Nothing to install first, and the version it runs is pinned to this skill. Exit 78 means no runtime at all: relay the `nextSteps` from its stderr JSON instead of retrying.
+The launcher tries a compatible `pptwise` on `PATH`, then `npx`, then `bunx`. It forwards arguments and exit codes unchanged. Exit 78 means no JavaScript runtime was found. Relay the `nextSteps` from stderr instead of retrying.
 
-Wherever this playbook writes `pptwise <args>`, run it through that launcher.
+If scripts are unavailable, use the first available route:
 
-Right after an install, and any time a command misbehaves in a way the error message does not explain, run `pptwise doctor` before anything else. It reports the runtime, every installed skill copy and whether one is stale, the dsh plugin's version, which optional capabilities are present, and a self-test render. Relay what it says instead of guessing.
+1. `pptwise <args>` when the installed major version matches this skill and is at least the pinned version.
+2. `npx --yes --package @liustack/pptwise@0.23.0 pptwise <args>`.
+3. `bunx --bun @liustack/pptwise@0.23.0 <args>`.
+4. Otherwise ask the user to install Node 22.19+ or Bun.
 
-If your harness forbids running scripts, work down the same order by hand and use the first line that applies:
+Run `pptwise doctor` after installation and whenever a failure is not explained by its own error. Relay the result instead of guessing.
 
-1. A `pptwise` on `PATH` at the same major version as the pin below and no older: `pptwise <args>`.
-2. Otherwise, if `npx` exists: `npx --yes --package @liustack/pptwise@0.23.0 pptwise <args>`.
-3. Otherwise, if `bunx` exists: `bunx --bun @liustack/pptwise@0.23.0 <args>`.
-4. Otherwise tell the user no JavaScript runtime was found, and that installing Node 22.19+ (https://nodejs.org) or Bun (https://bun.sh) is the next step. Do not report pptwise itself as broken.
+## Read live truth first
+
+Never write IR or a spec from memory. Run these at the start of each deck task:
+
+```bash
+pptwise schema
+pptwise schema --spec
+pptwise narratives --json
+pptwise themes --json
+```
+
+Scan the workspace before asking questions. An existing `deck.spec.json` already records the narrative, bound theme, page order, headings, and content kinds. A deck-local `theme.json`, a workspace `themes/` file, a named theme, or a supplied `.thmx`, `.potx`, or branded `.pptx` is a theme signal.
 
 ## Workflow
 
-Interview → spec → pages → validate → audit → render. Re-enter at the smallest step that captures a change. A very small deck (a handful of slides) may skip the spec file and write a single IR, still validating with `pptwise validate`. Never write IR or a spec from memory of a previous session or from this file. Run these fresh every session:
+### 1. Intent
+
+Record four facts before choosing how to tell the story: audience, desired outcome, whether the deck will be presented or circulated, and available time. Derive facts already present in the request or workspace. If a user is present and material facts are still missing, ask all unresolved questions in one round.
+
+### 2. Narrative
+
+Choose the narrative before the theme. The narrative decides argument strategy, pacing, and tone. Use a named preset when it matches, or write explicit `strategy`, `pacing`, and `audience` axes. Pacing controls editorial budgets and the body-text baseline. Narrative never chooses a page face.
+
+Confirm the narrative package before continuing. See `references/spec.md` for the compact interview and spec example.
+
+### 3. Bind a theme
+
+A theme is one complete, self-contained file containing style, a page menu, optional brand rules, and occasion metadata. Its content menu serves a subset of the 11 global `kind` words. Missing words are intentional.
+
+Resolve theme names in this order:
+
+1. The deck directory.
+2. A workspace `themes/` directory while walking upward.
+3. The 24 factory presets.
+
+Use request and workspace signals to shortlist themes by `occasions` and `identity`. Compare two to four candidates with the fixed fitting-room sample:
 
 ```bash
-pptwise schema             # IR JSON Schema: the single source of truth
-pptwise schema --spec      # deck spec schema
-pptwise narratives --json  # named narrative presets (strategy/pacing/audience axes + theme recommendations)
-pptwise themes --json      # built-in themes (id, label, occasions, identity, colors)
-pptwise layouts --json     # all standard layouts, slots, capacities, and pin-only status
+pptwise theme try consulting,swiss,memo
 ```
 
-Also scan the workspace before asking anyone anything. A confirmed `deck.spec.json` already locks narrative, theme, and branding: do not re-interview, revise that deck instead. A `theme.json`, pinned `pptwise.config.json` theme, user-named theme id, or supplied `.thmx` / `.potx` / branded `.pptx` is a brand signal: extract or honor it. Do not ask whether a template exists.
+Create means copy. With no existing asset, copy the closest preset into the workspace. With an Office brand file, extract its colors and fonts while copying a suitable donor menu. For a color change, fork the current theme so the whole palette is rederived and the original stays untouched.
 
-**Boundary-page rule:** `chapter` pages never render `components` or `footnote`. `cover` and `ending` pages never render `footnote`. A boundary page may carry `components` only when its known layout declares a compatible slot. Today `verdict-index` and `gauge-verdict` each accept one `bullets` component on a cover, while selected ending layouts accept their declared body content. Put ordinary body content on a `content` page. Wrong/right JSON and spec writing: `references/spec.md`.
+```bash
+pptwise theme new --from consulting --id acme-report
+pptwise brand extract corp.pptx -o themes/acme.theme.json --from consulting
+pptwise theme fork acme --primary '#0B5FFF' --id acme-blue
+```
 
-1. **Interview** (at most one round) when a user is present and any of audience, how it is told, or pacing is still unknown. Relay unresolved questions in **one** message, then stop. Do not fill them in. Q1–Q4, ★ defaults, lookup, `NARRATIVE_INTERVIEW` gate: `references/spec.md`.
-2. **Theme, spec, and confirmation** before any page content. Read occasion signals from the request and workspace, then use `themes --json` to shortlist two or three themes by `occasions` and `identity`. Narrative `themeRecommendations` are reference signals only. If a built-in look is still open, show `preview <target> --themes <ids>` and let the user choose from the contact sheet. Preview a custom candidate with both `--theme-file` and `--theme`. Only after confirmation, persist it as project `theme.json`, write its id in `deck.spec.json`, and use no flags. Write the spec (opens on `cover`, closes on `ending`, everything in between is `content` or `chapter`), run `pptwise spec validate` until `OK`, then persist a `seed`. Do not re-spec a confirmed spec. Full flow: `references/spec.md`. Theme-file and branding posture: `references/branding.md`.
-3. **Pages** in batches of at most 4. Write `pages/<id>.json` (`components`, optional `layout`/`notes`). Never write `type`/`heading`. Pin-only and sparse climax layouts: `references/layouts.md`. Component forms: `references/components.md`. Density, beat, capacity: `references/density.md`. Images: `references/images.md`.
-4. **Validate** after every batch: `pptwise assemble deck-dir/` then `pptwise validate deck-dir/` until both print `OK`. Restructure flagged content, never delete it. The assemble/validate/audit/preview/serve loop: `references/validate.md`.
-5. **Audit** once every page is filled: `pptwise audit deck-dir/` until exit 0. Do not substitute a screenshot. Then hand the deck over (`pptwise_preview`, else `preview --html`, else `serve --no-open`): `references/validate.md`.
-6. **Render:** `pptwise render deck-dir/`. Report the absolute path it prints. `--draft` and `--allow-dropped-content` only when the user says so.
+Write the selected theme name into `deck.spec.json` before writing page content. Bound deck commands use that name. There is no render-time theme switch.
 
-Follow-up: edit a page → steps 3–6 on that file only. A new deck → step 1. Unrelated → do not invoke pptwise.
+A same-menu color fork may replace the bound theme during the workflow. A different menu means a different theme. Return to this step, keep the intent, narrative, facts, data, images, and useful copy, then rewrite the spec and fill against the new menu.
 
-## Component selection
+### 4. Write the spec with `kind`
 
-| Content shape | Use | Not |
-|---|---|---|
-| 2–5 headline metrics | `kpi_cards` | `chart` |
-| Series data (trend, comparison, share) | `chart` (`bar`/`line`/`pie`/`funnel`/`dumbbell`/`scatter`/`area`/`donut`/`gauge`) | numbers buried in `bullets` |
-| Exact figures the audience reads row-by-row (price list, spec sheet, metrics-by-period grid) | `data_table` | `chart` |
-| Linear process, no branches | `steps` | `flowchart` |
-| Branching process that reaches an endpoint | `flowchart` | `steps` |
-| Cyclical process with no endpoint — loops back to its own start (PDCA, a product lifecycle, a flywheel, a seasonal cycle) | `cycle` | `flowchart` |
-| Two-sided contrast | `comparison` | two bullet lists |
-| System/organizational layering (a stack of bands, e.g. tech-stack layers or a maturity ladder) | `architecture` | `bullets` |
-| Dated milestones | `timeline` | `bullets` with dates |
-| Phased plan with workstreams | `roadmap` | `timeline` |
-| Phased plan with dated bars on a shared axis | `gantt` | `roadmap` |
-| One verdict or takeaway sentence | `verdict_banner` or `callout` | `paragraph` |
-| 2×2 strategic assessment (strengths/weaknesses/opportunities/threats) | `swot` | `matrix` |
-| 9-block business model canvas | `bmc` | separate `bullets`/`row_cards` |
-| Cumulative bridge/variance breakdown | `waterfall` | `chart` |
-| 2×2 macro-environment scan (political/economic/social/technological) | `pest` | `swot` |
-| Competitive-structure analysis (rivalry + 4 surrounding forces) | `five_forces` | `matrix` |
-| Two-axis value grid with color-coded cells (e.g. region × quarter) | `heatmap` | `matrix` |
-| Proportional flow/quantity distribution across stages (e.g. budget allocation, energy mix) | `sankey` | `chart` (funnel) or `flowchart` |
-| A product/software screenshot that the slide needs to read as "this is real, running software" (an app dashboard, a live product UI) | `device_mockup` | `image` |
-| A roster of people (team, speaker lineup, judging panel, author list) needing an identity anchor with no photo available | `people_cards` | `row_cards`/`icon_cards` |
-| A set of short parallel labels (a tech stack, capabilities, keywords, certifications) — labels, not described items | `tag_row` | `bullets`/`row_cards` |
+The spec locks theme, narrative, branding posture, page order, page type, heading, and the `kind` of every content page. It contains no render selection state.
 
-Lookalike pairs, field notes, and full-body types: `references/components.md`.
+- `cover`, `chapter`, and `ending` are page types and do not use `kind`.
+- Every `content` page requires exactly one explicit `kind`.
+- Authors write only a semantic `kind`, never a page face or geometry choice.
+- `focus` and `summary` are optional writing hints.
+
+Run `pptwise spec validate deck.spec.json` until it prints `OK`. A content `kind` outside the bound theme menu is a hard error that lists what the menu offers. Do not relabel the page merely to silence the error. Change the page's intent only when that is semantically honest, or return to the theme step.
+
+The 11 words and their boundaries are in `references/layouts.md`. Full spec guidance and theme creation are in `references/spec.md`.
+
+### 5. Fill pages
+
+Write `pages/<id>.json` in batches of at most four. A page file may contain `components`, `background`, `image_side`, `footnote`, and `notes`. Never repeat `type`, `kind`, or `heading`, because the spec owns them.
+
+Choose components that serve the page's `kind`. `quote` is a page kind. The quotation component is `blockquote`. Component ownership and lookalike choices are in `references/components.md`. Pacing and physical capacity are in `references/density.md`. Image workflows are in `references/images.md`.
+
+After each batch:
+
+```bash
+pptwise assemble deck-dir/
+pptwise validate deck-dir/
+```
+
+Fix every error and rerun both commands. Restructure content instead of deleting what validation caught.
+
+### 6. Audit, review, and render
+
+When all pages are filled, run:
+
+```bash
+pptwise audit deck-dir/
+pptwise preview deck-dir/ --html
+pptwise render deck-dir/
+```
+
+`audit` must exit 0 before delivery. Add `--pixels` when text sits over photo backgrounds. Use an available `pptwise_preview` tool first. Otherwise hand over the printed `preview.html` path, or run `pptwise serve deck-dir/ --no-open` for a live browser review. Report the absolute `.pptx` path printed by `render`.
+
+Use `--draft` or `--allow-dropped-content` only when the user explicitly requests that compromise.
+
+## Fast component routing
+
+| Page intent | `kind` | Typical component |
+| --- | --- | --- |
+| Ordered reasoning | `points` | `bullets`, `numbered_cards`, `paragraph` |
+| Reorderable inventory | `list` | `row_cards`, `icon_cards`, `tag_row`, `people_cards` |
+| Side-by-side differences | `comparison` | `comparison`, `image_compare`, `matrix`, `swot` |
+| Directed steps or time | `process` | `steps`, `flowchart`, `timeline`, `roadmap`, `gantt`, `cycle` |
+| Numeric structure | `data` | `chart`, `data_table`, `kpi_cards`, `heatmap`, `sankey` |
+| Image as the message | `photo` | `image`, `image_grid`, `device_mockup` |
+| Author's own proposition | `statement` | `verdict_banner`, `callout`, or no component |
+| Another speaker's words | `quote` | `blockquote` |
+| One number as the message | `fact` | one-item `kpi_cards` or no component |
+| Claim plus one exhibit | `evidence` | `image`, `chart`, `data_table`, `code`, `device_mockup` |
+| Containment or levels | `hierarchy` | `architecture`, `bmc`, `five_forces`, `rings` |
 
 ## Rules
 
-- Never edit or post-process the generated `.pptx`
-- Never bypass a `validate` error by deleting the content it flagged — restructure it (split the slide, tighten the heading, pick a denser component type)
-- Public deck text follows the user's language, IR structural fields are always the English enum values from the schema
-- Never tell a user that a `chart`'s or `data_table`'s numbers are editable inside PowerPoint: those components render as grouped shapes and text, fully restylable and retypable, but with no native chart part or `<a:tbl>` behind them. To change the numbers, edit the IR and re-render.
+- Never edit or post-process the generated `.pptx`.
+- Never add coordinates, SVG, page face names, or geometry controls to authored content.
+- Keep public deck copy in the user's language. Keep schema keys and enum values in English.
+- Never claim that `chart` or `data_table` values are native PowerPoint data objects. They export as editable grouped shapes and text. Change figures in the source and rerender.
+- Preview is read-only. Revisions go back into `deck.spec.json`, `pages/*.json`, assets, or the bound theme file.
 
 ## Read when
 
-- `references/spec.md` — writing `deck.spec.json`, choosing page types, or running the narrative interview
-- `references/layouts.md` — pinning a layout, including climax, quote, and evidence sparse pages
-- `references/components.md` — a lookalike pair or a component's fields and limits
-- `references/density.md` — pacing budgets, `beat`, capacity warnings, or slide `decor`
-- `references/branding.md` — extracting a company template, or whether to write `branding: "full"`
-- `references/images.md` — declaring assets, searching stock, or generating art
-- `references/validate.md` — assemble / validate / audit / preview / serve, or revising a page
+- `references/spec.md`: intent, narrative, theme creation, binding, rebinding, spec, and menu errors.
+- `references/layouts.md`: choosing among the 11 `kind` words.
+- `references/components.md`: component ownership, fields, and lookalike choices.
+- `references/density.md`: pacing, capacity, full-page components, and local decoration.
+- `references/branding.md`: deck branding posture, frameless pages, logos, and brand extraction.
+- `references/images.md`: image assets, stock search, generation, and `photo` versus `evidence`.
+- `references/validate.md`: assemble, validate, audit, preview, serve, render, and revision loops.

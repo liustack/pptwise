@@ -1,143 +1,181 @@
-# Spec writing and page types
+# Intent, narrative, theme binding, and spec
 
-Read this when writing `deck.spec.json`, choosing page types (`cover` / `chapter` / `content` / `ending`), or running the narrative interview.
+Read this before creating `deck.spec.json`, choosing a theme, or handling a menu mismatch.
 
-### Phase 1 — Read the vocabulary (do this fresh every session)
+The authoring chain is causal and one-way:
+
+```text
+intent -> narrative -> theme binding -> spec with kind -> fill -> render
+```
+
+## Read live vocabularies
+
+Run these at the start of every deck task:
 
 ```bash
-pptwise schema             # IR JSON Schema: the single source of truth
-pptwise schema --spec      # deck spec schema
-pptwise narratives --json  # named narrative presets (strategy/pacing/audience axes + theme recommendations)
-pptwise themes --json      # built-in themes (id, label, occasions, identity, colors)
-pptwise layouts --json     # standard layouts, slots, capacities, and pin-only status
+pptwise schema
+pptwise schema --spec
+pptwise narratives --json
+pptwise themes --json
 ```
 
-Never write IR or a spec from memory of a previous session or from this file — the schema evolves and `schema`/`narratives`/`themes` output always wins.
+The command output and workspace files outrank this guide. Scan for an existing `deck.spec.json`, deck-local `theme.json`, workspace `themes/`, and supplied Office brand files before asking questions.
 
-Also scan the workspace before asking anyone anything. Facts the files can answer are not questions:
+## Intent and narrative
 
-- An existing confirmed `deck.spec.json` already locks narrative, theme, and branding. Do not re-interview. Route follow-ups through phase 6.
-- A `theme.json`, a pinned `pptwise.config.json` theme, a user-named theme id, or a supplied `.thmx` / `.potx` / branded `.pptx` is a brand signal. Extract or honor it. Do not ask whether a template exists.
-- Request text that already names the audience, argument style, or density has derived that axis. Do not re-ask it.
+Intent records who the deck is for, the result it should cause, whether it will be presented or circulated, and the available time. Narrative is the first decision made from that intent. It chooses argument strategy, pacing, and tone.
 
-A brand signal answers what the deck should look like, never how it should argue. The full rule lives in `references/branding.md`.
+When essential facts are missing and a user is present, ask one compact round:
+
+1. Who is the audience, and what should they decide, understand, or do afterward?
+2. Will someone present it, or must it stand alone? How much time is available?
+3. Should the argument lead with a conclusion, unfold as a story, teach a sequence, showcase an image or number, or read as a compact briefing?
+4. Should pages be dense, balanced, or spacious?
+
+Use `pptwise narratives --json` to map the answer to a named preset or to explicit `strategy`, `pacing`, and `audience`. Do not infer the narrative from brand colors. Confirm this package before choosing a theme.
+
+## Choose, create, and bind a theme
+
+Theme is the second decision and must be settled before the spec. A theme is one complete file with style, a page menu, optional brand rules, `occasions`, and `identity`. The menu serves a deliberate subset of the 11 content kinds.
+
+Shortlist by occasion first and identity strength second. Compare two to four candidates with the fixed fitting-room sample:
+
+```bash
+pptwise theme try consulting,swiss,memo
+```
+
+`theme try` renders the same fixed sample deck under every candidate. It is the only place to compare themes without binding a deck. Choose from the images, not from names alone.
+
+Create means copy. Prefer a workspace-owned theme even when the starting point is a factory preset:
+
+```bash
+pptwise theme new --from consulting --id acme-report
+```
+
+With an Office theme or template, choose the donor menu by occasion, then extract colors and fonts into one complete v2 file:
+
+```bash
+pptwise brand extract corp.pptx -o themes/acme.theme.json --from consulting
+```
+
+With an existing theme and a requested color change, fork it. The fork keeps the menu byte-identical and rederives the full palette:
+
+```bash
+pptwise theme fork acme --primary '#0B5FFF' --id acme-blue
+```
+
+Theme names resolve in three levels:
+
+1. The deck directory, including `theme.json` and named theme JSON files.
+2. A workspace `themes/` directory while walking upward from the deck.
+3. Factory presets.
+
+Bind exactly one name by writing it to `deck.spec.json` as `theme`. To freeze a workspace theme for one deck, copy the complete file into the deck directory as `theme.json` without changing its id. Deck commands then load it automatically.
 
 <!-- generated:begin themes -->
-### Complete built-in theme catalog
+### Complete factory preset catalog
 
-This section is generated from the canonical theme registry and occasion routing table. `identity` is the strength of the visual voice.
+This section is generated from the preset library and each preset menu. `identity` is the strength of the visual voice. `menu words` and the final column count content kinds only.
 
-| id | label | occasions | identity |
-| --- | --- | --- | --- |
-| `consulting` | Business Consulting | business | medium |
-| `enterprise` | Enterprise | business, institutional | low |
-| `academic` | Academic | education | medium |
-| `insight` | Financial Insight | finance | medium |
-| `campaign` | Marketing Campaign | marketing, event | high |
-| `classroom` | Classroom | education | medium |
-| `ink` | Ink Wash | culture | high |
-| `tech` | Tech | tech | medium |
-| `runway` | Fashion Runway | fashion | high |
-| `journal` | Editorial Journal | editorial | medium |
-| `luxe` | Luxe | luxury, event | high |
-| `heritage` | Heritage | culture, luxury | medium |
-| `pulse` | Health & Life Science | health | medium |
-| `terra` | Sustainability & ESG | sustainability | medium |
-| `ember` | Startup Pitch | startup | high |
-| `vermilion` | Official Report | government, institutional | low |
-| `crayon` | Kids Education | kids, education | high |
-| `arena` | Esports & Entertainment | entertainment | high |
-| `museum` | Museum | museum, culture | high |
-| `stage` | Keynote Stage | keynote | high |
-| `lecture` | Lecture Hall | education | high |
-| `swiss` | Swiss Institutional | institutional | low |
-| `memo` | Decision Memo | business, institutional | low |
-| `playbill` | Playbill | event, entertainment | high |
+| id | label | occasions | identity | menu words | offered kinds |
+| --- | --- | --- | --- | ---: | --- |
+| `consulting` | Business Consulting | business | medium | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `fact`, `evidence`, `hierarchy` |
+| `enterprise` | Enterprise | business, institutional | low | 7 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `hierarchy` |
+| `academic` | Academic | education | medium | 11 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `quote`, `fact`, `evidence`, `hierarchy` |
+| `insight` | Financial Insight | finance | medium | 9 | `points`, `list`, `comparison`, `process`, `data`, `statement`, `quote`, `fact`, `hierarchy` |
+| `campaign` | Marketing Campaign | marketing, event | high | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `fact`, `evidence`, `hierarchy` |
+| `classroom` | Classroom | education | medium | 7 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `hierarchy` |
+| `ink` | Ink Wash | culture | high | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `quote`, `fact`, `hierarchy` |
+| `tech` | Tech | tech | medium | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `fact`, `evidence`, `hierarchy` |
+| `runway` | Fashion Runway | fashion | high | 7 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement` |
+| `journal` | Editorial Journal | editorial | medium | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `quote`, `fact`, `hierarchy` |
+| `luxe` | Luxe | luxury, event | high | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `quote`, `fact`, `hierarchy` |
+| `heritage` | Heritage | culture, luxury | medium | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `quote`, `fact`, `hierarchy` |
+| `pulse` | Health & Life Science | health | medium | 7 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `hierarchy` |
+| `terra` | Sustainability & ESG | sustainability | medium | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `fact`, `evidence`, `hierarchy` |
+| `ember` | Startup Pitch | startup | high | 7 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `hierarchy` |
+| `vermilion` | Official Report | government, institutional | low | 9 | `points`, `list`, `comparison`, `process`, `data`, `statement`, `fact`, `evidence`, `hierarchy` |
+| `crayon` | Kids Education | kids, education | high | 6 | `points`, `list`, `comparison`, `process`, `photo`, `statement` |
+| `arena` | Esports & Entertainment | entertainment | high | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `fact`, `evidence`, `hierarchy` |
+| `museum` | Museum | museum, culture | high | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `fact`, `evidence`, `hierarchy` |
+| `stage` | Keynote Stage | keynote | high | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `quote`, `fact`, `hierarchy` |
+| `lecture` | Lecture Hall | education | high | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `fact`, `evidence`, `hierarchy` |
+| `swiss` | Swiss Institutional | institutional | low | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `fact`, `evidence`, `hierarchy` |
+| `memo` | Decision Memo | business, institutional | low | 9 | `points`, `list`, `comparison`, `process`, `data`, `statement`, `quote`, `fact`, `hierarchy` |
+| `playbill` | Playbill | event, entertainment | high | 9 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `fact`, `hierarchy` |
 <!-- generated:end themes -->
 
+## The 11 content kinds
 
-**Boundary-page rule:** `chapter` pages never render `components` or `footnote`. `cover` and `ending` pages never render `footnote`. A boundary page may carry `components` only when its known layout declares a compatible slot. Today `verdict-index` and `gauge-verdict` each accept one `bullets` component on a cover, while selected ending layouts accept their declared body content. Put ordinary body content on a `content` page. `validate` names any field that the known layout would drop and tells you to move it.
+`kind` states how a content page makes its point. It is required on every content page and absent from cover, chapter, and ending pages.
+
+| `kind` | Use it when | Do not confuse it with |
+| --- | --- | --- |
+| `points` | Ordered reasoning advances step by step | `list`, whose items may be reordered |
+| `list` | Peer items are displayed together | `points`, whose order carries the argument |
+| `comparison` | Alternatives or sides need direct contrast | `hierarchy` for containment, `process` for direction |
+| `process` | Steps, time, movement, or a closed cycle matter | `points` for an argument with no process relation |
+| `data` | A set of numbers, chart, or table is the subject | `fact` for one number only |
+| `photo` | The image itself is the content | `evidence`, where an exhibit supports a claim |
+| `statement` | The deck author's own proposition gets a full page | `quote` for another speaker's words |
+| `quote` | Words are attributed to another speaker or source | `statement` for the deck author's own voice |
+| `fact` | One number carries the whole message | `data` for numeric structure across a set |
+| `evidence` | One assertion is paired with one supporting exhibit | `photo` when the image stands alone |
+| `hierarchy` | The page explains containment, levels, or composition | `process` for sequence, `comparison` for two sides |
+
+Four boundaries settle most ambiguous cases:
+
+- `statement`, `quote`, `fact`, and `evidence` differ by the speaking subject: our proposition, another person's words, one number, or a claim with an exhibit.
+- `data` exposes structure across several values. `fact` creates impact with one value.
+- `points` has progression. `list` can be reordered.
+- `photo` makes the image the message. `evidence` makes the image serve the assertion.
+
+## Write the spec
+
+A valid deck spec opens with `cover`, closes with `ending`, and uses `content` or `chapter` inside. Every page has `id`, `type`, and `heading`. Content pages additionally require `kind`. `focus` may name a preferred component type. `summary` is a short content anchor for the fill step.
 
 ```json
-// pages/market.json, spec type "chapter": WRONG because chapter layouts do not render components
-{ "components": [{ "type": "bullets", "items": ["Market size", "Buyer segments"] }] }
+{
+  "version": "1",
+  "filename": "q3-review.pptx",
+  "narrative": "boardroom-report",
+  "theme": "acme-report",
+  "meta": { "organization": "Acme", "date": "2026 Q3" },
+  "pages": [
+    { "id": "cover", "type": "cover", "heading": "Q3 operating review" },
+    { "id": "decision", "type": "content", "kind": "points", "heading": "Two actions protect the annual target" },
+    { "id": "options", "type": "content", "kind": "comparison", "heading": "The focused plan wins on payback" },
+    { "id": "economics", "type": "content", "kind": "data", "heading": "Margin recovers before year end" },
+    { "id": "delivery", "type": "content", "kind": "process", "heading": "Three releases close the gap" },
+    { "id": "close", "type": "ending", "heading": "Approve the focused plan" }
+  ]
+}
 ```
 
-```json
-// pages/market-detail.json, spec type "content": CORRECT
-{ "components": [{ "type": "bullets", "items": ["Market size", "Buyer segments"] }] }
+The spec contains no page geometry or render selection state. Do not add retired author fields. Page files later contain only fillable content and never repeat `type`, `kind`, or `heading`.
+
+Run:
+
+```bash
+pptwise spec validate deck.spec.json
 ```
 
-```json
-// pages/market.json, spec type "chapter": stays bare, nothing to move here
-{}
-```
+Fix hard errors until the command prints `OK`. Page count is checked against pacing. Three or more consecutive content pages with the same `kind` produce an editorial warning.
 
-`docs/deck-projects.md`'s boundary-page render surface table has the full per-type accounting.
+## Menu mismatch handling
 
-### Phase 2 — Spec and confirm
+If the spec requests a `kind` that the bound theme does not offer, validation fails and lists the available kinds. Handle it in this order:
 
-Propose and confirm before writing any page content.
+1. Recheck the page's semantic posture. Change `kind` only when another offered word is genuinely correct.
+2. If the page intent is fixed, choose or create a theme whose menu serves it.
+3. If content was already filled, return to the theme layer. Keep useful facts, data, images, and copy fragments, then rewrite the spec and page files for the new menu.
 
-- Lock a narrative package first: named preset (or explicit axes), theme id, branding posture, and a type-scale band (how large cover / chapter / speech headings render: `regular` omit/1, `display` 1.3, `hero` 1.5). This is a decision layer above theme, not a visual choice. Use the Narrative interview below when any axis is still unknown and a user is present. Do not silently pick a preset in that case.
-- Density (leave air vs pack the page) is decided in that interview (or derived). Follow the Sparse-page contract in `references/layouts.md` when you pin climax, quote, and evidence layouts and write `notes`. `pacing` does not grow a fourth value for this.
-- Derive controlled occasion signals from the request and workspace, such as `business`, `education`, `event`, or `institutional`. Use `themes --json` to shortlist two or three themes whose `occasions` match, then use `identity` to choose how quiet or expressive the look should be. Narrative `themeRecommendations` are a reference signal and tie-break after those keys. They never override an occasion or identity match. With no occasion match, use them only as the router's fallback before an identity-only list and `consulting`. If the interview's brand question returned a template, extract it to a candidate theme file first. Do not name it project `theme.json` until the user confirms it. See `references/branding.md`.
-- When the user wants to compare built-in looks, run `pptwise preview deck-dir/ --themes consulting,swiss,memo` with two to four shortlisted ids. It writes a contact sheet containing the same resolved cover and first content page repainted in every theme. Show that image and let the user choose visually. Preview a not-yet-persisted custom candidate separately with `pptwise preview deck-dir/ --theme-file <candidate> --theme <id> --html`, because registration does not select it. In a run with no user, take the first deterministic occasion and identity match and state the choice.
-- After confirmation, write the chosen id into `deck.spec.json`. A custom theme file belongs at `deck-dir/theme.json`, and its id belongs in the spec. That project path needs no `--theme-file` or `--theme` flags. A built-in choice needs no `theme.json` copy.
-- Write the confirmed `narrative`, `theme`, and `branding` into `deck.spec.json` as soon as the user agrees, before drafting any page. Do not hold them in the conversation and reconstruct them once pages exist.
-- Draft `deck.spec.json`: one entry per page (`id`, `type`, `heading`, optionally `beat`/`focus`/`summary`) — opens on `cover`, closes on `ending`, everything in between is `content` or `chapter`. Write `narrative` as a preset id string when the three axes match a preset exactly, otherwise as `{strategy, pacing, audience}`. Never write `{id, pacing}` mixed shapes. Omit `branding` by default. Write `branding: "full"` only when every content page needs the brand footer (and whenever `meta.confidentiality` is `confidential` or `restricted`). Do not invent a `typeScale` field on the spec — it does not exist. The band is a recommendation. Only a bare IR (spec skipped) may put `theme.style.shape.typeScale` on the IR itself.
-- Run `pptwise spec validate deck.spec.json` and fix whatever it reports until it prints `OK` — the hard gates (boundary pages, heading length, beat rotation, page count vs. pacing) all fire here, before a single page is written
-- Once `spec validate` prints `OK`, set a `seed` (any integer) in `deck.spec.json` for revision stability — write one now, or run `pptwise assemble` once in phase 3 and copy the `generated seed …` value it prints into the spec. Without a persisted seed, editing one page's heading later can reshuffle every other page's auto-picked layout
+Do not force a nearby word merely to pass validation. A menu gap is a theme decision, not missing geometry.
 
-**After the user confirms the validated spec, do not re-spec.** Restructuring a confirmed spec (reordering, retyping, dropping pages) silently wastes the user's review. If new information genuinely forces a change, say so and re-confirm first, then re-run `spec validate`.
+## Rebinding after work starts
 
-### Narrative interview (at most one round)
+A color fork with the same menu may replace the bound theme. Update the bound name and rerun spec validation, assemble, validate, audit, and render.
 
-When a user is present and any of audience, how it is told / strategy, or pacing is still unknown, relay the unresolved questions below in **one** message, then stop. Do not fill them in. Do not say "I'll assume". If the harness has a multiple-choice question tool, use it and pass the options verbatim.
+A theme with a different menu is not a repaint. It requires restarting at the theme layer and rewriting the spec. The CLI compares normalized menus directly and refuses an in-place different-menu rebind.
 
-Open that message with one sentence naming the deck you are about to build: who it is for, how the argument is told, how full a page runs, which theme, footer on or off. Build that sentence only out of what the request and the workspace actually said. Where a signal is missing, say it is missing and name the ★ option as a default, not as a read of their situation. Never dress a default as a conclusion about their meeting. Keep axis names (`pyramid`, `spacious`, `executive`) out of that sentence and out of the options. Close the message with the three ways out: take it as-is, change an option, or say none of these fit.
-
-Skip the whole interview (zero questions) when: a confirmed spec already exists; the user said to skip questions / just generate / batch; there is nobody in this run at all; or the request already locks audience, argument style, and density. A complete brief still gets a one-line narrative package before you write the spec — that is the existing spec confirmation, not a second interview round.
-
-Having no multiple-choice tool is not the same as having no user. In a plain conversation the user is present: the questions are the entire message and the stop still applies. Only a run with nobody in it (CI, batch, a script with no conversation) skips the pause, and there you still put the package, the reason, and what would change it in the visible output, then proceed on it. A later objection reopens the choice, and you re-run `spec validate` after changing it.
-
-Skip only the derived axes. An empty workspace (no spec, no `theme.json`, no pinned config theme, nothing derivable in the request) asks Q1–Q4 together. A workspace with no brand signal asks Q4 even if it is not otherwise empty.
-
-If the user skips an option, answers "anything", or replies off-list: fill the missing axis with the ★ default, name that fill in the recommendation reason, and do not follow up. "None of these fit" gets exactly one question back — which single axis is wrong — and nothing else. A veto of the package gets the prepared second candidate, not a new interview.
-
-<!-- Maintainer note, not an instruction to relay: Q1 earns its place today only through the lookup below and the tone of the prose. The `audience` axis still changes nothing on the render surface. If a future wave stops reading `audience` in that lookup, delete Q1 rather than keep asking a question whose answer changes no deliverable. -->
-
-**Q1 — Who is this for?** `executive` board / VP (conclusion first) · `technical` engineers who will check the numbers · `customer` ★ buyers, users, a pitch room · `public` mixed or public.
-
-**Q2 — How should it be told?** This is the reading of the deck. Q1 and Q3 only tune it. `talk-pyramid` ★ one conclusion per page (`pyramid`) · `talk-showcase` one image or number per page (`showcase`) · `read-brief` a packed brief, evidence first (`briefing`) · `teach` a training walkthrough (`instructional`). Derive `storytelling` from 年报 / brand-film / situation-to-resolution language. Do not add it as a fifth option.
-
-**Q3 — Sparse or packed?** `spacious` ★ leave air, few words per page · `balanced` a normal mix · `dense` pack the evidence, the page stands alone.
-
-**Q4 — Brand template?** Only when there is no brand signal. `extract` yes, they will hand over a `.thmx` / `.potx` / branded `.pptx` · `builtin` ★ no, use a built-in theme · `later` built-in now, brand later (treat as `builtin`, do not open a second round). Whether a `theme.json` is already in the workspace is something you check, never something you ask.
-
-End that message with this block, verbatim, one line per axis, a derived value filled in and every unresolved axis left as `?`:
-
-```
-NARRATIVE_INTERVIEW
-audience: ?
-tell: ?
-pacing: ?
-brand: ?
-```
-
-The block is the gate, not your self-discipline: while any line still reads `?`, you may not create or edit `deck.spec.json`, a page file, or a bare IR. Only the user's reply clears a `?` — or, once they have replied, the ★ default for an axis they left open. In a run with nobody in it, fill every line yourself and print the block with `(no user in this run)` on the first line, so the choice is visible and reversible.
-
-After the reply, emit one package and one backup, one sentence of reason, one clause for what would change it, then wait for confirmation:
-
-`recommend: <preset-or-axes> × <theme> × branding omit|full × typeScale regular|display|hero`
-`what would change it: <one clause>` — most often: this will be forwarded without a speaker, so put the extra words in notes, or recommend a PDF instead of packing the slide.
-
-Lookup below chooses the narrative preset, branding posture, and type-scale band. Theme selection follows the occasion and identity route above. A matching preset's `themeRecommendations` may break a remaining tie, but it is never the primary selector. Omit the branding field by default. Write `"full"` when `meta.confidentiality` is `confidential` or `restricted`, or every content page needs the brand footer. `customer` + `talk-pyramid` + `spacious` → `pitch` / omit / display. `executive` + `talk-pyramid` + `spacious` → `boardroom-report` / omit / display. `customer` + `talk-showcase` + `spacious` → `product-launch` / omit / display. `technical` + `teach` + `balanced` → `training` / omit / regular. `technical` + `read-brief` + `dense` → `weekly-brief` / omit / regular. `executive` + `read-brief` + `dense` → axes `{pyramid, dense, executive}` / omit / regular. `public` + storytelling + `balanced` → `annual-review` / omit / regular. Else write the axes object using the nearest preset: `pyramid`+`executive` → `boardroom-report`, `pyramid`+`customer` → `pitch`, `showcase` → `product-launch`, `instructional` → `training`, `briefing`+`dense` → `weekly-brief`, `storytelling` → `annual-review`, else `general`.
-
-Type-scale band: `regular` when `dense` or `balanced`. `display` when `spacious`. `hero` only on a repaint that switches the theme to `stage`. Do not retarget a boardroom deck to `stage` just to enlarge titles. Do not write `typeScale` onto `deck.spec.json`. Do not edit a repo-root `pptwise.config.json` for one deck. On a bare IR (spec skipped) a non-`regular` band may be written as `theme.style.shape.typeScale` 1.3 or 1.5.
-
-The second candidate ships with the package, prepared in advance, and it has to differ in mechanism: flip density (`spacious` ↔ `dense`, type-scale follows), or flip what leads the argument (`pitch` ↔ `product-launch`, `training` ↔ the same material as a dense handout). The same three axes in a different theme is a repaint, not a candidate — offer that only when the user rejected the look, and say the narrative did not move. `stage` × `hero` is the repaint for a showcase that wanted bigger titles. Do not flip all three axes at once.
-
-This interview settles the three narrative axes, not whether the request should be a deck at all. If that larger question is open, say so plainly and let the user answer it before you spec.
-
-A very small deck may still skip the spec file and write a single IR. It may not skip this interview when axes are unknown. Write the same decisions onto the IR's `narrative` / `theme` / `branding`.
+A very small deck may use one IR file instead of a deck project. It still follows the same chain. Its top-level `theme.id` is the binding, and every content slide still requires explicit `kind`.

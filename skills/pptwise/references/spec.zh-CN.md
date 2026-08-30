@@ -3,146 +3,184 @@ summary: 'skills/pptwise/references/spec.md 的中文阅读镜像'
 mirror_of: skills/pptwise/references/spec.md
 ---
 
-# Spec 写法与页型
+# 意图、叙事、主题绑定与 spec
 
-何时读：写 `deck.spec.json`、选页型（`cover` / `chapter` / `content` / `ending`）、或做叙事访谈时。
+何时读：创建 `deck.spec.json`、选择主题、或处理菜单不匹配时。
 
-### Phase 1 — 读词汇表（每个 session 都要重新读一遍）
+作者链条是因果单向的：
+
+```text
+意图 -> 叙事 -> 主题绑定 -> 带 kind 的 spec -> 填充 -> 渲染
+```
+
+## 读取现场词汇
+
+每个 deck 任务开始时运行：
 
 ```bash
-pptwise schema             # IR JSON Schema: the single source of truth
-pptwise schema --spec      # deck spec schema
-pptwise narratives --json  # named narrative presets (strategy/pacing/audience axes + theme recommendations)
-pptwise themes --json      # built-in themes (id, label, occasions, identity, colors)
-pptwise layouts --json     # standard layouts, slots, capacities, and pin-only status
+pptwise schema
+pptwise schema --spec
+pptwise narratives --json
+pptwise themes --json
 ```
 
-永远不要凭上一个 session 的记忆、或凭这份文件本身的记忆去写 IR 或 spec——schema 会演进，`schema`/`narratives`/`themes` 的实际输出永远优先。
+命令输出与工作区文件优先于本指南。提问前先找已有 `deck.spec.json`、deck 内 `theme.json`、工作区 `themes/`，以及用户递来的 Office 品牌文件。
 
-动手问人之前，先扫工作区。文件能回答的事实不要问人：
+## 意图与叙事
 
-- 已有确认过的 `deck.spec.json` 已经锁死 narrative、theme、品牌框。不要重做访谈。后续请求走阶段六
-- 已有 `theme.json`、项目 `pptwise.config.json` 钉死的 theme、用户点名的 theme id、或用户递来的 `.thmx` / `.potx` / 带品牌 `.pptx`，都是品牌信号。抽取或沿用。不要再问有没有模板
-- 请求原文已经点名受众、论证方式或疏密，这一轴就算推导出来了。不要再问
+意图记录讲给谁、要促成什么结果、现场讲述还是传阅、可用时长。叙事是根据意图作出的第一个决定，确定论证方式、节奏与语气。
 
-品牌信号回答的是这份 deck 长什么样，从来不回答它该怎么论证。完整规则在 `references/branding.md`。
+用户在场且仍缺关键事实时，只问一轮简洁问题：
+
+1. 受众是谁，结束后应该决定、理解或做什么？
+2. 会有人现场讲，还是文件必须独立读懂？有多少时间？
+3. 论证应该结论先行、按故事展开、分步教学、突出一个画面或数字，还是写成紧凑简报？
+4. 页面应该密、均衡，还是留白？
+
+用 `pptwise narratives --json` 把答案映射成具名预设，或显式的 `strategy`、`pacing`、`audience`。不要从品牌配色推导叙事。先确认这份叙事包，再选择主题。
+
+## 选择、创建并绑定主题
+
+主题是第二个决定，必须早于 spec。主题是一个完整文件，包含样式、页面菜单、可选品牌规则、`occasions` 与 `identity`。菜单只服务 11 种内容页讲法中的一个明确子集。
+
+先按场合筛选，再按视觉个性强度筛选。用固定样张比较 2 到 4 个候选：
+
+```bash
+pptwise theme try consulting,swiss,memo
+```
+
+`theme try` 用每个候选渲染同一份固定样张 deck。只有这里会在不绑定 deck 的情况下比较主题。按图选，不要只看名字。
+
+创建就是拷贝。即使从出厂预设开始，也优先创建工作区自有主题：
+
+```bash
+pptwise theme new --from consulting --id acme-report
+```
+
+有 Office 主题或模板时，先按场合选择菜单来源，再把配色与字体抽进一个完整的 v2 文件：
+
+```bash
+pptwise brand extract corp.pptx -o themes/acme.theme.json --from consulting
+```
+
+已有主题要改色时，fork 它。fork 保持菜单逐字节相同，并重新派生整套配色：
+
+```bash
+pptwise theme fork acme --primary '#0B5FFF' --id acme-blue
+```
+
+主题名按三级解析：
+
+1. deck 目录，包括 `theme.json` 与具名主题 JSON。
+2. 从 deck 向上查找的工作区 `themes/`。
+3. 出厂预设。
+
+在 `deck.spec.json` 的 `theme` 中写入唯一名称完成绑定。要把工作区主题冻结给单个 deck，保持 id 不变，把完整文件复制到 deck 目录并命名为 `theme.json`。之后 deck 命令会自动装载。
 
 <!-- generated:begin themes -->
-### 内置主题全量表
+### 出厂预设全量表
 
-本段由 canonical theme registry 与场合路由表生成。`identity` 表示视觉个性强度。
+本段由预设库及每个预设的菜单生成。`identity` 表示视觉个性强度。`菜单词数` 与最后一列都只计算内容页讲法。
 
-| id | label | occasions | identity |
-| --- | --- | --- | --- |
-| `consulting` | Business Consulting | business | medium |
-| `enterprise` | Enterprise | business, institutional | low |
-| `academic` | Academic | education | medium |
-| `insight` | Financial Insight | finance | medium |
-| `campaign` | Marketing Campaign | marketing, event | high |
-| `classroom` | Classroom | education | medium |
-| `ink` | Ink Wash | culture | high |
-| `tech` | Tech | tech | medium |
-| `runway` | Fashion Runway | fashion | high |
-| `journal` | Editorial Journal | editorial | medium |
-| `luxe` | Luxe | luxury, event | high |
-| `heritage` | Heritage | culture, luxury | medium |
-| `pulse` | Health & Life Science | health | medium |
-| `terra` | Sustainability & ESG | sustainability | medium |
-| `ember` | Startup Pitch | startup | high |
-| `vermilion` | Official Report | government, institutional | low |
-| `crayon` | Kids Education | kids, education | high |
-| `arena` | Esports & Entertainment | entertainment | high |
-| `museum` | Museum | museum, culture | high |
-| `stage` | Keynote Stage | keynote | high |
-| `lecture` | Lecture Hall | education | high |
-| `swiss` | Swiss Institutional | institutional | low |
-| `memo` | Decision Memo | business, institutional | low |
-| `playbill` | Playbill | event, entertainment | high |
+| id | label | occasions | identity | 菜单词数 | 提供的 kind |
+| --- | --- | --- | --- | ---: | --- |
+| `consulting` | Business Consulting | business | medium | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `fact`, `evidence`, `hierarchy` |
+| `enterprise` | Enterprise | business, institutional | low | 7 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `hierarchy` |
+| `academic` | Academic | education | medium | 11 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `quote`, `fact`, `evidence`, `hierarchy` |
+| `insight` | Financial Insight | finance | medium | 9 | `points`, `list`, `comparison`, `process`, `data`, `statement`, `quote`, `fact`, `hierarchy` |
+| `campaign` | Marketing Campaign | marketing, event | high | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `fact`, `evidence`, `hierarchy` |
+| `classroom` | Classroom | education | medium | 7 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `hierarchy` |
+| `ink` | Ink Wash | culture | high | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `quote`, `fact`, `hierarchy` |
+| `tech` | Tech | tech | medium | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `fact`, `evidence`, `hierarchy` |
+| `runway` | Fashion Runway | fashion | high | 7 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement` |
+| `journal` | Editorial Journal | editorial | medium | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `quote`, `fact`, `hierarchy` |
+| `luxe` | Luxe | luxury, event | high | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `quote`, `fact`, `hierarchy` |
+| `heritage` | Heritage | culture, luxury | medium | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `quote`, `fact`, `hierarchy` |
+| `pulse` | Health & Life Science | health | medium | 7 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `hierarchy` |
+| `terra` | Sustainability & ESG | sustainability | medium | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `fact`, `evidence`, `hierarchy` |
+| `ember` | Startup Pitch | startup | high | 7 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `hierarchy` |
+| `vermilion` | Official Report | government, institutional | low | 9 | `points`, `list`, `comparison`, `process`, `data`, `statement`, `fact`, `evidence`, `hierarchy` |
+| `crayon` | Kids Education | kids, education | high | 6 | `points`, `list`, `comparison`, `process`, `photo`, `statement` |
+| `arena` | Esports & Entertainment | entertainment | high | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `fact`, `evidence`, `hierarchy` |
+| `museum` | Museum | museum, culture | high | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `fact`, `evidence`, `hierarchy` |
+| `stage` | Keynote Stage | keynote | high | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `quote`, `fact`, `hierarchy` |
+| `lecture` | Lecture Hall | education | high | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `fact`, `evidence`, `hierarchy` |
+| `swiss` | Swiss Institutional | institutional | low | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `fact`, `evidence`, `hierarchy` |
+| `memo` | Decision Memo | business, institutional | low | 9 | `points`, `list`, `comparison`, `process`, `data`, `statement`, `quote`, `fact`, `hierarchy` |
+| `playbill` | Playbill | event, entertainment | high | 9 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `fact`, `hierarchy` |
 <!-- generated:end themes -->
 
+## 11 种内容页讲法
 
-**边界页规则：** `chapter` 永远不渲染 `components` 或 `footnote`。`cover` 与 `ending` 永远不渲染 `footnote`。边界页只有在已知版式声明了兼容槽位时才能带 `components`。目前 `verdict-index` 与 `gauge-verdict` 封面各接受一个 `bullets` component，部分 ending 版式接受自己声明的 body 内容。普通正文放到 `content` 页。`validate` 会点名已知版式会丢掉的字段，并要求把内容移走。
+`kind` 说明内容页怎样表达观点。每张内容页必填。封面、章节与结尾不写。
+
+| `kind` | 何时使用 | 不要混淆 |
+| --- | --- | --- |
+| `points` | 论证按顺序逐步推进 | `list` 的条目可以换序 |
+| `list` | 一组并列项一起陈列 | `points` 的顺序承载论证 |
+| `comparison` | 方案或两边需要直接对照 | 包含关系用 `hierarchy`，方向关系用 `process` |
+| `process` | 步骤、时间、运动或闭环很重要 | 没有流程关系的递进论证用 `points` |
+| `data` | 一组数字、图表或表格是主角 | 只有一个数字时用 `fact` |
+| `photo` | 画面本身就是内容 | 展品服务断言时用 `evidence` |
+| `statement` | 作者自己的一句话立论占满一页 | 借别人之口用 `quote` |
+| `quote` | 文字归属于另一位说话者或来源 | 作者自己的话用 `statement` |
+| `fact` | 一个数字承担整页信息 | 多个数字之间的结构用 `data` |
+| `evidence` | 一个断言配一件支持它的展品 | 图片独立成义时用 `photo` |
+| `hierarchy` | 页面解释包含、层级或组成 | 先后关系用 `process`，两边对照用 `comparison` |
+
+四条边界能解决大多数歧义：
+
+- `statement`、`quote`、`fact`、`evidence` 的区别在说话主体，分别是自己的立论、别人的话、一个数字、断言加展品。
+- `data` 展示多个值之间的结构。`fact` 用一个值制造冲击。
+- `points` 有递进。`list` 可换序。
+- `photo` 让画面成为信息。`evidence` 让画面服务断言。
+
+## 编写 spec
+
+合法 spec 以 `cover` 开头，以 `ending` 结束，中间使用 `content` 或 `chapter`。每页都有 `id`、`type`、`heading`。内容页还必须有 `kind`。`focus` 可以点名偏好的组件类型。`summary` 是填充步骤使用的简短内容锚点。
 
 ```json
-// pages/market.json，spec type "chapter"：WRONG，chapter 版式不渲染 components
-{ "components": [{ "type": "bullets", "items": ["市场规模", "买家分层"] }] }
+{
+  "version": "1",
+  "filename": "q3-review.pptx",
+  "narrative": "boardroom-report",
+  "theme": "acme-report",
+  "meta": { "organization": "Acme", "date": "2026 Q3" },
+  "pages": [
+    { "id": "cover", "type": "cover", "heading": "Q3 经营复盘" },
+    { "id": "decision", "type": "content", "kind": "points", "heading": "两项动作守住全年目标" },
+    { "id": "options", "type": "content", "kind": "comparison", "heading": "聚焦方案回报更快" },
+    { "id": "economics", "type": "content", "kind": "data", "heading": "利润率在年末前恢复" },
+    { "id": "delivery", "type": "content", "kind": "process", "heading": "三次发布补齐缺口" },
+    { "id": "close", "type": "ending", "heading": "批准聚焦方案" }
+  ]
+}
 ```
 
-```json
-// pages/market-detail.json，spec type "content"：CORRECT
-{ "components": [{ "type": "bullets", "items": ["市场规模", "买家分层"] }] }
+spec 不含页面几何或渲染选择状态。不要加入已退役的作者字段。后续页面文件只装可填内容，不重复 `type`、`kind` 或 `heading`。
+
+运行：
+
+```bash
+pptwise spec validate deck.spec.json
 ```
 
-```json
-// pages/market.json，spec type "chapter"：保持空白，内容已移走
-{}
-```
+修完硬错误，直到命令打印 `OK`。页数会按 `pacing` 检查。连续三张或更多内容页使用同一个 `kind` 时，会产生编辑提示。
 
-`docs/deck-projects.md` 里的边界页渲染面表（boundary-page render surface table）有按页型划分的完整对照。
+## 菜单不匹配怎么处理
 
-### Phase 2 — 定 spec 并确认
+spec 请求了绑定主题没有提供的 `kind` 时，校验会失败并列出可用词。按这个顺序处理：
 
-写任何页面内容之前，先提议并确认。
+1. 重查页面的语义姿势。只有另一个可用词确实正确时才改 `kind`。
+2. 页面意图不能变时，选择或创建菜单能服务它的主题。
+3. 已经填过内容时，回到主题层。保留有用的事实、数据、图片与文案片段，再按新菜单重写 spec 与页面文件。
 
-- 先锁定叙事包：具名预设（或显式三轴）、theme id、品牌框姿态、以及 typeScale 档（封面 / 章 / 演讲页标题有多大：`regular` 省略/1，`display` 1.3，`hero` 1.5）。这是位于 theme 之上的一层决策，不是视觉选择。任一轴仍未知且用户在场时，走下方「叙事访谈」。这种情况下不要自己静默挑一个预设
-- 疏密（留白还是铺满）在访谈里判定（或从请求推导）。钉高潮页、金句页、证据页版式和写 `notes` 时走 `references/layouts.md` 的稀排页合同。`pacing` 不会为此多出第四档
-- 从请求和工作区提取受控场合信号，例如 `business`、`education`、`event` 或 `institutional`。先用 `themes --json` 的 `occasions` 筛出两到三套，再用 `identity` 决定视觉表达要克制还是鲜明。叙事里的 `themeRecommendations` 只在这两层之后作参考和平手裁决，不得压过场合或 identity 匹配。没有场合命中时，才按路由回落顺序用它，随后是仅按 identity 的列表与 `consulting`。访谈的品牌问如果返回模板，先抽成候选主题文件。用户确认前，不要把它命名为项目 `theme.json`，见 `references/branding.md`
-- 用户想比较内置视觉方向时，带两到四个候选 id 跑 `pptwise preview deck-dir/ --themes consulting,swiss,memo`。命令会把同一套已解析封面与第一张内容页用每个主题 repaint，再排成对比图。把图给用户看，让用户按图选择。尚未落盘的自定义候选要单独跑 `pptwise preview deck-dir/ --theme-file <candidate> --theme <id> --html`，因为注册不会选中主题。无人运行时，采用场合与个性强度排序后的第一个确定性候选，并明确说出选择
-- 确认后，把选中的 id 写进 `deck.spec.json`。自定义主题文件落在 `deck-dir/theme.json`，spec 引用它的 id。项目路径后续不需要 `--theme-file` 或 `--theme`。选择内置主题时不需要复制一份 `theme.json`
-- 用户一点头，立刻把确认下来的 `narrative`、`theme`、`branding` 写进 `deck.spec.json`，再起草任何一页。不要把答案留在对话里，等页面写完再凭记忆补
-- 起草 `deck.spec.json`：每页一条记录（`id`、`type`、`heading`，可选加 `beat`/`focus`/`summary`）——以 `cover` 开篇，以 `ending` 收尾，中间的每一页都是 `content` 或 `chapter`。三轴与某个预设完全相等时，`narrative` 写预设 id 字符串，否则写 `{strategy, pacing, audience}`。不要写 `{id, pacing}` 这种混形。默认省略 `branding`。只有每一页内容页都需要品牌页脚时才写 `branding: "full"`（`meta.confidentiality` 为 `confidential` 或 `restricted` 时同样写 `"full"`）。不要在 spec 上发明 `typeScale` 字段，那个字段不存在。档是推荐。只有跳过 spec、直接写 IR 时，才允许把 `theme.style.shape.typeScale` 写进 IR
-- 跑 `pptwise spec validate deck.spec.json`，把它报出的问题都修掉，直到打印 `OK`——边界页、标题长度、beat 轮换、页数是否匹配 pacing 这些硬门都在这一步触发，早于任何一页正文的写作
-- `spec validate` 打印 `OK` 之后，在 `deck.spec.json` 里设一个 `seed`（任意整数）以保证修订稳定——现在就写一个，或者在阶段三跑一次 `pptwise assemble`，把它打印出的 `generated seed …` 值抄进 spec。没有固化的 seed，之后改一页的标题就可能打乱其余每一页自动选出的 layout
+不要为了通过校验硬套一个相近词。菜单缺口是主题决策，不是几何缺口。
 
-**用户确认过校验通过的 spec 之后，不要再重新定 spec。** 改动一份已确认的 spec（调整顺序、改页型、删页）会悄悄浪费用户已经做过的审阅。如果确有新信息迫使必须改动，先说明理由并重新取得确认，再重新跑一次 `spec validate`。
+## 开工后的换绑
 
-### 叙事访谈（最多一轮）
+菜单相同的配色 fork 可以替换绑定主题。更新绑定名称，再重跑 spec validate、assemble、validate、audit 与 render。
 
-用户在场，且受众、怎么讲 / strategy、pacing 任一轴仍未知时，把所有未决的问放进**一条**消息转达给人，然后停。不要自己填。不要说「我按常见情况先选」。宿主有选择题工具就用它，选项原文照传。
+菜单不同的主题不是换色，必须回到主题层重写 spec。CLI 会直接比较规范化后的菜单，并拒绝流程内换绑到不同菜单。
 
-这条消息开头先写一句话，说出你打算建的这份 deck：给谁、论证怎么讲、每页多满、哪个主题、页脚开还是关。这句话只能用请求和工作区真说过的东西搭。缺信号的地方就说缺，并把 ★ 点明成默认，不是对用户处境的读数。不要把默认打扮成结论。这句话和选项里都不要出现 `pyramid`、`spacious`、`executive` 这类轴名。结尾给三条出路：不改就说「就这样」，要改就挑选项，或者说「都不对」。
-
-整段跳过访谈（零问）：已有确认过的 spec。用户说跳过问题、直接生成或批量。这一轮里根本没有人。请求已经同时锁定受众、论证方式、疏密。完整 brief 仍要在写 spec 之前甩一句叙事包。那是原来的 spec 确认，不是第二轮访谈。
-
-没有选择题工具，不等于没有用户。普通文本对话里用户是在场的：问题就是整条消息，停照旧。只有真的没有人的运行（CI、批量、无对话脚本）才免掉这次停顿，而且仍要把包、一句理由、一句改口条件写进可见输出，然后按包继续。事后用户任何一条反对都重开这个决定，改完重跑 `spec validate`。
-
-只跳过已推导的轴。空 workspace（无 spec、无 `theme.json`、无钉死的 config theme、请求里什么都推不出）把 Q1–Q4 一起问。没有品牌信号的工作区即使别的文件很多，也要问 Q4。
-
-用户跳过某选项、说「都行」、或回了表外的话：用 ★ 默认补齐，在推荐理由里写明补了哪一轴，不要追问。用户说「都不对」：只回一句「三轴里哪一根不对」，别的都不问。用户否决推荐包：抛出事先准备的第二候选，不要重开访谈。
-
-<!-- 维护者注记，不要转达给用户：Q1 今天的价值全部来自下面那张查表和正文口吻，`audience` 轴在渲染面上仍然什么都不做。如果将来查表不再读 `audience`，应该删掉 Q1，而不是留着一个答案改变不了交付物的问题。 -->
-
-**Q1 这页是讲给谁的？** `executive` 董事会 / 高管（结论先行） · `technical` 会核对数字的技术同事 · `customer` ★ 客户、买家、路演现场 · `public` 公开或不特定。
-
-**Q2 你想怎么讲这件事？** 这一问才是这份 deck 的读法，Q1 和 Q3 只是把它调准。`talk-pyramid` ★ 一页一个结论（`pyramid`） · `talk-showcase` 一页一个画面或数字（`showcase`） · `read-brief` 一页铺满证据（`briefing`） · `teach` 按步骤教（`instructional`）。年报 / 品牌片 / 情境到解决的说法直接推导 `storytelling`，不要把它加成第五选项。
-
-**Q3 页上要留白还是铺满？** `spacious` ★ 留白，一页少字 · `balanced` 普通疏密 · `dense` 铺满证据，页自己把话说完。
-
-**Q4 有没有公司模板可以抽成主题？** 仅当没有品牌信号时问。`extract` 有，用户会给出 `.thmx` / `.potx` / 带品牌 `.pptx` · `builtin` ★ 没有，用内置主题 · `later` 先用内置，稍后补（当作 `builtin`，不开第二轮）。工作区里有没有 `theme.json`，是自己查的事，永远不问。
-
-这条消息的结尾原样附上下面这个块，一轴一行，已推导的轴填上值，未决的轴留 `?`：
-
-```
-NARRATIVE_INTERVIEW
-audience: ?
-tell: ?
-pacing: ?
-brand: ?
-```
-
-这个块就是闸，不靠自觉：只要还有一行是 `?`，就不许新建或修改 `deck.spec.json`、页面文件或裸 IR。清掉一个 `?` 只有两条路：用户回答，或者用户已经回复、只是留空了某一轴，那一轴用 ★ 默认补。真的没有人的运行里，自己把每一行填满，并在块的第一行标上 `(no user in this run)`，让这个选择可见、可推翻。
-
-用户回复之后，立刻给一个推荐包和一个第二候选，一句理由，一句改口条件，然后等确认：
-
-`推荐：<预设或三轴> × <theme> × branding 省略|full × typeScale regular|display|hero`
-`改口条件：<一句>`。最常见的一条：这份会在没有主讲人的情况下被转发，把多出来的字写进 notes，或者建议改用 PDF，不要把幻灯片塞满。
-
-下面的查表只决定叙事预设、品牌框姿态和 type-scale 档。主题单独走上面的场合与 `identity` 路由。相符预设里的 `themeRecommendations` 可以裁决最后的平手，但从不作为主选择器。默认省略品牌框字段。`meta.confidentiality` 为 `confidential` 或 `restricted`，或每一页内容页都需要品牌页脚时，才写 `"full"`。`customer` + `talk-pyramid` + `spacious` → `pitch` / 省略 / display。`executive` + `talk-pyramid` + `spacious` → `boardroom-report` / 省略 / display。`customer` + `talk-showcase` + `spacious` → `product-launch` / 省略 / display。`technical` + `teach` + `balanced` → `training` / 省略 / regular。`technical` + `read-brief` + `dense` → `weekly-brief` / 省略 / regular。`executive` + `read-brief` + `dense` → 三轴 `{pyramid, dense, executive}` / 省略 / regular。`public` + storytelling + `balanced` → `annual-review` / 省略 / regular。其余写三轴对象，取最接近的预设：`pyramid`+`executive` → `boardroom-report`，`pyramid`+`customer` → `pitch`，`showcase` → `product-launch`，`instructional` → `training`，`briefing`+`dense` → `weekly-brief`，`storytelling` → `annual-review`，否则 `general`。
-
-typeScale 档：`dense` 或 `balanced` 用 `regular`。`spacious` 用 `display`。`hero` 只出现在把 theme 换成 `stage` 的那种换皮上。不要为了把标题加大，把董事会 deck 改成 `stage`。不要在 `deck.spec.json` 上写 `typeScale`。不要为了一个 deck 去改仓库根上的 `pptwise.config.json`。跳过 spec、直接写 IR 时，非 `regular` 的档可以写成 `theme.style.shape.typeScale` 1.3 或 1.5。
-
-第二候选跟着推荐包一起抛，事先准备，而且必须在机制上不同：翻疏密（`spacious` ↔ `dense`，type-scale 跟着翻），或者换由什么领头论证（`pitch` ↔ `product-launch`，`training` ↔ 同样内容的密页讲义）。同样三根轴换个主题是换皮，不算候选，只在用户否的是皮时才给，并说清叙事没动。showcase 想要更大标题时，`stage` × `hero` 属于这种换皮。不要三轴一起翻。
-
-这一轮只定三根叙事轴，不负责判断这件事该不该做成 deck。那个更大的问题还开着，就直说，让用户先答，再定 spec。
-
-很小的 deck 仍可跳过 spec 文件、直接写一份 IR。轴未知时不可跳过这场访谈。把同样的决策写到 IR 的 `narrative` / `theme` / `branding` 上。
+很小的 deck 可以使用单个 IR 文件而不是 deck 项目。它仍遵循同一条链。顶层 `theme.id` 是绑定，每张内容页仍必须显式写 `kind`。

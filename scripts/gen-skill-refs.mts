@@ -2,141 +2,125 @@ import { readFileSync, writeFileSync } from "node:fs"
 import { dirname, join, relative } from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
 
-import { LAYOUT_REGISTRY, type LayoutDefinition, type SlideType } from "@/layouts/registry"
-import { CANONICAL_THEME_IDS, THEME_LABELS } from "@/themes"
-import { THEME_OCCASIONS } from "@/themes/occasions"
+import { KIND_VALUES, type PageKind } from "@/ir"
+import { BUILTIN_THEME_FILES } from "@/themes"
+import { THEME_PRESETS } from "@/themes/presets"
+import type { Menu } from "@/themes/schema"
 
 export const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..")
 
-const SLIDE_TYPES: readonly SlideType[] = ["cover", "chapter", "content", "ending"]
-const SLIDE_TYPE_LABELS: Record<SlideType, { en: string; zh: string }> = {
-  cover: { en: "Cover", zh: "封面" },
-  chapter: { en: "Chapter", zh: "章节" },
-  content: { en: "Content", zh: "内容" },
-  ending: { en: "Ending", zh: "结尾" },
-}
-
 type Locale = "en" | "zh"
-type GeneratedSection = "layouts" | "themes"
+type GeneratedSection = "kinds" | "themes"
 
-function listWords(words: readonly string[], locale: Locale): string {
-  if (locale === "zh") return words.join("、")
-  if (words.length <= 1) return words[0] ?? ""
-  if (words.length === 2) return `${words[0]} and ${words[1]}`
-  return `${words.slice(0, -1).join(", ")}, and ${words.at(-1)}`
+interface KindGuidance {
+  en: { label: string; use: string; boundary: string }
+  zh: { label: string; use: string; boundary: string }
 }
 
-function slotDetail(slot: LayoutDefinition["slots"][number], locale: Locale): string | undefined {
-  const accepts = slot.accepts === "any"
-    ? locale === "zh" ? "任意组件" : "any component"
-    : slot.accepts.length > 0
-      ? locale === "zh"
-        ? `${listWords(slot.accepts.map((type) => `\`${type}\``), locale)} 组件`
-        : slot.accepts.length === 1
-          ? `a ${listWords(slot.accepts.map((type) => `\`${type}\``), locale)} component`
-          : `${listWords(slot.accepts.map((type) => `\`${type}\``), locale)} components`
-      : undefined
+const KIND_GUIDANCE = {
+  points: {
+    en: { label: "Points", use: "Advance an ordered argument whose sequence matters.", boundary: "Use list when the items are peers that can be reordered." },
+    zh: { label: "要点", use: "按不可调换的顺序推进一组论点。", boundary: "并列条目可换序时用 list。" },
+  },
+  list: {
+    en: { label: "List", use: "Present peer items whose order may change.", boundary: "Use points when the sequence carries the reasoning." },
+    zh: { label: "清单", use: "并列陈列一组可以换序的条目。", boundary: "顺序承载论证时用 points。" },
+  },
+  comparison: {
+    en: { label: "Comparison", use: "Place alternatives, sides, or dimensions in direct contrast.", boundary: "Containment belongs to hierarchy and direction belongs to process." },
+    zh: { label: "对比", use: "把两边、多个方案或多个维度直接对照。", boundary: "包含关系用 hierarchy，有方向的变化用 process。" },
+  },
+  process: {
+    en: { label: "Process", use: "Show directed steps, a timeline, or a closed cycle.", boundary: "An ordered argument without motion is points." },
+    zh: { label: "流程", use: "表达有方向的步骤、时间线或闭环。", boundary: "只有论证递进而没有运动关系时用 points。" },
+  },
+  data: {
+    en: { label: "Data", use: "Make a set of numbers, a chart, or a table the subject.", boundary: "Use fact when one number is the whole message." },
+    zh: { label: "数据", use: "让一组数字、图表或表格成为页面主角。", boundary: "只有一个数字承担全部信息时用 fact。" },
+  },
+  photo: {
+    en: { label: "Photo", use: "Make the image itself the content.", boundary: "Use evidence when an exhibit exists to support a claim." },
+    zh: { label: "图像", use: "让画面本身成为内容。", boundary: "展品是为断言服务时用 evidence。" },
+  },
+  statement: {
+    en: { label: "Statement", use: "Give the deck author's own proposition a full page.", boundary: "Words attributed to someone else are quote." },
+    zh: { label: "宣言", use: "让作者自己的一句话立论占据整页。", boundary: "借别人之口时用 quote。" },
+  },
+  quote: {
+    en: { label: "Quote", use: "Center words attributed to another speaker or source.", boundary: "The deck author's own proposition is statement." },
+    zh: { label: "引用", use: "以他人或外部来源的话为中心。", boundary: "作者自己的立论用 statement。" },
+  },
+  fact: {
+    en: { label: "Fact", use: "Build the page around one number.", boundary: "A numeric set whose structure matters is data." },
+    zh: { label: "大数字", use: "让一个数字承担整页冲击。", boundary: "要看一组数字的结构时用 data。" },
+  },
+  evidence: {
+    en: { label: "Evidence", use: "Pair one assertion with one exhibit that supports it.", boundary: "Use photo when the image stands on its own." },
+    zh: { label: "单证据", use: "把一个断言与一件支持它的展品配对。", boundary: "画面自己就是内容时用 photo。" },
+  },
+  hierarchy: {
+    en: { label: "Hierarchy", use: "Express containment, levels, or composition.", boundary: "Sequence belongs to process and side-by-side contrast to comparison." },
+    zh: { label: "层级", use: "表达包含、层级或组成关系。", boundary: "先后关系用 process，并排对照用 comparison。" },
+  },
+} as const satisfies Record<PageKind, KindGuidance>
 
-  if (accepts === undefined && slot.capacity === undefined) return undefined
-  const name = `\`${slot.name}\``
-  if (locale === "zh") {
-    const accepted = accepts === undefined ? "承载派生内容" : `接收 ${accepts}`
-    const capacity = slot.capacity === undefined ? "" : `，容量 ${slot.capacity}`
-    return `${name} 槽${accepted}${capacity}`
-  }
-
-  const accepted = accepts === undefined ? "holds derived content" : `accepts ${accepts}`
-  const capacity = slot.capacity === undefined ? "" : ` with capacity ${slot.capacity}`
-  return `the ${name} slot ${accepted}${capacity}`
+function offeredKinds(themeId: (typeof THEME_PRESETS)[number]["id"]): PageKind[] {
+  const menu: Menu["content"] = BUILTIN_THEME_FILES[themeId].menu.content
+  return KIND_VALUES.filter((kind) => menu[kind] !== undefined)
 }
 
-function layoutUse(layout: LayoutDefinition, locale: Locale): string {
-  const slotNames = layout.slots.map((slot) => `\`${slot.name}\``)
-  const details = layout.slots
-    .map((slot) => slotDetail(slot, locale))
-    .filter((detail): detail is string => detail !== undefined)
-
-  if (locale === "zh") {
-    const base = `提供 ${listWords(slotNames, locale)} 槽位`
-    return details.length === 0 ? `${base}。` : `${base}，其中 ${listWords(details, locale)}。`
-  }
-
-  const slotLabel = slotNames.length === 1 ? "slot" : "slots"
-  const base = `Provides ${listWords(slotNames, locale)} ${slotLabel}`
-  return details.length === 0 ? `${base}.` : `${base}, where ${listWords(details, locale)}.`
-}
-
-function layoutCapacity(layout: LayoutDefinition): string {
-  const capacities = layout.slots.flatMap((slot) => slot.capacity === undefined ? [] : [slot.capacity])
-  return capacities.length === 0 ? "n/a" : String(capacities.reduce((sum, value) => sum + value, 0))
-}
-
-function standardLayouts(): LayoutDefinition[] {
-  const layouts = Object.values(LAYOUT_REGISTRY).filter((layout) => layout.kind === "archetype")
-  if (layouts.length !== 130) {
-    throw new Error(`expected 130 standard layouts, found ${layouts.length}`)
-  }
-  for (const layout of layouts) {
-    if (layout.slideTypes.length !== 1) {
-      throw new Error(`standard layout ${layout.id} must belong to exactly one page type`)
-    }
-  }
-  return layouts
-}
-
-function renderLayouts(locale: Locale): string {
+function renderKinds(locale: Locale): string {
   const lines = [
-    locale === "zh" ? "### 标准版式全量表" : "### Complete standard-layout catalog",
+    locale === "zh" ? "### 讲法全量表" : "### Complete kind vocabulary",
     "",
     locale === "zh"
-      ? "本段由版式 registry 与每个版式的 slots 元数据生成。`capacity` 是所有已声明槽位容量之和，`n/a` 表示该版式没有声明可计数容量。"
-      : "This section is generated from the layout registry and each layout's slot metadata. `capacity` is the sum of declared slot capacities. `n/a` means the layout declares no countable capacity.",
+      ? "本段由 IR v5 的讲法词表与 24 个预设菜单生成。最后一列表示有多少预设菜单提供该讲法。"
+      : "This section is generated from the IR v5 kind vocabulary and the 24 preset menus. The final column shows how many preset menus offer each kind.",
+    "",
+    locale === "zh"
+      ? "| kind | 中文 | 何时使用 | 边界 | 预设菜单 |"
+      : "| kind | name | use it when | boundary | preset menus |",
+    "| --- | --- | --- | --- | ---: |",
   ]
-
-  const layouts = standardLayouts()
-  for (const slideType of SLIDE_TYPES) {
-    lines.push("", `#### ${SLIDE_TYPE_LABELS[slideType][locale]}`, "")
-    lines.push(locale === "zh"
-      ? "| id | pinOnly | capacity | 一句话用途 |"
-      : "| id | pinOnly | capacity | one-sentence use |")
-    lines.push("| --- | --- | ---: | --- |")
-    for (const layout of layouts.filter((candidate) => candidate.slideTypes[0] === slideType)) {
-      const pinOnly = locale === "zh" ? layout.pinOnly ? "是" : "否" : layout.pinOnly ? "yes" : "no"
-      lines.push(`| \`${layout.id}\` | ${pinOnly} | ${layoutCapacity(layout)} | ${layoutUse(layout, locale)} |`)
-    }
+  for (const kind of KIND_VALUES) {
+    const copy = KIND_GUIDANCE[kind][locale]
+    const offeredBy = THEME_PRESETS.filter((preset) => offeredKinds(preset.id).includes(kind)).length
+    lines.push(`| \`${kind}\` | ${copy.label} | ${copy.use} | ${copy.boundary} | ${offeredBy}/24 |`)
   }
   return lines.join("\n")
 }
 
 function renderThemes(locale: Locale): string {
   const lines = [
-    locale === "zh" ? "### 内置主题全量表" : "### Complete built-in theme catalog",
+    locale === "zh" ? "### 出厂预设全量表" : "### Complete factory preset catalog",
     "",
     locale === "zh"
-      ? "本段由 canonical theme registry 与场合路由表生成。`identity` 表示视觉个性强度。"
-      : "This section is generated from the canonical theme registry and occasion routing table. `identity` is the strength of the visual voice.",
+      ? "本段由预设库及每个预设的菜单生成。`identity` 表示视觉个性强度。`菜单词数` 与最后一列都只计算内容页讲法。"
+      : "This section is generated from the preset library and each preset menu. `identity` is the strength of the visual voice. `menu words` and the final column count content kinds only.",
     "",
     locale === "zh"
-      ? "| id | label | occasions | identity |"
-      : "| id | label | occasions | identity |",
-    "| --- | --- | --- | --- |",
+      ? "| id | label | occasions | identity | 菜单词数 | 提供的 kind |"
+      : "| id | label | occasions | identity | menu words | offered kinds |",
+    "| --- | --- | --- | --- | ---: | --- |",
   ]
-  for (const id of CANONICAL_THEME_IDS) {
-    const route = THEME_OCCASIONS[id]
-    lines.push(`| \`${id}\` | ${THEME_LABELS[id]} | ${route.occasions.join(", ")} | ${route.identity} |`)
+  for (const preset of THEME_PRESETS) {
+    const kinds = offeredKinds(preset.id)
+    lines.push(
+      `| \`${preset.id}\` | ${preset.label} | ${preset.occasions.join(", ")} | ${preset.identity} | ${kinds.length} | ${kinds.map((kind) => `\`${kind}\``).join(", ")} |`,
+    )
   }
   return lines.join("\n")
 }
 
 export function generatedReferenceFiles(): {
-  layoutsEn: string
-  layoutsZh: string
+  kindsEn: string
+  kindsZh: string
   themesEn: string
   themesZh: string
 } {
   return {
-    layoutsEn: renderLayouts("en"),
-    layoutsZh: renderLayouts("zh"),
+    kindsEn: renderKinds("en"),
+    kindsZh: renderKinds("zh"),
     themesEn: renderThemes("en"),
     themesZh: renderThemes("zh"),
   }
@@ -164,8 +148,8 @@ interface RenderedReferenceFile {
 export function renderSkillReferenceFiles(root = repoRoot): RenderedReferenceFile[] {
   const generated = generatedReferenceFiles()
   const targets: Array<{ relativePath: string; section: GeneratedSection; generated: string }> = [
-    { relativePath: "skills/pptwise/references/layouts.md", section: "layouts", generated: generated.layoutsEn },
-    { relativePath: "skills/pptwise/references/layouts.zh-CN.md", section: "layouts", generated: generated.layoutsZh },
+    { relativePath: "skills/pptwise/references/layouts.md", section: "kinds", generated: generated.kindsEn },
+    { relativePath: "skills/pptwise/references/layouts.zh-CN.md", section: "kinds", generated: generated.kindsZh },
     { relativePath: "skills/pptwise/references/spec.md", section: "themes", generated: generated.themesEn },
     { relativePath: "skills/pptwise/references/spec.zh-CN.md", section: "themes", generated: generated.themesZh },
   ]
