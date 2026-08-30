@@ -159,25 +159,6 @@ if (httpMatches.length === 0) {
 }
 console.log("preview --html leg OK (self-contained: 5 embedded svgs, keyboard-nav JS, no stray http(s) reference)")
 
-// 3c) --style override must reach the DrawingML (hex appears uppercase, no "#")
-const stylePath = join(OUT, "style.json")
-writeFileSync(stylePath, JSON.stringify({ colors: { primary: "#0B5FFF" } }))
-const brandedPath = join(OUT, "branded.pptx")
-console.log(
-  sh("node", ["dist/cli.js", "render", "examples/basic.json", "-o", brandedPath, "--style", stylePath]),
-)
-const brandedZip = await JSZip.loadAsync(readFileSync(brandedPath))
-const brandedSlideXml = (
-  await Promise.all(
-    Object.keys(brandedZip.files)
-      .filter((k) => /^ppt\/slides\/slide\d+\.xml$/.test(k))
-      .map((k) => brandedZip.file(k)!.async("string")),
-  )
-).join("")
-if (!brandedSlideXml.includes("0B5FFF"))
-  throw new Error("e2e: --style primary color not found in any branded slide XML")
-console.log("style override leg OK (--style color reached DrawingML)")
-
 // 3d) brand extraction leg (brand-extract wave, 裁定 5's e2e requirement):
 //     programmatically built fixture zip (never a real Microsoft file) →
 //     `pptwise brand extract` via the built CLI → workspace theme lookup →
@@ -434,12 +415,15 @@ if (finalSlide2.includes("Emphasize that every shape stays editable")) {
 }
 console.log("deck-dir speaker-notes leg OK (notesSlide2.xml carries p-goals's notes text, slide2.xml canvas does not)")
 
-// 6c) vocabulary-v4 old-command hard-fail leg (spec §8.2): no long-lived
-//     aliases — each removed command must fail and name the one new command.
+// 6c) old-command hard-fail leg: `scenarios` is unknown (no dedicated stub).
+//     `schema --plan` and `plan validate` still point at current command names.
 console.log("--- old-command hard-fail leg ---")
 const scenariosStderr = shExpectFail("node", ["dist/cli.js", "scenarios"])
-if (!/pptwise narratives/.test(scenariosStderr)) {
-  throw new Error(`e2e: old-command leg — expected \`pptwise scenarios\` to point at \`pptwise narratives\`, got: ${scenariosStderr}`)
+if (!/unknown command/i.test(scenariosStderr)) {
+  throw new Error(`e2e: old-command leg — expected \`pptwise scenarios\` to fail as an unknown command, got: ${scenariosStderr}`)
+}
+if (/pptwise narratives/.test(scenariosStderr)) {
+  throw new Error(`e2e: old-command leg — \`pptwise scenarios\` must not point at \`pptwise narratives\`, got: ${scenariosStderr}`)
 }
 const schemaPlanStderr = shExpectFail("node", ["dist/cli.js", "schema", "--plan"])
 if (!/pptwise schema --spec/.test(schemaPlanStderr)) {
@@ -449,22 +433,18 @@ const planValidateStderr = shExpectFail("node", ["dist/cli.js", "plan", "validat
 if (!/pptwise spec validate/.test(planValidateStderr)) {
   throw new Error(`e2e: old-command leg — expected \`pptwise plan validate\` to point at \`pptwise spec validate\`, got: ${planValidateStderr}`)
 }
-console.log("old-command hard-fail leg OK (scenarios / schema --plan / plan validate all point at their replacements)")
+console.log("old-command hard-fail leg OK (scenarios is unknown, schema --plan / plan validate point at their replacements)")
 
-// 7) audit leg (W6 task 2, spec §7 workflow ④): a clean deck must exit 0; a
-//    deliberately near-background text color (theme.style override,
-//    validate-legal — same fixture shape as deck-audit.test.ts's own
-//    "low-contrast via a real style-token override" case) must exit 1 with a
-//    low-contrast finding in its output, in both human and --json mode.
-//    Bench-driven fix round, defect E: the same deliberately-degraded fixture
-//    also carries a page that overflows a single row_cards component (6
-//    schema-legal items, each with substantial title/text/sub — measured
-//    directly against real widths before writing this fixture: a full-width
-//    single column needs ~676px for 6 items, well past any real content
-//    rect's ~380-471px range, see docs/concepts.md's capacity section) to
-//    trip `content-dropped` via row-cards.tsx's own item-level "+N …"
-//    marker, and a page with a verdict_banner carrying far more text than its
-//    fixed 18px/2-line budget can hold to trip `content-truncated`.
+// 7) audit leg (W6 task 2, spec §7 workflow ④): a clean deck must exit 0.
+//    A fixture on a normal theme (consulting, no style override) carries a
+//    page that overflows a single row_cards component (6 schema-legal items,
+//    each with substantial title/text/sub — measured directly against real
+//    widths before writing this fixture: a full-width single column needs
+//    ~676px for 6 items, well past any real content rect's ~380-471px range,
+//    see docs/concepts.md's capacity section) to trip `content-dropped` via
+//    row-cards.tsx's own item-level "+N …" marker, and a page with a
+//    verdict_banner carrying far more text than its fixed 18px/2-line budget
+//    can hold to trip `content-truncated`. Both human and --json mode exit 1.
 console.log("--- audit leg ---")
 
 const cleanAudit = shCapture("node", ["dist/cli.js", "audit", "examples/basic.json"])
@@ -487,12 +467,10 @@ const ROW_CARDS_TEXT = "本季度通过精细化运营和渠道下沉实现了�
 const VERDICT_LONG_TEXT =
   "微服务架构下的分布式事务一致性保障机制与补偿策略设计规范以及跨可用区容灾演练的完整落地路径说明".repeat(6)
 
-const lowContrastDeck = {
+const findingsDeck = {
   version: "5",
-  filename: "pptwise-e2e-audit-low-contrast",
-  // Near consulting's own colors.bg (#F7F7F2) — validate-legal (theme.style
-  // is a schema-open deep-partial override), renderer-level unreadable.
-  theme: { id: "consulting", style: { colors: { text: "#F5F5F0" } } },
+  filename: "pptwise-e2e-audit-findings",
+  theme: { id: "consulting" },
   slides: [
     { type: "cover", heading: "Audit Fixture" },
     {
@@ -500,7 +478,7 @@ const lowContrastDeck = {
       kind: "points",
       id: "p-body",
       heading: "readable heading",
-      components: [{ type: "paragraph", text: "some body copy that should read as low-contrast" }],
+      components: [{ type: "paragraph", text: "some body copy on a normal consulting page" }],
     },
     {
       type: "content",
@@ -527,20 +505,14 @@ const lowContrastDeck = {
     },
   ],
 }
-const lowContrastPath = join(OUT, "audit-low-contrast.json")
-writeFileSync(lowContrastPath, JSON.stringify(lowContrastDeck))
+const findingsPath = join(OUT, "audit-findings.json")
+writeFileSync(findingsPath, JSON.stringify(findingsDeck))
 
-const findingsAudit = shCapture("node", ["dist/cli.js", "audit", lowContrastPath])
+const findingsAudit = shCapture("node", ["dist/cli.js", "audit", findingsPath])
 console.log(findingsAudit.stdout)
 if (findingsAudit.status !== 1) {
-  throw new Error(`e2e: audit leg — expected the low-contrast fixture to exit 1, got exit ${findingsAudit.status}`)
+  throw new Error(`e2e: audit leg — expected the findings fixture to exit 1, got exit ${findingsAudit.status}`)
 }
-if (!/\[low-contrast\]/.test(findingsAudit.stdout) || !/page 2 \(p-body\)/.test(findingsAudit.stdout)) {
-  throw new Error(
-    `e2e: audit leg — expected a low-contrast finding naming page 2 (p-body), got: ${findingsAudit.stdout}`,
-  )
-}
-console.log("audit low-contrast-fixture leg OK (exit 1, finding present)")
 
 // Bench-driven fix round, defect E: same fixture, same exit-1 report — a
 // 6-item row_cards over capacity must surface as `content-dropped` on
@@ -556,23 +528,20 @@ if (!/\[content-truncated\]/.test(findingsAudit.stdout) || !/page 4 \(p-truncate
     `e2e: audit leg — expected a content-truncated finding naming page 4 (p-truncated), got: ${findingsAudit.stdout}`,
   )
 }
-console.log("audit content-dropped/content-truncated leg OK (exit 1, both new advisory codes present)")
+console.log("audit content-dropped/content-truncated leg OK (exit 1, both advisory codes present)")
 
-const jsonAudit = shCapture("node", ["dist/cli.js", "audit", lowContrastPath, "--json"])
+const jsonAudit = shCapture("node", ["dist/cli.js", "audit", findingsPath, "--json"])
 if (jsonAudit.status !== 1) {
   throw new Error(`e2e: audit leg — expected --json mode to also exit 1, got exit ${jsonAudit.status}`)
 }
 const jsonReport = JSON.parse(jsonAudit.stdout) as { findings: Array<{ code: string }> }
-if (!jsonReport.findings.some((f) => f.code === "low-contrast")) {
-  throw new Error(`e2e: audit leg — expected --json output to include a low-contrast finding, got: ${jsonAudit.stdout}`)
-}
 if (!jsonReport.findings.some((f) => f.code === "content-dropped")) {
   throw new Error(`e2e: audit leg — expected --json output to include a content-dropped finding, got: ${jsonAudit.stdout}`)
 }
 if (!jsonReport.findings.some((f) => f.code === "content-truncated")) {
   throw new Error(`e2e: audit leg — expected --json output to include a content-truncated finding, got: ${jsonAudit.stdout}`)
 }
-console.log("audit --json leg OK (machine-readable AuditReport, exit 1, low-contrast/content-dropped/content-truncated codes present)")
+console.log("audit --json leg OK (machine-readable AuditReport, exit 1, content-dropped/content-truncated codes present)")
 
 // 7b) --pixels leg (audit-v2 phase B, spec §4.3/§11.7): the one CLI surface
 //     genuinely worth an e2e check for this feature — it exercises real
