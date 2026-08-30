@@ -133,15 +133,6 @@ type MissingMotifId = Exclude<MotifId, (typeof MOTIF_IDS)[number]>
 const MOTIF_IDS_ARE_EXHAUSTIVE: MissingMotifId extends never ? true : never = true
 void MOTIF_IDS_ARE_EXHAUSTIVE
 
-export const SPARSE_LAYOUT_IDS = [
-  "statement",
-  "pull-quote",
-  "verse-chapter",
-  "stat-hero",
-  "one-evidence",
-  "mono-bleed",
-] as const
-
 /** Primitive values a menu may pass to adjustable parameters declared by a face. */
 export const MenuParamValueSchema = z.union([z.string(), z.number().finite(), z.boolean()])
 

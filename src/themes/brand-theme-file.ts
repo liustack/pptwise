@@ -12,26 +12,16 @@ import { ThemeFileSchema, type ThemeFile } from "./schema"
 export const BrandThemeFileSchema = ThemeFileSchema
 export { ThemeFileSchema }
 
-function hasRetiredThemeShape(raw: unknown): boolean {
-  if (typeof raw !== "object" || raw === null || Array.isArray(raw)) return false
-  const value = raw as Record<string, unknown>
-  return value.version === 1 || Object.hasOwn(value, "base") || Object.hasOwn(value, "faces")
-}
-
 /** Parse already decoded JSON as a public v2 theme file. */
 export function parseBrandThemeFile(raw: unknown, source: string): ThemeFile {
-  if (hasRetiredThemeShape(raw)) {
-    throw new PptwiseError(
-      `invalid theme file ${source}: current theme format is version 2 and every file is self-contained. Declare style and menu with cover, chapter, a non-empty content kind subset, and ending entries. The base, faces, tendencies, sparse, and top-level motif fields were removed. No migration tool is provided.`,
-    )
-  }
-
   const result = ThemeFileSchema.safeParse(raw)
   if (!result.success) {
     const detail = result.error.issues
       .map((issue) => `${issue.path.join(".") || "(root)"}: ${issue.message}`)
       .join("\n")
-    throw new PptwiseError(`invalid theme file ${source}:\n${detail}`)
+    throw new PptwiseError(
+      `invalid theme file ${source}: current theme format is version 2 and every file is self-contained.\n${detail}`,
+    )
   }
   return result.data as ThemeFile
 }

@@ -6,7 +6,6 @@ import { contrastRatio } from "../render/ink"
 import { getLayout, type LayoutParamDeclaration } from "../layouts/registry"
 import { REGISTERED_THEMES } from "./registered-themes"
 import {
-  SPARSE_LAYOUT_IDS,
   ThemeFileSchema,
   type BuiltinThemeDeclaration,
   type Menu,
@@ -37,61 +36,9 @@ export interface ThemeDefinition {
   identity?: "low" | "medium" | "high"
   /** The theme's semantic page menu: one face per served kind. Authoritative. */
   menu: Menu
-  /** Transitional curated layout record read by the pre-S1-A renderer.
-   * Derived from `menu` at compile time, never authored. */
-  layouts: Record<Slide["type"], readonly string[]>
   /** One registered motif id. `undefined` means the theme has no motif. */
   motif?: MotifId
   motifParameters?: { intensity?: "subtle" | "normal" }
-  /**
-   * Which sparse climax pins this theme is willing to honour. This is not a
-   * curated auto-pick pool: pinOnly sparse ids never enter `layouts[slideType]`
-   * (`fullLayoutSet` / `excludePinOnly` already drop them), so a list here
-   * does not make `resolveLayoutId` sample them. It is the offer table for
-   * an explicit `slide.layout` pin — the only road that can ever reach a
-   * sparse page.
-   *
-   * **Three shapes, none of them a defaulted array:**
-   * - omitted / `undefined`: this theme offers every id in
-   *   {@link SPARSE_LAYOUT_IDS}. Builtins that have not boarded a face still
-   *   render the generic content face (`sparseFace` miss → `content-*.tsx`).
-   *   Custom themes registered via {@link registerTheme} get the same
-   *   omitted-means-all contract; do not default the field to `[]` or the
-   *   six-id list on the way in (`getThemeDefinition` round-trips the
-   *   registration object).
-   * - `[]`: this theme offers none. An explicit pin of any sparse id warns
-   *   at `validateIr` (`ok` stays true) and render falls back to auto-pick
-   *   from the ordinary content (or chapter, for `verse-chapter`) pool.
-   * - a list: only those ids. A listed id must be one of the six sparse
-   *   ids (`registerTheme` throws {@link PptwiseError} otherwise). It does
-   *   **not** have to sit in `layouts[slideType]` — those pools exclude
-   *   pinOnly members by construction.
-   *
-   * {@link themeOffersSparse} is the only offer check. Renderers must not
-   * branch on theme id. A pin this theme does not offer is stripped
-   * (`effectiveRequestedLayout`) *before* `resolveLayoutId`'s pin
-   * short-circuit, so fallback reuses the existing auto-pick path instead
-   * of teaching selection about this table.
-   */
-  sparseLayouts?: readonly string[]
-}
-
-/**
- * The transitional `layouts` record every pre-S1-A reader still expects,
- * derived from the menu. The menu may legitimately point `photo` at an
- * image takeover, and those ids must not leak into the archetype-only
- * curated pool the old selector samples from.
- */
-function menuLayouts(menu: Menu): Record<Slide["type"], readonly string[]> {
-  const contentFaces = Object.values(menu.content)
-    .filter((entry): entry is MenuEntry => entry !== undefined)
-    .map((entry) => entry.face)
-  return {
-    cover: [menu.cover.face],
-    chapter: [menu.chapter.face],
-    content: [...new Set(contentFaces)].filter((id) => getLayout(id)?.kind === "standard"),
-    ending: [menu.ending.face],
-  }
 }
 
 /**
@@ -111,23 +58,18 @@ function compileBuiltinTheme(file: BuiltinThemeDeclaration): ThemeDefinition {
     occasions: record.occasions,
     identity: record.identity,
     menu: file.menu,
-    layouts: menuLayouts(file.menu),
     motif: file.motif?.id,
     motifParameters: file.motif?.params,
   }
 }
 
-/** The sparse vocabulary is shared with validation and gallery speech. */
-export { SPARSE_LAYOUT_IDS } from "./schema"
-
 export const THEME_DEFINITIONS: Record<CanonicalThemeId, ThemeDefinition> = Object.fromEntries(
   CANONICAL_THEME_IDS.map((id) => [id, compileBuiltinTheme(BUILTIN_THEME_FILES[id])]),
 ) as Record<CanonicalThemeId, ThemeDefinition>
 
-/** Theme brand config + optional IR-level override (shallow merge, override wins). */
-export function resolveBrand(id: string, override?: BrandConfig): BrandConfig {
-  const base = getThemeDefinition(id).brand
-  return override ? { ...base, ...override } : base
+/** Theme brand config from the installed definition. Brand is not overlaid from IR. */
+export function resolveBrand(id: string): BrandConfig {
+  return getThemeDefinition(id).brand
 }
 
 // ── Theme registration seam (W3 task 4, spec §4/roadmap "theme ecosystem")
@@ -290,7 +232,6 @@ function compileThemeFile(file: ThemeFile): ThemeDefinition {
     occasions: file.occasions,
     identity: file.identity,
     menu: file.menu,
-    layouts: menuLayouts(file.menu),
   }
 }
 
@@ -468,44 +409,6 @@ export function getInstalledThemeIds(): readonly string[] {
  */
 export function getThemeDefinition(id: string): ThemeDefinition {
   return REGISTERED_THEMES.get(id) ?? THEME_DEFINITIONS[resolveThemeId(id)]
-}
-
-/**
- * Whether `themeId` is willing to honour an explicit pin of `layoutId` as a
- * sparse climax page. Reads the definition via {@link getThemeDefinition} so
- * a registered custom theme participates the same way as a builtin.
- *
- * - `layoutId` not in {@link SPARSE_LAYOUT_IDS}: `false`
- * - `sparseLayouts` omitted / `undefined`: `true` (offers all six)
- * - `sparseLayouts` is `[]`: `false`
- * - otherwise `sparseLayouts.includes(layoutId)`
- *
- * The only offer check. Do not put theme-id switches in renderers.
- */
-export function themeOffersSparse(themeId: string, layoutId: string): boolean {
-  if (!(SPARSE_LAYOUT_IDS as readonly string[]).includes(layoutId)) return false
-  const offered = getThemeDefinition(themeId).sparseLayouts
-  if (offered === undefined) return true
-  return offered.includes(layoutId)
-}
-
-/**
- * Strip an unoffered sparse pin to `undefined` so `resolveLayoutId`'s pin
- * short-circuit does not fire and auto-pick runs on the ordinary content /
- * chapter pool. Non-sparse pins (including takeovers) and offered sparse
- * pins pass through unchanged. Shared by `resolveOneEffectiveLayoutId` and
- * `FullSlideSvg`'s `resolvePageLayout` wrapper so validate and render cannot
- * drift. Not exported from `src/index.ts`.
- */
-export function effectiveRequestedLayout(themeId: string, requested: string | undefined): string | undefined {
-  if (
-    requested !== undefined &&
-    (SPARSE_LAYOUT_IDS as readonly string[]).includes(requested) &&
-    !themeOffersSparse(themeId, requested)
-  ) {
-    return undefined
-  }
-  return requested
 }
 
 /**
