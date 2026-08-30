@@ -1875,7 +1875,7 @@ describe("registerTheme end-to-end (W3 task 4)", () => {
     // distinctive primary color from the registered theme's own style tokens
     expect(svg).toContain("#123ABC")
     // respects the registered theme's narrow (single-entry) curated cover layout
-    expect(svg).toContain('data-archetype="poster-center"')
+    expect(svg).toContain('data-face="poster-center"')
   })
 
   it("validateIr accepts a registered theme id and still rejects an unknown id with the enlarged available list", () => {

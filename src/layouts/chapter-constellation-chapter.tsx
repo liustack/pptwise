@@ -142,7 +142,7 @@ export const layoutDef: LayoutDefinition = {
   // chapter-constellation-chapter.tsx: left opaque accent chapter number
   // (watermark), right-aligned heading + subheading, bottom hairline.
   id: "constellation-chapter",
-  kind: "archetype",
+  kind: "standard",
   slideTypes: ["chapter"],
   slots: [
     { name: "watermark", accepts: [] },

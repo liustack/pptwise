@@ -605,7 +605,7 @@ describe("a menu may name a pinOnly face", () => {
   beforeEach(() => {
     LAYOUT_REGISTRY[PIN_ONLY_TEST_ID] = {
       id: PIN_ONLY_TEST_ID,
-      kind: "archetype",
+      kind: "standard",
       slideTypes: ["content"],
       slots: [],
       pinOnly: true,

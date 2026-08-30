@@ -167,7 +167,7 @@ export const layoutDef = {
   // Page decor and branding posture belong to the menu entry. The whole page
   // is intentionally sparse.
   id: "pull-quote",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["content"],
   slots: [

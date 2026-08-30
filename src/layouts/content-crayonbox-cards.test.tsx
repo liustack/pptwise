@@ -167,7 +167,7 @@ describe("content-crayonbox-cards", () => {
   it("declares a pin-only full-density layout and exports safe primitives", () => {
     expect(layoutDef).toMatchObject({
       id: "crayonbox-cards",
-      kind: "archetype",
+      kind: "standard",
       pinOnly: true,
       slideTypes: ["content"],
       arrangements: "all",

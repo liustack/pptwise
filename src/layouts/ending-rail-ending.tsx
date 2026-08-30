@@ -251,7 +251,7 @@ export const layoutDef: LayoutDefinition = {
   // Cover's rect motif), org kicker, heading ("Thank you"), subheading,
   // hairline + "Contact" contact section + copyright line (all meta).
   id: "rail-ending",
-  kind: "archetype",
+  kind: "standard",
   slideTypes: ["ending"],
   slots: [
     { name: "decor", accepts: [] },

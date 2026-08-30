@@ -147,7 +147,7 @@ describe("cover-verdict-index — emphasis and bullets", () => {
 describe("cover-verdict-index — shared pool", () => {
   it("is registered for cover only, as an archetype", () => {
     expect(layoutDef.id).toBe("verdict-index")
-    expect(layoutDef.kind).toBe("archetype")
+    expect(layoutDef.kind).toBe("standard")
     expect(layoutDef.slideTypes).toEqual(["cover"])
     expect(layoutDef.params?.verdictTitleY).toEqual({
       type: "number",

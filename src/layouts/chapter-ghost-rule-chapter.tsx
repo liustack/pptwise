@@ -121,7 +121,7 @@ export const layoutDef: LayoutDefinition = {
   // Ghost numeral sinks to the lower right inside the canvas. Accent bar
   // starts the title cluster. Theme paints the chapter field.
   id: "ghost-rule-chapter",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["chapter"],
   slots: [

@@ -159,7 +159,7 @@ export function GaugeNextEnding({ ir, slide, ctx }: SvgTemplateProps) {
 export const layoutDef: LayoutDefinition = {
   branding: "none",
   id: "gauge-next",
-  kind: "archetype",
+  kind: "standard",
   slideTypes: ["ending"],
   slots: [
     { name: "kicker", accepts: [] },

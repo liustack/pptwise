@@ -198,7 +198,7 @@ export const layoutDef: LayoutDefinition = {
   // closing rule, optional subheading sign-off. No thank-you and no
   // invented resolution number. Optional bullets fill the list.
   id: "resolution-ending",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["ending"],
   slots: [

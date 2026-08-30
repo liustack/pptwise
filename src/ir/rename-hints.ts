@@ -58,6 +58,22 @@ const RENAME_HINTS: Readonly<Record<string, RenameHint>> = {
     at: (path) => path === "",
     hint: '"chrome" was renamed to "branding"',
   },
+  layout: {
+    at: SLIDE_LEVEL,
+    hint: '"layout" was removed — a content page declares its "kind" and the bound theme\'s menu picks the face',
+  },
+  arrangement: {
+    at: SLIDE_LEVEL,
+    hint: '"arrangement" was removed — the face lays its body out from the components it is given',
+  },
+  beat: {
+    at: SLIDE_LEVEL,
+    hint: '"beat" was replaced by "kind" — declare one of the content kinds (run `pptwise schema` for the list)',
+  },
+  seed: {
+    at: (path) => path === "",
+    hint: '"seed" was removed — face lookup is deterministic, the same deck always renders the same way',
+  },
 }
 
 /**

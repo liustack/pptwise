@@ -186,7 +186,7 @@ export const layoutDef: LayoutDefinition = {
   // newline-split heading, border rule, optional subheading. No thank-you
   // and no invented homework.
   id: "next-lecture-ending",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["ending"],
   slots: [

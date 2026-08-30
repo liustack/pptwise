@@ -113,7 +113,7 @@ export const layoutDef = {
   // (chart / table / image / whatever pickEvidence returns, else the sole
   // component). Page decor and branding posture belong to the menu entry.
   id: "one-evidence",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["content"],
   slots: [

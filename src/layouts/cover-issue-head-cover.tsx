@@ -271,7 +271,7 @@ export const layoutDef = {
   // rules at y148/156, lead type, foot rule and colophon. No accent.
   // Empty heading draws no title. pinOnly.
   id: "issue-head-cover",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["cover"],
   slots: [

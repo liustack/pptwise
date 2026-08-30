@@ -166,7 +166,7 @@ export const layoutDef = {
   // Empty heading does not fall back to a thank-you. Empty components draw
   // no preview list.
   id: "signoff-ending",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   paintsOwnBackground: true,
   slideTypes: ["ending"],

@@ -142,7 +142,7 @@ export const layoutDef = {
   // CJK 其 + numeral, Latin roman. Short border rule under the title.
   // Motif yields. Empty heading invents no chapter title.
   id: "gilt-ordinal-chapter",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["chapter"],
   slots: [

@@ -228,11 +228,11 @@ export const layoutDef: LayoutDefinition = {
   // bottom-left byline row. Content stays left of x1180 — the right edge is
   // reserved for a side-rail colophon a theme's motif may draw there.
   //
-  // `kind: "archetype"` is the standard tier's fossilized spelling (see
+  // `kind: "standard"` is the standard tier's fossilized spelling (see
   // `LayoutDefinition.kind`'s own doc comment) — kept at its current value,
   // renaming it is a golden-fixture change of its own.
   id: "colophon",
-  kind: "archetype",
+  kind: "standard",
   slideTypes: ["cover"],
   slots: [
     { name: "decor", accepts: [] },

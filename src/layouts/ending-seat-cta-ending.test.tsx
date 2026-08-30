@@ -122,7 +122,7 @@ describe("ending-seat-cta-ending — board geometry", () => {
 describe("ending-seat-cta-ending — shared pool", () => {
   it("is a pinOnly ending archetype", () => {
     expect(layoutDef.id).toBe("seat-cta-ending")
-    expect(layoutDef.kind).toBe("archetype")
+    expect(layoutDef.kind).toBe("standard")
     expect(layoutDef.pinOnly).toBe(true)
     expect(layoutDef.slideTypes).toEqual(["ending"])
   })

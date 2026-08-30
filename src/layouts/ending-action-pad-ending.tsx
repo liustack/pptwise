@@ -209,7 +209,7 @@ export const layoutDef: LayoutDefinition = {
   // ending-action-pad-ending.tsx: pinOnly next-step list, accent pad CTA,
   // foot rule and sign-off. No thank-you. Optional bullets fill the list.
   id: "action-pad-ending",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["ending"],
   slots: [

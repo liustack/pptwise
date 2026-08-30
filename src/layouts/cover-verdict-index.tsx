@@ -285,7 +285,7 @@ export const layoutDef: LayoutDefinition = {
   // the emphasized run, up to three numbered short arguments from the first
   // bullets component. Empty components draw no preview columns.
   id: "verdict-index",
-  kind: "archetype",
+  kind: "standard",
   slideTypes: ["cover"],
   params: {
     verdictTitleY: { type: "number", min: 180, max: 480 },

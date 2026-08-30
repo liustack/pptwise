@@ -127,7 +127,7 @@ export const layoutDef = {
   // Centered 120px title (no typeScale), act label + subheading as a
   // muted footnote. No decor. Empty heading invents no 性能.
   id: "one-word-chapter",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["chapter"],
   slots: [

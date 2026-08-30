@@ -90,7 +90,7 @@ describe("theme-menu layout lookup", () => {
     })
 
     const { container } = render(<FullSlideSvg ir={ir} slide={slide} index={0} />)
-    expect(container.querySelector("[data-archetype]")?.getAttribute("data-archetype")).toBe("bento-panel")
+    expect(container.querySelector("[data-face]")?.getAttribute("data-face")).toBe("bento-panel")
   })
 
   it("combines pacing with the capacity declared by the menu-selected face", () => {
@@ -145,7 +145,7 @@ describe("theme-menu layout lookup", () => {
     })
 
     const { container } = render(<FullSlideSvg ir={ir} slide={slide} index={0} />)
-    expect(container.querySelector("[data-archetype]")).toBeNull()
+    expect(container.querySelector("[data-face]")).toBeNull()
     expect(container.querySelector("image")?.getAttribute("href")).toContain("data:image/png")
   })
 

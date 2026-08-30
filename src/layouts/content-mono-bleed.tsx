@@ -29,7 +29,7 @@ export const layoutDef = {
   // FullSlideSvg does not paint the theme bg underneath. Page decor and
   // branding posture belong to the menu entry.
   id: "mono-bleed",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   paintsOwnBackground: true,
   slideTypes: ["content"],

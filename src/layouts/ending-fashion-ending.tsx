@@ -171,7 +171,7 @@ export const layoutDef: LayoutDefinition = {
   // giant heading ("Thank you"), accent band rule, subheading, org/date
   // meta line.
   id: "fashion-ending",
-  kind: "archetype",
+  kind: "standard",
   paintsOwnBackground: true,
   slideTypes: ["ending"],
   slots: [

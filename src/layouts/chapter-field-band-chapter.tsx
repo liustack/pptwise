@@ -144,7 +144,7 @@ export const layoutDef = {
   // "part" kicker, left inverted title. Zero decoration. Motif recedes.
   // Empty heading draws no title.
   id: "field-band-chapter",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   paintsOwnBackground: true,
   slideTypes: ["chapter"],

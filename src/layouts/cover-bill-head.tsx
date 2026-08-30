@@ -222,7 +222,7 @@ export const layoutDef: LayoutDefinition = {
   // split footer (org left, venue/subheading right), cover date chip as
   // foreground. Event-bill grammar. Motif is empty.
   id: "bill-head",
-  kind: "archetype",
+  kind: "standard",
   slideTypes: ["cover"],
   slots: [
     { name: "heading", accepts: [] },

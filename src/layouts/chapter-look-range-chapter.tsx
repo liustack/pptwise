@@ -175,7 +175,7 @@ export const layoutDef = {
   // title, optional **emphasis** on the subtitle, foot border rule. pinOnly.
   // Does not invent a look range. Empty heading draws no title.
   id: "look-range-chapter",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["chapter"],
   slots: [

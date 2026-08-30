@@ -304,15 +304,15 @@ export interface LayoutDefinition {
   /**
    * The standard tier vs. the 4 page-level image takeovers.
    *
-   * `"archetype"` is the standard tier's fossilized spelling. The two words
+   * `"standard"` is the standard tier's fossilized spelling. The two words
    * merged into one vocabulary — a layout is the registry entry plus the JSX
    * that draws it — but this literal is serialized into
-   * `__fixtures__/pre-migration-layout-registry.json`, which
+   * `__fixtures__/layout-registry.golden.json`, which
    * `registry.migration-guard.test.ts` deep-equals against the live registry,
    * so renaming it to `"standard"` means re-recording a golden fixture. That
    * belongs in its own change, not in a rename.
    */
-  kind: "archetype" | "takeover"
+  kind: "standard" | "takeover"
   slideTypes: readonly SlideType[]
   slots: readonly LayoutSlot[]
   /**
@@ -781,7 +781,7 @@ const TAKEOVER_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
 }
 
 /** All 130 standard layouts and 4 takeover layouts, 134 entries keyed by id.
- *  `kind` still spells the standard tier `"archetype"`, a wire-format fossil. See
+ *  `kind` still spells the standard tier `"standard"`, a wire-format fossil. See
  *  {@link LayoutDefinition.kind}. */
 export const LAYOUT_REGISTRY: Record<string, LayoutDefinition> = {
   ...COVER_LAYOUT_DEFS,

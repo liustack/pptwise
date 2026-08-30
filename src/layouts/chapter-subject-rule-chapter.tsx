@@ -145,7 +145,7 @@ export const layoutDef = {
   // primary rule, left title. The rule is a structural mark, not a card
   // edge. Motif yields. Theme paints the mint paper.
   id: "subject-rule-chapter",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["chapter"],
   slots: [

@@ -124,7 +124,7 @@ describe("chapter-seal-numeral-chapter — board geometry", () => {
 describe("chapter-seal-numeral-chapter — shared pool", () => {
   it("is registered as a pinOnly chapter layout", () => {
     expect(layoutDef.id).toBe("seal-numeral-chapter")
-    expect(layoutDef.kind).toBe("archetype")
+    expect(layoutDef.kind).toBe("standard")
     expect(layoutDef.pinOnly).toBe(true)
     expect(layoutDef.slideTypes).toEqual(["chapter"])
     expect("paintsOwnBackground" in layoutDef).toBe(false)

@@ -153,7 +153,7 @@ export const layoutDef = {
   // left title, no frame, no tick, no rule. Empty heading invents no hall
   // name. Copper gold is the hall label only.
   id: "hall-label-chapter",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["chapter"],
   slots: [

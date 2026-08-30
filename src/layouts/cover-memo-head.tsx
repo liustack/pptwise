@@ -217,7 +217,7 @@ export const layoutDef: LayoutDefinition = {
   // accent double rules, serif heading with last-run underline, FROM/RE
   // typewriter footer. Decision-memo grammar.
   id: "memo-head",
-  kind: "archetype",
+  kind: "standard",
   slideTypes: ["cover"],
   slots: [
     { name: "kicker", accepts: [] },

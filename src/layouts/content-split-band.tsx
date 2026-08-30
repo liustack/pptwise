@@ -342,7 +342,7 @@ export const layoutDef: LayoutDefinition = {
   // (not assumed) against the same zero-drop bar via the capacity
   // measurement above, so no `audit/capacity.ts` floor needs tightening.
   id: "split-band",
-  kind: "archetype",
+  kind: "standard",
   slideTypes: ["content"],
   slots: [
     { name: "kicker", accepts: [] },

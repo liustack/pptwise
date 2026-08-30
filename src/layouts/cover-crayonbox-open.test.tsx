@@ -138,7 +138,7 @@ describe("cover-crayonbox-open", () => {
   it("declares a pin-only motif-suppressing cover and exports safe primitives", () => {
     expect(layoutDef).toMatchObject({
       id: "crayonbox-open",
-      kind: "archetype",
+      kind: "standard",
       pinOnly: true,
       slideTypes: ["cover"],
     })

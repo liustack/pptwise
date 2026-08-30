@@ -68,7 +68,7 @@ describe("cover-horizon-wedge — board geometry", () => {
 describe("cover-horizon-wedge — shared pool", () => {
   it("is registered for cover only, as an archetype", () => {
     expect(layoutDef.id).toBe("horizon-wedge")
-    expect(layoutDef.kind).toBe("archetype")
+    expect(layoutDef.kind).toBe("standard")
     expect(layoutDef.slideTypes).toEqual(["cover"])
   })
 

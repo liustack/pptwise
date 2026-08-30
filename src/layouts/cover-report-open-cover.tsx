@@ -186,7 +186,7 @@ export const layoutDef = {
   // Motif owns the mid-page heartbeat. Empty heading draws no title.
   // Missing date/authors skips the sign-off. No invented privacy line.
   id: "report-open-cover",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["cover"],
   slots: [

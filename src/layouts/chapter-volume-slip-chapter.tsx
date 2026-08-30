@@ -166,7 +166,7 @@ export const layoutDef: LayoutDefinition = {
   // title, one ink stroke under the title cluster. CJK volume is per-glyph
   // vertical. Empty heading draws no title and no stroke.
   id: "volume-slip-chapter",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["chapter"],
   slots: [

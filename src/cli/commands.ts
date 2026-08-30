@@ -779,8 +779,16 @@ export async function runSpecValidate(specPath: string): Promise<string> {
   // expression successfully as part of its own hard-gate chain.
   const axes = resolveNarrative(spec.narrative as string | Partial<NarrativeProfile> | undefined)
   const ok = `OK — ${spec.pages.length} pages, narrative ${axes.strategy}/${axes.pacing}/${axes.audience}, theme "${resolveSpecThemeId(spec)}"`
+  const lines = [ok]
+  // Advisory findings (kind distribution and friends) ride the OK output the
+  // same way `runValidate` prints IR warnings — computing a lint nobody can
+  // see is the same as not having it.
+  for (const w of v.warnings ?? []) {
+    lines.push(`warning: ${w.path ? `${w.path}: ` : ""}${w.message}`)
+  }
   const aliasNote = normalizedNote(v.normalized)
-  return aliasNote ? `${ok}\n${aliasNote}` : ok
+  if (aliasNote) lines.push(aliasNote)
+  return lines.join("\n")
 }
 
 /** `mode` selects which JSON Schema to print (`pptwise schema [--style|--spec]`,

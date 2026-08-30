@@ -160,7 +160,7 @@ export const layoutDef = {
   // vertical mark plus ROUND nn kicker, left title, HUD foot rule.
   // Motif yields on chapter. Empty heading invents no section name.
   id: "round-mark-chapter",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["chapter"],
   slots: [

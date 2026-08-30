@@ -163,7 +163,7 @@ export const layoutDef = {
   // optional muted subheading, bottom-right ghost index inside the canvas.
   // The theme-menu entry owns brand silence so the default br logo does not eat the ghost. pinOnly.
   id: "ghost-section-chapter",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["chapter"],
   slots: [

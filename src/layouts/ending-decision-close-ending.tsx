@@ -206,7 +206,7 @@ export const layoutDef: LayoutDefinition = {
   // as the two lines, border rule, optional multi-line subheading sign-off.
   // No thank-you and no invented departments. Red is never a fill.
   id: "decision-close-ending",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["ending"],
   slots: [

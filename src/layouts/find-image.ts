@@ -14,7 +14,22 @@ import type { Component, Slide } from "@/ir"
  * implementation below keeps "component" terminology internally.
  */
 export function findImageComponent(slide: Slide): Extract<Component, { type: "image" }> | undefined {
-  return slide.components.find(
-    (component): component is Extract<Component, { type: "image" }> => component.type === "image",
-  )
+  for (const component of slide.components) {
+    if (component.type === "image") return component
+    // A photo-kind page may carry any member of the image family. A takeover
+    // face draws exactly one picture, so it anchors on the family member's
+    // primary asset instead of rendering a blank page (menu-model review
+    // BLOCKER B1).
+    if (component.type === "image_grid" && component.items.length > 0) {
+      const first = component.items[0]!
+      return { type: "image", asset_id: first.asset_id, fit: "cover", caption: first.caption }
+    }
+    if (component.type === "image_compare") {
+      return { type: "image", asset_id: component.left.asset_id, fit: "cover", caption: component.left.label }
+    }
+    if (component.type === "device_mockup") {
+      return { type: "image", asset_id: component.asset_id, fit: "cover", caption: component.caption }
+    }
+  }
+  return undefined
 }

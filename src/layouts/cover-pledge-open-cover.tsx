@@ -160,7 +160,7 @@ export const layoutDef = {
   // Org kicker, **emphasis** in primary, date at the foot. Motif owns the
   // contour lines. Empty heading draws no title. Missing date skips the foot.
   id: "pledge-open-cover",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["cover"],
   slots: [

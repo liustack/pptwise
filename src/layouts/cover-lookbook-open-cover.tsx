@@ -226,7 +226,7 @@ export const layoutDef = {
   // rule, left display title at 96px, season/date, crimson folio. pinOnly.
   // Empty heading draws no title. No motif, no vertical year.
   id: "lookbook-open-cover",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["cover"],
   slots: [

@@ -223,7 +223,7 @@ export const layoutDef = {
   // yields on cover. Empty heading draws no title. Missing org skips the
   // red-head line, not a fake agency name.
   id: "red-head-cover",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["cover"],
   slots: [

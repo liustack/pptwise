@@ -178,7 +178,7 @@ export const layoutDef = {
   // readableOn ink. Empty heading invents no date-and-place sentence and
   // draws no rule. Theme ending paper stays light.
   id: "invite-field-ending",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   paintsOwnBackground: true,
   slideTypes: ["ending"],

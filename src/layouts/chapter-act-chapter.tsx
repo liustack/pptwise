@@ -128,7 +128,7 @@ export const layoutDef = {
   // clamp the act kicker. Centered heading and optional subheading.
   // No body slot. The theme-menu entry owns brand silence because the canvas belongs to the face.
   id: "act-chapter",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["chapter"],
   slots: [

@@ -193,7 +193,7 @@ export const layoutDef: LayoutDefinition = {
   // org kicker, accent signature block bottom-left, two-line byline
   // bottom-right. Institutional-report cover grammar.
   id: "institutional-block",
-  kind: "archetype",
+  kind: "standard",
   slideTypes: ["cover"],
   slots: [
     { name: "kicker", accepts: [] },

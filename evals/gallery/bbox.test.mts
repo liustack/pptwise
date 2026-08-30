@@ -121,7 +121,7 @@ describe("classify", () => {
 
 describe("layoutOf", () => {
   it("reads the layout id back out of the rendered markup", () => {
-    expect(layoutOf(`<svg><g data-archetype="rail-chapter"><text/></g></svg>`)).toBe("rail-chapter")
+    expect(layoutOf(`<svg><g data-face="rail-chapter"><text/></g></svg>`)).toBe("rail-chapter")
   })
 
   it("is empty for an image-takeover page, which draws no layout wrapper", () => {

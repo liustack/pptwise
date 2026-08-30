@@ -351,7 +351,7 @@ export const layoutDef: LayoutDefinition = {
   // subheading, SvgContent body (arrangement passed through), italic footnote
   // (meta).
   id: "rail-numbered",
-  kind: "archetype",
+  kind: "standard",
   slideTypes: ["content"],
   slots: [
     { name: "rail", accepts: [] },

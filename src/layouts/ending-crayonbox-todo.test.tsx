@@ -130,7 +130,7 @@ describe("ending-crayonbox-todo", () => {
     ])
     expect(layoutDef).toMatchObject({
       id: "crayonbox-todo",
-      kind: "archetype",
+      kind: "standard",
       pinOnly: true,
       slideTypes: ["ending"],
     })

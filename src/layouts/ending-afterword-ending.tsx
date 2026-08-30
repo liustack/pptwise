@@ -197,7 +197,7 @@ export const layoutDef: LayoutDefinition = {
   // ending-afterword-ending.tsx: AFTERWORD kicker, two-line close from
   // heading, foot rule, next-issue preview from subheading. No thank-you.
   id: "afterword-ending",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["ending"],
   slots: [

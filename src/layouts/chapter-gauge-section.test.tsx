@@ -108,7 +108,7 @@ describe("chapter-gauge-section", () => {
   it("declares a theme-locked pinOnly self-painted chapter with no shared footer", () => {
     expect(layoutDef).toMatchObject({
       id: "gauge-section",
-      kind: "archetype",
+      kind: "standard",
       slideTypes: ["chapter"],
       paintsOwnBackground: true,
     })

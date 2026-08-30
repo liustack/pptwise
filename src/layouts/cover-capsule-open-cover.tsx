@@ -174,7 +174,7 @@ export const layoutDef = {
   // date line (not a pill). Motif owns the sun. Empty heading draws no
   // title. No header band.
   id: "capsule-open-cover",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["cover"],
   slots: [

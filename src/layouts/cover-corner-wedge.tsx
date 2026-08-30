@@ -277,7 +277,7 @@ export const layoutDef: LayoutDefinition = {
   // from menu face parameters. Overlay always on. Inner band only when both
   // wedgeInnerStartX and wedgeInnerPeakY are set.
   id: "corner-wedge",
-  kind: "archetype",
+  kind: "standard",
   slideTypes: ["cover"],
   params: {
     wedgePeakY: { type: "number", min: 160, max: 500 },

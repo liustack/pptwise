@@ -19,7 +19,7 @@ describe("LAYOUT_REGISTRY count guard", () => {
   it("pins the registry, standard-layout, and takeover totals", () => {
     expect(definitions, COUNT_DRIFT_MESSAGE).toHaveLength(134)
     expect(
-      definitions.filter((definition) => definition.kind === "archetype"),
+      definitions.filter((definition) => definition.kind === "standard"),
       COUNT_DRIFT_MESSAGE,
     ).toHaveLength(130)
     expect(
@@ -40,7 +40,7 @@ describe("LAYOUT_REGISTRY count guard", () => {
       SLIDE_TYPES.map((slideType) => {
         const registered = definitions.filter((definition) => definition.slideTypes.includes(slideType))
         const autoSelectable = registered.filter(
-          (definition) => definition.kind === "archetype" && definition.pinOnly !== true,
+          (definition) => definition.kind === "standard" && definition.pinOnly !== true,
         )
         return [slideType, { registered: registered.length, autoSelectable: autoSelectable.length }]
       }),

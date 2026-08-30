@@ -1071,7 +1071,7 @@ export const layoutDef: LayoutDefinition = {
   // inventory's own finding predates the W2 task 3 field rename). Italic
   // footnote (meta).
   id: "bento-panel",
-  kind: "archetype",
+  kind: "standard",
   slideTypes: ["content"],
   slots: [
     { name: "kicker", accepts: [] },

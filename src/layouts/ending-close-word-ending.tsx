@@ -111,7 +111,7 @@ export const layoutDef = {
   // only on **emphasis**, footer from subheading or org/author. No thank-you
   // fallback. Bottom ticker belongs to the motif. pinOnly.
   id: "close-word-ending",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["ending"],
   slots: [

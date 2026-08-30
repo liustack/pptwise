@@ -177,7 +177,7 @@ export const layoutDef = {
   // subtitle sits between them. CJK 卷 + numeral, Latin VOL. N. Theme
   // paints the chapter field.
   id: "mirror-volume-chapter",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["chapter"],
   slots: [

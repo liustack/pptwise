@@ -113,7 +113,7 @@ describe("ending-window-close-ending — board geometry", () => {
 describe("ending-window-close-ending — shared pool", () => {
   it("is a pinOnly ending that paints its own background", () => {
     expect(layoutDef.id).toBe("window-close-ending")
-    expect(layoutDef.kind).toBe("archetype")
+    expect(layoutDef.kind).toBe("standard")
     expect(layoutDef.pinOnly).toBe(true)
     expect(layoutDef.paintsOwnBackground).toBe(true)
     expect(layoutDef.slideTypes).toEqual(["ending"])

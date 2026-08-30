@@ -108,7 +108,7 @@ export function GaugeSectionChapter({ ir, slide, index, ctx }: SvgTemplateProps)
 export const layoutDef: LayoutDefinition = {
   branding: "none",
   id: "gauge-section",
-  kind: "archetype",
+  kind: "standard",
   paintsOwnBackground: true,
   slideTypes: ["chapter"],
   slots: [

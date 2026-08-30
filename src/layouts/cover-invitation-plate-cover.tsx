@@ -219,7 +219,7 @@ export const layoutDef = {
   // Gold title on the theme paper. Motif owns the double gilt frame.
   // Empty heading invents no invitation line and skips the short rule.
   id: "invitation-plate-cover",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["cover"],
   slots: [

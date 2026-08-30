@@ -147,7 +147,7 @@ export const layoutDef = {
   // draws the double rule. Empty heading invents no issue name. Red is
   // never a fill.
   id: "issue-line-chapter",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["chapter"],
   slots: [

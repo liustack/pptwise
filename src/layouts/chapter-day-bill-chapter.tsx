@@ -145,7 +145,7 @@ export const layoutDef = {
   // title at 130px unscaled, muted sub. No chip, no corner mark. Empty
   // heading invents no show name.
   id: "day-bill-chapter",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["chapter"],
   slots: [

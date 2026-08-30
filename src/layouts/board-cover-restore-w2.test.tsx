@@ -74,7 +74,7 @@ describe("board-cover-restore wave 2 — locked cover faces", () => {
     expect(THEME_DEFINITIONS[id].menu.cover.face).toBe(face)
     const doc = materializedIr(id)
     const { container } = render(<FullSlideSvg ir={doc} slide={COVER} index={0} />)
-    expect(container.querySelector("[data-archetype]")?.getAttribute("data-archetype")).toBe(face)
+    expect(container.querySelector("[data-face]")?.getAttribute("data-face")).toBe(face)
     const decor = container.querySelector("[data-decor]")
     const menuDecor = getThemeDefinition(doc.theme.id).menu.cover.decor
     const expected = expectedDecor(id, "cover")
@@ -127,7 +127,7 @@ describe("wave 8 batch 2 — locked cover / chapter / ending faces", () => {
     } as PptxIR
     const index = type === "chapter" ? 1 : 0
     const { container } = render(<FullSlideSvg ir={doc} slide={slide} index={index} />)
-    expect(container.querySelector("[data-archetype]")?.getAttribute("data-archetype")).toBe(face)
+    expect(container.querySelector("[data-face]")?.getAttribute("data-face")).toBe(face)
     expect(getThemeDefinition(doc.theme.id).menu[type].decor).toEqual(expectedDecor(id, type))
   })
 })
@@ -168,7 +168,7 @@ describe("wave 8 batch 3 — locked cover / chapter / ending faces", () => {
     } as PptxIR
     const index = type === "chapter" ? 1 : 0
     const { container } = render(<FullSlideSvg ir={doc} slide={slide} index={index} />)
-    expect(container.querySelector("[data-archetype]")?.getAttribute("data-archetype")).toBe(face)
+    expect(container.querySelector("[data-face]")?.getAttribute("data-face")).toBe(face)
     expect(getThemeDefinition(doc.theme.id).menu[type].decor).toEqual(expectedDecor(id, type))
   })
 })
@@ -209,7 +209,7 @@ describe("wave 8 batch 4 — locked cover / chapter / ending faces", () => {
     } as PptxIR
     const index = type === "chapter" ? 1 : 0
     const { container } = render(<FullSlideSvg ir={doc} slide={slide} index={index} />)
-    expect(container.querySelector("[data-archetype]")?.getAttribute("data-archetype")).toBe(face)
+    expect(container.querySelector("[data-face]")?.getAttribute("data-face")).toBe(face)
     expect(getThemeDefinition(doc.theme.id).menu[type].decor).toEqual(expectedDecor(id, type))
   })
 })

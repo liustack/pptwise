@@ -174,7 +174,7 @@ export const layoutDef = {
   // accent rule under the title cluster, org/date foot. No thank-you
   // and no invented 看完了.
   id: "exit-word-ending",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["ending"],
   slots: [

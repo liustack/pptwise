@@ -125,7 +125,7 @@ export const layoutDef: LayoutDefinition = {
   // title, small lower-right wedge. pinOnly board lock. The theme-menu entry owns brand silence so
   // the wedge keeps the corner.
   id: "ember-index-chapter",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["chapter"],
   slots: [

@@ -140,7 +140,7 @@ export const layoutDef = {
   // index, left-aligned title under the box. Notebook rules belong to
   // the motif. Theme paints the chapter paper.
   id: "lesson-box-chapter",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["chapter"],
   slots: [

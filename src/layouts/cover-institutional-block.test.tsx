@@ -83,7 +83,7 @@ describe("cover-institutional-block — board geometry", () => {
 describe("cover-institutional-block — shared pool", () => {
   it("is registered for cover only, as an archetype", () => {
     expect(layoutDef.id).toBe("institutional-block")
-    expect(layoutDef.kind).toBe("archetype")
+    expect(layoutDef.kind).toBe("standard")
     expect(layoutDef.slideTypes).toEqual(["cover"])
     for (const s of layoutDef.slots) expect(s.accepts).toEqual([])
   })

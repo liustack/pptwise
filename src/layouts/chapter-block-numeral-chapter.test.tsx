@@ -107,7 +107,7 @@ describe("chapter-block-numeral-chapter — board geometry", () => {
 describe("chapter-block-numeral-chapter — shared pool", () => {
   it("is registered as a pinOnly chapter layout", () => {
     expect(layoutDef.id).toBe("block-numeral-chapter")
-    expect(layoutDef.kind).toBe("archetype")
+    expect(layoutDef.kind).toBe("standard")
     expect(layoutDef.pinOnly).toBe(true)
     expect(layoutDef.slideTypes).toEqual(["chapter"])
   })

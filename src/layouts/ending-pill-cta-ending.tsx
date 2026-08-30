@@ -153,7 +153,7 @@ export const layoutDef = {
   // optional subheading, accent capsule CTA from the first bullets item.
   // Empty components draw no pill and invent no thank-you. The theme-menu entry owns brand silence.
   id: "pill-cta-ending",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["ending"],
   slots: [

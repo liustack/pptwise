@@ -89,7 +89,7 @@ function menuLayouts(menu: Menu): Record<Slide["type"], readonly string[]> {
   return {
     cover: [menu.cover.face],
     chapter: [menu.chapter.face],
-    content: [...new Set(contentFaces)].filter((id) => getLayout(id)?.kind === "archetype"),
+    content: [...new Set(contentFaces)].filter((id) => getLayout(id)?.kind === "standard"),
     ending: [menu.ending.face],
   }
 }

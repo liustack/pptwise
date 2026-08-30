@@ -186,7 +186,7 @@ export function ShowPlateChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
 export const layoutDef = {
   suppressMotif: true,
   id: "show-plate",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["chapter"],
   slots: [

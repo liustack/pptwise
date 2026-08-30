@@ -281,11 +281,17 @@ function fitThemeLead(themeId: string, slotIndex: number, component: Component):
 
 /** The body slot's declared capacity, or a safe default when it has none. */
 function bodyCapacity(def: LayoutDefinition): number {
-  const counted = def.slots.filter((s) => typeof s.capacity === "number")
-  if (counted.length === 0) return 2
-  // A declared 0 is a real value (mono-bleed's body slot accepts nothing) —
-  // clamping it up to 1 authors a page validate-core rejects outright.
-  return Math.max(0, Math.min(...counted.map((s) => s.capacity!)))
+  // Only the body slot governs how many stacked components the corpus may
+  // author — an auxiliary slot's own ceiling (asymmetric-triptych's lead is
+  // capacity 1) must not drag the whole page down to a degenerate single
+  // component (menu-model review BLOCKER B2).
+  const body = def.slots.find((s) => s.name === "body")
+  if (typeof body?.capacity === "number") {
+    // A declared 0 is a real value (mono-bleed's body slot accepts nothing) —
+    // clamping it up to 1 authors a page validate-core rejects outright.
+    return Math.max(0, body.capacity)
+  }
+  return 2
 }
 
 function wantsImage(def: LayoutDefinition): boolean {

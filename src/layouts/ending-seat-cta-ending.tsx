@@ -203,7 +203,7 @@ export const layoutDef = {
   // accent CTA. Label from contact.name, else subheading. No thank-you.
   // Motif owns the energy bar.
   id: "seat-cta-ending",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["ending"],
   slots: [

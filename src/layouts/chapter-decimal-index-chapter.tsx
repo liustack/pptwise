@@ -161,7 +161,7 @@ export const layoutDef = {
   // Display `${n}.0`, left title, grouped measuring-rule ticks. Motif
   // paints the top red bar. Empty heading invents no section name.
   id: "decimal-index-chapter",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["chapter"],
   slots: [

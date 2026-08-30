@@ -116,7 +116,7 @@ describe("chapter-field-band-chapter — board geometry", () => {
 describe("chapter-field-band-chapter — shared pool", () => {
   it("is a pinOnly chapter archetype that paints its own background", () => {
     expect(layoutDef.id).toBe("field-band-chapter")
-    expect(layoutDef.kind).toBe("archetype")
+    expect(layoutDef.kind).toBe("standard")
     expect(layoutDef.pinOnly).toBe(true)
     expect(layoutDef.paintsOwnBackground).toBe(true)
     expect(layoutDef.slideTypes).toEqual(["chapter"])

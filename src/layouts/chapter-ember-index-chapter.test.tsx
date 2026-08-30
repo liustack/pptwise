@@ -90,7 +90,7 @@ describe("chapter-ember-index-chapter — board geometry", () => {
 describe("chapter-ember-index-chapter — shared pool", () => {
   it("is pinOnly for chapter", () => {
     expect(layoutDef.id).toBe("ember-index-chapter")
-    expect(layoutDef.kind).toBe("archetype")
+    expect(layoutDef.kind).toBe("standard")
     expect(layoutDef.pinOnly).toBe(true)
     expect(layoutDef.slideTypes).toEqual(["chapter"])
   })

@@ -428,7 +428,7 @@ export function FullSlideSvg({
       <Fragment key={`body-${depth}-${nodeIndex}`}>{node}</Fragment>
     ))
   const foregroundBody = pageLayout ? (
-    <g data-archetype={pageLayout.id}>{keyedBody("fg")}</g>
+    <g data-face={pageLayout.id}>{keyedBody("fg")}</g>
   ) : (
     keyedBody("fg")
   )
@@ -473,7 +473,7 @@ export function FullSlideSvg({
         {safeMidground}
       </g>
       <g data-depth="fg">
-        {/* `data-archetype` is a wire-format fossil. The vocabulary merged into
+        {/* `data-face` is a wire-format fossil. The vocabulary merged into
             "layout". The attribute remains the stable layout identifier in
             rendered SVG while the depth engine owns paint order. */}
         {foreground}

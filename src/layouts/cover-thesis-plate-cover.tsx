@@ -178,7 +178,7 @@ export const layoutDef = {
   // Motif owns the gold rule at y120. Empty heading draws no title.
   // Missing authors/date skips the plate.
   id: "thesis-plate-cover",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["cover"],
   slots: [

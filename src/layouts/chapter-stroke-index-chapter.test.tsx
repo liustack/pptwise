@@ -122,7 +122,7 @@ describe("chapter-stroke-index-chapter — board geometry", () => {
 describe("chapter-stroke-index-chapter — shared pool", () => {
   it("is a pinOnly chapter archetype named by composition, not theme", () => {
     expect(layoutDef.id).toBe("stroke-index-chapter")
-    expect(layoutDef.kind).toBe("archetype")
+    expect(layoutDef.kind).toBe("standard")
     expect(layoutDef.pinOnly).toBe(true)
     expect(layoutDef.slideTypes).toEqual(["chapter"])
   })

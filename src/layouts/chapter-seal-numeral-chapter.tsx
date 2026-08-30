@@ -159,7 +159,7 @@ export const layoutDef = {
   // to its right, accent closing rule. Light page ground comes from the
   // theme. Motif yields on chapter. Empty heading draws no title.
   id: "seal-numeral-chapter",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["chapter"],
   slots: [

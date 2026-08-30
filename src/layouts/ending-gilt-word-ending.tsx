@@ -143,7 +143,7 @@ export const layoutDef = {
   // **emphasis**. Footer from org or authors. Motif owns the double frame.
   // Empty heading invents no thank-you.
   id: "gilt-word-ending",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["ending"],
   slots: [

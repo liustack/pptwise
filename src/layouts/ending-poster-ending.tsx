@@ -196,7 +196,7 @@ export const layoutDef: LayoutDefinition = {
   // subheading, divider, single combined org/contact/copyright meta line.
   // No standalone kicker.
   id: "poster-ending",
-  kind: "archetype",
+  kind: "standard",
   slideTypes: ["ending"],
   slots: [
     { name: "heading", accepts: [] },

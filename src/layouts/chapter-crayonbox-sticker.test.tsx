@@ -115,7 +115,7 @@ describe("chapter-crayonbox-sticker", () => {
   it("declares a pin-only motif-suppressing chapter and exports safe primitives", () => {
     expect(layoutDef).toMatchObject({
       id: "crayonbox-sticker",
-      kind: "archetype",
+      kind: "standard",
       pinOnly: true,
       slideTypes: ["chapter"],
     })

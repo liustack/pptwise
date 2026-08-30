@@ -159,7 +159,7 @@ export const layoutDef = {
   // ground comes from the theme. No body slot (chapter pages never render
   // components).
   id: "block-numeral-chapter",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["chapter"],
   slots: [

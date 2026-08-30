@@ -108,7 +108,7 @@ describe("chapter-ghost-section-chapter — board geometry", () => {
 describe("chapter-ghost-section-chapter — shared pool", () => {
   it("is registered for chapter only, as a pinOnly archetype", () => {
     expect(layoutDef.id).toBe("ghost-section-chapter")
-    expect(layoutDef.kind).toBe("archetype")
+    expect(layoutDef.kind).toBe("standard")
     expect(layoutDef.pinOnly).toBe(true)
     expect(layoutDef.slideTypes).toEqual(["chapter"])
   })

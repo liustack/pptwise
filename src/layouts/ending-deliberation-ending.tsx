@@ -200,7 +200,7 @@ export const layoutDef: LayoutDefinition = {
   // optional subheading sign-off. No thank-you and no invented 请审议.
   // Optional bullets fill the list.
   id: "deliberation-ending",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["ending"],
   slots: [

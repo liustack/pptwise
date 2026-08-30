@@ -138,7 +138,7 @@ describe("cover-invitation-plate-cover — board geometry", () => {
 describe("cover-invitation-plate-cover — shared pool", () => {
   it("is a pinOnly cover that does not paint its own background", () => {
     expect(layoutDef.id).toBe("invitation-plate-cover")
-    expect(layoutDef.kind).toBe("archetype")
+    expect(layoutDef.kind).toBe("standard")
     expect(layoutDef.pinOnly).toBe(true)
     expect("paintsOwnBackground" in layoutDef).toBe(false)
     expect(layoutDef.slideTypes).toEqual(["cover"])

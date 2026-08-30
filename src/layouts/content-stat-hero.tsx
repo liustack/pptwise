@@ -184,7 +184,7 @@ export const layoutDef = {
   // Page decor and branding posture belong to the menu entry. The page is
   // intentionally sparse and uses the full canvas.
   id: "stat-hero",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["content"],
   slots: [

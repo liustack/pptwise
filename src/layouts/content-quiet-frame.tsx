@@ -268,7 +268,7 @@ export const layoutDef: LayoutDefinition = {
   // pool's second `breathing`-suitable layout (T1 handoff hard
   // requirement).
   id: "quiet-frame",
-  kind: "archetype",
+  kind: "standard",
   slideTypes: ["content"],
   slots: [
     { name: "kicker", accepts: [] },

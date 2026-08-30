@@ -192,7 +192,7 @@ export const layoutDef: LayoutDefinition = {
   // optional subheading sign-off. No thank-you. No invented privacy line.
   // Optional bullets fill the list.
   id: "care-plan-ending",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["ending"],
   slots: [

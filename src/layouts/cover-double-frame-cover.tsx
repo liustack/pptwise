@@ -217,7 +217,7 @@ export const layoutDef = {
   // display title. Year and colophon centered. Empty heading invents no
   // cover sentence. Paper field stays on the theme default background.
   id: "double-frame-cover",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["cover"],
   slots: [

@@ -131,7 +131,7 @@ export const layoutDef = {
   // degrees with the chapter number inside. Title sits to the right. The
   // sticker is foreground. Theme paints the chapter field.
   id: "sticker-numeral-chapter",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["chapter"],
   slots: [

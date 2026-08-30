@@ -226,7 +226,7 @@ export const layoutDef: LayoutDefinition = {
   // cover-fashion-masthead.tsx: full-bleed primary block, org kicker, thin
   // rule above the masthead heading, accent color band, subheading, meta.
   id: "fashion-masthead",
-  kind: "archetype",
+  kind: "standard",
   paintsOwnBackground: true,
   slideTypes: ["cover"],
   slots: [

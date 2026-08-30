@@ -37,7 +37,7 @@ describe("LAYOUT_REGISTRY completeness (layout ids)", () => {
         const entry = LAYOUT_REGISTRY[id]
         expect(entry, `missing LAYOUT_REGISTRY entry for layout id "${id}"`).toBeDefined()
         expect(entry.id).toBe(id)
-        expect(entry.kind).toBe("archetype")
+        expect(entry.kind).toBe("standard")
         expect(entry.slideTypes).toContain(slideType)
       })
     }
@@ -50,7 +50,7 @@ describe("LAYOUT_REGISTRY completeness (layout ids)", () => {
       ...Object.keys(CONTENT_LAYOUTS),
       ...Object.keys(ENDING_LAYOUTS),
     ])
-    const layoutEntries = Object.values(LAYOUT_REGISTRY).filter((e) => e.kind === "archetype")
+    const layoutEntries = Object.values(LAYOUT_REGISTRY).filter((e) => e.kind === "standard")
     // Wave 8 batch 4: +6 chapter +6 ending pinOnly faces, 102 -> 114.
     // banner-heading retired: 114 -> 113.
     // consulting gauge adds five pin-only faces: 113 -> 118. All five are
@@ -247,7 +247,7 @@ describe("capacity metadata: only where the inventory gives hard numbers", () =>
 
 describe("getLayout", () => {
   it("returns the entry for a known layout id", () => {
-    expect(getLayout("banner-title")?.kind).toBe("archetype")
+    expect(getLayout("banner-title")?.kind).toBe("standard")
   })
   it("returns the entry for a known takeover id", () => {
     expect(getLayout("image-split")?.kind).toBe("takeover")
@@ -274,7 +274,7 @@ describe("layoutsForSlideType", () => {
 
   it("content includes both the 23 layouts and the 4 takeovers", () => {
     const contents = layoutsForSlideType("content")
-    expect(contents.filter((l) => l.kind === "archetype")).toHaveLength(23)
+    expect(contents.filter((l) => l.kind === "standard")).toHaveLength(23)
     expect(contents.filter((l) => l.kind === "takeover")).toHaveLength(4)
     expect(contents).toHaveLength(27)
   })
@@ -286,7 +286,7 @@ describe("filterByNarrativesOnly (W4, spec §6 step 4's rare narratives_only har
   // unit-tested without any real LAYOUT_REGISTRY id or a live selection
   // pass through `resolveLayoutId`.
   function synthetic(id: string, narrativesOnly?: readonly Strategy[]): LayoutDefinition {
-    return { id, kind: "archetype", slideTypes: ["content"], slots: [], narrativesOnly }
+    return { id, kind: "standard", slideTypes: ["content"], slots: [], narrativesOnly }
   }
 
   it("keeps a layout whose narrativesOnly list includes the resolved strategy", () => {
@@ -327,7 +327,7 @@ describe("excludePinOnly (quote-stage wave, task T1's pinOnly tier)", () => {
   // function" testability `filterByNarrativesOnly`'s own describe block
   // above already established for its own field.
   function synthetic(id: string, pinOnly?: boolean): LayoutDefinition {
-    return { id, kind: "archetype", slideTypes: ["content"], slots: [], pinOnly }
+    return { id, kind: "standard", slideTypes: ["content"], slots: [], pinOnly }
   }
 
   it("keeps a layout with pinOnly unset", () => {

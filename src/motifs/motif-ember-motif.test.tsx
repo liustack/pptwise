@@ -75,7 +75,7 @@ describe("EmberMotif（火星退役）", () => {
     const mid = groups.find((group) => group.getAttribute("data-depth") === "mid")
     const fg = groups.find((group) => group.getAttribute("data-depth") === "fg")!
     expect(mid?.querySelector("circle") ?? null).toBeNull()
-    expect(fg.querySelector('[data-archetype="corner-wedge"] path')).not.toBeNull()
+    expect(fg.querySelector('[data-face="corner-wedge"] path')).not.toBeNull()
   })
 
   it("不画任何孤立 tick / 左竖条 / 碎点", () => {

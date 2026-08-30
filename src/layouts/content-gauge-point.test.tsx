@@ -106,7 +106,7 @@ describe("content-gauge-point", () => {
   it("declares a sparse pin-only content layout", () => {
     expect(layoutDef).toMatchObject({
       id: "gauge-point",
-      kind: "archetype",
+      kind: "standard",
       pinOnly: true,
       slideTypes: ["content"],
       arrangements: ["single"],

@@ -191,7 +191,7 @@ export const layoutDef: LayoutDefinition = {
   // white heading/subheading over the primary color block, accent underline
   // beneath the line the block ends with.
   id: "banner-chapter",
-  kind: "archetype",
+  kind: "standard",
   slideTypes: ["chapter"],
   slots: [
     { name: "watermark", accepts: [] },

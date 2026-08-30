@@ -174,7 +174,7 @@ export const layoutDef: LayoutDefinition = {
   // label, foot rule, preview from subheading. No thank-you. Optional
   // bullets fill the list.
   id: "homework-close-ending",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["ending"],
   slots: [

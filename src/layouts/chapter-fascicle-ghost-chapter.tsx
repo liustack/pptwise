@@ -199,7 +199,7 @@ export const layoutDef = {
   // numeral inset to the canvas. pinOnly. The theme-menu entry owns brand silence so the default
   // br logo does not eat the ghost.
   id: "fascicle-ghost-chapter",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["chapter"],
   slots: [

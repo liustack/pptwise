@@ -139,7 +139,7 @@ export const layoutDef: LayoutDefinition = {
   // chapter-tone-adaptive-chapter.tsx: translucent watermark numeral +
   // centered heading only — no kicker, no subheading render at all.
   id: "tone-adaptive-chapter",
-  kind: "archetype",
+  kind: "standard",
   slideTypes: ["chapter"],
   slots: [
     { name: "watermark", accepts: [] },

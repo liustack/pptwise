@@ -164,7 +164,7 @@ export const layoutDef = {
   // heading, website or subheading address, org · date foot. No QR, no
   // thank-you. Empty heading invents no 今天，开放下载.
   id: "release-close-ending",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["ending"],
   slots: [

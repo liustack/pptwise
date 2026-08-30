@@ -289,7 +289,7 @@ export function GaugeStatsContent({ ir, slide, index, ctx }: SvgTemplateProps) {
 export const layoutDef: LayoutDefinition = {
   branding: "none",
   id: "gauge-stats",
-  kind: "archetype",
+  kind: "standard",
   slideTypes: ["content"],
   slots: [
     { name: "kicker", accepts: [] },

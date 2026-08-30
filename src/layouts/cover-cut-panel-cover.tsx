@@ -193,7 +193,7 @@ export const layoutDef = {
   // the title, accent light-strip on the cut. Motif owns the energy bar.
   // Empty heading invents no ignition line. Title stays inside the panel.
   id: "cut-panel-cover",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["cover"],
   slots: [

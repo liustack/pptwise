@@ -371,7 +371,7 @@ export const layoutDef = {
   // stay horizontal and left-aligned. Empty heading invents no cover copy.
   // Motif owns the remnant mountain. The theme-menu entry owns brand silence.
   id: "vertical-title-cover",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["cover"],
   slots: [

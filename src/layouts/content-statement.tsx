@@ -132,7 +132,7 @@ export const layoutDef = {
   // attribution caption, never a card. Page decor and branding posture belong
   // to the menu entry, not this face declaration.
   id: "statement",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["content"],
   slots: [

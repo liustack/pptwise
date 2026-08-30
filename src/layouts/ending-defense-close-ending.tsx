@@ -165,7 +165,7 @@ export const layoutDef: LayoutDefinition = {
   // CONCLUSIONS kicker, foot rule, optional subheading sign-off. No
   // thank-you fallback. Optional bullets fill the list.
   id: "defense-close-ending",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["ending"],
   slots: [

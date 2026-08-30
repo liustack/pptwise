@@ -119,7 +119,7 @@ describe("content-crayonbox-point", () => {
   it("declares a sparse pin-only layout and exports safe primitives", () => {
     expect(layoutDef).toMatchObject({
       id: "crayonbox-point",
-      kind: "archetype",
+      kind: "standard",
       pinOnly: true,
       slideTypes: ["content"],
       arrangements: ["single"],

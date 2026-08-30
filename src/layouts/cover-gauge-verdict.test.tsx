@@ -136,7 +136,7 @@ describe("cover-gauge-verdict", () => {
   it("declares a theme-locked pinOnly cover with one bullets slot and no shared branding footer", () => {
     expect(layoutDef).toMatchObject({
       id: "gauge-verdict",
-      kind: "archetype",
+      kind: "standard",
       slideTypes: ["cover"],
     })
     expect(layoutDef.pinOnly).toBe(true)

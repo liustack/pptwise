@@ -114,7 +114,7 @@ export const layoutDef = {
   // render components or footnote). Page decor and branding posture belong to
   // the menu entry. The fifth-band decoration safe-zone does not apply.
   id: "verse-chapter",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["chapter"],
   slots: [

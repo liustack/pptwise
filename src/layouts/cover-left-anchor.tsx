@@ -345,7 +345,7 @@ export const layoutDef: LayoutDefinition = {
   // conf badge, subheading, meta divider + author/date/version. The
   // corner triangle is a private decorative swatch (TRIANGLE_DEEP) → decor.
   id: "left-anchor",
-  kind: "archetype",
+  kind: "standard",
   slideTypes: ["cover"],
   params: {
     showCornerTriangle: { type: "boolean" },

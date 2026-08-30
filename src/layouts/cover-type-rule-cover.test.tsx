@@ -112,7 +112,7 @@ describe("cover-type-rule-cover — emphasis", () => {
 describe("cover-type-rule-cover — shared pool", () => {
   it("is a pinOnly cover archetype named by composition, not theme", () => {
     expect(layoutDef.id).toBe("type-rule-cover")
-    expect(layoutDef.kind).toBe("archetype")
+    expect(layoutDef.kind).toBe("standard")
     expect(layoutDef.pinOnly).toBe(true)
     expect(layoutDef.slideTypes).toEqual(["cover"])
   })

@@ -255,7 +255,7 @@ export const layoutDef: LayoutDefinition = {
   // signature 9-point constellation motif (inline in this file, not the
   // separate Motif system) → decor.
   id: "constellation",
-  kind: "archetype",
+  kind: "standard",
   slideTypes: ["cover"],
   params: {
     titleBottomAnchor: { type: "boolean" },

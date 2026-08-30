@@ -649,7 +649,7 @@ export const layoutDef: LayoutDefinition = {
   // card when a bg image is present, or an italic footnote when not —
   // same slot, two renderings).
   id: "tone-adaptive-content",
-  kind: "archetype",
+  kind: "standard",
   slideTypes: ["content"],
   slots: [
     { name: "kicker", accepts: [] },

@@ -253,7 +253,7 @@ export function ShowFiguresContent({ ir, slide, index, ctx }: SvgTemplateProps) 
 export const layoutDef = {
   suppressMotif: true,
   id: "show-figures",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["content"],
   slots: [

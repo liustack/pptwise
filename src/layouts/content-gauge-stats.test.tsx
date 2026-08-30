@@ -208,7 +208,7 @@ describe("content-gauge-stats", () => {
   it("declares a theme-locked pinOnly full-density content layout", () => {
     expect(layoutDef).toMatchObject({
       id: "gauge-stats",
-      kind: "archetype",
+      kind: "standard",
       slideTypes: ["content"],
       arrangements: "all",
     })

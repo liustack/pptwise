@@ -173,7 +173,7 @@ export const layoutDef = {
   // kicker, left title, emphasis chalk arc under ** runs. Motif draws the
   // tray frame. Empty heading invents no lecture title and skips the arc.
   id: "chalk-rule-chapter",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["chapter"],
   slots: [

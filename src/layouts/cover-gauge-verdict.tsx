@@ -191,7 +191,7 @@ export function GaugeVerdictCover({ ir, slide, ctx }: SvgTemplateProps) {
 export const layoutDef: LayoutDefinition = {
   branding: "none",
   id: "gauge-verdict",
-  kind: "archetype",
+  kind: "standard",
   slideTypes: ["cover"],
   slots: [
     { name: "kicker", accepts: [] },

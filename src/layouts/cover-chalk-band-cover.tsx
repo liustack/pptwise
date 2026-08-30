@@ -220,7 +220,7 @@ export const layoutDef = {
   // and subtitle inside, lesson/focus row under the band. Motif owns the
   // notebook rules. Empty heading invents no lesson title.
   id: "chalk-band-cover",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["cover"],
   slots: [

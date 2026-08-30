@@ -140,7 +140,7 @@ export const layoutDef: LayoutDefinition = {
   // kicker + org kicker (bottom), giant numeral watermark, heading, bottom
   // rule. No subheading render.
   id: "fashion-chapter",
-  kind: "archetype",
+  kind: "standard",
   paintsOwnBackground: true,
   slideTypes: ["chapter"],
   slots: [

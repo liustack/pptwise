@@ -169,7 +169,7 @@ export const layoutDef = {
   // the rows. **emphasis** tints primary, not accent. Subheading is the
   // sign-off. No thank-you. No hardcoded attestation.
   id: "scorecard-ending",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["ending"],
   slots: [

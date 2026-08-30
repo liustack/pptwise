@@ -136,7 +136,7 @@ describe("cover-red-head-cover — board geometry", () => {
 describe("cover-red-head-cover — shared pool", () => {
   it("is registered as a pinOnly cover that does not paint its own background", () => {
     expect(layoutDef.id).toBe("red-head-cover")
-    expect(layoutDef.kind).toBe("archetype")
+    expect(layoutDef.kind).toBe("standard")
     expect(layoutDef.pinOnly).toBe(true)
     expect("paintsOwnBackground" in layoutDef).toBe(false)
     expect(layoutDef.slideTypes).toEqual(["cover"])

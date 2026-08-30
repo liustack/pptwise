@@ -3,7 +3,7 @@
 // T1d (src domain reorg wave 1) migration guard — ONE-TIME, may be deleted
 // in a later wave once the layoutDef-inlining migration is trusted.
 //
-// `__fixtures__/pre-migration-layout-registry.json` is a one-time capture
+// `__fixtures__/layout-registry.golden.json` is a one-time capture
 // (see the task report for the capture method — a temporary
 // `__tmp-dump-registry.test.ts`, deleted before this commit, that imported
 // the pre-migration `LAYOUT_REGISTRY` — still built from literal
@@ -33,7 +33,7 @@ import { describe, expect, it } from "vitest"
 import { LAYOUT_REGISTRY } from "./registry"
 
 const fixture = JSON.parse(
-  readFileSync(new URL("./__fixtures__/pre-migration-layout-registry.json", import.meta.url), "utf-8"),
+  readFileSync(new URL("./__fixtures__/layout-registry.golden.json", import.meta.url), "utf-8"),
 ) as { order: string[]; registry: Record<string, Record<string, unknown>> }
 
 /** Layouts retired after the capture. Compare the rest, skip these ids. */

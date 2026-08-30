@@ -280,7 +280,7 @@ export const layoutDef: LayoutDefinition = {
   // subheading; no-bg mode adds a divider + author/date/version meta row,
   // bg mode collapses meta to one white overlay line (same slot names).
   id: "tone-adaptive-header",
-  kind: "archetype",
+  kind: "standard",
   slideTypes: ["cover"],
   params: {
     titleSize: { type: "number", min: 48, max: 120 },

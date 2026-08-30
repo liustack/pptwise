@@ -238,7 +238,7 @@ export const layoutDef: LayoutDefinition = {
   // paper below the band. Emphasized run uses accent, optional q-curve
   // under that run.
   id: "header-band",
-  kind: "archetype",
+  kind: "standard",
   slideTypes: ["cover"],
   slots: [
     { name: "meta", accepts: [] },

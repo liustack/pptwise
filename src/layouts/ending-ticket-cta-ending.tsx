@@ -197,7 +197,7 @@ export const layoutDef = {
   // subheading. pinOnly. paintsOwnBackground. Empty heading invents no
   // price and no canned ticket CTA.
   id: "ticket-cta-ending",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   paintsOwnBackground: true,
   slideTypes: ["ending"],

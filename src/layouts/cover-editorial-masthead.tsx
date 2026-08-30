@@ -171,7 +171,7 @@ export const layoutDef: LayoutDefinition = {
   // italic subheading + merged org/date/conf meta. Optional kicker and
   // textAnchor knobs. Default: middle, no kicker.
   id: "editorial-masthead",
-  kind: "archetype",
+  kind: "standard",
   slideTypes: ["cover"],
   params: {
     textAnchor: { type: "string", values: ["start", "middle"] },

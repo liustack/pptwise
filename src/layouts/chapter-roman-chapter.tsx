@@ -217,7 +217,7 @@ export const layoutDef: LayoutDefinition = {
   // watermark, heading + italic subheading with its own short rule, and a
   // seed/chapter-rotated arc ornament (eclipse/grooves/chord) → decor.
   id: "roman-chapter",
-  kind: "archetype",
+  kind: "standard",
   slideTypes: ["chapter"],
   slots: [
     { name: "kicker", accepts: [] },

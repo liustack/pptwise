@@ -236,7 +236,7 @@ export const layoutDef: LayoutDefinition = {
   // kicker sits on the band's top edge. meta in the top bar. Alignment /
   // Band geometry and optional marks come from this menu face's parameters.
   id: "band-title",
-  kind: "archetype",
+  kind: "standard",
   slideTypes: ["cover"],
   params: {
     bandY: { type: "number", min: 160, max: 360 },

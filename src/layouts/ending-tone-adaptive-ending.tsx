@@ -225,7 +225,7 @@ export const layoutDef: LayoutDefinition = {
   // divider, "Contact" contact section + copyright (meta). No subheading
   // render.
   id: "tone-adaptive-ending",
-  kind: "archetype",
+  kind: "standard",
   slideTypes: ["ending"],
   slots: [
     { name: "kicker", accepts: [] },

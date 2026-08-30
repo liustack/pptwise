@@ -124,7 +124,7 @@ describe("ending-reminder-list-ending — board geometry", () => {
 describe("ending-reminder-list-ending — shared pool", () => {
   it("is a pinOnly ending archetype with a bullets body slot", () => {
     expect(layoutDef.id).toBe("reminder-list-ending")
-    expect(layoutDef.kind).toBe("archetype")
+    expect(layoutDef.kind).toBe("standard")
     expect(layoutDef.pinOnly).toBe(true)
     expect(layoutDef.slideTypes).toEqual(["ending"])
     const body = layoutDef.slots.find((slot) => slot.name === "body")

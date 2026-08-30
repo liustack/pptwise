@@ -240,7 +240,7 @@ export const layoutDef: LayoutDefinition = {
   // into the bottom meta line, middle anchor (start left-aligns the
   // slogan and the short bar).
   id: "poster-center",
-  kind: "archetype",
+  kind: "standard",
   slideTypes: ["cover"],
   params: {
     showKicker: { type: "boolean" },

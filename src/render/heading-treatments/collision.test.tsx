@@ -122,7 +122,7 @@ function findRailBadge(root: Element): Box | null {
 }
 
 function isRailNumbered(root: Element): boolean {
-  return root.querySelector('[data-archetype="rail-numbered"]') !== null
+  return root.querySelector('[data-face="rail-numbered"]') !== null
 }
 
 function titleBoxes(texts: Box[], heading: string): Box[] {
@@ -273,8 +273,8 @@ describe("gallery theme-table rail-numbered pages", () => {
     expect(ir.slides[5]?.type).toBe("content")
     const svg = renderSlideSvg(ir, 5)
     const root = parseSvgRoot(svg)
-    expect(root.querySelector('[data-archetype="side-highlight"]')).toBeNull()
-    expect(root.querySelector('[data-archetype="banner-heading"]')).toBeNull()
+    expect(root.querySelector('[data-face="side-highlight"]')).toBeNull()
+    expect(root.querySelector('[data-face="banner-heading"]')).toBeNull()
     expect(isRailNumbered(root)).toBe(false)
     expect(findRailBadge(root)).toBeNull()
   })

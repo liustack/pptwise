@@ -173,7 +173,7 @@ export const layoutDef = {
   // title, window note, border rule, contact/org foot. pinOnly.
   // paintsOwnBackground. Empty heading invents no close and no email.
   id: "window-close-ending",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   paintsOwnBackground: true,
   slideTypes: ["ending"],

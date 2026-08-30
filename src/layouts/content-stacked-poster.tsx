@@ -584,7 +584,7 @@ export const layoutDef: LayoutDefinition = {
   // exactly 2 — renders in a `strip` caption slot below a divider
   // (capacity 1). Footnote (meta) renders on both paths.
   id: "stacked-poster",
-  kind: "archetype",
+  kind: "standard",
   slideTypes: ["content"],
   slots: [
     { name: "kicker", accepts: [] },

@@ -82,7 +82,7 @@ describe("FullSlideSvg", () => {
     expect(container.querySelector("[data-decor]")?.closest("[data-depth]")?.getAttribute("data-depth")).toBe(
       "mid",
     )
-    expect(container.querySelector("[data-archetype]")?.closest("[data-depth]")?.getAttribute("data-depth")).toBe(
+    expect(container.querySelector("[data-face]")?.closest("[data-depth]")?.getAttribute("data-depth")).toBe(
       "fg",
     )
     expect(groups[2]!.querySelector('line[y1="664"]')).not.toBeNull()
@@ -103,7 +103,7 @@ describe("FullSlideSvg", () => {
       text.textContent?.includes("第一部分：市场洞察"),
     )
 
-    expect(container.querySelector('[data-archetype="masthead-chapter"]')).not.toBeNull()
+    expect(container.querySelector('[data-face="masthead-chapter"]')).not.toBeNull()
     expect(ghost?.closest("[data-depth]")?.getAttribute("data-depth")).toBe("mid")
     expect(heading?.closest("[data-depth]")?.getAttribute("data-depth")).toBe("fg")
   })
@@ -636,13 +636,13 @@ describe("theme menu cover dispatch", () => {
 
   it("consulting cover 命中菜单唯一脸", () => {
     const { container } = render(<FullSlideSvg ir={mkIr("consulting")} slide={coverSlide} index={0} />)
-    const g = container.querySelector("[data-archetype]")
+    const g = container.querySelector("[data-face]")
     expect(g).not.toBeNull()
-    expect(g!.getAttribute("data-archetype")).toBe(THEME_DEFINITIONS.consulting.menu.cover.face)
+    expect(g!.getAttribute("data-face")).toBe(THEME_DEFINITIONS.consulting.menu.cover.face)
   })
   it("tech cover 命中菜单唯一脸", () => {
     const { container } = render(<FullSlideSvg ir={mkIr("tech")} slide={coverSlide} index={0} />)
-    const id = container.querySelector("[data-archetype]")?.getAttribute("data-archetype")
+    const id = container.querySelector("[data-face]")?.getAttribute("data-face")
     expect(id).toBe(THEME_DEFINITIONS.tech.menu.cover.face)
   })
   it("asset 背景 cover 仍走 ImageCoverPage 接管（优先级高于 manifest）", () => {
@@ -664,7 +664,7 @@ describe("theme menu cover dispatch", () => {
       slides: [splitContent],
     } as unknown as PptxIR
     const { container } = render(<FullSlideSvg ir={doc} slide={splitContent} index={0} />)
-    expect(container.querySelector("[data-archetype]")).toBeNull()
+    expect(container.querySelector("[data-face]")).toBeNull()
     expect(container.querySelector("image")).not.toBeNull()
   })
 })
@@ -685,7 +685,7 @@ describe("主题菜单四页型分发", () => {
     const { container } = render(
       <FullSlideSvg ir={mkIr("academic", chapterSlide)} slide={chapterSlide} index={0} />,
     )
-    const id = container.querySelector("[data-archetype]")?.getAttribute("data-archetype")
+    const id = container.querySelector("[data-face]")?.getAttribute("data-face")
     expect(id).toBe(THEME_DEFINITIONS.academic.menu.chapter.face)
   })
 
@@ -699,7 +699,7 @@ describe("主题菜单四页型分发", () => {
     const { container } = render(
       <FullSlideSvg ir={mkIr("tech", contentSlide2)} slide={contentSlide2} index={0} />,
     )
-    const id = container.querySelector("[data-archetype]")?.getAttribute("data-archetype")
+    const id = container.querySelector("[data-face]")?.getAttribute("data-face")
     expect(id).toBe(THEME_DEFINITIONS.tech.menu.content.points?.face)
   })
 
@@ -708,7 +708,7 @@ describe("主题菜单四页型分发", () => {
     const { container } = render(
       <FullSlideSvg ir={mkIr("journal", endingSlide)} slide={endingSlide} index={0} />,
     )
-    const id = container.querySelector("[data-archetype]")?.getAttribute("data-archetype")
+    const id = container.querySelector("[data-face]")?.getAttribute("data-face")
     expect(id).toBe(THEME_DEFINITIONS.journal.menu.ending.face)
   })
 
@@ -746,7 +746,7 @@ describe("content kind 确定性菜单分发", () => {
     const doc: PptxIR = { ...ir(slides), theme: { id: "academic" } }
     const ids = slides.map((slide, index) => {
       const { container } = render(<FullSlideSvg ir={doc} slide={slide} index={index} />)
-      return container.querySelector("[data-archetype]")?.getAttribute("data-archetype")
+      return container.querySelector("[data-face]")?.getAttribute("data-face")
     })
     expect(ids).toEqual(Array(3).fill(THEME_DEFINITIONS.academic.menu.content.points?.face))
   })
@@ -765,7 +765,7 @@ describe("content kind 确定性菜单分发", () => {
       components: [{ type: "paragraph", text: "正文" }],
     }
     const { container } = render(<FullSlideSvg ir={mkIr("academic", slide)} slide={slide} index={0} />)
-    expect(container.querySelector(`[data-archetype="${face}"]`)).not.toBeNull()
+    expect(container.querySelector(`[data-face="${face}"]`)).not.toBeNull()
   })
 })
 
@@ -774,7 +774,7 @@ describe("registered theme menu faces", () => {
     const slide: Slide = { type: "cover", heading: "标题", components: [] }
     const doc = irWithFace(slide, "consulting", { cover: "poster-center" })
     const { container } = render(<FullSlideSvg ir={doc} slide={slide} index={0} />)
-    expect(container.querySelector('[data-archetype="poster-center"]')).not.toBeNull()
+    expect(container.querySelector('[data-face="poster-center"]')).not.toBeNull()
   })
 
   it("通过 content kind 菜单承载源主题菜单外的指定脸", () => {
@@ -786,7 +786,7 @@ describe("registered theme menu faces", () => {
     }
     const doc = irWithFace(slide, "luxe", { content: { points: "split-band" } })
     const { container } = render(<FullSlideSvg ir={doc} slide={slide} index={0} />)
-    expect(container.querySelector('[data-archetype="split-band"]')).not.toBeNull()
+    expect(container.querySelector('[data-face="split-band"]')).not.toBeNull()
   })
 })
 
@@ -1003,7 +1003,7 @@ describe("layouts that paint their own full-bleed field (LayoutDefinition.paints
         type === "content" ? { content: { statement: layout } } : { [type]: layout }
       const doc = irWithFace(slide, theme, faces)
       const { container } = render(<FullSlideSvg ir={doc} slide={slide} index={0} />)
-      expect(container.querySelector(`[data-archetype="${layout}"]`)).not.toBeNull()
+      expect(container.querySelector(`[data-face="${layout}"]`)).not.toBeNull()
       expect(fullBleedFills(container)).toHaveLength(1)
     })
   }

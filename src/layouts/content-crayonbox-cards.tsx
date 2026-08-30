@@ -245,7 +245,7 @@ export function CrayonboxCardsContent({ ir, slide, index, ctx }: SvgTemplateProp
 export const layoutDef = {
   suppressMotif: true,
   id: "crayonbox-cards",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["content"],
   slots: [

@@ -297,7 +297,7 @@ export const layoutDef: LayoutDefinition = {
   // Empty regions skip their frame and divider. A 1-component page
   // collapses the lead to full body width.
   id: "asymmetric-triptych",
-  kind: "archetype",
+  kind: "standard",
   slideTypes: ["content"],
   slots: [
     { name: "kicker", accepts: [] },

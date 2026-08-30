@@ -309,7 +309,7 @@ export const layoutDef: LayoutDefinition = {
   // italic footnote
   // (meta).
   id: "narrow-column",
-  kind: "archetype",
+  kind: "standard",
   slideTypes: ["content"],
   slots: [
     { name: "rule", accepts: [] },

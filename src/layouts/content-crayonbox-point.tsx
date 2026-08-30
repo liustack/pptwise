@@ -136,7 +136,7 @@ export const layoutDef = {
   branding: "none",
   suppressMotif: true,
   id: "crayonbox-point",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["content"],
   slots: [

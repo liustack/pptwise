@@ -86,7 +86,7 @@ describe("cover-paper-masthead — board geometry", () => {
 describe("cover-paper-masthead — shared pool", () => {
   it("is registered for cover only, as an archetype", () => {
     expect(layoutDef.id).toBe("paper-masthead")
-    expect(layoutDef.kind).toBe("archetype")
+    expect(layoutDef.kind).toBe("standard")
     expect(layoutDef.slideTypes).toEqual(["cover"])
   })
 
