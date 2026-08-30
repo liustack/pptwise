@@ -1,7 +1,7 @@
 /**
  * Deterministic field-alias normalization — a rescue layer for weak-model
  * synonym field-name drift (a model writing kpi `title` when the schema
- * wants `label`, quote `content` when it wants `text`, and so on). Ported
+ * wants `label`, blockquote `content` when it wants `text`, and so on). Ported
  * from ops-kb's `field_aliases.py` (`_BLOCK_FIELD_ALIASES` /
  * `_ITEM_FIELD_ALIASES`, the production system pptwise was extracted from):
  * a 2026-07-12 failure-sample bucketing there found ~90% of weak-model
@@ -48,7 +48,7 @@
  * content itself, and is unchanged by this wave.
  */
 
-import { aliases as quoteAliases } from "./components/quote"
+import { aliases as blockquoteAliases } from "./components/blockquote"
 import { aliases as codeAliases } from "./components/code"
 import { aliases as paragraphAliases } from "./components/paragraph"
 import { aliases as calloutAliases } from "./components/callout"
@@ -77,7 +77,7 @@ export type FieldAliasMap = Readonly<Record<string, string>>
  * `_BLOCK_FIELD_ALIASES` (its "block" is pptwise's "component" post-rename).
  */
 export const COMPONENT_FIELD_ALIASES: Readonly<Record<string, FieldAliasMap>> = {
-  quote: quoteAliases.block,
+  blockquote: blockquoteAliases.block,
   // Mental model overlap with "code snippet" / "code text" / "source code".
   code: codeAliases.block,
   paragraph: paragraphAliases.block,
@@ -332,10 +332,7 @@ export function normalizeComponentAliases(input: unknown): NormalizeAliasesResul
 // parse as an unrecognized key; `mode`/`delivery` inside `narrative` and the
 // old enum values (`"text"`, `"presentation"`, the `mode`/`strategy` value
 // `"narrative"`) fail `resolveNarrative`'s own runtime axis/value check
-// (`src/narrative`), listing the current values. `pptwise migrate`
-// (`ir/migrate.ts`) remains the sanctioned bridge for a genuine v3 document —
-// v3 documents carry this exact old vocabulary by definition, and migration
-// is a distinct, declared operation from silent in-place rescue.
+// (`src/narrative`), listing the current values.
 //
 // This absence is scoped to *old vocabulary* specifically, not to "no
 // narrative-level rewrite of any kind" — `src/narrative/index.ts`'s
@@ -349,11 +346,10 @@ export function normalizeComponentAliases(input: unknown): NormalizeAliasesResul
 // this section's old-vocabulary rule.
 //
 // `chrome` → `branding` is a root-field alias (weak-model / old-key rescue
-// at validate time via {@link DECK_ROOT_ALIASES}), distinct from migrate's
-// hard dual-source error. Dual-source here leaves both keys for zod
-// `.strict()` to reject. It is not folded into `PptxIRSchema`: the schema
-// only has `branding`, so a direct `parsePptxIR` of `{ chrome: "full" }`
-// still fails.
+// at validate time via {@link DECK_ROOT_ALIASES}). Dual-source here leaves
+// both keys for zod `.strict()` to reject. It is not folded into
+// `PptxIRSchema`: the schema only has `branding`, so a direct `parsePptxIR`
+// of `{ chrome: "full" }` still fails.
 
 /** Root-level IR/spec field aliases applied by {@link normalizeDeckRootAliases}. */
 export const DECK_ROOT_ALIASES: FieldAliasMap = { chrome: "branding" }

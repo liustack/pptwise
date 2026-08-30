@@ -3,7 +3,6 @@
 // 创意子类由 doodle/ink 两新主题承接）。
 import type { StyleTokens } from "../tokens";
 import type { BuiltinThemeDeclaration } from "../schema";
-import { DEFAULT_CONTENT_FACES } from "./shared";
 
 /**
  * **深底组皮肤重设计（2026-08-19，`.issues/2026-08-18-theme-redesign/skins/`
@@ -39,6 +38,8 @@ import { DEFAULT_CONTENT_FACES } from "./shared";
  * 装饰见 `src/motifs/motif-poster-motif.tsx`（行情语汇 第八波：顶缘
  * 行情带与封面幽灵季字退役，只留底缘暗线，stroke 走 border。章节幽灵序号
  * 改由 `ghost-section-chapter` 画，整字落在画布内）。
+ *
+ * **菜单分派（S1-B）**：行情屏靠数字立身，data 用通栏的 split-band 放表和图，fact 用整页大数字，画面不是它的语言，photo 不上。
  */
 export const INSIGHT_TOKENS: StyleTokens = {
   id: "insight",
@@ -75,22 +76,25 @@ export const INSIGHT_TOKENS: StyleTokens = {
 };
 
 export const INSIGHT_THEME = {
-  version: 1,
+  version: 2,
   id: "insight",
   label: "Financial Insight",
   style: INSIGHT_TOKENS,
-  faces: {
-    cover: ["stat-cover"],
-    chapter: ["ghost-section-chapter"],
-    content: DEFAULT_CONTENT_FACES,
-    ending: ["close-word-ending"],
+  menu: {
+    cover: { face: "stat-cover" },
+    chapter: { face: "ghost-section-chapter" },
+    content: {
+      points: { face: "narrow-column" },
+      list: { face: "bento-panel" },
+      comparison: { face: "two-column" },
+      process: { face: "rail-numbered" },
+      data: { face: "split-band" },
+      statement: { face: "statement" },
+      quote: { face: "pull-quote" },
+      fact: { face: "stat-hero" },
+      hierarchy: { face: "asymmetric-triptych" },
+    },
+    ending: { face: "close-word-ending" },
   },
   motif: { id: "poster-motif" },
-  tendencies: {
-    cover: ["stat-cover"],
-    chapter: ["ghost-section-chapter"],
-    content: ["bento-panel", "two-column"],
-    ending: ["close-word-ending"],
-  },
-  sparse: ["statement", "stat-hero", "pull-quote", "verse-chapter"],
 } satisfies BuiltinThemeDeclaration;

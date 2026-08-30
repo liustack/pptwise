@@ -10,11 +10,12 @@ import { GaugePointContent, layoutDef } from "./content-gauge-point"
 const chapter: Slide = { type: "chapter", heading: "增长判断", components: [] } as Slide
 const slide: Slide = {
   type: "content",
+  kind: "points",
   layout: "gauge-point",
   heading: "留存不是结果\n而是增长的前提",
   components: [
     {
-      type: "quote",
+      type: "blockquote",
       text: "留存不是结果，而是增长的前提。",
       attribution: "云觅咨询研究",
     },
@@ -22,7 +23,7 @@ const slide: Slide = {
 } as Slide
 
 const ir: PptxIR = {
-  version: "4",
+  version: "5",
   filename: "gauge-point.pptx",
   theme: { id: "consulting" },
   meta: { organization: "云觅咨询", version: "v2", date: "2026-08" },
@@ -105,15 +106,14 @@ describe("content-gauge-point", () => {
   it("declares a sparse pin-only content layout", () => {
     expect(layoutDef).toMatchObject({
       id: "gauge-point",
-      kind: "archetype",
+      kind: "standard",
       pinOnly: true,
-      branding: "none",
       slideTypes: ["content"],
       arrangements: ["single"],
     })
     expect(layoutDef.slots.find((slot) => slot.name === "body")).toEqual({
       name: "body",
-      accepts: ["quote", "paragraph", "citation"],
+      accepts: ["blockquote", "paragraph", "citation"],
       capacity: 1,
     })
   })

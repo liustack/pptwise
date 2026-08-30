@@ -148,7 +148,7 @@ export function QuietFrameContent({ ir, slide, index, ctx }: SvgTemplateProps) {
     return (
       <>
         {treated.chrome}
-        <SvgContent arrangement={slide.arrangement} components={slide.components} rect={treatedRect} ctx={ctx} />
+        <SvgContent components={slide.components} rect={treatedRect} ctx={ctx} />
         {footnote && (
           <text
             data-truncated={footnote.truncated ? "1" : undefined}
@@ -229,7 +229,7 @@ export function QuietFrameContent({ ir, slide, index, ctx }: SvgTemplateProps) {
           full-width or left-anchored rule. */}
       <rect x={CENTER_X - RULE_W / 2} y={ruleY} width={RULE_W} height={RULE_H} rx={1.5} fill={colors.accent} />
 
-      <SvgContent arrangement={slide.arrangement} components={slide.components} rect={contentRect} ctx={ctx} />
+      <SvgContent components={slide.components} rect={contentRect} ctx={ctx} />
 
       {footnote && (
         <text
@@ -268,7 +268,7 @@ export const layoutDef: LayoutDefinition = {
   // pool's second `breathing`-suitable layout (T1 handoff hard
   // requirement).
   id: "quiet-frame",
-  kind: "archetype",
+  kind: "standard",
   slideTypes: ["content"],
   slots: [
     { name: "kicker", accepts: [] },

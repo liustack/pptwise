@@ -169,11 +169,11 @@ export function EndingCrayonboxTodo({ ir, slide, ctx }: SvgTemplateProps) {
 }
 
 export const layoutDef = {
-  id: "crayonbox-todo",
-  kind: "archetype",
-  pinOnly: true,
   branding: "none",
   suppressMotif: true,
+  id: "crayonbox-todo",
+  kind: "standard",
+  pinOnly: true,
   slideTypes: ["ending"],
   slots: [
     { name: "kicker", accepts: [] },

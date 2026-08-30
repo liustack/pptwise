@@ -219,7 +219,6 @@ export function CrayonboxCardsContent({ ir, slide, index, ctx }: SvgTemplateProp
         </g>
       ) : (
         <SvgContent
-          arrangement={slide.arrangement}
           components={slide.components}
           rect={{ x: 96, y: 248, w: 1088, h: 330 }}
           ctx={ctx}
@@ -244,10 +243,10 @@ export function CrayonboxCardsContent({ ir, slide, index, ctx }: SvgTemplateProp
 }
 
 export const layoutDef = {
-  id: "crayonbox-cards",
-  kind: "archetype",
-  pinOnly: true,
   suppressMotif: true,
+  id: "crayonbox-cards",
+  kind: "standard",
+  pinOnly: true,
   slideTypes: ["content"],
   slots: [
     { name: "kicker", accepts: [] },

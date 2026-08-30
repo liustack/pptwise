@@ -191,7 +191,7 @@ export const layoutDef: LayoutDefinition = {
   // kicker + decorative accent dot (decor); heading/rule/subheading/meta
   // sit in the right clear zone.
   id: "split-diagonal",
-  kind: "archetype",
+  kind: "standard",
   slideTypes: ["cover"],
   slots: [
     { name: "kicker", accepts: [] },

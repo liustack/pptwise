@@ -18,7 +18,7 @@ function chapter(heading: string, extras: Partial<Slide> = {}): Slide {
 
 function ir(themeId: string, slides: Slide[]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "sticker-numeral-chapter.pptx",
     theme: { id: themeId },
     meta: {},
@@ -111,7 +111,7 @@ describe("chapter-sticker-numeral-chapter — board geometry", () => {
 describe("chapter-sticker-numeral-chapter — shared pool", () => {
   it("is a pinOnly chapter archetype", () => {
     expect(layoutDef.id).toBe("sticker-numeral-chapter")
-    expect(layoutDef.kind).toBe("archetype")
+    expect(layoutDef.kind).toBe("standard")
     expect(layoutDef.pinOnly).toBe(true)
     expect(layoutDef.slideTypes).toEqual(["chapter"])
   })

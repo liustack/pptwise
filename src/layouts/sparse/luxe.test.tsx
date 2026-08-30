@@ -16,7 +16,7 @@ const MUSEUM_COPPER = "#BE7A28"
 
 function ir(slides: Slide[]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "x.pptx",
     theme: { id: "luxe" },
     meta: {},
@@ -38,7 +38,7 @@ describe("luxe sparse faces", () => {
   const ctx = buildCtx(resolveStyle("luxe"), {})
 
   it("statement is a single accent line with no decoration", () => {
-    const slide: Slide = { type: "content", layout: "statement", heading: VERSE, components: [] } as Slide
+    const slide: Slide = { type: "content", kind: "points", layout: "statement", heading: VERSE, components: [] } as Slide
     const { markup, root } = render(
       <StatementContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />,
     )
@@ -60,6 +60,7 @@ describe("luxe sparse faces", () => {
   it("pull-quote opens with a baked gold diamond and accent type", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "pull-quote",
       heading: QUOTE,
       subheading: "陈砚清 · 首席技术官",
@@ -85,6 +86,7 @@ describe("luxe sparse faces", () => {
   it("pull-quote diamond is a 45° square matching the clockwise bake, not the negated angle", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "pull-quote",
       heading: QUOTE,
       subheading: "陈砚清 · 首席技术官",
@@ -127,7 +129,7 @@ describe("luxe sparse faces", () => {
   })
 
   it("pull-quote without ** still uses accent as the face color, with no extra tspan", () => {
-    const slide: Slide = { type: "content", layout: "pull-quote", heading: QUOTE_PLAIN, subheading: "陈砚清", components: [] } as Slide
+    const slide: Slide = { type: "content", kind: "points", layout: "pull-quote", heading: QUOTE_PLAIN, subheading: "陈砚清", components: [] } as Slide
     const { root } = render(
       <PullQuoteContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />,
     )
@@ -141,6 +143,7 @@ describe("luxe sparse faces", () => {
   it("stat-hero is a 270px accent numeral between two border hairlines", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "stat-hero",
       heading: "43%",
       subheading: "席位净流失 · 九十日",

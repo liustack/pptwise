@@ -35,6 +35,7 @@ import type { PptxIR, Slide } from "@/ir"
 import { auditDeck } from "../audit/deck-audit"
 import { installNodePlatform } from "../platform/node"
 import { registerTheme, __resetRegisteredThemes } from "../themes/definitions"
+import type { ThemeFile } from "../themes/schema"
 
 beforeAll(() => {
   installNodePlatform()
@@ -52,6 +53,7 @@ afterEach(() => {
  * actually look like. */
 function confinedTheme(id: string, surface: string, primary: string) {
   return {
+    version: 2 as const,
     id,
     style: {
       id,
@@ -73,20 +75,19 @@ function confinedTheme(id: string, surface: string, primary: string) {
       },
     },
     brand: {},
-    tags: [],
-    layouts: {
-      cover: ["poster-center"],
-      chapter: ["banner-chapter"],
-      content: ["two-column"],
-      ending: ["banner-ending"],
+    menu: {
+      cover: { face: "poster-center" },
+      chapter: { face: "banner-chapter" },
+      content: { data: { face: "narrow-column" } },
+      ending: { face: "banner-ending" },
     },
-  }
+  } satisfies ThemeFile
 }
 
 const HEATMAP_SLIDE: Slide = {
   type: "content",
+  kind: "data",
   heading: "Deadzone probe",
-  layout: "narrow-column",
   components: [
     {
       type: "heatmap",
@@ -100,7 +101,7 @@ const HEATMAP_SLIDE: Slide = {
 
 function deckFor(themeId: string): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "heatmap-deadzone-fixture",
     theme: { id: themeId },
     meta: {},

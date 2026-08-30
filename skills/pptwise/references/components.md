@@ -1,35 +1,65 @@
 # Component guide
 
-Read this when choosing among lookalike components, or when a component's fields and floor/ceiling matter.
+Read this when choosing the typed content units that fill a page after its theme and `kind` are fixed.
 
-`steps` vs `flowchart` is the most common miss: if the edges never branch, it is `steps`. `flowchart` vs `cycle` is the next: does the process reach an endpoint, or does it loop back to its own start? Forcing a closed loop into `flowchart` makes the closing edge draw as a stray line/arc crossing the whole diagram — it isn't a diagram bug, it's the wrong component; reach for `cycle` the moment the last stage's arrow points back at the first. `roadmap` vs `gantt` is the next: `roadmap` groups workstreams into swimlanes with no shared numeric axis, `gantt` plots dated bars against one shared axis all items compare against. `pest` vs `swot` is the next: `pest` is external macro-environment factors only (no internal strengths/weaknesses axis), always the same four named categories — an internal-vs-external strategic assessment is still `swot`. `sankey` vs `flowchart`/funnel `chart` is the next: `sankey` conserves and splits a quantity across branching/merging paths (the band width itself carries meaning), `flowchart` is decision/process branching with no quantity, and a funnel `chart` only ever narrows in one line, never branches or merges. `data_table` vs `chart` vs `comparison` is the last: exact figures the audience reads row-by-row is `data_table`, a trend/comparison shape meant to be read at a glance is `chart`, qualitative side-by-side attributes with no exact figures is `comparison`.
+## Naming
 
-Inside `chart`, the subtype is the shape of the data. `scatter` when both axes are quantities (give each point an optional `size` to make it a bubble chart, and put what the bubble area means in the slide `footnote`). Cartesian plots (`bar` / `line` / `area` / `scatter`) draw a left+bottom axis with ticks outside the plot. Set `axes.x_title` / `axes.y_title` (and optional `x_unit` / `y_unit` on the ticks) so the pair sits under the drawing on one line: "name  ↑" then "name  →". Heatmap and matrix use the same pair under the grid. `area` when a line's filled region should read as accumulation or volume. `donut` for a part-to-whole share, with an optional total printed big in its center (`center_total: true`). `gauge` for one value's progress toward a target. `gauge` vs `kpi_cards` is the one to get right: a `gauge` is a single completion metric drawn as a filled half-ring (62% of goal), while `kpi_cards` is several independent headline numbers set side by side, so never build a row of gauges where `kpi_cards` belongs. `scatter` vs `line`: `scatter` needs a numeric x (a real coordinate on both axes), a category-labelled x-axis is still `line`.
+The component type is `blockquote`. The page kind is `quote`. Use a `blockquote` for attributed prose inside a `quote` page or as supporting evidence elsewhere. Never write a component type named `quote`.
 
-`architecture`'s `layers` array paints top-to-bottom by default (`layers[0]` is the topmost band) — the natural order for a system stack authored top-down (presentation layer first, infrastructure last). Author a bottom-up narrative (a maturity ladder, a foundation-first capability model) in its own natural low-to-high order and set `direction: "bottom_up"` on the component to paint `layers[0]` at the bottom instead — do not hand-reverse the array to fake it, the field exists precisely so the array stays in narrative order.
+## Semantic homes
 
-`swot`/`bmc`/`waterfall`/`gantt`/`pest`/`five_forces`/`heatmap`/`sankey` are *full-body*: each fills the entire slide and must be the slide's only component — see `references/density.md`.
+The table gives each component's normal kind home. A component may serve more than one kind when the page's semantic move remains honest. The kind names what the page is doing. The component names the content unit that does the work.
 
-### Cycles vs. flowcharts
+| component | normal kind ownership |
+| --- | --- |
+| `bullets` | `points`, `list` |
+| `paragraph` | `points`, `statement` |
+| `blockquote` | `quote` |
+| `callout` | `points`, `statement`, `evidence` |
+| `code` | `points`, `evidence` |
+| `kpi_cards` | `data`, `fact` |
+| `chart` | `data`, `evidence` |
+| `flowchart` | `process` |
+| `architecture` | `hierarchy` |
+| `timeline` | `process` |
+| `comparison` | `comparison` |
+| `icon_cards` | `list`, `points` |
+| `row_cards` | `list`, `points` |
+| `steps` | `process` |
+| `rings` | `data`, `hierarchy` |
+| `numbered_cards` | `points`, `process` |
+| `roadmap` | `process` |
+| `matrix` | `comparison`, `hierarchy` |
+| `insight_panel` | `points`, `evidence` |
+| `verdict_banner` | `statement`, `points` |
+| `citation` | `quote`, `evidence` |
+| `image` | `photo`, `evidence` |
+| `image_grid` | `photo`, `list` |
+| `image_compare` | `comparison`, `evidence` |
+| `swot` | `comparison` |
+| `bmc` | `hierarchy` |
+| `waterfall` | `data`, `process` |
+| `gantt` | `process` |
+| `pest` | `comparison` |
+| `five_forces` | `hierarchy` |
+| `heatmap` | `data`, `comparison` |
+| `sankey` | `data`, `process` |
+| `data_table` | `data`, `evidence` |
+| `device_mockup` | `photo`, `evidence` |
+| `cycle` | `process` |
+| `people_cards` | `list` |
+| `tag_row` | `list` |
 
-Both draw a sequence of stages connected by arrows — the split is whether the process has an endpoint. `flowchart` is for a process that starts somewhere and finishes somewhere, even if it branches on the way; forcing a closed loop through it means adding an edge from the last node back to the first, and `flowchart`'s layout engine has no notion that this edge is special — it draws as a long stray line or arc crossing the whole diagram, reading like a mistake, not "this repeats". `cycle` is for a process that has no endpoint: it always returns to its own start (PDCA, a product lifecycle, a flywheel, a seasonal cycle, "design → build → review → design"). The test: does the last stage's arrow point at something new, or at the first stage again? Pointing at the first stage again is `cycle`, full stop.
+## Lookalikes
 
-Fields: `items` (3-8 entries, each a required `label` and an optional `description`), an optional overall `title`. `cycle` accepts no `direction` field (stages always run clockwise — write `items` in that reading order) and no center-text slot; keep the diagram to the stages themselves and put anything else in the surrounding page text. 3 is a hard floor (2 stages can't visually close into a ring — use `flowchart` or `steps` instead) and 8 is a hard ceiling (a 9th node crowds the ring past legible size on a 1280x720 slide — split into multiple `cycle` slides instead of cramming more stages onto one ring).
+- Use `steps` for a linear sequence, `flowchart` for branching decisions, and `cycle` when the final stage returns to the first.
+- Use `roadmap` for workstreams without a shared numeric axis. Use `gantt` for dated bars on one shared axis.
+- Use `pest` for the four external macro factors. Use `swot` for internal and external strategic assessment.
+- Use `sankey` when band width carries a conserved quantity through branches and merges. Use `flowchart` when branches carry decisions rather than quantities.
+- Use `data_table` when exact values must be read row by row. Use `chart` when the audience should grasp a numeric shape at a glance. Use `comparison` for qualitative attributes.
+- Use `gauge` inside `chart` for one value against one target. Use `kpi_cards` for several independent headline values.
+- Use `tag_row` only for short labels. Use `bullets` for prose items and cards for items with their own description.
 
-### Device mockups vs. plain images
+`architecture.layers` paints top to bottom by default. Set `direction: "bottom_up"` when the authored order should begin at the foundation. Keep the array in narrative order.
 
-`device_mockup` frames an asset inside a themed browser-window or device frame instead of a bare bordered rect — it exists for exactly one job: a screenshot that has to be read as "a real product, actually running", not "a picture on a slide". Reach for it when the content is a screenshot of software/an app/a dashboard and the page's own point is that this product is real and working today. Keep plain `image` for everything else — ordinary photos, diagrams, illustrations, or a screenshot used only to illustrate a point in passing, not to assert "this is live". Overusing `device_mockup` on content that isn't actually a product screenshot reads as a strange decorative border, not evidence.
-
-Fields: `device` (`"browser"` or `"phone"`, required — pptwise doesn't guess), `asset_id` (same semantics as `image`), an optional `caption`, and — `browser` only — an optional `url` that renders as the address-bar text (the single strongest "this is really running in a browser" signal available; a `phone` mockup has no address bar, so `validate` hard-rejects `url` set on one). The screen always crops to fill the frame (cover) — there's no `fit` choice, unlike `image`: a real device's screen fills edge to edge. No other decoration options exist on purpose — no tilt/perspective, no dark-frame toggle, no side-by-side multi-device layout; the theme's own tokens pick the frame colors.
-
-### People rosters vs. row/icon cards
-
-The test is simple: is every item a *person*? A team roster, a speaker lineup, a judging panel, an author list — `people_cards` lays 2-12 people out on an equal-weight card grid, each card a deterministic initials badge (derived from the person's `name`, no photo asset needed) plus name and optional `role`/`org`. Keep `row_cards`/`icon_cards` for non-person enumerations — features, milestones, product topics — even when they happen to carry the same name/description-shaped fields; those two cap out at 6 items each, `people_cards` at 12, so a list of people that would blow through that cap (a 9-speaker conference lineup, say) is the clearest sign it belongs on `people_cards` instead of forced into two unlabeled row_cards pages.
-
-Fields: `people` (2-12 entries, each a required `name` and optional `role`/`org`), an optional overall `title`. The initials badge is a pure function of `name`: a Latin name takes the first letter of its first two words ("Sarah Chen" → "SC"), a single Latin word takes its own first two letters, and a CJK name takes only its first character — the surname — never two ("王小明" → "王"). There is no photo field on purpose: a slide with real headshots already has `image_grid`, and `people_cards`'s entire reason to exist is the zero-asset initials badge. 2 is a hard floor (a single person's bio doesn't need a grid — use `callout` or plain text) and 12 is a hard ceiling (a larger roster splits across multiple `people_cards` slides instead of cramming a 13th+ card onto one grid).
-
-### Tag rows vs. bullets and cards
-
-A row of short parallel labels — a technology stack, a capability or skill set, a keyword set, the certifications a vendor holds — is `tag_row`, not `bullets` or `row_cards`. The test is whether every item is a short *label* (a name) rather than a sentence or a described item. `tag_row` lays 2-16 short labels out as a wrapping row of capsule pills, each label measured with its real per-character width so a CJK/Latin-mixed tag wraps correctly, with an optional `emphasis: "first"` that draws the first tag in the theme accent as the primary one among the rest. Keep `bullets` for a real prose list (items that read as sentences or clauses), and `row_cards`/`icon_cards` for items that each carry their own descriptive text — a tag has none.
-
-Fields: `items` (2-16 short strings, each ≤24 chars — a hard cap, because a tag is a label and not a sentence; over it, `validate` points you at `bullets`/`row_cards`), an optional overall `title`, and an optional `emphasis` (`"first"` or `"none"`, default `"none"`). 2 is a hard floor (a single label isn't a row — put it in the heading, a `callout`, or a `verdict_banner`) and 16 is a hard ceiling (past 16 the row reads as an unsorted keyword dump — split into multiple `tag_row` slides or group the tags into labeled sets).
+`swot`, `bmc`, `waterfall`, `gantt`, `pest`, `five_forces`, `heatmap`, and `sankey` are full-body components. Each must be the page's only component.

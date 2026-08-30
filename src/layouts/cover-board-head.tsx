@@ -211,7 +211,7 @@ export const layoutDef: LayoutDefinition = {
   // light-weight serif heading, emphasis chalk stroke under ** runs,
   // italic byline bottom-right. Lecture-hall grammar.
   id: "board-head",
-  kind: "archetype",
+  kind: "standard",
   slideTypes: ["cover"],
   slots: [
     { name: "kicker", accepts: [] },

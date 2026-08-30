@@ -1,11 +1,14 @@
 // @vitest-environment jsdom
-import { describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it } from "vitest"
 import { measureTextUnits } from "../lib/svg-text-layout"
 import { CANVAS_W_PX } from "../constants"
 import { isBold } from "./fonts"
 import { parseSvgRoot } from "./serialize"
 import { slideToSvgMarkup } from "./render-slide"
 import type { PptxIR, Slide } from "@/ir"
+import type { CanonicalThemeId } from "../themes"
+import { __resetRegisteredThemes } from "../themes/definitions"
+import { registerTestTheme } from "../themes/test-fixtures"
 
 // Gallery review r1 leftover item 11: image-split / image-top English
 // headings sized with Regular metrics then painted at font-weight 600.
@@ -18,10 +21,10 @@ const BAND_PAD_X = 96
 const TOP_TITLE_W = CANVAS_W_PX - BAND_PAD_X * 2 - 120
 const LATIN_DESCENT = 0.22
 
-function makeSlide(layout: "image-split" | "image-top", heading: string): Slide {
+function makeSlide(heading: string): Slide {
   return {
     type: "content",
-    layout,
+    kind: "photo",
     heading,
     components: [
       { type: "image", asset_id: "hero", fit: "cover", caption: "Onboarding cabinet" },
@@ -35,7 +38,7 @@ function makeSlide(layout: "image-split" | "image-top", heading: string): Slide 
 
 function makeIr(theme: string, slide: Slide): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "deck.pptx",
     theme: { id: theme },
     meta: { organization: "Strategy & Operations" },
@@ -44,8 +47,15 @@ function makeIr(theme: string, slide: Slide): PptxIR {
   } as PptxIR
 }
 
-function renderRoot(theme: string, slide: Slide): Element {
-  return parseSvgRoot(slideToSvgMarkup(makeIr(theme, slide), slide, 0))
+let themeSerial = 0
+
+afterEach(() => {
+  __resetRegisteredThemes()
+})
+
+function renderRoot(theme: CanonicalThemeId, face: "image-split" | "image-top", slide: Slide): Element {
+  const themeId = registerTestTheme(`image-pages-${themeSerial++}`, theme, { content: { photo: face } })
+  return parseSvgRoot(slideToSvgMarkup(makeIr(themeId, slide), slide, 0))
 }
 
 function titleNodes(root: Element, heading: string): Element[] {
@@ -68,8 +78,8 @@ function lineWidth(el: Element): number {
 describe("image-split / image-top gallery English heading overflow", () => {
   it("image-split: every title line of the gallery English heading fits the 564px text column", () => {
     for (const theme of ["consulting", "journal"] as const) {
-      const slide = makeSlide("image-split", GALLERY_EN_HEADING)
-      const root = renderRoot(theme, slide)
+      const slide = makeSlide(GALLERY_EN_HEADING)
+      const root = renderRoot(theme, "image-split", slide)
       const titles = titleNodes(root, GALLERY_EN_HEADING)
       expect(titles.length, theme).toBeGreaterThan(0)
       expect(
@@ -86,8 +96,8 @@ describe("image-split / image-top gallery English heading overflow", () => {
 
   it("image-top: gallery English heading stays inside the band box and is not one overflowing line", () => {
     for (const theme of ["consulting", "journal"] as const) {
-      const slide = makeSlide("image-top", GALLERY_EN_HEADING)
-      const root = renderRoot(theme, slide)
+      const slide = makeSlide(GALLERY_EN_HEADING)
+      const root = renderRoot(theme, "image-top", slide)
       const titles = titleNodes(root, GALLERY_EN_HEADING)
       expect(titles.length, theme).toBeGreaterThan(0)
       expect(titles.length, theme).toBeLessThanOrEqual(2)
@@ -116,8 +126,8 @@ describe("image-split / image-top gallery English heading overflow", () => {
 
   it("image-top wraps a longer English heading instead of shrinking one overflowing line, and the band grows", () => {
     const heading = `${GALLERY_EN_HEADING} across every region`
-    const slide = makeSlide("image-top", heading)
-    const root = renderRoot("journal", slide)
+    const slide = makeSlide(heading)
+    const root = renderRoot("journal", "image-top", slide)
     const titles = titleNodes(root, heading)
     expect(titles.length).toBeGreaterThanOrEqual(2)
     for (const t of titles) {

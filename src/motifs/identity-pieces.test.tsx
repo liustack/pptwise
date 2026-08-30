@@ -53,7 +53,7 @@ function slideOf(type: Slide["type"]): Slide {
 
 function irOf(theme: string, slide: Slide): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "x.pptx",
     theme: { id: theme },
     meta: { date: "2026-07-15", organization: "CloudSeek" },

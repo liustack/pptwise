@@ -12,6 +12,7 @@ import { CREATIVE_PURPLE, GRASS_GREEN, SKY_BLUE, SUN_YELLOW } from "./crayonbox-
 const chapter: Slide = { type: "chapter", heading: "探索计划", components: [] } as Slide
 const slide: Slide = {
   type: "content",
+  kind: "points",
   heading: "今天画三幅小作品",
   subheading: "先观察，再动笔，最后大胆分享。",
   components: [
@@ -31,7 +32,7 @@ function renderContent(contentSlide: Slide = slide) {
   const bg = resolveBackgroundHex(tokens.defaultBackgrounds.content, tokens.colors.surface)
   const ctx = buildCtx(tokens, {}, undefined, bg)
   const ir = {
-    version: "4",
+    version: "5",
     filename: "crayonbox-cards.pptx",
     theme: { id: "crayon" },
     meta: {},
@@ -155,6 +156,7 @@ describe("content-crayonbox-cards", () => {
   it("preserves arbitrary content through the SvgContent fallback", () => {
     const paragraphSlide: Slide = {
       type: "content",
+      kind: "points",
       heading: "别让正文消失",
       components: [{ type: "paragraph", text: "自动选中卡片版式时，这段正文仍然必须渲染。" }],
     } as Slide
@@ -165,9 +167,8 @@ describe("content-crayonbox-cards", () => {
   it("declares a pin-only full-density layout and exports safe primitives", () => {
     expect(layoutDef).toMatchObject({
       id: "crayonbox-cards",
-      kind: "archetype",
+      kind: "standard",
       pinOnly: true,
-      suppressMotif: true,
       slideTypes: ["content"],
       arrangements: "all",
     })

@@ -1,8 +1,7 @@
 /**
- * The v4 IR schema root: theme/meta/assets/brand/branding/background/slide/narrative
+ * The v5 IR schema root: theme/meta/assets/brand/branding/background/slide/narrative
  * and the top-level `PptxIRSchema` a deck document parses against
- * (`parsePptxIR`). The frozen v3 shape lives in `./legacy-v3.ts`, kept only
- * for `migrateIrV3ToV4`'s input parsing (spec §9.3).
+ * (`parsePptxIR`). Versions 1 through 4 are rejected at this boundary.
  *
  * **The `ComponentSchema` union below is a pure aggregator (src domain reorg
  * wave 2, spec §4.3), same discipline as `src/layouts/registry.ts`'s T1d
@@ -31,11 +30,11 @@
  * elsewhere.
  */
 import { z } from "zod"
-import { BEAT_VALUES } from "./narrative-values"
+import { KIND_VALUES } from "./narrative-values"
 import { componentTypeError } from "./schema-error-hints"
 import { schema as bulletsSchema } from "./components/bullets"
 import { schema as paragraphSchema } from "./components/paragraph"
-import { schema as quoteSchema } from "./components/quote"
+import { schema as blockquoteSchema } from "./components/blockquote"
 import { schema as calloutSchema } from "./components/callout"
 import { schema as codeSchema } from "./components/code"
 import { schema as kpiCardsSchema } from "./components/kpi-cards"
@@ -71,12 +70,9 @@ import { schema as cycleSchema } from "./components/cycle"
 import { schema as peopleCardsSchema } from "./components/people-cards"
 import { schema as tagRowSchema } from "./components/tag-row"
 
-// Re-exported so `src/spec/index.ts`'s `PageSpecSchema.beat` can share this
-// exact tuple instead of a second, independently-declared one — same
-// "one vocabulary, two schemas" posture `SlideSchema.beat`'s own doc comment
-// above describes, see `./narrative-values.ts` for why this lives there
-// rather than being declared directly in either schema module.
-export { BEAT_VALUES }
+// Re-exported so IR, spec, theme menus, and public tooling share one exact
+// semantic vocabulary instead of maintaining independent string unions.
+export { KIND_VALUES }
 
 // Built-in theme ids — a registered, renderable subset, not a closed universe:
 // v0.4's theme registry can install more without a schema change (theme.id
@@ -288,9 +284,6 @@ const AssetSchema = z
   })
   .strict()
 
-// Exported (not just used internally) so `./legacy-v3.ts` (the frozen v3
-// schema) can reuse this exact schema — assets never changed shape between
-// v3 and v4 (spec §9.1: "其余 IR 字段保持不变").
 export const AssetsSchema = z
   .object({ images: z.record(z.string(), AssetSchema).default({}) })
   .strict()
@@ -332,7 +325,7 @@ export const DeckBrandingSchema = z.enum(DECK_BRANDING_VALUES).describe(
 const ComponentSchema = z.discriminatedUnion("type", [
   bulletsSchema,
   paragraphSchema,
-  quoteSchema,
+  blockquoteSchema,
   calloutSchema,
   codeSchema,
   kpiCardsSchema,
@@ -382,113 +375,58 @@ export const COMPONENT_TYPES: readonly string[] = ComponentSchema.options.map((o
 
 // ── Slide ──
 
-// Exported (not just used internally) so `./legacy-v3.ts` (the frozen v3
-// schema, kept around only for `migrateIrV3ToV4`'s input parsing and the
-// v3-hard-reject path's own tests) can reuse this exact schema instead of a
-// second definition that could drift from it — slides never changed shape
-// between v3 and v4 (spec §9.1: "其余 IR 字段保持不变").
-export const SlideSchema = z
-  .object({
-    type: z.enum(["cover", "chapter", "content", "ending"]).default("content"),
-    // 稳定页标识（W5 spec/assemble 注入，裸 IR 可省）。schema 层不做跨 slide
-    // 校验——同 deck 内重复 id 是 validateIr 的硬错误（api.ts
-    // checkDuplicateSlideIds），错误列出重复的 id，不带页码（跨多页的
-    // deck 级问题，单一 page 字段放不下）。
-    id: z.string().optional(),
-    // assemble 对未填充页生成的占位标记（W5）。validateIr 放行占位页的
-    // schema 与内容质量检查（ir-quality.ts 的 checkIrQuality 跳过占位页
-    // 的所有内容规则——占位页无内容可判）。generatePptx 未传
-    // `{ draft: true }` 时对含占位页的 deck 硬拦（api.ts 的 draft
-    // gate），renderSlideSvg（预览）永远不拦。
-    placeholder: z.literal(true).optional(),
-    // Layout registry id（layout 或 takeover 皆可，src/layouts/registry.ts
-    // 的 LAYOUT_REGISTRY 键）。schema 层是开放 string——已注册 + slideTypes 适用
-    // 是 validateIr 的硬门（api.ts，报错带可用清单与页号），同 theme.id「schema
-    // 开放、validate 收口」的分层哲学（spec §6）。省略 = 四步确定性选型（页型
-    // 全集 → theme.layouts 边界 → scenario 加权 → 加权 seed 取样加相邻防重复，
-    // src/render/layout-selection.ts。容量归 validate 密度门，不参与选型）。4 个图文接管 id
-    // （image-split/image-top/image-bottom/image-annotate，原「图文范式族」
-    // P3～2026-07-09 研究 ppt-master showcase 借鉴的 image_split/image_top/
-    // image_bottom/image_annotate 四个 variant 值）的具体版式行为详见
-    // registry.ts 对应条目，不在这里重复。
-    layout: z.string().optional(),
-    /**
-     * Page-level rhythm hint (P1 variety wave, task 1 — additive v4 field,
-     * spec's own beat vocabulary, `BEAT_VALUES`/`./narrative-values.ts`:
-     * "anchor" | "dense" | "breathing"). **A selection-weight hint, not a
-     * hard filter**: `resolveLayoutId` (`svg/layout-selection.ts`)
-     * combines a small tendency-weight factor for whichever content
-     * layouts the declared beat favors with the existing
-     * `narrative.strategy` weight via `Math.max` (a P1 fix-round revision —
-     * see `BEAT_TENDENCY_WEIGHT`'s own doc comment for why a product
-     * measurably compounded into a monotony bug and `max` doesn't) — an
-     * omitted `beat` contributes an implicit weight of 1 to every candidate,
-     * which `max` never lets exceed the strategy-only weight, so a slide/deck
-     * that never declares one resolves and renders byte-identically to
-     * before this field existed (the v4 freeze's additive-only contract,
-     * `docs/concepts.md`'s "v4
-     * schema freeze" section). Authored on a `deck.spec.json` page
-     * (`PageSpecSchema.beat`, `src/spec/index.ts`) and carried through
-     * `assembleDeck` into this exact field as of this task — previously a
-     * spec-only authoring anchor dropped at assemble (see that module's own
-     * doc comment history). Not confined to `type: "content"` at the schema
-     * layer (same open posture as every other optional `Slide` field), but
-     * only ever has a real weighting effect there in practice: every
-     * `BEAT_TENDENCIES` entry (`svg/layout-selection.ts`) names only content
-     * layout ids, the identical "cover/chapter/ending weighting is a
-     * structural no-op" convention `StrategyDefinition.layoutTendencies`
-     * already relies on for the same reason (that field's own doc comment).
-     */
-    beat: z.enum(BEAT_VALUES).optional(),
-    // Body-arrangement（W2 任务 3：从旧 variant 字段拆出——上面 4 个图文接管值
-    // 升格进 layout，其余 9 个身体排布值原样保留，语义逐条不变）。
-    arrangement: z
-      .enum([
-        "single",
-        "two_column",
-        "kpi_focus",
-        "image_focus",
-        "code",
-        "quote",
-        "big_number",
-        "assertion_evidence",
-        // aside（2026-07-12 借鉴财经简报 EDITORIAL NOTE）：主内容 2/3 +
-        // 观点侧栏 1/3——末位块进侧栏（放 callout/quote/kpi 巨号观点），
-        // 数据与观点并置。<2 块退化 single。
-        "aside",
-      ])
-      .optional(),
-    heading: z.string().optional(),
-    subheading: z.string().optional(),
-    components: z.array(ComponentSchema).default([]),
-    background: BackgroundSpecSchema.optional(),
-    // 图片排版 P4：受控装饰原语——模型只有选择权（kind + 强度 + corner_tag
-    // 的文本），绘制由渲染层手写 SVG 按主题 token 着色，不接受任意图形。
-    decor: z
-      .object({
-        kind: z.enum(["big_number", "corner_tag", "rule_line", "quote_marks", "geo_dots"]),
-        intensity: z.enum(["subtle", "normal"]).optional(),
-        text: z.string().max(12).optional(),
-      })
-      .strict()
-      .optional(),
-    // 仅 image_split 用：图列在左还是右（缺省 left；ppt-master P04 右图出血）
-    image_side: z.enum(["left", "right"]).optional(),
-    footnote: z.string().optional(),
-    /**
-     * Speaker notes — exported as native PowerPoint speaker notes
-     * (`src/pptx/generate.ts`'s `slide.addNotes`), never rendered onto the
-     * canvas SVG. Purely additive on the frozen v3 schema (optional, no
-     * default): an existing IR that omits this field parses and exports
-     * identically to before this field existed. Never reaches the canvas
-     * SVG, so it carries no geometry to overflow and no ink to contrast-check
-     * — out of scope for capacity/audit measurement
-     * (`src/audit/deck-audit.ts`) by construction, not by an added
-     * exemption.
-     */
-    notes: z.string().optional(),
-  })
-  .strict()
+const CommonSlideFields = {
+  // 稳定页标识（W5 spec/assemble 注入，裸 IR 可省）。schema 层不做跨 slide
+  // 校验——同 deck 内重复 id 是 validateIr 的硬错误。
+  id: z.string().optional(),
+  // assemble 对未填充页生成的占位标记（W5）。
+  placeholder: z.literal(true).optional(),
+  heading: z.string().optional(),
+  subheading: z.string().optional(),
+  components: z.array(ComponentSchema).default([]),
+  background: BackgroundSpecSchema.optional(),
+  // 图片排版 P4：受控装饰原语——模型只有选择权，绘制由渲染层完成。
+  decor: z
+    .object({
+      kind: z.enum(["big_number", "corner_tag", "rule_line", "quote_marks", "geo_dots"]),
+      intensity: z.enum(["subtle", "normal"]).optional(),
+      text: z.string().max(12).optional(),
+    })
+    .strict()
+    .optional(),
+  // 仅图像脸使用：图列在左还是右。
+  image_side: z.enum(["left", "right"]).optional(),
+  footnote: z.string().optional(),
+  /** Speaker notes are exported as native PowerPoint notes and never painted on the slide canvas. */
+  notes: z.string().optional(),
+}
+
+const ExplicitSlideSchema = z.discriminatedUnion("type", [
+  z.object({ type: z.literal("cover"), ...CommonSlideFields }).strict(),
+  z.object({ type: z.literal("chapter"), ...CommonSlideFields }).strict(),
+  z
+    .object({
+      type: z.literal("content"),
+      /** The required semantic posture selected from the theme's content menu. */
+      kind: z.enum(KIND_VALUES),
+      ...CommonSlideFields,
+    })
+    .strict(),
+  z.object({ type: z.literal("ending"), ...CommonSlideFields }).strict(),
+])
+
+/**
+ * IR v5 slide contract. Content slides require `kind`. Cover, chapter, and
+ * ending slides have no `kind` field because page type already determines
+ * their menu entry. Omitting `type` still means `content`, but therefore also
+ * requires an explicit `kind`.
+ */
+export const SlideSchema = z.preprocess((input) => {
+  if (typeof input !== "object" || input === null || Array.isArray(input) || Object.hasOwn(input, "type")) {
+    return input
+  }
+  return { ...input, type: "content" }
+}, ExplicitSlideSchema)
 
 // ── Narrative（spec §5, renamed from "Scenario" — spec §8.1）──
 
@@ -527,30 +465,21 @@ export const SlideSchema = z
  * Renamed from `ScenarioAxesInputSchema` in the vocabulary-v4 rename (task
  * 1) — not itself named in spec §8.1's table, but derived from
  * `ScenarioAxes`→`NarrativeProfile` the same way the rest of this module's
- * axis vocabulary was. `./legacy-v3.ts`'s frozen `PptxIRV3Schema` reuses this
- * exact schema for its own `scenario` field too — the object shape (any
- * string key, any value) never changed between v3 and v4, only which field
- * name and which axis-key vocabulary `resolveNarrative`/`resolveScenario`
- * validate against it downstream.
+ * axis vocabulary was.
  */
 export const NarrativeProfileInputSchema = z.record(z.string(), z.unknown())
 
-// ── 顶层 IR（v4 — current. The frozen v3 shape lives in ./legacy-v3.ts,
-// kept only for migrateIrV3ToV4's input parsing and the v3-hard-reject
-// path's own tests, per spec §9.3: v3 is a closed, frozen contract that
-// this repo's render chain no longer speaks directly — every v3 input must
-// pass through `migrateIrV3ToV4` first）──
+// ── 顶层 IR（v5）──
+
+export const OLD_IR_VERSION_ERROR =
+  `Current IR format is version "5". Content slides require kind (${KIND_VALUES.join(", ")}). ` +
+  'Cover, chapter, and ending slides do not use kind. Slide fields "beat", "layout", and "arrangement", and deck field "seed", were removed. ' +
+  'The quotation component type is "blockquote". No migration tool is provided. Rewrite the input to the current schema.'
 
 export const PptxIRSchema = z
   .object({
-    // v4 is now the default (spec §15.1: "version 默认 '4'") — an omitted
-    // version is treated as v4, not v3. `validateIr` (`src/api.ts`) branches
-    // on an *explicit* "2" or "3" before this schema ever runs (hard reject,
-    // spec §9.3/§15.3); everything else — omitted, or explicit "4" — reaches
-    // this schema's own `.strict()` parse with no old-vocabulary rescue
-    // (spec §16: an old field name like `scenario` fails here as an
-    // unrecognized key, same as any other typo).
-    version: z.literal("4").default("4"),
+    /** IR v5 is the only accepted format. An omitted version is authored as v5. */
+    version: z.literal("5", { error: OLD_IR_VERSION_ERROR }).default("5"),
     filename: z.string().default("presentation"),
     // Preset id string or a partial per-axis override object — both
     // branches are open at the schema layer now (validity checked in
@@ -591,10 +520,6 @@ export const PptxIRSchema = z
      * See {@link DeckBrandingSchema}.
      */
     branding: DeckBrandingSchema.optional(),
-    // 修订稳定性 seed（W5 由 assemble 从 plan 注入，W4 消费做取样选型）。与
-    // variety.ts 的内容哈希 deckSeed 正交、互不影响——缺省时 W4 前的选型/
-    // 渲染行为不变。
-    seed: z.number().int().optional(),
     slides: z.array(SlideSchema),
   })
   .strict()
@@ -603,6 +528,7 @@ export type PptxIR = z.infer<typeof PptxIRSchema>
 export type Component = z.infer<typeof ComponentSchema>
 export type BackgroundSpec = z.infer<typeof BackgroundSpecSchema>
 export type Slide = z.infer<typeof SlideSchema>
+export type PageKind = (typeof KIND_VALUES)[number]
 export type Assets = z.infer<typeof AssetsSchema>
 export type Meta = z.infer<typeof MetaSchema>
 export type Brand = z.infer<typeof BrandSchema>
@@ -632,9 +558,16 @@ export type TimelineMilestone = { date: string; title: string; desc?: string }
 export type ComparisonRow = { label: string; cells: string[] }
 export type CitationSource = { label: string; url?: string; ref?: string }
 
+function isRetiredIrVersion(input: unknown): boolean {
+  if (typeof input !== "object" || input === null || Array.isArray(input)) return false
+  const version = (input as Record<string, unknown>).version
+  return typeof version === "string" && ["1", "2", "3", "4"].includes(version)
+}
+
 export function parsePptxIR(
-  json: unknown
+  json: unknown,
 ): { success: true; data: PptxIR } | { success: false; error: string } {
+  if (isRetiredIrVersion(json)) return { success: false, error: `version: ${OLD_IR_VERSION_ERROR}` }
   const result = PptxIRSchema.safeParse(json)
   if (result.success) return { success: true, data: result.data }
   return {

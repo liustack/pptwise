@@ -22,14 +22,14 @@ beforeAll(() => {
 
 function makeIr(components: Component[]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "heatmap-export-fixture",
     theme: { id: "consulting" },
     meta: {},
     assets: { images: {} },
     slides: [
       { type: "cover", heading: "Cover" },
-      { type: "content", heading: "Heatmap", components },
+      { type: "content", kind: "points", heading: "Heatmap", components },
       { type: "ending", heading: "Thanks" },
     ],
   } as PptxIR

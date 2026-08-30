@@ -138,13 +138,13 @@ export function GiltWordEnding({ ir, slide, ctx }: SvgTemplateProps) {
 }
 
 export const layoutDef = {
+  branding: "none",
   // ending-gilt-word-ending.tsx: pinOnly two-line close, gilt only on
   // **emphasis**. Footer from org or authors. Motif owns the double frame.
   // Empty heading invents no thank-you.
   id: "gilt-word-ending",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
-  branding: "none",
   slideTypes: ["ending"],
   slots: [
     { name: "heading", accepts: [] },

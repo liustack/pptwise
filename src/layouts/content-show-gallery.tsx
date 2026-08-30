@@ -180,7 +180,6 @@ export function ShowGalleryContent({ ir, slide, index, ctx }: SvgTemplateProps) 
         </g>
       ) : (
         <SvgContent
-          arrangement={slide.arrangement}
           components={slide.components}
           rect={{ x: 64, y: 222, w: 1152, h: 390 }}
           ctx={showNeutralFallbackCtx(ctx)}
@@ -206,10 +205,10 @@ export function ShowGalleryContent({ ir, slide, index, ctx }: SvgTemplateProps) 
 }
 
 export const layoutDef = {
-  id: "show-gallery",
-  kind: "archetype",
-  pinOnly: true,
   suppressMotif: true,
+  id: "show-gallery",
+  kind: "standard",
+  pinOnly: true,
   slideTypes: ["content"],
   slots: [
     { name: "kicker", accepts: [] },

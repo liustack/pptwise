@@ -154,13 +154,13 @@ export function SealNumeralChapter({ ir, slide, index, ctx }: SvgTemplateProps) 
 }
 
 export const layoutDef = {
+  branding: "none",
   // chapter-seal-numeral-chapter.tsx: square primary numeral block, title
   // to its right, accent closing rule. Light page ground comes from the
   // theme. Motif yields on chapter. Empty heading draws no title.
   id: "seal-numeral-chapter",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
-  branding: "none",
   slideTypes: ["chapter"],
   slots: [
     { name: "kicker", accepts: [] },

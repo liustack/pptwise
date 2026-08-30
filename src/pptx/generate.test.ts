@@ -88,9 +88,10 @@ vi.mock("pptxgenjs", () => ({ default: FakePptx }))
 function makeSlide(type: Slide["type"], heading?: string): Slide {
   return {
     type,
+    ...(type === "content" ? { kind: "points" as const } : {}),
     heading: heading ?? `${type} 标题`,
     components: [{ type: "paragraph", text: `${type} 正文内容` }],
-  }
+  } as Slide
 }
 
 // Theme defaults to "consulting" rather than the legacy "ikb-swiss"
@@ -106,7 +107,7 @@ function makeSlide(type: Slide["type"], heading?: string): Slide {
 // of that gradient-patch path entirely.
 function makeIR(slides: Slide[], themeId = "consulting"): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "test.pptx",
     theme: { id: themeId as PptxIR["theme"]["id"] },
     meta: {},

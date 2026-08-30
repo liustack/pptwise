@@ -16,7 +16,7 @@ const EN_BODY =
 
 function ir(theme: string, slides: Slide[]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "x.pptx",
     theme: { id: theme },
     meta: {},
@@ -35,21 +35,21 @@ function render(body: React.ReactElement): { markup: string; root: Element } {
 }
 
 describe("layoutDef", () => {
-  it("declares pinOnly, branding none, capacity-1 body, content slide type", () => {
+  it("declares pinOnly, capacity-1 body, and content slide type", () => {
     expect(layoutDef.id).toBe("pull-quote")
     expect(layoutDef.pinOnly).toBe(true)
-    expect(layoutDef.branding).toBe("none")
     expect(layoutDef.slideTypes).toEqual(["content"])
     expect(layoutDef.slots.find((s) => s.name === "body")?.capacity).toBe(1)
   })
 })
 
 describe("PullQuoteContent", () => {
-  it("CJK quote: italic heading, accent attribution from quote component, muted paragraph body", () => {
+  it("CJK quote: italic heading, accent attribution from blockquote component, muted paragraph body", () => {
     const ctx = buildCtx(resolveStyle("consulting"), {})
     const chapter: Slide = { type: "chapter", heading: "第六章 · 羽毛下的智识", components: [] } as Slide
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "pull-quote",
       heading: CJK_QUOTE,
       components: [
@@ -73,14 +73,15 @@ describe("PullQuoteContent", () => {
     expect(() => assertSubset(root)).not.toThrow()
   })
 
-  it("English quote + quote.attribution wins over subheading", () => {
+  it("English quote + blockquote.attribution wins over subheading", () => {
     const ctx = buildCtx(resolveStyle("consulting"), {})
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "pull-quote",
       heading: EN_QUOTE,
       subheading: "should not appear",
-      components: [{ type: "quote", text: EN_QUOTE, attribution: "Irene Pepperberg" }],
+      components: [{ type: "blockquote", text: EN_QUOTE, attribution: "Irene Pepperberg" }],
     } as Slide
     const { markup } = render(
       <PullQuoteContent ir={ir("consulting", [slide])} slide={slide} index={0} ctx={ctx} />,
@@ -95,6 +96,7 @@ describe("PullQuoteContent", () => {
     const chapter: Slide = { type: "chapter", heading: "Mind", components: [] } as Slide
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "pull-quote",
       heading: EN_QUOTE,
       components: [{ type: "paragraph", text: EN_BODY }],
@@ -107,7 +109,7 @@ describe("PullQuoteContent", () => {
 
   it("empty meta fields degrade: no kicker, no attribution, no body, heading remains", () => {
     const ctx = buildCtx(resolveStyle("consulting"), {})
-    const slide: Slide = { type: "content", layout: "pull-quote", heading: CJK_QUOTE, components: [] } as Slide
+    const slide: Slide = { type: "content", kind: "points", layout: "pull-quote", heading: CJK_QUOTE, components: [] } as Slide
     const { root } = render(
       <PullQuoteContent ir={ir("consulting", [slide])} slide={slide} index={0} ctx={ctx} />,
     )
@@ -120,6 +122,7 @@ describe("PullQuoteContent", () => {
     const ctx = buildCtx(resolveStyle("consulting"), {})
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "pull-quote",
       heading: `${CJK_LONG}${CJK_LONG}`,
       components: [],

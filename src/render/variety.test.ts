@@ -4,12 +4,12 @@ import { deckSeed, pickBySeed, weightedPickBySeed } from "./variety"
 
 function ir(filename: string, headings: string[]): PptxIR {
   return {
-    version: "3",
+    version: "5",
     filename,
     theme: { id: "consulting" },
     meta: {},
     assets: { images: {} },
-    slides: headings.map((heading) => ({ type: "content", heading, components: [] })),
+    slides: headings.map((heading) => ({ type: "content", kind: "points", heading, components: [] })),
   } as unknown as PptxIR
 }
 
@@ -24,16 +24,6 @@ describe("deckSeed", () => {
   })
   it("heading 缺省不炸（cover/ending 可无 heading）", () => {
     expect(() => deckSeed(ir("a.pptx", [undefined as unknown as string]))).not.toThrow()
-  })
-  it("显式 ir.seed 优先于内容哈希（W4 seed 机制修订：修订稳定性阶梯的第一级）", () => {
-    const a: PptxIR = { ...ir("方案.pptx", ["现状"]), seed: 12345 }
-    const b: PptxIR = { ...ir("方案.pptx", ["对策"]), seed: 12345 } // 内容不同
-    expect(deckSeed(a)).toBe(12345)
-    expect(deckSeed(a)).toBe(deckSeed(b)) // 同 seed 忽略内容差异——这正是修订稳定性的意义
-  })
-  it("显式 ir.seed=0 仍被采用（非 falsy 回落——`!== undefined` 而非 `??`/`||`）", () => {
-    const a: PptxIR = { ...ir("a.pptx", ["x"]), seed: 0 }
-    expect(deckSeed(a)).toBe(0)
   })
 })
 

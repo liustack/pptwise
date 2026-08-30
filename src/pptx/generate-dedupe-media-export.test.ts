@@ -26,7 +26,7 @@ const duplicatePng = makeSolidRegionPngDataUri(4, 4, () => [200, 40, 40])
 
 function deckWithDuplicateMedia(): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "dedupe-integration-fixture.pptx",
     theme: { id: "consulting" },
     meta: {},
@@ -37,8 +37,8 @@ function deckWithDuplicateMedia(): PptxIR {
       },
     },
     slides: [
-      { type: "content", heading: "Slide A", components: [{ type: "image", asset_id: "heroA", fit: "cover" }] },
-      { type: "content", heading: "Slide B", components: [{ type: "image", asset_id: "heroB", fit: "cover" }] },
+      { type: "content", kind: "points", heading: "Slide A", components: [{ type: "image", asset_id: "heroA", fit: "cover" }] },
+      { type: "content", kind: "points", heading: "Slide B", components: [{ type: "image", asset_id: "heroB", fit: "cover" }] },
       { type: "ending", heading: "Thanks", components: [] },
     ],
   }

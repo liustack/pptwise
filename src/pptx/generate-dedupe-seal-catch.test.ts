@@ -34,7 +34,7 @@ vi.mock("./pptx-dedupe-media", () => ({
 
 function tinyIr(): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "seal-catch-fixture.pptx",
     theme: { id: "consulting" },
     meta: {},

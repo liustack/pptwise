@@ -193,12 +193,12 @@ export function AfterwordEnding({ slide, ctx }: SvgTemplateProps) {
 }
 
 export const layoutDef: LayoutDefinition = {
+  branding: "none",
   // ending-afterword-ending.tsx: AFTERWORD kicker, two-line close from
   // heading, foot rule, next-issue preview from subheading. No thank-you.
   id: "afterword-ending",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
-  branding: "none",
   slideTypes: ["ending"],
   slots: [
     { name: "kicker", accepts: [] },

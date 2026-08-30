@@ -265,14 +265,14 @@ export function IssueHeadCover({ ir, slide, ctx }: SvgTemplateProps) {
 }
 
 export const layoutDef = {
+  branding: "none",
+  suppressMotif: true,
   // cover-issue-head-cover.tsx: left masthead name, right date, wenwu
   // rules at y148/156, lead type, foot rule and colophon. No accent.
   // Empty heading draws no title. pinOnly.
   id: "issue-head-cover",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
-  branding: "none",
-  suppressMotif: true,
   slideTypes: ["cover"],
   slots: [
     { name: "kicker", accepts: [] },

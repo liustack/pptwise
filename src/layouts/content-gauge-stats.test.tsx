@@ -13,6 +13,7 @@ import { GaugeStatsContent, layoutDef } from "./content-gauge-stats"
 const chapter: Slide = { type: "chapter", heading: "增长路径", components: [] } as Slide
 const slide: Slide = {
   type: "content",
+  kind: "points",
   heading: "核心指标已越过修复拐点",
   subheading: "增长质量与交付效率同步改善。",
   components: [
@@ -35,7 +36,7 @@ function renderContent(contentSlide: Slide = slide) {
   const bg = resolveBackgroundHex(tokens.defaultBackgrounds.content, tokens.colors.surface)
   const ctx = buildCtx(tokens, {}, undefined, bg)
   const ir = {
-    version: "4",
+    version: "5",
     filename: "gauge-stats.pptx",
     theme: { id: "consulting" },
     meta: META,
@@ -159,6 +160,7 @@ describe("content-gauge-stats", () => {
   it("preserves arbitrary content through the shared SvgContent fallback", () => {
     const paragraphSlide: Slide = {
       type: "content",
+      kind: "points",
       heading: "运营判断",
       components: [{ type: "paragraph", text: "这一段不能因为自动选中**统计版式**而消失。" }],
       footnote: "来源：运营周报",
@@ -206,9 +208,8 @@ describe("content-gauge-stats", () => {
   it("declares a theme-locked pinOnly full-density content layout", () => {
     expect(layoutDef).toMatchObject({
       id: "gauge-stats",
-      kind: "archetype",
+      kind: "standard",
       slideTypes: ["content"],
-      branding: "none",
       arrangements: "all",
     })
     expect(layoutDef.pinOnly).toBe(true)

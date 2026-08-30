@@ -17,7 +17,7 @@ function chapter(heading: string, extras: Partial<Slide> = {}): Slide {
 
 function ir(themeId: string, slides: Slide[]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "seal-numeral-chapter.pptx",
     theme: { id: themeId },
     meta: {},
@@ -124,9 +124,8 @@ describe("chapter-seal-numeral-chapter — board geometry", () => {
 describe("chapter-seal-numeral-chapter — shared pool", () => {
   it("is registered as a pinOnly chapter layout", () => {
     expect(layoutDef.id).toBe("seal-numeral-chapter")
-    expect(layoutDef.kind).toBe("archetype")
+    expect(layoutDef.kind).toBe("standard")
     expect(layoutDef.pinOnly).toBe(true)
-    expect(layoutDef.branding).toBe("none")
     expect(layoutDef.slideTypes).toEqual(["chapter"])
     expect("paintsOwnBackground" in layoutDef).toBe(false)
   })

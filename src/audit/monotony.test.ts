@@ -13,7 +13,7 @@ beforeAll(() => {
 
 function deck(themeId: string, slides: Slide[], overrides: Partial<PptxIR> = {}): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "deck-audit-fixture",
     theme: { id: themeId },
     meta: {},
@@ -26,6 +26,7 @@ function deck(themeId: string, slides: Slide[], overrides: Partial<PptxIR> = {})
 function bulletsSlide(heading: string, id?: string): Slide {
   return {
     type: "content",
+    kind: "points",
     ...(id !== undefined ? { id } : {}),
     heading,
     components: [{ type: "bullets", items: ["one", "two", "three"] }],
@@ -35,6 +36,7 @@ function bulletsSlide(heading: string, id?: string): Slide {
 function kpiSlide(heading: string, id?: string): Slide {
   return {
     type: "content",
+    kind: "points",
     ...(id !== undefined ? { id } : {}),
     heading,
     components: [{ type: "kpi_cards", items: [{ value: "17", label: "themes" }] }],
@@ -150,7 +152,7 @@ describe("auditDeck — monotony", () => {
     const ir = deck("consulting", [
       bulletsSlide("a"),
       bulletsSlide("b"),
-      { type: "content", placeholder: true, components: [] },
+      { type: "content", kind: "points", placeholder: true, components: [] },
       bulletsSlide("c"),
     ])
     const report = auditDeck(ir)
@@ -166,9 +168,9 @@ describe("auditDeck — monotony", () => {
       code: CODE_OVERFLOW,
     }
     const ir = deck("consulting", [
-      { type: "content", id: "s1", heading: "overflow a", components: [overflowingCode] },
-      { type: "content", id: "s2", heading: "overflow b", components: [overflowingCode] },
-      { type: "content", id: "s3", heading: "overflow c", components: [overflowingCode] },
+      { type: "content", kind: "points", id: "s1", heading: "overflow a", components: [overflowingCode] },
+      { type: "content", kind: "points", id: "s2", heading: "overflow b", components: [overflowingCode] },
+      { type: "content", kind: "points", id: "s3", heading: "overflow c", components: [overflowingCode] },
     ])
     const report = auditDeck(ir)
     const codes = report.findings.map((f) => f.code)

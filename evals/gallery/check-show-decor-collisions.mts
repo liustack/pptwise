@@ -22,7 +22,7 @@ import {
 } from "@/render/depth-contract/geometry"
 import type { Manifest } from "./render"
 
-const SHOW_ARCHETYPE_SELECTOR = '[data-archetype^="show-"]'
+const SHOW_ARCHETYPE_SELECTOR = '[data-face^="show-"]'
 const LOGO_BOX = { x: 1120, y: 630, w: 96, h: 40 } as const
 const FOOTER_BAND = { x: 0, y: 620, w: 1280, h: 44 } as const
 

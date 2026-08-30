@@ -18,7 +18,7 @@ function slide(heading = HEADING, extras: Partial<Slide> = {}): Slide {
 
 function ir(themeId: string, meta: PptxIR["meta"] = {}, s: Slide = slide()): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "chalk-band-cover.pptx",
     theme: { id: themeId },
     meta,
@@ -146,10 +146,9 @@ describe("cover-chalk-band-cover — board geometry", () => {
 describe("cover-chalk-band-cover — shared pool", () => {
   it("is registered as a pinOnly cover named by composition, not theme", () => {
     expect(layoutDef.id).toBe("chalk-band-cover")
-    expect(layoutDef.kind).toBe("archetype")
+    expect(layoutDef.kind).toBe("standard")
     expect(layoutDef.pinOnly).toBe(true)
     expect("paintsOwnBackground" in layoutDef).toBe(false)
-    expect(layoutDef.branding).toBe("none")
     expect(layoutDef.slideTypes).toEqual(["cover"])
   })
 

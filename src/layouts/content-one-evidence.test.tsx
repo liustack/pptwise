@@ -41,7 +41,7 @@ const BAR_CHART = {
 
 function ir(theme: string, slides: Slide[]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "x.pptx",
     theme: { id: theme },
     meta: {},
@@ -60,10 +60,9 @@ function render(body: React.ReactElement): { markup: string; root: Element } {
 }
 
 describe("layoutDef", () => {
-  it("declares pinOnly, branding none, capacity-1 body, content slide type", () => {
+  it("declares pinOnly, capacity-1 body, and content slide type", () => {
     expect(layoutDef.id).toBe("one-evidence")
     expect(layoutDef.pinOnly).toBe(true)
-    expect(layoutDef.branding).toBe("none")
     expect(layoutDef.slideTypes).toEqual(["content"])
     expect(layoutDef.slots.find((s) => s.name === "body")?.capacity).toBe(1)
   })
@@ -74,6 +73,7 @@ describe("OneEvidenceContent", () => {
     const ctx = buildCtx(resolveStyle("insight"), {})
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "one-evidence",
       heading: CJK_CLAIM,
       footnote: "来源：监测站年报",
@@ -100,6 +100,7 @@ describe("OneEvidenceContent", () => {
     const ctx = buildCtx(resolveStyle("consulting"), {})
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "one-evidence",
       heading: EN_CLAIM,
       components: [{ type: "image", asset_id: "img1", fit: "cover" }, BAR_CHART],
@@ -115,6 +116,7 @@ describe("OneEvidenceContent", () => {
     const ctx = buildCtx(resolveStyle("academic"), {})
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "one-evidence",
       heading: EN_CLAIM,
       components: [BAR_CHART],
@@ -131,6 +133,7 @@ describe("OneEvidenceContent", () => {
     const extreme = `${CJK_LONG}${MIXED_LONG}`
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "one-evidence",
       heading: extreme,
       components: [],
@@ -151,6 +154,7 @@ describe("OneEvidenceContent", () => {
     const ctx = buildCtx(resolveStyle("consulting"), {})
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "one-evidence",
       heading: CJK_CLAIM,
       components: [],
@@ -167,6 +171,7 @@ describe("OneEvidenceContent", () => {
     const ctx = buildCtx(resolveStyle("consulting"), {})
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "one-evidence",
       heading: CJK_CLAIM,
       components: [BAR_CHART],
@@ -226,6 +231,7 @@ describe("one-evidence evidence vs assertion partition", () => {
     const ctx = buildCtx(resolveStyle(theme), {})
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "one-evidence",
       heading: PARTITION_CLAIM,
       subheading: "217 张工单全量统计，无一例外",
@@ -249,6 +255,7 @@ describe("one-evidence evidence vs assertion partition", () => {
     const ctx = buildCtx(resolveStyle("insight"), {})
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "one-evidence",
       heading: CJK_CLAIM,
       components: [BAR_CHART],
@@ -269,6 +276,7 @@ describe("one-evidence evidence vs assertion partition", () => {
     const ctx = buildCtx(resolveStyle("museum"), {})
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "one-evidence",
       heading: PARTITION_CLAIM,
       subheading: "试点客户 90 天 · 217 张工单",

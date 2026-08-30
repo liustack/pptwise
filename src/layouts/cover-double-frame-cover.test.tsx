@@ -1,11 +1,13 @@
 // @vitest-environment jsdom
-import { describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it } from "vitest"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
 import { buildCtx, resolveBackgroundHex } from "../render/full-slide-svg"
 import { resolveStyle, CANONICAL_THEME_IDS } from "../themes"
 import { accessibleInk, contrastRatio, metaInk, requiredContrastRatio } from "../render/ink"
 import { renderSlideSvg } from "../api"
+import { __resetRegisteredThemes } from "../themes/definitions"
+import { registerTestTheme } from "../themes/test-fixtures"
 import { DoubleFrameCover, layoutDef } from "./cover-double-frame-cover"
 import type { PptxIR, Slide } from "@/ir"
 
@@ -20,7 +22,7 @@ function slide(heading = HEADING, extras: Partial<Slide> = {}): Slide {
 
 function ir(themeId: string, meta: PptxIR["meta"] = {}, s: Slide = slide()): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "double-frame-cover.pptx",
     theme: { id: themeId },
     branding: "full",
@@ -123,10 +125,9 @@ describe("cover-double-frame-cover — board geometry", () => {
 describe("cover-double-frame-cover — shared pool", () => {
   it("is a pinOnly cover that does not paint its own background", () => {
     expect(layoutDef.id).toBe("double-frame-cover")
-    expect(layoutDef.kind).toBe("archetype")
+    expect(layoutDef.kind).toBe("standard")
     expect(layoutDef.pinOnly).toBe(true)
     expect("paintsOwnBackground" in layoutDef).toBe(false)
-    expect(layoutDef.branding).toBe("none")
     expect(layoutDef.slideTypes).toEqual(["cover"])
   })
 
@@ -170,16 +171,22 @@ describe("cover-double-frame-cover — shared pool", () => {
 })
 
 describe("double-frame-cover — no top rule on a framed page", () => {
+  afterEach(() => {
+    __resetRegisteredThemes()
+  })
+
   it("consulting motif does not paint a top divider over the double frame", () => {
+    const themeId = registerTestTheme("consulting-double-frame", "consulting", {
+      cover: "double-frame-cover",
+    })
     const deck: PptxIR = {
-      version: "4",
+      version: "5",
       filename: "double-frame-no-top-rule.pptx",
-      theme: { id: "consulting" },
+      theme: { id: themeId },
       meta: FULL_META,
       assets: { images: {} },
-      seed: 1,
-      slides: [{ type: "cover", layout: "double-frame-cover", heading: HEADING, components: [] }],
-    } as PptxIR
+      slides: [{ type: "cover", heading: HEADING, components: [] }],
+    }
     const root = parseSvgRoot(renderSlideSvg(deck, 0))
     expect(root.querySelector('rect[width="1168"][height="624"]')).not.toBeNull()
     expect(root.querySelector('rect[width="1144"][height="600"]')).not.toBeNull()
@@ -196,6 +203,5 @@ describe("double-frame-cover — no top rule on a framed page", () => {
       return y >= 20 && y < 48 && w >= 400 && h <= 4
     })
     expect(topRules).toHaveLength(0)
-    expect(layoutDef.pageFrame).toBe("double")
   })
 })

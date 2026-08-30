@@ -3,7 +3,7 @@ import { fitSvgLine, layoutSvgText } from "../lib/svg-text-layout"
 import { accessibleInk } from "../render/ink"
 import type { RenderDef, SvgComponent } from "./types"
 
-type QuoteComponent = Extract<Component, { type: "quote" }>
+type BlockquoteComponent = Extract<Component, { type: "blockquote" }>
 
 /**
  * Vertical space reserved above the first body line for the decorative
@@ -79,7 +79,7 @@ function layBody(text: string, w: number) {
   })
 }
 
-export const quote: SvgComponent<QuoteComponent> = {
+export const blockquote: SvgComponent<BlockquoteComponent> = {
   measure(component, w, _ctx) {
     const l = layBody(component.text, w)
     const bodyHeight = l.lines.length * l.lineHeight
@@ -164,4 +164,8 @@ export const quote: SvgComponent<QuoteComponent> = {
   },
 }
 
-export const renderDef: RenderDef<QuoteComponent> = { type: "quote", measure: quote.measure, render: quote.render }
+export const renderDef: RenderDef<BlockquoteComponent> = {
+  type: "blockquote",
+  measure: blockquote.measure,
+  render: blockquote.render,
+}

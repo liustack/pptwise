@@ -1,0 +1,18 @@
+{
+  "version": "1",
+  "narrative": "boardroom-report",
+  "theme": "consulting",
+  "filename": "northstar-review",
+  "pages": [
+    { "id": "p-cover", "type": "cover", "heading": "Northstar Review" },
+    { "id": "p-chapter", "type": "chapter", "heading": "The Quarter" },
+    { "id": "p-points", "type": "content", "kind": "points", "heading": "What we decided" },
+    { "id": "p-list", "type": "content", "kind": "list", "heading": "Open workstreams" },
+    { "id": "p-comparison", "type": "content", "kind": "comparison", "heading": "Build vs buy" },
+    { "id": "p-process", "type": "content", "kind": "process", "heading": "How we ship" },
+    { "id": "p-data", "type": "content", "kind": "data", "heading": "Pipeline by stage" },
+    { "id": "p-statement", "type": "content", "kind": "statement", "heading": "We will not add a fourth product line this year" },
+    { "id": "p-fact", "type": "content", "kind": "fact", "heading": "NPS" },
+    { "id": "p-ending", "type": "ending", "heading": "See you Thursday" }
+  ]
+}

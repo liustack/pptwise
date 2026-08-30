@@ -29,7 +29,7 @@ beforeAll(() => {
 
 function deck(themeId: string, slides: Slide[], overrides: Partial<PptxIR> = {}): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "pixel-audit-no-platform-fixture",
     theme: { id: themeId },
     meta: {},

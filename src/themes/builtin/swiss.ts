@@ -1,6 +1,5 @@
 import type { StyleTokens } from "../tokens";
 import type { BuiltinThemeDeclaration } from "../schema";
-import { DEFAULT_CONTENT_FACES } from "./shared";
 
 /**
  * swiss（冷白制度）——2026-08-21 新增第 22 个 theme id（第 21 个结构身份）。
@@ -60,6 +59,8 @@ import { DEFAULT_CONTENT_FACES } from "./shared";
  *
  * 第八波批 4：chapter 默认底从 primary 硬黑改为冷白纸（与 bg 同值）。
  * 板上章节是白纸 + 小数编号，不是整版黑。红条四页都在，是身份件。
+ *
+ * **菜单分派（S1-B）**：制度年报按小数点编号推进，栅格里 data 走通栏 split-band，photo 用满幅顶图接住瑞士海报的图版传统，quote 不上。
  */
 export const SWISS_TOKENS: StyleTokens = {
   id: "swiss",
@@ -93,22 +94,26 @@ export const SWISS_TOKENS: StyleTokens = {
 };
 
 export const SWISS_THEME = {
-  version: 1,
+  version: 2,
   id: "swiss",
   label: "Swiss Institutional",
   style: SWISS_TOKENS,
-  faces: {
-    cover: ["institutional-block"],
-    chapter: ["decimal-index-chapter"],
-    content: DEFAULT_CONTENT_FACES,
-    ending: ["resolution-ending"],
+  menu: {
+    cover: { face: "institutional-block" },
+    chapter: { face: "decimal-index-chapter" },
+    content: {
+      points: { face: "narrow-column" },
+      list: { face: "bento-panel" },
+      comparison: { face: "two-column" },
+      process: { face: "rail-numbered" },
+      data: { face: "split-band" },
+      photo: { face: "image-top" },
+      statement: { face: "statement" },
+      fact: { face: "stat-hero" },
+      evidence: { face: "one-evidence" },
+      hierarchy: { face: "asymmetric-triptych" },
+    },
+    ending: { face: "resolution-ending" },
   },
   motif: { id: "swiss-motif" },
-  tendencies: {
-    cover: ["institutional-block"],
-    chapter: ["decimal-index-chapter"],
-    content: ["two-column", "narrow-column", "rail-numbered"],
-    ending: ["resolution-ending"],
-  },
-  sparse: ["stat-hero", "statement", "one-evidence", "verse-chapter"],
 } satisfies BuiltinThemeDeclaration;

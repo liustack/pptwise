@@ -158,6 +158,24 @@ export function layoutFormBody(
   })
 }
 
+type FormTextLayout = { lines: readonly string[]; truncated: boolean }
+
+/** Put the clip marker on the final visible line of a form text layout. */
+export function formTextClipMarker(
+  layout: FormTextLayout,
+  lineIndex: number,
+): "1" | undefined {
+  return layout.truncated && lineIndex === layout.lines.length - 1 ? "1" : undefined
+}
+
+/** A zero-line fit is still content loss and must remain visible to audit. */
+export function formTextOmissionMarker(
+  sourceText: string,
+  layout: Pick<FormTextLayout, "lines">,
+): "1" | undefined {
+  return sourceText.trim() && layout.lines.length === 0 ? "1" : undefined
+}
+
 /** Single-line fit that will truncate rather than drop below `floor`. */
 export function fitFormLine(
   text: string,

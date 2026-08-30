@@ -9,6 +9,8 @@ import {
   fillCardType,
   formGridCols,
   formLineHeight,
+  formTextClipMarker,
+  formTextOmissionMarker,
   layoutFormBody,
   layoutFormTitle,
   linesThatFit,
@@ -211,6 +213,7 @@ export function renderBadgeCards(
         return (
           <g
             key={i}
+            data-truncated={formTextOmissionMarker(item.text, layout.text)}
             data-audit-box={`${box.x + cardX},${box.y + cardY},${g.cardW}`}
           >
             <rect
@@ -245,7 +248,7 @@ export function renderBadgeCards(
             {layout.title.lines.map((line, li) => (
               <text
                 key={`t-${li}`}
-                data-truncated={layout.title.truncated && li === layout.title.lines.length - 1 ? "1" : undefined}
+                data-truncated={formTextClipMarker(layout.title, li)}
                 x={cx}
                 y={blockTop + li * layout.title.lineHeight + layout.title.fontSize}
                 textAnchor="middle"
@@ -261,6 +264,7 @@ export function renderBadgeCards(
             {layout.text.lines.map((line, li) => (
               <text
                 key={li}
+                data-truncated={formTextClipMarker(layout.text, li)}
                 x={cx}
                 y={textTop + li * layout.text.lineHeight + layout.text.fontSize}
                 textAnchor="middle"

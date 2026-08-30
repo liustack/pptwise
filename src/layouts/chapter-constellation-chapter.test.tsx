@@ -21,7 +21,7 @@ function chapterCtx(themeId: string) {
 // `chapterNumberFor` has something to derive — index 0 is chapter "01",
 // index 2 is chapter "02".
 const chapter1: Slide = { type: "chapter", heading: "第一部分：市场洞察", components: [] } as Slide
-const content: Slide = { type: "content", heading: "现状", components: [] } as Slide
+const content: Slide = { type: "content", kind: "points", heading: "现状", components: [] } as Slide
 const chapter2: Slide = {
   type: "chapter",
   heading: "第二部分：技术路线图",

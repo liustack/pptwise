@@ -21,12 +21,13 @@ await installNodePlatform()
 
 function deck(style?: Record<string, unknown>): PptxIR {
   const ir = {
-    version: "4",
+    version: "5",
     filename: "fingerprint-probe",
     theme: style ? { id: "consulting", style } : { id: "consulting" },
     slides: [
       {
         type: "content",
+        kind: "points",
         heading: "指纹拆分",
         components: [
           {
@@ -46,7 +47,9 @@ const render = (ir: PptxIR) => renderSlideSvg(ir, 0)
 
 describe("splitPaint, against a real recolor", () => {
   const plain = render(deck())
-  const recolored = render(deck({ colors: { primary: "#7A1F3D", accent: "#0E7C66" } }))
+  const recolored = render(
+    deck({ colors: { bg: "#FFF4F7", surface: "#FFF9FB", text: "#3D1022", primary: "#7A1F3D", accent: "#0E7C66" } }),
+  )
 
   it("is measuring two genuinely different renders", () => {
     // Without this the rest of the block would pass just as well on a

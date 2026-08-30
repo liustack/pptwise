@@ -1,756 +1,173 @@
-import { describe, expect, it } from "vitest"
+import { afterAll, beforeAll, describe, expect, it } from "vitest"
 import { PptwiseError } from "../errors"
-import { PptxIRSchema, type PptxIR } from "../ir"
-import { resolveEffectiveLayoutId } from "../render/layout-selection"
+import { CONSULTING_TOKENS } from "../themes/builtin/consulting"
+import { __resetRegisteredThemes, registerTheme } from "../themes/definitions"
 import { assembleDeck, disassembleDeck, type PageContent } from "./assemble"
 
-// ── fixtures ─────────────────────────────────────────────────────────────
+const TEST_THEME_ID = "spec-assemble-tests"
 
-/** 4 pages clears the "spacious" pacing's page-count floor (spec §5:
- *  4-16) with the smallest fixture — every test below opts into that
- *  pacing explicitly so spec-level page-count noise never has to be
- *  reasoned about alongside whatever the test actually cares about. */
-function makePlan(extra: Record<string, unknown> = {}): Record<string, unknown> {
+beforeAll(() => {
+  registerTheme({
+    version: 2,
+    id: TEST_THEME_ID,
+    style: {
+      ...CONSULTING_TOKENS,
+      id: TEST_THEME_ID,
+      shape: { radius: 2, gapScale: 1, typeScale: 1 },
+    },
+    menu: {
+      cover: { face: "poster-center" },
+      chapter: { face: "masthead-chapter" },
+      content: { points: { face: "two-column" } },
+      ending: { face: "poster-ending" },
+    },
+  })
+})
+
+afterAll(() => {
+  __resetRegisteredThemes()
+})
+
+function spec(extra: Record<string, unknown> = {}): unknown {
   return {
     version: "1",
     narrative: { pacing: "spacious" },
-    theme: "consulting",
-    filename: "q3-review",
+    theme: TEST_THEME_ID,
+    filename: "assembled.pptx",
     pages: [
-      { id: "p-cover", type: "cover", heading: "Q3 Review" },
-      { id: "p-kpi", type: "content", heading: "Revenue is up" },
-      { id: "p-detail", type: "content", heading: "Detail breakdown" },
-      { id: "p-ending", type: "ending", heading: "Thanks" },
+      { id: "cover", type: "cover", heading: "Cover", summary: "Summary" },
+      { id: "body-a", type: "content", kind: "points", heading: "Body A" },
+      { id: "body-b", type: "content", kind: "points", heading: "Body B" },
+      { id: "ending", type: "ending", heading: "Ending" },
     ],
     ...extra,
   }
 }
 
 describe("assembleDeck", () => {
-  // ── step 1 ──────────────────────────────────────────────────────────
+  it("routes invalid specs through the spec validator", () => {
+    expect(() => assembleDeck({ pages: [] }, {})).toThrow(PptwiseError)
+    expect(() => assembleDeck({ pages: [] }, {})).toThrow(/invalid spec.*no pages/s)
+  })
 
-  describe("step 1 — invalid spec", () => {
-    it("throws PptwiseError with validateSpec's own formatted issues", () => {
-      expect(() => assembleDeck({ pages: [] }, {})).toThrow(PptwiseError)
-      expect(() => assembleDeck({ pages: [] }, {})).toThrow(/invalid spec.*no pages/s)
+  it.each(["type", "kind", "heading"])("protects spec-owned field %s", (field) => {
+    const pages = { "body-a": { [field]: "override" } } as unknown as Record<string, PageContent>
+    expect(() => assembleDeck(spec(), pages)).toThrow(new RegExp(`"${field}" is locked by the spec`))
+  })
+
+  it("rejects malformed and orphan page records", () => {
+    expect(() => assembleDeck(spec(), { "body-a": null } as unknown as Record<string, PageContent>)).toThrow(
+      /page content must be an object/,
+    )
+    expect(() => assembleDeck(spec(), { orphan: {} })).toThrow(/orphan page id "orphan"/)
+  })
+
+  it("creates placeholders with the spec-owned content kind", () => {
+    const { ir } = assembleDeck(spec(), {})
+    expect(ir.slides.find((slide) => slide.id === "body-a")).toMatchObject({
+      type: "content",
+      kind: "points",
+      heading: "Body A",
+      placeholder: true,
     })
-
-    it("surfaces a duplicate-id spec error through the same gate", () => {
-      const dup = makePlan({
-        pages: [
-          { id: "p-cover", type: "cover", heading: "Cover" },
-          { id: "dup", type: "content", heading: "A" },
-          { id: "dup", type: "content", heading: "B" },
-          { id: "p-ending", type: "ending", heading: "End" },
-        ],
-      })
-      expect(() => assembleDeck(dup, {})).toThrow(/invalid spec/)
-      expect(() => assembleDeck(dup, {})).toThrow(/duplicate page id "dup"/)
+    expect(ir.slides[0]).toMatchObject({
+      subheading: "Summary",
+      placeholder: true,
     })
   })
 
-  // ── step 2 ──────────────────────────────────────────────────────────
-
-  describe("step 2 — locked-field protection", () => {
-    it('rejects a page file that redeclares "heading"', () => {
-      const rawPages: Record<string, unknown> = { "p-kpi": { heading: "sneaky" } }
-      expect(() => assembleDeck(makePlan(), rawPages as Record<string, PageContent>)).toThrow(
-        /page "p-kpi": "heading" is locked by the spec — remove it from the page file/,
-      )
+  it("merges fillable page content without leaking content-page summary", () => {
+    const { ir } = assembleDeck(spec(), {
+      cover: {},
+      "body-a": {
+        components: [{ type: "paragraph", text: "Evidence" }],
+        footnote: "Source",
+        notes: "Speaker note",
+      },
     })
-
-    it('rejects a page file that redeclares "type"', () => {
-      const rawPages: Record<string, unknown> = { "p-kpi": { type: "chapter" } }
-      expect(() => assembleDeck(makePlan(), rawPages as Record<string, PageContent>)).toThrow(
-        /page "p-kpi": "type" is locked by the spec — remove it from the page file/,
-      )
+    expect(ir.slides[0]?.subheading).toBe("Summary")
+    expect(ir.slides[1]).toMatchObject({
+      id: "body-a",
+      type: "content",
+      kind: "points",
+      heading: "Body A",
+      footnote: "Source",
+      notes: "Speaker note",
+      components: [{ type: "paragraph", text: "Evidence" }],
     })
-
-    it("rejects even when the locked key's own value is explicitly undefined (Object.hasOwn, not a definedness check)", () => {
-      const rawPages: Record<string, unknown> = { "p-kpi": { heading: undefined } }
-      expect(() => assembleDeck(makePlan(), rawPages as Record<string, PageContent>)).toThrow(/"heading" is locked/)
-    })
-
-    it("reports the locked-field violation before an unrelated orphan-key violation", () => {
-      const rawPages: Record<string, unknown> = {
-        "p-kpi": { heading: "sneaky" }, // locked-field violation, valid spec id
-        "totally-not-a-page": {}, // orphan violation, unrelated id
-      }
-      expect(() => assembleDeck(makePlan(), rawPages as Record<string, PageContent>)).toThrow(/is locked by the spec/)
-    })
-
-    it("rejects a null page content value with a readable error instead of a native TypeError", () => {
-      const rawPages: Record<string, unknown> = { "p-kpi": null }
-      expect(() => assembleDeck(makePlan(), rawPages as Record<string, PageContent>)).toThrow(PptwiseError)
-      expect(() => assembleDeck(makePlan(), rawPages as Record<string, PageContent>)).toThrow(
-        /page "p-kpi": page content must be an object/,
-      )
-    })
-
-    it("rejects a string page content value the same way", () => {
-      const rawPages: Record<string, unknown> = { "p-kpi": "not-an-object" }
-      expect(() => assembleDeck(makePlan(), rawPages as Record<string, PageContent>)).toThrow(
-        /page "p-kpi": page content must be an object/,
-      )
-    })
+    expect(ir.slides[1]?.subheading).toBeUndefined()
   })
 
-  // ── step 3 ──────────────────────────────────────────────────────────
-
-  describe("step 3 — orphan pages keys", () => {
-    it("rejects a pages entry whose id is not in the spec", () => {
-      const pages: Record<string, PageContent> = { "not-a-real-page": {} }
-      expect(() => assembleDeck(makePlan(), pages)).toThrow(/orphan page id "not-a-real-page"/)
-      expect(() => assembleDeck(makePlan(), pages)).toThrow(/delete the page file or add the page to the spec/)
-    })
-
-    it("lists multiple orphan ids together in one error", () => {
-      const pages: Record<string, PageContent> = { "orphan-a": {}, "orphan-b": {} }
-      expect(() => assembleDeck(makePlan(), pages)).toThrow(/"orphan-a"/)
-      expect(() => assembleDeck(makePlan(), pages)).toThrow(/"orphan-b"/)
-    })
+  it("applies IR component defaults at the final parse boundary", () => {
+    const pages = {
+      "body-a": { components: [{ type: "image", asset_id: "hero" }] },
+    } as unknown as Record<string, PageContent>
+    const { ir } = assembleDeck(spec(), pages)
+    expect(ir.slides[1]?.components).toEqual([{ type: "image", asset_id: "hero", fit: "cover" }])
   })
 
-  // ── step 4 ──────────────────────────────────────────────────────────
-
-  describe("step 4 — missing pages become placeholders", () => {
-    it("fills an unfilled spec page with a placeholder slide", () => {
-      const { ir } = assembleDeck(makePlan(), {})
-      const kpi = ir.slides.find((s) => s.id === "p-kpi")
-      expect(kpi).toMatchObject({ id: "p-kpi", type: "content", heading: "Revenue is up", placeholder: true })
-    })
-
-    it("carries the spec page's summary into the placeholder's subheading", () => {
-      const withSummary = makePlan({
-        pages: [
-          { id: "p-cover", type: "cover", heading: "Q3 Review" },
-          { id: "p-kpi", type: "content", heading: "Revenue is up", summary: "Q3 revenue beat guidance by 12%" },
-          { id: "p-detail", type: "content", heading: "Detail breakdown" },
-          { id: "p-ending", type: "ending", heading: "Thanks" },
-        ],
-      })
-      const { ir } = assembleDeck(withSummary, {})
-      const kpi = ir.slides.find((s) => s.id === "p-kpi")
-      expect(kpi?.subheading).toBe("Q3 revenue beat guidance by 12%")
-    })
-
-    it("leaves subheading unset on a placeholder whose spec page has no summary", () => {
-      const { ir } = assembleDeck(makePlan(), {})
-      const kpi = ir.slides.find((s) => s.id === "p-kpi")
-      expect(kpi?.subheading).toBeUndefined()
-    })
+  it("passes through top-level narrative, theme, brand, and branding", () => {
+    const { ir } = assembleDeck(
+      spec({
+        brand: { logo_asset_id: "logo", position: "tl" },
+        branding: "minimal",
+      }),
+      {},
+    )
+    expect(ir.version).toBe("5")
+    expect(ir.narrative).toEqual({ pacing: "spacious" })
+    expect(ir.theme).toEqual({ id: TEST_THEME_ID })
+    expect(ir.brand).toEqual({ logo_asset_id: "logo", position: "tl" })
+    expect(ir.branding).toBe("minimal")
   })
 
-  // ── step 5 ──────────────────────────────────────────────────────────
-
-  describe("step 5 — present pages", () => {
-    it("carries filled boundary-page summaries into their subheadings", () => {
-      const withSummary = makePlan({
-        pages: [
-          { id: "p-cover", type: "cover", heading: "Q3 Review", summary: "Results and outlook" },
-          { id: "p-chapter", type: "chapter", heading: "Performance", summary: "What changed this quarter" },
-          { id: "p-kpi", type: "content", heading: "Revenue is up", summary: "Fill prompt only" },
-          { id: "p-ending", type: "ending", heading: "Thanks", summary: "Questions and discussion" },
-        ],
-      })
-
-      const { ir } = assembleDeck(withSummary, {
-        "p-cover": {},
-        "p-chapter": {},
-        "p-kpi": {},
-        "p-ending": {},
-      })
-
-      expect(ir.slides.find((slide) => slide.id === "p-cover")?.subheading).toBe("Results and outlook")
-      expect(ir.slides.find((slide) => slide.id === "p-chapter")?.subheading).toBe("What changed this quarter")
-      expect(ir.slides.find((slide) => slide.id === "p-kpi")?.subheading).toBeUndefined()
-      expect(ir.slides.find((slide) => slide.id === "p-ending")?.subheading).toBe("Questions and discussion")
-    })
-
-    it("injects id/type/heading from the spec and content fields from the page record", () => {
-      const pages: Record<string, PageContent> = {
-        "p-kpi": {
-          components: [{ type: "paragraph", text: "Revenue grew 12% QoQ" }],
-          layout: "kpi-strip",
-          arrangement: "kpi_focus",
-          footnote: "unaudited",
-        },
-      }
-      const { ir } = assembleDeck(makePlan(), pages)
-      const kpi = ir.slides.find((s) => s.id === "p-kpi")
-      expect(kpi).toMatchObject({
-        id: "p-kpi",
-        type: "content",
-        heading: "Revenue is up",
-        layout: "kpi-strip",
-        arrangement: "kpi_focus",
-        footnote: "unaudited",
-        components: [{ type: "paragraph", text: "Revenue grew 12% QoQ" }],
-      })
-      expect(kpi?.placeholder).toBeUndefined()
-    })
-
-    it("carries a declared beat into the IR while keeping a content-page summary fill-only", () => {
-      const withAnchors = makePlan({
-        pages: [
-          { id: "p-cover", type: "cover", heading: "Q3 Review" },
-          {
-            id: "p-kpi",
-            type: "content",
-            heading: "Revenue is up",
-            beat: "anchor",
-            focus: "kpi_cards",
-            summary: "should not leak",
-          },
-          { id: "p-detail", type: "content", heading: "Detail breakdown" },
-          { id: "p-ending", type: "ending", heading: "Thanks" },
-        ],
-      })
-      const { ir } = assembleDeck(withAnchors, { "p-kpi": {} })
-      const kpi = ir.slides.find((s) => s.id === "p-kpi") as unknown as Record<string, unknown>
-      expect(kpi.beat).toBe("anchor")
-      // Focus and content-page summary stay spec-only authoring anchors.
-      expect(kpi.focus).toBeUndefined()
-      expect(kpi.subheading).toBeUndefined()
-    })
-
-    it("omits beat from the IR entirely when the spec page never declared one", () => {
-      const { ir } = assembleDeck(makePlan(), { "p-kpi": {} })
-      const kpi = ir.slides.find((s) => s.id === "p-kpi") as unknown as Record<string, unknown>
-      expect(Object.hasOwn(kpi, "beat")).toBe(false)
-    })
-
-    it("carries a declared beat into a placeholder slide too (step 4, no content record)", () => {
-      const withBeat = makePlan({
-        pages: [
-          { id: "p-cover", type: "cover", heading: "Q3 Review" },
-          { id: "p-kpi", type: "content", heading: "Revenue is up", beat: "breathing" },
-          { id: "p-detail", type: "content", heading: "Detail breakdown" },
-          { id: "p-ending", type: "ending", heading: "Thanks" },
-        ],
-      })
-      const { ir } = assembleDeck(withBeat, {})
-      const kpi = ir.slides.find((s) => s.id === "p-kpi")
-      expect(kpi).toMatchObject({ placeholder: true, beat: "breathing" })
-    })
-
-    it("passes notes through as plain content — never locked, never rendered onto the canvas", () => {
-      const pages: Record<string, PageContent> = {
-        "p-kpi": {
-          components: [{ type: "paragraph", text: "Revenue grew 12% QoQ" }],
-          notes: "mention the FX headwind before Q&A",
-        },
-      }
-      const { ir } = assembleDeck(makePlan(), pages)
-      const kpi = ir.slides.find((s) => s.id === "p-kpi")
-      expect(kpi?.notes).toBe("mention the FX headwind before Q&A")
-    })
-
-    it("omits notes cleanly when the page file doesn't set it", () => {
-      const { ir } = assembleDeck(makePlan(), { "p-kpi": { footnote: "unaudited" } })
-      const kpi = ir.slides.find((s) => s.id === "p-kpi")
-      expect(kpi?.notes).toBeUndefined()
-    })
-
-    it("applies component-level schema defaults (e.g. image.fit) via the final IR parse", () => {
-      const rawPages: Record<string, unknown> = {
-        "p-kpi": { components: [{ type: "image", asset_id: "logo" }] },
-      }
-      const { ir } = assembleDeck(makePlan(), rawPages as Record<string, PageContent>)
-      const kpi = ir.slides.find((s) => s.id === "p-kpi")
-      expect(kpi?.components).toEqual([{ type: "image", asset_id: "logo", fit: "cover" }])
-    })
+  it("never materializes selection state", () => {
+    const result = assembleDeck(spec(), {}) as unknown as Record<string, unknown>
+    expect(result).toEqual({ ir: expect.any(Object) })
+    for (const slide of (result.ir as { slides: Array<Record<string, unknown>> }).slides) {
+      expect(slide).not.toHaveProperty("layout")
+      expect(slide).not.toHaveProperty("beat")
+    }
+    expect(result.ir).not.toHaveProperty("seed")
+    expect(result).not.toHaveProperty("generatedSeed")
+    expect(result).not.toHaveProperty("materializedLayoutCount")
   })
 
-  // ── step 6 ──────────────────────────────────────────────────────────
-
-  describe("step 6 — top-level field passthrough", () => {
-    it("passes narrative/theme/filename through from the spec", () => {
-      const { ir } = assembleDeck(makePlan(), {})
-      expect(ir.version).toBe("4")
-      expect(ir.narrative).toEqual({ pacing: "spacious" })
-      expect(ir.theme).toEqual({ id: "consulting" })
-      expect(ir.filename).toBe("q3-review")
-    })
-
-    it("passes brand through into ir.brand when the spec sets it", () => {
-      const { ir } = assembleDeck(makePlan({ brand: { logo_asset_id: "logo-1", position: "tl" } }), {})
-      expect(ir.brand).toEqual({ logo_asset_id: "logo-1", position: "tl" })
-    })
-
-    it("passes branding through into ir.branding when the spec sets it", () => {
-      const { ir } = assembleDeck(makePlan({ branding: "cover-only" }), {})
-      expect(ir.branding).toBe("cover-only")
-    })
-
-    it("omits ir.branding when the spec omits branding (no baked default)", () => {
-      const { ir } = assembleDeck(makePlan(), {})
-      expect(ir.branding).toBeUndefined()
-    })
-
-    it("lets IR schema defaults handle theme/filename/meta when the spec omits them", () => {
-      const minimal = {
-        narrative: { pacing: "spacious" },
-        pages: [
-          { id: "p-cover", type: "cover", heading: "Cover" },
-          { id: "p-body", type: "content", heading: "Body" },
-          { id: "p-body-2", type: "content", heading: "Body 2" },
-          { id: "p-ending", type: "ending", heading: "Ending" },
-        ],
-      }
-      const { ir } = assembleDeck(minimal, {})
-      expect(ir.theme).toEqual({ id: "consulting" })
-      expect(ir.filename).toBe("presentation")
-      expect(ir.meta).toEqual({})
-    })
-  })
-
-  // ── step 7 ──────────────────────────────────────────────────────────
-
-  describe("step 7 — seed", () => {
-    it("passes an explicit spec seed through and reports no generatedSeed", () => {
-      const { ir, generatedSeed } = assembleDeck(makePlan({ seed: 424242 }), {})
-      expect(ir.seed).toBe(424242)
-      expect(generatedSeed).toBeUndefined()
-    })
-
-    it("generates a deterministic integer seed when the spec omits one, and reports it as generatedSeed", () => {
-      const { ir, generatedSeed } = assembleDeck(makePlan(), {})
-      expect(Number.isInteger(ir.seed)).toBe(true)
-      expect(generatedSeed).toBe(ir.seed)
-    })
-
-    it("generates the same seed across repeated calls on the same spec", () => {
-      const a = assembleDeck(makePlan(), {})
-      const b = assembleDeck(makePlan(), {})
-      expect(a.generatedSeed).toBe(b.generatedSeed)
-    })
-
-    it("generates a different seed when the page id sequence differs", () => {
-      const a = assembleDeck(makePlan(), {})
-      const reordered = makePlan({
-        pages: [
-          { id: "p-cover", type: "cover", heading: "Q3 Review" },
-          { id: "p-detail", type: "content", heading: "Detail breakdown" },
-          { id: "p-kpi", type: "content", heading: "Revenue is up" },
-          { id: "p-ending", type: "ending", heading: "Thanks" },
-        ],
-      })
-      const b = assembleDeck(reordered, {})
-      expect(a.generatedSeed).not.toBe(b.generatedSeed)
-    })
-
-    it("stays the same regardless of which pages happen to be filled in yet", () => {
-      const a = assembleDeck(makePlan(), {})
-      const b = assembleDeck(makePlan(), { "p-kpi": { footnote: "filled in later" } })
-      expect(a.generatedSeed).toBe(b.generatedSeed)
-    })
-  })
-
-  // ── step 8 ──────────────────────────────────────────────────────────
-
-  describe("step 8 — idempotence", () => {
-    it("two calls with the same spec and pages produce a deep-equal result", () => {
-      const pages: Record<string, PageContent> = {
-        "p-kpi": { components: [{ type: "paragraph", text: "hello" }], footnote: "note" },
-      }
-      const a = assembleDeck(makePlan(), pages)
-      const b = assembleDeck(makePlan(), pages)
-      expect(a).toEqual(b)
-    })
-
-    it("stays deep-equal even when the spec/pages omit seed (generation is deterministic too)", () => {
-      const a = assembleDeck(makePlan(), {})
-      const b = assembleDeck(makePlan(), {})
-      expect(a).toEqual(b)
-    })
-  })
-
-  // ── materialization (W4 design decision 10) ────────────────────────
-
-  describe("materializes effective layouts", () => {
-    it("fills in a layout for every page type when the page file omits one", () => {
-      const { ir } = assembleDeck(makePlan(), {})
-      for (const slide of ir.slides) {
-        expect(slide.layout, `slide "${slide.id}" (${slide.type})`).toEqual(expect.any(String))
-      }
-    })
-
-    it("leaves an explicit page-file layout untouched", () => {
-      const pages: Record<string, PageContent> = { "p-kpi": { layout: "two-column" } }
-      const { ir } = assembleDeck(makePlan(), pages)
-      expect(ir.slides.find((s) => s.id === "p-kpi")?.layout).toBe("two-column")
-    })
-
-    it("leaves layout omitted for the image-cover takeover bypass — no invented representation for resolveEffectiveLayoutId's null", () => {
-      const pages: Record<string, PageContent> = {
-        "p-cover": { background: { kind: "asset", asset_id: "bg" } },
-      }
-      const { ir } = assembleDeck(makePlan(), pages)
-      const cover = ir.slides.find((s) => s.id === "p-cover")
-      expect(cover?.background).toEqual({ kind: "asset", asset_id: "bg" })
-      expect(cover?.layout).toBeUndefined()
-    })
-
-    it("materializes a layout on an unfilled (placeholder) page too — placeholder status doesn't exempt a page from selection", () => {
-      const { ir } = assembleDeck(makePlan(), {})
-      const kpi = ir.slides.find((s) => s.id === "p-kpi")
-      expect(kpi?.placeholder).toBe(true)
-      expect(kpi?.layout).toEqual(expect.any(String))
-    })
-
-    it("materializes exactly what resolveEffectiveLayoutId independently computes (parity — not a second selection-logic copy)", () => {
-      const seed = 909090
-      const { ir } = assembleDeck(makePlan({ seed }), {})
-
-      // Independently rebuilt pre-materialization shape (assembleDeck's own
-      // step 6, minus the materialization this test exists to check) — a
-      // fresh object, so `resolveEffectiveLayoutId`'s WeakMap cache (keyed by
-      // `ir` identity, `../render/layout-selection.ts`) can't be silently
-      // reading back assembleDeck's own answer. If assembleDeck ever grew a
-      // second, drifted copy of the selection logic instead of calling this
-      // function, this is the test that would catch it.
-      const manualIr: PptxIR = PptxIRSchema.parse({
-        version: "4",
-        narrative: { pacing: "spacious" },
-        theme: { id: "consulting" },
-        filename: "q3-review",
-        seed,
-        slides: [
-          { id: "p-cover", type: "cover", heading: "Q3 Review", placeholder: true },
-          { id: "p-kpi", type: "content", heading: "Revenue is up", placeholder: true },
-          { id: "p-detail", type: "content", heading: "Detail breakdown", placeholder: true },
-          { id: "p-ending", type: "ending", heading: "Thanks", placeholder: true },
-        ],
-      })
-
-      manualIr.slides.forEach((slide, i) => {
-        const expected = resolveEffectiveLayoutId(manualIr, slide, i)
-        const actual = ir.slides.find((s) => s.id === slide.id)?.layout
-        expect(actual).toBe(expected ?? undefined)
-      })
-    })
-
-    it("reports materializedLayoutCount matching the number of pages it filled in", () => {
-      const { materializedLayoutCount } = assembleDeck(makePlan(), {})
-      expect(materializedLayoutCount).toBe(4) // all 4 of makePlan()'s pages omit layout
-    })
-
-    // Backlog item 9b (`.issues/notes/engineering-history.md` #9b):
-    // every materializedLayoutCount test above (and everywhere else in this
-    // file) reuses `makePlan()`'s fixed cover/content/content/ending page
-    // sequence — `chapter` has never appeared in a single fixture alongside
-    // the other three types, so a deck genuinely mixing all four page types
-    // has never exercised this count. Overrides `pages` via `makePlan`'s own
-    // `extra` param (the same mechanism the duplicate-id test above already
-    // uses) rather than changing `makePlan` itself, so every other test that
-    // relies on its default cover/content/content/ending shape is untouched.
-    it("reports materializedLayoutCount across a cover/chapter/content/ending mixed-page-type fixture", () => {
-      const pages = [
-        { id: "p-cover", type: "cover", heading: "Q3 Review" },
-        { id: "p-chapter", type: "chapter", heading: "Section One" },
-        { id: "p-detail", type: "content", heading: "Detail breakdown" },
-        { id: "p-ending", type: "ending", heading: "Thanks" },
-      ]
-      const { ir, materializedLayoutCount } = assembleDeck(makePlan({ pages }), {})
-      // Sanity: all four page types are actually present (otherwise this
-      // fixture would silently degrade back to a 3-type deck and prove
-      // nothing new over the existing test above).
-      expect(ir.slides.map((s) => s.type)).toEqual(["cover", "chapter", "content", "ending"])
-      expect(materializedLayoutCount).toBe(4) // every page omits layout, including the chapter page
-    })
-
-    it("omits materializedLayoutCount (undefined) when every page already has an explicit layout", () => {
-      const pages: Record<string, PageContent> = {
-        "p-cover": { layout: "banner-title" },
-        "p-kpi": { layout: "two-column" },
-        "p-detail": { layout: "two-column" },
-        "p-ending": { layout: "tone-adaptive-ending" },
-      }
-      const { materializedLayoutCount } = assembleDeck(makePlan(), pages)
-      expect(materializedLayoutCount).toBeUndefined()
-    })
-
-    it("excludes an image-cover-bypassed page from materializedLayoutCount", () => {
-      const pages: Record<string, PageContent> = {
-        "p-cover": { background: { kind: "asset", asset_id: "bg" } }, // bypass — stays uncounted
-      }
-      const { materializedLayoutCount } = assembleDeck(makePlan(), pages)
-      expect(materializedLayoutCount).toBe(3) // p-kpi, p-detail, p-ending — not p-cover
-    })
-  })
-
-  // ── defensive: malformed page content ──────────────────────────────
-
-  describe("page content that cannot produce valid IR", () => {
-    it("throws PptwiseError for a component shape that fails IR schema validation", () => {
-      const rawPages: Record<string, unknown> = {
-        "p-kpi": { components: [{ type: "bullets", items: "not-an-array" }] },
-      }
-      expect(() => assembleDeck(makePlan(), rawPages as Record<string, PageContent>)).toThrow(PptwiseError)
-      expect(() => assembleDeck(makePlan(), rawPages as Record<string, PageContent>)).toThrow(/did not produce valid IR/)
-    })
+  it("is deterministic without generated selection fields", () => {
+    const pages: Record<string, PageContent> = {
+      "body-a": { components: [{ type: "paragraph", text: "Evidence" }] },
+    }
+    expect(assembleDeck(spec(), pages)).toEqual(assembleDeck(spec(), pages))
   })
 })
 
 describe("disassembleDeck", () => {
-  it("reconstructs spec pages and page content from a fully-authored IR", () => {
-    const ir = PptxIRSchema.parse({
-      version: "4",
-      filename: "q3-review",
-      theme: { id: "consulting" },
-      narrative: { pacing: "spacious" },
-      seed: 777,
-      slides: [
-        { id: "p-cover", type: "cover", heading: "Q3 Review" },
-        {
-          id: "p-kpi",
-          type: "content",
-          heading: "Revenue is up",
-          components: [{ type: "paragraph", text: "hi" }],
-          footnote: "note",
-          notes: "mention the FX headwind",
-        },
-        { id: "p-ending", type: "ending", heading: "Thanks" },
-      ],
-    })
-    const { spec, pages } = disassembleDeck(ir)
+  it("round-trips content kind and representable page content", () => {
+    const original = assembleDeck(spec(), {
+      "body-a": { components: [{ type: "paragraph", text: "Evidence" }] },
+    }).ir
+    const project = disassembleDeck(original)
 
-    expect(spec.filename).toBe("q3-review")
-    expect(spec.theme).toBe("consulting")
-    expect(spec.narrative).toEqual({ pacing: "spacious" })
-    expect(spec.seed).toBe(777)
-    expect(spec.pages).toEqual([
-      { id: "p-cover", type: "cover", heading: "Q3 Review" },
-      { id: "p-kpi", type: "content", heading: "Revenue is up" },
-      { id: "p-ending", type: "ending", heading: "Thanks" },
-    ])
-    expect(pages["p-kpi"]).toEqual({
-      components: [{ type: "paragraph", text: "hi" }],
-      footnote: "note",
-      notes: "mention the FX headwind",
+    expect(project.spec.pages[1]).toMatchObject({
+      type: "content",
+      kind: "points",
     })
-    expect(pages["p-cover"]).toEqual({})
-    expect(pages["p-ending"]).toEqual({})
+    expect(project.pages["body-a"]?.components).toEqual([{ type: "paragraph", text: "Evidence" }])
+    expect(assembleDeck(project.spec, project.pages).ir).toEqual(original)
   })
 
-  it("synthesizes a stable positional id (p-<ordinal>-<type>) for a slide that omits one", () => {
-    const ir = PptxIRSchema.parse({
-      version: "4",
-      theme: { id: "consulting" },
-      slides: [
-        { type: "cover", heading: "Cover" },
-        { type: "content", heading: "Body" },
-        { type: "ending", heading: "End" },
-      ],
-    })
-    const { spec } = disassembleDeck(ir)
-    expect(spec.pages.map((p) => p.id)).toEqual(["p-1-cover", "p-2-content", "p-3-ending"])
-  })
-
-  it('synthesizes "Untitled" for a slide with a missing or blank heading', () => {
-    const ir = PptxIRSchema.parse({
-      version: "4",
-      theme: { id: "consulting" },
-      slides: [
-        { id: "p-cover", type: "cover", heading: "Cover" },
-        { id: "p-body", type: "content" },
-        { id: "p-blank", type: "content", heading: "   " },
-        { id: "p-ending", type: "ending", heading: "End" },
-      ],
-    })
-    const { spec } = disassembleDeck(ir)
-    expect(spec.pages.find((p) => p.id === "p-body")?.heading).toBe("Untitled")
-    expect(spec.pages.find((p) => p.id === "p-blank")?.heading).toBe("Untitled")
-  })
-
-  it("produces no pages entry for a placeholder slide, and recovers summary from its subheading", () => {
-    const ir = PptxIRSchema.parse({
-      version: "4",
-      theme: { id: "consulting" },
-      slides: [
-        { id: "p-cover", type: "cover", heading: "Cover" },
-        { id: "p-gap", type: "content", heading: "Gap page", placeholder: true, subheading: "fill me in" },
-        { id: "p-ending", type: "ending", heading: "End" },
-      ],
-    })
-    const { spec, pages } = disassembleDeck(ir)
-    expect(pages["p-gap"]).toBeUndefined()
-    expect(spec.pages.find((p) => p.id === "p-gap")?.summary).toBe("fill me in")
-  })
-
-  it("recovers filled boundary-page subheadings as summaries without reinterpreting content subheadings", () => {
-    const ir = PptxIRSchema.parse({
-      version: "4",
-      theme: { id: "consulting" },
-      slides: [
-        { id: "p-cover", type: "cover", heading: "Cover", subheading: "Results and outlook" },
-        { id: "p-chapter", type: "chapter", heading: "Chapter", subheading: "What changed" },
-        { id: "p-body", type: "content", heading: "Body", subheading: "Authored slide copy" },
-        { id: "p-ending", type: "ending", heading: "End", subheading: "Questions and discussion" },
-      ],
-    })
-
-    const { spec } = disassembleDeck(ir)
-
-    expect(spec.pages.find((page) => page.id === "p-cover")?.summary).toBe("Results and outlook")
-    expect(spec.pages.find((page) => page.id === "p-chapter")?.summary).toBe("What changed")
-    expect(spec.pages.find((page) => page.id === "p-body")?.summary).toBeUndefined()
-    expect(spec.pages.find((page) => page.id === "p-ending")?.summary).toBe("Questions and discussion")
-  })
-
-  it("never sets focus on any produced spec page (no IR-side home for it)", () => {
-    const ir = PptxIRSchema.parse({
-      version: "4",
-      theme: { id: "consulting" },
-      slides: [
-        { id: "p-cover", type: "cover", heading: "Cover" },
-        { id: "p-body", type: "content", heading: "Body" },
-        { id: "p-ending", type: "ending", heading: "End" },
-      ],
-    })
-    const { spec } = disassembleDeck(ir)
-    for (const page of spec.pages) {
-      expect(page.focus).toBeUndefined()
+  it("synthesizes stable ids and headings for bare slides", () => {
+    const original = assembleDeck(spec(), {}).ir
+    const bare = {
+      ...original,
+      slides: [{ ...original.slides[1], id: undefined, heading: undefined }],
     }
-  })
-
-  it("recovers beat from slide.beat (P1 variety wave, task 1 — plain passthrough, same as layout/heading)", () => {
-    const ir = PptxIRSchema.parse({
-      version: "4",
-      theme: { id: "consulting" },
-      slides: [
-        { id: "p-cover", type: "cover", heading: "Cover" },
-        { id: "p-body", type: "content", heading: "Body", beat: "dense" },
-        { id: "p-plain", type: "content", heading: "Plain" },
-        { id: "p-ending", type: "ending", heading: "End" },
-      ],
+    const project = disassembleDeck(bare)
+    expect(project.spec.pages[0]).toMatchObject({
+      id: "p-1-content",
+      type: "content",
+      kind: "points",
+      heading: "Untitled",
     })
-    const { spec } = disassembleDeck(ir)
-    expect(spec.pages.find((p) => p.id === "p-body")?.beat).toBe("dense")
-    expect(spec.pages.find((p) => p.id === "p-plain")?.beat).toBeUndefined()
-  })
-})
-
-describe("round trip: assembleDeck(disassembleDeck(ir)) reproduces slide content", () => {
-  it("reproduces every slide's content across cover/content/placeholder/ending", () => {
-    const original = PptxIRSchema.parse({
-      version: "4",
-      filename: "roundtrip-deck",
-      theme: { id: "consulting" },
-      narrative: { pacing: "spacious" },
-      seed: 555,
-      brand: { logo_asset_id: "logo-1", position: "tl" },
-      slides: [
-        { id: "p-cover", type: "cover", heading: "Cover", subheading: "Results and outlook" },
-        {
-          id: "p-kpi",
-          type: "content",
-          heading: "KPI page",
-          beat: "dense",
-          components: [{ type: "paragraph", text: "hi" }],
-          layout: "kpi-strip",
-          arrangement: "kpi_focus",
-          footnote: "note",
-          notes: "mention the FX headwind",
-        },
-        { id: "p-gap", type: "content", heading: "Gap page", placeholder: true, subheading: "fill me in" },
-        { id: "p-ending", type: "ending", heading: "End", subheading: "Questions and discussion" },
-      ],
-    })
-
-    const { spec, pages } = disassembleDeck(original)
-    const { ir: reassembled } = assembleDeck(spec, pages)
-
-    // `original` was hand-authored via a bare `PptxIRSchema.parse` — it
-    // never went through `assembleDeck`, so its cover/gap/ending slides never
-    // had a `layout` materialized (W4 design decision 10). `reassembled` DID
-    // go through `assembleDeck`, so those same three slides now each carry
-    // an auto-picked `layout` `original` doesn't have — an accepted
-    // consequence, not a bug (`disassembleDeck`'s own doc comment). Compare
-    // content field-by-field with `layout` stripped so this test keeps
-    // covering "content survives the round trip" without re-asserting
-    // materialization (covered separately below and in the materialization
-    // describe block above).
-    const withoutLayout = (slides: typeof original.slides) =>
-      slides.map(({ layout: _layout, ...rest }) => rest)
-    expect(withoutLayout(reassembled.slides)).toEqual(withoutLayout(original.slides))
-    expect(reassembled.slides[1]?.notes).toBe("mention the FX headwind")
-
-    // p-kpi's explicit pin came from an actual page file field (`raw.layout`
-    // in `buildSlide`), so materialization skips it and it survives
-    // untouched — unlike the other three slides below.
-    expect(reassembled.slides[1]?.layout).toBe("kpi-strip")
-    // p-cover / p-gap / p-ending all omitted `layout` on `original` and each
-    // now carries whatever `resolveEffectiveLayoutId` auto-picked for it.
-    for (const id of ["p-cover", "p-gap", "p-ending"]) {
-      expect(original.slides.find((s) => s.id === id)?.layout).toBeUndefined()
-      expect(reassembled.slides.find((s) => s.id === id)?.layout).toEqual(expect.any(String))
-    }
-
-    expect(reassembled.filename).toBe(original.filename)
-    expect(reassembled.theme).toEqual(original.theme)
-    expect(reassembled.narrative).toEqual(original.narrative)
-    expect(reassembled.seed).toBe(original.seed)
-    expect(reassembled.brand).toEqual(original.brand)
-  })
-
-  it("round-trips an explicit branding posture and still omits it when the IR never set one", () => {
-    const withBranding = PptxIRSchema.parse({
-      version: "4",
-      filename: "talk-deck",
-      theme: { id: "consulting" },
-      narrative: { pacing: "spacious" },
-      branding: "cover-only",
-      slides: [
-        { id: "p-cover", type: "cover", heading: "Cover" },
-        { id: "p-body", type: "content", heading: "Body" },
-        { id: "p-body-2", type: "content", heading: "Body 2" },
-        { id: "p-ending", type: "ending", heading: "End" },
-      ],
-    })
-    const { spec, pages } = disassembleDeck(withBranding)
-    expect(spec.branding).toBe("cover-only")
-    const { ir: reassembled } = assembleDeck(spec, pages)
-    expect(reassembled.branding).toBe("cover-only")
-
-    const omitted = PptxIRSchema.parse({
-      version: "4",
-      theme: { id: "consulting" },
-      narrative: { pacing: "spacious" },
-      slides: [
-        { id: "p-cover", type: "cover", heading: "Cover" },
-        { id: "p-body", type: "content", heading: "Body" },
-        { id: "p-body-2", type: "content", heading: "Body 2" },
-        { id: "p-ending", type: "ending", heading: "End" },
-      ],
-    })
-    const back = disassembleDeck(omitted)
-    expect(back.spec.branding).toBeUndefined()
-    expect(assembleDeck(back.spec, back.pages).ir.branding).toBeUndefined()
-  })
-
-  it("round-trips a deck whose slides omit id entirely (positional synthesis both ways)", () => {
-    const original = PptxIRSchema.parse({
-      version: "4",
-      theme: { id: "consulting" },
-      narrative: { pacing: "spacious" },
-      slides: [
-        { type: "cover", heading: "Cover" },
-        { type: "content", heading: "Body", components: [{ type: "paragraph", text: "hi" }] },
-        { type: "content", heading: "Body 2" },
-        { type: "ending", heading: "End" },
-      ],
-    })
-
-    const { spec, pages } = disassembleDeck(original)
-    const { ir: reassembled } = assembleDeck(spec, pages)
-
-    // ids are synthesized (not present on `original`), but re-assembling the
-    // disassembled spec/pages is still internally consistent and stable.
-    const second = assembleDeck(spec, pages)
-    expect(reassembled.slides).toEqual(second.ir.slides)
-    expect(reassembled.slides.map((s) => s.heading)).toEqual(["Cover", "Body", "Body 2", "End"])
-    expect(reassembled.slides[1]?.components).toEqual([{ type: "paragraph", text: "hi" }])
   })
 })

@@ -3,87 +3,73 @@ summary: 'skills/pptwise/references/validate.md 的中文阅读镜像'
 mirror_of: skills/pptwise/references/validate.md
 ---
 
-# 排错与 validate 循环
+# 验证与评审循环
 
-何时读：跑 assemble / validate / audit / preview / serve，或修订某一页时。
+何时读：填充页面，组装 deck 项目，渲染，审计，预览，启动评审服务，或修订内容时。
 
-### Phase 3 — 分批填页面（每批至多 4 页），随填随 validate
+## 小批量填充
 
-对已确认 spec 里的每一页，写一个 `pages/<page-id>.json` 存放它的内容（`components`，以及可选的 `layout`/`arrangement`/`background`/`image_side`/`footnote`/`notes`，绝不写 `type`/`heading`，这两个字段被 spec 锁定）。撰写 `cover`/`chapter`/`ending` 页面时记住 Phase 1 的边界页规则。footnote 在这些页都不渲染。component 需要已知版式声明兼容槽位，当前 chapter 版式没有这类槽位。`notes` 是给主讲人看的演讲稿。写一份好的讲稿是模型的强项。只要页面需要一段超出幻灯片本身的口头讲解，就起草 `notes`（稀排页合同）。这是默认动作，不是可选项。
+为 spec 中每张已确认页面编写 `pages/<page-id>.json`。页面文件只能包含 `components`、`background`、`image_side`、`footnote` 与 `notes`。Spec 拥有 `type`、内容页 `kind`、`heading` 和页面顺序。在页面文件中重复任何锁定字段都会硬报错。
+
+每次最多填四页，然后运行：
 
 ```bash
-pptwise assemble deck-dir/     # materializes deck.json — catches structural drift: orphan page files, locked-field violations, a broken spec
-pptwise validate deck-dir/     # content-quality gate: heading length, density, bullets budget (warnings) + unknown theme, boundary-page content, and a bullet item past render-safety (hard errors)
+pptwise assemble deck-dir/
+pptwise validate deck-dir/
 ```
 
-把两个命令报出的错误都修掉，重新跑，直到两者都打印 `OK`。`validate` 可能在打印 `OK` 的同时带着 `warning:` 行（比如标题太长、某页太密）——条件允许时也应该收紧，读起来会更好，但它们不拦渲染。只有 error 才会让 `OK` 打印不出来。spec 里某一页如果还没有对应的页面文件，就是一个占位页（只有标题）——assemble 和 validate 都接受这种情况。分批之间留一些占位页是正常状态，不是错误。只要某一页的 `layout` 被留给自动选型，`assemble` 也会打印 `note: N layouts auto-selected into deck.json`——这只是提示，不是错误。只有当某个具体选型结果需要被锁定时，才在页面文件里显式钉死 `layout`——像 `quote-stage`、`statement`、`pull-quote`、`verse-chapter`、`stat-hero`、`one-evidence`、`mono-bleed` 这种 `pinOnly` 版式每次都需要这个钉子，因为它从来不会通过自动选型出现（见 `references/layouts.md`）。高潮页、金句页、证据页默认就要钉（见 `references/layouts.md`）。
+`assemble` 把锁定语义与页面内容合并成 IR v5。它不会把脸的选择或其他渲染决定写回项目。没有页面文件时保留为合法占位页。孤儿页面文件、锁定字段冲突、未知主题，或 kind 不在已绑定主题菜单中，都会硬报错。
 
-### Phase 4 — 渲染
+`validate` 检查 schema、组件、资产、叙事、物理容量与编辑预算。修复错误，直到它打印 `OK`。警告不拦输出，但长标题、密度过高、资产悬空和重复选择通常都应在交付前收紧。
+
+演讲者 `notes` 会导出为原生 PowerPoint 备注，从不画在页面上。
+
+## 只按绑定渲染
 
 ```bash
 pptwise render deck-dir/
 ```
 
-`.pptx` 落在 `.pptwise/<deck>/`。命令会打印绝对路径，把那一行报给用户。
+`.pptx` 写到 `.pptwise/<deck>/`，命令会打印绝对路径。渲染阶段没有临时换主题的开关。项目 spec 就是绑定。
 
-`--theme <id>` 是 repaint，只在不改 spec 的情况下换视觉皮肤。已经 assemble 的 `deck.json` 会保留所有已物化的 layout id，不会自动换成新主题的结构骨相。要吃到新主题的完整结构，先改 `deck.spec.json` 的 `theme`，再跑一次 `pptwise assemble deck-dir/`，随后重跑 validate、audit、render。`--style <path>` 在主题上叠加 style-token 覆盖，schema 见 `pptwise schema --style`。
+未填完的项目需要显式使用 `--draft`。可能丢失的内容仍会被拦截，除非用户明确接受 `--allow-dropped-content`。应优先修复或拆页。
 
-deck 里还有未填的占位页时，render 会拒绝导出，除非加上 `--draft`。只有用户明确想在所有页面都写完之前先看一眼时，才用它。某一页装不下、版面丢掉了放不下的块而页面上毫无提示时，render 同样拒绝导出，报错会写清哪几页各丢了几块。正确做法是把那一页缩短或拆成两页再重新渲染。`--allow-dropped-content` 会带着缺失内容出片，只有用户明确要求时才用。
+更换主题前，用 `pptwise theme try` 比较候选。菜单相同的分叉可以换绑，再依次运行 assemble、validate、audit 和 render。菜单不同则要回到主题选择，修订 spec 与受影响的页面填充，再重复这些检查。
 
-如果项目里有 `pptwise.config.json`，它的 theme/style 就是项目默认值——除非用户要求，不要用 `--theme` 跟它对着干。阶段三里写的任何页面 `notes` 都会导出成原生 PowerPoint 演讲者备注（PowerPoint/Keynote 里的 View → Notes）——从不会画到幻灯片本身上。
+## 审计几何
 
-### Phase 5 — 审查，可选的视觉自查
-
-所有页面都填完（没有占位页剩下）之后，跑一次确定性几何审查：
+全部页面填完后运行：
 
 ```bash
 pptwise audit deck-dir/
 ```
 
-它不消耗 token，输出确定。命令会离屏渲染每一页，检查 overflow、out-of-bounds、low-contrast、overlap、content-truncated 与 content-dropped。连续三张或更多非占位页以同一种 component 开头时，还会报告 `monotony`。没有 component 的页面会打断这段连续区间。出现任一 finding 时 exit 1，干净则是 0。每条 finding 都标出页面并带修法。按处理 `validate` 报错时的「重组，不要删除」纪律修内容。看到 `monotony` 时更换重复的领头组件。随后单独重跑 `pptwise audit deck-dir/`，直到 exit 0。这是 deck 的视觉 QA，不要用肉眼看截图代替。
+确定性审计会检查溢出、越界、低对比度、重叠、截断、内容丢失和连续使用相同首组件。发现问题时退出码为 1，并指出页面。重组内容，源文件改变后重跑 assemble 与 validate，再重复 audit，直到退出码为 0。
 
-如果有页面用了 cover/chapter 照片背景，加上 `--pixels`——它会把该页光栅化并采样真实像素，抓住文字直接压在一张没有遮罩的照片上的情况，这是上面纯 SVG 检查唯一看不到的一种。
+封面或章节页使用照片背景时，加上 `--pixels`。像素采样能发现文字落在真实图片不安全区域的问题。
+
+## 评审整份 deck
+
+运行环境若有对话内 deck 预览工具，优先使用。否则生成自包含评审文件：
 
 ```bash
 pptwise preview deck-dir/ --html
 ```
 
-为每张 slide 各写一个独立 SVG，外加一个自包含的 `preview.html`，都落在 `.pptwise/<deck>/`，永远不受占位页拦截。命令会打印绝对路径，把那一行报给用户。交付之前自己读几个 SVG（它们就是纯文本文件），核对 layout 与密度是否合理，图片较多的 deck 尤其要看。把 `preview.html`（缩略图条、键盘翻页、占位页角标）交给用户自己看，而不是代替这一步。所有页面都填完时，`preview.html` 还会叠加同一份 `audit` 检查结果（每页一个角标 + 一个 findings 面板），让审查者不用打开终端就能看到问题。deck 里如果还有占位页，则改为显示一行「audit skipped」的提示。`preview.html` 是只读的：它只负责把 deck 呈现出来，从不改动它。审查者想改什么，直接在对话里告诉你。把那一页截图发给你是最快的交接方式，你再走阶段六处理。
+它会在 `.pptwise/<deck>/` 下写出每页一个 SVG 与 `preview.html`。预览只读。占位页会被标记，完整 deck 会在评审界面中带上 audit 发现。
 
-### 把 deck 拿给用户看
-
-怎么交付取决于 harness 能画什么。按下面的顺序，用第一条成立的。
-
-**如果存在 `pptwise_preview` 工具，就调它。** 它渲染完直接把幻灯片预览放进对话：卡片里是缩略图条，点开看全尺寸，方向键翻页。用户不用离开对话，也不用打开任何东西。**这个工具在场时绝不要退回去甩一个文件路径或 URL 给用户**。它就是为了取代那个体验才存在的。工具只回给你一行摘要（页数、审计状态），这是刻意的：deck 去用户屏幕，不进你的上下文。
-
-**如果 harness 有内置浏览器（VS Code、Cursor 一类），就预览成文件。** 跑 `pptwise preview deck-dir/ --html`。命令会打印 `preview.html` 的绝对路径，把那条路径给用户，让他在内置浏览器里打开。每轮修订后重跑同一条命令，路径不变，用户刷新即可。不占端口，不留常驻进程。
-
-**否则就起服务。** 大多数 harness 没办法在对话里画出一页幻灯片，审阅就发生在用户自己的浏览器里。绝不要用「贴一张缩略图或某一页的截图」来代替。把整份 deck 服务出去，让用户全尺寸自己翻。启动服务（在 DSH 里遵循后台任务的规矩，记下 job id，方便之后停掉）：
+用户需要浏览器实时评审时，把项目服务作为后台任务启动：
 
 ```bash
 pptwise serve deck-dir/ --no-open
 ```
 
-然后按这个顺序走完这一轮：
+分享命令打印的准确 localhost 地址，在评审轮次中保留进程，结束时只停止这个进程。
 
-1. 必须带 `--no-open`。agent 环境里没有可以自动打开的浏览器。
-2. 把它打印的 localhost URL（默认 `http://127.0.0.1:4400`）原样报给用户，让用户自己打开。这一行就是全部交付动作。
-3. 用户翻完整份 deck，在对话里告诉你哪里要改。把出问题的那一页截图发过来是最快的交接方式——你看到的和他看到的完全一致。
-4. 把每一条请求都走阶段六的修订流程。你每保存一次文件页面就实时重渲染，每一次修订都直接落在用户已经打开的那个标签页里。不用发新链接，也不用让他点任何东西。
-5. 用户还在继续看就留在这个循环里。这一轮结束时停掉 serve 进程（kill 掉那个后台任务）。任务结束后绝不留着它继续跑。
+## 在源头修订
 
-### Phase 6 — 修订：改一页，重新 assemble
+- 内容变化只编辑受影响的 `pages/<id>.json`，再依次运行 assemble、validate、audit 和 render。
+- 页面顺序、页型、kind、标题或主题绑定变化时，编辑 `deck.spec.json`，运行 `pptwise spec validate`，再重复项目检查。
+- 主题或受众完全不同的新任务应创建新项目，从意图与叙事重新开始。
 
-一次修订，只改能承载这次改动的最小那份文件：
-
-- 内容改动（「把 KPI 那页写得更有冲击力」）→ 只改那一页的 `pages/<id>.json`，然后重复阶段三的 `assemble` + `validate` 组合，以及阶段五的 `audit`，再重新渲染。没人要求你改的页面，绝不重新生成。
-- 结构性改动（调整顺序、增删页面、改某页的 type 或 heading）→ 改 `deck.spec.json`，先重新跑一次 `pptwise spec validate`（阶段二的「不要重新定 spec」规则依然适用：只有在用户确实要求结构性改动时才这么做）。
-- 审查者在对话里提出的改动（通常附一张页面截图）→ 对照他描述的内容在 `deck.spec.json`/`pages/` 里找到那一页的 `pages/<id>.json`。把他的话当成一条需要你去理解的需求，而不是可以照抄的补丁：他描述的是渲染出来的 slide，不是在写页面文件 JSON——你自己要把它翻译成具体的内容改动，然后对每一页你动过的页面跑上面同一套内容改动流程（`assemble` + `validate` + `audit`）。preview 全程只读：除了你自己主动做出的编辑之外，没有任何环节会写入 `pages/*.json`。
-
-## 后续请求怎么分流
-
-一旦 deck 项目已经存在，后续消息恰好分流进三条分支之一——动手之前先判断走哪一条：
-
-1. **改一页**（「改一下第 3 页」「把 KPI 那页写得更有冲击力」，或者一张截图加一句说明）→ 走阶段六：改那一页的文件，重新 assemble、重新 validate、重新 audit。没人问起的页面绝不去碰。
-2. **一份新 deck**（不同的主题、不同的受众，或明确要求重新开始）→ 走阶段一：新建一个 deck 项目目录，重新决定 narrative/theme，重新起一份 spec。
-3. **和 deck 生成无关**（关于内容本身的问题，或任何和 slides 没有关联的事）→ 完全不要调用 pptwise。
+聚焦修订时不要重新生成无关页面。把截图反馈解释为内容要求，修改拥有这项要求的最小源文件，并始终保持预览产物只读。

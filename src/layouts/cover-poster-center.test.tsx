@@ -8,6 +8,7 @@ import { PosterCenterCover } from "./cover-poster-center"
 import type { PptxIR, Slide } from "@/ir"
 import type { StyleTokens } from "../themes/tokens"
 import { accessibleInk } from "../render/ink"
+import type { SvgTemplateProps } from "./types"
 
 function tokensWithoutCover(themeId: string): StyleTokens {
   const tokens = resolveStyle(themeId)
@@ -140,7 +141,7 @@ const FULL_META: PptxIR["meta"] = {
 
 function fullIr(themeId: string): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "deck.pptx",
     theme: { id: themeId },
     branding: "full",
@@ -156,10 +157,11 @@ function renderCover(
   s: Slide = slide,
 ) {
   const tokens = resolveStyle(themeId)
-  const shaped: StyleTokens = { ...tokens, shape: { ...tokens.shape, cover: { ...tokens.shape?.cover, ...cover } } }
-  const ctx = buildCtx(shaped, {})
+  const ctx = buildCtx(tokens, {})
   const doc = fullIr(themeId)
-  const { markup, root } = render(<PosterCenterCover ir={doc} slide={s} index={0} ctx={ctx} />)
+  const { markup, root } = render(
+    <PosterCenterCover ir={doc} slide={s} index={0} ctx={ctx} params={cover as SvgTemplateProps["params"]} />,
+  )
   return { markup, root, tokens, ctx }
 }
 

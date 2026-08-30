@@ -126,13 +126,13 @@ export function StickerNumeralChapter({ ir, slide, index, ctx }: SvgTemplateProp
 }
 
 export const layoutDef = {
+  branding: "none",
   // chapter-sticker-numeral-chapter.tsx: pinOnly accent sticker tilted -6
   // degrees with the chapter number inside. Title sits to the right. The
   // sticker is foreground. Theme paints the chapter field.
   id: "sticker-numeral-chapter",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
-  branding: "none",
   slideTypes: ["chapter"],
   slots: [
     { name: "kicker", accepts: [] },

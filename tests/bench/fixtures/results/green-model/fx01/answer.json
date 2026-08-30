@@ -1,11 +1,12 @@
 {
-  "version": "4",
+  "version": "5",
   "filename": "fixture-fx01",
   "theme": { "id": "consulting" },
   "slides": [
     { "type": "cover", "heading": "Fixture One", "subheading": "clean bare IR" },
     {
       "type": "content",
+      "kind": "points",
       "heading": "Body",
       "components": [{ "type": "bullets", "items": ["one", "two", "three"] }]
     },

@@ -3,37 +3,47 @@ summary: 'skills/pptwise/references/branding.md 的中文阅读镜像'
 mirror_of: skills/pptwise/references/branding.md
 ---
 
-# Branding 姿态
+# 品牌姿态
 
-何时读：抽取公司模板，或决定要不要写 `branding: "full"` 时。
+何时读：决定整份 deck 的品牌可见度，抽取 Office 品牌，或理解某页为什么没有品牌框时。
 
-品牌信号回答的是这份 deck 长什么样，从来不回答它该怎么论证。把「这家公司的配色像咨询公司」读成一种叙事，是把推断当事实抬上来，一份没人选过的论证形状就是这样上台的。
+品牌信号只控制外观，不负责选择叙事或页面讲法。
 
-## 品牌主题：用户自己的公司模板
+## Deck 级姿态
 
-当用户递来或提到 `.thmx` 主题、`.potx` 模板，或带品牌的 `.pptx` 时，先把配色和字体抽成自定义 theme，再决定最终视觉方向。抽取完全在本地进行，文件从不离开这台机器。
+`branding` 有三个值：
+
+| value | 可见结果 |
+| --- | --- |
+| `full` | 全程保留 logo，绘制内容页页脚与元数据，并允许封面和结尾的元数据行显示保密级别与日期。 |
+| `cover-only` | 只在封面与章节页保留 logo。内容页与结尾页不画共享页脚、元数据和 logo。 |
+| `minimal` | 保留 logo，但不画内容页页脚线与元数据。 |
+
+省略 `branding` 与显式写 `cover-only` 完全相同。只有每张内容页都需要机构页脚时才选 `full`，例如保密或受控文档。
+
+## 页面级静默
+
+Deck 姿态只是广义许可。一张脸可以把 `branding: "none"` 作为不可更改的结构事实。主题菜单条目也可以声明 `brand: "none"`。两者任意一个成立时，该页都不会出现共享品牌片段，即使 deck 选择了 `full`。
+
+这适用于构图本身没有安全品牌框的脸。它不是 logo 丢失，也不应通过页面内容补救。主题装饰与品牌相互独立，仍由脸与菜单的装饰规则决定。
+
+## 抽取完整 v2 主题
+
+用户提供 `.thmx`、`.potx` 或带品牌的 `.pptx` 时，在本机抽取颜色和字体。先选择一个菜单适合目标故事的供体，因为抽取结果会完整复制该菜单。
 
 ```bash
-pptwise brand extract corp-template.pptx -o deck-dir/acme.theme.json --id acme
-pptwise preview deck-dir/ --theme-file deck-dir/acme.theme.json --theme acme --html
+pptwise brand extract corp-template.pptx \
+  -o deck-dir/theme.json \
+  --id acme \
+  --from consulting
 ```
 
-抽取结果是版本 1 的 partial 主题。它包含 style 与 brand token，把 `base` 设为 `consulting`，并继承该基础主题的结构骨相。只有确实要采用另一套内置结构时，才在装载前修改结果里的 `base` 字段。对比视觉方向期间保留候选文件名。在预览命令里，`--theme-file` 注册候选，`--theme acme` 选中它，但不会把它变成项目默认主题。
+输出是自包含的版本 2 主题，包含样式 token、品牌 token、场合、个性强度和完整菜单。它没有基础引用，加载时也不继承任何东西。在 `deck.spec.json` 中绑定 `acme` 后，项目命令会自动解析 `deck-dir/theme.json`。
 
-用户确认自定义视觉后，把完全相同的候选保存为 `deck-dir/theme.json`，再把 id 写入 `deck.spec.json`。项目会在 assemble 前注册该文件，并在 validate、render、audit、preview、serve 时自动装载，所以项目命令不需要任何主题 flag。编辑 `theme.json` 后，`serve` 会重新读取并刷新已经打开的预览。
+要与其他命名主题比较，在所有名称都能解析的目录运行固定试衣样稿：
 
 ```bash
-pptwise render deck-dir/
+pptwise theme try acme,consulting,swiss
 ```
 
-`--theme-file` 只注册 id，从不选择主题。裸 IR 还必须带 `--theme <id>`，或已经在 `theme.id` 里点名该 id：
-
-```bash
-pptwise render deck.json --theme-file acme.theme.json --theme acme
-```
-
-项目里的 `theme.json` 加 spec 引用不需要这两个 flag。
-
-装载时会执行对比度下限检查。模板的文字色与背景色太接近时，命令会报出失败 token 和比例。把信息转告用户，请用户决定调整抽取文件的颜色，或改用内置主题。
-
-spec 和 IR 不要写 `branding`，除非每一页内容页都需要品牌页脚。`meta.confidentiality` 为 `confidential` 或 `restricted`，或文件需要机构落款时，写 `branding: "full"`。密级和日期随后出现在封面。其余姿态不出现。
+装载器会检查对比度。抽取结果若产生不安全的文字与背景组合，应调整主题或创建配色分叉，不要增加临时的单页颜色覆盖。

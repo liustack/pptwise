@@ -3,13 +3,13 @@ import { describe, it, expect } from "vitest"
 import { parsePptxIR, BUILTIN_THEME_IDS } from "./index"
 
 const minimal = () => ({
-  version: "4", filename: "d.pptx",
+  version: "5", filename: "d.pptx",
   theme: { id: "consulting" }, meta: { organization: "ACME" },
   assets: { images: {} },
   slides: [{ type: "cover", heading: "标题" }],
 })
 
-describe("IR v4 theme field", () => {
+describe("IR v5 theme field", () => {
   it("accepts theme with style and brand overrides", () => {
     const d: any = minimal()
     d.theme = {
@@ -31,12 +31,12 @@ describe("IR v4 theme field", () => {
   })
 })
 
-describe("IR v4 omission defaults (weak-model friendly)", () => {
+describe("IR v5 omission defaults (weak-model friendly)", () => {
   it("a bare slides-only deck parses with all defaults", () => {
-    const r = parsePptxIR({ slides: [{ heading: "只有一页", components: [] }] })
+    const r = parsePptxIR({ slides: [{ kind: "points", heading: "只有一页", components: [] }] })
     expect(r.success).toBe(true)
     if (r.success) {
-      expect(r.data.version).toBe("4")
+      expect(r.data.version).toBe("5")
       expect(r.data.filename).toBe("presentation")
       expect(r.data.theme.id).toBe("consulting")
       expect(r.data.slides[0]!.type).toBe("content")
@@ -65,37 +65,44 @@ describe("image_grid component", () => {
   it("accepts 2 to 6 images and rejects a seventh", () => {
     for (const count of [2, 4, 6]) {
       const d: any = minimal()
-      d.slides = [{ type: "content", components: [imageGrid(count)] }]
+      d.slides = [{ type: "content", kind: "points", components: [imageGrid(count)] }]
       expect(parsePptxIR(d).success, String(count)).toBe(true)
     }
     const d: any = minimal()
-    d.slides = [{ type: "content", components: [imageGrid(7)] }]
+    d.slides = [{ type: "content", kind: "points", components: [imageGrid(7)] }]
     expect(parsePptxIR(d).success).toBe(false)
   })
 })
 
-describe("pptx-ir v4", () => {
-  it("parses minimal v4", () => {
+describe("pptx-ir v5", () => {
+  it("parses minimal v5", () => {
     const r = parsePptxIR(minimal()); expect(r.success).toBe(true)
   })
-  it("slide carries type/arrangement, no layout_ref", () => {
+  it("requires kind on a content slide", () => {
     const d: any = minimal()
-    d.slides = [{ type: "content", arrangement: "two_column", heading: "x", components: [] }]
-    expect(parsePptxIR(d).success).toBe(true)
+    d.slides = [{ type: "content", heading: "x", components: [] }]
+    const r = parsePptxIR(d)
+    expect(r.success).toBe(false)
+    if (!r.success) expect(r.error).toMatch(/slides\.0\.kind/i)
   })
-  it("slide accepts an explicit layout id as an open string (registry existence is a validateIr gate, not a schema enum)", () => {
+  it("rejects the retired arrangement field", () => {
     const d: any = minimal()
-    d.slides = [{ type: "content", layout: "image-split", heading: "x", components: [] }]
-    expect(parsePptxIR(d).success).toBe(true)
-  })
-  it("rejects the retired variant field (strict schema — W2 task 3 split it into layout + arrangement)", () => {
-    const d: any = minimal()
-    d.slides = [{ type: "content", variant: "two_column", heading: "x", components: [] }]
+    d.slides = [{ type: "content", kind: "points", arrangement: "two_column", heading: "x", components: [] }]
     expect(parsePptxIR(d).success).toBe(false)
   })
-  it("rejects an arrangement value from the old image-takeover family (those 4 promoted to layout, not arrangement)", () => {
+  it("rejects the retired layout field", () => {
     const d: any = minimal()
-    d.slides = [{ type: "content", arrangement: "image_split", heading: "x", components: [] }]
+    d.slides = [{ type: "content", kind: "points", layout: "image-split", heading: "x", components: [] }]
+    expect(parsePptxIR(d).success).toBe(false)
+  })
+  it("rejects the retired variant field", () => {
+    const d: any = minimal()
+    d.slides = [{ type: "content", kind: "points", variant: "two_column", heading: "x", components: [] }]
+    expect(parsePptxIR(d).success).toBe(false)
+  })
+  it("rejects an arrangement value from the old image-takeover family", () => {
+    const d: any = minimal()
+    d.slides = [{ type: "content", kind: "points", arrangement: "image_split", heading: "x", components: [] }]
     expect(parsePptxIR(d).success).toBe(false)
   })
   it("rejects layouts / layout_ref", () => {
@@ -106,23 +113,27 @@ describe("pptx-ir v4", () => {
     const d: any = minimal(); d.slides[0].decorations = []
     expect(parsePptxIR(d).success).toBe(false)
   })
-  it("slide accepts an optional beat (P1 variety wave, task 1's additive v4 field — 'anchor'/'dense'/'breathing')", () => {
+  it("rejects every retired beat literal", () => {
     for (const beat of ["anchor", "dense", "breathing"]) {
       const d: any = minimal()
-      d.slides = [{ type: "content", heading: "x", beat, components: [] }]
-      const r = parsePptxIR(d)
-      expect(r.success).toBe(true)
-      if (r.success) expect(r.data.slides[0]!.beat).toBe(beat)
+      d.slides = [{ type: "content", kind: "points", heading: "x", beat, components: [] }]
+      expect(parsePptxIR(d).success).toBe(false)
     }
   })
-  it("a slide with no beat omits the field entirely (no default, unlike type/version)", () => {
-    const r = parsePptxIR(minimal())
-    expect(r.success).toBe(true)
-    if (r.success) expect(r.data.slides[0]!.beat).toBeUndefined()
-  })
-  it("rejects an unknown beat value (typo, not omission)", () => {
+  it("preserves the required content kind", () => {
     const d: any = minimal()
-    d.slides = [{ type: "content", heading: "x", beat: "urgent", components: [] }]
+    d.slides = [{ type: "content", kind: "evidence", heading: "x", components: [] }]
+    const r = parsePptxIR(d)
+    expect(r.success).toBe(true)
+    if (r.success) {
+      const slide = r.data.slides[0]!
+      expect(slide.type).toBe("content")
+      if (slide.type === "content") expect(slide.kind).toBe("evidence")
+    }
+  })
+  it("rejects an unknown kind value", () => {
+    const d: any = minimal()
+    d.slides = [{ type: "content", kind: "urgent", heading: "x", components: [] }]
     expect(parsePptxIR(d).success).toBe(false)
   })
   it("parses successfully when assets is omitted (backend default)", () => {
@@ -143,7 +154,7 @@ describe("pptx-ir v4", () => {
 describe("expressive components: roadmap / matrix / insight_panel", () => {
   const withComponents = (components: any[]) => {
     const d: any = minimal()
-    d.slides = [{ type: "content", heading: "h", components }]
+    d.slides = [{ type: "content", kind: "points", heading: "h", components }]
     return d
   }
   it("parses roadmap with period + label:value rows", () => {
@@ -205,7 +216,7 @@ describe("expressive components: roadmap / matrix / insight_panel", () => {
 describe("chart subtypes (chart-depth wave: scatter / area / donut / gauge)", () => {
   const withComponents = (components: any[]) => {
     const d: any = minimal()
-    d.slides = [{ type: "content", heading: "h", components }]
+    d.slides = [{ type: "content", kind: "points", heading: "h", components }]
     return d
   }
   const chart = (extra: Record<string, unknown>) => withComponents([{ type: "chart", ...extra }])
@@ -290,7 +301,7 @@ describe("chart subtypes (chart-depth wave: scatter / area / donut / gauge)", ()
 describe("swot component (structure-components wave task 1, named-slot family)", () => {
   const withComponents = (components: any[]) => {
     const d: any = minimal()
-    d.slides = [{ type: "content", heading: "h", components }]
+    d.slides = [{ type: "content", kind: "points", heading: "h", components }]
     return d
   }
   const swotComponent = (n: number) => ({
@@ -334,7 +345,7 @@ describe("swot component (structure-components wave task 1, named-slot family)",
 describe("bmc component (structure-components wave task 1, named-slot family)", () => {
   const withComponents = (components: any[]) => {
     const d: any = minimal()
-    d.slides = [{ type: "content", heading: "h", components }]
+    d.slides = [{ type: "content", kind: "points", heading: "h", components }]
     return d
   }
   const bmcComponent = (overrides: Record<string, string[]> = {}) => ({
@@ -379,7 +390,7 @@ describe("bmc component (structure-components wave task 1, named-slot family)", 
 describe("waterfall component (structure-components wave task 2, numeric-axis family)", () => {
   const withComponents = (components: any[]) => {
     const d: any = minimal()
-    d.slides = [{ type: "content", heading: "h", components }]
+    d.slides = [{ type: "content", kind: "points", heading: "h", components }]
     return d
   }
   const items = (n: number) =>
@@ -430,7 +441,7 @@ describe("waterfall component (structure-components wave task 2, numeric-axis fa
 describe("gantt component (structure-components wave task 2, numeric-axis family)", () => {
   const withComponents = (components: any[]) => {
     const d: any = minimal()
-    d.slides = [{ type: "content", heading: "h", components }]
+    d.slides = [{ type: "content", kind: "points", heading: "h", components }]
     return d
   }
   const items = (n: number) => Array.from({ length: n }, (_, i) => ({ label: `阶段${i}`, start: i, end: i + 2 }))
@@ -473,7 +484,7 @@ describe("gantt component (structure-components wave task 2, numeric-axis family
 describe("pest component (structure-components wave 2 task 1, named-slot family)", () => {
   const withComponents = (components: any[]) => {
     const d: any = minimal()
-    d.slides = [{ type: "content", heading: "h", components }]
+    d.slides = [{ type: "content", kind: "points", heading: "h", components }]
     return d
   }
   const quadrant = (n: number, overrides: Record<string, unknown> = {}) => ({
@@ -522,7 +533,7 @@ describe("pest component (structure-components wave 2 task 1, named-slot family)
 describe("five_forces component (structure-components wave 2 task 1, named-slot family)", () => {
   const withComponents = (components: any[]) => {
     const d: any = minimal()
-    d.slides = [{ type: "content", heading: "h", components }]
+    d.slides = [{ type: "content", kind: "points", heading: "h", components }]
     return d
   }
   const panel = (n: number, overrides: Record<string, unknown> = {}) => ({
@@ -582,7 +593,7 @@ describe("five_forces component (structure-components wave 2 task 1, named-slot 
 describe("heatmap component (structure-components wave 2 task 2, value-grid family)", () => {
   const withComponents = (components: any[]) => {
     const d: any = minimal()
-    d.slides = [{ type: "content", heading: "h", components }]
+    d.slides = [{ type: "content", kind: "points", heading: "h", components }]
     return d
   }
   const heatmapComponent = (overrides: Record<string, unknown> = {}) => ({
@@ -683,7 +694,7 @@ describe("heatmap component (structure-components wave 2 task 2, value-grid fami
 describe("sankey component (structure-components wave 2 task 3, flow-graph family)", () => {
   const withComponents = (components: any[]) => {
     const d: any = minimal()
-    d.slides = [{ type: "content", heading: "h", components }]
+    d.slides = [{ type: "content", kind: "points", heading: "h", components }]
     return d
   }
   const sankeyComponent = (overrides: Record<string, unknown> = {}) => ({
@@ -882,7 +893,7 @@ describe("sankey component (structure-components wave 2 task 3, flow-graph famil
 describe("architecture component direction field (probe evidence-gate byproduct, 2026-07-26)", () => {
   const withComponents = (components: any[]) => {
     const d: any = minimal()
-    d.slides = [{ type: "content", heading: "h", components }]
+    d.slides = [{ type: "content", kind: "points", heading: "h", components }]
     return d
   }
   const architectureComponent = (overrides: Record<string, unknown> = {}) => ({
@@ -923,7 +934,7 @@ describe("architecture component direction field (probe evidence-gate byproduct,
 describe("comparison component cells/columns length contract (probe evidence-gate byproduct, 2026-07-26)", () => {
   const withComponents = (components: any[]) => {
     const d: any = minimal()
-    d.slides = [{ type: "content", heading: "h", components }]
+    d.slides = [{ type: "content", kind: "points", heading: "h", components }]
     return d
   }
   const comparisonComponent = (overrides: Record<string, unknown> = {}) => ({
@@ -992,7 +1003,7 @@ describe("comparison component cells/columns length contract (probe evidence-gat
 describe("data_table component (R1 evidence wave Task T3 — 33rd component, first through the wave-2 domain-file flow)", () => {
   const withComponents = (components: any[]) => {
     const d: any = minimal()
-    d.slides = [{ type: "content", heading: "h", components }]
+    d.slides = [{ type: "content", kind: "points", heading: "h", components }]
     return d
   }
   const dataTableComponent = (overrides: Record<string, unknown> = {}) => ({
@@ -1168,7 +1179,7 @@ describe("data_table component (R1 evidence wave Task T3 — 33rd component, fir
 describe("device_mockup component (device_mockup wave, `.issues/2026-08-05-component-waves/plan-device-mockup.md` — 34th component)", () => {
   const withComponents = (components: any[]) => {
     const d: any = minimal()
-    d.slides = [{ type: "content", heading: "h", components }]
+    d.slides = [{ type: "content", kind: "points", heading: "h", components }]
     return d
   }
   const deviceMockupComponent = (overrides: Record<string, unknown> = {}) => ({
@@ -1224,7 +1235,7 @@ describe("device_mockup component (device_mockup wave, `.issues/2026-08-05-compo
 describe("cycle component (cycle wave, `.issues/2026-08-05-component-waves/plan-cycle.md` — 35th component)", () => {
   const withComponents = (components: any[]) => {
     const d: any = minimal()
-    d.slides = [{ type: "content", heading: "h", components }]
+    d.slides = [{ type: "content", kind: "points", heading: "h", components }]
     return d
   }
   const items = (n: number) =>
@@ -1314,7 +1325,7 @@ describe("cycle component (cycle wave, `.issues/2026-08-05-component-waves/plan-
 describe("people_cards component (people_cards wave, `.issues/2026-08-05-component-waves/plan-people-cards.md` — 36th component)", () => {
   const withComponents = (components: any[]) => {
     const d: any = minimal()
-    d.slides = [{ type: "content", heading: "h", components }]
+    d.slides = [{ type: "content", kind: "points", heading: "h", components }]
     return d
   }
   const people = (n: number) =>
@@ -1407,7 +1418,7 @@ describe("people_cards component (people_cards wave, `.issues/2026-08-05-compone
 describe("tag_row component (tag_row wave, `.issues/2026-08-06-tag-row/plan.md` — 38th component)", () => {
   const withComponents = (components: any[]) => {
     const d: any = minimal()
-    d.slides = [{ type: "content", heading: "h", components }]
+    d.slides = [{ type: "content", kind: "points", heading: "h", components }]
     return d
   }
   const tags = (n: number) => Array.from({ length: n }, (_, i) => `Tag${i + 1}`)
@@ -1535,22 +1546,22 @@ describe("icon_cards component", () => {
   it("accepts 2-4 items", () => {
     for (const n of [2, 3, 4]) {
       const d: any = minimal()
-      d.slides = [{ type: "content", components: [iconCardsComponent(n)] }]
+      d.slides = [{ type: "content", kind: "points", components: [iconCardsComponent(n)] }]
       expect(parsePptxIR(d).success).toBe(true)
     }
   })
 
   it("rejects fewer than 2 items", () => {
     const d: any = minimal()
-    d.slides = [{ type: "content", components: [iconCardsComponent(1)] }]
+    d.slides = [{ type: "content", kind: "points", components: [iconCardsComponent(1)] }]
     expect(parsePptxIR(d).success).toBe(false)
   })
 
   it("accepts 6 items (2026-07-11 六宫格扩容), rejects more than 6", () => {
     const d: any = minimal()
-    d.slides = [{ type: "content", components: [iconCardsComponent(6)] }]
+    d.slides = [{ type: "content", kind: "points", components: [iconCardsComponent(6)] }]
     expect(parsePptxIR(d).success).toBe(true)
-    d.slides = [{ type: "content", components: [iconCardsComponent(7)] }]
+    d.slides = [{ type: "content", kind: "points", components: [iconCardsComponent(7)] }]
     expect(parsePptxIR(d).success).toBe(false)
   })
 
@@ -1558,7 +1569,7 @@ describe("icon_cards component", () => {
     const d: any = minimal()
     const component = iconCardsComponent(2)
     component.items[0].icon = "not-a-real-icon"
-    d.slides = [{ type: "content", components: [component] }]
+    d.slides = [{ type: "content", kind: "points", components: [component] }]
     expect(parsePptxIR(d).success).toBe(false)
   })
 })
@@ -1575,20 +1586,20 @@ describe("steps component", () => {
   it("accepts 2-5 items", () => {
     for (const n of [2, 3, 4, 5]) {
       const d: any = minimal()
-      d.slides = [{ type: "content", components: [stepsComponent(n)] }]
+      d.slides = [{ type: "content", kind: "points", components: [stepsComponent(n)] }]
       expect(parsePptxIR(d).success).toBe(true)
     }
   })
 
   it("rejects fewer than 2 items", () => {
     const d: any = minimal()
-    d.slides = [{ type: "content", components: [stepsComponent(1)] }]
+    d.slides = [{ type: "content", kind: "points", components: [stepsComponent(1)] }]
     expect(parsePptxIR(d).success).toBe(false)
   })
 
   it("rejects more than 5 items", () => {
     const d: any = minimal()
-    d.slides = [{ type: "content", components: [stepsComponent(6)] }]
+    d.slides = [{ type: "content", kind: "points", components: [stepsComponent(6)] }]
     expect(parsePptxIR(d).success).toBe(false)
   })
 
@@ -1596,7 +1607,7 @@ describe("steps component", () => {
     const d: any = minimal()
     const component = stepsComponent(2)
     ;(component.items[0] as any).icon = "rocket"
-    d.slides = [{ type: "content", components: [component] }]
+    d.slides = [{ type: "content", kind: "points", components: [component] }]
     expect(parsePptxIR(d).success).toBe(false)
   })
 })
@@ -1615,7 +1626,7 @@ describe("verdict_banner component", () => {
   it("accepts all three tone values", () => {
     for (const tone of ["positive", "warning", "neutral"]) {
       const d: any = minimal()
-      d.slides = [{ type: "content", components: [verdictBannerComponent(tone)] }]
+      d.slides = [{ type: "content", kind: "points", components: [verdictBannerComponent(tone)] }]
       expect(parsePptxIR(d).success).toBe(true)
     }
   })
@@ -1624,7 +1635,7 @@ describe("verdict_banner component", () => {
     const d: any = minimal()
     d.slides = [
       {
-        type: "content",
+        type: "content", kind: "points",
         components: [verdictBannerComponent("positive", { icon: "rocket" })],
       },
     ]
@@ -1633,7 +1644,7 @@ describe("verdict_banner component", () => {
 
   it("rejects a tone outside the enum", () => {
     const d: any = minimal()
-    d.slides = [{ type: "content", components: [verdictBannerComponent("danger")] }]
+    d.slides = [{ type: "content", kind: "points", components: [verdictBannerComponent("danger")] }]
     expect(parsePptxIR(d).success).toBe(false)
   })
 
@@ -1641,7 +1652,7 @@ describe("verdict_banner component", () => {
     const d: any = minimal()
     d.slides = [
       {
-        type: "content",
+        type: "content", kind: "points",
         components: [verdictBannerComponent("positive", { icon: "not-a-real-icon" })],
       },
     ]
@@ -1652,7 +1663,7 @@ describe("verdict_banner component", () => {
     const d: any = minimal()
     d.slides = [
       {
-        type: "content",
+        type: "content", kind: "points",
         components: [verdictBannerComponent("positive", { variant: "loud" })],
       },
     ]
@@ -1671,11 +1682,11 @@ describe("verdict_banner component", () => {
 //
 // Field renamed `scenario` → `narrative` (vocabulary-v4 rename, task 1, spec
 // §8.1/§9.1). `parsePptxIR` is a raw schema parse — there is no alias
-// rescue anywhere in the v4 pipeline for this field (spec §16: the
+// rescue anywhere in the v5 pipeline for this field (spec §16: the
 // now-superseded §15.4 rescue was removed), so setting the pre-rename
 // `scenario` key here is a strict-schema rejection, not a
 // semantically-open-but-later-rejected value — see the last two `it`s below.
-describe("IR v4 narrative field (W3 task 2)", () => {
+describe("IR v5 narrative field (W3 task 2)", () => {
   it("accepts a preset id string", () => {
     const d: any = minimal()
     d.narrative = "boardroom-report"
@@ -1747,25 +1758,25 @@ describe("IR v4 narrative field (W3 task 2)", () => {
   })
 })
 
-describe("IR v4 seed field (W5 task 1)", () => {
-  it("accepts an integer seed", () => {
+describe("IR v5 retired deck seed", () => {
+  it("rejects an integer seed", () => {
     const d: any = minimal()
     d.seed = 12345
-    expect(parsePptxIR(d).success).toBe(true)
+    expect(parsePptxIR(d).success).toBe(false)
   })
-  it("omits cleanly — stays undefined, no default baked in by the schema", () => {
+  it("omits seed from a parsed current-format deck", () => {
     const r = parsePptxIR(minimal())
     expect(r.success).toBe(true)
-    if (r.success) expect(r.data.seed).toBeUndefined()
+    if (r.success) expect((r.data as unknown as { seed?: number }).seed).toBeUndefined()
   })
-  it("rejects a non-integer seed", () => {
+  it("also rejects a non-integer seed as an unknown field", () => {
     const d: any = minimal()
     d.seed = 1.5
     expect(parsePptxIR(d).success).toBe(false)
   })
 })
 
-describe("IR v4 slide id field (W5 task 1)", () => {
+describe("IR v5 slide id field (W5 task 1)", () => {
   it("accepts a string id on a slide", () => {
     const d: any = minimal()
     d.slides = [{ type: "cover", id: "p-1", heading: "x" }]
@@ -1780,16 +1791,16 @@ describe("IR v4 slide id field (W5 task 1)", () => {
     const d: any = minimal()
     d.slides = [
       { type: "cover", id: "dup", heading: "a" },
-      { type: "content", id: "dup", heading: "b", components: [] },
+      { type: "content", kind: "points", id: "dup", heading: "b", components: [] },
     ]
     expect(parsePptxIR(d).success).toBe(true)
   })
 })
 
-describe("IR v4 slide placeholder field (W5 task 1)", () => {
+describe("IR v5 slide placeholder field (W5 task 1)", () => {
   it("accepts placeholder: true", () => {
     const d: any = minimal()
-    d.slides = [{ type: "content", placeholder: true }]
+    d.slides = [{ type: "content", kind: "points", placeholder: true }]
     expect(parsePptxIR(d).success).toBe(true)
   })
   it("omits cleanly — stays undefined", () => {
@@ -1799,12 +1810,12 @@ describe("IR v4 slide placeholder field (W5 task 1)", () => {
   })
   it("rejects placeholder: false (z.literal(true) accepts only true)", () => {
     const d: any = minimal()
-    d.slides = [{ type: "content", placeholder: false }]
+    d.slides = [{ type: "content", kind: "points", placeholder: false }]
     expect(parsePptxIR(d).success).toBe(false)
   })
 })
 
-describe("IR v4 slide notes field (notes+preview wave, task 1)", () => {
+describe("IR v5 slide notes field (notes+preview wave, task 1)", () => {
   it("accepts a string notes on a slide", () => {
     const d: any = minimal()
     d.slides = [{ type: "cover", heading: "x", notes: "remember to slow down here" }]

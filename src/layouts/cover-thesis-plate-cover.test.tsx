@@ -16,7 +16,7 @@ function slide(heading = HEADING, extras: Partial<Slide> = {}): Slide {
 
 function ir(themeId: string, meta: PptxIR["meta"] = {}, s: Slide = slide()): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "thesis-plate-cover.pptx",
     theme: { id: themeId },
     meta,
@@ -114,10 +114,9 @@ describe("cover-thesis-plate-cover — board geometry", () => {
 describe("cover-thesis-plate-cover — shared pool", () => {
   it("is registered as a pinOnly cover that does not paint its own background", () => {
     expect(layoutDef.id).toBe("thesis-plate-cover")
-    expect(layoutDef.kind).toBe("archetype")
+    expect(layoutDef.kind).toBe("standard")
     expect(layoutDef.pinOnly).toBe(true)
     expect("paintsOwnBackground" in layoutDef).toBe(false)
-    expect(layoutDef.branding).toBe("none")
     expect(layoutDef.slideTypes).toEqual(["cover"])
   })
 

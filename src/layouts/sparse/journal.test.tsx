@@ -16,7 +16,7 @@ const LDQ = "\u201C"
 
 function ir(slides: Slide[]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "x.pptx",
     theme: { id: "journal" },
     meta: {},
@@ -40,6 +40,7 @@ describe("journal sparse faces", () => {
   it("pull-quote uses a giant text quotation mark, not a path", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "pull-quote",
       heading: QUOTE,
       subheading: "陈砚清 · 首席技术官",
@@ -70,7 +71,7 @@ describe("journal sparse faces", () => {
   })
 
   it("pull-quote draws no em-dash prefix when attribution is missing", () => {
-    const slide: Slide = { type: "content", layout: "pull-quote", heading: QUOTE, components: [] } as Slide
+    const slide: Slide = { type: "content", kind: "points", layout: "pull-quote", heading: QUOTE, components: [] } as Slide
     const { markup } = render(
       <PullQuoteContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />,
     )
@@ -81,6 +82,7 @@ describe("journal sparse faces", () => {
     const chapter: Slide = { type: "chapter", heading: "运行专栏", components: [] } as Slide
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "stat-hero",
       heading: "43%",
       subheading: "订阅续约率同比回升 · 九十日为证",
@@ -107,7 +109,7 @@ describe("journal sparse faces", () => {
   })
 
   it("statement is a centered lead with The Operations Review stamp", () => {
-    const slide: Slide = { type: "content", layout: "statement", heading: VERSE, components: [] } as Slide
+    const slide: Slide = { type: "content", kind: "points", layout: "statement", heading: VERSE, components: [] } as Slide
     const { root } = render(
       <StatementContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />,
     )

@@ -1,187 +1,178 @@
 ---
-summary: 'Hard constraints for designing a theme visually (canvas, vector language, tokens, contrast, decoration safe zones) and what a finished design must hand back'
+summary: 'How to design a complete v2 theme from its menu outward, including face coverage, palette, type, motif, branding, vector constraints, and visual acceptance'
 read_when:
-  - designing or redesigning a theme, motif, or layout visually (human or design agent)
-  - translating an approved visual design into theme/motif/layout code
-  - deciding whether a design idea can survive the SVG -> PPTX conversion
+  - designing or redesigning a theme, motif, or internal page face
+  - translating approved artboards into a v2 theme menu and engine code
+  - deciding whether a visual idea can survive editable SVG to PPTX conversion
 ---
 
 # Designing themes
 
-This is the contract between a visual design (drawn in any tool, by a
-person or a design agent) and what pptwise can actually compile into a
-native, editable PowerPoint deck. A design that breaks a hard constraint
-is not a design for this product, however good it looks.
+A pptwise theme is a complete visual answer for a known set of semantic page moves. Design starts with the menu, not a palette sheet:
 
-The code translation is not the designer's job. Approved artboards come
-back to the codebase as theme tokens (`src/themes/tokens.ts`), motifs
-(`src/motifs/`), and layouts (`src/layouts/`), and are verified
-by re-rendering the full gallery matrix. The designer owns direction;
-the codebase owns fidelity.
+```text
+occasion and identity
+  -> offered kinds
+  -> one face per boundary page and offered kind
+  -> face parameters, motif posture, and brand posture
+  -> complete style system
+  -> fitting-room and gallery acceptance
+```
 
-## Hard constraints
+The public result is one self-contained version 2 file. Internal drawing code may be needed for a new face or motif, but the theme file itself has no base or inherited half.
 
-1. **Artboard 1280×720, 1:1.** One artboard is one slide, at final size.
-2. **Flat vector language only**: solid fills, simple linear gradients,
-   strokes, standard geometric shapes, text. No CSS filters, no stacked
-   shadows, no blend modes, no frosted glass, no external images. None
-   of these survive conversion to native editable PowerPoint shapes
-   (`src/pptx/svg2pptx/` is far stricter than a browser).
-3. **A small named palette.** Every color states its role: background /
-   panel / body / heading / accent / muted, plus the three semantic roles
-   — alert (`danger`), caution (`warning`), good result (`success`).
-   Body-on-background contrast >= 4.5:1, large headings >= 3:1, footer
-   meta >= 3:1. The audit enforces these floors mechanically
-   (`docs/contrast-system.md`), and since the decor-attribution fix it
-   measures text against the decoration it is actually painted on — a
-   design cannot pass by letting text sit on a stamp and grading it
-   against the page. The semantic three are the theme's own colors, not a
-   universal red/amber/green: a design that leaves them out inherits a
-   generic red that will not belong to it. `danger` and `success` must
-   clear 4.5:1 on the theme's `surface` (they render as the kpi delta
-   arrow's text); `warning` only has to clear 3:1, since it is painted as
-   a rule and an icon.
-4. **Fonts express intent only** (serif/sans, weight, size rhythm).
-   Never depend on a specific commercial font being present.
-5. **Decoration keeps out of five content regions**: the heading area,
-   the body area, the footer meta strip (content pages under explicit
-   `branding: "full"`), the bottom-right logo box (96×40 at x1120 y630,
-   on cover and chapter pages, and on content pages under `"full"` or
-   `"minimal"`), and the full-width band at y620-664. That fifth band
-   is where the cover meta line, chart-source footnotes, and the logo
-   box actually live. Solid thick strokes or fills that can
-   cut through text stay out of it. Hairlines (≤1.5px) and decoration
-   faded to background level are exempt, provided body ink over the
-   decoration-on-background composite still clears 4.5:1 (measure with
-   this repo's `contrastRatio`). Terra's contours, insight's full-width
-   baseline area line, and heritage's foot rule already live there and
-   pass. Heritage's gold diamond does not meet either exemption — it is
-   a 10×10 solid at the rule's midpoint that predates this rule and
-   stands as a grandfathered pinpoint exception, not a precedent for
-   new solid pieces. Crayon crossed this band twice on
-   2026-08-21, once through cover meta and once through a chart
-   footnote. Decoration positions are fixed by design, never derived
-   from where the content happens to sit, because seeded layout
-   stability promises that editing one page's text moves nothing else.
-6. **One artboard per page type** — cover / chapter / content / ending —
-   and content at two densities: sparse (few blocks, generous
-   whitespace) and full (four content blocks, the geometric maximum for
-   most content layouts).
-7. **A page paints at most three decoration pieces.** A piece is one
-   named visual unit, not every SVG leaf. Repeating marks that read as
-   one field or chain count as one piece (a confetti field, a row of
-   binding holes, a spark trail, a node chain with its tracks). A paired
-   rule (double line, inner and outer frame) is one piece. A mark plus
-   its satellite (a foot rule with a midpoint diamond, a chip and the
-   date on it) is one piece. Distinct families on the same page count
-   separately. Motif text that labels a piece is not a piece. Motifs wrap
-   each piece in `<g data-decor-piece>`. An unwrapped painted leaf also
-   counts, so a new mark that is not wrapped fails the budget. Tech's
-   cover used to paint a node chain with branch tracks, orbit arcs, and a
-   row of sparse stars. The stars and the branches were the lesser
-   families and were cut.
-8. **Decoration is always background, with two named exceptions.** Ordinary
-   motif ink on a content page recedes so the copy wins at a glance.
-   Composited fill or stroke against the page ground stays below 3:1, the
-   large-text and meta floor. Body copy at 4.5:1 then sits clearly in
-   front. Two marks opt out by an explicit `DecorPiece` role, never by
-   guessing at a hex:
-   - **Structure** (`role: "structure"`): the page's own chrome. A Swiss
-     top bar, a memo double rule, a vermilion head rule, a luxe invitation
-     frame. It is not decoration. It paints in the foreground at the theme
-     color.
-   - **Identity** (`role: "identity"`): a midground mark whose color is
-     the theme. An ink vermilion seal. It stays under type so it cannot
-     cover copy, but the intensity ceiling does not touch it.
-   Cover, chapter, and ending may keep the designed strength for ordinary
-   decor. They are the theme's face. Tune the fade per motif from tokens,
-   never a baked hex (`leafRecessOpacity` in `src/motifs/decor-budget.ts`).
-   Hairlines already under the ceiling stay as they are. Do not mark a
-   whole motif to dodge the ceiling.
-9. **At most one slanted tile per page.** A slanted tile is a chip-sized
-   filled rect or four-point polygon whose tilt from the axis is between
-   1° and 20° (a playbill date chip, a unit chip). 45° diamonds are not
-   tiles. Confetti scraps under 40px on the long edge are not tiles.
-   Playbill's motif paints the date chip on cover and ending only, so a
-   content face that already carries a unit chip (stat-hero) does not get
-   a second one.
+## Start with the menu
 
-## What distinguishes a theme
+Every theme menu must provide:
 
-A theme's identity is the whole of its layouts, components, decoration,
-and palette together — palette alone is one quarter of it (user ruling,
-2026-08-22, `.issues/2026-08-22-anti-generalization-ruling/`). A redesign
-must differ from the current theme in at least two of: heading axis
-(left/center/right), meta placement, decoration language, whitespace
-scale. Recoloring the same composition is the failure mode this document
-exists to prevent: themes that declare no structural preference render
-identically under the same seed.
+- one `cover` entry
+- one `chapter` entry
+- one `ending` entry
+- a non-empty subset of the eleven content kinds
 
-The product runs two tracks from here, each owning its own object set —
-the layouts, components, and decoration used across cover, chapter,
-ending, and content pages. **Brand-generic objects** belong to the
-brand-restoration track: it keeps growing that set and keeps sharpening
-how faithfully a client's visual identity is reproduced. **Theme-locked
-objects** belong to the built-in theme track: cover, chapter, and ending
-lock to their board-designed layouts, content pages follow the
-allocation table, each theme must fully cover its declared scenario, and
-existing themes are revisited (and new ones added) over time.
+The content vocabulary is `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `quote`, `fact`, `evidence`, and `hierarchy`.
 
-Token levers on `style.shape` change rhythm without forking a layout:
-`radius` (corners), `gapScale` (block spacing), and `typeScale` (heading
-and display size on cover, chapter, ending, and pin-only speech pages,
-applied before heading-fit shrinks to the box. Body, meta, kicker,
-footnote, and content-page titles that share the page with a body stack
-stay put. Omit `typeScale` and every layout renders exactly as it does
-today).
+Offering a kind is a promise that the theme has a convincing face for that semantic move. A theme does not need all eleven. Leaving out `quote` or `statement` can be the right decision when that expression would break the visual voice.
 
-## Deliverables per theme
+Each key maps to exactly one face. There is no rotation or conditional branch. Adaptation to actual content belongs inside the face.
 
-- 5-6 artboards: cover, chapter, content ×2 densities, ending, and
-  optionally a palette/type-scale sheet
-- A short design note: palette role table, type rhythm, decoration
-  language with its safe zones, and what changed structurally versus the
-  current theme
+## Face contract
 
-## Where the current state lives
+A face declares:
 
-- Built-in theme declarations: `src/themes/builtin/`
-- Public theme-file schema: `src/themes/schema.ts`
-- Occasion and identity routing: `src/themes/occasions.ts`
-- Compiled runtime definitions: `src/themes/definitions.ts`
-- Decoration geometry: `src/motifs/`
-- Page compositions: `src/layouts/`
-- Rendered current output: `examples/previews/`
-- Vocabulary: `docs/concepts.md` (layout, component, motif, narrative)
+- supported page type
+- named slots and accepted component types
+- body capacity
+- adjustable parameter names, primitive types, and complete bounds
+- whether it paints its own background
+- whether motif suppression is structural
+- whether shared branding is structurally absent
 
-## The generalization bar
+A menu entry may supply only declared parameter values. Registration rejects unknown names, wrong types, and values outside bounds.
 
-Three rules govern how this vocabulary grows, in priority order when
-they conflict (stability first):
+Menu entries also own two page-specific choices:
 
-1. **The model-facing surface is sacred.** Components, slide types and
-   the narrative vocabulary are what a small model has to write
-   reliably — that is why the IR exists. A new component enters only
-   when existing ones genuinely cannot express the content; prefer
-   making existing components more adaptive over minting new types.
-   Layouts, motifs and tokens are invisible to the model (selection is
-   compile-side), so they may grow freely.
-2. **Cover, chapter, and ending are the theme's face.** The roster is
-   24 theme ids. When a Claude Design board exists for that page type, the
-   theme's `layouts` set for that type narrows to the board construction
-   (one layout, or the pair the board names). That set is a lock. Soft
-   weights cannot keep a cover identical. A theme whose board has not
-   yet drawn chapter or ending keeps today's set on those types until
-   the next design pass locks them. Content pages pick from the
-   auto-selectable set, weighted by the allocation table, and a theme
-   may narrow that set (lecture and luxe drop the top-title / top-image
-   layouts).
-3. **The shared pool still exists.** A new layout or motif still joins
-   the pool, still reads every color through tokens, and still states
-   which scenarios it serves. It is not a private file for one theme.
-   Joining the pool does not mean every theme auto-picks it. A theme
-   with a board lock on that page type will not draw a neighbor from
-   the pool. Reuse an existing layout (tokens like typeScale / radius /
-   gapScale) when the board's composition already lives in the pool. A
-   composition the pool cannot draw becomes a new shared layout, then
-   the originating theme locks to it.
+- `decor`, either `silent` or one registered motif with valid parameters
+- `brand: "none"`, which removes the shared brand fragment on that page
+
+A face with structural `suppressMotif: true` remains silent regardless of the menu. A face with structural `branding: "none"` remains frameless regardless of deck posture.
+
+## Hard visual constraints
+
+### Canvas and editable drawing language
+
+1. Use a 1280 by 720 artboard at final size.
+2. Use flat vector primitives: solid fills, simple linear gradients, strokes, standard geometry, and text.
+3. Do not depend on browser-only effects such as CSS filters, blend modes, frosted glass, or stacked shadows. They do not survive native editable conversion reliably.
+4. Use external images only through declared image assets and image-aware faces. Do not bake raster decoration into a theme to avoid drawing it properly.
+
+### Palette and contrast
+
+Every color has a role. The required core is `bg`, `surface`, `primary`, `accent`, `text`, `muted`, and `chartPalette`. Add `panel`, `border`, `accentPool`, `cardStroke`, `danger`, `warning`, or `success` only when the theme needs them.
+
+Body text must clear 4.5:1 against its painted background. Large headings and metadata must clear their audited floors. `danger` and `success` act as text in KPI deltas and must clear 4.5:1 on `surface`. `warning` is normally line or icon ink and must clear 3:1.
+
+Never change one token in isolation. A palette change creates a new fork, rederives muted and dependent colors, remaps backgrounds and decoration colors, then passes contrast and visual review.
+
+### Type
+
+Fonts express family, weight, and rhythm. Never require a commercial face to exist on the target machine. Provide ordered fallbacks, including a suitable CJK family.
+
+`shape.radius`, `shape.gapScale`, and `shape.typeScale` tune the complete theme within their schema bounds. They do not replace face design.
+
+### Decoration
+
+Decoration must stay subordinate to content and within audit-safe regions. Keep solid marks out of heading, body, footer metadata, logo, and footnote zones. Hairlines up to 1.5px and background-level marks may cross a reserved zone only when the composited result remains readable.
+
+A page paints at most three named decoration pieces. Repeated marks that read as one field count as one piece. Wrap pieces in `<g data-decor-piece>` so the budget can audit them.
+
+Ordinary motif ink is background material. Content-page motif paint should normally remain below the 3:1 foreground threshold after compositing. Two explicit roles can opt out:
+
+- `structure` for page chrome such as a frame or institutional rule
+- `identity` for one signature midground mark whose color carries the theme
+
+Do not label an entire motif as an exception. Mark only the piece that needs the role. Keep at most one slanted filled tile per page.
+
+Motif colors derive from theme tokens. A palette fork must recolor motifs without editing motif code.
+
+### Branding safe zones
+
+Design against all three deck postures. `full` can add a content footer, metadata, and logo. `cover-only` keeps the logo on cover and chapter. `minimal` keeps logos but removes the content footer and metadata.
+
+When a composition has no safe place for the shared fragment, declare that fact on the face or set `brand: "none"` in the menu entry. Do not squeeze the brand frame into content or rely on authors to omit metadata.
+
+## What makes themes different
+
+A new palette alone is a color fork, not a new menu direction. A structural theme should differ in at least two of these dimensions:
+
+- heading axis
+- metadata placement
+- whitespace scale
+- motif language
+- kind coverage
+- face family
+
+The menu is the theme's structural identity. Style and menu must be reviewed together. Two independent themes may intentionally share a byte-identical menu while carrying different complete palettes.
+
+## Creation workflow
+
+Start from the nearest complete theme:
+
+```bash
+pptwise theme new --from consulting \
+  -o themes/new-theme.theme.json \
+  --id new-theme
+```
+
+Then work in this order:
+
+1. Record intended occasions and identity strength.
+2. Decide which content kinds the theme can serve convincingly.
+3. Choose or build one face for each boundary page and offered kind.
+4. Set only valid face parameters.
+5. Decide motif and brand posture entry by entry.
+6. Establish the complete palette, font stacks, shape controls, and default backgrounds.
+7. Validate the theme and every menu route.
+8. Compare it with two to three relevant themes using `theme try`.
+9. Review the full gallery matrix and native PPTX output.
+
+Use `serve` with a deck-local `theme.json` for a live tuning round. Once approved, keep the complete file as an independent workspace theme.
+
+For a color-only variation, use `theme fork`. Do not hand-copy token fragments:
+
+```bash
+pptwise theme fork new-theme \
+  --primary "#0B5FFF" \
+  --accent "#FFB000" \
+  -o themes/new-theme-blue.theme.json \
+  --id new-theme-blue
+```
+
+## Acceptance package
+
+A finished theme hands back:
+
+- one complete v2 theme file
+- menu rationale for every offered and intentionally omitted kind
+- visual examples for cover, chapter, ending, and every offered content kind
+- minimum-content and full-load stress where the selected face supports both
+- palette role and contrast results
+- font fallback rationale
+- motif piece count, depth role, and safe-zone evidence
+- branding results under `full`, `cover-only`, and `minimal`
+- a `theme try` contact sheet against relevant alternatives
+- gallery, audit, PPTX export, and package-check results
+
+## Source locations
+
+- Public schema: `src/themes/schema.ts`
+- Factory presets: `src/themes/presets.ts`
+- Built-in declarations: `src/themes/builtin/`
+- Theme registration: `src/themes/definitions.ts`
+- Workspace name lookup: `src/cli/theme-resolve.ts`
+- Palette forking: `src/cli/theme-fork.ts`
+- Faces and parameter declarations: `src/layouts/`
+- Motifs and decoration budgets: `src/motifs/`
+- Composition and brand semantics: `src/render/full-slide-svg.tsx`
+- Contrast system: [Contrast system](./contrast-system.md)
+- Testing and visual acceptance: [Testing](./testing.md)

@@ -149,7 +149,7 @@ export const layoutDef = {
   // chapter-stroke-index-chapter.tsx: hollow stroked chapter index, title
   // below, progress rule with an accent segment. pinOnly board lock.
   id: "stroke-index-chapter",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["chapter"],
   slots: [

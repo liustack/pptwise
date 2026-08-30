@@ -16,7 +16,7 @@ const BOARD_TEXT = "#F2EDF7"
 
 function ir(slides: Slide[]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "x.pptx",
     theme: { id: "campaign" },
     meta: {},
@@ -38,7 +38,7 @@ describe("campaign sparse faces", () => {
   const ctx = buildCtx(resolveStyle("campaign"), {})
 
   it("statement is centered heavy type with a magenta closer bar and accent on **", () => {
-    const slide: Slide = { type: "content", layout: "statement", heading: VERSE, components: [] } as Slide
+    const slide: Slide = { type: "content", kind: "points", layout: "statement", heading: VERSE, components: [] } as Slide
     const { markup, root } = render(
       <StatementContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />,
     )
@@ -63,7 +63,7 @@ describe("campaign sparse faces", () => {
   })
 
   it("statement without ** still draws the closer bar and keeps the verse on text fill", () => {
-    const slide: Slide = { type: "content", layout: "statement", heading: VERSE_PLAIN, components: [] } as Slide
+    const slide: Slide = { type: "content", kind: "points", layout: "statement", heading: VERSE_PLAIN, components: [] } as Slide
     const { root } = render(
       <StatementContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />,
     )
@@ -79,6 +79,7 @@ describe("campaign sparse faces", () => {
     const chapter: Slide = { type: "chapter", heading: "九十天，一个数", components: [] } as Slide
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "stat-hero",
       heading: "43%",
       subheading: "订阅续约率同比回升",
@@ -105,6 +106,7 @@ describe("campaign sparse faces", () => {
   it("one-evidence is a side-curtain card with a magenta footer bar", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "one-evidence",
       heading: "维护工单平均提前 6.5 天生成",
       subheading: "217 张工单全量统计 · 2026 Q2",

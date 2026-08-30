@@ -22,7 +22,7 @@ const ctx: ComponentCtx = {
 
 function deck(slides: Slide[]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "d.pptx",
     theme: { id: "consulting" },
     meta: {},
@@ -37,7 +37,7 @@ function svg(node: React.ReactElement) {
 
 describe("SlideDecor (image-layouts P4 受控装饰原语)", () => {
   it("renders nothing without an explicit decor", () => {
-    const slide: Slide = { type: "content", heading: "无饰", components: [] }
+    const slide: Slide = { type: "content", kind: "points", heading: "无饰", components: [] }
     const { container } = svg(
       <SlideDecor ir={deck([slide])} slide={slide} index={0} ctx={ctx} />,
     )
@@ -59,6 +59,7 @@ describe("SlideDecor (image-layouts P4 受控装饰原语)", () => {
   it("corner_tag renders model-provided text, skips silently without it", () => {
     const tagged: Slide = {
       type: "content",
+      kind: "points",
       heading: "x",
       components: [],
       decor: { kind: "corner_tag", text: "季报专刊" },
@@ -78,6 +79,7 @@ describe("SlideDecor (image-layouts P4 受控装饰原语)", () => {
   it("intensity=subtle lowers opacity vs normal", () => {
     const mk = (intensity: "subtle" | "normal"): Slide => ({
       type: "content",
+      kind: "points",
       heading: "x",
       components: [],
       decor: { kind: "geo_dots", intensity },
@@ -96,7 +98,7 @@ describe("SlideDecor (image-layouts P4 受控装饰原语)", () => {
   it.each(["rule_line", "quote_marks", "geo_dots"] as const)(
     "%s renders themed shapes",
     (kind) => {
-      const slide: Slide = { type: "content", heading: "x", components: [], decor: { kind } }
+      const slide: Slide = { type: "content", kind: "points", heading: "x", components: [], decor: { kind } }
       const { container } = svg(
         <SlideDecor ir={deck([slide])} slide={slide} index={0} ctx={ctx} />,
       )

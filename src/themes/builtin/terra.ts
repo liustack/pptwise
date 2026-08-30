@@ -1,6 +1,5 @@
 import type { StyleTokens } from "../tokens";
 import type { BuiltinThemeDeclaration } from "../schema";
-import { DEFAULT_CONTENT_FACES } from "./shared";
 
 /**
  * terra（可持续/ESG/大地色）——2026-07-28 themes-16 wave task T2（第 15
@@ -56,6 +55,8 @@ import { DEFAULT_CONTENT_FACES } from "./shared";
  *
  * 装饰见 `src/motifs/motif-terra-motif.tsx`（等高线 v3：左上顶缘三条
  * border 色细线，退役左下簇与右缘种子点。chapter 整版橄榄底上完全不画）。
+ *
+ * **菜单分派（S1-B）**：ESG 报告靠承诺与实证说话，statement 与 evidence 都上，photo 用顶部满幅的 image-top 放田野照片，quote 不上。
  */
 export const TERRA_TOKENS: StyleTokens = {
   id: "terra",
@@ -99,22 +100,26 @@ export const TERRA_TOKENS: StyleTokens = {
 };
 
 export const TERRA_THEME = {
-  version: 1,
+  version: 2,
   id: "terra",
   label: "Sustainability & ESG",
   style: TERRA_TOKENS,
-  faces: {
-    cover: ["pledge-open-cover"],
-    chapter: ["field-band-chapter"],
-    content: DEFAULT_CONTENT_FACES,
-    ending: ["scorecard-ending"],
+  menu: {
+    cover: { face: "pledge-open-cover" },
+    chapter: { face: "field-band-chapter" },
+    content: {
+      points: { face: "narrow-column" },
+      list: { face: "bento-panel" },
+      comparison: { face: "two-column" },
+      process: { face: "rail-numbered" },
+      data: { face: "split-band" },
+      photo: { face: "image-top" },
+      statement: { face: "statement" },
+      fact: { face: "stat-hero" },
+      evidence: { face: "one-evidence" },
+      hierarchy: { face: "asymmetric-triptych" },
+    },
+    ending: { face: "scorecard-ending" },
   },
   motif: { id: "terra-motif" },
-  tendencies: {
-    cover: ["pledge-open-cover"],
-    chapter: ["field-band-chapter"],
-    content: ["two-column", "quiet-frame"],
-    ending: ["scorecard-ending"],
-  },
-  sparse: ["statement", "stat-hero", "one-evidence", "verse-chapter"],
 } satisfies BuiltinThemeDeclaration;

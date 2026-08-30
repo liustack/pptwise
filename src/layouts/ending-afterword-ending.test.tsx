@@ -17,7 +17,7 @@ function slide(extras: Partial<Slide> = {}): Slide {
 
 function ir(themeId: string, s: Slide, meta: PptxIR["meta"] = {}): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "afterword-ending.pptx",
     theme: { id: themeId },
     meta,
@@ -108,9 +108,8 @@ describe("ending-afterword-ending — board geometry", () => {
 describe("ending-afterword-ending — shared pool", () => {
   it("is a pinOnly ending archetype", () => {
     expect(layoutDef.id).toBe("afterword-ending")
-    expect(layoutDef.kind).toBe("archetype")
+    expect(layoutDef.kind).toBe("standard")
     expect(layoutDef.pinOnly).toBe(true)
-    expect(layoutDef.branding).toBe("none")
     expect(layoutDef.slideTypes).toEqual(["ending"])
   })
 

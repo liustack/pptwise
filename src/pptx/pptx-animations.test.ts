@@ -176,7 +176,7 @@ describe("blockAnimationEffect", () => {
   it("defaults every other component type to fade", () => {
     expect(blockAnimationEffect("paragraph")).toBe("fade")
     expect(blockAnimationEffect("bullets")).toBe("fade")
-    expect(blockAnimationEffect("quote")).toBe("fade")
+    expect(blockAnimationEffect("blockquote")).toBe("fade")
     expect(blockAnimationEffect("image")).toBe("fade")
   })
 })

@@ -26,12 +26,12 @@ function chapterCtx(themeId: string) {
 }
 
 const chapter1: Slide = { type: "chapter", heading: HEADING, subheading: SUBHEADING, components: [] } as Slide
-const content: Slide = { type: "content", heading: "现状", components: [] } as Slide
+const content: Slide = { type: "content", kind: "points", heading: "现状", components: [] } as Slide
 const chapter2: Slide = { type: "chapter", heading: HEADING, subheading: SUBHEADING, components: [] } as Slide
 
 function ir(themeId: string, slides: Slide[] = [chapter1, content, chapter2]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "field-band-chapter.pptx",
     theme: { id: themeId },
     meta: {},
@@ -116,10 +116,9 @@ describe("chapter-field-band-chapter — board geometry", () => {
 describe("chapter-field-band-chapter — shared pool", () => {
   it("is a pinOnly chapter archetype that paints its own background", () => {
     expect(layoutDef.id).toBe("field-band-chapter")
-    expect(layoutDef.kind).toBe("archetype")
+    expect(layoutDef.kind).toBe("standard")
     expect(layoutDef.pinOnly).toBe(true)
     expect(layoutDef.paintsOwnBackground).toBe(true)
-    expect(layoutDef.branding).toBe("none")
     expect(layoutDef.slideTypes).toEqual(["chapter"])
   })
 

@@ -148,7 +148,7 @@ export const layoutDef: LayoutDefinition = {
   // left-aligned heading + italic subheading; bottom-right translucent
   // chapter-number watermark.
   id: "masthead-chapter",
-  kind: "archetype",
+  kind: "standard",
   slideTypes: ["chapter"],
   slots: [
     { name: "rule", accepts: [] },

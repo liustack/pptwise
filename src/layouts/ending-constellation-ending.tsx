@@ -258,7 +258,7 @@ export const layoutDef: LayoutDefinition = {
   // trailing period), subheading, signature accent rule bar, stacked
   // org/contact/date meta lines.
   id: "constellation-ending",
-  kind: "archetype",
+  kind: "standard",
   slideTypes: ["ending"],
   slots: [
     { name: "heading", accepts: [] },

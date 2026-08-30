@@ -17,7 +17,7 @@ function slide(heading = HEADING): Slide {
 
 function ir(themeId: string, meta: PptxIR["meta"] = {}): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "horizon-wedge.pptx",
     theme: { id: themeId },
     meta,
@@ -68,7 +68,7 @@ describe("cover-horizon-wedge — board geometry", () => {
 describe("cover-horizon-wedge — shared pool", () => {
   it("is registered for cover only, as an archetype", () => {
     expect(layoutDef.id).toBe("horizon-wedge")
-    expect(layoutDef.kind).toBe("archetype")
+    expect(layoutDef.kind).toBe("standard")
     expect(layoutDef.slideTypes).toEqual(["cover"])
   })
 

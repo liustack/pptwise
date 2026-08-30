@@ -11,7 +11,7 @@ import type { PptxIR, Slide } from "@/ir"
 
 const coverSlide: Slide = { type: "cover", heading: "封面", components: [] } as Slide
 const chapterSlide: Slide = { type: "chapter", heading: "章节", components: [] } as Slide
-const contentSlide: Slide = { type: "content", heading: "内容", components: [] } as Slide
+const contentSlide: Slide = { type: "content", kind: "points", heading: "内容", components: [] } as Slide
 const endingSlide: Slide = { type: "ending", components: [] } as Slide
 const ALL_SLIDES = [coverSlide, chapterSlide, contentSlide, endingSlide]
 
@@ -61,7 +61,7 @@ describe("EmberMotif（火星退役）", () => {
   it("封面整页渲染：中景不再有火星，角楔主体固定进入 fg", () => {
     const svg = renderSlideSvg(
       {
-        version: "4",
+        version: "5",
         filename: "ember-cover.pptx",
         theme: { id: "ember" },
         meta: {},
@@ -75,7 +75,7 @@ describe("EmberMotif（火星退役）", () => {
     const mid = groups.find((group) => group.getAttribute("data-depth") === "mid")
     const fg = groups.find((group) => group.getAttribute("data-depth") === "fg")!
     expect(mid?.querySelector("circle") ?? null).toBeNull()
-    expect(fg.querySelector('[data-archetype="corner-wedge"] path')).not.toBeNull()
+    expect(fg.querySelector('[data-face="corner-wedge"] path')).not.toBeNull()
   })
 
   it("不画任何孤立 tick / 左竖条 / 碎点", () => {

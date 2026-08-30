@@ -180,7 +180,7 @@ console.log("style override leg OK (--style color reached DrawingML)")
 
 // 3d) brand extraction leg (brand-extract wave, 裁定 5's e2e requirement):
 //     programmatically built fixture zip (never a real Microsoft file) →
-//     `pptwise brand extract` via the built CLI → `render --theme-file` →
+//     `pptwise brand extract` via the built CLI → workspace theme lookup →
 //     the exported PPTX's DrawingML must carry the extracted brand colors.
 //     The package-audit hard gate (leg 2b — no skip switch) already vets the
 //     branded package's structure the same way it vets every other render in
@@ -190,7 +190,9 @@ console.log("--- brand extraction leg ---")
 const { buildThmxBytes, DEFAULT_THMX_COLORS } = await import("../src/themes/extract/__fixtures__/thmx")
 const brandFixturePath = join(OUT, "brand-fixture.pptx")
 writeFileSync(brandFixturePath, Buffer.from(await buildThmxBytes({ schemeName: "E2E Brand" })))
-const brandThemePath = join(OUT, "e2e-brand.theme.json")
+const brandWorkspace = resolve(OUT, "brand-workspace")
+mkdirSync(join(brandWorkspace, "themes"), { recursive: true })
+const brandThemePath = join(brandWorkspace, "themes", "e2e-brand.theme.json")
 const extractMsg = sh("node", ["dist/cli.js", "brand", "extract", brandFixturePath, "-o", brandThemePath])
 console.log(extractMsg)
 if (!extractMsg.includes('theme "e2e-brand"')) {
@@ -206,8 +208,15 @@ if (brandThemeFile.style.colors.primary !== `#${DEFAULT_THMX_COLORS.accent1}`) {
   )
 }
 const brandPptxPath = join(OUT, "brand-themed.pptx")
+const brandDeck = JSON.parse(readFileSync("examples/basic.json", "utf8")) as Record<string, unknown>
+brandDeck.theme = { id: "e2e-brand" }
+const brandDeckPath = join(brandWorkspace, "brand-deck.json")
+writeFileSync(brandDeckPath, JSON.stringify(brandDeck))
 console.log(
-  sh("node", ["dist/cli.js", "render", "examples/basic.json", "-o", brandPptxPath, "--theme-file", brandThemePath, "--theme", "e2e-brand"]),
+  execFileSync("node", [resolve("dist/cli.js"), "render", "brand-deck.json", "-o", resolve(brandPptxPath)], {
+    cwd: brandWorkspace,
+    encoding: "utf8",
+  }),
 )
 const brandThemedZip = await JSZip.loadAsync(readFileSync(brandPptxPath))
 const brandThemedSlideXml = (
@@ -226,7 +235,7 @@ if (!expectedBrandHexes.some((hex) => brandThemedSlideXml.includes(hex))) {
 if (!brandThemedSlideXml.includes(brandThemeFile.style.colors.muted.replace("#", ""))) {
   throw new Error("e2e: brand leg — the derived muted color did not reach the DrawingML")
 }
-console.log("brand extraction leg OK (fixture → extract → --theme-file render → brand colors in DrawingML)")
+console.log("brand extraction leg OK (fixture → extract → workspace theme lookup → brand colors in DrawingML)")
 
 // 4) optional visual gate: LibreOffice PDF conversion (skipped when unavailable)
 try {
@@ -257,13 +266,13 @@ if (sharpMod) {
   await sharpMod(PNG_1PX).webp().toFile(webpPath)
 
   const webpDeck = {
-    version: "4",
+    version: "5",
     filename: "pptwise-webp-smoke",
     theme: { id: "consulting" },
     assets: { images: { smoke: { src: "smoke.webp" } } },
     slides: [
       { type: "cover", heading: "webp smoke" },
-      { type: "content", heading: "Body", components: [{ type: "image", asset_id: "smoke" }] },
+      { type: "content", kind: "photo", heading: "Body", components: [{ type: "image", asset_id: "smoke" }] },
     ],
   }
   const webpDeckPath = join(OUT, "webp-deck.json")
@@ -310,8 +319,8 @@ const deckSpec = {
   filename: "pptwise-e2e-deck-dir",
   pages: [
     { id: "p-cover", type: "cover", heading: "pptwise Deck Directory Demo" },
-    { id: "p-goals", type: "content", heading: "Design goals" },
-    { id: "p-roadmap", type: "content", heading: "Roadmap ahead" },
+    { id: "p-goals", type: "content", kind: "points", heading: "Design goals" },
+    { id: "p-roadmap", type: "content", kind: "points", heading: "Roadmap ahead" },
     { id: "p-ending", type: "ending", heading: "Thanks" },
   ],
 }
@@ -383,7 +392,6 @@ console.log("deck-dir --draft leg OK (placeholder page rendered as a real slide)
 writeFileSync(
   join(deckDir, "pages", "p-roadmap.json"),
   JSON.stringify({
-    arrangement: "kpi_focus",
     components: [
       {
         type: "kpi_cards",
@@ -426,138 +434,6 @@ if (finalSlide2.includes("Emphasize that every shape stays editable")) {
 }
 console.log("deck-dir speaker-notes leg OK (notesSlide2.xml carries p-goals's notes text, slide2.xml canvas does not)")
 
-// 6b) migrate leg (spec §9.1/§9.2/§9.3, vocabulary-v4 rename, task 2):
-//     `pptwise migrate` for both accepted input shapes — a pre-rename
-//     deck.plan.json project directory, and a v3 IR file — plus the
-//     "never overwrite" and dual-file hard-error contracts.
-console.log("--- migrate leg ---")
-
-// (a) deck-dir leg: old plan dir → migrate → spec validate → assemble green.
-const migrateDeckDir = join(OUT, "migrate-deck-dir-demo")
-rmSync(migrateDeckDir, { recursive: true, force: true })
-mkdirSync(join(migrateDeckDir, "pages"), { recursive: true })
-const legacyDeckPlan = {
-  version: "1",
-  scenario: "boardroom-report",
-  theme: "consulting",
-  filename: "pptwise-e2e-migrate-deck-dir",
-  pages: [
-    { id: "p-cover", type: "cover", heading: "Migrate Demo" },
-    { id: "p-a", type: "content", heading: "Segment A", rhythm: "anchor" },
-    { id: "p-b", type: "content", heading: "Segment B" },
-    { id: "p-ending", type: "ending", heading: "Thanks" },
-  ],
-}
-writeFileSync(join(migrateDeckDir, "deck.plan.json"), JSON.stringify(legacyDeckPlan))
-writeFileSync(join(migrateDeckDir, "pages", "p-cover.json"), JSON.stringify({}))
-writeFileSync(
-  join(migrateDeckDir, "pages", "p-a.json"),
-  JSON.stringify({ components: [{ type: "paragraph", text: "Segment A detail" }] }),
-)
-writeFileSync(
-  join(migrateDeckDir, "pages", "p-b.json"),
-  JSON.stringify({ components: [{ type: "paragraph", text: "Segment B detail" }] }),
-)
-writeFileSync(join(migrateDeckDir, "pages", "p-ending.json"), JSON.stringify({}))
-
-const migrateDeckDirOut = sh("node", [
-  "dist/cli.js",
-  "migrate",
-  migrateDeckDir,
-  "-o",
-  migrateDeckDir,
-])
-console.log(migrateDeckDirOut)
-const migratedSpecPath = join(migrateDeckDir, "deck.spec.json")
-if (!existsSync(migratedSpecPath)) {
-  throw new Error("e2e: migrate leg — deck.spec.json was not written alongside deck.plan.json")
-}
-const migratedSpec = JSON.parse(readFileSync(migratedSpecPath, "utf8")) as Record<string, unknown>
-if (migratedSpec.scenario !== undefined || migratedSpec.narrative !== "boardroom-report") {
-  throw new Error(`e2e: migrate leg — expected narrative: "boardroom-report", no scenario field, got: ${JSON.stringify(migratedSpec)}`)
-}
-const migratedPageA = (migratedSpec.pages as Array<Record<string, unknown>>).find((p) => p.id === "p-a")
-if (migratedPageA?.rhythm !== undefined || migratedPageA?.beat !== "anchor") {
-  throw new Error(`e2e: migrate leg — expected p-a's rhythm field renamed to beat: "anchor", got: ${JSON.stringify(migratedPageA)}`)
-}
-// The pre-rename deck.plan.json must survive untouched (never overwritten,
-// never deleted by migrate itself) — the caller deletes it once satisfied.
-if (!existsSync(join(migrateDeckDir, "deck.plan.json"))) {
-  throw new Error("e2e: migrate leg — migrate must never delete the source deck.plan.json")
-}
-console.log("migrate deck-dir leg OK (deck.spec.json written, narrative/beat fields renamed, source file untouched)")
-
-// Dual-file hard error (spec §9.2): both files present must refuse to guess.
-const dualFileStderr = shExpectFail("node", ["dist/cli.js", "assemble", migrateDeckDir])
-if (!/deck\.plan\.json/.test(dualFileStderr) || !/deck\.spec\.json/.test(dualFileStderr)) {
-  throw new Error(`e2e: migrate leg — expected the dual-file hard error to name both files, got: ${dualFileStderr}`)
-}
-console.log("migrate dual-file hard-error leg OK (assemble refuses while both files are present)")
-
-// Never-overwrite: re-running migrate at the same -o must refuse, not clobber.
-const migrateOverwriteStderr = shExpectFail("node", ["dist/cli.js", "migrate", migrateDeckDir, "-o", migrateDeckDir])
-if (!/already exists/.test(migrateOverwriteStderr)) {
-  throw new Error(`e2e: migrate leg — expected a re-run to refuse to overwrite deck.spec.json, got: ${migrateOverwriteStderr}`)
-}
-
-// Delete the legacy file (the documented next step) — spec validate and
-// assemble must both go green on the migrated deck.spec.json alone.
-rmSync(join(migrateDeckDir, "deck.plan.json"))
-console.log(sh("node", ["dist/cli.js", "spec", "validate", migratedSpecPath]))
-const migrateAssembleOut = sh("node", ["dist/cli.js", "assemble", migrateDeckDir])
-console.log(migrateAssembleOut)
-if (!migrateAssembleOut.includes("(4 slides, 0 placeholders)")) {
-  throw new Error(`e2e: migrate leg — expected a clean 4-slide, 0-placeholder assemble, got: ${migrateAssembleOut}`)
-}
-console.log("migrate deck-dir leg OK end to end (spec validate + assemble green after deleting the legacy file)")
-
-// (b) v3 IR file leg: mode "narrative" → strategy "storytelling", delivery
-//     "text" → pacing "dense" — the exact spec §9.1 value mapping, not just
-//     a field rename.
-const v3Ir = {
-  version: "3",
-  filename: "pptwise-e2e-migrate-v3",
-  scenario: { mode: "narrative", delivery: "text", audience: "public" },
-  theme: { id: "consulting" },
-  slides: [
-    { type: "cover", heading: "Migrate v3 Demo" },
-    { type: "content", heading: "Body", components: [{ type: "paragraph", text: "migrated from v3" }] },
-  ],
-}
-const v3IrPath = join(OUT, "migrate-v3-input.json")
-writeFileSync(v3IrPath, JSON.stringify(v3Ir))
-const v4OutPath = join(OUT, "migrate-v3-output.json")
-// Clean slate — a leftover output file from a previous run would falsify
-// both this call (should succeed on a fresh target) and the never-overwrite
-// check just below it (should fail only because *this run* just wrote it).
-rmSync(v4OutPath, { force: true })
-console.log(sh("node", ["dist/cli.js", "migrate", v3IrPath, "-o", v4OutPath]))
-const migratedV4 = JSON.parse(readFileSync(v4OutPath, "utf8")) as Record<string, unknown>
-if (migratedV4.version !== "4") {
-  throw new Error(`e2e: migrate leg — expected version "4" in the migrated v3→v4 output, got: ${JSON.stringify(migratedV4.version)}`)
-}
-const migratedNarrative = migratedV4.narrative as Record<string, unknown> | undefined
-if (migratedNarrative?.strategy !== "storytelling" || migratedNarrative?.pacing !== "dense") {
-  throw new Error(`e2e: migrate leg — expected strategy "storytelling" / pacing "dense", got: ${JSON.stringify(migratedNarrative)}`)
-}
-console.log(sh("node", ["dist/cli.js", "validate", v4OutPath]))
-// Never-overwrite for the single-file leg too.
-const migrateV3OverwriteStderr = shExpectFail("node", ["dist/cli.js", "migrate", v3IrPath, "-o", v4OutPath])
-if (!/already exists/.test(migrateV3OverwriteStderr)) {
-  throw new Error(`e2e: migrate leg — expected a re-run to refuse to overwrite the v4 output file, got: ${migrateV3OverwriteStderr}`)
-}
-console.log("migrate v3-IR-file leg OK (version + mode/delivery value mapping, validates as v4, no-overwrite enforced)")
-
-// (c) v2 is explicitly not accepted (spec §15.3: "pptwise migrate 只支持
-//     v3→v4，不接 v2").
-const v2Path = join(OUT, "migrate-v2-input.json")
-writeFileSync(v2Path, JSON.stringify({ version: "2", slides: [] }))
-const migrateV2Stderr = shExpectFail("node", ["dist/cli.js", "migrate", v2Path, "-o", join(OUT, "migrate-v2-output.json")])
-if (!/v2/.test(migrateV2Stderr)) {
-  throw new Error(`e2e: migrate leg — expected the v2-rejection message to mention v2, got: ${migrateV2Stderr}`)
-}
-console.log("migrate v2-rejection leg OK (pptwise migrate refuses v2 input)")
-
 // 6c) vocabulary-v4 old-command hard-fail leg (spec §8.2): no long-lived
 //     aliases — each removed command must fail and name the one new command.
 console.log("--- old-command hard-fail leg ---")
@@ -569,7 +445,7 @@ const schemaPlanStderr = shExpectFail("node", ["dist/cli.js", "schema", "--plan"
 if (!/pptwise schema --spec/.test(schemaPlanStderr)) {
   throw new Error(`e2e: old-command leg — expected \`pptwise schema --plan\` to point at \`pptwise schema --spec\`, got: ${schemaPlanStderr}`)
 }
-const planValidateStderr = shExpectFail("node", ["dist/cli.js", "plan", "validate", migratedSpecPath])
+const planValidateStderr = shExpectFail("node", ["dist/cli.js", "plan", "validate", join(deckDir, "deck.spec.json")])
 if (!/pptwise spec validate/.test(planValidateStderr)) {
   throw new Error(`e2e: old-command leg — expected \`pptwise plan validate\` to point at \`pptwise spec validate\`, got: ${planValidateStderr}`)
 }
@@ -612,7 +488,7 @@ const VERDICT_LONG_TEXT =
   "微服务架构下的分布式事务一致性保障机制与补偿策略设计规范以及跨可用区容灾演练的完整落地路径说明".repeat(6)
 
 const lowContrastDeck = {
-  version: "4",
+  version: "5",
   filename: "pptwise-e2e-audit-low-contrast",
   // Near consulting's own colors.bg (#F7F7F2) — validate-legal (theme.style
   // is a schema-open deep-partial override), renderer-level unreadable.
@@ -621,12 +497,14 @@ const lowContrastDeck = {
     { type: "cover", heading: "Audit Fixture" },
     {
       type: "content",
+      kind: "points",
       id: "p-body",
       heading: "readable heading",
       components: [{ type: "paragraph", text: "some body copy that should read as low-contrast" }],
     },
     {
       type: "content",
+      kind: "list",
       id: "p-dropped",
       heading: "row_cards over capacity",
       components: [
@@ -642,6 +520,7 @@ const lowContrastDeck = {
     },
     {
       type: "content",
+      kind: "points",
       id: "p-truncated",
       heading: "verdict_banner over budget",
       components: [{ type: "verdict_banner", tone: "positive", text: VERDICT_LONG_TEXT }],
@@ -728,32 +607,16 @@ console.log("audit --pixels leg OK (real Sharp through dist/cli.js, checks.pixel
 //    across both waves (swot/bmc/waterfall/gantt/pest/five_forces/heatmap/
 //    sankey), one per content slide, cover+ending bookending them —
 //    must render to a well-formed pptx and audit clean (exit 0, 0 findings).
-//    `layout: "narrow-column"` is pinned on every content slide (same
-//    precedent as full-matrix-contrast.test.ts's own SWOT_SLIDE/BMC_SLIDE/
-//    WATERFALL_SLIDE/GANTT_SLIDE fixtures) — a full-body component ignores
-//    its resolved layout's own content-fit geometry either way, so the
-//    pin exists only to keep this leg clear of a documented, unrelated
-//    audit-tool blind spot (this file's own ALLOWLIST["rail-numbered"]
-//    entry: content-rail-numbered.tsx's small self-painted "N.N" badge rect
-//    falls below deck-audit.ts's MIN_BG_REGION_AREA, so a real page that
-//    happens to auto-select that layout gets a false-positive low-
-//    contrast finding on the badge text — a pre-existing tool gap, not
-//    something this wave's components caused or should paper over here).
+//    Each page states the component's semantic kind. The consulting menu
+//    owns the exact face, so this leg exercises the same author-facing path
+//    as a real v5 deck.
 //
 //    R1 evidence wave, Task T4: two more content pages, p-data-table
 //    (component 33, the wave's new data_table) and p-multi-series-chart (a
 //    2-series grouped bar with a legend, exercising the wave's shared-domain
 //    multi-series chart fix) — appended right before the ending slide so
 //    every earlier slide index (including sankey's own slide9.xml assertion
-//    below) stays unchanged. Neither pins `layout`: unlike the eight
-//    full-body components above, data_table/chart are NOT full-body, so
-//    their geometry genuinely depends on whichever layout auto-selection
-//    resolves — left to the real (unpinned) path deliberately, matching this
-//    wave's own precedent for this exact fixture family (b7a3754: an earlier
-//    seed pin elsewhere in this wave was reverted once the renderer bug it
-//    was routing around got fixed at the root, restoring "the fixture's
-//    actual mission — stressing real auto-selection paths, not a frozen
-//    one") rather than preemptively pinning around a hypothetical. Content
+//    below) stays unchanged. Content
 //    is deliberately modest (short English labels, well under data_table's
 //    schema max of 8 columns/12 rows) — this leg's job is proving the full
 //    CLI render -> package-audit -> CLI-audit chain accepts both new
@@ -763,16 +626,16 @@ console.log("audit --pixels leg OK (real Sharp through dist/cli.js, checks.pixel
 console.log("--- structure-components leg ---")
 
 const structuresDeck = {
-  version: "4",
+  version: "5",
   filename: "pptwise-e2e-structure-components",
   theme: { id: "consulting" },
   slides: [
     { type: "cover", heading: "Structure Components Demo" },
     {
       type: "content",
+      kind: "comparison",
       id: "p-swot",
       heading: "SWOT",
-      layout: "narrow-column",
       components: [
         {
           type: "swot",
@@ -785,14 +648,12 @@ const structuresDeck = {
     },
     {
       type: "content",
+      kind: "hierarchy",
       id: "p-bmc",
       heading: "Business Model Canvas",
-      layout: "narrow-column",
       components: [
         {
-          // Five-column BMC cells on narrow-column are ~137px of text at
-          // the 16px (12pt) floor. English phrases longer than ~8 glyphs
-          // truncate. Keep each item to a short label.
+          // Keep the nine canvas cells compact enough for the hierarchy face.
           type: "bmc",
           key_partners: ["Suppliers", "Resellers"],
           key_activities: ["R&D"],
@@ -808,9 +669,9 @@ const structuresDeck = {
     },
     {
       type: "content",
+      kind: "data",
       id: "p-waterfall",
       heading: "Revenue Bridge",
-      layout: "narrow-column",
       components: [
         {
           type: "waterfall",
@@ -827,9 +688,9 @@ const structuresDeck = {
     },
     {
       type: "content",
+      kind: "process",
       id: "p-gantt",
       heading: "Project Timeline",
-      layout: "narrow-column",
       components: [
         {
           type: "gantt",
@@ -845,9 +706,9 @@ const structuresDeck = {
     },
     {
       type: "content",
+      kind: "comparison",
       id: "p-pest",
       heading: "PEST Analysis",
-      layout: "narrow-column",
       components: [
         {
           type: "pest",
@@ -860,9 +721,9 @@ const structuresDeck = {
     },
     {
       type: "content",
+      kind: "hierarchy",
       id: "p-five-forces",
       heading: "Porter's Five Forces",
-      layout: "narrow-column",
       components: [
         {
           type: "five_forces",
@@ -876,9 +737,9 @@ const structuresDeck = {
     },
     {
       type: "content",
+      kind: "data",
       id: "p-heatmap",
       heading: "Regional Performance Heatmap",
-      layout: "narrow-column",
       components: [
         {
           type: "heatmap",
@@ -897,9 +758,9 @@ const structuresDeck = {
     },
     {
       type: "content",
+      kind: "process",
       id: "p-sankey",
       heading: "Energy Flow",
-      layout: "narrow-column",
       components: [
         {
           type: "sankey",
@@ -921,11 +782,11 @@ const structuresDeck = {
         },
       ],
     },
-    // R1 evidence wave, Task T4 — see this leg's own top comment for why
-    // these two are appended here (after sankey, before ending) and why
-    // neither pins `layout`.
+    // R1 evidence wave, Task T4 — these two are appended here after sankey
+    // and before ending.
     {
       type: "content",
+      kind: "data",
       id: "p-data-table",
       heading: "Regional Performance",
       components: [
@@ -950,6 +811,7 @@ const structuresDeck = {
     },
     {
       type: "content",
+      kind: "data",
       id: "p-multi-series-chart",
       heading: "Revenue vs Target",
       components: [
@@ -1021,12 +883,12 @@ console.log("structure-components audit leg OK (exit 0, 0 findings)")
 console.log("--- dual-threshold severity leg ---")
 
 const warnOnlyDeck = {
-  version: "4",
+  version: "5",
   filename: "pptwise-e2e-warn-only",
   theme: { id: "tech" },
   slides: [
     { type: "cover" }, // missing heading — warn only since Task 2
-    { type: "content", heading: "Body", components: [{ type: "paragraph", text: "hello" }] },
+    { type: "content", kind: "points", heading: "Body", components: [{ type: "paragraph", text: "hello" }] },
   ],
 }
 const warnOnlyPath = join(OUT, "warn-only.json")
@@ -1059,12 +921,12 @@ console.log("dual-threshold warn-only render leg OK (exit 0, file written, warni
 // since this script only shells out to the built CLI, it does not import
 // src/ directly.
 const bulletOverflowDeck = {
-  version: "4",
+  version: "5",
   filename: "pptwise-e2e-bullet-overflow",
   theme: { id: "tech" },
   slides: [
     { type: "cover", heading: "Overflow" },
-    { type: "content", heading: "Body", components: [{ type: "bullets", items: ["测".repeat(51)] }] },
+    { type: "content", kind: "points", heading: "Body", components: [{ type: "bullets", items: ["测".repeat(51)] }] },
   ],
 }
 const bulletOverflowPath = join(OUT, "bullet-overflow.json")
@@ -1144,15 +1006,15 @@ const PNG_1PX_STOCK = Buffer.from(
   "base64",
 )
 const stockIr = {
-  version: "4",
+  version: "5",
   filename: "stock",
   theme: { id: "consulting" },
   slides: [
     { type: "cover", heading: "Stock" },
     {
       type: "content",
+      kind: "photo",
       heading: "Hero",
-      layout: "image-top",
       components: [{ type: "image", asset_id: "hero" }],
     },
     { type: "ending", heading: "End" },

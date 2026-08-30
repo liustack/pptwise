@@ -167,11 +167,11 @@ export function CrayonboxOpenCover({ ir, slide, ctx }: SvgTemplateProps) {
 }
 
 export const layoutDef = {
-  id: "crayonbox-open",
-  kind: "archetype",
-  pinOnly: true,
   branding: "none",
   suppressMotif: true,
+  id: "crayonbox-open",
+  kind: "standard",
+  pinOnly: true,
   slideTypes: ["cover"],
   slots: [
     { name: "kicker", accepts: [] },

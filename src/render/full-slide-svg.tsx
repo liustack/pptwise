@@ -1,6 +1,6 @@
-import { Fragment, type ReactElement, type ReactNode } from "react"
+import { Children, Fragment, cloneElement, isValidElement, type ReactElement, type ReactNode } from "react"
 import type { BackgroundSpec, Component, PptxIR, Slide } from "@/ir"
-import { PACING_BUDGETS, resolveNarrative, type Strategy, type NarrativeProfile } from "@/narrative"
+import { PACING_BUDGETS, resolveNarrative, type NarrativeProfile } from "@/narrative"
 import type { StyleTokens } from "../themes/tokens"
 import { resolveStyle } from "../themes"
 import { CANVAS_W_PX, CANVAS_H_PX } from "../constants"
@@ -10,26 +10,17 @@ import type { SvgTemplateProps } from "../layouts/types"
 import { Background } from "./background"
 import { Branding } from "./branding"
 import { SlideDecor } from "./slide-decor"
-import {
-  ImageAnnotatePage,
-  ImageBottomPage,
-  ImageCoverPage,
-  ImageSplitPage,
-  ImageTopPage,
-} from "./image-pages"
-import { findImageComponent } from "../layouts/find-image"
+import { ImageAnnotatePage, ImageBottomPage, ImageCoverPage, ImageSplitPage, ImageTopPage } from "./image-pages"
 import { gradientBands } from "./gradient-bands"
-import { getLayout, layoutOmitsBranding } from "../layouts/registry"
-import { effectiveRequestedLayout, getThemeDefinition, type ThemeDefinition } from "../themes/definitions"
 import { COVER_LAYOUTS } from "../layouts/index-cover"
 import { CHAPTER_LAYOUTS } from "../layouts/index-chapter"
 import { CONTENT_LAYOUTS } from "../layouts/index-content"
 import { ENDING_LAYOUTS } from "../layouts/index-ending"
 import { MOTIFS } from "../motifs"
-import { resolveMotifId } from "./motif-selection"
+import { getThemeDefinition } from "../themes/definitions"
 import { resolveChartPaletteOffset } from "./chart-palette"
 import { cachedDeckSeed } from "./variety"
-import { resolveLayoutId, resolveEffectiveLayoutId, resolveIrStrategy } from "./layout-selection"
+import { resolveEffectiveFace } from "./layout-selection"
 import { partitionSvgDepth, type SvgDepthLayers } from "./depth-contract/partition"
 import { enforceMidgroundContract, resolveMidgroundBackground } from "./depth-contract/safety"
 
@@ -220,50 +211,33 @@ const PAGE_LAYOUT_REGISTRIES: Record<Slide["type"], Record<string, PageLayout>> 
   ending: ENDING_LAYOUTS,
 }
 
-/**
- * theme.layouts 分发泛化（P2 Task 24，spec §4.2→v0.3 spec §6
- * strangler）：四页型共用「查 theme 的 layouts allowed set → 按 deck seed 加权
- * 取样一个 → 查对应页型的注册表」这段逻辑，含 `requestedLayout`（W2 任务 3，即
- * `slide.layout`）显式指定短路——完整选型算法（narrative 加权取样、
- * narrativesOnly 硬约束、相邻防重复、allowed 空集防御性回退，W4 终态）现由
- * `./layout-selection` 的 `resolveLayoutId` 持有（W3 任务 3 抽取：
- * `checkIrQuality` 的 density 门在 validate 期要跑同一条选型路径，两处各自维护
- * 一份会有漂移风险，故只留一份）。这里只做 render 专属的收尾——按选中 id 查
- * 这个文件自己的 `PAGE_LAYOUT_REGISTRIES` 取 JSX Component（validate 侧不
- * 需要、也不该关心这一步）。
- */
-function resolvePageLayout(
-  slideType: Slide["type"],
-  layouts: ThemeDefinition["layouts"],
-  seed: number,
-  pageKey: string,
-  requestedLayout: string | undefined,
-  strategy: Strategy,
-  previousEffectiveLayoutId: string | null,
-  beat: Slide["beat"],
-  // Theme-structure wave, task T1 fix-round: the theme's own structural
-  // personality (`ThemeDefinition.layoutTendencies`, `../themes/definitions.ts`),
-  // already sliced to this slide type by the caller below — threaded through
-  // to `resolveLayoutId` for the exact same reason `beat` already is: this
-  // is the render path's copy of the selection call, and
-  // `resolveOneEffectiveLayoutId` (`./layout-selection.ts`) is the
-  // validate-path copy. Both must pass every weighting input identically or
-  // the module's own file-header invariant ("what validate sees is what
-  // render uses") breaks the moment any theme declares a tendency.
-  themeTendencies: readonly string[] | undefined,
-): { id: string; Component: PageLayout } | null {
-  const id = resolveLayoutId(
-    slideType,
-    layouts,
-    seed,
-    pageKey,
-    requestedLayout,
-    strategy,
-    previousEffectiveLayoutId,
-    beat,
-    themeTendencies,
+type SvgNodeProps = Record<string, unknown> & {
+  children?: ReactNode
+  opacity?: number | string
+}
+const MOTIF_PAINT_TAGS = new Set(["rect", "circle", "ellipse", "line", "polyline", "polygon", "path", "text", "image"])
+
+/** Put menu intensity on painted leaves because svg2pptx does not inherit group opacity. */
+function scaleMotifLeafOpacity(node: ReactNode, factor: number): ReactNode {
+  if (!isValidElement<SvgNodeProps>(node)) return node
+  if (node.type === Fragment) {
+    return cloneElement(
+      node,
+      undefined,
+      Children.map(node.props.children, (child) => scaleMotifLeafOpacity(child, factor)),
+    )
+  }
+  if (typeof node.type !== "string") return node
+  if (MOTIF_PAINT_TAGS.has(node.type)) {
+    const declared = node.props.opacity === undefined ? 1 : Number(node.props.opacity)
+    const opacity = Number.isFinite(declared) ? declared * factor : factor
+    return cloneElement(node, { opacity })
+  }
+  return cloneElement(
+    node,
+    undefined,
+    Children.map(node.props.children, (child) => scaleMotifLeafOpacity(child, factor)),
   )
-  return id === null ? null : { id, Component: PAGE_LAYOUT_REGISTRIES[slideType][id] }
 }
 
 /**
@@ -309,14 +283,8 @@ export function FullSlideSvg({
   const defaultBg = slide.background
     ? resolveOverrideBackgroundHex(slide.background, tokens.colors.surface, themeDefaultBg)
     : themeDefaultBg
-  // W4 task 3 (design decision 9): the single injection seam for the
-  // paragraph/bullets/callout trio's body-text baseline — see
-  // `ComponentCtx.bodyFontPx`'s own doc comment for why this is required
-  // (not optional like `defaultBg` above) and why no component recomputes
-  // it. A second, independent `resolveNarrative` call from `resolveIrStrategy`'s
-  // own (cheap, unmemoized — see that function's doc comment) below is
-  // expected, not a duplicated selection-logic copy: this projects
-  // `.pacing`, `resolveIrStrategy` projects `.strategy`, off the same pure input.
+  // Pacing remains an editorial input. It supplies the body-text baseline
+  // but never participates in menu-face resolution.
   const bodyFontPx =
     PACING_BUDGETS[resolveNarrative(ir.narrative as string | Partial<NarrativeProfile> | undefined).pacing]
       .bodyBaselinePx
@@ -334,15 +302,33 @@ export function FullSlideSvg({
     bodyFontPx,
     chartPaletteOffset,
   )
+  // This is the only face resolution performed by the renderer. Capacity
+  // checks and validation consume the same route record from
+  // `layout-selection.ts`, so takeover precedence cannot drift between
+  // those paths.
+  const effectiveFace = resolveEffectiveFace(ir, slide)
+  if (effectiveFace.route === "unresolved") {
+    throw new Error(effectiveFace.error ?? `cannot resolve a theme-menu face for "${slide.type}" page`)
+  }
+  const menuDecor = effectiveFace.entry?.decor
+  // Decoration resolution (charter ruling 6, face-default + menu-override):
+  // the face's own `suppressMotif` is a structural fact no menu can undo; a
+  // menu entry may silence the motif on other faces or swap which motif
+  // paints; with no entry opinion the theme's own motif is the ordinary
+  // posture.
   const themeDef = getThemeDefinition(ir.theme.id)
-  // motif 分发（P2 Task 24→Wave5 收尾，W2 任务 2 数据源迁至 THEME_DEFINITIONS，
-  // W3 任务 4 起经 getThemeDefinition 统一查找——registered theme 同样生效，
-  // P1 variety wave task 2 起不再是每主题一个固定 id：`resolveMotifId`
-  // 〔./motif-selection.ts〕在 12/13 内置主题上把它换成一个 2-3 项候选子集的
-  // seed+pageKey 加权采样，同 deck 内不同页常态性拿到不同贴纸；runway〔无
-  // motif〕与 registered/自定义主题走该函数自己的直通回落，行为不变）。
-  const motifId = resolveMotifId(ir, slide, index)
-  const Decor = motifId ? MOTIFS[motifId] : undefined
+  const faceSuppressesMotif = effectiveFace.layout?.suppressMotif === true
+  const Decor =
+    menuDecor?.kind === "silent" || faceSuppressesMotif
+      ? undefined
+      : menuDecor?.kind === "motif"
+        ? MOTIFS[menuDecor.id]
+        : themeDef.motif !== undefined
+          ? MOTIFS[themeDef.motif]
+          : undefined
+  const motifIntensity =
+    menuDecor?.kind === "motif" ? menuDecor.params?.intensity : themeDef.motifParameters?.intensity
+  const motifOpacity = motifIntensity === "subtle" ? 0.62 : undefined
   let bgSpec = slide.background ?? tokens.defaultBackgrounds[slide.type]
   // 压图页接管（图片排版 polish，2026-07-09 用户反馈）：cover/chapter 的
   // asset 背景 → 暗遮罩 + 白字 bespoke 版式（ImageCoverPage）——图保持清晰
@@ -351,9 +337,7 @@ export function FullSlideSvg({
   // 2026-07-10 custom→gallery 改造后所有主题都是设计主题，原「custom 裸
   // 背景 + 模型 overlay 直通」特判随之删除（存量 custom deck 落 gallery，
   // 压图页同享暗遮罩接管）。
-  const imageCoverTakeover =
-    bgSpec.kind === "asset" &&
-    (slide.type === "cover" || slide.type === "chapter")
+  const imageCoverTakeover = effectiveFace.route === "image-cover"
   // content/ending 的 asset 背景维持 P1 雾面 scrim（正文密度高，可读性优先）。
   let autoScrimColor: string | undefined
   if (bgSpec.kind === "asset") {
@@ -376,75 +360,51 @@ export function FullSlideSvg({
       autoScrimColor = themeDefaultBg
     }
   }
-  // 图文范式族接管（image-split/image-top/image-bottom/image-annotate，W2
-  // 任务 3：分派钥匙由 slide.variant 改为 slide.layout，4 个版式各自的行为
-  // 不变）：出血图 bespoke 版式，heading 由版式自画，跳过模板 Body 防重复
-  // 标题。无 image 块回落模板路径。
-  const requestedLayoutDef = slide.layout ? getLayout(slide.layout) : undefined
-  const isTakeoverLayout = requestedLayoutDef?.kind === "takeover"
-  const splitTakeover = isTakeoverLayout && findImageComponent(slide) != null
-  // theme.layouts 层（P1 cover-only → P2 Task 24 泛化四页型，spec
-  // §4.2→v0.3 spec §6 strangler）：允许集非空才接管（十三主题四页型 Wave 5 后
-  // 恒非空）。image 接管优先级更高（压图页/图文版式语义不归 layout 管，
-  // imageCoverTakeover 仅 cover/chapter 生效、splitTakeover 对所有页型生效，
-  // 两条优先级原样保留）。
-  // 盐 pageKey（W4 design decision 2，同类型页序 ordinal 机制已废弃）：优先
-  // 稳定 slide.id，无 id 落回绝对页 index——插页/重排不再牵动其它页的取样。
-  // previousEffectiveLayoutId（W4 design decision 4，相邻防重复的唯一跨页
-  // 输入）：复用 `resolveEffectiveLayoutId` 对上一页的解算而非在这里另起一份
-  // 折叠——同一 WeakMap 缓存的折叠结果，两处必然同源同值。
-  const pageKey = slide.id ?? String(index)
-  const strategy = resolveIrStrategy(ir)
-  const previousEffectiveLayoutId = index > 0 ? resolveEffectiveLayoutId(ir, ir.slides[index - 1], index - 1) : null
-  const requestedLayout = effectiveRequestedLayout(ir.theme.id, slide.layout)
-  const pageLayout =
-    imageCoverTakeover || splitTakeover
-      ? null
-      : resolvePageLayout(
-          slide.type,
-          themeDef.layouts,
-          cachedDeckSeed(ir),
-          pageKey,
-          requestedLayout,
-          strategy,
-          previousEffectiveLayoutId,
-          slide.beat,
-          themeDef.layoutTendencies?.[slide.type],
-        )
+  let pageLayout: { id: string; Component: PageLayout } | null = null
+  if (effectiveFace.route === "layout" && effectiveFace.layoutId !== null) {
+    const Component = PAGE_LAYOUT_REGISTRIES[slide.type][effectiveFace.layoutId]
+    if (Component === undefined) {
+      throw new Error(
+        `layout registry invariant failed: face "${effectiveFace.layoutId}" has no ${slide.type} renderer`,
+      )
+    }
+    pageLayout = { id: effectiveFace.layoutId, Component }
+  }
   // A layout that opens with its own full-bleed colour field hides the theme
   // background completely, and painting one under the other is not free: a
   // browser antialiases the SVG viewport clip whenever the mounted slide's box
   // misses the device pixel grid, so the covered colour survives in the edge
   // column and reads as a pale hairline down the page. See
   // `LayoutDefinition.paintsOwnBackground` (`../layouts/registry.ts`).
-  const layoutPaintsBackground = pageLayout ? getLayout(pageLayout.id)?.paintsOwnBackground === true : false
-  // Layout-declared branding:none (editorial-verse pinOnly members) skips
-  // Branding as a whole (footer rule/meta, logo). The theme motif still
-  // paints. slide.decor, when the author sets it, still draws. Resolved
-  // layout id wins. The *offered* pin is the other source, so a pinOnly
-  // page whose resolvePageLayout somehow missed still honors the
-  // declaration — but an unoffered sparse pin has already been stripped,
-  // and the fallback regular layout keeps ordinary branding.
-  const skipBranding = layoutOmitsBranding(pageLayout?.id) || layoutOmitsBranding(requestedLayout)
-  const layoutChrome = pageLayout ? getLayout(pageLayout.id) : undefined
-  const skipMotif = Boolean(layoutChrome?.pageFrame) || Boolean(layoutChrome?.suppressMotif)
+  const layoutPaintsBackground = effectiveFace.route === "layout" && effectiveFace.layout?.paintsOwnBackground === true
+  // Page-level brand silence: the face's structural `branding: "none"` and
+  // the menu entry's `brand: "none"` each switch the brand frame off.
+  // Deck-level full/cover-only/minimal posture remains inside Branding and
+  // is applied only when this page has not opted out.
+  const skipBranding = effectiveFace.layout?.branding === "none" || effectiveFace.entry?.brand === "none"
 
   let pageBody: ReactNode = null
   if (imageCoverTakeover) {
     pageBody = ImageCoverPage({ ir, slide, index, ctx })
-  } else if (splitTakeover && slide.layout === "image-top") {
+  } else if (effectiveFace.route === "takeover" && effectiveFace.layoutId === "image-top") {
     pageBody = ImageTopPage({ ir, slide, ctx })
-  } else if (splitTakeover && slide.layout === "image-bottom") {
+  } else if (effectiveFace.route === "takeover" && effectiveFace.layoutId === "image-bottom") {
     pageBody = ImageBottomPage({ ir, slide, ctx })
-  } else if (splitTakeover && slide.layout === "image-annotate") {
+  } else if (effectiveFace.route === "takeover" && effectiveFace.layoutId === "image-annotate") {
     pageBody = ImageAnnotatePage({ ir, slide, ctx })
-  } else if (splitTakeover) {
+  } else if (effectiveFace.route === "takeover" && effectiveFace.layoutId === "image-split") {
     pageBody = ImageSplitPage({ ir, slide, ctx })
   } else if (pageLayout) {
-    pageBody = pageLayout.Component({ ir, slide, index, ctx })
+    pageBody = pageLayout.Component({
+      ir,
+      slide,
+      index,
+      ctx,
+      params: effectiveFace.entry?.params,
+    })
   }
   const motif =
-    Decor && !imageCoverTakeover && !skipMotif ? (
+    Decor && !imageCoverTakeover ? (
       <g data-decor>
         <Decor ir={ir} slide={slide} ctx={ctx} />
       </g>
@@ -452,17 +412,23 @@ export function FullSlideSvg({
   const motifDepth: SvgDepthLayers = motif
     ? partitionSvgDepth(motif, { slideType: slide.type })
     : { bg: [], mid: [], fg: [] }
-  const keyedMotif = (depth: keyof SvgDepthLayers) =>
-    motifDepth[depth].map((node, nodeIndex) => (
+  const keyedMotif = (depth: keyof SvgDepthLayers) => {
+    const nodes = motifDepth[depth]
+    const paintedNodes =
+      motifOpacity === undefined ? nodes : nodes.map((node) => scaleMotifLeafOpacity(node, motifOpacity))
+    return paintedNodes.map((node, nodeIndex) => (
       <Fragment key={`motif-${depth}-${nodeIndex}`}>{node}</Fragment>
     ))
-  const bodyDepth: SvgDepthLayers = partitionSvgDepth(pageBody, { slideType: slide.type })
+  }
+  const bodyDepth: SvgDepthLayers = partitionSvgDepth(pageBody, {
+    slideType: slide.type,
+  })
   const keyedBody = (depth: keyof SvgDepthLayers) =>
     bodyDepth[depth].map((node, nodeIndex) => (
       <Fragment key={`body-${depth}-${nodeIndex}`}>{node}</Fragment>
     ))
   const foregroundBody = pageLayout ? (
-    <g data-archetype={pageLayout.id}>{keyedBody("fg")}</g>
+    <g data-face={pageLayout.id}>{keyedBody("fg")}</g>
   ) : (
     keyedBody("fg")
   )
@@ -507,7 +473,7 @@ export function FullSlideSvg({
         {safeMidground}
       </g>
       <g data-depth="fg">
-        {/* `data-archetype` is a wire-format fossil. The vocabulary merged into
+        {/* `data-face` is a wire-format fossil. The vocabulary merged into
             "layout". The attribute remains the stable layout identifier in
             rendered SVG while the depth engine owns paint order. */}
         {foreground}

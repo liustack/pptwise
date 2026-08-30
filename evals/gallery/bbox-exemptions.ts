@@ -21,7 +21,7 @@
  */
 
 export interface BleedExemption {
-  /** `data-archetype` id of the layout that draws the bleeding element. */
+  /** `data-face` id of the layout that draws the bleeding element. */
   readonly layout: string
   /** Which of the three checks this exempts. */
   readonly kind: "h-overflow" | "v-overflow" | "page-overflow"

@@ -18,7 +18,7 @@ function slide(heading = HEADING, extras: Partial<Slide> = {}): Slide {
 
 function ir(themeId: string, meta: PptxIR["meta"] = {}, s: Slide = slide()): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "type-rule-cover.pptx",
     theme: { id: themeId },
     meta,
@@ -112,7 +112,7 @@ describe("cover-type-rule-cover — emphasis", () => {
 describe("cover-type-rule-cover — shared pool", () => {
   it("is a pinOnly cover archetype named by composition, not theme", () => {
     expect(layoutDef.id).toBe("type-rule-cover")
-    expect(layoutDef.kind).toBe("archetype")
+    expect(layoutDef.kind).toBe("standard")
     expect(layoutDef.pinOnly).toBe(true)
     expect(layoutDef.slideTypes).toEqual(["cover"])
   })

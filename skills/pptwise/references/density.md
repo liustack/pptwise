@@ -1,17 +1,31 @@
-# Density and beat
+# Density and decoration
 
-Read this when pacing budgets, `beat`, capacity, or slide `decor` are in play.
+Read this when writing to pacing budgets, fitting the bound face, or deciding whether a page needs local decoration.
 
-### Capacity
+## Two capacity limits
 
-A slide is a fixed-size canvas. Draft to fit on the first pass: few components per slide, short assertive headings, bullet items within about two lines. Component and bullets budgets scale with the deck's `pacing` axis (tightest for `spacious`, loosest for `dense`) — `validate` reports the exact numbers that applied, not a flat constant. These are warnings, not hard errors — worth fixing for a tighter deck, but they never block `render`. Body text size scales the other way: `spacious` renders the largest body font (32px vs. `balanced`/`dense` at 24px, 18pt) even though it allows the fewest components, so a `spacious` slide needs fewer and shorter items, not just tighter ones. A bullet item that is long regardless of pacing — long enough to still overflow after shrinking to the 24px body floor — *is* a hard `validate` error, for every bullet style (`default`/`plain`/`divided`/`numbered`/`checklist` alike). The renderer does not paint an ellipsis. Treat "keep bullet items short" as a real constraint regardless of style. When in doubt, split into two slides — writing to fit beats fix-up loops.
+Every content page has two independent limits. Narrative pacing sets an editorial budget. The face selected by the bound theme menu sets a physical body capacity. The effective component limit is the smaller value.
 
-Eight component types own the whole slide instead of sharing it: `swot`, `bmc`, `waterfall`, `gantt`, `pest`, `five_forces`, `heatmap`, `sankey`. Each must be its slide's only component — `validate` hard-errors on a slide that mixes one in with `bullets` or anything else, it never silently drops the sibling.
+| pacing | body baseline | components | bullet items | width units per bullet |
+| --- | ---: | ---: | ---: | ---: |
+| `dense` | 24px | 5 | 6 | 27 |
+| `balanced` | 24px | 4 | 5 | 25 |
+| `spacious` | 32px | 3 | 4 | 22 |
 
-### Beat
+`validate` reports the effective limit for the actual theme and kind. Editorial excess is normally a warning. Render-safety limits and content loss remain hard errors. Shorten or split a page instead of hiding overflow.
 
-A content page's optional `beat` (`anchor`, `dense`, or `breathing`) is more than a `spec validate` rhythm check now — it also nudges which layout `render` auto-picks for that page: `anchor` leans toward a single bold-statement layout, `dense` leans toward a high-density layout with more visible items, `breathing` leans toward the most spacious single-column layout. It is a soft weight, not a pin — an explicit `layout` still overrides it entirely, and an unset `beat` has zero effect. Declare it deliberately, one value per page based on that page's actual role in the argument (the "big reveal" page is `anchor`, a data-heavy comparison page is `dense`, a breather page between two dense sections is `breathing`), not as a rubber stamp on every page — `spec validate`'s own beat-rotation gate already flags a streak of identical declared beats for strategies that expect variation, and stamping the same value everywhere also just cancels out the layout variety this field exists to add.
+`spacious` means fewer elements at a larger body size. It does not mean the same content compressed into a cleaner-looking page. Keep headings assertive and keep bullet items near two lines.
 
-### Decor
+Three consecutive content pages with the same kind produce a spec advisory. Repetition can be correct, but confirm that the story truly calls for the same semantic move three times.
 
-Set slide `decor` only when the user explicitly asks for decorative flourish. Default is none — themes already carry their own motifs.
+Eight components own the whole body: `swot`, `bmc`, `waterfall`, `gantt`, `pest`, `five_forces`, `heatmap`, and `sankey`. Each must be the page's only component.
+
+## Decoration ownership
+
+Decoration resolves in this order:
+
+1. A face with structural `suppressMotif: true` never receives a theme motif.
+2. Otherwise a menu entry may choose `decor.kind: "silent"` or select another motif.
+3. With no menu opinion, the theme's ordinary motif paints.
+
+The face's structural silence cannot be undone by a menu. A page-level `decor` is a controlled local primitive such as a rule, tag, quote mark, dots, or large number. Use it only when the page meaning needs that accent. It does not replace the theme menu and should not be stamped across the deck.

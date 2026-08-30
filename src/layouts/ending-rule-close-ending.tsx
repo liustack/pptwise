@@ -151,7 +151,7 @@ export const layoutDef = {
   // ending-rule-close-ending.tsx: closing sentence, full-width border rule
   // with a short accent start. pinOnly board lock. No thank-you fallback.
   id: "rule-close-ending",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["ending"],
   slots: [

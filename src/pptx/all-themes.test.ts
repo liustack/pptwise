@@ -20,7 +20,7 @@ describe("all themes export v2 (download path)", () => {
   for (const id of BUILTIN_THEME_IDS) {
     it(`${id} generates a non-empty blob without throwing`, async () => {
       const ir: PptxIR = {
-        version: "4",
+        version: "5",
         filename: `${id}.pptx`,
         theme: { id },
         meta: {},
@@ -35,11 +35,11 @@ describe("all themes export v2 (download path)", () => {
           // The chart and the flowchart each need a page to themselves —
           // paired with anything else they still overflowed in half the
           // themes. Same per-theme component coverage, no loss.
-          { type: "content", heading: "数据页 1", components: components.slice(0, 2), footnote: "来源：测试" },
-          { type: "content", heading: "数据页 2", components: [components[2]] },
-          { type: "content", heading: "数据页 3", components: [components[3]] },
-          { type: "content", heading: "数据页 4", components: components.slice(4, 6) },
-          { type: "content", heading: "数据页 5", components: components.slice(6) },
+          { type: "content", kind: "points", heading: "数据页 1", components: components.slice(0, 2), footnote: "来源：测试" },
+          { type: "content", kind: "points", heading: "数据页 2", components: [components[2]] },
+          { type: "content", kind: "points", heading: "数据页 3", components: [components[3]] },
+          { type: "content", kind: "points", heading: "数据页 4", components: components.slice(4, 6) },
+          { type: "content", kind: "points", heading: "数据页 5", components: components.slice(6) },
           { type: "ending", heading: "Questions", components: [] },
         ],
       }

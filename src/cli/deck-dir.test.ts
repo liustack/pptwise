@@ -28,8 +28,8 @@ function makePlan(extra: Record<string, unknown> = {}): Record<string, unknown> 
     filename: "q3-review",
     pages: [
       { id: "p-cover", type: "cover", heading: "Q3 Review" },
-      { id: "p-kpi", type: "content", heading: "Revenue is up" },
-      { id: "p-detail", type: "content", heading: "Detail breakdown" },
+      { id: "p-kpi", type: "content", kind: "points", heading: "Revenue is up" },
+      { id: "p-detail", type: "content", kind: "points", heading: "Detail breakdown" },
       { id: "p-ending", type: "ending", heading: "Thanks" },
     ],
     ...extra,
@@ -278,20 +278,11 @@ describe("readDeckDir", () => {
     ])
   })
 
-  it("reports the seed generation the same way assembleDeck does (no spec.seed set)", async () => {
+  it("does not generate a seed (seed is no longer a spec or IR field)", async () => {
     const dir = await tmp()
     await writeDeckSpec(dir)
-    const { generatedSeed, ir } = await readDeckDir(dir)
-    expect(generatedSeed).toBeDefined()
-    expect(ir.seed).toBe(generatedSeed)
-  })
-
-  it("passes an explicit spec.seed through with no generatedSeed", async () => {
-    const dir = await tmp()
-    await writeDeckSpec(dir, makePlan({ seed: 999 }))
-    const { generatedSeed, ir } = await readDeckDir(dir)
-    expect(generatedSeed).toBeUndefined()
-    expect(ir.seed).toBe(999)
+    const { ir } = await readDeckDir(dir)
+    expect((ir as unknown as { seed?: number }).seed).toBeUndefined()
   })
 
   describe("missing spec file", () => {

@@ -161,13 +161,13 @@ export function VolumeSlipChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
 }
 
 export const layoutDef: LayoutDefinition = {
+  branding: "none",
   // chapter-volume-slip-chapter.tsx: pinOnly right-edge volume slip, left
   // title, one ink stroke under the title cluster. CJK volume is per-glyph
   // vertical. Empty heading draws no title and no stroke.
   id: "volume-slip-chapter",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
-  branding: "none",
   slideTypes: ["chapter"],
   slots: [
     { name: "kicker", accepts: [] },

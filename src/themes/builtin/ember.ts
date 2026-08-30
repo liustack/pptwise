@@ -1,6 +1,5 @@
 import type { StyleTokens } from "../tokens";
 import type { BuiltinThemeDeclaration } from "../schema";
-import { DEFAULT_CONTENT_FACES } from "./shared";
 
 /**
  * ember（融资路演 / 炭黑火橙）——第八波批 1 把暖纸路演翻成炭黑路演。
@@ -36,6 +35,8 @@ import { DEFAULT_CONTENT_FACES } from "./shared";
  * 几何不动。
  *
  * 装饰见 `src/motifs/motif-ember-motif.tsx`（上升火星退役，角楔归版式）。
+ *
+ * **菜单分派（S1-B）**：路演页面靠密排的卡组与曲线推进，data 走单张主角图的 stacked-poster。原声明不供任何疏排高潮页，本轮照旧不上。
  */
 export const EMBER_TOKENS: StyleTokens = {
   id: "ember",
@@ -87,22 +88,23 @@ export const EMBER_TOKENS: StyleTokens = {
 };
 
 export const EMBER_THEME = {
-  version: 1,
+  version: 2,
   id: "ember",
   label: "Startup Pitch",
   style: EMBER_TOKENS,
-  faces: {
-    cover: ["corner-wedge"],
-    chapter: ["ember-index-chapter"],
-    content: DEFAULT_CONTENT_FACES,
-    ending: ["ask-ending"],
+  menu: {
+    cover: { face: "corner-wedge" },
+    chapter: { face: "ember-index-chapter" },
+    content: {
+      points: { face: "narrow-column" },
+      list: { face: "bento-panel" },
+      comparison: { face: "two-column" },
+      process: { face: "rail-numbered" },
+      data: { face: "stacked-poster" },
+      photo: { face: "image-split" },
+      hierarchy: { face: "asymmetric-triptych" },
+    },
+    ending: { face: "ask-ending" },
   },
   motif: { id: "ember-motif" },
-  tendencies: {
-    cover: ["corner-wedge"],
-    chapter: ["ember-index-chapter"],
-    content: ["bento-panel", "two-column", "stacked-poster"],
-    ending: ["ask-ending"],
-  },
-  sparse: [],
 } satisfies BuiltinThemeDeclaration;

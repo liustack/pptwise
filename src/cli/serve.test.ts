@@ -14,19 +14,19 @@ import { createServeServer, SERVE_CLIENT_SCRIPT_ID, watchRoots, type ServeHandle
 installNodePlatform()
 
 const VALID_IR = {
-  version: "4",
+  version: "5",
   filename: "serve-test",
   theme: { id: "tech" },
   slides: [
     { type: "cover", heading: "Serve Test" },
-    { type: "content", heading: "Body", components: [{ type: "paragraph", text: "hello from serve" }] },
+    { type: "content", kind: "points", heading: "Body", components: [{ type: "paragraph", text: "hello from serve" }] },
   ],
 }
 
 // Same shape commands.test.ts's own `bad.json` uses to pin runValidate's
 // "invalid IR" rejection — reused here to trigger the exact same rejection
 // out of createServeServer's own initial build.
-const INVALID_IR_SHAPE = { version: "4" }
+const INVALID_IR_SHAPE = { version: "5" }
 
 // 1x1 red PNG — the same fixture commands.test.ts uses to exercise a real
 // deck-dir `assets/` asset (see its own "assets/ auto-registration reaches
@@ -52,9 +52,9 @@ function makeDeckPlan(): Record<string, unknown> {
     filename: "serve-deck",
     pages: [
       { id: "p-cover", type: "cover", heading: "Serve Deck" },
-      { id: "p-a", type: "content", heading: "Segment A" },
-      { id: "p-b", type: "content", heading: "Segment B" },
-      { id: "p-c", type: "content", heading: "Segment C" },
+      { id: "p-a", type: "content", kind: "points", heading: "Segment A" },
+      { id: "p-b", type: "content", kind: "points", heading: "Segment B" },
+      { id: "p-c", type: "content", kind: "points", heading: "Segment C" },
       { id: "p-ending", type: "ending", heading: "Thanks" },
     ],
   }
@@ -192,13 +192,12 @@ function connectSSE(port: number): {
 const openHandles: ServeHandle[] = []
 async function startServe(
   target: string,
-  opts: { port?: number; cwd?: string; themeFilePath?: string } = {},
+  opts: { port?: number; cwd?: string } = {},
 ): Promise<ServeHandle> {
   const handle = await createServeServer({
     target,
     port: opts.port ?? 0,
     cwd: opts.cwd,
-    themeFilePath: opts.themeFilePath,
   })
   openHandles.push(handle)
   return handle
@@ -449,36 +448,76 @@ describe("createServeServer — /revision-request, removed", () => {
 })
 
 describe("watchRoots — theme files", () => {
-  it("includes deck-dir theme.json and a --theme-file extra path", () => {
+  it("includes deck-dir theme.json", () => {
     const deckDir = "/tmp/some-deck"
-    const roots = watchRoots(deckDir, true, ["/tmp/custom.theme.json"])
+    const roots = watchRoots(deckDir, true, ["/tmp/workspace/themes/acme.theme.json"])
     expect(roots).toContain(join(deckDir, THEME_FILENAME))
-    expect(roots).toContain("/tmp/custom.theme.json")
+    expect(roots).toContain("/tmp/workspace/themes/acme.theme.json")
   })
 })
 
 describe("createServeServer — theme-file live reload", () => {
-  it("rebuild() re-reads a mutated --theme-file and serves the new primary color", async () => {
-    const dir = await makeDir("pptwise-serve-theme-")
+  it("rebuild() re-reads a mutated workspace theme file and serves the new primary color", async () => {
+    const dir = await makeDir("pptwise-serve-ws-theme-")
     const src = join(dir, "corp.pptx")
     await writeFile(src, Buffer.from(await buildThmxBytes({ schemeName: "Acme" })))
-    const themePath = join(dir, "acme-serve.theme.json")
+    await mkdir(join(dir, "themes"))
+    const themePath = join(dir, "themes", "acme-serve.theme.json")
     await runBrandExtract(src, { output: themePath, id: "acme-serve" })
     const irPath = join(dir, "deck.json")
     await writeFile(
       irPath,
       JSON.stringify({
-        version: "4",
+        version: "5",
         filename: "serve-theme",
         theme: { id: "acme-serve" },
         slides: [
           { type: "cover", heading: "Serve Theme" },
-          { type: "content", heading: "Body", components: [{ type: "paragraph", text: "hello from serve" }] },
+          { type: "content", kind: "points", heading: "Body", components: [{ type: "paragraph", text: "hello from serve" }] },
         ],
       }),
     )
 
-    const handle = await startServe(irPath, { themeFilePath: themePath })
+    const handle = await startServe(irPath, { cwd: dir })
+    const before = await get(handle.port, "/")
+    const oldPrimary = DEFAULT_THMX_COLORS.accent1
+    expect(before.body.toUpperCase()).toContain(oldPrimary)
+
+    const themeFile = JSON.parse(await readFile(themePath, "utf8")) as {
+      style: { colors: { primary: string } }
+    }
+    themeFile.style.colors.primary = "#0B5FFF"
+    await writeFile(themePath, JSON.stringify(themeFile, null, 2) + "\n")
+
+    await handle.rebuild()
+    const after = await get(handle.port, "/")
+    expect(after.body.toUpperCase()).toContain("0B5FFF")
+    expect(after.body.toUpperCase()).not.toContain(oldPrimary)
+  })
+
+  it("rebuild() re-reads a mutated deck theme.json and serves the new primary color", async () => {
+    const dir = await makeDir("pptwise-serve-theme-")
+    const src = join(dir, "corp.pptx")
+    await writeFile(src, Buffer.from(await buildThmxBytes({ schemeName: "Acme" })))
+    const themePath = join(dir, THEME_FILENAME)
+    await runBrandExtract(src, { output: themePath, id: "acme-serve" })
+    await writeFile(
+      join(dir, "deck.spec.json"),
+      JSON.stringify({
+        version: "1",
+        narrative: "boardroom-report",
+        theme: "acme-serve",
+        filename: "serve-theme",
+        pages: [
+          { id: "p-cover", type: "cover", heading: "Serve Theme" },
+          { id: "p-body", type: "content", kind: "points", heading: "Body" },
+          { id: "p-next", type: "content", kind: "list", heading: "Next" },
+          { id: "p-ending", type: "ending", heading: "Thanks" },
+        ],
+      }),
+    )
+
+    const handle = await startServe(dir, { cwd: dir })
     const before = await get(handle.port, "/")
     const oldPrimary = DEFAULT_THMX_COLORS.accent1
     expect(before.body.toUpperCase()).toContain(oldPrimary)

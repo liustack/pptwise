@@ -1,10 +1,9 @@
 {
-  "version": "4",
+  "version": "5",
   "filename": "saas-metrics-review",
   "narrative": "general",
   "theme": { "id": "insight" },
   "meta": { "organization": "Meridian Analytics", "date": "2026-08-15" },
-  "seed": 41,
   "slides": [
     {
       "type": "cover",
@@ -13,6 +12,7 @@
     },
     {
       "type": "content",
+      "kind": "data",
       "heading": "Revenue vs target, by quarter",
       "components": [
         {
@@ -44,6 +44,7 @@
     },
     {
       "type": "content",
+      "kind": "data",
       "heading": "Retention is compounding",
       "components": [
         {
@@ -67,6 +68,7 @@
     },
     {
       "type": "content",
+      "kind": "data",
       "heading": "Where revenue comes from",
       "components": [
         {
@@ -88,6 +90,7 @@
     },
     {
       "type": "content",
+      "kind": "data",
       "heading": "Feature adoption by cohort",
       "components": [
         {

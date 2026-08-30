@@ -65,7 +65,7 @@ describe("diffAffectedPages", () => {
   it("puts a new pageId in added and a deleted pageId in removed", () => {
     const before = gold({
       "component--callout--zh": page("h-callout"),
-      "component--quote--zh": page("h-quote"),
+      "component--blockquote--zh": page("h-blockquote"),
     })
     const after = gold({
       "component--callout--zh": page("h-callout"),
@@ -74,7 +74,7 @@ describe("diffAffectedPages", () => {
     expect(diffAffectedPages(before, after)).toEqual({
       changed: [],
       added: ["component--row-cards--zh"],
-      removed: ["component--quote--zh"],
+      removed: ["component--blockquote--zh"],
     })
   })
 })

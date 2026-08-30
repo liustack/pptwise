@@ -276,22 +276,51 @@ export interface LayoutSlot {
   selection?: "first" | "all"
 }
 
+/** Numeric parameter contract exported by a face. */
+export interface LayoutNumberParam {
+  type: "number"
+  integer?: boolean
+  min?: number
+  max?: number
+}
+
+/** String parameter contract exported by a face. */
+export interface LayoutStringParam {
+  type: "string"
+  values?: readonly string[]
+  minLength?: number
+  maxLength?: number
+}
+
+/** Boolean parameters have no range beyond their primitive type. */
+export interface LayoutBooleanParam {
+  type: "boolean"
+}
+
+export type LayoutParamDeclaration = LayoutNumberParam | LayoutStringParam | LayoutBooleanParam
+
 export interface LayoutDefinition {
   id: string
   /**
    * The standard tier vs. the 4 page-level image takeovers.
    *
-   * `"archetype"` is the standard tier's fossilized spelling. The two words
+   * `"standard"` is the standard tier's fossilized spelling. The two words
    * merged into one vocabulary — a layout is the registry entry plus the JSX
    * that draws it — but this literal is serialized into
-   * `__fixtures__/pre-migration-layout-registry.json`, which
+   * `__fixtures__/layout-registry.golden.json`, which
    * `registry.migration-guard.test.ts` deep-equals against the live registry,
    * so renaming it to `"standard"` means re-recording a golden fixture. That
    * belongs in its own change, not in a rename.
    */
-  kind: "archetype" | "takeover"
+  kind: "standard" | "takeover"
   slideTypes: readonly SlideType[]
   slots: readonly LayoutSlot[]
+  /**
+   * Adjustable face parameters and their complete value boundaries. Theme
+   * menu entries may set only names declared here, and `registerTheme`
+   * validates every supplied value before installing the theme.
+   */
+  params?: Readonly<Record<string, LayoutParamDeclaration>>
   /** content layouts only: which body arrangements this layout honors
    *  (inventory's 4 直接尊重全部 + stacked-poster（W2 任务 3 裁决，条件接管
    *  路径见其注释）共 5 个 → "all"，two-column → ["two_column"]，
@@ -339,6 +368,18 @@ export interface LayoutDefinition {
    */
   pinOnly?: boolean
   /**
+   * Structural fact of the face: it leaves no room for the brand frame
+   * (footer rule, meta, logo). A menu entry may additionally silence the
+   * brand on a face that does have room; it can never paint one here.
+   */
+  branding?: "none"
+  /**
+   * Structural fact of the face: it paints its own full identity and the
+   * theme motif must stay off. A menu entry's `decor` can silence a motif
+   * on other faces, or swap which motif paints; it cannot force one here.
+   */
+  suppressMotif?: true
+  /**
    * This layout opens by painting its own full-bleed colour field over the
    * whole canvas, so the theme background underneath it is never seen —
    * `FullSlideSvg` (`../render/full-slide-svg.tsx`) skips `Background` entirely for
@@ -361,17 +402,6 @@ export interface LayoutDefinition {
    * layout draws on top of it.
    */
   paintsOwnBackground?: boolean
-  /**
-   * This layout paints a page-scale frame (a single hairline box or a
-   * grouped double frame). A framed page does not also get a motif top
-   * rule. `FullSlideSvg` skips the theme motif when this is set.
-   */
-  pageFrame?: "single" | "double"
-  /**
-   * This layout owns the page chrome (full-bleed field, its own top rule).
-   * The theme motif recedes so a leftover top stub does not sit on it.
-   */
-  suppressMotif?: boolean
   /**
    * Heading-overflow hard-error parameters (quote-stage wave, T2 fix round —
    * `.issues/2026-07-28-quote-stage/task-2-report.md`'s fix-report addendum):
@@ -410,36 +440,6 @@ export interface LayoutDefinition {
     bold?: boolean
     lineHeightRatio?: number
   }
-  /**
-   * Branding posture this layout declares (editorial-verse wave).
-   *
-   * `"none"`: `FullSlideSvg` skips `Branding` entirely (footer rule,
-   * footer meta, logo — page numbers were already removed globally). The
-   * theme motif still paints. `slide.decor`, when the author sets it
-   * explicitly, still draws. The fifth-band decoration safe-zone in
-   * `docs/designing-themes.md` does not apply: the whole 1280×720 canvas
-   * is the layout's, there is no reserved footer strip to keep clear of.
-   *
-   * `undefined` (every layout except the branding-free pinOnly members
-   * `statement` / `pull-quote` / `verse-chapter` / `stat-hero` /
-   * `one-evidence` / `mono-bleed`) means ordinary branding:
-   * `Branding` and the theme motif paint as they do today. `"default"`
-   * is accepted as an explicit spelling of that same ordinary path.
-   *
-   * This is a layout-level declaration, not a slide-level IR field. A
-   * page gets it only by pinning this layout (`pinOnly` members of the
-   * editorial-verse set all set `"none"`). Existing decks that never pin
-   * those ids are byte-identical.
-   */
-  branding?: "default" | "none"
-}
-
-/**
- * True when the named layout declares `branding: "none"`. `undefined` id or
- * a layout that omits the field (the ordinary path) returns false.
- */
-export function layoutOmitsBranding(id: string | undefined): boolean {
-  return id !== undefined && getLayout(id)?.branding === "none"
 }
 
 /**
@@ -781,7 +781,7 @@ const TAKEOVER_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
 }
 
 /** All 130 standard layouts and 4 takeover layouts, 134 entries keyed by id.
- *  `kind` still spells the standard tier `"archetype"`, a wire-format fossil. See
+ *  `kind` still spells the standard tier `"standard"`, a wire-format fossil. See
  *  {@link LayoutDefinition.kind}. */
 export const LAYOUT_REGISTRY: Record<string, LayoutDefinition> = {
   ...COVER_LAYOUT_DEFS,

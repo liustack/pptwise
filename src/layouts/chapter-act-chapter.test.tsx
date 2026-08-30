@@ -17,7 +17,7 @@ function chapterSlide(heading = HEADING, extras: Partial<Slide> = {}): Slide {
 
 function ir(themeId: string, slides: Slide[]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "act-chapter.pptx",
     theme: { id: themeId },
     meta: {},
@@ -44,11 +44,10 @@ function renderChapter(themeId: string, slides: Slide[] = [chapterSlide()], inde
 }
 
 describe("layoutDef", () => {
-  it("declares pinOnly act-chapter on chapter, branding none, no body slot", () => {
+  it("declares pinOnly act-chapter on chapter with no body slot", () => {
     expect(layoutDef.id).toBe("act-chapter")
-    expect(layoutDef.kind).toBe("archetype")
+    expect(layoutDef.kind).toBe("standard")
     expect(layoutDef.pinOnly).toBe(true)
-    expect(layoutDef.branding).toBe("none")
     expect(layoutDef.slideTypes).toEqual(["chapter"])
     expect(layoutDef.slots.map((s) => s.name)).toEqual(["kicker", "heading", "subheading"])
   })

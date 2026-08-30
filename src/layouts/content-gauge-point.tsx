@@ -112,15 +112,15 @@ export function GaugePointContent({ ir, slide, index, ctx }: SvgTemplateProps) {
 }
 
 export const layoutDef = {
-  id: "gauge-point",
-  kind: "archetype",
-  pinOnly: true,
   branding: "none",
+  id: "gauge-point",
+  kind: "standard",
+  pinOnly: true,
   slideTypes: ["content"],
   slots: [
     { name: "kicker", accepts: [] },
     { name: "heading", accepts: [] },
-    { name: "body", accepts: ["quote", "paragraph", "citation"], capacity: 1 },
+    { name: "body", accepts: ["blockquote", "paragraph", "citation"], capacity: 1 },
     { name: "meta", accepts: [] },
   ],
   arrangements: ["single"],

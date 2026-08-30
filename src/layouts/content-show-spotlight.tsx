@@ -249,7 +249,6 @@ export function ShowSpotlightContent({ slide, ctx }: SvgTemplateProps) {
             </text>
           )}
           <SvgContent
-            arrangement={slide.arrangement}
             components={slide.components}
             rect={{ x: 64, y: 124, w: 1152, h: 500 }}
             ctx={showNeutralFallbackCtx(ctx)}
@@ -261,10 +260,10 @@ export function ShowSpotlightContent({ slide, ctx }: SvgTemplateProps) {
 }
 
 export const layoutDef = {
-  id: "show-spotlight",
-  kind: "archetype",
-  pinOnly: true,
   suppressMotif: true,
+  id: "show-spotlight",
+  kind: "standard",
+  pinOnly: true,
   slideTypes: ["content"],
   slots: [
     { name: "kicker", accepts: [] },

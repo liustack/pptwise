@@ -1,10 +1,9 @@
 {
-  "version": "4",
+  "version": "5",
   "filename": "platform-team-onboarding",
   "narrative": "training",
   "theme": { "id": "classroom" },
   "meta": { "organization": "Relay Engineering", "date": "2026-08-15" },
-  "seed": 5,
   "slides": [
     {
       "type": "cover",
@@ -13,6 +12,7 @@
     },
     {
       "type": "content",
+      "kind": "hierarchy",
       "heading": "The team",
       "components": [
         {
@@ -30,6 +30,7 @@
     },
     {
       "type": "content",
+      "kind": "list",
       "heading": "The stack you'll touch",
       "components": [
         {
@@ -46,6 +47,7 @@
     },
     {
       "type": "content",
+      "kind": "process",
       "heading": "How a change ships",
       "components": [
         {
@@ -61,6 +63,7 @@
     },
     {
       "type": "content",
+      "kind": "process",
       "heading": "The on-call loop",
       "components": [
         {
@@ -76,6 +79,7 @@
     },
     {
       "type": "content",
+      "kind": "process",
       "heading": "Your first two weeks",
       "components": [
         {
@@ -93,8 +97,7 @@
     {
       "type": "ending",
       "heading": "Welcome aboard",
-      "subheading": "Questions go in #platform-help",
-      "layout": "banner-ending"
+      "subheading": "Questions go in #platform-help"
     }
   ]
 }

@@ -16,7 +16,7 @@ const CJK_STAT = "3.2 亿"
 
 function ir(theme: string, slides: Slide[]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "x.pptx",
     theme: { id: theme },
     meta: {},
@@ -35,10 +35,9 @@ function render(body: React.ReactElement): { markup: string; root: Element } {
 }
 
 describe("layoutDef", () => {
-  it("declares pinOnly, branding none, capacity-1 body, content slide type", () => {
+  it("declares pinOnly, capacity-1 body, and content slide type", () => {
     expect(layoutDef.id).toBe("stat-hero")
     expect(layoutDef.pinOnly).toBe(true)
-    expect(layoutDef.branding).toBe("none")
     expect(layoutDef.slideTypes).toEqual(["content"])
     expect(layoutDef.slots.find((s) => s.name === "body")?.capacity).toBe(1)
   })
@@ -49,6 +48,7 @@ describe("StatHeroContent", () => {
     const ctx = buildCtx(resolveStyle("crayon"), {})
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "stat-hero",
       heading: "三年累计服务人次",
       components: [
@@ -77,6 +77,7 @@ describe("StatHeroContent", () => {
     const ctx = buildCtx(resolveStyle("crayon"), {})
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "stat-hero",
       heading: CJK_STAT,
       subheading: "迁徙路径上的种群规模",
@@ -98,7 +99,7 @@ describe("StatHeroContent", () => {
 
   it("English short stat renders on consulting without a crash", () => {
     const ctx = buildCtx(resolveStyle("consulting"), {})
-    const slide: Slide = { type: "content", layout: "stat-hero", heading: EN_STAT, components: [] } as Slide
+    const slide: Slide = { type: "content", kind: "points", layout: "stat-hero", heading: EN_STAT, components: [] } as Slide
     const { markup, root } = render(
       <StatHeroContent ir={ir("consulting", [slide])} slide={slide} index={0} ctx={ctx} />,
     )
@@ -109,7 +110,7 @@ describe("StatHeroContent", () => {
   it("mixed long heading shrinks/wraps to at most 2 lines and never dumps the raw source verbatim", () => {
     const ctx = buildCtx(resolveStyle("crayon"), {})
     const extreme = `${CJK_LONG}${CJK_LONG}${MIXED_LONG}`
-    const slide: Slide = { type: "content", layout: "stat-hero", heading: extreme, components: [] } as Slide
+    const slide: Slide = { type: "content", kind: "points", layout: "stat-hero", heading: extreme, components: [] } as Slide
     const { markup, root } = render(
       <StatHeroContent ir={ir("crayon", [slide])} slide={slide} index={0} ctx={ctx} />,
     )
@@ -124,7 +125,7 @@ describe("StatHeroContent", () => {
 
   it("empty meta fields degrade: no empty text node, hero still renders", () => {
     const ctx = buildCtx(resolveStyle("academic"), {})
-    const slide: Slide = { type: "content", layout: "stat-hero", heading: CJK_STAT, components: [] } as Slide
+    const slide: Slide = { type: "content", kind: "points", layout: "stat-hero", heading: CJK_STAT, components: [] } as Slide
     const { root } = render(
       <StatHeroContent ir={ir("academic", [slide])} slide={slide} index={0} ctx={ctx} />,
     )
@@ -135,7 +136,7 @@ describe("StatHeroContent", () => {
 
   it("consulting tokens: no luxe baked hex leaks", () => {
     const ctx = buildCtx(resolveStyle("consulting"), {})
-    const slide: Slide = { type: "content", layout: "stat-hero", heading: EN_STAT, components: [] } as Slide
+    const slide: Slide = { type: "content", kind: "points", layout: "stat-hero", heading: EN_STAT, components: [] } as Slide
     const out = renderSvgMarkup(
       <StatHeroContent ir={ir("consulting", [slide])} slide={slide} index={0} ctx={ctx} />,
     )

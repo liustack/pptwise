@@ -85,7 +85,7 @@ export type BBoxVerdict =
 export interface BBoxFinding {
   /** Gallery page id — the same key the review page and its verdicts use. */
   readonly page: string
-  /** `data-archetype` of the layout that drew the page, or "" for a takeover page. */
+  /** `data-face` of the layout that drew the page, or "" for a takeover page. */
   readonly layout: string
   readonly kind: BBoxKind
   /** The text the finding names, as `collectBBoxOverflows` reported it. */
@@ -113,9 +113,9 @@ export interface BBoxReport {
   readonly metric: readonly BBoxFinding[]
 }
 
-/** `data-archetype` is the layout id in the rendered markup (see `full-slide-svg.tsx`). */
+/** `data-face` is the layout id in the rendered markup (see `full-slide-svg.tsx`). */
 export function layoutOf(svg: string): string {
-  return /data-archetype="([^"]*)"/.exec(svg)?.[1] ?? ""
+  return /data-face="([^"]*)"/.exec(svg)?.[1] ?? ""
 }
 
 const KINDS: readonly BBoxKind[] = ["h-overflow", "v-overflow", "page-overflow"]

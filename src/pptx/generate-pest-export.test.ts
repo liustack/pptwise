@@ -16,25 +16,31 @@
 // audit hard gate) at its schema extremes — `pest.test.tsx` only ever
 // exercises `renderSvgMarkup`+`assertSubset`, and the e2e structure-
 // components leg uses one modest, representative fixture, not schema-max.
-import { beforeAll, describe, expect, it } from "vitest"
+import { afterEach, beforeAll, describe, expect, it } from "vitest"
 import type { Component, PptxIR } from "@/ir"
 import { generatePptx } from "@/api"
 import { installNodePlatform } from "../platform/node"
+import { __resetRegisteredThemes } from "../themes/definitions"
+import { registerTestTheme } from "../themes/test-fixtures"
 
 beforeAll(() => {
   installNodePlatform()
 })
 
+afterEach(() => {
+  __resetRegisteredThemes()
+})
+
 function makeIr(components: Component[]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "pest-export-fixture",
     theme: { id: "consulting" },
     meta: {},
     assets: { images: {} },
     slides: [
       { type: "cover", heading: "Cover" },
-      { type: "content", heading: "PEST", components },
+      { type: "content", kind: "comparison", heading: "PEST", components },
       { type: "ending", heading: "Thanks" },
     ],
   } as PptxIR
@@ -94,25 +100,28 @@ describe("pest pathological content through the real generatePptx", () => {
   })
 
   it("schema-max content on the narrowest curated layout (defect-F fontScale floor) still exports cleanly", async () => {
+    const themeId = registerTestTheme("pest-narrow", "consulting", {
+      content: { comparison: "narrow-column" },
+    })
     const bytes = await generatePptx({
-      version: "4",
+      version: "5",
       filename: "pest-narrow-fixture",
-      theme: { id: "consulting" },
+      theme: { id: themeId },
       meta: {},
       assets: { images: {} },
       slides: [
         { type: "cover", heading: "Cover" },
         {
           type: "content",
+          kind: "comparison",
           heading: "PEST Analysis Under A Deliberately Long Heading To Force Two Lines",
-          layout: "narrow-column",
           components: [
             { type: "pest", political: quadrant(5), economic: quadrant(5), social: quadrant(5), technological: quadrant(5) },
           ],
         },
         { type: "ending", heading: "Thanks" },
       ],
-    } as PptxIR)
+    } as unknown as PptxIR)
     expect(bytes.length).toBeGreaterThan(10_000)
     expect([bytes[0], bytes[1]]).toEqual([0x50, 0x4b])
   })

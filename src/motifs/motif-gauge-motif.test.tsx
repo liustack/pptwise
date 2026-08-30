@@ -16,7 +16,7 @@ function renderMotif(slide: Slide) {
   const bg = resolveBackgroundHex(tokens.defaultBackgrounds[slide.type], tokens.colors.surface)
   const ctx = buildCtx(tokens, {}, undefined, bg)
   const ir = {
-    version: "4",
+    version: "5",
     filename: "gauge-motif.pptx",
     theme: { id: "consulting" },
     meta: {},

@@ -72,7 +72,7 @@ export function chapterIndexKicker(n: number, heading: string | undefined): stri
  */
 export function statementAttribution(slide: Slide): string | undefined {
   const component = slide.components[0]
-  if (component?.type === "quote") {
+  if (component?.type === "blockquote") {
     const fromQuote = component.attribution?.trim() || component.text.trim()
     if (fromQuote) return fromQuote
   }
@@ -94,7 +94,7 @@ export function statementAttribution(slide: Slide): string | undefined {
  */
 export function pullQuoteAttribution(slide: Slide): string | undefined {
   const component = slide.components[0]
-  if (component?.type === "quote") {
+  if (component?.type === "blockquote") {
     const fromQuote = component.attribution?.trim()
     if (fromQuote) return fromQuote
   }

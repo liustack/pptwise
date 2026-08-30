@@ -8,6 +8,7 @@ import {
   FORM_TITLE_FLOOR,
   capFormBody,
   fitFormTitleLine,
+  formTextClipMarker,
   layoutFormBody,
   layoutFormTitle,
 } from "./legibility"
@@ -207,7 +208,6 @@ export function renderCycleLoop(
           fontFamily: ctx.fonts.body,
         })
         const lines = wrapped.lines
-        const truncated = wrapped.truncated
         const textAnchor = outward.x > 0.3 ? "start" : outward.x < -0.3 ? "end" : "middle"
         const stackUp = outward.y < 0
         const totalH = lines.length * wrapped.lineHeight
@@ -217,7 +217,7 @@ export function renderCycleLoop(
             {lines.map((line, li) => (
               <text
                 key={li}
-                data-truncated={truncated ? "1" : undefined}
+                data-truncated={formTextClipMarker(wrapped, li)}
                 x={ax}
                 y={topY + li * wrapped.lineHeight + wrapped.fontSize}
                 textAnchor={textAnchor}

@@ -192,14 +192,14 @@ export function ResolutionEnding({ slide, ctx }: SvgTemplateProps) {
 }
 
 export const layoutDef: LayoutDefinition = {
+  branding: "none",
   // ending-resolution-ending.tsx: pinOnly three-item resolution list,
   // short heading or CJK 评审决议 / Latin RESOLUTION kicker, border
   // closing rule, optional subheading sign-off. No thank-you and no
   // invented resolution number. Optional bullets fill the list.
   id: "resolution-ending",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
-  branding: "none",
   slideTypes: ["ending"],
   slots: [
     { name: "kicker", accepts: [] },

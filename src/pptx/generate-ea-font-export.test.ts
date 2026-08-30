@@ -27,12 +27,12 @@ function contentSlide(heading: string, paragraph: string, includeCode: boolean):
       code: "// 中文注释\nconst x = 1",
     } as Slide["components"][number])
   }
-  return { type: "content", heading, components }
+  return { type: "content", kind: "points", heading, components }
 }
 
 function makeIR(themeId: PptxIR["theme"]["id"], slides: Slide[]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "ea-font.pptx",
     theme: { id: themeId },
     meta: {},

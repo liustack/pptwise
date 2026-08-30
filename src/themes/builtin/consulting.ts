@@ -1,6 +1,5 @@
 import type { StyleTokens } from "../tokens";
 import type { BuiltinThemeDeclaration } from "../schema";
-import { CONSULTING_CONTENT_FACES } from "./shared";
 
 /**
  * consulting（先结论报告）——藏青 + 一线黄的咨询报告腔。
@@ -60,6 +59,8 @@ import { CONSULTING_CONTENT_FACES } from "./shared";
  * `ghost-rule-chapter` 或 `action-pad-ending`。这些旧构件仍由既有主题和页面
  * 引用，原地修改会把 consulting 的设计变更扩散给借用方。本轮只改
  * consulting 的锁，色板不动。
+ *
+ * **菜单分派（S1-B）**：量规家族承主场（data 走 gauge-stats，statement 走同族的 gauge-point），先结论的报告腔靠 points 的窄栏与 evidence 的单证据页说话，不借别人的嘴，故无 quote。
  */
 export const CONSULTING_TOKENS: StyleTokens = {
   id: "consulting",
@@ -106,22 +107,26 @@ export const CONSULTING_TOKENS: StyleTokens = {
 };
 
 export const CONSULTING_THEME = {
-  version: 1,
+  version: 2,
   id: "consulting",
   label: "Business Consulting",
   style: CONSULTING_TOKENS,
-  faces: {
-    cover: ["gauge-verdict"],
-    chapter: ["gauge-section"],
-    content: CONSULTING_CONTENT_FACES,
-    ending: ["gauge-next"],
+  menu: {
+    cover: { face: "gauge-verdict" },
+    chapter: { face: "gauge-section" },
+    content: {
+      points: { face: "narrow-column" },
+      list: { face: "bento-panel" },
+      comparison: { face: "two-column" },
+      process: { face: "rail-numbered" },
+      data: { face: "gauge-stats" },
+      photo: { face: "image-split" },
+      statement: { face: "gauge-point" },
+      fact: { face: "stat-hero" },
+      evidence: { face: "one-evidence" },
+      hierarchy: { face: "asymmetric-triptych" },
+    },
+    ending: { face: "gauge-next" },
   },
   motif: { id: "gauge-motif" },
-  tendencies: {
-    cover: ["gauge-verdict"],
-    chapter: ["gauge-section"],
-    content: ["gauge-stats"],
-    ending: ["gauge-next"],
-  },
-  sparse: ["statement", "stat-hero", "one-evidence", "verse-chapter"],
 } satisfies BuiltinThemeDeclaration;

@@ -17,7 +17,7 @@ import { countDecorPieces, MAX_DECOR_PIECES } from "./decor-budget"
 import { CrayonboxMotif } from "./motif-crayonbox-motif"
 
 const ir: PptxIR = {
-  version: "4",
+  version: "5",
   filename: "crayonbox-motif.pptx",
   theme: { id: "crayon" },
   meta: {},

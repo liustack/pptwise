@@ -22,7 +22,7 @@ const ctx: ComponentCtx = {
 
 function ir(themeId: PptxIR["theme"]["id"], slides: Slide[], branding?: PptxIR["branding"]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "deck.pptx",
     theme: { id: themeId },
     meta: { organization: "ACME", confidentiality: "internal", version: "v1", date: "2026" },
@@ -36,6 +36,7 @@ function ir(themeId: PptxIR["theme"]["id"], slides: Slide[], branding?: PptxIR["
 
 const cardBgContentSlide: Slide = {
   type: "content",
+  kind: "points",
   heading: "带背景卡片",
   components: [{ type: "paragraph", text: "卡内文字。" }],
   background: { kind: "asset", asset_id: "bg", fit: "cover" },
@@ -77,6 +78,7 @@ describe("Branding footer suppression (W1: theme brand.suppressFooterOnCardConte
 
 const plainContentSlide: Slide = {
   type: "content",
+  kind: "points",
   heading: "普通内容页",
   components: [{ type: "paragraph", text: "正文。" }],
 }
@@ -122,13 +124,6 @@ const LOGO_SRC =
 const coverSlide: Slide = { type: "cover", heading: "封面", components: [] }
 const chapterSlide: Slide = { type: "chapter", heading: "章节", components: [] }
 const endingSlide: Slide = { type: "ending", heading: "收束", components: [] }
-const statementSlide: Slide = {
-  type: "content",
-  layout: "statement",
-  heading: "一句就够",
-  components: [],
-}
-
 function branded(slides: Slide[], branding?: PptxIR["branding"]): PptxIR {
   const base = ir("consulting", slides)
   return {
@@ -208,22 +203,6 @@ describe("deck branding posture (Branding gate)", () => {
     const { container } = svg(<Branding ir={doc} slide={endingSlide} ctx={ctx} />)
     expect(container.querySelector("image")).toBeNull()
     expect(container.querySelector("line")).toBeNull()
-    expect(container.textContent).not.toContain("ACME")
-  })
-
-  it("layout branding:none still wins under branding full", () => {
-    const doc = branded([statementSlide], "full")
-    const { container } = svg(<Branding ir={doc} slide={statementSlide} ctx={ctx} />)
-    expect(container.querySelector("line")).toBeNull()
-    expect(container.querySelector("image")).toBeNull()
-    expect(container.textContent).not.toContain("ACME")
-  })
-
-  it("cover-only stacked on layout branding:none stays empty (no conflict)", () => {
-    const doc = branded([statementSlide], "cover-only")
-    const { container } = svg(<Branding ir={doc} slide={statementSlide} ctx={ctx} />)
-    expect(container.querySelector("line")).toBeNull()
-    expect(container.querySelector("image")).toBeNull()
     expect(container.textContent).not.toContain("ACME")
   })
 

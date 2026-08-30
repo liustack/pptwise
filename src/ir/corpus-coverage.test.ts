@@ -51,9 +51,9 @@ const EXAMPLES_DIR = new URL("../../examples/", import.meta.url)
 /** Wraps one component in the smallest deck `validateIr` accepts — every `coverage/*` entry below is single-component, which trivially satisfies `checkFullBodyExclusivity` for the full-body types among them (gantt/heatmap/sankey/waterfall). */
 function minimalDeck(component: Record<string, unknown>): unknown {
   return {
-    version: "4",
+    version: "5",
     theme: { id: "consulting" },
-    slides: [{ type: "content", heading: "coverage probe", components: [component] }],
+    slides: [{ type: "content", kind: "points", heading: "coverage probe", components: [component] }],
   }
 }
 

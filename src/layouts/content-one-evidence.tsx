@@ -11,9 +11,8 @@ import { sparseFace } from "./sparse/registry"
 /**
  * 未注册的 (themeId, layoutId) 与自定义主题仍走此脸。
  *
- * one-evidence 通用脸：整句断言 + 独占一张图或一个表。`pinOnly` +
- * `branding: "none"`。容量 1，超过走既有 `pin_only_over_capacity`。品牌页脚 /
- * logo 不画。motif 仍画。
+ * one-evidence 通用脸：整句断言 + 独占一张图或一个表。容量 1。菜单可用
+ * silent 同时关掉 motif 与页级品牌。
  * 证据挑选复用 `pickEvidence`（和 `assertion_evidence` 同一份优先级），没有
  * 命中证据类型时退回唯一组件。等比缩小以适配剩余框，不放大。
  *
@@ -108,16 +107,14 @@ function GenericOneEvidenceContent({ slide, ctx }: SvgTemplateProps) {
 }
 
 export const layoutDef = {
+  branding: "none",
   // content-one-evidence.tsx: a pinOnly assertion + single evidence page.
   // Heading is a full-sentence claim. Body capacity 1 is the evidence
   // (chart / table / image / whatever pickEvidence returns, else the sole
-  // component). branding: "none" skips brand footer and logo. The theme motif
-  // still paints. The fifth-band decoration safe-zone does not apply — the
-  // whole canvas is the layout's.
+  // component). Page decor and branding posture belong to the menu entry.
   id: "one-evidence",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
-  branding: "none",
   slideTypes: ["content"],
   slots: [
     { name: "heading", accepts: [] },

@@ -22,14 +22,14 @@ beforeAll(() => {
 
 function makeIr(components: Component[]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "data-table-export-fixture",
     theme: { id: "consulting" },
     meta: {},
     assets: { images: {} },
     slides: [
       { type: "cover", heading: "Cover" },
-      { type: "content", heading: "Data Table", components },
+      { type: "content", kind: "points", heading: "Data Table", components },
       { type: "ending", heading: "Thanks" },
     ],
   } as PptxIR
@@ -134,7 +134,6 @@ describe("data_table pathological content through the real generatePptx", () => 
       table(8, 12, (r, c) => `r${r}c${c}`),
       { type: "paragraph", text: "Sibling column content to force a two-column squeeze." },
     ])
-    ir.slides[1] = { ...ir.slides[1], arrangement: "two_column" }
     // The squeeze is the point of the fixture: something has to go, and the
     // slide says nothing about it — so the export now refuses first
     // (content-drop gate, deep-review P1). What this test is actually about

@@ -1,10 +1,9 @@
 {
-  "version": "4",
+  "version": "5",
   "filename": "q2-jingying-huibao",
   "narrative": "weekly-brief",
   "theme": { "id": "vermilion" },
   "meta": { "organization": "云帆科技", "date": "2026-08-15", "confidentiality": "internal" },
-  "seed": 22,
   "slides": [
     {
       "type": "cover",
@@ -14,8 +13,8 @@
     { "type": "chapter", "heading": "业绩总览" },
     {
       "type": "content",
+      "kind": "data",
       "heading": "核心指标",
-      "arrangement": "kpi_focus",
       "components": [
         {
           "type": "kpi_cards",
@@ -30,6 +29,7 @@
     },
     {
       "type": "content",
+      "kind": "data",
       "heading": "分区域营收",
       "components": [
         {
@@ -53,6 +53,7 @@
     },
     {
       "type": "content",
+      "kind": "data",
       "heading": "利润桥：Q1 到 Q2",
       "components": [
         {
@@ -72,6 +73,7 @@
     { "type": "chapter", "heading": "下季度重点" },
     {
       "type": "content",
+      "kind": "points",
       "heading": "三件必须做成的事",
       "components": [
         {
@@ -86,6 +88,7 @@
     },
     {
       "type": "content",
+      "kind": "statement",
       "heading": "风险提示",
       "components": [
         {

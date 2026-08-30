@@ -14,7 +14,7 @@ import { PptxIRSchema, type ChartSeries, type Component, type PptxIR, type Slide
 import { renderSlideSvg } from "../api"
 import { PptwiseError } from "../errors"
 import { installNodePlatform } from "../platform/node"
-import { CANONICAL_THEME_IDS } from "../themes"
+import { CANONICAL_THEME_IDS, type CanonicalThemeId } from "../themes"
 import { renderDonut, renderPie } from "../components/chart-svg"
 import {
   auditDeck,
@@ -28,6 +28,7 @@ import {
 } from "./deck-audit"
 import { STRESS_DECKS } from "./stress-fixtures"
 import { contrastRatio } from "../render/ink"
+import { registerTestTheme } from "../themes/test-fixtures"
 
 beforeAll(() => {
   installNodePlatform()
@@ -38,7 +39,7 @@ const LONG_CJK =
 
 function deck(themeId: string, slides: Slide[], overrides: Partial<PptxIR> = {}): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "deck-audit-fixture",
     theme: { id: themeId },
     meta: {},
@@ -163,7 +164,7 @@ describe("auditDeck — understood pre-existing low-contrast sources (not audit 
     const ir = deck("consulting", [
       {
         type: "content",
-        arrangement: "code",
+        kind: "points",
         heading: "code",
         components: [{ type: "code", language: "ts", code: "const x = 1\nconst y = 2" }],
       },
@@ -195,6 +196,7 @@ describe("auditDeck — understood pre-existing low-contrast sources (not audit 
     const ir = deck("insight", [
       {
         type: "content",
+        kind: "points",
         heading: "architecture",
         components: [{ type: "architecture", layers: [{ title: "Layer", items: ["a", "b"] }] }],
       },
@@ -226,7 +228,7 @@ describe("constellation-ending accent period contrast (contrast-policy wave, tas
   for (const themeId of CANONICAL_THEME_IDS) {
     it(`${themeId}: the accent-colored trailing period clears the required contrast ratio against ctx.defaultBg`, () => {
       const ir = deck(themeId, [
-        { type: "ending", layout: "constellation-ending", heading: "Thank you.", components: [] },
+        { type: "ending",  heading: "Thank you.", components: [] },
       ])
       const findings = auditDeck(ir).findings.filter(
         (f) => f.code === "low-contrast" && (f.detail as { text?: string } | undefined)?.text === ".",
@@ -271,6 +273,7 @@ describe("auditDeck — B-group ink fixes (bench-driven fix round, defect A hand
     const ir = deck("tech", [
       {
         type: "content",
+        kind: "points",
         heading: "steps",
         components: [{ type: "steps", items: [{ title: "Step one", text: "do the first thing" }] }],
       },
@@ -283,6 +286,7 @@ describe("auditDeck — B-group ink fixes (bench-driven fix round, defect A hand
     const ir = deck("tech", [
       {
         type: "content",
+        kind: "points",
         heading: "roadmap",
         components: [
           {
@@ -307,6 +311,7 @@ describe("auditDeck — B-group ink fixes (bench-driven fix round, defect A hand
     const ir = deck("campaign", [
       {
         type: "content",
+        kind: "points",
         heading: "rings",
         components: [{ type: "rings", items: [{ label: "Core", desc: "inner layer" }] }],
       },
@@ -319,6 +324,7 @@ describe("auditDeck — B-group ink fixes (bench-driven fix round, defect A hand
     const ir = deck("campaign", [
       {
         type: "content",
+        kind: "points",
         heading: "image compare",
         components: [
           {
@@ -348,6 +354,7 @@ describe("auditDeck — B-group ink fixes (bench-driven fix round, defect A hand
     const ir = deck("consulting", [
       {
         type: "content",
+        kind: "points",
         heading: "image compare before/after",
         components: [
           {
@@ -382,7 +389,7 @@ describe("auditDeck — overflow / out-of-bounds", () => {
     // and `row_cards` already did. Its new behaviour is locked in by the
     // content-truncated test below rather than here.
     const ir = deck("consulting", [
-      { type: "content", id: "s1", heading: "overflow probe", components: [{ type: "code", language: "js", code: CODE_OVERFLOW }] },
+      { type: "content", kind: "points", id: "s1", heading: "overflow probe", components: [{ type: "code", language: "js", code: CODE_OVERFLOW }] },
     ])
     const report = auditDeck(ir)
     const overflow = report.findings.filter((f) => f.code === "overflow")
@@ -394,7 +401,7 @@ describe("auditDeck — overflow / out-of-bounds", () => {
 
   it("omits slideId when the slide carries none", () => {
     const ir = deck("consulting", [
-      { type: "content", heading: "overflow probe", components: [{ type: "code", language: "js", code: CODE_OVERFLOW }] },
+      { type: "content", kind: "points", heading: "overflow probe", components: [{ type: "code", language: "js", code: CODE_OVERFLOW }] },
     ])
     const report = auditDeck(ir)
     const overflow = report.findings.filter((f) => f.code === "overflow")
@@ -410,7 +417,7 @@ describe("auditDeck — overflow / out-of-bounds", () => {
     // `layoutContentFit` hands it and stamps `data-truncated`, so the loss
     // is reported instead of being discovered by the reader.
     const ir = deck("consulting", [
-      { type: "content", id: "s1", heading: "overflow probe", components: [{ type: "paragraph", text: LONG_CJK.repeat(20) }] },
+      { type: "content", kind: "points", id: "s1", heading: "overflow probe", components: [{ type: "paragraph", text: LONG_CJK.repeat(20) }] },
     ])
     const report = auditDeck(ir)
     expect(report.findings.filter((f) => f.code === "overflow")).toEqual([])
@@ -438,6 +445,7 @@ describe("auditDeck — content-truncated / content-dropped (bench-driven fix ro
     const ir = deck("consulting", [
       {
         type: "content",
+        kind: "points",
         id: "s1",
         heading: "verdict probe",
         components: [{ type: "verdict_banner", tone: "positive", text: LONG_CJK.repeat(10) }],
@@ -451,13 +459,73 @@ describe("auditDeck — content-truncated / content-dropped (bench-driven fix ro
     expect((truncated[0].detail as { text?: string }).text).not.toMatch(/…$/)
   })
 
+  it("surfaces a clipped assigned icon-card form body as content-truncated", () => {
+    const ir = deck("terra", [
+      {
+        type: "content",
+        kind: "data",
+        id: "card-form-clip",
+        heading: "竞品在中小客户市场的价格压力",
+        components: [
+          {
+            type: "icon_cards",
+            items: [
+              { icon: "target", title: "自建基建替换", text: "自建基建替换公有云托管，单个席位的月度成本下降三成一。" },
+              { icon: "gauge", title: "客群场景复制", text: "华东区域的渗透率是华南的一半，销售覆盖密度是主要原因。" },
+              { icon: "shield", title: "开通流程自动化", text: "客户成功工程师的人均负荷已经接近上限，扩张速度受制于招聘。" },
+              { icon: "rocket", title: "渠道伙伴培育", text: "两家竞品在中小客户市场以低于成本的价格投标，短期内难以正面应对。" },
+            ],
+          },
+        ],
+      },
+    ])
+    const markup = renderSlideSvg(ir, 0)
+    expect(markup).not.toContain("自建基建替换公有云托管，单个席位的月度成本下降三成一。")
+    expect(markup).toContain('data-truncated="1"')
+    expect(auditDeck(ir).findings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ page: 1, slideId: "card-form-clip", code: "content-truncated" }),
+      ]),
+    )
+  })
+
+  it("surfaces a clipped citation ref as content-truncated", () => {
+    const ir = deck("classroom", [
+      {
+        type: "content",
+        kind: "data",
+        id: "citation-ref-clip",
+        heading: "经营数据口径",
+        components: [
+          {
+            type: "citation",
+            sources: [
+              {
+                label: "云觅科技 2026 年第二季度经营数据",
+                ref: LONG_CJK.repeat(4),
+              },
+            ],
+          },
+        ],
+      },
+    ])
+    const markup = renderSlideSvg(ir, 0)
+    expect(markup).toContain('data-truncated="1"')
+    expect(markup).not.toContain("…")
+    expect(auditDeck(ir).findings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ page: 1, slideId: "citation-ref-clip", code: "content-truncated" }),
+      ]),
+    )
+  })
+
   it("surfaces layoutContentFit's fully-dropped components as 'content-dropped' findings", () => {
     // Same fixture shape as svg-content.test.tsx's own "renders a
     // dropped-count marker" case, run through the real auditDeck path
     // instead of calling SvgContent directly.
     const longText = LONG_CJK.repeat(3)
     const many: Component[] = Array.from({ length: 8 }, () => ({ type: "paragraph", text: longText }))
-    const ir = deck("consulting", [{ type: "content", id: "s1", heading: "drop probe", components: many }])
+    const ir = deck("consulting", [{ type: "content", kind: "points", id: "s1", heading: "drop probe", components: many }])
     const report = auditDeck(ir)
     const dropped = report.findings.filter((f) => f.code === "content-dropped")
     expect(dropped.length).toBeGreaterThan(0)
@@ -481,9 +549,9 @@ describe("auditDeck — content-truncated / content-dropped (bench-driven fix ro
     const ir = deck("consulting", [
       {
         type: "content",
+        kind: "points",
         id: "s1",
         heading: "row_cards probe",
-        arrangement: "two_column",
         components: [
           { type: "row_cards", items: [1, 2, 3, 4, 5].map(item) },
           { type: "paragraph", text: "第二列占位内容" },
@@ -500,18 +568,20 @@ describe("auditDeck — content-truncated / content-dropped (bench-driven fix ro
   // internal `truncateToUnits` cut, fired when even the layout's `minPt`
   // floor can't fit the text) used to have zero render-time visibility, so
   // `content-truncated` never fired for it the way it does for every other
-  // `fitSvgLine`-based text role. `layout: "fashion-masthead"` pins
-  // `cover-fashion-masthead.tsx` deterministically — it declares the
+  // `fitSvgLine`-based text role. A registered test theme offers
+  // `fashion-masthead` as its cover face. That face declares the
   // highest `minPt` (72) of any layout (`ir-quality.ts`'s own survey),
   // so the least amount of shrink headroom before a pathological heading
   // hits the truncate branch.
   it("surfaces a heading that outgrows even its layout's minPt floor as 'content-truncated'", () => {
-    const ir = deck("campaign", [
+    const themeId = registerTestTheme("audit-fashion-masthead-positive", "campaign", {
+      cover: "fashion-masthead",
+    })
+    const ir = deck(themeId, [
       {
         type: "cover",
         id: "s1",
         heading: LONG_CJK.repeat(5),
-        layout: "fashion-masthead",
         components: [],
       },
     ])
@@ -534,12 +604,14 @@ describe("auditDeck — content-truncated / content-dropped (bench-driven fix ro
   // permanently, next to the positive one above.
   it("does not mark or report a heading that only shrinks to its layout's minPt floor", () => {
     const plain = "微服务架构下的分布式事务一致性保障机制与补偿策略设计规范以及"
-    const ir = deck("campaign", [
+    const themeId = registerTestTheme("audit-fashion-masthead-negative", "campaign", {
+      cover: "fashion-masthead",
+    })
+    const ir = deck(themeId, [
       {
         type: "cover",
         id: "s1",
         heading: plain,
-        layout: "fashion-masthead",
         components: [],
       },
     ])
@@ -560,11 +632,11 @@ describe("auditDeck — content-truncated / content-dropped (bench-driven fix ro
 describe("auditDeck — placeholder pages", () => {
   it("skips placeholder slides entirely (not audited, not counted as a finding source)", () => {
     const slides: Slide[] = [
-      { type: "content", heading: "real page", components: [{ type: "paragraph", text: "short" }] },
+      { type: "content", kind: "points", heading: "real page", components: [{ type: "paragraph", text: "short" }] },
       // A placeholder page whose (absent) content would trivially overflow
       // if it were rendered/audited — proves the skip is real, not just
       // "happened not to have findings".
-      { type: "content", placeholder: true, components: [] },
+      { type: "content", kind: "points", placeholder: true, components: [] },
     ]
     const ir = deck("consulting", slides)
     const report = auditDeck(ir)
@@ -1763,10 +1835,8 @@ describe("findContrastIssues — decor/motif subtrees excluded from background-r
   // accept as real backgrounds — inside the `<g data-decor>` wrapper
   // `full-slide-svg.tsx` renders around every theme motif's output.
   //
-  // `layout: "split-diagonal"` pins the cover layout deterministically
-  // (an explicit `slide.layout` short-circuits the seed-based pick per
-  // `resolveLayoutId`'s own doc comment in `layout-selection.ts`) to
-  // `cover-split-diagonal.tsx` — chosen specifically because it exercises
+  // A registered test theme offers `split-diagonal` as its cover face.
+  // That face is chosen specifically because it exercises
   // `pathBoundingBox`'s one remaining *exact* (non-decor) solid-path case
   // side-by-side with the decor exclusion in the same render, tying both
   // halves of this fix together. That gives an exact, hand-verified
@@ -1780,8 +1850,11 @@ describe("findContrastIssues — decor/motif subtrees excluded from background-r
   // a cover slide with no `ir.brand` configured. If the decor exclusion
   // regressed, this count would jump well past 2.
   it("sees exactly the two legitimate background regions on a real campaign-theme cover, none from the motif", () => {
-    const ir = deck("campaign", [
-      { type: "cover", heading: "Launch Day", layout: "split-diagonal", components: [] },
+    const themeId = registerTestTheme("audit-campaign-split", "campaign", {
+      cover: "split-diagonal",
+    })
+    const ir = deck(themeId, [
+      { type: "cover", heading: "Launch Day",  components: [] },
     ])
     const markup = renderSlideSvg(ir, 0)
     const regions = __collectBgRegions(markup)
@@ -1806,10 +1879,10 @@ describe("findContrastIssues — decor/motif subtrees excluded from background-r
 // own doc comment for the two halves of the fix.
 //
 // Fixture is the task's own reproduction, unchanged: `examples/
-// quarterly-review-zh.json` (which carries `seed: 22`, `meta.organization`
+// quarterly-review-zh.json` (which carries `meta.organization`
 // and `meta.date` — the matrix sweep in `full-matrix-contrast.test.ts`
 // deliberately sets no meta, which is exactly why that sweep never saw any of
-// this), theme swapped, cover layout pinned to `tone-adaptive-header`.
+// this). A registered test theme carries `tone-adaptive-header` in its cover menu.
 describe("findContrastIssues — text painted on a decor shape resolves against that shape (fix/decor-contrast-attribution)", () => {
   // Through the real schema, same as the `examples/basic.json` baseline at
   // the top of this file — `assets` is optional in the authored JSON and
@@ -1818,15 +1891,22 @@ describe("findContrastIssues — text painted on a decor shape resolves against 
     JSON.parse(readFileSync(new URL("../../examples/quarterly-review-zh.json", import.meta.url), "utf8")),
   ) as PptxIR
 
-  /** The task's own repro deck, theme-swapped, cover layout pinned. */
-  function quarterly(themeId: string, overrides: Partial<PptxIR> = {}): PptxIR {
+  const QUARTERLY_THEMES = new Map<CanonicalThemeId, string>()
+
+  /** The task's own repro deck, theme-swapped, with the cover face carried by the menu. */
+  function quarterly(themeId: CanonicalThemeId, overrides: Partial<PptxIR> = {}): PptxIR {
+    let registeredId = QUARTERLY_THEMES.get(themeId)
+    if (registeredId === undefined) {
+      registeredId = registerTestTheme(`audit-quarterly-${themeId}`, themeId, {
+        cover: "tone-adaptive-header",
+      })
+      QUARTERLY_THEMES.set(themeId, registeredId)
+    }
+    const overrideTheme = overrides.theme
     return {
       ...QUARTERLY,
-      theme: { id: themeId },
-      slides: QUARTERLY.slides.map((slide, i) =>
-        i === 0 ? ({ ...slide, layout: "tone-adaptive-header" } as Slide) : slide,
-      ),
       ...overrides,
+      theme: { ...overrideTheme, id: registeredId },
     }
   }
 
@@ -1995,7 +2075,7 @@ describe("auditDeck — low-contrast via a real style-token override (validate-l
     // validate-level" problem this audit exists to catch.
     const ir = deck(
       "consulting",
-      [{ type: "content", heading: "readable heading", components: [{ type: "paragraph", text: "some body copy" }] }],
+      [{ type: "content", kind: "points", heading: "readable heading", components: [{ type: "paragraph", text: "some body copy" }] }],
       { theme: { id: "consulting", style: { colors: { text: "#F5F5F0" } } } },
     )
     const report = auditDeck(ir)
@@ -2015,6 +2095,7 @@ describe("auditDeck — low-contrast via a real style-token override (validate-l
     const ir = deck("consulting", [
       {
         type: "content",
+        kind: "points",
         heading: "photo bg",
         background: { kind: "asset", asset_id: "missing" },
         components: [{ type: "paragraph", text: "caption-like text" }],
@@ -2670,6 +2751,7 @@ describe("auditDeck — arc-bbox reclassification ink fixes (fix/arc-bbox)", () 
     const ir = deck("academic", [
       {
         type: "content",
+        kind: "points",
         heading: "insight",
         components: [
           {
@@ -2688,6 +2770,7 @@ describe("auditDeck — arc-bbox reclassification ink fixes (fix/arc-bbox)", () 
     const ir = deck("luxe", [
       {
         type: "content",
+        kind: "points",
         heading: "roadmap",
         components: [
           {

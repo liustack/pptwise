@@ -2,6 +2,8 @@ import { createHash } from "node:crypto"
 import { renderSlideSvg } from "../api"
 import type { PptxIR, Slide } from "../ir"
 import { CANONICAL_THEME_IDS } from "../themes"
+import { __resetRegisteredThemes } from "../themes/definitions"
+import { registerTestTheme } from "../themes/test-fixtures"
 import { resolveComponentForm } from "../components/form-assignments"
 
 /**
@@ -22,10 +24,10 @@ export const EMPHASIS_UNASSIGNED_BYTES_URL = new URL(
   import.meta.url,
 )
 
-function content(layout: string, component: Slide["components"][number]): Slide {
+function content(kind: "comparison" | "data" | "list" | "statement", component: Slide["components"][number]): Slide {
   return {
     type: "content",
-    layout,
+    kind,
     heading: MARKED_HEADING,
     subheading: MARKED_SUBHEADING,
     components: [component],
@@ -34,7 +36,7 @@ function content(layout: string, component: Slide["components"][number]): Slide 
 
 function deck(themeId: string): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "emphasis-unassigned-byte-nail.pptx",
     theme: { id: themeId },
     meta: { organization: "pptwise" },
@@ -47,20 +49,20 @@ function deck(themeId: string): PptxIR {
         components: [],
       } as Slide,
       { type: "chapter", heading: "增长战略", components: [] } as Slide,
-      content("two-column", {
+      content("comparison", {
         type: "paragraph",
         text: "普通正文中的**关键证据**保持原有强调画法。",
       }),
-      content("split-band", {
+      content("data", {
         type: "bullets",
         items: ["第一条包含**关键证据**", "第二条保持普通文本"],
       }),
-      content("bento-panel", {
+      content("list", {
         type: "callout",
         variant: "info",
         text: "提示中的**关键证据**保持原有强调画法。",
       }),
-      content("quiet-frame", {
+      content("statement", {
         type: "verdict_banner",
         tone: "positive",
         text: "结论中的**关键证据**保持原有强调画法。",
@@ -74,12 +76,22 @@ function sha(svg: string): string {
 }
 
 export function computeEmphasisUnassignedPages(): Record<string, string> {
+  __resetRegisteredThemes()
   const pages: Record<string, string> = {}
-  for (const themeId of UNASSIGNED) {
+  for (const sourceThemeId of UNASSIGNED) {
+    const themeId = registerTestTheme(`emphasis-${sourceThemeId}`, sourceThemeId, {
+      content: {
+        comparison: "two-column",
+        data: "split-band",
+        list: "bento-panel",
+        statement: "quiet-frame",
+      },
+    })
     const ir = deck(themeId)
     for (const pageIndex of [0, 2, 3, 4, 5]) {
-      pages[`${themeId}|${pageIndex}`] = sha(renderSlideSvg(ir, pageIndex))
+      pages[`${sourceThemeId}|${pageIndex}`] = sha(renderSlideSvg(ir, pageIndex))
     }
   }
+  __resetRegisteredThemes()
   return pages
 }

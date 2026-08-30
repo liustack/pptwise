@@ -280,7 +280,7 @@ export const layoutDef: LayoutDefinition = {
   // subheading (falls back to "We appreciate your time."), divider,
   // "Contact" contact section + copyright (meta).
   id: "banner-ending",
-  kind: "archetype",
+  kind: "standard",
   slideTypes: ["ending"],
   slots: [
     { name: "kicker", accepts: [] },

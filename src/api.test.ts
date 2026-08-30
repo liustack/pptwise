@@ -1,12 +1,12 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it } from "vitest"
 import { PptxIRSchema } from "@/ir"
 import { measureTextUnits } from "@/lib/svg-text-layout"
 import { makeSolidRegionPngDataUri } from "@/platform/test-png-fixture"
 import { formatIssues, formatWarnings, generatePptx, irJsonSchema, listThemes, renderSlideSvg, validateIr } from "./api"
 import { ENUM_ERROR_MESSAGE_MAX_LENGTH } from "./ir/schema-error-hints"
 import { CAPACITY } from "./audit/capacity"
-import { LAYOUT_REGISTRY } from "./layouts/registry"
-import { __resetRegisteredThemes, registerTheme, type ThemeDefinition } from "./themes/definitions"
+import { __resetRegisteredThemes, registerTheme } from "./themes/definitions"
+import { registerTestTheme } from "./themes/test-fixtures"
 
 /** A real, minimal, decodable PNG data URI — every "byte-inertness" and
  *  "dangling asset_id" test below (Task 2, borrow wave) needs an asset that
@@ -15,12 +15,12 @@ import { __resetRegisteredThemes, registerTheme, type ThemeDefinition } from "./
 const realPngDataUri = makeSolidRegionPngDataUri(2, 2, () => [10, 20, 30])
 
 const raw = {
-  version: "4",
+  version: "5",
   filename: "api-test",
   theme: { id: "consulting" },
   slides: [
     { type: "cover", heading: "Hello" },
-    { type: "content", heading: "Points", components: [{ type: "bullets", items: ["a", "b"] }] },
+    { type: "content", kind: "points", heading: "Points", components: [{ type: "bullets", items: ["a", "b"] }] },
   ],
 }
 
@@ -32,42 +32,19 @@ describe("validateIr", () => {
     expect(r.ir?.slides[0]?.components).toEqual([])
   })
 
-  it("gives a migration message for IR v2 input (spec §15.3: combined mapping straight to v4)", () => {
-    const v = validateIr({ version: "2", filename: "x", theme: { id: "tech" }, slides: [] })
-    expect(v.ok).toBe(false)
-    expect(v.errors).toHaveLength(1)
-    expect(v.errors[0]!.message).toMatch(/theme\.override is now theme\.style/)
-    expect(v.errors[0]!.message).toMatch(/variant is split into layout and arrangement/)
-    expect(v.errors[0]!.message).toMatch(/blocks are now components/)
-    expect(v.errors[0]!.message).toMatch(/scenario is now narrative/)
-    expect(v.errors[0]!.message).toMatch(/mode renamed to strategy/)
-    expect(v.errors[0]!.message).toMatch(/"narrative" strategy value is now "storytelling"/)
-    expect(v.errors[0]!.message).toMatch(/delivery renamed to pacing/)
-    expect(v.errors[0]!.message).toMatch(/"text" pacing value is now "dense"/)
-    expect(v.errors[0]!.message).toMatch(/"presentation" is now "spacious"/)
-    // v2 has no automated migration path (spec §15.3: "不接 v2") — the
-    // message must not point to `pptwise migrate`.
-    expect(v.errors[0]!.message).not.toMatch(/pptwise migrate/)
-  })
-
-  it("hard-rejects IR v3 input with the full §9.1 mapping and a migrate-command pointer (spec §9.3)", () => {
-    const v = validateIr({ version: "3", filename: "x", theme: { id: "tech" }, slides: [] })
+  it.each(["1", "2", "3", "4"])("hard-rejects IR v%s with the current v5 contract and no migration pointer", (version) => {
+    const v = validateIr({ version, filename: "x", theme: { id: "tech" }, slides: [] })
     expect(v.ok).toBe(false)
     expect(v.errors).toHaveLength(1)
     expect(v.errors[0]!.path).toBe("version")
-    expect(v.errors[0]!.message).toMatch(/IR v3 is not supported/)
-    expect(v.errors[0]!.message).toMatch(/pptwise migrate <input> -o <output>/)
-    expect(v.errors[0]!.message).toMatch(/scenario is now narrative/)
-    expect(v.errors[0]!.message).toMatch(/scenario\.mode is now narrative\.strategy/)
-    expect(v.errors[0]!.message).toMatch(/mode "narrative" is now strategy "storytelling"/)
-    expect(v.errors[0]!.message).toMatch(/scenario\.delivery is now narrative\.pacing/)
-    expect(v.errors[0]!.message).toMatch(/delivery "text" is now pacing "dense"/)
-    expect(v.errors[0]!.message).toMatch(/"presentation" is now "spacious"/)
-    expect(v.errors[0]!.message).toMatch(/scenario\.audience is now narrative\.audience/)
+    expect(v.errors[0]!.message).toMatch(/current IR format is version "5"/i)
+    expect(v.errors[0]!.message).toMatch(/content slides require kind/i)
+    expect(v.errors[0]!.message).toMatch(/no migration tool/i)
+    expect(v.errors[0]!.message).not.toMatch(/pptwise migrate/i)
   })
 
   it("hard-rejects an unknown theme id with the available list", () => {
-    const v = validateIr({ theme: { id: "neon" }, slides: [{ heading: "x" }] })
+    const v = validateIr({ theme: { id: "neon" }, slides: [{ kind: "points", heading: "x" }] })
     expect(v.ok).toBe(false)
     expect(v.errors[0]!.message).toMatch(/unknown theme "neon"/)
     expect(v.errors[0]!.message).toMatch(/available:.*consulting/)
@@ -75,21 +52,19 @@ describe("validateIr", () => {
     expect(v.errors[0]!.message).not.toMatch(/was removed/)
   })
 
-  it("hard-rejects leftover bloom and points at migrate to classroom", () => {
-    const v = validateIr({ theme: { id: "bloom" }, slides: [{ heading: "x" }] })
+  it("hard-rejects a removed theme id", () => {
+    const v = validateIr({ theme: { id: "bloom" }, slides: [{ kind: "points", heading: "x" }] })
     expect(v.ok).toBe(false)
     expect(v.errors[0]!.path).toBe("theme.id")
     expect(v.errors[0]!.message).toMatch(/bloom/)
-    expect(v.errors[0]!.message).toMatch(/removed/)
-    expect(v.errors[0]!.message).toMatch(/pptwise migrate/)
-    expect(v.errors[0]!.message).toMatch(/classroom/)
   })
 
-  it("hard-rejects leftover logo_wall and points at migrate to image_grid", () => {
+  it("hard-rejects leftover logo_wall without pointing at a removed migration command", () => {
     const v = validateIr({
       theme: { id: "consulting" },
       slides: [
         {
+          kind: "points",
           heading: "x",
           components: [
             {
@@ -103,38 +78,36 @@ describe("validateIr", () => {
     expect(v.ok).toBe(false)
     const message = v.errors.map((e) => e.message).join("\n")
     expect(message).toMatch(/removed/)
-    expect(message).toMatch(/pptwise migrate/)
+    expect(message).not.toMatch(/pptwise migrate/)
     expect(message).toMatch(/image_grid/)
   })
 
-  it("hard-rejects leftover banner-heading and points at migrate to two-column", () => {
+  it("rejects the retired layout field before interpreting its value", () => {
     const v = validateIr({
       theme: { id: "consulting" },
-      slides: [{ heading: "x", layout: "banner-heading" }],
+      slides: [{ kind: "points", heading: "x", layout: "banner-heading" }],
     })
     expect(v.ok).toBe(false)
-    expect(v.errors[0]!.path).toBe("slides.0.layout")
-    expect(v.errors[0]!.message).toMatch(/banner-heading/)
-    expect(v.errors[0]!.message).toMatch(/removed/)
-    expect(v.errors[0]!.message).toMatch(/pptwise migrate/)
-    expect(v.errors[0]!.message).toMatch(/two-column/)
+    expect(v.errors[0]!.path).toBe("slides.0")
+    expect(v.errors[0]!.message).toMatch(/unrecognized key: "layout"/i)
+    expect(v.errors[0]!.message).not.toMatch(/pptwise migrate/i)
   })
 
-  it("unknown other layouts still do NOT mention migrate", () => {
+  it("rejects every layout value through the same removed-field contract", () => {
     const v = validateIr({
       theme: { id: "consulting" },
-      slides: [{ heading: "x", layout: "not-a-real-layout" }],
+      slides: [{ kind: "points", heading: "x", layout: "not-a-real-layout" }],
     })
     expect(v.ok).toBe(false)
     const message = v.errors.map((e) => e.message).join("\n")
-    expect(message).toMatch(/unknown layout/)
+    expect(message).toMatch(/unrecognized key: "layout"/i)
     expect(message).not.toMatch(/pptwise migrate/)
   })
 
   it("unknown other component types still do NOT mention migrate", () => {
     const v = validateIr({
       theme: { id: "consulting" },
-      slides: [{ heading: "x", components: [{ type: "not_a_real_component" }] }],
+      slides: [{ kind: "points", heading: "x", components: [{ type: "not_a_real_component" }] }],
     })
     expect(v.ok).toBe(false)
     const message = v.errors.map((e) => e.message).join("\n")
@@ -175,109 +148,28 @@ describe("validateIr", () => {
     expect(r.errors).toEqual([{ path: "slides", message: "deck has no slides" }])
   })
 
-  describe("layout applicability gate (W2 task 3)", () => {
-    it("rejects a cover slide carrying a content-only takeover layout id (cover-hijack fix)", () => {
-      const v = validateIr({
-        ...raw,
-        slides: [{ type: "cover", heading: "Hello", layout: "image-top" }, raw.slides[1]],
-      })
+  describe("v5 page semantics", () => {
+    it("rejects kind on a boundary page", () => {
+      const v = validateIr({ ...raw, slides: [{ type: "cover", kind: "points", heading: "Hello" }] })
       expect(v.ok).toBe(false)
-      expect(v.errors[0]!.page).toBe(1)
-      expect(v.errors[0]!.message).toMatch(/image-top/)
-      expect(v.errors[0]!.message).toMatch(/cover/)
+      expect(v.errors[0]!.path).toBe("slides.0")
     })
 
-    it("rejects an unknown layout id, listing the available ids for that slide type", () => {
-      const v = validateIr({
-        ...raw,
-        slides: [raw.slides[0], { type: "content", heading: "x", layout: "not-a-real-layout", components: [] }],
-      })
+    it("rejects a content page without kind", () => {
+      const v = validateIr({ ...raw, slides: [{ type: "content", heading: "Missing", components: [] }] })
       expect(v.ok).toBe(false)
-      expect(v.errors[0]!.page).toBe(2)
-      expect(v.errors[0]!.message).toMatch(/not-a-real-layout/)
-      expect(v.errors[0]!.message).toMatch(/available/)
+      expect(v.errors[0]!.path).toBe("slides.0.kind")
     })
 
-    it("accepts a content slide naming a valid takeover layout id", () => {
-      const v = validateIr({
-        ...raw,
-        slides: [
-          raw.slides[0],
-          {
-            type: "content",
-            heading: "Split",
-            layout: "image-split",
-            components: [{ type: "image", asset_id: "a" }],
-          },
-        ],
-      })
-      expect(v.ok).toBe(true)
+    it("accepts a kind offered by the bound theme menu", () => {
+      expect(validateIr({ ...raw, slides: [{ type: "content", kind: "photo", heading: "Photo", components: [] }] }).ok).toBe(true)
     })
 
-    it("accepts a content slide naming a valid layout id", () => {
-      const v = validateIr({
-        ...raw,
-        slides: [
-          raw.slides[0],
-          { type: "content", heading: "Bento", layout: "bento-panel", components: [{ type: "paragraph", text: "x" }] },
-        ],
-      })
-      expect(v.ok).toBe(true)
-    })
-
-    it("does not gate on arrangement-vs-layout compatibility (declarative this wave, W3 decides)", () => {
-      // "two-column" only *declares* arrangements: ["two_column"], but the
-      // gate must not enforce that yet — only registry existence +
-      // slideTypes applicability are hard errors this task.
-      const v = validateIr({
-        ...raw,
-        slides: [
-          raw.slides[0],
-          {
-            type: "content",
-            heading: "Mismatched on purpose",
-            layout: "two-column",
-            arrangement: "quote",
-            components: [{ type: "paragraph", text: "x" }],
-          },
-        ],
-      })
-      expect(v.ok).toBe(true)
-    })
-
-    // quote-stage wave, task T1 (`.issues/2026-07-28-quote-stage/plan.md`'s
-    // 裁定 1, TDD assertion (d)): `checkLayoutApplicability` only ever checks
-    // registry existence + `slideTypes` — it must keep passing a pinOnly
-    // layout, since pin-only means "only an explicit pin reaches it", and
-    // this *is* that explicit pin. A synthetic `LAYOUT_REGISTRY` entry
-    // stands in for the not-yet-built `quote-stage` (T2's job) — this task
-    // is the mechanism only.
-    describe("pinOnly layout: explicit pin still passes applicability", () => {
-      const PIN_ONLY_TEST_ID = "test-pin-only-layout"
-
-      beforeEach(() => {
-        LAYOUT_REGISTRY[PIN_ONLY_TEST_ID] = {
-          id: PIN_ONLY_TEST_ID,
-          kind: "archetype",
-          slideTypes: ["content"],
-          slots: [],
-          pinOnly: true,
-        }
-      })
-      afterEach(() => {
-        delete LAYOUT_REGISTRY[PIN_ONLY_TEST_ID]
-      })
-
-      it("accepts a content slide explicitly pinning a pinOnly layout id", () => {
-        const v = validateIr({
-          ...raw,
-          slides: [
-            raw.slides[0],
-            { type: "content", heading: "Quote", layout: PIN_ONLY_TEST_ID, components: [] },
-          ],
-        })
-        expect(v.ok).toBe(true)
-      })
+    it("hard-rejects a kind outside the bound theme menu and lists the offer", () => {
+      const v = validateIr({ ...raw, slides: [{ type: "content", kind: "quote", heading: "Quote", components: [] }] })
+      expect(v.ok).toBe(false)
+      expect(v.errors[0]!.message).toMatch(/kind "quote" is not offered/i)
+      expect(v.errors[0]!.message).toMatch(/available content kinds/i)
     })
   })
 })
@@ -309,18 +201,18 @@ describe("ValidateResult.warnings + formatWarnings (Task 2, borrow wave — dual
   })
 
   it("`warnings` can be present alongside a failing (`ok:false`) result too — a rejected deck's warnings are not hidden", () => {
-    // slide 2 mixes a real error (unknown layout) with slide 1's own
+    // slide 2 mixes a real error (kind outside the bound menu) with slide 1's own
     // warn-only missing heading — both must be visible on their own arrays.
     const v = validateIr({
       ...raw,
       slides: [
         { type: "cover" }, // missing heading — warn
-        { type: "content", heading: "x", layout: "not-a-real-layout", components: [] }, // error
+        { type: "content", kind: "quote", heading: "x", components: [] }, // error
       ],
     })
     expect(v.ok).toBe(false)
     expect(v.errors.length).toBeGreaterThan(0)
-    // The layout-applicability hard gate returns early (api.ts's validateIr
+    // The theme-menu hard gate returns early (api.ts's validateIr
     // short-circuits at the first hard-gate failure, before checkIrQuality
     // ever runs) — so this specific deck's warning never actually gets
     // computed. Documents that ordering rather than asserting warnings
@@ -332,7 +224,7 @@ describe("ValidateResult.warnings + formatWarnings (Task 2, borrow wave — dual
 describe("field-alias normalization at the validate boundary (W5 task 4)", () => {
   const withKpi = (item: Record<string, unknown>) => ({
     ...raw,
-    slides: [raw.slides[0], { type: "content", heading: "KPIs", components: [{ type: "kpi_cards", items: [item] }] }],
+    slides: [raw.slides[0], { type: "content", kind: "points", heading: "KPIs", components: [{ type: "kpi_cards", items: [item] }] }],
   })
 
   it("normalizes a synonym field name before parsing and reports it on ValidateResult.normalized", () => {
@@ -484,7 +376,7 @@ describe("full-body component exclusivity gate (structure-components wave 1 task
   it("accepts a slide whose sole component is a full-body type (swot)", () => {
     const v = validateIr({
       ...raw,
-      slides: [{ type: "content", heading: "SWOT", components: [swotOnly] }],
+      slides: [{ type: "content", kind: "points", heading: "SWOT", components: [swotOnly] }],
     })
     expect(v.ok).toBe(true)
   })
@@ -492,7 +384,7 @@ describe("full-body component exclusivity gate (structure-components wave 1 task
   it("accepts a slide whose sole component is a full-body type (bmc)", () => {
     const v = validateIr({
       ...raw,
-      slides: [{ type: "content", heading: "BMC", components: [bmcOnly] }],
+      slides: [{ type: "content", kind: "points", heading: "BMC", components: [bmcOnly] }],
     })
     expect(v.ok).toBe(true)
   })
@@ -500,7 +392,7 @@ describe("full-body component exclusivity gate (structure-components wave 1 task
   it("accepts a slide whose sole component is a full-body type (waterfall)", () => {
     const v = validateIr({
       ...raw,
-      slides: [{ type: "content", heading: "Waterfall", components: [waterfallOnly] }],
+      slides: [{ type: "content", kind: "points", heading: "Waterfall", components: [waterfallOnly] }],
     })
     expect(v.ok).toBe(true)
   })
@@ -508,7 +400,7 @@ describe("full-body component exclusivity gate (structure-components wave 1 task
   it("accepts a slide whose sole component is a full-body type (gantt)", () => {
     const v = validateIr({
       ...raw,
-      slides: [{ type: "content", heading: "Gantt", components: [ganttOnly] }],
+      slides: [{ type: "content", kind: "points", heading: "Gantt", components: [ganttOnly] }],
     })
     expect(v.ok).toBe(true)
   })
@@ -516,7 +408,7 @@ describe("full-body component exclusivity gate (structure-components wave 1 task
   it("accepts a slide whose sole component is a full-body type (pest)", () => {
     const v = validateIr({
       ...raw,
-      slides: [{ type: "content", heading: "PEST", components: [pestOnly] }],
+      slides: [{ type: "content", kind: "points", heading: "PEST", components: [pestOnly] }],
     })
     expect(v.ok).toBe(true)
   })
@@ -524,7 +416,7 @@ describe("full-body component exclusivity gate (structure-components wave 1 task
   it("accepts a slide whose sole component is a full-body type (five_forces)", () => {
     const v = validateIr({
       ...raw,
-      slides: [{ type: "content", heading: "Five Forces", components: [fiveForcesOnly] }],
+      slides: [{ type: "content", kind: "points", heading: "Five Forces", components: [fiveForcesOnly] }],
     })
     expect(v.ok).toBe(true)
   })
@@ -532,7 +424,7 @@ describe("full-body component exclusivity gate (structure-components wave 1 task
   it("accepts a slide whose sole component is a full-body type (heatmap)", () => {
     const v = validateIr({
       ...raw,
-      slides: [{ type: "content", heading: "Heatmap", components: [heatmapOnly] }],
+      slides: [{ type: "content", kind: "points", heading: "Heatmap", components: [heatmapOnly] }],
     })
     expect(v.ok).toBe(true)
   })
@@ -543,6 +435,7 @@ describe("full-body component exclusivity gate (structure-components wave 1 task
       slides: [
         {
           type: "content",
+          kind: "points",
           heading: "SWOT + bullets",
           components: [swotOnly, { type: "bullets", items: ["额外的兄弟块"] }],
         },
@@ -559,7 +452,7 @@ describe("full-body component exclusivity gate (structure-components wave 1 task
   it("hard-rejects two full-body components sharing one slide", () => {
     const v = validateIr({
       ...raw,
-      slides: [{ type: "content", heading: "SWOT + BMC", components: [swotOnly, bmcOnly] }],
+      slides: [{ type: "content", kind: "points", heading: "SWOT + BMC", components: [swotOnly, bmcOnly] }],
     })
     expect(v.ok).toBe(false)
     expect(v.errors[0]!.message).toMatch(/"swot, bmc" is a full-body component/)
@@ -568,7 +461,7 @@ describe("full-body component exclusivity gate (structure-components wave 1 task
   it("hard-rejects two full-body components from the numeric-axis family sharing one slide", () => {
     const v = validateIr({
       ...raw,
-      slides: [{ type: "content", heading: "Waterfall + Gantt", components: [waterfallOnly, ganttOnly] }],
+      slides: [{ type: "content", kind: "points", heading: "Waterfall + Gantt", components: [waterfallOnly, ganttOnly] }],
     })
     expect(v.ok).toBe(false)
     expect(v.errors[0]!.message).toMatch(/"waterfall, gantt" is a full-body component/)
@@ -577,7 +470,7 @@ describe("full-body component exclusivity gate (structure-components wave 1 task
   it("hard-rejects two full-body components across the wave-2 named-slot pair sharing one slide", () => {
     const v = validateIr({
       ...raw,
-      slides: [{ type: "content", heading: "PEST + Five Forces", components: [pestOnly, fiveForcesOnly] }],
+      slides: [{ type: "content", kind: "points", heading: "PEST + Five Forces", components: [pestOnly, fiveForcesOnly] }],
     })
     expect(v.ok).toBe(false)
     expect(v.errors[0]!.message).toMatch(/"pest, five_forces" is a full-body component/)
@@ -589,6 +482,7 @@ describe("full-body component exclusivity gate (structure-components wave 1 task
       slides: [
         {
           type: "content",
+          kind: "points",
           heading: "Heatmap + bullets",
           components: [heatmapOnly, { type: "bullets", items: ["extra sibling"] }],
         },
@@ -601,7 +495,7 @@ describe("full-body component exclusivity gate (structure-components wave 1 task
   it("accepts a slide whose sole component is a full-body type (sankey)", () => {
     const v = validateIr({
       ...raw,
-      slides: [{ type: "content", heading: "Sankey", components: [sankeyOnly] }],
+      slides: [{ type: "content", kind: "points", heading: "Sankey", components: [sankeyOnly] }],
     })
     expect(v.ok).toBe(true)
   })
@@ -612,6 +506,7 @@ describe("full-body component exclusivity gate (structure-components wave 1 task
       slides: [
         {
           type: "content",
+          kind: "points",
           heading: "Sankey + bullets",
           components: [sankeyOnly, { type: "bullets", items: ["extra sibling"] }],
         },
@@ -624,7 +519,7 @@ describe("full-body component exclusivity gate (structure-components wave 1 task
   it("hard-rejects two components of the *same* full-body type sharing one slide (task-1 review minor: literal same-type double)", () => {
     const v = validateIr({
       ...raw,
-      slides: [{ type: "content", heading: "SWOT + SWOT", components: [swotOnly, swotOnly] }],
+      slides: [{ type: "content", kind: "points", heading: "SWOT + SWOT", components: [swotOnly, swotOnly] }],
     })
     expect(v.ok).toBe(false)
     expect(v.errors).toHaveLength(1)
@@ -643,6 +538,7 @@ describe("full-body component exclusivity gate (structure-components wave 1 task
       slides: [
         {
           type: "content",
+          kind: "points",
           id: "p-swot",
           heading: "SWOT + bullets",
           components: [swotOnly, { type: "bullets", items: ["x"] }],
@@ -751,7 +647,7 @@ describe("boundary-page render-surface gate (bench-driven fixes wave, defect D)"
   it("accepts a content slide carrying components, footnote, and subheading together — the one type that renders all three", () => {
     const v = validateIr({
       ...raw,
-      slides: [{ type: "content", heading: "H", subheading: "S", components: [bullets], footnote: "source: x" }],
+      slides: [{ type: "content", kind: "points", heading: "H", subheading: "S", components: [bullets], footnote: "source: x" }],
     })
     expect(v.ok).toBe(true)
   })
@@ -791,7 +687,7 @@ describe("boundary-page render-surface gate (bench-driven fixes wave, defect D)"
       theme: { id: "academic" },
       slides: [
         { type: "cover", heading: "C", components: [bullets] },
-        { type: "content", heading: "OK", components: [bullets] },
+        { type: "content", kind: "points", heading: "OK", components: [bullets] },
         { type: "ending", heading: "E", footnote: "source: x" },
       ],
     })
@@ -808,26 +704,26 @@ describe("ValidationIssue.slideId + formatIssues (W5 whole-branch review finding
       ...raw,
       slides: [
         raw.slides[0],
-        { type: "content", id: "p-kpi", heading: "x", layout: "not-a-real-layout", components: [] },
+        { type: "content", kind: "quote", id: "p-kpi", heading: "x", components: [] },
       ],
     })
     expect(v.ok).toBe(false)
     expect(v.errors[0]!.page).toBe(2)
     expect(v.errors[0]!.slideId).toBe("p-kpi")
     expect(formatIssues(v.errors)).toBe(
-      `page 2 (p-kpi) — slides.1.layout: ${v.errors[0]!.message}`,
+      `page 2 (p-kpi) — slides.1.kind: ${v.errors[0]!.message}`,
     )
   })
 
   it("leaves the format unchanged (no parens) when the offending slide has no id", () => {
     const v = validateIr({
       ...raw,
-      slides: [raw.slides[0], { type: "content", heading: "x", layout: "not-a-real-layout", components: [] }],
+      slides: [raw.slides[0], { type: "content", kind: "quote", heading: "x", components: [] }],
     })
     expect(v.ok).toBe(false)
     expect(v.errors[0]!.page).toBe(2)
     expect(v.errors[0]!.slideId).toBeUndefined()
-    expect(formatIssues(v.errors)).toBe(`page 2 — slides.1.layout: ${v.errors[0]!.message}`)
+    expect(formatIssues(v.errors)).toBe(`page 2 — slides.1.kind: ${v.errors[0]!.message}`)
     expect(formatIssues(v.errors)).not.toContain("(")
   })
 
@@ -836,7 +732,7 @@ describe("ValidationIssue.slideId + formatIssues (W5 whole-branch review finding
       ...raw,
       // Slide 0 has an id, but slide 1 (the one missing a heading) does not
       // — slideId must stay unset, not leak slide 0's id onto slide 1's issue.
-      slides: [{ ...raw.slides[0], id: "p-cover" }, { type: "content" }],
+      slides: [{ ...raw.slides[0], id: "p-cover" }, { type: "content", kind: "points" }],
     })
     // missing_heading is warn-only since Task 2 — ok:true, the issue lands
     // on `warnings` instead of `errors` (see "reads slideId" naming: the
@@ -850,7 +746,7 @@ describe("ValidationIssue.slideId + formatIssues (W5 whole-branch review finding
   it("the content-quality-gate translation sets slideId when the flagged slide has an id", () => {
     const v = validateIr({
       ...raw,
-      slides: [raw.slides[0], { type: "content", id: "p-body" }],
+      slides: [raw.slides[0], { type: "content", kind: "points", id: "p-body" }],
     })
     expect(v.ok).toBe(true)
     expect(v.warnings?.[0]!.page).toBe(2)
@@ -863,7 +759,7 @@ describe("placeholder slide quality exemption (W5 task 1)", () => {
   it("a placeholder slide with no heading passes validate", () => {
     const v = validateIr({
       ...raw,
-      slides: [raw.slides[0], { type: "content", id: "p-2", placeholder: true }],
+      slides: [raw.slides[0], { type: "content", kind: "points", id: "p-2", placeholder: true }],
     })
     expect(v.ok).toBe(true)
   })
@@ -871,7 +767,7 @@ describe("placeholder slide quality exemption (W5 task 1)", () => {
   it("a normal (non-placeholder) empty content slide still warns the missing-heading gate (ok:true since Task 2 — missing_heading is editorial, not content-loss)", () => {
     const v = validateIr({
       ...raw,
-      slides: [raw.slides[0], { type: "content" }],
+      slides: [raw.slides[0], { type: "content", kind: "points" }],
     })
     expect(v.ok).toBe(true)
     expect(v.warnings?.some((w) => /heading/i.test(w.message))).toBe(true)
@@ -880,6 +776,7 @@ describe("placeholder slide quality exemption (W5 task 1)", () => {
   it("skips every content rule for a placeholder page, not only missing_heading", () => {
     const overloaded = {
       type: "content" as const,
+      kind: "points",
       placeholder: true as const,
       heading: "标".repeat(100), // would trip long_heading if checked
       components: Array.from({ length: 10 }, (_, i) => ({ type: "paragraph" as const, text: String(i) })), // would trip density
@@ -903,14 +800,12 @@ describe("describeQualityIssue: density/bullets English messages (W3 task 3, spe
   // Task 2 these were hard errors (`ok:false`, read off `v.errors`). The
   // message content and shape are otherwise unchanged.
   //
-  // `n` is the slide's total component count (what the density gate counts
-  // against); `withImage` prepends one `image` component (counted as one of
-  // `n`) so a pinned takeover layout actually takes over (findImageComponent
-  // must find something) instead of falling through to layout auto-pick.
-  const denseSlide = (n: number, opts: { layout?: string; withImage?: boolean } = {}) => ({
+  // `n` is the slide's total component count. `kind` chooses the bound
+  // theme's menu face, while `withImage` supplies the photo takeover input.
+  const denseSlide = (n: number, opts: { kind?: "photo" | "comparison" | "list"; withImage?: boolean } = {}) => ({
     type: "content" as const,
+    kind: opts.kind ?? "points",
     heading: "Dense",
-    layout: opts.layout,
     components: [
       ...(opts.withImage ? [{ type: "image" as const, asset_id: "a" }] : []),
       ...Array.from({ length: opts.withImage ? n - 1 : n }, (_, i) => ({ type: "paragraph" as const, text: String(i) })),
@@ -923,7 +818,7 @@ describe("describeQualityIssue: density/bullets English messages (W3 task 3, spe
     const v = validateIr({
       ...raw,
       narrative: { pacing: "spacious" },
-      slides: [raw.slides[0], denseSlide(4, { layout: "image-top", withImage: true })],
+      slides: [raw.slides[0], denseSlide(4, { kind: "photo", withImage: true })],
     })
     expect(v.ok).toBe(true)
     expect(densityMessage(v)).toBe(
@@ -935,7 +830,7 @@ describe("describeQualityIssue: density/bullets English messages (W3 task 3, spe
     const v = validateIr({
       ...raw,
       narrative: { pacing: "balanced" },
-      slides: [raw.slides[0], denseSlide(5, { layout: "two-column" })],
+      slides: [raw.slides[0], denseSlide(5, { kind: "comparison" })],
     })
     expect(v.ok).toBe(true)
     expect(densityMessage(v)).toBe(
@@ -948,7 +843,7 @@ describe("describeQualityIssue: density/bullets English messages (W3 task 3, spe
       ...raw,
       theme: { id: "tech" },
       narrative: { pacing: "balanced" },
-      slides: [raw.slides[0], denseSlide(5, { layout: "bento-panel" })],
+      slides: [raw.slides[0], denseSlide(5, { kind: "list" })],
     })
     expect(v.ok).toBe(true)
     expect(densityMessage(v)).toBe(
@@ -960,7 +855,7 @@ describe("describeQualityIssue: density/bullets English messages (W3 task 3, spe
     const v = validateIr({
       ...raw,
       narrative: { pacing: "dense" },
-      slides: [raw.slides[0], denseSlide(5, { layout: "two-column" })],
+      slides: [raw.slides[0], denseSlide(5, { kind: "comparison" })],
     })
     expect(v.ok).toBe(true)
     expect(densityMessage(v)).toBe(
@@ -976,6 +871,7 @@ describe("describeQualityIssue: density/bullets English messages (W3 task 3, spe
         raw.slides[0],
         {
           type: "content",
+          kind: "points",
           heading: "List",
           components: [{ type: "bullets", items: ["a", "b", "c", "d", "e", "f"] }],
         },
@@ -995,6 +891,7 @@ describe("describeQualityIssue: density/bullets English messages (W3 task 3, spe
         raw.slides[0],
         {
           type: "content",
+          kind: "points",
           heading: "List",
           components: [{ type: "bullets", items: ["长".repeat(28)] }],
         },
@@ -1030,7 +927,7 @@ describe("bullets geometric hard error (Task 2, borrow wave — dual-threshold s
       ...raw,
       slides: [
         raw.slides[0],
-        { type: "content", heading: "Density probe", components: [{ type: "bullets", items: ["filler item one", cjk27] }] },
+        { type: "content", kind: "points", heading: "Density probe", components: [{ type: "bullets", items: ["filler item one", cjk27] }] },
       ],
     })
     expect(v.ok).toBe(true)
@@ -1045,7 +942,7 @@ describe("bullets geometric hard error (Task 2, borrow wave — dual-threshold s
       ...raw,
       slides: [
         raw.slides[0],
-        { type: "content", heading: "Overflow probe", components: [{ type: "bullets", items: [tooLong] }] },
+        { type: "content", kind: "points", heading: "Overflow probe", components: [{ type: "bullets", items: [tooLong] }] },
       ],
     }
     const v = validateIr(ir)
@@ -1060,129 +957,10 @@ describe("bullets geometric hard error (Task 2, borrow wave — dual-threshold s
       ...raw,
       slides: [
         raw.slides[0],
-        { type: "content", heading: "At ceiling", components: [{ type: "bullets", items: [atCeiling] }] },
+        { type: "content", kind: "points", heading: "At ceiling", components: [{ type: "bullets", items: [atCeiling] }] },
       ],
     })
     expect(v.ok).toBe(true)
-  })
-})
-
-// quote-stage wave, task T2, 裁定 2: pinning a `pinOnly` layout
-// (registry.ts's `LayoutDefinition.pinOnly`) over its own declared `body`
-// capacity is a hard error end-to-end through `validateIr` — not just at
-// the `checkIrQuality` unit level (`ir-quality.test.tsx` already covers
-// that). quote-stage is the pool's only `pinOnly` member as of this task.
-describe("pin_only_over_capacity end-to-end via validateIr (quote-stage wave, task T2, 裁定 2)", () => {
-  it("pinning quote-stage with 2 components hard-blocks validateIr, naming the layout id and both numbers", () => {
-    const v = validateIr({
-      ...raw,
-      slides: [
-        raw.slides[0],
-        { type: "content", heading: "金句", layout: "quote-stage", components: [{ type: "paragraph", text: "a" }, { type: "paragraph", text: "b" }] },
-      ],
-    })
-    expect(v.ok).toBe(false)
-    expect(
-      v.errors.some(
-        (e) => e.message.includes('"quote-stage"') && e.message.includes("at most 1") && e.message.includes("has 2"),
-      ),
-    ).toBe(true)
-  })
-
-  it("pinning quote-stage with 1 component (at capacity) validates ok", () => {
-    const v = validateIr({
-      ...raw,
-      slides: [
-        raw.slides[0],
-        { type: "content", heading: "金句", layout: "quote-stage", components: [{ type: "paragraph", text: "—— 出处" }] },
-      ],
-    })
-    expect(v.ok).toBe(true)
-  })
-
-  it("pinning quote-stage with 0 components (a pure quote) validates ok", () => {
-    const v = validateIr({
-      ...raw,
-      slides: [raw.slides[0], { type: "content", heading: "金句", layout: "quote-stage", components: [] }],
-    })
-    expect(v.ok).toBe(true)
-  })
-
-  it("pinning statement with 2 components hard-blocks validateIr, naming the layout id and both numbers", () => {
-    const v = validateIr({
-      ...raw,
-      slides: [
-        raw.slides[0],
-        {
-          type: "content",
-          heading: "金句",
-          layout: "statement",
-          components: [
-            { type: "paragraph", text: "a" },
-            { type: "paragraph", text: "b" },
-          ],
-        },
-      ],
-    })
-    expect(v.ok).toBe(false)
-    expect(
-      v.errors.some(
-        (e) => e.message.includes('"statement"') && e.message.includes("at most 1") && e.message.includes("has 2"),
-      ),
-    ).toBe(true)
-  })
-
-  it("pinning verse-chapter with components still hard-rejects as a chapter boundary (no body slot, so pin_only_over_capacity does not apply)", () => {
-    const v = validateIr({
-      ...raw,
-      slides: [
-        {
-          type: "chapter",
-          heading: "章首",
-          layout: "verse-chapter",
-          components: [{ type: "paragraph", text: "should not be here" }],
-        },
-      ],
-    })
-    expect(v.ok).toBe(false)
-    expect(v.errors.some((e) => e.message.includes('"chapter" slides do not render components'))).toBe(true)
-    expect(v.errors.every((e) => !e.message.includes("pinned layout"))).toBe(true)
-  })
-
-  it("regression: pinning an ordinary (non-pinOnly) layout over its own capacity keeps ok:true with only a density warning — the new hard error never fires for it", () => {
-    const v = validateIr({
-      ...raw,
-      slides: [
-        raw.slides[0],
-        {
-          type: "content",
-          heading: "标题",
-          layout: "two-column",
-          components: Array.from({ length: 5 }, (_, i) => ({ type: "paragraph" as const, text: String(i) })),
-        },
-      ],
-    })
-    expect(v.ok).toBe(true)
-    expect(v.warnings?.some((w) => w.message.includes("too many components"))).toBe(true)
-  })
-
-  it("a pathologically long quote-stage heading that still truncates at minPt hard-blocks validateIr, naming the render-safety limit", () => {
-    const CJK_LONG =
-      "微服务架构下的分布式事务一致性保障机制与补偿策略设计规范以及跨可用区容灾演练的完整落地路径说明"
-    const v = validateIr({
-      ...raw,
-      slides: [
-        raw.slides[0],
-        {
-          type: "content",
-          heading: `${CJK_LONG}${CJK_LONG}${CJK_LONG}`,
-          layout: "quote-stage",
-          components: [],
-        },
-      ],
-    })
-    expect(v.ok).toBe(false)
-    expect(v.errors.some((e) => e.message.includes("render-safety limit"))).toBe(true)
   })
 })
 
@@ -1197,7 +975,7 @@ describe("bullets count geometric hard error (P0 hardening, robustness deep-revi
       ...raw,
       slides: [
         raw.slides[0],
-        { type: "content", heading: "Count overflow probe", components: [{ type: "bullets", items: tooMany }] },
+        { type: "content", kind: "points", heading: "Count overflow probe", components: [{ type: "bullets", items: tooMany }] },
       ],
     }
     const v = validateIr(ir)
@@ -1212,7 +990,7 @@ describe("bullets count geometric hard error (P0 hardening, robustness deep-revi
       ...raw,
       slides: [
         raw.slides[0],
-        { type: "content", heading: "At count ceiling", components: [{ type: "bullets", items: atCeiling }] },
+        { type: "content", kind: "points", heading: "At count ceiling", components: [{ type: "bullets", items: atCeiling }] },
       ],
     })
     expect(v.ok).toBe(true)
@@ -1224,7 +1002,7 @@ describe("bullets count geometric hard error (P0 hardening, robustness deep-revi
       ...raw,
       slides: [
         raw.slides[0],
-        { type: "content", heading: "Extreme", components: [{ type: "bullets", items: tooMany }] },
+        { type: "content", kind: "points", heading: "Extreme", components: [{ type: "bullets", items: tooMany }] },
       ],
     }
     let caught: Error | undefined
@@ -1253,6 +1031,7 @@ describe("describeQualityIssue: chart_axes_ignored English message (chart-axes f
         raw.slides[0],
         {
           type: "content",
+          kind: "points",
           heading: "Share",
           components: [
             {
@@ -1282,6 +1061,7 @@ describe("describeQualityIssue: chart_axes_ignored English message (chart-axes f
         raw.slides[0],
         {
           type: "content",
+          kind: "points",
           heading: "Trend",
           components: [
             {
@@ -1312,6 +1092,7 @@ describe("describeQualityIssue: chart_duplicate_category English message (R1 evi
         raw.slides[0],
         {
           type: "content",
+          kind: "points",
           heading: "Revenue",
           components: [
             {
@@ -1345,6 +1126,7 @@ describe("describeQualityIssue: chart_duplicate_category English message (R1 evi
         raw.slides[0],
         {
           type: "content",
+          kind: "points",
           heading: "Revenue",
           components: [
             {
@@ -1367,6 +1149,7 @@ describe("describeQualityIssue: chart_duplicate_category English message (R1 evi
         raw.slides[0],
         {
           type: "content",
+          kind: "points",
           heading: "Share",
           components: [
             {
@@ -1403,6 +1186,7 @@ describe("describeQualityIssue: chart_line_too_many_series English message", () 
         raw.slides[0],
         {
           type: "content",
+          kind: "points",
           heading: "Trend",
           components: [{ type: "chart", chart_type: "line", series: manyLineSeries }],
         },
@@ -1423,6 +1207,7 @@ describe("describeQualityIssue: chart_line_too_many_series English message", () 
         raw.slides[0],
         {
           type: "content",
+          kind: "points",
           heading: "Trend",
           components: [{ type: "chart", chart_type: "line", series: manyLineSeries.slice(0, 8) }],
         },
@@ -1447,6 +1232,7 @@ describe("describeQualityIssue: data_table_missing_cell English message (R1 evid
         raw.slides[0],
         {
           type: "content",
+          kind: "points",
           heading: "Metrics",
           components: [
             {
@@ -1478,6 +1264,7 @@ describe("describeQualityIssue: data_table_missing_cell English message (R1 evid
         raw.slides[0],
         {
           type: "content",
+          kind: "points",
           heading: "Metrics",
           components: [
             {
@@ -1514,6 +1301,7 @@ describe("describeQualityIssue: comparison/citation/architecture English message
         raw.slides[0],
         {
           type: "content",
+          kind: "points",
           heading: "Comparison",
           components: [
             {
@@ -1543,6 +1331,7 @@ describe("describeQualityIssue: comparison/citation/architecture English message
         raw.slides[0],
         {
           type: "content",
+          kind: "points",
           heading: "Citation",
           components: [
             {
@@ -1569,6 +1358,7 @@ describe("describeQualityIssue: comparison/citation/architecture English message
         raw.slides[0],
         {
           type: "content",
+          kind: "points",
           heading: "Architecture",
           components: [
             {
@@ -1597,7 +1387,7 @@ describe("comparison/citation/architecture count geometric hard error (carried-i
     const tooMany = Array.from({ length: CAPACITY.comparison.errorRows + 1 }, (_, i) => ({ label: `row ${i}`, cells: ["x", "y"] }))
     const ir = {
       ...raw,
-      slides: [raw.slides[0], { type: "content", heading: "Overflow", components: [{ type: "comparison", columns: ["A", "B"], rows: tooMany }] }],
+      slides: [raw.slides[0], { type: "content", kind: "points", heading: "Overflow", components: [{ type: "comparison", columns: ["A", "B"], rows: tooMany }] }],
     }
     const v = validateIr(ir)
     expect(v.ok).toBe(false)
@@ -1617,7 +1407,7 @@ describe("comparison/citation/architecture count geometric hard error (carried-i
     const atCeiling = Array.from({ length: CAPACITY.comparison.errorRows }, (_, i) => ({ label: `row ${i}`, cells: ["x", "y"] }))
     const v = validateIr({
       ...raw,
-      slides: [raw.slides[0], { type: "content", heading: "At ceiling", components: [{ type: "comparison", columns: ["A", "B"], rows: atCeiling }] }],
+      slides: [raw.slides[0], { type: "content", kind: "points", heading: "At ceiling", components: [{ type: "comparison", columns: ["A", "B"], rows: atCeiling }] }],
     })
     expect(v.ok).toBe(true)
   })
@@ -1626,7 +1416,7 @@ describe("comparison/citation/architecture count geometric hard error (carried-i
     const tooMany = Array.from({ length: CAPACITY.citation.errorSources + 1 }, (_, i) => ({ label: `source ${i}` }))
     const ir = {
       ...raw,
-      slides: [raw.slides[0], { type: "content", heading: "Overflow", components: [{ type: "citation", sources: tooMany }] }],
+      slides: [raw.slides[0], { type: "content", kind: "points", heading: "Overflow", components: [{ type: "citation", sources: tooMany }] }],
     }
     const v = validateIr(ir)
     expect(v.ok).toBe(false)
@@ -1646,7 +1436,7 @@ describe("comparison/citation/architecture count geometric hard error (carried-i
     const atCeiling = Array.from({ length: CAPACITY.citation.errorSources }, (_, i) => ({ label: `source ${i}` }))
     const v = validateIr({
       ...raw,
-      slides: [raw.slides[0], { type: "content", heading: "At ceiling", components: [{ type: "citation", sources: atCeiling }] }],
+      slides: [raw.slides[0], { type: "content", kind: "points", heading: "At ceiling", components: [{ type: "citation", sources: atCeiling }] }],
     })
     expect(v.ok).toBe(true)
   })
@@ -1655,7 +1445,7 @@ describe("comparison/citation/architecture count geometric hard error (carried-i
     const tooMany = Array.from({ length: CAPACITY.architecture.errorLayers + 1 }, (_, i) => ({ title: `layer ${i}`, items: ["a"] }))
     const ir = {
       ...raw,
-      slides: [raw.slides[0], { type: "content", heading: "Overflow", components: [{ type: "architecture", layers: tooMany }] }],
+      slides: [raw.slides[0], { type: "content", kind: "points", heading: "Overflow", components: [{ type: "architecture", layers: tooMany }] }],
     }
     const v = validateIr(ir)
     expect(v.ok).toBe(false)
@@ -1675,7 +1465,7 @@ describe("comparison/citation/architecture count geometric hard error (carried-i
     const atCeiling = Array.from({ length: CAPACITY.architecture.errorLayers }, (_, i) => ({ title: `layer ${i}`, items: ["a"] }))
     const v = validateIr({
       ...raw,
-      slides: [raw.slides[0], { type: "content", heading: "At ceiling", components: [{ type: "architecture", layers: atCeiling }] }],
+      slides: [raw.slides[0], { type: "content", kind: "points", heading: "At ceiling", components: [{ type: "architecture", layers: atCeiling }] }],
     })
     expect(v.ok).toBe(true)
   })
@@ -1778,21 +1568,20 @@ describe("narrative {id} shape rescue (T0b fix 2, bench-evidence)", () => {
   })
 })
 
-describe("v4 has no old-vocabulary rescue (spec §16, reversing the now-superseded §15.4)", () => {
-  it("hard-rejects the pre-rename `scenario` field name as an unrecognized key — no rename, no rescue, message points at `narrative`", () => {
+describe("v5 rejects old vocabulary", () => {
+  it("hard-rejects the pre-rename `scenario` field name as an unrecognized key", () => {
     const v = validateIr({ ...raw, scenario: { strategy: "pyramid" } })
     expect(v.ok).toBe(false)
     expect(v.normalized).toBeUndefined()
     expect(v.ir).toBeUndefined()
-    expect(v.errors.some((e) => e.message.includes('"scenario" was renamed to "narrative" in IR v4'))).toBe(true)
-    expect(v.errors.some((e) => e.message.includes("pptwise migrate"))).toBe(true)
+    expect(v.errors.some((e) => e.message.includes("scenario"))).toBe(true)
   })
 
-  it("hard-rejects a preset-id string under the pre-rename `scenario` field name too, with the same pointer", () => {
+  it("hard-rejects a preset-id string under the pre-rename `scenario` field name too", () => {
     const v = validateIr({ ...raw, scenario: "annual-review" })
     expect(v.ok).toBe(false)
     expect(v.normalized).toBeUndefined()
-    expect(v.errors.some((e) => e.message.includes('"scenario" was renamed to "narrative" in IR v4'))).toBe(true)
+    expect(v.errors.some((e) => e.message.includes("scenario"))).toBe(true)
   })
 
   it("hard-rejects the pre-rename `mode`/`delivery` axis field names inside `narrative`, listing the current axis names", () => {
@@ -1838,11 +1627,12 @@ describe("v4 has no old-vocabulary rescue (spec §16, reversing the now-supersed
     expect(v.errors[0]!.message).toMatch(/unknown narrative axis "mode"/)
   })
 
-  it("still hard-rejects an explicit version \"3\" first, same as before — the v3 boundary is unaffected by the rescue removal", () => {
+  it("hard-rejects an explicit version \"3\" through the current-format boundary", () => {
     const v = validateIr({ ...raw, version: "3", scenario: { strategy: "pyramid" } })
     expect(v.ok).toBe(false)
     expect(v.normalized).toBeUndefined()
-    expect(v.errors[0]!.message).toMatch(/IR v3 is not supported/)
+    expect(v.errors[0]!.message).toMatch(/current IR format is version "5"/i)
+    expect(v.errors[0]!.message).not.toMatch(/pptwise migrate/i)
   })
 
   // Pins that the component-alias walk (normalizeComponentAliases, unaffected
@@ -1857,6 +1647,7 @@ describe("v4 has no old-vocabulary rescue (spec §16, reversing the now-supersed
         { type: "cover", heading: "The Narrative Text Presentation Strategy" },
         {
           type: "content",
+          kind: "points",
           heading: "Body",
           components: [{ type: "paragraph", text: "mode: narrative, delivery: presentation, text: dense" }],
         },
@@ -1874,7 +1665,7 @@ describe("v4 has no old-vocabulary rescue (spec §16, reversing the now-supersed
 })
 
 // Borrow-wave task 3 (error-message quality): the rest of the documented
-// v2/v3 → v4 rename map gets the same "renamed, here's the new name" rescue
+// Earlier rename hints get the same "renamed, here's the new name" rescue
 // `scenario` already had (see `./ir/rename-hints.ts`), plus a generic
 // slide-level location hint for an unrecognized key that isn't one of those
 // renames. Every case below is one of the borrow-wave B report's 15
@@ -1884,22 +1675,20 @@ describe("unrecognized-key rescue hints (borrow-wave task 3, generalizing the sc
   it("P7: hints blocks -> components at slide level", () => {
     const v = validateIr({
       ...raw,
-      slides: [raw.slides[0], { type: "content", heading: "x", blocks: [{ type: "bullets", items: ["a", "b"] }] }],
+      slides: [raw.slides[0], { type: "content", kind: "points", heading: "x", blocks: [{ type: "bullets", items: ["a", "b"] }] }],
     })
     expect(v.ok).toBe(false)
     expect(v.errors.some((e) => e.message.includes('Unrecognized key: "blocks"'))).toBe(true)
     expect(v.errors.some((e) => e.message.includes('"blocks" was renamed to "components" in IR v4'))).toBe(true)
   })
 
-  it("hints variant -> layout/arrangement at slide level", () => {
+  it("rejects the retired variant field at slide level", () => {
     const v = validateIr({
       ...raw,
-      slides: [raw.slides[0], { type: "content", heading: "x", variant: "two-column" }],
+      slides: [raw.slides[0], { type: "content", kind: "points", heading: "x", variant: "two-column" }],
     })
     expect(v.ok).toBe(false)
-    expect(v.errors.some((e) => e.message.includes('"variant" was split into "layout" and "arrangement" in IR v4'))).toBe(
-      true,
-    )
+    expect(v.errors.some((e) => e.message.includes('Unrecognized key: "variant"'))).toBe(true)
   })
 
   it("hints theme.override -> theme.style, scoped to the theme object", () => {
@@ -1911,7 +1700,7 @@ describe("unrecognized-key rescue hints (borrow-wave task 3, generalizing the sc
   it("P2: a non-rename unrecognized key directly on a slide gets the generic components[] location hint instead", () => {
     const v = validateIr({
       ...raw,
-      slides: [raw.slides[0], { type: "content", heading: "x", items: ["stray", "items"] }],
+      slides: [raw.slides[0], { type: "content", kind: "points", heading: "x", items: ["stray", "items"] }],
     })
     expect(v.ok).toBe(false)
     expect(v.errors.some((e) => e.message.includes('Unrecognized key: "items"'))).toBe(true)
@@ -1938,7 +1727,7 @@ describe("unrecognized-key rescue hints (borrow-wave task 3, generalizing the sc
 describe("enum/discriminator did-you-mean hints (borrow-wave task 3)", () => {
   const withComponent = (component: unknown) => ({
     ...raw,
-    slides: [raw.slides[0], { type: "content", heading: "x", components: [component] }],
+    slides: [raw.slides[0], { type: "content", kind: "points", heading: "x", components: [component] }],
   })
 
   it("P9: an icon near-miss ('check-circle' for lucide's 'circle-check') gets a did-you-mean suggestion, not the full enum", () => {
@@ -2029,8 +1818,9 @@ describe("registerTheme end-to-end (W3 task 4)", () => {
     __resetRegisteredThemes()
   })
 
-  function registeredTheme(id: string): ThemeDefinition {
+  function registeredTheme(id: string) {
     return {
+      version: 2 as const,
       id,
       style: {
         id,
@@ -2060,15 +1850,13 @@ describe("registerTheme end-to-end (W3 task 4)", () => {
         },
       },
       brand: {},
-      tags: [],
-      // Narrow (single-layout) curated set per slide type — proves
-      // selection actually respects the registered theme's own curation
-      // rather than falling back to consulting's allowed set.
-      layouts: {
-        cover: ["poster-center"],
-        chapter: ["banner-chapter"],
-        content: ["two-column"],
-        ending: ["banner-ending"],
+      // Narrow (single-face) menu — proves resolution actually respects the
+      // registered theme's own menu rather than any built-in's.
+      menu: {
+        cover: { face: "poster-center" },
+        chapter: { face: "banner-chapter" },
+        content: { points: { face: "two-column" } },
+        ending: { face: "banner-ending" },
       },
     }
   }
@@ -2076,7 +1864,7 @@ describe("registerTheme end-to-end (W3 task 4)", () => {
   it("a registered theme's style and curated layout take effect end-to-end (validateIr → renderSlideSvg)", () => {
     registerTheme(registeredTheme("acme-registered"))
     const v = validateIr({
-      version: "4",
+      version: "5",
       filename: "registered-theme-test",
       theme: { id: "acme-registered" },
       slides: [{ type: "cover", heading: "Hello from a registered theme" }],
@@ -2087,7 +1875,7 @@ describe("registerTheme end-to-end (W3 task 4)", () => {
     // distinctive primary color from the registered theme's own style tokens
     expect(svg).toContain("#123ABC")
     // respects the registered theme's narrow (single-entry) curated cover layout
-    expect(svg).toContain('data-archetype="poster-center"')
+    expect(svg).toContain('data-face="poster-center"')
   })
 
   it("validateIr accepts a registered theme id and still rejects an unknown id with the enlarged available list", () => {
@@ -2128,6 +1916,10 @@ describe("renderSlideSvg", () => {
 })
 
 describe("generatePptx", () => {
+  afterEach(() => {
+    __resetRegisteredThemes()
+  })
+
   it("returns pptx bytes (zip magic) for a valid IR", async () => {
     const bytes = await generatePptx(raw)
     expect(bytes.length).toBeGreaterThan(10_000)
@@ -2140,13 +1932,13 @@ describe("generatePptx", () => {
 
   it("omitted branding matches cover-only: content page drops the footer rule and org", () => {
     const omitted = {
-      version: "4",
+      version: "5",
       filename: "omit-branding",
       theme: { id: "consulting" },
       meta: { organization: "ACME", date: "2026" },
       slides: [
         { type: "cover", heading: "Pitch" },
-        { type: "content", heading: "The point", layout: "quiet-frame", components: [{ type: "paragraph", text: "Say it." }] },
+        { type: "content", kind: "points", heading: "The point", components: [{ type: "paragraph", text: "Say it." }] },
         { type: "ending", heading: "Thanks" },
       ],
     }
@@ -2161,10 +1953,14 @@ describe("generatePptx", () => {
   })
 
   it("omitted branding leaves confidentiality and date off the cover, branding full paints them", () => {
+    const themeId = registerTestTheme("api-branding-face", "consulting", {
+      cover: "tone-adaptive-header",
+      content: { points: "quiet-frame" },
+    })
     const base = {
-      version: "4",
+      version: "5",
       filename: "meta-hide",
-      theme: { id: "consulting" },
+      theme: { id: themeId },
       meta: {
         organization: "ACME",
         date: "2026-08-15",
@@ -2172,11 +1968,11 @@ describe("generatePptx", () => {
         authors: [{ name: "Ada", role: "Lead" }],
       },
       slides: [
-        { type: "cover", heading: "Pitch", layout: "tone-adaptive-header" },
+        { type: "cover", heading: "Pitch" },
         {
           type: "content",
+          kind: "points",
           heading: "The point",
-          layout: "quiet-frame",
           components: [{ type: "paragraph", text: "Say it." }],
         },
       ],
@@ -2214,14 +2010,14 @@ describe("generatePptx", () => {
 
   it("validates and renders a cover-only deck to pptx", async () => {
     const talk = {
-      version: "4",
+      version: "5",
       filename: "talk-branding",
       theme: { id: "consulting" },
       branding: "cover-only",
       meta: { organization: "ACME", date: "2026" },
       slides: [
         { type: "cover", heading: "Pitch" },
-        { type: "content", heading: "The point", layout: "quiet-frame", components: [{ type: "paragraph", text: "Say it." }] },
+        { type: "content", kind: "points", heading: "The point", components: [{ type: "paragraph", text: "Say it." }] },
         { type: "ending", heading: "Thanks" },
       ],
     }
@@ -2266,7 +2062,7 @@ describe("validateIr deck branding alias", () => {
 describe("generatePptx draft gate (W5 task 1)", () => {
   const withPlaceholder = {
     ...raw,
-    slides: [raw.slides[0], { type: "content" as const, id: "p-2", placeholder: true as const }],
+    slides: [raw.slides[0], { type: "content" as const, kind: "points", id: "p-2", placeholder: true as const }],
   }
 
   it("throws PptwiseError listing the placeholder page number + id when draft is not passed", async () => {
@@ -2280,8 +2076,8 @@ describe("generatePptx draft gate (W5 task 1)", () => {
       ...raw,
       slides: [
         raw.slides[0],
-        { type: "content" as const, id: "p-2", placeholder: true as const },
-        { type: "content" as const, placeholder: true as const }, // no id — falls back to page-only ref
+        { type: "content" as const, kind: "points", id: "p-2", placeholder: true as const },
+        { type: "content" as const, kind: "points", placeholder: true as const }, // no id — falls back to page-only ref
       ],
     }
     await expect(generatePptx(twoPlaceholders)).rejects.toThrow(
@@ -2321,7 +2117,7 @@ describe("generatePptx content-drop gate (deep-review P1)", () => {
     ...raw,
     slides: [
       raw.slides[0],
-      { type: "content" as const, id: "p-2", heading: "Too much", components: overfull(8) },
+      { type: "content" as const, kind: "points", id: "p-2", heading: "Too much", components: overfull(8) },
     ],
   }
 
@@ -2342,7 +2138,7 @@ describe("generatePptx content-drop gate (deep-review P1)", () => {
   it("falls back to a page-only reference when the slide has no id", async () => {
     const noId = {
       ...raw,
-      slides: [raw.slides[0], { type: "content" as const, heading: "Too much", components: overfull(8) }],
+      slides: [raw.slides[0], { type: "content" as const, kind: "points", heading: "Too much", components: overfull(8) }],
     }
     await expect(generatePptx(noId)).rejects.toThrow(/on 1 page: page 2 \(\d+\)/)
   })
@@ -2373,6 +2169,7 @@ describe("generatePptx content-drop gate (deep-review P1)", () => {
         raw.slides[0],
         {
           type: "content" as const,
+          kind: "points",
           heading: "Long list",
           components: [
             { type: "bullets" as const, items: Array.from({ length: 40 }, (_, i) => `要点 ${i}`) },
@@ -2396,7 +2193,7 @@ describe("checkAssetBytes: byte-level asset validation (Task 2, borrow wave — 
     assets: { images: { photo: { src } } },
     slides: [
       raw.slides[0],
-      { type: "content" as const, heading: "x", components: [{ type: "image" as const, asset_id: "photo" }] },
+      { type: "content" as const, kind: "points", heading: "x", components: [{ type: "image" as const, asset_id: "photo" }] },
     ],
   })
 
@@ -2456,7 +2253,7 @@ describe("checkAssetReferences: dangling asset_id warning (Task 2, borrow wave �
       ...raw,
       slides: [
         raw.slides[0],
-        { type: "content", heading: "x", components: [{ type: "image", asset_id: "missing" }] },
+        { type: "content", kind: "points", heading: "x", components: [{ type: "image", asset_id: "missing" }] },
       ],
     })
     expect(v.ok).toBe(true)
@@ -2474,7 +2271,7 @@ describe("checkAssetReferences: dangling asset_id warning (Task 2, borrow wave �
       assets: { images: { logo: { src: realPngDataUri } } },
       slides: [
         raw.slides[0],
-        { type: "content", heading: "x", components: [{ type: "image", asset_id: "logoo" }] },
+        { type: "content", kind: "points", heading: "x", components: [{ type: "image", asset_id: "logoo" }] },
       ],
     })
     expect(v.ok).toBe(true)
@@ -2489,7 +2286,7 @@ describe("checkAssetReferences: dangling asset_id warning (Task 2, borrow wave �
       assets: { images: { logo: { src: realPngDataUri } } },
       slides: [
         raw.slides[0],
-        { type: "content", heading: "x", components: [{ type: "image", asset_id: "logo" }] },
+        { type: "content", kind: "points", heading: "x", components: [{ type: "image", asset_id: "logo" }] },
       ],
     })
     expect(v.ok).toBe(true)

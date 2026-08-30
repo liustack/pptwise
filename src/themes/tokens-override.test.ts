@@ -29,21 +29,13 @@ describe("theme.style override merging", () => {
 
   it("theme.style reaches the rendered SVG", () => {
     const v = validateIr({
-      version: "4",
+      version: "5",
       filename: "t.pptx",
       theme: { id: "consulting", style: { colors: { primary: "#0B5FFF" } } },
-      // Explicit `layout` pin (P1 variety wave, task 3 re-pin): this test
-      // only cares whether a `theme.style` override reaches render, not
-      // which cover layout auto-pick lands on — an omitted `layout` left
-      // that pick to the seed/strategy-weighted auto-pick, which cover
-      // identity weighting (task 3) can now legitimately shift to an
-      // layout that never paints `colors.primary` at all (e.g.
-      // `tone-adaptive-header`, no color-block). `left-anchor` always
-      // paints its 40%-width heading block in `colors.primary`
-      // (`cover-left-anchor.tsx`), so pinning it decouples this assertion
-      // from selection weighting entirely — the correct fix for a test that
-      // was already fragile to any future re-weighting, not just this one.
-      slides: [{ type: "cover", heading: "Hello Tokens", layout: "left-anchor" }],
+      // No layout pin: v5 removed the field, and the theme's cover face is
+      // whatever its menu locks. consulting's `gauge-verdict` paints the
+      // heading rule in `colors.primary`, so the override still shows up.
+      slides: [{ type: "cover", heading: "Hello Tokens" }],
     })
     expect(v.ok).toBe(true)
     expect(renderSlideSvg(v.ir!, 0)).toContain("#0B5FFF")

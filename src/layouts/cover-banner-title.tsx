@@ -220,7 +220,7 @@ export const layoutDef: LayoutDefinition = {
   // cover-banner-title.tsx: org dot-kicker, conf badge, heading, accent
   // bar, italic subheading, meta divider + author/date/version row.
   id: "banner-title",
-  kind: "archetype",
+  kind: "standard",
   slideTypes: ["cover"],
   slots: [
     { name: "kicker", accepts: [] },

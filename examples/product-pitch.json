@@ -1,10 +1,9 @@
 {
-  "version": "4",
+  "version": "5",
   "filename": "atlas-product-pitch",
   "narrative": "pitch",
-  "theme": { "id": "tech" },
+  "theme": { "id": "academic" },
   "meta": { "organization": "Atlas Robotics", "date": "2026-08-15" },
-  "seed": 7,
   "slides": [
     {
       "type": "cover",
@@ -13,6 +12,7 @@
     },
     {
       "type": "content",
+      "kind": "points",
       "heading": "Picking is the bottleneck",
       "components": [
         {
@@ -27,6 +27,7 @@
     },
     {
       "type": "content",
+      "kind": "list",
       "heading": "What Atlas delivers",
       "components": [
         {
@@ -41,8 +42,8 @@
     },
     {
       "type": "content",
+      "kind": "data",
       "heading": "Proof from the floor",
-      "arrangement": "kpi_focus",
       "components": [
         {
           "type": "kpi_cards",
@@ -56,6 +57,7 @@
     },
     {
       "type": "content",
+      "kind": "comparison",
       "heading": "How we compare",
       "components": [
         {
@@ -71,11 +73,11 @@
     },
     {
       "type": "content",
+      "kind": "quote",
       "heading": "A customer's verdict",
-      "arrangement": "quote",
       "components": [
         {
-          "type": "quote",
+          "type": "blockquote",
           "text": "Atlas cleared our Black Friday backlog in one shift. We stopped planning around seasonal hiring entirely.",
           "attribution": "COO, Nordic 3PL operator"
         }

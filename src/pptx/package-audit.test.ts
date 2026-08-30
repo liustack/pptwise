@@ -15,7 +15,7 @@
 // an already-broken zip *through* the generator; corruption always happens
 // after the fact, standing in for "what if a future patch bug did this."
 import { readFileSync } from "node:fs"
-import { describe, it, expect, beforeAll } from "vitest"
+import { afterEach, describe, it, expect, beforeAll } from "vitest"
 import JSZip from "jszip"
 import type { PptxIR } from "@/ir"
 import { installNodePlatform } from "../platform/node"
@@ -25,23 +25,29 @@ import { generatePptxBlob } from "./generate"
 import { auditPptxPackage } from "./package-audit"
 import { svgToOps } from "./svg2pptx/dispatch"
 import type { ImageOp } from "./svg2pptx/image"
+import { __resetRegisteredThemes } from "../themes/definitions"
+import { registerTestTheme } from "../themes/test-fixtures"
 
 beforeAll(() => {
   installNodePlatform()
+})
+
+afterEach(() => {
+  __resetRegisteredThemes()
 })
 
 const BASIC_IR_PATH = new URL("../../examples/basic.json", import.meta.url)
 
 function makeIr(overrides: Partial<PptxIR> = {}): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "package-audit-fixture",
     theme: { id: "consulting" },
     meta: {},
     assets: { images: {} },
     slides: [
       { type: "cover", heading: "Package Audit Fixture" },
-      { type: "content", heading: "Body", components: [{ type: "bullets", items: ["one", "two"] }] },
+      { type: "content", kind: "points", heading: "Body", components: [{ type: "bullets", items: ["one", "two"] }] },
       { type: "ending", heading: "Thanks" },
     ],
     ...overrides,
@@ -316,6 +322,7 @@ describe("auditPptxPackage — image-alt-dropped (A11Y-01)", () => {
         { type: "cover", heading: "Package Audit Fixture", components: [] },
         {
           type: "content",
+          kind: "photo",
           heading: "Body",
           components: [{ type: "image", asset_id: "hero", fit: "cover" }],
         },
@@ -387,6 +394,7 @@ describe("auditPptxPackage — image-alt-dropped (A11Y-01)", () => {
         { type: "cover", heading: "Package Audit Fixture", components: [] },
         {
           type: "content",
+          kind: "photo",
           heading: "Body",
           components: [{ type: "image", asset_id: "hero", fit: "cover" }],
         },
@@ -410,14 +418,14 @@ describe("auditPptxPackage — image-alt-dropped, image-takeover closure (q15 mi
   const REAL_PNG =
     "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
 
-  it("round-trips green for a pinned image-split layout (q15 slide3 minimal repro)", async () => {
+  it("round-trips green for the consulting photo menu's image-split face (q15 slide3 minimal repro)", async () => {
     const ir = makeIr({
       slides: [
         { type: "cover", heading: "Package Audit Fixture", components: [] },
         {
           type: "content",
+          kind: "photo",
           heading: "Where you will do your best work",
-          layout: "image-split",
           components: [
             { type: "image", asset_id: "office_photo", fit: "cover" },
             { type: "bullets", items: ["Remote-first", "Flexible hours"] },
@@ -435,14 +443,18 @@ describe("auditPptxPackage — image-alt-dropped, image-takeover closure (q15 mi
     expect(xml).toContain(`descr="Northbeam office and workplace"`)
   })
 
-  it("round-trips green for a pinned image-top layout (q15 slide5 minimal repro)", async () => {
+  it("round-trips green for a photo menu bound to image-top (q15 slide5 minimal repro)", async () => {
+    const themeId = registerTestTheme("package-audit-image-top", "consulting", {
+      content: { photo: "image-top" },
+    })
     const ir = makeIr({
+      theme: { id: themeId },
       slides: [
         { type: "cover", heading: "Package Audit Fixture", components: [] },
         {
           type: "content",
+          kind: "photo",
           heading: "Our culture",
-          layout: "image-top",
           components: [
             { type: "image", asset_id: "team_photo", fit: "cover" },
             { type: "bullets", items: ["Ownership", "Craft"] },
@@ -475,6 +487,7 @@ describe("auditPptxPackage — image-alt-dropped, image_grid/background closure"
         { type: "cover", heading: "Package Audit Fixture", components: [] },
         {
           type: "content",
+          kind: "points",
           heading: "Body",
           components: [
             {
@@ -507,6 +520,7 @@ describe("auditPptxPackage — image-alt-dropped, image_grid/background closure"
         { type: "cover", heading: "Package Audit Fixture", components: [] },
         {
           type: "content",
+          kind: "points",
           heading: "Body",
           background: { kind: "asset", asset_id: "bg_photo" },
           components: [{ type: "bullets", items: ["one", "two"] }],
@@ -540,6 +554,7 @@ describe("auditPptxPackage — image-alt-dropped, device_mockup closure", () => 
         { type: "cover", heading: "Package Audit Fixture", components: [] },
         {
           type: "content",
+          kind: "points",
           heading: "Body",
           components: [
             {
@@ -569,6 +584,7 @@ describe("auditPptxPackage — image-alt-dropped, device_mockup closure", () => 
         { type: "cover", heading: "Package Audit Fixture", components: [] },
         {
           type: "content",
+          kind: "points",
           heading: "Body",
           components: [{ type: "device_mockup", device: "phone", asset_id: "app_shot" }],
         },
@@ -613,11 +629,11 @@ describe("auditPptxPackage — image-alt-dropped, rekeyed on rendered ops (alt-e
         { type: "cover", heading: "Package Audit Fixture", components: [] },
         {
           type: "content",
+          kind: "points",
           heading: "Body",
           // Pin a tight auto-pool layout. After banner-heading retired,
           // consulting's free pick no longer overflows this slide, which
           // would skip the drop this fixture is here to prove.
-          layout: "narrow-column",
           components: [
             { type: "bullets", items: Array.from({ length: 40 }, () => LONG_BULLET) },
             { type: "image_grid", items: [{ asset_id: "grid_a" }, { asset_id: "grid_b" }] },
@@ -663,6 +679,7 @@ describe("auditPptxPackage — image-alt-dropped, rekeyed on rendered ops (alt-e
         { type: "cover", heading: "Package Audit Fixture", components: [] },
         {
           type: "content",
+          kind: "points",
           heading: "Body",
           components: [{ type: "image", asset_id: "hero", fit: "cover" }],
         },

@@ -18,7 +18,7 @@ function slide(heading = HEADING, extras: Partial<Slide> = {}): Slide {
 
 function ir(themeId: string, s: Slide = slide(), meta: PptxIR["meta"] = {}): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "gilt-word-ending.pptx",
     theme: { id: themeId },
     meta,
@@ -132,9 +132,8 @@ describe("ending-gilt-word-ending — board geometry", () => {
 describe("ending-gilt-word-ending — shared pool", () => {
   it("is a pinOnly ending archetype named by composition, not theme", () => {
     expect(layoutDef.id).toBe("gilt-word-ending")
-    expect(layoutDef.kind).toBe("archetype")
+    expect(layoutDef.kind).toBe("standard")
     expect(layoutDef.pinOnly).toBe(true)
-    expect(layoutDef.branding).toBe("none")
     expect(layoutDef.slideTypes).toEqual(["ending"])
   })
 

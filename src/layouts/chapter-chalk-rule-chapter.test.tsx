@@ -38,7 +38,7 @@ const chapter3: Slide = {
 
 function ir(themeId: string, slides: Slide[] = [chapter1, chapter2, chapter3]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "chalk-rule-chapter.pptx",
     theme: { id: themeId },
     meta: {},
@@ -167,9 +167,8 @@ describe("chapter-chalk-rule-chapter — board geometry", () => {
 describe("chapter-chalk-rule-chapter — shared pool", () => {
   it("is a pinOnly chapter archetype", () => {
     expect(layoutDef.id).toBe("chalk-rule-chapter")
-    expect(layoutDef.kind).toBe("archetype")
+    expect(layoutDef.kind).toBe("standard")
     expect(layoutDef.pinOnly).toBe(true)
-    expect(layoutDef.branding).toBe("none")
     expect(layoutDef.slideTypes).toEqual(["chapter"])
     expect("paintsOwnBackground" in layoutDef).toBe(false)
   })

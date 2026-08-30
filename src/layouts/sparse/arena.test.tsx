@@ -16,7 +16,7 @@ const BOARD_TEXT = "#EFEAFB"
 
 function ir(slides: Slide[]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "x.pptx",
     theme: { id: "arena" },
     meta: {},
@@ -40,6 +40,7 @@ describe("arena sparse faces", () => {
   it("stat-hero is a centered green numeral inside inset HUD brackets", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "stat-hero",
       heading: "43%",
       subheading: "席位净流失 · 降幅",
@@ -73,7 +74,7 @@ describe("arena sparse faces", () => {
   })
 
   it("statement is left type with four energy bars and accent on **", () => {
-    const slide: Slide = { type: "content", layout: "statement", heading: VERSE, components: [] } as Slide
+    const slide: Slide = { type: "content", kind: "points", layout: "statement", heading: VERSE, components: [] } as Slide
     const { root } = render(
       <StatementContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />,
     )
@@ -95,7 +96,7 @@ describe("arena sparse faces", () => {
   })
 
   it("statement without ** still draws the energy bars", () => {
-    const slide: Slide = { type: "content", layout: "statement", heading: VERSE_PLAIN, components: [] } as Slide
+    const slide: Slide = { type: "content", kind: "points", layout: "statement", heading: VERSE_PLAIN, components: [] } as Slide
     const { root } = render(
       <StatementContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />,
     )
@@ -105,6 +106,7 @@ describe("arena sparse faces", () => {
   it("one-evidence uses diagonal accent brackets and a STAT / index", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "one-evidence",
       heading: "维护工单平均提前 6.5 天生成",
       subheading: "217 张工单全量统计 · 2026 Q2",

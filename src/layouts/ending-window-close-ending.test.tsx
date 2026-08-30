@@ -20,7 +20,7 @@ function slide(heading = HEADING, extras: Partial<Slide> = {}): Slide {
 
 function ir(themeId: string, s: Slide, meta: PptxIR["meta"] = {}): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "window-close-ending.pptx",
     theme: { id: themeId },
     meta,
@@ -113,10 +113,9 @@ describe("ending-window-close-ending — board geometry", () => {
 describe("ending-window-close-ending — shared pool", () => {
   it("is a pinOnly ending that paints its own background", () => {
     expect(layoutDef.id).toBe("window-close-ending")
-    expect(layoutDef.kind).toBe("archetype")
+    expect(layoutDef.kind).toBe("standard")
     expect(layoutDef.pinOnly).toBe(true)
     expect(layoutDef.paintsOwnBackground).toBe(true)
-    expect(layoutDef.branding).toBe("none")
     expect(layoutDef.slideTypes).toEqual(["ending"])
   })
 
@@ -167,17 +166,16 @@ describe("ending-window-close-ending — shared pool", () => {
 describe("ending-window-close-ending — no leftover top-left motif stub", () => {
   it("consulting banner-motif does not paint the yellow lead on this ending", () => {
     const deck: PptxIR = {
-      version: "4",
+      version: "5",
       filename: "window-close-no-stub.pptx",
       theme: { id: "consulting" },
       meta: FULL_META,
       assets: { images: {} },
       seed: 1,
       slides: [{ type: "ending", layout: "window-close-ending", heading: HEADING, subheading: SUBHEADING, components: [] }],
-    } as PptxIR
+    } as unknown as PptxIR
     const root = parseSvgRoot(renderSlideSvg(deck, 0))
     const stub = Array.from(root.querySelectorAll("line")).filter((el) => Number(el.getAttribute("y1")) === 32)
     expect(stub).toHaveLength(0)
-    expect(layoutDef.suppressMotif).toBe(true)
   })
 })

@@ -187,7 +187,7 @@ export const layoutDef = {
   // serif conclusion from subheading, org/date kicker, author/version foot.
   // Does not invent a statistic. pinOnly board lock.
   id: "stat-cover",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["cover"],
   slots: [

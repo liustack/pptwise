@@ -18,7 +18,7 @@ function chapterSlide(heading = HEADING, extras: Partial<Slide> = {}): Slide {
 
 function ir(themeId: string, slides: Slide[]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "one-word-chapter.pptx",
     theme: { id: themeId },
     meta: {},
@@ -122,9 +122,8 @@ describe("chapter-one-word-chapter — board geometry", () => {
 describe("chapter-one-word-chapter — shared pool", () => {
   it("is a pinOnly chapter archetype", () => {
     expect(layoutDef.id).toBe("one-word-chapter")
-    expect(layoutDef.kind).toBe("archetype")
+    expect(layoutDef.kind).toBe("standard")
     expect(layoutDef.pinOnly).toBe(true)
-    expect(layoutDef.branding).toBe("none")
     expect(layoutDef.slideTypes).toEqual(["chapter"])
     expect("paintsOwnBackground" in layoutDef).toBe(false)
   })

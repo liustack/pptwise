@@ -1,6 +1,5 @@
 import { z } from "zod"
-import { BrandConfigSchema, BUILTIN_THEME_IDS, type BrandConfig, type Slide } from "@/ir"
-import { MAX_DECOR_PIECES } from "../motifs/decor-budget"
+import { BrandConfigSchema, BUILTIN_THEME_IDS, KIND_VALUES, type BrandConfig } from "@/ir"
 import type { MotifId } from "../motifs/types"
 import { OCCASION_VOCAB, type Occasion } from "./occasions"
 import type { StyleTokens } from "./tokens"
@@ -78,7 +77,6 @@ export const StyleTokensFileSchema = z
   .strict()
 
 const CommonThemeFileFields = {
-  version: z.literal(1),
   id: z.string().min(1),
   label: z.string().min(1).optional(),
   style: StyleTokensFileSchema,
@@ -144,139 +142,105 @@ export const SPARSE_LAYOUT_IDS = [
   "mono-bleed",
 ] as const
 
-export const FaceParametersSchema = z
-  .object({
-    morph: z.object({ variant: z.string().min(1) }).strict().optional(),
-    decor: z.object({ pieces: z.number().int().min(0).max(MAX_DECOR_PIECES) }).strict().optional(),
-    capacity: z.object({ slot: z.string().min(1), max: z.number().int().min(0) }).strict().optional(),
-  })
-  .strict()
+/** Primitive values a menu may pass to adjustable parameters declared by a face. */
+export const MenuParamValueSchema = z.union([z.string(), z.number().finite(), z.boolean()])
 
-export const FaceReferenceSchema = z.union([
-  z.string().min(1),
-  z.object({ id: z.string().min(1), params: FaceParametersSchema.optional() }).strict(),
+/**
+ * A menu entry can select one registered motif or explicitly silence the
+ * decorative layer. Omission leaves decoration at the theme renderer's
+ * ordinary posture.
+ */
+export const MenuDecorSchema = z.discriminatedUnion("kind", [
+  z
+    .object({
+      kind: z.literal("motif"),
+      id: z.enum(MOTIF_IDS),
+      params: z.object({ intensity: z.enum(["subtle", "normal"]).optional() }).strict().optional(),
+    })
+    .strict(),
+  z.object({ kind: z.literal("silent") }).strict(),
 ])
 
-export const ThemeFacesSchema = z
+/** One semantic menu choice mapped to one registered face. */
+export const MenuEntrySchema = z
   .object({
-    cover: z.array(FaceReferenceSchema).min(1),
-    chapter: z.array(FaceReferenceSchema).min(1),
-    content: z.array(FaceReferenceSchema).min(1),
-    ending: z.array(FaceReferenceSchema).min(1),
+    face: z.string().min(1),
+    params: z.record(z.string().min(1), MenuParamValueSchema).optional(),
+    decor: MenuDecorSchema.optional(),
+    /** Switch the brand frame (footer rule, meta, logo) off on this page. */
+    brand: z.literal("none").optional(),
   })
   .strict()
 
-export const ThemeMotifSchema = z
+const ContentMenuSchema = z
   .object({
-    id: z.enum(MOTIF_IDS),
-    params: z.object({ intensity: z.enum(["subtle", "normal"]).optional() }).strict().optional(),
+    points: MenuEntrySchema.optional(),
+    list: MenuEntrySchema.optional(),
+    comparison: MenuEntrySchema.optional(),
+    process: MenuEntrySchema.optional(),
+    data: MenuEntrySchema.optional(),
+    photo: MenuEntrySchema.optional(),
+    statement: MenuEntrySchema.optional(),
+    quote: MenuEntrySchema.optional(),
+    fact: MenuEntrySchema.optional(),
+    evidence: MenuEntrySchema.optional(),
+    hierarchy: MenuEntrySchema.optional(),
   })
   .strict()
-
-export const ThemeTendenciesSchema = z
-  .object({
-    cover: z.array(z.string().min(1)).min(1).optional(),
-    chapter: z.array(z.string().min(1)).min(1).optional(),
-    content: z.array(z.string().min(1)).min(1).optional(),
-    ending: z.array(z.string().min(1)).min(1).optional(),
-  })
-  .strict()
-
-export const PartialThemeFileSchema = z
-  .object({
-    ...CommonThemeFileFields,
-    base: z.enum(BUILTIN_THEME_IDS),
-  })
-  .passthrough()
-  .superRefine((value, ctx) => {
-    validateCommonThemeFields(value, ctx)
-    const knownFields = new Set(["version", "id", "label", "style", "brand", "occasions", "identity", "base"])
-    const completeFields = new Set(["faces", "motif", "tendencies", "sparse"])
-    for (const field of Object.keys(value)) {
-      if (knownFields.has(field)) continue
-      const message = completeFields.has(field)
-        ? `"${field}" is a complete theme field and cannot appear when "base" is present`
-        : `Unrecognized key: "${field}"`
-      ctx.addIssue({ code: "custom", path: [field], message })
-    }
-  })
-
-export const CompleteThemeFileSchema = z
-  .object({
-    ...CommonThemeFileFields,
-    faces: ThemeFacesSchema,
-    motif: ThemeMotifSchema.optional(),
-    tendencies: ThemeTendenciesSchema.optional(),
-    sparse: z.array(z.enum(SPARSE_LAYOUT_IDS)).optional(),
-  })
-  .strict()
-  .superRefine((value, ctx) => {
-    validateCommonThemeFields(value, ctx)
+  .refine((value) => KIND_VALUES.some((kind) => value[kind] !== undefined), {
+    message: "a theme menu must offer at least one content kind",
   })
 
 /**
- * Public v1 theme-file contract. Presence of `base` selects partial
- * completeness. Its absence selects complete completeness and requires all
- * four face pools.
+ * A theme menu has one entry for each boundary page type and a non-empty
+ * subset of the global content-kind vocabulary. Each key maps directly to
+ * one face with no rotation or conditional branch.
  */
+export const MenuSchema = z
+  .object({
+    cover: MenuEntrySchema,
+    chapter: MenuEntrySchema,
+    content: ContentMenuSchema,
+    ending: MenuEntrySchema,
+  })
+  .strict()
+
+/** Public v2 theme-file contract. Every file is complete and self-contained. */
 export const ThemeFileSchema = z
   .object({
     ...CommonThemeFileFields,
-    base: z.enum(BUILTIN_THEME_IDS).optional(),
-    faces: ThemeFacesSchema.partial().optional(),
-    motif: ThemeMotifSchema.optional(),
-    tendencies: ThemeTendenciesSchema.optional(),
-    sparse: z.array(z.enum(SPARSE_LAYOUT_IDS)).optional(),
+    version: z.literal(2),
+    menu: MenuSchema,
   })
   .strict()
   .superRefine((value, ctx) => {
     validateCommonThemeFields(value, ctx)
-    if (value.base !== undefined) {
-      for (const field of ["faces", "motif", "tendencies", "sparse"] as const) {
-        if (!Object.hasOwn(value, field)) continue
-        ctx.addIssue({
-          code: "custom",
-          path: [field],
-          message: `"${field}" is a complete theme field and cannot appear when "base" is present`,
-        })
-      }
-      return
-    }
-    for (const slideType of ["cover", "chapter", "content", "ending"] as const) {
-      if (value.faces?.[slideType] !== undefined) continue
-      ctx.addIssue({
-        code: "custom",
-        path: ["faces", slideType],
-        message: `a complete theme without "base" must declare a non-empty "${slideType}" face pool`,
-      })
-    }
   })
 
-export type PartialThemeFile = z.infer<typeof PartialThemeFileSchema>
-export type CompleteThemeFile = z.infer<typeof CompleteThemeFileSchema>
-export type ThemeFile = PartialThemeFile | CompleteThemeFile
-export type FaceReference = z.infer<typeof FaceReferenceSchema>
+export type MenuParamValue = z.infer<typeof MenuParamValueSchema>
+export type MenuDecor = z.infer<typeof MenuDecorSchema>
+export type MenuEntry = z.infer<typeof MenuEntrySchema>
+export type Menu = z.infer<typeof MenuSchema>
+export type ThemeFile = z.infer<typeof ThemeFileSchema>
 
 /**
  * Internal declaration accepted from `builtin/`. It is intentionally a
- * superset of the public complete-theme contract. Existing built-in board
- * constructor knobs remain in the engine-only `style.shape.cover` field.
- * The public style schema rejects that field, and limited decorations remain
- * inside the registered motif implementations.
+ * superset of the public complete-theme contract: built-in board constructor
+ * knobs stay in the engine-only `style.shape.cover` field (the public style
+ * schema rejects it), and the theme-wide `motif` anchor stays here because
+ * the public contract expresses decoration per menu entry only.
  */
 export interface BuiltinThemeDeclaration {
-  version: 1
+  version: 2
   id: (typeof BUILTIN_THEME_IDS)[number]
   label: string
   style: StyleTokens
   brand?: BrandConfig
   occasions?: readonly Occasion[]
   identity?: "low" | "medium" | "high"
-  faces: Record<Slide["type"], readonly FaceReference[]>
+  menu: Menu
   motif?: {
     id: MotifId
     params?: { intensity?: "subtle" | "normal" }
   }
-  tendencies?: Partial<Record<Slide["type"], readonly string[]>>
-  sparse?: readonly (typeof SPARSE_LAYOUT_IDS)[number][]
 }

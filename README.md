@@ -32,13 +32,13 @@ Issues are welcome any time. [Open one](https://github.com/liustack/pptwise/issu
 
 ## Highlights
 
-**⚡ Tell your AI what to cover, get the deck.** You bring the content, the engine handles layout, color, type size, and spacing. The same content renders the same deck every time, so there is nothing to redo and no luck involved.
+**⚡ Tell your AI what to cover, get the deck.** You bring the intent, the engine turns semantic page kinds and typed components into a coherent theme-bound deck. The same bound input renders the same output every time.
 
-**✏️ Open it in PowerPoint and keep working.** Every heading, bullet, and chart bar opens in PowerPoint for you to retype and restyle. Chart and table figures are the exception: to change the numbers, have your AI rebuild that page. 24 ready-made styles, and you can pull the colors and fonts out of a deck your company already uses.
+**✏️ Open it in PowerPoint and keep working.** Every heading, bullet, and chart bar opens in PowerPoint for you to retype and restyle. Chart and table figures are the exception: to change the numbers, have your AI rebuild that page. Start from 24 factory themes, copy one into your workspace, or extract colors and fonts from a deck your company already uses.
 
 **🔌 Installs into the agent you already use.** One command puts pptwise into DeepSeek Harness, Claude Code, or any agent that reads a skill folder (Codex and friends), and it knows how to build a deck the moment it lands.
 
-**🔁 Revisions without describing everything again.** One command opens a live preview in your browser. Tell your AI what to change in plain words — the page refreshes itself as each revision lands.
+**🔁 Revisions without describing everything again.** One command opens a live preview in your browser. Tell your AI what to change in plain words, and the page refreshes itself as each revision lands.
 
 **🔒 No account, no API key to render, no network at render time.** Install it and it works. Node 22.19+ or Bun is all you need on the machine. Optional stock-photo search uses the user's own Pexels key.
 
@@ -56,47 +56,76 @@ There is no step 2. Your AI puts the skill folder where your harness reads it, a
 
 ## Quick start
 
-An IR is one JSON file describing the whole deck. Write a minimal one, then run the validate → render → preview loop:
+IR v5 is one JSON file describing a complete bound deck. Every content page names its semantic `kind`. The theme menu turns that kind into a visual face.
 
-```bash
-cat > deck.json <<'EOF'
+```json
 {
+  "version": "5",
   "filename": "hello.pptx",
   "theme": { "id": "consulting" },
   "slides": [
-    { "type": "cover", "heading": "Hello pptwise", "subheading": "A first deck in ten minutes" },
-    { "type": "content", "heading": "Why it works", "components": [
-      { "type": "bullets", "items": ["Semantic IR in", "Native DrawingML out", "Every shape stays editable"] } ] },
+    {
+      "type": "cover",
+      "heading": "Hello pptwise",
+      "subheading": "A first native deck"
+    },
+    {
+      "type": "content",
+      "kind": "points",
+      "heading": "Why it works",
+      "components": [
+        {
+          "type": "bullets",
+          "items": ["Semantic IR in", "Theme-menu lookup", "Native DrawingML out"]
+        }
+      ]
+    },
     { "type": "ending", "heading": "Thanks" }
   ]
 }
-EOF
-pptwise validate deck.json                              # → OK — 3 slides, theme "consulting"
-pptwise render deck.json -o out/hello.pptx              # → wrote out/hello.pptx (3 slides, ~24 KB)
-pptwise render deck.json -o out/tech.pptx --theme tech  # same bare IR, explicit theme override
-pptwise preview deck.json -o out/svgs                   # SVG per slide, for a visual self-check
 ```
 
-Boundary pages render components only when their resolved layout declares a compatible slot. `validate` names content that would otherwise disappear.
+Save that as `deck.json`, then run:
 
-Choose a look from `pptwise themes --json` by matching task `occasions` and desired `identity`. If several fit, compare them with `pptwise preview <target> --themes <id,id,...>`. Custom version 1 theme files are either partial with a built-in `base`, or complete with all four face pools.
+```bash
+pptwise validate deck.json
+pptwise render deck.json -o out/hello.pptx
+pptwise preview deck.json -o out/review --html
+```
 
-On an assembled deck, `--theme` is a repaint that keeps materialized layout ids. To adopt another theme's structural faces, change the project spec theme and assemble again.
+Choose a theme from `pptwise themes --json` by matching `occasions` and `identity`. Compare two to four candidates before binding:
 
-No install at all also works: `npx -y @liustack/pptwise validate deck.json`. In a source checkout, `node dist/cli.js` replaces `pptwise`, and `examples/` has ready-made IR files to try.
+```bash
+pptwise theme try consulting,swiss,memo
+```
+
+Create a complete independent v2 theme by copying a preset, forking a palette, or extracting an Office brand:
+
+```bash
+pptwise theme new --from consulting -o themes/acme.theme.json --id acme
+pptwise theme fork acme --primary "#0B5FFF" -o themes/acme-blue.theme.json --id acme-blue
+pptwise brand extract corp.pptx -o themes/acme-brand.theme.json --id acme-brand --from consulting
+```
+
+A deck project binds one theme in `deck.spec.json`, then keeps page content in `pages/<id>.json`. Render has no temporary theme switch. A same-menu color fork can replace the binding. A different menu requires returning to theme selection, then revisiting the spec and affected page fills.
+
+No install also works: `npx -y @liustack/pptwise validate deck.json`. In a source checkout, use `node dist/cli.js` in place of `pptwise`. Ready-made v5 files live under `examples/`.
 
 The commands you will reach for most:
 
-| Command | Does |
-|---|---|
-| `validate <target>` | Check the IR, with page numbers on every error |
-| `render <target> [-o <out.pptx>] [--theme <id>]` | Render a `.pptx`. Omit `-o` to write `.pptwise/<deck>/<deck>.pptx` |
-| `preview <target> [-o <dir>] [--html] [--themes <id,id,...>]` | One SVG per slide, a review page, or a cover and content theme contact sheet. Omit `-o` to write `.pptwise/<deck>/` |
-| `serve <target>` | Live preview that reloads on every change |
-| `audit <target>` | Deterministic review: geometry, dropped content, and monotony |
-| `themes [--json]` | List built-in themes, including occasion and identity metadata |
-| `layouts [--json]` | List layouts, pin-only status, capacities, and slots |
-| `doctor` | Check the install: runtime, skill copies, optional capabilities, self-test render |
+| command | purpose |
+| --- | --- |
+| `spec validate <spec.json>` | Validate page order, kinds, headings, narrative, and theme-menu fit. |
+| `assemble <dir>` | Combine a deck project into derived IR v5 without storing rendering choices. |
+| `validate <target>` | Check IR, binding, menu, components, assets, and content quality. |
+| `render <target> [-o <out.pptx>]` | Render native editable PPTX. |
+| `audit <target>` | Check geometry, contrast, truncation, dropped content, and monotony. |
+| `preview <target> [--html]` | Write SVG pages and an optional self-contained review file. |
+| `serve <target>` | Start a live review that reloads on source changes. |
+| `themes [--json]` | List factory themes with occasion and identity metadata. |
+| `theme try <id,id,...>` | Compare the fixed sample across two to four themes. |
+| `theme new`, `theme fork` | Copy a complete theme or create a full-palette fork. |
+| `doctor` | Check runtime, skill copies, optional capabilities, and a self-test render. |
 
 Full reference: [`docs/cli.md`](./docs/cli.md).
 
@@ -107,12 +136,12 @@ Full reference: [`docs/cli.md`](./docs/cli.md).
 | [Install guide](./INSTALL.md) | Handing installation to an agent or checking prerequisites |
 | [Agent skill](./skills/pptwise/SKILL.md) | Learning the workflow pptwise teaches an agent |
 | [CLI manual](./docs/cli.md) | Looking up commands, flags, audits, previews, and health checks |
-| [IR reference](./docs/ir.md) | Writing a deck, slide, component, or narrative in JSON |
-| [Themes](./docs/themes.md) | Routing by occasion, comparing looks, or authoring a partial or complete theme |
-| [Core concepts](./docs/concepts.md) | Understanding themes, layouts, components, narratives, and capacity |
-| [Architecture](./docs/architecture.md) | Working on the render chain or adding a theme, layout, or component |
-| [Deck projects](./docs/deck-projects.md) | Building a multi-file deck with locked specs, assets, and live review |
-| [Layout selection and seed](./docs/selection-and-seed.md) | Explaining why a layout was picked or keeping revisions stable |
+| [IR reference](./docs/ir.md) | Writing IR v5 pages, kinds, components, assets, and narrative in JSON |
+| [Themes](./docs/themes.md) | Copying, comparing, forking, binding, or authoring a complete v2 theme |
+| [Core concepts](./docs/concepts.md) | Understanding theme, spec, component, kind, menus, and capacity |
+| [Architecture](./docs/architecture.md) | Working on the menu route, render chain, or export boundary |
+| [Deck projects](./docs/deck-projects.md) | Building a multi-file deck with a bound theme, locked spec, assets, and live review |
+| [Menu lookup](./docs/menu-lookup.md) | Tracing how a page kind reaches one theme face across validation and render |
 | [Contrast system](./docs/contrast-system.md) | Debugging text color, painted backgrounds, or contrast findings |
 | [Designing themes](./docs/designing-themes.md) | Drawing a theme redesign that can actually compile to PPTX |
 | [Testing](./docs/testing.md) | Running the right gate, inspecting snapshots, or changing exported XML |

@@ -4,12 +4,13 @@ import { fitHeadingLines } from "../render/heading-fit"
 import { fitSvgLine, layoutSvgText } from "../lib/svg-text-layout"
 import { latinUpper, trackingPx } from "./minimal-shared"
 import { accessibleInk, metaInk, readableOn } from "../render/ink"
+import { faceParam, optionalFaceParam } from "./face-params"
 
 /**
  * corner-wedge cover layout（2026-08-22 封面还原第一波，新表达）：
  * **右下三角楔 + 更亮的叠加斜带**。构图抄 arena / ember 两家封面样例：
  * 同一只角楔，arena 是居中海报加小楔，ember 是左齐标题加大楔。标题对齐与
- * 楔的峰点由 `style.shape.cover` 参数化。
+ * 楔的峰点由菜单中本脸的参数控制。
  *
  * **它进共享池，不是 arena / ember 专用**。零 theme id、零 hex。HUD 括弧
  * 和火星点列是各自主题 motif 的事，本版式不重画。现有 `split-diagonal`
@@ -83,17 +84,16 @@ function innerBandPath(
   return `M${innerStartX},720 L1280,${innerPeakY} L1280,${outerPeakY} L${outerStartX},720 Z`
 }
 
-export function CornerWedgeCover({ ir, slide, ctx }: SvgTemplateProps) {
+export function CornerWedgeCover({ ir, slide, ctx, params }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const bg = ctx.defaultBg ?? colors.bg
-  const cover = ctx.shape?.cover
-  const peakY = cover?.wedgePeakY ?? DEFAULT_PEAK_Y
-  const startX = cover?.wedgeStartX ?? DEFAULT_START_X
-  const innerStartX = cover?.wedgeInnerStartX
-  const innerPeakY = cover?.wedgeInnerPeakY
+  const peakY = faceParam(params, "wedgePeakY", DEFAULT_PEAK_Y)
+  const startX = faceParam(params, "wedgeStartX", DEFAULT_START_X)
+  const innerStartX = optionalFaceParam<number>(params, "wedgeInnerStartX")
+  const innerPeakY = optionalFaceParam<number>(params, "wedgeInnerPeakY")
   const hasInner = innerStartX !== undefined && innerPeakY !== undefined
-  const textAnchor = cover?.textAnchor ?? "middle"
-  const metaInWedge = cover?.metaInWedge === true
+  const textAnchor = faceParam<"start" | "middle">(params, "textAnchor", "middle")
+  const metaInWedge = faceParam(params, "metaInWedge", false)
   const centered = textAnchor === "middle"
   const titleX = centered ? TITLE_CENTER_X : TITLE_START_X
   const titleY = centered ? TITLE_CENTER_Y : TITLE_START_Y
@@ -274,11 +274,19 @@ export function CornerWedgeCover({ ir, slide, ctx }: SvgTemplateProps) {
 export const layoutDef: LayoutDefinition = {
   // cover-corner-wedge.tsx: lower-right triangular wedge plus a brighter
   // overlay slash inset from the hypotenuse. Title alignment and peak come
-  // from style.shape.cover. Overlay always on. Inner band only when both
+  // from menu face parameters. Overlay always on. Inner band only when both
   // wedgeInnerStartX and wedgeInnerPeakY are set.
   id: "corner-wedge",
-  kind: "archetype",
+  kind: "standard",
   slideTypes: ["cover"],
+  params: {
+    wedgePeakY: { type: "number", min: 160, max: 500 },
+    wedgeStartX: { type: "number", min: 720, max: 1120 },
+    wedgeInnerStartX: { type: "number", min: 720, max: 1120 },
+    wedgeInnerPeakY: { type: "number", min: 120, max: 500 },
+    textAnchor: { type: "string", values: ["start", "middle"] },
+    metaInWedge: { type: "boolean" },
+  },
   slots: [
     { name: "kicker", accepts: [] },
     { name: "heading", accepts: [] },

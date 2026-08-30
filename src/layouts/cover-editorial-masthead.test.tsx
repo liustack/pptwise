@@ -7,6 +7,7 @@ import { resolveStyle } from "../themes"
 import { EditorialMastheadCover } from "./cover-editorial-masthead"
 import type { PptxIR, Slide } from "@/ir"
 import type { StyleTokens } from "../themes/tokens"
+import type { SvgTemplateProps } from "./types"
 
 function tokensWithoutCover(themeId: string): StyleTokens {
   const tokens = resolveStyle(themeId)
@@ -95,11 +96,16 @@ function renderMasthead(
   cover?: NonNullable<StyleTokens["shape"]>["cover"],
 ) {
   const tokens = resolveStyle(themeId)
-  const shaped: StyleTokens = { ...tokens, shape: { ...tokens.shape, cover: { ...tokens.shape?.cover, ...cover } } }
-  const ctx = buildCtx(shaped, {})
+  const ctx = buildCtx(tokens, {})
   const markup = renderSvgMarkup(
     <svg xmlns="http://www.w3.org/2000/svg">
-      <EditorialMastheadCover ir={ir(themeId)} slide={slide} index={0} ctx={ctx} />
+      <EditorialMastheadCover
+        ir={ir(themeId)}
+        slide={slide}
+        index={0}
+        ctx={ctx}
+        params={cover as SvgTemplateProps["params"]}
+      />
     </svg>,
   )
   return { root: parseSvgRoot(markup), tokens, ctx, markup }

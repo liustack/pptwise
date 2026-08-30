@@ -16,7 +16,7 @@ const BOARD_INK = "#22251F"
 
 function ir(slides: Slide[]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "x.pptx",
     theme: { id: "academic" },
     meta: {},
@@ -40,6 +40,7 @@ describe("academic sparse faces", () => {
   it("pull-quote adds a [1] tspan with dy=-18 only when attribution exists", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "pull-quote",
       heading: QUOTE,
       subheading: "陈砚清，运维成本年度复盘，2026",
@@ -65,7 +66,7 @@ describe("academic sparse faces", () => {
   })
 
   it("pull-quote draws neither the superscript nor the footnote without attribution", () => {
-    const slide: Slide = { type: "content", layout: "pull-quote", heading: QUOTE, components: [] } as Slide
+    const slide: Slide = { type: "content", kind: "points", layout: "pull-quote", heading: QUOTE, components: [] } as Slide
     const { root } = render(
       <PullQuoteContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />,
     )
@@ -76,6 +77,7 @@ describe("academic sparse faces", () => {
   it("stat-hero splits a trailing % onto a smaller gold-lined numeral", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "stat-hero",
       heading: "43%",
       subheading: "订阅续约率同比回升",
@@ -106,7 +108,7 @@ describe("academic sparse faces", () => {
 
   it("statement stamps 证明见后三页。 and uses sectionName as the kicker", () => {
     const chapter: Slide = { type: "chapter", heading: "命题 3.1", components: [] } as Slide
-    const slide: Slide = { type: "content", layout: "statement", heading: VERSE, components: [] } as Slide
+    const slide: Slide = { type: "content", kind: "points", layout: "statement", heading: VERSE, components: [] } as Slide
     const { root } = render(
       <StatementContent ir={ir([chapter, slide])} slide={slide} index={1} ctx={ctx} />,
     )

@@ -194,7 +194,6 @@ export function ShowStatementContent({ ir, slide, index, ctx }: SvgTemplateProps
           </g>
           <line x1={64} y1={200} x2={1216} y2={200} stroke={colors.border ?? colors.muted} strokeWidth={1} />
           <SvgContent
-            arrangement={slide.arrangement}
             components={slide.components}
             rect={{ x: 64, y: 230, w: 1152, h: 390 }}
             ctx={showNeutralFallbackCtx(ctx)}
@@ -206,10 +205,10 @@ export function ShowStatementContent({ ir, slide, index, ctx }: SvgTemplateProps
 }
 
 export const layoutDef = {
-  id: "show-statement",
-  kind: "archetype",
-  pinOnly: true,
   suppressMotif: true,
+  id: "show-statement",
+  kind: "standard",
+  pinOnly: true,
   slideTypes: ["content"],
   slots: [
     { name: "kicker", accepts: [] },

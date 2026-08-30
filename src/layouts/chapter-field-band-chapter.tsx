@@ -139,13 +139,13 @@ export function FieldBandChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
 }
 
 export const layoutDef = {
+  branding: "none",
   // chapter-field-band-chapter.tsx: pinOnly full-bleed primary field,
   // "part" kicker, left inverted title. Zero decoration. Motif recedes.
   // Empty heading draws no title.
   id: "field-band-chapter",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
-  branding: "none",
   paintsOwnBackground: true,
   slideTypes: ["chapter"],
   slots: [

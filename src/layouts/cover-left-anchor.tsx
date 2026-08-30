@@ -6,6 +6,7 @@ import { CONF_LABEL } from "../lib/conf-labels"
 import { showsDocumentMeta } from "../render/document-meta"
 import { accessibleInk, readableOn } from "../render/ink"
 import { hasCjk, latinUpper, trackingPx } from "./minimal-shared"
+import { faceParam } from "./face-params"
 
 /**
  * left-anchor cover layout（spec §3.2）：左侧 40%宽通栏色块 + 右侧留白面板——
@@ -88,12 +89,11 @@ const IN_BLOCK_KICKER_SIZE = 16
 const IN_BLOCK_KICKER_TRACKING_EM = 0.22
 const TITLE_UPPER_FIRST_Y = 340
 
-export function LeftAnchorCover({ ir, slide, ctx }: SvgTemplateProps) {
+export function LeftAnchorCover({ ir, slide, ctx, params }: SvgTemplateProps) {
   const { colors, fonts } = ctx
-  const cover = ctx.shape?.cover
-  const showCornerTriangle = cover?.showCornerTriangle !== false
-  const titleUpper = cover?.titleBlockAlign === "upper"
-  const showInBlockKicker = cover?.showInBlockKicker === true
+  const showCornerTriangle = faceParam(params, "showCornerTriangle", true)
+  const titleUpper = faceParam<"center" | "upper">(params, "titleBlockAlign", "center") === "upper"
+  const showInBlockKicker = faceParam(params, "showInBlockKicker", false)
 
   // Narrow (420px) in-block column: a CJK title routinely wraps to 2-3 lines
   // at hero scale, and the block runs the full 720px page height so there's
@@ -345,8 +345,13 @@ export const layoutDef: LayoutDefinition = {
   // conf badge, subheading, meta divider + author/date/version. The
   // corner triangle is a private decorative swatch (TRIANGLE_DEEP) → decor.
   id: "left-anchor",
-  kind: "archetype",
+  kind: "standard",
   slideTypes: ["cover"],
+  params: {
+    showCornerTriangle: { type: "boolean" },
+    titleBlockAlign: { type: "string", values: ["center", "upper"] },
+    showInBlockKicker: { type: "boolean" },
+  },
   slots: [
     { name: "kicker", accepts: [] },
     { name: "decor", accepts: [] },

@@ -82,10 +82,27 @@ describe("citation component", () => {
     const tspan1 = texts[1].querySelector("tspan")
     expect(tspan1).toBeNull()
 
-    // third source has url
+    // third source has both ref and url
     const tspan2 = texts[2].querySelector("tspan")
     expect(tspan2).not.toBeNull()
     expect(tspan2!.getAttribute("fill")).toBe(ctx.colors.muted)
+    expect(tspan2!.textContent).toContain("CSS")
+    expect(tspan2!.textContent).toContain("https://developer.mozilla.org")
+  })
+
+  it("renders a ref-only source detail instead of silently dropping it", () => {
+    const ref = "内部口径，7 月 5 日封账"
+    const refComponent = {
+      type: "citation" as const,
+      sources: [{ label: "云觅科技 2026 年第二季度经营数据", ref }],
+    }
+    const { container } = svg(
+      citation.render(refComponent, { x: 0, y: 0, w: 1120 }, ctx),
+    )
+    const tspan = container.querySelector("tspan")
+    expect(tspan).not.toBeNull()
+    expect(tspan!.textContent).toContain(ref)
+    expect(container.querySelector("text")?.getAttribute("data-truncated")).toBeNull()
   })
 
   it("shrinks the '[n] label' font-size when it would overflow 60% of the row width", () => {
@@ -102,7 +119,7 @@ describe("citation component", () => {
     expect(Number(text.getAttribute("font-size"))).toBeLessThan(18)
   })
 
-  it("truncates the url tspan without an overflow mark when the row is too narrow", () => {
+  it("clips an overlong detail without ellipsis and marks the source row", () => {
     const longUrl = "https://example.com/" + "a".repeat(200)
     const narrowComponent = {
       type: "citation" as const,
@@ -114,6 +131,7 @@ describe("citation component", () => {
     const tspan = container.querySelector("tspan")!
     expect(tspan.textContent).not.toMatch(/…$/)
     expect(tspan.textContent!.length).toBeLessThan(longUrl.length)
+    expect(container.querySelector("text")?.getAttribute("data-truncated")).toBe("1")
   })
 
   it("keeps a visible CJK-to-Latin gap via tspan dx, not a leading space", () => {

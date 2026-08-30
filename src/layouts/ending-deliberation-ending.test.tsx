@@ -28,7 +28,7 @@ function slide(extras: Partial<Slide> = {}): Slide {
 
 function ir(themeId: string, s: Slide, meta: PptxIR["meta"] = {}): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "deliberation-ending.pptx",
     theme: { id: themeId },
     meta,
@@ -126,9 +126,8 @@ describe("ending-deliberation-ending — board geometry", () => {
 describe("ending-deliberation-ending — shared pool", () => {
   it("is a pinOnly ending archetype with a bullets body slot", () => {
     expect(layoutDef.id).toBe("deliberation-ending")
-    expect(layoutDef.kind).toBe("archetype")
+    expect(layoutDef.kind).toBe("standard")
     expect(layoutDef.pinOnly).toBe(true)
-    expect(layoutDef.branding).toBe("none")
     expect(layoutDef.slideTypes).toEqual(["ending"])
     const body = layoutDef.slots.find((slot) => slot.name === "body")
     expect(body?.accepts).toEqual(["bullets"])

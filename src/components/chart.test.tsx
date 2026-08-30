@@ -755,7 +755,7 @@ describe("chart component — legend (n>=2 series)", () => {
       data: [{ x: "A", y: i + 1 }],
     }))
     const ir: PptxIR = {
-      version: "4",
+      version: "5",
       filename: "legend-audit-fixture",
       theme: { id: "consulting" },
       meta: {},
@@ -763,6 +763,7 @@ describe("chart component — legend (n>=2 series)", () => {
       slides: [
         {
           type: "content",
+          kind: "points",
           heading: "Legend audit fixture",
           components: [{ type: "chart", chart_type: "bar", series: manySeries }],
         },

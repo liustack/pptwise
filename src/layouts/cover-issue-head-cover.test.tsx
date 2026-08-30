@@ -18,7 +18,7 @@ function slide(heading = HEADING, extras: Partial<Slide> = {}): Slide {
 
 function ir(themeId: string, meta: PptxIR["meta"] = {}, s: Slide = slide()): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "issue-head-cover.pptx",
     theme: { id: themeId },
     meta,
@@ -121,9 +121,8 @@ describe("cover-issue-head-cover — board geometry", () => {
 describe("cover-issue-head-cover — shared pool", () => {
   it("is registered as a pinOnly cover", () => {
     expect(layoutDef.id).toBe("issue-head-cover")
-    expect(layoutDef.kind).toBe("archetype")
+    expect(layoutDef.kind).toBe("standard")
     expect(layoutDef.pinOnly).toBe(true)
-    expect(layoutDef.branding).toBe("none")
     expect(layoutDef.slideTypes).toEqual(["cover"])
   })
 
@@ -176,19 +175,18 @@ describe("cover-issue-head-cover — shared pool", () => {
 describe("cover-issue-head-cover — optical center", () => {
   it("does not stack a motif foot line under the layout foot, and hangs the title closer to the masthead", () => {
     const deck: PptxIR = {
-      version: "4",
+      version: "5",
       filename: "issue-head-center.pptx",
       theme: { id: "journal" },
       meta: FULL_META,
       assets: { images: {} },
       seed: 1,
       slides: [{ type: "cover", layout: "issue-head-cover", heading: HEADING, subheading: SUBHEADING, components: [] }],
-    } as PptxIR
+    } as unknown as PptxIR
     const root = parseSvgRoot(renderSlideSvg(deck, 0))
     expect(root.querySelector('line[y1="712"]')).toBeNull()
     expect(Array.from(root.querySelectorAll("text")).some((t) => (t.textContent ?? "").includes("№"))).toBe(false)
     const title = Array.from(root.querySelectorAll("text")).find((t) => (t.textContent ?? "").includes("县城咖啡"))
     expect(title?.getAttribute("y")).toBe("280")
-    expect(layoutDef.suppressMotif).toBe(true)
   })
 })

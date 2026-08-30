@@ -219,7 +219,7 @@ export const layoutDef = {
   // cover-type-rule-cover.tsx: left-aligned type cover, short border rule
   // under the title block, cyan only on **emphasis**. pinOnly board lock.
   id: "type-rule-cover",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["cover"],
   slots: [

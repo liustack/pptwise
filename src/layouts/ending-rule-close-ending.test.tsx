@@ -17,7 +17,7 @@ function slide(heading = HEADING, extras: Partial<Slide> = {}): Slide {
 
 function ir(themeId: string, s: Slide = slide(), meta: PptxIR["meta"] = {}): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "rule-close-ending.pptx",
     theme: { id: themeId },
     meta,
@@ -96,7 +96,7 @@ describe("ending-rule-close-ending — board geometry", () => {
 describe("ending-rule-close-ending — shared pool", () => {
   it("is a pinOnly ending archetype named by composition, not theme", () => {
     expect(layoutDef.id).toBe("rule-close-ending")
-    expect(layoutDef.kind).toBe("archetype")
+    expect(layoutDef.kind).toBe("standard")
     expect(layoutDef.pinOnly).toBe(true)
     expect(layoutDef.slideTypes).toEqual(["ending"])
   })

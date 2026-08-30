@@ -25,7 +25,7 @@ const CJK_LONG =
 // is chapter "01", index 2 is chapter "02" out of 2 total chapters (drives
 // the horizontal progress dot row's track + node position).
 const chapter1: Slide = { type: "chapter", heading: "第一部分：研究背景", components: [] } as Slide
-const content: Slide = { type: "content", heading: "现状", components: [] } as Slide
+const content: Slide = { type: "content", kind: "points", heading: "现状", components: [] } as Slide
 const chapter2: Slide = {
   type: "chapter",
   heading: "第二部分：方法与证据",

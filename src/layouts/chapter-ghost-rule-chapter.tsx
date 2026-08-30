@@ -116,13 +116,13 @@ export function GhostRuleChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
 }
 
 export const layoutDef: LayoutDefinition = {
+  branding: "none",
   // chapter-ghost-rule-chapter.tsx: pinOnly left-aligned chapter open.
   // Ghost numeral sinks to the lower right inside the canvas. Accent bar
   // starts the title cluster. Theme paints the chapter field.
   id: "ghost-rule-chapter",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
-  branding: "none",
   slideTypes: ["chapter"],
   slots: [
     { name: "watermark", accepts: [] },

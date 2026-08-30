@@ -26,13 +26,13 @@ function chapterCtx(themeId: string) {
 }
 
 const chapter1: Slide = { type: "chapter", heading: HEADING, subheading: SUBHEADING, components: [] } as Slide
-const content: Slide = { type: "content", heading: "现状", components: [] } as Slide
+const content: Slide = { type: "content", kind: "points", heading: "现状", components: [] } as Slide
 const chapter2: Slide = { type: "chapter", heading: HEADING, subheading: SUBHEADING, components: [] } as Slide
 const chapter3: Slide = { type: "chapter", heading: HEADING, subheading: SUBHEADING, components: [] } as Slide
 
 function ir(themeId: string, slides: Slide[] = [chapter1, content, chapter2, content, chapter3]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "folio-ghost-chapter.pptx",
     theme: { id: themeId },
     meta: {},
@@ -128,9 +128,8 @@ describe("chapter-folio-ghost-chapter — board geometry", () => {
 describe("chapter-folio-ghost-chapter — shared pool", () => {
   it("is a pinOnly chapter archetype", () => {
     expect(layoutDef.id).toBe("folio-ghost-chapter")
-    expect(layoutDef.kind).toBe("archetype")
+    expect(layoutDef.kind).toBe("standard")
     expect(layoutDef.pinOnly).toBe(true)
-    expect(layoutDef.branding).toBe("none")
     expect(layoutDef.slideTypes).toEqual(["chapter"])
   })
 

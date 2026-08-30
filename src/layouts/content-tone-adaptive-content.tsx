@@ -205,7 +205,6 @@ export function ToneAdaptiveContent({ ir, slide, index, ctx }: SvgTemplateProps)
           />
           {treated.chrome}
           <SvgContent
-            arrangement={slide.arrangement}
             components={slide.components}
             rect={{
               x: treated.contentRect.x,
@@ -240,7 +239,6 @@ export function ToneAdaptiveContent({ ir, slide, index, ctx }: SvgTemplateProps)
       <>
         {treated.chrome}
         <SvgContent
-          arrangement={slide.arrangement}
           components={slide.components}
           rect={{
             x: treated.contentRect.x,
@@ -441,7 +439,6 @@ export function ToneAdaptiveContent({ ir, slide, index, ctx }: SvgTemplateProps)
 
         {/* Content area inside card (SvgContent replaces foreignObject) */}
         <SvgContent
-          arrangement={slide.arrangement}
           components={slide.components}
           rect={{ x: 92, y: contentRectY, w: 1096, h: contentRectH }}
           ctx={cardCtx}
@@ -606,7 +603,6 @@ export function ToneAdaptiveContent({ ir, slide, index, ctx }: SvgTemplateProps)
 
       {/* Content components (SvgContent replaces foreignObject) */}
       <SvgContent
-        arrangement={slide.arrangement}
         components={slide.components}
         rect={{ x: 64, y: contentRectY, w: 1152, h: contentRectH }}
         ctx={ctx}
@@ -653,7 +649,7 @@ export const layoutDef: LayoutDefinition = {
   // card when a bg image is present, or an italic footnote when not —
   // same slot, two renderings).
   id: "tone-adaptive-content",
-  kind: "archetype",
+  kind: "standard",
   slideTypes: ["content"],
   slots: [
     { name: "kicker", accepts: [] },

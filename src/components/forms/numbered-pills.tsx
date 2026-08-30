@@ -3,7 +3,13 @@ import { layoutSvgText } from "@/lib/svg-text-layout"
 import { accessibleInk, readableOn } from "../../render/ink"
 import type { FormKnobs } from "../form-assignments"
 import type { ComponentBox, ComponentCtx } from "../types"
-import { FORM_BODY_FLOOR, FORM_TITLE_FLOOR, formLineHeight } from "./legibility"
+import {
+  FORM_BODY_FLOOR,
+  FORM_TITLE_FLOOR,
+  formLineHeight,
+  formTextClipMarker,
+  formTextOmissionMarker,
+} from "./legibility"
 
 type NumberedCardsComponent = Extract<Component, { type: "numbered_cards" }>
 
@@ -210,7 +216,10 @@ export function renderNumberedPills(
         const textTop = pillY + (L.pillH - stackTextH) / 2
         const titleY0 = textTop + title.fontSize * 0.85
         return (
-          <g key={i}>
+          <g
+            key={i}
+            data-truncated={formTextOmissionMarker(item.text ?? "", body ?? { lines: [] })}
+          >
             <rect
               x={pillX}
               y={pillY}
@@ -253,7 +262,7 @@ export function renderNumberedPills(
             {title.lines.map((line, li) => (
               <text
                 key={`t-${li}`}
-                data-truncated={title.truncated && li === title.lines.length - 1 ? "1" : undefined}
+                data-truncated={formTextClipMarker(title, li)}
                 x={textX}
                 y={textTop + li * title.lineHeight + title.fontSize * 0.85}
                 fontSize={title.fontSize}
@@ -269,9 +278,7 @@ export function renderNumberedPills(
               ? body.lines.map((line, li) => (
                   <text
                     key={`b-${li}`}
-                    data-truncated={
-                      body.truncated && li === body.lines.length - 1 ? "1" : undefined
-                    }
+                    data-truncated={formTextClipMarker(body, li)}
                     x={textX}
                     y={
                       textTop +

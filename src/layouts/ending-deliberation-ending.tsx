@@ -194,14 +194,14 @@ export function DeliberationEnding({ slide, ctx }: SvgTemplateProps) {
 }
 
 export const layoutDef: LayoutDefinition = {
+  branding: "none",
   // ending-deliberation-ending.tsx: pinOnly three-item arrangements list,
   // short heading or English ARRANGEMENTS kicker, accent closing rule,
   // optional subheading sign-off. No thank-you and no invented 请审议.
   // Optional bullets fill the list.
   id: "deliberation-ending",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
-  branding: "none",
   slideTypes: ["ending"],
   slots: [
     { name: "kicker", accepts: [] },

@@ -1,34 +1,44 @@
 # Branding posture
 
-Read this when extracting a company template, or deciding whether to write `branding: "full"`.
+Read this when deciding deck-level brand visibility, extracting an Office brand, or understanding why a page has no brand frame.
 
-A brand signal answers what the deck should look like, never how it should argue. Turning "this company's palette looks like a consulting firm" into a narrative is a guess wearing a fact's clothes, and it is how a deck ends up arguing in a shape nobody chose.
+A brand signal controls appearance. It does not choose the narrative or the page kind.
 
-## Brand themes: the user's own company template
+## Deck-level posture
 
-When the user hands over or mentions a `.thmx` theme, `.potx` template, or branded `.pptx`, extract its colors and fonts into a custom theme before choosing the final look. Extraction is local. The file never leaves the machine.
+`branding` has three values:
+
+| value | visible result |
+| --- | --- |
+| `full` | Keeps the logo throughout, draws the content-page footer and metadata, and allows confidentiality and date on cover and ending metadata rows. |
+| `cover-only` | Keeps the logo on cover and chapter pages. Content and ending pages drop the shared footer, metadata, and logo. |
+| `minimal` | Keeps the logo but drops the content-page footer rule and metadata. |
+
+Omitting `branding` is exactly the same as `cover-only`. Choose `full` only when every content page needs the organization footer, such as a confidential or controlled document.
+
+## Page-level silence
+
+The deck posture is only the broad permission. A face may carry the structural fact `branding: "none"`. A theme menu entry may also declare `brand: "none"`. Either one removes the whole shared brand fragment from that page, even when the deck says `full`.
+
+This is intentional for faces whose composition has no safe brand frame. It is not a missing logo bug and it must not be repaired with page content. Theme motifs are separate from branding and remain governed by the face and menu decoration rules.
+
+## Extract a complete v2 theme
+
+When the user supplies a `.thmx`, `.potx`, or branded `.pptx`, extract colors and fonts locally. Choose a donor whose menu fits the intended story because extraction copies that complete menu.
 
 ```bash
-pptwise brand extract corp-template.pptx -o deck-dir/acme.theme.json --id acme
-pptwise preview deck-dir/ --theme-file deck-dir/acme.theme.json --theme acme --html
+pptwise brand extract corp-template.pptx \
+  -o deck-dir/theme.json \
+  --id acme \
+  --from consulting
 ```
 
-Extraction writes a version 1 partial theme. It contains style and brand tokens, sets `base` to `consulting`, and inherits that base theme's structural faces. Edit the written `base` field before loading only when another built-in structure is intentional. Keep it as a candidate file while comparing looks. In the preview command, `--theme-file` registers the candidate and `--theme acme` selects it without turning it into the project default.
+The output is a self-contained version 2 theme with style tokens, brand tokens, occasions, identity, and a complete menu. It has no base reference and inherits nothing at load time. Bind `acme` in `deck.spec.json`, then project commands resolve `deck-dir/theme.json` automatically.
 
-After the user confirms the custom look, save that exact file as `deck-dir/theme.json` and write its id into `deck.spec.json`. The project registers it before assemble and auto-loads it for validate, render, audit, preview, and serve, so every project command stays free of theme flags. `serve` rereads `theme.json` after edits and refreshes the open preview.
+To compare the result against other named themes, run the fixed fitting-room sample from a directory where all names resolve:
 
 ```bash
-pptwise render deck-dir/
+pptwise theme try acme,consulting,swiss
 ```
 
-`--theme-file` only registers ids. It never selects one. A bare IR file must also use `--theme <id>` or already name that id in `theme.id`:
-
-```bash
-pptwise render deck.json --theme-file acme.theme.json --theme acme
-```
-
-A deck project with `theme.json` and a spec reference needs neither flag.
-
-Loading enforces a contrast floor. A template whose text and background tones are too close is refused with the failing token and ratio named. Relay that message and ask whether to adjust the extracted colors or use a built-in theme.
-
-Leave `branding` off the spec and the IR unless every content page needs the brand footer. Write `branding: "full"` whenever `meta.confidentiality` is `confidential` or `restricted`, or the file needs an organization colophon. Confidentiality and date then appear on the cover. They stay off every other posture.
+The loader checks contrast. If extraction produces unsafe text and background pairs, adjust the extracted theme or create a palette fork. Do not add ad hoc per-page color overrides.

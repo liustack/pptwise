@@ -229,7 +229,7 @@ export const layoutDef = {
   // demoted to annotation tier. No kicker, no rule, no watermark — the
   // whitespace and the oversized heading are the whole composition.
   id: "quote-stage",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["content"],
   slots: [

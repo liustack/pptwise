@@ -18,7 +18,7 @@ const slide: Slide = {
 } as Slide
 
 const ir: PptxIR = {
-  version: "4",
+  version: "5",
   filename: "gauge-section.pptx",
   theme: { id: "consulting" },
   meta: { organization: "云觅咨询", version: "v2", date: "2026-08" },
@@ -108,9 +108,8 @@ describe("chapter-gauge-section", () => {
   it("declares a theme-locked pinOnly self-painted chapter with no shared footer", () => {
     expect(layoutDef).toMatchObject({
       id: "gauge-section",
-      kind: "archetype",
+      kind: "standard",
       slideTypes: ["chapter"],
-      branding: "none",
       paintsOwnBackground: true,
     })
     expect(layoutDef.pinOnly).toBe(true)

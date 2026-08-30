@@ -240,7 +240,7 @@
         "font-size"
       ]
     },
-    "component--quote--mixed": {
+    "component--blockquote--mixed": {
       "verdict": "rework",
       "note": "Top-left five equal dots are one filled and four hollow, the forbidden slide-progress motif.",
       "findings": [
@@ -254,7 +254,7 @@
         "taboo"
       ]
     },
-    "component--quote--zh": {
+    "component--blockquote--zh": {
       "verdict": "rework",
       "note": "Five equal header dots are one solid and four hollow, which the progress-dot taboo forbids. The same page also pairs those navy dots (H 224, S 0.42) with gold-orange rules (H 47, S 0.89).",
       "findings": [

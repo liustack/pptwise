@@ -4,6 +4,7 @@ import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
 import { buildCtx, resolveBackgroundHex } from "../render/full-slide-svg"
 import { resolveStyle } from "../themes"
+import { THEME_DEFINITIONS } from "../themes/definitions"
 import { contrastRatio } from "../audit/deck-audit"
 import { CONTENT_DECOR_CONTRAST_CEILING, countDecorPieces } from "./decor-budget"
 import { PosterMotif } from "./motif-poster-motif"
@@ -11,7 +12,7 @@ import type { PptxIR, Slide } from "@/ir"
 
 const coverSlide: Slide = { type: "cover", heading: "封面", components: [] } as Slide
 const chapterSlide: Slide = { type: "chapter", heading: "章节", components: [] } as Slide
-const contentSlide: Slide = { type: "content", heading: "内容", components: [] } as Slide
+const contentSlide: Slide = { type: "content", kind: "points", heading: "内容", components: [] } as Slide
 const endingSlide: Slide = { type: "ending", components: [] } as Slide
 
 const LOGO_BR = { x: 1120, y: 630, w: 96, h: 40 }
@@ -25,7 +26,7 @@ function rectsOverlap(
 
 const ir = (theme: string, date?: string): PptxIR =>
   ({
-    version: "3",
+    version: "5",
     filename: "x.pptx",
     theme: { id: theme },
     meta: date ? { date } : {},
@@ -121,14 +122,10 @@ function pathYRange(d: string): { minY: number; maxY: number } {
  * 行情波浪由折线改为 Catmull-Rom 三次贝塞尔 path。
  */
 describe("PosterMotif（底缘暗线）", () => {
-  it("content 稀排钉 pin 整片退让", () => {
-    for (const layout of ["statement", "pull-quote", "stat-hero", "one-evidence", "mono-bleed"] as const) {
-      const slide = { ...contentSlide, layout } as Slide
-      const { root } = draw("insight", slide)
-      expect(root.querySelectorAll("path"), layout).toHaveLength(0)
-      expect(root.querySelectorAll("polyline"), layout).toHaveLength(0)
-      expect(root.querySelectorAll("line"), layout).toHaveLength(0)
-      expect(root.querySelectorAll("text"), layout).toHaveLength(0)
+  it("稀排条目不带 decor：脸自带无框事实，主题 motif 照画", () => {
+    const content = THEME_DEFINITIONS.insight.menu.content
+    for (const kind of ["statement", "quote", "fact"] as const) {
+      expect(content[kind]?.decor, kind).toBeUndefined()
     }
     expect(draw("insight", contentSlide).root.querySelectorAll("path")).toHaveLength(1)
     expect(draw("insight", coverSlide).root.querySelectorAll("path")).toHaveLength(1)

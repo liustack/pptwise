@@ -3,20 +3,34 @@ summary: 'skills/pptwise/references/density.md 的中文阅读镜像'
 mirror_of: skills/pptwise/references/density.md
 ---
 
-# 密度与 beat
+# 密度与装饰
 
-何时读：处理 pacing 预算、`beat`、容量、或 slide `decor` 时。
+何时读：按 pacing 预算写作，适配已绑定的脸，或判断页面是否需要局部装饰时。
 
-### 容量
+## 两种容量限制
 
-一张 slide 是一块固定尺寸的画布。第一遍起草就要考虑装得下：每张 slide 少放几个 component，标题简短有力，bullet 条目控制在约两行以内。component 数和 bullets 预算随这份 deck 的 `pacing` 轴变化（`spacious` 最紧，`dense` 最松）——`validate` 会报出实际生效的具体数值，不是一个写死的常数。这些是警告，不是硬错误——值得为了让 deck 更紧凑而修，但从不拦住 `render`。正文字号则反过来变化：`spacious` 渲染出的正文字号最大（32px，相对 `balanced`/`dense` 的 24px、18pt），即便它允许的 component 数最少——所以一张 `spacious` 的 slide 需要更少、更短的条目，而不只是更紧凑。不论 pacing 是什么，一条长到在 24px 正文地板下仍然溢出的 bullet 条目，*就是*一条硬 `validate` 错误，五种 bullet 样式（`default`/`plain`/`divided`/`numbered`/`checklist`）一视同仁。渲染器不画省略号。把「bullet 条目要短」当成一条不分样式都成立的硬约束。拿不准的时候就拆成两张 slide——一遍写对，好过事后反复修补。
+每张内容页同时受两种独立限制。叙事 pacing 给出编辑预算，主题菜单选中的脸给出正文物理容量。实际组件上限取两者中的较小值。
 
-有八种 component 类型独占整张 slide，而不是与其他组件共享：`swot`、`bmc`、`waterfall`、`gantt`、`pest`、`five_forces`、`heatmap`、`sankey`。各自必须是所在 slide 唯一的 component——`validate` 会在一张 slide 把其中之一和 `bullets` 或其他任何组件混在一起时硬报错，绝不会静默丢弃那个「陪衬」的 component。
+| pacing | 正文基线 | components | bullet 条目 | 每条宽度单位 |
+| --- | ---: | ---: | ---: | ---: |
+| `dense` | 24px | 5 | 6 | 27 |
+| `balanced` | 24px | 4 | 5 | 25 |
+| `spacious` | 32px | 3 | 4 | 22 |
 
-### Beat（节奏标记）
+`validate` 会按实际主题与 kind 报出有效上限。超出编辑预算通常是警告，越过渲染安全线或造成内容丢失仍然是硬错误。应该缩短或拆页，不要隐藏溢出。
 
-一张 content 页面上可选的 `beat`（`anchor`、`dense` 或 `breathing`）现在不只是 `spec validate` 的节奏检查——它还会影响 `render` 给这一页自动选出哪个 layout：`anchor` 偏向单一的强断言式 layout，`dense` 偏向可见条目更多的高密度 layout，`breathing` 偏向最舒展的单栏 layout。它是一个软权重，不是钉死的选择——显式的 `layout` 依然会完全覆盖它，未设置的 `beat` 则毫无影响。要有意识地声明它，按每一页在论证里的实际角色各给一个值（「重磅揭示」的那页是 `anchor`，数据密集的对比页是 `dense`，两个高密度段落之间的换气页是 `breathing`），而不是每一页都盖同一个章——`spec validate` 自己的 beat 轮换门已经会对期望有变化的 strategy 标出一连串相同 beat 的问题，而且到处盖同一个值本来就会抵消这个字段存在的目的：给 layout 增加变化。
+`spacious` 表示元素更少且正文字号更大，不是把同样多的内容压缩进一张看似更干净的页面。标题要短而有判断，bullet 条目尽量控制在两行附近。
 
-### Decor（装饰）
+连续三张内容页使用相同 kind 时，spec 会给出提示。重复可能正确，但应确认故事确实需要连续三次相同的语义动作。
 
-只有当用户明确要求装饰性点缀时，才设置 slide 的 `decor`。默认不设——theme 本身已经带着自己的视觉母题。
+八种组件独占整个正文区：`swot`、`bmc`、`waterfall`、`gantt`、`pest`、`five_forces`、`heatmap` 与 `sankey`。每种都必须是该页唯一的组件。
+
+## 装饰归属
+
+装饰按以下顺序解析：
+
+1. 一张脸若把 `suppressMotif: true` 声明为结构事实，就永远不接收主题 motif。
+2. 其他脸可以由菜单条目选择 `decor.kind: "silent"`，或换用另一个 motif。
+3. 菜单没有表达意见时，绘制主题的普通 motif。
+
+菜单不能推翻脸的结构静默。页面级 `decor` 是受控的局部原语，例如线、标签、引号、圆点或大数字。只有页面含义确实需要这一个强调时才使用。它不能替代主题菜单，也不应整份 deck 到处盖章。

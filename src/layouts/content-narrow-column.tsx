@@ -60,7 +60,6 @@ export function NarrowColumnContent({ ir, slide, index, ctx }: SvgTemplateProps)
       <>
         {treated.chrome}
         <SvgContent
-          arrangement={slide.arrangement}
           components={slide.components}
           rect={{ x, y, w, h: columnH }}
           ctx={ctx}
@@ -256,7 +255,6 @@ export function NarrowColumnContent({ ir, slide, index, ctx }: SvgTemplateProps)
         )}
 
       <SvgContent
-        arrangement={slide.arrangement}
         components={slide.components}
         rect={{ x: COLUMN_X, y: columnY, w: COLUMN_W, h: columnH }}
         ctx={ctx}
@@ -311,7 +309,7 @@ export const layoutDef: LayoutDefinition = {
   // italic footnote
   // (meta).
   id: "narrow-column",
-  kind: "archetype",
+  kind: "standard",
   slideTypes: ["content"],
   slots: [
     { name: "rule", accepts: [] },

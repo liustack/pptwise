@@ -53,13 +53,11 @@ import JSZip from "jszip"
 import { PptwiseError } from "../../errors"
 import { contrastRatio } from "../../render/ink"
 import { mixHex } from "../../components/color-mix"
-import type { PartialThemeFile } from "../schema"
+import type { Menu, ThemeFile } from "../schema"
 import type { StyleTokens } from "../tokens"
 
-/** The v1 partial theme-file shape written by `pptwise brand extract`.
- * Extraction has no layout knowledge, so it always names a built-in `base`
- * and never emits complete-theme structural fields. */
-export type BrandThemeFile = PartialThemeFile
+/** The complete v2 theme-file shape written by `pptwise brand extract`. */
+export type BrandThemeFile = ThemeFile
 
 export interface ExtractBrandThemeOptions {
   /** Theme id — defaults to a slug of {@link ExtractBrandThemeOptions.label},
@@ -71,10 +69,27 @@ export interface ExtractBrandThemeOptions {
   /** Human-readable label — defaults to the source theme part's own
    *  `<a:clrScheme name="…">`. */
   label?: string
-  /** Built-in structure inherited by the partial output. Defaults to
-   * `consulting`. Edit the written file's `base` to choose another built-in. */
-  base?: PartialThemeFile["base"]
 }
+
+/** Materialized consulting-style menu used by shallow brand extraction. */
+const EXTRACTED_THEME_MENU = {
+  cover: { face: "poster-center" },
+  chapter: { face: "masthead-chapter" },
+  content: {
+    points: { face: "two-column" },
+    list: { face: "bento-panel" },
+    comparison: { face: "two-column" },
+    process: { face: "rail-numbered" },
+    data: { face: "bento-panel" },
+    photo: { face: "asymmetric-triptych" },
+    statement: { face: "statement" },
+    quote: { face: "pull-quote" },
+    fact: { face: "stat-hero" },
+    evidence: { face: "one-evidence" },
+    hierarchy: { face: "two-column" },
+  },
+  ending: { face: "poster-ending" },
+} satisfies Menu
 
 /** Every OOXML color-scheme slot this parser reads. `hlink`/`folHlink` are
  *  parsed (mirroring probe.py) but never mapped onto a pptwise token — no
@@ -334,5 +349,5 @@ export async function extractBrandTheme(
     },
   }
 
-  return { version: 1, id, label, base: opts.base ?? "consulting", style, brand: {} }
+  return { version: 2, id, label, style, brand: {}, menu: EXTRACTED_THEME_MENU }
 }

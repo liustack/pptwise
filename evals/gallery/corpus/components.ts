@@ -39,7 +39,7 @@ export const COMPONENT_BUILDERS: Record<string, (lex: Lexicon) => Component> = {
 
   bullets: (lex) => ({ type: "bullets", items: slice(lex.bullets, 5), style: "default" }),
 
-  quote: (lex) => ({ type: "quote", text: lex.quote.text, attribution: lex.quote.attribution }),
+  blockquote: (lex) => ({ type: "blockquote", text: lex.quote.text, attribution: lex.quote.attribution }),
 
   callout: (lex) => ({ type: "callout", variant: "warn", text: lex.callouts.warn, icon: "alert-triangle" }),
 

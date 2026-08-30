@@ -191,14 +191,14 @@ export function TicketCtaEnding({ ir, slide, ctx }: SvgTemplateProps) {
 }
 
 export const layoutDef = {
+  branding: "none",
   // ending-ticket-cta-ending.tsx: full-bleed primary field, inverted
   // title, paper-color CTA rect. Label from contact.name, else a short
   // subheading. pinOnly. paintsOwnBackground. Empty heading invents no
   // price and no canned ticket CTA.
   id: "ticket-cta-ending",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
-  branding: "none",
   paintsOwnBackground: true,
   slideTypes: ["ending"],
   slots: [

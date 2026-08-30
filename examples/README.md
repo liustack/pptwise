@@ -1,48 +1,44 @@
 # Examples
 
-Seven ready-to-run decks covering the main slide types, component families,
-and themes. Every one validates and audits clean against the current schema
-(`pnpm build`, then the commands below).
+Seven ready-to-run decks cover the main page kinds, component families, and
+factory themes. Every example uses IR v5 or a version 1 deck spec. Run
+`pnpm build` before using the compiled CLI commands below.
 
-| Example | What it shows | Preview |
+| example | what it shows | preview |
 | --- | --- | --- |
-| [`basic.json`](basic.json) | The five-slide starter: `cover` / `chapter` / `content` (`bullets`, `kpi_cards`) / `ending`. Theme `consulting`. | <img src="previews/basic.svg" width="280" alt="basic cover"> |
-| [`product-pitch.json`](product-pitch.json) | A customer pitch (`narrative: "pitch"`): `icon_cards`, `kpi_cards`, `comparison`, and the `quote` arrangement. Theme `tech`. | <img src="previews/product-pitch.svg" width="280" alt="product pitch cover"> |
-| [`quarterly-review-zh.json`](quarterly-review-zh.json) | A Chinese business review (`narrative: "weekly-brief"`): `data_table`, a `waterfall` profit bridge, `numbered_cards`, a `warn` callout. Theme `vermilion`. | <img src="previews/quarterly-review-zh.svg" width="280" alt="quarterly review cover"> |
-| [`data-charts.json`](data-charts.json) | Data-heavy pages: grouped `bar`, `line`, and `donut` charts plus a `heatmap`. Theme `insight`. | <img src="previews/data-charts.svg" width="280" alt="data charts cover"> |
-| [`strategy-analysis.json`](strategy-analysis.json) | Consulting structures: full-body `swot` and `five_forces`, a 2×2 `matrix`, a `verdict_banner` recommendation. Theme `academic`. | <img src="previews/strategy-analysis.svg" width="280" alt="strategy analysis cover"> |
-| [`team-onboarding.json`](team-onboarding.json) | People and process: `people_cards`, `tag_row`, `steps`, a `cycle` loop, a vertical `timeline`. Theme `classroom`. | <img src="previews/team-onboarding.svg" width="280" alt="team onboarding cover"> |
-| [`launch-deck/`](launch-deck/) | A full deck **project** (`deck.spec.json` + `pages/*.json`): the spec locks page order and headings, page files fill content, `assemble` produces the renderable IR. Theme `campaign`. | <img src="previews/launch-deck.svg" width="280" alt="launch deck cover"> |
+| [`basic.json`](basic.json) | A five-page starter with `points` and `data` content kinds. Theme `consulting`. | <img src="previews/basic.svg" width="280" alt="basic cover"> |
+| [`product-pitch.json`](product-pitch.json) | A customer pitch using `points`, `list`, `data`, `comparison`, and `quote`. Theme `academic`. | <img src="previews/product-pitch.svg" width="280" alt="product pitch cover"> |
+| [`quarterly-review-zh.json`](quarterly-review-zh.json) | A Chinese business review with `data`, `points`, and `statement` pages. Theme `vermilion`. | <img src="previews/quarterly-review-zh.svg" width="280" alt="quarterly review cover"> |
+| [`data-charts.json`](data-charts.json) | Grouped bar, line, donut, and heatmap components under the `data` kind. Theme `insight`. | <img src="previews/data-charts.svg" width="280" alt="data charts cover"> |
+| [`strategy-analysis.json`](strategy-analysis.json) | SWOT, five forces, matrix, and recommendation components under semantic kinds. Theme `academic`. | <img src="previews/strategy-analysis.svg" width="280" alt="strategy analysis cover"> |
+| [`team-onboarding.json`](team-onboarding.json) | People, lists, and process structures using `hierarchy`, `list`, and `process`. Theme `classroom`. | <img src="previews/team-onboarding.svg" width="280" alt="team onboarding cover"> |
+| [`launch-deck/`](launch-deck/) | A deck project whose spec binds theme `campaign` and whose page files supply content. | <img src="previews/launch-deck.svg" width="280" alt="launch deck cover"> |
 
-Preview images are each deck's first page, produced by `pptwise preview`
-(regenerate with the commands below after changing an example).
+Preview images show each deck's first page and are produced by
+`pptwise preview`.
 
-## Running the examples
+## Run an IR example
 
-Build the CLI once, then run any of the commands below from the repo root:
+From the repository root:
 
 ```bash
 pnpm build
-
-# validate an IR against the schema
 node dist/cli.js validate examples/basic.json
-
-# render to a .pptx
 node dist/cli.js render examples/basic.json -o out/basic.pptx
-
-# render each slide to an SVG for a quick visual self-check
 node dist/cli.js preview examples/basic.json -o out/svgs
-
-# check layout quality (contrast, truncation, dropped content)
 node dist/cli.js audit examples/basic.json
-
-# same deck, a different built-in theme
-node dist/cli.js render examples/basic.json -o out/basic-ink.pptx --theme ink
 ```
 
-The deck project has one extra step — assemble the spec + pages into an IR
-first (this writes `launch-deck/deck.json`, which is git-ignored as a
-generated artifact):
+The theme is part of the IR. To compare alternatives before binding one, use
+the fixed theme sample:
+
+```bash
+node dist/cli.js theme try consulting,swiss,memo -o out/theme-try
+```
+
+## Run the deck project
+
+Validate the spec, assemble it with the page files, then render the project:
 
 ```bash
 node dist/cli.js spec validate examples/launch-deck/deck.spec.json
@@ -50,12 +46,14 @@ node dist/cli.js assemble examples/launch-deck
 node dist/cli.js render examples/launch-deck -o out/launch.pptx
 ```
 
-`pnpm e2e` runs `basic.json` end to end (build → render → structural
-assertions on the produced pptx → preview → optional LibreOffice PDF
-conversion when `soffice` is installed) and writes its output to
-`.e2e-out/` (git-ignored).
+Assembly writes `examples/launch-deck/deck.json` as a generated artifact.
+The file is ignored by Git.
 
-## Refreshing the previews
+`pnpm e2e` drives `basic.json` through the built CLI, structural assertions,
+preview generation, and the optional LibreOffice conversion probe. Output is
+written under `.e2e-out/`.
+
+## Refresh a preview
 
 ```bash
 node dist/cli.js preview examples/<name>.json -o /tmp/preview-<name>

@@ -17,7 +17,7 @@ const slide: Slide = {
 } as Slide
 
 const ir: PptxIR = {
-  version: "4",
+  version: "5",
   filename: "crayonbox-sticker.pptx",
   theme: { id: "crayon" },
   meta: {},
@@ -115,10 +115,8 @@ describe("chapter-crayonbox-sticker", () => {
   it("declares a pin-only motif-suppressing chapter and exports safe primitives", () => {
     expect(layoutDef).toMatchObject({
       id: "crayonbox-sticker",
-      kind: "archetype",
+      kind: "standard",
       pinOnly: true,
-      branding: "none",
-      suppressMotif: true,
       slideTypes: ["chapter"],
     })
     expect(() => assertSubset(renderChapter().root)).not.toThrow()

@@ -13,22 +13,22 @@ const TECH_HEX = ["#0A0F1E", "#121A30", "#14294A", "#53E0D2", "#EAF1FA", "#93A5C
 
 const chapters: Slide[] = [
   { type: "chapter", heading: "召回为什么要拆三层", components: [] } as Slide,
-  { type: "content", heading: "中间页", components: [] } as Slide,
+  { type: "content", kind: "points", heading: "中间页", components: [] } as Slide,
   { type: "chapter", heading: "特征回流怎么压延迟", components: [] } as Slide,
-  { type: "content", heading: "中间页", components: [] } as Slide,
+  { type: "content", kind: "points", heading: "中间页", components: [] } as Slide,
   {
     type: "chapter",
     heading: "推理为什么敢上主站",
     subheading: "特征回流 · 边缘缓存 · 降级策略",
     components: [],
   } as Slide,
-  { type: "content", heading: "中间页", components: [] } as Slide,
+  { type: "content", kind: "points", heading: "中间页", components: [] } as Slide,
   { type: "chapter", heading: "发布窗口", components: [] } as Slide,
 ]
 
 function ir(themeId: string, slides: Slide[] = chapters): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "stroke-index-chapter.pptx",
     theme: { id: themeId },
     meta: {},
@@ -122,7 +122,7 @@ describe("chapter-stroke-index-chapter — board geometry", () => {
 describe("chapter-stroke-index-chapter — shared pool", () => {
   it("is a pinOnly chapter archetype named by composition, not theme", () => {
     expect(layoutDef.id).toBe("stroke-index-chapter")
-    expect(layoutDef.kind).toBe("archetype")
+    expect(layoutDef.kind).toBe("standard")
     expect(layoutDef.pinOnly).toBe(true)
     expect(layoutDef.slideTypes).toEqual(["chapter"])
   })

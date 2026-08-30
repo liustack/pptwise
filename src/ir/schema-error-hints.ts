@@ -92,7 +92,7 @@ export function componentTypeError(issue: z.core.$ZodRawIssue<z.core.$ZodIssueIn
       ? (issue.input as Record<string, unknown>)[issue.discriminator]
       : undefined
   if (raw === "logo_wall") {
-    return 'component type "logo_wall" was removed — run `pptwise migrate <input> -o <output>` to rewrite it to "image_grid"'
+    return 'component type "logo_wall" was removed — use "image_grid" instead'
   }
   return enumMismatchMessage("component type", raw, options.map(String))
 }

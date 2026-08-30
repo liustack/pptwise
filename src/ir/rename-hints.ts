@@ -39,12 +39,7 @@ const SLIDE_LEVEL = (path: string): boolean => /^slides\.\d+$/.test(path)
  * message — this table exists because that message only fires for an
  * *explicit* `version: "2"` document, while a hand-edited `version: "4"`
  * document can still carry the same stale field names as plain schema
- * violations. `scenario` is the one exception: it stays inline in
- * `validateIr` rather than here, because its hint also carries the
- * `pptwise migrate` pointer for genuine v3 documents (a distinction that
- * doesn't apply to the v2-only renames below — `blocks`/`variant`/`override`
- * are not valid under v3 either, so pointing at a v3-only migration tool for
- * them would be misleading).
+ * violations.
  */
 const RENAME_HINTS: Readonly<Record<string, RenameHint>> = {
   blocks: {
@@ -53,7 +48,7 @@ const RENAME_HINTS: Readonly<Record<string, RenameHint>> = {
   },
   variant: {
     at: SLIDE_LEVEL,
-    hint: '"variant" was split into "layout" and "arrangement" in IR v4',
+    hint: '"variant" was removed — a content page declares its "kind" and the theme menu picks the face',
   },
   override: {
     at: (path) => path === "theme",
@@ -62,6 +57,22 @@ const RENAME_HINTS: Readonly<Record<string, RenameHint>> = {
   chrome: {
     at: (path) => path === "",
     hint: '"chrome" was renamed to "branding"',
+  },
+  layout: {
+    at: SLIDE_LEVEL,
+    hint: '"layout" was removed — a content page declares its "kind" and the bound theme\'s menu picks the face',
+  },
+  arrangement: {
+    at: SLIDE_LEVEL,
+    hint: '"arrangement" was removed — the face lays its body out from the components it is given',
+  },
+  beat: {
+    at: SLIDE_LEVEL,
+    hint: '"beat" was replaced by "kind" — declare one of the content kinds (run `pptwise schema` for the list)',
+  },
+  seed: {
+    at: (path) => path === "",
+    hint: '"seed" was removed — face lookup is deterministic, the same deck always renders the same way',
   },
 }
 

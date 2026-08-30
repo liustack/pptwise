@@ -192,7 +192,7 @@ export function SplitBandContent({ ir, slide, index, ctx }: SvgTemplateProps) {
     return (
       <>
         {treated.chrome}
-        <SvgContent arrangement={slide.arrangement} components={slide.components} rect={bodyRect} ctx={ctx} />
+        <SvgContent components={slide.components} rect={bodyRect} ctx={ctx} />
         {footnote && (
           <text
             data-truncated={footnote.truncated ? "1" : undefined}
@@ -310,7 +310,7 @@ export function SplitBandContent({ ir, slide, index, ctx }: SvgTemplateProps) {
 
       {/* body band: ordinary single-stack body, arrangement passed through —
           the pool's usual (96, 1088) geometry, no bespoke internal split. */}
-      <SvgContent arrangement={slide.arrangement} components={slide.components} rect={bodyRect} ctx={ctx} />
+      <SvgContent components={slide.components} rect={bodyRect} ctx={ctx} />
 
       {footnote && (
         <text
@@ -342,7 +342,7 @@ export const layoutDef: LayoutDefinition = {
   // (not assumed) against the same zero-drop bar via the capacity
   // measurement above, so no `audit/capacity.ts` floor needs tightening.
   id: "split-band",
-  kind: "archetype",
+  kind: "standard",
   slideTypes: ["content"],
   slots: [
     { name: "kicker", accepts: [] },

@@ -138,11 +138,11 @@ export function ShowFinaleEnding({ ir, slide, ctx }: SvgTemplateProps) {
 }
 
 export const layoutDef = {
+  suppressMotif: true,
   id: "show-finale",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   paintsOwnBackground: true,
-  suppressMotif: true,
   slideTypes: ["ending"],
   slots: [
     { name: "kicker", accepts: [] },

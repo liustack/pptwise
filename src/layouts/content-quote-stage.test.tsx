@@ -14,7 +14,7 @@ const MIXED_LONG =
 
 function ir(theme: string, slides: Slide[]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "x.pptx",
     theme: { id: theme },
     meta: {},
@@ -34,6 +34,7 @@ function render(body: React.ReactElement): { markup: string; root: Element } {
 
 const zeroComponentSlide: Slide = {
   type: "content",
+  kind: "points",
   layout: "quote-stage",
   heading: "简洁是最终的复杂",
   components: [],
@@ -41,6 +42,7 @@ const zeroComponentSlide: Slide = {
 
 const oneComponentSlide: Slide = {
   type: "content",
+  kind: "points",
   layout: "quote-stage",
   heading: "简洁是最终的复杂",
   components: [{ type: "paragraph", text: "—— 达·芬奇" }],
@@ -50,7 +52,7 @@ describe("layoutDef", () => {
   it("declares pinOnly, a capacity-1 body slot, and the content slide type", () => {
     expect(layoutDef.id).toBe("quote-stage")
     expect(layoutDef.pinOnly).toBe(true)
-    expect(layoutDef.kind).toBe("archetype")
+    expect(layoutDef.kind).toBe("standard")
     expect(layoutDef.slideTypes).toEqual(["content"])
     const body = layoutDef.slots.find((s) => s.name === "body")
     expect(body?.capacity).toBe(1)
@@ -144,7 +146,7 @@ describe("QuoteStageContent", () => {
   describe("pathological long-quote content (CJK_LONG / MIXED_LONG)", () => {
     it("a single CJK_LONG heading shrinks/wraps via fitHeadingLines but does not truncate (well within budget)", () => {
       const ctx = buildCtx(resolveStyle("insight"), {})
-      const slide: Slide = { type: "content", layout: "quote-stage", heading: CJK_LONG, components: [] } as Slide
+      const slide: Slide = { type: "content", kind: "points", layout: "quote-stage", heading: CJK_LONG, components: [] } as Slide
       const { markup, root } = render(<QuoteStageContent ir={ir("insight", [slide])} slide={slide} index={0} ctx={ctx} />)
       expect(() => assertSubset(root)).not.toThrow()
       expect(root.querySelector('[data-truncated="1"]')).toBeNull()
@@ -162,7 +164,7 @@ describe("QuoteStageContent", () => {
     it("a pathologically long heading (2x CJK_LONG + MIXED_LONG) still renders without throwing, shrinks to minPt, wraps to at most maxLines, and never dumps the raw source string verbatim", () => {
       const ctx = buildCtx(resolveStyle("insight"), {})
       const extreme = `${CJK_LONG}${CJK_LONG}${MIXED_LONG}`
-      const slide: Slide = { type: "content", layout: "quote-stage", heading: extreme, components: [] } as Slide
+      const slide: Slide = { type: "content", kind: "points", layout: "quote-stage", heading: extreme, components: [] } as Slide
       const { markup, root } = render(<QuoteStageContent ir={ir("insight", [slide])} slide={slide} index={0} ctx={ctx} />)
       expect(() => assertSubset(root)).not.toThrow()
 
@@ -188,7 +190,7 @@ describe("QuoteStageContent", () => {
       const ctx = buildCtx(resolveStyle("insight"), {})
       const extreme = `${CJK_LONG}${CJK_LONG}${MIXED_LONG}`
       for (const components of [[], [{ type: "paragraph", text: MIXED_LONG }]] as Slide["components"][]) {
-        const slide: Slide = { type: "content", layout: "quote-stage", heading: extreme, subheading: MIXED_LONG, components } as Slide
+        const slide: Slide = { type: "content", kind: "points", layout: "quote-stage", heading: extreme, subheading: MIXED_LONG, components } as Slide
         const { root } = render(<QuoteStageContent ir={ir("insight", [slide])} slide={slide} index={0} ctx={ctx} />)
         const bodyGroup = root.querySelector("g[data-audit-rect]")!
         const [, y, , h] = (bodyGroup.getAttribute("data-audit-rect") ?? "").split(",").map(Number)
@@ -217,6 +219,7 @@ describe("QuoteStageContent", () => {
       const { renderSlideSvg } = await import("../api")
       const slide: Slide = {
         type: "content",
+        kind: "points",
         layout: "quote-stage",
         heading: CJK_LONG,
         components: [{ type: "paragraph", text: "—— 出处" }],
@@ -234,6 +237,7 @@ describe("QuoteStageContent", () => {
     const ctx = buildCtx(resolveStyle("insight"), {})
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "quote-stage",
       heading: "竞品在中小客户市场的价格压力",
       components: [{ type: "citation", sources: [{ label: "[1] 云觅科技 2026 年第二季度经营数据" }] }],
@@ -258,6 +262,7 @@ describe("QuoteStageContent", () => {
     const ctx = buildCtx(resolveStyle("insight"), {})
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "quote-stage",
       heading: "Competitors are pricing below cost in the mid-market",
       components: [{ type: "citation", sources: [{ label: "[1] CloudSeek Collaboration Q2 2026 operating data" }] }],

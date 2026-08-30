@@ -1,6 +1,5 @@
 import type { StyleTokens } from "../tokens";
 import type { BuiltinThemeDeclaration } from "../schema";
-import { RUNWAY_CONTENT_FACES } from "./shared";
 
 /**
  * runway（时尚秀场）——2026-07-10 拆分后的新主题（初名 magazine，用户
@@ -77,6 +76,8 @@ import { RUNWAY_CONTENT_FACES } from "./shared";
  * `show-spotlight` 只通过显式 `slide.layout` 到达。展示字级解锁到
  * 132 至 240px，满版色场与留白交替制造秀场节奏。七张脸每页只允许一组
  * accent。`show-finale` 自绘满版 primary，主题级 motif 继续留空。
+ *
+ * **菜单分派（S1-B）**：秀场自带 show 家族：statement 用 show-statement，data 用 show-figures，photo 用单主图的 show-spotlight。大数字与单证据的报告腔不属于秀场，不上。
  */
 export const RUNWAY_TOKENS: StyleTokens = {
   id: "runway",
@@ -110,21 +111,22 @@ export const RUNWAY_TOKENS: StyleTokens = {
 };
 
 export const RUNWAY_THEME = {
-  version: 1,
+  version: 2,
   id: "runway",
   label: "Fashion Runway",
   style: RUNWAY_TOKENS,
-  faces: {
-    cover: ["show-headline"],
-    chapter: ["show-plate"],
-    content: RUNWAY_CONTENT_FACES,
-    ending: ["show-finale"],
+  menu: {
+    cover: { face: "show-headline" },
+    chapter: { face: "show-plate" },
+    content: {
+      points: { face: "narrow-column" },
+      list: { face: "bento-panel" },
+      comparison: { face: "two-column" },
+      process: { face: "rail-numbered" },
+      data: { face: "show-figures" },
+      photo: { face: "show-spotlight" },
+      statement: { face: "show-statement" },
+    },
+    ending: { face: "show-finale" },
   },
-  tendencies: {
-    cover: ["show-headline"],
-    chapter: ["show-plate"],
-    content: ["show-statement"],
-    ending: ["show-finale"],
-  },
-  sparse: [],
 } satisfies BuiltinThemeDeclaration;

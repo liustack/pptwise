@@ -3,16 +3,18 @@ import { PptwiseError } from "../errors"
 import type { MotifId } from "../motifs/types"
 import { hasExactWidthTable, resolveFontFace } from "../render/fonts"
 import { contrastRatio } from "../render/ink"
-import { excludePinOnly, getLayout, layoutsForSlideType } from "../layouts/registry"
+import { getLayout, type LayoutParamDeclaration } from "../layouts/registry"
 import { REGISTERED_THEMES } from "./registered-themes"
 import {
   SPARSE_LAYOUT_IDS,
   ThemeFileSchema,
   type BuiltinThemeDeclaration,
-  type FaceReference,
+  type Menu,
+  type MenuEntry,
+  type MenuParamValue,
   type ThemeFile,
 } from "./schema"
-import type { Occasion } from "./occasions"
+import { THEME_OCCASIONS, type Occasion } from "./occasions"
 import type { StyleTokens } from "./tokens"
 import { BUILTIN_THEME_FILES, CANONICAL_THEME_IDS, resolveThemeId, type CanonicalThemeId } from "./index"
 
@@ -33,67 +35,14 @@ export interface ThemeDefinition {
   tags: readonly string[]
   occasions?: readonly Occasion[]
   identity?: "low" | "medium" | "high"
-  /** Curated layout ids eligible for each page type. Built-ins and public
-   * complete themes compile their `faces` pools into this total record.
-   * Legacy programmatic registrations may omit a page type and receive the
-   * registry-wide fallback once at registration. Public complete files must
-   * declare all four pools, so they never take that fallback. */
+  /** The theme's semantic page menu: one face per served kind. Authoritative. */
+  menu: Menu
+  /** Transitional curated layout record read by the pre-S1-A renderer.
+   * Derived from `menu` at compile time, never authored. */
   layouts: Record<Slide["type"], readonly string[]>
-  /** Original declarative face entries when the theme came from the v1
-   * theme schema. Render selection consumes the compiled `layouts` ids. */
-  faces?: Record<Slide["type"], readonly FaceReference[]>
   /** One registered motif id. `undefined` means the theme has no motif. */
   motif?: MotifId
   motifParameters?: { intensity?: "subtle" | "normal" }
-  /**
-   * A theme's own structural personality (theme-structure wave, task T1 —
-   * `.issues/2026-07-26-theme-structure/plan.md`'s 控制器设计裁定 2): per
-   * page type, the layout ids this theme's author wants `resolveLayoutId`
-   * (`src/render/layout-selection.ts`) to lean toward. Shape mirrors
-   * `StrategyDefinition.layoutTendencies` (`@/narrative`) — the same "named
-   * ids get a soft weight bump, everyone else stays at the floor" contract —
-   * but declared **per slide type** rather than content-only: a strategy's
-   * `layoutTendencies` is content-only, so on cover/chapter/ending a theme
-   * competes only with `StrategyDefinition.identityTendencies` (which
-   * `tendencyIdsFor` does consult for those three types — an earlier draft
-   * of this comment wrongly claimed no strategy signal reached them at all).
-   * **Consequence worth knowing when declaring:** because `weightOf`
-   * composes via `Math.max`, a theme tendency naming an id the active
-   * strategy's `identityTendencies` already names adds no differential pull
-   * for that id under that strategy (max(3,3) = 3) — a theme's structural
-   * character therefore reads most clearly on ids the strategies do not
-   * already favor. Content can carry both a strategy tendency
-   * and a theme tendency at once; `weightOf` composes every live layer via
-   * `Math.max`, never multiplication (same ruling `BEAT_TENDENCY_WEIGHT`'s
-   * doc comment already argues for: agreement between layers corroborates
-   * the same preference dimension, it does not square the pull).
-   *
-   * **Soft weight, not a whitelist — `layouts` above stays the one hard
-   * boundary.** A slide type's candidate pool is built from `layouts[slideType]`
-   * *before* any tendency is ever consulted (`resolveLayoutId`'s own
-   * `pool` construction), so an id this record names for a page type it is
-   * not also present in that same page type's `layouts` set can never be
-   * scored — it is invisible to `weightOf`, not merely down-weighted. That
-   * silent no-op is exactly why it counts as a theme-author mistake rather
-   * than a legal (if unusual) declaration — `definitions.test.ts`'s
-   * consistency sweep over the 24 built-ins, and `registerTheme`'s own
-   * validation below for any future custom theme, both fail loudly the
-   * moment a `layoutTendencies` entry names an id outside its own page
-   * type's `layouts` set, so the mistake surfaces at registration/test time
-   * instead of silently doing nothing at render time.
-   *
-   * Optional at every level (the whole field, and independently each of its
-   * four page-type entries) — **omission is not a lesser default, it is
-   * today's exact behavior**: a page type this record doesn't cover (key
-   * absent, or the field itself `undefined`) contributes a uniform weight of
-   * 1 to every candidate, the same "no theme-layer opinion" no-op floor
-   * `beatTendencies === undefined` already gives beat. None of the 13
-   * builtins declare this field yet (theme-structure wave task T1 is the
-   * mechanism only — task T2 is where individual builtins pick up a
-   * personality), so every one of them renders byte-identically to before
-   * this field existed.
-   */
-  layoutTendencies?: Partial<Record<Slide["type"], readonly string[]>>
   /**
    * Which sparse climax pins this theme is willing to honour. This is not a
    * curated auto-pick pool: pinOnly sparse ids never enter `layouts[slideType]`
@@ -128,75 +77,43 @@ export interface ThemeDefinition {
 }
 
 /**
- * Every registered standard layout id applicable to `slideType`, in
- * `LAYOUT_REGISTRY`'s own insertion order (W4, spec §3's curation default:
- * "layouts 主题引用的 layout 精选集...缺省 = 全集"). Takeover layouts are
- * excluded — `layoutsForSlideType("content")` also returns the 4 image
- * takeovers (their `slideTypes` includes `"content"` too), but a curated
- * auto-pick set may only ever contain standard layouts (`registerTheme`'s own
- * validation below enforces the same constraint on any caller-supplied
- * set. Takeovers are addressed only via an explicit `slide.layout` pin,
- * never auto-selected). The default also excludes every `pinOnly` layout.
- * A builtin may still list a pin-only cover, chapter, or ending face as a
- * deliberate one-entry board lock. See `LayoutDefinition.pinOnly` and the
- * matching exception in `resolveLayoutId`.
+ * The transitional `layouts` record every pre-S1-A reader still expects,
+ * derived from the menu. The menu may legitimately point `photo` at an
+ * image takeover, and those ids must not leak into the archetype-only
+ * curated pool the old selector samples from.
  */
-function fullLayoutSet(slideType: Slide["type"]): readonly string[] {
-  return excludePinOnly(layoutsForSlideType(slideType).filter((layout) => layout.kind === "archetype")).map(
-    (layout) => layout.id,
-  )
+function menuLayouts(menu: Menu): Record<Slide["type"], readonly string[]> {
+  const contentFaces = Object.values(menu.content)
+    .filter((entry): entry is MenuEntry => entry !== undefined)
+    .map((entry) => entry.face)
+  return {
+    cover: [menu.cover.face],
+    chapter: [menu.chapter.face],
+    content: [...new Set(contentFaces)].filter((id) => getLayout(id)?.kind === "standard"),
+    ending: [menu.ending.face],
+  }
 }
 
 /**
- * Test-only: `fullLayoutSet` under a `__`-prefixed name (same convention
- * as `__resetRegisteredThemes` below) so a pinOnly regression test can call
- * it directly against a synthetic `LAYOUT_REGISTRY` mutation. The
- * registration fallback snapshots `fullLayoutSet` at module load, long
- * before any test could inject a fixture entry. Deliberately not
- * exported from `src/index.ts` (the public SDK barrel).
- */
-export function __fullLayoutSet(slideType: Slide["type"]): readonly string[] {
-  return fullLayoutSet(slideType)
-}
-
-/**
- * Registry-wide defaults used by custom themes that omit `layouts`.
- * Consulting's gauge layouts remain visible here because an explicitly
- * registered theme may opt into the complete auto-selectable registry.
- */
-const REGISTERED_THEME_DEFAULT_LAYOUTS: Record<Slide["type"], readonly string[]> = {
-  cover: fullLayoutSet("cover"),
-  chapter: fullLayoutSet("chapter"),
-  content: fullLayoutSet("content"),
-  ending: fullLayoutSet("ending"),
-}
-
-/**
- * Built-ins compile from the same declarative face model as public complete
- * themes. Their declaration type additionally permits internal constructor
- * metadata that public files cannot express.
+ * Built-ins compile from the same v2 menu the public contract uses. Their
+ * declaration type additionally permits internal constructor metadata
+ * (`style.shape.cover` knobs, the theme-wide motif anchor) that public
+ * files cannot express.
  */
 function compileBuiltinTheme(file: BuiltinThemeDeclaration): ThemeDefinition {
-  const layouts: ThemeDefinition["layouts"] = {
-    cover: file.faces.cover.map(faceId),
-    chapter: file.faces.chapter.map(faceId),
-    content: file.faces.content.map(faceId),
-    ending: file.faces.ending.map(faceId),
-  }
+  const record = THEME_OCCASIONS[file.id]
   return {
     id: file.id,
     label: file.label,
     style: file.style,
     brand: file.brand ?? {},
-    tags: file.occasions ?? [],
-    occasions: file.occasions,
-    identity: file.identity,
-    layouts,
-    faces: file.faces,
+    tags: record.occasions,
+    occasions: record.occasions,
+    identity: record.identity,
+    menu: file.menu,
+    layouts: menuLayouts(file.menu),
     motif: file.motif?.id,
     motifParameters: file.motif?.params,
-    layoutTendencies: file.tendencies,
-    sparseLayouts: file.sparse,
   }
 }
 
@@ -222,8 +139,6 @@ export function resolveBrand(id: string, override?: BrandConfig): BrandConfig {
 // `registerTheme` a fully-formed `ThemeDefinition` and it becomes visible to
 // every internal theme lookup (installed-check, selection, resolveStyle,
 // resolveBrand) exactly like a builtin, with no second code path.
-
-const REGISTERABLE_SLIDE_TYPES: readonly Slide["type"][] = ["cover", "chapter", "content", "ending"]
 
 /**
  * Reduce a `BackgroundSpec` to one representative hex color — a color spec
@@ -352,43 +267,8 @@ function warnUnmeasuredFace(id: string, role: "heading" | "body", stack: string[
   }
 }
 
-/**
- * `registerTheme`'s input shape (W4, spec §3 "缺省 = 全集"): identical to
- * {@link ThemeDefinition} except `layouts` is optional, and — when present —
- * each of its four slide-type entries is independently optional too. A
- * slide type this theme doesn't narrow (its own key omitted, or the whole
- * `layouts` object omitted) defaults to that type's full registered-
- * layout set ({@link fullLayoutSet}). Public complete files cannot reach
- * this legacy fallback because their schema requires all four face pools.
- * `getThemeDefinition`/`REGISTERED_THEMES` still only ever
- * hold the fully-resolved `ThemeDefinition` shape (`layouts` total over all
- * four types) — `registerTheme` performs the defaulting once, here, so
- * every downstream reader (`resolveLayoutId` foremost) can keep assuming
- * a total record and never re-derive "was this slide type curated or
- * defaulted".
- */
-export type ThemeRegistration = Omit<ThemeDefinition, "layouts"> & {
-  layouts?: Partial<Record<Slide["type"], readonly string[]>>
-}
+function parseThemeFile(value: unknown): ThemeFile {
 
-function faceId(face: FaceReference): string {
-  return typeof face === "string" ? face : face.id
-}
-
-function facesFromLayouts(layouts: ThemeDefinition["layouts"]): ThemeDefinition["faces"] {
-  return {
-    cover: [...layouts.cover],
-    chapter: [...layouts.chapter],
-    content: [...layouts.content],
-    ending: [...layouts.ending],
-  }
-}
-
-function isVersionedThemeFile(value: ThemeRegistration | ThemeFile): boolean {
-  return typeof value === "object" && value !== null && Object.hasOwn(value, "version")
-}
-
-function parseVersionedThemeFile(value: ThemeRegistration | ThemeFile): ThemeFile {
   const result = ThemeFileSchema.safeParse(value)
   if (!result.success) {
     const detail = result.error.issues
@@ -399,40 +279,8 @@ function parseVersionedThemeFile(value: ThemeRegistration | ThemeFile): ThemeFil
   return result.data as ThemeFile
 }
 
-/** Compile the public declaration into the total internal shape consumed by
- * layout, motif, brand, and sparse selection. */
-function compileThemeFile(file: ThemeFile): ThemeRegistration {
-  if ("base" in file) {
-    const base = THEME_DEFINITIONS[file.base]
-    const style: StyleTokens = {
-      ...file.style,
-      id: file.base,
-      ...(base.style.shape?.cover
-        ? { shape: { ...file.style.shape, cover: base.style.shape.cover } }
-        : {}),
-    }
-    return {
-      id: file.id,
-      label: file.label,
-      // Component forms, emphasis treatments, and sparse boarded faces use
-      // ComponentCtx.themeId, which is sourced from StyleTokens.id. Keep the
-      // public file id for registration, but dispatch those structural tables
-      // through the declared base so partial truly inherits all structure.
-      style,
-      brand: { ...base.brand, ...file.brand },
-      tags: file.occasions ?? base.tags,
-      occasions: file.occasions ?? base.occasions,
-      identity: file.identity ?? base.identity,
-      layouts: base.layouts,
-      faces: base.faces ?? facesFromLayouts(base.layouts),
-      motif: base.motif,
-      motifParameters: base.motifParameters,
-      layoutTendencies: base.layoutTendencies,
-      sparseLayouts: base.sparseLayouts,
-    }
-  }
-
-  const faces = file.faces
+/** Compile the public v2 declaration into the internal theme definition. */
+function compileThemeFile(file: ThemeFile): ThemeDefinition {
   return {
     id: file.id,
     label: file.label,
@@ -441,153 +289,170 @@ function compileThemeFile(file: ThemeFile): ThemeRegistration {
     tags: file.occasions ?? [],
     occasions: file.occasions,
     identity: file.identity,
-    layouts: {
-      cover: faces.cover.map(faceId),
-      chapter: faces.chapter.map(faceId),
-      content: faces.content.map(faceId),
-      ending: faces.ending.map(faceId),
-    },
-    faces,
-    motif: file.motif?.id,
-    motifParameters: file.motif?.params,
-    layoutTendencies: file.tendencies,
-    sparseLayouts: file.sparse,
+    menu: file.menu,
+    layouts: menuLayouts(file.menu),
+  }
+}
+
+interface MenuEntryLocation {
+  path: string
+  slideType: Slide["type"]
+  entry: MenuEntry
+}
+
+function menuEntryLocations(menu: Menu): MenuEntryLocation[] {
+  const content = Object.entries(menu.content).flatMap(([kind, entry]) =>
+    entry === undefined ? [] : [{ path: `menu.content.${kind}`, slideType: "content" as const, entry }],
+  )
+  return [
+    { path: "menu.cover", slideType: "cover", entry: menu.cover },
+    { path: "menu.chapter", slideType: "chapter", entry: menu.chapter },
+    ...content,
+    { path: "menu.ending", slideType: "ending", entry: menu.ending },
+  ]
+}
+
+function assertNumberParam(
+  themeId: string,
+  path: string,
+  value: MenuParamValue,
+  declaration: Extract<LayoutParamDeclaration, { type: "number" }>,
+): void {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    throw new PptwiseError(`theme "${themeId}" ${path} expected number`)
+  }
+  if (declaration.integer && !Number.isInteger(value)) {
+    throw new PptwiseError(`theme "${themeId}" ${path} expected an integer`)
+  }
+  if (declaration.min !== undefined && value < declaration.min) {
+    throw new PptwiseError(`theme "${themeId}" ${path} is ${value}, below minimum ${declaration.min}`)
+  }
+  if (declaration.max !== undefined && value > declaration.max) {
+    throw new PptwiseError(`theme "${themeId}" ${path} is ${value}, above maximum ${declaration.max}`)
+  }
+}
+
+function assertStringParam(
+  themeId: string,
+  path: string,
+  value: MenuParamValue,
+  declaration: Extract<LayoutParamDeclaration, { type: "string" }>,
+): void {
+  if (typeof value !== "string") {
+    throw new PptwiseError(`theme "${themeId}" ${path} expected string`)
+  }
+  if (declaration.values !== undefined && !declaration.values.includes(value)) {
+    throw new PptwiseError(
+      `theme "${themeId}" ${path} is "${value}". Allowed values: ${declaration.values.join(", ")}`,
+    )
+  }
+  if (declaration.minLength !== undefined && value.length < declaration.minLength) {
+    throw new PptwiseError(
+      `theme "${themeId}" ${path} has length ${value.length}, below minimum length ${declaration.minLength}`,
+    )
+  }
+  if (declaration.maxLength !== undefined && value.length > declaration.maxLength) {
+    throw new PptwiseError(
+      `theme "${themeId}" ${path} has length ${value.length}, above maximum length ${declaration.maxLength}`,
+    )
+  }
+}
+
+function assertMenuParam(
+  themeId: string,
+  path: string,
+  value: MenuParamValue,
+  declaration: LayoutParamDeclaration,
+): void {
+  if (declaration.type === "number") {
+    assertNumberParam(themeId, path, value, declaration)
+    return
+  }
+  if (declaration.type === "string") {
+    assertStringParam(themeId, path, value, declaration)
+    return
+  }
+  if (typeof value !== "boolean") {
+    throw new PptwiseError(`theme "${themeId}" ${path} expected boolean`)
+  }
+}
+
+/** Validate menu faces and every face-owned adjustable parameter before registration. */
+function assertMenuContract(themeId: string, menu: Menu): void {
+  for (const { path, slideType, entry } of menuEntryLocations(menu)) {
+    const layout = getLayout(entry.face)
+    if (!layout) {
+      throw new PptwiseError(`theme "${themeId}" ${path}.face references unknown layout id "${entry.face}"`)
+    }
+    if (!layout.slideTypes.includes(slideType)) {
+      throw new PptwiseError(
+        `theme "${themeId}" ${path}.face layout "${entry.face}" is not valid for "${slideType}" slides`,
+      )
+    }
+
+    const values = Object.entries(entry.params ?? {})
+    if (values.length === 0) continue
+    if (layout.params === undefined) {
+      throw new PptwiseError(
+        `theme "${themeId}" ${path}.params cannot set values because layout "${entry.face}" declares no adjustable parameters`,
+      )
+    }
+    for (const [name, value] of values) {
+      const declaration = layout.params[name]
+      const paramPath = `${path}.params.${name}`
+      if (declaration === undefined) {
+        throw new PptwiseError(
+          `theme "${themeId}" ${paramPath} is not declared by layout "${entry.face}"`,
+        )
+      }
+      assertMenuParam(themeId, paramPath, value, declaration)
+    }
   }
 }
 
 /**
  * Register a theme at runtime (SDK seam, not the v0.4 distribution
- * protocol). Validates just enough to keep the render chain from silently
- * breaking on a malformed registration — not a full schema:
+ * protocol). The input is a complete v2 theme file and nothing else: one
+ * self-contained declaration carrying style, brand, and the menu. There is
+ * no partial completeness, no inherited structure, and no registry-wide
+ * default pool to fall back on.
  *
- * - `id` must not collide with a builtin or an already-registered theme.
- * - each of the four slide types, once defaulted ({@link ThemeRegistration}),
- *   must have at least one layout id that is both registered in
- *   `LAYOUT_REGISTRY` and valid for that slide type (the same registry
- *   `resolveLayoutId`/`FullSlideSvg` select from. A theme never ships
- *   new render code, only a curated subset of the existing 130 standard
- *   layouts, per `docs/architecture.md`'s "Adding a theme" section. An
- *   *explicit* empty array for a slide type still fails this check (the
- *   default only kicks in when the key — or `layouts` itself — is omitted
- *   entirely, `undefined`, never for a caller-supplied `[]`).
- * - `style` must be present (a JS caller can bypass the TS type).
+ * Hard gates, in order:
+ *
+ * - the file must parse against {@link ThemeFileSchema} (which already
+ *   rejects a built-in id collision and a `style.id` that disagrees with
+ *   `id`, and requires a non-empty content-kind subset).
+ * - `id` must not collide with a built-in or an already-registered theme.
  * - `style.colors.text`/`style.colors.muted` must each clear the
  *   {@link CONTRAST_FLOOR} against a {@link CONTRAST_CHECKED_SLIDE_TYPES}
  *   slide type's own resolved default background — see
- *   {@link assertContrastFloor}'s own doc comment.
- * - `sparseLayouts`, when present, may be empty (offers none) or a list of
- *   {@link SPARSE_LAYOUT_IDS} members. A listed non-sparse id throws. The
- *   field is not defaulted when omitted (`undefined` = offer all six).
+ *   {@link assertContrastFloor}.
+ * - every menu entry must name a registered layout valid for that page
+ *   type, and every parameter it sets must be declared by that face and
+ *   inside the face's own declared bounds ({@link assertMenuContract}).
  *
  * Also `console.warn`s (never throws) once for each of `style.fonts.heading`/
  * `style.fonts.body` that resolves to a face with no exact width table — see
  * {@link warnUnmeasuredFace}'s own doc comment. Fires only for a
- * registration that clears every check above (i.e. one that is actually
- * about to succeed).
+ * registration that clears every check above.
  *
  * Once registered, the theme participates in `getInstalledThemeIds`,
- * `getThemeDefinition` (hence `layout-selection.ts`/`FullSlideSvg`'s
- * selection and `resolveBrand`), and `themes/index.ts`'s `resolveStyle` —
- * every internal theme lookup, with no separate "registered theme" branch
- * for callers to remember.
+ * `getThemeDefinition`, and `themes/index.ts`'s `resolveStyle` — every
+ * internal theme lookup, with no separate "registered theme" branch.
  */
-export function registerTheme(input: ThemeRegistration | ThemeFile): void {
-  const fromThemeFile = isVersionedThemeFile(input)
-  const def = fromThemeFile ? compileThemeFile(parseVersionedThemeFile(input)) : (input as ThemeRegistration)
+export function registerTheme(input: unknown): void {
+  const def = compileThemeFile(parseThemeFile(input))
   if ((CANONICAL_THEME_IDS as readonly string[]).includes(def.id) || REGISTERED_THEMES.has(def.id)) {
     throw new PptwiseError(`theme "${def.id}" is already installed`)
   }
-  if (!def.style) {
-    throw new PptwiseError(`theme "${def.id}" is missing style tokens`)
-  }
   assertContrastFloor(def.id, def.style)
-  const layouts = {} as Record<Slide["type"], readonly string[]>
-  for (const slideType of REGISTERABLE_SLIDE_TYPES) {
-    const ids = def.layouts?.[slideType] ?? REGISTERED_THEME_DEFAULT_LAYOUTS[slideType]
-    if (ids.length === 0) {
-      throw new PptwiseError(`theme "${def.id}" must declare at least one layout for "${slideType}" slides`)
-    }
-    for (const [index, id] of ids.entries()) {
-      const layout = getLayout(id)
-      const pathRoot = fromThemeFile ? `faces.${slideType}` : `layouts.${slideType}`
-      if (!layout) {
-        throw new PptwiseError(`theme "${def.id}" ${pathRoot} references unknown layout id "${id}"`)
-      }
-      // Curated sets feed the auto-selection path, which assumes layout ids
-      // only — a takeover id here would crash at render (undefined component).
-      if (layout.kind !== "archetype") {
-        throw new PptwiseError(
-          `theme "${def.id}" ${pathRoot}: "${id}" is a ${layout.kind} layout. Curated sets may only contain archetype layouts`,
-        )
-      }
-      if (!layout.slideTypes.includes(slideType)) {
-        throw new PptwiseError(
-          `theme "${def.id}" ${pathRoot}: layout "${id}" is not valid for "${slideType}" slides`,
-        )
-      }
-      const face = def.faces?.[slideType]?.[index]
-      const capacity = typeof face === "string" ? undefined : face?.params?.capacity
-      if (capacity) {
-        const slot = layout.slots.find((candidate) => candidate.name === capacity.slot)
-        if (!slot) {
-          throw new PptwiseError(
-            `theme "${def.id}" faces.${slideType}.${index}.params.capacity references unknown slot "${capacity.slot}" on layout "${id}"`,
-          )
-        }
-        if (slot.capacity === undefined) {
-          throw new PptwiseError(
-            `theme "${def.id}" faces.${slideType}.${index}.params.capacity cannot adapt slot "${capacity.slot}" on layout "${id}" because the registry declares no capacity`,
-          )
-        }
-        if (capacity.max > slot.capacity) {
-          throw new PptwiseError(
-            `theme "${def.id}" faces.${slideType}.${index}.params.capacity.max is ${capacity.max}, above layout "${id}" slot "${capacity.slot}" capacity ${slot.capacity}`,
-          )
-        }
-      }
-    }
-    layouts[slideType] = ids
-  }
-  // `layoutTendencies` consistency (theme-structure wave, task T1): a
-  // declared id that isn't also a member of this same slide type's
-  // just-resolved `layouts` set can never be scored by `weightOf`
-  // (`layout-selection.ts`'s pool is built from `layouts[slideType]` before
-  // any tendency is consulted) — it would silently do nothing forever, the
-  // exact "theme author mistake" `ThemeDefinition.layoutTendencies`'s own
-  // doc comment warns about. Caught here, at registration time, rather than
-  // left to surface (or not) at render time.
-  for (const slideType of REGISTERABLE_SLIDE_TYPES) {
-    const tendencyIds = def.layoutTendencies?.[slideType]
-    if (!tendencyIds) continue
-    for (const id of tendencyIds) {
-      if (!layouts[slideType].includes(id)) {
-        throw new PptwiseError(
-          `theme "${def.id}" layoutTendencies.${slideType} references "${id}", which is not in this theme's own layouts.${slideType} set — a tendency must name an id already in the theme's curated pool`,
-        )
-      }
-    }
-  }
-  // Offer table for explicit sparse pins, not an auto-pick pool. A listed
-  // id must be one of the six sparse climax layouts. It does not have to
-  // sit in `layouts[slideType]` (those pools exclude pinOnly members).
-  // Empty array is legal (offers none). Omitted stays undefined — do not
-  // default it to an array, `getThemeDefinition` round-trips the
-  // registration object.
-  if (def.sparseLayouts !== undefined) {
-    for (const id of def.sparseLayouts) {
-      if (!(SPARSE_LAYOUT_IDS as readonly string[]).includes(id)) {
-        throw new PptwiseError(
-          `theme "${def.id}" sparseLayouts references "${id}", which is not a sparse climax layout — allowed: ${SPARSE_LAYOUT_IDS.join(", ")}`,
-        )
-      }
-    }
-  }
+  assertMenuContract(def.id, def.menu)
   // Soft checks last, only once every hard check above has confirmed this
   // registration will actually succeed — a registration that goes on to
-  // throw (bad layout id, etc.) never warns for an unrelated font choice.
+  // throw never warns for an unrelated font choice.
   warnUnmeasuredFace(def.id, "heading", def.style.fonts.heading)
   warnUnmeasuredFace(def.id, "body", def.style.fonts.body)
-  REGISTERED_THEMES.set(def.id, { ...def, layouts })
+  REGISTERED_THEMES.set(def.id, def)
 }
 
 /** Every installed theme id: the 24 built-ins, then registered themes in registration order. */
@@ -597,11 +462,9 @@ export function getInstalledThemeIds(): readonly string[] {
 
 /**
  * Resolve a theme id to its full definition — a registered theme first, then
- * the builtin fallback (`THEME_DEFINITIONS[resolveThemeId(id)]`, which itself
- * folds an unrecognized id to consulting). The one lookup every internal
- * consumer that used to read `THEME_DEFINITIONS[resolveThemeId(id)]`
- * directly (`layout-selection.ts`, `full-slide-svg.tsx`) now calls instead, so
- * a registered theme's curated layouts actually drive selection end-to-end.
+ * the built-in shelf. An id that is neither throws (`resolveThemeId`), so a
+ * misspelled theme surfaces at once instead of rendering as some other
+ * theme. The one lookup every internal consumer calls.
  */
 export function getThemeDefinition(id: string): ThemeDefinition {
   return REGISTERED_THEMES.get(id) ?? THEME_DEFINITIONS[resolveThemeId(id)]

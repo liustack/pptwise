@@ -16,7 +16,7 @@ const slide: Slide = {
 } as Slide
 
 const ir: PptxIR = {
-  version: "4",
+  version: "5",
   filename: "gauge-next.pptx",
   theme: { id: "consulting" },
   meta: { organization: "云觅咨询", version: "v2", date: "2026-08" },
@@ -117,8 +117,7 @@ describe("ending-gauge-next", () => {
     ])
     expect(layoutDef).toMatchObject({
       id: "gauge-next",
-      kind: "archetype",
-      branding: "none",
+      kind: "standard",
       slideTypes: ["ending"],
     })
     expect(layoutDef.pinOnly).toBe(true)

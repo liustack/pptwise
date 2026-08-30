@@ -17,7 +17,7 @@ const slide: Slide = {
 } as Slide
 
 const ir: PptxIR = {
-  version: "4",
+  version: "5",
   filename: "gauge-verdict.pptx",
   theme: { id: "consulting" },
   meta: {
@@ -136,9 +136,8 @@ describe("cover-gauge-verdict", () => {
   it("declares a theme-locked pinOnly cover with one bullets slot and no shared branding footer", () => {
     expect(layoutDef).toMatchObject({
       id: "gauge-verdict",
-      kind: "archetype",
+      kind: "standard",
       slideTypes: ["cover"],
-      branding: "none",
     })
     expect(layoutDef.pinOnly).toBe(true)
     expect(layoutDef.slots.find((slot) => slot.name === "body")).toEqual({

@@ -64,7 +64,7 @@
         "single"
       ],
       "id": "asymmetric-triptych",
-      "kind": "archetype",
+      "kind": "standard",
       "slideTypes": [
         "content"
       ],
@@ -107,7 +107,7 @@
     },
     "banner-chapter": {
       "id": "banner-chapter",
-      "kind": "archetype",
+      "kind": "standard",
       "slideTypes": [
         "chapter"
       ],
@@ -132,7 +132,7 @@
     },
     "banner-ending": {
       "id": "banner-ending",
-      "kind": "archetype",
+      "kind": "standard",
       "slideTypes": [
         "ending"
       ],
@@ -162,7 +162,7 @@
     "banner-heading": {
       "arrangements": "all",
       "id": "banner-heading",
-      "kind": "archetype",
+      "kind": "standard",
       "slideTypes": [
         "content"
       ],
@@ -192,7 +192,7 @@
     },
     "banner-title": {
       "id": "banner-title",
-      "kind": "archetype",
+      "kind": "standard",
       "slideTypes": [
         "cover"
       ],
@@ -224,7 +224,7 @@
         "single"
       ],
       "id": "bento-panel",
-      "kind": "archetype",
+      "kind": "standard",
       "slideTypes": [
         "content"
       ],
@@ -259,7 +259,7 @@
     },
     "constellation": {
       "id": "constellation",
-      "kind": "archetype",
+      "kind": "standard",
       "slideTypes": [
         "cover"
       ],
@@ -292,7 +292,7 @@
     },
     "constellation-chapter": {
       "id": "constellation-chapter",
-      "kind": "archetype",
+      "kind": "standard",
       "slideTypes": [
         "chapter"
       ],
@@ -317,7 +317,7 @@
     },
     "constellation-ending": {
       "id": "constellation-ending",
-      "kind": "archetype",
+      "kind": "standard",
       "slideTypes": [
         "ending"
       ],
@@ -342,7 +342,7 @@
     },
     "editorial-masthead": {
       "id": "editorial-masthead",
-      "kind": "archetype",
+      "kind": "standard",
       "slideTypes": [
         "cover"
       ],
@@ -367,7 +367,7 @@
     },
     "fashion-chapter": {
       "id": "fashion-chapter",
-      "kind": "archetype",
+      "kind": "standard",
       "slideTypes": [
         "chapter"
       ],
@@ -392,7 +392,7 @@
     },
     "fashion-ending": {
       "id": "fashion-ending",
-      "kind": "archetype",
+      "kind": "standard",
       "slideTypes": [
         "ending"
       ],
@@ -421,7 +421,7 @@
     },
     "fashion-masthead": {
       "id": "fashion-masthead",
-      "kind": "archetype",
+      "kind": "standard",
       "slideTypes": [
         "cover"
       ],
@@ -545,7 +545,7 @@
     },
     "left-anchor": {
       "id": "left-anchor",
-      "kind": "archetype",
+      "kind": "standard",
       "slideTypes": [
         "cover"
       ],
@@ -578,7 +578,7 @@
     },
     "masthead-chapter": {
       "id": "masthead-chapter",
-      "kind": "archetype",
+      "kind": "standard",
       "slideTypes": [
         "chapter"
       ],
@@ -603,7 +603,7 @@
     },
     "masthead-ending": {
       "id": "masthead-ending",
-      "kind": "archetype",
+      "kind": "standard",
       "slideTypes": [
         "ending"
       ],
@@ -625,7 +625,7 @@
     "narrow-column": {
       "arrangements": "all",
       "id": "narrow-column",
-      "kind": "archetype",
+      "kind": "standard",
       "slideTypes": [
         "content"
       ],
@@ -663,7 +663,7 @@
     },
     "poster-center": {
       "id": "poster-center",
-      "kind": "archetype",
+      "kind": "standard",
       "slideTypes": [
         "cover"
       ],
@@ -688,7 +688,7 @@
     },
     "poster-chapter": {
       "id": "poster-chapter",
-      "kind": "archetype",
+      "kind": "standard",
       "slideTypes": [
         "chapter"
       ],
@@ -713,7 +713,7 @@
     },
     "poster-ending": {
       "id": "poster-ending",
-      "kind": "archetype",
+      "kind": "standard",
       "slideTypes": [
         "ending"
       ],
@@ -739,7 +739,7 @@
     "quiet-frame": {
       "arrangements": "all",
       "id": "quiet-frame",
-      "kind": "archetype",
+      "kind": "standard",
       "slideTypes": [
         "content"
       ],
@@ -773,7 +773,7 @@
     },
     "image-lead-split": {
       "id": "image-lead-split",
-      "kind": "archetype",
+      "kind": "standard",
       "slideTypes": [
         "content"
       ],
@@ -809,7 +809,7 @@
     },
     "split-band": {
       "id": "split-band",
-      "kind": "archetype",
+      "kind": "standard",
       "slideTypes": [
         "content"
       ],
@@ -840,7 +840,7 @@
     },
     "quote-stage": {
       "id": "quote-stage",
-      "kind": "archetype",
+      "kind": "standard",
       "pinOnly": true,
       "slideTypes": [
         "content"
@@ -877,7 +877,7 @@
     },
     "colophon": {
       "id": "colophon",
-      "kind": "archetype",
+      "kind": "standard",
       "slideTypes": [
         "cover"
       ],
@@ -906,7 +906,7 @@
     },
     "rail-chapter": {
       "id": "rail-chapter",
-      "kind": "archetype",
+      "kind": "standard",
       "slideTypes": [
         "chapter"
       ],
@@ -931,7 +931,7 @@
     },
     "rail-ending": {
       "id": "rail-ending",
-      "kind": "archetype",
+      "kind": "standard",
       "slideTypes": [
         "ending"
       ],
@@ -965,7 +965,7 @@
     "rail-numbered": {
       "arrangements": "all",
       "id": "rail-numbered",
-      "kind": "archetype",
+      "kind": "standard",
       "slideTypes": [
         "content"
       ],
@@ -999,7 +999,7 @@
     },
     "roman-chapter": {
       "id": "roman-chapter",
-      "kind": "archetype",
+      "kind": "standard",
       "slideTypes": [
         "chapter"
       ],
@@ -1033,7 +1033,7 @@
     "side-highlight": {
       "arrangements": "all",
       "id": "side-highlight",
-      "kind": "archetype",
+      "kind": "standard",
       "slideTypes": [
         "content"
       ],
@@ -1067,7 +1067,7 @@
     },
     "split-diagonal": {
       "id": "split-diagonal",
-      "kind": "archetype",
+      "kind": "standard",
       "slideTypes": [
         "cover"
       ],
@@ -1101,7 +1101,7 @@
     "stacked-poster": {
       "arrangements": "all",
       "id": "stacked-poster",
-      "kind": "archetype",
+      "kind": "standard",
       "slideTypes": [
         "content"
       ],
@@ -1145,7 +1145,7 @@
     },
     "tone-adaptive-chapter": {
       "id": "tone-adaptive-chapter",
-      "kind": "archetype",
+      "kind": "standard",
       "slideTypes": [
         "chapter"
       ],
@@ -1163,7 +1163,7 @@
     "tone-adaptive-content": {
       "arrangements": "all",
       "id": "tone-adaptive-content",
-      "kind": "archetype",
+      "kind": "standard",
       "slideTypes": [
         "content"
       ],
@@ -1197,7 +1197,7 @@
     },
     "tone-adaptive-ending": {
       "id": "tone-adaptive-ending",
-      "kind": "archetype",
+      "kind": "standard",
       "slideTypes": [
         "ending"
       ],
@@ -1222,7 +1222,7 @@
     },
     "tone-adaptive-header": {
       "id": "tone-adaptive-header",
-      "kind": "archetype",
+      "kind": "standard",
       "slideTypes": [
         "cover"
       ],
@@ -1251,7 +1251,7 @@
     },
     "verdict-index": {
       "id": "verdict-index",
-      "kind": "archetype",
+      "kind": "standard",
       "slideTypes": ["cover"],
       "slots": [
         { "name": "kicker", "accepts": [] },
@@ -1263,7 +1263,7 @@
     },
     "band-title": {
       "id": "band-title",
-      "kind": "archetype",
+      "kind": "standard",
       "slideTypes": ["cover"],
       "slots": [
         { "name": "kicker", "accepts": [] },
@@ -1274,7 +1274,7 @@
     },
     "header-band": {
       "id": "header-band",
-      "kind": "archetype",
+      "kind": "standard",
       "slideTypes": ["cover"],
       "slots": [
         { "name": "meta", "accepts": [] },
@@ -1284,7 +1284,7 @@
     },
     "paper-masthead": {
       "id": "paper-masthead",
-      "kind": "archetype",
+      "kind": "standard",
       "slideTypes": ["cover"],
       "slots": [
         { "name": "kicker", "accepts": [] },
@@ -1295,7 +1295,7 @@
     },
     "horizon-wedge": {
       "id": "horizon-wedge",
-      "kind": "archetype",
+      "kind": "standard",
       "slideTypes": ["cover"],
       "slots": [
         { "name": "kicker", "accepts": [] },
@@ -1306,7 +1306,7 @@
     },
     "corner-wedge": {
       "id": "corner-wedge",
-      "kind": "archetype",
+      "kind": "standard",
       "slideTypes": ["cover"],
       "slots": [
         { "name": "kicker", "accepts": [] },
@@ -1320,7 +1320,7 @@
         "two_column"
       ],
       "id": "two-column",
-      "kind": "archetype",
+      "kind": "standard",
       "slideTypes": [
         "content"
       ],

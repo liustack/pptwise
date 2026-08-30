@@ -181,7 +181,7 @@ export const layoutDef: LayoutDefinition = {
   // paper above the wedge. Optional polyline on the wedge face. Meta
   // reversed in the wedge, pulled left of the logo box.
   id: "horizon-wedge",
-  kind: "archetype",
+  kind: "standard",
   slideTypes: ["cover"],
   slots: [
     { name: "kicker", accepts: [] },

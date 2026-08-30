@@ -19,7 +19,7 @@ const slide: Slide = {
 } as Slide
 
 const ir: PptxIR = {
-  version: "4",
+  version: "5",
   filename: "crayonbox-todo.pptx",
   theme: { id: "crayon" },
   meta: { organization: "一盒蜡笔" },
@@ -130,10 +130,8 @@ describe("ending-crayonbox-todo", () => {
     ])
     expect(layoutDef).toMatchObject({
       id: "crayonbox-todo",
-      kind: "archetype",
+      kind: "standard",
       pinOnly: true,
-      branding: "none",
-      suppressMotif: true,
       slideTypes: ["ending"],
     })
     expect(layoutDef.slots.find((slot) => slot.name === "body")).toEqual({

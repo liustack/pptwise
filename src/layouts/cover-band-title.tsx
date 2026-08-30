@@ -6,12 +6,13 @@ import { latinUpper, trackingPx } from "./minimal-shared"
 import { accessibleInk, metaInk, readableOn } from "../render/ink"
 import { CONF_LABEL } from "../lib/conf-labels"
 import { showsDocumentMeta } from "../render/document-meta"
+import { faceParam } from "./face-params"
 
 /**
  * band-title cover layout（2026-08-22 封面还原第一波，新表达）：
  * **通栏主色带承反白标题**。kicker 贴带上沿，meta 走顶栏。构图抄 classroom /
  * enterprise / vermilion 三家封面样例：一条色带把标题反白写进去，对齐、带的
- * y/h、带上小帽由 `style.shape.cover` 参数化。
+ * y/h、带上小帽由菜单中本脸的参数控制。
  *
  * **它进共享池，不是某一家专用**。零 theme id、零 hex。打孔、刻度尺、金双线
  * 是各自主题 motif 的事，本版式不重画。通栏色带是版式自己的结构件，本来就在
@@ -58,15 +59,14 @@ function hangingBaseline(top: number, fontSize: number): number {
   return top + Math.round(fontSize * 0.8)
 }
 
-export function BandTitleCover({ ir, slide, ctx }: SvgTemplateProps) {
+export function BandTitleCover({ ir, slide, ctx, params }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const bg = ctx.defaultBg ?? colors.bg
-  const cover = ctx.shape?.cover
-  const bandY = cover?.bandY ?? DEFAULT_BAND_Y
-  const bandH = cover?.bandH ?? DEFAULT_BAND_H
-  const textAnchor = cover?.textAnchor ?? "start"
-  const bandMark = cover?.bandMark === true
-  const bandWave = cover?.bandWave === true
+  const bandY = faceParam(params, "bandY", DEFAULT_BAND_Y)
+  const bandH = faceParam(params, "bandH", DEFAULT_BAND_H)
+  const textAnchor = faceParam<"start" | "middle">(params, "textAnchor", "start")
+  const bandMark = faceParam(params, "bandMark", false)
+  const bandWave = faceParam(params, "bandWave", false)
   const centered = textAnchor === "middle"
   const titleX = centered ? 640 : 96
   const kickerX = titleX
@@ -234,10 +234,17 @@ export function BandTitleCover({ ir, slide, ctx }: SvgTemplateProps) {
 export const layoutDef: LayoutDefinition = {
   // cover-band-title.tsx: full-width primary band carrying reversed title.
   // kicker sits on the band's top edge. meta in the top bar. Alignment /
-  // band y/h / mark / wave come from style.shape.cover.
+  // Band geometry and optional marks come from this menu face's parameters.
   id: "band-title",
-  kind: "archetype",
+  kind: "standard",
   slideTypes: ["cover"],
+  params: {
+    bandY: { type: "number", min: 160, max: 360 },
+    bandH: { type: "number", min: 120, max: 280 },
+    textAnchor: { type: "string", values: ["start", "middle"] },
+    bandMark: { type: "boolean" },
+    bandWave: { type: "boolean" },
+  },
   slots: [
     { name: "kicker", accepts: [] },
     { name: "heading", accepts: [] },

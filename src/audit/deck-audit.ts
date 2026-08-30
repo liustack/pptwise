@@ -2462,7 +2462,7 @@ function droppedFindings(markup: string, page: number, slideId: string | undefin
 function monotonyMessage(componentType: string, fromPage: number, toPage: number, length: number): string {
   return (
     `pages ${fromPage}-${toPage} repeat component type "${componentType}" (${length} consecutive pages) — ` +
-    `vary the lead component across neighbouring pages (mix bullets, chart, kpi, quote) so the deck does not read as a repeating template`
+    `vary the lead component across neighbouring pages (mix bullets, chart, kpi, blockquote) so the deck does not read as a repeating template`
   )
 }
 

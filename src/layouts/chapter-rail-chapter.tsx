@@ -242,7 +242,7 @@ export const layoutDef: LayoutDefinition = {
   // heading + italic subheading over the theme's primary color block, and
   // a horizontal chapter-progress dot row + track → rail.
   id: "rail-chapter",
-  kind: "archetype",
+  kind: "standard",
   slideTypes: ["chapter"],
   slots: [
     { name: "watermark", accepts: [] },

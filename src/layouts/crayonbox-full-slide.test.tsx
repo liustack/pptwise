@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { render } from "@testing-library/react"
-import { describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it } from "vitest"
 import type { PptxIR, Slide } from "@/ir"
 import { resolveStyle } from "../themes"
 import { FullSlideSvg } from "../render/full-slide-svg"
@@ -12,10 +12,16 @@ import {
   SKY_BLUE,
   SUN_YELLOW,
 } from "./crayonbox-shared"
+import { __resetRegisteredThemes } from "../themes/definitions"
+import { registerTestTheme } from "../themes/test-fixtures"
+
+afterEach(() => {
+  __resetRegisteredThemes()
+})
 
 function deck(slide: Slide, theme = "crayon"): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "crayonbox-full-slide.pptx",
     theme: { id: theme },
     meta: { organization: "一盒蜡笔", date: "2026 秋季" },
@@ -29,11 +35,11 @@ function draw(slide: Slide, theme = "crayon") {
 }
 
 const dedicatedSlides: readonly Slide[] = [
-  { type: "cover", layout: "crayonbox-open", heading: "打开想象力\n画出新世界", components: [] },
-  { type: "chapter", layout: "crayonbox-sticker", heading: "让创意发生", components: [] },
+  { type: "cover",  heading: "打开想象力\n画出新世界", components: [] },
+  { type: "chapter",  heading: "让创意发生", components: [] },
   {
     type: "content",
-    layout: "crayonbox-cards",
+    kind: "list",
     heading: "三支蜡笔，三个方向",
     components: [
       { type: "numbered_cards", items: [
@@ -45,13 +51,12 @@ const dedicatedSlides: readonly Slide[] = [
   },
   {
     type: "content",
-    layout: "crayonbox-point",
+    kind: "statement",
     heading: "每一种颜色\n都有自己的故事",
-    components: [{ type: "quote", text: "把想象画出来", attribution: "一盒蜡笔" }],
+    components: [{ type: "blockquote", text: "把想象画出来", attribution: "一盒蜡笔" }],
   },
   {
     type: "ending",
-    layout: "crayonbox-todo",
     heading: "下一步，一起画出来",
     components: [{ type: "bullets", items: ["选定第一支蜡笔", "画出今天的点子", "把作品送给朋友"] }],
   },
@@ -61,8 +66,8 @@ describe("crayonbox final depth contract", () => {
   it("keeps every dedicated face inside the three-piece decoration budget", () => {
     for (const slide of dedicatedSlides) {
       const count = draw(slide).querySelectorAll("[data-decor-piece]").length
-      expect(count, slide.layout).toBeGreaterThan(0)
-      expect(count, slide.layout).toBeLessThanOrEqual(MAX_DECOR_PIECES)
+      expect(count, slide.type).toBeGreaterThan(0)
+      expect(count, slide.type).toBeLessThanOrEqual(MAX_DECOR_PIECES)
     }
   })
 
@@ -70,11 +75,11 @@ describe("crayonbox final depth contract", () => {
     for (const slide of dedicatedSlides) {
       const container = draw(slide)
       const sun = container.querySelector('[data-decor-piece="sun"]')!
-      expect(sun.getAttribute("data-decor-role"), slide.layout).toBe("identity")
-      expect(sun.closest('[data-depth="mid"]'), slide.layout).not.toBeNull()
-      expect(sun.querySelector("circle")?.getAttribute("stroke"), slide.layout).toBe(SUN_YELLOW)
+      expect(sun.getAttribute("data-decor-role"), slide.type).toBe("identity")
+      expect(sun.closest('[data-depth="mid"]'), slide.type).not.toBeNull()
+      expect(sun.querySelector("circle")?.getAttribute("stroke"), slide.type).toBe(SUN_YELLOW)
       for (const ray of Array.from(sun.querySelectorAll("line"))) {
-        expect(ray.getAttribute("stroke"), slide.layout).toBe(SUN_YELLOW)
+        expect(ray.getAttribute("stroke"), slide.type).toBe(SUN_YELLOW)
       }
     }
   })
@@ -90,14 +95,14 @@ describe("crayonbox final depth contract", () => {
     for (const expectation of expectations) {
       const container = draw(expectation.slide)
       const stars = container.querySelector('[data-decor-piece="stars"]')!
-      expect(stars.getAttribute("data-decor-role"), expectation.slide.layout).toBe("identity")
+      expect(stars.getAttribute("data-decor-role"), expectation.slide.type).toBe("identity")
       expect(Array.from(stars.querySelectorAll("text"), (star) => star.getAttribute("fill"))).toEqual(
         expectation.stars,
       )
       if ("underline" in expectation) {
         const underline = container.querySelector('[data-decor-piece="underline"]')!
-        expect(underline.getAttribute("data-decor-role"), expectation.slide.layout).toBe("identity")
-        expect(underline.querySelector("rect")?.getAttribute("fill"), expectation.slide.layout).toBe(
+        expect(underline.getAttribute("data-decor-role"), expectation.slide.type).toBe("identity")
+        expect(underline.querySelector("rect")?.getAttribute("fill"), expectation.slide.type).toBe(
           expectation.underline,
         )
       }
@@ -128,7 +133,7 @@ describe("crayonbox final depth contract", () => {
   it("keeps the shared-layout motif at the specified yellow, pink, and purple", () => {
     const slide: Slide = {
       type: "content",
-      layout: "two-column",
+      kind: "points",
       heading: "共享内容页",
       components: [{ type: "paragraph", text: "正文" }],
     }
@@ -145,10 +150,15 @@ describe("crayonbox final depth contract", () => {
     ])
   })
 
-  it("recesses dedicated decoration when the face is explicitly pinned under another theme", () => {
-    const container = draw(dedicatedSlides[0]!, "insight")
+  it("recesses dedicated decoration when another theme menu offers the face", () => {
+    const themeId = registerTestTheme("insight-crayonbox-cover", "insight", {
+      cover: { face: "crayonbox-open", decor: { kind: "silent" } },
+    })
+    const container = draw(dedicatedSlides[0]!, themeId)
     for (const id of ["sun", "stars"]) {
-      expect(container.querySelector(`[data-decor-piece="${id}"]`)?.getAttribute("data-decor-role"), id).toBeNull()
+      const piece = container.querySelector(`[data-decor-piece="${id}"]`)
+      expect(piece, id).not.toBeNull()
+      expect(piece?.getAttribute("data-decor-role"), id).toBeNull()
     }
     expect(container.querySelector('[data-decor-piece="underline"]')).toBeNull()
   })

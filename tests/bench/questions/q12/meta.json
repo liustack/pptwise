@@ -7,7 +7,7 @@
     "expects_components": [
       "image",
       "kpi_cards",
-      "quote"
+      "blockquote"
     ],
     "workflow": "bare-ir",
     "image_deck": true

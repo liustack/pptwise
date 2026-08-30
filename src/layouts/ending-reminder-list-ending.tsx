@@ -156,12 +156,12 @@ export function ReminderListEnding({ slide, ctx }: SvgTemplateProps) {
 }
 
 export const layoutDef: LayoutDefinition = {
+  branding: "none",
   // ending-reminder-list-ending.tsx: pinOnly three-item reminder list,
   // contact line from subheading. No decoration. No thank-you.
   id: "reminder-list-ending",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
-  branding: "none",
   slideTypes: ["ending"],
   slots: [
     { name: "heading", accepts: [] },

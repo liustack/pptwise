@@ -1,29 +1,29 @@
 // @vitest-environment jsdom
 import { render } from "@testing-library/react"
-import { describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it } from "vitest"
 import type { PptxIR, Slide } from "@/ir"
 import { resolveStyle } from "../themes"
 import { contrastRatio } from "../render/ink"
 import { FullSlideSvg } from "../render/full-slide-svg"
+import { __resetRegisteredThemes } from "../themes/definitions"
+import { registerTestTheme, type TestThemeFaces } from "../themes/test-fixtures"
 
 const slides: Slide[] = [
   {
     type: "cover",
-    layout: "show-headline",
     heading: "破界",
     subheading: "年度战略发布",
     components: [],
   },
   {
     type: "chapter",
-    layout: "show-plate",
     heading: "增长引擎",
     subheading: "从共识走向行动",
     components: [],
   },
   {
     type: "content",
-    layout: "show-gallery",
+    kind: "photo",
     heading: "六个关键场景",
     subheading: "从真实场景中提炼可复制的方法",
     components: [
@@ -38,7 +38,7 @@ const slides: Slide[] = [
   },
   {
     type: "content",
-    layout: "show-spotlight",
+    kind: "photo",
     heading: "旗舰方案",
     subheading: "把复杂约束压缩成一条清晰路径",
     components: [
@@ -56,7 +56,7 @@ const slides: Slide[] = [
   },
   {
     type: "content",
-    layout: "show-statement",
+    kind: "statement",
     heading: "真正的增长来自\n持续创造不可替代性",
     components: [
       {
@@ -71,7 +71,7 @@ const slides: Slide[] = [
   },
   {
     type: "content",
-    layout: "show-figures",
+    kind: "data",
     heading: "关键数字",
     subheading: "三项指标共同验证增长质量",
     components: [
@@ -87,7 +87,6 @@ const slides: Slide[] = [
   },
   {
     type: "ending",
-    layout: "show-finale",
     heading: "谢谢",
     subheading: "THE SHOW GOES ON",
     components: [],
@@ -95,7 +94,7 @@ const slides: Slide[] = [
 ]
 
 const ir: PptxIR = {
-  version: "4",
+  version: "5",
   filename: "runway-show.pptx",
   theme: { id: "runway" },
   meta: {
@@ -109,8 +108,30 @@ const ir: PptxIR = {
   slides,
 } as PptxIR
 
+const FACE_BY_INDEX = [
+  "show-headline",
+  "show-plate",
+  "show-gallery",
+  "show-spotlight",
+  "show-statement",
+  "show-figures",
+  "show-finale",
+] as const
+let themeSerial = 0
+
+afterEach(() => {
+  __resetRegisteredThemes()
+})
+
 function draw(index: number, slide: Slide = slides[index]!) {
-  return render(<FullSlideSvg ir={{ ...ir, slides: slide === slides[index] ? slides : [slide] }} slide={slide} index={slide === slides[index] ? index : 0} />).container
+  const face = FACE_BY_INDEX[index]!
+  const faces: TestThemeFaces =
+    slide.type === "content" ? { content: { [slide.kind]: face } } : { [slide.type]: face }
+  const themeId = registerTestTheme(`show-layout-${themeSerial++}`, "runway", faces)
+  const doc = { ...ir, theme: { id: themeId }, slides: slide === slides[index] ? slides : [slide] }
+  return render(
+    <FullSlideSvg ir={doc} slide={slide} index={slide === slides[index] ? index : 0} />,
+  ).container
 }
 
 function textBy(root: ParentNode, value: string): Element {
@@ -273,14 +294,14 @@ describe("runway show layouts", () => {
     for (const [index, slide] of slides.entries()) {
       const root = draw(index)
       const groups = root.querySelectorAll('[data-show-accent="true"]')
-      expect(groups, slide.layout).toHaveLength(1)
+      expect(groups, (slide as unknown as { layout?: string }).layout).toHaveLength(1)
       const redLeaves = Array.from(root.querySelectorAll("rect, line, path, circle, text")).filter((node) =>
         [node.getAttribute("fill"), node.getAttribute("stroke")].some((paint) => paint?.toLowerCase() === accent),
       )
-      expect(redLeaves.length, slide.layout).toBeGreaterThan(0)
-      expect(redLeaves.every((node) => node.closest('[data-show-accent="true"]') === groups[0]), slide.layout).toBe(true)
-      expect(root.querySelectorAll("text[fill-opacity]"), slide.layout).toHaveLength(0)
-      expect(root.querySelectorAll("[data-decor-piece]").length, slide.layout).toBeLessThanOrEqual(3)
+      expect(redLeaves.length, (slide as unknown as { layout?: string }).layout).toBeGreaterThan(0)
+      expect(redLeaves.every((node) => node.closest('[data-show-accent="true"]') === groups[0]), (slide as unknown as { layout?: string }).layout).toBe(true)
+      expect(root.querySelectorAll("text[fill-opacity]"), (slide as unknown as { layout?: string }).layout).toHaveLength(0)
+      expect(root.querySelectorAll("[data-decor-piece]").length, (slide as unknown as { layout?: string }).layout).toBeLessThanOrEqual(3)
     }
   })
 
@@ -289,47 +310,47 @@ describe("runway show layouts", () => {
     for (const index of [1, 2, 3]) {
       const root = draw(index)
       const placeholders = Array.from(root.querySelectorAll('[data-show-placeholder="true"]'))
-      expect(placeholders.length, slides[index]!.layout).toBeGreaterThan(0)
+      expect(placeholders.length, (slides[index]! as unknown as { layout?: string }).layout).toBeGreaterThan(0)
       for (const placeholder of placeholders) {
         const ink = placeholder.getAttribute("fill")!
-        expect(contrastRatio(ink, "#D8D4C8"), slides[index]!.layout).toBeGreaterThanOrEqual(4.5)
-        expect(ink, slides[index]!.layout).not.toBe(tokens.colors.muted)
+        expect(contrastRatio(ink, "#D8D4C8"), (slides[index]! as unknown as { layout?: string }).layout).toBeGreaterThanOrEqual(4.5)
+        expect(ink, (slides[index]! as unknown as { layout?: string }).layout).not.toBe(tokens.colors.muted)
       }
     }
   })
 
   it("falls back without losing content when a gated content face receives the wrong component shape", () => {
-    const cases: Slide[] = [
-      {
+    const cases: Array<{ index: number; slide: Slide }> = [
+      { index: 2, slide: {
         type: "content",
-        layout: "show-gallery",
+        kind: "photo",
         heading: "三图不走六格",
         components: [{ type: "paragraph", text: "画廊回退正文" }],
-      },
-      {
+      } },
+      { index: 3, slide: {
         type: "content",
-        layout: "show-spotlight",
+        kind: "photo",
         heading: "无图不走焦点",
         components: [{ type: "paragraph", text: "焦点回退正文" }],
-      },
-      {
+      } },
+      { index: 4, slide: {
         type: "content",
-        layout: "show-statement",
+        kind: "statement",
         heading: "四点不走观点",
         components: [{ type: "bullets", items: ["一", "二", "三", "观点回退正文"] }],
-      },
-      {
+      } },
+      { index: 5, slide: {
         type: "content",
-        layout: "show-figures",
+        kind: "data",
         heading: "非指标不走数字",
         components: [{ type: "paragraph", text: "数字回退正文" }],
-      },
+      } },
     ]
-    for (const slide of cases) {
-      const root = draw(0, slide)
-      expect(root.querySelector('[data-show-mode="fallback"]'), slide.layout).not.toBeNull()
-      expect(root.textContent, slide.layout).toContain("回退正文")
-      expect(root.querySelectorAll('[data-show-accent="true"]'), slide.layout).toHaveLength(1)
+    for (const { index, slide } of cases) {
+      const root = draw(index, slide)
+      expect(root.querySelector('[data-show-mode="fallback"]'), FACE_BY_INDEX[index]).not.toBeNull()
+      expect(root.textContent, FACE_BY_INDEX[index]).toContain("回退正文")
+      expect(root.querySelectorAll('[data-show-accent="true"]'), FACE_BY_INDEX[index]).toHaveLength(1)
     }
   })
 })

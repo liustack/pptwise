@@ -1,5 +1,4 @@
 import type { PptxIR, Slide } from "@/ir"
-import { layoutOmitsBranding } from "../layouts/registry"
 
 /** Outer frame bottom when branding paints the logo/footer strip. */
 export const FRAME_BOTTOM_BRANDED = 624
@@ -15,17 +14,16 @@ export const LUXE_FRAME_BOTTOM_BOARD = 696
  */
 export const SPARSE_PIN_LAYOUTS = ["statement", "pull-quote", "stat-hero", "one-evidence", "mono-bleed"] as const
 
-export function yieldsOnSparsePin(slide: Slide): boolean {
-  return slide.type === "content" && slide.layout !== undefined && (SPARSE_PIN_LAYOUTS as readonly string[]).includes(slide.layout)
+export function yieldsOnSparsePin(_slide: Slide): boolean {
+  return false
 }
 
 /**
  * Outer-frame bottom edge. `ir.branding === "full"` is the only posture that
- * paints the content-page logo/footer, so the frame clears y630. Layout
- * `branding: "none"` skips that fragment even on a full deck (`layoutOmitsBranding`).
- * Omitted branding (gallery default) drops to the board inset.
+ * paints the content-page logo/footer, so the frame clears y630. Omitted
+ * branding drops to the board inset. A menu entry that silences branding also
+ * silences its motif, so this frame is not rendered for that entry.
  */
-export function frameBottomY(ir: PptxIR, slide: Slide, boardY: number): number {
-  if (layoutOmitsBranding(slide.layout)) return boardY
+export function frameBottomY(ir: PptxIR, _slide: Slide, boardY: number): number {
   return ir.branding === "full" ? FRAME_BOTTOM_BRANDED : boardY
 }

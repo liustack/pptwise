@@ -30,7 +30,8 @@ describe("resolveStyle", () => {
     expect(t.colors.accent).toBe("#F0A63C");
   });
 
-  it("未知 id 回落到 consulting 的 token 包", () => {
-    expect(resolveStyle("nonexistent-theme")).toEqual(resolveStyle("consulting"));
+  // 零兼容裁定：未知 id 不再静默回落 consulting，直接报错并列出已装主题。
+  it("未知 id 硬错，不回落", () => {
+    expect(() => resolveStyle("nonexistent-theme")).toThrow(/unknown theme "nonexistent-theme"/);
   });
 });

@@ -17,7 +17,7 @@ const BOARD_QUOTE = "#E8E2D6"
 
 function ir(slides: Slide[], meta: Record<string, string> = {}): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "x.pptx",
     theme: { id: "insight" },
     meta,
@@ -39,7 +39,7 @@ describe("insight sparse faces", () => {
   const ctx = buildCtx(resolveStyle("insight"), {})
 
   it("statement is a prompt line with a muted >, amber verse, and a cursor", () => {
-    const slide: Slide = { type: "content", layout: "statement", heading: VERSE, components: [] } as Slide
+    const slide: Slide = { type: "content", kind: "statement", heading: VERSE, components: [] }
     const doc = ir([slide], { date: "2026-05-01" })
     const { markup, root } = render(
       <StatementContent ir={doc} slide={slide} index={0} ctx={ctx} />,
@@ -66,14 +66,14 @@ describe("insight sparse faces", () => {
   })
 
   it("SESSION and the ghost quarter stay off when the date cannot be read", () => {
-    const slide: Slide = { type: "content", layout: "statement", heading: VERSE, components: [] } as Slide
+    const slide: Slide = { type: "content", kind: "statement", heading: VERSE, components: [] }
     const { markup } = render(
       <StatementContent ir={ir([slide], { date: "sometime soon" })} slide={slide} index={0} ctx={ctx} />,
     )
     expect(markup).not.toContain("SESSION")
     expect(markup).not.toMatch(/\bQ[1-4]\b/)
 
-    const missing: Slide = { type: "content", layout: "stat-hero", heading: "43%", components: [] } as Slide
+    const missing: Slide = { type: "content", kind: "fact", heading: "43%", components: [] }
     const { markup: noDate } = render(
       <StatHeroContent ir={ir([missing])} slide={missing} index={0} ctx={ctx} />,
     )
@@ -84,7 +84,7 @@ describe("insight sparse faces", () => {
   it("stat-hero paints a ghost quarter from meta.date and keeps a leading minus in the value", () => {
     const slide: Slide = {
       type: "content",
-      layout: "stat-hero",
+      kind: "fact",
       heading: "-43%",
       subheading: "席位净流失 · 环比",
       footnote: "PILOT LINE · 90D WINDOW",
@@ -109,7 +109,7 @@ describe("insight sparse faces", () => {
     expect(hero.textContent).toBe("-43%")
     expect(markup).toContain("PILOT LINE · 90D WINDOW")
 
-    const q4slide: Slide = { type: "content", layout: "stat-hero", heading: "12%", components: [] } as Slide
+    const q4slide: Slide = { type: "content", kind: "fact", heading: "12%", components: [] }
     const { root: q4root } = render(
       <StatHeroContent ir={ir([q4slide], { date: "2026-11-20" })} slide={q4slide} index={0} ctx={ctx} />,
     )
@@ -120,7 +120,7 @@ describe("insight sparse faces", () => {
   it("pull-quote follows a cubic ticker and paints the quote in text, attribution in accent", () => {
     const slide: Slide = {
       type: "content",
-      layout: "pull-quote",
+      kind: "quote",
       heading: QUOTE,
       subheading: "陈砚清 · 首席技术官",
       components: [],
@@ -155,22 +155,31 @@ describe("insight sparse faces", () => {
     expect(markup).not.toContain(LUXE_GOLD)
   })
 
-  it("routes cover, content, and sparse pull-quote ticker paths to mid, not fg", () => {
+  it("routes the quote face ticker path to mid, not fg", () => {
+    const slide: Slide = {
+      type: "content",
+      kind: "quote",
+      heading: QUOTE,
+      subheading: "陈砚清 · 首席技术官",
+      components: [],
+    }
+    const doc = ir([slide], { date: "2026-05-01" })
+    const root = parseSvgRoot(renderSlideSvg(doc, 0))
+    const tickers = Array.from(root.querySelectorAll("path")).filter(
+      (el) => el.getAttribute("fill") === "none" && (el.getAttribute("d") ?? "").includes("C "),
+    )
+    expect(tickers.length).toBeGreaterThan(0)
+    for (const ticker of tickers) {
+      expect(ticker.closest("[data-depth]")?.getAttribute("data-depth")).toBe("mid")
+    }
+  })
+
+  it("routes the built-in cover and points motif ticker paths to mid, not fg", () => {
     const cases: { label: string; slide: Slide }[] = [
       { label: "cover", slide: { type: "cover", heading: "43%", components: [] } as Slide },
       {
         label: "content",
-        slide: { type: "content", heading: "行情", components: [{ type: "paragraph", text: "一段正文" }] } as Slide,
-      },
-      {
-        label: "pull-quote",
-        slide: {
-          type: "content",
-          layout: "pull-quote",
-          heading: QUOTE,
-          subheading: "陈砚清 · 首席技术官",
-          components: [],
-        } as Slide,
+        slide: { type: "content", kind: "points", heading: "行情", components: [{ type: "paragraph", text: "一段正文" }] } as Slide,
       },
     ]
     for (const { label, slide } of cases) {

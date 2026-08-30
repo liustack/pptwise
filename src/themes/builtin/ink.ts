@@ -1,6 +1,5 @@
 import type { StyleTokens } from "../tokens";
 import type { BuiltinThemeDeclaration } from "../schema";
-import { DEFAULT_CONTENT_FACES } from "./shared";
 
 /**
  * ink（水墨国风）——2026-07-10 用户裁决新增的「真创意」子类之二（用户
@@ -34,6 +33,8 @@ import { DEFAULT_CONTENT_FACES } from "./shared";
  * 右缘落款列，ending 右下半山，章节退让）。封面见
  * `src/layouts/cover-vertical-title-cover.tsx`（竖题 + 朱砂印）。
  * 四页 defaultBackgrounds 保持宣纸米，不改角色色。
+ *
+ * **菜单分派（S1-B）**：留白是水墨的第一性，points 因此改用居中透气的 quiet-frame 而不是带页码水印的窄栏，evidence 的展品腔与它相斥，不上。
  */
 export const INK_TOKENS: StyleTokens = {
   id: "ink",
@@ -66,23 +67,27 @@ export const INK_TOKENS: StyleTokens = {
 };
 
 export const INK_THEME = {
-  version: 1,
+  version: 2,
   id: "ink",
   label: "Ink Wash",
   style: INK_TOKENS,
   brand: { suppressFooterRule: true, suppressFooterMeta: true },
-  faces: {
-    cover: ["vertical-title-cover"],
-    chapter: ["volume-slip-chapter"],
-    content: DEFAULT_CONTENT_FACES,
-    ending: ["seal-close-ending"],
+  menu: {
+    cover: { face: "vertical-title-cover" },
+    chapter: { face: "volume-slip-chapter" },
+    content: {
+      points: { face: "quiet-frame" },
+      list: { face: "bento-panel" },
+      comparison: { face: "two-column" },
+      process: { face: "rail-numbered" },
+      data: { face: "split-band" },
+      photo: { face: "image-split" },
+      statement: { face: "statement" },
+      quote: { face: "pull-quote" },
+      fact: { face: "stat-hero" },
+      hierarchy: { face: "asymmetric-triptych" },
+    },
+    ending: { face: "seal-close-ending" },
   },
   motif: { id: "ink-motif" },
-  tendencies: {
-    cover: ["vertical-title-cover"],
-    chapter: ["volume-slip-chapter"],
-    content: ["quiet-frame", "split-band"],
-    ending: ["seal-close-ending"],
-  },
-  sparse: ["statement", "stat-hero", "pull-quote", "verse-chapter"],
 } satisfies BuiltinThemeDeclaration;

@@ -8,10 +8,9 @@
 // `deck-audit.test.ts`) so `auditDeck`'s actual documented Node consumption
 // path is exercised end-to-end.
 //
-// Scope: every canonical theme × every slide type × every layout
-// currently in that theme's curated set (now the full registered-layout
-// set for all four slide types on all but a small, explicitly-adjudicated
-// handful of curation exclusions — see `themes/definitions.ts`). Each
+// Scope: every canonical theme × every entry in that theme's v2 menu.
+// Boundary pages contribute one entry each. Content contributes exactly the
+// semantic kinds the theme offers. Each
 // combination is rendered with `heading` populated on every slide type, plus
 // `subheading` on `chapter`/`content` specifically — this task's defect
 // class (and this task's own fix) lives on those two elements plus
@@ -59,14 +58,14 @@
 //     scope narrow to the W4 defect class.
 //   - the five sources `deck-audit.test.ts`'s own "understood pre-existing
 //     low-contrast sources" block already documents and pins.
-import { beforeAll, describe, expect, it } from "vitest"
-import { COMPONENT_TYPES, type PptxIR, type Slide } from "@/ir"
+import { afterAll, beforeAll, describe, expect, it } from "vitest"
+import { COMPONENT_TYPES, type PageKind, type PptxIR, type Slide } from "@/ir"
 import { renderSlideSvg } from "../api"
 import { auditDeck, type AuditFinding } from "./deck-audit"
 import { installNodePlatform } from "../platform/node"
 import { CANONICAL_THEME_IDS, type CanonicalThemeId } from "../themes"
-import { SPARSE_LAYOUT_IDS, THEME_DEFINITIONS, themeOffersSparse } from "../themes/definitions"
-import { LAYOUT_REGISTRY } from "../layouts/registry"
+import { __resetRegisteredThemes, THEME_DEFINITIONS } from "../themes/definitions"
+import { registerTestTheme } from "../themes/test-fixtures"
 import { resolveBackgroundHex } from "../render/full-slide-svg"
 import {
   accessibleInk,
@@ -85,6 +84,10 @@ beforeAll(() => {
   installNodePlatform()
 })
 
+afterAll(() => {
+  __resetRegisteredThemes()
+})
+
 /** The org/date meta this file's own sweep deliberately leaves unset (see
  *  the header) — populated only by the decor-collision block at the bottom,
  *  which needs the one text a motif's corner shape actually lands under. */
@@ -93,14 +96,56 @@ const DECOR_META = { organization: "云帆科技", date: "2026-08-15" } as const
 const HEADING = "示例标题：验证对比度矩阵"
 const SUBHEADING = "示例副标题：用于穷举扫描的**所见即所得**文案"
 
+const FIXTURE_FACES = new WeakMap<Slide, string>()
+
+function markFace(slide: Slide, face: string): void {
+  FIXTURE_FACES.set(slide, face)
+}
+
 function deckFor(themeId: string, slide: Slide, images: PptxIR["assets"]["images"] = {}): PptxIR {
+  const face = FIXTURE_FACES.get(slide)
+  const boundThemeId = face === undefined
+    ? themeId
+    : registeredThemeForFace(themeId as CanonicalThemeId, face, slide)
   return {
-    version: "4",
+    version: "5",
     filename: "full-matrix-contrast-fixture",
-    theme: { id: themeId },
+    theme: { id: boundThemeId },
     meta: {},
     assets: { images },
     slides: [slide],
+  }
+}
+
+const REGISTERED_FACE_THEMES = new Map<string, string>()
+
+function registeredThemeForFace(
+  themeId: CanonicalThemeId,
+  face: string,
+  slide: Slide,
+): string {
+  const kind = slide.type === "content" ? slide.kind : undefined
+  const key = `${themeId}|${slide.type}|${kind ?? "boundary"}|${face}`
+  let registeredId = REGISTERED_FACE_THEMES.get(key)
+  if (registeredId === undefined) {
+    registeredId = `matrix-${themeId}-${slide.type}-${kind ?? "boundary"}-${face}`
+    registerTestTheme(registeredId, themeId, {
+      ...(slide.type === "cover" ? { cover: face } : {}),
+      ...(slide.type === "chapter" ? { chapter: face } : {}),
+      ...(slide.type === "content" ? { content: { [slide.kind]: face } } : {}),
+      ...(slide.type === "ending" ? { ending: face } : {}),
+    })
+    REGISTERED_FACE_THEMES.set(key, registeredId)
+  }
+  return registeredId
+}
+
+function bindFace(themeId: CanonicalThemeId, face: string, ir: PptxIR): PptxIR {
+  const slide = ir.slides[0]
+  if (slide === undefined) throw new Error("face fixture requires one slide")
+  return {
+    ...ir,
+    theme: { ...ir.theme, id: registeredThemeForFace(themeId, face, slide) },
   }
 }
 
@@ -125,9 +170,9 @@ function auditFindings(ir: PptxIR): AuditFinding[] {
 
 interface AllowlistEntry {
   theme: string
-  layout: string
+  face: string
   /** Matches against `finding.detail.fill` (contrast) when set — omit to
-   * allowlist every finding for this theme+layout pairing. */
+   * allowlist every finding for this theme+face pairing. */
   fill?: string
   /**
    * Matches against `finding.detail.ratio` (contrast findings only) when
@@ -173,7 +218,7 @@ const ALLOWLIST: readonly AllowlistEntry[] = [
   // relies on instead.
   {
     theme: "*",
-    layout: "fashion-chapter",
+    face: "fashion-chapter",
     // Tier annotation (contrast-policy wave, task T3, 裁定 4): **C tier**
     // (pure decoration — this file's own header two lines below calls the
     // chapter-number watermark "decorative by design", and
@@ -219,7 +264,7 @@ const ALLOWLIST: readonly AllowlistEntry[] = [
   },
   {
     theme: "*",
-    layout: "tone-adaptive-header",
+    face: "tone-adaptive-header",
     // fix/decor-contrast-attribution. Scoped by `TEXT_SHAPE_GUARD` below to
     // this layout's org/date meta band — never its heading or subheading,
     // so a real heading failure here still fails the net.
@@ -243,7 +288,7 @@ const ALLOWLIST: readonly AllowlistEntry[] = [
   },
   {
     theme: "arena",
-    layout: "stat-hero",
+    face: "stat-hero",
     fill: "#A79FC4",
     ratioMin: 1.5,
     ratioMax: 2.0,
@@ -286,14 +331,14 @@ const TEXT_SHAPE_GUARD: Readonly<Record<string, RegExp>> = {
   "tone-adaptive-header": new RegExp(`^(${DECOR_META.organization}|${DECOR_META.date})$`),
 }
 
-function isAllowlisted(theme: string, layout: string, finding: AuditFinding): boolean {
+function isAllowlisted(theme: string, face: string, finding: AuditFinding): boolean {
   const fill = (finding.detail as { fill?: string } | undefined)?.fill
   const text = (finding.detail as { text?: string } | undefined)?.text
   const ratio = (finding.detail as { ratio?: number } | undefined)?.ratio
-  const guard = TEXT_SHAPE_GUARD[layout]
+  const guard = TEXT_SHAPE_GUARD[face]
   if (guard && !guard.test(text ?? "")) return false
   return ALLOWLIST.some((entry) => {
-    if (entry.layout !== layout) return false
+    if (entry.face !== face) return false
     if (entry.theme !== "*" && entry.theme !== theme) return false
     if (entry.fill !== undefined && entry.fill !== fill) return false
     // Both bounds are set together (see AllowlistEntry's own doc comment) —
@@ -331,11 +376,11 @@ describe("rail-numbered badge attribution (bench-driven fix round, defect A)", (
     it(`${themeId}: the "{chapter}.{content}" badge text clears contrast against its own self-painted background`, () => {
       const slide: Slide = {
         type: "content",
+        kind: "process",
         heading: HEADING,
         subheading: SUBHEADING,
-        layout: "rail-numbered",
         components: CONTENT_BODY,
-      } as Slide
+      }
       const findings = auditFindings(deckFor(themeId, slide))
       // Scoped to the badge's own text shape (not the whole finding set) —
       // this block's job is exactly the one thing that used to need an
@@ -354,54 +399,49 @@ describe("rail-numbered badge attribution (bench-driven fix round, defect A)", (
 describe("full-matrix contrast/overflow regression net (W4 fix round)", () => {
   for (const themeId of CANONICAL_THEME_IDS) {
     describe(themeId, () => {
-      const layouts = THEME_DEFINITIONS[themeId as CanonicalThemeId].layouts
+      const menu = THEME_DEFINITIONS[themeId].menu
 
-      it("cover layouts", () => {
-        const failures: string[] = []
-        for (const layout of layouts.cover) {
-          // No subheading — see file header on colors.muted's subtitle gap.
-          const slide: Slide = { type: "cover", heading: HEADING, layout, components: [] } as Slide
-          const findings = auditFindings(deckFor(themeId, slide)).filter((f) => !isAllowlisted(themeId, layout, f))
-          for (const f of findings) failures.push(`${layout}: ${findingSummary(f)}`)
-        }
-        expect(failures).toEqual([])
+      it("cover menu entry", () => {
+        const slide: Slide = { type: "cover", heading: HEADING, components: [] }
+        const findings = auditFindings(deckFor(themeId, slide)).filter(
+          (finding) => !isAllowlisted(themeId, menu.cover.face, finding),
+        )
+        expect(findings.map((finding) => `${menu.cover.face}: ${findingSummary(finding)}`)).toEqual([])
       })
 
-      it("chapter layouts", () => {
-        const failures: string[] = []
-        for (const layout of layouts.chapter) {
-          const slide: Slide = { type: "chapter", heading: HEADING, subheading: SUBHEADING, layout, components: [] } as Slide
-          const findings = auditFindings(deckFor(themeId, slide)).filter((f) => !isAllowlisted(themeId, layout, f))
-          for (const f of findings) failures.push(`${layout}: ${findingSummary(f)}`)
-        }
-        expect(failures).toEqual([])
+      it("chapter menu entry", () => {
+        const slide: Slide = { type: "chapter", heading: HEADING, subheading: SUBHEADING, components: [] }
+        const findings = auditFindings(deckFor(themeId, slide)).filter(
+          (finding) => !isAllowlisted(themeId, menu.chapter.face, finding),
+        )
+        expect(findings.map((finding) => `${menu.chapter.face}: ${findingSummary(finding)}`)).toEqual([])
       })
 
-      it("content layouts", () => {
+      it("content kind menu entries", () => {
         const failures: string[] = []
-        for (const layout of layouts.content) {
+        for (const [kind, entry] of Object.entries(menu.content) as [PageKind, NonNullable<(typeof menu.content)[PageKind]>][]) {
+          if (entry === undefined) continue
           const slide: Slide = {
             type: "content",
+            kind,
             heading: HEADING,
             subheading: SUBHEADING,
-            layout,
             components: CONTENT_BODY,
           } as Slide
-          const findings = auditFindings(deckFor(themeId, slide)).filter((f) => !isAllowlisted(themeId, layout, f))
-          for (const f of findings) failures.push(`${layout}: ${findingSummary(f)}`)
+          const findings = auditFindings(deckFor(themeId, slide)).filter(
+            (finding) => !isAllowlisted(themeId, entry.face, finding),
+          )
+          for (const finding of findings) failures.push(`${kind} -> ${entry.face}: ${findingSummary(finding)}`)
         }
         expect(failures).toEqual([])
       })
 
-      it("ending layouts", () => {
-        const failures: string[] = []
-        for (const layout of layouts.ending) {
-          // No subheading — see file header on colors.muted's subtitle gap.
-          const slide: Slide = { type: "ending", heading: HEADING, layout, components: [] } as Slide
-          const findings = auditFindings(deckFor(themeId, slide)).filter((f) => !isAllowlisted(themeId, layout, f))
-          for (const f of findings) failures.push(`${layout}: ${findingSummary(f)}`)
-        }
-        expect(failures).toEqual([])
+      it("ending menu entry", () => {
+        const slide: Slide = { type: "ending", heading: HEADING, components: [] }
+        const findings = auditFindings(deckFor(themeId, slide)).filter(
+          (finding) => !isAllowlisted(themeId, menu.ending.face, finding),
+        )
+        expect(findings.map((finding) => `${menu.ending.face}: ${findingSummary(finding)}`)).toEqual([])
       })
     })
   }
@@ -418,24 +458,24 @@ describe("full-matrix contrast/overflow regression net (W4 fix round)", () => {
 describe("fashion-masthead meta line contrast (contrast-policy wave, metaInk migration)", () => {
   function mastheadDeck(themeId: string): PptxIR {
     return {
-      version: "4",
+      version: "5",
       filename: "fashion-masthead-meta-fixture",
       theme: { id: themeId },
       meta: { organization: "pptwise", date: "2026-08" },
       assets: { images: {} },
-      slides: [{ type: "cover", heading: HEADING, layout: "fashion-masthead", components: [] } as Slide],
+      slides: [{ type: "cover", heading: HEADING, components: [] }],
     }
   }
 
   for (const themeId of CANONICAL_THEME_IDS) {
     it(`${themeId}: the org/date meta line clears the B-tier 3:1 floor against its own painted primary block`, () => {
-      const ir = mastheadDeck(themeId)
+      const ir = bindFace(themeId, "fashion-masthead", mastheadDeck(themeId))
       const findings = auditDeck(ir).findings.filter((f) => f.code === "low-contrast")
       expect(findings).toEqual([])
     })
 
     it(`${themeId}: the meta line renders through metaInk (data-contrast-tier="meta", fill measured >= 3:1)`, () => {
-      const ir = mastheadDeck(themeId)
+      const ir = bindFace(themeId, "fashion-masthead", mastheadDeck(themeId))
       const svg = renderSlideSvg(ir, 0)
       const root = parseSvgRoot(svg)
       // Skip anything inside the theme motif's own `<g data-decor>` subtree
@@ -479,7 +519,7 @@ describe("fashion-masthead meta line contrast (contrast-policy wave, metaInk mig
   // through the generic >=3 loop above — and now pins the post-redesign
   // numbers instead of the pre-redesign ones.
   it("insight: the composite clears 3:1 with room (6.72:1) now that primary is near-black — pinned by name so a future primary change is caught here", () => {
-    const ir = mastheadDeck("insight")
+    const ir = bindFace("insight", "fashion-masthead", mastheadDeck("insight"))
     const svg = renderSlideSvg(ir, 0)
     const root = parseSvgRoot(svg)
     const metaText = Array.from(root.querySelectorAll("text")).find(
@@ -510,20 +550,20 @@ describe("fashion-masthead meta line contrast (contrast-policy wave, metaInk mig
 // element `data-contrast-tier="meta"`, the paired idiom the block above
 // established.
 describe("split-diagonal org kicker contrast (B-tier reclassification)", () => {
-  function splitDiagonalDeck(themeId: string): PptxIR {
+  function splitDiagonalDeck(themeId: CanonicalThemeId): PptxIR {
     return {
-      version: "4",
+      version: "5",
       filename: "split-diagonal-kicker-fixture",
       theme: { id: themeId },
       meta: { organization: "pptwise", date: "2026-08" },
       assets: { images: {} },
-      slides: [{ type: "cover", heading: HEADING, layout: "split-diagonal", components: [] } as Slide],
+      slides: [{ type: "cover", heading: HEADING, components: [] }],
     }
   }
 
   /** The kicker element itself — anchored at the layout's own x=96, y=128, which no other text on this page shares (title/rule/subheading/meta all sit at x=596). */
-  function kicker(themeId: string): Element {
-    const root = parseSvgRoot(renderSlideSvg(splitDiagonalDeck(themeId), 0))
+  function kicker(themeId: CanonicalThemeId): Element {
+    const root = parseSvgRoot(renderSlideSvg(bindFace(themeId, "split-diagonal", splitDiagonalDeck(themeId)), 0))
     const el = Array.from(root.querySelectorAll("text")).find(
       (t) => t.getAttribute("x") === "96" && t.getAttribute("y") === "128",
     )
@@ -540,7 +580,11 @@ describe("split-diagonal org kicker contrast (B-tier reclassification)", () => {
     })
 
     it(`${themeId}: the deck audits clean with the kicker actually rendered`, () => {
-      expect(auditDeck(splitDiagonalDeck(themeId)).findings.filter((f) => f.code === "low-contrast")).toEqual([])
+      expect(
+        auditDeck(bindFace(themeId, "split-diagonal", splitDiagonalDeck(themeId))).findings.filter(
+          (finding) => finding.code === "low-contrast",
+        ),
+      ).toEqual([])
     })
 
     // The pixel-identity half. `fillOpacity` moved into the fill hex rather
@@ -610,85 +654,6 @@ describe("split-diagonal org kicker contrast (B-tier reclassification)", () => {
   })
 })
 
-// pin-only matrix leg (quote-stage wave, task T2, 裁定 4): `pinOnly` layouts
-// (registry.ts's `LayoutDefinition.pinOnly`) are reachable only through an
-// explicit `slide.layout` pin, so `THEME_DEFINITIONS[themeId].layouts`
-// never lists one — the "content layouts" sweep right above, which
-// enumerates *that* curated set, has zero coverage of them by construction.
-// Without a dedicated leg, a `pinOnly` layout (currently just
-// quote-stage) would sit outside every contrast/overflow regression net in
-// this repo. Enumerate every `pinOnly` entry in `LAYOUT_REGISTRY` directly
-// (not hardcoded to "quote-stage") × all 16 canonical themes, pin each one
-// explicitly, and run the exact same `auditFindings`/`isAllowlisted`
-// machinery the sweep above already uses — no new assertion helper.
-//
-// Two content shapes per (theme, layout) pair, at capacity 0 and capacity 1
-// (quote-stage's own declared `body` capacity — see registry.ts's
-// CONTENT_LAYOUT_DEFS header) rather than the shared `CONTENT_BODY` fixture
-// (2 components, `paragraph`+`bullets`) the sweep above uses: pinning a
-// `pinOnly` layout with more components than its own declared capacity is a
-// hard *error* at the `checkIrQuality` layer (`pin_only_over_capacity`,
-// this same wave's 裁定 2) — a fixture that size would validate-reject
-// before ever reaching this audit, so it would be testing the wrong thing
-// here. `HEADING`/`SUBHEADING` (this file's own shared fixtures) stay,
-// matching the sweep above's use of realistic, non-trivial text.
-describe("pin-only matrix contrast/overflow regression net (quote-stage wave, task T2, 裁定 4)", () => {
-  const PIN_ONLY_LAYOUTS = Object.values(LAYOUT_REGISTRY).filter((l) => l.pinOnly)
-
-  // Not a silent-zero foot-gun: if every `pinOnly` layout were ever removed
-  // (or the flag renamed) without updating this file, the describe block
-  // below would just iterate zero layouts and report a false "pass" —  this
-  // assertion turns that into a loud failure instead, the same
-  // "coverage-holds-a-floor" discipline the rest of this file's fixed
-  // 16-theme sweeps already assume implicitly.
-  it("LAYOUT_REGISTRY has at least one pinOnly member to sweep (quote-stage)", () => {
-    expect(PIN_ONLY_LAYOUTS.length).toBeGreaterThanOrEqual(1)
-  })
-
-  for (const themeId of CANONICAL_THEME_IDS) {
-    describe(themeId, () => {
-      for (const layoutDef of PIN_ONLY_LAYOUTS) {
-        const layout = layoutDef.id
-        const bodyCapacity = layoutDef.slots.find((s) => s.name === "body")?.capacity ?? 0
-        // A sparse pin this theme does not offer falls back to a regular
-        // content/chapter layout. This net is about the pinOnly face itself.
-        if (
-          (SPARSE_LAYOUT_IDS as readonly string[]).includes(layout) &&
-          !themeOffersSparse(themeId, layout)
-        ) {
-          continue
-        }
-
-        it(`${layout} at 0 components (a pure quote)`, () => {
-          const slideType = layoutDef.slideTypes[0] ?? "content"
-          const slide: Slide = {
-            type: slideType,
-            heading: HEADING,
-            subheading: SUBHEADING,
-            layout,
-            components: [],
-          } as Slide
-          const findings = auditFindings(deckFor(themeId, slide)).filter((f) => !isAllowlisted(themeId, layout, f))
-          expect(findings.map(findingSummary)).toEqual([])
-        })
-
-        it(`${layout} at its own declared capacity (${bodyCapacity} component${bodyCapacity === 1 ? "" : "s"})`, () => {
-          const slideType = layoutDef.slideTypes[0] ?? "content"
-          const slide: Slide = {
-            type: slideType,
-            heading: HEADING,
-            subheading: SUBHEADING,
-            layout,
-            components: slideType === "content" ? CONTENT_BODY.slice(0, bodyCapacity) : [],
-          } as Slide
-          const findings = auditFindings(deckFor(themeId, slide)).filter((f) => !isAllowlisted(themeId, layout, f))
-          expect(findings.map(findingSummary)).toEqual([])
-        })
-      }
-    })
-  }
-})
-
 // Targeted addition (W8 fix round): kpi_cards flowing through bento-panel
 // specifically — deliberately *not* folded into `CONTENT_BODY` above.
 // `CONTENT_BODY` is shared by every content layout across all 13 themes;
@@ -711,8 +676,8 @@ describe("bento-panel kpi_cards contrast (W8 fix round, targeted — see comment
   // path (not the single-card degrade) renders both through renderKpiCard.
   const KPI_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
-    layout: "bento-panel",
     components: [
       {
         type: "kpi_cards",
@@ -723,6 +688,7 @@ describe("bento-panel kpi_cards contrast (W8 fix round, targeted — see comment
       },
     ],
   } as Slide
+  markFace(KPI_SLIDE, "bento-panel")
 
   // Sweep all 13 canonical themes rather than hand-picking the ones known to
   // fail — this both proves the defect on the affected themes (red before
@@ -777,36 +743,36 @@ describe("bento-panel kpi_cards contrast (W8 fix round, targeted — see comment
 describe("B-group ink fixes — full 13-theme sweep (bench-driven fix round, defect A handoff, Task 3)", () => {
   const STEPS_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
-    layout: "narrow-column",
     components: [{ type: "steps", items: [{ title: "Step one", text: "do the first thing" }] }],
   } as Slide
   const ROADMAP_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
-    layout: "narrow-column",
     components: [
       { type: "roadmap", items: [{ title: "Kickoff", period: "Q1", rows: [{ label: "Scope", value: "discovery" }] }] },
     ],
   } as Slide
   const RINGS_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
-    layout: "narrow-column",
     components: [{ type: "rings", items: [{ label: "Core", desc: "inner layer" }] }],
   } as Slide
   const IMAGE_COMPARE_VS_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
-    layout: "narrow-column",
     components: [
       { type: "image_compare", left: { asset_id: "a", label: "Before" }, right: { asset_id: "b", label: "After" }, style: "vs" },
     ],
   } as Slide
   const IMAGE_COMPARE_BEFORE_AFTER_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
-    layout: "narrow-column",
     components: [
       {
         type: "image_compare",
@@ -890,18 +856,20 @@ describe("B-group ink fixes — full 13-theme sweep (bench-driven fix round, def
 describe("defect B real contrast fixes (bench-driven fix round, Task 3)", () => {
   const KPI_UP_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
     components: [{ type: "kpi_cards", items: [{ value: "1", label: "x", delta: "up" }] }],
   } as Slide
   const KPI_DOWN_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
     components: [{ type: "kpi_cards", items: [{ value: "1", label: "x", delta: "down" }] }],
   } as Slide
   const BENTO_KPI_UP_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
-    layout: "bento-panel",
     components: [
       {
         type: "kpi_cards",
@@ -912,10 +880,11 @@ describe("defect B real contrast fixes (bench-driven fix round, Task 3)", () => 
       },
     ],
   } as Slide
+  markFace(BENTO_KPI_UP_SLIDE, "bento-panel")
   const BENTO_KPI_DOWN_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
-    layout: "bento-panel",
     components: [
       {
         type: "kpi_cards",
@@ -926,8 +895,10 @@ describe("defect B real contrast fixes (bench-driven fix round, Task 3)", () => 
       },
     ],
   } as Slide
+  markFace(BENTO_KPI_DOWN_SLIDE, "bento-panel")
   const NUMBERED_CARDS_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
     components: [
       {
@@ -941,9 +912,9 @@ describe("defect B real contrast fixes (bench-driven fix round, Task 3)", () => 
   } as Slide
   const QUOTE_SLIDE: Slide = {
     type: "content",
-    arrangement: "quote",
+    kind: "points",
     heading: HEADING,
-    components: [{ type: "quote", text: "an attributed quotation", attribution: "Someone" }],
+    components: [{ type: "blockquote", text: "an attributed quotation", attribution: "Someone" }],
   } as Slide
 
   for (const themeId of CANONICAL_THEME_IDS) {
@@ -1013,7 +984,7 @@ describe("defect B ink guards hold on the asset-scrim ctx.defaultBg branch (Task
   const ASSET_BG_IMAGES: PptxIR["assets"]["images"] = { bg: { src: "data:image/png;base64,AAAA" } }
   const NUMBERED_CARDS_ASSET_BG_SLIDE: Slide = {
     type: "content",
-    layout: "narrow-column",
+    kind: "points",
     heading: HEADING,
     background: { kind: "asset", asset_id: "bg" },
     components: [
@@ -1028,11 +999,10 @@ describe("defect B ink guards hold on the asset-scrim ctx.defaultBg branch (Task
   } as Slide
   const QUOTE_ASSET_BG_SLIDE: Slide = {
     type: "content",
-    layout: "narrow-column",
-    arrangement: "quote",
+    kind: "points",
     heading: HEADING,
     background: { kind: "asset", asset_id: "bg" },
-    components: [{ type: "quote", text: "an attributed quotation", attribution: "Someone" }],
+    components: [{ type: "blockquote", text: "an attributed quotation", attribution: "Someone" }],
   } as Slide
 
   for (const themeId of CANONICAL_THEME_IDS) {
@@ -1117,8 +1087,8 @@ describe("colors.muted contrast (post-v0.3 W8 fix round, backlog item 5a)", () =
     it(`${themeId}: colors.muted clears the required ratio against the bento-panel kpi card's own rendered surface (value+unit and label)`, () => {
       const slide: Slide = {
         type: "content",
+        kind: "points",
         heading: HEADING,
-        layout: "bento-panel",
         components: [
           {
             type: "kpi_cards",
@@ -1129,6 +1099,7 @@ describe("colors.muted contrast (post-v0.3 W8 fix round, backlog item 5a)", () =
           },
         ],
       } as Slide
+      markFace(slide, "bento-panel")
       const findings = auditFindings(deckFor(themeId, slide))
       const mutedFindings = findings.filter(
         (f) => f.code === "low-contrast" && (f.detail as { fill?: string } | undefined)?.fill === muted,
@@ -1277,7 +1248,7 @@ type MutedSurfaceClass =
 const MUTED_SURFACE_CLASS: Record<string, MutedSurfaceClass> = {
   bullets: "no-muted-fill", // stroke-only divider fallback (bullets.tsx)
   paragraph: "no-muted-fill", // no colors.muted reference at all
-  quote: "page-bg", // attribution line (quote.tsx), no card
+  blockquote: "page-bg", // attribution line (blockquote.tsx), no card
   callout: "no-muted-fill", // no colors.muted reference at all
   code: "no-muted-fill", // no colors.muted reference at all
   // kpi.tsx's row-card unit/label/delta-flat-fallback text is flat-surface
@@ -1539,8 +1510,8 @@ describe("colors.muted component-type coverage (task-2 fix round, backlog 5a com
   // ambient page background, already covered by the page-bg check above).
   const MATRIX_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
-    layout: "narrow-column",
     components: [
       {
         type: "matrix",
@@ -1585,8 +1556,8 @@ describe("swot/bmc tinted-panel contrast (structure-components wave task 1, deci
   // quadrant so both the header and the item-list ink paths render.
   const SWOT_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
-    layout: "narrow-column",
     components: [
       {
         type: "swot",
@@ -1602,8 +1573,8 @@ describe("swot/bmc tinted-panel contrast (structure-components wave task 1, deci
   // (`value_propositions`) alongside the 8 flat-surface ones.
   const BMC_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
-    layout: "narrow-column",
     components: [
       {
         type: "bmc",
@@ -1648,8 +1619,8 @@ describe("pest tinted-panel contrast (structure-components wave 2 task 1, decisi
   // renders too.
   const PEST_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
-    layout: "narrow-column",
     components: [
       {
         type: "pest",
@@ -1679,8 +1650,8 @@ describe("five_forces tinted-panel contrast (structure-components wave 2 task 1,
   // (including the center `rivalry` panel), and the native connector lines.
   const FIVE_FORCES_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
-    layout: "narrow-column",
     components: [
       {
         type: "five_forces",
@@ -1725,8 +1696,8 @@ describe("five_forces tinted-panel contrast (structure-components wave 2 task 1,
 describe("bmc bottom-row overflow (bench-driven fix round, defect F)", () => {
   const BMC_SCHEMA_MAX_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
-    layout: "narrow-column",
     components: [
       {
         type: "bmc",
@@ -1760,8 +1731,8 @@ describe("bmc bottom-row overflow (bench-driven fix round, defect F)", () => {
 describe("swot schema-max content (fix round, controller scope addition)", () => {
   const SWOT_SCHEMA_MAX_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
-    layout: "narrow-column",
     components: [
       {
         type: "swot",
@@ -1793,8 +1764,8 @@ describe("swot schema-max content (fix round, controller scope addition)", () =>
 describe("swot zero-residual under a 2-line-wrapped heading + schema-max content (fix round)", () => {
   const SWOT_LONG_HEADING_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: "Competitive Landscape Deep-Dive",
-    layout: "narrow-column",
     components: [
       {
         type: "swot",
@@ -1821,8 +1792,8 @@ describe("swot zero-residual under a 2-line-wrapped heading + schema-max content
 describe("pest schema-max content (structure-components wave 2 task 1)", () => {
   const PEST_SCHEMA_MAX_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
-    layout: "narrow-column",
     components: [
       {
         type: "pest",
@@ -1862,8 +1833,8 @@ describe("pest schema-max content (structure-components wave 2 task 1)", () => {
 describe("pest zero-residual under a 2-line-wrapped heading + schema-max content (fix round)", () => {
   const PEST_LONG_HEADING_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: "Competitive Landscape Deep-Dive",
-    layout: "narrow-column",
     components: [
       {
         type: "pest",
@@ -1894,8 +1865,8 @@ describe("pest zero-residual under a 2-line-wrapped heading + schema-max content
 describe("five_forces schema-max content (structure-components wave 2 task 1)", () => {
   const FIVE_FORCES_SCHEMA_MAX_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
-    layout: "narrow-column",
     components: [
       {
         type: "five_forces",
@@ -1948,8 +1919,8 @@ describe("five_forces schema-max content (structure-components wave 2 task 1)", 
 describe("heatmap contrast (structure-components wave 2 task 2)", () => {
   const HEATMAP_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
-    layout: "narrow-column",
     components: [
       {
         type: "heatmap",
@@ -1976,8 +1947,8 @@ describe("heatmap contrast (structure-components wave 2 task 2)", () => {
   const heatmapLabels = (n: number, prefix: string) => Array.from({ length: n }, (_, i) => `${prefix}${i}`)
   const HEATMAP_SCHEMA_MAX_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
-    layout: "narrow-column",
     components: [
       {
         type: "heatmap",
@@ -1988,6 +1959,7 @@ describe("heatmap contrast (structure-components wave 2 task 2)", () => {
       },
     ],
   } as Slide
+  markFace(HEATMAP_SCHEMA_MAX_SLIDE, "narrow-column")
 
   for (const themeId of CANONICAL_THEME_IDS) {
     it(`${themeId}: schema-max heatmap (10x10 grid, show_values on) renders with zero auditDeck findings on the narrowest curated content layout`, () => {
@@ -2009,8 +1981,8 @@ describe("heatmap contrast (structure-components wave 2 task 2)", () => {
 describe("heatmap cell-fill x ink (structure-components wave 2 task 2, decision 7 — the hard part named by the controller ruling)", () => {
   const EXTREMES_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
-    layout: "narrow-column",
     components: [
       {
         type: "heatmap",
@@ -2024,8 +1996,8 @@ describe("heatmap cell-fill x ink (structure-components wave 2 task 2, decision 
 
   const NEGATIVE_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
-    layout: "narrow-column",
     components: [
       {
         type: "heatmap",
@@ -2039,8 +2011,8 @@ describe("heatmap cell-fill x ink (structure-components wave 2 task 2, decision 
 
   const DEGENERATE_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
-    layout: "narrow-column",
     components: [
       {
         type: "heatmap",
@@ -2076,8 +2048,8 @@ describe("heatmap cell-fill x ink (structure-components wave 2 task 2, decision 
 describe("data_table contrast (R1 evidence wave, Task T3)", () => {
   const DATA_TABLE_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
-    layout: "narrow-column",
     components: [
       {
         type: "data_table",
@@ -2115,8 +2087,8 @@ describe("data_table contrast (R1 evidence wave, Task T3)", () => {
     }))
     return {
       type: "content",
+      kind: "points",
       heading: HEADING,
-      layout: "narrow-column",
       components: [{ type: "data_table", columns, rows, source: "示例数据来源脚注文本" }],
     } as Slide
   }
@@ -2140,8 +2112,8 @@ describe("data_table contrast (R1 evidence wave, Task T3)", () => {
 describe("data_table emphasis-row ink (R1 evidence wave, Task T3 — self-painted-surface discipline)", () => {
   const HIGHLIGHT_ONLY_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
-    layout: "narrow-column",
     components: [
       {
         type: "data_table",
@@ -2153,8 +2125,8 @@ describe("data_table emphasis-row ink (R1 evidence wave, Task T3 — self-painte
 
   const TOTAL_ONLY_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
-    layout: "narrow-column",
     components: [
       {
         type: "data_table",
@@ -2194,8 +2166,8 @@ describe("data_table emphasis-row ink (R1 evidence wave, Task T3 — self-painte
 // approximation of them.
 const SANKEY_SIMPLE_SLIDE: Slide = {
   type: "content",
+  kind: "points",
   heading: HEADING,
-  layout: "narrow-column",
   components: [
     {
       type: "sankey",
@@ -2214,8 +2186,8 @@ const SANKEY_SIMPLE_SLIDE: Slide = {
 
 const SANKEY_MULTI_LAYER_SLIDE: Slide = {
   type: "content",
+  kind: "points",
   heading: HEADING,
-  layout: "narrow-column",
   components: [
     {
       type: "sankey",
@@ -2249,8 +2221,8 @@ const SANKEY_MULTI_LAYER_SLIDE: Slide = {
 // pre-fix).
 const SANKEY_DENSE_CROSSING_SLIDE: Slide = {
   type: "content",
+  kind: "points",
   heading: HEADING,
-  layout: "narrow-column",
   components: [
     {
       type: "sankey",
@@ -2280,8 +2252,8 @@ const SANKEY_DENSE_CROSSING_SLIDE: Slide = {
 const sankeyLabels = (n: number, prefix: string) => Array.from({ length: n }, (_, i) => `${prefix}${i}`)
 const SANKEY_SCHEMA_MAX_SLIDE: Slide = {
   type: "content",
+  kind: "points",
   heading: HEADING,
-  layout: "narrow-column",
   components: [
     {
       type: "sankey",
@@ -2436,8 +2408,8 @@ describe("waterfall/gantt contrast (structure-components wave task 2, decision 7
   // (5 authored + 1 auto).
   const WATERFALL_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
-    layout: "narrow-column",
     components: [
       {
         type: "waterfall",
@@ -2457,8 +2429,8 @@ describe("waterfall/gantt contrast (structure-components wave task 2, decision 7
   // including the first/last edge-anchored labels) alongside 4 ordinary bars.
   const GANTT_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
-    layout: "narrow-column",
     components: [
       {
         type: "gantt",
@@ -2540,8 +2512,8 @@ describe("colors.muted opacity-blend fix (post-v0.3 W8 fix round, task-2 review 
   it("kpi.tsx row-card source line (fillOpacity via accessibleOpacity): clears 4.5:1 on all 13 themes", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       heading: HEADING,
-      layout: "narrow-column",
       components: [
         {
           type: "kpi_cards",
@@ -2556,8 +2528,8 @@ describe("colors.muted opacity-blend fix (post-v0.3 W8 fix round, task-2 review 
   it("numbered-cards.tsx sub line (opacity via accessibleOpacity): clears 4.5:1 on all 13 themes", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       heading: HEADING,
-      layout: "narrow-column",
       components: [
         {
           type: "numbered_cards",
@@ -2583,7 +2555,8 @@ describe("colors.muted opacity-blend fix (post-v0.3 W8 fix round, task-2 review 
 // (`background.tsx`'s auto-scrim, colored `themeDefaultBg` — see
 // `full-slide-svg.tsx`'s own `autoScrimColor` assignment and
 // `resolveOverrideBackgroundHex`'s "Asset policy rationale" doc comment).
-// This sweep closes exactly that gap: every content layout, every theme,
+// This sweep closes exactly that gap: every offered content menu entry,
+// every theme,
 // with a real asset background (a data-URI `<image>`, not the missing-asset
 // placeholder rect) through the real `auditDeck` pipeline.
 //
@@ -2650,24 +2623,29 @@ describe("asset-background content contrast (final-review Major finding, backlog
   // footer meta all now route through the same `accessibleInk` guard the
   // subheading already used, against the same card `"#FFFFFF"` reference —
   // see `content-tone-adaptive-content.tsx`'s own "白卡分支墨色修复" file-header
-  // paragraph. Exclusion removed; this sweep now exercises every content
-  // layout including this one, for all 13 themes, with zero exceptions.
+  // paragraph. Exclusion removed. The menu sweep exercises every reachable
+  // content face, with zero pool traversal or author pinning.
 
   for (const themeId of CANONICAL_THEME_IDS) {
     it(`${themeId}: content layouts clear contrast against the real painted auto-scrim, not colors.surface`, () => {
       const failures: string[] = []
-      for (const layout of THEME_DEFINITIONS[themeId].layouts.content) {
+      const menu = THEME_DEFINITIONS[themeId].menu
+      for (const [kind, entry] of Object.entries(menu.content) as [
+        PageKind,
+        NonNullable<(typeof menu.content)[PageKind]>,
+      ][]) {
+        if (entry === undefined) continue
         const slide: Slide = {
           type: "content",
+          kind,
           heading: HEADING,
           subheading: SUBHEADING,
-          layout,
           components: CONTENT_BODY,
           background: ASSET_BG,
-        } as Slide
+        }
         const ir: PptxIR = { ...deckFor(themeId, slide), assets: ASSET_IMAGES }
-        const findings = auditFindings(ir).filter((f) => !isAllowlisted(themeId, layout, f))
-        for (const f of findings) failures.push(`${layout}: ${findingSummary(f)}`)
+        const findings = auditFindings(ir).filter((f) => !isAllowlisted(themeId, entry.face, f))
+        for (const f of findings) failures.push(`${kind} -> ${entry.face}: ${findingSummary(f)}`)
       }
       expect(failures).toEqual([])
     })
@@ -2693,6 +2671,7 @@ describe("asset-background content contrast (final-review Major finding, backlog
 describe("chart legend contrast (R1 evidence wave, Task T2)", () => {
   const LEGEND_BAR_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
     components: [
       {
@@ -2715,6 +2694,7 @@ describe("chart legend contrast (R1 evidence wave, Task T2)", () => {
 
   const LEGEND_LINE_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
     components: [
       {
@@ -2746,6 +2726,7 @@ describe("chart legend contrast (R1 evidence wave, Task T2)", () => {
   }))
   const LEGEND_OVERFLOW_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
     components: [{ type: "chart", chart_type: "bar", series: legendStressSeries }],
   } as Slide
@@ -2772,6 +2753,7 @@ describe("chart legend contrast (R1 evidence wave, Task T2)", () => {
 describe("chart-depth subtypes contrast + wedge attribution (16-theme sweep, 裁定 3)", () => {
   const SCATTER_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
     components: [
       {
@@ -2786,6 +2768,7 @@ describe("chart-depth subtypes contrast + wedge attribution (16-theme sweep, 裁
   } as Slide
   const AREA_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
     components: [
       {
@@ -2800,6 +2783,7 @@ describe("chart-depth subtypes contrast + wedge attribution (16-theme sweep, 裁
   } as Slide
   const DONUT_SLIDE: Slide = {
     type: "content",
+    kind: "points",
     heading: HEADING,
     components: [
       {
@@ -2813,6 +2797,7 @@ describe("chart-depth subtypes contrast + wedge attribution (16-theme sweep, 裁
   const gaugeSlide = (y: number): Slide =>
     ({
       type: "content",
+      kind: "points",
       heading: HEADING,
       components: [{ type: "chart", chart_type: "gauge", series: [{ name: "Completion", data: [{ x: "Toward goal", y }] }] }],
     }) as Slide
@@ -2879,36 +2864,40 @@ describe("decor-collision sweep (fix/decor-contrast-attribution)", () => {
     return inDecor
   }
 
-  const SEEDS: readonly (number | undefined)[] = [undefined, 0, 1]
-
   for (const themeId of CANONICAL_THEME_IDS) {
     it(`${themeId}: every text run attributed to a decor shape is an adjudicated, allowlisted collision`, () => {
-      const layouts = THEME_DEFINITIONS[themeId as CanonicalThemeId].layouts
+      const menu = THEME_DEFINITIONS[themeId].menu
+      const fixtures: { face: string; slide: Slide }[] = [
+        { face: menu.cover.face, slide: { type: "cover", heading: HEADING, components: [] } },
+        {
+          face: menu.chapter.face,
+          slide: { type: "chapter", heading: HEADING, subheading: SUBHEADING, components: [] },
+        },
+        { face: menu.ending.face, slide: { type: "ending", heading: HEADING, components: [] } },
+      ]
+      for (const [kind, entry] of Object.entries(menu.content) as [PageKind, NonNullable<(typeof menu.content)[PageKind]>][]) {
+        fixtures.push({
+          face: entry.face,
+          slide: {
+            type: "content",
+            kind,
+            heading: HEADING,
+            subheading: SUBHEADING,
+            components: CONTENT_BODY,
+          },
+        })
+      }
+
       const failures: string[] = []
-      for (const seed of SEEDS) {
-        for (const type of ["cover", "chapter", "content", "ending"] as const) {
-          for (const layout of layouts[type]) {
-            const slide: Slide = {
-              type,
-              heading: HEADING,
-              layout,
-              ...(type === "chapter" || type === "content" ? { subheading: SUBHEADING } : {}),
-              components: type === "content" ? CONTENT_BODY : [],
-            } as Slide
-            const ir: PptxIR = {
-              ...deckFor(themeId, slide),
-              meta: { ...DECOR_META },
-              ...(seed !== undefined ? { seed } : {}),
-            }
-            const fills = decorOnlyFills(renderSlideSvg(ir, 0))
-            if (fills.size === 0) continue
-            for (const finding of auditDeck(ir).findings) {
-              const background = (finding.detail as { background?: string } | undefined)?.background
-              if (finding.code !== "low-contrast" || !background || !fills.has(background)) continue
-              if (isAllowlisted(themeId, layout, finding)) continue
-              failures.push(`seed=${seed ?? "default"} ${layout}: ${findingSummary(finding)}`)
-            }
-          }
+      for (const { face, slide } of fixtures) {
+        const ir: PptxIR = { ...deckFor(themeId, slide), meta: { ...DECOR_META } }
+        const fills = decorOnlyFills(renderSlideSvg(ir, 0))
+        if (fills.size === 0) continue
+        for (const finding of auditDeck(ir).findings) {
+          const background = (finding.detail as { background?: string } | undefined)?.background
+          if (finding.code !== "low-contrast" || !background || !fills.has(background)) continue
+          if (isAllowlisted(themeId, face, finding)) continue
+          failures.push(`${face}: ${findingSummary(finding)}`)
         }
       }
       expect(failures).toEqual([])

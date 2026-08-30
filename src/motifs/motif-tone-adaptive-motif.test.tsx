@@ -14,7 +14,7 @@ function wrap(el: React.ReactElement): React.ReactElement {
 
 const coverSlide: Slide = { type: "cover", heading: "封面", components: [] } as Slide
 const chapterSlide: Slide = { type: "chapter", heading: "章节", components: [] } as Slide
-const contentSlide: Slide = { type: "content", heading: "内容", components: [] } as Slide
+const contentSlide: Slide = { type: "content", kind: "points", heading: "内容", components: [] } as Slide
 const endingSlide: Slide = { type: "ending", components: [] } as Slide
 
 const bgImages: PptxIR["assets"]["images"] = {

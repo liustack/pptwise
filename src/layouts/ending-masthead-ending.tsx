@@ -147,7 +147,7 @@ export const layoutDef: LayoutDefinition = {
   // ending-masthead-ending.tsx: centered heading (falls back to
   // "Thank You") + italic subheading + single org/contact/date meta line.
   id: "masthead-ending",
-  kind: "archetype",
+  kind: "standard",
   slideTypes: ["ending"],
   slots: [
     { name: "heading", accepts: [] },

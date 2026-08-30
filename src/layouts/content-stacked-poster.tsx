@@ -236,7 +236,6 @@ function renderStackedContent(
       <>
         {treated.chrome}
         <SvgContent
-          arrangement={slide.arrangement}
           components={slide.components}
           rect={{ x: 56, y: contentRectY, w: 1168, h: contentRectH }}
           ctx={ctx}
@@ -329,7 +328,6 @@ function renderStackedContent(
 
       {/* Content components (was a foreignObject) */}
       <SvgContent
-        arrangement={slide.arrangement}
         components={slide.components}
         rect={{ x: 56, y: contentRectY, w: 1168, h: contentRectH }}
         ctx={ctx}
@@ -578,20 +576,15 @@ export function StackedPosterContent(props: SvgTemplateProps) {
 export const layoutDef: LayoutDefinition = {
   // content-stacked-poster.tsx: centered kicker + accent rule, heading,
   // subheading, and a `body` slot — the *degrade* path (>=3 components, 0
-  // components, or an overflowing hero/strip candidate) passes
-  // `slide.arrangement` straight through to SvgContent unchanged, so this
-  // layout honors every arrangement exactly like the four plain "all"
-  // layouts below (W2 task 3 adjudication: the inventory's original
-  // "single" was a conservative placeholder pending this call, not a
-  // literal claim that only "single" ever reaches SvgContent — see the
-  // registry test's dedicated degrade-path-with-two_column assertion).
+  // components, or an overflowing hero/strip candidate) self-arranges as a
+  // full-width stack. Page-level arrangement was retired from IR v5.
   // Exactly 1-2 fitting components instead take the bespoke poster path,
   // which bypasses arrangement entirely: component[0] always renders in a
   // dedicated `hero` slot (capacity 1), and component[1] — only when there are
   // exactly 2 — renders in a `strip` caption slot below a divider
   // (capacity 1). Footnote (meta) renders on both paths.
   id: "stacked-poster",
-  kind: "archetype",
+  kind: "standard",
   slideTypes: ["content"],
   slots: [
     { name: "kicker", accepts: [] },

@@ -4,6 +4,7 @@ import { fitSvgLine, layoutSvgText } from "../lib/svg-text-layout"
 import { scaleTypePx } from "../render/heading-fit"
 import { CONF_LABEL } from "../lib/conf-labels"
 import { showsDocumentMeta } from "../render/document-meta"
+import { faceParam } from "./face-params"
 
 /**
  * tone-adaptive-header cover layout（spec §3.2）：全宽版式——顶部 org 标签 +
@@ -68,9 +69,8 @@ function hasBgImage(
   return !!(asset?.src && !asset.error)
 }
 
-export function ToneAdaptiveHeaderCover({ ir, slide, ctx }: SvgTemplateProps) {
+export function ToneAdaptiveHeaderCover({ ir, slide, ctx, params }: SvgTemplateProps) {
   const { colors, fonts } = ctx
-  const cover = ctx.shape?.cover
   const withBg = hasBgImage(ir, slide)
   // INK 语境映射（见文件头「替换表」）：文字填色 → text，强调/描边 → primary。
   const textFg = withBg ? "#FFFFFF" : colors.text
@@ -94,8 +94,8 @@ export function ToneAdaptiveHeaderCover({ ir, slide, ctx }: SvgTemplateProps) {
   // 守空。
   const rightMeta = [date, version].filter(Boolean).join(" · ")
 
-  const titleSize = cover?.titleSize ?? 92
-  const hideRightMeta = cover?.hideRightMeta === true
+  const titleSize = faceParam(params, "titleSize", 92)
+  const hideRightMeta = faceParam(params, "hideRightMeta", false)
   const title = layoutSvgText(slide.heading || "", {
     maxWidth: 1120,
     fontSize: scaleTypePx(titleSize, ctx.shape?.typeScale),
@@ -280,8 +280,12 @@ export const layoutDef: LayoutDefinition = {
   // subheading; no-bg mode adds a divider + author/date/version meta row,
   // bg mode collapses meta to one white overlay line (same slot names).
   id: "tone-adaptive-header",
-  kind: "archetype",
+  kind: "standard",
   slideTypes: ["cover"],
+  params: {
+    titleSize: { type: "number", min: 48, max: 120 },
+    hideRightMeta: { type: "boolean" },
+  },
   slots: [
     { name: "kicker", accepts: [] },
     { name: "meta", accepts: [] },

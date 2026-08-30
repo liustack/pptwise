@@ -3,101 +3,163 @@ summary: 'skills/pptwise/SKILL.md 的中文阅读镜像，仅供人工审阅该 
 mirror_of: skills/pptwise/SKILL.md
 ---
 
-# pptwise — deck 生成操作手册
+# pptwise deck 生成操作手册
 
-> 本文件是 [`skills/pptwise/SKILL.md`](./SKILL.md) 的中文阅读镜像，供中文使用者审阅这个 skill 会指示 agent 执行的内容。agent 始终加载并执行英文版 `SKILL.md`——本文件不含 `name` 字段，从不注册为一个独立的 skill，也从不被 agent 读取。两个文件如有出入，以英文版 `SKILL.md` 为准。修改任一文件时，必须把改动同步镜像到另一文件。
+> 本文件是 [`skills/pptwise/SKILL.md`](./SKILL.md) 的中文阅读镜像。agent 只注册并执行英文版。两份文件如有出入，以英文版为准。
 
-pptwise 把一份 JSON IR（intermediate representation，中间表示）转换成原生 DrawingML 格式的 `.pptx`——每个图形在 PowerPoint 里都保持可编辑。内容模型由你掌控，layout、style 与动效由工具掌控。你从不绘制 SVG，也从不给任何东西定位：从受控词汇表里挑选，装不下的内容交给 validate 关卡去拦。
+pptwise 把语义 JSON 转成原生 DrawingML `.pptx`。文字与图形在 PowerPoint 中保持可编辑。作者只描述每页在怎么讲，以及页面包含哪些有类型的组件。页面的脸、几何、配色、字体和装饰归主题与引擎。
 
-## 怎么跑
+严格按这条单向链工作，不跨步，不同时决定两层。
 
-这份操作手册里的每一步都走 CLI：schema、spec/assemble、validate、render、audit、preview、serve、品牌提取。这些命令一律通过本 skill 自带的启动器执行，由它替你解析出一个可用的运行时。把 `<skill-dir>` 换成这份 SKILL.md 所在的目录：
+```text
+意图 -> 叙事 -> 主题绑定 -> 带 kind 的 spec -> 填充 -> 渲染
+```
+
+## 运行 CLI
+
+所有命令都通过本文件旁边的启动器运行。把 `<skill-dir>` 换成本 skill 的目录。
 
 ```bash
 bash <skill-dir>/scripts/run.sh <args>                                       # macOS / Linux
 powershell -ExecutionPolicy Bypass -File <skill-dir>\scripts\run.ps1 <args>  # Windows
 ```
 
-它按顺序尝试：PATH 上版本兼容的 `pptwise`、`npx`、`bunx`，参数与退出码原样透传。不需要预先安装任何东西，跑到的版本被钉死在这份 skill 上。退出码 78 表示没有任何可用运行时：把它 stderr 里 JSON 的 `nextSteps` 转告用户，不要重试。
+启动器依次尝试 `PATH` 上兼容的 `pptwise`、`npx`、`bunx`，参数和退出码原样透传。退出码 78 表示没有 JavaScript 运行时。转告 stderr 中的 `nextSteps`，不要重试。
 
-下文凡是写 `pptwise <args>` 的地方，都通过这个启动器执行。
+无法执行脚本时，使用第一条可行路径：
 
-刚装完，以及任何时候某条命令的表现不对、错误信息又解释不清时，先跑 `pptwise doctor`。它会报告运行时、机器上每一份已安装的 skill 副本及其是否过期、dsh 插件版本、可选能力是否具备，以及一次自检渲染。把它说的原样转达，不要靠猜。
+1. 已安装版本的主版本与本 skill 一致，且不低于钉定版本时，运行 `pptwise <args>`。
+2. `npx --yes --package @liustack/pptwise@0.23.0 pptwise <args>`。
+3. `bunx --bun @liustack/pptwise@0.23.0 <args>`。
+4. 都不可用时，请用户安装 Node 22.19+ 或 Bun。
 
-如果你的 harness 不允许执行脚本，就按同样的顺序自己判断，用第一条成立的：
+安装后运行 `pptwise doctor`。某个失败无法由错误信息本身解释时也先运行它。转告结果，不要猜。
 
-1. PATH 上有 `pptwise`，且主版本号与下面的钉版本相同、版本不低于它：`pptwise <args>`。
-2. 否则，有 `npx` 就用：`npx --yes --package @liustack/pptwise@0.23.0 pptwise <args>`。
-3. 否则，有 `bunx` 就用：`bunx --bun @liustack/pptwise@0.23.0 <args>`。
-4. 都没有就告诉用户机器上找不到 JavaScript 运行时，下一步是装 Node 22.19+（https://nodejs.org）或 Bun（https://bun.sh）。不要说成是 pptwise 本身坏了。
+## 先读取现场真相
 
-## 工作流程
-
-访谈 → spec → pages → validate → audit → render。改动从能承载它的最小一步重新进入。很小的 deck（页数屈指可数）可以跳过 spec 文件，直接写一份 IR，仍用 `pptwise validate` 校验。永远不要凭上一个 session 的记忆、或凭这份文件本身的记忆去写 IR 或 spec。每个 session 都重新跑：
+永远不要凭记忆写 IR 或 spec。每个 deck 任务开始时运行：
 
 ```bash
-pptwise schema             # IR JSON Schema: the single source of truth
-pptwise schema --spec      # deck spec schema
-pptwise narratives --json  # named narrative presets (strategy/pacing/audience axes + theme recommendations)
-pptwise themes --json      # built-in themes (id, label, occasions, identity, colors)
-pptwise layouts --json     # all standard layouts, slots, capacities, and pin-only status
+pptwise schema
+pptwise schema --spec
+pptwise narratives --json
+pptwise themes --json
 ```
 
-动手问人之前，先扫工作区。已有确认过的 `deck.spec.json` 已经锁死 narrative、theme、品牌框：不要重做访谈，改那份 deck。已有 `theme.json`、项目 `pptwise.config.json` 钉死的 theme、用户点名的 theme id、或用户递来的 `.thmx` / `.potx` / 带品牌 `.pptx`，都是品牌信号：抽取或沿用。不要再问有没有模板。
+提问前先扫描工作区。已有 `deck.spec.json` 会记录叙事、绑定主题、页面顺序、标题与每张内容页的 `kind`。deck 内 `theme.json`、工作区 `themes/` 文件、用户点名的主题，或递来的 `.thmx`、`.potx`、带品牌 `.pptx` 都是主题信号。
 
-**边界页规则：** `chapter` 永远不渲染 `components` 或 `footnote`。`cover` 与 `ending` 永远不渲染 `footnote`。边界页只有在已知版式声明了兼容槽位时才能带 `components`。目前 `verdict-index` 与 `gauge-verdict` 封面各接受一个 `bullets` component，部分 ending 版式接受自己声明的 body 内容。普通正文放到 `content` 页。对错 JSON 和 spec 写法：`references/spec.md`。
+## 工作流
 
-1. **访谈**（最多一轮）：用户在场，且受众、怎么讲、pacing 任一轴仍未知时，把未决的问放进**一条**消息，然后停。不要自己填。Q1–Q4、★ 默认、查表、`NARRATIVE_INTERVIEW` 闸：`references/spec.md`。
-2. **定主题、spec 并确认**，再写任何页面。从请求和工作区提取场合信号，再按 `themes --json` 的 `occasions` 与 `identity` 筛出 2 到 3 套主题。叙事里的 `themeRecommendations` 只作参考信号。内置视觉方向仍未定时，用 `preview <target> --themes <ids>` 给用户看对比图，让用户按图选择。预览自定义候选时同时传 `--theme-file` 与 `--theme`。只在确认后把它落成项目 `theme.json`，把 id 写入 `deck.spec.json`，后续零 flag。写 spec（以 `cover` 开篇，以 `ending` 收尾，中间是 `content` 或 `chapter`），跑 `pptwise spec validate` 直到 `OK`，然后固化 `seed`。已确认的 spec 不要重定。完整流程：`references/spec.md`。主题文件与品牌框姿态：`references/branding.md`。
-3. **填页面**，每批至多 4 页。写 `pages/<id>.json`（`components`，可选 `layout`/`notes`）。绝不写 `type`/`heading`。Pin-only 与稀排高潮页：`references/layouts.md`。组件形态：`references/components.md`。密度、beat、容量：`references/density.md`。配图：`references/images.md`。
-4. **Validate** 每批之后：`pptwise assemble deck-dir/`，再 `pptwise validate deck-dir/`，直到两者都打印 `OK`。重组被标出的内容，不要删。assemble / validate / audit / preview / serve 回路：`references/validate.md`。
-5. **Audit** 所有页面填完后：`pptwise audit deck-dir/` 直到 exit 0。不要用截图代替。然后把 deck 交给用户（有 `pptwise_preview` 就调它，否则 `preview --html`，再否则 `serve --no-open`）：`references/validate.md`。
-6. **渲染：** `pptwise render deck-dir/`。把打印的绝对路径报给用户。`--draft` 和 `--allow-dropped-content` 只有用户明确要求时才用。
+### 1. 意图
 
-后续请求：改一页 → 只对那一页走步骤 3–6。一份新 deck → 步骤 1。和 deck 生成无关 → 不要调用 pptwise。
+选择讲法前先记录四个事实：受众、想要的结果、现场讲述还是传阅、可用时长。请求或工作区已经给出的事实直接推导。用户在场且仍缺关键事实时，把所有未决问题合并成一轮询问。
 
-## 组件选型
+### 2. 叙事
 
-| 内容形态 | 用 | 不用 |
-|---|---|---|
-| 2–5 项头条指标 | `kpi_cards` | `chart` |
-| 系列数据（趋势、对比、占比） | `chart`（`bar`/`line`/`pie`/`funnel`/`dumbbell`/`scatter`/`area`/`donut`/`gauge`） | 埋在 `bullets` 里的数字 |
-| 受众要逐行读的精确数字（价目表、规格表、按周期分列的指标网格） | `data_table` | `chart` |
-| 线性流程，无分支 | `steps` | `flowchart` |
-| 有分支、且最终走到终点的流程 | `flowchart` | `steps` |
-| 循环往复、没有终点的流程（首尾相连回到起点，如 PDCA、产品生命周期、飞轮、季节性循环） | `cycle` | `flowchart` |
-| 双方对比 | `comparison` | 两份 bullet 列表 |
-| 系统/组织分层（一叠层带，例如技术栈分层或成熟度阶梯） | `architecture` | `bullets` |
-| 有日期的里程碑 | `timeline` | 带日期的 `bullets` |
-| 分阶段计划，带多条工作线 | `roadmap` | `timeline` |
-| 分阶段计划，在共享坐标轴上画出带日期的条形 | `gantt` | `roadmap` |
-| 一句结论或要点 | `verdict_banner` 或 `callout` | `paragraph` |
-| 2×2 战略评估（优势/劣势/机会/威胁） | `swot` | `matrix` |
-| 9 宫格商业模式画布 | `bmc` | 拆开的 `bullets`/`row_cards` |
-| 累计合计的桥接/差异拆解 | `waterfall` | `chart` |
-| 2×2 宏观环境扫描（政治/经济/社会/技术） | `pest` | `swot` |
-| 竞争结构分析（竞争强度 + 周边 4 种力量） | `five_forces` | `matrix` |
-| 双轴数值网格，按颜色编码单元格（例如地区 × 季度） | `heatmap` | `matrix` |
-| 跨阶段的比例流量/数量分布（例如预算分配、能源结构） | `sankey` | `chart`（funnel）或 `flowchart` |
-| 产品/软件截图，这张 slide 要让人一眼认出「这是真实、正在运行的软件」（App 仪表盘、真实产品界面） | `device_mockup` | `image` |
-| 一份人员名单（团队、讲者阵容、评委阵容、作者名单），需要一个无照片可用的身份锚点 | `people_cards` | `row_cards`/`icon_cards` |
-| 一组短平行标签（技术栈、能力清单、关键词、资质认证）——是标签，不是带描述的条目 | `tag_row` | `bullets`/`row_cards` |
+先定叙事，再定主题。叙事决定论证方式、节奏与语气。完全匹配时使用具名预设，否则显式写 `strategy`、`pacing`、`audience`。`pacing` 控制编辑预算与正文字号基线。叙事从不选择页面的脸。
 
-形态对照、字段说明、满幅组件：`references/components.md`。
+继续前先确认叙事包。简洁访谈与 spec 示例见 `references/spec.md`。
+
+### 3. 绑定主题
+
+主题是一个完整、自包含的文件，包含样式、页面菜单、可选品牌规则与场合元数据。内容菜单只服务全局 11 个 `kind` 中的一个子集。缺少某个词是设计选择。
+
+主题名按三级查找：
+
+1. deck 目录。
+2. 从当前目录向上查找工作区 `themes/`。
+3. 24 个出厂预设。
+
+按请求与工作区信号，用 `occasions` 和 `identity` 筛出候选。用固定样张比较 2 到 4 个候选：
+
+```bash
+pptwise theme try consulting,swiss,memo
+```
+
+创建就是拷贝。没有现成资产时，把最接近的预设拷进工作区。有 Office 品牌文件时，抽取配色与字体，同时拷入合适的菜单。要改色时，fork 当前主题，让整套配色重新派生，原主题保持不动。
+
+```bash
+pptwise theme new --from consulting --id acme-report
+pptwise brand extract corp.pptx -o themes/acme.theme.json --from consulting
+pptwise theme fork acme --primary '#0B5FFF' --id acme-blue
+```
+
+写页面内容之前，把选中的主题名写进 `deck.spec.json`。绑定后的 deck 命令只读这个名字，没有渲染时临时换主题。
+
+工作流中可以换绑到菜单相同的配色 fork。菜单不同就是另一套主题。回到本步骤，保留意图、叙事、事实、数据、图片与可复用文案，再按新菜单重写 spec 与填充。
+
+### 4. 用 `kind` 写 spec
+
+spec 锁定主题、叙事、品牌姿态、页面顺序、页型、标题，以及每张内容页的 `kind`。它不保存任何渲染选择状态。
+
+- `cover`、`chapter`、`ending` 是页型，不写 `kind`。
+- 每张 `content` 页必须显式写且只写一个 `kind`。
+- 作者只写语义 `kind`，从不选择页面的脸或几何。
+- `focus` 与 `summary` 是可选写作提示。
+
+运行 `pptwise spec validate deck.spec.json`，直到打印 `OK`。内容页 `kind` 不在绑定主题菜单中时会硬报错，并列出菜单提供的词。不要为了消错给页面贴一个失真的词。只有页面意图确实匹配时才换词，否则回到主题层。
+
+11 个词及边界见 `references/layouts.md`。完整 spec 与主题创建流程见 `references/spec.md`。
+
+### 5. 填页面
+
+每批至多写四个 `pages/<id>.json`。页面文件可以含 `components`、`background`、`image_side`、`footnote`、`notes`。不要重复 `type`、`kind`、`heading`，它们归 spec。
+
+选择服务本页 `kind` 的组件。`quote` 是页面讲法，引用组件名是 `blockquote`。组件归属与相似项对照见 `references/components.md`。节奏与容量见 `references/density.md`。图片流程见 `references/images.md`。
+
+每批完成后运行：
+
+```bash
+pptwise assemble deck-dir/
+pptwise validate deck-dir/
+```
+
+修完每个错误后重跑两条命令。重组内容，不要删除校验抓到的信息。
+
+### 6. 审查、预览与渲染
+
+所有页面填完后运行：
+
+```bash
+pptwise audit deck-dir/
+pptwise preview deck-dir/ --html
+pptwise render deck-dir/
+```
+
+交付前 `audit` 必须以 0 退出。文字压在照片背景上时加 `--pixels`。有 `pptwise_preview` 工具时优先使用。否则交付命令打印的 `preview.html` 路径，或运行 `pptwise serve deck-dir/ --no-open` 做实时浏览器审阅。把 `render` 打印的 `.pptx` 绝对路径报给用户。
+
+只有用户明确接受妥协时才使用 `--draft` 或 `--allow-dropped-content`。
+
+## 快速组件分派
+
+| 页面意图 | `kind` | 常用组件 |
+| --- | --- | --- |
+| 有顺序的论证 | `points` | `bullets`、`numbered_cards`、`paragraph` |
+| 可换序的并列项 | `list` | `row_cards`、`icon_cards`、`tag_row`、`people_cards` |
+| 并排看差异 | `comparison` | `comparison`、`image_compare`、`matrix`、`swot` |
+| 有方向的步骤或时间 | `process` | `steps`、`flowchart`、`timeline`、`roadmap`、`gantt`、`cycle` |
+| 一组数字的结构 | `data` | `chart`、`data_table`、`kpi_cards`、`heatmap`、`sankey` |
+| 画面本身就是信息 | `photo` | `image`、`image_grid`、`device_mockup` |
+| 作者自己的立论 | `statement` | `verdict_banner`、`callout`，也可以没有组件 |
+| 借别人之口 | `quote` | `blockquote` |
+| 一个数字就是全部 | `fact` | 单项 `kpi_cards`，也可以没有组件 |
+| 断言配一件展品 | `evidence` | `image`、`chart`、`data_table`、`code`、`device_mockup` |
+| 包含或层级 | `hierarchy` | `architecture`、`bmc`、`five_forces`、`rings` |
 
 ## 规则
 
-- 从不编辑或后处理生成出来的 `.pptx`
-- 从不通过删除 `validate` 报错所指的内容来绕过它——去重组它（拆分 slide、收紧标题、换一个更紧凑的 component 类型）
-- 面向用户的 deck 文本跟随用户使用的语言，IR 的结构性字段永远用 schema 里的英文枚举值
-- 从不告诉用户 `chart`、`data_table` 里的数字可以在 PowerPoint 里直接编辑。这两类组件渲染出来是成组的图形加文字，样式和文字都能自由改，但背后没有原生的图表部件，也没有 `<a:tbl>`。要改数字，去改 IR 再重新渲染
+- 从不编辑或后处理生成的 `.pptx`。
+- 从不在作者内容中加入坐标、SVG、页面脸名或几何控制。
+- 面向用户的 deck 文案跟随用户语言。schema 键与枚举值使用英文。
+- 不声称 `chart` 或 `data_table` 的数字是原生 PowerPoint 数据对象。它们导出为可编辑的成组图形与文字。改数字要改源文件并重新渲染。
+- preview 全程只读。修订回到 `deck.spec.json`、`pages/*.json`、资产或绑定主题文件。
 
-## 何时去读
+## 何时阅读
 
-- `references/spec.md` — 写 `deck.spec.json`、选页型、或做叙事访谈时
-- `references/layouts.md` — 钉 layout，包括高潮页、金句页、证据页稀排版式时
-- `references/components.md` — 碰到形态相近的组件，或要看字段与上下限时
-- `references/density.md` — 处理 pacing 预算、`beat`、容量警告、或 slide `decor` 时
-- `references/branding.md` — 抽取公司模板，或决定要不要写 `branding: "full"` 时
-- `references/images.md` — 声明资产、搜图库、或生图时
-- `references/validate.md` — 跑 assemble / validate / audit / preview / serve，或修订某一页时
+- `references/spec.md`：意图、叙事、主题创建、绑定、换绑、spec 与菜单错误。
+- `references/layouts.md`：在 11 个 `kind` 中选择。
+- `references/components.md`：组件归属、字段与相似项选择。
+- `references/density.md`：节奏、容量、独占页面组件与局部装饰。
+- `references/branding.md`：deck 品牌姿态、无框页面、logo 与品牌抽取。
+- `references/images.md`：图片资产、图库、生图，以及 `photo` 和 `evidence` 的边界。
+- `references/validate.md`：assemble、validate、audit、preview、serve、render 与修订循环。

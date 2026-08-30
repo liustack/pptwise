@@ -25,7 +25,7 @@ function slide(heading = HEADING, subheading: string | null = SUBHEADING): Slide
 
 function ir(themeId: string, meta: PptxIR["meta"] = {}, branding?: PptxIR["branding"]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "colophon.pptx",
     theme: { id: themeId },
     meta,
@@ -143,7 +143,7 @@ describe("cover-colophon — the 1a design's own geometry", () => {
 describe("cover-colophon — shared pool, not ink's private layout", () => {
   it("is registered for cover only, as an archetype, with the cover family's slot vocabulary", () => {
     expect(layoutDef.id).toBe("colophon")
-    expect(layoutDef.kind).toBe("archetype")
+    expect(layoutDef.kind).toBe("standard")
     expect(layoutDef.slideTypes).toEqual(["cover"])
     expect(layoutDef.slots.map((s) => s.name)).toEqual([
       "decor",

@@ -17,7 +17,7 @@ function slide(heading = HEADING): Slide {
 
 function ir(themeId: string, meta: PptxIR["meta"] = {}, s: Slide = slide()): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "header-band.pptx",
     theme: { id: themeId },
     branding: "full",
@@ -108,7 +108,7 @@ describe("cover-header-band — board geometry", () => {
 describe("cover-header-band — shared pool", () => {
   it("is registered for cover only, as an archetype", () => {
     expect(layoutDef.id).toBe("header-band")
-    expect(layoutDef.kind).toBe("archetype")
+    expect(layoutDef.kind).toBe("standard")
     expect(layoutDef.slideTypes).toEqual(["cover"])
   })
 

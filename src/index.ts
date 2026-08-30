@@ -12,30 +12,42 @@ export {
   type ValidationIssue,
   type ThemeInfo,
 } from "./api"
-export { PptxIRSchema, ThemeSchema, StyleOverrideSchema, BUILTIN_THEME_IDS, BrandConfigSchema, COMPONENT_TYPES } from "./ir"
-export type { PptxIR, Slide, Component, Meta, Assets, BackgroundSpec, StyleOverride, BrandConfig } from "./ir"
-// v3 (frozen, spec §9.3) — kept on the SDK surface only for the deterministic
-// migration primitive below and a caller that still needs to parse a
-// genuinely v3-shaped document (e.g. the `pptwise migrate` CLI command, task
-// 2) before migrating it. `validateIr`'s own v3 path never calls either of
-// these — it hard-rejects an explicit `version: "3"` before any schema parse.
-export { PptxIRV3Schema } from "./ir/legacy-v3"
-export type { PptxIRV3 } from "./ir/legacy-v3"
-// Deterministic, pure IR v3 → v4 migration (spec §9.1/§9.3, vocabulary-v4
-// rename task 1) — the primitive the `pptwise migrate` CLI command (task 2)
-// wraps. Field-for-field, value-for-value; never runs a model, never
-// rewrites content, never re-selects a layout.
-export { migrateIrV3ToV4 } from "./ir/migrate"
+export {
+  PptxIRSchema,
+  ThemeSchema,
+  StyleOverrideSchema,
+  BUILTIN_THEME_IDS,
+  COMPONENT_TYPES,
+  KIND_VALUES,
+  BrandConfigSchema,
+} from "./ir"
+export type {
+  PptxIR,
+  Slide,
+  PageKind,
+  Component,
+  Meta,
+  Assets,
+  BackgroundSpec,
+  StyleOverride,
+  BrandConfig,
+} from "./ir"
 export { registerTheme, getInstalledThemeIds, getThemeDefinition } from "./themes/definitions"
-export type { ThemeDefinition, ThemeRegistration } from "./themes/definitions"
+export type { ThemeDefinition } from "./themes/definitions"
+// The factory preset shelf: the read source for "create a theme = copy a
+// preset into the workspace". A copy shares nothing with its preset.
+export { THEME_PRESETS, getThemePreset, isThemePresetId, copyThemePreset } from "./themes/presets"
+export type { ThemePresetSummary } from "./themes/presets"
 // Brand extraction (brand-extract wave, roadmap §2.0.1): extract brand
 // colors/fonts from a user's own .thmx/.potx/.pptx locally — zip bytes in,
 // pure theme-file JSON out (jszip only, browser-safe) — and load such a file
 // back through the registerTheme seam (with its contrast hard gate). The
-// `pptwise brand extract` CLI command and `--theme-file` flag wrap these.
+// `pptwise brand extract` CLI command wraps these.
 export { extractBrandTheme } from "./themes/extract/brand-extract"
 export type { BrandThemeFile, ExtractBrandThemeOptions } from "./themes/extract/brand-extract"
 export { parseBrandThemeFile, registerBrandThemeFile, BrandThemeFileSchema } from "./themes/brand-theme-file"
+export { forkTheme } from "./cli/theme-fork"
+export type { ForkThemeAnchors, ForkThemeIdentity } from "./cli/theme-fork"
 export {
   resolveNarrative,
   NARRATIVE_PRESETS,
@@ -65,16 +77,10 @@ export {
   type DeckSpec,
   type PageSpec,
   type PageSpecType,
-  type PageBeat,
   type SpecValidateResult,
   type SpecValidationIssue,
 } from "./spec"
 export { assembleDeck, disassembleDeck, type PageContent, type AssembleResult } from "./spec/assemble"
-// Deterministic, pure deck.plan.json → deck.spec.json migration (spec §9.2,
-// vocabulary-v4 rename, task 2) — the primitive the `pptwise migrate` CLI
-// command wraps for the deck-project-directory input shape, mirroring
-// `migrateIrV3ToV4` above for the single-IR-file shape.
-export { migrateDeckPlanToSpec } from "./spec/migrate"
 export {
   auditDeck,
   type AuditReport,

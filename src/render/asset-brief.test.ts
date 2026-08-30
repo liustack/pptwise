@@ -5,9 +5,11 @@
 // own `@vitest-environment node` choice: this exercises `buildAssetBrief`'s
 // actual documented Node consumption path end-to-end, not jsdom's incidental
 // global filling in unasked.
-import { beforeAll, describe, expect, it } from "vitest"
+import { afterEach, beforeAll, describe, expect, it } from "vitest"
 import type { Component, PptxIR, Slide } from "@/ir"
-import { getInstalledThemeIds } from "../themes/definitions"
+import type { CanonicalThemeId } from "../themes"
+import { __resetRegisteredThemes, getInstalledThemeIds } from "../themes/definitions"
+import { registerTestTheme } from "../themes/test-fixtures"
 import { installNodePlatform } from "../platform/node"
 import { buildAssetBrief } from "./asset-brief"
 
@@ -15,13 +17,18 @@ beforeAll(() => {
   installNodePlatform()
 })
 
+afterEach(() => {
+  __resetRegisteredThemes()
+})
+
+let themeSerial = 0
+
 function deck(themeId: string, slides: Slide[], overrides: Partial<PptxIR> = {}): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "asset-brief-fixture",
     theme: { id: themeId },
     meta: {},
-    seed: 7,
     assets: { images: {} },
     slides,
     ...overrides,
@@ -43,12 +50,15 @@ function imageComponent(assetId: string, extra: Partial<Component> = {}): Compon
  * on `buildAssetBrief`'s output, which is exactly the point (裁定 1: the
  * frame must come from a real render, not a copied formula).
  */
-function probeDeck(assetId = "pic"): PptxIR {
-  return deck("consulting", [
+function probeDeck(assetId = "pic", sourceTheme: CanonicalThemeId = "consulting"): PptxIR {
+  const themeId = registerTestTheme(`asset-brief-${themeSerial++}`, sourceTheme, {
+    content: { photo: "two-column" },
+  })
+  return deck(themeId, [
     {
       type: "content",
+      kind: "photo",
       id: "p1",
-      layout: "two-column",
       heading: "Regional growth engine",
       components: [
         imageComponent(assetId),
@@ -133,7 +143,6 @@ describe("buildAssetBrief — component never rendered under the selected layout
       {
         type: "cover",
         id: "c1",
-        layout: "banner-title",
         heading: "Cover",
         components: [imageComponent("orphan")],
       } as Slide,
@@ -168,11 +177,14 @@ describe("buildAssetBrief — shared asset_id across multiple components on one 
   // swapped) — instead emit one honest, explicitly `shared` item per real
   // rendered frame, both present, neither claiming a specific component.
   it("emits one shared item per rendered frame, both real frames present and correctly valued, no swapped attribution claim", () => {
-    const ir = deck("consulting", [
+    const themeId = registerTestTheme(`asset-brief-${themeSerial++}`, "consulting", {
+      content: { photo: "two-column" },
+    })
+    const ir = deck(themeId, [
       {
         type: "content",
+        kind: "photo",
         id: "p1",
-        layout: "two-column",
         heading: "Regional growth engine",
         components: [
           imageComponent("shared"),
@@ -205,10 +217,9 @@ describe("buildAssetBrief — shared asset_id across multiple components on one 
 
 describe("buildAssetBrief — every built-in theme", () => {
   it.each(getInstalledThemeIds())("assembles complete palette/mood fields for theme %s", (themeId) => {
-    const ir = probeDeck()
-    ir.theme.id = themeId
+    const ir = probeDeck("pic", themeId as CanonicalThemeId)
     const brief = buildAssetBrief(ir)
-    expect(brief.theme).toBe(themeId)
+    expect(brief.theme).toBe(ir.theme.id)
     const item = brief.items[0]!
     expect(item.palette.hexes.length).toBeGreaterThan(0)
     expect(item.palette.primary).toMatch(/^#/)

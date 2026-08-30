@@ -15,7 +15,7 @@ import { stripEmphasis } from "../render/emphasis"
  *
  * 进共享池，不是 vermilion 专用。零 theme id、零 baked hex。motif 封面
  * 整页退让，避免顶缘金双线再叠四条线。不自绘满版，纸底走主题
- * `defaultBackgrounds.cover`。`branding: "none"`。
+ * `defaultBackgrounds.cover`。主题菜单应声明 `decor: silent`。
  *
  * 板上做不到、最近落地：
  *   1. CJK 不加 letter-spacing。
@@ -217,14 +217,14 @@ export function RedHeadCover({ ir, slide, ctx }: SvgTemplateProps) {
 }
 
 export const layoutDef = {
+  branding: "none",
   // cover-red-head-cover.tsx: centered red-head cover, org in primary, a
   // 4px primary rule plus 1px accent rule, document-ink title. Motif
   // yields on cover. Empty heading draws no title. Missing org skips the
   // red-head line, not a fake agency name.
   id: "red-head-cover",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
-  branding: "none",
   slideTypes: ["cover"],
   slots: [
     { name: "kicker", accepts: [] },

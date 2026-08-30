@@ -16,7 +16,7 @@ const LUXE_GOLD = "#C6A15B"
 
 function ir(slides: Slide[]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "x.pptx",
     theme: { id: "memo" },
     meta: {},
@@ -55,7 +55,7 @@ describe("memo sparse faces", () => {
   const ctx = buildCtx(resolveStyle("memo"), {})
 
   it("does not redraw MEMORANDUM or the motif's top red double rule", () => {
-    const slide: Slide = { type: "content", layout: "statement", heading: VERSE, components: [] } as Slide
+    const slide: Slide = { type: "content", kind: "points", layout: "statement", heading: VERSE, components: [] } as Slide
     const { markup } = render(
       <StatementContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />,
     )
@@ -63,7 +63,7 @@ describe("memo sparse faces", () => {
   })
 
   it("statement is one Songti line with a baked 已阅/存档 seal", () => {
-    const slide: Slide = { type: "content", layout: "statement", heading: VERSE, components: [] } as Slide
+    const slide: Slide = { type: "content", kind: "points", layout: "statement", heading: VERSE, components: [] } as Slide
     const { markup, root } = render(
       <StatementContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />,
     )
@@ -86,6 +86,7 @@ describe("memo sparse faces", () => {
   it("pull-quote uses mono type, ink double rules, and an accent underline on **runs**", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "pull-quote",
       heading: QUOTE,
       subheading: "陈砚清 · 首席技术官",
@@ -116,6 +117,7 @@ describe("memo sparse faces", () => {
   it("pull-quote keeps at most two horizontal rule groups (文武 pair counts as one)", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "pull-quote",
       heading: QUOTE,
       subheading: "陈砚清 · 首席技术官",
@@ -128,7 +130,7 @@ describe("memo sparse faces", () => {
   })
 
   it("pull-quote without ** draws no accent underline", () => {
-    const slide: Slide = { type: "content", layout: "pull-quote", heading: QUOTE_PLAIN, components: [] } as Slide
+    const slide: Slide = { type: "content", kind: "points", layout: "pull-quote", heading: QUOTE_PLAIN, components: [] } as Slide
     const { root } = render(
       <PullQuoteContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />,
     )
@@ -141,6 +143,7 @@ describe("memo sparse faces", () => {
   it("stat-hero sandwiches a centered numeral in double rules and a RE line", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "stat-hero",
       heading: "43%",
       subheading: "席位净流失时长，试点客户 90 天",

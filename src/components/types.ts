@@ -53,7 +53,7 @@ export interface ComponentCtx {
    * `PACING_BUDGETS[resolveNarrative(ir.narrative).pacing].bodyBaselinePx`
    * (`@/narrative`) — dense=20 / balanced=24 / spacious=32 — and no
    * component recomputes it. Every other component's own bespoke type
-   * scale, the heading system (`heading-fit.ts`), and quote's fixed 26px
+   * scale, the heading system (`heading-fit.ts`), and blockquote's fixed 26px
    * attribution line are untouched by this field; they don't read it.
    *
    * Required, unlike `defaultBg` above — a deliberate divergence from that

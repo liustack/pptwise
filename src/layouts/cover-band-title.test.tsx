@@ -7,6 +7,7 @@ import { resolveStyle, CANONICAL_THEME_IDS } from "../themes"
 import { contrastRatio, requiredContrastRatio } from "../render/ink"
 import type { StyleTokens } from "../themes/tokens"
 import { BandTitleCover, layoutDef } from "./cover-band-title"
+import type { SvgTemplateProps } from "./types"
 import type { PptxIR, Slide } from "@/ir"
 
 const HEADING = "云觅科技 2026 年第二季度业务评审"
@@ -18,7 +19,7 @@ function slide(heading = HEADING): Slide {
 
 function ir(themeId: string, meta: PptxIR["meta"] = {}): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "band-title.pptx",
     theme: { id: themeId },
     branding: "full",
@@ -42,16 +43,21 @@ function renderCover(
   cover?: StyleTokens["shape"] extends infer S ? (S extends { cover?: infer C } ? C : never) : never,
 ) {
   const tokens = resolveStyle(themeId)
-  const shaped: StyleTokens = { ...tokens, shape: { ...tokens.shape, cover: { ...tokens.shape?.cover, ...cover } } }
   const ctx = buildCtx(
-    shaped,
+    tokens,
     {},
     undefined,
     resolveBackgroundHex(tokens.defaultBackgrounds.cover, tokens.colors.surface),
   )
   const markup = renderSvgMarkup(
     <svg viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg">
-      <BandTitleCover ir={ir(themeId, meta)} slide={s} index={0} ctx={ctx} />
+      <BandTitleCover
+        ir={ir(themeId, meta)}
+        slide={s}
+        index={0}
+        ctx={ctx}
+        params={cover as SvgTemplateProps["params"]}
+      />
     </svg>,
   )
   return { markup, root: parseSvgRoot(markup), tokens }
@@ -140,17 +146,20 @@ describe("cover-band-title — board geometry", () => {
   })
 
   it("parameter changes move the band", () => {
-    const { root } = renderCover("consulting", slide(), FULL_META, { bandY: 100, bandH: 80 })
+    const { root } = renderCover("consulting", slide(), FULL_META, {
+      bandY: 180,
+      bandH: 140,
+    })
     const band = bandRect(root)
-    expect(band.getAttribute("y")).toBe("100")
-    expect(band.getAttribute("height")).toBe("80")
+    expect(band.getAttribute("y")).toBe("180")
+    expect(band.getAttribute("height")).toBe("140")
   })
 })
 
 describe("cover-band-title — shared pool", () => {
   it("is registered for cover only, as an archetype", () => {
     expect(layoutDef.id).toBe("band-title")
-    expect(layoutDef.kind).toBe("archetype")
+    expect(layoutDef.kind).toBe("standard")
     expect(layoutDef.slideTypes).toEqual(["cover"])
   })
 

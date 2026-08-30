@@ -1,35 +1,50 @@
 # Images
 
-Read this when declaring image assets, searching stock, or generating art.
+Read this when declaring image assets, choosing `photo` or `evidence`, searching stock, or generating art.
 
-### Image slides
+## Choose the semantic move first
 
-Declare images once in `assets.images` and reference them by `asset_id` — double-check every `asset_id` spelling, a wrong key renders a silent placeholder instead of failing. An explicit `layout` id always wins over pptwise's auto-selection, which otherwise picks from the theme's layout set for that page type (the full registry set by default, unless the theme curates it narrower) — for a slide built around an image, set `layout` to one of the image takeovers: `image-split` (half-page image + side text, `image_side: left|right`), `image-top` (full-bleed top image + text columns below), `image-bottom` (text above, image below), `image-annotate` (center image + radiating callouts taken from the first 4 bullets). **Every image layout needs an `image` component somewhere in `components`** — pptwise uses the first one it finds as the image source regardless of array position, and every other component becomes the layout's text body.
+Use `kind: "photo"` when the image itself is the subject. Use `kind: "evidence"` when one exhibit supports one assertion. The bound theme menu chooses the face for that kind. Authors do not name image geometry.
 
-Before generating art for any `image` component whose `asset_id` still has no real file behind it, run `pptwise asset-brief <target>` — it renders the deck for real and reports each slot's actual frame (not the layout's nominal slot size), crop mode with a safe-zone note, suggested generation pixels, the theme's palette, and a paste-ready prompt. Matching the reported aspect ratio and palette is what makes a generated image look intentional once it's placed instead of stretched, cropped wrong, or off-tone.
+Cover and chapter pages can use an asset background. The renderer applies the dedicated image-cover treatment with a dark readability scrim. Content and ending asset backgrounds retain the theme-toned scrim. Use a background image only when the page truly needs a full-canvas scene.
 
-### Stock photos
+Declare each image once in `assets.images`, then reference it by `asset_id` from `image`, `image_grid`, `image_compare`, or `device_mockup`. Check every key. `validate` reports a dangling reference, and an unresolved source cannot become a real image.
 
-Run `pptwise asset-brief <target>` first so the frame, crop, and palette are known.
+`image_side: "left"` or `"right"` is an optional preference for a face that supports a side image. Other faces ignore no authoring geometry because none is supplied.
 
-Query rules: short concrete nouns, English 2–4 words (`office desk`, `wind farm`). Chinese is a variant, not the only query. No mood or quality words (`beautiful`, `4k`, `cinematic`). No negative keywords (`not office`, `no people`).
+## Brief before sourcing
 
-Search order is Pexels, then Pixabay if a key is set, then Openverse (cc0/pdm, commercial filter).
+Run the real renderer before sourcing any missing asset:
+
+```bash
+pptwise asset-brief <target>
+```
+
+The brief reports the actual frame, crop mode, safe zone, suggested pixel size, theme palette, and a paste-ready prompt. Match the reported aspect ratio and palette.
+
+## Stock photos
+
+Use a short concrete English query of two to four words, such as `office desk` or `wind farm`. Keep mood, quality claims, and negative keywords out of the query. Search Pexels first, Pixabay when configured, then the commercially filtered Openverse sources.
 
 ```bash
 pptwise config set pexels.apiKey
 pptwise images search "office desk" --orientation landscape
 ```
 
-Do not auto-pick the first result. A person or a vision model picks from the ~8 thumbs. Then download:
+Do not take the first result automatically. Have a person or vision model choose from the thumbnails, then fetch the selected asset.
 
 ```bash
 pptwise images fetch pexels:123 --deck <dir> --as hero
 pptwise images list --deck <dir>
+```
+
+## Generated images
+
+```bash
 pptwise images generate --deck <dir> --as <asset_id>
 ```
 
-Local generators stay off until enabled:
+Local generators remain disabled until the user enables one:
 
 ```bash
 pptwise config set images.generators.grok.enabled true
@@ -37,6 +52,4 @@ pptwise config set images.generators.codex.enabled true
 pptwise config set images.generators.antigravity.enabled true
 ```
 
-The file lands in `.pptwise/<deck>/assets/<asset_id>.jpg` with a sidecar next to it. Reference that `asset_id` from the page. Do not delete `.pptwise/` wholesale to "rerun". That drops pinned photos.
-
-No key: leave the slot `missing` (grey frame). Do not invent a photo. Do not scrape. Do not use Unsplash. This is a local client fetching with the user's own key. Commercial use in a presentation is allowed. Do not resell the photo standalone. Print attribution in the terminal, not on the slide by default.
+Fetched and generated files live under `.pptwise/<deck>/assets/` with sidecars. Do not delete that directory to rerun a step because it contains selected assets. Without an available source, leave the asset missing and report it. Do not invent a photo or scrape an unsupported provider. Print required attribution in the terminal unless the license or user asks for on-slide credit.

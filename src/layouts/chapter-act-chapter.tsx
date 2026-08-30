@@ -12,7 +12,7 @@ import { trackingPx } from "./minimal-shared"
  * 幕次来自 `chapterNumberFor`（CJK「第N幕」/ Latin「ACT N」），标题与副题
  * 落在同一中轴。构图抄 campaign 板章节页，进共享池，零 theme id、零 hex。
  *
- * `pinOnly` + `branding: "none"`。无 body 槽。无水印巨号。对杠依附幕次，
+ * `pinOnly`。品牌静默由主题菜单条目声明。无 body 槽。无水印巨号。对杠依附幕次，
  * 不是漂在角落的孤立小件。
  */
 
@@ -123,13 +123,13 @@ export function ActChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
 }
 
 export const layoutDef = {
+  branding: "none",
   // chapter-act-chapter.tsx: pinOnly mirrored act-open. Accent bars
   // clamp the act kicker. Centered heading and optional subheading.
-  // No body slot. branding none: the canvas is the layout's.
+  // No body slot. The theme-menu entry owns brand silence because the canvas belongs to the face.
   id: "act-chapter",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
-  branding: "none",
   slideTypes: ["chapter"],
   slots: [
     { name: "kicker", accepts: [] },

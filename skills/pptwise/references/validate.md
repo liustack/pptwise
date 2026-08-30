@@ -1,84 +1,70 @@
-# Validate loop
+# Validation and review loop
 
-Read this when running assemble / validate / audit / preview / serve, or revising a page.
+Read this when filling pages, assembling a deck project, rendering, auditing, previewing, serving, or revising.
 
-### Phase 3 — Fill pages in batches of at most 4, validate immediately
+## Fill small batches
 
-For each page in the confirmed spec, write `pages/<page-id>.json` with its content (`components`, and optionally `layout`/`arrangement`/`background`/`image_side`/`footnote`/`notes`). Never write `type` or `heading` because the spec locks them. Remember Phase 1's boundary-page rule while drafting `cover`/`chapter`/`ending` pages. Footnotes never render there. Components require a known layout with a compatible slot, and current chapter layouts have none. `notes` is speaker notes prose for whoever presents the deck. Writing a good speaking script is a model strength. Draft `notes` whenever the page needs a spoken walkthrough beyond what is on the slide (Sparse-page contract). That is the default, not optional.
+For each confirmed spec page, write `pages/<page-id>.json`. A page file may contain only `components`, `background`, `image_side`, `footnote`, and `notes`. The spec owns `type`, content `kind`, `heading`, and page order. Repeating any locked field in a page file is a hard error.
+
+Fill at most four pages, then run:
 
 ```bash
-pptwise assemble deck-dir/     # materializes deck.json — catches structural drift: orphan page files, locked-field violations, a broken spec
-pptwise validate deck-dir/     # content-quality gate: heading length, density, bullets budget (warnings) + unknown theme, boundary-page content, and a bullet item past render-safety (hard errors)
+pptwise assemble deck-dir/
+pptwise validate deck-dir/
 ```
 
-Fix whatever either command reports as an error and re-run until both print `OK`. `validate` can print `OK` alongside `warning:` lines (e.g. a long heading or a dense slide) — tighten those too when practical, they read better, but they do not block. Only an error stops `OK` from printing. A spec page with no page file yet is a placeholder (heading only) — assemble and validate both accept that. Leaving some pages as placeholders between batches is normal, not an error. `assemble` also prints `note: N layouts auto-selected into deck.json` whenever a page's `layout` was left to auto-selection — informational, not an error. Pin `layout` in a page file only when a specific pick needs to be locked — a `pinOnly` layout like `quote-stage`, `statement`, `pull-quote`, `verse-chapter`, `stat-hero`, `one-evidence`, or `mono-bleed` needs this pin every single time, since it never comes up through auto-selection at all (see `references/layouts.md`). Climax, quote, and evidence pages pin those by default (see `references/layouts.md`).
+`assemble` merges the locked semantics and page content into IR v5. It does not write face choices or any other rendering decision into the project. A missing page file remains an accepted placeholder. An orphan page file, a locked-field conflict, an unknown theme, or a kind absent from the bound theme menu is a hard error.
 
-### Phase 4 — Render
+`validate` applies schema, component, asset, narrative, physical capacity, and editorial checks. Fix errors until it prints `OK`. Warnings do not block output, but long headings, excessive density, dangling assets, and repetitive choices should normally be tightened before delivery.
+
+Speaker `notes` export as native PowerPoint notes and never paint on the slide.
+
+## Render only from the binding
 
 ```bash
 pptwise render deck-dir/
 ```
 
-The `.pptx` lands in `.pptwise/<deck>/`. The command prints the absolute path. Report that line to the user.
+The `.pptx` is written under `.pptwise/<deck>/`, and the command prints its absolute path. There is no render-time theme switch. The project spec is the binding.
 
-`--theme <id>` is a repaint. It changes the visual skin without editing the spec, while the already assembled `deck.json` keeps every materialized layout id. It does not replace those pinned faces with the new theme's structural faces. To use the new theme's full structure, change `theme` in `deck.spec.json`, run `pptwise assemble deck-dir/` again, then repeat validate, audit, and render. `--style <path>` layers a style-token override on top. Its schema is `pptwise schema --style`.
+An unfinished project requires explicit `--draft`. Content that would be dropped remains blocked unless the user explicitly accepts `--allow-dropped-content`. Prefer fixing or splitting the page.
 
-Render refuses a deck with unfilled placeholder pages unless you add `--draft`. Reach for that only when the user explicitly wants a look before every page is done. It also refuses a deck where a page holds more than fits, so the layout left blocks out with nothing on the slide to say so. The error names the pages and how many blocks each lost. Fix it by shortening that page or splitting it in two, and render again. `--allow-dropped-content` ships the file with the content missing, so only pass it if the user says to.
+When changing themes, compare candidates with `pptwise theme try`. A same-menu fork can replace the binding and proceed through assemble, validate, audit, and render. A different menu requires returning to theme selection, then revising the spec and affected page fills before those checks.
 
-If the project has a `pptwise.config.json`, its theme/style are project defaults — do not fight them with `--theme` unless the user asks. Any page `notes` you wrote in phase 3 export as native PowerPoint speaker notes (View → Notes in PowerPoint/Keynote) — never drawn onto the slide itself.
+## Audit geometry
 
-### Phase 5 — Audit and optional visual self-check
-
-Once every page is filled (no placeholders left), run the deterministic geometry audit:
+After every page is filled, run:
 
 ```bash
 pptwise audit deck-dir/
 ```
 
-Zero-token and deterministic, it renders each page off-screen and checks overflow, out-of-bounds, low-contrast, overlap, content-truncated, and content-dropped. It also reports `monotony` when three or more consecutive non-placeholder pages lead with the same component type. Pages with no components break that streak. A finding makes the command exit 1, while a clean deck exits 0. Each finding names its page and carries a fix. Fix the flagged content with the same "restructure, don't delete" discipline as a `validate` error, vary repetitive lead components when `monotony` appears, then run `pptwise audit deck-dir/` alone until it exits 0. This is the deck's visual QA. Do not rely on eyeballing a screenshot instead.
+The deterministic audit checks overflow, out-of-bounds content, low contrast, overlap, truncation, dropped content, and repeated lead components. A finding exits with code 1 and names the page. Restructure the content, rerun assemble and validate when source files changed, then rerun audit until it exits 0.
 
-If any page has a cover/chapter photo background, add `--pixels` — it rasterizes the page and samples real pixels to catch text sitting directly on an unscrimmed photo, the one case the SVG-only checks above can't see.
+Add `--pixels` when cover or chapter pages use photo backgrounds. Pixel sampling catches text placed on an unsafe part of a real image.
+
+## Review the whole deck
+
+When an in-conversation deck preview tool exists, use it. Otherwise generate the self-contained review file:
 
 ```bash
 pptwise preview deck-dir/ --html
 ```
 
-Writes one standalone SVG per slide plus a self-contained `preview.html` into `.pptwise/<deck>/`, never gated on placeholder pages. The command prints the absolute path. Report that line to the user. Read a few SVGs yourself (they are plain text files) to sanity-check layout and density before delivering, especially for image-heavy decks. Hand `preview.html` (thumbnail strip, keyboard navigation, placeholder badges) to the user for their own look instead. When every page is filled, `preview.html` also overlays the same `audit` findings (per-page badges + a findings panel) so the reviewer sees them without a terminal. A deck with any placeholder page shows a one-line "audit skipped" notice instead. `preview.html` is read-only: it shows the deck, it never edits it. When the reviewer wants something changed, they tell you in the conversation. A screenshot of the page in question is the fastest way for both of you, and you route it through phase 6.
+It writes one SVG per page plus `preview.html` under `.pptwise/<deck>/`. The preview is read-only. Placeholder pages are marked, and a complete deck includes audit findings in the review interface.
 
-### Showing the deck to the user
-
-How you hand a deck over depends on what the harness can render. Take the first one that applies.
-
-**If a `pptwise_preview` tool exists, call it.** It renders the deck and puts a real slide preview in the conversation: a thumbnail strip in the tool card, full size on click, arrow keys to page. The user sees the deck without leaving the thread and without opening anything. Never fall back to handing over a file path or a URL when this tool is present. That is the experience it was built to replace. The tool reports only a summary line back to you (page count, audit state). That is deliberate: the deck itself goes to the user's screen, not into your context.
-
-**If the harness has a built-in browser (VS Code, Cursor, and similar), preview to a file.** Run `pptwise preview deck-dir/ --html`. The command prints the absolute path of `preview.html`. Give the user that path so they can open it in the built-in browser. Re-run the same command after each revision: the path does not change, they refresh. No port, no background process.
-
-**Otherwise, serve it.** Most harnesses have no way to draw a slide in the transcript, so the review happens in the user's own browser. Never try to substitute by pasting a thumbnail or a screenshot of one page into the conversation. Serve the whole thing and let the user page through it at full size. Start the server as a background task (in DSH, follow the background-job convention and note the job id so you can stop it later):
+When the user needs a live browser round, run the project server as a background task:
 
 ```bash
 pptwise serve deck-dir/ --no-open
 ```
 
-Then run the round in this order:
+Share the exact localhost URL, keep the process for the review round, and stop only that process when the round ends.
 
-1. Always pass `--no-open`. There is no browser to auto-open in an agent environment.
-2. Report the exact localhost URL it prints (default `http://127.0.0.1:4400`) to the user, so they can open it themselves. That one line is the whole handoff.
-3. The user pages through the deck and tells you what needs changing, in the conversation. A screenshot of the offending page is the fastest hand-off — you see exactly what they see.
-4. Route each request through phase 6's revision flow. The page live-reloads on every file you save, so each revision lands in the tab the user already has open. No new link, no re-export, nothing for them to click.
-5. Stay in the loop while they keep looking. When the round is over, stop the serve process (kill the background job). Never leave it running after the task ends.
+## Revise at the source
 
-### Phase 6 — Revision: edit one page, re-assemble
+- For a content change, edit only the affected `pages/<id>.json`, then assemble, validate, audit, and render again.
+- For page order, page type, kind, heading, or theme binding, edit `deck.spec.json`, run `pptwise spec validate`, then repeat the project checks.
+- For a different topic or audience, create a new project and restart from intent and narrative.
 
-A revision touches the smallest file that captures it:
-
-- Content change ("punch up the KPI page") → edit that page's `pages/<id>.json` only, then repeat phase 3's `assemble` + `validate` pair, and phase 5's `audit`, before re-rendering. Never regenerate pages nobody asked you to touch.
-- Structural change (reorder, add/remove a page, change a page's type or heading) → edit `deck.spec.json` instead, re-run `pptwise spec validate` first (phase 2's no-respeccing rule still applies: only do this when the user actually asked for a structural change).
-- A change the reviewer asked for in conversation (usually with a screenshot of the page) → find that page's `pages/<id>.json` by matching what they described against `deck.spec.json`/`pages/`, and treat their words as a requirement to interpret, not a patch to apply verbatim: they are describing a rendered slide, not writing page-file JSON. Translate it into a concrete content edit, then run the same content-change loop above (`assemble` + `validate` + `audit`) for every page you touched. Preview stays read-only end to end: nothing writes into `pages/*.json` except your own deliberate edit.
-
-## Routing a follow-up request
-
-Once a deck project exists, a follow-up message routes into exactly one of three branches — decide which before doing anything:
-
-1. **Edit a page** ("change slide 3", "make the KPI page punchier", or a screenshot with a note) → phase 6: edit that page's file, re-assemble, re-validate, re-audit. Never touch pages nobody asked about.
-2. **A new deck** (a different topic, audience, or an explicit request to start over) → phase 1: a new deck project directory, fresh narrative/theme decision, fresh spec.
-3. **Unrelated to deck generation** (a question about the content, anything with no connection to slides) → do not invoke pptwise at all.
+Never regenerate unrelated pages during a focused revision. Interpret screenshot feedback as a content requirement, change the smallest source file that owns it, and keep preview output read-only.

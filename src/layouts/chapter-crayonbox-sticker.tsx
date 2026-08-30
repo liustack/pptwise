@@ -131,11 +131,11 @@ export function CrayonboxStickerChapter({ ir, slide, index, ctx }: SvgTemplatePr
 }
 
 export const layoutDef = {
-  id: "crayonbox-sticker",
-  kind: "archetype",
-  pinOnly: true,
   branding: "none",
   suppressMotif: true,
+  id: "crayonbox-sticker",
+  kind: "standard",
+  pinOnly: true,
   slideTypes: ["chapter"],
   slots: [
     { name: "kicker", accepts: [] },

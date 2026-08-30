@@ -146,7 +146,7 @@ export const layoutDef: LayoutDefinition = {
   // ending-ask-ending.tsx: fundraising ask as the heading, one primary
   // CTA block. pinOnly board lock. No thank-you fallback.
   id: "ask-ending",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
   slideTypes: ["ending"],
   slots: [

@@ -3,7 +3,6 @@ import { isCjk } from "../lib/text-script"
 import {
   fitSvgLine,
   measureTextUnits,
-  truncateToUnits,
 } from "../lib/svg-text-layout"
 import type { RenderDef, SvgComponent } from "./types"
 
@@ -12,9 +11,9 @@ type CitationComponent = Extract<Component, { type: "citation" }>
 const ROW = 28
 const LABEL_FONT_SIZE = 18
 const LABEL_MIN_FONT_SIZE = 16
-const URL_FONT_SIZE = 16
-const URL_GAP_LATIN = 8
-const URL_GAP_CJK = 16
+const DETAIL_FONT_SIZE = 16
+const DETAIL_GAP_LATIN = 8
+const DETAIL_GAP_CJK = 16
 
 /** Baseline y for source row `i`, relative to the component group origin. */
 function baselineY(i: number): number {
@@ -57,14 +56,23 @@ export const citation: SvgComponent<CitationComponent> = {
           })
           const labelWidth =
             measureTextUnits(fittedLabel.text) * fittedLabel.fontSize
-          const remainingWidth = box.w - labelWidth
-          const fittedUrl = source.url
-            ? truncateToUnits(source.url, remainingWidth / URL_FONT_SIZE)
+          const detail = [source.ref?.trim(), source.url?.trim()]
+            .filter((part): part is string => Boolean(part))
+            .join(" · ")
+          const detailGap = detail
+            ? isCjk(fittedLabel.text) ? DETAIL_GAP_CJK : DETAIL_GAP_LATIN
+            : 0
+          const fittedDetail = detail
+            ? fitSvgLine(detail, {
+                maxWidth: Math.max(0, box.w - labelWidth - detailGap),
+                fontSize: DETAIL_FONT_SIZE,
+                minFontSize: DETAIL_FONT_SIZE,
+              })
             : null
           return (
             <text
               key={i}
-              data-truncated={fittedLabel.truncated ? "1" : undefined}
+              data-truncated={fittedLabel.truncated || fittedDetail?.truncated ? "1" : undefined}
               x="0"
               y={baselineY(i)}
               fontFamily={ctx.fonts.body}
@@ -73,13 +81,13 @@ export const citation: SvgComponent<CitationComponent> = {
               dominantBaseline="alphabetic"
             >
               {fittedLabel.text}
-              {fittedUrl && (
+              {fittedDetail && (
                 <tspan
-                  dx={isCjk(fittedLabel.text) ? URL_GAP_CJK : URL_GAP_LATIN}
+                  dx={detailGap}
                   fill={ctx.colors.muted}
-                  fontSize={URL_FONT_SIZE}
+                  fontSize={DETAIL_FONT_SIZE}
                 >
-                  {fittedUrl}
+                  {fittedDetail.text}
                 </tspan>
               )}
             </text>

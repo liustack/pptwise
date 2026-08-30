@@ -163,7 +163,7 @@ export const layoutDef: LayoutDefinition = {
   // (content-two-column.tsx:102) regardless of slide.arrangement. No
   // footnote/meta render at all.
   id: "two-column",
-  kind: "archetype",
+  kind: "standard",
   slideTypes: ["content"],
   slots: [
     { name: "kicker", accepts: [] },

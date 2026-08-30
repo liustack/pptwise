@@ -35,8 +35,8 @@ import { LECTURE_FRAME_BOTTOM_BOARD, frameBottomY } from "./branded-frame"
  * 板上 `inset: 26px` 四边等距，下边落在 y694。`branding: "full"` 会画页脚
  * meta 和右下 logo 盒 (1120,630,96×40)，那条横线会穿过去，所以收到 624。
  * 画廊默认省略 branding（等于 cover-only），内容页不画 footer/logo，框
- * 停在 624 会空出约 96px。未声明 full、或 layout `branding: "none"` 时走
- * 板上 694。左右上三边仍是板上的 26px。
+ * 走板上 694。菜单条目为 silent 时本 motif 根本不渲染。左右上三边仍是
+ * 板上的 26px。
  *
  * 安全区：标题区 (96,48,1040×122)、正文区 (96,200,1040×420)、页脚 meta
  * 带 (48,664,1184×44)、右下 logo 盒 (1120,630,96×40)。

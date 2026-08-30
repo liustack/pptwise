@@ -159,13 +159,13 @@ export function ReleaseCloseEnding({ ir, slide, ctx }: SvgTemplateProps) {
 }
 
 export const layoutDef = {
+  branding: "none",
   // ending-release-close-ending.tsx: pinOnly release close. Centered
   // heading, website or subheading address, org · date foot. No QR, no
   // thank-you. Empty heading invents no 今天，开放下载.
   id: "release-close-ending",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
-  branding: "none",
   slideTypes: ["ending"],
   slots: [
     { name: "heading", accepts: [] },

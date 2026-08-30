@@ -156,7 +156,7 @@ export const layoutDef: LayoutDefinition = {
   // chapter-poster-chapter.tsx: top-right org kicker, top/bottom hairlines,
   // large opaque chapter-number watermark, heading. No subheading render.
   id: "poster-chapter",
-  kind: "archetype",
+  kind: "standard",
   slideTypes: ["chapter"],
   slots: [
     { name: "kicker", accepts: [] },

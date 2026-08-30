@@ -9,7 +9,6 @@ import {
   filterByNarrativesOnly,
   getLayout,
   LAYOUT_REGISTRY,
-  layoutOmitsBranding,
   layoutsForSlideType,
   type LayoutDefinition,
   type SlideType,
@@ -38,7 +37,7 @@ describe("LAYOUT_REGISTRY completeness (layout ids)", () => {
         const entry = LAYOUT_REGISTRY[id]
         expect(entry, `missing LAYOUT_REGISTRY entry for layout id "${id}"`).toBeDefined()
         expect(entry.id).toBe(id)
-        expect(entry.kind).toBe("archetype")
+        expect(entry.kind).toBe("standard")
         expect(entry.slideTypes).toContain(slideType)
       })
     }
@@ -51,7 +50,7 @@ describe("LAYOUT_REGISTRY completeness (layout ids)", () => {
       ...Object.keys(CONTENT_LAYOUTS),
       ...Object.keys(ENDING_LAYOUTS),
     ])
-    const layoutEntries = Object.values(LAYOUT_REGISTRY).filter((e) => e.kind === "archetype")
+    const layoutEntries = Object.values(LAYOUT_REGISTRY).filter((e) => e.kind === "standard")
     // Wave 8 batch 4: +6 chapter +6 ending pinOnly faces, 102 -> 114.
     // banner-heading retired: 114 -> 113.
     // consulting gauge adds five pin-only faces: 113 -> 118. All five are
@@ -149,7 +148,7 @@ describe("content family: body slot + declared arrangements", () => {
     expect(LAYOUT_REGISTRY["asymmetric-triptych"].arrangements).toEqual(["single"])
   })
 
-  it("stacked-poster declares arrangements \"all\" (W2 task 3 adjudication: its degrade path passes slide.arrangement straight through unchanged, same as the four plain pass-through layouts — the conditional hero/strip takeover only applies to 1-2 fitting components)", () => {
+  it("stacked-poster retains its legacy arrangements metadata until the CLI inventory migrates", () => {
     expect(LAYOUT_REGISTRY["stacked-poster"].arrangements).toBe("all")
   })
 
@@ -248,7 +247,7 @@ describe("capacity metadata: only where the inventory gives hard numbers", () =>
 
 describe("getLayout", () => {
   it("returns the entry for a known layout id", () => {
-    expect(getLayout("banner-title")?.kind).toBe("archetype")
+    expect(getLayout("banner-title")?.kind).toBe("standard")
   })
   it("returns the entry for a known takeover id", () => {
     expect(getLayout("image-split")?.kind).toBe("takeover")
@@ -275,7 +274,7 @@ describe("layoutsForSlideType", () => {
 
   it("content includes both the 23 layouts and the 4 takeovers", () => {
     const contents = layoutsForSlideType("content")
-    expect(contents.filter((l) => l.kind === "archetype")).toHaveLength(23)
+    expect(contents.filter((l) => l.kind === "standard")).toHaveLength(23)
     expect(contents.filter((l) => l.kind === "takeover")).toHaveLength(4)
     expect(contents).toHaveLength(27)
   })
@@ -287,7 +286,7 @@ describe("filterByNarrativesOnly (W4, spec §6 step 4's rare narratives_only har
   // unit-tested without any real LAYOUT_REGISTRY id or a live selection
   // pass through `resolveLayoutId`.
   function synthetic(id: string, narrativesOnly?: readonly Strategy[]): LayoutDefinition {
-    return { id, kind: "archetype", slideTypes: ["content"], slots: [], narrativesOnly }
+    return { id, kind: "standard", slideTypes: ["content"], slots: [], narrativesOnly }
   }
 
   it("keeps a layout whose narrativesOnly list includes the resolved strategy", () => {
@@ -328,7 +327,7 @@ describe("excludePinOnly (quote-stage wave, task T1's pinOnly tier)", () => {
   // function" testability `filterByNarrativesOnly`'s own describe block
   // above already established for its own field.
   function synthetic(id: string, pinOnly?: boolean): LayoutDefinition {
-    return { id, kind: "archetype", slideTypes: ["content"], slots: [], pinOnly }
+    return { id, kind: "standard", slideTypes: ["content"], slots: [], pinOnly }
   }
 
   it("keeps a layout with pinOnly unset", () => {
@@ -446,187 +445,6 @@ describe("excludePinOnly (quote-stage wave, task T1's pinOnly tier)", () => {
       } else {
         expect(def.pinOnly, `"${def.id}" unexpectedly sets pinOnly`).toBeUndefined()
       }
-    }
-  })
-})
-
-describe("layout branding declaration (editorial-verse wave)", () => {
-  it("layoutOmitsBranding is true only for branding: none members", () => {
-    expect(layoutOmitsBranding("statement")).toBe(true)
-    expect(layoutOmitsBranding("pull-quote")).toBe(true)
-    expect(layoutOmitsBranding("verse-chapter")).toBe(true)
-    expect(layoutOmitsBranding("stat-hero")).toBe(true)
-    expect(layoutOmitsBranding("one-evidence")).toBe(true)
-    expect(layoutOmitsBranding("mono-bleed")).toBe(true)
-    expect(layoutOmitsBranding("gauge-point")).toBe(true)
-    expect(layoutOmitsBranding("crayonbox-point")).toBe(true)
-    expect(layoutOmitsBranding("crayonbox-cards")).toBe(false)
-    expect(layoutOmitsBranding("quote-stage")).toBe(false)
-    expect(layoutOmitsBranding("two-column")).toBe(false)
-    expect(layoutOmitsBranding(undefined)).toBe(false)
-  })
-
-  it("branding-free pinOnly members declare branding: none", () => {
-    for (const id of [
-      "statement",
-      "pull-quote",
-      "verse-chapter",
-      "stat-hero",
-      "one-evidence",
-      "mono-bleed",
-      "ikb-field-cover",
-      "ghost-rule-chapter",
-      "block-numeral-chapter",
-      "ghost-section-chapter",
-      "ember-index-chapter",
-      "act-chapter",
-      "action-pad-ending",
-      "signoff-ending",
-      "pill-cta-ending",
-      "thesis-plate-cover",
-      "chalk-band-cover",
-      "capsule-open-cover",
-      "issue-head-cover",
-      "double-frame-cover",
-      "vertical-title-cover",
-      "folio-ghost-chapter",
-      "lesson-box-chapter",
-      "sticker-numeral-chapter",
-      "fascicle-ghost-chapter",
-      "mirror-volume-chapter",
-      "volume-slip-chapter",
-      "defense-close-ending",
-      "homework-close-ending",
-      "reminder-list-ending",
-      "afterword-ending",
-      "invite-field-ending",
-      "seal-close-ending",
-      "invitation-plate-cover",
-      "lookbook-open-cover",
-      "red-head-cover",
-      "pledge-open-cover",
-      "report-open-cover",
-      "cut-panel-cover",
-      "gilt-ordinal-chapter",
-      "look-range-chapter",
-      "seal-numeral-chapter",
-      "field-band-chapter",
-      "subject-rule-chapter",
-      "round-mark-chapter",
-      "gilt-word-ending",
-      "window-close-ending",
-      "deliberation-ending",
-      "scorecard-ending",
-      "care-plan-ending",
-      "seat-cta-ending",
-      "one-word-chapter",
-      "chalk-rule-chapter",
-      "decimal-index-chapter",
-      "issue-line-chapter",
-      "day-bill-chapter",
-      "hall-label-chapter",
-      "release-close-ending",
-      "next-lecture-ending",
-      "resolution-ending",
-      "decision-close-ending",
-      "ticket-cta-ending",
-      "exit-word-ending",
-      "gauge-verdict",
-      "gauge-section",
-      "gauge-stats",
-      "gauge-point",
-      "gauge-next",
-      "crayonbox-open",
-      "crayonbox-sticker",
-      "crayonbox-point",
-      "crayonbox-todo",
-    ] as const) {
-      expect(LAYOUT_REGISTRY[id].branding, id).toBe("none")
-    }
-  })
-
-  it("every other registry entry leaves branding unset (ordinary branding + motif)", () => {
-    const brandingNone = new Set([
-      "statement",
-      "pull-quote",
-      "verse-chapter",
-      "stat-hero",
-      "one-evidence",
-      "mono-bleed",
-      "ikb-field-cover",
-      "ghost-rule-chapter",
-      "block-numeral-chapter",
-      "ghost-section-chapter",
-      "ember-index-chapter",
-      "act-chapter",
-      "action-pad-ending",
-      "signoff-ending",
-      "pill-cta-ending",
-      "thesis-plate-cover",
-      "chalk-band-cover",
-      "capsule-open-cover",
-      "issue-head-cover",
-      "double-frame-cover",
-      "vertical-title-cover",
-      "folio-ghost-chapter",
-      "lesson-box-chapter",
-      "sticker-numeral-chapter",
-      "fascicle-ghost-chapter",
-      "mirror-volume-chapter",
-      "volume-slip-chapter",
-      "defense-close-ending",
-      "homework-close-ending",
-      "reminder-list-ending",
-      "afterword-ending",
-      "invite-field-ending",
-      "seal-close-ending",
-      "invitation-plate-cover",
-      "lookbook-open-cover",
-      "red-head-cover",
-      "pledge-open-cover",
-      "report-open-cover",
-      "cut-panel-cover",
-      "gilt-ordinal-chapter",
-      "look-range-chapter",
-      "seal-numeral-chapter",
-      "field-band-chapter",
-      "subject-rule-chapter",
-      "round-mark-chapter",
-      "gilt-word-ending",
-      "window-close-ending",
-      "deliberation-ending",
-      "scorecard-ending",
-      "care-plan-ending",
-      "seat-cta-ending",
-      "one-word-chapter",
-      "chalk-rule-chapter",
-      "decimal-index-chapter",
-      "issue-line-chapter",
-      "day-bill-chapter",
-      "hall-label-chapter",
-      "release-close-ending",
-      "next-lecture-ending",
-      "resolution-ending",
-      "decision-close-ending",
-      "ticket-cta-ending",
-      "exit-word-ending",
-      "gauge-verdict",
-      "gauge-section",
-      "gauge-stats",
-      "gauge-verdict",
-      "gauge-section",
-      "gauge-stats",
-      "gauge-point",
-      "gauge-next",
-      "gauge-next",
-      "crayonbox-open",
-      "crayonbox-sticker",
-      "crayonbox-point",
-      "crayonbox-todo",
-    ])
-    for (const def of Object.values(LAYOUT_REGISTRY)) {
-      if (brandingNone.has(def.id)) continue
-      expect(def.branding, `"${def.id}" unexpectedly sets branding`).toBeUndefined()
     }
   })
 })

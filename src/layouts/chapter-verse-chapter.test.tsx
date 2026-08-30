@@ -17,7 +17,7 @@ function chapterCtx(themeId: string) {
 
 function ir(theme: string, slides: Slide[]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "x.pptx",
     theme: { id: theme },
     meta: {},
@@ -51,10 +51,9 @@ const chapterEn: Slide = {
 } as Slide
 
 describe("layoutDef", () => {
-  it("declares pinOnly, branding none, chapter slide type, no body slot", () => {
+  it("declares pinOnly, chapter slide type, and no body slot", () => {
     expect(layoutDef.id).toBe("verse-chapter")
     expect(layoutDef.pinOnly).toBe(true)
-    expect(layoutDef.branding).toBe("none")
     expect(layoutDef.slideTypes).toEqual(["chapter"])
     expect(layoutDef.slots.map((s) => s.name)).toEqual(["kicker", "heading", "subheading"])
   })

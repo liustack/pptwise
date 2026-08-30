@@ -3,19 +3,20 @@
   "narrative": "product-launch",
   "theme": "campaign",
   "filename": "lumen-2-launch",
-  "seed": 88,
   "meta": { "organization": "Lumen Labs", "date": "2026-08-15" },
   "pages": [
     { "id": "p-cover", "type": "cover", "heading": "Lumen 2.0" },
     {
       "id": "p-problem",
       "type": "content",
+      "kind": "points",
       "heading": "Design reviews stall in screenshots",
       "summary": "Feedback scattered across chat threads and stale screenshots, no single source of truth"
     },
     {
       "id": "p-product",
       "type": "content",
+      "kind": "list",
       "heading": "Review on the live product",
       "summary": "Three headline capabilities: live embeds, threaded pins, versioned snapshots",
       "focus": "icon_cards"
@@ -23,6 +24,7 @@
     {
       "id": "p-numbers",
       "type": "content",
+      "kind": "data",
       "heading": "Beta numbers",
       "summary": "KPI proof from the 8-week private beta",
       "focus": "kpi_cards"
@@ -30,6 +32,7 @@
     {
       "id": "p-roadmap",
       "type": "content",
+      "kind": "process",
       "heading": "What ships next",
       "summary": "Quarterly roadmap through mid-2027",
       "focus": "roadmap"

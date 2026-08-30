@@ -133,16 +133,16 @@ export function CrayonboxPointContent({ ir, slide, index, ctx }: SvgTemplateProp
 }
 
 export const layoutDef = {
-  id: "crayonbox-point",
-  kind: "archetype",
-  pinOnly: true,
   branding: "none",
   suppressMotif: true,
+  id: "crayonbox-point",
+  kind: "standard",
+  pinOnly: true,
   slideTypes: ["content"],
   slots: [
     { name: "kicker", accepts: [] },
     { name: "heading", accepts: [] },
-    { name: "body", accepts: ["quote", "paragraph", "citation"], capacity: 1 },
+    { name: "body", accepts: ["blockquote", "paragraph", "citation"], capacity: 1 },
     { name: "meta", accepts: [] },
   ],
   arrangements: ["single"],

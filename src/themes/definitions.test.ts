@@ -1,37 +1,185 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { BUILTIN_THEME_FILES, CANONICAL_THEME_IDS, THEME_STYLES, resolveThemeId } from "./index"
 import {
-  __fullLayoutSet,
   __resetRegisteredThemes,
   assertContrastFloor,
   getInstalledThemeIds,
   getThemeDefinition,
   registerTheme,
   resolveBrand,
-  SPARSE_LAYOUT_IDS,
   THEME_DEFINITIONS,
-  themeOffersSparse,
-  type ThemeDefinition,
-  type ThemeRegistration,
 } from "./definitions"
-import { FACES } from "../layouts/sparse/registry"
+import { THEME_OCCASIONS } from "./occasions"
 import { COVER_LAYOUTS } from "../layouts/index-cover"
 import { CHAPTER_LAYOUTS } from "../layouts/index-chapter"
 import { CONTENT_LAYOUTS } from "../layouts/index-content"
 import { ENDING_LAYOUTS } from "../layouts/index-ending"
 import { MOTIFS } from "../motifs"
-import { LAYOUT_REGISTRY, layoutsForSlideType, excludePinOnly, type LayoutDefinition } from "../layouts/registry"
+import { LAYOUT_REGISTRY, type LayoutDefinition } from "../layouts/registry"
 import { hasExactWidthTable, resolveFontFace } from "../render/fonts"
-import type { BuiltinThemeDeclaration } from "./schema"
+import type { BuiltinThemeDeclaration, Menu, ThemeFile } from "./schema"
 
-// 四页型注册表按 id 分发用的宽字符串索引视图（PAGE_LAYOUT_REGISTRIES 在
-// full-slide-svg.tsx 用的同一模式）：THEME_DEFINITIONS.layouts 的 id 是通用
-// string（W2 任务 2 起不再分页型细分 ID 联合类型），直接用窄 Record 类型索引
-// 会编译失败，故在测试里做同样的宽化视图。
+// Wide string-indexed views over the four page-type registries: a theme's
+// `layouts` ids are plain strings, so a narrow Record type cannot index them.
 const COVER_REGISTRY: Record<string, unknown> = COVER_LAYOUTS
 const CHAPTER_REGISTRY: Record<string, unknown> = CHAPTER_LAYOUTS
 const CONTENT_REGISTRY: Record<string, unknown> = CONTENT_LAYOUTS
 const ENDING_REGISTRY: Record<string, unknown> = ENDING_LAYOUTS
+
+/**
+ * The human-audited board table (S1-B): each theme's three boundary faces
+ * and the archetype faces its content menu reaches, in menu order. Written
+ * by hand, never derived from the declarations it checks, so a menu edit has
+ * to be re-审 here instead of passing silently. Image takeovers a `photo`
+ * entry may name are deliberately absent: they never enter the transitional
+ * `layouts` record.
+ */
+const BOARD: Record<string, { cover: string; chapter: string; ending: string; content: readonly string[] }> = {
+  consulting: {
+    cover: "gauge-verdict",
+    chapter: "gauge-section",
+    ending: "gauge-next",
+    content: ["narrow-column", "bento-panel", "two-column", "rail-numbered", "gauge-stats", "gauge-point", "stat-hero", "one-evidence", "asymmetric-triptych"],
+  },
+  enterprise: {
+    cover: "ikb-field-cover",
+    chapter: "block-numeral-chapter",
+    ending: "signoff-ending",
+    content: ["narrow-column", "bento-panel", "two-column", "rail-numbered", "split-band", "asymmetric-triptych"],
+  },
+  academic: {
+    cover: "thesis-plate-cover",
+    chapter: "folio-ghost-chapter",
+    ending: "defense-close-ending",
+    content: ["narrow-column", "bento-panel", "two-column", "rail-numbered", "split-band", "statement", "pull-quote", "stat-hero", "one-evidence", "asymmetric-triptych"],
+  },
+  insight: {
+    cover: "stat-cover",
+    chapter: "ghost-section-chapter",
+    ending: "close-word-ending",
+    content: ["narrow-column", "bento-panel", "two-column", "rail-numbered", "split-band", "statement", "pull-quote", "stat-hero", "asymmetric-triptych"],
+  },
+  campaign: {
+    cover: "poster-center",
+    chapter: "act-chapter",
+    ending: "pill-cta-ending",
+    content: ["narrow-column", "bento-panel", "two-column", "rail-numbered", "stacked-poster", "statement", "stat-hero", "one-evidence", "asymmetric-triptych"],
+  },
+  classroom: {
+    cover: "chalk-band-cover",
+    chapter: "lesson-box-chapter",
+    ending: "homework-close-ending",
+    content: ["narrow-column", "bento-panel", "two-column", "rail-numbered", "split-band", "asymmetric-triptych"],
+  },
+  ink: {
+    cover: "vertical-title-cover",
+    chapter: "volume-slip-chapter",
+    ending: "seal-close-ending",
+    content: ["quiet-frame", "bento-panel", "two-column", "rail-numbered", "split-band", "statement", "pull-quote", "stat-hero", "asymmetric-triptych"],
+  },
+  tech: {
+    cover: "type-rule-cover",
+    chapter: "stroke-index-chapter",
+    ending: "rule-close-ending",
+    content: ["narrow-column", "bento-panel", "two-column", "rail-numbered", "split-band", "statement", "stat-hero", "one-evidence", "asymmetric-triptych"],
+  },
+  runway: {
+    cover: "show-headline",
+    chapter: "show-plate",
+    ending: "show-finale",
+    content: ["narrow-column", "bento-panel", "two-column", "rail-numbered", "show-figures", "show-spotlight", "show-statement"],
+  },
+  journal: {
+    cover: "issue-head-cover",
+    chapter: "fascicle-ghost-chapter",
+    ending: "afterword-ending",
+    content: ["narrow-column", "bento-panel", "two-column", "rail-numbered", "split-band", "statement", "pull-quote", "stat-hero", "asymmetric-triptych"],
+  },
+  luxe: {
+    cover: "invitation-plate-cover",
+    chapter: "gilt-ordinal-chapter",
+    ending: "gilt-word-ending",
+    content: ["quiet-frame", "bento-panel", "two-column", "rail-numbered", "tone-adaptive-content", "statement", "pull-quote", "stat-hero", "asymmetric-triptych"],
+  },
+  heritage: {
+    cover: "double-frame-cover",
+    chapter: "mirror-volume-chapter",
+    ending: "invite-field-ending",
+    content: ["narrow-column", "bento-panel", "two-column", "rail-numbered", "split-band", "statement", "pull-quote", "stat-hero", "asymmetric-triptych"],
+  },
+  pulse: {
+    cover: "report-open-cover",
+    chapter: "subject-rule-chapter",
+    ending: "care-plan-ending",
+    content: ["narrow-column", "bento-panel", "two-column", "rail-numbered", "split-band", "asymmetric-triptych"],
+  },
+  terra: {
+    cover: "pledge-open-cover",
+    chapter: "field-band-chapter",
+    ending: "scorecard-ending",
+    content: ["narrow-column", "bento-panel", "two-column", "rail-numbered", "split-band", "statement", "stat-hero", "one-evidence", "asymmetric-triptych"],
+  },
+  ember: {
+    cover: "corner-wedge",
+    chapter: "ember-index-chapter",
+    ending: "ask-ending",
+    content: ["narrow-column", "bento-panel", "two-column", "rail-numbered", "stacked-poster", "asymmetric-triptych"],
+  },
+  vermilion: {
+    cover: "red-head-cover",
+    chapter: "seal-numeral-chapter",
+    ending: "deliberation-ending",
+    content: ["narrow-column", "bento-panel", "two-column", "rail-numbered", "split-band", "statement", "stat-hero", "one-evidence", "asymmetric-triptych"],
+  },
+  crayon: {
+    cover: "crayonbox-open",
+    chapter: "crayonbox-sticker",
+    ending: "crayonbox-todo",
+    content: ["narrow-column", "crayonbox-cards", "two-column", "rail-numbered", "crayonbox-point"],
+  },
+  arena: {
+    cover: "cut-panel-cover",
+    chapter: "round-mark-chapter",
+    ending: "seat-cta-ending",
+    content: ["narrow-column", "bento-panel", "two-column", "rail-numbered", "split-band", "statement", "stat-hero", "one-evidence", "asymmetric-triptych"],
+  },
+  museum: {
+    cover: "poster-center",
+    chapter: "hall-label-chapter",
+    ending: "exit-word-ending",
+    content: ["quiet-frame", "bento-panel", "two-column", "rail-numbered", "split-band", "statement", "stat-hero", "one-evidence", "asymmetric-triptych"],
+  },
+  stage: {
+    cover: "poster-center",
+    chapter: "one-word-chapter",
+    ending: "release-close-ending",
+    content: ["quiet-frame", "bento-panel", "two-column", "rail-numbered", "stacked-poster", "statement", "pull-quote", "stat-hero", "asymmetric-triptych"],
+  },
+  lecture: {
+    cover: "board-head",
+    chapter: "chalk-rule-chapter",
+    ending: "next-lecture-ending",
+    content: ["narrow-column", "bento-panel", "two-column", "rail-numbered", "tone-adaptive-content", "statement", "stat-hero", "one-evidence", "asymmetric-triptych"],
+  },
+  swiss: {
+    cover: "institutional-block",
+    chapter: "decimal-index-chapter",
+    ending: "resolution-ending",
+    content: ["narrow-column", "bento-panel", "two-column", "rail-numbered", "split-band", "statement", "stat-hero", "one-evidence", "asymmetric-triptych"],
+  },
+  memo: {
+    cover: "memo-head",
+    chapter: "issue-line-chapter",
+    ending: "decision-close-ending",
+    content: ["narrow-column", "bento-panel", "two-column", "rail-numbered", "split-band", "statement", "pull-quote", "stat-hero", "asymmetric-triptych"],
+  },
+  playbill: {
+    cover: "bill-head",
+    chapter: "day-bill-chapter",
+    ending: "ticket-cta-ending",
+    content: ["narrow-column", "bento-panel", "two-column", "rail-numbered", "stacked-poster", "mono-bleed", "stat-hero", "asymmetric-triptych"],
+  },
+}
 
 describe("THEME_DEFINITIONS", () => {
   it("covers all 24 canonical ids with theme tokens and brand", () => {
@@ -44,29 +192,25 @@ describe("THEME_DEFINITIONS", () => {
     }
   })
 
-  it("compiles every built-in from its colocated v1 declaration without structural drift", () => {
+  it("compiles every built-in from its colocated v2 menu declaration without structural drift", () => {
     expect(Object.keys(BUILTIN_THEME_FILES)).toEqual([...CANONICAL_THEME_IDS])
     for (const id of CANONICAL_THEME_IDS) {
       const file: BuiltinThemeDeclaration = BUILTIN_THEME_FILES[id]
       const def = THEME_DEFINITIONS[id]
-      const faceIds = (type: "cover" | "chapter" | "content" | "ending") =>
-        file.faces[type].map((face) => (typeof face === "string" ? face : face.id))
 
-      expect(file.version, id).toBe(1)
+      expect(file.version, id).toBe(2)
       expect(file.id, id).toBe(id)
       expect(file.style.id, id).toBe(id)
       expect(def.label, id).toBe(file.label)
       expect(def.style, id).toBe(file.style)
-      expect(def.layouts, id).toEqual({
-        cover: faceIds("cover"),
-        chapter: faceIds("chapter"),
-        content: faceIds("content"),
-        ending: faceIds("ending"),
-      })
-      expect(def.faces, id).toBe(file.faces)
+      expect(def.menu, id).toBe(file.menu)
       expect(def.motif, id).toBe(file.motif?.id)
-      expect(def.layoutTendencies, id).toBe(file.tendencies)
-      expect(def.sparseLayouts, id).toBe(file.sparse)
+      expect(def.motifParameters, id).toEqual(file.motif?.params)
+      // Occasion metadata is wired from the one occasion table, not
+      // re-declared per theme file.
+      expect(def.occasions, id).toEqual(THEME_OCCASIONS[id].occasions)
+      expect(def.identity, id).toBe(THEME_OCCASIONS[id].identity)
+      expect(def.tags, id).toEqual(THEME_OCCASIONS[id].occasions)
     }
   })
 
@@ -78,18 +222,15 @@ describe("THEME_DEFINITIONS", () => {
     expect(THEME_DEFINITIONS.consulting.brand).toEqual({})
   })
 
-  // W2 任务 2（选择源迁居）：src/themes/manifest.ts 已删除（原主题清单常量
-  // 随之死亡），其存留断言迁入本文件，验证对象换成 THEME_DEFINITIONS[id]
-  // 的 .layouts/.motif。
   it("24 主题四页型 layouts 均非空。motif 可选", () => {
     for (const id of CANONICAL_THEME_IDS) {
       const def = THEME_DEFINITIONS[id]
-      expect(def.layouts.cover.length, `${id}.cover`).toBeGreaterThan(0)
-      expect(def.layouts.chapter.length, `${id}.chapter`).toBeGreaterThan(0)
-      expect(def.layouts.content.length, `${id}.content`).toBeGreaterThan(0)
-      expect(def.layouts.ending.length, `${id}.ending`).toBeGreaterThan(0)
+      expect(def.layouts.cover.length, id + ".cover").toBeGreaterThan(0)
+      expect(def.layouts.chapter.length, id + ".chapter").toBeGreaterThan(0)
+      expect(def.layouts.content.length, id + ".content").toBeGreaterThan(0)
+      expect(def.layouts.ending.length, id + ".ending").toBeGreaterThan(0)
       // motif 是可选的（undefined = 该主题无装饰层，FullSlideSvg 的 Decor 跳过
-      // 渲染，安全）——runway 留空，故这里不强制 defined。
+      // 渲染，安全）——runway/museum/stage 留空，故这里不强制 defined。
     }
   })
 
@@ -104,311 +245,50 @@ describe("THEME_DEFINITIONS", () => {
     }
   })
 
-  // W4 全集放开（design decision 7, spec §3「缺省 = 全集」）+ W4 fix round
-  // 的根因处置收官 + post-v0.3 W8 fix round（backlog item 2）：这份基线断言
-  // 钉的是十三主题四页型的纯全集终态。design decision 7 的三处既有对比度
-  // 裁定（luxe/campaign/classroom 的 content 排除 banner-heading）、design
-  // decision 8 新增的三处阳性裁定（tech 的 cover/content、consulting 的
-  // chapter）、以及 W4 fix round 全矩阵扫描新发现的两处（classroom/
-  // heritage 的 chapter 排除 fashion-chapter）——共八处——已随 `src/render/ink.ts`
-  // 的 readableOn 两轮根因修复（W4 引入自适应 ink helper；post-v0.3 W8 把
-  // 固定 0.4 明度阈值换成两墨实测对比度取优）全部撤销。四个 FULL_* 常量是
-  // 手工钉的字面数组（人审基线，不经 layoutsForSlideType 派生）——未来
-  // registry 新增/删除 layout 时，这里必须跟着人工重推，而不是无声通过。
-  // Gallery r2 D10 退订 image-lead-split，自动 content 池 12 -> 11。D20 / E22
-  // 再收窄 lecture / luxe / consulting 的 content 集合。量规重构新增的
-  // 五张 gauge 脸都是 pinOnly，只有 consulting 在自己的名单里列出它们，
-  // 所以共享全集与重构前完全一致。
-  const FULL_COVER = [
-    "banner-title",
-    "poster-center",
-    "left-anchor",
-    "constellation",
-    "editorial-masthead",
-    "tone-adaptive-header",
-    "fashion-masthead",
-    "split-diagonal",
-    // theme-redesign wave (2026-08-18): the 9th cover layout, appended last
-    // in `registry.ts`'s own COVER_LAYOUT_DEFS — order is load-bearing here
-    // (it feeds `weightedPickBySeed`'s positional sampling), so this list is
-    // re-推 by hand against that file, not derived.
-    "colophon",
-    // board-cover-fidelity wave (2026-08-22): cover pool 9 -> 13.
-    "institutional-block",
-    "memo-head",
-    "board-head",
-    "bill-head",
-    // board-cover-restore wave 1 (2026-08-22): cover pool 13 -> 19.
-    "verdict-index",
-    "band-title",
-    "header-band",
-    "paper-masthead",
-    "horizon-wedge",
-    "corner-wedge",
-  ]
-  const FULL_CHAPTER = [
-    "masthead-chapter",
-    "constellation-chapter",
-    "rail-chapter",
-    "banner-chapter",
-    "poster-chapter",
-    "roman-chapter",
-    "tone-adaptive-chapter",
-    "fashion-chapter",
-  ]
-  const FULL_CONTENT = [
-    "narrow-column",
-    "two-column",
-    "rail-numbered",
-    "stacked-poster",
-    "bento-panel",
-    "tone-adaptive-content",
-    // P1 variety wave, task 4: content pool 7 -> 10. side-highlight later
-    // retired. banner-heading later retired.
-    "asymmetric-triptych",
-    "quiet-frame",
-    // content-layout expansion wave, task T2. Gallery r2 D10 retired
-    // image-lead-split. This change retires banner-heading. The gauge faces
-    // are pinOnly, so consulting's own lock never joins this shared pool.
-    "split-band",
-  ]
-  // Gallery r2 D20: framed themes do not sample split-band /
-  // stacked-poster. banner-heading is globally retired.
-  const FRAMED_CONTENT = [
-    "narrow-column",
-    "two-column",
-    "rail-numbered",
-    "bento-panel",
-    "tone-adaptive-content",
-    "asymmetric-triptych",
-    "quiet-frame",
-  ]
-  const CONSULTING_CONTENT = [
-    "gauge-stats",
-    "narrow-column",
-    "two-column",
-    "rail-numbered",
-    "stacked-poster",
-    "bento-panel",
-    "tone-adaptive-content",
-    "asymmetric-triptych",
-    "quiet-frame",
-    "split-band",
-  ]
-  const CRAYON_CONTENT = ["crayonbox-cards", ...FULL_CONTENT]
-  const RUNWAY_CONTENT = ["show-statement", "show-figures", ...FULL_CONTENT]
-  const SHARED_CONTENT = FULL_CONTENT
-  const FULL_ENDING = [
-    "masthead-ending",
-    "constellation-ending",
-    "rail-ending",
-    "banner-ending",
-    "poster-ending",
-    "tone-adaptive-ending",
-    "fashion-ending",
-  ]
-  it("W4 全集放开基线：consulting 的 gauge 脸是 pinOnly，共享池不吸收它们", () => {
-    expect(__fullLayoutSet("cover")).toEqual(FULL_COVER)
-    expect(__fullLayoutSet("content")).toEqual(FULL_CONTENT)
-    const NARROWED_CONTENT = new Set(["lecture", "luxe", "consulting", "crayon", "runway"])
-    const WAVE8_LOCKED = new Set([
-      "consulting",
-      "enterprise",
-      "insight",
-      "ember",
-      "tech",
-      "campaign",
-      "academic",
-      "classroom",
-      "crayon",
-      "journal",
-      "heritage",
-      "ink",
-      "luxe",
-      "runway",
-      "vermilion",
-      "terra",
-      "pulse",
-      "arena",
-      "stage",
-      "lecture",
-      "swiss",
-      "memo",
-      "playbill",
-      "museum",
-    ])
+  it("every theme locks one cover, one chapter, and one ending face, matching the audited board table", () => {
     for (const id of CANONICAL_THEME_IDS) {
-      expect(THEME_DEFINITIONS[id].layouts.cover.length, `${id}.cover is a singleton lock`).toBe(1)
-      if (!WAVE8_LOCKED.has(id)) {
-        expect(THEME_DEFINITIONS[id].layouts.chapter, `${id}.chapter`).toEqual(FULL_CHAPTER)
-        expect(THEME_DEFINITIONS[id].layouts.ending, `${id}.ending`).toEqual(FULL_ENDING)
-      }
-      if (!NARROWED_CONTENT.has(id)) {
-        expect(THEME_DEFINITIONS[id].layouts.content, `${id}.content`).toEqual(SHARED_CONTENT)
+      const menu = BUILTIN_THEME_FILES[id].menu
+      const board = BOARD[id]!
+      expect(menu.cover.face, id + ".cover").toBe(board.cover)
+      expect(menu.chapter.face, id + ".chapter").toBe(board.chapter)
+      expect(menu.ending.face, id + ".ending").toBe(board.ending)
+      expect(THEME_DEFINITIONS[id].layouts.cover, id).toEqual([board.cover])
+      expect(THEME_DEFINITIONS[id].layouts.chapter, id).toEqual([board.chapter])
+      expect(THEME_DEFINITIONS[id].layouts.ending, id).toEqual([board.ending])
+    }
+  })
+
+  it("derives layouts.content from the menu in menu order, dropping any image takeover a photo entry names", () => {
+    for (const id of CANONICAL_THEME_IDS) {
+      expect(THEME_DEFINITIONS[id].layouts.content, id + ".layouts.content").toEqual(BOARD[id]!.content)
+    }
+    // consulting serves `photo` through the image-split takeover, which the
+    // curated pool must not absorb.
+    expect(BUILTIN_THEME_FILES.consulting.menu.content.photo?.face).toBe("image-split")
+    expect(THEME_DEFINITIONS.consulting.layouts.content).not.toContain("image-split")
+  })
+
+  it("每套主题各自的专属脸只出现在自己的菜单里，不外溢", () => {
+    const exclusive: Record<string, string> = {
+      "gauge-stats": "consulting",
+      "gauge-point": "consulting",
+      "crayonbox-cards": "crayon",
+      "crayonbox-point": "crayon",
+      "show-statement": "runway",
+      "show-figures": "runway",
+      "show-spotlight": "runway",
+    }
+    for (const [face, owner] of Object.entries(exclusive)) {
+      for (const id of CANONICAL_THEME_IDS) {
+        const faces = Object.values(BUILTIN_THEME_FILES[id].menu.content).map((entry) => entry!.face)
+        if (id === owner) expect(faces, owner + " keeps " + face).toContain(face)
+        else expect(faces, id + " must not borrow " + face).not.toContain(face)
       }
     }
-    expect(THEME_DEFINITIONS.lecture.layouts.content).toEqual(FRAMED_CONTENT)
-    expect(THEME_DEFINITIONS.luxe.layouts.content).toEqual(FRAMED_CONTENT)
-    expect(THEME_DEFINITIONS.consulting.layouts.content).toEqual(CONSULTING_CONTENT)
-    expect(THEME_DEFINITIONS.runway.layouts.content).toEqual(RUNWAY_CONTENT)
-    expect(THEME_DEFINITIONS.playbill.layouts.content).toEqual(SHARED_CONTENT)
-    expect(THEME_DEFINITIONS.insight.motif).toBe("poster-motif")
-    expect(THEME_DEFINITIONS.academic.motif).toBe("rail-motif")
-    expect(THEME_DEFINITIONS.tech.motif).toBe("constellation-motif")
-    expect(THEME_DEFINITIONS.journal.motif).toBe("corner-ornament-motif")
-    expect(THEME_DEFINITIONS.luxe.motif).toBe("luxe-motif")
-    expect(THEME_DEFINITIONS.campaign.motif).toBe("campaign-motif")
-    expect(THEME_DEFINITIONS.ink.motif).toBe("ink-motif")
-    expect(THEME_DEFINITIONS.heritage.motif).toBe("heritage-motif")
   })
 
-  it("wave7 five themes narrow layouts.cover to the board construction (first use of cover narrowing)", () => {
-    expect(THEME_DEFINITIONS.stage.layouts.cover).toEqual(["poster-center"])
-    expect(THEME_DEFINITIONS.lecture.layouts.cover).toEqual(["board-head"])
-    expect(THEME_DEFINITIONS.swiss.layouts.cover).toEqual(["institutional-block"])
-    expect(THEME_DEFINITIONS.memo.layouts.cover).toEqual(["memo-head"])
-    expect(THEME_DEFINITIONS.playbill.layouts.cover).toEqual(["bill-head"])
-    // Wave 8 batch 4 locks chapter/ending on these five. Content stays a
-    // soft preference over the still-full (or framed) pools.
-    expect(THEME_DEFINITIONS.stage.layoutTendencies).toEqual({
-      cover: ["poster-center"],
-      chapter: ["one-word-chapter"],
-      content: ["quiet-frame", "stacked-poster", "asymmetric-triptych"],
-      ending: ["release-close-ending"],
-    })
-    expect(THEME_DEFINITIONS.lecture.layoutTendencies).toEqual({
-      cover: ["board-head"],
-      chapter: ["chalk-rule-chapter"],
-      content: ["two-column", "quiet-frame", "bento-panel"],
-      ending: ["next-lecture-ending"],
-    })
-    expect(THEME_DEFINITIONS.swiss.layoutTendencies).toEqual({
-      cover: ["institutional-block"],
-      chapter: ["decimal-index-chapter"],
-      content: ["two-column", "narrow-column", "rail-numbered"],
-      ending: ["resolution-ending"],
-    })
-    expect(THEME_DEFINITIONS.memo.layoutTendencies).toEqual({
-      cover: ["memo-head"],
-      chapter: ["issue-line-chapter"],
-      content: ["asymmetric-triptych", "narrow-column", "tone-adaptive-content"],
-      ending: ["decision-close-ending"],
-    })
-    expect(THEME_DEFINITIONS.playbill.layoutTendencies).toEqual({
-      cover: ["bill-head"],
-      chapter: ["day-bill-chapter"],
-      content: ["stacked-poster", "rail-numbered", "split-band"],
-      ending: ["ticket-cta-ending"],
-    })
-  })
-
-  it("board-cover-restore wave 1: nine themes lock layouts.cover to the board face", () => {
-    expect(THEME_DEFINITIONS.consulting.layouts).toEqual({
-      cover: ["gauge-verdict"],
-      chapter: ["gauge-section"],
-      content: CONSULTING_CONTENT,
-      ending: ["gauge-next"],
-    })
-    // Tendency is a soft weight, not the pool. content leans on the gauge
-    // face while the nine shared ids stay reachable, so the two are equal on
-    // the locked page types only.
-    expect(THEME_DEFINITIONS.consulting.layoutTendencies).toEqual({
-      cover: ["gauge-verdict"],
-      chapter: ["gauge-section"],
-      content: ["gauge-stats"],
-      ending: ["gauge-next"],
-    })
-    expect(THEME_DEFINITIONS.consulting.motif).toBe("gauge-motif")
-
-    expect(THEME_DEFINITIONS.classroom.layouts.cover).toEqual(["chalk-band-cover"])
-    expect(THEME_DEFINITIONS.classroom.motif).toBe("classroom-motif")
-
-    expect(THEME_DEFINITIONS.enterprise.layouts.cover).toEqual(["ikb-field-cover"])
-    expect(THEME_DEFINITIONS.enterprise.layoutTendencies?.cover).toEqual(["ikb-field-cover"])
-    expect(THEME_DEFINITIONS.enterprise.motif).toBe("enterprise-motif")
-
-    expect(THEME_DEFINITIONS.vermilion.layouts.cover).toEqual(["red-head-cover"])
-    expect(THEME_DEFINITIONS.vermilion.layoutTendencies?.cover).toEqual(["red-head-cover"])
-
-    expect(THEME_DEFINITIONS.crayon.layouts).toEqual({
-      cover: ["crayonbox-open"],
-      chapter: ["crayonbox-sticker"],
-      content: CRAYON_CONTENT,
-      ending: ["crayonbox-todo"],
-    })
-    expect(THEME_DEFINITIONS.crayon.layoutTendencies).toEqual({
-      cover: ["crayonbox-open"],
-      chapter: ["crayonbox-sticker"],
-      content: ["crayonbox-cards"],
-      ending: ["crayonbox-todo"],
-    })
-    expect(THEME_DEFINITIONS.crayon.motif).toBe("crayonbox-motif")
-
-    expect(THEME_DEFINITIONS.runway.layouts).toEqual({
-      cover: ["show-headline"],
-      chapter: ["show-plate"],
-      content: RUNWAY_CONTENT,
-      ending: ["show-finale"],
-    })
-    expect(THEME_DEFINITIONS.runway.layoutTendencies).toEqual({
-      cover: ["show-headline"],
-      chapter: ["show-plate"],
-      content: ["show-statement"],
-      ending: ["show-finale"],
-    })
-    expect(THEME_DEFINITIONS.runway.motif).toBeUndefined()
-
-    expect(THEME_DEFINITIONS.pulse.layouts.cover).toEqual(["report-open-cover"])
-    expect(THEME_DEFINITIONS.pulse.layoutTendencies?.cover).toEqual(["report-open-cover"])
-
-    expect(THEME_DEFINITIONS.arena.layouts.cover).toEqual(["cut-panel-cover"])
-    expect(THEME_DEFINITIONS.arena.layoutTendencies?.cover).toEqual(["cut-panel-cover"])
-
-    expect(THEME_DEFINITIONS.ember.layouts.cover).toEqual(["corner-wedge"])
-    expect(THEME_DEFINITIONS.ember.layoutTendencies?.cover).toEqual(["corner-wedge"])
-  })
-
-  it("board-cover-restore wave 2: ten themes lock layouts.cover to the board face", () => {
-    expect(THEME_DEFINITIONS.academic.layouts.cover).toEqual(["thesis-plate-cover"])
-    expect(THEME_DEFINITIONS.academic.layoutTendencies?.cover).toEqual(["thesis-plate-cover"])
-
-    expect(THEME_DEFINITIONS.campaign.layouts.cover).toEqual(["poster-center"])
-    expect(THEME_DEFINITIONS.campaign.layoutTendencies?.cover).toEqual(["poster-center"])
-
-    expect(THEME_DEFINITIONS.insight.layouts.cover).toEqual(["stat-cover"])
-    expect(THEME_DEFINITIONS.insight.layoutTendencies?.cover).toEqual(["stat-cover"])
-
-    expect(THEME_DEFINITIONS.tech.layouts.cover).toEqual(["type-rule-cover"])
-    expect(THEME_DEFINITIONS.tech.layoutTendencies?.cover).toEqual(["type-rule-cover"])
-
-    expect(THEME_DEFINITIONS.luxe.layouts.cover).toEqual(["invitation-plate-cover"])
-    expect(THEME_DEFINITIONS.luxe.layoutTendencies?.cover).toEqual(["invitation-plate-cover"])
-
-    expect(THEME_DEFINITIONS.journal.layouts.cover).toEqual(["issue-head-cover"])
-    expect(THEME_DEFINITIONS.journal.layoutTendencies?.cover).toEqual(["issue-head-cover"])
-
-    expect(THEME_DEFINITIONS.ink.layouts.cover).toEqual(["vertical-title-cover"])
-    expect(THEME_DEFINITIONS.ink.layoutTendencies?.cover).toEqual(["vertical-title-cover"])
-    expect(THEME_DEFINITIONS.ink.layoutTendencies).toEqual({
-      cover: ["vertical-title-cover"],
-      chapter: ["volume-slip-chapter"],
-      content: ["quiet-frame", "split-band"],
-      ending: ["seal-close-ending"],
-    })
-
-    expect(THEME_DEFINITIONS.museum.layouts.cover).toEqual(["poster-center"])
-    expect(THEME_DEFINITIONS.museum.layoutTendencies?.cover).toEqual(["poster-center"])
-    expect(THEME_DEFINITIONS.museum.motif).toBeUndefined()
-
-    expect(THEME_DEFINITIONS.terra.layouts.cover).toEqual(["pledge-open-cover"])
-    expect(THEME_DEFINITIONS.terra.layoutTendencies?.cover).toEqual(["pledge-open-cover"])
-
-    expect(THEME_DEFINITIONS.heritage.layouts.cover).toEqual(["double-frame-cover"])
-    expect(THEME_DEFINITIONS.heritage.layoutTendencies?.cover).toEqual(["double-frame-cover"])
-  })
-
-  it("未知 id 经 resolveThemeId 回落 consulting 的主题定义（含 layouts/motif），原 manifest 取值函数回落断言迁移", () => {
-    expect(THEME_DEFINITIONS[resolveThemeId("nonexistent-theme")]).toBe(THEME_DEFINITIONS.consulting)
+  it("未知 id 不再回落 consulting，resolveThemeId 直接报错", () => {
+    expect(() => resolveThemeId("nonexistent-theme")).toThrow(/unknown theme "nonexistent-theme"/)
   })
 })
 
@@ -422,22 +302,25 @@ describe("resolveBrand", () => {
       suppressFooterMeta: true,
     })
   })
-  it("falls back to consulting for unknown ids", () => {
-    expect(resolveBrand("nope")).toEqual({})
+  it("throws for an unknown id instead of borrowing consulting's brand frame", () => {
+    expect(() => resolveBrand("nope")).toThrow(/unknown theme "nope"/)
   })
 })
 
-// ── registerTheme (W3 task 4: theme registration seam) ──────────────────
+// ── registerTheme: one complete v2 file in, one theme definition out ──────
 
-/** A structurally valid `ThemeRegistration` fixture — real LAYOUT_REGISTRY
- *  ids (one layout per slide type, each already applicable to that type
- *  per registry.ts), a minimal-but-complete StyleTokens. `overrides` lets
- *  each test tweak just the field it's exercising, including setting
- *  `layouts` to `undefined` or a partial slide-type subset (W4: `layouts`
- *  and each of its four entries are independently optional on the
- *  registration input — see {@link ThemeRegistration}'s own doc comment). */
-function testTheme(overrides: Partial<ThemeRegistration> = {}): ThemeRegistration {
+const TEST_MENU: Menu = {
+  cover: { face: "poster-center" },
+  chapter: { face: "banner-chapter" },
+  content: { points: { face: "two-column" } },
+  ending: { face: "banner-ending" },
+}
+
+/** A structurally valid public v2 theme file. `overrides` lets each test
+ *  tweak just the field it exercises. */
+function testTheme(overrides: Partial<ThemeFile> = {}): ThemeFile {
   return {
+    version: 2,
     id: "acme",
     style: {
       id: "acme",
@@ -459,15 +342,15 @@ function testTheme(overrides: Partial<ThemeRegistration> = {}): ThemeRegistratio
       },
     },
     brand: {},
-    tags: [],
-    layouts: {
-      cover: ["poster-center"],
-      chapter: ["banner-chapter"],
-      content: ["two-column"],
-      ending: ["banner-ending"],
-    },
+    menu: TEST_MENU,
     ...overrides,
-  }
+  } as ThemeFile
+}
+
+/** The same fixture under another id (style.id must always agree with id). */
+function themeNamed(id: string, overrides: Partial<ThemeFile> = {}): ThemeFile {
+  const base = testTheme()
+  return { ...base, id, style: { ...base.style, id }, ...overrides }
 }
 
 describe("registerTheme", () => {
@@ -479,12 +362,11 @@ describe("registerTheme", () => {
     registerTheme(testTheme())
     expect(getInstalledThemeIds()).toContain("acme")
     expect(getThemeDefinition("acme").layouts.cover).toEqual(["poster-center"])
+    expect(getThemeDefinition("acme").menu).toEqual(TEST_MENU)
   })
 
-  it("rejects a duplicate builtin id", () => {
-    expect(() => registerTheme(testTheme({ id: "consulting" }))).toThrow(
-      /theme "consulting" is already installed/,
-    )
+  it("rejects a built-in id at the schema gate, before the installed check", () => {
+    expect(() => registerTheme(themeNamed("consulting"))).toThrow(/built-in pptwise theme/)
   })
 
   it("rejects a duplicate already-registered id", () => {
@@ -492,171 +374,67 @@ describe("registerTheme", () => {
     expect(() => registerTheme(testTheme())).toThrow(/theme "acme" is already installed/)
   })
 
-  it("rejects an unregistered layout id, naming the bad id", () => {
+  it("rejects anything that is not a complete v2 file, naming the offending path", () => {
+    expect(() => registerTheme({})).toThrow(/invalid theme definition/)
+    // The retired programmatic shape (layout arrays, no menu) has no way in.
     expect(() =>
-      registerTheme(
-        testTheme({
-          layouts: {
-            cover: ["not-a-real-layout"],
-            chapter: ["banner-chapter"],
-            content: ["two-column"],
-            ending: ["banner-ending"],
-          },
-        }),
-      ),
-    ).toThrow(/not-a-real-layout/)
+      registerTheme({ id: "acme", style: testTheme().style, layouts: { cover: ["poster-center"] } }),
+    ).toThrow(/invalid theme definition/)
   })
 
-  it("rejects a layout id that exists but does not apply to the slide type", () => {
-    expect(() =>
-      registerTheme(
-        // "two-column" is a content-only layout (registry.ts) — invalid under `cover`.
-        testTheme({
-          layouts: {
-            cover: ["two-column"],
-            chapter: ["banner-chapter"],
-            content: ["two-column"],
-            ending: ["banner-ending"],
-          },
-        }),
-      ),
-    ).toThrow(/layout "two-column" is not valid for "cover" slides/)
+  it("rejects a menu missing a boundary page type", () => {
+    const menu = { ...TEST_MENU } as Record<string, unknown>
+    delete menu.ending
+    expect(() => registerTheme(testTheme({ menu: menu as unknown as Menu }))).toThrow(/menu\.ending/)
   })
 
-  it("rejects a takeover layout id in a curated set (auto-selection assumes layouts — render would crash)", () => {
-    // image-split is kind "takeover" with slideTypes ["content"] — slide-type
-    // matching alone would let it through, the kind check must stop it.
-    expect(() =>
-      registerTheme(
-        testTheme({
-          layouts: {
-            cover: ["poster-center"],
-            chapter: ["banner-chapter"],
-            content: ["image-split"],
-            ending: ["banner-ending"],
-          },
-        }),
-      ),
-    ).toThrow(/"image-split" is a takeover layout\. Curated sets may only contain archetype layouts/)
-  })
-
-  it("rejects a theme missing layout coverage for one of the four slide types", () => {
-    expect(() =>
-      registerTheme(
-        testTheme({
-          layouts: {
-            cover: ["poster-center"],
-            chapter: [],
-            content: ["two-column"],
-            ending: ["banner-ending"],
-          },
-        }),
-      ),
-    ).toThrow(/chapter/)
-  })
-
-  it("rejects a theme with no style tokens", () => {
-    expect(() =>
-      registerTheme(testTheme({ style: undefined as unknown as ThemeDefinition["style"] })),
-    ).toThrow(/missing style tokens/)
-  })
-
-  // ── W4: layouts (and each of its four slide-type entries) is optional,
-  // defaulting to the full registered-layout set (spec §3 "缺省 = 全集")
-  // ──────────────────────────────────────────────────────────────────────
-
-  it("omitting layouts entirely defaults every slide type to its full registered-layout set, minus any pinOnly member (quote-stage wave, task T1's fullLayoutSet filter — now exercised by a real member, task T2's quote-stage)", () => {
-    registerTheme(testTheme({ layouts: undefined }))
-    const def = getThemeDefinition("acme")
-    for (const slideType of ["cover", "chapter", "content", "ending"] as const) {
-      const expected = excludePinOnly(layoutsForSlideType(slideType).filter((l) => l.kind === "archetype")).map(
-        (l) => l.id,
-      )
-      expect(def.layouts[slideType]).toEqual(expected)
-    }
-    // Explicit, name-level lock (not just "the filtered set matches"): the
-    // default content pool must not silently regain quote-stage if the
-    // filter above ever broke.
-    expect(def.layouts.content).not.toContain("quote-stage")
-    expect(def.layouts.content).not.toContain("statement")
-    expect(def.layouts.content).not.toContain("pull-quote")
-    expect(def.layouts.content).not.toContain("stat-hero")
-    expect(def.layouts.content).not.toContain("one-evidence")
-    expect(def.layouts.content).not.toContain("mono-bleed")
-    expect(def.layouts.chapter).not.toContain("verse-chapter")
-  })
-
-  it("curating only one slide type leaves the other three at their full-set default (explicit narrowing coexists with the new default)", () => {
-    registerTheme(testTheme({ layouts: { content: ["two-column", "narrow-column"] } }))
-    const def = getThemeDefinition("acme")
-    expect(def.layouts.content).toEqual(["two-column", "narrow-column"])
-    for (const slideType of ["cover", "chapter", "ending"] as const) {
-      const expected = excludePinOnly(layoutsForSlideType(slideType).filter((l) => l.kind === "archetype")).map(
-        (l) => l.id,
-      )
-      expect(def.layouts[slideType]).toEqual(expected)
-    }
-  })
-
-  it("an explicit exclusion inside a curated slide type still narrows the pool (the same full-set-minus-one pattern the 3 built-in exceptions use)", () => {
-    const fullContent = layoutsForSlideType("content")
-      .filter((l) => l.kind === "archetype")
-      .map((l) => l.id)
-    registerTheme(testTheme({ layouts: { content: fullContent.filter((id) => id !== "split-band") } }))
-    const def = getThemeDefinition("acme")
-    expect(def.layouts.content).not.toContain("split-band")
-    expect(def.layouts.content).toHaveLength(fullContent.length - 1)
-  })
-
-  it("an explicit empty array for a slide type is still rejected — the full-set default only kicks in when the key is omitted, never for a caller-supplied []", () => {
-    expect(() => registerTheme(testTheme({ layouts: { content: [] } }))).toThrow(
-      /must declare at least one layout for "content" slides/,
+  it("rejects a menu that serves no content kind at all", () => {
+    expect(() => registerTheme(testTheme({ menu: { ...TEST_MENU, content: {} } }))).toThrow(
+      /at least one content kind/,
     )
   })
 
-  // ── registerTheme: colors.text/colors.muted contrast floor (backlog-sweep
-  // task I2). Registration-time floor, not the 4.5:1 body-text bar
-  // `full-matrix-contrast.test.ts`'s `colors.muted contrast` suite enforces —
-  // see `assertContrastFloor`'s own doc comment in `./definitions` for the
-  // 3.0 rationale. `testTheme()`'s own fixture (`text` #000000, `muted`
-  // #888888, all-white `defaultBackgrounds`) clears 3.0 comfortably (21:1 /
-  // ~3.55:1) so every *other* `registerTheme` test above stays green
-  // unaffected by this check.
-  it("does not throw when colors.text/colors.muted clear the 3.0 floor against every slide type's background", () => {
-    expect(() => registerTheme(testTheme({ id: "acme-contrast-ok" }))).not.toThrow()
+  it("rejects an unregistered face id, naming the bad id", () => {
+    expect(() => registerTheme(testTheme({ menu: { ...TEST_MENU, cover: { face: "not-a-real-layout" } } }))).toThrow(
+      /menu\.cover\.face references unknown layout id "not-a-real-layout"/,
+    )
   })
 
-  it("rejects colors.text below the 3.0 contrast floor against a slide type's resolved default background, naming the token/slideType/ratio/threshold", () => {
-    const base = testTheme({ id: "acme-low-text-contrast" })
+  it("rejects a face that exists but does not apply to that page type", () => {
+    expect(() => registerTheme(testTheme({ menu: { ...TEST_MENU, cover: { face: "two-column" } } }))).toThrow(
+      /menu\.cover\.face layout "two-column" is not valid for "cover" slides/,
+    )
+  })
+
+  // ── colors.text/colors.muted contrast floor. Registration-time floor, not
+  // the 4.5:1 body-text bar — see `assertContrastFloor` for the 3.0 rationale.
+  it("does not throw when colors.text/colors.muted clear the 3.0 floor against every slide type's background", () => {
+    expect(() => registerTheme(themeNamed("acme-contrast-ok"))).not.toThrow()
+  })
+
+  it("rejects colors.text below the 3.0 contrast floor, naming the token/slideType/ratio/threshold", () => {
+    const base = themeNamed("acme-low-text-contrast")
     expect(() =>
-      registerTheme({
-        ...base,
-        // near-white text on the fixture's white "cover" background -> ~1.09:1.
-        style: { ...base.style, colors: { ...base.style.colors, text: "#F5F5F5" } },
-      }),
+      // near-white text on the fixture's white "cover" background -> ~1.09:1.
+      registerTheme({ ...base, style: { ...base.style, colors: { ...base.style.colors, text: "#F5F5F5" } } }),
     ).toThrow(/colors\.text.*1\.\d\d:1.*"cover".*3\.0:1/)
   })
 
   it("rejects colors.muted below the 3.0 contrast floor", () => {
-    const base = testTheme({ id: "acme-low-muted-contrast" })
+    const base = themeNamed("acme-low-muted-contrast")
     expect(() =>
-      registerTheme({
-        ...base,
-        style: { ...base.style, colors: { ...base.style.colors, muted: "#FAFAFA" } },
-      }),
+      registerTheme({ ...base, style: { ...base.style, colors: { ...base.style.colors, muted: "#FAFAFA" } } }),
     ).toThrow(/colors\.muted/)
   })
 
   it("checks content and ending too, not just cover", () => {
-    const base = testTheme({ id: "acme-ending-bad" })
+    const base = themeNamed("acme-ending-bad")
     expect(() =>
       registerTheme({
         ...base,
         style: {
           ...base.style,
-          // Only "ending" is a bad background (black, same as the fixture's
-          // own black `colors.text` -> 1:1) — cover/chapter/content stay the
-          // fixture's white, which clears the floor.
+          // Only "ending" is bad (black, same as the fixture's black text).
           defaultBackgrounds: {
             cover: { kind: "color", value: "#FFFFFF" },
             chapter: { kind: "color", value: "#FFFFFF" },
@@ -668,26 +446,17 @@ describe("registerTheme", () => {
     ).toThrow(/colors\.text.*"ending"/)
   })
 
-  // Verified red-then-green during implementation: a first draft checked all
-  // four slide types (matching the task brief's literal text) and a probe
-  // against the 13 real builtins immediately found academic/classroom/
-  // consulting's `colors.text`/`colors.muted` measuring as low as 1.00:1
-  // against their own `chapter` background — not a bug in those themes
-  // (nothing ever renders that raw pairing, see the next test and
-  // `assertContrastFloor`'s own doc comment), but a false positive in the
-  // check itself. This test locks the fix: `chapter` is deliberately
-  // excluded, mirroring `full-matrix-contrast.test.ts`'s `colors.muted
-  // contrast` suite's own precedent for the identical reason.
+  // A first draft checked all four page types and found academic/classroom/
+  // consulting measuring as low as 1.00:1 against their own `chapter`
+  // background — not a theme bug (nothing renders that raw pairing), a false
+  // positive in the check itself. This locks the exclusion.
   it("deliberately excludes chapter from the check — a bad chapter background alone does not throw", () => {
-    const base = testTheme({ id: "acme-chapter-bad-bg-is-fine" })
+    const base = themeNamed("acme-chapter-bad-bg-is-fine")
     expect(() =>
       registerTheme({
         ...base,
         style: {
           ...base.style,
-          // "chapter" alone is bad (black, 1:1 against the fixture's own
-          // black colors.text) — cover/content/ending stay white, so if
-          // chapter were checked this would throw; it must not.
           defaultBackgrounds: {
             cover: { kind: "color", value: "#FFFFFF" },
             chapter: { kind: "color", value: "#000000" },
@@ -700,97 +469,20 @@ describe("registerTheme", () => {
   })
 })
 
-// ── registerTheme: layoutTendencies consistency (theme-structure wave, task
-// T1 — `.issues/2026-07-26-theme-structure/plan.md`). A theme's own
-// structural personality (`ThemeDefinition.layoutTendencies`,
-// `Partial<Record<Slide["type"], readonly string[]>>`) must only ever name
-// ids already inside that same slide type's own curated `layouts` pool — an
-// id outside it can never be scored by `weightOf` (`../render/layout-selection.ts`
-// builds its candidate pool from `layouts[slideType]` before any tendency is
-// consulted), so declaring one is a theme-author mistake, not a legal
-// no-op. ──────────────────────────────────────────────────────────────────
-describe("registerTheme: layoutTendencies consistency", () => {
-  afterEach(() => {
-    __resetRegisteredThemes()
-  })
-
-  it("accepts a layoutTendencies id that is a member of this theme's own layouts set for that slide type", () => {
-    expect(() =>
-      registerTheme(testTheme({ id: "acme-tendency-ok", layoutTendencies: { content: ["two-column"] } })),
-    ).not.toThrow()
-    expect(getThemeDefinition("acme-tendency-ok").layoutTendencies).toEqual({ content: ["two-column"] })
-  })
-
-  it("rejects a layoutTendencies id that is not in this theme's own layouts set for that slide type, naming the id and slide type", () => {
-    // testTheme()'s own content pool is exactly ["two-column"] — "narrow-column"
-    // is a real, registered content layout (so it can't be caught by the
-    // unrelated "unknown layout id" check above), just not a member of this
-    // particular theme's curated content set.
-    expect(() =>
-      registerTheme(testTheme({ id: "acme-tendency-bad", layoutTendencies: { content: ["narrow-column"] } })),
-    ).toThrow(/layoutTendencies\.content.*"narrow-column".*not in this theme's own layouts\.content/)
-  })
-
-  it("rejects an out-of-pool id even when a different slide type's tendency is fine (checks all four independently)", () => {
-    expect(() =>
-      registerTheme(
-        testTheme({
-          id: "acme-tendency-mixed",
-          layoutTendencies: { content: ["two-column"], cover: ["left-anchor"] },
-        }),
-      ),
-      // testTheme()'s cover pool is exactly ["poster-center"] — "left-anchor" is
-      // a real cover layout, just outside this theme's own curated set.
-    ).toThrow(/layoutTendencies\.cover.*"left-anchor"/)
-  })
-
-  it("a theme that declares no layoutTendencies at all registers unaffected (the field is fully optional)", () => {
-    expect(() => registerTheme(testTheme({ id: "acme-no-tendency" }))).not.toThrow()
-    expect(getThemeDefinition("acme-no-tendency").layoutTendencies).toBeUndefined()
-  })
-})
-
-// ── built-in consistency sweep (theme-structure wave, task T1): the 13
-// canonical themes never go through `registerTheme` (see the
-// `assertContrastFloor` describe block's own comment for why), so this test
-// is the only place their own `layoutTendencies` (if any) gets the same
-// hard-boundary check. Vacuously true today — task T1 declares no builtin
-// tendencies (that is task T2's job) — but this must fail loudly the moment
-// any builtin declares one that isn't a member of its own `layouts` set for
-// that slide type.
-describe("THEME_DEFINITIONS: layoutTendencies consistency (built-ins)", () => {
-  it("every declared layoutTendencies id, for every builtin that declares any, is a member of that same theme's own layouts set for that slide type", () => {
-    const slideTypes = ["cover", "chapter", "content", "ending"] as const
-    for (const id of CANONICAL_THEME_IDS) {
-      const def = THEME_DEFINITIONS[id]
-      if (!def.layoutTendencies) continue
-      for (const slideType of slideTypes) {
-        const declared = def.layoutTendencies[slideType]
-        if (!declared) continue
-        for (const layoutId of declared) {
-          expect(
-            def.layouts[slideType],
-            `theme "${id}" layoutTendencies.${slideType} declares "${layoutId}", which is not in its own layouts.${slideType}`,
-          ).toContain(layoutId)
-        }
-      }
-    }
-  })
-})
-
-// ── registerTheme: unmeasured-font-width console.warn (backlog-sweep task
-// I2). First console.warn precedent in the codebase (repo-wide grep found
-// zero prior production `console.warn` call sites) — plain, no new warning-
-// channel abstraction, per the task's own adjudicated rationale.
+// ── registerTheme: unmeasured-font-width console.warn ─────────────────────
 describe("registerTheme: unmeasured-font-width console.warn", () => {
   afterEach(() => {
     __resetRegisteredThemes()
   })
 
+  function withFonts(id: string, heading: string, body: string): ThemeFile {
+    const base = themeNamed(id)
+    return { ...base, style: { ...base.style, fonts: { heading: [heading], body: [body] } } }
+  }
+
   it("warns for a heading face with no exact width table (SimSun) and stays silent for a body face that has one (Georgia)", () => {
     const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
-    const base = testTheme({ id: "acme-warn-heading-only" })
-    registerTheme({ ...base, style: { ...base.style, fonts: { heading: ["SimSun"], body: ["Georgia"] } } })
+    registerTheme(withFonts("acme-warn-heading-only", "SimSun", "Georgia"))
     expect(warnSpy).toHaveBeenCalledTimes(1)
     const message = warnSpy.mock.calls[0]?.[0]
     expect(message).toMatch(/acme-warn-heading-only/)
@@ -803,8 +495,7 @@ describe("registerTheme: unmeasured-font-width console.warn", () => {
 
   it("warns twice — once per role — when both heading and body resolve to faces without an exact width table", () => {
     const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
-    const base = testTheme({ id: "acme-warn-both" })
-    registerTheme({ ...base, style: { ...base.style, fonts: { heading: ["SimSun"], body: ["KaiTi"] } } })
+    registerTheme(withFonts("acme-warn-both", "SimSun", "KaiTi"))
     expect(warnSpy).toHaveBeenCalledTimes(2)
     expect(warnSpy.mock.calls[0]?.[0]).toMatch(/heading/)
     expect(warnSpy.mock.calls[1]?.[0]).toMatch(/body/)
@@ -813,52 +504,25 @@ describe("registerTheme: unmeasured-font-width console.warn", () => {
 
   it("stays silent when both heading and body resolve to faces with an exact width table (Georgia/Microsoft YaHei)", () => {
     const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
-    const base = testTheme({ id: "acme-no-warn" })
-    registerTheme({ ...base, style: { ...base.style, fonts: { heading: ["Georgia"], body: ["Microsoft YaHei"] } } })
+    registerTheme(withFonts("acme-no-warn", "Georgia", "Microsoft YaHei"))
     expect(warnSpy).not.toHaveBeenCalled()
     warnSpy.mockRestore()
   })
 
-  it("never warns for a registration that ultimately throws (e.g. a bad layout id) — warnings only fire once a registration will actually succeed", () => {
+  it("never warns for a registration that ultimately throws (e.g. a bad face id) — warnings only fire once a registration will actually succeed", () => {
     const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
-    const base = testTheme({ id: "acme-throws-before-warn" })
-    expect(() =>
-      registerTheme({
-        ...base,
-        style: { ...base.style, fonts: { heading: ["SimSun"], body: ["SimSun"] } },
-        layouts: { ...base.layouts, cover: ["not-a-real-layout"] },
-      }),
-    ).toThrow(/not-a-real-layout/)
+    const base = withFonts("acme-throws-before-warn", "SimSun", "SimSun")
+    expect(() => registerTheme({ ...base, menu: { ...TEST_MENU, cover: { face: "not-a-real-layout" } } })).toThrow(
+      /not-a-real-layout/,
+    )
     expect(warnSpy).not.toHaveBeenCalled()
     warnSpy.mockRestore()
   })
 
-  // Hostile-review finding (backlog-sweep task I2 self-review): 4 of the 13
-  // builtins (ink/journal/runway plus the later SimSun/KaiTi headings) resolve their *heading* font to
-  // SimSun or KaiTi — real, deliberate CJK-serif design choices (see each
-  // theme file's own inline comment — SimSun/KaiTi are the only CJK serif
-  // entries in `SAFE_FONTS`) that have no exact width table. Every builtin's
-  // *body* font resolves to Microsoft YaHei, which does. If any of this ever
-  // reached `console.warn`, it would fire on every single consumer's very
-  // first render — but it structurally cannot: builtins never call
-  // `registerTheme` (`THEME_DEFINITIONS` is built directly from
-  // `THEME_STYLES`, see the `assertContrastFloor` describe block's own
-  // comment above for the full argument). This test locks both halves of
-  // that claim so a future change that either (a) alters which builtins
-  // resolve to a non-exact face, or (b) starts routing builtins through
-  // `registerTheme`, fails loudly here instead of silently starting to spam
-  // every consumer.
-  // 2026-08-19 深底组皮肤重设计给 luxe 换了衬线标题（`SimSun` 打头，请柬
-  // 气质），SimSun 不在 `EXACT_TABLE_FOR` 的两张精确宽度表里（只有 Georgia
-  // 和 Microsoft YaHei 有），所以 luxe 加入这份名单——与 ink 换楷体时同一
-  // 条代价：标题宽度改由 class-average 包络估，保守一档。
-  // 2026-08-19 暖纸组皮肤重设计按设计板的组内互检行「heritage 衬线、其余
-  // sans」调了本组四家的字体register：heritage 换上 `SimSun` 打头的藏书票
-  // 衬线，因此**加入**这份名单；vermilion 从 SimSun 换成雅黑无衬线，因此
-  // **退出**（它的标题从此走精确宽度表，不再是保守包络）。terra 从 Georgia
-  // 换成雅黑——两者都在精确宽度表里，名单不变。
-  // 2026-08-20 柔和组皮肤重设计：classroom 走雅黑，宋体衬线报题退役，标题
-  // 从保守包络改回精确宽度表（vermilion 在 gov-theme 波做过同一次移动）。
+  // Eight builtins resolve their *heading* to SimSun or KaiTi — deliberate
+  // CJK-serif design choices with no exact width table. Every builtin's
+  // *body* resolves to a face that has one. This never reaches console.warn
+  // because builtins never call registerTheme; the test locks both halves.
   it("regression: heritage/ink/journal/lecture/luxe/memo/museum/runway's heading has no exact table, every builtin's body does — but builtins never call registerTheme, so this never reaches console.warn", () => {
     const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
     const nonExactHeadingBuiltins = new Set(["heritage", "ink", "journal", "lecture", "luxe", "memo", "museum", "runway"])
@@ -866,8 +530,8 @@ describe("registerTheme: unmeasured-font-width console.warn", () => {
       const style = THEME_DEFINITIONS[id].style
       const headingFace = resolveFontFace(style.fonts.heading, "heading")
       const bodyFace = resolveFontFace(style.fonts.body, "body")
-      expect(hasExactWidthTable(bodyFace), `${id} body face "${bodyFace}"`).toBe(true)
-      expect(hasExactWidthTable(headingFace), `${id} heading face "${headingFace}"`).toBe(
+      expect(hasExactWidthTable(bodyFace), id + " body face " + bodyFace).toBe(true)
+      expect(hasExactWidthTable(headingFace), id + " heading face " + headingFace).toBe(
         !nonExactHeadingBuiltins.has(id),
       )
     }
@@ -877,19 +541,9 @@ describe("registerTheme: unmeasured-font-width console.warn", () => {
 })
 
 describe("assertContrastFloor", () => {
-  // Scoping decision (backlog-sweep task I2, confirmed by reading the
-  // source): the 24 builtins do NOT go through `registerTheme` —
-  // `THEME_DEFINITIONS` is built directly from `THEME_STYLES`
-  // (`Object.fromEntries(CANONICAL_THEME_IDS.map(...))` in `./definitions`),
-  // and `registered-themes.ts`'s own docstring explains this is load-bearing
-  // (a `THEME_DEFINITIONS`/`registerTheme` cycle would crash at module-eval
-  // with a TDZ error). A repo-wide grep for `registerTheme(` confirms zero
-  // production call sites outside its own declaration — every call site is
-  // this file (or a sibling test) registering a synthetic test theme, never
-  // one of the 24 canonical ids. So `registerTheme`'s new contrast check
-  // never actually runs against a builtin; this test sweeps all 13 directly
-  // through the underlying validation function instead, per the task brief's
-  // own scoping fallback for exactly this case.
+  // The 24 builtins never go through `registerTheme` (a THEME_DEFINITIONS /
+  // registerTheme cycle would crash at module eval), so this sweeps them
+  // through the underlying validation function directly.
   it("all 24 canonical themes clear the 3.0 floor for colors.text and colors.muted on every slide type", () => {
     for (const id of CANONICAL_THEME_IDS) {
       expect(() => assertContrastFloor(id, THEME_DEFINITIONS[id].style)).not.toThrow()
@@ -907,8 +561,8 @@ describe("getInstalledThemeIds", () => {
   })
 
   it("stable order: builtins first, then registration order", () => {
-    registerTheme(testTheme({ id: "zzz-first" }))
-    registerTheme(testTheme({ id: "aaa-second" }))
+    registerTheme(themeNamed("zzz-first"))
+    registerTheme(themeNamed("aaa-second"))
     const ids = getInstalledThemeIds()
     expect(ids.slice(0, CANONICAL_THEME_IDS.length)).toEqual(CANONICAL_THEME_IDS)
     expect(ids.slice(CANONICAL_THEME_IDS.length)).toEqual(["zzz-first", "aaa-second"])
@@ -922,12 +576,20 @@ describe("getThemeDefinition", () => {
 
   it("returns the registered definition for a registered id", () => {
     registerTheme(testTheme())
-    expect(getThemeDefinition("acme")).toEqual(testTheme())
+    const def = getThemeDefinition("acme")
+    expect(def.id).toBe("acme")
+    expect(def.menu).toEqual(TEST_MENU)
+    expect(def.layouts).toEqual({
+      cover: ["poster-center"],
+      chapter: ["banner-chapter"],
+      content: ["two-column"],
+      ending: ["banner-ending"],
+    })
   })
 
-  it("still falls back to consulting for an unknown id (registered or not)", () => {
+  it("throws for an unknown id instead of falling back to consulting", () => {
     registerTheme(testTheme())
-    expect(getThemeDefinition("still-unknown")).toBe(THEME_DEFINITIONS.consulting)
+    expect(() => getThemeDefinition("still-unknown")).toThrow(/unknown theme "still-unknown"/)
   })
 
   it("matches THEME_DEFINITIONS for a builtin id", () => {
@@ -935,148 +597,29 @@ describe("getThemeDefinition", () => {
   })
 })
 
-// ── pinOnly layout tier (quote-stage wave, task T1 —
-// `.issues/2026-07-28-quote-stage/plan.md`'s 裁定 1) ──────────────────────
-//
-// `fullLayoutSet` (the module-private function `__fullLayoutSet`
-// re-exports under this file's own test-only convention) only ever snapshots
-// its result once, at module load (`FULL_LAYOUTS`), long before any test
-// could mutate `LAYOUT_REGISTRY` — so this suite injects a synthetic
-// pinOnly-tagged registry entry directly and calls `__fullLayoutSet`
-// itself, rather than reading `THEME_DEFINITIONS`/`FULL_LAYOUTS` (both frozen
-// at import time).
+// ── pinOnly faces: a menu is the board-lock path, so naming one is legal ──
 
 const PIN_ONLY_TEST_ID = "test-pin-only-layout"
 
-function pinOnlyTestLayout(): LayoutDefinition {
-  return { id: PIN_ONLY_TEST_ID, kind: "archetype", slideTypes: ["content"], slots: [], pinOnly: true }
-}
-
-describe("pinOnly layout tier: fullLayoutSet exclusion", () => {
+describe("a menu may name a pinOnly face", () => {
   beforeEach(() => {
-    LAYOUT_REGISTRY[PIN_ONLY_TEST_ID] = pinOnlyTestLayout()
-  })
-  afterEach(() => {
-    delete LAYOUT_REGISTRY[PIN_ONLY_TEST_ID]
-  })
-
-  it("a pinOnly layout never appears in fullLayoutSet for its slide type", () => {
-    expect(__fullLayoutSet("content")).not.toContain(PIN_ONLY_TEST_ID)
-  })
-
-  it("a plain (non-pinOnly) layout registered the same way does appear — proves the exclusion is pinOnly-specific, not a generic new-id miss", () => {
-    const plainId = "test-plain-layout"
-    LAYOUT_REGISTRY[plainId] = { id: plainId, kind: "archetype", slideTypes: ["content"], slots: [] }
-    try {
-      expect(__fullLayoutSet("content")).toContain(plainId)
-    } finally {
-      delete LAYOUT_REGISTRY[plainId]
-    }
-  })
-})
-
-describe("pinOnly layout tier: registerTheme still legally allows curating a pinOnly id", () => {
-  beforeEach(() => {
-    LAYOUT_REGISTRY[PIN_ONLY_TEST_ID] = pinOnlyTestLayout()
+    LAYOUT_REGISTRY[PIN_ONLY_TEST_ID] = {
+      id: PIN_ONLY_TEST_ID,
+      kind: "standard",
+      slideTypes: ["content"],
+      slots: [],
+      pinOnly: true,
+    } satisfies LayoutDefinition
   })
   afterEach(() => {
     delete LAYOUT_REGISTRY[PIN_ONLY_TEST_ID]
     __resetRegisteredThemes()
   })
 
-  it("does not throw when a custom theme curates a pinOnly id into its own layouts set (registerTheme validates existence/kind/slideTypes, never pinOnly — listing it is the board-lock path, see layout-selection.test.ts)", () => {
+  it("registers a theme whose content menu points at a pinOnly face (the same road the built-in board locks take)", () => {
     expect(() =>
-      registerTheme(testTheme({ id: "acme-pin-only", layouts: { content: [PIN_ONLY_TEST_ID, "two-column"] } })),
+      registerTheme(themeNamed("acme-pin-only", { menu: { ...TEST_MENU, content: { points: { face: PIN_ONLY_TEST_ID } } } })),
     ).not.toThrow()
-    expect(getThemeDefinition("acme-pin-only").layouts.content).toContain(PIN_ONLY_TEST_ID)
-  })
-})
-
-const EMPTY_SPARSE_THEME_IDS = ["crayon", "classroom", "enterprise", "pulse", "runway", "ember"] as const
-const OMITTED_SPARSE_THEME_IDS: readonly string[] = []
-
-describe("sparseLayouts offer table", () => {
-  it("boarded themes list Object.keys(FACES) plus verse-chapter, in that order", () => {
-    const boarded = Object.keys(FACES)
-    expect(boarded.length).toBeGreaterThan(0)
-    for (const id of boarded) {
-      expect(THEME_DEFINITIONS[id as keyof typeof THEME_DEFINITIONS].sparseLayouts).toEqual([
-        ...Object.keys(FACES[id]!),
-        "verse-chapter",
-      ])
-    }
-  })
-
-  it("the six no-sparse themes declare an empty offer list", () => {
-    for (const id of EMPTY_SPARSE_THEME_IDS) {
-      expect(THEME_DEFINITIONS[id].sparseLayouts, id).toEqual([])
-    }
-  })
-
-  it("no builtin omits sparseLayouts", () => {
-    for (const id of OMITTED_SPARSE_THEME_IDS) {
-      expect(THEME_DEFINITIONS[id as keyof typeof THEME_DEFINITIONS].sparseLayouts, id).toBeUndefined()
-    }
-  })
-
-  it("every canonical theme id sits in exactly one of boarded / empty / omitted", () => {
-    const boarded = Object.keys(FACES)
-    expect(new Set([...boarded, ...EMPTY_SPARSE_THEME_IDS, ...OMITTED_SPARSE_THEME_IDS]).size).toBe(
-      CANONICAL_THEME_IDS.length,
-    )
-    expect(boarded.length + EMPTY_SPARSE_THEME_IDS.length + OMITTED_SPARSE_THEME_IDS.length).toBe(
-      CANONICAL_THEME_IDS.length,
-    )
-  })
-
-  it("themeOffersSparse matches the offer table", () => {
-    expect(themeOffersSparse("crayon", "statement")).toBe(false)
-    expect(themeOffersSparse("stage", "statement")).toBe(true)
-    expect(themeOffersSparse("stage", "one-evidence")).toBe(false)
-    expect(themeOffersSparse("consulting", "statement")).toBe(true)
-    expect(themeOffersSparse("consulting", "two-column")).toBe(false)
-    for (const layoutId of SPARSE_LAYOUT_IDS) {
-      expect(themeOffersSparse("classroom", layoutId), `classroom/${layoutId}`).toBe(false)
-    }
-  })
-})
-
-describe("registerTheme: sparseLayouts", () => {
-  afterEach(() => {
-    __resetRegisteredThemes()
-  })
-
-  it("accepts an empty array (offers none)", () => {
-    registerTheme(testTheme({ id: "acme-no-sparse", sparseLayouts: [] }))
-    expect(getThemeDefinition("acme-no-sparse").sparseLayouts).toEqual([])
-    expect(themeOffersSparse("acme-no-sparse", "statement")).toBe(false)
-  })
-
-  it("accepts listed sparse ids and round-trips them on getThemeDefinition", () => {
-    registerTheme(testTheme({ id: "acme-listed-sparse", sparseLayouts: ["statement", "verse-chapter"] }))
-    expect(getThemeDefinition("acme-listed-sparse").sparseLayouts).toEqual(["statement", "verse-chapter"])
-    expect(themeOffersSparse("acme-listed-sparse", "statement")).toBe(true)
-    expect(themeOffersSparse("acme-listed-sparse", "verse-chapter")).toBe(true)
-    expect(themeOffersSparse("acme-listed-sparse", "stat-hero")).toBe(false)
-  })
-
-  it("rejects a listed non-sparse id, naming the bad id and the allowed list", () => {
-    expect(() => registerTheme(testTheme({ id: "acme-bad-sparse", sparseLayouts: ["two-column"] }))).toThrow(
-      /sparseLayouts.*"two-column".*statement.*pull-quote.*verse-chapter.*stat-hero.*one-evidence.*mono-bleed/,
-    )
-  })
-
-  it("rejects an unknown id the same way", () => {
-    expect(() => registerTheme(testTheme({ id: "acme-unknown-sparse", sparseLayouts: ["not-a-layout"] }))).toThrow(
-      /sparseLayouts.*"not-a-layout"/,
-    )
-  })
-
-  it("omitted sparseLayouts still offers all six (the field stays undefined, not defaulted to an array)", () => {
-    registerTheme(testTheme({ id: "acme-omit-sparse" }))
-    expect(getThemeDefinition("acme-omit-sparse").sparseLayouts).toBeUndefined()
-    for (const layoutId of SPARSE_LAYOUT_IDS) {
-      expect(themeOffersSparse("acme-omit-sparse", layoutId)).toBe(true)
-    }
+    expect(getThemeDefinition("acme-pin-only").layouts.content).toEqual([PIN_ONLY_TEST_ID])
   })
 })

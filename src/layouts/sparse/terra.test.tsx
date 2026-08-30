@@ -15,7 +15,7 @@ const BOARD_CLAIM = "#3D3A30"
 
 function ir(slides: Slide[]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "x.pptx",
     theme: { id: "terra" },
     meta: {},
@@ -37,7 +37,7 @@ describe("terra sparse faces", () => {
   const ctx = buildCtx(resolveStyle("terra"), {})
 
   it("statement is left olive type over two layout q-curves", () => {
-    const slide: Slide = { type: "content", layout: "statement", heading: VERSE, components: [] } as Slide
+    const slide: Slide = { type: "content", kind: "points", layout: "statement", heading: VERSE, components: [] } as Slide
     const { markup, root } = render(
       <StatementContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />,
     )
@@ -61,6 +61,7 @@ describe("terra sparse faces", () => {
   it("stat-hero is an ochre numeral with an olive structure bar", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "stat-hero",
       heading: "43%",
       subheading: "订阅续约率同比回升",
@@ -87,6 +88,7 @@ describe("terra sparse faces", () => {
   it("one-evidence is a sample card with an ochre dot and 样点 index", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "one-evidence",
       heading: "维护工单平均提前 6.5 天生成",
       subheading: "217 张工单全量统计 · 2026 Q2",

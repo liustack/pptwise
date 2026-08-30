@@ -8,13 +8,15 @@ import {
   runBrandExtract,
   runDisassemble,
   runInit,
-  runMigrate,
   runLayouts,
   runNarratives,
   runPreview,
   runRender,
   runSchema,
   runSpecValidate,
+  runThemeFork,
+  runThemeNew,
+  runThemeTry,
   runThemes,
   runValidate,
 } from "./cli/commands"
@@ -43,8 +45,6 @@ program
   .description("Render an IR JSON file, deck project directory, or bare deck name to a .pptx")
   .argument("<target>", "IR JSON file, deck project directory, or bare name under ~/.pptwise/decks")
   .option("-o, --output <file>", "output .pptx path (default: .pptwise/<deck>/<deck>.pptx under the project root)")
-  .option("--theme <id>", "override the deck theme (see `pptwise themes`)")
-  .option("--theme-file <path>", "load and register a custom theme file (does not select it, pass --theme <id> or set the spec/IR theme)")
   .option("--style <path>", "style overrides JSON re-coloring the theme (see `pptwise schema --style`)")
   .option("--draft", "allow unfilled placeholder pages (skip the draft gate)")
   .option(
@@ -57,8 +57,6 @@ program
       target: string,
       opts: {
         output?: string
-        theme?: string
-        themeFile?: string
         style?: string
         draft?: boolean
         allowDroppedContent?: boolean
@@ -69,8 +67,6 @@ program
         console.log(
           await runRender(target, {
             output: opts.output,
-            theme: opts.theme,
-            themeFilePath: opts.themeFile,
             stylePath: opts.style,
             draft: opts.draft,
             allowDroppedContent: opts.allowDroppedContent,
@@ -88,11 +84,9 @@ program
   .command("validate")
   .description("Validate an IR JSON file, deck project directory, or bare deck name against the schema")
   .argument("<target>", "IR JSON file, deck project directory, or bare name under ~/.pptwise/decks")
-  .option("--theme <id>", "override the deck theme (see `pptwise themes`)")
-  .option("--theme-file <path>", "load and register a custom theme file (does not select it, pass --theme <id> or set the spec/IR theme)")
-  .action(async (target: string, opts: { theme?: string; themeFile?: string }) => {
+  .action(async (target: string) => {
     try {
-      console.log(await runValidate(target, process.cwd(), { theme: opts.theme, themeFilePath: opts.themeFile }))
+      console.log(await runValidate(target, process.cwd()))
     } catch (e) {
       fail(e)
     }
@@ -106,15 +100,11 @@ program
   .argument("<target>", "IR JSON file, deck project directory, or bare name under ~/.pptwise/decks")
   .option("--json", "machine-readable output (the full AuditReport)")
   .option("--pixels", "also run the optional pixel-contrast pass over image-backed text (requires sharp)")
-  .option("--theme <id>", "override the deck theme (see `pptwise themes`)")
-  .option("--theme-file <path>", "load and register a custom theme file (does not select it, pass --theme <id> or set the spec/IR theme)")
-  .action(async (target: string, opts: { json?: boolean; pixels?: boolean; theme?: string; themeFile?: string }) => {
+  .action(async (target: string, opts: { json?: boolean; pixels?: boolean }) => {
     try {
       const { output, hasFindings } = await runAudit(target, {
         json: opts.json,
         pixels: opts.pixels,
-        theme: opts.theme,
-        themeFilePath: opts.themeFile,
       })
       console.log(output)
       if (hasFindings) process.exit(1)
@@ -207,23 +197,77 @@ program
   })
 
 program
-  .command("migrate")
-  .description("Convert a v3 IR file to v4, rewrite chrome → branding, bloom → classroom, logo_wall → image_grid, or banner-heading → two-column on a v4 IR or deck spec, or convert a deck.plan.json project directory to deck.spec.json — deterministic, no model")
-  .argument("<input>", "IR v3 JSON file, a v4 IR or deck spec still carrying chrome, bloom, logo_wall, or banner-heading, or a deck project directory containing deck.plan.json")
-  .requiredOption("-o, --output <output>", "output path — an IR JSON file for a file input, a directory for a deck-project-directory input")
-  .action(async (input: string, opts: { output: string }) => {
-    try {
-      console.log(await runMigrate(input, opts.output))
-    } catch (e) {
-      fail(e)
-    }
-  })
-
-program
   .command("themes")
   .description("List built-in themes")
   .option("--json", "machine-readable output")
   .action((opts: { json?: boolean }) => console.log(runThemes(Boolean(opts.json))))
+
+const theme = program.command("theme").description("Copy, fork, and compare themes")
+theme
+  .command("new")
+  .description("Copy a preset or named theme into a self-contained v2 theme file")
+  .requiredOption("--from <preset>", "preset or theme name to copy")
+  .option("-o, --output <path>", "output theme JSON path")
+  .option("--id <id>", "theme id (default: slug of the output filename)")
+  .option("--label <label>", "human-readable theme label")
+  .addHelpText("after", "\nExample:\n  $ pptwise theme new --from consulting -o themes/acme.theme.json")
+  .action(async (opts: { from: string; output?: string; id?: string; label?: string }) => {
+    try {
+      console.log(await runThemeNew({ from: opts.from, output: opts.output, id: opts.id, label: opts.label, cwd: process.cwd() }))
+    } catch (e) {
+      fail(e)
+    }
+  })
+theme
+  .command("fork")
+  .description("Copy a theme and rederive tokens around new anchor colors")
+  .argument("<name>", "preset or theme name to fork")
+  .requiredOption("--primary <hex>", "new primary color")
+  .option("--bg <hex>", "new background color")
+  .option("--accent <hex>", "new accent color")
+  .option("--text <hex>", "new text color")
+  .option("--surface <hex>", "new surface color")
+  .option("-o, --output <path>", "output theme JSON path")
+  .option("--id <id>", "theme id (default: slug of the output filename)")
+  .option("--label <label>", "human-readable theme label")
+  .addHelpText("after", "\nExample:\n  $ pptwise theme fork acme --primary #0B5FFF -o themes/acme-blue.theme.json")
+  .action(
+    async (
+      name: string,
+      opts: { primary: string; bg?: string; accent?: string; text?: string; surface?: string; output?: string; id?: string; label?: string },
+    ) => {
+      try {
+        console.log(
+          await runThemeFork(name, {
+            primary: opts.primary,
+            bg: opts.bg,
+            accent: opts.accent,
+            text: opts.text,
+            surface: opts.surface,
+            output: opts.output,
+            id: opts.id,
+            label: opts.label,
+            cwd: process.cwd(),
+          }),
+        )
+      } catch (e) {
+        fail(e)
+      }
+    },
+  )
+theme
+  .command("try")
+  .description("Render the fitting-room sample across 2-4 themes into a contact sheet")
+  .argument("<ids>", "comma-separated theme ids (2-4)")
+  .option("-o, --output <dir>", "output directory (default: .pptwise/theme-try/)")
+  .addHelpText("after", "\nExample:\n  $ pptwise theme try consulting,swiss,memo")
+  .action(async (ids: string, opts: { output?: string }) => {
+    try {
+      console.log(await runThemeTry(ids, { output: opts.output, cwd: process.cwd() }))
+    } catch (e) {
+      fail(e)
+    }
+  })
 
 program
   .command("layouts")
@@ -244,9 +288,11 @@ brand
   .requiredOption("-o, --output <file>", "output theme JSON path (e.g. my-brand.theme.json)")
   .option("--id <id>", "theme id to register under (default: slug of the output filename)")
   .option("--label <label>", "human-readable theme label (default: the source theme's color-scheme name)")
-  .action(async (file: string, opts: { output: string; id?: string; label?: string }) => {
+  .option("--from <preset>", "donor preset whose menu is copied (default: consulting)")
+  .addHelpText("after", "\nExample:\n  $ pptwise brand extract corp.pptx -o themes/acme.theme.json --from consulting")
+  .action(async (file: string, opts: { output: string; id?: string; label?: string; from?: string }) => {
     try {
-      console.log(await runBrandExtract(file, { output: opts.output, id: opts.id, label: opts.label }))
+      console.log(await runBrandExtract(file, { output: opts.output, id: opts.id, label: opts.label, from: opts.from }))
     } catch (e) {
       fail(e)
     }
@@ -383,18 +429,12 @@ program
   .argument("<target>", "IR JSON file, deck project directory, or bare name under ~/.pptwise/decks")
   .option("-o, --output <dir>", "output directory (default: .pptwise/<deck>/ under the project root)")
   .option("--html", "also write a self-contained preview.html (all slides inlined — thumbnail strip, keyboard navigation) for human review")
-  .option("--theme <id>", "override the deck theme (see `pptwise themes`)")
-  .option("--themes <ids>", "comma-separated theme ids (2-4) to write a contact-sheet comparison")
-  .option("--theme-file <path>", "load and register a custom theme file (does not select it, pass --theme <id> or set the spec/IR theme)")
   .option("--no-git-ignore", "do not add .pptwise/ to this repository's local exclude file")
-  .action(async (target: string, opts: { output?: string; html?: boolean; theme?: string; themes?: string; themeFile?: string; gitIgnore?: boolean }) => {
+  .action(async (target: string, opts: { output?: string; html?: boolean; gitIgnore?: boolean }) => {
     try {
       console.log(
         await runPreview(target, opts.output, {
           htmlOut: opts.html,
-          theme: opts.theme,
-          themes: opts.themes,
-          themeFilePath: opts.themeFile,
           gitIgnore: opts.gitIgnore,
           cwd: process.cwd(),
         }),
@@ -410,8 +450,7 @@ program
   .argument("<target>", "IR JSON file, deck project directory, or bare name under ~/.pptwise/decks")
   .option("--port <number>", `port to listen on (default ${DEFAULT_PORT})`)
   .option("--no-open", "do not open the URL in a browser after starting")
-  .option("--theme-file <path>", "load and register a custom theme file (does not select it, pass --theme <id> or set the spec/IR theme)")
-  .action(async (target: string, opts: { port?: string; open: boolean; themeFile?: string }) => {
+  .action(async (target: string, opts: { port?: string; open: boolean }) => {
     try {
       let port: number | undefined
       if (opts.port !== undefined) {
@@ -420,7 +459,7 @@ program
           fail(new Error(`invalid --port value "${opts.port}" — expected an integer`))
         }
       }
-      await runServe(target, { port, open: opts.open, themeFilePath: opts.themeFile })
+      await runServe(target, { port, open: opts.open })
     } catch (e) {
       fail(e)
     }

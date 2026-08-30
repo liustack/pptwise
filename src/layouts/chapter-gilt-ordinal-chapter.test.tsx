@@ -17,7 +17,7 @@ function chapterSlide(heading = HEADING, extras: Partial<Slide> = {}): Slide {
 
 function ir(themeId: string, slides: Slide[]): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "gilt-ordinal-chapter.pptx",
     theme: { id: themeId },
     meta: {},
@@ -116,9 +116,8 @@ describe("chapter-gilt-ordinal-chapter — board geometry", () => {
 describe("chapter-gilt-ordinal-chapter — shared pool", () => {
   it("is a pinOnly chapter archetype", () => {
     expect(layoutDef.id).toBe("gilt-ordinal-chapter")
-    expect(layoutDef.kind).toBe("archetype")
+    expect(layoutDef.kind).toBe("standard")
     expect(layoutDef.pinOnly).toBe(true)
-    expect(layoutDef.branding).toBe("none")
     expect(layoutDef.slideTypes).toEqual(["chapter"])
     expect("paintsOwnBackground" in layoutDef).toBe(false)
   })

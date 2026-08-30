@@ -16,7 +16,7 @@ const BAKED_COLOPHON = "丙午夏云觅"
 
 function ir(slides: Slide[], organization?: string): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "x.pptx",
     theme: { id: "ink" },
     meta: organization ? { organization } : {},
@@ -38,7 +38,7 @@ describe("ink sparse faces", () => {
   const ctx = buildCtx(resolveStyle("ink"), {})
 
   it("statement sets CJK vertically from the right, with a vermilion opener", () => {
-    const slide: Slide = { type: "content", layout: "statement", heading: VERSE, components: [] } as Slide
+    const slide: Slide = { type: "content", kind: "points", layout: "statement", heading: VERSE, components: [] } as Slide
     const { markup, root } = render(
       <StatementContent ir={ir([slide], "云觅科技")} slide={slide} index={0} ctx={ctx} />,
     )
@@ -70,6 +70,7 @@ describe("ink sparse faces", () => {
   it("statement paints **emphasized** CJK glyphs in accent", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "statement",
       heading: "席位不会突然掉，只是没人**看它沉默**",
       components: [],
@@ -84,7 +85,7 @@ describe("ink sparse faces", () => {
   })
 
   it("statement without organization omits the left colophon column", () => {
-    const slide: Slide = { type: "content", layout: "statement", heading: VERSE, components: [] } as Slide
+    const slide: Slide = { type: "content", kind: "points", layout: "statement", heading: VERSE, components: [] } as Slide
     const { root } = render(
       <StatementContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />,
     )
@@ -95,6 +96,7 @@ describe("ink sparse faces", () => {
   it("Latin statement stays horizontal and centered", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "statement",
       heading: "Machines fail in silence.",
       components: [],
@@ -112,6 +114,7 @@ describe("ink sparse faces", () => {
   it("stat-hero is a 300px numeral with a baked 验 seal", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "stat-hero",
       heading: "43%",
       subheading: "订阅续约率同比回升 · 九十日为期",
@@ -134,6 +137,7 @@ describe("ink sparse faces", () => {
   it("CJK pull-quote sets vertically from the right, with a vermilion opener and a left attribution", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "pull-quote",
       heading: QUOTE,
       subheading: "陈砚清 · 首席技术官",
@@ -160,6 +164,7 @@ describe("ink sparse faces", () => {
   it("Latin pull-quote stays a side mark plus horizontal type", () => {
     const slide: Slide = {
       type: "content",
+      kind: "points",
       layout: "pull-quote",
       heading: "The most expensive outage is the one nobody saw coming.",
       subheading: "Chen Yanqing",

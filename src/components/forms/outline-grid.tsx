@@ -8,6 +8,8 @@ import {
   capFormBody,
   formGridCols,
   formLineHeight,
+  formTextClipMarker,
+  formTextOmissionMarker,
   layoutFormBody,
   layoutFormTitle,
   linesThatFit,
@@ -225,6 +227,7 @@ export function renderOutlineGrid(
         return (
           <g
             key={i}
+            data-truncated={formTextOmissionMarker(item.text, layout.text)}
             data-audit-box={`${box.x + cellX},${box.y + cellY},${g.cellW}`}
           >
             <rect
@@ -247,7 +250,7 @@ export function renderOutlineGrid(
             {layout.title.lines.map((line, li) => (
               <text
                 key={`t-${li}`}
-                data-truncated={layout.title.truncated && li === layout.title.lines.length - 1 ? "1" : undefined}
+                data-truncated={formTextClipMarker(layout.title, li)}
                 x={cx}
                 y={titleTop + li * layout.title.lineHeight + layout.title.fontSize}
                 textAnchor="middle"
@@ -263,6 +266,7 @@ export function renderOutlineGrid(
             {layout.text.lines.map((line, li) => (
               <text
                 key={li}
+                data-truncated={formTextClipMarker(layout.text, li)}
                 x={cx}
                 y={textTop + li * layout.text.lineHeight + layout.text.fontSize}
                 textAnchor="middle"

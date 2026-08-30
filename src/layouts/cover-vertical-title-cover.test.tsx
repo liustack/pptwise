@@ -20,7 +20,7 @@ function slide(heading = HEADING, extras: Partial<Slide> = {}): Slide {
 
 function ir(themeId: string, meta: PptxIR["meta"] = {}, s: Slide = slide()): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "vertical-title-cover.pptx",
     theme: { id: themeId },
     meta,
@@ -163,9 +163,8 @@ describe("cover-vertical-title-cover — board geometry", () => {
 describe("cover-vertical-title-cover — shared pool", () => {
   it("is registered as a pinOnly cover that does not paint its own background", () => {
     expect(layoutDef.id).toBe("vertical-title-cover")
-    expect(layoutDef.kind).toBe("archetype")
+    expect(layoutDef.kind).toBe("standard")
     expect(layoutDef.pinOnly).toBe(true)
-    expect(layoutDef.branding).toBe("none")
     expect("paintsOwnBackground" in layoutDef).toBe(false)
     expect(layoutDef.slideTypes).toEqual(["cover"])
   })
@@ -386,7 +385,7 @@ describe("cover-vertical-title-cover — seal rules", () => {
 
 describe("cover-vertical-title-cover — FullSlideSvg remnant", () => {
   it("keeps the left remnant mountain when the org foot is present", () => {
-    const s = slide(HEADING, { layout: "vertical-title-cover" })
+    const s = slide(HEADING, {  })
     const markup = renderSvgMarkup(<FullSlideSvg ir={ir("ink", FULL_META, s)} slide={s} index={0} />)
     const root = parseSvgRoot(markup)
     const remnant = root.querySelector('[data-decor-piece="remnant"]')

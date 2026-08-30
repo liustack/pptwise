@@ -129,10 +129,6 @@ export function InkMotif({ slide, ir, ctx }: DecorProps) {
     return <Remnant d={REMNANT_RIGHT} ctx={ctx} slideType={slide.type} />
   }
 
-  if (slide.layout === "pull-quote") {
-    return <Remnant d={REMNANT_LEFT} ctx={ctx} slideType={slide.type} />
-  }
-
   const { colors } = ctx
   const dateGlyphs = colophonDateGlyphs(ir.meta.date)
   const org = fitOrgGlyphs(ir.meta.organization ?? "", orgCapacity(dateGlyphs.length))

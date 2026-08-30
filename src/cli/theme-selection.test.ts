@@ -1,22 +1,22 @@
 // @vitest-environment node
-import { mkdtemp, writeFile } from "node:fs/promises"
+import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest"
 import { installNodePlatform } from "@/platform/node"
 import { __resetRegisteredThemes } from "../themes/definitions"
 import { buildThmxBytes } from "../themes/extract/__fixtures__/thmx"
-import { applyDeckConfig, runBrandExtract, runValidate } from "./commands"
+import { applyDeckConfig, runBrandExtract, runSpecValidate, runValidate } from "./commands"
 
 installNodePlatform()
 
 const SLIDES = [
   { type: "cover", heading: "CLI" },
-  { type: "content", heading: "Body", components: [{ type: "paragraph", text: "hello from the CLI test" }] },
+  { type: "content", kind: "points", heading: "Body", components: [{ type: "paragraph", text: "hello from the CLI test" }] },
 ]
 
-const IR_TECH = { version: "4", filename: "cli-test", theme: { id: "tech" }, slides: SLIDES }
-const IR_NO_THEME = { version: "4", filename: "cli-test", slides: SLIDES }
+const IR_TECH = { version: "5", filename: "cli-test", theme: { id: "tech" }, slides: SLIDES }
+const IR_NO_THEME = { version: "5", filename: "cli-test", slides: SLIDES }
 
 const originalPptwiseHome = process.env.PPTWISE_HOME
 beforeAll(async () => {
@@ -30,17 +30,6 @@ afterEach(() => {
   __resetRegisteredThemes()
 })
 
-async function withPptwiseHome<T>(home: string, fn: () => Promise<T>): Promise<T> {
-  const prev = process.env.PPTWISE_HOME
-  process.env.PPTWISE_HOME = home
-  try {
-    return await fn()
-  } finally {
-    if (prev === undefined) delete process.env.PPTWISE_HOME
-    else process.env.PPTWISE_HOME = prev
-  }
-}
-
 function makeDeckPlan(extra: Record<string, unknown> = {}): Record<string, unknown> {
   return {
     version: "1",
@@ -49,9 +38,9 @@ function makeDeckPlan(extra: Record<string, unknown> = {}): Record<string, unkno
     filename: "q3-review",
     pages: [
       { id: "p-cover", type: "cover", heading: "Q3 Review" },
-      { id: "p-a", type: "content", heading: "Segment A" },
-      { id: "p-b", type: "content", heading: "Segment B" },
-      { id: "p-c", type: "content", heading: "Segment C" },
+      { id: "p-a", type: "content", kind: "points", heading: "Segment A" },
+      { id: "p-b", type: "content", kind: "points", heading: "Segment B" },
+      { id: "p-c", type: "content", kind: "points", heading: "Segment C" },
       { id: "p-ending", type: "ending", heading: "Thanks" },
     ],
     ...extra,
@@ -91,129 +80,64 @@ async function projectWith(theme: string | undefined): Promise<string> {
   return projectDir
 }
 
-async function userHomeWith(theme: string | undefined): Promise<string> {
-  const home = await tmp("pptwise-sel-user-")
-  if (theme !== undefined) {
-    await writeFile(join(home, "config.json"), JSON.stringify({ theme }))
-  }
-  return home
-}
+const REBIND_MESSAGE =
+  /cannot rebind theme "acme" to "swiss": menus differ\. A same-menu color fork is allowed\. A different menu is a new theme\. Start over from the theme layer \(keep intent, narrative, and harvested materials, rewrite the spec\)\./
 
 describe("theme selection chain", () => {
-  it("1. --theme beats spec, project, and user", async () => {
+  it("1. deck theme.json id=acme + spec.theme=acme -> acme", async () => {
+    const deckDir = await writeDeckDir(makeDeckPlan({ theme: "acme" }))
+    await extractTheme(deckDir, "acme", "theme.json")
+    const projectDir = await projectWith("ink")
+    await expect(runValidate(deckDir, projectDir)).resolves.toMatch(/theme "acme"/)
+  })
+
+  it("2. deck ${name}.theme.json hits", async () => {
+    const deckDir = await writeDeckDir(makeDeckPlan({ theme: "acme" }))
+    await extractTheme(deckDir, "acme", "acme.theme.json")
+    const projectDir = await projectWith("ink")
+    await expect(runValidate(deckDir, projectDir)).resolves.toMatch(/theme "acme"/)
+  })
+
+  it("3. workspace themes/acme.theme.json from a nested startDir -> acme", async () => {
+    const root = await tmp("pptwise-sel-ws-")
+    await mkdir(join(root, "themes"))
+    await extractTheme(join(root, "themes"), "acme", "acme.theme.json")
+    const nested = join(root, "deep", "cwd")
+    await mkdir(nested, { recursive: true })
+    const deckDir = await writeDeckDir(makeDeckPlan({ theme: "acme" }))
+    await expect(runValidate(deckDir, nested)).resolves.toMatch(/theme "acme"/)
+  })
+
+  it("4. spec.theme=consulting with no files -> builtin", async () => {
+    const deckDir = await writeDeckDir(makeDeckPlan({ theme: "consulting" }))
+    const projectDir = await projectWith(undefined)
+    await expect(runValidate(deckDir, projectDir)).resolves.toMatch(/theme "consulting"/)
+  })
+
+  it("5. spec.theme beats config.theme", async () => {
     const deckDir = await writeDeckDir(makeDeckPlan({ theme: "tech" }))
     const projectDir = await projectWith("ink")
-    const home = await userHomeWith("journal")
-    await withPptwiseHome(home, async () => {
-      await expect(runValidate(deckDir, projectDir, { theme: "consulting" })).resolves.toMatch(/theme "consulting"/)
-    })
+    await expect(runValidate(deckDir, projectDir)).resolves.toMatch(/theme "tech"/)
   })
 
-  it("2. spec.theme beats project and user when --theme is omitted", async () => {
-    const deckDir = await writeDeckDir(makeDeckPlan({ theme: "tech" }))
-    const projectDir = await projectWith("ink")
-    const home = await userHomeWith("journal")
-    await withPptwiseHome(home, async () => {
-      await expect(runValidate(deckDir, projectDir)).resolves.toMatch(/theme "tech"/)
-    })
-  })
-
-  it("3. omitted spec theme lets project config win (assembled consulting does not beat it)", async () => {
-    const deckDir = await writeDeckDir(makeDeckPlan({ theme: undefined }))
-    const projectDir = await projectWith("ink")
-    const home = await userHomeWith("journal")
-    await withPptwiseHome(home, async () => {
-      await expect(runValidate(deckDir, projectDir)).resolves.toMatch(/theme "ink"/)
-    })
-  })
-
-  it("4. omitted spec and project lets user config win", async () => {
-    const deckDir = await writeDeckDir(makeDeckPlan({ theme: undefined }))
-    const projectDir = await projectWith(undefined)
-    const home = await userHomeWith("journal")
-    await withPptwiseHome(home, async () => {
-      await expect(runValidate(deckDir, projectDir)).resolves.toMatch(/theme "journal"/)
-    })
-  })
-
-  it("5. omitted spec/project/user falls through to schema default consulting", async () => {
-    const deckDir = await writeDeckDir(makeDeckPlan({ theme: undefined }))
-    const projectDir = await projectWith(undefined)
-    const home = await userHomeWith(undefined)
-    await withPptwiseHome(home, async () => {
-      await expect(runValidate(deckDir, projectDir)).resolves.toMatch(/theme "consulting"/)
-    })
-  })
-
-  it("6. bare IR authored theme.id beats project and user", async () => {
+  it("6. bare IR theme.id is authority, config cannot override", async () => {
     const irPath = await writeIrFile(IR_TECH)
     const projectDir = await projectWith("ink")
-    const home = await userHomeWith("journal")
-    await withPptwiseHome(home, async () => {
-      await expect(runValidate(irPath, projectDir)).resolves.toMatch(/theme "tech"/)
-    })
+    await expect(runValidate(irPath, projectDir)).resolves.toMatch(/theme "tech"/)
   })
 
-  it("7. bare IR with no theme key lets project config win", async () => {
+  it("7. bare IR with no theme key -> schema default consulting, config cannot override", async () => {
     const irPath = await writeIrFile(IR_NO_THEME)
     const projectDir = await projectWith("ink")
-    const home = await userHomeWith("journal")
-    await withPptwiseHome(home, async () => {
-      await expect(runValidate(irPath, projectDir)).resolves.toMatch(/theme "ink"/)
-    })
+    await expect(runValidate(irPath, projectDir)).resolves.toMatch(/theme "consulting"/)
+    expect(await runValidate(irPath, projectDir)).not.toMatch(/theme "ink"/)
   })
 
-  it("8. spec.theme selects a registered custom id from deck theme.json", async () => {
-    const deckDir = await writeDeckDir(makeDeckPlan({ theme: "acme-custom" }))
-    await extractTheme(deckDir, "acme-custom", "theme.json")
-    const projectDir = await projectWith("ink")
-    await expect(runValidate(deckDir, projectDir)).resolves.toMatch(/theme "acme-custom"/)
-  })
-
-  it("9. --theme-file alone does not override an authored IR theme", async () => {
-    const d = await tmp("pptwise-sel-file-")
-    const themeFile = await extractTheme(d, "acme", "acme.theme.json")
-    await writeFile(join(d, "deck.json"), JSON.stringify(IR_TECH))
-    const report = await runValidate(join(d, "deck.json"), d, { themeFilePath: themeFile })
-    expect(report).toMatch(/theme "tech"/)
-  })
-
-  it("10. --theme custom id wins over spec when the file is registered", async () => {
-    const d = await tmp("pptwise-sel-flag-")
-    const themeFile = await extractTheme(d, "acme-custom", "acme.theme.json")
-    const deckDir = await writeDeckDir(makeDeckPlan({ theme: "tech" }))
-    const projectDir = await projectWith("ink")
-    await expect(
-      runValidate(deckDir, projectDir, { theme: "acme-custom", themeFilePath: themeFile }),
-    ).resolves.toMatch(/theme "acme-custom"/)
-  })
-
-  it("11. --theme builtin wins over a registered file and authored IR", async () => {
-    const d = await tmp("pptwise-sel-builtin-")
-    const themeFile = await extractTheme(d, "acme", "acme.theme.json")
-    await writeFile(join(d, "deck.json"), JSON.stringify(IR_TECH))
-    const report = await runValidate(join(d, "deck.json"), d, { theme: "consulting", themeFilePath: themeFile })
-    expect(report).toMatch(/theme "consulting"/)
-  })
-
-  it("12. --theme-file alone does not select the file id when no layer names it", async () => {
-    const d = await tmp("pptwise-sel-nosel-")
-    const themeFile = await extractTheme(d, "acme", "acme.theme.json")
-    await writeFile(join(d, "deck.json"), JSON.stringify(IR_NO_THEME))
-    const report = await runValidate(join(d, "deck.json"), d, { themeFilePath: themeFile })
-    expect(report).toMatch(/theme "consulting"/)
-    expect(report).not.toMatch(/theme "acme"/)
-  })
-
-  it("13. --theme consulting ignores a stale project-config theme", async () => {
-    const irPath = await writeIrFile(IR_NO_THEME)
-    const projectDir = await projectWith("not-a-real-theme")
-    await expect(runValidate(irPath, projectDir, { theme: "consulting" })).resolves.toMatch(/theme "consulting"/)
-  })
-
-  it("14. winning unknown spec theme throws and names the spec file", async () => {
+  it("8. unknown name errors, no consulting fallback", async () => {
     const deckDir = await writeDeckDir(makeDeckPlan({ theme: "not-a-real-theme" }))
     const projectDir = await projectWith("consulting")
+    await expect(runValidate(deckDir, projectDir)).rejects.toThrow(/unknown theme "not-a-real-theme"/)
+    await expect(runValidate(deckDir, projectDir)).rejects.not.toThrow(/theme "consulting"/)
     const raw: Record<string, unknown> = { ...IR_NO_THEME }
     await expect(
       applyDeckConfig(raw, {
@@ -221,15 +145,49 @@ describe("theme selection chain", () => {
         specTheme: "not-a-real-theme",
         specPath: join(deckDir, "deck.spec.json"),
         fromDeckDir: true,
+        deckDir,
       }),
-    ).rejects.toThrow(/unknown theme "not-a-real-theme" \(from .*deck\.spec\.json\)/)
+    ).rejects.toThrow(/unknown theme "not-a-real-theme"/)
   })
 
-  it("--theme-file + IR that names the custom id selects it", async () => {
-    const d = await tmp("pptwise-sel-named-")
-    const themeFile = await extractTheme(d, "acme", "acme.theme.json")
-    await writeFile(join(d, "deck.json"), JSON.stringify({ ...IR_NO_THEME, theme: { id: "acme" } }))
-    const report = await runValidate(join(d, "deck.json"), d, { themeFilePath: themeFile })
-    expect(report).toMatch(/theme "acme"/)
+  it("9. rebind to different menu rejected", async () => {
+    const deckDir = await writeDeckDir(makeDeckPlan({ theme: "swiss" }))
+    await extractTheme(deckDir, "acme", "theme.json")
+    const projectDir = await projectWith(undefined)
+    await expect(runValidate(deckDir, projectDir)).rejects.toThrow(REBIND_MESSAGE)
+  })
+
+  it("10. rebind to same-menu fork allowed", async () => {
+    const deckDir = await writeDeckDir(makeDeckPlan({ theme: "acme-blue" }))
+    await extractTheme(deckDir, "acme", "theme.json")
+    const bound = JSON.parse(await readFile(join(deckDir, "theme.json"), "utf8")) as {
+      id: string
+      style: { id: string; colors: { primary: string } }
+    }
+    bound.id = "acme-blue"
+    bound.style.id = "acme-blue"
+    bound.style.colors.primary = "#0B5FFF"
+    const projectDir = await projectWith(undefined)
+    await mkdir(join(projectDir, "themes"))
+    await writeFile(join(projectDir, "themes", "acme-blue.theme.json"), JSON.stringify(bound))
+    await expect(runValidate(deckDir, projectDir)).resolves.toMatch(/theme "acme-blue"/)
+  })
+
+  it("11. workspace file cannot shadow a builtin id", async () => {
+    const root = await tmp("pptwise-sel-shadow-")
+    await mkdir(join(root, "themes"))
+    await extractTheme(join(root, "themes"), "acme", "consulting.theme.json")
+    const deckDir = await writeDeckDir(makeDeckPlan({ theme: "consulting" }))
+    await expect(runValidate(deckDir, root)).resolves.toMatch(/theme "consulting"/)
+    expect(await runValidate(deckDir, root)).not.toMatch(/theme "acme"/)
+  })
+
+  it("12. runSpecValidate sees a workspace custom id", async () => {
+    const root = await tmp("pptwise-sel-spec-")
+    await mkdir(join(root, "themes"))
+    await extractTheme(join(root, "themes"), "acme", "acme.theme.json")
+    const specPath = join(root, "deck.spec.json")
+    await writeFile(specPath, JSON.stringify(makeDeckPlan({ theme: "acme" })))
+    await expect(runSpecValidate(specPath)).resolves.toMatch(/theme "acme"/)
   })
 })

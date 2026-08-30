@@ -1,49 +1,35 @@
-// Leaf module — no imports. Shared enum value tuples for the three narrative
-// axes (strategy / pacing / audience, spec §5, renamed from
-// mode/delivery/audience per the vocabulary-v4 wave — spec §8.1's rename
-// table and §4's value table).
-//
-// `src/narrative` (the `Strategy`/`Pacing`/`Audience` types, `resolveNarrative`'s
-// runtime validation) reads these tuples from here rather than owning them
-// directly. This package's IR schema (`./index.ts`) originally read them too
-// (the `narrative` field's axes-object shape used to enum-close per axis
-// right at the schema layer) — the W3 task-2 review fix loosened that branch
-// to a plain open record (schema now only distinguishes string vs. object,
-// `resolveNarrative` is the sole semantic authority), so `./index.ts` no
-// longer imports from here. This still stays a separate leaf module rather
-// than folding into `src/narrative` directly: `src/narrative/index.test.ts`
-// already imports `BUILTIN_THEME_IDS` from `src/ir` (every preset's
-// `themeRecommendations` is checked against it), so `src/ir` importing these
-// axis tuples *from* `src/narrative` would risk a real cycle the day
-// scenario's runtime code (not just its test) needs something from `src/ir`
-// too — and `src/ir` reading them again in the future (another schema-layer
-// enum, a JSON-schema description, ...) is not unlikely. A neutral leaf
-// module with zero imports sidesteps the direction question entirely —
-// neither module depends on the other.
-//
-// File renamed `scenario-values.ts` → `narrative-values.ts` in the
-// vocabulary-v4 rename (task 1): not itself one of spec §8.1's named public
-// symbols, but this leaf module's entire content is the narrative axis value
-// tuples, so its filename follows the same rename for internal consistency.
-// Only two importers (`src/narrative/index.ts`, `src/layouts/registry.ts`
-// — both updated in the same commit), no external/public path reference.
+// Import-free vocabulary leaf shared by the IR, narrative resolver, theme
+// menu, and layout registry without introducing a dependency cycle.
 export const STRATEGY_VALUES = ["pyramid", "storytelling", "instructional", "showcase", "briefing"] as const
 export const PACING_VALUES = ["dense", "balanced", "spacious"] as const
 export const AUDIENCE_VALUES = ["executive", "technical", "customer", "public"] as const
 
-// Page-level `beat` vocabulary (P1 variety wave, task 1 — "beat wired into
-// selection"). Not one of the three narrative *axes* above (beat is a
-// per-page authoring value, not a deck-level `NarrativeProfile` field) but
-// shares this leaf module for the identical reason: `src/ir` (SlideSchema's
-// `beat` field, `./index.ts`) and `src/spec` (PageSpecSchema's own `beat`
-// field, `../spec/index.ts`) both need the exact same three-value tuple, and
-// `src/spec` already imports from `src/ir`, so `src/ir` importing the tuple
-// back from `src/spec` would be the cycle this module exists to avoid (see
-// this file's own top comment). Distinct from `StrategyDefinition.beatPolicy`
-// (`src/narrative/index.ts`) — that is a *per-strategy rotation rule* name
-// ("anchor-open", "alternate", ...), a different five-value vocabulary that
-// shares no members with this one. Values unchanged from the pre-vocabulary-v4
-// "rhythm" field (spec §2.3/§4.3/§8.1's rename table): `anchor` (single bold
-// statement), `dense` (high information density), `breathing` (generous
-// whitespace, unhurried single flow).
-export const BEAT_VALUES = ["anchor", "dense", "breathing"] as const
+/**
+ * The complete page-kind vocabulary for content slides. A kind is the
+ * semantic posture shared by a spec and a theme menu. It is not a layout,
+ * pacing hint, component type, or inferred property of filled content.
+ */
+export const KIND_VALUES = [
+  /** Points advance an ordered argument whose sequence matters, unlike a reorderable list. */
+  "points",
+  /** List presents peer items whose order may change, unlike the progression carried by points. */
+  "list",
+  /** Comparison places alternatives side by side, rather than expressing sequence or containment. */
+  "comparison",
+  /** Process shows directed steps, a timeline, or a cycle, not merely an ordered argument. */
+  "process",
+  /** Data makes a set of numbers or a table the subject, while fact reserves the page for one number. */
+  "data",
+  /** Photo makes the image itself the content, while evidence uses an exhibit to support a claim. */
+  "photo",
+  /** Statement gives the author's own proposition a full page, unlike words attributed to another speaker. */
+  "statement",
+  /** Quote borrows another speaker's words, unlike an unattributed authorial statement. */
+  "quote",
+  /** Fact builds impact around one number, while data reveals structure across a numeric set. */
+  "fact",
+  /** Evidence pairs one assertion with one exhibit, so the exhibit serves the claim rather than standing alone. */
+  "evidence",
+  /** Hierarchy expresses containment, levels, or composition, not temporal flow or two-sided contrast. */
+  "hierarchy",
+] as const

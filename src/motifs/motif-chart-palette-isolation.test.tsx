@@ -30,7 +30,7 @@ import { ArenaMotif } from "./motif-arena-motif"
 
 function ir(themeId: string): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "x.pptx",
     theme: { id: themeId },
     meta: {},

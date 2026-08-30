@@ -1,6 +1,5 @@
 import type { StyleTokens } from "../tokens";
 import type { BuiltinThemeDeclaration } from "../schema";
-import { DEFAULT_CONTENT_FACES } from "./shared";
 
 /**
  * stage（黑场）——2026-08-21 新增第 21 个 theme id（第 20 个结构身份）。
@@ -57,6 +56,8 @@ import { DEFAULT_CONTENT_FACES } from "./shared";
  * 锁 pinOnly `release-close-ending`（发布句 + 一行地址，不放二维码不写
  * Thank you）。decor=none 继续是官方身份，本轮不补 motif。四页
  * defaultBackgrounds 仍是冷玄黑 `#0F0F12`。角色色 hex 与 fonts 一处不改。
+ *
+ * **菜单分派（S1-B）**：黑场发布会一页一件事，points 用透气的 quiet-frame，data 用单张主角图的 stacked-poster，evidence 的举证腔与台上节奏相斥，不上。
  */
 export const STAGE_TOKENS: StyleTokens = {
   id: "stage",
@@ -89,21 +90,25 @@ export const STAGE_TOKENS: StyleTokens = {
 };
 
 export const STAGE_THEME = {
-  version: 1,
+  version: 2,
   id: "stage",
   label: "Keynote Stage",
   style: STAGE_TOKENS,
-  faces: {
-    cover: ["poster-center"],
-    chapter: ["one-word-chapter"],
-    content: DEFAULT_CONTENT_FACES,
-    ending: ["release-close-ending"],
+  menu: {
+    cover: { face: "poster-center" },
+    chapter: { face: "one-word-chapter" },
+    content: {
+      points: { face: "quiet-frame" },
+      list: { face: "bento-panel" },
+      comparison: { face: "two-column" },
+      process: { face: "rail-numbered" },
+      data: { face: "stacked-poster" },
+      photo: { face: "image-top" },
+      statement: { face: "statement" },
+      quote: { face: "pull-quote" },
+      fact: { face: "stat-hero" },
+      hierarchy: { face: "asymmetric-triptych" },
+    },
+    ending: { face: "release-close-ending" },
   },
-  tendencies: {
-    cover: ["poster-center"],
-    chapter: ["one-word-chapter"],
-    content: ["quiet-frame", "stacked-poster", "asymmetric-triptych"],
-    ending: ["release-close-ending"],
-  },
-  sparse: ["statement", "stat-hero", "pull-quote", "verse-chapter"],
 } satisfies BuiltinThemeDeclaration;

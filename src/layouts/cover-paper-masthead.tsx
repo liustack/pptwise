@@ -226,7 +226,7 @@ export const layoutDef: LayoutDefinition = {
   // one-character-per-line (no Latin writing-mode=tb). Emphasized run uses
   // accent. Does not paint a full-bleed primary field.
   id: "paper-masthead",
-  kind: "archetype",
+  kind: "standard",
   slideTypes: ["cover"],
   slots: [
     { name: "kicker", accepts: [] },

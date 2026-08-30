@@ -10,9 +10,8 @@ import { sparseFace } from "./sparse/registry"
 /**
  * 未注册的 (themeId, layoutId) 与自定义主题仍走此脸。
  *
- * statement 通用脸：整页就是 heading 的 2–4 行诗行 / 金句。`pinOnly` +
- * `branding: "none"`——只能被 `slide.layout: "statement"` 点名，不进自动池。
- * 品牌页脚 / logo / 页码一律不画。motif 仍画。
+ * statement 通用脸：整页就是 heading 的 2 至 4 行诗行 / 金句。主题菜单把
+ * `statement` 讲法绑定到本脸，并在需要时用 silent 同时关掉 motif 与页级品牌。
  *
  * 和 quote-stage 的差别不是「再居中一点」：字重 500 斜体（禁止 800），
  * 无短棒，标签语法（tracking 眉 + 出处小字），0 组件合法，1 个组件只渲成
@@ -127,20 +126,19 @@ function GenericStatementContent({ ir, slide, index, ctx }: SvgTemplateProps) {
 }
 
 export const layoutDef = {
-  // content-statement.tsx: a pinOnly editorial-verse page. Heading is the
-  // whole visual (2–4 italic lines, weight 500). Capacity-1 body is an
-  // attribution caption, never a card. branding: "none" skips brand footer,
-  // logo, and page numbers. The theme motif still paints. The fifth-band
-  // decoration safe-zone does not apply — the whole canvas is the layout's.
-  id: "statement",
-  kind: "archetype",
-  pinOnly: true,
   branding: "none",
+  // content-statement.tsx: a pinOnly editorial-verse page. Heading is the
+  // whole visual (2 to 4 italic lines, weight 500). Capacity-1 body is an
+  // attribution caption, never a card. Page decor and branding posture belong
+  // to the menu entry, not this face declaration.
+  id: "statement",
+  kind: "standard",
+  pinOnly: true,
   slideTypes: ["content"],
   slots: [
     { name: "kicker", accepts: [] },
     { name: "heading", accepts: [] },
-    { name: "body", accepts: ["paragraph", "quote", "citation"], capacity: 1 },
+    { name: "body", accepts: ["paragraph", "blockquote", "citation"], capacity: 1 },
     { name: "meta", accepts: [] },
   ],
   arrangements: ["single"],

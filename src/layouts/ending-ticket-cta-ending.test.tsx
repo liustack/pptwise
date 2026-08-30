@@ -21,7 +21,7 @@ function slide(heading = HEADING, extras: Partial<Slide> = {}): Slide {
 
 function ir(themeId: string, s: Slide, meta: PptxIR["meta"] = {}): PptxIR {
   return {
-    version: "4",
+    version: "5",
     filename: "ticket-cta-ending.pptx",
     theme: { id: themeId },
     meta,
@@ -160,10 +160,9 @@ describe("ending-ticket-cta-ending — board geometry", () => {
 describe("ending-ticket-cta-ending — shared pool", () => {
   it("is a pinOnly ending that paints its own background", () => {
     expect(layoutDef.id).toBe("ticket-cta-ending")
-    expect(layoutDef.kind).toBe("archetype")
+    expect(layoutDef.kind).toBe("standard")
     expect(layoutDef.pinOnly).toBe(true)
     expect(layoutDef.paintsOwnBackground).toBe(true)
-    expect(layoutDef.branding).toBe("none")
     expect(layoutDef.slideTypes).toEqual(["ending"])
   })
 

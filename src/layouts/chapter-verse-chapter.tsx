@@ -8,8 +8,8 @@ import { chapterIndexKicker, latinUpper, trackingPx } from "./minimal-shared"
 
 /**
  * verse-chapter layout（极简版式波）：居中诗行章首。chapter 页本来就不画
- * Branding 页脚。缺的是居中诗行，不是再做一个左对齐大章号。`pinOnly` +
- * `branding: "none"`——品牌页脚 / logo 关掉，motif 仍画。无水印数字，无罗马圆弧，无 body 槽
+ * Branding 页脚。缺的是居中诗行，不是再做一个左对齐大章号。菜单可用
+ * silent 同时关掉 motif 与页级品牌。无水印数字，无罗马圆弧，无 body 槽
  * （chapter 页不渲 components / footnote，validate-core 既有门照旧）。
  *
  * 纪律：本文件禁 theme id、禁颜色 hex 字面量，颜色 / 字体全部来自 ctx。
@@ -107,17 +107,15 @@ export function VerseChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
 }
 
 export const layoutDef = {
+  branding: "none",
   // chapter-verse-chapter.tsx: a pinOnly centered verse-as-chapter-open.
   // Tracking chapter-index kicker, 2-line heading, optional italic
   // subheading. No watermark numeral, no body slot (chapter pages never
-  // render components or footnote). branding: "none" skips logo (chapter
-  // pages already omit the brand footer). The theme motif still paints. The
-  // fifth-band decoration safe-zone does not apply — the whole canvas is
-  // the layout's.
+  // render components or footnote). Page decor and branding posture belong to
+  // the menu entry. The fifth-band decoration safe-zone does not apply.
   id: "verse-chapter",
-  kind: "archetype",
+  kind: "standard",
   pinOnly: true,
-  branding: "none",
   slideTypes: ["chapter"],
   slots: [
     { name: "kicker", accepts: [] },

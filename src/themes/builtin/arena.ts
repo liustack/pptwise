@@ -1,6 +1,5 @@
 import type { StyleTokens } from "../tokens";
 import type { BuiltinThemeDeclaration } from "../schema";
-import { DEFAULT_CONTENT_FACES } from "./shared";
 
 /**
  * arena（竞技场紫黑）——2026-08-21 新增第 18 个内置主题（娱乐电竞）。
@@ -39,6 +38,8 @@ import { DEFAULT_CONTENT_FACES } from "./shared";
  *
  * 装饰见 `../../motifs/motif-arena-motif.tsx`（第八波批 3：四角括弧退役，
  * 速度线本波不画，只留右下三段能量条。斜切面板与灯带归封面版式）。
+ *
+ * **菜单分派（S1-B）**：赛事腔要战绩和名场面，fact 的整页大数字与 image-top 的满幅画面是主力，选手语录不进正式页，quote 不上。
  */
 export const ARENA_TOKENS: StyleTokens = {
   id: "arena",
@@ -75,22 +76,26 @@ export const ARENA_TOKENS: StyleTokens = {
 };
 
 export const ARENA_THEME = {
-  version: 1,
+  version: 2,
   id: "arena",
   label: "Esports & Entertainment",
   style: ARENA_TOKENS,
-  faces: {
-    cover: ["cut-panel-cover"],
-    chapter: ["round-mark-chapter"],
-    content: DEFAULT_CONTENT_FACES,
-    ending: ["seat-cta-ending"],
+  menu: {
+    cover: { face: "cut-panel-cover" },
+    chapter: { face: "round-mark-chapter" },
+    content: {
+      points: { face: "narrow-column" },
+      list: { face: "bento-panel" },
+      comparison: { face: "two-column" },
+      process: { face: "rail-numbered" },
+      data: { face: "split-band" },
+      photo: { face: "image-top" },
+      statement: { face: "statement" },
+      fact: { face: "stat-hero" },
+      evidence: { face: "one-evidence" },
+      hierarchy: { face: "asymmetric-triptych" },
+    },
+    ending: { face: "seat-cta-ending" },
   },
   motif: { id: "arena-motif" },
-  tendencies: {
-    cover: ["cut-panel-cover"],
-    chapter: ["round-mark-chapter"],
-    content: ["bento-panel", "asymmetric-triptych"],
-    ending: ["seat-cta-ending"],
-  },
-  sparse: ["stat-hero", "statement", "one-evidence", "verse-chapter"],
 } satisfies BuiltinThemeDeclaration;

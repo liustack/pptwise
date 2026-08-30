@@ -6,6 +6,7 @@ import { CONF_LABEL } from "../lib/conf-labels"
 import { showsDocumentMeta } from "../render/document-meta"
 import { accessibleInk } from "../render/ink"
 import { hasCjk, latinUpper, trackingPx } from "./minimal-shared"
+import { faceParam } from "./face-params"
 
 /**
  * editorial-masthead cover layout（spec §3.2）：居中报头式标题 + 短下划线
@@ -27,15 +28,14 @@ const KICKER_SIZE = 16
 const KICKER_TRACKING_EM = 0.22
 const KICKER_PREFERRED_Y = 252
 
-export function EditorialMastheadCover({ ir, slide, ctx }: SvgTemplateProps) {
+export function EditorialMastheadCover({ ir, slide, ctx, params }: SvgTemplateProps) {
   const { colors, fonts } = ctx
-  const cover = ctx.shape?.cover
-  const textAnchor = cover?.textAnchor ?? "middle"
+  const textAnchor = faceParam<"start" | "middle">(params, "textAnchor", "middle")
   const centered = textAnchor === "middle"
   const titleX = centered ? 640 : 96
   const underlineX1 = centered ? 560 : 96
   const underlineX2 = centered ? 720 : 240
-  const showKicker = cover?.showKicker === true
+  const showKicker = faceParam(params, "showKicker", false)
   const pageBg = ctx.defaultBg ?? colors.bg
   const org = ir.meta.organization
   const conf = showsDocumentMeta(ir) ? ir.meta.confidentiality : undefined
@@ -171,8 +171,12 @@ export const layoutDef: LayoutDefinition = {
   // italic subheading + merged org/date/conf meta. Optional kicker and
   // textAnchor knobs. Default: middle, no kicker.
   id: "editorial-masthead",
-  kind: "archetype",
+  kind: "standard",
   slideTypes: ["cover"],
+  params: {
+    textAnchor: { type: "string", values: ["start", "middle"] },
+    showKicker: { type: "boolean" },
+  },
   slots: [
     { name: "heading", accepts: [] },
     { name: "rule", accepts: [] },

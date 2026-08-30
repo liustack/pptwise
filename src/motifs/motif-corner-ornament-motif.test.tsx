@@ -12,7 +12,7 @@ import type { PptxIR, Slide } from "@/ir"
 
 const coverSlide: Slide = { type: "cover", heading: "封面", components: [] } as Slide
 const chapterSlide: Slide = { type: "chapter", heading: "章节", components: [] } as Slide
-const contentSlide: Slide = { type: "content", heading: "内容", components: [] } as Slide
+const contentSlide: Slide = { type: "content", kind: "points", heading: "内容", components: [] } as Slide
 const endingSlide: Slide = { type: "ending", components: [] } as Slide
 /** chapter 不画。封面只留底缘线 + 期号。内容 / ending 画页缘文武双线 + 期号。 */
 const DRAWN_SLIDES = [coverSlide, contentSlide, endingSlide]
