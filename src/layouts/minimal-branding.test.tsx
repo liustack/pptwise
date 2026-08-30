@@ -4,7 +4,6 @@ import type { PptxIR, Slide } from "@/ir"
 import { renderSlideSvg } from "../api"
 import { __resetRegisteredThemes, registerTheme } from "../themes/definitions"
 import { CONSULTING_TOKENS } from "../themes/builtin/consulting"
-import type { MenuDecor } from "../themes/schema"
 import { FOOTER_DIVIDER_Y } from "../render/branding-geometry"
 import { parseSvgRoot } from "../render/serialize"
 
