@@ -11,11 +11,13 @@
     {
       "id": "p-kpi",
       "type": "content",
+      "kind": "data",
       "heading": "Numbers"
     },
     {
       "id": "p-detail",
       "type": "content",
+      "kind": "points",
       "heading": "Detail"
     },
     {

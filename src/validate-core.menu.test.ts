@@ -11,34 +11,29 @@ const BASE_MENU: Menu = {
   ending: { face: "poster-ending" },
 }
 
-function installTheme(id: string, menu: Menu, legacyCover: string): void {
+function publicStyle(id: string) {
+  const style = structuredClone(CONSULTING_TOKENS)
+  style.id = id
+  if (style.shape?.cover !== undefined) delete style.shape.cover
+  return style
+}
+
+function installTheme(id: string, menu: Menu): void {
   registerTheme({
+    version: 2,
     id,
-    style: { ...CONSULTING_TOKENS, id },
+    style: publicStyle(id),
     brand: {},
-    tags: [],
     menu,
-    layouts: {
-      cover: [legacyCover],
-      chapter: ["masthead-chapter"],
-      content: ["two-column"],
-      ending: ["poster-ending"],
-    },
   })
 }
 
 function installThemeWithoutMenu(id: string): void {
   registerTheme({
+    version: 2,
     id,
-    style: { ...CONSULTING_TOKENS, id },
+    style: publicStyle(id),
     brand: {},
-    tags: [],
-    layouts: {
-      cover: ["poster-center"],
-      chapter: ["masthead-chapter"],
-      content: ["two-column"],
-      ending: ["poster-ending"],
-    },
   })
 }
 
@@ -57,32 +52,14 @@ afterEach(() => {
 })
 
 describe("IR validation against the bound theme menu", () => {
-  it("hard-rejects a bound theme that has no menu", () => {
+  it("rejects a theme file with no menu at registration", () => {
     const id = "ir-missing-menu"
-    installThemeWithoutMenu(id)
-
-    const result = validateIr(
-      deck(id, {
-        id: "content",
-        type: "content",
-        kind: "points",
-        heading: "Points",
-        components: [],
-      }),
-    )
-
-    expect(result.ok).toBe(false)
-    expect(result.errors).toEqual([
-      expect.objectContaining({
-        path: "theme.id",
-        message: expect.stringContaining(`theme "${id}" has no menu`),
-      }),
-    ])
+    expect(() => installThemeWithoutMenu(id)).toThrow(/menu/i)
   })
 
   it("accepts cover components declared by the menu-bound cover face", () => {
     const id = "boundary-menu-face"
-    installTheme(id, BASE_MENU, "poster-center")
+    installTheme(id, BASE_MENU)
 
     const result = validateIr(
       deck(id, {
@@ -98,7 +75,7 @@ describe("IR validation against the bound theme menu", () => {
 
   it("uses the bound cover face for slots even when an asset background takes over rendering", () => {
     const id = "boundary-menu-image-cover"
-    installTheme(id, BASE_MENU, "poster-center")
+    installTheme(id, BASE_MENU)
 
     const result = validateIr(
       deck(id, {
@@ -115,7 +92,7 @@ describe("IR validation against the bound theme menu", () => {
 
   it("rejects cover components absent from the menu-bound cover face", () => {
     const id = "boundary-menu-reject"
-    installTheme(id, { ...BASE_MENU, cover: { face: "poster-center" } }, "verdict-index")
+    installTheme(id, { ...BASE_MENU, cover: { face: "poster-center" } })
 
     const result = validateIr(
       deck(id, {
@@ -137,7 +114,7 @@ describe("IR validation against the bound theme menu", () => {
 
   it("hard-rejects a content kind outside the bound menu and lists its offer", () => {
     const id = "ir-menu-kind"
-    installTheme(id, BASE_MENU, "verdict-index")
+    installTheme(id, BASE_MENU)
 
     const result = validateIr(
       deck(id, {

@@ -5,6 +5,7 @@ import { assertSubset } from "../render/subset-validate"
 import { buildCtx } from "../render/full-slide-svg"
 import { contrastRatio } from "../render/ink"
 import { resolveStyle } from "../themes"
+import { THEME_DEFINITIONS } from "../themes/definitions"
 import { LectureMotif } from "./motif-lecture-motif"
 import type { PptxIR, Slide } from "@/ir"
 
@@ -22,7 +23,7 @@ const FIFTH_BAND = { x: 0, y: 620, w: 1280, h: 44 }
 
 const ir = (theme: string, filename = "x.pptx", branding?: PptxIR["branding"]): PptxIR =>
   ({
-    version: "3",
+    version: "5",
     filename,
     theme: { id: theme },
     meta: {},
@@ -200,9 +201,7 @@ describe("LectureMotif（粉笔槽细框）", () => {
     expect(bottom).toBeLessThan(LOGO_BOX.y)
   })
 
-  it("layout branding none drops the frame even on a full deck", () => {
-    const slide = { ...contentSlide, layout: "stat-hero" } as unknown as Slide
-    const { root } = draw("lecture", slide, undefined, "full")
-    expect(num(frame(root)!, "y") + num(frame(root)!, "height")).toBe(694)
+  it("fact 条目不带 decor：stat-hero 自带无框事实，粉笔 motif 照画", () => {
+    expect(THEME_DEFINITIONS.lecture.menu.content.fact).toEqual({ face: "stat-hero" })
   })
 })

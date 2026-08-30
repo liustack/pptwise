@@ -69,12 +69,10 @@ describe("MemoMotif（打字机眉行）", () => {
     expect(root.querySelectorAll("text")).toHaveLength(0)
   })
 
-  it("content 稀排钉 pin 整片退让，不和 statement 等脸的横线叠预算", () => {
-    for (const layout of ["statement", "pull-quote", "stat-hero", "one-evidence", "mono-bleed"] as const) {
-      const slide = { ...contentSlide, layout } as unknown as Slide
-      const { root } = draw("memo", slide)
-      expect(root.querySelectorAll("line"), layout).toHaveLength(0)
-      expect(root.querySelectorAll("text"), layout).toHaveLength(0)
+  it("稀排条目不带 decor：脸自带无框事实，主题 motif 照画", () => {
+    const content = THEME_DEFINITIONS.memo.menu.content
+    for (const kind of ["statement", "quote", "fact"] as const) {
+      expect(content[kind]?.decor, kind).toBeUndefined()
     }
     expect(parts(draw("memo", contentSlide).root).thickRule).toBeTruthy()
     expect(parts(draw("memo", chapterSlide).root).thickRule).toBeTruthy()

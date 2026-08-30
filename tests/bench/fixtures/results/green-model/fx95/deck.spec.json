@@ -4,8 +4,8 @@
   "filename": "fixture-fx95",
   "pages": [
     { "id": "p-cover", "type": "cover", "heading": "Fixture 95" },
-    { "id": "p-body", "type": "content", "heading": "Body" },
-    { "id": "p-detail", "type": "content", "heading": "Detail" },
+    { "id": "p-body", "type": "content", "kind": "points", "heading": "Body" },
+    { "id": "p-detail", "type": "content", "kind": "points", "heading": "Detail" },
     { "id": "p-ending", "type": "ending", "heading": "Thanks" }
   ],
   "narrative": {

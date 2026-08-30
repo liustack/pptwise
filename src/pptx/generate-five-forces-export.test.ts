@@ -14,13 +14,19 @@
 // real-export-chain coverage at schema extremes — plus `intensity`'s own
 // 3-level enum, the one piece of this component's content space `pest`
 // doesn't have an equivalent of.
-import { beforeAll, describe, expect, it } from "vitest"
+import { afterEach, beforeAll, describe, expect, it } from "vitest"
 import type { Component, PptxIR } from "@/ir"
 import { generatePptx } from "@/api"
 import { installNodePlatform } from "../platform/node"
+import { __resetRegisteredThemes } from "../themes/definitions"
+import { registerTestTheme } from "../themes/test-fixtures"
 
 beforeAll(() => {
   installNodePlatform()
+})
+
+afterEach(() => {
+  __resetRegisteredThemes()
 })
 
 function makeIr(components: Component[]): PptxIR {
@@ -32,7 +38,7 @@ function makeIr(components: Component[]): PptxIR {
     assets: { images: {} },
     slides: [
       { type: "cover", heading: "Cover" },
-      { type: "content", kind: "points", heading: "Five Forces", components },
+      { type: "content", kind: "hierarchy", heading: "Five Forces", components },
       { type: "ending", heading: "Thanks" },
     ],
   } as PptxIR
@@ -134,19 +140,21 @@ describe("five_forces pathological content through the real generatePptx", () =>
   })
 
   it("schema-max content on the narrowest curated layout (defect-F fontScale floor) still exports cleanly", async () => {
+    const themeId = registerTestTheme("five-forces-narrow", "consulting", {
+      content: { hierarchy: "narrow-column" },
+    })
     const bytes = await generatePptx({
       version: "5",
       filename: "five-forces-narrow-fixture",
-      theme: { id: "consulting" },
+      theme: { id: themeId },
       meta: {},
       assets: { images: {} },
       slides: [
         { type: "cover", heading: "Cover" },
         {
           type: "content",
-          kind: "points",
+          kind: "hierarchy",
           heading: "Porter's Five Forces Under A Deliberately Long Heading To Force Two Lines",
-          layout: "narrow-column",
           components: [
             {
               type: "five_forces",

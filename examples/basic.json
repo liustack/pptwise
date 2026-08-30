@@ -1,5 +1,5 @@
 {
-  "version": "4",
+  "version": "5",
   "filename": "pptwise-basic-demo",
   "theme": { "id": "consulting" },
   "meta": { "organization": "pptwise", "date": "2026-07-17" },
@@ -8,6 +8,7 @@
     { "type": "chapter", "heading": "Why an IR" },
     {
       "type": "content",
+      "kind": "points",
       "heading": "Design goals",
       "components": [
         {
@@ -22,8 +23,8 @@
     },
     {
       "type": "content",
+      "kind": "data",
       "heading": "At a glance",
-      "arrangement": "kpi_focus",
       "components": [
         {
           "type": "kpi_cards",
@@ -35,6 +36,6 @@
         }
       ]
     },
-    { "type": "ending", "heading": "Thanks", "layout": "banner-ending" }
+    { "type": "ending", "heading": "Thanks" }
   ]
 }

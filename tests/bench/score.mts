@@ -143,13 +143,9 @@ type ArtifactResult = { ir: unknown } | { error: string }
  * malformed JSON, a `readDeckDir`/`assembleDeck` structural error) returns
  * `{ error }` instead.
  *
- * Checks for *either* `deck.spec.json` (current, vocabulary-v4 rename, spec
- * §6/§9.2) or the pre-rename `deck.plan.json` — not just the former — so a
- * not-yet-migrated result directory still routes into `readDeckDir` and gets
- * its own readable "no deck.spec.json ... run `pptwise migrate`" error
- * (`readSpecFile`, `src/cli/deck-dir.ts`) instead of silently falling through
- * to the bare-IR branch below and being mis-parsed as if `deck.plan.json`/
- * `deck.spec.json` itself were a bare `PptxIR` file.
+ * A deck project is identified only by the current `deck.spec.json` entry.
+ * Older project names are ordinary unsupported artifacts under the v5
+ * zero-compatibility contract.
  */
 async function loadArtifact(resultDir: string): Promise<ArtifactResult> {
   let entries: Dirent[]
@@ -159,9 +155,7 @@ async function loadArtifact(resultDir: string): Promise<ArtifactResult> {
     return { error: relativizeToRepoRoot(`no result directory found at ${resultDir}`) }
   }
 
-  const isDeckProjectDir = entries.some(
-    (e) => e.isFile() && (e.name === "deck.spec.json" || e.name === "deck.plan.json"),
-  )
+  const isDeckProjectDir = entries.some((e) => e.isFile() && e.name === "deck.spec.json")
   if (isDeckProjectDir) {
     try {
       const { ir } = await readDeckDir(resultDir)

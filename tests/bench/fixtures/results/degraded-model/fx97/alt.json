@@ -1,3 +1,4 @@
 {
-  "slides": [{ "id": "s1", "layout": "cover", "components": [] }]
+  "version": "5",
+  "slides": [{ "id": "s1", "type": "cover", "components": [] }]
 }

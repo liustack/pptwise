@@ -4,6 +4,7 @@ import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
 import { buildCtx, resolveBackgroundHex } from "../render/full-slide-svg"
 import { resolveStyle } from "../themes"
+import { THEME_DEFINITIONS } from "../themes/definitions"
 import { VermilionMotif } from "./motif-vermilion-motif"
 import {
   CONTENT_DECOR_CONTRAST_CEILING,
@@ -30,7 +31,7 @@ const BODY_ZONE = { x: 96, y: 200, w: 1040, h: 420 }
 
 const ir = (theme: string): PptxIR =>
   ({
-    version: "3",
+    version: "5",
     filename: "x.pptx",
     theme: { id: theme },
     meta: {},
@@ -70,12 +71,10 @@ function goldRules(root: Element) {
  * 金芒扇与底缘金菱退役。封面与章节退让。
  */
 describe("VermilionMotif（文件金线）", () => {
-  it("content 稀排钉 pin 整片退让，不和 statement 等脸的横线叠预算", () => {
-    for (const layout of ["statement", "pull-quote", "stat-hero", "one-evidence", "mono-bleed"] as const) {
-      const slide = { ...contentSlide, layout } as unknown as Slide
-      const { root } = draw("vermilion", slide)
-      expect(root.querySelectorAll("line"), layout).toHaveLength(0)
-      expect(countDecorPieces(root), layout).toBe(0)
+  it("稀排条目不带 decor：脸自带无框事实，主题 motif 照画", () => {
+    const content = THEME_DEFINITIONS.vermilion.menu.content
+    for (const kind of ["statement", "fact", "evidence"] as const) {
+      expect(content[kind]?.decor, kind).toBeUndefined()
     }
     expect(goldRules(draw("vermilion", contentSlide).root).thick).toBeTruthy()
   })

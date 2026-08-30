@@ -9,6 +9,7 @@ import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
 import { buildCtx, resolveBackgroundHex } from "../render/full-slide-svg"
 import { resolveStyle } from "../themes"
+import { THEME_DEFINITIONS } from "../themes/definitions"
 import { InkMotif } from "./motif-ink-motif"
 import {
   CONTENT_DECOR_CONTRAST_CEILING,
@@ -21,7 +22,10 @@ import { blendOver, contrastRatio } from "../render/ink"
 import { textInkBox } from "../render/depth-contract/geometry"
 import type { PptxIR, Slide } from "@/ir"
 
-const slideOf = (type: Slide["type"]): Slide => ({ type, heading: "标题", components: [] }) as Slide
+const slideOf = (type: Slide["type"]): Slide =>
+  (type === "content"
+    ? { type, kind: "points", heading: "标题", components: [] }
+    : { type, heading: "标题", components: [] }) as Slide
 const SLIDE_TYPES = ["cover", "chapter", "content", "ending"] as const
 
 const REMNANT_LEFT = "M -40 720 Q 140 640 330 690 Q 430 708 500 720 Z"
@@ -136,20 +140,11 @@ describe("ink-motif wave 8 — remnant mountain and colophon rail by page type",
     }
   })
 
-  it("a sparse pull-quote pin yields the rail and paints the left remnant", () => {
-    const slide = { type: "content", kind: "points", layout: "pull-quote", heading: "引", components: [] } as Slide
-    const defaultBg = resolveBackgroundHex(tokens.defaultBackgrounds.content, tokens.colors.surface)
-    const pageCtx = buildCtx(tokens, {}, undefined, defaultBg)
-    const markup = renderSvgMarkup(
-      <svg viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg">
-        <InkMotif ir={ir()} slide={slide} ctx={pageCtx} />
-      </svg>,
-    )
-    const root = parseSvgRoot(markup)
-    expect(root.querySelector("[data-decor-piece]")?.getAttribute("data-decor-piece")).toBe("remnant")
-    expect(root.querySelector("path")?.getAttribute("d")).toBe(REMNANT_LEFT)
-    expect(root.querySelectorAll("line")).toHaveLength(0)
-    expect(root.querySelectorAll("rect")).toHaveLength(0)
+  it("稀排条目不带 decor：脸自带无框事实，主题 motif 照画", () => {
+    const content = THEME_DEFINITIONS.ink.menu.content
+    for (const kind of ["statement", "quote", "fact"] as const) {
+      expect(content[kind]?.decor, kind).toBeUndefined()
+    }
   })
 
   it("the vermilion seal keeps the theme accent at full strength", () => {

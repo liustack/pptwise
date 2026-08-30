@@ -25,10 +25,6 @@ export interface GalleryThemeCatalogEntry {
   readonly motif?: string
 }
 
-function faceId(face: string | { id: string }): string {
-  return typeof face === "string" ? face : face.id
-}
-
 function sourceFor(id: string): Pick<GalleryThemeCatalogEntry, "source"> {
   if (id === GALLERY_TIDE_THEME_ID || id === GALLERY_STUDIO_THEME_ID) return { source: "workspace" }
   return { source: "builtin" }
@@ -50,13 +46,13 @@ export function buildGalleryThemeCatalog(
       source.source === "builtin"
         ? THEME_OCCASIONS[id as keyof typeof THEME_OCCASIONS]
         : { identity: definition.identity, occasions: definition.occasions ?? [] }
-    const idsFor = (slideType: Slide["type"]) => [...definition.layouts[slideType]]
     const faces: GalleryThemeCatalogEntry["faces"] = {
-      cover: idsFor("cover"),
-      chapter: idsFor("chapter"),
-      content: idsFor("content"),
-      ending: idsFor("ending"),
+      cover: [definition.menu.cover.face],
+      chapter: [definition.menu.chapter.face],
+      content: Object.values(definition.menu.content).flatMap((entry) => entry === undefined ? [] : [entry.face]),
+      ending: [definition.menu.ending.face],
     }
+    const menuFaces = [...new Set(Object.values(faces).flat())]
 
     return {
       id,
@@ -65,8 +61,8 @@ export function buildGalleryThemeCatalog(
       identity: metadata.identity,
       occasions: [...metadata.occasions],
       faces,
-      pinOnlyFaces: [...new Set(Object.values(faces).flat())].filter((layoutId) => LAYOUT_REGISTRY[layoutId]?.pinOnly),
-      sparse: [...(definition.sparseLayouts ?? SPARSE_LAYOUT_IDS)],
+      pinOnlyFaces: menuFaces.filter((layoutId) => LAYOUT_REGISTRY[layoutId]?.pinOnly),
+      sparse: menuFaces.filter((layoutId) => (SPARSE_LAYOUT_IDS as readonly string[]).includes(layoutId)),
       motif: definition.motif,
     }
   })

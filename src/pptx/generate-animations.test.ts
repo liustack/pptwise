@@ -1,6 +1,18 @@
-import { describe, expect, it } from "vitest"
+import { afterEach, beforeEach, describe, expect, it } from "vitest"
 import JSZip from "jszip"
 import type { Meta, PptxIR, Slide } from "@/ir"
+import { __resetRegisteredThemes } from "../themes/definitions"
+import { registerTestTheme } from "../themes/test-fixtures"
+
+const ANIMATION_THEME_ID = "animation-fixture"
+
+beforeEach(() => {
+  registerTestTheme(ANIMATION_THEME_ID, "consulting", { content: { points: "bento-panel" } })
+})
+
+afterEach(() => {
+  __resetRegisteredThemes()
+})
 
 /**
  * End-to-end check (wave-C S1/S2): the full `generatePptxBlob` pipeline —
@@ -26,7 +38,7 @@ function makeIR(slides: Slide[], animation?: Meta["animation"]): PptxIR {
   return {
     version: "5",
     filename: "animations.pptx",
-    theme: { id: "consulting" },
+    theme: { id: ANIMATION_THEME_ID },
     meta: animation ? { animation } : {},
     assets: { images: {} },
     slides,

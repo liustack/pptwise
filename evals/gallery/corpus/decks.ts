@@ -3,19 +3,20 @@
  *
  * Theme table: every theme runs a ten-page deck of the same shape, with
  * content leads rotating from a fixed assignment table. Layout/component table:
- * one page each, pinned, on a fixed baseline theme, so a reviewer comparing
- * two layouts is likewise looking at one variable. Nothing here picks a
- * layout implicitly — every page in the second table carries an explicit
- * `layout` pin, because auto-selection reshuffling between runs would make
- * the review non-reproducible.
+ * one page each on a fixed baseline style. An exact face under review is
+ * carried by a registered test theme menu, so the author-facing IR stays
+ * semantic and deterministic.
  */
 
 import { readFileSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
-import type { Component, PptxIR, Slide } from "@/ir"
+import type { Component, PageKind, PptxIR, Slide } from "@/ir"
 import { FULL_BODY_TYPES } from "@/render/component-traits"
 import { LAYOUT_REGISTRY, type LayoutDefinition } from "@/layouts/registry"
+import { CANONICAL_THEME_IDS, type CanonicalThemeId } from "@/themes"
+import { getInstalledThemeIds, getThemeDefinition } from "@/themes/definitions"
+import { registerTestTheme, type TestThemeFaces } from "@/themes/test-fixtures"
 import { COMPONENT_BUILDERS, PHOTO_ASSETS, SCREENSHOT_ASSET } from "./components"
 import type { LanguageId, Lexicon } from "./lexicon"
 import { THEME_CONTENT_SLOTS, buildThemeSlot } from "./theme-slots"
@@ -137,13 +138,52 @@ function deckShell(lex: Lexicon, assets: CorpusAssets, themeId: string, filename
       confidentiality: "internal",
     },
     assets,
-    // Pinned so layout selection, seed-dependent decor and any other
-    // sampled choice reproduce byte-for-byte across runs. A gallery that
-    // reshuffled between runs could not be diffed, and a reviewer could
-    // not tell a real regression from a reroll.
-    seed: 20260815,
     slides,
-  } as PptxIR
+  }
+}
+
+const COMPONENT_KINDS: Record<Component["type"], PageKind> = {
+  paragraph: "points",
+  bullets: "points",
+  blockquote: "quote",
+  callout: "statement",
+  code: "evidence",
+  citation: "evidence",
+  verdict_banner: "statement",
+  tag_row: "list",
+  kpi_cards: "data",
+  chart: "data",
+  data_table: "data",
+  waterfall: "data",
+  heatmap: "data",
+  gantt: "process",
+  sankey: "process",
+  steps: "process",
+  numbered_cards: "points",
+  icon_cards: "list",
+  row_cards: "list",
+  timeline: "process",
+  roadmap: "process",
+  cycle: "process",
+  rings: "hierarchy",
+  matrix: "comparison",
+  flowchart: "process",
+  architecture: "hierarchy",
+  comparison: "comparison",
+  insight_panel: "evidence",
+  swot: "comparison",
+  pest: "comparison",
+  five_forces: "hierarchy",
+  bmc: "hierarchy",
+  people_cards: "hierarchy",
+  image: "photo",
+  image_grid: "photo",
+  image_compare: "photo",
+  device_mockup: "photo",
+}
+
+function componentKind(component: Component): PageKind {
+  return COMPONENT_KINDS[component.type]
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -155,9 +195,8 @@ function deckShell(lex: Lexicon, assets: CorpusAssets, themeId: string, filename
  * them: an opening, a section break, seven content pages each led by a
  * different component (looked up in `THEME_CONTENT_SLOTS`), then a close.
  *
- * Layouts are left unpinned here on purpose. This table asks "does this
- * theme look good doing its own thing", and its own thing includes which
- * layout it reaches for. The `seed` on the deck keeps that choice stable.
+ * Each content page names the semantic kind of its lead component. The
+ * bound theme menu then chooses the one face for that kind.
  */
 export function themeDeck(themeId: string, lex: Lexicon, assets: CorpusAssets): PptxIR {
   const slots = THEME_CONTENT_SLOTS[themeId]
@@ -169,12 +208,15 @@ export function themeDeck(themeId: string, lex: Lexicon, assets: CorpusAssets): 
     const built = fitThemeLead(themeId, i, buildThemeSlot(spec, lex))
     const component = emphasis ? emphasizedLead(themeId, built, i, lex) : built
     const extra = thickenThemeContent(themeId, i, lex)
+    const kind = componentKind(component)
+    if (getThemeDefinition(themeId).menu.content[kind] === undefined) {
+      throw new Error(`theme table slot ${themeId}[${i}] uses ${component.type}, but its menu does not offer ${kind}`)
+    }
     return {
       type: "content" as const,
-      kind: "points",
+      kind,
       heading: emphasis && i === 0 ? emphasizePhrase(lex.headings[i]!, emphasis.heading) : lex.headings[i]!,
-      components: [component, ...extra.extra],
-      ...(extra.layout ? { layout: extra.layout } : {}),
+      components: [component, ...extra],
       ...(component.type === "data_table" ? { footnote: lex.sources[0]!.label } : {}),
     }
   })
@@ -212,30 +254,18 @@ export function themeDeck(themeId: string, lex: Lexicon, assets: CorpusAssets): 
 /**
  * Gallery theme pages ship one lead component. A few slots are too thin
  * for the layouts they land in (empty second column, vacant triptych
- * frames, a 56px card in a poster hero). Inject a short companion, and
- * pin two-column where the page must actually split.
+ * frames, a 56px card in a poster hero). Inject a short companion where the
+ * menu-selected face needs one.
  */
-function thickenThemeContent(
-  themeId: string,
-  slotIndex: number,
-  lex: Lexicon,
-): { extra: Component[]; layout?: string } {
+function thickenThemeContent(themeId: string, slotIndex: number, lex: Lexicon): Component[] {
   const shortParagraph: Component = { type: "paragraph", text: lex.shortParagraph }
-  if (themeId === "stage" && slotIndex === 0) {
-    return { extra: [shortParagraph], layout: "two-column" }
-  }
-  if (themeId === "swiss" && slotIndex === 0) {
-    return { extra: [COMPONENT_BUILDERS.bullets!(lex)], layout: "two-column" }
-  }
-  if (themeId === "arena" && slotIndex === 2) return { extra: [shortParagraph] }
-  if (themeId === "pulse" && slotIndex === 3) return { extra: [shortParagraph] }
-  if (themeId === "runway" && slotIndex === 5) return { extra: [shortParagraph] }
-  if (themeId === "heritage" && slotIndex === 3) return { extra: [shortParagraph] }
-  // Seed landed this four-card row in quiet-frame's 640px single-component
-  // frame, so icon-card body text fitted to 6-7px. two-column falls back to
-  // one full-width column at n=1, which is this theme's own content claim.
-  if (themeId === "enterprise" && slotIndex === 2) return { extra: [], layout: "two-column" }
-  return { extra: [] }
+  if (themeId === "stage" && slotIndex === 0) return [shortParagraph]
+  if (themeId === "swiss" && slotIndex === 0) return [COMPONENT_BUILDERS.bullets!(lex)]
+  if (themeId === "arena" && slotIndex === 2) return [shortParagraph]
+  if (themeId === "pulse" && slotIndex === 3) return [shortParagraph]
+  if (themeId === "runway" && slotIndex === 5) return [shortParagraph]
+  if (themeId === "heritage" && slotIndex === 3) return [shortParagraph]
+  return []
 }
 
 function fitThemeLead(themeId: string, slotIndex: number, component: Component): Component {
@@ -246,7 +276,7 @@ function fitThemeLead(themeId: string, slotIndex: number, component: Component):
 }
 
 // ─────────────────────────────────────────────────────────────────────────
-// Layout table — one pinned page per layout
+// Layout table — one menu-bound page per layout
 // ─────────────────────────────────────────────────────────────────────────
 
 /** The body slot's declared capacity, or a safe default when it has none. */
@@ -400,17 +430,79 @@ function bodyFor(def: LayoutDefinition, lex: Lexicon): Component[] {
   return pool.slice(0, Math.min(capacity, 3))
 }
 
-/** One page pinned onto one layout, typed to whatever that layout accepts. */
-export function layoutPage(layoutId: string, lex: Lexicon, assets: CorpusAssets, themeId: string = BASELINE_THEME): PptxIR {
+const CONTENT_FACE_KINDS: Record<string, PageKind> = {
+  "asymmetric-triptych": "hierarchy",
+  "bento-panel": "list",
+  "crayonbox-cards": "list",
+  "crayonbox-point": "statement",
+  "gauge-point": "statement",
+  "gauge-stats": "data",
+  "image-annotate": "photo",
+  "image-bottom": "photo",
+  "image-split": "photo",
+  "image-top": "photo",
+  "mono-bleed": "statement",
+  "narrow-column": "points",
+  "one-evidence": "evidence",
+  "pull-quote": "quote",
+  "quiet-frame": "points",
+  "quote-stage": "quote",
+  "rail-numbered": "process",
+  "show-figures": "data",
+  "show-gallery": "photo",
+  "show-spotlight": "photo",
+  "show-statement": "statement",
+  "split-band": "data",
+  "stacked-poster": "data",
+  "stat-hero": "fact",
+  statement: "statement",
+  "tone-adaptive-content": "data",
+  "two-column": "comparison",
+}
+
+function galleryThemeId(sourceThemeId: CanonicalThemeId, layoutId: string, slideType: Slide["type"], kind?: PageKind): string {
+  return `gallery-face-${sourceThemeId}-${slideType}-${kind ?? "boundary"}-${layoutId}`
+}
+
+function ensureGalleryFaceTheme(
+  sourceThemeId: string,
+  layoutId: string,
+  slideType: Slide["type"],
+  kind?: PageKind,
+): string {
+  const source = getThemeDefinition(sourceThemeId)
+  const current = slideType === "content" && kind !== undefined ? source.menu.content[kind]?.face : source.menu[slideType as Exclude<Slide["type"], "content">].face
+  if (current === layoutId) return sourceThemeId
+  if (!(CANONICAL_THEME_IDS as readonly string[]).includes(sourceThemeId)) {
+    throw new Error(`gallery cannot bind face "${layoutId}" onto non-builtin theme "${sourceThemeId}"`)
+  }
+
+  const canonical = sourceThemeId as CanonicalThemeId
+  const id = galleryThemeId(canonical, layoutId, slideType, kind)
+  if (getInstalledThemeIds().includes(id)) return id
+  const faces: TestThemeFaces =
+    slideType === "content" && kind !== undefined ? { content: { [kind]: layoutId } } : { [slideType]: layoutId }
+  return registerTestTheme(id, canonical, faces)
+}
+
+/** One page routed to one exact face through a theme menu. */
+export function layoutPage(
+  layoutId: string,
+  lex: Lexicon,
+  assets: CorpusAssets,
+  themeId: string = BASELINE_THEME,
+  requestedKind?: PageKind,
+): PptxIR {
   const def = LAYOUT_REGISTRY[layoutId]
   if (!def) throw new Error(`unknown layout id: ${layoutId}`)
   const slideType = def.slideTypes[0]!
+  const kind = slideType === "content" ? requestedKind ?? CONTENT_FACE_KINDS[layoutId] ?? "points" : undefined
+  const renderingThemeId = ensureGalleryFaceTheme(themeId, layoutId, slideType, kind)
 
   const slide =
     slideType === "cover"
       ? {
           type: "cover",
-          layout: layoutId,
           heading:
             def.id === "stat-cover"
               ? statCoverHeading(lex)
@@ -426,11 +518,10 @@ export function layoutPage(layoutId: string, lex: Lexicon, assets: CorpusAssets,
               : [],
         }
       : slideType === "chapter"
-        ? { type: "chapter", layout: layoutId, heading: lex.chapters[1]!, subheading: lex.kickers[1], components: [] }
+        ? { type: "chapter", heading: lex.chapters[1]!, subheading: lex.kickers[1], components: [] }
         : slideType === "ending"
           ? {
               type: "ending",
-              layout: layoutId,
               heading: lex.chapters[5]!,
               subheading: lex.verdicts.positive,
               components:
@@ -440,8 +531,7 @@ export function layoutPage(layoutId: string, lex: Lexicon, assets: CorpusAssets,
             }
           : {
               type: "content",
-              kind: "points",
-              layout: layoutId,
+              kind: kind!,
               // stat-hero's heading is a hero caption capped at two short
               // lines — the corpus' default row overruns its render-safety
               // floor in English. headings[11] is each lexicon's shortest.
@@ -458,7 +548,7 @@ export function layoutPage(layoutId: string, lex: Lexicon, assets: CorpusAssets,
     typedSlide.components = [COMPONENT_BUILDERS.image!(lex), ...typedSlide.components].slice(0, 2)
   }
 
-  return deckShell(lex, assets, themeId, `layout-${layoutId}-${themeId === BASELINE_THEME ? lex.id : `${themeId}-${lex.id}`}`, [typedSlide])
+  return deckShell(lex, assets, renderingThemeId, `layout-${layoutId}-${themeId === BASELINE_THEME ? lex.id : `${themeId}-${lex.id}`}`, [typedSlide])
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -498,21 +588,27 @@ export function componentPage(
   const component = build(lex)
   const cartesian = isCartesianChart(component)
   const bubble = isBubbleChart(component)
-  const solo = opts.solo ?? (FULL_BODY_TYPES.has(component.type) || cartesian)
+  const kind = componentKind(component)
+  const solo =
+    opts.solo ??
+    (FULL_BODY_TYPES.has(component.type) || cartesian || ["quote", "evidence", "statement", "fact", "photo"].includes(kind))
 
   // A one-sentence lead-in, not the full corpus paragraph. The paragraph
   // runs long enough in English that it consumed the content rect and the
   // component under review got dropped — the review table was showing the
   // lead-in instead of the thing it exists to show, on 40 pages.
   const leadIn: Component = { type: "paragraph", text: lex.sentences[0]! }
+  const menuFace = getThemeDefinition(themeId).menu.content[kind]?.face
+  const renderingThemeId =
+    component.type === "citation"
+      ? ensureGalleryFaceTheme(themeId, "narrow-column", "content", kind)
+      : menuFace !== undefined
+      ? themeId
+      : ensureGalleryFaceTheme(themeId, kind === "quote" ? "pull-quote" : "narrow-column", "content", kind)
 
   const slide = {
     type: "content",
-    kind: "points",
-    // This runway-only form-variant page predates the show curation. Pin the
-    // old deterministic pick so a theme redesign cannot masquerade as a
-    // steps-component byte change in the component comparison table.
-    layout: componentId === "steps · arrow band" ? "stacked-poster" : undefined,
+    kind,
     heading: cartesian && component.chart_type === "scatter" ? lex.scatterHeading : lex.headings[8]!,
     subheading: cartesian
       ? component.chart_type === "scatter"
@@ -523,5 +619,5 @@ export function componentPage(
     footnote: bubble ? lex.bubbleSizeNote : cartesian || !solo ? lex.sources[2]!.label : undefined,
   } as unknown as Slide
   const safeId = componentId.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "")
-  return deckShell(lex, assets, themeId, `component-${safeId}-${lex.id}`, [slide])
+  return deckShell(lex, assets, renderingThemeId, `component-${safeId}-${lex.id}`, [slide])
 }

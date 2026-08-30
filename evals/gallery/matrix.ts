@@ -9,9 +9,9 @@
  * sign-off.
  */
 
-import { COMPONENT_TYPES, type PptxIR } from "@/ir"
+import { COMPONENT_TYPES, type PageKind, type PptxIR } from "@/ir"
 import { LAYOUT_REGISTRY } from "@/layouts/registry"
-import { SPARSE_LAYOUT_IDS, getThemeDefinition, themeOffersSparse } from "@/themes/definitions"
+import { getThemeDefinition } from "@/themes/definitions"
 import { CHART_VARIANTS, COMPONENT_BUILDERS, FORM_VARIANTS } from "./corpus/components"
 import {
   BASELINE_THEME,
@@ -109,76 +109,45 @@ export function buildMatrix(
   }
 
   // ── Skeleton table ─────────────────────────────────────────────────────
-  // 每套主题的骨相原样铺开：四页型各自策展/锁定的脸（该页型在这套主题下
-  // 真实可解析到的池），加上这套主题开放的 sparse 钉面。每脸一页、显式
-  // 钉住、用主题自己渲，语料随主题表单语料，两页之间只差「脸」这一个变量。
+  // 每套主题的菜单原样铺开。边界三页各一脸，content 按每个已供给 kind
+  // 各一脸。每页直接走主题自己的菜单，不再扩展池或稀疏钉面。
   if (!opts.only || opts.only === "skeleton") {
     const lex = LEXICONS[themeLanguage]
     for (const themeId of themeIds) {
       const def = getThemeDefinition(themeId)
-      const groups: ReadonlyArray<readonly [string, readonly string[]]> = [
-        ["cover", def.layouts.cover],
-        ["chapter", def.layouts.chapter],
-        ["content", def.layouts.content],
-        ["ending", def.layouts.ending],
-        ["sparse", (SPARSE_LAYOUT_IDS as readonly string[]).filter((id) => themeOffersSparse(themeId, id))],
+      const entries: Array<{ slot: string; layoutId: string; kind?: PageKind }> = [
+        { slot: "cover", layoutId: def.menu.cover.face },
+        { slot: "chapter", layoutId: def.menu.chapter.face },
+        ...Object.entries(def.menu.content).flatMap(([kind, entry]) =>
+          entry === undefined ? [] : [{ slot: `content-${kind}`, layoutId: entry.face, kind: kind as PageKind }],
+        ),
+        { slot: "ending", layoutId: def.menu.ending.face },
       ]
-      for (const [slot, faces] of groups) {
-        for (const layoutId of faces) {
-          const ir = layoutPage(layoutId, lex, assets[themeLanguage], themeId)
-          push({
-            id: `skeleton--${safe(themeId)}--${slot}--${safe(layoutId)}`,
-            table: "skeleton",
-            subject: layoutId,
-            language: themeLanguage,
-            theme: themeId,
-            page: 1,
-            pageCount: 1,
-            slideType: ir.slides[0]!.type ?? "content",
-            heading: ir.slides[0]!.heading ?? "",
-            ir,
-            slideIndex: 0,
-          })
-        }
+      for (const { slot, layoutId, kind } of entries) {
+        const ir = layoutPage(layoutId, lex, assets[themeLanguage], themeId, kind)
+        push({
+          id: `skeleton--${safe(themeId)}--${slot}--${safe(layoutId)}`,
+          table: "skeleton",
+          subject: layoutId,
+          language: themeLanguage,
+          theme: themeId,
+          page: 1,
+          pageCount: 1,
+          slideType: ir.slides[0]!.type ?? "content",
+          heading: ir.slides[0]!.heading ?? "",
+          ir,
+          slideIndex: 0,
+        })
       }
     }
   }
 
   // ── Layout table ───────────────────────────────────────────────────────
-  // Ordinary layouts stay on the baseline theme × the language axis, so two
-  // pages differ by one variable. Sparse layouts never enter the auto pool,
-  // so they also expand across every theme that offers them
-  // (`themeOffersSparse`). The baseline theme still runs all three corpora;
-  // every other eligible theme runs `themeLanguage` only, matching the old
-  // sparse slice and keeping the table from exploding 3×.
+  // Every registered face stays on the baseline theme and language axis.
+  // `layoutPage` binds the requested face through a registered gallery theme
+  // menu when the baseline menu does not already expose it.
   if (!opts.only || opts.only === "layout") {
     for (const layoutId of Object.keys(LAYOUT_REGISTRY).sort()) {
-      const sparse = (SPARSE_LAYOUT_IDS as readonly string[]).includes(layoutId)
-      if (sparse) {
-        for (const themeId of themeIds) {
-          if (!themeOffersSparse(themeId, layoutId)) continue
-          const langs = themeId === BASELINE_THEME ? languages : [themeLanguage]
-          for (const language of langs) {
-            const lex = LEXICONS[language]
-            const ir = layoutPage(layoutId, lex, assets[language], themeId)
-            push({
-              id: `layout--${safe(layoutId)}--${safe(themeId)}--${language}`,
-              table: "layout",
-              subject: layoutId,
-              language,
-              theme: themeId,
-              page: 1,
-              pageCount: 1,
-              slideType: ir.slides[0]!.type ?? "content",
-              heading: ir.slides[0]!.heading ?? "",
-              ir,
-              slideIndex: 0,
-            })
-          }
-        }
-        continue
-      }
-
       for (const language of languages) {
         const lex = LEXICONS[language]
         const ir = layoutPage(layoutId, lex, assets[language])

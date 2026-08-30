@@ -24,11 +24,11 @@ import { COMPONENT_TYPES, type Component } from "@/ir"
 import { CHART_VARIANTS, COMPONENT_BUILDERS, FORM_VARIANTS } from "../evals/gallery/corpus/components"
 import { THEME_TABLE_REQUIRED_SURFACES } from "../evals/gallery/corpus/theme-slots"
 import { COMPONENT_FORMS, resolveComponentForm } from "@/components/form-assignments"
+import { LAYOUT_REGISTRY } from "@/layouts/registry"
 import { BASELINE_THEME, corpusAssets, type CorpusAssets } from "../evals/gallery/corpus/decks"
 import { LANGUAGE_IDS, LEXICONS, type LanguageId } from "../evals/gallery/corpus/lexicon"
 import { buildGalleryHtml } from "../evals/gallery/html"
 import { assertFullCoverage, buildMatrix } from "../evals/gallery/matrix"
-import { SPARSE_LAYOUT_IDS, THEME_DEFINITIONS, themeOffersSparse } from "@/themes/definitions"
 import { installNodePlatform } from "@/platform/node"
 
 // `renderMatrix` audits every page it renders, and the auditor parses SVG
@@ -92,25 +92,11 @@ describe("gallery coverage", () => {
     expect(() => assertFullCoverage(themeIds, themeIds.length + 1)).toThrow(/expected/)
   })
 
-  it("layout table expands sparse layouts only on themes that offer them", async () => {
+  it("layout table renders every registered face once per language through a menu binding", async () => {
     const jobs = buildMatrix(themeIds, await assets(), { only: "layout" })
-    const sparse = jobs.filter((j) => (SPARSE_LAYOUT_IDS as readonly string[]).includes(j.subject))
-    const subjects = (themeId: string) => sparse.filter((j) => j.theme === themeId).map((j) => j.subject)
-
-    expect(subjects("crayon")).toEqual([])
-    expect(subjects("classroom")).toEqual([])
-
-    const stage = subjects("stage")
-    expect(stage).toContain("statement")
-    expect(stage).not.toContain("one-evidence")
-
-    expect([...new Set(subjects("consulting"))].sort()).toEqual([...THEME_DEFINITIONS.consulting.sparseLayouts!].sort())
-
-    const derived = themeIds.reduce((n, themeId) => {
-      const offered = SPARSE_LAYOUT_IDS.filter((layoutId) => themeOffersSparse(themeId, layoutId)).length
-      return n + offered * (themeId === BASELINE_THEME ? LANGUAGE_IDS.length : 1)
-    }, 0)
-    expect(sparse).toHaveLength(derived)
+    expect(jobs).toHaveLength(Object.keys(LAYOUT_REGISTRY).length * LANGUAGE_IDS.length)
+    expect([...new Set(jobs.map((job) => job.subject))].sort()).toEqual(Object.keys(LAYOUT_REGISTRY).sort())
+    expect(new Set(jobs.map((job) => job.theme))).toEqual(new Set([BASELINE_THEME]))
   })
 
   it("emits the theme, skeleton, layout, and component tables", async () => {
