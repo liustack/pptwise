@@ -32,6 +32,26 @@ describe("validateIr", () => {
     expect(r.ir?.slides[0]?.components).toEqual([])
   })
 
+  it.each([
+    ["#abc", "#AABBCC"],
+    ["#abc8", "#AABBCC"],
+    ["#abcdef", "#ABCDEF"],
+    ["#abcdef80", "#ABCDEF"],
+  ])("renders normalized slide background %s as opaque %s", (input, expected) => {
+    const candidate = {
+      ...raw,
+      slides: raw.slides.map((slide, index) =>
+        index === 1 ? { ...slide, background: { kind: "color", value: input } } : slide,
+      ),
+    }
+
+    const result = validateIr(candidate)
+
+    expect(result.ok).toBe(true)
+    expect(result.ir?.slides[1]?.background).toEqual({ kind: "color", value: expected })
+    expect(renderSlideSvg(result.ir!, 1)).toContain(`fill="${expected}"`)
+  })
+
   it.each(["1", "2", "3", "4"])("hard-rejects IR v%s with the current v5 contract and no migration pointer", (version) => {
     const v = validateIr({ version, filename: "x", theme: { id: "tech" }, slides: [] })
     expect(v.ok).toBe(false)
