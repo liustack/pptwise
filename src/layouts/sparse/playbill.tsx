@@ -4,7 +4,7 @@ import { fitHeadingLines } from "../../render/heading-fit"
 import { fitSvgLine } from "../../lib/svg-text-layout"
 import { renderEmphasisTspans } from "../../render/emphasis"
 import { accessibleOpacity, readableOn } from "../../render/ink"
-import { findImageComponent } from "../find-image"
+import { findImageSelection } from "../find-image"
 import { heroCaption, heroValue } from "../minimal-shared"
 import { fitHeroLine, fitSparseHeading, isNumericHero, rotateRectPolygon, splitTrailingPercent } from "./shared"
 
@@ -172,7 +172,7 @@ function playbillTypeOnField({ slide, ctx }: SvgTemplateProps) {
 export function monoBleed(props: SvgTemplateProps) {
   const { slide, ctx } = props
   const { colors, fonts } = ctx
-  const image = findImageComponent(slide)
+  const image = findImageSelection(slide)?.image
   const src = image ? ctx.images?.[image.asset_id]?.src : undefined
   const alt = image ? ctx.images?.[image.asset_id]?.alt : undefined
   if (!src) return playbillTypeOnField(props)

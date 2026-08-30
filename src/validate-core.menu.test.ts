@@ -231,4 +231,32 @@ describe("IR validation against the bound theme menu", () => {
     })
     expect(result.errors[0]?.message).toContain('layout "image-annotate" does not render paragraph components')
   })
+
+  it("only lets the selected image-family source consume image-annotate's first image slot", () => {
+    const id = "annotation-image-selection"
+    installTheme(id, {
+      ...BASE_MENU,
+      content: { photo: { face: "image-annotate" } },
+    })
+
+    const result = validateIr(
+      deck(id, {
+        id: "annotated-photo",
+        type: "content",
+        kind: "photo",
+        heading: "One image anchor",
+        components: [
+          {
+            type: "image_compare",
+            left: { asset_id: "before", label: "Before" },
+            right: { asset_id: "after", label: "After" },
+          },
+          { type: "device_mockup", device: "browser", asset_id: "dashboard" },
+        ],
+      }),
+    )
+
+    expect(result.ok).toBe(false)
+    expect(result.errors[0]?.message).toContain('layout "image-annotate" does not render device_mockup components')
+  })
 })

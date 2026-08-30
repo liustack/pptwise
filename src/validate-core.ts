@@ -27,6 +27,7 @@ import { CAPACITY } from "./audit/capacity"
 import { FULL_BODY_TYPES } from "./render/component-traits"
 import { checkIrQuality, type QualityIssue } from "./render/ir-quality"
 import { resolveEffectiveFace } from "./render/layout-selection"
+import { findImageSelection } from "./layouts/find-image"
 import type { LayoutDefinition } from "./layouts/registry"
 import { CANONICAL_THEME_IDS, THEME_LABELS, THEME_STYLES } from "./themes"
 import { getInstalledThemeIds, getThemeDefinition } from "./themes/definitions"
@@ -315,9 +316,15 @@ function checkContentPageSlots(ir: PptxIR): ValidationIssue[] {
     if (slide.placeholder || slide.type !== "content") return
     const layout = resolveEffectiveFace(ir, slide).layout
     if (!layout) return
+    const imageSlot = layout.kind === "takeover"
+      ? layout.slots.find((slot) => slot.name === "image" && slot.selection === "first")
+      : undefined
+    const imageSelection = imageSlot === undefined ? undefined : findImageSelection(slide)
     for (const slot of layout.slots) {
       if (slot.required !== true || slot.accepts === "any") continue
-      const present = slide.components.some((component) => slot.accepts.includes(component.type))
+      const present = slot === imageSlot
+        ? imageSelection !== undefined && slot.accepts.includes(imageSelection.source.type)
+        : slide.components.some((component) => slot.accepts.includes(component.type))
       if (present) continue
       const expected = slot.accepts.join(" or ")
       errors.push({
@@ -327,7 +334,13 @@ function checkContentPageSlots(ir: PptxIR): ValidationIssue[] {
         message: `layout "${layout.id}" requires an ${expected} component for its ${slot.name} slot`,
       })
     }
-    const unsupported = slide.components.filter((component) => !layoutAcceptsComponent(layout, component.type))
+    const unsupported = slide.components.filter((component) => {
+      if (component === imageSelection?.source) return false
+      return !layout.slots.some((slot) => {
+        if (slot === imageSlot) return false
+        return slot.accepts === "any" || slot.accepts.includes(component.type)
+      })
+    })
     if (unsupported.length > 0) {
       const types = [...new Set(unsupported.map((component) => component.type))].join(", ")
       errors.push({

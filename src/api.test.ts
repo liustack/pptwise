@@ -831,7 +831,7 @@ describe("describeQualityIssue: density/bullets English messages (W3 task 3, spe
     const v = validateIr({
       ...raw,
       narrative: { pacing: "spacious" },
-      slides: [raw.slides[0], denseSlide(4, { kind: "photo", withImage: true })],
+      slides: [raw.slides[0], denseSlide(5, { kind: "photo", withImage: true })],
     })
     expect(v.ok).toBe(true)
     expect(densityMessage(v)).toBe(

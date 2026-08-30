@@ -5,7 +5,7 @@ import type { LayoutDefinition } from "../layouts/registry"
 import { renderComponent } from "../components"
 import { layoutContentFit, stackBottom } from "./layout"
 import { DroppedContentMarker } from "./drop-marker"
-import { findImageComponent } from "../layouts/find-image"
+import { findImageSelection } from "../layouts/find-image"
 import { CANVAS_W_PX, CANVAS_H_PX } from "../constants"
 import { layoutSvgText, fitSvgLine } from "../lib/svg-text-layout"
 import { fitHeadingLines, scaleTypePx } from "./heading-fit"
@@ -199,8 +199,9 @@ export function ImageSplitPage({
   ctx: ComponentCtx
   page: PageRenderContext
 }) {
-  const imageComponent = findImageComponent(slide)
-  if (!imageComponent) return <MissingRequiredImageMarker slide={slide} />
+  const imageSelection = findImageSelection(slide)
+  if (!imageSelection) return <MissingRequiredImageMarker slide={slide} />
+  const { image: imageComponent, source: imageSource } = imageSelection
   // 图文范式族（ppt-master P04 右图出血）：image_side=right 时整页镜像——
   // 图列贴右缘、文字区在左。
   const rightSide = slide.image_side === "right"
@@ -212,7 +213,7 @@ export function ImageSplitPage({
   // dispatch), so it needs its own `aria-label` emission — same
   // only-when-present rule as that file's own `<image>`.
   const alt = ctx.images?.[imageComponent.asset_id]?.alt
-  const rest = slide.components.filter((b) => b !== imageComponent)
+  const rest = slide.components.filter((component) => component !== imageSource)
   const org = page.metadataOn ? ir.meta.organization : undefined
 
   // fontWeight 600 而非 700：magazine/creative 的衬线 heading（SimSun/Lora）
@@ -363,12 +364,13 @@ export function ImageTopPage({
   ctx: ComponentCtx
   page: PageRenderContext
 }) {
-  const imageComponent = findImageComponent(slide)
-  if (!imageComponent) return <MissingRequiredImageMarker slide={slide} />
+  const imageSelection = findImageSelection(slide)
+  if (!imageSelection) return <MissingRequiredImageMarker slide={slide} />
+  const { image: imageComponent, source: imageSource } = imageSelection
   const src = ctx.images?.[imageComponent.asset_id]?.src
   // A11Y-01 alt 链路收尾（q15 根因）：见 ImageSplitPage 同名变量的注释。
   const alt = ctx.images?.[imageComponent.asset_id]?.alt
-  const rest = slide.components.filter((b) => b !== imageComponent)
+  const rest = slide.components.filter((component) => component !== imageSource)
 
   const titleMaxW = W - BAND_PAD_X * 2 - 120
   const title = fitHeadingLines(slide.heading, {
@@ -512,8 +514,9 @@ export function ImageAnnotatePage({
   ctx: ComponentCtx
   page: PageRenderContext
 }) {
-  const imageComponent = findImageComponent(slide)
-  if (!imageComponent) return <MissingRequiredImageMarker slide={slide} />
+  const imageSelection = findImageSelection(slide)
+  if (!imageSelection) return <MissingRequiredImageMarker slide={slide} />
+  const { image: imageComponent, source: imageSource } = imageSelection
   const src = ctx.images?.[imageComponent.asset_id]?.src
   // A11Y-01 alt 链路收尾（q15 根因）：见 ImageSplitPage 同名变量的注释。
   const alt = ctx.images?.[imageComponent.asset_id]?.alt
@@ -523,7 +526,7 @@ export function ImageAnnotatePage({
   const annotations = (bulletsComponent?.items ?? []).slice(0, 4).map(splitAnnotation)
   const dropped =
     Math.max(0, (bulletsComponent?.items.length ?? 0) - 4) +
-    slide.components.filter((component) => component !== imageComponent && component !== bulletsComponent).length
+    slide.components.filter((component) => component !== imageSource && component !== bulletsComponent).length
   const hasNotes = annotations.length > 0
 
   const bg = ctx.defaultBg ?? ctx.colors.bg
@@ -743,12 +746,13 @@ export function ImageBottomPage({
   ctx: ComponentCtx
   page: PageRenderContext
 }) {
-  const imageComponent = findImageComponent(slide)
-  if (!imageComponent) return <MissingRequiredImageMarker slide={slide} />
+  const imageSelection = findImageSelection(slide)
+  if (!imageSelection) return <MissingRequiredImageMarker slide={slide} />
+  const { image: imageComponent, source: imageSource } = imageSelection
   const src = ctx.images?.[imageComponent.asset_id]?.src
   // A11Y-01 alt 链路收尾（q15 根因）：见 ImageSplitPage 同名变量的注释。
   const alt = ctx.images?.[imageComponent.asset_id]?.alt
-  const rest = slide.components.filter((b) => b !== imageComponent)
+  const rest = slide.components.filter((component) => component !== imageSource)
 
   const title = layoutSvgText(slide.heading, {
     maxWidth: 900,
@@ -909,11 +913,11 @@ export function hasTakeoverRenderer(id: string): boolean {
 // reference never becomes a runtime cycle.
 export const imageSplitLayoutDef: LayoutDefinition = {
   // image-pages.tsx ImageSplitPage: full-height bleed image in a fixed
-  // column (first image component; optional caption overlay), kicker + heading
-  // + rule + subheading in the text column, then the remaining components as
-  // body — hardcoded arrangement "single" (layoutContentFit("single", ...),
-  // image-pages.tsx:209-214), not exposed via `arrangements` (takeover
-  // kind, not layout).
+  // column. The first image-family source supplies one image anchor and an
+  // optional caption overlay. Kicker, heading, rule, and subheading occupy
+  // the text column, followed by the components left after consuming that
+  // source as body. The body uses hardcoded arrangement "single".
+  // Takeovers do not expose standard layout arrangements.
   id: "image-split",
   kind: "takeover",
   slideTypes: ["content"],
@@ -925,9 +929,10 @@ export const imageSplitLayoutDef: LayoutDefinition = {
 }
 
 export const imageTopLayoutDef: LayoutDefinition = {
-  // image-pages.tsx ImageTopPage: full-width top-band bleed image (first
-  // image component, no caption render), heading band, remaining components split
-  // into up to 3 columns as body — each column hardcoded "single"
+  // image-pages.tsx ImageTopPage: full-width top-band bleed image from the
+  // first image-family selection, no caption render, then a heading band.
+  // Components left after consuming the source split into up to 3 body
+  // columns, with each column hardcoded "single"
   // (image-pages.tsx:360).
   id: "image-top",
   kind: "takeover",
@@ -940,9 +945,9 @@ export const imageTopLayoutDef: LayoutDefinition = {
 
 export const imageBottomLayoutDef: LayoutDefinition = {
   // image-pages.tsx ImageBottomPage: centered heading/rule/subheading,
-  // remaining components as body (hardcoded "single", image-pages.tsx:682-687),
-  // then a full-width bottom-band bleed image (first image component) with an
-  // optional caption overlay.
+  // components left after consuming the first image-family source as body,
+  // then a full-width bottom-band bleed image from its derived anchor with
+  // an optional caption overlay.
   id: "image-bottom",
   kind: "takeover",
   slideTypes: ["content"],
@@ -955,15 +960,12 @@ export const imageBottomLayoutDef: LayoutDefinition = {
 
 export const imageAnnotateLayoutDef: LayoutDefinition = {
   // image-pages.tsx ImageAnnotatePage: centered heading + subheading,
-  // framed center image (first image component) with optional caption, and up
-  // to 4 corner annotations sourced from the *first bullets component's* items
-  // (bulletsComponent.items.slice(0, 4), image-pages.tsx:479-482). Deliberate
-  // deviation from the brief's base "image + body" takeover shape: unlike
-  // the other 3 takeovers, this renderer never builds a `rest` of
-  // leftover components — nothing besides the found image + bullets component is
-  // read, so declaring a `body` slot here would claim capacity the code
-  // does not actually offer. `annotation` is the real substitute for body
-  // in this one takeover.
+  // framed center image from the first image-family selection with optional
+  // caption, and up to 4 annotations sourced from the first bullets component
+  // items. Unlike the other 3 takeovers, this renderer only consumes the
+  // selected image source and bullets component. Declaring a `body` slot
+  // would claim capacity the renderer does not offer. `annotation` is the
+  // substitute for body on this face.
   id: "image-annotate",
   kind: "takeover",
   slideTypes: ["content"],

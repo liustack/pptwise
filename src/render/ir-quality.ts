@@ -8,7 +8,8 @@
 import type { PptxIR, Slide } from "@/ir"
 import { PACING_BUDGETS, resolveNarrative, type NarrativeProfile, type Pacing } from "@/narrative"
 import { CAPACITY } from "../audit/capacity"
-import { resolveEffectiveFace, resolveEffectiveLayoutBodyCapacity } from "./layout-selection"
+import { findImageSelection } from "../layouts/find-image"
+import { resolveEffectiveFace } from "./layout-selection"
 import { measureTextUnits } from "../lib/svg-text-layout"
 import { buildChartModel } from "../components/chart-model"
 
@@ -20,9 +21,9 @@ export type QualityIssue = {
   /**
    * `code: "density"` only (W3 task 3, spec §5's dual-attribute capacity
    * split): the two `min()` candidates plus enough to name them, computed
-   * once here via `resolveEffectiveLayoutBodyCapacity` — the same
-   * selection path `FullSlideSvg` renders through — so `api.ts`'s English
-   * translation layer (`describeQualityIssue`) can report which side bound
+   * once here from `resolveEffectiveFace`, the same selection path
+   * `FullSlideSvg` renders through. This lets `api.ts`'s English
+   * translation layer (`describeQualityIssue`) report which side bound
    * without re-resolving the slide's effective layout itself (there must be
    * exactly one place that does that resolution).
    */
@@ -196,17 +197,24 @@ function checkSlide(ir: PptxIR, slide: Slide, index: number, resolvedAxes: Narra
   // A2: density cap — only for content slides. W3 task 3 (spec §5's
   // dual-attribute capacity split): limit = min(this narrative's pacing
   // editorial budget, the resolved layout's body-slot geometric capacity).
-  // The geometric half comes from `resolveEffectiveLayoutBodyCapacity`
-  // (`./layout-selection`) — the exact selection path `FullSlideSvg` renders
-  // through, never re-derived here, so what this gate flags is guaranteed to
-  // match what render would actually overflow. `layoutCapacity: undefined`
+  // The geometric half comes from `resolveEffectiveFace`, the exact
+  // selection path `FullSlideSvg` renders through. What this gate flags is
+  // guaranteed to match what render would actually overflow.
+  // `layoutCapacity: undefined`
   // means the selected face declares no `body` slot capacity, as with the
   // four image-family takeovers. In that case only the editorial budget
   // applies.
   if (slide.type === "content") {
-    const { layoutId, capacity: layoutCapacity } = resolveEffectiveLayoutBodyCapacity(ir, slide)
+    const effective = resolveEffectiveFace(ir, slide)
+    const layoutId = effective.layoutId
+    const layoutCapacity = effective.layout?.slots.find((slot) => slot.name === "body")?.capacity
+    const hasTakeoverImageSlot = effective.route === "takeover" && effective.layout?.slots.some(
+      (slot) => slot.name === "image" && slot.selection === "first",
+    )
+    const imageSelection = hasTakeoverImageSlot ? findImageSelection(slide) : undefined
+    const bodyComponentCount = slide.components.length - (imageSelection === undefined ? 0 : 1)
     const limit = Math.min(budget.maxComponentsPerSlide, layoutCapacity ?? Infinity)
-    if (slide.components.length > limit) {
+    if (bodyComponentCount > limit) {
       issues.push({
         slide: index,
         severity: "warn",
@@ -222,7 +230,6 @@ function checkSlide(ir: PptxIR, slide: Slide, index: number, resolvedAxes: Narra
       })
     }
 
-    const effective = resolveEffectiveFace(ir, slide)
     const itemCapacitySlot = effective.layout?.slots.find(
       (slot) => slot.capacity !== undefined && slot.capacityUnit === "items" && slot.accepts !== "any",
     )

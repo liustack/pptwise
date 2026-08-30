@@ -188,6 +188,50 @@ describe("image takeover dropped-content propagation", () => {
     expect(slideToRender(doc, slide, 0).dropped).toBe(1)
   })
 
+  it("image-top consumes an image_compare once as its selected image family source", () => {
+    const slide: Slide = {
+      type: "content",
+      kind: "photo",
+      heading: "One selected image",
+      components: [
+        {
+          type: "image_compare",
+          left: { asset_id: "hero", label: "Before" },
+          right: { asset_id: "hero", label: "After" },
+        },
+      ],
+    }
+    const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "consulting", {
+      content: { photo: "image-top" },
+    })
+    const root = parseSvgRoot(slideToSvgMarkup(makeIr(themeId, slide), slide, 0))
+
+    expect(root.querySelectorAll("image")).toHaveLength(1)
+    expect(root.textContent).not.toContain("Before")
+    expect(root.textContent).not.toContain("After")
+  })
+
+  it("image-annotate does not mark its selected image_compare source as dropped", () => {
+    const slide: Slide = {
+      type: "content",
+      kind: "photo",
+      heading: "Selected comparison anchor",
+      components: [
+        {
+          type: "image_compare",
+          left: { asset_id: "hero", label: "Before" },
+          right: { asset_id: "hero", label: "After" },
+        },
+      ],
+    }
+    const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "consulting", {
+      content: { photo: "image-annotate" },
+    })
+    const doc = makeIr(themeId, slide)
+
+    expect(slideToRender(doc, slide, 0).dropped).toBe(0)
+  })
+
   it("image-annotate marks annotation overflow and unsupported sibling components", () => {
     const slide: Slide = {
       type: "content",
