@@ -210,9 +210,23 @@ export function assertContrastFloor(id: string, style: StyleTokens): void {
  * `console.warn` needs none (zero API surface change, works identically on
  * every platform this package ships to).
  */
+/** Faces already warned about this process. The information is a property of
+ * the face, not of the theme that happens to register it, so registering
+ * dozens of themes sharing one unmeasured face (the gallery corpus does)
+ * says it once instead of once per theme. */
+const WARNED_UNMEASURED_FACES = new Set<string>()
+
+/** Test hook: lets suites assert the warning fires deterministically. */
+export function __resetUnmeasuredFaceWarnings(): void {
+  WARNED_UNMEASURED_FACES.clear()
+}
+
 function warnUnmeasuredFace(id: string, role: "heading" | "body", stack: string[]): void {
   const face = resolveFontFace(stack, role)
   if (!hasExactWidthTable(face)) {
+    const key = `${role}:${face}`
+    if (WARNED_UNMEASURED_FACES.has(key)) return
+    WARNED_UNMEASURED_FACES.add(key)
     console.warn(
       `theme "${id}" ${role} font "${face}" has no exact width table — text width estimation falls back to a conservative class-average envelope and may overflow on long text; see measureTextUnits in src/lib/svg-text-layout.ts`,
     )
