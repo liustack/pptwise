@@ -557,8 +557,13 @@ ${inlineRule(verdictFreshness)}
     if (state.view !== "theme") return p.sectionLabel === p.section ? p.section : p.sectionLabel + " · " + p.section;
     // A deck page's subject is its own theme, which the section heading right
     // above it already said. Its heading is the thing worth naming.
-    if (p.band === "deck") return p.heading || p.subject;
+    // Emphasis runs are author markup for the renderer, not for chrome text.
+    if (p.band === "deck") return stripEmphasis(p.heading) || p.subject;
     return p.subject;
+  }
+
+  function stripEmphasis(text) {
+    return (text || "").replace(/\*\*([^*]+)\*\*/g, "$1");
   }
 
   function cardFacts(p) {
@@ -878,16 +883,23 @@ ${inlineRule(verdictFreshness)}
   const viewer = document.getElementById("viewer");
   const frame = document.getElementById("viewer-frame");
   let viewerIndex = -1;
+  // The set the viewer pages through. In the theme view a page is judged
+  // inside its own section, so the queue scopes to that section; a cross-cut
+  // view is itself the comparison set, so the queue is the visible set.
+  let viewerQueue = [];
 
   function openViewer(id) {
-    viewerIndex = visible.findIndex((p) => p.id === id);
+    const opened = visible.find((p) => p.id === id);
+    if (!opened) return;
+    viewerQueue = state.view === "theme" ? visible.filter((p) => p.section === opened.section) : visible;
+    viewerIndex = viewerQueue.findIndex((p) => p.id === id);
     if (viewerIndex < 0) return;
     paintViewer();
     if (!viewer.open) viewer.showModal();
   }
 
   function paintViewer() {
-    const p = visible[viewerIndex];
+    const p = viewerQueue[viewerIndex];
     if (!p) return;
     frame.textContent = "";
     frame.style.background = "";
@@ -901,7 +913,7 @@ ${inlineRule(verdictFreshness)}
     }
     document.getElementById("viewer-subject").textContent = cardTitle(p);
     document.getElementById("viewer-facts").textContent =
-      cardFacts(p).join(" · ") + " · " + (viewerIndex + 1) + " / " + visible.length;
+      cardFacts(p).join(" · ") + " · " + (viewerIndex + 1) + " / " + viewerQueue.length;
     const v = (verdicts[p.id] || {}).verdict;
     for (const btn of document.getElementById("viewer-verdicts").children) {
       btn.setAttribute("aria-pressed", String(btn.dataset.verdict === v));
@@ -918,18 +930,18 @@ ${inlineRule(verdictFreshness)}
 
   function step(delta) {
     if (viewerIndex < 0) return;
-    viewerIndex = Math.min(visible.length - 1, Math.max(0, viewerIndex + delta));
+    viewerIndex = Math.min(viewerQueue.length - 1, Math.max(0, viewerIndex + delta));
     paintViewer();
   }
 
   for (const btn of document.getElementById("viewer-verdicts").children) {
     btn.addEventListener("click", () => {
-      const p = visible[viewerIndex];
+      const p = viewerQueue[viewerIndex];
       if (p) { setVerdict(p.id, btn.dataset.verdict); paintViewer(); }
     });
   }
   document.getElementById("viewer-note").addEventListener("input", (ev) => {
-    const p = visible[viewerIndex];
+    const p = viewerQueue[viewerIndex];
     if (p) { setNote(p.id, ev.target.value); refreshCard(p.id); }
   });
 
@@ -940,7 +952,7 @@ ${inlineRule(verdictFreshness)}
     else if (ev.key === "ArrowLeft") { ev.preventDefault(); step(-1); }
     else if (!typing && (ev.key === "1" || ev.key === "2" || ev.key === "3")) {
       ev.preventDefault();
-      const p = visible[viewerIndex];
+      const p = viewerQueue[viewerIndex];
       if (p) { setVerdict(p.id, ["pass", "limit", "rework"][Number(ev.key) - 1]); paintViewer(); }
     }
   });
