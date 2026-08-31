@@ -55,6 +55,7 @@ mirror_of: skills/pptwise/references/components.md
 | `people_cards` | `list` |
 | `tag_row` | `list` |
 | `hub_spoke` | `hierarchy` |
+| `progress_donuts` | `data` |
 
 ## 相近组件
 
@@ -64,7 +65,7 @@ mirror_of: skills/pptwise/references/components.md
 - 四类外部宏观因素用 `pest`，同时评估内外部战略条件用 `swot`。
 - 带宽承载守恒数量并发生分支与汇合时用 `sankey`，分支表达决策而非数量时用 `flowchart`。
 - 需要逐行读取精确值时用 `data_table`，需要一眼看懂数值形态时用 `chart`，定性属性对照用 `comparison`。
-- 一个值对一个目标用 `chart` 内的 `gauge`，多个独立头条数字用 `kpi_cards`。
+- 一个值对一个目标用 `chart` 内的 `gauge`，多个完成度百分比用 `progress_donuts`，多个独立头条数字用 `kpi_cards`。
 - `tag_row` 只放短标签。句子式条目用 `bullets`，每项都有说明文字时用卡片组件。
 
 `architecture.layers` 默认从上向下绘制。作者按基座优先的顺序写作时，设置 `direction: "bottom_up"`，不要手工倒置数组。

@@ -278,6 +278,13 @@ const COMPONENT_BY_TYPE: Record<Component["type"], Component> = {
       { label: "Review" },
     ],
   },
+  progress_donuts: {
+    type: "progress_donuts",
+    items: [
+      { value: "86%", label: "coverage" },
+      { value: "72%", label: "closure" },
+    ],
+  },
   hub_spoke: {
     type: "hub_spoke",
     center: "Platform",

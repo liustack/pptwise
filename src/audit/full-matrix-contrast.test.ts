@@ -1489,6 +1489,10 @@ const MUTED_SURFACE_CLASS: Record<string, MutedSurfaceClass> = {
   // reference is the spoke line's stroke fallback (`colors.border ??
   // colors.muted`), a stroke and not a text fill.
   hub_spoke: "flat-surface",
+  // progress-donuts.tsx paints `colors.muted` as the ring *track* stroke
+  // (never a text fill); its source line is `accessibleInk(colors.muted,
+  // pageBg, …)` on the ambient page background, same shape as timeline's.
+  progress_donuts: "page-bg",
 }
 
 describe("colors.muted component-type coverage (task-2 fix round, backlog 5a completeness sweep)", () => {

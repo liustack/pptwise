@@ -153,6 +153,7 @@ const COMPONENT_KINDS: Record<Component["type"], PageKind> = {
   verdict_banner: "points",
   tag_row: "list",
   kpi_cards: "data",
+  progress_donuts: "data",
   chart: "data",
   data_table: "data",
   waterfall: "data",

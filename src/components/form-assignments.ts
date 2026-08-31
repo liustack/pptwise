@@ -11,8 +11,6 @@ export const COMPONENT_FORMS = [
   "outline_grid",
   "numbered_pills",
   "hex_cluster",
-  "donut_trio",
-  "bubble_row",
   "pill_panels",
   "arrow_steps",
   "vert_timeline",
@@ -45,10 +43,6 @@ export interface FormKnobs {
   waveFirst?: boolean
   hexFill?: "palette" | "accent-ramp"
   hexStroke?: "bg" | "accent"
-  arc?: "accent" | "primary"
-  track?: "muted" | "border"
-  dangerOnMin?: boolean
-  champion?: "fill-accent" | "stroke-palette"
   frame?: "dashed" | "solid" | "none"
   pillFill?: "accent-primary" | "accent-all"
   cornerMarks?: boolean
@@ -139,32 +133,6 @@ const ASSIGNMENTS: Record<string, Record<string, FormAssignment>> = {
     arena: {
       form: "hex_cluster",
       knobs: { hexFill: "palette", hexStroke: "accent" },
-    },
-  },
-  kpi_cards: {
-    luxe: {
-      form: "donut_trio",
-      knobs: { arc: "accent", track: "muted" },
-    },
-    swiss: {
-      form: "donut_trio",
-      knobs: { arc: "primary", track: "border", dangerOnMin: true },
-    },
-    terra: {
-      form: "donut_trio",
-      knobs: { arc: "accent", track: "border" },
-    },
-    insight: {
-      form: "bubble_row",
-      knobs: { champion: "fill-accent" },
-    },
-    crayon: {
-      form: "bubble_row",
-      knobs: { champion: "stroke-palette", paletteStroke: true },
-    },
-    journal: {
-      form: "bubble_row",
-      knobs: { champion: "fill-accent" },
     },
   },
   comparison: {

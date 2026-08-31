@@ -190,6 +190,22 @@ const COVERAGE_ENTRIES: Record<string, unknown> = {
     center: "Platform",
     items: [{ label: "Billing" }, { label: "Identity" }],
   }),
+  // progress_donuts' own hard check is the 0-100 value domain: an absolute
+  // quantity has no share of a whole to fill a ring with.
+  "coverage/progress_donuts-valid": minimalDeck({
+    type: "progress_donuts",
+    items: [
+      { value: "86%", label: "coverage" },
+      { value: "72", label: "closure" },
+    ],
+  }),
+  "coverage/progress_donuts-tripwire": minimalDeck({
+    type: "progress_donuts",
+    items: [
+      { value: "128", unit: "台", label: "devices" },
+      { value: "72%", label: "closure" },
+    ],
+  }),
 }
 
 // Assembles the validation corpus from all three sources, keyed by

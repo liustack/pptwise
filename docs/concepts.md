@@ -32,7 +32,7 @@ The spec is shaped by the bound theme menu. Changing to a theme with another men
 
 ### Component
 
-A component is one typed content unit such as `bullets`, `chart`, `blockquote`, `image`, or `sankey`. Components fill pages after the spec has chosen their semantic move. The current IR exposes 38 component types.
+A component is one typed content unit such as `bullets`, `chart`, `blockquote`, `image`, or `sankey`. Components fill pages after the spec has chosen their semantic move. The current IR exposes 39 component types.
 
 The component is named `blockquote`. `quote` is reserved for the page kind.
 

@@ -119,42 +119,6 @@ const ASSIGNMENTS: AssignmentRow[] = [
     knobs: { hexFill: "palette", hexStroke: "accent" },
   },
   {
-    componentType: "kpi_cards",
-    themeId: "luxe",
-    form: "donut_trio",
-    knobs: { arc: "accent", track: "muted" },
-  },
-  {
-    componentType: "kpi_cards",
-    themeId: "swiss",
-    form: "donut_trio",
-    knobs: { arc: "primary", track: "border", dangerOnMin: true },
-  },
-  {
-    componentType: "kpi_cards",
-    themeId: "terra",
-    form: "donut_trio",
-    knobs: { arc: "accent", track: "border" },
-  },
-  {
-    componentType: "kpi_cards",
-    themeId: "insight",
-    form: "bubble_row",
-    knobs: { champion: "fill-accent" },
-  },
-  {
-    componentType: "kpi_cards",
-    themeId: "crayon",
-    form: "bubble_row",
-    knobs: { champion: "stroke-palette", paletteStroke: true },
-  },
-  {
-    componentType: "kpi_cards",
-    themeId: "journal",
-    form: "bubble_row",
-    knobs: { champion: "fill-accent" },
-  },
-  {
     componentType: "comparison",
     themeId: "consulting",
     form: "pill_panels",
@@ -328,7 +292,6 @@ const FORM_COMPONENT_TYPES = [
   "emphasis",
   "icon_cards",
   "numbered_cards",
-  "kpi_cards",
   "comparison",
   "steps",
   "timeline",
@@ -420,10 +383,9 @@ describe("resolveComponentForm", () => {
       expect(assignment?.knobs?.waveFirst).toBe(true)
     })
 
-    it("swiss + kpi_cards → form donut_trio, knobs.dangerOnMin === true", () => {
-      const assignment = resolveComponentForm("kpi_cards", "swiss")
-      expect(assignment?.form).toBe("donut_trio")
-      expect(assignment?.knobs?.dangerOnMin).toBe(true)
+    it("kpi_cards carries no form assignment at all — one canonical card grid", () => {
+      expect(assignedThemeIds("kpi_cards")).toEqual([])
+      expect(resolveComponentForm("kpi_cards", "swiss")).toBeUndefined()
     })
   })
 

@@ -575,6 +575,33 @@ const ITEM_CASES: readonly ItemCase[] = [
     pad: [{ label: "Identity" }, { label: "Search" }],
     expected: "invoices and dunning",
   },
+  {
+    type: "progress_donuts",
+    itemsKey: "items",
+    alias: "title",
+    canonical: "label",
+    item: { value: "86%", title: "coverage" },
+    pad: [{ value: "72%", label: "closure" }],
+    expected: "coverage",
+  },
+  {
+    type: "progress_donuts",
+    itemsKey: "items",
+    alias: "name",
+    canonical: "label",
+    item: { value: "86%", name: "coverage" },
+    pad: [{ value: "72%", label: "closure" }],
+    expected: "coverage",
+  },
+  {
+    type: "progress_donuts",
+    itemsKey: "items",
+    alias: "percent",
+    canonical: "value",
+    item: { percent: "86%", label: "coverage" },
+    pad: [{ value: "72%", label: "closure" }],
+    expected: "86%",
+  },
 ]
 
 describe("COMPONENT_ITEM_FIELD_ALIASES: every row round-trips", () => {
@@ -604,7 +631,7 @@ describe("COMPONENT_ITEM_FIELD_ALIASES: every row round-trips", () => {
 // ── total pair count pinned (docs/changeset "53 total synonym pairs") ──────
 
 describe("total synonym-pair count", () => {
-  it("COMPONENT_FIELD_ALIASES + COMPONENT_ITEM_FIELD_ALIASES flatten to exactly 61 pairs", () => {
+  it("COMPONENT_FIELD_ALIASES + COMPONENT_ITEM_FIELD_ALIASES flatten to exactly 64 pairs", () => {
     // The "covers every row exactly once" completeness guards above only
     // prove BLOCK_CASES/ITEM_CASES stay in lockstep with each table's own
     // rows — a row deleted from a table *and* its matching test case would
@@ -621,7 +648,7 @@ describe("total synonym-pair count", () => {
       (n, specs) => n + specs.reduce((m, spec) => m + Object.keys(spec.aliases).length, 0),
       0,
     )
-    expect(blockCount + itemCount).toBe(61)
+    expect(blockCount + itemCount).toBe(64)
   })
 })
 

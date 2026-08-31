@@ -68,6 +68,7 @@ import { aliases as fiveForcesAliases } from "./components/five-forces"
 import { aliases as heatmapAliases } from "./components/heatmap"
 import { aliases as sankeyAliases } from "./components/sankey"
 import { aliases as hubSpokeAliases } from "./components/hub-spoke"
+import { aliases as progressDonutsAliases } from "./components/progress-donuts"
 
 /** One component type's `{ aliasKey: canonicalKey }` map. */
 export type FieldAliasMap = Readonly<Record<string, string>>
@@ -180,6 +181,7 @@ export const COMPONENT_ITEM_FIELD_ALIASES: Readonly<Record<string, readonly Item
   numbered_cards: numberedCardsAliases.items,
   row_cards: rowCardsAliases.items,
   hub_spoke: hubSpokeAliases.items,
+  progress_donuts: progressDonutsAliases.items,
 }
 
 /**

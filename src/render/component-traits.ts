@@ -38,6 +38,7 @@ import { traits as cycleTraits } from "@/ir/components/cycle"
 import { traits as peopleCardsTraits } from "@/ir/components/people-cards"
 import { traits as tagRowTraits } from "@/ir/components/tag-row"
 import { traits as hubSpokeTraits } from "@/ir/components/hub-spoke"
+import { traits as progressDonutsTraits } from "@/ir/components/progress-donuts"
 
 /**
  * Component trait registry (W2 task 5, spec §3/§6/§8 — re-derived as a pure
@@ -153,6 +154,7 @@ const ALL_TRAITS: Record<ComponentType, ComponentTraits> = {
   people_cards: peopleCardsTraits,
   tag_row: tagRowTraits,
   hub_spoke: hubSpokeTraits,
+  progress_donuts: progressDonutsTraits,
 }
 
 /** Every component type whose own domain-file `traits` declares `trait: true`, collected as a `ReadonlySet`. */
@@ -270,6 +272,11 @@ export const EVIDENCE_TYPES = [
   "image",
   "comparison",
   "kpi_cards",
+  // `progress_donuts` ranks last, right after the `kpi_cards` it split off
+  // from (component-form collapse): a ring of completion rates is the same
+  // "headline numbers" evidence as a kpi card grid, and when a slide
+  // carries both the card grid is the one an author reached for first.
+  "progress_donuts",
 ] as const satisfies readonly ComponentType[]
 
 /**

@@ -66,6 +66,17 @@ export const COMPONENT_BUILDERS: Record<string, (lex: Lexicon) => Component> = {
     })),
   }),
 
+  // Completion rates, not the kpi_cards magnitudes above — the dial only
+  // means anything when every value is a share of a whole.
+  progress_donuts: (lex) => ({
+    type: "progress_donuts",
+    items: [
+      { value: "86%", label: lex.metrics[0]!.label, icon: "trending-up", source: lex.sources[0]!.label },
+      { value: "72%", label: lex.metrics[1]!.label },
+      { value: "48%", label: lex.metrics[2]!.label },
+    ],
+  }),
+
   // No `show_grid` here: a bar chart's house default is gridline-free
   // (round-4 review, `journal p05` — every bar already prints its value, see
   // `renderBar`'s own `showGrid` doc comment), and this page is the one the
@@ -488,8 +499,6 @@ export const FORM_VARIANTS: readonly FormVariant[] = [
   { id: "icon_cards · outline grid", theme: "academic", build: (lex) => COMPONENT_BUILDERS.icon_cards!(lex) },
   { id: "numbered_cards · pills", theme: "pulse", build: (lex) => COMPONENT_BUILDERS.numbered_cards!(lex) },
   { id: "numbered_cards · hex cluster", theme: "tech", build: (lex) => COMPONENT_BUILDERS.numbered_cards!(lex) },
-  { id: "kpi_cards · donut trio", theme: "luxe", build: (lex) => COMPONENT_BUILDERS.kpi_cards!(lex) },
-  { id: "kpi_cards · bubble row", theme: "insight", build: (lex) => COMPONENT_BUILDERS.kpi_cards!(lex) },
   { id: "comparison · pill panels", theme: "vermilion", build: (lex) => COMPONENT_BUILDERS.comparison!(lex) },
   { id: "steps · arrow band", theme: "runway", build: (lex) => COMPONENT_BUILDERS.steps!(lex) },
   { id: "timeline · vertical nodes", theme: "stage", build: (lex) => COMPONENT_BUILDERS.timeline!(lex) },
