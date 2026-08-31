@@ -16,7 +16,13 @@ import {
   type DomainPadMode,
 } from "./cartesian-axis"
 import { buildChartModel, zeroAxisRatio, type ChartDomain } from "./chart-model"
-import { resolveValueLabelCollisions, type ValueLabelSpec } from "./label-collision"
+import {
+  labelLinePitch,
+  resolveValueLabelCollisions,
+  stackLabelColumn,
+  type ColumnLabelSpec,
+  type ValueLabelSpec,
+} from "./label-collision"
 
 /**
  * Chart renderers for the page-coordinate SVG pipeline.
@@ -239,6 +245,77 @@ function scaleHexBrightness(hex: string, factor: number): string {
   const g = scale((value >> 8) & 0xff)
   const b = scale(value & 0xff)
   return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, "0").toUpperCase()}`
+}
+
+/**
+ * Direct labels for the two charts that carry no axis and no legend — pie
+ * and funnel (`chart.tsx`'s `legendApplicable` excludes both, and always
+ * did). Until this wave they printed nothing at all: a full-page pie was
+ * four colored wedges with no way to tell which segment was which. They now
+ * print `name value` beside every mark, the same house idiom the rest of
+ * this file follows.
+ *
+ * **Beside the mark, never on it.** `renderBar` prints its value above the
+ * bar, `renderBarHorizontal` past the bar's end, `renderDumbbell` beside its
+ * dots: every chart label in this file lands on the page background, which
+ * is exactly what lets `full-matrix-contrast.test.ts` classify the whole
+ * `chart` component as `"page-bg"` ("labels never sit on a
+ * component-painted rect"). Printing inside a wedge or a funnel band instead
+ * would put body text on a `chartPalette` fill, and the *best available* ink
+ * on those fills — `readableOn(fill)` measured against the fill itself —
+ * bottoms out at 4.51:1 across the 24 built-in palettes (museum's
+ * `#C45A45`). That is a 0.01 margin over the 4.5:1 body floor, held up by
+ * nothing: a `theme fork` or a brand-extracted palette moves those hexes
+ * freely. Labeling outside the mark keeps the contrast decision out of the
+ * palette's hands entirely, and keeps this component's own audit
+ * classification true.
+ */
+const DIRECT_LABEL_FONT_SIZE = VALUE_FONT_SIZE
+const DIRECT_LABEL_FONT_WEIGHT = VALUE_FONT_WEIGHT
+/**
+ * A label's baseline, as an offset in em below its own vertical center. An
+ * ink box runs 0.72em above the baseline to 0.12em below it
+ * (`render/depth-contract/geometry`'s `TEXT_INK_ASCENT`/`TEXT_INK_DESCENT`),
+ * so its center sits 0.3em above the baseline. Placement math works in
+ * centers — that is what a column stacks and what a band is centered on —
+ * and converts to a baseline only at the `<text>` itself.
+ */
+const DIRECT_LABEL_CENTER_TO_BASELINE = 0.3
+
+/**
+ * One label per mark, `name value` in a single `<text>`. One node, not a
+ * name node plus a value node: the anti-collision math, the audit's ink box
+ * and the reader all see one label instead of two half-labels that can drift
+ * apart. A point with no name prints its value alone.
+ */
+function directLabelText(point: ChartSeries["data"][number]): string {
+  const name = String(point.x).trim()
+  return name ? `${name} ${point.y}` : String(point.y)
+}
+
+function directLabelWidth(text: string, fontFamily?: string): number {
+  return measureTextUnits(text, { bold: true, fontFamily }) * DIRECT_LABEL_FONT_SIZE
+}
+
+/** Widest of a chart's direct labels, the width its layout has to reserve. */
+function widestDirectLabel(texts: readonly string[], fontFamily?: string): number {
+  let widest = 0
+  for (const text of texts) {
+    const px = directLabelWidth(text, fontFamily)
+    if (px > widest) widest = px
+  }
+  return widest
+}
+
+/**
+ * Ink for a direct label. Same rule `renderDumbbell` states on its own
+ * `accentInk`: the label sits on the page, so it clears a contrast floor
+ * against the background it actually lands on. Without a `bgHex` (direct
+ * unit-test calls) the caller's own text token is used unchanged.
+ */
+function directLabelInk(textColor: string | undefined, bgHex: string | undefined): string | undefined {
+  if (!textColor || !bgHex) return textColor
+  return accessibleInk(textColor, bgHex, DIRECT_LABEL_FONT_SIZE)
 }
 
 /**
@@ -841,6 +918,20 @@ export function renderLine(
   )
 }
 
+/** Radial stub a leader travels out from the arc before it turns horizontal. */
+const PIE_LEADER_STUB = 10
+/** Air between a leader's end and the first glyph of the label it points at. */
+const PIE_LEADER_GAP = 6
+/**
+ * Floor on how much radius the pie gives up to make room for its label
+ * gutters. Wide labels shrink the circle; past this the circle stops
+ * shrinking and the labels are fitted (to the 16px floor, then clipped)
+ * instead. A pie reduced to a small disc in a field of text has stopped
+ * being a pie, which is the same trade `renderDumbbell`'s own
+ * `DUMBBELL_PLOT_MIN_W` makes for its plot band.
+ */
+const PIE_MIN_RADIUS_RATIO = 0.55
+
 export function renderPie(
   series: ChartSeries[],
   palette: string[],
@@ -848,45 +939,157 @@ export function renderPie(
   y0: number,
   w: number,
   h: number,
-  _mutedColor?: string,
-  _textColor?: string,
+  mutedColor?: string,
+  textColor?: string,
   _accentColor?: string,
   /** Unused — pie has no axes (radial, not applicable per chart.tsx's
    * `AXES_APPLICABLE_TYPES`). Kept for signature parity with bar/line/
    * barHorizontal so `chart.tsx`'s `renderers` record dispatches through one
-   * uniform call shape (same convention `_mutedColor`/`_textColor`/
-   * `_accentColor` above already established for this function). */
+   * uniform call shape (same convention `_accentColor` above already
+   * established for this function). */
   _showGrid?: boolean,
+  _component?: ChartInput,
+  bgHex?: string,
+  _axisColor?: string,
+  fontFamily?: string,
 ): ReactElement {
   const data = series[0]?.data ?? []
   const total = data.reduce((s, d) => s + d.y, 0)
   if (total === 0) return <></>
-  let acc = 0
   const cx = x0 + w / 2
   const cy = y0 + h / 2
-  const r = Math.min(w, h) / 2 - 4
+  const fullR = Math.min(w, h) / 2 - 4
+  // The circle gives up radius to the two label gutters, down to the floor.
+  // A pie wide enough for its labels (the common case: `chart.tsx` hands
+  // this renderer the full component width against a fixed 240px band) keeps
+  // its full radius, so the wedge geometry is untouched there.
+  const texts = data.map(directLabelText)
+  // One authoritative label budget, used both to size the circle and to fit
+  // the text. Measuring the leftover geometry back out instead costs a float
+  // bit at exactly the point where reservation and budget are meant to be
+  // equal, and `fitSvgLine`'s `floor(available / units)` turns that bit into
+  // a whole dropped size step, so the label that set the reservation is the
+  // one that gets truncated. Caught on the funnel, whose widest band's label
+  // is usually also its longest: it shipped as "田野采集 " with its own value
+  // clipped off, on 18 gallery pages. Geometry may grant a label *more* room
+  // than the budget (a narrow band, a small slice); it never grants less.
+  const labelBudget = Math.max(
+    0,
+    Math.min(
+      widestDirectLabel(texts, fontFamily),
+      w / 2 - PIE_LEADER_STUB - PIE_LEADER_GAP - fullR * PIE_MIN_RADIUS_RATIO,
+    ),
+  )
+  const r = Math.max(
+    fullR * PIE_MIN_RADIUS_RATIO,
+    Math.min(fullR, w / 2 - (PIE_LEADER_STUB + PIE_LEADER_GAP + labelBudget)),
+  )
+  const labelFill = directLabelInk(textColor, bgHex)
+  const pitch = labelLinePitch(DIRECT_LABEL_FONT_SIZE)
+
+  let acc = 0
+  const slices = data.map((d, i) => {
+    const startA = (acc / total) * Math.PI * 2 - Math.PI / 2
+    acc += d.y
+    const endA = (acc / total) * Math.PI * 2 - Math.PI / 2
+    const large = endA - startA > Math.PI ? 1 : 0
+    const x1 = cx + Math.cos(startA) * r
+    const y1 = cy + Math.sin(startA) * r
+    const x2 = cx + Math.cos(endA) * r
+    const y2 = cy + Math.sin(endA) * r
+    // Where the label hangs off: the slice's own middle, carried one stub
+    // out past the arc. A slice on the right half labels rightward, one on
+    // the left labels leftward, so a leader never crosses the pie.
+    const midA = (startA + endA) / 2
+    const right = Math.cos(midA) >= 0
+    const textX = right ? cx + r + PIE_LEADER_STUB + PIE_LEADER_GAP : cx - r - PIE_LEADER_STUB - PIE_LEADER_GAP
+    return {
+      key: i,
+      d: `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2} Z`,
+      fill: palette[i % palette.length],
+      right,
+      textX,
+      // Truncation is the last resort, after the circle has already given up
+      // what radius it can: fit to the room that is actually left.
+      fitted: fitSvgLine(texts[i]!, {
+        maxWidth: Math.max(labelBudget, right ? x0 + w - textX : textX - x0),
+        fontSize: DIRECT_LABEL_FONT_SIZE,
+        minFontSize: DIRECT_LABEL_FONT_SIZE,
+        bold: true,
+        fontFamily,
+      }),
+      arcX: cx + Math.cos(midA) * r,
+      arcY: cy + Math.sin(midA) * r,
+      stubX: cx + Math.cos(midA) * (r + PIE_LEADER_STUB),
+      stubY: cy + Math.sin(midA) * (r + PIE_LEADER_STUB),
+      value: d.y,
+    }
+  })
+
+  // Each gutter is stacked on its own: a thin slice's label slides off its
+  // neighbour's line instead of landing on it, and a gutter too short to
+  // hold every label drops its smallest slices rather than overlapping.
+  const bounds = { top: y0, bottom: y0 + h }
+  const columnSpec = (slice: (typeof slices)[number]): ColumnLabelSpec => ({
+    id: String(slice.key),
+    y: slice.stubY,
+    pitch,
+    priority: slice.value,
+  })
+  const placed = new Map(
+    [true, false].flatMap((side) =>
+      stackLabelColumn(slices.filter((s) => s.right === side).map(columnSpec), bounds).map(
+        (label) => [label.id, label] as const,
+      ),
+    ),
+  )
+
   return (
     <>
-      {data.map((d, i) => {
-        const startA = (acc / total) * Math.PI * 2 - Math.PI / 2
-        acc += d.y
-        const endA = (acc / total) * Math.PI * 2 - Math.PI / 2
-        const large = endA - startA > Math.PI ? 1 : 0
-        const x1 = cx + Math.cos(startA) * r
-        const y1 = cy + Math.sin(startA) * r
-        const x2 = cx + Math.cos(endA) * r
-        const y2 = cy + Math.sin(endA) * r
+      {slices.map((slice) => (
+        <path key={slice.key} d={slice.d} fill={slice.fill} />
+      ))}
+      {slices.map((slice) => {
+        const label = placed.get(String(slice.key))
+        if (!label || label.hidden || !slice.fitted.text) return null
+        const elbowX = slice.right ? slice.textX - PIE_LEADER_GAP : slice.textX + PIE_LEADER_GAP
         return (
-          <path
-            key={i}
-            d={`M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2} Z`}
-            fill={palette[i % palette.length]}
-          />
+          <g key={`label-${slice.key}`}>
+            <polyline
+              points={`${slice.arcX},${slice.arcY} ${slice.stubX},${slice.stubY} ${elbowX},${label.y}`}
+              fill="none"
+              stroke={mutedColor}
+              strokeWidth={1}
+              strokeOpacity={0.55}
+            />
+            <text
+              data-value-label="1"
+              data-truncated={slice.fitted.truncated ? "1" : undefined}
+              x={slice.textX}
+              y={label.y + DIRECT_LABEL_FONT_SIZE * DIRECT_LABEL_CENTER_TO_BASELINE}
+              textAnchor={slice.right ? "start" : "end"}
+              fontSize={slice.fitted.fontSize}
+              fontWeight={DIRECT_LABEL_FONT_WEIGHT}
+              fill={labelFill}
+              dominantBaseline="alphabetic"
+            >
+              {slice.fitted.text}
+            </text>
+          </g>
         )
       })}
     </>
   )
 }
+
+/** Air between a funnel band's end and the label naming it. */
+const FUNNEL_LABEL_GAP = 10
+/**
+ * Floor on the width the funnel keeps for its own bands. Labels take their
+ * measured width out of `w`; past this the bands stop narrowing and the
+ * labels are fitted into what is left, same trade as `PIE_MIN_RADIUS_RATIO`.
+ */
+const FUNNEL_MIN_BANDS_RATIO = 0.5
 
 export function renderFunnel(
   series: ChartSeries[],
@@ -896,33 +1099,88 @@ export function renderFunnel(
   w: number,
   h: number,
   _mutedColor?: string,
-  _textColor?: string,
+  textColor?: string,
   _accentColor?: string,
   /** Unused — funnel is not `AXES_APPLICABLE_TYPES` (chart.tsx): a single
    * value dimension with no second (category) axis and no plot-box gridline
    * surface to anchor a title against. Kept for signature parity, same as
    * `renderPie`'s own `_showGrid`. */
   _showGrid?: boolean,
+  _component?: ChartInput,
+  bgHex?: string,
+  _axisColor?: string,
+  fontFamily?: string,
 ): ReactElement {
   const data = series[0]?.data ?? []
   const max = Math.max(...data.map((d) => d.y), 1)
   const stepH = h / Math.max(data.length, 1)
+  const texts = data.map(directLabelText)
+  // One label per band, so the bands themselves are the anti-collision
+  // mechanism — until a row is shorter than a line of text, at which point
+  // no placement inside this component can keep neighbouring labels apart
+  // and the whole chart goes back to bands only. All or nothing, rather than
+  // labeling whichever rows happen to win a race.
+  const labeled = data.length > 0 && stepH >= labelLinePitch(DIRECT_LABEL_FONT_SIZE)
+  // One authoritative label budget, capped so the funnel keeps the wider
+  // half of the box — see `renderPie`'s own note on why the fit budget reads
+  // this number rather than measuring the leftover geometry back.
+  const labelBudget = labeled
+    ? Math.max(
+        0,
+        Math.min(
+          widestDirectLabel(texts, fontFamily),
+          w * (1 - FUNNEL_MIN_BANDS_RATIO) - FUNNEL_LABEL_GAP,
+        ),
+      )
+    : 0
+  const bandsW = labeled ? w - FUNNEL_LABEL_GAP - labelBudget : w
+  const labelFill = directLabelInk(textColor, bgHex)
   return (
     <>
       {data.map((d, i) => {
         const ratio = d.y / max
-        const barW = clampChartExtent(w * ratio)
-        const barX = x0 + (w - barW) / 2
+        const barW = clampChartExtent(bandsW * ratio)
+        const barX = x0 + (bandsW - barW) / 2
+        const bandCy = y0 + i * stepH + stepH / 2
+        // `Math.max(0, barW)` for the same reason `clampChartExtent` exists:
+        // a negative `y` is legal IR and already yields a degenerate band, so
+        // the label anchors to the band's real right edge rather than riding
+        // that geometry off the page.
+        const labelX = barX + Math.max(0, barW) + FUNNEL_LABEL_GAP
+        const fitted = labeled
+          ? fitSvgLine(texts[i]!, {
+              maxWidth: Math.max(labelBudget, x0 + w - labelX),
+              fontSize: DIRECT_LABEL_FONT_SIZE,
+              minFontSize: DIRECT_LABEL_FONT_SIZE,
+              bold: true,
+              fontFamily,
+            })
+          : null
         return (
-          <rect
-            key={i}
-            data-plot-mark="1"
-            x={barX}
-            y={y0 + i * stepH + 2}
-            width={barW}
-            height={stepH - 4}
-            fill={palette[i % palette.length]}
-          />
+          <g key={i}>
+            <rect
+              data-plot-mark="1"
+              x={barX}
+              y={y0 + i * stepH + 2}
+              width={barW}
+              height={stepH - 4}
+              fill={palette[i % palette.length]}
+            />
+            {fitted && fitted.text && (
+              <text
+                data-value-label="1"
+                data-truncated={fitted.truncated ? "1" : undefined}
+                x={labelX}
+                y={bandCy + DIRECT_LABEL_FONT_SIZE * DIRECT_LABEL_CENTER_TO_BASELINE}
+                fontSize={fitted.fontSize}
+                fontWeight={DIRECT_LABEL_FONT_WEIGHT}
+                fill={labelFill}
+                dominantBaseline="alphabetic"
+              >
+                {fitted.text}
+              </text>
+            )}
+          </g>
         )
       })}
     </>

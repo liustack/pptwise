@@ -1797,14 +1797,24 @@ describe("parseWedgePath — real renderDonut/renderPie output round-trips (rend
     )
     const ds = extractPathDs(markup)
     expect(ds.length).toBe(4)
+    // Unlike renderDonut, a pie's radius is no longer `min(w,h)/2 - 4`
+    // outright: slice labels (2026-08-31) sit in gutters outside the circle
+    // and a box too narrow to hold both makes the circle give way, down to
+    // chart-svg.tsx's own `PIE_MIN_RADIUS_RATIO` floor. This 400x400 box is
+    // one that pays. What the parser contract actually needs pinned is
+    // unchanged: every wedge parses, and they all describe *one* circle.
+    const radii: number[] = []
     for (const d of ds) {
       const sector = __parseWedgePath(d)
       expect(sector).not.toBeNull()
       expect(sector!.cx).toBeCloseTo(EXPECTED_CX, 6)
       expect(sector!.cy).toBeCloseTo(EXPECTED_CY, 6)
-      expect(sector!.ro).toBeCloseTo(EXPECTED_R, 6)
       expect(sector!.ri).toBe(0)
+      radii.push(sector!.ro)
     }
+    for (const ro of radii) expect(ro).toBeCloseTo(radii[0]!, 6)
+    expect(radii[0]!).toBeLessThanOrEqual(EXPECTED_R)
+    expect(radii[0]!).toBeGreaterThanOrEqual(EXPECTED_R * 0.55)
   })
 
   it("parses a real single-100%-share renderDonut wedge as a full circle, and a real zero-share category's wedge as degenerate", () => {

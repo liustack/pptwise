@@ -53,8 +53,18 @@ const INDENT_EM = 0.8
  */
 const LINE_EM = 1.2
 
+/**
+ * Vertical room one label needs before it reads as its own line: a normal
+ * text line plus the hairline of air above it. The one source of truth for
+ * "far enough apart", shared by the pairwise resolver below and by
+ * {@link stackLabelColumn}.
+ */
+export function labelLinePitch(fontSize: number): number {
+  return fontSize * LINE_EM + AIR
+}
+
 function minBaselineGap(a: ValueLabelSpec, b: ValueLabelSpec): number {
-  return Math.max(a.fontSize, b.fontSize) * LINE_EM + AIR
+  return labelLinePitch(Math.max(a.fontSize, b.fontSize))
 }
 
 const GAP_EPSILON = 1e-6
@@ -74,6 +84,94 @@ function xExtentsOverlap(a: ValueLabelSpec, b: ValueLabelSpec): boolean {
 function labelsCollide(a: ValueLabelSpec, b: ValueLabelSpec): boolean {
   if (!xExtentsOverlap(a, b)) return false
   return Math.abs(a.y - b.y) < minBaselineGap(a, b) - GAP_EPSILON
+}
+
+/**
+ * One label competing for room in a vertical label column — the gutter
+ * beside a pie, where every label wants the y its own slice points at and
+ * several slices can point at nearly the same one.
+ */
+export interface ColumnLabelSpec {
+  readonly id: string
+  /** Where this label's ink wants to be centered. */
+  readonly y: number
+  /** Vertical room it needs — see {@link labelLinePitch}. */
+  readonly pitch: number
+  /** Higher survives when the column cannot hold every label. */
+  readonly priority: number
+}
+
+export interface StackedColumnLabel {
+  readonly id: string
+  readonly y: number
+  readonly hidden: boolean
+}
+
+/**
+ * Stack one column of labels so no two of them overlap.
+ *
+ * `resolveValueLabelCollisions` above settles collisions pair by pair, which
+ * suits labels that are already spread across a plot and only occasionally
+ * bump. A pie's labels are the opposite case: every one of them is pinned to
+ * the same narrow gutter by construction, and three thin slices in a row all
+ * want the same 20px of it. So this one solves the column as a whole —
+ *
+ *  1. **Room first.** A column can hold `(bottom - top) / pitch` labels and
+ *     no more. Anything past that is dropped outright, largest slice first
+ *     (`priority`), because a label squeezed into space that does not exist
+ *     is an ink blot, not a label. Dropping paints nothing — validate forbids
+ *     an ellipsis, and the same last resort ends the pairwise resolver above.
+ *  2. **Sweep down**, pushing each label at least one pitch below the one
+ *     above it, so labels keep their by-angle order rather than crossing
+ *     their own leader lines.
+ *  3. **Sweep back up**, so the last label ends inside the column. Step 1
+ *     guarantees the kept labels' pitches fit between `top` and `bottom`, so
+ *     this pass can never push the first one back out through the top.
+ */
+export function stackLabelColumn(
+  labels: readonly ColumnLabelSpec[],
+  bounds: { readonly top: number; readonly bottom: number },
+): StackedColumnLabel[] {
+  if (labels.length === 0) return []
+  const height = bounds.bottom - bounds.top
+
+  const kept = new Set<string>()
+  let used = 0
+  for (const { label } of labels
+    .map((label, index) => ({ label, index }))
+    .sort((a, b) => b.label.priority - a.label.priority || a.index - b.index)) {
+    if (used + label.pitch > height) continue
+    used += label.pitch
+    kept.add(label.id)
+  }
+
+  const placed = labels
+    .map((label, index) => ({ label, index }))
+    .filter(({ label }) => kept.has(label.id))
+    .sort((a, b) => a.label.y - b.label.y || a.index - b.index)
+    .map(({ label }) => ({ id: label.id, y: label.y, pitch: label.pitch }))
+
+  for (let i = 0; i < placed.length; i++) {
+    const self = placed[i]!
+    const above = placed[i - 1]
+    const floor = above ? above.y + (above.pitch + self.pitch) / 2 : bounds.top + self.pitch / 2
+    if (self.y < floor) self.y = floor
+  }
+  for (let i = placed.length - 1; i >= 0; i--) {
+    const self = placed[i]!
+    const below = placed[i + 1]
+    const ceiling = below
+      ? below.y - (below.pitch + self.pitch) / 2
+      : bounds.bottom - self.pitch / 2
+    if (self.y > ceiling) self.y = ceiling
+  }
+
+  const finalY = new Map(placed.map((p) => [p.id, p.y]))
+  return labels.map((label) => ({
+    id: label.id,
+    y: finalY.get(label.id) ?? label.y,
+    hidden: !finalY.has(label.id),
+  }))
 }
 
 export function resolveValueLabelCollisions(labels: readonly ValueLabelSpec[]): PlacedValueLabel[] {

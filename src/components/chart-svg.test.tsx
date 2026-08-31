@@ -10,11 +10,14 @@ import {
   renderFunnel,
   renderGauge,
   renderLine,
+  renderPie,
   renderScatter,
 } from "./chart-svg"
 import { buildNumericAxis, layoutCartesianPlot } from "./cartesian-axis"
 import { assertSubset } from "../render/subset-validate"
 import { renderSvgMarkup } from "../render/serialize"
+import { boxesIntersect, textInkBox } from "../render/depth-contract/geometry"
+import { contrastRatio } from "../render/ink"
 import { __parseWedgePath } from "../audit/deck-audit"
 import type { ChartSeries, Component } from "@/ir"
 
@@ -1526,5 +1529,249 @@ describe("renderLine — converging endpoints", () => {
     const lastRing = order.lastIndexOf("8")
     const firstDot = order.indexOf("4")
     expect(lastRing).toBeLessThan(firstDot)
+  })
+})
+
+/**
+ * Pie and funnel direct labels (2026-08-31). Before this wave both charts
+ * drew colored shapes and nothing else, and `chart.tsx`'s `legendApplicable`
+ * excludes both, so a full-page pie carried no way at all to tell one wedge
+ * from another. Every test below fails outright if the labels come back off.
+ *
+ * Labels are measured through `textInkBox` — the same estimator the gallery's
+ * own L1 collision pass reads (`evals/gallery/l1.ts`) and the same one
+ * `svg-audit.ts` bases its h-overflow verdict on — so "these do not overlap"
+ * here means the same thing it means at the gate.
+ */
+const PIE_ZH: ChartSeries[] = [
+  {
+    name: "收入结构",
+    data: [
+      { x: "席位开通", y: 40 },
+      { x: "用量采集", y: 32 },
+      { x: "模板配置", y: 24 },
+      { x: "权限建模", y: 16 },
+      { x: "知识检索", y: 9 },
+      { x: "消息触达", y: 5 },
+    ],
+  },
+]
+
+/**
+ * The gallery corpus' own funnel shape, and deliberately so: its widest
+ * label ("需求确认 100", four wide glyphs and three digits) belongs to its
+ * *widest* band, the one whose label budget the whole layout is measured
+ * from. That is the case where the reservation and the fit budget have to
+ * agree exactly — they disagreed by one float bit in this wave's first cut,
+ * and `fitSvgLine`'s `floor(available / units)` turned that bit into a
+ * dropped size step, shipping "需求确认 " with its own value clipped off on
+ * 18 gallery pages. A fixture whose longest label sits on a narrower band
+ * never touches that edge.
+ */
+const FUNNEL_ZH: ChartSeries[] = [
+  {
+    name: "转化漏斗",
+    data: [
+      { x: "需求确认", y: 100 },
+      { x: "方案设计", y: 81 },
+      { x: "席位开通", y: 62 },
+      { x: "权限配置", y: 43 },
+      { x: "试运行", y: 24 },
+    ],
+  },
+]
+
+function labelsOf(container: HTMLElement): Element[] {
+  return Array.from(container.querySelectorAll('[data-value-label="1"]'))
+}
+
+function inkBoxOf(el: Element) {
+  return textInkBox({
+    content: el.textContent ?? "",
+    x: Number(el.getAttribute("x")),
+    y: Number(el.getAttribute("y")),
+    fontSize: Number(el.getAttribute("font-size")),
+    fontFamily: el.getAttribute("font-family") ?? "",
+    fontWeight: el.getAttribute("font-weight"),
+    textAnchor: el.getAttribute("text-anchor") ?? "start",
+  })
+}
+
+function expectNoOverlap(container: HTMLElement): void {
+  const boxes = labelsOf(container).map((el) => ({ text: el.textContent, box: inkBoxOf(el) }))
+  for (let i = 0; i < boxes.length; i++) {
+    for (let j = i + 1; j < boxes.length; j++) {
+      expect(
+        boxesIntersect(boxes[i]!.box, boxes[j]!.box),
+        `"${boxes[i]!.text}" and "${boxes[j]!.text}" overlap`,
+      ).toBe(false)
+    }
+  }
+}
+
+describe("renderPie — direct slice labels", () => {
+  it("names every slice and prints its value", () => {
+    const { container } = svg(renderPie(PIE_ZH, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
+    const texts = labelsOf(container).map((el) => el.textContent)
+    expect(texts).toHaveLength(PIE_ZH[0]!.data.length)
+    for (const point of PIE_ZH[0]!.data) {
+      expect(texts).toContain(`${point.x} ${point.y}`)
+    }
+  })
+
+  it("keeps every pair of slice labels off each other", () => {
+    const { container } = svg(renderPie(PIE_ZH, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
+    expect(labelsOf(container).length).toBeGreaterThan(1)
+    expectNoOverlap(container)
+  })
+
+  it("labels outside the pie, so no label ever lands on a wedge fill", () => {
+    // The contrast invariant `full-matrix-contrast.test.ts` classifies this
+    // whole component under ("chart": "page-bg"): a label sitting on a
+    // chartPalette wedge would have to clear 4.5:1 against a color the theme
+    // is free to move. Outside the circle it never has to.
+    const { container } = svg(renderPie(PIE_ZH, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
+    const cx = W / 2
+    const cy = H / 2
+    const r = Math.min(W, H) / 2 - 4
+    for (const el of labelsOf(container)) {
+      const box = inkBoxOf(el)
+      for (const x of [box.x, box.x + box.w]) {
+        for (const y of [box.y, box.y + box.h]) {
+          expect(Math.hypot(x - cx, y - cy), `"${el.textContent}" corner inside the pie`).toBeGreaterThan(r)
+        }
+      }
+    }
+  })
+
+  it("draws one leader per label, from the arc out to the label it names", () => {
+    const { container } = svg(renderPie(PIE_ZH, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
+    const leaders = Array.from(container.querySelectorAll("polyline"))
+    expect(leaders).toHaveLength(PIE_ZH[0]!.data.length)
+    for (const leader of leaders) {
+      expect(leader.getAttribute("points")!.trim().split(/\s+/)).toHaveLength(3)
+    }
+  })
+
+  it("keeps every label inside the component's own box", () => {
+    const { container } = svg(renderPie(PIE_ZH, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
+    expect(labelsOf(container)).toHaveLength(PIE_ZH[0]!.data.length)
+    for (const el of labelsOf(container)) {
+      const box = inkBoxOf(el)
+      expect(box.x, el.textContent ?? "").toBeGreaterThanOrEqual(0)
+      expect(box.x + box.w, el.textContent ?? "").toBeLessThanOrEqual(W)
+    }
+  })
+
+  it("gives up radius, not readability, when the box is too narrow for full-size gutters", () => {
+    const narrow = 420
+    const { container } = svg(renderPie(PIE_ZH, PALETTE, 0, 0, narrow, H, MUTED, TEXT, ACCENT))
+    expect(labelsOf(container)).toHaveLength(PIE_ZH[0]!.data.length)
+    expectNoOverlap(container)
+    for (const el of labelsOf(container)) {
+      expect(Number(el.getAttribute("font-size"))).toBeGreaterThanOrEqual(16)
+      // The radius is what pays for the gutters, not the labels' content:
+      // this box is narrow enough that the circle shrinks, and still every
+      // label keeps its own value.
+      expect(el.getAttribute("data-truncated"), el.textContent ?? "").toBeNull()
+      const box = inkBoxOf(el)
+      expect(box.x).toBeGreaterThanOrEqual(0)
+      expect(box.x + box.w).toBeLessThanOrEqual(narrow)
+    }
+  })
+
+  it("drops the smallest slices' labels rather than stacking a column it cannot hold", () => {
+    const many: ChartSeries[] = [
+      { name: "细分", data: Array.from({ length: 40 }, (_, i) => ({ x: `细分${i}`, y: 40 - i * 0.5 })) },
+    ]
+    const { container } = svg(renderPie(many, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
+    const texts = labelsOf(container).map((el) => el.textContent)
+    expect(texts.length).toBeGreaterThan(0)
+    expect(texts.length).toBeLessThan(40)
+    // Whatever survives is the biggest, and none of it collides.
+    expect(texts).toContain("细分0 40")
+    expectNoOverlap(container)
+  })
+
+  it("routes the label ink through the background it is painted on", () => {
+    const dark = "#101418"
+    const { container } = svg(
+      renderPie(PIE_ZH, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT, undefined, undefined, dark),
+    )
+    expect(labelsOf(container)).toHaveLength(PIE_ZH[0]!.data.length)
+    for (const el of labelsOf(container)) {
+      expect(contrastRatio(el.getAttribute("fill")!, dark)).toBeGreaterThanOrEqual(4.5)
+    }
+  })
+})
+
+describe("renderFunnel — direct stage labels", () => {
+  it("names every band and prints its value", () => {
+    const { container } = svg(renderFunnel(FUNNEL_ZH, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
+    const labels = labelsOf(container)
+    expect(labels.map((el) => el.textContent)).toEqual(
+      FUNNEL_ZH[0]!.data.map((point) => `${point.x} ${point.y}`),
+    )
+    // The widest band's label is the one the layout budget is measured from,
+    // so it is the one a one-bit budget disagreement clips first.
+    for (const el of labels) expect(el.getAttribute("data-truncated")).toBeNull()
+  })
+
+  it("keeps every pair of stage labels off each other", () => {
+    const { container } = svg(renderFunnel(FUNNEL_ZH, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
+    expect(labelsOf(container).length).toBeGreaterThan(1)
+    expectNoOverlap(container)
+  })
+
+  it("labels beside the band, never on the band's own fill", () => {
+    const { container } = svg(renderFunnel(FUNNEL_ZH, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
+    const bands = Array.from(container.querySelectorAll("rect")).map((rect) => ({
+      right: Number(rect.getAttribute("x")) + Number(rect.getAttribute("width")),
+    }))
+    const labels = labelsOf(container)
+    expect(labels).toHaveLength(bands.length)
+    labels.forEach((el, i) => {
+      expect(inkBoxOf(el).x, el.textContent ?? "").toBeGreaterThan(bands[i]!.right)
+    })
+  })
+
+  it("keeps every label inside the component's own box", () => {
+    const { container } = svg(renderFunnel(FUNNEL_ZH, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
+    expect(labelsOf(container)).toHaveLength(FUNNEL_ZH[0]!.data.length)
+    for (const el of labelsOf(container)) {
+      const box = inkBoxOf(el)
+      expect(box.x + box.w, el.textContent ?? "").toBeLessThanOrEqual(W)
+    }
+  })
+
+  it("keeps the funnel itself the wider half of the box", () => {
+    const { container } = svg(renderFunnel(FUNNEL_ZH, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
+    const widest = Math.max(
+      ...Array.from(container.querySelectorAll("rect")).map((r) => Number(r.getAttribute("width"))),
+    )
+    expect(widest).toBeGreaterThanOrEqual(W * 0.5)
+  })
+
+  it("prints no label at all once a row is shorter than a line of text", () => {
+    // 20 stages over 240px is a 12px row: there is no placement that keeps
+    // neighbouring labels apart, so the chart goes back to bands only rather
+    // than printing an ink blot.
+    const crowded: ChartSeries[] = [
+      { name: "阶段", data: Array.from({ length: 20 }, (_, i) => ({ x: `阶段${i}`, y: 100 - i * 4 })) },
+    ]
+    const { container } = svg(renderFunnel(crowded, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
+    expect(labelsOf(container)).toHaveLength(0)
+    expect(container.querySelectorAll("rect")).toHaveLength(20)
+  })
+
+  it("routes the label ink through the background it is painted on", () => {
+    const dark = "#101418"
+    const { container } = svg(
+      renderFunnel(FUNNEL_ZH, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT, undefined, undefined, dark),
+    )
+    expect(labelsOf(container)).toHaveLength(FUNNEL_ZH[0]!.data.length)
+    for (const el of labelsOf(container)) {
+      expect(contrastRatio(el.getAttribute("fill")!, dark)).toBeGreaterThanOrEqual(4.5)
+    }
   })
 })
