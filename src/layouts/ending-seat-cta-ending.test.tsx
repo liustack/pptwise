@@ -72,7 +72,8 @@ describe("ending-seat-cta-ending — board geometry", () => {
 
     const cta = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === CTA)
     expect(cta?.getAttribute("x")).toBe("238")
-    expect(cta?.getAttribute("y")).toBe("482")
+    // 钮 440..504，单行标签的基线取钮心 472 + round(22 * 0.32)。
+    expect(cta?.getAttribute("y")).toBe("479")
     expect(cta?.getAttribute("text-anchor")).toBe("middle")
     expect(cta?.getAttribute("fill")).toBe(readableOn(tokens.colors.accent))
 

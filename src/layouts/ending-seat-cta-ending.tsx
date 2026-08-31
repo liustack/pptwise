@@ -9,6 +9,7 @@ import { stripEmphasis } from "../render/emphasis"
  * seat-cta-ending（第八波 pinOnly）：稀缺席位句 + 切角绿钮。构图抄
  * `.issues/design-boards/wave8/b3/Arena.dc.html` ending：标题 y280 / 56px、
  * 副题 y360、钮 polygon 96,440 396,440 396,482 374,504 96,504、落款 y620。
+ * 钮字基线不写死，由钮自身的上下边算居中（见 `ctaFirstY`）。
  *
  * 进共享池。零 theme id、零 baked hex。切角绿钮是结构 CTA，不是 motif。
  * 钮字取 contact.name，没有再取 subheading，不写死「约商务面聊」。
@@ -37,12 +38,16 @@ const CTA_TOP = 440
 const CTA_BOTTOM = 504
 const CTA_NOTCH = 22
 const CTA_TEXT_X = 238
-const CTA_TEXT_Y = 482
 const CTA_SIZE = 22
 const CTA_MIN_PT = 16
 const CTA_MAX_W = 260
 const CTA_MAX_LINES = 2
 const CTA_LINE_HEIGHT_RATIO = 1.25
+/** Same "box centre + round(fontSize * 0.32)" single-line vertical-centering
+ * trick `components/steps.tsx` and `components/tag-row.tsx` use: the optical
+ * centre of a CJK/Latin line sits about a third of the em above its
+ * baseline. */
+const CTA_BASELINE_FUDGE_RATIO = 0.32
 
 const FOOT_X = 96
 const FOOT_Y = 620
@@ -104,7 +109,14 @@ export function SeatCtaEnding({ ir, slide, ctx }: SvgTemplateProps) {
   const ctaExtra = cta ? Math.max(0, (cta.lines.length - 1) * cta.lineHeight) : 0
   const ctaBottom = CTA_BOTTOM + ctaExtra
   const ctaPoints = `${CTA_X},${CTA_TOP} ${CTA_RIGHT},${CTA_TOP} ${CTA_RIGHT},${ctaBottom - CTA_NOTCH} ${CTA_RIGHT - CTA_NOTCH},${ctaBottom} ${CTA_X},${ctaBottom}`
-  const ctaFirstY = CTA_TEXT_Y - ctaExtra / 2
+  // The button grows downward by exactly one line height per extra line, so
+  // its centre moves down with the block. Deriving the first baseline from
+  // the button's own centre keeps the label centred at any line count; the
+  // previous form pinned a single-line baseline and then subtracted half the
+  // extra, which shifted a two-line label a full line above centre.
+  const ctaFirstY = cta
+    ? (CTA_TOP + ctaBottom) / 2 - ctaExtra / 2 + Math.round(cta.fontSize * CTA_BASELINE_FUDGE_RATIO)
+    : 0
 
   const foot = footSource
     ? fitSvgLine(footSource, {
