@@ -468,5 +468,6 @@ export function getThemeDefinition(id: string): ThemeDefinition {
  * test-only name signals the same at the call site.
  */
 export function __resetRegisteredThemes(): void {
+  WARNED_UNMEASURED_FACES.clear()
   REGISTERED_THEMES.clear()
 }
