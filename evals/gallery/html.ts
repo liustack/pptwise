@@ -103,7 +103,11 @@ export function buildGalleryHtml(manifest: Manifest, svgs: ReadonlyMap<string, s
   --radius: 10px;
   font-synthesis-weight: none;
 }
-[data-surround="dark"] {
+/* Scoped to the body element, not to anything carrying the attribute. The
+   surround toggle's own buttons carry data-surround="light" / "dark", so an
+   unqualified selector redefined the palette inside the dark button itself —
+   its label came out near-white on the light header and read as disabled. */
+body[data-surround="dark"] {
   --bg: #17181a;
   --panel: #1f2124;
   --line: #34373c;
