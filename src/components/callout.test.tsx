@@ -3,7 +3,6 @@ import { describe, it, expect } from "vitest"
 import { render } from "@testing-library/react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { callout } from "./callout"
-import { resolveComponentForm } from "./form-assignments"
 import type { ComponentCtx } from "./types"
 import { CANONICAL_THEME_IDS, resolveStyle } from "../themes"
 import { buildCtx } from "../render/full-slide-svg"
@@ -176,22 +175,10 @@ describe("callout semantic color tokens", () => {
       expect(owner, `${id} reuses ${owner}'s caution color ${expected}`).toBeUndefined()
       seen.set(expected!, id)
       const themeCtx = buildCtx(style, {})
-      const assignment = resolveComponentForm("callout", id)
       const { container } = svg(callout.render(warn, { x: 0, y: 0, w: 800 }, themeCtx))
-      if (assignment?.form === "lead_word") {
-        const lead = [...container.querySelectorAll("text")].find((t) => t.textContent === "风险")
-        const painted = lead?.getAttribute("fill")
-        if (assignment.knobs?.iconInk === "accent") {
-          expect(painted, id).toBe(style.colors.accent)
-        } else {
-          expect(painted, id).toBe(expected)
-        }
-      } else if (assignment?.knobs?.stamp === true) {
-        const stamp = [...container.querySelectorAll("text")].find((t) => t.textContent === "WARN:")
-        expect(stamp?.getAttribute("fill"), id).toBe(expected)
-      } else {
-        expect(container.querySelector("path")?.getAttribute("stroke"), id).toBe(expected)
-      }
+      // The variant icon carries the caution color on every theme — one
+      // drawing, so one place to look for it.
+      expect(container.querySelector("path")?.getAttribute("stroke"), id).toBe(expected)
     }
   })
 

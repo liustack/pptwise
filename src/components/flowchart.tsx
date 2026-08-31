@@ -7,7 +7,6 @@ import {
 } from "../lib/svg-text-layout"
 import { readableOn } from "../render/ink"
 import { mixHex } from "./color-mix"
-import { resolveComponentForm, type FormKnobs } from "./form-assignments"
 import {
   layoutFlowchart,
   type LayoutEdge as FlowLayoutEdge,
@@ -1064,21 +1063,22 @@ function focalNodeId(component: FlowchartComponent): string | null {
   return component.nodes[component.nodes.length - 1]?.id ?? null
 }
 
-function nodeRx(kind: LayoutNode["kind"], knobs: FormKnobs): number {
-  if (kind === "round") return 20
-  if (knobs.radius === "square") return 0
-  if (knobs.radius === "round") return 12
-  return 6
+/**
+ * Node paint by the node's own declared kind — the IR already says whether a
+ * box is a terminal, a decision, or a step, so the drawing reads it instead
+ * of painting every box alike. The focal node (the first decision, else the
+ * last terminal) carries the accent.
+ */
+function nodeRx(kind: LayoutNode["kind"]): number {
+  return kind === "round" ? 20 : 6
 }
 
 function nodePaints(
   kind: LayoutNode["kind"],
-  knobs: FormKnobs,
   ctx: ComponentCtx,
   focal: boolean,
 ): { fill: string; stroke: string; text: string } {
-  const stroke =
-    knobs.nodeStroke === "border" ? (ctx.colors.border ?? ctx.colors.muted) : ctx.colors.primary
+  const stroke = ctx.colors.primary
   if (focal) {
     const fill = mixHex(ctx.colors.surface, ctx.colors.accent, 0.22)
     return { fill, stroke: ctx.colors.accent, text: readableOn(fill) }
@@ -1086,9 +1086,6 @@ function nodePaints(
   if (kind === "round") {
     const fill = mixHex(ctx.colors.surface, ctx.colors.muted ?? ctx.colors.primary, 0.14)
     return { fill, stroke, text: readableOn(fill) }
-  }
-  if (knobs.nodeFill === "none") {
-    return { fill: ctx.colors.bg, stroke, text: ctx.colors.text }
   }
   return { fill: ctx.colors.surface, stroke, text: ctx.colors.text }
 }
@@ -1105,10 +1102,7 @@ export const flowchart: SvgComponent<FlowchartComponent> = {
     const scaleY = scale // uniform scale, bounded by width AND height
     // 宽屏画布下水平居中，避免整图贴左留出大片死白
     const dx = Math.max(0, (box.w - flow.width) / 2)
-    const assignment = resolveComponentForm("flowchart", ctx.themeId)
-    const typed = assignment?.form === "typed_nodes"
-    const knobs = assignment?.knobs ?? {}
-    const focalId = typed ? focalNodeId(component) : null
+    const focalId = focalNodeId(component)
 
     return (
       <g transform={`translate(${box.x + dx},${box.y})`}>
@@ -1161,10 +1155,8 @@ export const flowchart: SvgComponent<FlowchartComponent> = {
           const pitch = NODE_LINE_PITCH * scaleY
           const firstLineY =
             ny + nh / 2 - ((n.lines.length - 1) * pitch) / 2
-          const paints = typed
-            ? nodePaints(n.kind, knobs, ctx, n.id === focalId)
-            : { fill: ctx.colors.surface, stroke: ctx.colors.primary, text: ctx.colors.text }
-          const rx = typed ? nodeRx(n.kind, knobs) : n.kind === "round" ? 20 : 6
+          const paints = nodePaints(n.kind, ctx, n.id === focalId)
+          const rx = nodeRx(n.kind)
 
           return (
             <g key={n.id} data-flow-node="1">

@@ -118,15 +118,26 @@ describe("flowchart component", () => {
     expect(h).toBeGreaterThan(0)
   })
 
-  it("node labels use text color and body font", () => {
-    const { container } = svg(
-      flowchart.render(component, { x: 0, y: 0, w: 600 }, ctx),
+  // Node paint follows the node's own declared kind: a plain step keeps the
+  // page's text ink on a surface box, a terminal gets a muted-tinted box, and
+  // the decision the graph turns on carries the accent.
+  it("paints each node by its declared kind, in the body font", () => {
+    const { container } = svg(flowchart.render(component, { x: 0, y: 0, w: 600 }, ctx))
+    const texts = Array.from(container.querySelectorAll("text"))
+    const step = texts.find((t) => t.textContent === "Process")
+    expect(step).toBeTruthy()
+    expect(step?.getAttribute("fill")).toBe("#1A2421")
+    expect(step?.getAttribute("font-family")).toBe("Microsoft YaHei")
+
+    const terminal = texts.find((t) => t.textContent === "Start")
+    expect(terminal?.getAttribute("fill")).not.toBe(ctx.colors.text)
+    const terminalBox = Array.from(container.querySelectorAll("rect")).find(
+      (r) => r.getAttribute("rx") === "20",
     )
-    const texts = container.querySelectorAll("text")
-    const nodeText = Array.from(texts).find((t) => t.textContent === "Start")
-    expect(nodeText).toBeTruthy()
-    expect(nodeText?.getAttribute("fill")).toBe("#1A2421")
-    expect(nodeText?.getAttribute("font-family")).toBe("Microsoft YaHei")
+    expect(terminalBox?.getAttribute("fill")).not.toBe(ctx.colors.surface)
+
+    const diamond = Array.from(container.querySelectorAll("polygon")).find((el) => el.hasAttribute("stroke"))
+    expect(diamond?.getAttribute("stroke")).toBe(ctx.colors.accent)
   })
 
   it("edge strokes use muted color", () => {
@@ -779,9 +790,7 @@ describe("flowchart diamond label and edge-label clearance (ember p05 leftover)"
 
   it("parks 数据采集 off the diamond bbox and drops the 设备接入 edge label as a node-name duplicate", () => {
     const { container } = svg(flowchart.render(emberZh, { x: 96, y: 228, w: 1088 }, ctx))
-    const diamond = Array.from(container.querySelectorAll("polygon")).find(
-      (p) => p.getAttribute("fill") === ctx.colors.surface,
-    )
+    const diamond = Array.from(container.querySelectorAll("polygon")).find((el) => el.hasAttribute("stroke"))
     expect(diamond).toBeTruthy()
     const dBox = polygonBox(diamond!)
 

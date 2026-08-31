@@ -8,7 +8,6 @@
  *   theme      CANONICAL_THEME_IDS
  *   layout     Object.keys(LAYOUT_REGISTRY), including pinOnly
  *   component  COMPONENT_TYPES (chart via the chart-variant pages)
- *   form       COMPONENT_FORMS
  *
  * The review is cut theme first, so the promise is per section as well as
  * global: every theme section carries all three bands, and its component
@@ -23,14 +22,12 @@
  */
 
 import { COMPONENT_TYPES } from "@/ir"
-import { COMPONENT_FORMS, resolveComponentForm, type ComponentFormId } from "@/components/form-assignments"
 import { LAYOUT_REGISTRY } from "@/layouts/registry"
 import { CANONICAL_THEME_IDS } from "@/themes"
-import { CHART_VARIANTS, FORM_VARIANTS } from "./corpus/components"
-import { LEXICONS } from "./corpus/lexicon"
+import { CHART_VARIANTS } from "./corpus/components"
 import { BAND_IDS, UNSERVED_SECTION, servedLayoutIds, type BandId, type Job } from "./matrix"
 
-export type InventoryKind = "theme" | "layout" | "component" | "form"
+export type InventoryKind = "theme" | "layout" | "component"
 
 export interface MappedSubject {
   readonly inventory: InventoryKind
@@ -45,7 +42,6 @@ export interface GallerySubject {
 
 const COMPONENT_TYPE_SET = new Set<string>(COMPONENT_TYPES)
 const THEME_SET = new Set<string>(CANONICAL_THEME_IDS)
-const FORM_SET = new Set<string>(COMPONENT_FORMS)
 
 function mapTheme(job: GallerySubject): MappedSubject | undefined {
   return THEME_SET.has(job.subject) ? { inventory: "theme", id: job.subject } : undefined
@@ -58,11 +54,7 @@ function mapLayout(job: GallerySubject): MappedSubject | undefined {
 function mapComponent(job: GallerySubject): MappedSubject | undefined {
   if (COMPONENT_TYPE_SET.has(job.subject)) return { inventory: "component", id: job.subject }
   if (job.subject in CHART_VARIANTS) return { inventory: "component", id: "chart" }
-  const variant = FORM_VARIANTS.find((row) => row.id === job.subject)
-  if (!variant) return undefined
-  const component = variant.build(LEXICONS.zh)
-  const form = resolveComponentForm(component.type, variant.theme)?.form
-  return form && FORM_SET.has(form) ? { inventory: "form", id: form } : undefined
+  return undefined
 }
 
 /**
@@ -79,30 +71,10 @@ export function mapJobSubject(job: GallerySubject): MappedSubject | undefined {
   return BAND_SUBJECT_MAPPERS[job.band]?.(job)
 }
 
-/** Component faces that need a dedicated `FORM_VARIANTS` page, not just a deck sighting. */
-export function dedicatedFormIds(): ComponentFormId[] {
-  return [...COMPONENT_FORMS]
-}
-
-export function formIdForVariant(variant: (typeof FORM_VARIANTS)[number]): ComponentFormId | undefined {
-  const component = variant.build(LEXICONS.zh)
-  return resolveComponentForm(component.type, variant.theme)?.form
-}
-
-const PINNED_FORM_PAGE_IDS = [
-  "swiss--comp--flowchart-typed-nodes--zh",
-  "consulting--comp--architecture-layer-stack--zh",
-  "consulting--comp--architecture-layer-stack--en",
-  "consulting--comp--architecture-layer-stack--mixed",
-] as const
-
 export interface CoverageGaps {
   readonly missingThemes: readonly string[]
   readonly missingLayouts: readonly string[]
   readonly missingComponents: readonly string[]
-  readonly missingForms: readonly string[]
-  readonly missingDedicatedForms: readonly string[]
-  readonly missingPinnedPages: readonly string[]
   /** `<theme> band` pairs a theme section is missing. */
   readonly missingBands: readonly string[]
   /** `<theme>: <component>` pairs a theme section's component band never drew. */
@@ -114,37 +86,10 @@ export interface CoverageGaps {
   readonly unmapped: readonly string[]
 }
 
-function leadTypes(job: Job): string[] {
-  const slide = job.ir.slides[job.slideIndex]
-  if (!slide) return []
-  return slide.components.map((c) => c.type)
-}
-
-function formsVisibleOn(job: Job): ComponentFormId[] {
-  const slide = job.ir.slides[job.slideIndex]
-  if (!slide) return []
-  const out: ComponentFormId[] = []
-  const seen = new Set<string>()
-  const add = (form: ComponentFormId | undefined) => {
-    if (!form || seen.has(form)) return
-    seen.add(form)
-    out.push(form)
-  }
-  for (const type of leadTypes(job)) {
-    add(resolveComponentForm(type, job.theme)?.form)
-  }
-  const mapped = mapJobSubject(job)
-  if (mapped?.inventory === "form") add(mapped.id as ComponentFormId)
-  return out
-}
-
 export function galleryCoverageGaps(jobs: readonly Job[]): CoverageGaps {
   const themes = new Set<string>()
   const layouts = new Set<string>()
   const components = new Set<string>()
-  const forms = new Set<string>()
-  const dedicatedForms = new Set<string>()
-  const ids = new Set(jobs.map((job) => job.id))
   const unmapped: string[] = []
   /** section → component types its component band drew. */
   const perSection = new Map<string, Set<string>>()
@@ -174,9 +119,7 @@ export function galleryCoverageGaps(jobs: readonly Job[]): CoverageGaps {
         seen.add(mapped.id)
         perSection.set(job.section, seen)
       }
-      if (mapped.inventory === "form") dedicatedForms.add(mapped.id)
     }
-    for (const form of formsVisibleOn(job)) forms.add(form)
   }
 
   const themeSections = [...bandsBySection.keys()].sort()
@@ -209,17 +152,11 @@ export function galleryCoverageGaps(jobs: readonly Job[]): CoverageGaps {
     .sort()
     .filter((id) => !layouts.has(id))
   const missingComponents = COMPONENT_TYPES.filter((id) => !components.has(id))
-  const missingForms = COMPONENT_FORMS.filter((id) => !forms.has(id))
-  const missingDedicatedForms = dedicatedFormIds().filter((id) => !dedicatedForms.has(id))
-  const missingPinnedPages = PINNED_FORM_PAGE_IDS.filter((id) => !ids.has(id))
 
   return {
     missingThemes,
     missingLayouts,
     missingComponents,
-    missingForms,
-    missingDedicatedForms,
-    missingPinnedPages,
     missingBands,
     missingSectionComponents,
     misfiledUnserved,
@@ -271,25 +208,6 @@ export function assertInventoryCoverage(jobs: readonly Job[]): void {
   if (gaps.missingSectionComponents.length > 0) {
     problems.push(
       `theme section(s) whose component band skips a component type: ${sample(gaps.missingSectionComponents)}`,
-    )
-  }
-  if (gaps.missingForms.length > 0) {
-    problems.push(
-      `no gallery page a reviewer can see for form(s): ${gaps.missingForms.join(", ")} — ` +
-        `add a FORM_VARIANTS row, or a deck surface whose resolveComponentForm yields the form`,
-    )
-  }
-  if (gaps.missingDedicatedForms.length > 0) {
-    problems.push(
-      `no dedicated component-band page for form(s): ${gaps.missingDedicatedForms.join(", ")} — ` +
-        `add a FORM_VARIANTS row`,
-    )
-  }
-  if (gaps.missingPinnedPages.length > 0) {
-    problems.push(
-      `pinned form pages missing: ${gaps.missingPinnedPages.join(", ")} — ` +
-        `typed_nodes and layer_stack must keep swiss--comp--flowchart-typed-nodes--* and ` +
-        `consulting--comp--architecture-layer-stack--*`,
     )
   }
   if (gaps.unmapped.length > 0) {

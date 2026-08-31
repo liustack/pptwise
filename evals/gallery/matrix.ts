@@ -21,7 +21,7 @@
 import { COMPONENT_TYPES, type PageKind, type PptxIR } from "@/ir"
 import { LAYOUT_REGISTRY } from "@/layouts/registry"
 import { getThemeDefinition } from "@/themes/definitions"
-import { CHART_VARIANTS, COMPONENT_BUILDERS, FORM_VARIANTS } from "./corpus/components"
+import { CHART_VARIANTS, COMPONENT_BUILDERS } from "./corpus/components"
 import {
   BASELINE_THEME,
   componentPage,
@@ -149,18 +149,17 @@ export function unservedLayoutIds(themeIds: readonly string[]): string[] {
 
 /**
  * The component band's page list: every component type, with `chart` replaced
- * by its nine drawings and the form variants folded in beside the component
- * they restyle, so a theme's own variants sit next to their base id.
+ * by its nine drawings. Every theme's band carries the same list — a
+ * component draws one way everywhere, so what a reviewer compares across two
+ * sections is the skin, not the drawing.
  */
 interface ComponentEntry {
   readonly id: string
   readonly build: (lex: (typeof LEXICONS)[LanguageId]) => ReturnType<(typeof COMPONENT_BUILDERS)[string]>
   readonly solo?: boolean
-  /** Set when this entry only belongs in one section — a form variant. */
-  readonly theme?: string
 }
 
-function componentEntries(themeId: string): ComponentEntry[] {
+function componentEntries(): ComponentEntry[] {
   const base: ComponentEntry[] = [
     // `chart` renders nine unrelated drawings behind one type name, so the
     // variants replace the bare `chart` entry rather than sitting next to it.
@@ -168,12 +167,6 @@ function componentEntries(themeId: string): ComponentEntry[] {
       .filter(([id]) => id !== "chart")
       .map(([id, build]) => ({ id, build: build! })),
     ...Object.entries(CHART_VARIANTS).map(([id, build]) => ({ id, build: build! })),
-    ...FORM_VARIANTS.filter((v) => v.theme === themeId).map((v) => ({
-      id: v.id,
-      build: v.build,
-      solo: true,
-      theme: v.theme,
-    })),
   ]
   return base.sort((a, b) => safe(a.id).localeCompare(safe(b.id)))
 }
@@ -259,7 +252,7 @@ export function buildMatrix(
       // judged on one language, so two themes differ by exactly one variable.
       const bandLanguages =
         themeId === BASELINE_THEME ? [...new Set<LanguageId>([themeLanguage, ...languages])] : [themeLanguage]
-      for (const entry of componentEntries(themeId)) {
+      for (const entry of componentEntries()) {
         for (const language of bandLanguages) {
           const entryLex = language === themeLanguage ? nativeLexiconFor(themeId) : LEXICONS[language]
           const ir = componentPage(entry.id, entry.build, entryLex, assets[language], themeId, {

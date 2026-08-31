@@ -479,25 +479,3 @@ export const CHART_VARIANTS: Record<string, (lex: Lexicon) => Component> = {
     series: [{ name: lex.metrics[1]!.label, data: [{ x: lex.metrics[1]!.label, y: 91 }] }],
   }),
 }
-
-/**
- * Theme-assigned component forms. Same IR type as the default row, a
- * different theme so the new face shows. Solo on the page: these drawings
- * are larger than the default cards, and a lead-in paragraph would crowd
- * them off the content rect. First assigned theme per form (campaign ×
- * cycle is hub_spoke).
- */
-export interface FormVariant {
-  readonly id: string
-  readonly theme: string
-  readonly build: (lex: Lexicon) => Component
-}
-
-export const FORM_VARIANTS: readonly FormVariant[] = [
-  { id: "steps · arrow band", theme: "runway", build: (lex) => COMPONENT_BUILDERS.steps!(lex) },
-  { id: "flowchart · typed nodes", theme: "swiss", build: (lex) => COMPONENT_BUILDERS.flowchart!(lex) },
-  { id: "architecture · layer stack", theme: "consulting", build: (lex) => COMPONENT_BUILDERS.architecture!(lex) },
-  { id: "callout · tint panel", theme: "heritage", build: (lex) => COMPONENT_BUILDERS.callout!(lex) },
-  { id: "callout · hanging bare", theme: "memo", build: (lex) => COMPONENT_BUILDERS.callout!(lex) },
-  { id: "callout · lead word", theme: "luxe", build: (lex) => COMPONENT_BUILDERS.callout!(lex) },
-]
