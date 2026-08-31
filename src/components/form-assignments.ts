@@ -1,19 +1,14 @@
 /**
  * Render-side component form assignment table. Forms are not IR: one
- * theme + one component maps to at most one form, looked up here and
- * ignored by renderers until a later commit wires dispatch. campaign ×
- * cycle is hub_spoke (first-listed wins), never petal_wheel. 79 rows
- * (65 prior + 2 emphasis + 7 typed_nodes + 5 architecture). classroom
- * is listed on callout like every other canonical theme.
+ * theme + one component maps to at most one form, looked up here.
+ * Shrinking table — every component listed here is on its way to a single
+ * canonical rendering.
  */
 
 export const COMPONENT_FORMS = [
   "icon_columns",
   "badge_cards",
   "outline_grid",
-  "cycle_loop",
-  "hub_spoke",
-  "petal_wheel",
   "numbered_pills",
   "hex_cluster",
   "donut_trio",
@@ -45,10 +40,7 @@ export interface FormKnobs {
   radius?: "soft" | "square" | "round"
   badge?: "circle-outline" | "circle-solid" | "square-solid"
   paletteStroke?: boolean
-  ring?: "dashed" | "dotted" | "solid"
   highlightFirst?: boolean
-  hub?: "outline" | "solid"
-  petalAlt?: boolean
   stagger?: boolean
   waveFirst?: boolean
   hexFill?: "palette" | "accent-ramp"
@@ -115,40 +107,6 @@ const ASSIGNMENTS: Record<string, Record<string, FormAssignment>> = {
     crayon: {
       form: "outline_grid",
       knobs: { nodeFill: "surface", paletteStroke: true, radius: "soft" },
-    },
-  },
-  cycle: {
-    museum: {
-      form: "cycle_loop",
-      knobs: { ring: "dashed", highlightFirst: true },
-    },
-    journal: {
-      form: "cycle_loop",
-      knobs: { ring: "dotted", highlightFirst: true },
-    },
-    arena: {
-      form: "cycle_loop",
-      knobs: { ring: "solid", highlightFirst: true },
-    },
-    insight: {
-      form: "hub_spoke",
-      knobs: { hub: "outline" },
-    },
-    academic: {
-      form: "hub_spoke",
-      knobs: { hub: "solid" },
-    },
-    campaign: {
-      form: "hub_spoke",
-      knobs: { hub: "outline" },
-    },
-    tech: {
-      form: "petal_wheel",
-      knobs: { petalAlt: true, hub: "outline" },
-    },
-    heritage: {
-      form: "petal_wheel",
-      knobs: { petalAlt: true, hub: "outline" },
     },
   },
   numbered_cards: {

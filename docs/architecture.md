@@ -20,7 +20,7 @@ The first two steps are editorial decisions. The theme is selected before the sp
 
 | domain | owner | responsibility |
 | --- | --- | --- |
-| IR | `src/ir` | Strict v5 deck, page, asset, metadata, brand, and 37-component schemas. |
+| IR | `src/ir` | Strict v5 deck, page, asset, metadata, brand, and 38-component schemas. |
 | narrative | `src/narrative` | Strategy, pacing, audience, presets, body baseline, and editorial budgets. |
 | themes | `src/themes` | Public v2 schema, 24 presets, built-in declarations, workspace registration, tokens, occasions, and identity. |
 | specs | `src/spec` | Version 1 theme binding, page semantics, menu-kind validation, placeholders, and pure assembly. |

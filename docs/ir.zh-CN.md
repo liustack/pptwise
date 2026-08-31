@@ -134,7 +134,7 @@ IR v5 没有 `seed`、`layout`、`beat` 或 `arrangement`，也不接受这些�
 
 ## 组件
 
-`components` 是由 37 种类型化单元组成的可辨识联合。精确字段应查询当前安装的 schema：
+`components` 是由 38 种类型化单元组成的可辨识联合。精确字段应查询当前安装的 schema：
 
 ```bash
 pptwise schema > ir.schema.json

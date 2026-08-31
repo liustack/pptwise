@@ -37,6 +37,7 @@ import { traits as deviceMockupTraits } from "@/ir/components/device-mockup"
 import { traits as cycleTraits } from "@/ir/components/cycle"
 import { traits as peopleCardsTraits } from "@/ir/components/people-cards"
 import { traits as tagRowTraits } from "@/ir/components/tag-row"
+import { traits as hubSpokeTraits } from "@/ir/components/hub-spoke"
 
 /**
  * Component trait registry (W2 task 5, spec §3/§6/§8 — re-derived as a pure
@@ -151,6 +152,7 @@ const ALL_TRAITS: Record<ComponentType, ComponentTraits> = {
   cycle: cycleTraits,
   people_cards: peopleCardsTraits,
   tag_row: tagRowTraits,
+  hub_spoke: hubSpokeTraits,
 }
 
 /** Every component type whose own domain-file `traits` declares `trait: true`, collected as a `ReadonlySet`. */

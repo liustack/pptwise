@@ -9,10 +9,8 @@ import {
 // Render-side form assignment table (component-forms-w1 plumbing). Pure
 // lookup contract, independent of any component renderer: missing /
 // unknown / unassigned pairs stay undefined so today's default face is
-// unchanged. campaign × cycle is hub_spoke (first-listed wins), never
-// petal_wheel. 79 rows (65 prior + 2 emphasis + 7 typed_nodes + 5
-// architecture). classroom is listed on callout like every other
-// canonical theme.
+// unchanged. classroom is listed on callout like every other canonical
+// theme.
 
 type AssignmentRow = {
   componentType: string
@@ -77,54 +75,6 @@ const ASSIGNMENTS: AssignmentRow[] = [
     themeId: "crayon",
     form: "outline_grid",
     knobs: { nodeFill: "surface", paletteStroke: true, radius: "soft" },
-  },
-  {
-    componentType: "cycle",
-    themeId: "museum",
-    form: "cycle_loop",
-    knobs: { ring: "dashed", highlightFirst: true },
-  },
-  {
-    componentType: "cycle",
-    themeId: "journal",
-    form: "cycle_loop",
-    knobs: { ring: "dotted", highlightFirst: true },
-  },
-  {
-    componentType: "cycle",
-    themeId: "arena",
-    form: "cycle_loop",
-    knobs: { ring: "solid", highlightFirst: true },
-  },
-  {
-    componentType: "cycle",
-    themeId: "insight",
-    form: "hub_spoke",
-    knobs: { hub: "outline" },
-  },
-  {
-    componentType: "cycle",
-    themeId: "academic",
-    form: "hub_spoke",
-    knobs: { hub: "solid" },
-  },
-  {
-    componentType: "cycle",
-    themeId: "campaign",
-    form: "hub_spoke",
-    knobs: { hub: "outline" },
-  },
-  {
-    componentType: "cycle",
-    themeId: "tech",
-    form: "petal_wheel",
-    knobs: { petalAlt: true, hub: "outline" },
-  },
-  {
-    componentType: "cycle",
-    themeId: "heritage",
-    form: "petal_wheel",
-    knobs: { petalAlt: true, hub: "outline" },
   },
   {
     componentType: "numbered_cards",
@@ -377,7 +327,6 @@ const ASSIGNMENTS: AssignmentRow[] = [
 const FORM_COMPONENT_TYPES = [
   "emphasis",
   "icon_cards",
-  "cycle",
   "numbered_cards",
   "kpi_cards",
   "comparison",
@@ -404,10 +353,6 @@ describe("resolveComponentForm", () => {
 
     it("resolveComponentForm(icon_cards, consulting) → undefined (unassigned contrast theme)", () => {
       expect(resolveComponentForm("icon_cards", "consulting")).toBeUndefined()
-    })
-
-    it("resolveComponentForm(cycle, consulting) → undefined", () => {
-      expect(resolveComponentForm("cycle", "consulting")).toBeUndefined()
     })
 
     it("resolveComponentForm(flowchart, consulting) → undefined", () => {
@@ -450,19 +395,11 @@ describe("resolveComponentForm", () => {
         }
       }
     })
-
-    it("campaign has only hub_spoke for cycle, never petal_wheel", () => {
-      expect(resolveComponentForm("cycle", "campaign")?.form).toBe("hub_spoke")
-      expect(assignedThemeIds("cycle").filter((id) => id === "campaign")).toEqual(["campaign"])
-    })
   })
 
-  it("campaign + cycle → hub_spoke, not petal_wheel", () => {
-    expect(resolveComponentForm("cycle", "campaign")).toEqual({
-      form: "hub_spoke",
-      knobs: { hub: "outline" },
-    })
-    expect(resolveComponentForm("cycle", "campaign")?.form).not.toBe("petal_wheel")
+  it("cycle carries no form assignment at all — one canonical loop drawing", () => {
+    expect(assignedThemeIds("cycle")).toEqual([])
+    expect(resolveComponentForm("cycle", "campaign")).toBeUndefined()
   })
 
   it("consulting + comparison → pill_panels, consulting + icon_cards → undefined", () => {
@@ -490,13 +427,13 @@ describe("resolveComponentForm", () => {
     })
   })
 
-  it("assignment count is 79 (sum across the 12 assigned primitive and component types)", () => {
+  it("assignment count matches the table exactly, across every assigned type", () => {
     const total = FORM_COMPONENT_TYPES.reduce(
       (n, componentType) => n + assignedThemeIds(componentType).length,
       0,
     )
-    expect(total).toBe(79)
-    expect(ASSIGNMENTS).toHaveLength(79)
+    expect(total).toBe(ASSIGNMENTS.length)
+    expect(ASSIGNMENTS.length).toBeGreaterThan(0)
   })
 })
 

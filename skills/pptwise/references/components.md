@@ -49,10 +49,12 @@ The table gives each component's normal kind home. A component may serve more th
 | `cycle` | `process` |
 | `people_cards` | `list` |
 | `tag_row` | `list` |
+| `hub_spoke` | `hierarchy` |
 
 ## Lookalikes
 
 - Use `steps` for a linear sequence, `flowchart` for branching decisions, and `cycle` when the final stage returns to the first.
+- Use `hub_spoke` for one central concept with unordered peer elements attached to it. Use `cycle` when they close a loop and `rings` when they nest inside one another.
 - Use `roadmap` for workstreams without a shared numeric axis. Use `gantt` for dated bars on one shared axis.
 - Use `pest` for the four external macro factors. Use `swot` for internal and external strategic assessment.
 - Use `sankey` when band width carries a conserved quantity through branches and merges. Use `flowchart` when branches carry decisions rather than quantities.

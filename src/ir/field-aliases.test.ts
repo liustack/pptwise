@@ -341,6 +341,20 @@ const BLOCK_CASES: readonly BlockCase[] = [
     component: { type: "heatmap", x_labels: ["c1"], y_labels: ["r1"], values: [[1]], range: { min: 0, max: 10 } },
     expected: { min: 0, max: 10 },
   },
+  {
+    type: "hub_spoke",
+    alias: "title",
+    canonical: "center",
+    component: { type: "hub_spoke", title: "Platform", items: [{ label: "A" }, { label: "B" }, { label: "C" }] },
+    expected: "Platform",
+  },
+  {
+    type: "hub_spoke",
+    alias: "hub",
+    canonical: "center",
+    component: { type: "hub_spoke", hub: "Platform", items: [{ label: "A" }, { label: "B" }, { label: "C" }] },
+    expected: "Platform",
+  },
 ]
 
 describe("COMPONENT_FIELD_ALIASES: every row round-trips", () => {
@@ -521,6 +535,46 @@ const ITEM_CASES: readonly ItemCase[] = [
     pad: [{ id: "b", label: "Node B" }],
     expected: "Node A",
   },
+  {
+    type: "hub_spoke",
+    itemsKey: "items",
+    alias: "title",
+    canonical: "label",
+    extra: { center: "Platform" },
+    item: { title: "Billing" },
+    pad: [{ label: "Identity" }, { label: "Search" }],
+    expected: "Billing",
+  },
+  {
+    type: "hub_spoke",
+    itemsKey: "items",
+    alias: "name",
+    canonical: "label",
+    extra: { center: "Platform" },
+    item: { name: "Billing" },
+    pad: [{ label: "Identity" }, { label: "Search" }],
+    expected: "Billing",
+  },
+  {
+    type: "hub_spoke",
+    itemsKey: "items",
+    alias: "text",
+    canonical: "description",
+    extra: { center: "Platform" },
+    item: { label: "Billing", text: "invoices and dunning" },
+    pad: [{ label: "Identity" }, { label: "Search" }],
+    expected: "invoices and dunning",
+  },
+  {
+    type: "hub_spoke",
+    itemsKey: "items",
+    alias: "desc",
+    canonical: "description",
+    extra: { center: "Platform" },
+    item: { label: "Billing", desc: "invoices and dunning" },
+    pad: [{ label: "Identity" }, { label: "Search" }],
+    expected: "invoices and dunning",
+  },
 ]
 
 describe("COMPONENT_ITEM_FIELD_ALIASES: every row round-trips", () => {
@@ -550,7 +604,7 @@ describe("COMPONENT_ITEM_FIELD_ALIASES: every row round-trips", () => {
 // ── total pair count pinned (docs/changeset "53 total synonym pairs") ──────
 
 describe("total synonym-pair count", () => {
-  it("COMPONENT_FIELD_ALIASES + COMPONENT_ITEM_FIELD_ALIASES flatten to exactly 55 pairs", () => {
+  it("COMPONENT_FIELD_ALIASES + COMPONENT_ITEM_FIELD_ALIASES flatten to exactly 61 pairs", () => {
     // The "covers every row exactly once" completeness guards above only
     // prove BLOCK_CASES/ITEM_CASES stay in lockstep with each table's own
     // rows — a row deleted from a table *and* its matching test case would
@@ -567,7 +621,7 @@ describe("total synonym-pair count", () => {
       (n, specs) => n + specs.reduce((m, spec) => m + Object.keys(spec.aliases).length, 0),
       0,
     )
-    expect(blockCount + itemCount).toBe(55)
+    expect(blockCount + itemCount).toBe(61)
   })
 })
 

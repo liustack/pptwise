@@ -228,6 +228,14 @@ export const COMPONENT_BUILDERS: Record<string, (lex: Lexicon) => Component> = {
     items: slice(lex.stages, 5).map((label, i) => ({ label, description: lex.phrases[i] })),
   }),
 
+  // A center plus four peers — the count where the two-column capsule
+  // placement is on show and every label still gets its own line.
+  hub_spoke: (lex) => ({
+    type: "hub_spoke",
+    center: lex.kickers[2]!,
+    items: slice(lex.labels, 4, 8).map((label, i) => ({ label, description: lex.phrases[i] })),
+  }),
+
   rings: (lex) => ({
     type: "rings",
     items: slice(lex.labels, 3).map((label, i) => ({ label, desc: lex.sentences[i]! })),
@@ -478,9 +486,6 @@ export const FORM_VARIANTS: readonly FormVariant[] = [
   { id: "icon_cards · icon columns", theme: "terra", build: (lex) => COMPONENT_BUILDERS.icon_cards!(lex) },
   { id: "icon_cards · badge cards", theme: "tech", build: (lex) => COMPONENT_BUILDERS.icon_cards!(lex) },
   { id: "icon_cards · outline grid", theme: "academic", build: (lex) => COMPONENT_BUILDERS.icon_cards!(lex) },
-  { id: "cycle · loop", theme: "museum", build: (lex) => COMPONENT_BUILDERS.cycle!(lex) },
-  { id: "cycle · hub spoke", theme: "insight", build: (lex) => COMPONENT_BUILDERS.cycle!(lex) },
-  { id: "cycle · petal wheel", theme: "tech", build: (lex) => COMPONENT_BUILDERS.cycle!(lex) },
   { id: "numbered_cards · pills", theme: "pulse", build: (lex) => COMPONENT_BUILDERS.numbered_cards!(lex) },
   { id: "numbered_cards · hex cluster", theme: "tech", build: (lex) => COMPONENT_BUILDERS.numbered_cards!(lex) },
   { id: "kpi_cards · donut trio", theme: "luxe", build: (lex) => COMPONENT_BUILDERS.kpi_cards!(lex) },

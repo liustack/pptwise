@@ -507,8 +507,11 @@ describe("donut_trio legibility", () => {
   })
 })
 
-describe("petal_wheel legibility", () => {
-  it("tech 4-char on-petal labels wrap at ≥20 instead of 现场…", () => {
+describe("cycle node legibility", () => {
+  // In-circle node labels sit against FORM_BODY_FLOOR, not FORM_TITLE_FLOOR:
+  // a label inside a ring node has a chord's worth of width, and the ring
+  // scale already shrank the whole drawing to fit its slot.
+  it("tech 4-char CJK node labels wrap at ≥16 instead of 现场…", () => {
     const ctx = themeCtx("tech")
     const component = {
       type: "cycle" as const,
@@ -536,7 +539,7 @@ describe("petal_wheel legibility", () => {
     )
     expect(hits.length).toBeGreaterThan(0)
     for (const t of hits) {
-      expect(fontSizeOf(t), `"${t.textContent}"`).toBeGreaterThanOrEqual(FORM_TITLE_FLOOR)
+      expect(fontSizeOf(t), `"${t.textContent}"`).toBeGreaterThanOrEqual(FORM_BODY_FLOOR)
     }
   })
 })

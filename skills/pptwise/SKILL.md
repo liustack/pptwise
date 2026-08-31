@@ -142,7 +142,7 @@ Use `--draft` or `--allow-dropped-content` only when the user explicitly request
 | Another speaker's words | `quote` | `blockquote` |
 | One number as the message | `fact` | one-item `kpi_cards` or no component |
 | Claim plus one exhibit | `evidence` | `image`, `chart`, `data_table`, `code`, `device_mockup` |
-| Containment or levels | `hierarchy` | `architecture`, `bmc`, `five_forces`, `rings` |
+| Containment or levels | `hierarchy` | `architecture`, `bmc`, `five_forces`, `rings`, `hub_spoke` |
 
 ## Rules
 

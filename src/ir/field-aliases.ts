@@ -67,6 +67,7 @@ import { aliases as pestAliases } from "./components/pest"
 import { aliases as fiveForcesAliases } from "./components/five-forces"
 import { aliases as heatmapAliases } from "./components/heatmap"
 import { aliases as sankeyAliases } from "./components/sankey"
+import { aliases as hubSpokeAliases } from "./components/hub-spoke"
 
 /** One component type's `{ aliasKey: canonicalKey }` map. */
 export type FieldAliasMap = Readonly<Record<string, string>>
@@ -118,6 +119,9 @@ export const COMPONENT_FIELD_ALIASES: Readonly<Record<string, FieldAliasMap>> = 
   // numbers." `range` is the natural word for `domain`'s `{min,max}`
   // value-scale override.
   heatmap: heatmapAliases.block,
+  // hub_spoke's center concept is the one field a model reaches past: every
+  // other card-like component in this IR calls its lead string `title`.
+  hub_spoke: hubSpokeAliases.block,
 }
 
 /** One component type's item-array field aliases: which array to walk, and the alias map applied to each item object in it. */
@@ -175,6 +179,7 @@ export const COMPONENT_ITEM_FIELD_ALIASES: Readonly<Record<string, readonly Item
   timeline: timelineAliases.items,
   numbered_cards: numberedCardsAliases.items,
   row_cards: rowCardsAliases.items,
+  hub_spoke: hubSpokeAliases.items,
 }
 
 /**

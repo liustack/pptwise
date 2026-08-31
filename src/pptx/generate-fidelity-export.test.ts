@@ -278,6 +278,15 @@ const COMPONENT_BY_TYPE: Record<Component["type"], Component> = {
       { label: "Review" },
     ],
   },
+  hub_spoke: {
+    type: "hub_spoke",
+    center: "Platform",
+    items: [
+      { label: "Billing" },
+      { label: "Identity" },
+      { label: "Search" },
+    ],
+  },
   people_cards: {
     type: "people_cards",
     people: [

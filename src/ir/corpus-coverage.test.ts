@@ -178,6 +178,18 @@ const COVERAGE_ENTRIES: Record<string, unknown> = {
     ],
     rows: [{ cells: { metric: "Revenue", q1: "120", ghost_col: "x" } }],
   }),
+  // hub_spoke's own hard check is the element-count floor: a center with
+  // fewer than 3 peers reads as a list, not a structure.
+  "coverage/hub_spoke-valid": minimalDeck({
+    type: "hub_spoke",
+    center: "Platform",
+    items: [{ label: "Billing" }, { label: "Identity" }, { label: "Search" }],
+  }),
+  "coverage/hub_spoke-tripwire": minimalDeck({
+    type: "hub_spoke",
+    center: "Platform",
+    items: [{ label: "Billing" }, { label: "Identity" }],
+  }),
 }
 
 // Assembles the validation corpus from all three sources, keyed by

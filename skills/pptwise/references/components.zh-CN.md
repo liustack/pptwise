@@ -54,10 +54,12 @@ mirror_of: skills/pptwise/references/components.md
 | `cycle` | `process` |
 | `people_cards` | `list` |
 | `tag_row` | `list` |
+| `hub_spoke` | `hierarchy` |
 
 ## 相近组件
 
 - 直线步骤用 `steps`，有决策分支用 `flowchart`，末段回到首段用 `cycle`。
+- 一个中心概念带一组无序并列要素用 `hub_spoke`，要素闭环用 `cycle`，层层包含用 `rings`。
 - 没有共享数值轴的工作线用 `roadmap`，在同一日期轴上比较条形用 `gantt`。
 - 四类外部宏观因素用 `pest`，同时评估内外部战略条件用 `swot`。
 - 带宽承载守恒数量并发生分支与汇合时用 `sankey`，分支表达决策而非数量时用 `flowchart`。
