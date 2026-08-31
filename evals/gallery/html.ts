@@ -554,16 +554,20 @@ ${inlineRule(verdictFreshness)}
   // so the card names what it shows. In a cross-cut row the opposite holds:
   // every card in the row shows the same thing, and the theme is the variable.
   function cardTitle(p) {
-    if (state.view === "theme") return p.subject;
-    return p.sectionLabel === p.section ? p.section : p.sectionLabel + " · " + p.section;
+    if (state.view !== "theme") return p.sectionLabel === p.section ? p.section : p.sectionLabel + " · " + p.section;
+    // A deck page's subject is its own theme, which the section heading right
+    // above it already said. Its heading is the thing worth naming.
+    if (p.band === "deck") return p.heading || p.subject;
+    return p.subject;
   }
 
   function cardFacts(p) {
     const bits = [];
     if (state.view !== "theme") bits.push(p.subject);
-    if (p.band === "deck") bits.push("第 " + p.page + " / " + p.pageCount + " 页");
+    if (p.band === "deck") bits.push("第 " + p.page + " / " + p.pageCount + " 页", p.slideType);
+    // A slot already names the slide type it belongs to, and every component
+    // page is a content page — saying so again is noise on 1500 cards.
     if (p.slot) bits.push(SLOT_LABELS[p.slot] ? SLOT_LABELS[p.slot] + " " + p.slot : p.slot);
-    bits.push(p.slideType);
     bits.push(p.languageLabel);
     return bits;
   }
