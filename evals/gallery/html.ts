@@ -563,7 +563,7 @@ ${inlineRule(verdictFreshness)}
   }
 
   function stripEmphasis(text) {
-    return (text || "").replace(/\*\*([^*]+)\*\*/g, "$1");
+    return (text || "").replaceAll("**", "");
   }
 
   function cardFacts(p) {
