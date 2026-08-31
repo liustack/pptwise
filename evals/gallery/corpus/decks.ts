@@ -189,6 +189,18 @@ function componentKind(component: Component): PageKind {
   return COMPONENT_KINDS[component.type]
 }
 
+/**
+ * Drawings whose own natural height is around 400px — a numbered pill stack,
+ * a stage ring, a hub and its spokes each fill a content rect on their own.
+ * Sharing the page with even a one-sentence lead-in leaves them under their
+ * measured height: the density gate drops the pill stack and the ring
+ * outright, and squeezes the hub into a cell where its element descriptions
+ * no longer fit. Either way the review page stops showing what it exists to
+ * show. Not full-body (a real deck may still stack them), just too tall to
+ * review alongside anything.
+ */
+const TALL_COMPONENT_TYPES = new Set<Component["type"]>(["numbered_cards", "cycle", "hub_spoke"])
+
 // ─────────────────────────────────────────────────────────────────────────
 // Theme table — one ten-page deck, rendered once per theme
 // ─────────────────────────────────────────────────────────────────────────
@@ -620,7 +632,10 @@ export function componentPage(
   // paragraph, i.e. the review page was not showing what it exists to show.
   const solo =
     opts.solo ??
-    (FULL_BODY_TYPES.has(component.type) || chart || ["quote", "evidence", "statement", "fact", "photo"].includes(kind))
+    (FULL_BODY_TYPES.has(component.type) ||
+      TALL_COMPONENT_TYPES.has(component.type) ||
+      chart ||
+      ["quote", "evidence", "statement", "fact", "photo"].includes(kind))
 
   // A one-sentence lead-in, not the full corpus paragraph. The paragraph
   // runs long enough in English that it consumed the content rect and the
