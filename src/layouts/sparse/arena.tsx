@@ -93,6 +93,15 @@ export function statement({ slide, ctx }: SvgTemplateProps) {
   )
 }
 
+/**
+ * one-evidence 取景框角标：面板四角外侧的对角亮括弧。角标与面板留
+ * `VIEWFINDER_GAP` 的对角呼吸位——两条臂贴着面板边线画时，括弧读成面板
+ * 描边的一段毛刺，取景框的「框住主体」语义不成立（gallery 视觉验收
+ * fix/gallery-verdict-round 第 1 条）。臂长收在面板边界处，不越过主体。
+ */
+const VIEWFINDER_GAP = 16
+const VIEWFINDER_ARM = 16
+
 export function oneEvidence({ slide, index, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const evidence = pickEvidence(slide.components)
@@ -119,11 +128,18 @@ export function oneEvidence({ slide, index, ctx }: SvgTemplateProps) {
       ? fitSvgLine(sourceRaw, { maxWidth: textW, fontSize: 16, minFontSize: 16, fontFamily: fonts.body })
       : { text: sourceRaw, fontSize: 16 }
     : null
+  const panel = { x: 160, y: 190, w: 960, h: 320 }
+  const markTop = panel.y - VIEWFINDER_GAP
+  const markLeft = panel.x - VIEWFINDER_GAP
+  const markBottom = panel.y + panel.h + VIEWFINDER_GAP
+  const markRight = panel.x + panel.w + VIEWFINDER_GAP
+  const topLeftMark = `M ${panel.x} ${markTop} L ${markLeft} ${markTop} L ${markLeft} ${markTop + VIEWFINDER_ARM}`
+  const bottomRightMark = `M ${panel.x + panel.w} ${markBottom} L ${markRight} ${markBottom} L ${markRight} ${markBottom - VIEWFINDER_ARM}`
   return (
     <>
-      <rect x={160} y={190} width={960} height={320} fill={colors.surface} stroke={colors.border} strokeWidth={1} />
-      <path d="M 160 190 l 0 -14 l 14 0" fill="none" stroke={colors.accent} strokeWidth={2} />
-      <path d="M 1120 510 l 0 14 l -14 0" fill="none" stroke={colors.accent} strokeWidth={2} />
+      <rect x={panel.x} y={panel.y} width={panel.w} height={panel.h} fill={colors.surface} stroke={colors.border} strokeWidth={1} />
+      <path d={topLeftMark} fill="none" stroke={colors.accent} strokeWidth={2} />
+      <path d={bottomRightMark} fill="none" stroke={colors.accent} strokeWidth={2} />
       <text x={224} y={288} fontFamily={fonts.mono} fontSize={20} fill={colors.accent} dominantBaseline="alphabetic">
         {`STAT / ${pad2(index + 1)}`}
       </text>
