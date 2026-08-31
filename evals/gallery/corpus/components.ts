@@ -494,15 +494,7 @@ export interface FormVariant {
 }
 
 export const FORM_VARIANTS: readonly FormVariant[] = [
-  { id: "icon_cards · icon columns", theme: "terra", build: (lex) => COMPONENT_BUILDERS.icon_cards!(lex) },
-  { id: "icon_cards · badge cards", theme: "tech", build: (lex) => COMPONENT_BUILDERS.icon_cards!(lex) },
-  { id: "icon_cards · outline grid", theme: "academic", build: (lex) => COMPONENT_BUILDERS.icon_cards!(lex) },
-  { id: "numbered_cards · pills", theme: "pulse", build: (lex) => COMPONENT_BUILDERS.numbered_cards!(lex) },
-  { id: "numbered_cards · hex cluster", theme: "tech", build: (lex) => COMPONENT_BUILDERS.numbered_cards!(lex) },
-  { id: "comparison · pill panels", theme: "vermilion", build: (lex) => COMPONENT_BUILDERS.comparison!(lex) },
   { id: "steps · arrow band", theme: "runway", build: (lex) => COMPONENT_BUILDERS.steps!(lex) },
-  { id: "timeline · vertical nodes", theme: "stage", build: (lex) => COMPONENT_BUILDERS.timeline!(lex) },
-  { id: "image_grid · numbered photos", theme: "museum", build: (lex) => COMPONENT_BUILDERS.image_grid!(lex) },
   { id: "flowchart · typed nodes", theme: "swiss", build: (lex) => COMPONENT_BUILDERS.flowchart!(lex) },
   { id: "architecture · layer stack", theme: "consulting", build: (lex) => COMPONENT_BUILDERS.architecture!(lex) },
   { id: "callout · tint panel", theme: "heritage", build: (lex) => COMPONENT_BUILDERS.callout!(lex) },

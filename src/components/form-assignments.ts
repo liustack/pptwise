@@ -6,15 +6,7 @@
  */
 
 export const COMPONENT_FORMS = [
-  "icon_columns",
-  "badge_cards",
-  "outline_grid",
-  "numbered_pills",
-  "hex_cluster",
-  "pill_panels",
   "arrow_steps",
-  "vert_timeline",
-  "numbered_photos",
   "tint_panel",
   "hanging_bare",
   "lead_word",
@@ -29,27 +21,15 @@ export type ComponentFormId = (typeof COMPONENT_FORMS)[number]
  * the rest.
  */
 export interface FormKnobs {
-  node?: "circle" | "square"
   nodeFill?: "surface" | "none"
   nodeStroke?: "border" | "dashed" | "primary"
-  iconInk?: "accent" | "text"
   radius?: "soft" | "square" | "round"
+  iconInk?: "accent" | "text"
   badge?: "circle-outline" | "circle-solid" | "square-solid"
-  paletteStroke?: boolean
   highlightFirst?: boolean
-  stagger?: boolean
-  waveFirst?: boolean
-  hexFill?: "palette" | "accent-ramp"
-  hexStroke?: "bg" | "accent"
-  frame?: "dashed" | "solid" | "none"
-  pillFill?: "accent-primary" | "accent-all"
-  cornerMarks?: boolean
   arrow?: "chevron" | "notch" | "slope"
   pulseLine?: boolean
-  axis?: "hairline" | "dashed"
   stamp?: boolean
-  caption?: "above" | "below"
-  numberBadge?: "specimen" | "invert" | "accent"
   weight?: "regular" | "bold" | "black"
 }
 
@@ -59,90 +39,6 @@ export interface FormAssignment {
 }
 
 const ASSIGNMENTS: Record<string, Record<string, FormAssignment>> = {
-  icon_cards: {
-    terra: {
-      form: "icon_columns",
-      knobs: { node: "circle", nodeFill: "surface", nodeStroke: "border", iconInk: "accent" },
-    },
-    lecture: {
-      form: "icon_columns",
-      knobs: { node: "circle", nodeFill: "none", nodeStroke: "dashed", iconInk: "accent" },
-    },
-    swiss: {
-      form: "icon_columns",
-      knobs: { node: "square", nodeFill: "surface", nodeStroke: "border", iconInk: "text" },
-    },
-    tech: {
-      form: "badge_cards",
-      knobs: { radius: "soft", badge: "circle-outline" },
-    },
-    luxe: {
-      form: "badge_cards",
-      knobs: { radius: "square", badge: "circle-outline" },
-    },
-    vermilion: {
-      form: "badge_cards",
-      knobs: { radius: "soft", badge: "circle-solid" },
-    },
-    academic: {
-      form: "outline_grid",
-      knobs: { nodeFill: "none", nodeStroke: "primary", radius: "square" },
-    },
-    ember: {
-      form: "outline_grid",
-      knobs: { nodeFill: "surface", nodeStroke: "border", iconInk: "accent", radius: "square" },
-    },
-    crayon: {
-      form: "outline_grid",
-      knobs: { nodeFill: "surface", paletteStroke: true, radius: "soft" },
-    },
-  },
-  numbered_cards: {
-    pulse: {
-      form: "numbered_pills",
-      knobs: { node: "circle", stagger: true, radius: "round" },
-    },
-    enterprise: {
-      form: "numbered_pills",
-      knobs: { node: "square", stagger: false, radius: "square" },
-    },
-    classroom: {
-      form: "numbered_pills",
-      knobs: {
-        node: "circle",
-        stagger: true,
-        radius: "soft",
-        badge: "circle-outline",
-        waveFirst: true,
-      },
-    },
-    tech: {
-      form: "hex_cluster",
-      knobs: { hexFill: "palette", hexStroke: "bg" },
-    },
-    ember: {
-      form: "hex_cluster",
-      knobs: { hexFill: "accent-ramp", hexStroke: "bg" },
-    },
-    arena: {
-      form: "hex_cluster",
-      knobs: { hexFill: "palette", hexStroke: "accent" },
-    },
-  },
-  comparison: {
-    consulting: {
-      form: "pill_panels",
-      knobs: { frame: "dashed", radius: "round", pillFill: "accent-primary" },
-    },
-    vermilion: {
-      form: "pill_panels",
-      knobs: { frame: "solid", radius: "round", cornerMarks: true, pillFill: "accent-all" },
-    },
-    ember: {
-      form: "pill_panels",
-      knobs: { frame: "none", radius: "soft", pillFill: "accent-all" },
-    },
-  },
   steps: {
     runway: {
       form: "arrow_steps",
@@ -155,34 +51,6 @@ const ASSIGNMENTS: Record<string, Record<string, FormAssignment>> = {
     pulse: {
       form: "arrow_steps",
       knobs: { arrow: "slope", badge: "circle-solid", pulseLine: true },
-    },
-  },
-  timeline: {
-    stage: {
-      form: "vert_timeline",
-      knobs: { axis: "hairline", badge: "circle-outline" },
-    },
-    memo: {
-      form: "vert_timeline",
-      knobs: { axis: "dashed", stamp: true },
-    },
-    classroom: {
-      form: "vert_timeline",
-      knobs: { axis: "dashed", badge: "circle-solid", waveFirst: true },
-    },
-  },
-  image_grid: {
-    museum: {
-      form: "numbered_photos",
-      knobs: { caption: "above", numberBadge: "specimen" },
-    },
-    playbill: {
-      form: "numbered_photos",
-      knobs: { caption: "below", numberBadge: "invert" },
-    },
-    runway: {
-      form: "numbered_photos",
-      knobs: { caption: "below", numberBadge: "accent" },
     },
   },
   callout: {

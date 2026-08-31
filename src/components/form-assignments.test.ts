@@ -21,120 +21,6 @@ type AssignmentRow = {
 
 const ASSIGNMENTS: AssignmentRow[] = [
   {
-    componentType: "icon_cards",
-    themeId: "terra",
-    form: "icon_columns",
-    knobs: { node: "circle", nodeFill: "surface", nodeStroke: "border", iconInk: "accent" },
-  },
-  {
-    componentType: "icon_cards",
-    themeId: "lecture",
-    form: "icon_columns",
-    knobs: { node: "circle", nodeFill: "none", nodeStroke: "dashed", iconInk: "accent" },
-  },
-  {
-    componentType: "icon_cards",
-    themeId: "swiss",
-    form: "icon_columns",
-    knobs: { node: "square", nodeFill: "surface", nodeStroke: "border", iconInk: "text" },
-  },
-  {
-    componentType: "icon_cards",
-    themeId: "tech",
-    form: "badge_cards",
-    knobs: { radius: "soft", badge: "circle-outline" },
-  },
-  {
-    componentType: "icon_cards",
-    themeId: "luxe",
-    form: "badge_cards",
-    knobs: { radius: "square", badge: "circle-outline" },
-  },
-  {
-    componentType: "icon_cards",
-    themeId: "vermilion",
-    form: "badge_cards",
-    knobs: { radius: "soft", badge: "circle-solid" },
-  },
-  {
-    componentType: "icon_cards",
-    themeId: "academic",
-    form: "outline_grid",
-    knobs: { nodeFill: "none", nodeStroke: "primary", radius: "square" },
-  },
-  {
-    componentType: "icon_cards",
-    themeId: "ember",
-    form: "outline_grid",
-    knobs: { nodeFill: "surface", nodeStroke: "border", iconInk: "accent", radius: "square" },
-  },
-  {
-    componentType: "icon_cards",
-    themeId: "crayon",
-    form: "outline_grid",
-    knobs: { nodeFill: "surface", paletteStroke: true, radius: "soft" },
-  },
-  {
-    componentType: "numbered_cards",
-    themeId: "pulse",
-    form: "numbered_pills",
-    knobs: { node: "circle", stagger: true, radius: "round" },
-  },
-  {
-    componentType: "numbered_cards",
-    themeId: "enterprise",
-    form: "numbered_pills",
-    knobs: { node: "square", stagger: false, radius: "square" },
-  },
-  {
-    componentType: "numbered_cards",
-    themeId: "classroom",
-    form: "numbered_pills",
-    knobs: {
-      node: "circle",
-      stagger: true,
-      radius: "soft",
-      badge: "circle-outline",
-      waveFirst: true,
-    },
-  },
-  {
-    componentType: "numbered_cards",
-    themeId: "tech",
-    form: "hex_cluster",
-    knobs: { hexFill: "palette", hexStroke: "bg" },
-  },
-  {
-    componentType: "numbered_cards",
-    themeId: "ember",
-    form: "hex_cluster",
-    knobs: { hexFill: "accent-ramp", hexStroke: "bg" },
-  },
-  {
-    componentType: "numbered_cards",
-    themeId: "arena",
-    form: "hex_cluster",
-    knobs: { hexFill: "palette", hexStroke: "accent" },
-  },
-  {
-    componentType: "comparison",
-    themeId: "consulting",
-    form: "pill_panels",
-    knobs: { frame: "dashed", radius: "round", pillFill: "accent-primary" },
-  },
-  {
-    componentType: "comparison",
-    themeId: "vermilion",
-    form: "pill_panels",
-    knobs: { frame: "solid", radius: "round", cornerMarks: true, pillFill: "accent-all" },
-  },
-  {
-    componentType: "comparison",
-    themeId: "ember",
-    form: "pill_panels",
-    knobs: { frame: "none", radius: "soft", pillFill: "accent-all" },
-  },
-  {
     componentType: "steps",
     themeId: "runway",
     form: "arrow_steps",
@@ -151,42 +37,6 @@ const ASSIGNMENTS: AssignmentRow[] = [
     themeId: "pulse",
     form: "arrow_steps",
     knobs: { arrow: "slope", badge: "circle-solid", pulseLine: true },
-  },
-  {
-    componentType: "timeline",
-    themeId: "stage",
-    form: "vert_timeline",
-    knobs: { axis: "hairline", badge: "circle-outline" },
-  },
-  {
-    componentType: "timeline",
-    themeId: "memo",
-    form: "vert_timeline",
-    knobs: { axis: "dashed", stamp: true },
-  },
-  {
-    componentType: "timeline",
-    themeId: "classroom",
-    form: "vert_timeline",
-    knobs: { axis: "dashed", badge: "circle-solid", waveFirst: true },
-  },
-  {
-    componentType: "image_grid",
-    themeId: "museum",
-    form: "numbered_photos",
-    knobs: { caption: "above", numberBadge: "specimen" },
-  },
-  {
-    componentType: "image_grid",
-    themeId: "playbill",
-    form: "numbered_photos",
-    knobs: { caption: "below", numberBadge: "invert" },
-  },
-  {
-    componentType: "image_grid",
-    themeId: "runway",
-    form: "numbered_photos",
-    knobs: { caption: "below", numberBadge: "accent" },
   },
   { componentType: "callout", themeId: "heritage", form: "tint_panel", knobs: { radius: "soft" } },
   { componentType: "callout", themeId: "swiss", form: "tint_panel", knobs: { radius: "square", weight: "bold" } },
@@ -287,12 +137,7 @@ const ASSIGNMENTS: AssignmentRow[] = [
 ]
 
 const FORM_COMPONENT_TYPES = [
-  "icon_cards",
-  "numbered_cards",
-  "comparison",
   "steps",
-  "timeline",
-  "image_grid",
   "callout",
   "flowchart",
   "architecture",
@@ -361,22 +206,11 @@ describe("resolveComponentForm", () => {
     expect(resolveComponentForm("cycle", "campaign")).toBeUndefined()
   })
 
-  it("consulting + comparison → pill_panels, consulting + icon_cards → undefined", () => {
-    expect(resolveComponentForm("comparison", "consulting")?.form).toBe("pill_panels")
-    expect(resolveComponentForm("icon_cards", "consulting")).toBeUndefined()
-  })
-
   describe("knobs for a few skins", () => {
-    it("swiss + icon_cards → form icon_columns, knobs.node === square", () => {
-      const assignment = resolveComponentForm("icon_cards", "swiss")
-      expect(assignment?.form).toBe("icon_columns")
-      expect(assignment?.knobs?.node).toBe("square")
-    })
-
-    it("classroom + numbered_cards → form numbered_pills, knobs.waveFirst === true", () => {
-      const assignment = resolveComponentForm("numbered_cards", "classroom")
-      expect(assignment?.form).toBe("numbered_pills")
-      expect(assignment?.knobs?.waveFirst).toBe(true)
+    it("every collapsed component carries no assignment at all", () => {
+      for (const type of ["icon_cards", "numbered_cards", "comparison", "timeline", "image_grid", "cycle"]) {
+        expect(assignedThemeIds(type), type).toEqual([])
+      }
     })
 
     it("kpi_cards carries no form assignment at all — one canonical card grid", () => {

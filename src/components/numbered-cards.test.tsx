@@ -10,20 +10,6 @@ import { resolveStyle } from "../themes"
 import { buildCtx } from "../render/full-slide-svg"
 import { FORM_BODY_FLOOR, FORM_TITLE_FLOOR } from "./legibility"
 
-const ctx: ComponentCtx = {
-  colors: {
-    bg: "#FFFFFF",
-    surface: "#F4F4F4",
-    primary: "#006A4E",
-    accent: "#00A878",
-    text: "#1A2421",
-    muted: "#5D6B65",
-    chartPalette: ["#006A4E", "#00A878"],
-  },
-  fonts: { heading: "Georgia", body: "Microsoft YaHei", mono: "Consolas" },
-  bodyFontPx: 24,
-}
-
 function svg(node: React.ReactElement) {
   return render(<svg>{node}</svg>)
 }
@@ -163,30 +149,6 @@ function badgeCircles(container: HTMLElement): SVGCircleElement[] {
   )
 }
 
-function nonPillRects(container: HTMLElement): SVGRectElement[] {
-  return Array.from(container.querySelectorAll("rect")).filter((r) => {
-    const w = Number(r.getAttribute("width"))
-    const h = Number(r.getAttribute("height"))
-    return !(w > h * 1.6)
-  })
-}
-
-function leftDiscSquare(container: HTMLElement): SVGRectElement {
-  const rects = nonPillRects(container)
-  expect(rects.length).toBeGreaterThan(0)
-  return rects.reduce((a, b) =>
-    Number(a.getAttribute("width")) * Number(a.getAttribute("height")) >
-    Number(b.getAttribute("width")) * Number(b.getAttribute("height"))
-      ? a
-      : b,
-  )
-}
-
-function badgeSquares(container: HTMLElement): SVGRectElement[] {
-  const disc = leftDiscSquare(container)
-  return nonPillRects(container).filter((r) => r !== disc)
-}
-
 function circleInsideRect(circle: Element, pill: Element, slop = 1) {
   const cx = Number(circle.getAttribute("cx"))
   const cy = Number(circle.getAttribute("cy"))
@@ -199,21 +161,6 @@ function circleInsideRect(circle: Element, pill: Element, slop = 1) {
   expect(cy - r, "badge top in pill").toBeGreaterThanOrEqual(y - slop)
   expect(cx + r, "badge right in pill").toBeLessThanOrEqual(x + w + slop)
   expect(cy + r, "badge bottom in pill").toBeLessThanOrEqual(y + h + slop)
-}
-
-function rectInsideRect(inner: Element, outer: Element, slop = 1) {
-  const x = Number(inner.getAttribute("x"))
-  const y = Number(inner.getAttribute("y"))
-  const w = Number(inner.getAttribute("width"))
-  const h = Number(inner.getAttribute("height"))
-  const ox = Number(outer.getAttribute("x"))
-  const oy = Number(outer.getAttribute("y"))
-  const ow = Number(outer.getAttribute("width"))
-  const oh = Number(outer.getAttribute("height"))
-  expect(x, "square left in pill").toBeGreaterThanOrEqual(ox - slop)
-  expect(y, "square top in pill").toBeGreaterThanOrEqual(oy - slop)
-  expect(x + w, "square right in pill").toBeLessThanOrEqual(ox + ow + slop)
-  expect(y + h, "square bottom in pill").toBeLessThanOrEqual(oy + oh + slop)
 }
 
 function pillForShape(pills: Element[], shape: Element, kind: "circle" | "rect") {
@@ -237,15 +184,7 @@ function pillForShape(pills: Element[], shape: Element, kind: "circle" | "rect")
   return hit!
 }
 
-function discExtent(container: HTMLElement, themeId: string) {
-  if (themeId === "enterprise") {
-    const sq = leftDiscSquare(container)
-    const x = Number(sq.getAttribute("x"))
-    const y = Number(sq.getAttribute("y"))
-    const w = Number(sq.getAttribute("width"))
-    const h = Number(sq.getAttribute("height"))
-    return { left: x, right: x + w, top: y, bottom: y + h, cx: x + w / 2, cy: y + h / 2, r: w / 2 }
-  }
+function discExtent(container: HTMLElement) {
   const c = leftDiscCircle(container)
   const cx = Number(c.getAttribute("cx"))
   const cy = Number(c.getAttribute("cy"))
@@ -268,36 +207,9 @@ function isNumLabel(text: string | null): boolean {
   return /^\d{2}$/.test(text ?? "")
 }
 
-describe("numbered_cards default face (no themeId)", () => {
-  it("paints padded 01 numbers with no top hairline and no left-edge bar", () => {
-    const { container } = svg(numberedCards.render(four, { x: 80, y: 100, w: 1088 }, ctx))
-    expect(container.querySelectorAll("line")).toHaveLength(0)
-    const hairlines = [...container.querySelectorAll("rect")].filter(
-      (r) => Number(r.getAttribute("height")) <= 3,
-    )
-    expect(hairlines).toHaveLength(0)
-    const nums = Array.from(container.querySelectorAll("text")).filter((t) =>
-      /^\d{2}$/.test(t.textContent ?? ""),
-    )
-    expect(nums.map((t) => t.textContent)).toEqual(["01", "02", "03", "04"])
-    nums.forEach((t) => {
-      expect(t.getAttribute("font-style")).toBe("italic")
-      expect(t.getAttribute("font-weight")).toBe("bold")
-    })
-  })
-
-  it("stays within the controlled SVG subset (assertSubset)", () => {
-    const markup = renderSvgMarkup(
-      <svg xmlns="http://www.w3.org/2000/svg">
-        {numberedCards.render(four, { x: 80, y: 100, w: 1088 }, ctx)}
-      </svg>,
-    )
-    expect(() => assertSubset(parseSvgRoot(markup))).not.toThrow()
-  })
-})
 
 describe("numbered_pills", () => {
-  it("pulse: a large left circle plus n pill rects, first/last x differ when stagger", () => {
+  it("draws a large left count circle plus one pill per item, all pills sharing a left edge", () => {
     const pulse = themeCtx("pulse")
     const { container } = svg(numberedCards.render(four, { x: 0, y: 0, w: 1088 }, pulse))
     const circles = Array.from(container.querySelectorAll("circle"))
@@ -314,7 +226,7 @@ describe("numbered_pills", () => {
       expect(Number(p.getAttribute("rx"))).toBe(pulse.shape?.radius ?? 8)
     })
     const xs = pills.map((p) => Number(p.getAttribute("x")))
-    expect(xs[0]).not.toBe(xs[xs.length - 1])
+    expect(new Set(xs).size).toBe(1)
     expect(container.textContent).toContain("04")
     expect(container.textContent).not.toContain("四件要事")
     const discR = Number(large.getAttribute("r"))
@@ -350,32 +262,10 @@ describe("numbered_pills", () => {
     expect(pillLeft - (cx + r)).toBeGreaterThanOrEqual(16)
   })
 
-  it("enterprise: aligned squares, pill x equal", () => {
-    const enterprise = themeCtx("enterprise")
-    const { container } = svg(numberedCards.render(four, { x: 0, y: 0, w: 1088 }, enterprise))
-    expect(container.querySelector("circle")).toBeNull()
-    const pills = pillRects(container)
-    expect(pills).toHaveLength(4)
-    const xs = new Set(pills.map((p) => p.getAttribute("x")))
-    expect(xs.size).toBe(1)
-  })
 
-  it("classroom: outline number badges and a quadratic wave under the first title", () => {
-    const classroom = themeCtx("classroom")
-    const { container } = svg(numberedCards.render(four, { x: 0, y: 0, w: 1088 }, classroom))
-    const outline = Array.from(container.querySelectorAll("circle")).filter(
-      (c) => c.getAttribute("fill") === "none" && c.getAttribute("stroke") === classroom.colors.accent,
-    )
-    expect(outline.length).toBeGreaterThanOrEqual(4)
-    const wave = Array.from(container.querySelectorAll("path")).find((p) =>
-      /[Qq]/.test(p.getAttribute("d") ?? ""),
-    )
-    expect(wave).toBeTruthy()
-    expect(wave!.getAttribute("stroke")).toBe(classroom.colors.accent)
-  })
 
-  it("pulse and classroom number badges stay at ≤0.8 of pill height and sit inside the pill", () => {
-    for (const themeId of ["pulse", "classroom"] as const) {
+  it("number badges stay at ≤0.8 of pill height and sit inside the pill", () => {
+    for (const themeId of PILL_THEMES) {
       const theme = themeCtx(themeId)
       const { container } = svg(numberedCards.render(four, { x: 0, y: 0, w: 1088 }, theme))
       const pills = pillRects(container)
@@ -392,23 +282,6 @@ describe("numbered_pills", () => {
     }
   })
 
-  it("enterprise square badges stay at ≤0.8 of pill height and sit inside the pill", () => {
-    const theme = themeCtx("enterprise")
-    const { container } = svg(numberedCards.render(four, { x: 0, y: 0, w: 1088 }, theme))
-    const pills = pillRects(container)
-    const badges = badgeSquares(container)
-    expect(badges.length).toBe(4)
-    for (const badge of badges) {
-      const pill = pillForShape(pills, badge, "rect")
-      const pillH = Number(pill.getAttribute("height"))
-      const side = Math.max(
-        Number(badge.getAttribute("width")),
-        Number(badge.getAttribute("height")),
-      )
-      expect(side).toBeLessThanOrEqual(BADGE_DIAMETER_RATIO * pillH + 0.5)
-      rectInsideRect(badge, pill)
-    }
-  })
 
   it.each([
     ["pulse", { x: 96, y: 186, w: 640, h: 280 }],
@@ -424,7 +297,7 @@ describe("numbered_pills", () => {
     const origin = parseTranslate(
       (container.querySelector("svg") ?? container).querySelector("g")!,
     )
-    const local = discExtent(container, themeId)
+    const local = discExtent(container)
     expect(local.left + origin.dx).toBeGreaterThanOrEqual(box.x - 2)
     expect(local.top + origin.dy).toBeGreaterThanOrEqual(box.y - 2)
     expect(local.right + origin.dx).toBeLessThanOrEqual(box.x + box.w + 2)
@@ -533,102 +406,15 @@ describe("numbered_pills", () => {
       const title = Array.from(group.querySelectorAll("text")).find((t) => !isNumLabel(t.textContent))
       expect(title).toBeTruthy()
       const textX = Number(title!.getAttribute("x"))
-      if (themeId === "enterprise") {
-        const badge = Array.from(group.querySelectorAll("rect")).find((r) => r !== pill)
-        expect(badge).toBeTruthy()
-        const right =
-          Number(badge!.getAttribute("x")) + Number(badge!.getAttribute("width"))
-        expect(textX).toBeGreaterThanOrEqual(right + 8)
-      } else {
-        const badge =
-          themeId === "classroom"
-            ? Array.from(group.querySelectorAll("circle")).find(
-                (c) => c.getAttribute("fill") === "none",
-              )
-            : group.querySelector("circle")
-        expect(badge).toBeTruthy()
-        const badgeRight =
-          Number(badge!.getAttribute("cx")) + Number(badge!.getAttribute("r"))
-        expect(textX).toBeGreaterThanOrEqual(badgeRight + 8)
-      }
+      const badge = group.querySelector("circle")
+      expect(badge).toBeTruthy()
+      const badgeRight = Number(badge!.getAttribute("cx")) + Number(badge!.getAttribute("r"))
+      expect(textX).toBeGreaterThanOrEqual(badgeRight + 8)
     }
   })
 })
 
-describe("numbered_cards unassigned theme equals the default face", () => {
-  it("consulting (unassigned) markup equals the same tokens with themeId omitted", () => {
-    const consulting = themeCtx("consulting")
-    const noId: ComponentCtx = { ...consulting, themeId: undefined }
-    const box = { x: 80, y: 100, w: 1088 }
-    expect(markupOf(four, box, consulting)).toBe(markupOf(four, box, noId))
-  })
-})
 
-describe("hex_cluster", () => {
-  function hexShapes(container: HTMLElement) {
-    const polygons = Array.from(container.querySelectorAll("polygon"))
-    const paths = Array.from(container.querySelectorAll("path")).filter((p) => {
-      const d = p.getAttribute("d") ?? ""
-      return d.includes("Z") || d.includes("z")
-    })
-    return { polygons, paths, count: polygons.length + paths.length }
-  }
-
-  it("tech: n hex polygons, fills from the palette, no invented left essay", () => {
-    const tech = themeCtx("tech")
-    const three = cards(3)
-    const { container } = svg(numberedCards.render(three, { x: 0, y: 0, w: 1088 }, tech))
-    const shapes = hexShapes(container)
-    expect(shapes.count).toBe(3)
-    const fills = shapes.polygons.map((p) => p.getAttribute("fill"))
-    for (const fill of fills) {
-      expect(tech.colors.chartPalette).toContain(fill)
-    }
-    shapes.polygons.forEach((p) => {
-      expect(p.getAttribute("stroke")).toBe(tech.colors.bg)
-    })
-    expect(container.textContent).toContain("01")
-    expect(container.textContent).toContain("要点1")
-    expect(container.textContent).not.toContain("为什么是三层")
-    expect(container.textContent).not.toContain("单一告警会漏")
-    expect(container.textContent).not.toContain("四件要事")
-    const markup = renderSvgMarkup(
-      <svg xmlns="http://www.w3.org/2000/svg">
-        {numberedCards.render(three, { x: 0, y: 0, w: 1088 }, tech)}
-      </svg>,
-    )
-    expect(() => assertSubset(parseSvgRoot(markup))).not.toThrow()
-  })
-
-  it("n=3 is 品字: one hex on top, two below", () => {
-    const tech = themeCtx("tech")
-    const { container } = svg(numberedCards.render(cards(3), { x: 0, y: 0, w: 1088 }, tech))
-    const centroids = Array.from(container.querySelectorAll("polygon")).map((p) => {
-      const raw = (p.getAttribute("points") ?? "").trim().split(/[\s,]+/).map(Number)
-      let sx = 0
-      let sy = 0
-      let n = 0
-      for (let i = 0; i + 1 < raw.length; i += 2) {
-        sx += raw[i]!
-        sy += raw[i + 1]!
-        n++
-      }
-      return { x: sx / n, y: sy / n }
-    })
-    expect(centroids).toHaveLength(3)
-    centroids.sort((a, b) => a.y - b.y)
-    expect(centroids[0]!.y).toBeLessThan(centroids[1]!.y)
-    expect(Math.abs(centroids[1]!.y - centroids[2]!.y)).toBeLessThan(2)
-  })
-
-  it("ember accent-ramp starts at accent and ends at primary", () => {
-    const ember = themeCtx("ember")
-    const { container } = svg(numberedCards.render(cards(3), { x: 0, y: 0, w: 1088 }, ember))
-    const fills = Array.from(container.querySelectorAll("polygon")).map((p) => p.getAttribute("fill"))
-    expect(fills[0]).toBe(ember.colors.accent)
-    expect(fills[fills.length - 1]).toBe(ember.colors.primary)
-  })
-})
 
 describe("numbered_cards n=3 and n=8 stay in box", () => {
   it.each([
