@@ -31,7 +31,7 @@ import {
 } from "../components/kpi"
 import { iconCardContentHeight, renderIconCardBody } from "../components/icon-cards"
 import { fitEmphasisLine, renderEmphasisText } from "../render/emphasis"
-import { accessibleInk, groupValueInks } from "../render/ink"
+import { accessibleInk, graphicInk, groupValueInks } from "../render/ink"
 import { tryContentHeadingTreatment } from "../render/heading-treatments/render"
 import { FRAMED_CONTENT_BOTTOM } from "./framed-content-bottom"
 import { CARD_INSET_PX } from "../render/spacing"
@@ -460,7 +460,7 @@ function renderKpiCardBody(
           x={innerX}
           y={innerY}
           size={BENTO_KPI_ICON_SIZE}
-          color={ctx.colors.primary}
+          color={graphicInk(ctx.colors.primary, ctx.colors.surface)}
         />
       )}
       <text

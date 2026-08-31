@@ -6,6 +6,7 @@ import {
   truncateToUnits,
 } from "../lib/svg-text-layout"
 import { Icon } from "../render/icons"
+import { graphicInk } from "../render/ink"
 import { resolveComponentForm } from "./form-assignments"
 import { measureBadgeCards, renderBadgeCards } from "./forms/badge-cards"
 import { measureIconColumns, renderIconColumns } from "./forms/icon-columns"
@@ -181,7 +182,7 @@ export function renderIconCardBody(
         x={box.x}
         y={box.y}
         size={iconSize}
-        color={ctx.colors.primary}
+        color={graphicInk(ctx.colors.primary, ctx.colors.surface)}
       />
       {title.lines.map((line, i) => (
         <text

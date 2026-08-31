@@ -137,6 +137,37 @@ export function accessibleInk(preferredFill: string, bgHex: string, fontSizePx: 
     : readableOn(bgHex)
 }
 
+/**
+ * WCAG 2.1 SC 1.4.11 non-text contrast floor. A graphic that carries meaning
+ * — an icon stroke, a state rule — has no font size to relieve it, so the
+ * one number applies at every size.
+ */
+const CONTRAST_RATIO_GRAPHIC = 3
+
+/**
+ * `accessibleInk`'s shape for a *graphic* mark rather than text: keep
+ * `preferredFill` when it already clears the non-text floor against `bgHex`,
+ * otherwise fall back to `readableOn`'s neutral ink.
+ *
+ * Why icons need their own call rather than a token picked by hand: several
+ * themes give `colors.primary` a block-fill job, not an ink job — `campaign`
+ * names it "更深一档给横幅/色块" and measures 1.08:1 against its own page
+ * background on purpose, because the only thing ever painted *on* primary is
+ * white type. A renderer that hands that token to `Icon` as a stroke inherits
+ * the block-fill luminance and paints a mark nobody can see (gallery visual
+ * review fix/gallery-verdict-round, items 3 and 4: campaign's bento and
+ * kpi-card icons at 1.25:1 against `colors.surface`). The fix belongs on the
+ * ink seam every text element already goes through, not on the palette.
+ *
+ * A no-op wherever the theme's own token already clears 3:1, so a theme whose
+ * primary is a real ink keeps its icons exactly as they were.
+ */
+export function graphicInk(preferredFill: string, bgHex: string): string {
+  return contrastRatio(preferredFill, bgHex) >= CONTRAST_RATIO_GRAPHIC
+    ? preferredFill
+    : readableOn(bgHex)
+}
+
 /** One sibling value's preferred graphic ink and the surface it renders on. */
 export interface GroupValueInkInput {
   readonly preferredFill: string
