@@ -151,6 +151,49 @@ describe("image-split / image-top gallery English heading overflow", () => {
   })
 })
 
+describe("image-top with nothing under the image", () => {
+  /** photo 页只带一张图（image_grid / image_compare 被 takeover 收成单张主视觉
+   * 也是这一档）：没有分栏可分的时候不预留分栏带，图长到标题带上沿，页底不留
+   * 一百多像素的死区，标题也不再贴着图底缘。 */
+  function captionOnlySlide(heading: string): Slide {
+    return {
+      type: "content",
+      kind: "photo",
+      heading,
+      components: [{ type: "image", asset_id: "hero", fit: "cover", caption: "Onboarding cabinet" }],
+    } as Slide
+  }
+
+  it("grows the image to the caption band and gives the title air on both sides", () => {
+    const slide = captionOnlySlide("付费席位量首次突破十万席")
+    const root = renderRoot("journal", "image-top", slide)
+
+    const image = root.querySelector("image")!
+    expect(Number(image.getAttribute("height"))).toBe(520)
+
+    const titles = titleNodes(root, "付费席位量首次突破十万席")
+    const title = titles[0]!
+    const titleY = Number(title.getAttribute("y"))
+    expect(titleY).toBe(582) // 520 + 62, not the general path's 42
+
+    const hairline = Array.from(root.querySelectorAll("rect")).find(
+      (r) => r.getAttribute("height") === "1" && Number(r.getAttribute("width")) > 1000,
+    )!
+    const ruleY = Number(hairline.getAttribute("y"))
+    expect(ruleY).toBe(594)
+    // Nothing is left dangling under the rule: the band ends on the page's
+    // own content floor (720 - 84), not 100px above it.
+    expect(720 - 84 - ruleY).toBeLessThanOrEqual(42)
+  })
+
+  it("keeps the general (body-bearing) geometry when a text block does follow the image", () => {
+    const slide = makeSlide("付费席位量首次突破十万席")
+    const root = renderRoot("journal", "image-top", slide)
+    const image = root.querySelector("image")!
+    expect(Number(image.getAttribute("height"))).toBeLessThanOrEqual(480)
+  })
+})
+
 describe("image takeover dropped-content propagation", () => {
   it.each(["image-split", "image-top", "image-bottom", "image-annotate"] as const)(
     "%s marks the page as dropped when its required image is absent",

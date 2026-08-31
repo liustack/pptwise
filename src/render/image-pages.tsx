@@ -359,6 +359,20 @@ export function ImageSplitPage({
  */
 const TOP_IMG_H_MIN = 356
 const TOP_IMG_H_MAX = 480
+/**
+ * 图下一个文字块都没有时（photo 页只带一张图，image_grid / image_compare 被
+ * takeover 收成单张主视觉也是这一档）的顶图上界。
+ *
+ * 走通用公式的话，空正文仍然要按 `TOP_BODY_MIN_H` 预留 100px 的分栏带，图被
+ * 480 封顶，页底剩下近 190px 的死区，标题又贴着图底 42px——版面读起来是"没内容"
+ * 而不是"一张大图配一行图注"。没有分栏可分的时候本就不需要分栏带：图长到
+ * 标题带正上方，剩下的空间全部换成标题的上下呼吸。
+ */
+const TOP_IMG_H_MAX_CAPTION_ONLY = 520
+/** 无正文档的图底到标题首行基线（通用档是 42，这里给标题让出呼吸）。 */
+const TOP_CAPTION_TITLE_GAP = 62
+/** 无正文档的细线到页底安全边距之间的留白，与图底那侧大致对称。 */
+const TOP_CAPTION_RULE_GAP_BOTTOM = 42
 /** 正文带的最薄高度，沿用原来分栏 rect 里 `Math.max(100, ...)` 的下限语义。 */
 const TOP_BODY_MIN_H = 100
 /**
@@ -418,13 +432,19 @@ export function ImageTopPage({
   // 给它的框，反推出来的高度只会等于框本身。
   const naturalH = rest.slice(0, 3).reduce((max, block) => Math.max(max, measureComponent(block, colW, ctx)), 0)
   const neededH = Math.max(naturalH, TOP_BODY_MIN_H)
-  const headBandH = TOP_TITLE_GAP + Math.max(0, title.lines.length - 1) * title.lineHeight + TOP_RULE_GAP + TOP_BODY_GAP
-  // 图吃掉正文带和标题带之外的所有空间，上下界见常量注释。
-  const imgH = Math.min(TOP_IMG_H_MAX, Math.max(TOP_IMG_H_MIN, H - TOP_SAFE_BOTTOM - neededH - headBandH))
+  const titleExtra = Math.max(0, title.lines.length - 1) * title.lineHeight
+  const headBandH = TOP_TITLE_GAP + titleExtra + TOP_RULE_GAP + TOP_BODY_GAP
+  // 图吃掉正文带和标题带之外的所有空间，上下界见常量注释。分栏里一个块都没有
+  // 的时候不预留分栏带，图直接长到标题带上沿（见 TOP_IMG_H_MAX_CAPTION_ONLY）。
+  const captionOnly = rest.length === 0
+  const captionBandH = TOP_CAPTION_TITLE_GAP + titleExtra + TOP_RULE_GAP + TOP_CAPTION_RULE_GAP_BOTTOM
+  const imgH = captionOnly
+    ? Math.min(TOP_IMG_H_MAX_CAPTION_ONLY, Math.max(TOP_IMG_H_MIN, H - TOP_SAFE_BOTTOM - captionBandH))
+    : Math.min(TOP_IMG_H_MAX, Math.max(TOP_IMG_H_MIN, H - TOP_SAFE_BOTTOM - neededH - headBandH))
 
   // 单行标题时几何跟着图底缘走（原固定图高下为 398 / 发丝 410 / 正文 442）。
   // 换行时发丝和分栏整体下移。
-  const firstTitleY = imgH + TOP_TITLE_GAP
+  const firstTitleY = imgH + (captionOnly ? TOP_CAPTION_TITLE_GAP : TOP_TITLE_GAP)
   const lastTitleY = firstTitleY + Math.max(0, title.lines.length - 1) * title.lineHeight
   const ruleY = lastTitleY + TOP_RULE_GAP
   const componentsTop = ruleY + TOP_BODY_GAP
