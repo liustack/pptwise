@@ -117,7 +117,9 @@ describe("arena sparse faces", () => {
     )
     expect(() => assertSubset(root)).not.toThrow()
     const corners = Array.from(root.querySelectorAll("path")).map((p) => p.getAttribute("d"))
-    expect(corners).toEqual(["M 160 190 l 0 -14 l 14 0", "M 1120 510 l 0 14 l -14 0"])
+    // 角标画在面板 (160,190,960x320) 外侧，与面板留 16px 对角呼吸位，
+    // 臂长 16px 收在面板边界处（见 arena.tsx 的 VIEWFINDER_GAP 注释）。
+    expect(corners).toEqual(["M 160 174 L 144 174 L 144 190", "M 1120 526 L 1136 526 L 1136 510"])
     const index = Array.from(root.querySelectorAll("text")).find((t) => (t.textContent ?? "").includes("STAT"))!
     expect(index.textContent).toBe("STAT / 01")
     expect(index.getAttribute("fill")).toBe(ctx.colors.accent)

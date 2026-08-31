@@ -227,17 +227,23 @@ describe("chart component", () => {
     expect(maxBar).toBeTruthy()
   })
 
-  it("wires ctx.colors.accent through to the line renderer's endpoint marker", () => {
+  // The line renderer's endpoint dot now carries its own series color, so
+  // two series converging on one corner stay two (see chart-svg.test.tsx's
+  // "converging endpoints"). The accent still reaches the renderer — it
+  // fills the area under a single line — and that is what is pinned here.
+  it("wires ctx.colors.accent through to the line renderer's area fill", () => {
     const component = {
       type: "chart" as const,
       chart_type: "line" as const,
       series: [{ name: "Trend", data: [{ x: 1, y: 10 }, { x: 2, y: 30 }] }],
     }
     const { container } = svg(chart.render(component, box, ctx))
+    const stop = container.querySelector("linearGradient stop")
+    expect(stop?.getAttribute("stop-color")).toBe(ctx.colors.accent)
     const dot = Array.from(container.querySelectorAll("circle")).find(
       (c) => c.getAttribute("r") === "4",
     )
-    expect(dot?.getAttribute("fill")).toBe(ctx.colors.accent)
+    expect(dot?.getAttribute("fill")).toBe(ctx.colors.chartPalette[0])
   })
 })
 

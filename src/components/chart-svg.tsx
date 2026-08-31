@@ -154,6 +154,19 @@ const ENDPOINT_DOT_R = 4
 const ENDPOINT_RING_R = 8
 const ENDPOINT_RING_OPACITY = 0.3
 /**
+ * Air (px) between an endpoint marker's edge and the value label that names
+ * it. Without it the number sits on its own dot at the plot's right edge.
+ */
+const ENDPOINT_LABEL_CLEARANCE = 2
+
+/** Slide a value label off the marker it names, in the direction it grows. */
+function clearOfMarker(x: number, anchor: "start" | "middle" | "end"): number {
+  const away = ENDPOINT_DOT_R + ENDPOINT_LABEL_CLEARANCE
+  if (anchor === "end") return x - away
+  if (anchor === "start") return x + away
+  return x
+}
+/**
  * Last series count at which a line chart still paints first/last value
  * labels. Dataviz discipline: labels have to be selective. When many
  * series share the same left and right edges, those numbers stack into
@@ -531,7 +544,7 @@ export function renderLine(
    * lines here are the reading aid, not duplicate ink. */
   showGrid = true,
   component?: ChartInput,
-  _bgHex?: string,
+  bgHex?: string,
   axisColor?: string,
   fontFamily?: string,
 ): ReactElement {
@@ -594,12 +607,15 @@ export function renderLine(
   if (showEndpointValues) {
     for (const end of seriesEnds) {
       if (end.first) {
+        const anchor = edgeAnchor(end.first.i, categories.length)
+        // A single-point series' one label names the endpoint marker too.
+        const carriesMarker = end.first === end.last
         endpointSpecs.push({
           id: `${end.s.seriesIndex}-first`,
           text: String(end.first.value),
-          x: end.first.x,
+          x: carriesMarker ? clearOfMarker(end.first.x, anchor) : end.first.x,
           y: end.first.y - 6,
-          anchor: edgeAnchor(end.first.i, categories.length),
+          anchor,
           fontSize: VALUE_FONT_SIZE,
           fontFamily,
           priority: 100 - end.s.seriesIndex,
@@ -608,12 +624,13 @@ export function renderLine(
         })
       }
       if (end.last && end.last !== end.first) {
+        const anchor = edgeAnchor(end.last.i, categories.length)
         endpointSpecs.push({
           id: `${end.s.seriesIndex}-last`,
           text: String(end.last.value),
-          x: end.last.x,
+          x: clearOfMarker(end.last.x, anchor),
           y: end.last.y - 6,
-          anchor: edgeAnchor(end.last.i, categories.length),
+          anchor,
           fontSize: VALUE_FONT_SIZE,
           fontFamily,
           priority: 100 - end.s.seriesIndex,
@@ -624,6 +641,46 @@ export function renderLine(
     }
   }
   const placedEndpoints = new Map(resolveValueLabelCollisions(endpointSpecs).map((label) => [label.id, label]))
+
+  /**
+   * Endpoint markers, painted as two flat layers instead of one pair per
+   * series (author screenshot, 2026-08). Three rules, all of them about what
+   * happens when two series converge on the same corner of the plot:
+   *
+   *  - A marker takes its own series' line color. Painting every dot in the
+   *    accent made the last series' dot look like it had swallowed the one
+   *    underneath, because both were the same color.
+   *  - Every ring paints below every dot. Inside the old per-series group a
+   *    later series' translucent ring landed on top of an earlier series'
+   *    dot and tinted it.
+   *  - Rings that would overlap at all collapse to the topmost one, so a
+   *    crowded endpoint shows one halo instead of a stack. The
+   *    surviving ring always sits on a dot that is actually painted, so no
+   *    ring is ever left without an owner.
+   */
+  const endpointMarkers = seriesEnds
+    .filter((end) => end.last)
+    .map((end) => ({
+      x: end.last!.x,
+      y: end.last!.y,
+      color: palette[end.s.seriesIndex % palette.length]!,
+      key: end.s.seriesIndex,
+    }))
+  const ringKeys = new Set<number>()
+  const ringCenters: { x: number; y: number }[] = []
+  for (let i = endpointMarkers.length - 1; i >= 0; i--) {
+    const marker = endpointMarkers[i]!
+    const crowded = ringCenters.some(
+      (c) => Math.hypot(c.x - marker.x, c.y - marker.y) < ENDPOINT_RING_R * 2,
+    )
+    if (crowded) continue
+    ringKeys.add(marker.key)
+    ringCenters.push({ x: marker.x, y: marker.y })
+  }
+  /** Two dots this close read as one blob, so the upper one gets a hairline
+   * of the page background between them. */
+  const dotTouches = (a: { x: number; y: number }, b: { x: number; y: number }) =>
+    Math.hypot(a.x - b.x, a.y - b.y) < ENDPOINT_DOT_R * 2
 
   return (
     <>
@@ -740,24 +797,35 @@ export function renderLine(
                 </text>
               )
             })}
-            {/* Endpoint emphasis: a soft outer ring plus a solid accent dot,
-                always at the series' last non-null point (even a
-                single-point series, where it coincides with `first`). */}
-            {last && (
-              <>
-                <circle
-                  data-plot-mark="1"
-                  cx={last.x}
-                  cy={last.y}
-                  r={ENDPOINT_RING_R}
-                  fill="none"
-                  stroke={accentColor}
-                  strokeOpacity={ENDPOINT_RING_OPACITY}
-                />
-                <circle data-plot-mark="1" cx={last.x} cy={last.y} r={ENDPOINT_DOT_R} fill={accentColor} />
-              </>
-            )}
           </g>
+        )
+      })}
+      {endpointMarkers
+        .filter((marker) => ringKeys.has(marker.key))
+        .map((marker) => (
+          <circle
+            key={`ring-${marker.key}`}
+            data-plot-mark="1"
+            cx={marker.x}
+            cy={marker.y}
+            r={ENDPOINT_RING_R}
+            fill="none"
+            stroke={marker.color}
+            strokeOpacity={ENDPOINT_RING_OPACITY}
+          />
+        ))}
+      {endpointMarkers.map((marker, i) => {
+        const crowded = endpointMarkers.some((other, j) => j !== i && dotTouches(marker, other))
+        return (
+          <circle
+            key={`dot-${marker.key}`}
+            data-plot-mark="1"
+            cx={marker.x}
+            cy={marker.y}
+            r={ENDPOINT_DOT_R}
+            fill={marker.color}
+            {...(crowded && bgHex ? { stroke: bgHex, strokeWidth: 1 } : {})}
+          />
         )
       })}
       {renderCartesianAxisTitles({

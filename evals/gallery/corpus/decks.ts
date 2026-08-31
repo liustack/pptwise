@@ -42,8 +42,9 @@ const THEME_EMPHASIS_PHRASES: Record<string, Record<LanguageId, EmphasisPhrases>
     en: { cover: "Business Review", heading: "new business", bullet: "91%" },
     mixed: { cover: "Kubernetes 托管", heading: "90 秒", bullet: "12 分钟" },
   },
+  // lecture's deck reads its native lexicon, so its phrases come from there.
   lecture: {
-    zh: { cover: "业务评审", heading: "新签", bullet: "九成一" },
+    zh: { cover: "手机摄影课", heading: "二十一位", bullet: "三个词" },
     en: { cover: "Business Review", heading: "new business", bullet: "91%" },
     mixed: { cover: "Kubernetes 托管", heading: "90 秒", bullet: "12 分钟" },
   },
@@ -466,6 +467,19 @@ const CONTENT_FACE_KINDS: Record<string, PageKind> = {
   "two-column": "comparison",
 }
 
+/**
+ * Which menu slot a layout would occupy: the boundary slide type it draws,
+ * or, for a content face, the page kind it is authored against. The gallery
+ * needs this for faces no menu offers — they still have to be filed under a
+ * slot so the cross-cut view can put them in the right row.
+ */
+export function layoutFaceSlot(layoutId: string): string {
+  const def = LAYOUT_REGISTRY[layoutId]
+  if (!def) throw new Error(`unknown layout id: ${layoutId}`)
+  const slideType = def.slideTypes[0]!
+  return slideType === "content" ? (CONTENT_FACE_KINDS[layoutId] ?? "points") : slideType
+}
+
 function galleryThemeId(sourceThemeId: CanonicalThemeId, layoutId: string, slideType: Slide["type"], kind?: PageKind): string {
   return `gallery-face-${sourceThemeId}-${slideType}-${kind ?? "boundary"}-${layoutId}`
 }
@@ -592,12 +606,19 @@ export function componentPage(
   opts: { solo?: boolean } = {},
 ): PptxIR {
   const component = build(lex)
+  const chart = component.type === "chart"
   const cartesian = isCartesianChart(component)
   const bubble = isBubbleChart(component)
   const kind = componentKind(component)
+  // Every chart type owns its page, not just the cartesian four. A chart
+  // sharing the page with a lead-in paragraph is a two-component slide, and
+  // a face that reserves its second slot for a caption strip (stage's
+  // stacked-poster) then hands the plot a 68px band: the dumbbell, funnel,
+  // gauge and pie skins were rendering as thumbnails under a full-size
+  // paragraph, i.e. the review page was not showing what it exists to show.
   const solo =
     opts.solo ??
-    (FULL_BODY_TYPES.has(component.type) || cartesian || ["quote", "evidence", "statement", "fact", "photo"].includes(kind))
+    (FULL_BODY_TYPES.has(component.type) || chart || ["quote", "evidence", "statement", "fact", "photo"].includes(kind))
 
   // A one-sentence lead-in, not the full corpus paragraph. The paragraph
   // runs long enough in English that it consumed the content rect and the
@@ -622,7 +643,7 @@ export function componentPage(
         : lex.sentences[3]
       : undefined,
     components: solo ? [component] : [leadIn, component],
-    footnote: bubble ? lex.bubbleSizeNote : cartesian || !solo ? lex.sources[2]!.label : undefined,
+    footnote: bubble ? lex.bubbleSizeNote : chart || !solo ? lex.sources[2]!.label : undefined,
   } as unknown as Slide
   const safeId = componentId.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "")
   return deckShell(lex, assets, renderingThemeId, `component-${safeId}-${lex.id}`, [slide])

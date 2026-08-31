@@ -353,6 +353,12 @@ export const layoutDef: LayoutDefinition = {
   id: "rail-numbered",
   kind: "standard",
   slideTypes: ["content"],
+  // The progress rail is this face's own structural furniture, painted in
+  // the outer left margin where a theme motif may also want to mark the
+  // page. consulting's locator corner ran its vertical arm 4px from the
+  // rail and the pair read as one botched line. Declaring the rail lets a
+  // motif stand down there instead (see `motifs/keep-out.ts`).
+  decorKeepOut: [{ x: RAIL_X, y: RAIL_Y, w: RAIL_W, h: RAIL_H }],
   slots: [
     { name: "rail", accepts: [] },
     { name: "kicker", accepts: [] },

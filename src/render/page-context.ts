@@ -1,4 +1,5 @@
 import type { DeckBranding, PptxIR, Slide } from "@/ir"
+import type { DecorKeepOutRect } from "../layouts/registry"
 import type { MotifId } from "../motifs/types"
 import type { ThemeDefinition } from "../themes/definitions"
 import type { EffectiveFace } from "./layout-selection"
@@ -14,6 +15,12 @@ export interface PageRenderContext {
   branding: EffectiveBranding
   metadataOn: boolean
   documentMetaOn: boolean
+  /**
+   * Page-coordinate rectangles the chosen face paints its own furniture
+   * into. A motif checks its mark against these before painting — see
+   * `motifs/keep-out.ts`.
+   */
+  decorKeepOut?: readonly DecorKeepOutRect[]
   geometry: {
     brandedFrameBottomY?: number
     imageBottomCaptionBottomY: number
@@ -76,6 +83,7 @@ export function resolvePageRenderContext(
     branding,
     metadataOn,
     documentMetaOn,
+    ...(effectiveFace.layout?.decorKeepOut ? { decorKeepOut: effectiveFace.layout.decorKeepOut } : {}),
     geometry: {
       ...(branding === "full" ? { brandedFrameBottomY: FRAME_BOTTOM_BRANDED } : {}),
       imageBottomCaptionBottomY:

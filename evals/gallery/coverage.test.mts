@@ -5,6 +5,7 @@
 
 import { describe, expect, it } from "vitest"
 import { COMPONENT_FORMS } from "@/components/form-assignments"
+import { LAYOUT_REGISTRY } from "@/layouts/registry"
 import { CANONICAL_THEME_IDS } from "@/themes"
 import { CHART_VARIANTS, FORM_VARIANTS } from "./corpus/components"
 import type { CorpusAssets } from "./corpus/decks"
@@ -15,7 +16,7 @@ import {
   galleryCoverageGaps,
   mapJobSubject,
 } from "./coverage"
-import { buildMatrix, type Job } from "./matrix"
+import { buildMatrix, servedLayoutIds, unservedLayoutIds, UNSERVED_SECTION, type Job } from "./matrix"
 
 const emptyAssets = { images: {} } as CorpusAssets
 const assets = { zh: emptyAssets, en: emptyAssets, mixed: emptyAssets }
@@ -25,44 +26,44 @@ function jobs(opts?: Parameters<typeof buildMatrix>[2]): Job[] {
 }
 
 describe("mapJobSubject", () => {
-  it("maps current tables onto their inventories", () => {
-    expect(mapJobSubject({ table: "theme", subject: "consulting" })).toEqual({
+  it("maps current bands onto their inventories", () => {
+    expect(mapJobSubject({ band: "deck", subject: "consulting" })).toEqual({
       inventory: "theme",
       id: "consulting",
     })
-    expect(mapJobSubject({ table: "layout", subject: "two-column" })).toEqual({
+    expect(mapJobSubject({ band: "face", subject: "two-column" })).toEqual({
       inventory: "layout",
       id: "two-column",
     })
-    expect(mapJobSubject({ table: "component", subject: "callout" })).toEqual({
+    expect(mapJobSubject({ band: "component", subject: "callout" })).toEqual({
       inventory: "component",
       id: "callout",
     })
-    expect(mapJobSubject({ table: "component", subject: "chart · bar" })).toEqual({
+    expect(mapJobSubject({ band: "component", subject: "chart · bar" })).toEqual({
       inventory: "component",
       id: "chart",
     })
-    expect(mapJobSubject({ table: "component", subject: "flowchart · typed nodes" })).toEqual({
+    expect(mapJobSubject({ band: "component", subject: "flowchart · typed nodes" })).toEqual({
       inventory: "form",
       id: "typed_nodes",
     })
-    expect(mapJobSubject({ table: "component", subject: "architecture · layer stack" })).toEqual({
+    expect(mapJobSubject({ band: "component", subject: "architecture · layer stack" })).toEqual({
       inventory: "form",
       id: "layer_stack",
     })
   })
 
   it("leaves retired subjects unmapped, including bloom / logo-wall / side-highlight", () => {
-    expect(mapJobSubject({ table: "theme", subject: "bloom" })).toBeUndefined()
-    expect(mapJobSubject({ table: "component", subject: "logo-wall" })).toBeUndefined()
-    expect(mapJobSubject({ table: "layout", subject: "side-highlight" })).toBeUndefined()
-    expect(mapJobSubject({ table: "component", subject: "speech" })).toBeUndefined()
-    expect(mapJobSubject({ table: "unknown", subject: "consulting" })).toBeUndefined()
+    expect(mapJobSubject({ band: "deck", subject: "bloom" })).toBeUndefined()
+    expect(mapJobSubject({ band: "component", subject: "logo-wall" })).toBeUndefined()
+    expect(mapJobSubject({ band: "face", subject: "side-highlight" })).toBeUndefined()
+    expect(mapJobSubject({ band: "component", subject: "speech" })).toBeUndefined()
+    expect(mapJobSubject({ band: "unknown", subject: "consulting" })).toBeUndefined()
   })
 
   it("maps every chart variant onto the chart component type", () => {
     for (const id of Object.keys(CHART_VARIANTS)) {
-      expect(mapJobSubject({ table: "component", subject: id }), id).toEqual({
+      expect(mapJobSubject({ band: "component", subject: id }), id).toEqual({
         inventory: "component",
         id: "chart",
       })
@@ -82,13 +83,46 @@ describe("gallery inventory coverage", () => {
 
   it("keeps flowchart typed_nodes and architecture layer_stack as findable component pages", () => {
     const ids = new Set(jobs({ only: "component" }).map((job) => job.id))
+    // typed_nodes belongs to swiss, layer_stack to consulting — under a
+    // theme-first cut a form variant lives in the section of the theme that
+    // owns the form, and only the baseline section carries all three scripts.
+    expect(ids.has("swiss--comp--flowchart-typed-nodes--zh")).toBe(true)
     for (const lang of ["zh", "en", "mixed"] as const) {
-      expect(ids.has(`component--flowchart-typed-nodes--${lang}`)).toBe(true)
-      expect(ids.has(`component--architecture-layer-stack--${lang}`)).toBe(true)
+      expect(ids.has(`consulting--comp--architecture-layer-stack--${lang}`)).toBe(true)
     }
   })
 
-  it("gives every component-face form a dedicated FORM_VARIANTS page, and pad only a theme-table surface", () => {
+  it("gives every theme section all three bands, and every one of them the 37 component types", () => {
+    const gaps = galleryCoverageGaps(jobs())
+    expect(gaps.missingBands, `missing bands: ${gaps.missingBands.join(", ")}`).toEqual([])
+    expect(
+      gaps.missingSectionComponents,
+      `missing per-section components: ${gaps.missingSectionComponents.slice(0, 10).join(", ")}`,
+    ).toEqual([])
+  })
+
+  it("puts exactly the layouts no menu serves into the appendix section", () => {
+    const matrix = jobs()
+    const gaps = galleryCoverageGaps(matrix)
+    expect(gaps.missingUnserved, `unserved but absent: ${gaps.missingUnserved.join(", ")}`).toEqual([])
+    expect(gaps.misfiledUnserved, `served but filed as unserved: ${gaps.misfiledUnserved.join(", ")}`).toEqual([])
+
+    const served = servedLayoutIds(CANONICAL_THEME_IDS)
+    const appendix = matrix.filter((job) => job.section === UNSERVED_SECTION)
+    expect(appendix.length).toBeGreaterThan(0)
+    expect(appendix.every((job) => job.band === "face")).toBe(true)
+    expect(appendix.every((job) => job.theme === "consulting")).toBe(true)
+    expect([...new Set(appendix.map((job) => job.subject))].sort()).toEqual(unservedLayoutIds(CANONICAL_THEME_IDS))
+    expect(appendix.some((job) => served.has(job.subject))).toBe(false)
+  })
+
+  it("gives every registered layout a face-band page somewhere", () => {
+    const faces = new Set(jobs().filter((job) => job.band === "face").map((job) => job.subject))
+    const missing = Object.keys(LAYOUT_REGISTRY).filter((id) => !faces.has(id)).sort()
+    expect(missing, `layouts with no face page: ${missing.join(", ")}`).toEqual([])
+  })
+
+  it("gives every component-face form a dedicated FORM_VARIANTS page, and pad only a deck surface", () => {
     const matrix = jobs()
     const dedicated = new Set(
       FORM_VARIANTS.map(formIdForVariant).filter((form): form is NonNullable<typeof form> => !!form),
@@ -110,7 +144,7 @@ describe("gallery inventory coverage", () => {
   it("names unmapped leftover subjects instead of mixing them into the review wall", () => {
     const ghost: Job = {
       ...jobs({ only: "component", languages: ["zh"] })[0]!,
-      id: "component--logo-wall--zh",
+      id: "consulting--comp--logo-wall--zh",
       subject: "logo-wall",
     }
     expect(() => assertInventoryCoverage([ghost])).toThrow(/logo-wall/)

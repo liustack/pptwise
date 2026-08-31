@@ -23,7 +23,30 @@
 
 import { slideEdgeFill } from "@/lib/slide-edge"
 import { namespaceSvgIds, svgIdPrefix } from "@/lib/svg-ids"
+import { FACE_SLOTS } from "./matrix"
 import { verdictFreshness, type Manifest } from "./render"
+
+/**
+ * Chinese names for the menu slots, so the cross-cut view's rows read as
+ * "这一页在讲什么" rather than as schema keys. The English id stays beside
+ * each one — it is what the corpus, the manifest and the page ids all use.
+ */
+const SLOT_LABELS: Record<string, string> = {
+  cover: "封面",
+  chapter: "章节",
+  points: "要点",
+  list: "清单",
+  comparison: "对比",
+  process: "流程",
+  data: "数据",
+  photo: "图像",
+  statement: "断言",
+  quote: "引述",
+  fact: "数字",
+  evidence: "证据",
+  hierarchy: "层级",
+  ending: "结尾",
+}
 
 /**
  * Embed a function's own source in the page's script block.
@@ -77,7 +100,6 @@ export function buildGalleryHtml(manifest: Manifest, svgs: ReadonlyMap<string, s
     if (edge) edgeRecord[id] = edge
   }
 
-  const themes = [...new Set(manifest.pages.map((p) => p.theme))].sort()
   const languages = [...new Set(manifest.pages.map((p) => p.language))]
   const languageLabels: Record<string, string> = {}
   for (const p of manifest.pages) languageLabels[p.language] = p.languageLabel
@@ -103,7 +125,11 @@ export function buildGalleryHtml(manifest: Manifest, svgs: ReadonlyMap<string, s
   --radius: 10px;
   font-synthesis-weight: none;
 }
-[data-surround="dark"] {
+/* Scoped to the body element, not to anything carrying the attribute. The
+   surround toggle's own buttons carry data-surround="light" / "dark", so an
+   unqualified selector redefined the palette inside the dark button itself —
+   its label came out near-white on the light header and read as disabled. */
+body[data-surround="dark"] {
   --bg: #17181a;
   --panel: #1f2124;
   --line: #34373c;
@@ -166,8 +192,23 @@ input[type="search"] { min-width: 190px; }
 .tally .t-rework::before { background: var(--rework); }
 
 main { padding: 20px; }
-.tablehead { margin: 26px 0 14px; }
-.tablehead:first-child { margin-top: 4px; }
+.sectionhead { margin: 36px 0 8px; padding-top: 10px; border-top: 2px solid var(--line); scroll-margin-top: 120px; }
+.sectionhead:first-child { margin-top: 4px; padding-top: 0; border-top: 0; }
+.sectionhead h2 { margin: 0; font-size: 18px; letter-spacing: -0.01em; }
+.sectionhead h2 code { font: 500 12px/1 ui-monospace, "SF Mono", Menlo, monospace; color: var(--ink-dim); margin-left: 8px; }
+.sectionhead p { margin: 3px 0 0; color: var(--ink-dim); font-size: 13px; max-width: 70ch; }
+.bandhead { margin: 20px 0 10px; }
+.bandhead h3 { margin: 0; font-size: 14px; letter-spacing: -0.01em; }
+.bandhead h3 span { font-weight: 400; color: var(--ink-dim); margin-left: 8px; }
+.bandhead p { margin: 2px 0 0; color: var(--ink-dim); font-size: 12px; max-width: 76ch; }
+/* One row per slot or per component: the 24 skins sit side by side and scroll
+   horizontally, so the comparison the row exists for is a single eye sweep
+   rather than a wrapped block the reader has to reassemble. */
+.crossrow { margin: 0 0 20px; }
+.crossrow h3 { margin: 0 0 8px; font-size: 14px; letter-spacing: -0.01em; }
+.crossrow h3 span { font-weight: 400; font-size: 12px; color: var(--ink-dim); margin-left: 8px; }
+.strip { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; scroll-snap-type: x proximity; }
+.strip .card { flex: 0 0 264px; scroll-snap-align: start; }
 #quickmap { display: grid; grid-template-columns: repeat(auto-fill, minmax(148px, 1fr)); gap: 10px; padding: 14px 18px 4px; }
 .qm { border: 1px solid var(--line); border-radius: 8px; background: var(--panel); padding: 0; cursor: pointer; overflow: hidden; text-align: left; }
 .qm:hover { border-color: var(--ink-dim); }
@@ -175,9 +216,6 @@ main { padding: 20px; }
 .qm .qm-stage { aspect-ratio: 16 / 9; background: var(--stage); overflow: hidden; }
 .qm .qm-stage svg { display: block; width: 100%; height: 100%; }
 .qm .qm-name { display: block; padding: 5px 8px 6px; font: 500 11px/1.3 ui-monospace, "SF Mono", Menlo, monospace; color: var(--ink); }
-.tablehead h2 { margin: 0; font-size: 16px; letter-spacing: -0.01em; }
-.tablehead p { margin: 3px 0 0; color: var(--ink-dim); font-size: 13px; max-width: 70ch; }
-
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
 
 .card {
@@ -294,19 +332,22 @@ kbd {
 <header class="bar">
   <div class="title">pptwise 视觉审查<small>${esc(manifest.pptwiseVersion)} · 生成于 ${esc(manifest.generatedAt.slice(0, 16).replace("T", " "))}</small></div>
 
-  <div class="seg" id="table-filter" role="group" aria-label="表">
-    <button data-table="all" aria-pressed="true">全部</button>
-    ${manifest.tables.map((t) => `<button data-table="${t.id}" aria-pressed="false">${esc(t.label)}</button>`).join("\n    ")}
+  <select id="theme-filter" aria-label="主题">
+    <option value="all">全部主题</option>
+    ${manifest.sections
+      .map((sec) => `<option value="${esc(sec.id)}">${esc(sec.label)}${sec.label === sec.id ? "" : ` · ${esc(sec.id)}`}</option>`)
+      .join("\n    ")}
+  </select>
+
+  <div class="seg" id="view-filter" role="group" aria-label="视角">
+    <button data-view="theme" aria-pressed="true">按主题</button>
+    <button data-view="slot" aria-pressed="false">按讲法</button>
+    <button data-view="component" aria-pressed="false">按组件</button>
   </div>
 
   <select id="lang-filter" aria-label="语料">
     <option value="all">全部语料</option>
     ${languages.map((l) => `<option value="${esc(l)}">${esc(languageLabels[l] ?? l)}</option>`).join("\n    ")}
-  </select>
-
-  <select id="theme-filter" aria-label="主题">
-    <option value="all">全部主题</option>
-    ${themes.map((t) => `<option value="${esc(t)}">${esc(t)}</option>`).join("\n    ")}
   </select>
 
   <select id="verdict-filter" aria-label="结论">
@@ -329,7 +370,7 @@ kbd {
 
   <div class="spacer"></div>
 
-  <div class="progress"><b id="done-count">0</b> / ${manifest.pages.length} 已评</div>
+  <div class="progress" id="progress" title=""><b id="done-count">0</b> / <span id="total-count">${manifest.pages.length}</span> 已评</div>
   <div class="tally">
     <span class="t-pass"><b id="n-pass">0</b></span>
     <span class="t-limit"><b id="n-limit">0</b></span>
@@ -344,7 +385,7 @@ kbd {
   <button class="btn primary" id="export">复制结论</button>
 </header>
 
-<section id="quickmap" aria-label="主题速览"></section>
+<section id="quickmap" aria-label="主题速览（跳转索引）"></section>
 
 <main id="main"><p class="booting">正在装入 ${manifest.pages.length} 页……<br><small>整页自包含，所有幻灯片都在这个文件里，首次装入约需几秒。</small></p></main>
 
@@ -378,6 +419,11 @@ kbd {
   const SVGS = JSON.parse(document.getElementById("svg-data").textContent);
   const EDGES = JSON.parse(document.getElementById("edge-data").textContent);
   const STORE_KEY = "pptwise-gallery-verdicts-v1";
+  // Row order for the cross-cut view, straight from the corpus' own slot list
+  // rather than from whatever order this build's menus happened to emit.
+  const SLOT_ORDER = ${jsonScript(FACE_SLOTS)};
+  const SLOT_LABELS = ${jsonScript(SLOT_LABELS)};
+  const SECTION_ORDER = new Map(MANIFEST.sections.map((s, i) => [s.id, i]));
 
   // Shipped in as source rather than restated here, so the rule the reviewer
   // sees is byte-for-byte the one render.test.mts tests. See its own doc
@@ -504,10 +550,29 @@ ${inlineRule(verdictFreshness)}
   // ── card rendering ─────────────────────────────────────────────────────
   const cards = new Map();
 
+  // In the theme view the section heading already says which theme this is,
+  // so the card names what it shows. In a cross-cut row the opposite holds:
+  // every card in the row shows the same thing, and the theme is the variable.
+  function cardTitle(p) {
+    if (state.view !== "theme") return p.sectionLabel === p.section ? p.section : p.sectionLabel + " · " + p.section;
+    // A deck page's subject is its own theme, which the section heading right
+    // above it already said. Its heading is the thing worth naming.
+    // Emphasis runs are author markup for the renderer, not for chrome text.
+    if (p.band === "deck") return stripEmphasis(p.heading) || p.subject;
+    return p.subject;
+  }
+
+  function stripEmphasis(text) {
+    return (text || "").replaceAll("**", "");
+  }
+
   function cardFacts(p) {
     const bits = [];
-    if (p.table === "theme") bits.push("第 " + p.page + " / " + p.pageCount + " 页", p.slideType);
-    else bits.push(p.slideType, p.theme);
+    if (state.view !== "theme") bits.push(p.subject);
+    if (p.band === "deck") bits.push("第 " + p.page + " / " + p.pageCount + " 页", p.slideType);
+    // A slot already names the slide type it belongs to, and every component
+    // page is a content page — saying so again is noise on 1500 cards.
+    if (p.slot) bits.push(SLOT_LABELS[p.slot] ? SLOT_LABELS[p.slot] + " " + p.slot : p.slot);
     bits.push(p.languageLabel);
     return bits;
   }
@@ -521,7 +586,7 @@ ${inlineRule(verdictFreshness)}
     stage.className = "stage";
     stage.setAttribute("role", "button");
     stage.setAttribute("tabindex", "0");
-    stage.setAttribute("aria-label", "放大 " + p.subject);
+    stage.setAttribute("aria-label", "放大 " + p.id);
     if (p.skipped) {
       const s = document.createElement("div");
       s.className = "skip";
@@ -537,7 +602,7 @@ ${inlineRule(verdictFreshness)}
     meta.className = "meta";
     const subject = document.createElement("div");
     subject.className = "subject";
-    subject.textContent = p.subject;
+    subject.textContent = cardTitle(p);
     const facts = document.createElement("div");
     facts.className = "facts";
     for (const bit of cardFacts(p)) {
@@ -616,23 +681,38 @@ ${inlineRule(verdictFreshness)}
   }
 
   function refreshTally() {
-    // Counted over this build's own pages, not over everything in storage.
-    // Verdicts persist across runs by design (that is what makes the ids
-    // stable), so a narrowed run (--only=layout, fewer languages) still
-    // sees the full matrix's judgements in localStorage. Tallying those
-    // would report more pages reviewed than the page even has, and would
-    // disagree with the export, which already filters to the manifest.
+    // Counted over what is on screen, not over everything in storage and not
+    // over the whole build. A reviewer working through one theme wants "12 /
+    // 67 of this theme", and the old whole-manifest denominator made a
+    // finished section look barely started. The build-wide numbers are still
+    // one hover away, in the tooltip.
     let pass = 0, limit = 0, rework = 0;
-    for (const p of MANIFEST.pages) {
+    for (const p of visible) {
       const v = (verdicts[p.id] || {}).verdict;
       if (v === "pass") pass++;
       else if (v === "limit") limit++;
       else if (v === "rework") rework++;
     }
+    // Verdicts persist across runs by design (that is what makes the ids
+    // stable), so a narrowed run still sees the full matrix's judgements in
+    // localStorage. The global tally counts this build's pages only, which is
+    // what the export already does.
+    let gp = 0, gl = 0, gr = 0;
+    for (const p of MANIFEST.pages) {
+      const v = (verdicts[p.id] || {}).verdict;
+      if (v === "pass") gp++;
+      else if (v === "limit") gl++;
+      else if (v === "rework") gr++;
+    }
     document.getElementById("n-pass").textContent = String(pass);
     document.getElementById("n-limit").textContent = String(limit);
     document.getElementById("n-rework").textContent = String(rework);
     document.getElementById("done-count").textContent = String(pass + limit + rework);
+    document.getElementById("total-count").textContent = String(visible.length);
+    const globalTip = "全库 " + MANIFEST.pages.length + " 页，已评 " + (gp + gl + gr) +
+      " 页（通过 " + gp + " · 限制 " + gl + " · 返工 " + gr + "）";
+    document.getElementById("progress").title = globalTip;
+    document.querySelector(".tally").title = globalTip;
   }
 
   // Only slides near the viewport are mounted: several hundred inline SVG
@@ -650,13 +730,20 @@ ${inlineRule(verdictFreshness)}
   }, { rootMargin: "600px 0px" });
 
   // ── filtering and layout ───────────────────────────────────────────────
-  const state = { table: "all", language: "all", theme: "all", verdict: "all", finding: "all", query: "" };
+  // Three views over one set of rendered pages. The two cross-cut views add
+  // no render at all: they regroup the same manifest, so the theme axis and
+  // the "how does this one face look across all 24 skins" axis cost the same
+  // four seconds of generation.
+  const state = { view: "theme", language: "all", theme: "all", verdict: "all", finding: "all", query: "" };
   let visible = [];
 
   function matches(p) {
-    if (state.table !== "all" && p.table !== state.table) return false;
+    // The cross-cut views only have rows for one band each, so a page from
+    // another band is not "filtered out", it has nowhere to go.
+    if (state.view === "slot" && p.band !== "face") return false;
+    if (state.view === "component" && p.band !== "component") return false;
     if (state.language !== "all" && p.language !== state.language) return false;
-    if (state.theme !== "all" && p.theme !== state.theme) return false;
+    if (state.theme !== "all" && p.section !== state.theme) return false;
     if (state.verdict !== "all") {
       const v = (verdicts[p.id] || {}).verdict;
       if (state.verdict === "none" ? Boolean(v) : v !== state.verdict) return false;
@@ -670,10 +757,92 @@ ${inlineRule(verdictFreshness)}
       if (state.finding === "any" ? !has : has) return false;
     }
     if (state.query) {
-      const hay = (p.subject + " " + p.heading + " " + p.id).toLowerCase();
+      const hay = (p.subject + " " + p.heading + " " + p.id + " " + p.sectionLabel).toLowerCase();
       if (!hay.includes(state.query)) return false;
     }
     return true;
+  }
+
+  function grid(pages, className) {
+    const box = document.createElement("div");
+    box.className = className;
+    for (const p of pages) box.appendChild(buildCard(p));
+    return box;
+  }
+
+  function renderThemeView(main) {
+    for (const section of MANIFEST.sections) {
+      const pages = visible.filter((p) => p.section === section.id);
+      if (pages.length === 0) continue;
+
+      const head = document.createElement("div");
+      head.className = "sectionhead";
+      head.id = "sec-" + section.id;
+      const h2 = document.createElement("h2");
+      h2.textContent = section.label + " — " + pages.length + " 页";
+      if (section.label !== section.id) {
+        const code = document.createElement("code");
+        code.textContent = section.id;
+        h2.appendChild(code);
+      }
+      const blurb = document.createElement("p");
+      blurb.textContent = section.blurb;
+      head.append(h2, blurb);
+      main.appendChild(head);
+
+      for (const band of MANIFEST.bands) {
+        const bandPages = pages.filter((p) => p.band === band.id);
+        if (bandPages.length === 0) continue;
+        const bandHead = document.createElement("div");
+        bandHead.className = "bandhead";
+        const h3 = document.createElement("h3");
+        h3.textContent = band.label;
+        const count = document.createElement("span");
+        count.textContent = bandPages.length + " 页";
+        h3.appendChild(count);
+        const q = document.createElement("p");
+        q.textContent = band.question;
+        bandHead.append(h3, q);
+        main.append(bandHead, grid(bandPages, "grid"));
+      }
+    }
+  }
+
+  /**
+   * One row per value of the grouping key, each row's pages ordered by
+   * section — so a row reads left to right as the same thing wearing 24 skins.
+   */
+  function renderCrossView(main, key, rowOrder, labelFor) {
+    const rows = new Map();
+    for (const p of visible) {
+      const value = p[key];
+      if (value === undefined) continue;
+      const list = rows.get(value) || [];
+      list.push(p);
+      rows.set(value, list);
+    }
+    const ordered = [...rows.keys()].sort((a, b) => {
+      const ia = rowOrder.indexOf(a), ib = rowOrder.indexOf(b);
+      // A value the fixed order does not know sinks below the ones it does,
+      // rather than silently taking position 0 the way indexOf -1 would.
+      if (ia !== ib) return (ia < 0 ? rowOrder.length : ia) - (ib < 0 ? rowOrder.length : ib);
+      return String(a).localeCompare(String(b));
+    });
+    for (const value of ordered) {
+      const pages = rows.get(value).slice().sort((a, b) => {
+        const d = (SECTION_ORDER.get(a.section) ?? 0) - (SECTION_ORDER.get(b.section) ?? 0);
+        return d !== 0 ? d : a.id.localeCompare(b.id);
+      });
+      const row = document.createElement("section");
+      row.className = "crossrow";
+      const h3 = document.createElement("h3");
+      h3.textContent = labelFor(value);
+      const count = document.createElement("span");
+      count.textContent = pages.length + " 张";
+      h3.appendChild(count);
+      row.append(h3, grid(pages, "strip"));
+      main.appendChild(row);
+    }
   }
 
   function render() {
@@ -691,25 +860,17 @@ ${inlineRule(verdictFreshness)}
       empty.className = "empty";
       empty.textContent = "没有符合条件的页面。";
       main.appendChild(empty);
+      refreshTally();
       return;
     }
 
-    for (const table of MANIFEST.tables) {
-      const pages = visible.filter((p) => p.table === table.id);
-      if (pages.length === 0) continue;
-
-      const head = document.createElement("div");
-      head.className = "tablehead";
-      const h2 = document.createElement("h2");
-      h2.textContent = table.label + " — " + pages.length + " 页";
-      const q = document.createElement("p");
-      q.textContent = table.question;
-      head.append(h2, q);
-
-      const grid = document.createElement("div");
-      grid.className = "grid";
-      for (const p of pages) grid.appendChild(buildCard(p));
-      main.append(head, grid);
+    if (state.view === "theme") renderThemeView(main);
+    else if (state.view === "slot") {
+      renderCrossView(main, "slot", SLOT_ORDER, (slot) =>
+        (SLOT_LABELS[slot] ? SLOT_LABELS[slot] + " " : "") + slot);
+    } else {
+      const order = [...new Set(MANIFEST.pages.filter((p) => p.component).map((p) => p.component))];
+      renderCrossView(main, "component", order, (id) => id);
     }
 
     // Observed after insertion, so the first screenful has real geometry
@@ -722,16 +883,23 @@ ${inlineRule(verdictFreshness)}
   const viewer = document.getElementById("viewer");
   const frame = document.getElementById("viewer-frame");
   let viewerIndex = -1;
+  // The set the viewer pages through. In the theme view a page is judged
+  // inside its own section, so the queue scopes to that section; a cross-cut
+  // view is itself the comparison set, so the queue is the visible set.
+  let viewerQueue = [];
 
   function openViewer(id) {
-    viewerIndex = visible.findIndex((p) => p.id === id);
+    const opened = visible.find((p) => p.id === id);
+    if (!opened) return;
+    viewerQueue = state.view === "theme" ? visible.filter((p) => p.section === opened.section) : visible;
+    viewerIndex = viewerQueue.findIndex((p) => p.id === id);
     if (viewerIndex < 0) return;
     paintViewer();
     if (!viewer.open) viewer.showModal();
   }
 
   function paintViewer() {
-    const p = visible[viewerIndex];
+    const p = viewerQueue[viewerIndex];
     if (!p) return;
     frame.textContent = "";
     frame.style.background = "";
@@ -743,9 +911,9 @@ ${inlineRule(verdictFreshness)}
     } else {
       mountSvg(frame, p.id);
     }
-    document.getElementById("viewer-subject").textContent = p.subject;
+    document.getElementById("viewer-subject").textContent = cardTitle(p);
     document.getElementById("viewer-facts").textContent =
-      cardFacts(p).join(" · ") + " · " + (viewerIndex + 1) + " / " + visible.length;
+      cardFacts(p).join(" · ") + " · " + (viewerIndex + 1) + " / " + viewerQueue.length;
     const v = (verdicts[p.id] || {}).verdict;
     for (const btn of document.getElementById("viewer-verdicts").children) {
       btn.setAttribute("aria-pressed", String(btn.dataset.verdict === v));
@@ -762,18 +930,18 @@ ${inlineRule(verdictFreshness)}
 
   function step(delta) {
     if (viewerIndex < 0) return;
-    viewerIndex = Math.min(visible.length - 1, Math.max(0, viewerIndex + delta));
+    viewerIndex = Math.min(viewerQueue.length - 1, Math.max(0, viewerIndex + delta));
     paintViewer();
   }
 
   for (const btn of document.getElementById("viewer-verdicts").children) {
     btn.addEventListener("click", () => {
-      const p = visible[viewerIndex];
+      const p = viewerQueue[viewerIndex];
       if (p) { setVerdict(p.id, btn.dataset.verdict); paintViewer(); }
     });
   }
   document.getElementById("viewer-note").addEventListener("input", (ev) => {
-    const p = visible[viewerIndex];
+    const p = viewerQueue[viewerIndex];
     if (p) { setNote(p.id, ev.target.value); refreshCard(p.id); }
   });
 
@@ -784,16 +952,16 @@ ${inlineRule(verdictFreshness)}
     else if (ev.key === "ArrowLeft") { ev.preventDefault(); step(-1); }
     else if (!typing && (ev.key === "1" || ev.key === "2" || ev.key === "3")) {
       ev.preventDefault();
-      const p = visible[viewerIndex];
+      const p = viewerQueue[viewerIndex];
       if (p) { setVerdict(p.id, ["pass", "limit", "rework"][Number(ev.key) - 1]); paintViewer(); }
     }
   });
 
   // ── controls ───────────────────────────────────────────────────────────
-  document.getElementById("table-filter").addEventListener("click", (ev) => {
+  document.getElementById("view-filter").addEventListener("click", (ev) => {
     const btn = ev.target.closest("button");
     if (!btn) return;
-    state.table = btn.dataset.table;
+    state.view = btn.dataset.view;
     for (const b of ev.currentTarget.children) b.setAttribute("aria-pressed", String(b === btn));
     render();
   });
@@ -807,39 +975,58 @@ ${inlineRule(verdictFreshness)}
   document.getElementById("theme-filter").addEventListener("change", (e) => { state.theme = e.target.value; render(); syncQuickmap(); });
 
   // ── 主题速览 ────────────────────────────────────────────────────────────
-  // 24 格缩略导航：每格取该主题在主题表里的第一张封面，点击等于在主题下拉
-  // 框里选中它（再点一次回到全部）。只是给现有 theme-filter 一个可视入口，
-  // 不引入第二套筛选状态。
+  // 一格一节，取该节样张里的封面。点击是跳转，不是第二套筛选状态：切回主题
+  // 视角、滚到那一节。当前主题筛选选中的那一格仍然高亮，好让下拉框和速览条
+  // 说的是同一件事。
   function syncQuickmap() {
     for (const b of document.querySelectorAll("#quickmap .qm")) {
-      b.setAttribute("aria-pressed", String(b.dataset.theme === state.theme));
+      b.setAttribute("aria-pressed", String(b.dataset.section === state.theme));
     }
+  }
+
+  function jumpToSection(id) {
+    const target = document.getElementById("sec-" + id);
+    if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   function buildQuickmap() {
     const host = document.getElementById("quickmap");
-    const themes = [...new Set(MANIFEST.pages.map((p) => p.theme))].sort();
     const select = document.getElementById("theme-filter");
-    for (const theme of themes) {
+    const viewButtons = document.getElementById("view-filter").children;
+    for (const section of MANIFEST.sections) {
       const sample =
-        MANIFEST.pages.find((p) => p.theme === theme && p.table === "theme" && p.slideType === "cover") ||
-        MANIFEST.pages.find((p) => p.theme === theme && !p.skipped);
+        MANIFEST.pages.find((p) => p.section === section.id && p.band === "deck" && p.slideType === "cover") ||
+        MANIFEST.pages.find((p) => p.section === section.id && !p.skipped);
       if (!sample) continue;
       const cell = document.createElement("button");
       cell.className = "qm";
-      cell.dataset.theme = theme;
+      cell.dataset.section = section.id;
       cell.setAttribute("aria-pressed", "false");
-      cell.title = "只看 " + theme;
+      cell.title = "跳到 " + section.label;
       const stage = document.createElement("div");
       stage.className = "qm-stage";
       mountSvg(stage, sample.id);
       const name = document.createElement("span");
       name.className = "qm-name";
-      name.textContent = theme;
+      name.textContent = section.label === section.id ? section.id : section.label + " · " + section.id;
       cell.append(stage, name);
       cell.addEventListener("click", () => {
-        select.value = state.theme === theme ? "all" : theme;
-        select.dispatchEvent(new Event("change"));
+        let rerender = false;
+        if (state.view !== "theme") {
+          state.view = "theme";
+          for (const b of viewButtons) b.setAttribute("aria-pressed", String(b.dataset.view === "theme"));
+          rerender = true;
+        }
+        // A theme filter narrowed to some other section would leave nothing to
+        // scroll to, so widen it rather than jumping into an empty page.
+        if (state.theme !== "all" && state.theme !== section.id) {
+          select.value = "all";
+          state.theme = "all";
+          syncQuickmap();
+          rerender = true;
+        }
+        if (rerender) render();
+        jumpToSection(section.id);
       });
       host.appendChild(cell);
     }
@@ -860,9 +1047,10 @@ ${inlineRule(verdictFreshness)}
   document.getElementById("export").addEventListener("click", async () => {
     const btn = document.getElementById("export");
     const payload = {
-      // 3 since a verdict can now come back marked "recolored" instead of
-      // only "stale". A reader of /2 sees the same fields it always did.
-      schema: "pptwise-gallery-verdicts/3",
+      // 4 since the review is cut theme first: every verdict names the
+      // section and band it was made in, where /3 named a table that no
+      // longer exists.
+      schema: "pptwise-gallery-verdicts/4",
       pptwiseVersion: MANIFEST.pptwiseVersion,
       renderedAt: MANIFEST.generatedAt,
       total: MANIFEST.pages.length,
@@ -870,7 +1058,8 @@ ${inlineRule(verdictFreshness)}
         .filter((p) => verdicts[p.id] && (verdicts[p.id].verdict || verdicts[p.id].note))
         .map((p) => ({
           id: p.id,
-          table: p.table,
+          section: p.section,
+          band: p.band,
           subject: p.subject,
           language: p.language,
           theme: p.theme,
@@ -939,6 +1128,8 @@ ${inlineRule(verdictFreshness)}
 export function summarize(manifest: Manifest): string {
   const rendered = manifest.pages.filter((p) => p.file).length
   const skipped = manifest.pages.length - rendered
-  const byTable = manifest.tables.map((t) => `${t.label} ${t.pages.length}`).join(" · ")
-  return `${rendered} pages rendered${skipped > 0 ? `, ${skipped} skipped` : ""} (${byTable})`
+  const byBand = manifest.bands
+    .map((b) => `${b.label} ${manifest.pages.filter((p) => p.band === b.id).length}`)
+    .join(" · ")
+  return `${rendered} pages rendered${skipped > 0 ? `, ${skipped} skipped` : ""} across ${manifest.sections.length} sections (${byBand})`
 }

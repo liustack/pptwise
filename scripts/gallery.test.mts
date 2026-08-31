@@ -28,7 +28,7 @@ import { LAYOUT_REGISTRY } from "@/layouts/registry"
 import { BASELINE_THEME, corpusAssets, type CorpusAssets } from "../evals/gallery/corpus/decks"
 import { LANGUAGE_IDS, LEXICONS, type LanguageId } from "../evals/gallery/corpus/lexicon"
 import { buildGalleryHtml } from "../evals/gallery/html"
-import { assertFullCoverage, buildMatrix } from "../evals/gallery/matrix"
+import { assertFullCoverage, buildMatrix, unservedLayoutIds, UNSERVED_SECTION } from "../evals/gallery/matrix"
 import { installNodePlatform } from "@/platform/node"
 
 // `renderMatrix` audits every page it renders, and the auditor parses SVG
@@ -92,21 +92,43 @@ describe("gallery coverage", () => {
     expect(() => assertFullCoverage(themeIds, themeIds.length + 1)).toThrow(/expected/)
   })
 
-  it("layout table renders every registered face once per language through a menu binding", async () => {
-    const jobs = buildMatrix(themeIds, await assets(), { only: "layout" })
-    expect(jobs).toHaveLength(Object.keys(LAYOUT_REGISTRY).length * LANGUAGE_IDS.length)
+  it("face band reaches every registered layout, each on the skin it is filed under", async () => {
+    const jobs = buildMatrix(themeIds, await assets(), { only: "face" })
     expect([...new Set(jobs.map((job) => job.subject))].sort()).toEqual(Object.keys(LAYOUT_REGISTRY).sort())
-    expect(new Set(jobs.map((job) => job.theme))).toEqual(new Set([BASELINE_THEME]))
+    // A face in a theme section is rendered on that theme; the appendix holds
+    // what no menu serves and renders it on the baseline.
+    for (const job of jobs) {
+      expect(job.theme, job.id).toBe(job.section === UNSERVED_SECTION ? BASELINE_THEME : job.section)
+      expect(job.slot, job.id).toBeTruthy()
+    }
+    const appendix = jobs.filter((job) => job.section === UNSERVED_SECTION)
+    expect(appendix.map((job) => job.subject)).toEqual(unservedLayoutIds(themeIds))
   })
 
-  it("emits the theme, skeleton, layout, and component tables", async () => {
+  it("emits one section per theme plus the appendix, each theme section carrying all three bands", async () => {
     const jobs = buildMatrix(themeIds, await assets())
-    expect([...new Set(jobs.map((j) => j.table))].sort()).toEqual([
-      "component",
-      "layout",
-      "skeleton",
-      "theme",
-    ])
+    expect([...new Set(jobs.map((j) => j.band))].sort()).toEqual(["component", "deck", "face"])
+    const sections = [...new Set(jobs.map((j) => j.section))]
+    expect(sections).toEqual([...themeIds, UNSERVED_SECTION])
+    for (const themeId of themeIds) {
+      const bands = new Set(jobs.filter((j) => j.section === themeId).map((j) => j.band))
+      expect([...bands].sort(), themeId).toEqual(["component", "deck", "face"])
+    }
+    // The appendix is faces only — it exists to close the layout gap, not to
+    // be a 25th theme.
+    expect([...new Set(jobs.filter((j) => j.section === UNSERVED_SECTION).map((j) => j.band))]).toEqual(["face"])
+  })
+
+  it("dresses every component in every theme's own skin, and only the baseline in three scripts", async () => {
+    const jobs = buildMatrix(themeIds, await assets(), { only: "component" })
+    for (const job of jobs) {
+      expect(job.theme, job.id).toBe(job.section)
+      expect(job.component, job.id).toBe(job.subject)
+    }
+    for (const themeId of themeIds) {
+      const langs = new Set(jobs.filter((j) => j.section === themeId).map((j) => j.language))
+      expect([...langs].sort(), themeId).toEqual(themeId === BASELINE_THEME ? ["en", "mixed", "zh"] : ["zh"])
+    }
   })
 })
 
@@ -158,7 +180,7 @@ function themeTableSurfaces(
   return [...surfaces].sort()
 }
 
-describe("gallery theme table corpus", () => {
+describe("gallery deck band corpus", () => {
   it("keeps the coverage list aligned with IR types, chart surfaces, and forms", () => {
     const expected = [
       ...COMPONENT_TYPES,
@@ -171,7 +193,7 @@ describe("gallery theme table corpus", () => {
   })
 
   it("runs a ten-page deck on every theme, with seven unique content leads", async () => {
-    const jobs = buildMatrix(themeIds, await assets(), { only: "theme" })
+    const jobs = buildMatrix(themeIds, await assets(), { only: "deck" })
 
     for (const themeId of themeIds) {
       const pages = jobs.filter((j) => j.subject === themeId).sort((a, b) => a.page - b.page)
@@ -196,7 +218,7 @@ describe("gallery theme table corpus", () => {
   })
 
   it("covers every required surface at least once across the 24×7 union", async () => {
-    const jobs = buildMatrix(themeIds, await assets(), { only: "theme" })
+    const jobs = buildMatrix(themeIds, await assets(), { only: "deck" })
     const drawn = themeTableSurfaces(jobs)
     const required = [...THEME_TABLE_REQUIRED_SURFACES].sort()
     const missing = required.filter((s) => !drawn.includes(s))
@@ -232,8 +254,8 @@ describe("gallery theme table corpus", () => {
   })
 
   it("assigns the same lead types on a second buildMatrix call", async () => {
-    const first = buildMatrix(themeIds, await assets(), { only: "theme" })
-    const second = buildMatrix(themeIds, await assets(), { only: "theme" })
+    const first = buildMatrix(themeIds, await assets(), { only: "deck" })
+    const second = buildMatrix(themeIds, await assets(), { only: "deck" })
     const typesOf = (jobs: typeof first) =>
       jobs
         .filter((j) => j.slideType === "content")
@@ -242,11 +264,11 @@ describe("gallery theme table corpus", () => {
   })
 })
 
-describe("gallery layout table corpus", () => {
+describe("gallery face band corpus", () => {
   it("authors bodies that match what those layouts actually draw", async () => {
-    const jobs = buildMatrix(themeIds, await assets(), { only: "layout", languages: ["zh"] })
+    const jobs = buildMatrix(themeIds, await assets(), { only: "face" })
     const typesOf = (layoutId: string): string[] => {
-      const job = jobs.find((j) => j.subject === layoutId && j.language === "zh")
+      const job = jobs.find((j) => j.subject === layoutId)
       expect(job, layoutId).toBeTruthy()
       return job!.ir.slides[0]!.components.map((c) => c.type)
     }
@@ -258,7 +280,7 @@ describe("gallery layout table corpus", () => {
   })
 
   it("varies the first body type across the two-compact layout family", async () => {
-    const jobs = buildMatrix(themeIds, await assets(), { only: "layout", languages: ["zh"] })
+    const jobs = buildMatrix(themeIds, await assets(), { only: "face" })
     const twoCompact = [
       "two-column",
       "narrow-column",
@@ -268,7 +290,7 @@ describe("gallery layout table corpus", () => {
       "split-band",
     ]
     const leads = twoCompact.map((layoutId) => {
-      const job = jobs.find((j) => j.subject === layoutId && j.language === "zh")
+      const job = jobs.find((j) => j.subject === layoutId)
       expect(job, layoutId).toBeTruthy()
       return job!.ir.slides[0]!.components[0]!.type
     })
@@ -276,9 +298,9 @@ describe("gallery layout table corpus", () => {
   })
 
   it("gives image-split, image-top, and image-bottom different secondary types", async () => {
-    const jobs = buildMatrix(themeIds, await assets(), { only: "layout", languages: ["zh"] })
+    const jobs = buildMatrix(themeIds, await assets(), { only: "face" })
     const secondaries = (["image-split", "image-top", "image-bottom"] as const).map((layoutId) => {
-      const job = jobs.find((j) => j.subject === layoutId && j.language === "zh")
+      const job = jobs.find((j) => j.subject === layoutId)
       expect(job, layoutId).toBeTruthy()
       const types = job!.ir.slides[0]!.components.map((c) => c.type)
       expect(types[0], layoutId).toBe("image")
@@ -316,7 +338,7 @@ describe("gallery corpus", () => {
     const { tmpdir } = await import("node:os")
     const { join } = await import("node:path")
 
-    const jobs = buildMatrix(themeIds, await assets(), { only: "component", languages: ["zh"] })
+    const jobs = buildMatrix(themeIds, await assets(), { only: "component", languages: ["zh"], section: BASELINE_THEME })
     const outDir = mkdtempSync(join(tmpdir(), "pptwise-gallery-fp-"))
     const { manifest } = renderMatrix(jobs, outDir, "test")
 
@@ -392,7 +414,7 @@ describe("gallery page", () => {
     const { tmpdir } = await import("node:os")
     const { join } = await import("node:path")
 
-    const jobs = buildMatrix(themeIds, await assets(), { only: "component", languages: ["zh"] })
+    const jobs = buildMatrix(themeIds, await assets(), { only: "component", languages: ["zh"], section: BASELINE_THEME })
     const outDir = mkdtempSync(join(tmpdir(), "pptwise-gallery-html-"))
     const { manifest, svgs } = renderMatrix(jobs, outDir, "test")
     const html = buildGalleryHtml(manifest, svgs)
@@ -422,7 +444,7 @@ describe("gallery page", () => {
     const { join } = await import("node:path")
     const vm = await import("node:vm")
 
-    const jobs = buildMatrix(themeIds, await assets(), { only: "component", languages: ["zh"] })
+    const jobs = buildMatrix(themeIds, await assets(), { only: "component", languages: ["zh"], section: BASELINE_THEME })
     const outDir = mkdtempSync(join(tmpdir(), "pptwise-gallery-parse-"))
     const { manifest, svgs } = renderMatrix(jobs, outDir, "test")
     const html = buildGalleryHtml(manifest, svgs)
@@ -445,7 +467,7 @@ describe("gallery page", () => {
     const { tmpdir } = await import("node:os")
     const { join } = await import("node:path")
 
-    const jobs = buildMatrix(themeIds, await assets(), { only: "component", languages: ["zh"] })
+    const jobs = buildMatrix(themeIds, await assets(), { only: "component", languages: ["zh"], section: BASELINE_THEME })
     const outDir = mkdtempSync(join(tmpdir(), "pptwise-gallery-rule-"))
     const { manifest, svgs } = renderMatrix(jobs, outDir, "test")
     const html = buildGalleryHtml(manifest, svgs)
@@ -462,7 +484,7 @@ describe("gallery page", () => {
     const { tmpdir } = await import("node:os")
     const { join } = await import("node:path")
 
-    const jobs = buildMatrix(themeIds, await assets(), { only: "component", languages: ["zh"] })
+    const jobs = buildMatrix(themeIds, await assets(), { only: "component", languages: ["zh"], section: BASELINE_THEME })
     const outDir = mkdtempSync(join(tmpdir(), "pptwise-gallery-esc-"))
     const { manifest, svgs } = renderMatrix(jobs, outDir, "test")
     const html = buildGalleryHtml(manifest, svgs)
@@ -489,7 +511,7 @@ describe("gallery page", () => {
     const { tmpdir } = await import("node:os")
     const { join } = await import("node:path")
 
-    const jobs = buildMatrix(themeIds, await assets(), { only: "theme", themeLanguage: "zh" })
+    const jobs = buildMatrix(themeIds, await assets(), { only: "deck" })
     const outDir = mkdtempSync(join(tmpdir(), "pptwise-gallery-edge-"))
     const { manifest, svgs } = renderMatrix(jobs, outDir, "test")
     const html = buildGalleryHtml(manifest, svgs)

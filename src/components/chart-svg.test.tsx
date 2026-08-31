@@ -202,15 +202,17 @@ describe("renderLine — endpoint emphasis and area gradient", () => {
     const circles = Array.from(container.querySelectorAll("circle"))
     expect(circles).toHaveLength(2)
 
+    // Both layers carry the series' own line color — see "converging
+    // endpoints" below for why the accent no longer paints them.
     const ring = circles.find((c) => c.getAttribute("r") === "8")!
     expect(ring).toBeTruthy()
     expect(ring.getAttribute("fill")).toBe("none")
-    expect(ring.getAttribute("stroke")).toBe(ACCENT)
+    expect(ring.getAttribute("stroke")).toBe(PALETTE[0])
     expect(ring.getAttribute("stroke-opacity")).toBe("0.3")
 
     const dot = circles.find((c) => c.getAttribute("r") === "4")!
     expect(dot).toBeTruthy()
-    expect(dot.getAttribute("fill")).toBe(ACCENT)
+    expect(dot.getAttribute("fill")).toBe(PALETTE[0])
 
     // Both circles share the same center — the series' last point.
     expect(ring.getAttribute("cx")).toBe(dot.getAttribute("cx"))
@@ -1431,5 +1433,98 @@ describe("chart-depth renderers — deterministic double render (byte-identical)
     expect(renderSvgMarkup(renderDonut(donutS, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT, false, donutC))).toBe(
       renderSvgMarkup(renderDonut(donutS, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT, false, donutC)),
     )
+  })
+})
+
+/**
+ * Converging endpoints (author screenshot, 2026-08): two series that land a
+ * few units apart at the last category. Their value labels used to sit
+ * baseline-to-baseline with no air, their endpoint rings overlapped into a
+ * halo whose dot belonged to another series, and every marker was painted
+ * in the accent, so the later series simply covered the earlier one.
+ */
+const convergingSeries: ChartSeries[] = [
+  {
+    name: "Deep",
+    data: [{ x: "Jan", y: 40 }, { x: "Feb", y: 62 }, { x: "Mar", y: 90 }],
+  },
+  {
+    name: "Gold",
+    data: [{ x: "Jan", y: 55 }, { x: "Feb", y: 71 }, { x: "Mar", y: 87 }],
+  },
+]
+
+function circlesOf(container: HTMLElement) {
+  return Array.from(container.querySelectorAll("circle")).map((c) => ({
+    cx: Number(c.getAttribute("cx")),
+    cy: Number(c.getAttribute("cy")),
+    r: Number(c.getAttribute("r")),
+    stroke: c.getAttribute("stroke"),
+    fill: c.getAttribute("fill"),
+  }))
+}
+
+describe("renderLine — converging endpoints", () => {
+  it("keeps a full line of air between the two endpoint value labels", () => {
+    const { container } = svg(renderLine(convergingSeries, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
+    const labels = Array.from(container.querySelectorAll('[data-value-label="1"]'))
+    const ends = labels.filter((t) => t.textContent === "90" || t.textContent === "87")
+    expect(ends.map((t) => t.textContent).sort()).toEqual(["87", "90"])
+    const ys = ends.map((t) => Number(t.getAttribute("y")))
+    // One full 16px text line (1.2em) plus its air.
+    expect(Math.abs(ys[0] - ys[1])).toBeGreaterThanOrEqual(16 * 1.2 + 2)
+  })
+
+  it("paints every endpoint marker in its own series color, never the accent", () => {
+    const { container } = svg(renderLine(convergingSeries, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
+    const dots = circlesOf(container).filter((c) => c.r === 4)
+    expect(dots.map((d) => d.fill)).toEqual([PALETTE[0], PALETTE[1]])
+  })
+
+  it("gives no ring an absent owner — every ring is centered on a painted dot", () => {
+    const { container } = svg(renderLine(convergingSeries, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
+    const circles = circlesOf(container)
+    const rings = circles.filter((c) => c.r === 8)
+    const dots = circles.filter((c) => c.r === 4)
+    for (const ring of rings) {
+      const owner = dots.find((d) => d.cx === ring.cx && d.cy === ring.cy)
+      expect(owner).toBeTruthy()
+      expect(ring.stroke).toBe(owner!.fill)
+    }
+  })
+
+  it("keeps the endpoint number off the endpoint marker", () => {
+    const { container } = svg(renderLine(convergingSeries, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
+    const dotX = circlesOf(container).filter((c) => c.r === 4)[0]!.cx
+    const last = Array.from(container.querySelectorAll('[data-value-label="1"]')).find(
+      (t) => t.textContent === "90",
+    )!
+    // Anchored "end", so the number's right edge must stop short of the dot.
+    expect(Number(last.getAttribute("x"))).toBeLessThanOrEqual(dotX - 4)
+  })
+
+  it("separates two touching dots with a hairline of the page background", () => {
+    const tight: ChartSeries[] = [
+      { name: "Deep", data: [{ x: "Jan", y: 40 }, { x: "Mar", y: 90 }] },
+      { name: "Gold", data: [{ x: "Jan", y: 55 }, { x: "Mar", y: 89 }] },
+    ]
+    const { container } = svg(
+      renderLine(tight, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT, true, undefined, "#FFFDF5"),
+    )
+    const dots = circlesOf(container).filter((c) => c.r === 4)
+    expect(dots.map((d) => d.stroke)).toEqual(["#FFFDF5", "#FFFDF5"])
+  })
+
+  it("drops the crowded ring instead of stacking two halos on one endpoint", () => {
+    const { container } = svg(renderLine(convergingSeries, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
+    expect(circlesOf(container).filter((c) => c.r === 8)).toHaveLength(1)
+  })
+
+  it("paints all rings under all dots so no ring tints a neighbour's dot", () => {
+    const { container } = svg(renderLine(convergingSeries, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
+    const order = Array.from(container.querySelectorAll("circle")).map((c) => c.getAttribute("r"))
+    const lastRing = order.lastIndexOf("8")
+    const firstDot = order.indexOf("4")
+    expect(lastRing).toBeLessThan(firstDot)
   })
 })

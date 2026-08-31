@@ -45,7 +45,8 @@ function loadFromGallery(dir: string): { manifest: Manifest; svgs: Map<string, s
 function metaOf(page: ManifestPage): GalleryPageMeta {
   return {
     id: page.id,
-    table: page.table,
+    section: page.section,
+    band: page.band,
     subject: page.subject,
     language: page.language,
     theme: page.theme,
@@ -62,7 +63,8 @@ function mergeVerdict(page: ManifestPage, l1: ReturnType<typeof auditL1>, l2: L2
   }
   return {
     id: page.id,
-    table: page.table,
+    section: page.section,
+    band: page.band,
     subject: page.subject,
     language: page.language,
     theme: page.theme,

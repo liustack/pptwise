@@ -135,6 +135,21 @@ const SUBHEADING_SLOT_STACKED = 46
 const HERO_SCALE_MAX = 1.3
 
 /**
+ * Readable floor (px) for a scalable component in a poster slot. A chart or
+ * image scales to whatever slot it is given, so before this floor existed a
+ * 2-component page whose *second* block was the chart handed the plot the
+ * caption strip — 108px, or 68px once a footnote pulls the floor up — and the
+ * page shipped a thumbnail under a full-size paragraph. Scaling to fit is not
+ * the same as fitting: below this height the plot stops being a chart and
+ * becomes a smudge, so the slot is declared a non-fit and the whole page takes
+ * the degrade path, whose full-width stack gives the same two components a
+ * content rect several times taller. 180 is the height at which this file's
+ * own chart marks (bar/line plus their axis labels) still read at projection
+ * distance; the strip's 108 never did.
+ */
+const SCALABLE_SLOT_MIN_H = 180
+
+/**
  * Render a single component into `rect` as one poster "slot" (hero or caption
  * strip). Scalable components (chart/image) get bento's uniform-scale-to-fit
  * technique, generalized to also scale *up* to HERO_SCALE_MAX so the slot is
@@ -162,11 +177,12 @@ function renderPosterSlot(component: Component, rect: ContentRect, ctx: Componen
   )
 }
 
-/** Whether `component` will fit `rect` without overflowing. Scalable types always
- * "fit" (they scale to the slot by construction); everything else needs its
- * natural height, at the slot's width, to stay within budget. */
+/** Whether `component` will fit `rect` without overflowing. A scalable type
+ * scales to the slot by construction, so all it needs is a slot tall enough to
+ * stay readable (`SCALABLE_SLOT_MIN_H`); everything else needs its natural
+ * height, at the slot's width, to stay within budget. */
 function componentFitsSlot(component: Component, rect: ContentRect, ctx: ComponentCtx): boolean {
-  if (SCALABLE_TYPES.has(component.type)) return true
+  if (SCALABLE_TYPES.has(component.type)) return rect.h >= SCALABLE_SLOT_MIN_H
   return measureComponent(component, rect.w, ctx) <= rect.h
 }
 
