@@ -10,7 +10,7 @@ import {
   fitFormTitleLine,
   formTextClipMarker,
   layoutFormBody,
-} from "./legibility"
+} from "../legibility"
 
 type TimelineComponent = Extract<Component, { type: "timeline" }>
 

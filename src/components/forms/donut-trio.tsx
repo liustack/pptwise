@@ -4,7 +4,7 @@ import { accessibleInk, groupValueInks, resolveSemanticColor } from "../../rende
 import type { FormKnobs } from "../form-assignments"
 import type { ComponentBox, ComponentCtx } from "../types"
 import { parseKpiRatio } from "./kpi-value"
-import { FORM_BODY_FLOOR, fitFormLine } from "./legibility"
+import { FORM_BODY_FLOOR, fitFormLine } from "../legibility"
 
 type KpiComponent = Extract<Component, { type: "kpi_cards" }>
 

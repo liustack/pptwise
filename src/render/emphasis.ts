@@ -7,7 +7,7 @@ import {
   type TextWeightHint,
 } from "../lib/svg-text-layout"
 import { resolveComponentForm } from "../components/form-assignments"
-import { formLegibleInk } from "../components/forms/legibility"
+import { formLegibleInk } from "../components/legibility"
 
 /** One run of text with its emphasis state, in source (unmarked) text order. */
 export interface EmphasisSegment {

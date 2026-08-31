@@ -13,7 +13,7 @@ import {
   layoutFormBody,
   layoutFormTitle,
   linesThatFit,
-} from "./legibility"
+} from "../legibility"
 
 type IconCardsComponent = Extract<Component, { type: "icon_cards" }>
 type IconCardItem = IconCardsComponent["items"][number]

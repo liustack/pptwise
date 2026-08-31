@@ -2,7 +2,7 @@ import {
   layoutSvgText,
   truncateToUnits,
   type TextWeightHint,
-} from "../../lib/svg-text-layout"
+} from "../lib/svg-text-layout"
 
 const WRAP_PROBE_LINES = 64
 

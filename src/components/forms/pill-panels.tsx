@@ -1,10 +1,10 @@
 import type React from "react"
 import type { Component } from "@/ir"
-import { wrapClip } from "./clip-text"
+import { wrapClip } from "../clip-text"
 import { accessibleInk, readableOn } from "../../render/ink"
 import type { FormKnobs } from "../form-assignments"
 import type { ComponentBox, ComponentCtx } from "../types"
-import { FORM_BODY_FLOOR, FORM_TITLE_FLOOR, fitFormLine, fitFormTitleLine } from "./legibility"
+import { FORM_BODY_FLOOR, FORM_TITLE_FLOOR, fitFormLine, fitFormTitleLine } from "../legibility"
 
 type ComparisonComponent = Extract<Component, { type: "comparison" }>
 

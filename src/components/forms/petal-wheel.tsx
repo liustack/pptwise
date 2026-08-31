@@ -12,7 +12,7 @@ import {
   formTextClipMarker,
   layoutFormBody,
   layoutFormTitle,
-} from "./legibility"
+} from "../legibility"
 
 type CycleComponent = Extract<Component, { type: "cycle" }>
 type CycleItem = CycleComponent["items"][number] & { icon?: string }

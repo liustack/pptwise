@@ -1,6 +1,6 @@
 import type React from "react"
 import type { Component } from "@/ir"
-import { wrapClip } from "./clip-text"
+import { wrapClip } from "../clip-text"
 import { mixHex } from "../color-mix"
 import { readableOn } from "../../render/ink"
 import type { FormKnobs } from "../form-assignments"
@@ -10,7 +10,7 @@ import {
   FORM_TITLE_FLOOR,
   fitFormTitleLine,
   formTextClipMarker,
-} from "./legibility"
+} from "../legibility"
 
 type StepsComponent = Extract<Component, { type: "steps" }>
 

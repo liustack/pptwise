@@ -9,7 +9,7 @@ import {
   formLineHeight,
   formTextClipMarker,
   formTextOmissionMarker,
-} from "./legibility"
+} from "../legibility"
 
 type NumberedCardsComponent = Extract<Component, { type: "numbered_cards" }>
 

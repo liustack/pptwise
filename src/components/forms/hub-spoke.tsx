@@ -11,7 +11,7 @@ import {
   formTextOmissionMarker,
   layoutFormBody,
   layoutFormTitle,
-} from "./legibility"
+} from "../legibility"
 
 type CycleComponent = Extract<Component, { type: "cycle" }>
 

@@ -8,7 +8,7 @@ import { numberedCards } from "./numbered-cards"
 import type { ComponentCtx } from "./types"
 import { resolveStyle } from "../themes"
 import { buildCtx } from "../render/full-slide-svg"
-import { FORM_BODY_FLOOR, FORM_TITLE_FLOOR } from "./forms/legibility"
+import { FORM_BODY_FLOOR, FORM_TITLE_FLOOR } from "./legibility"
 
 const ctx: ComponentCtx = {
   colors: {

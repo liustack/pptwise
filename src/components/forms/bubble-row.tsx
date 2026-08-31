@@ -4,7 +4,7 @@ import { accessibleInk, groupValueInks, readableOn } from "../../render/ink"
 import type { FormKnobs } from "../form-assignments"
 import type { ComponentBox, ComponentCtx } from "../types"
 import { parseKpiMagnitude } from "./kpi-value"
-import { FORM_BODY_FLOOR, FORM_BUBBLE_R_MIN, fitFormLine } from "./legibility"
+import { FORM_BODY_FLOOR, FORM_BUBBLE_R_MIN, fitFormLine } from "../legibility"
 
 type KpiComponent = Extract<Component, { type: "kpi_cards" }>
 type KpiItem = KpiComponent["items"][number]

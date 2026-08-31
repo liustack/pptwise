@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { measureTextUnits } from "../../lib/svg-text-layout"
+import { measureTextUnits } from "../lib/svg-text-layout"
 import { wrapClip } from "./clip-text"
 
 describe("wrapClip", () => {
