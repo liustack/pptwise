@@ -181,7 +181,7 @@ export function ChalkBandCover({ ir, slide, ctx }: SvgTemplateProps) {
             accent: focusAccent,
             baseFill: focusBase,
             fontWeight: "600",
-            themeId: ctx.themeId,
+            emphasis: ctx.emphasis,
             measureWeight: { fontFamily: fonts.body },
           },
           <text

@@ -66,6 +66,17 @@ export const COMPONENT_BUILDERS: Record<string, (lex: Lexicon) => Component> = {
     })),
   }),
 
+  // Completion rates, not the kpi_cards magnitudes above — the dial only
+  // means anything when every value is a share of a whole.
+  progress_donuts: (lex) => ({
+    type: "progress_donuts",
+    items: [
+      { value: "86%", label: lex.metrics[0]!.label, icon: "trending-up", source: lex.sources[0]!.label },
+      { value: "72%", label: lex.metrics[1]!.label },
+      { value: "48%", label: lex.metrics[2]!.label },
+    ],
+  }),
+
   // No `show_grid` here: a bar chart's house default is gridline-free
   // (round-4 review, `journal p05` — every bar already prints its value, see
   // `renderBar`'s own `showGrid` doc comment), and this page is the one the
@@ -226,6 +237,14 @@ export const COMPONENT_BUILDERS: Record<string, (lex: Lexicon) => Component> = {
     type: "cycle",
     title: lex.kickers[2],
     items: slice(lex.stages, 5).map((label, i) => ({ label, description: lex.phrases[i] })),
+  }),
+
+  // A center plus four peers — the count where the two-column capsule
+  // placement is on show and every label still gets its own line.
+  hub_spoke: (lex) => ({
+    type: "hub_spoke",
+    center: lex.kickers[2]!,
+    items: slice(lex.labels, 4, 8).map((label, i) => ({ label, description: lex.phrases[i] })),
   }),
 
   rings: (lex) => ({
@@ -460,38 +479,3 @@ export const CHART_VARIANTS: Record<string, (lex: Lexicon) => Component> = {
     series: [{ name: lex.metrics[1]!.label, data: [{ x: lex.metrics[1]!.label, y: 91 }] }],
   }),
 }
-
-/**
- * Theme-assigned component forms. Same IR type as the default row, a
- * different theme so the new face shows. Solo on the page: these drawings
- * are larger than the default cards, and a lead-in paragraph would crowd
- * them off the content rect. First assigned theme per form (campaign ×
- * cycle is hub_spoke).
- */
-export interface FormVariant {
-  readonly id: string
-  readonly theme: string
-  readonly build: (lex: Lexicon) => Component
-}
-
-export const FORM_VARIANTS: readonly FormVariant[] = [
-  { id: "icon_cards · icon columns", theme: "terra", build: (lex) => COMPONENT_BUILDERS.icon_cards!(lex) },
-  { id: "icon_cards · badge cards", theme: "tech", build: (lex) => COMPONENT_BUILDERS.icon_cards!(lex) },
-  { id: "icon_cards · outline grid", theme: "academic", build: (lex) => COMPONENT_BUILDERS.icon_cards!(lex) },
-  { id: "cycle · loop", theme: "museum", build: (lex) => COMPONENT_BUILDERS.cycle!(lex) },
-  { id: "cycle · hub spoke", theme: "insight", build: (lex) => COMPONENT_BUILDERS.cycle!(lex) },
-  { id: "cycle · petal wheel", theme: "tech", build: (lex) => COMPONENT_BUILDERS.cycle!(lex) },
-  { id: "numbered_cards · pills", theme: "pulse", build: (lex) => COMPONENT_BUILDERS.numbered_cards!(lex) },
-  { id: "numbered_cards · hex cluster", theme: "tech", build: (lex) => COMPONENT_BUILDERS.numbered_cards!(lex) },
-  { id: "kpi_cards · donut trio", theme: "luxe", build: (lex) => COMPONENT_BUILDERS.kpi_cards!(lex) },
-  { id: "kpi_cards · bubble row", theme: "insight", build: (lex) => COMPONENT_BUILDERS.kpi_cards!(lex) },
-  { id: "comparison · pill panels", theme: "vermilion", build: (lex) => COMPONENT_BUILDERS.comparison!(lex) },
-  { id: "steps · arrow band", theme: "runway", build: (lex) => COMPONENT_BUILDERS.steps!(lex) },
-  { id: "timeline · vertical nodes", theme: "stage", build: (lex) => COMPONENT_BUILDERS.timeline!(lex) },
-  { id: "image_grid · numbered photos", theme: "museum", build: (lex) => COMPONENT_BUILDERS.image_grid!(lex) },
-  { id: "flowchart · typed nodes", theme: "swiss", build: (lex) => COMPONENT_BUILDERS.flowchart!(lex) },
-  { id: "architecture · layer stack", theme: "consulting", build: (lex) => COMPONENT_BUILDERS.architecture!(lex) },
-  { id: "callout · tint panel", theme: "heritage", build: (lex) => COMPONENT_BUILDERS.callout!(lex) },
-  { id: "callout · hanging bare", theme: "memo", build: (lex) => COMPONENT_BUILDERS.callout!(lex) },
-  { id: "callout · lead word", theme: "luxe", build: (lex) => COMPONENT_BUILDERS.callout!(lex) },
-]

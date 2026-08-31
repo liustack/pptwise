@@ -4,8 +4,8 @@ import {
   measureTextUnits,
   truncateToUnits,
   type TextWeightHint,
-} from "../../lib/svg-text-layout"
-import { accessibleInk } from "../../render/ink"
+} from "../lib/svg-text-layout"
+import { accessibleInk } from "../render/ink"
 
 /** User-visible type floors for component-form item titles and body (1280×720 px). */
 export const FORM_TITLE_FLOOR = 20

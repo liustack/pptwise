@@ -211,7 +211,7 @@ export function QuietFrameContent({ ir, slide, index, ctx }: SvgTemplateProps) {
             padFill: colors.accent,
             baseFill: subheadingFill,
             fontWeight: "700",
-            themeId: ctx.themeId,
+            emphasis: ctx.emphasis,
           },
           <text
             x={CENTER_X}

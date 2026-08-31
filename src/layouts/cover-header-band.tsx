@@ -85,7 +85,7 @@ export function HeaderBandCover({ ir, slide, ctx, page }: SvgTemplateProps) {
 
   let waveX: number | null = null
   let waveY: number | null = null
-  if (resolveEmphasisForm(ctx.themeId) === "tint") lineSegs.forEach((segs, i) => {
+  if (resolveEmphasisForm(ctx.emphasis) === "tint") lineSegs.forEach((segs, i) => {
     if (waveX !== null) return
     let x = TITLE_X
     for (const seg of segs) {
@@ -174,7 +174,7 @@ export function HeaderBandCover({ ir, slide, ctx, page }: SvgTemplateProps) {
             padFill: colors.accent,
             baseFill: titleInk,
             fontWeight: "700",
-            themeId: ctx.themeId,
+            emphasis: ctx.emphasis,
             measureWeight: { bold: true, fontFamily: fonts.heading },
           },
           <text

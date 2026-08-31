@@ -40,6 +40,8 @@ import { renderDef as deviceMockupRenderDef } from "./device-mockup"
 import { renderDef as cycleRenderDef } from "./cycle"
 import { renderDef as peopleCardsRenderDef } from "./people-cards"
 import { renderDef as tagRowRenderDef } from "./tag-row"
+import { renderDef as hubSpokeRenderDef } from "./hub-spoke"
+import { renderDef as progressDonutsRenderDef } from "./progress-donuts"
 
 /**
  * Dispatch table (src domain reorg wave 2, spec §4.2/§4.3): replaces the
@@ -99,6 +101,8 @@ const RENDER_DEFS: Record<ComponentType, RenderDef> = {
   cycle: cycleRenderDef,
   people_cards: peopleCardsRenderDef,
   tag_row: tagRowRenderDef,
+  hub_spoke: hubSpokeRenderDef,
+  progress_donuts: progressDonutsRenderDef,
 }
 
 /**

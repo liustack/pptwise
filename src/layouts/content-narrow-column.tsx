@@ -240,7 +240,7 @@ export function NarrowColumnContent({ ir, slide, index, ctx }: SvgTemplateProps)
             padFill: colors.accent,
             baseFill: subheadingFill,
             fontWeight: "700",
-            themeId: ctx.themeId,
+            emphasis: ctx.emphasis,
           },
           <text
             data-truncated={subheading.truncated ? "1" : undefined}

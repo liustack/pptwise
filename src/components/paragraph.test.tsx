@@ -58,6 +58,7 @@ describe("paragraph component emphasis", () => {
       ...ctx,
       colors: CONSULTING_TOKENS.colors,
       themeId: "consulting",
+      emphasis: "pad",
     }
     const marked = { type: "paragraph" as const, text: "普通 **强调内容** 普通" }
     const { container } = svg(paragraph.render(marked, { x: 0, y: 0, w: 1120 }, consultingCtx))
@@ -140,6 +141,7 @@ describe("paragraph component emphasis", () => {
       ...ctx,
       colors: CONSULTING_TOKENS.colors,
       themeId: "consulting",
+      emphasis: "pad",
     }
     const long = {
       type: "paragraph" as const,

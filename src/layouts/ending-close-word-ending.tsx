@@ -72,7 +72,7 @@ export function CloseWordEnding({ ir, slide, ctx }: SvgTemplateProps) {
             accent: accentInk,
             baseFill: titleInk,
             fontWeight: "400",
-            themeId: ctx.themeId,
+            emphasis: ctx.emphasis,
             measureWeight: { bold: false, fontFamily: fonts.heading },
           },
           <text

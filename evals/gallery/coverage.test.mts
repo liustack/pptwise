@@ -4,15 +4,13 @@
 // Cheap: walks `buildMatrix` page ids, no render.
 
 import { describe, expect, it } from "vitest"
-import { COMPONENT_FORMS } from "@/components/form-assignments"
+
 import { LAYOUT_REGISTRY } from "@/layouts/registry"
 import { CANONICAL_THEME_IDS } from "@/themes"
-import { CHART_VARIANTS, FORM_VARIANTS } from "./corpus/components"
+import { CHART_VARIANTS } from "./corpus/components"
 import type { CorpusAssets } from "./corpus/decks"
 import {
   assertInventoryCoverage,
-  dedicatedFormIds,
-  formIdForVariant,
   galleryCoverageGaps,
   mapJobSubject,
 } from "./coverage"
@@ -43,14 +41,11 @@ describe("mapJobSubject", () => {
       inventory: "component",
       id: "chart",
     })
-    expect(mapJobSubject({ band: "component", subject: "flowchart · typed nodes" })).toEqual({
-      inventory: "form",
-      id: "typed_nodes",
+    expect(mapJobSubject({ band: "component", subject: "hub_spoke" })).toEqual({
+      inventory: "component",
+      id: "hub_spoke",
     })
-    expect(mapJobSubject({ band: "component", subject: "architecture · layer stack" })).toEqual({
-      inventory: "form",
-      id: "layer_stack",
-    })
+    expect(mapJobSubject({ band: "component", subject: "flowchart · typed nodes" })).toBeUndefined()
   })
 
   it("leaves retired subjects unmapped, including bloom / logo-wall / side-highlight", () => {
@@ -81,18 +76,17 @@ describe("gallery inventory coverage", () => {
     expect(gaps.missingComponents, `missing components: ${gaps.missingComponents.join(", ")}`).toEqual([])
   })
 
-  it("keeps flowchart typed_nodes and architecture layer_stack as findable component pages", () => {
-    const ids = new Set(jobs({ only: "component" }).map((job) => job.id))
-    // typed_nodes belongs to swiss, layer_stack to consulting — under a
-    // theme-first cut a form variant lives in the section of the theme that
-    // owns the form, and only the baseline section carries all three scripts.
-    expect(ids.has("swiss--comp--flowchart-typed-nodes--zh")).toBe(true)
-    for (const lang of ["zh", "en", "mixed"] as const) {
-      expect(ids.has(`consulting--comp--architecture-layer-stack--${lang}`)).toBe(true)
+  it("gives every theme section the same component page list — one drawing per component", () => {
+    const ids = jobs({ only: "component" })
+    const perTheme = new Map<string, string[]>()
+    for (const job of ids) {
+      perTheme.set(job.section, [...(perTheme.get(job.section) ?? []), job.subject])
     }
+    const sorted = [...perTheme.values()].map((list) => [...new Set(list)].sort().join(","))
+    expect(new Set(sorted).size, "theme sections disagree on which components they draw").toBe(1)
   })
 
-  it("gives every theme section all three bands, and every one of them the 37 component types", () => {
+  it("gives every theme section all three bands, and every one of them every component type", () => {
     const gaps = galleryCoverageGaps(jobs())
     expect(gaps.missingBands, `missing bands: ${gaps.missingBands.join(", ")}`).toEqual([])
     expect(
@@ -120,25 +114,6 @@ describe("gallery inventory coverage", () => {
     const faces = new Set(jobs().filter((job) => job.band === "face").map((job) => job.subject))
     const missing = Object.keys(LAYOUT_REGISTRY).filter((id) => !faces.has(id)).sort()
     expect(missing, `layouts with no face page: ${missing.join(", ")}`).toEqual([])
-  })
-
-  it("gives every component-face form a dedicated FORM_VARIANTS page, and pad only a deck surface", () => {
-    const matrix = jobs()
-    const dedicated = new Set(
-      FORM_VARIANTS.map(formIdForVariant).filter((form): form is NonNullable<typeof form> => !!form),
-    )
-
-    expect(dedicatedFormIds().includes("pad")).toBe(false)
-    expect(dedicatedFormIds().includes("underline")).toBe(false)
-    expect(COMPONENT_FORMS.includes("pad")).toBe(true)
-    expect(COMPONENT_FORMS.includes("underline")).toBe(true)
-
-    const missingDedicated = dedicatedFormIds().filter((form) => !dedicated.has(form))
-    expect(missingDedicated, `missing dedicated form pages: ${missingDedicated.join(", ")}`).toEqual([])
-
-    const gaps = galleryCoverageGaps(matrix)
-    expect(gaps.missingForms, `forms with no visible surface: ${gaps.missingForms.join(", ")}`).toEqual([])
-    expect(gaps.missingDedicatedForms).toEqual([])
   })
 
   it("names unmapped leftover subjects instead of mixing them into the review wall", () => {

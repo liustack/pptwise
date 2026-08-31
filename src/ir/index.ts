@@ -70,6 +70,8 @@ import { schema as deviceMockupSchema } from "./components/device-mockup"
 import { schema as cycleSchema } from "./components/cycle"
 import { schema as peopleCardsSchema } from "./components/people-cards"
 import { schema as tagRowSchema } from "./components/tag-row"
+import { schema as hubSpokeSchema } from "./components/hub-spoke"
+import { schema as progressDonutsSchema } from "./components/progress-donuts"
 
 // Re-exported so IR, spec, theme menus, and public tooling share one exact
 // semantic vocabulary instead of maintaining independent string unions.
@@ -282,7 +284,7 @@ export const DeckBrandingSchema = z.enum(DECK_BRANDING_VALUES).describe(
   'Where the brand footer and logo appear. Omitted equals "cover-only": cover and chapter pages keep the brand logo, content and ending pages drop the footer rule, meta, and logo. "full" is the explicit declaration that draws the content-page footer and logo, and that paints confidentiality and date on cover and ending meta rows. Other postures leave those two fields off the canvas even when meta carries them. "minimal" drops the content-page footer rule and meta but keeps the logo. Layout branding:"none" still wins. Theme motifs are unaffected. Write "full" only when every content page needs the brand footer.',
 )
 
-// ── Components（37 种）──
+// ── Components（39 种）──
 
 const ComponentSchema = z.discriminatedUnion("type", [
   bulletsSchema,
@@ -322,6 +324,8 @@ const ComponentSchema = z.discriminatedUnion("type", [
   cycleSchema,
   peopleCardsSchema,
   tagRowSchema,
+  hubSpokeSchema,
+  progressDonutsSchema,
 ], { error: componentTypeError })
 
 /**

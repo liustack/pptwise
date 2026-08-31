@@ -1,12 +1,18 @@
 import type { Component } from "@/ir"
-import { Icon } from "../../render/icons"
-import { accessibleInk, groupValueInks, resolveSemanticColor } from "../../render/ink"
-import type { FormKnobs } from "../form-assignments"
-import type { ComponentBox, ComponentCtx } from "../types"
-import { parseKpiRatio } from "./kpi-value"
+import { parseProgressRatio } from "@/ir/components/progress-donuts"
+import { PptwiseError } from "../errors"
+import { Icon } from "../render/icons"
+import { accessibleInk, groupValueInks } from "../render/ink"
 import { FORM_BODY_FLOOR, fitFormLine } from "./legibility"
+import type { RenderDef, SvgComponent } from "./types"
 
-type KpiComponent = Extract<Component, { type: "kpi_cards" }>
+type ProgressDonutsComponent = Extract<Component, { type: "progress_donuts" }>
+
+/**
+ * 一组完成度圆环：每个指标画一圈轨道 + 一段从 12 点顺时针的进度弧，
+ * 圆心是数值本身，环下是标签与可选来源。弧长由 schema 已校验过的 0-100
+ * 值决定，渲染期不做数据嗅探。
+ */
 
 const PAD = 8
 const MIN_CELL = 168
@@ -36,13 +42,19 @@ export function donutArcPath(cx: number, cy: number, r: number, t: number): stri
   return `M ${fmt(sx)} ${fmt(sy)} A ${fmt(r)} ${fmt(r)} 0 ${large} 1 ${fmt(ex)} ${fmt(ey)}`
 }
 
-function arcToken(knobs: FormKnobs, ctx: ComponentCtx): string {
-  return knobs.arc === "primary" ? ctx.colors.primary : ctx.colors.accent
-}
-
-function trackToken(knobs: FormKnobs, ctx: ComponentCtx): string {
-  if (knobs.track === "border") return ctx.colors.border ?? ctx.colors.muted
-  return ctx.colors.muted
+/**
+ * The schema already proved every value parses (`parseProgressRatio`). A
+ * component that reaches the renderer without it skipped `validateIr`, the
+ * same class of bypass `components/index.tsx`'s `getRenderDef` guards.
+ */
+function ratioOf(item: ProgressDonutsComponent["items"][number]): number {
+  const t = parseProgressRatio(item.value, item.unit)
+  if (t === null) {
+    throw new PptwiseError(
+      `progress_donuts value "${item.value}" is not a completion rate between 0 and 100 — this IR was not accepted by validateIr`,
+    )
+  }
+  return t
 }
 
 function splitValue(value: string, unit: string | undefined): { head: string; tail: string | null } {
@@ -70,45 +82,19 @@ function grid(n: number, w: number, h?: number) {
   return { cols, rows, cellW, cellH, r, strokeW, naturalH }
 }
 
-export function measureDonutTrio(
-  component: KpiComponent,
-  w: number,
-  _ctx: ComponentCtx,
-  _knobs: FormKnobs,
-): number {
-  const n = component.items.length
-  if (n === 0) return 0
-  return grid(n, w).naturalH
-}
+export const progressDonuts: SvgComponent<ProgressDonutsComponent> = {
+  measure(component, w) {
+    return grid(component.items.length, w).naturalH
+  },
 
-export function renderDonutTrio(
-  component: KpiComponent,
-  box: ComponentBox,
-  ctx: ComponentCtx,
-  knobs: FormKnobs,
-) {
+  render(component, box, ctx) {
   const n = component.items.length
-  if (n === 0) return <g transform={`translate(${box.x},${box.y})`} />
   const natural = grid(n, box.w).naturalH
   const h = box.h ?? natural
   const G = grid(n, box.w, h)
-  const defaultArc = arcToken(knobs, ctx)
-  const track = trackToken(knobs, ctx)
-  const danger = resolveSemanticColor("danger", ctx.colors)
+  const arc = ctx.colors.accent
+  const track = ctx.colors.muted
   const pageBg = ctx.defaultBg ?? ctx.colors.bg
-
-  let minI = -1
-  let minT = Infinity
-  if (knobs.dangerOnMin) {
-    component.items.forEach((item, i) => {
-      const t = parseKpiRatio(String(item.value), item.unit)
-      if (t == null) return
-      if (t < minT) {
-        minT = t
-        minI = i
-      }
-    })
-  }
 
   const values = component.items.map((item, i) => {
     const col = i % G.cols
@@ -117,11 +103,9 @@ export function renderDonutTrio(
     const y0 = row * G.cellH
     const cx = x0 + G.cellW / 2
     const cy = y0 + PAD + G.r + G.strokeW / 2
-    const t = parseKpiRatio(String(item.value), item.unit)
-    const hot = knobs.dangerOnMin && i === minI
-    const arc = hot ? danger : defaultArc
-    const d = t != null && t > 0 ? donutArcPath(cx, cy, G.r, t) : ""
-    const { head, tail } = splitValue(String(item.value), item.unit)
+    const t = ratioOf(item)
+    const d = t > 0 ? donutArcPath(cx, cy, G.r, t) : ""
+    const { head, tail } = splitValue(item.value, item.unit)
     const innerW = Math.max(8, (G.r - G.strokeW) * 1.5)
     const rawValue = tail ? `${head}${tail}` : head
     const preferred = Math.max(FORM_BODY_FLOOR, Math.min(40, G.r * 0.55))
@@ -148,8 +132,6 @@ export function renderDonutTrio(
       item,
       cx,
       cy,
-      hot,
-      arc,
       d,
       headFit,
       tailFit,
@@ -157,7 +139,7 @@ export function renderDonutTrio(
     }
   })
   const valueInks = groupValueInks(
-    values.map(({ arc, valueSize }) => ({
+    values.map(({ valueSize }) => ({
       preferredFill: arc,
       backgroundFill: pageBg,
       fontSizePx: valueSize,
@@ -167,13 +149,8 @@ export function renderDonutTrio(
 
   return (
     <g transform={`translate(${box.x},${box.y})`}>
-      {values.map(({ item, cx, cy, hot, arc, d, headFit, tailFit, valueSize }, i) => {
+      {values.map(({ item, cx, cy, d, headFit, tailFit, valueSize }, i) => {
         const valueInk = valueInks[i]!
-        // The danger-colored hot label is semantic copy, not part of the
-        // numeric sibling group. Preserve its original per-item ink choice.
-        const labelInk = hot
-          ? accessibleInk(arc, pageBg, valueSize)
-          : ctx.colors.text
         const label = fitFormLine(item.label, {
           maxWidth: G.cellW - 16,
           fontSize: 16,
@@ -257,7 +234,7 @@ export function renderDonutTrio(
               textAnchor="middle"
               fontSize={label.fontSize}
               fontWeight="bold"
-              fill={labelInk}
+              fill={ctx.colors.text}
               fontFamily={ctx.fonts.body}
               dominantBaseline="alphabetic"
             >
@@ -282,4 +259,11 @@ export function renderDonutTrio(
       })}
     </g>
   )
+  },
+}
+
+export const renderDef: RenderDef<ProgressDonutsComponent> = {
+  type: "progress_donuts",
+  measure: progressDonuts.measure,
+  render: progressDonuts.render,
 }

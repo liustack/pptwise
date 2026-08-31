@@ -84,6 +84,16 @@ export const StyleTokensFileSchema = z
   })
   .strict()
 
+/**
+ * How a theme draws a `**marked**` run inside body text. Part of a theme's
+ * identity, not of any component: `"tint"` (omitted) recolors the run in the
+ * accent, `"pad"` swipes a marker-pen block behind it, `"underline"` strikes
+ * a chalk line under it.
+ */
+export const EMPHASIS_TREATMENTS = ["tint", "pad", "underline"] as const
+export type EmphasisTreatment = (typeof EMPHASIS_TREATMENTS)[number]
+export const EmphasisTreatmentSchema = z.enum(EMPHASIS_TREATMENTS)
+
 const CommonThemeFileFields = {
   id: z.string().regex(THEME_ID_PATTERN, THEME_ID_CONSTRAINT),
   label: z.string().min(1).optional(),
@@ -91,6 +101,8 @@ const CommonThemeFileFields = {
   brand: BrandConfigSchema.optional(),
   occasions: z.array(z.enum(Object.keys(OCCASION_VOCAB) as [Occasion, ...Occasion[]])).min(1).optional(),
   identity: z.enum(["low", "medium", "high"]).optional(),
+  /** Emphasis stroke for `**marked**` runs. Omitted equals `"tint"`. */
+  emphasis: EmphasisTreatmentSchema.optional(),
 }
 
 function validateCommonThemeFields(value: { id: string; style: { id: string } }, ctx: z.RefinementCtx): void {
@@ -230,6 +242,7 @@ export interface BuiltinThemeDeclaration {
   brand?: BrandConfig
   occasions?: readonly Occasion[]
   identity?: "low" | "medium" | "high"
+  emphasis?: EmphasisTreatment
   menu: Menu
   motif?: {
     id: MotifId

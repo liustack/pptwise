@@ -1,310 +1,238 @@
 import type React from "react"
 import type { Component } from "@/ir"
-import {
-  fitSvgLine,
-  layoutSvgText,
-  truncateToUnits,
-} from "../lib/svg-text-layout"
 import { Icon } from "../render/icons"
-import { graphicInk } from "../render/ink"
-import { resolveComponentForm } from "./form-assignments"
-import { measureBadgeCards, renderBadgeCards } from "./forms/badge-cards"
-import { measureIconColumns, renderIconColumns } from "./forms/icon-columns"
-import { measureOutlineGrid, renderOutlineGrid } from "./forms/outline-grid"
-import type { ComponentBox, ComponentCtx, RenderDef, SvgComponent } from "./types"
+import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
+import {
+  boardTypeScale,
+  fillCardType,
+  formIconColumnCols,
+  formLineHeight,
+  formTextClipMarker,
+  formTextOmissionMarker,
+  layoutFormBody,
+  layoutFormTitle,
+  linesThatFit,
+} from "./legibility"
 
 type IconCardsComponent = Extract<Component, { type: "icon_cards" }>
-/** A single `icon_cards` item, keyed off the schema so `icon` stays in sync
- * — same technique as `bento-layout.ts`'s `KpiItem`. */
-export type IconCardItem = IconCardsComponent["items"][number]
+type IconCardItem = IconCardsComponent["items"][number]
 
 const GAP = 16
-
-const ICON_SIZE = 24
-const GAP_ICON_TITLE = 12
-const TITLE_FONT_SIZE = 20
-const TITLE_MIN_FONT_SIZE = 16
-// Matches callout.tsx/bullets.tsx's own line-height convention for
-// body-weight text (`LINE_RATIO` / the 1.4 used in `layoutItems`) — title
-// never wraps (`fitSvgLine` only shrinks/truncates a single line), so this
-// is a fixed "line box" height reserved for it, not a measured value.
-// `titleLineHeight` is derived from this ratio at each call site (default
-// TITLE_FONT_SIZE * 1.4 = 28, unless a caller's `titleFontSize` opt overrides
-// it — see `IconCardLayoutOptions`), not hoisted to its own module constant.
 const TITLE_LINE_HEIGHT_RATIO = 1.4
-const GAP_TITLE_TEXT = 8
-const TEXT_FONT_SIZE = 16
-// 15 * 1.4 = 21, matching the brief's stated line height for the 2-line
-// description text.
 const TEXT_LINE_HEIGHT_RATIO = 1.4
-const TEXT_MAX_LINES = 2
+const GAP_NODE_TITLE = 18
+const GAP_TITLE_TEXT = 10
+const COL_INSET = 16
 
-// This file's own row-layout padding — used both by `measure`/`render` below
-// to inset the standalone (non-bento) card. `templates/tech.tsx` uses
-// its *own* BENTO_CARD_PAD/TOP_PAD/BOTTOM_PAD constants instead when it
-// explodes an `icon_cards` item into a bento tile (same split as
-// `kpi.tsx` vs. bento's own `renderKpiCardBody` padding).
-const PAD_X = 24
-const PAD_TOP = 20
-const PAD_BOTTOM = 20
-
-const CARD_RADIUS = 8
-
-interface IconCardTextLayout {
-  title: { text: string; lines: string[]; fontSize: number; lineHeight: number; truncated: boolean }
-  text: { lines: string[]; fontSize: number; lineHeight: number; truncated: boolean }
-}
-
-/**
- * Bento-only injection point (tech.tsx's `BENTO_ICON_CARD_TITLE_SIZE`):
- * lets a caller bump the title's *requested* font size without touching this
- * file's own `TITLE_FONT_SIZE` module constant, which `iconCards.render`'s
- * standalone row-card layout (used by the other 5 themes) still reads
- * directly and must stay byte-identical to. Omitted (`undefined`) falls back
- * to `TITLE_FONT_SIZE` everywhere below, so every existing call site is
- * unaffected.
- */
-interface IconCardLayoutOptions {
-  titleFontSize?: number
-  /** 图标尺寸覆盖（tech bento 卡传更大值增强存在感），缺省共享 ICON_SIZE。 */
-  iconSize?: number
-  /** Title wrap. Default 1 keeps the standalone row-card byte-identical. */
-  titleMaxLines?: number
-}
-
-function layoutIconCard(
+function layoutItemText(
   item: IconCardItem,
   contentW: number,
-  opts: IconCardLayoutOptions = {}
-): IconCardTextLayout {
-  const titleFontSize = opts.titleFontSize ?? TITLE_FONT_SIZE
-  const titleMaxLines = Math.max(1, opts.titleMaxLines ?? 1)
-  const titleLineHeight = Math.round(titleFontSize * TITLE_LINE_HEIGHT_RATIO)
-  let title: IconCardTextLayout["title"]
-  if (titleMaxLines === 1) {
-    const fitted = fitSvgLine(item.title, {
-      maxWidth: contentW,
-      fontSize: titleFontSize,
-      minFontSize: TITLE_MIN_FONT_SIZE,
-    })
-    title = {
-      text: fitted.text,
-      lines: [fitted.text],
-      fontSize: fitted.fontSize,
-      lineHeight: titleLineHeight,
-      truncated: fitted.truncated,
-    }
-  } else {
-    const laid = layoutSvgText(item.title, {
-      maxWidth: contentW,
-      fontSize: titleFontSize,
-      maxLines: titleMaxLines,
-      minPt: TITLE_MIN_FONT_SIZE,
-      lineHeightRatio: TITLE_LINE_HEIGHT_RATIO,
-      bold: true,
-    })
-    title = {
-      text: laid.lines[0] ?? "",
-      lines: laid.lines,
-      fontSize: laid.fontSize,
-      lineHeight: laid.lineHeight,
-      truncated: laid.truncated,
-    }
-  }
-  const wrapped = layoutSvgText(item.text, {
+  ctx: ComponentCtx,
+  titleSize: number,
+  bodySize: number,
+  titleMaxLines: number,
+  bodyMaxLines: number,
+) {
+  const title = layoutFormTitle(item.title, {
     maxWidth: contentW,
-    fontSize: TEXT_FONT_SIZE,
-    maxLines: TEXT_MAX_LINES,
-    lineHeightRatio: TEXT_LINE_HEIGHT_RATIO,
+    fontSize: titleSize,
+    fontFamily: ctx.fonts.heading,
+    maxLines: Math.max(1, titleMaxLines),
   })
-  // `layoutSvgText` shrinks its returned font size so the *widest wrapped*
-  // line fits `contentW`, but that shrink floors at 1px (its own
-  // `Math.max(1, ...)`). Text long enough that the post-`maxLines` merged
-  // tail line still exceeds `contentW` even at 1px/unit comes back unfit —
-  // truncate defensively at the fitted size, the same floor-size fallback
-  // bullets.tsx applies locally.
-  const maxUnits = contentW / wrapped.fontSize
-  const lines = wrapped.lines.map((line) => truncateToUnits(line, maxUnits))
-  const text = {
-    ...wrapped,
-    lines,
-    truncated: wrapped.truncated || lines.some((line, i) => line !== wrapped.lines[i]),
-  }
+  const text =
+    bodyMaxLines > 0
+      ? layoutFormBody(item.text, {
+          maxWidth: contentW,
+          fontSize: bodySize,
+          titleSize,
+          maxLines: bodyMaxLines,
+          lineHeightRatio: TEXT_LINE_HEIGHT_RATIO,
+          fontFamily: ctx.fonts.body,
+        })
+      : { lines: [] as string[], fontSize: bodySize, lineHeight: 0, truncated: false }
   return { title, text }
 }
 
-/**
- * Pure content height (icon + gaps + title's single line + text's 1-2
- * lines) — deliberately excludes any padding, so a caller with its own
- * padding convention (this file's PAD_TOP/PAD_BOTTOM, or tech.tsx's
- * BENTO_CARD_TOP_PAD/BOTTOM_PAD) can subtract its own budget and compare,
- * exactly mirroring `kpi.tsx`/tech.tsx's `kpiContentHeight` split.
- */
-export function iconCardContentHeight(
-  item: IconCardItem,
-  contentW: number,
-  opts: IconCardLayoutOptions = {}
-): number {
-  const iconSize = opts.iconSize ?? ICON_SIZE
-  const { title, text } = layoutIconCard(item, contentW, opts)
+function nodeRadius(colW: number): number {
+  return Math.round(Math.min(44, Math.max(28, colW * 0.16)))
+}
+
+function stackHeight(layout: ReturnType<typeof layoutItemText>, nodeSize: number): number {
   return (
-    iconSize +
-    GAP_ICON_TITLE +
-    title.lines.length * title.lineHeight +
+    nodeSize +
+    GAP_NODE_TITLE +
+    layout.title.lines.length * layout.title.lineHeight +
     GAP_TITLE_TEXT +
-    text.lines.length * text.lineHeight
+    layout.text.lines.length * layout.text.lineHeight
   )
 }
 
-/**
- * Render one card's icon/title/text inside `box` — `box` is already the
- * *padded content area* (its top-left is where the icon starts, its width is
- * the text-wrap budget). Does not paint the card shell —
- * callers compose those separately (this file's `iconCards.render` paints a
- * surface shell; `templates/tech.tsx`'s exploded tiles paint
- * their own outline shell instead), mirroring `renderKpiCardBody`'s
- * content-only contract in tech.tsx.
- */
-export function renderIconCardBody(
-  item: IconCardItem,
-  box: ComponentBox,
-  ctx: ComponentCtx,
-  opts: IconCardLayoutOptions = {}
+function renderGlyph(
+  name: string,
+  x: number,
+  y: number,
+  size: number,
+  color: string,
 ): React.ReactElement {
-  const iconSize = opts.iconSize ?? ICON_SIZE
-  const { title, text } = layoutIconCard(item, box.w, opts)
-  const titleTopY = box.y + iconSize + GAP_ICON_TITLE
-  const textTopY = titleTopY + title.lines.length * title.lineHeight + GAP_TITLE_TEXT
-  return (
-    <>
-      <Icon
-        name={item.icon}
-        x={box.x}
-        y={box.y}
-        size={iconSize}
-        color={graphicInk(ctx.colors.primary, ctx.colors.surface)}
+  if (!name) {
+    return (
+      <circle
+        cx={x + size / 2}
+        cy={y + size / 2}
+        r={Math.max(3, size / 6)}
+        fill={color}
       />
-      {title.lines.map((line, i) => (
-        <text
-          key={`title-${i}`}
-          data-truncated={title.truncated && i === title.lines.length - 1 ? "1" : undefined}
-          x={box.x}
-          y={titleTopY + i * title.lineHeight + title.fontSize}
-          fontSize={title.fontSize}
-          fontWeight="600"
-          fill={ctx.colors.text}
-          fontFamily={ctx.fonts.heading}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
-      {text.lines.map((line, li) => (
-        <text
-          key={li}
-          data-truncated={text.truncated && li === text.lines.length - 1 ? "1" : undefined}
-          x={box.x}
-          y={textTopY + li * text.lineHeight + text.fontSize}
-          fontSize={text.fontSize}
-          fill={ctx.colors.muted}
-          fontFamily={ctx.fonts.body}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
-    </>
-  )
-}
-
-function cardGeometry(component: IconCardsComponent, w: number) {
-  const n = component.items.length
-  // 2-4 项单行 n 列，5-6 项 2 行 3 列宫格（2026-07-11 用户借鉴 6 宫格）
-  const cols = n <= 4 ? n : 3
-  const rows = Math.ceil(n / cols)
-  const cardW = (w - GAP * (cols - 1)) / cols
-  const contentW = cardW - PAD_X * 2
-  const cardH = Math.max(
-    ...component.items.map(
-      (item) => PAD_TOP + iconCardContentHeight(item, contentW) + PAD_BOTTOM
     )
-  )
-  return { cols, rows, cardW, contentW, cardH }
+  }
+  return <Icon name={name} x={x} y={y} size={size} color={color} />
 }
 
-function measureDefault(component: IconCardsComponent, w: number): number {
-  const { rows, cardH } = cardGeometry(component, w)
-  return rows * cardH + (rows - 1) * GAP
-}
-
-function renderDefault(
+function geometry(
   component: IconCardsComponent,
-  box: ComponentBox,
+  w: number,
   ctx: ComponentCtx,
-): React.ReactElement {
-  const { cols, rows, cardW, contentW, cardH } = cardGeometry(component, box.w)
-  // 密度拉伸（box.h 由布局分配）：每行卡壳均分增量，内容组垂直居中
-  const measuredH = rows * cardH + (rows - 1) * GAP
-  const perRowGrow = Math.max(0, ((box.h ?? measuredH) - measuredH) / rows)
-  const shellH = cardH + perRowGrow
-  const contentShift = perRowGrow / 2
+  boxH?: number,
+) {
+  const n = component.items.length
+  const cols = formIconColumnCols(n, w, COL_INSET)
+  const rows = Math.ceil(n / cols)
+  const colW = w / cols
+  const nodeR = nodeRadius(colW)
+  const nodeSize = nodeR * 2
+  const contentW = Math.max(24, colW - COL_INSET)
+  const slotH = boxH != null ? Math.max(1, (boxH - GAP * (rows - 1)) / rows) : undefined
+  const start = boardTypeScale(colW, slotH)
+  const extraAbove = nodeSize + GAP_NODE_TITLE
+  const naturalInner =
+    extraAbove +
+    formLineHeight(start.title) +
+    GAP_TITLE_TEXT +
+    2 * formLineHeight(start.body)
+  const naturalMeasured = rows * naturalInner + (rows - 1) * GAP
+  const rowH =
+    boxH === undefined
+      ? naturalInner
+      : Math.max(1, (boxH - GAP * (rows - 1)) / rows)
+  const innerH = Math.max(1, rowH)
+  const filled = fillCardType({
+    innerH: Math.max(1, innerH - extraAbove),
+    contentW,
+    titleSize: start.title,
+    bodySize: start.body,
+    gap: GAP_TITLE_TEXT,
+    longestBody: component.items.map((it) => it.text).sort((a, b) => b.length - a.length)[0],
+    titles: component.items.map((it) => it.title),
+    fonts: { heading: ctx.fonts.heading, body: ctx.fonts.body },
+    titleLhRatio: TITLE_LINE_HEIGHT_RATIO,
+    bodyLhRatio: TEXT_LINE_HEIGHT_RATIO,
+  })
+  const fit = linesThatFit({
+    innerH,
+    titleSize: filled.titleSize,
+    bodySize: filled.bodySize,
+    gap: GAP_TITLE_TEXT,
+    extraAbove,
+    titleMax: 2,
+    bodyMax: Math.max(2, filled.bodyMaxLines),
+  })
+  const layouts = component.items.map((item) =>
+    layoutItemText(
+      item,
+      contentW,
+      ctx,
+      filled.titleSize,
+      filled.bodySize,
+      fit.titleMaxLines,
+      fit.bodyMaxLines,
+    ),
+  )
+  const measuredH = boxH === undefined ? naturalMeasured : Math.min(boxH, rows * rowH + (rows - 1) * GAP)
+  return { cols, rows, colW, nodeR, nodeSize, contentW, layouts, rowH, measuredH }
+}
+
+function measureIconColumns(component: IconCardsComponent, w: number, ctx: ComponentCtx): number {
+  return geometry(component, w, ctx).measuredH
+}
+
+export const iconCards: SvgComponent<IconCardsComponent> = {
+  measure: measureIconColumns,
+
+  render(component, box, ctx): React.ReactElement {
+  const g = geometry(component, box.w, ctx, box.h)
+  const fill = ctx.colors.surface
+  const ink = ctx.colors.accent
+  const iconSize = Math.round(g.nodeR * 0.85)
+  const strokeProps = { stroke: ctx.colors.border ?? ctx.colors.muted, strokeWidth: 1 }
+
   return (
     <g transform={`translate(${box.x},${box.y})`}>
       {component.items.map((item, i) => {
-        const cardX = (i % cols) * (cardW + GAP)
-        const cardY = Math.floor(i / cols) * (shellH + GAP)
+        const col = i % g.cols
+        const row = Math.floor(i / g.cols)
+        const cx = col * g.colW + g.colW / 2
+        const rowY = row * (g.rowH + GAP)
+        const layout = g.layouts[i]!
+        const stackH = stackHeight(layout, g.nodeSize)
+        const stackTop = rowY + (g.rowH - stackH) / 2
+        const cy = stackTop + g.nodeR
+        const titleTop = stackTop + g.nodeSize + GAP_NODE_TITLE
+        const textTop =
+          titleTop + layout.title.lines.length * layout.title.lineHeight + GAP_TITLE_TEXT
         return (
-          <g key={i} data-audit-box={`${box.x + cardX},${box.y + cardY},${cardW}`}>
-            <rect
-              x={cardX}
-              y={cardY}
-              width={cardW}
-              height={shellH}
-              rx={ctx.shape?.radius ?? CARD_RADIUS}
-              fill={ctx.colors.surface}
-              {...(ctx.colors.cardStroke
-                ? { stroke: ctx.colors.cardStroke, strokeWidth: 1 }
-                : {})}
-            />
-            {renderIconCardBody(
-              item,
-              { x: cardX + PAD_X, y: cardY + PAD_TOP + contentShift, w: contentW },
-              ctx
+          <g
+            key={i}
+            data-truncated={formTextOmissionMarker(item.text, layout.text)}
+            data-audit-box={`${box.x + col * g.colW},${box.y + rowY},${g.colW}`}
+          >
+            <circle cx={cx} cy={cy} r={g.nodeR} fill={fill} {...strokeProps} />
+            {renderGlyph(
+              item.icon,
+              cx - iconSize / 2,
+              cy - iconSize / 2,
+              iconSize,
+              ink,
             )}
+            {layout.title.lines.map((line, li) => (
+              <text
+                key={`t-${li}`}
+                data-truncated={formTextClipMarker(layout.title, li)}
+                x={cx}
+                y={titleTop + li * layout.title.lineHeight + layout.title.fontSize}
+                textAnchor="middle"
+                fontSize={layout.title.fontSize}
+                fontWeight="700"
+                fill={ctx.colors.text}
+                fontFamily={ctx.fonts.heading}
+                dominantBaseline="alphabetic"
+              >
+                {line}
+              </text>
+            ))}
+            {layout.text.lines.map((line, li) => (
+              <text
+                key={li}
+                data-truncated={formTextClipMarker(layout.text, li)}
+                x={cx}
+                y={textTop + li * layout.text.lineHeight + layout.text.fontSize}
+                textAnchor="middle"
+                fontSize={layout.text.fontSize}
+                fill={ctx.colors.muted}
+                fontFamily={ctx.fonts.body}
+                dominantBaseline="alphabetic"
+              >
+                {line}
+              </text>
+            ))}
           </g>
         )
       })}
     </g>
   )
-}
-
-export const iconCards: SvgComponent<IconCardsComponent> = {
-  measure(component, w, ctx) {
-    const assignment = resolveComponentForm("icon_cards", ctx.themeId)
-    switch (assignment?.form) {
-      case "icon_columns":
-        return measureIconColumns(component, w, ctx, assignment.knobs ?? {})
-      case "badge_cards":
-        return measureBadgeCards(component, w, ctx, assignment.knobs ?? {})
-      case "outline_grid":
-        return measureOutlineGrid(component, w, ctx, assignment.knobs ?? {})
-      default:
-        return measureDefault(component, w)
-    }
-  },
-  render(component, box, ctx) {
-    const assignment = resolveComponentForm("icon_cards", ctx.themeId)
-    switch (assignment?.form) {
-      case "icon_columns":
-        return renderIconColumns(component, box, ctx, assignment.knobs ?? {})
-      case "badge_cards":
-        return renderBadgeCards(component, box, ctx, assignment.knobs ?? {})
-      case "outline_grid":
-        return renderOutlineGrid(component, box, ctx, assignment.knobs ?? {})
-      default:
-        return renderDefault(component, box, ctx)
-    }
   },
 }
 
-export const renderDef: RenderDef<IconCardsComponent> = { type: "icon_cards", measure: iconCards.measure, render: iconCards.render }
+export const renderDef: RenderDef<IconCardsComponent> = {
+  type: "icon_cards",
+  measure: iconCards.measure,
+  render: iconCards.render,
+}

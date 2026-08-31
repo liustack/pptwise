@@ -3,8 +3,6 @@ import type { Component } from "@/ir"
 import { fitSvgLine, layoutSvgText } from "../lib/svg-text-layout"
 import type { ComponentBox, ComponentCtx, RenderDef, SvgComponent } from "./types"
 import { accessibleInk, contrastRatio, requiredContrastRatio } from "../render/ink"
-import { resolveComponentForm } from "./form-assignments"
-import { measureVertTimeline, renderVertTimeline } from "./forms/vert-timeline"
 
 type TimelineComponent = Extract<Component, { type: "timeline" }>
 
@@ -263,18 +261,10 @@ function measureDefault(component: TimelineComponent, w: number): number {
 }
 
 export const timeline: SvgComponent<TimelineComponent> = {
-  measure(component, w, ctx) {
-    const assignment = resolveComponentForm("timeline", ctx.themeId)
-    if (assignment?.form === "vert_timeline") {
-      return measureVertTimeline(component, w, ctx, assignment.knobs ?? {})
-    }
+  measure(component, w) {
     return measureDefault(component, w)
   },
   render(component, box, ctx) {
-    const assignment = resolveComponentForm("timeline", ctx.themeId)
-    if (assignment?.form === "vert_timeline") {
-      return renderVertTimeline(component, box, ctx, assignment.knobs ?? {})
-    }
     if (component.layout === "vertical") return renderVertical(component, box, ctx)
     const rows = milestoneLayout(component, box.w)
     return (

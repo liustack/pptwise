@@ -59,7 +59,7 @@ export const paragraph: SvgComponent<ParagraphComponent> = {
             fontSize: l.fontSize,
             x: 0,
             baselineY,
-            themeId: ctx.themeId,
+            emphasis: ctx.emphasis,
           })
           return (
             <Fragment key={i}>

@@ -29,7 +29,7 @@ import {
   splitKpiValueWidths,
   type KpiValueScale,
 } from "../components/kpi"
-import { iconCardContentHeight, renderIconCardBody } from "../components/icon-cards"
+import { iconCardContentHeight, renderIconCardBody } from "../components/icon-card-body"
 import { fitEmphasisLine, renderEmphasisText } from "../render/emphasis"
 import { accessibleInk, graphicInk, groupValueInks } from "../render/ink"
 import { tryContentHeadingTreatment } from "../render/heading-treatments/render"
@@ -78,7 +78,7 @@ import { CARD_INSET_PX } from "../render/spacing"
  * `../render/heading-fit`；`fitSvgLine`/`measureTextUnits`/`truncateToUnits` 定义于
  * `../lib/svg-text-layout`；`Icon` 定义于 `../render/icons`；
  * `deltaProps`/`splitKpiValueWidths` 定义于 `../components/kpi`；
- * `iconCardContentHeight`/`renderIconCardBody` 定义于 `../components/icon-cards`；
+ * `iconCardContentHeight`/`renderIconCardBody` 定义于 `../components/icon-card-body`；
  * `fitEmphasisLine`/`renderEmphasisText` 定义于 `../render/emphasis`——全部是已
  * 公开导出的模块，没有任何一个又回头依赖 `templates/tech.tsx` 文件私有的
  * 其它符号（`CONF_LABEL`/`chapterNumberFor` 等 Cover/Chapter 专属依赖均未
@@ -1020,7 +1020,7 @@ export function BentoPanelContent({ ir, slide, index, ctx }: SvgTemplateProps) {
             padFill: colors.accent,
             baseFill: subheadingFill,
             fontWeight: "700",
-            themeId: ctx.themeId,
+            emphasis: ctx.emphasis,
           },
           <text
             data-truncated={subheading.truncated ? "1" : undefined}

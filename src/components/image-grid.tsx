@@ -1,8 +1,6 @@
 import type { Component } from "@/ir"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
-import { resolveComponentForm } from "./form-assignments"
-import { measureNumberedPhotos, renderNumberedPhotos } from "./forms/numbered-photos"
 
 type ImageGridComponent = Extract<Component, { type: "image_grid" }>
 
@@ -184,18 +182,10 @@ function renderDefault(component: ImageGridComponent, box: Parameters<SvgCompone
 }
 
 export const imageGrid: SvgComponent<ImageGridComponent> = {
-  measure(component, w, ctx) {
-    const assignment = resolveComponentForm("image_grid", ctx.themeId)
-    if (assignment?.form === "numbered_photos") {
-      return measureNumberedPhotos(component, w, ctx, assignment.knobs ?? {})
-    }
+  measure(component, w) {
     return measureDefault(component, w)
   },
   render(component, box, ctx) {
-    const assignment = resolveComponentForm("image_grid", ctx.themeId)
-    if (assignment?.form === "numbered_photos") {
-      return renderNumberedPhotos(component, box, ctx, assignment.knobs ?? {})
-    }
     return renderDefault(component, box, ctx)
   },
 }

@@ -7,9 +7,6 @@ import {
 } from "../lib/svg-text-layout"
 import { accessibleInk, accessibleOpacity, graphicInk, resolveSemanticColor, type SemanticColorTokens } from "../render/ink"
 import { Icon } from "../render/icons"
-import { resolveComponentForm } from "./form-assignments"
-import { measureBubbleRow, renderBubbleRow } from "./forms/bubble-row"
-import { measureDonutTrio, renderDonutTrio } from "./forms/donut-trio"
 import type { RenderDef, SvgComponent } from "./types"
 
 type KpiComponent = Extract<Component, { type: "kpi_cards" }>
@@ -285,24 +282,10 @@ function wrappedHeight(component: KpiComponent, w: number): number {
 }
 
 export const kpi: SvgComponent<KpiComponent> = {
-  measure(component, w, ctx) {
-    const assignment = resolveComponentForm("kpi_cards", ctx.themeId)
-    if (assignment?.form === "donut_trio") {
-      return measureDonutTrio(component, w, ctx, assignment.knobs ?? {})
-    }
-    if (assignment?.form === "bubble_row") {
-      return measureBubbleRow(component, w, ctx, assignment.knobs ?? {})
-    }
+  measure(component, w) {
     return wrappedHeight(component, w)
   },
   render(rawComponent, box, ctx) {
-    const assignment = resolveComponentForm("kpi_cards", ctx.themeId)
-    if (assignment?.form === "donut_trio") {
-      return renderDonutTrio(rawComponent, box, ctx, assignment.knobs ?? {})
-    }
-    if (assignment?.form === "bubble_row") {
-      return renderBubbleRow(rawComponent, box, ctx, assignment.knobs ?? {})
-    }
     const fullCount = rawComponent.items.length
     const cols = visibleCardCount(fullCount, box.w)
     const rowH = baseCardH(rawComponent)

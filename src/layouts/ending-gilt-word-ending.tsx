@@ -100,7 +100,7 @@ export function GiltWordEnding({ ir, slide, ctx }: SvgTemplateProps) {
               padFill: colors.accent,
               baseFill: titleInk,
               fontWeight: "400",
-              themeId: ctx.themeId,
+              emphasis: ctx.emphasis,
               measureWeight: { bold: false, fontFamily: fonts.heading },
             },
             <text

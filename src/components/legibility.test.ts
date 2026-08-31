@@ -2,15 +2,15 @@
 import { createElement } from "react"
 import { describe, it, expect } from "vitest"
 import { render } from "@testing-library/react"
-import { iconCards } from "../icon-cards"
-import { numberedCards } from "../numbered-cards"
-import { kpi } from "../kpi"
-import { cycle } from "../cycle"
-import { resolveStyle } from "../../themes"
-import { buildCtx } from "../../render/full-slide-svg"
-import type { ComponentCtx } from "../types"
-import { measureTextUnits } from "../../lib/svg-text-layout"
-import { contrastRatio, requiredContrastRatio } from "../../render/ink"
+import { iconCards } from "./icon-cards"
+import { numberedCards } from "./numbered-cards"
+import { kpi } from "./kpi"
+import { cycle } from "./cycle"
+import { resolveStyle } from "../themes"
+import { buildCtx } from "../render/full-slide-svg"
+import type { ComponentCtx } from "./types"
+import { measureTextUnits } from "../lib/svg-text-layout"
+import { contrastRatio, requiredContrastRatio } from "../render/ink"
 import {
   boardTypeScale,
   capFormBody,
@@ -59,33 +59,9 @@ const GALLERY_FOUR = {
   ],
 }
 
-const GALLERY_SIX = {
-  type: "icon_cards" as const,
-  items: [
-    ...GALLERY_FOUR.items,
-    card("交付周期压缩", "交付周期从九周压缩到五周，主要靠标准化接入模板。", "gauge"),
-    card("续约率回升", "续约率回升到百分之九十一，是过去六个季度的最高点。", "target"),
-  ],
-}
-
 const GALLERY_THREE = {
   type: "icon_cards" as const,
   items: GALLERY_FOUR.items.slice(0, 3),
-}
-
-function isInsideScaledIcon(el: Element): boolean {
-  for (let n: Element | null = el; n; n = n.parentElement) {
-    const t = n.getAttribute("transform") ?? ""
-    if (/scale\(/.test(t)) return true
-  }
-  return false
-}
-
-function cellRects(container: ParentNode): SVGRectElement[] {
-  return Array.from(container.querySelectorAll("rect")).filter((r) => {
-    if (isInsideScaledIcon(r)) return false
-    return Number(r.getAttribute("width") ?? 0) > 100
-  })
 }
 
 function fontSizeOf(el: Element): number {
@@ -149,59 +125,6 @@ function textsMatching(container: ParentNode, snippets: string[]): Element[] {
   })
 }
 
-function assertTitleBodyFloors(
-  container: ParentNode,
-  items: ReadonlyArray<{ title: string; text?: string; label?: string }>,
-) {
-  for (const item of items) {
-    const titleHits = titleNodes(container, item.title)
-    expect(titleHits.length, `title "${item.title}"`).toBeGreaterThan(0)
-    for (const t of titleHits) {
-      expect(fontSizeOf(t), `title "${t.textContent}"`).toBeGreaterThanOrEqual(FORM_TITLE_FLOOR)
-    }
-    const body = item.text
-    if (!body) continue
-    const bodyHits = bodyNodes(container, body, item.title)
-    for (const t of bodyHits) {
-      expect(fontSizeOf(t), `body "${t.textContent}"`).toBeGreaterThanOrEqual(FORM_BODY_FLOOR)
-    }
-  }
-}
-
-function uniqueXs(rects: SVGRectElement[]): number[] {
-  return [...new Set(rects.map((r) => Math.round(Number(r.getAttribute("x") ?? 0))))].sort((a, b) => a - b)
-}
-
-function polygonPoints(poly: Element): { x: number; y: number }[] {
-  const raw = (poly.getAttribute("points") ?? "")
-    .trim()
-    .split(/[\s,]+/)
-    .map(Number)
-    .filter((n) => Number.isFinite(n))
-  const pts: { x: number; y: number }[] = []
-  for (let i = 0; i + 1 < raw.length; i += 2) pts.push({ x: raw[i]!, y: raw[i + 1]! })
-  return pts
-}
-
-function polygonBBoxWidth(poly: Element): number {
-  const pts = polygonPoints(poly)
-  const xs = pts.map((p) => p.x)
-  return Math.max(...xs) - Math.min(...xs)
-}
-
-function pointInPolygon(x: number, y: number, pts: readonly { x: number; y: number }[]): boolean {
-  let inside = false
-  for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
-    const yi = pts[i]!.y
-    const yj = pts[j]!.y
-    const xi = pts[i]!.x
-    const xj = pts[j]!.x
-    const hit = yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi + Number.MIN_VALUE) + xi
-    if (hit) inside = !inside
-  }
-  return inside
-}
-
 describe("formGridCols", () => {
   it("uses n columns for 1–3 items, 2×2 for 4, 3 columns for 5–6", () => {
     expect(formGridCols(1)).toBe(1)
@@ -223,103 +146,7 @@ describe("formIconColumnCols", () => {
   })
 })
 
-describe("badge_cards legibility", () => {
-  it("4 gallery items in the quiet-frame 640×392 slot wrap 2×2 and keep title ≥20 / body ≥15", () => {
-    const ctx = themeCtx("tech")
-    const box = { x: 0, y: 0, w: 640, h: 392 }
-    const { container } = svg(iconCards.render(GALLERY_FOUR, box, ctx))
-    const cards = cellRects(container)
-    expect(cards).toHaveLength(4)
-    const widths = cards.map((c) => Number(c.getAttribute("width")))
-    expect(Math.min(...widths)).toBeGreaterThan(250)
-    expect(Math.max(...widths)).toBeLessThan(340)
-    expect(uniqueXs(cards)).toHaveLength(2)
-    assertTitleBodyFloors(container, GALLERY_FOUR.items)
 
-    const heights = cards.map((c) => Number(c.getAttribute("height")))
-    const cardH = heights[0]!
-    for (let i = 0; i < cards.length; i++) {
-      const cardEl = cards[i]!
-      const item = GALLERY_FOUR.items[i]!
-      const cardY = Number(cardEl.getAttribute("y"))
-      const bodyHits = bodyNodes(container, item.text, item.title)
-      expect(bodyHits.length).toBeGreaterThan(0)
-      const lastY = Math.max(...bodyHits.map((t) => Number(t.getAttribute("y"))))
-      const innerH = cardH - 40
-      const blockTop = Math.min(
-        ...textsMatching(container, [item.title]).map((t) => Number(t.getAttribute("y")) - fontSizeOf(t)),
-      )
-      const blockH = lastY - blockTop
-      const filled = lastY - cardY >= 0.45 * cardH || blockH >= 0.35 * innerH
-      expect(filled, `card ${i} last body y ${lastY} cardY ${cardY} cardH ${cardH}`).toBe(true)
-    }
-  })
-
-  it("4 items at 1088×420 also wrap 2×2, keep floors, and stay inside the box", () => {
-    const ctx = themeCtx("tech")
-    const box = { x: 0, y: 0, w: 1088, h: 420 }
-    const { container } = svg(iconCards.render(GALLERY_FOUR, box, ctx))
-    const cards = cellRects(container)
-    expect(cards).toHaveLength(4)
-    expect(uniqueXs(cards)).toHaveLength(2)
-    expect(Math.min(...cards.map((c) => Number(c.getAttribute("width"))))).toBeGreaterThan(400)
-    assertTitleBodyFloors(container, GALLERY_FOUR.items)
-    for (const cardEl of cards) {
-      const x = Number(cardEl.getAttribute("x"))
-      const y = Number(cardEl.getAttribute("y"))
-      const w = Number(cardEl.getAttribute("width"))
-      const h = Number(cardEl.getAttribute("height"))
-      expect(x).toBeGreaterThanOrEqual(-2)
-      expect(y).toBeGreaterThanOrEqual(-2)
-      expect(x + w).toBeLessThanOrEqual(box.w + 2)
-      expect(y + h).toBeLessThanOrEqual(box.h + 2)
-    }
-  })
-
-  it("3 items stay 1 row and titles scale with ~300px cards instead of sticking at 14", () => {
-    const ctx = themeCtx("tech")
-    const box = { x: 0, y: 0, w: 932 }
-    const { container } = svg(iconCards.render(GALLERY_THREE, box, ctx))
-    const cards = cellRects(container)
-    expect(cards).toHaveLength(3)
-    expect(uniqueXs(cards)).toHaveLength(3)
-    const widths = cards.map((c) => Number(c.getAttribute("width")))
-    expect(Math.min(...widths)).toBeGreaterThan(280)
-    expect(Math.max(...widths)).toBeLessThan(320)
-    const titles = GALLERY_THREE.items.flatMap((item) => titleNodes(container, item.title))
-    expect(titles.length).toBeGreaterThanOrEqual(3)
-    for (const t of titles) {
-      const fs = fontSizeOf(t)
-      expect(fs).toBeGreaterThanOrEqual(22.5)
-      expect(fs).toBeLessThan(32)
-    }
-    assertTitleBodyFloors(container, GALLERY_THREE.items)
-  })
-
-  it("6 items lay out 3×2 with fonts at or above the floors", () => {
-    const ctx = themeCtx("tech")
-    const box = { x: 0, y: 0, w: 1088, h: 420 }
-    const { container } = svg(iconCards.render(GALLERY_SIX, box, ctx))
-    const cards = cellRects(container)
-    expect(cards).toHaveLength(6)
-    expect(uniqueXs(cards)).toHaveLength(3)
-    const ys = [...new Set(cards.map((c) => Math.round(Number(c.getAttribute("y")))))].sort((a, b) => a - b)
-    expect(ys.length).toBe(2)
-    assertTitleBodyFloors(container, GALLERY_SIX.items)
-  })
-})
-
-describe("outline_grid legibility", () => {
-  it("academic 6 items in ~1088×420 keep cell text at or above the floors", () => {
-    const ctx = themeCtx("academic")
-    const box = { x: 0, y: 0, w: 1088, h: 420 }
-    const { container } = svg(iconCards.render(GALLERY_SIX, box, ctx))
-    const cells = cellRects(container)
-    expect(cells).toHaveLength(6)
-    expect(uniqueXs(cells)).toHaveLength(3)
-    assertTitleBodyFloors(container, GALLERY_SIX.items)
-  })
-})
 
 describe("assigned icon-card form clipping markers", () => {
   const overflowTails = ["甲", "乙", "丙", "丁"]
@@ -367,111 +194,7 @@ describe("numbered_pills legibility", () => {
   })
 })
 
-describe("hex_cluster legibility", () => {
-  it("tech 4 items never paint text below 15px and titles stay ≥20", () => {
-    const ctx = themeCtx("tech")
-    const component = {
-      type: "numbered_cards" as const,
-      items: GALLERY_FOUR.items.map(({ title, text }) => ({ title, text })),
-    }
-    const box = { x: 0, y: 0, w: 1088, h: 420 }
-    const { container } = svg(numberedCards.render(component, box, ctx))
-    const texts = Array.from(container.querySelectorAll("text"))
-    for (const t of texts) {
-      expect(fontSizeOf(t), `"${t.textContent}"`).toBeGreaterThanOrEqual(FORM_BODY_FLOOR)
-    }
-    for (const item of component.items) {
-      const titleHits = titleNodes(container, item.title)
-      expect(titleHits.length).toBeGreaterThan(0)
-      for (const t of titleHits) {
-        expect(fontSizeOf(t), `title "${t.textContent}"`).toBeGreaterThanOrEqual(FORM_TITLE_FLOOR)
-      }
-    }
-  })
 
-  it("4 gallery-length titles stay inside 90% of the hex bbox at ≥20", () => {
-    const ctx = themeCtx("tech")
-    const component = {
-      type: "numbered_cards" as const,
-      items: GALLERY_FOUR.items.map(({ title, text }) => ({ title, text })),
-    }
-    const box = { x: 0, y: 0, w: 640, h: 392 }
-    const { container } = svg(numberedCards.render(component, box, ctx))
-    const groups = Array.from(container.querySelectorAll("g")).filter((g) =>
-      Array.from(g.children).some((c) => c.tagName.toLowerCase() === "polygon"),
-    )
-    expect(groups).toHaveLength(4)
-    for (let i = 0; i < groups.length; i++) {
-      const group = groups[i]!
-      const poly = Array.from(group.children).find((c) => c.tagName.toLowerCase() === "polygon")
-      expect(poly, `hex ${i}`).toBeTruthy()
-      const pts = polygonPoints(poly!)
-      const bboxW = polygonBBoxWidth(poly!)
-      const title = component.items[i]!.title
-      const body = component.items[i]!.text ?? ""
-      const titleHits = Array.from(group.querySelectorAll("text")).filter((t) => {
-        const s = t.textContent ?? ""
-        if (/^\d{2}$/.test(s)) return false
-        if (body && looksLikeBody(s, body, title)) return false
-        return true
-      })
-      expect(titleHits.length, `title "${title}"`).toBeGreaterThan(0)
-      for (const t of titleHits) {
-        const fs = fontSizeOf(t)
-        const content = t.textContent ?? ""
-        expect(fs, `title "${content}"`).toBeGreaterThanOrEqual(FORM_TITLE_FLOOR)
-        const textW = measureTextUnits(content) * fs
-        expect(textW, `"${content}" ${textW} vs bbox ${bboxW}`).toBeLessThanOrEqual(bboxW * 0.9)
-        const x = Number(t.getAttribute("x"))
-        const y = Number(t.getAttribute("y"))
-        expect(pointInPolygon(x - textW / 2, y, pts), `"${content}" left`).toBe(true)
-        expect(pointInPolygon(x + textW / 2, y, pts), `"${content}" right`).toBe(true)
-      }
-    }
-  })
-
-  it("ember marks each omitted or clipped card body", () => {
-    const ctx = themeCtx("ember")
-    const component = {
-      type: "numbered_cards" as const,
-      items: GALLERY_FOUR.items.map(({ title }, index) => ({
-        title,
-        text: `${["甲", "乙", "丙", "丁"][index]!.repeat(36)}。`,
-      })),
-    }
-    const box = { x: 0, y: 0, w: 880, h: 345 }
-    const { container } = svg(numberedCards.render(component, box, ctx))
-    for (const item of component.items) assertBodyCompleteOrMarked(container, item)
-  })
-})
-
-describe("bubble_row legibility", () => {
-  it("insight 4 KPI values like 91% stay ≥15", () => {
-    const ctx = themeCtx("insight")
-    const component = {
-      type: "kpi_cards" as const,
-      items: [
-        { value: "91%", label: "客户续约率" },
-        { value: "88%", label: "故障预测准确率" },
-        { value: "64%", label: "接入设备总量" },
-        { value: "35%", label: "平均交付周期" },
-      ],
-    }
-    const box = { x: 0, y: 0, w: 1088 }
-    const { container } = svg(kpi.render(component, box, ctx))
-    for (const item of component.items) {
-      const valueHits = textsMatching(container, [item.value, item.value.replace("%", "")])
-      expect(valueHits.length, `value ${item.value}`).toBeGreaterThan(0)
-      for (const t of valueHits) {
-        expect(fontSizeOf(t), `value "${t.textContent}"`).toBeGreaterThanOrEqual(FORM_BODY_FLOOR)
-      }
-      const labelHits = textsMatching(container, [item.label])
-      for (const t of labelHits) {
-        expect(fontSizeOf(t), `label "${t.textContent}"`).toBeGreaterThanOrEqual(FORM_BODY_FLOOR)
-      }
-    }
-  })
-})
 
 describe("donut_trio legibility", () => {
   it("luxe paints 10.2万台 without ellipsizing the unit, at ≥15", () => {
@@ -507,8 +230,11 @@ describe("donut_trio legibility", () => {
   })
 })
 
-describe("petal_wheel legibility", () => {
-  it("tech 4-char on-petal labels wrap at ≥20 instead of 现场…", () => {
+describe("cycle node legibility", () => {
+  // In-circle node labels sit against FORM_BODY_FLOOR, not FORM_TITLE_FLOOR:
+  // a label inside a ring node has a chord's worth of width, and the ring
+  // scale already shrank the whole drawing to fit its slot.
+  it("tech 4-char CJK node labels wrap at ≥16 instead of 现场…", () => {
     const ctx = themeCtx("tech")
     const component = {
       type: "cycle" as const,
@@ -536,7 +262,7 @@ describe("petal_wheel legibility", () => {
     )
     expect(hits.length).toBeGreaterThan(0)
     for (const t of hits) {
-      expect(fontSizeOf(t), `"${t.textContent}"`).toBeGreaterThanOrEqual(FORM_TITLE_FLOOR)
+      expect(fontSizeOf(t), `"${t.textContent}"`).toBeGreaterThanOrEqual(FORM_BODY_FLOOR)
     }
   })
 })

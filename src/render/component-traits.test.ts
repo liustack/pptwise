@@ -34,6 +34,7 @@ import { traits as heatmapTraits } from "@/ir/components/heatmap"
 import { traits as sankeyTraits } from "@/ir/components/sankey"
 import { traits as dataTableTraits } from "@/ir/components/data-table"
 import { traits as deviceMockupTraits } from "@/ir/components/device-mockup"
+import { traits as progressDonutsTraits } from "@/ir/components/progress-donuts"
 import {
   EVIDENCE_TYPES,
   FULL_BODY_TYPES,
@@ -93,6 +94,7 @@ const DOMAIN_FILE_TRAITS: readonly (readonly [string, { readonly evidence: boole
   ["sankey", sankeyTraits],
   ["data_table", dataTableTraits],
   ["device_mockup", deviceMockupTraits],
+  ["progress_donuts", progressDonutsTraits],
 ]
 
 /**
@@ -109,7 +111,7 @@ const DOMAIN_FILE_TRAITS: readonly (readonly [string, { readonly evidence: boole
  */
 
 describe("STRETCHABLE_TYPES equivalence (was layout.ts:137, plus the people_cards wave's addition)", () => {
-  it("matches the pre-refactor members plus people_cards (people_cards wave, `.issues/2026-08-05-component-waves/plan-people-cards.md` — first new stretchable:true declaration since the W2 task 5 refactor)", () => {
+  it("matches the pre-refactor members plus people_cards, chart, and progress_donuts", () => {
     // layout.ts:137 (pre-refactor):
     // `new Set<Component["type"]>(["kpi_cards", "icon_cards", "row_cards"])`
     const preRefactor = ["kpi_cards", "icon_cards", "row_cards"]
@@ -119,7 +121,9 @@ describe("STRETCHABLE_TYPES equivalence (was layout.ts:137, plus the people_card
     // leftover height the same way, so it declares stretchable: true too.
     // cartesian-axis wave: chart plots stretch into leftover column height
     // so the frame (not empty page margin) takes the extra room.
-    const current = [...preRefactor, "people_cards", "chart"]
+    // progress_donuts (component-form collapse): a dial grid is the same
+    // card-family shape as kpi_cards, which it split off from.
+    const current = [...preRefactor, "people_cards", "chart", "progress_donuts"]
     expect(new Set(STRETCHABLE_TYPES)).toEqual(new Set(current))
     expect(STRETCHABLE_TYPES.size).toBe(current.length)
   })
@@ -179,7 +183,7 @@ describe("SCALABLE_TYPES duplication verdict (content-bento-panel.tsx:105 vs con
 })
 
 describe("PASSTHROUGH_SHELL_TYPES equivalence (was content-bento-panel.tsx:134-143, plus R1's data_table addition)", () => {
-  it("matches the pre-refactor members plus data_table and cycle (R1 evidence wave, Task T3 — first new passthroughShell:true declaration since the W2 task 5 refactor; cycle wave adds a second)", () => {
+  it("matches the pre-refactor members plus data_table, cycle, and hub_spoke", () => {
     // content-bento-panel.tsx:134-143 (pre-refactor):
     // new Set(["steps", "flowchart", "architecture", "timeline", "paragraph", "blockquote"])
     const preRefactor = ["steps", "flowchart", "architecture", "timeline", "paragraph", "blockquote"]
@@ -195,7 +199,9 @@ describe("PASSTHROUGH_SHELL_TYPES equivalence (was content-bento-panel.tsx:134-1
     // flowchart/architecture — a bento outline shell underneath its ring
     // would be a redundant second shell, so it declares passthroughShell:
     // true too.
-    const current = [...preRefactor, "data_table", "cycle"]
+    // hub_spoke (component-form collapse): a hub circle plus one capsule per
+    // element, same self-framed-node family — third and last addition.
+    const current = [...preRefactor, "data_table", "cycle", "hub_spoke"]
     expect(new Set(PASSTHROUGH_SHELL_TYPES)).toEqual(new Set(current))
     expect(PASSTHROUGH_SHELL_TYPES.size).toBe(current.length)
   })
@@ -236,7 +242,18 @@ describe("EVIDENCE_TYPES equivalence (was assertion-evidence.tsx:8-13) — order
     // plan-device-mockup.md`): "device_mockup" inserted right after
     // "data_table", ranked above "image" — see EVIDENCE_TYPES' own doc
     // comment (component-traits.ts) for the rationale.
-    expect(EVIDENCE_TYPES).toEqual(["chart", "data_table", "device_mockup", "image", "comparison", "kpi_cards"])
+    // component-form collapse: "progress_donuts" appended last, ranked just
+    // below the "kpi_cards" it split off from — see EVIDENCE_TYPES' own doc
+    // comment (component-traits.ts) for the rationale.
+    expect(EVIDENCE_TYPES).toEqual([
+      "chart",
+      "data_table",
+      "device_mockup",
+      "image",
+      "comparison",
+      "kpi_cards",
+      "progress_donuts",
+    ])
   })
 
   it("is a tuple (ordered array), not a Set — priority dispatch depends on iteration order", () => {

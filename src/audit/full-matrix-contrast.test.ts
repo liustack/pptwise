@@ -1482,6 +1482,17 @@ const MUTED_SURFACE_CLASS: Record<string, MutedSurfaceClass> = {
   // mid-gray or a `colors.muted`. The default pill's hairline is a `stroke`
   // (`cardStroke`/`border`/a surface→text blend), never a `<text>` fill.
   tag_row: "no-muted-fill",
+  // hub-spoke.tsx's only `colors.muted` text is each element's one-line
+  // description, drawn inside the element's own `colors.surface`-filled
+  // capsule through `accessibleInk(colors.muted, colors.surface, …)` — the
+  // same flat-surface shape as people_cards above. Its other `colors.muted`
+  // reference is the spoke line's stroke fallback (`colors.border ??
+  // colors.muted`), a stroke and not a text fill.
+  hub_spoke: "flat-surface",
+  // progress-donuts.tsx paints `colors.muted` as the ring *track* stroke
+  // (never a text fill); its source line is `accessibleInk(colors.muted,
+  // pageBg, …)` on the ambient page background, same shape as timeline's.
+  progress_donuts: "page-bg",
 }
 
 describe("colors.muted component-type coverage (task-2 fix round, backlog 5a completeness sweep)", () => {

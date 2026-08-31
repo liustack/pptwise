@@ -111,6 +111,9 @@ export const CONSULTING_THEME = {
   id: "consulting",
   label: "Business Consulting",
   style: CONSULTING_TOKENS,
+  // A marker-pen swipe behind the marked run — the board-room habit of
+  // highlighting the one phrase the room should leave with.
+  emphasis: "pad",
   menu: {
     cover: { face: "gauge-verdict" },
     chapter: { face: "gauge-section" },

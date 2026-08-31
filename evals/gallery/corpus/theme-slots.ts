@@ -3,10 +3,6 @@
  * seven content pages draws, plus the explicit coverage list the tests
  * refuse to let rot.
  *
- * Forms are not IR. Putting `icon_cards` on `tech` draws badge_cards
- * because `resolveComponentForm` maps theme × type. Slots never set a
- * form field.
- *
  * Zero `Math.random`. The table is the whole contract.
  */
 
@@ -30,6 +26,7 @@ export const THEME_TABLE_REQUIRED_SURFACES = [
   "verdict_banner",
   "tag_row",
   "kpi_cards",
+  "progress_donuts",
   "chart",
   "data_table",
   "waterfall",
@@ -43,6 +40,7 @@ export const THEME_TABLE_REQUIRED_SURFACES = [
   "timeline",
   "roadmap",
   "cycle",
+  "hub_spoke",
   "rings",
   "matrix",
   "flowchart",
@@ -69,28 +67,6 @@ export const THEME_TABLE_REQUIRED_SURFACES = [
   "chart:dumbbell",
   "chart:scatter",
   "chart:gauge",
-  // 20 forms
-  "form:icon_columns",
-  "form:badge_cards",
-  "form:outline_grid",
-  "form:cycle_loop",
-  "form:hub_spoke",
-  "form:petal_wheel",
-  "form:numbered_pills",
-  "form:hex_cluster",
-  "form:donut_trio",
-  "form:bubble_row",
-  "form:pill_panels",
-  "form:arrow_steps",
-  "form:vert_timeline",
-  "form:numbered_photos",
-  "form:tint_panel",
-  "form:hanging_bare",
-  "form:lead_word",
-  "form:pad",
-  "form:underline",
-  "form:typed_nodes",
-  "form:layer_stack",
 ] as const
 
 export type ThemeChartType =
@@ -134,13 +110,12 @@ function chart(chart_type: ThemeChartType, direction?: "horizontal"): ThemeConte
 
 /**
  * Per-theme content-page order (seven unique lead types). Chart subtype
- * is noted on chart slots. Forms appear because the listed (theme, type)
- * pair owns that form in `form-assignments.ts`.
+ * is noted on chart slots.
  */
 export const THEME_CONTENT_SLOTS: Record<string, readonly ThemeContentSlot[]> = {
   academic: [slot("icon_cards"), slot("paragraph"), chart("funnel"), slot("blockquote"), slot("callout"), slot("code"), slot("citation")],
   arena: [chart("scatter"), slot("verdict_banner"), slot("tag_row"), slot("data_table"), slot("waterfall"), slot("heatmap"), slot("gantt")],
-  campaign: [chart("dumbbell"), slot("architecture"), slot("insight_panel"), slot("swot"), slot("pest"), slot("five_forces"), slot("bmc")],
+  campaign: [chart("dumbbell"), slot("hub_spoke"), slot("insight_panel"), slot("swot"), slot("pest"), slot("five_forces"), slot("bmc")],
   classroom: [chart("gauge"), slot("image_grid"), slot("image"), slot("image_compare"), slot("device_mockup"), slot("data_table"), slot("bullets")],
   consulting: [chart("bar"), slot("bullets"), slot("kpi_cards"), slot("people_cards"), slot("heatmap"), slot("citation"), slot("architecture")],
   crayon: [slot("numbered_cards"), slot("bullets"), slot("swot"), slot("gantt"), slot("callout"), slot("image_grid"), slot("comparison")],
@@ -151,7 +126,7 @@ export const THEME_CONTENT_SLOTS: Record<string, readonly ThemeContentSlot[]> = 
   insight: [slot("cycle"), slot("kpi_cards"), slot("bullets"), slot("blockquote"), slot("sankey"), slot("verdict_banner"), slot("architecture")],
   journal: [chart("line"), slot("numbered_cards"), slot("comparison"), slot("blockquote"), slot("roadmap"), slot("callout"), slot("people_cards")],
   lecture: [chart("area"), slot("timeline"), slot("bmc"), slot("bullets"), slot("image_grid"), slot("matrix"), slot("citation")],
-  luxe: [slot("kpi_cards"), slot("swot"), slot("gantt"), slot("blockquote"), slot("device_mockup"), slot("flowchart"), slot("tag_row")],
+  luxe: [slot("progress_donuts"), slot("swot"), slot("gantt"), slot("blockquote"), slot("device_mockup"), slot("flowchart"), slot("tag_row")],
   memo: [chart("donut"), slot("paragraph"), slot("icon_cards"), slot("pest"), slot("blockquote"), slot("rings"), slot("waterfall")],
   museum: [slot("cycle"), slot("kpi_cards"), slot("bullets"), slot("heatmap"), slot("people_cards"), slot("callout"), slot("architecture")],
   playbill: [slot("image_grid"), slot("data_table"), slot("callout"), slot("steps"), slot("five_forces"), slot("image"), slot("row_cards")],

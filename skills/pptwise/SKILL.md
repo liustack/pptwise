@@ -136,13 +136,13 @@ Use `--draft` or `--allow-dropped-content` only when the user explicitly request
 | Reorderable inventory | `list` | `row_cards`, `icon_cards`, `tag_row`, `people_cards` |
 | Side-by-side differences | `comparison` | `comparison`, `image_compare`, `matrix`, `swot` |
 | Directed steps or time | `process` | `steps`, `flowchart`, `timeline`, `roadmap`, `gantt`, `cycle` |
-| Numeric structure | `data` | `chart`, `data_table`, `kpi_cards`, `heatmap`, `sankey` |
+| Numeric structure | `data` | `chart`, `data_table`, `kpi_cards`, `progress_donuts`, `heatmap`, `sankey` |
 | Image as the message | `photo` | `image`, `image_grid`, `device_mockup` |
 | Author's own proposition | `statement` | `verdict_banner`, `callout`, or no component |
 | Another speaker's words | `quote` | `blockquote` |
 | One number as the message | `fact` | one-item `kpi_cards` or no component |
 | Claim plus one exhibit | `evidence` | `image`, `chart`, `data_table`, `code`, `device_mockup` |
-| Containment or levels | `hierarchy` | `architecture`, `bmc`, `five_forces`, `rings` |
+| Containment or levels | `hierarchy` | `architecture`, `bmc`, `five_forces`, `rings`, `hub_spoke` |
 
 ## Rules
 

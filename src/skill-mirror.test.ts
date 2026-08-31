@@ -181,7 +181,7 @@ describe("pptwise SKILL model and bilingual mirrors", () => {
     expect(zh).toEqual(en)
   })
 
-  it("mirrors the complete 37-component ownership table", () => {
+  it("mirrors the complete component ownership table", () => {
     const en = tableFirstColumn(read(REF("components.md")), "| component |")
     const zh = tableFirstColumn(read(REF("components.zh-CN.md")), "| component |")
     expect(en).toEqual([...COMPONENT_TYPES])

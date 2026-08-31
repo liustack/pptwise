@@ -21,9 +21,8 @@
 import { describe, expect, it } from "vitest"
 import { listThemes } from "@/api"
 import { COMPONENT_TYPES, type Component } from "@/ir"
-import { CHART_VARIANTS, COMPONENT_BUILDERS, FORM_VARIANTS } from "../evals/gallery/corpus/components"
+import { CHART_VARIANTS, COMPONENT_BUILDERS } from "../evals/gallery/corpus/components"
 import { THEME_TABLE_REQUIRED_SURFACES } from "../evals/gallery/corpus/theme-slots"
-import { COMPONENT_FORMS, resolveComponentForm } from "@/components/form-assignments"
 import { LAYOUT_REGISTRY } from "@/layouts/registry"
 import { BASELINE_THEME, corpusAssets, type CorpusAssets } from "../evals/gallery/corpus/decks"
 import { LANGUAGE_IDS, LEXICONS, type LanguageId } from "../evals/gallery/corpus/lexicon"
@@ -62,14 +61,6 @@ describe("gallery coverage", () => {
     const declared = new Set(COMPONENT_TYPES)
     const stale = Object.keys(COMPONENT_BUILDERS).filter((t) => !declared.has(t))
     expect(stale).toEqual([])
-  })
-
-  it("assigns each form-variant page a theme that actually owns that form", () => {
-    for (const variant of FORM_VARIANTS) {
-      const component = variant.build(LEXICONS.zh)
-      const assignment = resolveComponentForm(component.type, variant.theme)
-      expect(assignment, `${variant.id} on ${variant.theme}`).toBeTruthy()
-    }
   })
 
   it("covers every chart_type, which one `chart` builder alone would not", () => {
@@ -164,29 +155,18 @@ function themeTableSurfaces(
 ): string[] {
   const surfaces = new Set<string>()
   for (const job of jobs) {
-    const slide = job.ir.slides[job.slideIndex]!
-    if (JSON.stringify(slide).includes("**")) {
-      const emphasisForm = resolveComponentForm("emphasis", job.theme)?.form
-      if (emphasisForm) surfaces.add(`form:${emphasisForm}`)
-    }
     if (job.slideType !== "content") continue
     const c = leadComponent(job)
     if (!c) continue
     surfaces.add(c.type)
     if (c.type === "chart") surfaces.add(chartSurfaceId(c))
-    const form = resolveComponentForm(c.type, job.theme)?.form
-    if (form) surfaces.add(`form:${form}`)
   }
   return [...surfaces].sort()
 }
 
 describe("gallery deck band corpus", () => {
-  it("keeps the coverage list aligned with IR types, chart surfaces, and forms", () => {
-    const expected = [
-      ...COMPONENT_TYPES,
-      ...THEME_CHART_SURFACES,
-      ...COMPONENT_FORMS.map((f) => `form:${f}`),
-    ].sort()
+  it("keeps the coverage list aligned with IR types and chart surfaces", () => {
+    const expected = [...COMPONENT_TYPES, ...THEME_CHART_SURFACES].sort()
     const listed = [...THEME_TABLE_REQUIRED_SURFACES].sort()
     expect(listed).toEqual(expected)
     expect(new Set(THEME_TABLE_REQUIRED_SURFACES).size).toBe(THEME_TABLE_REQUIRED_SURFACES.length)
@@ -241,15 +221,6 @@ describe("gallery deck band corpus", () => {
     )
     for (const surface of THEME_CHART_SURFACES) {
       expect(charts.has(surface), surface).toBe(true)
-    }
-
-    const forms = new Set(
-      themeTableSurfaces(jobs)
-        .filter((surface) => surface.startsWith("form:"))
-        .map((surface) => surface.slice("form:".length)),
-    )
-    for (const form of COMPONENT_FORMS) {
-      expect(forms.has(form), form).toBe(true)
     }
   })
 

@@ -264,7 +264,7 @@ export const bullets: SvgComponent<BulletsComponent> = {
                 {
                   accent: ctx.colors.accent,
                   baseFill: ctx.colors.text,
-                  themeId: ctx.themeId,
+                  emphasis: ctx.emphasis,
                 },
                 <text
                   key={li}

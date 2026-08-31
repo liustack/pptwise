@@ -402,7 +402,7 @@ function verticalKickerFill(knobs: HeadingKnobs, colors: ComponentCtx["colors"])
 function renderGhostIndex(args: RenderArgs): { chrome: ReactNode; contentRect: ContentRect } {
   const { colors, fonts } = args.ctx
   const hasSub = args.subheading.length > 0
-  const pad = resolveEmphasisForm(args.ctx.themeId) === "pad"
+  const pad = resolveEmphasisForm(args.ctx.emphasis) === "pad"
   const heading = pad ? stripEmphasis(args.heading) : args.heading
   const titleX = leftTitleX(PAGE_LEFT, 128, 42, heading, fonts.heading, args.reserve)
   const title = fitTitle(heading, 42, titleMaxWidthFor(titleX), fonts.heading)
@@ -459,7 +459,7 @@ function renderGhostIndex(args: RenderArgs): { chrome: ReactNode; contentRect: C
               padFill: colors.accent,
               baseFill: titleFill,
               fontWeight: "700",
-              themeId: args.ctx.themeId,
+              emphasis: args.ctx.emphasis,
               measureWeight: { bold: true, fontFamily: fonts.heading },
             },
             <text
@@ -483,7 +483,7 @@ function renderGhostIndex(args: RenderArgs): { chrome: ReactNode; contentRect: C
                   padFill: colors.accent,
                   baseFill: ink(colors.muted, args.ctx, 18),
                   fontWeight: "700",
-                  themeId: args.ctx.themeId,
+                  emphasis: args.ctx.emphasis,
                   measureWeight: { fontFamily: fonts.body },
                 },
                 <text
@@ -785,7 +785,7 @@ function renderVerticalKicker(args: RenderArgs): HeadingTreatmentPaint {
   const kicker = stackable
     ? resolveKickerLayout(source, args.knobs, fonts.heading, args.reserve, false)
     : null
-  const form = resolveEmphasisForm(args.ctx.themeId)
+  const form = resolveEmphasisForm(args.ctx.emphasis)
   const headingForFit = form === "tint" ? args.heading : stripEmphasis(args.heading)
   let titleX = leftTitleX(defaultTitleX, 126, 42, headingForFit, fonts.heading, args.reserve)
   if (kicker?.side === "right") {
@@ -834,7 +834,7 @@ function renderVerticalKicker(args: RenderArgs): HeadingTreatmentPaint {
                   padFill: colors.accent,
                   baseFill: titleFill,
                   fontWeight: "700",
-                  themeId: args.ctx.themeId,
+                  emphasis: args.ctx.emphasis,
                   measureWeight: { bold: true, fontFamily: fonts.heading },
                 },
                 <text

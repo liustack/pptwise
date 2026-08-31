@@ -278,6 +278,22 @@ const COMPONENT_BY_TYPE: Record<Component["type"], Component> = {
       { label: "Review" },
     ],
   },
+  progress_donuts: {
+    type: "progress_donuts",
+    items: [
+      { value: "86%", label: "coverage" },
+      { value: "72%", label: "closure" },
+    ],
+  },
+  hub_spoke: {
+    type: "hub_spoke",
+    center: "Platform",
+    items: [
+      { label: "Billing" },
+      { label: "Identity" },
+      { label: "Search" },
+    ],
+  },
   people_cards: {
     type: "people_cards",
     people: [
@@ -335,7 +351,12 @@ function noAssetIr(): PptxIR {
       // how much fits on a page).
       contentSlide("RowCards", [COMPONENT_BY_TYPE.row_cards]),
       contentSlide("Steps", [COMPONENT_BY_TYPE.steps]),
-      contentSlide("Rings + Numbered", [COMPONENT_BY_TYPE.rings, COMPONENT_BY_TYPE.numbered_cards]),
+      // numbered_cards gets its own page for the same reason as RowCards and
+      // Steps above: its pill stack plus a rings diagram overflow one page.
+      contentSlide("Rings", [COMPONENT_BY_TYPE.rings]),
+      contentSlide("Numbered", [COMPONENT_BY_TYPE.numbered_cards]),
+      contentSlide("Hub spoke", [COMPONENT_BY_TYPE.hub_spoke]),
+      contentSlide("Progress donuts", [COMPONENT_BY_TYPE.progress_donuts]),
       contentSlide("Roadmap + Matrix", [COMPONENT_BY_TYPE.roadmap, COMPONENT_BY_TYPE.matrix]),
       contentSlide("Insight + Verdict", [COMPONENT_BY_TYPE.insight_panel, COMPONENT_BY_TYPE.verdict_banner]),
       contentSlide("Blockquote + Paragraph", [COMPONENT_BY_TYPE.blockquote, COMPONENT_BY_TYPE.paragraph]),
