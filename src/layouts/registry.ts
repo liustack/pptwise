@@ -287,6 +287,14 @@ export interface LayoutBooleanParam {
 
 export type LayoutParamDeclaration = LayoutNumberParam | LayoutStringParam | LayoutBooleanParam
 
+/** A page-coordinate rectangle a face paints its own furniture into. */
+export interface DecorKeepOutRect {
+  readonly x: number
+  readonly y: number
+  readonly w: number
+  readonly h: number
+}
+
 export interface LayoutDefinition {
   id: string
   /**
@@ -321,6 +329,23 @@ export interface LayoutDefinition {
    * on other faces, or swap which motif paints; it cannot force one here.
    */
   suppressMotif?: true
+  /**
+   * Structural fact of the face: it paints its own furniture inside these
+   * page-coordinate rectangles, so a page-level motif must keep its marks
+   * away from them.
+   *
+   * `suppressMotif` is the all-or-nothing neighbour of this field — it turns
+   * the theme's whole motif off for a face that paints its own full identity.
+   * A face that only *occupies a corner* needs the narrower statement: the
+   * motif is still welcome, just not there. `rail-numbered` is the first
+   * case (gallery visual review fix/gallery-verdict-round, item 5): its left
+   * progress rail runs 4px from consulting's locator corner, and two
+   * structural marks that close together read as one botched line.
+   *
+   * A face states where it paints. How much clearance a mark needs is the
+   * mark's own business — see `motifs/keep-out.ts`.
+   */
+  decorKeepOut?: readonly DecorKeepOutRect[]
   /**
    * This layout opens by painting its own full-bleed colour field over the
    * whole canvas, so the theme background underneath it is never seen —

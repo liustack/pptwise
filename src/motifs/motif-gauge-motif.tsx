@@ -1,5 +1,6 @@
 import { accessibleInk } from "../render/ink"
 import { DecorPiece } from "./decor-piece"
+import { clearsFaceFurniture } from "./keep-out"
 import type { DecorProps } from "./types"
 
 /**
@@ -9,7 +10,17 @@ import type { DecorProps } from "./types"
  * 颜色只读 token。浅底保留 primary，深底通过 `accessibleInk` 切到白色。
  * `role="structure"` 让内容页保持定稿的 1.5px 实线，不被普通装饰退底。
  */
-export function GaugeMotif({ ctx }: DecorProps) {
+
+/** The mark's own bounding box: origin (56,56), two 72px arms. */
+const MARK = { x: 56, y: 56, w: 72, h: 72 } as const
+
+export function GaugeMotif({ ctx, page }: DecorProps) {
+  // 落笔条件：本页的脸自己在左上角画了结构件时不落笔。两条结构线挨在一起
+  // 读成一条画歪的线，不是两个记号——`rail-numbered` 的进度轨距本角标的
+  // 竖臂只有 4px（gallery 视觉验收 fix/gallery-verdict-round 第 5 条）。
+  // 页面已有定位结构，角标本就是多余的那一个，退让即可，不改画法。
+  if (!clearsFaceFurniture(page, MARK)) return null
+
   const bg = ctx.defaultBg ?? ctx.colors.bg
   const stroke = accessibleInk(ctx.colors.primary, bg, 14)
 
@@ -24,8 +35,8 @@ export function GaugeMotif({ ctx }: DecorProps) {
           margin keeps designing-themes.md's "decoration stays out of the
           heading area" true for both families: the vertical arm sits left of
           every content left edge, the horizontal arm above every heading. */}
-      <line x1={56} y1={56} x2={128} y2={56} stroke={stroke} strokeWidth={1.5} />
-      <line x1={56} y1={56} x2={56} y2={128} stroke={stroke} strokeWidth={1.5} />
+      <line x1={MARK.x} y1={MARK.y} x2={MARK.x + MARK.w} y2={MARK.y} stroke={stroke} strokeWidth={1.5} />
+      <line x1={MARK.x} y1={MARK.y} x2={MARK.x} y2={MARK.y + MARK.h} stroke={stroke} strokeWidth={1.5} />
     </DecorPiece>
   )
 }
