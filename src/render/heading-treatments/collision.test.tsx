@@ -11,6 +11,7 @@ import { parseSvgRoot, renderSvgMarkup } from "../serialize"
 import { resolveStyle } from "../../themes"
 import { corpusAssets, themeDeck } from "../../../evals/gallery/corpus/decks"
 import { LEXICONS } from "../../../evals/gallery/corpus/lexicon"
+import { nativeLexiconFor } from "../../../evals/gallery/corpus/native"
 import { assignedThemeIds } from "./assignments"
 import { tryContentHeadingTreatment } from "./render"
 
@@ -269,7 +270,7 @@ describe("tag_box chapter chip vs rail-numbered badge", () => {
 describe("gallery theme-table rail-numbered pages", () => {
   it("insight zh slide 6 is not a rail-numbered false positive after banner-heading retired", async () => {
     const assets = await corpusAssets(LEXICONS.zh)
-    const ir = themeDeck("insight", LEXICONS.zh, assets)
+    const ir = themeDeck("insight", nativeLexiconFor("insight"), assets)
     expect(ir.slides[5]?.type).toBe("content")
     const svg = renderSlideSvg(ir, 5)
     const root = parseSvgRoot(svg)
@@ -284,7 +285,8 @@ describe("gallery theme-table rail-numbered pages", () => {
     const dirty: string[] = []
     let scanned = 0
     for (const themeId of listThemes().map((t) => t.id)) {
-      const ir = themeDeck(themeId, LEXICONS.zh, assets)
+      // The gallery feeds each theme its native lexicon; test the same decks.
+      const ir = themeDeck(themeId, nativeLexiconFor(themeId), assets)
       for (let i = 0; i < ir.slides.length; i++) {
         if (ir.slides[i]!.type !== "content") continue
         const svg = renderSlideSvg(ir, i)

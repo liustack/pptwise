@@ -31,6 +31,7 @@ import {
   type CorpusAssets,
 } from "./corpus/decks"
 import { LANGUAGE_IDS, LEXICONS, type LanguageId } from "./corpus/lexicon"
+import { nativeLexiconFor } from "./corpus/native"
 
 export const BAND_IDS = ["deck", "face", "component"] as const
 export type BandId = (typeof BAND_IDS)[number]
@@ -200,7 +201,7 @@ export function buildMatrix(
 
     // ── deck band: the ten pages a real deck of this theme contains ──────
     if (wantsBand("deck")) {
-      const ir = themeDeck(themeId, lex, assets[themeLanguage])
+      const ir = themeDeck(themeId, nativeLexiconFor(themeId), assets[themeLanguage])
       ir.slides.forEach((slide, i) => {
         push({
           id: `${safe(themeId)}--deck--p${String(i + 1).padStart(2, "0")}`,
@@ -232,7 +233,7 @@ export function buildMatrix(
         if (entry !== undefined) entries.push({ slot, layoutId: entry.face, kind: slot as PageKind })
       }
       for (const { slot, layoutId, kind } of entries) {
-        const ir = layoutPage(layoutId, lex, assets[themeLanguage], themeId, kind)
+        const ir = layoutPage(layoutId, nativeLexiconFor(themeId), assets[themeLanguage], themeId, kind)
         push({
           id: `${safe(themeId)}--face--${slot}--${safe(layoutId)}`,
           section: themeId,
@@ -260,7 +261,7 @@ export function buildMatrix(
         themeId === BASELINE_THEME ? [...new Set<LanguageId>([themeLanguage, ...languages])] : [themeLanguage]
       for (const entry of componentEntries(themeId)) {
         for (const language of bandLanguages) {
-          const entryLex = LEXICONS[language]
+          const entryLex = language === themeLanguage ? nativeLexiconFor(themeId) : LEXICONS[language]
           const ir = componentPage(entry.id, entry.build, entryLex, assets[language], themeId, {
             solo: entry.solo,
           })

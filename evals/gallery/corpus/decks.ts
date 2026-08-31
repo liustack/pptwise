@@ -42,8 +42,9 @@ const THEME_EMPHASIS_PHRASES: Record<string, Record<LanguageId, EmphasisPhrases>
     en: { cover: "Business Review", heading: "new business", bullet: "91%" },
     mixed: { cover: "Kubernetes 托管", heading: "90 秒", bullet: "12 分钟" },
   },
+  // lecture's deck reads its native lexicon, so its phrases come from there.
   lecture: {
-    zh: { cover: "业务评审", heading: "新签", bullet: "九成一" },
+    zh: { cover: "手机摄影课", heading: "二十一位", bullet: "三个词" },
     en: { cover: "Business Review", heading: "new business", bullet: "91%" },
     mixed: { cover: "Kubernetes 托管", heading: "90 秒", bullet: "12 分钟" },
   },

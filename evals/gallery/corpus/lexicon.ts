@@ -366,7 +366,7 @@ const zh: Lexicon = {
   },
 
   sources: [
-    { label: "云觅科技 2026 年第二季度经营数据", ref: "内部口径，7 月 5 日封账" },
+    { label: "云觅科技二季度经营数据", ref: "内部口径，7 月 5 日封账" },
     { label: "中国协作软件订阅市场规模测算", ref: "行业研究院，2026" },
     { label: "客户满意度年度调研", url: "https://example.com/survey-2026" },
   ],
