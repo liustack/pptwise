@@ -43,9 +43,37 @@ export function valueLabelBox(
 
 const AIR = 2
 const INDENT_EM = 0.8
+/**
+ * Baseline-to-baseline distance two stacked value labels need before they
+ * read as two lines instead of one blob. The ink box is only 0.9em tall, so
+ * the old 0.95em target left under 1px of air: two line-chart endpoints
+ * converging on 90 and 87 came out with their digits touching (author
+ * screenshot, 2026-08). A normal text line is 1.2em, and that is what a
+ * pair of numbers needs here too.
+ */
+const LINE_EM = 1.2
 
 function minBaselineGap(a: ValueLabelSpec, b: ValueLabelSpec): number {
-  return Math.max(a.fontSize, b.fontSize) * 0.95 + AIR
+  return Math.max(a.fontSize, b.fontSize) * LINE_EM + AIR
+}
+
+const GAP_EPSILON = 1e-6
+
+function xExtentsOverlap(a: ValueLabelSpec, b: ValueLabelSpec): boolean {
+  const boxA = valueLabelBox(a)
+  const boxB = valueLabelBox(b)
+  return boxA.x < boxB.x + boxB.w && boxA.x + boxA.w > boxB.x
+}
+
+/**
+ * Two labels collide when they share horizontal room and sit closer than one
+ * line apart — not merely when their ink boxes overlap. Ink overlap alone
+ * misses the band between "boxes just clear" and "a readable line apart",
+ * which is exactly where converging endpoints land.
+ */
+function labelsCollide(a: ValueLabelSpec, b: ValueLabelSpec): boolean {
+  if (!xExtentsOverlap(a, b)) return false
+  return Math.abs(a.y - b.y) < minBaselineGap(a, b) - GAP_EPSILON
 }
 
 export function resolveValueLabelCollisions(labels: readonly ValueLabelSpec[]): PlacedValueLabel[] {
@@ -60,7 +88,7 @@ export function resolveValueLabelCollisions(labels: readonly ValueLabelSpec[]): 
         const a = placed[i]!
         const b = placed[j]!
         if (a.hidden || b.hidden) continue
-        if (!boxesIntersect(valueLabelBox(a), valueLabelBox(b))) continue
+        if (!labelsCollide(a, b)) continue
         const moverIdx = a.priority <= b.priority ? i : j
         const keeperIdx = moverIdx === i ? j : i
         const mover = placed[moverIdx]!
@@ -72,7 +100,7 @@ export function resolveValueLabelCollisions(labels: readonly ValueLabelSpec[]): 
           (mover.yMin == null || staggeredY >= mover.yMin) &&
           (mover.yMax == null || staggeredY <= mover.yMax)
         const staggered: PlacedValueLabel = { ...mover, y: staggeredY }
-        if (inBand && !boxesIntersect(valueLabelBox(keeper), valueLabelBox(staggered))) {
+        if (inBand && !labelsCollide(keeper, staggered)) {
           placed[moverIdx] = staggered
           dirty = true
           continue
@@ -81,6 +109,8 @@ export function resolveValueLabelCollisions(labels: readonly ValueLabelSpec[]): 
         const sign = mover.x >= keeper.x ? 1 : -1
         const indentBase = inBand ? staggered : mover
         const indented: PlacedValueLabel = { ...indentBase, x: mover.x + sign * indent }
+        // The indent path is judged on ink separation alone: side by side,
+        // two numbers read apart without a full line between their baselines.
         if (!boxesIntersect(valueLabelBox(keeper), valueLabelBox(indented))) {
           placed[moverIdx] = indented
           dirty = true
