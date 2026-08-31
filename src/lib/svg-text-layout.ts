@@ -577,15 +577,113 @@ export function measureMonoTextUnits(text: string): number {
   }, 0)
 }
 
+// ---------------------------------------------------------------------
+// CJK line-break prohibition (禁则处理 / kinsoku shori).
+//
+// The defect this closes: this file's greedy packer broke a line wherever
+// the width budget ran out, with no notion of which characters may sit at a
+// line boundary. The playbill deck cover, "《候鸟旅馆》毕业公演", split as
+// 「《候鸟旅馆」/「》毕业公演」 — a closing book-title mark opening a line,
+// which no Chinese, Japanese, or Korean typesetting convention permits.
+//
+// ONE rule, one place. Every line break this repo produces for an SVG page
+// goes through `wrapWithUnits` or `splitLongToken` below (`layoutSvgText`,
+// `balanceWrappedLines`, and the floor refit all call `wrapWithUnits`;
+// `fitHeadingLines`/`fitSvgLine` and every layout/component call site reach
+// them through `layoutSvgText`), so both consult `allowsLineBreakBetween`
+// and nothing else re-implements the judgment.
+//
+// SET SELECTION. Curated from the intersection of three references — CSS
+// Text's `line-break: strict` prohibition classes, JIS X 4051's 行頭/行末
+// 禁則 tables, and 中文排版需求 (clreq) §3.1.6 — narrowed to what this
+// product's authoring corpus can actually carry (Simplified Chinese plus
+// English, with the occasional shared CJK mark). Deliberate exclusions,
+// each for a stated reason rather than an oversight:
+//
+//   - ASCII sentence punctuation (`,` `.` `:` `;` `!` `?` `%`). Their
+//     fullwidth twins are in the set; the halfwidth forms are
+//     overwhelmingly Latin-context, where `tokenize`'s space-delimited
+//     branch already glues them onto their own word, so a line can never
+//     begin with one anyway. Forbidding them buys nothing and would put
+//     English word wrapping at risk for no gain.
+//   - ASCII straight quotes (`"` `'`). Direction-ambiguous — UAX #14 class
+//     QU, the same character opens and closes — so no rule can tell whether
+//     a given one belongs at a line head or a line tail. The unambiguous
+//     curly forms are in the sets instead.
+//   - U+2014 EM DASH. Chinese uses the doubled 破折号 "——" freely at a line
+//     head (dialogue, attribution), and UAX #14 classes it B2 — a break
+//     opportunity on both sides, not a prohibition.
+//   - Currency prefixes (`$` `￥` `€`). JIS X 4051 forbids them at line end;
+//     no theme or corpus text in this repo places one before a line break,
+//     so they stay out of a set that is meant to be justified, not maximal.
+//   - Japanese small kana (ぁぃぅ…ャュョッ) and the sokuon. Standard in any
+//     Japanese kinsoku table, but this product authors Simplified Chinese
+//     and English; adding an unexercised script's rules would be guessing.
+//
+// Both classes are single-character tests. Callers pass one code unit at a
+// time; an astral-plane character arrives as a lone surrogate, matches
+// neither class, and is therefore treated as freely breakable — the safe
+// direction (no CJK punctuation lives outside the BMP).
+
+/** 行头禁则 — may not begin a line: closing brackets, closing quotes, and
+ *  punctuation that trails the character it belongs to. */
+const LINE_START_FORBIDDEN =
+  /[)\]}）］｝｠〉》」』】〕〗〙〛｣’”〞〟、。，．：；！？｡､…‥‧·・･％‰℃々〻ーゝゞヽヾ〜～~]/
+
+/** 行尾禁则 — may not end a line: opening brackets and opening quotes. */
+const LINE_END_FORBIDDEN =
+  /[([{（［｛｟〈《「『【〔〖〘〚｢‘“〝]/
+
+/**
+ * The single kinsoku judgment: may a line break fall between `before` (the
+ * would-be last character of a line) and `after` (the would-be first
+ * character of the next)? Either side missing — a paragraph edge — is
+ * always breakable.
+ *
+ * Pure-Latin text never reaches a `false` here in practice: neither class
+ * contains an ASCII letter, digit, space, or sentence mark (see the set
+ * comment above), and the only ASCII members are the bracket pairs, which
+ * `tokenize`'s space-delimited branch keeps glued to their neighbouring
+ * word.
+ */
+export function allowsLineBreakBetween(
+  before: string | undefined,
+  after: string | undefined,
+): boolean {
+  if (!before || !after) return true
+  return !LINE_START_FORBIDDEN.test(after) && !LINE_END_FORBIDDEN.test(before)
+}
+
+/**
+ * Push-out (追い出し) applied to a character-level cut: the caller wanted to
+ * break `chars` before index `breakAt`; this retreats to the latest index at
+ * or before it whose boundary kinsoku permits, so the offending character
+ * travels down to the next line together with the neighbour that pins it.
+ *
+ * FLOOR: never retreats past `lineStart`, so a line is never emptied. When
+ * no legal boundary exists inside the line at all, the original cut stands —
+ * content beats purity, the same fallback `splitLongToken` and
+ * `retreatFromMidRun` already take.
+ */
+function retreatCharCut(chars: string[], lineStart: number, breakAt: number): number {
+  let cut = breakAt
+  while (cut > lineStart && !allowsLineBreakBetween(chars[cut - 1], chars[cut])) cut -= 1
+  return cut > lineStart ? cut : breakAt
+}
+
 function splitLongToken(token: string, maxUnits: number, weight?: TextWeightHint): string[] {
+  const chars = Array.from(token)
   const chunks: string[] = []
+  let start = 0
   let current = ""
 
-  for (const char of Array.from(token)) {
-    const candidate = `${current}${char}`
+  for (let i = 0; i < chars.length; i += 1) {
+    const candidate = `${current}${chars[i]}`
     if (current && measureTextUnits(candidate, weight) > maxUnits) {
-      chunks.push(current)
-      current = char
+      const cut = retreatCharCut(chars, start, i)
+      chunks.push(cut === i ? current : chars.slice(start, cut).join(""))
+      start = cut
+      current = chars.slice(cut, i + 1).join("")
     } else {
       current = candidate
     }
@@ -703,6 +801,77 @@ interface WrapResult {
   minSplitFreeUnits: number
 }
 
+/**
+ * One packable unit and how it re-joins to its predecessor. `space` mirrors
+ * the pre-kinsoku loop's own `prefix` rule exactly: only the *first* chunk of
+ * a space-delimited token re-joins with a space, so a `splitLongToken`
+ * continuation still butts straight against the piece before it.
+ */
+interface WrapPiece {
+  text: string
+  space: boolean
+}
+
+function joinPieces(pieces: WrapPiece[], from: number, to: number): string {
+  let out = ""
+  for (let i = from; i < to; i += 1) {
+    out += out && pieces[i].space ? ` ${pieces[i].text}` : pieces[i].text
+  }
+  return out
+}
+
+/**
+ * Push-out (追い出し) at the token level, the sibling of `retreatCharCut`:
+ * the greedy pack wanted to break before piece `breakAt`; retreat to the
+ * latest piece boundary kinsoku permits, which sends the offending character
+ * and everything after the new boundary down to the next line together.
+ *
+ * Same FLOOR as `retreatCharCut` — never past `lineStart`, and the original
+ * cut stands when the whole line offers no legal boundary.
+ */
+function retreatPieceCut(pieces: WrapPiece[], lineStart: number, breakAt: number): number {
+  let cut = breakAt
+  while (cut > lineStart) {
+    const before = pieces[cut - 1].text
+    const after = pieces[cut].text
+    if (allowsLineBreakBetween(before[before.length - 1], after[0])) return cut
+    cut -= 1
+  }
+  // -1, not `breakAt`: the caller has to tell "the requested cut was already
+  // legal" apart from "the whole line offers no legal boundary", and both
+  // would otherwise come back as the same number.
+  return -1
+}
+
+/**
+ * Last-resort push-out *inside* a piece, for when no boundary between
+ * pieces on the line is legal at all.
+ *
+ * The case that needs it: a space-delimited CJK title whose separator is
+ * its own token — 「夜校手机摄影课 · 第三讲」 packs as three pieces, and the
+ * only boundary the line offers puts the separator at a line head. There is
+ * nothing to retreat *to*, because the rest of the line is one token.
+ *
+ * CJK breaks between any two ideographs, so the piece itself supplies the
+ * boundary. Returns the *latest* such offset (retreat as little as the rule
+ * allows), or 0 when the piece offers none.
+ *
+ * Both sides must be `WIDE_CHAR_RE` characters. That is what makes this
+ * structurally incapable of splitting a Latin word: no ASCII letter, digit,
+ * or space is ever wide, so a space-delimited English token can never
+ * produce a non-zero offset here, whatever its content.
+ */
+function wideBreakOffset(text: string): number {
+  const chars = Array.from(text)
+  for (let k = chars.length - 1; k >= 1; k -= 1) {
+    const before = chars[k - 1]
+    const after = chars[k]
+    if (!WIDE_CHAR_RE.test(before) || !WIDE_CHAR_RE.test(after)) continue
+    if (allowsLineBreakBetween(before, after)) return chars.slice(0, k).join("").length
+  }
+  return 0
+}
+
 function wrapWithUnits(text: string, maxUnits: number, weight?: TextWeightHint): WrapResult {
   const lines: string[] = []
   let hadSplit = false
@@ -710,8 +879,10 @@ function wrapWithUnits(text: string, maxUnits: number, weight?: TextWeightHint):
 
   for (const paragraph of text.split(/\n+/)) {
     const { tokens, spaceDelimited } = tokenize(paragraph)
-    let current = ""
 
+    // Flatten to pieces first so the pack below can address a break by index
+    // and walk it backwards. The greedy arithmetic itself is unchanged.
+    const pieces: WrapPiece[] = []
     for (const token of tokens) {
       const tokenUnits = measureTextUnits(token, weight)
       const isRunToken = !spaceDelimited && Array.from(token).length > 1
@@ -721,14 +892,53 @@ function wrapWithUnits(text: string, maxUnits: number, weight?: TextWeightHint):
       if (isRunToken && tokenChunks.length > 1) hadSplit = true
 
       for (const [chunkIndex, chunk] of tokenChunks.entries()) {
-        const prefix = current && spaceDelimited && chunkIndex === 0 ? " " : ""
-        const candidate = `${current}${prefix}${chunk}`
-        if (current && measureTextUnits(candidate, weight) > maxUnits) {
-          lines.push(current)
-          current = chunk
-        } else {
-          current = candidate
+        pieces.push({ text: chunk, space: spaceDelimited && chunkIndex === 0 })
+      }
+    }
+
+    let lineStart = 0
+    let current = ""
+    for (let i = 0; i < pieces.length; i += 1) {
+      const prefix = current && pieces[i].space ? " " : ""
+      const candidate = `${current}${prefix}${pieces[i].text}`
+      if (current && measureTextUnits(candidate, weight) > maxUnits) {
+        // `current === joinPieces(pieces, lineStart, i)` by construction, so
+        // an unretreated cut pushes the identical string the pre-kinsoku loop
+        // pushed and allocates nothing extra. Only a real prohibition pays
+        // for the two re-joins.
+        let cut = retreatPieceCut(pieces, lineStart, i)
+        if (cut === -1) {
+          // No legal boundary between pieces anywhere on this line. Split the
+          // piece before the break at its own latest legal CJK boundary and
+          // retreat there. The array grows by one entry behind the cursor, so
+          // `i` advances with it and the index arithmetic below is unchanged.
+          const offset = wideBreakOffset(pieces[i - 1].text)
+          if (offset > 0) {
+            const whole = pieces[i - 1]
+            pieces.splice(
+              i - 1,
+              1,
+              { text: whole.text.slice(0, offset), space: whole.space },
+              { text: whole.text.slice(offset), space: false },
+            )
+            i += 1
+            cut = i - 1
+          } else {
+            // FLOOR: content beats purity — the prohibited cut stands rather
+            // than emptying the line or dropping text.
+            cut = i
+          }
         }
+        if (cut === i) {
+          lines.push(current)
+          current = pieces[i].text
+        } else {
+          lines.push(joinPieces(pieces, lineStart, cut))
+          current = joinPieces(pieces, cut, i + 1)
+        }
+        lineStart = cut
+      } else {
+        current = candidate
       }
     }
 

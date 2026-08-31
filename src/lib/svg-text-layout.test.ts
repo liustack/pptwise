@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import {
+  allowsLineBreakBetween,
   fitSvgLine,
   hasExactWidthTable,
   layoutSvgText,
@@ -670,5 +671,249 @@ describe("hasExactWidthTable", () => {
     expect(hasExactWidthTable("Cambria")).toBe(false)
     expect(hasExactWidthTable("Arial")).toBe(false)
     expect(hasExactWidthTable("")).toBe(false)
+  })
+})
+
+// CJK line-break prohibition (禁则处理 / kinsoku shori) — see the set
+// selection comment above `LINE_START_FORBIDDEN` in svg-text-layout.ts.
+//
+// The reported defect: the playbill deck cover heading "《候鸟旅馆》毕业公演"
+// rendered as 「《候鸟旅馆」/「》毕业公演」, opening the second line with a
+// closing book-title mark. Every case below asserts the concrete post-fix
+// wrap, not merely the invariant, so a revert of the rule fails loudly
+// rather than silently drifting to some other legal-looking split.
+describe("CJK line-break prohibition (kinsoku)", () => {
+  // Deliberately re-declared instead of imported from the module under
+  // test: asserting against the implementation's own character class would
+  // hold for whatever set the implementation happens to carry, including an
+  // empty one. These are the marks the defect report named plus the ones
+  // this repo's own corpus actually contains.
+  const OPENS_A_LINE_ILLEGALLY = /^[》）」』】〉，。、：；！？…·]/
+  const ENDS_A_LINE_ILLEGALLY = /[《（「『【〈]$/
+
+  /** A first line may legitimately begin with a closing mark (the source
+   *  text itself started with one) and a last line may end with an opening
+   *  one — only interior boundaries are line breaks this rule governs. */
+  const expectNoProhibitedBoundary = (lines: string[]): void => {
+    for (const [i, line] of lines.entries()) {
+      if (i > 0) expect([i, OPENS_A_LINE_ILLEGALLY.test(line)]).toEqual([i, false])
+      if (i < lines.length - 1) expect([i, ENDS_A_LINE_ILLEGALLY.test(line)]).toEqual([i, false])
+    }
+  }
+
+  const HEADING = {
+    maxWidth: 480,
+    fontSize: 96,
+    maxLines: 2,
+    minPt: 28,
+    balanceLines: true,
+    bold: true,
+    fontFamily: "Microsoft YaHei",
+  } as const
+
+  it("keeps a closing 》 off a line start (the playbill cover repro)", () => {
+    // Pre-fix this exact call returned ["《候鸟旅馆", "》毕业公演"] at
+    // fontSize 96 — the closing mark alone at the head of line 2.
+    const r = layoutSvgText("《候鸟旅馆》毕业公演", HEADING)
+    expectNoProhibitedBoundary(r.lines)
+    // Push-out forces three lines at the greedy budget, so `layoutSvgText`'s
+    // own retry ladder grows the budget until two lines fit again — landing
+    // on the title/occasion split a human would have chosen, one font step
+    // smaller. That interplay is the point: the rule steers the existing fit
+    // loop rather than bypassing it.
+    expect(r.lines).toEqual(["《候鸟旅馆》", "毕业公演"])
+    expect(r.fontSize).toBe(80)
+    expect(r.truncated).toBe(false)
+  })
+
+  it("pushes an opening 《 off a line end", () => {
+    // Pre-fix: ["毕业公演《", "候鸟旅馆》"] — line 1 ended on the opening mark.
+    const r = layoutSvgText("毕业公演《候鸟旅馆》", HEADING)
+    expectNoProhibitedBoundary(r.lines)
+    expect(r.lines).toEqual(["毕业公演《候", "鸟旅馆》"])
+    expect(r.lines[0]).not.toMatch(/《$/)
+    expect(r.truncated).toBe(false)
+  })
+
+  it("never strands a Chinese comma or full stop at a line head", () => {
+    // The corpus case behind most of the gallery's movement: pre-fix this
+    // returned ["七月一场大涝淹田三天", "，稻子倒伏不足一成。"].
+    const r = layoutSvgText("七月一场大涝淹田三天，稻子倒伏不足一成。", {
+      maxWidth: 256,
+      fontSize: 24,
+      maxLines: 64,
+      minPt: 24,
+    })
+    expectNoProhibitedBoundary(r.lines)
+    expect(r.lines).toEqual(["七月一场大涝淹田三", "天，稻子倒伏不足一", "成。"])
+  })
+
+  it("pulls a doubled ellipsis onto the line before it", () => {
+    // Pre-fix: ["剩下的部分留给下一季", "……我们不急。"].
+    const r = layoutSvgText("剩下的部分留给下一季……我们不急。", {
+      maxWidth: 240,
+      fontSize: 24,
+      maxLines: 3,
+      minPt: 12,
+    })
+    expectNoProhibitedBoundary(r.lines)
+    expect(r.lines).toEqual(["剩下的部分留给下一", "季……我们不急。"])
+  })
+
+  it("obeys the prohibition inside splitLongToken's emergency cut of an over-long token", () => {
+    // A space-delimited paragraph whose second token is wider than a whole
+    // line, so `splitLongToken` — not the token packer — chooses the break
+    // points. Pre-fix it cut after the opening bracket:
+    // ["报告", "深度学习（", "DL）在生", "产环境的落", "地路径与成", "本。"].
+    const r = layoutSvgText("报告 深度学习（DL）在生产环境的落地路径与成本。", {
+      maxWidth: 120,
+      fontSize: 24,
+      maxLines: 8,
+      minPt: 12,
+    })
+    expectNoProhibitedBoundary(r.lines)
+    expect(r.lines).toEqual(["报告", "深度学习", "（DL）在", "生产环境的", "落地路径与", "成本。"])
+  })
+
+  it("keeps the original cut rather than emptying a line when no legal break exists", () => {
+    // Every boundary in this string is prohibited. The FLOOR must win:
+    // content is preserved, no empty line is emitted, and the call
+    // terminates.
+    const r = layoutSvgText("》》》》》》》》", {
+      maxWidth: 120,
+      fontSize: 24,
+      maxLines: 4,
+      minPt: 12,
+    })
+    expect(r.lines).toEqual(["》》》》》", "》》》"])
+    expect(r.lines.every((line) => line.length > 0)).toBe(true)
+    expect(r.lines.join("")).toBe("》》》》》》》》")
+  })
+
+  it("retreats inside a CJK token when the line offers no legal boundary between tokens", () => {
+    // 「夜校手机摄影课 · 第三讲」 packs as three tokens, and its only token
+    // boundary puts the separator at a line head — pre-fix:
+    // ["夜校手机摄影课", "· 第三讲"], a lone middle dot opening a 126px
+    // display line. There is nothing to retreat *to*, so the boundary has to
+    // come from inside the token: CJK breaks between any two ideographs.
+    const r = layoutSvgText("夜校手机摄影课 · 第三讲", {
+      maxWidth: 1088,
+      fontSize: 126,
+      maxLines: 2,
+      minPt: 40,
+      balanceLines: true,
+      bold: false,
+      fontFamily: "SimSun",
+    })
+    expectNoProhibitedBoundary(r.lines)
+    expect(r.lines).toEqual(["夜校手机摄影", "课 · 第三讲"])
+  })
+
+  it("never splits a Latin word to satisfy the rule, even when a separator would head a line", () => {
+    // The sub-token retreat requires wide (CJK) characters on both sides of
+    // the boundary, so an English token can never supply one. Here the rule
+    // does move the break — a middle dot is a middle dot in any script — but
+    // it moves a whole word, and "Basics" survives intact.
+    const r = layoutSvgText("Photography Basics · Volume Two", {
+      maxWidth: 284,
+      fontSize: 28,
+      maxLines: 4,
+      minPt: 14,
+    })
+    expect(r.lines).toEqual(["Photography", "Basics · Volume", "Two"])
+    for (const word of "Photography Basics Volume Two".split(" ")) {
+      expect(r.lines.some((line) => line.split(/[\s·]+/).includes(word))).toBe(true)
+    }
+  })
+
+  it("leaves pure-Latin wrapping byte-identical, brackets and quotes included", () => {
+    // The whole point of confining the character sets to CJK and bracket
+    // forms: English word wrapping must not move at all. Each expectation
+    // below is the pre-fix output, recorded by running these exact calls
+    // against the commit before the rule landed.
+    expect(
+      layoutSvgText("Quarterly revenue review for the northern region", {
+        maxWidth: 320,
+        fontSize: 24,
+        maxLines: 3,
+      }).lines,
+    ).toEqual(["Quarterly revenue review", "for the northern region"])
+
+    expect(
+      layoutSvgText("Adoption (measured weekly) climbed to 62% across the pilot cohort.", {
+        maxWidth: 300,
+        fontSize: 22,
+        maxLines: 4,
+      }).lines,
+    ).toEqual(["Adoption (measured", "weekly) climbed to 62%", "across the pilot cohort."])
+
+    expect(
+      layoutSvgText('The team called it "a quiet, decisive quarter" in the memo.', {
+        maxWidth: 260,
+        fontSize: 20,
+        maxLines: 4,
+      }).lines,
+    ).toEqual(['The team called it "a', 'quiet, decisive quarter"', "in the memo."])
+
+    expect(
+      layoutSvgText("Supercalifragilisticexpialidocious benchmarks", {
+        maxWidth: 200,
+        fontSize: 28,
+        maxLines: 3,
+        minPt: 16,
+      }).lines,
+    ).toEqual(["Supercalifragili", "sticexpialidocio", "us benchmarks"])
+
+    expect(
+      layoutSvgText("very-long-file-name-for-quarterly-review.pptx", {
+        maxWidth: 320,
+        fontSize: 40,
+        maxLines: 1,
+      }).lines,
+    ).toEqual(["very-long-file-name-for-quarterly-re"])
+  })
+})
+
+describe("allowsLineBreakBetween", () => {
+  it("refuses a break that would put a closing mark or trailing punctuation at a line head", () => {
+    expect(allowsLineBreakBetween("馆", "》")).toBe(false)
+    expect(allowsLineBreakBetween("天", "，")).toBe(false)
+    expect(allowsLineBreakBetween("成", "。")).toBe(false)
+    expect(allowsLineBreakBetween("点", "」")).toBe(false)
+    expect(allowsLineBreakBetween("A", ")")).toBe(false)
+    expect(allowsLineBreakBetween("季", "…")).toBe(false)
+    expect(allowsLineBreakBetween("戏", "·")).toBe(false)
+  })
+
+  it("refuses a break that would leave an opening mark at a line end", () => {
+    expect(allowsLineBreakBetween("《", "候")).toBe(false)
+    expect(allowsLineBreakBetween("（", "D")).toBe(false)
+    expect(allowsLineBreakBetween("「", "这")).toBe(false)
+    expect(allowsLineBreakBetween("“", "a")).toBe(false)
+  })
+
+  it("allows an ordinary CJK or Latin boundary, and a closing mark at a line end", () => {
+    expect(allowsLineBreakBetween("旅", "馆")).toBe(true)
+    expect(allowsLineBreakBetween("》", "毕")).toBe(true)
+    expect(allowsLineBreakBetween("，", "稻")).toBe(true)
+    expect(allowsLineBreakBetween("e", "w")).toBe(true)
+    expect(allowsLineBreakBetween(")", "n")).toBe(true)
+  })
+
+  it("treats ASCII sentence punctuation and straight quotes as freely breakable, keeping English wrapping untouched", () => {
+    // Direction-ambiguous or Latin-context marks, deliberately excluded from
+    // both sets — see the set-selection comment in svg-text-layout.ts.
+    expect(allowsLineBreakBetween("d", ".")).toBe(true)
+    expect(allowsLineBreakBetween("d", ",")).toBe(true)
+    expect(allowsLineBreakBetween("2", "%")).toBe(true)
+    expect(allowsLineBreakBetween('"', "a")).toBe(true)
+    expect(allowsLineBreakBetween("'", "a")).toBe(true)
+    expect(allowsLineBreakBetween("—", "碰")).toBe(true)
+  })
+
+  it("treats a paragraph edge as always breakable", () => {
+    expect(allowsLineBreakBetween(undefined, "》")).toBe(true)
+    expect(allowsLineBreakBetween("《", undefined)).toBe(true)
+    expect(allowsLineBreakBetween("", "》")).toBe(true)
   })
 })
