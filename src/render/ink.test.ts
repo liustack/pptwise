@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { accessibleInk, accessibleOpacity, contrastRatio, groupValueInks, metaInk, readableOn, requiredContrastRatio, resolveSemanticColor } from "./ink"
+import { accessibleInk, accessibleOpacity, contrastRatio, graphicInk, groupValueInks, metaInk, readableOn, requiredContrastRatio, resolveSemanticColor } from "./ink"
 import { CANONICAL_THEME_IDS, resolveStyle } from "../themes"
 
 // `readableOn`'s own behavior is unchanged by the W4 fix-round extraction
@@ -94,6 +94,34 @@ describe("accessibleInk", () => {
     expect(ratio).toBeLessThan(4.5)
     expect(accessibleInk(fill, bg, 24)).toBe(fill) // large text: 3:1 clears
     expect(accessibleInk(fill, bg, 16)).toBe(readableOn(bg)) // body text: needs 4.5:1, falls back
+  })
+})
+
+describe("graphicInk", () => {
+  it("keeps a token that already clears the 3:1 non-text floor", () => {
+    expect(graphicInk("#E84F8A", "#35284E")).toBe("#E84F8A")
+  })
+
+  it("falls back to neutral ink for a block-fill token used as a stroke", () => {
+    // campaign: `primary` is the banner/colour-block dark, 1.25:1 against the
+    // card surface it would be stroked on.
+    expect(contrastRatio("#23173A", "#35284E")).toBeLessThan(3)
+    expect(graphicInk("#23173A", "#35284E")).toBe(readableOn("#35284E"))
+  })
+
+  it("holds the same floor at every size — a graphic has no size relief", () => {
+    const marginal = "#909090"
+    expect(contrastRatio(marginal, "#FFFFFF")).toBeLessThan(4.5)
+    expect(contrastRatio(marginal, "#FFFFFF")).toBeGreaterThan(3)
+    expect(graphicInk(marginal, "#FFFFFF")).toBe(marginal)
+  })
+
+  it("every built-in theme paints a visible icon on its own card surface", () => {
+    for (const id of CANONICAL_THEME_IDS) {
+      const { colors } = resolveStyle(id)
+      const ink = graphicInk(colors.primary, colors.surface)
+      expect(contrastRatio(ink, colors.surface), id).toBeGreaterThanOrEqual(3)
+    }
   })
 })
 

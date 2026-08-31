@@ -21,8 +21,10 @@ import { tryContentHeadingTreatment } from "../render/heading-treatments/render"
  * contract): heading band spans the usual full 1088px content width
  * (x=96..1184, matching `bento-panel`/`two-column`'s own convention of a
  * full-width header sitting above a split body). Below it: LEAD region
- * x=96, w=632 (58%); a vertical divider hairline at the gap's
- * midpoint (x=744) when the right column has content; RIGHT region x=760, w=424 (39% — deliberately equal to
+ * x=96, w=592 (54%); a vertical divider hairline at the gap's
+ * midpoint (x=704) when the right column has content; RIGHT region x=720,
+ * w=464 (42%), whose framed panels pad 20px inward to a 424px content
+ * width (39% — deliberately equal to
  * `two-column`'s own worst-case half-width at the pool's narrowest 880px
  * single-stack basis, `(880-32)/2=424` — this layout introduces no
  * width narrower than `audit/capacity.ts` already accounts for). RIGHT
@@ -66,14 +68,32 @@ const SUBHEADING_MIN_FONT_SIZE = 16
 const SUBHEADING_SLOT = 46
 
 const LEAD_X = 96
-const LEAD_W = 632
+const LEAD_W = 592
 const COL_GAP = 32
-const RIGHT_X = LEAD_X + LEAD_W + COL_GAP // 760
-const RIGHT_W = 1184 - RIGHT_X // 424
-const DIVIDER_X = LEAD_X + LEAD_W + COL_GAP / 2 // 744
+const RIGHT_X = LEAD_X + LEAD_W + COL_GAP // 720
+const RIGHT_W = 1184 - RIGHT_X // 464
+const DIVIDER_X = LEAD_X + LEAD_W + COL_GAP / 2 // 704
 
 const ROW_GAP = 24
 const PANEL_RADIUS = 6
+/**
+ * Inner padding of the two framed right-column panels. The frame and the
+ * content rect used to be the same rectangle, so a panel's text ran to its
+ * own outline — a blockquote's lines ended flush against the right edge
+ * (gallery visual review fix/gallery-verdict-round, item 6).
+ *
+ * The right column widened from 424 to 464 to pay for it rather than the
+ * content narrowing: 424 is `audit/capacity.ts`'s narrowest-content-rect
+ * basis (magazine's 880px column halved), and every editorial budget in
+ * that file is derived from it. Padding the frame outward keeps the number
+ * the capacity math is built on exactly where it was. The lead column,
+ * which paints no frame, gives up the 40px and still runs far wider.
+ */
+const PANEL_PAD_X = 20
+const PANEL_PAD_Y = 16
+/** Content height floor for a padded panel — the unpadded floor minus the
+ * padding it now carries would go negative on the narrowest split. */
+const PANEL_MIN_CONTENT_H = 60
 
 export function AsymmetricTriptychContent({ ir, slide, index, ctx }: SvgTemplateProps) {
   const treated = tryContentHeadingTreatment({ ir, slide, index, ctx })
@@ -127,6 +147,14 @@ export function AsymmetricTriptychContent({ ir, slide, index, ctx }: SvgTemplate
   const topRect: ContentRect = { x: RIGHT_X, y: bodyTop, w: RIGHT_W, h: rowH }
   const dividerY = bodyTop + rowH + ROW_GAP / 2
   const bottomRect: ContentRect = { x: RIGHT_X, y: bodyTop + rowH + ROW_GAP, w: RIGHT_W, h: halfRowH }
+  // A framed panel hands its content the padded inside, never the frame
+  // itself. The lead column has no frame and keeps its whole rect.
+  const padded = (rect: ContentRect): ContentRect => ({
+    x: rect.x + PANEL_PAD_X,
+    y: rect.y + PANEL_PAD_Y,
+    w: rect.w - PANEL_PAD_X * 2,
+    h: Math.max(PANEL_MIN_CONTENT_H, rect.h - PANEL_PAD_Y * 2),
+  })
   const panelStroke = colors.border ?? colors.muted
   const panelRadius = ctx.shape?.radius ?? PANEL_RADIUS
 
@@ -188,10 +216,10 @@ export function AsymmetricTriptychContent({ ir, slide, index, ctx }: SvgTemplate
         <SvgContent arrangement={undefined} components={[leadComponent]} rect={leadRect} ctx={ctx} />
       )}
       {hasTop && (
-        <SvgContent arrangement={undefined} components={topComponents} rect={topRect} ctx={ctx} />
+        <SvgContent arrangement={undefined} components={topComponents} rect={padded(topRect)} ctx={ctx} />
       )}
       {hasBottom && (
-        <SvgContent arrangement={undefined} components={bottomComponents} rect={bottomRect} ctx={ctx} />
+        <SvgContent arrangement={undefined} components={bottomComponents} rect={padded(bottomRect)} ctx={ctx} />
       )}
       {footnote && (
         <text

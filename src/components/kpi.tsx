@@ -5,7 +5,7 @@ import {
   truncateToUnits,
   type TextWeightHint,
 } from "../lib/svg-text-layout"
-import { accessibleInk, accessibleOpacity, resolveSemanticColor, type SemanticColorTokens } from "../render/ink"
+import { accessibleInk, accessibleOpacity, graphicInk, resolveSemanticColor, type SemanticColorTokens } from "../render/ink"
 import { Icon } from "../render/icons"
 import { resolveComponentForm } from "./form-assignments"
 import { measureBubbleRow, renderBubbleRow } from "./forms/bubble-row"
@@ -421,7 +421,7 @@ export const kpi: SvgComponent<KpiComponent> = {
                   x={cardX + 20}
                   y={cardY + 12 + contentShift}
                   size={18}
-                  color={ctx.colors.primary}
+                  color={graphicInk(ctx.colors.primary, ctx.colors.surface)}
                 />
               )}
               <text

@@ -60,9 +60,9 @@ describe("AsymmetricTriptychContent", () => {
     const [x, , w] = leadRect!.getAttribute("data-audit-rect")!.split(",").map(Number)
     expect(x).toBe(96)
     expect(w).toBe(1088)
-    expect(root.querySelector('[data-audit-rect^="760,"]')).toBeNull()
-    expect(root.querySelector('line[x1="744"]')).toBeNull()
-    const rightOutlines = outlineFrames(root).filter((el) => Number(el.getAttribute("x")) === 760)
+    expect(root.querySelector('[data-audit-rect^="740,"]')).toBeNull()
+    expect(root.querySelector('line[x1="704"]')).toBeNull()
+    const rightOutlines = outlineFrames(root).filter((el) => Number(el.getAttribute("x")) === 720)
     expect(rightOutlines).toHaveLength(0)
   })
 
@@ -73,11 +73,15 @@ describe("AsymmetricTriptychContent", () => {
     expect(markup).toContain("次项一")
     expect(markup).toContain("次项二")
     const root = parseSvgRoot(`<svg xmlns="http://www.w3.org/2000/svg">${markup}</svg>`)
-    const rightRects = Array.from(root.querySelectorAll('[data-audit-rect^="760,"]'))
+    // The frames sit at x=720 and the content they hold is padded 20px in
+    // to x=740 — a panel never hands its text its own outline.
+    const rightRects = Array.from(root.querySelectorAll('[data-audit-rect^="740,"]'))
     expect(rightRects.length).toBe(2)
-    const rightOutlines = outlineFrames(root).filter((el) => Number(el.getAttribute("x")) === 760)
+    expect(rightRects.map((el) => el.getAttribute("data-audit-rect")!.split(",")[2])).toEqual(["424", "424"])
+    const rightOutlines = outlineFrames(root).filter((el) => Number(el.getAttribute("x")) === 720)
     expect(rightOutlines).toHaveLength(2)
-    expect(root.querySelector('line[x1="744"]')).not.toBeNull()
+    expect(rightOutlines.map((el) => el.getAttribute("width"))).toEqual(["464", "464"])
+    expect(root.querySelector('line[x1="704"]')).not.toBeNull()
   })
 
   it("arrangement is always hardcoded to the layout's own three-region split — slide.arrangement is never consulted (registry declares [\"single\"])", () => {
@@ -86,7 +90,7 @@ describe("AsymmetricTriptychContent", () => {
     // Still renders through the lead/top split, not a two_column layout —
     // sanity: both components are present and the divider/frames exist.
     const root = parseSvgRoot(`<svg xmlns="http://www.w3.org/2000/svg">${markup}</svg>`)
-    expect(root.querySelector('line[x1="744"]')).not.toBeNull()
+    expect(root.querySelector('line[x1="704"]')).not.toBeNull()
   })
 
   it("panel frames follow shape.radius instead of a baked capsule radius", () => {
