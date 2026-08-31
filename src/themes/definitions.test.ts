@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { BUILTIN_THEME_FILES, CANONICAL_THEME_IDS, THEME_STYLES, resolveThemeId } from "./index"
 import {
   __resetRegisteredThemes,
+  __resetUnmeasuredFaceWarnings,
   assertContrastFloor,
   compileBuiltinTheme,
   getInstalledThemeIds,
@@ -375,8 +376,13 @@ describe("registerTheme: unmeasured-font-width console.warn", () => {
   }
 
   it("warns for a heading face with no exact width table (SimSun) and stays silent for a body face that has one (Georgia)", () => {
+    __resetUnmeasuredFaceWarnings()
     const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
     registerTheme(withFonts("acme-warn-heading-only", "SimSun", "Georgia"))
+    expect(warnSpy).toHaveBeenCalledTimes(1)
+    // The warning describes the face, not the theme: a second theme sharing
+    // the same unmeasured face stays silent instead of repeating it.
+    registerTheme(withFonts("acme-warn-heading-twin", "SimSun", "Georgia"))
     expect(warnSpy).toHaveBeenCalledTimes(1)
     const message = warnSpy.mock.calls[0]?.[0]
     expect(message).toMatch(/acme-warn-heading-only/)
