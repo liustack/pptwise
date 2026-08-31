@@ -33,9 +33,12 @@ function probeJob(): Job {
   } as PptxIR
 
   return {
-    id: "component--paragraph--zh",
-    table: "component",
+    id: "consulting--comp--paragraph--zh",
+    section: "consulting",
+    sectionLabel: "Business Consulting",
+    band: "component",
     subject: "paragraph",
+    component: "paragraph",
     language: "zh",
     languageLabel: "中文",
     theme: "consulting",
@@ -64,15 +67,15 @@ describe("renderMatrix page prune", () => {
     // render of only this job must treat its own manifest as the source of
     // truth — `--only=component` into a dir that already has theme or
     // layout pages is supposed to drop the other tables' files.
-    writeFileSync(join(pagesDir, "component--logo-wall--zh.svg"), "<svg />\n")
-    writeFileSync(join(pagesDir, "layout--side-highlight--zh.svg"), "<svg />\n")
+    writeFileSync(join(pagesDir, "consulting--comp--logo-wall--zh.svg"), "<svg />\n")
+    writeFileSync(join(pagesDir, "unserved--face--side-highlight.svg"), "<svg />\n")
     writeFileSync(join(pagesDir, "junk.txt"), "leftover\n")
     writeFileSync(join(outDir, "_dx-fake.png"), "png")
 
     renderMatrix([job], outDir, "test")
 
-    expect(existsSync(join(pagesDir, "component--logo-wall--zh.svg"))).toBe(false)
-    expect(existsSync(join(pagesDir, "layout--side-highlight--zh.svg"))).toBe(false)
+    expect(existsSync(join(pagesDir, "consulting--comp--logo-wall--zh.svg"))).toBe(false)
+    expect(existsSync(join(pagesDir, "unserved--face--side-highlight.svg"))).toBe(false)
     expect(existsSync(join(pagesDir, "junk.txt"))).toBe(false)
     expect(existsSync(realPage)).toBe(true)
     expect(existsSync(manifest)).toBe(true)

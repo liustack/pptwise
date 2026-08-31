@@ -12,15 +12,16 @@ import type { ProcessRunner } from "@/cli/image-generators"
 import type { L1Result } from "./l1"
 import { maybePlaywrightPng, rasterSvgToPng } from "./raster"
 
-export const VERDICT_SCHEMA_NAME = "pptwise-gallery-verdicts/3"
+export const VERDICT_SCHEMA_NAME = "pptwise-gallery-verdicts/4"
 
 export const L2_JSON_SCHEMA = {
   type: "object",
   additionalProperties: true,
-  required: ["id", "table", "subject", "language", "theme", "page", "verdict", "note", "findings"],
+  required: ["id", "section", "band", "subject", "language", "theme", "page", "verdict", "note", "findings"],
   properties: {
     id: { type: "string" },
-    table: { type: "string" },
+    section: { type: "string" },
+    band: { type: "string" },
     subject: { type: "string" },
     language: { type: "string" },
     theme: { type: "string" },
@@ -36,7 +37,8 @@ export const L2_JSON_SCHEMA = {
 
 export interface GalleryPageMeta {
   id: string
-  table: string
+  section: string
+  band: string
   subject: string
   language: string
   theme: string
@@ -104,7 +106,7 @@ function buildPrompt(
     hasBrowserPng ? "page-browser.png is a real-browser screenshot of the same SVG." : "",
     "The rubric is inlined below. Do not spend turns re-reading rubric files.",
     `Page id: ${page.id}`,
-    `table=${page.table} subject=${page.subject} language=${page.language} theme=${page.theme} page=${page.page}`,
+    `section=${page.section} band=${page.band} subject=${page.subject} language=${page.language} theme=${page.theme} page=${page.page}`,
     l1Lines,
     "L1 findings are clues, not the answer. Still look at the image.",
     "verdict must be pass, limit, or rework.",
@@ -139,7 +141,8 @@ function asVerdict(value: unknown, fallback: GalleryPageMeta): L2Verdict | null 
     const findings = Array.isArray(v.findings) ? v.findings.map((x) => String(x)) : []
     const out: L2Verdict = {
       id: String(v.id ?? fallback.id),
-      table: String(v.table ?? fallback.table),
+      section: String(v.section ?? fallback.section),
+      band: String(v.band ?? fallback.band),
       subject: String(v.subject ?? fallback.subject),
       language: String(v.language ?? fallback.language),
       theme: String(v.theme ?? fallback.theme),

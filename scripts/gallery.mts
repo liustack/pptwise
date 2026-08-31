@@ -1,16 +1,18 @@
 /**
- * `pnpm gallery` — renders the visual-review tables and builds the review
+ * `pnpm gallery` — renders the visual-review sections and builds the review
  * page. A maintainer's quality tool, deliberately not a public CLI command:
  * it produces the material a human taste review is done against, which is
  * a step in this repo's own release process, not a capability the product
  * offers its users.
  *
- * See `.issues/2026-08-15-release-readiness/spec.md` for what the two
- * tables are and why the matrix is cut the way it is.
+ * One section per theme, three bands inside each (sample deck, menu faces,
+ * component skins), plus an appendix section for registered faces no menu
+ * offers.
  *
  *   pnpm gallery                        # everything, into .gallery/
- *   pnpm gallery --only=theme           # one table
- *   pnpm gallery --languages=zh,en      # narrow the language axis
+ *   pnpm gallery --only=face            # one band
+ *   pnpm gallery --theme=swiss          # one section (--theme=unserved for the appendix)
+ *   pnpm gallery --languages=zh,en      # narrow the baseline component band's language axis
  *   pnpm gallery --out=/tmp/g           # somewhere else
  *   pnpm gallery --bbox                 # + a real-browser geometry pass
  *
@@ -29,7 +31,13 @@ import { corpusAssets, type CorpusAssets } from "../evals/gallery/corpus/decks"
 import { LANGUAGE_IDS, LEXICONS, type LanguageId } from "../evals/gallery/corpus/lexicon"
 import { buildGalleryHtml, summarize } from "../evals/gallery/html"
 import { assertInventoryCoverage } from "../evals/gallery/coverage"
-import { assertFullCoverage, buildMatrix, TABLE_IDS, type TableId } from "../evals/gallery/matrix"
+import {
+  assertFullCoverage,
+  BAND_IDS,
+  buildMatrix,
+  UNSERVED_SECTION,
+  type BandId,
+} from "../evals/gallery/matrix"
 import { pruneGalleryDir } from "../evals/gallery/prune"
 import { renderMatrix } from "../evals/gallery/render"
 
@@ -53,10 +61,13 @@ function fail(message: string): never {
 const outDir = resolve(ROOT, flag("out") || ".gallery")
 
 const onlyRaw = flag("only")
-const only = onlyRaw as TableId | undefined
-if (onlyRaw !== undefined && !(TABLE_IDS as readonly string[]).includes(onlyRaw)) {
-  fail(`--only must be one of ${TABLE_IDS.join(", ")} (got "${onlyRaw}")`)
+const only = onlyRaw as BandId | undefined
+if (onlyRaw !== undefined && !(BAND_IDS as readonly string[]).includes(onlyRaw)) {
+  fail(`--only must be one of ${BAND_IDS.join(", ")} (got "${onlyRaw}")`)
 }
+
+const sectionRaw = flag("theme")
+const section = sectionRaw || undefined
 
 const languagesRaw = flag("languages")
 const languages = languagesRaw ? (languagesRaw.split(",").map((s) => s.trim()) as LanguageId[]) : LANGUAGE_IDS
@@ -99,8 +110,16 @@ const assets = Object.fromEntries(
   await Promise.all(usedLanguages.map(async (id) => [id, await corpusAssets(LEXICONS[id])] as const)),
 ) as Record<LanguageId, CorpusAssets>
 
-const jobs = buildMatrix(themeIds, assets, { languages, themeLanguage, only })
-if (!only) assertInventoryCoverage(jobs)
+if (section !== undefined && section !== UNSERVED_SECTION && !themeIds.includes(section)) {
+  fail(`unknown --theme "${section}" — expected one of ${[...themeIds, UNSERVED_SECTION].join(", ")}`)
+}
+
+const jobs = buildMatrix(themeIds, assets, { languages, themeLanguage, only, section })
+if (jobs.length === 0) fail("nothing to render — check --only / --theme")
+// A narrowed run is by definition not the full matrix, so the coverage
+// promise cannot be checked against it without failing on every gap the
+// narrowing itself created.
+if (!only && !section) assertInventoryCoverage(jobs)
 console.log(`gallery: rendering ${jobs.length} pages through the real render chain…`)
 
 mkdirSync(outDir, { recursive: true })

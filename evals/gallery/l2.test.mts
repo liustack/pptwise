@@ -15,8 +15,9 @@ import { auditL1 } from "./l1"
 await installNodePlatform()
 
 const PAGE = {
-  id: "component--callout--zh",
-  table: "component",
+  id: "consulting--comp--callout--zh",
+  section: "consulting",
+  band: "component",
   subject: "callout",
   language: "zh",
   theme: "consulting",
@@ -79,7 +80,8 @@ describe("parseL2Stdout", () => {
       stopReason: "end_turn",
       structuredOutput: {
         id: PAGE.id,
-        table: PAGE.table,
+        section: PAGE.section,
+        band: PAGE.band,
         subject: PAGE.subject,
         language: PAGE.language,
         theme: PAGE.theme,
@@ -103,7 +105,8 @@ describe("judgeL2", () => {
         code: 0,
         stdout: JSON.stringify({
           id: PAGE.id,
-          table: PAGE.table,
+          section: PAGE.section,
+        band: PAGE.band,
           subject: PAGE.subject,
           language: PAGE.language,
           theme: PAGE.theme,

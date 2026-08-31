@@ -115,7 +115,7 @@ describe("hashesFromManifest", () => {
 })
 
 describe("gold sample against a live render", () => {
-  it("matches hashes.json for component/zh page ids", async () => {
+  it("matches hashes.json for the baseline theme's component/zh page ids", async () => {
     const goldFile = loadGoldHashes()
     const themeIds = listThemes()
       .map((t) => t.id)
@@ -123,7 +123,10 @@ describe("gold sample against a live render", () => {
     const jobs = buildMatrix(
       themeIds,
       { zh: await corpusAssets(LEXICONS.zh) } as Record<LanguageId, Awaited<ReturnType<typeof corpusAssets>>>,
-      { only: "component", languages: ["zh"] },
+      // One section is enough to catch a stale pin: the mechanism is what is
+      // under test, and rendering all 24 skins' component bands here would
+      // add nine seconds to every `pnpm check`.
+      { only: "component", languages: ["zh"], section: "consulting" },
     )
     const outDir = mkdtempSync(join(tmpdir(), "pptwise-gold-sample-"))
     const current = hashesFromManifest(renderMatrix(jobs, outDir, "pin").manifest)
