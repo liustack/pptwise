@@ -606,12 +606,19 @@ export function componentPage(
   opts: { solo?: boolean } = {},
 ): PptxIR {
   const component = build(lex)
+  const chart = component.type === "chart"
   const cartesian = isCartesianChart(component)
   const bubble = isBubbleChart(component)
   const kind = componentKind(component)
+  // Every chart type owns its page, not just the cartesian four. A chart
+  // sharing the page with a lead-in paragraph is a two-component slide, and
+  // a face that reserves its second slot for a caption strip (stage's
+  // stacked-poster) then hands the plot a 68px band: the dumbbell, funnel,
+  // gauge and pie skins were rendering as thumbnails under a full-size
+  // paragraph, i.e. the review page was not showing what it exists to show.
   const solo =
     opts.solo ??
-    (FULL_BODY_TYPES.has(component.type) || cartesian || ["quote", "evidence", "statement", "fact", "photo"].includes(kind))
+    (FULL_BODY_TYPES.has(component.type) || chart || ["quote", "evidence", "statement", "fact", "photo"].includes(kind))
 
   // A one-sentence lead-in, not the full corpus paragraph. The paragraph
   // runs long enough in English that it consumed the content rect and the
@@ -636,7 +643,7 @@ export function componentPage(
         : lex.sentences[3]
       : undefined,
     components: solo ? [component] : [leadIn, component],
-    footnote: bubble ? lex.bubbleSizeNote : cartesian || !solo ? lex.sources[2]!.label : undefined,
+    footnote: bubble ? lex.bubbleSizeNote : chart || !solo ? lex.sources[2]!.label : undefined,
   } as unknown as Slide
   const safeId = componentId.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "")
   return deckShell(lex, assets, renderingThemeId, `component-${safeId}-${lex.id}`, [slide])

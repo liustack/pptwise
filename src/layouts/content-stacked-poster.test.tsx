@@ -397,6 +397,62 @@ describe("StackedPosterContent", () => {
     expect(posterRect).toBeUndefined()
   })
 
+  it("a chart as the second component degrades: the caption strip is below the readable floor for a plot", () => {
+    const ctx = buildCtx(resolveStyle("classroom"), {})
+    const slide: Slide = {
+      type: "content",
+      kind: "data",
+      heading: "留存率",
+      components: [
+        { type: "paragraph", text: "续约率回到六个季度高点。" },
+        {
+          type: "chart",
+          chart_type: "pie",
+          series: [{ name: "构成", data: [{ x: "A", y: 3 }, { x: "B", y: 2 }] }],
+        },
+      ],
+      footnote: "数据来源：内部审计",
+    } as Slide
+    const { root } = render(<StackedPosterContent ir={ir("classroom", [slide])} slide={slide} index={0} ctx={ctx} />)
+
+    // The strip is 68px tall once the footnote pulls the floor up, and a plot
+    // scaled into 68px is a smudge — so the page takes the degrade path and
+    // both components share the full-width stack instead.
+    const posterRect = Array.from(root.querySelectorAll("g")).find((g) =>
+      g.getAttribute("data-audit-rect")?.startsWith("190,"),
+    )
+    expect(posterRect).toBeUndefined()
+    const wideRect = Array.from(root.querySelectorAll("g")).find((g) =>
+      g.getAttribute("data-audit-rect")?.startsWith("56,"),
+    )
+    expect(wideRect).toBeTruthy()
+  })
+
+  it("a chart as the *first* component still takes the hero: the hero clears the readable floor", () => {
+    const ctx = buildCtx(resolveStyle("classroom"), {})
+    const slide: Slide = {
+      type: "content",
+      kind: "data",
+      heading: "留存率",
+      components: [
+        {
+          type: "chart",
+          chart_type: "pie",
+          series: [{ name: "构成", data: [{ x: "A", y: 3 }, { x: "B", y: 2 }] }],
+        },
+        { type: "paragraph", text: "续约率回到六个季度高点。" },
+      ],
+    } as Slide
+    const { root } = render(<StackedPosterContent ir={ir("classroom", [slide])} slide={slide} index={0} ctx={ctx} />)
+
+    const heroGroup = Array.from(root.querySelectorAll("g")).find((g) =>
+      g.getAttribute("data-audit-rect")?.startsWith("190,"),
+    )!
+    expect(heroGroup).toBeTruthy()
+    const heroRect = parseAudit(heroGroup.getAttribute("data-audit-rect"))
+    expect(heroRect.h!).toBeGreaterThanOrEqual(180)
+  })
+
   it("a 0-component content slide degrades without crashing", () => {
     const ctx = buildCtx(resolveStyle("classroom"), {})
     const slide: Slide = { type: "content", kind: "points", heading: "空白页", components: [] } as Slide

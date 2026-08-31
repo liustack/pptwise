@@ -25,6 +25,19 @@ describe("resolveValueLabelCollisions", () => {
     expect(placed.map((label) => label.y)).toEqual([160, 190])
   })
 
+  it("opens a full line between two labels whose ink boxes only just clear", () => {
+    // 16px apart: the ink boxes (0.9em tall) miss each other by a hair, so
+    // the old overlap-only test left the digits sitting on top of one
+    // another. A line of air is 1.2em + 2.
+    const placed = resolveValueLabelCollisions([
+      spec({ id: "a", text: "90", y: 160, priority: 2 }),
+      spec({ id: "b", text: "87", y: 176, priority: 1 }),
+    ])
+    expect(placed.every((label) => !label.hidden)).toBe(true)
+    const [a, b] = placed
+    expect(Math.abs(a!.y - b!.y)).toBeCloseTo(16 * 1.2 + 2)
+  })
+
   it("staggers the lower-priority label when two endpoint numbers kiss", () => {
     const placed = resolveValueLabelCollisions([
       spec({ id: "a", text: "90", y: 174, priority: 2 }),
