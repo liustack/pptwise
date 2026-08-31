@@ -30,14 +30,6 @@ import { CHART_VARIANTS, FORM_VARIANTS } from "./corpus/components"
 import { LEXICONS } from "./corpus/lexicon"
 import { BAND_IDS, UNSERVED_SECTION, servedLayoutIds, type BandId, type Job } from "./matrix"
 
-/**
- * Emphasis forms draw a `**run**` inside body text, not a component face, so
- * they can never have a dedicated component-band page: there is no component
- * type to build one from. A deck page whose prose carries a marked run is the
- * only place a reviewer sees them.
- */
-const EMPHASIS_FORMS: readonly ComponentFormId[] = ["pad", "underline"]
-
 export type InventoryKind = "theme" | "layout" | "component" | "form"
 
 export interface MappedSubject {
@@ -89,7 +81,7 @@ export function mapJobSubject(job: GallerySubject): MappedSubject | undefined {
 
 /** Component faces that need a dedicated `FORM_VARIANTS` page, not just a deck sighting. */
 export function dedicatedFormIds(): ComponentFormId[] {
-  return COMPONENT_FORMS.filter((form) => !EMPHASIS_FORMS.includes(form))
+  return [...COMPONENT_FORMS]
 }
 
 export function formIdForVariant(variant: (typeof FORM_VARIANTS)[number]): ComponentFormId | undefined {
@@ -137,9 +129,6 @@ function formsVisibleOn(job: Job): ComponentFormId[] {
     if (!form || seen.has(form)) return
     seen.add(form)
     out.push(form)
-  }
-  if (JSON.stringify(slide).includes("**")) {
-    add(resolveComponentForm("emphasis", job.theme)?.form)
   }
   for (const type of leadTypes(job)) {
     add(resolveComponentForm(type, job.theme)?.form)
@@ -220,7 +209,7 @@ export function galleryCoverageGaps(jobs: readonly Job[]): CoverageGaps {
     .sort()
     .filter((id) => !layouts.has(id))
   const missingComponents = COMPONENT_TYPES.filter((id) => !components.has(id))
-  const missingForms = COMPONENT_FORMS.filter((id) => !forms.has(id) && !EMPHASIS_FORMS.includes(id))
+  const missingForms = COMPONENT_FORMS.filter((id) => !forms.has(id))
   const missingDedicatedForms = dedicatedFormIds().filter((id) => !dedicatedForms.has(id))
   const missingPinnedPages = PINNED_FORM_PAGE_IDS.filter((id) => !ids.has(id))
 
@@ -293,7 +282,7 @@ export function assertInventoryCoverage(jobs: readonly Job[]): void {
   if (gaps.missingDedicatedForms.length > 0) {
     problems.push(
       `no dedicated component-band page for form(s): ${gaps.missingDedicatedForms.join(", ")} — ` +
-        `add a FORM_VARIANTS row (emphasis forms are deck-only and are not in this list)`,
+        `add a FORM_VARIANTS row`,
     )
   }
   if (gaps.missingPinnedPages.length > 0) {

@@ -20,8 +20,6 @@ type AssignmentRow = {
 }
 
 const ASSIGNMENTS: AssignmentRow[] = [
-  { componentType: "emphasis", themeId: "consulting", form: "pad" },
-  { componentType: "emphasis", themeId: "lecture", form: "underline" },
   {
     componentType: "icon_cards",
     themeId: "terra",
@@ -289,7 +287,6 @@ const ASSIGNMENTS: AssignmentRow[] = [
 ]
 
 const FORM_COMPONENT_TYPES = [
-  "emphasis",
   "icon_cards",
   "numbered_cards",
   "comparison",
@@ -302,11 +299,10 @@ const FORM_COMPONENT_TYPES = [
 ] as const
 
 describe("resolveComponentForm", () => {
-  it("assigns consulting pad and lecture underline, leaving other themes unassigned", () => {
-    expect(resolveComponentForm("emphasis", "consulting")).toEqual({ form: "pad" })
-    expect(resolveComponentForm("emphasis", "lecture")).toEqual({ form: "underline" })
-    expect(resolveComponentForm("emphasis", "academic")).toBeUndefined()
-    expect(resolveComponentForm("emphasis", "insight")).toBeUndefined()
+  it("carries no emphasis rows — the stroke is a theme field, not a component form", () => {
+    expect(assignedThemeIds("emphasis")).toEqual([])
+    expect(resolveComponentForm("emphasis", "consulting")).toBeUndefined()
+    expect(resolveComponentForm("emphasis", "lecture")).toBeUndefined()
   })
 
   describe("unassigned / missing themeId → undefined", () => {

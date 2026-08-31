@@ -4,7 +4,7 @@
 // Cheap: walks `buildMatrix` page ids, no render.
 
 import { describe, expect, it } from "vitest"
-import { COMPONENT_FORMS } from "@/components/form-assignments"
+
 import { LAYOUT_REGISTRY } from "@/layouts/registry"
 import { CANONICAL_THEME_IDS } from "@/themes"
 import { CHART_VARIANTS, FORM_VARIANTS } from "./corpus/components"
@@ -122,16 +122,11 @@ describe("gallery inventory coverage", () => {
     expect(missing, `layouts with no face page: ${missing.join(", ")}`).toEqual([])
   })
 
-  it("gives every component-face form a dedicated FORM_VARIANTS page, and pad only a deck surface", () => {
+  it("gives every component-face form a dedicated FORM_VARIANTS page", () => {
     const matrix = jobs()
     const dedicated = new Set(
       FORM_VARIANTS.map(formIdForVariant).filter((form): form is NonNullable<typeof form> => !!form),
     )
-
-    expect(dedicatedFormIds().includes("pad")).toBe(false)
-    expect(dedicatedFormIds().includes("underline")).toBe(false)
-    expect(COMPONENT_FORMS.includes("pad")).toBe(true)
-    expect(COMPONENT_FORMS.includes("underline")).toBe(true)
 
     const missingDedicated = dedicatedFormIds().filter((form) => !dedicated.has(form))
     expect(missingDedicated, `missing dedicated form pages: ${missingDedicated.join(", ")}`).toEqual([])

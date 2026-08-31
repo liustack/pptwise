@@ -6,8 +6,8 @@ import {
   truncateToUnits,
   type TextWeightHint,
 } from "../lib/svg-text-layout"
-import { resolveComponentForm } from "../components/form-assignments"
 import { formLegibleInk } from "../components/legibility"
+import type { EmphasisTreatment } from "../themes/schema"
 
 /** One run of text with its emphasis state, in source (unmarked) text order. */
 export interface EmphasisSegment {
@@ -83,18 +83,14 @@ export function renderEmphasisTspans(
   )
 }
 
-export type EmphasisFormId = "tint" | "pad" | "underline"
-
 export interface EmphasisLineRender {
   pads: React.ReactNode
   tspans: React.ReactNode
 }
 
-export function resolveEmphasisForm(themeId: string | undefined): EmphasisFormId {
-  const form = resolveComponentForm("emphasis", themeId)?.form
-  if (form === "pad") return "pad"
-  if (form === "underline") return "underline"
-  return "tint"
+/** A theme that declares no emphasis stroke tints the run in its accent. */
+export function resolveEmphasisForm(emphasis: EmphasisTreatment | undefined): EmphasisTreatment {
+  return emphasis ?? "tint"
 }
 
 /** Hand-drawn quadratic chalk stroke whose x-span equals `width`. */
@@ -166,13 +162,13 @@ export function renderEmphasisLine(
     fontSize: number
     x: number
     baselineY: number
-    themeId?: string
+    emphasis?: EmphasisTreatment
     fontWeight?: string
     measureWeight?: TextWeightHint
     textAnchor?: "start" | "middle" | "end"
   },
 ): EmphasisLineRender {
-  const form = resolveEmphasisForm(opts.themeId)
+  const form = resolveEmphasisForm(opts.emphasis)
   const tspansTint = renderEmphasisTspans(segments, {
     accent: opts.accent,
     baseFill: opts.baseFill,
@@ -291,7 +287,7 @@ export function renderEmphasisText(
     accent: string
     padFill?: string
     baseFill: string
-    themeId?: string
+    emphasis?: EmphasisTreatment
     fontWeight?: string
     measureWeight?: TextWeightHint
   },

@@ -329,7 +329,7 @@ function renderStackedContent(
             padFill: ctx.colors.accent,
             baseFill: subheadingFill,
             fontWeight: "700",
-            themeId: ctx.themeId,
+            emphasis: ctx.emphasis,
           },
           <text
             data-truncated={subheading.truncated ? "1" : undefined}
@@ -542,7 +542,7 @@ export function StackedPosterContent(props: SvgTemplateProps) {
             padFill: ctx.colors.accent,
             baseFill: subheadingFill,
             fontWeight: "700",
-            themeId: ctx.themeId,
+            emphasis: ctx.emphasis,
           },
           <text
             data-truncated={subheading.truncated ? "1" : undefined}

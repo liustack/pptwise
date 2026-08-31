@@ -404,7 +404,7 @@ export function ToneAdaptiveContent({ ir, slide, index, ctx, page }: SvgTemplate
               padFill: colors.accent,
               baseFill: subheadingFill,
               fontWeight: "700",
-              themeId: ctx.themeId,
+              emphasis: ctx.emphasis,
             },
             <text
               data-truncated={subheading.truncated ? "1" : undefined}
@@ -568,7 +568,7 @@ export function ToneAdaptiveContent({ ir, slide, index, ctx, page }: SvgTemplate
             padFill: colors.accent,
             baseFill: subheadingFill,
             fontWeight: "700",
-            themeId: ctx.themeId,
+            emphasis: ctx.emphasis,
           },
           <text
             data-truncated={subheading.truncated ? "1" : undefined}

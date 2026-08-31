@@ -142,7 +142,7 @@ export function LookRangeChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
             accent: subAccent,
             padFill: colors.accent,
             baseFill: subInk,
-            themeId: ctx.themeId,
+            emphasis: ctx.emphasis,
             measureWeight: { fontFamily: fonts.heading },
           },
           <text

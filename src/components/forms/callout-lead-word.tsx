@@ -67,7 +67,7 @@ export function renderLeadWord(
           {
             accent: ctx.colors.accent,
             baseFill: ink,
-            themeId: ctx.themeId,
+            emphasis: ctx.emphasis,
             measureWeight: { fontFamily: ctx.fonts.body },
           },
           <text

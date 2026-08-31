@@ -17,7 +17,7 @@ import { CHAPTER_LAYOUTS } from "../layouts/index-chapter"
 import { CONTENT_LAYOUTS } from "../layouts/index-content"
 import { ENDING_LAYOUTS } from "../layouts/index-ending"
 import { MOTIFS } from "../motifs"
-import { getThemeDefinition } from "../themes/definitions"
+import { getThemeDefinition, resolveThemeEmphasis } from "../themes/definitions"
 import { resolveEffectiveFace } from "./layout-selection"
 import { partitionSvgDepth, type SvgDepthLayers } from "./depth-contract/partition"
 import { enforceMidgroundContract, resolveMidgroundBackground } from "./depth-contract/safety"
@@ -180,6 +180,9 @@ export function buildCtx(
     bodyFontPx: bodyFontPx ?? PACING_BUDGETS.balanced.bodyBaselinePx,
     chartPaletteOffset,
     themeId: tokens.id,
+    // The bound theme's own emphasis stroke, resolved once here so no
+    // renderer downstream has to reach back into the theme registry.
+    emphasis: resolveThemeEmphasis(tokens.id),
   }
 }
 

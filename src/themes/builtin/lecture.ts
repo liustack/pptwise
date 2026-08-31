@@ -99,6 +99,9 @@ export const LECTURE_THEME = {
   id: "lecture",
   label: "Lecture Hall",
   style: LECTURE_TOKENS,
+  // A chalk line under the marked run, drawn the way it is on the board
+  // this theme is named after.
+  emphasis: "underline",
   menu: {
     cover: { face: "board-head" },
     chapter: { face: "chalk-rule-chapter" },

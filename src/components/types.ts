@@ -1,6 +1,7 @@
 import type React from "react"
 import type { Component } from "@/ir"
 import type { StyleColors, StyleShape } from "../themes/tokens"
+import type { EmphasisTreatment } from "../themes/schema"
 
 /**
  * Render context threaded through every SVG component. Colors are hex strings from
@@ -115,16 +116,24 @@ export interface ComponentCtx {
    */
   chartPaletteOffset?: number
   /**
-   * Theme id used to look up a component form assignment
-   * (`./form-assignments.ts`'s `resolveComponentForm`). Omitted means
-   * "no form assignment, current face" — the component renderer keeps
-   * today's default markup. Production `buildCtx` always sets this from
-   * `tokens.id` (`StyleTokens.id` is already the theme id). Hand-built
-   * test ctx objects that skip it keep the default renderer, so existing
-   * component-level tests stay on the current face until a later commit
-   * wires dispatch.
+   * Theme id, used by the heading-treatment assignment table
+   * (`../render/heading-treatments/assignments.ts`). Production `buildCtx`
+   * always sets it from `tokens.id` (`StyleTokens.id` is already the theme
+   * id). A hand-built test ctx that skips it gets the default heading
+   * treatment.
+   *
+   * No component renderer reads this. A component draws one way on every
+   * theme, and what differs between themes reaches it through `colors`,
+   * `fonts`, and `shape`.
    */
   themeId?: string
+  /**
+   * The bound theme's declared emphasis stroke for a `**marked**` run
+   * (`ThemeDefinition.emphasis`), threaded here rather than looked up by id
+   * so the render layer never has to reach back into the theme registry.
+   * Omitted equals `"tint"`.
+   */
+  emphasis?: EmphasisTreatment
 }
 
 /**

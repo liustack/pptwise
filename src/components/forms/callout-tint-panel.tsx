@@ -71,7 +71,7 @@ export function renderTintPanel(
           {
             accent: ctx.colors.accent,
             baseFill: ink,
-            themeId: ctx.themeId,
+            emphasis: ctx.emphasis,
             measureWeight: { bold, fontFamily: ctx.fonts.body },
           },
           <text

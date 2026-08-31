@@ -9,7 +9,7 @@ read_when:
 
 # Themes
 
-A theme is one self-contained version 2 file. It combines a complete style system, an optional brand configuration, occasion metadata, identity strength, and a menu that maps semantic page moves to faces.
+A theme is one self-contained version 2 file. It combines a complete style system, an optional brand configuration, occasion metadata, identity strength, an emphasis stroke, and a menu that maps semantic page moves to faces.
 
 There is no partial format, base reference, or load-time inheritance. Creating a theme means copying an existing complete theme and owning the copy independently.
 
@@ -22,6 +22,7 @@ There is no partial format, base reference, or load-time inheritance. Creating a
   "label": "Acme Report",
   "occasions": ["business"],
   "identity": "medium",
+  "emphasis": "pad",
   "style": {
     "id": "acme-report",
     "colors": {
@@ -72,6 +73,8 @@ There is no partial format, base reference, or load-time inheritance. Creating a
 `version`, `id`, `style`, and `menu` are required. `style.id` must equal the theme `id`. A theme id is a slug of lowercase letters, digits, and hyphens. Deck and workspace files may keep a factory preset id and shadow it.
 
 The style object is complete. Its required core contains background, surface, primary, accent, text, muted, chart palette, heading fonts, body fonts, and four default backgrounds. Additional colors, mono fonts, shape controls, and `allowCustomBackground` are optional.
+
+`emphasis` is how the theme strikes a `**marked**` run inside body text: `tint` recolors it in the accent, `pad` swipes a marker-pen block behind it, `underline` strikes a chalk line under it. Omitted equals `tint`. It is a property of the theme, not of any component, so every page of a deck strikes its marked runs the same way.
 
 The menu must contain one entry for every boundary page and at least one content kind. It does not need all eleven kinds. Each offered kind maps to one face. `params` must match the adjustable values declared by that face. `decor` can select a motif or silence it. `brand: "none"` suppresses the shared brand fragment on that page.
 

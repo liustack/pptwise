@@ -146,7 +146,7 @@ export function BoardHeadCover({ ir, slide, ctx }: SvgTemplateProps) {
             padFill: colors.accent,
             baseFill: titleInk,
             fontWeight: "400",
-            themeId: ctx.themeId,
+            emphasis: ctx.emphasis,
             measureWeight: { bold: false, fontFamily: fonts.heading },
           },
           <text
@@ -171,7 +171,7 @@ export function BoardHeadCover({ ir, slide, ctx }: SvgTemplateProps) {
             padFill: colors.accent,
             baseFill: subInk,
             fontWeight: "400",
-            themeId: ctx.themeId,
+            emphasis: ctx.emphasis,
             measureWeight: { bold: false, fontFamily: fonts.heading },
           },
           <text

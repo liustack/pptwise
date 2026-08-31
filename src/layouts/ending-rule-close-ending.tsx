@@ -90,7 +90,7 @@ export function RuleCloseEnding({ ir, slide, ctx, page }: SvgTemplateProps) {
                 padFill: colors.accent,
                 baseFill: titleInk,
                 fontWeight: "700",
-                themeId: ctx.themeId,
+                emphasis: ctx.emphasis,
                 measureWeight: { bold: true, fontFamily: fonts.heading },
               },
               <text

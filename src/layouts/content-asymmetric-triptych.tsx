@@ -288,7 +288,7 @@ export function AsymmetricTriptychContent({ ir, slide, index, ctx }: SvgTemplate
             padFill: colors.accent,
             baseFill: subheadingFill,
             fontWeight: "700",
-            themeId: ctx.themeId,
+            emphasis: ctx.emphasis,
           },
           <text
             x="96"

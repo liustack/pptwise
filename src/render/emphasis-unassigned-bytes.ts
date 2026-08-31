@@ -4,7 +4,7 @@ import type { PptxIR, Slide } from "../ir"
 import { CANONICAL_THEME_IDS } from "../themes"
 import { __resetRegisteredThemes } from "../themes/definitions"
 import { registerTestTheme } from "../themes/test-fixtures"
-import { resolveComponentForm } from "../components/form-assignments"
+import { getThemeDefinition } from "../themes/definitions"
 
 /**
  * Unassigned-theme emphasis byte-nail matrix. Shared by the colocated test
@@ -13,7 +13,7 @@ import { resolveComponentForm } from "../components/form-assignments"
  */
 
 export const UNASSIGNED = CANONICAL_THEME_IDS.filter(
-  (themeId) => resolveComponentForm("emphasis", themeId) === undefined,
+  (themeId) => getThemeDefinition(themeId).emphasis === undefined,
 )
 
 export const MARKED_HEADING = "年度**增长结论**与下一步投入"

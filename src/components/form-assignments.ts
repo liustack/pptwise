@@ -18,8 +18,6 @@ export const COMPONENT_FORMS = [
   "tint_panel",
   "hanging_bare",
   "lead_word",
-  "pad",
-  "underline",
   "typed_nodes",
   "layer_stack",
 ] as const
@@ -61,10 +59,6 @@ export interface FormAssignment {
 }
 
 const ASSIGNMENTS: Record<string, Record<string, FormAssignment>> = {
-  emphasis: {
-    consulting: { form: "pad" },
-    lecture: { form: "underline" },
-  },
   icon_cards: {
     terra: {
       form: "icon_columns",

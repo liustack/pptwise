@@ -12,6 +12,8 @@ import {
   sliceEmphasisForLines,
   fitEmphasisLine,
 } from "./emphasis"
+import { getThemeDefinition } from "../themes/definitions"
+import type { EmphasisTreatment } from "../themes/schema"
 
 describe("parseEmphasis", () => {
   it("returns a single plain segment when there's no markup", () => {
@@ -158,10 +160,16 @@ describe("sliceEmphasisForLines", () => {
 })
 
 describe("resolveEmphasisForm", () => {
-  it("assigns lecture underline, consulting pad, and insight tint", () => {
-    expect(resolveEmphasisForm("lecture")).toBe("underline")
-    expect(resolveEmphasisForm("consulting")).toBe("pad")
-    expect(resolveEmphasisForm("insight")).toBe("tint")
+  it("passes a theme's declared stroke through and defaults an undeclared one to tint", () => {
+    expect(resolveEmphasisForm("underline")).toBe("underline")
+    expect(resolveEmphasisForm("pad")).toBe("pad")
+    expect(resolveEmphasisForm(undefined)).toBe("tint")
+  })
+
+  it("reads the stroke off the theme definition, not a per-component table", () => {
+    expect(getThemeDefinition("lecture").emphasis).toBe("underline")
+    expect(getThemeDefinition("consulting").emphasis).toBe("pad")
+    expect(getThemeDefinition("insight").emphasis).toBeUndefined()
   })
 })
 
@@ -174,7 +182,7 @@ function parseQuadXSpan(d: string): { start: number; width: number } {
 function emphasisLineMarkup(
   text: string,
   opts: {
-    themeId?: string
+    emphasis?: EmphasisTreatment
     padFill?: string
     accent?: string
     baseFill?: string
@@ -192,7 +200,7 @@ function emphasisLineMarkup(
     fontSize,
     x,
     baselineY: opts.baselineY ?? 200,
-    themeId: opts.themeId,
+    emphasis: opts.emphasis,
   })
   return renderToStaticMarkup(
     createElement("g", null, rendered.pads, createElement("text", { x, y: 200, fontSize }, rendered.tspans)),
@@ -203,7 +211,7 @@ describe("renderEmphasisLine underline", () => {
   it("draws a chalk arc under the emphasized run, not a full-title scribble", () => {
     const fontSize = 40
     const x = 100
-    const html = emphasisLineMarkup("囚徒**困境**与重复博弈", { themeId: "lecture", fontSize, x })
+    const html = emphasisLineMarkup("囚徒**困境**与重复博弈", { emphasis: "underline", fontSize, x })
     expect(html).toContain('data-emphasis-underline=""')
     expect(html).not.toContain('data-emphasis-pad=""')
     expect(html).not.toContain("q 160 8 330 3")
@@ -226,7 +234,7 @@ describe("renderEmphasisLine underline", () => {
 
   it("uses padFill as the underline stroke when provided", () => {
     const html = emphasisLineMarkup("前**关键词**后", {
-      themeId: "lecture",
+      emphasis: "underline",
       padFill: "#112233",
     })
     const doc = new DOMParser().parseFromString(`<svg>${html}</svg>`, "image/svg+xml")
@@ -234,7 +242,7 @@ describe("renderEmphasisLine underline", () => {
   })
 
   it("keeps unassigned themes on the tint branch with no underline path", () => {
-    const html = emphasisLineMarkup("年度**增长结论**与下一步投入", { themeId: "insight" })
+    const html = emphasisLineMarkup("年度**增长结论**与下一步投入", { emphasis: undefined })
     expect(html).not.toContain("data-emphasis-underline")
     expect(html).not.toContain("data-emphasis-pad")
     expect(html).toContain('fill="#E9C46A"')
@@ -252,7 +260,7 @@ function padPathPoints(d: string): { x: number; y: number }[] {
 
 describe("renderEmphasisLine pad", () => {
   it("paints a marker path under the run, not an axis-aligned rect", () => {
-    const html = emphasisLineMarkup("年度**增长结论**与下一步投入", { themeId: "consulting" })
+    const html = emphasisLineMarkup("年度**增长结论**与下一步投入", { emphasis: "pad" })
     expect(html).toContain('data-emphasis-pad=""')
     expect(html).not.toContain("data-emphasis-underline")
     const doc = new DOMParser().parseFromString(`<svg>${html}</svg>`, "image/svg+xml")
@@ -271,10 +279,10 @@ describe("renderEmphasisLine pad", () => {
   })
 
   it("derives the marker from the run text so the same input reprints byte-identically", () => {
-    const a = emphasisLineMarkup("普通 **强调内容** 普通", { themeId: "consulting", fontSize: 24, x: 0 })
-    const b = emphasisLineMarkup("普通 **强调内容** 普通", { themeId: "consulting", fontSize: 24, x: 0 })
+    const a = emphasisLineMarkup("普通 **强调内容** 普通", { emphasis: "pad", fontSize: 24, x: 0 })
+    const b = emphasisLineMarkup("普通 **强调内容** 普通", { emphasis: "pad", fontSize: 24, x: 0 })
     expect(a).toBe(b)
-    const other = emphasisLineMarkup("普通 **另一段字** 普通", { themeId: "consulting", fontSize: 24, x: 0 })
+    const other = emphasisLineMarkup("普通 **另一段字** 普通", { emphasis: "pad", fontSize: 24, x: 0 })
     const dOf = (html: string) =>
       new DOMParser().parseFromString(`<svg>${html}</svg>`, "image/svg+xml").querySelector("[data-emphasis-pad]")?.getAttribute("d")
     expect(dOf(a)).not.toBe(dOf(other))

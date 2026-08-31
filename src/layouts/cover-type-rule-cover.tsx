@@ -143,7 +143,7 @@ export function TypeRuleCover({ ir, slide, ctx }: SvgTemplateProps) {
                 padFill: colors.accent,
                 baseFill: titleInk,
                 fontWeight: "700",
-                themeId: ctx.themeId,
+                emphasis: ctx.emphasis,
                 measureWeight: { bold: true, fontFamily: fonts.heading },
               },
               <text
@@ -169,7 +169,7 @@ export function TypeRuleCover({ ir, slide, ctx }: SvgTemplateProps) {
             padFill: colors.accent,
             baseFill: metaInk(colors.muted, bg),
             fontWeight: "600",
-            themeId: ctx.themeId,
+            emphasis: ctx.emphasis,
             measureWeight: { fontFamily: fonts.body },
           },
           <text

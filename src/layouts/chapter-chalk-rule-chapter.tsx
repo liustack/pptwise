@@ -124,7 +124,7 @@ export function ChalkRuleChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
               padFill: colors.accent,
               baseFill: titleInk,
               fontWeight: "700",
-              themeId: ctx.themeId,
+              emphasis: ctx.emphasis,
               measureWeight: { bold: true, fontFamily: fonts.heading },
             },
             <text
@@ -149,7 +149,7 @@ export function ChalkRuleChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
             padFill: colors.accent,
             baseFill: metaInk(colors.muted, pageBg),
             fontWeight: "400",
-            themeId: ctx.themeId,
+            emphasis: ctx.emphasis,
             measureWeight: { fontFamily: fonts.body },
           },
           <text

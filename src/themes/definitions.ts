@@ -11,6 +11,7 @@ import {
   type BuiltinThemeDeclaration,
   type Menu,
   type MenuEntry,
+  type EmphasisTreatment,
   type MenuParamValue,
   type ThemeFile,
 } from "./schema"
@@ -35,6 +36,8 @@ export interface ThemeDefinition {
   tags: readonly string[]
   occasions?: readonly Occasion[]
   identity?: "low" | "medium" | "high"
+  /** How this theme strikes a `**marked**` run. `undefined` equals `"tint"`. */
+  emphasis?: EmphasisTreatment
   /** The theme's semantic page menu: one face per served kind. Authoritative. */
   menu: Menu
   /** One registered motif id. `undefined` means the theme has no motif. */
@@ -59,6 +62,7 @@ export function compileBuiltinTheme(file: BuiltinThemeDeclaration): ThemeDefinit
     tags: record.occasions,
     occasions: record.occasions,
     identity: record.identity,
+    emphasis: file.emphasis,
     menu: file.menu,
     motif: file.motif?.id,
     motifParameters: file.motif?.params,
@@ -255,6 +259,7 @@ function compileThemeFile(file: ThemeFile): ThemeDefinition {
     tags: file.occasions ?? [],
     occasions: file.occasions,
     identity: file.identity,
+    emphasis: file.emphasis,
     menu: file.menu,
   }
 }
@@ -460,6 +465,24 @@ export function getInstalledThemeIds(): readonly string[] {
  */
 export function getThemeDefinition(id: string): ThemeDefinition {
   return REGISTERED_THEMES.get(id) ?? THEME_DEFINITIONS[resolveThemeId(id)]
+}
+
+/**
+ * The emphasis stroke declared by the theme these style tokens came from, or
+ * `undefined` when the id belongs to no installed theme.
+ *
+ * Unlike `getThemeDefinition`, an unknown id is not an error here: `buildCtx`
+ * is routinely handed a hand-built `StyleTokens` object that never came from
+ * a theme file at all (motif and layout tests), and such tokens simply
+ * declare no stroke — the same answer as an installed theme that omits the
+ * field.
+ */
+export function resolveThemeEmphasis(id: string): EmphasisTreatment | undefined {
+  const registered = REGISTERED_THEMES.get(id)
+  if (registered) return registered.emphasis
+  return CANONICAL_THEME_IDS.includes(id as CanonicalThemeId)
+    ? THEME_DEFINITIONS[id as CanonicalThemeId].emphasis
+    : undefined
 }
 
 /**

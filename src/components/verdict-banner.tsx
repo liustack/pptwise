@@ -223,7 +223,7 @@ export const verdictBanner: SvgComponent<VerdictBannerComponent> = {
               padFill: ctx.colors.accent,
               baseFill: ctx.colors.text,
               fontWeight: "700",
-              themeId: ctx.themeId,
+              emphasis: ctx.emphasis,
               measureWeight: { bold: true, fontFamily: ctx.fonts.body },
             },
             <text

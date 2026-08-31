@@ -34,7 +34,7 @@ export function statement({ slide, ctx }: SvgTemplateProps) {
             padFill: colors.accent,
             baseFill: colors.primary,
             fontWeight: "700",
-            themeId: ctx.themeId,
+            emphasis: ctx.emphasis,
             measureWeight: { bold: true, fontFamily: fonts.heading },
           },
           <text
@@ -142,7 +142,7 @@ export function oneEvidence({ slide, index, ctx }: SvgTemplateProps) {
             padFill: colors.accent,
             baseFill: colors.primary,
             fontWeight: "400",
-            themeId: ctx.themeId,
+            emphasis: ctx.emphasis,
             measureWeight: { bold: false, fontFamily: fonts.heading },
           },
           <text

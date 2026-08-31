@@ -119,7 +119,7 @@ export function PledgeOpenCover({ ir, slide, ctx }: SvgTemplateProps) {
               padFill: colors.primary,
               baseFill: titleInk,
               fontWeight: "700",
-              themeId: ctx.themeId,
+              emphasis: ctx.emphasis,
               measureWeight: { bold: true, fontFamily: fonts.heading },
             },
             <text

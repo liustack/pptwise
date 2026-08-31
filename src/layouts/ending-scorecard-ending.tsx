@@ -128,7 +128,7 @@ export function ScorecardEnding({ slide, ctx }: SvgTemplateProps) {
                 padFill: colors.primary,
                 baseFill: itemInk,
                 fontWeight: "700",
-                themeId: ctx.themeId,
+                emphasis: ctx.emphasis,
                 measureWeight: { fontFamily: fonts.body },
               },
               <text
