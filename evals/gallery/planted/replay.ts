@@ -27,7 +27,8 @@ export interface ReplayPlantedResult {
 function plantedPage(entry: { id: string; class: string }): GalleryPageMeta {
   return {
     id: entry.id,
-    table: "planted",
+    section: "planted",
+    band: "planted",
     subject: entry.class,
     language: "en",
     theme: "planted",

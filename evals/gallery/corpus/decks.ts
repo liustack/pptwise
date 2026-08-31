@@ -466,6 +466,19 @@ const CONTENT_FACE_KINDS: Record<string, PageKind> = {
   "two-column": "comparison",
 }
 
+/**
+ * Which menu slot a layout would occupy: the boundary slide type it draws,
+ * or, for a content face, the page kind it is authored against. The gallery
+ * needs this for faces no menu offers — they still have to be filed under a
+ * slot so the cross-cut view can put them in the right row.
+ */
+export function layoutFaceSlot(layoutId: string): string {
+  const def = LAYOUT_REGISTRY[layoutId]
+  if (!def) throw new Error(`unknown layout id: ${layoutId}`)
+  const slideType = def.slideTypes[0]!
+  return slideType === "content" ? (CONTENT_FACE_KINDS[layoutId] ?? "points") : slideType
+}
+
 function galleryThemeId(sourceThemeId: CanonicalThemeId, layoutId: string, slideType: Slide["type"], kind?: PageKind): string {
   return `gallery-face-${sourceThemeId}-${slideType}-${kind ?? "boundary"}-${layoutId}`
 }

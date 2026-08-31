@@ -19,7 +19,8 @@ function fakeRunner(verdictFor: (prompt: string) => "pass" | "limit" | "rework")
       code: 0,
       stdout: JSON.stringify({
         id,
-        table: "planted",
+        section: "planted",
+        band: "planted",
         subject: "planted",
         language: "en",
         theme: "planted",

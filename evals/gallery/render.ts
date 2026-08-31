@@ -20,13 +20,20 @@ import { join } from "node:path"
 import { renderSlideSvg, validateIr } from "@/api"
 import { CANVAS_H_PX, CANVAS_W_PX } from "@/constants"
 import { auditDeck } from "@/audit/deck-audit"
-import { TABLE_IDS, type Job, type TableId } from "./matrix"
+import { BAND_IDS, UNSERVED_SECTION, type BandId, type Job } from "./matrix"
 import { pruneGalleryDir } from "./prune"
 
 export interface ManifestPage {
   readonly id: string
-  readonly table: TableId
+  /** Theme id, or `"unserved"` for the appendix section. */
+  readonly section: string
+  readonly sectionLabel: string
+  readonly band: BandId
   readonly subject: string
+  /** Menu slot, on `face` pages only. */
+  readonly slot?: string
+  /** Component id, on `component` pages only. */
+  readonly component?: string
   readonly language: string
   readonly languageLabel: string
   readonly theme: string
@@ -69,48 +76,68 @@ export interface ManifestPage {
   readonly fingerprint: PageFingerprint
 }
 
-export interface ManifestTable {
-  readonly id: TableId
+/** One theme's whole review, or the appendix. The gallery's top-level unit. */
+export interface ManifestSection {
+  readonly id: string
+  readonly label: string
+  /** One line saying what this section is here to answer. */
+  readonly blurb: string
+  readonly pages: readonly string[]
+}
+
+/** A stripe inside every section: sample deck, menu faces, component skins. */
+export interface ManifestBand {
+  readonly id: BandId
   readonly label: string
   readonly question: string
-  readonly pages: readonly string[]
 }
 
 export interface Manifest {
   /**
-   * 2 since pages carry `fingerprint` alongside `hash`. A v1 reader still
-   * works — the new field is additive and `hash` kept its meaning — but a
-   * verdict recorded against a v1 manifest cannot tell a recolor from a
-   * redraw, and `verdictFreshness` needs to know which kind it is holding.
+   * 3 since the review is cut theme first: `tables` is gone and every page
+   * names its `section` and `band` instead. A v2 reader cannot be salvaged
+   * by a fallback — the axis it grouped by no longer exists — so the version
+   * is bumped rather than the old field being faked.
    */
-  readonly manifestVersion: 2
+  readonly manifestVersion: 3
   readonly generator: string
   readonly pptwiseVersion: string
   readonly generatedAt: string
   readonly slide: { readonly width: number; readonly height: number }
-  readonly tables: readonly ManifestTable[]
+  /** Themes in registry order, appendix last. */
+  readonly sections: readonly ManifestSection[]
+  /** Always in `BAND_IDS` order. */
+  readonly bands: readonly ManifestBand[]
+  /** Section order × band order × natural order inside the band. */
   readonly pages: readonly ManifestPage[]
 }
 
-const TABLE_META: Record<TableId, { label: string; question: string }> = {
-  theme: {
-    label: "主题表",
-    question:
-      "每个主题仍是十页（封面/章节/七页内容/结尾），七个内容页按固定分配表轮换组件——这个主题好不好看？",
+const BAND_META: Record<BandId, { label: string; question: string }> = {
+  deck: {
+    label: "样张",
+    question: "十页一副真实的牌面（封面/章节/七页内容/结尾）——这套主题拿去讲，观众看到的是这个样子，好不好看？",
   },
-  layout: {
-    label: "版式表",
-    question:
-      "普通版式钉在基准主题上三种语料各跑一遍，稀排版式按有资格的主题展开——这个版式在真实内容下站不站得住？",
+  face: {
+    label: "骨架全脸",
+    question: "这套主题菜单上的每一张脸，用它自己的皮渲一页——这套主题的骨相成不成立？",
   },
   component: {
-    label: "组件表",
-    question: "固定基准主题，每个组件一页，三种语料各跑一遍——这个组件画出来能不能看？",
+    label: "组件皮肤",
+    question: "37 个组件（chart 拆成九张图）穿上这套主题的皮各一页——每个组件在这套皮下画出来能不能看？",
   },
-  skeleton: {
-    label: "骨架表",
-    question: "每套主题四页型各自锁定与策展的脸，加上它开放的 sparse 钉面，全部用这套主题自己渲——这套主题的骨相成不成立？",
-  },
+}
+
+/**
+ * One line per section, built from what the section actually contains rather
+ * than hand-written per theme: 24 hand-written blurbs would go stale the
+ * first time a menu changed, and a stale blurb is worse than a count.
+ */
+function sectionBlurb(id: string, pages: readonly ManifestPage[]): string {
+  if (id === UNSERVED_SECTION) {
+    return `没有任何主题菜单点过的 ${pages.length} 张注册版式，统一穿 ${pages[0]?.theme ?? "consulting"} 的皮各渲一页——它们还站不站得住？`
+  }
+  const counts = BAND_IDS.map((band) => ({ band, n: pages.filter((p) => p.band === band).length })).filter((b) => b.n > 0)
+  return counts.map(({ band, n }) => `${BAND_META[band].label} ${n} 页`).join(" · ")
 }
 
 export interface RenderResult {
@@ -221,8 +248,12 @@ export function renderMatrix(jobs: readonly Job[], outDir: string, pptwiseVersio
   for (const job of jobs) {
     const base: Omit<ManifestPage, "file" | "skipped" | "hash" | "fingerprint"> = {
       id: job.id,
-      table: job.table,
+      section: job.section,
+      sectionLabel: job.sectionLabel,
+      band: job.band,
       subject: job.subject,
+      ...(job.slot !== undefined ? { slot: job.slot } : {}),
+      ...(job.component !== undefined ? { component: job.component } : {}),
       language: job.language,
       languageLabel: job.languageLabel,
       theme: job.theme,
@@ -296,29 +327,42 @@ export function renderMatrix(jobs: readonly Job[], outDir: string, pptwiseVersio
     })
   }
 
-  const tables: ManifestTable[] = TABLE_IDS.map((id) => ({
+  // Sections in first-appearance order, which is the job order: themes as the
+  // registry sorts them, appendix last.
+  const sectionIds: string[] = []
+  for (const p of pages) if (!sectionIds.includes(p.section)) sectionIds.push(p.section)
+  const sections: ManifestSection[] = sectionIds.map((id) => {
+    const own = pages.filter((p) => p.section === id)
+    return {
+      id,
+      label: own[0]!.sectionLabel,
+      blurb: sectionBlurb(id, own),
+      pages: own.map((p) => p.id),
+    }
+  })
+  const bands: ManifestBand[] = BAND_IDS.filter((id) => pages.some((p) => p.band === id)).map((id) => ({
     id,
-    label: TABLE_META[id].label,
-    question: TABLE_META[id].question,
-    pages: pages.filter((p) => p.table === id).map((p) => p.id),
-  })).filter((t) => t.pages.length > 0)
+    label: BAND_META[id].label,
+    question: BAND_META[id].question,
+  }))
 
   const manifest: Manifest = {
-    manifestVersion: 2,
+    manifestVersion: 3,
     generator: "pptwise gallery",
     pptwiseVersion,
     generatedAt: new Date().toISOString(),
     slide: { width: CANVAS_W_PX, height: CANVAS_H_PX },
-    tables,
+    sections,
+    bands,
     pages,
   }
 
   writeFileSync(join(outDir, "manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`, "utf8")
 
   // Prune AFTER the writes, never before. Wiping pages/ first would blank a
-  // previous good gallery if this run crashed mid-render. `--only=layout`
-  // into a dir that already has theme pages: this run's files are the source
-  // of truth, so the other tables' leftovers go away. That is intended.
+  // previous good gallery if this run crashed mid-render. `--only=face`
+  // into a dir that already has deck pages: this run's files are the source
+  // of truth, so the other bands' leftovers go away. That is intended.
   pruneGalleryDir(pagesDir, new Set(pages.filter((p) => p.file).map((p) => `${p.id}.svg`)))
 
   if (auditErrors.length > 0) {

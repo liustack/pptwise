@@ -1,5 +1,14 @@
 /**
- * Expands the review tables into a flat, ordered list of render jobs.
+ * Expands the review into a flat, ordered list of render jobs, theme first.
+ *
+ * One section per theme, three bands inside it: the theme's own ten-page
+ * sample deck, its menu laid out face by face, and every component wearing
+ * that theme's skin. A reviewer therefore judges one theme at a time on
+ * everything it can draw, instead of hopping between four cross-cut tables.
+ *
+ * Layouts no theme menu ever asks for still need a page — otherwise the
+ * coverage promise quietly shrinks to "whatever the menus happen to use" —
+ * so they land in one appendix section rendered on the baseline skin.
  *
  * Also the place the coverage promise is enforced: if the IR grows a
  * component type or the registry grows a layout and nobody teaches this
@@ -16,25 +25,65 @@ import { CHART_VARIANTS, COMPONENT_BUILDERS, FORM_VARIANTS } from "./corpus/comp
 import {
   BASELINE_THEME,
   componentPage,
+  layoutFaceSlot,
   layoutPage,
   themeDeck,
   type CorpusAssets,
 } from "./corpus/decks"
 import { LANGUAGE_IDS, LEXICONS, type LanguageId } from "./corpus/lexicon"
 
-export const TABLE_IDS = ["theme", "skeleton", "layout", "component"] as const
-export type TableId = (typeof TABLE_IDS)[number]
+export const BAND_IDS = ["deck", "face", "component"] as const
+export type BandId = (typeof BAND_IDS)[number]
+
+/** The appendix section's id. It is not a theme. */
+export const UNSERVED_SECTION = "unserved"
+
+export const UNSERVED_SECTION_LABEL = "未上菜版式"
+
+/**
+ * Face slots in reading order: the two openings, the eleven content kinds a
+ * menu can serve, then the close. The cross-cut view rows are drawn in this
+ * order, so it is the corpus' own answer to "what can a deck be made of".
+ */
+export const FACE_SLOTS = [
+  "cover",
+  "chapter",
+  "points",
+  "list",
+  "comparison",
+  "process",
+  "data",
+  "photo",
+  "statement",
+  "quote",
+  "fact",
+  "evidence",
+  "hierarchy",
+  "ending",
+] as const
 
 export interface Job {
   /** Stable, filename-safe page id — also the key verdicts are recorded against. */
   readonly id: string
-  readonly table: TableId
-  /** Theme id, layout id, or component label — what this page is here to show. */
+  /** Theme id, or `"unserved"` for the appendix section. */
+  readonly section: string
+  readonly sectionLabel: string
+  readonly band: BandId
+  /** What this page is here to show: a theme id, a layout id, or a component id. */
   readonly subject: string
+  /** Menu slot, when the band is `"face"`. Unset on the other bands. */
+  readonly slot?: string
+  /** Component id (chart and form variants carry their own), when the band is `"component"`. */
+  readonly component?: string
   readonly language: LanguageId
   /** Human-readable language name, for the gallery's own shell. */
   readonly languageLabel: string
-  /** Which theme actually rendered — the subject for the theme table, the baseline elsewhere. */
+  /**
+   * The skin actually under review — the section's theme, or the baseline
+   * for the appendix. Not the temporary bound theme the IR may carry: a face
+   * the section's own menu does not offer is reached through a derived theme
+   * that keeps the section theme's colors, and the reviewer is judging those.
+   */
   readonly theme: string
   /** Page position inside its deck (1-based) and the deck's own length. */
   readonly page: number
@@ -54,22 +103,78 @@ function safe(s: string): string {
 }
 
 export interface MatrixOptions {
-  /** Languages for the layout and component tables. */
-  readonly languages?: readonly LanguageId[]
   /**
-   * Language for the theme table. The source issue attaches the
-   * three-script requirement to layouts and components, not to themes —
-   * a theme is judged once, on one coherent body of text, so that two
-   * themes differ by exactly one variable.
+   * Corpus languages for the baseline theme's component band. `themeLanguage`
+   * is always included: every other section is judged on one language so two
+   * themes differ by exactly one variable, and the three-script requirement
+   * is discharged once, on the baseline skin.
    */
+  readonly languages?: readonly LanguageId[]
+  /** The one language every section is rendered in. */
   readonly themeLanguage?: LanguageId
-  /** Restrict to one table — for a quick pass over just what changed. */
-  readonly only?: TableId
+  /** Restrict to one band — for a quick pass over just what changed. */
+  readonly only?: BandId
+  /** Restrict to one section (a theme id, or `"unserved"`). */
+  readonly section?: string
 }
 
 /** Themes the gallery renders, in registry order. */
 export function galleryThemes(listThemeIds: readonly string[]): readonly string[] {
   return [...listThemeIds].sort()
+}
+
+/** Layout ids reachable from at least one theme menu, i.e. what the product can actually pick. */
+export function servedLayoutIds(themeIds: readonly string[]): Set<string> {
+  const served = new Set<string>()
+  for (const themeId of themeIds) {
+    const menu = getThemeDefinition(themeId).menu
+    served.add(menu.cover.face)
+    served.add(menu.chapter.face)
+    served.add(menu.ending.face)
+    for (const entry of Object.values(menu.content)) {
+      if (entry !== undefined) served.add(entry.face)
+    }
+  }
+  return served
+}
+
+/** Registered layouts no menu offers. They get the appendix section. */
+export function unservedLayoutIds(themeIds: readonly string[]): string[] {
+  const served = servedLayoutIds(themeIds)
+  return Object.keys(LAYOUT_REGISTRY)
+    .filter((id) => !served.has(id))
+    .sort()
+}
+
+/**
+ * The component band's page list: every component type, with `chart` replaced
+ * by its nine drawings and the form variants folded in beside the component
+ * they restyle, so a theme's own variants sit next to their base id.
+ */
+interface ComponentEntry {
+  readonly id: string
+  readonly build: (lex: (typeof LEXICONS)[LanguageId]) => ReturnType<(typeof COMPONENT_BUILDERS)[string]>
+  readonly solo?: boolean
+  /** Set when this entry only belongs in one section — a form variant. */
+  readonly theme?: string
+}
+
+function componentEntries(themeId: string): ComponentEntry[] {
+  const base: ComponentEntry[] = [
+    // `chart` renders nine unrelated drawings behind one type name, so the
+    // variants replace the bare `chart` entry rather than sitting next to it.
+    ...Object.entries(COMPONENT_BUILDERS)
+      .filter(([id]) => id !== "chart")
+      .map(([id, build]) => ({ id, build: build! })),
+    ...Object.entries(CHART_VARIANTS).map(([id, build]) => ({ id, build: build! })),
+    ...FORM_VARIANTS.filter((v) => v.theme === themeId).map((v) => ({
+      id: v.id,
+      build: v.build,
+      solo: true,
+      theme: v.theme,
+    })),
+  ]
+  return base.sort((a, b) => safe(a.id).localeCompare(safe(b.id)))
 }
 
 export function buildMatrix(
@@ -79,21 +184,29 @@ export function buildMatrix(
 ): Job[] {
   const languages = opts.languages ?? LANGUAGE_IDS
   const themeLanguage = opts.themeLanguage ?? "zh"
+  const lex = LEXICONS[themeLanguage]
   const jobs: Job[] = []
 
   const push = (job: Omit<Job, "languageLabel">) => {
     jobs.push({ ...job, languageLabel: LEXICONS[job.language].display })
   }
+  const wantsBand = (band: BandId) => !opts.only || opts.only === band
+  const wantsSection = (section: string) => !opts.section || opts.section === section
 
-  // ── Theme table ────────────────────────────────────────────────────────
-  if (!opts.only || opts.only === "theme") {
-    const lex = LEXICONS[themeLanguage]
-    for (const themeId of themeIds) {
+  for (const themeId of themeIds) {
+    if (!wantsSection(themeId)) continue
+    const def = getThemeDefinition(themeId)
+    const sectionLabel = def.label ?? themeId
+
+    // ── deck band: the ten pages a real deck of this theme contains ──────
+    if (wantsBand("deck")) {
       const ir = themeDeck(themeId, lex, assets[themeLanguage])
       ir.slides.forEach((slide, i) => {
         push({
-          id: `theme--${safe(themeId)}--${themeLanguage}--p${String(i + 1).padStart(2, "0")}`,
-          table: "theme",
+          id: `${safe(themeId)}--deck--p${String(i + 1).padStart(2, "0")}`,
+          section: themeId,
+          sectionLabel,
+          band: "deck",
           subject: themeId,
           language: themeLanguage,
           theme: themeId,
@@ -106,29 +219,27 @@ export function buildMatrix(
         })
       })
     }
-  }
 
-  // ── Skeleton table ─────────────────────────────────────────────────────
-  // 每套主题的菜单原样铺开。边界三页各一脸，content 按每个已供给 kind
-  // 各一脸。每页直接走主题自己的菜单，不再扩展池或稀疏钉面。
-  if (!opts.only || opts.only === "skeleton") {
-    const lex = LEXICONS[themeLanguage]
-    for (const themeId of themeIds) {
-      const def = getThemeDefinition(themeId)
-      const entries: Array<{ slot: string; layoutId: string; kind?: PageKind }> = [
-        { slot: "cover", layoutId: def.menu.cover.face },
-        { slot: "chapter", layoutId: def.menu.chapter.face },
-        ...Object.entries(def.menu.content).flatMap(([kind, entry]) =>
-          entry === undefined ? [] : [{ slot: `content-${kind}`, layoutId: entry.face, kind: kind as PageKind }],
-        ),
-        { slot: "ending", layoutId: def.menu.ending.face },
-      ]
+    // ── face band: this theme's menu, laid out one face per slot ─────────
+    if (wantsBand("face")) {
+      const entries: Array<{ slot: string; layoutId: string; kind?: PageKind }> = []
+      for (const slot of FACE_SLOTS) {
+        if (slot === "cover" || slot === "chapter" || slot === "ending") {
+          entries.push({ slot, layoutId: def.menu[slot].face })
+          continue
+        }
+        const entry = def.menu.content[slot as PageKind]
+        if (entry !== undefined) entries.push({ slot, layoutId: entry.face, kind: slot as PageKind })
+      }
       for (const { slot, layoutId, kind } of entries) {
         const ir = layoutPage(layoutId, lex, assets[themeLanguage], themeId, kind)
         push({
-          id: `skeleton--${safe(themeId)}--${slot}--${safe(layoutId)}`,
-          table: "skeleton",
+          id: `${safe(themeId)}--face--${slot}--${safe(layoutId)}`,
+          section: themeId,
+          sectionLabel,
+          band: "face",
           subject: layoutId,
+          slot,
           language: themeLanguage,
           theme: themeId,
           page: 1,
@@ -140,81 +251,62 @@ export function buildMatrix(
         })
       }
     }
-  }
 
-  // ── Layout table ───────────────────────────────────────────────────────
-  // Every registered face stays on the baseline theme and language axis.
-  // `layoutPage` binds the requested face through a registered gallery theme
-  // menu when the baseline menu does not already expose it.
-  if (!opts.only || opts.only === "layout") {
-    for (const layoutId of Object.keys(LAYOUT_REGISTRY).sort()) {
-      for (const language of languages) {
-        const lex = LEXICONS[language]
-        const ir = layoutPage(layoutId, lex, assets[language])
-        push({
-          id: `layout--${safe(layoutId)}--${language}`,
-          table: "layout",
-          subject: layoutId,
-          language,
-          theme: BASELINE_THEME,
-          page: 1,
-          pageCount: 1,
-          slideType: ir.slides[0]!.type ?? "content",
-          heading: ir.slides[0]!.heading ?? "",
-          ir,
-          slideIndex: 0,
-        })
+    // ── component band: every component wearing this theme's skin ────────
+    if (wantsBand("component")) {
+      // Only the baseline carries the other two scripts. Every other theme is
+      // judged on one language, so two themes differ by exactly one variable.
+      const bandLanguages =
+        themeId === BASELINE_THEME ? [...new Set<LanguageId>([themeLanguage, ...languages])] : [themeLanguage]
+      for (const entry of componentEntries(themeId)) {
+        for (const language of bandLanguages) {
+          const entryLex = LEXICONS[language]
+          const ir = componentPage(entry.id, entry.build, entryLex, assets[language], themeId, {
+            solo: entry.solo,
+          })
+          push({
+            id: `${safe(themeId)}--comp--${safe(entry.id)}--${language}`,
+            section: themeId,
+            sectionLabel,
+            band: "component",
+            subject: entry.id,
+            component: entry.id,
+            language,
+            theme: themeId,
+            page: 1,
+            pageCount: 1,
+            slideType: "content",
+            heading: ir.slides[0]!.heading ?? "",
+            ir,
+            slideIndex: 0,
+          })
+        }
       }
     }
   }
 
-  // ── Component table ────────────────────────────────────────────────────
-  if (!opts.only || opts.only === "component") {
-    // `chart` renders nine unrelated drawings behind one type name, so the
-    // variants replace the bare `chart` entry rather than sitting next to it.
-    const entries: [string, (typeof COMPONENT_BUILDERS)[string]][] = [
-      ...Object.entries(COMPONENT_BUILDERS).filter(([id]) => id !== "chart"),
-      ...Object.entries(CHART_VARIANTS),
-    ].sort(([a], [b]) => a.localeCompare(b))
-
-    for (const [componentId, build] of entries) {
-      for (const language of languages) {
-        const lex = LEXICONS[language]
-        const ir = componentPage(componentId, build!, lex, assets[language])
-        push({
-          id: `component--${safe(componentId)}--${language}`,
-          table: "component",
-          subject: componentId,
-          language,
-          theme: BASELINE_THEME,
-          page: 1,
-          pageCount: 1,
-          slideType: "content",
-          heading: ir.slides[0]!.heading ?? "",
-          ir,
-          slideIndex: 0,
-        })
-      }
-    }
-
-    for (const variant of FORM_VARIANTS) {
-      for (const language of languages) {
-        const lex = LEXICONS[language]
-        const ir = componentPage(variant.id, variant.build, lex, assets[language], variant.theme, { solo: true })
-        push({
-          id: `component--${safe(variant.id)}--${language}`,
-          table: "component",
-          subject: variant.id,
-          language,
-          theme: variant.theme,
-          page: 1,
-          pageCount: 1,
-          slideType: "content",
-          heading: ir.slides[0]!.heading ?? "",
-          ir,
-          slideIndex: 0,
-        })
-      }
+  // ── appendix: registered faces no menu offers ──────────────────────────
+  if (wantsSection(UNSERVED_SECTION) && wantsBand("face")) {
+    for (const layoutId of unservedLayoutIds(themeIds)) {
+      const slot = layoutFaceSlot(layoutId)
+      const kind = LAYOUT_REGISTRY[layoutId]!.slideTypes[0] === "content" ? (slot as PageKind) : undefined
+      const ir = layoutPage(layoutId, lex, assets[themeLanguage], BASELINE_THEME, kind)
+      push({
+        id: `${UNSERVED_SECTION}--face--${safe(layoutId)}`,
+        section: UNSERVED_SECTION,
+        sectionLabel: UNSERVED_SECTION_LABEL,
+        band: "face",
+        subject: layoutId,
+        slot,
+        language: themeLanguage,
+        theme: BASELINE_THEME,
+        page: 1,
+        pageCount: 1,
+        slideType: ir.slides[0]!.type ?? "content",
+        heading: ir.slides[0]!.heading ?? "",
+        ir,
+        slideIndex: 0,
+      })
     }
   }
 
