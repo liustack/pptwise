@@ -49,6 +49,22 @@ import type { ComponentCtx } from "./types"
  * geometry in the pins below is unchanged; only those label attributes
  * (and the matching y on vertical-bar values) moved. Pie/donut pins stay
  * geometry-identical. Cartesian marks now carry `data-plot-mark`.
+ *
+ * **Slice labels (2026-08-31) end pie's and funnel's byte-compat era, on
+ * purpose.** Both charts drew no labels at all and are excluded from the
+ * legend, so nothing on the page named a wedge or a band — the defect this
+ * wave fixes (see `renderPie`/`renderFunnel` in chart-svg.tsx). The pins are
+ * re-recorded rather than relaxed, and the diff is exactly what the fix
+ * claims:
+ *  - `EXPECTED_PIE`: the three wedge `<path>` elements are still
+ *    **byte-identical** — this fixture's pie is wide enough that the label
+ *    gutters cost it no radius — with a leader `<polyline>` plus a
+ *    `<text data-value-label>` appended per slice.
+ *  - `EXPECTED_FUNNEL`: band geometry **moved**, and had to. Labels sit
+ *    beside the bands (never on them — see `renderFunnel`'s own contrast
+ *    note), so the widest band gives up the label column's width and every
+ *    band rescales against it. `renderDonut`/`renderDumbbell` are untouched
+ *    and still pin their original bytes.
  */
 
 const ACCENT = "#00A878"
@@ -103,13 +119,13 @@ const ctx: ComponentCtx = {
 const box = { x: 80, y: 100, w: 1120 }
 
 const EXPECTED_PIE =
-  "<path d=\"M 560 120 L 560 4 A 116 116 0 0 1 595.8459713474939 230.32255589023782 Z\" fill=\"#006A4E\"></path><path d=\"M 560 120 L 595.8459713474939 230.32255589023782 A 116 116 0 0 1 444 120.00000000000001 Z\" fill=\"#00A878\"></path><path d=\"M 560 120 L 444 120.00000000000001 A 116 116 0 0 1 560 4 Z\" fill=\"#FF6B35\"></path>"
+  "<path d=\"M 560 120 L 560 4 A 116 116 0 0 1 595.8459713474939 230.32255589023782 Z\" fill=\"#006A4E\"></path><path d=\"M 560 120 L 595.8459713474939 230.32255589023782 A 116 116 0 0 1 444 120.00000000000001 Z\" fill=\"#00A878\"></path><path d=\"M 560 120 L 444 120.00000000000001 A 116 116 0 0 1 560 4 Z\" fill=\"#FF6B35\"></path><g><polyline points=\"674.5718475090359,101.85360205533323 684.4487309149873,100.28925740493091 686,100.28925740493091\" fill=\"none\" stroke=\"#5D6B65\" stroke-width=\"1\" stroke-opacity=\"0.55\"></polyline><text data-value-label=\"1\" x=\"692\" y=\"105.0892574049309\" text-anchor=\"start\" font-size=\"16\" font-weight=\"600\" fill=\"#1A2421\" dominant-baseline=\"alphabetic\">Enterprise 45</text></g><g><polyline points=\"491.81691073407313,213.8459713474939 485.9390582111484,221.93614129124336 434,221.93614129124336\" fill=\"none\" stroke=\"#5D6B65\" stroke-width=\"1\" stroke-opacity=\"0.55\"></polyline><text data-value-label=\"1\" x=\"428\" y=\"226.73614129124337\" text-anchor=\"end\" font-size=\"16\" font-weight=\"600\" fill=\"#1A2421\" dominant-baseline=\"alphabetic\">SMB 30</text></g><g><polyline points=\"477.97561338236045,37.97561338236049 470.904545570495,30.904545570495017 434,30.904545570495017\" fill=\"none\" stroke=\"#5D6B65\" stroke-width=\"1\" stroke-opacity=\"0.55\"></polyline><text data-value-label=\"1\" x=\"428\" y=\"35.704545570495014\" text-anchor=\"end\" font-size=\"16\" font-weight=\"600\" fill=\"#1A2421\" dominant-baseline=\"alphabetic\">Consumer 25</text></g>"
 
 const EXPECTED_DONUT =
   "<path d=\"M 560 4 A 116 116 0 0 1 595.8459713474939 230.32255589023782 L 582.2245022354463 188.39998465194745 A 71.92 71.92 0 0 0 560 48.08 Z\" fill=\"#006A4E\"></path><path d=\"M 595.8459713474939 230.32255589023782 A 116 116 0 0 1 444 120.00000000000001 L 488.08 120.00000000000001 A 71.92 71.92 0 0 0 582.2245022354463 188.39998465194745 Z\" fill=\"#00A878\"></path><path d=\"M 444 120.00000000000001 A 116 116 0 0 1 560 4 L 560 48.08 A 71.92 71.92 0 0 0 488.08 120.00000000000001 Z\" fill=\"#FF6B35\"></path><text x=\"560\" y=\"124.5\" text-anchor=\"middle\" font-size=\"30\" font-weight=\"bold\" fill=\"#1A2421\" dominant-baseline=\"alphabetic\">100</text><text x=\"560\" y=\"142.5\" text-anchor=\"middle\" font-size=\"16\" fill=\"#5D6B65\" dominant-baseline=\"alphabetic\">Total</text>"
 
 const EXPECTED_FUNNEL =
-  "<rect data-plot-mark=\"1\" x=\"0\" y=\"2\" width=\"1120\" height=\"76\" fill=\"#006A4E\"></rect><rect data-plot-mark=\"1\" x=\"336\" y=\"82\" width=\"448\" height=\"76\" fill=\"#00A878\"></rect><rect data-plot-mark=\"1\" x=\"492.8\" y=\"162\" width=\"134.4\" height=\"76\" fill=\"#FF6B35\"></rect>"
+  "<g><rect data-plot-mark=\"1\" x=\"0\" y=\"2\" width=\"996.227488\" height=\"76\" fill=\"#006A4E\"></rect><text data-value-label=\"1\" x=\"1006.227488\" y=\"44.8\" font-size=\"16\" font-weight=\"600\" fill=\"#1A2421\" dominant-baseline=\"alphabetic\">Visit 1000</text></g><g><rect data-plot-mark=\"1\" x=\"298.8682464\" y=\"82\" width=\"398.49099520000004\" height=\"76\" fill=\"#00A878\"></rect><text data-value-label=\"1\" x=\"707.3592416\" y=\"124.8\" font-size=\"16\" font-weight=\"600\" fill=\"#1A2421\" dominant-baseline=\"alphabetic\">Signup 400</text></g><g><rect data-plot-mark=\"1\" x=\"438.34009472\" y=\"162\" width=\"119.54729856\" height=\"76\" fill=\"#FF6B35\"></rect><text data-value-label=\"1\" x=\"567.88739328\" y=\"204.8\" font-size=\"16\" font-weight=\"600\" fill=\"#1A2421\" dominant-baseline=\"alphabetic\">Purchase 120</text></g>"
 
 const EXPECTED_DUMBBELL =
   "<g><text x=\"96\" y=\"64\" text-anchor=\"end\" font-size=\"16\" font-weight=\"600\" fill=\"#1A2421\" dominant-baseline=\"alphabetic\">Q1</text><line data-plot-mark=\"1\" x1=\"639.1111111111111\" y1=\"60\" x2=\"1064\" y2=\"60\" stroke=\"#5D6B65\" stroke-width=\"2\" stroke-opacity=\"0.55\"></line><circle data-plot-mark=\"1\" cx=\"639.1111111111111\" cy=\"60\" r=\"5\" fill=\"#5D6B65\"></circle><circle data-plot-mark=\"1\" cx=\"1064\" cy=\"60\" r=\"6.5\" fill=\"#00A878\"></circle><text x=\"639.1111111111111\" y=\"49\" text-anchor=\"middle\" font-size=\"16\" fill=\"#5D6B65\" dominant-baseline=\"alphabetic\">50</text><text x=\"1077\" y=\"64\" font-size=\"16\" font-weight=\"bold\" fill=\"#00A878\" dominant-baseline=\"alphabetic\">90</text></g><g><text x=\"96\" y=\"184\" text-anchor=\"end\" font-size=\"16\" font-weight=\"600\" fill=\"#1A2421\" dominant-baseline=\"alphabetic\">Q2</text><line data-plot-mark=\"1\" x1=\"957.7777777777777\" y1=\"180\" x2=\"745.3333333333333\" y2=\"180\" stroke=\"#5D6B65\" stroke-width=\"2\" stroke-opacity=\"0.55\"></line><circle data-plot-mark=\"1\" cx=\"957.7777777777777\" cy=\"180\" r=\"5\" fill=\"#5D6B65\"></circle><circle data-plot-mark=\"1\" cx=\"745.3333333333333\" cy=\"180\" r=\"6.5\" fill=\"#00A878\"></circle><text x=\"957.7777777777777\" y=\"169\" text-anchor=\"middle\" font-size=\"16\" fill=\"#5D6B65\" dominant-baseline=\"alphabetic\">80</text><text x=\"758.3333333333333\" y=\"184\" font-size=\"16\" font-weight=\"bold\" fill=\"#00A878\" dominant-baseline=\"alphabetic\">60</text></g>"

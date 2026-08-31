@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest"
 import {
+  labelLinePitch,
   resolveValueLabelCollisions,
+  stackLabelColumn,
   valueLabelBox,
+  type ColumnLabelSpec,
   type ValueLabelSpec,
 } from "./label-collision"
 
@@ -78,5 +81,56 @@ describe("resolveValueLabelCollisions", () => {
     ])
     expect(placed.some((label) => label.hidden)).toBe(true)
     expect(placed.every((label) => !label.text.includes("…"))).toBe(true)
+  })
+})
+
+describe("stackLabelColumn", () => {
+  const pitch = labelLinePitch(16)
+  const col = (id: string, y: number, priority = 1): ColumnLabelSpec => ({ id, y, pitch, priority })
+  const bounds = { top: 0, bottom: 240 }
+
+  it("leaves labels that already sit a line apart where they are", () => {
+    const placed = stackLabelColumn([col("a", 40), col("b", 100)], bounds)
+    expect(placed.map((p) => p.y)).toEqual([40, 100])
+    expect(placed.every((p) => !p.hidden)).toBe(true)
+  })
+
+  it("pushes two labels that want the same y one pitch apart", () => {
+    const placed = stackLabelColumn([col("a", 100), col("b", 102)], bounds)
+    expect(placed[1]!.y - placed[0]!.y).toBeGreaterThanOrEqual(pitch)
+  })
+
+  it("keeps the column inside its bounds, top and bottom", () => {
+    const placed = stackLabelColumn([col("a", -50), col("b", -48), col("c", 900)], bounds)
+    for (const p of placed) {
+      // Sweeping back up lands on the bound through a different sum than
+      // sweeping down does, so the two disagree in the last float bit.
+      expect(p.y).toBeGreaterThanOrEqual(bounds.top + pitch / 2 - 1e-9)
+      expect(p.y).toBeLessThanOrEqual(bounds.bottom - pitch / 2 + 1e-9)
+    }
+  })
+
+  it("keeps by-angle order, so no leader crosses another", () => {
+    const placed = stackLabelColumn([col("a", 120), col("b", 118), col("c", 122)], bounds)
+    const byId = new Map(placed.map((p) => [p.id, p.y]))
+    expect(byId.get("b")!).toBeLessThan(byId.get("a")!)
+    expect(byId.get("a")!).toBeLessThan(byId.get("c")!)
+  })
+
+  it("drops the least important labels when the column cannot hold them all", () => {
+    const crowded = Array.from({ length: 30 }, (_, i) => col(`s${i}`, 10 + i * 3, 30 - i))
+    const placed = stackLabelColumn(crowded, bounds)
+    const kept = placed.filter((p) => !p.hidden)
+    expect(kept.length).toBe(Math.floor((bounds.bottom - bounds.top) / pitch))
+    // Priority order decides who survives, not input order.
+    expect(placed.find((p) => p.id === "s0")!.hidden).toBe(false)
+    expect(placed.find((p) => p.id === "s29")!.hidden).toBe(true)
+    // And whatever survives still clears a full line.
+    const ys = kept.map((p) => p.y).sort((a, b) => a - b)
+    for (let i = 1; i < ys.length; i++) expect(ys[i]! - ys[i - 1]!).toBeGreaterThanOrEqual(pitch - 1e-9)
+  })
+
+  it("returns nothing for no labels", () => {
+    expect(stackLabelColumn([], bounds)).toEqual([])
   })
 })
