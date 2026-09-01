@@ -30,10 +30,20 @@ function VerticalRun({
   accent: string
   fontFamily: string
 }) {
+  // 竖排换列本身就是那个逗号：`splitCjkPhrases` 把停顿号留在它收尾的短语
+  // 末尾，所以一列末尾的逗号已经由列的结束画出来了，再画一个方块是重复。
+  //
+  // 其余的停顿号一律照画。旧写法把 `，。；、` 全部删掉，作者写的句号、
+  // 顿号、分号就此从页面消失，而且没有任何标记：`甲、乙` 竖排成 `甲乙`，
+  // 引文末尾的句号也不见了。列末逗号是排版，别的是作者的字。
+  const runText = segments.map((seg) => seg.text).join("")
+  const breakAt = /，$/.test(runText) ? Array.from(runText).length - 1 : -1
+  let seen = -1
   let i = 0
   return segments.flatMap((seg) =>
     Array.from(seg.text).flatMap((ch) => {
-      if (/[，。；、]/.test(ch)) return []
+      seen += 1
+      if (seen === breakAt) return []
       const el = (
         <text
           key={`${x}-${i}`}

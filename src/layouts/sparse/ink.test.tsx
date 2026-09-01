@@ -52,7 +52,12 @@ describe("ink sparse faces", () => {
     expect(first?.getAttribute("y")).toBe("150")
     expect(Number(first?.getAttribute("font-size"))).toBe(52)
     expect(first?.getAttribute("fill")).toBe(ctx.colors.primary)
+    // The column break is the comma, so the comma is not also a glyph.
     expect(Array.from(root.querySelectorAll("text")).some((t) => t.textContent === "，")).toBe(false)
+    // Every other stop the author typed is a word, not a break, and stays on
+    // the page. The closing full stop of this verse used to vanish with the
+    // comma and leave no mark anywhere (codex render review, F2 fallout).
+    expect(Array.from(root.querySelectorAll("text")).some((t) => t.textContent === "。")).toBe(true)
     const org = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "云")
     expect(org?.getAttribute("x")).toBe("180")
     const emptySeal = Array.from(root.querySelectorAll("rect")).find((r) => r.getAttribute("width") === "34")
