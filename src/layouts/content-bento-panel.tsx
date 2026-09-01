@@ -166,6 +166,18 @@ const BENTO_KPI_VALUE_SIZE = 56
 const BENTO_KPI_VALUE_MIN_SIZE = 20
 const BENTO_KPI_LABEL_SIZE = 16
 const BENTO_KPI_LABEL_MIN_SIZE = 11
+/**
+ * `kpi_cards.items[].source` — where the number came from.
+ *
+ * `components/kpi.tsx`'s own row card has painted it since the field existed
+ * (and grows the card by a line to make room); bento's exploded card never
+ * read it, so a metric authored with its provenance arrived on the slide
+ * bare, on 23 corpus pages. The line sits under the label and is counted in
+ * `kpiContentHeight`, so the degrade gate and the paint agree about the room
+ * it takes — the invariant that whole function exists to hold.
+ */
+const BENTO_KPI_SOURCE_SIZE = 16
+const BENTO_KPI_SOURCE_GAP = 20
 /** The unit tspan's size as a fraction of the fitted value size — the same
  * ratio `components/kpi.tsx`'s row card uses, named here because the shared
  * width split needs it too. */
@@ -250,13 +262,13 @@ const SINGLE_KPI_CARD_H = 160
  * budget check and the actual paint can never disagree about which size a
  * given cell renders at.
  */
-function kpiContentHeight(hasIcon: boolean, hero: boolean): number {
+function kpiContentHeight(hasIcon: boolean, hero: boolean, hasSource: boolean): number {
   const iconComponentH = hasIcon ? BENTO_KPI_ICON_SIZE + BENTO_KPI_ICON_GAP : 0
   const valueSize = hero ? BENTO_KPI_HERO_VALUE_SIZE : BENTO_KPI_VALUE_SIZE
   const valueLabelGap = hero
     ? BENTO_KPI_HERO_VALUE_LABEL_GAP
     : BENTO_KPI_VALUE_LABEL_GAP
-  return iconComponentH + valueSize + valueLabelGap
+  return iconComponentH + valueSize + valueLabelGap + (hasSource ? BENTO_KPI_SOURCE_GAP : 0)
 }
 
 type KpiBentoUnit = Extract<BentoCell["unit"], { kind: "kpi-item" }>
@@ -377,6 +389,7 @@ function renderKpiCardBody(
     fittedUnit,
   } = valuePaint.layout
   const hasIcon = Boolean(item.icon)
+  const sourceText = item.source?.trim() ?? ""
   const iconComponentH = hasIcon ? BENTO_KPI_ICON_SIZE + BENTO_KPI_ICON_GAP : 0
 
   // Task 3 "视觉主角": a hero-sized cell (see BENTO_KPI_HERO_MIN_CELL_H's own
@@ -396,7 +409,7 @@ function renderKpiCardBody(
   // padding and the bottom breathing room in every case, including cells too
   // short to have any slack (offsetY floors at 0).
   const budgetH = box.h - BENTO_CARD_TOP_PAD - BENTO_CARD_BOTTOM_PAD
-  const offsetY = Math.max(0, (budgetH - kpiContentHeight(hasIcon, hero)) / 2)
+  const offsetY = Math.max(0, (budgetH - kpiContentHeight(hasIcon, hero, sourceText.length > 0)) / 2)
   const innerY = box.y + BENTO_CARD_TOP_PAD + offsetY
 
   const dp = item.delta ? deltaProps(item.delta, ctx.colors) : null
@@ -416,6 +429,14 @@ function renderKpiCardBody(
     fontSize: BENTO_KPI_LABEL_SIZE,
     minFontSize: BENTO_KPI_LABEL_MIN_SIZE,
   })
+  const fittedSource = sourceText
+    ? fitSvgLine(sourceText, {
+        maxWidth: innerW,
+        fontSize: BENTO_KPI_SOURCE_SIZE,
+        minFontSize: BENTO_KPI_SOURCE_SIZE,
+        fontFamily: ctx.fonts.body,
+      })
+    : null
 
   // Prepared once for the source kpi_cards group. The shell background is
   // colors.surface, and any failing sibling moves the whole group to the
@@ -526,6 +547,19 @@ function renderKpiCardBody(
       >
         {fittedLabel.text}
       </text>
+      {fittedSource && (
+        <text
+          data-truncated={fittedSource.truncated ? "1" : undefined}
+          x={innerX}
+          y={labelBaselineY + BENTO_KPI_SOURCE_GAP}
+          fontSize={fittedSource.fontSize}
+          fill={ctx.colors.muted}
+          fontFamily={ctx.fonts.body}
+          dominantBaseline="alphabetic"
+        >
+          {fittedSource.text}
+        </text>
+      )}
     </>
   )
 }
@@ -644,7 +678,7 @@ function cellOverBudget(cell: BentoCell, ctx: ComponentCtx): boolean {
   if (unit.kind === "kpi-item") {
     const budgetH = box.h - BENTO_CARD_TOP_PAD - BENTO_CARD_BOTTOM_PAD
     const hero = box.h > BENTO_KPI_HERO_MIN_CELL_H
-    return kpiContentHeight(Boolean(unit.item.icon), hero) > budgetH
+    return kpiContentHeight(Boolean(unit.item.icon), hero, Boolean(unit.item.source?.trim())) > budgetH
   }
   if (unit.kind === "icon-card-item") {
     const budgetH = box.h - BENTO_CARD_TOP_PAD - BENTO_CARD_BOTTOM_PAD

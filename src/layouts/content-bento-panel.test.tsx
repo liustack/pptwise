@@ -78,6 +78,15 @@ const soloKpiSlide: Slide = {
   components: [{ type: "kpi_cards", items: [{ value: "88", label: "达成率" }] }],
 } as Slide
 
+const sourcedKpiSlide: Slide = {
+  type: "content",
+  kind: "points",
+  heading: "单指标",
+  components: [
+    { type: "kpi_cards", items: [{ value: "88", label: "达成率", source: "去年对账全文" }] },
+  ],
+} as Slide
+
 // Captured once from the (now-retired) legacy `BentoTechContent` — locks the
 // byte-identical output the port preserved, without importing templates/.
 //
@@ -196,6 +205,27 @@ describe("BentoPanelContent", () => {
       expect(y + h).toBeLessThanOrEqual(rectBottom + 0.5)
       expect(y + h).toBeLessThanOrEqual(612)
     }
+  })
+
+  it("paints a kpi item's source under its label", () => {
+    const ctx = buildCtx(resolveStyle("tech"), {})
+    const deck = ir("tech", [sourcedKpiSlide])
+    const root = parseSvgRoot(
+      renderSvgMarkup(
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">
+          <BentoPanelContent ir={deck} slide={sourcedKpiSlide} index={0} ctx={ctx} />
+        </svg>,
+      ),
+    )
+    const texts = Array.from(root.querySelectorAll("text"))
+    // `components/kpi.tsx`'s row card has painted this since the field
+    // existed; bento's exploded card never read it, so a metric authored
+    // with its provenance arrived bare.
+    const source = texts.find((t) => t.textContent === "去年对账全文")
+    expect(source).toBeDefined()
+    const label = texts.find((t) => t.textContent === "达成率")!
+    expect(Number(source!.getAttribute("y"))).toBeGreaterThan(Number(label.getAttribute("y")))
+    expect(source!.getAttribute("x")).toBe(label.getAttribute("x"))
   })
 
   it("bento card radius follows shape.radius", () => {
