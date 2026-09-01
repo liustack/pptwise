@@ -1509,3 +1509,70 @@ describe("flowchart gallery back-edge U, coaxial snap, and scale", () => {
   })
 })
 
+describe("a flowchart never loses a label without saying so", () => {
+  const BOX = { x: 96, y: 176, w: 1088 }
+
+  // `wrapDiamondLabel` split a decision node's label into two fixed lines and
+  // kept whatever fit. A five-character CJK label came back as 主理/人致 —
+  // the 辞 gone, no ellipsis for a reader, no `data-truncated` for a machine —
+  // on three gallery pages.
+  it("keeps every character of a diamond's label", () => {
+    for (const label of ["主理人致辞", "发放血压本"]) {
+      const component = {
+        type: "flowchart" as const,
+        nodes: [
+          { id: "a", label: "开始" },
+          { id: "b", label, kind: "diamond" as const },
+          { id: "c", label: "结束" },
+        ],
+        edges: [
+          { from: "a", to: "b" },
+          { from: "b", to: "c" },
+        ],
+      }
+      const { container } = svg(flowchart.render(component, BOX, ctx))
+      const painted = Array.from(container.querySelectorAll("text")).map((t) => t.textContent ?? "")
+      expect(painted.join(""), label).toContain(label)
+      expect(container.querySelector("[data-dropped]")).toBeNull()
+    }
+  })
+
+  // An edge label with nowhere legible to sit is still omitted — a floating
+  // "…" reads as a rendering bug — but the omission is now declared, so the
+  // export gate refuses to ship a deck that lost one.
+  it("declares an edge label it could not place anywhere", () => {
+    const crowded = {
+      type: "flowchart" as const,
+      nodes: Array.from({ length: 8 }, (_, i) => ({ id: `n${i}`, label: `节点${i}` })),
+      edges: Array.from({ length: 7 }, (_, i) => ({
+        from: `n${i}`,
+        to: `n${i + 1}`,
+        label: `一条相当长的边标签内容${i}`,
+      })),
+    }
+    const { container } = svg(flowchart.render(crowded, { x: 0, y: 0, w: 240 }, ctx))
+    const painted = Array.from(container.querySelectorAll("text")).map((t) => t.textContent ?? "").join("")
+    const lost = crowded.edges.filter((e) => !painted.includes(e.label)).length
+    const marker = container.querySelector("[data-dropped]")
+    if (lost > 0) {
+      expect(marker, "an omitted edge label must be declared").not.toBeNull()
+      expect(Number(marker!.getAttribute("data-dropped"))).toBe(lost)
+    } else {
+      expect(marker).toBeNull()
+    }
+  })
+
+  it("declares nothing when every edge label is drawn", () => {
+    const roomy = {
+      type: "flowchart" as const,
+      nodes: [
+        { id: "a", label: "甲" },
+        { id: "b", label: "乙" },
+      ],
+      edges: [{ from: "a", to: "b", label: "是" }],
+    }
+    const { container } = svg(flowchart.render(roomy, BOX, ctx))
+    expect(container.textContent).toContain("是")
+    expect(container.querySelector("[data-dropped]")).toBeNull()
+  })
+})

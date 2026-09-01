@@ -188,7 +188,15 @@ function wrapDiamondLabel(label: string): string[] {
     balanceLines: true,
     minPt: FONT_SIZE,
   })
-  return wrapped.lines.length > 0 ? wrapped.lines : raw
+  // This wrap is cosmetic — it keeps a rhombus from swallowing a 4-em row —
+  // so it is never allowed to cost the label a character. Two lines at a
+  // fixed size cannot always hold one: a five-character CJK label came back
+  // as 主理/人致 with the 辞 gone, no ellipsis for a reader and no
+  // `data-truncated` for a machine, on three gallery pages. When the wrap
+  // would drop something, the label goes back unwrapped and the node's own
+  // `fitSvgLine` shrinks or cuts it in the open, marking the cut.
+  if (wrapped.truncated || wrapped.lines.length === 0) return raw
+  return wrapped.lines
 }
 
 interface Aabb {
@@ -925,6 +933,8 @@ interface PreparedFlow {
   layout: Layout
   scale: number
   labels: (EdgeLabelVisual | null)[]
+  /** Authored edge labels this drawing could not place anywhere. */
+  droppedLabels: number
   width: number
   height: number
 }
@@ -953,6 +963,21 @@ function prepareFlow(component: FlowchartComponent, w: number): PreparedFlow {
       strokes.filter((_, j) => j !== i),
       arrows,
     ),
+  )
+  // Edge labels that reached nobody.
+  //
+  // `computeEdgeLabel` returns null for three different reasons and only one
+  // of them is a loss. A label a node already prints is on the page in the
+  // node's own words, and an edge with no label had nothing to lose. What is
+  // left — a gap too narrow for one legible character, or a chip with nowhere
+  // to park that does not collide with a card, a stroke or an arrowhead — is
+  // authored text that left the author's hands and reached no one. Omitting
+  // it is still the right drawing (a floating "…" reads as a bug), so it is
+  // declared rather than painted: `data-dropped` is the mark, and the export
+  // gate refuses to ship a deck carrying one.
+  const droppedLabels = layout.edges.reduce(
+    (n, edge, i) => (edge.label && !names.has(edge.label) && labels[i] === null ? n + 1 : n),
+    0,
   )
   let minX = 0
   let minY = 0
@@ -1005,6 +1030,7 @@ function prepareFlow(component: FlowchartComponent, w: number): PreparedFlow {
     layout: shifted,
     scale,
     labels: shiftedLabels,
+    droppedLabels,
     width: maxX - minX,
     height: maxY - minY,
   }
@@ -1097,7 +1123,7 @@ export const flowchart: SvgComponent<FlowchartComponent> = {
 
   render(component, box, ctx) {
     const flow = prepareFlow(component, box.w)
-    const { layout, scale, labels } = flow
+    const { layout, scale, labels, droppedLabels } = flow
     const scaleX = scale
     const scaleY = scale // uniform scale, bounded by width AND height
     // 宽屏画布下水平居中，避免整图贴左留出大片死白
@@ -1243,6 +1269,8 @@ export const flowchart: SvgComponent<FlowchartComponent> = {
             </Fragment>
           )
         })}
+        {/* Recorded, never painted — see `droppedLabels` in `prepareFlow`. */}
+        {droppedLabels > 0 && <g data-dropped={droppedLabels} data-dropped-silent={droppedLabels} />}
       </g>
     )
   },
