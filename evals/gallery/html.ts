@@ -485,6 +485,19 @@ dialog.viewer::backdrop { background: rgba(0,0,0,0.82); }
 .viewer-bar .note { border: 1px solid var(--line); border-radius: 7px; padding: 6px 9px; min-height: 0; margin: 0; flex: 1 1 240px; }
 .viewer-bar .verdicts { padding: 0; flex: 0 0 300px; }
 
+/* Leaving one axis for another, from the page that raised the question.
+   Quiet buttons: they are a way out of the current comparison, not a
+   verdict, and they must not compete with the three that are. */
+.crossjump { display: flex; gap: 6px; flex-wrap: wrap; }
+.crossjump:empty { display: none; }
+.crossjump button {
+  appearance: none; font: inherit; font-size: 12px; padding: 5px 9px; cursor: pointer;
+  background: transparent; color: var(--ink); white-space: nowrap;
+  border: 1px solid var(--line); border-radius: 7px;
+}
+.crossjump button:hover { background: var(--stage); }
+.crossjump code { font: 500 11px/1 ui-monospace, "SF Mono", Menlo, monospace; color: var(--ink-dim); margin: 0 6px; }
+
 .hint { color: var(--ink-dim); font-size: 12px; }
 kbd {
   font: inherit; font-size: 11px; padding: 1px 5px; border: 1px solid var(--line);
@@ -602,6 +615,7 @@ kbd {
         <button class="v-limit" data-verdict="limit" aria-pressed="false">限制 <kbd>2</kbd></button>
         <button class="v-rework" data-verdict="rework" aria-pressed="false">返工 <kbd>3</kbd></button>
       </div>
+      <div class="crossjump" id="viewer-cross"></div>
       <ul class="findings-list" id="viewer-findings"></ul>
       <input class="note" id="viewer-note" placeholder="备注（自动保存）">
       <span class="hint"><kbd>←</kbd><kbd>→</kbd> 翻页 · <kbd>Esc</kbd> 关闭</span>
@@ -1440,6 +1454,43 @@ ${inlineRule(verdictFreshness)}
     main.appendChild(visible.length === 0 ? emptyNote() : grid(visible.slice().sort(bySection), "grid"));
   }
 
+  /**
+   * The two axes a page can be left along, and the keys that take them.
+   *
+   * A page sits on more than one axis at once — this deck page was drawn by a
+   * face, that page is one component — and judging it is what raises the
+   * neighbouring question: is this face like this everywhere, or is this one
+   * theme's problem? Answering it used to mean closing the viewer, switching
+   * tabs, and finding the tile. These are that trip in one key.
+   */
+  const CROSS_JUMPS = [
+    { key: "f", view: "face", label: "按此版式" },
+    { key: "c", view: "component", label: "按此组件" },
+  ];
+
+  /** What a page would be filed under on another axis, or undefined if nothing. */
+  const jumpValue = (page, viewKey) => (page ? page[CROSS[viewKey].key] : undefined);
+
+  function crossJump(page, viewKey) {
+    const value = jumpValue(page, viewKey);
+    if (value === undefined) return;
+    if (viewer.open) viewer.close();
+    state.view = viewKey;
+    state.group[viewKey] = value;
+    // Filters stay exactly as they were — the reviewer changed axis, not
+    // subject. The tab buttons are told where the state went, since this is
+    // the one path that moves the view without a click on them.
+    for (const b of document.getElementById("view-filter").children) {
+      b.setAttribute("aria-pressed", String(b.dataset.view === viewKey));
+    }
+    render();
+    // Top first, so the group's own heading and breadcrumb register before
+    // the scroll, then straight to the page that raised the question — a
+    // 45-card group the reviewer then has to search is not an answer.
+    window.scrollTo(0, 0);
+    revealCard(page.id);
+  }
+
   function openGroup(viewKey, value) {
     state.group[viewKey] = value;
     render();
@@ -1544,6 +1595,23 @@ ${inlineRule(verdictFreshness)}
       btn.setAttribute("aria-pressed", String(btn.dataset.verdict === v));
     }
     document.getElementById("viewer-note").value = (verdicts[p.id] || {}).note || "";
+    // Only the axes this page is actually on. A component page names no face
+    // (see Job.face), and nothing outside the component band names a
+    // component, so in practice each page offers one of the two.
+    const cross = document.getElementById("viewer-cross");
+    cross.textContent = "";
+    for (const jump of CROSS_JUMPS) {
+      const value = jumpValue(p, jump.view);
+      if (value === undefined) continue;
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.title = "在" + CROSS[jump.view].label + "里打开 " + value + "，筛选保持不变";
+      btn.appendChild(document.createTextNode(jump.label));
+      btn.appendChild(headText("code", "", value));
+      btn.appendChild(headText("kbd", "", jump.key));
+      btn.addEventListener("click", () => crossJump(p, jump.view));
+      cross.appendChild(btn);
+    }
     const list = document.getElementById("viewer-findings");
     list.textContent = "";
     for (const f of p.findings || []) {
@@ -1581,12 +1649,20 @@ ${inlineRule(verdictFreshness)}
       return;
     }
     const typing = ev.target instanceof HTMLInputElement || ev.target instanceof HTMLTextAreaElement;
+    const key = typeof ev.key === "string" ? ev.key.toLowerCase() : "";
     if (ev.key === "ArrowRight") { ev.preventDefault(); step(1); }
     else if (ev.key === "ArrowLeft") { ev.preventDefault(); step(-1); }
     else if (!typing && (ev.key === "1" || ev.key === "2" || ev.key === "3")) {
       ev.preventDefault();
       const p = viewerQueue[viewerIndex];
       if (p) { setVerdict(p.id, ["pass", "limit", "rework"][Number(ev.key) - 1]); paintViewer(); }
+    }
+    else if (!typing && CROSS_JUMPS.some((j) => j.key === key)) {
+      const p = viewerQueue[viewerIndex];
+      const jump = CROSS_JUMPS.find((j) => j.key === key);
+      // Silent on a page that is not on that axis, rather than jumping
+      // somewhere arbitrary — the button is not there either.
+      if (jumpValue(p, jump.view) !== undefined) { ev.preventDefault(); crossJump(p, jump.view); }
     }
   });
 
