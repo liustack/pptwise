@@ -1,6 +1,6 @@
 import type { Component } from "@/ir"
 import { sectionNameFor } from "../lib/derive"
-import { fitSvgLine } from "../lib/svg-text-layout"
+import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout"
 import { stripEmphasis } from "../render/emphasis"
 import { accessibleInk, groupValueInks } from "../render/ink"
 import { SvgContent } from "../render/svg-content"
@@ -29,8 +29,42 @@ function geometryFor(count: number): FigureGeometry {
   return { x: [64, 512, 960], width: [336, 336, 256], dividers: [448, 896] }
 }
 
-function valueWithUnit(item: KpiCards["items"][number]): string {
-  return `${item.value}${item.unit?.trim() ?? ""}`
+/**
+ * The figure and its unit, fitted as two runs rather than one string.
+ *
+ * Fitting `"36小时"` as one line let the cut land on the unit: the narrowest
+ * of the three columns printed `36小` and the author's 小时 was gone, with
+ * the `data-truncated` mark sitting on a line whose text no longer resembled
+ * either field. A unit is set small and tight against its numeral anyway
+ * (the same `heroUnitMark` idiom every sparse skin uses), so reserving its
+ * width up front both reads better and puts the unit out of the cut's way.
+ */
+const UNIT_SIZE_RATIO = 0.34
+const UNIT_GAP_RATIO = 0.04
+
+function fitFigure(
+  item: KpiCards["items"][number],
+  maxWidth: number,
+  fontFamily: string,
+): { text: string; fontSize: number; truncated: boolean; unit: string; unitSize: number; unitDx: number } {
+  const unit = item.unit?.trim() ?? ""
+  const unitBudget = unit ? UNIT_SIZE_RATIO + UNIT_GAP_RATIO : 0
+  const valueUnits = measureTextUnits(String(item.value), { bold: true, fontFamily })
+  const unitUnits = measureTextUnits(unit, { bold: true, fontFamily }) * UNIT_SIZE_RATIO
+  const share = valueUnits + unitUnits > 0 ? valueUnits / (valueUnits + unitUnits + (unit ? UNIT_GAP_RATIO : 0)) : 1
+  const fitted = fitSvgLine(String(item.value), {
+    maxWidth: unitBudget > 0 ? maxWidth * share : maxWidth,
+    fontSize: 140,
+    minFontSize: 72,
+    fontFamily,
+    bold: true,
+  })
+  return {
+    ...fitted,
+    unit,
+    unitSize: Math.max(20, Math.round(fitted.fontSize * UNIT_SIZE_RATIO)),
+    unitDx: Math.max(2, Math.round(fitted.fontSize * UNIT_GAP_RATIO)),
+  }
 }
 
 function noteFor(item: KpiCards["items"][number]): string {
@@ -79,13 +113,7 @@ export function ShowFiguresContent({ ir, slide, index, ctx }: SvgTemplateProps) 
       })
     : null
   const fittedValues = items.map((item, itemIndex) =>
-    fitSvgLine(valueWithUnit(item), {
-      maxWidth: geometry.width[itemIndex]!,
-      fontSize: 140,
-      minFontSize: 72,
-      fontFamily: fonts.heading,
-      bold: true,
-    }),
+    fitFigure(item, geometry.width[itemIndex]!, fonts.heading),
   )
   const neutralIndexes = items.map((_, itemIndex) => itemIndex).filter((itemIndex) => itemIndex !== accentIndex)
   const neutralValueInks = groupValueInks(
@@ -185,6 +213,11 @@ export function ShowFiguresContent({ ir, slide, index, ctx }: SvgTemplateProps) 
                 dominantBaseline="alphabetic"
               >
                 {withoutOverflowMark(value.text)}
+                {value.unit && (
+                  <tspan dx={value.unitDx} fontSize={value.unitSize}>
+                    {value.unit}
+                  </tspan>
+                )}
               </text>
             )
             return (

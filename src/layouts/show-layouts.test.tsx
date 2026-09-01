@@ -254,6 +254,33 @@ describe("runway show layouts", () => {
     ])
   })
 
+  it("sets a figure's unit small beside it, so the cut can never land on the unit", () => {
+    const slide = {
+      type: "content",
+      kind: "data",
+      heading: "三项指标",
+      components: [
+        {
+          type: "kpi_cards",
+          items: [
+            { value: "38", unit: "%", label: "渗透率" },
+            { value: "2.4", unit: "倍", label: "复购" },
+            { value: "36", unit: "小时", label: "响应" },
+          ],
+        },
+      ],
+    } as unknown as Slide
+    const root = draw(5, slide)
+    // Fitting `36小时` as one string let the narrowest column cut the unit
+    // away, leaving a data-truncated mark on a line that resembled neither
+    // field. The unit is now its own run at its own size.
+    const value = textBy(root, "36小时")
+    const unit = Array.from(value.querySelectorAll("tspan")).find((t) => t.textContent === "小时")
+    expect(unit).toBeDefined()
+    expect(Number(unit!.getAttribute("font-size"))).toBeLessThan(Number(value.getAttribute("font-size")))
+    expect(root.textContent).toContain("小时")
+  })
+
   it("places show-figures on the approved three-stat grid and accents the first delta item", () => {
     const root = draw(5)
     const tokens = resolveStyle("runway")
