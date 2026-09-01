@@ -232,6 +232,16 @@ export function faceOf(ir: PptxIR, slide: Slide): LayoutDefinition | undefined {
  * Only a field whose corpus-wide loss count is zero belongs here. A field
  * still losing content on some other face would make this list a wish rather
  * than a check, and one red entry would hide every other one.
+ *
+ * `(chart).series[].name` on SINGLE-series charts is the one path ruled out
+ * by design rather than pending a fix (author ruling 2026-09-01): a chart
+ * with one series never draws a legend, and a one-entry legend or a header
+ * caption would restate what the page heading already says while reflowing
+ * most chart pages by a header row. The series identity is absorbed by the
+ * declared page semantics. The narrower losses stay caught: two or more
+ * series get a legend (`legendApplicable`), and a donut captions its series
+ * at the center. Widening `.data[` instead of `(chart).series` is what keeps
+ * this ruling from hiding a multi-series regression.
  */
 export interface WidenedPath {
   /** Substring of the authored text's IR path. */
