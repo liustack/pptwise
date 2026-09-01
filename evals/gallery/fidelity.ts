@@ -206,12 +206,20 @@ export function faceOf(ir: PptxIR, slide: Slide): LayoutDefinition | undefined {
 }
 
 /**
- * The faces still absorbing content, each with the reason it is not fixed
- * here and what it would take.
+ * Faces whose absorption of one field is the page's declared semantic.
  *
- * Every entry is a review item, not an excuse: the scan reports them as
- * known and would go red the moment one grew a *new* kind of loss, because
- * an exemption names one face and one field path, never a whole page.
+ * The bar is deliberately high, and it is not "we have not got to this one
+ * yet". An entry states which face, which single field path, and why that
+ * loss is what the page means rather than what the page failed at — and it
+ * must leave a narrower loss of the same shape still detectable, so the
+ * exemption cannot quietly grow into a licence.
+ *
+ * The table is empty. Every entry it used to carry — statement's cited
+ * source, the two point faces' quote text, image-annotate's grids and
+ * compares — was a defect wearing a reason, and each is now fixed rather
+ * than excused. Adding an entry is a design decision, not a way past a red
+ * scan: a face that cannot hold what it was given renders it anyway,
+ * declines the page, or marks the loss.
  */
 export interface FidelityExemption {
   /** Face id the exemption applies to. */
@@ -221,19 +229,7 @@ export interface FidelityExemption {
   readonly reason: string
 }
 
-export const FIDELITY_EXEMPTIONS: readonly FidelityExemption[] = [
-  {
-    face: "image-annotate",
-    path: "(image_grid).items",
-    reason:
-      "The takeover draws one picture, chosen by findImageSelection, and the captions of the pictures it did not draw go with them. That selection is a separate mechanism from field-picking and needs its own decision: decline a multi-image component, or draw the grid.",
-  },
-  {
-    face: "image-annotate",
-    path: "(image_compare)",
-    reason: "Same findImageSelection path as the image_grid entry above.",
-  },
-]
+export const FIDELITY_EXEMPTIONS: readonly FidelityExemption[] = []
 
 /** True when this face is already known to drop this path. */
 export function exempt(faceId: string | undefined, path: string): boolean {

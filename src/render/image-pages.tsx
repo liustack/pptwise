@@ -17,6 +17,7 @@ import {
 } from "./emphasis"
 import { accessibleInk } from "./ink"
 import { showsDocumentMeta } from "./document-meta"
+import { SvgContent } from "./svg-content"
 import type { PageRenderContext } from "./page-context"
 
 /**
@@ -573,11 +574,127 @@ function splitAnnotation(item: string): { title: string; desc: string } {
 }
 
 /**
+ * Whether this page is the one thing this face can draw: a single picture.
+ *
+ * `image-annotate` has exactly one photo frame. An `image_grid` carrying more
+ * than one item is several pictures with a caption each, and an
+ * `image_compare` is a before and an after with a label on each.
+ * `findImageSelection` reduces both to their first image, and the pictures it
+ * did not choose left with their captions — no ellipsis on the slide, no
+ * validate error, nothing in the audit. Drawing one of six and saying nothing
+ * about the other five is the posture the face discipline forbids.
+ *
+ * So the face steps aside and the ordinary component renderer draws the page,
+ * which paints every grid item with its caption and both sides of a compare.
+ * A single `image`, a one-item grid, and a `device_mockup` are still exactly
+ * one picture, and those the face keeps.
+ *
+ * Same guard shape as `stat-hero`, `show-statement` and `show-spotlight`:
+ * this repository has no re-selection pass a null return could fall through
+ * to, so "step aside" is a second render inside the same face rather than a
+ * second trip through the menu.
+ */
+function annotateExact(slide: Slide): boolean {
+  return !slide.components.some(
+    (component) =>
+      component.type === "image_compare" ||
+      (component.type === "image_grid" && component.items.length > 1),
+  )
+}
+
+/**
  * image_annotate 图 + 图旁说明清单：左对齐 heading/副题压顶、左侧白框照片
  * 卡（可带 caption）、右侧 bullets 前 4 条排成编号说明清单。
  * 无 image 块回落 null（调用方走模板路径）。
  */
-export function ImageAnnotatePage({
+export function ImageAnnotatePage(props: {
+  ir: PptxIR
+  slide: Slide
+  ctx: ComponentCtx
+  page: PageRenderContext
+}) {
+  if (!annotateExact(props.slide)) return ImageAnnotateFallbackPage(props)
+  return ImageAnnotateSoloPage(props)
+}
+
+/** 这张脸画不下的图组，交给通用组件渲染：每格连图注、对比两侧连标签。 */
+function ImageAnnotateFallbackPage({
+  slide,
+  ctx,
+}: {
+  ir: PptxIR
+  slide: Slide
+  ctx: ComponentCtx
+  page: PageRenderContext
+}) {
+  const bg = ctx.defaultBg ?? ctx.colors.bg
+  const title = fitEmphasisText(slide.heading, {
+    maxWidth: ANN_CONTENT_W,
+    fontSize: scaleTypePx(34, ctx.shape?.typeScale),
+    maxLines: 2,
+    lineHeightRatio: 1.2,
+  })
+  const sub = fitEmphasisText(slide.subheading, {
+    maxWidth: Math.min(ANN_CONTENT_W, 900),
+    fontSize: 18,
+    maxLines: 2,
+    lineHeightRatio: 1.3,
+  })
+  let cursor = ANN_HEAD_TOP
+  const titleY = cursor + title.lineHeight - 10
+  cursor += title.lines.length * title.lineHeight + 8
+  const subY = cursor + sub.lineHeight - 8
+  if (sub.lines.length) cursor += sub.lines.length * sub.lineHeight + 6
+  const bodyTop = cursor + 22
+  return (
+    <g data-annotate-mode="fallback">
+      {renderEmphasisHeading(
+        title,
+        headingEmphasisPaint(ctx, title, {
+          baseFill: accessibleInk(ctx.colors.primary, bg, title.fontSize),
+          fontWeight: "600",
+          fontFamily: ctx.fonts.heading,
+        }),
+        (_line, i) => (
+          <text
+            key={i}
+            data-truncated={title.truncated && i === title.lines.length - 1 ? "1" : undefined}
+            x={ANN_MARGIN_X}
+            y={titleY + i * title.lineHeight}
+            fontSize={title.fontSize}
+            fontWeight={600}
+            fontFamily={ctx.fonts.heading}
+            fill={accessibleInk(ctx.colors.primary, bg, title.fontSize)}
+            dominantBaseline="alphabetic"
+          />
+        ),
+      )}
+      {renderEmphasisHeading(
+        sub,
+        headingEmphasisPaint(ctx, sub, { baseFill: ctx.colors.muted, fontFamily: ctx.fonts.body, bold: false }),
+        (_line, i) => (
+          <text
+            key={i}
+            data-truncated={sub.truncated && i === sub.lines.length - 1 ? "1" : undefined}
+            x={ANN_MARGIN_X}
+            y={subY + i * sub.lineHeight}
+            fontSize={sub.fontSize}
+            fontFamily={ctx.fonts.body}
+            fill={ctx.colors.muted}
+            dominantBaseline="alphabetic"
+          />
+        ),
+      )}
+      <SvgContent
+        components={slide.components}
+        rect={{ x: ANN_MARGIN_X, y: bodyTop, w: ANN_CONTENT_W, h: Math.max(80, ANN_BODY_BOTTOM + ANN_CAPTION_SLOT - bodyTop) }}
+        ctx={ctx}
+      />
+    </g>
+  )
+}
+
+function ImageAnnotateSoloPage({
   ir: _ir,
   slide,
   ctx,
