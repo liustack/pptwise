@@ -1,6 +1,6 @@
 import type { SvgTemplateProps } from "../types"
 import { sectionNameFor } from "../../lib/derive"
-import { renderEmphasisTspans } from "../../render/emphasis"
+import { renderEmphasisTspans, emphasisRunInk } from "../../render/emphasis"
 import { heroCaption, heroUnit, heroSource, heroValue, pullQuoteAttribution, pullQuoteContext, pullQuoteText } from "../minimal-shared"
 import { fitHeroLine, heroUnitMark, fitSparseHeading, fitSparseQuote, fitStatementSource, pad2, quoteBlockBaseline } from "./shared"
 
@@ -49,7 +49,7 @@ export function pullQuote({ slide, ctx }: SvgTemplateProps) {
           dominantBaseline="alphabetic"
         >
           {renderEmphasisTspans(quote.lineSegs[i] ?? [{ text: line, emphasized: false }], {
-            accent: colors.accent,
+            accent: emphasisRunInk(colors),
             baseFill: colors.primary,
             fontWeight: "400",
           })}
@@ -169,7 +169,7 @@ export function statement({ slide, ctx }: SvgTemplateProps) {
           dominantBaseline="alphabetic"
         >
           {renderEmphasisTspans(heading.lineSegs[i] ?? [{ text: line, emphasized: false }], {
-            accent: colors.accent,
+            accent: emphasisRunInk(colors),
             baseFill: colors.primary,
             fontWeight: "400",
           })}

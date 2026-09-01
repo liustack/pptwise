@@ -1,7 +1,7 @@
 import type { SvgTemplateProps } from "../types"
 import { sectionNameFor } from "../../lib/derive"
 import { pickEvidence } from "../../render/component-traits"
-import { renderEmphasisTspans } from "../../render/emphasis"
+import { renderEmphasisTspans, emphasisRunInk } from "../../render/emphasis"
 import { fitSvgLine } from "../../lib/svg-text-layout"
 import { heroCaption, heroUnit, heroSource, heroValue, statementAttribution } from "../minimal-shared"
 import { renderFittedEvidence } from "../fitted-evidence"
@@ -47,7 +47,7 @@ export function statement({ slide, ctx }: SvgTemplateProps) {
           dominantBaseline="alphabetic"
         >
           {renderEmphasisTspans(heading.lineSegs[i] ?? [{ text: line, emphasized: false }], {
-            accent: colors.accent,
+            accent: emphasisRunInk(colors),
             baseFill: colors.text,
             fontWeight: "400",
           })}
@@ -183,7 +183,7 @@ export function oneEvidence({ slide, ctx }: SvgTemplateProps) {
             dominantBaseline="alphabetic"
           >
             {renderEmphasisTspans(heading.lineSegs[i] ?? [{ text: line, emphasized: false }], {
-              accent: colors.accent,
+              accent: emphasisRunInk(colors),
               baseFill: colors.text,
               fontWeight: "400",
             })}
@@ -204,7 +204,7 @@ export function oneEvidence({ slide, ctx }: SvgTemplateProps) {
               dominantBaseline="alphabetic"
             >
               {renderEmphasisTspans(heading.lineSegs[i] ?? [{ text: line, emphasized: false }], {
-                accent: colors.accent,
+                accent: emphasisRunInk(colors),
                 baseFill: colors.text,
                 fontWeight: "400",
               })}

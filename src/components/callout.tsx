@@ -7,6 +7,7 @@ import {
   sliceEmphasisForLines,
   stripEmphasis,
   type EmphasisSegment,
+  emphasisRunInk,
 } from "../render/emphasis"
 import { accessibleInk, resolveSemanticColor, type SemanticColorTokens } from "../render/ink"
 import { mixHex } from "./color-mix"
@@ -99,7 +100,7 @@ export const callout: SvgComponent<CalloutComponent> = {
           renderEmphasisText(
             segments,
             {
-              accent: ctx.colors.accent,
+              accent: emphasisRunInk(ctx.colors),
               baseFill: ink,
               emphasis: ctx.emphasis,
               measureWeight: { fontFamily: ctx.fonts.body },

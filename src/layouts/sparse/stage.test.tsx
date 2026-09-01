@@ -55,8 +55,12 @@ describe("stage sparse faces", () => {
     expect(Number(heading.getAttribute("font-size"))).toBe(64)
     expect(heading.getAttribute("fill")).toBe(ctx.colors.text)
     expect(heading.textContent).toMatch(/，$/)
+    // stage strikes a ** run in its own emphasis ink, not its accent: the
+    // accent is a near-neutral silver 1.60:1 from this very heading's paper
+    // white, so a run in it read as faded rather than emphasised.
     const em = Array.from(root.querySelectorAll("tspan")).find((t) => t.textContent === "听它说话")
-    expect(em?.getAttribute("fill")).toBe(ctx.colors.accent)
+    expect(em?.getAttribute("fill")).toBe(ctx.colors.emphasisInk)
+    expect(em?.getAttribute("fill")).not.toBe(ctx.colors.accent)
     const hair = root.querySelector("line")
     expect(hair?.getAttribute("x1")).toBe("616")
     expect(hair?.getAttribute("x2")).toBe("664")

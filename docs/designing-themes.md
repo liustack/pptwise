@@ -68,7 +68,9 @@ A face with structural `suppressMotif: true` remains silent regardless of the me
 
 ### Palette and contrast
 
-Every color has a role. The required core is `bg`, `surface`, `primary`, `accent`, `text`, `muted`, and `chartPalette`. Add `panel`, `border`, `accentPool`, `cardStroke`, `danger`, `warning`, or `success` only when the theme needs them.
+Every color has a role. The required core is `bg`, `surface`, `primary`, `accent`, `text`, `muted`, and `chartPalette`. Add `panel`, `border`, `accentPool`, `cardStroke`, `emphasisInk`, `danger`, `warning`, or `success` only when the theme needs them.
+
+`accent` answers to the page background: it must stay legible where it is painted. A `**marked**` run answers to the text it interrupts: it must look different from the words on either side. Most palettes have one color that does both, and those omit `emphasisInk`. A theme whose accent is a near-neutral in the same family as its text ink does not, and its marked runs read as faded rather than emphasized. Such a theme keeps `accent` for decoration and names `emphasisInk` for the run.
 
 Body text must clear 4.5:1 against its painted background. Large headings and metadata must clear their audited floors. `danger` and `success` act as text in KPI deltas and must clear 4.5:1 on `surface`. `warning` is normally line or icon ink and must clear 3:1.
 

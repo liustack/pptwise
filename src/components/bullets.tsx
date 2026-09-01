@@ -8,6 +8,7 @@ import {
   stripEmphasis,
   truncateEmphasisSegments,
   type EmphasisSegment,
+  emphasisRunInk,
 } from "../render/emphasis"
 import type { RenderDef, SvgComponent } from "./types"
 
@@ -262,7 +263,7 @@ export const bullets: SvgComponent<BulletsComponent> = {
               renderEmphasisText(
                 segments,
                 {
-                  accent: ctx.colors.accent,
+                  accent: emphasisRunInk(ctx.colors),
                   baseFill: ctx.colors.text,
                   emphasis: ctx.emphasis,
                 },

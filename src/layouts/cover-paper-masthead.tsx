@@ -5,7 +5,7 @@ import { fitSvgLine } from "../lib/svg-text-layout"
 import { trackingPx } from "./minimal-shared"
 import { accessibleInk, metaInk } from "../render/ink"
 import { showsDocumentMeta } from "../render/document-meta"
-import { fitEmphasisText, headingEmphasisPaint, parseEmphasis, renderEmphasisHeading, renderEmphasisText, sliceEmphasisForLines, stripEmphasis } from "../render/emphasis"
+import { fitEmphasisText, headingEmphasisPaint, parseEmphasis, renderEmphasisHeading, renderEmphasisText, sliceEmphasisForLines, stripEmphasis, emphasisRunInk } from "../render/emphasis"
 
 /**
  * paper-masthead cover layout（2026-08-22 封面还原第一波，新表达）：
@@ -151,7 +151,7 @@ export function PaperMastheadCover({ ir, slide, ctx, page }: SvgTemplateProps) {
         renderEmphasisText(
           lineSegs[i] ?? [{ text: line, emphasized: false }],
           {
-            accent: colors.accent,
+            accent: emphasisRunInk(colors),
             padFill: colors.accent,
             baseFill: titleInk,
             fontWeight: "700",

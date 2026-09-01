@@ -1,7 +1,7 @@
 import type { Component } from "@/ir"
 import { Fragment } from "react"
 import { layoutSvgText } from "../lib/svg-text-layout"
-import { parseEmphasis, renderEmphasisLine, sliceEmphasisForLines, stripEmphasis } from "../render/emphasis"
+import { parseEmphasis, renderEmphasisLine, sliceEmphasisForLines, stripEmphasis, emphasisRunInk } from "../render/emphasis"
 import type { RenderDef, SvgComponent } from "./types"
 
 type ParagraphComponent = Extract<Component, { type: "paragraph" }>
@@ -54,7 +54,7 @@ export const paragraph: SvgComponent<ParagraphComponent> = {
         {visible.map((segments, i) => {
           const baselineY = i * l.lineHeight + l.fontSize
           const emphasis = renderEmphasisLine(segments, {
-            accent: ctx.colors.accent,
+            accent: emphasisRunInk(ctx.colors),
             baseFill: ctx.colors.text,
             fontSize: l.fontSize,
             x: 0,

@@ -2,7 +2,7 @@ import type { SvgTemplateProps } from "../types"
 import { sectionNameFor } from "../../lib/derive"
 import { fitHeadingLines } from "../../render/heading-fit"
 import { fitSvgLine } from "../../lib/svg-text-layout"
-import { renderEmphasisTspans } from "../../render/emphasis"
+import { renderEmphasisTspans, emphasisRunInk } from "../../render/emphasis"
 import { accessibleOpacity, readableOn } from "../../render/ink"
 import { findImageSelection, singlePictureExact } from "../find-image"
 import { DroppedContentMarker } from "../../render/drop-marker"
@@ -41,7 +41,7 @@ export function statement({ ir, slide, index, ctx }: SvgTemplateProps) {
           dominantBaseline="alphabetic"
         >
           {renderEmphasisTspans(heading.lineSegs[i] ?? [{ text: line, emphasized: false }], {
-            accent: colors.accent,
+            accent: emphasisRunInk(colors),
             baseFill: colors.text,
             fontWeight: "700",
           })}

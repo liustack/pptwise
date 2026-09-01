@@ -31,6 +31,25 @@ export interface StyleColors {
    */
   cardStroke?: string;
   /**
+   * Optional ink for a `**marked**` run, when the theme's `accent` cannot do
+   * that job. Omitted (the default) resolves to `accent`, so a theme that
+   * leaves it out renders byte-for-byte as it did before this token existed.
+   *
+   * Same reasoning as `cardStroke` above — the emphasis renderers are shared
+   * across every theme and must stay theme-agnostic — but the pressure is
+   * different. `accent` answers to the page background: it has to stay legible
+   * where it is painted. An emphasis run answers to the *text it interrupts*:
+   * it has to look different from the words on either side of it. Most themes
+   * have one colour that does both. A theme whose accent is a near-neutral in
+   * the same family as its text ink does not, and its marked runs read as
+   * faded rather than emphasised (stage, whose muted silver sits 1.60:1 from
+   * its own paper white). Splitting the token lets such a theme keep its
+   * accent for decoration and name a second ink for emphasis.
+   *
+   * `themes/definitions.test.ts` pins the separation rule for all built-ins.
+   */
+  emphasisInk?: string;
+  /**
    * Optional semantic-role colors — the "this is an error", "this is a
    * caution", "this is a good result" trio that shared component renderers
    * used to bake in as literal hexes (`callout`'s warn rule and icon in

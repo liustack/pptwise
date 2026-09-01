@@ -1,6 +1,6 @@
 import type { SvgTemplateProps } from "../types"
 import type { EmphasisSegment } from "../../render/emphasis"
-import { renderEmphasisTspans } from "../../render/emphasis"
+import { renderEmphasisTspans, emphasisRunInk } from "../../render/emphasis"
 import {
   hasCjk,
   heroCaption,
@@ -84,7 +84,7 @@ export function statement({ ir, slide, ctx }: SvgTemplateProps) {
             dominantBaseline="alphabetic"
           >
             {renderEmphasisTspans(heading.lineSegs[i] ?? [{ text: line, emphasized: false }], {
-              accent: colors.accent,
+              accent: emphasisRunInk(colors),
               baseFill: colors.primary,
               fontWeight: "400",
             })}
@@ -263,7 +263,7 @@ export function pullQuote({ slide, ctx }: SvgTemplateProps) {
             dominantBaseline="alphabetic"
           >
             {renderEmphasisTspans(quote.lineSegs[i] ?? [{ text: line, emphasized: false }], {
-              accent: colors.accent,
+              accent: emphasisRunInk(colors),
               baseFill: colors.primary,
               fontWeight: "400",
             })}

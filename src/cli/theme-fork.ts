@@ -266,6 +266,9 @@ function buildForkedTheme(
   if (sourceColors.cardStroke !== undefined) {
     colors.cardStroke = rebaseRelativeColor(sourceColors.cardStroke, sourceColors.surface, surface, sourceColors.text, text)
   }
+  if (sourceColors.emphasisInk !== undefined) {
+    colors.emphasisInk = rebaseRelativeColor(sourceColors.emphasisInk, sourceColors.bg, bg, sourceColors.text, text)
+  }
   if (sourceColors.danger !== undefined) {
     colors.danger = calibrateStatusColor("danger", sourceColors.danger, bg, surface)
   }

@@ -13,6 +13,7 @@ import { fitHeadingLines } from "./heading-fit"
 import { accessibleInk } from "./ink"
 import type { ComponentCtx } from "../components/types"
 import type { EmphasisTreatment } from "../themes/schema"
+import type { StyleColors } from "../themes/tokens"
 
 /** One run of text with its emphasis state, in source (unmarked) text order. */
 export interface EmphasisSegment {
@@ -96,6 +97,19 @@ export interface EmphasisLineRender {
 /** A theme that declares no emphasis stroke tints the run in its accent. */
 export function resolveEmphasisForm(emphasis: EmphasisTreatment | undefined): EmphasisTreatment {
   return emphasis ?? "tint"
+}
+
+/**
+ * The ink a `**marked**` run is struck in.
+ *
+ * The accent, unless the theme named a separate `emphasisInk` because its
+ * accent cannot separate from its own text ink (see `themes/tokens.ts`). Every
+ * painter of an emphasised run resolves it here rather than reading
+ * `colors.accent` directly, so a theme that splits the two gets the split on
+ * headings, body text and its own sparse faces alike.
+ */
+export function emphasisRunInk(colors: Pick<StyleColors, "accent" | "emphasisInk">): string {
+  return colors.emphasisInk ?? colors.accent
 }
 
 /** Hand-drawn quadratic chalk stroke whose x-span equals `width`. */
@@ -413,8 +427,8 @@ export function headingEmphasisPaint(
 ): EmphasisHeadingPaint {
   const bg = ctx.defaultBg ?? ctx.colors.bg
   return {
-    accent: style.accent ?? accessibleInk(ctx.colors.accent, bg, layout.fontSize),
-    padFill: ctx.colors.accent,
+    accent: style.accent ?? accessibleInk(emphasisRunInk(ctx.colors), bg, layout.fontSize),
+    padFill: emphasisRunInk(ctx.colors),
     baseFill: style.baseFill,
     fontWeight: style.fontWeight ?? "700",
     emphasis: ctx.emphasis,

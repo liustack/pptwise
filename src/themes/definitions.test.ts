@@ -13,6 +13,7 @@ import {
   THEME_DEFINITIONS,
 } from "./definitions"
 import { THEME_OCCASIONS } from "./occasions"
+import { contrastRatio } from "../render/ink"
 import { COVER_LAYOUTS } from "../layouts/index-cover"
 import { CHAPTER_LAYOUTS } from "../layouts/index-chapter"
 import { ENDING_LAYOUTS } from "../layouts/index-ending"
@@ -169,6 +170,44 @@ describe("THEME_DEFINITIONS", () => {
 
   it("未知 id 不再回落 consulting，resolveThemeId 直接报错", () => {
     expect(() => resolveThemeId("nonexistent-theme")).toThrow(/unknown theme "nonexistent-theme"/)
+  })
+})
+
+describe("emphasis run ink", () => {
+  // `accessibleInk` already keeps a `**marked**` run legible against the page
+  // background. It never asked the other question: does the run look different
+  // from the plain text around it? A run can clear every contrast floor and
+  // still read as the same sentence in a slightly tired colour — which is what
+  // stage did, a near-neutral silver run inside near-neutral paper-white type.
+  //
+  // Two ways to be different, and a theme needs only one. Luminance: the run is
+  // visibly lighter or darker than the text. Chroma: the run is a colour where
+  // the text is near-neutral, which is how the dark themes with mint, cyan and
+  // amber accents pop at almost no luminance contrast at all.
+  const chroma = (hex: string) => {
+    const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)) as [number, number, number]
+    return Math.max(r, g, b) - Math.min(r, g, b)
+  }
+  const separation = (ink: string, text: string) =>
+    Math.max(contrastRatio(ink, text) - 1, Math.abs(chroma(ink) - chroma(text)) / 60)
+
+  it("separates every theme's run ink from that theme's own text ink", () => {
+    for (const id of CANONICAL_THEME_IDS) {
+      const colors = THEME_STYLES[id].colors
+      const runInk = colors.emphasisInk ?? colors.accent
+      expect(
+        separation(runInk, colors.text),
+        `${id}: a ** run in ${runInk} fades into text ${colors.text}`,
+      ).toBeGreaterThanOrEqual(1)
+    }
+  })
+
+  it("keeps every declared run ink readable on its own page background", () => {
+    for (const id of CANONICAL_THEME_IDS) {
+      const colors = THEME_STYLES[id].colors
+      if (colors.emphasisInk === undefined) continue
+      expect(contrastRatio(colors.emphasisInk, colors.bg), id).toBeGreaterThanOrEqual(4.5)
+    }
   })
 })
 

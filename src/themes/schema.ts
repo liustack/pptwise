@@ -53,6 +53,7 @@ export const StyleTokensFileSchema = z
         chartPalette: z.array(HexTokenSchema).min(1),
         accentPool: z.array(HexTokenSchema).min(1).optional(),
         cardStroke: HexTokenSchema.optional(),
+        emphasisInk: HexTokenSchema.optional(),
         danger: HexTokenSchema.optional(),
         warning: HexTokenSchema.optional(),
         success: HexTokenSchema.optional(),

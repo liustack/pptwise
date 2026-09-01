@@ -1,5 +1,5 @@
 import type { SvgTemplateProps } from "../types"
-import { renderEmphasisTspans } from "../../render/emphasis"
+import { renderEmphasisTspans, emphasisRunInk } from "../../render/emphasis"
 import {
   heroCaption,
   heroSource,
@@ -192,7 +192,7 @@ export function pullQuote({ slide, ctx }: SvgTemplateProps) {
           dominantBaseline="alphabetic"
         >
           {renderEmphasisTspans(quote.lineSegs[i] ?? [{ text: line, emphasized: false }], {
-            accent: colors.accent,
+            accent: emphasisRunInk(colors),
             baseFill: colors.text,
             fontWeight: "400",
           })}

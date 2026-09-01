@@ -116,6 +116,18 @@ describe("paragraph component emphasis", () => {
     expect(accentSpan?.getAttribute("font-weight")).toBe("600")
   })
 
+  it("strikes the run in the theme's emphasis ink when it declares one", () => {
+    // Body text and headings resolve the run ink the same way, so a theme
+    // whose accent cannot separate from its text ink (stage) is fixed on both
+    // surfaces at once rather than on headings only.
+    const marked = { type: "paragraph" as const, text: "普通 **强调内容** 普通" }
+    const split = { ...ctx, colors: { ...ctx.colors, emphasisInk: "#B8A888" } }
+    const { container } = svg(paragraph.render(marked, { x: 0, y: 0, w: 1120 }, split))
+    const run = Array.from(container.querySelectorAll("tspan")).find((t) => t.textContent === "强调内容")
+    expect(run?.getAttribute("fill")).toBe("#B8A888")
+    expect(run?.getAttribute("fill")).not.toBe(ctx.colors.accent)
+  })
+
   it("measures the same height with or without ** markers", () => {
     const plain = { type: "paragraph" as const, text: "一段普通文本内容" }
     const marked = { type: "paragraph" as const, text: "一段**普通**文本内容" }
