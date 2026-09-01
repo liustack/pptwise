@@ -310,7 +310,7 @@ interface RenderArgs {
 function renderNoTitle(
   treatment: HeadingTreatmentId,
   args: RenderArgs,
-): { chrome: ReactNode; contentRect: ContentRect } {
+): { chrome: ReactNode; contentRect: ContentRect } | null {
   if (treatment === "ghost_index" && args.anchor === "mini-index") {
     return renderGhostMiniIndex(args)
   }
@@ -343,11 +343,41 @@ function renderGhostMiniIndex(args: RenderArgs): { chrome: ReactNode; contentRec
   }
 }
 
+/**
+ * The text the vertical signpost sets, with emphasis markers stripped.
+ *
+ * The markers are this repository's notation, not the author's characters,
+ * and they used to reach `stacksVertically` intact: `口径以**季度审计**为准`
+ * is a Chinese label that stacks perfectly well, and the four asterisks in
+ * the middle of it were enough to answer no.
+ */
 function kickerSource(args: RenderArgs): string {
-  return args.subheading || args.sectionName || ""
+  return stripEmphasis(args.subheading || args.sectionName || "").trim()
 }
 
-function renderShortKicker(args: RenderArgs): { chrome: ReactNode; contentRect: ContentRect } {
+/**
+ * When the vertical signpost has to step aside for the ordinary heading path.
+ *
+ * A kicker is set as a column of single glyphs, which is ordinary typography
+ * for CJK and unreadable for a Latin word (`stacksVertically`, and the review
+ * behind it). The guard used to null the kicker chrome alone and hand back
+ * the rest of the treatment, so the caller saw a result, never reached its
+ * own heading path, and the subheading was painted nowhere at all: no
+ * horizontal fallback, no `data-dropped`, nothing. Declining the whole
+ * treatment is what makes that fallback reachable.
+ *
+ * Only an authored `subheading` forces the decline. With no subheading the
+ * source is `sectionName`, which this repository derives from the chapter
+ * page that already prints it, so a Latin section name losing its signpost
+ * loses nothing an author wrote.
+ */
+function declinesVerticalSignpost(args: RenderArgs): boolean {
+  const sub = stripEmphasis(args.subheading).trim()
+  return sub.length > 0 && !stacksVertically(sub)
+}
+
+function renderShortKicker(args: RenderArgs): { chrome: ReactNode; contentRect: ContentRect } | null {
+  if (declinesVerticalSignpost(args)) return null
   const source = kickerSource(args)
   const insetX = args.knobs.insetX ?? PAGE_LEFT
   if (!source || !stacksVertically(source)) {
@@ -793,7 +823,8 @@ function renderLeadAccent(args: RenderArgs): { chrome: ReactNode; contentRect: C
   }
 }
 
-function renderVerticalKicker(args: RenderArgs): HeadingTreatmentPaint {
+function renderVerticalKicker(args: RenderArgs): HeadingTreatmentPaint | null {
+  if (declinesVerticalSignpost(args)) return null
   const { colors, fonts } = args.ctx
   const source = kickerSource(args)
   const stackable = source.length > 0 && stacksVertically(source)

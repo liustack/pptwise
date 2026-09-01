@@ -459,6 +459,32 @@ describe("vertical_kicker ink", () => {
     const root = rootOf(treated!.chrome)
     expect(texts(root).filter((t) => (t.textContent ?? "").length === 1)).toHaveLength(0)
   })
+
+  // A signpost that cannot set its source steps aside for the whole page,
+  // not just for its own chrome. The guard used to null the kicker and hand
+  // the rest of the treatment back, so the caller never reached its own
+  // heading path and the subheading was painted nowhere at all: no
+  // horizontal fallback, no data-dropped, nothing.
+  it.each(["Growth Strategy", "K8s 托管与成本", "Рост"])(
+    "declines the whole treatment for a subheading it cannot stack (%s)",
+    (subheading) => {
+      expect(withChapter("ink", { subheading }).treated).toBeNull()
+    },
+  )
+
+  it("stacks a CJK subheading whose only obstacle was its emphasis markers", () => {
+    const { treated } = withChapter("ink", { subheading: "口径以**季度审计**为准" })
+    expect(treated).not.toBeNull()
+    const stacked = texts(rootOf(treated!.chrome)).filter((t) => (t.textContent ?? "").length === 1)
+    // Set as a column, one glyph per element, and not an asterisk among them.
+    expect(stacked.map((t) => t.textContent).join("")).toBe("口径以季度审计为准")
+  })
+
+  it("still stacks a plain CJK subheading", () => {
+    const { treated } = withChapter("ink", { subheading: "增长战略" })
+    const stacked = texts(rootOf(treated!.chrome)).filter((t) => (t.textContent ?? "").length === 1)
+    expect(stacked.map((t) => t.textContent).join("")).toBe("增长战略")
+  })
 })
 
 describe("vertical_kicker museum", () => {

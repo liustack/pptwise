@@ -10,6 +10,7 @@ import { COVER_LAYOUTS } from "../layouts/index-cover"
 import { CHAPTER_LAYOUTS } from "../layouts/index-chapter"
 import { CONTENT_LAYOUTS } from "../layouts/index-content"
 import { ENDING_LAYOUTS } from "../layouts/index-ending"
+import { LAYOUT_REGISTRY } from "../layouts/registry"
 import { stripEmphasis } from "./emphasis"
 
 installNodePlatform()
@@ -35,6 +36,11 @@ function deck(themeId: string, slides: Slide[]): PptxIR {
     assets: { images: {} },
     slides,
   } as PptxIR
+}
+
+/** Has this face promised `slide.subheading` a place of its own? */
+function declaresSubheading(face: string): boolean {
+  return Boolean(LAYOUT_REGISTRY[face]?.slots.some((slot) => slot.name === "subheading"))
 }
 
 /** Text actually painted, with every tag removed — what a reader sees. */
@@ -114,7 +120,23 @@ describe("no registered face prints a heading or subheading marker", () => {
         : [{ type: kind, heading: MARKED, subheading: SUB_MARKED, components: [] } as Slide]
     const svg = renderSlideSvg(deck(id, slides), slides.length - 1)
     __resetRegisteredThemes()
-    expect(paintedText(svg)).not.toContain("*")
+    const painted = paintedText(svg)
+    expect(painted).not.toContain("*")
+    // "No asterisks on the page" is also true of a page that dropped the
+    // whole field, which is how ink/lecture/museum's vertical kicker passed
+    // this sweep while painting no subheading at all: the markers made the
+    // label unstackable, the guard nulled the kicker chrome alone, and the
+    // caller never reached its own heading path. A marker sweep has to know
+    // the difference between stripped and gone.
+    //
+    // Asked only of a face that declares a `subheading` slot. A face with no
+    // such slot has not promised the field a place, and that is a menu
+    // question rather than a marker one.
+    if (declaresSubheading(face)) {
+      expect(painted.replace(/\s/g, ""), face).toContain(
+        stripEmphasis(SUB_MARKED).replace(/\s/g, ""),
+      )
+    }
   })
 })
 
