@@ -470,7 +470,20 @@ describe("renderDonut — center total label", () => {
     const unnamed: ChartSeries[] = [{ name: "", data: [{ x: "A", y: 40 }, { x: "B", y: 60 }] }]
     const { container } = svg(renderDonut(unnamed, PALETTE, 0, 0, W, H, MUTED, TEXT))
     const texts = Array.from(container.querySelectorAll("text")).map((t) => t.textContent)
-    expect(texts).toEqual(["100"])
+    // The centre is the bare total: no caption, because there is no name to
+    // caption it with. The slices keep their own labels — those are the
+    // points' names, which the author did write.
+    expect(texts).toEqual(["A 40", "B 60", "100"])
+  })
+
+  it("names every slice beside the ring, not just the total in the middle", () => {
+    const { container } = svg(renderDonut(seriesOf(30, 45, 25), PALETTE, 0, 0, W, H, MUTED, TEXT))
+    const labels = Array.from(container.querySelectorAll("text[data-value-label]")).map(
+      (t) => t.textContent,
+    )
+    expect(labels).toEqual(["C0 30", "C1 45", "C2 25"])
+    // One leader line per labeled slice, drawn from the arc outwards.
+    expect(container.querySelectorAll("polyline")).toHaveLength(3)
   })
 
   it("renders one path wedge per data point and nothing when the series sums to zero", () => {
@@ -1400,7 +1413,13 @@ describe("renderDonut — center-total toggle (chart-depth wave)", () => {
 
   it("the dedicated donut subtype keeps the center empty by default", () => {
     const { container } = svg(renderDonut(donutSeries, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT, false, donutComponent()))
-    expect(container.querySelectorAll("text")).toHaveLength(0)
+    // `center_total` gates the middle of the ring, and nothing else. The
+    // slice labels are not a total — they are what the author called each
+    // slice — so they are painted whether or not the centre is.
+    expect(Array.from(container.querySelectorAll("text")).map((t) => t.textContent)).toEqual([
+      "A 40",
+      "B 60",
+    ])
     expect(container.querySelectorAll("path")).toHaveLength(2)
   })
 

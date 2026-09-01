@@ -1779,16 +1779,31 @@ describe("parseWedgePath — real renderDonut/renderPie output round-trips (rend
     )
     const ds = extractPathDs(markup)
     expect(ds.length).toBe(4) // one wedge per category, none zero-share
+    // The ring's radius is no longer `min(w,h)/2 - 4` outright, for the same
+    // reason the pie's stopped being (see the pie case below): slice labels
+    // sit in gutters outside the ring, and a box too narrow to hold both
+    // makes the ring give way down to `PIE_MIN_RADIUS_RATIO`. This 400x400
+    // box is one that pays. The parser contract itself is unchanged — every
+    // wedge parses, and they all describe one ring with one hole.
+    const radii: { ro: number; ri: number }[] = []
     for (const d of ds) {
       const sector = __parseWedgePath(d)
       expect(sector).not.toBeNull()
       expect(sector!.cx).toBeCloseTo(EXPECTED_CX, 6)
       expect(sector!.cy).toBeCloseTo(EXPECTED_CY, 6)
-      expect(sector!.ro).toBeCloseTo(EXPECTED_R, 6)
-      expect(sector!.ri).toBeCloseTo(EXPECTED_RI, 6)
       expect(sector!.span).toBeGreaterThan(0)
       expect(sector!.span).toBeLessThanOrEqual(2 * Math.PI + 1e-9)
+      radii.push({ ro: sector!.ro, ri: sector!.ri })
     }
+    for (const { ro, ri } of radii) {
+      expect(ro).toBeCloseTo(radii[0]!.ro, 6)
+      expect(ri).toBeCloseTo(radii[0]!.ri, 6)
+      // The hole still follows the ring by DONUT_HOLE_RATIO, whatever radius
+      // the ring kept — which is what `EXPECTED_RI`'s ratio actually pins.
+      expect(ri).toBeCloseTo(ro * (EXPECTED_RI / EXPECTED_R), 6)
+    }
+    expect(radii[0]!.ro).toBeLessThanOrEqual(EXPECTED_R)
+    expect(radii[0]!.ro).toBeGreaterThanOrEqual(EXPECTED_R * 0.55)
   })
 
   it("parses every wedge <path> a real renderPie call emits, with geometry matching the chart's own known center/radius (no hole)", () => {

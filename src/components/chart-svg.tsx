@@ -932,6 +932,169 @@ const PIE_LEADER_GAP = 6
  */
 const PIE_MIN_RADIUS_RATIO = 0.55
 
+/** One slice's label geometry, plus the two angles its own path is drawn from. */
+interface RadialSlice {
+  readonly key: number
+  readonly startA: number
+  readonly endA: number
+  readonly right: boolean
+  readonly textX: number
+  readonly fitted: ReturnType<typeof fitSvgLine>
+  readonly arcX: number
+  readonly arcY: number
+  readonly stubX: number
+  readonly stubY: number
+  readonly value: number
+}
+
+/**
+ * The radial label gutter, shared by the pie and the donut.
+ *
+ * Both charts are one series of named slices with no axis and no legend, so
+ * the only thing that can name a slice is a label beside it. The pie grew
+ * that mechanism first; the donut drew nameless rings for another wave, its
+ * centre carrying a total and a series name while the slices themselves said
+ * nothing — 100 gallery pages of colored arcs a reader could not read.
+ *
+ * Extracted verbatim rather than reimplemented: the arithmetic, and the order
+ * it runs in, is what keeps `EXPECTED_PIE`'s wedges byte-identical.
+ *
+ * Returns the radius the circle keeps after yielding what the gutters need,
+ * and one entry per slice. The caller builds its own `d` from `startA`/`endA`
+ * — a wedge for the pie, an annulus sector for the donut.
+ */
+function layoutRadialSlices(
+  data: ChartSeries["data"],
+  total: number,
+  cx: number,
+  cy: number,
+  x0: number,
+  w: number,
+  fullR: number,
+  fontFamily?: string,
+): { r: number; slices: RadialSlice[] } {
+  // One authoritative label budget, used both to size the circle and to fit
+  // the text. Measuring the leftover geometry back out instead costs a float
+  // bit at exactly the point where reservation and budget are meant to be
+  // equal, and `fitSvgLine`'s `floor(available / units)` turns that bit into
+  // a whole dropped size step, so the label that set the reservation is the
+  // one that gets truncated. Caught on the funnel, whose widest band's label
+  // is usually also its longest: it shipped as "田野采集 " with its own value
+  // clipped off, on 18 gallery pages. Geometry may grant a label *more* room
+  // than the budget (a narrow band, a small slice); it never grants less.
+  const texts = data.map(directLabelText)
+  const labelBudget = Math.max(
+    0,
+    Math.min(
+      widestDirectLabel(texts, fontFamily),
+      w / 2 - PIE_LEADER_STUB - PIE_LEADER_GAP - fullR * PIE_MIN_RADIUS_RATIO,
+    ),
+  )
+  const r = Math.max(
+    fullR * PIE_MIN_RADIUS_RATIO,
+    Math.min(fullR, w / 2 - (PIE_LEADER_STUB + PIE_LEADER_GAP + labelBudget)),
+  )
+
+  let acc = 0
+  const slices = data.map((d, i) => {
+    const startA = (acc / total) * Math.PI * 2 - Math.PI / 2
+    acc += d.y
+    const endA = (acc / total) * Math.PI * 2 - Math.PI / 2
+    // Where the label hangs off: the slice's own middle, carried one stub
+    // out past the arc. A slice on the right half labels rightward, one on
+    // the left labels leftward, so a leader never crosses the circle.
+    const midA = (startA + endA) / 2
+    const right = Math.cos(midA) >= 0
+    const textX = right ? cx + r + PIE_LEADER_STUB + PIE_LEADER_GAP : cx - r - PIE_LEADER_STUB - PIE_LEADER_GAP
+    return {
+      key: i,
+      startA,
+      endA,
+      right,
+      textX,
+      // Truncation is the last resort, after the circle has already given up
+      // what radius it can: fit to the room that is actually left.
+      fitted: fitSvgLine(texts[i]!, {
+        maxWidth: Math.max(labelBudget, right ? x0 + w - textX : textX - x0),
+        fontSize: DIRECT_LABEL_FONT_SIZE,
+        minFontSize: DIRECT_LABEL_FONT_SIZE,
+        bold: true,
+        fontFamily,
+      }),
+      arcX: cx + Math.cos(midA) * r,
+      arcY: cy + Math.sin(midA) * r,
+      stubX: cx + Math.cos(midA) * (r + PIE_LEADER_STUB),
+      stubY: cy + Math.sin(midA) * (r + PIE_LEADER_STUB),
+      value: d.y,
+    }
+  })
+  return { r, slices }
+}
+
+/**
+ * Leader lines and labels for a laid-out radial chart.
+ *
+ * Each gutter is stacked on its own: a thin slice's label slides off its
+ * neighbour's line instead of landing on it, and a gutter too short to hold
+ * every label drops its smallest slices rather than overlapping.
+ */
+function radialSliceLabels(
+  slices: readonly RadialSlice[],
+  y0: number,
+  h: number,
+  mutedColor: string | undefined,
+  labelFill: string | undefined,
+): ReactElement {
+  const pitch = labelLinePitch(DIRECT_LABEL_FONT_SIZE)
+  const bounds = { top: y0, bottom: y0 + h }
+  const columnSpec = (slice: RadialSlice): ColumnLabelSpec => ({
+    id: String(slice.key),
+    y: slice.stubY,
+    pitch,
+    priority: slice.value,
+  })
+  const placed = new Map(
+    [true, false].flatMap((side) =>
+      stackLabelColumn(slices.filter((s) => s.right === side).map(columnSpec), bounds).map(
+        (label) => [label.id, label] as const,
+      ),
+    ),
+  )
+  return (
+    <>
+      {slices.map((slice) => {
+        const label = placed.get(String(slice.key))
+        if (!label || label.hidden || !slice.fitted.text) return null
+        const elbowX = slice.right ? slice.textX - PIE_LEADER_GAP : slice.textX + PIE_LEADER_GAP
+        return (
+          <g key={`label-${slice.key}`}>
+            <polyline
+              points={`${slice.arcX},${slice.arcY} ${slice.stubX},${slice.stubY} ${elbowX},${label.y}`}
+              fill="none"
+              stroke={mutedColor}
+              strokeWidth={1}
+              strokeOpacity={0.55}
+            />
+            <text
+              data-value-label="1"
+              data-truncated={slice.fitted.truncated ? "1" : undefined}
+              x={slice.textX}
+              y={label.y + DIRECT_LABEL_FONT_SIZE * DIRECT_LABEL_CENTER_TO_BASELINE}
+              textAnchor={slice.right ? "start" : "end"}
+              fontSize={slice.fitted.fontSize}
+              fontWeight={DIRECT_LABEL_FONT_WEIGHT}
+              fill={labelFill}
+              dominantBaseline="alphabetic"
+            >
+              {slice.fitted.text}
+            </text>
+          </g>
+        )
+      })}
+    </>
+  )
+}
+
 export function renderPie(
   series: ChartSeries[],
   palette: string[],
@@ -963,121 +1126,26 @@ export function renderPie(
   // A pie wide enough for its labels (the common case: `chart.tsx` hands
   // this renderer the full component width against a fixed 240px band) keeps
   // its full radius, so the wedge geometry is untouched there.
-  const texts = data.map(directLabelText)
-  // One authoritative label budget, used both to size the circle and to fit
-  // the text. Measuring the leftover geometry back out instead costs a float
-  // bit at exactly the point where reservation and budget are meant to be
-  // equal, and `fitSvgLine`'s `floor(available / units)` turns that bit into
-  // a whole dropped size step, so the label that set the reservation is the
-  // one that gets truncated. Caught on the funnel, whose widest band's label
-  // is usually also its longest: it shipped as "田野采集 " with its own value
-  // clipped off, on 18 gallery pages. Geometry may grant a label *more* room
-  // than the budget (a narrow band, a small slice); it never grants less.
-  const labelBudget = Math.max(
-    0,
-    Math.min(
-      widestDirectLabel(texts, fontFamily),
-      w / 2 - PIE_LEADER_STUB - PIE_LEADER_GAP - fullR * PIE_MIN_RADIUS_RATIO,
-    ),
-  )
-  const r = Math.max(
-    fullR * PIE_MIN_RADIUS_RATIO,
-    Math.min(fullR, w / 2 - (PIE_LEADER_STUB + PIE_LEADER_GAP + labelBudget)),
-  )
+  const { r, slices } = layoutRadialSlices(data, total, cx, cy, x0, w, fullR, fontFamily)
   const labelFill = directLabelInk(textColor, bgHex)
-  const pitch = labelLinePitch(DIRECT_LABEL_FONT_SIZE)
-
-  let acc = 0
-  const slices = data.map((d, i) => {
-    const startA = (acc / total) * Math.PI * 2 - Math.PI / 2
-    acc += d.y
-    const endA = (acc / total) * Math.PI * 2 - Math.PI / 2
-    const large = endA - startA > Math.PI ? 1 : 0
-    const x1 = cx + Math.cos(startA) * r
-    const y1 = cy + Math.sin(startA) * r
-    const x2 = cx + Math.cos(endA) * r
-    const y2 = cy + Math.sin(endA) * r
-    // Where the label hangs off: the slice's own middle, carried one stub
-    // out past the arc. A slice on the right half labels rightward, one on
-    // the left labels leftward, so a leader never crosses the pie.
-    const midA = (startA + endA) / 2
-    const right = Math.cos(midA) >= 0
-    const textX = right ? cx + r + PIE_LEADER_STUB + PIE_LEADER_GAP : cx - r - PIE_LEADER_STUB - PIE_LEADER_GAP
-    return {
-      key: i,
-      d: `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2} Z`,
-      fill: palette[i % palette.length],
-      right,
-      textX,
-      // Truncation is the last resort, after the circle has already given up
-      // what radius it can: fit to the room that is actually left.
-      fitted: fitSvgLine(texts[i]!, {
-        maxWidth: Math.max(labelBudget, right ? x0 + w - textX : textX - x0),
-        fontSize: DIRECT_LABEL_FONT_SIZE,
-        minFontSize: DIRECT_LABEL_FONT_SIZE,
-        bold: true,
-        fontFamily,
-      }),
-      arcX: cx + Math.cos(midA) * r,
-      arcY: cy + Math.sin(midA) * r,
-      stubX: cx + Math.cos(midA) * (r + PIE_LEADER_STUB),
-      stubY: cy + Math.sin(midA) * (r + PIE_LEADER_STUB),
-      value: d.y,
-    }
-  })
-
-  // Each gutter is stacked on its own: a thin slice's label slides off its
-  // neighbour's line instead of landing on it, and a gutter too short to
-  // hold every label drops its smallest slices rather than overlapping.
-  const bounds = { top: y0, bottom: y0 + h }
-  const columnSpec = (slice: (typeof slices)[number]): ColumnLabelSpec => ({
-    id: String(slice.key),
-    y: slice.stubY,
-    pitch,
-    priority: slice.value,
-  })
-  const placed = new Map(
-    [true, false].flatMap((side) =>
-      stackLabelColumn(slices.filter((s) => s.right === side).map(columnSpec), bounds).map(
-        (label) => [label.id, label] as const,
-      ),
-    ),
-  )
 
   return (
     <>
-      {slices.map((slice) => (
-        <path key={slice.key} d={slice.d} fill={slice.fill} />
-      ))}
       {slices.map((slice) => {
-        const label = placed.get(String(slice.key))
-        if (!label || label.hidden || !slice.fitted.text) return null
-        const elbowX = slice.right ? slice.textX - PIE_LEADER_GAP : slice.textX + PIE_LEADER_GAP
+        const large = slice.endA - slice.startA > Math.PI ? 1 : 0
+        const x1 = cx + Math.cos(slice.startA) * r
+        const y1 = cy + Math.sin(slice.startA) * r
+        const x2 = cx + Math.cos(slice.endA) * r
+        const y2 = cy + Math.sin(slice.endA) * r
         return (
-          <g key={`label-${slice.key}`}>
-            <polyline
-              points={`${slice.arcX},${slice.arcY} ${slice.stubX},${slice.stubY} ${elbowX},${label.y}`}
-              fill="none"
-              stroke={mutedColor}
-              strokeWidth={1}
-              strokeOpacity={0.55}
-            />
-            <text
-              data-value-label="1"
-              data-truncated={slice.fitted.truncated ? "1" : undefined}
-              x={slice.textX}
-              y={label.y + DIRECT_LABEL_FONT_SIZE * DIRECT_LABEL_CENTER_TO_BASELINE}
-              textAnchor={slice.right ? "start" : "end"}
-              fontSize={slice.fitted.fontSize}
-              fontWeight={DIRECT_LABEL_FONT_WEIGHT}
-              fill={labelFill}
-              dominantBaseline="alphabetic"
-            >
-              {slice.fitted.text}
-            </text>
-          </g>
+          <path
+            key={slice.key}
+            d={`M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2} Z`}
+            fill={palette[slice.key % palette.length]}
+          />
         )
       })}
+      {radialSliceLabels(slices, y0, h, mutedColor, labelFill)}
     </>
   )
 }
@@ -1692,16 +1760,23 @@ export function renderDonut(
    * dedicated `chart_type: "donut"` subtype instead defaults the center to
    * empty and only prints the total when its own `center_total` is set. */
   component?: ChartInput,
+  bgHex?: string,
+  /** Unused — the donut draws no axis. Signature parity, see `_showGrid`. */
+  _axisColor?: string,
+  fontFamily?: string,
 ): ReactElement {
   const showCenter = component?.chart_type === "donut" ? component.center_total === true : true
   const data = series[0]?.data ?? []
   const total = data.reduce((s, d) => s + d.y, 0)
   if (total === 0) return <></>
-  let acc = 0
   const cx = x0 + w / 2
   const cy = y0 + h / 2
-  const r = Math.min(w, h) / 2 - 4
+  const fullR = Math.min(w, h) / 2 - 4
+  // Same gutter the pie yields radius to, for the same reason: a ring of
+  // colored arcs with a total in the middle names none of its own slices.
+  const { r, slices } = layoutRadialSlices(data, total, cx, cy, x0, w, fullR, fontFamily)
   const ri = r * DONUT_HOLE_RATIO
+  const labelFill = directLabelInk(textColor, bgHex)
   const totalLabel = Number.isInteger(total) ? String(total) : total.toFixed(1)
   const fitted = fitSvgLine(totalLabel, { maxWidth: ri * 1.5, fontSize: 30, minFontSize: 16 })
   // The caption under the centre number used to be the literal word "Total",
@@ -1716,12 +1791,14 @@ export function renderDonut(
     : null
   return (
     <>
-      {data.map((d, i) => {
-        const startA = (acc / total) * Math.PI * 2 - Math.PI / 2
-        acc += d.y
-        const endA = (acc / total) * Math.PI * 2 - Math.PI / 2
-        return <path key={i} d={annulusSectorPath(cx, cy, r, ri, startA, endA)} fill={palette[i % palette.length]} />
-      })}
+      {slices.map((slice) => (
+        <path
+          key={slice.key}
+          d={annulusSectorPath(cx, cy, r, ri, slice.startA, slice.endA)}
+          fill={palette[slice.key % palette.length]}
+        />
+      ))}
+      {radialSliceLabels(slices, y0, h, mutedColor, labelFill)}
       {showCenter && (
         <>
           <text

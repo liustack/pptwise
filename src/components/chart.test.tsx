@@ -824,9 +824,14 @@ describe("chart component — chart-depth subtypes (scatter / area / donut / gau
       series: [{ name: "S", data: [{ x: "A", y: 40 }, { x: "B", y: 60 }] }],
     }
     const { container } = svg(chart.render(component, box, ctx))
-    // wedges present, no center total text
+    // Wedges present and no center total text. The two texts are the slices'
+    // own labels: `center_total` gates the middle of the ring, not whether
+    // the ring names itself.
     expect(container.querySelectorAll("path").length).toBe(2)
-    expect(container.querySelectorAll("text").length).toBe(0)
+    expect(Array.from(container.querySelectorAll("text")).map((t) => t.textContent)).toEqual([
+      "A 40",
+      "B 60",
+    ])
   })
 
   it("donut center_total: true prints the total through the full render", () => {
