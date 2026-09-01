@@ -132,9 +132,8 @@ describe("stage sparse faces", () => {
       type: "content",
       kind: "points",
       layout: "pull-quote",
-      heading: QUOTE,
-      subheading: "陈砚清 · 首席技术官",
-      components: [],
+      heading: "停机成本复盘",
+      components: [{ type: "blockquote", text: QUOTE, attribution: "陈砚清 · 首席技术官" }],
     } as Slide
     const { root } = render(
       <PullQuoteContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />,
@@ -144,8 +143,9 @@ describe("stage sparse faces", () => {
     expect(lines).toHaveLength(2)
     expect(lines[0]?.getAttribute("x1")).toBe("240")
     expect(lines[0]?.getAttribute("x2")).toBe("1040")
-    expect(lines[0]?.getAttribute("y1")).toBe("230")
-    expect(lines[1]?.getAttribute("y1")).toBe("420")
+    // The rules frame the quote block, so they move with its line count.
+    expect(lines[0]?.getAttribute("y1")).toBe("270")
+    expect(lines[1]?.getAttribute("y1")).toBe("466")
     const quote = Array.from(root.querySelectorAll("text")).find((t) =>
       (t.textContent ?? "").includes("最贵的停机"),
     )!
@@ -158,7 +158,7 @@ describe("stage sparse faces", () => {
     ).length
     const blockTop = quoteY - quoteSize * 0.8
     const blockBot = quoteY + (lineCount - 1) * lineHeight
-    expect((blockTop + blockBot) / 2).toBeCloseTo(325, 0)
+    expect((blockTop + blockBot) / 2).toBeCloseTo(368, 0)
     expect(Number(quote.getAttribute("font-size"))).toBe(46)
     expect(quote.getAttribute("font-weight")).toBe("400")
     const attr = Array.from(root.querySelectorAll("text")).find((t) =>

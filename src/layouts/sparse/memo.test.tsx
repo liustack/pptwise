@@ -88,9 +88,8 @@ describe("memo sparse faces", () => {
       type: "content",
       kind: "points",
       layout: "pull-quote",
-      heading: QUOTE,
-      subheading: "陈砚清 · 首席技术官",
-      components: [],
+      heading: "停机成本复盘",
+      components: [{ type: "blockquote", text: QUOTE, attribution: "陈砚清 · 首席技术官" }],
     } as Slide
     const { markup, root } = render(
       <PullQuoteContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />,
@@ -119,9 +118,8 @@ describe("memo sparse faces", () => {
       type: "content",
       kind: "points",
       layout: "pull-quote",
-      heading: QUOTE,
-      subheading: "陈砚清 · 首席技术官",
-      components: [],
+      heading: "停机成本复盘",
+      components: [{ type: "blockquote", text: QUOTE, attribution: "陈砚清 · 首席技术官" }],
     } as Slide
     const { root } = render(
       <PullQuoteContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />,

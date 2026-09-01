@@ -139,9 +139,8 @@ describe("ink sparse faces", () => {
       type: "content",
       kind: "points",
       layout: "pull-quote",
-      heading: QUOTE,
-      subheading: "陈砚清 · 首席技术官",
-      components: [],
+      heading: "停机成本复盘",
+      components: [{ type: "blockquote", text: QUOTE, attribution: "陈砚清 · 首席技术官" }],
     } as Slide
     const { markup, root } = render(
       <PullQuoteContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />,
@@ -154,7 +153,7 @@ describe("ink sparse faces", () => {
     const first = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "最")
     expect(first?.getAttribute("x")).toBe("900")
     expect(first?.getAttribute("y")).toBe("150")
-    expect(Number(first?.getAttribute("font-size"))).toBe(48)
+    expect(Number(first?.getAttribute("font-size"))).toBe(42)
     expect(first?.getAttribute("fill")).toBe(ctx.colors.primary)
     const attr = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "陈")
     expect(attr?.getAttribute("x")).toBe("180")

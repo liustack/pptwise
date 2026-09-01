@@ -1,39 +1,52 @@
 import type { SvgTemplateProps } from "../types"
 import { sectionNameFor } from "../../lib/derive"
 import { renderEmphasisTspans } from "../../render/emphasis"
-import { heroCaption, heroSource, heroValue, pullQuoteAttribution } from "../minimal-shared"
-import { fitHeroLine, fitSparseHeading, splitTrailingPercent } from "./shared"
+import {
+  heroCaption,
+  heroSource,
+  heroValue,
+  pullQuoteAttribution,
+  pullQuoteContext,
+  pullQuoteText,
+} from "../minimal-shared"
+import { fitHeroLine, fitSparseHeading, fitSparseQuote, quoteBlockBaseline, splitTrailingPercent } from "./shared"
 
 /** academic 稀排脸：脚注引文、百分号巨数、命题格言。不画点轨和角标。 */
 
 export function pullQuote({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
-  const heading = fitSparseHeading(slide.heading, {
-    maxWidth: 1000,
+  const quote = fitSparseQuote(pullQuoteText(slide), {
+    maxWidth: 960,
     fontSize: 46,
-    maxLines: 2,
-    minPt: 26,
-    lineHeightRatio: 76 / 46,
     fontFamily: fonts.heading,
-    bold: false,
   })
+  const context = pullQuoteContext(slide)
   const attr = pullQuoteAttribution(slide)
-  const last = heading.lines.length - 1
+  const last = quote.lines.length - 1
+  const firstY = quoteBlockBaseline(394, quote)
+  const blockTop = firstY - quote.fontSize
+  const blockBottom = firstY + last * quote.lineHeight + quote.fontSize * 0.3
   return (
     <>
-      <rect x={96} y={240} width={6} height={220} fill={colors.primary} />
-      {heading.lines.map((line, i) => (
+      <rect x={96} y={blockTop} width={6} height={Math.round(blockBottom - blockTop)} fill={colors.primary} />
+      {context && (
+        <text x={160} y={200} fontFamily={fonts.body} fontSize={18} fill={colors.muted} dominantBaseline="alphabetic">
+          {context}
+        </text>
+      )}
+      {quote.lines.map((line, i) => (
         <text
           key={i}
+          data-truncated={quote.truncated && i === last ? "1" : undefined}
           x={160}
-          y={330 + i * heading.lineHeight}
+          y={firstY + i * quote.lineHeight}
           fontFamily={fonts.heading}
-          fontSize={heading.fontSize}
+          fontSize={quote.fontSize}
           fontWeight="400"
           fill={colors.text}
           dominantBaseline="alphabetic"
         >
-          {renderEmphasisTspans(heading.lineSegs[i] ?? [{ text: line, emphasized: false }], {
+          {renderEmphasisTspans(quote.lineSegs[i] ?? [{ text: line, emphasized: false }], {
             accent: colors.accent,
             baseFill: colors.text,
             fontWeight: "400",
@@ -46,7 +59,14 @@ export function pullQuote({ slide, ctx }: SvgTemplateProps) {
         </text>
       ))}
       {attr && (
-        <text x={160} y={540} fontFamily={fonts.heading} fontSize={18} fill={colors.muted} dominantBaseline="alphabetic">
+        <text
+          x={160}
+          y={Math.round(blockBottom) + 68}
+          fontFamily={fonts.heading}
+          fontSize={18}
+          fill={colors.muted}
+          dominantBaseline="alphabetic"
+        >
           {`[1] ${attr}`}
         </text>
       )}

@@ -2,8 +2,22 @@ import type { SvgTemplateProps } from "../types"
 import { sectionNameFor } from "../../lib/derive"
 import { renderEmphasisTspans } from "../../render/emphasis"
 import { fitSvgLine } from "../../lib/svg-text-layout"
-import { hasCjk, heroCaption, heroValue, pullQuoteAttribution, statementAttribution } from "../minimal-shared"
-import { fitHeroLine, fitSparseHeading, splitTrailingPercent } from "./shared"
+import {
+  hasCjk,
+  heroCaption,
+  heroValue,
+  pullQuoteAttribution,
+  pullQuoteContext,
+  pullQuoteText,
+  statementAttribution,
+} from "../minimal-shared"
+import {
+  fitHeroLine,
+  fitSparseHeading,
+  fitSparseQuote,
+  quoteBlockBaseline,
+  splitTrailingPercent,
+} from "./shared"
 
 /** stage 稀排脸：居中细字、巨数、双发丝引文。 */
 
@@ -125,37 +139,51 @@ export function statHero({ ir, slide, index, ctx }: SvgTemplateProps) {
 
 export function pullQuote({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
-  const heading = fitSparseHeading(slide.heading, {
+  const quote = fitSparseQuote(pullQuoteText(slide), {
     maxWidth: 800,
     fontSize: 46,
-    maxLines: 2,
-    minPt: 28,
-    lineHeightRatio: 1.32,
     fontFamily: fonts.heading,
-    bold: false,
+    lineHeightRatio: 1.4,
   })
+  const context = pullQuoteContext(slide)
   const attr = pullQuoteAttribution(slide)
-  const ruleTop = 230
-  const ruleBot = 420
-  const titleBlockH =
-    Math.max(0, heading.lines.length - 1) * heading.lineHeight + heading.fontSize * 0.8
-  const titleY = (ruleTop + ruleBot) / 2 - titleBlockH / 2 + heading.fontSize * 0.8
+  const last = quote.lines.length - 1
+  // The two rules are the frame the quote sits in, so they follow the block
+  // instead of pinning it: a four-line quote inside a fixed 190px band would
+  // cross both of them.
+  const titleY = quoteBlockBaseline(372, quote)
+  const ruleTop = Math.round(titleY - quote.fontSize - 40)
+  const ruleBot = Math.round(titleY + last * quote.lineHeight + 46)
   return (
     <>
+      {context && (
+        <text
+          x={640}
+          y={ruleTop - 34}
+          textAnchor="middle"
+          fontFamily={fonts.body}
+          fontSize={18}
+          fill={colors.muted}
+          dominantBaseline="alphabetic"
+        >
+          {context}
+        </text>
+      )}
       <line x1={240} y1={ruleTop} x2={1040} y2={ruleTop} stroke={colors.border} strokeWidth={1.5} />
-      {heading.lines.map((line, i) => (
+      {quote.lines.map((line, i) => (
         <text
           key={i}
+          data-truncated={quote.truncated && i === last ? "1" : undefined}
           x={640}
-          y={titleY + i * heading.lineHeight}
+          y={titleY + i * quote.lineHeight}
           textAnchor="middle"
           fontFamily={fonts.heading}
-          fontSize={heading.fontSize}
+          fontSize={quote.fontSize}
           fontWeight="400"
           fill={colors.text}
           dominantBaseline="alphabetic"
         >
-          {renderEmphasisTspans(heading.lineSegs[i] ?? [{ text: line, emphasized: false }], {
+          {renderEmphasisTspans(quote.lineSegs[i] ?? [{ text: line, emphasized: false }], {
             accent: colors.accent,
             baseFill: colors.text,
             fontWeight: "400",
@@ -166,7 +194,7 @@ export function pullQuote({ slide, ctx }: SvgTemplateProps) {
       {attr && (
         <text
           x={1040}
-          y={474}
+          y={ruleBot + 54}
           textAnchor="end"
           fontFamily={fonts.body}
           fontSize={20}

@@ -1,7 +1,15 @@
 import type { SvgTemplateProps } from "../types"
 import { renderEmphasisTspans } from "../../render/emphasis"
-import { hasCjk, heroCaption, heroValue, pullQuoteAttribution, trackingPx } from "../minimal-shared"
-import { firstEmphasisRun, fitHeroLine, fitSparseHeading } from "./shared"
+import {
+  hasCjk,
+  heroCaption,
+  heroValue,
+  pullQuoteAttribution,
+  pullQuoteContext,
+  pullQuoteText,
+  trackingPx,
+} from "../minimal-shared"
+import { firstEmphasisRun, fitHeroLine, fitSparseHeading, fitSparseQuote, quoteBlockBaseline } from "./shared"
 
 /** memo 稀排脸：打字机引文、文武夹巨数、宋体格言+印章。不画 MEMORANDUM / 顶缘红双线。 */
 
@@ -28,41 +36,54 @@ function InkDouble({
 
 export function pullQuote({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
-  const heading = fitSparseHeading(slide.heading, {
+  const quote = fitSparseQuote(pullQuoteText(slide), {
     maxWidth: 1088,
     fontSize: 44,
-    maxLines: 2,
-    minPt: 26,
-    lineHeightRatio: 74 / 44,
     fontFamily: fonts.mono,
-    bold: false,
+    lineHeightRatio: 1.48,
   })
-  const run = firstEmphasisRun(heading.lineSegs, {
+  const firstY = quoteBlockBaseline(392, quote)
+  const run = firstEmphasisRun(quote.lineSegs, {
     originX: 96,
-    firstY: 330,
-    lineHeight: heading.lineHeight,
-    fontSize: heading.fontSize,
+    firstY,
+    lineHeight: quote.lineHeight,
+    fontSize: quote.fontSize,
     fontFamily: fonts.mono,
     bold: false,
   })
+  const context = pullQuoteContext(slide)
   const attr = pullQuoteAttribution(slide)
   const from = attr ? `FROM:  ${attr}` : null
   const fromTracking = from && !hasCjk(from) ? trackingPx(19, 0.2) : undefined
+  const last = quote.lines.length - 1
   return (
     <>
       <InkDouble x={96} width={1088} yThick={96} yThin={102} stroke={colors.text} />
-      {heading.lines.map((line, i) => (
+      {context && (
+        <text
+          x={96}
+          y={168}
+          fontFamily={fonts.mono}
+          fontSize={18}
+          fill={colors.muted}
+          dominantBaseline="alphabetic"
+        >
+          {`RE:  ${context}`}
+        </text>
+      )}
+      {quote.lines.map((line, i) => (
         <text
           key={i}
+          data-truncated={quote.truncated && i === last ? "1" : undefined}
           x={96}
-          y={330 + i * heading.lineHeight}
+          y={firstY + i * quote.lineHeight}
           fontFamily={fonts.mono}
-          fontSize={heading.fontSize}
+          fontSize={quote.fontSize}
           fontWeight="400"
           fill={colors.text}
           dominantBaseline="alphabetic"
         >
-          {renderEmphasisTspans(heading.lineSegs[i] ?? [{ text: line, emphasized: false }], {
+          {renderEmphasisTspans(quote.lineSegs[i] ?? [{ text: line, emphasized: false }], {
             accent: colors.accent,
             baseFill: colors.text,
             fontWeight: "400",
@@ -82,7 +103,7 @@ export function pullQuote({ slide, ctx }: SvgTemplateProps) {
       {from && (
         <text
           x={96}
-          y={560}
+          y={Math.round(firstY + last * quote.lineHeight) + 84}
           fontFamily={fonts.mono}
           fontSize={19}
           fill={colors.muted}

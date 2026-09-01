@@ -185,3 +185,54 @@ export function firstEmphasisRun(
   }
   return null
 }
+
+/**
+ * How many lines a sparse quote skin gives the quote itself.
+ *
+ * An authored quote is a sentence, not a title. The corpus' own quotes run
+ * to about forty-five CJK characters, and their English counterparts to a
+ * couple of clauses — that is the normal case, not the pathological one. Two
+ * lines could only hold them by shrinking to a whisper, so the quote gets
+ * four and `fitSparseHeading`'s phrase wrap breaks it at the author's own
+ * commas whenever they fall in reachable places, which is how a quote wants
+ * to be set anyway.
+ */
+export const QUOTE_MAX_LINES = 4
+
+/** Floor for a quote's type size: below this it stops reading as the page's voice. */
+export const QUOTE_MIN_PT = 26
+
+/**
+ * The one fit every `pull-quote` skin runs its quote through, so the policy
+ * above lives in one place instead of eight. Each skin still owns its own
+ * measure, size, family and furniture — what it does not own is how far the
+ * quote may shrink or how many lines it may take.
+ */
+export function fitSparseQuote(
+  quote: string,
+  opts: { maxWidth: number; fontSize: number; fontFamily: string; lineHeightRatio?: number },
+): ReturnType<typeof fitSparseHeading> {
+  return fitSparseHeading(quote, {
+    maxWidth: opts.maxWidth,
+    fontSize: opts.fontSize,
+    maxLines: QUOTE_MAX_LINES,
+    minPt: QUOTE_MIN_PT,
+    lineHeightRatio: opts.lineHeightRatio ?? 1.42,
+    fontFamily: opts.fontFamily,
+    bold: false,
+  })
+}
+
+/**
+ * First-line baseline that keeps a quote block optically centred on `midY`
+ * whatever its line count. A fixed top baseline was fine while the quote was
+ * a one-or-two-line heading; an authored quote runs one to four lines, and a
+ * fixed top leaves a short one hanging above a hole.
+ */
+export function quoteBlockBaseline(
+  midY: number,
+  block: { lines: readonly string[]; lineHeight: number; fontSize: number },
+): number {
+  const span = Math.max(0, block.lines.length - 1) * block.lineHeight
+  return Math.round(midY - span / 2 + block.fontSize * 0.34)
+}

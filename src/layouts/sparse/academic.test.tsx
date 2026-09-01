@@ -42,19 +42,28 @@ describe("academic sparse faces", () => {
       type: "content",
       kind: "points",
       layout: "pull-quote",
-      heading: QUOTE,
-      subheading: "陈砚清，运维成本年度复盘，2026",
-      components: [],
+      heading: "停机成本复盘",
+      components: [{ type: "blockquote", text: QUOTE, attribution: "陈砚清，运维成本年度复盘，2026" }],
     } as Slide
     const { markup, root } = render(
       <PullQuoteContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />,
     )
     expect(() => assertSubset(root)).not.toThrow()
+    // The rule spans the quote block rather than a fixed band: an authored
+    // quote runs one line to four, and a frozen 220px bar would either
+    // under- or over-run it.
     const bar = Array.from(root.querySelectorAll("rect")).find((r) => r.getAttribute("width") === "6")
     expect(bar?.getAttribute("x")).toBe("96")
-    expect(bar?.getAttribute("y")).toBe("240")
-    expect(bar?.getAttribute("height")).toBe("220")
     expect(bar?.getAttribute("fill")).toBe(ctx.colors.primary)
+    const quoteLines = Array.from(root.querySelectorAll("text")).filter(
+      (t) => Number(t.getAttribute("font-size")) >= 26 && t.getAttribute("x") === "160",
+    )
+    const barTop = Number(bar?.getAttribute("y"))
+    const barBottom = barTop + Number(bar?.getAttribute("height"))
+    const firstBaseline = Number(quoteLines[0]?.getAttribute("y"))
+    const lastBaseline = Number(quoteLines[quoteLines.length - 1]?.getAttribute("y"))
+    expect(barTop).toBeLessThan(firstBaseline)
+    expect(barBottom).toBeGreaterThan(lastBaseline)
     const mark = Array.from(root.querySelectorAll("tspan")).find((t) => t.textContent === "[1]")
     expect(mark?.getAttribute("dy")).toBe("-18")
     expect(mark?.getAttribute("fill")).toBe(ctx.colors.accent)

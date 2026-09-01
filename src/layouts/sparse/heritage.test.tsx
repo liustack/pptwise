@@ -41,9 +41,8 @@ describe("heritage sparse faces", () => {
       type: "content",
       kind: "points",
       layout: "pull-quote",
-      heading: QUOTE,
-      subheading: "陈砚清 · 首席技术官",
-      components: [],
+      heading: "停机成本复盘",
+      components: [{ type: "blockquote", text: QUOTE, attribution: "陈砚清 · 首席技术官" }],
     } as Slide
     const { markup, root } = render(
       <PullQuoteContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />,
@@ -57,13 +56,13 @@ describe("heritage sparse faces", () => {
       (t.textContent ?? "").includes("最贵的停机"),
     )!
     expect(quote.getAttribute("x")).toBe("640")
-    expect(quote.getAttribute("y")).toBe("340")
+    expect(quote.getAttribute("y")).toBe("352")
     expect(quote.getAttribute("text-anchor")).toBe("middle")
     expect(quote.getAttribute("fill")).toBe(ctx.colors.primary)
     expect(Number(quote.getAttribute("font-size"))).toBe(48)
     const bar = Array.from(root.querySelectorAll("rect")).find((r) => r.getAttribute("width") === "144")
     expect(bar?.getAttribute("x")).toBe("568")
-    expect(bar?.getAttribute("y")).toBe("392")
+    expect(bar?.getAttribute("y")).toBe("449")
     expect(bar?.getAttribute("height")).toBe("3")
     expect(bar?.getAttribute("fill")).toBe(ctx.colors.accent)
     expect(markup).not.toContain(LUXE_GOLD)
