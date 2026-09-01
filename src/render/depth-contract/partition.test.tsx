@@ -54,4 +54,25 @@ describe("partitionSvgDepth three-tier decor roles", () => {
     expect(seal.closest("[data-depth]")?.getAttribute("data-depth")).toBe("mid")
     expect(seal.closest("[data-identity]")?.getAttribute("data-identity")).toBe("true")
   })
+
+  it("keeps every node of a component that returns a list, not just the first", () => {
+    // `ink`'s vertical quote setting returns one `<text>` per glyph. A list
+    // is not a React element, so before this was handled the whole return
+    // value fell out of the partition and the page lost the run with nothing
+    // said — which is how that skin's quote attribution went unpainted.
+    function GlyphColumn({ text }: { text: string }) {
+      return Array.from(text).map((ch, i) => (
+        <text key={i} data-probe="glyph" x={100} y={100 + i * 20}>
+          {ch}
+        </text>
+      ))
+    }
+    const root = renderLayers(<GlyphColumn text="abc" />)
+    expect(root.querySelectorAll('[data-probe="glyph"]')).toHaveLength(3)
+    expect(Array.from(root.querySelectorAll('[data-probe="glyph"]')).map((el) => el.textContent)).toEqual([
+      "a",
+      "b",
+      "c",
+    ])
+  })
 })
