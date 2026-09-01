@@ -618,7 +618,7 @@ kbd {
       <div class="crossjump" id="viewer-cross"></div>
       <ul class="findings-list" id="viewer-findings"></ul>
       <input class="note" id="viewer-note" placeholder="备注（自动保存）">
-      <span class="hint"><kbd>←</kbd><kbd>→</kbd> 翻页 · <kbd>Esc</kbd> 关闭</span>
+      <span class="hint"><kbd>←</kbd><kbd>→</kbd> 翻页 · <span id="viewer-facehint" hidden><kbd>[</kbd><kbd>]</kbd> 换脸 · </span><kbd>Esc</kbd> 关闭</span>
     </div>
   </div>
 </dialog>
@@ -1112,18 +1112,21 @@ ${inlineRule(verdictFreshness)}
   const activeGroup = () => (state.view === "theme" ? null : state.group[state.view]);
   let visible = [];
 
-  function matches(p) {
+  /**
+   * Everything narrowing the set except which group is drilled into: the
+   * view's own band, and the header's five filters.
+   *
+   * Split out because 按版式's lightbox pages through a whole family, which
+   * is wider than the one face on screen — it needs the reviewer's filters
+   * without the group narrowing that matches() adds on top.
+   */
+  function passesFilters(p) {
     // The cross-cut views only have rows for one band each, so a page from
     // another band is not "filtered out", it has nowhere to go. 按版式 picks
     // its own set: one specimen per theme-and-face pair, see FACE_AXIS_IDS.
     if (state.view === "slot" && p.band !== "face") return false;
     if (state.view === "component" && p.band !== "component") return false;
     if (state.view === "face" && !FACE_AXIS_IDS.has(p.id)) return false;
-    // Inside a group detail the group is a filter like any other. That is
-    // what scopes the header tally, the empty state and — because the viewer
-    // queues off it — the lightbox's own prev/next to this one group.
-    const group = activeGroup();
-    if (group !== null && p[CROSS[state.view].key] !== group) return false;
     if (state.language !== "all" && p.language !== state.language) return false;
     if (state.theme !== "all" && p.section !== state.theme) return false;
     if (state.verdict !== "all") {
@@ -1142,6 +1145,20 @@ ${inlineRule(verdictFreshness)}
       const hay = (p.subject + " " + p.heading + " " + p.id + " " + p.sectionLabel).toLowerCase();
       if (!hay.includes(state.query)) return false;
     }
+    return true;
+  }
+
+  /**
+   * What is on screen: the filters, plus whichever level of the cross-cut
+   * view the reviewer has drilled to.
+   *
+   * Inside a group detail the group is a filter like any other. That is what
+   * scopes the header tally, the empty state and the grid to one comparison.
+   */
+  function matches(p) {
+    if (!passesFilters(p)) return false;
+    const group = activeGroup();
+    if (group !== null) return p[CROSS[state.view].key] === group;
     return true;
   }
 
@@ -1598,6 +1615,38 @@ ${inlineRule(verdictFreshness)}
   // into the next one, which is what the flat view used to do.
   let viewerQueue = [];
 
+  /** The faces of one face's family, in the index's own order. */
+  function familyMembers(faceId) {
+    const label = FAMILY_OF.face.get(faceId);
+    const fam = PLANS.face.find((f) => f.label === label);
+    return fam ? fam.members : [faceId];
+  }
+
+  /**
+   * 按版式's queue: the whole family, face after face.
+   *
+   * The comparison a face audit actually makes is between neighbouring faces
+   * — all six covers, all four takeovers — and a queue scoped to the one face
+   * on screen stopped at its own last theme, which meant closing the viewer
+   * and finding the next tile to ask the obvious next question. So the queue
+   * is the family: registry order across faces, theme order inside each, and
+   * the viewer's own header names the face so crossing from the last
+   * banner-title page into the first band-title page reads as a boundary
+   * rather than as a slide that changed under you.
+   *
+   * Built off the manifest with the group narrowing dropped (see
+   * passesFilters), because the family is wider than the face detail the
+   * reviewer opened it from. The header's filters still apply: they are the
+   * reviewer's own narrowing, not the level they are standing on.
+   */
+  function familyQueue(opened) {
+    const rank = new Map();
+    familyMembers(opened.face).forEach((m, i) => rank.set(m, i));
+    return MANIFEST.pages
+      .filter((p) => rank.has(p.face) && passesFilters(p))
+      .sort((a, b) => (rank.get(a.face) - rank.get(b.face)) || bySection(a, b));
+  }
+
   function openViewer(id) {
     const opened = visible.find((p) => p.id === id);
     if (!opened) return;
@@ -1606,6 +1655,8 @@ ${inlineRule(verdictFreshness)}
     viewerQueue =
       state.view === "theme"
         ? visible.filter((p) => p.section === opened.section)
+        : state.view === "face"
+        ? familyQueue(opened)
         : visible.slice().sort(bySection);
     viewerIndex = viewerQueue.findIndex((p) => p.id === id);
     if (viewerIndex < 0) return;
@@ -1627,8 +1678,19 @@ ${inlineRule(verdictFreshness)}
       mountSvg(frame, p.id);
     }
     document.getElementById("viewer-subject").textContent = cardTitle(p);
-    document.getElementById("viewer-facts").textContent =
-      cardFacts(p).join(" · ") + " · " + (viewerIndex + 1) + " / " + viewerQueue.length;
+    // On 按版式 the queue spans a whole family, so the position alone does not
+    // say what is on screen — 3 / 63 could be any of six covers. The family
+    // and the face id go in front of it, which is what makes the step from
+    // one face's last theme into the next face's first legible.
+    const bits = state.view === "face" ? cardFacts(p).filter((b) => b !== p.face) : cardFacts(p);
+    if (state.view === "face") {
+      const family = FAMILY_OF.face.get(p.face);
+      if (family) bits.push(family);
+      bits.push(p.face);
+    }
+    bits.push(viewerIndex + 1 + " / " + viewerQueue.length);
+    document.getElementById("viewer-facts").textContent = bits.join(" · ");
+    document.getElementById("viewer-facehint").hidden = state.view !== "face";
     const v = (verdicts[p.id] || {}).verdict;
     for (const btn of document.getElementById("viewer-verdicts").children) {
       btn.setAttribute("aria-pressed", String(btn.dataset.verdict === v));
@@ -1666,6 +1728,33 @@ ${inlineRule(verdictFreshness)}
     paintViewer();
   }
 
+  /**
+   * Skip a whole face, in a queue that spans a family.
+   *
+   * With 24 themes to a face, arrowing from banner-title to the next cover
+   * face is two dozen keystrokes through a comparison the reviewer has
+   * already finished. These land on the next face's first theme instead.
+   * Backwards from anywhere inside a face goes to that face's own first
+   * page when there is nothing before it, which is the same clamp the arrow
+   * keys use at the ends of the queue.
+   */
+  function stepFace(delta) {
+    const here = viewerQueue[viewerIndex];
+    if (!here) return;
+    const starts = [];
+    let seen;
+    for (let i = 0; i < viewerQueue.length; i++) {
+      if (viewerQueue[i].face !== seen) {
+        seen = viewerQueue[i].face;
+        starts.push(i);
+      }
+    }
+    const at = starts.findIndex((i) => viewerQueue[i].face === here.face);
+    if (at < 0) return;
+    viewerIndex = starts[Math.min(starts.length - 1, Math.max(0, at + delta))];
+    paintViewer();
+  }
+
   for (const btn of document.getElementById("viewer-verdicts").children) {
     btn.addEventListener("click", () => {
       const p = viewerQueue[viewerIndex];
@@ -1691,6 +1780,13 @@ ${inlineRule(verdictFreshness)}
     const key = typeof ev.key === "string" ? ev.key.toLowerCase() : "";
     if (ev.key === "ArrowRight") { ev.preventDefault(); step(1); }
     else if (ev.key === "ArrowLeft") { ev.preventDefault(); step(-1); }
+    // Only where the queue spans several faces. Everywhere else the whole
+    // queue is one face and these would be a jump to its first page dressed
+    // up as a skip.
+    else if (!typing && state.view === "face" && (ev.key === "[" || ev.key === "]")) {
+      ev.preventDefault();
+      stepFace(ev.key === "]" ? 1 : -1);
+    }
     else if (!typing && (ev.key === "1" || ev.key === "2" || ev.key === "3")) {
       ev.preventDefault();
       const p = viewerQueue[viewerIndex];
