@@ -256,6 +256,50 @@ export const WIDENED_PATHS: readonly WidenedPath[] = [
     reason:
       "layers[].items were joined with ' · ' and fitted as one line, so a single data-truncated stood for an unknowable number of lost items. They are now measured run by run: what fits is painted whole, what is cut says so on its own element, and what is left over is declared with data-dropped.",
   },
+  {
+    path: "(insight_panel)",
+    reason:
+      "the nine theme faces behind one-evidence found their component with pickEvidence, which knows only EVIDENCE_TYPES, so a panel reached no frame at all: 12 pages drew a heading over nothing. The face now steps aside for content its single frame cannot place (`evidenceExact`).",
+  },
+  {
+    path: "(citation).sources",
+    reason:
+      "same one-evidence swallow as insight_panel, 5 pages. The guard covers every construction on that face, not just the one that happened to be reported.",
+  },
+  {
+    path: "(code).code",
+    reason:
+      "two separate faults met on the same 28 pages. 12 were the one-evidence swallow above. The other 16 were the scan's own: the line-number gutter prints a number between every pair of lines, so the page-wide text join read '1const a = 12const b = 2' and no listing could be found in it. The gutter now says what it is (`data-gutter`) and the page is read a second time without it.",
+  },
+  {
+    path: "(image_grid).items",
+    reason:
+      "the takeover image faces reduced a grid to its first picture through findImageSelection and the rest left with their captions, 55 losses over 22 pages. All four takeovers now step aside for a picture set they cannot hold (`singlePictureExact`), and the ordinary renderer paints every item.",
+  },
+  {
+    path: "(image_compare)",
+    reason:
+      "the same reduction took a compare's left half and dropped the right one entirely, 31 losses. Both sides now reach the page through the same guard.",
+  },
+  {
+    path: "(image).caption",
+    reason:
+      "image-top drew the picture and never its caption — 19 pages of photographs whose authored line was painted nowhere, plus show-spotlight's, which lost to insight_panel.title over one shared kicker slot. image-top now carries the same scrim caption band image-split and image-bottom already had, and spotlight's caption hangs under its own frame.",
+  },
+  {
+    path: "(device_mockup).caption",
+    reason: "same missing caption band on image-top, 9 pages.",
+  },
+  {
+    path: "(flowchart)",
+    reason:
+      "two label losses on the same component. A diamond's label was wrapped to two fixed lines and the overflow discarded silently (主理人致辞 shipped as 主理/人致); the wrap is cosmetic, so it now declines rather than cut, and the node's own fit marks any cut it makes. An edge label with nowhere legible to sit is still omitted, but the omission is declared with data-dropped instead of being invisible.",
+  },
+  {
+    path: ".data[",
+    reason:
+      "a chart data point's own name — the donut's slices. The ring drew colored arcs with a total in the middle and named none of its parts, 104 losses over 27 pages. renderDonut now runs the pie's own label gutter (`layoutRadialSlices`), leader lines, column stacking, radius yield and all. Deliberately not '(chart).series', which would also claim series[].name: a single-series chart still paints its one name nowhere, and naming that path here would make this list a wish rather than a check.",
+  },
 ]
 
 /** True when this field is checked on every page, whatever face drew it. */
