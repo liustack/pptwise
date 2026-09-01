@@ -1,5 +1,11 @@
 # @liustack/pptwise
 
+## 0.28.0
+
+### Minor Changes
+
+- Review-hardening round from two independent logic audits. Validate now refuses what renderers silently guessed at: a pie, donut or funnel with a non-positive total or more than one series, a dumbbell without exactly two equal-length series, a flowchart edge naming a missing node, a boundary page with more blocks than its face's slot draws (validator and the sixteen cover/ending faces share one selection helper), and a `progress_donuts` value that is not a complete number with an optional percent sign. Theme copy, fork and brand extract carry the `emphasis` stroke, and a registered theme's `emphasisInk` must be visible on its own background. Faces render what they used to drop: the generic statement face sets both quote and attribution, show-figures sets subheading and footnote, statement/pull-quote/stat-hero list every citation source, the vertical kicker steps aside for a subheading it cannot stack, and horizontal timelines honor `highlight`. Radial charts and dense funnels declare the labels they leave out, image annotations and insight panels mark what they cut, ink's vertical setting keeps the stops it used to delete, emphasis runs honor letter-spacing and pick their ink against the panel they sit on, and exported text keeps the spaces around styled runs. The gallery gains a fourth review axis, 按版式, plus a per-theme skeleton strip and cross-axis jumps from the lightbox, and its fidelity scan can no longer be satisfied by a heading standing in for a component or by an unrelated drop marker.
+
 ## 0.27.0
 
 ### Minor Changes
