@@ -128,6 +128,23 @@ function anchorToAlign(anchor: string | null): "left" | "center" | "right" {
   return "left"
 }
 
+/**
+ * SVG's default whitespace handling (`xml:space="default"`) applies to the
+ * whole `<text>`: leading and trailing blanks go, interior runs of blanks
+ * collapse to one space. A blank at a tspan boundary is interior, so
+ * `The <tspan>decisive</tspan> year` keeps both spaces. Trimming each node on
+ * its own would export "Thedecisiveyear".
+ */
+function collapseRunWhitespace(runs: TextRunData[]): TextRunData[] {
+  const collapsed = runs.map((run) => ({ ...run, text: run.text.replace(/\s+/g, " ") }))
+  if (collapsed.length > 0) {
+    collapsed[0] = { ...collapsed[0], text: collapsed[0].text.replace(/^\s+/, "") }
+    const last = collapsed.length - 1
+    collapsed[last] = { ...collapsed[last], text: collapsed[last].text.replace(/\s+$/, "") }
+  }
+  return collapsed.filter((run) => run.text.length > 0)
+}
+
 function buildRuns(el: Element, baseBold: boolean, baseItalic: boolean): TextRunData[] {
   const tspans = el.querySelectorAll("tspan")
   if (tspans.length === 0) {
@@ -137,11 +154,12 @@ function buildRuns(el: Element, baseBold: boolean, baseItalic: boolean): TextRun
     return [run]
   }
   // 按 childNodes 顺序遍历：直接文本节点是基础 run（如 KPI 的
-  // "99.95<tspan>%</tspan>"——丢掉文本节点会导出成只剩单位）。
+  // "99.95<tspan>%</tspan>"——丢掉文本节点会导出成只剩单位）。空白折叠
+  // 在整段层面做（见 collapseRunWhitespace），不在这里逐节点 trim。
   const runs: TextRunData[] = []
   el.childNodes.forEach((node) => {
     if (node.nodeType === 3) {
-      const text = (node.textContent ?? "").trim()
+      const text = node.textContent ?? ""
       if (!text) return
       const run: TextRunData = { text }
       if (baseBold) run.bold = true
@@ -161,7 +179,7 @@ function buildRuns(el: Element, baseBold: boolean, baseItalic: boolean): TextRun
     if (fs) run.fontSize = pxToPt(parseFloat(fs))
     runs.push(run)
   })
-  return runs
+  return collapseRunWhitespace(runs)
 }
 
 /**

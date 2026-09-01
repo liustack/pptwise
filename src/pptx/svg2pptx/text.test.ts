@@ -96,3 +96,24 @@ describe("mixed text and tspan content", () => {
     expect(op.runs.map((r) => r.text)).toEqual(["99.95", "%"])
   })
 })
+
+describe("whitespace at run boundaries", () => {
+  it("keeps the spaces around an emphasized word set as tspans", () => {
+    const op = textToOp(
+      textEl('<text x="0" y="0" font-size="20"><tspan>The </tspan><tspan fill="#CC0000">decisive</tspan><tspan> year</tspan></text>'),
+    )
+    expect(op.runs.map((r) => r.text)).toEqual(["The ", "decisive", " year"])
+  })
+
+  it("keeps interior spaces of a text node beside a tspan, trimming only the outer edges", () => {
+    const op = textToOp(
+      textEl('<text x="0" y="0" font-size="20">  The <tspan fill="#CC0000">decisive</tspan> year  </text>'),
+    )
+    expect(op.runs.map((r) => r.text)).toEqual(["The ", "decisive", " year"])
+  })
+
+  it("collapses a run of blanks inside a node to one space", () => {
+    const op = textToOp(textEl('<text x="0" y="0" font-size="20">99.95<tspan>%</tspan>   of   plan</text>'))
+    expect(op.runs.map((r) => r.text)).toEqual(["99.95", "%", " of plan"])
+  })
+})
