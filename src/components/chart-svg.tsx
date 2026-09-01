@@ -1704,6 +1704,16 @@ export function renderDonut(
   const ri = r * DONUT_HOLE_RATIO
   const totalLabel = Number.isInteger(total) ? String(total) : total.toFixed(1)
   const fitted = fitSvgLine(totalLabel, { maxWidth: ri * 1.5, fontSize: 30, minFontSize: 16 })
+  // The caption under the centre number used to be the literal word "Total",
+  // printed on every deck in every language — a maintainer's word arriving on
+  // a customer's slide, and the one thing on this chart that was not the
+  // author's. It is now the series' own name, which the author wrote and
+  // which nothing else on a donut ever paints (`legendApplicable` needs two
+  // series, and a donut has one). No name, no caption: a bare number reads
+  // fine, an English label on a Chinese deck does not.
+  const centerCaption = series[0]?.name?.trim()
+    ? fitSvgLine(series[0].name.trim(), { maxWidth: ri * 1.7, fontSize: 16, minFontSize: 16 })
+    : null
   return (
     <>
       {data.map((d, i) => {
@@ -1726,16 +1736,19 @@ export function renderDonut(
           >
             {fitted.text}
           </text>
-          <text
-            x={cx}
-            y={cy + fitted.fontSize * 0.15 + 18}
-            textAnchor="middle"
-            fontSize={16}
-            fill={mutedColor}
-            dominantBaseline="alphabetic"
-          >
-            Total
-          </text>
+          {centerCaption && (
+            <text
+              data-truncated={centerCaption.truncated ? "1" : undefined}
+              x={cx}
+              y={cy + fitted.fontSize * 0.15 + 18}
+              textAnchor="middle"
+              fontSize={centerCaption.fontSize}
+              fill={mutedColor}
+              dominantBaseline="alphabetic"
+            >
+              {centerCaption.text}
+            </text>
+          )}
         </>
       )}
     </>

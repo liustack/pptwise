@@ -452,14 +452,25 @@ describe("renderDonut — center total label", () => {
   // is the only caller (`chart.tsx`); no prior test exercised this render
   // path at all (neither `chart.test.tsx` nor this file), so this also
   // closes a pre-existing coverage gap, not just the language regression.
-  it("renders the English 'Total' caption below the summed value, never the old Chinese label", () => {
+  it("captions the summed value with the series' own name, never a word of ours", () => {
     const { container } = svg(
       renderDonut(seriesOf(30, 45, 25), PALETTE, 0, 0, W, H, MUTED, TEXT),
     )
     const texts = Array.from(container.querySelectorAll("text")).map((t) => t.textContent)
-    expect(texts).toContain("Total")
     expect(texts).toContain("100") // 30+45+25, the summed center value
+    expect(texts).toContain("S1") // the author's name for this series
+    // Both of the labels this caption has worn were baked: a Chinese one,
+    // then an English one. An unnamed series now gets a bare number rather
+    // than a third.
+    expect(container.textContent).not.toContain("Total")
     expect(container.textContent).not.toContain("总计")
+  })
+
+  it("leaves the caption off entirely when the series has no name", () => {
+    const unnamed: ChartSeries[] = [{ name: "", data: [{ x: "A", y: 40 }, { x: "B", y: 60 }] }]
+    const { container } = svg(renderDonut(unnamed, PALETTE, 0, 0, W, H, MUTED, TEXT))
+    const texts = Array.from(container.querySelectorAll("text")).map((t) => t.textContent)
+    expect(texts).toEqual(["100"])
   })
 
   it("renders one path wedge per data point and nothing when the series sums to zero", () => {
@@ -1393,11 +1404,12 @@ describe("renderDonut — center-total toggle (chart-depth wave)", () => {
     expect(container.querySelectorAll("path")).toHaveLength(2)
   })
 
-  it("center_total: true prints the summed total plus its caption", () => {
+  it("center_total: true prints the summed total captioned by the series name", () => {
     const { container } = svg(renderDonut(donutSeries, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT, false, donutComponent(true)))
     const texts = Array.from(container.querySelectorAll("text")).map((t) => t.textContent)
     expect(texts).toContain("100")
-    expect(texts).toContain("Total")
+    expect(texts).toContain("S")
+    expect(container.textContent).not.toContain("Total")
   })
 
   it("the legacy pie+style path (component undefined) still shows the center total — byte-compat", () => {
