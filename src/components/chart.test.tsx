@@ -647,32 +647,42 @@ describe("chart component — legend (n>=2 series)", () => {
     expect(h5).toBe(h2) // fixed band, not proportional to series count
   })
 
-  it("measure() does not grow for a multi-series pie/funnel/dumbbell chart (legend never applies — dispatch untouched)", () => {
-    const pie2 = {
-      type: "chart" as const,
-      chart_type: "pie" as const,
-      series: [{ name: "A", data: [{ x: "x", y: 1 }] }, { name: "B", data: [{ x: "y", y: 2 }] }],
-    }
-    const pie1 = { ...pie2, series: [pie2.series[0]!] }
-    expect(chart.measure(pie2, 1120, ctx)).toBe(chart.measure(pie1, 1120, ctx))
+  // The radial/one-series family names its parts on the marks themselves, so
+  // a legend would repeat the page or name a series the chart never drew.
+  // These four stay legend-free however many series an author writes.
+  it.each(["pie", "donut", "funnel", "gauge"] as const)(
+    "measure() does not grow for a multi-series %s chart (it draws one series and labels it directly)",
+    (chart_type) => {
+      const two = {
+        type: "chart" as const,
+        chart_type,
+        series: [{ name: "A", data: [{ x: "x", y: 1 }] }, { name: "B", data: [{ x: "y", y: 2 }] }],
+      }
+      const one = { ...two, series: [two.series[0]!] }
+      expect(chart.measure(two, 1120, ctx)).toBe(chart.measure(one, 1120, ctx))
+      const { container } = svg(chart.render(two, box, ctx))
+      expect(legendTexts(container).map((t) => t.textContent)).toEqual([])
+    },
+  )
 
-    const funnel2 = {
-      type: "chart" as const,
-      chart_type: "funnel" as const,
-      series: [{ name: "A", data: [{ x: "x", y: 1 }] }, { name: "B", data: [{ x: "y", y: 2 }] }],
-    }
-    const funnel1 = { ...funnel2, series: [funnel2.series[0]!] }
-    expect(chart.measure(funnel2, 1120, ctx)).toBe(chart.measure(funnel1, 1120, ctx))
-
-    // dumbbell is *always* exactly 2 series (from/to) by construction — the
-    // most direct possible proof that series.length alone never triggers a
-    // legend; chart_type applicability (`legendApplicable`) gates it too.
+  // A dumbbell is two series by construction — a from and a to. It used to
+  // fail `legendApplicable`'s borrowed axis test and so drew a muted dot and
+  // an accent dot per row with nothing naming either, on 26 gallery pages.
+  it("gives a dumbbell the legend its two series always needed", () => {
     const dumbbell = {
       type: "chart" as const,
       chart_type: "dumbbell" as const,
-      series: [{ name: "From", data: [{ x: "A", y: 10 }] }, { name: "To", data: [{ x: "A", y: 20 }] }],
+      series: [{ name: "2019", data: [{ x: "A", y: 10 }] }, { name: "2026", data: [{ x: "A", y: 20 }] }],
     }
-    expect(chart.measure(dumbbell, 1120, ctx)).toBe(240)
+    expect(chart.measure(dumbbell, 1120, ctx)).toBe(292)
+    const { container } = svg(chart.render(dumbbell, box, ctx))
+    expect(legendTexts(container).map((t) => t.textContent)).toEqual(["2019", "2026"])
+    // The swatches are the colors the dumbbell actually paints — muted for
+    // the from-dot, accent for the to-dot — not the cartesian palette.
+    const swatches = Array.from(container.querySelectorAll("rect")).filter(
+      (r) => Number(r.getAttribute("width")) === 10 && Number(r.getAttribute("height")) === 10,
+    )
+    expect(swatches.map((r) => r.getAttribute("fill"))).toEqual([ctx.colors.muted, ctx.colors.accent])
   })
 
   it("renders one swatch + name per series for a multi-series bar chart", () => {
@@ -701,18 +711,22 @@ describe("chart component — legend (n>=2 series)", () => {
     expect(legendTexts(container)).toHaveLength(0)
   })
 
-  it("renders no legend for a multi-series pie/funnel/dumbbell chart even though series.length >= 2", () => {
+  // The dumbbell used to be listed here too. It is not a chart that labels
+  // its series on the marks — it had no names anywhere — so it moved to the
+  // legend side of the rule; see "gives a dumbbell the legend its two series
+  // always needed" above.
+  it("renders no legend for a multi-series pie/funnel chart even though series.length >= 2", () => {
     const pie = {
       type: "chart" as const,
       chart_type: "pie" as const,
       series: [{ name: "A", data: [{ x: "x", y: 1 }] }, { name: "B", data: [{ x: "y", y: 2 }] }],
     }
-    const dumbbell = {
+    const funnel = {
       type: "chart" as const,
-      chart_type: "dumbbell" as const,
-      series: [{ name: "From", data: [{ x: "A", y: 10 }] }, { name: "To", data: [{ x: "A", y: 20 }] }],
+      chart_type: "funnel" as const,
+      series: [{ name: "A", data: [{ x: "x", y: 1 }] }, { name: "B", data: [{ x: "y", y: 2 }] }],
     }
-    for (const component of [pie, dumbbell]) {
+    for (const component of [pie, funnel]) {
       const { container } = svg(chart.render(component, box, ctx))
       expect(legendTexts(container)).toHaveLength(0)
     }

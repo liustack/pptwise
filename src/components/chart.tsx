@@ -104,23 +104,58 @@ function axesApplicable(component: ChartComponent): boolean {
 }
 
 /**
- * Legend applicability (R1 evidence wave, Task T2 — roadmap §6.1.2's legend
- * model, rendering half). Deliberately reuses `axesApplicable`'s own
- * bar/line chart_type set rather than declaring a second identical one —
- * unlike `ir-quality.ts`'s own `AXES_APPLICABLE_CHART_TYPES` (a genuine
- * cross-file duplicate, justified by that file's render/quality layering
- * split), this check lives in the *same file* as `axesApplicable`, so
- * reusing it directly is simplification, not risk: pie/donut (radial, no
- * per-series comparison axis), funnel and dumbbell (no shared category
- * axis a legend's color-to-series mapping would sit against) never gain a
- * legend regardless of `series.length`, matching the byte-compat boundary
- * that keeps their dispatch path untouched (roadmap §6.1.4). The second
- * half of the condition — `series.length >= 2` — is the actual legend
- * trigger: never for a single series (byte-compat — see the golden pins),
- * always from two series up.
+ * Chart types whose renderer reads `series[0]` and nothing else: a pie, a
+ * donut, a funnel and a gauge are each one series of named parts, and each
+ * names those parts on the page itself (slice labels, band labels, the
+ * gauge's own number). A legend on one of them would either repeat what the
+ * marks already say or name a series the chart never drew.
+ */
+const SINGLE_SERIES_TYPES: ReadonlySet<ChartComponent["chart_type"]> = new Set([
+  "pie",
+  "donut",
+  "funnel",
+  "gauge",
+])
+
+/**
+ * Legend applicability. A legend maps a color to a series name, so it applies
+ * exactly when the chart draws more than one series.
+ *
+ * This used to read `axesApplicable(component) && series.length >= 2`, which
+ * borrowed the axis-title rule for a question that is not about axes. The
+ * borrowed half cost the dumbbell its names: a dumbbell is two series by
+ * construction — a from and a to — and it drew both as colored dots with
+ * nothing anywhere on the page saying which was which, on 26 gallery pages.
+ * Axes have nothing to do with it, and `SINGLE_SERIES_TYPES` above states the
+ * real exclusion directly: the types that only ever draw one series.
+ *
+ * `series.length >= 2` is still the trigger. A single series has no color to
+ * distinguish from another, and the golden pins hold that boundary.
  */
 function legendApplicable(component: ChartComponent): boolean {
-  return axesApplicable(component) && component.series.length >= 2
+  return !SINGLE_SERIES_TYPES.has(component.chart_type) && component.series.length >= 2
+}
+
+/**
+ * The color a legend swatch has to be: whatever the renderer actually painted
+ * that series with.
+ *
+ * Every cartesian renderer takes its series colors from the rotated palette
+ * in order, so `palette[colorIndex]` is right for them. `renderDumbbell` does
+ * not — it paints the from-dots muted and the to-dots accent, because a
+ * dumbbell is one row read left to right rather than two independent series.
+ * A palette swatch beside those names would be a legend describing a chart
+ * that is not on the page.
+ */
+function legendSwatchFill(
+  component: ChartComponent,
+  seriesIndex: number,
+  palette: string[],
+  mutedColor: string,
+  accentColor: string,
+): string {
+  if (component.chart_type === "dumbbell") return seriesIndex === 0 ? mutedColor : accentColor
+  return palette[seriesIndex % palette.length]!
 }
 
 /**
@@ -311,7 +346,13 @@ export const chart: SvgComponent<ChartComponent> = {
                     y={swatchY}
                     width={LEGEND_SWATCH_SIZE}
                     height={LEGEND_SWATCH_SIZE}
-                    fill={palette[slot.colorIndex % palette.length]}
+                    fill={legendSwatchFill(
+                      component,
+                      slot.colorIndex,
+                      palette,
+                      ctx.colors.muted,
+                      ctx.colors.accent,
+                    )}
                   />
                   <text
                     data-truncated={slot.fitted.truncated ? "1" : undefined}
