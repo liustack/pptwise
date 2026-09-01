@@ -1,5 +1,11 @@
 # @liustack/pptwise
 
+## 0.27.0
+
+### Minor Changes
+
+- Latent polish round. Themes can name an optional `emphasisInk` color for `**emphasis**` runs when their accent sits too close to the text ink — stage takes the warm sand from its own chart palette, and a corpus rule now requires every theme's run ink to separate from its text ink by luminance or chroma. The academic stat-hero rule hangs from the numeral's measured ink floor instead of a frozen y, clearing old-style figure descenders for any value. show-spotlight renders the panel footnote and the page conclusion as two lines instead of one slot with two owners, insight_panel rows start where the panel budgeted them, and playbill's mono-bleed guards multi-image components and paints its kept picture's caption.
+
 ## 0.26.0
 
 ### Minor Changes
