@@ -214,11 +214,15 @@ export const numberedCards: SvgComponent<NumberedCardsComponent> = {
         const bodyBlockH = body ? body.lines.length * body.lineHeight : 0
         const stackTextH = titleBlockH + (body ? TITLE_BODY_GAP + bodyBlockH : 0)
         const textTop = pillY + (L.pillH - stackTextH) / 2
+        // A short pill (8 items in a constrained slot) turns `showText` off,
+        // and the body and the sub then go unbuilt. Both are authored words,
+        // so both leave the same mark on the pill they could not fit in —
+        // the sub used to leave none at all.
+        const omitted =
+          formTextOmissionMarker(item.text ?? "", body ?? { lines: [] }) ??
+          formTextOmissionMarker(item.sub ?? "", { lines: sub ? [sub.text] : [] })
         return (
-          <g
-            key={i}
-            data-truncated={formTextOmissionMarker(item.text ?? "", body ?? { lines: [] })}
-          >
+          <g key={i} data-truncated={omitted}>
             <rect
               x={pillX}
               y={pillY}
