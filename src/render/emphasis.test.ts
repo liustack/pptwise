@@ -404,3 +404,68 @@ describe("fitEmphasisHeading fits the stripped text, not the markers", () => {
     expect(fitted.segments).toEqual(fitted.lines.map((line) => [{ text: line, emphasized: false }]))
   })
 })
+
+// The shared helper writes an absolute `x` on every tspan of a marked line,
+// so it has to advance its cursor the way the browser will. It measured
+// glyph units alone and ignored the parent `<text>`'s own `letterSpacing`,
+// which the fit chain already budgets as `(charCount - 1) * letterSpacing`
+// (`svg-text-layout.ts`). On fashion-masthead's title (tracking -2) the runs
+// drifted apart, on its subtitle (tracking +4) they drifted into each other,
+// and the pad and underline drawn under them missed by the same amount.
+describe("run geometry follows the parent text's tracking", () => {
+  const TEXT = "Alpha **Beta** Gamma"
+  const FONT_SIZE = 40
+
+  function runs(letterSpacing: number) {
+    const rendered = renderEmphasisLine(parseEmphasis(TEXT), {
+      accent: "#E9C46A",
+      baseFill: "#111111",
+      fontSize: FONT_SIZE,
+      x: 100,
+      baselineY: 200,
+      emphasis: "pad",
+      letterSpacing,
+    })
+    const markup = renderToStaticMarkup(
+      createElement("g", null, rendered.pads, createElement("text", { x: 100, y: 200 }, rendered.tspans)),
+    )
+    return {
+      xs: Array.from(markup.matchAll(/<tspan[^>]*\sx="([-\d.]+)"/g)).map((m) => Number(m[1])),
+      padWidth: (() => {
+        const d = /<path[^>]*\sd="M ([-\d.]+) [-\d.]+ L ([-\d.]+) /.exec(markup)
+        return d ? Number(d[2]) - Number(d[1]) : NaN
+      })(),
+    }
+  }
+
+  /** Where each run starts if the cursor budgets tracking the way the fit does. */
+  function expectedStarts(letterSpacing: number): number[] {
+    const segs = ["Alpha ", "Beta", " Gamma"]
+    let cursor = 100
+    return segs.map((seg) => {
+      const start = cursor
+      cursor += measureTextUnits(seg, { bold: false }) * FONT_SIZE + Array.from(seg).length * letterSpacing
+      return start
+    })
+  }
+
+  it.each([4, -2])("places every run at the tracked cursor (letterSpacing %s)", (letterSpacing) => {
+    const { xs } = runs(letterSpacing)
+    expect(xs).toHaveLength(3)
+    xs.forEach((x, i) => expect(x, `run ${i}`).toBeCloseTo(expectedStarts(letterSpacing)[i]!, 3))
+  })
+
+  it("widens the pad by the tracking inside the run it covers", () => {
+    const spacing = 4
+    const chars = Array.from("Beta").length
+    const ink = measureTextUnits("Beta", { bold: false }) * FONT_SIZE + (chars - 1) * spacing
+    // The pad adds its own fontSize*0.1 padding on each side.
+    expect(runs(spacing).padWidth).toBeGreaterThan(ink)
+    expect(runs(spacing).padWidth).toBeLessThan(ink + FONT_SIZE * 0.4)
+  })
+
+  it("leaves an untracked line exactly where it was", () => {
+    const { xs } = runs(0)
+    xs.forEach((x, i) => expect(x).toBeCloseTo(expectedStarts(0)[i]!, 6))
+  })
+})

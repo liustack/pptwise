@@ -185,6 +185,18 @@ export function renderEmphasisLine(
     fontWeight?: string
     measureWeight?: TextWeightHint
     textAnchor?: "start" | "middle" | "end"
+    /**
+     * The parent `<text>`'s own `letterSpacing`, in absolute px.
+     *
+     * Every tspan of a marked line carries an absolute `x`, so the cursor
+     * here has to advance the way the renderer will lay the glyphs out. It
+     * measured glyph units alone, so a face setting tracking (fashion
+     * masthead's title at -2, its subtitle at +4) got runs that drifted
+     * apart or overlapped, with the pad and underline missing by the same
+     * amount. Budgeted as `(charCount - 1) * letterSpacing` over the whole
+     * line, the same derivation `svg-text-layout.ts` uses.
+     */
+    letterSpacing?: number
   },
 ): EmphasisLineRender {
   const form = resolveEmphasisForm(opts.emphasis)
@@ -200,10 +212,19 @@ export function renderEmphasisLine(
     }
   }
 
+  const tracking = opts.letterSpacing ?? 0
+  const chars = segments.map((segment) => Array.from(segment.text).length)
+  /** A run's own ink: its glyphs plus the gaps between them. */
   const widths = segments.map(
-    (segment) => measureTextUnits(segment.text, opts.measureWeight) * opts.fontSize,
+    (segment, index) =>
+      measureTextUnits(segment.text, opts.measureWeight) * opts.fontSize +
+      Math.max(0, chars[index]! - 1) * tracking,
   )
-  const lineWidth = widths.reduce((sum, width) => sum + width, 0)
+  /** What the cursor moves by: the run's ink plus the gap to the next run. */
+  const advances = widths.map((width, index) => width + (chars[index]! > 0 ? tracking : 0))
+  const totalChars = chars.reduce((sum, n) => sum + n, 0)
+  const lineWidth =
+    advances.reduce((sum, advance) => sum + advance, 0) - (totalChars > 0 ? tracking : 0)
   const startX =
     opts.textAnchor === "middle"
       ? opts.x - lineWidth / 2
@@ -231,7 +252,7 @@ export function renderEmphasisLine(
               }),
             ]
           : []
-      cursorX += width
+      cursorX += advances[index] ?? width
       return path
     })
     return { pads, tspans: tspansTint }
@@ -262,7 +283,7 @@ export function renderEmphasisLine(
             }),
           ]
         : []
-    cursorX += width
+    cursorX += advances[index] ?? width
     return path
   })
   const padInk = formLegibleInk(opts.baseFill, padFill, opts.fontSize)
@@ -322,12 +343,18 @@ export function renderEmphasisText(
     textElement.props.textAnchor === "middle" || textElement.props.textAnchor === "end"
       ? textElement.props.textAnchor
       : "start"
+  // The caller's own element is the authority on how its glyphs are spaced,
+  // so the geometry below reads the tracking from it rather than assuming
+  // none. A non-numeric value (a CSS length string) budgets as zero, which
+  // is what this helper did for every caller before it read the field.
+  const spacing = Number(textElement.props.letterSpacing)
   const rendered = renderEmphasisLine(segments, {
     ...opts,
     x,
     baselineY,
     fontSize,
     textAnchor,
+    letterSpacing: Number.isFinite(spacing) ? spacing : 0,
   })
   return React.createElement(
     React.Fragment,
@@ -413,6 +440,16 @@ export function fitEmphasisText(
  * `baseFill` is the fill the `<text>` element itself carries, so plain runs
  * keep the exact ink the call site already chose. Pass `accent` only for a
  * painter whose emphasized run is not the theme accent.
+ *
+ * `bg` is the colour the run actually lands on, and a face that paints its
+ * own panel or full-bleed field has to say so. The default is the page
+ * background, which is right for the ordinary face drawing on the page and
+ * wrong for every face that covers it: `cover-fashion-masthead` fills 1280
+ * by 720 with `colors.primary` and sets its masthead on that, so the helper
+ * was grading a gold run against academic's ivory (about 3.1:1, a pass) and
+ * painting it on green (about 2.1:1, well under the large-text floor). The
+ * face already measured its meta line against the panel; this is the same
+ * "measure what you painted" rule reaching the runs.
  */
 export function headingEmphasisPaint(
   ctx: Pick<ComponentCtx, "colors" | "defaultBg" | "emphasis">,
@@ -423,9 +460,10 @@ export function headingEmphasisPaint(
     fontWeight?: string
     fontFamily?: string
     bold?: boolean
+    bg?: string
   },
 ): EmphasisHeadingPaint {
-  const bg = ctx.defaultBg ?? ctx.colors.bg
+  const bg = style.bg ?? ctx.defaultBg ?? ctx.colors.bg
   return {
     accent: style.accent ?? accessibleInk(emphasisRunInk(ctx.colors), bg, layout.fontSize),
     padFill: emphasisRunInk(ctx.colors),
