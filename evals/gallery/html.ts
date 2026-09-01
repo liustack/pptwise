@@ -1010,7 +1010,7 @@ ${inlineRule(verdictFreshness)}
       label: "按版式",
       unit: "张脸",
       noun: "张脸",
-      lead: "一格一张脸，点开看同一段版式代码被派到各主题、各讲法上画出来的样子。组件皮肤那 1248 页不在这条轴上——它们比的是组件，会把脸淹掉。",
+      lead: "一格一张脸，点开看同一段版式代码被派到各主题、各讲法上画出来的样子。组件皮肤那一带不在这条轴上：它们比的是组件，会把脸淹掉。",
       families: FACE_FAMILIES,
       nameOf: (v) => ({ zh: "", code: v }),
       detailHead: faceIdentity,
@@ -1369,7 +1369,7 @@ ${inlineRule(verdictFreshness)}
 
     const served = [...bySlot].filter(([, secs]) => [...secs].some((s) => THEME_SECTIONS.has(s)));
     if (served.length === 0) {
-      box.appendChild(headText("div", "idnote", "没有任何主题菜单点过这张脸——它只在未上菜版式那一节里露过面。"));
+      box.appendChild(headText("div", "idnote", "没有任何主题菜单点过这张脸，它只在未上菜版式那一节里露过面。"));
       return box;
     }
 
@@ -1392,7 +1392,7 @@ ${inlineRule(verdictFreshness)}
       who.className = "idthemes";
       who.textContent = list.join(" ");
       who.title = list.length + " 套主题的菜单把 " + slot + " 派给了 " + faceId;
-      row.append(name, who, headText("span", "idn", String(list.length)));
+      row.append(name, who, headText("span", "idn", list.length + " 套"));
       box.appendChild(row);
     }
     return box;
