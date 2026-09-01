@@ -1,4 +1,5 @@
 import type { SvgTemplateProps } from "./types"
+import { boundaryBulletItems, boundarySlotBlock } from "./boundary-content"
 import type { LayoutDefinition } from "./registry"
 import type { Slide } from "@/ir"
 import { fitEmphasisHeading, fitEmphasisLine, headingEmphasisPaint, renderEmphasisHeading, renderEmphasisText } from "../render/emphasis"
@@ -30,12 +31,9 @@ const CTA_SIZE = 22
 const ITEM_MAX = 1
 
 function ctaSource(slide: Slide): string | null {
-  const bullets = slide.components.find((c) => c.type === "bullets")
-  if (bullets?.type === "bullets") {
-    const item = bullets.items.find((s) => s.trim().length > 0)
-    if (item) return item.trim()
-  }
-  const para = slide.components.find((c) => c.type === "paragraph")
+  const item = boundaryBulletItems(slide, ITEM_MAX)[0]
+  if (item) return item.trim()
+  const para = boundarySlotBlock(slide, ["paragraph"])
   if (para?.type === "paragraph") {
     const text = para.text.trim()
     if (text) return text

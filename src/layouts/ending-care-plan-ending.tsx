@@ -1,4 +1,5 @@
 import type { SvgTemplateProps } from "./types"
+import { boundaryBulletItems } from "./boundary-content"
 import type { LayoutDefinition } from "./registry"
 import { fitHeadingLines } from "../render/heading-fit"
 import { fitSvgLine } from "../lib/svg-text-layout"
@@ -51,12 +52,6 @@ function withoutOverflowMark(text: string): string {
 /** Items of the accepted `bullets` block this face has room to draw. */
 const ITEM_MAX = 3
 
-function coverBulletItems(slide: SvgTemplateProps["slide"]): string[] {
-  const block = slide.components.find((c) => c.type === "bullets")
-  if (!block || block.type !== "bullets") return []
-  return block.items.slice(0, ITEM_MAX)
-}
-
 function splitPlanLines(text: string): string[] {
   const trimmed = text.trim()
   if (!trimmed) return []
@@ -70,7 +65,7 @@ function splitPlanLines(text: string): string[] {
 }
 
 function planItems(slide: SvgTemplateProps["slide"]): string[] {
-  const bullets = coverBulletItems(slide)
+  const bullets = boundaryBulletItems(slide, ITEM_MAX)
   if (bullets.length > 0) return bullets
   return splitPlanLines(slide.heading ?? "")
 }
@@ -89,8 +84,8 @@ function numberedItem(item: string, index: number, cjk: boolean): string {
 export function CarePlanEnding({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const bg = ctx.defaultBg ?? colors.bg
-  const items = planItems(slide).map((item) => stripEmphasis(item)).filter((item) => item.trim())
-  const fromBullets = coverBulletItems(slide).length > 0
+  const items = planItems(slide).map((item) => stripEmphasis(item))
+  const fromBullets = boundaryBulletItems(slide, ITEM_MAX).length > 0
   const headingSource = fromBullets || items.length === 0 ? stripEmphasis(slide.heading ?? "") : ""
   const showTitle = headingSource.trim().length > 0
   const cjk = hasCjk([headingSource, ...items].join(""))

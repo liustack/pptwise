@@ -37,6 +37,15 @@ describe("the factory preset shelf", () => {
     expect(shadowed.style.id).toBe("academic")
   })
 
+  it("carries the preset's emphasis stroke into the copy", () => {
+    // The two presets that declare one. A copy that dropped the field left
+    // both drawing a `**marked**` run in the plain accent tint, which is a
+    // different theme than the one the author asked to copy.
+    expect(copyThemePreset("consulting", "acme-pad").emphasis).toBe("pad")
+    expect(copyThemePreset("lecture", "acme-underline").emphasis).toBe("underline")
+    expect(copyThemePreset("academic", "acme-tint").emphasis).toBeUndefined()
+  })
+
   it("shares no mutable state with the preset it copied", () => {
     const copy = copyThemePreset("academic", "fork-a")
     copy.style.colors.bg = "#000000"

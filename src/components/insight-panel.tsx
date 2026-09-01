@@ -1,6 +1,7 @@
 import type { Component } from "@/ir"
 import { fitSvgLine, layoutSvgText, measureTextUnits } from "../lib/svg-text-layout"
 import { accessibleInk } from "../render/ink"
+import { formTextClipMarker } from "./legibility"
 import type { RenderDef, SvgComponent } from "./types"
 
 type InsightPanelComponent = Extract<Component, { type: "insight_panel" }>
@@ -29,16 +30,29 @@ const LABEL_COL_MIN = 56
 const FOOT_SIZE = 16
 const GAP_ROWS_FOOT = 16
 
+/**
+ * `truncated` travels with the wrapped text on both fields below. The panel
+ * caps a row at three lines and its footnote at two, so long copy is cut;
+ * the flag was dropped on the floor here, and the cut reached the page with
+ * no `data-truncated` on it — invisible to the audit and to the content
+ * scan alike.
+ */
+interface WrappedText {
+  lines: string[]
+  fontSize: number
+  lineHeight: number
+  truncated: boolean
+}
 interface RowLayout {
   label: { text: string; fontSize: number; truncated: boolean }
-  text: { lines: string[]; fontSize: number; lineHeight: number }
+  text: WrappedText
   height: number
 }
 interface PanelLayout {
   title: { text: string; fontSize: number; truncated: boolean }
   rows: RowLayout[]
   labelColW: number
-  foot: { lines: string[]; fontSize: number; lineHeight: number } | null
+  foot: WrappedText | null
   contentH: number
 }
 
@@ -165,6 +179,7 @@ export const insightPanel: SvgComponent<InsightPanelComponent> = {
               {row.text.lines.map((line, li) => (
                 <text
                   key={li}
+                  data-truncated={formTextClipMarker(row.text, li)}
                   x={box.x + PAD_X + layout.labelColW}
                   y={rowTop + TEXT_SIZE + li * row.text.lineHeight}
                   fontSize={row.text.fontSize}
@@ -182,6 +197,7 @@ export const insightPanel: SvgComponent<InsightPanelComponent> = {
           ? layout.foot.lines.map((line, li) => (
               <text
                 key={`f${li}`}
+                data-truncated={formTextClipMarker(layout.foot!, li)}
                 x={box.x + PAD_X}
                 y={box.y + panelH - PAD_BOTTOM - (layout.foot!.lines.length - 1 - li) * layout.foot!.lineHeight - 2}
                 fontSize={FOOT_SIZE}

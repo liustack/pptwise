@@ -27,6 +27,7 @@ import { CAPACITY } from "./audit/capacity"
 import { FULL_BODY_TYPES } from "./render/component-traits"
 import { checkIrQuality, type QualityIssue } from "./render/ir-quality"
 import { resolveEffectiveFace } from "./render/layout-selection"
+import { boundarySlotBlocks, drawableItems } from "./layouts/boundary-content"
 import { findImageSelection } from "./layouts/find-image"
 import type { LayoutDefinition } from "./layouts/registry"
 import { CANONICAL_THEME_IDS, THEME_LABELS, THEME_STYLES } from "./themes"
@@ -43,7 +44,7 @@ export interface ValidationIssue {
    * error messages reference [a slide] by [its] id"; this is what makes
    * that true. Set by every page-scoped issue producer
    * ({@link checkThemeMenuFaces}, {@link checkBoundaryPageContent},
-   * {@link checkBoundaryItemCapacity},
+   * {@link checkBoundarySlotCapacity}, {@link checkBoundaryItemCapacity},
    * the content-quality-gate translation in {@link validateIr}, and
    * {@link checkDuplicateSlideIds})
    * when the slide in question has an `id` — absent when the slide has
@@ -391,6 +392,48 @@ function checkBoundaryPageContent(ir: PptxIR): ValidationIssue[] {
 }
 
 /**
+ * Boundary-page component-capacity hard gate.
+ *
+ * `checkBoundaryPageContent` above asks whether a slot accepts a component's
+ * *type*. That is not the same question as whether the face has room for it.
+ * Every boundary body slot in the registry declares `capacity: 1` and every
+ * boundary face draws `boundarySlotBlock` — the first accepted block. A page
+ * that carried two of them therefore printed one and lost the other with no
+ * error, no `data-dropped`, and nothing in the audit: exactly the silent
+ * partial render the face contract forbids.
+ *
+ * The count and the selection now come from the same helper the faces draw
+ * with (`layouts/boundary-content.ts`), so the number this rule enforces
+ * cannot drift from the number the renderer honours.
+ */
+function checkBoundarySlotCapacity(ir: PptxIR): ValidationIssue[] {
+  const errors: ValidationIssue[] = []
+  ir.slides.forEach((slide, i) => {
+    if (slide.placeholder) return
+    if (slide.type !== "cover" && slide.type !== "chapter" && slide.type !== "ending") return
+    const layout = boundBoundaryLayout(ir, slide)
+    if (!layout) return
+    for (const slot of layout.slots) {
+      if (slot.capacity === undefined || slot.accepts === "any") continue
+      const blocks = boundarySlotBlocks(slide, slot.accepts)
+      if (blocks.length <= slot.capacity) continue
+      const kinds = slot.accepts.join(" or ")
+      errors.push({
+        path: `slides.${i}.components`,
+        page: i + 1,
+        ...(slide.id !== undefined ? { slideId: slide.id } : {}),
+        message: `face "${layout.id}" draws ${slot.capacity} ${kinds} block${
+          slot.capacity === 1 ? "" : "s"
+        } in its ${slot.name} slot, and this "${slide.type}" page has ${
+          blocks.length
+        } — merge them into one block or move the rest to a content slide`,
+      })
+    }
+  })
+  return errors
+}
+
+/**
  * Boundary-page item-capacity hard gate (face-fidelity wave).
  *
  * A cover, chapter or ending face draws its `bullets` into a fixed piece of
@@ -419,10 +462,16 @@ function checkBoundaryItemCapacity(ir: PptxIR): ValidationIssue[] {
     if (!layout) return
     for (const slot of layout.slots) {
       if (slot.itemCapacity === undefined || slot.accepts === "any") continue
-      for (const component of slide.components) {
-        if (!slot.accepts.includes(component.type)) continue
+      for (const component of boundarySlotBlocks(slide, slot.accepts)) {
         if (!("items" in component) || !Array.isArray(component.items)) continue
-        const count = component.items.length
+        // The count is what the face will draw, not what the array holds:
+        // `drawableItems` drops the blanks every face already skipped, so a
+        // page is never rejected for items nobody was going to print. Only a
+        // list of plain strings can hold a blank — a structured item (a KPI,
+        // a card) always draws something, so those count as authored.
+        const raw: readonly unknown[] = component.items
+        const strings = raw.filter((item): item is string => typeof item === "string")
+        const count = strings.length === raw.length ? drawableItems(strings).length : raw.length
         if (count <= slot.itemCapacity) continue
         errors.push({
           path: `slides.${i}.components`,
@@ -761,6 +810,8 @@ export function validateIr(input: unknown): ValidateResult {
   if (fullBodyErrors.length > 0) return withNormalized({ ok: false, errors: fullBodyErrors })
   const boundaryPageErrors = checkBoundaryPageContent(r.data)
   if (boundaryPageErrors.length > 0) return withNormalized({ ok: false, errors: boundaryPageErrors })
+  const boundarySlotErrors = checkBoundarySlotCapacity(r.data)
+  if (boundarySlotErrors.length > 0) return withNormalized({ ok: false, errors: boundarySlotErrors })
   const boundaryItemErrors = checkBoundaryItemCapacity(r.data)
   if (boundaryItemErrors.length > 0) return withNormalized({ ok: false, errors: boundaryItemErrors })
   const duplicateIdErrors = checkDuplicateSlideIds(r.data)

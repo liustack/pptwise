@@ -1,4 +1,5 @@
 import type { SvgTemplateProps } from "./types"
+import { boundaryBulletItems } from "./boundary-content"
 import type { LayoutDefinition } from "./registry"
 import { CONF_LABEL } from "../lib/conf-labels"
 import { fitSvgLine } from "../lib/svg-text-layout"
@@ -42,11 +43,6 @@ const DATA_MAX_W = 290
 /** Items of the accepted `bullets` block this face has room to draw. */
 const ITEM_MAX = 3
 
-function bulletItems(slide: SvgTemplateProps["slide"]): string[] {
-  const bullets = slide.components.find((component) => component.type === "bullets")
-  return bullets?.type === "bullets" ? bullets.items.slice(0, ITEM_MAX) : []
-}
-
 function kickerSource({ ir }: Pick<SvgTemplateProps, "ir">): string {
   const confidentiality = ir.meta.confidentiality
   if (confidentiality) return CONF_LABEL[confidentiality] ?? confidentiality
@@ -84,7 +80,7 @@ export function GaugeVerdictCover({ ir, slide, ctx }: SvgTemplateProps) {
         fontFamily: fonts.body,
       })
     : null
-  const evidence = bulletItems(slide).map((item, index) => ({
+  const evidence = boundaryBulletItems(slide, ITEM_MAX).map((item, index) => ({
     x: COL_X[index]!,
     tickX2: TICK_X2[index]!,
     number: String(index + 1).padStart(2, "0"),

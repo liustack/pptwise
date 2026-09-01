@@ -1,4 +1,5 @@
 import type { SvgTemplateProps } from "./types"
+import { boundaryBulletItems } from "./boundary-content"
 import type { LayoutDefinition } from "./registry"
 import { fitHeadingLines } from "../render/heading-fit"
 import { fitSvgLine, layoutSvgText } from "../lib/svg-text-layout"
@@ -72,12 +73,6 @@ function hasCjk(text: string): boolean {
 /** Items of the accepted `bullets` block this face has room to draw. */
 const ITEM_MAX = 3
 
-function coverBulletItems(slide: SvgTemplateProps["slide"]): string[] {
-  const block = slide.components.find((c) => c.type === "bullets")
-  if (!block || block.type !== "bullets") return []
-  return block.items.slice(0, ITEM_MAX)
-}
-
 export function VerdictIndexCover({ ir, slide, ctx, params }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const bg = ctx.defaultBg ?? colors.bg
@@ -129,7 +124,7 @@ export function VerdictIndexCover({ ir, slide, ctx, params }: SvgTemplateProps) 
     fontFamily: fonts.body,
   })
 
-  const items = coverBulletItems(slide)
+  const items = boundaryBulletItems(slide, ITEM_MAX)
   const columns = items.map((item, i) => ({
     x: COL_X[i]!,
     num: String(i + 1).padStart(2, "0"),

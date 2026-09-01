@@ -1,4 +1,5 @@
 import type { SvgTemplateProps } from "./types"
+import { boundaryBulletItems } from "./boundary-content"
 import type { LayoutDefinition } from "./registry"
 import { fitHeadingLines } from "../render/heading-fit"
 import { fitSvgLine } from "../lib/svg-text-layout"
@@ -36,12 +37,6 @@ const FOOT_MAX_W = 1088
 /** Items of the accepted `bullets` block this face has room to draw. */
 const ITEM_MAX = 3
 
-function coverBulletItems(slide: SvgTemplateProps["slide"]): string[] {
-  const block = slide.components.find((c) => c.type === "bullets")
-  if (!block || block.type !== "bullets") return []
-  return block.items.slice(0, ITEM_MAX)
-}
-
 function splitActionLines(text: string): string[] {
   const trimmed = text.trim()
   if (!trimmed) return []
@@ -55,7 +50,7 @@ function splitActionLines(text: string): string[] {
 }
 
 function reminderItems(slide: SvgTemplateProps["slide"]): string[] {
-  const bullets = coverBulletItems(slide)
+  const bullets = boundaryBulletItems(slide, ITEM_MAX)
   if (bullets.length > 0) return bullets
   return splitActionLines(slide.heading ?? "")
 }
@@ -69,7 +64,7 @@ export function ReminderListEnding({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const bg = ctx.defaultBg ?? colors.bg
   const items = reminderItems(slide)
-  const fromBullets = coverBulletItems(slide).length > 0
+  const fromBullets = boundaryBulletItems(slide, ITEM_MAX).length > 0
   const headingSource = fromBullets || items.length === 0 ? stripEmphasis(slide.heading ?? "") : ""
   const showTitle = headingSource.trim().length > 0
 

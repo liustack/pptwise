@@ -1,4 +1,5 @@
 import type { SvgTemplateProps } from "./types"
+import { boundaryBulletItems } from "./boundary-content"
 import type { LayoutDefinition } from "./registry"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { accessibleInk, metaInk } from "../render/ink"
@@ -49,12 +50,6 @@ function withoutOverflowMark(text: string): string {
 /** Items of the accepted `bullets` block this face has room to draw. */
 const ITEM_MAX = 2
 
-function coverBulletItems(slide: SvgTemplateProps["slide"]): string[] {
-  const block = slide.components.find((c) => c.type === "bullets")
-  if (!block || block.type !== "bullets") return []
-  return block.items.slice(0, ITEM_MAX)
-}
-
 function isKickerWord(text: string): boolean {
   return text === KICKER_CJK || text === KICKER_LATIN
 }
@@ -68,7 +63,7 @@ function splitHomeworkLines(text: string): string[] {
 }
 
 function homeworkItems(slide: SvgTemplateProps["slide"]): string[] {
-  const bullets = coverBulletItems(slide)
+  const bullets = boundaryBulletItems(slide, ITEM_MAX)
   if (bullets.length > 0) return bullets
   return splitHomeworkLines(stripEmphasis(slide.heading ?? ""))
 }

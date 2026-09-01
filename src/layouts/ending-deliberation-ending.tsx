@@ -1,4 +1,5 @@
 import type { SvgTemplateProps } from "./types"
+import { boundaryBulletItems } from "./boundary-content"
 import type { LayoutDefinition } from "./registry"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { accessibleInk, metaInk } from "../render/ink"
@@ -53,12 +54,6 @@ function withoutOverflowMark(text: string): string {
 /** Items of the accepted `bullets` block this face has room to draw. */
 const ITEM_MAX = 3
 
-function coverBulletItems(slide: SvgTemplateProps["slide"]): string[] {
-  const block = slide.components.find((c) => c.type === "bullets")
-  if (!block || block.type !== "bullets") return []
-  return block.items.slice(0, ITEM_MAX)
-}
-
 function splitArrangementLines(text: string): string[] {
   const trimmed = text.trim()
   if (!trimmed) return []
@@ -72,7 +67,7 @@ function splitArrangementLines(text: string): string[] {
 }
 
 function arrangementItems(slide: SvgTemplateProps["slide"]): string[] {
-  const bullets = coverBulletItems(slide)
+  const bullets = boundaryBulletItems(slide, ITEM_MAX)
   if (bullets.length > 0) return bullets
   return splitArrangementLines(stripEmphasis(slide.heading ?? ""))
 }
@@ -87,7 +82,7 @@ function isShortKicker(heading: string): boolean {
 
 function kickerSource(slide: SvgTemplateProps["slide"]): string {
   const heading = stripEmphasis(slide.heading ?? "").trim()
-  if (coverBulletItems(slide).length > 0 && isShortKicker(heading)) return heading
+  if (boundaryBulletItems(slide, ITEM_MAX).length > 0 && isShortKicker(heading)) return heading
   return ARRANGEMENTS_KICKER
 }
 

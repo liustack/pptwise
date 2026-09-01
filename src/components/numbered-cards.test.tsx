@@ -228,6 +228,40 @@ describe("numbered_pills", () => {
     expect(container.textContent).toContain("要点4")
   })
 
+  it("marks the pill when height pushes items[].sub off it", () => {
+    // Eight items in a 640×392 slot leave a 35px pill: the body and the sub
+    // both go undrawn. The body's loss was already marked and the sub's was
+    // not, so a card with a title and a sub and no body lost a word with no
+    // trace anywhere — not on the page, not in validate, not in the audit.
+    const pulse = themeCtx("pulse")
+    const eight = {
+      type: "numbered_cards" as const,
+      items: Array.from({ length: 8 }, (_, i) => ({ title: `要点${i + 1}`, sub: `SUB_${i + 1}` })),
+    }
+    const box = { x: 96, y: 186, w: 640, h: 392 }
+    const { container } = svg(numberedCards.render(eight, box, pulse))
+    expect(container.textContent).not.toContain("SUB_1")
+    expect(container.querySelectorAll("g[data-truncated]")).toHaveLength(8)
+
+    // The body half of the same rule, which the sub joins rather than
+    // replaces: a card whose text is pushed off marks its pill too.
+    const withText = {
+      type: "numbered_cards" as const,
+      items: Array.from({ length: 8 }, (_, i) => ({ title: `要点${i + 1}`, text: `TEXT_${i + 1}` })),
+    }
+    const bodies = svg(numberedCards.render(withText, box, pulse)).container
+    expect(bodies.textContent).not.toContain("TEXT_1")
+    expect(bodies.querySelectorAll("g[data-truncated]")).toHaveLength(8)
+  })
+
+  it("leaves the pill unmarked when the sub reaches the page", () => {
+    const pulse = themeCtx("pulse")
+    const four = cards(4, { sub: "一季度" })
+    const { container } = svg(numberedCards.render(four, { x: 0, y: 0, w: 1088 }, pulse))
+    expect(container.textContent).toContain("一季度")
+    expect(container.querySelectorAll("g[data-truncated]")).toHaveLength(0)
+  })
+
   it("draws a large left count circle plus one pill per item, all pills sharing a left edge", () => {
     const pulse = themeCtx("pulse")
     const { container } = svg(numberedCards.render(four, { x: 0, y: 0, w: 1088 }, pulse))

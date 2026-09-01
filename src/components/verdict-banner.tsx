@@ -1,6 +1,7 @@
 import type { Component } from "@/ir"
 import { layoutSvgText } from "../lib/svg-text-layout"
 import {
+  emphasisRunInk,
   parseEmphasis,
   renderEmphasisText,
   sliceEmphasisForLines,
@@ -219,8 +220,16 @@ export const verdictBanner: SvgComponent<VerdictBannerComponent> = {
           renderEmphasisText(
             segments,
             {
+              // The run itself takes the verdict's own tone — this is the
+              // one painter whose emphasized text is not the theme accent
+              // (`headingEmphasisPaint`'s `accent` override, same shape).
+              // The pad or underline behind it is theme furniture, so it
+              // resolves through `emphasisRunInk` like every other painter:
+              // reading `colors.accent` here ignored a theme that named a
+              // separate emphasis ink precisely because its accent cannot
+              // separate from its own text.
               accent: tone,
-              padFill: ctx.colors.accent,
+              padFill: emphasisRunInk(ctx.colors),
               baseFill: ctx.colors.text,
               fontWeight: "700",
               emphasis: ctx.emphasis,

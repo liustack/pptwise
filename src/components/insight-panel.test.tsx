@@ -108,6 +108,35 @@ describe("insight_panel component", () => {
     expect(labelInkTop - titleInkBottom).toBeGreaterThanOrEqual(24)
   })
 
+  it("marks the row line and the footnote line it had to cut", () => {
+    // Rows cap at three lines and the footnote at two. Long copy is cut
+    // there, and the cut used to reach the page carrying nothing that said
+    // so — no marker on the element, nothing for the audit or the content
+    // scan to find.
+    const long = "这是一段足够长的说明文字，用来把这一行推过面板三行的硬上限，尾部必然被裁掉。".repeat(3)
+    const longFoot = "这是一条足够长的脚注，用来把它推过两行的硬上限，尾部必然被裁掉。".repeat(3)
+    const { container } = svg(
+      insightPanel.render(
+        { ...panel, rows: [{ label: "重资产", text: long }], footnote: longFoot },
+        { x: 0, y: 0, w: 300 },
+        ctx,
+      ),
+    )
+    const marked = Array.from(container.querySelectorAll("text[data-truncated]"))
+    expect(marked).toHaveLength(2)
+    // One marker per cut block, on the last line each one kept.
+    const texts = Array.from(container.querySelectorAll("text"))
+    expect(texts.at(-1)).toBe(marked[1])
+    const rowLines = texts.filter((t) => t.getAttribute("x") === marked[0]!.getAttribute("x"))
+    expect(rowLines).toHaveLength(3)
+    expect(rowLines.at(-1)).toBe(marked[0])
+  })
+
+  it("leaves ordinary copy unmarked", () => {
+    const { container } = svg(insightPanel.render(panel, { x: 0, y: 0, w: 400 }, ctx))
+    expect(container.querySelectorAll("[data-truncated]")).toHaveLength(0)
+  })
+
   it("measure() grows with more rows", () => {
     const three = insightPanel.measure(panel, 400, ctx)
     const one = insightPanel.measure({ ...panel, rows: panel.rows.slice(0, 1) }, 400, ctx)

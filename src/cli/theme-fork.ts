@@ -300,6 +300,10 @@ function buildForkedTheme(
     brand: source.brand,
     occasions: source.occasions,
     identity: source.identity,
+    // A fork changes the palette, never the handwriting. `emphasisInk` is
+    // rebased above like every other color; the stroke that ink is applied
+    // with belongs to the source theme and travels unchanged.
+    emphasis: source.emphasis,
     menu: structuredClone(source.menu),
   }
   return ThemeFileSchema.parse(file) as ThemeFile

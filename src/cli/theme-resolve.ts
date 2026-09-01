@@ -88,7 +88,9 @@ function publicStyle(style: ThemeDefinition["style"], id: string): ThemeFile["st
 }
 
 /** Copy a factory preset into a public v2 ThemeFile. Engine-only
- *  `style.shape.cover` is stripped. Motif is materialized per menu entry. */
+ *  `style.shape.cover` is stripped. Motif is materialized per menu entry.
+ *  `emphasis` is copied like the rest of the theme's identity — a `theme new
+ *  --from lecture` that dropped it chalked no line under a `**marked**` run. */
 export function themeFileFromPreset(
   presetId: string,
   identity: { id: string; label?: string },
@@ -102,6 +104,7 @@ export function themeFileFromPreset(
     brand: copy.brand,
     occasions: copy.occasions !== undefined ? [...copy.occasions] : undefined,
     identity: copy.identity,
+    emphasis: copy.emphasis,
     menu: copy.menu,
   }
   return ThemeFileSchema.parse(file) as ThemeFile

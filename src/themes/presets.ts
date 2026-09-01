@@ -84,6 +84,11 @@ function copyMenu(menu: Menu, motif: BuiltinThemeDeclaration["motif"]): Menu {
  * preset: style tokens, brand, and menu are all fresh objects, and the
  * theme-wide motif anchor has been written into the menu entries.
  *
+ * `emphasis` travels with the copy. It is theme identity, not decoration:
+ * consulting swipes a marker pad behind a `**marked**` run and lecture
+ * chalks a line under it, so a copy that lost the field silently reverted
+ * both to the plain accent tint.
+ *
  * `targetId` may equal a preset id. That is how a freeze copy keeps the
  * bound name while the file shadows the factory shelf.
  */
@@ -102,6 +107,7 @@ export function copyThemePreset(presetId: string, targetId: string): BuiltinThem
     ...(preset.brand ? { brand: structuredClone(preset.brand) } : {}),
     occasions: [...record.occasions],
     identity: record.identity,
+    ...(preset.emphasis ? { emphasis: preset.emphasis } : {}),
     menu: copyMenu(preset.menu, preset.motif),
   }
 }

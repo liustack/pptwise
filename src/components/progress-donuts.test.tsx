@@ -58,6 +58,38 @@ describe("parseProgressRatio", () => {
     expect(parseProgressRatio("140%")).toBeNull()
     expect(parseProgressRatio("n/a")).toBeNull()
   })
+
+  it("refuses a value that is only partly a number", () => {
+    // `Number.parseFloat` reads a prefix and stops. Every one of these used
+    // to be drawn as a ring filled to the part that happened to parse.
+    expect(parseProgressRatio("50 widgets")).toBeNull()
+    expect(parseProgressRatio("50", "widgets")).toBeNull()
+    expect(parseProgressRatio("42 台")).toBeNull()
+    expect(parseProgressRatio("1.2.3")).toBeNull()
+    expect(parseProgressRatio("86%%")).toBeNull()
+    expect(parseProgressRatio("")).toBeNull()
+  })
+
+  it("takes comma grouping only in whole thousands", () => {
+    expect(parseProgressRatio("1,23,4")).toBeNull()
+    expect(parseProgressRatio("5,0")).toBeNull()
+    // Correctly grouped and still not a rate: 1,234 is a magnitude.
+    expect(parseProgressRatio("1,234")).toBeNull()
+  })
+
+  it("keeps the three documented spellings of a rate", () => {
+    expect(parseProgressRatio("86%")).toBeCloseTo(0.86)
+    expect(parseProgressRatio("0.86")).toBeCloseTo(0.86)
+    expect(parseProgressRatio("86")).toBeCloseTo(0.86)
+  })
+
+  it("lets a written percent outrank the bare-ratio reading", () => {
+    // "0.9" with no unit is nine tenths. "0.9%" is nine thousandths — the
+    // author wrote the unit, so the unit decides.
+    expect(parseProgressRatio("0.9")).toBeCloseTo(0.9)
+    expect(parseProgressRatio("0.9%")).toBeCloseTo(0.009)
+    expect(parseProgressRatio("0.9", "%")).toBeCloseTo(0.009)
+  })
 })
 
 describe("progress_donuts schema", () => {
@@ -89,6 +121,51 @@ describe("progress_donuts schema", () => {
     expect(result.ok).toBe(false)
     expect(result.errors.map((e) => e.message).join("\n")).toContain("kpi_cards")
     expect(result.errors[0]!.path).toBe("slides.0.components.0.items.0.value")
+  })
+
+  it("rejects a count carrying its unit inside the value", () => {
+    const result = validateIr(
+      deck({
+        type: "progress_donuts",
+        items: [
+          { value: "50 widgets", label: "shipped" },
+          { value: "72%", label: "closure" },
+        ],
+      } as Component),
+    )
+    expect(result.ok).toBe(false)
+    expect(result.errors[0]!.path).toBe("slides.0.components.0.items.0.value")
+    expect(result.errors[0]!.message).toContain("kpi_cards")
+  })
+
+  it("rejects a malformed number that used to be read as its prefix", () => {
+    const result = validateIr(
+      deck({
+        type: "progress_donuts",
+        items: [
+          { value: "1.2.3", label: "coverage" },
+          { value: "72%", label: "closure" },
+        ],
+      } as Component),
+    )
+    expect(result.ok).toBe(false)
+    expect(result.errors[0]!.path).toBe("slides.0.components.0.items.0.value")
+  })
+
+  it("still rejects a count after the percent alias is rescued into value", () => {
+    // `percent` is renamed to `value` before the schema runs, so alias
+    // rescue must not become a way in for a shape the field itself refuses.
+    const result = validateIr(
+      deck({
+        type: "progress_donuts",
+        items: [
+          { percent: "50 widgets", label: "shipped" },
+          { percent: "72%", label: "closure" },
+        ],
+      } as unknown as Component),
+    )
+    expect(result.ok).toBe(false)
+    expect(result.errors[0]!.message).toContain("kpi_cards")
   })
 
   it("rejects a single rate and more than six", () => {

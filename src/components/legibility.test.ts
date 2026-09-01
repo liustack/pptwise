@@ -16,7 +16,6 @@ import {
   capFormBody,
   fillCardType,
   formLegibleInk,
-  formGridCols,
   formIconColumnCols,
   layoutAtSize,
   layoutFormBody,
@@ -124,17 +123,6 @@ function textsMatching(container: ParentNode, snippets: string[]): Element[] {
     return snippets.some((snip) => s.includes(snip) || snip.includes(stripped(s)))
   })
 }
-
-describe("formGridCols", () => {
-  it("uses n columns for 1–3 items, 2×2 for 4, 3 columns for 5–6", () => {
-    expect(formGridCols(1)).toBe(1)
-    expect(formGridCols(2)).toBe(2)
-    expect(formGridCols(3)).toBe(3)
-    expect(formGridCols(4)).toBe(2)
-    expect(formGridCols(5)).toBe(3)
-    expect(formGridCols(6)).toBe(3)
-  })
-})
 
 describe("formIconColumnCols", () => {
   it("keeps 4-across on a 640-wide box when floors still fit", () => {

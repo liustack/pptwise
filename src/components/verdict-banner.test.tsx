@@ -409,4 +409,37 @@ describe("verdict_banner component emphasis", () => {
       verdictBanner.measure(plain, 1088, ctx)
     )
   })
+
+  it("strikes its pad and underline in the theme's emphasis ink", () => {
+    // A theme names `emphasisInk` when its accent cannot separate from its
+    // own text. This painter read `colors.accent` directly, so the one
+    // theme that needs the split kept getting the color it asked to avoid.
+    const split = { ...ctx, colors: { ...ctx.colors, emphasisInk: "#B8A888" } }
+    const b = component("positive", "结论：**关键提升**，符合预期")
+
+    const pads = svg(verdictBanner.render(b, { x: 0, y: 0, w: 1088 }, { ...split, emphasis: "pad" }))
+    const pad = pads.container.querySelector("[data-emphasis-pad]")!
+    expect(pad.getAttribute("fill")).toBe("#B8A888")
+    expect(pad.getAttribute("fill")).not.toBe(ctx.colors.accent)
+
+    const lines = svg(
+      verdictBanner.render(b, { x: 0, y: 0, w: 1088 }, { ...split, emphasis: "underline" }),
+    )
+    const underline = lines.container.querySelector("[data-emphasis-underline]")!
+    expect(underline.getAttribute("stroke")).toBe("#B8A888")
+    expect(underline.getAttribute("stroke")).not.toBe(ctx.colors.accent)
+  })
+
+  it("keeps the tint run in the verdict's tone, whatever ink the theme names", () => {
+    // The exception this component is: its emphasized run carries the
+    // verdict's semantic color, not the theme's. A theme ink change must
+    // not quietly recolor a "positive" verdict.
+    const split = { ...ctx, colors: { ...ctx.colors, emphasisInk: "#B8A888" } }
+    const b = component("positive", "结论：**关键提升**，符合预期")
+    const { container } = svg(verdictBanner.render(b, { x: 0, y: 0, w: 1088 }, split))
+    const run = Array.from(container.querySelectorAll("tspan")).find(
+      (t) => t.textContent === "关键提升",
+    )
+    expect(run?.getAttribute("fill")).toBe("#2E9E6B")
+  })
 })
