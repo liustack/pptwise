@@ -1,5 +1,19 @@
 # @liustack/pptwise
 
+## 0.25.0
+
+### Minor Changes
+
+- Faces render authored content completely or decline the page. Quote pages set the authored `blockquote.text` as the display line with the heading as a small context lead (previously the quote text was silently dropped and the heading conscripted); attribution comes only from the component. `stat-hero` steps aside when `kpi_cards` carries more than one item so a full rendering draws the page, and its kept pages now print the metric's label, unit and source. Cover and ending faces declare item capacities and validate rejects an over-limit list with an error naming the face and its cap. A corpus-wide fidelity scan guards the contract in CI.
+- Every component now has exactly one drawing. The per-theme form dispatch (badge cards, hex clusters, petal wheels, donut trios and the rest of the 21-form table) is removed: themes differ through tokens and faces, never by restructuring a component. Two forms grew into real components with their own routing criteria — `hub_spoke` (one center concept with 3-6 unordered satellites) and `progress_donuts` (completion-rate metrics drawn as rings, values validated to 0-100). The emphasis stroke (`pad` / `underline`) moved into the theme file as an `emphasis` field.
+
+### Patch Changes
+
+- Pie slices and funnel bands are labeled directly beside the mark (name and value, with leader lines and column stacking on the pie), so a full-page radial chart no longer renders as unlabeled color fields.
+- CJK line-break prohibition: closing punctuation (》」、，。 and kin) no longer starts a line and opening brackets no longer end one, resolved by pushing the pinned pair to the next line inside the existing fit ladder. Latin wrapping is byte-identical.
+- `**emphasis**` runs in headings and subheadings paint as styled runs on every face and treatment through one shared fit-and-paint path; markers never reach width math or the page. Previously 76 of 130 faces printed the raw markers.
+- The rail-numbered face drops its left progress track (the chapter.n badge already carries the position; the track read as a stray vertical line across themes). The depth-contract partitioner now walks array children, fixing components whose fragments returned lists — ink's vertical quote attribution renders for the first time.
+
 ## 0.24.0
 
 ### Minor Changes

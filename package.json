@@ -1,6 +1,6 @@
 {
   "name": "@liustack/pptwise",
-  "version": "0.24.0",
+  "version": "0.25.0",
   "description": "Stable, editable PPTX generation for AI agents — semantic IR in, native DrawingML out",
   "type": "module",
   "sideEffects": false,
