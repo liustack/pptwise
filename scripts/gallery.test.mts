@@ -26,8 +26,16 @@ import { THEME_TABLE_REQUIRED_SURFACES } from "../evals/gallery/corpus/theme-slo
 import { LAYOUT_REGISTRY } from "@/layouts/registry"
 import { BASELINE_THEME, corpusAssets, type CorpusAssets } from "../evals/gallery/corpus/decks"
 import { LANGUAGE_IDS, LEXICONS, type LanguageId } from "../evals/gallery/corpus/lexicon"
-import { buildGalleryHtml, COMPONENT_FAMILIES, SLOT_FAMILIES } from "../evals/gallery/html"
-import { assertFullCoverage, buildMatrix, FACE_SLOTS, unservedLayoutIds, UNSERVED_SECTION } from "../evals/gallery/matrix"
+import { buildGalleryHtml, COMPONENT_FAMILIES, FACE_FAMILIES, SLOT_FAMILIES } from "../evals/gallery/html"
+import {
+  assertFullCoverage,
+  BOUNDARY_SLOTS,
+  buildMatrix,
+  FACE_SLOTS,
+  menuFaces,
+  unservedLayoutIds,
+  UNSERVED_SECTION,
+} from "../evals/gallery/matrix"
 import { installNodePlatform } from "@/platform/node"
 
 // `renderMatrix` audits every page it renders, and the auditor parses SVG
@@ -147,6 +155,97 @@ describe("gallery coverage", () => {
     expect([...filed].sort()).toEqual([...FACE_SLOTS].sort())
     expect(filed.length).toBe(new Set(filed).size)
   })
+
+  it("files every registered face under a named family, and names no other", () => {
+    // Derived from the registry rather than hand-kept, so this cannot rot on
+    // its own — it is here to catch someone replacing the derivation with a
+    // list, which is how the 按组件 table earned its own guard.
+    const filed = FACE_FAMILIES.flatMap((f) => f.members)
+    expect([...filed].sort()).toEqual(Object.keys(LAYOUT_REGISTRY).sort())
+    expect(filed.length).toBe(new Set(filed).size)
+  })
+})
+
+// 按讲法 audits the menus: one kind, 24 answers. 按版式 audits the face code:
+// one face, everywhere it was sent. The second only means anything if every
+// page on it names the face that actually drew it, so both bands that carry
+// one are checked against the menu the renderer read.
+describe("gallery face axis", () => {
+  it("credits every deck page to the face its theme's menu names", async () => {
+    const jobs = buildMatrix(themeIds, await assets(), { only: "deck" })
+    expect(jobs.length).toBeGreaterThan(0)
+    for (const job of jobs) {
+      const slide = job.ir.slides[job.slideIndex]!
+      const slot = slide.type === "content" ? slide.kind : slide.type
+      expect(job.faceSlot, job.id).toBe(slot)
+      expect(job.face, job.id).toBe(menuFaces(job.theme)[slot!])
+    }
+  })
+
+  it("puts every registered face on the axis, appendix included", async () => {
+    const jobs = buildMatrix(themeIds, await assets(), { only: "face" })
+    for (const job of jobs) {
+      expect(job.face, job.id).toBe(job.subject)
+      expect(job.faceSlot, job.id).toBe(job.slot)
+    }
+    // A face no menu offers still gets its own tile, or the axis would review
+    // only what the menus already chose.
+    expect([...new Set(jobs.map((j) => j.face))].sort()).toEqual(Object.keys(LAYOUT_REGISTRY).sort())
+  })
+
+  it("keeps the component band off the axis", async () => {
+    // Those pages ride whichever face their component's kind routes to, and
+    // they outnumber the rest two to one: on the axis they would pile onto 18
+    // of the 134 faces and bury the pages that differ. Excluded by carrying no
+    // face at all, so nothing downstream has to remember to filter them.
+    const jobs = buildMatrix(themeIds, await assets(), {
+      only: "component",
+      languages: ["zh"],
+      section: BASELINE_THEME,
+    })
+    expect(jobs.length).toBeGreaterThan(0)
+    expect(jobs.filter((j) => j.face !== undefined || j.faceSlot !== undefined).map((j) => j.id)).toEqual([])
+  }, 60_000)
+})
+
+describe("gallery theme menu strip", () => {
+  it("reads each theme's menu the way the renderer resolves it", () => {
+    for (const themeId of themeIds) {
+      const faces = menuFaces(themeId)
+      // Every face named is one that exists, every boundary slot is filled,
+      // and the strip's cells come out in reading order.
+      for (const [slot, face] of Object.entries(faces)) {
+        expect(FACE_SLOTS as readonly string[], `${themeId} ${slot}`).toContain(slot)
+        expect(LAYOUT_REGISTRY[face], `${themeId} ${slot} -> ${face}`).toBeTruthy()
+      }
+      for (const slot of BOUNDARY_SLOTS) expect(faces[slot], `${themeId} ${slot}`).toBeTruthy()
+      const order = Object.keys(faces)
+      expect(order).toEqual(FACE_SLOTS.filter((s) => order.includes(s)))
+    }
+  })
+
+  it("gives every theme section a menu to draw its strip from, and the appendix none", async () => {
+    const { renderMatrix } = await import("../evals/gallery/render")
+    const { mkdtempSync } = await import("node:fs")
+    const { tmpdir } = await import("node:os")
+    const { join } = await import("node:path")
+
+    const jobs = buildMatrix(themeIds, await assets(), { only: "deck" })
+    const outDir = mkdtempSync(join(tmpdir(), "pptwise-gallery-menu-"))
+    const { manifest } = renderMatrix(jobs, outDir, "test")
+
+    // Read off the theme, not off the pages this run happened to render —
+    // a deck-only build still shows the whole menu it drew from.
+    expect(manifest.sections.map((s) => s.id)).toEqual(themeIds)
+    for (const section of manifest.sections) {
+      expect(section.menu, section.id).toEqual(menuFaces(section.id))
+    }
+
+    const appendix = buildMatrix(themeIds, await assets(), { only: "face", section: UNSERVED_SECTION })
+    const { manifest: other } = renderMatrix(appendix, mkdtempSync(join(tmpdir(), "pptwise-gallery-app-")), "test")
+    expect(other.sections.map((s) => s.id)).toEqual([UNSERVED_SECTION])
+    expect(other.sections[0]!.menu).toBeUndefined()
+  }, 120_000)
 })
 
 const THEME_CHART_SURFACES = [
@@ -496,6 +595,48 @@ describe("gallery page", () => {
       expect(body.includes("<")).toBe(false)
       expect(() => JSON.parse(body.replace(/\\u003c/g, "<"))).not.toThrow()
     }
+  }, 60_000)
+
+  it("offers the face axis, with every face on it filed under a heading", async () => {
+    const { renderMatrix } = await import("../evals/gallery/render")
+    const { mkdtempSync } = await import("node:fs")
+    const { tmpdir } = await import("node:os")
+    const { join } = await import("node:path")
+
+    // The face band of one theme plus the appendix: enough pages to have an
+    // axis, few enough to build in a second.
+    const jobs = buildMatrix(themeIds, await assets(), { only: "face", section: BASELINE_THEME })
+    const outDir = mkdtempSync(join(tmpdir(), "pptwise-gallery-face-"))
+    const { manifest, svgs } = renderMatrix(jobs, outDir, "test")
+    const html = buildGalleryHtml(manifest, svgs)
+
+    expect(html).toContain('data-view="face"')
+    expect(html).toContain("按版式")
+    // A face the family table does not name would land under 其他 — visible,
+    // but filed nowhere a reviewer would look for it.
+    const filed = new Set(FACE_FAMILIES.flatMap((f) => f.members))
+    expect(manifest.pages.filter((p) => p.face && !filed.has(p.face)).map((p) => p.id)).toEqual([])
+    expect(manifest.pages.filter((p) => !p.face).map((p) => p.id)).toEqual([])
+  }, 60_000)
+
+  it("draws a menu strip for every theme section it shows", async () => {
+    const { renderMatrix } = await import("../evals/gallery/render")
+    const { mkdtempSync } = await import("node:fs")
+    const { tmpdir } = await import("node:os")
+    const { join } = await import("node:path")
+
+    const jobs = buildMatrix(themeIds, await assets(), { only: "deck" })
+    const outDir = mkdtempSync(join(tmpdir(), "pptwise-gallery-strip-"))
+    const { manifest, svgs } = renderMatrix(jobs, outDir, "test")
+    const html = buildGalleryHtml(manifest, svgs)
+
+    // The strip is unconditional on a section carrying a menu, so "every
+    // theme gets one" is exactly "every theme section carries one".
+    expect(manifest.sections.filter((s) => s.menu).length).toBe(themeIds.length)
+    expect(html).toContain("的菜单骨架")
+    // Its cells are the fourteen slots in reading order, shipped rather than
+    // inferred from whatever this build's menus happened to fill.
+    expect(html).toContain(`const SLOT_ORDER = ${JSON.stringify(FACE_SLOTS)}`)
   }, 60_000)
 
   it("carries a paint for the box under every page it can name one for", async () => {
