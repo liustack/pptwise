@@ -6,7 +6,6 @@ import { buildCtx, resolveBackgroundHex } from "../render/full-slide-svg"
 import { parseSvgRoot, renderSvgMarkup } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
 import type { PageRenderContext } from "../render/page-context"
-import { layoutDef as railNumberedDef } from "../layouts/content-rail-numbered"
 import { GaugeMotif } from "./motif-gauge-motif"
 
 const SLIDES = ["cover", "chapter", "content", "ending"].map(
@@ -79,9 +78,11 @@ describe("GaugeMotif", () => {
   })
 
   it("stands down on a face that paints its own furniture in the same corner", () => {
-    // rail-numbered's progress rail runs 4px from the corner's vertical arm.
-    const page = pageReserving(railNumberedDef.decorKeepOut)
-    expect(railNumberedDef.decorKeepOut).toBeDefined()
+    // No built-in face reserves this corner any more (rail-numbered's track
+    // was cut by author ruling 2026-09-01), but the stand-down contract must
+    // hold for any face that does: a reservation where the track used to run
+    // still silences the corner.
+    const page = pageReserving([{ x: 48, y: 96, w: 4, h: 544 }])
     const { root } = renderMotif(SLIDES[2]!, page)
     expect(root.querySelector('[data-decor-piece="locator-corner"]')).toBeNull()
   })

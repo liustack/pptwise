@@ -11,20 +11,20 @@ import { tryContentHeadingTreatment } from "../render/heading-treatments/render"
 /**
  * rail-numbered content layout（spec §3.2，Wave 3 Task 18）：grammar break
  * ("换骨") vs. the other legacy themes' section-name-kicker + plain-heading
- * layout. Instead: a fixed left "numbered rail" (a vertical track with a node
- * marking how far through the deck's chapters the slide currently sits —
- * proportional to `(chapter - 1) / (totalChapters - 1)`, collapsing to the
- * top for a single-chapter deck) plus a "{chapter}.{content-in-chapter}"
- * number badge that replaces the old kicker (the content-in-chapter index
- * comes from `contentIndexInChapter`, derive.ts). The heading sits to the
- * right of the badge, vertically centered on it. Extracted from
+ * layout. Instead: a "{chapter}.{content-in-chapter}" number badge replaces
+ * the old kicker (the content-in-chapter index comes from
+ * `contentIndexInChapter`, derive.ts). The face's former left progress track
+ * ("rail") was cut by author ruling (2026-09-01): across themes it read as a
+ * stray vertical line beside the content, and the badge alone already says
+ * where the slide sits. The face id keeps its historical name. The heading
+ * sits to the right of the badge, vertically centered on it. Extracted from
  * templates/academic.tsx 的 `BCGEmeraldContent`（390-531 行，Step A 实测边界，
  * 比 brief 给出的 390-558 短——558 行已进入下一节"Ending"的头注释）。随迁
  * helper：无——本函数消费的 `SvgContent`/`chapterNumberFor`/
  * `contentIndexInChapter`/`fitHeadingLines`/`fitSvgLine`/`fitEmphasisLine`/
  * `renderEmphasisText` 均是 svg 或 pptx-preview 下的公共 helper（经
  * import 消费，非 templates 文件私有），照常 import，不复制。函数消费的模块
- * 级私有几何常量（`RAIL_*`/`BADGE_*`/`TITLE_*`/`CONTENT_*`/`SUBHEADING_*`/
+ * 级私有几何常量（`BADGE_*`/`TITLE_*`/`CONTENT_*`/`SUBHEADING_*`/
  * `BASELINE_FUDGE_RATIO`——均是像素/比例数值，非颜色）随函数体一并复制为本
  * 文件私有常量，不建公共 util（同 chapter-rail-chapter.tsx 对 `CH_DOT_*`
  * 的处理）。
@@ -32,7 +32,7 @@ import { tryContentHeadingTreatment } from "../render/heading-treatments/render"
  * 替换表（Step B，逐十六进制核实，对照 themes/academic.ts 的 colors。
  * 十六进制值本身不抄进本注释——避免污染本文件的 grep 清零门，同
  * cover-left-anchor.tsx 先例）：
- *   - `colors.primary`：源函数已直接消费 `ctx.colors.primary`（rail 轨道/
+ *   - `colors.primary`：源函数已直接消费 `ctx.colors.primary`（
  *     节点/徽章底色），未烤死，原样保留。
  *   - 源文件私有常量 `TEXT`  → `ctx.colors.text`  —— 逐字符精确匹配。
  *   - 源文件私有常量 `MUTED` → `ctx.colors.muted` —— 逐字符精确匹配。
@@ -64,10 +64,6 @@ import { tryContentHeadingTreatment } from "../render/heading-treatments/render"
 // multi-line blocks spread symmetrically around the same pivot.
 const BASELINE_FUDGE_RATIO = 0.32
 
-const RAIL_X = 48
-const RAIL_Y = 96
-const RAIL_W = 4
-const RAIL_H = 544
 
 // BADGE_Y=96 (not 64) keeps the badge clear of Branding's tl logo band
 // (x 64-160, y 48-88) — mirrors the Cover confLabel fix (see
@@ -197,7 +193,6 @@ export function RailNumberedContent({ ir, slide, index, ctx }: SvgTemplateProps)
     return (
       <>
         {treated.chrome}
-        <rect x={RAIL_X} y={RAIL_Y} width={RAIL_W} height={RAIL_H} fill={colors.primary} />
         <rect
           x={BADGE_X}
           y={badgeY}
@@ -240,9 +235,6 @@ export function RailNumberedContent({ ir, slide, index, ctx }: SvgTemplateProps)
 
   return (
     <>
-      {/* Left numbered rail. No cap dot: isolated filled circles are banned. */}
-      <rect x={RAIL_X} y={RAIL_Y} width={RAIL_W} height={RAIL_H} fill={colors.primary} />
-
       {/* "{chapter}.{content}" number badge, replacing the old section kicker */}
       <rect
         x={BADGE_X}
@@ -347,21 +339,15 @@ export function RailNumberedContent({ ir, slide, index, ctx }: SvgTemplateProps)
 // name registry.ts explicitly, since that derivation essay lives in
 // registry.ts's CONTENT_LAYOUT_DEFS aggregation block, not in this file.
 export const layoutDef: LayoutDefinition = {
-  // content-rail-numbered.tsx: fixed left progress track + node (rail),
-  // "{chapter}.{n}" number badge replacing the usual kicker, heading,
-  // subheading, SvgContent body (arrangement passed through), italic footnote
-  // (meta).
+  // content-rail-numbered.tsx: "{chapter}.{n}" number badge replacing the
+  // usual kicker, heading, subheading, SvgContent body (arrangement passed
+  // through), italic footnote (meta). The face's former left progress track
+  // was cut by author ruling (2026-09-01): across themes it read as a stray
+  // vertical line, and the badge alone already carries the position.
   id: "rail-numbered",
   kind: "standard",
   slideTypes: ["content"],
-  // The progress rail is this face's own structural furniture, painted in
-  // the outer left margin where a theme motif may also want to mark the
-  // page. consulting's locator corner ran its vertical arm 4px from the
-  // rail and the pair read as one botched line. Declaring the rail lets a
-  // motif stand down there instead (see `motifs/keep-out.ts`).
-  decorKeepOut: [{ x: RAIL_X, y: RAIL_Y, w: RAIL_W, h: RAIL_H }],
   slots: [
-    { name: "rail", accepts: [] },
     { name: "kicker", accepts: [] },
     { name: "heading", accepts: [] },
     { name: "subheading", accepts: [] },

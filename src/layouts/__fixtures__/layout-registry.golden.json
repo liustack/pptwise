@@ -3655,10 +3655,6 @@
       ],
       "slots": [
         {
-          "name": "rail",
-          "accepts": []
-        },
-        {
           "name": "kicker",
           "accepts": []
         },
