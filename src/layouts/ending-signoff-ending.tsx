@@ -1,4 +1,5 @@
 import type { SvgTemplateProps } from "./types"
+import { boundaryBulletItems } from "./boundary-content"
 import type { LayoutDefinition } from "./registry"
 import { fitHeadingLines } from "../render/heading-fit"
 import { fitSvgLine } from "../lib/svg-text-layout"
@@ -49,9 +50,7 @@ const FOOT_SIZE = 17
 const FOOT_MAX_W = 1000
 
 function signoffItems(slide: SvgTemplateProps["slide"]): string[] {
-  const block = slide.components.find((c) => c.type === "bullets")
-  if (!block || block.type !== "bullets") return []
-  return block.items.map((item) => stripEmphasis(item)).filter((item) => item.trim().length > 0).slice(0, ITEM_MAX)
+  return boundaryBulletItems(slide, ITEM_MAX).map((item) => stripEmphasis(item))
 }
 
 export function SignoffEnding({ ir, slide, ctx, page }: SvgTemplateProps) {

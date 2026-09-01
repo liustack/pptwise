@@ -1,4 +1,5 @@
 import type { SvgTemplateProps } from "./types"
+import { boundaryBulletItems } from "./boundary-content"
 import type { LayoutDefinition } from "./registry"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { fitEmphasisLine, headingEmphasisPaint, renderEmphasisText, stripEmphasis } from "../render/emphasis"
@@ -19,12 +20,6 @@ const BADGE_FILLS = [SKY_BLUE, "accent", GRASS_GREEN] as const
 /** Items of the accepted `bullets` block this face has room to draw. */
 const ITEM_MAX = 3
 
-function actionItems(slide: SvgTemplateProps["slide"]): string[] {
-  const bullets = slide.components.find((component) => component.type === "bullets")
-  if (!bullets || bullets.type !== "bullets") return []
-  return bullets.items.slice(0, ITEM_MAX)
-}
-
 function contactLine({ ir, slide }: Pick<SvgTemplateProps, "ir" | "slide">): string {
   const subheading = slide.subheading?.trim()
   if (subheading) return subheading
@@ -33,7 +28,7 @@ function contactLine({ ir, slide }: Pick<SvgTemplateProps, "ir" | "slide">): str
 }
 
 function kickerFor(slide: SvgTemplateProps["slide"]): string {
-  const corpus = [slide.heading, ...actionItems(slide)].filter(Boolean).join("")
+  const corpus = [slide.heading, ...boundaryBulletItems(slide, ITEM_MAX)].filter(Boolean).join("")
   return /[\u3400-\u9fff]/u.test(corpus) ? "待办清单" : "TO DO"
 }
 
@@ -48,7 +43,7 @@ export function EndingCrayonboxTodo({ ir, slide, ctx }: SvgTemplateProps) {
     fontFamily: fonts.heading,
     bold: true,
   })
-  const items = actionItems(slide).map((value) =>
+  const items = boundaryBulletItems(slide, ITEM_MAX).map((value) =>
     fitSvgLine(stripEmphasis(value), {
       maxWidth: 980,
       fontSize: 30,

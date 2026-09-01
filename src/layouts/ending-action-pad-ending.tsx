@@ -1,4 +1,5 @@
 import type { SvgTemplateProps } from "./types"
+import { boundaryBulletItems } from "./boundary-content"
 import type { LayoutDefinition } from "./registry"
 import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout"
 import { fitEmphasisLine, headingEmphasisPaint, renderEmphasisText, stripEmphasis } from "../render/emphasis"
@@ -47,12 +48,6 @@ const NEXT_KICKER = "NEXT"
 /** Items of the accepted `bullets` block this face has room to draw. */
 const ITEM_MAX = 3
 
-function coverBulletItems(slide: SvgTemplateProps["slide"]): string[] {
-  const block = slide.components.find((c) => c.type === "bullets")
-  if (!block || block.type !== "bullets") return []
-  return block.items.slice(0, ITEM_MAX)
-}
-
 function splitActionLines(text: string): string[] {
   const trimmed = text.trim()
   if (!trimmed) return []
@@ -66,13 +61,13 @@ function splitActionLines(text: string): string[] {
 }
 
 function actionItems(slide: SvgTemplateProps["slide"]): string[] {
-  const bullets = coverBulletItems(slide)
+  const bullets = boundaryBulletItems(slide, ITEM_MAX)
   if (bullets.length > 0) return bullets
   return splitActionLines(slide.heading ?? "")
 }
 
 function actionCta(slide: SvgTemplateProps["slide"]): string {
-  if (coverBulletItems(slide).length > 0) return (slide.heading ?? "").trim()
+  if (boundaryBulletItems(slide, ITEM_MAX).length > 0) return (slide.heading ?? "").trim()
   return (slide.subheading ?? "").trim()
 }
 

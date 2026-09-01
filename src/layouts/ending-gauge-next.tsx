@@ -1,4 +1,5 @@
 import type { SvgTemplateProps } from "./types"
+import { boundaryBulletItems } from "./boundary-content"
 import type { LayoutDefinition } from "./registry"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { fitEmphasisLine, headingEmphasisPaint, renderEmphasisText, stripEmphasis } from "../render/emphasis"
@@ -36,12 +37,6 @@ const SIGNOFF_MAX_W = 970
 /** Items of the accepted `bullets` block this face has room to draw. */
 const ITEM_MAX = 3
 
-function bulletItems(slide: SvgTemplateProps["slide"]): string[] {
-  const block = slide.components.find((component) => component.type === "bullets")
-  if (!block || block.type !== "bullets") return []
-  return block.items.slice(0, ITEM_MAX)
-}
-
 function splitHeading(text: string): string[] {
   const trimmed = stripEmphasis(text).trim()
   if (!trimmed) return []
@@ -55,7 +50,7 @@ function splitHeading(text: string): string[] {
 }
 
 function actionItems(slide: SvgTemplateProps["slide"]): string[] {
-  const bullets = bulletItems(slide)
+  const bullets = boundaryBulletItems(slide, ITEM_MAX)
   return bullets.length > 0 ? bullets : splitHeading(slide.heading ?? "")
 }
 

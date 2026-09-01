@@ -1,4 +1,5 @@
 import type { SvgTemplateProps } from "./types"
+import { boundaryBulletItems } from "./boundary-content"
 import type { LayoutDefinition } from "./registry"
 import { fitHeadingLines } from "../render/heading-fit"
 import { fitSvgLine } from "../lib/svg-text-layout"
@@ -41,18 +42,12 @@ function dropOverflowMarks(text: string): string {
 /** Items of the accepted `bullets` block this face has room to draw. */
 const ITEM_MAX = 3
 
-function coverBulletItems(slide: SvgTemplateProps["slide"]): string[] {
-  const block = slide.components.find((c) => c.type === "bullets")
-  if (!block || block.type !== "bullets") return []
-  return block.items.slice(0, ITEM_MAX)
-}
-
 export function ScorecardEnding({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const bg = ctx.defaultBg ?? colors.bg
   const headingSource = stripEmphasis(slide.heading ?? "")
   const showTitle = headingSource.trim().length > 0
-  const items = coverBulletItems(slide)
+  const items = boundaryBulletItems(slide, ITEM_MAX)
 
   const title = fitHeadingLines(headingSource, {
     maxWidth: TITLE_MAX_W,
