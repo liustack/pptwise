@@ -27,6 +27,28 @@ export const schema = z
     direction: z.enum(["TB", "TD", "BT", "LR", "RL"]).optional(),
   })
   .strict()
+  .superRefine((c, ctx) => {
+    // An edge is a line between two nodes, so an endpoint naming no node is
+    // a line with nowhere to go. The layout used to drop such an edge before
+    // it counted anything, so the arrow and its label left the page with no
+    // validate error and no `data-dropped`: a typo in one id silently
+    // removed a step from the diagram. Name the edge and the id, so the fix
+    // is mechanical.
+    const ids = new Set(c.nodes.map((n) => n.id))
+    c.edges.forEach((edge, i) => {
+      for (const end of ["from", "to"] as const) {
+        if (ids.has(edge[end])) continue
+        ctx.addIssue({
+          code: "custom",
+          path: ["edges", i, end],
+          message:
+            `edges[${i}].${end} is "${edge[end]}", which is not the id of any node on this flowchart. ` +
+            `Known ids: ${c.nodes.map((n) => `"${n.id}"`).join(", ") || "(none)"}. ` +
+            "An edge draws a line between two nodes, so both ends have to name one.",
+        })
+      }
+    })
+  })
 
 export const aliases = {} satisfies ComponentAliasSpec
 

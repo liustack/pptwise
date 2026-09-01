@@ -408,6 +408,58 @@ describe("chart subtypes (chart-depth wave: scatter / area / donut / gauge)", ()
   })
 })
 
+describe("flowchart edge endpoints", () => {
+  const withComponents = (components: any[]) => {
+    const d: any = minimal()
+    d.slides = [{ type: "content", kind: "process", heading: "h", components }]
+    return d
+  }
+  const nodes = [
+    { id: "scope", label: "Scoping" },
+    { id: "build", label: "Solutioning" },
+  ]
+
+  it("accepts edges between nodes the flowchart declares", () => {
+    const d = withComponents([
+      { type: "flowchart", nodes, edges: [{ from: "scope", to: "build", label: "handover" }] },
+    ])
+    expect(parsePptxIR(d).success).toBe(true)
+  })
+
+  // The layout dropped an edge with a missing endpoint before it counted
+  // anything, so a typo in one id took a step out of the diagram with no
+  // error and no data-dropped. An edge is a line between two nodes, and a
+  // line with nowhere to go is not something a renderer can improve on.
+  it("names the dangling edge and endpoint rather than dropping it at layout", () => {
+    const d = withComponents([
+      {
+        type: "flowchart",
+        nodes,
+        edges: [
+          { from: "scope", to: "build" },
+          { from: "build", to: "shipp", label: "release" },
+        ],
+      },
+    ])
+    const parsed = parsePptxIR(d)
+    expect(parsed.success).toBe(false)
+    if (parsed.success) return
+    expect(parsed.error).toContain("edges[1].to")
+    expect(parsed.error).toContain('"shipp"')
+    expect(parsed.error).toContain('"scope"')
+  })
+
+  it("reports a dangling from-endpoint the same way", () => {
+    const d = withComponents([
+      { type: "flowchart", nodes, edges: [{ from: "nope", to: "build" }] },
+    ])
+    const parsed = parsePptxIR(d)
+    expect(parsed.success).toBe(false)
+    if (parsed.success) return
+    expect(parsed.error).toContain("edges[0].from")
+  })
+})
+
 describe("swot component (structure-components wave task 1, named-slot family)", () => {
   const withComponents = (components: any[]) => {
     const d: any = minimal()
