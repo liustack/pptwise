@@ -46,14 +46,14 @@ describe("timeline component", () => {
     expect(line?.getAttribute("stroke-width")).toBe("2")
   })
 
-  it("renders 3 circle nodes with accent fill", () => {
+  it("renders 3 circle nodes in the primary fill", () => {
     const { container } = svg(
       timeline.render(component, { x: 0, y: 0, w: 1000 }, ctx),
     )
     const circles = container.querySelectorAll("circle")
     expect(circles.length).toBe(3)
     circles.forEach((c) => {
-      expect(c.getAttribute("fill")).toBe("#00A878")
+      expect(c.getAttribute("fill")).toBe("#006A4E")
     })
   })
 
@@ -86,7 +86,7 @@ describe("timeline component", () => {
     expect(titleTexts[0].textContent).toBe("启动")
   })
 
-  it("uses muted ink for horizontal dates and reserves accent for axis dots", () => {
+  it("uses muted ink for horizontal dates and the quiet primary for unmarked dots", () => {
     const themeCtx = buildCtx(resolveStyle("enterprise"), {})
     const { container } = svg(
       timeline.render(component, { x: 0, y: 0, w: 1000 }, themeCtx),
@@ -105,9 +105,43 @@ describe("timeline component", () => {
     expect(titles.map((title) => title.getAttribute("fill"))).toEqual(
       component.milestones.map(() => themeCtx.colors.text),
     )
+    // The accent is what a marked milestone is paid in, so a row where the
+    // author marked nothing spends none of it.
     expect(
       Array.from(container.querySelectorAll("circle")).map((dot) => dot.getAttribute("fill")),
-    ).toEqual(component.milestones.map(() => themeCtx.colors.accent))
+    ).toEqual(component.milestones.map(() => themeCtx.colors.primary))
+  })
+
+  it("paints a highlighted milestone the same way in both layouts", () => {
+    // `highlight` is one field with one meaning. The horizontal row read it
+    // nowhere: every dot came out the same size and the same color, so the
+    // turn an author marked reached the page as nothing at all.
+    const themeCtx = buildCtx(resolveStyle("consulting"), {})
+    const milestones = [
+      { date: "第一季度", title: "基线" },
+      { date: "第二季度", title: "转折", highlight: true },
+      { date: "第三季度", title: "交付" },
+    ]
+    for (const layout of ["horizontal", "vertical"] as const) {
+      const { container } = svg(
+        timeline.render(
+          { type: "timeline", layout, milestones },
+          { x: 0, y: 0, w: 1000, h: 600 },
+          themeCtx,
+        ),
+      )
+      const dots = Array.from(container.querySelectorAll("circle"))
+      expect(dots, layout).toHaveLength(3)
+      const [plain, marked, other] = dots.map((dot) => ({
+        r: Number(dot.getAttribute("r")),
+        fill: dot.getAttribute("fill"),
+      }))
+      expect(marked!.fill, layout).toBe(themeCtx.colors.accent)
+      expect(plain!.fill, layout).toBe(themeCtx.colors.primary)
+      expect(other!.fill, layout).toBe(themeCtx.colors.primary)
+      expect(marked!.r, layout).toBeGreaterThan(plain!.r)
+      expect(plain!.r, layout).toBe(other!.r)
+    }
   })
 
   it("does not contain nested svg elements", () => {

@@ -19,6 +19,26 @@ const BOTTOM_PAD = 18
 
 type Anchor = "start" | "middle" | "end"
 
+/**
+ * The dot a milestone gets, from the one authored fact that changes it:
+ * `highlight`, the turn the author marked. A marked node grows and takes
+ * the accent, an unmarked one stays the quieter primary.
+ *
+ * Both layouts read the field through here. The horizontal row used to
+ * ignore it outright — every dot came out `r=8` in the accent, so a deck
+ * that named its turning point got a row of identical circles and the
+ * reader was left to guess which one it was.
+ */
+function milestoneDot(
+  highlight: boolean | undefined,
+  baseR: number,
+  colors: ComponentCtx["colors"],
+): { r: number; fill: string } {
+  return highlight
+    ? { r: baseR + 3, fill: colors.accent }
+    : { r: baseR, fill: colors.primary }
+}
+
 function inkWithTextFallback(
   preferredFill: string,
   textFill: string,
@@ -206,14 +226,9 @@ function renderVertical(
             >
               {date.text}
             </text>
-            <circle
-              cx={V_AXIS_X}
-              cy={nodeCy}
-              r={hl ? 10 : 7}
-              // 高亮只落在圆点。日期与标题统一从 muted/text 推导，避免
-              // 身份色与正文墨在同一高亮项里混用。
-              fill={hl ? ctx.colors.accent : ctx.colors.primary}
-            />
+            {/* 高亮只落在圆点。日期与标题统一从 muted/text 推导，避免
+                身份色与正文墨在同一高亮项里混用。 */}
+            <circle cx={V_AXIS_X} cy={nodeCy} {...milestoneDot(hl, 7, ctx.colors)} />
             <text
               data-truncated={title.truncated ? "1" : undefined}
               x={V_TEXT_X}
@@ -286,7 +301,7 @@ export const timeline: SvgComponent<TimelineComponent> = {
           const descTop = TITLE_TOP + title.lines.length * title.lineHeight + 2
           return (
             <g key={i}>
-              <circle cx={x} cy={AXIS_Y} r={8} fill={ctx.colors.accent} />
+              <circle cx={x} cy={AXIS_Y} {...milestoneDot(m.highlight, 8, ctx.colors)} />
               <text
                 data-truncated={date.truncated ? "1" : undefined}
                 x={tx}
