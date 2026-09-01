@@ -4,7 +4,7 @@ import { renderEmphasisTspans } from "../../render/emphasis"
 import { heroCaption, heroUnit, heroSource, heroValue } from "../minimal-shared"
 import { fitSvgLine } from "../../lib/svg-text-layout"
 import { renderFittedEvidence, textColumnMaxWidth } from "../fitted-evidence"
-import { evidenceSource, fitHeroLine, heroUnitMark, fitSparseHeading, pad2 } from "./shared"
+import { evidenceSource, fitHeroLine, heroUnitMark, fitSparseHeading, fitStatementSource, pad2 } from "./shared"
 
 /** arena 稀排脸：内缩 HUD、量能条、对角亮括弧。不画页角 12px 括弧和底带能量条。 */
 
@@ -86,6 +86,7 @@ export function statement({ slide, ctx }: SvgTemplateProps) {
     fontFamily: fonts.heading,
     bold: true,
   })
+  const source = fitStatementSource(slide, { maxWidth: 1088, fontSize: 16, fontFamily: fonts.body })
   return (
     <>
       {heading.lines.map((line, i) => (
@@ -110,6 +111,19 @@ export function statement({ slide, ctx }: SvgTemplateProps) {
       {ENERGY.map((bar) => (
         <rect key={bar.x} x={bar.x} y={540} width={30} height={8} fill={colors.accent} opacity={bar.opacity} />
       ))}
+      {source && (
+        <text
+          data-truncated={source.truncated ? "1" : undefined}
+          x={96}
+          y={604}
+          fontFamily={fonts.body}
+          fontSize={source.fontSize}
+          fill={colors.muted}
+          dominantBaseline="alphabetic"
+        >
+          {source.text}
+        </text>
+      )}
     </>
   )
 }

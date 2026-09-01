@@ -39,7 +39,8 @@ function render(body: React.ReactElement): { markup: string; root: Element } {
 describe("consulting sparse faces", () => {
   const ctx = buildCtx(resolveStyle("consulting"), {})
 
-  it("statement is left navy serif with a 结论先行 stamp and a yellow pad only on the first ** run", () => {
+  it("statement is left navy serif under the deck's own section, with a yellow pad only on the first ** run", () => {
+    const chapter: Slide = { type: "chapter", heading: "试点结论", components: [] } as Slide
     const slide: Slide = {
       type: "content",
       kind: "points",
@@ -48,15 +49,16 @@ describe("consulting sparse faces", () => {
       components: [{ type: "paragraph", text: "试点复盘纪要" }],
     } as Slide
     const { markup, root } = render(
-      <StatementContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />,
+      <StatementContent ir={ir([chapter, slide])} slide={slide} index={1} ctx={ctx} />,
     )
     expect(() => assertSubset(root)).not.toThrow()
-    const kicker = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "结论先行")!
+    const kicker = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "试点结论")!
     expect(kicker.getAttribute("x")).toBe("96")
     expect(kicker.getAttribute("y")).toBe("200")
     expect(Number(kicker.getAttribute("font-size"))).toBe(18)
     expect(kicker.getAttribute("fill")).toBe(ctx.colors.muted)
     expect(kicker.getAttribute("letter-spacing")).toBeNull()
+    expect(markup).not.toContain("结论先行")
     const heading = Array.from(root.querySelectorAll("text")).find((t) =>
       (t.textContent ?? "").includes("工作区订阅"),
     )!

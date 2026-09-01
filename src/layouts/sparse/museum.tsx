@@ -5,7 +5,7 @@ import { renderEmphasisTspans } from "../../render/emphasis"
 import { heroCaption, heroUnit, heroSource, heroValue } from "../minimal-shared"
 import { fitSvgLine } from "../../lib/svg-text-layout"
 import { renderFittedEvidence } from "../fitted-evidence"
-import { evidenceSource, fitHeroLine, heroUnitMark, fitSparseHeading, pad2 } from "./shared"
+import { evidenceSource, fitHeroLine, fitSparseHeading, fitStatementSource, heroUnitMark, pad2 } from "./shared"
 import { SIBLING_AIR_PX } from "../../render/spacing"
 
 /** museum 稀排脸：展签格言、衬板单证据、铜金巨数。 */
@@ -23,6 +23,7 @@ export function statement({ ir, slide, index, ctx }: SvgTemplateProps) {
     bold: false,
   })
   const footer = [ir.meta.organization, ir.meta.date].filter((v): v is string => Boolean(v && v.trim())).join(" · ")
+  const source = fitStatementSource(slide, { maxWidth: 1000, fontSize: 17, fontFamily: fonts.body })
   return (
     <>
       {section && (
@@ -58,6 +59,20 @@ export function statement({ ir, slide, index, ctx }: SvgTemplateProps) {
           })}
         </text>
       ))}
+      {source && (
+        <text
+          data-truncated={source.truncated ? "1" : undefined}
+          x={640}
+          y={528}
+          textAnchor="middle"
+          fontFamily={fonts.body}
+          fontSize={source.fontSize}
+          fill={colors.muted}
+          dominantBaseline="alphabetic"
+        >
+          {source.text}
+        </text>
+      )}
       {footer && (
         <text x={640} y={580} textAnchor="middle" fontFamily={fonts.body} fontSize={17} fill={colors.muted} dominantBaseline="alphabetic">
           {footer}

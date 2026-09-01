@@ -2,7 +2,7 @@ import type { SvgTemplateProps } from "../types"
 import { sectionNameFor } from "../../lib/derive"
 import { renderEmphasisTspans } from "../../render/emphasis"
 import { heroCaption, heroUnit, heroSource, heroValue, pullQuoteAttribution, pullQuoteContext, pullQuoteText } from "../minimal-shared"
-import { fitHeroLine, heroUnitMark, fitSparseHeading, fitSparseQuote, pad2, quoteBlockBaseline } from "./shared"
+import { fitHeroLine, heroUnitMark, fitSparseHeading, fitSparseQuote, fitStatementSource, pad2, quoteBlockBaseline } from "./shared"
 
 /** journal 稀排脸：巨引号、期号巨数、报头格言。不画 motif 报头双线。 */
 
@@ -152,6 +152,7 @@ export function statement({ slide, ctx }: SvgTemplateProps) {
     fontFamily: fonts.heading,
     bold: false,
   })
+  const source = fitStatementSource(slide, { maxWidth: 1000, fontSize: 20, fontFamily: fonts.heading })
   return (
     <>
       {heading.lines.map((line, i) => (
@@ -175,18 +176,21 @@ export function statement({ slide, ctx }: SvgTemplateProps) {
         </text>
       ))}
       <rect x={565} y={400} width={150} height={3} fill={colors.accent} />
-      <text
-        x={640}
-        y={470}
-        textAnchor="middle"
-        fontFamily={fonts.heading}
-        fontSize={20}
-        fontStyle="italic"
-        fill={colors.muted}
-        dominantBaseline="alphabetic"
-      >
-        The Operations Review
-      </text>
+      {source && (
+        <text
+          data-truncated={source.truncated ? "1" : undefined}
+          x={640}
+          y={470}
+          textAnchor="middle"
+          fontFamily={fonts.heading}
+          fontSize={source.fontSize}
+          fontStyle="italic"
+          fill={colors.muted}
+          dominantBaseline="alphabetic"
+        >
+          {source.text}
+        </text>
+      )}
     </>
   )
 }

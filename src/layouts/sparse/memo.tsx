@@ -9,7 +9,7 @@ import {
   pullQuoteText,
   trackingPx,
 } from "../minimal-shared"
-import { firstEmphasisRun, fitHeroLine, heroUnitMark, fitSparseHeading, fitSparseQuote, quoteBlockBaseline } from "./shared"
+import { firstEmphasisRun, fitHeroLine, fitSparseHeading, fitSparseQuote, fitStatementSource, heroUnitMark, quoteBlockBaseline } from "./shared"
 
 /** memo 稀排脸：打字机引文、文武夹巨数、宋体格言+印章。不画 MEMORANDUM / 顶缘红双线。 */
 
@@ -177,6 +177,7 @@ export function statement({ slide, ctx }: SvgTemplateProps) {
     fontFamily: fonts.heading,
     bold: false,
   })
+  const source = fitStatementSource(slide, { maxWidth: 960, fontSize: 16, fontFamily: fonts.mono })
   return (
     <>
       {heading.lines.map((line, i) => (
@@ -197,13 +198,24 @@ export function statement({ slide, ctx }: SvgTemplateProps) {
           })}
         </text>
       ))}
+      {source && (
+        <text
+          data-truncated={source.truncated ? "1" : undefined}
+          x={96}
+          y={430}
+          fontFamily={fonts.mono}
+          fontSize={source.fontSize}
+          fill={colors.muted}
+          dominantBaseline="alphabetic"
+        >
+          {source.text}
+        </text>
+      )}
+      {/* 骑缝章：空框是印记本身，不落字。原本框里刷的「已阅 / 存档」是本仓
+          写的两个词，在观众眼里与作者写的字没有分别——一张宣言页凭空多出
+          一条「这份东西已经批过存档了」的记录。印框留白，作者的出处落在
+          上面那行。 */}
       <rect x={1076} y={520} width={108} height={108} fill="none" stroke={colors.accent} strokeWidth={3} />
-      <text x={1130} y={562} textAnchor="middle" fontFamily={fonts.heading} fontSize={30} fill={colors.accent} dominantBaseline="alphabetic">
-        已阅
-      </text>
-      <text x={1130} y={604} textAnchor="middle" fontFamily={fonts.heading} fontSize={30} fill={colors.accent} dominantBaseline="alphabetic">
-        存档
-      </text>
     </>
   )
 }

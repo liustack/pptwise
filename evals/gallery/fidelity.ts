@@ -223,12 +223,6 @@ export interface FidelityExemption {
 
 export const FIDELITY_EXEMPTIONS: readonly FidelityExemption[] = [
   {
-    face: "statement",
-    path: "(citation).sources",
-    reason:
-      "Eighteen theme skins close the page with their own baked line instead of the source the author cited. Same absorption as pull-quote, and the fix is the same shape: paint statementAttribution and delete the baked furniture. Not folded in here because that furniture is also the skins' signature and each needs its own look decided.",
-  },
-  {
     face: "gauge-point",
     path: "(blockquote).text",
     reason:

@@ -6,7 +6,7 @@ import { renderEmphasisTspans } from "../../render/emphasis"
 import { accessibleOpacity, readableOn } from "../../render/ink"
 import { findImageSelection } from "../find-image"
 import { heroCaption, heroUnit, heroSource, heroValue } from "../minimal-shared"
-import { fitHeroLine, heroUnitMark, fitSparseHeading, isNumericHero, rotateRectPolygon, splitTrailingPercent } from "./shared"
+import { fitHeroLine, fitSparseHeading, fitStatementSource, heroUnitMark, isNumericHero, rotateRectPolygon, splitTrailingPercent } from "./shared"
 
 /** playbill 稀排脸：特粗三行、出血巨数+斜贴片、满版图。不画日期贴片。 */
 
@@ -24,6 +24,7 @@ export function statement({ ir, slide, index, ctx }: SvgTemplateProps) {
     bold: true,
   })
   const kicker = sectionNameFor(ir.slides, index) || slide.subheading?.trim() || undefined
+  const source = fitStatementSource(slide, { maxWidth: 1088, fontSize: 16, fontFamily: fonts.body })
   return (
     <>
       {heading.lines.map((line, i) => (
@@ -49,6 +50,19 @@ export function statement({ ir, slide, index, ctx }: SvgTemplateProps) {
       {kicker && (
         <text x={96} y={662} fontFamily={fonts.heading} fontSize={20} fontWeight="700" fill={colors.text} dominantBaseline="alphabetic">
           {kicker}
+        </text>
+      )}
+      {source && (
+        <text
+          data-truncated={source.truncated ? "1" : undefined}
+          x={96}
+          y={694}
+          fontFamily={fonts.body}
+          fontSize={source.fontSize}
+          fill={colors.muted}
+          dominantBaseline="alphabetic"
+        >
+          {source.text}
         </text>
       )}
     </>

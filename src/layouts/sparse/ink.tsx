@@ -9,7 +9,7 @@ import {
   pullQuoteContext,
   pullQuoteText,
 } from "../minimal-shared"
-import { fitHeroLine, heroUnitMark, fitSparseHeading, fitSparseQuote, quoteBlockBaseline } from "./shared"
+import { fitHeroLine, fitSparseHeading, fitSparseQuote, fitStatementSource, heroUnitMark, quoteBlockBaseline } from "./shared"
 
 /** ink 稀排脸：竖排格言、验印巨数、竖排引文。引文页 motif 画左下半山、不画右缘落款列。 */
 
@@ -56,10 +56,11 @@ function VerticalRun({
 
 export function statement({ ir, slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
-  const source = slide.heading ?? ""
-  const latin = !hasCjk(source)
+  const verse = slide.heading ?? ""
+  const latin = !hasCjk(verse)
+  const cited = fitStatementSource(slide, { maxWidth: 840, fontSize: 16, fontFamily: fonts.body })
   if (latin) {
-    const heading = fitSparseHeading(source, {
+    const heading = fitSparseHeading(verse, {
       maxWidth: 1000,
       fontSize: 52,
       maxLines: 2,
@@ -89,12 +90,26 @@ export function statement({ ir, slide, ctx }: SvgTemplateProps) {
             })}
           </text>
         ))}
+        {cited && (
+          <text
+            data-truncated={cited.truncated ? "1" : undefined}
+            x={640}
+            y={470}
+            textAnchor="middle"
+            fontFamily={fonts.body}
+            fontSize={cited.fontSize}
+            fill={colors.muted}
+            dominantBaseline="alphabetic"
+          >
+            {cited.text}
+          </text>
+        )}
         <rect x={163} y={600} width={34} height={34} fill="none" stroke={colors.accent} strokeWidth={2} />
       </>
     )
   }
 
-  const heading = fitSparseHeading(source, {
+  const heading = fitSparseHeading(verse, {
     maxWidth: 52 * 10,
     fontSize: 52,
     maxLines: 2,
@@ -132,6 +147,19 @@ export function statement({ ir, slide, ctx }: SvgTemplateProps) {
           accent={colors.accent}
           fontFamily={fonts.heading}
         />
+      )}
+      {cited && (
+        <text
+          data-truncated={cited.truncated ? "1" : undefined}
+          x={240}
+          y={664}
+          fontFamily={fonts.body}
+          fontSize={cited.fontSize}
+          fill={colors.muted}
+          dominantBaseline="alphabetic"
+        >
+          {cited.text}
+        </text>
       )}
       <rect x={163} y={600} width={34} height={34} fill="none" stroke={colors.accent} strokeWidth={2} />
     </>

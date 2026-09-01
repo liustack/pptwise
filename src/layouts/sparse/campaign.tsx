@@ -5,7 +5,7 @@ import { renderEmphasisTspans } from "../../render/emphasis"
 import { heroCaption, heroUnit, heroSource, heroValue } from "../minimal-shared"
 import { fitSvgLine } from "../../lib/svg-text-layout"
 import { renderFittedEvidence, textColumnMaxWidth } from "../fitted-evidence"
-import { evidenceSource, fitHeroLine, heroUnitMark, fitSparseHeading, pad2 } from "./shared"
+import { evidenceSource, fitHeroLine, fitSparseHeading, fitStatementSource, heroUnitMark, pad2 } from "./shared"
 
 /** campaign 稀排脸：洋红收尾杠、侧幕卡。不画纸屑场。 */
 
@@ -20,6 +20,7 @@ export function statement({ slide, ctx }: SvgTemplateProps) {
     fontFamily: fonts.heading,
     bold: true,
   })
+  const source = fitStatementSource(slide, { maxWidth: 1000, fontSize: 16, fontFamily: fonts.body })
   return (
     <>
       {heading.lines.map((line, i) => (
@@ -43,6 +44,20 @@ export function statement({ slide, ctx }: SvgTemplateProps) {
         </text>
       ))}
       <rect x={576} y={490} width={128} height={6} fill={colors.accent} />
+      {source && (
+        <text
+          data-truncated={source.truncated ? "1" : undefined}
+          x={640}
+          y={552}
+          textAnchor="middle"
+          fontFamily={fonts.body}
+          fontSize={source.fontSize}
+          fill={colors.muted}
+          dominantBaseline="alphabetic"
+        >
+          {source.text}
+        </text>
+      )}
     </>
   )
 }

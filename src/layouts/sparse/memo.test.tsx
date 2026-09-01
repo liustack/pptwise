@@ -62,8 +62,14 @@ describe("memo sparse faces", () => {
     expect(markup).not.toContain("MEMORANDUM")
   })
 
-  it("statement is one Songti line with a baked 已阅/存档 seal", () => {
-    const slide: Slide = { type: "content", kind: "points", layout: "statement", heading: VERSE, components: [] } as Slide
+  it("statement is one Songti line, a blank chop, and the cited source", () => {
+    const slide: Slide = {
+      type: "content",
+      kind: "points",
+      layout: "statement",
+      heading: VERSE,
+      components: [{ type: "citation", sources: [{ label: "两年银行流水与记账导出" }] }],
+    } as Slide
     const { markup, root } = render(
       <StatementContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />,
     )
@@ -76,8 +82,13 @@ describe("memo sparse faces", () => {
     expect(Number(heading.getAttribute("font-size"))).toBe(54)
     expect(heading.getAttribute("fill")).toBe(ctx.colors.text)
     expect(heading.getAttribute("font-family")).toBe(ctx.fonts.heading)
-    expect(markup).toContain("已阅")
-    expect(markup).toContain("存档")
+    expect(markup).not.toContain("已阅")
+    expect(markup).not.toContain("存档")
+    const source = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "两年银行流水与记账导出")!
+    expect(source.getAttribute("x")).toBe("96")
+    expect(source.getAttribute("y")).toBe("430")
+    expect(source.getAttribute("font-family")).toBe(ctx.fonts.mono)
+    expect(source.getAttribute("fill")).toBe(ctx.colors.muted)
     const seal = Array.from(root.querySelectorAll("rect")).find((r) => r.getAttribute("width") === "108")
     expect(seal?.getAttribute("stroke")).toBe(ctx.colors.accent)
     expect(markup).not.toContain(LUXE_GOLD)

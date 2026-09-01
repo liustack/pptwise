@@ -9,7 +9,7 @@ import {
   pullQuoteContext,
   pullQuoteText,
 } from "../minimal-shared"
-import { fitHeroLine, heroUnitMark, fitSparseHeading, fitSparseQuote, quoteBlockBaseline, splitTrailingPercent } from "./shared"
+import { fitHeroLine, heroUnitMark, fitSparseHeading, fitSparseQuote, fitStatementSource, quoteBlockBaseline, splitTrailingPercent } from "./shared"
 
 /** academic 稀排脸：脚注引文、百分号巨数、命题格言。不画点轨和角标。 */
 
@@ -145,6 +145,7 @@ export function statement({ ir, slide, index, ctx }: SvgTemplateProps) {
     fontFamily: fonts.heading,
     bold: false,
   })
+  const source = fitStatementSource(slide, { maxWidth: 1000, fontSize: 19, fontFamily: fonts.heading })
   return (
     <>
       {section && (
@@ -180,18 +181,21 @@ export function statement({ ir, slide, index, ctx }: SvgTemplateProps) {
           })}
         </text>
       ))}
-      <text
-        x={640}
-        y={500}
-        textAnchor="middle"
-        fontFamily={fonts.heading}
-        fontSize={19}
-        fontStyle="italic"
-        fill={colors.muted}
-        dominantBaseline="alphabetic"
-      >
-        证明见后三页。
-      </text>
+      {source && (
+        <text
+          data-truncated={source.truncated ? "1" : undefined}
+          x={640}
+          y={500}
+          textAnchor="middle"
+          fontFamily={fonts.heading}
+          fontSize={source.fontSize}
+          fontStyle="italic"
+          fill={colors.muted}
+          dominantBaseline="alphabetic"
+        >
+          {source.text}
+        </text>
+      )}
     </>
   )
 }

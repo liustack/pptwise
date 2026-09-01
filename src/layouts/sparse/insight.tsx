@@ -8,7 +8,7 @@ import {
   pullQuoteContext,
   pullQuoteText,
 } from "../minimal-shared"
-import { fitHeroLine, heroUnitMark, fitSparseHeading, fitSparseQuote, quoteBlockBaseline, yearQuarter } from "./shared"
+import { fitHeroLine, fitSparseHeading, fitSparseQuote, fitStatementSource, heroUnitMark, quoteBlockBaseline, yearQuarter } from "./shared"
 
 /** insight 稀排脸：行情格言、幽灵季度、折线引文。不画顶缘刻度尺和底缘面积线。 */
 
@@ -41,7 +41,7 @@ function catmullRomCubicD(pts: readonly (readonly [number, number])[]): string {
   return d
 }
 
-export function statement({ ir, slide, ctx }: SvgTemplateProps) {
+export function statement({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const heading = fitSparseHeading(slide.heading, {
     maxWidth: 1088,
@@ -53,7 +53,7 @@ export function statement({ ir, slide, ctx }: SvgTemplateProps) {
     bold: false,
   })
   const verse = heading.lines[0] ?? ""
-  const session = yearQuarter(ir.meta.date)
+  const source = fitStatementSource(slide, { maxWidth: 1088, fontSize: 16, fontFamily: fonts.mono })
   return (
     <>
       <text
@@ -71,9 +71,17 @@ export function statement({ ir, slide, ctx }: SvgTemplateProps) {
         </tspan>
       </text>
       <rect x={96} y={420} width={26} height={6} fill={colors.accent} />
-      {session && (
-        <text x={96} y={662} fontFamily={fonts.mono} fontSize={16} fill={colors.muted} dominantBaseline="alphabetic">
-          {`SESSION ${session.year}-${session.quarter} · LIVE`}
+      {source && (
+        <text
+          data-truncated={source.truncated ? "1" : undefined}
+          x={96}
+          y={662}
+          fontFamily={fonts.mono}
+          fontSize={source.fontSize}
+          fill={colors.muted}
+          dominantBaseline="alphabetic"
+        >
+          {source.text}
         </text>
       )}
     </>

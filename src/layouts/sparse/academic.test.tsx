@@ -115,10 +115,16 @@ describe("academic sparse faces", () => {
     expect(markup).toContain("试点客户 90 天窗口")
   })
 
-  it("statement stamps 证明见后三页。 and uses sectionName as the kicker", () => {
+  it("statement closes on the cited source, not on a promise about later pages", () => {
     const chapter: Slide = { type: "chapter", heading: "命题 3.1", components: [] } as Slide
-    const slide: Slide = { type: "content", kind: "points", layout: "statement", heading: VERSE, components: [] } as Slide
-    const { root } = render(
+    const slide: Slide = {
+      type: "content",
+      kind: "points",
+      layout: "statement",
+      heading: VERSE,
+      components: [{ type: "citation", sources: [{ label: "论文第四章实验记录" }] }],
+    } as Slide
+    const { markup, root } = render(
       <StatementContent ir={ir([chapter, slide])} slide={slide} index={1} ctx={ctx} />,
     )
     expect(() => assertSubset(root)).not.toThrow()
@@ -133,8 +139,11 @@ describe("academic sparse faces", () => {
     expect(heading.getAttribute("y")).toBe("360")
     expect(heading.getAttribute("fill")).toBe(ctx.colors.text)
     expect(root.querySelectorAll("circle")).toHaveLength(0)
-    const stamp = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "证明见后三页。")!
-    expect(stamp.getAttribute("font-style")).toBe("italic")
-    expect(stamp.getAttribute("fill")).toBe(ctx.colors.muted)
+    const source = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "论文第四章实验记录")!
+    expect(source.getAttribute("x")).toBe("640")
+    expect(source.getAttribute("y")).toBe("500")
+    expect(source.getAttribute("font-style")).toBe("italic")
+    expect(source.getAttribute("fill")).toBe(ctx.colors.muted)
+    expect(markup).not.toContain("证明见后三页")
   })
 })

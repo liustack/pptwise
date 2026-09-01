@@ -1,4 +1,5 @@
 import type { SvgTemplateProps } from "../types"
+import { sectionNameFor } from "../../lib/derive"
 import { pickEvidence } from "../../render/component-traits"
 import { renderEmphasisText } from "../../render/emphasis"
 import { heroCaption, heroSource, heroUnit, heroValue, statementAttribution } from "../minimal-shared"
@@ -9,7 +10,7 @@ import { underlineYFromBaseline } from "../underline"
 
 /** consulting 稀排脸：结论先行、藏青巨数、白卡单证据。不画顶缘规矩线。 */
 
-export function statement({ slide, ctx }: SvgTemplateProps) {
+export function statement({ ir, slide, index, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const heading = fitSparseHeading(slide.heading, {
     maxWidth: 1088,
@@ -21,11 +22,16 @@ export function statement({ slide, ctx }: SvgTemplateProps) {
     bold: true,
   })
   const attr = statementAttribution(slide)
+  // 眉头是这页在牌记里的位置，不是本仓给它起的口号。原本刷的「结论先行」
+  // 是咨询件的方法论标签，观众读到的却是这份 deck 自己在说话。
+  const section = sectionNameFor(ir.slides, index)
   return (
     <>
-      <text x={96} y={200} fontFamily={fonts.body} fontSize={18} fill={colors.muted} dominantBaseline="alphabetic">
-        结论先行
-      </text>
+      {section && (
+        <text x={96} y={200} fontFamily={fonts.body} fontSize={18} fill={colors.muted} dominantBaseline="alphabetic">
+          {section}
+        </text>
+      )}
       {heading.lines.map((line, i) =>
         renderEmphasisText(
           heading.lineSegs[i] ?? [{ text: line, emphasized: false }],

@@ -4,7 +4,7 @@ import { renderEmphasisTspans } from "../../render/emphasis"
 import { heroCaption, heroUnit, heroSource, heroValue } from "../minimal-shared"
 import { fitSvgLine } from "../../lib/svg-text-layout"
 import { renderFittedEvidence, textColumnMaxWidth } from "../fitted-evidence"
-import { evidenceSource, fitHeroLine, heroUnitMark, fitSparseHeading, pad2 } from "./shared"
+import { evidenceSource, fitHeroLine, fitSparseHeading, fitStatementSource, heroUnitMark, pad2 } from "./shared"
 
 /** vermilion 稀排脸：金双线批示、金菱巨数、案卷卡。不画顶缘金双线、金芒、底菱。 */
 
@@ -43,6 +43,7 @@ export function statement({ ir, slide, ctx }: SvgTemplateProps) {
   const meta = [ir.meta.organization, ir.meta.date]
     .filter((v): v is string => Boolean(v && v.trim()))
     .join(" · ")
+  const source = fitStatementSource(slide, { maxWidth: 800, fontSize: 18, fontFamily: fonts.body })
   return (
     <>
       <InkDouble x={240} width={800} yThick={150} yThin={156} stroke={colors.accent} />
@@ -66,6 +67,20 @@ export function statement({ ir, slide, ctx }: SvgTemplateProps) {
           })}
         </text>
       ))}
+      {source && (
+        <text
+          data-truncated={source.truncated ? "1" : undefined}
+          x={640}
+          y={470}
+          textAnchor="middle"
+          fontFamily={fonts.body}
+          fontSize={source.fontSize}
+          fill={colors.muted}
+          dominantBaseline="alphabetic"
+        >
+          {source.text}
+        </text>
+      )}
       <InkDouble x={240} width={800} yThick={564} yThin={560} stroke={colors.accent} />
       {meta && (
         <text

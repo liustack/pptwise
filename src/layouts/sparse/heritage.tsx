@@ -1,7 +1,7 @@
 import type { SvgTemplateProps } from "../types"
 import { renderEmphasisTspans } from "../../render/emphasis"
 import { heroCaption, heroUnit, heroSource, heroValue, pullQuoteAttribution, pullQuoteContext, pullQuoteText } from "../minimal-shared"
-import { fitHeroLine, heroUnitMark, fitSparseHeading, fitSparseQuote, quoteBlockBaseline } from "./shared"
+import { fitHeroLine, fitSparseHeading, fitSparseQuote, fitStatementSource, heroUnitMark, quoteBlockBaseline } from "./shared"
 
 /** heritage 稀排脸：文武线引文、取景框格言、夹心巨数。不画 motif 顶缘双线和顶角金菱。 */
 
@@ -118,6 +118,7 @@ export function statement({ slide, ctx }: SvgTemplateProps) {
   const blockH = heading.lines.length * heading.lineHeight
   const frameH = VIEWFINDER_B - VIEWFINDER_T
   const firstY = VIEWFINDER_T + (frameH - blockH) / 2 + heading.fontSize * 0.82
+  const source = fitStatementSource(slide, { maxWidth: SUBJECT_MAX_W, fontSize: 16, fontFamily: fonts.heading })
   return (
     <>
       <path
@@ -164,6 +165,20 @@ export function statement({ slide, ctx }: SvgTemplateProps) {
           })}
         </text>
       ))}
+      {source && (
+        <text
+          data-truncated={source.truncated ? "1" : undefined}
+          x={640}
+          y={VIEWFINDER_B + 52}
+          textAnchor="middle"
+          fontFamily={fonts.heading}
+          fontSize={source.fontSize}
+          fill={colors.muted}
+          dominantBaseline="alphabetic"
+        >
+          {source.text}
+        </text>
+      )}
     </>
   )
 }

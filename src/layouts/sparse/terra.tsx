@@ -4,7 +4,7 @@ import { renderEmphasisTspans } from "../../render/emphasis"
 import { heroCaption, heroSource, heroUnit, heroValue } from "../minimal-shared"
 import { fitSvgLine } from "../../lib/svg-text-layout"
 import { renderFittedEvidence, textColumnMaxWidth } from "../fitted-evidence"
-import { evidenceSource, fitHeroLine, heroUnitMark, fitSparseHeading, pad2 } from "./shared"
+import { evidenceSource, fitHeroLine, fitSparseHeading, fitStatementSource, heroUnitMark, pad2 } from "./shared"
 
 /** terra 稀排脸：等高线格言、橄榄横线巨数、样点卡。不画 motif 左下线和右缘点。 */
 
@@ -19,6 +19,7 @@ export function statement({ slide, ctx }: SvgTemplateProps) {
     fontFamily: fonts.heading,
     bold: true,
   })
+  const source = fitStatementSource(slide, { maxWidth: 1088, fontSize: 17, fontFamily: fonts.body })
   return (
     <>
       {heading.lines.map((line, i) => (
@@ -40,6 +41,19 @@ export function statement({ slide, ctx }: SvgTemplateProps) {
           })}
         </text>
       ))}
+      {source && (
+        <text
+          data-truncated={source.truncated ? "1" : undefined}
+          x={96}
+          y={510}
+          fontFamily={fonts.body}
+          fontSize={source.fontSize}
+          fill={colors.muted}
+          dominantBaseline="alphabetic"
+        >
+          {source.text}
+        </text>
+      )}
       <path d="M 60 610 q 220 -40 430 0 t 430 0" fill="none" stroke={colors.border} strokeWidth={1.5} />
       <path d="M 20 650 q 260 -34 500 0 t 500 0" fill="none" stroke={colors.border} strokeWidth={1.5} />
     </>

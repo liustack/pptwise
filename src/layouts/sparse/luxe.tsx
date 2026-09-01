@@ -9,7 +9,7 @@ import {
   pullQuoteText,
   trackingPx,
 } from "../minimal-shared"
-import { fitHeroLine, heroUnitMark, fitSparseHeading, fitSparseQuote, quoteBlockBaseline, rotateRectPolygon } from "./shared"
+import { fitHeroLine, fitSparseHeading, fitSparseQuote, fitStatementSource, heroUnitMark, quoteBlockBaseline, rotateRectPolygon } from "./shared"
 
 /** luxe 稀排脸：金菱引文、发丝巨数、一行金字。不画金框。 */
 
@@ -143,6 +143,7 @@ export function statement({ slide, ctx }: SvgTemplateProps) {
     fontFamily: fonts.heading,
     bold: false,
   })
+  const source = fitStatementSource(slide, { maxWidth: 1000, fontSize: 17, fontFamily: fonts.body })
   return (
     <>
       {heading.lines.map((line, i) => (
@@ -164,6 +165,20 @@ export function statement({ slide, ctx }: SvgTemplateProps) {
           })}
         </text>
       ))}
+      {source && (
+        <text
+          data-truncated={source.truncated ? "1" : undefined}
+          x={640}
+          y={470}
+          textAnchor="middle"
+          fontFamily={fonts.body}
+          fontSize={source.fontSize}
+          fill={colors.muted}
+          dominantBaseline="alphabetic"
+        >
+          {source.text}
+        </text>
+      )}
     </>
   )
 }

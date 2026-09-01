@@ -4,7 +4,7 @@ import { renderEmphasisTspans } from "../../render/emphasis"
 import { heroCaption, heroSource, heroUnit, heroValue } from "../minimal-shared"
 import { fitSvgLine, measureTextUnits } from "../../lib/svg-text-layout"
 import { renderFittedEvidence, textColumnMaxWidth } from "../fitted-evidence"
-import { evidenceSource, fitHeroLine, heroUnitMark, fitSparseHeading, pad2 } from "./shared"
+import { evidenceSource, fitHeroLine, fitSparseHeading, fitStatementSource, heroUnitMark, pad2 } from "./shared"
 
 /** tech 稀排脸：青光巨数、轨道格言、节点证据卡。不画右缘星座链。 */
 
@@ -81,6 +81,7 @@ export function statement({ slide, ctx }: SvgTemplateProps) {
     fontFamily: fonts.heading,
     bold: true,
   })
+  const source = fitStatementSource(slide, { maxWidth: 920, fontSize: 17, fontFamily: fonts.body })
   return (
     <>
       <path d="M 980 48 C 1140 48 1232 104 1232 208" fill="none" stroke={colors.border} strokeWidth={1.5} />
@@ -105,6 +106,19 @@ export function statement({ slide, ctx }: SvgTemplateProps) {
           })}
         </text>
       ))}
+      {source && (
+        <text
+          data-truncated={source.truncated ? "1" : undefined}
+          x={96}
+          y={528}
+          fontFamily={fonts.body}
+          fontSize={source.fontSize}
+          fill={colors.muted}
+          dominantBaseline="alphabetic"
+        >
+          {source.text}
+        </text>
+      )}
     </>
   )
 }

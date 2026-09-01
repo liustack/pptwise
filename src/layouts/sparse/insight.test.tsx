@@ -38,8 +38,13 @@ function render(body: React.ReactElement): { markup: string; root: Element } {
 describe("insight sparse faces", () => {
   const ctx = buildCtx(resolveStyle("insight"), {})
 
-  it("statement is a prompt line with a muted >, amber verse, and a cursor", () => {
-    const slide: Slide = { type: "content", kind: "statement", heading: VERSE, components: [] }
+  it("statement is a prompt line with a muted >, amber verse, a cursor, and the cited source", () => {
+    const slide: Slide = {
+      type: "content",
+      kind: "statement",
+      heading: VERSE,
+      components: [{ type: "citation", sources: [{ label: "去年对账全文" }] }],
+    }
     const doc = ir([slide], { date: "2026-05-01" })
     const { markup, root } = render(
       <StatementContent ir={doc} slide={slide} index={0} ctx={ctx} />,
@@ -61,7 +66,13 @@ describe("insight sparse faces", () => {
     expect(cursor?.getAttribute("fill")).toBe(ctx.colors.accent)
     expect(markup).not.toContain("<animate")
     expect(root.querySelector("line")).toBeNull()
-    expect(markup).toContain("SESSION 2026-Q2 · LIVE")
+    const source = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "去年对账全文")!
+    expect(source.getAttribute("x")).toBe("96")
+    expect(source.getAttribute("y")).toBe("662")
+    expect(source.getAttribute("font-family")).toBe(ctx.fonts.mono)
+    expect(source.getAttribute("fill")).toBe(ctx.colors.muted)
+    expect(markup).not.toContain("SESSION")
+    expect(markup).not.toContain("LIVE")
     expect(markup).not.toContain(LUXE_GOLD)
   })
 

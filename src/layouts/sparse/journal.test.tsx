@@ -107,9 +107,15 @@ describe("journal sparse faces", () => {
     expect(hair?.getAttribute("stroke")).toBe(ctx.colors.primary)
   })
 
-  it("statement is a centered lead with The Operations Review stamp", () => {
-    const slide: Slide = { type: "content", kind: "points", layout: "statement", heading: VERSE, components: [] } as Slide
-    const { root } = render(
+  it("statement closes on the cited source, not on a masthead of our own", () => {
+    const slide: Slide = {
+      type: "content",
+      kind: "points",
+      layout: "statement",
+      heading: VERSE,
+      components: [{ type: "citation", sources: [{ label: "读者问卷全量统计" }] }],
+    } as Slide
+    const { markup, root } = render(
       <StatementContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />,
     )
     expect(() => assertSubset(root)).not.toThrow()
@@ -126,8 +132,11 @@ describe("journal sparse faces", () => {
     expect(bar?.getAttribute("y")).toBe("400")
     expect(bar?.getAttribute("height")).toBe("3")
     expect(bar?.getAttribute("fill")).toBe(ctx.colors.accent)
-    const stamp = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "The Operations Review")!
-    expect(stamp.getAttribute("font-style")).toBe("italic")
-    expect(stamp.getAttribute("fill")).toBe(ctx.colors.muted)
+    const source = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "读者问卷全量统计")!
+    expect(source.getAttribute("x")).toBe("640")
+    expect(source.getAttribute("y")).toBe("470")
+    expect(source.getAttribute("font-style")).toBe("italic")
+    expect(source.getAttribute("fill")).toBe(ctx.colors.muted)
+    expect(markup).not.toContain("The Operations Review")
   })
 })

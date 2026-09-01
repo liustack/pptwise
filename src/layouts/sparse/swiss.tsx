@@ -4,7 +4,7 @@ import { renderEmphasisTspans } from "../../render/emphasis"
 import { heroCaption, heroSource, heroUnit, heroValue } from "../minimal-shared"
 import { fitSvgLine } from "../../lib/svg-text-layout"
 import { renderFittedEvidence, textColumnMaxWidth } from "../fitted-evidence"
-import { evidenceSource, fitHeroLine, heroUnitMark, fitSparseHeading, pad2 } from "./shared"
+import { evidenceSource, fitHeroLine, fitSparseHeading, fitStatementSource, heroUnitMark, pad2 } from "./shared"
 
 /** swiss 稀排脸：左对齐超黑。不画顶边红条（motif 已画）。 */
 
@@ -62,6 +62,7 @@ export function statement({ slide, ctx }: SvgTemplateProps) {
     fontFamily: fonts.heading,
     bold: true,
   })
+  const source = fitStatementSource(slide, { maxWidth: 1100, fontSize: 18, fontFamily: fonts.body })
   return (
     <>
       {heading.lines.map((line, i) => (
@@ -84,6 +85,19 @@ export function statement({ slide, ctx }: SvgTemplateProps) {
         </text>
       ))}
       <rect x={88} y={490} width={120} height={6} fill={colors.text} />
+      {source && (
+        <text
+          data-truncated={source.truncated ? "1" : undefined}
+          x={88}
+          y={560}
+          fontFamily={fonts.body}
+          fontSize={source.fontSize}
+          fill={colors.muted}
+          dominantBaseline="alphabetic"
+        >
+          {source.text}
+        </text>
+      )}
     </>
   )
 }
