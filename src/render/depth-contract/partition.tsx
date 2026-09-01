@@ -74,11 +74,36 @@ function isGhostText(props: ElementProps, slideType: Slide["type"]): boolean {
   return declaredBleed || ghostQuarter || opacity <= 0.2 || slideType === "chapter"
 }
 
+/**
+ * A node React will walk as a list.
+ *
+ * `ReactNode` admits any `Iterable`, not only `Array`: a component may return
+ * a `Set`, a generator, or anything else with `Symbol.iterator`, and React
+ * renders every entry. Reading "a list" as "an Array" left those returns
+ * matching neither the array branch nor `isValidElement`, so they fell
+ * through to empty layers and every node in them left the page in silence,
+ * which is the same defect the array branch exists to close.
+ *
+ * Strings are iterable and are not lists: they are handled as text above.
+ */
+function asNodeList(node: ReactNode): ReactNode[] | null {
+  if (Array.isArray(node)) return node
+  if (node === null || typeof node !== "object") return null
+  const iterable = node as unknown as Iterable<ReactNode>
+  if (typeof iterable[Symbol.iterator] !== "function") return null
+  return Array.from(iterable)
+}
+
 function executeFunctionElement(element: ReactElement<ElementProps>): ReactNode | null {
   if (typeof element.type !== "function") return null
   if ("isReactComponent" in (element.type.prototype ?? {})) return null
   const component = element.type as unknown as (props: ElementProps) => ReactNode
-  return component(element.props)
+  const returned = component(element.props)
+  // A generator is walked once and then it is empty, and this return value is
+  // walked twice: once to decide whether it is a background paint cluster,
+  // once to partition it. Materialising here is what keeps the second walk
+  // from finding nothing.
+  return asNodeList(returned) ?? returned
 }
 
 interface PaintClusterEvidence {
@@ -89,8 +114,9 @@ interface PaintClusterEvidence {
 function inspectPaintCluster(node: ReactNode, evidence: PaintClusterEvidence): void {
   if (node === null || node === undefined || typeof node === "boolean") return
   if (typeof node === "string" || typeof node === "number") return
-  if (Array.isArray(node)) {
-    Children.forEach(node, (child) => inspectPaintCluster(child, evidence))
+  const list = asNodeList(node)
+  if (list) {
+    Children.forEach(list, (child) => inspectPaintCluster(child, evidence))
     return
   }
   if (!isValidElement<ElementProps>(node)) return
@@ -155,7 +181,8 @@ function partitionNode(
   // falls through to `return layers`, and every node in it is dropped from
   // the page with nothing said. That cost `ink` its quote attribution for as
   // long as the skin has existed.
-  if (Array.isArray(node)) return partitionChildren(node, options, defaultDepth)
+  const list = asNodeList(node)
+  if (list) return partitionChildren(list, options, defaultDepth)
   if (!isValidElement<ElementProps>(node)) return layers
 
   if (node.type === Fragment) return partitionChildren(node.props.children, options, defaultDepth)

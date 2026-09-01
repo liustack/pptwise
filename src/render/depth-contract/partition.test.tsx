@@ -75,4 +75,37 @@ describe("partitionSvgDepth three-tier decor roles", () => {
       "c",
     ])
   })
+
+  // "A list" was read as "an Array", but `ReactNode` admits any Iterable and
+  // React renders one. A component returning a Set or a generator is not an
+  // Array and not a valid element either, so it fell through to empty layers
+  // and every node in it left the page in silence, which is exactly the
+  // defect the Array branch above was added to close.
+  it.each([
+    [
+      "a Set",
+      function SetColumn() {
+        return new Set([
+          <text key="a" data-probe="glyph">A</text>,
+          <text key="b" data-probe="glyph">B</text>,
+        ]) as unknown as React.ReactElement
+      },
+    ],
+    [
+      "a generator",
+      function GeneratorColumn() {
+        function* glyphs() {
+          yield <text key="a" data-probe="glyph">A</text>
+          yield <text key="b" data-probe="glyph">B</text>
+        }
+        return glyphs() as unknown as React.ReactElement
+      },
+    ],
+  ])("keeps every node of a component that returns %s", (_label, Component) => {
+    const root = renderLayers(<Component />)
+    expect(Array.from(root.querySelectorAll('[data-probe="glyph"]')).map((el) => el.textContent)).toEqual([
+      "A",
+      "B",
+    ])
+  })
 })
