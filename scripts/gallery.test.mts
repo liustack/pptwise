@@ -206,6 +206,35 @@ describe("gallery face axis", () => {
     expect(jobs.length).toBeGreaterThan(0)
     expect(jobs.filter((j) => j.face !== undefined || j.faceSlot !== undefined).map((j) => j.id)).toEqual([])
   }, 60_000)
+
+  // 按版式 shows one specimen per section-and-face pair, and prefers the face
+  // band's. These two guard the halves of that rule the shell cannot check
+  // for itself: that the face band really is one page per pair, and that no
+  // pair depends on the deck-page fallback. A menu change that broke either
+  // would otherwise surface as a face missing from the axis, or as the
+  // duplicate rows the dedupe exists to remove.
+  it("gives 按版式 exactly one face-band specimen per section-and-face pair", async () => {
+    const jobs = buildMatrix(themeIds, await assets(), { only: "face" })
+    const pairs = jobs.map((j) => `${j.section} ${j.face}`)
+    expect([...pairs].sort()).toEqual([...new Set(pairs)].sort())
+  })
+
+  it("reaches every face on the face band, so no pair falls back to a deck page", async () => {
+    // A page whose face is unset is not on the axis at all — an image-cover
+    // page is drawn by the takeover route and credits no face. See Job.face.
+    const deck = buildMatrix(themeIds, await assets(), { only: "deck" }).filter((j) => j.face !== undefined)
+    const face = buildMatrix(themeIds, await assets(), { only: "face" })
+    const onFaceBand = new Set(face.map((j) => `${j.section} ${j.face}`))
+    // Every pair the deck band names, the face band already has a specimen
+    // for — which is why dropping the deck band from the axis loses nothing.
+    const deckOnly = [...new Set(deck.map((j) => `${j.section} ${j.face}`))].filter((p) => !onFaceBand.has(p))
+    expect(deckOnly).toEqual([])
+    // And every face the axis can file a page under exists on the face band.
+    const deckFaces = new Set(deck.map((j) => j.face))
+    const faceBandFaces = new Set(face.map((j) => j.face))
+    expect([...deckFaces].filter((f) => !faceBandFaces.has(f))).toEqual([])
+    expect([...faceBandFaces].sort()).toEqual(Object.keys(LAYOUT_REGISTRY).sort())
+  })
 })
 
 describe("gallery theme menu strip", () => {

@@ -650,6 +650,44 @@ kbd {
   // to say "nobody serves this" instead of naming the appendix as a theme.
   const THEME_SECTIONS = new Set(MANIFEST.sections.filter((s) => s.menu).map((s) => s.id));
 
+  /**
+   * The pages 按版式 is allowed to show: exactly one per theme-and-face pair.
+   *
+   * Both bands name the face that drew them, so the axis used to take both —
+   * and a deck page's face is whatever its own theme's menu picked, which is
+   * by construction the face band's specimen for the same theme and slot. On
+   * this build that put 197 of the 330 pairs on screen twice and 35 of them
+   * three times, with the deck band contributing not one pair the face band
+   * lacked. The reviewer was comparing faces and got shown the same theme's
+   * answer two and three times in a row.
+   *
+   * So the face band wins the pair and the deck band leaves this axis
+   * entirely (按主题 still shows every deck page, untouched). The deck page is
+   * kept only as a fallback for a pair the face band has no specimen for —
+   * today there are none, and scripts/gallery.test.mts fails if a menu
+   * change ever creates one, so the fallback is a safety net rather than a
+   * quietly-load-bearing path.
+   *
+   * Decided once, off the whole manifest, rather than per filter pass: which
+   * page represents a pair is a fact about the corpus, and deriving it from
+   * the filtered set would resurrect a deck page the moment a filter hid its
+   * face-band twin.
+   */
+  const FACE_AXIS_IDS = (() => {
+    const chosen = new Map();
+    for (const p of MANIFEST.pages) {
+      if (p.face === undefined) continue;
+      // Section rather than theme so the appendix — whose pages are drawn on
+      // the baseline skin but belong to no theme — keeps its own specimens.
+      const key = p.section + " " + p.face;
+      const held = chosen.get(key);
+      if (!held || (held.band !== "face" && p.band === "face")) chosen.set(key, p);
+    }
+    const ids = new Set();
+    for (const p of chosen.values()) ids.add(p.id);
+    return ids;
+  })();
+
   // Shipped in as source rather than restated here, so the rule the reviewer
   // sees is byte-for-byte the one render.test.mts tests. See its own doc
   // comment in render.ts for why it is written to survive toString().
@@ -1010,7 +1048,7 @@ ${inlineRule(verdictFreshness)}
       label: "按版式",
       unit: "张脸",
       noun: "张脸",
-      lead: "一格一张脸，点开看同一段版式代码被派到各主题、各讲法上画出来的样子。组件皮肤那一带不在这条轴上：它们比的是组件，会把脸淹掉。",
+      lead: "一格一张脸，点开看同一段版式代码被派到各主题上画出来的样子。这条轴比的是脸，所以一套主题一张脸只留一张样张（骨架全脸那一张）：样张带里画法相同的重复页不上轴，组件皮肤那一带也不上轴，它们比的是组件，会把脸淹掉。",
       families: FACE_FAMILIES,
       nameOf: (v) => ({ zh: "", code: v }),
       detailHead: faceIdentity,
@@ -1076,12 +1114,11 @@ ${inlineRule(verdictFreshness)}
 
   function matches(p) {
     // The cross-cut views only have rows for one band each, so a page from
-    // another band is not "filtered out", it has nowhere to go. 按版式 is the
-    // exception: it takes any page that names the face which drew it, which
-    // is the deck band as well as the face band.
+    // another band is not "filtered out", it has nowhere to go. 按版式 picks
+    // its own set: one specimen per theme-and-face pair, see FACE_AXIS_IDS.
     if (state.view === "slot" && p.band !== "face") return false;
     if (state.view === "component" && p.band !== "component") return false;
-    if (state.view === "face" && p.face === undefined) return false;
+    if (state.view === "face" && !FACE_AXIS_IDS.has(p.id)) return false;
     // Inside a group detail the group is a filter like any other. That is
     // what scopes the header tally, the empty state and — because the viewer
     // queues off it — the lightbox's own prev/next to this one group.
@@ -1349,14 +1386,16 @@ ${inlineRule(verdictFreshness)}
    * change that suits one can break the other. The card is the reverse of the
    * menu lookup, one row per 讲法 and the themes that route it here.
    *
-   * Read off every page in the build rather than off the filtered set: this
+   * Read off every page on the axis rather than off the filtered set: this
    * is who the face is, not who happens to be on screen. Read off page
    * metadata rather than a second copy of the menus, so it cannot disagree
-   * with the pages under it.
+   * with the pages under it — and off the same deduped set the grid below
+   * draws from, so the card cannot count a theme the grid does not show.
    */
   function faceIdentity(faceId) {
     const bySlot = new Map();
     for (const p of MANIFEST.pages) {
+      if (!FACE_AXIS_IDS.has(p.id)) continue;
       if (p.face !== faceId || p.faceSlot === undefined) continue;
       const seen = bySlot.get(p.faceSlot) || new Set();
       seen.add(p.section);
