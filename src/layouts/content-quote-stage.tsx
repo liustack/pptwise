@@ -26,18 +26,9 @@ import { footnoteBaselineFor } from "../render/branding-geometry"
  * 是整个构图，故意不像其它 content layout 那样带章节标签（"金句"页应是
  * 不被打断的单一论断）。
  *
- * 容量超限（>1 组件）与金句超长（缩到 minPt 仍放不下）都不是本文件的职责——
- * 前者是 `ir-quality.ts` 的 `pin_only_over_capacity` 硬错误（裁定 2，pinOnly
- * 专属，普通钉住版式维持今天的 density warn 不变），后者是
- * `pinned_heading_overflow` 硬错误（同文件，T2 fix round 起改为读本文件
- * `layoutDef.headingFit` 这份声明式元数据，不再钉死 `slide.layout ===
- * "quote-stage"` 这一支具体分支；T3 收尾把错误码本身也从
- * `quote_stage_heading_overflow` 改名为 `pinned_heading_overflow`，跟检查早已
- * metadata-driven 的事实对齐——见 `LayoutDefinition.headingFit` 自己的注释,
- * registry.ts）。本文件自己只管渲染：
- * `fitHeadingLines` 的 graceful truncate + `data-truncated="1"` 标记（既有
- * 机制，同每个 layout 的 heading 处理）是渲染层最后一道防线，不是把关口
- * ——真正的把关在 validate。
+ * 容量超限与金句超长都不是本文件的职责，本文件只管渲染：`fitHeadingLines`
+ * 的 graceful truncate 加 `data-truncated="1"` 标记（既有机制，同每个 layout
+ * 的 heading 处理）是渲染层最后一道防线，不是把关口——真正的把关在 validate。
  *
  * 纪律：本文件禁 theme id、禁颜色 hex 字面量，颜色全部来自 ctx.colors。
  */
@@ -80,14 +71,12 @@ const HEADING_BAR_AIR = 24
 export function QuoteStageContent({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
 
-  // `headingFit` lives on `layoutDef` (below) — the single source both this
-  // call and `ir-quality.ts`'s `pinned_heading_overflow` hard-error
-  // check read (that module reads it generically off `getLayout(slide
-  // .layout)?.headingFit`, no cross-import of this render-chain file — see
-  // `LayoutDefinition.headingFit`'s own doc comment, registry.ts). Only
+  // `headingFit` lives on `layoutDef` (below), so this page's typographic
+  // contract is readable without reading this JSX — see
+  // `LayoutDefinition.headingFit`'s own doc comment, registry.ts. Only
   // `fontFamily` is supplied here rather than on the shared object: it comes
-  // from this layout's render `ctx`, which the validate-side check has no
-  // access to (and deliberately doesn't need — see that check's own comment).
+  // from the bound theme through this layout's render `ctx`, so it is not a
+  // property of the face.
   const minPt = layoutDef.headingFit.minPt ?? 36
   const fitOpts = {
     ...layoutDef.headingFit,

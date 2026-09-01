@@ -1371,12 +1371,10 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
   // report zero overflow findings: `fitHeadingLines`'s shrink-then-truncate
   // fallback keeps every element inside its own declared box even when the
   // *content* gets cut, which is exactly what this baseline's "zero
-  // findings" bar checks (a truncated-but-in-bounds render is not what this
-  // gate flags — see `ir-quality.ts`'s own `pinned_heading_overflow`
-  // hard error for the separate, validate-level "this heading is too long,
-  // period" gate this deck deliberately does NOT go through, since this
-  // file's own header established these fixtures render directly, bypassing
-  // validateIr on purpose).
+  // findings" bar checks: a truncated-but-in-bounds render is not what this
+  // gate flags. Length itself is validate's business, and these fixtures
+  // render directly, bypassing validateIr on purpose (this file's own
+  // header).
   quote_stage: deck([
     {
       type: "content",

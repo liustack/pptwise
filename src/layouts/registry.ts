@@ -390,31 +390,20 @@ export interface LayoutDefinition {
    */
   paintsOwnBackground?: boolean
   /**
-   * Heading-overflow hard-error parameters (quote-stage wave, T2 fix round —
-   * `.issues/2026-07-28-quote-stage/task-2-report.md`'s fix-report addendum):
-   * when set, `ir-quality.ts`'s `checkSlide` runs `fitHeadingLines(slide
-   * .heading, headingFit)` for a slide pinned onto this layout and hard-
-   * errors (`pinned_heading_overflow` — renamed from
-   * `quote_stage_heading_overflow` in task T3 once the check itself went
-   * metadata-driven, so the code no longer names quote-stage specifically)
-   * if even `minPt` still truncates it. Shape mirrors `fitHeadingLines`'s
-   * own options (minus `fontFamily`,
-   * which the layout supplies from its render `ctx` and the validate-side
-   * check deliberately omits — see `ir-quality.ts`'s call site comment for
-   * why a theme-agnostic fallback width table is the right posture there).
+   * This face's own heading fit, declared rather than inlined.
    *
-   * Replaces the pre-fix design where `ir-quality.ts` hardcoded
-   * `slide.layout === "quote-stage"` plus its own hand-mirrored copy of this
-   * layout's four fit constants (a shadow-copy with no sync guard,
-   * flagged by whole-branch review) — this field makes the layout's own
-   * `layoutDef` (`content-quote-stage.tsx`) the single source for both the
-   * layout's own render-time fit call *and* validate's hard-error check,
-   * the same "declarative metadata `ir-quality.ts` reads generically" shape
-   * `pinOnly` above and `slots[].capacity` already established (see
-   * `pin_only_over_capacity`'s own check, same file, for the precedent this
-   * mirrors). `undefined` (every layout except `quote-stage` as of this
-   * field's introduction) means no heading-overflow hard error for that
-   * layout — `long_heading`'s warn stays the only signal, unchanged.
+   * A face whose heading is the whole page — `stat-hero`'s numeral,
+   * `statement`'s verse, `quote-stage`'s aphorism — has a measure, a size, a
+   * line ceiling and a floor it does not want scattered through its render
+   * code. Declaring them here lets the face spread them into its own
+   * `fitHeadingLines` call (`...layoutDef.headingFit`) and lets a reader see
+   * the page's typographic contract without reading the JSX.
+   *
+   * `fontFamily` is deliberately absent: it comes from the bound theme
+   * through the render `ctx`, so it is not a property of the face.
+   *
+   * `undefined` means the face makes no declaration and fits its heading
+   * however its render code sees fit.
    */
   headingFit?: {
     maxWidth: number
@@ -674,13 +663,9 @@ const ENDING_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
 //     oversized heading, not a "承重" content region — 1 is a deliberate,
 //     narrow authoring contract (at most one short attribution component),
 //     not a geometric ceiling derived from column width like the other
-//     entries' 4/6. Enforced two ways: `ir-quality.ts`'s `density` warn
-//     (min(pacing budget, this capacity) — same generic gate every entry
-//     here already feeds) *and*, because this is a pinned-only layout, a
-//     dedicated hard *error* (`pin_only_over_capacity`, quote-stage wave
-//     T2's own 裁定 2) — an explicit pin already declares author intent, so
-//     silently dropping content past capacity 1 would be real content loss,
-//     not an editorial nudge.
+//     entries' 4/6. Enforced by `ir-quality.ts`'s `density` warn
+//     (min(pacing budget, this capacity) — the same generic gate every entry
+//     here already feeds).
 //
 // This essay is what every content layout's own body-slot capacity
 // comment means by "see registry.ts's CONTENT_LAYOUT_DEFS header for the

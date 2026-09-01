@@ -59,9 +59,9 @@ function emphasizePhrase(source: string, phrase: string): string {
 
 /**
  * stat-cover's heading is the giant number, one 200px line floored at 72pt.
- * A full deck title still truncates at that floor and hard-blocks validate
- * as pinned_heading_overflow (same class as stat-hero's caption). Author a
- * KPI from the lexicon, not a sentence.
+ * A full deck title still truncates at that floor, so the review page would
+ * be showing a cut sentence rather than the face. Author a KPI from the
+ * lexicon, not a sentence.
  */
 function statCoverHeading(lex: Lexicon): string {
   const m = lex.metrics[1]!
