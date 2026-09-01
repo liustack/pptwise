@@ -30,6 +30,9 @@ function exactSpotlight(slide: SvgTemplateProps["slide"]): {
 }
 
 /** show-spotlight。一个主图加至多三组参数时启用定稿疏构图。 */
+/** Closing-line baseline on the fallback path, under its content block. */
+const FALLBACK_CONCLUSION_Y = 664
+
 export function ShowSpotlightContent({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const bg = ctx.defaultBg ?? colors.bg
@@ -321,6 +324,25 @@ export function ShowSpotlightContent({ slide, ctx }: SvgTemplateProps) {
             rect={{ x: 64, y: 124, w: 1152, h: 500 }}
             ctx={showNeutralFallbackCtx(ctx)}
           />
+          {/* The closing line is the page's, not the spotlight's. It used to
+              be painted only inside the exact-construction branch, so a page
+              this face fell back on kept its heading and its components and
+              dropped its subheading with no mark: the face declares a
+              subheading slot on both paths and only honoured one. */}
+          {conclusion && (
+            <text
+              data-truncated={conclusion.truncated ? "1" : undefined}
+              x={64}
+              y={FALLBACK_CONCLUSION_Y}
+              fontFamily={fonts.body}
+              fontSize={conclusion.fontSize}
+              fontStyle="italic"
+              fill={accessibleInk(colors.text, bg, conclusion.fontSize)}
+              dominantBaseline="alphabetic"
+            >
+              {withoutOverflowMark(conclusion.text)}
+            </text>
+          )}
         </>
       )}
     </g>

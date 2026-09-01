@@ -336,6 +336,47 @@ describe("runway show layouts", () => {
     ])
   })
 
+  it("show-figures writes both the page's summary and its footnote", () => {
+    // The same one-slot defect show-spotlight had above: `subheading ??
+    // footnote` printed the subheading and left the footnote nowhere, and an
+    // empty-string subheading even won the `??` outright and took a real
+    // footnote with it.
+    const slide = {
+      ...slides[5]!,
+      subheading: "三项指标共同验证增长质量",
+      footnote: "样本为 2026 年上半年签约客户",
+    } as unknown as Slide
+    const root = draw(5, slide)
+    const summary = textBy(root, "三项指标共同验证增长质量")
+    const foot = textBy(root, "样本为 2026 年上半年签约客户")
+    // The footnote closes the page on the baseline the single line always
+    // used, and the summary steps up above it.
+    expect(attrs(foot, ["x", "y", "font-size"])).toEqual(["64", "642", "14"])
+    expect(attrs(summary, ["x", "y", "font-size"])).toEqual(["64", "620", "14"])
+    expect(Number(summary.getAttribute("y"))).toBeLessThan(Number(foot.getAttribute("y")))
+  })
+
+  it("show-figures leaves the single-line baseline alone when only one of the two was written", () => {
+    const onlyFoot = { ...slides[5]!, subheading: undefined, footnote: "只有脚注" } as unknown as Slide
+    expect(attrs(textBy(draw(5, onlyFoot), "只有脚注"), ["x", "y"])).toEqual(["64", "642"])
+    const onlySub = { ...slides[5]!, subheading: "只有副题", footnote: undefined } as unknown as Slide
+    expect(attrs(textBy(draw(5, onlySub), "只有副题"), ["x", "y"])).toEqual(["64", "642"])
+  })
+
+  it("show-spotlight keeps the page's closing line when it falls back", () => {
+    // The conclusion was painted only inside the exact-construction branch,
+    // so a page this face fell back on kept its heading and components and
+    // dropped its subheading with no mark at all.
+    const slide = {
+      ...slides[3]!,
+      subheading: "把复杂约束压缩成一条清晰路径",
+      components: [{ type: "paragraph", text: "没有图片，落到通用排布。" }],
+    } as unknown as Slide
+    const root = draw(3, slide)
+    expect(root.querySelector('[data-show-mode="fallback"]')).not.toBeNull()
+    expect(textBy(root, "把复杂约束压缩成一条清晰路径")).not.toBeNull()
+  })
+
   it("places show-finale on the approved black field and runway perspective", () => {
     const root = draw(6)
     expect(attrs(textBy(root, "谢谢"), ["x", "y", "font-size", "font-weight", "text-anchor"])).toEqual([

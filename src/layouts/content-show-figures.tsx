@@ -76,6 +76,11 @@ function noteFor(item: KpiCards["items"][number]): string {
 }
 
 /** show-figures。第一个带 delta 的指标最关键，无标记时首项最关键。 */
+/** The closing line's baseline, and the step the summary takes above it
+ *  when the page wrote a footnote too. */
+const SUMMARY_Y = 642
+const SUMMARY_LINE_GAP = 22
+
 export function ShowFiguresContent({ ir, slide, index, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const bg = ctx.defaultBg ?? colors.bg
@@ -103,15 +108,24 @@ export function ShowFiguresContent({ ir, slide, index, ctx }: SvgTemplateProps) 
         bold: true,
       })
     : null
-  const summarySource = stripEmphasis(slide.subheading ?? slide.footnote ?? "").trim()
-  const summary = summarySource
-    ? fitSvgLine(summarySource, {
-        maxWidth: 1040,
-        fontSize: 14,
-        minFontSize: 14,
-        fontFamily: fonts.body,
-      })
-    : null
+  // The page's summary line and its footnote are two texts with two owners.
+  // They shared this one slot as `subheading ?? footnote`, so a page that
+  // wrote both printed the subheading and the footnote reached nobody, with
+  // no mark anywhere. An empty-string subheading even won the `??` outright
+  // and took a real footnote down with it. Same split show-spotlight made
+  // for the same reason: each gets its own line.
+  const summaryLine = (source: string | undefined) => {
+    const text = stripEmphasis(source ?? "").trim()
+    return text
+      ? fitSvgLine(text, { maxWidth: 1040, fontSize: 14, minFontSize: 14, fontFamily: fonts.body })
+      : null
+  }
+  const summary = summaryLine(slide.subheading)
+  const footnote = summaryLine(slide.footnote)
+  // With one line the baseline is the one this face has always used, so the
+  // pages that only ever wrote a subheading do not move. With two, the pair
+  // sits above it.
+  const summaryY = footnote && summary ? SUMMARY_Y - SUMMARY_LINE_GAP : SUMMARY_Y
   const fittedValues = items.map((item, itemIndex) =>
     fitFigure(item, geometry.width[itemIndex]!, fonts.heading),
   )
@@ -270,13 +284,28 @@ export function ShowFiguresContent({ ir, slide, index, ctx }: SvgTemplateProps) 
           data-font-floor-exempt="show-spec"
           data-truncated={summary.truncated ? "1" : undefined}
           x={64}
-          y={642}
+          y={summaryY}
           fontFamily={fonts.body}
           fontSize={summary.fontSize}
           fill={accessibleInk(colors.muted, bg, summary.fontSize)}
           dominantBaseline="alphabetic"
         >
           {withoutOverflowMark(summary.text)}
+        </text>
+      )}
+
+      {footnote && (
+        <text
+          data-font-floor-exempt="show-spec"
+          data-truncated={footnote.truncated ? "1" : undefined}
+          x={64}
+          y={SUMMARY_Y}
+          fontFamily={fonts.body}
+          fontSize={footnote.fontSize}
+          fill={accessibleInk(colors.muted, bg, footnote.fontSize)}
+          dominantBaseline="alphabetic"
+        >
+          {withoutOverflowMark(footnote.text)}
         </text>
       )}
     </g>
