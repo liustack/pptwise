@@ -193,6 +193,25 @@ export function assertContrastFloor(id: string, style: StyleTokens): void {
       )
     }
   }
+  // A theme names `emphasisInk` when its accent cannot separate from its own
+  // text ink, so the token is a deliberate second ink and is held to the
+  // ordinary body floor on the page it is painted on. The built-in shelf has
+  // been checked for this since it gained the token (`definitions.test.ts`),
+  // but the check lived only in that test, so a registered theme file could
+  // set `emphasisInk` to its own background and ship a marked run that is
+  // simply invisible, with nothing anywhere saying so.
+  //
+  // Only a declared value is checked. Leaving it out selects the accent,
+  // which every other rule here already measures.
+  const emphasisInk = style.colors.emphasisInk
+  if (emphasisInk !== undefined) {
+    const ratio = contrastRatio(emphasisInk, style.colors.bg)
+    if (ratio < CONTRAST_FLOOR) {
+      throw new PptwiseError(
+        `theme "${id}" colors.emphasisInk (${emphasisInk}) has a contrast ratio of ${ratio.toFixed(2)}:1 against colors.bg (${style.colors.bg}). A **marked** run is painted in this ink on that background, so it must be at least ${CONTRAST_FLOOR.toFixed(1)}:1. Leave emphasisInk out to use colors.accent.`,
+      )
+    }
+  }
 }
 
 /**

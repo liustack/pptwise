@@ -290,6 +290,30 @@ describe("registerTheme", () => {
     expect(getInstalledThemeIds().filter((id) => id === "consulting")).toHaveLength(1)
   })
 
+  // The built-in shelf has been held to this since the token existed (see
+  // "keeps every declared run ink readable on its own page background"
+  // above), but that rule lived only in a test over the built-ins, so a
+  // registered theme file could set emphasisInk to its own background and
+  // ship a **marked** run that is simply invisible, with nothing anywhere
+  // saying so.
+  function withEmphasisInk(hex: string): ThemeFile {
+    const base = testTheme()
+    return { ...base, style: { ...base.style, colors: { ...base.style.colors, emphasisInk: hex } } } as ThemeFile
+  }
+
+  it("refuses a registered theme whose run ink cannot be seen on its own background", () => {
+    expect(() => registerTheme(withEmphasisInk("#FFFFFF"))).toThrow(/colors\.emphasisInk/)
+    expect(() => registerTheme(withEmphasisInk("#FFFFFF"))).toThrow(/1\.00:1/)
+    expect(() => registerTheme(withEmphasisInk("#FEFEFE"))).toThrow(/against colors\.bg/)
+  })
+
+  it("accepts a declared run ink that clears the floor, and says nothing when none is declared", () => {
+    registerTheme(withEmphasisInk("#553311"))
+    expect(getThemeDefinition("acme").style.colors.emphasisInk).toBe("#553311")
+    __resetRegisteredThemes()
+    expect(() => registerTheme(testTheme())).not.toThrow()
+  })
+
   it("rejects a duplicate already-registered id", () => {
     registerTheme(testTheme())
     expect(() => registerTheme(testTheme())).toThrow(/theme "acme" is already installed/)
