@@ -1,7 +1,7 @@
 import type { SvgTemplateProps } from "../types"
 import { renderEmphasisTspans } from "../../render/emphasis"
-import { heroCaption, heroValue, pullQuoteAttribution } from "../minimal-shared"
-import { fitHeroLine, fitSparseHeading } from "./shared"
+import { heroCaption, heroUnit, heroSource, heroValue, pullQuoteAttribution, pullQuoteContext, pullQuoteText } from "../minimal-shared"
+import { fitHeroLine, heroUnitMark, fitSparseHeading, fitSparseQuote, quoteBlockBaseline } from "./shared"
 
 /** heritage 稀排脸：文武线引文、取景框格言、夹心巨数。不画 motif 顶缘双线和顶角金菱。 */
 
@@ -28,43 +28,58 @@ function InkDouble({
 
 export function pullQuote({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
-  const heading = fitSparseHeading(slide.heading, {
+  const quote = fitSparseQuote(pullQuoteText(slide), {
     maxWidth: 1000,
     fontSize: 48,
-    maxLines: 2,
-    minPt: 28,
-    lineHeightRatio: 1.28,
     fontFamily: fonts.heading,
-    bold: false,
+    lineHeightRatio: 1.36,
   })
+  const context = pullQuoteContext(slide)
   const attr = pullQuoteAttribution(slide)
+  const last = quote.lines.length - 1
+  const firstY = quoteBlockBaseline(368, quote)
+  const barY = Math.round(firstY + last * quote.lineHeight + quote.fontSize * 0.66)
   return (
     <>
       <InkDouble x={96} width={1088} yThick={80} yThin={88} stroke={colors.primary} />
-      {heading.lines.map((line, i) => (
+      {context && (
+        <text
+          x={640}
+          y={158}
+          textAnchor="middle"
+          fontFamily={fonts.body}
+          fontSize={18}
+          fill={colors.muted}
+          dominantBaseline="alphabetic"
+        >
+          {context}
+        </text>
+      )}
+      {quote.lines.map((line, i) => (
         <text
           key={i}
+          data-truncated={quote.truncated && i === last ? "1" : undefined}
           x={640}
-          y={340 + i * heading.lineHeight}
+          y={firstY + i * quote.lineHeight}
           textAnchor="middle"
           fontFamily={fonts.heading}
-          fontSize={heading.fontSize}
+          fontSize={quote.fontSize}
           fontWeight="400"
           fill={colors.primary}
           dominantBaseline="alphabetic"
         >
-          {renderEmphasisTspans(heading.lineSegs[i] ?? [{ text: line, emphasized: false }], {
+          {renderEmphasisTspans(quote.lineSegs[i] ?? [{ text: line, emphasized: false }], {
             accent: colors.accent,
             baseFill: colors.primary,
             fontWeight: "400",
           })}
         </text>
       ))}
-      <rect x={568} y={392} width={144} height={3} fill={colors.accent} />
+      <rect x={568} y={barY} width={144} height={3} fill={colors.accent} />
       {attr && (
         <text
           x={640}
-          y={470}
+          y={barY + 78}
           textAnchor="middle"
           fontFamily={fonts.heading}
           fontSize={19}
@@ -156,7 +171,10 @@ export function statement({ slide, ctx }: SvgTemplateProps) {
 export function statHero({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const fitted = fitHeroLine(heroValue(slide), { maxWidth: 800, fontSize: 280, fontFamily: fonts.heading, bold: false })
+  const unit = heroUnit(slide)
+  const unitMark = heroUnitMark(fitted.fontSize)
   const caption = heroCaption(slide)
+  const source = heroSource(slide)
   return (
     <>
       <InkDouble x={240} width={800} yThick={180} yThin={186} stroke={colors.primary} />
@@ -171,6 +189,11 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
         dominantBaseline="alphabetic"
       >
         {fitted.text}
+        {unit && (
+          <tspan dx={unitMark.dx} fontSize={unitMark.fontSize}>
+            {unit}
+          </tspan>
+        )}
       </text>
       <InkDouble x={240} width={800} yThick={534} yThin={530} stroke={colors.primary} />
       {caption && (
@@ -184,6 +207,19 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
           dominantBaseline="alphabetic"
         >
           {caption}
+        </text>
+      )}
+      {source && (
+        <text
+          x={640}
+          y={628}
+        textAnchor="middle"
+          fontFamily={fonts.heading}
+          fontSize={16}
+          fill={colors.muted}
+          dominantBaseline="alphabetic"
+        >
+          {source}
         </text>
       )}
     </>

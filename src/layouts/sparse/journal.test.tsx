@@ -42,9 +42,8 @@ describe("journal sparse faces", () => {
       type: "content",
       kind: "points",
       layout: "pull-quote",
-      heading: QUOTE,
-      subheading: "陈砚清 · 首席技术官",
-      components: [],
+      heading: "停机成本复盘",
+      components: [{ type: "blockquote", text: QUOTE, attribution: "陈砚清 · 首席技术官" }],
     } as Slide
     const { markup, root } = render(
       <PullQuoteContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />,
@@ -52,7 +51,7 @@ describe("journal sparse faces", () => {
     expect(() => assertSubset(root)).not.toThrow()
     const mark = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === LDQ)!
     expect(mark.getAttribute("x")).toBe("150")
-    expect(mark.getAttribute("y")).toBe("300")
+    expect(mark.getAttribute("y")).toBe("349")
     expect(Number(mark.getAttribute("font-size"))).toBe(200)
     expect(mark.getAttribute("fill")).toBe(ctx.colors.accent)
     expect(mark.getAttribute("opacity")).toBe("0.9")

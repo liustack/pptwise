@@ -46,10 +46,13 @@ function withoutOverflowMark(text: string): string {
   return text.replace(/(?:\u2026|\.{3})+$/u, "")
 }
 
+/** Items of the accepted `bullets` block this face has room to draw. */
+const ITEM_MAX = 2
+
 function coverBulletItems(slide: SvgTemplateProps["slide"]): string[] {
   const block = slide.components.find((c) => c.type === "bullets")
   if (!block || block.type !== "bullets") return []
-  return block.items.slice(0, 2)
+  return block.items.slice(0, ITEM_MAX)
 }
 
 function isKickerWord(text: string): boolean {
@@ -190,7 +193,7 @@ export const layoutDef: LayoutDefinition = {
   slideTypes: ["ending"],
   slots: [
     { name: "kicker", accepts: [] },
-    { name: "body", accepts: ["bullets"], capacity: 1 },
+    { name: "body", accepts: ["bullets"], capacity: 1, itemCapacity: ITEM_MAX },
     { name: "rule", accepts: [] },
     { name: "subheading", accepts: [] },
   ],

@@ -124,6 +124,7 @@ describe("ending-gauge-next", () => {
       name: "body",
       accepts: ["bullets"],
       capacity: 1,
+      itemCapacity: 3,
     })
     expect(() => assertSubset(root)).not.toThrow()
   })

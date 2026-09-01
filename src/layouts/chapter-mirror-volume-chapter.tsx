@@ -6,7 +6,7 @@ import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout"
 import { accessibleInk, metaInk } from "../render/ink"
 import { casualHan, headingIsCjk } from "../render/heading-treatments/labels"
 import { trackingPx } from "./minimal-shared"
-import { stripEmphasis } from "../render/emphasis"
+import { fitEmphasisLine, headingEmphasisPaint, renderEmphasisText, stripEmphasis } from "../render/emphasis"
 
 /**
  * mirror-volume-chapter（第八波 pinOnly）：中轴对镜。muted 卷号在上，
@@ -78,7 +78,7 @@ export function MirrorVolumeChapter({ ir, slide, index, ctx }: SvgTemplateProps)
     : TITLE_Y
 
   const subheading = slide.subheading
-    ? fitSvgLine(slide.subheading, {
+    ? fitEmphasisLine(slide.subheading, {
         maxWidth: CONTENT_MAX_W,
         fontSize: SUB_SIZE,
         minFontSize: 16,
@@ -87,7 +87,7 @@ export function MirrorVolumeChapter({ ir, slide, index, ctx }: SvgTemplateProps)
     : null
   const subY = headingLastY + SUB_GAP
   const subWidth = subheading
-    ? measureTextUnits(subheading.text, { fontFamily: fonts.body }) * subheading.fontSize
+    ? measureTextUnits(subheading.segments.map((segment) => segment.text).join(""), { fontFamily: fonts.body }) * subheading.fontSize
     : 0
   const leftBarX2 = CENTER_X - subWidth / 2 - BAR_GAP
   const rightBarX1 = CENTER_X + subWidth / 2 + BAR_GAP
@@ -151,20 +151,25 @@ export function MirrorVolumeChapter({ ir, slide, index, ctx }: SvgTemplateProps)
         </g>
       )}
 
-      {subheading && (
-        <text
-          data-contrast-tier="meta"
-          data-truncated={subheading.truncated ? "1" : undefined}
-          x={CENTER_X}
-          y={subY}
-          textAnchor="middle"
-          fontFamily={fonts.body}
-          fontSize={subheading.fontSize}
-          fill={metaInk(colors.muted, defaultBg)}
-          dominantBaseline="alphabetic"
-        >
-          {subheading.text}
-        </text>
+      {subheading && renderEmphasisText(
+        subheading.segments,
+        headingEmphasisPaint(ctx, subheading, {
+          baseFill: metaInk(colors.muted, defaultBg),
+          fontWeight: "600",
+          fontFamily: fonts.body,
+          bold: false,
+        }),
+            <text
+              data-contrast-tier="meta"
+              data-truncated={subheading.truncated ? "1" : undefined}
+              x={CENTER_X}
+              y={subY}
+              textAnchor="middle"
+              fontFamily={fonts.body}
+              fontSize={subheading.fontSize}
+              fill={metaInk(colors.muted, defaultBg)}
+              dominantBaseline="alphabetic"
+              />
       )}
     </>
   )

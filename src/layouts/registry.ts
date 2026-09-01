@@ -260,6 +260,26 @@ export interface LayoutSlot {
   capacity?: number
   /** Capacity counts components unless the renderer consumes items within one component. */
   capacityUnit?: "components" | "items"
+  /**
+   * How many items *inside* one accepted component this slot draws.
+   *
+   * `capacity` counts components. A boundary face that accepts one `bullets`
+   * has `capacity: 1` and still needs to say how many of that block's items
+   * fit on the page — `signoff-ending` draws four lines on a 44px rhythm,
+   * `verdict-index` three numbered arguments. Every one of those faces used
+   * to answer the question with a bare `items.slice(0, 3)` in its own render
+   * code: a page authored with five bullets printed three and said nothing,
+   * anywhere, about the two that never made it.
+   *
+   * Declaring the number here makes it checkable. `validate-core.ts`'s
+   * `checkBoundaryItemCapacity` reads it and hard-errors on a boundary page
+   * that exceeds it, naming the face and the limit, so the author gets a
+   * signal to shorten the list rather than a slide that quietly holds less
+   * than it was given.
+   *
+   * `undefined` means the slot makes no item-level promise.
+   */
+  itemCapacity?: number
   /** for image slots: today's two coexisting conventions (inventory §variant 速查) */
   selection?: "first" | "all"
 }

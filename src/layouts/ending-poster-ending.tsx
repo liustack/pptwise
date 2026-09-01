@@ -1,6 +1,6 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
-import { fitEmphasisHeading, headingEmphasisPaint, renderEmphasisHeading } from "../render/emphasis"
+import { fitEmphasisHeading, fitEmphasisLine, headingEmphasisPaint, renderEmphasisHeading, renderEmphasisText } from "../render/emphasis"
 import { fitSvgLine } from "../lib/svg-text-layout"
 
 /**
@@ -84,7 +84,7 @@ export function PosterEnding({ ir, slide, ctx }: SvgTemplateProps) {
   const accentY = headingLastY + 64
 
   // 兜底只服务完全默认的 ending 页：仅 slide.heading 也缺省时才连带兜底副标题。
-  const subheading = fitSvgLine(slide.subheading || (slide.heading ? "" : "Questions & Discussion"), {
+  const subheading = fitEmphasisLine(slide.subheading || (slide.heading ? "" : "Questions & Discussion"), {
     maxWidth: 900,
     fontSize: 40,
     minFontSize: 20,
@@ -141,20 +141,25 @@ export function PosterEnding({ ir, slide, ctx }: SvgTemplateProps) {
       />
 
       {/* Subheading */}
-      {subheading.text && (
-        <text
-          data-truncated={subheading.truncated ? "1" : undefined}
-          x={CENTER_X}
-          y={subheadingY}
-          textAnchor="middle"
-          fontFamily={ctx.fonts.heading}
-          fontSize={subheading.fontSize}
-          fill={ctx.colors.muted}
-          fontStyle="italic"
-          dominantBaseline="alphabetic"
-        >
-          {subheading.text}
-        </text>
+      {subheading && renderEmphasisText(
+        subheading.segments,
+        headingEmphasisPaint(ctx, subheading, {
+          baseFill: ctx.colors.muted,
+          fontWeight: "600",
+          fontFamily: ctx.fonts.heading,
+          bold: false,
+        }),
+            <text
+              data-truncated={subheading.truncated ? "1" : undefined}
+              x={CENTER_X}
+              y={subheadingY}
+              textAnchor="middle"
+              fontFamily={ctx.fonts.heading}
+              fontSize={subheading.fontSize}
+              fill={ctx.colors.muted}
+              fontStyle="italic"
+              dominantBaseline="alphabetic"
+              />
       )}
 
       {/* Divider */}

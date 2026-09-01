@@ -2,7 +2,7 @@ import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { accessibleInk, metaInk } from "../render/ink"
-import { stripEmphasis } from "../render/emphasis"
+import { fitEmphasisLine, headingEmphasisPaint, renderEmphasisText, stripEmphasis } from "../render/emphasis"
 import { hasCjk } from "./minimal-shared"
 
 /**
@@ -35,10 +35,13 @@ const SIGNOFF_MAX_W = 1088
 const CONCLUSIONS_KICKER_LATIN = "CONCLUSIONS"
 const CONCLUSIONS_KICKER_CJK = "结论"
 
+/** Items of the accepted `bullets` block this face has room to draw. */
+const ITEM_MAX = 3
+
 function coverBulletItems(slide: SvgTemplateProps["slide"]): string[] {
   const block = slide.components.find((c) => c.type === "bullets")
   if (!block || block.type !== "bullets") return []
-  return block.items.slice(0, 3)
+  return block.items.slice(0, ITEM_MAX)
 }
 
 function splitConclusionLines(text: string): string[] {
@@ -89,7 +92,7 @@ export function DefenseCloseEnding({ slide, ctx }: SvgTemplateProps) {
   }))
 
   const signoff = signoffSource
-    ? fitSvgLine(signoffSource, {
+    ? fitEmphasisLine(signoffSource, {
         maxWidth: SIGNOFF_MAX_W,
         fontSize: SIGNOFF_SIZE,
         minFontSize: 16,
@@ -141,19 +144,24 @@ export function DefenseCloseEnding({ slide, ctx }: SvgTemplateProps) {
         strokeWidth={1}
       />
 
-      {signoff && (
-        <text
-          data-contrast-tier="meta"
-          data-truncated={signoff.truncated ? "1" : undefined}
-          x={FOOT_X}
-          y={SIGNOFF_Y}
-          fontFamily={fonts.heading}
-          fontSize={signoff.fontSize}
-          fill={metaInk(colors.muted, bg)}
-          dominantBaseline="alphabetic"
-        >
-          {signoff.text}
-        </text>
+      {signoff && renderEmphasisText(
+        signoff.segments,
+        headingEmphasisPaint(ctx, signoff, {
+          baseFill: metaInk(colors.muted, bg),
+          fontWeight: "600",
+          fontFamily: fonts.heading,
+          bold: false,
+        }),
+            <text
+              data-contrast-tier="meta"
+              data-truncated={signoff.truncated ? "1" : undefined}
+              x={FOOT_X}
+              y={SIGNOFF_Y}
+              fontFamily={fonts.heading}
+              fontSize={signoff.fontSize}
+              fill={metaInk(colors.muted, bg)}
+              dominantBaseline="alphabetic"
+              />
       )}
     </>
   )
@@ -171,7 +179,7 @@ export const layoutDef: LayoutDefinition = {
     { name: "kicker", accepts: [] },
     { name: "heading", accepts: [] },
     { name: "subheading", accepts: [] },
-    { name: "body", accepts: ["bullets"], capacity: 1 },
+    { name: "body", accepts: ["bullets"], capacity: 1, itemCapacity: ITEM_MAX },
     { name: "meta", accepts: [] },
   ],
 }

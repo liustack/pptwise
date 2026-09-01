@@ -143,6 +143,7 @@ describe("cover-gauge-verdict", () => {
       name: "body",
       accepts: ["bullets"],
       capacity: 1,
+      itemCapacity: 3,
     })
   })
 })

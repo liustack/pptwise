@@ -171,7 +171,7 @@ export const layoutDef = {
   slideTypes: ["ending"],
   slots: [
     { name: "heading", accepts: [] },
-    { name: "body", accepts: ["bullets"], capacity: 1 },
+    { name: "body", accepts: ["bullets"], capacity: 1, itemCapacity: ITEM_MAX },
     { name: "rule", accepts: [] },
     { name: "meta", accepts: [] },
   ],

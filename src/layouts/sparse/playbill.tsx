@@ -5,8 +5,8 @@ import { fitSvgLine } from "../../lib/svg-text-layout"
 import { renderEmphasisTspans } from "../../render/emphasis"
 import { accessibleOpacity, readableOn } from "../../render/ink"
 import { findImageSelection } from "../find-image"
-import { heroCaption, heroValue } from "../minimal-shared"
-import { fitHeroLine, fitSparseHeading, isNumericHero, rotateRectPolygon, splitTrailingPercent } from "./shared"
+import { heroCaption, heroUnit, heroSource, heroValue } from "../minimal-shared"
+import { fitHeroLine, heroUnitMark, fitSparseHeading, isNumericHero, rotateRectPolygon, splitTrailingPercent } from "./shared"
 
 /** playbill 稀排脸：特粗三行、出血巨数+斜贴片、满版图。不画日期贴片。 */
 
@@ -67,8 +67,11 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
     fontFamily: fonts.heading,
     bold: true,
   })
+  const unit = heroUnit(slide)
+  const unitMark = heroUnitMark(fitted.fontSize)
   const chip = numeric ? (raw.includes("%") ? raw : `${raw}%`) : null
   const caption = heroCaption(slide)
+  const source = heroSource(slide)
   return (
     <>
       <text
@@ -82,6 +85,11 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
         dominantBaseline="alphabetic"
       >
         {fitted.text}
+        {unit && (
+          <tspan dx={unitMark.dx} fontSize={unitMark.fontSize}>
+            {unit}
+          </tspan>
+        )}
       </text>
       {chip && (
         <>
@@ -104,6 +112,18 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
       {caption && (
         <text x={96} y={662} fontFamily={fonts.heading} fontSize={20} fontWeight="700" fill={colors.text} dominantBaseline="alphabetic">
           {caption}
+        </text>
+      )}
+      {source && (
+        <text
+          x={96}
+          y={694}
+          fontFamily={fonts.body}
+          fontSize={16}
+          fill={colors.muted}
+          dominantBaseline="alphabetic"
+        >
+          {source}
         </text>
       )}
     </>

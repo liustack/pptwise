@@ -3,7 +3,7 @@ import type { LayoutDefinition } from "./registry"
 import { fitHeadingLines } from "../render/heading-fit"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { accessibleInk, accessibleOpacity, readableOn } from "../render/ink"
-import { stripEmphasis } from "../render/emphasis"
+import { fitEmphasisLine, headingEmphasisPaint, renderEmphasisText, stripEmphasis } from "../render/emphasis"
 
 /**
  * invite-field-ending（第八波 pinOnly）：满版 primary 邀约页。反白一句把
@@ -76,7 +76,7 @@ export function InviteFieldEnding({ ir, slide, ctx }: SvgTemplateProps) {
   const ruleY = titleLastY + RULE_GAP
 
   const subheading = slide.subheading?.trim()
-    ? fitSvgLine(slide.subheading, {
+    ? fitEmphasisLine(slide.subheading, {
         maxWidth: SUB_MAX_W,
         fontSize: SUB_SIZE,
         minFontSize: 16,
@@ -123,21 +123,26 @@ export function InviteFieldEnding({ ir, slide, ctx }: SvgTemplateProps) {
           </text>
         ))}
 
-      {subheading && (
-        <text
-          data-contrast-tier="meta"
-          data-truncated={subheading.truncated ? "1" : undefined}
-          x={CENTER_X}
-          y={subY}
-          textAnchor="middle"
-          fontFamily={fonts.body}
-          fontSize={subheading.fontSize}
-          fill={ink}
-          fillOpacity={subOpacity}
-          dominantBaseline="alphabetic"
-        >
-          {subheading.text}
-        </text>
+      {subheading && renderEmphasisText(
+        subheading.segments,
+        headingEmphasisPaint(ctx, subheading, {
+          baseFill: ink,
+          fontWeight: "600",
+          fontFamily: fonts.body,
+          bold: false,
+        }),
+            <text
+              data-contrast-tier="meta"
+              data-truncated={subheading.truncated ? "1" : undefined}
+              x={CENTER_X}
+              y={subY}
+              textAnchor="middle"
+              fontFamily={fonts.body}
+              fontSize={subheading.fontSize}
+              fill={ink}
+              fillOpacity={subOpacity}
+              dominantBaseline="alphabetic"
+              />
       )}
 
       {showRule && (

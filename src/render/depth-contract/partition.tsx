@@ -89,6 +89,10 @@ interface PaintClusterEvidence {
 function inspectPaintCluster(node: ReactNode, evidence: PaintClusterEvidence): void {
   if (node === null || node === undefined || typeof node === "boolean") return
   if (typeof node === "string" || typeof node === "number") return
+  if (Array.isArray(node)) {
+    Children.forEach(node, (child) => inspectPaintCluster(child, evidence))
+    return
+  }
   if (!isValidElement<ElementProps>(node)) return
 
   if (node.type === Fragment) {
@@ -145,6 +149,13 @@ function partitionNode(
     push(layers, defaultDepth, node)
     return layers
   }
+  // A component may return a list rather than a single element — `ink`'s
+  // vertical quote setting returns one `<text>` per glyph. Walking into it is
+  // not an optimisation: without this branch the list is not a valid element,
+  // falls through to `return layers`, and every node in it is dropped from
+  // the page with nothing said. That cost `ink` its quote attribution for as
+  // long as the skin has existed.
+  if (Array.isArray(node)) return partitionChildren(node, options, defaultDepth)
   if (!isValidElement<ElementProps>(node)) return layers
 
   if (node.type === Fragment) return partitionChildren(node.props.children, options, defaultDepth)

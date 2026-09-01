@@ -2,12 +2,7 @@ import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import type { ContentRect } from "../render/layout"
 import { SvgContent } from "../render/svg-content"
-import {
-  fitEmphasisHeading,
-  headingEmphasisPaint,
-  renderEmphasisHeading,
-  stripEmphasis,
-} from "../render/emphasis"
+import { fitEmphasisHeading, headingEmphasisPaint, renderEmphasisHeading, stripEmphasis } from "../render/emphasis"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { footnoteBaselineFor } from "../render/branding-geometry"
 

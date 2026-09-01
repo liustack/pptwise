@@ -1,16 +1,18 @@
 import type { SvgTemplateProps } from "../types"
 import { pickEvidence } from "../../render/component-traits"
 import { renderEmphasisTspans } from "../../render/emphasis"
-import { heroCaption, heroSource, heroValue } from "../minimal-shared"
+import { heroCaption, heroSource, heroUnit, heroValue } from "../minimal-shared"
 import { fitSvgLine } from "../../lib/svg-text-layout"
 import { renderFittedEvidence, textColumnMaxWidth } from "../fitted-evidence"
-import { evidenceSource, fitHeroLine, fitSparseHeading, pad2 } from "./shared"
+import { evidenceSource, fitHeroLine, heroUnitMark, fitSparseHeading, pad2 } from "./shared"
 
 /** swiss 稀排脸：左对齐超黑。不画顶边红条（motif 已画）。 */
 
 export function statHero({ ir, slide, index, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const fitted = fitHeroLine(heroValue(slide), { maxWidth: 1100, fontSize: 360, fontFamily: fonts.heading, bold: true })
+  const unit = heroUnit(slide)
+  const unitMark = heroUnitMark(fitted.fontSize)
   const caption = heroCaption(slide)
   const source = heroSource(slide)
   const page = `${pad2(index + 1)} / ${pad2(ir.slides.length)}`
@@ -26,6 +28,11 @@ export function statHero({ ir, slide, index, ctx }: SvgTemplateProps) {
         dominantBaseline="alphabetic"
       >
         {fitted.text}
+        {unit && (
+          <tspan dx={unitMark.dx} fontSize={unitMark.fontSize}>
+            {unit}
+          </tspan>
+        )}
       </text>
       {caption && (
         <text x={92} y={560} fontFamily={fonts.heading} fontSize={26} fontWeight="700" fill={colors.text} dominantBaseline="alphabetic">

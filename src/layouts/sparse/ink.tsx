@@ -1,8 +1,15 @@
 import type { SvgTemplateProps } from "../types"
 import type { EmphasisSegment } from "../../render/emphasis"
 import { renderEmphasisTspans } from "../../render/emphasis"
-import { hasCjk, heroCaption, heroValue, pullQuoteAttribution } from "../minimal-shared"
-import { fitHeroLine, fitSparseHeading } from "./shared"
+import {
+  hasCjk,
+  heroCaption,
+  heroUnit, heroSource, heroValue,
+  pullQuoteAttribution,
+  pullQuoteContext,
+  pullQuoteText,
+} from "../minimal-shared"
+import { fitHeroLine, heroUnitMark, fitSparseHeading, fitSparseQuote, quoteBlockBaseline } from "./shared"
 
 /** ink 稀排脸：竖排格言、验印巨数、竖排引文。引文页 motif 画左下半山、不画右缘落款列。 */
 
@@ -134,7 +141,10 @@ export function statement({ ir, slide, ctx }: SvgTemplateProps) {
 export function statHero({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const fitted = fitHeroLine(heroValue(slide), { maxWidth: 1080, fontSize: 300, fontFamily: fonts.heading, bold: false })
+  const unit = heroUnit(slide)
+  const unitMark = heroUnitMark(fitted.fontSize)
   const caption = heroCaption(slide)
+  const source = heroSource(slide)
   return (
     <>
       <text
@@ -147,6 +157,11 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
         dominantBaseline="alphabetic"
       >
         {fitted.text}
+        {unit && (
+          <tspan dx={unitMark.dx} fontSize={unitMark.fontSize}>
+            {unit}
+          </tspan>
+        )}
       </text>
       <rect x={1108} y={392} width={56} height={56} fill={colors.accent} />
       <text
@@ -165,41 +180,61 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
           {caption}
         </text>
       )}
+      {source && (
+        <text
+          x={140}
+          y={606}
+          fontFamily={fonts.body}
+          fontSize={16}
+          fill={colors.muted}
+          dominantBaseline="alphabetic"
+        >
+          {source}
+        </text>
+      )}
     </>
   )
 }
 
 export function pullQuote({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
-  const source = slide.heading ?? ""
+  const source = pullQuoteText(slide)
+  const context = pullQuoteContext(slide)
   const attr = pullQuoteAttribution(slide)
   const latin = !hasCjk(source)
 
   if (latin) {
-    const heading = fitSparseHeading(source, {
-      maxWidth: 960,
+    const quote = fitSparseQuote(source, {
+      maxWidth: 900,
       fontSize: 46,
-      maxLines: 2,
-      minPt: 26,
-      lineHeightRatio: 76 / 46,
       fontFamily: fonts.heading,
-      bold: false,
+      lineHeightRatio: 1.44,
     })
+    const last = quote.lines.length - 1
+    const firstY = quoteBlockBaseline(360, quote)
+    const barTop = Math.round(firstY - quote.fontSize - 12)
+    const barBottom = Math.round(firstY + last * quote.lineHeight + quote.fontSize * 0.3)
     return (
       <>
-        <rect x={150} y={270} width={4} height={160} fill={colors.accent} />
-        {heading.lines.map((line, i) => (
+        <rect x={150} y={barTop} width={4} height={barBottom - barTop} fill={colors.accent} />
+        {context && (
+          <text x={200} y={176} fontFamily={fonts.body} fontSize={18} fill={colors.muted} dominantBaseline="alphabetic">
+            {context}
+          </text>
+        )}
+        {quote.lines.map((line, i) => (
           <text
             key={i}
+            data-truncated={quote.truncated && i === last ? "1" : undefined}
             x={200}
-            y={330 + i * heading.lineHeight}
+            y={firstY + i * quote.lineHeight}
             fontFamily={fonts.heading}
-            fontSize={heading.fontSize}
+            fontSize={quote.fontSize}
             fontWeight="400"
             fill={colors.primary}
             dominantBaseline="alphabetic"
           >
-            {renderEmphasisTspans(heading.lineSegs[i] ?? [{ text: line, emphasized: false }], {
+            {renderEmphasisTspans(quote.lineSegs[i] ?? [{ text: line, emphasized: false }], {
               accent: colors.accent,
               baseFill: colors.primary,
               fontWeight: "400",
@@ -207,7 +242,14 @@ export function pullQuote({ slide, ctx }: SvgTemplateProps) {
           </text>
         ))}
         {attr && (
-          <text x={200} y={530} fontFamily={fonts.body} fontSize={19} fill={colors.muted} dominantBaseline="alphabetic">
+          <text
+            x={200}
+            y={barBottom + 62}
+            fontFamily={fonts.body}
+            fontSize={19}
+            fill={colors.muted}
+            dominantBaseline="alphabetic"
+          >
             {attr}
           </text>
         )}
@@ -216,29 +258,41 @@ export function pullQuote({ slide, ctx }: SvgTemplateProps) {
   }
 
   // CJK: board grammar from wave8/b2 Ink cover. Vertical quote on the
-  // right, vermilion opener at the shoulder, attribution as left colophon.
+  // right, vermilion opener at the shoulder, attribution as left colophon,
+  // page context as a marginal column outside the quote's own rail.
   // Motif paints the remnant mountain lower left and yields the right rail.
-  const heading = fitSparseHeading(source, {
-    maxWidth: 48 * 10,
-    fontSize: 48,
-    maxLines: 2,
-    minPt: 36,
-    lineHeightRatio: 1,
+  //
+  // 竖排每列的字数上限即 `maxWidth / fontSize`，行数即列数：作者写下的引文
+  // 通常有三四十字，两列装不下，四列才装得下，逗号处正好断列。
+  const quote = fitSparseQuote(source, {
+    maxWidth: 42 * 12,
+    fontSize: 42,
     fontFamily: fonts.heading,
-    bold: false,
+    lineHeightRatio: 1,
   })
-  const columns = heading.lines.slice(0, 2)
-  const xs = [900, 780]
+  const columns = quote.lines
+  const xs = [900, 780, 660, 540]
   return (
     <>
       <rect x={942} y={110} width={14} height={56} fill={colors.accent} />
+      {context && (
+        <VerticalRun
+          segments={[{ text: context, emphasized: false }]}
+          x={1040}
+          y={176}
+          size={17}
+          baseFill={colors.muted}
+          accent={colors.accent}
+          fontFamily={fonts.heading}
+        />
+      )}
       {columns.map((line, col) => (
-        <g key={col}>
+        <g key={col} data-truncated={quote.truncated && col === columns.length - 1 ? "1" : undefined}>
           <VerticalRun
-            segments={heading.lineSegs[col] ?? [{ text: line, emphasized: false }]}
-            x={xs[col]!}
+            segments={quote.lineSegs[col] ?? [{ text: line, emphasized: false }]}
+            x={xs[col] ?? xs[xs.length - 1]! - (col - xs.length + 1) * 120}
             y={150}
-            size={heading.fontSize}
+            size={quote.fontSize}
             baseFill={colors.primary}
             accent={colors.accent}
             fontFamily={fonts.heading}

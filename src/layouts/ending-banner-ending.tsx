@@ -1,7 +1,7 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
-import { fitEmphasisHeading, headingEmphasisPaint, renderEmphasisHeading } from "../render/emphasis"
-import { fitSvgLine } from "../lib/svg-text-layout"
+import { fitEmphasisHeading, fitEmphasisLine, headingEmphasisPaint, renderEmphasisHeading, renderEmphasisText } from "../render/emphasis"
+
 import { accessibleInk, metaInk } from "../render/ink"
 
 /**
@@ -148,7 +148,7 @@ export function BannerEnding({ ir, slide, ctx }: SvgTemplateProps) {
   // 兜底文案"谢谢。"改为英文"We appreciate your time."——不直译成与主标题
   // 相同的"Thank you."，避免同页大小标题重复同一句话（主标题兜底已是
   // "Thank you."，见上方）。
-  const subheading = fitSvgLine(slide.subheading || (slide.heading ? "" : "We appreciate your time."), {
+  const subheading = fitEmphasisLine(slide.subheading || (slide.heading ? "" : "We appreciate your time."), {
     maxWidth: 1088,
     fontSize: 48,
     minFontSize: 24,
@@ -197,18 +197,23 @@ export function BannerEnding({ ir, slide, ctx }: SvgTemplateProps) {
       )}
 
       {/* Chinese subheading（空串=heading 已含感谢语，跳过） */}
-      {subheading.text && (
-        <text
-          data-truncated={subheading.truncated ? "1" : undefined}
-          x="96"
-          y={subheadingY}
-          fontFamily={fonts.heading}
-          fontSize={subheading.fontSize}
-          fill={colors.muted}
-          dominantBaseline="alphabetic"
-        >
-          {subheading.text}
-        </text>
+      {subheading && renderEmphasisText(
+        subheading.segments,
+        headingEmphasisPaint(ctx, subheading, {
+          baseFill: colors.muted,
+          fontWeight: "600",
+          fontFamily: fonts.heading,
+          bold: false,
+        }),
+            <text
+              data-truncated={subheading.truncated ? "1" : undefined}
+              x="96"
+              y={subheadingY}
+              fontFamily={fonts.heading}
+              fontSize={subheading.fontSize}
+              fill={colors.muted}
+              dominantBaseline="alphabetic"
+              />
       )}
 
       {/* Horizontal divider */}

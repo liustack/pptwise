@@ -1,21 +1,37 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import { sectionNameFor } from "../lib/derive"
-import { fitEmphasisHeading, headingEmphasisPaint, renderEmphasisHeading } from "../render/emphasis"
+import {
+  fitEmphasisHeading,
+  fitEmphasisLine,
+  headingEmphasisPaint,
+  renderEmphasisHeading,
+  renderEmphasisText,
+} from "../render/emphasis"
 import { fitSvgLine, layoutSvgText } from "../lib/svg-text-layout"
 import { accessibleInk } from "../render/ink"
-import { latinUpper, pullQuoteAttribution, pullQuoteBody, trackingPx } from "./minimal-shared"
+import {
+  latinUpper,
+  pullQuoteAttribution,
+  pullQuoteBody,
+  pullQuoteContext,
+  pullQuoteText,
+  trackingPx,
+} from "./minimal-shared"
 import { sparseFace } from "./sparse/registry"
 
 /**
  * 未注册的 (themeId, layoutId) 与自定义主题仍走此脸。
  *
- * pull-quote 通用脸：居中引言页。章节眉 + 大引言 + 出处小字 + 一段散文。
- * 不自己铺暗底，暗不暗由主题 `colors.bg` / `slide.background` 决定。菜单可用
- * silent 同时关掉 motif 与页级品牌。
+ * pull-quote 通用脸：居中引言页。章节眉 + 页首语境行 + 大引言 + 出处小字 +
+ * 一段散文。不自己铺暗底，暗不暗由主题 `colors.bg` / `slide.background`
+ * 决定。菜单可用 silent 同时关掉 motif 与页级品牌。
  *
- * 出处优先 blockquote 组件的 attribution，否则 subheading。正文只接受一个
- * paragraph，走 layoutSvgText，不走 SvgContent 卡片。
+ * 大字位是作者写的引文本体（`blockquote.text`），heading 降为页首小字语境
+ * 行；页面没有 blockquote 组件时 heading 自己就是引文（本脸明示语义），此时
+ * 语境行留空，同一句不会印两遍。出处只取组件字段，没有 subheading 兜底。
+ * 正文只接受一个 paragraph，走 layoutSvgText，不走 SvgContent 卡片。
+ * 取哪个字段的完整契约见 `minimal-shared.ts` 的 pullQuote* 四件套。
  *
  * 纪律：本文件禁 theme id、禁颜色 hex 字面量，颜色 / 字体全部来自 ctx。
  */
@@ -24,13 +40,15 @@ const CENTER_X = 640
 const HEADING_MAX_W = 920
 const BODY_MAX_W = 760
 const KICKER_Y = 100
-const TITLE_Y = 240
+const CONTEXT_Y = 148
+const QUOTE_TOP = 250
 const KICKER_SIZE = 16
+const CONTEXT_SIZE = 18
 const ATTR_SIZE = 16
 const BODY_SIZE = 17
 const KICKER_TRACKING_EM = 0.42
 const ATTR_TRACKING_EM = 0.2
-const ATTR_GAP = 36
+const ATTR_GAP = 40
 const BODY_GAP = 50
 const BODY_MAX_LINES = 6
 const BODY_LINE_RATIO = 1.8
@@ -56,12 +74,28 @@ function GenericPullQuoteContent({ ir, slide, index, ctx }: SvgTemplateProps) {
       })
     : null
 
-  const heading = fitEmphasisHeading(slide.heading, {
+  const context = fitEmphasisLine(pullQuoteContext(slide), {
+    maxWidth: HEADING_MAX_W,
+    fontSize: CONTEXT_SIZE,
+    minFontSize: 16,
+    fontFamily: fonts.body,
+  })
+
+  // The quote is the page. It gets the emphasis-aware heading fit so a
+  // `**marked**` run inside an authored quote paints the same way it would
+  // in any other big type on this deck.
+  const heading = fitEmphasisHeading(pullQuoteText(slide), {
     ...layoutDef.headingFit,
     fontFamily: fonts.heading,
     typeScale: ctx.shape?.typeScale,
   })
-  const titleLastY = TITLE_Y + Math.max(0, heading.lines.length - 1) * heading.lineHeight
+  // Centre the quote block on the page rather than hanging it from a fixed
+  // baseline: an authored quote runs anywhere from one line to four, and a
+  // fixed top leaves a one-liner floating above a hole.
+  const titleY = Math.round(
+    QUOTE_TOP + (4 - heading.lines.length) * heading.lineHeight * 0.5,
+  )
+  const titleLastY = titleY + Math.max(0, heading.lines.length - 1) * heading.lineHeight
 
   const attrSource = pullQuoteAttribution(slide)
   const attrTracking = trackingPx(ATTR_SIZE, ATTR_TRACKING_EM)
@@ -106,6 +140,27 @@ function GenericPullQuoteContent({ ir, slide, index, ctx }: SvgTemplateProps) {
         </text>
       )}
 
+      {context &&
+        renderEmphasisText(
+          context.segments,
+          headingEmphasisPaint(ctx, context, {
+            baseFill: accessibleInk(colors.muted, defaultBg, context.fontSize),
+            fontWeight: "600",
+            fontFamily: fonts.body,
+            bold: false,
+          }),
+          <text
+            data-truncated={context.truncated ? "1" : undefined}
+            x={CENTER_X}
+            y={CONTEXT_Y}
+            textAnchor="middle"
+            fontFamily={fonts.body}
+            fontSize={context.fontSize}
+            fill={accessibleInk(colors.muted, defaultBg, context.fontSize)}
+            dominantBaseline="alphabetic"
+          />,
+        )}
+
       {renderEmphasisHeading(
         heading,
         headingEmphasisPaint(ctx, heading, { baseFill: accessibleInk(colors.text, defaultBg, heading.fontSize), fontWeight: "400", fontFamily: fonts.heading }),
@@ -114,7 +169,7 @@ function GenericPullQuoteContent({ ir, slide, index, ctx }: SvgTemplateProps) {
             key={i}
             data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
             x={CENTER_X}
-            y={TITLE_Y + i * heading.lineHeight}
+            y={titleY + i * heading.lineHeight}
             textAnchor="middle"
             fontFamily={fonts.heading}
             fontSize={heading.fontSize}
@@ -165,7 +220,8 @@ function GenericPullQuoteContent({ ir, slide, index, ctx }: SvgTemplateProps) {
 export const layoutDef = {
   branding: "none",
   // content-pull-quote.tsx: a centered-quote page. Kicker (section
-  // name) + italic heading + accent attribution + one muted paragraph.
+  // name) + a small context line carrying heading and subheading + the
+  // authored quote in italic + accent attribution + one muted paragraph.
   // Page decor and branding posture belong to the menu entry. The whole page
   // is intentionally sparse.
   id: "pull-quote",
@@ -178,6 +234,10 @@ export const layoutDef = {
     { name: "body", accepts: ["paragraph", "blockquote", "citation"], capacity: 1 },
     { name: "meta", accepts: [] },
   ],
+  // Unchanged since the registry capture, and it already suits the quote:
+  // 920px over four lines at 40pt holds a forty-character CJK quote in two
+  // lines and an English one in three or four, which is what the corpus
+  // actually authors.
   headingFit: {
     maxWidth: HEADING_MAX_W,
     fontSize: 40,

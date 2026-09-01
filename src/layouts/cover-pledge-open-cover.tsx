@@ -4,12 +4,7 @@ import { fitHeadingLines } from "../render/heading-fit"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { accessibleInk, metaInk } from "../render/ink"
 import { hasCjk } from "./minimal-shared"
-import {
-  parseEmphasis,
-  renderEmphasisText,
-  sliceEmphasisForLines,
-  stripEmphasis,
-} from "../render/emphasis"
+import { parseEmphasis, renderEmphasisText, sliceEmphasisForLines, stripEmphasis } from "../render/emphasis"
 
 /**
  * pledge-open-cover（第八波 pinOnly）：沙色纸底上的左齐承诺句。kicker 取

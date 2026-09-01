@@ -1,7 +1,14 @@
 import type { SvgTemplateProps } from "../types"
 import { renderEmphasisTspans } from "../../render/emphasis"
-import { heroCaption, heroSource, heroValue, pullQuoteAttribution } from "../minimal-shared"
-import { fitHeroLine, fitSparseHeading, yearQuarter } from "./shared"
+import {
+  heroCaption,
+  heroSource,
+  heroUnit, heroValue,
+  pullQuoteAttribution,
+  pullQuoteContext,
+  pullQuoteText,
+} from "../minimal-shared"
+import { fitHeroLine, heroUnitMark, fitSparseHeading, fitSparseQuote, quoteBlockBaseline, yearQuarter } from "./shared"
 
 /** insight 稀排脸：行情格言、幽灵季度、折线引文。不画顶缘刻度尺和底缘面积线。 */
 
@@ -77,6 +84,8 @@ export function statHero({ ir, slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const quarter = yearQuarter(ir.meta.date)
   const fitted = fitHeroLine(heroValue(slide), { maxWidth: 1100, fontSize: 290, fontFamily: fonts.heading, bold: false })
+  const unit = heroUnit(slide)
+  const unitMark = heroUnitMark(fitted.fontSize)
   const caption = heroCaption(slide)
   const source = heroSource(slide)
   return (
@@ -105,6 +114,11 @@ export function statHero({ ir, slide, ctx }: SvgTemplateProps) {
         dominantBaseline="alphabetic"
       >
         {fitted.text}
+        {unit && (
+          <tspan dx={unitMark.dx} fontSize={unitMark.fontSize}>
+            {unit}
+          </tspan>
+        )}
       </text>
       {caption && (
         <text x={96} y={560} fontFamily={fonts.body} fontSize={24} fill={colors.muted} dominantBaseline="alphabetic">
@@ -122,16 +136,16 @@ export function statHero({ ir, slide, ctx }: SvgTemplateProps) {
 
 export function pullQuote({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
-  const heading = fitSparseHeading(slide.heading, {
+  const quote = fitSparseQuote(pullQuoteText(slide), {
     maxWidth: 1000,
     fontSize: 46,
-    maxLines: 2,
-    minPt: 28,
-    lineHeightRatio: 1.32,
     fontFamily: fonts.heading,
-    bold: false,
+    lineHeightRatio: 1.38,
   })
+  const context = pullQuoteContext(slide)
   const attr = pullQuoteAttribution(slide)
+  const last = quote.lines.length - 1
+  const firstY = quoteBlockBaseline(398, quote)
   return (
     <>
       {/* 行情走线是内容无关装饰，走中景，不与引言抢前景。 */}
@@ -143,19 +157,33 @@ export function pullQuote({ slide, ctx }: SvgTemplateProps) {
           strokeWidth={2}
         />
       </g>
-      {heading.lines.map((line, i) => (
+      {context && (
+        <text
+          x={640}
+          y={228}
+          textAnchor="middle"
+          fontFamily={fonts.body}
+          fontSize={18}
+          fill={colors.muted}
+          dominantBaseline="alphabetic"
+        >
+          {context}
+        </text>
+      )}
+      {quote.lines.map((line, i) => (
         <text
           key={i}
+          data-truncated={quote.truncated && i === last ? "1" : undefined}
           x={640}
-          y={370 + i * heading.lineHeight}
+          y={firstY + i * quote.lineHeight}
           textAnchor="middle"
           fontFamily={fonts.heading}
-          fontSize={heading.fontSize}
+          fontSize={quote.fontSize}
           fontWeight="400"
           fill={colors.text}
           dominantBaseline="alphabetic"
         >
-          {renderEmphasisTspans(heading.lineSegs[i] ?? [{ text: line, emphasized: false }], {
+          {renderEmphasisTspans(quote.lineSegs[i] ?? [{ text: line, emphasized: false }], {
             accent: colors.accent,
             baseFill: colors.text,
             fontWeight: "400",
@@ -165,7 +193,7 @@ export function pullQuote({ slide, ctx }: SvgTemplateProps) {
       {attr && (
         <text
           x={640}
-          y={470}
+          y={Math.round(firstY + last * quote.lineHeight) + 76}
           textAnchor="middle"
           fontFamily={fonts.heading}
           fontSize={18}

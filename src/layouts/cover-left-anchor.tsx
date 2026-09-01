@@ -1,7 +1,7 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
-import { fitEmphasisHeading, headingEmphasisPaint, renderEmphasisHeading } from "../render/emphasis"
-import { fitSvgLine, layoutSvgText } from "../lib/svg-text-layout"
+import { fitEmphasisHeading, fitEmphasisText, headingEmphasisPaint, renderEmphasisHeading } from "../render/emphasis"
+import { fitSvgLine } from "../lib/svg-text-layout"
 import { CONF_LABEL } from "../lib/conf-labels"
 import { showsDocumentMeta } from "../render/document-meta"
 import { accessibleInk, readableOn } from "../render/ink"
@@ -114,7 +114,7 @@ export function LeftAnchorCover({ ir, slide, ctx, page, params }: SvgTemplatePro
       ((title.lines.length - 1) * title.lineHeight) / 2 +
       titleFudge
 
-  const subtitle = layoutSvgText(slide.subheading, {
+  const subtitle = fitEmphasisText(slide.subheading, {
     maxWidth: COVER_RIGHT_MAX_W,
     fontSize: 30,
     maxLines: 3,
@@ -277,20 +277,22 @@ export function LeftAnchorCover({ ir, slide, ctx, page, params }: SvgTemplatePro
       )}
 
       {/* Subheading (italic) */}
-      {subtitle.lines.map((line, i) => (
-        <text
-          key={i}
-          x={COVER_RIGHT_X}
-          y={subtitleY + i * subtitle.lineHeight}
-          fontFamily={fonts.body}
-          fontSize={subtitle.fontSize}
-          fill={colors.muted}
-          fontStyle="italic"
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {renderEmphasisHeading(
+        subtitle,
+        headingEmphasisPaint(ctx, subtitle, { baseFill: colors.muted, fontWeight: "600", fontFamily: fonts.body, bold: false }),
+        (_line, i) => (
+            <text
+              key={i}
+              x={COVER_RIGHT_X}
+              y={subtitleY + i * subtitle.lineHeight}
+              fontFamily={fonts.body}
+              fontSize={subtitle.fontSize}
+              fill={colors.muted}
+              fontStyle="italic"
+              dominantBaseline="alphabetic"
+              />
+        ),
+      )}
 
       {/* Meta divider + meta row (author / date / version) */}
       {(authorText || date || version) && (

@@ -3,7 +3,7 @@ import type { LayoutDefinition } from "./registry"
 import { fitHeadingLines } from "../render/heading-fit"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { accessibleInk } from "../render/ink"
-import { stripEmphasis } from "../render/emphasis"
+import { fitEmphasisLine, headingEmphasisPaint, renderEmphasisText, stripEmphasis } from "../render/emphasis"
 
 /**
  * reminder-list-ending（第八波 pinOnly）：三件小事清单，零装饰。构图抄
@@ -33,10 +33,13 @@ const FOOT_Y = 600
 const FOOT_SIZE = 22
 const FOOT_MAX_W = 1088
 
+/** Items of the accepted `bullets` block this face has room to draw. */
+const ITEM_MAX = 3
+
 function coverBulletItems(slide: SvgTemplateProps["slide"]): string[] {
   const block = slide.components.find((c) => c.type === "bullets")
   if (!block || block.type !== "bullets") return []
-  return block.items.slice(0, 3)
+  return block.items.slice(0, ITEM_MAX)
 }
 
 function splitActionLines(text: string): string[] {
@@ -94,7 +97,7 @@ export function ReminderListEnding({ slide, ctx }: SvgTemplateProps) {
 
   const footSource = (slide.subheading ?? "").trim()
   const foot = footSource
-    ? fitSvgLine(footSource, {
+    ? fitEmphasisLine(footSource, {
         maxWidth: FOOT_MAX_W,
         fontSize: FOOT_SIZE,
         minFontSize: 16,
@@ -137,19 +140,24 @@ export function ReminderListEnding({ slide, ctx }: SvgTemplateProps) {
         </text>
       ))}
 
-      {foot && (
-        <text
-          data-truncated={foot.truncated ? "1" : undefined}
-          x={FOOT_X}
-          y={FOOT_Y}
-          fontFamily={fonts.body}
-          fontSize={foot.fontSize}
-          fontWeight="700"
-          fill={accessibleInk(colors.primary, bg, foot.fontSize)}
-          dominantBaseline="alphabetic"
-        >
-          {foot.text}
-        </text>
+      {foot && renderEmphasisText(
+        foot.segments,
+        headingEmphasisPaint(ctx, foot, {
+          baseFill: accessibleInk(colors.primary, bg, foot.fontSize),
+          fontWeight: "600",
+          fontFamily: fonts.body,
+          bold: false,
+        }),
+            <text
+              data-truncated={foot.truncated ? "1" : undefined}
+              x={FOOT_X}
+              y={FOOT_Y}
+              fontFamily={fonts.body}
+              fontSize={foot.fontSize}
+              fontWeight="700"
+              fill={accessibleInk(colors.primary, bg, foot.fontSize)}
+              dominantBaseline="alphabetic"
+              />
       )}
     </>
   )
@@ -164,7 +172,7 @@ export const layoutDef: LayoutDefinition = {
   slideTypes: ["ending"],
   slots: [
     { name: "heading", accepts: [] },
-    { name: "body", accepts: ["bullets"], capacity: 1 },
+    { name: "body", accepts: ["bullets"], capacity: 1, itemCapacity: ITEM_MAX },
     { name: "subheading", accepts: [] },
   ],
   headingFit: {

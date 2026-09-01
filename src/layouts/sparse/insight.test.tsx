@@ -121,9 +121,8 @@ describe("insight sparse faces", () => {
     const slide: Slide = {
       type: "content",
       kind: "quote",
-      heading: QUOTE,
-      subheading: "陈砚清 · 首席技术官",
-      components: [],
+      heading: "停机成本复盘",
+      components: [{ type: "blockquote", text: QUOTE, attribution: "陈砚清 · 首席技术官" }],
     } as Slide
     const { markup, root } = render(
       <PullQuoteContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />,
@@ -142,7 +141,7 @@ describe("insight sparse faces", () => {
       (t.textContent ?? "").includes("最贵的停机"),
     )!
     expect(quote.getAttribute("x")).toBe("640")
-    expect(quote.getAttribute("y")).toBe("370")
+    expect(quote.getAttribute("y")).toBe("382")
     expect(quote.getAttribute("text-anchor")).toBe("middle")
     expect(quote.getAttribute("fill")).toBe(ctx.colors.text)
     expect(Number(quote.getAttribute("font-size"))).toBe(46)

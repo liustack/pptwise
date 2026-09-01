@@ -1,7 +1,7 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
-import { fitEmphasisHeading, headingEmphasisPaint, renderEmphasisHeading } from "../render/emphasis"
-import { fitSvgLine, layoutSvgText } from "../lib/svg-text-layout"
+import { fitEmphasisHeading, fitEmphasisText, headingEmphasisPaint, renderEmphasisHeading } from "../render/emphasis"
+import { fitSvgLine } from "../lib/svg-text-layout"
 import { CONF_LABEL } from "../lib/conf-labels"
 import { showsDocumentMeta } from "../render/document-meta"
 import { accessibleInk, metaInk } from "../render/ink"
@@ -120,7 +120,7 @@ export function ColophonCover({ ir, slide, ctx, page }: SvgTemplateProps) {
   // `cover-editorial-masthead.tsx`'s own subtitle.
   const subtitleY = kickerY + STACK_GAP
   const subtitle = slide.subheading
-    ? layoutSvgText(slide.subheading, {
+    ? fitEmphasisText(slide.subheading, {
         maxWidth: CONTENT_RIGHT_EDGE - TITLE_X,
         fontSize: SUBTITLE_SIZE,
         maxLines: SUBTITLE_MAX_LINES,
@@ -191,19 +191,27 @@ export function ColophonCover({ ir, slide, ctx, page }: SvgTemplateProps) {
       )}
 
       {/* 副题 —— 正文层（A 层），按字号判，27px 走大字 3:1 那一档 */}
-      {subtitle?.lines.map((line, i) => (
-        <text
-          key={i}
-          x={TITLE_X}
-          y={subtitleY + i * subtitle.lineHeight}
-          fontFamily={fonts.heading}
-          fontSize={subtitle.fontSize}
-          fill={accessibleInk(colors.muted, bg, subtitle.fontSize)}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {subtitle &&
+        renderEmphasisHeading(
+          subtitle,
+          headingEmphasisPaint(ctx, subtitle, {
+            baseFill: accessibleInk(colors.muted, bg, subtitle.fontSize),
+            fontWeight: "600",
+            fontFamily: fonts.heading,
+            bold: false,
+          }),
+          (_line, i) => (
+            <text
+              key={i}
+              x={TITLE_X}
+              y={subtitleY + i * subtitle.lineHeight}
+              fontFamily={fonts.heading}
+              fontSize={subtitle.fontSize}
+              fill={accessibleInk(colors.muted, bg, subtitle.fontSize)}
+              dominantBaseline="alphabetic"
+            />
+          ),
+        )}
 
       {/* 页脚署名（作者 / 密级 / 日期 / 版本）—— 同样是 B 层 */}
       {footer && (

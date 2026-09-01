@@ -1,7 +1,7 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import type { Slide } from "@/ir"
-import { fitEmphasisHeading, headingEmphasisPaint, renderEmphasisHeading } from "../render/emphasis"
+import { fitEmphasisHeading, fitEmphasisLine, headingEmphasisPaint, renderEmphasisHeading, renderEmphasisText } from "../render/emphasis"
 import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout"
 import { accessibleInk, readableOn } from "../render/ink"
 
@@ -25,6 +25,9 @@ const PILL_MIN_W = 280
 const PILL_MAX_W = 640
 const PILL_PAD_X = 74
 const CTA_SIZE = 22
+
+/** Items of the accepted `bullets` block this face has room to draw. */
+const ITEM_MAX = 1
 
 function ctaSource(slide: Slide): string | null {
   const bullets = slide.components.find((c) => c.type === "bullets")
@@ -51,7 +54,7 @@ export function PillCtaEnding({ slide, ctx }: SvgTemplateProps) {
   const headingLastY =
     HEADING_Y + Math.max(0, heading.lines.length - 1) * heading.lineHeight
   const subheading = slide.subheading
-    ? fitSvgLine(slide.subheading, {
+    ? fitEmphasisLine(slide.subheading, {
         maxWidth: CONTENT_MAX_W,
         fontSize: SUB_SIZE,
         minFontSize: 16,
@@ -105,19 +108,24 @@ export function PillCtaEnding({ slide, ctx }: SvgTemplateProps) {
         ),
       )}
 
-      {subheading && subheading.text && (
-        <text
-          data-truncated={subheading.truncated ? "1" : undefined}
-          x={CENTER_X}
-          y={subY}
-          textAnchor="middle"
-          fontFamily={fonts.body}
-          fontSize={subheading.fontSize}
-          fill={accessibleInk(colors.muted, bg, subheading.fontSize)}
-          dominantBaseline="alphabetic"
-        >
-          {subheading.text}
-        </text>
+      {subheading && renderEmphasisText(
+        subheading.segments,
+        headingEmphasisPaint(ctx, subheading, {
+          baseFill: accessibleInk(colors.muted, bg, subheading.fontSize),
+          fontWeight: "600",
+          fontFamily: fonts.body,
+          bold: false,
+        }),
+            <text
+              data-truncated={subheading.truncated ? "1" : undefined}
+              x={CENTER_X}
+              y={subY}
+              textAnchor="middle"
+              fontFamily={fonts.body}
+              fontSize={subheading.fontSize}
+              fill={accessibleInk(colors.muted, bg, subheading.fontSize)}
+              dominantBaseline="alphabetic"
+              />
       )}
 
       {cta && (
@@ -160,7 +168,7 @@ export const layoutDef = {
   slots: [
     { name: "heading", accepts: [] },
     { name: "subheading", accepts: [] },
-    { name: "body", accepts: ["bullets", "paragraph"], capacity: 1 },
+    { name: "body", accepts: ["bullets", "paragraph"], capacity: 1, itemCapacity: ITEM_MAX },
   ],
   headingFit: {
     maxWidth: CONTENT_MAX_W,

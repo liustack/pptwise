@@ -2,8 +2,8 @@ import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import { chapterNumberFor } from "../lib/derive"
 import { scaleTypePx } from "../render/heading-fit"
-import { fitEmphasisHeading, headingEmphasisPaint, renderEmphasisHeading } from "../render/emphasis"
-import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout"
+import { fitEmphasisHeading, fitEmphasisLine, headingEmphasisPaint, renderEmphasisHeading, renderEmphasisText } from "../render/emphasis"
+import { measureTextUnits } from "../lib/svg-text-layout"
 import { accessibleOpacity, readableOn } from "../render/ink"
 import { underlineYFromBaseline } from "./underline"
 
@@ -59,7 +59,7 @@ export function BannerChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
   const headingLastY =
     headingY + Math.max(0, heading.lines.length - 1) * heading.lineHeight
   const subheading = slide.subheading
-    ? fitSvgLine(slide.subheading, { maxWidth: 1088, fontSize: 36, minFontSize: 18 })
+    ? fitEmphasisLine(slide.subheading, { maxWidth: 1088, fontSize: 36, minFontSize: 18 })
     : null
   const subheadingY = headingLastY + 56
   const subheadingOpacity = subheading
@@ -88,7 +88,7 @@ export function BannerChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
   // zh/en/mixed all get the same optical air.
   const underlined = subheading
     ? {
-        text: subheading.text,
+        text: subheading.segments.map((segment) => segment.text).join(""),
         fontSize: subheading.fontSize,
         baseline: subheadingY,
         weight: { fontFamily: ctx.fonts.body, bold: false },
@@ -148,20 +148,25 @@ export function BannerChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
       )}
 
       {/* Optional subheading */}
-      {subheading && (
-        <text
-          data-truncated={subheading.truncated ? "1" : undefined}
-          x="640"
-          y={subheadingY}
-          fontFamily={ctx.fonts.body}
-          fontSize={subheading.fontSize}
-          fill={ink}
-          opacity={subheadingOpacity}
-          textAnchor="middle"
-          dominantBaseline="alphabetic"
-        >
-          {subheading.text}
-        </text>
+      {subheading && renderEmphasisText(
+        subheading.segments,
+        headingEmphasisPaint(ctx, subheading, {
+          baseFill: ink,
+          fontWeight: "600",
+          fontFamily: ctx.fonts.body,
+          bold: false,
+        }),
+            <text
+              data-truncated={subheading.truncated ? "1" : undefined}
+              x="640"
+              y={subheadingY}
+              fontFamily={ctx.fonts.body}
+              fontSize={subheading.fontSize}
+              fill={ink}
+              opacity={subheadingOpacity}
+              textAnchor="middle"
+              dominantBaseline="alphabetic"
+              />
       )}
 
       {/* Accent underline for the line the block ends with. A chapter page

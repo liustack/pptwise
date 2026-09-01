@@ -1,28 +1,28 @@
 import type { SvgTemplateProps } from "../types"
 import { sectionNameFor } from "../../lib/derive"
 import { renderEmphasisTspans } from "../../render/emphasis"
-import { heroCaption, heroValue, pullQuoteAttribution } from "../minimal-shared"
-import { fitHeroLine, fitSparseHeading, pad2 } from "./shared"
+import { heroCaption, heroUnit, heroSource, heroValue, pullQuoteAttribution, pullQuoteContext, pullQuoteText } from "../minimal-shared"
+import { fitHeroLine, heroUnitMark, fitSparseHeading, fitSparseQuote, pad2, quoteBlockBaseline } from "./shared"
 
 /** journal 稀排脸：巨引号、期号巨数、报头格言。不画 motif 报头双线。 */
 
 export function pullQuote({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
-  const heading = fitSparseHeading(slide.heading, {
-    maxWidth: 880,
+  const quote = fitSparseQuote(pullQuoteText(slide), {
+    maxWidth: 820,
     fontSize: 46,
-    maxLines: 2,
-    minPt: 26,
-    lineHeightRatio: 76 / 46,
     fontFamily: fonts.heading,
-    bold: false,
+    lineHeightRatio: 1.44,
   })
+  const context = pullQuoteContext(slide)
   const attr = pullQuoteAttribution(slide)
+  const last = quote.lines.length - 1
+  const firstY = quoteBlockBaseline(396, quote)
   return (
     <>
       <text
         x={150}
-        y={300}
+        y={Math.round(firstY) - 30}
         fontFamily={fonts.heading}
         fontSize={200}
         fill={colors.accent}
@@ -31,18 +31,24 @@ export function pullQuote({ slide, ctx }: SvgTemplateProps) {
       >
         {"\u201C"}
       </text>
-      {heading.lines.map((line, i) => (
+      {context && (
+        <text x={300} y={172} fontFamily={fonts.body} fontSize={18} fill={colors.muted} dominantBaseline="alphabetic">
+          {context}
+        </text>
+      )}
+      {quote.lines.map((line, i) => (
         <text
           key={i}
+          data-truncated={quote.truncated && i === last ? "1" : undefined}
           x={300}
-          y={360 + i * heading.lineHeight}
+          y={firstY + i * quote.lineHeight}
           fontFamily={fonts.heading}
-          fontSize={heading.fontSize}
+          fontSize={quote.fontSize}
           fontWeight="400"
           fill={colors.primary}
           dominantBaseline="alphabetic"
         >
-          {renderEmphasisTspans(heading.lineSegs[i] ?? [{ text: line, emphasized: false }], {
+          {renderEmphasisTspans(quote.lineSegs[i] ?? [{ text: line, emphasized: false }], {
             accent: colors.accent,
             baseFill: colors.primary,
             fontWeight: "400",
@@ -50,7 +56,14 @@ export function pullQuote({ slide, ctx }: SvgTemplateProps) {
         </text>
       ))}
       {attr && (
-        <text x={300} y={540} fontFamily={fonts.heading} fontSize={19} fill={colors.muted} dominantBaseline="alphabetic">
+        <text
+          x={300}
+          y={Math.round(firstY + last * quote.lineHeight) + 76}
+          fontFamily={fonts.heading}
+          fontSize={19}
+          fill={colors.muted}
+          dominantBaseline="alphabetic"
+        >
           {`\u2014\u2014 ${attr}`}
         </text>
       )}
@@ -63,7 +76,10 @@ export function statHero({ ir, slide, index, ctx }: SvgTemplateProps) {
   const section = sectionNameFor(ir.slides, index)
   const kicker = [`№ ${pad2(index + 1)}`, section].filter((v): v is string => Boolean(v && v.trim())).join(" · ")
   const fitted = fitHeroLine(heroValue(slide), { maxWidth: 1100, fontSize: 300, fontFamily: fonts.heading, bold: false })
+  const unit = heroUnit(slide)
+  const unitMark = heroUnitMark(fitted.fontSize)
   const caption = heroCaption(slide)
+  const source = heroSource(slide)
   return (
     <>
       <text
@@ -88,6 +104,11 @@ export function statHero({ ir, slide, index, ctx }: SvgTemplateProps) {
         dominantBaseline="alphabetic"
       >
         {fitted.text}
+        {unit && (
+          <tspan dx={unitMark.dx} fontSize={unitMark.fontSize}>
+            {unit}
+          </tspan>
+        )}
       </text>
       <line x1={500} y1={540} x2={780} y2={540} stroke={colors.primary} strokeWidth={1.5} />
       {caption && (
@@ -101,6 +122,19 @@ export function statHero({ ir, slide, index, ctx }: SvgTemplateProps) {
           dominantBaseline="alphabetic"
         >
           {caption}
+        </text>
+      )}
+      {source && (
+        <text
+          x={640}
+          y={628}
+        textAnchor="middle"
+          fontFamily={fonts.heading}
+          fontSize={16}
+          fill={colors.muted}
+          dominantBaseline="alphabetic"
+        >
+          {source}
         </text>
       )}
     </>

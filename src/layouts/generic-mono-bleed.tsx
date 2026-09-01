@@ -1,6 +1,6 @@
 import type { SvgTemplateProps } from "./types"
-import { fitEmphasisHeading, headingEmphasisPaint, renderEmphasisHeading } from "../render/emphasis"
-import { fitSvgLine } from "../lib/svg-text-layout"
+import { fitEmphasisHeading, fitEmphasisLine, headingEmphasisPaint, renderEmphasisHeading, renderEmphasisText } from "../render/emphasis"
+
 import { accessibleOpacity, readableOn } from "../render/ink"
 
 /**
@@ -36,7 +36,7 @@ export function GenericMonoBleedContent({ slide, ctx }: SvgTemplateProps) {
 
   const subSource = slide.subheading?.trim()
   const subheading = subSource
-    ? fitSvgLine(subSource, {
+    ? fitEmphasisLine(subSource, {
         maxWidth: HEADING_MAX_W,
         fontSize: SUB_SIZE,
         minFontSize: 16,
@@ -70,20 +70,25 @@ export function GenericMonoBleedContent({ slide, ctx }: SvgTemplateProps) {
         ),
       )}
 
-      {subheading && (
-        <text
-          data-truncated={subheading.truncated ? "1" : undefined}
-          x={CENTER_X}
-          y={subY}
-          textAnchor="middle"
-          fontFamily={ctx.fonts.body}
-          fontSize={subheading.fontSize}
-          fill={fg}
-          fillOpacity={subOpacity}
-          dominantBaseline="alphabetic"
-        >
-          {subheading.text}
-        </text>
+      {subheading && renderEmphasisText(
+        subheading.segments,
+        headingEmphasisPaint(ctx, subheading, {
+          baseFill: fg,
+          fontWeight: "600",
+          fontFamily: ctx.fonts.body,
+          bold: false,
+        }),
+            <text
+              data-truncated={subheading.truncated ? "1" : undefined}
+              x={CENTER_X}
+              y={subY}
+              textAnchor="middle"
+              fontFamily={ctx.fonts.body}
+              fontSize={subheading.fontSize}
+              fill={fg}
+              fillOpacity={subOpacity}
+              dominantBaseline="alphabetic"
+              />
       )}
     </>
   )

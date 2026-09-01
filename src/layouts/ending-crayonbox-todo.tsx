@@ -1,7 +1,7 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import { fitSvgLine } from "../lib/svg-text-layout"
-import { stripEmphasis } from "../render/emphasis"
+import { fitEmphasisLine, headingEmphasisPaint, renderEmphasisText, stripEmphasis } from "../render/emphasis"
 import { accessibleInk } from "../render/ink"
 import {
   CrayonboxDecorPiece,
@@ -16,10 +16,13 @@ const ITEM_BADGE_YS = [292, 378, 464] as const
 const ITEM_TEXT_YS = [329, 415, 501] as const
 const BADGE_FILLS = [SKY_BLUE, "accent", GRASS_GREEN] as const
 
+/** Items of the accepted `bullets` block this face has room to draw. */
+const ITEM_MAX = 3
+
 function actionItems(slide: SvgTemplateProps["slide"]): string[] {
   const bullets = slide.components.find((component) => component.type === "bullets")
   if (!bullets || bullets.type !== "bullets") return []
-  return bullets.items.slice(0, 3)
+  return bullets.items.slice(0, ITEM_MAX)
 }
 
 function contactLine({ ir, slide }: Pick<SvgTemplateProps, "ir" | "slide">): string {
@@ -60,7 +63,7 @@ export function EndingCrayonboxTodo({ ir, slide, ctx }: SvgTemplateProps) {
   // gets replaced by near-black — the design's blue contact line disappears.
   // The cover's date line is already 24 for the same reason.
   const contact = contactSource
-    ? fitSvgLine(contactSource, {
+    ? fitEmphasisLine(contactSource, {
         maxWidth: 1088,
         fontSize: 24,
         minFontSize: 17,
@@ -150,19 +153,19 @@ export function EndingCrayonboxTodo({ ir, slide, ctx }: SvgTemplateProps) {
         </g>
       ))}
 
-      {contact && (
-        <text
-          data-truncated={contact.truncated ? "1" : undefined}
-          x={96}
-          y={600}
-          fontFamily={fonts.body}
-          fontSize={contact.fontSize}
-          fontWeight="700"
-          fill={accessibleInk(colors.primary, bg, contact.fontSize)}
-          dominantBaseline="alphabetic"
-        >
-          {withoutOverflowMark(contact.text)}
-        </text>
+      {contact && renderEmphasisText(
+        contact.segments,
+        headingEmphasisPaint(ctx, contact, { baseFill: accessibleInk(colors.primary, bg, contact.fontSize), fontWeight: "700", fontFamily: fonts.body, bold: false }),
+            <text
+              data-truncated={contact.truncated ? "1" : undefined}
+              x={96}
+              y={600}
+              fontFamily={fonts.body}
+              fontSize={contact.fontSize}
+              fontWeight="700"
+              fill={accessibleInk(colors.primary, bg, contact.fontSize)}
+              dominantBaseline="alphabetic"
+              />
       )}
     </>
   )
@@ -177,7 +180,7 @@ export const layoutDef = {
   slots: [
     { name: "kicker", accepts: [] },
     { name: "heading", accepts: [] },
-    { name: "body", accepts: ["bullets"], capacity: 1 },
+    { name: "body", accepts: ["bullets"], capacity: 1, itemCapacity: ITEM_MAX },
     { name: "subheading", accepts: [] },
   ],
 } satisfies LayoutDefinition
