@@ -110,8 +110,7 @@ export function ToneAdaptiveEnding({ ir, slide, ctx }: SvgTemplateProps) {
     Math.max(0, heading.lines.length - 1) * heading.lineHeight
   const headingLastY = HEADING_LAST_BASELINE
   const dividerY = headingLastY + 124
-  const contactLabelY = dividerY + 52
-  const contactTextY = dividerY + 88
+  const contactTextY = dividerY + 62
   const copyrightY = dividerY + 164
 
   return (
@@ -169,32 +168,24 @@ export function ToneAdaptiveEnding({ ir, slide, ctx }: SvgTemplateProps) {
         strokeWidth="1.6"
       />
 
-      {/* Contact section */}
+      {/* No label above the contact line. It used to read "Contact" — a
+          maintainer's English word arriving on a customer's slide, printed on
+          every deck in every language, and the one line in this block nobody
+          authored. `ir.meta` has no label field to put there instead (see
+          MetaSchema: contact carries name/email/phone/website and no caption),
+          so the label is gone rather than replaced with another word of ours.
+          `ending-action-pad` already shipped this posture: "无 Contact". */}
       {contactText && (
-        <>
-          <text
-            x="64"
-            y={contactLabelY}
-            fontFamily={fonts.body}
-            fontSize="20"
-            fill={mutedFg}
-            opacity={withBg ? 0.6 : 1}
-            letterSpacing="4"
-            dominantBaseline="alphabetic"
-          >
-            Contact
-          </text>
-          <text
-            x="64"
-            y={contactTextY}
-            fontFamily={fonts.body}
-            fontSize="28"
-            fill={textFg}
-            dominantBaseline="alphabetic"
-          >
-            {contactText}
-          </text>
-        </>
+        <text
+          x="64"
+          y={contactTextY}
+          fontFamily={fonts.body}
+          fontSize="28"
+          fill={textFg}
+          dominantBaseline="alphabetic"
+        >
+          {contactText}
+        </text>
       )}
 
       {/* Copyright */}
@@ -224,7 +215,7 @@ export function ToneAdaptiveEnding({ ir, slide, ctx }: SvgTemplateProps) {
 // means.
 export const layoutDef: LayoutDefinition = {
   // ending-tone-adaptive-ending.tsx: org kicker, heading ("Thank you"),
-  // divider, "Contact" contact section + copyright (meta). No subheading
+  // divider, the authored contact line + copyright (meta). No subheading
   // render.
   id: "tone-adaptive-ending",
   kind: "standard",

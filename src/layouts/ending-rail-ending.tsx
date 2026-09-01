@@ -191,30 +191,24 @@ export function RailEnding({ ir, slide, ctx }: SvgTemplateProps) {
         strokeWidth="1.4"
       />
 
+      {/* No label above the contact line. It used to read "Contact" — a
+          maintainer's English word arriving on a customer's slide, printed on
+          every deck in every language, and the one line in this block nobody
+          authored. `ir.meta` has no label field to put there instead (see
+          MetaSchema: contact carries name/email/phone/website and no caption),
+          so the label is gone rather than replaced with another word of ours.
+          `ending-action-pad` already shipped this posture: "无 Contact". */}
       {contactText && (
-        <>
-          <text
-            x="400"
-            y={hairlineY + 52}
-            fontFamily={fonts.body}
-            fontSize="20"
-            fill={colors.muted}
-            letterSpacing="4"
-            dominantBaseline="alphabetic"
-          >
-            Contact
-          </text>
-          <text
-            x="400"
-            y={hairlineY + 90}
-            fontFamily={fonts.body}
-            fontSize="28"
-            fill={colors.text}
-            dominantBaseline="alphabetic"
-          >
-            {contactText}
-          </text>
-        </>
+        <text
+          x="400"
+          y={hairlineY + 62}
+          fontFamily={fonts.body}
+          fontSize="28"
+          fill={colors.text}
+          dominantBaseline="alphabetic"
+        >
+          {contactText}
+        </text>
       )}
 
       {/* Copyright — B-tier meta-information text (docs/contrast-system.md's
@@ -249,7 +243,7 @@ export function RailEnding({ ir, slide, ctx }: SvgTemplateProps) {
 export const layoutDef: LayoutDefinition = {
   // ending-rail-ending.tsx: corner color-block accents (decor, echoing
   // Cover's rect motif), org kicker, heading ("Thank you"), subheading,
-  // hairline + "Contact" contact section + copyright line (all meta).
+  // hairline + the authored contact line + copyright line (all meta).
   id: "rail-ending",
   kind: "standard",
   slideTypes: ["ending"],

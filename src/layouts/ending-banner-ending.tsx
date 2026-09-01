@@ -226,31 +226,24 @@ export function BannerEnding({ ir, slide, ctx }: SvgTemplateProps) {
         strokeWidth="1.4"
       />
 
-      {/* Contact section */}
+      {/* No label above the contact line. It used to read "Contact" — a
+          maintainer's English word arriving on a customer's slide, printed on
+          every deck in every language, and the one line in this block nobody
+          authored. `ir.meta` has no label field to put there instead (see
+          MetaSchema: contact carries name/email/phone/website and no caption),
+          so the label is gone rather than replaced with another word of ours.
+          `ending-action-pad` already shipped this posture: "无 Contact". */}
       {contactText && (
-        <>
-          <text
-            x="96"
-            y={dividerY + 52}
-            fontFamily={fonts.body}
-            fontSize="20"
-            fill={colors.muted}
-            letterSpacing="4"
-            dominantBaseline="alphabetic"
-          >
-            Contact
-          </text>
-          <text
-            x="96"
-            y={dividerY + 90}
-            fontFamily={fonts.body}
-            fontSize="28"
-            fill={accessibleInk(colors.primary, bg, 28)}
-            dominantBaseline="alphabetic"
-          >
-            {contactText}
-          </text>
-        </>
+        <text
+          x="96"
+          y={dividerY + 62}
+          fontFamily={fonts.body}
+          fontSize="28"
+          fill={accessibleInk(colors.primary, bg, 28)}
+          dominantBaseline="alphabetic"
+        >
+          {contactText}
+        </text>
       )}
 
       {/* Copyright — B-tier meta-information text (docs/contrast-system.md's
@@ -285,7 +278,7 @@ export function BannerEnding({ ir, slide, ctx }: SvgTemplateProps) {
 export const layoutDef: LayoutDefinition = {
   // ending-banner-ending.tsx: org kicker, italic heading ("Thank you."),
   // subheading (falls back to "We appreciate your time."), divider,
-  // "Contact" contact section + copyright (meta).
+  // the authored contact line + copyright (meta).
   id: "banner-ending",
   kind: "standard",
   slideTypes: ["ending"],

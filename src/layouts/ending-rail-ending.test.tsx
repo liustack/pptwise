@@ -56,7 +56,10 @@ describe("RailEnding", () => {
     expect(out).toContain("衷心感谢")
     expect(out).toContain("感谢参与本次评审")
     expect(out).not.toContain("Thank you")
-    expect(out).toContain("Contact")
+    // 联系行只留作者写的内容：原来那行 "Contact" 是维护者的英文词印在客户
+    // 的片子上，`ir.meta` 里没有可替换的标签字段，于是整行去掉而不是换一个
+    // 我们自己的词。
+    expect(out).not.toContain("Contact")
     expect(out).toContain("hi@weilan.example")
     expect(out).toContain("© 2026 维岚科技 保留所有权利")
 
