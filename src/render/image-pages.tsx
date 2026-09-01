@@ -973,9 +973,15 @@ function ImageAnnotateSoloPage({
           >
             {note.index}
           </text>
+          {/* An annotation this page kept but could not set whole says so
+              on the line that carries the cut. `dropped` below counts the
+              items and siblings this face turned away, and counted nothing
+              for an item it accepted and then trimmed to one or two lines,
+              so a long bullet used to lose its tail with no mark anywhere. */}
           {note.title.lines.map((line, li) => (
             <text
               key={li}
+              data-truncated={note.title.truncated && li === note.title.lines.length - 1 ? "1" : undefined}
               x={ANN_NOTE_X + ANN_NOTE_INDENT}
               y={note.titleY + li * note.title.lineHeight}
               fontSize={note.title.fontSize}
@@ -990,6 +996,7 @@ function ImageAnnotateSoloPage({
           {note.desc?.lines.map((line, li) => (
             <text
               key={li}
+              data-truncated={note.desc!.truncated && li === note.desc!.lines.length - 1 ? "1" : undefined}
               x={ANN_NOTE_X + ANN_NOTE_INDENT}
               y={note.descY + li * note.desc!.lineHeight}
               fontSize={note.desc!.fontSize}

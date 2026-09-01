@@ -199,6 +199,25 @@ describe("progress_donuts rendering", () => {
     expect(donutArcPath(0, 0, 10, 0)).toBe("")
   })
 
+  it("says on the centre value itself when the ring had to cut it", () => {
+    // A rate written out to full float precision is a legal completion rate
+    // and far wider than the hole in the middle of the ring.
+    const precise = {
+      type: "progress_donuts" as const,
+      items: [{ value: "0.860000000000000000000001", label: "\u9884\u6d4b\u547d\u4e2d\u7387" }],
+    }
+    expect(parseProgressRatio(precise.items[0]!.value)).toBeCloseTo(0.86)
+    const { container } = svg(progressDonuts.render(precise, { x: 0, y: 0, w: 1120 }, themeCtx("luxe")))
+    const cut = Array.from(container.querySelectorAll("text")).filter((t) =>
+      t.hasAttribute("data-truncated"),
+    )
+    // The label and source lines already marked their own cuts; the number
+    // in the middle of the ring, the one thing a reader looks at, did not.
+    const value = cut.find((t) => (t.textContent ?? "").startsWith("0.86"))
+    expect(value, cut.map((t) => t.textContent).join(" / ")).toBeDefined()
+    expect(value!.textContent!.length).toBeLessThan(precise.items[0]!.value.length)
+  })
+
   it("draws one track circle and one arc per rate, in the accent token", () => {
     const luxe = themeCtx("luxe")
     const { container } = svg(progressDonuts.render(RATES, { x: 0, y: 0, w: 1120 }, luxe))

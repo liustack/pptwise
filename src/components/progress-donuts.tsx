@@ -189,6 +189,7 @@ export const progressDonuts: SvgComponent<ProgressDonutsComponent> = {
             {tailFit ? (
               <>
                 <text
+                  data-truncated={headFit.truncated ? "1" : undefined}
                   x={cx}
                   y={cy - tailFit.fontSize * 0.35 + valueSize * BASELINE_FUDGE}
                   textAnchor="middle"
@@ -201,6 +202,7 @@ export const progressDonuts: SvgComponent<ProgressDonutsComponent> = {
                   {headFit.text}
                 </text>
                 <text
+                  data-truncated={tailFit.truncated ? "1" : undefined}
                   x={cx}
                   y={cy + tailFit.fontSize * 0.95}
                   textAnchor="middle"
@@ -215,6 +217,7 @@ export const progressDonuts: SvgComponent<ProgressDonutsComponent> = {
               </>
             ) : (
               <text
+                data-truncated={headFit.truncated ? "1" : undefined}
                 x={cx}
                 y={cy + valueSize * BASELINE_FUDGE}
                 textAnchor="middle"

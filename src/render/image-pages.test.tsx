@@ -352,6 +352,29 @@ describe("image takeover dropped-content propagation", () => {
     expect(slideToRender(doc, slide, 0).dropped).toBe(2)
   })
 
+  it("image-annotate marks a kept annotation it had to cut", () => {
+    const long =
+      "\u5f00\u901a\u94fe\u8def\u4ecd\u5728\u6253\u78e8\uff1a\u7b2c\u4e09\u5b63\u5ea6\u7684\u5ba2\u7fa4\u6536\u5165\u9884\u6d4b\u5b58\u5728\u6b63\u8d1f\u4e24\u6210\u7684\u504f\u5dee\u7a7a\u95f4\uff0c\u800c\u6559\u80b2\u5ba2\u7fa4\u7684\u5f00\u901a\u5468\u671f\u53c8\u6bd4\u5546\u4e1a\u5ba2\u7fa4\u957f\u51fa\u56db\u5468\uff0c\u4e24\u4ef6\u4e8b\u53e0\u5728\u4e00\u8d77\u624d\u662f\u771f\u6b63\u7684\u98ce\u9669"
+    const slide: Slide = {
+      type: "content",
+      kind: "photo",
+      heading: "Annotated image",
+      components: [
+        { type: "image", asset_id: "hero", fit: "cover" },
+        { type: "bullets", items: [long] },
+      ],
+    }
+    const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "consulting", {
+      content: { photo: "image-annotate" },
+    })
+    const doc = makeIr(themeId, slide)
+    // Four items or fewer, so nothing is dropped. The one item the face
+    // accepted is set into one or two lines and the tail is gone, which the
+    // page has to say on the line that carries the cut.
+    expect(slideToRender(doc, slide, 0).dropped).toBe(0)
+    expect(slideToSvgMarkup(doc, slide, 0)).toContain('data-truncated="1"')
+  })
+
   it("image-bottom propagates components rejected by layoutContentFit", () => {
     const slide: Slide = {
       type: "content",

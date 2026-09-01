@@ -1076,21 +1076,34 @@ function radialSliceLabels(
       ),
     ),
   )
+  // A gutter too short for every label drops the smallest slices, which is
+  // the right trade (a name on the biggest wedge is worth more than five
+  // names in a pile), but it used to be an invisible one: the wedge stayed,
+  // the author's name for it left, and nothing on the page or in the audit
+  // said so. The count is declared here, silent because the page itself
+  // cannot show it.
+  const hidden = slices.filter((slice) => placed.get(String(slice.key))?.hidden ?? true).length
   return (
     <>
+      {hidden > 0 && <g data-dropped={hidden} data-dropped-silent={hidden} />}
       {slices.map((slice) => {
         const label = placed.get(String(slice.key))
-        if (!label || label.hidden || !slice.fitted.text) return null
+        if (!label || label.hidden) return null
         const elbowX = slice.right ? slice.textX - PIE_LEADER_GAP : slice.textX + PIE_LEADER_GAP
         return (
           <g key={`label-${slice.key}`}>
-            <polyline
-              points={`${slice.arcX},${slice.arcY} ${slice.stubX},${slice.stubY} ${elbowX},${label.y}`}
-              fill="none"
-              stroke={mutedColor}
-              strokeWidth={1}
-              strokeOpacity={0.55}
-            />
+            {/* No leader without a label at the end of it: a fit that came
+                back with nothing keeps its own cut marker below, and a line
+                pointing at empty air is a defect a reader can see. */}
+            {slice.fitted.text !== "" && (
+              <polyline
+                points={`${slice.arcX},${slice.arcY} ${slice.stubX},${slice.stubY} ${elbowX},${label.y}`}
+                fill="none"
+                stroke={mutedColor}
+                strokeWidth={1}
+                strokeOpacity={0.55}
+              />
+            )}
             <text
               data-value-label="1"
               data-truncated={slice.fitted.truncated ? "1" : undefined}
@@ -1221,6 +1234,11 @@ export function renderFunnel(
   const labelFill = directLabelInk(textColor, bgHex)
   return (
     <>
+      {/* Bands only, because no placement inside this component keeps
+          neighbouring labels apart at this row height. Every stage name the
+          author wrote is off the page and the bands say nothing about it, so
+          the count is declared here. */}
+      {!labeled && data.length > 0 && <g data-dropped={data.length} data-dropped-silent={data.length} />}
       {data.map((d, i) => {
         const ratio = d.y / max
         const barW = clampChartExtent(bandsW * ratio)
@@ -1250,7 +1268,10 @@ export function renderFunnel(
               height={stepH - 4}
               fill={palette[i % palette.length]}
             />
-            {fitted && fitted.text && (
+            {/* A fit that came back with nothing still says so on its own
+                element. Deleting the node took the only trace of the cut
+                with it. */}
+            {fitted && (
               <text
                 data-value-label="1"
                 data-truncated={fitted.truncated ? "1" : undefined}

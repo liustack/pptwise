@@ -1728,7 +1728,7 @@ describe("renderPie — direct slice labels", () => {
     }
   })
 
-  it("drops the smallest slices' labels rather than stacking a column it cannot hold", () => {
+  it("drops the smallest slices' labels rather than stacking a column it cannot hold, and declares the count", () => {
     const many: ChartSeries[] = [
       { name: "细分", data: Array.from({ length: 40 }, (_, i) => ({ x: `细分${i}`, y: 40 - i * 0.5 })) },
     ]
@@ -1739,6 +1739,16 @@ describe("renderPie — direct slice labels", () => {
     // Whatever survives is the biggest, and none of it collides.
     expect(texts).toContain("细分0 40")
     expectNoOverlap(container)
+    // The wedges stay and their names go, which is the trade this layout
+    // makes. What it may not do is make the trade invisible.
+    const dropped = container.querySelector("[data-dropped]")
+    expect(dropped).not.toBeNull()
+    expect(Number(dropped!.getAttribute("data-dropped"))).toBe(40 - texts.length)
+  })
+
+  it("says nothing about drops when every slice keeps its name", () => {
+    const { container } = svg(renderPie(PIE_ZH, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
+    expect(container.querySelector("[data-dropped]")).toBeNull()
   })
 
   it("routes the label ink through the background it is painted on", () => {
@@ -1800,16 +1810,36 @@ describe("renderFunnel — direct stage labels", () => {
     expect(widest).toBeGreaterThanOrEqual(W * 0.5)
   })
 
-  it("prints no label at all once a row is shorter than a line of text", () => {
+  it("prints no label at all once a row is shorter than a line of text, and declares every name it kept off", () => {
     // 20 stages over 240px is a 12px row: there is no placement that keeps
     // neighbouring labels apart, so the chart goes back to bands only rather
-    // than printing an ink blot.
+    // than printing an ink blot. All or nothing is the right call; making it
+    // silently was not.
     const crowded: ChartSeries[] = [
       { name: "阶段", data: Array.from({ length: 20 }, (_, i) => ({ x: `阶段${i}`, y: 100 - i * 4 })) },
     ]
     const { container } = svg(renderFunnel(crowded, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
     expect(labelsOf(container)).toHaveLength(0)
     expect(container.querySelectorAll("rect")).toHaveLength(20)
+    const dropped = container.querySelector("[data-dropped]")
+    expect(dropped).not.toBeNull()
+    expect(Number(dropped!.getAttribute("data-dropped"))).toBe(20)
+  })
+
+  it("keeps the marker on a stage whose label had no width to fit into", () => {
+    const one: ChartSeries[] = [{ name: "阶段", data: [{ x: "唯一阶段", y: 10 }] }]
+    const { container } = svg(renderFunnel(one, PALETTE, 0, 0, 0, H, MUTED, TEXT, ACCENT))
+    // Nothing legible got out, but the element that would have carried the
+    // label is still there saying it was cut. Deleting it left the loss with
+    // no trace at all.
+    const label = container.querySelector("text[data-value-label]")
+    expect(label).not.toBeNull()
+    expect(label!.getAttribute("data-truncated")).toBe("1")
+  })
+
+  it("declares no drop when every band keeps its name", () => {
+    const { container } = svg(renderFunnel(FUNNEL_ZH, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
+    expect(container.querySelector("[data-dropped]")).toBeNull()
   })
 
   it("routes the label ink through the background it is painted on", () => {
