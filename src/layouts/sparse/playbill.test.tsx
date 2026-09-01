@@ -27,6 +27,15 @@ function ir(slides: Slide[]): PptxIR {
   } as unknown as PptxIR
 }
 
+const SHOTS = {
+  shot: { src: "data:image/png;base64,iVBORw0KGgo=", alt: "客户现场" },
+  shot2: { src: "data:image/png;base64,iVBORw0KGgo=", alt: "第二现场" },
+}
+
+function irWithShot(slides: Slide[]): PptxIR {
+  return { ...ir(slides), assets: { images: SHOTS } } as unknown as PptxIR
+}
+
 function render(body: React.ReactElement): { markup: string; root: Element } {
   const markup = renderSvgMarkup(
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">
@@ -38,6 +47,7 @@ function render(body: React.ReactElement): { markup: string; root: Element } {
 
 describe("playbill sparse faces", () => {
   const ctx = buildCtx(resolveStyle("playbill"), {})
+  const shotCtx = buildCtx(resolveStyle("playbill"), SHOTS)
 
   it("statement is three-line heavy type with an accent run and a closer bar", () => {
     const chapter: Slide = { type: "chapter", heading: "工作区订阅 · 开演", components: [] } as Slide
@@ -201,5 +211,60 @@ describe("playbill sparse faces", () => {
     expect(Number(heading.getAttribute("font-size"))).toBeLessThanOrEqual(64)
     expect(root.querySelector("image")).toBeNull()
     expect(markup).not.toContain(PLACEHOLDER)
+  })
+
+  it("mono-bleed paints the kept picture's caption in the band under the bleed", () => {
+    const slide: Slide = {
+      type: "content",
+      kind: "points",
+      layout: "mono-bleed",
+      heading: "凌晨两点的会议，以后交给工作区",
+      components: [{ type: "image", asset_id: "shot", fit: "cover", caption: PLACEHOLDER }],
+    } as Slide
+    const { root } = render(
+      <MonoBleedContent ir={irWithShot([slide])} slide={slide} index={0} ctx={shotCtx} />,
+    )
+    expect(() => assertSubset(root)).not.toThrow()
+    expect(root.querySelector("image")).not.toBeNull()
+    const caption = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === PLACEHOLDER)
+    expect(caption, "the picture's caption reaches the page").toBeTruthy()
+    // playbill's own band register: bold line at 662, quiet line at 694.
+    const title = Array.from(root.querySelectorAll("text")).find((t) =>
+      (t.textContent ?? "").includes("凌晨两点"),
+    )!
+    expect(title.getAttribute("y")).toBe("662")
+    expect(caption!.getAttribute("y")).toBe("694")
+    expect(caption!.getAttribute("fill")).toBe(ctx.colors.bg)
+    // Both sit inside the field band under the 600px bleed, never on the photo.
+    for (const node of [title, caption!]) {
+      const size = Number(node.getAttribute("font-size"))
+      expect(Number(node.getAttribute("y")) - size).toBeGreaterThan(600)
+    }
+    expect(root.querySelector("[data-dropped]")).toBeNull()
+  })
+
+  it("mono-bleed steps aside when one picture frame cannot hold the page's pictures", () => {
+    const slide: Slide = {
+      type: "content",
+      kind: "points",
+      layout: "mono-bleed",
+      heading: "凌晨两点的会议，以后交给工作区",
+      components: [
+        {
+          type: "image_grid",
+          items: [
+            { asset_id: "shot", caption: PLACEHOLDER },
+            { asset_id: "shot2", caption: "第二张" },
+          ],
+        },
+      ],
+    } as Slide
+    const { root } = render(
+      <MonoBleedContent ir={irWithShot([slide])} slide={slide} index={0} ctx={shotCtx} />,
+    )
+    expect(() => assertSubset(root)).not.toThrow()
+    // Never one of two pictures painted silently.
+    expect(root.querySelector("image")).toBeNull()
+    expect(root.querySelector("[data-dropped]")).not.toBeNull()
   })
 })

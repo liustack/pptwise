@@ -4,7 +4,8 @@ import { fitHeadingLines } from "../../render/heading-fit"
 import { fitSvgLine } from "../../lib/svg-text-layout"
 import { renderEmphasisTspans } from "../../render/emphasis"
 import { accessibleOpacity, readableOn } from "../../render/ink"
-import { findImageSelection } from "../find-image"
+import { findImageSelection, singlePictureExact } from "../find-image"
+import { DroppedContentMarker } from "../../render/drop-marker"
 import { heroCaption, heroUnit, heroSource, heroValue } from "../minimal-shared"
 import { fitHeroLine, fitSparseHeading, fitStatementSource, heroUnitMark, isNumericHero, rotateRectPolygon, splitTrailingPercent } from "./shared"
 
@@ -203,14 +204,39 @@ function playbillTypeOnField({ slide, ctx }: SvgTemplateProps) {
   )
 }
 
+/** The band under the bleed, in playbill's own register: bold line, quiet line. */
+const BLEED_H = 600
+const BAND_TITLE_Y = 662
+const BAND_CAPTION_Y = 694
+const BAND_CAPTION_SIZE = 16
+const BAND_CAPTION_OPACITY = 0.72
+
 export function monoBleed(props: SvgTemplateProps) {
   const { slide, ctx } = props
   const { colors, fonts } = ctx
+  // One picture frame, so the same question the takeover faces ask: an
+  // `image_compare` or a multi-item `image_grid` would arrive here reduced to
+  // its first picture, and the ones it did not choose would leave with their
+  // captions and no mark on the page. This face steps back to type-on-field
+  // and records the loss instead of painting one of six in silence.
+  if (!singlePictureExact(slide)) {
+    return (
+      <>
+        {playbillTypeOnField(props)}
+        <DroppedContentMarker count={slide.components.length} />
+      </>
+    )
+  }
   const image = findImageSelection(slide)?.image
   const src = image ? ctx.images?.[image.asset_id]?.src : undefined
   const alt = image ? ctx.images?.[image.asset_id]?.alt : undefined
   if (!src) return playbillTypeOnField(props)
-  const caption = slide.heading?.trim()
+  const title = slide.heading?.trim()
+  // The picture's own caption, not the page heading. It used to have no place
+  // on this face at all: a photo authored with a caption reached the slide as
+  // pixels only, and the line the author wrote was never painted.
+  const caption = image?.caption?.trim()
+  const captionOpacity = accessibleOpacity(colors.bg, colors.primary, BAND_CAPTION_SIZE, BAND_CAPTION_OPACITY)
   return (
     <>
       <rect x={0} y={0} width={1280} height={720} fill={colors.primary} />
@@ -219,18 +245,31 @@ export function monoBleed(props: SvgTemplateProps) {
         x={0}
         y={0}
         width={1280}
-        height={600}
+        height={BLEED_H}
         preserveAspectRatio="xMidYMid slice"
         aria-label={alt || undefined}
       />
-      {caption && (
+      {title && (
         <text
           x={96}
-          y={672}
+          y={BAND_TITLE_Y}
           fontFamily={fonts.heading}
           fontSize={24}
           fontWeight="700"
           fill={colors.bg}
+          dominantBaseline="alphabetic"
+        >
+          {title}
+        </text>
+      )}
+      {caption && (
+        <text
+          x={96}
+          y={BAND_CAPTION_Y}
+          fontFamily={fonts.body}
+          fontSize={BAND_CAPTION_SIZE}
+          fill={colors.bg}
+          fillOpacity={captionOpacity}
           dominantBaseline="alphabetic"
         >
           {caption}
