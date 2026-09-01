@@ -115,7 +115,13 @@ export const insightPanel: SvgComponent<InsightPanelComponent> = {
     // 面板高度取实测与分配的较大者——脚注按内容实测底定位，恒在卡内。
     const panelH = Math.max(layout.contentH, box.h ?? layout.contentH)
     const titleBaseline = box.y + PAD_TOP + TITLE_SIZE
-    let rowY = titleBaseline + GAP_TITLE_ROWS
+    // Rows open below the title's full line box, the same rhythm row_cards
+    // uses (`contentTop + TITLE_LH + GAP_TITLE_NEXT`) and the same budget
+    // `panelLayout` above already spends on `contentH`. Advancing from the
+    // title's *baseline* instead spent 7px less than the panel had reserved,
+    // which both crowded the first row against the title and left the block
+    // floating short of the shell it was measured into.
+    let rowY = box.y + PAD_TOP + TITLE_LH + GAP_TITLE_ROWS
     return (
       <g>
         <rect

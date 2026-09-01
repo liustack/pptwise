@@ -74,6 +74,40 @@ describe("insight_panel component", () => {
     expect(title!.getAttribute("font-weight")).toBe("700")
   })
 
+  it("opens the title-to-rows air its own measure() reserves", () => {
+    // Two bugs in one line: `rowY = titleBaseline + GAP_TITLE_ROWS` advanced
+    // past the title by its *font size* (17) where `measure()` budgets its
+    // full line box (TITLE_LH, 24). The rows therefore started 7px above the
+    // height the panel had already reserved, and the title sat closer to the
+    // first row than any sibling card's title sits to its body.
+    const one = {
+      ...panel,
+      rows: [{ label: "重资产", text: "城市旗舰。" }],
+      footnote: undefined,
+    }
+    const measured = insightPanel.measure(one, 400, ctx)
+    const { container } = svg(insightPanel.render(one, { x: 0, y: 0, w: 400 }, ctx))
+    const shell = container.querySelector("rect")!
+    expect(Number(shell.getAttribute("height"))).toBe(measured)
+
+    const title = [...container.querySelectorAll("text")].find((t) => t.textContent === one.title)!
+    const label = [...container.querySelectorAll("text")].find((t) => t.textContent === "重资产")!
+    const titleSize = Number(title.getAttribute("font-size"))
+    const labelSize = Number(label.getAttribute("font-size"))
+
+    // The single row's block ends exactly one bottom pad above the shell, so
+    // the rows fill the height the panel measured instead of floating high.
+    const rowTop = Number(label.getAttribute("y")) - labelSize
+    const ROW_LINE_H = 23
+    const PAD_BOTTOM = 18
+    expect(measured - (rowTop + ROW_LINE_H)).toBe(PAD_BOTTOM)
+
+    // A panel header sits over labelled rows, so it carries a section's air.
+    const titleInkBottom = Number(title.getAttribute("y")) + titleSize * 0.22
+    const labelInkTop = Number(label.getAttribute("y")) - labelSize * 0.72
+    expect(labelInkTop - titleInkBottom).toBeGreaterThanOrEqual(24)
+  })
+
   it("measure() grows with more rows", () => {
     const three = insightPanel.measure(panel, 400, ctx)
     const one = insightPanel.measure({ ...panel, rows: panel.rows.slice(0, 1) }, 400, ctx)
