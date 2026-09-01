@@ -360,6 +360,17 @@ main { padding: 20px; }
 .famhead { margin: 24px 0 10px; padding-top: 11px; border-top: 1px solid var(--line); }
 .famhead h3 { margin: 0; font-size: 15px; font-weight: 650; letter-spacing: -0.01em; }
 .famhead h3 span { font-weight: 400; font-size: 12px; color: var(--ink-dim); margin-left: 8px; font-variant-numeric: tabular-nums; }
+/* On 按版式 the heading is also the way in: a family is a comparison in its
+   own right (all six covers side by side), so it opens like a tile does.
+   Styled as the heading it already was rather than as a button, with the
+   arrow and the hover rule carrying the affordance. */
+.famhead h3 button.famopen {
+  appearance: none; border: 0; background: transparent; padding: 0; margin: 0;
+  font: inherit; color: inherit; letter-spacing: inherit; cursor: pointer;
+}
+.famhead h3 button.famopen::after { content: " →"; font-weight: 400; color: var(--ink-dim); }
+.famhead h3 button.famopen:hover { text-decoration: underline; text-underline-offset: 3px; }
+.famhead h3 button.famopen:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; border-radius: 4px; }
 
 /* The face's identity card. A reference the reviewer reads once on the way
    in, so it is a quiet block above the grid rather than a panel competing
@@ -832,7 +843,8 @@ ${inlineRule(verdictFreshness)}
   function cardFacts(p) {
     // Inside a group detail the heading already named the group, so the facts
     // line drops whatever it repeats and keeps only what varies card to card.
-    const detail = activeGroup() !== null;
+    // A family detail has a sub-heading per face doing the same job.
+    const detail = activeGroup() !== null || activeFamily() !== null;
     const bits = [];
     // On a component page the subject is the component id — constant down a
     // component detail, so the heading has it covered. Same for the face id
@@ -1107,9 +1119,14 @@ ${inlineRule(verdictFreshness)}
     // left off instead of at the top of the index — and so no view can ever
     // be handed another's group id.
     group: { slot: null, face: null, component: null },
+    // 按版式 only: the family being browsed whole, one grid per face under it.
+    // A family is a comparison of its own — all six covers, all four
+    // takeovers — and it sits between the index and a single face.
+    family: null,
     language: "all", theme: "all", verdict: "all", finding: "all", query: "",
   };
   const activeGroup = () => (state.view === "theme" ? null : state.group[state.view]);
+  const activeFamily = () => (state.view === "face" && activeGroup() === null ? state.family : null);
   let visible = [];
 
   /**
@@ -1159,6 +1176,8 @@ ${inlineRule(verdictFreshness)}
     if (!passesFilters(p)) return false;
     const group = activeGroup();
     if (group !== null) return p[CROSS[state.view].key] === group;
+    const family = activeFamily();
+    if (family !== null) return FAMILY_OF.face.get(p.face) === family;
     return true;
   }
 
@@ -1338,7 +1357,20 @@ ${inlineRule(verdictFreshness)}
       const famHead = document.createElement("div");
       famHead.className = "famhead";
       const h3 = document.createElement("h3");
-      h3.textContent = fam.label;
+      // On 按版式 the heading opens the family whole — every face in it, one
+      // grid each. The other two indexes keep a plain heading: their families
+      // are filing, not a comparison anybody asked to see side by side.
+      if (view.key === "face") {
+        const open = document.createElement("button");
+        open.type = "button";
+        open.className = "famopen";
+        open.textContent = fam.label;
+        open.title = "把" + fam.label + "整族一起看";
+        open.addEventListener("click", () => openFamily(fam.label));
+        h3.appendChild(open);
+      } else {
+        h3.appendChild(document.createTextNode(fam.label));
+      }
       const count = document.createElement("span");
       count.textContent =
         members.length + " " + view.unit + " · " + members.reduce((n, m) => n + byGroup.get(m).length, 0) + " 张";
@@ -1466,8 +1498,12 @@ ${inlineRule(verdictFreshness)}
     const back = document.createElement("button");
     back.type = "button";
     back.className = "btn";
-    back.textContent = "← " + view.label;
-    back.addEventListener("click", () => openGroup(view.key, null));
+    // Back to wherever this face was opened from: the family, when the
+    // reviewer came in through one, otherwise the index. A back button that
+    // skipped the level they were standing on would lose their place.
+    const upFamily = view.key === "face" && state.family !== null ? state.family : null;
+    back.textContent = "← " + (upFamily !== null ? upFamily : view.label);
+    back.addEventListener("click", () => (upFamily !== null ? openFamily(upFamily) : openGroup(view.key, null)));
     crumbs.appendChild(back);
     const family = FAMILY_OF[view.key].get(value);
     if (family) crumbs.appendChild(headText("span", "where", family));
@@ -1487,7 +1523,11 @@ ${inlineRule(verdictFreshness)}
       if (neighbour === undefined) btn.disabled = true;
       else {
         btn.title = groupLabel(view, neighbour);
-        btn.addEventListener("click", () => openGroup(view.key, neighbour));
+        // Walking off the end of a family carries the breadcrumb with it,
+        // rather than leaving it pointing back at a family this face is no
+        // longer in.
+        const carry = upFamily !== null ? FAMILY_OF[view.key].get(neighbour) : undefined;
+        btn.addEventListener("click", () => openGroup(view.key, neighbour, carry));
       }
       return btn;
     };
@@ -1508,6 +1548,91 @@ ${inlineRule(verdictFreshness)}
     if (card) main.appendChild(card);
 
     main.appendChild(visible.length === 0 ? emptyNote() : grid(visible.slice().sort(bySection), "grid"));
+  }
+
+  /**
+   * The level between the 按版式 index and one face: a whole family, face by
+   * face, one sub-heading and one grid each.
+   *
+   * The index answers "what faces are there" and a face detail answers "how
+   * does this one draw everywhere". Neither answers the question a face
+   * audit actually opens with — are these six covers six different ideas, or
+   * the same idea six times — because that one needs them on the same screen.
+   * The lightbox already pages the whole family (see familyQueue), so this is
+   * the level that queue was always implying.
+   *
+   * Each sub-heading is a way down into the single face, and the breadcrumb
+   * there comes back here.
+   */
+  function renderFamilyDetail(main, label) {
+    const view = CROSS.face;
+    const crumbs = document.createElement("div");
+    crumbs.className = "crumbs";
+    const back = document.createElement("button");
+    back.type = "button";
+    back.className = "btn";
+    back.textContent = "← " + view.label;
+    back.addEventListener("click", () => openGroup("face", null));
+    crumbs.appendChild(back);
+    crumbs.appendChild(headText("div", "spacer", ""));
+
+    const labels = PLANS.face.map((f) => f.label);
+    const at = labels.indexOf(label);
+    const nav = (delta, text) => {
+      const neighbour = at < 0 ? undefined : labels[at + delta];
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "btn";
+      btn.textContent = text;
+      if (neighbour === undefined) btn.disabled = true;
+      else {
+        btn.title = neighbour;
+        btn.addEventListener("click", () => openFamily(neighbour));
+      }
+      return btn;
+    };
+    crumbs.append(nav(-1, "← 上一族"), nav(1, "下一族 →"));
+    main.appendChild(crumbs);
+
+    const members = (PLANS.face[at] || { members: [] }).members;
+    const byFace = new Map();
+    for (const p of visible) {
+      const list = byFace.get(p.face) || [];
+      list.push(p);
+      byFace.set(p.face, list);
+    }
+    const present = members.filter((m) => byFace.has(m));
+    main.appendChild(
+      viewHead(
+        [
+          headText("span", "", label),
+          headText("span", "n", present.length + " 张脸 · " + visible.length + " 张"),
+        ],
+        "整族一起看：一张脸一格，每格里是各主题的答卷。点小标题只看那一张脸，点幻灯片进灯箱，← → 会一路走完整族。",
+      ),
+    );
+
+    if (present.length === 0) {
+      main.appendChild(emptyNote());
+      return;
+    }
+
+    for (const face of present) {
+      const pages = byFace.get(face).slice().sort(bySection);
+      const head = document.createElement("div");
+      head.className = "famhead";
+      const h3 = document.createElement("h3");
+      const open = document.createElement("button");
+      open.type = "button";
+      open.className = "famopen";
+      open.textContent = face;
+      open.title = "只看 " + face;
+      open.addEventListener("click", () => openGroup("face", face, label));
+      h3.appendChild(open);
+      h3.appendChild(headText("span", "", pages.length + " 张"));
+      head.appendChild(h3);
+      main.append(head, grid(pages, "grid"));
+    }
   }
 
   /**
@@ -1533,6 +1658,10 @@ ${inlineRule(verdictFreshness)}
     if (viewer.open) viewer.close();
     state.view = viewKey;
     state.group[viewKey] = value;
+    // Arriving from another axis is not arriving from a family, so the
+    // breadcrumb leads back to the index rather than to whichever family the
+    // reviewer last browsed.
+    if (viewKey === "face") state.family = null;
     // Filters stay exactly as they were — the reviewer changed axis, not
     // subject. The tab buttons are told where the state went, since this is
     // the one path that moves the view without a click on them.
@@ -1544,11 +1673,35 @@ ${inlineRule(verdictFreshness)}
     // the scroll, then straight to the page that raised the question — a
     // 45-card group the reviewer then has to search is not an answer.
     window.scrollTo(0, 0);
-    revealCard(page.id);
+    // A deck page is not on 按版式 any more (see FACE_AXIS_IDS), so jumping
+    // from one lands the reviewer on its theme's specimen for the same face
+    // — the page that answers the question they asked, drawn by the same code
+    // on the same skin. Without this the jump arrives and highlights nothing.
+    let land = page.id;
+    if (viewKey === "face" && !FACE_AXIS_IDS.has(page.id)) {
+      const stand = MANIFEST.pages.find(
+        (p) => FACE_AXIS_IDS.has(p.id) && p.section === page.section && p.face === page.face,
+      );
+      if (stand) land = stand.id;
+    }
+    revealCard(land);
   }
 
-  function openGroup(viewKey, value) {
+  /**
+   * Drill to one group. The family argument is 按版式's third level: pass the family the
+   * face was opened from so the breadcrumb leads back to it, and leave it out
+   * anywhere the reviewer came straight off the index or across an axis.
+   */
+  function openGroup(viewKey, value, family) {
     state.group[viewKey] = value;
+    if (viewKey === "face") state.family = family === undefined ? null : family;
+    render();
+    window.scrollTo(0, 0);
+  }
+
+  function openFamily(label) {
+    state.group.face = null;
+    state.family = label;
     render();
     // Landing mid-page after a level change reads as a broken jump, and the
     // heading that says where you now are is at the top.
@@ -1592,7 +1745,9 @@ ${inlineRule(verdictFreshness)}
       // A filter that empties a group still renders the group's chrome. The
       // reviewer keeps their place and can widen the filter; bouncing them
       // back to the index would look like the click had been undone.
+      const family = activeFamily();
       if (group !== null) renderGroupDetail(main, view, group);
+      else if (family !== null) renderFamilyDetail(main, family);
       else if (visible.length === 0) main.appendChild(emptyNote());
       else renderGroupIndex(main, view);
     }
@@ -1770,10 +1925,17 @@ ${inlineRule(verdictFreshness)}
     if (!viewer.open) {
       // Esc backs out one level, the same key that closes the viewer one
       // level further in — so the way out is the same key wherever you are.
-      if (ev.key !== "Escape" || activeGroup() === null) return;
+      // On 按版式 there are three levels, and a face opened from a family
+      // backs out to that family before the index.
+      if (ev.key !== "Escape") return;
+      const group = activeGroup();
+      const family = activeFamily();
+      if (group === null && family === null) return;
       if (ev.target instanceof HTMLInputElement || ev.target instanceof HTMLTextAreaElement) return;
       ev.preventDefault();
-      openGroup(state.view, null);
+      if (group !== null && state.view === "face" && state.family !== null) openFamily(state.family);
+      else if (group !== null) openGroup(state.view, null);
+      else openGroup("face", null);
       return;
     }
     const typing = ev.target instanceof HTMLInputElement || ev.target instanceof HTMLTextAreaElement;
