@@ -45,10 +45,24 @@ export function ShowSpotlightContent({ slide, ctx }: SvgTemplateProps) {
         bold: true,
       })
     : null
-  const kickerSource = exact?.panel?.title?.trim() || exact?.image.caption?.trim() || ""
+  // The kicker is the panel's own title. The picture's caption used to share
+  // this one slot with it (`panel.title || image.caption`), so a page that
+  // wrote both printed the title and lost the caption — the approved
+  // composition itself writes both. A caption belongs to the picture, so it
+  // now hangs under the image frame instead of competing for this line.
+  const kickerSource = exact?.panel?.title?.trim() ?? ""
   const kicker = kickerSource
     ? fitSvgLine(kickerSource, {
         maxWidth: 496,
+        fontSize: 14,
+        minFontSize: 14,
+        fontFamily: fonts.body,
+      })
+    : null
+  const captionSource = exact?.image.caption?.trim() ?? ""
+  const caption = captionSource
+    ? fitSvgLine(captionSource, {
+        maxWidth: 600,
         fontSize: 14,
         minFontSize: 14,
         fontFamily: fonts.body,
@@ -137,6 +151,20 @@ export function ShowSpotlightContent({ slide, ctx }: SvgTemplateProps) {
             arm={26}
             stroke={colors.muted}
           />
+          {caption && (
+            <text
+              data-font-floor-exempt="show-spec"
+              data-truncated={caption.truncated ? "1" : undefined}
+              x={64}
+              y={672}
+              fontFamily={fonts.body}
+              fontSize={caption.fontSize}
+              fill={accessibleInk(colors.muted, bg, caption.fontSize)}
+              dominantBaseline="alphabetic"
+            >
+              {withoutOverflowMark(caption.text)}
+            </text>
+          )}
           {kicker && (
             <text
               data-font-floor-exempt="show-spec"

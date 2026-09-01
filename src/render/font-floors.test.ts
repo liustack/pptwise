@@ -32,6 +32,9 @@ const SHOW_SPEC_UNDER_FLOOR = [
   "layouts/content-show-gallery.tsx: minFontSize: 14",
   "layouts/content-show-gallery.tsx: minFontSize: 12",
   "layouts/content-show-spotlight.tsx: minFontSize: 14",
+  // The picture's own caption, on the show scale's caption size — it used to
+  // share the kicker line with `insight_panel.title` and lose to it.
+  "layouts/content-show-spotlight.tsx: minFontSize: 14",
   "layouts/content-show-spotlight.tsx: minFontSize: 12",
   "layouts/content-show-statement.tsx: minFontSize: 15",
   "layouts/cover-show-headline.tsx: minFontSize: 14",
