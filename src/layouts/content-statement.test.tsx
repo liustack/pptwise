@@ -96,21 +96,31 @@ describe("StatementContent", () => {
     expect(markup).not.toContain(extreme)
   })
 
-  it("1 blockquote component renders as a small accent attribution, not a card", () => {
+  it("1 blockquote component renders both the quote and its attribution, not a card", () => {
+    // The quote used to be named "unused body" here and asserted absent: a
+    // blockquote carries two authored texts and this face set one, putting a
+    // speaker's name on a page that never showed what they said.
     const ctx = buildCtx(resolveStyle("crayon"), {})
     const slide: Slide = {
       ...zeroSlide,
-      components: [{ type: "blockquote", text: "unused body", attribution: "Irene Pepperberg" }],
+      components: [
+        { type: "blockquote", text: "The evidence changed the decision", attribution: "Irene Pepperberg" },
+      ],
     } as Slide
     const { markup, root } = render(
       <StatementContent ir={ir("crayon", [slide])} slide={slide} index={0} ctx={ctx} />,
     )
     expect(markup).toContain("IRENE PEPPERBERG")
-    expect(markup).not.toContain("unused body")
-    expect(root.querySelector("g[data-audit-rect]")).toBeNull()
+    expect(markup).toContain("The evidence changed the decision")
+    // The quote sits between the claim and the line naming its source.
+    const quote = Array.from(root.querySelectorAll("text")).find((t) =>
+      (t.textContent ?? "").includes("evidence changed"),
+    )!
     const attr = Array.from(root.querySelectorAll("text")).find((t) =>
       (t.textContent ?? "").includes("PEPPERBERG"),
     )!
+    expect(Number(quote.getAttribute("y"))).toBeLessThan(Number(attr.getAttribute("y")))
+    expect(root.querySelector("g[data-audit-rect]")).toBeNull()
     expect(attr.getAttribute("fill")).toBe(
       accessibleInk(ctx.colors.accent, ctx.defaultBg ?? ctx.colors.bg, Number(attr.getAttribute("font-size"))),
     )

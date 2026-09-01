@@ -1,10 +1,10 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import { sectionNameFor } from "../lib/derive"
-import { fitEmphasisHeading, headingEmphasisPaint, renderEmphasisHeading } from "../render/emphasis"
+import { fitEmphasisHeading, fitEmphasisText, headingEmphasisPaint, renderEmphasisHeading } from "../render/emphasis"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { accessibleInk } from "../render/ink"
-import { latinUpper, statementAttribution, trackingPx } from "./minimal-shared"
+import { latinUpper, statementLines, trackingPx } from "./minimal-shared"
 import { sparseFace } from "./sparse/registry"
 
 /**
@@ -29,6 +29,12 @@ const ATTR_SIZE = 16
 const KICKER_TRACKING_EM = 0.35
 const ATTR_TRACKING_EM = 0.2
 const ATTR_GAP = 56
+/** The quote block between the claim and the line naming its source. */
+const QUOTE_SIZE = 22
+const QUOTE_MAX_LINES = 3
+const QUOTE_LINE_RATIO = 1.5
+const QUOTE_GAP = 48
+const QUOTE_ATTR_GAP = 40
 
 export function StatementContent(props: SvgTemplateProps) {
   const Face = sparseFace("statement", props.ir.theme.id)
@@ -58,7 +64,27 @@ function GenericStatementContent({ ir, slide, index, ctx }: SvgTemplateProps) {
   })
   const titleLastY = TITLE_Y + Math.max(0, heading.lines.length - 1) * heading.lineHeight
 
-  const attrSource = statementAttribution(slide)
+  // A blockquote carries two authored texts, and this face used to set one:
+  // `source ?? quote` printed the speaker's name on a page that never showed
+  // what they said. The claim is the heading, the quote is the body, and the
+  // small line underneath names where it came from. Same split gauge-point
+  // and crayonbox-point already make.
+  const lines = statementLines(slide)
+  const quote = lines.quote
+    ? fitEmphasisText(lines.quote, {
+        maxWidth: CONTENT_MAX_W,
+        fontSize: QUOTE_SIZE,
+        maxLines: QUOTE_MAX_LINES,
+        minPt: 18,
+        lineHeightRatio: QUOTE_LINE_RATIO,
+        fontFamily: fonts.body,
+      })
+    : null
+  const quoteFirstY = titleLastY + QUOTE_GAP
+  const quoteLastY = quote
+    ? quoteFirstY + Math.max(0, quote.lines.length - 1) * quote.lineHeight
+    : quoteFirstY
+  const attrSource = lines.source
   const attrTracking = trackingPx(ATTR_SIZE, ATTR_TRACKING_EM)
   const attribution = attrSource
     ? fitSvgLine(latinUpper(attrSource), {
@@ -68,7 +94,9 @@ function GenericStatementContent({ ir, slide, index, ctx }: SvgTemplateProps) {
         letterSpacing: attrTracking,
       })
     : null
-  const attrY = titleLastY + ATTR_GAP
+  // With no quote the caption keeps the baseline this face has always used,
+  // so every page that never had one stays where it was.
+  const attrY = quote ? quoteLastY + QUOTE_ATTR_GAP : titleLastY + ATTR_GAP
 
   return (
     <>
@@ -107,6 +135,30 @@ function GenericStatementContent({ ir, slide, index, ctx }: SvgTemplateProps) {
             />
         ),
       )}
+
+      {quote &&
+        renderEmphasisHeading(
+          quote,
+          headingEmphasisPaint(ctx, quote, {
+            baseFill: accessibleInk(colors.text, defaultBg, quote.fontSize),
+            fontFamily: fonts.body,
+            fontWeight: "600",
+            bold: false,
+          }),
+          (_line, i) => (
+            <text
+              key={i}
+              data-truncated={quote.truncated && i === quote.lines.length - 1 ? "1" : undefined}
+              x={CENTER_X}
+              y={quoteFirstY + i * quote.lineHeight}
+              textAnchor="middle"
+              fontFamily={fonts.body}
+              fontSize={quote.fontSize}
+              fill={accessibleInk(colors.text, defaultBg, quote.fontSize)}
+              dominantBaseline="alphabetic"
+            />
+          ),
+        )}
 
       {attribution && (
         <text

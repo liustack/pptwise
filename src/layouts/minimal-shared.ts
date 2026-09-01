@@ -65,6 +65,31 @@ export function chapterIndexKicker(n: number, heading: string | undefined): stri
   return `CHAPTER ${String(n).padStart(2, "0")}`
 }
 
+/**
+ * The separator these faces set between two things on one label line.
+ *
+ * `pullQuoteContext` already joins heading and subheading with it, so a
+ * citation's sources read in the same register as everything else on the
+ * page rather than introducing a second punctuation habit.
+ */
+export const LABEL_JOIN = " \u00b7 "
+
+/**
+ * Every source a citation names, on one line.
+ *
+ * The statement, pull-quote and stat-hero families each read `sources[0]` and
+ * left every later source unpainted. Nothing declared that limit: the body
+ * capacity these faces carry counts components, not the entries inside one,
+ * and the citation schema puts no ceiling on the array. A two-source citation
+ * is ordinary IR, so both sources reach the line, and the fit chain marks the
+ * cut if the line is longer than the face has room for.
+ */
+export function citationSources(component: Slide["components"][number]): string | undefined {
+  if (component.type !== "citation") return undefined
+  const labels = component.sources.map((source) => source.label?.trim()).filter((l): l is string => Boolean(l))
+  return labels.length > 0 ? labels.join(LABEL_JOIN) : undefined
+}
+
 /** The two texts a `statement`-family page can put under its claim. */
 export interface StatementLines {
   /**
@@ -108,8 +133,8 @@ export function statementLines(slide: Slide): StatementLines {
     if (text) return { source: text }
   }
   if (component?.type === "citation") {
-    const label = component.sources[0]?.label?.trim()
-    if (label) return { source: label }
+    const cited = citationSources(component)
+    if (cited) return { source: cited }
   }
   return { source: slide.subheading?.trim() || undefined }
 }
@@ -182,8 +207,8 @@ export function pullQuoteAttribution(slide: Slide): string | undefined {
     if (fromQuote) return fromQuote
   }
   if (component?.type === "citation") {
-    const label = component.sources[0]?.label?.trim()
-    if (label) return label
+    const cited = citationSources(component)
+    if (cited) return cited
   }
   return undefined
 }
@@ -245,8 +270,8 @@ export function heroSource(slide: Slide): string | undefined {
   if (fromKpi) return fromKpi
   const component = slide.components[0]
   if (!kpi && component?.type === "citation") {
-    const label = component.sources[0]?.label?.trim()
-    if (label) return label
+    const cited = citationSources(component)
+    if (cited) return cited
   }
   if (!kpi && component?.type === "paragraph") {
     const text = component.text.trim()
