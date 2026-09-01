@@ -113,3 +113,42 @@ describe("every face renders the content it was given, or says what it dropped",
     expect(losses).toEqual([])
   })
 })
+
+// The gutter reading, in isolation. The corpus sweep above proves the 28
+// false losses are gone; this proves *why* they were false and that the
+// exclusion did not buy that with a blind spot — drop a line from the
+// listing and the scan must still call it.
+describe("a line-number gutter is the renderer's counting, not the author's text", () => {
+  const listing = "const a = 1\nconst b = 2\nconst c = 3"
+  const slide = {
+    type: "content",
+    kind: "evidence",
+    heading: "Listing",
+    components: [{ type: "code", language: "ts", code: listing }],
+  } as unknown as Slide
+
+  /** One `<text>` per line, each preceded by its gutter number — code.tsx's own shape. */
+  function page(lines: readonly string[], gutter: boolean): string {
+    const body = lines
+      .map(
+        (line, i) =>
+          `${gutter ? `<text data-gutter="1">${i + 1}</text>` : ""}<text>${line}</text>`,
+      )
+      .join("")
+    return `<svg xmlns="http://www.w3.org/2000/svg">${body}</svg>`
+  }
+
+  it("finds the whole listing even though a number sits between every line", () => {
+    expect(checkPageFidelity(page(listing.split("\n"), true), slide).missing).toEqual([])
+  })
+
+  it("still reports the listing when one of its lines never reached the page", () => {
+    const cut = ["const a = 1", "const c = 3"]
+    const missing = checkPageFidelity(page(cut, true), slide).missing
+    expect(missing.map((m) => m.path)).toEqual(["components[0](code).code"])
+  })
+
+  it("reports a dropped line whether or not the gutter is drawn", () => {
+    expect(checkPageFidelity(page(["const a = 1"], false), slide).missing).toHaveLength(1)
+  })
+})

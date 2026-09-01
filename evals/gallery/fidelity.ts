@@ -150,10 +150,24 @@ export function checkPageFidelity(svg: string, slide: Slide): PageFidelity {
   if (!Parser) throw new Error("DOMParser unavailable")
   const root = new Parser().parseFromString(svg, "image/svg+xml").documentElement
 
-  const painted = normalize(
-    Array.from(root.querySelectorAll("text"))
-      .map(elementText)
-      .join(""),
+  const texts = Array.from(root.querySelectorAll("text"))
+  const painted = normalize(texts.map(elementText).join(""))
+  // The same page read again with the renderer's own counting left out.
+  //
+  // Flattening a page into one string is what lets a face wrap one authored
+  // sentence over three lines and still be found. It also means any glyphs a
+  // renderer emits *between* the pieces of an authored string break the
+  // match. `code`'s line-number gutter does exactly that: it prints a number
+  // before each line of the listing, so the page reads
+  // "1const a = 12const b = 2" and a six-line listing is reported lost on
+  // every page that carries one — 28 of them, none of them a real loss.
+  //
+  // A gutter says so on its own elements (`data-gutter`), so the page can be
+  // read a second time without them. Both readings are honest readings of
+  // "did these glyphs reach the page", and a needle found in either has
+  // reached it; a line actually dropped from the listing is in neither.
+  const paintedContent = normalize(
+    texts.filter((el) => !el.hasAttribute("data-gutter")).map(elementText).join(""),
   )
   const truncatedFragments = Array.from(root.querySelectorAll("[data-truncated]"))
     .map((el) => normalize(elementText(el)))
@@ -163,7 +177,7 @@ export function checkPageFidelity(svg: string, slide: Slide): PageFidelity {
   const missing = authoredTexts(slide).filter(({ text }) => {
     const needle = normalize(text)
     if (needle.length === 0) return false
-    if (painted.includes(needle)) return false
+    if (painted.includes(needle) || paintedContent.includes(needle)) return false
     if (declaredDrop) return false
     return !truncatedFragments.some((fragment) => needle.includes(fragment))
   })

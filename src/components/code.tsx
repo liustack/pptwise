@@ -145,6 +145,13 @@ export const code: SvgComponent<CodeComponent> = {
           <g key={i}>
             <text
               data-contrast-tier="meta"
+              // The renderer's own counting, not a word the author wrote.
+              // Marked so a reader of the finished page — the content-fidelity
+              // scan included — can tell these digits from the listing they
+              // number. They are emitted between the lines they belong to, so
+              // a scan that flattens the page into one string reads
+              // "1const a = 12const b = 2" and cannot find the listing in it.
+              data-gutter="1"
               x={PADDING + LINE_NUM_COL - 8}
               y={PADDING + i * lineHeight + fontSize}
               fontFamily={ctx.fonts.mono}
