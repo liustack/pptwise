@@ -2,11 +2,16 @@ import React from "react"
 import { META_FONT_FLOOR_PX } from "../constants"
 import {
   fitSvgLine,
+  layoutSvgText,
   measureTextUnits,
   truncateToUnits,
+  type SvgTextLayout,
   type TextWeightHint,
 } from "../lib/svg-text-layout"
 import { formLegibleInk } from "../components/legibility"
+import { fitHeadingLines } from "./heading-fit"
+import { accessibleInk } from "./ink"
+import type { ComponentCtx } from "../components/types"
 import type { EmphasisTreatment } from "../themes/schema"
 
 /** One run of text with its emphasis state, in source (unmarked) text order. */
@@ -318,6 +323,125 @@ export function renderEmphasisText(
   )
 }
 
+/** Ink and stroke a heading paints its emphasis runs with. */
+export interface EmphasisHeadingPaint {
+  /** Fill for an emphasized run under the `tint` stroke. */
+  accent: string
+  /** Fill of the pad/underline stroke. Defaults to `accent`. */
+  padFill?: string
+  /** Fill for plain runs — the same value the `<text>` element carries. */
+  baseFill: string
+  /** Weight for emphasized runs. Defaults to `"600"`. */
+  fontWeight?: string
+  /** The bound theme's stroke (`ComponentCtx.emphasis`). Omitted equals `tint`. */
+  emphasis?: EmphasisTreatment
+  /** The weight hint the fit used, so pad geometry lands under the glyphs. */
+  measureWeight?: TextWeightHint
+}
+
+/** A fitted heading plus one emphasis segment table per fitted line. */
+export interface EmphasisHeadingLayout extends SvgTextLayout {
+  /** Aligned 1:1 with `lines`. A line with no marked run holds one plain segment. */
+  segments: EmphasisSegment[][]
+}
+
+/**
+ * The one rule every heading painter follows: fit the stripped text, paint the
+ * marked one.
+ *
+ * `layout` must be the result of running the fit chain over
+ * `stripEmphasis(source)` — markers must never reach a measurement, or they
+ * widen lines and move breaks by four characters per run that nothing ever
+ * paints. This re-attaches each run's emphasis onto those already-fitted lines
+ * via `sliceEmphasisForLines`, so a run straddling a kinsoku-aware line break
+ * stays emphasized on both halves.
+ *
+ * Text with no markers is its own stripped form and yields one plain segment
+ * per line, which `renderEmphasisHeading` paints as a bare string — the same
+ * bytes the call site produced before it adopted this helper.
+ *
+ * The two wrappers below pair it with this codebase's two heading fits. A
+ * painter with a third fit of its own calls this directly rather than growing
+ * a second copy of the rule.
+ */
+export function attachEmphasis(
+  source: string | undefined,
+  layout: SvgTextLayout,
+): EmphasisHeadingLayout {
+  return {
+    ...layout,
+    segments: sliceEmphasisForLines(parseEmphasis(source ?? ""), layout.lines),
+  }
+}
+
+/** `attachEmphasis` over `fitHeadingLines` — shrink, wrap, truncate to a floor. */
+export function fitEmphasisHeading(
+  text: string | undefined,
+  opts: Parameters<typeof fitHeadingLines>[1],
+): EmphasisHeadingLayout {
+  return attachEmphasis(text, fitHeadingLines(stripEmphasis(text ?? ""), opts))
+}
+
+/** `attachEmphasis` over `layoutSvgText` — wrap and shrink, no truncate fallback. */
+export function fitEmphasisText(
+  text: string | undefined,
+  opts: Parameters<typeof layoutSvgText>[1],
+): EmphasisHeadingLayout {
+  return attachEmphasis(text, layoutSvgText(stripEmphasis(text ?? ""), opts))
+}
+
+/**
+ * The standard heading run ink, derived from the render context so no call
+ * site has to decide it: the theme accent, pulled to a readable ink when it
+ * misses the contrast floor against the painted background at this heading's
+ * fitted size, over the theme's own pad/underline stroke.
+ *
+ * `baseFill` is the fill the `<text>` element itself carries, so plain runs
+ * keep the exact ink the call site already chose. Pass `accent` only for a
+ * painter whose emphasized run is not the theme accent.
+ */
+export function headingEmphasisPaint(
+  ctx: Pick<ComponentCtx, "colors" | "defaultBg" | "emphasis">,
+  layout: Pick<SvgTextLayout, "fontSize">,
+  style: {
+    baseFill: string
+    accent?: string
+    fontWeight?: string
+    fontFamily?: string
+    bold?: boolean
+  },
+): EmphasisHeadingPaint {
+  const bg = ctx.defaultBg ?? ctx.colors.bg
+  return {
+    accent: style.accent ?? accessibleInk(ctx.colors.accent, bg, layout.fontSize),
+    padFill: ctx.colors.accent,
+    baseFill: style.baseFill,
+    fontWeight: style.fontWeight ?? "700",
+    emphasis: ctx.emphasis,
+    measureWeight: { bold: style.bold ?? true, fontFamily: style.fontFamily },
+  }
+}
+
+/**
+ * Paints a `fitEmphasisHeading` layout. `line` builds this call site's own
+ * childless `<text>` element for one fitted line — its attributes (position,
+ * size, family, anchor, `data-truncated`) stay the call site's business, while
+ * the run ink, weight, and the pad/underline geometry stay here.
+ */
+export function renderEmphasisHeading(
+  layout: EmphasisHeadingLayout,
+  paint: EmphasisHeadingPaint,
+  line: (text: string, index: number) => React.ReactElement<React.SVGProps<SVGTextElement>>,
+): React.ReactNode {
+  return layout.lines.map((text, index) =>
+    renderEmphasisText(
+      layout.segments[index] ?? [{ text, emphasized: false }],
+      paint,
+      line(text, index),
+    ),
+  )
+}
+
 interface EmphasisChar {
   char: string
   emphasized: boolean
@@ -441,20 +565,27 @@ export function truncateEmphasisSegments(
  * Returns `null` for empty/whitespace-only text, mirroring the
  * `slide.xxx ? fitSvgLine(...) : null` guard every other single-line caller
  * in this codebase already uses.
+ *
+ * The optional `TextWeightHint` reaches both the fit and the truncation
+ * budget, so the two keep measuring with the same table. Omitting it (what
+ * every caller predating the hint does) selects the same conservative
+ * cross-face envelope as before, so those callers stay byte-identical.
  */
 export function fitEmphasisLine(
   text: string | undefined,
-  opts: { maxWidth: number; fontSize: number; minFontSize?: number },
+  opts: { maxWidth: number; fontSize: number; minFontSize?: number } & TextWeightHint,
 ): { fontSize: number; segments: EmphasisSegment[]; truncated: boolean } | null {
   if (!text || !text.trim()) return null
   const minFontSize = opts.minFontSize ?? META_FONT_FLOOR_PX
+  const weight: TextWeightHint = { bold: opts.bold, fontFamily: opts.fontFamily }
   const fitted = fitSvgLine(stripEmphasis(text), {
     maxWidth: opts.maxWidth,
     fontSize: opts.fontSize,
     minFontSize,
+    ...weight,
   })
   const maxUnits = opts.maxWidth / minFontSize
-  const segments = truncateEmphasisSegments(parseEmphasis(text), maxUnits)
+  const segments = truncateEmphasisSegments(parseEmphasis(text), maxUnits, weight)
   // `fitted.truncated` is authoritative for this call too (bench-driven fix
   // round, defect E) — see this function's own doc comment: the budget
   // passed to `truncateEmphasisSegments` mirrors `fitSvgLine`'s internal

@@ -3,6 +3,7 @@ import { describe, it, expect } from "vitest"
 import { renderToStaticMarkup } from "react-dom/server"
 import { createElement } from "react"
 import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout"
+import { fitHeadingLines } from "./heading-fit"
 import {
   parseEmphasis,
   stripEmphasis,
@@ -11,6 +12,7 @@ import {
   resolveEmphasisForm,
   sliceEmphasisForLines,
   fitEmphasisLine,
+  fitEmphasisHeading,
 } from "./emphasis"
 import { getThemeDefinition } from "../themes/definitions"
 import type { EmphasisTreatment } from "../themes/schema"
@@ -348,5 +350,57 @@ describe("fitEmphasisLine", () => {
     const last = result!.segments[result!.segments.length - 1]
     expect(last.emphasized).toBe(true)
     expect(result!.truncated).toBe(true)
+  })
+})
+
+const MARKED = "年度**增长结论**与下一步投入"
+const PLAIN = stripEmphasis(MARKED)
+const RUN = "增长结论"
+
+describe("fitEmphasisHeading fits the stripped text, not the markers", () => {
+  it("wraps where the plain text wraps, not where the markers push it", () => {
+    // A box wide enough for the plain heading but not for the four extra
+    // marker characters: fitting the raw string breaks it onto a second line.
+    const opts = { maxWidth: 300, fontSize: 24, maxLines: 2, minPt: 24, fontFamily: "Arial" }
+    const rawFit = fitHeadingLines(MARKED, opts)
+    const strippedFit = fitHeadingLines(PLAIN, opts)
+    expect(rawFit.lines).not.toEqual(strippedFit.lines)
+
+    const fitted = fitEmphasisHeading(MARKED, opts)
+    expect(fitted.lines).toEqual(strippedFit.lines)
+    expect(fitted.lines.join("")).not.toContain("*")
+  })
+
+  it("hands back one segment table per fitted line", () => {
+    const fitted = fitEmphasisHeading(MARKED, {
+      maxWidth: 1088,
+      fontSize: 42,
+      maxLines: 2,
+      minPt: 24,
+    })
+    expect(fitted.segments).toHaveLength(fitted.lines.length)
+    expect(fitted.segments.flat().map((s) => s.text).join("")).toBe(PLAIN)
+    expect(fitted.segments.flat().filter((s) => s.emphasized).map((s) => s.text).join("")).toBe(RUN)
+  })
+
+  it("carries a run across a line break", () => {
+    // 300px at 24px holds ~12 CJK glyphs, so the marked run straddles the break.
+    const fitted = fitEmphasisHeading("一二三四五六七八九十**十一十二十三十四**十五", {
+      maxWidth: 300,
+      fontSize: 24,
+      maxLines: 2,
+      minPt: 24,
+    })
+    expect(fitted.lines.length).toBeGreaterThan(1)
+    const emphasizedPerLine = fitted.segments.map((line) =>
+      line.filter((s) => s.emphasized).map((s) => s.text).join(""),
+    )
+    expect(emphasizedPerLine.filter(Boolean).length).toBeGreaterThan(1)
+    expect(emphasizedPerLine.join("")).toBe("十一十二十三十四")
+  })
+
+  it("leaves unmarked text as a single plain segment per line", () => {
+    const fitted = fitEmphasisHeading(PLAIN, { maxWidth: 1088, fontSize: 42, minPt: 24 })
+    expect(fitted.segments).toEqual(fitted.lines.map((line) => [{ text: line, emphasized: false }]))
   })
 })
