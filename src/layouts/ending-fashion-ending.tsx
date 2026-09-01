@@ -105,7 +105,13 @@ export function FashionEnding({ ir, slide, ctx, page }: SvgTemplateProps) {
       {/* 超大收尾标题 */}
       {renderEmphasisHeading(
         title,
-        headingEmphasisPaint(ctx, title, { baseFill: fg, fontWeight: "900", fontFamily: ctx.fonts.heading }),
+        headingEmphasisPaint(ctx, title, {
+          baseFill: fg,
+          fontWeight: "900",
+          fontFamily: ctx.fonts.heading,
+          // The field this face paints, not the page behind it.
+          bg: ctx.colors.primary,
+        }),
         (_line, i) => (
           <text
             key={i}
@@ -128,7 +134,13 @@ export function FashionEnding({ ir, slide, ctx, page }: SvgTemplateProps) {
       {/* 副题 */}
       {renderEmphasisHeading(
         subtitle,
-        headingEmphasisPaint(ctx, subtitle, { baseFill: fg, fontFamily: ctx.fonts.body, bold: false }),
+        headingEmphasisPaint(ctx, subtitle, {
+          baseFill: fg,
+          fontFamily: ctx.fonts.body,
+          bold: false,
+          // The field this face paints, not the page behind it.
+          bg: ctx.colors.primary,
+        }),
         (_line, i) => (
           <text
             key={i}

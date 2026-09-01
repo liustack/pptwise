@@ -53,7 +53,13 @@ export function GenericMonoBleedContent({ slide, ctx }: SvgTemplateProps) {
 
       {renderEmphasisHeading(
         heading,
-        headingEmphasisPaint(ctx, heading, { baseFill: fg, fontWeight: "700", fontFamily: ctx.fonts.heading }),
+        headingEmphasisPaint(ctx, heading, {
+          baseFill: fg,
+          fontWeight: "700",
+          fontFamily: ctx.fonts.heading,
+          // The field this face paints, not the page behind it.
+          bg: field,
+        }),
         (_line, i) => (
           <text
             key={i}
@@ -77,6 +83,8 @@ export function GenericMonoBleedContent({ slide, ctx }: SvgTemplateProps) {
           fontWeight: "600",
           fontFamily: ctx.fonts.body,
           bold: false,
+          // The field this face paints, not the page behind it.
+          bg: field,
         }),
             <text
               data-truncated={subheading.truncated ? "1" : undefined}

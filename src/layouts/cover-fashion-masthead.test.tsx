@@ -5,6 +5,7 @@ import { buildCtx } from "../render/full-slide-svg"
 import { resolveStyle } from "../themes"
 import { measureTextUnits } from "../lib/svg-text-layout"
 import { renderSlideSvg } from "../api"
+import { contrastRatio } from "../render/ink"
 import { FashionMastheadCover } from "./cover-fashion-masthead"
 import type { PptxIR, Slide } from "@/ir"
 
@@ -292,4 +293,56 @@ describe("cover-fashion-masthead — no leftover top-left motif stub", () => {
     const stub = Array.from(root.querySelectorAll("line")).filter((el) => Number(el.getAttribute("y1")) === 32)
     expect(stub).toHaveLength(0)
   })
+})
+
+// This face paints its own full-bleed panel (`colors.primary`) and sets the
+// masthead straight onto it. The meta line already measured against that
+// panel; the emphasis helper did not, choosing the run's ink against
+// `ctx.defaultBg` instead — the theme's page background, which this cover
+// never shows. On academic that is ivory behind a green panel, so the helper
+// passed a gold run at ~3.1:1 against ivory and painted it at ~2.1:1 against
+// the green a reader actually sees.
+describe("cover-fashion-masthead — an emphasis run measured against the panel it lands on", () => {
+  function markedCover(themeId: string) {
+    const ctx = buildCtx(resolveStyle(themeId), {})
+    const slide = { type: "cover", heading: "The **decisive** year", components: [] } as Slide
+    const ir = {
+      version: "5",
+      filename: "x.pptx",
+      theme: { id: themeId },
+      meta: { organization: "pptwise", date: "2026-07" },
+      assets: { images: {} },
+      slides: [slide],
+    } as unknown as PptxIR
+    const out = renderSvgMarkup(
+      <FashionMastheadCover ir={ir} slide={slide} index={0} ctx={ctx} />,
+    )
+    const root = parseSvgRoot(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">${out}</svg>`)
+    return { root, ctx }
+  }
+
+  it.each(["academic", "consulting", "swiss"])(
+    "%s: the marked run clears the large-text floor against the panel, not the page",
+    (themeId) => {
+      const { root, ctx } = markedCover(themeId)
+      const panel = ctx.colors.primary
+      // The panel is what the page shows: a full-bleed rect in `primary`.
+      const bleed = Array.from(root.querySelectorAll("rect")).find(
+        (r) => r.getAttribute("width") === "1280" && r.getAttribute("height") === "720",
+      )!
+      expect(bleed.getAttribute("fill")).toBe(panel)
+
+      const runs = Array.from(root.querySelectorAll("tspan")).filter(
+        (t) => (t.textContent ?? "").includes("decisive"),
+      )
+      expect(runs.length, "the marked run is painted as its own tspan").toBeGreaterThan(0)
+      for (const run of runs) {
+        // A theme whose emphasis stroke is a pad lays the run on that pad and
+        // says so on the tspan, so the backdrop to measure is the pad. A tint
+        // theme puts the run straight onto the panel.
+        const backdrop = run.getAttribute("data-emphasis-pad-fill") ?? panel
+        expect(contrastRatio(run.getAttribute("fill")!, backdrop), `${themeId} run ink`).toBeGreaterThanOrEqual(3)
+      }
+    },
+  )
 })

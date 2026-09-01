@@ -96,7 +96,13 @@ export function FashionChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
       {/* 章节标题：大字重压满版色块 */}
       {renderEmphasisHeading(
         heading,
-        headingEmphasisPaint(ctx, heading, { baseFill: fg, fontWeight: "900", fontFamily: ctx.fonts.heading }),
+        headingEmphasisPaint(ctx, heading, {
+          baseFill: fg,
+          fontWeight: "900",
+          fontFamily: ctx.fonts.heading,
+          // The field this face paints, not the page behind it.
+          bg: ctx.colors.accent,
+        }),
         (_line, i) => (
           <text
             key={i}

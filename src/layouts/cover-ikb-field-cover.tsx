@@ -130,7 +130,13 @@ export function IkbFieldCover({ ir, slide, ctx }: SvgTemplateProps) {
 
       {renderEmphasisHeading(
         subtitle,
-        headingEmphasisPaint(ctx, subtitle, { baseFill: metaInk(colors.muted, field), fontFamily: fonts.body, bold: false }),
+        headingEmphasisPaint(ctx, subtitle, {
+          baseFill: metaInk(colors.muted, field),
+          fontFamily: fonts.body,
+          bold: false,
+          // The field this face paints, not the page behind it.
+          bg: field,
+        }),
         (_line, i) => (
           <text
             key={`sub-${i}`}
