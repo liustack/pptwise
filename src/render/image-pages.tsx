@@ -5,7 +5,7 @@ import type { LayoutDefinition } from "../layouts/registry"
 import { renderComponent, measureComponent } from "../components"
 import { layoutContentFit, stackBottom } from "./layout"
 import { DroppedContentMarker } from "./drop-marker"
-import { findImageSelection } from "../layouts/find-image"
+import { findImageSelection, singlePictureExact } from "../layouts/find-image"
 import { CANVAS_W_PX, CANVAS_H_PX } from "../constants"
 import { layoutSvgText, fitSvgLine } from "../lib/svg-text-layout"
 import { scaleTypePx } from "./heading-fit"
@@ -47,6 +47,91 @@ const H = CANVAS_H_PX
 
 function MissingRequiredImageMarker({ slide }: { slide: Slide }) {
   return <DroppedContentMarker count={Math.max(1, slide.components.length)} />
+}
+
+/** 通用回落版式的版心：三个出血 takeover 共用一套几何。 */
+const FALLBACK_MARGIN_X = 88
+const FALLBACK_HEAD_TOP = 66
+const FALLBACK_BOTTOM = 648
+
+/**
+ * The whole page, drawn plainly, when a takeover's single picture frame
+ * cannot hold what the author wrote — see `singlePictureExact`.
+ *
+ * One geometry for `image-split`, `image-top` and `image-bottom` rather than
+ * three: past the guard these pages are no longer a bleed composition of any
+ * kind, they are "draw everything, honestly", and the ordinary component
+ * renderer is what draws a grid with its captions and a compare with both
+ * sides. `image-annotate` keeps its own fallback, whose geometry predates
+ * this one.
+ */
+function TakeoverFallbackPage({ slide, ctx }: { slide: Slide; ctx: ComponentCtx }) {
+  const bg = ctx.defaultBg ?? ctx.colors.bg
+  const contentW = W - FALLBACK_MARGIN_X * 2
+  const title = fitEmphasisText(slide.heading, {
+    maxWidth: contentW,
+    fontSize: scaleTypePx(34, ctx.shape?.typeScale),
+    maxLines: 2,
+    lineHeightRatio: 1.2,
+  })
+  const sub = fitEmphasisText(slide.subheading, {
+    maxWidth: Math.min(contentW, 900),
+    fontSize: 18,
+    maxLines: 2,
+    lineHeightRatio: 1.3,
+  })
+  let cursor = FALLBACK_HEAD_TOP
+  const titleY = cursor + title.lineHeight - 10
+  cursor += title.lines.length * title.lineHeight + 8
+  const subY = cursor + sub.lineHeight - 8
+  if (sub.lines.length) cursor += sub.lines.length * sub.lineHeight + 6
+  const bodyTop = cursor + 22
+  return (
+    <g data-takeover-mode="fallback">
+      {renderEmphasisHeading(
+        title,
+        headingEmphasisPaint(ctx, title, {
+          baseFill: accessibleInk(ctx.colors.primary, bg, title.fontSize),
+          fontWeight: "600",
+          fontFamily: ctx.fonts.heading,
+        }),
+        (_line, i) => (
+          <text
+            key={i}
+            data-truncated={title.truncated && i === title.lines.length - 1 ? "1" : undefined}
+            x={FALLBACK_MARGIN_X}
+            y={titleY + i * title.lineHeight}
+            fontSize={title.fontSize}
+            fontWeight={600}
+            fontFamily={ctx.fonts.heading}
+            fill={accessibleInk(ctx.colors.primary, bg, title.fontSize)}
+            dominantBaseline="alphabetic"
+          />
+        ),
+      )}
+      {renderEmphasisHeading(
+        sub,
+        headingEmphasisPaint(ctx, sub, { baseFill: ctx.colors.muted, fontFamily: ctx.fonts.body, bold: false }),
+        (_line, i) => (
+          <text
+            key={i}
+            data-truncated={sub.truncated && i === sub.lines.length - 1 ? "1" : undefined}
+            x={FALLBACK_MARGIN_X}
+            y={subY + i * sub.lineHeight}
+            fontSize={sub.fontSize}
+            fontFamily={ctx.fonts.body}
+            fill={ctx.colors.muted}
+            dominantBaseline="alphabetic"
+          />
+        ),
+      )}
+      <SvgContent
+        components={slide.components}
+        rect={{ x: FALLBACK_MARGIN_X, y: bodyTop, w: contentW, h: Math.max(80, FALLBACK_BOTTOM - bodyTop) }}
+        ctx={ctx}
+      />
+    </g>
+  )
 }
 
 /** 暗 scrim：上浅下深三段（文字集中在中下部），图保持清晰可辨。 */
@@ -210,6 +295,7 @@ export function ImageSplitPage({
   ctx: ComponentCtx
   page: PageRenderContext
 }) {
+  if (!singlePictureExact(slide)) return <TakeoverFallbackPage slide={slide} ctx={ctx} />
   const imageSelection = findImageSelection(slide)
   if (!imageSelection) return <MissingRequiredImageMarker slide={slide} />
   const { image: imageComponent, source: imageSource } = imageSelection
@@ -416,6 +502,7 @@ export function ImageTopPage({
   ctx: ComponentCtx
   page: PageRenderContext
 }) {
+  if (!singlePictureExact(slide)) return <TakeoverFallbackPage slide={slide} ctx={ctx} />
   const imageSelection = findImageSelection(slide)
   if (!imageSelection) return <MissingRequiredImageMarker slide={slide} />
   const { image: imageComponent, source: imageSource } = imageSelection
@@ -490,6 +577,35 @@ export function ImageTopPage({
       ) : (
         <rect x={0} y={0} width={W} height={imgH} fill={ctx.colors.surface} />
       )}
+      {/* 图注压在出血图下缘（与 image-split / image-bottom 同一条 scrim 带）。
+          这张脸原来根本不画 caption：一张配了图注的照片、一个 device_mockup
+          的说明、一格 image_grid 的图注，被 findImageSelection 选中之后就只
+          剩下像素，作者写的那行字一个字都没上过页。 */}
+      {imageComponent.caption &&
+        (() => {
+          const fitted = fitSvgLine(imageComponent.caption, {
+            maxWidth: W - BAND_PAD_X * 2,
+            fontSize: 16,
+            minFontSize: 16,
+          })
+          return (
+            <>
+              <rect x={0} y={imgH - 44} width={W} height={44} fill="#0A0E14" fillOpacity={0.62} />
+              <text
+                data-truncated={fitted.truncated ? "1" : undefined}
+                x={BAND_PAD_X}
+                y={imgH - 17}
+                fontSize={fitted.fontSize}
+                fontFamily={ctx.fonts.body}
+                fill="#FFFFFF"
+                fillOpacity={0.92}
+                dominantBaseline="alphabetic"
+              >
+                {fitted.text}
+              </text>
+            </>
+          )
+        })()}
       {/* 标题行：kicker 点 + 标题 + 贯穿细线（图眉/脚注的杂志结构） */}
       <rect x={BAND_PAD_X} y={firstTitleY - 12} width={13} height={13} fill={ctx.colors.accent} />
       {renderEmphasisHeading(
@@ -574,35 +690,6 @@ function splitAnnotation(item: string): { title: string; desc: string } {
 }
 
 /**
- * Whether this page is the one thing this face can draw: a single picture.
- *
- * `image-annotate` has exactly one photo frame. An `image_grid` carrying more
- * than one item is several pictures with a caption each, and an
- * `image_compare` is a before and an after with a label on each.
- * `findImageSelection` reduces both to their first image, and the pictures it
- * did not choose left with their captions — no ellipsis on the slide, no
- * validate error, nothing in the audit. Drawing one of six and saying nothing
- * about the other five is the posture the face discipline forbids.
- *
- * So the face steps aside and the ordinary component renderer draws the page,
- * which paints every grid item with its caption and both sides of a compare.
- * A single `image`, a one-item grid, and a `device_mockup` are still exactly
- * one picture, and those the face keeps.
- *
- * Same guard shape as `stat-hero`, `show-statement` and `show-spotlight`:
- * this repository has no re-selection pass a null return could fall through
- * to, so "step aside" is a second render inside the same face rather than a
- * second trip through the menu.
- */
-function annotateExact(slide: Slide): boolean {
-  return !slide.components.some(
-    (component) =>
-      component.type === "image_compare" ||
-      (component.type === "image_grid" && component.items.length > 1),
-  )
-}
-
-/**
  * image_annotate 图 + 图旁说明清单：左对齐 heading/副题压顶、左侧白框照片
  * 卡（可带 caption）、右侧 bullets 前 4 条排成编号说明清单。
  * 无 image 块回落 null（调用方走模板路径）。
@@ -613,7 +700,7 @@ export function ImageAnnotatePage(props: {
   ctx: ComponentCtx
   page: PageRenderContext
 }) {
-  if (!annotateExact(props.slide)) return ImageAnnotateFallbackPage(props)
+  if (!singlePictureExact(props.slide)) return ImageAnnotateFallbackPage(props)
   return ImageAnnotateSoloPage(props)
 }
 
@@ -940,6 +1027,7 @@ export function ImageBottomPage({
   ctx: ComponentCtx
   page: PageRenderContext
 }) {
+  if (!singlePictureExact(slide)) return <TakeoverFallbackPage slide={slide} ctx={ctx} />
   const imageSelection = findImageSelection(slide)
   if (!imageSelection) return <MissingRequiredImageMarker slide={slide} />
   const { image: imageComponent, source: imageSource } = imageSelection

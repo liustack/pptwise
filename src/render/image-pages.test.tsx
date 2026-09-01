@@ -231,27 +231,85 @@ describe("image takeover dropped-content propagation", () => {
     expect(slideToRender(doc, slide, 0).dropped).toBe(1)
   })
 
-  it("image-top consumes an image_compare once as its selected image family source", () => {
+  // This used to assert the opposite — one `<image>`, neither label on the
+  // page — which is the loss the face discipline forbids written down as a
+  // contract: the takeover's single frame took the compare's left half and
+  // the right half left with its label, unmarked. The takeover now steps
+  // aside for any picture set it cannot hold.
+  it.each(["image-split", "image-top", "image-bottom", "image-annotate"] as const)(
+    "%s steps aside for an image_compare and paints both sides with their labels",
+    (face) => {
+      const slide: Slide = {
+        type: "content",
+        kind: "photo",
+        heading: "One selected image",
+        components: [
+          {
+            type: "image_compare",
+            left: { asset_id: "hero", label: "Before" },
+            right: { asset_id: "hero", label: "After" },
+          },
+        ],
+      }
+      const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "consulting", {
+        content: { photo: face },
+      })
+      const doc = makeIr(themeId, slide)
+      const root = parseSvgRoot(slideToSvgMarkup(doc, slide, 0))
+
+      expect(root.querySelectorAll("image")).toHaveLength(2)
+      expect(root.textContent).toContain("Before")
+      expect(root.textContent).toContain("After")
+      expect(slideToRender(doc, slide, 0).dropped).toBe(0)
+    },
+  )
+
+  it.each(["image-split", "image-top", "image-bottom", "image-annotate"] as const)(
+    "%s steps aside for a multi-item image_grid and paints every caption",
+    (face) => {
+      const slide: Slide = {
+        type: "content",
+        kind: "photo",
+        heading: "Six scenes",
+        components: [
+          {
+            type: "image_grid",
+            items: [
+              { asset_id: "hero", caption: "First frame" },
+              { asset_id: "hero", caption: "Second frame" },
+              { asset_id: "hero", caption: "Third frame" },
+            ],
+          },
+        ],
+      }
+      const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "consulting", {
+        content: { photo: face },
+      })
+      const doc = makeIr(themeId, slide)
+      const root = parseSvgRoot(slideToSvgMarkup(doc, slide, 0))
+
+      for (const caption of ["First frame", "Second frame", "Third frame"]) {
+        expect(root.textContent).toContain(caption)
+      }
+      expect(slideToRender(doc, slide, 0).dropped).toBe(0)
+    },
+  )
+
+  it("image-top keeps a single picture and paints the caption the author gave it", () => {
     const slide: Slide = {
       type: "content",
       kind: "photo",
       heading: "One selected image",
-      components: [
-        {
-          type: "image_compare",
-          left: { asset_id: "hero", label: "Before" },
-          right: { asset_id: "hero", label: "After" },
-        },
-      ],
+      components: [{ type: "image", asset_id: "hero", fit: "cover", caption: "Field station, winter" }],
     }
     const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "consulting", {
       content: { photo: "image-top" },
     })
     const root = parseSvgRoot(slideToSvgMarkup(makeIr(themeId, slide), slide, 0))
 
+    expect(root.querySelector("g[data-takeover-mode]")).toBeNull()
     expect(root.querySelectorAll("image")).toHaveLength(1)
-    expect(root.textContent).not.toContain("Before")
-    expect(root.textContent).not.toContain("After")
+    expect(root.textContent).toContain("Field station, winter")
   })
 
   it("image-annotate does not mark its selected image_compare source as dropped", () => {
