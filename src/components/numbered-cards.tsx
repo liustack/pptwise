@@ -1,5 +1,5 @@
 import type { Component } from "@/ir"
-import { layoutSvgText } from "@/lib/svg-text-layout"
+import { fitSvgLine, layoutSvgText, measureTextUnits } from "@/lib/svg-text-layout"
 import { readableOn } from "../render/ink"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
 import {
@@ -28,6 +28,22 @@ const SOFT_LEFT = 88
 const WRAP_PROBE_LINES = 64
 const TITLE_MAX_LINES = 2
 const BODY_MAX_LINES = 4
+
+/**
+ * `items[].sub` — the qualifier an author hangs on a card: a quarter, a
+ * region, a version. The schema has carried it since this component existed
+ * and this renderer never read it, so every one of those words was written
+ * into the deck and painted nowhere. No ellipsis, no validate error, nothing
+ * in the audit: the plainest kind of forgotten field.
+ *
+ * It sets right-aligned on the pill, in the body register, and takes its
+ * width out of the title/body column so it can never sit on top of them.
+ * Capped, because a sub is a qualifier and must not be able to squeeze the
+ * card's own title down to nothing.
+ */
+const SUB_GAP = 16
+const SUB_MAX_W = 180
+const SUB_MAX_SHARE = 0.34
 
 /** Fully rounded ends unless the theme's own radius token says otherwise. */
 function pillRx(pillH: number, ctx: ComponentCtx): number {
@@ -156,7 +172,19 @@ export const numberedCards: SvgComponent<NumberedCardsComponent> = {
         const badgeInk = readableOn(ctx.colors.accent)
         const badgeRight = badgeCx + badgeR
         const textX = badgeRight + BADGE_TEXT_GAP
-        const textW = Math.max(24, pillX + L.pillW - TEXT_PAD - textX)
+        const textRight = pillX + L.pillW - TEXT_PAD
+        const subCap = Math.min(SUB_MAX_W, Math.max(0, (textRight - textX) * SUB_MAX_SHARE))
+        const sub =
+          showText && item.sub?.trim() && subCap > 0
+            ? fitSvgLine(item.sub.trim(), {
+                maxWidth: subCap,
+                fontSize: FORM_BODY_FLOOR,
+                minFontSize: FORM_BODY_FLOOR,
+                fontFamily: ctx.fonts.body,
+              })
+            : null
+        const subW = sub ? measureTextUnits(sub.text, { fontFamily: ctx.fonts.body }) * sub.fontSize + SUB_GAP : 0
+        const textW = Math.max(24, textRight - textX - subW)
         const innerH = Math.max(0, L.pillH - 4)
         const titleLH = formLineHeight(FORM_TITLE_FLOOR)
         const titleKeep = Math.max(1, Math.min(TITLE_MAX_LINES, Math.floor(innerH / titleLH) || 1))
@@ -251,6 +279,20 @@ export const numberedCards: SvgComponent<NumberedCardsComponent> = {
                   </text>
                 ))
               : null}
+            {sub && (
+              <text
+                data-truncated={sub.truncated ? "1" : undefined}
+                x={textRight}
+                y={pillY + L.pillH / 2 + sub.fontSize * BASELINE_FUDGE}
+                textAnchor="end"
+                fontSize={sub.fontSize}
+                fill={ctx.colors.muted}
+                fontFamily={ctx.fonts.body}
+                dominantBaseline="alphabetic"
+              >
+                {sub.text}
+              </text>
+            )}
           </g>
         )
       })}

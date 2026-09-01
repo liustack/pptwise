@@ -209,6 +209,25 @@ function isNumLabel(text: string | null): boolean {
 
 
 describe("numbered_pills", () => {
+  it("paints items[].sub, right-aligned, without pushing the title off its own pill", () => {
+    const pulse = themeCtx("pulse")
+    const withSub = cards(4, { text: "一句说明。", sub: "一季度" })
+    const box = { x: 0, y: 0, w: 1088 }
+    const { container } = svg(numberedCards.render(withSub, box, pulse))
+    // The field was in the schema and in no renderer: an author's qualifier
+    // went into the deck and onto no slide.
+    const subs = Array.from(container.querySelectorAll("text")).filter((t) => t.textContent === "一季度")
+    expect(subs).toHaveLength(4)
+    for (const sub of subs) {
+      expect(sub.getAttribute("text-anchor")).toBe("end")
+      expect(sub.getAttribute("fill")).toBe(pulse.colors.muted)
+    }
+    // Titles still reach the page — the sub takes width out of their column
+    // rather than sitting on top of them.
+    expect(container.textContent).toContain("要点1")
+    expect(container.textContent).toContain("要点4")
+  })
+
   it("draws a large left count circle plus one pill per item, all pills sharing a left edge", () => {
     const pulse = themeCtx("pulse")
     const { container } = svg(numberedCards.render(four, { x: 0, y: 0, w: 1088 }, pulse))
