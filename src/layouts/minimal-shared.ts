@@ -65,27 +65,67 @@ export function chapterIndexKicker(n: number, heading: string | undefined): stri
   return `CHAPTER ${String(n).padStart(2, "0")}`
 }
 
+/** The two texts a `statement`-family page can put under its claim. */
+export interface StatementLines {
+  /**
+   * The quote itself, when the body component is a `blockquote`.
+   *
+   * A face that has room for it paints it; a face that does not must not
+   * pretend the page never had one.
+   */
+  readonly quote?: string
+  /**
+   * The small line naming where the claim came from: the quote's speaker,
+   * the cited source, the paragraph, or the subheading.
+   */
+  readonly source?: string
+}
+
 /**
- * Attribution line for `statement`: the single legal body component is the
- * source, never a card. Quote attribution wins over quote text. Subheading
- * is the no-component fallback.
+ * The `statement` family's field contract.
+ *
+ * A statement page is a claim set large and a line or two underneath. The
+ * claim is `slide.heading`. Everything underneath is the author's: the source
+ * they cited, the speaker they quoted, the sentence they wrote, the
+ * subheading they typed. The single legal body component supplies it, never a
+ * card, and never a line this repository composed.
+ *
+ * The split matters because a `blockquote` carries two authored texts, not
+ * one. `gauge-point` and `crayonbox-point` used to read the attribution and
+ * leave `text` — the quote itself — unpainted, which put a speaker's name on
+ * a page that never showed what they said. Faces with room for both read
+ * both fields here; the one-line skins read `statementAttribution` below.
  */
-export function statementAttribution(slide: Slide): string | undefined {
+export function statementLines(slide: Slide): StatementLines {
   const component = slide.components[0]
   if (component?.type === "blockquote") {
-    const fromQuote = component.attribution?.trim() || component.text.trim()
-    if (fromQuote) return fromQuote
+    const quote = component.text.trim() || undefined
+    const source = component.attribution?.trim() || undefined
+    if (quote || source) return { quote, source }
   }
   if (component?.type === "paragraph") {
     const text = component.text.trim()
-    if (text) return text
+    if (text) return { source: text }
   }
   if (component?.type === "citation") {
     const label = component.sources[0]?.label?.trim()
-    if (label) return label
+    if (label) return { source: label }
   }
-  const sub = slide.subheading?.trim()
-  return sub || undefined
+  return { source: slide.subheading?.trim() || undefined }
+}
+
+/**
+ * The one line a single-line statement skin sets.
+ *
+ * The source when the page has one. A quote with no attribution falls back to
+ * the quote itself rather than leaving the line blank and the words nowhere.
+ *
+ * Read it alongside `fitStatementSource` (`sparse/shared.ts`), which is where
+ * every skin picks the line up.
+ */
+export function statementAttribution(slide: Slide): string | undefined {
+  const { quote, source } = statementLines(slide)
+  return source ?? quote
 }
 
 /**

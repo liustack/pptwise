@@ -3,9 +3,9 @@ import type { LayoutDefinition } from "./registry"
 import { sectionNameFor } from "../lib/derive"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { fitHeadingLines } from "../render/heading-fit"
-import { stripEmphasis } from "../render/emphasis"
+import { fitEmphasisText, headingEmphasisPaint, renderEmphasisHeading, stripEmphasis } from "../render/emphasis"
 import { accessibleInk } from "../render/ink"
-import { statementAttribution } from "./minimal-shared"
+import { statementLines } from "./minimal-shared"
 import {
   CREATIVE_PURPLE,
   CrayonboxDecorPiece,
@@ -23,6 +23,25 @@ const TITLE_MIN_PT = 38
 const TITLE_MAX_LINES = 2
 const TITLE_MAX_W = 700
 const TITLE_LINE_HEIGHT = 88
+
+const SOURCE_X = 96
+const SOURCE_Y = 500
+
+/**
+ * The quote block, when the page's body component is a `blockquote`.
+ *
+ * Same defect this face shared with `gauge-point`: it read the attribution
+ * and left the quote itself unpainted, so a page said who spoke and never
+ * what they said. The block sits under the crayon underline, clear of the
+ * sun doodle (which ends around y=422), and the speaker closes underneath.
+ */
+const QUOTE_X = 96
+const QUOTE_Y = 496
+const QUOTE_SIZE = 24
+const QUOTE_MAX_LINES = 3
+const QUOTE_LINE_RATIO = 1.5
+const QUOTE_MAX_W = 1000
+const QUOTE_SOURCE_GAP = 46
 
 /** crayonbox-point：一条大结论与右侧特大太阳组成的疏内容页。 */
 export function CrayonboxPointContent({ ir, slide, index, ctx }: SvgTemplateProps) {
@@ -47,15 +66,28 @@ export function CrayonboxPointContent({ ir, slide, index, ctx }: SvgTemplateProp
     fontFamily: fonts.heading,
     typeScale: ctx.shape?.typeScale,
   })
-  const sourceValue = statementAttribution(slide)
-  const source = sourceValue
-    ? fitSvgLine(sourceValue, {
+  const lines = statementLines(slide)
+  const quote = lines.quote
+    ? fitEmphasisText(lines.quote, {
+        maxWidth: QUOTE_MAX_W,
+        fontSize: QUOTE_SIZE,
+        maxLines: QUOTE_MAX_LINES,
+        minPt: 18,
+        lineHeightRatio: QUOTE_LINE_RATIO,
+        fontFamily: fonts.body,
+      })
+    : null
+  const source = lines.source
+    ? fitSvgLine(lines.source, {
         maxWidth: 700,
         fontSize: 22,
         minFontSize: 18,
         fontFamily: fonts.body,
       })
     : null
+  const quoteLastY = quote ? QUOTE_Y + Math.max(0, quote.lines.length - 1) * quote.lineHeight : QUOTE_Y
+  // A page with no quote keeps this face's original source baseline.
+  const sourceY = quote ? quoteLastY + QUOTE_SOURCE_GAP : SOURCE_Y
 
   return (
     <>
@@ -115,11 +147,34 @@ export function CrayonboxPointContent({ ir, slide, index, ctx }: SvgTemplateProp
         <rect x={96} y={436} width={352} height={12} rx={6} fill={colors.accent} />
       </CrayonboxDecorPiece>
 
+      {quote &&
+        renderEmphasisHeading(
+          quote,
+          headingEmphasisPaint(ctx, quote, {
+            baseFill: accessibleInk(colors.text, bg, quote.fontSize),
+            fontFamily: fonts.body,
+            fontWeight: "700",
+            bold: false,
+          }),
+          (_line, lineIndex) => (
+            <text
+              key={lineIndex}
+              data-truncated={quote.truncated && lineIndex === quote.lines.length - 1 ? "1" : undefined}
+              x={QUOTE_X}
+              y={QUOTE_Y + lineIndex * quote.lineHeight}
+              fontFamily={fonts.body}
+              fontSize={quote.fontSize}
+              fill={accessibleInk(colors.text, bg, quote.fontSize)}
+              dominantBaseline="alphabetic"
+            />
+          ),
+        )}
+
       {source && (
         <text
           data-truncated={source.truncated ? "1" : undefined}
-          x={96}
-          y={500}
+          x={SOURCE_X}
+          y={sourceY}
           fontFamily={fonts.body}
           fontSize={source.fontSize}
           fill={accessibleInk(colors.muted, bg, source.fontSize)}

@@ -3,9 +3,9 @@ import type { LayoutDefinition } from "./registry"
 import { sectionNameFor } from "../lib/derive"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { fitHeadingLines } from "../render/heading-fit"
-import { stripEmphasis } from "../render/emphasis"
+import { fitEmphasisText, headingEmphasisPaint, renderEmphasisHeading, stripEmphasis } from "../render/emphasis"
 import { accessibleInk } from "../render/ink"
-import { statementAttribution } from "./minimal-shared"
+import { statementLines } from "./minimal-shared"
 import { GaugeMeta, withoutOverflowMark } from "./gauge-shared"
 
 const KICKER_X = 160
@@ -29,6 +29,22 @@ const SOURCE_Y = 512
 const SOURCE_SIZE = 18
 const SOURCE_MAX_W = 946
 
+/**
+ * The quote block, when the page's body component is a `blockquote`.
+ *
+ * This face reads as heading-as-claim plus a small source line, and for a
+ * long time that is all it painted: handed a quote it set the speaker's name
+ * and dropped what the speaker said. A page can hold both — the claim stays
+ * the hero, the quote sits under it in the body register, and the speaker
+ * closes underneath, which is how an attributed quote is set anywhere else in
+ * this repository.
+ */
+const QUOTE_SIZE = 22
+const QUOTE_MAX_LINES = 3
+const QUOTE_LINE_RATIO = 1.55
+const QUOTE_GAP = 52
+const QUOTE_SOURCE_GAP = 46
+
 /** gauge-point：以单枚金色引条校准两行结论的疏内容页。 */
 export function GaugePointContent({ ir, slide, index, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
@@ -48,15 +64,31 @@ export function GaugePointContent({ ir, slide, index, ctx }: SvgTemplateProps) {
     fontFamily: fonts.heading,
     typeScale: ctx.shape?.typeScale,
   })
-  const sourceValue = statementAttribution(slide)
-  const source = sourceValue
-    ? fitSvgLine(sourceValue, {
+  const lines = statementLines(slide)
+  const quote = lines.quote
+    ? fitEmphasisText(lines.quote, {
+        maxWidth: SOURCE_MAX_W,
+        fontSize: QUOTE_SIZE,
+        maxLines: QUOTE_MAX_LINES,
+        minPt: 18,
+        lineHeightRatio: QUOTE_LINE_RATIO,
+        fontFamily: fonts.body,
+      })
+    : null
+  const source = lines.source
+    ? fitSvgLine(lines.source, {
         maxWidth: SOURCE_MAX_W,
         fontSize: SOURCE_SIZE,
         minFontSize: SOURCE_SIZE,
         fontFamily: fonts.body,
       })
     : null
+  const headingLastY = TITLE_Y + Math.max(0, heading.lines.length - 1) * TITLE_LINE_HEIGHT
+  const quoteFirstY = headingLastY + QUOTE_GAP
+  const quoteLastY = quote ? quoteFirstY + Math.max(0, quote.lines.length - 1) * quote.lineHeight : quoteFirstY
+  // A page with no quote keeps the baseline this face has always used, so
+  // adding the quote block moves nothing on the pages that never had one.
+  const sourceY = quote ? quoteLastY + QUOTE_SOURCE_GAP : SOURCE_Y
 
   return (
     <>
@@ -94,11 +126,34 @@ export function GaugePointContent({ ir, slide, index, ctx }: SvgTemplateProps) {
         </text>
       ))}
 
+      {quote &&
+        renderEmphasisHeading(
+          quote,
+          headingEmphasisPaint(ctx, quote, {
+            baseFill: accessibleInk(colors.text, bg, quote.fontSize),
+            fontFamily: fonts.body,
+            fontWeight: "600",
+            bold: false,
+          }),
+          (_line, lineIndex) => (
+            <text
+              key={lineIndex}
+              data-truncated={quote.truncated && lineIndex === quote.lines.length - 1 ? "1" : undefined}
+              x={SOURCE_X}
+              y={quoteFirstY + lineIndex * quote.lineHeight}
+              fontFamily={fonts.body}
+              fontSize={quote.fontSize}
+              fill={accessibleInk(colors.text, bg, quote.fontSize)}
+              dominantBaseline="alphabetic"
+            />
+          ),
+        )}
+
       {source && (
         <text
           data-truncated={source.truncated ? "1" : undefined}
           x={SOURCE_X}
-          y={SOURCE_Y}
+          y={sourceY}
           fontFamily={fonts.body}
           fontSize={source.fontSize}
           fill={accessibleInk(colors.muted, bg, source.fontSize)}

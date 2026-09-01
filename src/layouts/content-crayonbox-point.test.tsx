@@ -107,10 +107,19 @@ describe("content-crayonbox-point", () => {
       "12",
       "6",
     ])
+    // The quoted words, not only the book they came from: this face used to
+    // set "小小创作者手册" and drop "大胆下笔。" entirely.
+    const quote = textBy(root, "大胆下笔。")!
+    expect([quote.getAttribute("x"), quote.getAttribute("y"), quote.getAttribute("font-size"), quote.getAttribute("fill")]).toEqual([
+      "96",
+      "496",
+      "24",
+      accessibleInk(tokens.colors.text, bg, 24),
+    ])
     const source = textBy(root, "小小创作者手册")!
     expect([source.getAttribute("x"), source.getAttribute("y"), source.getAttribute("font-size"), source.getAttribute("fill")]).toEqual([
       "96",
-      "500",
+      "542",
       "22",
       tokens.colors.muted,
     ])

@@ -81,15 +81,24 @@ describe("content-gauge-point", () => {
     }
   })
 
-  it("places the source and top-right meta while keeping gold shape-only", () => {
+  it("paints the quote itself, then its speaker, then the top-right meta, keeping gold shape-only", () => {
     const { root, tokens } = renderPoint()
+    // The words the author quoted, not just the name on them: this face used
+    // to set "云觅咨询研究" and drop the sentence it was attributing.
+    const quote = textBy(root, "留存不是结果，而是增长的前提。")!
+    expect([
+      quote.getAttribute("x"),
+      quote.getAttribute("y"),
+      quote.getAttribute("font-size"),
+      quote.getAttribute("fill"),
+    ]).toEqual(["184", "492", "22", tokens.colors.text])
     const source = textBy(root, "云觅咨询研究")!
     expect([
       source.getAttribute("x"),
       source.getAttribute("y"),
       source.getAttribute("font-size"),
       source.getAttribute("fill"),
-    ]).toEqual(["184", "512", "18", tokens.colors.muted])
+    ]).toEqual(["184", "538", "18", tokens.colors.muted])
     expect([textBy(root, "云觅咨询")?.getAttribute("x"), textBy(root, "云觅咨询")?.getAttribute("y")]).toEqual([
       "1184",
       "100",

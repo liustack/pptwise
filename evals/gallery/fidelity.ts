@@ -223,17 +223,6 @@ export interface FidelityExemption {
 
 export const FIDELITY_EXEMPTIONS: readonly FidelityExemption[] = [
   {
-    face: "gauge-point",
-    path: "(blockquote).text",
-    reason:
-      "statementAttribution takes a blockquote's attribution and leaves its text unpainted. The face's declared semantic is heading-as-statement with a small source line, so the fix is a field contract for the statement family, not a patch here.",
-  },
-  {
-    face: "crayonbox-point",
-    path: "(blockquote).text",
-    reason: "Same statementAttribution path as gauge-point above.",
-  },
-  {
     face: "image-annotate",
     path: "(image_grid).items",
     reason:
