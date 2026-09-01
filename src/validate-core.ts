@@ -43,6 +43,7 @@ export interface ValidationIssue {
    * error messages reference [a slide] by [its] id"; this is what makes
    * that true. Set by every page-scoped issue producer
    * ({@link checkThemeMenuFaces}, {@link checkBoundaryPageContent},
+   * {@link checkBoundaryItemCapacity},
    * the content-quality-gate translation in {@link validateIr}, and
    * {@link checkDuplicateSlideIds})
    * when the slide in question has an `id` — absent when the slide has
@@ -390,6 +391,54 @@ function checkBoundaryPageContent(ir: PptxIR): ValidationIssue[] {
 }
 
 /**
+ * Boundary-page item-capacity hard gate (face-fidelity wave).
+ *
+ * A cover, chapter or ending face draws its `bullets` into a fixed piece of
+ * furniture: two baked baselines, three numbered arguments, one call to
+ * action. Every one of those faces used to answer "and if there are more?"
+ * with `items.slice(0, N)` inside its own render code, so a page authored
+ * with five bullets printed three and nothing anywhere said what happened to
+ * the other two — not the slide, not validate, not the audit.
+ *
+ * The number is now declared on the face's own body slot (`itemCapacity`,
+ * `layouts/registry.ts`) and exceeding it is an error of the same class as
+ * the other structural boundary rejects above: the author is told which face
+ * is bound, what it holds, and how many items the page has, and decides what
+ * to cut. The render is not the place that decision gets made silently.
+ *
+ * Only the exact bound face is consulted (`boundBoundaryLayout`), so a page
+ * whose theme routes it to an asset cover — which draws no bullets at all —
+ * is never measured against a cap it does not use.
+ */
+function checkBoundaryItemCapacity(ir: PptxIR): ValidationIssue[] {
+  const errors: ValidationIssue[] = []
+  ir.slides.forEach((slide, i) => {
+    if (slide.placeholder) return
+    if (slide.type !== "cover" && slide.type !== "chapter" && slide.type !== "ending") return
+    const layout = boundBoundaryLayout(ir, slide)
+    if (!layout) return
+    for (const slot of layout.slots) {
+      if (slot.itemCapacity === undefined || slot.accepts === "any") continue
+      for (const component of slide.components) {
+        if (!slot.accepts.includes(component.type)) continue
+        if (!("items" in component) || !Array.isArray(component.items)) continue
+        const count = component.items.length
+        if (count <= slot.itemCapacity) continue
+        errors.push({
+          path: `slides.${i}.components`,
+          page: i + 1,
+          ...(slide.id !== undefined ? { slideId: slide.id } : {}),
+          message: `face "${layout.id}" draws at most ${slot.itemCapacity} item${
+            slot.itemCapacity === 1 ? "" : "s"
+          } from a "${component.type}" block, and this "${slide.type}" page has ${count} — shorten the list or move it to a content slide`,
+        })
+      }
+    }
+  })
+  return errors
+}
+
+/**
  * Duplicate slide id hard gate (W5 task 1): `slide.id` is a stable page
  * identity spec/assemble stamps on (spec-adjacent — see `ir/index.ts`'s
  * `id` docstring), so two slides sharing one within the same deck is always
@@ -712,6 +761,8 @@ export function validateIr(input: unknown): ValidateResult {
   if (fullBodyErrors.length > 0) return withNormalized({ ok: false, errors: fullBodyErrors })
   const boundaryPageErrors = checkBoundaryPageContent(r.data)
   if (boundaryPageErrors.length > 0) return withNormalized({ ok: false, errors: boundaryPageErrors })
+  const boundaryItemErrors = checkBoundaryItemCapacity(r.data)
+  if (boundaryItemErrors.length > 0) return withNormalized({ ok: false, errors: boundaryItemErrors })
   const duplicateIdErrors = checkDuplicateSlideIds(r.data)
   if (duplicateIdErrors.length > 0) return withNormalized({ ok: false, errors: duplicateIdErrors })
   // Asset byte validation (borrow wave, Task 2 — D3): a broken image is

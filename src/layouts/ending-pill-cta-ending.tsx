@@ -26,6 +26,9 @@ const PILL_MAX_W = 640
 const PILL_PAD_X = 74
 const CTA_SIZE = 22
 
+/** Items of the accepted `bullets` block this face has room to draw. */
+const ITEM_MAX = 1
+
 function ctaSource(slide: Slide): string | null {
   const bullets = slide.components.find((c) => c.type === "bullets")
   if (bullets?.type === "bullets") {
@@ -160,7 +163,7 @@ export const layoutDef = {
   slots: [
     { name: "heading", accepts: [] },
     { name: "subheading", accepts: [] },
-    { name: "body", accepts: ["bullets", "paragraph"], capacity: 1 },
+    { name: "body", accepts: ["bullets", "paragraph"], capacity: 1, itemCapacity: ITEM_MAX },
   ],
   headingFit: {
     maxWidth: CONTENT_MAX_W,

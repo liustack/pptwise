@@ -33,10 +33,13 @@ const FOOT_Y = 600
 const FOOT_SIZE = 22
 const FOOT_MAX_W = 1088
 
+/** Items of the accepted `bullets` block this face has room to draw. */
+const ITEM_MAX = 3
+
 function coverBulletItems(slide: SvgTemplateProps["slide"]): string[] {
   const block = slide.components.find((c) => c.type === "bullets")
   if (!block || block.type !== "bullets") return []
-  return block.items.slice(0, 3)
+  return block.items.slice(0, ITEM_MAX)
 }
 
 function splitActionLines(text: string): string[] {
@@ -164,7 +167,7 @@ export const layoutDef: LayoutDefinition = {
   slideTypes: ["ending"],
   slots: [
     { name: "heading", accepts: [] },
-    { name: "body", accepts: ["bullets"], capacity: 1 },
+    { name: "body", accepts: ["bullets"], capacity: 1, itemCapacity: ITEM_MAX },
     { name: "subheading", accepts: [] },
   ],
   headingFit: {

@@ -49,10 +49,13 @@ const FOOT_RULE_W = 1088
 
 const NEXT_KICKER = "NEXT"
 
+/** Items of the accepted `bullets` block this face has room to draw. */
+const ITEM_MAX = 3
+
 function coverBulletItems(slide: SvgTemplateProps["slide"]): string[] {
   const block = slide.components.find((c) => c.type === "bullets")
   if (!block || block.type !== "bullets") return []
-  return block.items.slice(0, 3)
+  return block.items.slice(0, ITEM_MAX)
 }
 
 function splitActionLines(text: string): string[] {
@@ -234,7 +237,7 @@ export const layoutDef: LayoutDefinition = {
     { name: "kicker", accepts: [] },
     { name: "heading", accepts: [] },
     { name: "subheading", accepts: [] },
-    { name: "body", accepts: ["bullets"], capacity: 1 },
+    { name: "body", accepts: ["bullets"], capacity: 1, itemCapacity: ITEM_MAX },
     { name: "meta", accepts: [] },
   ],
 }

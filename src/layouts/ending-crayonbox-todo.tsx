@@ -16,10 +16,13 @@ const ITEM_BADGE_YS = [292, 378, 464] as const
 const ITEM_TEXT_YS = [329, 415, 501] as const
 const BADGE_FILLS = [SKY_BLUE, "accent", GRASS_GREEN] as const
 
+/** Items of the accepted `bullets` block this face has room to draw. */
+const ITEM_MAX = 3
+
 function actionItems(slide: SvgTemplateProps["slide"]): string[] {
   const bullets = slide.components.find((component) => component.type === "bullets")
   if (!bullets || bullets.type !== "bullets") return []
-  return bullets.items.slice(0, 3)
+  return bullets.items.slice(0, ITEM_MAX)
 }
 
 function contactLine({ ir, slide }: Pick<SvgTemplateProps, "ir" | "slide">): string {
@@ -177,7 +180,7 @@ export const layoutDef = {
   slots: [
     { name: "kicker", accepts: [] },
     { name: "heading", accepts: [] },
-    { name: "body", accepts: ["bullets"], capacity: 1 },
+    { name: "body", accepts: ["bullets"], capacity: 1, itemCapacity: ITEM_MAX },
     { name: "subheading", accepts: [] },
   ],
 } satisfies LayoutDefinition

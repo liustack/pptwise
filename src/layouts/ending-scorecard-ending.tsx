@@ -43,10 +43,13 @@ function dropOverflowMarks(text: string): string {
   return text.replace(/…/g, "").replace(/\.{3}/g, "")
 }
 
+/** Items of the accepted `bullets` block this face has room to draw. */
+const ITEM_MAX = 3
+
 function coverBulletItems(slide: SvgTemplateProps["slide"]): string[] {
   const block = slide.components.find((c) => c.type === "bullets")
   if (!block || block.type !== "bullets") return []
-  return block.items.slice(0, 3)
+  return block.items.slice(0, ITEM_MAX)
 }
 
 export function ScorecardEnding({ slide, ctx }: SvgTemplateProps) {
@@ -173,7 +176,7 @@ export const layoutDef = {
   slideTypes: ["ending"],
   slots: [
     { name: "heading", accepts: [] },
-    { name: "body", accepts: ["bullets"], capacity: 1 },
+    { name: "body", accepts: ["bullets"], capacity: 1, itemCapacity: ITEM_MAX },
     { name: "subheading", accepts: [] },
   ],
   headingFit: {

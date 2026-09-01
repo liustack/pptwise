@@ -33,10 +33,13 @@ const SIGNOFF_Y = 636
 const SIGNOFF_SIZE = 16
 const SIGNOFF_MAX_W = 970
 
+/** Items of the accepted `bullets` block this face has room to draw. */
+const ITEM_MAX = 3
+
 function bulletItems(slide: SvgTemplateProps["slide"]): string[] {
   const block = slide.components.find((component) => component.type === "bullets")
   if (!block || block.type !== "bullets") return []
-  return block.items.slice(0, 3)
+  return block.items.slice(0, ITEM_MAX)
 }
 
 function splitHeading(text: string): string[] {
@@ -165,7 +168,7 @@ export const layoutDef: LayoutDefinition = {
     { name: "kicker", accepts: [] },
     { name: "heading", accepts: [] },
     { name: "subheading", accepts: [] },
-    { name: "body", accepts: ["bullets"], capacity: 1 },
+    { name: "body", accepts: ["bullets"], capacity: 1, itemCapacity: ITEM_MAX },
     { name: "rule", accepts: [] },
     { name: "meta", accepts: [] },
   ],

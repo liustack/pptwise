@@ -39,9 +39,12 @@ const NUM_SIZE = 22
 const DATA_SIZE = 17
 const DATA_MAX_W = 290
 
+/** Items of the accepted `bullets` block this face has room to draw. */
+const ITEM_MAX = 3
+
 function bulletItems(slide: SvgTemplateProps["slide"]): string[] {
   const bullets = slide.components.find((component) => component.type === "bullets")
-  return bullets?.type === "bullets" ? bullets.items.slice(0, 3) : []
+  return bullets?.type === "bullets" ? bullets.items.slice(0, ITEM_MAX) : []
 }
 
 function kickerSource({ ir }: Pick<SvgTemplateProps, "ir">): string {
@@ -197,7 +200,7 @@ export const layoutDef: LayoutDefinition = {
     { name: "kicker", accepts: [] },
     { name: "heading", accepts: [] },
     { name: "subheading", accepts: [] },
-    { name: "body", accepts: ["bullets"], capacity: 1 },
+    { name: "body", accepts: ["bullets"], capacity: 1, itemCapacity: ITEM_MAX },
     { name: "meta", accepts: [] },
     { name: "rule", accepts: [] },
   ],

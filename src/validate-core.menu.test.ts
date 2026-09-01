@@ -259,4 +259,67 @@ describe("IR validation against the bound theme menu", () => {
     expect(result.ok).toBe(false)
     expect(result.errors[0]?.message).toContain('layout "image-annotate" does not render device_mockup components')
   })
+
+  it("accepts a boundary page filled exactly to the bound face's item capacity", () => {
+    const id = "boundary-items-at-cap"
+    installTheme(id, BASE_MENU)
+
+    const result = validateIr(
+      deck(id, {
+        id: "cover",
+        type: "cover",
+        heading: "Verdict",
+        components: [{ type: "bullets", items: ["One", "Two", "Three"] }],
+      }),
+    )
+
+    expect(result.ok).toBe(true)
+  })
+
+  it("rejects a boundary page with more items than the bound face draws", () => {
+    const id = "boundary-items-over-cap"
+    installTheme(id, BASE_MENU)
+
+    const result = validateIr(
+      deck(id, {
+        id: "cover",
+        type: "cover",
+        heading: "Verdict",
+        components: [{ type: "bullets", items: ["One", "Two", "Three", "Four"] }],
+      }),
+    )
+
+    expect(result.ok).toBe(false)
+    expect(result.errors[0]).toMatchObject({
+      path: "slides.0.components",
+      page: 1,
+      slideId: "cover",
+    })
+    // The face and its limit are both named: an author who reads this knows
+    // what to shorten and by how much, which is the whole point of turning
+    // a silent `items.slice(0, 3)` into an error.
+    expect(result.errors[0]?.message).toContain('face "verdict-index"')
+    expect(result.errors[0]?.message).toContain("at most 3 items")
+    expect(result.errors[0]?.message).toContain("has 4")
+  })
+
+  it("never measures a page against a cap the bound face does not use", () => {
+    const id = "boundary-items-image-cover"
+    installTheme(id, BASE_MENU)
+
+    // An asset cover draws no bullets at all, so `checkBoundaryPageContent`
+    // rejects the components outright and no item cap is consulted.
+    const result = validateIr(
+      deck(id, {
+        id: "cover",
+        type: "cover",
+        heading: "Verdict",
+        background: { kind: "asset", asset_id: "hero" },
+        components: [{ type: "bullets", items: ["One", "Two", "Three", "Four"] }],
+      }),
+    )
+
+    expect(result.ok).toBe(false)
+    expect(result.errors[0]?.message).toContain("do not render components")
+  })
 })
