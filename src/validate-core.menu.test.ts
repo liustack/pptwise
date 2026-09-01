@@ -303,6 +303,75 @@ describe("IR validation against the bound theme menu", () => {
     expect(result.errors[0]?.message).toContain("has 4")
   })
 
+  it("rejects a second accepted block on a slot that draws one", () => {
+    const id = "boundary-two-blocks"
+    installTheme(id, BASE_MENU)
+
+    // `verdict-index` declares `body accepts: ["bullets"], capacity: 1` and
+    // draws the first block it finds. The second one used to reach no page,
+    // no error and no audit — the page simply printed less than it was given.
+    const result = validateIr(
+      deck(id, {
+        id: "cover",
+        type: "cover",
+        heading: "Verdict",
+        components: [
+          { type: "bullets", items: ["First"] },
+          { type: "bullets", items: ["Second"] },
+        ],
+      }),
+    )
+
+    expect(result.ok).toBe(false)
+    expect(result.errors[0]).toMatchObject({
+      path: "slides.0.components",
+      page: 1,
+      slideId: "cover",
+    })
+    expect(result.errors[0]?.message).toContain('face "verdict-index"')
+    expect(result.errors[0]?.message).toContain("body slot")
+    expect(result.errors[0]?.message).toContain("has 2")
+  })
+
+  it("counts the items the bound face will draw, not the blanks between them", () => {
+    const id = "boundary-blank-items"
+    installTheme(id, { ...BASE_MENU, ending: { face: "signoff-ending" } })
+
+    // `signoff-ending` draws four lines and skips items with no glyphs, so
+    // this page holds exactly four. Counting the raw array rejected it as
+    // five and sent the author looking for content to cut that was already
+    // not being drawn.
+    const result = validateIr(
+      deck(id, {
+        id: "ending",
+        type: "ending",
+        heading: "Close",
+        components: [{ type: "bullets", items: ["One", "", "Two", "  ", "Three", "Four"] }],
+      }),
+    )
+
+    expect(result.ok).toBe(true)
+  })
+
+  it("still rejects a page whose drawable items exceed the face's capacity", () => {
+    const id = "boundary-blank-items-over"
+    installTheme(id, { ...BASE_MENU, ending: { face: "signoff-ending" } })
+
+    const result = validateIr(
+      deck(id, {
+        id: "ending",
+        type: "ending",
+        heading: "Close",
+        components: [{ type: "bullets", items: ["One", "", "Two", "Three", "Four", "Five"] }],
+      }),
+    )
+
+    expect(result.ok).toBe(false)
+    expect(result.errors[0]?.message).toContain('face "signoff-ending"')
+    expect(result.errors[0]?.message).toContain("at most 4 items")
+    expect(result.errors[0]?.message).toContain("has 5")
+  })
+
   it("never measures a page against a cap the bound face does not use", () => {
     const id = "boundary-items-image-cover"
     installTheme(id, BASE_MENU)
