@@ -310,6 +310,29 @@ main { padding: 20px; }
 .bandhead h3 { margin: 0; font-size: 14px; letter-spacing: -0.01em; }
 .bandhead h3 span { font-weight: 400; color: var(--ink-dim); margin-left: 8px; }
 .bandhead p { margin: 2px 0 0; color: var(--ink-dim); font-size: 12px; max-width: 76ch; }
+
+/* One theme's whole menu in one strip, at its section head: fourteen slots,
+   the face each is mapped to, an em-dash where the menu declines the kind.
+   Hairline-separated cells over the line colour rather than boxes with their
+   own borders — an index the eye can skip, not a second headline. */
+.skeleton {
+  display: flex; gap: 1px; margin: 10px 0 0; overflow-x: auto;
+  background: var(--line); border: 1px solid var(--line); border-radius: 8px;
+}
+.skcell {
+  appearance: none; font: inherit; text-align: left; padding: 4px 7px 5px; border: 0;
+  flex: 1 1 0; min-width: 68px; display: flex; flex-direction: column; gap: 1px;
+  background: var(--panel); color: var(--ink); cursor: pointer;
+}
+.skcell:hover:not(:disabled) { background: var(--stage); }
+.skcell:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+.skcell:disabled { cursor: default; }
+.sksl { font-size: 10px; line-height: 1.4; color: var(--ink-dim); }
+.skface { font: 500 10.5px/1.4 ui-monospace, "SF Mono", Menlo, monospace; overflow-wrap: anywhere; }
+.skcell.is-off .skface { color: var(--ink-dim); }
+/* Where a jump landed. Loud for a moment, then gone — the reviewer needs to
+   find the card once, not to keep looking at a highlighted one. */
+.card.is-target { outline: 2px solid var(--focus); outline-offset: 2px; }
 /* ── the two cross-cut views ────────────────────────────────────────────
    Both are two levels deep: an index of one tile per group, then that one
    group across every theme. The heading of whichever level is on screen is
@@ -1078,6 +1101,69 @@ ${inlineRule(verdictFreshness)}
     return box;
   }
 
+  /**
+   * Put one card in front of the reviewer without disturbing anything else.
+   *
+   * Used by every jump that lands somewhere already on screen — the skeleton
+   * strip and the viewer's cross-axis buttons. Returns false when the page is
+   * filtered out, which is the caller's cue to say so rather than to scroll
+   * nowhere and look broken.
+   */
+  function revealCard(id) {
+    const c = cards.get(id);
+    if (!c) return false;
+    c.card.scrollIntoView({ behavior: "smooth", block: "center" });
+    c.card.classList.add("is-target");
+    setTimeout(() => c.card.classList.remove("is-target"), 1500);
+    return true;
+  }
+
+  /**
+   * One theme's menu, laid out slot by slot at its section head.
+   *
+   * The band headings below it answer "how does this theme draw"; this
+   * answers "what is this theme made of" — fourteen slots, one face each,
+   * an em-dash where the menu declines the kind. Read off the manifest's own
+   * section menu, which is read off the theme, so it cannot drift from the
+   * pages under it.
+   *
+   * A cell is a jump to that slot's page: the face band's, which exists to
+   * show exactly that menu choice, or a deck page carrying the same face when
+   * the face band was not built.
+   */
+  function skeletonStrip(section) {
+    const strip = document.createElement("div");
+    strip.className = "skeleton";
+    strip.setAttribute("role", "group");
+    strip.setAttribute("aria-label", section.label + " 的菜单骨架");
+    for (const slot of SLOT_ORDER) {
+      const face = section.menu[slot];
+      const cell = document.createElement("button");
+      cell.type = "button";
+      cell.className = "skcell" + (face ? "" : " is-off");
+      cell.appendChild(headText("span", "sksl", SLOT_LABELS[slot] || slot));
+      cell.appendChild(headText("span", "skface", face || "—"));
+      if (!face) {
+        cell.disabled = true;
+        cell.title = section.label + " 的菜单不提供 " + slot + " 这一讲法";
+        strip.appendChild(cell);
+        continue;
+      }
+      const target =
+        visible.find((p) => p.section === section.id && p.band === "face" && p.slot === slot) ||
+        visible.find((p) => p.section === section.id && p.faceSlot === slot);
+      if (!target) {
+        cell.disabled = true;
+        cell.title = "当前筛选下没有 " + slot + " → " + face + " 这一页";
+      } else {
+        cell.title = "跳到 " + slot + " → " + face;
+        cell.addEventListener("click", () => revealCard(target.id));
+      }
+      strip.appendChild(cell);
+    }
+    return strip;
+  }
+
   function renderThemeView(main) {
     for (const section of MANIFEST.sections) {
       const pages = visible.filter((p) => p.section === section.id);
@@ -1096,6 +1182,9 @@ ${inlineRule(verdictFreshness)}
       const blurb = document.createElement("p");
       blurb.textContent = section.blurb;
       head.append(h2, blurb);
+      // The appendix has no menu — it is what no menu asked for — so it gets
+      // no strip rather than a row of em-dashes pretending to be one.
+      if (section.menu) head.appendChild(skeletonStrip(section));
       main.appendChild(head);
 
       for (const band of MANIFEST.bands) {
