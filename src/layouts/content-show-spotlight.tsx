@@ -68,12 +68,26 @@ export function ShowSpotlightContent({ slide, ctx }: SvgTemplateProps) {
         fontFamily: fonts.body,
       })
     : null
-  const conclusionSource = stripEmphasis(slide.subheading ?? exact?.panel?.footnote ?? "").trim()
+  // The page's closing line and the panel's footnote are two texts with two
+  // owners. They shared this one slot as `subheading ?? footnote`, so a page
+  // that wrote both printed the subheading and the footnote reached nobody.
+  // The conclusion is the page's; the footnote belongs to the panel and now
+  // closes the panel's own column.
+  const conclusionSource = stripEmphasis(slide.subheading ?? "").trim()
   const conclusion = conclusionSource
     ? fitSvgLine(conclusionSource, {
         maxWidth: 384,
         fontSize: 24,
         minFontSize: 18,
+        fontFamily: fonts.body,
+      })
+    : null
+  const footnoteSource = stripEmphasis(exact?.panel?.footnote ?? "").trim()
+  const footnote = footnoteSource
+    ? fitSvgLine(footnoteSource, {
+        maxWidth: 496,
+        fontSize: 14,
+        minFontSize: 14,
         fontFamily: fonts.body,
       })
     : null
@@ -88,6 +102,17 @@ export function ShowSpotlightContent({ slide, ctx }: SvgTemplateProps) {
   )
   const labelY = [346, 428, 510] as const
   const valueY = [376, 458, 540] as const
+  /**
+   * The panel's footnote closes the panel's column, on the same baseline as
+   * the picture's caption closes the picture's. Both are the small annotation
+   * a column carries about its own content, so the page ends on one line of
+   * them.
+   *
+   * Not tucked between the last row and the rule: at three rows only 48px
+   * separate them, and a line there reads as the third row's second half
+   * rather than as the panel's own note.
+   */
+  const FOOTNOTE_Y = 672
 
   return (
     <g data-show-mode={exact ? "spotlight" : "fallback"}>
@@ -257,6 +282,21 @@ export function ShowSpotlightContent({ slide, ctx }: SvgTemplateProps) {
               dominantBaseline="alphabetic"
             >
               {withoutOverflowMark(conclusion.text)}
+            </text>
+          )}
+          {footnote && (
+            <text
+              data-font-floor-exempt="show-spec"
+              data-show-panel-footnote="true"
+              data-truncated={footnote.truncated ? "1" : undefined}
+              x={720}
+              y={FOOTNOTE_Y}
+              fontFamily={fonts.body}
+              fontSize={footnote.fontSize}
+              fill={accessibleInk(colors.muted, bg, footnote.fontSize)}
+              dominantBaseline="alphabetic"
+            >
+              {withoutOverflowMark(footnote.text)}
             </text>
           )}
         </>

@@ -234,6 +234,44 @@ describe("runway show layouts", () => {
     ])
   })
 
+  it("show-spotlight writes both the page's conclusion and the panel's own footnote", () => {
+    // One slot used to read `slide.subheading ?? panel.footnote`, so a page
+    // that wrote both printed the subheading and lost the footnote entirely.
+    const slide = {
+      ...slides[3]!,
+      subheading: "把复杂约束压缩成一条清晰路径",
+      components: [
+        slides[3]!.components[0]!,
+        { ...(slides[3]!.components[1]! as Record<string, unknown>), footnote: "样本为 2026 年上半年签约客户" },
+      ],
+    } as unknown as Slide
+    const root = draw(3, slide)
+    expect(root.querySelector('[data-show-mode="spotlight"]')).not.toBeNull()
+
+    // The page's conclusion keeps the approved slot, untouched.
+    const conclusion = textBy(root, "把复杂约束压缩成一条清晰路径")
+    expect(attrs(conclusion, ["x", "y", "font-size", "font-style"])).toEqual(["720", "632", "24", "italic"])
+
+    // The panel's footnote closes the panel's column in the small annotation
+    // tier, on the same baseline as the picture's caption closes the picture's.
+    const foot = textBy(root, "样本为 2026 年上半年签约客户")
+    const footY = Number(foot.getAttribute("y"))
+    const footSize = Number(foot.getAttribute("font-size"))
+    expect(attrs(foot, ["x", "y", "font-size"])).toEqual(["720", "672", "14"])
+    expect(attrs(textBy(root, "核心场景"), ["x", "y", "font-size"])).toEqual(["64", "672", "14"])
+    // It never lands on the conclusion above it.
+    const conclusionSize = Number(conclusion.getAttribute("font-size"))
+    expect(footY - footSize * 0.72, "footnote ink clears the conclusion").toBeGreaterThan(
+      Number(conclusion.getAttribute("y")) + conclusionSize * 0.22,
+    )
+    // The pinned composition is untouched by the added line.
+    expect(attrs(root.querySelector('[data-show-rule="spotlight"]')!, ["x", "y", "width", "height"])).toEqual([
+      "720", "588", "120", "4",
+    ])
+    expect(attrs(textBy(root, "旗舰方案"), ["x", "y", "font-size"])).toEqual(["720", "248", "56"])
+    expect(attrs(textBy(root, "增长可复制"), ["x", "y", "font-size"])).toEqual(["720", "540", "22"])
+  })
+
   it("places show-statement on the approved assertion and three-column grid", () => {
     const root = draw(4)
     const tokens = resolveStyle("runway")
