@@ -1,10 +1,10 @@
 import type { SvgTemplateProps } from "../types"
 import { pickEvidence } from "../../render/component-traits"
 import { renderEmphasisTspans } from "../../render/emphasis"
-import { heroCaption, heroSource, heroValue } from "../minimal-shared"
+import { heroCaption, heroSource, heroUnit, heroValue } from "../minimal-shared"
 import { fitSvgLine } from "../../lib/svg-text-layout"
 import { renderFittedEvidence, textColumnMaxWidth } from "../fitted-evidence"
-import { evidenceSource, fitHeroLine, fitSparseHeading, pad2 } from "./shared"
+import { evidenceSource, fitHeroLine, heroUnitMark, fitSparseHeading, pad2 } from "./shared"
 
 /** terra 稀排脸：等高线格言、橄榄横线巨数、样点卡。不画 motif 左下线和右缘点。 */
 
@@ -49,6 +49,8 @@ export function statement({ slide, ctx }: SvgTemplateProps) {
 export function statHero({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const fitted = fitHeroLine(heroValue(slide), { maxWidth: 1100, fontSize: 300, fontFamily: fonts.heading, bold: true })
+  const unit = heroUnit(slide)
+  const unitMark = heroUnitMark(fitted.fontSize)
   const caption = heroCaption(slide)
   const source = heroSource(slide)
   return (
@@ -63,6 +65,11 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
         dominantBaseline="alphabetic"
       >
         {fitted.text}
+        {unit && (
+          <tspan dx={unitMark.dx} fontSize={unitMark.fontSize}>
+            {unit}
+          </tspan>
+        )}
       </text>
       <rect x={104} y={504} width={430} height={2} fill={colors.primary} />
       {caption && (

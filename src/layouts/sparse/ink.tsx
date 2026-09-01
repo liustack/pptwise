@@ -4,12 +4,12 @@ import { renderEmphasisTspans } from "../../render/emphasis"
 import {
   hasCjk,
   heroCaption,
-  heroValue,
+  heroUnit, heroSource, heroValue,
   pullQuoteAttribution,
   pullQuoteContext,
   pullQuoteText,
 } from "../minimal-shared"
-import { fitHeroLine, fitSparseHeading, fitSparseQuote, quoteBlockBaseline } from "./shared"
+import { fitHeroLine, heroUnitMark, fitSparseHeading, fitSparseQuote, quoteBlockBaseline } from "./shared"
 
 /** ink 稀排脸：竖排格言、验印巨数、竖排引文。引文页 motif 画左下半山、不画右缘落款列。 */
 
@@ -141,7 +141,10 @@ export function statement({ ir, slide, ctx }: SvgTemplateProps) {
 export function statHero({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const fitted = fitHeroLine(heroValue(slide), { maxWidth: 1080, fontSize: 300, fontFamily: fonts.heading, bold: false })
+  const unit = heroUnit(slide)
+  const unitMark = heroUnitMark(fitted.fontSize)
   const caption = heroCaption(slide)
+  const source = heroSource(slide)
   return (
     <>
       <text
@@ -154,6 +157,11 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
         dominantBaseline="alphabetic"
       >
         {fitted.text}
+        {unit && (
+          <tspan dx={unitMark.dx} fontSize={unitMark.fontSize}>
+            {unit}
+          </tspan>
+        )}
       </text>
       <rect x={1108} y={392} width={56} height={56} fill={colors.accent} />
       <text
@@ -170,6 +178,18 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
       {caption && (
         <text x={140} y={570} fontFamily={fonts.body} fontSize={22} fill={colors.muted} dominantBaseline="alphabetic">
           {caption}
+        </text>
+      )}
+      {source && (
+        <text
+          x={140}
+          y={606}
+          fontFamily={fonts.body}
+          fontSize={16}
+          fill={colors.muted}
+          dominantBaseline="alphabetic"
+        >
+          {source}
         </text>
       )}
     </>

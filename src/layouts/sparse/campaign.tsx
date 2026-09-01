@@ -2,10 +2,10 @@ import type { SvgTemplateProps } from "../types"
 import { sectionNameFor } from "../../lib/derive"
 import { pickEvidence } from "../../render/component-traits"
 import { renderEmphasisTspans } from "../../render/emphasis"
-import { heroCaption, heroValue } from "../minimal-shared"
+import { heroCaption, heroUnit, heroSource, heroValue } from "../minimal-shared"
 import { fitSvgLine } from "../../lib/svg-text-layout"
 import { renderFittedEvidence, textColumnMaxWidth } from "../fitted-evidence"
-import { evidenceSource, fitHeroLine, fitSparseHeading, pad2 } from "./shared"
+import { evidenceSource, fitHeroLine, heroUnitMark, fitSparseHeading, pad2 } from "./shared"
 
 /** campaign 稀排脸：洋红收尾杠、侧幕卡。不画纸屑场。 */
 
@@ -51,7 +51,10 @@ export function statHero({ ir, slide, index, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const section = sectionNameFor(ir.slides, index)
   const fitted = fitHeroLine(heroValue(slide), { maxWidth: 1100, fontSize: 320, fontFamily: fonts.heading, bold: true })
+  const unit = heroUnit(slide)
+  const unitMark = heroUnitMark(fitted.fontSize)
   const caption = heroCaption(slide)
+  const source = heroSource(slide)
   return (
     <>
       {section && (
@@ -78,6 +81,11 @@ export function statHero({ ir, slide, index, ctx }: SvgTemplateProps) {
         dominantBaseline="alphabetic"
       >
         {fitted.text}
+        {unit && (
+          <tspan dx={unitMark.dx} fontSize={unitMark.fontSize}>
+            {unit}
+          </tspan>
+        )}
       </text>
       {caption && (
         <text
@@ -90,6 +98,19 @@ export function statHero({ ir, slide, index, ctx }: SvgTemplateProps) {
           dominantBaseline="alphabetic"
         >
           {caption}
+        </text>
+      )}
+      {source && (
+        <text
+          x={640}
+          y={616}
+        textAnchor="middle"
+          fontFamily={fonts.body}
+          fontSize={16}
+          fill={colors.muted}
+          dominantBaseline="alphabetic"
+        >
+          {source}
         </text>
       )}
     </>

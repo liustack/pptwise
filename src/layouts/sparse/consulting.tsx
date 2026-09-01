@@ -1,10 +1,10 @@
 import type { SvgTemplateProps } from "../types"
 import { pickEvidence } from "../../render/component-traits"
 import { renderEmphasisText } from "../../render/emphasis"
-import { heroCaption, heroSource, heroValue, statementAttribution } from "../minimal-shared"
+import { heroCaption, heroSource, heroUnit, heroValue, statementAttribution } from "../minimal-shared"
 import { fitSvgLine, measureTextUnits } from "../../lib/svg-text-layout"
 import { renderFittedEvidence, textColumnMaxWidth } from "../fitted-evidence"
-import { evidenceSource, fitHeroLine, fitSparseHeading, pad2 } from "./shared"
+import { evidenceSource, fitHeroLine, heroUnitMark, fitSparseHeading, pad2 } from "./shared"
 import { underlineYFromBaseline } from "../underline"
 
 /** consulting 稀排脸：结论先行、藏青巨数、白卡单证据。不画顶缘规矩线。 */
@@ -62,6 +62,8 @@ export function statement({ slide, ctx }: SvgTemplateProps) {
 export function statHero({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const fitted = fitHeroLine(heroValue(slide), { maxWidth: 1100, fontSize: 310, fontFamily: fonts.heading, bold: true })
+  const unit = heroUnit(slide)
+  const unitMark = heroUnitMark(fitted.fontSize)
   const caption = heroCaption(slide)
   const source = heroSource(slide)
   const numberY = 450
@@ -85,6 +87,11 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
         dominantBaseline="alphabetic"
       >
         {fitted.text}
+        {unit && (
+          <tspan dx={unitMark.dx} fontSize={unitMark.fontSize}>
+            {unit}
+          </tspan>
+        )}
       </text>
       <rect x={96} y={barY} width={barW} height={BAR_H} fill={colors.accent} />
       {caption && (

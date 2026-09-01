@@ -5,14 +5,14 @@ import { fitSvgLine } from "../../lib/svg-text-layout"
 import {
   hasCjk,
   heroCaption,
-  heroValue,
+  heroUnit, heroSource, heroValue,
   pullQuoteAttribution,
   pullQuoteContext,
   pullQuoteText,
   statementAttribution,
 } from "../minimal-shared"
 import {
-  fitHeroLine,
+  fitHeroLine, heroUnitMark,
   fitSparseHeading,
   fitSparseQuote,
   quoteBlockBaseline,
@@ -86,7 +86,10 @@ export function statHero({ ir, slide, index, ctx }: SvgTemplateProps) {
     : null
   const { body, percent } = splitTrailingPercent(heroValue(slide))
   const fitted = fitHeroLine(body, { maxWidth: 1100, fontSize: 300, fontFamily: fonts.heading, bold: false })
+  const unit = heroUnit(slide)
+  const unitMark = heroUnitMark(fitted.fontSize)
   const caption = heroCaption(slide)
+  const source = heroSource(slide)
   return (
     <>
       {kicker && (
@@ -114,6 +117,11 @@ export function statHero({ ir, slide, index, ctx }: SvgTemplateProps) {
         dominantBaseline="alphabetic"
       >
         {fitted.text}
+        {unit && (
+          <tspan dx={unitMark.dx} fontSize={unitMark.fontSize}>
+            {unit}
+          </tspan>
+        )}
         {percent && (
           <tspan fontSize={Math.round(fitted.fontSize * 0.5)} fill={colors.accent}>
             %
@@ -131,6 +139,19 @@ export function statHero({ ir, slide, index, ctx }: SvgTemplateProps) {
           dominantBaseline="alphabetic"
         >
           {caption}
+        </text>
+      )}
+      {source && (
+        <text
+          x={640}
+          y={616}
+        textAnchor="middle"
+          fontFamily={fonts.body}
+          fontSize={16}
+          fill={colors.muted}
+          dominantBaseline="alphabetic"
+        >
+          {source}
         </text>
       )}
     </>

@@ -4,12 +4,12 @@ import { renderEmphasisTspans } from "../../render/emphasis"
 import {
   heroCaption,
   heroSource,
-  heroValue,
+  heroUnit, heroValue,
   pullQuoteAttribution,
   pullQuoteContext,
   pullQuoteText,
 } from "../minimal-shared"
-import { fitHeroLine, fitSparseHeading, fitSparseQuote, quoteBlockBaseline, splitTrailingPercent } from "./shared"
+import { fitHeroLine, heroUnitMark, fitSparseHeading, fitSparseQuote, quoteBlockBaseline, splitTrailingPercent } from "./shared"
 
 /** academic 稀排脸：脚注引文、百分号巨数、命题格言。不画点轨和角标。 */
 
@@ -78,6 +78,8 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const { body, percent } = splitTrailingPercent(heroValue(slide))
   const fitted = fitHeroLine(body, { maxWidth: 1100, fontSize: 300, fontFamily: fonts.heading, bold: false })
+  const unit = heroUnit(slide)
+  const unitMark = heroUnitMark(fitted.fontSize)
   const caption = heroCaption(slide)
   const source = heroSource(slide)
   return (
@@ -94,6 +96,11 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
       >
         {fitted.text}
         {percent && <tspan fontSize={Math.round(fitted.fontSize * (190 / 300))}>%</tspan>}
+        {unit && (
+          <tspan dx={unitMark.dx} fontSize={unitMark.fontSize}>
+            {unit}
+          </tspan>
+        )}
       </text>
       <line x1={470} y1={448} x2={810} y2={448} stroke={colors.accent} strokeWidth={1.5} />
       {caption && (

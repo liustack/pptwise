@@ -236,3 +236,18 @@ export function quoteBlockBaseline(
   const span = Math.max(0, block.lines.length - 1) * block.lineHeight
   return Math.round(midY - span / 2 + block.fontSize * 0.34)
 }
+
+/**
+ * Type size and lead-in for the unit mark trailing a hero numeral.
+ *
+ * `kpi_cards[0].unit` is a text the author wrote, and until this existed no
+ * theme skin painted it: the page showed `8.4` where the deck said `8.4pp`.
+ * A unit is set small and tight against its figure, which is what these two
+ * numbers are — a quarter of the numeral's size, a hair of air before it.
+ */
+export function heroUnitMark(heroFontSize: number): { fontSize: number; dx: number } {
+  return {
+    fontSize: Math.max(20, Math.round(heroFontSize * 0.26)),
+    dx: Math.max(2, Math.round(heroFontSize * 0.04)),
+  }
+}

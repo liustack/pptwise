@@ -3,12 +3,12 @@ import { renderEmphasisTspans } from "../../render/emphasis"
 import {
   heroCaption,
   heroSource,
-  heroValue,
+  heroUnit, heroValue,
   pullQuoteAttribution,
   pullQuoteContext,
   pullQuoteText,
 } from "../minimal-shared"
-import { fitHeroLine, fitSparseHeading, fitSparseQuote, quoteBlockBaseline, yearQuarter } from "./shared"
+import { fitHeroLine, heroUnitMark, fitSparseHeading, fitSparseQuote, quoteBlockBaseline, yearQuarter } from "./shared"
 
 /** insight 稀排脸：行情格言、幽灵季度、折线引文。不画顶缘刻度尺和底缘面积线。 */
 
@@ -84,6 +84,8 @@ export function statHero({ ir, slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const quarter = yearQuarter(ir.meta.date)
   const fitted = fitHeroLine(heroValue(slide), { maxWidth: 1100, fontSize: 290, fontFamily: fonts.heading, bold: false })
+  const unit = heroUnit(slide)
+  const unitMark = heroUnitMark(fitted.fontSize)
   const caption = heroCaption(slide)
   const source = heroSource(slide)
   return (
@@ -112,6 +114,11 @@ export function statHero({ ir, slide, ctx }: SvgTemplateProps) {
         dominantBaseline="alphabetic"
       >
         {fitted.text}
+        {unit && (
+          <tspan dx={unitMark.dx} fontSize={unitMark.fontSize}>
+            {unit}
+          </tspan>
+        )}
       </text>
       {caption && (
         <text x={96} y={560} fontFamily={fonts.body} fontSize={24} fill={colors.muted} dominantBaseline="alphabetic">

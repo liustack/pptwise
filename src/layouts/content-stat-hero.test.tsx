@@ -43,7 +43,7 @@ describe("layoutDef", () => {
 })
 
 describe("StatHeroContent", () => {
-  it("kpi value is the giant number, heading is the caption, source is kpi.source", () => {
+  it("kpi value is the giant number, its own label is the caption, source is kpi.source", () => {
     const ctx = buildCtx(resolveStyle("crayon"), {})
     const slide: Slide = {
       type: "content",
@@ -62,7 +62,9 @@ describe("StatHeroContent", () => {
     )
     expect(markup).toContain("95.7")
     expect(markup).toContain("%")
-    expect(markup).toContain("三年累计服务人次")
+    // The caption row belongs to the card's own label. The page heading used
+    // to take it, which left the label painted nowhere at all.
+    expect(markup).toContain("完成率")
     expect(markup).toContain("内部复盘 2026")
     const value = Array.from(root.querySelectorAll("text")).find((t) => (t.textContent ?? "") === "95.7")!
     expect(value.getAttribute("x")).toBe("160")
@@ -141,5 +143,53 @@ describe("StatHeroContent", () => {
     )
     expect(out).not.toContain("#0B0908")
     expect(out).not.toContain("#C6A15B")
+  })
+
+  it("steps aside when the page carries more than one metric, and draws them all", () => {
+    const ctx = buildCtx(resolveStyle("crayon"), {})
+    const slide: Slide = {
+      type: "content",
+      kind: "points",
+      layout: "stat-hero",
+      heading: "三年累计服务人次",
+      components: [
+        {
+          type: "kpi_cards",
+          items: [
+            { value: "95.7", unit: "%", label: "完成率" },
+            { value: "12", unit: "个", label: "覆盖城市" },
+            { value: "3.2", unit: "万", label: "服务人次" },
+            { value: "48", unit: "小时", label: "响应时长" },
+          ],
+        },
+      ],
+    } as Slide
+    const { markup, root } = render(
+      <StatHeroContent ir={ir("crayon", [slide])} slide={slide} index={0} ctx={ctx} />,
+    )
+    expect(root.querySelector("g[data-hero-mode]")?.getAttribute("data-hero-mode")).toBe("fallback")
+    for (const label of ["完成率", "覆盖城市", "服务人次", "响应时长"]) {
+      expect(markup).toContain(label)
+    }
+    for (const value of ["95.7", "12", "3.2", "48"]) {
+      expect(markup).toContain(value)
+    }
+    expect(markup).toContain("三年累计服务人次")
+    expect(() => assertSubset(root)).not.toThrow()
+  })
+
+  it("a single metric keeps the hero construction", () => {
+    const ctx = buildCtx(resolveStyle("crayon"), {})
+    const slide: Slide = {
+      type: "content",
+      kind: "points",
+      layout: "stat-hero",
+      heading: "三年累计服务人次",
+      components: [{ type: "kpi_cards", items: [{ value: "95.7", unit: "%", label: "完成率" }] }],
+    } as Slide
+    const { root } = render(
+      <StatHeroContent ir={ir("crayon", [slide])} slide={slide} index={0} ctx={ctx} />,
+    )
+    expect(root.querySelector("g[data-hero-mode]")).toBeNull()
   })
 })

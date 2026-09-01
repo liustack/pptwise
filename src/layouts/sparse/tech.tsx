@@ -1,10 +1,10 @@
 import type { SvgTemplateProps } from "../types"
 import { pickEvidence } from "../../render/component-traits"
 import { renderEmphasisTspans } from "../../render/emphasis"
-import { heroCaption, heroSource, heroValue } from "../minimal-shared"
+import { heroCaption, heroSource, heroUnit, heroValue } from "../minimal-shared"
 import { fitSvgLine, measureTextUnits } from "../../lib/svg-text-layout"
 import { renderFittedEvidence, textColumnMaxWidth } from "../fitted-evidence"
-import { evidenceSource, fitHeroLine, fitSparseHeading, pad2 } from "./shared"
+import { evidenceSource, fitHeroLine, heroUnitMark, fitSparseHeading, pad2 } from "./shared"
 
 /** tech 稀排脸：青光巨数、轨道格言、节点证据卡。不画右缘星座链。 */
 
@@ -28,6 +28,8 @@ function starTrack(heroWidth: number): { x1: number; x2: number; dots: { cx: num
 export function statHero({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const fitted = fitHeroLine(heroValue(slide), { maxWidth: 1100, fontSize: 300, fontFamily: fonts.heading, bold: true })
+  const unit = heroUnit(slide)
+  const unitMark = heroUnitMark(fitted.fontSize)
   const caption = heroCaption(slide)
   const source = heroSource(slide)
   const heroWidth = measureTextUnits(fitted.text, { bold: true, fontFamily: fonts.heading }) * fitted.fontSize
@@ -44,6 +46,11 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
         dominantBaseline="alphabetic"
       >
         {fitted.text}
+        {unit && (
+          <tspan dx={unitMark.dx} fontSize={unitMark.fontSize}>
+            {unit}
+          </tspan>
+        )}
       </text>
       <line x1={track.x1} y1={STAR_Y} x2={track.x2} y2={STAR_Y} stroke={colors.border} strokeWidth={1.5} />
       {track.dots.map((dot) => (

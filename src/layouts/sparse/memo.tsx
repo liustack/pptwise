@@ -3,13 +3,13 @@ import { renderEmphasisTspans } from "../../render/emphasis"
 import {
   hasCjk,
   heroCaption,
-  heroValue,
+  heroUnit, heroSource, heroValue,
   pullQuoteAttribution,
   pullQuoteContext,
   pullQuoteText,
   trackingPx,
 } from "../minimal-shared"
-import { firstEmphasisRun, fitHeroLine, fitSparseHeading, fitSparseQuote, quoteBlockBaseline } from "./shared"
+import { firstEmphasisRun, fitHeroLine, heroUnitMark, fitSparseHeading, fitSparseQuote, quoteBlockBaseline } from "./shared"
 
 /** memo 稀排脸：打字机引文、文武夹巨数、宋体格言+印章。不画 MEMORANDUM / 顶缘红双线。 */
 
@@ -120,7 +120,10 @@ export function pullQuote({ slide, ctx }: SvgTemplateProps) {
 export function statHero({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const fitted = fitHeroLine(heroValue(slide), { maxWidth: 1088, fontSize: 280, fontFamily: fonts.heading, bold: false })
+  const unit = heroUnit(slide)
+  const unitMark = heroUnitMark(fitted.fontSize)
   const caption = heroCaption(slide)
+  const source = heroSource(slide)
   return (
     <>
       <InkDouble x={96} width={1088} yThick={170} yThin={176} stroke={colors.text} />
@@ -135,11 +138,28 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
         dominantBaseline="alphabetic"
       >
         {fitted.text}
+        {unit && (
+          <tspan dx={unitMark.dx} fontSize={unitMark.fontSize}>
+            {unit}
+          </tspan>
+        )}
       </text>
       <InkDouble x={96} width={1088} yThick={534} yThin={530} stroke={colors.text} />
       {caption && (
         <text x={96} y={590} fontFamily={fonts.mono} fontSize={19} fill={colors.muted} dominantBaseline="alphabetic">
           {`RE:  ${caption}`}
+        </text>
+      )}
+      {source && (
+        <text
+          x={96}
+          y={626}
+          fontFamily={fonts.mono}
+          fontSize={16}
+          fill={colors.muted}
+          dominantBaseline="alphabetic"
+        >
+          {source}
         </text>
       )}
     </>

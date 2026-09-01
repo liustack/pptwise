@@ -1,8 +1,8 @@
 import type { SvgTemplateProps } from "../types"
 import { sectionNameFor } from "../../lib/derive"
 import { renderEmphasisTspans } from "../../render/emphasis"
-import { heroCaption, heroValue, pullQuoteAttribution, pullQuoteContext, pullQuoteText } from "../minimal-shared"
-import { fitHeroLine, fitSparseHeading, fitSparseQuote, pad2, quoteBlockBaseline } from "./shared"
+import { heroCaption, heroUnit, heroSource, heroValue, pullQuoteAttribution, pullQuoteContext, pullQuoteText } from "../minimal-shared"
+import { fitHeroLine, heroUnitMark, fitSparseHeading, fitSparseQuote, pad2, quoteBlockBaseline } from "./shared"
 
 /** journal 稀排脸：巨引号、期号巨数、报头格言。不画 motif 报头双线。 */
 
@@ -76,7 +76,10 @@ export function statHero({ ir, slide, index, ctx }: SvgTemplateProps) {
   const section = sectionNameFor(ir.slides, index)
   const kicker = [`№ ${pad2(index + 1)}`, section].filter((v): v is string => Boolean(v && v.trim())).join(" · ")
   const fitted = fitHeroLine(heroValue(slide), { maxWidth: 1100, fontSize: 300, fontFamily: fonts.heading, bold: false })
+  const unit = heroUnit(slide)
+  const unitMark = heroUnitMark(fitted.fontSize)
   const caption = heroCaption(slide)
+  const source = heroSource(slide)
   return (
     <>
       <text
@@ -101,6 +104,11 @@ export function statHero({ ir, slide, index, ctx }: SvgTemplateProps) {
         dominantBaseline="alphabetic"
       >
         {fitted.text}
+        {unit && (
+          <tspan dx={unitMark.dx} fontSize={unitMark.fontSize}>
+            {unit}
+          </tspan>
+        )}
       </text>
       <line x1={500} y1={540} x2={780} y2={540} stroke={colors.primary} strokeWidth={1.5} />
       {caption && (
@@ -114,6 +122,19 @@ export function statHero({ ir, slide, index, ctx }: SvgTemplateProps) {
           dominantBaseline="alphabetic"
         >
           {caption}
+        </text>
+      )}
+      {source && (
+        <text
+          x={640}
+          y={628}
+        textAnchor="middle"
+          fontFamily={fonts.heading}
+          fontSize={16}
+          fill={colors.muted}
+          dominantBaseline="alphabetic"
+        >
+          {source}
         </text>
       )}
     </>

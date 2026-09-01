@@ -181,14 +181,21 @@ export function heroUnit(slide: Slide): string | undefined {
   return unit || undefined
 }
 
+/**
+ * The line under the hero numeral: what the number is.
+ *
+ * With a `kpi_cards` on the page that is the card's own `label`. The heading
+ * used to take this position whenever it differed from the value, which left
+ * the label — a text the author wrote into a component — painted nowhere at
+ * all. The page's own heading does not compete with the component for the
+ * one caption row; it yields.
+ *
+ * With no kpi component the heading is the hero numeral itself (see
+ * `heroValue`), so the caption falls to the subheading.
+ */
 export function heroCaption(slide: Slide): string | undefined {
   const kpi = kpiHero(slide)
-  if (kpi) {
-    const heading = slide.heading?.trim()
-    if (heading && heading !== kpi.value.trim()) return heading
-    const label = kpi.label.trim()
-    return label || undefined
-  }
+  if (kpi) return kpi.label.trim() || undefined
   return slide.subheading?.trim() || undefined
 }
 

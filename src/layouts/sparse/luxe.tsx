@@ -3,13 +3,13 @@ import { renderEmphasisTspans } from "../../render/emphasis"
 import {
   hasCjk,
   heroCaption,
-  heroValue,
+  heroUnit, heroSource, heroValue,
   pullQuoteAttribution,
   pullQuoteContext,
   pullQuoteText,
   trackingPx,
 } from "../minimal-shared"
-import { fitHeroLine, fitSparseHeading, fitSparseQuote, quoteBlockBaseline, rotateRectPolygon } from "./shared"
+import { fitHeroLine, heroUnitMark, fitSparseHeading, fitSparseQuote, quoteBlockBaseline, rotateRectPolygon } from "./shared"
 
 /** luxe 稀排脸：金菱引文、发丝巨数、一行金字。不画金框。 */
 
@@ -85,7 +85,10 @@ export function pullQuote({ slide, ctx }: SvgTemplateProps) {
 export function statHero({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const fitted = fitHeroLine(heroValue(slide), { maxWidth: 1100, fontSize: 270, fontFamily: fonts.heading, bold: false })
+  const unit = heroUnit(slide)
+  const unitMark = heroUnitMark(fitted.fontSize)
   const caption = heroCaption(slide)
+  const source = heroSource(slide)
   return (
     <>
       <line x1={360} y1={200} x2={920} y2={200} stroke={colors.border} strokeWidth={1} />
@@ -100,11 +103,29 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
         dominantBaseline="alphabetic"
       >
         {fitted.text}
+        {unit && (
+          <tspan dx={unitMark.dx} fontSize={unitMark.fontSize}>
+            {unit}
+          </tspan>
+        )}
       </text>
       <line x1={360} y1={524} x2={920} y2={524} stroke={colors.border} strokeWidth={1} />
       {caption && (
         <text x={640} y={580} textAnchor="middle" fontFamily={fonts.body} fontSize={19} fill={colors.muted} dominantBaseline="alphabetic">
           {caption}
+        </text>
+      )}
+      {source && (
+        <text
+          x={640}
+          y={616}
+        textAnchor="middle"
+          fontFamily={fonts.body}
+          fontSize={16}
+          fill={colors.muted}
+          dominantBaseline="alphabetic"
+        >
+          {source}
         </text>
       )}
     </>

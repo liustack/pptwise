@@ -1,7 +1,7 @@
 import type { SvgTemplateProps } from "../types"
 import { renderEmphasisTspans } from "../../render/emphasis"
-import { heroCaption, heroValue, pullQuoteAttribution, pullQuoteContext, pullQuoteText } from "../minimal-shared"
-import { fitHeroLine, fitSparseHeading, fitSparseQuote, quoteBlockBaseline } from "./shared"
+import { heroCaption, heroUnit, heroSource, heroValue, pullQuoteAttribution, pullQuoteContext, pullQuoteText } from "../minimal-shared"
+import { fitHeroLine, heroUnitMark, fitSparseHeading, fitSparseQuote, quoteBlockBaseline } from "./shared"
 
 /** heritage 稀排脸：文武线引文、取景框格言、夹心巨数。不画 motif 顶缘双线和顶角金菱。 */
 
@@ -171,7 +171,10 @@ export function statement({ slide, ctx }: SvgTemplateProps) {
 export function statHero({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const fitted = fitHeroLine(heroValue(slide), { maxWidth: 800, fontSize: 280, fontFamily: fonts.heading, bold: false })
+  const unit = heroUnit(slide)
+  const unitMark = heroUnitMark(fitted.fontSize)
   const caption = heroCaption(slide)
+  const source = heroSource(slide)
   return (
     <>
       <InkDouble x={240} width={800} yThick={180} yThin={186} stroke={colors.primary} />
@@ -186,6 +189,11 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
         dominantBaseline="alphabetic"
       >
         {fitted.text}
+        {unit && (
+          <tspan dx={unitMark.dx} fontSize={unitMark.fontSize}>
+            {unit}
+          </tspan>
+        )}
       </text>
       <InkDouble x={240} width={800} yThick={534} yThin={530} stroke={colors.primary} />
       {caption && (
@@ -199,6 +207,19 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
           dominantBaseline="alphabetic"
         >
           {caption}
+        </text>
+      )}
+      {source && (
+        <text
+          x={640}
+          y={628}
+        textAnchor="middle"
+          fontFamily={fonts.heading}
+          fontSize={16}
+          fill={colors.muted}
+          dominantBaseline="alphabetic"
+        >
+          {source}
         </text>
       )}
     </>

@@ -5,6 +5,9 @@ import { fitEmphasisHeading, headingEmphasisPaint, renderEmphasisHeading } from 
 import { fitSvgLine, layoutSvgText } from "../lib/svg-text-layout"
 import { accessibleInk } from "../render/ink"
 import { heroCaption, heroSource, heroUnit, heroValue, latinUpper, trackingPx } from "./minimal-shared"
+import { SvgContent } from "../render/svg-content"
+import { stripEmphasis } from "../render/emphasis"
+import { fitHeadingLines } from "../render/heading-fit"
 import { sparseFace } from "./sparse/registry"
 
 /**
@@ -14,8 +17,13 @@ import { sparseFace } from "./sparse/registry"
  * 菜单可用 silent 同时关掉 motif 与页级品牌，让四周只剩这一件事。
  *
  * 数字优先 kpi_cards 第一项的 value（单位单独一行），否则 heading 自己就是
- * 英雄位。说明一行来自 heading（有 kpi 时）或 subheading。出处来自
- * kpi.source / footnote / citation / paragraph。
+ * 英雄位——无 kpi 组件时 heading 即主体，是本脸的明示语义。说明一行来自
+ * kpi.label（有 kpi 时）或 subheading。出处来自 kpi.source / footnote /
+ * citation / paragraph。
+ *
+ * 这一页只有一个英雄位。作者写下两个以上指标时本脸退位（`heroExact` 返回
+ * false），整页交给通用组件渲染，四个指标一个不少地画出来——不是画第一个、
+ * 悄悄扔掉其余三个。
  *
  * 纪律：本文件禁 theme id、禁颜色 hex 字面量，颜色 / 字体全部来自 ctx。
  * 单个数字用比例数字，不用等宽 tabular。
@@ -36,10 +44,64 @@ const CAPTION_GAP = 40
 const CAPTION_MAX_LINES = 2
 const CAPTION_LINE_RATIO = 1.25
 
+/**
+ * Whether this page is the one thing this face can draw: a single hero
+ * figure.
+ *
+ * A `kpi_cards` component carrying more than one item is four numbers, and
+ * this face has exactly one place to put a number. Drawing the first and
+ * dropping the rest is the posture the face discipline forbids, so it steps
+ * aside instead and the page is drawn by the ordinary component renderer,
+ * which shows every card. Same guard shape as `show-statement` and
+ * `show-spotlight`.
+ */
+function heroExact(slide: SvgTemplateProps["slide"]): boolean {
+  return !slide.components.some((component) => component.type === "kpi_cards" && component.items.length > 1)
+}
+
 export function StatHeroContent(props: SvgTemplateProps) {
+  if (!heroExact(props.slide)) return StatHeroFallbackContent(props)
   const Face = sparseFace("stat-hero", props.ir.theme.id)
   if (Face) return Face(props)
   return GenericStatHeroContent(props)
+}
+
+const FALLBACK_HEADING_Y = 150
+const FALLBACK_RECT = { x: PAD_X, y: 230, w: 1280 - PAD_X * 2, h: 400 } as const
+
+/** The whole page, drawn plainly, when the hero construction cannot hold it. */
+function StatHeroFallbackContent({ slide, ctx }: SvgTemplateProps) {
+  const { colors, fonts } = ctx
+  const defaultBg = ctx.defaultBg ?? colors.bg
+  const heading = fitHeadingLines(stripEmphasis(slide.heading ?? ""), {
+    maxWidth: CONTENT_MAX_W,
+    fontSize: 44,
+    maxLines: 2,
+    minPt: 28,
+    lineHeightRatio: 1.28,
+    fontFamily: fonts.heading,
+  })
+  const headingStart = FALLBACK_HEADING_Y - Math.max(0, heading.lines.length - 1) * heading.lineHeight
+  return (
+    <g data-hero-mode="fallback">
+      {heading.lines.map((line, i) => (
+        <text
+          key={`heading-${i}`}
+          data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
+          x={PAD_X}
+          y={headingStart + i * heading.lineHeight}
+          fontFamily={fonts.heading}
+          fontSize={heading.fontSize}
+          fontWeight="700"
+          fill={accessibleInk(colors.text, defaultBg, heading.fontSize)}
+          dominantBaseline="alphabetic"
+        >
+          {line}
+        </text>
+      ))}
+      <SvgContent components={slide.components} rect={FALLBACK_RECT} ctx={ctx} />
+    </g>
+  )
 }
 
 function GenericStatHeroContent({ ir, slide, index, ctx }: SvgTemplateProps) {
