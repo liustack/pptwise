@@ -38,6 +38,21 @@ describe("forkTheme", () => {
     expect(forked.menu).toEqual(source.menu)
   })
 
+  it("keeps the source theme's emphasis stroke", () => {
+    // A fork repaints the palette. How the theme strikes a `**marked**` run
+    // is handwriting, not palette, so it survives the repaint on both
+    // presets that declare one.
+    const pad = themeFileFromPreset("consulting", { id: "pad-src" })
+    expect(pad.emphasis).toBe("pad")
+    expect(forkTheme(pad, { primary: "#0B5FFF" }, { id: "pad-fork" }).emphasis).toBe("pad")
+
+    const underline = themeFileFromPreset("lecture", { id: "underline-src" })
+    expect(underline.emphasis).toBe("underline")
+    expect(forkTheme(underline, { primary: "#0B5FFF" }, { id: "underline-fork" }).emphasis).toBe(
+      "underline",
+    )
+  })
+
   it("rederives muted with deriveMuted", () => {
     const forked = forkTheme(
       source,

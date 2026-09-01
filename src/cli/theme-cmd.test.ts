@@ -53,6 +53,20 @@ describe("runThemeNew", () => {
     expect(written.menu.content.points?.decor?.id).toBe("lecture-motif")
   })
 
+  it("keeps the preset's emphasis stroke in the written file", async () => {
+    // `theme new --from consulting` used to write a theme that drew its
+    // `**marked**` runs in the plain accent tint: the copy chain built a
+    // fresh object and never listed `emphasis` among the fields it copied.
+    const cwd = await tmp("pptwise-theme-new-emphasis-")
+    const pad = join(cwd, "themes", "pad.theme.json")
+    await runThemeNew({ from: "consulting", output: pad, id: "pad-copy", cwd })
+    expect(JSON.parse(await readFile(pad, "utf8")).emphasis).toBe("pad")
+
+    const underline = join(cwd, "themes", "underline.theme.json")
+    await runThemeNew({ from: "lecture", output: underline, id: "underline-copy", cwd })
+    expect(JSON.parse(await readFile(underline, "utf8")).emphasis).toBe("underline")
+  })
+
   it("freezes a builtin under the same id into deck/theme.json", async () => {
     const cwd = await tmp("pptwise-theme-new-freeze-")
     const out = join(cwd, "deck", "theme.json")
@@ -161,6 +175,15 @@ describe("runThemeFork", () => {
     expect(written).not.toHaveProperty("base")
   })
 
+  it("keeps the source theme's emphasis stroke through the fork", async () => {
+    const cwd = await tmp("pptwise-theme-fork-emphasis-")
+    const src = join(cwd, "themes", "underline-copy.theme.json")
+    await runThemeNew({ from: "lecture", output: src, cwd })
+    const out = join(cwd, "themes", "underline-blue.theme.json")
+    await runThemeFork("underline-copy", { primary: "#0B5FFF", output: out, cwd })
+    expect(JSON.parse(await readFile(out, "utf8")).emphasis).toBe("underline")
+  })
+
   it("treats contrast failure as a hard error", async () => {
     const cwd = await tmp("pptwise-theme-fork-bad-")
     await expect(
@@ -192,6 +215,17 @@ describe("runBrandExtract v2 wrap", () => {
     expect(written.version).toBe(2)
     expect(written).not.toHaveProperty("base")
     expect(written.menu.cover).toBeDefined()
+  })
+
+  it("keeps the donor's emphasis stroke alongside its menu", async () => {
+    // Extraction takes the brand's colors and the donor's everything else.
+    // The donor's stroke is part of that everything else.
+    const cwd = await tmp("pptwise-extract-emphasis-")
+    const src = join(cwd, "corp.pptx")
+    await writeFile(src, Buffer.from(await buildThmxBytes({ schemeName: "Acme" })))
+    const out = join(cwd, "themes", "acme.theme.json")
+    await runBrandExtract(src, { output: out, from: "consulting" })
+    expect(JSON.parse(await readFile(out, "utf8")).emphasis).toBe("pad")
   })
 })
 
