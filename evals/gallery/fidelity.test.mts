@@ -23,7 +23,7 @@ import { installNodePlatform } from "@/platform/node"
 import { COMPONENT_BUILDERS } from "./corpus/components"
 import { corpusAssets, layoutPage, type CorpusAssets } from "./corpus/decks"
 import { LANGUAGE_IDS, LEXICONS, type LanguageId } from "./corpus/lexicon"
-import { checkPageFidelity, exempt, faceOf, scanned } from "./fidelity"
+import { checkPageFidelity, exempt, faceOf, scanned, widened } from "./fidelity"
 import { buildMatrix } from "./matrix"
 import { renderMatrix } from "./render"
 
@@ -83,14 +83,19 @@ describe("every face renders the content it was given, or says what it dropped",
     }
 
     let scannedPages = 0
+    let widenedPages = 0
     const losses: string[] = []
     for (const page of pages) {
       const slide = page.ir.slides[page.slideIndex]!
       const face = faceOf(page.ir, slide)
-      if (!scanned(face)) continue
-      scannedPages += 1
+      const fieldPicking = scanned(face)
+      if (fieldPicking) scannedPages += 1
+      else widenedPages += 1
       for (const missing of checkPageFidelity(page.svg, slide).missing) {
-        if (exempt(face?.id, missing.path)) continue
+        // A field-picking face answers for every authored field on its page.
+        // Any other face answers for the fields `WIDENED_PATHS` names — the
+        // ones whose shared renderer was fixed and is now held to it.
+        if (fieldPicking ? exempt(face?.id, missing.path) : !widened(missing.path)) continue
         losses.push(
           `${page.id} [${face?.id}] ${missing.path}: ${JSON.stringify(missing.text.slice(0, 60))}`,
         )
@@ -99,9 +104,12 @@ describe("every face renders the content it was given, or says what it dropped",
 
     // A scope that has silently collapsed would pass this sweep without ever
     // looking at a page. 284 of the corpus' 1820 pages are drawn by a
-    // field-picking face today; the floor is well under that so an ordinary
-    // corpus edit does not trip it, and well over zero so a broken scope does.
+    // field-picking face today, and the rest are now read for the widened
+    // fields; both floors are well under the real counts so an ordinary
+    // corpus edit does not trip them, and well over zero so a broken scope
+    // does.
     expect(scannedPages).toBeGreaterThan(200)
+    expect(widenedPages).toBeGreaterThan(1000)
     expect(losses).toEqual([])
   })
 })

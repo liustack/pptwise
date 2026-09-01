@@ -206,6 +206,50 @@ export function faceOf(ir: PptxIR, slide: Slide): LayoutDefinition | undefined {
 }
 
 /**
+ * Fields this scan speaks for on *every* page, `"any"`-slot faces included.
+ *
+ * `scanned` above draws the line at field-picking faces because that is
+ * where the rule was enforceable when it was written. The shared component
+ * renderers behind an `"any"` slot had their own losses, and the honest way
+ * to bring one under this scan is to fix it first and then name the field
+ * here, so the fix cannot rot: green on the whole corpus today, red the
+ * moment the field stops reaching the page.
+ *
+ * Only a field whose corpus-wide loss count is zero belongs here. A field
+ * still losing content on some other face would make this list a wish rather
+ * than a check, and one red entry would hide every other one.
+ */
+export interface WidenedPath {
+  /** Substring of the authored text's IR path. */
+  readonly path: string
+  /** What used to be lost here, and what now keeps it on the page. */
+  readonly reason: string
+}
+
+export const WIDENED_PATHS: readonly WidenedPath[] = [
+  {
+    path: "(numbered_cards).items",
+    reason:
+      "items[].sub was in the schema and in no renderer: 122 authored qualifiers across 31 pages were painted nowhere. numbered-cards.tsx now sets it on the pill, taking its width out of the title column.",
+  },
+  {
+    path: "(kpi_cards).items",
+    reason:
+      "bento's exploded card never read items[].source (23 pages), and show-figures fitted value+unit as one string so the cut landed on the unit. Both fields now have their own place and their own room.",
+  },
+  {
+    path: "(architecture).layers",
+    reason:
+      "layers[].items were joined with ' · ' and fitted as one line, so a single data-truncated stood for an unknowable number of lost items. They are now measured run by run: what fits is painted whole, what is cut says so on its own element, and what is left over is declared with data-dropped.",
+  },
+]
+
+/** True when this field is checked on every page, whatever face drew it. */
+export function widened(path: string): boolean {
+  return WIDENED_PATHS.some((entry) => path.includes(entry.path))
+}
+
+/**
  * Faces whose absorption of one field is the page's declared semantic.
  *
  * The bar is deliberately high, and it is not "we have not got to this one
