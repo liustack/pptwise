@@ -1,8 +1,13 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import { sectionNameFor } from "../lib/derive"
-import { fitEmphasisHeading, headingEmphasisPaint, renderEmphasisHeading } from "../render/emphasis"
-import { fitSvgLine, layoutSvgText } from "../lib/svg-text-layout"
+import {
+  fitEmphasisHeading,
+  fitEmphasisText,
+  headingEmphasisPaint,
+  renderEmphasisHeading,
+} from "../render/emphasis"
+import { fitSvgLine } from "../lib/svg-text-layout"
 import { accessibleInk } from "../render/ink"
 import { heroCaption, heroSource, heroUnit, heroValue, latinUpper, trackingPx } from "./minimal-shared"
 import { SvgContent } from "../render/svg-content"
@@ -137,17 +142,14 @@ function GenericStatHeroContent({ ir, slide, index, ctx }: SvgTemplateProps) {
     : null
   const unitY = titleLastY + Math.round(heading.fontSize * UNIT_GAP_RATIO)
 
-  const captionSource = heroCaption(slide)
-  const caption = captionSource
-    ? layoutSvgText(captionSource, {
-        maxWidth: CONTENT_MAX_W,
-        fontSize: CAPTION_SIZE,
-        maxLines: CAPTION_MAX_LINES,
-        minPt: 16,
-        lineHeightRatio: CAPTION_LINE_RATIO,
-        fontFamily: fonts.body,
-      })
-    : null
+  const caption = fitEmphasisText(heroCaption(slide), {
+    maxWidth: CONTENT_MAX_W,
+    fontSize: CAPTION_SIZE,
+    maxLines: CAPTION_MAX_LINES,
+    minPt: 16,
+    lineHeightRatio: CAPTION_LINE_RATIO,
+    fontFamily: fonts.body,
+  })
   const captionStartY = (unit ? unitY : titleLastY) + CAPTION_GAP
 
   const sourceSource = heroSource(slide)
@@ -208,8 +210,15 @@ function GenericStatHeroContent({ ir, slide, index, ctx }: SvgTemplateProps) {
         </text>
       )}
 
-      {caption &&
-        caption.lines.map((line, i) => (
+      {renderEmphasisHeading(
+        caption,
+        headingEmphasisPaint(ctx, caption, {
+          baseFill: accessibleInk(colors.text, defaultBg, caption.fontSize),
+          fontWeight: "600",
+          fontFamily: fonts.body,
+          bold: false,
+        }),
+        (_line, i) => (
           <text
             key={`caption-${i}`}
             data-truncated={caption.truncated && i === caption.lines.length - 1 ? "1" : undefined}
@@ -219,10 +228,9 @@ function GenericStatHeroContent({ ir, slide, index, ctx }: SvgTemplateProps) {
             fontSize={caption.fontSize}
             fill={accessibleInk(colors.text, defaultBg, caption.fontSize)}
             dominantBaseline="alphabetic"
-          >
-            {line}
-          </text>
-        ))}
+          />
+        ),
+      )}
 
       {source && (
         <text

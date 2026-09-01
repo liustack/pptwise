@@ -1,7 +1,7 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
-import { fitEmphasisHeading, headingEmphasisPaint, renderEmphasisHeading } from "../render/emphasis"
-import { fitSvgLine } from "../lib/svg-text-layout"
+import { fitEmphasisHeading, fitEmphasisLine, headingEmphasisPaint, renderEmphasisHeading, renderEmphasisText } from "../render/emphasis"
+
 import { showsDocumentMeta } from "../render/document-meta"
 
 /**
@@ -71,7 +71,7 @@ export function MastheadEnding({ ir, slide, ctx, page }: SvgTemplateProps) {
   const headingLastY = HEADING_LAST_BASELINE
 
   // 兜底只服务完全默认的 ending 页（同 consulting 2026-07-09 去重裁决）
-  const subheading = fitSvgLine(slide.subheading || (slide.heading ? "" : "We appreciate your time."), {
+  const subheading = fitEmphasisLine(slide.subheading || (slide.heading ? "" : "We appreciate your time."), {
     maxWidth: 1088,
     fontSize: 28,
     minFontSize: 16,
@@ -105,20 +105,25 @@ export function MastheadEnding({ ir, slide, ctx, page }: SvgTemplateProps) {
         ),
       )}
 
-      {subheading.text && (
-        <text
-          data-truncated={subheading.truncated ? "1" : undefined}
-          x="640"
-          y={subheadingY}
-          fontFamily={fonts.heading}
-          fontSize={subheading.fontSize}
-          fill={colors.muted}
-          fontStyle="italic"
-          textAnchor="middle"
-          dominantBaseline="alphabetic"
-        >
-          {subheading.text}
-        </text>
+      {subheading && renderEmphasisText(
+        subheading.segments,
+        headingEmphasisPaint(ctx, subheading, {
+          baseFill: colors.muted,
+          fontWeight: "600",
+          fontFamily: fonts.heading,
+          bold: false,
+        }),
+            <text
+              data-truncated={subheading.truncated ? "1" : undefined}
+              x="640"
+              y={subheadingY}
+              fontFamily={fonts.heading}
+              fontSize={subheading.fontSize}
+              fill={colors.muted}
+              fontStyle="italic"
+              textAnchor="middle"
+              dominantBaseline="alphabetic"
+              />
       )}
 
       {metaParts.length > 0 && (

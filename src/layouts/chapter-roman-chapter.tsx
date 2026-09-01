@@ -2,7 +2,7 @@ import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import { chapterNumberFor } from "../lib/derive"
 import { scaleTypePx } from "../render/heading-fit"
-import { fitEmphasisHeading, headingEmphasisPaint, renderEmphasisHeading } from "../render/emphasis"
+import { fitEmphasisHeading, fitEmphasisLine, headingEmphasisPaint, renderEmphasisHeading, renderEmphasisText } from "../render/emphasis"
 import { accessibleInk } from "../render/ink"
 import { faceParam } from "./face-params"
 
@@ -88,6 +88,12 @@ export function RomanChapter({ ir, slide, index, ctx, params }: SvgTemplateProps
   })
   const headingY = 388
   const headingLastY = headingY + Math.max(0, heading.lines.length - 1) * heading.lineHeight
+  const subheading = fitEmphasisLine(slide.subheading, {
+    maxWidth: 1000,
+    fontSize: 24,
+    minFontSize: 16,
+    fontFamily: ctx.fonts.body,
+  })
   const subY = headingLastY + 52
 
   // 装饰构图：face param `ornament` 择一，省略则 eclipse。
@@ -182,19 +188,26 @@ export function RomanChapter({ ir, slide, index, ctx, params }: SvgTemplateProps
       )}
 
       {/* 可选副题（斜体，财经简报的双语排印感） */}
-      {slide.subheading && (
+      {subheading && (
         <>
-          <text
-            x="56"
-            y={subY}
-            fontFamily={ctx.fonts.body}
-            fontSize="24"
-            fontStyle="italic"
-            fill={accessibleInk(ctx.colors.muted, defaultBg, 24)}
-            dominantBaseline="alphabetic"
-          >
-            {slide.subheading}
-          </text>
+          {renderEmphasisText(
+            subheading.segments,
+            headingEmphasisPaint(ctx, subheading, {
+              baseFill: accessibleInk(ctx.colors.muted, defaultBg, 24),
+              fontWeight: "600",
+              fontFamily: ctx.fonts.body,
+              bold: false,
+            }),
+            <text
+              x="56"
+              y={subY}
+              fontFamily={ctx.fonts.body}
+              fontSize="24"
+              fontStyle="italic"
+              fill={accessibleInk(ctx.colors.muted, defaultBg, 24)}
+              dominantBaseline="alphabetic"
+            />,
+          )}
           <line
             x1="56"
             y1={subY + 34}

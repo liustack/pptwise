@@ -1,7 +1,7 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import { fitSvgLine } from "../lib/svg-text-layout"
-import { stripEmphasis } from "../render/emphasis"
+import { fitEmphasisLine, headingEmphasisPaint, renderEmphasisText, stripEmphasis } from "../render/emphasis"
 import { accessibleInk } from "../render/ink"
 import {
   CrayonboxDecorPiece,
@@ -63,7 +63,7 @@ export function EndingCrayonboxTodo({ ir, slide, ctx }: SvgTemplateProps) {
   // gets replaced by near-black — the design's blue contact line disappears.
   // The cover's date line is already 24 for the same reason.
   const contact = contactSource
-    ? fitSvgLine(contactSource, {
+    ? fitEmphasisLine(contactSource, {
         maxWidth: 1088,
         fontSize: 24,
         minFontSize: 17,
@@ -153,19 +153,19 @@ export function EndingCrayonboxTodo({ ir, slide, ctx }: SvgTemplateProps) {
         </g>
       ))}
 
-      {contact && (
-        <text
-          data-truncated={contact.truncated ? "1" : undefined}
-          x={96}
-          y={600}
-          fontFamily={fonts.body}
-          fontSize={contact.fontSize}
-          fontWeight="700"
-          fill={accessibleInk(colors.primary, bg, contact.fontSize)}
-          dominantBaseline="alphabetic"
-        >
-          {withoutOverflowMark(contact.text)}
-        </text>
+      {contact && renderEmphasisText(
+        contact.segments,
+        headingEmphasisPaint(ctx, contact, { baseFill: accessibleInk(colors.primary, bg, contact.fontSize), fontWeight: "700", fontFamily: fonts.body, bold: false }),
+            <text
+              data-truncated={contact.truncated ? "1" : undefined}
+              x={96}
+              y={600}
+              fontFamily={fonts.body}
+              fontSize={contact.fontSize}
+              fontWeight="700"
+              fill={accessibleInk(colors.primary, bg, contact.fontSize)}
+              dominantBaseline="alphabetic"
+              />
       )}
     </>
   )

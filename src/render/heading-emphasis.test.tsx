@@ -17,6 +17,13 @@ installNodePlatform()
 const MARKED = "年度**增长结论**与下一步投入"
 const PLAIN = stripEmphasis(MARKED)
 const RUN = "增长结论"
+/**
+ * A subheading carries markers as readily as a heading does, and until the
+ * face-fidelity wave twenty-two registered faces printed them raw: the
+ * asterisks reached the slide. The sweep below therefore marks both fields
+ * on every page it builds.
+ */
+const SUB_MARKED = "口径以**季度审计**为准"
 const BODY = { type: "paragraph", text: "正文占位。" } as Slide["components"][number]
 
 function deck(themeId: string, slides: Slide[]): PptxIR {
@@ -84,7 +91,7 @@ describe("a theme with a declared stroke keeps it", () => {
   })
 })
 
-describe("no registered face prints a heading marker", () => {
+describe("no registered face prints a heading or subheading marker", () => {
   const faces = [
     ...Object.keys(COVER_LAYOUTS).map((face) => ["cover", face] as const),
     ...Object.keys(CHAPTER_LAYOUTS).map((face) => ["chapter", face] as const),
@@ -102,9 +109,9 @@ describe("no registered face prints a heading marker", () => {
       kind === "content"
         ? [
             { type: "chapter", heading: "增长战略", components: [] } as Slide,
-            { type: "content", kind: "points", heading: MARKED, components: [BODY] } as Slide,
+            { type: "content", kind: "points", heading: MARKED, subheading: SUB_MARKED, components: [BODY] } as Slide,
           ]
-        : [{ type: kind, heading: MARKED, components: [] } as Slide]
+        : [{ type: kind, heading: MARKED, subheading: SUB_MARKED, components: [] } as Slide]
     const svg = renderSlideSvg(deck(id, slides), slides.length - 1)
     __resetRegisteredThemes()
     expect(paintedText(svg)).not.toContain("*")

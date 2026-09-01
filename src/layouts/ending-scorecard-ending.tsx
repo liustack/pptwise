@@ -3,12 +3,7 @@ import type { LayoutDefinition } from "./registry"
 import { fitHeadingLines } from "../render/heading-fit"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { accessibleInk, metaInk } from "../render/ink"
-import {
-  parseEmphasis,
-  renderEmphasisText,
-  sliceEmphasisForLines,
-  stripEmphasis,
-} from "../render/emphasis"
+import { parseEmphasis, renderEmphasisText, sliceEmphasisForLines, stripEmphasis } from "../render/emphasis"
 
 /**
  * scorecard-ending（第八波 pinOnly）：对表三项。优先 bullets 前三项。数字 /

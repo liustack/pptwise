@@ -5,12 +5,7 @@ import { fitHeadingLines } from "../render/heading-fit"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { accessibleInk, metaInk } from "../render/ink"
 import { hasCjk, trackingPx } from "./minimal-shared"
-import {
-  parseEmphasis,
-  renderEmphasisText,
-  sliceEmphasisForLines,
-  stripEmphasis,
-} from "../render/emphasis"
+import { parseEmphasis, renderEmphasisText, sliceEmphasisForLines, stripEmphasis } from "../render/emphasis"
 
 /**
  * gilt-word-ending（第八波 pinOnly）：金框回环收场。居中两行收束取 heading，

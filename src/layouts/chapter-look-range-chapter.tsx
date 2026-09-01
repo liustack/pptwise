@@ -4,12 +4,7 @@ import { chapterNumberFor } from "../lib/derive"
 import { fitHeadingLines } from "../render/heading-fit"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { accessibleInk, metaInk } from "../render/ink"
-import {
-  parseEmphasis,
-  renderEmphasisText,
-  sliceEmphasisForLines,
-  stripEmphasis,
-} from "../render/emphasis"
+import { parseEmphasis, renderEmphasisText, sliceEmphasisForLines, stripEmphasis } from "../render/emphasis"
 
 /**
  * look-range-chapter（第八波 pinOnly）：look 组导视。kicker 为 LOOK + 两位

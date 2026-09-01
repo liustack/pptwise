@@ -3,7 +3,7 @@ import type { LayoutDefinition } from "./registry"
 import { fitHeadingLines } from "../render/heading-fit"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { accessibleInk } from "../render/ink"
-import { stripEmphasis } from "../render/emphasis"
+import { fitEmphasisLine, headingEmphasisPaint, renderEmphasisText, stripEmphasis } from "../render/emphasis"
 
 /**
  * reminder-list-ending（第八波 pinOnly）：三件小事清单，零装饰。构图抄
@@ -97,7 +97,7 @@ export function ReminderListEnding({ slide, ctx }: SvgTemplateProps) {
 
   const footSource = (slide.subheading ?? "").trim()
   const foot = footSource
-    ? fitSvgLine(footSource, {
+    ? fitEmphasisLine(footSource, {
         maxWidth: FOOT_MAX_W,
         fontSize: FOOT_SIZE,
         minFontSize: 16,
@@ -140,19 +140,24 @@ export function ReminderListEnding({ slide, ctx }: SvgTemplateProps) {
         </text>
       ))}
 
-      {foot && (
-        <text
-          data-truncated={foot.truncated ? "1" : undefined}
-          x={FOOT_X}
-          y={FOOT_Y}
-          fontFamily={fonts.body}
-          fontSize={foot.fontSize}
-          fontWeight="700"
-          fill={accessibleInk(colors.primary, bg, foot.fontSize)}
-          dominantBaseline="alphabetic"
-        >
-          {foot.text}
-        </text>
+      {foot && renderEmphasisText(
+        foot.segments,
+        headingEmphasisPaint(ctx, foot, {
+          baseFill: accessibleInk(colors.primary, bg, foot.fontSize),
+          fontWeight: "600",
+          fontFamily: fonts.body,
+          bold: false,
+        }),
+            <text
+              data-truncated={foot.truncated ? "1" : undefined}
+              x={FOOT_X}
+              y={FOOT_Y}
+              fontFamily={fonts.body}
+              fontSize={foot.fontSize}
+              fontWeight="700"
+              fill={accessibleInk(colors.primary, bg, foot.fontSize)}
+              dominantBaseline="alphabetic"
+              />
       )}
     </>
   )

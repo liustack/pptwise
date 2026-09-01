@@ -1,10 +1,10 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import { fitHeadingLines } from "../render/heading-fit"
-import { fitSvgLine, layoutSvgText } from "../lib/svg-text-layout"
+import { fitSvgLine } from "../lib/svg-text-layout"
 import { accessibleInk, metaInk } from "../render/ink"
 import { hasCjk } from "./minimal-shared"
-import { stripEmphasis } from "../render/emphasis"
+import { fitEmphasisLine, fitEmphasisText, headingEmphasisPaint, renderEmphasisHeading, renderEmphasisText, stripEmphasis } from "../render/emphasis"
 
 /**
  * capsule-open-cover（第八波 pinOnly）：卡纸上的左齐大标题，日期是一行
@@ -75,7 +75,7 @@ export function CapsuleOpenCover({ ir, slide, ctx }: SvgTemplateProps) {
     : null
 
   const subtitle = subtitleSource
-    ? layoutSvgText(subtitleSource, {
+    ? fitEmphasisText(subtitleSource, {
         maxWidth: SUB_MAX_W,
         fontSize: SUB_SIZE,
         maxLines: 2,
@@ -88,7 +88,7 @@ export function CapsuleOpenCover({ ir, slide, ctx }: SvgTemplateProps) {
   const dateY = subLastY + DATE_GAP
 
   const dateLine = dateSource
-    ? fitSvgLine(dateSource, {
+    ? fitEmphasisLine(dateSource, {
         maxWidth: DATE_MAX_W,
         fontSize: DATE_SIZE,
         minFontSize: 16,
@@ -134,36 +134,48 @@ export function CapsuleOpenCover({ ir, slide, ctx }: SvgTemplateProps) {
         ))}
 
       {subtitle &&
-        subtitle.lines.map((line, i) => (
-          <text
-            key={`sub-${i}`}
-            data-contrast-tier="meta"
-            data-truncated={subtitle.truncated && i === subtitle.lines.length - 1 ? "1" : undefined}
-            x={TITLE_X}
-            y={subY + i * subtitle.lineHeight}
-            fontFamily={fonts.body}
-            fontSize={subtitle.fontSize}
-            fill={metaInk(colors.muted, bg)}
-            dominantBaseline="alphabetic"
-          >
-            {line}
-          </text>
-        ))}
+        renderEmphasisHeading(
+          subtitle,
+          headingEmphasisPaint(ctx, subtitle, {
+            baseFill: metaInk(colors.muted, bg),
+            fontWeight: "600",
+            fontFamily: fonts.body,
+            bold: false,
+          }),
+          (_line, i) => (
+            <text
+              key={`sub-${i}`}
+              data-contrast-tier="meta"
+              data-truncated={subtitle.truncated && i === subtitle.lines.length - 1 ? "1" : undefined}
+              x={TITLE_X}
+              y={subY + i * subtitle.lineHeight}
+              fontFamily={fonts.body}
+              fontSize={subtitle.fontSize}
+              fill={metaInk(colors.muted, bg)}
+              dominantBaseline="alphabetic"
+            />
+          ),
+        )}
 
-      {dateLine && (
-        <text
-          data-truncated={dateLine.truncated ? "1" : undefined}
-          x={DATE_X}
-          y={dateY}
-          fontFamily={fonts.body}
-          fontSize={dateLine.fontSize}
-          fontWeight="700"
-          fill={dateInk}
-          dominantBaseline="alphabetic"
-        >
-          {dateLine.text}
-        </text>
-      )}
+      {dateLine &&
+        renderEmphasisText(
+          dateLine.segments,
+          headingEmphasisPaint(ctx, dateLine, {
+            baseFill: dateInk,
+            fontWeight: "700",
+            fontFamily: fonts.body,
+          }),
+          <text
+            data-truncated={dateLine.truncated ? "1" : undefined}
+            x={DATE_X}
+            y={dateY}
+            fontFamily={fonts.body}
+            fontSize={dateLine.fontSize}
+            fontWeight="700"
+            fill={dateInk}
+            dominantBaseline="alphabetic"
+          />,
+        )}
     </>
   )
 }

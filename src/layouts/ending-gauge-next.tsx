@@ -1,7 +1,7 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import { fitSvgLine } from "../lib/svg-text-layout"
-import { stripEmphasis } from "../render/emphasis"
+import { fitEmphasisLine, headingEmphasisPaint, renderEmphasisText, stripEmphasis } from "../render/emphasis"
 import { accessibleInk } from "../render/ink"
 import { GaugeMeta, withoutOverflowMark } from "./gauge-shared"
 
@@ -77,7 +77,7 @@ export function GaugeNextEnding({ ir, slide, ctx }: SvgTemplateProps) {
   }))
   const signoffSource = slide.subheading?.trim() ?? ""
   const signoff = signoffSource
-    ? fitSvgLine(signoffSource, {
+    ? fitEmphasisLine(signoffSource, {
         maxWidth: SIGNOFF_MAX_W,
         fontSize: SIGNOFF_SIZE,
         minFontSize: SIGNOFF_SIZE,
@@ -141,19 +141,19 @@ export function GaugeNextEnding({ ir, slide, ctx }: SvgTemplateProps) {
 
       <line x1={RULE_X1} y1={RULE_Y} x2={RULE_X2} y2={RULE_Y} stroke={ruleStroke} strokeWidth={1} />
 
-      {signoff && (
-        <text
-          data-contrast-tier="meta"
-          data-truncated={signoff.truncated ? "1" : undefined}
-          x={SIGNOFF_X}
-          y={SIGNOFF_Y}
-          fontFamily={fonts.body}
-          fontSize={signoff.fontSize}
-          fill={accessibleInk(colors.muted, bg, signoff.fontSize)}
-          dominantBaseline="alphabetic"
-        >
-          {withoutOverflowMark(signoff.text)}
-        </text>
+      {signoff && renderEmphasisText(
+        signoff.segments,
+        headingEmphasisPaint(ctx, signoff, { baseFill: accessibleInk(colors.muted, bg, signoff.fontSize), fontWeight: "600", fontFamily: fonts.body, bold: false }),
+            <text
+              data-contrast-tier="meta"
+              data-truncated={signoff.truncated ? "1" : undefined}
+              x={SIGNOFF_X}
+              y={SIGNOFF_Y}
+              fontFamily={fonts.body}
+              fontSize={signoff.fontSize}
+              fill={accessibleInk(colors.muted, bg, signoff.fontSize)}
+              dominantBaseline="alphabetic"
+              />
       )}
     </>
   )

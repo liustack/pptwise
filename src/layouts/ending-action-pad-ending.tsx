@@ -1,12 +1,7 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout"
-import {
-  fitEmphasisLine,
-  headingEmphasisPaint,
-  renderEmphasisText,
-  stripEmphasis,
-} from "../render/emphasis"
+import { fitEmphasisLine, headingEmphasisPaint, renderEmphasisText, stripEmphasis } from "../render/emphasis"
 import { accessibleInk, metaInk, readableOn } from "../render/ink"
 
 /**

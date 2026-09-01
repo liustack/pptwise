@@ -1,6 +1,6 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
-import { layoutSvgText } from "../lib/svg-text-layout"
+
 import { scaleTypePx } from "../render/heading-fit"
 import { fitEmphasisText, headingEmphasisPaint, renderEmphasisHeading } from "../render/emphasis"
 import { accessibleInk } from "../render/ink"
@@ -48,7 +48,7 @@ export function BannerTitleCover({ ir, slide, ctx, page }: SvgTemplateProps) {
     bold: true,
     fontFamily: ctx.fonts.heading,
   })
-  const subtitle = layoutSvgText(slide.subheading, {
+  const subtitle = fitEmphasisText(slide.subheading, {
     maxWidth: 1040,
     fontSize: 34,
     maxLines: 2,
@@ -166,20 +166,22 @@ export function BannerTitleCover({ ir, slide, ctx, page }: SvgTemplateProps) {
       <rect x="96" y={titleLastY + 40} width="96" height="8" fill={ctx.colors.primary} />
 
       {/* Subheading (italic) */}
-      {subtitle.lines.map((line, i) => (
-        <text
-          key={i}
-          x="96"
-          y={subtitleY + i * subtitle.lineHeight}
-          fontFamily={ctx.fonts.body}
-          fontSize={subtitle.fontSize}
-          fill={ctx.colors.muted}
-          fontStyle="italic"
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {renderEmphasisHeading(
+        subtitle,
+        headingEmphasisPaint(ctx, subtitle, { baseFill: ctx.colors.muted, fontWeight: "600", fontFamily: ctx.fonts.body, bold: false }),
+        (_line, i) => (
+            <text
+              key={i}
+              x="96"
+              y={subtitleY + i * subtitle.lineHeight}
+              fontFamily={ctx.fonts.body}
+              fontSize={subtitle.fontSize}
+              fill={ctx.colors.muted}
+              fontStyle="italic"
+              dominantBaseline="alphabetic"
+              />
+        ),
+      )}
 
       {/* Meta divider + meta row (author / date / version) */}
       {(authorText || date || version) && (

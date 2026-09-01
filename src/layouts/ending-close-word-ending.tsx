@@ -1,9 +1,9 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import { fitHeadingLines } from "../render/heading-fit"
-import { fitSvgLine } from "../lib/svg-text-layout"
+
 import { accessibleInk, metaInk } from "../render/ink"
-import { parseEmphasis, renderEmphasisText, sliceEmphasisForLines, stripEmphasis } from "../render/emphasis"
+import { fitEmphasisLine, headingEmphasisPaint, parseEmphasis, renderEmphasisText, sliceEmphasisForLines, stripEmphasis } from "../render/emphasis"
 
 /**
  * close-word-ending layout（2026-08-22 第八波批 1，新表达）：
@@ -55,7 +55,7 @@ export function CloseWordEnding({ ir, slide, ctx }: SvgTemplateProps) {
   const authorText = author ? [author.name, author.role].filter(Boolean).join(" · ") : null
   const footSource = slide.subheading?.trim() || [org, authorText].filter(Boolean).join(" · ")
   const foot = footSource
-    ? fitSvgLine(footSource, {
+    ? fitEmphasisLine(footSource, {
         maxWidth: FOOT_MAX_W,
         fontSize: FOOT_SIZE,
         minFontSize: 16,
@@ -88,19 +88,24 @@ export function CloseWordEnding({ ir, slide, ctx }: SvgTemplateProps) {
         ),
       )}
 
-      {foot && (
-        <text
-          data-contrast-tier="meta"
-          data-truncated={foot.truncated ? "1" : undefined}
-          x={FOOT_X}
-          y={FOOT_Y}
-          fontFamily={fonts.body}
-          fontSize={foot.fontSize}
-          fill={metaInk(colors.muted, bg)}
-          dominantBaseline="alphabetic"
-        >
-          {foot.text}
-        </text>
+      {foot && renderEmphasisText(
+        foot.segments,
+        headingEmphasisPaint(ctx, foot, {
+          baseFill: metaInk(colors.muted, bg),
+          fontWeight: "600",
+          fontFamily: fonts.body,
+          bold: false,
+        }),
+            <text
+              data-contrast-tier="meta"
+              data-truncated={foot.truncated ? "1" : undefined}
+              x={FOOT_X}
+              y={FOOT_Y}
+              fontFamily={fonts.body}
+              fontSize={foot.fontSize}
+              fill={metaInk(colors.muted, bg)}
+              dominantBaseline="alphabetic"
+              />
       )}
     </>
   )

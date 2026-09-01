@@ -1,7 +1,13 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import { sectionNameFor } from "../lib/derive"
-import { fitEmphasisHeading, headingEmphasisPaint, renderEmphasisHeading } from "../render/emphasis"
+import {
+  fitEmphasisHeading,
+  fitEmphasisLine,
+  headingEmphasisPaint,
+  renderEmphasisHeading,
+  renderEmphasisText,
+} from "../render/emphasis"
 import { fitSvgLine, layoutSvgText } from "../lib/svg-text-layout"
 import { accessibleInk } from "../render/ink"
 import {
@@ -68,15 +74,12 @@ function GenericPullQuoteContent({ ir, slide, index, ctx }: SvgTemplateProps) {
       })
     : null
 
-  const contextSource = pullQuoteContext(slide)
-  const context = contextSource
-    ? fitSvgLine(contextSource, {
-        maxWidth: HEADING_MAX_W,
-        fontSize: CONTEXT_SIZE,
-        minFontSize: 16,
-        fontFamily: fonts.body,
-      })
-    : null
+  const context = fitEmphasisLine(pullQuoteContext(slide), {
+    maxWidth: HEADING_MAX_W,
+    fontSize: CONTEXT_SIZE,
+    minFontSize: 16,
+    fontFamily: fonts.body,
+  })
 
   // The quote is the page. It gets the emphasis-aware heading fit so a
   // `**marked**` run inside an authored quote paints the same way it would
@@ -137,20 +140,26 @@ function GenericPullQuoteContent({ ir, slide, index, ctx }: SvgTemplateProps) {
         </text>
       )}
 
-      {context && (
-        <text
-          data-truncated={context.truncated ? "1" : undefined}
-          x={CENTER_X}
-          y={CONTEXT_Y}
-          textAnchor="middle"
-          fontFamily={fonts.body}
-          fontSize={context.fontSize}
-          fill={accessibleInk(colors.muted, defaultBg, context.fontSize)}
-          dominantBaseline="alphabetic"
-        >
-          {context.text}
-        </text>
-      )}
+      {context &&
+        renderEmphasisText(
+          context.segments,
+          headingEmphasisPaint(ctx, context, {
+            baseFill: accessibleInk(colors.muted, defaultBg, context.fontSize),
+            fontWeight: "600",
+            fontFamily: fonts.body,
+            bold: false,
+          }),
+          <text
+            data-truncated={context.truncated ? "1" : undefined}
+            x={CENTER_X}
+            y={CONTEXT_Y}
+            textAnchor="middle"
+            fontFamily={fonts.body}
+            fontSize={context.fontSize}
+            fill={accessibleInk(colors.muted, defaultBg, context.fontSize)}
+            dominantBaseline="alphabetic"
+          />,
+        )}
 
       {renderEmphasisHeading(
         heading,

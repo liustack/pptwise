@@ -4,12 +4,7 @@ import { fitHeadingLines } from "../render/heading-fit"
 import { fitSvgLine, layoutSvgText } from "../lib/svg-text-layout"
 import { accessibleInk, metaInk } from "../render/ink"
 import { hasCjk } from "./minimal-shared"
-import {
-  parseEmphasis,
-  renderEmphasisText,
-  sliceEmphasisForLines,
-  stripEmphasis,
-} from "../render/emphasis"
+import { parseEmphasis, renderEmphasisText, sliceEmphasisForLines, stripEmphasis } from "../render/emphasis"
 
 /**
  * type-rule-cover（第八波 tech 板，新 pinOnly）：纯排印封面。kicker / 标题 /

@@ -3,7 +3,7 @@ import type { LayoutDefinition } from "./registry"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { accessibleInk, metaInk } from "../render/ink"
 import { hasCjk } from "./minimal-shared"
-import { stripEmphasis } from "../render/emphasis"
+import { fitEmphasisLine, headingEmphasisPaint, renderEmphasisText, stripEmphasis } from "../render/emphasis"
 
 /**
  * resolution-ending（第八波 pinOnly）：决议编号制收口。kicker 取短 heading
@@ -119,14 +119,13 @@ export function ResolutionEnding({ slide, ctx }: SvgTemplateProps) {
   })
 
   const signoff = signoffSource
-    ? fitSvgLine(signoffSource, {
+    ? fitEmphasisLine(signoffSource, {
         maxWidth: SIGNOFF_MAX_W,
         fontSize: SIGNOFF_SIZE,
         minFontSize: 16,
         fontFamily: fonts.body,
       })
     : null
-  const signoffPainted = signoff ? withoutOverflowMark(signoff.text) : ""
 
   const itemInk = accessibleInk(colors.text, bg, ITEM_SIZE)
 
@@ -176,19 +175,19 @@ export function ResolutionEnding({ slide, ctx }: SvgTemplateProps) {
         strokeWidth={RULE_STROKE}
       />
 
-      {signoff && signoffPainted && (
-        <text
-          data-contrast-tier="meta"
-          data-truncated={signoff.truncated ? "1" : undefined}
-          x={SIGNOFF_X}
-          y={SIGNOFF_Y}
-          fontFamily={fonts.body}
-          fontSize={signoff.fontSize}
-          fill={metaInk(colors.muted, bg)}
-          dominantBaseline="alphabetic"
-        >
-          {signoffPainted}
-        </text>
+      {signoff && renderEmphasisText(
+        signoff.segments,
+        headingEmphasisPaint(ctx, signoff, { baseFill: metaInk(colors.muted, bg), fontWeight: "600", fontFamily: fonts.body, bold: false }),
+            <text
+              data-contrast-tier="meta"
+              data-truncated={signoff.truncated ? "1" : undefined}
+              x={SIGNOFF_X}
+              y={SIGNOFF_Y}
+              fontFamily={fonts.body}
+              fontSize={signoff.fontSize}
+              fill={metaInk(colors.muted, bg)}
+              dominantBaseline="alphabetic"
+              />
       )}
     </>
   )
