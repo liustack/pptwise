@@ -1,6 +1,6 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
-import { fitHeadingLines } from "../render/heading-fit"
+import { fitEmphasisHeading, headingEmphasisPaint, renderEmphasisHeading, stripEmphasis } from "../render/emphasis"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { trackingPx } from "./minimal-shared"
 import { accessibleInk, metaInk } from "../render/ink"
@@ -93,9 +93,12 @@ export function BillHeadCover({ ir, slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const bg = ctx.defaultBg ?? colors.bg
   const org = ir.meta.organization
-  const venue = slide.subheading
+  // Meta tier, not the emphasis surface: this line is letter-spaced/stacked
+  // small type where an accent run has nowhere to read. Markers are
+  // stripped so nothing prints them.
+  const venue = stripEmphasis(slide.subheading ?? "") || undefined
 
-  const title = fitHeadingLines(slide.heading, {
+  const title = fitEmphasisHeading(slide.heading, {
     maxWidth: TITLE_MAX_W,
     fontSize: TITLE_SIZE,
     maxLines: TITLE_MAX_LINES,
@@ -162,21 +165,23 @@ export function BillHeadCover({ ir, slide, ctx }: SvgTemplateProps) {
           </text>
         </>
       )}
-      {title.lines.map((line, i) => (
-        <text
-          key={i}
-          data-truncated={title.truncated && i === title.lines.length - 1 ? "1" : undefined}
-          x={TITLE_X}
-          y={titleY + i * title.lineHeight}
-          fontFamily={fonts.heading}
-          fontSize={title.fontSize}
-          fontWeight="700"
-          fill={accessibleInk(colors.text, bg, title.fontSize)}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {renderEmphasisHeading(
+        title,
+        headingEmphasisPaint(ctx, title, { baseFill: accessibleInk(colors.text, bg, title.fontSize), fontWeight: "700", fontFamily: fonts.heading }),
+        (_line, i) => (
+          <text
+            key={i}
+            data-truncated={title.truncated && i === title.lines.length - 1 ? "1" : undefined}
+            x={TITLE_X}
+            y={titleY + i * title.lineHeight}
+            fontFamily={fonts.heading}
+            fontSize={title.fontSize}
+            fontWeight="700"
+            fill={accessibleInk(colors.text, bg, title.fontSize)}
+            dominantBaseline="alphabetic"
+            />
+        ),
+      )}
 
       <rect x={RULE_X} y={RULE_Y} width={RULE_W} height={RULE_H} fill={colors.primary} />
 

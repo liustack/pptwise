@@ -1,6 +1,6 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
-import { fitHeadingLines } from "../render/heading-fit"
+import { fitEmphasisHeading, headingEmphasisPaint, renderEmphasisHeading } from "../render/emphasis"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { accessibleInk, metaInk } from "../render/ink"
 
@@ -123,7 +123,7 @@ export function BannerEnding({ ir, slide, ctx }: SvgTemplateProps) {
     .filter(Boolean)
     .join(" · ")
 
-  const heading = fitHeadingLines(slide.heading || "Thank you.", {
+  const heading = fitEmphasisHeading(slide.heading || "Thank you.", {
     maxWidth: 1088,
     fontSize: 132,
     maxLines: 2,
@@ -177,22 +177,24 @@ export function BannerEnding({ ir, slide, ctx }: SvgTemplateProps) {
       </g>
 
       {/* Main heading */}
-      {heading.lines.map((line, i) => (
-        <text
-          key={i}
-          data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
-          x="96"
-          y={headingY + i * heading.lineHeight}
-          fontFamily={fonts.heading}
-          fontSize={heading.fontSize}
-          fontWeight="500"
-          fill={accessibleInk(colors.primary, bg, heading.fontSize)}
-          fontStyle="italic"
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {renderEmphasisHeading(
+        heading,
+        headingEmphasisPaint(ctx, heading, { baseFill: accessibleInk(colors.primary, bg, heading.fontSize), fontWeight: "500", fontFamily: fonts.heading, bold: false }),
+        (_line, i) => (
+          <text
+            key={i}
+            data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
+            x="96"
+            y={headingY + i * heading.lineHeight}
+            fontFamily={fonts.heading}
+            fontSize={heading.fontSize}
+            fontWeight="500"
+            fill={accessibleInk(colors.primary, bg, heading.fontSize)}
+            fontStyle="italic"
+            dominantBaseline="alphabetic"
+            />
+        ),
+      )}
 
       {/* Chinese subheading（空串=heading 已含感谢语，跳过） */}
       {subheading.text && (

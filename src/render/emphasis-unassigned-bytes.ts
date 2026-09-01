@@ -75,9 +75,25 @@ function sha(svg: string): string {
   return createHash("sha256").update(svg).digest("hex")
 }
 
-export function computeEmphasisUnassignedPages(): Record<string, string> {
+/** What one rendered page in the matrix is worth pinning about. */
+export interface UnassignedPageAudit {
+  sha: string
+  /** Literal `**` left in the serialized page. Must be 0 — a marker printed
+   *  as text is the defect this whole matrix exists to keep out. */
+  markers: number
+  /** `<tspan` elements: the shape a painted emphasis run takes. */
+  tspans: number
+}
+
+/**
+ * Renders the matrix once and reports both the byte hash and what the page
+ * did with its `**marked**` runs. The hashes are the drift nail; the marker
+ * and tspan counts are what stop a future recapture from quietly pinning a
+ * page that prints its markers instead of painting them.
+ */
+export function auditEmphasisUnassignedPages(): Record<string, UnassignedPageAudit> {
   __resetRegisteredThemes()
-  const pages: Record<string, string> = {}
+  const pages: Record<string, UnassignedPageAudit> = {}
   for (const sourceThemeId of UNASSIGNED) {
     const themeId = registerTestTheme(`emphasis-${sourceThemeId}`, sourceThemeId, {
       content: {
@@ -89,9 +105,20 @@ export function computeEmphasisUnassignedPages(): Record<string, string> {
     })
     const ir = deck(themeId)
     for (const pageIndex of [0, 2, 3, 4, 5]) {
-      pages[`${sourceThemeId}|${pageIndex}`] = sha(renderSlideSvg(ir, pageIndex))
+      const svg = renderSlideSvg(ir, pageIndex)
+      pages[`${sourceThemeId}|${pageIndex}`] = {
+        sha: sha(svg),
+        markers: (svg.match(/\*\*/g) ?? []).length,
+        tspans: (svg.match(/<tspan/g) ?? []).length,
+      }
     }
   }
   __resetRegisteredThemes()
   return pages
+}
+
+export function computeEmphasisUnassignedPages(): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(auditEmphasisUnassignedPages()).map(([key, page]) => [key, page.sha]),
+  )
 }

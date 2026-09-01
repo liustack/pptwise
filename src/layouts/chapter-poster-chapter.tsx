@@ -1,7 +1,8 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import { chapterNumberFor } from "../lib/derive"
-import { fitHeadingLines, scaleTypePx } from "../render/heading-fit"
+import { scaleTypePx } from "../render/heading-fit"
+import { fitEmphasisHeading, headingEmphasisPaint, renderEmphasisHeading } from "../render/emphasis"
 import { accessibleInk } from "../render/ink"
 
 /**
@@ -58,7 +59,7 @@ export function PosterChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
   // `colors.bg` `buildCtx` itself defaults to.
   const defaultBg = ctx.defaultBg ?? ctx.colors.bg
 
-  const heading = fitHeadingLines(slide.heading, {
+  const heading = fitEmphasisHeading(slide.heading, {
     maxWidth: 1168,
     fontSize: 56,
     maxLines: 2,
@@ -117,21 +118,23 @@ export function PosterChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
       </text>
 
       {/* Chapter heading */}
-      {heading.lines.map((line, i) => (
-        <text
-          key={i}
-          data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
-          x="56"
-          y={headingY + i * heading.lineHeight}
-          fontFamily={ctx.fonts.heading}
-          fontSize={heading.fontSize}
-          fontWeight="800"
-          fill={accessibleInk(ctx.colors.text, defaultBg, heading.fontSize)}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {renderEmphasisHeading(
+        heading,
+        headingEmphasisPaint(ctx, heading, { baseFill: accessibleInk(ctx.colors.text, defaultBg, heading.fontSize), fontWeight: "800", fontFamily: ctx.fonts.heading }),
+        (_line, i) => (
+          <text
+            key={i}
+            data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
+            x="56"
+            y={headingY + i * heading.lineHeight}
+            fontFamily={ctx.fonts.heading}
+            fontSize={heading.fontSize}
+            fontWeight="800"
+            fill={accessibleInk(ctx.colors.text, defaultBg, heading.fontSize)}
+            dominantBaseline="alphabetic"
+            />
+        ),
+      )}
 
       {/* Bottom divider */}
       <line

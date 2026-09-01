@@ -6,15 +6,19 @@ import { chapterNumberFor, sectionNameFor } from "../../lib/derive"
 import { hasCjk } from "../../layouts/minimal-shared"
 import { stacksVertically } from "../../lib/text-script"
 import {
+  fitEmphasisHeading,
+  fitEmphasisLine,
+  headingEmphasisPaint,
   parseEmphasis,
+  renderEmphasisHeading,
   renderEmphasisText,
-  resolveEmphasisForm,
   sliceEmphasisForLines,
   stripEmphasis,
+  type EmphasisHeadingPaint,
+  type EmphasisSegment,
 } from "../emphasis"
 import { accessibleInk, readableOn } from "../ink"
-import { fitSvgLine, layoutSvgText, measureTextUnits } from "../../lib/svg-text-layout"
-import { fitHeadingLines } from "../heading-fit"
+import { layoutSvgText, measureTextUnits, type SvgTextLayout } from "../../lib/svg-text-layout"
 import {
   resolveHeadingTreatment,
   type HeadingKnobs,
@@ -79,7 +83,7 @@ function glyphBox(
 }
 
 function headingWidth(text: string, fontSize: number, fontFamily: string): number {
-  return measureTextUnits(text.replace(/\*\*/g, ""), { bold: true, fontFamily }) * fontSize
+  return measureTextUnits(stripEmphasis(text), { bold: true, fontFamily }) * fontSize
 }
 
 function leftTitleX(
@@ -201,8 +205,13 @@ function ink(preferred: string, ctx: ComponentCtx, fontSize: number): string {
   return accessibleInk(preferred, pageBg(ctx), fontSize)
 }
 
+/**
+ * Every treatment's title goes through this one fit. It measures and wraps the
+ * emphasis-stripped heading, so `**` markers never widen a line or move a
+ * break, and carries the per-line emphasis segments through to paint.
+ */
 function fitTitle(text: string, fontSize: number, maxWidth: number, fontFamily: string) {
-  return fitHeadingLines(text, {
+  return fitEmphasisHeading(text, {
     maxWidth,
     fontSize,
     maxLines: 2,
@@ -211,8 +220,25 @@ function fitTitle(text: string, fontSize: number, maxWidth: number, fontFamily: 
   })
 }
 
-function extraTitleY(fitted: ReturnType<typeof fitHeadingLines>): number {
+function extraTitleY(fitted: SvgTextLayout): number {
   return Math.max(0, fitted.lines.length - 1) * fitted.lineHeight
+}
+
+/** Run ink shared by every treatment title: accent tint, theme pad/underline. */
+function titlePaint(args: RenderArgs, layout: SvgTextLayout, baseFill: string): EmphasisHeadingPaint {
+  return headingEmphasisPaint(args.ctx, layout, {
+    baseFill,
+    fontFamily: args.ctx.fonts.heading,
+  })
+}
+
+/** Run ink for a treatment's own subheading line, which paints at body weight. */
+function subPaint(args: RenderArgs, fontSize: number, baseFill: string): EmphasisHeadingPaint {
+  return headingEmphasisPaint(args.ctx, { fontSize }, {
+    baseFill,
+    fontFamily: args.ctx.fonts.body,
+    bold: false,
+  })
 }
 
 export interface HeadingTreatmentPaint {
@@ -402,13 +428,8 @@ function verticalKickerFill(knobs: HeadingKnobs, colors: ComponentCtx["colors"])
 function renderGhostIndex(args: RenderArgs): { chrome: ReactNode; contentRect: ContentRect } {
   const { colors, fonts } = args.ctx
   const hasSub = args.subheading.length > 0
-  const pad = resolveEmphasisForm(args.ctx.emphasis) === "pad"
-  const heading = pad ? stripEmphasis(args.heading) : args.heading
-  const titleX = leftTitleX(PAGE_LEFT, 128, 42, heading, fonts.heading, args.reserve)
-  const title = fitTitle(heading, 42, titleMaxWidthFor(titleX), fonts.heading)
-  const titleSegments = pad
-    ? sliceEmphasisForLines(parseEmphasis(args.heading), title.lines)
-    : title.lines.map((line) => [{ text: line, emphasized: false }])
+  const titleX = leftTitleX(PAGE_LEFT, 128, 42, args.heading, fonts.heading, args.reserve)
+  const title = fitTitle(args.heading, 42, titleMaxWidthFor(titleX), fonts.heading)
   const y = (hasSub ? 238 : 196) + extraTitleY(title)
   const index = padded(args.chapterNumber)
   const strokeCorner = args.knobs.indexStyle === "stroke-corner"
@@ -450,18 +471,10 @@ function renderGhostIndex(args: RenderArgs): { chrome: ReactNode; contentRect: C
             {index}
           </text>
         )}
-        {title.lines.map((line, i) => {
-          const titleFill = ink(colors.text, args.ctx, title.fontSize)
-          return renderEmphasisText(
-            titleSegments[i] ?? [{ text: line, emphasized: false }],
-            {
-              accent: colors.accent,
-              padFill: colors.accent,
-              baseFill: titleFill,
-              fontWeight: "700",
-              emphasis: args.ctx.emphasis,
-              measureWeight: { bold: true, fontFamily: fonts.heading },
-            },
+        {renderEmphasisHeading(
+          title,
+          titlePaint(args, title, ink(colors.text, args.ctx, title.fontSize)),
+          (_line, i) => (
             <text
               key={i}
               x={titleX}
@@ -469,44 +482,24 @@ function renderGhostIndex(args: RenderArgs): { chrome: ReactNode; contentRect: C
               fontSize={title.fontSize}
               fontWeight={700}
               fontFamily={fonts.heading}
-              fill={titleFill}
+              fill={ink(colors.text, args.ctx, title.fontSize)}
+              dominantBaseline="alphabetic"
+            />
+          ),
+        )}
+        {hasSub &&
+          renderEmphasisText(
+            parseEmphasis(args.subheading),
+            subPaint(args, 18, ink(colors.muted, args.ctx, 18)),
+            <text
+              x={96}
+              y={172 + extraTitleY(title)}
+              fontSize={18}
+              fontFamily={fonts.body}
+              fill={ink(colors.muted, args.ctx, 18)}
               dominantBaseline="alphabetic"
             />,
-          )
-        })}
-        {hasSub &&
-          (pad
-            ? renderEmphasisText(
-                parseEmphasis(args.subheading),
-                {
-                  accent: colors.accent,
-                  padFill: colors.accent,
-                  baseFill: ink(colors.muted, args.ctx, 18),
-                  fontWeight: "700",
-                  emphasis: args.ctx.emphasis,
-                  measureWeight: { fontFamily: fonts.body },
-                },
-                <text
-                  x={96}
-                  y={172 + extraTitleY(title)}
-                  fontSize={18}
-                  fontFamily={fonts.body}
-                  fill={ink(colors.muted, args.ctx, 18)}
-                  dominantBaseline="alphabetic"
-                />,
-              )
-            : (
-                <text
-                  x={96}
-                  y={172 + extraTitleY(title)}
-                  fontSize={18}
-                  fontFamily={fonts.body}
-                  fill={ink(colors.muted, args.ctx, 18)}
-                  dominantBaseline="alphabetic"
-                >
-                  {args.subheading}
-                </text>
-              ))}
+          )}
       </>
     ),
   }
@@ -520,7 +513,12 @@ function renderBaseline(args: RenderArgs): HeadingTreatmentPaint {
   const journalEnhanced = (rule === "double-tone" || rule === "wenwu") && hasSub
   const insightSide = rule === "hairline" && hasSub
   const sidePhrase = insightSide
-    ? fitSvgLine(args.subheading, { maxWidth: 200, fontSize: 16, minFontSize: 16, fontFamily: fonts.body })
+    ? fitEmphasisLine(args.subheading, {
+        maxWidth: 200,
+        fontSize: 16,
+        minFontSize: 16,
+        fontFamily: fonts.body,
+      })
     : null
   const titleX = leftTitleX(PAGE_LEFT, 132, 40, args.heading, fonts.heading, args.reserve)
   const title = fitTitle(args.heading, 40, titleMaxWidthFor(titleX), fonts.heading)
@@ -536,33 +534,36 @@ function renderBaseline(args: RenderArgs): HeadingTreatmentPaint {
     titleSize: title.fontSize,
     chrome: (
       <>
-        {title.lines.map((line, i) => (
-          <text
-            key={i}
-            x={titleX}
-            y={132 + i * title.lineHeight}
-            fontSize={title.fontSize}
-            fontWeight={700}
-            fontFamily={fonts.heading}
-            fill={ink(colors.text, args.ctx, title.fontSize)}
-            dominantBaseline="alphabetic"
-          >
-            {line}
-          </text>
-        ))}
-        {sidePhrase && (
-          <text
-            x={1184}
-            y={132}
-            fontSize={sidePhrase.fontSize}
-            fontFamily={fonts.body}
-            fill={ink(colors.accent, args.ctx, sidePhrase.fontSize)}
-            textAnchor="end"
-            dominantBaseline="alphabetic"
-          >
-            {sidePhrase.text}
-          </text>
+        {renderEmphasisHeading(
+          title,
+          titlePaint(args, title, ink(colors.text, args.ctx, title.fontSize)),
+          (_line, i) => (
+            <text
+              key={i}
+              x={titleX}
+              y={132 + i * title.lineHeight}
+              fontSize={title.fontSize}
+              fontWeight={700}
+              fontFamily={fonts.heading}
+              fill={ink(colors.text, args.ctx, title.fontSize)}
+              dominantBaseline="alphabetic"
+            />
+          ),
         )}
+        {sidePhrase &&
+          renderEmphasisText(
+            sidePhrase.segments,
+            subPaint(args, sidePhrase.fontSize, ink(colors.accent, args.ctx, sidePhrase.fontSize)),
+            <text
+              x={1184}
+              y={132}
+              fontSize={sidePhrase.fontSize}
+              fontFamily={fonts.body}
+              fill={ink(colors.accent, args.ctx, sidePhrase.fontSize)}
+              textAnchor="end"
+              dominantBaseline="alphabetic"
+            />,
+          )}
         {numero && (
           <text
             x={1184}
@@ -593,18 +594,19 @@ function renderBaseline(args: RenderArgs): HeadingTreatmentPaint {
             <rect x={96} y={163 + lift} width={1088} height={1} fill={borderFill(colors)} />
           </g>
         )}
-        {journalEnhanced && (
-          <text
-            x={96}
-            y={188 + lift}
-            fontSize={18}
-            fontFamily={fonts.body}
-            fill={ink(colors.muted, args.ctx, 18)}
-            dominantBaseline="alphabetic"
-          >
-            {args.subheading}
-          </text>
-        )}
+        {journalEnhanced &&
+          renderEmphasisText(
+            parseEmphasis(args.subheading),
+            subPaint(args, 18, ink(colors.muted, args.ctx, 18)),
+            <text
+              x={96}
+              y={188 + lift}
+              fontSize={18}
+              fontFamily={fonts.body}
+              fill={ink(colors.muted, args.ctx, 18)}
+              dominantBaseline="alphabetic"
+            />,
+          )}
       </>
     ),
   }
@@ -647,68 +649,86 @@ function renderTagBox(args: RenderArgs): { chrome: ReactNode; contentRect: Conte
         >
           {label}
         </text>
-        {title.lines.map((line, i) => (
-          <text
-            key={i}
-            x={titleX}
-            y={150 + i * title.lineHeight}
-            fontSize={title.fontSize}
-            fontWeight={700}
-            fontFamily={fonts.heading}
-            fill={ink(colors.text, args.ctx, title.fontSize)}
-            dominantBaseline="alphabetic"
-          >
-            {line}
-          </text>
-        ))}
-        {hasSub && (
-          <text
-            x={96}
-            y={190 + lift}
-            fontSize={19}
-            fontFamily={fonts.body}
-            fill={ink(colors.muted, args.ctx, 19)}
-            dominantBaseline="alphabetic"
-          >
-            {args.subheading}
-          </text>
+        {renderEmphasisHeading(
+          title,
+          titlePaint(args, title, ink(colors.text, args.ctx, title.fontSize)),
+          (_line, i) => (
+            <text
+              key={i}
+              x={titleX}
+              y={150 + i * title.lineHeight}
+              fontSize={title.fontSize}
+              fontWeight={700}
+              fontFamily={fonts.heading}
+              fill={ink(colors.text, args.ctx, title.fontSize)}
+              dominantBaseline="alphabetic"
+            />
+          ),
         )}
+        {hasSub &&
+          renderEmphasisText(
+            parseEmphasis(args.subheading),
+            subPaint(args, 19, ink(colors.muted, args.ctx, 19)),
+            <text
+              x={96}
+              y={190 + lift}
+              fontSize={19}
+              fontFamily={fonts.body}
+              fill={ink(colors.muted, args.ctx, 19)}
+              dominantBaseline="alphabetic"
+            />,
+          )}
       </>
     ),
   }
 }
 
+/**
+ * lead_accent paints its own runs instead of the shared tint/pad/underline:
+ * the marked lead either switches to the heading face while the rest falls
+ * back to the body face (`typeface-shift`), or takes the accent at full weight
+ * while the rest drops to regular. That contrast is the treatment's identity,
+ * so it keeps its own ink. It still fits through `fitTitle` like every other
+ * treatment, so the markers never reach the width math.
+ *
+ * A line with no marked run returns the bare string, which serializes exactly
+ * as the plain `{line}` it replaces.
+ */
+function leadAccentRuns(
+  segments: EmphasisSegment[],
+  args: RenderArgs,
+  typeface: boolean,
+  fontSize: number,
+): ReactNode {
+  const { colors, fonts } = args.ctx
+  if (segments.length === 1 && !segments[0].emphasized) return segments[0].text
+  return segments.map((seg, i) =>
+    typeface ? (
+      <tspan
+        key={i}
+        fontFamily={seg.emphasized ? fonts.heading : fonts.body}
+        fill={ink(seg.emphasized ? colors.primary : colors.text, args.ctx, fontSize)}
+      >
+        {seg.text}
+      </tspan>
+    ) : (
+      <tspan
+        key={i}
+        fill={ink(seg.emphasized ? colors.accent : colors.text, args.ctx, fontSize)}
+        fontWeight={seg.emphasized ? 700 : 400}
+      >
+        {seg.text}
+      </tspan>
+    ),
+  )
+}
+
 function renderLeadAccent(args: RenderArgs): { chrome: ReactNode; contentRect: ContentRect } {
   const { colors, fonts } = args.ctx
   const hasSub = args.subheading.length > 0
-  const segments = parseEmphasis(args.heading)
-  const hasEmph = segments.some((s) => s.emphasized)
   const typeface = args.knobs.accentStyle === "typeface-shift"
-  const titleInner = !hasEmph ? (
-    args.heading
-  ) : (
-    segments.map((seg, i) =>
-      typeface ? (
-        <tspan
-          key={i}
-          fontFamily={seg.emphasized ? fonts.heading : fonts.body}
-          fill={ink(seg.emphasized ? colors.primary : colors.text, args.ctx, 42)}
-        >
-          {seg.text}
-        </tspan>
-      ) : (
-        <tspan
-          key={i}
-          fill={ink(seg.emphasized ? colors.accent : colors.text, args.ctx, 42)}
-          fontWeight={seg.emphasized ? 700 : 400}
-        >
-          {seg.text}
-        </tspan>
-      ),
-    )
-  )
   const notes = hasSub
-    ? layoutSvgText(args.subheading, {
+    ? layoutSvgText(stripEmphasis(args.subheading), {
         maxWidth: 220,
         fontSize: 16,
         maxLines: 2,
@@ -716,62 +736,58 @@ function renderLeadAccent(args: RenderArgs): { chrome: ReactNode; contentRect: C
         fontFamily: fonts.body,
       })
     : null
+  const noteSegments = notes
+    ? sliceEmphasisForLines(parseEmphasis(args.subheading), notes.lines)
+    : []
   const noteYs = [106, 130]
   const titleX = leftTitleX(PAGE_LEFT, 120, 42, args.heading, fonts.heading, args.reserve)
-  const titleFit = hasEmph ? null : fitTitle(args.heading, 42, titleMaxWidthFor(titleX), fonts.heading)
-  const lift = titleFit ? extraTitleY(titleFit) : 0
+  const title = fitTitle(args.heading, 42, titleMaxWidthFor(titleX), fonts.heading)
+  const lift = extraTitleY(title)
   return {
     contentRect: bodyRect(PAGE_LEFT, (hasSub ? 200 : 184) + lift),
     chrome: (
       <>
-        {titleFit ? (
-          titleFit.lines.map((line, i) => (
-            <text
-              key={i}
-              x={titleX}
-              y={120 + i * titleFit.lineHeight}
-              fontSize={titleFit.fontSize}
-              fontWeight={700}
-              fontFamily={fonts.heading}
-              fill={ink(colors.text, args.ctx, titleFit.fontSize)}
-              dominantBaseline="alphabetic"
-            >
-              {line}
-            </text>
-          ))
-        ) : (
+        {title.lines.map((line, i) => (
           <text
+            key={i}
             x={titleX}
-            y={120}
-            fontSize={42}
+            y={120 + i * title.lineHeight}
+            fontSize={title.fontSize}
             fontWeight={700}
             fontFamily={fonts.heading}
-            fill={ink(colors.text, args.ctx, 42)}
+            fill={ink(colors.text, args.ctx, title.fontSize)}
             dominantBaseline="alphabetic"
           >
-            {titleInner}
+            {leadAccentRuns(
+              title.segments[i] ?? [{ text: line, emphasized: false }],
+              args,
+              typeface,
+              title.fontSize,
+            )}
           </text>
-        )}
+        ))}
         {args.knobs.tail === "olive-rule" && (
           <g data-decor="">
             <rect x={titleX} y={142 + lift} width={64} height={2} fill={colors.primary} />
           </g>
         )}
         {notes &&
-          notes.lines.map((line, i) => (
-            <text
-              key={i}
-              x={1184}
-              y={noteYs[i] ?? 130}
-              fontSize={16}
-              fontFamily={fonts.body}
-              fill={ink(colors.muted, args.ctx, 16)}
-              textAnchor="end"
-              dominantBaseline="alphabetic"
-            >
-              {line}
-            </text>
-          ))}
+          notes.lines.map((line, i) =>
+            renderEmphasisText(
+              noteSegments[i] ?? [{ text: line, emphasized: false }],
+              subPaint(args, 16, ink(colors.muted, args.ctx, 16)),
+              <text
+                key={i}
+                x={1184}
+                y={noteYs[i] ?? 130}
+                fontSize={16}
+                fontFamily={fonts.body}
+                fill={ink(colors.muted, args.ctx, 16)}
+                textAnchor="end"
+                dominantBaseline="alphabetic"
+              />,
+            ),
+          )}
       </>
     ),
   }
@@ -785,16 +801,12 @@ function renderVerticalKicker(args: RenderArgs): HeadingTreatmentPaint {
   const kicker = stackable
     ? resolveKickerLayout(source, args.knobs, fonts.heading, args.reserve, false)
     : null
-  const form = resolveEmphasisForm(args.ctx.emphasis)
-  const headingForFit = form === "tint" ? args.heading : stripEmphasis(args.heading)
-  let titleX = leftTitleX(defaultTitleX, 126, 42, headingForFit, fonts.heading, args.reserve)
+  let titleX = leftTitleX(defaultTitleX, 126, 42, args.heading, fonts.heading, args.reserve)
   if (kicker?.side === "right") {
     titleX = Math.max(titleX, kicker.x + kicker.fontSize + RESERVE_GAP)
   }
-  const title = fitTitle(headingForFit, 42, titleMaxWidthFor(titleX), fonts.heading)
-  const titleSegments = sliceEmphasisForLines(parseEmphasis(args.heading), title.lines)
+  const title = fitTitle(args.heading, 42, titleMaxWidthFor(titleX), fonts.heading)
   const titleFill = ink(colors.text, args.ctx, title.fontSize)
-  const titleAccent = ink(colors.accent, args.ctx, title.fontSize)
   const contentY = (args.knobs.kickerMark === "vermilion-dot" ? 200 : 196) + extraTitleY(title)
   let contentX = defaultTitleX
   if (kicker?.side === "right") {
@@ -811,44 +823,18 @@ function renderVerticalKicker(args: RenderArgs): HeadingTreatmentPaint {
     chrome: (
       <>
         {stackable && kicker && verticalSign(args, source, { short: false, layout: kicker })}
-        {form === "tint"
-          ? title.lines.map((line, i) => (
-              <text
-                key={i}
-                x={titleX}
-                y={126 + i * title.lineHeight}
-                fontSize={title.fontSize}
-                fontWeight={700}
-                fontFamily={fonts.heading}
-                fill={titleFill}
-                dominantBaseline="alphabetic"
-              >
-                {line}
-              </text>
-            ))
-          : title.lines.map((line, i) =>
-              renderEmphasisText(
-                titleSegments[i] ?? [{ text: line, emphasized: false }],
-                {
-                  accent: titleAccent,
-                  padFill: colors.accent,
-                  baseFill: titleFill,
-                  fontWeight: "700",
-                  emphasis: args.ctx.emphasis,
-                  measureWeight: { bold: true, fontFamily: fonts.heading },
-                },
-                <text
-                  key={i}
-                  x={titleX}
-                  y={126 + i * title.lineHeight}
-                  fontSize={title.fontSize}
-                  fontWeight={700}
-                  fontFamily={fonts.heading}
-                  fill={titleFill}
-                  dominantBaseline="alphabetic"
-                />,
-              ),
-            )}
+        {renderEmphasisHeading(title, titlePaint(args, title, titleFill), (_line, i) => (
+          <text
+            key={i}
+            x={titleX}
+            y={126 + i * title.lineHeight}
+            fontSize={title.fontSize}
+            fontWeight={700}
+            fontFamily={fonts.heading}
+            fill={titleFill}
+            dominantBaseline="alphabetic"
+          />
+        ))}
       </>
     ),
   }
@@ -900,40 +886,43 @@ function renderCenterMirror(args: RenderArgs): { chrome: ReactNode; contentRect:
             {eyebrow}
           </text>
         )}
-        {title.lines.map((line, i) => (
-          <text
-            key={i}
-            x={640}
-            y={130 + i * title.lineHeight}
-            fontSize={title.fontSize}
-            fontWeight={700}
-            fontFamily={fonts.heading}
-            fill={ink(titleFill, args.ctx, title.fontSize)}
-            textAnchor="middle"
-            dominantBaseline="alphabetic"
-          >
-            {line}
-          </text>
-        ))}
+        {renderEmphasisHeading(
+          title,
+          titlePaint(args, title, ink(titleFill, args.ctx, title.fontSize)),
+          (_line, i) => (
+            <text
+              key={i}
+              x={640}
+              y={130 + i * title.lineHeight}
+              fontSize={title.fontSize}
+              fontWeight={700}
+              fontFamily={fonts.heading}
+              fill={ink(titleFill, args.ctx, title.fontSize)}
+              textAnchor="middle"
+              dominantBaseline="alphabetic"
+            />
+          ),
+        )}
         {(args.knobs.diamond || (hasSub && mirror === "gold-rule")) && (
           // Identity: champagne gold (or the theme accent) is the mark. Midground, under type, no fade.
           <g data-decor="" data-decor-role="identity" data-identity="true">
             <path d="M 640 156 l 5 7 l -5 7 l -5 -7 z" fill={colors.accent} />
           </g>
         )}
-        {hasSub && (
-          <text
-            x={640}
-            y={176 + lift}
-            fontSize={17}
-            fontFamily={fonts.body}
-            fill={ink(colors.muted, args.ctx, 17)}
-            textAnchor="middle"
-            dominantBaseline="alphabetic"
-          >
-            {args.subheading}
-          </text>
-        )}
+        {hasSub &&
+          renderEmphasisText(
+            parseEmphasis(args.subheading),
+            subPaint(args, 17, ink(colors.muted, args.ctx, 17)),
+            <text
+              x={640}
+              y={176 + lift}
+              fontSize={17}
+              fontFamily={fonts.body}
+              fill={ink(colors.muted, args.ctx, 17)}
+              textAnchor="middle"
+              dominantBaseline="alphabetic"
+            />,
+          )}
       </>
     ),
   }

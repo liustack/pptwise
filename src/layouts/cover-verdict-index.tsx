@@ -3,7 +3,7 @@ import type { LayoutDefinition } from "./registry"
 import { fitHeadingLines } from "../render/heading-fit"
 import { fitSvgLine, layoutSvgText } from "../lib/svg-text-layout"
 import { accessibleInk, metaInk } from "../render/ink"
-import { parseEmphasis, renderEmphasisText, sliceEmphasisForLines, stripEmphasis } from "../render/emphasis"
+import { fitEmphasisText, headingEmphasisPaint, parseEmphasis, renderEmphasisHeading, renderEmphasisText, sliceEmphasisForLines, stripEmphasis } from "../render/emphasis"
 import { faceParam } from "./face-params"
 
 /**
@@ -118,7 +118,7 @@ export function VerdictIndexCover({ ir, slide, ctx, params }: SvgTemplateProps) 
       })
     : null
 
-  const subtitle = layoutSvgText(slide.subheading || "", {
+  const subtitle = fitEmphasisText(slide.subheading, {
     maxWidth: SUBTITLE_MAX_W,
     fontSize: SUBTITLE_SIZE,
     maxLines: 2,
@@ -197,19 +197,21 @@ export function VerdictIndexCover({ ir, slide, ctx, params }: SvgTemplateProps) 
         ),
       )}
 
-      {subtitle.lines.map((line, i) => (
-        <text
-          key={`sub-${i}`}
-          x={SUBTITLE_X}
-          y={SUBTITLE_Y + i * subtitle.lineHeight}
-          fontFamily={fonts.body}
-          fontSize={subtitle.fontSize}
-          fill={metaInk(colors.muted, bg)}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {renderEmphasisHeading(
+        subtitle,
+        headingEmphasisPaint(ctx, subtitle, { baseFill: metaInk(colors.muted, bg), fontFamily: fonts.body, bold: false }),
+        (_line, i) => (
+          <text
+            key={`sub-${i}`}
+            x={SUBTITLE_X}
+            y={SUBTITLE_Y + i * subtitle.lineHeight}
+            fontFamily={fonts.body}
+            fontSize={subtitle.fontSize}
+            fill={metaInk(colors.muted, bg)}
+            dominantBaseline="alphabetic"
+          />
+        ),
+      )}
 
       {columns.map((col, i) => (
         <g key={col.num}>

@@ -2,6 +2,7 @@ import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import { layoutSvgText } from "../lib/svg-text-layout"
 import { scaleTypePx } from "../render/heading-fit"
+import { fitEmphasisText, headingEmphasisPaint, renderEmphasisHeading } from "../render/emphasis"
 import { accessibleInk } from "../render/ink"
 import { CONF_LABEL } from "../lib/conf-labels"
 import { showsDocumentMeta } from "../render/document-meta"
@@ -34,7 +35,7 @@ export function BannerTitleCover({ ir, slide, ctx, page }: SvgTemplateProps) {
   // 本版式不画自己的背景面板，文字直接压在页面级背景上——与
   // ending-banner-ending.tsx 同一条 `ctx.defaultBg ?? colors.bg` 回退。
   const pageBg = ctx.defaultBg ?? ctx.colors.bg
-  const title = layoutSvgText(slide.heading, {
+  const title = fitEmphasisText(slide.heading, {
     maxWidth: 1088,
     fontSize: scaleTypePx(84, ctx.shape?.typeScale),
     maxLines: 2,
@@ -138,20 +139,22 @@ export function BannerTitleCover({ ir, slide, ctx, page }: SvgTemplateProps) {
       )}
 
       {/* Main heading lines */}
-      {title.lines.map((line, i) => (
-        <text
-          key={i}
-          x="96"
-          y={titleY + i * title.lineHeight}
-          fontFamily={ctx.fonts.heading}
-          fontSize={title.fontSize}
-          fontWeight="600"
-          fill={accessibleInk(ctx.colors.primary, pageBg, title.fontSize)}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {renderEmphasisHeading(
+        title,
+        headingEmphasisPaint(ctx, title, { baseFill: accessibleInk(ctx.colors.primary, pageBg, title.fontSize), fontWeight: "600", fontFamily: ctx.fonts.heading, bold: true }),
+        (_line, i) => (
+          <text
+            key={i}
+            x="96"
+            y={titleY + i * title.lineHeight}
+            fontFamily={ctx.fonts.heading}
+            fontSize={title.fontSize}
+            fontWeight="600"
+            fill={accessibleInk(ctx.colors.primary, pageBg, title.fontSize)}
+            dominantBaseline="alphabetic"
+          />
+        ),
+      )}
 
       {/* Short, thick navy bar under the title — echoes the Content page's
           assertion banner so Cover reads as the same theme. The 40px gap

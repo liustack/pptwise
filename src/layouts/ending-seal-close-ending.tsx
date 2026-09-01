@@ -1,9 +1,8 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import { fitHeadingLines } from "../render/heading-fit"
-import { fitSvgLine } from "../lib/svg-text-layout"
 import { accessibleInk, metaInk, readableOn } from "../render/ink"
-import { stripEmphasis } from "../render/emphasis"
+import { fitEmphasisLine, headingEmphasisPaint, renderEmphasisText, stripEmphasis } from "../render/emphasis"
 import { sealStudioGlyph } from "./minimal-shared"
 
 /**
@@ -59,14 +58,12 @@ export function SealCloseEnding({ ir, slide, ctx }: SvgTemplateProps) {
   const sealY = showTitle ? (slide.subheading ? subY + SEAL_GAP : titleLastY + SUB_GAP + SEAL_GAP) : SEAL_Y
   const sealGlyphY = sealY === SEAL_Y ? SEAL_GLYPH_Y : Math.round(sealY + SEAL_SIZE / 2 + SEAL_GLYPH_SIZE * 0.35)
 
-  const subheading = slide.subheading
-    ? fitSvgLine(slide.subheading, {
+  const subheading = fitEmphasisLine(slide.subheading, {
         maxWidth: SUB_MAX_W,
         fontSize: SUB_SIZE,
         minFontSize: 16,
         fontFamily: fonts.heading,
       })
-    : null
 
   return (
     <>
@@ -88,21 +85,22 @@ export function SealCloseEnding({ ir, slide, ctx }: SvgTemplateProps) {
           </text>
         ))}
 
-      {subheading && (
-        <text
-          data-contrast-tier="meta"
-          data-truncated={subheading.truncated ? "1" : undefined}
-          x={TITLE_X}
-          y={subY}
-          textAnchor="middle"
-          fontFamily={fonts.heading}
-          fontSize={subheading.fontSize}
-          fill={metaInk(colors.muted, bg)}
-          dominantBaseline="alphabetic"
-        >
-          {subheading.text}
-        </text>
-      )}
+      {subheading &&
+        renderEmphasisText(
+          subheading.segments,
+          headingEmphasisPaint(ctx, subheading, { baseFill: metaInk(colors.muted, bg), fontFamily: fonts.heading, bold: false }),
+          <text
+            data-contrast-tier="meta"
+            data-truncated={subheading.truncated ? "1" : undefined}
+            x={TITLE_X}
+            y={subY}
+            textAnchor="middle"
+            fontFamily={fonts.heading}
+            fontSize={subheading.fontSize}
+            fill={metaInk(colors.muted, bg)}
+            dominantBaseline="alphabetic"
+          />,
+        )}
 
       {sealGlyph && (
         <>

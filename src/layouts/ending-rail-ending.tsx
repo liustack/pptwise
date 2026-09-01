@@ -1,7 +1,6 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
-import { fitHeadingLines } from "../render/heading-fit"
-import { fitSvgLine } from "../lib/svg-text-layout"
+import { fitEmphasisHeading, fitEmphasisLine, headingEmphasisPaint, renderEmphasisHeading, renderEmphasisText } from "../render/emphasis"
 import { accessibleInk, metaInk } from "../render/ink"
 
 /**
@@ -108,7 +107,7 @@ export function RailEnding({ ir, slide, ctx }: SvgTemplateProps) {
   const copyright = ir.meta.copyright
   const contactText = [contact?.email, contact?.website].filter(Boolean).join("  ·  ")
 
-  const heading = fitHeadingLines(slide.heading || "Thank you", {
+  const heading = fitEmphasisHeading(slide.heading || "Thank you", {
     maxWidth: 768,
     fontSize: 120,
     maxLines: 2,
@@ -122,9 +121,7 @@ export function RailEnding({ ir, slide, ctx }: SvgTemplateProps) {
     : ENDING_HEADING_LAST_BASELINE
   const headingLastY =
     headingY + Math.max(0, heading.lines.length - 1) * heading.lineHeight
-  const subheading = slide.subheading
-    ? fitSvgLine(slide.subheading, { maxWidth: 768, fontSize: 40, minFontSize: 20 })
-    : null
+  const subheading = fitEmphasisLine(slide.subheading, { maxWidth: 768, fontSize: 40, minFontSize: 20 })
   const subheadingY = headingLastY + 68
   const hairlineY = headingLastY + (isTwoLine ? ENDING_TWO_LINE_HAIRLINE_GAP : 120)
 
@@ -151,36 +148,39 @@ export function RailEnding({ ir, slide, ctx }: SvgTemplateProps) {
         )}
       </g>
 
-      {heading.lines.map((line, i) => (
-        <text
-          key={i}
-          data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
-          x="400"
-          y={headingY + i * heading.lineHeight}
-          fontFamily={fonts.heading}
-          fontSize={heading.fontSize}
-          fontWeight="600"
-          fill={colors.text}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
-
-      {subheading && (
-        <text
-          data-truncated={subheading.truncated ? "1" : undefined}
-          x="400"
-          y={subheadingY}
-          fontFamily={fonts.body}
-          fontSize={subheading.fontSize}
-          fill={colors.muted}
-          fontStyle="italic"
-          dominantBaseline="alphabetic"
-        >
-          {subheading.text}
-        </text>
+      {renderEmphasisHeading(
+        heading,
+        headingEmphasisPaint(ctx, heading, { baseFill: colors.text, fontWeight: "600", fontFamily: fonts.heading }),
+        (_line, i) => (
+          <text
+            key={i}
+            data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
+            x="400"
+            y={headingY + i * heading.lineHeight}
+            fontFamily={fonts.heading}
+            fontSize={heading.fontSize}
+            fontWeight="600"
+            fill={colors.text}
+            dominantBaseline="alphabetic"
+            />
+        ),
       )}
+
+      {subheading &&
+        renderEmphasisText(
+          subheading.segments,
+          headingEmphasisPaint(ctx, subheading, { baseFill: colors.muted, fontFamily: fonts.body, bold: false }),
+          <text
+            data-truncated={subheading.truncated ? "1" : undefined}
+            x="400"
+            y={subheadingY}
+            fontFamily={fonts.body}
+            fontSize={subheading.fontSize}
+            fill={colors.muted}
+            fontStyle="italic"
+            dominantBaseline="alphabetic"
+          />,
+        )}
 
       <line
         x1="400"

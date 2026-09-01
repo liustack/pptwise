@@ -1,17 +1,11 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import { fitHeadingLines } from "../render/heading-fit"
-import { fitSvgLine, layoutSvgText, measureTextUnits } from "../lib/svg-text-layout"
+import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout"
 import { accessibleInk, blendOver, metaInk, readableOn } from "../render/ink"
 import { CONF_LABEL } from "../lib/conf-labels"
 import { showsDocumentMeta } from "../render/document-meta"
-import {
-  parseEmphasis,
-  renderEmphasisText,
-  resolveEmphasisForm,
-  sliceEmphasisForLines,
-  stripEmphasis,
-} from "../render/emphasis"
+import { fitEmphasisText, headingEmphasisPaint, parseEmphasis, renderEmphasisHeading, renderEmphasisText, resolveEmphasisForm, sliceEmphasisForLines, stripEmphasis } from "../render/emphasis"
 
 /**
  * header-band cover layout（2026-08-22 封面还原第一波，新表达）：
@@ -117,7 +111,7 @@ export function HeaderBandCover({ ir, slide, ctx, page }: SvgTemplateProps) {
         })
       : null
 
-  const subtitle = layoutSvgText(slide.subheading || "", {
+  const subtitle = fitEmphasisText(slide.subheading, {
     maxWidth: TITLE_MAX_W,
     fontSize: SUBTITLE_SIZE,
     maxLines: 2,
@@ -201,19 +195,21 @@ export function HeaderBandCover({ ir, slide, ctx, page }: SvgTemplateProps) {
         />
       )}
 
-      {subtitle.lines.map((line, i) => (
-        <text
-          key={`sub-${i}`}
-          x={TITLE_X}
-          y={SUBTITLE_Y + i * subtitle.lineHeight}
-          fontFamily={fonts.body}
-          fontSize={subtitle.fontSize}
-          fill={metaInk(colors.muted, bg)}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {renderEmphasisHeading(
+        subtitle,
+        headingEmphasisPaint(ctx, subtitle, { baseFill: metaInk(colors.muted, bg), fontFamily: fonts.body, bold: false }),
+        (_line, i) => (
+          <text
+            key={`sub-${i}`}
+            x={TITLE_X}
+            y={SUBTITLE_Y + i * subtitle.lineHeight}
+            fontFamily={fonts.body}
+            fontSize={subtitle.fontSize}
+            fill={metaInk(colors.muted, bg)}
+            dominantBaseline="alphabetic"
+          />
+        ),
+      )}
 
       {byline && (
         <text

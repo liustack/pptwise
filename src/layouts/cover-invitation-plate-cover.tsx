@@ -106,7 +106,10 @@ export function InvitationPlateCover({ ir, slide, ctx }: SvgTemplateProps) {
       })
     : null
 
-  const subSource = slide.subheading?.trim() || ""
+  // Meta tier, not the emphasis surface: this line is letter-spaced/stacked
+  // small type where an accent run has nowhere to read. Markers are
+  // stripped so nothing prints them.
+  const subSource = stripEmphasis(slide.subheading?.trim() || "")
   const subTracking = subSource && !hasCjk(subSource) ? trackingPx(SUB_SIZE, 0.2) : undefined
   const subtitle = subSource
     ? fitSvgLine(subSource, {

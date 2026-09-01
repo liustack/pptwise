@@ -1,7 +1,7 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
-import { fitHeadingLines } from "../render/heading-fit"
-import { fitSvgLine, layoutSvgText } from "../lib/svg-text-layout"
+import { fitEmphasisHeading, fitEmphasisText, headingEmphasisPaint, renderEmphasisHeading } from "../render/emphasis"
+import { fitSvgLine } from "../lib/svg-text-layout"
 import { CONF_LABEL } from "../lib/conf-labels"
 import { showsDocumentMeta } from "../render/document-meta"
 import { accessibleInk } from "../render/ink"
@@ -74,7 +74,7 @@ export function PosterCenterCover({ ir, slide, ctx, page, params }: SvgTemplateP
   const barX = textAnchor === "start" ? START_X : CENTER_X - ACCENT_BAR_W / 2
   const pageBg = ctx.defaultBg ?? ctx.colors.bg
 
-  const title = fitHeadingLines(slide.heading, {
+  const title = fitEmphasisHeading(slide.heading, {
     maxWidth: 1100,
     fontSize: 100,
     maxLines: 2,
@@ -95,7 +95,7 @@ export function PosterCenterCover({ ir, slide, ctx, page, params }: SvgTemplateP
   // +56→+70（2026-07-10 导出审计：导出端字体回退行高更高，56 时字底压线）
   const accentY = titleLastY + 70
 
-  const subtitle = layoutSvgText(slide.subheading || "", {
+  const subtitle = fitEmphasisText(slide.subheading, {
     maxWidth: 900,
     fontSize: 32,
     maxLines: 2,
@@ -166,23 +166,25 @@ export function PosterCenterCover({ ir, slide, ctx, page, params }: SvgTemplateP
         </text>
       )}
 
-      {title.lines.map((line, i) => (
-        <text
-          key={i}
-          data-truncated={title.truncated && i === title.lines.length - 1 ? "1" : undefined}
-          x={textX}
-          y={COVER_TITLE_Y + i * title.lineHeight}
-          textAnchor={textAnchor}
-          fontFamily={ctx.fonts.heading}
-          fontSize={title.fontSize}
-          fontWeight="800"
-          fill={ctx.colors.text}
-          letterSpacing="-1"
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {renderEmphasisHeading(
+        title,
+        headingEmphasisPaint(ctx, title, { baseFill: ctx.colors.text, fontWeight: "800", fontFamily: ctx.fonts.heading }),
+        (_line, i) => (
+          <text
+            key={i}
+            data-truncated={title.truncated && i === title.lines.length - 1 ? "1" : undefined}
+            x={textX}
+            y={COVER_TITLE_Y + i * title.lineHeight}
+            textAnchor={textAnchor}
+            fontFamily={ctx.fonts.heading}
+            fontSize={title.fontSize}
+            fontWeight="800"
+            fill={ctx.colors.text}
+            letterSpacing="-1"
+            dominantBaseline="alphabetic"
+          />
+        ),
+      )}
 
       <rect
         x={barX}
@@ -193,21 +195,23 @@ export function PosterCenterCover({ ir, slide, ctx, page, params }: SvgTemplateP
         fill={barFill}
       />
 
-      {subtitle.lines.map((line, i) => (
-        <text
-          key={i}
-          x={textX}
-          y={subtitleY + i * subtitle.lineHeight}
-          textAnchor={textAnchor}
-          fontFamily={ctx.fonts.heading}
-          fontSize={subtitle.fontSize}
-          fill={ctx.colors.muted}
-          fontStyle="italic"
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {renderEmphasisHeading(
+        subtitle,
+        headingEmphasisPaint(ctx, subtitle, { baseFill: ctx.colors.muted, fontFamily: ctx.fonts.heading, bold: false }),
+        (_line, i) => (
+          <text
+            key={i}
+            x={textX}
+            y={subtitleY + i * subtitle.lineHeight}
+            textAnchor={textAnchor}
+            fontFamily={ctx.fonts.heading}
+            fontSize={subtitle.fontSize}
+            fill={ctx.colors.muted}
+            fontStyle="italic"
+            dominantBaseline="alphabetic"
+          />
+        ),
+      )}
 
       {metaLine && (
         <text

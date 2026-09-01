@@ -2,11 +2,10 @@ import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import { SvgContent } from "../render/svg-content"
 import { chapterNumberFor, sectionNameFor } from "../lib/derive"
-import { fitHeadingLines } from "../render/heading-fit"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { CONF_LABEL } from "../lib/conf-labels"
 import { showsDocumentMeta } from "../render/document-meta"
-import { fitEmphasisLine, renderEmphasisText } from "../render/emphasis"
+import { fitEmphasisHeading, fitEmphasisLine, headingEmphasisPaint, renderEmphasisHeading, renderEmphasisText } from "../render/emphasis"
 import { accessibleInk } from "../render/ink"
 import { footnoteBaselineFor } from "../render/branding-geometry"
 import { tryContentHeadingTreatment } from "../render/heading-treatments/render"
@@ -278,7 +277,7 @@ export function ToneAdaptiveContent({ ir, slide, index, ctx, page }: SvgTemplate
           letterSpacing: 2,
         })
       : null
-    const heading = fitHeadingLines(slide.heading, {
+    const heading = fitEmphasisHeading(slide.heading, {
       maxWidth: 1096,
       fontSize: 44,
       maxLines: 2,
@@ -379,21 +378,23 @@ export function ToneAdaptiveContent({ ir, slide, index, ctx, page }: SvgTemplate
         )}
 
         {/* Heading inside card */}
-        {heading.lines.map((line, i) => (
-          <text
-            key={i}
-            data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
-            x="92"
-            y={168 + i * heading.lineHeight}
-            fontFamily={fonts.heading}
-            fontSize={heading.fontSize}
-            fontWeight="700"
-            fill={headingFill}
-            dominantBaseline="alphabetic"
-          >
-            {line}
-          </text>
-        ))}
+        {renderEmphasisHeading(
+          heading,
+          headingEmphasisPaint(ctx, heading, { baseFill: headingFill, fontWeight: "700", fontFamily: fonts.heading }),
+          (_line, i) => (
+            <text
+              key={i}
+              data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
+              x="92"
+              y={168 + i * heading.lineHeight}
+              fontFamily={fonts.heading}
+              fontSize={heading.fontSize}
+              fontWeight="700"
+              fill={headingFill}
+              dominantBaseline="alphabetic"
+            />
+          ),
+        )}
 
         {/* Subheading: accent so-what sentence below the heading (Task 5) */}
         {subheading &&
@@ -477,7 +478,7 @@ export function ToneAdaptiveContent({ ir, slide, index, ctx, page }: SvgTemplate
         letterSpacing: 2,
       })
     : null
-  const heading = fitHeadingLines(slide.heading, {
+  const heading = fitEmphasisHeading(slide.heading, {
     maxWidth: 1152,
     fontSize: 46,
     maxLines: 2,
@@ -543,21 +544,23 @@ export function ToneAdaptiveContent({ ir, slide, index, ctx, page }: SvgTemplate
       )}
 
       {/* Heading */}
-      {heading.lines.map((line, i) => (
-        <text
-          key={i}
-          data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
-          x="64"
-          y={130 + i * heading.lineHeight}
-          fontFamily={fonts.heading}
-          fontSize={heading.fontSize}
-          fontWeight="700"
-          fill={colors.text}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {renderEmphasisHeading(
+        heading,
+        headingEmphasisPaint(ctx, heading, { baseFill: colors.text, fontWeight: "700", fontFamily: fonts.heading }),
+        (_line, i) => (
+          <text
+            key={i}
+            data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
+            x="64"
+            y={130 + i * heading.lineHeight}
+            fontFamily={fonts.heading}
+            fontSize={heading.fontSize}
+            fontWeight="700"
+            fill={colors.text}
+            dominantBaseline="alphabetic"
+          />
+        ),
+      )}
 
       {/* Subheading: accent so-what sentence below the heading (Task 5) */}
       {subheading &&

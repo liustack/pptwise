@@ -8,7 +8,13 @@ import { DroppedContentMarker } from "./drop-marker"
 import { findImageSelection } from "../layouts/find-image"
 import { CANVAS_W_PX, CANVAS_H_PX } from "../constants"
 import { layoutSvgText, fitSvgLine } from "../lib/svg-text-layout"
-import { fitHeadingLines, scaleTypePx } from "./heading-fit"
+import { scaleTypePx } from "./heading-fit"
+import {
+  fitEmphasisHeading,
+  fitEmphasisText,
+  headingEmphasisPaint,
+  renderEmphasisHeading,
+} from "./emphasis"
 import { accessibleInk } from "./ink"
 import { showsDocumentMeta } from "./document-meta"
 import type { PageRenderContext } from "./page-context"
@@ -74,13 +80,13 @@ export function ImageCoverPage({
   const org = page.metadataOn ? ir.meta.organization : undefined
   const date = showsDocumentMeta(page, ir, slide) ? ir.meta.date : undefined
 
-  const title = layoutSvgText(slide.heading, {
+  const title = fitEmphasisText(slide.heading, {
     maxWidth: 1030,
     fontSize: scaleTypePx(isChapter ? 60 : 68, ctx.shape?.typeScale),
     maxLines: 2,
     lineHeightRatio: 1.12,
   })
-  const sub = layoutSvgText(slide.subheading, {
+  const sub = fitEmphasisText(slide.subheading, {
     maxWidth: 980,
     fontSize: 27,
     maxLines: 2,
@@ -128,35 +134,39 @@ export function ImageCoverPage({
           {org}
         </text>
       )}
-      {title.lines.map((line, i) => (
-        <text
-          key={i}
-          x={96}
-          y={titleTopY + i * title.lineHeight}
-          fontSize={title.fontSize}
-          fontWeight={700}
-          fontFamily={ctx.fonts.heading}
-          fill="#FFFFFF"
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {renderEmphasisHeading(
+        title,
+        headingEmphasisPaint(ctx, title, { baseFill: "#FFFFFF", accent: accent, fontWeight: "700", fontFamily: ctx.fonts.heading }),
+        (_line, i) => (
+          <text
+            key={i}
+            x={96}
+            y={titleTopY + i * title.lineHeight}
+            fontSize={title.fontSize}
+            fontWeight={700}
+            fontFamily={ctx.fonts.heading}
+            fill="#FFFFFF"
+            dominantBaseline="alphabetic"
+          />
+        ),
+      )}
       <rect x={96} y={baseY + 16} width={92} height={5} fill={accent} />
-      {sub.lines.map((line, i) => (
-        <text
-          key={i}
-          x={96}
-          y={baseY + 52 + i * sub.lineHeight}
-          fontSize={sub.fontSize}
-          fontFamily={ctx.fonts.body}
-          fill="#FFFFFF"
-          fillOpacity={0.88}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {renderEmphasisHeading(
+        sub,
+        headingEmphasisPaint(ctx, sub, { baseFill: "#FFFFFF", accent: accent, fontFamily: ctx.fonts.body, bold: false }),
+        (_line, i) => (
+          <text
+            key={i}
+            x={96}
+            y={baseY + 52 + i * sub.lineHeight}
+            fontSize={sub.fontSize}
+            fontFamily={ctx.fonts.body}
+            fill="#FFFFFF"
+            fillOpacity={0.88}
+            dominantBaseline="alphabetic"
+          />
+        ),
+      )}
       {!isChapter && date && (
         <text
           x={W - 96}
@@ -220,7 +230,7 @@ export function ImageSplitPage({
   // 被 700 合成加粗抹掉衬线特征——降字重提字号保气势。拟合必须带 bold +
   // heading 字体：Regular 估算会把「Competitors are pricing」收成一行，
   // SimSun 600 实宽超出 SPLIT_TEXT_W。
-  const title = fitHeadingLines(slide.heading, {
+  const title = fitEmphasisHeading(slide.heading, {
     maxWidth: SPLIT_TEXT_W,
     fontSize: scaleTypePx(44, ctx.shape?.typeScale),
     maxLines: 3,
@@ -229,7 +239,7 @@ export function ImageSplitPage({
     fontFamily: ctx.fonts.heading,
     bold: true,
   })
-  const sub = layoutSvgText(slide.subheading, {
+  const sub = fitEmphasisText(slide.subheading, {
     maxWidth: SPLIT_TEXT_W,
     fontSize: 21,
     maxLines: 2,
@@ -307,35 +317,39 @@ export function ImageSplitPage({
           {org}
         </text>
       )}
-      {title.lines.map((line, i) => (
-        <text
-          key={i}
-          data-truncated={title.truncated && i === title.lines.length - 1 ? "1" : undefined}
-          x={textX}
-          y={titleY + i * title.lineHeight}
-          fontSize={title.fontSize}
-          fontWeight={600}
-          fontFamily={ctx.fonts.heading}
-          fill={accessibleInk(ctx.colors.primary, ctx.defaultBg ?? ctx.colors.bg, title.fontSize)}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {renderEmphasisHeading(
+        title,
+        headingEmphasisPaint(ctx, title, { baseFill: accessibleInk(ctx.colors.primary, ctx.defaultBg ?? ctx.colors.bg, title.fontSize), fontWeight: "600", fontFamily: ctx.fonts.heading }),
+        (_line, i) => (
+          <text
+            key={i}
+            data-truncated={title.truncated && i === title.lines.length - 1 ? "1" : undefined}
+            x={textX}
+            y={titleY + i * title.lineHeight}
+            fontSize={title.fontSize}
+            fontWeight={600}
+            fontFamily={ctx.fonts.heading}
+            fill={accessibleInk(ctx.colors.primary, ctx.defaultBg ?? ctx.colors.bg, title.fontSize)}
+            dominantBaseline="alphabetic"
+          />
+        ),
+      )}
       <rect x={textX} y={ruleY} width={72} height={4} fill={ctx.colors.accent} />
-      {sub.lines.map((line, i) => (
-        <text
-          key={i}
-          x={textX}
-          y={subY + i * sub.lineHeight}
-          fontSize={sub.fontSize}
-          fontFamily={ctx.fonts.body}
-          fill={ctx.colors.muted}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {renderEmphasisHeading(
+        sub,
+        headingEmphasisPaint(ctx, sub, { baseFill: ctx.colors.muted, fontFamily: ctx.fonts.body, bold: false }),
+        (_line, i) => (
+          <text
+            key={i}
+            x={textX}
+            y={subY + i * sub.lineHeight}
+            fontSize={sub.fontSize}
+            fontFamily={ctx.fonts.body}
+            fill={ctx.colors.muted}
+            dominantBaseline="alphabetic"
+          />
+        ),
+      )}
       {placed.map((p, i) => (
         <Fragment key={i}>{renderComponent(p.component, p.box, ctx)}</Fragment>
       ))}
@@ -416,7 +430,7 @@ export function ImageTopPage({
   const colW = (W - BAND_PAD_X * 2 - colGap * (n - 1)) / n
 
   const titleMaxW = W - BAND_PAD_X * 2 - 120
-  const title = fitHeadingLines(slide.heading, {
+  const title = fitEmphasisHeading(slide.heading, {
     maxWidth: titleMaxW,
     fontSize: scaleTypePx(30, ctx.shape?.typeScale),
     maxLines: 2,
@@ -477,21 +491,23 @@ export function ImageTopPage({
       )}
       {/* 标题行：kicker 点 + 标题 + 贯穿细线（图眉/脚注的杂志结构） */}
       <rect x={BAND_PAD_X} y={firstTitleY - 12} width={13} height={13} fill={ctx.colors.accent} />
-      {title.lines.map((line, i) => (
-        <text
-          key={i}
-          data-truncated={title.truncated && i === title.lines.length - 1 ? "1" : undefined}
-          x={BAND_PAD_X + 26}
-          y={firstTitleY + i * title.lineHeight}
-          fontSize={title.fontSize}
-          fontWeight={600}
-          fontFamily={ctx.fonts.heading}
-          fill={accessibleInk(ctx.colors.primary, ctx.defaultBg ?? ctx.colors.bg, title.fontSize)}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {renderEmphasisHeading(
+        title,
+        headingEmphasisPaint(ctx, title, { baseFill: accessibleInk(ctx.colors.primary, ctx.defaultBg ?? ctx.colors.bg, title.fontSize), fontWeight: "600", fontFamily: ctx.fonts.heading }),
+        (_line, i) => (
+          <text
+            key={i}
+            data-truncated={title.truncated && i === title.lines.length - 1 ? "1" : undefined}
+            x={BAND_PAD_X + 26}
+            y={firstTitleY + i * title.lineHeight}
+            fontSize={title.fontSize}
+            fontWeight={600}
+            fontFamily={ctx.fonts.heading}
+            fill={accessibleInk(ctx.colors.primary, ctx.defaultBg ?? ctx.colors.bg, title.fontSize)}
+            dominantBaseline="alphabetic"
+          />
+        ),
+      )}
       <rect x={BAND_PAD_X} y={ruleY} width={W - BAND_PAD_X * 2} height={1} fill={ctx.colors.border} />
       {fits.map(({ placed }, ci) => (
         <Fragment key={ci}>
@@ -587,13 +603,13 @@ export function ImageAnnotatePage({
   const hasNotes = annotations.length > 0
 
   const bg = ctx.defaultBg ?? ctx.colors.bg
-  const title = layoutSvgText(slide.heading, {
+  const title = fitEmphasisText(slide.heading, {
     maxWidth: ANN_CONTENT_W,
     fontSize: scaleTypePx(34, ctx.shape?.typeScale),
     maxLines: 2,
     lineHeightRatio: 1.2,
   })
-  const sub = layoutSvgText(slide.subheading, {
+  const sub = fitEmphasisText(slide.subheading, {
     maxWidth: Math.min(ANN_CONTENT_W, 900),
     fontSize: 18,
     maxLines: 2,
@@ -661,35 +677,39 @@ export function ImageAnnotatePage({
 
   return (
     <g>
-      {title.lines.map((line, i) => (
-        <text
-          key={i}
-          data-truncated={title.truncated && i === title.lines.length - 1 ? "1" : undefined}
-          x={ANN_MARGIN_X}
-          y={titleY + i * title.lineHeight}
-          fontSize={title.fontSize}
-          fontWeight={600}
-          fontFamily={ctx.fonts.heading}
-          fill={accessibleInk(ctx.colors.primary, bg, title.fontSize)}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
-      {sub.lines.map((line, i) => (
-        <text
-          key={i}
-          data-truncated={sub.truncated && i === sub.lines.length - 1 ? "1" : undefined}
-          x={ANN_MARGIN_X}
-          y={subY + i * sub.lineHeight}
-          fontSize={sub.fontSize}
-          fontFamily={ctx.fonts.body}
-          fill={ctx.colors.muted}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {renderEmphasisHeading(
+        title,
+        headingEmphasisPaint(ctx, title, { baseFill: accessibleInk(ctx.colors.primary, bg, title.fontSize), fontWeight: "600", fontFamily: ctx.fonts.heading }),
+        (_line, i) => (
+          <text
+            key={i}
+            data-truncated={title.truncated && i === title.lines.length - 1 ? "1" : undefined}
+            x={ANN_MARGIN_X}
+            y={titleY + i * title.lineHeight}
+            fontSize={title.fontSize}
+            fontWeight={600}
+            fontFamily={ctx.fonts.heading}
+            fill={accessibleInk(ctx.colors.primary, bg, title.fontSize)}
+            dominantBaseline="alphabetic"
+          />
+        ),
+      )}
+      {renderEmphasisHeading(
+        sub,
+        headingEmphasisPaint(ctx, sub, { baseFill: ctx.colors.muted, fontFamily: ctx.fonts.body, bold: false }),
+        (_line, i) => (
+          <text
+            key={i}
+            data-truncated={sub.truncated && i === sub.lines.length - 1 ? "1" : undefined}
+            x={ANN_MARGIN_X}
+            y={subY + i * sub.lineHeight}
+            fontSize={sub.fontSize}
+            fontFamily={ctx.fonts.body}
+            fill={ctx.colors.muted}
+            dominantBaseline="alphabetic"
+          />
+        ),
+      )}
       {/* 白框照片卡（showcase 的 photo-print 质感，深浅主题通用） */}
       <rect
         x={frameX}
@@ -811,13 +831,13 @@ export function ImageBottomPage({
   const alt = ctx.images?.[imageComponent.asset_id]?.alt
   const rest = slide.components.filter((component) => component !== imageSource)
 
-  const title = layoutSvgText(slide.heading, {
+  const title = fitEmphasisText(slide.heading, {
     maxWidth: 900,
     fontSize: scaleTypePx(44, ctx.shape?.typeScale),
     maxLines: 2,
     lineHeightRatio: 1.15,
   })
-  const sub = layoutSvgText(slide.subheading, {
+  const sub = fitEmphasisText(slide.subheading, {
     maxWidth: 860,
     fontSize: 21,
     maxLines: 2,
@@ -857,36 +877,40 @@ export function ImageBottomPage({
 
   return (
     <g>
-      {title.lines.map((line, i) => (
-        <text
-          key={i}
-          x={W / 2}
-          y={titleY + i * title.lineHeight}
-          textAnchor="middle"
-          fontSize={title.fontSize}
-          fontWeight={600}
-          fontFamily={ctx.fonts.heading}
-          fill={accessibleInk(ctx.colors.primary, ctx.defaultBg ?? ctx.colors.bg, title.fontSize)}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {renderEmphasisHeading(
+        title,
+        headingEmphasisPaint(ctx, title, { baseFill: accessibleInk(ctx.colors.primary, ctx.defaultBg ?? ctx.colors.bg, title.fontSize), fontWeight: "600", fontFamily: ctx.fonts.heading }),
+        (_line, i) => (
+          <text
+            key={i}
+            x={W / 2}
+            y={titleY + i * title.lineHeight}
+            textAnchor="middle"
+            fontSize={title.fontSize}
+            fontWeight={600}
+            fontFamily={ctx.fonts.heading}
+            fill={accessibleInk(ctx.colors.primary, ctx.defaultBg ?? ctx.colors.bg, title.fontSize)}
+            dominantBaseline="alphabetic"
+          />
+        ),
+      )}
       <rect x={W / 2 - 42} y={ruleY} width={84} height={4} fill={ctx.colors.accent} />
-      {sub.lines.map((line, i) => (
-        <text
-          key={i}
-          x={W / 2}
-          y={subY + i * sub.lineHeight}
-          textAnchor="middle"
-          fontSize={sub.fontSize}
-          fontFamily={ctx.fonts.body}
-          fill={ctx.colors.muted}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {renderEmphasisHeading(
+        sub,
+        headingEmphasisPaint(ctx, sub, { baseFill: ctx.colors.muted, fontFamily: ctx.fonts.body, bold: false }),
+        (_line, i) => (
+          <text
+            key={i}
+            x={W / 2}
+            y={subY + i * sub.lineHeight}
+            textAnchor="middle"
+            fontSize={sub.fontSize}
+            fontFamily={ctx.fonts.body}
+            fill={ctx.colors.muted}
+            dominantBaseline="alphabetic"
+          />
+        ),
+      )}
       {placed.map((p, i) => (
         <Fragment key={i}>{renderComponent(p.component, p.box, ctx)}</Fragment>
       ))}

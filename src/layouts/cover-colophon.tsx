@@ -1,6 +1,6 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
-import { fitHeadingLines } from "../render/heading-fit"
+import { fitEmphasisHeading, headingEmphasisPaint, renderEmphasisHeading } from "../render/emphasis"
 import { fitSvgLine, layoutSvgText } from "../lib/svg-text-layout"
 import { CONF_LABEL } from "../lib/conf-labels"
 import { showsDocumentMeta } from "../render/document-meta"
@@ -89,7 +89,7 @@ export function ColophonCover({ ir, slide, ctx, page }: SvgTemplateProps) {
   const author = ir.meta.authors?.[0]
   const authorText = author ? [author.name, author.role].filter(Boolean).join(" · ") : null
 
-  const title = fitHeadingLines(slide.heading, {
+  const title = fitEmphasisHeading(slide.heading, {
     maxWidth: CONTENT_RIGHT_EDGE - TITLE_X,
     fontSize: TITLE_SIZE,
     maxLines: TITLE_MAX_LINES,
@@ -153,21 +153,23 @@ export function ColophonCover({ ir, slide, ctx, page }: SvgTemplateProps) {
       <rect x={LEADER_X} y={LEADER_Y} width={LEADER_W} height={LEADER_H} fill={colors.accent} />
 
       {/* 标题（左轴） */}
-      {title.lines.map((line, i) => (
-        <text
-          key={i}
-          data-truncated={title.truncated && i === title.lines.length - 1 ? "1" : undefined}
-          x={TITLE_X}
-          y={TITLE_FIRST_BASELINE + i * title.lineHeight}
-          fontFamily={fonts.heading}
-          fontSize={title.fontSize}
-          fontWeight="600"
-          fill={accessibleInk(colors.text, bg, title.fontSize)}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {renderEmphasisHeading(
+        title,
+        headingEmphasisPaint(ctx, title, { baseFill: accessibleInk(colors.text, bg, title.fontSize), fontWeight: "600", fontFamily: fonts.heading }),
+        (_line, i) => (
+          <text
+            key={i}
+            data-truncated={title.truncated && i === title.lines.length - 1 ? "1" : undefined}
+            x={TITLE_X}
+            y={TITLE_FIRST_BASELINE + i * title.lineHeight}
+            fontFamily={fonts.heading}
+            fontSize={title.fontSize}
+            fontWeight="600"
+            fill={accessibleInk(colors.text, bg, title.fontSize)}
+            dominantBaseline="alphabetic"
+            />
+        ),
+      )}
 
       {/* 机构名（宽字距小字）—— B 层元信息文本（`docs/contrast-system.md`
           三层策略点名的「机构名」），`metaInk` 保 3:1，`data-contrast-tier`

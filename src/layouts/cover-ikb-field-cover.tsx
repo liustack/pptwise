@@ -1,10 +1,10 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import { fitHeadingLines } from "../render/heading-fit"
-import { fitSvgLine, layoutSvgText } from "../lib/svg-text-layout"
+import { fitSvgLine } from "../lib/svg-text-layout"
 import { accessibleInk, metaInk, readableOn } from "../render/ink"
 import { hasCjk } from "./minimal-shared"
-import { stripEmphasis } from "../render/emphasis"
+import { fitEmphasisText, headingEmphasisPaint, renderEmphasisHeading, stripEmphasis } from "../render/emphasis"
 
 /**
  * ikb-field-cover（第八波企业制度封面）：满版 primary 场，左齐反白标题，
@@ -79,7 +79,7 @@ export function IkbFieldCover({ ir, slide, ctx }: SvgTemplateProps) {
       })
     : null
 
-  const subtitle = layoutSvgText(slide.subheading || "", {
+  const subtitle = fitEmphasisText(slide.subheading, {
     maxWidth: SUBTITLE_MAX_W,
     fontSize: SUBTITLE_SIZE,
     maxLines: 2,
@@ -128,21 +128,23 @@ export function IkbFieldCover({ ir, slide, ctx }: SvgTemplateProps) {
         <rect x={BAR_X} y={barY} width={BAR_W} height={BAR_H} fill={ink} />
       )}
 
-      {subtitle.lines.map((line, i) => (
-        <text
-          key={`sub-${i}`}
-          data-contrast-tier="meta"
-          data-truncated={subtitle.truncated && i === subtitle.lines.length - 1 ? "1" : undefined}
-          x={SUBTITLE_X}
-          y={SUBTITLE_Y + i * subtitle.lineHeight}
-          fontFamily={fonts.body}
-          fontSize={subtitle.fontSize}
-          fill={metaInk(colors.muted, field)}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {renderEmphasisHeading(
+        subtitle,
+        headingEmphasisPaint(ctx, subtitle, { baseFill: metaInk(colors.muted, field), fontFamily: fonts.body, bold: false }),
+        (_line, i) => (
+          <text
+            key={`sub-${i}`}
+            data-contrast-tier="meta"
+            data-truncated={subtitle.truncated && i === subtitle.lines.length - 1 ? "1" : undefined}
+            x={SUBTITLE_X}
+            y={SUBTITLE_Y + i * subtitle.lineHeight}
+            fontFamily={fonts.body}
+            fontSize={subtitle.fontSize}
+            fill={metaInk(colors.muted, field)}
+            dominantBaseline="alphabetic"
+          />
+        ),
+      )}
     </>
   )
 }

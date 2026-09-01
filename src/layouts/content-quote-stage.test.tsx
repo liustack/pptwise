@@ -109,10 +109,12 @@ describe("QuoteStageContent", () => {
     const sub = Array.from(root.querySelectorAll("text")).find((t) => (t.textContent ?? "").includes("附注"))!
     expect(sub.getAttribute("fill")).toBe(ctx.colors.muted)
     expect(sub.getAttribute("text-anchor")).toBe("middle")
-    // No renderEmphasisTspans segmentation — the literal `**...**` markers
-    // pass through as plain text rather than becoming <tspan> children.
+    // No emphasis segmentation: the annotation never competes with the
+    // heading's own emphasis, so it gets no <tspan> children. The markers
+    // still come off rather than printing at the reader.
     expect(sub.querySelector("tspan")).toBeNull()
-    expect(sub.textContent).toContain("**强调**")
+    expect(sub.textContent).not.toContain("*")
+    expect(sub.textContent).toContain("强调 的附注")
   })
 
   it("footnote renders as a small italic muted caption, independent of the body annotation slot", () => {

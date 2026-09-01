@@ -1,7 +1,7 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import { sectionNameFor } from "../lib/derive"
-import { fitHeadingLines } from "../render/heading-fit"
+import { fitEmphasisHeading, headingEmphasisPaint, renderEmphasisHeading } from "../render/emphasis"
 import { fitSvgLine, layoutSvgText } from "../lib/svg-text-layout"
 import { accessibleInk } from "../render/ink"
 import { latinUpper, pullQuoteAttribution, pullQuoteBody, trackingPx } from "./minimal-shared"
@@ -56,7 +56,7 @@ function GenericPullQuoteContent({ ir, slide, index, ctx }: SvgTemplateProps) {
       })
     : null
 
-  const heading = fitHeadingLines(slide.heading, {
+  const heading = fitEmphasisHeading(slide.heading, {
     ...layoutDef.headingFit,
     fontFamily: fonts.heading,
     typeScale: ctx.shape?.typeScale,
@@ -106,23 +106,25 @@ function GenericPullQuoteContent({ ir, slide, index, ctx }: SvgTemplateProps) {
         </text>
       )}
 
-      {heading.lines.map((line, i) => (
-        <text
-          key={i}
-          data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
-          x={CENTER_X}
-          y={TITLE_Y + i * heading.lineHeight}
-          textAnchor="middle"
-          fontFamily={fonts.heading}
-          fontSize={heading.fontSize}
-          fontWeight="400"
-          fontStyle="italic"
-          fill={accessibleInk(colors.text, defaultBg, heading.fontSize)}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {renderEmphasisHeading(
+        heading,
+        headingEmphasisPaint(ctx, heading, { baseFill: accessibleInk(colors.text, defaultBg, heading.fontSize), fontWeight: "400", fontFamily: fonts.heading }),
+        (_line, i) => (
+          <text
+            key={i}
+            data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
+            x={CENTER_X}
+            y={TITLE_Y + i * heading.lineHeight}
+            textAnchor="middle"
+            fontFamily={fonts.heading}
+            fontSize={heading.fontSize}
+            fontWeight="400"
+            fontStyle="italic"
+            fill={accessibleInk(colors.text, defaultBg, heading.fontSize)}
+            dominantBaseline="alphabetic"
+            />
+        ),
+      )}
 
       {attribution && (
         <text

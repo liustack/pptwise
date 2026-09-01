@@ -1,7 +1,7 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
-import { fitHeadingLines } from "../render/heading-fit"
-import { fitSvgLine, layoutSvgText } from "../lib/svg-text-layout"
+import { fitEmphasisHeading, fitEmphasisText, headingEmphasisPaint, renderEmphasisHeading } from "../render/emphasis"
+import { fitSvgLine } from "../lib/svg-text-layout"
 import { latinUpper, trackingPx } from "./minimal-shared"
 import { accessibleInk, metaInk, readableOn } from "../render/ink"
 import { CONF_LABEL } from "../lib/conf-labels"
@@ -81,7 +81,7 @@ export function BandTitleCover({ ir, slide, ctx, page, params }: SvgTemplateProp
   const author = ir.meta.authors?.[0]
   const authorText = author ? [author.name, author.role].filter(Boolean).join(" · ") : null
 
-  const title = fitHeadingLines(slide.heading, {
+  const title = fitEmphasisHeading(slide.heading, {
     maxWidth: titleMaxW,
     fontSize: TITLE_SIZE,
     maxLines: TITLE_MAX_LINES,
@@ -118,7 +118,7 @@ export function BandTitleCover({ ir, slide, ctx, page, params }: SvgTemplateProp
       : null
 
   const subtitleY = bandBottom + (bandWave ? 88 : 52)
-  const subtitle = layoutSvgText(slide.subheading || "", {
+  const subtitle = fitEmphasisText(slide.subheading, {
     maxWidth: titleMaxW,
     fontSize: SUBTITLE_SIZE,
     maxLines: 2,
@@ -172,22 +172,24 @@ export function BandTitleCover({ ir, slide, ctx, page, params }: SvgTemplateProp
         <rect x={MARK_X} y={bandY + MARK_DY} width={MARK_SIZE} height={MARK_SIZE} fill={onBand} />
       )}
 
-      {title.lines.map((line, i) => (
-        <text
-          key={i}
-          data-truncated={title.truncated && i === title.lines.length - 1 ? "1" : undefined}
-          x={titleX}
-          y={titleY + i * title.lineHeight}
-          textAnchor={centered ? "middle" : "start"}
-          fontFamily={fonts.heading}
-          fontSize={title.fontSize}
-          fontWeight="700"
-          fill={onBand}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {renderEmphasisHeading(
+        title,
+        headingEmphasisPaint(ctx, title, { baseFill: onBand, fontWeight: "700", fontFamily: fonts.heading }),
+        (_line, i) => (
+          <text
+            key={i}
+            data-truncated={title.truncated && i === title.lines.length - 1 ? "1" : undefined}
+            x={titleX}
+            y={titleY + i * title.lineHeight}
+            textAnchor={centered ? "middle" : "start"}
+            fontFamily={fonts.heading}
+            fontSize={title.fontSize}
+            fontWeight="700"
+            fill={onBand}
+            dominantBaseline="alphabetic"
+          />
+        ),
+      )}
 
       {bandWave && (
         <path
@@ -198,20 +200,22 @@ export function BandTitleCover({ ir, slide, ctx, page, params }: SvgTemplateProp
         />
       )}
 
-      {subtitle.lines.map((line, i) => (
-        <text
-          key={`sub-${i}`}
-          x={titleX}
-          y={subtitleY + i * subtitle.lineHeight}
-          textAnchor={centered ? "middle" : "start"}
-          fontFamily={fonts.body}
-          fontSize={subtitle.fontSize}
-          fill={paperSub}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {renderEmphasisHeading(
+        subtitle,
+        headingEmphasisPaint(ctx, subtitle, { baseFill: paperSub, fontFamily: fonts.body, bold: false }),
+        (_line, i) => (
+          <text
+            key={`sub-${i}`}
+            x={titleX}
+            y={subtitleY + i * subtitle.lineHeight}
+            textAnchor={centered ? "middle" : "start"}
+            fontFamily={fonts.body}
+            fontSize={subtitle.fontSize}
+            fill={paperSub}
+            dominantBaseline="alphabetic"
+          />
+        ),
+      )}
 
       {authorText && (
         <text

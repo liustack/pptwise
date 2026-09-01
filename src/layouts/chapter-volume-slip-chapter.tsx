@@ -2,11 +2,10 @@ import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import { chapterNumberFor } from "../lib/derive"
 import { fitHeadingLines } from "../render/heading-fit"
-import { fitSvgLine } from "../lib/svg-text-layout"
 import { accessibleInk, metaInk } from "../render/ink"
 import { casualHan, headingIsCjk } from "../render/heading-treatments/labels"
 import { hasCjk } from "./minimal-shared"
-import { stripEmphasis } from "../render/emphasis"
+import { fitEmphasisLine, headingEmphasisPaint, renderEmphasisText, stripEmphasis } from "../render/emphasis"
 
 /**
  * volume-slip-chapter（第八波 pinOnly）：右上竖排卷号，横题左齐，题下一笔
@@ -71,14 +70,12 @@ export function VolumeSlipChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
     typeScale: ctx.shape?.typeScale,
   })
   const headingLastY = TITLE_Y + Math.max(0, heading.lines.length - 1) * TITLE_LINE_HEIGHT
-  const subheading = slide.subheading
-    ? fitSvgLine(slide.subheading, {
+  const subheading = fitEmphasisLine(slide.subheading, {
         maxWidth: SUB_MAX_W,
         fontSize: SUB_SIZE,
         minFontSize: 16,
         fontFamily: fonts.heading,
       })
-    : null
   const subY = headingLastY + SUB_DROP
   const curveY = subheading ? subY + CURVE_AFTER_SUB : headingLastY + CURVE_AFTER_TITLE
 
@@ -130,20 +127,21 @@ export function VolumeSlipChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
           </text>
         ))}
 
-      {subheading && (
-        <text
-          data-contrast-tier="meta"
-          data-truncated={subheading.truncated ? "1" : undefined}
-          x={TITLE_X}
-          y={subY}
-          fontFamily={fonts.heading}
-          fontSize={subheading.fontSize}
-          fill={metaInk(colors.muted, defaultBg)}
-          dominantBaseline="alphabetic"
-        >
-          {subheading.text}
-        </text>
-      )}
+      {subheading &&
+        renderEmphasisText(
+          subheading.segments,
+          headingEmphasisPaint(ctx, subheading, { baseFill: metaInk(colors.muted, defaultBg), fontFamily: fonts.heading, bold: false }),
+          <text
+            data-contrast-tier="meta"
+            data-truncated={subheading.truncated ? "1" : undefined}
+            x={TITLE_X}
+            y={subY}
+            fontFamily={fonts.heading}
+            fontSize={subheading.fontSize}
+            fill={metaInk(colors.muted, defaultBg)}
+            dominantBaseline="alphabetic"
+          />,
+        )}
 
       {showTitle && (
         <g data-depth="mid" data-decor-piece="ink-stroke">

@@ -1,7 +1,7 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
-import { fitHeadingLines } from "../render/heading-fit"
-import { fitSvgLine, layoutSvgText } from "../lib/svg-text-layout"
+import { fitEmphasisHeading, fitEmphasisText, headingEmphasisPaint, renderEmphasisHeading } from "../render/emphasis"
+import { fitSvgLine } from "../lib/svg-text-layout"
 import { latinUpper, trackingPx } from "./minimal-shared"
 import { accessibleInk, metaInk, readableOn } from "../render/ink"
 import { faceParam, optionalFaceParam } from "./face-params"
@@ -122,7 +122,7 @@ export function CornerWedgeCover({ ir, slide, ctx, params }: SvgTemplateProps) {
   const authorText = author ? [author.name, author.role].filter(Boolean).join(" · ") : null
   const version = ir.meta.version
 
-  const title = fitHeadingLines(slide.heading, {
+  const title = fitEmphasisHeading(slide.heading, {
     maxWidth: titleMaxW,
     fontSize: titleSize,
     maxLines: TITLE_MAX_LINES,
@@ -145,7 +145,7 @@ export function CornerWedgeCover({ ir, slide, ctx, params }: SvgTemplateProps) {
       })
     : null
 
-  const subtitle = layoutSvgText(slide.subheading || "", {
+  const subtitle = fitEmphasisText(slide.subheading, {
     maxWidth: titleMaxW,
     fontSize: centered ? 34 : SUBTITLE_SIZE,
     maxLines: 2,
@@ -205,37 +205,41 @@ export function CornerWedgeCover({ ir, slide, ctx, params }: SvgTemplateProps) {
         </text>
       )}
 
-      {title.lines.map((line, i) => (
-        <text
-          key={i}
-          data-truncated={title.truncated && i === title.lines.length - 1 ? "1" : undefined}
-          x={titleX}
-          y={titleY + i * title.lineHeight}
-          textAnchor={centered ? "middle" : "start"}
-          fontFamily={fonts.heading}
-          fontSize={title.fontSize}
-          fontWeight="700"
-          fill={titleInk}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {renderEmphasisHeading(
+        title,
+        headingEmphasisPaint(ctx, title, { baseFill: titleInk, fontWeight: "700", fontFamily: fonts.heading }),
+        (_line, i) => (
+          <text
+            key={i}
+            data-truncated={title.truncated && i === title.lines.length - 1 ? "1" : undefined}
+            x={titleX}
+            y={titleY + i * title.lineHeight}
+            textAnchor={centered ? "middle" : "start"}
+            fontFamily={fonts.heading}
+            fontSize={title.fontSize}
+            fontWeight="700"
+            fill={titleInk}
+            dominantBaseline="alphabetic"
+          />
+        ),
+      )}
 
-      {subtitle.lines.map((line, i) => (
-        <text
-          key={`sub-${i}`}
-          x={titleX}
-          y={subtitleY + i * subtitle.lineHeight}
-          textAnchor={centered ? "middle" : "start"}
-          fontFamily={fonts.body}
-          fontSize={subtitle.fontSize}
-          fill={accessibleInk(colors.accent, bg, subtitle.fontSize)}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {renderEmphasisHeading(
+        subtitle,
+        headingEmphasisPaint(ctx, subtitle, { baseFill: accessibleInk(colors.accent, bg, subtitle.fontSize), fontFamily: fonts.body, bold: false }),
+        (_line, i) => (
+          <text
+            key={`sub-${i}`}
+            x={titleX}
+            y={subtitleY + i * subtitle.lineHeight}
+            textAnchor={centered ? "middle" : "start"}
+            fontFamily={fonts.body}
+            fontSize={subtitle.fontSize}
+            fill={accessibleInk(colors.accent, bg, subtitle.fontSize)}
+            dominantBaseline="alphabetic"
+          />
+        ),
+      )}
 
       {metaInWedge && wedgeMeta && (
         <text

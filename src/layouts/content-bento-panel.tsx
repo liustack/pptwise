@@ -16,7 +16,6 @@ import {
 import { PASSTHROUGH_SHELL_TYPES, SCALABLE_TYPES, SELF_VISUAL_TYPES } from "../render/component-traits"
 import { measureComponent, renderComponent } from "../components"
 import { sectionNameFor } from "../lib/derive"
-import { fitHeadingLines } from "../render/heading-fit"
 import {
   fitSvgLine,
   measureTextUnits,
@@ -30,7 +29,7 @@ import {
   type KpiValueScale,
 } from "../components/kpi"
 import { iconCardContentHeight, renderIconCardBody } from "../components/icon-card-body"
-import { fitEmphasisLine, renderEmphasisText } from "../render/emphasis"
+import { fitEmphasisHeading, fitEmphasisLine, headingEmphasisPaint, renderEmphasisHeading, renderEmphasisText } from "../render/emphasis"
 import { accessibleInk, graphicInk, groupValueInks } from "../render/ink"
 import { tryContentHeadingTreatment } from "../render/heading-treatments/render"
 import { FRAMED_CONTENT_BOTTOM } from "./framed-content-bottom"
@@ -809,7 +808,7 @@ export function BentoPanelContent({ ir, slide, index, ctx }: SvgTemplateProps) {
     : null
 
   const HEADING_BASELINE = 150
-  const heading = fitHeadingLines(slide.heading, {
+  const heading = fitEmphasisHeading(slide.heading, {
     maxWidth: 1088,
     fontSize: 44,
     maxLines: 2,
@@ -995,21 +994,23 @@ export function BentoPanelContent({ ir, slide, index, ctx }: SvgTemplateProps) {
         </text>
       )}
 
-      {heading.lines.map((line, i) => (
-        <text
-          key={i}
-          data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
-          x="96"
-          y={HEADING_BASELINE + i * heading.lineHeight}
-          fontFamily={fonts.heading}
-          fontSize={heading.fontSize}
-          fontWeight="700"
-          fill={colors.text}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {renderEmphasisHeading(
+        heading,
+        headingEmphasisPaint(ctx, heading, { baseFill: colors.text, fontWeight: "700", fontFamily: fonts.heading }),
+        (_line, i) => (
+          <text
+            key={i}
+            data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
+            x="96"
+            y={HEADING_BASELINE + i * heading.lineHeight}
+            fontFamily={fonts.heading}
+            fontSize={heading.fontSize}
+            fontWeight="700"
+            fill={colors.text}
+            dominantBaseline="alphabetic"
+            />
+        ),
+      )}
 
       {/* Subheading: accent so-what sentence below the heading (Task 5) */}
       {subheading &&

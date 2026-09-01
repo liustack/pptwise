@@ -1,7 +1,7 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
-import { fitHeadingLines } from "../render/heading-fit"
-import { fitSvgLine, layoutSvgText } from "../lib/svg-text-layout"
+import { fitEmphasisHeading, fitEmphasisText, headingEmphasisPaint, renderEmphasisHeading } from "../render/emphasis"
+import { fitSvgLine } from "../lib/svg-text-layout"
 import { CONF_LABEL } from "../lib/conf-labels"
 import { showsDocumentMeta } from "../render/document-meta"
 import { blendOver, metaInk, readableOn } from "../render/ink"
@@ -66,7 +66,7 @@ export function SplitDiagonalCover({ ir, slide, ctx, page }: SvgTemplateProps) {
   const ORG_ALPHA = 0.92
   const orgFill = metaInk(blendOver(onBlock, ctx.colors.primary, ORG_ALPHA), ctx.colors.primary)
 
-  const title = fitHeadingLines(slide.heading, {
+  const title = fitEmphasisHeading(slide.heading, {
     maxWidth: TITLE_MAX_W,
     fontSize: 76,
     maxLines: 3,
@@ -79,7 +79,7 @@ export function SplitDiagonalCover({ ir, slide, ctx, page }: SvgTemplateProps) {
 
   const accentY = titleLastY + 40
 
-  const subtitle = layoutSvgText(slide.subheading || "", {
+  const subtitle = fitEmphasisText(slide.subheading, {
     maxWidth: TITLE_MAX_W,
     fontSize: 26,
     maxLines: 2,
@@ -128,39 +128,43 @@ export function SplitDiagonalCover({ ir, slide, ctx, page }: SvgTemplateProps) {
       <circle cx={96} cy={620} r={10} fill={onBlock} fillOpacity={0.92} />
 
       {/* 标题：右侧净空区，跨近斜切线，用页型默认文字色 */}
-      {title.lines.map((line, i) => (
-        <text
-          key={i}
-          data-truncated={title.truncated && i === title.lines.length - 1 ? "1" : undefined}
-          x={TITLE_X}
-          y={TITLE_Y + i * title.lineHeight}
-          fontFamily={ctx.fonts.heading}
-          fontSize={title.fontSize}
-          fontWeight="700"
-          fill={ctx.colors.text}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {renderEmphasisHeading(
+        title,
+        headingEmphasisPaint(ctx, title, { baseFill: ctx.colors.text, fontWeight: "700", fontFamily: ctx.fonts.heading }),
+        (_line, i) => (
+          <text
+            key={i}
+            data-truncated={title.truncated && i === title.lines.length - 1 ? "1" : undefined}
+            x={TITLE_X}
+            y={TITLE_Y + i * title.lineHeight}
+            fontFamily={ctx.fonts.heading}
+            fontSize={title.fontSize}
+            fontWeight="700"
+            fill={ctx.colors.text}
+            dominantBaseline="alphabetic"
+          />
+        ),
+      )}
 
       {/* accent 短条 */}
       <rect x={TITLE_X} y={accentY} width={72} height={5} fill={ctx.colors.primary} />
 
       {/* 副题 */}
-      {subtitle.lines.map((line, i) => (
-        <text
-          key={i}
-          x={TITLE_X}
-          y={subtitleY + i * subtitle.lineHeight}
-          fontFamily={ctx.fonts.body}
-          fontSize={subtitle.fontSize}
-          fill={ctx.colors.muted}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {renderEmphasisHeading(
+        subtitle,
+        headingEmphasisPaint(ctx, subtitle, { baseFill: ctx.colors.muted, fontFamily: ctx.fonts.body, bold: false }),
+        (_line, i) => (
+          <text
+            key={i}
+            x={TITLE_X}
+            y={subtitleY + i * subtitle.lineHeight}
+            fontFamily={ctx.fonts.body}
+            fontSize={subtitle.fontSize}
+            fill={ctx.colors.muted}
+            dominantBaseline="alphabetic"
+          />
+        ),
+      )}
 
       {/* meta 行：右下 */}
       {metaLine && (

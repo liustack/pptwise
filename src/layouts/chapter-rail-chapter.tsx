@@ -1,8 +1,8 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import { chapterNumberFor } from "../lib/derive"
-import { fitHeadingLines, scaleTypePx } from "../render/heading-fit"
-import { fitSvgLine } from "../lib/svg-text-layout"
+import { scaleTypePx } from "../render/heading-fit"
+import { fitEmphasisHeading, fitEmphasisLine, headingEmphasisPaint, renderEmphasisHeading, renderEmphasisText } from "../render/emphasis"
 import { accessibleOpacity, readableOn } from "../render/ink"
 
 /**
@@ -112,7 +112,7 @@ export function RailChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
   const defaultBg = ctx.defaultBg ?? ctx.colors.bg
   const ink = readableOn(defaultBg)
 
-  const heading = fitHeadingLines(slide.heading, {
+  const heading = fitEmphasisHeading(slide.heading, {
     maxWidth: 1088,
     fontSize: 84,
     maxLines: 2,
@@ -123,9 +123,7 @@ export function RailChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
   const headingY = heading.lines.length > 1 ? 352 : 392
   const headingLastY =
     headingY + Math.max(0, heading.lines.length - 1) * heading.lineHeight
-  const subheading = slide.subheading
-    ? fitSvgLine(slide.subheading, { maxWidth: 1088, fontSize: 34, minFontSize: 18 })
-    : null
+  const subheading = fitEmphasisLine(slide.subheading, { maxWidth: 1088, fontSize: 34, minFontSize: 18 })
   const subheadingY = subheading
     ? headingLastY + subheadingDrop(heading.fontSize, subheading.fontSize)
     : headingLastY
@@ -170,38 +168,41 @@ export function RailChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
       >
         {label}
       </text>
-      {heading.lines.map((line, i) => (
-        <text
-          key={i}
-          data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
-          x="640"
-          y={headingY + i * heading.lineHeight}
-          fontFamily={ctx.fonts.heading}
-          fontSize={heading.fontSize}
-          fontWeight="600"
-          fill={ink}
-          textAnchor="middle"
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
-      {subheading && (
-        <text
-          data-truncated={subheading.truncated ? "1" : undefined}
-          x="640"
-          y={subheadingY}
-          fontFamily={ctx.fonts.heading}
-          fontSize={subheading.fontSize}
-          fill={ink}
-          opacity={subheadingOpacity}
-          textAnchor="middle"
-          fontStyle="italic"
-          dominantBaseline="alphabetic"
-        >
-          {subheading.text}
-        </text>
+      {renderEmphasisHeading(
+        heading,
+        headingEmphasisPaint(ctx, heading, { baseFill: ink, fontWeight: "600", fontFamily: ctx.fonts.heading }),
+        (_line, i) => (
+          <text
+            key={i}
+            data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
+            x="640"
+            y={headingY + i * heading.lineHeight}
+            fontFamily={ctx.fonts.heading}
+            fontSize={heading.fontSize}
+            fontWeight="600"
+            fill={ink}
+            textAnchor="middle"
+            dominantBaseline="alphabetic"
+            />
+        ),
       )}
+      {subheading &&
+        renderEmphasisText(
+          subheading.segments,
+          headingEmphasisPaint(ctx, subheading, { baseFill: ink, fontFamily: ctx.fonts.heading, bold: false }),
+          <text
+            data-truncated={subheading.truncated ? "1" : undefined}
+            x="640"
+            y={subheadingY}
+            fontFamily={ctx.fonts.heading}
+            fontSize={subheading.fontSize}
+            fill={ink}
+            opacity={subheadingOpacity}
+            textAnchor="middle"
+            fontStyle="italic"
+            dominantBaseline="alphabetic"
+          />,
+        )}
 
       {/* Horizontal chapter-progress track + dots (multi-chapter decks only) */}
       {showDots && (

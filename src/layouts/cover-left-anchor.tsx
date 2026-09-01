@@ -1,6 +1,6 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
-import { fitHeadingLines } from "../render/heading-fit"
+import { fitEmphasisHeading, headingEmphasisPaint, renderEmphasisHeading } from "../render/emphasis"
 import { fitSvgLine, layoutSvgText } from "../lib/svg-text-layout"
 import { CONF_LABEL } from "../lib/conf-labels"
 import { showsDocumentMeta } from "../render/document-meta"
@@ -99,7 +99,7 @@ export function LeftAnchorCover({ ir, slide, ctx, page, params }: SvgTemplatePro
   // at hero scale, and the block runs the full 720px page height so there's
   // room — hence maxLines 3 here vs. the usual 2, with a 32pt floor to stay
   // legible even for a pathologically long title.
-  const title = fitHeadingLines(slide.heading, {
+  const title = fitEmphasisHeading(slide.heading, {
     maxWidth: COVER_TITLE_MAX_W,
     fontSize: 64,
     maxLines: 3,
@@ -193,21 +193,23 @@ export function LeftAnchorCover({ ir, slide, ctx, page, params }: SvgTemplatePro
       {/* Heading set inside the block — contrast-adaptive ink off the
           block's own primary fill (see file header's "白字例外"/W4 fix
           round note), not a fixed literal. */}
-      {title.lines.map((line, i) => (
-        <text
-          key={i}
-          data-truncated={title.truncated && i === title.lines.length - 1 ? "1" : undefined}
-          x={COVER_TITLE_X}
-          y={titleFirstY + i * title.lineHeight}
-          fontFamily={fonts.heading}
-          fontSize={title.fontSize}
-          fontWeight="600"
-          fill={readableOn(colors.primary)}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {renderEmphasisHeading(
+        title,
+        headingEmphasisPaint(ctx, title, { baseFill: readableOn(colors.primary), fontWeight: "600", fontFamily: fonts.heading }),
+        (_line, i) => (
+          <text
+            key={i}
+            data-truncated={title.truncated && i === title.lines.length - 1 ? "1" : undefined}
+            x={COVER_TITLE_X}
+            y={titleFirstY + i * title.lineHeight}
+            fontFamily={fonts.heading}
+            fontSize={title.fontSize}
+            fontWeight="600"
+            fill={readableOn(colors.primary)}
+            dominantBaseline="alphabetic"
+          />
+        ),
+      )}
 
       {kicker && (
         <text

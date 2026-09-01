@@ -1,7 +1,7 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
-import { fitHeadingLines } from "../render/heading-fit"
-import { fitSvgLine, layoutSvgText } from "../lib/svg-text-layout"
+import { fitEmphasisHeading, fitEmphasisText, headingEmphasisPaint, renderEmphasisHeading } from "../render/emphasis"
+import { fitSvgLine } from "../lib/svg-text-layout"
 import { latinUpper, trackingPx } from "./minimal-shared"
 import { accessibleInk, metaInk, readableOn } from "../render/ink"
 
@@ -61,7 +61,7 @@ export function HorizonWedgeCover({ ir, slide, ctx }: SvgTemplateProps) {
   const author = ir.meta.authors?.[0]
   const authorText = author ? [author.name, author.role].filter(Boolean).join(" · ") : null
 
-  const title = fitHeadingLines(slide.heading, {
+  const title = fitEmphasisHeading(slide.heading, {
     maxWidth: TITLE_MAX_W,
     fontSize: TITLE_SIZE,
     maxLines: TITLE_MAX_LINES,
@@ -84,7 +84,7 @@ export function HorizonWedgeCover({ ir, slide, ctx }: SvgTemplateProps) {
       })
     : null
 
-  const subtitle = layoutSvgText(slide.subheading || "", {
+  const subtitle = fitEmphasisText(slide.subheading, {
     maxWidth: TITLE_MAX_W,
     fontSize: SUBTITLE_SIZE,
     maxLines: 2,
@@ -127,35 +127,39 @@ export function HorizonWedgeCover({ ir, slide, ctx }: SvgTemplateProps) {
         </text>
       )}
 
-      {title.lines.map((line, i) => (
-        <text
-          key={i}
-          data-truncated={title.truncated && i === title.lines.length - 1 ? "1" : undefined}
-          x={TITLE_X}
-          y={TITLE_Y + i * TITLE_LINE_HEIGHT}
-          fontFamily={fonts.heading}
-          fontSize={title.fontSize}
-          fontWeight="700"
-          fill={titleInk}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {renderEmphasisHeading(
+        title,
+        headingEmphasisPaint(ctx, title, { baseFill: titleInk, fontWeight: "700", fontFamily: fonts.heading }),
+        (_line, i) => (
+          <text
+            key={i}
+            data-truncated={title.truncated && i === title.lines.length - 1 ? "1" : undefined}
+            x={TITLE_X}
+            y={TITLE_Y + i * TITLE_LINE_HEIGHT}
+            fontFamily={fonts.heading}
+            fontSize={title.fontSize}
+            fontWeight="700"
+            fill={titleInk}
+            dominantBaseline="alphabetic"
+          />
+        ),
+      )}
 
-      {subtitle.lines.map((line, i) => (
-        <text
-          key={`sub-${i}`}
-          x={TITLE_X}
-          y={SUBTITLE_Y + i * subtitle.lineHeight}
-          fontFamily={fonts.body}
-          fontSize={subtitle.fontSize}
-          fill={metaInk(colors.muted, bg)}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {renderEmphasisHeading(
+        subtitle,
+        headingEmphasisPaint(ctx, subtitle, { baseFill: metaInk(colors.muted, bg), fontFamily: fonts.body, bold: false }),
+        (_line, i) => (
+          <text
+            key={`sub-${i}`}
+            x={TITLE_X}
+            y={SUBTITLE_Y + i * subtitle.lineHeight}
+            fontFamily={fonts.body}
+            fontSize={subtitle.fontSize}
+            fill={metaInk(colors.muted, bg)}
+            dominantBaseline="alphabetic"
+          />
+        ),
+      )}
 
       {meta && (
         <text

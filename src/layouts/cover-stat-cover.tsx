@@ -1,6 +1,6 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
-import { fitHeadingLines } from "../render/heading-fit"
+import { fitEmphasisHeading, fitEmphasisLine, headingEmphasisPaint, renderEmphasisHeading, renderEmphasisText } from "../render/emphasis"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { accessibleInk, metaInk } from "../render/ink"
 import { hasCjk } from "./minimal-shared"
@@ -66,14 +66,14 @@ export function StatCover({ ir, slide, ctx }: SvgTemplateProps) {
     typeScale: ctx.shape?.typeScale,
     bold: false,
   } as const
-  const oneLineTitle = fitHeadingLines(slide.heading, {
+  const oneLineTitle = fitEmphasisHeading(slide.heading, {
     ...titleFit,
     maxLines: TITLE_PREFERRED_LINES,
   })
   // 数字和短标题维持单行板式。只有单行会真实截断时才启用第二行，避免为了
   // 放大字号把原本完整的一行主动拆开。
   const title = oneLineTitle.truncated
-    ? fitHeadingLines(slide.heading, { ...titleFit, maxLines: TITLE_MAX_LINES })
+    ? fitEmphasisHeading(slide.heading, { ...titleFit, maxLines: TITLE_MAX_LINES })
     : oneLineTitle
   const titleInk = accessibleInk(colors.accent, bg, title.fontSize)
 
@@ -89,14 +89,12 @@ export function StatCover({ ir, slide, ctx }: SvgTemplateProps) {
       })
     : null
 
-  const conclusion = slide.subheading
-    ? fitSvgLine(slide.subheading, {
+  const conclusion = fitEmphasisLine(slide.subheading, {
         maxWidth: CONCLUSION_MAX_W,
         fontSize: CONCLUSION_SIZE,
         minFontSize: 16,
         fontFamily: fonts.heading,
       })
-    : null
   const titleLastY = TITLE_Y + Math.max(0, title.lines.length - 1) * title.lineHeight
   const conclusionY =
     title.lines.length > 0
@@ -135,34 +133,41 @@ export function StatCover({ ir, slide, ctx }: SvgTemplateProps) {
         </text>
       )}
 
-      {title.lines.map((line, i) => (
-        <text
-          key={i}
-          data-truncated={title.truncated && i === title.lines.length - 1 ? "1" : undefined}
-          x={TITLE_X}
-          y={TITLE_Y + i * title.lineHeight}
-          fontFamily={fonts.heading}
-          fontSize={title.fontSize}
-          fill={titleInk}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
-
-      {conclusion && (
-        <text
-          data-truncated={conclusion.truncated ? "1" : undefined}
-          x={TITLE_X}
-          y={conclusionY}
-          fontFamily={fonts.heading}
-          fontSize={conclusion.fontSize}
-          fill={accessibleInk(colors.text, bg, conclusion.fontSize)}
-          dominantBaseline="alphabetic"
-        >
-          {conclusion.text}
-        </text>
+      {renderEmphasisHeading(
+        title,
+        headingEmphasisPaint(ctx, title, {
+          baseFill: titleInk,
+          fontFamily: fonts.heading,
+          bold: false,
+        }),
+        (_line, i) => (
+          <text
+            key={i}
+            data-truncated={title.truncated && i === title.lines.length - 1 ? "1" : undefined}
+            x={TITLE_X}
+            y={TITLE_Y + i * title.lineHeight}
+            fontFamily={fonts.heading}
+            fontSize={title.fontSize}
+            fill={titleInk}
+            dominantBaseline="alphabetic"
+          />
+        ),
       )}
+
+      {conclusion &&
+        renderEmphasisText(
+          conclusion.segments,
+          headingEmphasisPaint(ctx, conclusion, { baseFill: accessibleInk(colors.text, bg, conclusion.fontSize), fontFamily: fonts.heading, bold: false }),
+          <text
+            data-truncated={conclusion.truncated ? "1" : undefined}
+            x={TITLE_X}
+            y={conclusionY}
+            fontFamily={fonts.heading}
+            fontSize={conclusion.fontSize}
+            fill={accessibleInk(colors.text, bg, conclusion.fontSize)}
+            dominantBaseline="alphabetic"
+          />,
+        )}
 
       {foot && (
         <text

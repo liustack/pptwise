@@ -1,7 +1,7 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import type { Slide } from "@/ir"
-import { fitHeadingLines } from "../render/heading-fit"
+import { fitEmphasisHeading, headingEmphasisPaint, renderEmphasisHeading } from "../render/emphasis"
 import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout"
 import { accessibleInk, readableOn } from "../render/ink"
 
@@ -43,7 +43,7 @@ function ctaSource(slide: Slide): string | null {
 export function PillCtaEnding({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const bg = ctx.defaultBg ?? colors.bg
-  const heading = fitHeadingLines(slide.heading || "", {
+  const heading = fitEmphasisHeading(slide.heading || "", {
     ...layoutDef.headingFit,
     fontFamily: fonts.heading,
     typeScale: ctx.shape?.typeScale,
@@ -86,22 +86,24 @@ export function PillCtaEnding({ slide, ctx }: SvgTemplateProps) {
 
   return (
     <>
-      {heading.lines.map((line, i) => (
-        <text
-          key={i}
-          data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
-          x={CENTER_X}
-          y={HEADING_Y + i * heading.lineHeight}
-          textAnchor="middle"
-          fontFamily={fonts.heading}
-          fontSize={heading.fontSize}
-          fontWeight="700"
-          fill={accessibleInk(colors.text, bg, heading.fontSize)}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {renderEmphasisHeading(
+        heading,
+        headingEmphasisPaint(ctx, heading, { baseFill: accessibleInk(colors.text, bg, heading.fontSize), fontWeight: "700", fontFamily: fonts.heading }),
+        (_line, i) => (
+          <text
+            key={i}
+            data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
+            x={CENTER_X}
+            y={HEADING_Y + i * heading.lineHeight}
+            textAnchor="middle"
+            fontFamily={fonts.heading}
+            fontSize={heading.fontSize}
+            fontWeight="700"
+            fill={accessibleInk(colors.text, bg, heading.fontSize)}
+            dominantBaseline="alphabetic"
+            />
+        ),
+      )}
 
       {subheading && subheading.text && (
         <text

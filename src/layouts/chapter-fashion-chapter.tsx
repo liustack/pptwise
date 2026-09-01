@@ -1,7 +1,8 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import { chapterNumberFor } from "../lib/derive"
-import { fitHeadingLines, scaleTypePx } from "../render/heading-fit"
+import { scaleTypePx } from "../render/heading-fit"
+import { fitEmphasisHeading, headingEmphasisPaint, renderEmphasisHeading } from "../render/emphasis"
 import { accessibleOpacity, readableOn } from "../render/ink"
 
 /**
@@ -49,7 +50,7 @@ export function FashionChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
   // 水印色：前景与满版底的 22% 实色混合（导出安全，无 transparency 依赖）
   const watermark = mixHex(ctx.colors.accent, fg, 0.22)
 
-  const heading = fitHeadingLines(slide.heading, {
+  const heading = fitEmphasisHeading(slide.heading, {
     maxWidth: 1100,
     fontSize: 54,
     maxLines: 2,
@@ -93,21 +94,23 @@ export function FashionChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
       </text>
 
       {/* 章节标题：大字重压满版色块 */}
-      {heading.lines.map((line, i) => (
-        <text
-          key={i}
-          data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
-          x={56}
-          y={420 + i * heading.lineHeight}
-          fontFamily={ctx.fonts.heading}
-          fontSize={heading.fontSize}
-          fontWeight="900"
-          fill={fg}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {renderEmphasisHeading(
+        heading,
+        headingEmphasisPaint(ctx, heading, { baseFill: fg, fontWeight: "900", fontFamily: ctx.fonts.heading }),
+        (_line, i) => (
+          <text
+            key={i}
+            data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
+            x={56}
+            y={420 + i * heading.lineHeight}
+            fontFamily={ctx.fonts.heading}
+            fontSize={heading.fontSize}
+            fontWeight="900"
+            fill={fg}
+            dominantBaseline="alphabetic"
+            />
+        ),
+      )}
 
       {/* 底部细线 + org */}
       <line x1={56} y1={636} x2={1224} y2={636} stroke={fg} strokeWidth={1.5} opacity={0.5} />

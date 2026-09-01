@@ -3,7 +3,7 @@ import type { LayoutDefinition } from "./registry"
 import { fitHeadingLines } from "../render/heading-fit"
 import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout"
 import { accessibleInk, readableOn } from "../render/ink"
-import { parseEmphasis, renderEmphasisText, sliceEmphasisForLines, stripEmphasis } from "../render/emphasis"
+import { fitEmphasisLine, headingEmphasisPaint, parseEmphasis, renderEmphasisText, sliceEmphasisForLines, stripEmphasis } from "../render/emphasis"
 
 /**
  * ask-ending（第八波批 1，新表达）：募资句当标题 + 火橙钮。构图抄融资
@@ -60,14 +60,12 @@ export function AskEnding({ slide, ctx }: SvgTemplateProps) {
   const accentInk = accessibleInk(colors.accent, defaultBg, heading.fontSize)
 
   const headingLastY = TITLE_Y + Math.max(0, heading.lines.length - 1) * heading.lineHeight
-  const subheading = slide.subheading
-    ? fitSvgLine(slide.subheading, {
+  const subheading = fitEmphasisLine(slide.subheading, {
         maxWidth: SUB_MAX_W,
         fontSize: SUB_SIZE,
         minFontSize: 16,
         fontFamily: fonts.body,
       })
-    : null
   const subY = Math.max(SUB_Y, headingLastY + Math.round(heading.fontSize * 0.36) + (subheading?.fontSize ?? SUB_SIZE))
 
   const ctaLabel = fitSvgLine(CTA_LABEL, {
@@ -111,19 +109,20 @@ export function AskEnding({ slide, ctx }: SvgTemplateProps) {
         ),
       )}
 
-      {subheading && (
-        <text
-          data-truncated={subheading.truncated ? "1" : undefined}
-          x={SUB_X}
-          y={subY}
-          fontFamily={fonts.body}
-          fontSize={subheading.fontSize}
-          fill={accessibleInk(colors.muted, defaultBg, subheading.fontSize)}
-          dominantBaseline="alphabetic"
-        >
-          {subheading.text}
-        </text>
-      )}
+      {subheading &&
+        renderEmphasisText(
+          subheading.segments,
+          headingEmphasisPaint(ctx, subheading, { baseFill: accessibleInk(colors.muted, defaultBg, subheading.fontSize), fontFamily: fonts.body, bold: false }),
+          <text
+            data-truncated={subheading.truncated ? "1" : undefined}
+            x={SUB_X}
+            y={subY}
+            fontFamily={fonts.body}
+            fontSize={subheading.fontSize}
+            fill={accessibleInk(colors.muted, defaultBg, subheading.fontSize)}
+            dominantBaseline="alphabetic"
+          />,
+        )}
 
       <rect x={CTA_X} y={CTA_Y} width={ctaWidth} height={CTA_H} fill={ctaFill} />
       <text

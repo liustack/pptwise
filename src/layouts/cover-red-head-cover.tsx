@@ -2,9 +2,9 @@ import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import type { PptxIR } from "@/ir"
 import { fitHeadingLines } from "../render/heading-fit"
-import { fitSvgLine, layoutSvgText } from "../lib/svg-text-layout"
+import { fitSvgLine } from "../lib/svg-text-layout"
 import { accessibleInk, metaInk } from "../render/ink"
-import { stripEmphasis } from "../render/emphasis"
+import { fitEmphasisText, headingEmphasisPaint, renderEmphasisText, sliceEmphasisForLines, stripEmphasis } from "../render/emphasis"
 
 /**
  * red-head-cover（第八波 pinOnly）：红头文件封面。居中。org 正红大字作红头，
@@ -104,7 +104,7 @@ export function RedHeadCover({ ir, slide, ctx }: SvgTemplateProps) {
   const titleLastY = TITLE_Y + Math.max(0, titleLines.length - 1) * title.lineHeight
   const subY = showTitle && titleLines.length > 0 ? titleLastY + SUB_GAP : SUB_Y
 
-  const subtitle = layoutSvgText(slide.subheading || "", {
+  const subtitle = fitEmphasisText(slide.subheading, {
     maxWidth: SUB_MAX_W,
     fontSize: SUB_SIZE,
     maxLines: 2,
@@ -180,7 +180,15 @@ export function RedHeadCover({ ir, slide, ctx }: SvgTemplateProps) {
       {subtitle.lines.map((line, i) => {
         const painted = withoutOverflowMark(line)
         if (!painted) return null
-        return (
+        return renderEmphasisText(
+          sliceEmphasisForLines(subtitle.segments[i] ?? [{ text: line, emphasized: false }], [
+            painted,
+          ])[0],
+          headingEmphasisPaint(ctx, subtitle, {
+            baseFill: metaInk(colors.muted, bg),
+            fontFamily: fonts.body,
+            bold: false,
+          }),
           <text
             key={`sub-${i}`}
             data-contrast-tier="meta"
@@ -192,9 +200,7 @@ export function RedHeadCover({ ir, slide, ctx }: SvgTemplateProps) {
             fontSize={subtitle.fontSize}
             fill={metaInk(colors.muted, bg)}
             dominantBaseline="alphabetic"
-          >
-            {painted}
-          </text>
+          />,
         )
       })}
 

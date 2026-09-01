@@ -1,6 +1,6 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
-import { fitHeadingLines } from "../render/heading-fit"
+import { fitEmphasisHeading, headingEmphasisPaint, renderEmphasisHeading, stripEmphasis } from "../render/emphasis"
 import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout"
 import { trackingPx } from "./minimal-shared"
 import { accessibleInk, metaInk } from "../render/ink"
@@ -78,7 +78,7 @@ export function MemoHeadCover({ ir, slide, ctx }: SvgTemplateProps) {
   const mono = fonts.mono
 
   const eyebrowTracking = trackingPx(EYEBROW_SIZE, EYEBROW_TRACKING_EM)
-  const title = fitHeadingLines(slide.heading, {
+  const title = fitEmphasisHeading(slide.heading, {
     maxWidth: TITLE_MAX_W,
     fontSize: TITLE_SIZE,
     maxLines: TITLE_MAX_LINES,
@@ -99,7 +99,10 @@ export function MemoHeadCover({ ir, slide, ctx }: SvgTemplateProps) {
 
   const footerTracking = trackingPx(FOOTER_SIZE, FOOTER_TRACKING_EM)
   const fromText = org ? `FROM: ${org}` : null
-  const reText = slide.subheading ? `RE:   ${slide.subheading}` : null
+  // Meta tier, not the emphasis surface: this line is letter-spaced/stacked
+  // small type where an accent run has nowhere to read. Markers are
+  // stripped so nothing prints them.
+  const reText = slide.subheading ? `RE:   ${stripEmphasis(slide.subheading)}` : null
   const fromLine = fromText
     ? fitSvgLine(fromText, {
         maxWidth: 1080,
@@ -150,21 +153,23 @@ export function MemoHeadCover({ ir, slide, ctx }: SvgTemplateProps) {
         strokeWidth="1"
       />
 
-      {title.lines.map((line, i) => (
-        <text
-          key={i}
-          data-truncated={title.truncated && i === title.lines.length - 1 ? "1" : undefined}
-          x={TITLE_X}
-          y={titleY + i * title.lineHeight}
-          fontFamily={fonts.heading}
-          fontSize={title.fontSize}
-          fontWeight="400"
-          fill={accessibleInk(colors.text, bg, title.fontSize)}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {renderEmphasisHeading(
+        title,
+        headingEmphasisPaint(ctx, title, { baseFill: accessibleInk(colors.text, bg, title.fontSize), fontWeight: "400", fontFamily: fonts.heading, bold: false }),
+        (_line, i) => (
+          <text
+            key={i}
+            data-truncated={title.truncated && i === title.lines.length - 1 ? "1" : undefined}
+            x={TITLE_X}
+            y={titleY + i * title.lineHeight}
+            fontFamily={fonts.heading}
+            fontSize={title.fontSize}
+            fontWeight="400"
+            fill={accessibleInk(colors.text, bg, title.fontSize)}
+            dominantBaseline="alphabetic"
+            />
+        ),
+      )}
 
       {underlineW > 0 && (
         <line

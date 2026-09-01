@@ -2,9 +2,8 @@ import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import { SvgContent } from "../render/svg-content"
 import { sectionNameFor } from "../lib/derive"
-import { fitHeadingLines } from "../render/heading-fit"
 import { fitSvgLine } from "../lib/svg-text-layout"
-import { fitEmphasisLine, renderEmphasisText } from "../render/emphasis"
+import { fitEmphasisHeading, fitEmphasisLine, headingEmphasisPaint, renderEmphasisHeading, renderEmphasisText } from "../render/emphasis"
 import { accessibleInk, contrastRatio, requiredContrastRatio } from "../render/ink"
 import { footnoteBaselineFor } from "../render/branding-geometry"
 import { tryContentHeadingTreatment } from "../render/heading-treatments/render"
@@ -111,7 +110,7 @@ export function NarrowColumnContent({ ir, slide, index, ctx }: SvgTemplateProps)
   // its ink at 628.25, so the two overlapped by 7.75px outright.
   const COLUMN_BOTTOM = slide.footnote ? 620 : 640
 
-  const heading = fitHeadingLines(slide.heading, {
+  const heading = fitEmphasisHeading(slide.heading, {
     maxWidth: COLUMN_W,
     fontSize: 60,
     maxLines: 2,
@@ -215,21 +214,23 @@ export function NarrowColumnContent({ ir, slide, index, ctx }: SvgTemplateProps)
         </text>
       )}
 
-      {heading.lines.map((line, i) => (
-        <text
-          key={i}
-          data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
-          x="96"
-          y={HEADING_BASELINE + i * heading.lineHeight}
-          fontFamily={fonts.heading}
-          fontSize={heading.fontSize}
-          fontWeight="600"
-          fill={colors.text}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {renderEmphasisHeading(
+        heading,
+        headingEmphasisPaint(ctx, heading, { baseFill: colors.text, fontWeight: "600", fontFamily: fonts.heading }),
+        (_line, i) => (
+          <text
+            key={i}
+            data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
+            x="96"
+            y={HEADING_BASELINE + i * heading.lineHeight}
+            fontFamily={fonts.heading}
+            fontSize={heading.fontSize}
+            fontWeight="600"
+            fill={colors.text}
+            dominantBaseline="alphabetic"
+            />
+        ),
+      )}
 
       {/* Subheading: accent italic so-what sentence below the heading (Task 5) */}
       {subheading &&

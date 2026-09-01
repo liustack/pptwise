@@ -1,8 +1,8 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import { chapterNumberFor } from "../lib/derive"
-import { fitHeadingLines, scaleTypePx } from "../render/heading-fit"
-import { fitSvgLine } from "../lib/svg-text-layout"
+import { scaleTypePx } from "../render/heading-fit"
+import { fitEmphasisHeading, fitEmphasisLine, headingEmphasisPaint, renderEmphasisHeading, renderEmphasisText } from "../render/emphasis"
 import { accessibleInk } from "../render/ink"
 
 /**
@@ -51,7 +51,7 @@ export function ConstellationChapter({ ir, slide, index, ctx }: SvgTemplateProps
   // the page's established right edge.
   const headingMaxWidth = 1184 - HEADING_X
 
-  const heading = fitHeadingLines(slide.heading, {
+  const heading = fitEmphasisHeading(slide.heading, {
     maxWidth: headingMaxWidth,
     fontSize: 56,
     maxLines: 2,
@@ -62,13 +62,11 @@ export function ConstellationChapter({ ir, slide, index, ctx }: SvgTemplateProps
   const headingLastY =
     HEADING_BASELINE +
     Math.max(0, heading.lines.length - 1) * heading.lineHeight
-  const subheading = slide.subheading
-    ? fitSvgLine(slide.subheading, {
+  const subheading = fitEmphasisLine(slide.subheading, {
         maxWidth: headingMaxWidth,
         fontSize: 26,
         minFontSize: 16,
       })
-    : null
   const subheadingY = headingLastY + 56
   const numberPx = scaleTypePx(160, ctx.shape?.typeScale)
 
@@ -89,35 +87,38 @@ export function ConstellationChapter({ ir, slide, index, ctx }: SvgTemplateProps
         {label}
       </text>
 
-      {heading.lines.map((line, i) => (
-        <text
-          key={i}
-          data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
-          x={HEADING_X}
-          y={HEADING_BASELINE + i * heading.lineHeight}
-          fontFamily={fonts.heading}
-          fontSize={heading.fontSize}
-          fontWeight="600"
-          fill={accessibleInk(colors.text, defaultBg, heading.fontSize)}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
-
-      {subheading && (
-        <text
-          data-truncated={subheading.truncated ? "1" : undefined}
-          x={HEADING_X}
-          y={subheadingY}
-          fontFamily={fonts.body}
-          fontSize={subheading.fontSize}
-          fill={accessibleInk(colors.muted, defaultBg, subheading.fontSize)}
-          dominantBaseline="alphabetic"
-        >
-          {subheading.text}
-        </text>
+      {renderEmphasisHeading(
+        heading,
+        headingEmphasisPaint(ctx, heading, { baseFill: accessibleInk(colors.text, defaultBg, heading.fontSize), fontWeight: "600", fontFamily: fonts.heading }),
+        (_line, i) => (
+          <text
+            key={i}
+            data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
+            x={HEADING_X}
+            y={HEADING_BASELINE + i * heading.lineHeight}
+            fontFamily={fonts.heading}
+            fontSize={heading.fontSize}
+            fontWeight="600"
+            fill={accessibleInk(colors.text, defaultBg, heading.fontSize)}
+            dominantBaseline="alphabetic"
+            />
+        ),
       )}
+
+      {subheading &&
+        renderEmphasisText(
+          subheading.segments,
+          headingEmphasisPaint(ctx, subheading, { baseFill: accessibleInk(colors.muted, defaultBg, subheading.fontSize), fontFamily: fonts.body, bold: false }),
+          <text
+            data-truncated={subheading.truncated ? "1" : undefined}
+            x={HEADING_X}
+            y={subheadingY}
+            fontFamily={fonts.body}
+            fontSize={subheading.fontSize}
+            fill={accessibleInk(colors.muted, defaultBg, subheading.fontSize)}
+            dominantBaseline="alphabetic"
+          />,
+        )}
 
       <line
         x1="96"

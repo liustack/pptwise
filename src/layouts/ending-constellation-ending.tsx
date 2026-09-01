@@ -1,7 +1,7 @@
+import { Fragment } from "react"
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
-import { fitHeadingLines } from "../render/heading-fit"
-import { fitSvgLine } from "../lib/svg-text-layout"
+import { fitEmphasisHeading, fitEmphasisLine, headingEmphasisPaint, renderEmphasisLine, renderEmphasisText, sliceEmphasisForLines } from "../render/emphasis"
 import { contrastRatio, requiredContrastRatio } from "../render/ink"
 import { showsDocumentMeta } from "../render/document-meta"
 
@@ -65,7 +65,7 @@ export function ConstellationEnding({ ir, slide, ctx, page }: SvgTemplateProps) 
   const { colors, fonts } = ctx
 
   const HEADING_LAST_BASELINE = 330
-  const heading = fitHeadingLines(slide.heading || "Thank you.", {
+  const heading = fitEmphasisHeading(slide.heading || "Thank you.", {
     maxWidth: 1088,
     fontSize: 88,
     maxLines: 2,
@@ -79,13 +79,11 @@ export function ConstellationEnding({ ir, slide, ctx, page }: SvgTemplateProps) 
   const headingLastY = HEADING_LAST_BASELINE
   const lastLineIndex = heading.lines.length - 1
 
-  const subheading = slide.subheading
-    ? fitSvgLine(slide.subheading, {
+  const subheading = fitEmphasisLine(slide.subheading, {
         maxWidth: 1088,
         fontSize: 24,
         minFontSize: 16,
       })
-    : null
   const subheadingY = headingLastY + 44
 
   const org = ir.meta.organization
@@ -115,8 +113,15 @@ export function ConstellationEnding({ ir, slide, ctx, page }: SvgTemplateProps) 
   return (
     <>
       {heading.lines.map((line, i) => {
+        const paint = headingEmphasisPaint(ctx, heading, {
+          baseFill: colors.text,
+          fontWeight: "700",
+          fontFamily: fonts.heading,
+        })
         if (i !== lastLineIndex) {
-          return (
+          return renderEmphasisText(
+            heading.segments[i] ?? [{ text: line, emphasized: false }],
+            paint,
             <text
               key={i}
               x="640"
@@ -127,9 +132,7 @@ export function ConstellationEnding({ ir, slide, ctx, page }: SvgTemplateProps) 
               fill={colors.text}
               textAnchor="middle"
               dominantBaseline="alphabetic"
-            >
-              {line}
-            </text>
+            />,
           )
         }
         // Signature detail: only the closing line's trailing "。" (if any)
@@ -180,39 +183,62 @@ export function ConstellationEnding({ ir, slide, ctx, page }: SvgTemplateProps) 
           contrastRatio(colors.accent, ctx.defaultBg ?? colors.bg) >= requiredContrastRatio(heading.fontSize)
             ? colors.accent
             : colors.text
+        // The closing period keeps its own tspan, so this line composes the
+        // emphasis runs itself (`renderEmphasisLine` hands back pads and
+        // tspans separately) instead of going through `renderEmphasisText`,
+        // which owns the whole `<text>` body.
+        const restSegments = sliceEmphasisForLines(
+          heading.segments[i] ?? [{ text: line, emphasized: false }],
+          [rest],
+        )[0]
+        const baselineY = headingY + i * heading.lineHeight
+        const runs = renderEmphasisLine(restSegments, {
+          ...headingEmphasisPaint(ctx, heading, {
+            baseFill: colors.text,
+            fontWeight: "700",
+            fontFamily: fonts.heading,
+          }),
+          x: 640,
+          baselineY,
+          fontSize: heading.fontSize,
+          textAnchor: "middle",
+        })
         return (
-          <text
-            key={i}
-            data-truncated={heading.truncated ? "1" : undefined}
-            x="640"
-            y={headingY + i * heading.lineHeight}
-            fontFamily={fonts.heading}
-            fontSize={heading.fontSize}
-            fontWeight="700"
-            fill={colors.text}
-            textAnchor="middle"
-            dominantBaseline="alphabetic"
-          >
-            {rest}
-            {period && <tspan fill={periodFill}>{period}</tspan>}
-          </text>
+          <Fragment key={i}>
+            {runs.pads}
+            <text
+              data-truncated={heading.truncated ? "1" : undefined}
+              x="640"
+              y={baselineY}
+              fontFamily={fonts.heading}
+              fontSize={heading.fontSize}
+              fontWeight="700"
+              fill={colors.text}
+              textAnchor="middle"
+              dominantBaseline="alphabetic"
+            >
+              {runs.tspans}
+              {period && <tspan fill={periodFill}>{period}</tspan>}
+            </text>
+          </Fragment>
         )
       })}
 
-      {subheading && (
-        <text
-          data-truncated={subheading.truncated ? "1" : undefined}
-          x="640"
-          y={subheadingY}
-          fontFamily={fonts.body}
-          fontSize={subheading.fontSize}
-          fill={colors.muted}
-          textAnchor="middle"
-          dominantBaseline="alphabetic"
-        >
-          {subheading.text}
-        </text>
-      )}
+      {subheading &&
+        renderEmphasisText(
+          subheading.segments,
+          headingEmphasisPaint(ctx, subheading, { baseFill: colors.muted, fontFamily: fonts.body, bold: false }),
+          <text
+            data-truncated={subheading.truncated ? "1" : undefined}
+            x="640"
+            y={subheadingY}
+            fontFamily={fonts.body}
+            fontSize={subheading.fontSize}
+            fill={colors.muted}
+            textAnchor="middle"
+            dominantBaseline="alphabetic"
+          />,
+        )}
 
       {/* Signature bar + meta text are omitted entirely (no orphaned bar,
           no empty card) when the deck carries no organization, contact, or

@@ -1,7 +1,7 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
-import { fitSvgLine, layoutSvgText } from "../lib/svg-text-layout"
 import { scaleTypePx } from "../render/heading-fit"
+import { fitEmphasisLine, fitEmphasisText, headingEmphasisPaint, renderEmphasisHeading, renderEmphasisText } from "../render/emphasis"
 import { CONF_LABEL } from "../lib/conf-labels"
 import { showsDocumentMeta } from "../render/document-meta"
 import { faceParam } from "./face-params"
@@ -96,7 +96,7 @@ export function ToneAdaptiveHeaderCover({ ir, slide, ctx, page, params }: SvgTem
 
   const titleSize = faceParam(params, "titleSize", 92)
   const hideRightMeta = faceParam(params, "hideRightMeta", false)
-  const title = layoutSvgText(slide.heading || "", {
+  const title = fitEmphasisText(slide.heading || "", {
     maxWidth: 1120,
     fontSize: scaleTypePx(titleSize, ctx.shape?.typeScale),
     maxLines: 2,
@@ -120,9 +120,7 @@ export function ToneAdaptiveHeaderCover({ ir, slide, ctx, page, params }: SvgTem
   const titleLastY =
     titleY + Math.max(0, title.lines.length - 1) * title.lineHeight
   const subtitleY = titleLastY + 58
-  const subtitle = slide.subheading
-    ? fitSvgLine(slide.subheading, { maxWidth: 1120, fontSize: 34, minFontSize: 18 })
-    : null
+  const subtitle = fitEmphasisLine(slide.subheading, { maxWidth: 1120, fontSize: 34, minFontSize: 18 })
 
   return (
     <>
@@ -177,37 +175,40 @@ export function ToneAdaptiveHeaderCover({ ir, slide, ctx, page, params }: SvgTem
       )}
 
       {/* Title */}
-      {title.lines.map((line, i) => (
-        <text
-          key={i}
-          x="64"
-          y={titleY + i * title.lineHeight}
-          fontFamily={fonts.heading}
-          fontSize={title.fontSize}
-          fontWeight="700"
-          fill={textFg}
-          letterSpacing="-2"
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {renderEmphasisHeading(
+        title,
+        headingEmphasisPaint(ctx, title, { baseFill: textFg, fontWeight: "700", fontFamily: fonts.heading, bold: true }),
+        (_line, i) => (
+          <text
+            key={i}
+            x="64"
+            y={titleY + i * title.lineHeight}
+            fontFamily={fonts.heading}
+            fontSize={title.fontSize}
+            fontWeight="700"
+            fill={textFg}
+            letterSpacing="-2"
+            dominantBaseline="alphabetic"
+          />
+        ),
+      )}
 
       {/* Subtitle */}
-      {subtitle && (
-        <text
-          data-truncated={subtitle.truncated ? "1" : undefined}
-          x="64"
-          y={subtitleY}
-          fontFamily={fonts.body}
-          fontSize={subtitle.fontSize}
-          fill={mutedFg}
-          opacity={withBg ? 0.82 : 1}
-          dominantBaseline="alphabetic"
-        >
-          {subtitle.text}
-        </text>
-      )}
+      {subtitle &&
+        renderEmphasisText(
+          subtitle.segments,
+          headingEmphasisPaint(ctx, subtitle, { baseFill: mutedFg, fontFamily: fonts.body, bold: false }),
+          <text
+            data-truncated={subtitle.truncated ? "1" : undefined}
+            x="64"
+            y={subtitleY}
+            fontFamily={fonts.body}
+            fontSize={subtitle.fontSize}
+            fill={mutedFg}
+            opacity={withBg ? 0.82 : 1}
+            dominantBaseline="alphabetic"
+          />,
+        )}
 
       {/* Bottom divider + meta row (no-bg mode) */}
       {!withBg && (

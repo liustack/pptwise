@@ -1,7 +1,8 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import { chapterNumberFor } from "../lib/derive"
-import { fitHeadingLines, scaleTypePx } from "../render/heading-fit"
+import { scaleTypePx } from "../render/heading-fit"
+import { fitEmphasisHeading, headingEmphasisPaint, renderEmphasisHeading } from "../render/emphasis"
 import { accessibleInk } from "../render/ink"
 
 /**
@@ -61,7 +62,7 @@ export function ToneAdaptiveChapter({ ir, slide, index, ctx }: SvgTemplateProps)
   const chNum = chapterNumberFor(ir.slides, index)
   const label = String(chNum).padStart(2, "0")
 
-  const heading = fitHeadingLines(slide.heading, {
+  const heading = fitEmphasisHeading(slide.heading, {
     maxWidth: 1152,
     fontSize: 88,
     maxLines: 2,
@@ -108,22 +109,24 @@ export function ToneAdaptiveChapter({ ir, slide, index, ctx }: SvgTemplateProps)
       </text>
 
       {/* Chapter heading (centered) */}
-      {heading.lines.map((line, i) => (
-        <text
-          key={i}
-          data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
-          x="640"
-          y={headingY + i * heading.lineHeight}
-          fontFamily={ctx.fonts.heading}
-          fontSize={heading.fontSize}
-          fontWeight="700"
-          fill={textFg}
-          textAnchor="middle"
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {renderEmphasisHeading(
+        heading,
+        headingEmphasisPaint(ctx, heading, { baseFill: textFg, fontWeight: "700", fontFamily: ctx.fonts.heading }),
+        (_line, i) => (
+          <text
+            key={i}
+            data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
+            x="640"
+            y={headingY + i * heading.lineHeight}
+            fontFamily={ctx.fonts.heading}
+            fontSize={heading.fontSize}
+            fontWeight="700"
+            fill={textFg}
+            textAnchor="middle"
+            dominantBaseline="alphabetic"
+            />
+        ),
+      )}
     </>
   )
 }

@@ -1,7 +1,7 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
-import { fitHeadingLines } from "../render/heading-fit"
-import { fitSvgLine, layoutSvgText } from "../lib/svg-text-layout"
+import { fitEmphasisHeading, fitEmphasisText, headingEmphasisPaint, renderEmphasisHeading } from "../render/emphasis"
+import { fitSvgLine } from "../lib/svg-text-layout"
 import { accessibleOpacity, readableOn } from "../render/ink"
 import { showsDocumentMeta } from "../render/document-meta"
 
@@ -34,7 +34,7 @@ export function FashionEnding({ ir, slide, ctx, page }: SvgTemplateProps) {
   // ending 家族兜底纪律：仅 heading 缺省时兜底（模型填了 heading 时兜底
   // 必然语义重复——2026-07-09 用户裁决先例）。
   const headingText = slide.heading || "Thank you"
-  const title = fitHeadingLines(headingText, {
+  const title = fitEmphasisHeading(headingText, {
     maxWidth: 1168,
     fontSize: 130,
     maxLines: 2,
@@ -54,7 +54,7 @@ export function FashionEnding({ ir, slide, ctx, page }: SvgTemplateProps) {
   // 右缘 1259.1，越出自己声明的 1168 盒（右缘 1224）35.1px——只是恰好还没
   // 冲出 1280px 页面，所以三轮人评把它读成了误报。
   const SUBTITLE_LETTER_SPACING = 4
-  const subtitle = layoutSvgText(slide.subheading || "", {
+  const subtitle = fitEmphasisText(slide.subheading, {
     maxWidth: 1168,
     fontSize: 28,
     maxLines: 2,
@@ -103,42 +103,46 @@ export function FashionEnding({ ir, slide, ctx, page }: SvgTemplateProps) {
       )}
 
       {/* 超大收尾标题 */}
-      {title.lines.map((line, i) => (
-        <text
-          key={i}
-          data-truncated={title.truncated && i === title.lines.length - 1 ? "1" : undefined}
-          x={56}
-          y={TITLE_Y + i * title.lineHeight}
-          fontFamily={ctx.fonts.heading}
-          fontSize={title.fontSize}
-          fontWeight="900"
-          fill={fg}
-          letterSpacing={-2}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {renderEmphasisHeading(
+        title,
+        headingEmphasisPaint(ctx, title, { baseFill: fg, fontWeight: "900", fontFamily: ctx.fonts.heading }),
+        (_line, i) => (
+          <text
+            key={i}
+            data-truncated={title.truncated && i === title.lines.length - 1 ? "1" : undefined}
+            x={56}
+            y={TITLE_Y + i * title.lineHeight}
+            fontFamily={ctx.fonts.heading}
+            fontSize={title.fontSize}
+            fontWeight="900"
+            fill={fg}
+            letterSpacing={-2}
+            dominantBaseline="alphabetic"
+          />
+        ),
+      )}
 
       {/* 满宽 accent 色带 */}
       <rect x={56} y={bandY} width={1168} height={BAND_H} fill={ctx.colors.accent} />
 
       {/* 副题 */}
-      {subtitle.lines.map((line, i) => (
-        <text
-          key={i}
-          x={56}
-          y={subtitleY + i * subtitle.lineHeight}
-          fontFamily={ctx.fonts.body}
-          fontSize={subtitle.fontSize}
-          fill={fg}
-          fillOpacity={subtitleOpacity}
-          letterSpacing={SUBTITLE_LETTER_SPACING}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {renderEmphasisHeading(
+        subtitle,
+        headingEmphasisPaint(ctx, subtitle, { baseFill: fg, fontFamily: ctx.fonts.body, bold: false }),
+        (_line, i) => (
+          <text
+            key={i}
+            x={56}
+            y={subtitleY + i * subtitle.lineHeight}
+            fontFamily={ctx.fonts.body}
+            fontSize={subtitle.fontSize}
+            fill={fg}
+            fillOpacity={subtitleOpacity}
+            letterSpacing={SUBTITLE_LETTER_SPACING}
+            dominantBaseline="alphabetic"
+          />
+        ),
+      )}
 
       {/* 底部 meta */}
       {metaLine && (

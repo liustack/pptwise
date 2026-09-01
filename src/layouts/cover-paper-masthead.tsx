@@ -1,11 +1,11 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import { fitHeadingLines } from "../render/heading-fit"
-import { fitSvgLine, layoutSvgText } from "../lib/svg-text-layout"
+import { fitSvgLine } from "../lib/svg-text-layout"
 import { trackingPx } from "./minimal-shared"
 import { accessibleInk, metaInk } from "../render/ink"
 import { showsDocumentMeta } from "../render/document-meta"
-import { parseEmphasis, renderEmphasisText, sliceEmphasisForLines, stripEmphasis } from "../render/emphasis"
+import { fitEmphasisText, headingEmphasisPaint, parseEmphasis, renderEmphasisHeading, renderEmphasisText, sliceEmphasisForLines, stripEmphasis } from "../render/emphasis"
 
 /**
  * paper-masthead cover layout（2026-08-22 封面还原第一波，新表达）：
@@ -107,7 +107,7 @@ export function PaperMastheadCover({ ir, slide, ctx, page }: SvgTemplateProps) {
       })
     : null
 
-  const subtitle = layoutSvgText(slide.subheading || "", {
+  const subtitle = fitEmphasisText(slide.subheading, {
     maxWidth: TITLE_MAX_W,
     fontSize: SUBTITLE_SIZE,
     maxLines: 2,
@@ -189,19 +189,21 @@ export function PaperMastheadCover({ ir, slide, ctx, page }: SvgTemplateProps) {
           </text>
         ))}
 
-      {subtitle.lines.map((line, i) => (
-        <text
-          key={`sub-${i}`}
-          x={TITLE_X}
-          y={SUBTITLE_Y + i * subtitle.lineHeight}
-          fontFamily={fonts.body}
-          fontSize={subtitle.fontSize}
-          fill={metaInk(colors.muted, bg)}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {renderEmphasisHeading(
+        subtitle,
+        headingEmphasisPaint(ctx, subtitle, { baseFill: metaInk(colors.muted, bg), fontFamily: fonts.body, bold: false }),
+        (_line, i) => (
+          <text
+            key={`sub-${i}`}
+            x={TITLE_X}
+            y={SUBTITLE_Y + i * subtitle.lineHeight}
+            fontFamily={fonts.body}
+            fontSize={subtitle.fontSize}
+            fill={metaInk(colors.muted, bg)}
+            dominantBaseline="alphabetic"
+          />
+        ),
+      )}
 
       {foot && (
         <text

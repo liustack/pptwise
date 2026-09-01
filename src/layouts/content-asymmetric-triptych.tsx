@@ -3,9 +3,8 @@ import type { LayoutDefinition } from "./registry"
 import type { ContentRect } from "../render/layout"
 import { SvgContent } from "../render/svg-content"
 import { sectionNameFor } from "../lib/derive"
-import { fitHeadingLines } from "../render/heading-fit"
 import { fitSvgLine } from "../lib/svg-text-layout"
-import { fitEmphasisLine, renderEmphasisText } from "../render/emphasis"
+import { fitEmphasisHeading, fitEmphasisLine, headingEmphasisPaint, renderEmphasisHeading, renderEmphasisText } from "../render/emphasis"
 import { accessibleInk } from "../render/ink"
 import { footnoteBaselineFor } from "../render/branding-geometry"
 import { tryContentHeadingTreatment } from "../render/heading-treatments/render"
@@ -103,7 +102,7 @@ export function AsymmetricTriptychContent({ ir, slide, index, ctx }: SvgTemplate
     ? fitSvgLine(section, { maxWidth: HEADING_MAX_W, fontSize: 16, minFontSize: 16, letterSpacing: 4 })
     : null
 
-  const heading = fitHeadingLines(slide.heading, {
+  const heading = fitEmphasisHeading(slide.heading, {
     maxWidth: HEADING_MAX_W,
     fontSize: 42,
     maxLines: 2,
@@ -264,21 +263,23 @@ export function AsymmetricTriptychContent({ ir, slide, index, ctx }: SvgTemplate
         </text>
       )}
 
-      {heading.lines.map((line, i) => (
-        <text
-          key={i}
-          data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
-          x="96"
-          y={HEADING_BASELINE + i * heading.lineHeight}
-          fontFamily={fonts.heading}
-          fontSize={heading.fontSize}
-          fontWeight="700"
-          fill={colors.text}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {renderEmphasisHeading(
+        heading,
+        headingEmphasisPaint(ctx, heading, { baseFill: colors.text, fontWeight: "700", fontFamily: fonts.heading }),
+        (_line, i) => (
+          <text
+            key={i}
+            data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
+            x="96"
+            y={HEADING_BASELINE + i * heading.lineHeight}
+            fontFamily={fonts.heading}
+            fontSize={heading.fontSize}
+            fontWeight="700"
+            fill={colors.text}
+            dominantBaseline="alphabetic"
+            />
+        ),
+      )}
 
       {subheading &&
         renderEmphasisText(

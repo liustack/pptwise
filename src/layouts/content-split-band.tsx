@@ -3,9 +3,8 @@ import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import { SvgContent } from "../render/svg-content"
 import { sectionNameFor } from "../lib/derive"
-import { fitHeadingLines } from "../render/heading-fit"
 import { fitSvgLine } from "../lib/svg-text-layout"
-import { fitEmphasisLine, renderEmphasisText } from "../render/emphasis"
+import { fitEmphasisHeading, fitEmphasisLine, headingEmphasisPaint, renderEmphasisHeading, renderEmphasisText } from "../render/emphasis"
 import { accessibleInk, readableOn } from "../render/ink"
 import { footnoteBaselineFor } from "../render/branding-geometry"
 import { tryContentHeadingTreatment } from "../render/heading-treatments/render"
@@ -220,7 +219,7 @@ export function SplitBandContent({ ir, slide, index, ctx }: SvgTemplateProps) {
     : null
   const kickerFill = accessibleInk(colors.muted, colors.primary, 14)
 
-  const heading = fitHeadingLines(slide.heading, {
+  const heading = fitEmphasisHeading(slide.heading, {
     maxWidth: TEXT_MAX_W,
     fontSize: 44,
     maxLines: 2,
@@ -270,21 +269,23 @@ export function SplitBandContent({ ir, slide, index, ctx }: SvgTemplateProps) {
             </text>
           )}
 
-          {heading.lines.map((line, i) => (
-            <text
-              key={i}
-              data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
-              x={TEXT_X}
-              y={HEADING_BASELINE + i * heading.lineHeight}
-              fontFamily={fonts.heading}
-              fontSize={heading.fontSize}
-              fontWeight="700"
-              fill={readableOn(colors.primary)}
-              dominantBaseline="alphabetic"
-            >
-              {line}
-            </text>
-          ))}
+          {renderEmphasisHeading(
+            heading,
+            headingEmphasisPaint(ctx, heading, { baseFill: readableOn(colors.primary), fontWeight: "700", fontFamily: fonts.heading }),
+            (_line, i) => (
+              <text
+                key={i}
+                data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
+                x={TEXT_X}
+                y={HEADING_BASELINE + i * heading.lineHeight}
+                fontFamily={fonts.heading}
+                fontSize={heading.fontSize}
+                fontWeight="700"
+                fill={readableOn(colors.primary)}
+                dominantBaseline="alphabetic"
+                />
+            ),
+          )}
 
           {subheading &&
             renderEmphasisText(

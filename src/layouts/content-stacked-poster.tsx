@@ -7,9 +7,8 @@ import { SvgContent } from "../render/svg-content"
 import { SCALABLE_TYPES } from "../render/component-traits"
 import { measureComponent, renderComponent } from "../components"
 import { chapterNumberFor, sectionNameFor } from "../lib/derive"
-import { fitHeadingLines } from "../render/heading-fit"
 import { fitSvgLine } from "../lib/svg-text-layout"
-import { fitEmphasisLine, renderEmphasisText } from "../render/emphasis"
+import { fitEmphasisHeading, fitEmphasisLine, headingEmphasisPaint, renderEmphasisHeading, renderEmphasisText } from "../render/emphasis"
 import { accessibleInk } from "../render/ink"
 import { footnoteBaselineFor } from "../render/branding-geometry"
 import { tryContentHeadingTreatment } from "../render/heading-treatments/render"
@@ -209,7 +208,7 @@ function renderStackedContent(
     : null
   const contentH = slide.footnote ? 420 : 460
 
-  const heading = fitHeadingLines(slide.heading, {
+  const heading = fitEmphasisHeading(slide.heading, {
     maxWidth: 1168,
     fontSize: 50,
     maxLines: 2,
@@ -304,21 +303,23 @@ function renderStackedContent(
       />
 
       {/* Heading */}
-      {heading.lines.map((line, i) => (
-        <text
-          key={i}
-          data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
-          x="56"
-          y={150 + i * heading.lineHeight}
-          fontFamily={ctx.fonts.heading}
-          fontSize={heading.fontSize}
-          fontWeight="500"
-          fill={ctx.colors.text}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {renderEmphasisHeading(
+        heading,
+        headingEmphasisPaint(ctx, heading, { baseFill: ctx.colors.text, fontWeight: "500", fontFamily: ctx.fonts.heading }),
+        (_line, i) => (
+          <text
+            key={i}
+            data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
+            x="56"
+            y={150 + i * heading.lineHeight}
+            fontFamily={ctx.fonts.heading}
+            fontSize={heading.fontSize}
+            fontWeight="500"
+            fill={ctx.colors.text}
+            dominantBaseline="alphabetic"
+          />
+        ),
+      )}
 
       {/* Subheading: accent so-what sentence below the heading */}
       {subheading &&
@@ -381,7 +382,7 @@ export function StackedPosterContent(props: SvgTemplateProps) {
   const treated = tryContentHeadingTreatment(props)
   const { ir, slide, index, ctx } = props
 
-  const heading = fitHeadingLines(slide.heading, {
+  const heading = fitEmphasisHeading(slide.heading, {
     maxWidth: 1000,
     fontSize: 64,
     maxLines: 2,
@@ -516,22 +517,24 @@ export function StackedPosterContent(props: SvgTemplateProps) {
       />
 
       {/* Centered 800-weight title */}
-      {heading.lines.map((line, i) => (
-        <text
-          key={i}
-          data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
-          x={CENTER_X}
-          y={TITLE_Y + i * heading.lineHeight}
-          textAnchor="middle"
-          fontFamily={ctx.fonts.heading}
-          fontSize={heading.fontSize}
-          fontWeight="800"
-          fill={ctx.colors.text}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {renderEmphasisHeading(
+        heading,
+        headingEmphasisPaint(ctx, heading, { baseFill: ctx.colors.text, fontWeight: "800", fontFamily: ctx.fonts.heading }),
+        (_line, i) => (
+          <text
+            key={i}
+            data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
+            x={CENTER_X}
+            y={TITLE_Y + i * heading.lineHeight}
+            textAnchor="middle"
+            fontFamily={ctx.fonts.heading}
+            fontSize={heading.fontSize}
+            fontWeight="800"
+            fill={ctx.colors.text}
+            dominantBaseline="alphabetic"
+          />
+        ),
+      )}
 
       {/* Subheading: centered accent so-what sentence below the title */}
       {subheading &&

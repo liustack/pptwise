@@ -1,6 +1,6 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
-import { fitHeadingLines } from "../render/heading-fit"
+import { fitEmphasisHeading, headingEmphasisPaint, renderEmphasisHeading } from "../render/emphasis"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { showsDocumentMeta } from "../render/document-meta"
 
@@ -58,7 +58,7 @@ export function MastheadEnding({ ir, slide, ctx, page }: SvgTemplateProps) {
   const { colors, fonts } = ctx
 
   const HEADING_LAST_BASELINE = 340
-  const heading = fitHeadingLines(slide.heading || "Thank You", {
+  const heading = fitEmphasisHeading(slide.heading || "Thank You", {
     maxWidth: 1088,
     fontSize: 76,
     maxLines: 2,
@@ -86,22 +86,24 @@ export function MastheadEnding({ ir, slide, ctx, page }: SvgTemplateProps) {
 
   return (
     <>
-      {heading.lines.map((line, i) => (
-        <text
-          key={i}
-          data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
-          x="640"
-          y={headingY + i * heading.lineHeight}
-          fontFamily={fonts.heading}
-          fontSize={heading.fontSize}
-          fontWeight="600"
-          fill={colors.text}
-          textAnchor="middle"
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {renderEmphasisHeading(
+        heading,
+        headingEmphasisPaint(ctx, heading, { baseFill: colors.text, fontWeight: "600", fontFamily: fonts.heading }),
+        (_line, i) => (
+          <text
+            key={i}
+            data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
+            x="640"
+            y={headingY + i * heading.lineHeight}
+            fontFamily={fonts.heading}
+            fontSize={heading.fontSize}
+            fontWeight="600"
+            fill={colors.text}
+            textAnchor="middle"
+            dominantBaseline="alphabetic"
+            />
+        ),
+      )}
 
       {subheading.text && (
         <text

@@ -165,7 +165,10 @@ export function VerticalTitleCover({ ir, slide, ctx }: SvgTemplateProps) {
   const headingSource = slide.heading ?? ""
   const plainHeading = stripEmphasis(headingSource)
   const showTitle = plainHeading.trim().length > 0
-  const subSource = (slide.subheading ?? "").trim()
+  // Meta tier, not the emphasis surface: this line is letter-spaced/stacked
+  // small type where an accent run has nowhere to read. Markers are
+  // stripped so nothing prints them.
+  const subSource = stripEmphasis((slide.subheading ?? "").trim())
   const verticalTitle = showTitle && canSetVertical(plainHeading)
   const verticalSub = subSource.length > 0 && canSetVertical(subSource)
   const sealGlyph = sealStudioGlyph(org)

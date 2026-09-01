@@ -1,7 +1,7 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import { chapterNumberFor } from "../lib/derive"
-import { fitHeadingLines } from "../render/heading-fit"
+import { fitEmphasisHeading, fitEmphasisLine, headingEmphasisPaint, renderEmphasisHeading, renderEmphasisText } from "../render/emphasis"
 import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout"
 import { accessibleInk } from "../render/ink"
 import { formatChapterLabel, headingIsCjk } from "../render/heading-treatments/labels"
@@ -52,20 +52,18 @@ export function ActChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
   const leftBarX = CENTER_X - halfSpan - BAR_W
   const rightBarX = CENTER_X + halfSpan
 
-  const heading = fitHeadingLines(slide.heading, {
+  const heading = fitEmphasisHeading(slide.heading, {
     ...layoutDef.headingFit,
     fontFamily: fonts.heading,
     typeScale: ctx.shape?.typeScale,
   })
   const titleLastY = TITLE_Y + Math.max(0, heading.lines.length - 1) * heading.lineHeight
-  const subheading = slide.subheading
-    ? fitSvgLine(slide.subheading, {
+  const subheading = fitEmphasisLine(slide.subheading, {
         maxWidth: CONTENT_MAX_W,
         fontSize: SUB_SIZE,
         minFontSize: 16,
         fontFamily: fonts.body,
       })
-    : null
   const subY = titleLastY + SUB_GAP
   const barFill = colors.accent
 
@@ -87,37 +85,40 @@ export function ActChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
         {act.text}
       </text>
 
-      {heading.lines.map((line, i) => (
-        <text
-          key={i}
-          data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
-          x={CENTER_X}
-          y={TITLE_Y + i * heading.lineHeight}
-          textAnchor="middle"
-          fontFamily={fonts.heading}
-          fontSize={heading.fontSize}
-          fontWeight="700"
-          fill={accessibleInk(colors.text, defaultBg, heading.fontSize)}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
-
-      {subheading && (
-        <text
-          data-truncated={subheading.truncated ? "1" : undefined}
-          x={CENTER_X}
-          y={subY}
-          textAnchor="middle"
-          fontFamily={fonts.body}
-          fontSize={subheading.fontSize}
-          fill={accessibleInk(colors.muted, defaultBg, subheading.fontSize)}
-          dominantBaseline="alphabetic"
-        >
-          {subheading.text}
-        </text>
+      {renderEmphasisHeading(
+        heading,
+        headingEmphasisPaint(ctx, heading, { baseFill: accessibleInk(colors.text, defaultBg, heading.fontSize), fontWeight: "700", fontFamily: fonts.heading }),
+        (_line, i) => (
+          <text
+            key={i}
+            data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
+            x={CENTER_X}
+            y={TITLE_Y + i * heading.lineHeight}
+            textAnchor="middle"
+            fontFamily={fonts.heading}
+            fontSize={heading.fontSize}
+            fontWeight="700"
+            fill={accessibleInk(colors.text, defaultBg, heading.fontSize)}
+            dominantBaseline="alphabetic"
+            />
+        ),
       )}
+
+      {subheading &&
+        renderEmphasisText(
+          subheading.segments,
+          headingEmphasisPaint(ctx, subheading, { baseFill: accessibleInk(colors.muted, defaultBg, subheading.fontSize), fontFamily: fonts.body, bold: false }),
+          <text
+            data-truncated={subheading.truncated ? "1" : undefined}
+            x={CENTER_X}
+            y={subY}
+            textAnchor="middle"
+            fontFamily={fonts.body}
+            fontSize={subheading.fontSize}
+            fill={accessibleInk(colors.muted, defaultBg, subheading.fontSize)}
+            dominantBaseline="alphabetic"
+          />,
+        )}
     </>
   )
 }

@@ -1,7 +1,8 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import { chapterNumberFor } from "../lib/derive"
-import { fitHeadingLines, scaleTypePx } from "../render/heading-fit"
+import { scaleTypePx } from "../render/heading-fit"
+import { fitEmphasisHeading, headingEmphasisPaint, renderEmphasisHeading } from "../render/emphasis"
 import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout"
 import { accessibleOpacity, readableOn } from "../render/ink"
 import { underlineYFromBaseline } from "./underline"
@@ -46,7 +47,7 @@ export function BannerChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
   const defaultBg = ctx.defaultBg ?? ctx.colors.bg
   const ink = readableOn(defaultBg)
 
-  const heading = fitHeadingLines(slide.heading, {
+  const heading = fitEmphasisHeading(slide.heading, {
     maxWidth: 1088,
     fontSize: 84,
     maxLines: 2,
@@ -127,22 +128,24 @@ export function BannerChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
       </text>
 
       {/* Chapter heading (adaptive ink, centered) */}
-      {heading.lines.map((line, i) => (
-        <text
-          key={i}
-          data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
-          x="640"
-          y={headingY + i * heading.lineHeight}
-          fontFamily={ctx.fonts.heading}
-          fontSize={heading.fontSize}
-          fontWeight="600"
-          fill={ink}
-          textAnchor="middle"
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {renderEmphasisHeading(
+        heading,
+        headingEmphasisPaint(ctx, heading, { baseFill: ink, fontWeight: "600", fontFamily: ctx.fonts.heading }),
+        (_line, i) => (
+          <text
+            key={i}
+            data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
+            x="640"
+            y={headingY + i * heading.lineHeight}
+            fontFamily={ctx.fonts.heading}
+            fontSize={heading.fontSize}
+            fontWeight="600"
+            fill={ink}
+            textAnchor="middle"
+            dominantBaseline="alphabetic"
+            />
+        ),
+      )}
 
       {/* Optional subheading */}
       {subheading && (

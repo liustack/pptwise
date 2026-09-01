@@ -1,6 +1,12 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout"
+import {
+  fitEmphasisLine,
+  headingEmphasisPaint,
+  renderEmphasisText,
+  stripEmphasis,
+} from "../render/emphasis"
 import { accessibleInk, metaInk, readableOn } from "../render/ink"
 
 /**
@@ -91,7 +97,7 @@ export function ActionPadEnding({ ir, slide, ctx }: SvgTemplateProps) {
 
   const lines = items.map((item, i) => ({
     y: ITEM_YS[i]!,
-    body: fitSvgLine(item, {
+    body: fitEmphasisLine(item, {
       maxWidth: ITEM_MAX_W,
       fontSize: ITEM_SIZE,
       minFontSize: ITEM_MIN_PT,
@@ -99,8 +105,13 @@ export function ActionPadEnding({ ir, slide, ctx }: SvgTemplateProps) {
     }),
   }))
 
+  // The CTA sits inside the accent pad, so it is the one heading-fed string
+  // on this page that keeps its markers stripped instead of painted: an
+  // accent tint (or an accent pad, or an accent underline) on an accent
+  // field has no contrast left to spend. The action lines above carry the
+  // emphasis.
   const cta = ctaSource
-    ? fitSvgLine(ctaSource, {
+    ? fitSvgLine(stripEmphasis(ctaSource), {
         maxWidth: 1000,
         fontSize: PAD_TEXT_SIZE,
         minFontSize: 16,
@@ -142,21 +153,29 @@ export function ActionPadEnding({ ir, slide, ctx }: SvgTemplateProps) {
         {kicker.text}
       </text>
 
-      {lines.map((line, i) => (
-        <text
-          key={i}
-          data-truncated={line.body.truncated ? "1" : undefined}
-          x={ITEM_X}
-          y={line.y}
-          fontFamily={fonts.heading}
-          fontSize={line.body.fontSize}
-          fontWeight="700"
-          fill={itemInk}
-          dominantBaseline="alphabetic"
-        >
-          {line.body.text}
-        </text>
-      ))}
+      {lines.map((line, i) =>
+        line.body === null ? null : (
+          renderEmphasisText(
+            line.body.segments,
+            headingEmphasisPaint(ctx, line.body, {
+              baseFill: itemInk,
+              fontWeight: "700",
+              fontFamily: fonts.heading,
+            }),
+            <text
+              key={i}
+              data-truncated={line.body.truncated ? "1" : undefined}
+              x={ITEM_X}
+              y={line.y}
+              fontFamily={fonts.heading}
+              fontSize={line.body.fontSize}
+              fontWeight="700"
+              fill={itemInk}
+              dominantBaseline="alphabetic"
+            />,
+          )
+        ),
+      )}
 
       {cta && (
         <>

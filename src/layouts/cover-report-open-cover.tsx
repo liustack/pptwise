@@ -2,10 +2,10 @@ import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import type { PptxIR } from "@/ir"
 import { fitHeadingLines } from "../render/heading-fit"
-import { fitSvgLine, layoutSvgText } from "../lib/svg-text-layout"
+import { fitSvgLine } from "../lib/svg-text-layout"
 import { accessibleInk, metaInk } from "../render/ink"
 import { hasCjk } from "./minimal-shared"
-import { stripEmphasis } from "../render/emphasis"
+import { fitEmphasisText, headingEmphasisPaint, renderEmphasisText, sliceEmphasisForLines, stripEmphasis } from "../render/emphasis"
 
 /**
  * report-open-cover（第八波 pinOnly）：薄荷纸上的左齐报告题。kicker 取
@@ -91,7 +91,7 @@ export function ReportOpenCover({ ir, slide, ctx }: SvgTemplateProps) {
     : null
 
   const subtitle = subSource
-    ? layoutSvgText(subSource, {
+    ? fitEmphasisText(subSource, {
         maxWidth: SUB_MAX_W,
         fontSize: SUB_SIZE,
         maxLines: 2,
@@ -146,21 +146,29 @@ export function ReportOpenCover({ ir, slide, ctx }: SvgTemplateProps) {
         ))}
 
       {subtitle &&
-        subtitle.lines.map((line, i) => (
-          <text
-            key={`sub-${i}`}
-            data-contrast-tier="meta"
-            data-truncated={subtitle.truncated && i === subtitle.lines.length - 1 ? "1" : undefined}
-            x={TITLE_X}
-            y={subY + i * subtitle.lineHeight}
-            fontFamily={fonts.body}
-            fontSize={subtitle.fontSize}
-            fill={metaInk(colors.muted, bg)}
-            dominantBaseline="alphabetic"
-          >
-            {withoutOverflowMark(line)}
-          </text>
-        ))}
+        subtitle.lines.map((line, i) =>
+          renderEmphasisText(
+            sliceEmphasisForLines(subtitle.segments[i] ?? [{ text: line, emphasized: false }], [
+              withoutOverflowMark(line),
+            ])[0],
+            headingEmphasisPaint(ctx, subtitle, {
+              baseFill: metaInk(colors.muted, bg),
+              fontFamily: fonts.body,
+              bold: false,
+            }),
+            <text
+              key={`sub-${i}`}
+              data-contrast-tier="meta"
+              data-truncated={subtitle.truncated && i === subtitle.lines.length - 1 ? "1" : undefined}
+              x={TITLE_X}
+              y={subY + i * subtitle.lineHeight}
+              fontFamily={fonts.body}
+              fontSize={subtitle.fontSize}
+              fill={metaInk(colors.muted, bg)}
+              dominantBaseline="alphabetic"
+            />,
+          ),
+        )}
 
       {foot && (
         <text

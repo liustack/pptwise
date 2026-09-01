@@ -2,9 +2,8 @@ import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import { SvgContent } from "../render/svg-content"
 import { chapterNumberFor, contentIndexInChapter } from "../lib/derive"
-import { fitHeadingLines } from "../render/heading-fit"
 import { fitSvgLine } from "../lib/svg-text-layout"
-import { fitEmphasisLine, renderEmphasisText } from "../render/emphasis"
+import { fitEmphasisHeading, fitEmphasisLine, headingEmphasisPaint, renderEmphasisHeading, renderEmphasisText } from "../render/emphasis"
 import { accessibleInk, readableOn } from "../render/ink"
 import { footnoteBaselineFor } from "../render/branding-geometry"
 import { tryContentHeadingTreatment } from "../render/heading-treatments/render"
@@ -128,7 +127,7 @@ export function RailNumberedContent({ ir, slide, index, ctx }: SvgTemplateProps)
     minFontSize: 16,
   })
 
-  const heading = fitHeadingLines(slide.heading, {
+  const heading = fitEmphasisHeading(slide.heading, {
     maxWidth: TITLE_MAX_W,
     fontSize: 40,
     maxLines: 2,
@@ -268,26 +267,28 @@ export function RailNumberedContent({ ir, slide, index, ctx }: SvgTemplateProps)
       </text>
 
       {/* Heading, vertically centered against the badge row */}
-      {heading.lines.map((line, i) => (
-        <text
-          key={i}
-          data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
-          x={TITLE_X}
-          y={
+      {renderEmphasisHeading(
+        heading,
+        headingEmphasisPaint(ctx, heading, { baseFill: colors.text, fontWeight: "600", fontFamily: fonts.heading }),
+        (_line, i) => (
+          <text
+            key={i}
+            data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
+            x={TITLE_X}
+            y={
             BADGE_CENTER_Y -
             ((heading.lines.length - 1) * heading.lineHeight) / 2 +
             i * heading.lineHeight +
             headingFudge
-          }
-          fontFamily={fonts.heading}
-          fontSize={heading.fontSize}
-          fontWeight="600"
-          fill={colors.text}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+            }
+            fontFamily={fonts.heading}
+            fontSize={heading.fontSize}
+            fontWeight="600"
+            fill={colors.text}
+            dominantBaseline="alphabetic"
+            />
+        ),
+      )}
 
       {/* Subheading: accent so-what sentence below the badge/title row */}
       {subheading &&

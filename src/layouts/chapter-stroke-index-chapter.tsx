@@ -1,8 +1,8 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import { chapterNumberFor } from "../lib/derive"
-import { fitHeadingLines, scaleTypePx } from "../render/heading-fit"
-import { fitSvgLine } from "../lib/svg-text-layout"
+import { scaleTypePx } from "../render/heading-fit"
+import { fitEmphasisHeading, fitEmphasisLine, headingEmphasisPaint, renderEmphasisHeading, renderEmphasisText } from "../render/emphasis"
 import { accessibleInk, metaInk } from "../render/ink"
 
 /**
@@ -52,7 +52,7 @@ export function StrokeIndexChapter({ ir, slide, index, ctx }: SvgTemplateProps) 
   const numberStroke = accessibleInk(colors.accent, defaultBg, numberPx)
   const ruleStroke = colors.border ?? colors.muted
 
-  const heading = fitHeadingLines(slide.heading, {
+  const heading = fitEmphasisHeading(slide.heading, {
     maxWidth: TITLE_MAX_W,
     fontSize: TITLE_SIZE,
     maxLines: TITLE_MAX_LINES,
@@ -62,14 +62,12 @@ export function StrokeIndexChapter({ ir, slide, index, ctx }: SvgTemplateProps) 
     typeScale: ctx.shape?.typeScale,
   })
   const headingLastY = TITLE_Y + Math.max(0, heading.lines.length - 1) * heading.lineHeight
-  const subheading = slide.subheading
-    ? fitSvgLine(slide.subheading, {
+  const subheading = fitEmphasisLine(slide.subheading, {
         maxWidth: TITLE_MAX_W,
         fontSize: SUB_SIZE,
         minFontSize: 16,
         fontFamily: fonts.body,
       })
-    : null
   const subheadingY = headingLastY + SUB_GAP
 
   return (
@@ -90,36 +88,39 @@ export function StrokeIndexChapter({ ir, slide, index, ctx }: SvgTemplateProps) 
         </text>
       </g>
 
-      {heading.lines.map((line, i) => (
-        <text
-          key={i}
-          data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
-          x={TITLE_X}
-          y={TITLE_Y + i * heading.lineHeight}
-          fontFamily={fonts.heading}
-          fontSize={heading.fontSize}
-          fontWeight="700"
-          fill={accessibleInk(colors.text, defaultBg, heading.fontSize)}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
-
-      {subheading && (
-        <text
-          data-contrast-tier="meta"
-          data-truncated={subheading.truncated ? "1" : undefined}
-          x={TITLE_X}
-          y={subheadingY}
-          fontFamily={fonts.body}
-          fontSize={subheading.fontSize}
-          fill={metaInk(colors.muted, defaultBg)}
-          dominantBaseline="alphabetic"
-        >
-          {subheading.text}
-        </text>
+      {renderEmphasisHeading(
+        heading,
+        headingEmphasisPaint(ctx, heading, { baseFill: accessibleInk(colors.text, defaultBg, heading.fontSize), fontWeight: "700", fontFamily: fonts.heading }),
+        (_line, i) => (
+          <text
+            key={i}
+            data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
+            x={TITLE_X}
+            y={TITLE_Y + i * heading.lineHeight}
+            fontFamily={fonts.heading}
+            fontSize={heading.fontSize}
+            fontWeight="700"
+            fill={accessibleInk(colors.text, defaultBg, heading.fontSize)}
+            dominantBaseline="alphabetic"
+            />
+        ),
       )}
+
+      {subheading &&
+        renderEmphasisText(
+          subheading.segments,
+          headingEmphasisPaint(ctx, subheading, { baseFill: metaInk(colors.muted, defaultBg), fontFamily: fonts.body, bold: false }),
+          <text
+            data-contrast-tier="meta"
+            data-truncated={subheading.truncated ? "1" : undefined}
+            x={TITLE_X}
+            y={subheadingY}
+            fontFamily={fonts.body}
+            fontSize={subheading.fontSize}
+            fill={metaInk(colors.muted, defaultBg)}
+            dominantBaseline="alphabetic"
+          />,
+        )}
 
       <g data-decor-piece="progress-rule">
         <g data-depth="mid">

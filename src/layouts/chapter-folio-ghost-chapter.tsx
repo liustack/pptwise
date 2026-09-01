@@ -7,7 +7,7 @@ import { accessibleInk, metaInk, readableOn } from "../render/ink"
 import { formatChapterLabel, headingIsCjk } from "../render/heading-treatments/labels"
 import { textInkBox } from "../render/depth-contract/geometry"
 import { CANVAS_H_PX, CANVAS_W_PX } from "../constants"
-import { stripEmphasis } from "../render/emphasis"
+import { fitEmphasisLine, headingEmphasisPaint, renderEmphasisText, stripEmphasis } from "../render/emphasis"
 
 /**
  * folio-ghost-chapter（第八波 pinOnly）：浅底章首。kicker「第三章」走
@@ -104,14 +104,12 @@ export function FolioGhostChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
   })
   const headingLastY = TITLE_Y + Math.max(0, heading.lines.length - 1) * heading.lineHeight
   const showTitle = headingSource.trim().length > 0
-  const subheading = slide.subheading
-    ? fitSvgLine(slide.subheading, {
+  const subheading = fitEmphasisLine(slide.subheading, {
         maxWidth: TITLE_MAX_W,
         fontSize: SUB_SIZE,
         minFontSize: 16,
         fontFamily: fonts.body,
       })
-    : null
 
   return (
     <>
@@ -158,20 +156,21 @@ export function FolioGhostChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
             {line}
           </text>
         ))}
-      {subheading && (
-        <text
-          data-contrast-tier="meta"
-          data-truncated={subheading.truncated ? "1" : undefined}
-          x={TITLE_X}
-          y={headingLastY + SUB_DROP}
-          fontFamily={fonts.body}
-          fontSize={subheading.fontSize}
-          fill={metaInk(colors.muted, defaultBg)}
-          dominantBaseline="alphabetic"
-        >
-          {subheading.text}
-        </text>
-      )}
+      {subheading &&
+        renderEmphasisText(
+          subheading.segments,
+          headingEmphasisPaint(ctx, subheading, { baseFill: metaInk(colors.muted, defaultBg), fontFamily: fonts.body, bold: false }),
+          <text
+            data-contrast-tier="meta"
+            data-truncated={subheading.truncated ? "1" : undefined}
+            x={TITLE_X}
+            y={headingLastY + SUB_DROP}
+            fontFamily={fonts.body}
+            fontSize={subheading.fontSize}
+            fill={metaInk(colors.muted, defaultBg)}
+            dominantBaseline="alphabetic"
+          />,
+        )}
     </>
   )
 }

@@ -1,6 +1,6 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
-import { fitHeadingLines } from "../render/heading-fit"
+import { fitEmphasisHeading, headingEmphasisPaint, renderEmphasisHeading } from "../render/emphasis"
 
 /**
  * tone-adaptive-ending layout（spec §3.2）：左对齐超大主标题（缺省兜底
@@ -94,7 +94,7 @@ export function ToneAdaptiveEnding({ ir, slide, ctx }: SvgTemplateProps) {
   )
   const contactText = contactParts.join(" · ")
 
-  const heading = fitHeadingLines(slide.heading || "Thank you", {
+  const heading = fitEmphasisHeading(slide.heading || "Thank you", {
     maxWidth: 1152,
     fontSize: 100,
     maxLines: 2,
@@ -139,22 +139,24 @@ export function ToneAdaptiveEnding({ ir, slide, ctx }: SvgTemplateProps) {
       )}
 
       {/* Main heading */}
-      {heading.lines.map((line, i) => (
-        <text
-          key={i}
-          data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
-          x="64"
-          y={headingY + i * heading.lineHeight}
-          fontFamily={fonts.heading}
-          fontSize={heading.fontSize}
-          fontWeight="700"
-          fill={textFg}
-          letterSpacing="-2"
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {renderEmphasisHeading(
+        heading,
+        headingEmphasisPaint(ctx, heading, { baseFill: textFg, fontWeight: "700", fontFamily: fonts.heading }),
+        (_line, i) => (
+          <text
+            key={i}
+            data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
+            x="64"
+            y={headingY + i * heading.lineHeight}
+            fontFamily={fonts.heading}
+            fontSize={heading.fontSize}
+            fontWeight="700"
+            fill={textFg}
+            letterSpacing="-2"
+            dominantBaseline="alphabetic"
+            />
+        ),
+      )}
 
       {/* Divider */}
       <line

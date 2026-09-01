@@ -1,7 +1,7 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import { sectionNameFor } from "../lib/derive"
-import { fitHeadingLines } from "../render/heading-fit"
+import { fitEmphasisHeading, headingEmphasisPaint, renderEmphasisHeading } from "../render/emphasis"
 import { fitSvgLine, layoutSvgText } from "../lib/svg-text-layout"
 import { accessibleInk } from "../render/ink"
 import { heroCaption, heroSource, heroUnit, heroValue, latinUpper, trackingPx } from "./minimal-shared"
@@ -58,7 +58,7 @@ function GenericStatHeroContent({ ir, slide, index, ctx }: SvgTemplateProps) {
     : null
 
   const value = heroValue(slide)
-  const heading = fitHeadingLines(value, {
+  const heading = fitEmphasisHeading(value, {
     ...layoutDef.headingFit,
     fontFamily: fonts.heading,
     typeScale: ctx.shape?.typeScale,
@@ -114,21 +114,23 @@ function GenericStatHeroContent({ ir, slide, index, ctx }: SvgTemplateProps) {
         </text>
       )}
 
-      {heading.lines.map((line, i) => (
-        <text
-          key={i}
-          data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
-          x={PAD_X}
-          y={VALUE_Y + i * heading.lineHeight}
-          fontFamily={fonts.heading}
-          fontSize={heading.fontSize}
-          fontWeight="700"
-          fill={accessibleInk(colors.primary, defaultBg, heading.fontSize)}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {renderEmphasisHeading(
+        heading,
+        headingEmphasisPaint(ctx, heading, { baseFill: accessibleInk(colors.primary, defaultBg, heading.fontSize), fontWeight: "700", fontFamily: fonts.heading }),
+        (_line, i) => (
+          <text
+            key={i}
+            data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
+            x={PAD_X}
+            y={VALUE_Y + i * heading.lineHeight}
+            fontFamily={fonts.heading}
+            fontSize={heading.fontSize}
+            fontWeight="700"
+            fill={accessibleInk(colors.primary, defaultBg, heading.fontSize)}
+            dominantBaseline="alphabetic"
+            />
+        ),
+      )}
 
       {unit && (
         <text

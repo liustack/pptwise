@@ -1,5 +1,5 @@
 import type { SvgTemplateProps } from "./types"
-import { fitHeadingLines } from "../render/heading-fit"
+import { fitEmphasisHeading, headingEmphasisPaint, renderEmphasisHeading } from "../render/emphasis"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { accessibleOpacity, readableOn } from "../render/ink"
 
@@ -27,7 +27,7 @@ export function GenericMonoBleedContent({ slide, ctx }: SvgTemplateProps) {
   const field = ctx.colors.primary
   const fg = readableOn(field)
 
-  const heading = fitHeadingLines(slide.heading, {
+  const heading = fitEmphasisHeading(slide.heading, {
     ...MONO_BLEED_HEADING_FIT,
     fontFamily: ctx.fonts.heading,
     typeScale: ctx.shape?.typeScale,
@@ -51,22 +51,24 @@ export function GenericMonoBleedContent({ slide, ctx }: SvgTemplateProps) {
     <>
       <rect x={0} y={0} width={1280} height={720} fill={field} />
 
-      {heading.lines.map((line, i) => (
-        <text
-          key={i}
-          data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
-          x={CENTER_X}
-          y={TITLE_Y + i * heading.lineHeight}
-          textAnchor="middle"
-          fontFamily={ctx.fonts.heading}
-          fontSize={heading.fontSize}
-          fontWeight="700"
-          fill={fg}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {renderEmphasisHeading(
+        heading,
+        headingEmphasisPaint(ctx, heading, { baseFill: fg, fontWeight: "700", fontFamily: ctx.fonts.heading }),
+        (_line, i) => (
+          <text
+            key={i}
+            data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
+            x={CENTER_X}
+            y={TITLE_Y + i * heading.lineHeight}
+            textAnchor="middle"
+            fontFamily={ctx.fonts.heading}
+            fontSize={heading.fontSize}
+            fontWeight="700"
+            fill={fg}
+            dominantBaseline="alphabetic"
+          />
+        ),
+      )}
 
       {subheading && (
         <text

@@ -3,9 +3,8 @@ import type { LayoutDefinition } from "./registry"
 import { SvgContent } from "../render/svg-content"
 import { FULL_BODY_TYPES } from "../render/component-traits"
 import { sectionNameFor } from "../lib/derive"
-import { fitHeadingLines } from "../render/heading-fit"
 import { fitSvgLine } from "../lib/svg-text-layout"
-import { fitEmphasisLine, renderEmphasisText } from "../render/emphasis"
+import { fitEmphasisHeading, fitEmphasisLine, headingEmphasisPaint, renderEmphasisHeading, renderEmphasisText } from "../render/emphasis"
 import { accessibleInk } from "../render/ink"
 import { footnoteBaselineFor } from "../render/branding-geometry"
 import { tryContentHeadingTreatment } from "../render/heading-treatments/render"
@@ -98,7 +97,7 @@ export function QuietFrameContent({ ir, slide, index, ctx }: SvgTemplateProps) {
     ? fitSvgLine(section, { maxWidth: FRAME_W, fontSize: 16, minFontSize: 16, letterSpacing: 3 })
     : null
 
-  const heading = fitHeadingLines(slide.heading, {
+  const heading = fitEmphasisHeading(slide.heading, {
     maxWidth: FRAME_W,
     fontSize: 40,
     maxLines: 2,
@@ -186,22 +185,24 @@ export function QuietFrameContent({ ir, slide, index, ctx }: SvgTemplateProps) {
         </text>
       )}
 
-      {heading.lines.map((line, i) => (
-        <text
-          key={i}
-          data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
-          x={CENTER_X}
-          y={HEADING_BASELINE + i * heading.lineHeight}
-          textAnchor="middle"
-          fontFamily={fonts.heading}
-          fontSize={heading.fontSize}
-          fontWeight="600"
-          fill={colors.text}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {renderEmphasisHeading(
+        heading,
+        headingEmphasisPaint(ctx, heading, { baseFill: colors.text, fontWeight: "600", fontFamily: fonts.heading }),
+        (_line, i) => (
+          <text
+            key={i}
+            data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
+            x={CENTER_X}
+            y={HEADING_BASELINE + i * heading.lineHeight}
+            textAnchor="middle"
+            fontFamily={fonts.heading}
+            fontSize={heading.fontSize}
+            fontWeight="600"
+            fill={colors.text}
+            dominantBaseline="alphabetic"
+            />
+        ),
+      )}
 
       {subheading &&
         renderEmphasisText(

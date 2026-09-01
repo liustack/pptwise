@@ -1,7 +1,6 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
-import { fitHeadingLines } from "../render/heading-fit"
-import { fitSvgLine } from "../lib/svg-text-layout"
+import { fitEmphasisHeading, fitEmphasisLine, headingEmphasisPaint, renderEmphasisHeading, renderEmphasisText } from "../render/emphasis"
 import { CONF_LABEL } from "../lib/conf-labels"
 import { showsDocumentMeta } from "../render/document-meta"
 import { faceParam } from "./face-params"
@@ -73,7 +72,7 @@ export function ConstellationCover({ ir, slide, ctx, page, params }: SvgTemplate
   const date = showsDocumentMeta(page, ir, slide) ? ir.meta.date : undefined
   const metaParts = [confLabel, date].filter((v): v is string => Boolean(v))
 
-  const title = fitHeadingLines(slide.heading, {
+  const title = fitEmphasisHeading(slide.heading, {
     maxWidth: 900,
     fontSize: 88,
     maxLines: 2,
@@ -92,13 +91,11 @@ export function ConstellationCover({ ir, slide, ctx, page, params }: SvgTemplate
   const ruleY = titleLastY + 28
   const subtitleY = titleLastY + 76
 
-  const subtitle = slide.subheading
-    ? fitSvgLine(slide.subheading, {
+  const subtitle = fitEmphasisLine(slide.subheading, {
         maxWidth: 900,
         fontSize: 30,
         minFontSize: 18,
       })
-    : null
 
   return (
     <>
@@ -137,36 +134,44 @@ export function ConstellationCover({ ir, slide, ctx, page, params }: SvgTemplate
       {subtitle && (
         <>
           {ruleStyle === "bar" && <rect x="96" y={ruleY} width="84" height="4" fill={colors.accent} />}
-          <text
-            data-truncated={subtitle.truncated ? "1" : undefined}
-            x="96"
-            y={subtitleY}
-            fontFamily={fonts.body}
-            fontSize={subtitle.fontSize}
-            fill={colors.muted}
-            dominantBaseline="alphabetic"
-          >
-            {subtitle.text}
-          </text>
+          {renderEmphasisText(
+            subtitle.segments,
+            headingEmphasisPaint(ctx, subtitle, {
+              baseFill: colors.muted,
+              fontFamily: fonts.body,
+              bold: false,
+            }),
+            <text
+              data-truncated={subtitle.truncated ? "1" : undefined}
+              x="96"
+              y={subtitleY}
+              fontFamily={fonts.body}
+              fontSize={subtitle.fontSize}
+              fill={colors.muted}
+              dominantBaseline="alphabetic"
+            />,
+          )}
         </>
       )}
 
       {/* Bottom-left hero title */}
-      {title.lines.map((line, i) => (
-        <text
-          key={i}
-          data-truncated={title.truncated && i === title.lines.length - 1 ? "1" : undefined}
-          x="96"
-          y={titleY + i * title.lineHeight}
-          fontFamily={fonts.heading}
-          fontSize={title.fontSize}
-          fontWeight="700"
-          fill={colors.text}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {renderEmphasisHeading(
+        title,
+        headingEmphasisPaint(ctx, title, { baseFill: colors.text, fontWeight: "700", fontFamily: fonts.heading }),
+        (_line, i) => (
+          <text
+            key={i}
+            data-truncated={title.truncated && i === title.lines.length - 1 ? "1" : undefined}
+            x="96"
+            y={titleY + i * title.lineHeight}
+            fontFamily={fonts.heading}
+            fontSize={title.fontSize}
+            fontWeight="700"
+            fill={colors.text}
+            dominantBaseline="alphabetic"
+            />
+        ),
+      )}
 
       {/* Bottom meta row: confidentiality / date */}
       {metaParts.length > 0 && (

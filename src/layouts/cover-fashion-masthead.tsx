@@ -1,7 +1,7 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
-import { fitHeadingLines } from "../render/heading-fit"
-import { fitSvgLine, layoutSvgText } from "../lib/svg-text-layout"
+import { fitEmphasisHeading, fitEmphasisText, headingEmphasisPaint, renderEmphasisHeading } from "../render/emphasis"
+import { fitSvgLine } from "../lib/svg-text-layout"
 import { CONF_LABEL } from "../lib/conf-labels"
 import { showsDocumentMeta } from "../render/document-meta"
 import { blendOver, metaInk, readableOn } from "../render/ink"
@@ -65,7 +65,7 @@ export function FashionMastheadCover({ ir, slide, ctx, page }: SvgTemplateProps)
   const version = ir.meta.version
   const fg = readableOn(ctx.colors.primary)
 
-  const title = fitHeadingLines(slide.heading, {
+  const title = fitEmphasisHeading(slide.heading, {
     maxWidth: 1168,
     fontSize: 150,
     maxLines: 2,
@@ -92,7 +92,7 @@ export function FashionMastheadCover({ ir, slide, ctx, page }: SvgTemplateProps)
   // 绝对 px，必须进折行预算：不进的话 71 字符的英文副题被判「一行放得下
   // 1168px」，实际画出 1253.7px，右缘 1309.7 冲出 1280px 页面 29.7px。
   const SUBTITLE_LETTER_SPACING = 4
-  const subtitle = layoutSvgText(slide.subheading || "", {
+  const subtitle = fitEmphasisText(slide.subheading, {
     maxWidth: 1168,
     fontSize: 30,
     maxLines: 2,
@@ -152,42 +152,46 @@ export function FashionMastheadCover({ ir, slide, ctx, page }: SvgTemplateProps)
       <line x1={56} y1={116} x2={1224} y2={116} stroke={fg} strokeWidth={3} />
 
       {/* 超大报头 */}
-      {title.lines.map((line, i) => (
-        <text
-          key={i}
-          data-truncated={title.truncated && i === title.lines.length - 1 ? "1" : undefined}
-          x={56}
-          y={TITLE_Y + i * title.lineHeight}
-          fontFamily={ctx.fonts.heading}
-          fontSize={title.fontSize}
-          fontWeight="900"
-          fill={fg}
-          letterSpacing={-2}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {renderEmphasisHeading(
+        title,
+        headingEmphasisPaint(ctx, title, { baseFill: fg, fontWeight: "900", fontFamily: ctx.fonts.heading }),
+        (_line, i) => (
+          <text
+            key={i}
+            data-truncated={title.truncated && i === title.lines.length - 1 ? "1" : undefined}
+            x={56}
+            y={TITLE_Y + i * title.lineHeight}
+            fontFamily={ctx.fonts.heading}
+            fontSize={title.fontSize}
+            fontWeight="900"
+            fill={fg}
+            letterSpacing={-2}
+            dominantBaseline="alphabetic"
+          />
+        ),
+      )}
 
       {/* 满宽粗色带（accent 正红压黑底） */}
       <rect x={56} y={bandY} width={1168} height={BAND_H} fill={ctx.colors.accent} />
 
       {/* 副题 */}
-      {subtitle.lines.map((line, i) => (
-        <text
-          key={i}
-          x={56}
-          y={subtitleY + i * subtitle.lineHeight}
-          fontFamily={ctx.fonts.body}
-          fontSize={subtitle.fontSize}
-          fill={fg}
-          fillOpacity={0.72}
-          letterSpacing={SUBTITLE_LETTER_SPACING}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {renderEmphasisHeading(
+        subtitle,
+        headingEmphasisPaint(ctx, subtitle, { baseFill: fg, fontFamily: ctx.fonts.body, bold: false }),
+        (_line, i) => (
+          <text
+            key={i}
+            x={56}
+            y={subtitleY + i * subtitle.lineHeight}
+            fontFamily={ctx.fonts.body}
+            fontSize={subtitle.fontSize}
+            fill={fg}
+            fillOpacity={0.72}
+            letterSpacing={SUBTITLE_LETTER_SPACING}
+            dominantBaseline="alphabetic"
+          />
+        ),
+      )}
 
       {/* 底部 meta — B-tier meta-information text (docs/contrast-system.md's
           three-tier contrast policy): `metaFill` (see the const above) is

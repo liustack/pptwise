@@ -2,7 +2,7 @@ import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import { SvgContent } from "../render/svg-content"
 import { sectionNameFor } from "../lib/derive"
-import { fitHeadingLines } from "../render/heading-fit"
+import { fitEmphasisHeading, fitEmphasisLine, headingEmphasisPaint, renderEmphasisHeading, renderEmphasisText } from "../render/emphasis"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { accessibleInk } from "../render/ink"
 import { tryContentHeadingTreatment } from "../render/heading-treatments/render"
@@ -56,7 +56,7 @@ export function TwoColumnContent({ ir, slide, index, ctx }: SvgTemplateProps) {
   const KICKER_Y = 96
   const HEADING_BASELINE = 150
 
-  const heading = fitHeadingLines(slide.heading, {
+  const heading = fitEmphasisHeading(slide.heading, {
     maxWidth: 1088,
     fontSize: 46,
     maxLines: 2,
@@ -68,9 +68,7 @@ export function TwoColumnContent({ ir, slide, index, ctx }: SvgTemplateProps) {
 
   // subheading 槽位（2026-07-10 深度自查修复：上线版静默丢 slide.subheading，
   // 轮换进本版式的页面副题信息丢失）。有副题时其余元素整体下移。
-  const subheading = slide.subheading
-    ? fitSvgLine(slide.subheading, { maxWidth: 1088, fontSize: 22, minFontSize: 16 })
-    : null
+  const subheading = fitEmphasisLine(slide.subheading, { maxWidth: 1088, fontSize: 22, minFontSize: 16 })
   const subheadingFill = subheading
     ? accessibleInk(colors.primary, ctx.defaultBg ?? colors.bg, subheading.fontSize)
     : colors.primary
@@ -102,36 +100,39 @@ export function TwoColumnContent({ ir, slide, index, ctx }: SvgTemplateProps) {
       )}
 
       {/* heading */}
-      {heading.lines.map((line, i) => (
-        <text
-          key={i}
-          data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
-          x={96}
-          y={HEADING_BASELINE + i * heading.lineHeight}
-          fontFamily={fonts.heading}
-          fontSize={heading.fontSize}
-          fontWeight="700"
-          fill={colors.text}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {renderEmphasisHeading(
+        heading,
+        headingEmphasisPaint(ctx, heading, { baseFill: colors.text, fontWeight: "700", fontFamily: fonts.heading }),
+        (_line, i) => (
+          <text
+            key={i}
+            data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
+            x={96}
+            y={HEADING_BASELINE + i * heading.lineHeight}
+            fontFamily={fonts.heading}
+            fontSize={heading.fontSize}
+            fontWeight="700"
+            fill={colors.text}
+            dominantBaseline="alphabetic"
+            />
+        ),
+      )}
 
       {/* subheading：primary 强调（与 banner-heading 的副题语义一致） */}
-      {subheading && (
-        <text
-          data-truncated={subheading.truncated ? "1" : undefined}
-          x={96}
-          y={subheadingY}
-          fontFamily={fonts.body}
-          fontSize={subheading.fontSize}
-          fill={subheadingFill}
-          dominantBaseline="alphabetic"
-        >
-          {subheading.text}
-        </text>
-      )}
+      {subheading &&
+        renderEmphasisText(
+          subheading.segments,
+          headingEmphasisPaint(ctx, subheading, { baseFill: subheadingFill, fontFamily: fonts.body, bold: false }),
+          <text
+            data-truncated={subheading.truncated ? "1" : undefined}
+            x={96}
+            y={subheadingY}
+            fontFamily={fonts.body}
+            fontSize={subheading.fontSize}
+            fill={subheadingFill}
+            dominantBaseline="alphabetic"
+          />,
+        )}
 
       {/* accent 短条 + 贯穿细线 */}
       <rect x={96} y={accentY} width={72} height={4} fill={colors.accent} />

@@ -1,6 +1,6 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
-import { fitHeadingLines } from "../render/heading-fit"
+import { fitEmphasisHeading, headingEmphasisPaint, renderEmphasisHeading } from "../render/emphasis"
 import { fitSvgLine } from "../lib/svg-text-layout"
 
 /**
@@ -60,7 +60,7 @@ export function PosterEnding({ ir, slide, ctx }: SvgTemplateProps) {
   const copyright = ir.meta.copyright
   const author = ir.meta.authors?.[0]
 
-  const heading = fitHeadingLines(slide.heading || "Questions & Discussion", {
+  const heading = fitEmphasisHeading(slide.heading || "Questions & Discussion", {
     maxWidth: 1152,
     fontSize: 150,
     maxLines: 2,
@@ -109,23 +109,25 @@ export function PosterEnding({ ir, slide, ctx }: SvgTemplateProps) {
   return (
     <>
       {/* Main heading (italic serif, centered) */}
-      {heading.lines.map((line, i) => (
-        <text
-          key={i}
-          data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
-          x={CENTER_X}
-          y={headingY + i * heading.lineHeight}
-          textAnchor="middle"
-          fontFamily={ctx.fonts.heading}
-          fontSize={heading.fontSize}
-          fontWeight="800"
-          fill={ctx.colors.text}
-          fontStyle="italic"
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {renderEmphasisHeading(
+        heading,
+        headingEmphasisPaint(ctx, heading, { baseFill: ctx.colors.text, fontWeight: "800", fontFamily: ctx.fonts.heading }),
+        (_line, i) => (
+          <text
+            key={i}
+            data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
+            x={CENTER_X}
+            y={headingY + i * heading.lineHeight}
+            textAnchor="middle"
+            fontFamily={ctx.fonts.heading}
+            fontSize={heading.fontSize}
+            fontWeight="800"
+            fill={ctx.colors.text}
+            fontStyle="italic"
+            dominantBaseline="alphabetic"
+            />
+        ),
+      )}
 
       {/* Accent hairline (AccentBar helper inlined, same treatment as
           cover-poster-center.tsx) */}

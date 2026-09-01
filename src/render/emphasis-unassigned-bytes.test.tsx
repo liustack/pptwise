@@ -5,7 +5,7 @@ import { renderSlideSvg } from "../api"
 import type { PptxIR, Slide } from "../ir"
 import { installNodePlatform } from "../platform/node"
 import {
-  computeEmphasisUnassignedPages,
+  auditEmphasisUnassignedPages,
   EMPHASIS_UNASSIGNED_BYTES_URL,
   MARKED_HEADING,
   MARKED_SUBHEADING,
@@ -107,12 +107,19 @@ function consultingPadDeck(): PptxIR {
 // Recaptured (runway show, 2026-08-26). The runway cover lock moves from
 // lookbook-open-cover to show-headline. Only `runway|0` changes. The other
 // 109 paths stay byte-identical.
+//
+// Recaptured (heading emphasis parse, 2026-09-01). Every heading painter now
+// fits the emphasis-stripped text and paints the runs as tspans, so a theme
+// with no declared stroke tints its marked heading instead of printing the
+// `**` markers. 96 of the 110 hashes move. The matrix keeps its original job
+// — proving an unassigned theme does not drift — and gains the assertion that
+// makes the old hashes un-recapturable: no page may contain a literal marker.
 const fixture = JSON.parse(
   readFileSync(EMPHASIS_UNASSIGNED_BYTES_URL, "utf-8"),
 ) as { pages: Record<string, string> }
 
 describe("unassigned emphasis forms stay pinned to the depth-contract fixture", () => {
-  const pages = computeEmphasisUnassignedPages()
+  const pages = auditEmphasisUnassignedPages()
   it("covers 22 themes across five real render paths", () => {
     expect(UNASSIGNED).not.toContain("lecture")
     expect(UNASSIGNED).not.toContain("consulting")
@@ -122,7 +129,28 @@ describe("unassigned emphasis forms stay pinned to the depth-contract fixture", 
   })
 
   it.each(Object.keys(fixture.pages))("%s", (key) => {
-    expect(pages[key]).toBe(fixture.pages[key])
+    expect(pages[key].sha).toBe(fixture.pages[key])
+  })
+
+  // The guard that keeps a recapture honest. Revert the parse anywhere in
+  // this matrix and this fails before the hashes can be re-recorded over the
+  // regression, which is how the old hashes came to pin pages that printed
+  // their markers as text.
+  it.each(Object.keys(fixture.pages))("%s prints no literal marker", (key) => {
+    expect(pages[key].markers).toBe(0)
+  })
+
+  // Marker-free is not enough on its own — stripping every run would also
+  // pass. A theme that declares no stroke still has one (`resolveEmphasisForm`
+  // defaults to `tint`), so the content pages have to *paint* their runs.
+  //
+  // Covers are excluded on purpose: seven of the bespoke cover plates
+  // (thesis-plate, cut-panel, chalk-band, crayonbox-open, double-frame,
+  // issue-head, show-headline) have always stripped instead of tinting, a
+  // decision that predates this matrix and belongs to those faces.
+  const contentKeys = Object.keys(fixture.pages).filter((key) => !key.endsWith("|0"))
+  it.each(contentKeys)("%s paints its runs as tspans", (key) => {
+    expect(pages[key].tspans).toBeGreaterThan(0)
   })
 })
 

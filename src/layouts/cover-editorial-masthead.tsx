@@ -1,6 +1,6 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
-import { fitHeadingLines } from "../render/heading-fit"
+import { fitEmphasisHeading, fitEmphasisLine, headingEmphasisPaint, renderEmphasisHeading, renderEmphasisText } from "../render/emphasis"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { CONF_LABEL } from "../lib/conf-labels"
 import { showsDocumentMeta } from "../render/document-meta"
@@ -47,7 +47,7 @@ export function EditorialMastheadCover({ ir, slide, ctx, page, params }: SvgTemp
   // baseline always lands on 340 so the underline/subtitle/meta stack below
   // never shifts.
   const HEADING_LAST_BASELINE = 340
-  const title = fitHeadingLines(slide.heading, {
+  const title = fitEmphasisHeading(slide.heading, {
     maxWidth: 1040,
     fontSize: 92,
     maxLines: 2,
@@ -62,9 +62,7 @@ export function EditorialMastheadCover({ ir, slide, ctx, page, params }: SvgTemp
   const underlineY = headingLastY + 56
   const subtitleY = underlineY + 52
 
-  const subtitle = slide.subheading
-    ? fitSvgLine(slide.subheading, { maxWidth: 900, fontSize: 28, minFontSize: 16 })
-    : null
+  const subtitle = fitEmphasisLine(slide.subheading, { maxWidth: 900, fontSize: 28, minFontSize: 16 })
 
   const kickerSrc = showKicker && org ? (hasCjk(org) ? org : latinUpper(org)) : null
   const kickerTracking = kickerSrc && !hasCjk(kickerSrc) ? trackingPx(KICKER_SIZE, KICKER_TRACKING_EM) : undefined
@@ -100,22 +98,24 @@ export function EditorialMastheadCover({ ir, slide, ctx, page, params }: SvgTemp
         </text>
       )}
 
-      {title.lines.map((line, i) => (
-        <text
-          key={i}
-          data-truncated={title.truncated && i === title.lines.length - 1 ? "1" : undefined}
-          x={titleX}
-          y={titleY + i * title.lineHeight}
-          fontFamily={fonts.heading}
-          fontSize={title.fontSize}
-          fontWeight="600"
-          fill={colors.text}
-          textAnchor={textAnchor}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {renderEmphasisHeading(
+        title,
+        headingEmphasisPaint(ctx, title, { baseFill: colors.text, fontWeight: "600", fontFamily: fonts.heading }),
+        (_line, i) => (
+          <text
+            key={i}
+            data-truncated={title.truncated && i === title.lines.length - 1 ? "1" : undefined}
+            x={titleX}
+            y={titleY + i * title.lineHeight}
+            fontFamily={fonts.heading}
+            fontSize={title.fontSize}
+            fontWeight="600"
+            fill={colors.text}
+            textAnchor={textAnchor}
+            dominantBaseline="alphabetic"
+            />
+        ),
+      )}
 
       <line
         x1={underlineX1}
@@ -126,21 +126,22 @@ export function EditorialMastheadCover({ ir, slide, ctx, page, params }: SvgTemp
         strokeWidth="1.6"
       />
 
-      {subtitle && (
-        <text
-          data-truncated={subtitle.truncated ? "1" : undefined}
-          x={titleX}
-          y={subtitleY}
-          fontFamily={fonts.heading}
-          fontSize={subtitle.fontSize}
-          fill={colors.muted}
-          fontStyle="italic"
-          textAnchor={textAnchor}
-          dominantBaseline="alphabetic"
-        >
-          {subtitle.text}
-        </text>
-      )}
+      {subtitle &&
+        renderEmphasisText(
+          subtitle.segments,
+          headingEmphasisPaint(ctx, subtitle, { baseFill: colors.muted, fontFamily: fonts.heading, bold: false }),
+          <text
+            data-truncated={subtitle.truncated ? "1" : undefined}
+            x={titleX}
+            y={subtitleY}
+            fontFamily={fonts.heading}
+            fontSize={subtitle.fontSize}
+            fill={colors.muted}
+            fontStyle="italic"
+            textAnchor={textAnchor}
+            dominantBaseline="alphabetic"
+          />,
+        )}
 
       {metaParts.length > 0 && (
         <text

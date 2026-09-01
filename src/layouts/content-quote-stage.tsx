@@ -2,7 +2,12 @@ import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import type { ContentRect } from "../render/layout"
 import { SvgContent } from "../render/svg-content"
-import { fitHeadingLines } from "../render/heading-fit"
+import {
+  fitEmphasisHeading,
+  headingEmphasisPaint,
+  renderEmphasisHeading,
+  stripEmphasis,
+} from "../render/emphasis"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { footnoteBaselineFor } from "../render/branding-geometry"
 
@@ -95,7 +100,7 @@ export function QuoteStageContent({ slide, ctx }: SvgTemplateProps) {
     fontFamily: fonts.heading,
     typeScale: ctx.shape?.typeScale,
   }
-  let heading = fitHeadingLines(slide.heading, fitOpts)
+  let heading = fitEmphasisHeading(slide.heading, fitOpts)
   const hasBody = slide.components.length > 0
   const lastInkBottom = (h: typeof heading) => {
     const lastY = TITLE_Y + Math.max(0, h.lines.length - 1) * h.lineHeight
@@ -112,18 +117,24 @@ export function QuoteStageContent({ slide, ctx }: SvgTemplateProps) {
   while (!headingFits(heading) && (fontSize > minPt || maxLines > 1)) {
     if (fontSize > minPt) fontSize = Math.max(minPt, fontSize - 4)
     else maxLines -= 1
-    heading = fitHeadingLines(slide.heading, { ...fitOpts, fontSize, maxLines, minPt })
+    heading = fitEmphasisHeading(slide.heading, { ...fitOpts, fontSize, maxLines, minPt })
   }
   const titleLastY = TITLE_Y + Math.max(0, heading.lines.length - 1) * heading.lineHeight
 
   // Subheading, when present, is an annotation (small, muted) — not the
   // accent "so-what" line every other content layout gives it. Plain
-  // `fitSvgLine` (not `fitEmphasisLine`/`renderEmphasisTspans`), matching
+  // `fitSvgLine` over `stripEmphasis` (not `fitEmphasisLine`), matching
   // every other layout's *footnote*-tier single-line text rather than
   // its subheading tier: quote-stage's heading already carries the page's
-  // entire emphasis, a second emphasized line would compete with it.
+  // entire emphasis, a second emphasized line would compete with it. The
+  // markers still come off — declining to *style* a run is a design call,
+  // printing `**` at the reader is not.
   const subheading = slide.subheading
-    ? fitSvgLine(slide.subheading, { maxWidth: 860, fontSize: 20, minFontSize: 16 })
+    ? fitSvgLine(stripEmphasis(slide.subheading), {
+        maxWidth: 860,
+        fontSize: 20,
+        minFontSize: 16,
+      })
     : null
   const subheadingY = titleLastY + ANNOTATION_GAP
 
@@ -155,22 +166,24 @@ export function QuoteStageContent({ slide, ctx }: SvgTemplateProps) {
       />
 
       {/* Heading: the page's entire main visual — oversized, centered. */}
-      {heading.lines.map((line, i) => (
-        <text
-          key={i}
-          data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
-          x={CENTER_X}
-          y={TITLE_Y + i * heading.lineHeight}
-          textAnchor="middle"
-          fontFamily={fonts.heading}
-          fontSize={heading.fontSize}
-          fontWeight="800"
-          fill={colors.text}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {renderEmphasisHeading(
+        heading,
+        headingEmphasisPaint(ctx, heading, { baseFill: colors.text, fontWeight: "800", fontFamily: fonts.heading }),
+        (_line, i) => (
+          <text
+            key={i}
+            data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
+            x={CENTER_X}
+            y={TITLE_Y + i * heading.lineHeight}
+            textAnchor="middle"
+            fontFamily={fonts.heading}
+            fontSize={heading.fontSize}
+            fontWeight="800"
+            fill={colors.text}
+            dominantBaseline="alphabetic"
+          />
+        ),
+      )}
 
       {/* Subheading annotation: small, muted, centered — never accent. */}
       {subheading && (
