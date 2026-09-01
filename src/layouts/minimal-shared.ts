@@ -89,8 +89,51 @@ export function statementAttribution(slide: Slide): string | undefined {
 }
 
 /**
- * Attribution line for `pull-quote`: quote/citation source, else subheading.
- * A paragraph component is the body, not the source.
+ * The `pull-quote` family's field contract, shared by the generic face and
+ * every theme skin of it.
+ *
+ * The quote a reader sees is the quote an author wrote: `blockquote.text`,
+ * set at hero size. A page with no blockquote has no component quote to set,
+ * and there the heading is the quote — that is this face's declared semantic
+ * (the same posture `stat-hero` takes when no `kpi_cards` supplies its
+ * numeral), not the heading standing in for component content that exists
+ * and is being ignored.
+ */
+function quoteComponent(slide: Slide) {
+  const component = slide.components[0]
+  if (component?.type !== "blockquote") return undefined
+  return component.text.trim() ? component : undefined
+}
+
+/** The hero line: the authored quote, or the heading when no quote component exists. */
+export function pullQuoteText(slide: Slide): string {
+  return quoteComponent(slide)?.text.trim() ?? slide.heading?.trim() ?? ""
+}
+
+/**
+ * The small context line above the quote — the page's own words, in the
+ * kicker register: heading and subheading, in that order, joined when an
+ * author wrote both.
+ *
+ * The heading drops out of this line exactly when it is itself the quote
+ * (no blockquote component on the page), so one sentence is never set twice
+ * on one page. The subheading never drops out: nothing else on this face
+ * paints it, and a face that declares a `subheading` slot has promised to
+ * draw one.
+ */
+export function pullQuoteContext(slide: Slide): string | undefined {
+  const sub = slide.subheading?.trim()
+  if (!quoteComponent(slide)) return sub || undefined
+  const parts = [slide.heading?.trim(), sub].filter((part): part is string => Boolean(part))
+  return parts.length > 0 ? parts.join(" \u00b7 ") : undefined
+}
+
+/**
+ * Attribution line for `pull-quote`: the quote's or citation's own field.
+ *
+ * There is no `subheading` fallback. A subheading is the page's structure,
+ * not the quote's source, and printing it under a quote credits a line the
+ * author never attributed to anyone.
  */
 export function pullQuoteAttribution(slide: Slide): string | undefined {
   const component = slide.components[0]
@@ -102,8 +145,7 @@ export function pullQuoteAttribution(slide: Slide): string | undefined {
     const label = component.sources[0]?.label?.trim()
     if (label) return label
   }
-  const sub = slide.subheading?.trim()
-  return sub || undefined
+  return undefined
 }
 
 /** Body prose for `pull-quote`: only a paragraph component, never the quote itself. */
