@@ -48,6 +48,86 @@ const SLOT_LABELS: Record<string, string> = {
   ending: "结尾",
 }
 
+/** One heading on a cross-cut index, and the groups filed under it. */
+export interface GroupFamily {
+  readonly label: string
+  readonly members: readonly string[]
+}
+
+/** The three slots that open and close a deck. See AGENTS.md. */
+const BOUNDARY_SLOTS: readonly string[] = ["cover", "chapter", "ending"]
+
+/**
+ * Headings for the 按讲法 index. Derived from `FACE_SLOTS` rather than
+ * restated, so a twelfth content kind lands under 内容页 on its own — a
+ * hand-kept list would have to be remembered, and the one thing this corpus
+ * refuses is a page quietly falling out of review.
+ */
+export const SLOT_FAMILIES: readonly GroupFamily[] = [
+  { label: "边界页", members: FACE_SLOTS.filter((s) => BOUNDARY_SLOTS.includes(s)) },
+  { label: "内容页", members: FACE_SLOTS.filter((s) => !BOUNDARY_SLOTS.includes(s)) },
+]
+
+/**
+ * Headings for the 按组件 index, grouped by what the component draws rather
+ * than by the `kind` it usually serves.
+ *
+ * This is a visual review, and the question a reviewer scans the index with
+ * is "show me the charts" or "show me the card families" — never "show me
+ * everything the `data` kind can reach for". The semantic table in
+ * `skills/pptwise/references/components.md` answers the other question and
+ * stays the place for it.
+ *
+ * Hand-kept, because nothing in the engine groups components this way. That
+ * makes it the one list here that can rot, so `scripts/gallery.test.mts`
+ * fails in both directions: a component the corpus builds and this table
+ * does not name, and a name here the corpus no longer builds.
+ */
+export const COMPONENT_FAMILIES: readonly GroupFamily[] = [
+  {
+    label: "文字",
+    members: [
+      "paragraph",
+      "bullets",
+      "blockquote",
+      "code",
+      "callout",
+      "citation",
+      "insight_panel",
+      "verdict_banner",
+      "tag_row",
+    ],
+  },
+  { label: "卡片", members: ["kpi_cards", "icon_cards", "numbered_cards", "row_cards", "people_cards"] },
+  {
+    label: "图表",
+    members: [
+      "chart · line",
+      "chart · bar",
+      "chart · bar horizontal",
+      "chart · area",
+      "chart · pie",
+      "chart · donut",
+      "chart · scatter",
+      "chart · funnel",
+      "chart · gauge",
+      "chart · dumbbell",
+      "waterfall",
+      "sankey",
+      "progress_donuts",
+    ],
+  },
+  {
+    label: "表格与框架",
+    members: ["data_table", "heatmap", "matrix", "comparison", "swot", "bmc", "pest", "five_forces"],
+  },
+  {
+    label: "流程与结构",
+    members: ["steps", "flowchart", "cycle", "hub_spoke", "rings", "architecture", "timeline", "roadmap", "gantt"],
+  },
+  { label: "图像", members: ["image", "image_grid", "image_compare", "device_mockup"] },
+]
+
 /**
  * Embed a function's own source in the page's script block.
  *
@@ -201,15 +281,61 @@ main { padding: 20px; }
 .bandhead h3 { margin: 0; font-size: 14px; letter-spacing: -0.01em; }
 .bandhead h3 span { font-weight: 400; color: var(--ink-dim); margin-left: 8px; }
 .bandhead p { margin: 2px 0 0; color: var(--ink-dim); font-size: 12px; max-width: 76ch; }
-/* One row per slot or per component: the 24 skins sit side by side and scroll
-   horizontally, so the comparison the row exists for is a single eye sweep
-   rather than a wrapped block the reader has to reassemble. */
-.crossrow { margin: 0 0 20px; }
-.crossrow h3 { margin: 0 0 8px; font-size: 14px; letter-spacing: -0.01em; }
-.crossrow h3 span { font-weight: 400; font-size: 12px; color: var(--ink-dim); margin-left: 8px; }
-.strip { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; scroll-snap-type: x proximity; }
-.strip .card { flex: 0 0 264px; scroll-snap-align: start; }
+/* ── the two cross-cut views ────────────────────────────────────────────
+   Both are two levels deep: an index of one tile per group, then that one
+   group across every theme. The heading of whichever level is on screen is
+   the first thing in the main column, so the reviewer always knows which of
+   the three views they are in and how deep. */
+.viewhead { margin: 2px 0 16px; }
+.viewhead h2 {
+  margin: 0; font-size: 20px; letter-spacing: -0.01em;
+  display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+}
+.viewhead h2 code { font: 650 19px/1.25 ui-monospace, "SF Mono", Menlo, monospace; color: var(--ink); }
+.viewhead h2 code.sub { font-size: 13px; font-weight: 500; color: var(--ink-dim); }
+.viewhead h2 .n { font-weight: 400; font-size: 13px; color: var(--ink-dim); font-variant-numeric: tabular-nums; }
+.viewhead p { margin: 4px 0 0; color: var(--ink-dim); font-size: 13px; max-width: 70ch; }
+
+.crumbs { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 0 0 12px; }
+.crumbs .where { color: var(--ink-dim); font-size: 13px; }
+.crumbs .where::before { content: "› "; }
+.crumbs .btn[disabled] { opacity: 0.4; cursor: default; }
+.crumbs .btn[disabled]:hover { background: var(--panel); }
+
+/* A rule per family. With 48 tiles under six headings the grouping is the
+   only thing telling the reviewer where they are, so it gets a line rather
+   than relying on white space alone. */
+.famhead { margin: 24px 0 10px; padding-top: 11px; border-top: 1px solid var(--line); }
+.famhead h3 { margin: 0; font-size: 15px; font-weight: 650; letter-spacing: -0.01em; }
+.famhead h3 span { font-weight: 400; font-size: 12px; color: var(--ink-dim); margin-left: 8px; font-variant-numeric: tabular-nums; }
+
+.groupgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(196px, 1fr)); gap: 14px; }
+.gcard {
+  appearance: none; font: inherit; color: var(--ink); text-align: left; padding: 0; cursor: pointer;
+  background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+  overflow: hidden; display: flex; flex-direction: column;
+}
+.gcard:hover { border-color: var(--ink-dim); }
+.gcard:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+.gcard .gstage { position: relative; aspect-ratio: ${manifest.slide.width} / ${manifest.slide.height}; background: var(--stage); overflow: hidden; }
+.gcard .gstage svg { display: block; width: 100%; height: 100%; }
+/* How far this group has been judged, in the verdict colours the cards use.
+   The track is the unjudged remainder — the index is also a work list. */
+.gbar { display: flex; height: 4px; background: var(--line); }
+.gbar i { display: block; height: 100%; }
+.gbar .b-pass { background: var(--pass); }
+.gbar .b-limit { background: var(--limit); }
+.gbar .b-rework { background: var(--rework); }
+.gname { padding: 8px 10px 1px; display: flex; align-items: baseline; gap: 7px; flex-wrap: wrap; }
+.gname b { font-weight: 650; font-size: 13px; }
+.gname code { font: 600 12px/1.35 ui-monospace, "SF Mono", Menlo, monospace; word-break: break-word; }
+.gname code.sub { font-weight: 500; font-size: 11px; color: var(--ink-dim); }
+.gfacts { padding: 0 10px 9px; color: var(--ink-dim); font-size: 12px; font-variant-numeric: tabular-nums; }
+
 #quickmap { display: grid; grid-template-columns: repeat(auto-fill, minmax(148px, 1fr)); gap: 10px; padding: 14px 18px 4px; }
+/* The hidden attribute alone loses to the display rule above, and the
+   quickmap stands down outside the theme view — see syncChrome. */
+#quickmap[hidden] { display: none; }
 .qm { border: 1px solid var(--line); border-radius: 8px; background: var(--panel); padding: 0; cursor: pointer; overflow: hidden; text-align: left; }
 .qm:hover { border-color: var(--ink-dim); }
 .qm[aria-pressed="true"] { outline: 2px solid var(--focus); outline-offset: 1px; }
@@ -419,10 +545,12 @@ kbd {
   const SVGS = JSON.parse(document.getElementById("svg-data").textContent);
   const EDGES = JSON.parse(document.getElementById("edge-data").textContent);
   const STORE_KEY = "pptwise-gallery-verdicts-v1";
-  // Row order for the cross-cut view, straight from the corpus' own slot list
-  // rather than from whatever order this build's menus happened to emit.
-  const SLOT_ORDER = ${jsonScript(FACE_SLOTS)};
   const SLOT_LABELS = ${jsonScript(SLOT_LABELS)};
+  // Headings and group order for the two cross-cut indexes. The slot half is
+  // built from the corpus' own slot list rather than from whatever order this
+  // build's menus happened to emit.
+  const SLOT_FAMILIES = ${jsonScript(SLOT_FAMILIES)};
+  const COMPONENT_FAMILIES = ${jsonScript(COMPONENT_FAMILIES)};
   const SECTION_ORDER = new Map(MANIFEST.sections.map((s, i) => [s.id, i]));
 
   // Shipped in as source rather than restated here, so the rule the reviewer
@@ -567,12 +695,21 @@ ${inlineRule(verdictFreshness)}
   }
 
   function cardFacts(p) {
+    // Inside a group detail the heading already named the group, so the facts
+    // line drops whatever it repeats and keeps only what varies card to card.
+    const detail = activeGroup() !== null;
     const bits = [];
-    if (state.view !== "theme") bits.push(p.subject);
+    // On a component page the subject is the component id — constant down a
+    // component detail, so the heading has it covered. On a face page it is
+    // the layout this theme's menu picked for the slot, which is the whole
+    // thing a 讲法 detail exists to compare, so it stays.
+    if (state.view !== "theme" && !(detail && state.view === "component")) bits.push(p.subject);
     if (p.band === "deck") bits.push("第 " + p.page + " / " + p.pageCount + " 页", p.slideType);
     // A slot already names the slide type it belongs to, and every component
     // page is a content page — saying so again is noise on 1500 cards.
-    if (p.slot) bits.push(SLOT_LABELS[p.slot] ? SLOT_LABELS[p.slot] + " " + p.slot : p.slot);
+    if (p.slot && !(detail && state.view === "slot")) {
+      bits.push(SLOT_LABELS[p.slot] ? SLOT_LABELS[p.slot] + " " + p.slot : p.slot);
+    }
     bits.push(p.languageLabel);
     return bits;
   }
@@ -729,12 +866,92 @@ ${inlineRule(verdictFreshness)}
     }
   }, { rootMargin: "600px 0px" });
 
+  // The same deal for the cross-cut index's group tiles. They are rebuilt on
+  // every filter change, and mounting 48 documents per debounced keystroke is
+  // the kind of cost that makes a 36MB page feel broken.
+  const thumbIo = new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      if (!e.isIntersecting) continue;
+      if (mountSvg(e.target, e.target.dataset.page)) thumbIo.unobserve(e.target);
+    }
+  }, { rootMargin: "600px 0px" });
+
   // ── filtering and layout ───────────────────────────────────────────────
   // Three views over one set of rendered pages. The two cross-cut views add
   // no render at all: they regroup the same manifest, so the theme axis and
   // the "how does this one face look across all 24 skins" axis cost the same
   // four seconds of generation.
-  const state = { view: "theme", language: "all", theme: "all", verdict: "all", finding: "all", query: "" };
+  //
+  // Both cross-cut views are two levels deep. Flat, they were one page of 48
+  // stacked 26-card rows with nothing to say where one comparison ended and
+  // the next began — the reviewer could not see the organization, so there
+  // was effectively none. An index of one tile per group answers "what is in
+  // here" on the first screen, and a detail answers "how does this one thing
+  // look everywhere" with nothing else on the page competing.
+  const CROSS = {
+    slot: {
+      key: "slot",
+      label: "按讲法",
+      unit: "种讲法",
+      noun: "讲法",
+      lead: "一格一种讲法，点开看每套主题的菜单给它派了哪张脸。",
+      families: SLOT_FAMILIES,
+      nameOf: (v) => ({ zh: SLOT_LABELS[v] || "", code: v }),
+    },
+    component: {
+      key: "component",
+      label: "按组件",
+      unit: "个组件",
+      noun: "组件",
+      lead: "一格一个组件，点开看它穿上每套主题的皮各画成什么样。",
+      families: COMPONENT_FAMILIES,
+      nameOf: (v) => ({ zh: "", code: v }),
+    },
+  };
+
+  const groupLabel = (view, value) => {
+    const n = view.nameOf(value);
+    return n.zh ? n.zh + " " + n.code : n.code;
+  };
+
+  /**
+   * Every group this build actually has, in family order. Anything the family
+   * table does not name is appended under 其他 rather than dropped: a gallery
+   * that silently hides a component from review is the one failure this
+   * corpus refuses (see assertFullCoverage in matrix.ts), and a visible
+   * 其他 heading is how that refusal reaches the reviewer's eye.
+   */
+  function groupPlan(view) {
+    const present = new Set();
+    for (const p of MANIFEST.pages) if (p[view.key] !== undefined) present.add(p[view.key]);
+    const plan = [];
+    const placed = new Set();
+    for (const fam of view.families) {
+      const members = fam.members.filter((m) => present.has(m));
+      for (const m of members) placed.add(m);
+      if (members.length > 0) plan.push({ label: fam.label, members });
+    }
+    const rest = [...present].filter((m) => !placed.has(m)).sort();
+    if (rest.length > 0) plan.push({ label: "其他", members: rest });
+    return plan;
+  }
+
+  const PLANS = { slot: groupPlan(CROSS.slot), component: groupPlan(CROSS.component) };
+  const FAMILY_OF = { slot: new Map(), component: new Map() };
+  for (const key of ["slot", "component"]) {
+    for (const fam of PLANS[key]) for (const m of fam.members) FAMILY_OF[key].set(m, fam.label);
+  }
+
+  const state = {
+    view: "theme",
+    // Which group each cross-cut view is drilled into, null on its index.
+    // Kept per view so tabbing away and back puts the reviewer where they
+    // left off instead of at the top of the index — and so neither view can
+    // ever be handed the other's group id.
+    group: { slot: null, component: null },
+    language: "all", theme: "all", verdict: "all", finding: "all", query: "",
+  };
+  const activeGroup = () => (state.view === "theme" ? null : state.group[state.view]);
   let visible = [];
 
   function matches(p) {
@@ -742,6 +959,11 @@ ${inlineRule(verdictFreshness)}
     // another band is not "filtered out", it has nowhere to go.
     if (state.view === "slot" && p.band !== "face") return false;
     if (state.view === "component" && p.band !== "component") return false;
+    // Inside a group detail the group is a filter like any other. That is
+    // what scopes the header tally, the empty state and — because the viewer
+    // queues off it — the lightbox's own prev/next to this one group.
+    const group = activeGroup();
+    if (group !== null && p[CROSS[state.view].key] !== group) return false;
     if (state.language !== "all" && p.language !== state.language) return false;
     if (state.theme !== "all" && p.section !== state.theme) return false;
     if (state.verdict !== "all") {
@@ -808,41 +1030,200 @@ ${inlineRule(verdictFreshness)}
     }
   }
 
+  /** Theme order, the axis every cross-cut group is compared along. */
+  function bySection(a, b) {
+    const d = (SECTION_ORDER.get(a.section) ?? 0) - (SECTION_ORDER.get(b.section) ?? 0);
+    return d !== 0 ? d : a.id.localeCompare(b.id);
+  }
+
+  function emptyNote() {
+    const empty = document.createElement("p");
+    empty.className = "empty";
+    empty.textContent = "没有符合条件的页面。";
+    return empty;
+  }
+
+  /** Heading for whichever level of a cross-cut view is on screen. */
+  function viewHead(parts, lead) {
+    const head = document.createElement("div");
+    head.className = "viewhead";
+    const h2 = document.createElement("h2");
+    for (const part of parts) h2.appendChild(part);
+    head.appendChild(h2);
+    if (lead) {
+      const p = document.createElement("p");
+      p.textContent = lead;
+      head.appendChild(p);
+    }
+    return head;
+  }
+
+  const headText = (tag, className, text) => {
+    const el = document.createElement(tag);
+    if (className) el.className = className;
+    el.textContent = text;
+    return el;
+  };
+
   /**
-   * One row per value of the grouping key, each row's pages ordered by
-   * section — so a row reads left to right as the same thing wearing 24 skins.
+   * Level one: one tile per group, under its family heading.
+   *
+   * The tile carries the first page of the detail it opens, so the thumbnail
+   * the reviewer clicked is the first slide they land on, and a verdict bar
+   * so the index doubles as the work list — which of the 48 still need a look.
    */
-  function renderCrossView(main, key, rowOrder, labelFor) {
-    const rows = new Map();
+  function renderGroupIndex(main, view) {
+    const byGroup = new Map();
     for (const p of visible) {
-      const value = p[key];
+      const value = p[view.key];
       if (value === undefined) continue;
-      const list = rows.get(value) || [];
+      const list = byGroup.get(value) || [];
       list.push(p);
-      rows.set(value, list);
+      byGroup.set(value, list);
     }
-    const ordered = [...rows.keys()].sort((a, b) => {
-      const ia = rowOrder.indexOf(a), ib = rowOrder.indexOf(b);
-      // A value the fixed order does not know sinks below the ones it does,
-      // rather than silently taking position 0 the way indexOf -1 would.
-      if (ia !== ib) return (ia < 0 ? rowOrder.length : ia) - (ib < 0 ? rowOrder.length : ib);
-      return String(a).localeCompare(String(b));
-    });
-    for (const value of ordered) {
-      const pages = rows.get(value).slice().sort((a, b) => {
-        const d = (SECTION_ORDER.get(a.section) ?? 0) - (SECTION_ORDER.get(b.section) ?? 0);
-        return d !== 0 ? d : a.id.localeCompare(b.id);
-      });
-      const row = document.createElement("section");
-      row.className = "crossrow";
+
+    const plan = PLANS[view.key];
+    const total = plan.reduce((n, fam) => n + fam.members.length, 0);
+    const shown = byGroup.size === total ? String(total) : byGroup.size + " / " + total;
+    main.appendChild(
+      viewHead([headText("span", "", view.label), headText("span", "n", shown + " " + view.unit)], view.lead),
+    );
+
+    for (const fam of plan) {
+      const members = fam.members.filter((m) => byGroup.has(m));
+      if (members.length === 0) continue;
+      const famHead = document.createElement("div");
+      famHead.className = "famhead";
       const h3 = document.createElement("h3");
-      h3.textContent = labelFor(value);
+      h3.textContent = fam.label;
       const count = document.createElement("span");
-      count.textContent = pages.length + " 张";
+      count.textContent =
+        members.length + " " + view.unit + " · " + members.reduce((n, m) => n + byGroup.get(m).length, 0) + " 张";
       h3.appendChild(count);
-      row.append(h3, grid(pages, "strip"));
-      main.appendChild(row);
+      famHead.appendChild(h3);
+      const box = document.createElement("div");
+      box.className = "groupgrid";
+      for (const m of members) box.appendChild(buildGroupCard(view, m, byGroup.get(m)));
+      main.append(famHead, box);
     }
+  }
+
+  function buildGroupCard(view, value, pages) {
+    const ordered = pages.slice().sort(bySection);
+    const cell = document.createElement("button");
+    cell.type = "button";
+    cell.className = "gcard";
+    cell.dataset.group = value;
+    cell.title = "打开 " + groupLabel(view, value);
+
+    const stage = document.createElement("div");
+    stage.className = "gstage";
+    const sample = ordered.find((p) => !p.skipped);
+    if (sample) {
+      stage.dataset.page = sample.id;
+      thumbIo.observe(stage);
+    } else {
+      // Nothing in this group rendered. An empty grey tile would be
+      // indistinguishable from one still mounting, so it says so.
+      stage.appendChild(headText("div", "skip", "未能渲染"));
+    }
+
+    const bar = document.createElement("div");
+    bar.className = "gbar";
+    let judged = 0;
+    for (const key of ["pass", "limit", "rework"]) {
+      const n = ordered.filter((p) => (verdicts[p.id] || {}).verdict === key).length;
+      judged += n;
+      if (n === 0) continue;
+      const seg = document.createElement("i");
+      seg.className = "b-" + key;
+      seg.style.width = (n / ordered.length) * 100 + "%";
+      bar.appendChild(seg);
+    }
+
+    const name = document.createElement("div");
+    name.className = "gname";
+    const parts = view.nameOf(value);
+    if (parts.zh) name.appendChild(headText("b", "", parts.zh));
+    name.appendChild(headText("code", parts.zh ? "sub" : "", parts.code));
+
+    cell.append(stage, bar, name, headText("div", "gfacts", ordered.length + " 张 · 已评 " + judged));
+    cell.addEventListener("click", () => openGroup(view.key, value));
+    return cell;
+  }
+
+  /**
+   * Level two: one group across every theme, ordered by theme, and nothing
+   * else on the page. The visible set is already narrowed to it (see the
+   * group branch in matches),
+   * so the header tally and the viewer queue are scoped without asking.
+   */
+  function renderGroupDetail(main, view, value) {
+    const crumbs = document.createElement("div");
+    crumbs.className = "crumbs";
+    const back = document.createElement("button");
+    back.type = "button";
+    back.className = "btn";
+    back.textContent = "← " + view.label;
+    back.addEventListener("click", () => openGroup(view.key, null));
+    crumbs.appendChild(back);
+    const family = FAMILY_OF[view.key].get(value);
+    if (family) crumbs.appendChild(headText("span", "where", family));
+    crumbs.appendChild(headText("div", "spacer", ""));
+
+    // Straight into the neighbouring group, so working the whole index does
+    // not mean bouncing off it between every two comparisons.
+    const flat = [];
+    for (const fam of PLANS[view.key]) for (const m of fam.members) flat.push(m);
+    const at = flat.indexOf(value);
+    const nav = (delta, text) => {
+      const neighbour = at < 0 ? undefined : flat[at + delta];
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "btn";
+      btn.textContent = text;
+      if (neighbour === undefined) btn.disabled = true;
+      else {
+        btn.title = groupLabel(view, neighbour);
+        btn.addEventListener("click", () => openGroup(view.key, neighbour));
+      }
+      return btn;
+    };
+    crumbs.append(nav(-1, "← 上一" + view.noun), nav(1, "下一" + view.noun + " →"));
+    main.appendChild(crumbs);
+
+    const parts = view.nameOf(value);
+    const head = [];
+    if (parts.zh) head.push(headText("span", "", parts.zh), headText("code", "sub", parts.code));
+    else head.push(headText("code", "", parts.code));
+    head.push(headText("span", "n", visible.length + " 张"));
+    main.appendChild(viewHead(head, ""));
+
+    main.appendChild(visible.length === 0 ? emptyNote() : grid(visible.slice().sort(bySection), "grid"));
+  }
+
+  function openGroup(viewKey, value) {
+    state.group[viewKey] = value;
+    render();
+    // Landing mid-page after a level change reads as a broken jump, and the
+    // heading that says where you now are is at the top.
+    window.scrollTo(0, 0);
+  }
+
+  /**
+   * 主题速览 is a theme-view instrument: every cell is a jump to a section
+   * heading, and the cross-cut views have no section headings to jump to.
+   * It used to answer a click there by switching the tab back to 按主题 —
+   * the reviewer asked for one theme and lost the view they were in.
+   *
+   * So it stands down outside 按主题 rather than being re-taught to filter.
+   * Its filtering twin, the 全部主题 dropdown, is in the header in every
+   * view and already shares its state; and its 25 thumbnails directly above
+   * an index of group tiles would be a second thumbnail grid competing with
+   * the one the reviewer came to read.
+   */
+  function syncChrome() {
+    document.getElementById("quickmap").hidden = state.view !== "theme";
   }
 
   function render() {
@@ -851,26 +1232,24 @@ ${inlineRule(verdictFreshness)}
     // stay in the observer, so switching theme or typing in the search box
     // accumulated dead references and callbacks for the life of the page.
     io.disconnect();
+    thumbIo.disconnect();
     main.textContent = "";
     cards.clear();
     visible = MANIFEST.pages.filter(matches);
+    syncChrome();
 
-    if (visible.length === 0) {
-      const empty = document.createElement("p");
-      empty.className = "empty";
-      empty.textContent = "没有符合条件的页面。";
-      main.appendChild(empty);
-      refreshTally();
-      return;
-    }
-
-    if (state.view === "theme") renderThemeView(main);
-    else if (state.view === "slot") {
-      renderCrossView(main, "slot", SLOT_ORDER, (slot) =>
-        (SLOT_LABELS[slot] ? SLOT_LABELS[slot] + " " : "") + slot);
+    if (state.view === "theme") {
+      if (visible.length === 0) main.appendChild(emptyNote());
+      else renderThemeView(main);
     } else {
-      const order = [...new Set(MANIFEST.pages.filter((p) => p.component).map((p) => p.component))];
-      renderCrossView(main, "component", order, (id) => id);
+      const view = CROSS[state.view];
+      const group = state.group[state.view];
+      // A filter that empties a group still renders the group's chrome. The
+      // reviewer keeps their place and can widen the filter; bouncing them
+      // back to the index would look like the click had been undone.
+      if (group !== null) renderGroupDetail(main, view, group);
+      else if (visible.length === 0) main.appendChild(emptyNote());
+      else renderGroupIndex(main, view);
     }
 
     // Observed after insertion, so the first screenful has real geometry
@@ -883,15 +1262,23 @@ ${inlineRule(verdictFreshness)}
   const viewer = document.getElementById("viewer");
   const frame = document.getElementById("viewer-frame");
   let viewerIndex = -1;
-  // The set the viewer pages through. In the theme view a page is judged
-  // inside its own section, so the queue scopes to that section; a cross-cut
-  // view is itself the comparison set, so the queue is the visible set.
+  // The set the viewer pages through, always the comparison the reviewer
+  // opened it from. In the theme view a page is judged inside its own
+  // section, so the queue scopes to that section. In a cross-cut view the
+  // group detail is the comparison, and the visible set is narrowed to it
+  // — so arrowing off the end of a group stops there instead of walking on
+  // into the next one, which is what the flat view used to do.
   let viewerQueue = [];
 
   function openViewer(id) {
     const opened = visible.find((p) => p.id === id);
     if (!opened) return;
-    viewerQueue = state.view === "theme" ? visible.filter((p) => p.section === opened.section) : visible;
+    // Sorted the way the cards under it are, so ← and → walk the grid in the
+    // order the eye just read it.
+    viewerQueue =
+      state.view === "theme"
+        ? visible.filter((p) => p.section === opened.section)
+        : visible.slice().sort(bySection);
     viewerIndex = viewerQueue.findIndex((p) => p.id === id);
     if (viewerIndex < 0) return;
     paintViewer();
@@ -946,7 +1333,15 @@ ${inlineRule(verdictFreshness)}
   });
 
   document.addEventListener("keydown", (ev) => {
-    if (!viewer.open) return;
+    if (!viewer.open) {
+      // Esc backs out one level, the same key that closes the viewer one
+      // level further in — so the way out is the same key wherever you are.
+      if (ev.key !== "Escape" || activeGroup() === null) return;
+      if (ev.target instanceof HTMLInputElement || ev.target instanceof HTMLTextAreaElement) return;
+      ev.preventDefault();
+      openGroup(state.view, null);
+      return;
+    }
     const typing = ev.target instanceof HTMLInputElement || ev.target instanceof HTMLTextAreaElement;
     if (ev.key === "ArrowRight") { ev.preventDefault(); step(1); }
     else if (ev.key === "ArrowLeft") { ev.preventDefault(); step(-1); }
@@ -963,7 +1358,11 @@ ${inlineRule(verdictFreshness)}
     if (!btn) return;
     state.view = btn.dataset.view;
     for (const b of ev.currentTarget.children) b.setAttribute("aria-pressed", String(b === btn));
+    // Filters are deliberately untouched — a view is a different cut of the
+    // same narrowed set, not a fresh start. Where each cross-cut view was
+    // drilled to survives too, in state.group.
     render();
+    window.scrollTo(0, 0);
   });
   document.getElementById("surround").addEventListener("click", (ev) => {
     const btn = ev.target.closest("button");
@@ -975,9 +1374,9 @@ ${inlineRule(verdictFreshness)}
   document.getElementById("theme-filter").addEventListener("change", (e) => { state.theme = e.target.value; render(); syncQuickmap(); });
 
   // ── 主题速览 ────────────────────────────────────────────────────────────
-  // 一格一节，取该节样张里的封面。点击是跳转，不是第二套筛选状态：切回主题
-  // 视角、滚到那一节。当前主题筛选选中的那一格仍然高亮，好让下拉框和速览条
-  // 说的是同一件事。
+  // 一格一节，取该节样张里的封面。点击是跳转，不是第二套筛选状态：滚到那一
+  // 节。当前主题筛选选中的那一格仍然高亮，好让下拉框和速览条说的是同一件事。
+  // 只在按主题视角出现（见 syncChrome）。
   function syncQuickmap() {
     for (const b of document.querySelectorAll("#quickmap .qm")) {
       b.setAttribute("aria-pressed", String(b.dataset.section === state.theme));
@@ -992,7 +1391,6 @@ ${inlineRule(verdictFreshness)}
   function buildQuickmap() {
     const host = document.getElementById("quickmap");
     const select = document.getElementById("theme-filter");
-    const viewButtons = document.getElementById("view-filter").children;
     for (const section of MANIFEST.sections) {
       const sample =
         MANIFEST.pages.find((p) => p.section === section.id && p.band === "deck" && p.slideType === "cover") ||
@@ -1011,21 +1409,14 @@ ${inlineRule(verdictFreshness)}
       name.textContent = section.label === section.id ? section.id : section.label + " · " + section.id;
       cell.append(stage, name);
       cell.addEventListener("click", () => {
-        let rerender = false;
-        if (state.view !== "theme") {
-          state.view = "theme";
-          for (const b of viewButtons) b.setAttribute("aria-pressed", String(b.dataset.view === "theme"));
-          rerender = true;
-        }
         // A theme filter narrowed to some other section would leave nothing to
         // scroll to, so widen it rather than jumping into an empty page.
         if (state.theme !== "all" && state.theme !== section.id) {
           select.value = "all";
           state.theme = "all";
           syncQuickmap();
-          rerender = true;
+          render();
         }
-        if (rerender) render();
         jumpToSection(section.id);
       });
       host.appendChild(cell);

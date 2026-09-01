@@ -26,8 +26,8 @@ import { THEME_TABLE_REQUIRED_SURFACES } from "../evals/gallery/corpus/theme-slo
 import { LAYOUT_REGISTRY } from "@/layouts/registry"
 import { BASELINE_THEME, corpusAssets, type CorpusAssets } from "../evals/gallery/corpus/decks"
 import { LANGUAGE_IDS, LEXICONS, type LanguageId } from "../evals/gallery/corpus/lexicon"
-import { buildGalleryHtml } from "../evals/gallery/html"
-import { assertFullCoverage, buildMatrix, unservedLayoutIds, UNSERVED_SECTION } from "../evals/gallery/matrix"
+import { buildGalleryHtml, COMPONENT_FAMILIES, SLOT_FAMILIES } from "../evals/gallery/html"
+import { assertFullCoverage, buildMatrix, FACE_SLOTS, unservedLayoutIds, UNSERVED_SECTION } from "../evals/gallery/matrix"
 import { installNodePlatform } from "@/platform/node"
 
 // `renderMatrix` audits every page it renders, and the auditor parses SVG
@@ -120,6 +120,32 @@ describe("gallery coverage", () => {
       const langs = new Set(jobs.filter((j) => j.section === themeId).map((j) => j.language))
       expect([...langs].sort(), themeId).toEqual(themeId === BASELINE_THEME ? ["en", "mixed", "zh"] : ["zh"])
     }
+  })
+
+  // The 按组件 and 按讲法 views are indexes of group tiles under family
+  // headings, and a group missing from its family table would be a page the
+  // review page never offers to open. That is the same failure
+  // `assertFullCoverage` exists to refuse, one level up in the shell — so it
+  // is checked the same way, in both directions.
+  it("files every component the corpus builds under a named family, and names no other", async () => {
+    const jobs = buildMatrix(themeIds, await assets(), {
+      only: "component",
+      languages: ["zh"],
+      section: BASELINE_THEME,
+    })
+    const built = [...new Set(jobs.map((j) => j.component!))].sort()
+    const filed = COMPONENT_FAMILIES.flatMap((f) => f.members)
+
+    expect(built.filter((id) => !filed.includes(id))).toEqual([])
+    expect(filed.filter((id) => !built.includes(id)).sort()).toEqual([])
+    // A component filed twice would draw two tiles for one comparison.
+    expect(filed.length).toBe(new Set(filed).size)
+  }, 60_000)
+
+  it("files every menu slot under a named family, and names no other", () => {
+    const filed = SLOT_FAMILIES.flatMap((f) => f.members)
+    expect([...filed].sort()).toEqual([...FACE_SLOTS].sort())
+    expect(filed.length).toBe(new Set(filed).size)
   })
 })
 
