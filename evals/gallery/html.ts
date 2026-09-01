@@ -23,7 +23,7 @@
 
 import { slideEdgeFill } from "@/lib/slide-edge"
 import { namespaceSvgIds, svgIdPrefix } from "@/lib/svg-ids"
-import { FACE_SLOTS } from "./matrix"
+import { BOUNDARY_SLOTS, FACE_SLOTS } from "./matrix"
 import { verdictFreshness, type Manifest } from "./render"
 
 /**
@@ -53,9 +53,6 @@ export interface GroupFamily {
   readonly label: string
   readonly members: readonly string[]
 }
-
-/** The three slots that open and close a deck. See AGENTS.md. */
-const BOUNDARY_SLOTS: readonly string[] = ["cover", "chapter", "ending"]
 
 /**
  * Headings for the 按讲法 index. Derived from `FACE_SLOTS` rather than

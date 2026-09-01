@@ -20,6 +20,7 @@
 
 import { COMPONENT_TYPES, type PageKind, type PptxIR } from "@/ir"
 import { LAYOUT_REGISTRY } from "@/layouts/registry"
+import { resolveEffectiveFace } from "@/render/layout-selection"
 import { getThemeDefinition } from "@/themes/definitions"
 import { CHART_VARIANTS, COMPONENT_BUILDERS } from "./corpus/components"
 import {
@@ -63,6 +64,9 @@ export const FACE_SLOTS = [
   "ending",
 ] as const
 
+/** The three slots that open and close a deck. See AGENTS.md. */
+export const BOUNDARY_SLOTS: readonly string[] = ["cover", "chapter", "ending"]
+
 export interface Job {
   /** Stable, filename-safe page id — also the key verdicts are recorded against. */
   readonly id: string
@@ -76,6 +80,24 @@ export interface Job {
   readonly slot?: string
   /** Component id (chart and form variants carry their own), when the band is `"component"`. */
   readonly component?: string
+  /**
+   * The face that actually drew this page.
+   *
+   * On the face band it is the subject. On the deck band it is whatever the
+   * section theme's menu picked for that page — the same lookup the renderer
+   * made, asked once more here so a review can be cut by face code as well as
+   * by menu choice. Deliberately unset on the component band: those 1248
+   * pages ride whichever face their component's kind routes to, and they
+   * would land on 18 of the 134 faces and bury the pages that differ. See
+   * `FACE_FAMILIES` in `html.ts`.
+   */
+  readonly face?: string
+  /**
+   * The menu slot that routed this page to `face` — a content kind, or a
+   * boundary slide type. Equals `slot` on the face band, and is what the deck
+   * band has instead of one.
+   */
+  readonly faceSlot?: string
   readonly language: LanguageId
   /** Human-readable language name, for the gallery's own shell. */
   readonly languageLabel: string
@@ -139,6 +161,28 @@ export function servedLayoutIds(themeIds: readonly string[]): Set<string> {
   return served
 }
 
+/**
+ * One theme's menu, flattened to slot → face in `FACE_SLOTS` reading order.
+ *
+ * The face band walks it to lay the menu out page by page, the manifest
+ * carries it per section so the review page can print a theme's whole
+ * skeleton in one strip, and both therefore say the same thing by
+ * construction. A slot the menu does not offer is absent, not empty.
+ */
+export function menuFaces(themeId: string): Record<string, string> {
+  const menu = getThemeDefinition(themeId).menu
+  const faces: Record<string, string> = {}
+  for (const slot of FACE_SLOTS) {
+    if (slot === "cover" || slot === "chapter" || slot === "ending") {
+      faces[slot] = menu[slot].face
+      continue
+    }
+    const entry = menu.content[slot as PageKind]
+    if (entry !== undefined) faces[slot] = entry.face
+  }
+  return faces
+}
+
 /** Registered layouts no menu offers. They get the appendix section. */
 export function unservedLayoutIds(themeIds: readonly string[]): string[] {
   const served = servedLayoutIds(themeIds)
@@ -196,12 +240,23 @@ export function buildMatrix(
     if (wantsBand("deck")) {
       const ir = themeDeck(themeId, nativeLexiconFor(themeId), assets[themeLanguage])
       ir.slides.forEach((slide, i) => {
+        // Asked of the renderer's own resolver rather than re-read off the
+        // menu here, so the gallery credits the face that drew the page and
+        // not the one a second copy of the lookup would have guessed. An
+        // image-cover page is drawn by the dedicated image route with the
+        // menu's face retained only for slot validation, so it names no face
+        // rather than crediting one that never ran.
+        const routed = resolveEffectiveFace(ir, slide)
+        const face = routed.route === "layout" || routed.route === "takeover" ? routed.layoutId : null
         push({
           id: `${safe(themeId)}--deck--p${String(i + 1).padStart(2, "0")}`,
           section: themeId,
           sectionLabel,
           band: "deck",
           subject: themeId,
+          ...(face !== null
+            ? { face, faceSlot: slide.type === "content" ? slide.kind : slide.type }
+            : {}),
           language: themeLanguage,
           theme: themeId,
           page: i + 1,
@@ -216,16 +271,8 @@ export function buildMatrix(
 
     // ── face band: this theme's menu, laid out one face per slot ─────────
     if (wantsBand("face")) {
-      const entries: Array<{ slot: string; layoutId: string; kind?: PageKind }> = []
-      for (const slot of FACE_SLOTS) {
-        if (slot === "cover" || slot === "chapter" || slot === "ending") {
-          entries.push({ slot, layoutId: def.menu[slot].face })
-          continue
-        }
-        const entry = def.menu.content[slot as PageKind]
-        if (entry !== undefined) entries.push({ slot, layoutId: entry.face, kind: slot as PageKind })
-      }
-      for (const { slot, layoutId, kind } of entries) {
+      for (const [slot, layoutId] of Object.entries(menuFaces(themeId))) {
+        const kind = BOUNDARY_SLOTS.includes(slot) ? undefined : (slot as PageKind)
         const ir = layoutPage(layoutId, nativeLexiconFor(themeId), assets[themeLanguage], themeId, kind)
         push({
           id: `${safe(themeId)}--face--${slot}--${safe(layoutId)}`,
@@ -234,6 +281,8 @@ export function buildMatrix(
           band: "face",
           subject: layoutId,
           slot,
+          face: layoutId,
+          faceSlot: slot,
           language: themeLanguage,
           theme: themeId,
           page: 1,
@@ -292,6 +341,8 @@ export function buildMatrix(
         band: "face",
         subject: layoutId,
         slot,
+        face: layoutId,
+        faceSlot: slot,
         language: themeLanguage,
         theme: BASELINE_THEME,
         page: 1,

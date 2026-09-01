@@ -20,7 +20,7 @@ import { join } from "node:path"
 import { renderSlideSvg, validateIr } from "@/api"
 import { CANVAS_H_PX, CANVAS_W_PX } from "@/constants"
 import { auditDeck } from "@/audit/deck-audit"
-import { BAND_IDS, UNSERVED_SECTION, type BandId, type Job } from "./matrix"
+import { BAND_IDS, menuFaces, UNSERVED_SECTION, type BandId, type Job } from "./matrix"
 import { pruneGalleryDir } from "./prune"
 
 export interface ManifestPage {
@@ -34,6 +34,14 @@ export interface ManifestPage {
   readonly slot?: string
   /** Component id, on `component` pages only. */
   readonly component?: string
+  /**
+   * The face that drew this page, on the `face` and `deck` bands. The review
+   * page's 按版式 axis is exactly the set of pages carrying it — see `Job.face`
+   * for why the component band stays out.
+   */
+  readonly face?: string
+  /** The menu slot that routed this page to `face`: a content kind or a boundary type. */
+  readonly faceSlot?: string
   readonly language: string
   readonly languageLabel: string
   readonly theme: string
@@ -83,6 +91,15 @@ export interface ManifestSection {
   /** One line saying what this section is here to answer. */
   readonly blurb: string
   readonly pages: readonly string[]
+  /**
+   * This theme's whole menu, slot → face, in `FACE_SLOTS` order. The review
+   * page prints it as the section's skeleton strip.
+   *
+   * Read from the theme rather than from the pages this run happened to
+   * render, so `--only=deck` still shows the menu it drew from. Absent on the
+   * appendix, which is a pile of faces no menu offers, not a theme.
+   */
+  readonly menu?: Readonly<Record<string, string>>
 }
 
 /** A stripe inside every section: sample deck, menu faces, component skins. */
@@ -94,12 +111,17 @@ export interface ManifestBand {
 
 export interface Manifest {
   /**
-   * 3 since the review is cut theme first: `tables` is gone and every page
-   * names its `section` and `band` instead. A v2 reader cannot be salvaged
-   * by a fallback — the axis it grouped by no longer exists — so the version
-   * is bumped rather than the old field being faked.
+   * 3 was the theme-first cut: `tables` gone, every page naming its `section`
+   * and `band` instead. A v2 reader could not be salvaged by a fallback —
+   * the axis it grouped by no longer existed — so that bump fenced it out.
+   *
+   * 4 adds `face`/`faceSlot` to pages and `menu` to sections, all optional
+   * and all additive: a v3 reader still reads a v4 file correctly. The number
+   * moves anyway because a manifest outlives the code that wrote it, and a
+   * reader that finds no faces should be able to tell "this build predates
+   * the face axis" from "these pages have no face".
    */
-  readonly manifestVersion: 3
+  readonly manifestVersion: 4
   readonly generator: string
   readonly pptwiseVersion: string
   readonly generatedAt: string
@@ -254,6 +276,8 @@ export function renderMatrix(jobs: readonly Job[], outDir: string, pptwiseVersio
       subject: job.subject,
       ...(job.slot !== undefined ? { slot: job.slot } : {}),
       ...(job.component !== undefined ? { component: job.component } : {}),
+      ...(job.face !== undefined ? { face: job.face } : {}),
+      ...(job.faceSlot !== undefined ? { faceSlot: job.faceSlot } : {}),
       language: job.language,
       languageLabel: job.languageLabel,
       theme: job.theme,
@@ -338,6 +362,7 @@ export function renderMatrix(jobs: readonly Job[], outDir: string, pptwiseVersio
       label: own[0]!.sectionLabel,
       blurb: sectionBlurb(id, own),
       pages: own.map((p) => p.id),
+      ...(id === UNSERVED_SECTION ? {} : { menu: menuFaces(id) }),
     }
   })
   const bands: ManifestBand[] = BAND_IDS.filter((id) => pages.some((p) => p.band === id)).map((id) => ({
@@ -347,7 +372,7 @@ export function renderMatrix(jobs: readonly Job[], outDir: string, pptwiseVersio
   }))
 
   const manifest: Manifest = {
-    manifestVersion: 3,
+    manifestVersion: 4,
     generator: "pptwise gallery",
     pptwiseVersion,
     generatedAt: new Date().toISOString(),
