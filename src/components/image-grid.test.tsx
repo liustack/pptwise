@@ -52,11 +52,11 @@ describe("image_grid component", () => {
     expect(h).toBeLessThanOrEqual(340 + 26)
   })
 
-  it("2x2 layout for 4 items stays within the grid height budget and drops captions", () => {
+  it("2x2 layout for 4 items keeps the grid height budget and still paints captions", () => {
     const component = {
       type: "image_grid" as const,
       items: [
-        { asset_id: "a", caption: "会被忽略" },
+        { asset_id: "a", caption: "第一格图注" },
         { asset_id: "b" },
         { asset_id: "c" },
         { asset_id: "d" },
@@ -64,8 +64,12 @@ describe("image_grid component", () => {
     }
     const { container } = svg(<>{imageGrid.render(component, box, ctx)}</>)
     expect(container.querySelectorAll("image")).toHaveLength(4)
-    // 多行网格 caption 会与下行图重叠——不渲染
-    expect(container.textContent).not.toContain("会被忽略")
+    // 多行网格把 caption 收进每格底条，不再整批丢掉：一条作者写的图注
+    // 无声消失，页面上没有省略号，validate 不报错，正是要根除的那种丢失。
+    expect(container.textContent).toContain("第一格图注")
+    const caption = Array.from(container.querySelectorAll("text")).find((t) => t.textContent === "第一格图注")!
+    // 底条在本格之内，行 0 的图注不越过行 1 的图上缘（ch=165, 行 1 从 175 起）。
+    expect(Number(caption.getAttribute("y"))).toBeLessThan(175)
     expect(imageGrid.measure(component, box.w, ctx)).toBe(340)
   })
 

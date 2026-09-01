@@ -65,12 +65,25 @@ function gridImageAreaH(component: ImageGridComponent, w: number): number {
 }
 
 /**
- * caption 仅在单行网格显示：多行形态（4 图 2×2、emphasis=first 的 1 大
- * N 小）里格下 caption 会与下一行图重叠，直接忽略（measure 同步不留白）。
+ * 多行形态：4 图 2×2，以及 emphasis="first" 的 1 大 N 小。
+ *
+ * 这两种形态里，挂在格子下缘外侧的 caption 会压到下一行的图上——原先的
+ * 做法是整批不画（measure 同步不留白）。作者写的图注就此消失，页面上没有
+ * 省略号，validate 不报错，audit 不出声：这正是 face-fidelity 规矩要根除
+ * 的那种无痕丢失。改法不是给它开例外，是给它留位置——多行形态把 caption
+ * 收进每一格自己的底条，单行形态照旧挂在网格下方。
  */
+function multiRow(component: ImageGridComponent): boolean {
+  return component.items.length === 4 || (component.emphasis === "first" && component.items.length >= 3)
+}
+
 function captionsVisible(component: ImageGridComponent): boolean {
-  const multiRow = component.items.length === 4 || (component.emphasis === "first" && component.items.length >= 3)
-  return !multiRow && component.items.some((it) => it.caption)
+  return component.items.some((it) => it.caption)
+}
+
+/** 多行形态里每格底部为 caption 留出的高度，单行形态为 0（挂在网格外）。 */
+function captionInset(component: ImageGridComponent): number {
+  return multiRow(component) && captionsVisible(component) ? CAPTION_H : 0
 }
 
 function renderCell({
@@ -127,43 +140,43 @@ function renderCell({
 }
 
 function measureDefault(component: ImageGridComponent, w: number): number {
-  return gridImageAreaH(component, w) + (captionsVisible(component) ? CAPTION_H : 0)
+  // 单行形态的 caption 挂在网格下方，要额外的高；多行形态的收在格内，不要。
+  const below = captionsVisible(component) && !multiRow(component) ? CAPTION_H : 0
+  return gridImageAreaH(component, w) + below
 }
 
 function renderDefault(component: ImageGridComponent, box: Parameters<SvgComponent<ImageGridComponent>["render"]>[1], ctx: ComponentCtx) {
     const areaH = gridImageAreaH(component, box.w)
     const cells = gridCells(component.items.length, component.emphasis, box.w, areaH)
+    const inset = captionInset(component)
     return (
       <g transform={`translate(${box.x},${box.y})`}>
         {component.items.map((item, i) => {
           const cell = cells[i]
           const src = ctx.images?.[item.asset_id]?.src
           const alt = ctx.images?.[item.asset_id]?.alt
+          // 图占格子减去底条；单行形态 inset=0，格子就是图，与从前逐像素相同。
+          const imageCell = { ...cell, h: cell.h - inset }
           return (
             <g key={i}>
-              {renderCell({ src, alt, cell, ctx })}
-              {captionsVisible(component) && item.caption &&
+              {renderCell({ src, alt, cell: imageCell, ctx })}
+              {item.caption &&
                 (() => {
                   const fitted = fitSvgLine(item.caption, {
                     maxWidth: cell.w - 26,
                     fontSize: 16,
                     minFontSize: 16,
                   })
+                  const ruleY = inset ? cell.y + cell.h - inset + 10 : cell.y + cell.h + 10
                   return (
                     // caption 左对齐 + accent 短线前缀（杂志图注惯例），
                     // 弃居中 muted 的"占位感"
                     <>
-                      <rect
-                        x={cell.x}
-                        y={cell.y + cell.h + 10}
-                        width={16}
-                        height={3}
-                        fill={ctx.colors.accent}
-                      />
+                      <rect x={cell.x} y={ruleY} width={16} height={3} fill={ctx.colors.accent} />
                       <text
                         data-truncated={fitted.truncated ? "1" : undefined}
                         x={cell.x + 24}
-                        y={cell.y + cell.h + 20}
+                        y={ruleY + 10}
                         fontSize={fitted.fontSize}
                         fill={ctx.colors.text}
                         fontFamily={ctx.fonts.body}
