@@ -117,7 +117,7 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
       {source && (
         <text
           x={96}
-          y={624}
+          y={694}
           fontFamily={fonts.body}
           fontSize={16}
           fill={colors.muted}
