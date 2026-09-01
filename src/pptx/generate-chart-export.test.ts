@@ -56,6 +56,11 @@ async function expectExports(components: Component[]): Promise<void> {
   expect([bytes[0], bytes[1]]).toEqual([0x50, 0x4b])
 }
 
+/** Content the pipeline never has to survive because validate turns it away. */
+async function expectRefused(components: Component[]): Promise<void> {
+  await expect(generatePptx(makeIr(components))).rejects.toThrow()
+}
+
 describe("chart zero/negative data value through the real generatePptx (deep-acceptance review Critical finding 1)", () => {
   it("vertical bar with one zero-value point exports without an invalid-shape-transform", async () => {
     await expectExports([
@@ -115,8 +120,14 @@ describe("chart zero/negative data value through the real generatePptx (deep-acc
     ])
   })
 
-  it("funnel with all-zero values exports", async () => {
-    await expectExports([
+  // A funnel narrows one value across ordered stages, so a total of zero is
+  // not a chart with degenerate geometry, it is a chart with nothing to
+  // narrow. It used to be schema-legal and render as an empty fragment,
+  // taking the series name and every stage name off the page in silence;
+  // validate now refuses it (`ir/components/chart.ts`), which is why it no
+  // longer reaches the converter this file exercises.
+  it("funnel with all-zero values is refused before it reaches the converter", async () => {
+    await expectRefused([
       { type: "chart", chart_type: "funnel", series: [{ name: "s1", data: [{ x: "A", y: 0 }, { x: "B", y: 0 }] }] },
     ])
   })
@@ -158,18 +169,14 @@ describe("chart_type × pathological-values matrix (deep-acceptance review Note 
       component: { type: "chart", chart_type: "bar", direction: "horizontal", series: [{ name: "s1", data: mixedSign }] },
     },
     { label: "funnel zero-point", component: { type: "chart", chart_type: "funnel", series: [{ name: "s1", data: zeroPoint }] } },
-    { label: "funnel all-zero", component: { type: "chart", chart_type: "funnel", series: [{ name: "s1", data: allZero }] } },
+
     { label: "funnel mixed-sign", component: { type: "chart", chart_type: "funnel", series: [{ name: "s1", data: mixedSign }] } },
     {
       label: "donut (pie+style) zero-point",
       component: { type: "chart", chart_type: "pie", style: "donut", series: [{ name: "s1", data: zeroPoint }] },
     },
-    {
-      label: "donut all-zero",
-      component: { type: "chart", chart_type: "pie", style: "donut", series: [{ name: "s1", data: allZero }] },
-    },
     { label: "pie zero-point", component: { type: "chart", chart_type: "pie", series: [{ name: "s1", data: zeroPoint }] } },
-    { label: "pie all-zero", component: { type: "chart", chart_type: "pie", series: [{ name: "s1", data: allZero }] } },
+
     { label: "line zero-point", component: { type: "chart", chart_type: "line", series: [{ name: "s1", data: zeroPoint }] } },
     { label: "line mixed-sign", component: { type: "chart", chart_type: "line", series: [{ name: "s1", data: mixedSign }] } },
     { label: "line all-zero", component: { type: "chart", chart_type: "line", series: [{ name: "s1", data: allZero }] } },
@@ -406,7 +413,9 @@ describe("bar/bar-horizontal/line/funnel extreme mixed-magnitude ratio through t
     { label: "bar", chart_type: "bar" },
     { label: "bar-horizontal", chart_type: "bar", direction: "horizontal" },
     { label: "line", chart_type: "line" },
-    { label: "funnel", chart_type: "funnel" },
+    // funnel is absent on purpose: every ratio below has a negative total,
+    // and a funnel with nothing to narrow is now refused at validate rather
+    // than rendered as an empty fragment. The pinned case below says so.
   ]
   for (const { label: ctLabel, chart_type, direction } of chartTypes) {
     for (const { label: rLabel, data } of ratios) {
@@ -425,6 +434,12 @@ describe("bar/bar-horizontal/line/funnel extreme mixed-magnitude ratio through t
   // bound instead, and this describe block's own doc comment for why
   // realistic-magnitude content (confirmed elsewhere in this file) is the
   // actual byte-inertness contract.
+  it("a funnel at these ratios is refused rather than converted", async () => {
+    for (const { data } of ratios) {
+      await expectRefused([{ type: "chart", chart_type: "funnel", series: [{ name: "s1", data }] }])
+    }
+  })
+
   it("realistic mixed-sign magnitude (this file's own mixedSign fixture) is unaffected — regression guard", async () => {
     await expectExports([
       { type: "chart", chart_type: "bar", series: [{ name: "s1", data: [{ x: "A", y: -8 }, { x: "B", y: 0 }, { x: "C", y: 12 }] }] },

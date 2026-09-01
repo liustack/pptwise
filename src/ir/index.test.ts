@@ -273,7 +273,12 @@ describe("chart subtypes (chart-depth wave: scatter / area / donut / gauge)", ()
       const series =
         chart_type === "scatter"
           ? [{ name: "s", data: [{ x: 1, y: 2 }] }]
-          : [{ name: "s", data: [{ x: "A", y: 5 }] }]
+          : chart_type === "dumbbell"
+            ? [
+                { name: "from", data: [{ x: "A", y: 5 }] },
+                { name: "to", data: [{ x: "A", y: 9 }] },
+              ]
+            : [{ name: "s", data: [{ x: "A", y: 5 }] }]
       expect(parsePptxIR(chart({ chart_type, series })).success, chart_type).toBe(true)
     }
   })
@@ -341,6 +346,65 @@ describe("chart subtypes (chart-depth wave: scatter / area / donut / gauge)", ()
   })
   it("area accepts a negative value (volume can dip below the baseline)", () => {
     expect(parsePptxIR(chart({ chart_type: "area", series: [{ name: "s", data: [{ x: "Q1", y: -4 }, { x: "Q2", y: 6 }] }] })).success).toBe(true)
+  })
+
+  // Three shapes the renderers have always assumed and the schema never
+  // required, so IR that satisfied it reached a renderer that answered by
+  // dropping content with no error and no mark on the page.
+  function reject(component: Record<string, unknown>): string {
+    const parsed = parsePptxIR(chart(component))
+    expect(parsed.success, JSON.stringify(component)).toBe(false)
+    return parsed.success ? "" : parsed.error
+  }
+
+  it("refuses a second series on a chart that divides one whole", () => {
+    const two = [
+      { name: "AlphaOnly", data: [{ x: "A", y: 1 }] },
+      { name: "BetaOnly", data: [{ x: "B", y: 2 }] },
+    ]
+    for (const chart_type of ["pie", "donut", "funnel"]) {
+      const message = reject({ chart_type, series: two })
+      expect(message, chart_type).toContain(chart_type)
+      expect(message, chart_type).toContain("exactly one series")
+    }
+    for (const chart_type of ["pie", "donut", "funnel"]) {
+      expect(parsePptxIR(chart({ chart_type, series: [two[0]!] })).success, chart_type).toBe(true)
+    }
+  })
+
+  it("refuses a whole-share chart whose points cannot make a whole", () => {
+    for (const data of [
+      [{ x: "A", y: 0 }, { x: "B", y: 0 }],
+      [{ x: "A", y: 5 }, { x: "B", y: -5 }],
+      [{ x: "A", y: -1 }],
+    ]) {
+      for (const chart_type of ["pie", "donut", "funnel"]) {
+        const message = reject({ chart_type, series: [{ name: "Allocation", data }] })
+        expect(message, chart_type).toContain(chart_type)
+        expect(message, chart_type).toContain("Allocation")
+      }
+    }
+  })
+
+  it("lets a bar carry the same figures, where a negative is a real reading", () => {
+    const data = [{ x: "A", y: 5 }, { x: "B", y: -5 }]
+    expect(parsePptxIR(chart({ chart_type: "bar", series: [{ name: "Net", data }] })).success).toBe(true)
+  })
+
+  it("requires a dumbbell to be two series of equal length", () => {
+    const from = { name: "2019", data: [{ x: "A", y: 10 }, { x: "B", y: 20 }] }
+    const to = { name: "2026", data: [{ x: "A", y: 14 }, { x: "B", y: 26 }] }
+    expect(parsePptxIR(chart({ chart_type: "dumbbell", series: [from, to] })).success).toBe(true)
+
+    expect(reject({ chart_type: "dumbbell", series: [from] })).toContain("exactly two series")
+    expect(
+      reject({ chart_type: "dumbbell", series: [from, to, { name: "ThirdOnly", data: [{ x: "A", y: 999 }] }] }),
+    ).toContain("exactly two series")
+
+    const short = { name: "2026", data: [{ x: "A", y: 14 }] }
+    const uneven = reject({ chart_type: "dumbbell", series: [from, short] })
+    expect(uneven).toContain("row by row")
+    expect(uneven).toContain("2019")
   })
 })
 

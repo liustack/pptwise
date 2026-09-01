@@ -31,6 +31,22 @@ import {
  * elements positioned in page coordinates (no nested <svg viewBox>).
  */
 
+/**
+ * A whole-share chart handed a total it cannot divide.
+ *
+ * `validate` refuses a pie, donut or funnel whose points sum to zero or less
+ * (`ir/components/chart.ts`), so a component reaching a renderer in this
+ * state has come round the gate: a caller assembling IR in memory, a test, a
+ * future chart_type added to the dispatch and not to the refinement. There is
+ * nothing to draw from a total of zero, and the old answer, an empty
+ * fragment, took the series name, every point name and every value off the
+ * page with no error and no mark. This one paints nothing either, and says
+ * how much went with it.
+ */
+function WholeShareDeclined({ data }: { data: readonly { x: string | number; y: number }[] }): ReactElement {
+  return <g data-dropped={data.length} data-dropped-silent={data.length} />
+}
+
 /** The `chart` IR component, for the renderers whose geometry needs
  * component-level config beyond `series` (donut's `center_total`, gauge's
  * `min`/`max` range). Passed as the trailing `component` arg to every
@@ -1118,7 +1134,7 @@ export function renderPie(
 ): ReactElement {
   const data = series[0]?.data ?? []
   const total = data.reduce((s, d) => s + d.y, 0)
-  if (total === 0) return <></>
+  if (total <= 0) return <WholeShareDeclined data={data} />
   const cx = x0 + w / 2
   const cy = y0 + h / 2
   const fullR = Math.min(w, h) / 2 - 4
@@ -1768,7 +1784,7 @@ export function renderDonut(
   const showCenter = component?.chart_type === "donut" ? component.center_total === true : true
   const data = series[0]?.data ?? []
   const total = data.reduce((s, d) => s + d.y, 0)
-  if (total === 0) return <></>
+  if (total <= 0) return <WholeShareDeclined data={data} />
   const cx = x0 + w / 2
   const cy = y0 + h / 2
   const fullR = Math.min(w, h) / 2 - 4

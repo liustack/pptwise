@@ -1,4 +1,5 @@
 import type { Component } from "@/ir"
+import { SINGLE_SERIES_TYPES } from "@/ir/components/chart"
 import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout"
 import { rotateChartPalette } from "../render/chart-palette"
 import { accessibleInk } from "../render/ink"
@@ -109,13 +110,13 @@ function axesApplicable(component: ChartComponent): boolean {
  * names those parts on the page itself (slice labels, band labels, the
  * gauge's own number). A legend on one of them would either repeat what the
  * marks already say or name a series the chart never drew.
+ *
+ * The list is the schema's (`ir/components/chart.ts`), which is also where
+ * validate now refuses a second series on one of these types. Reading it from
+ * there is what keeps "the renderer draws one series" and "the author may
+ * only write one" from drifting apart.
  */
-const SINGLE_SERIES_TYPES: ReadonlySet<ChartComponent["chart_type"]> = new Set([
-  "pie",
-  "donut",
-  "funnel",
-  "gauge",
-])
+const SINGLE_SERIES: ReadonlySet<ChartComponent["chart_type"]> = new Set(SINGLE_SERIES_TYPES)
 
 /**
  * Legend applicability. A legend maps a color to a series name, so it applies
@@ -126,14 +127,14 @@ const SINGLE_SERIES_TYPES: ReadonlySet<ChartComponent["chart_type"]> = new Set([
  * borrowed half cost the dumbbell its names: a dumbbell is two series by
  * construction — a from and a to — and it drew both as colored dots with
  * nothing anywhere on the page saying which was which, on 26 gallery pages.
- * Axes have nothing to do with it, and `SINGLE_SERIES_TYPES` above states the
+ * Axes have nothing to do with it, and `SINGLE_SERIES` above states the
  * real exclusion directly: the types that only ever draw one series.
  *
  * `series.length >= 2` is still the trigger. A single series has no color to
  * distinguish from another, and the golden pins hold that boundary.
  */
 function legendApplicable(component: ChartComponent): boolean {
-  return !SINGLE_SERIES_TYPES.has(component.chart_type) && component.series.length >= 2
+  return !SINGLE_SERIES.has(component.chart_type) && component.series.length >= 2
 }
 
 /**

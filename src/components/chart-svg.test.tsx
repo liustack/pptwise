@@ -486,13 +486,30 @@ describe("renderDonut — center total label", () => {
     expect(container.querySelectorAll("polyline")).toHaveLength(3)
   })
 
-  it("renders one path wedge per data point and nothing when the series sums to zero", () => {
+  it("renders one path wedge per data point", () => {
     const { container } = svg(renderDonut(seriesOf(1, 2, 3), PALETTE, 0, 0, W, H, MUTED, TEXT))
     expect(container.querySelectorAll("path")).toHaveLength(3)
+  })
 
-    const { container: empty } = svg(renderDonut(seriesOf(0, 0), PALETTE, 0, 0, W, H, MUTED, TEXT))
-    expect(empty.querySelectorAll("path")).toHaveLength(0)
-    expect(empty.querySelectorAll("text")).toHaveLength(0)
+  // Validate refuses a whole-share chart that cannot make a whole
+  // (`ir/components/chart.ts`), so this is the defence behind the gate: IR
+  // assembled in memory, a test, a chart_type added to the dispatch and not
+  // to the refinement. There is still nothing to draw, and the answer is
+  // still to draw nothing, but the page now says how much went with it
+  // instead of losing the series name and every slice in silence.
+  it.each([
+    ["all zero", [0, 0]],
+    ["cancelling to zero", [5, -5]],
+    ["negative", [-1, -2]],
+  ] as const)("declines a ring whose slices total %s and declares what it dropped", (_label, values) => {
+    for (const render of [renderDonut, renderPie]) {
+      const { container } = svg(render(seriesOf(...values), PALETTE, 0, 0, W, H, MUTED, TEXT))
+      expect(container.querySelectorAll("path")).toHaveLength(0)
+      expect(container.querySelectorAll("text")).toHaveLength(0)
+      const dropped = container.querySelector("[data-dropped]")
+      expect(dropped).not.toBeNull()
+      expect(Number(dropped!.getAttribute("data-dropped"))).toBe(values.length)
+    }
   })
 })
 

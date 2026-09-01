@@ -8,6 +8,7 @@ import { auditSvgMarkup } from "../audit/svg-audit"
 import { auditDeck } from "../audit/deck-audit"
 import { AXIS_TITLE_BAND_H } from "./axis-titles"
 import { chart } from "./chart"
+import { schema as chartSchema } from "@/ir/components/chart"
 import type { ComponentCtx } from "./types"
 
 const ctx: ComponentCtx = {
@@ -649,18 +650,22 @@ describe("chart component — legend (n>=2 series)", () => {
 
   // The radial/one-series family names its parts on the marks themselves, so
   // a legend would repeat the page or name a series the chart never drew.
-  // These four stay legend-free however many series an author writes.
+  // A second series is therefore content this family has nowhere to put, and
+  // validate refuses it (`ir/components/chart.ts`) rather than letting the
+  // renderer read series[0] and drop the rest in silence. What is left to
+  // pin here is the one series they do draw, and that it draws no legend.
   it.each(["pie", "donut", "funnel", "gauge"] as const)(
-    "measure() does not grow for a multi-series %s chart (it draws one series and labels it directly)",
+    "%s draws its one series with no legend, and a second is refused upstream",
     (chart_type) => {
-      const two = {
+      const one = {
         type: "chart" as const,
         chart_type,
-        series: [{ name: "A", data: [{ x: "x", y: 1 }] }, { name: "B", data: [{ x: "y", y: 2 }] }],
+        series: [{ name: "A", data: [{ x: "x", y: 1 }] }],
       }
-      const one = { ...two, series: [two.series[0]!] }
-      expect(chart.measure(two, 1120, ctx)).toBe(chart.measure(one, 1120, ctx))
-      const { container } = svg(chart.render(two, box, ctx))
+      const two = { ...one, series: [...one.series, { name: "B", data: [{ x: "y", y: 2 }] }] }
+      expect(chartSchema.safeParse(one).success, chart_type).toBe(true)
+      expect(chartSchema.safeParse(two).success, chart_type).toBe(false)
+      const { container } = svg(chart.render(one, box, ctx))
       expect(legendTexts(container).map((t) => t.textContent)).toEqual([])
     },
   )
@@ -715,21 +720,21 @@ describe("chart component — legend (n>=2 series)", () => {
   // its series on the marks — it had no names anywhere — so it moved to the
   // legend side of the rule; see "gives a dumbbell the legend its two series
   // always needed" above.
-  it("renders no legend for a multi-series pie/funnel chart even though series.length >= 2", () => {
-    const pie = {
-      type: "chart" as const,
-      chart_type: "pie" as const,
-      series: [{ name: "A", data: [{ x: "x", y: 1 }] }, { name: "B", data: [{ x: "y", y: 2 }] }],
-    }
-    const funnel = {
-      type: "chart" as const,
-      chart_type: "funnel" as const,
-      series: [{ name: "A", data: [{ x: "x", y: 1 }] }, { name: "B", data: [{ x: "y", y: 2 }] }],
-    }
-    for (const component of [pie, funnel]) {
-      const { container } = svg(chart.render(component, box, ctx))
-      expect(legendTexts(container)).toHaveLength(0)
-    }
+  //
+  // A dumbbell is two series read as one from-to row, which the renderer has
+  // always assumed and the schema now requires: a lone series drew nothing
+  // at all, a third drew a legend entry with no marks under it, and an
+  // uneven pair lost the longer series' tail to a Math.min nobody could see.
+  it("takes exactly two series of equal length, and says so before rendering", () => {
+    const from = { name: "2019", data: [{ x: "A", y: 10 }, { x: "B", y: 20 }] }
+    const to = { name: "2026", data: [{ x: "A", y: 14 }, { x: "B", y: 26 }] }
+    const dumbbell = (series: unknown[]) => ({ type: "chart" as const, chart_type: "dumbbell" as const, series })
+    expect(chartSchema.safeParse(dumbbell([from, to])).success).toBe(true)
+    expect(chartSchema.safeParse(dumbbell([from])).success).toBe(false)
+    expect(
+      chartSchema.safeParse(dumbbell([from, to, { name: "ThirdOnly", data: [{ x: "A", y: 999 }] }])).success,
+    ).toBe(false)
+    expect(chartSchema.safeParse(dumbbell([from, { name: "2026", data: [{ x: "A", y: 14 }] }])).success).toBe(false)
   })
 
   it("name overflow: a series name longer than its slot truncates via fitSvgLine, marked data-truncated", () => {

@@ -14,6 +14,31 @@ const ChartPointSchema = z
   })
   .strict()
 
+/**
+ * Chart types that draw exactly one series and name its parts on the marks
+ * themselves: a pie, a donut, a funnel and a gauge are each one whole divided
+ * into named parts (slice labels, band labels, the gauge's own number).
+ *
+ * The renderers have always read `series[0]` and nothing else, and the legend
+ * rule (`components/chart.tsx`'s `legendApplicable`) excludes these types
+ * because a legend would either repeat the marks or name a series the chart
+ * never drew. Neither statement was an invariant until this list moved here:
+ * a two-series pie was schema-legal, and the renderer painted the first
+ * series and dropped the second's name, point names and values with no
+ * validate error and no `data-dropped` on the page. The exclusion is stated
+ * where the contract is stated, so validate can hold authors to it.
+ */
+export const SINGLE_SERIES_TYPES = ["pie", "donut", "funnel", "gauge"] as const
+
+/**
+ * Chart types whose renderer sums the series into a whole and reads each
+ * point as a share of it. A total of zero has no shares to draw: every
+ * renderer here used to return an empty fragment, so the series name, every
+ * point name and every value left the page with no error and no mark.
+ * Nothing downstream can repair that, so it is refused here.
+ */
+const WHOLE_SHARE_TYPES = ["pie", "donut", "funnel"] as const
+
 export const schema = z
   .object({
     type: z.literal("chart"),
@@ -126,6 +151,60 @@ export const schema = z
           code: "custom",
           path: ["gauge", "max"],
           message: `gauge max (${max}) must be greater than min (${min}).`,
+        })
+      }
+    }
+    // One whole, one series. `gauge` says this in its own words above (one
+    // series, one point), so it is left to that message rather than given a
+    // second, vaguer one.
+    if (SINGLE_SERIES_TYPES.includes(c.chart_type as (typeof SINGLE_SERIES_TYPES)[number])) {
+      if (c.chart_type !== "gauge" && c.series.length !== 1) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["series"],
+          message:
+            `a ${c.chart_type} divides one whole into named parts and draws exactly one series, got ${c.series.length}. ` +
+            `It names those parts on the marks themselves and has no legend, so a second series would reach the page nowhere. ` +
+            `Keep one series, or use chart_type "bar" or "line" to compare several.`,
+        })
+      }
+    }
+    if (WHOLE_SHARE_TYPES.includes(c.chart_type as (typeof WHOLE_SHARE_TYPES)[number])) {
+      c.series.forEach((s, si) => {
+        if (s.data.length === 0) return
+        const total = s.data.reduce((sum, d) => sum + d.y, 0)
+        if (total > 0) return
+        ctx.addIssue({
+          code: "custom",
+          path: ["series", si, "data"],
+          message:
+            `a ${c.chart_type} draws each point as a share of the total, and series[${si}] ("${s.name}") totals ${total}. ` +
+            `Nothing can be drawn from a total of zero or less, so the whole component would leave the page. ` +
+            `Give the points values that sum above zero, or use chart_type "bar" for figures that can be negative.`,
+        })
+      })
+    }
+    // A dumbbell is one row read left to right: series[0] is where each row
+    // started and series[1] is where it ended. The renderer has always taken
+    // that on trust, reading two series and `Math.min` of their lengths, so a
+    // third series drew a legend entry with no marks under it and an uneven
+    // pair silently lost the longer one's tail.
+    if (c.chart_type === "dumbbell") {
+      if (c.series.length !== 2) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["series"],
+          message:
+            `a dumbbell draws one from-to change per row, so it takes exactly two series (the from values and the to values), got ${c.series.length}. ` +
+            `For more than two moments in a series use chart_type "line".`,
+        })
+      } else if (c.series[0]!.data.length !== c.series[1]!.data.length) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["series", 1, "data"],
+          message:
+            `a dumbbell pairs the two series row by row, so both need the same number of points and the same labels, ` +
+            `got ${c.series[0]!.data.length} in series[0] ("${c.series[0]!.name}") and ${c.series[1]!.data.length} in series[1] ("${c.series[1]!.name}").`,
         })
       }
     }
