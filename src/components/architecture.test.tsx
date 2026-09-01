@@ -29,6 +29,37 @@ const layers = [
   { title: "Infrastructure", items: ["Docker", "Nginx", "PostgreSQL"] },
 ]
 
+describe("architecture layer items are attributable, run by run", () => {
+  it("paints each item as its own run so a wide column loses nothing", () => {
+    const { container } = svg(architecture.render({ type: "architecture", layers }, { x: 0, y: 0, w: 1100 }, ctx))
+    for (const item of layers.flatMap((l) => l.items)) {
+      expect(container.textContent).toContain(item)
+    }
+    expect(container.querySelector("[data-dropped]")).toBeNull()
+    expect(container.querySelector("[data-truncated]")).toBeNull()
+  })
+
+  it("marks the cut on the item it actually cut, and declares what came after it", () => {
+    // A column too narrow for the whole 構件串. Joined-and-fitted, this
+    // printed one line reading "React · Tailwind · shad" under a single
+    // data-truncated, and nothing could say which items survived.
+    const { container } = svg(
+      architecture.render({ type: "architecture", layers: [layers[0]!] }, { x: 0, y: 0, w: 340 }, ctx),
+    )
+    expect(container.textContent).toContain("React")
+    // The remainder is declared, not silently gone.
+    expect(container.querySelector("[data-dropped]")).not.toBeNull()
+    // The cut mark sits on the item run it cut (a `tspan`), and its text is a
+    // real prefix of that author's item — not of the joined string.
+    const cut = container.querySelector("tspan[data-truncated]")
+    if (cut) {
+      const fragment = cut.textContent ?? ""
+      expect(fragment.length).toBeGreaterThanOrEqual(2)
+      expect(layers[0]!.items.some((item) => item.startsWith(fragment))).toBe(true)
+    }
+  })
+})
+
 describe("architecture component", () => {
   it("renders one rect per layer", () => {
     const { container } = svg(

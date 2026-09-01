@@ -1,5 +1,5 @@
 import type { Component } from "@/ir"
-import { fitSvgLine } from "../lib/svg-text-layout"
+import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout"
 import { mixHex } from "./color-mix"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
 
@@ -33,6 +33,61 @@ function hairlineColor(ctx: ComponentCtx): string {
   return ctx.colors.border ?? mixHex(ctx.colors.muted, ctx.colors.bg, 0.45)
 }
 
+interface ItemRun {
+  readonly text: string
+  /** This run is a cut piece of the author's item, not the whole of it. */
+  readonly truncated: boolean
+}
+
+/**
+ * The layer's構件串, run by run rather than as one joined string.
+ *
+ * Joining the items and fitting the result made the cut unattributable: a
+ * line reading "网关 · 鉴权 · 限…" carries one `data-truncated`, and nothing
+ * downstream can tell which of the author's items survived whole, which one
+ * was cut, and which never made it. Every item after the cut looked exactly
+ * like an item that was never authored.
+ *
+ * Measuring run by run keeps that answer on the page: an item that fits is
+ * painted whole and is findable verbatim, the one the width runs out on is
+ * cut and says so on its own element, and anything past it is reported as
+ * `dropped` for the caller to mark.
+ */
+function fitItemRuns(
+  items: readonly string[],
+  opts: { maxWidth: number; fontSize: number; fontFamily?: string },
+): { runs: ItemRun[]; dropped: number } {
+  const width = (text: string) => measureTextUnits(text, { fontFamily: opts.fontFamily }) * opts.fontSize
+  const runs: ItemRun[] = []
+  let used = 0
+  for (const [i, item] of items.entries()) {
+    const lead = i === 0 ? "" : SEPARATOR
+    const remaining = opts.maxWidth - used - width(lead)
+    if (remaining <= 0) return { runs, dropped: items.length - i }
+    if (width(item) <= remaining) {
+      if (lead) runs.push({ text: lead, truncated: false })
+      runs.push({ text: item, truncated: false })
+      used += width(lead) + width(item)
+      continue
+    }
+    const cut = fitSvgLine(item, {
+      maxWidth: remaining,
+      fontSize: opts.fontSize,
+      minFontSize: opts.fontSize,
+      fontFamily: opts.fontFamily,
+    })
+    // A cut down to a character or less communicates nothing about the item
+    // it came from — a lone 西 is not "西南产区" partly shown, it is the item
+    // gone with a stray glyph left behind. Report it as a drop so the marker
+    // speaks for it instead of a fragment that reads like a different word.
+    if (Array.from(cut.text.trim()).length < 2) return { runs, dropped: items.length - i }
+    if (lead) runs.push({ text: lead, truncated: false })
+    runs.push({ text: cut.text, truncated: true })
+    return { runs, dropped: items.length - i - 1 }
+  }
+  return { runs, dropped: 0 }
+}
+
 export const architecture: SvgComponent<ArchitectureComponent> = {
   measure(component) {
     return component.layers.length * LAYER_H
@@ -59,10 +114,10 @@ export const architecture: SvgComponent<ArchitectureComponent> = {
             fontSize: TITLE_FONT_SIZE,
             minFontSize: MIN_FONT_SIZE,
           })
-          const items = fitSvgLine(layer.items.join(SEPARATOR), {
+          const items = fitItemRuns(layer.items, {
             maxWidth: itemsMax,
             fontSize: ITEMS_FONT_SIZE,
-            minFontSize: MIN_FONT_SIZE,
+            fontFamily: ctx.fonts.body,
           })
           const index = `L${i + 1}`
           return (
@@ -91,16 +146,24 @@ export const architecture: SvgComponent<ArchitectureComponent> = {
                 {title.text}
               </text>
               <text
-                data-truncated={items.truncated ? "1" : undefined}
                 x={itemsX}
                 y={layerY + ITEMS_BASELINE_Y}
-                fontSize={items.fontSize}
+                fontSize={ITEMS_FONT_SIZE}
                 fontFamily={ctx.fonts.body}
                 fill={bodyInk}
                 dominantBaseline="alphabetic"
               >
-                {items.text}
+                {items.runs.map((run, k) => (
+                  <tspan key={k} data-truncated={run.truncated ? "1" : undefined}>
+                    {run.text}
+                  </tspan>
+                ))}
               </text>
+              {/* Same bare marker `bullets.tsx` stamps for its own cut items:
+                  `deck-audit` reports it as `content-dropped`, so a layer
+                  whose 構件串 outran its column says so somewhere a machine
+                  can find. */}
+              {items.dropped > 0 && <g data-dropped={items.dropped} />}
             </g>
           )
         })}
