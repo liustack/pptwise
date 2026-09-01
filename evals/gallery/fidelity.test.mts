@@ -1,0 +1,107 @@
+// @vitest-environment node
+//
+// Constitutional nail: a face renders authored content completely or it
+// declines the page. See `fidelity.ts` for the rule, the scope, and the
+// exemption table — this file is the sweep that holds it.
+//
+// Two page sets, for two different jobs:
+//
+//   - the whole gallery corpus, which is what the product actually draws;
+//   - a short list of contract pages that load a face to the edge of what
+//     its own slots say it accepts. The corpus authors a stat-hero page with
+//     one metric because that is how such a page is written; nothing in it
+//     asks the face what it does when handed four. A rule nobody exercises
+//     is a rule that quietly stops holding, so the contract pages ask.
+
+import { mkdtempSync } from "node:fs"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
+import { describe, expect, it } from "vitest"
+import { listThemes, renderSlideSvg, validateIr } from "@/api"
+import type { PptxIR, Slide } from "@/ir"
+import { installNodePlatform } from "@/platform/node"
+import { COMPONENT_BUILDERS } from "./corpus/components"
+import { corpusAssets, layoutPage, type CorpusAssets } from "./corpus/decks"
+import { LANGUAGE_IDS, LEXICONS, type LanguageId } from "./corpus/lexicon"
+import { checkPageFidelity, exempt, faceOf, scanned } from "./fidelity"
+import { buildMatrix } from "./matrix"
+import { renderMatrix } from "./render"
+
+await installNodePlatform()
+
+interface ScanPage {
+  readonly id: string
+  readonly ir: PptxIR
+  readonly slideIndex: number
+}
+
+/**
+ * Pages that put a face under the load its own declaration invites.
+ *
+ * `stat-hero` accepts a `kpi_cards`, and a `kpi_cards` carries as many items
+ * as an author writes. One metric is the page the corpus draws; four is the
+ * page the face has to have an answer for.
+ */
+function contractPages(lex: (typeof LEXICONS)[LanguageId], assets: CorpusAssets): ScanPage[] {
+  const statHero = layoutPage("stat-hero", lex, assets, "consulting", "fact")
+  const heroSlide = statHero.slides[0] as Slide
+  heroSlide.components = [COMPONENT_BUILDERS.kpi_cards!(lex)]
+
+  const pullQuote = layoutPage("pull-quote", lex, assets, "consulting", "quote")
+  const quoteSlide = pullQuote.slides[0] as Slide
+  quoteSlide.components = [COMPONENT_BUILDERS.blockquote!(lex)]
+
+  return [
+    { id: "contract--stat-hero--four-metrics", ir: statHero, slideIndex: 0 },
+    { id: "contract--pull-quote--authored-quote", ir: pullQuote, slideIndex: 0 },
+  ]
+}
+
+describe("every face renders the content it was given, or says what it dropped", () => {
+  it("scans the gallery corpus and the face contract pages", { timeout: 300_000 }, async () => {
+    const themeIds = listThemes()
+      .map((t) => t.id)
+      .sort()
+    const assets = Object.fromEntries(
+      await Promise.all(LANGUAGE_IDS.map(async (id) => [id, await corpusAssets(LEXICONS[id])])),
+    ) as Record<LanguageId, CorpusAssets>
+
+    const jobs = buildMatrix(themeIds, assets)
+    const outDir = mkdtempSync(join(tmpdir(), "pptwise-fidelity-"))
+    const { svgs } = renderMatrix(jobs, outDir, "fidelity")
+    expect(svgs.size).toBeGreaterThan(0)
+
+    const pages: { id: string; svg: string; ir: PptxIR; slideIndex: number }[] = []
+    for (const job of jobs) {
+      const svg = svgs.get(job.id)
+      if (svg) pages.push({ id: job.id, svg, ir: job.ir, slideIndex: job.slideIndex })
+    }
+    for (const page of contractPages(LEXICONS.zh, assets.zh)) {
+      const validated = validateIr(page.ir)
+      expect(validated.ok, `${page.id}: ${validated.ok ? "" : JSON.stringify(validated.errors)}`).toBe(true)
+      pages.push({ ...page, svg: renderSlideSvg(validated.ir!, page.slideIndex) })
+    }
+
+    let scannedPages = 0
+    const losses: string[] = []
+    for (const page of pages) {
+      const slide = page.ir.slides[page.slideIndex]!
+      const face = faceOf(page.ir, slide)
+      if (!scanned(face)) continue
+      scannedPages += 1
+      for (const missing of checkPageFidelity(page.svg, slide).missing) {
+        if (exempt(face?.id, missing.path)) continue
+        losses.push(
+          `${page.id} [${face?.id}] ${missing.path}: ${JSON.stringify(missing.text.slice(0, 60))}`,
+        )
+      }
+    }
+
+    // A scope that has silently collapsed would pass this sweep without ever
+    // looking at a page. 284 of the corpus' 1820 pages are drawn by a
+    // field-picking face today; the floor is well under that so an ordinary
+    // corpus edit does not trip it, and well over zero so a broken scope does.
+    expect(scannedPages).toBeGreaterThan(200)
+    expect(losses).toEqual([])
+  })
+})
