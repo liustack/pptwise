@@ -21,6 +21,7 @@
  * cross-wire each other's gradients.
  */
 
+import { LAYOUT_REGISTRY } from "@/layouts/registry"
 import { slideEdgeFill } from "@/lib/slide-edge"
 import { namespaceSvgIds, svgIdPrefix } from "@/lib/svg-ids"
 import { BOUNDARY_SLOTS, FACE_SLOTS } from "./matrix"
@@ -64,6 +65,37 @@ export const SLOT_FAMILIES: readonly GroupFamily[] = [
   { label: "边界页", members: FACE_SLOTS.filter((s) => BOUNDARY_SLOTS.includes(s)) },
   { label: "内容页", members: FACE_SLOTS.filter((s) => !BOUNDARY_SLOTS.includes(s)) },
 ]
+
+/**
+ * Headings for the 按版式 index.
+ *
+ * Read straight off the layout registry: a face declares which slide type it
+ * draws and whether it is one of the four image takeovers, and that is
+ * already the only grouping a face audit wants — the four openings sit
+ * together, the content faces sit together, the takeovers are their own
+ * short shelf. Nothing is hand-kept here, so nothing can rot: a face added
+ * to the registry lands under its own heading on the next build.
+ *
+ * Boundary faces come first and last for the same reason `FACE_SLOTS` puts
+ * them there — it is the order a deck is read in.
+ */
+export const FACE_FAMILIES: readonly GroupFamily[] = (() => {
+  const labels: Array<[key: string, label: string]> = [
+    ["cover", "封面脸"],
+    ["chapter", "章节脸"],
+    ["content", "内容脸"],
+    ["takeover", "图像接管"],
+    ["ending", "结尾脸"],
+  ]
+  const familyOf = (id: string): string => {
+    const def = LAYOUT_REGISTRY[id]!
+    return def.kind === "takeover" ? "takeover" : def.slideTypes[0]!
+  }
+  const ids = Object.keys(LAYOUT_REGISTRY).sort()
+  return labels
+    .map(([key, label]) => ({ label, members: ids.filter((id) => familyOf(id) === key) }))
+    .filter((fam) => fam.members.length > 0)
+})()
 
 /**
  * Headings for the 按组件 index, grouped by what the component draws rather
@@ -306,6 +338,27 @@ main { padding: 20px; }
 .famhead h3 { margin: 0; font-size: 15px; font-weight: 650; letter-spacing: -0.01em; }
 .famhead h3 span { font-weight: 400; font-size: 12px; color: var(--ink-dim); margin-left: 8px; font-variant-numeric: tabular-nums; }
 
+/* The face's identity card. A reference the reviewer reads once on the way
+   in, so it is a quiet block above the grid rather than a panel competing
+   with the slides — one row per 讲法, the themes that route it here in mono
+   because they are ids, and the count right-aligned so a face served by two
+   themes is distinguishable from one served by twenty at a glance. */
+.identity {
+  background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 9px 12px 10px; margin: 0 0 16px; max-width: 96ch;
+}
+.identity h4 { margin: 0 0 5px; font-size: 12px; font-weight: 650; color: var(--ink-dim); }
+.idrow { display: flex; gap: 12px; align-items: baseline; padding: 4px 0; border-top: 1px solid var(--line); }
+.idslot { flex: 0 0 96px; font-size: 12px; }
+.idslot b { font-weight: 600; }
+.idslot code { font: 500 11px/1.3 ui-monospace, "SF Mono", Menlo, monospace; color: var(--ink-dim); margin-left: 5px; }
+.idthemes {
+  flex: 1 1 auto; min-width: 0; word-break: break-word;
+  font: 500 11px/1.5 ui-monospace, "SF Mono", Menlo, monospace; color: var(--ink-dim);
+}
+.idn { flex: 0 0 auto; font-size: 11px; color: var(--ink-dim); font-variant-numeric: tabular-nums; }
+.idnote { font-size: 12px; color: var(--ink-dim); }
+
 .groupgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(196px, 1fr)); gap: 14px; }
 .gcard {
   appearance: none; font: inherit; color: var(--ink); text-align: left; padding: 0; cursor: pointer;
@@ -465,6 +518,7 @@ kbd {
   <div class="seg" id="view-filter" role="group" aria-label="视角">
     <button data-view="theme" aria-pressed="true">按主题</button>
     <button data-view="slot" aria-pressed="false">按讲法</button>
+    <button data-view="face" aria-pressed="false">按版式</button>
     <button data-view="component" aria-pressed="false">按组件</button>
   </div>
 
@@ -543,12 +597,21 @@ kbd {
   const EDGES = JSON.parse(document.getElementById("edge-data").textContent);
   const STORE_KEY = "pptwise-gallery-verdicts-v1";
   const SLOT_LABELS = ${jsonScript(SLOT_LABELS)};
-  // Headings and group order for the two cross-cut indexes. The slot half is
+  // The menu slots in reading order — the two openings, the eleven content
+  // kinds, the close. Shipped rather than read off SLOT_LABELS' key order,
+  // which happens to match but would be a silent dependency on it.
+  const SLOT_ORDER = ${jsonScript(FACE_SLOTS)};
+  // Headings and group order for the three cross-cut indexes. The slot half is
   // built from the corpus' own slot list rather than from whatever order this
-  // build's menus happened to emit.
+  // build's menus happened to emit, and the face half off the layout registry.
   const SLOT_FAMILIES = ${jsonScript(SLOT_FAMILIES)};
+  const FACE_FAMILIES = ${jsonScript(FACE_FAMILIES)};
   const COMPONENT_FAMILIES = ${jsonScript(COMPONENT_FAMILIES)};
   const SECTION_ORDER = new Map(MANIFEST.sections.map((s, i) => [s.id, i]));
+  // A section carrying a menu is a theme. The appendix is a pile of faces no
+  // menu offers, so it has none — which is how the face identity card knows
+  // to say "nobody serves this" instead of naming the appendix as a theme.
+  const THEME_SECTIONS = new Set(MANIFEST.sections.filter((s) => s.menu).map((s) => s.id));
 
   // Shipped in as source rather than restated here, so the rule the reviewer
   // sees is byte-for-byte the one render.test.mts tests. See its own doc
@@ -697,15 +760,21 @@ ${inlineRule(verdictFreshness)}
     const detail = activeGroup() !== null;
     const bits = [];
     // On a component page the subject is the component id — constant down a
-    // component detail, so the heading has it covered. On a face page it is
-    // the layout this theme's menu picked for the slot, which is the whole
-    // thing a 讲法 detail exists to compare, so it stays.
-    if (state.view !== "theme" && !(detail && state.view === "component")) bits.push(p.subject);
+    // component detail, so the heading has it covered. Same for the face id
+    // down a 版式 detail. On a face page in the 讲法 view it is the layout
+    // this theme's menu picked for the slot, which is the whole thing that
+    // detail exists to compare, so it stays.
+    if (state.view !== "theme" && !(detail && (state.view === "component" || state.view === "face"))) {
+      bits.push(p.subject);
+    }
     if (p.band === "deck") bits.push("第 " + p.page + " / " + p.pageCount + " 页", p.slideType);
     // A slot already names the slide type it belongs to, and every component
-    // page is a content page — saying so again is noise on 1500 cards.
-    if (p.slot && !(detail && state.view === "slot")) {
-      bits.push(SLOT_LABELS[p.slot] ? SLOT_LABELS[p.slot] + " " + p.slot : p.slot);
+    // page is a content page — saying so again is noise on 1500 cards. Down a
+    // 版式 detail the slot is the variable, and a deck page has one to show
+    // even though it carries no menu slot of its own.
+    const slot = state.view === "face" ? p.faceSlot : p.slot;
+    if (slot && !(detail && state.view === "slot")) {
+      bits.push(SLOT_LABELS[slot] ? SLOT_LABELS[slot] + " " + slot : slot);
     }
     bits.push(p.languageLabel);
     return bits;
@@ -895,6 +964,20 @@ ${inlineRule(verdictFreshness)}
       families: SLOT_FAMILIES,
       nameOf: (v) => ({ zh: SLOT_LABELS[v] || "", code: v }),
     },
+    // 按讲法 judges the menus: one kind, 24 answers. 按版式 judges the face
+    // code itself: one face, everywhere it was sent — across themes and
+    // across the kinds different menus point at it for. Same drill-down,
+    // opposite question.
+    face: {
+      key: "face",
+      label: "按版式",
+      unit: "张脸",
+      noun: "张脸",
+      lead: "一格一张脸，点开看同一段版式代码被派到各主题、各讲法上画出来的样子。组件皮肤那 1248 页不在这条轴上——它们比的是组件，会把脸淹掉。",
+      families: FACE_FAMILIES,
+      nameOf: (v) => ({ zh: "", code: v }),
+      detailHead: faceIdentity,
+    },
     component: {
       key: "component",
       label: "按组件",
@@ -933,9 +1016,12 @@ ${inlineRule(verdictFreshness)}
     return plan;
   }
 
-  const PLANS = { slot: groupPlan(CROSS.slot), component: groupPlan(CROSS.component) };
-  const FAMILY_OF = { slot: new Map(), component: new Map() };
-  for (const key of ["slot", "component"]) {
+  const CROSS_KEYS = ["slot", "face", "component"];
+  const PLANS = {};
+  const FAMILY_OF = {};
+  for (const key of CROSS_KEYS) {
+    PLANS[key] = groupPlan(CROSS[key]);
+    FAMILY_OF[key] = new Map();
     for (const fam of PLANS[key]) for (const m of fam.members) FAMILY_OF[key].set(m, fam.label);
   }
 
@@ -943,9 +1029,9 @@ ${inlineRule(verdictFreshness)}
     view: "theme",
     // Which group each cross-cut view is drilled into, null on its index.
     // Kept per view so tabbing away and back puts the reviewer where they
-    // left off instead of at the top of the index — and so neither view can
-    // ever be handed the other's group id.
-    group: { slot: null, component: null },
+    // left off instead of at the top of the index — and so no view can ever
+    // be handed another's group id.
+    group: { slot: null, face: null, component: null },
     language: "all", theme: "all", verdict: "all", finding: "all", query: "",
   };
   const activeGroup = () => (state.view === "theme" ? null : state.group[state.view]);
@@ -953,9 +1039,12 @@ ${inlineRule(verdictFreshness)}
 
   function matches(p) {
     // The cross-cut views only have rows for one band each, so a page from
-    // another band is not "filtered out", it has nowhere to go.
+    // another band is not "filtered out", it has nowhere to go. 按版式 is the
+    // exception: it takes any page that names the face which drew it, which
+    // is the deck band as well as the face band.
     if (state.view === "slot" && p.band !== "face") return false;
     if (state.view === "component" && p.band !== "component") return false;
+    if (state.view === "face" && p.face === undefined) return false;
     // Inside a group detail the group is a filter like any other. That is
     // what scopes the header tally, the empty state and — because the viewer
     // queues off it — the lightbox's own prev/next to this one group.
@@ -1150,6 +1239,63 @@ ${inlineRule(verdictFreshness)}
   }
 
   /**
+   * The face's identity card: every menu choice that leads here.
+   *
+   * A face is reused, and that reuse is the thing a face audit has to hold in
+   * mind — the same code draws consulting's 要点 and museum's 清单, so a
+   * change that suits one can break the other. The card is the reverse of the
+   * menu lookup, one row per 讲法 and the themes that route it here.
+   *
+   * Read off every page in the build rather than off the filtered set: this
+   * is who the face is, not who happens to be on screen. Read off page
+   * metadata rather than a second copy of the menus, so it cannot disagree
+   * with the pages under it.
+   */
+  function faceIdentity(faceId) {
+    const bySlot = new Map();
+    for (const p of MANIFEST.pages) {
+      if (p.face !== faceId || p.faceSlot === undefined) continue;
+      const seen = bySlot.get(p.faceSlot) || new Set();
+      seen.add(p.section);
+      bySlot.set(p.faceSlot, seen);
+    }
+    if (bySlot.size === 0) return null;
+
+    const box = document.createElement("div");
+    box.className = "identity";
+
+    const served = [...bySlot].filter(([, secs]) => [...secs].some((s) => THEME_SECTIONS.has(s)));
+    if (served.length === 0) {
+      box.appendChild(headText("div", "idnote", "没有任何主题菜单点过这张脸——它只在未上菜版式那一节里露过面。"));
+      return box;
+    }
+
+    const themes = new Set();
+    for (const [, secs] of served) for (const s of secs) if (THEME_SECTIONS.has(s)) themes.add(s);
+    box.appendChild(
+      headText("h4", "", "这张脸的来路 · " + themes.size + " 套主题 · " + served.length + " 种讲法"),
+    );
+
+    served.sort((a, b) => SLOT_ORDER.indexOf(a[0]) - SLOT_ORDER.indexOf(b[0]));
+    for (const [slot, secs] of served) {
+      const row = document.createElement("div");
+      row.className = "idrow";
+      const name = document.createElement("span");
+      name.className = "idslot";
+      if (SLOT_LABELS[slot]) name.appendChild(headText("b", "", SLOT_LABELS[slot]));
+      name.appendChild(headText("code", "", slot));
+      const list = [...secs].filter((s) => THEME_SECTIONS.has(s)).sort((a, b) => SECTION_ORDER.get(a) - SECTION_ORDER.get(b));
+      const who = document.createElement("span");
+      who.className = "idthemes";
+      who.textContent = list.join(" ");
+      who.title = list.length + " 套主题的菜单把 " + slot + " 派给了 " + faceId;
+      row.append(name, who, headText("span", "idn", String(list.length)));
+      box.appendChild(row);
+    }
+    return box;
+  }
+
+  /**
    * Level two: one group across every theme, ordered by theme, and nothing
    * else on the page. The visible set is already narrowed to it (see the
    * group branch in matches),
@@ -1195,6 +1341,12 @@ ${inlineRule(verdictFreshness)}
     else head.push(headText("code", "", parts.code));
     head.push(headText("span", "n", visible.length + " 张"));
     main.appendChild(viewHead(head, ""));
+
+    // Whatever this view wants said about the group itself before the pages
+    // start. Only 按版式 has one: a face is reused across menus, and knowing
+    // which menus is half of judging it.
+    const card = view.detailHead ? view.detailHead(value) : null;
+    if (card) main.appendChild(card);
 
     main.appendChild(visible.length === 0 ? emptyNote() : grid(visible.slice().sort(bySection), "grid"));
   }
