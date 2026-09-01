@@ -293,4 +293,74 @@ describe("one-evidence evidence vs assertion partition", () => {
     expect(claim).toBeTruthy()
     expect(claim!.y + claim!.h).toBeLessThanOrEqual(ev.y + 1)
   })
+  // The 2026-09 fidelity sweep: nine theme faces call `pickEvidence` and
+  // render its result, and `pickEvidence` knows only `EVIDENCE_TYPES`. An
+  // `insight_panel` / `code` / `citation` therefore reached no frame on any
+  // of them — 29 gallery pages drew a heading over an empty page with no
+  // mark of any kind. The face now steps aside for content it cannot place.
+  it("steps aside for a component the evidence frame cannot place, and draws it whole", () => {
+    for (const themeId of ["consulting", "tech", "swiss", "vermilion", "academic"]) {
+      const ctx = buildCtx(resolveStyle(themeId), {})
+      const slide: Slide = {
+        type: "content",
+        kind: "evidence",
+        layout: "one-evidence",
+        heading: CJK_CLAIM,
+        components: [
+          {
+            type: "insight_panel",
+            title: "面板标题",
+            rows: [
+              { label: "标签甲", text: "取值甲" },
+              { label: "标签乙", text: "取值乙" },
+            ],
+            footnote: "面板脚注",
+          },
+        ],
+      } as Slide
+      const { markup, root } = render(
+        <OneEvidenceContent ir={ir(themeId, [slide])} slide={slide} index={0} ctx={ctx} />,
+      )
+      expect(
+        root.querySelector("g[data-evidence-mode]")?.getAttribute("data-evidence-mode"),
+        themeId,
+      ).toBe("fallback")
+      for (const text of ["面板标题", "标签甲", "取值甲", "标签乙", "取值乙", "面板脚注"]) {
+        expect(markup, `${themeId} lost ${text}`).toContain(text)
+      }
+      expect(markup).toContain(CJK_CLAIM)
+      expect(() => assertSubset(root)).not.toThrow()
+    }
+  })
+
+  it("draws a code listing line by line rather than dropping it", () => {
+    const ctx = buildCtx(resolveStyle("consulting"), {})
+    const slide: Slide = {
+      type: "content",
+      kind: "evidence",
+      layout: "one-evidence",
+      heading: CJK_CLAIM,
+      components: [{ type: "code", language: "ts", code: "const a = 1\nconst b = 2\nconst c = 3" }],
+    } as Slide
+    const { markup, root } = render(
+      <OneEvidenceContent ir={ir("consulting", [slide])} slide={slide} index={0} ctx={ctx} />,
+    )
+    expect(root.querySelector("g[data-evidence-mode]")?.getAttribute("data-evidence-mode")).toBe("fallback")
+    for (const line of ["const a = 1", "const b = 2", "const c = 3"]) expect(markup).toContain(line)
+  })
+
+  it("keeps the evidence frame when the component is one the frame can hold", () => {
+    const ctx = buildCtx(resolveStyle("consulting"), {})
+    const slide: Slide = {
+      type: "content",
+      kind: "evidence",
+      layout: "one-evidence",
+      heading: CJK_CLAIM,
+      components: [BAR_CHART],
+    } as Slide
+    const { root } = render(
+      <OneEvidenceContent ir={ir("consulting", [slide])} slide={slide} index={0} ctx={ctx} />,
+    )
+    expect(root.querySelector("g[data-evidence-mode]")).toBeNull()
+  })
 })
