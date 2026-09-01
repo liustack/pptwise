@@ -7,6 +7,7 @@ import { resolveStyle } from "../../themes"
 import { StatementContent } from "../content-statement"
 import { StatHeroContent } from "../content-stat-hero"
 import { PullQuoteContent } from "../content-pull-quote"
+import { underlineDescentRatio } from "../underline"
 import type { PptxIR, Slide } from "@/ir"
 
 const VERSE = "设备不会突然坏，只是没人听它说话。"
@@ -109,10 +110,50 @@ describe("academic sparse faces", () => {
     const hair = root.querySelector("line")
     expect(hair?.getAttribute("x1")).toBe("470")
     expect(hair?.getAttribute("x2")).toBe("810")
-    expect(hair?.getAttribute("y1")).toBe("448")
+    // 392 baseline + 300 × 0.22 ink floor + 16 air. Was a frozen 448, which
+    // sat inside the descender of academic's old-style figures — see the
+    // collision sweep below for the contract this coordinate satisfies.
+    expect(hair?.getAttribute("y1")).toBe("474")
     expect(hair?.getAttribute("stroke")).toBe(ctx.colors.accent)
     expect(markup).not.toContain("图 4.2")
     expect(markup).toContain("试点客户 90 天窗口")
+  })
+
+  it("keeps the gold rule below the numeral's ink for every value the corpus can author", () => {
+    // academic's heading serif sets old-style figures: 3 4 5 7 9 hang below
+    // the baseline. The rule used to sit at a fixed y=448, two pixels under
+    // the descending stem of a 300px "4" — inside the descender zone the
+    // shared `underlineDescentRatio` floor declares, and across the stem on
+    // any stack in the family that hangs a little deeper.
+    for (const value of ["8.4", "12000", "86.5", "43%", "9"]) {
+      const slide: Slide = {
+        type: "content",
+        kind: "points",
+        layout: "stat-hero",
+        heading: value,
+        subheading: "字错率降幅",
+        components: [],
+      } as Slide
+      const { root } = render(
+        <StatHeroContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />,
+      )
+      const hero = Array.from(root.querySelectorAll("text")).find(
+        (t) => Number(t.getAttribute("font-size")) > 80,
+      )!
+      const heroSize = Number(hero.getAttribute("font-size"))
+      const heroBaseline = Number(hero.getAttribute("y"))
+      const body = hero.childNodes[0]?.textContent ?? ""
+      const inkFloor = heroBaseline + heroSize * underlineDescentRatio(body)
+      const rule = root.querySelector("line")!
+      const ruleY = Number(rule.getAttribute("y1"))
+      expect(ruleY, `rule clears the ${value} numeral's ink floor`).toBeGreaterThan(inkFloor)
+
+      // And it still sits above the caption it divides from the numeral.
+      const caption = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "字错率降幅")!
+      const captionSize = Number(caption.getAttribute("font-size"))
+      const captionInkTop = Number(caption.getAttribute("y")) - captionSize * 0.72
+      expect(ruleY, `rule clears the ${value} caption`).toBeLessThan(captionInkTop)
+    }
   })
 
   it("statement closes on the cited source, not on a promise about later pages", () => {

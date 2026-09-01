@@ -10,6 +10,7 @@ import {
   pullQuoteText,
 } from "../minimal-shared"
 import { fitHeroLine, heroUnitMark, fitSparseHeading, fitSparseQuote, fitStatementSource, quoteBlockBaseline, splitTrailingPercent } from "./shared"
+import { underlineDescentRatio } from "../underline"
 
 /** academic 稀排脸：脚注引文、百分号巨数、命题格言。不画点轨和角标。 */
 
@@ -74,6 +75,12 @@ export function pullQuote({ slide, ctx }: SvgTemplateProps) {
   )
 }
 
+/** Hero baseline, then the block that hangs below the numeral's ink. */
+const HERO_BASELINE = 392
+const RULE_AIR = 16
+const RULE_CAPTION_GAP = 60
+const CAPTION_SOURCE_GAP = 40
+
 export function statHero({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const { body, percent } = splitTrailingPercent(heroValue(slide))
@@ -82,11 +89,22 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
   const unitMark = heroUnitMark(fitted.fontSize)
   const caption = heroCaption(slide)
   const source = heroSource(slide)
+  // The rule hangs from the numeral's ink floor rather than a fixed y.
+  // academic's heading serif sets old-style figures — 3 4 5 7 9 hang below the
+  // baseline — so a 300px "4" puts ink 66px under a baseline the frozen y=448
+  // sat only 56px below. The rule ran through the stem. `underlineDescentRatio`
+  // is the same measured floor banner-chapter, memo-head and consulting's own
+  // stat-hero already hang their rules from.
+  const ruleY = Math.round(HERO_BASELINE + fitted.fontSize * underlineDescentRatio(fitted.text) + RULE_AIR)
+  // Caption and source follow the rule so the approved spacing between the
+  // three survives wherever the rule lands.
+  const captionY = ruleY + RULE_CAPTION_GAP
+  const sourceY = captionY + CAPTION_SOURCE_GAP
   return (
     <>
       <text
         x={640}
-        y={392}
+        y={HERO_BASELINE}
         textAnchor="middle"
         fontFamily={fonts.heading}
         fontSize={fitted.fontSize}
@@ -102,11 +120,11 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
           </tspan>
         )}
       </text>
-      <line x1={470} y1={448} x2={810} y2={448} stroke={colors.accent} strokeWidth={1.5} />
+      <line x1={470} y1={ruleY} x2={810} y2={ruleY} stroke={colors.accent} strokeWidth={1.5} />
       {caption && (
         <text
           x={640}
-          y={508}
+          y={captionY}
           textAnchor="middle"
           fontFamily={fonts.body}
           fontSize={23}
@@ -119,7 +137,7 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
       {source && (
         <text
           x={640}
-          y={548}
+          y={sourceY}
           textAnchor="middle"
           fontFamily={fonts.body}
           fontSize={17}
