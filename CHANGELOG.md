@@ -1,5 +1,11 @@
 # @liustack/pptwise
 
+## 0.26.0
+
+### Minor Changes
+
+- The face fidelity contract now covers the whole corpus. Statement skins set the authored citation source instead of baked signature lines, gauge-point and crayonbox-point render the quote they used to drop, one-evidence and the takeover image family step aside for components they cannot represent instead of swallowing them, donut slices carry direct labels through the pie's leader-line gutter, dumbbell charts get a legend, numbered card sub-lines and bento KPI sources render, architecture layers declare per-item truncation, and the baked `Contact` ending label is gone. The fidelity scan runs on all pages for thirteen field paths with an empty exemption table; single-series chart names are the one path ruled as design absorption (the page heading carries the identity, multi-series regressions still go red).
+
 ## 0.25.0
 
 ### Minor Changes

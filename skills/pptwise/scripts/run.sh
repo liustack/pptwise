@@ -21,7 +21,7 @@ set -eu
 # package.json version, and `pnpm release:version` rewrites it on every bump.
 PKG="@liustack/pptwise"
 BIN="pptwise"
-PINNED="0.25.0"
+PINNED="0.26.0"
 # ------------------------------------------------------------------------------
 
 # Split "X.Y.Z" (extra suffix ignored) into the globals _MAJ, _MIN, _PAT.
