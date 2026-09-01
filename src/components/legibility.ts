@@ -41,13 +41,6 @@ export function capFormBody(titleSize: number, bodySize: number): number {
 const TITLE_LH = 1.4
 const BODY_LH = 1.4
 
-/** Tall-card grid: n=4 wraps 2×2 so type does not shrink to fit one cramped row. */
-export function formGridCols(n: number): number {
-  if (n <= 3) return Math.max(1, n)
-  if (n === 4) return 2
-  return 3
-}
-
 /**
  * Icon columns are not a tall card shell. 4-across is OK when a 640-wide
  * slot still clears the floors with wrap. Narrower slots fall back to 2×2.
@@ -324,6 +317,3 @@ export function fillCardType(opts: {
   else bodyMaxLines = Math.max(2, bodyMaxLines)
   return { titleSize, bodySize, bodyMaxLines }
 }
-
-/** Smallest bubble radius whose 0.42 type scale still clears the body floor. */
-export const FORM_BUBBLE_R_MIN = Math.ceil(FORM_BODY_FLOOR / 0.42)
