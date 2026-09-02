@@ -73,6 +73,29 @@ describe("chart component", () => {
     expect(container.querySelector("[data-dropped]")!.getAttribute("data-dropped")).toBe("1")
   })
 
+  it("refuses an empty line or area series at the schema, where the loss is preventable", () => {
+    // A line or area series is named at the end of its own line and nowhere
+    // else. An empty one has no end, so its name reaches the page nowhere and
+    // nothing declares it — the renderer cannot rescue it and the fidelity
+    // scan is right to call it a loss. The boundary is the schema.
+    for (const chart_type of ["line", "area"] as const) {
+      const parsed = chartSchema.safeParse({
+        type: "chart",
+        chart_type,
+        series: [{ name: "Forecast", data: [] }],
+      })
+      expect(parsed.success, chart_type).toBe(false)
+      if (!parsed.success) {
+        expect(parsed.error.issues[0]!.path.join(".")).toBe("series.0.data")
+      }
+    }
+    // A bar's series is named in a legend, which one empty series does not
+    // take off the page: the rule is about direct labelling, not emptiness.
+    expect(
+      chartSchema.safeParse({ type: "chart", chart_type: "bar", series: [{ name: "F", data: [] }] }).success,
+    ).toBe(true)
+  })
+
   it("bar chart renders at least one rect per data point", () => {
     const component = {
       type: "chart" as const,
