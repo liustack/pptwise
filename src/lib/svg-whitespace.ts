@@ -50,13 +50,18 @@ export interface WhitespaceRun {
  */
 export function collapseWhitespaceRuns(runs: readonly WhitespaceRun[]): string[] {
   const out: string[] = []
+  // Whether the last character emitted was *collapsible* whitespace, not
+  // merely whitespace. A space inside a preserved run is content: it does not
+  // eat the space that follows it in a default run, the way one collapsible
+  // space eats the next.
+  //
   // Seeded `true` so whitespace at the very start of the text is dropped by
   // the same rule that drops it between two runs.
   let lastCharWasCollapsible = true
   for (const run of runs) {
     if (run.preserve) {
       out.push(run.text)
-      if (run.text.length > 0) lastCharWasCollapsible = /[ \t\r\n\f\v]$/.test(run.text)
+      if (run.text.length > 0) lastCharWasCollapsible = false
       continue
     }
     let text = run.text.replace(DOCUMENT_WHITESPACE_RUN, " ")
@@ -64,11 +69,12 @@ export function collapseWhitespaceRuns(runs: readonly WhitespaceRun[]): string[]
     if (text.length > 0) lastCharWasCollapsible = text.endsWith(" ")
     out.push(text)
   }
-  // Trailing whitespace at the end of the text goes too, and never inside a
-  // preserved run.
+  // Trailing whitespace at the end of the text goes too. An empty preserved
+  // run contributes no character, so it cannot be what the text ends with —
+  // stopping at one left a default run's trailing space on the page.
   for (let i = out.length - 1; i >= 0; i--) {
-    if (runs[i]!.preserve) break
     if (out[i] === "") continue
+    if (runs[i]!.preserve) break
     out[i] = out[i]!.replace(/ $/, "")
     break
   }

@@ -41,6 +41,19 @@ describe("collapseWhitespaceRuns", () => {
     expect(texts([{ text: "x  ", preserve: true }])).toEqual(["x  "])
   })
 
+  it("does not let a preserved blank eat the blank after it", () => {
+    // Only a collapsible blank collapses the one that follows. A space inside
+    // a preserved run is content, so the default run's own leading space is
+    // still the first collapsible one and stands.
+    expect(texts([{ text: "A   ", preserve: true }, { text: " B" }]).join("")).toBe("A    B")
+  })
+
+  it("drops a trailing blank even when an empty preserved run follows it", () => {
+    // An empty preserved run contributes no character, so it cannot be what
+    // the text ends with. Stopping at one left the blank on the page.
+    expect(texts([{ text: "A " }, { text: "", preserve: true }]).join("")).toBe("A")
+  })
+
   it("collapses only document whitespace, never a no-break or ideographic space", () => {
     // NBSP, the narrow no-break space and the ideographic space are content:
     // an author who writes one means the glyph to stay. JavaScript's \s and
