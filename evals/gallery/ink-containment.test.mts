@@ -139,7 +139,17 @@ describe("consecutive tspans are one anchored chunk, the way SVG lays them out",
   })
 })
 
-describe("nested audit boxes cannot launder an outer overflow", () => {
+describe("the walker keeps the current text position", () => {
+  it("resumes a y-only tspan where the last glyph ended, not where the chunk began", () => {
+    // A tspan giving only `y` starts a new chunk on that axis and keeps the
+    // current x. Reading the *previous chunk's start* instead put the second
+    // line back under the first and hid the overflow entirely.
+    const markup = `<svg xmlns="http://www.w3.org/2000/svg"><g data-audit-rect="0,0,100,100"><g data-audit-box="0,0,100"><text x="10" y="30" font-size="10">AAAAAAAAAA<tspan y="60">BBBBBBBBBB</tspan></text></g></g></svg>`
+    const findings = collectInkFindings(markup)
+    expect(findings.map((f) => f.side)).toEqual(["right"])
+    expect(findings[0]!.px).toBeCloseTo(42, 0)
+  })
+
   it("charges a child's ink to every box scope above it", () => {
     // `matrix`, `icon_cards`, `row_cards`, `sankey` and `flowchart` all
     // declare one box per cell inside the component's own box. Charging the

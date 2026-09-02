@@ -174,30 +174,40 @@ function collectSegments(node: Element, style: TextStyle, out: TextSegment[]): v
     const y = rawY != null && Number.isFinite(Number(rawY)) ? Number(rawY) : undefined
     const before = out.length
     collectSegments(el, own, out)
-    if ((x !== undefined || y !== undefined) && out.length > before) {
-      out[before] = { ...out[before]!, x, y }
+    if (out.length > before) {
+      out[before] = {
+        ...out[before]!,
+        ...(x !== undefined ? { x } : {}),
+        ...(y !== undefined ? { y } : {}),
+      }
     }
   }
 }
 
 /**
- * Every ink box a `<text>` paints, one per chunk.
+ * Every ink box a `<text>` paints, one per run.
  *
- * A **chunk** is what SVG lays out and anchors as a unit: consecutive runs
- * with no start of their own. `text-anchor` applies once, to the chunk's whole
- * advance — measuring each `<tspan>` as its own anchored box puts every run
- * of an end-anchored line at the same right edge, stacked on top of each
- * other, and reports the widest single run instead of their sum. That is not
- * a hand-written shape: `renderEmphasisTspans` emits exactly it, and
- * `svg2pptx/text.ts` already treats those nodes as one segment, spaces on the
- * tspan boundaries included. Nothing is trimmed inside a chunk for the same
- * reason — a space between two runs is advance the page pays for.
+ * Three positions are in play and the walker keeps all three straight:
  *
- * A `<tspan>` carrying its own `x`/`y` starts a new chunk wherever it says.
+ *  - **The current text position** advances glyph by glyph across the whole
+ *    element. A `<tspan>` that gives only `y` starts a new chunk there but
+ *    keeps this x, so it resumes where the last glyph left off — not where
+ *    the previous chunk *began*, which is a different number the moment
+ *    anything was drawn.
+ *  - **A chunk** is what `text-anchor` applies to, once, over the total
+ *    advance from its start. Anchoring each `<tspan>` separately stacks every
+ *    run of an end-anchored line at the same edge. `renderEmphasisTspans`
+ *    emits exactly that shape, and `svg2pptx/text.ts` already treats those
+ *    nodes as one segment.
  *
- * This is not a text engine: no bidi, no `dx`/`dy` lists, no `textLength`,
- * and a chunk that moves only in `y` resumes at the previous chunk's start
- * rather than at its end. None of those appear in this renderer's output.
+ * One box comes back per run rather than one per chunk, so a `dy`-shifted
+ * run carries its own vertical extent instead of being averaged into its
+ * neighbours. Every consumer here unions them, so a chunk still measures as
+ * one thing.
+ *
+ * This is not a text engine: no bidi, no `dx`/`dy`, no
+ * `textLength`, no `xml:space="preserve"`. None appears in this renderer's
+ * output.
  */
 export function textInkBoxes(el: Element, inherited: TextStyle): DepthBox[] {
   const style = inheritTextStyle(el, inherited)
@@ -205,42 +215,50 @@ export function textInkBoxes(el: Element, inherited: TextStyle): DepthBox[] {
   collectSegments(el, style, segments)
   if (segments.length === 0) return []
 
-  const rootX = num(el, "x")
-  const rootY = num(el, "y")
-  const chunks: { segments: TextSegment[]; x: number; y: number }[] = []
+  const chunks: { segments: TextSegment[]; x?: number; y?: number }[] = []
   for (const segment of segments) {
     const previous = chunks[chunks.length - 1]
     if (!previous || segment.x !== undefined || segment.y !== undefined) {
-      chunks.push({
-        segments: [segment],
-        x: segment.x ?? previous?.x ?? rootX,
-        y: segment.y ?? previous?.y ?? rootY,
-      })
+      chunks.push({ segments: [segment], x: segment.x, y: segment.y })
       continue
     }
     previous.segments.push(segment)
   }
 
   const boxes: DepthBox[] = []
+  // The current text position, carried across chunks: an absolute `x` or `y`
+  // replaces its own axis and the other one continues from here.
+  let cursorX = num(el, "x")
+  let cursorY = num(el, "y")
   for (const chunk of chunks) {
-    const content = chunk.segments.map((s) => s.text).join("")
-    if (content.trim() === "") continue
-    // Each glyph pays its own advance and its own tracking; the last glyph on
-    // the chunk keeps no trailing gap.
-    const last = chunk.segments[chunk.segments.length - 1]!
-    const width = Math.max(
-      0,
-      chunk.segments.reduce((sum, s) => sum + runAdvance(s.text, s.style), 0) - last.style.letterSpacing,
-    )
-    const anchor = chunk.segments[0]!.style.textAnchor
-    const fontSize = Math.max(...chunk.segments.map((s) => s.style.fontSize))
-    const x = anchor === "end" ? chunk.x - width : anchor === "middle" ? chunk.x - width / 2 : chunk.x
-    boxes.push({
-      x,
-      y: chunk.y - fontSize * TEXT_INK_ASCENT,
-      w: width,
-      h: fontSize * (TEXT_INK_ASCENT + TEXT_INK_DESCENT),
-    })
+    const runs = chunk.segments.filter((segment) => segment.text !== "")
+    const startX = chunk.x ?? cursorX
+    const startY = chunk.y ?? cursorY
+    cursorX = startX
+    cursorY = startY
+    if (runs.length === 0) continue
+
+    const placed: { x: number; y: number; ink: number; fontSize: number }[] = []
+    for (const [index, run] of runs.entries()) {
+      const advance = runAdvance(run.text, run.style)
+      // Every glyph pays its own tracking; the chunk's last glyph keeps no
+      // trailing gap in its ink, though the cursor still moves by it.
+      const ink = index === runs.length - 1 ? Math.max(0, advance - run.style.letterSpacing) : advance
+      placed.push({ x: cursorX, y: cursorY, ink, fontSize: run.style.fontSize })
+      cursorX += advance
+    }
+
+    const total = Math.max(0, cursorX - startX - runs[runs.length - 1]!.style.letterSpacing)
+    const anchor = runs[0]!.style.textAnchor
+    const shift = anchor === "end" ? -total : anchor === "middle" ? -total / 2 : 0
+    for (const run of placed) {
+      boxes.push({
+        x: run.x + shift,
+        y: run.y - run.fontSize * TEXT_INK_ASCENT,
+        w: run.ink,
+        h: run.fontSize * (TEXT_INK_ASCENT + TEXT_INK_DESCENT),
+      })
+    }
   }
   return boxes
 }
