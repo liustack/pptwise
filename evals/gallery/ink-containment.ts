@@ -184,8 +184,34 @@ function relativeShift(el: Element, attr: string): number {
   return Number.isFinite(value) ? value : 0
 }
 
+/**
+ * One element's position claim over the segments in its own subtree.
+ *
+ * `x`, `y`, `dx` and `dy` on a `<tspan>` address the first character that
+ * element or one of its descendants actually paints — nothing outside it, and
+ * nothing at all when the whole subtree collapses away. A sibling that comes
+ * after an empty positioned tspan keeps the position it already had.
+ */
+interface PositionClaim {
+  /** Segment indices this element covers, as `[from, to)`. */
+  readonly from: number
+  readonly to: number
+  readonly x?: number
+  readonly y?: number
+  readonly dx: number
+  readonly dy: number
+  /** Nesting depth, so a nearer declaration wins over an outer one. */
+  readonly depth: number
+}
+
 /** Flatten a `<text>` into its runs, keeping document order and every space. */
-function collectSegments(node: Element, style: TextStyle, out: TextSegment[]): void {
+function collectSegments(
+  node: Element,
+  style: TextStyle,
+  out: TextSegment[],
+  claims: PositionClaim[],
+  depth: number,
+): void {
   for (const child of Array.from(node.childNodes)) {
     if (child.nodeType === 3) {
       const text = child.textContent ?? ""
@@ -200,16 +226,12 @@ function collectSegments(node: Element, style: TextStyle, out: TextSegment[]): v
     const rawY = el.getAttribute("y")
     const x = rawX != null && Number.isFinite(Number(rawX)) ? Number(rawX) : undefined
     const y = rawY != null && Number.isFinite(Number(rawY)) ? Number(rawY) : undefined
-    const before = out.length
-    collectSegments(el, own, out)
-    if (out.length > before) {
-      out[before] = {
-        ...out[before]!,
-        ...(x !== undefined ? { x } : {}),
-        ...(y !== undefined ? { y } : {}),
-        dx: relativeShift(el, "dx"),
-        dy: relativeShift(el, "dy"),
-      }
+    const dx = relativeShift(el, "dx")
+    const dy = relativeShift(el, "dy")
+    const from = out.length
+    collectSegments(el, own, out, claims, depth + 1)
+    if (x !== undefined || y !== undefined || dx !== 0 || dy !== 0) {
+      claims.push({ from, to: out.length, x, y, dx, dy, depth })
     }
   }
 }
@@ -247,7 +269,8 @@ function collectSegments(node: Element, style: TextStyle, out: TextSegment[]): v
 export function textInkBoxes(el: Element, inherited: TextStyle): DepthBox[] {
   const style = inheritTextStyle(el, inherited)
   const collected: TextSegment[] = []
-  collectSegments(el, style, collected)
+  const claims: PositionClaim[] = []
+  collectSegments(el, style, collected, claims, 0)
   if (collected.length === 0) return []
 
   // Whitespace first, over the whole element's character stream, because that
@@ -259,25 +282,32 @@ export function textInkBoxes(el: Element, inherited: TextStyle): DepthBox[] {
   const painted = collapseWhitespaceRuns(
     collected.map((segment) => ({ text: segment.text, preserve: segment.style.preserveWhitespace })),
   )
+
+  // Then the positions, each to the first *surviving* segment inside the
+  // element that declared it. Outermost first, so a nearer declaration lands
+  // last and wins; a claim whose whole subtree collapsed away addresses no
+  // character and is simply void.
+  const position = collected.map(() => ({ dx: 0, dy: 0 }) as { x?: number; y?: number; dx: number; dy: number })
+  for (const claim of [...claims].sort((a, b) => a.depth - b.depth || a.from - b.from)) {
+    let target = -1
+    for (let i = claim.from; i < claim.to; i++) {
+      if (painted[i] !== "") {
+        target = i
+        break
+      }
+    }
+    if (target === -1) continue
+    const slot = position[target]!
+    if (claim.x !== undefined) slot.x = claim.x
+    if (claim.y !== undefined) slot.y = claim.y
+    slot.dx += claim.dx
+    slot.dy += claim.dy
+  }
+
   const segments: TextSegment[] = []
-  // A run that collapsed to nothing hands its own position and shift to
-  // whichever run comes next, so an empty positioned tspan cannot quietly
-  // merge the run after it into the chunk before it.
-  let carried: Pick<TextSegment, "x" | "y" | "dx" | "dy"> | null = null
   for (const [index, text] of painted.entries()) {
-    const segment = collected[index]!
-    const position: Pick<TextSegment, "x" | "y" | "dx" | "dy"> = {
-      x: carried?.x ?? segment.x,
-      y: carried?.y ?? segment.y,
-      dx: (carried?.dx ?? 0) + segment.dx,
-      dy: (carried?.dy ?? 0) + segment.dy,
-    }
-    if (text === "") {
-      carried = position
-      continue
-    }
-    carried = null
-    segments.push({ ...segment, ...position, text })
+    if (text === "") continue
+    segments.push({ ...collected[index]!, ...position[index]!, text })
   }
   if (segments.length === 0) return []
 

@@ -225,6 +225,38 @@ describe("the walker resolves whitespace the way SVG does", () => {
   })
 })
 
+describe("a tspan's position addresses its own subtree, nearest declaration first", () => {
+  // Browser-verified with getStartPositionOfChar(0): an x on a tspan
+  // addresses the first character that element or a descendant actually
+  // paints. A tspan whose whole subtree collapses away addresses nothing, and
+  // the sibling after it keeps the position it already had.
+  const bx = (inner: string) => {
+    const Parser = getPlatform().domParser!
+    const el = new Parser()
+      .parseFromString(`<svg xmlns="http://www.w3.org/2000/svg"><text x="0" y="50" font-size="10">${inner}</text></svg>`, "image/svg+xml")
+      .documentElement.querySelector("text")!
+    return leafInkBoxes(el as Element, ROOT_TEXT_STYLE).map((box) => box.x)
+  }
+
+  it("hands an outer x down to a descendant's first surviving character", () => {
+    expect(bx(`<tspan x="150"> <tspan>B</tspan></tspan>`)).toEqual([150])
+  })
+
+  it("does not hand it to a following sibling when the subtree collapsed away", () => {
+    expect(bx(`<tspan x="150"> </tspan><tspan>B</tspan>`)).toEqual([0])
+  })
+
+  it("lets a nearer x win over the one that encloses it", () => {
+    expect(bx(`<tspan x="150"> <tspan x="20">B</tspan></tspan>`)).toEqual([20])
+    expect(bx(`<tspan x="150"> </tspan><tspan x="20">B</tspan>`)).toEqual([20])
+  })
+
+  it("reports no overflow for the sibling case, which starts at the root x", () => {
+    const markup = `<svg xmlns="http://www.w3.org/2000/svg"><g data-audit-rect="0,0,100,100"><g data-audit-box="0,0,100"><text x="0" y="50" font-size="10"><tspan x="150"> </tspan><tspan>B</tspan></text></g></g></svg>`
+    expect(collectInkFindings(markup)).toEqual([])
+  })
+})
+
 describe("nested audit boxes cannot launder an outer overflow", () => {
   it("charges a child's ink to every box scope above it", () => {
     // `matrix`, `icon_cards`, `row_cards`, `sankey` and `flowchart` all
