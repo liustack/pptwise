@@ -500,11 +500,65 @@ interface GutterLabel {
   readonly id: string
   readonly side: "left" | "right"
   readonly text: string
+  /**
+   * The tail of `text` that has to survive a cut — a series' own end value.
+   *
+   * `name value` was fitted as one string from the front, so the part that
+   * fell off the end was the number: a 12-character series name beside
+   * `1234` in a 400px box painted `战略业务单元` and left `1234` off the page
+   * entirely. The reader was handed half a name and no figure, with
+   * `data-truncated` promising only that something had been cut.
+   *
+   * A name is a thing a reader can recognize from a fragment, and often from
+   * the line's own colour and position. A value is not: four digits cut to
+   * three is a different number, and cut to nothing is no number at all. So
+   * the value is reserved first and the name is fitted into what is left —
+   * the same order the pie already keeps for its direct labels.
+   */
+  readonly keep?: string
   /** The plot point this label names, in page coordinates. */
   readonly endX: number
   readonly endY: number
   /** Higher survives when the column cannot hold every label. */
   readonly priority: number
+}
+
+/**
+ * Fit one gutter label to the room its side has, keeping its value whole.
+ *
+ * The full `name value` is tried first and returned untouched when it fits,
+ * so every label that was never crowded paints exactly what it always did.
+ * Only a label that has to be cut takes the protected path: the value's own
+ * width (with the space before it) comes off the budget first, and the name
+ * is fitted into the remainder. A name with no room at all yields the gutter
+ * to the value alone, still marked as cut. A gutter that cannot hold even
+ * the value comes back empty, which the caller counts and declares.
+ */
+function fitGutterLabel(
+  label: GutterLabel,
+  avail: number,
+  fontFamily?: string,
+): ReturnType<typeof fitSvgLine> {
+  const shared = {
+    fontSize: DIRECT_LABEL_FONT_SIZE,
+    minFontSize: DIRECT_LABEL_FONT_SIZE,
+    bold: true,
+    fontFamily,
+  } as const
+  const whole = fitSvgLine(label.text, { ...shared, maxWidth: avail })
+  if (!whole.truncated || label.keep === undefined) return whole
+
+  const keep = label.keep
+  const name = label.text.slice(0, Math.max(0, label.text.length - keep.length - 1))
+  const fittedName = fitSvgLine(name, {
+    ...shared,
+    maxWidth: Math.max(0, avail - directLabelWidth(` ${keep}`, fontFamily)),
+  })
+  if (fittedName.text === "") {
+    const valueOnly = fitSvgLine(keep, { ...shared, maxWidth: avail })
+    return { ...valueOnly, truncated: true }
+  }
+  return { text: `${fittedName.text} ${keep}`, fontSize: fittedName.fontSize, truncated: true }
 }
 
 /**
@@ -548,13 +602,7 @@ function renderSeriesGutterLabels(opts: {
     Math.max(0, (side === "left" ? opts.leftW : opts.rightW) - SERIES_GUTTER_OVERHEAD)
   const prepared = opts.labels.map((label) => ({
     label,
-    fitted: fitSvgLine(label.text, {
-      maxWidth: avail(label.side),
-      fontSize: DIRECT_LABEL_FONT_SIZE,
-      minFontSize: DIRECT_LABEL_FONT_SIZE,
-      bold: true,
-      fontFamily: opts.fontFamily,
-    }),
+    fitted: fitGutterLabel(label, avail(label.side), opts.fontFamily),
   }))
   const placed = new Map(
     (["left", "right"] as const).flatMap((side) =>
@@ -1015,6 +1063,7 @@ export function renderLine(
         id: `${end.s.seriesIndex}-last`,
         side: "right",
         text: seriesEndLabelText(end.s.name, end.last.value),
+        keep: String(end.last.value),
         endX: end.last.x,
         endY: end.last.y,
         priority: n - end.s.seriesIndex,
@@ -2352,6 +2401,7 @@ export function renderArea(
         id: `${s.seriesIndex}-last`,
         side: "right",
         text: seriesEndLabelText(s.name, last),
+        keep: String(last),
         endX: xForIndex(kept[kept.length - 1]!),
         endY: yFor(last),
         priority: model.series.length - s.seriesIndex,

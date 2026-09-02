@@ -2000,3 +2000,57 @@ describe("a single category", () => {
     expect(Number(dot.getAttribute("cx"))).toBeCloseTo(tickX, 6)
   })
 })
+
+/**
+ * A gutter label is `name value` in one node, and it used to be fitted as one
+ * string from the front — so the part that fell off the end was the number.
+ */
+describe("a cut gutter label keeps its value", () => {
+  const NAME = "战略业务单元营业收入同比"
+  const series: ChartSeries[] = [{ name: NAME, data: [{ x: "Q1", y: 10 }, { x: "Q2", y: 1234 }] }]
+
+  for (const [kind, renderChart] of [["line", renderLine], ["area", renderArea]] as const) {
+    it(`${kind}: prints the end value and truncates the name around it`, () => {
+      const { container } = svg(renderChart(series, PALETTE, 0, 0, 400, H, MUTED, TEXT, ACCENT))
+      const right = [...container.querySelectorAll("text[data-value-label]")]
+        .map((el) => el.textContent ?? "")
+        .filter((t) => t !== "10")
+      expect(right).toHaveLength(1)
+      const label = right[0]!
+      // The value is what a reader cannot reconstruct, so it is the part
+      // that survives. Before this the label read "战略业务单元" and 1234
+      // was nowhere on the page.
+      expect(label.endsWith("1234")).toBe(true)
+      expect(label.length).toBeLessThan(`${NAME} 1234`.length)
+      const el = [...container.querySelectorAll("text[data-value-label]")].find(
+        (n) => n.textContent === label,
+      )!
+      expect(el.getAttribute("data-truncated")).toBe("1")
+    })
+  }
+
+  it("leaves a label that fits exactly as it was", () => {
+    // Byte-inertness for every label that was never crowded: the full string
+    // is tried first and returned untouched, so the wide common case takes
+    // no new code path at all.
+    const roomy: ChartSeries[] = [{ name: "North", data: [{ x: "Q1", y: 10 }, { x: "Q2", y: 42 }] }]
+    const { container } = svg(renderLine(roomy, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
+    const label = [...container.querySelectorAll("text[data-value-label]")].find((el) =>
+      (el.textContent ?? "").includes("North"),
+    )!
+    expect(label.textContent).toBe("North 42")
+    expect(label.getAttribute("data-truncated")).toBeNull()
+  })
+
+  it("yields the whole gutter to the value when the name has no room at all", () => {
+    const wide: ChartSeries[] = [
+      { name: "供应链数字化转型综合效能指数季度环比", data: [{ x: "Q1", y: 10 }, { x: "Q2", y: 88 }] },
+    ]
+    const { container } = svg(renderLine(wide, PALETTE, 0, 0, 240, H, MUTED, TEXT, ACCENT))
+    const labels = [...container.querySelectorAll("text[data-value-label]")].map((el) => el.textContent)
+    // Either the value alone, or a name fragment ending in it — never a
+    // fragment with the number gone.
+    const right = labels.filter((t) => t !== "10")
+    for (const t of right) expect(t!.endsWith("88")).toBe(true)
+  })
+})
