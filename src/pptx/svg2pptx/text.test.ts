@@ -116,4 +116,21 @@ describe("whitespace at run boundaries", () => {
     const op = textToOp(textEl('<text x="0" y="0" font-size="20">99.95<tspan>%</tspan>   of   plan</text>'))
     expect(op.runs.map((r) => r.text)).toEqual(["99.95", "%", " of plan"])
   })
+
+  it("collapses a blank pair that straddles a run boundary to one space", () => {
+    // The shape `renderEmphasisTspans` produces from `AA ** BB**`. Collapsing
+    // each run on its own left both blanks: two adjacent characters in the
+    // stream, one space on the page.
+    const op = textToOp(
+      textEl('<text x="0" y="0" font-size="20"><tspan>AA </tspan><tspan font-weight="600"> BB</tspan></text>'),
+    )
+    expect(op.runs.map((r) => r.text)).toEqual(["AA ", "BB"])
+  })
+
+  it("drops a run that was nothing but a redundant blank", () => {
+    const op = textToOp(
+      textEl('<text x="0" y="0" font-size="20"><tspan>AA </tspan><tspan> </tspan><tspan>BB</tspan></text>'),
+    )
+    expect(op.runs.map((r) => r.text)).toEqual(["AA ", "BB"])
+  })
 })
