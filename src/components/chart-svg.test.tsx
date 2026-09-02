@@ -1937,3 +1937,66 @@ describe("renderFunnel — direct stage labels", () => {
     }
   })
 })
+
+/**
+ * A chart with exactly one category. `i / (n - 1)` has no answer at n === 1,
+ * and the old `Math.max(n - 1, 1)` guard answered `0` — the lone point sat on
+ * the y-axis, and its `middle`-anchored tick hung half a category name off
+ * the left edge of the component.
+ */
+describe("a single category", () => {
+  const LONG_ZH = "微服务架构下的分布式事务一致性保障机制"
+  const LONG_LATIN = "Quarterly recurring revenue guidance"
+  const one = (x: string): ChartSeries[] => [{ name: "S", data: [{ x, y: 10 }] }]
+
+  const cases = [
+    ["line", renderLine],
+    ["area", renderArea],
+  ] as const
+
+  for (const [kind, renderChart] of cases) {
+    it(`${kind}: centres the lone category in the data span instead of pinning it to the y-axis`, () => {
+      const { container } = svg(renderChart(one("Q1"), PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
+      const tick = container.querySelector('[data-axis-tick="x"]')!
+      const axisX = Number(container.querySelector('[data-axis="y"]')!.getAttribute("x1"))
+      const tickX = Number(tick.getAttribute("x"))
+      expect(tick.getAttribute("text-anchor")).toBe("middle")
+      // Well clear of the axis: the point is in the middle of the span it
+      // has, not at the left edge of it.
+      expect(tickX).toBeGreaterThan(axisX + 100)
+      expect(tickX).toBeLessThan(W)
+    })
+
+    for (const [label, name] of [["CJK", LONG_ZH], ["Latin", LONG_LATIN]] as const) {
+      it(`${kind}: cuts a long ${label} category to the room it has and says so`, () => {
+        const { container } = svg(renderChart(one(name), PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
+        const tick = container.querySelector('[data-axis-tick="x"]')!
+        const tickX = Number(tick.getAttribute("x"))
+        const painted = tick.textContent ?? ""
+        expect(painted).not.toBe("")
+        expect(painted.length).toBeLessThanOrEqual(name.length)
+        // A centred label grows both ways, so half of it has to fit on the
+        // left of its own anchor and half on the right.
+        const half = textInkBox({
+          content: painted,
+          x: tickX,
+          y: 0,
+          fontSize: Number(tick.getAttribute("font-size")),
+          fontFamily: tick.getAttribute("font-family") ?? "",
+          fontWeight: null,
+          textAnchor: "middle",
+        })
+        expect(half.x).toBeGreaterThanOrEqual(-1)
+        expect(half.x + half.w).toBeLessThanOrEqual(W + 1)
+        if (painted.length < name.length) expect(tick.getAttribute("data-truncated")).toBe("1")
+      })
+    }
+  }
+
+  it("line: the tick and the point it names share one x", () => {
+    const { container } = svg(renderLine(one("Q1"), PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
+    const tickX = Number(container.querySelector('[data-axis-tick="x"]')!.getAttribute("x"))
+    const dot = container.querySelector("circle[data-plot-mark]")!
+    expect(Number(dot.getAttribute("cx"))).toBeCloseTo(tickX, 6)
+  })
+})

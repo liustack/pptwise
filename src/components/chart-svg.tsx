@@ -201,6 +201,45 @@ function edgeAnchor(i: number, n: number): "start" | "middle" | "end" {
 }
 
 /**
+ * Where category `i` of `n` sits inside the data span, and how much width its
+ * tick label may claim.
+ *
+ * `i / (n - 1)` spreads n categories from the span's left edge to its right
+ * edge, which is right for every n above one and degenerate at exactly one:
+ * `Math.max(n - 1, 1)` turned the fraction into `0 / 1`, so the lone point
+ * was pinned to the y-axis and its tick — anchored `middle` by
+ * {@link edgeAnchor} — hung half its width off the left of the component. A
+ * 20-character category name overflowed the box by 116px.
+ *
+ * One point has no span to spread across, so it takes the middle of the one
+ * it has. The tick is then centred on the data span, and the width it may
+ * claim is whichever is smaller: the plot it belongs to, or twice its
+ * distance to the nearer edge of the box — a centred label grows both ways,
+ * so that is the widest it can be and still land inside the box the
+ * component accepted. Past that it is cut, and says so with `data-truncated`.
+ */
+function categorySpan(
+  n: number,
+  dataX: number,
+  dataW: number,
+  x0: number,
+  w: number,
+  plotW: number,
+): { xForIndex: (i: number) => number; maxWidth: number } {
+  if (n <= 1) {
+    const centre = dataX + dataW / 2
+    return {
+      xForIndex: () => centre,
+      maxWidth: Math.max(0, Math.min(plotW, 2 * Math.min(centre - x0, x0 + w - centre))),
+    }
+  }
+  return {
+    xForIndex: (i: number) => dataX + (i / (n - 1)) * dataW,
+    maxWidth: dataW / (n - 1),
+  }
+}
+
+/**
  * djb2 string hash — deterministic and platform-independent (same algorithm
  * as `@/shared/lib/color`'s private `hash()`, re-implemented locally since
  * that one isn't exported and this file has no reason to import from it).
@@ -912,9 +951,14 @@ export function renderLine(
     gutterTextRequest(endLabelTexts(model.series), fontFamily),
   )
   const dataX = geom.plotX + gutters.leftW
-  const categoryMaxWidth = gutters.dataW / Math.max(categories.length - 1, 1)
-  const xForIndex = (i: number) =>
-    dataX + (i / Math.max(categories.length - 1, 1)) * gutters.dataW
+  const { xForIndex, maxWidth: categoryMaxWidth } = categorySpan(
+    categories.length,
+    dataX,
+    gutters.dataW,
+    x0,
+    w,
+    geom.plotW,
+  )
   const yTicks = yAxis.ticks.map((t) => ({
     label: formatAxisTick(t, meta.yUnit),
     pos: mapToPlotY(t, yAxis.domain, geom.plotY, geom.plotH),
@@ -2264,9 +2308,14 @@ export function renderArea(
     gutterTextRequest(endLabelTexts(model.series), fontFamily),
   )
   const dataX = geom.plotX + gutters.leftW
-  const categoryMaxWidth = gutters.dataW / Math.max(categories.length - 1, 1)
-  const xForIndex = (i: number) =>
-    dataX + (i / Math.max(categories.length - 1, 1)) * gutters.dataW
+  const { xForIndex, maxWidth: categoryMaxWidth } = categorySpan(
+    categories.length,
+    dataX,
+    gutters.dataW,
+    x0,
+    w,
+    geom.plotW,
+  )
   const yTicks = yAxis.ticks.map((t) => ({
     label: formatAxisTick(t, meta.yUnit),
     pos: mapToPlotY(t, yAxis.domain, geom.plotY, geom.plotH),

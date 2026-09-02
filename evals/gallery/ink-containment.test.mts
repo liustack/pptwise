@@ -272,17 +272,40 @@ describe("nested audit boxes cannot launder an outer overflow", () => {
   })
 })
 
-describe("an unbounded axis label cannot push the plot out of its box", () => {
-  const ctx: ComponentCtx = {
-    colors: {
-      bg: "#FFFFFF", surface: "#F4F4F4", primary: "#006A4E", accent: "#00A878",
-      text: "#1A2421", muted: "#5D6B65",
-      chartPalette: ["#006A4E", "#00A878", "#FF6B35", "#FFD166"],
-    },
-    fonts: { heading: "Georgia", body: "Microsoft YaHei", mono: "Consolas" },
-    bodyFontPx: 24,
-  }
+const ctx: ComponentCtx = {
+  colors: {
+    bg: "#FFFFFF", surface: "#F4F4F4", primary: "#006A4E", accent: "#00A878",
+    text: "#1A2421", muted: "#5D6B65",
+    chartPalette: ["#006A4E", "#00A878", "#FF6B35", "#FFD166"],
+  },
+  fonts: { heading: "Georgia", body: "Microsoft YaHei", mono: "Consolas" },
+  bodyFontPx: 24,
+}
 
+describe("a chart with one category keeps its tick inside the box", () => {
+  for (const chart_type of ["line", "area"] as const) {
+    for (const [label, name] of [
+      ["CJK", "\u5fae\u670d\u52a1\u67b6\u6784\u4e0b\u7684\u5206\u5e03\u5f0f\u4e8b\u52a1\u4e00\u81f4\u6027\u4fdd\u969c\u673a\u5236"],
+      ["Latin", "Quarterly recurring revenue guidance"],
+    ] as const) {
+      it(`${chart_type}: a long ${label} name on the only category stays inside`, () => {
+        // `i / (n - 1)` at n === 1 put the point on the y-axis and the
+        // middle-anchored tick half a name to the left of the component.
+        const component = {
+          type: "chart" as const,
+          chart_type,
+          series: [{ name: "S", data: [{ x: name, y: 10 }] }],
+        }
+        const w = 1120
+        const h = chart.measure(component, w, ctx)
+        const markup = boxed(renderSvgMarkup(chart.render(component, { x: 0, y: 0, w, h }, ctx)), w, h)
+        expect(collectInkFindings(markup)).toEqual([])
+      })
+    }
+  }
+})
+
+describe("an unbounded axis label cannot push the plot out of its box", () => {
   it("keeps a 200-character y unit inside the component box", () => {
     const component = {
       type: "chart" as const,
