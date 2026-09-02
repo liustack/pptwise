@@ -163,6 +163,28 @@ describe("the walker keeps the current text position", () => {
     expect(collectInkFindings(spaced)[0]!.px).toBeGreaterThan(collectInkFindings(tight)[0]!.px)
   })
 
+  it("shifts by dx without starting a chunk", () => {
+    // 162 tspans in the live corpus carry dx; citation.tsx writes them.
+    const markup = `<svg xmlns="http://www.w3.org/2000/svg"><g data-audit-rect="0,0,100,100"><g data-audit-box="0,0,100"><text x="10" y="50" font-size="10">AAAA<tspan dx="80">BBBB</tspan></text></g></g></svg>`
+    const findings = collectInkFindings(markup)
+    expect(findings.map((f) => f.side)).toEqual(["right"])
+    expect(findings[0]!.px).toBeCloseTo(42.8, 1)
+  })
+
+  it("shifts by dy without starting a chunk", () => {
+    const markup = `<svg xmlns="http://www.w3.org/2000/svg"><g data-audit-rect="0,0,100,100"><g data-audit-box="0,0,100"><text x="10" y="20" font-size="10">A<tspan dy="-30">B</tspan></text></g></g></svg>`
+    const findings = collectInkFindings(markup)
+    expect(findings.map((f) => f.side)).toEqual(["top"])
+    expect(findings[0]!.px).toBeCloseTo(17.2, 1)
+  })
+
+  it("reads a dx list as no shift rather than guessing at it", () => {
+    const markup = `<svg xmlns="http://www.w3.org/2000/svg"><g data-audit-rect="0,0,100,100"><g data-audit-box="0,0,100"><text x="10" y="50" font-size="10">AAAA<tspan dx="80 90 100">BBBB</tspan></text></g></g></svg>`
+    expect(collectInkFindings(markup)).toEqual([])
+  })
+})
+
+describe("nested audit boxes cannot launder an outer overflow", () => {
   it("charges a child's ink to every box scope above it", () => {
     // `matrix`, `icon_cards`, `row_cards`, `sankey` and `flowchart` all
     // declare one box per cell inside the component's own box. Charging the

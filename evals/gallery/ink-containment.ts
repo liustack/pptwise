@@ -154,6 +154,24 @@ interface TextSegment {
   /** Set only when the `<tspan>` that owns this run declared its own start. */
   readonly x?: number
   readonly y?: number
+  /** Relative shift of the current text position, applied before the run. */
+  readonly dx: number
+  readonly dy: number
+}
+
+/**
+ * A single-valued `dx`/`dy`, or 0.
+ *
+ * SVG lets both take a list, one entry per glyph. Nothing in this renderer
+ * emits a list — `citation.tsx`'s separator dots, the only live producer,
+ * writes one number — and a per-glyph kerning model is a text engine, not a
+ * bounds check. A list is read as no shift rather than guessed at.
+ */
+function relativeShift(el: Element, attr: string): number {
+  const raw = el.getAttribute(attr)
+  if (raw == null) return 0
+  const value = Number(raw.trim())
+  return Number.isFinite(value) ? value : 0
 }
 
 /** Flatten a `<text>` into its runs, keeping document order and every space. */
@@ -161,7 +179,7 @@ function collectSegments(node: Element, style: TextStyle, out: TextSegment[]): v
   for (const child of Array.from(node.childNodes)) {
     if (child.nodeType === 3) {
       const text = child.textContent ?? ""
-      if (text !== "") out.push({ text, style })
+      if (text !== "") out.push({ text, style, dx: 0, dy: 0 })
       continue
     }
     if (child.nodeType !== 1) continue
@@ -179,6 +197,8 @@ function collectSegments(node: Element, style: TextStyle, out: TextSegment[]): v
         ...out[before]!,
         ...(x !== undefined ? { x } : {}),
         ...(y !== undefined ? { y } : {}),
+        dx: relativeShift(el, "dx"),
+        dy: relativeShift(el, "dy"),
       }
     }
   }
@@ -215,6 +235,9 @@ function collapseChunkWhitespace(segments: readonly TextSegment[]): TextSegment[
  *    keeps this x, so it resumes where the last glyph left off — not where
  *    the previous chunk *began*, which is a different number the moment
  *    anything was drawn.
+ *  - **`dx`/`dy`** shift that position before their own run, without
+ *    starting a chunk: they are relative adjustments, and SVG only breaks a
+ *    chunk on an absolute one.
  *  - **A chunk** is what `text-anchor` applies to, once, over the total
  *    advance from its start. Anchoring each `<tspan>` separately stacks every
  *    run of an end-anchored line at the same edge. `renderEmphasisTspans`
@@ -226,7 +249,7 @@ function collapseChunkWhitespace(segments: readonly TextSegment[]): TextSegment[
  * neighbours. Every consumer here unions them, so a chunk still measures as
  * one thing.
  *
- * This is not a text engine: no bidi, no `dx`/`dy`, no
+ * This is not a text engine: no bidi, no per-glyph `dx`/`dy` lists, no
  * `textLength`, no `xml:space="preserve"`. None appears in this renderer's
  * output.
  */
@@ -261,6 +284,8 @@ export function textInkBoxes(el: Element, inherited: TextStyle): DepthBox[] {
 
     const placed: { x: number; y: number; ink: number; fontSize: number }[] = []
     for (const [index, run] of runs.entries()) {
+      cursorX += run.dx
+      cursorY += run.dy
       const advance = runAdvance(run.text, run.style)
       // Every glyph pays its own tracking; the chunk's last glyph keeps no
       // trailing gap in its ink, though the cursor still moves by it.
