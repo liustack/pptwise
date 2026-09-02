@@ -1114,10 +1114,15 @@ describe("describeQualityIssue: chart_axes_ignored English message (chart-axes f
 
 describe("describeQualityIssue: chart_duplicate_category English message (R1 evidence wave, Task T2)", () => {
   // chart-model.ts's buildChartModel flags a category (x value) repeated
-  // within one series — a warn-severity advisory (Global Constraint 2: a
-  // data-quality concern, never a schema-level hard error), translated to
-  // English here for the public validate surface, same convention as
-  // chart_axes_ignored above.
+  // within one series, translated to English here for the public validate
+  // surface, same convention as chart_axes_ignored above.
+  //
+  // The fixture is a pie because bar, line and area now refuse a repeated
+  // category outright: those three fold their points onto a shared category
+  // axis and keep only the first value, so the repeat costs the author a
+  // number and the schema says so. A pie reads its points in order without
+  // folding — two same-named slices are two slices, nothing is lost, and a
+  // repeated label there is what this advisory is for.
   it("names the series and the duplicated category, and stays ok:true (warn, not error)", () => {
     const v = validateIr({
       ...raw,
@@ -1130,7 +1135,7 @@ describe("describeQualityIssue: chart_duplicate_category English message (R1 evi
           components: [
             {
               type: "chart",
-              chart_type: "bar",
+              chart_type: "pie",
               series: [
                 {
                   name: "Q1 Actuals",
