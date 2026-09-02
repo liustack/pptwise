@@ -45,14 +45,37 @@ const CONCLUSION_Y = 560
 const CONCLUSION_SIZE = 20
 const CONCLUSION_MAX_W = 970
 
+/**
+ * Where the conclusion line and the rule sit on the *fallback* composition —
+ * the branch that hands arbitrary components to `SvgContent` instead of
+ * painting the four-column stats grid.
+ *
+ * On the stats grid the conclusion is a closing line under the numbers, at
+ * `CONCLUSION_Y`. That put the content band between the rule and the
+ * conclusion, 208px of it, and 208px is less than any cartesian chart's own
+ * measured minimum. The band was a constant: it never asked what it was
+ * about to hold, so a chart handed 208px drew its 316px anyway and painted
+ * straight through the conclusion and the footnote (16 pages of the review
+ * corpus, every one of them this face).
+ *
+ * So on the fallback the conclusion reads as a standfirst instead — under
+ * the headline, above the rule, which is where a one-pager puts the sentence
+ * that frames the exhibit below it. The rule then closes the header block
+ * rather than floating between two halves of it, and the exhibit gets one
+ * band, 328px, whatever the page carries. That is room for every chart this
+ * face can be handed, so the band no longer promises less than it owes.
+ */
+const STANDFIRST_Y = 252
+const FALLBACK_RULE_Y = 280
+
 const FOOTNOTE_X = 160
 const FOOTNOTE_Y = 636
 const FOOTNOTE_SIZE = 16
 const FOOTNOTE_MAX_W = 970
 
-const FALLBACK_Y = 312
-const FALLBACK_BOTTOM_WITH_CONCLUSION = 520
-const FALLBACK_BOTTOM_EMPTY = 620
+const FALLBACK_Y = FALLBACK_RULE_Y + 12
+/** Just clear of the footnote's own ink — see `FOOTNOTE_Y`. */
+const FALLBACK_BOTTOM = 620
 
 function exactKpiBlock(slide: SvgTemplateProps["slide"]): KpiCards | null {
   if (slide.components.length !== 1) return null
@@ -191,7 +214,28 @@ export function GaugeStatsContent({ ir, slide, index, ctx }: SvgTemplateProps) {
         </text>
       )}
 
-      <line x1={RULE_X1} y1={RULE_Y} x2={RULE_X2} y2={RULE_Y} stroke={border} strokeWidth={1} />
+      {conclusion && !kpis && (
+        <text
+          data-truncated={conclusion.truncated ? "1" : undefined}
+          x={CONCLUSION_X}
+          y={STANDFIRST_Y}
+          fontFamily={fonts.body}
+          fontSize={conclusion.fontSize}
+          fill={accessibleInk(colors.text, bg, conclusion.fontSize)}
+          dominantBaseline="alphabetic"
+        >
+          {withoutOverflowMark(conclusion.text)}
+        </text>
+      )}
+
+      <line
+        x1={RULE_X1}
+        y1={kpis ? RULE_Y : FALLBACK_RULE_Y}
+        x2={RULE_X2}
+        y2={kpis ? RULE_Y : FALLBACK_RULE_Y}
+        stroke={border}
+        strokeWidth={1}
+      />
 
       {kpis ? (
         <g data-dropped={droppedStats > 0 ? droppedStats : undefined}>
@@ -244,17 +288,12 @@ export function GaugeStatsContent({ ir, slide, index, ctx }: SvgTemplateProps) {
         <SvgContent
           arrangement={fallbackArrangement}
           components={slide.components}
-          rect={{
-            x: RULE_X1,
-            y: FALLBACK_Y,
-            w: RULE_X2 - RULE_X1,
-            h: (conclusion ? FALLBACK_BOTTOM_WITH_CONCLUSION : FALLBACK_BOTTOM_EMPTY) - FALLBACK_Y,
-          }}
+          rect={{ x: RULE_X1, y: FALLBACK_Y, w: RULE_X2 - RULE_X1, h: FALLBACK_BOTTOM - FALLBACK_Y }}
           ctx={fallbackCtx}
         />
       )}
 
-      {conclusion && (
+      {conclusion && kpis && (
         <text
           data-truncated={conclusion.truncated ? "1" : undefined}
           x={CONCLUSION_X}
