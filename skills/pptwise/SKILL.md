@@ -27,8 +27,8 @@ The launcher tries a compatible `pptwise` on `PATH`, then `npx`, then `bunx`. It
 If scripts are unavailable, use the first available route:
 
 1. `pptwise <args>` when the installed major version matches this skill and is at least the pinned version.
-2. `npx --yes --package @liustack/pptwise@0.29.0 pptwise <args>`.
-3. `bunx --bun @liustack/pptwise@0.29.0 <args>`.
+2. `npx --yes --package @liustack/pptwise@0.30.0 pptwise <args>`.
+3. `bunx --bun @liustack/pptwise@0.30.0 <args>`.
 4. Otherwise ask the user to install Node 22.19+ or Bun.
 
 Run `pptwise doctor` after installation and whenever a failure is not explained by its own error. Relay the result instead of guessing.

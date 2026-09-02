@@ -1,5 +1,11 @@
 # @liustack/pptwise
 
+## 0.30.0
+
+### Minor Changes
+
+- Chart hardening from a fourth independent audit. Every chart type now draws in the height it is allocated (funnel, pie, donut, gauge and dumbbell used to pin themselves at 240px), a funnel measures one line per stage, and a radial chart's disc never grows past what leaves its label columns room. A single-category line or area centers its lone point and fits the tick inside the box. Direct labels protect the value: the series name truncates first, and a value that cannot print whole is a declared drop that stops the export, never a shortened number. Legend rows that cut trailing series paint a visible `+N`; otherwise the cut is declared and the export refuses. Validate rejects empty pie/donut/funnel series and duplicate categories within a bar, line or area series, and the duplicate-category advisory says what each chart type actually does. Pie and donut leaders no longer hang past the block below (46 corpus pages). The review scanner checks each component against its own allocated height, transforms nested declarations like the ink beneath them, marks radial wedges as plot marks, and measures polylines segment by segment; the geometry-based gauge and donut wedge parsers handle half-turn and branch-cut edge cases. Text export keeps its indentation: `a:t` is a plain string in DrawingML, verified by an unzip test rather than a cargo-culted attribute.
+
 ## 0.29.0
 
 ### Minor Changes
