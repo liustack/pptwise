@@ -62,8 +62,24 @@ const CONCLUSION_MAX_W = 970
  * the headline, above the rule, which is where a one-pager puts the sentence
  * that frames the exhibit below it. The rule then closes the header block
  * rather than floating between two halves of it, and the exhibit gets one
- * band, 328px, whatever the page carries. That is room for every chart this
- * face can be handed, so the band no longer promises less than it owes.
+ * band, 328px, whatever the page carries.
+ *
+ * **What 328 guarantees**, measured against `chart.measure` rather than
+ * asserted: every legend-bearing cartesian chart (a bar or scatter costs
+ * 52 for the legend row + 28 for the axis-title pair + the flat 240 body =
+ * 320), and a directly-labelled line or area chart up to 12 series with axis
+ * titles, 13 without — those two grow with the series count, because each
+ * series needs a line of the label column (`directLabelBodyH`). A 13-series
+ * line with axis titles measures 344 and does not fit.
+ *
+ * It is not widened to cover that, because it cannot be: the band already
+ * runs from the rule to 620, and 620 is where the footnote's own ink starts.
+ * The bound is the page, not a number someone picked. Past it the exhibit
+ * declines and declares (`data-dropped-silent`), which stops the export
+ * rather than painting a chart through the footnote — the behaviour this
+ * face's own history is about. A 13-series line chart is legal IR
+ * (`ir-quality` only warns past 8), so that path is reachable and is meant
+ * to be loud.
  */
 const STANDFIRST_Y = 252
 const FALLBACK_RULE_Y = 280
