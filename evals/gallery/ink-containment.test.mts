@@ -57,6 +57,11 @@ function boxed(inner: string, w = 100, h = 100, attrs = ""): string {
   return `<svg xmlns="http://www.w3.org/2000/svg"${attrs}><g data-audit-rect="0,0,${w},${h}"><g data-audit-box="0,0,${w}">${inner}</g></g></svg>`
 }
 
+/** The same, with the box declaring the height it was allocated. */
+function boxedWithHeight(inner: string, w: number, h: number): string {
+  return `<svg xmlns="http://www.w3.org/2000/svg"><g data-audit-rect="0,0,${w},${h}"><g data-audit-box="0,0,${w},${h}">${inner}</g></g></svg>`
+}
+
 function parseFirst(markup: string): Element {
   const Parser = getPlatform().domParser!
   return new Parser().parseFromString(markup, "image/svg+xml").documentElement.querySelector("text")!
@@ -304,6 +309,70 @@ describe("a chart with one category keeps its tick inside the box", () => {
       })
     }
   }
+})
+
+describe("a component is held to its own allocated height", () => {
+  it("catches a block that paints into the block below it", () => {
+    // The review's A-over-B case. Component A is allocated 100px at the top
+    // of a 400px content rect and paints 220, straight through component B,
+    // which starts at 120. Every pixel of that is inside the content rect,
+    // which was the only vertical limit this scan knew — so it reported
+    // nothing at all.
+    const markup =
+      `<svg xmlns="http://www.w3.org/2000/svg"><g data-audit-rect="0,0,400,400">` +
+      `<g data-audit-box="0,0,400,100"><rect x="0" y="0" width="400" height="220"/></g>` +
+      `<g data-audit-box="0,120,400,100"><rect x="0" y="120" width="400" height="60"/></g>` +
+      `</g></svg>`
+    const findings = collectInkFindings(markup)
+    expect(findings.map((f) => f.side)).toEqual(["bottom"])
+    expect(findings[0]!.px).toBeCloseTo(120)
+    expect(findings[0]!.message).toContain("its own allocated height")
+  })
+
+  it("keeps the content rect as the limit for a declaration with no height", () => {
+    // A three-number declaration states no height, so the rect bottom stays
+    // the only line there is.
+    const inside =
+      `<svg xmlns="http://www.w3.org/2000/svg"><g data-audit-rect="0,0,400,400">` +
+      `<g data-audit-box="0,0,400"><rect x="0" y="0" width="400" height="220"/></g></g></svg>`
+    expect(collectInkFindings(inside)).toEqual([])
+    const past =
+      `<svg xmlns="http://www.w3.org/2000/svg"><g data-audit-rect="0,0,400,400">` +
+      `<g data-audit-box="0,0,400"><rect x="0" y="0" width="400" height="460"/></g></g></svg>`
+    const findings = collectInkFindings(past)
+    expect(findings.map((f) => f.side)).toEqual(["bottom"])
+    expect(findings[0]!.message).toContain("the content rect")
+  })
+
+  it("lets a radial chart's leader stubs stay inside the band it was given", () => {
+    // Every slice hangs a leader stub off its own arc, and only the
+    // horizontal side ever paid for it — a slice near six o'clock put its
+    // leader 6px below the box, on 46 corpus pages.
+    for (const chart_type of ["pie", "donut"] as const) {
+      const component = {
+        type: "chart" as const,
+        chart_type,
+        series: [
+          {
+            name: "Share",
+            data: [
+              { x: "Enterprise", y: 45 },
+              { x: "SMB", y: 30 },
+              { x: "Consumer", y: 25 },
+            ],
+          },
+        ],
+      }
+      for (const h of [240, 324, 400]) {
+        const markup = boxedWithHeight(
+          renderSvgMarkup(chart.render(component, { x: 0, y: 0, w: 1088, h }, ctx)),
+          1088,
+          h,
+        )
+        expect(collectInkFindings(markup), `${chart_type} h=${h}`).toEqual([])
+      }
+    }
+  })
 })
 
 describe("a declared box travels with the ink it declares", () => {

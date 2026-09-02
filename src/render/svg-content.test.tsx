@@ -58,7 +58,7 @@ describe("SvgContent", () => {
     // the golden-top cap binds, so the first box reports 192 (rect.y 176 +
     // one block-gap) rather than the uncapped 276.32. The annotation
     // follows the placement, which is what this test pins.
-    expect(markup).toContain('data-audit-box="96,192,1088"')
+    expect(markup).toMatch(/data-audit-box="96,192,1088,[\d.]+"/)
   })
 
   it("records dropped components for the audit without painting anything the reader can see", () => {
@@ -108,7 +108,7 @@ it("places a lone chart at the golden share of leftover rather than the heading-
       />
     </svg>,
   )
-  const match = /data-audit-box="96,([\d.]+),1088"/.exec(markup)!
+  const match = /data-audit-box="96,([\d.]+),1088,[\d.]+"/.exec(markup)!
   const y = Number(match[1])
   expect(y).toBeGreaterThan(228 + 16)
 })
@@ -129,8 +129,8 @@ it("sets a lone short component down by at most one heading-body beat, not 38% o
       />
     </svg>,
   )
-  expect(markup).toContain('data-audit-box="96,192,1088"')
-  expect(markup).not.toContain('data-audit-box="96,314.32,1088"')
+  expect(markup).toMatch(/data-audit-box="96,192,1088,[\d.]+"/)
+  expect(markup).not.toMatch(/data-audit-box="96,314\.32,1088,/)
 })
 
 // Structure-components wave task 1, decision 1: a full-body component
@@ -153,7 +153,7 @@ describe("SvgContent full-body components (structure-components wave task 1)", (
       </svg>,
     )
     expect(markup).toContain('data-audit-rect="96,176,1088,424"')
-    expect(markup).toContain('data-audit-box="96,176,1088"')
+    expect(markup).toMatch(/data-audit-box="96,176,1088,[\d.]+"/)
     // No settle — the component's own <g> children translate straight to
     // rect.y (176), never to a golden-position y like the lone-component
     // bullets case above (which lands at 208). It fills the rect's whole
@@ -239,9 +239,9 @@ it("surplus-grown component y is identical between the audit annotation and the 
   // (233.2 — stretch spends its 60% share first, +73.2 per kpi, the gap
   // pass adds the 8 its 1.5x ceiling allows, and the assembled block is
   // then set down by the 16px cap rather than 34.048 — see layout.test.ts).
-  expect(markup).toContain('data-audit-box="0,233.2,400"')
+  expect(markup).toMatch(/data-audit-box="0,233\.2,400,[\d.]+"/)
   // And the component's own rendered translate must carry that exact same y —
   // "rendering the annotation" (not a parallel, possibly-diverging value).
   expect(markup).toContain("translate(0,233.2)")
-  expect(markup).not.toContain('data-audit-box="0,136,400"')
+  expect(markup).not.toMatch(/data-audit-box="0,136,400,/)
 })

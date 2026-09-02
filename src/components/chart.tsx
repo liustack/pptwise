@@ -6,7 +6,7 @@ import { accessibleInk } from "../render/ink"
 import { axisTitlePairHeight } from "./axis-titles"
 import { MIN_CARTESIAN_BOX_W, PLOT_TOP_PAD, X_TICK_BAND } from "./cartesian-axis"
 import { labelLinePitch } from "./label-collision"
-import { DIRECT_LABEL_FONT_SIZE, MIN_DIRECT_LABEL_BOX_W } from "./chart-svg"
+import { DIRECT_LABEL_FONT_SIZE, MIN_DIRECT_LABEL_BOX_W, PIE_LEADER_STUB } from "./chart-svg"
 import { buildChartModel } from "./chart-model"
 import type { RenderDef, SvgComponent } from "./types"
 import {
@@ -358,6 +358,21 @@ function directLabelBodyH(component: ChartComponent): number {
 }
 
 /**
+ * Body height a pie or donut needs to hold its own leaders.
+ *
+ * Every slice hangs a `PIE_LEADER_STUB` off its arc, so the circle's ink runs
+ * a stub past its own radius in every direction. `radialFullRadius` keeps
+ * that inside the box by yielding the stub on whichever axis binds — which,
+ * left alone, would simply draw a smaller circle in the same band. The band
+ * grows by the two stubs instead, so a caller granting this minimum gets the
+ * circle it always got and the leaders land inside it.
+ */
+function radialBodyH(component: ChartComponent): number {
+  if (component.chart_type !== "pie" && component.chart_type !== "donut") return 0
+  return CHART_H + 2 * PIE_LEADER_STUB
+}
+
+/**
  * Body height a funnel needs so every stage keeps its name.
  *
  * `renderFunnel` gives each stage one band of `h / stages` and labels none of
@@ -385,7 +400,7 @@ export const chart: SvgComponent<ChartComponent> = {
     return (
       (hasHeaderRow(component) ? HEADER_ROW_H : 0) +
       axisTitlePairHeight(xTitle, yTitle) +
-      Math.max(CHART_H, directLabelBodyH(component), funnelBodyH(component))
+      Math.max(CHART_H, directLabelBodyH(component), funnelBodyH(component), radialBodyH(component))
     )
   },
   render(component, box, ctx) {

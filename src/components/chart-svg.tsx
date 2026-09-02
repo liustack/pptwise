@@ -1306,7 +1306,7 @@ export function renderLine(
 }
 
 /** Radial stub a leader travels out from the arc before it turns horizontal. */
-const PIE_LEADER_STUB = 10
+export const PIE_LEADER_STUB = 10
 /** Air between a leader's end and the first glyph of the label it points at. */
 const PIE_LEADER_GAP = 6
 /**
@@ -1318,6 +1318,23 @@ const PIE_LEADER_GAP = 6
  * `DUMBBELL_PLOT_MIN_W` makes for its plot band.
  */
 const PIE_MIN_RADIUS_RATIO = 0.55
+
+/**
+ * The radius a pie or donut may use before its labels start reaching.
+ *
+ * Every slice hangs a `PIE_LEADER_STUB` off its own arc, so the circle's
+ * real ink runs to `r + PIE_LEADER_STUB` in every direction. The horizontal
+ * side was already paid for — `layoutRadialSlices` subtracts the stub, the
+ * gap and the label budget out of `w / 2` — but the vertical side had only
+ * the flat 4px inset the arc alone needed, so a slice near six o'clock put
+ * its leader 6px below the box the chart was handed. Invisible until the
+ * geometry gate started measuring a component against its own allocated
+ * height rather than the whole content rect: it was 6px into the block
+ * below, on 46 pages of the review corpus.
+ */
+function radialFullRadius(w: number, h: number): number {
+  return Math.min(w / 2, h / 2 - PIE_LEADER_STUB) - 4
+}
 
 /** One slice's label geometry, plus the two angles its own path is drawn from. */
 interface RadialSlice {
@@ -1521,7 +1538,7 @@ export function renderPie(
   if (total <= 0) return <WholeShareDeclined data={data} />
   const cx = x0 + w / 2
   const cy = y0 + h / 2
-  const fullR = Math.min(w, h) / 2 - 4
+  const fullR = radialFullRadius(w, h)
   // The circle gives up radius to the two label gutters, down to the floor.
   // A pie wide enough for its labels (the common case: `chart.tsx` hands
   // this renderer the full component width against a fixed 240px band) keeps
@@ -2180,7 +2197,7 @@ export function renderDonut(
   if (total <= 0) return <WholeShareDeclined data={data} />
   const cx = x0 + w / 2
   const cy = y0 + h / 2
-  const fullR = Math.min(w, h) / 2 - 4
+  const fullR = radialFullRadius(w, h)
   // Same gutter the pie yields radius to, for the same reason: a ring of
   // colored arcs with a total in the middle names none of its own slices.
   const { r, slices } = layoutRadialSlices(data, total, cx, cy, x0, w, fullR, fontFamily)

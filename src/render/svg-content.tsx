@@ -1,6 +1,6 @@
 import type { Component } from "@/ir"
 import type { ComponentCtx } from "../components/types"
-import { renderComponent } from "../components"
+import { measureComponent, renderComponent } from "../components"
 import { asideSplit, layoutContentFit, settleToGolden, type ContentRect, type Arrangement } from "./layout"
 import { SCALABLE_TYPES } from "./component-traits"
 import { AssertionEvidence } from "./assertion-evidence"
@@ -42,7 +42,7 @@ export function SvgContent({ arrangement, components, rect, ctx }: SvgContentPro
   if (components.length === 1 && FULL_BODY_TYPES.has(components[0].type)) {
     return (
       <g data-audit-rect={auditRect}>
-        <g data-audit-box={`${rect.x},${rect.y},${rect.w}`}>
+        <g data-audit-box={`${rect.x},${rect.y},${rect.w},${rect.h}`}>
           {renderComponent(components[0], { x: rect.x, y: rect.y, w: rect.w, h: rect.h }, ctx)}
         </g>
       </g>
@@ -111,8 +111,21 @@ export function SvgContent({ arrangement, components, rect, ctx }: SvgContentPro
           strokeOpacity={0.6}
         />
       )}
+      {/* The fourth number is the height this block was allocated: its own
+          `box.h` where the layout handed one out as a budget, and otherwise
+          the height it measured for itself, which is exactly the height the
+          stack advanced by before placing the next block. Declaring it is
+          what lets the geometry gate (`evals/gallery/ink-containment.ts`)
+          hold a component to its own share of the page rather than to the
+          content rect, which on a stacked page is the wrong line: everything
+          below a block belongs to the next block, not to the face. */}
       {placed.map((p, i) => (
-        <g key={i} data-audit-box={`${p.box.x},${p.box.y},${p.box.w}`}>
+        <g
+          key={i}
+          data-audit-box={`${p.box.x},${p.box.y},${p.box.w},${
+            p.box.h ?? measureComponent(p.component, p.box.w, ctx)
+          }`}
+        >
           {renderComponent(p.component, p.box, ctx)}
         </g>
       ))}

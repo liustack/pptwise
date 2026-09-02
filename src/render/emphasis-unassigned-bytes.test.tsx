@@ -88,6 +88,11 @@ function consultingPadDeck(): PptxIR {
 // right-edge ticks (cover-only). Covers of all 23 unassigned themes stay
 // byte-identical. consulting is not in this fixture.
 //
+// Recaptured (allocated-height declaration). Every stacked component box now
+// declares the height it was allocated as a fourth number, so the
+// `data-audit-box` attribute value moves on every content page. Verified by
+// diffing pages before and after: nothing else in the markup changed.
+//
 // Recaptured (audit-box frame normalization). `verdict_banner` states its
 // own `data-audit-box`/`data-audit-rect` in the frame its ink uses — at the
 // local origin, under the `translate` it already carried — instead of adding

@@ -1372,6 +1372,22 @@ describe("a chart uses the height it was allocated, whatever its type", () => {
       ],
     })
 
+  it("measures a pie and a donut with room for their own leaders", () => {
+    // Every slice hangs a leader stub off its arc, so the circle's ink runs a
+    // stub past its radius in every direction. Only the horizontal side was
+    // ever paid for; the band now carries the two vertical stubs, so a caller
+    // granting the minimum gets the circle it always got with its leaders
+    // inside the box.
+    for (const chart_type of ["pie", "donut"] as const) {
+      const component = {
+        type: "chart" as const,
+        chart_type,
+        series: [{ name: "Share", data: [{ x: "A", y: 40 }, { x: "B", y: 60 }] }],
+      }
+      expect(chart.measure(component, 970, ctx), chart_type).toBe(260)
+    }
+  })
+
   it("measures a funnel by the stages it has to name, not a flat floor", () => {
     // `renderFunnel` labels every band or none, and gives up once a band is
     // shorter than a line of text. The count of names to place is part of
@@ -1409,8 +1425,9 @@ describe("a chart uses the height it was allocated, whatever its type", () => {
         return Number(/A ([\d.]+) /.exec(d)![1])
       }
       // A taller band is a bigger circle and a taller column to stack labels
-      // in. Pinned at 240 the two were the same chart.
-      expect(radiusAt(400), chart_type).toBeGreaterThan(radiusAt(240))
+      // in. Pinned at the flat floor the two were the same chart.
+      const minimum = chart.measure(component, 600, ctx)
+      expect(radiusAt(minimum + 160), chart_type).toBeGreaterThan(radiusAt(minimum))
     }
   })
 })

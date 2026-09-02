@@ -28,11 +28,14 @@
  *    the hero bleeds into the page margin by design and *says so* in the box
  *    it declares). A declared bleed is a decision; ink past the declaration
  *    is not.
- *  - **Vertically, against the enclosing `data-audit-rect`.** A
- *    `data-audit-box` has no height — the layout stacks by measured height
- *    and only the region rect knows where the content area ends. The rect
- *    bottom is the line a component may not cross, because everything below
- *    it belongs to the face.
+ *  - **Vertically, against the component's own allocated height when it has
+ *    one, and the enclosing `data-audit-rect` when it does not.** A
+ *    `data-audit-box` that carries a fourth number is stating the height it
+ *    was allocated, and that is the line its ink may not cross: on a stacked
+ *    page everything below it belongs to the *next block*, not to the face,
+ *    and a component painting 220px into a 100px allocation is inside the
+ *    content rect the whole way down. A three-number declaration states no
+ *    height, so the rect bottom remains the only line there is.
  *
  * ## Tolerances
  *
@@ -422,6 +425,8 @@ interface BoxScope {
   readonly declaration: string
   /** The declaration in page coordinates — see {@link declaredBox}. */
   readonly box: DepthBox
+  /** True when the declaration carried a fourth number, its own height. */
+  readonly hasVertical: boolean
   readonly region: Region | null
   readonly ink: DepthBox[]
 }
@@ -489,7 +494,14 @@ export function collectInkFindings(markup: string): InkFinding[] {
     const boxAttr = el.getAttribute("data-audit-box")
     let opened: BoxScope | null = null
     if (boxAttr) {
-      opened = { declaration: boxAttr, box: declaredBox(boxAttr, here).box, region, ink: [] }
+      const declared = declaredBox(boxAttr, here)
+      opened = {
+        declaration: boxAttr,
+        box: declared.box,
+        hasVertical: declared.hasVertical,
+        region,
+        ink: [],
+      }
       scopes = [...scopes, opened]
     }
 
@@ -515,12 +527,23 @@ export function collectInkFindings(markup: string): InkFinding[] {
       const right = ink.x + ink.w - (opened.box.x + opened.box.w)
       if (left > H_TOLERANCE) report("left", left, "its own declared box")
       if (right > H_TOLERANCE) report("right", right, "its own declared box")
-      if (opened.region) {
-        const { rect } = opened.region
-        const top = rect.y - ink.y
-        const bottom = ink.y + ink.h - (rect.y + rect.h)
-        if (top > V_TOLERANCE) report("top", top, "the content rect")
-        if (bottom > V_TOLERANCE) report("bottom", bottom, "the content rect")
+      // A component's own allocation when it declared one, the content rect
+      // otherwise. The rect was the only vertical limit this scan knew, and
+      // it is the wrong one on a stacked page: a component allocated 100px
+      // that paints 220 has taken the room the face gave the block below it,
+      // and every pixel of that is still inside the content rect. The rect
+      // stays the answer for a three-number declaration, which states no
+      // height for the ink to be measured against.
+      const limit = opened.hasVertical
+        ? { rect: opened.box, name: "its own allocated height" }
+        : opened.region
+          ? { rect: opened.region.rect, name: "the content rect" }
+          : null
+      if (limit) {
+        const top = limit.rect.y - ink.y
+        const bottom = ink.y + ink.h - (limit.rect.y + limit.rect.h)
+        if (top > V_TOLERANCE) report("top", top, limit.name)
+        if (bottom > V_TOLERANCE) report("bottom", bottom, limit.name)
       }
     }
   }

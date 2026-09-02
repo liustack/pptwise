@@ -9,6 +9,11 @@ import {
 
 installNodePlatform()
 
+// Recaptured (allocated-height declaration). Every stacked component box now
+// declares the height it was allocated as a fourth number, so the
+// `data-audit-box` attribute value moves on every content page in the matrix.
+// Verified by diffing pages before and after: nothing else changed.
+//
 // Recaptured for the three-layer depth contract. All 378 hashes move because
 // the marked layer groups are now part of the serialized SVG contract. The
 // same matrix remains a byte nail for every later change.
