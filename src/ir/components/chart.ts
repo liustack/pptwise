@@ -39,6 +39,25 @@ export const SINGLE_SERIES_TYPES = ["pie", "donut", "funnel", "gauge"] as const
  */
 const WHOLE_SHARE_TYPES = ["pie", "donut", "funnel"] as const
 
+/**
+ * Chart types that fold their points onto a shared category axis, keeping the
+ * first value seen for each category and discarding every later one
+ * (`components/chart-model.ts`'s `buildChartModel`).
+ *
+ * Exactly the types where a repeated x costs the author a number: a line with
+ * `A:10, A:99, B:20` drew two ticks, printed `10` and `20`, and left `99`
+ * nowhere on the page with no `data-dropped` and no `data-truncated` to find
+ * it by.
+ *
+ * Deliberately not every chart type. A `scatter` is a point cloud whose whole
+ * job is several y's at one x, and a pie, donut, funnel or dumbbell reads its
+ * points in order without folding them, so two same-named slices are two
+ * slices and nothing is lost. Those keep `ir-quality`'s advisory
+ * `chart_duplicate_category` warning, which is what a repeated label means
+ * there: possibly a typo, never a dropped value.
+ */
+const CATEGORY_FOLDING_TYPES = ["bar", "line", "area"] as const
+
 export const schema = z
   .object({
     type: z.literal("chart"),
@@ -215,6 +234,37 @@ export const schema = z
             `a ${c.chart_type} draws each point as a share of the total, and series[${si}] ("${s.name}") totals ${total}. ` +
             `Nothing can be drawn from a total of zero or less, so the whole component would leave the page. ` +
             `Give the points values that sum above zero, or use chart_type "bar" for figures that can be negative.`,
+        })
+      })
+    }
+    // A repeated category inside one series is a value the author wrote and
+    // the page never shows. `buildChartModel` keeps the first y for each
+    // category and drops the rest, and it drops them without a mark — the
+    // chart draws a clean, complete-looking series with a number missing out
+    // of the middle of it. Nothing downstream can repair that, so it is
+    // refused here, the same rule that refuses a series whose name cannot
+    // reach the page.
+    //
+    // The key mirrors `chart-model.ts`'s own `categoryKeyOf`: the type tag
+    // keeps `x: "1"` and `x: 1` apart, since the schema admits both and the
+    // model treats them as different categories.
+    if (CATEGORY_FOLDING_TYPES.includes(c.chart_type as (typeof CATEGORY_FOLDING_TYPES)[number])) {
+      c.series.forEach((s, si) => {
+        const seen = new Set<string>()
+        s.data.forEach((d, di) => {
+          const key = typeof d.x === "number" ? `n:${d.x}` : `s:${d.x}`
+          if (!seen.has(key)) {
+            seen.add(key)
+            return
+          }
+          ctx.addIssue({
+            code: "custom",
+            path: ["series", si, "data", di, "x"],
+            message:
+              `series[${si}] ("${s.name}") repeats the category "${d.x}", and a ${c.chart_type} keeps only the first value for each category — ` +
+              `this point's y would leave the page with nothing on it or in the audit to say so. ` +
+              `Give each point in a series its own category, or split the repeats into separate series.`,
+          })
         })
       })
     }

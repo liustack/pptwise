@@ -1403,3 +1403,57 @@ describe("an empty whole-share series is refused where the loss is preventable",
     }
   })
 })
+
+describe("a repeated category inside one series is refused", () => {
+  it("names the series and the category it repeats", () => {
+    // `buildChartModel` keeps the first y for each category and drops the
+    // rest without a mark: `A:10, A:99, B:20` drew two ticks, printed 10 and
+    // 20, and left 99 nowhere on the page, with validate reporting success.
+    for (const chart_type of ["line", "area", "bar"] as const) {
+      const parsed = chartSchema.safeParse({
+        type: "chart",
+        chart_type,
+        series: [{ name: "Revenue", data: [{ x: "A", y: 10 }, { x: "A", y: 99 }, { x: "B", y: 20 }] }],
+      })
+      expect(parsed.success, chart_type).toBe(false)
+      if (!parsed.success) {
+        const issue = parsed.error.issues.find((i) => i.path.join(".") === "series.0.data.1.x")
+        expect(issue, chart_type).toBeDefined()
+        expect(issue!.message).toContain("Revenue")
+        expect(issue!.message).toContain('"A"')
+      }
+    }
+  })
+
+  it("keeps a numeric and a string category of the same text apart", () => {
+    // The model treats `x: "1"` and `x: 1` as different categories, so the
+    // schema has to as well or it refuses data the renderer draws in full.
+    expect(
+      chartSchema.safeParse({
+        type: "chart",
+        chart_type: "line",
+        series: [{ name: "S", data: [{ x: "1", y: 10 }, { x: 1, y: 20 }] }],
+      }).success,
+    ).toBe(true)
+  })
+
+  it("leaves the types that never fold a category alone", () => {
+    // A scatter is a point cloud whose job is several y's at one x, and a
+    // pie reads its points in order without folding them: two same-named
+    // slices are two slices and nothing is lost.
+    expect(
+      chartSchema.safeParse({
+        type: "chart",
+        chart_type: "scatter",
+        series: [{ name: "S", data: [{ x: 1, y: 10 }, { x: 1, y: 20 }] }],
+      }).success,
+    ).toBe(true)
+    expect(
+      chartSchema.safeParse({
+        type: "chart",
+        chart_type: "pie",
+        series: [{ name: "S", data: [{ x: "A", y: 10 }, { x: "A", y: 20 }] }],
+      }).success,
+    ).toBe(true)
+  })
+})
