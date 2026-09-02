@@ -262,22 +262,25 @@ describe("renderLine — endpoint emphasis and area gradient", () => {
     expect(polylines.map((p) => p.getAttribute("stroke"))).toEqual([PALETTE[0], PALETTE[1]])
   })
 
-  it("does not alter existing category/value labels", () => {
+  it("names the series where its line ends, and prints the bare start value", () => {
     const { container } = svg(renderLine(series, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
     const texts = Array.from(container.querySelectorAll("text"))
     const categories = Array.from(container.querySelectorAll('[data-axis-tick="x"]'))
     const values = texts.filter((t) => t.getAttribute("fill") === TEXT)
     expect(categories.map((t) => t.textContent)).toEqual(["Jan", "Feb", "Mar"])
-    expect(values.map((t) => t.textContent)).toEqual(["10", "20"])
+    // Identity travels with the line: `name value` at the end, the start
+    // value alone (the name is already on the page, once).
+    expect(values.map((t) => t.textContent).sort()).toEqual(["10", "Trend 20"])
   })
 })
 
 /**
- * Endpoint value labels on a line chart. Dataviz discipline: labels have to
- * be selective. Four series is the last count whose first/last numbers can
- * sit without stacking into an ink blot (author screenshot, 20-series
- * density corpus). Past that, the legend carries identity and the numbers
- * come off. Endpoint dots stay.
+ * Gutter labels on a line chart. Every series is named where its own line
+ * ends, whatever the series count: there is no legend on a line chart to
+ * fall back to, and `stackLabelColumn` solves the whole column rather than
+ * nudging pairs, so five converging series stack into five readable lines
+ * instead of an ink blot. A gutter genuinely too short to hold them all
+ * drops the lowest-priority labels and declares the loss.
  */
 function lineSeriesCount(n: number): ChartSeries[] {
   return Array.from({ length: n }, (_, i) => ({
@@ -297,18 +300,29 @@ function endpointValueTexts(container: HTMLElement): string[] {
     .map((t) => t.textContent ?? "")
 }
 
-describe("renderLine — endpoint value labels drop when series collide", () => {
-  it("keeps first/last value labels at 4 series", () => {
+describe("renderLine — every series is named in the end gutter", () => {
+  it("names all four series at 4 series, start values bare", () => {
     const { container } = svg(renderLine(lineSeriesCount(4), PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
-    expect(endpointValueTexts(container).sort()).toEqual(["10", "11", "12", "13", "20", "21", "22", "23"])
+    expect(endpointValueTexts(container).sort()).toEqual([
+      "10", "11", "12", "13", "S0 20", "S1 21", "S2 22", "S3 23",
+    ])
     expect(container.querySelectorAll('circle[r="4"]')).toHaveLength(4)
   })
 
-  it("drops every endpoint value label at 5 series, and leaves the dots", () => {
+  it("keeps naming every series at 5, one readable line apart, dots intact", () => {
     const { container } = svg(renderLine(lineSeriesCount(5), PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
-    expect(endpointValueTexts(container)).toEqual([])
+    expect(endpointValueTexts(container).sort()).toEqual([
+      "10", "11", "12", "13", "14", "S0 20", "S1 21", "S2 22", "S3 23", "S4 24",
+    ])
     expect(container.querySelectorAll("polyline")).toHaveLength(5)
     expect(container.querySelectorAll('circle[r="4"]')).toHaveLength(5)
+    const endYs = Array.from(container.querySelectorAll('[data-value-label="1"]'))
+      .filter((t) => (t.textContent ?? "").startsWith("S"))
+      .map((t) => Number(t.getAttribute("y")))
+      .sort((a, b) => a - b)
+    for (let i = 1; i < endYs.length; i++) {
+      expect(endYs[i]! - endYs[i - 1]!).toBeGreaterThanOrEqual(16 * 1.2 + 2 - 1e-6)
+    }
   })
 })
 
@@ -397,14 +411,14 @@ describe("gridlines", () => {
     expect(
       hGrid(svg(renderScatter(scatterSeries, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT)).container).length,
     ).toBeGreaterThan(0)
-    // The evidence behind that asymmetry: an area chart prints no value text
-    // at all, and a line chart prints only its first/last point.
+    // The evidence behind that asymmetry: neither line nor area prints an
+    // *interior* value. Both name their series at the ends, in the gutter.
     const areaValues = Array.from(
       svg(renderArea(lineSeries, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT)).container.querySelectorAll(
         "text",
       ),
     ).filter((t) => t.getAttribute("fill") === TEXT)
-    expect(areaValues).toHaveLength(0)
+    expect(areaValues.length).toBeLessThanOrEqual(2)
     const lineValues = Array.from(
       svg(renderLine(lineSeries, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT)).container.querySelectorAll(
         "text",
@@ -412,7 +426,7 @@ describe("gridlines", () => {
     )
       .filter((t) => t.getAttribute("fill") === TEXT)
       .map((t) => t.textContent)
-    expect(lineValues).toEqual(["1", "3"])
+    expect(lineValues.sort()).toEqual(["1", "Trend 3"])
   })
 
   it("renderLine: an explicit showGrid=false suppresses the reference lines", () => {
@@ -1516,11 +1530,11 @@ function circlesOf(container: HTMLElement) {
 }
 
 describe("renderLine — converging endpoints", () => {
-  it("keeps a full line of air between the two endpoint value labels", () => {
+  it("keeps a full line of air between the two end labels", () => {
     const { container } = svg(renderLine(convergingSeries, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
     const labels = Array.from(container.querySelectorAll('[data-value-label="1"]'))
-    const ends = labels.filter((t) => t.textContent === "90" || t.textContent === "87")
-    expect(ends.map((t) => t.textContent).sort()).toEqual(["87", "90"])
+    const ends = labels.filter((t) => t.textContent === "Deep 90" || t.textContent === "Gold 87")
+    expect(ends.map((t) => t.textContent).sort()).toEqual(["Deep 90", "Gold 87"])
     const ys = ends.map((t) => Number(t.getAttribute("y")))
     // One full 16px text line (1.2em) plus its air.
     expect(Math.abs(ys[0] - ys[1])).toBeGreaterThanOrEqual(16 * 1.2 + 2)
@@ -1544,14 +1558,16 @@ describe("renderLine — converging endpoints", () => {
     }
   })
 
-  it("keeps the endpoint number off the endpoint marker", () => {
+  it("keeps the end label off the plot entirely, in the gutter past the marker", () => {
     const { container } = svg(renderLine(convergingSeries, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
     const dotX = circlesOf(container).filter((c) => c.r === 4)[0]!.cx
     const last = Array.from(container.querySelectorAll('[data-value-label="1"]')).find(
-      (t) => t.textContent === "90",
+      (t) => t.textContent === "Deep 90",
     )!
-    // Anchored "end", so the number's right edge must stop short of the dot.
-    expect(Number(last.getAttribute("x"))).toBeLessThanOrEqual(dotX - 4)
+    // Anchored "start" in the right gutter: the label begins past the marker
+    // and grows away from the plot, so it can never land on a line or a ring.
+    expect(last.getAttribute("text-anchor")).toBe("start")
+    expect(Number(last.getAttribute("x"))).toBeGreaterThan(dotX + 4)
   })
 
   it("separates two touching dots with a hairline of the page background", () => {

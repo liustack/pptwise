@@ -237,12 +237,29 @@ export function renderCartesianFrame(opts: {
   yTicks: readonly CartesianTick[]
   showHGrid: boolean
   showVGrid?: boolean
+  /**
+   * Where the reference lines start and how far they run, when that is
+   * narrower than the frame itself.
+   *
+   * Line and area charts inset their points from the frame to make room for
+   * the series-label gutters (`splitSeriesGutters` in chart-svg.tsx). A
+   * gridline drawn the full width of the frame then runs straight under
+   * those labels — which reads as a rule struck through a number, and which
+   * `l1.ts` reports as exactly that. Reference lines belong under the data
+   * they are a reference for, so a caller with gutters passes the data span
+   * here and gets its gutters left clean. Omitted, the lines span the frame,
+   * which is what bar and scatter (no gutters) still want.
+   */
+  gridX?: number
+  gridW?: number
   axisColor: string
   mutedColor: string
   fontFamily?: string
 }): ReactElement {
   const xAxisY = opts.plotY + opts.plotH
   const yAxisX = opts.plotX
+  const gridX = opts.gridX ?? opts.plotX
+  const gridW = opts.gridW ?? opts.plotW
   const xTickBaseline = xAxisY + TICK_FONT_SIZE + TICK_BELOW_AXIS
   return (
     <g data-axis-frame="1">
@@ -252,9 +269,9 @@ export function renderCartesianFrame(opts: {
               <line
                 key={`hg-${i}`}
                 data-grid="h"
-                x1={opts.plotX}
+                x1={gridX}
                 y1={tick.pos}
-                x2={opts.plotX + opts.plotW}
+                x2={gridX + gridW}
                 y2={tick.pos}
                 stroke={opts.mutedColor}
                 strokeOpacity={0.12}
