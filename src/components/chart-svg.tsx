@@ -12,6 +12,7 @@ import {
   renderCartesianFrame,
   TICK_FONT_SIZE,
   TICK_MIN_FONT_SIZE,
+  TICK_TO_AXIS_GAP,
   X_TICK_BAND,
   type DomainPadMode,
 } from "./cartesian-axis"
@@ -267,7 +268,7 @@ function scaleHexBrightness(hex: string, factor: number): string {
  * palette's hands entirely, and keeps this component's own audit
  * classification true.
  */
-const DIRECT_LABEL_FONT_SIZE = VALUE_FONT_SIZE
+export const DIRECT_LABEL_FONT_SIZE = VALUE_FONT_SIZE
 const DIRECT_LABEL_FONT_WEIGHT = VALUE_FONT_WEIGHT
 /**
  * A label's baseline, as an offset in em below its own vertical center. An
@@ -386,31 +387,66 @@ function firstValueTexts(
     .filter((text): text is string => text !== null)
 }
 
-/** How much room one gutter's widest label asks for, leader included. */
-function gutterRequest(texts: readonly string[], fontFamily?: string): number {
+/** Fixed cost of one gutter's leader, whatever the label says. */
+export const SERIES_GUTTER_OVERHEAD = SERIES_GUTTER_STUB + SERIES_GUTTER_GAP
+
+/** How wide one gutter's widest label wants to be, leader excluded. */
+function gutterTextRequest(texts: readonly string[], fontFamily?: string): number {
   if (texts.length === 0) return 0
-  return widestDirectLabel(texts, fontFamily) + SERIES_GUTTER_STUB + SERIES_GUTTER_GAP
+  return widestDirectLabel(texts, fontFamily)
 }
 
 /**
  * Split a plot band into a left gutter, the data span, and a right gutter.
  *
- * Both gutters are granted what they ask for while the plot keeps at least
- * `SERIES_PLOT_MIN_W_RATIO` of the band. Past that the grant is shared out
- * in proportion to what each side asked for, so a long series name on the
- * right does not starve the start values on the left.
+ * Two rules, and the order between them is the whole point:
+ *
+ *  1. **The leader is paid for first.** Each side that has a label at all
+ *     keeps its full `SERIES_GUTTER_OVERHEAD` off the top. Scaling a request
+ *     that had the leader folded into it, and then subtracting the leader
+ *     again at paint time, is how a 40-character series name on the right
+ *     drove the left gutter's *text* budget to zero and made a chart that
+ *     only needed its right label truncated into one that dropped content
+ *     and refused to export.
+ *  2. **What is left is shared max-min fair, not proportionally.** The
+ *     smaller request is satisfied in full while it fits within an equal
+ *     share, and only the greedy side is cut. A start value is three glyphs
+ *     next to a series name that can be forty; proportional sharing cuts
+ *     both by the same fraction, which takes nothing off the name that
+ *     matters and everything off the number that was already minimal.
+ *
+ * The plot keeps at least `SERIES_PLOT_MIN_W_RATIO` of the band throughout.
  */
 export function splitSeriesGutters(
   plotW: number,
-  leftRequest: number,
-  rightRequest: number,
+  leftText: number,
+  rightText: number,
 ): { leftW: number; rightW: number; dataW: number } {
-  const want = leftRequest + rightRequest
-  if (want <= 0) return { leftW: 0, rightW: 0, dataW: plotW }
-  const grant = Math.min(want, Math.max(0, plotW * (1 - SERIES_PLOT_MIN_W_RATIO)))
-  const share = grant / want
-  const leftW = leftRequest * share
-  return { leftW, rightW: rightRequest * share, dataW: plotW - leftW - rightRequest * share }
+  const overhead = (leftText > 0 ? SERIES_GUTTER_OVERHEAD : 0) + (rightText > 0 ? SERIES_GUTTER_OVERHEAD : 0)
+  const grantable = Math.max(0, plotW * (1 - SERIES_PLOT_MIN_W_RATIO))
+  if (overhead === 0 || overhead > grantable) return { leftW: 0, rightW: 0, dataW: plotW }
+  const textGrantable = grantable - overhead
+
+  const half = textGrantable / 2
+  let leftGrant: number
+  let rightGrant: number
+  if (leftText + rightText <= textGrantable) {
+    leftGrant = leftText
+    rightGrant = rightText
+  } else if (Math.min(leftText, rightText) <= half) {
+    const smallIsLeft = leftText <= rightText
+    const small = Math.min(leftText, rightText)
+    const big = textGrantable - small
+    leftGrant = smallIsLeft ? small : big
+    rightGrant = smallIsLeft ? big : small
+  } else {
+    leftGrant = half
+    rightGrant = half
+  }
+
+  const leftW = leftText > 0 ? leftGrant + SERIES_GUTTER_OVERHEAD : 0
+  const rightW = rightText > 0 ? rightGrant + SERIES_GUTTER_OVERHEAD : 0
+  return { leftW, rightW, dataW: plotW - leftW - rightW }
 }
 
 /** One label wanting a place in a series gutter. */
@@ -438,6 +474,10 @@ interface GutterLabel {
  */
 function renderSeriesGutterLabels(opts: {
   labels: readonly GutterLabel[]
+  /** Left edge of the data span — the inner edge of the left gutter. */
+  dataX: number
+  /** Width of the data span. */
+  dataW: number
   leftW: number
   rightW: number
   plotY: number
@@ -449,8 +489,17 @@ function renderSeriesGutterLabels(opts: {
 }): ReactElement {
   const pitch = labelLinePitch(DIRECT_LABEL_FONT_SIZE)
   const bounds = { top: opts.plotY, bottom: opts.plotY + opts.plotH }
+  // The gutter is a column, so every label in it starts on the same
+  // vertical. Anchoring each label to its own series' last point instead
+  // put a short series' label back inside the plot, on top of the lines it
+  // was supposed to sit beside — a series that stops at Q2 of Q3 ends
+  // nowhere near the gutter. The label goes where the gutter is; the leader
+  // is what reaches back to the point that owns it, however far that is.
+  const rightTextX = opts.dataX + opts.dataW + SERIES_GUTTER_OVERHEAD
+  const leftTextX = opts.dataX - SERIES_GUTTER_OVERHEAD
+  const textX = (side: "left" | "right") => (side === "right" ? rightTextX : leftTextX)
   const avail = (side: "left" | "right") =>
-    Math.max(0, (side === "left" ? opts.leftW : opts.rightW) - SERIES_GUTTER_STUB - SERIES_GUTTER_GAP)
+    Math.max(0, (side === "left" ? opts.leftW : opts.rightW) - SERIES_GUTTER_OVERHEAD)
   const prepared = opts.labels.map((label) => ({
     label,
     fitted: fitSvgLine(label.text, {
@@ -490,14 +539,14 @@ function renderSeriesGutterLabels(opts: {
         if (!slot || slot.hidden) return null
         const dir = label.side === "right" ? 1 : -1
         const leaderStart = label.endX + dir * opts.markerR
-        const textX = label.endX + dir * (SERIES_GUTTER_STUB + SERIES_GUTTER_GAP)
+        const leaderEnd = textX(label.side) - dir * SERIES_GUTTER_GAP
         return (
           <g key={label.id}>
             <line
               data-label-leader="1"
               x1={leaderStart}
               y1={label.endY}
-              x2={label.endX + dir * SERIES_GUTTER_STUB}
+              x2={leaderEnd}
               y2={slot.y}
               stroke={opts.leaderColor}
               strokeWidth={1}
@@ -506,7 +555,7 @@ function renderSeriesGutterLabels(opts: {
             <text
               data-value-label="1"
               data-truncated={fitted.truncated ? "1" : undefined}
-              x={textX}
+              x={textX(label.side)}
               y={slot.y + DIRECT_LABEL_FONT_SIZE * DIRECT_LABEL_CENTER_TO_BASELINE}
               textAnchor={label.side === "right" ? "start" : "end"}
               fontSize={fitted.fontSize}
@@ -749,6 +798,7 @@ export function renderBar(
         xTicks,
         yTicks,
         showHGrid: showGrid,
+        yTickMaxW: geom.leftGutter - TICK_TO_AXIS_GAP,
         axisColor: axisColor ?? mutedColor,
         mutedColor,
         fontFamily,
@@ -858,8 +908,8 @@ export function renderLine(
   // the x-axis still run the full plot width; only the points move in.
   const gutters = splitSeriesGutters(
     geom.plotW,
-    gutterRequest(firstValueTexts(model.series), fontFamily),
-    gutterRequest(endLabelTexts(model.series), fontFamily),
+    gutterTextRequest(firstValueTexts(model.series), fontFamily),
+    gutterTextRequest(endLabelTexts(model.series), fontFamily),
   )
   const dataX = geom.plotX + gutters.leftW
   const categoryMaxWidth = gutters.dataW / Math.max(categories.length - 1, 1)
@@ -984,6 +1034,7 @@ export function renderLine(
         xTicks,
         yTicks,
         showHGrid: showGrid,
+        yTickMaxW: geom.leftGutter - TICK_TO_AXIS_GAP,
         gridX: dataX,
         gridW: gutters.dataW,
         axisColor: axisColor ?? mutedColor,
@@ -1096,6 +1147,8 @@ export function renderLine(
       })}
       {renderSeriesGutterLabels({
         labels: gutterLabels,
+        dataX,
+        dataW: gutters.dataW,
         leftW: gutters.leftW,
         rightW: gutters.rightW,
         plotY: geom.plotY,
@@ -1856,6 +1909,7 @@ export function renderBarHorizontal(
         xTicks,
         yTicks,
         showHGrid: showGrid,
+        yTickMaxW: BAR_H_LABEL_W + 12 - TICK_TO_AXIS_GAP,
         showVGrid: false,
         axisColor: axisColor ?? mutedColor,
         mutedColor,
@@ -2123,6 +2177,7 @@ export function renderScatter(
         xTicks,
         yTicks,
         showHGrid: showGrid,
+        yTickMaxW: geom.leftGutter - TICK_TO_AXIS_GAP,
         axisColor: axisColor ?? mutedColor,
         mutedColor,
         fontFamily,
@@ -2205,8 +2260,8 @@ export function renderArea(
   // at all before this (no legend now, and never any endpoint values).
   const gutters = splitSeriesGutters(
     geom.plotW,
-    gutterRequest(firstValueTexts(model.series), fontFamily),
-    gutterRequest(endLabelTexts(model.series), fontFamily),
+    gutterTextRequest(firstValueTexts(model.series), fontFamily),
+    gutterTextRequest(endLabelTexts(model.series), fontFamily),
   )
   const dataX = geom.plotX + gutters.leftW
   const categoryMaxWidth = gutters.dataW / Math.max(categories.length - 1, 1)
@@ -2267,6 +2322,7 @@ export function renderArea(
         xTicks,
         yTicks,
         showHGrid: showGrid,
+        yTickMaxW: geom.leftGutter - TICK_TO_AXIS_GAP,
         gridX: dataX,
         gridW: gutters.dataW,
         axisColor: axisColor ?? mutedColor,
@@ -2319,6 +2375,8 @@ export function renderArea(
       })}
       {renderSeriesGutterLabels({
         labels: gutterLabels,
+        dataX,
+        dataW: gutters.dataW,
         leftW: gutters.leftW,
         rightW: gutters.rightW,
         plotY: geom.plotY,

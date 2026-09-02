@@ -2,6 +2,8 @@
 import { describe, it, expect } from "vitest"
 import { render } from "@testing-library/react"
 import {
+  SERIES_GUTTER_OVERHEAD,
+  splitSeriesGutters,
   renderArea,
   renderBar,
   renderBarHorizontal,
@@ -299,6 +301,72 @@ function endpointValueTexts(container: HTMLElement): string[] {
     )
     .map((t) => t.textContent ?? "")
 }
+
+describe("splitSeriesGutters — the leader is paid for before the text is shared", () => {
+  it("gives both sides everything when both fit", () => {
+    const g = splitSeriesGutters(1000, 40, 60)
+    expect(g.leftW).toBeCloseTo(40 + SERIES_GUTTER_OVERHEAD)
+    expect(g.rightW).toBeCloseTo(60 + SERIES_GUTTER_OVERHEAD)
+    expect(g.dataW).toBeCloseTo(1000 - g.leftW - g.rightW)
+  })
+
+  it("never starves a short start value behind a very long series name", () => {
+    // 1120px plot, a 40-character series name on the right and a one-digit
+    // start value on the left. Proportional sharing cut both by the same
+    // fraction, which took the left gutter's text budget under the width of
+    // a single glyph and turned a chart that only needed its right label
+    // truncated into one that dropped content and refused to export.
+    const g = splitSeriesGutters(1120, 12, 900)
+    expect(g.leftW - SERIES_GUTTER_OVERHEAD).toBeCloseTo(12)
+    expect(g.rightW).toBeGreaterThan(SERIES_GUTTER_OVERHEAD)
+    expect(g.dataW).toBeGreaterThanOrEqual(1120 * 0.55 - 1e-6)
+  })
+
+  it("splits evenly when both sides are greedy", () => {
+    const g = splitSeriesGutters(1000, 900, 900)
+    expect(g.leftW).toBeCloseTo(g.rightW)
+    expect(g.dataW).toBeGreaterThanOrEqual(550 - 1e-6)
+  })
+
+  it("keeps the plot floor and asks for no gutter when there are no labels", () => {
+    expect(splitSeriesGutters(1000, 0, 0)).toEqual({ leftW: 0, rightW: 0, dataW: 1000 })
+  })
+})
+
+describe("renderLine — a sparse series is labelled in the gutter, not mid-plot", () => {
+  // A series that stops before the last shared category has its own last
+  // point somewhere in the middle of the plot. Anchoring its label there put
+  // the text on top of the other series' line; the gutter is a column, so
+  // every label in it starts on the same vertical and the leader is what
+  // reaches back to the point.
+  const sparse: ChartSeries[] = [
+    { name: "EndsEarly", data: [{ x: "Q1", y: 10 }, { x: "Q2", y: 20 }] },
+    { name: "Full", data: [{ x: "Q1", y: 5 }, { x: "Q2", y: 20 }, { x: "Q3", y: 20 }] },
+  ]
+
+  it("starts both end labels on the same vertical, past the data span", () => {
+    const { container } = svg(renderLine(sparse, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
+    const ends = Array.from(container.querySelectorAll('[data-value-label="1"]')).filter((t) =>
+      (t.textContent ?? "").includes(" "),
+    )
+    expect(ends.map((t) => t.textContent).sort()).toEqual(["EndsEarly 20", "Full 20"])
+    const xs = ends.map((t) => Number(t.getAttribute("x")))
+    expect(xs[0]).toBeCloseTo(xs[1]!, 5)
+    // Past every plotted point, so it cannot land on a line or a marker.
+    const pointXs = Array.from(container.querySelectorAll("polyline[data-plot-mark]")).flatMap((p) =>
+      (p.getAttribute("points") ?? "").trim().split(/\s+/).map((pair) => Number(pair.split(",")[0])),
+    )
+    expect(xs[0]).toBeGreaterThan(Math.max(...pointXs))
+  })
+
+  it("runs the sparse series' leader back to its own last point", () => {
+    const { container } = svg(renderLine(sparse, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
+    const leaders = Array.from(container.querySelectorAll("[data-label-leader]"))
+    const spans = leaders.map((l) => Math.abs(Number(l.getAttribute("x2")) - Number(l.getAttribute("x1"))))
+    // One leader is long (the series that stopped at Q2 of Q3), the rest short.
+    expect(Math.max(...spans)).toBeGreaterThan(100)
+  })
+})
 
 describe("renderLine — every series is named in the end gutter", () => {
   it("names all four series at 4 series, start values bare", () => {
