@@ -12,6 +12,7 @@ import {
   renderCartesianFrame,
   TICK_FONT_SIZE,
   TICK_MIN_FONT_SIZE,
+  TICK_TO_AXIS_GAP,
   X_TICK_BAND,
   type DomainPadMode,
 } from "./cartesian-axis"
@@ -181,25 +182,6 @@ const ENDPOINT_RING_OPACITY = 0.3
  */
 const ENDPOINT_LABEL_CLEARANCE = 2
 
-/** Slide a value label off the marker it names, in the direction it grows. */
-function clearOfMarker(x: number, anchor: "start" | "middle" | "end"): number {
-  const away = ENDPOINT_DOT_R + ENDPOINT_LABEL_CLEARANCE
-  if (anchor === "end") return x - away
-  if (anchor === "start") return x + away
-  return x
-}
-/**
- * Last series count at which a line chart still paints first/last value
- * labels. Dataviz discipline: labels have to be selective. When many
- * series share the same left and right edges, those numbers stack into
- * an ink blot (author screenshot, 20-series density corpus, 2026-08).
- * Past this count the legend carries identity and the endpoint numbers
- * come off. Endpoint dots stay.
- *
- * Source: Few, *Show Me the Numbers* (selective labeling) and Tufte's
- * "erase non-data-ink" — colliding labels are worse than no labels.
- */
-const LINE_ENDPOINT_LABEL_MAX_SERIES = 4
 /** Line-under-curve area fill: alpha at the line (top) fading to fully
  * transparent at the baseline (bottom). */
 const AREA_FILL_TOP_ALPHA = 0.2
@@ -286,7 +268,7 @@ function scaleHexBrightness(hex: string, factor: number): string {
  * palette's hands entirely, and keeps this component's own audit
  * classification true.
  */
-const DIRECT_LABEL_FONT_SIZE = VALUE_FONT_SIZE
+export const DIRECT_LABEL_FONT_SIZE = VALUE_FONT_SIZE
 const DIRECT_LABEL_FONT_WEIGHT = VALUE_FONT_WEIGHT
 /**
  * A label's baseline, as an offset in em below its own vertical center. An
@@ -332,6 +314,269 @@ function widestDirectLabel(texts: readonly string[], fontFamily?: string): numbe
 function directLabelInk(textColor: string | undefined, bgHex: string | undefined): string | undefined {
   if (!textColor || !bgHex) return textColor
   return accessibleInk(textColor, bgHex, DIRECT_LABEL_FONT_SIZE)
+}
+
+/**
+ * Series-label gutter geometry for line and area charts.
+ *
+ * A line chart used to print its endpoint values *on* the plot and settle
+ * the crowding pair by pair (`resolveValueLabelCollisions`). That cannot be
+ * made safe. A pairwise nudger only knows about other labels, so a number
+ * pushed clear of its neighbour lands on the line, on the endpoint dot or
+ * inside its ring instead — every one of the 27 line-chart pages in the
+ * review corpus had a value label sitting on a data mark — and two series
+ * converging on the same corner defeat it outright.
+ *
+ * So the labels come off the plot. The plot yields width at both ends, the
+ * way `layoutRadialSlices` makes the pie yield radius, and each series is
+ * named where its own line ends: `series name + value`, one line per series,
+ * stacked by {@link stackLabelColumn} so the column is solved as a whole
+ * rather than pair by pair. Identity now travels with the line, which is why
+ * line and area charts no longer draw a legend header row
+ * (`legendApplicable` in chart.tsx).
+ *
+ * `SERIES_GUTTER_STUB` is the leader's own run out of the endpoint before it
+ * reaches for the label, `SERIES_GUTTER_GAP` the air before the first glyph.
+ * Both are the pie's numbers, for the same job.
+ */
+const SERIES_GUTTER_STUB = 10
+const SERIES_GUTTER_GAP = 6
+/**
+ * Floor on how much of its width the plot gives up to the two gutters.
+ * Wide series names shrink the plot; past this the plot stops shrinking and
+ * the labels are fitted (to the 16px readable floor, then cut) instead — the
+ * same trade `PIE_MIN_RADIUS_RATIO` makes for the circle and
+ * `DUMBBELL_PLOT_MIN_W` for its band. A line squeezed into a third of the
+ * page beside two columns of text has stopped being a line chart.
+ */
+const SERIES_PLOT_MIN_W_RATIO = 0.55
+
+/** One series' end label: `name value`, or the bare value when unnamed. */
+function seriesEndLabelText(name: string | undefined, value: number): string {
+  const trimmed = (name ?? "").trim()
+  return trimmed ? `${trimmed} ${value}` : String(value)
+}
+
+/** One aligned series' first and last non-null value, plus how many it kept. */
+function endsOf(values: readonly (number | null)[]): { first?: number; last?: number; count: number } {
+  const kept = values.filter((v): v is number => v != null)
+  return { first: kept[0], last: kept[kept.length - 1], count: kept.length }
+}
+
+/** The end-gutter texts a line/area chart has to reserve room for. */
+function endLabelTexts(
+  series: readonly { name: string; values: readonly (number | null)[] }[],
+  ): string[] {
+  return series
+    .map((s) => {
+      const { last } = endsOf(s.values)
+      return last == null ? null : seriesEndLabelText(s.name, last)
+    })
+    .filter((text): text is string => text !== null)
+}
+
+/** The start-gutter texts (bare values) a line/area chart has to reserve room for. */
+function firstValueTexts(
+  series: readonly { values: readonly (number | null)[] }[],
+): string[] {
+  return series
+    .map((s) => {
+      const { first, count } = endsOf(s.values)
+      return count < 2 || first == null ? null : String(first)
+    })
+    .filter((text): text is string => text !== null)
+}
+
+/** Fixed cost of one gutter's leader, whatever the label says. */
+export const SERIES_GUTTER_OVERHEAD = SERIES_GUTTER_STUB + SERIES_GUTTER_GAP
+
+/** How wide one gutter's widest label wants to be, leader excluded. */
+function gutterTextRequest(texts: readonly string[], fontFamily?: string): number {
+  if (texts.length === 0) return 0
+  return widestDirectLabel(texts, fontFamily)
+}
+
+/**
+ * Split a plot band into a left gutter, the data span, and a right gutter.
+ *
+ * Two rules, and the order between them is the whole point:
+ *
+ *  1. **The leader is paid for first.** Each side that has a label at all
+ *     keeps its full `SERIES_GUTTER_OVERHEAD` off the top. Scaling a request
+ *     that had the leader folded into it, and then subtracting the leader
+ *     again at paint time, is how a 40-character series name on the right
+ *     drove the left gutter's *text* budget to zero and made a chart that
+ *     only needed its right label truncated into one that dropped content
+ *     and refused to export.
+ *  2. **What is left is shared max-min fair, not proportionally.** The
+ *     smaller request is satisfied in full while it fits within an equal
+ *     share, and only the greedy side is cut. A start value is three glyphs
+ *     next to a series name that can be forty; proportional sharing cuts
+ *     both by the same fraction, which takes nothing off the name that
+ *     matters and everything off the number that was already minimal.
+ *
+ * The plot keeps at least `SERIES_PLOT_MIN_W_RATIO` of the band throughout.
+ */
+export function splitSeriesGutters(
+  plotW: number,
+  leftText: number,
+  rightText: number,
+): { leftW: number; rightW: number; dataW: number } {
+  const overhead = (leftText > 0 ? SERIES_GUTTER_OVERHEAD : 0) + (rightText > 0 ? SERIES_GUTTER_OVERHEAD : 0)
+  const grantable = Math.max(0, plotW * (1 - SERIES_PLOT_MIN_W_RATIO))
+  if (overhead === 0 || overhead > grantable) return { leftW: 0, rightW: 0, dataW: plotW }
+  const textGrantable = grantable - overhead
+
+  const half = textGrantable / 2
+  let leftGrant: number
+  let rightGrant: number
+  if (leftText + rightText <= textGrantable) {
+    leftGrant = leftText
+    rightGrant = rightText
+  } else if (Math.min(leftText, rightText) <= half) {
+    const smallIsLeft = leftText <= rightText
+    const small = Math.min(leftText, rightText)
+    const big = textGrantable - small
+    leftGrant = smallIsLeft ? small : big
+    rightGrant = smallIsLeft ? big : small
+  } else {
+    leftGrant = half
+    rightGrant = half
+  }
+
+  const leftW = leftText > 0 ? leftGrant + SERIES_GUTTER_OVERHEAD : 0
+  const rightW = rightText > 0 ? rightGrant + SERIES_GUTTER_OVERHEAD : 0
+  return { leftW, rightW, dataW: plotW - leftW - rightW }
+}
+
+/** One label wanting a place in a series gutter. */
+interface GutterLabel {
+  readonly id: string
+  readonly side: "left" | "right"
+  readonly text: string
+  /** The plot point this label names, in page coordinates. */
+  readonly endX: number
+  readonly endY: number
+  /** Higher survives when the column cannot hold every label. */
+  readonly priority: number
+}
+
+/**
+ * Paint one chart's gutter labels: fit each to the room its own side has,
+ * stack each column with {@link stackLabelColumn}, then draw a leader from
+ * the point to the label that names it.
+ *
+ * A leader is a single straight run — a `<line>`, not the pie's three-point
+ * `<polyline>` elbow — so when a label keeps its own endpoint's y it reads as
+ * a short horizontal tick and only a displaced label slopes.
+ * Nothing is nudged: a label the column cannot hold is dropped and declared,
+ * the same last resort the pie's own gutter ends on.
+ */
+function renderSeriesGutterLabels(opts: {
+  labels: readonly GutterLabel[]
+  /** Left edge of the data span — the inner edge of the left gutter. */
+  dataX: number
+  /** Width of the data span. */
+  dataW: number
+  leftW: number
+  rightW: number
+  plotY: number
+  plotH: number
+  markerR: number
+  leaderColor?: string
+  fill?: string
+  fontFamily?: string
+}): ReactElement {
+  const pitch = labelLinePitch(DIRECT_LABEL_FONT_SIZE)
+  const bounds = { top: opts.plotY, bottom: opts.plotY + opts.plotH }
+  // The gutter is a column, so every label in it starts on the same
+  // vertical. Anchoring each label to its own series' last point instead
+  // put a short series' label back inside the plot, on top of the lines it
+  // was supposed to sit beside — a series that stops at Q2 of Q3 ends
+  // nowhere near the gutter. The label goes where the gutter is; the leader
+  // is what reaches back to the point that owns it, however far that is.
+  const rightTextX = opts.dataX + opts.dataW + SERIES_GUTTER_OVERHEAD
+  const leftTextX = opts.dataX - SERIES_GUTTER_OVERHEAD
+  const textX = (side: "left" | "right") => (side === "right" ? rightTextX : leftTextX)
+  const avail = (side: "left" | "right") =>
+    Math.max(0, (side === "left" ? opts.leftW : opts.rightW) - SERIES_GUTTER_OVERHEAD)
+  const prepared = opts.labels.map((label) => ({
+    label,
+    fitted: fitSvgLine(label.text, {
+      maxWidth: avail(label.side),
+      fontSize: DIRECT_LABEL_FONT_SIZE,
+      minFontSize: DIRECT_LABEL_FONT_SIZE,
+      bold: true,
+      fontFamily: opts.fontFamily,
+    }),
+  }))
+  const placed = new Map(
+    (["left", "right"] as const).flatMap((side) =>
+      stackLabelColumn(
+        prepared
+          .filter((entry) => entry.label.side === side && entry.fitted.text !== "")
+          .map((entry) => ({
+            id: entry.label.id,
+            y: entry.label.endY,
+            pitch,
+            priority: entry.label.priority,
+          })),
+        bounds,
+      ).map((label) => [label.id, label] as const),
+    ),
+  )
+  // A gutter with no room for a name paints nothing rather than an ink blot,
+  // and says how many names went with it — validate forbids an ellipsis and
+  // `checkContentDropGate` refuses to export a deck carrying the mark.
+  const hidden = prepared.filter(
+    (entry) => entry.fitted.text === "" || (placed.get(entry.label.id)?.hidden ?? true),
+  ).length
+  return (
+    <>
+      {hidden > 0 && <g data-dropped={hidden} data-dropped-silent={hidden} />}
+      {prepared.map(({ label, fitted }) => {
+        const slot = placed.get(label.id)
+        if (!slot || slot.hidden) return null
+        const dir = label.side === "right" ? 1 : -1
+        const leaderStart = label.endX + dir * opts.markerR
+        const leaderEnd = textX(label.side) - dir * SERIES_GUTTER_GAP
+        return (
+          <g key={label.id}>
+            <line
+              data-label-leader="1"
+              x1={leaderStart}
+              y1={label.endY}
+              x2={leaderEnd}
+              y2={slot.y}
+              stroke={opts.leaderColor}
+              strokeWidth={1}
+              strokeOpacity={0.55}
+            />
+            <text
+              data-value-label="1"
+              data-truncated={fitted.truncated ? "1" : undefined}
+              x={textX(label.side)}
+              y={slot.y + DIRECT_LABEL_FONT_SIZE * DIRECT_LABEL_CENTER_TO_BASELINE}
+              textAnchor={label.side === "right" ? "start" : "end"}
+              fontSize={fitted.fontSize}
+              fontWeight={DIRECT_LABEL_FONT_WEIGHT}
+              // Declared, not inherited: the gutter width was reserved by
+              // measuring this text in this family, and `svg-audit` measures
+              // the painted element in whatever family the element names. An
+              // element that names none is measured against a different
+              // envelope than the one that sized its own gutter, and the two
+              // disagree by exactly the width that then runs past the box.
+              fontFamily={opts.fontFamily}
+              fill={opts.fill}
+              dominantBaseline="alphabetic"
+            >
+              {fitted.text}
+            </text>
+          </g>
+        )
+      })}
+    </>
+  )
 }
 
 /**
@@ -553,6 +798,7 @@ export function renderBar(
         xTicks,
         yTicks,
         showHGrid: showGrid,
+        yTickMaxW: Math.max(0, geom.leftGutter - TICK_TO_AXIS_GAP),
         axisColor: axisColor ?? mutedColor,
         mutedColor,
         fontFamily,
@@ -644,7 +890,6 @@ export function renderLine(
   const model = buildChartModel(series)
   const { categories } = model
   const n = model.series.length
-  const showEndpointValues = n <= LINE_ENDPOINT_LABEL_MAX_SERIES
   const meta = cartesianMeta(component)
   const values = keptValues(model.series)
   const yAxis = buildNumericAxis(values, valueAxisMode(values), meta.yUnit)
@@ -658,9 +903,18 @@ export function renderLine(
     fontFamily,
   })
   const baselineY = baselineYFor(yAxis.domain, geom.plotY, geom.plotH)
-  const categoryMaxWidth = geom.plotW / Math.max(categories.length - 1, 1)
+  // The data span is inset from the axis frame by whatever the two label
+  // gutters need — see `splitSeriesGutters`. The frame, the gridlines and
+  // the x-axis still run the full plot width; only the points move in.
+  const gutters = splitSeriesGutters(
+    geom.plotW,
+    gutterTextRequest(firstValueTexts(model.series), fontFamily),
+    gutterTextRequest(endLabelTexts(model.series), fontFamily),
+  )
+  const dataX = geom.plotX + gutters.leftW
+  const categoryMaxWidth = gutters.dataW / Math.max(categories.length - 1, 1)
   const xForIndex = (i: number) =>
-    geom.plotX + (i / Math.max(categories.length - 1, 1)) * geom.plotW
+    dataX + (i / Math.max(categories.length - 1, 1)) * gutters.dataW
   const yTicks = yAxis.ticks.map((t) => ({
     label: formatAxisTick(t, meta.yUnit),
     pos: mapToPlotY(t, yAxis.domain, geom.plotY, geom.plotH),
@@ -696,44 +950,39 @@ export function renderLine(
     }
     return { s, resolved, first: resolved[0], last: resolved[resolved.length - 1] }
   })
-  const endpointSpecs: ValueLabelSpec[] = []
-  if (showEndpointValues) {
-    for (const end of seriesEnds) {
-      if (end.first) {
-        const anchor = edgeAnchor(end.first.i, categories.length)
-        // A single-point series' one label names the endpoint marker too.
-        const carriesMarker = end.first === end.last
-        endpointSpecs.push({
-          id: `${end.s.seriesIndex}-first`,
-          text: String(end.first.value),
-          x: carriesMarker ? clearOfMarker(end.first.x, anchor) : end.first.x,
-          y: end.first.y - 6,
-          anchor,
-          fontSize: VALUE_FONT_SIZE,
-          fontFamily,
-          priority: 100 - end.s.seriesIndex,
-          yMin: geom.plotY + 8,
-          yMax: geom.plotY + geom.plotH,
-        })
-      }
-      if (end.last && end.last !== end.first) {
-        const anchor = edgeAnchor(end.last.i, categories.length)
-        endpointSpecs.push({
-          id: `${end.s.seriesIndex}-last`,
-          text: String(end.last.value),
-          x: clearOfMarker(end.last.x, anchor),
-          y: end.last.y - 6,
-          anchor,
-          fontSize: VALUE_FONT_SIZE,
-          fontFamily,
-          priority: 100 - end.s.seriesIndex,
-          yMin: geom.plotY + 8,
-          yMax: geom.plotY + geom.plotH,
-        })
-      }
+  // Every series is named, whatever the series count. The old cap
+  // (`LINE_ENDPOINT_LABEL_MAX_SERIES`) existed because past four series the
+  // on-plot numbers stacked into an ink blot and the legend was left to
+  // carry identity. There is no legend on a line chart any more, and the
+  // column solver below answers crowding by dropping the labels a gutter
+  // genuinely cannot hold and declaring the loss — a rule that scales,
+  // unlike a hard-coded series count.
+  const gutterLabels: GutterLabel[] = []
+  for (const end of seriesEnds) {
+    if (end.last) {
+      gutterLabels.push({
+        id: `${end.s.seriesIndex}-last`,
+        side: "right",
+        text: seriesEndLabelText(end.s.name, end.last.value),
+        endX: end.last.x,
+        endY: end.last.y,
+        priority: n - end.s.seriesIndex,
+      })
+    }
+    // The start value only, never the name: the end label already carries
+    // identity, and printing the series name twice on one line is ink that
+    // says nothing new.
+    if (end.first && end.first !== end.last) {
+      gutterLabels.push({
+        id: `${end.s.seriesIndex}-first`,
+        side: "left",
+        text: String(end.first.value),
+        endX: end.first.x,
+        endY: end.first.y,
+        priority: n - end.s.seriesIndex,
+      })
     }
   }
-  const placedEndpoints = new Map(resolveValueLabelCollisions(endpointSpecs).map((label) => [label.id, label]))
 
   /**
    * Endpoint markers, painted as two flat layers instead of one pair per
@@ -785,6 +1034,9 @@ export function renderLine(
         xTicks,
         yTicks,
         showHGrid: showGrid,
+        yTickMaxW: Math.max(0, geom.leftGutter - TICK_TO_AXIS_GAP),
+        gridX: dataX,
+        gridW: gutters.dataW,
         axisColor: axisColor ?? mutedColor,
         mutedColor,
         fontFamily,
@@ -862,34 +1114,6 @@ export function renderLine(
                 strokeWidth={2}
               />
             ))}
-            {/* Value labels only at each series' endpoints — every point would
-                clutter a many-point line, unlike bar's one-label-per-bar.
-                "Endpoints" now means the first/last *non-null* point (a
-                trailing/leading gap has no coordinate to be first or last
-                at), but the edge-anchor direction still reads off that
-                point's real position in the shared category axis.
-                Dropped entirely past LINE_ENDPOINT_LABEL_MAX_SERIES: the
-                numbers collide into an ink blot, so the legend carries
-                identity instead. */}
-            {(["first", "last"] as const).map((kind) => {
-              const placed = placedEndpoints.get(`${sIdx}-${kind}`)
-              if (!placed || placed.hidden) return null
-              return (
-                <text
-                  key={kind}
-                  data-value-label="1"
-                  x={placed.x}
-                  y={placed.y}
-                  textAnchor={placed.anchor}
-                  fontSize={placed.fontSize}
-                  fontWeight={VALUE_FONT_WEIGHT}
-                  fill={textColor}
-                  dominantBaseline="alphabetic"
-                >
-                  {placed.text}
-                </text>
-              )
-            })}
           </g>
         )
       })}
@@ -920,6 +1144,19 @@ export function renderLine(
             {...(crowded && bgHex ? { stroke: bgHex, strokeWidth: 1 } : {})}
           />
         )
+      })}
+      {renderSeriesGutterLabels({
+        labels: gutterLabels,
+        dataX,
+        dataW: gutters.dataW,
+        leftW: gutters.leftW,
+        rightW: gutters.rightW,
+        plotY: geom.plotY,
+        plotH: geom.plotH,
+        markerR: ENDPOINT_DOT_R + ENDPOINT_LABEL_CLEARANCE,
+        leaderColor: mutedColor,
+        fill: directLabelInk(textColor, bgHex),
+        fontFamily,
       })}
       {renderCartesianAxisTitles({
         plotX: geom.plotX,
@@ -1672,6 +1909,7 @@ export function renderBarHorizontal(
         xTicks,
         yTicks,
         showHGrid: showGrid,
+        yTickMaxW: Math.max(0, BAR_H_LABEL_W + 12 - TICK_TO_AXIS_GAP),
         showVGrid: false,
         axisColor: axisColor ?? mutedColor,
         mutedColor,
@@ -1939,6 +2177,7 @@ export function renderScatter(
         xTicks,
         yTicks,
         showHGrid: showGrid,
+        yTickMaxW: Math.max(0, geom.leftGutter - TICK_TO_AXIS_GAP),
         axisColor: axisColor ?? mutedColor,
         mutedColor,
         fontFamily,
@@ -1992,12 +2231,12 @@ export function renderArea(
   w: number,
   h: number,
   mutedColor: string,
-  _textColor: string,
+  textColor: string,
   _accentColor: string,
   /** `axes.show_grid` wiring — default **on**, same reason as `renderLine`. */
   showGrid = true,
   component?: ChartInput,
-  _bgHex?: string,
+  bgHex?: string,
   axisColor?: string,
   fontFamily?: string,
 ): ReactElement {
@@ -2016,9 +2255,18 @@ export function renderArea(
     fontFamily,
   })
   const baselineY = baselineYFor(yAxis.domain, geom.plotY, geom.plotH)
-  const categoryMaxWidth = geom.plotW / Math.max(categories.length - 1, 1)
+  // Same end-gutter labelling as `renderLine` — an area chart is a line
+  // chart with the region under it filled, and it carried no series names
+  // at all before this (no legend now, and never any endpoint values).
+  const gutters = splitSeriesGutters(
+    geom.plotW,
+    gutterTextRequest(firstValueTexts(model.series), fontFamily),
+    gutterTextRequest(endLabelTexts(model.series), fontFamily),
+  )
+  const dataX = geom.plotX + gutters.leftW
+  const categoryMaxWidth = gutters.dataW / Math.max(categories.length - 1, 1)
   const xForIndex = (i: number) =>
-    geom.plotX + (i / Math.max(categories.length - 1, 1)) * geom.plotW
+    dataX + (i / Math.max(categories.length - 1, 1)) * gutters.dataW
   const yTicks = yAxis.ticks.map((t) => ({
     label: formatAxisTick(t, meta.yUnit),
     pos: mapToPlotY(t, yAxis.domain, geom.plotY, geom.plotH),
@@ -2038,6 +2286,32 @@ export function renderArea(
       anchor: edgeAnchor(i, categories.length),
     }
   })
+  const gutterLabels: GutterLabel[] = []
+  for (const s of model.series) {
+    const { first, last, count } = endsOf(s.values)
+    const yFor = (v: number) => mapToPlotY(v, yAxis.domain, geom.plotY, geom.plotH)
+    const kept = s.values.map((v, i) => (v == null ? null : i)).filter((i): i is number => i !== null)
+    if (last != null) {
+      gutterLabels.push({
+        id: `${s.seriesIndex}-last`,
+        side: "right",
+        text: seriesEndLabelText(s.name, last),
+        endX: xForIndex(kept[kept.length - 1]!),
+        endY: yFor(last),
+        priority: model.series.length - s.seriesIndex,
+      })
+    }
+    if (count >= 2 && first != null) {
+      gutterLabels.push({
+        id: `${s.seriesIndex}-first`,
+        side: "left",
+        text: String(first),
+        endX: xForIndex(kept[0]!),
+        endY: yFor(first),
+        priority: model.series.length - s.seriesIndex,
+      })
+    }
+  }
   return (
     <>
       {renderCartesianFrame({
@@ -2048,6 +2322,9 @@ export function renderArea(
         xTicks,
         yTicks,
         showHGrid: showGrid,
+        yTickMaxW: Math.max(0, geom.leftGutter - TICK_TO_AXIS_GAP),
+        gridX: dataX,
+        gridW: gutters.dataW,
         axisColor: axisColor ?? mutedColor,
         mutedColor,
         fontFamily,
@@ -2095,6 +2372,19 @@ export function renderArea(
             ))}
           </g>
         )
+      })}
+      {renderSeriesGutterLabels({
+        labels: gutterLabels,
+        dataX,
+        dataW: gutters.dataW,
+        leftW: gutters.leftW,
+        rightW: gutters.rightW,
+        plotY: geom.plotY,
+        plotH: geom.plotH,
+        markerR: ENDPOINT_LABEL_CLEARANCE,
+        leaderColor: mutedColor,
+        fill: directLabelInk(textColor, bgHex),
+        fontFamily,
       })}
       {renderCartesianAxisTitles({
         plotX: geom.plotX,

@@ -407,19 +407,26 @@ function checkSlide(ir: PptxIR, slide: Slide, index: number, resolvedAxes: Narra
   }
 
   // chart_line_too_many_series: dataviz's 8-series ceiling
-  // (`CAPACITY.chart.lineSeriesAdvisoryMax`). A line chart past that is
-  // still legal IR and still renders — the legend's "+N …" drop is an
-  // authoring problem, not a renderer rescue. Warn only, never a hard
-  // error. Bar/area/scatter keep their own series count (grouped bars
-  // and scatter groups do not share this hairball).
+  // (`CAPACITY.chart.lineSeriesAdvisoryMax`). Past that the lines read as a
+  // hairball and the label gutter has to stack that many names down one
+  // column. Still legal IR, still renders — an authoring problem, not a
+  // renderer rescue. Warn only, never a hard error.
+  //
+  // Area shares the rule now. It used to be excluded because a legend
+  // carried identity past the point where direct labels stopped coping, and
+  // area has no legend any more — it names its series in the same gutter
+  // line does, out of the same column, with the same ceiling. Bar and
+  // scatter keep their own counts (grouped bars and scatter groups do not
+  // share this hairball).
   for (const component of slide.components) {
-    if (component.type !== "chart" || component.chart_type !== "line") continue
+    if (component.type !== "chart") continue
+    if (component.chart_type !== "line" && component.chart_type !== "area") continue
     if (component.series.length > CAPACITY.chart.lineSeriesAdvisoryMax) {
       issues.push({
         slide: index,
         severity: "warn",
         code: "chart_line_too_many_series",
-        message: `折线图系列数过多（>${CAPACITY.chart.lineSeriesAdvisoryMax}），建议拆分或归并`,
+        message: `${component.chart_type === "area" ? "面积图" : "折线图"}系列数过多（>${CAPACITY.chart.lineSeriesAdvisoryMax}），建议拆分或归并`,
       })
     }
   }

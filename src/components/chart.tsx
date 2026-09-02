@@ -4,6 +4,9 @@ import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout"
 import { rotateChartPalette } from "../render/chart-palette"
 import { accessibleInk } from "../render/ink"
 import { axisTitlePairHeight } from "./axis-titles"
+import { MIN_CARTESIAN_BOX_W, PLOT_TOP_PAD, X_TICK_BAND } from "./cartesian-axis"
+import { labelLinePitch } from "./label-collision"
+import { DIRECT_LABEL_FONT_SIZE } from "./chart-svg"
 import { buildChartModel } from "./chart-model"
 import type { RenderDef, SvgComponent } from "./types"
 import {
@@ -119,8 +122,24 @@ function axesApplicable(component: ChartComponent): boolean {
 const SINGLE_SERIES: ReadonlySet<ChartComponent["chart_type"]> = new Set(SINGLE_SERIES_TYPES)
 
 /**
+ * Chart types that name their own series on the plot, so a legend would
+ * repeat what the marks already say.
+ *
+ * Line and area charts label each series where its line ends — `name value`
+ * in a right-hand gutter, stacked by `stackLabelColumn` (see
+ * `chart-svg.tsx`'s own `renderSeriesGutterLabels`). Identity travels with
+ * the line it belongs to, which is strictly better than a swatch row the
+ * reader has to look up: no color matching, no legend order to reconcile
+ * with plot order, and nothing to read when two series cross. A header row
+ * on top of that would be the same names twice, and it cost every line and
+ * area chart 52px of plot height for the privilege.
+ */
+const DIRECT_LABELLED: ReadonlySet<ChartComponent["chart_type"]> = new Set(["line", "area"])
+
+/**
  * Legend applicability. A legend maps a color to a series name, so it applies
- * exactly when the chart draws more than one series.
+ * exactly when the chart draws more than one series *and* does not already
+ * name them on the plot.
  *
  * This used to read `axesApplicable(component) && series.length >= 2`, which
  * borrowed the axis-title rule for a question that is not about axes. The
@@ -130,11 +149,14 @@ const SINGLE_SERIES: ReadonlySet<ChartComponent["chart_type"]> = new Set(SINGLE_
  * Axes have nothing to do with it, and `SINGLE_SERIES` above states the
  * real exclusion directly: the types that only ever draw one series.
  *
- * `series.length >= 2` is still the trigger. A single series has no color to
- * distinguish from another, and the golden pins hold that boundary.
+ * `series.length >= 2` is still the trigger for everything else. A single
+ * series has no color to distinguish from another, and the golden pins hold
+ * that boundary.
  */
 function legendApplicable(component: ChartComponent): boolean {
-  return !SINGLE_SERIES.has(component.chart_type) && component.series.length >= 2
+  if (SINGLE_SERIES.has(component.chart_type)) return false
+  if (DIRECT_LABELLED.has(component.chart_type)) return false
+  return component.series.length >= 2
 }
 
 /**
@@ -272,10 +294,36 @@ function axisTitlesOf(component: ChartComponent): { xTitle?: string; yTitle?: st
   return { xTitle: component.axes?.x_title, yTitle: component.axes?.y_title }
 }
 
+/**
+ * Body height a directly-labelled chart needs so its gutters can hold one
+ * line per series.
+ *
+ * Line and area gave up their legend row because each series is now named
+ * where its own line ends. That trade only holds if there is a line's worth
+ * of column for every series to be named in: at the flat 240px body, the
+ * columns fit nine, and a tenth series lost both its start value and its
+ * name to a declared drop — on the height the chart measured for itself,
+ * not on a caller's short box. `measure()` is what a caller owes this
+ * component, so the count of names it has to place belongs in it.
+ *
+ * The column runs the plot's own height, which is the body less the top pad
+ * and the x-tick band (`layoutCartesianPlot`). Anything not directly
+ * labelled keeps the flat floor.
+ */
+function directLabelBodyH(component: ChartComponent): number {
+  if (!DIRECT_LABELLED.has(component.chart_type)) return 0
+  const columns = Math.ceil(component.series.length * labelLinePitch(DIRECT_LABEL_FONT_SIZE))
+  return columns + PLOT_TOP_PAD + X_TICK_BAND
+}
+
 export const chart: SvgComponent<ChartComponent> = {
   measure(component) {
     const { xTitle, yTitle } = axisTitlesOf(component)
-    return (hasHeaderRow(component) ? HEADER_ROW_H : 0) + axisTitlePairHeight(xTitle, yTitle) + CHART_H
+    return (
+      (hasHeaderRow(component) ? HEADER_ROW_H : 0) +
+      axisTitlePairHeight(xTitle, yTitle) +
+      Math.max(CHART_H, directLabelBodyH(component))
+    )
   },
   render(component, box, ctx) {
     const renderer = resolveRenderer(component)
@@ -284,13 +332,52 @@ export const chart: SvgComponent<ChartComponent> = {
     // the field is honestly ignored rather than partially/silently honored.
     const axes = axesApplicable(component) ? component.axes : undefined
     const headerH = hasHeaderRow(component) ? HEADER_ROW_H : 0
-    const titleH = axisTitlePairHeight(axes?.x_title, axes?.y_title)
-    const allocated = (box.h ?? headerH + CHART_H + titleH) - headerH
-    const bodyH = axesApplicable(component)
-      ? Math.max(CHART_H + titleH, allocated)
-      : CHART_H
+    const minimum = chart.measure(component, box.w, ctx)
+    // A component draws inside the box it accepted, or it declines. This used
+    // to read `Math.max(CHART_H + titleH, allocated)`: handed a box shorter
+    // than its own measured minimum, the chart quietly drew that minimum
+    // anyway and spilled over whatever the face had placed below it — a
+    // sentence, a footnote, 16 pages of the review corpus. `measure()` is the
+    // minimum a caller owes this component, and `render` now trusts `box.h`
+    // to be it.
+    const allocated = (box.h ?? minimum) - headerH
+    const bodyH = axesApplicable(component) ? allocated : CHART_H
     const plotX = 0
     const plotW = box.w
+
+    // A box this component cannot draw in — too short for its own measured
+    // minimum, or too narrow for a plot to exist at all — is a layout defect,
+    // not something to paint through. Nothing paints and the loss is
+    // declared, the same answer `WholeShareDeclined` (chart-svg.tsx) already
+    // gives a chart handed data it cannot draw.
+    //
+    // What that declaration *does* is refuse the deck. `data-dropped-silent`
+    // is the attribute `slideToRender` (render-slide.tsx) counts, and that
+    // count is what `checkContentDropGate` throws on, so an under-allocated
+    // chart stops the export until someone fixes the band or passes
+    // `--allow-dropped-content` (`generate-chart-decline-export.test.ts`
+    // pins both halves). That is the point, not a regrettable side effect: a
+    // chart painted through the sentence below it ships a wrong page in
+    // silence, and this ships nothing until a person decides. The plain
+    // attribute alone would have been the silent version — a marker the gate
+    // does not read, on a page with no chart and no error anywhere.
+    //
+    // A thrown error was the other candidate and is wrong here. A face's
+    // content band is a fixed constant on several of them, so an
+    // under-allocated box stays reachable by construction; a named marker
+    // lets the page still render for preview and review, and moves the
+    // refusal to the one place that ships a file.
+    if ((box.h ?? minimum) + 0.5 < minimum) {
+      return <g data-dropped={1} data-dropped-silent={1} />
+    }
+    // Same contract on the other axis. Below `MIN_CARTESIAN_BOX_W` the y-tick
+    // gutter and the right pad leave no plot to speak of, and the frame would
+    // be drawn against `plotW`'s 1px floor — geometry that no longer means
+    // anything and, before the gutter cap was made to bind, ink outside the
+    // box.
+    if (axesApplicable(component) && box.w < MIN_CARTESIAN_BOX_W) {
+      return <g data-dropped={1} data-dropped-silent={1} />
+    }
 
     // P1 variety wave, task 2 (review fix round, Major finding): rotation
     // happens *here*, at the one place this palette actually feeds a chart

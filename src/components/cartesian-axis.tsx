@@ -1,5 +1,5 @@
 import type { ReactElement } from "react"
-import { measureTextUnits } from "../lib/svg-text-layout"
+import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout"
 
 /**
  * Shared cartesian plot frame (scatter / bubble / line / area / bar).
@@ -164,14 +164,60 @@ export function formatAxisTick(value: number, unit?: string): string {
   return `${n} ${unit}`
 }
 
-export function yTickGutter(labels: readonly string[], fontFamily?: string): number {
+/**
+ * Ceiling on the share of a plot's width the y-tick labels may claim.
+ *
+ * `y_unit` and the tick values it decorates are author strings with no
+ * length bound in the schema, and this gutter used to grow with them without
+ * limit. `plotW` was floored at 1px, which kept the *width* positive while
+ * saying nothing about the origin: a 200-character unit pushed `plotX` clean
+ * past the component's right edge, and the chart drew 1752px outside the box
+ * it was handed. A gutter is a share of the box, never more, and a label too
+ * wide for its share is cut and says so.
+ */
+export const Y_TICK_MAX_W_RATIO = 0.32
+
+/**
+ * Room the y-axis tick labels need, bounded by `maxGutter` when given.
+ * Callers that own a fixed box always give one — see
+ * {@link Y_TICK_MAX_W_RATIO}.
+ */
+export function yTickGutter(labels: readonly string[], fontFamily?: string, maxGutter?: number): number {
   let max = 0
   for (const label of labels) {
     const w = measureTextUnits(label, { fontFamily }) * TICK_FONT_SIZE
     if (w > max) max = w
   }
-  return Math.max(Y_TICK_MIN_GUTTER, Math.ceil(max + TICK_TO_AXIS_GAP))
+  const want = Math.max(Y_TICK_MIN_GUTTER, Math.ceil(max + TICK_TO_AXIS_GAP))
+  if (maxGutter == null) return want
+  // The cap is applied last, so it is actually a cap. `Y_TICK_MIN_GUTTER` used
+  // to be re-applied *outside* it, which let the gutter take more than its
+  // declared share on any narrow plot and, below ~31px, put `plotX` outside
+  // the box the chart was handed — the exact contract this file states,
+  // broken on the line that states it. A comfortable minimum is a preference;
+  // the box is not, so the floor yields to it.
+  return Math.min(want, Math.max(0, Math.floor(maxGutter)))
 }
+
+/**
+ * Plot width below which a cartesian chart has nothing left to draw in.
+ *
+ * Two ticks and a mark need somewhere to go. Under this, the frame is all
+ * there is and `plotW`'s own 1px floor is doing the only work — which is not
+ * a chart, it is a rounding artefact with axes.
+ */
+export const MIN_PLOT_W = 24
+
+/**
+ * Narrowest box a cartesian chart can be drawn in at all.
+ *
+ * Derived, not chosen: the gutter never takes more than
+ * `Y_TICK_MAX_W_RATIO` of the box, so the plot always keeps at least
+ * `(1 - ratio) * w - PLOT_RIGHT_PAD`, and this is the width at which that
+ * reaches {@link MIN_PLOT_W}. A caller handing less is handing an impossible
+ * box, which `chart.render` declines rather than paints its way out of.
+ */
+export const MIN_CARTESIAN_BOX_W = Math.ceil((MIN_PLOT_W + PLOT_RIGHT_PAD) / (1 - Y_TICK_MAX_W_RATIO))
 
 export function mapToPlotY(value: number, domain: NumericDomain, plotY: number, plotH: number): number {
   const span = domain.max - domain.min
@@ -204,7 +250,7 @@ export function layoutCartesianPlot(opts: {
   titleY: number
 } {
   const topPad = opts.topPad ?? PLOT_TOP_PAD
-  const leftGutter = yTickGutter(opts.yTickLabels, opts.fontFamily)
+  const leftGutter = yTickGutter(opts.yTickLabels, opts.fontFamily, opts.w * Y_TICK_MAX_W_RATIO)
   const plotX = opts.x0 + leftGutter
   const plotY = opts.y0 + topPad
   const plotW = Math.max(1, opts.w - leftGutter - PLOT_RIGHT_PAD)
@@ -237,12 +283,36 @@ export function renderCartesianFrame(opts: {
   yTicks: readonly CartesianTick[]
   showHGrid: boolean
   showVGrid?: boolean
+  /**
+   * Where the reference lines start and how far they run, when that is
+   * narrower than the frame itself.
+   *
+   * Line and area charts inset their points from the frame to make room for
+   * the series-label gutters (`splitSeriesGutters` in chart-svg.tsx). A
+   * gridline drawn the full width of the frame then runs straight under
+   * those labels — which reads as a rule struck through a number, and which
+   * `l1.ts` reports as exactly that. Reference lines belong under the data
+   * they are a reference for, so a caller with gutters passes the data span
+   * here and gets its gutters left clean. Omitted, the lines span the frame,
+   * which is what bar and scatter (no gutters) still want.
+   */
+  gridX?: number
+  gridW?: number
+  /**
+   * Room a y-axis tick label has before the axis. Passed by every caller
+   * that owns a fixed box, because the gutter it sits in is capped
+   * ({@link Y_TICK_MAX_W_RATIO}) and a label wider than the cap would run
+   * out through the left edge of that box. Cut labels say so.
+   */
+  yTickMaxW?: number
   axisColor: string
   mutedColor: string
   fontFamily?: string
 }): ReactElement {
   const xAxisY = opts.plotY + opts.plotH
   const yAxisX = opts.plotX
+  const gridX = opts.gridX ?? opts.plotX
+  const gridW = opts.gridW ?? opts.plotW
   const xTickBaseline = xAxisY + TICK_FONT_SIZE + TICK_BELOW_AXIS
   return (
     <g data-axis-frame="1">
@@ -252,9 +322,9 @@ export function renderCartesianFrame(opts: {
               <line
                 key={`hg-${i}`}
                 data-grid="h"
-                x1={opts.plotX}
+                x1={gridX}
                 y1={tick.pos}
-                x2={opts.plotX + opts.plotW}
+                x2={gridX + gridW}
                 y2={tick.pos}
                 stroke={opts.mutedColor}
                 strokeOpacity={0.12}
@@ -298,22 +368,33 @@ export function renderCartesianFrame(opts: {
         stroke={opts.axisColor}
         strokeWidth={AXIS_STROKE_WIDTH}
       />
-      {opts.yTicks.map((tick, i) => (
-        <text
-          key={`yt-${i}`}
-          data-axis-tick="y"
-          data-truncated={tick.truncated ? "1" : undefined}
-          x={opts.plotX - TICK_TO_AXIS_GAP}
-          y={tick.pos + (tick.fontSize ?? TICK_FONT_SIZE) * 0.35}
-          textAnchor="end"
-          fontSize={tick.fontSize ?? TICK_FONT_SIZE}
-          fill={opts.mutedColor}
-          fontFamily={opts.fontFamily}
-          dominantBaseline="alphabetic"
-        >
-          {tick.label}
-        </text>
-      ))}
+      {opts.yTicks.map((tick, i) => {
+        const fitted =
+          opts.yTickMaxW == null
+            ? { text: tick.label, fontSize: tick.fontSize ?? TICK_FONT_SIZE, truncated: tick.truncated ?? false }
+            : fitSvgLine(tick.label, {
+                maxWidth: opts.yTickMaxW,
+                fontSize: tick.fontSize ?? TICK_FONT_SIZE,
+                minFontSize: TICK_MIN_FONT_SIZE,
+                fontFamily: opts.fontFamily,
+              })
+        return (
+          <text
+            key={`yt-${i}`}
+            data-axis-tick="y"
+            data-truncated={fitted.truncated || tick.truncated ? "1" : undefined}
+            x={opts.plotX - TICK_TO_AXIS_GAP}
+            y={tick.pos + fitted.fontSize * 0.35}
+            textAnchor="end"
+            fontSize={fitted.fontSize}
+            fill={opts.mutedColor}
+            fontFamily={opts.fontFamily}
+            dominantBaseline="alphabetic"
+          >
+            {fitted.text}
+          </text>
+        )
+      })}
       {opts.xTicks.map((tick, i) => {
         const textAnchor = tick.anchor ?? "middle"
         return (

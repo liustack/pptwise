@@ -108,6 +108,25 @@ export const schema = z
   })
   .strict()
   .superRefine((c, ctx) => {
+    // A line or an area series carries its identity at the end of its own
+    // line — `name value` in the label gutter, which is the only place those
+    // two types name a series now that neither draws a legend. A series with
+    // no points has no end to be named at, so the author's `name` reaches
+    // the page nowhere and nothing on the page or in the audit says so. The
+    // renderer cannot rescue it and the fidelity scan is right to call it a
+    // loss, so the boundary belongs here: an empty series is not a chart
+    // with a gap, it is a series nobody wrote.
+    if (c.chart_type === "line" || c.chart_type === "area") {
+      c.series.forEach((s, i) => {
+        if (s.data.length === 0) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["series", i, "data"],
+            message: `series "${s.name}" has no data points — ${c.chart_type} charts name each series at the end of its own line, so a series with nothing to draw reaches the page nowhere`,
+          })
+        }
+      })
+    }
     // scatter needs genuine numeric coordinates on both axes — a string `x`
     // is the model reaching for `line`/`bar` (category axis) by the wrong
     // name. Point the message at the exact offending point so the fix is

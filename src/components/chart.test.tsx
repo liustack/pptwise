@@ -41,6 +41,86 @@ describe("chart component", () => {
     expect(chart.measure(component, 1120, ctx)).toBe(240)
   })
 
+  it("draws in exactly the box it is given, never its own floor", () => {
+    const component = {
+      type: "chart" as const,
+      chart_type: "line" as const,
+      axes: { x_title: "月份", y_title: "数量" },
+      series: [{ name: "Trend", data: [{ x: "Jan", y: 10 }, { x: "Feb", y: 30 }] }],
+    }
+    const minimum = chart.measure(component, 970, ctx)
+    const { container } = svg(chart.render(component, { x: 0, y: 0, w: 970, h: minimum + 120 }, ctx))
+    const axisY = Number(container.querySelector('[data-axis="x"]')!.getAttribute("y1"))
+    // A taller box makes a taller plot. The old `max(floor, allocated)` made
+    // the plot the same height whatever it was handed, and the extra came
+    // out of whatever sat below.
+    const { container: tight } = svg(chart.render(component, { x: 0, y: 0, w: 970, h: minimum }, ctx))
+    expect(axisY).toBeGreaterThan(Number(tight.querySelector('[data-axis="x"]')!.getAttribute("y1")))
+  })
+
+  it("declines a box below its measured minimum instead of painting past it", () => {
+    const component = {
+      type: "chart" as const,
+      chart_type: "line" as const,
+      axes: { x_title: "月份", y_title: "数量" },
+      series: [{ name: "Trend", data: [{ x: "Jan", y: 10 }, { x: "Feb", y: 30 }] }],
+    }
+    const minimum = chart.measure(component, 970, ctx)
+    const { container } = svg(chart.render(component, { x: 0, y: 0, w: 970, h: minimum - 40 }, ctx))
+    // Nothing painted, and the loss declared where a machine finds it.
+    expect(container.querySelectorAll("text")).toHaveLength(0)
+    expect(container.querySelectorAll("polyline")).toHaveLength(0)
+    expect(container.querySelector("[data-dropped]")!.getAttribute("data-dropped")).toBe("1")
+  })
+
+  it("refuses an empty line or area series at the schema, where the loss is preventable", () => {
+    // A line or area series is named at the end of its own line and nowhere
+    // else. An empty one has no end, so its name reaches the page nowhere and
+    // nothing declares it — the renderer cannot rescue it and the fidelity
+    // scan is right to call it a loss. The boundary is the schema.
+    for (const chart_type of ["line", "area"] as const) {
+      const parsed = chartSchema.safeParse({
+        type: "chart",
+        chart_type,
+        series: [{ name: "Forecast", data: [] }],
+      })
+      expect(parsed.success, chart_type).toBe(false)
+      if (!parsed.success) {
+        expect(parsed.error.issues[0]!.path.join(".")).toBe("series.0.data")
+      }
+    }
+    // A bar's series is named in a legend, which one empty series does not
+    // take off the page: the rule is about direct labelling, not emptiness.
+    expect(
+      chartSchema.safeParse({ type: "chart", chart_type: "bar", series: [{ name: "F", data: [] }] }).success,
+    ).toBe(true)
+  })
+
+  it("measures the room every directly-labelled series needs a line for", () => {
+    // Line and area gave up their legend row because each series is now
+    // named where its own line ends. At the flat 240px body the two label
+    // columns fit nine names; a tenth series lost both its start value and
+    // its name to a declared drop, on the height the chart measured for
+    // itself. The count of names to place is part of what a caller is owed.
+    const areaN = (n: number) =>
+      ({
+        type: "chart" as const,
+        chart_type: "area" as const,
+        series: Array.from({ length: n }, (_, i) => ({
+          name: `S${i}`,
+          data: [{ x: "A", y: 10 + i }, { x: "B", y: 20 + i }],
+        })),
+      })
+    expect(chart.measure(areaN(2), 1120, ctx)).toBe(240)
+    expect(chart.measure(areaN(10), 1120, ctx)).toBeGreaterThan(240)
+    const { container } = svg(chart.render(areaN(10), { x: 0, y: 0, w: 1120, h: chart.measure(areaN(10), 1120, ctx) }, ctx))
+    expect(container.querySelector("[data-dropped]")).toBeNull()
+    const named = Array.from(container.querySelectorAll('[data-value-label="1"]'))
+      .map((t) => t.textContent ?? "")
+      .filter((t) => t.startsWith("S"))
+    expect(named).toHaveLength(10)
+  })
+
   it("bar chart renders at least one rect per data point", () => {
     const component = {
       type: "chart" as const,
@@ -202,7 +282,8 @@ describe("chart component", () => {
       (t) => t.getAttribute("fill") === ctx.colors.text,
     )
     expect(categories.map((t) => t.textContent)).toEqual(["Jan", "Feb", "Mar"])
-    expect(values.map((t) => t.textContent)).toEqual(["10", "20"])
+    // End gutter: `name value`. Start gutter: the bare first value.
+    expect(values.map((t) => t.textContent).sort()).toEqual(["10", "Trend 20"])
   })
 
   // Task 8: chart.tsx must thread ctx.colors.accent through to the renderer
@@ -902,7 +983,7 @@ describe("chart component — chart-depth subtypes (scatter / area / donut / gau
     }
   })
 
-  it("a multi-series scatter/area gains a legend; gauge/donut never do", () => {
+  it("a multi-series scatter gains a legend; area names its own lines, gauge/donut never do", () => {
     const scatter2 = {
       type: "chart" as const,
       chart_type: "scatter" as const,
@@ -922,7 +1003,10 @@ describe("chart component — chart-depth subtypes (scatter / area / donut / gau
     const scatter1 = { ...scatter2, series: [scatter2.series[0]!] }
     const area1 = { ...area2, series: [area2.series[0]!] }
     expect(chart.measure(scatter2, 1120, ctx)).toBeGreaterThan(chart.measure(scatter1, 1120, ctx))
-    expect(chart.measure(area2, 1120, ctx)).toBeGreaterThan(chart.measure(area1, 1120, ctx))
+    // An area chart names each series at the end of its own line, so it
+    // draws no legend header row at any series count — and stops paying the
+    // 52px that row used to cost it.
+    expect(chart.measure(area2, 1120, ctx)).toBe(chart.measure(area1, 1120, ctx))
   })
 
   it("renders only svg2pptx-subset primitives for every new subtype", () => {

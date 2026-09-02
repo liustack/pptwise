@@ -153,6 +153,29 @@ describe("fitSvgLine", () => {
       truncated: false,
     })
   })
+  it("solves the tracking budget with the surviving text, not the input", () => {
+    // 500 tracked glyphs ask for 499px of gaps alone. Deducting the *input*
+    // string's budget from a 485px box left nothing to fit any text into, so
+    // both author labels of an `image_compare` came back empty. The budget
+    // belongs to whatever survives the cut.
+    const weight = { bold: true, fontFamily: "Georgia" }
+    const fit = fitSvgLine("i".repeat(500), { maxWidth: 485, fontSize: 16, minFontSize: 16, letterSpacing: 1, ...weight })
+    const kept = Array.from(fit.text).length
+    expect(kept).toBeGreaterThan(50)
+    expect(fit.truncated).toBe(true)
+    const painted = (n: number) => measureTextUnits("i".repeat(n), weight) * 16 + Math.max(0, n - 1)
+    // Exactly as much as fits, and not one glyph more.
+    expect(painted(kept)).toBeLessThanOrEqual(485)
+    expect(painted(kept + 1)).toBeGreaterThan(485)
+  })
+
+  it("leaves the untracked truncation path alone", () => {
+    const text = "一二三四五六七八九十"
+    expect(fitSvgLine(text, { maxWidth: 120, fontSize: 20 })).toEqual(
+      fitSvgLine(text, { maxWidth: 120, fontSize: 20, letterSpacing: 0 }),
+    )
+  })
+
   it("defaults the shrink floor to the 16px (12pt) readable floor", () => {
     const r = fitSvgLine("一二三四五六七八九十", { maxWidth: 120, fontSize: 20 })
     expect(r.fontSize).toBe(16)

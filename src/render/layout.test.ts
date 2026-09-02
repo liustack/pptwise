@@ -10,7 +10,8 @@ import {
   GOLDEN_TOP_CAP_GAPS,
   type ContentRect,
 } from "./layout"
-import { measureComponent } from "../components"
+import { measureComponent, renderComponent } from "../components"
+import { renderSvgMarkup } from "./serialize"
 import type { ComponentCtx } from "../components/types"
 import type { Component } from "@/ir"
 
@@ -310,6 +311,53 @@ describe("layoutContentFit", () => {
     expect(placed[0].component.type).toBe("image")
     expect(placed[0].box.x).toBe(416)
     expect(placed[0].box.w).toBe(384)
+  })
+})
+
+describe("the single-survivor rescue hands a budget, and the loss is always declared", () => {
+  // The rescue deliberately gives the one surviving block less height than it
+  // measures. That is legal, and it is the only place in the layout that does
+  // it — but it must never leave a loss nobody records. A chart treats box.h
+  // as a contract rather than a budget, so it is the block that turns this
+  // path into a visible refusal instead of a squashed drawing.
+  const lineChart = (n: number): Component => ({
+    type: "chart",
+    chart_type: "line",
+    axes: { x_title: "月", y_title: "数" },
+    series: Array.from({ length: n }, (_, i) => ({
+      name: `S${i}`,
+      data: [
+        { x: "A", y: 10 + i },
+        { x: "B", y: 20 + i },
+      ],
+    })),
+  })
+
+  it("gives the survivor the room that is left, below its own measure", () => {
+    const tight: ContentRect = { x: 0, y: 0, w: 970, h: 200 }
+    const { placed, dropped } = layoutContentFit("single", [lineChart(3)], tight, ctx)
+    expect(placed).toHaveLength(1)
+    expect(dropped).toBe(0)
+    expect(placed[0]!.box.h).toBe(200)
+    expect(measureComponent(lineChart(3), 970, ctx)).toBeGreaterThan(placed[0]!.box.h!)
+  })
+
+  it("makes a box-aware survivor declare rather than paint through", () => {
+    const tight: ContentRect = { x: 0, y: 0, w: 970, h: 200 }
+    const { placed } = layoutContentFit("single", [lineChart(3)], tight, ctx)
+    const markup = renderSvgMarkup(renderComponent(placed[0]!.component, placed[0]!.box, ctx))
+    // Blank is only half the story, and the wrong half on its own: the point
+    // is that the page says so, and that `checkContentDropGate` reads it.
+    expect(markup).toMatch(/data-dropped-silent="1"/)
+    expect(markup).not.toMatch(/data-plot-mark/)
+  })
+
+  it("draws normally once the region can hold the same chart", () => {
+    const roomy: ContentRect = { x: 0, y: 0, w: 970, h: 400 }
+    const { placed } = layoutContentFit("single", [lineChart(3)], roomy, ctx)
+    const markup = renderSvgMarkup(renderComponent(placed[0]!.component, placed[0]!.box, ctx))
+    expect(markup).toMatch(/data-plot-mark/)
+    expect(markup).not.toMatch(/data-dropped-silent/)
   })
 })
 

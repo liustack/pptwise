@@ -116,4 +116,62 @@ describe("whitespace at run boundaries", () => {
     const op = textToOp(textEl('<text x="0" y="0" font-size="20">99.95<tspan>%</tspan>   of   plan</text>'))
     expect(op.runs.map((r) => r.text)).toEqual(["99.95", "%", " of plan"])
   })
+
+  it("collapses interior blanks in a text node that has no tspans", () => {
+    // The no-tspan path used to trim instead: the two ends went and every
+    // interior run of blanks stood. 423 nodes across 217 corpus pages
+    // exported blanks the page paints as one — axis titles, and the cover and
+    // sign-off lines that separate their parts with four spaces.
+    expect(textToOp(textEl('<text x="0" y="0" font-size="16">axis  \u2191</text>')).runs.map((r) => r.text)).toEqual([
+      "axis \u2191",
+    ])
+    expect(
+      textToOp(textEl('<text x="0" y="0" font-size="16">战略与运营部    ·    陈砚清</text>')).runs.map((r) => r.text),
+    ).toEqual(["战略与运营部 · 陈砚清"])
+  })
+
+  it("keeps every character of an xml:space=preserve line", () => {
+    // code.tsx sets it on each line because the indentation is the author's.
+    expect(
+      textToOp(textEl('<text x="0" y="0" font-size="14" xml:space="preserve">    raise Error()</text>')).runs.map(
+        (r) => r.text,
+      ),
+    ).toEqual(["    raise Error()"])
+  })
+
+  it("takes the preserve mode from an ancestor, and a tspan's own over that", () => {
+    expect(
+      textToOp(textEl('<text x="0" y="0" font-size="16">A<tspan xml:space="preserve">   B</tspan>C</text>')).runs.map(
+        (r) => r.text,
+      ),
+    ).toEqual(["A", "   B", "C"])
+    expect(
+      textToOp(
+        textEl('<text x="0" y="0" font-size="16" xml:space="preserve">A<tspan xml:space="default">   B</tspan>C</text>'),
+      ).runs.map((r) => r.text),
+    ).toEqual(["A", " B", "C"])
+  })
+
+  it("leaves a no-break space alone", () => {
+    expect(textToOp(textEl('<text x="0" y="0" font-size="16">A\u00a0\u00a0B</text>')).runs.map((r) => r.text)).toEqual([
+      "A\u00a0\u00a0B",
+    ])
+  })
+
+  it("collapses a blank pair that straddles a run boundary to one space", () => {
+    // The shape `renderEmphasisTspans` produces from `AA ** BB**`. Collapsing
+    // each run on its own left both blanks: two adjacent characters in the
+    // stream, one space on the page.
+    const op = textToOp(
+      textEl('<text x="0" y="0" font-size="20"><tspan>AA </tspan><tspan font-weight="600"> BB</tspan></text>'),
+    )
+    expect(op.runs.map((r) => r.text)).toEqual(["AA ", "BB"])
+  })
+
+  it("drops a run that was nothing but a redundant blank", () => {
+    const op = textToOp(
+      textEl('<text x="0" y="0" font-size="20"><tspan>AA </tspan><tspan> </tspan><tspan>BB</tspan></text>'),
+    )
+    expect(op.runs.map((r) => r.text)).toEqual(["AA ", "BB"])
+  })
 })

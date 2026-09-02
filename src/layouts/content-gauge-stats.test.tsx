@@ -181,6 +181,82 @@ describe("content-gauge-stats", () => {
     expect(root.querySelectorAll("line")).toHaveLength(1)
   })
 
+  it("gives the fallback exhibit a band no smaller than what it has to hold", () => {
+    // The band used to be a constant, 208px between the rule and a
+    // conclusion pinned to the stats grid's own closing line, which is less
+    // than any cartesian chart's measured minimum. On the fallback the
+    // conclusion reads as a standfirst above the rule instead, and the
+    // exhibit gets the whole band under it.
+    const chartSlide: Slide = {
+      type: "content",
+      kind: "points",
+      heading: "运营判断",
+      subheading: "续约率回升到百分之九十一。",
+      components: [
+        {
+          type: "chart",
+          chart_type: "bar",
+          axes: { x_title: "季度", y_title: "席位" },
+          series: [
+            { name: "咨询", data: [{ x: "Q1", y: 42 }, { x: "Q2", y: 53 }] },
+            { name: "软件", data: [{ x: "Q1", y: 30 }, { x: "Q2", y: 36 }] },
+          ],
+        },
+      ],
+      footnote: "来源：运营周报",
+    } as Slide
+    const { markup, root } = renderContent(chartSlide)
+    const rect = root.querySelector("[data-audit-rect]")!.getAttribute("data-audit-rect")!.split(",").map(Number)
+    const standfirst = textBy(root, "续约率回升到百分之九十一。")!
+    const ruleY = Number(root.querySelector("line[stroke-width=\"1\"]")!.getAttribute("y1"))
+    // Standfirst above the rule, exhibit below it, footnote clear of both.
+    expect(Number(standfirst.getAttribute("y"))).toBeLessThan(ruleY)
+    expect(rect[1]!).toBeGreaterThan(ruleY)
+    expect(rect[3]!).toBeGreaterThanOrEqual(316)
+    // Nothing paints through anything: no chart declined, no overflow.
+    expect(root.querySelector("[data-dropped]")).toBeNull()
+    expect(auditSvgMarkup(markup)).toEqual([])
+  })
+
+  it("names the series count where the 328px band runs out, and is loud past it", () => {
+    // The band is bounded by the page, not by a number someone picked: it
+    // runs from the rule to 620, and 620 is where the footnote's ink starts.
+    // A directly-labelled line chart grows with its series count, so there is
+    // a real boundary — 12 series with axis titles fit, 13 do not. Past it the
+    // exhibit declines and declares rather than painting through the footnote.
+    const lineSlide = (n: number): Slide =>
+      ({
+        type: "content",
+        kind: "points",
+        heading: "运营判断",
+        subheading: "续约率回升到百分之九十一。",
+        components: [
+          {
+            type: "chart",
+            chart_type: "line",
+            axes: { x_title: "季度", y_title: "席位" },
+            series: Array.from({ length: n }, (_, i) => ({
+              name: `S${i}`,
+              data: [
+                { x: "Q1", y: 10 + i },
+                { x: "Q2", y: 20 + i },
+              ],
+            })),
+          },
+        ],
+        footnote: "来源：运营周报",
+      }) as Slide
+
+    const fits = renderContent(lineSlide(12))
+    expect(fits.root.querySelector("[data-dropped]")).toBeNull()
+    expect(fits.markup).toMatch(/data-plot-mark/)
+    expect(auditSvgMarkup(fits.markup)).toEqual([])
+
+    const overflows = renderContent(lineSlide(13))
+    expect(overflows.markup).not.toMatch(/data-plot-mark/)
+    expect(overflows.root.querySelector("[data-dropped-silent]")).not.toBeNull()
+  })
+
   it("keeps an oversized fallback block inside the fixed body region", () => {
     const oversized = STRESS_DECKS.comparison_quote_code.slides[1]!
     const { markup, root } = renderContent(oversized)
