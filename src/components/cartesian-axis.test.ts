@@ -8,6 +8,7 @@ import {
   paddedDomain,
   TICK_FONT_SIZE,
   TICK_MIN_FONT_SIZE,
+  Y_TICK_MIN_GUTTER,
   yTickGutter,
 } from "./cartesian-axis"
 
@@ -74,5 +75,24 @@ describe("yTickGutter", () => {
     const wide = yTickGutter(["1,000 weeks", "2,000 weeks"], "Arial")
     expect(wide).toBeGreaterThan(narrow)
     expect(wide).toBeGreaterThan(36)
+  })
+
+  it("never takes more than the cap, comfort floor included", () => {
+    // Called without a `maxGutter` this function has no box to answer to, so
+    // the assertion above only compares two uncapped numbers to each other —
+    // which is where the real defect used to live: the 36px comfort floor was
+    // re-applied *outside* the cap, so on a narrow plot the gutter took more
+    // than its declared share and put the plot origin outside the box the
+    // chart was handed. Every caller that owns a fixed box passes a cap, so
+    // the cap is the contract.
+    const labels = ["1,000 weeks", "2,000 weeks"]
+    for (const cap of [4, 12, 24, 35, 36]) {
+      expect(yTickGutter(labels, "Arial", cap), `cap=${cap}`).toBeLessThanOrEqual(cap)
+    }
+    // A cap above what the labels want does not inflate the gutter to it.
+    const want = yTickGutter(labels, "Arial")
+    expect(yTickGutter(labels, "Arial", 400)).toBe(want)
+    // And the comfort floor still applies below the cap when there is room.
+    expect(yTickGutter(["0"], "Arial", 400)).toBe(Y_TICK_MIN_GUTTER)
   })
 })

@@ -185,9 +185,23 @@ describe("the walker keeps the current text position", () => {
     expect(findings[0]!.px).toBeCloseTo(17.2, 1)
   })
 
-  it("reads a dx list as no shift rather than guessing at it", () => {
-    const markup = `<svg xmlns="http://www.w3.org/2000/svg"><g data-audit-rect="0,0,100,100"><g data-audit-box="0,0,100"><text x="10" y="50" font-size="10">AAAA<tspan dx="80 90 100">BBBB</tspan></text></g></g></svg>`
-    expect(collectInkFindings(markup)).toEqual([])
+  it("no page in the corpus asks the walker to read a per-glyph dx or dy list", { timeout: 180_000 }, async () => {
+    // The walker reads a `dx`/`dy` list as no shift, which under-reports a
+    // real per-glyph offset — and asserting *that* is asserting the
+    // simplification. What makes the simplification safe is the fact
+    // underneath it: nothing in this renderer emits a list. `citation.tsx`,
+    // the only live producer of either attribute, writes one number. So the
+    // contract to hold is the absence, checked against every page the
+    // matrix renders rather than against a hand-written string.
+    const svgs = await renderCorpus()
+    expect(svgs.size).toBeGreaterThan(0)
+    const offenders: string[] = []
+    for (const [id, svg] of svgs) {
+      for (const m of svg.matchAll(/\sd[xy]="([^"]*)"/g)) {
+        if (/[\s,]/.test(m[1]!.trim())) offenders.push(`${id}: ${m[0]}`)
+      }
+    }
+    expect(offenders, offenders.slice(0, 10).join("\n")).toEqual([])
   })
 })
 

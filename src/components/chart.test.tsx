@@ -68,10 +68,16 @@ describe("chart component", () => {
     }
     const minimum = chart.measure(component, 970, ctx)
     const { container } = svg(chart.render(component, { x: 0, y: 0, w: 970, h: minimum - 40 }, ctx))
-    // Nothing painted, and the loss declared where a machine finds it.
+    // Nothing painted, and the loss declared where the gate reads it.
+    // `data-dropped` alone was the assertion here, and that is the attribute
+    // `slideToRender` does *not* count — the marker the export gate acts on
+    // is `data-dropped-silent`, and a decline that only wrote the plain one
+    // would be a page with no chart, no error, and a shipped file.
     expect(container.querySelectorAll("text")).toHaveLength(0)
     expect(container.querySelectorAll("polyline")).toHaveLength(0)
-    expect(container.querySelector("[data-dropped]")!.getAttribute("data-dropped")).toBe("1")
+    const marker = container.querySelector("[data-dropped]")!
+    expect(marker.getAttribute("data-dropped")).toBe("1")
+    expect(marker.getAttribute("data-dropped-silent")).toBe("1")
   })
 
   it("refuses an empty line or area series at the schema, where the loss is preventable", () => {
