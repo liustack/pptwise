@@ -1,5 +1,11 @@
 # @liustack/pptwise
 
+## 0.29.0
+
+### Minor Changes
+
+- Charts keep their box and label their lines at the end. A chart now draws inside exactly the height it is given and declines loudly (export refuses) when handed less than its measured minimum instead of painting over the content below it, and the gauge-stats fallback band is sized for what it can hold. Line and area charts drop the legend row and label each series in a left and right gutter — `name value` at the line end, start value at the left — solved as whole columns with leader lines, so converging or sparse series never collide with each other, the line or the marker, and the plot yields width to the gutters with a floor. Validate refuses empty line/area series and axis tick gutters are capped and truncated instead of pushing the plot out of its box. Text export and the review scanner now share one SVG whitespace rule: default text collapses interior runs of blanks to one space (423 corpus nodes exported doubled spaces before), `xml:space="preserve"` code lines keep their indentation in PPTX, per-tspan overrides and ancestor inheritance are honored, and no-break spaces are left alone. The review gallery gains an ink-containment geometry scan that fails when any component's painted ink leaves its allocated rect, hardened through six review rounds (tracking, tspan positioning, dx/dy, nested scopes, whitespace modes).
+
 ## 0.28.0
 
 ### Minor Changes
