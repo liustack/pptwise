@@ -4,7 +4,7 @@ import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout"
 import { rotateChartPalette } from "../render/chart-palette"
 import { accessibleInk } from "../render/ink"
 import { axisTitlePairHeight } from "./axis-titles"
-import { PLOT_TOP_PAD, X_TICK_BAND } from "./cartesian-axis"
+import { MIN_CARTESIAN_BOX_W, PLOT_TOP_PAD, X_TICK_BAND } from "./cartesian-axis"
 import { labelLinePitch } from "./label-collision"
 import { DIRECT_LABEL_FONT_SIZE } from "./chart-svg"
 import { buildChartModel } from "./chart-model"
@@ -362,6 +362,14 @@ export const chart: SvgComponent<ChartComponent> = {
     // count. Marked with the plain attribute alone, the deck shipped a page
     // with no chart on it and no error anywhere.
     if ((box.h ?? minimum) + 0.5 < minimum) {
+      return <g data-dropped={1} data-dropped-silent={1} />
+    }
+    // Same contract on the other axis. Below `MIN_CARTESIAN_BOX_W` the y-tick
+    // gutter and the right pad leave no plot to speak of, and the frame would
+    // be drawn against `plotW`'s 1px floor — geometry that no longer means
+    // anything and, before the gutter cap was made to bind, ink outside the
+    // box.
+    if (axesApplicable(component) && box.w < MIN_CARTESIAN_BOX_W) {
       return <g data-dropped={1} data-dropped-silent={1} />
     }
 

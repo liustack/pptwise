@@ -24,6 +24,7 @@ import { LANGUAGE_IDS, LEXICONS, type LanguageId } from "./corpus/lexicon"
 import { buildMatrix } from "./matrix"
 import { renderMatrix } from "./render"
 import { chart } from "@/components/chart"
+import { MIN_CARTESIAN_BOX_W } from "@/components/cartesian-axis"
 import { renderSvgMarkup } from "@/render/serialize"
 import { Fragment, createElement } from "react"
 import { parseEmphasis, renderEmphasisTspans, stripEmphasis } from "@/render/emphasis"
@@ -272,16 +273,17 @@ describe("nested audit boxes cannot launder an outer overflow", () => {
 })
 
 describe("an unbounded axis label cannot push the plot out of its box", () => {
+  const ctx: ComponentCtx = {
+    colors: {
+      bg: "#FFFFFF", surface: "#F4F4F4", primary: "#006A4E", accent: "#00A878",
+      text: "#1A2421", muted: "#5D6B65",
+      chartPalette: ["#006A4E", "#00A878", "#FF6B35", "#FFD166"],
+    },
+    fonts: { heading: "Georgia", body: "Microsoft YaHei", mono: "Consolas" },
+    bodyFontPx: 24,
+  }
+
   it("keeps a 200-character y unit inside the component box", () => {
-    const ctx: ComponentCtx = {
-      colors: {
-        bg: "#FFFFFF", surface: "#F4F4F4", primary: "#006A4E", accent: "#00A878",
-        text: "#1A2421", muted: "#5D6B65",
-        chartPalette: ["#006A4E", "#00A878", "#FF6B35", "#FFD166"],
-      },
-      fonts: { heading: "Georgia", body: "Microsoft YaHei", mono: "Consolas" },
-      bodyFontPx: 24,
-    }
     const component = {
       type: "chart" as const,
       chart_type: "line" as const,
@@ -292,6 +294,50 @@ describe("an unbounded axis label cannot push the plot out of its box", () => {
     const h = chart.measure(component, w, ctx)
     const markup = boxed(renderSvgMarkup(chart.render(component, { x: 0, y: 0, w, h }, ctx)), w, h)
     expect(collectInkFindings(markup)).toEqual([])
+  })
+
+  it("keeps the gutter inside the box at widths where the comfort floor cannot fit", () => {
+    // The 36px minimum gutter used to be re-applied outside the 32% cap, so
+    // the cap was not a cap: below ~31px the plot origin alone landed outside
+    // the box. 400px is where the cap binds and the old code looked fine —
+    // these two are where it did not.
+    for (const w of [30, 20]) {
+      const component = {
+        type: "chart" as const,
+        chart_type: "line" as const,
+        axes: { x_title: "月", y_title: "数" },
+        series: [{ name: "S", data: [{ x: "A", y: 1 }, { x: "B", y: 2 }] }],
+      }
+      const h = chart.measure(component, w, ctx)
+      const markup = boxed(renderSvgMarkup(chart.render(component, { x: 0, y: 0, w, h }, ctx)), w, h)
+      expect(collectInkFindings(markup), `w=${w}`).toEqual([])
+    }
+  })
+
+  it("declines a box too narrow for any plot, and draws at the width just above it", () => {
+    const component = {
+      type: "chart" as const,
+      chart_type: "line" as const,
+      axes: { x_title: "月", y_title: "数" },
+      series: [{ name: "S", data: [{ x: "A", y: 1 }, { x: "B", y: 2 }] }],
+    }
+    const render = (w: number) => {
+      const h = chart.measure(component, w, ctx)
+      const markup = renderSvgMarkup(chart.render(component, { x: 0, y: 0, w, h }, ctx))
+      return {
+        marks: (markup.match(/data-plot-mark/g) ?? []).length,
+        declared: /data-dropped-silent/.test(markup),
+        findings: collectInkFindings(boxed(markup, w, h)),
+      }
+    }
+    const tooNarrow = render(MIN_CARTESIAN_BOX_W - 1)
+    expect(tooNarrow.marks).toBe(0)
+    expect(tooNarrow.declared).toBe(true)
+    expect(tooNarrow.findings).toEqual([])
+    // One pixel wider there is a plot, and it stays inside the box.
+    const wideEnough = render(MIN_CARTESIAN_BOX_W)
+    expect(wideEnough.marks).toBeGreaterThan(0)
+    expect(wideEnough.findings).toEqual([])
   })
 })
 

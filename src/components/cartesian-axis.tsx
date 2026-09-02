@@ -190,8 +190,34 @@ export function yTickGutter(labels: readonly string[], fontFamily?: string, maxG
   }
   const want = Math.max(Y_TICK_MIN_GUTTER, Math.ceil(max + TICK_TO_AXIS_GAP))
   if (maxGutter == null) return want
-  return Math.min(want, Math.max(Y_TICK_MIN_GUTTER, Math.floor(maxGutter)))
+  // The cap is applied last, so it is actually a cap. `Y_TICK_MIN_GUTTER` used
+  // to be re-applied *outside* it, which let the gutter take more than its
+  // declared share on any narrow plot and, below ~31px, put `plotX` outside
+  // the box the chart was handed — the exact contract this file states,
+  // broken on the line that states it. A comfortable minimum is a preference;
+  // the box is not, so the floor yields to it.
+  return Math.min(want, Math.max(0, Math.floor(maxGutter)))
 }
+
+/**
+ * Plot width below which a cartesian chart has nothing left to draw in.
+ *
+ * Two ticks and a mark need somewhere to go. Under this, the frame is all
+ * there is and `plotW`'s own 1px floor is doing the only work — which is not
+ * a chart, it is a rounding artefact with axes.
+ */
+export const MIN_PLOT_W = 24
+
+/**
+ * Narrowest box a cartesian chart can be drawn in at all.
+ *
+ * Derived, not chosen: the gutter never takes more than
+ * `Y_TICK_MAX_W_RATIO` of the box, so the plot always keeps at least
+ * `(1 - ratio) * w - PLOT_RIGHT_PAD`, and this is the width at which that
+ * reaches {@link MIN_PLOT_W}. A caller handing less is handing an impossible
+ * box, which `chart.render` declines rather than paints its way out of.
+ */
+export const MIN_CARTESIAN_BOX_W = Math.ceil((MIN_PLOT_W + PLOT_RIGHT_PAD) / (1 - Y_TICK_MAX_W_RATIO))
 
 export function mapToPlotY(value: number, domain: NumericDomain, plotY: number, plotH: number): number {
   const span = domain.max - domain.min
