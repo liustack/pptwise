@@ -150,6 +150,19 @@ describe("the walker keeps the current text position", () => {
     expect(findings[0]!.px).toBeCloseTo(42, 0)
   })
 
+  it("collapses whitespace the way the default SVG rule does", () => {
+    // Four source spaces are painted as one. Measuring all four reported an
+    // overflow the page does not have.
+    const markup = (inner: string) =>
+      `<svg xmlns="http://www.w3.org/2000/svg"><g data-audit-rect="0,0,33,100"><g data-audit-box="0,0,33"><text x="0" y="50" font-size="10">${inner}</text></g></g></svg>`
+    expect(collectInkFindings(markup(`<tspan>AA    </tspan><tspan>BB</tspan>`))).toEqual([])
+    // …and the one space a boundary really does paint still counts: the same
+    // glyphs with no space between them are narrower.
+    const spaced = `<svg xmlns="http://www.w3.org/2000/svg"><g data-audit-rect="0,0,100,100"><g data-audit-box="0,0,100"><text x="0" y="50" font-size="10">AAAAAAAAAA<tspan> </tspan>AAAAAAAAAA</text></g></g></svg>`
+    const tight = spaced.replace("<tspan> </tspan>", "")
+    expect(collectInkFindings(spaced)[0]!.px).toBeGreaterThan(collectInkFindings(tight)[0]!.px)
+  })
+
   it("charges a child's ink to every box scope above it", () => {
     // `matrix`, `icon_cards`, `row_cards`, `sankey` and `flowchart` all
     // declare one box per cell inside the component's own box. Charging the

@@ -185,6 +185,27 @@ function collectSegments(node: Element, style: TextStyle, out: TextSegment[]): v
 }
 
 /**
+ * SVG's default whitespace handling, over one chunk's runs.
+ *
+ * `xml:space="default"` collapses every run of whitespace to a single space
+ * and drops it at the two ends of the text. Keeping the source spaces
+ * verbatim measures a string the page never paints: four spaces between two
+ * runs are drawn as one. This mirrors `collapseRunWhitespace` in
+ * `src/pptx/svg2pptx/text.ts`, which already applies the same rule to the
+ * same markup on the way to OOXML — the boundary space that N2 exists to
+ * keep survives here exactly as it survives there.
+ */
+function collapseChunkWhitespace(segments: readonly TextSegment[]): TextSegment[] {
+  const collapsed = segments.map((segment) => ({ ...segment, text: segment.text.replace(/\s+/g, " ") }))
+  if (collapsed.length > 0) {
+    collapsed[0] = { ...collapsed[0]!, text: collapsed[0]!.text.replace(/^\s+/, "") }
+    const last = collapsed.length - 1
+    collapsed[last] = { ...collapsed[last]!, text: collapsed[last]!.text.replace(/\s+$/, "") }
+  }
+  return collapsed.filter((segment) => segment.text.length > 0)
+}
+
+/**
  * Every ink box a `<text>` paints, one per run.
  *
  * Three positions are in play and the walker keeps all three straight:
@@ -231,7 +252,7 @@ export function textInkBoxes(el: Element, inherited: TextStyle): DepthBox[] {
   let cursorX = num(el, "x")
   let cursorY = num(el, "y")
   for (const chunk of chunks) {
-    const runs = chunk.segments.filter((segment) => segment.text !== "")
+    const runs = collapseChunkWhitespace(chunk.segments)
     const startX = chunk.x ?? cursorX
     const startY = chunk.y ?? cursorY
     cursorX = startX
