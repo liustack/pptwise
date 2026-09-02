@@ -6,7 +6,12 @@ import { accessibleInk } from "../render/ink"
 import { axisTitlePairHeight } from "./axis-titles"
 import { MIN_CARTESIAN_BOX_W, PLOT_TOP_PAD, X_TICK_BAND } from "./cartesian-axis"
 import { labelLinePitch } from "./label-collision"
-import { DIRECT_LABEL_FONT_SIZE, MIN_DIRECT_LABEL_BOX_W, PIE_LEADER_STUB } from "./chart-svg"
+import {
+  CHART_BODY_H,
+  DIRECT_LABEL_FONT_SIZE,
+  MIN_DIRECT_LABEL_BOX_W,
+  RADIAL_MIN_BODY_H,
+} from "./chart-svg"
 import { buildChartModel } from "./chart-model"
 import type { RenderDef, SvgComponent } from "./types"
 import {
@@ -25,7 +30,9 @@ import {
 
 type ChartComponent = Extract<Component, { type: "chart" }>
 
-const CHART_H = 240
+/** Re-exported name for the flat body height, which now lives beside the
+ * radial geometry that has to reason about it (`chart-svg.tsx`). */
+const CHART_H = CHART_BODY_H
 
 const renderers: Record<ChartComponent["chart_type"], ChartRenderFn> = {
   bar: renderBar,
@@ -369,7 +376,7 @@ function directLabelBodyH(component: ChartComponent): number {
  */
 function radialBodyH(component: ChartComponent): number {
   if (component.chart_type !== "pie" && component.chart_type !== "donut") return 0
-  return CHART_H + 2 * PIE_LEADER_STUB
+  return RADIAL_MIN_BODY_H
 }
 
 /**

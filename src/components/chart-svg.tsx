@@ -558,41 +558,82 @@ interface GutterLabel {
 }
 
 /**
- * Fit one gutter label to the room its side has, keeping its value whole.
+ * One direct label fitted to the room it has, with its value kept whole.
  *
- * The full `name value` is tried first and returned untouched when it fits,
- * so every label that was never crowded paints exactly what it always did.
- * Only a label that has to be cut takes the protected path: the value's own
- * width (with the space before it) comes off the budget first, and the name
- * is fitted into the remainder. A name with no room at all yields the gutter
- * to the value alone, still marked as cut. A gutter that cannot hold even
- * the value comes back empty, which the caller counts and declares.
+ * Shared by the line/area gutter and by the pie and donut, which had the
+ * same defect for the same reason: `name value` was fitted as one string
+ * from the front, so the part that fell off the end was the number.
+ *
+ * Four outcomes, in the order they are tried:
+ *
+ *  1. **The whole string fits** — returned untouched, so every label that
+ *     was never crowded paints exactly what it always did.
+ *  2. **The name has to give** — the value's own width (with the space
+ *     before it) comes off the budget first and the name is fitted into the
+ *     remainder. Marked cut, and still `named`.
+ *  3. **The name has no room at all** — the value keeps the column alone.
+ *     Marked cut, and no longer `named`, which is what lets a caller decline
+ *     rather than paint a chart whose series have no names.
+ *  4. **Not even the value fits** — nothing is painted and the caller
+ *     declares the drop. A value is never cut: `123456789` truncated to `1`
+ *     is not a shorter number, it is a wrong one, and no reader can tell the
+ *     difference. That was the one case this function used to get wrong.
  */
-function fitGutterLabel(
-  label: GutterLabel,
-  avail: number,
+interface ProtectedFit {
+  readonly text: string
+  readonly fontSize: number
+  readonly truncated: boolean
+  /** False when the label lost its name entirely and prints a bare value. */
+  readonly named: boolean
+}
+
+function fitProtectedLabel(
+  text: string,
+  keep: string,
+  maxWidth: number,
   fontFamily?: string,
-): ReturnType<typeof fitSvgLine> {
+): ProtectedFit {
   const shared = {
     fontSize: DIRECT_LABEL_FONT_SIZE,
     minFontSize: DIRECT_LABEL_FONT_SIZE,
     bold: true,
     fontFamily,
   } as const
-  const whole = fitSvgLine(label.text, { ...shared, maxWidth: avail })
-  if (!whole.truncated || label.keep === undefined) return whole
+  // A value that does not fit whole is a declared drop, never a shorter
+  // number — for the bare-value label too, which is all a start value is.
+  const valueFits = directLabelWidth(keep, fontFamily) <= maxWidth
+  if (text === keep) {
+    return valueFits
+      ? { text, fontSize: DIRECT_LABEL_FONT_SIZE, truncated: false, named: true }
+      : { text: "", fontSize: DIRECT_LABEL_FONT_SIZE, truncated: true, named: true }
+  }
 
-  const keep = label.keep
-  const name = label.text.slice(0, Math.max(0, label.text.length - keep.length - 1))
+  const whole = fitSvgLine(text, { ...shared, maxWidth })
+  if (!whole.truncated) return { ...whole, named: true }
+  if (!valueFits) {
+    return { text: "", fontSize: DIRECT_LABEL_FONT_SIZE, truncated: true, named: false }
+  }
+
+  const name = text.slice(0, Math.max(0, text.length - keep.length - 1))
   const fittedName = fitSvgLine(name, {
     ...shared,
-    maxWidth: Math.max(0, avail - directLabelWidth(` ${keep}`, fontFamily)),
+    maxWidth: Math.max(0, maxWidth - directLabelWidth(` ${keep}`, fontFamily)),
   })
   if (fittedName.text === "") {
-    const valueOnly = fitSvgLine(keep, { ...shared, maxWidth: avail })
-    return { ...valueOnly, truncated: true }
+    return { text: keep, fontSize: DIRECT_LABEL_FONT_SIZE, truncated: true, named: false }
   }
-  return { text: `${fittedName.text} ${keep}`, fontSize: fittedName.fontSize, truncated: true }
+  return {
+    text: `${fittedName.text} ${keep}`,
+    fontSize: fittedName.fontSize,
+    truncated: true,
+    named: true,
+  }
+}
+
+/** {@link fitProtectedLabel} for one gutter label. A label with no `keep` is
+ * a bare start value, which is its own protected part. */
+function fitGutterLabel(label: GutterLabel, avail: number, fontFamily?: string): ProtectedFit {
+  return fitProtectedLabel(label.text, label.keep ?? label.text, avail, fontFamily)
 }
 
 /**
@@ -1320,6 +1361,22 @@ const PIE_LEADER_GAP = 6
 const PIE_MIN_RADIUS_RATIO = 0.55
 
 /**
+ * Flat body height every chart type is measured at before its own content
+ * adds to it (`chart.tsx`'s `measure`). Declared here because the radial
+ * geometry below has to reason about the band the component asked for, not
+ * only the one it was handed.
+ */
+export const CHART_BODY_H = 240
+
+/**
+ * The band a pie or donut measures for itself: the flat body plus the two
+ * leader stubs its slices hang off the arc (`chart.tsx`'s `radialBodyH`).
+ * This is the circle the chart is designed around, and the anchor for how
+ * small it is willing to get — see {@link layoutRadialSlices}.
+ */
+export const RADIAL_MIN_BODY_H = CHART_BODY_H + 2 * PIE_LEADER_STUB
+
+/**
  * The radius a pie or donut may use before its labels start reaching.
  *
  * Every slice hangs a `PIE_LEADER_STUB` off its own arc, so the circle's
@@ -1343,7 +1400,7 @@ interface RadialSlice {
   readonly endA: number
   readonly right: boolean
   readonly textX: number
-  readonly fitted: ReturnType<typeof fitSvgLine>
+  readonly fitted: ProtectedFit
   readonly arcX: number
   readonly arcY: number
   readonly stubX: number
@@ -1387,16 +1444,33 @@ function layoutRadialSlices(
   // clipped off, on 18 gallery pages. Geometry may grant a label *more* room
   // than the budget (a narrow band, a small slice); it never grants less.
   const texts = data.map(directLabelText)
+  const widest = widestDirectLabel(texts, fontFamily)
+  // **The circle never grows past what the width can host beside it.**
+  // `fullR` is the disc the *box* would hold, and once a radial chart
+  // started taking the height it was allocated that number grew with the
+  // band: a taller box made a bigger disc, the disc pushed the label budget
+  // down, and a three-slice pie with long names lost its values at 328px in
+  // a box that kept them all at 260px. Height beyond what the width can pair
+  // with a full label column is vertical whitespace, not more radius.
+  const labelBoundR = w / 2 - PIE_LEADER_STUB - PIE_LEADER_GAP - widest
+  // How small the circle is willing to get, anchored on the band the chart
+  // measured for itself ({@link RADIAL_MIN_BODY_H}) rather than on the band
+  // it happened to be handed. Reading it off the allocated height instead is
+  // what let extra height raise the floor, which raised the disc, which took
+  // the width back from the label column.
+  const baseR = Math.max(0, Math.min(w / 2, RADIAL_MIN_BODY_H / 2 - PIE_LEADER_STUB) - 4)
+  const floorR = baseR * PIE_MIN_RADIUS_RATIO
+  const discR = Math.min(fullR, Math.max(labelBoundR, floorR))
+  // One authoritative label budget, used both to size the circle and to fit
+  // the text — see the note below on why this is not measured back out of
+  // the geometry.
   const labelBudget = Math.max(
     0,
-    Math.min(
-      widestDirectLabel(texts, fontFamily),
-      w / 2 - PIE_LEADER_STUB - PIE_LEADER_GAP - fullR * PIE_MIN_RADIUS_RATIO,
-    ),
+    Math.min(widest, w / 2 - PIE_LEADER_STUB - PIE_LEADER_GAP - floorR),
   )
   const r = Math.max(
-    fullR * PIE_MIN_RADIUS_RATIO,
-    Math.min(fullR, w / 2 - (PIE_LEADER_STUB + PIE_LEADER_GAP + labelBudget)),
+    floorR,
+    Math.min(discR, w / 2 - (PIE_LEADER_STUB + PIE_LEADER_GAP + labelBudget)),
   )
 
   let acc = 0
@@ -1417,14 +1491,16 @@ function layoutRadialSlices(
       right,
       textX,
       // Truncation is the last resort, after the circle has already given up
-      // what radius it can: fit to the room that is actually left.
-      fitted: fitSvgLine(texts[i]!, {
-        maxWidth: Math.max(labelBudget, right ? x0 + w - textX : textX - x0),
-        fontSize: DIRECT_LABEL_FONT_SIZE,
-        minFontSize: DIRECT_LABEL_FONT_SIZE,
-        bold: true,
+      // what radius it can: fit to the room that is actually left — and cut
+      // the name rather than the value, the same protection the line and
+      // area gutters keep. A slice label is `name value` in one node, so
+      // fitting it from the front took the number off first.
+      fitted: fitProtectedLabel(
+        texts[i]!,
+        String(d.y),
+        Math.max(labelBudget, right ? x0 + w - textX : textX - x0),
         fontFamily,
-      }),
+      ),
       arcX: cx + Math.cos(midA) * r,
       arcY: cy + Math.sin(midA) * r,
       stubX: cx + Math.cos(midA) * (r + PIE_LEADER_STUB),

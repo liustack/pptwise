@@ -1529,3 +1529,54 @@ describe("a repeated category inside one series is refused", () => {
     ).toBe(true)
   })
 })
+
+/**
+ * A radial chart's labels are the reason its circle yields radius, and once
+ * pie and donut started taking the height they were allocated the circle grew
+ * with the band and took that radius back — from the label columns.
+ */
+describe("a radial chart's extra height is whitespace, not a bigger disc", () => {
+  const LONG = [
+    { x: "企业级客户年度经常性收入", y: 45 },
+    { x: "中小企业客户年度经常性收入", y: 30 },
+    { x: "个人开发者年度经常性收入", y: 25 },
+  ]
+  const longPie = (chart_type: "pie" | "donut") =>
+    ({ type: "chart" as const, chart_type, series: [{ name: "份额", data: LONG }] })
+
+  const labelsOf = (container: HTMLElement) =>
+    [...container.querySelectorAll("text[data-value-label]")].map((el) => el.textContent ?? "")
+
+  for (const chart_type of ["pie", "donut"] as const) {
+    // The three geometries from the review: the component's own measured
+    // minimum, a taller band, and a narrow half-column at a taller band
+    // still. At 328 the first label used to lose its value outright, and at
+    // 528×400 all three did.
+    for (const [w, h] of [[600, 260], [600, 328], [528, 400]] as const) {
+      it(`${chart_type} ${w}x${h}: every slice keeps its own value`, () => {
+        const { container } = svg(chart.render(longPie(chart_type), { x: 0, y: 0, w, h }, ctx))
+        const labels = labelsOf(container)
+        expect(labels).toHaveLength(3)
+        for (const point of LONG) {
+          expect(
+            labels.some((label) => label.endsWith(` ${point.y}`) || label === String(point.y)),
+            `${point.y} in ${JSON.stringify(labels)}`,
+          ).toBe(true)
+        }
+      })
+    }
+
+    it(`${chart_type}: a taller band does not shrink the label column`, () => {
+      const component = longPie(chart_type)
+      const widthOf = (h: number) => {
+        const { container } = svg(chart.render(component, { x: 0, y: 0, w: 600, h }, ctx))
+        return labelsOf(container).join("|").length
+      }
+      // Same labels at 260, 328 and 460: the disc stopped growing where the
+      // width can still host a full column beside it, and the rest of the
+      // height is air.
+      expect(widthOf(328)).toBe(widthOf(260))
+      expect(widthOf(460)).toBe(widthOf(260))
+    })
+  }
+})
