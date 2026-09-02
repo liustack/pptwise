@@ -521,6 +521,54 @@ describe("an unbounded axis label cannot push the plot out of its box", () => {
   })
 })
 
+describe("the label-on-mark check sees radial marks and follows a stroke", () => {
+  it("marks a pie's wedges and a donut's rings as plot marks", () => {
+    // Wedges carried no `data-plot-mark`, so the check that exists to keep a
+    // label off the data it names was blind to every radial chart.
+    for (const chart_type of ["pie", "donut"] as const) {
+      const component = {
+        type: "chart" as const,
+        chart_type,
+        series: [{ name: "Share", data: [{ x: "A", y: 40 }, { x: "B", y: 35 }, { x: "C", y: 25 }] }],
+      }
+      const h = chart.measure(component, 600, ctx)
+      const markup = renderSvgMarkup(chart.render(component, { x: 0, y: 0, w: 600, h }, ctx))
+      expect((markup.match(/data-plot-mark/g) ?? []).length, chart_type).toBe(3)
+      // And the labels still sit clear of them.
+      expect(collectLabelFindings(markup), chart_type).toEqual([])
+    }
+  })
+
+  it("catches a label parked on a wedge", () => {
+    const markup =
+      `<svg xmlns="http://www.w3.org/2000/svg">` +
+      `<path data-plot-mark="1" d="M 100 100 L 100 0 A 100 100 0 0 1 200 100 Z" fill="#000"/>` +
+      `<text data-value-label="1" x="130" y="60" font-size="16">40</text></svg>`
+    expect(collectLabelFindings(markup).map((f) => f.message)).toEqual([
+      'data label "40" sits on a data mark',
+    ])
+  })
+
+  it("measures a diagonal polyline by its stroke, not the rectangle around it", () => {
+    // A line from the plot's bottom-left to its top-right claims the whole
+    // plot as its bounding box, so a label parked in the empty corner beside
+    // it read as sitting on the line while being 60px clear of the stroke.
+    const clear =
+      `<svg xmlns="http://www.w3.org/2000/svg">` +
+      `<polyline data-plot-mark="1" points="0,90 90,0" fill="none" stroke="#000"/>` +
+      `<text data-value-label="1" x="0" y="10" font-size="10">ok</text></svg>`
+    expect(collectLabelFindings(clear)).toEqual([])
+    // A label actually sitting on the same diagonal is still caught.
+    const on =
+      `<svg xmlns="http://www.w3.org/2000/svg">` +
+      `<polyline data-plot-mark="1" points="0,90 90,0" fill="none" stroke="#000"/>` +
+      `<text data-value-label="1" x="40" y="50" font-size="10">on</text></svg>`
+    expect(collectLabelFindings(on).map((f) => f.message)).toEqual([
+      'data label "on" sits on a data mark',
+    ])
+  })
+})
+
 describe("gallery geometry", () => {
   it("no component paints outside the box it accepted", { timeout: 180_000 }, async () => {
     const svgs = await renderCorpus()

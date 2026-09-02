@@ -552,6 +552,70 @@ export function collectInkFindings(markup: string): InkFinding[] {
   return findings
 }
 
+/**
+ * One painted data mark, and the strokes it is actually made of.
+ *
+ * A filled shape is its own bounding box closely enough for this check — a
+ * bar, a wedge, an area fill. A `<polyline>` is not: a line from the plot's
+ * bottom-left to its top-right claims the whole plot as its bounding box, so
+ * a label parked in the empty corner beside it reads as sitting on the line.
+ * `points="0,90 90,0"` with a label at the origin was a finding, and the
+ * label was 60px clear of the stroke. Where the segments are known they
+ * decide, and the box stays as the cheap first test.
+ */
+interface Mark {
+  readonly box: DepthBox
+  readonly segments?: readonly Segment[]
+}
+
+type Segment = readonly [x1: number, y1: number, x2: number, y2: number]
+
+/** The stroked runs of a `<polyline>`, in page coordinates. Nothing else has
+ * strokes this check can follow: a `<polygon>` and a `<path>` are filled
+ * regions here, and their bounding box is the honest answer for both. */
+function strokeSegments(el: Element, matrix: SvgMatrix): Segment[] | undefined {
+  if (el.tagName.toLowerCase() !== "polyline") return undefined
+  const nums = (el.getAttribute("points") ?? "").trim().split(/[\s,]+/).map(Number).filter(Number.isFinite)
+  const points: { x: number; y: number }[] = []
+  for (let i = 0; i + 1 < nums.length; i += 2) {
+    const p = transformBox({ x: nums[i]!, y: nums[i + 1]!, w: 0, h: 0 }, matrix)
+    points.push({ x: p.x, y: p.y })
+  }
+  if (points.length < 2) return undefined
+  const segments: Segment[] = []
+  for (let i = 0; i + 1 < points.length; i++) {
+    segments.push([points[i]!.x, points[i]!.y, points[i + 1]!.x, points[i + 1]!.y])
+  }
+  return segments
+}
+
+/** Whether a segment passes through an axis-aligned box (Liang-Barsky). */
+function segmentCrossesBox(segment: Segment, box: DepthBox): boolean {
+  const [x1, y1, x2, y2] = segment
+  const dx = x2 - x1
+  const dy = y2 - y1
+  let t0 = 0
+  let t1 = 1
+  const clip = (p: number, q: number): boolean => {
+    if (p === 0) return q >= 0
+    const r = q / p
+    if (p < 0) {
+      if (r > t1) return false
+      if (r > t0) t0 = r
+    } else {
+      if (r < t0) return false
+      if (r < t1) t1 = r
+    }
+    return true
+  }
+  return (
+    clip(-dx, x1 - box.x) &&
+    clip(dx, box.x + box.w - x1) &&
+    clip(-dy, y1 - box.y) &&
+    clip(dy, box.y + box.h - y1)
+  )
+}
+
 export interface LabelFinding {
   readonly message: string
 }
@@ -569,7 +633,7 @@ export interface LabelFinding {
  */
 export function collectLabelFindings(markup: string): LabelFinding[] {
   const labels: { box: DepthBox; text: string; size: number }[] = []
-  const marks: DepthBox[] = []
+  const marks: Mark[] = []
 
   const visit = (el: Element, matrix: SvgMatrix, style: TextStyle): void => {
     const here = multiplyMatrices(matrix, parseSvgTransform(el.getAttribute("transform")))
@@ -580,7 +644,7 @@ export function collectLabelFindings(markup: string): LabelFinding[] {
       if (el.getAttribute("data-value-label") === "1") {
         labels.push({ box, text: (el.textContent ?? "").trim().slice(0, 24), size: inherited.fontSize })
       } else if (el.hasAttribute("data-plot-mark")) {
-        marks.push(box)
+        marks.push({ box, segments: strokeSegments(el, here) })
       }
     }
     for (const child of Array.from(el.children)) visit(child as Element, here, inherited)
@@ -602,10 +666,12 @@ export function collectLabelFindings(markup: string): LabelFinding[] {
       }
     }
     for (const mark of marks) {
-      if (boxesIntersect(a.box, mark)) {
-        findings.push({ message: `data label "${a.text}" sits on a data mark` })
-        break
-      }
+      if (!boxesIntersect(a.box, mark.box)) continue
+      // A stroked run is a line, not the rectangle around it. Sharing a
+      // bounding box with a diagonal is what most of the page does.
+      if (mark.segments && !mark.segments.some((segment) => segmentCrossesBox(segment, a.box))) continue
+      findings.push({ message: `data label "${a.text}" sits on a data mark` })
+      break
     }
   }
   return findings

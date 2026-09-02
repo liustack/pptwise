@@ -1557,6 +1557,7 @@ export function renderPie(
         return (
           <path
             key={slice.key}
+            data-plot-mark="1"
             d={`M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2} Z`}
             fill={palette[slice.key % palette.length]}
           />
@@ -2220,6 +2221,7 @@ export function renderDonut(
       {slices.map((slice) => (
         <path
           key={slice.key}
+          data-plot-mark="1"
           d={annulusSectorPath(cx, cy, r, ri, slice.startA, slice.endA)}
           fill={palette[slice.key % palette.length]}
         />
@@ -2603,9 +2605,9 @@ export function renderGauge(
   return (
     <>
       {/* full half-ring track (below the candidate-opacity floor) */}
-      <path d={annulusSectorPath(cx, cy, ro, ri, startA, 2 * Math.PI)} fill={mutedColor} fillOpacity={GAUGE_TRACK_OPACITY} />
+      <path data-plot-mark="1" d={annulusSectorPath(cx, cy, ro, ri, startA, 2 * Math.PI)} fill={mutedColor} fillOpacity={GAUGE_TRACK_OPACITY} />
       {/* filled progress arc (annulus idiom → hole-excluding attribution) */}
-      {frac > 0 && <path d={annulusSectorPath(cx, cy, ro, ri, startA, endValue)} fill={accentColor} />}
+      {frac > 0 && <path data-plot-mark="1" d={annulusSectorPath(cx, cy, ro, ri, startA, endValue)} fill={accentColor} />}
       <text
         data-truncated={numFit.truncated ? "1" : undefined}
         x={cx}
