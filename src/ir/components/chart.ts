@@ -190,7 +190,22 @@ export const schema = z
     }
     if (WHOLE_SHARE_TYPES.includes(c.chart_type as (typeof WHOLE_SHARE_TYPES)[number])) {
       c.series.forEach((s, si) => {
-        if (s.data.length === 0) return
+        // Same boundary the empty line/area series is refused at, for the
+        // same reason. A pie, donut or funnel is one whole divided into named
+        // parts, and it names those parts on the marks themselves — with no
+        // parts there are no marks, so the series name and everything under
+        // it reach the page nowhere. The renderer's answer was a page of
+        // nothing carrying `data-dropped-silent="0"`, a count the export gate
+        // reads as no loss at all: validate passed, the preview was blank and
+        // the file shipped.
+        if (s.data.length === 0) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["series", si, "data"],
+            message: `series "${s.name}" has no data points — ${c.chart_type} charts divide one whole into named parts drawn from the points themselves, so a series with nothing to draw reaches the page nowhere`,
+          })
+          return
+        }
         const total = s.data.reduce((sum, d) => sum + d.y, 0)
         if (total > 0) return
         ctx.addIssue({

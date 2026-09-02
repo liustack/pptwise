@@ -1365,3 +1365,41 @@ describe("a chart uses the height it was allocated, whatever its type", () => {
     }
   })
 })
+
+describe("an empty whole-share series is refused where the loss is preventable", () => {
+  it("refuses an empty pie, donut or funnel series at the schema", () => {
+    // A pie, donut or funnel names its parts on the marks themselves. With
+    // no parts there are no marks, so the series name and everything under
+    // it reach the page nowhere. The renderer's answer was a blank page
+    // carrying `data-dropped-silent="0"` — a count the export gate reads as
+    // no loss at all, so validate passed and the file shipped.
+    for (const chart_type of ["pie", "donut", "funnel"] as const) {
+      const parsed = chartSchema.safeParse({
+        type: "chart",
+        chart_type,
+        series: [{ name: "Share", data: [] }],
+      })
+      expect(parsed.success, chart_type).toBe(false)
+      if (!parsed.success) {
+        expect(parsed.error.issues[0]!.path.join(".")).toBe("series.0.data")
+      }
+    }
+    // Bar keeps its tolerance: its series is named in a legend, which one
+    // empty series does not take off the page.
+    expect(
+      chartSchema.safeParse({ type: "chart", chart_type: "bar", series: [{ name: "F", data: [] }] }).success,
+    ).toBe(true)
+  })
+
+  it("never declares a drop of zero, whatever a caller hands the renderer", () => {
+    // The schema is the fix; this is the marker itself refusing to write a
+    // count the gate reads as nothing, on the in-memory route the schema
+    // cannot reach.
+    for (const chart_type of ["pie", "donut"] as const) {
+      const component = { type: "chart" as const, chart_type, series: [{ name: "Share", data: [] }] }
+      const { container } = svg(chart.render(component, { x: 0, y: 0, w: 600, h: 240 }, ctx))
+      const marker = container.querySelector("[data-dropped-silent]")!
+      expect(Number(marker.getAttribute("data-dropped-silent")), chart_type).toBeGreaterThan(0)
+    }
+  })
+})
