@@ -96,6 +96,31 @@ describe("chart component", () => {
     ).toBe(true)
   })
 
+  it("measures the room every directly-labelled series needs a line for", () => {
+    // Line and area gave up their legend row because each series is now
+    // named where its own line ends. At the flat 240px body the two label
+    // columns fit nine names; a tenth series lost both its start value and
+    // its name to a declared drop, on the height the chart measured for
+    // itself. The count of names to place is part of what a caller is owed.
+    const areaN = (n: number) =>
+      ({
+        type: "chart" as const,
+        chart_type: "area" as const,
+        series: Array.from({ length: n }, (_, i) => ({
+          name: `S${i}`,
+          data: [{ x: "A", y: 10 + i }, { x: "B", y: 20 + i }],
+        })),
+      })
+    expect(chart.measure(areaN(2), 1120, ctx)).toBe(240)
+    expect(chart.measure(areaN(10), 1120, ctx)).toBeGreaterThan(240)
+    const { container } = svg(chart.render(areaN(10), { x: 0, y: 0, w: 1120, h: chart.measure(areaN(10), 1120, ctx) }, ctx))
+    expect(container.querySelector("[data-dropped]")).toBeNull()
+    const named = Array.from(container.querySelectorAll('[data-value-label="1"]'))
+      .map((t) => t.textContent ?? "")
+      .filter((t) => t.startsWith("S"))
+    expect(named).toHaveLength(10)
+  })
+
   it("bar chart renders at least one rect per data point", () => {
     const component = {
       type: "chart" as const,

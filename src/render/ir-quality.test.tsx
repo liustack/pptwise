@@ -1147,8 +1147,20 @@ describe("checkIrQuality", () => {
     expect(codes(checkIrQuality(ir))).not.toContain("chart_line_too_many_series")
   })
 
-  it("does NOT warn for a bar or area chart with the same many series — the ceiling is line-only", () => {
-    for (const chart_type of ["bar", "area"] as const) {
+  it("warns for an area chart too, which now names its series in the same one column", () => {
+    const ir = makeIR([
+      {
+        type: "content",
+        kind: "points",
+        heading: "Trend",
+        components: [{ type: "chart", chart_type: "area", series: nSeries(9) }],
+      },
+    ])
+    expect(codes(checkIrQuality(ir))).toContain("chart_line_too_many_series")
+  })
+
+  it("does NOT warn for a bar or scatter chart with the same many series", () => {
+    for (const chart_type of ["bar", "scatter"] as const) {
       const ir = makeIR([
         {
           type: "content",

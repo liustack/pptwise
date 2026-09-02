@@ -4,6 +4,9 @@ import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout"
 import { rotateChartPalette } from "../render/chart-palette"
 import { accessibleInk } from "../render/ink"
 import { axisTitlePairHeight } from "./axis-titles"
+import { PLOT_TOP_PAD, X_TICK_BAND } from "./cartesian-axis"
+import { labelLinePitch } from "./label-collision"
+import { DIRECT_LABEL_FONT_SIZE } from "./chart-svg"
 import { buildChartModel } from "./chart-model"
 import type { RenderDef, SvgComponent } from "./types"
 import {
@@ -291,10 +294,36 @@ function axisTitlesOf(component: ChartComponent): { xTitle?: string; yTitle?: st
   return { xTitle: component.axes?.x_title, yTitle: component.axes?.y_title }
 }
 
+/**
+ * Body height a directly-labelled chart needs so its gutters can hold one
+ * line per series.
+ *
+ * Line and area gave up their legend row because each series is now named
+ * where its own line ends. That trade only holds if there is a line's worth
+ * of column for every series to be named in: at the flat 240px body, the
+ * columns fit nine, and a tenth series lost both its start value and its
+ * name to a declared drop — on the height the chart measured for itself,
+ * not on a caller's short box. `measure()` is what a caller owes this
+ * component, so the count of names it has to place belongs in it.
+ *
+ * The column runs the plot's own height, which is the body less the top pad
+ * and the x-tick band (`layoutCartesianPlot`). Anything not directly
+ * labelled keeps the flat floor.
+ */
+function directLabelBodyH(component: ChartComponent): number {
+  if (!DIRECT_LABELLED.has(component.chart_type)) return 0
+  const columns = Math.ceil(component.series.length * labelLinePitch(DIRECT_LABEL_FONT_SIZE))
+  return columns + PLOT_TOP_PAD + X_TICK_BAND
+}
+
 export const chart: SvgComponent<ChartComponent> = {
   measure(component) {
     const { xTitle, yTitle } = axisTitlesOf(component)
-    return (hasHeaderRow(component) ? HEADER_ROW_H : 0) + axisTitlePairHeight(xTitle, yTitle) + CHART_H
+    return (
+      (hasHeaderRow(component) ? HEADER_ROW_H : 0) +
+      axisTitlePairHeight(xTitle, yTitle) +
+      Math.max(CHART_H, directLabelBodyH(component))
+    )
   },
   render(component, box, ctx) {
     const renderer = resolveRenderer(component)
