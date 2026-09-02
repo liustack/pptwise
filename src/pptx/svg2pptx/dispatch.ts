@@ -147,6 +147,12 @@ const INHERITED_PAINT_ATTRS = [
   "stroke-width",
   "stroke-opacity",
   "stroke-dasharray",
+  // Not paint, and inherited by the same mechanism because it is inherited
+  // the same way: `xml:space` on a container reaches the `<text>` inside it,
+  // and a leaf resolved onto a clone has no ancestors left to ask. Without it
+  // folded here, a container declaring `preserve` had its blanks collapsed on
+  // the way to OOXML while the page kept them.
+  "xml:space",
 ] as const
 
 /** Paint an element inherits from its container chain. */

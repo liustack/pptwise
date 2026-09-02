@@ -14,6 +14,31 @@ function parseSvg(inner: string): Element {
   return svg
 }
 
+describe("xml:space reaches a text through its container chain", () => {
+  const runsOf = (inner: string) =>
+    (svgToOps(parseSvg(inner)) as Op[]).flatMap((op) =>
+      op.kind === "text" ? op.runs.map((run) => run.text) : [],
+    )
+
+  it("keeps blanks a container declared preserve for", () => {
+    // A leaf resolved onto a clone has no ancestors left to ask, so the mode
+    // travels with the folded attributes or not at all.
+    expect(runsOf('<g xml:space="preserve"><text x="0" y="20" font-size="16">    inherited</text></g>')).toEqual([
+      "    inherited",
+    ])
+  })
+
+  it("lets the text's own declaration override the container's", () => {
+    expect(
+      runsOf('<g xml:space="preserve"><text x="0" y="20" font-size="16" xml:space="default">    own</text></g>'),
+    ).toEqual(["own"])
+  })
+
+  it("collapses as usual with no declaration anywhere", () => {
+    expect(runsOf('<g><text x="0" y="20" font-size="16">  a  b  </text></g>')).toEqual(["a b"])
+  })
+})
+
 describe("svgToOps", () => {
   it("dispatches each leaf element to its converter in document order", () => {
     const ops = svgToOps(
