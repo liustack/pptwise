@@ -345,22 +345,28 @@ export const chart: SvgComponent<ChartComponent> = {
     const plotX = 0
     const plotW = box.w
 
-    // Under-allocation is a layout defect, not something to paint through.
-    // Nothing paints and the loss is declared, the same answer
-    // `WholeShareDeclined` (chart-svg.tsx) already gives a chart handed data
-    // it cannot draw. A thrown error was the other candidate and is wrong
-    // here — a face's content band is a fixed constant on several of them,
-    // so an under-allocated box stays reachable by construction, and a page
-    // that renders with one declared gap beats a deck that cannot render at
-    // all.
+    // A box this component cannot draw in — too short for its own measured
+    // minimum, or too narrow for a plot to exist at all — is a layout defect,
+    // not something to paint through. Nothing paints and the loss is
+    // declared, the same answer `WholeShareDeclined` (chart-svg.tsx) already
+    // gives a chart handed data it cannot draw.
     //
-    // `data-dropped-silent`, not `data-dropped` alone: `slideToRender`
-    // (render-slide.tsx) counts *only* the silent attribute, and that count
-    // is what `checkContentDropGate` refuses the export on. A whole chart
-    // vanishing is the most silent loss this component can suffer — nothing
-    // is left on the page to hint at it — so it belongs in exactly that
-    // count. Marked with the plain attribute alone, the deck shipped a page
-    // with no chart on it and no error anywhere.
+    // What that declaration *does* is refuse the deck. `data-dropped-silent`
+    // is the attribute `slideToRender` (render-slide.tsx) counts, and that
+    // count is what `checkContentDropGate` throws on, so an under-allocated
+    // chart stops the export until someone fixes the band or passes
+    // `--allow-dropped-content` (`generate-chart-decline-export.test.ts`
+    // pins both halves). That is the point, not a regrettable side effect: a
+    // chart painted through the sentence below it ships a wrong page in
+    // silence, and this ships nothing until a person decides. The plain
+    // attribute alone would have been the silent version — a marker the gate
+    // does not read, on a page with no chart and no error anywhere.
+    //
+    // A thrown error was the other candidate and is wrong here. A face's
+    // content band is a fixed constant on several of them, so an
+    // under-allocated box stays reachable by construction; a named marker
+    // lets the page still render for preview and review, and moves the
+    // refusal to the one place that ships a file.
     if ((box.h ?? minimum) + 0.5 < minimum) {
       return <g data-dropped={1} data-dropped-silent={1} />
     }
