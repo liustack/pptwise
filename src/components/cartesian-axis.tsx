@@ -1,5 +1,5 @@
 import type { ReactElement } from "react"
-import { measureTextUnits } from "../lib/svg-text-layout"
+import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout"
 
 /**
  * Shared cartesian plot frame (scatter / bubble / line / area / bar).
@@ -164,13 +164,33 @@ export function formatAxisTick(value: number, unit?: string): string {
   return `${n} ${unit}`
 }
 
-export function yTickGutter(labels: readonly string[], fontFamily?: string): number {
+/**
+ * Ceiling on the share of a plot's width the y-tick labels may claim.
+ *
+ * `y_unit` and the tick values it decorates are author strings with no
+ * length bound in the schema, and this gutter used to grow with them without
+ * limit. `plotW` was floored at 1px, which kept the *width* positive while
+ * saying nothing about the origin: a 200-character unit pushed `plotX` clean
+ * past the component's right edge, and the chart drew 1752px outside the box
+ * it was handed. A gutter is a share of the box, never more, and a label too
+ * wide for its share is cut and says so.
+ */
+export const Y_TICK_MAX_W_RATIO = 0.32
+
+/**
+ * Room the y-axis tick labels need, bounded by `maxGutter` when given.
+ * Callers that own a fixed box always give one — see
+ * {@link Y_TICK_MAX_W_RATIO}.
+ */
+export function yTickGutter(labels: readonly string[], fontFamily?: string, maxGutter?: number): number {
   let max = 0
   for (const label of labels) {
     const w = measureTextUnits(label, { fontFamily }) * TICK_FONT_SIZE
     if (w > max) max = w
   }
-  return Math.max(Y_TICK_MIN_GUTTER, Math.ceil(max + TICK_TO_AXIS_GAP))
+  const want = Math.max(Y_TICK_MIN_GUTTER, Math.ceil(max + TICK_TO_AXIS_GAP))
+  if (maxGutter == null) return want
+  return Math.min(want, Math.max(Y_TICK_MIN_GUTTER, Math.floor(maxGutter)))
 }
 
 export function mapToPlotY(value: number, domain: NumericDomain, plotY: number, plotH: number): number {
@@ -204,7 +224,7 @@ export function layoutCartesianPlot(opts: {
   titleY: number
 } {
   const topPad = opts.topPad ?? PLOT_TOP_PAD
-  const leftGutter = yTickGutter(opts.yTickLabels, opts.fontFamily)
+  const leftGutter = yTickGutter(opts.yTickLabels, opts.fontFamily, opts.w * Y_TICK_MAX_W_RATIO)
   const plotX = opts.x0 + leftGutter
   const plotY = opts.y0 + topPad
   const plotW = Math.max(1, opts.w - leftGutter - PLOT_RIGHT_PAD)
@@ -252,6 +272,13 @@ export function renderCartesianFrame(opts: {
    */
   gridX?: number
   gridW?: number
+  /**
+   * Room a y-axis tick label has before the axis. Passed by every caller
+   * that owns a fixed box, because the gutter it sits in is capped
+   * ({@link Y_TICK_MAX_W_RATIO}) and a label wider than the cap would run
+   * out through the left edge of that box. Cut labels say so.
+   */
+  yTickMaxW?: number
   axisColor: string
   mutedColor: string
   fontFamily?: string
@@ -315,22 +342,33 @@ export function renderCartesianFrame(opts: {
         stroke={opts.axisColor}
         strokeWidth={AXIS_STROKE_WIDTH}
       />
-      {opts.yTicks.map((tick, i) => (
-        <text
-          key={`yt-${i}`}
-          data-axis-tick="y"
-          data-truncated={tick.truncated ? "1" : undefined}
-          x={opts.plotX - TICK_TO_AXIS_GAP}
-          y={tick.pos + (tick.fontSize ?? TICK_FONT_SIZE) * 0.35}
-          textAnchor="end"
-          fontSize={tick.fontSize ?? TICK_FONT_SIZE}
-          fill={opts.mutedColor}
-          fontFamily={opts.fontFamily}
-          dominantBaseline="alphabetic"
-        >
-          {tick.label}
-        </text>
-      ))}
+      {opts.yTicks.map((tick, i) => {
+        const fitted =
+          opts.yTickMaxW == null
+            ? { text: tick.label, fontSize: tick.fontSize ?? TICK_FONT_SIZE, truncated: tick.truncated ?? false }
+            : fitSvgLine(tick.label, {
+                maxWidth: opts.yTickMaxW,
+                fontSize: tick.fontSize ?? TICK_FONT_SIZE,
+                minFontSize: TICK_MIN_FONT_SIZE,
+                fontFamily: opts.fontFamily,
+              })
+        return (
+          <text
+            key={`yt-${i}`}
+            data-axis-tick="y"
+            data-truncated={fitted.truncated || tick.truncated ? "1" : undefined}
+            x={opts.plotX - TICK_TO_AXIS_GAP}
+            y={tick.pos + fitted.fontSize * 0.35}
+            textAnchor="end"
+            fontSize={fitted.fontSize}
+            fill={opts.mutedColor}
+            fontFamily={opts.fontFamily}
+            dominantBaseline="alphabetic"
+          >
+            {fitted.text}
+          </text>
+        )
+      })}
       {opts.xTicks.map((tick, i) => {
         const textAnchor = tick.anchor ?? "middle"
         return (
