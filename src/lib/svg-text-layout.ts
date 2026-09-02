@@ -1044,6 +1044,43 @@ export function truncateToUnits(text: string, maxUnits: number, weight?: TextWei
   return retreatFromMidRun(text, out)
 }
 
+/**
+ * Longest prefix of `text` that fits `maxWidth` at `fontSize` **with its own
+ * tracking**, cut on the same run boundary `truncateToUnits` respects.
+ *
+ * The tracking budget has to be solved together with the candidate, not
+ * deducted from the width first. `letter-spacing` costs `(n - 1) * spacing`
+ * where `n` is the length of the string that survives — deducting the *input*
+ * string's budget charges the caller for glyphs that are about to be cut, and
+ * a long enough input drives the remaining width to zero and returns nothing
+ * at all. A 500-character `image_compare` label at 485px lost both author
+ * labels whole that way, where 84 characters fit.
+ *
+ * With no tracking this is `truncateToUnits` with the division done by the
+ * caller, and it delegates to it so the untracked path stays byte-identical.
+ */
+export function truncateToWidth(
+  text: string,
+  maxWidth: number,
+  fontSize: number,
+  letterSpacing: number,
+  weight?: TextWeightHint,
+): string {
+  if (letterSpacing === 0) return truncateToUnits(text, maxWidth / fontSize, weight)
+  const fits = (candidate: string) => {
+    const glyphs = Array.from(candidate).length
+    return measureTextUnits(candidate, weight) * fontSize + Math.max(0, glyphs - 1) * letterSpacing <= maxWidth
+  }
+  if (fits(text)) return text
+  let out = ""
+  for (const ch of Array.from(text)) {
+    if (!fits(out + ch)) break
+    out += ch
+  }
+  if (out === "") return ""
+  return retreatFromMidRun(text, out)
+}
+
 // Mono sibling of `truncateToUnits` above, measuring with
 // `measureMonoTextUnits` instead of `measureTextUnits` -- a separate
 // function rather than a parameterized one so `truncateToUnits`'s existing
@@ -1098,8 +1135,12 @@ export function fitSvgLine(
   // shorter than what it started as for unrelated reasons upstream; this
   // flag reports the *mechanism* (did this call take the truncate branch),
   // which is unambiguous regardless of what the input happened to contain.
+  // Not `availableWidth` here: that width had the *input* string's tracking
+  // budget taken out of it, and the string about to be painted is shorter
+  // than the input by definition on this branch. `truncateToWidth` solves the
+  // two together — see its own doc comment for the labels this used to erase.
   return {
-    text: truncateToUnits(text, availableWidth / minFontSize, weight),
+    text: truncateToWidth(text, opts.maxWidth, minFontSize, letterSpacing, weight),
     fontSize: minFontSize,
     truncated: true,
   }
