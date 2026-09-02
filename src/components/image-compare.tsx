@@ -3,6 +3,9 @@ import { fitSvgLine } from "../lib/svg-text-layout"
 import { accessibleInk } from "../render/ink"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
 
+/** Tracking on a compare label, budgeted by the fit and set on the text. */
+const COMPARE_LABEL_TRACKING = 1
+
 type ImageCompareComponent = Extract<Component, { type: "image_compare" }>
 
 /** 图区高度上限（px），标签条另计。 */
@@ -37,7 +40,20 @@ function renderSide({
   // `fontWeight={600}` in `ctx.fonts.body` below -- bold by this codebase's
   // own threshold, and `fonts.body` resolves to Georgia for the consulting
   // theme (the same face the reported defect traced to), not just YaHei.
-  const fitted = fitSvgLine(label, { maxWidth: w - 16, fontSize: 16, minFontSize: 16, bold: true, fontFamily: ctx.fonts.body })
+  // `letterSpacing` is budgeted here because the label below is *painted*
+  // with it. It is an absolute px advance between glyphs, so it appears in
+  // neither `measureTextUnits` nor the font size — a fit that leaves it out
+  // reserves room for a narrower string than the one that reaches the page,
+  // and the difference is (glyphs - 1) px of overflow that grows with the
+  // label. `fitSvgLine` takes the same number the `<text>` sets.
+  const fitted = fitSvgLine(label, {
+    maxWidth: w - 16,
+    fontSize: 16,
+    minFontSize: 16,
+    bold: true,
+    fontFamily: ctx.fonts.body,
+    letterSpacing: COMPARE_LABEL_TRACKING,
+  })
   return (
     <g transform={`translate(${x},0)`}>
       {src ? (
@@ -84,7 +100,7 @@ function renderSide({
         fontFamily={ctx.fonts.body}
         fill={ctx.colors.text}
         fontWeight={600}
-        letterSpacing={1}
+        letterSpacing={COMPARE_LABEL_TRACKING}
         dominantBaseline="alphabetic"
       >
         {fitted.text}
