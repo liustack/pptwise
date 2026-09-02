@@ -670,6 +670,12 @@ export function faceOf(ir: PptxIR, slide: Slide): LayoutDefinition | undefined {
  * component the author actually wrote rather than by the shape of its path:
  * `when` below reads the chart and claims `series[].name` the moment there
  * are two or more of them, which is exactly when the renderer owes a legend.
+ *
+ * That set-aside no longer covers line and area. Their names now travel with
+ * the line — a label in the end gutter, `name value`, one per series
+ * whatever the count — so there is somewhere to put a lone series' name that
+ * costs no header row and restates nothing. Those two types are claimed at
+ * every series count.
  */
 export interface WidenedPath {
   /** Substring of the authored text's IR path. */
@@ -745,9 +751,13 @@ export const WIDENED_PATHS: readonly WidenedPath[] = [
   },
   {
     path: "(chart).series",
-    when: (component) => component.type === "chart" && component.series.length >= 2,
+    when: (component) =>
+      component.type === "chart" &&
+      (component.series.length >= 2 ||
+        component.chart_type === "line" ||
+        component.chart_type === "area"),
     reason:
-      "the other half of the single-series ruling above. Two or more series get a legend (`legendApplicable`), so their names are content this scan holds every face to. Claimed by reading the authored chart rather than by path shape: `.data[` alone let both names of a two-series bar chart disappear with the legend and kept the scan green.",
+      "the other half of the single-series ruling above. Two or more series get a legend (`legendApplicable`), so their names are content this scan holds every face to. Claimed by reading the authored chart rather than by path shape: `.data[` alone let both names of a two-series bar chart disappear with the legend and kept the scan green. Line and area charts are claimed at *any* series count: they no longer draw a legend at all, and instead name each series where its own line ends (`renderSeriesGutterLabels`), so even a one-series line puts its name on the page — the narrow case the single-series ruling above set aside for want of anywhere to put it.",
   },
 ]
 

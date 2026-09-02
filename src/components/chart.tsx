@@ -119,8 +119,24 @@ function axesApplicable(component: ChartComponent): boolean {
 const SINGLE_SERIES: ReadonlySet<ChartComponent["chart_type"]> = new Set(SINGLE_SERIES_TYPES)
 
 /**
+ * Chart types that name their own series on the plot, so a legend would
+ * repeat what the marks already say.
+ *
+ * Line and area charts label each series where its line ends — `name value`
+ * in a right-hand gutter, stacked by `stackLabelColumn` (see
+ * `chart-svg.tsx`'s own `renderSeriesGutterLabels`). Identity travels with
+ * the line it belongs to, which is strictly better than a swatch row the
+ * reader has to look up: no color matching, no legend order to reconcile
+ * with plot order, and nothing to read when two series cross. A header row
+ * on top of that would be the same names twice, and it cost every line and
+ * area chart 52px of plot height for the privilege.
+ */
+const DIRECT_LABELLED: ReadonlySet<ChartComponent["chart_type"]> = new Set(["line", "area"])
+
+/**
  * Legend applicability. A legend maps a color to a series name, so it applies
- * exactly when the chart draws more than one series.
+ * exactly when the chart draws more than one series *and* does not already
+ * name them on the plot.
  *
  * This used to read `axesApplicable(component) && series.length >= 2`, which
  * borrowed the axis-title rule for a question that is not about axes. The
@@ -130,11 +146,14 @@ const SINGLE_SERIES: ReadonlySet<ChartComponent["chart_type"]> = new Set(SINGLE_
  * Axes have nothing to do with it, and `SINGLE_SERIES` above states the
  * real exclusion directly: the types that only ever draw one series.
  *
- * `series.length >= 2` is still the trigger. A single series has no color to
- * distinguish from another, and the golden pins hold that boundary.
+ * `series.length >= 2` is still the trigger for everything else. A single
+ * series has no color to distinguish from another, and the golden pins hold
+ * that boundary.
  */
 function legendApplicable(component: ChartComponent): boolean {
-  return !SINGLE_SERIES.has(component.chart_type) && component.series.length >= 2
+  if (SINGLE_SERIES.has(component.chart_type)) return false
+  if (DIRECT_LABELLED.has(component.chart_type)) return false
+  return component.series.length >= 2
 }
 
 /**
@@ -291,6 +310,7 @@ export const chart: SvgComponent<ChartComponent> = {
       : CHART_H
     const plotX = 0
     const plotW = box.w
+
 
     // P1 variety wave, task 2 (review fix round, Major finding): rotation
     // happens *here*, at the one place this palette actually feeds a chart

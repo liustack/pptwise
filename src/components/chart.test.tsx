@@ -202,7 +202,8 @@ describe("chart component", () => {
       (t) => t.getAttribute("fill") === ctx.colors.text,
     )
     expect(categories.map((t) => t.textContent)).toEqual(["Jan", "Feb", "Mar"])
-    expect(values.map((t) => t.textContent)).toEqual(["10", "20"])
+    // End gutter: `name value`. Start gutter: the bare first value.
+    expect(values.map((t) => t.textContent).sort()).toEqual(["10", "Trend 20"])
   })
 
   // Task 8: chart.tsx must thread ctx.colors.accent through to the renderer
@@ -902,7 +903,7 @@ describe("chart component — chart-depth subtypes (scatter / area / donut / gau
     }
   })
 
-  it("a multi-series scatter/area gains a legend; gauge/donut never do", () => {
+  it("a multi-series scatter gains a legend; area names its own lines, gauge/donut never do", () => {
     const scatter2 = {
       type: "chart" as const,
       chart_type: "scatter" as const,
@@ -922,7 +923,10 @@ describe("chart component — chart-depth subtypes (scatter / area / donut / gau
     const scatter1 = { ...scatter2, series: [scatter2.series[0]!] }
     const area1 = { ...area2, series: [area2.series[0]!] }
     expect(chart.measure(scatter2, 1120, ctx)).toBeGreaterThan(chart.measure(scatter1, 1120, ctx))
-    expect(chart.measure(area2, 1120, ctx)).toBeGreaterThan(chart.measure(area1, 1120, ctx))
+    // An area chart names each series at the end of its own line, so it
+    // draws no legend header row at any series count — and stops paying the
+    // 52px that row used to cost it.
+    expect(chart.measure(area2, 1120, ctx)).toBe(chart.measure(area1, 1120, ctx))
   })
 
   it("renders only svg2pptx-subset primitives for every new subtype", () => {
