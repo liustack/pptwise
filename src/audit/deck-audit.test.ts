@@ -1706,6 +1706,24 @@ describe("parseWedgePath — geometric round-trip hardening (post-review, falsif
     expect(sector!.span).toBeCloseTo(Math.PI, 6)
   })
 
+  it("recognizes a ring whose end lands on atan2's own branch cut", () => {
+    // A real academic-theme donut wedge ending on the horizontal: the outer
+    // endpoint reads +pi and the inner endpoint, a rounding bit below the
+    // axis, reads -pi. The ray cross-check wrapped that with a sign-keeping
+    // `%` and answered a full turn, so the wedge was rejected and the ring
+    // claimed, by bounding box, the caption centred in its own hole — a
+    // 1.73:1 contrast finding on two themes.
+    const BRANCH_CUT_D =
+      "M 494.0161706167408 355.0446790483928 A 174.8 174.8 0 0 1 265.2 188.80000000000004 " +
+      "L 331.624 188.8 A 108.376 108.376 0 0 0 473.4900257823793 291.87170101000356 Z"
+    const sector = __parseWedgePath(BRANCH_CUT_D)
+    expect(sector).not.toBeNull()
+    expect(sector!.cx).toBeCloseTo(440, 6)
+    expect(sector!.cy).toBeCloseTo(188.8, 6)
+    expect(sector!.ro).toBeCloseTo(174.8, 6)
+    expect(sector!.ri).toBeCloseTo(108.376, 6)
+  })
+
   it("still recognizes a real renderDonut wedge whose coordinates happen to be clean round numbers (rejects only a genuine near-miss, not a valid wedge)", () => {
     // Guards against an overcorrection: the hardening must not reject a
     // real wedge just because its numbers happen to look "too clean" —

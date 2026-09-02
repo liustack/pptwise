@@ -1316,9 +1316,18 @@ function parseWedgePath(d: string): Sector | null {
     const endA = Math.atan2(oy2 - cy, ox2 - cx)
     // Cross-check: (ix1, iy1) is the inner arc's point at endA — it should
     // land on the same ray as (ox2, oy2) through the recovered center.
+    //
+    // Wrapped into (-π, π] with a *positive* modulo. JS's `%` keeps the sign
+    // of its left operand, so the plain `(d + π) % 2π - π` form answers with
+    // a full turn whenever `d` is a hair below zero — which is exactly what
+    // happens at atan2's own branch cut, where one point reads `+π` and the
+    // other, a rounding bit below the axis, reads `-π`. A donut wedge ending
+    // on the horizontal was rejected for a 2π disagreement between two
+    // points on the same ray, and the ring then claimed, by bounding box,
+    // the caption centred in its own hole.
     const checkA = Math.atan2(iy1 - cy, ix1 - cx)
-    const angleDiff = Math.abs(((checkA - endA + Math.PI) % (2 * Math.PI)) - Math.PI)
-    if (angleDiff > 1e-3) return null
+    const wrapped = (((checkA - endA) % (2 * Math.PI)) + 3 * Math.PI) % (2 * Math.PI) - Math.PI
+    if (Math.abs(wrapped) > 1e-3) return null
     const wedgeSpan = resolveSpan(startA, endA, tokens[7]!)
     if (wedgeSpan === null) return null
     return { cx, cy, ri, ro: r, startA, span: wedgeSpan }
