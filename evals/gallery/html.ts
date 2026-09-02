@@ -1985,12 +1985,15 @@ ${inlineRule(verdictFreshness)}
   document.getElementById("theme-filter").addEventListener("change", (e) => { state.theme = e.target.value; render(); syncQuickmap(); });
 
   // ── 主题速览 ────────────────────────────────────────────────────────────
-  // 一格一节，取该节样张里的封面。点击是跳转，不是第二套筛选状态：滚到那一
-  // 节。当前主题筛选选中的那一格仍然高亮，好让下拉框和速览条说的是同一件事。
-  // 只在按主题视角出现（见 syncChrome）。
+  // 一格一节，取该节样张里的封面。点击就是选中这套主题：它和顶栏的主题下拉
+  // 框是同一个 state.theme，两边永远同步，高亮的那一格说的就是当前筛选。再
+  // 点一次已选中的格子退回全部主题。选中跟着换视角一起走，按讲法/按版式/按
+  // 组件因此也只剩这套主题的页。只在按主题视角出现（见 syncChrome）。
   function syncQuickmap() {
     for (const b of document.querySelectorAll("#quickmap .qm")) {
-      b.setAttribute("aria-pressed", String(b.dataset.section === state.theme));
+      const on = b.dataset.section === state.theme;
+      b.setAttribute("aria-pressed", String(on));
+      b.title = on ? "再点一次看全部主题" : "只看 " + b.dataset.label;
     }
   }
 
@@ -2011,7 +2014,7 @@ ${inlineRule(verdictFreshness)}
       cell.className = "qm";
       cell.dataset.section = section.id;
       cell.setAttribute("aria-pressed", "false");
-      cell.title = "跳到 " + section.label;
+      cell.dataset.label = section.label;
       const stage = document.createElement("div");
       stage.className = "qm-stage";
       mountSvg(stage, sample.id);
@@ -2020,14 +2023,14 @@ ${inlineRule(verdictFreshness)}
       name.textContent = section.label === section.id ? section.id : section.label + " · " + section.id;
       cell.append(stage, name);
       cell.addEventListener("click", () => {
-        // A theme filter narrowed to some other section would leave nothing to
-        // scroll to, so widen it rather than jumping into an empty page.
-        if (state.theme !== "all" && state.theme !== section.id) {
-          select.value = "all";
-          state.theme = "all";
-          syncQuickmap();
-          render();
-        }
+        // Selecting, not scrolling. A lit cell used to mean nothing but "you
+        // clicked here", so the reviewer carried a selection into 按组件 that
+        // was never made and read 26 张 as this theme's. Clicking picks the
+        // theme, clicking it again puts 全部主题 back.
+        state.theme = state.theme === section.id ? "all" : section.id;
+        select.value = state.theme;
+        syncQuickmap();
+        render();
         jumpToSection(section.id);
       });
       host.appendChild(cell);
@@ -2118,6 +2121,7 @@ ${inlineRule(verdictFreshness)}
   });
 
   buildQuickmap();
+  syncQuickmap();
   render();
 })();
 </script>

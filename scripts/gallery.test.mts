@@ -668,6 +668,32 @@ describe("gallery page", () => {
     expect(html).toContain(`const SLOT_ORDER = ${JSON.stringify(FACE_SLOTS)}`)
   }, 60_000)
 
+  it("makes a quickmap click select that theme rather than only scroll to it", async () => {
+    // A lit quickmap cell that set no filter read as a selection: the
+    // reviewer carried it into 按组件 and took all 24 themes' 26 张 for that
+    // one theme's. The cell is the same state.theme the header dropdown
+    // holds, so the two move together and the cross views narrow with them.
+    const { renderMatrix } = await import("../evals/gallery/render")
+    const { mkdtempSync } = await import("node:fs")
+    const { tmpdir } = await import("node:os")
+    const { join } = await import("node:path")
+
+    const jobs = buildMatrix(themeIds, await assets(), { only: "component", languages: ["zh"], section: BASELINE_THEME })
+    const outDir = mkdtempSync(join(tmpdir(), "pptwise-gallery-qm-"))
+    const { manifest, svgs } = renderMatrix(jobs, outDir, "test")
+    const html = buildGalleryHtml(manifest, svgs)
+
+    // Click picks the theme, and clicking the lit cell puts 全部主题 back.
+    expect(html).toContain('state.theme = state.theme === section.id ? "all" : section.id')
+    // Both directions stay in lockstep: the cell writes the dropdown, the
+    // dropdown's own handler writes the cells.
+    expect(html).toContain("select.value = state.theme")
+    expect(html).toContain('document.getElementById("theme-filter").addEventListener("change"')
+    // The old behaviour widened the filter on the way past. Nothing may put
+    // that back, or the click would clear the selection it just made.
+    expect(html).not.toContain('state.theme = "all";\n          syncQuickmap();')
+  }, 60_000)
+
   it("carries a paint for the box under every page it can name one for", async () => {
     // A stage left its own neutral grey survives in the slide's antialiased
     // edge column and reads as a pale line down the page — see
