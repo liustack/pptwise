@@ -1246,7 +1246,7 @@ export const flowchart: SvgComponent<FlowchartComponent> = {
                   ancestor transform, but reads `data-audit-box` values
                   literally. */}
               <rect
-                data-audit-box={`${box.x + dx + label.boxX},${box.y + label.chipY},${label.boxW}`}
+                data-audit-box={`${label.boxX},${label.chipY},${label.boxW}`}
                 x={label.chipX}
                 y={label.chipY}
                 width={label.chipW}

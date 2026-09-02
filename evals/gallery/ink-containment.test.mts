@@ -306,6 +306,58 @@ describe("a chart with one category keeps its tick inside the box", () => {
   }
 })
 
+describe("a declared box travels with the ink it declares", () => {
+  it("carries a nested box through the ancestor transform above it", () => {
+    // `assertion-evidence`, `fitted-evidence` and `content-stacked-poster`
+    // all wrap `renderComponent(component, { x: 0, y: 0, w })` in a
+    // translate+scale. A component that declares its own box inside that
+    // wrapper states it in local coordinates while its ink is measured in
+    // page coordinates, and the two were compared against each other: a
+    // 100px overflow finding for a component painting exactly inside its own
+    // declaration.
+    const markup =
+      `<svg xmlns="http://www.w3.org/2000/svg"><g data-audit-rect="0,0,400,400">` +
+      `<g data-audit-box="100,0,200"><g transform="translate(100,0)">` +
+      `<g data-audit-box="0,0,200"><rect x="0" y="0" width="200" height="10"/></g>` +
+      `</g></g></g></svg>`
+    expect(collectInkFindings(markup)).toEqual([])
+  })
+
+  it("scales a nested declaration by the same factor as the ink under it", () => {
+    const inside =
+      `<svg xmlns="http://www.w3.org/2000/svg"><g data-audit-rect="0,0,400,400">` +
+      `<g data-audit-box="0,0,100"><g transform="translate(0,0) scale(0.5)">` +
+      `<g data-audit-box="0,0,200"><rect x="0" y="0" width="200" height="10"/></g>` +
+      `</g></g></g></svg>`
+    expect(collectInkFindings(inside)).toEqual([])
+  })
+
+  it("still catches ink that leaves a nested box under a transform", () => {
+    // The transform must not become a way to launder an escape.
+    const markup =
+      `<svg xmlns="http://www.w3.org/2000/svg"><g data-audit-rect="0,0,400,400">` +
+      `<g data-audit-box="100,0,300"><g transform="translate(100,0)">` +
+      `<g data-audit-box="0,0,100"><rect x="0" y="0" width="200" height="10"/></g>` +
+      `</g></g></g></svg>`
+    const findings = collectInkFindings(markup)
+    expect(findings.map((f) => f.box)).toEqual(["0,0,100"])
+    expect(findings[0]!.side).toBe("right")
+    expect(findings[0]!.px).toBeCloseTo(100)
+  })
+
+  it("reads a box on a transforming element in that element's own frame", () => {
+    // `verdict-banner.tsx` puts `translate(box.x,box.y)` and its own
+    // declaration on the same `<g>`. The declaration is stated the way its
+    // children are stated — at the local origin — and the transform carries
+    // both to the page together.
+    const markup =
+      `<svg xmlns="http://www.w3.org/2000/svg"><g data-audit-rect="0,0,400,400">` +
+      `<g transform="translate(100,0)" data-audit-box="0,0,200">` +
+      `<rect x="0" y="0" width="200" height="10"/></g></g></svg>`
+    expect(collectInkFindings(markup)).toEqual([])
+  })
+})
+
 describe("an unbounded axis label cannot push the plot out of its box", () => {
   it("keeps a 200-character y unit inside the component box", () => {
     const component = {

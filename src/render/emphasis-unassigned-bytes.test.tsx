@@ -88,6 +88,13 @@ function consultingPadDeck(): PptxIR {
 // right-edge ticks (cover-only). Covers of all 23 unassigned themes stay
 // byte-identical. consulting is not in this fixture.
 //
+// Recaptured (audit-box frame normalization). `verdict_banner` states its
+// own `data-audit-box`/`data-audit-rect` in the frame its ink uses — at the
+// local origin, under the `translate` it already carried — instead of adding
+// its page position back in. Only `*|5` moves, and only those two attribute
+// values on it (verified by diffing the page before and after). Every other
+// page in the matrix stays byte-identical.
+//
 // Recaptured (no-ellipsis-root, 2026-08-23). Shared text-fit drops overflow
 // marks. insight content pages 2-5 and campaign cover plus content 2-5 move.
 // Other unassigned themes stay byte-identical. consulting is not in this

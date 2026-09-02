@@ -195,8 +195,8 @@ export const verdictBanner: SvgComponent<VerdictBannerComponent> = {
     return (
       <g
         transform={`translate(${box.x},${box.y})`}
-        data-audit-box={`${box.x},${box.y},${box.w}`}
-        data-audit-rect={`${box.x},${box.y},${box.w},${height}`}
+        data-audit-box={`0,0,${box.w}`}
+        data-audit-rect={`0,0,${box.w},${height}`}
       >
         <line
           x1={g.markWidth}

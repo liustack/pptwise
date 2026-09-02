@@ -2275,8 +2275,13 @@ function collectLeafBoxes(root: Element): DerivedBox[] {
     if (boxAttr) {
       const parent = stack[stack.length - 1]
       if (parent) parent.hasNestedBox = true
+      // Composed with the accumulated transform, like every leaf extent this
+      // walker collects below: a declaration is stated in the same frame as
+      // the ink beneath the element carrying it.
       const [x, y, w] = parseNums(boxAttr)
-      stack.push({ x, y, w, bottom: y, label: "", hasNestedBox: false })
+      const bx = ax + as * x
+      const by = ay + as * y
+      stack.push({ x: bx, y: by, w: as * w, bottom: by, label: "", hasNestedBox: false })
       pushed = true
     }
 

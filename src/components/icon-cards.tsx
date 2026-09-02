@@ -182,7 +182,7 @@ export const iconCards: SvgComponent<IconCardsComponent> = {
           <g
             key={i}
             data-truncated={formTextOmissionMarker(item.text, layout.text)}
-            data-audit-box={`${box.x + col * g.colW},${box.y + rowY},${g.colW}`}
+            data-audit-box={`${col * g.colW},${rowY},${g.colW}`}
           >
             <circle cx={cx} cy={cy} r={g.nodeR} fill={fill} {...strokeProps} />
             {renderGlyph(

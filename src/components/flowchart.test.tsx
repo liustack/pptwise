@@ -558,7 +558,7 @@ describe("flowchart edge label scale-aware budget (never a bare ellipsis or empt
 })
 
 describe("flowchart edge label data-audit-box (gap geometry, not the chip's own tautological size)", () => {
-  it("tags the label chip with a data-audit-box sized to the physical gap, centered on the label, in absolute page coordinates", () => {
+  it("tags the label chip with a data-audit-box sized to the physical gap, centered on the label, in the frame its own ink uses", () => {
     const boxArg = { x: 96, y: 176, w: 600 }
     const { container } = svg(flowchart.render(component, boxArg, ctx))
 
@@ -582,18 +582,15 @@ describe("flowchart edge label data-audit-box (gap geometry, not the chip's own 
     // its usableW fitting budget.
     expect(boxW).toBeGreaterThan(chipW)
 
-    // Absolute page coordinates: read the actual translate the renderer
-    // applied (box.x + dx) rather than assuming dx=0, then confirm the box
-    // is centered on the same point as the text (mirrors the chip/text
-    // centering already asserted above the flowchart-block describe).
-    const outerG = container.querySelector("g")!
-    const m = /translate\(([\d.]+),([\d.]+)\)/.exec(
-      outerG.getAttribute("transform") ?? "",
-    )
-    const tdx = Number(m?.[1])
+    // The declaration is stated the way the chip and the label are stated —
+    // in the local frame the renderer's own `translate(box.x + dx, box.y)`
+    // carries to the page — so it is centered on the label's own local x.
     const localX = Number(text!.getAttribute("x"))
-    expect(boxX + boxW / 2).toBeCloseTo(tdx + localX, 5)
-    expect(boxY).toBeGreaterThanOrEqual(boxArg.y)
+    expect(boxX + boxW / 2).toBeCloseTo(localX, 5)
+    expect(boxY).toBeGreaterThanOrEqual(0)
+    // And the transform that carries both to the page is still there.
+    const outerG = container.querySelector("g")!
+    expect(outerG.getAttribute("transform")).toMatch(/^translate\([\d.]+,[\d.]+\)$/)
   })
 })
 

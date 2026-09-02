@@ -308,7 +308,7 @@ export const peopleCards: SvgComponent<PeopleCardsComponent> = {
           const showOrg = Boolean(org) && orgBaselineY <= shellBottom
           const fill = palette.length > 0 ? palette[i % palette.length] : ctx.colors.primary
           return (
-            <g key={i} data-audit-box={`${box.x + cardX},${box.y + cardY},${cardW}`}>
+            <g key={i} data-audit-box={`${cardX},${cardY},${cardW}`}>
               <rect
                 x={cardX}
                 y={cardY}

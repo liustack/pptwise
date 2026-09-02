@@ -75,7 +75,11 @@ describe("verdict_banner component: measure", () => {
     )
     const root = parseSvgRoot(markup)
     const audited = root.querySelector("[data-audit-rect]")!
-    expect(audited.getAttribute("data-audit-rect")).toBe(`80,100,1088,${measuredH}`)
+    // Stated in the frame the bar's own ink uses — the `<g>` carrying the
+    // declaration also carries `translate(80,100)`, which is what puts both
+    // on the page.
+    expect(audited.getAttribute("data-audit-rect")).toBe(`0,0,1088,${measuredH}`)
+    expect(audited.getAttribute("transform")).toBe("translate(80,100)")
   })
 })
 
@@ -125,7 +129,7 @@ describe("verdict_banner component: editorial rule", () => {
     expect(container.querySelector("text")!.getAttribute("font-size")).toBe("24")
   })
 
-  it("annotates the whole bar with a page-coordinate data-audit-box and data-audit-rect", () => {
+  it("annotates the whole bar with a data-audit-box and data-audit-rect in its own frame", () => {
     const b = component("positive", "结论")
     const h = verdictBanner.measure(b, 1088, ctx)
     const markup = renderSvgMarkup(
@@ -135,8 +139,9 @@ describe("verdict_banner component: editorial rule", () => {
     )
     const root = parseSvgRoot(markup)
     const el = root.querySelector("[data-audit-box]")!
-    expect(el.getAttribute("data-audit-box")).toBe("80,100,1088")
-    expect(el.getAttribute("data-audit-rect")).toBe(`80,100,1088,${h}`)
+    expect(el.getAttribute("data-audit-box")).toBe("0,0,1088")
+    expect(el.getAttribute("data-audit-rect")).toBe(`0,0,1088,${h}`)
+    expect(el.getAttribute("transform")).toBe("translate(80,100)")
   })
 
   it("stays within the controlled SVG subset (assertSubset)", () => {

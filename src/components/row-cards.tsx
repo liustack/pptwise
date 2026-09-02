@@ -174,7 +174,7 @@ export const rowCards: SvgComponent<RowCardsComponent> = {
           const titleBaseline = contentTop + TITLE_SIZE
           const textTop = contentTop + TITLE_LH + GAP_TITLE_NEXT
           return (
-            <g key={i} data-audit-box={`${box.x},${box.y + cardY},${box.w}`}>
+            <g key={i} data-audit-box={`0,${cardY},${box.w}`}>
               <rect
                 x={0}
                 y={cardY}

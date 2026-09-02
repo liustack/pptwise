@@ -146,7 +146,7 @@ export const cycle: SvgComponent<CycleComponent> = {
         const totalH = fit.lines.length * fit.lineHeight
         const top = cy - totalH / 2
         return (
-          <g key={`node-${i}`} data-audit-box={`${box.x + cx - nr},${box.y + cy - nr},${2 * nr}`}>
+          <g key={`node-${i}`} data-audit-box={`${cx - nr},${cy - nr},${2 * nr}`}>
             <circle
               cx={cx}
               cy={cy}

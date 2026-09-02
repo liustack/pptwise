@@ -420,10 +420,41 @@ interface Region {
 
 interface BoxScope {
   readonly declaration: string
-  readonly x: number
-  readonly w: number
+  /** The declaration in page coordinates — see {@link declaredBox}. */
+  readonly box: DepthBox
   readonly region: Region | null
   readonly ink: DepthBox[]
+}
+
+/**
+ * A `data-audit-box` / `data-audit-rect` declaration, brought into page
+ * coordinates.
+ *
+ * **A declaration is stated in the same coordinate frame as the ink beneath
+ * the element that carries it.** That is the whole protocol, and it is what
+ * lets a declaration be compared to ink at all: both are carried to the page
+ * by the same accumulated transform.
+ *
+ * The ink was already being transformed and the declaration was not, so the
+ * two were compared across different coordinate systems the moment anything
+ * sat under a transform. Under the `translate(...) scale(...)` wrapper that
+ * `assertion-evidence.tsx`, `fitted-evidence.tsx` and
+ * `content-stacked-poster.tsx` all put around `renderComponent(component,
+ * { x: 0, y: 0, w })`, a component box declared at local `0,0,200` was
+ * compared against ink carried 100px to the right — a 100px overflow finding
+ * for a component painting exactly inside its own declaration. Producers
+ * that used to add their own `box.x`/`box.y` back into a nested declaration
+ * (they render their children under `translate(box.x,box.y)`) now state it
+ * the way their children are stated, and `svg-audit.ts` and
+ * `browser-audit.ts` compose the declaration the same way.
+ */
+function declaredBox(attr: string, frame: SvgMatrix): { box: DepthBox; hasVertical: boolean } {
+  const [x, y, w, h] = attr.split(",").map(Number)
+  const hasVertical = h !== undefined && Number.isFinite(h)
+  return {
+    box: transformBox({ x: x!, y: y!, w: w!, h: hasVertical ? h! : 0 }, frame),
+    hasVertical,
+  }
 }
 
 /**
@@ -452,15 +483,13 @@ export function collectInkFindings(markup: string): InkFinding[] {
 
     const rectAttr = el.getAttribute("data-audit-rect")
     if (rectAttr) {
-      const [x, y, w, h] = rectAttr.split(",").map(Number)
-      region = { rect: { x: x!, y: y!, w: w!, h: h! } }
+      region = { rect: declaredBox(rectAttr, here).box }
     }
 
     const boxAttr = el.getAttribute("data-audit-box")
     let opened: BoxScope | null = null
     if (boxAttr) {
-      const [x, , w] = boxAttr.split(",").map(Number)
-      opened = { declaration: boxAttr, x: x!, w: w!, region, ink: [] }
+      opened = { declaration: boxAttr, box: declaredBox(boxAttr, here).box, region, ink: [] }
       scopes = [...scopes, opened]
     }
 
@@ -482,8 +511,8 @@ export function collectInkFindings(markup: string): InkFinding[] {
           message: `a component's ink runs ${px.toFixed(0)}px past the ${side} edge of ${limit} (box ${opened!.declaration}) — it must draw inside the box it accepted, or decline and declare`,
         })
       }
-      const left = opened.x - ink.x
-      const right = ink.x + ink.w - (opened.x + opened.w)
+      const left = opened.box.x - ink.x
+      const right = ink.x + ink.w - (opened.box.x + opened.box.w)
       if (left > H_TOLERANCE) report("left", left, "its own declared box")
       if (right > H_TOLERANCE) report("right", right, "its own declared box")
       if (opened.region) {

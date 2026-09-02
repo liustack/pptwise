@@ -71,15 +71,20 @@ export function auditSvgMarkup(markup: string): OverflowIssue[] {
     const ay = oy + os * dy
     const as = os * scale
 
+    // A declaration is stated in the same frame as the ink beneath the
+    // element that carries it, so it is composed with the accumulated
+    // transform exactly like the `<text>` coordinates below. Read literally,
+    // a box declared inside a scaled or translated subtree was compared
+    // against text coordinates that had already been carried to the page.
     const boxAttr = el.getAttribute("data-audit-box")
     if (boxAttr) {
       const [x, y, w] = parseNums(boxAttr)
-      box = { x, y, w }
+      box = { x: ax + as * x, y: ay + as * y, w: as * w }
     }
     const rectAttr = el.getAttribute("data-audit-rect")
     if (rectAttr) {
       const [x, y, w, h] = parseNums(rectAttr)
-      rect = { x, y, w, h }
+      rect = { x: ax + as * x, y: ay + as * y, w: as * w, h: as * h }
     }
 
     if (el.tagName.toLowerCase() === "text") {

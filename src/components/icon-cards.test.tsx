@@ -127,17 +127,26 @@ describe("icon_cards component", () => {
     expect(container.querySelectorAll("path").length).toBeGreaterThan(0)
   })
 
-  it("annotates every column with its own page-coordinate data-audit-box", () => {
+  it("annotates every column with a data-audit-box in the frame its own ink uses", () => {
+    // The columns are drawn under this component's `translate(box.x,box.y)`,
+    // so their declarations are stated the way their children are: at the
+    // local origin, with the transform carrying both to the page together.
+    // Adding `box.x`/`box.y` back in made the declaration mean something
+    // different from the ink under it the moment a layout wrapper scaled or
+    // moved the whole component.
     const { container } = svg(iconCards.render(four, BOX, themeCtx("terra")))
     const boxes = Array.from(container.querySelectorAll("[data-audit-box]")).map((el) =>
       (el.getAttribute("data-audit-box") ?? "").split(",").map(Number),
     )
     expect(boxes).toHaveLength(4)
     for (const [x, y, w] of boxes) {
-      expect(x).toBeGreaterThanOrEqual(BOX.x)
-      expect(y).toBe(BOX.y)
+      expect(x).toBeGreaterThanOrEqual(0)
+      expect(y).toBe(0)
       expect(w).toBeGreaterThan(0)
     }
+    // First column at the local origin, later columns to the right of it.
+    expect(boxes[0]![0]).toBe(0)
+    expect(boxes[1]![0]).toBeGreaterThan(0)
   })
 
   // The column drawing keeps its own floors (`legibility.ts`): a title

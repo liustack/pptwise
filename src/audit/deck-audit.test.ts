@@ -2152,8 +2152,13 @@ describe("findOverlapIssues — synthetic markup", () => {
   // a `<g transform="translate(x,y)">` positions local content, and the
   // data-audit-box attribute independently bakes the same (x,y) absolute —
   // the rect's own x/y stay local (0,0), matching real markup exactly.
+  // A declaration is stated in the same frame as the ink beneath the element
+  // that carries it, so a box inside `translate(x,y)` is written at the local
+  // origin and the transform is what carries it to (x, y). The fixture used
+  // to write the page coordinates inside the translate, which only worked
+  // while the walker read the attribute literally.
   const box = (x: number, y: number, w: number, h: number) =>
-    `<g transform="translate(${x},${y})"><g data-audit-box="${x},${y},${w}"><rect x="0" y="0" width="${w}" height="${h}" fill="#FFFFFF"/></g></g>`
+    `<g transform="translate(${x},${y})"><g data-audit-box="0,0,${w}"><rect x="0" y="0" width="${w}" height="${h}" fill="#FFFFFF"/></g></g>`
 
   it("flags two boxes whose rendered rects substantially overlap", () => {
     const markup = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">
