@@ -469,10 +469,12 @@ export function splitSeriesGutters(
   plotW: number,
   leftText: number,
   rightText: number,
-): { leftW: number; rightW: number; dataW: number } {
+): { leftW: number; rightW: number; dataW: number; leftBudget: number; rightBudget: number } {
   const overhead = (leftText > 0 ? SERIES_GUTTER_OVERHEAD : 0) + (rightText > 0 ? SERIES_GUTTER_OVERHEAD : 0)
   const grantable = Math.max(0, plotW * (1 - SERIES_PLOT_MIN_W_RATIO))
-  if (overhead === 0 || overhead > grantable) return { leftW: 0, rightW: 0, dataW: plotW }
+  if (overhead === 0 || overhead > grantable) {
+    return { leftW: 0, rightW: 0, dataW: plotW, leftBudget: 0, rightBudget: 0 }
+  }
   const textGrantable = grantable - overhead
 
   const half = textGrantable / 2
@@ -492,9 +494,19 @@ export function splitSeriesGutters(
     rightGrant = half
   }
 
+  const leftBudget = leftText > 0 ? leftGrant : 0
+  const rightBudget = rightText > 0 ? rightGrant : 0
   const leftW = leftText > 0 ? leftGrant + SERIES_GUTTER_OVERHEAD : 0
   const rightW = rightText > 0 ? rightGrant + SERIES_GUTTER_OVERHEAD : 0
-  return { leftW, rightW, dataW: plotW - leftW - rightW }
+  // The text budgets travel with the widths rather than being subtracted
+  // back out of them. `(grant + overhead) - overhead` is not `grant` in
+  // floating point, and a budget one ulp under its own request is a label
+  // that does not fit the room reserved for it: a full-width line chart's
+  // start value asked for 50.086400000000005 and was offered 50.0864, so it
+  // was declared a drop and the export was refused. This is the same
+  // re-derivation `layoutRadialSlices` already refuses to make for the pie's
+  // own label budget, for the same reason.
+  return { leftW, rightW, dataW: plotW - leftW - rightW, leftBudget, rightBudget }
 }
 
 /**
@@ -655,6 +667,9 @@ function renderSeriesGutterLabels(opts: {
   dataW: number
   leftW: number
   rightW: number
+  /** The text budget each gutter was granted — see {@link splitSeriesGutters}. */
+  leftBudget: number
+  rightBudget: number
   plotY: number
   plotH: number
   markerR: number
@@ -673,8 +688,7 @@ function renderSeriesGutterLabels(opts: {
   const rightTextX = opts.dataX + opts.dataW + SERIES_GUTTER_OVERHEAD
   const leftTextX = opts.dataX - SERIES_GUTTER_OVERHEAD
   const textX = (side: "left" | "right") => (side === "right" ? rightTextX : leftTextX)
-  const avail = (side: "left" | "right") =>
-    Math.max(0, (side === "left" ? opts.leftW : opts.rightW) - SERIES_GUTTER_OVERHEAD)
+  const avail = (side: "left" | "right") => (side === "left" ? opts.leftBudget : opts.rightBudget)
   const prepared = opts.labels.map((label) => ({
     label,
     fitted: fitGutterLabel(label, avail(label.side), opts.fontFamily),
@@ -1326,6 +1340,8 @@ export function renderLine(
         dataW: gutters.dataW,
         leftW: gutters.leftW,
         rightW: gutters.rightW,
+        leftBudget: gutters.leftBudget,
+        rightBudget: gutters.rightBudget,
         plotY: geom.plotY,
         plotH: geom.plotH,
         markerR: ENDPOINT_DOT_R + ENDPOINT_LABEL_CLEARANCE,
@@ -2614,6 +2630,8 @@ export function renderArea(
         dataW: gutters.dataW,
         leftW: gutters.leftW,
         rightW: gutters.rightW,
+        leftBudget: gutters.leftBudget,
+        rightBudget: gutters.rightBudget,
         plotY: geom.plotY,
         plotH: geom.plotH,
         markerR: ENDPOINT_LABEL_CLEARANCE,

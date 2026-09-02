@@ -329,7 +329,32 @@ describe("splitSeriesGutters — the leader is paid for before the text is share
   })
 
   it("keeps the plot floor and asks for no gutter when there are no labels", () => {
-    expect(splitSeriesGutters(1000, 0, 0)).toEqual({ leftW: 0, rightW: 0, dataW: 1000 })
+    expect(splitSeriesGutters(1000, 0, 0)).toEqual({
+      leftW: 0,
+      rightW: 0,
+      dataW: 1000,
+      leftBudget: 0,
+      rightBudget: 0,
+    })
+  })
+
+  it("hands back the text budget it granted, rather than leaving it to be subtracted back out", () => {
+    // `(grant + overhead) - overhead` is not `grant` in floating point, and
+    // a budget one ulp under its own request is a label that does not fit
+    // the room reserved for it. A full-width chart's start value `-9000` was
+    // measured at exactly the width it was granted, came back a bit short,
+    // and was declared a drop that refused the export.
+    // The exact widths from that chart, measured in its own theme's body
+    // face: the start value asks for 50.086400000000005 and the subtraction
+    // hands back 50.0864.
+    const request = 50.086400000000005
+    const split = splitSeriesGutters(811, request, 50.37440000000001)
+    expect(split.leftBudget).toBe(request)
+    expect(request <= split.leftBudget).toBe(true)
+    // The subtraction this replaced does not round-trip, and the label that
+    // set the reservation is the one that fails to fit it.
+    expect(split.leftW - SERIES_GUTTER_OVERHEAD).not.toBe(request)
+    expect(request <= split.leftW - SERIES_GUTTER_OVERHEAD).toBe(false)
   })
 })
 
@@ -2052,5 +2077,27 @@ describe("a cut gutter label keeps its value", () => {
     // fragment with the number gone.
     const right = labels.filter((t) => t !== "10")
     for (const t of right) expect(t!.endsWith("88")).toBe(true)
+  })
+})
+
+/**
+ * A value is never cut. `123456789` truncated to `1` is not a shorter number,
+ * it is a wrong one, and nothing on the page tells the reader which.
+ */
+describe("a value that does not fit is dropped, never shortened", () => {
+  it("declines the label rather than printing a prefix of the number", () => {
+    const series: ChartSeries[] = [{ name: "S", data: [{ x: "A", y: 123456789 }, { x: "B", y: 987654321 }] }]
+    const { container } = svg(renderLine(series, PALETTE, 0, 0, 260, H, MUTED, TEXT, ACCENT))
+    for (const el of container.querySelectorAll("text[data-value-label]")) {
+      const text = el.textContent ?? ""
+      // Whatever survives ends in a whole value, never a prefix of one.
+      expect(["123456789", "987654321"].some((v) => text === v || text.endsWith(` ${v}`))).toBe(true)
+    }
+  })
+
+  it("counts a dropped label so the export refuses it", () => {
+    const series: ChartSeries[] = [{ name: "S", data: [{ x: "A", y: 123456789 }, { x: "B", y: 987654321 }] }]
+    const { container } = svg(renderLine(series, PALETTE, 0, 0, 260, H, MUTED, TEXT, ACCENT))
+    expect(container.querySelector("[data-dropped-silent]")).not.toBeNull()
   })
 })
