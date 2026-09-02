@@ -223,19 +223,47 @@ function legendNameWidth(
   return measureTextUnits(fitted.text, { fontFamily }) * fitted.fontSize
 }
 
+/** The overflow mark a cut legend paints: `+13`, in the legend's own type. */
+function legendOverflowText(droppedCount: number): string {
+  return `+${droppedCount}`
+}
+
 /**
  * Lays out a chart's legend entries (chart-model.ts's `ChartModel.legend`,
  * already in input series order) against `availW` px. Slots pack left to
  * right with a ≥72px swatch-to-swatch pitch (or the fitted name width when
- * that is larger). The caller right-aligns the group by offsetting
- * `slotX` with `availW - groupW`. Entries that do not fit are omitted and
- * recorded on a silent `data-dropped` marker.
+ * that is larger). The caller right-aligns the group by offsetting `slotX`
+ * with `availW - groupW`.
+ *
+ * **A cut the reader can see, or no export.** Entries that do not fit used to
+ * be omitted behind a bare `data-dropped` count: on a 24-series bar chart at
+ * 1120px, thirteen series were drawn with no name anywhere on the page, the
+ * page said nothing about it, and `generatePptxBlob` shipped the file —
+ * `data-dropped` without `data-dropped-silent` is the one marker the export
+ * gate does not read. That is exactly the shape `generate.ts`'s own gate
+ * documents as forbidden: a component may trim its own items, but then it
+ * paints "+N" and the reader is told; a cut nothing on the page admits to is
+ * the silent kind and the export refuses it.
+ *
+ * So the mark is part of the layout, not an afterthought. It is reserved out
+ * of `availW` before an entry can claim the room, and `groupW` includes it,
+ * so the whole right-aligned group still lands inside the box. Only when the
+ * row cannot hold even `+N` does the drop become silent.
  */
 function layoutChartLegend(
   legend: ReturnType<typeof buildChartModel>["legend"],
   availW: number,
   fontFamily: string,
-): { slots: LegendSlot[]; droppedCount: number; groupW: number; droppedX: number } {
+): {
+  slots: LegendSlot[]
+  droppedCount: number
+  /** Total width of the right-aligned group, overflow mark included. */
+  groupW: number
+  /** Where the overflow mark starts, relative to the group's left edge. */
+  markX: number
+  /** True when not even `+N` fits — nothing on the page can say what went. */
+  silent: boolean
+} {
   const prepared = legend.map((entry) => {
     const fitted = fitSvgLine(entry.name, {
       maxWidth: LEGEND_NAME_MAX_W,
@@ -273,16 +301,29 @@ function layoutChartLegend(
     return { slots, groupW: last.slotX + last.width, droppedX: last.slotX + last.width }
   }
 
+  const markWidth = (droppedCount: number) =>
+    droppedCount === 0
+      ? 0
+      : measureTextUnits(legendOverflowText(droppedCount), { fontFamily }) * LEGEND_FONT_SIZE
+
   let visible = prepared.length
   while (visible >= 0) {
     const droppedCount = prepared.length - visible
     const packed = pack(visible)
-    if (packed.groupW <= availW || visible === 0) {
-      return { ...packed, droppedCount }
+    // The mark sits one gap past the last name, or at the group's own left
+    // edge when every name went.
+    const markX = droppedCount === 0 ? 0 : packed.groupW === 0 ? 0 : packed.groupW + LEGEND_SWATCH_GAP
+    const groupW =
+      droppedCount === 0 ? packed.groupW : markX + markWidth(droppedCount)
+    if (groupW <= availW) {
+      return { slots: packed.slots, droppedCount, groupW, markX, silent: false }
+    }
+    if (visible === 0) {
+      return { slots: [], droppedCount, groupW: 0, markX: 0, silent: true }
     }
     visible -= 1
   }
-  return { slots: [], droppedCount: prepared.length, groupW: 0, droppedX: 0 }
+  return { slots: [], droppedCount: prepared.length, groupW: 0, markX: 0, silent: true }
 }
 
 function hasHeaderRow(component: ChartComponent): boolean {
@@ -484,7 +525,29 @@ export const chart: SvgComponent<ChartComponent> = {
                 </g>
               )
             })}
-            {legendLayout.droppedCount > 0 && <g data-dropped={legendLayout.droppedCount} />}
+            {legendLayout.droppedCount > 0 &&
+              (legendLayout.silent ? (
+                // Nowhere to say it, so the export is the one that refuses.
+                <g
+                  data-dropped={legendLayout.droppedCount}
+                  data-dropped-silent={legendLayout.droppedCount}
+                />
+              ) : (
+                <>
+                  <text
+                    data-legend-overflow="1"
+                    x={legendLeft + legendLayout.markX}
+                    y={HEADER_BASELINE_Y}
+                    fontSize={LEGEND_FONT_SIZE}
+                    fill={accessibleInk(ctx.colors.muted, legendBg, LEGEND_FONT_SIZE)}
+                    fontFamily={bodyFace}
+                    dominantBaseline="alphabetic"
+                  >
+                    {legendOverflowText(legendLayout.droppedCount)}
+                  </text>
+                  <g data-dropped={legendLayout.droppedCount} />
+                </>
+              ))}
           </g>
         ) : null}
       </g>

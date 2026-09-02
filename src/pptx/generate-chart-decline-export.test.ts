@@ -77,3 +77,48 @@ describe("a declined chart blocks the export", () => {
     expect(out.byteLength).toBeGreaterThan(0)
   })
 })
+
+/**
+ * The legend's own half of the same contract. A bar chart with more series
+ * than its legend row can name used to mark a bare `data-dropped` count —
+ * the one marker the gate does not read — so thirteen series shipped with no
+ * name anywhere on the page and `generatePptx` succeeded.
+ */
+function manySeriesBarDeck(seriesCount: number): PptxIR {
+  return {
+    version: "5",
+    filename: "chart-legend-overflow-fixture",
+    theme: { id: "consulting" },
+    meta: {},
+    assets: { images: {} },
+    slides: [
+      {
+        type: "content",
+        kind: "data",
+        heading: "系列很多的柱状图",
+        components: [
+          {
+            type: "chart",
+            chart_type: "bar",
+            series: Array.from({ length: seriesCount }, (_, i) => ({
+              name: `S${i + 1}`,
+              data: [{ x: "A", y: i + 1 }],
+            })),
+          },
+        ],
+      },
+    ],
+  } as unknown as PptxIR
+}
+
+describe("a legend that cuts its tail says so on the page", () => {
+  it("exports a 24-series bar chart, because the row paints its own +N", async () => {
+    const out = await generatePptx(manySeriesBarDeck(24))
+    expect(out.byteLength).toBeGreaterThan(0)
+  })
+
+  it("exports a series count the row can name in full", async () => {
+    const out = await generatePptx(manySeriesBarDeck(3))
+    expect(out.byteLength).toBeGreaterThan(0)
+  })
+})

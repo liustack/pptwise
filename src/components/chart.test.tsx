@@ -8,6 +8,7 @@ import { auditSvgMarkup } from "../audit/svg-audit"
 import { auditDeck } from "../audit/deck-audit"
 import { AXIS_TITLE_BAND_H } from "./axis-titles"
 import { chart } from "./chart"
+import { measureTextUnits } from "../lib/svg-text-layout"
 import { schema as chartSchema } from "@/ir/components/chart"
 import type { ComponentCtx } from "./types"
 
@@ -834,24 +835,72 @@ describe("chart component — legend (n>=2 series)", () => {
     expect(truncated!.textContent!.length).toBeLessThan(longName.length)
   })
 
-  it("count overflow: more series than fit in one row drop the tail, marked data-dropped with no painted remainder copy", () => {
+  it("count overflow: the tail it cannot name is counted on the page as +N", () => {
     // Header-row packing starts at 72px per short name, so a 1120px plot
     // holds ~15 of these. 24 is enough to force the drop.
+    //
+    // This used to assert the defect: a bare `data-dropped` count and no
+    // text on the marker. `data-dropped` without `data-dropped-silent` is
+    // the one marker the export gate does not read, so thirteen series were
+    // drawn with no name anywhere and the file shipped. The contract is
+    // `generate.ts`'s own: a cut the reader is told about may export, a cut
+    // nothing on the page admits to may not.
     const manySeries = Array.from({ length: 24 }, (_, i) => ({
       name: `S${i + 1}`,
       data: [{ x: "A", y: i + 1 }],
     }))
     const component = { type: "chart" as const, chart_type: "bar" as const, series: manySeries }
     const { container } = svg(chart.render(component, box, ctx))
-    const texts = legendTexts(container)
-    const dropped = container.querySelector("[data-dropped]")
-    expect(dropped).toBeTruthy()
-    expect((dropped!.textContent ?? "").trim()).toBe("")
-    const droppedCount = Number(dropped!.getAttribute("data-dropped"))
+    const dropped = container.querySelector("[data-dropped]")!
+    const droppedCount = Number(dropped.getAttribute("data-dropped"))
     expect(droppedCount).toBeGreaterThan(0)
-    const nameEntries = texts.filter((t) => !t.hasAttribute("data-dropped"))
+    // Exportable, because the page says so.
+    expect(dropped.hasAttribute("data-dropped-silent")).toBe(false)
+    const mark = container.querySelector('[data-legend-overflow="1"]')
+    expect(mark).toBeTruthy()
+    expect(mark!.textContent).toBe(`+${droppedCount}`)
+    const nameEntries = legendTexts(container).filter(
+      (t) => t.getAttribute("data-legend-overflow") !== "1",
+    )
     expect(nameEntries.length).toBeLessThan(manySeries.length)
     expect(nameEntries.length + droppedCount).toBe(manySeries.length)
+  })
+
+  it("count overflow: a row too narrow for even +N declares a silent drop instead", () => {
+    // A dumbbell carries a legend and no cartesian plot, so it is the one
+    // legend-bearing type a box can be narrower than its own overflow mark.
+    const component = {
+      type: "chart" as const,
+      chart_type: "dumbbell" as const,
+      series: [
+        { name: "From", data: [{ x: "A", y: 1 }] },
+        { name: "To", data: [{ x: "A", y: 9 }] },
+      ],
+    }
+    const w = 10
+    const { container } = svg(
+      chart.render(component, { x: 0, y: 0, w, h: chart.measure(component, w, ctx) }, ctx),
+    )
+    const dropped = container.querySelector("[data-dropped-silent]")
+    expect(dropped).toBeTruthy()
+    expect(Number(dropped!.getAttribute("data-dropped-silent"))).toBeGreaterThan(0)
+    expect(container.querySelector('[data-legend-overflow="1"]')).toBeNull()
+  })
+
+  it("count overflow: the +N mark stays inside the box it was laid out against", () => {
+    const manySeries = Array.from({ length: 24 }, (_, i) => ({
+      name: `S${i + 1}`,
+      data: [{ x: "A", y: i + 1 }],
+    }))
+    const component = { type: "chart" as const, chart_type: "bar" as const, series: manySeries }
+    const { container } = svg(
+      chart.render(component, { x: 0, y: 0, w: 1120, h: chart.measure(component, 1120, ctx) }, ctx),
+    )
+    const mark = container.querySelector('[data-legend-overflow="1"]')!
+    const x = Number(mark.getAttribute("x"))
+    const w = measureTextUnits(mark.textContent!, { fontFamily: ctx.fonts.body }) * 16
+    expect(x).toBeGreaterThanOrEqual(0)
+    expect(x + w).toBeLessThanOrEqual(1120 + 1)
   })
 
   it("audit-visibility: deck-audit reads both the truncated name and the dropped-count marker as content-truncated/content-dropped findings", () => {
