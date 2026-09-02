@@ -22,6 +22,19 @@
  * characters — which is why this runs before anything is laid out.
  */
 
+/**
+ * The characters SVG and CSS call *document whitespace*: the ones a default
+ * `white-space` collapses. Space, tab, and the segment breaks.
+ *
+ * Deliberately not JavaScript's `\s`, which also matches NBSP, the narrow
+ * no-break space, the ideographic space and the rest of the Unicode space
+ * separators. Those are content — an author writing a no-break space means
+ * the glyph to stay — and folding them into one ordinary space rewrites what
+ * was written and measures it narrow. `String.trim()` has the same over-broad
+ * reach, which is why nothing here uses it either.
+ */
+const DOCUMENT_WHITESPACE_RUN = /[ \t\r\n\f\v]+/g
+
 /** One run of characters, with the whitespace mode it was written under. */
 export interface WhitespaceRun {
   readonly text: string
@@ -39,20 +52,20 @@ export function collapseWhitespaceRuns(runs: readonly WhitespaceRun[]): string[]
   const out: string[] = []
   // Seeded `true` so whitespace at the very start of the text is dropped by
   // the same rule that drops it between two runs.
-  let lastCharWasSpace = true
+  let lastCharWasCollapsible = true
   for (const run of runs) {
     if (run.preserve) {
       out.push(run.text)
-      if (run.text.length > 0) lastCharWasSpace = /\s$/.test(run.text)
+      if (run.text.length > 0) lastCharWasCollapsible = /[ \t\r\n\f\v]$/.test(run.text)
       continue
     }
-    let text = run.text.replace(/\s+/g, " ")
-    if (lastCharWasSpace) text = text.replace(/^ /, "")
-    if (text.length > 0) lastCharWasSpace = text.endsWith(" ")
+    let text = run.text.replace(DOCUMENT_WHITESPACE_RUN, " ")
+    if (lastCharWasCollapsible) text = text.replace(/^ /, "")
+    if (text.length > 0) lastCharWasCollapsible = text.endsWith(" ")
     out.push(text)
   }
-  // Trailing whitespace at the end of the text goes too — on the last run
-  // that has anything left, and never inside a preserved one.
+  // Trailing whitespace at the end of the text goes too, and never inside a
+  // preserved run.
   for (let i = out.length - 1; i >= 0; i--) {
     if (runs[i]!.preserve) break
     if (out[i] === "") continue

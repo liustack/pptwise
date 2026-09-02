@@ -41,6 +41,17 @@ describe("collapseWhitespaceRuns", () => {
     expect(texts([{ text: "x  ", preserve: true }])).toEqual(["x  "])
   })
 
+  it("collapses only document whitespace, never a no-break or ideographic space", () => {
+    // NBSP, the narrow no-break space and the ideographic space are content:
+    // an author who writes one means the glyph to stay. JavaScript's \s and
+    // String.trim() reach all of them, which is why neither is used here.
+    expect(texts([{ text: "A\u00a0\u00a0B" }]).join("")).toBe("A\u00a0\u00a0B")
+    expect(texts([{ text: "A\u202f\u3000B" }]).join("")).toBe("A\u202f\u3000B")
+    expect(texts([{ text: "\u00a0A\u00a0" }]).join("")).toBe("\u00a0A\u00a0")
+    // Tabs and newlines are document whitespace and still collapse.
+    expect(texts([{ text: "A\t\n  B" }]).join("")).toBe("A B")
+  })
+
   it("reports an empty run rather than dropping it, so callers keep their own metadata", () => {
     expect(texts([{ text: "AA " }, { text: "  " }, { text: "BB" }])).toEqual(["AA ", "", "BB"])
   })
