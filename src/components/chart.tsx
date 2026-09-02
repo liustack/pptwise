@@ -316,13 +316,35 @@ function directLabelBodyH(component: ChartComponent): number {
   return columns + PLOT_TOP_PAD + X_TICK_BAND
 }
 
+/**
+ * Body height a funnel needs so every stage keeps its name.
+ *
+ * `renderFunnel` gives each stage one band of `h / stages` and labels none of
+ * them once that band is shorter than a line of text — all or nothing, so
+ * that neighbouring labels can never overlap. At the flat 240px body a
+ * twelve-stage funnel drew twelve bands and dropped twelve names, and did it
+ * on a face that had 328px to give.
+ *
+ * It is the same claim `directLabelBodyH` makes for line and area: what a
+ * caller owes this component depends on how many things it has to name, so
+ * the count belongs in `measure()`. One line of pitch per stage is exactly
+ * the threshold the renderer tests, so a caller granting this minimum gets
+ * every stage named.
+ */
+function funnelBodyH(component: ChartComponent): number {
+  if (component.chart_type !== "funnel") return 0
+  const stages = component.series[0]?.data.length ?? 0
+  if (stages === 0) return 0
+  return Math.ceil(stages * labelLinePitch(DIRECT_LABEL_FONT_SIZE))
+}
+
 export const chart: SvgComponent<ChartComponent> = {
   measure(component) {
     const { xTitle, yTitle } = axisTitlesOf(component)
     return (
       (hasHeaderRow(component) ? HEADER_ROW_H : 0) +
       axisTitlePairHeight(xTitle, yTitle) +
-      Math.max(CHART_H, directLabelBodyH(component))
+      Math.max(CHART_H, directLabelBodyH(component), funnelBodyH(component))
     )
   },
   render(component, box, ctx) {
@@ -340,8 +362,14 @@ export const chart: SvgComponent<ChartComponent> = {
     // sentence, a footnote, 16 pages of the review corpus. `measure()` is the
     // minimum a caller owes this component, and `render` now trusts `box.h`
     // to be it.
-    const allocated = (box.h ?? minimum) - headerH
-    const bodyH = axesApplicable(component) ? allocated : CHART_H
+    // Every chart type, not only the cartesian ones. `CHART_H` used to be
+    // pinned here for funnel, pie, donut, gauge and dumbbell, so a face that
+    // handed one of them a 328px band got a 240px chart and kept the
+    // difference as dead air — and a twelve-stage funnel dropped all twelve
+    // stage names inside a box that had room for them. `traits.stretchable`
+    // says a layout may grow this component; honouring that only on four of
+    // the nine chart types made the trait half true.
+    const bodyH = (box.h ?? minimum) - headerH
     const plotX = 0
     const plotW = box.w
 

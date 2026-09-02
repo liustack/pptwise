@@ -1302,3 +1302,66 @@ describe("chart component — axis title pair (cartesian value axis)", () => {
     }
   })
 })
+
+/**
+ * Every chart type draws in the box it accepted. `bodyH` used to be pinned to
+ * the flat 240px floor for every non-cartesian type, so a face that granted a
+ * funnel, pie, donut, gauge or dumbbell more height got a 240px chart and kept
+ * the rest as dead air — and a twelve-stage funnel dropped all twelve stage
+ * names inside a band that had room for them.
+ */
+describe("a chart uses the height it was allocated, whatever its type", () => {
+  const funnelOf = (stages: number) =>
+    ({
+      type: "chart" as const,
+      chart_type: "funnel" as const,
+      series: [
+        {
+          name: "漏斗",
+          data: Array.from({ length: stages }, (_, i) => ({ x: `阶段${i + 1}`, y: 120 - i * 8 })),
+        },
+      ],
+    })
+
+  it("measures a funnel by the stages it has to name, not a flat floor", () => {
+    // `renderFunnel` labels every band or none, and gives up once a band is
+    // shorter than a line of text. The count of names to place is part of
+    // what a caller is owed, the same claim line and area already make.
+    expect(chart.measure(funnelOf(4), 970, ctx)).toBe(240)
+    expect(chart.measure(funnelOf(12), 970, ctx)).toBeGreaterThan(240)
+  })
+
+  it("paints all twelve stage names in the 328px band gauge-stats grants", () => {
+    const component = funnelOf(12)
+    const { container } = svg(chart.render(component, { x: 0, y: 0, w: 970, h: 328 }, ctx))
+    const labels = [...container.querySelectorAll("text[data-value-label]")].map((el) => el.textContent)
+    expect(labels).toHaveLength(12)
+    for (let i = 0; i < 12; i++) expect(labels[i]).toContain(`阶段${i + 1}`)
+    expect(container.querySelector("[data-dropped]")).toBeNull()
+  })
+
+  it("paints every stage at the height it measured for itself", () => {
+    const component = funnelOf(12)
+    const minimum = chart.measure(component, 970, ctx)
+    const { container } = svg(chart.render(component, { x: 0, y: 0, w: 970, h: minimum }, ctx))
+    expect(container.querySelectorAll("text[data-value-label]")).toHaveLength(12)
+  })
+
+  it("gives a radial chart's label column the room the face granted it", () => {
+    for (const chart_type of ["pie", "donut"] as const) {
+      const component = {
+        type: "chart" as const,
+        chart_type,
+        series: [{ name: "Share", data: [{ x: "A", y: 40 }, { x: "B", y: 35 }, { x: "C", y: 25 }] }],
+      }
+      const radiusAt = (h: number) => {
+        const { container } = svg(chart.render(component, { x: 0, y: 0, w: 600, h }, ctx))
+        const d = container.querySelector("path")!.getAttribute("d")!
+        return Number(/A ([\d.]+) /.exec(d)![1])
+      }
+      // A taller band is a bigger circle and a taller column to stack labels
+      // in. Pinned at 240 the two were the same chart.
+      expect(radiusAt(400), chart_type).toBeGreaterThan(radiusAt(240))
+    }
+  })
+})
