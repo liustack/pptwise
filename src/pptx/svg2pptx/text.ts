@@ -129,46 +129,18 @@ function anchorToAlign(anchor: string | null): "left" | "center" | "right" {
   return "left"
 }
 
-/**
- * SVG's default whitespace handling (`xml:space="default"`) applies to the
- * whole `<text>`: leading and trailing blanks go, interior runs of blanks
- * collapse to one space. A blank at a tspan boundary is interior, so
- * `The <tspan>decisive</tspan> year` keeps both spaces. Trimming each node on
- * its own would export "Thedecisiveyear".
- *
- * The collapsing runs over the *character stream*, not over each run
- * separately: two blanks either side of one boundary — the shape
- * `renderEmphasisTspans` produces from `AA ** BB**` — are adjacent
- * characters, and the page paints one space. Collapsing run by run left
- * both, so the export said something the page does not.
- *
- * `svg-whitespace.ts` owns the rule; the gallery's ink scan reads it from
- * there too, so what this exports and what that measures cannot drift.
- */
-function collapseRunWhitespace(runs: TextRunData[]): TextRunData[] {
-  const texts = collapseWhitespaceRuns(runs.map((run) => ({ text: run.text })))
-  return runs.map((run, i) => ({ ...run, text: texts[i]! })).filter((run) => run.text.length > 0)
-}
-
 function buildRuns(el: Element, baseBold: boolean, baseItalic: boolean): TextRunData[] {
-  const tspans = el.querySelectorAll("tspan")
-  // `xml:space="preserve"` means every character stands, indentation
-  // included: `code.tsx` sets it on each code line because the leading blanks
-  // are the author's content. Trimming here shipped every code slide
-  // flush-left, and the gallery's ink scan reads the same flag from the same
-  // helper, so the two now agree about what the page carries.
+  // `xml:space` is inherited and a child may override it. The `<text>` reads
+  // whatever an ancestor folded onto it (`dispatch.ts`), and each direct
+  // child reads its own declaration over that. `code.tsx` is the producer
+  // that matters today — every code line preserves, because the indentation
+  // is the author's content — but the rule is the rule, not that one case.
   const preserve = preservesWhitespace(el, false)
-  if (tspans.length === 0) {
-    const raw = el.textContent ?? ""
-    const run: TextRunData = { text: preserve ? raw : raw.trim() }
-    if (baseBold) run.bold = true
-    if (baseItalic) run.italic = true
-    return run.text.length > 0 ? [run] : []
-  }
-  // 按 childNodes 顺序遍历：直接文本节点是基础 run（如 KPI 的
-  // "99.95<tspan>%</tspan>"——丢掉文本节点会导出成只剩单位）。空白折叠
-  // 在整段层面做（见 collapseRunWhitespace），不在这里逐节点 trim。
-  const runs: TextRunData[] = []
+  // One walk for every shape, tspans or not. The no-tspan path used to trim
+  // instead, which removed the two ends and left every interior run of blanks
+  // untouched: 423 nodes across 217 corpus pages exported "A    ·    B" where
+  // the page paints "A · B". Both consumers now read one character stream.
+  const runs: { run: TextRunData; preserve: boolean }[] = []
   el.childNodes.forEach((node) => {
     if (node.nodeType === 3) {
       const text = node.textContent ?? ""
@@ -176,7 +148,7 @@ function buildRuns(el: Element, baseBold: boolean, baseItalic: boolean): TextRun
       const run: TextRunData = { text }
       if (baseBold) run.bold = true
       if (baseItalic) run.italic = true
-      runs.push(run)
+      runs.push({ run, preserve })
       return
     }
     if (node.nodeType !== 1) return
@@ -189,9 +161,12 @@ function buildRuns(el: Element, baseBold: boolean, baseItalic: boolean): TextRun
     if (fill && fill !== "none") run.color = svgColorToHex(fill)
     const fs = child.getAttribute("font-size")
     if (fs) run.fontSize = pxToPt(parseFloat(fs))
-    runs.push(run)
+    runs.push({ run, preserve: preservesWhitespace(child, preserve) })
   })
-  return preserve ? runs.filter((run) => run.text.length > 0) : collapseRunWhitespace(runs)
+  const texts = collapseWhitespaceRuns(runs.map((entry) => ({ text: entry.run.text, preserve: entry.preserve })))
+  return runs
+    .map((entry, i) => ({ ...entry.run, text: texts[i]! }))
+    .filter((run) => run.text.length > 0)
 }
 
 /**
