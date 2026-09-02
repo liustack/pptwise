@@ -41,6 +41,38 @@ describe("chart component", () => {
     expect(chart.measure(component, 1120, ctx)).toBe(240)
   })
 
+  it("draws in exactly the box it is given, never its own floor", () => {
+    const component = {
+      type: "chart" as const,
+      chart_type: "line" as const,
+      axes: { x_title: "月份", y_title: "数量" },
+      series: [{ name: "Trend", data: [{ x: "Jan", y: 10 }, { x: "Feb", y: 30 }] }],
+    }
+    const minimum = chart.measure(component, 970, ctx)
+    const { container } = svg(chart.render(component, { x: 0, y: 0, w: 970, h: minimum + 120 }, ctx))
+    const axisY = Number(container.querySelector('[data-axis="x"]')!.getAttribute("y1"))
+    // A taller box makes a taller plot. The old `max(floor, allocated)` made
+    // the plot the same height whatever it was handed, and the extra came
+    // out of whatever sat below.
+    const { container: tight } = svg(chart.render(component, { x: 0, y: 0, w: 970, h: minimum }, ctx))
+    expect(axisY).toBeGreaterThan(Number(tight.querySelector('[data-axis="x"]')!.getAttribute("y1")))
+  })
+
+  it("declines a box below its measured minimum instead of painting past it", () => {
+    const component = {
+      type: "chart" as const,
+      chart_type: "line" as const,
+      axes: { x_title: "月份", y_title: "数量" },
+      series: [{ name: "Trend", data: [{ x: "Jan", y: 10 }, { x: "Feb", y: 30 }] }],
+    }
+    const minimum = chart.measure(component, 970, ctx)
+    const { container } = svg(chart.render(component, { x: 0, y: 0, w: 970, h: minimum - 40 }, ctx))
+    // Nothing painted, and the loss declared where a machine finds it.
+    expect(container.querySelectorAll("text")).toHaveLength(0)
+    expect(container.querySelectorAll("polyline")).toHaveLength(0)
+    expect(container.querySelector("[data-dropped]")!.getAttribute("data-dropped")).toBe("1")
+  })
+
   it("bar chart renders at least one rect per data point", () => {
     const component = {
       type: "chart" as const,

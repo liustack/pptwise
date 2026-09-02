@@ -303,14 +303,31 @@ export const chart: SvgComponent<ChartComponent> = {
     // the field is honestly ignored rather than partially/silently honored.
     const axes = axesApplicable(component) ? component.axes : undefined
     const headerH = hasHeaderRow(component) ? HEADER_ROW_H : 0
-    const titleH = axisTitlePairHeight(axes?.x_title, axes?.y_title)
-    const allocated = (box.h ?? headerH + CHART_H + titleH) - headerH
-    const bodyH = axesApplicable(component)
-      ? Math.max(CHART_H + titleH, allocated)
-      : CHART_H
+    const minimum = chart.measure(component, box.w, ctx)
+    // A component draws inside the box it accepted, or it declines. This used
+    // to read `Math.max(CHART_H + titleH, allocated)`: handed a box shorter
+    // than its own measured minimum, the chart quietly drew that minimum
+    // anyway and spilled over whatever the face had placed below it — a
+    // sentence, a footnote, 16 pages of the review corpus. `measure()` is the
+    // minimum a caller owes this component, and `render` now trusts `box.h`
+    // to be it.
+    const allocated = (box.h ?? minimum) - headerH
+    const bodyH = axesApplicable(component) ? allocated : CHART_H
     const plotX = 0
     const plotW = box.w
 
+    // Under-allocation is a layout defect, not something to paint through.
+    // Nothing paints and the loss is declared, the same answer
+    // `WholeShareDeclined` (chart-svg.tsx) already gives a chart handed data
+    // it cannot draw: a `data-dropped` mark that `checkContentDropGate`
+    // refuses to export and `deck-audit` reports. A thrown error was the
+    // other candidate and is wrong here — a face's content band is a fixed
+    // constant on several of them, so an under-allocated box stays reachable
+    // by construction, and a page that renders with one declared gap beats a
+    // deck that cannot render at all.
+    if ((box.h ?? minimum) + 0.5 < minimum) {
+      return <g data-dropped={1} />
+    }
 
     // P1 variety wave, task 2 (review fix round, Major finding): rotation
     // happens *here*, at the one place this palette actually feeds a chart
