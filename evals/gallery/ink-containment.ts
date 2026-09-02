@@ -50,6 +50,7 @@
 import { getPlatform } from "@/platform/registry"
 import { __pathBoundingBox } from "@/audit/deck-audit"
 import { labelLinePitch } from "@/components/label-collision"
+import { collapseWhitespaceRuns, preservesWhitespace } from "@/lib/svg-whitespace"
 import {
   IDENTITY_MATRIX,
   boxesIntersect,
@@ -99,6 +100,13 @@ export interface TextStyle {
   readonly fontWeight: string | null
   readonly letterSpacing: number
   readonly textAnchor: string
+  /**
+   * `xml:space="preserve"`, inherited like every other type property here.
+   * The corpus has 173 of these — every line `code.tsx` paints, where the
+   * indentation is the author's content and collapsing it measured the line
+   * up to 105px narrower than the page draws it.
+   */
+  readonly preserveWhitespace: boolean
 }
 
 export const ROOT_TEXT_STYLE: TextStyle = {
@@ -107,6 +115,7 @@ export const ROOT_TEXT_STYLE: TextStyle = {
   fontWeight: null,
   letterSpacing: 0,
   textAnchor: "start",
+  preserveWhitespace: false,
 }
 
 /** The style an element declares, over whatever it inherited. */
@@ -120,6 +129,7 @@ export function inheritTextStyle(el: Element, parent: TextStyle): TextStyle {
     fontWeight: raw("font-weight") ?? parent.fontWeight,
     letterSpacing: spacing == null || !Number.isFinite(Number(spacing)) ? parent.letterSpacing : Number(spacing),
     textAnchor: raw("text-anchor") ?? parent.textAnchor,
+    preserveWhitespace: preservesWhitespace(el, parent.preserveWhitespace),
   }
 }
 
@@ -205,27 +215,6 @@ function collectSegments(node: Element, style: TextStyle, out: TextSegment[]): v
 }
 
 /**
- * SVG's default whitespace handling, over one chunk's runs.
- *
- * `xml:space="default"` collapses every run of whitespace to a single space
- * and drops it at the two ends of the text. Keeping the source spaces
- * verbatim measures a string the page never paints: four spaces between two
- * runs are drawn as one. This mirrors `collapseRunWhitespace` in
- * `src/pptx/svg2pptx/text.ts`, which already applies the same rule to the
- * same markup on the way to OOXML — the boundary space that N2 exists to
- * keep survives here exactly as it survives there.
- */
-function collapseChunkWhitespace(segments: readonly TextSegment[]): TextSegment[] {
-  const collapsed = segments.map((segment) => ({ ...segment, text: segment.text.replace(/\s+/g, " ") }))
-  if (collapsed.length > 0) {
-    collapsed[0] = { ...collapsed[0]!, text: collapsed[0]!.text.replace(/^\s+/, "") }
-    const last = collapsed.length - 1
-    collapsed[last] = { ...collapsed[last]!, text: collapsed[last]!.text.replace(/\s+$/, "") }
-  }
-  return collapsed.filter((segment) => segment.text.length > 0)
-}
-
-/**
  * Every ink box a `<text>` paints, one per run.
  *
  * Three positions are in play and the walker keeps all three straight:
@@ -249,14 +238,47 @@ function collapseChunkWhitespace(segments: readonly TextSegment[]): TextSegment[
  * neighbours. Every consumer here unions them, so a chunk still measures as
  * one thing.
  *
+ * Whitespace is resolved before any of this, over the whole element's
+ * character stream — see `collapseWhitespaceRuns`.
+ *
  * This is not a text engine: no bidi, no per-glyph `dx`/`dy` lists, no
- * `textLength`, no `xml:space="preserve"`. None appears in this renderer's
- * output.
+ * `textLength`. Neither appears in this renderer's output.
  */
 export function textInkBoxes(el: Element, inherited: TextStyle): DepthBox[] {
   const style = inheritTextStyle(el, inherited)
+  const collected: TextSegment[] = []
+  collectSegments(el, style, collected)
+  if (collected.length === 0) return []
+
+  // Whitespace first, over the whole element's character stream, because that
+  // is the order the spec lays down and the order the difference shows up in:
+  // two spaces either side of a tspan boundary are one space on the page, and
+  // a space that survives inside the text still advances the cursor even when
+  // the next run starts a chunk of its own. Positions are applied to what
+  // comes out of here, never to the source.
+  const painted = collapseWhitespaceRuns(
+    collected.map((segment) => ({ text: segment.text, preserve: segment.style.preserveWhitespace })),
+  )
   const segments: TextSegment[] = []
-  collectSegments(el, style, segments)
+  // A run that collapsed to nothing hands its own position and shift to
+  // whichever run comes next, so an empty positioned tspan cannot quietly
+  // merge the run after it into the chunk before it.
+  let carried: Pick<TextSegment, "x" | "y" | "dx" | "dy"> | null = null
+  for (const [index, text] of painted.entries()) {
+    const segment = collected[index]!
+    const position: Pick<TextSegment, "x" | "y" | "dx" | "dy"> = {
+      x: carried?.x ?? segment.x,
+      y: carried?.y ?? segment.y,
+      dx: (carried?.dx ?? 0) + segment.dx,
+      dy: (carried?.dy ?? 0) + segment.dy,
+    }
+    if (text === "") {
+      carried = position
+      continue
+    }
+    carried = null
+    segments.push({ ...segment, ...position, text })
+  }
   if (segments.length === 0) return []
 
   const chunks: { segments: TextSegment[]; x?: number; y?: number }[] = []
@@ -275,12 +297,11 @@ export function textInkBoxes(el: Element, inherited: TextStyle): DepthBox[] {
   let cursorX = num(el, "x")
   let cursorY = num(el, "y")
   for (const chunk of chunks) {
-    const runs = collapseChunkWhitespace(chunk.segments)
+    const runs = chunk.segments
     const startX = chunk.x ?? cursorX
     const startY = chunk.y ?? cursorY
     cursorX = startX
     cursorY = startY
-    if (runs.length === 0) continue
 
     const placed: { x: number; y: number; ink: number; fontSize: number }[] = []
     for (const [index, run] of runs.entries()) {

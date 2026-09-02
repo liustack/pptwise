@@ -184,6 +184,47 @@ describe("the walker keeps the current text position", () => {
   })
 })
 
+describe("the walker resolves whitespace the way SVG does", () => {
+  const box = (inner: string, w = 100) =>
+    `<svg xmlns="http://www.w3.org/2000/svg"><g data-audit-rect="0,0,${w},100"><g data-audit-box="0,0,${w}">${inner}</g></g></svg>`
+
+  it("measures every character of an xml:space=preserve line", () => {
+    // 173 text nodes in the live corpus carry it — every line `code.tsx`
+    // paints, where the indentation is the author's content. Collapsing it
+    // measured one line 105px narrower than the page draws it.
+    const line = `${" ".repeat(20)}AAAAAAAAAA`
+    const preserved = box(`<text x="0" y="50" font-family="Consolas" font-size="10" xml:space="preserve">${line}</text>`)
+    const findings = collectInkFindings(preserved)
+    expect(findings.map((f) => f.side)).toEqual(["right"])
+    expect(findings[0]!.px).toBeCloseTo(36, 0)
+    // The same characters under the default mode collapse away, as they should.
+    expect(collectInkFindings(preserved.replace(' xml:space="preserve"', ""))).toEqual([])
+  })
+
+  it("inherits the preserve mode from an ancestor", () => {
+    const line = `${" ".repeat(20)}AAAAAAAAAA`
+    const markup = `<svg xmlns="http://www.w3.org/2000/svg"><g xml:space="preserve" data-audit-rect="0,0,100,100"><g data-audit-box="0,0,100"><text x="0" y="50" font-family="Consolas" font-size="10">${line}</text></g></g></svg>`
+    expect(collectInkFindings(markup).map((f) => f.side)).toEqual(["right"])
+  })
+
+  it("collapses a blank pair straddling a run boundary before laying anything out", () => {
+    // `renderEmphasisTspans(parseEmphasis("AA ** BB**"))` writes exactly this.
+    // Measuring both blanks reported an overflow the page does not have.
+    const markup = box(`<text x="0" y="50" font-size="10"><tspan>AA </tspan><tspan font-weight="600"> BB</tspan></text>`, 27.2)
+    expect(collectInkFindings(markup)).toEqual([])
+  })
+
+  it("keeps an interior blank that lands at a positioned chunk's edge", () => {
+    // The blank is interior to the <text>, so it survives and advances the
+    // cursor the next chunk continues from. Trimming it per chunk put the
+    // second line 10px to the left and hid the overflow again.
+    const markup = box(`<text x="0" y="35" font-size="30">A <tspan y="75">B</tspan></text>`, 40)
+    const findings = collectInkFindings(markup)
+    expect(findings.map((f) => f.side)).toEqual(["right"])
+    expect(findings[0]!.px).toBeCloseTo(10.1, 1)
+  })
+})
+
 describe("nested audit boxes cannot launder an outer overflow", () => {
   it("charges a child's ink to every box scope above it", () => {
     // `matrix`, `icon_cards`, `row_cards`, `sankey` and `flowchart` all
