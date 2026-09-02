@@ -1686,6 +1686,26 @@ describe("parseWedgePath — geometric round-trip hardening (post-review, falsif
     expect(__parseWedgePath(MISMATCHED_FLAG_D)).toBeNull()
   })
 
+  it("recognizes a half-turn ring whose read-back span lands one ulp past the flag boundary", () => {
+    // `renderGauge`'s track and progress arc are exactly a half turn by
+    // construction, so the renderer writes large=0 from its own unrounded
+    // angles. Reading the angles back out of the printed coordinates put the
+    // span 4.4e-16 above pi, which claimed the flag should have been 1 and
+    // rejected the parse — the gauge fell back to its bounding box and
+    // claimed the number centred in its own hole, at a 2.57:1 contrast
+    // finding on ten themes. Either flag is right at exactly a half turn.
+    const HALF_RING_D =
+      "M 124 320.00000000000006 A 316 316 0 0 1 756 319.99999999999994 " +
+      "L 629.6 319.99999999999994 A 189.6 189.6 0 0 0 250.4 320 Z"
+    const sector = __parseWedgePath(HALF_RING_D)
+    expect(sector).not.toBeNull()
+    expect(sector!.cx).toBeCloseTo(440, 6)
+    expect(sector!.cy).toBeCloseTo(320, 6)
+    expect(sector!.ro).toBeCloseTo(316, 6)
+    expect(sector!.ri).toBeCloseTo(189.6, 6)
+    expect(sector!.span).toBeCloseTo(Math.PI, 6)
+  })
+
   it("still recognizes a real renderDonut wedge whose coordinates happen to be clean round numbers (rejects only a genuine near-miss, not a valid wedge)", () => {
     // Guards against an overcorrection: the hardening must not reject a
     // real wedge just because its numbers happen to look "too clean" —

@@ -1191,6 +1191,10 @@ function parseWedgePath(d: string): Sector | null {
   }
   const isFlag = (i: number) => tokens[i] === "0" || tokens[i] === "1"
   const DEGENERATE_EPS = 1e-6
+  /** Slack around a half turn, where the large-arc flag is ambiguous. Sized
+   * like `DEGENERATE_EPS`: far above the ulp-scale disagreement this absorbs
+   * and far below any span a real wedge and its flag could disagree over. */
+  const HALF_TURN_EPS = 1e-6
   // Absolute pixel tolerance for "does this point actually lie on its
   // claimed circle" / "is the recovered center actually where the outer
   // and inner arc endpoints agree it is" — loose enough to absorb float
@@ -1209,6 +1213,16 @@ function parseWedgePath(d: string): Sector | null {
     // boundary between a zero-sweep and a full-turn wedge, resolved by the
     // large-arc-flag the path itself already carries rather than guessed.
     if (raw < DEGENERATE_EPS) return large === "1" ? 2 * Math.PI : 0
+    // A half turn is the other ambiguous boundary, and for the same reason
+    // the near-zero one above is: the renderer decides the flag from its own
+    // unrounded `startA`/`endA` (`endA - startA > π ? 1 : 0`), while this
+    // reads the angles back out of the printed coordinates. `renderGauge`'s
+    // half-ring is exactly π by construction and round-tripped to π plus one
+    // ulp, so the flag it correctly wrote as "0" read as "1" and the whole
+    // parse was rejected — the gauge then fell back to its bounding box and
+    // claimed the number centred in its own hole. Either flag is right at
+    // exactly a half turn, so the one the path carries stands.
+    if (Math.abs(raw - Math.PI) < HALF_TURN_EPS) return raw
     // Non-degenerate: the flag must agree with the span its own endpoints
     // imply — `renderPie`/`renderDonut`'s own `endA - startA > π ? 1 : 0`.
     const expectedLarge = raw > Math.PI ? "1" : "0"
