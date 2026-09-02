@@ -12,6 +12,7 @@ import { findImageSelection } from "../layouts/find-image"
 import { resolveEffectiveFace } from "./layout-selection"
 import { measureTextUnits } from "../lib/svg-text-layout"
 import { buildChartModel } from "../components/chart-model"
+import { CATEGORY_FOLDING_TYPES } from "@/ir/components/chart"
 
 export type QualityIssue = {
   slide: number
@@ -51,7 +52,7 @@ export type QualityIssue = {
    * key per series — a key repeated 3x in one series still produces one
    * `ChartDuplicate`/one issue, see that type's own doc comment), for the
    * same English-translation reason as `chartAxesIgnored` above. */
-  chartDuplicateCategory?: { seriesName: string; x: string | number }
+  chartDuplicateCategory?: { seriesName: string; x: string | number; chartType: string }
   /** `code: "data_table_missing_cell"` only (R1 evidence wave, Task T3) —
    * the offending row's 0-based index and the declared column key its
    * `cells` object omits, for the same English-translation reason as
@@ -379,29 +380,40 @@ function checkSlide(ir: PptxIR, slide: Slide, index: number, resolvedAxes: Narra
     })
   }
 
-  // chart_duplicate_category (R1 evidence wave, Task T2 — roadmap §6.1.2):
-  // a data-authoring concern independent of chart_type/rendering, so this
-  // runs for every chart_type, not just bar/line — `chart-model.ts`'s
-  // `buildChartModel` flags any category value repeated within one series
-  // (kept: first occurrence, dropped: the rest) as part of bar/line's own
-  // dedup rule, but the underlying "did the author accidentally repeat a
-  // category label" question is exactly as real for pie/funnel/dumbbell,
-  // which don't dedupe at render time at all (e.g. two same-labeled pie
-  // wedges silently split one category's value across two slices — an
-  // even easier authoring slip to miss than bar/line's clean "first wins").
-  // Global Constraint 2 (roadmap): duplicate x is a data-quality question,
-  // not a structural one — warn, never a schema-level hard error, and never
-  // blocks `ok` (severity "warn" only).
+  // chart_duplicate_category: a repeated category label inside one series.
+  //
+  // **What that costs depends on the chart type, and the advisory now says
+  // which.** `buildChartModel` folds a repeated category onto the first
+  // value it saw and drops the rest, and bar, line and area are the types
+  // that read that folded model — so for them a repeat costs the author a
+  // number, which is why the schema refuses it outright now
+  // (`ir/components/chart.ts`'s `CATEGORY_FOLDING_TYPES`). Nothing with a
+  // folding type reaches this advisory through `validateIr` any more; the
+  // wording is kept for a caller that runs quality checks on IR it built in
+  // memory.
+  //
+  // Every other type reads `series[0].data` in order and never folds
+  // anything: a pie with two slices called "East" draws two slices and
+  // prints both values, a scatter plots both points, a dumbbell pairs both
+  // rows. Nothing is dropped there, and the old message said it was — a
+  // warning that named a loss the page had not taken. What is worth telling
+  // the author is the ambiguity itself: two things on the chart now carry
+  // the same name.
   for (const component of slide.components) {
     if (component.type !== "chart") continue
+    const folds = CATEGORY_FOLDING_TYPES.includes(
+      component.chart_type as (typeof CATEGORY_FOLDING_TYPES)[number],
+    )
     const { duplicates } = buildChartModel(component.series)
     for (const dup of duplicates) {
       issues.push({
         slide: index,
         severity: "warn",
         code: "chart_duplicate_category",
-        message: `图表系列 "${dup.seriesName}" 存在重复分类 "${dup.x}"，仅保留首次出现的取值，其余将被忽略`,
-        chartDuplicateCategory: { seriesName: dup.seriesName, x: dup.x },
+        message: folds
+          ? `图表系列 "${dup.seriesName}" 存在重复分类 "${dup.x}"，仅保留首次出现的取值，其余将被忽略`
+          : `图表系列 "${dup.seriesName}" 有两条数据共用分类名 "${dup.x}"，两条都会画出来，图上会出现两个同名的部分`,
+        chartDuplicateCategory: { seriesName: dup.seriesName, x: dup.x, chartType: component.chart_type },
       })
     }
   }

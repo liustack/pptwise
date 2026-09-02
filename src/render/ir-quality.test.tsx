@@ -1100,7 +1100,14 @@ describe("checkIrQuality", () => {
     ])
     const issue = checkIrQuality(ir).find((i) => i.code === "chart_duplicate_category")
     expect(issue?.severity).toBe("warn")
-    expect(issue?.chartDuplicateCategory).toEqual({ seriesName: "Q1 Actuals", x: "East" })
+    // The chart type travels with the issue, because what a repeat costs
+    // depends on it: bar folds the category and keeps the first value,
+    // everything else draws both entries.
+    expect(issue?.chartDuplicateCategory).toEqual({
+      seriesName: "Q1 Actuals",
+      x: "East",
+      chartType: "bar",
+    })
   })
 
   // ── chart_line_too_many_series ──

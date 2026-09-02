@@ -24,6 +24,7 @@ import { normalizeComponentAliases, normalizeDeckRootAliases } from "./ir/field-
 import { isSlideLevelPath, renameHintsFor, SLIDE_LEVEL_UNKNOWN_KEY_HINT } from "./ir/rename-hints"
 import { normalizeNarrativeShape, resolveNarrative, type NarrativeProfile } from "./narrative"
 import { CAPACITY } from "./audit/capacity"
+import { CATEGORY_FOLDING_TYPES } from "./ir/components/chart"
 import { FULL_BODY_TYPES } from "./render/component-traits"
 import { checkIrQuality, type QualityIssue } from "./render/ir-quality"
 import { resolveEffectiveFace } from "./render/layout-selection"
@@ -108,6 +109,14 @@ export interface ValidateResult {
  * path render also uses) and attaches them to the issue via `density` /
  * `bulletsBudget` — this function only formats what it's handed.
  */
+/** Test-only: the public English wording for one quality issue, so a branch
+ * that `validateIr` can no longer reach (a folding chart type's repeated
+ * category is refused at the schema now) can still be pinned. Same `__`
+ * convention `deck-audit.ts`'s `__parseWedgePath` already establishes. */
+export function __describeQualityIssue(issue: QualityIssue): string {
+  return describeQualityIssue(issue)
+}
+
 function describeQualityIssue(issue: QualityIssue): string {
   switch (issue.code) {
     case "empty_deck":
@@ -215,14 +224,24 @@ function describeQualityIssue(issue: QualityIssue): string {
         : "chart axes settings (x_title/y_title/show_grid) are not supported for this chart type and are ignored — only bar, line, scatter and area charts render them"
     }
     case "chart_duplicate_category": {
-      // R1 evidence wave, Task T2: chart-model.ts's buildChartModel found a
-      // category (x value) repeated within one series — names the series
-      // and the repeated value via `issue.chartDuplicateCategory`, same
-      // structured-field convention as `chartAxesIgnored` above.
+      // What a repeated category costs depends on the chart type, so the
+      // message says which — see `ir-quality.ts`'s own note where the issue
+      // is raised. Bar, line and area read the folded model and keep only
+      // the first value, and the schema refuses that outright now, so the
+      // first-wins wording is only reachable for a caller running quality
+      // checks on IR it built in memory. Every other type draws both
+      // entries, and the old message told those authors about a loss the
+      // page had not taken.
       const d = issue.chartDuplicateCategory
-      return d
+      if (!d) {
+        return "a chart series repeats a category value — check whether the repeat is intended"
+      }
+      const folds = CATEGORY_FOLDING_TYPES.includes(
+        d.chartType as (typeof CATEGORY_FOLDING_TYPES)[number],
+      )
+      return folds
         ? `chart series "${d.seriesName}" has a duplicate category "${d.x}" — only the first occurrence is kept, later ones are dropped`
-        : "a chart series has a duplicate category value — only the first occurrence is kept, later ones are dropped"
+        : `chart series "${d.seriesName}" has two entries sharing the category "${d.x}" — a ${d.chartType} draws both, so the chart shows two parts with the same name`
     }
     case "chart_line_too_many_series":
       // Dataviz's 8-series ceiling (CAPACITY.chart.lineSeriesAdvisoryMax).

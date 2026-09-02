@@ -5,6 +5,7 @@ import { makeSolidRegionPngDataUri } from "@/platform/test-png-fixture"
 import { formatIssues, formatWarnings, generatePptx, irJsonSchema, listThemes, renderSlideSvg, validateIr } from "./api"
 import { ENUM_ERROR_MESSAGE_MAX_LENGTH } from "./ir/schema-error-hints"
 import { CAPACITY } from "./audit/capacity"
+import { __describeQualityIssue } from "./validate-core"
 import { __resetRegisteredThemes, registerTheme } from "./themes/definitions"
 import { registerTestTheme } from "./themes/test-fixtures"
 
@@ -1148,13 +1149,40 @@ describe("describeQualityIssue: chart_duplicate_category English message (R1 evi
       ],
     })
     expect(v.ok).toBe(true)
-    const warning = v.warnings?.find((w) => w.message.includes("duplicate category"))
+    const warning = v.warnings?.find((w) => w.message.includes("sharing the category"))
     expect(warning).toBeTruthy()
     expect(warning?.message).toMatch(/Q1 Actuals/)
     expect(warning?.message).toMatch(/East/)
+    // The wording itself, not just the fact of a warning. A pie reads its
+    // points in order and never folds them, so both slices are drawn and
+    // both values are printed — the old message told the author that "only
+    // the first occurrence is kept, later ones are dropped", which named a
+    // loss the page had not taken.
+    expect(warning?.message).toBe(
+      'chart series "Q1 Actuals" has two entries sharing the category "East" — a pie draws both, so the chart shows two parts with the same name',
+    )
+    expect(warning?.message).not.toMatch(/dropped|only the first/)
     // public surface (CLI output/error messages) is English — never leak
     // ir-quality.ts's own internal Chinese wording.
     expect(warning?.message).not.toMatch(/[一-鿿]/)
+  })
+
+  it("keeps the first-wins wording for the types that really do fold a category", () => {
+    // Bar, line and area read the folded model, so a repeat there costs the
+    // author a number — and the schema refuses it, which is why this goes
+    // through `describeQualityIssue` directly: the message is unreachable
+    // via `validateIr` now, and it is still the right words for a caller
+    // running quality checks on IR it assembled in memory.
+    const message = __describeQualityIssue({
+      slide: 0,
+      severity: "warn",
+      code: "chart_duplicate_category",
+      message: "",
+      chartDuplicateCategory: { seriesName: "Revenue", x: "East", chartType: "bar" },
+    })
+    expect(message).toBe(
+      'chart series "Revenue" has a duplicate category "East" — only the first occurrence is kept, later ones are dropped',
+    )
   })
 
   it("does NOT fire when every series has distinct category values", () => {
@@ -1202,9 +1230,13 @@ describe("describeQualityIssue: chart_duplicate_category English message (R1 evi
       ],
     })
     expect(v.ok).toBe(true)
-    const warning = v.warnings?.find((w) => w.message.includes("duplicate category"))
+    const warning = v.warnings?.find((w) => w.message.includes("sharing the category"))
     expect(warning).toBeTruthy()
     expect(warning?.message).toMatch(/Enterprise/)
+    // A pie draws both slices, so the advisory describes the ambiguity and
+    // never claims a drop.
+    expect(warning?.message).toMatch(/a pie draws both/)
+    expect(warning?.message).not.toMatch(/dropped|only the first/)
   })
 })
 

@@ -56,7 +56,7 @@ const WHOLE_SHARE_TYPES = ["pie", "donut", "funnel"] as const
  * `chart_duplicate_category` warning, which is what a repeated label means
  * there: possibly a typo, never a dropped value.
  */
-const CATEGORY_FOLDING_TYPES = ["bar", "line", "area"] as const
+export const CATEGORY_FOLDING_TYPES = ["bar", "line", "area"] as const
 
 export const schema = z
   .object({
