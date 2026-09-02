@@ -569,6 +569,31 @@ export function layoutContentFit(
   // 保留块带上剩余可用高（box.h < 测量高 = 截断预算，2026-07-11 存量
   // deck 5 项长卡画出页外实锤）：可分割块（row_cards）据此块内截断并
   // 自画「+N …」，不感知 box.h 的块行为不变（照旧溢出渲染）。
+  //
+  // **This hands out a budget, not a box, and it is the one place that does.**
+  // `box.h` here is deliberately below `measureComponent` — that is the whole
+  // point of the branch — so a component reading it is being told "this is all
+  // there is", not "this is what you were promised". Three answers are legal
+  // and none of them is silent:
+  //
+  //  - **Truncate into it and say so.** `row_cards` splits at the budget and
+  //    draws its own "+N …". The loss is on the page and in the audit.
+  //  - **Draw at natural size.** A component that never reads `box.h` renders
+  //    as it always did. `cycle` and `numbered_cards` reach this path on 24
+  //    corpus pages and their ink still lands inside the content rect — which
+  //    is now proven rather than assumed, by the geometry gate
+  //    (`evals/gallery/ink-containment.ts`), not by this comment.
+  //  - **Decline and declare.** A component that treats `box.h` as a contract
+  //    rather than a budget paints nothing and marks
+  //    `data-dropped-silent`, which stops the export. `chart` is the one that
+  //    does this today (`components/chart.tsx`), and a chart is exactly the
+  //    kind of block for which a squashed rendering would be a wrong page
+  //    rather than a short one.
+  //
+  // What this path must never do is leave a loss nobody records. It does not:
+  // in every branch above the *block* owns the declaration, so adding one here
+  // would double-count the chart's own marker and would fire on the 24 pages
+  // where nothing is lost at all.
   if (kept.length === 0 && placed.length > 0) {
     const first = placed[0]
     const avail = rect.y + rect.h - first.box.y
