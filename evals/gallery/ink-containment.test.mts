@@ -25,7 +25,6 @@ import { buildMatrix } from "./matrix"
 import { renderMatrix } from "./render"
 import { chart } from "@/components/chart"
 import { MIN_CARTESIAN_BOX_W } from "@/components/cartesian-axis"
-import { MIN_DIRECT_LABEL_BOX_W } from "@/components/chart-svg"
 import { renderSvgMarkup } from "@/render/serialize"
 import { Fragment, createElement } from "react"
 import { parseEmphasis, renderEmphasisTspans, stripEmphasis } from "@/render/emphasis"
@@ -473,44 +472,102 @@ describe("an unbounded axis label cannot push the plot out of its box", () => {
     }
   })
 
-  it("draws a line with every series named, or declines — never a line with none", () => {
-    // This used to assert "there is still a plot mark at
-    // `MIN_CARTESIAN_BOX_W`", which is a fact about the implementation, not
-    // the contract. At that width the chart drew six marks, zero value
-    // labels and `data-dropped-silent="4"`: a nameless line on the page and
-    // a refused export. `MIN_DIRECT_LABEL_BOX_W` is the width at which the
-    // gutters can host a label at all, and it is the width the chart now
-    // declines below.
-    const component = {
-      type: "chart" as const,
-      chart_type: "line" as const,
-      axes: { x_title: "月", y_title: "数" },
-      series: [
-        { name: "Alpha", data: [{ x: "A", y: 1 }, { x: "B", y: 2 }] },
-        { name: "Beta", data: [{ x: "A", y: 3 }, { x: "B", y: 4 }] },
-      ],
-    }
-    const render = (w: number) => {
+  /**
+   * The contract for a directly-labelled chart, at the exact width it starts
+   * painting: **every series is named, or nothing is.**
+   *
+   * This used to assert "there is still a plot mark at
+   * `MIN_CARTESIAN_BOX_W`", which is a fact about the implementation. Then it
+   * asserted `labels > 0` at a constant width, which is a weaker fact about
+   * a different implementation — at that width the chart painted `"2"`,
+   * `"1"`, `"4"`, `"3"`, four numbers with no series name anywhere and no
+   * silent marker, and the export passed. The threshold is not a constant at
+   * all: it moves with the y-tick gutter, so the test finds it instead of
+   * naming it.
+   */
+  const firstPaintedWidth = (component: Parameters<typeof chart.render>[0]) => {
+    for (let w = 40; w <= 900; w++) {
       const h = chart.measure(component, w, ctx)
       const markup = renderSvgMarkup(chart.render(component, { x: 0, y: 0, w, h }, ctx))
-      return {
-        marks: (markup.match(/data-plot-mark/g) ?? []).length,
-        labels: (markup.match(/data-value-label/g) ?? []).length,
-        declared: /data-dropped-silent/.test(markup),
-        findings: collectInkFindings(boxed(markup, w, h)),
+      if ((markup.match(/data-plot-mark/g) ?? []).length > 0) return w
+    }
+    throw new Error("never painted below 900px")
+  }
+
+  const shot = (component: Parameters<typeof chart.render>[0], w: number) => {
+    const h = chart.measure(component, w, ctx)
+    const markup = renderSvgMarkup(chart.render(component, { x: 0, y: 0, w, h }, ctx))
+    return {
+      markup,
+      marks: (markup.match(/data-plot-mark/g) ?? []).length,
+      labels: [...markup.matchAll(/data-value-label[^>]*>([^<]*)</g)].map((m) => m[1]!),
+      declared: /data-dropped-silent/.test(markup),
+      findings: collectInkFindings(boxed(markup, w, h)),
+    }
+  }
+
+  const namedLine = (ys: readonly number[]) => ({
+    type: "chart" as const,
+    chart_type: "line" as const,
+    axes: { x_title: "月", y_title: "数" },
+    series: [
+      { name: "Alpha", data: [{ x: "A", y: ys[0]! }, { x: "B", y: ys[1]! }] },
+      { name: "Beta", data: [{ x: "A", y: ys[2]! }, { x: "B", y: ys[3]! }] },
+    ],
+  })
+
+  for (const [label, ys] of [
+    ["short ticks", [1, 2, 3, 4]],
+    // The y-tick gutter is capped at a share of the box, so nine-digit ticks
+    // leave a different plot at the same width. At 200px this painted six
+    // marks, zero labels and `data-dropped-silent="4"` — drawing and
+    // declaring at once.
+    ["nine-digit ticks", [100_000_000, 200_000_000, 300_000_000, 400_000_000]],
+  ] as const) {
+    it(`${label}: paints with every series named, or declines`, () => {
+      const component = namedLine(ys)
+      const w = firstPaintedWidth(component)
+
+      const tooNarrow = shot(component, w - 1)
+      expect(tooNarrow.marks).toBe(0)
+      expect(tooNarrow.labels).toEqual([])
+      expect(tooNarrow.declared).toBe(true)
+      expect(tooNarrow.findings).toEqual([])
+
+      const wideEnough = shot(component, w)
+      expect(wideEnough.marks).toBeGreaterThan(0)
+      expect(wideEnough.declared).toBe(false)
+      expect(wideEnough.findings).toEqual([])
+      // Every series carries its own name at the boundary — a real prefix of
+      // it, with its end value still attached — not a bare number. A name
+      // cut short says so with `data-truncated`; a name cut to nothing is
+      // the silent case, and that is what the chart declines instead of
+      // painting.
+      const ends = [ys[1], ys[3]]
+      for (const [i, name] of ["Alpha", "Beta"].entries()) {
+        const value = String(ends[i])
+        const own = wideEnough.labels.find((text) => text.endsWith(` ${value}`))
+        expect(own, `${name} ${value} in ${JSON.stringify(wideEnough.labels)}`).toBeDefined()
+        const printedName = own!.slice(0, own!.length - value.length - 1)
+        expect(printedName.length).toBeGreaterThan(0)
+        expect(name.startsWith(printedName), `${printedName} is a prefix of ${name}`).toBe(true)
+        if (printedName !== name) {
+          expect(wideEnough.markup).toContain('data-truncated="1"')
+        }
+      }
+    })
+  }
+
+  it("never paints a line and declares a silent drop at the same time", () => {
+    // Sweep the whole range the two contracts meet in: at no width may a
+    // chart both put a mark on the page and say it lost something silently.
+    for (const ys of [[1, 2, 3, 4], [100_000_000, 200_000_000, 300_000_000, 400_000_000]] as const) {
+      const component = namedLine(ys)
+      for (let w = 40; w <= 420; w += 2) {
+        const s = shot(component, w)
+        expect(s.marks > 0 && s.declared, `w=${w} ys=${ys[0]}`).toBe(false)
       }
     }
-    const tooNarrow = render(MIN_DIRECT_LABEL_BOX_W - 1)
-    expect(tooNarrow.marks).toBe(0)
-    expect(tooNarrow.labels).toBe(0)
-    expect(tooNarrow.declared).toBe(true)
-    expect(tooNarrow.findings).toEqual([])
-    // At the threshold there is a line, and every series on it is named.
-    const wideEnough = render(MIN_DIRECT_LABEL_BOX_W)
-    expect(wideEnough.marks).toBeGreaterThan(0)
-    expect(wideEnough.labels).toBeGreaterThan(0)
-    expect(wideEnough.declared).toBe(false)
-    expect(wideEnough.findings).toEqual([])
   })
 
   it("still declines a bar chart below the width at which a plot exists", () => {

@@ -14,8 +14,6 @@ import {
   TICK_MIN_FONT_SIZE,
   TICK_TO_AXIS_GAP,
   X_TICK_BAND,
-  PLOT_RIGHT_PAD,
-  Y_TICK_MAX_W_RATIO,
   type DomainPadMode,
 } from "./cartesian-axis"
 import { buildChartModel, zeroAxisRatio, type ChartDomain } from "./chart-model"
@@ -501,45 +499,73 @@ export function splitSeriesGutters(
   // The text budgets travel with the widths rather than being subtracted
   // back out of them. `(grant + overhead) - overhead` is not `grant` in
   // floating point, and a budget one ulp under its own request is a label
-  // that does not fit the room reserved for it: a full-width line chart's
-  // start value asked for 50.086400000000005 and was offered 50.0864, so it
-  // was declared a drop and the export was refused. This is the same
-  // re-derivation `layoutRadialSlices` already refuses to make for the pie's
-  // own label budget, for the same reason.
+  // that does not fit the room reserved for it: the start value `-9000` was
+  // measured at exactly the width it was granted, came back a bit short, and
+  // was declared a drop that refused the export of a full-width chart. This
+  // is the same re-derivation `layoutRadialSlices` already refuses to do for
+  // the pie's label budget, for the same reason.
   return { leftW, rightW, dataW: plotW - leftW - rightW, leftBudget, rightBudget }
 }
 
 /**
- * Narrowest box a line or area chart can be drawn in and still name a series.
+ * Whether a line or area chart of this width can name every series it draws.
  *
- * `MIN_CARTESIAN_BOX_W` answers a different question — the width below which
- * there is no plot at all — and a chart between the two widths painted a line
- * whose every series name silently vanished: at 48px the plot is 25px, the
- * grantable share is 11.25px, the two leaders alone cost 32px, so both
- * gutters collapsed to zero, every label fitted to the empty string and the
- * chart declared `data-dropped-silent="4"`. The line was drawn and the
- * export refused it. Painting the chart was the wrong half of the contract:
- * a face has to get a chart with labels, or a refusal it can act on.
+ * A directly-labelled chart has no legend: the only place a series is named
+ * is the label at the end of its own line. So the box contract for these two
+ * types is not "is there a plot" (that is `MIN_CARTESIAN_BOX_W`, and bar and
+ * scatter still stop there) but "can every series be named" — draw with the
+ * names, or decline and let the face hear about it.
  *
- * Derived, in four steps, from the gutter arithmetic itself:
+ * This used to be a constant, `MIN_DIRECT_LABEL_BOX_W = 178`, derived from
+ * the gutter arithmetic against a *typical* y-tick gutter. The gutter is not
+ * typical: it grows with the tick labels and is capped at a share of the box,
+ * so the same 178px box holds a full label column for `0..4` and none at all
+ * for values in the hundreds of millions. At 178 with short ticks the chart
+ * painted `"2","1","4","3"` — four numbers, no series name anywhere, no
+ * silent marker, and an export that passed. With big ticks it painted six
+ * marks, zero labels and a silent drop: drawing and declaring at once, the
+ * exact shape the width floor existed to remove.
  *
- *  1. Each side that carries a label pays its leader in full, so a chart
- *     with both a start value and an end label owes `2 ×
- *     SERIES_GUTTER_OVERHEAD` before a single glyph is placed.
- *  2. Each side then needs room for at least one glyph, so the text budget
- *     has to reach `2 × MIN_GUTTER_LABEL_W` — the max-min split hands each
- *     side at least its own share of that.
- *  3. `splitSeriesGutters` only ever grants `1 - SERIES_PLOT_MIN_W_RATIO` of
- *     the plot, which fixes the plot width those two costs imply.
- *  4. The plot is what is left of the box after the y-tick gutter (capped at
- *     `Y_TICK_MAX_W_RATIO` of the box) and the right pad.
+ * So the question is asked of the real geometry instead, with the same calls
+ * the renderer itself will make: the axis this data produces, the gutter that
+ * axis takes, the split those gutters get, and the fit each label would come
+ * back with. It is answered before anything is painted.
  */
-const MIN_GUTTER_LABEL_W = measureTextUnits("0", { bold: true }) * DIRECT_LABEL_FONT_SIZE
-const MIN_GUTTER_PLOT_W =
-  (2 * SERIES_GUTTER_OVERHEAD + 2 * MIN_GUTTER_LABEL_W) / (1 - SERIES_PLOT_MIN_W_RATIO)
-export const MIN_DIRECT_LABEL_BOX_W = Math.ceil(
-  (MIN_GUTTER_PLOT_W + PLOT_RIGHT_PAD) / (1 - Y_TICK_MAX_W_RATIO),
-)
+export function seriesGutterLabelsFit(
+  series: ChartSeries[],
+  w: number,
+  component?: ChartInput,
+  fontFamily?: string,
+): boolean {
+  const model = buildChartModel(series)
+  const meta = cartesianMeta(component)
+  const values = keptValues(model.series)
+  const yAxis = buildNumericAxis(values, valueAxisMode(values), meta.yUnit)
+  // Only `plotW` matters here, and it does not depend on the height or the
+  // axis-title band — see `layoutCartesianPlot`.
+  const geom = layoutCartesianPlot({ x0: 0, y0: 0, w, h: 0, yTickLabels: yAxis.labels, titleH: 0, fontFamily })
+  const leftTexts = firstValueTexts(model.series)
+  const rightTexts = endLabelTexts(model.series)
+  const gutters = splitSeriesGutters(
+    geom.plotW,
+    gutterTextRequest(leftTexts, fontFamily),
+    gutterTextRequest(rightTexts, fontFamily),
+  )
+  const avail = (side: "left" | "right") => (side === "left" ? gutters.leftBudget : gutters.rightBudget)
+
+  // A start value is its own protected part: it prints whole or not at all.
+  for (const text of leftTexts) {
+    if (fitProtectedLabel(text, text, avail("left"), fontFamily).text === "") return false
+  }
+  // And every series' end label has to carry at least part of its own name.
+  for (const s of model.series) {
+    const { last } = endsOf(s.values)
+    if (last == null) continue
+    const fit = fitProtectedLabel(seriesEndLabelText(s.name, last), String(last), avail("right"), fontFamily)
+    if (fit.text === "" || !fit.named) return false
+  }
+  return true
+}
 
 /** One label wanting a place in a series gutter. */
 interface GutterLabel {

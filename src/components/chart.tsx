@@ -9,8 +9,8 @@ import { labelLinePitch } from "./label-collision"
 import {
   CHART_BODY_H,
   DIRECT_LABEL_FONT_SIZE,
-  MIN_DIRECT_LABEL_BOX_W,
   RADIAL_MIN_BODY_H,
+  seriesGutterLabelsFit,
 } from "./chart-svg"
 import { buildChartModel } from "./chart-model"
 import type { RenderDef, SvgComponent } from "./types"
@@ -469,14 +469,17 @@ export const chart: SvgComponent<ChartComponent> = {
     if (axesApplicable(component) && box.w < MIN_CARTESIAN_BOX_W) {
       return <g data-dropped={1} data-dropped-silent={1} />
     }
-    // A directly-labelled chart has a second, wider floor. Between the two
-    // widths a line was painted whose every series name silently vanished:
-    // the gutters collapsed, every label fitted to the empty string, and the
-    // chart declared a silent drop that refused the export while still
-    // drawing the line. Draw with labels, or decline — not both.
-    // `MIN_DIRECT_LABEL_BOX_W` states where that boundary is and how it is
-    // derived from the gutter arithmetic.
-    if (DIRECT_LABELLED.has(component.chart_type) && box.w < MIN_DIRECT_LABEL_BOX_W) {
+    // A directly-labelled chart has a second contract on this axis, and it
+    // is not a width: line and area carry no legend, so the only place a
+    // series is named is the end of its own line. A box that cannot host
+    // those labels gets a chart with no names on it — which the old width
+    // floor still allowed, because the y-tick gutter it was derived against
+    // is not a constant either. `seriesGutterLabelsFit` asks the real
+    // geometry the question, with the same calls the renderer will make.
+    if (
+      DIRECT_LABELLED.has(component.chart_type) &&
+      !seriesGutterLabelsFit(component.series, box.w, component, ctx.fonts.body)
+    ) {
       return <g data-dropped={1} data-dropped-silent={1} />
     }
 
