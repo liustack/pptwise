@@ -25,6 +25,8 @@ import { buildMatrix } from "./matrix"
 import { renderMatrix } from "./render"
 import { chart } from "@/components/chart"
 import { renderSvgMarkup } from "@/render/serialize"
+import { Fragment, createElement } from "react"
+import { parseEmphasis, renderEmphasisTspans, stripEmphasis } from "@/render/emphasis"
 import type { ComponentCtx } from "@/components/types"
 import {
   ROOT_TEXT_STYLE,
@@ -100,6 +102,40 @@ describe("the ink-box helper measures what the page actually paints", () => {
     const el = parseFirst(`<svg xmlns="http://www.w3.org/2000/svg"><text x="0" y="50" font-size="32">A</text></svg>`)
     expect(inheritTextStyle(el, { ...ROOT_TEXT_STYLE, fontSize: 10 }).fontSize).toBe(32)
     expect(inheritTextStyle(el, { ...ROOT_TEXT_STYLE, fontFamily: "Georgia" }).fontFamily).toBe("Georgia")
+  })
+})
+
+describe("consecutive tspans are one anchored chunk, the way SVG lays them out", () => {
+  it("sums two unpositioned runs under an end anchor instead of stacking them", () => {
+    // Anchoring each <tspan> on its own put both runs at the same right edge,
+    // on top of each other, and reported the widest single run rather than
+    // their sum. Under text-anchor="end" that hid a real 37px left overflow.
+    const chunked = `<svg xmlns="http://www.w3.org/2000/svg"><g data-audit-rect="0,0,100,100"><g data-audit-box="0,0,100"><text x="95" y="50" font-size="10" text-anchor="end"><tspan>AAAAAAAAAA</tspan><tspan>AAAAAAAAAA</tspan></text></g></g></svg>`
+    const findings = collectInkFindings(chunked)
+    expect(findings.map((f) => f.side)).toEqual(["left"])
+    expect(findings[0]!.px).toBeGreaterThan(30)
+    // The same twenty glyphs as one text node must measure the same.
+    const flat = `<svg xmlns="http://www.w3.org/2000/svg"><g data-audit-rect="0,0,100,100"><g data-audit-box="0,0,100"><text x="95" y="50" font-size="10" text-anchor="end">${"A".repeat(20)}</text></g></g></svg>`
+    expect(findings[0]!.px).toBeCloseTo(collectInkFindings(flat)[0]!.px, 5)
+  })
+
+  it("measures a real emphasis line the same as its own unmarked text", () => {
+    // `renderEmphasisTspans` is the live producer of consecutive tspans with
+    // no position of their own — one per **marked** run.
+    const segments = parseEmphasis("总量增长 **四成**，续约率同步回升到九成")
+    const tspans = renderEmphasisTspans(segments, { accent: "#B45309", baseFill: "#111827" })
+    const markup = (inner: string) =>
+      `<svg xmlns="http://www.w3.org/2000/svg"><g data-audit-rect="0,0,200,100"><g data-audit-box="0,0,200"><text x="195" y="50" font-size="20" text-anchor="end">${inner}</text></g></g></svg>`
+    const marked = collectInkFindings(markup(renderSvgMarkup(createElement(Fragment, null, tspans))))
+    const plain = collectInkFindings(markup(stripEmphasis("总量增长 **四成**，续约率同步回升到九成")))
+    expect(marked).toHaveLength(1)
+    expect(marked[0]!.side).toBe("left")
+    expect(marked[0]!.px).toBeCloseTo(plain[0]!.px, 5)
+  })
+
+  it("keeps a positioned tspan starting a chunk of its own", () => {
+    const markup = `<svg xmlns="http://www.w3.org/2000/svg"><g data-audit-rect="0,0,100,100"><g data-audit-box="0,0,100"><text x="10" y="50" font-size="10">ok<tspan x="200">OUT</tspan></text></g></g></svg>`
+    expect(collectInkFindings(markup).map((f) => f.side)).toEqual(["right"])
   })
 })
 

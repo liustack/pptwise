@@ -55,6 +55,8 @@ import {
   boxesIntersect,
   multiplyMatrices,
   parseSvgTransform,
+  TEXT_INK_ASCENT,
+  TEXT_INK_DESCENT,
   textInkBox,
   transformBox,
   unionBoxes,
@@ -122,75 +124,124 @@ export function inheritTextStyle(el: Element, parent: TextStyle): TextStyle {
 }
 
 /**
- * One run of glyphs' ink box, letter-spacing included.
+ * The advance one run of glyphs adds to the line it sits on, its own tracking
+ * included.
  *
- * `letter-spacing` is an absolute px advance added between glyphs, so it
+ * `letter-spacing` is an absolute px advance added after each glyph, so it
  * neither scales with the font size nor appears in `measureTextUnits`, which
  * reports advance widths alone. `fitSvgLine` budgets for it when it fits a
  * line; a scanner that does not is measuring a narrower string than the one
  * on the page.
  */
-export function runInkBox(content: string, x: number, y: number, style: TextStyle): DepthBox {
-  const box = textInkBox({
+export function runAdvance(content: string, style: TextStyle): number {
+  if (content === "") return 0
+  const glyphs = textInkBox({
     content,
-    x,
-    y,
+    x: 0,
+    y: 0,
     fontSize: style.fontSize,
     fontFamily: style.fontFamily,
     fontWeight: style.fontWeight,
-    textAnchor: style.textAnchor,
-  })
-  const spacing = Math.max(0, Array.from(content).length - 1) * style.letterSpacing
-  if (spacing === 0) return box
-  const widened = box.w + spacing
-  const shift = style.textAnchor === "end" ? -spacing : style.textAnchor === "middle" ? -spacing / 2 : 0
-  return { x: box.x + shift, y: box.y, w: widened, h: box.h }
+    textAnchor: "start",
+  }).w
+  return glyphs + Array.from(content).length * style.letterSpacing
+}
+
+/** One stretch of glyphs sharing a style, in document order. */
+interface TextSegment {
+  readonly text: string
+  readonly style: TextStyle
+  /** Set only when the `<tspan>` that owns this run declared its own start. */
+  readonly x?: number
+  readonly y?: number
+}
+
+/** Flatten a `<text>` into its runs, keeping document order and every space. */
+function collectSegments(node: Element, style: TextStyle, out: TextSegment[]): void {
+  for (const child of Array.from(node.childNodes)) {
+    if (child.nodeType === 3) {
+      const text = child.textContent ?? ""
+      if (text !== "") out.push({ text, style })
+      continue
+    }
+    if (child.nodeType !== 1) continue
+    const el = child as Element
+    if (el.tagName.toLowerCase() !== "tspan") continue
+    const own = inheritTextStyle(el, style)
+    const rawX = el.getAttribute("x")
+    const rawY = el.getAttribute("y")
+    const x = rawX != null && Number.isFinite(Number(rawX)) ? Number(rawX) : undefined
+    const y = rawY != null && Number.isFinite(Number(rawY)) ? Number(rawY) : undefined
+    const before = out.length
+    collectSegments(el, own, out)
+    if ((x !== undefined || y !== undefined) && out.length > before) {
+      out[before] = { ...out[before]!, x, y }
+    }
+  }
 }
 
 /**
- * Every ink box a `<text>` paints, one per run.
+ * Every ink box a `<text>` paints, one per chunk.
  *
- * A `<tspan>` carrying its own `x`/`y` starts a new run wherever it says —
- * flattening the element to one string at the parent's `x` puts a run that
- * begins at x=200 inside a box that ends at 100 and calls it contained.
- * Runs without their own `x` continue from where the previous one ended,
- * which is what advance-width layout does.
+ * A **chunk** is what SVG lays out and anchors as a unit: consecutive runs
+ * with no start of their own. `text-anchor` applies once, to the chunk's whole
+ * advance — measuring each `<tspan>` as its own anchored box puts every run
+ * of an end-anchored line at the same right edge, stacked on top of each
+ * other, and reports the widest single run instead of their sum. That is not
+ * a hand-written shape: `renderEmphasisTspans` emits exactly it, and
+ * `svg2pptx/text.ts` already treats those nodes as one segment, spaces on the
+ * tspan boundaries included. Nothing is trimmed inside a chunk for the same
+ * reason — a space between two runs is advance the page pays for.
  *
- * This is not a text engine: no bidi, no `dx`/`dy` lists, no `textLength`.
- * None of those appear in this renderer's output, and every construction that
- * does — a positioned tspan, an inherited family, letter-spacing — is
- * accounted for.
+ * A `<tspan>` carrying its own `x`/`y` starts a new chunk wherever it says.
+ *
+ * This is not a text engine: no bidi, no `dx`/`dy` lists, no `textLength`,
+ * and a chunk that moves only in `y` resumes at the previous chunk's start
+ * rather than at its end. None of those appear in this renderer's output.
  */
 export function textInkBoxes(el: Element, inherited: TextStyle): DepthBox[] {
-  const boxes: DepthBox[] = []
-  const walk = (node: Element, style: TextStyle, cursor: { x: number; y: number }): void => {
-    for (const child of Array.from(node.childNodes)) {
-      if (child.nodeType === 3) {
-        const content = (child.textContent ?? "").trim()
-        if (content === "") continue
-        const box = runInkBox(content, cursor.x, cursor.y, style)
-        boxes.push(box)
-        // Advance by the run's own width, anchored runs included: a middle- or
-        // end-anchored run still consumes its width along the line.
-        cursor.x = (style.textAnchor === "start" ? box.x : box.x) + box.w
-        continue
-      }
-      if (child.nodeType !== 1) continue
-      const childEl = child as Element
-      if (childEl.tagName.toLowerCase() !== "tspan") continue
-      const childStyle = inheritTextStyle(childEl, style)
-      const ownX = childEl.getAttribute("x")
-      const ownY = childEl.getAttribute("y")
-      const childCursor = {
-        x: ownX != null && Number.isFinite(Number(ownX)) ? Number(ownX) : cursor.x,
-        y: ownY != null && Number.isFinite(Number(ownY)) ? Number(ownY) : cursor.y,
-      }
-      walk(childEl, childStyle, childCursor)
-      cursor.x = childCursor.x
-    }
-  }
   const style = inheritTextStyle(el, inherited)
-  walk(el, style, { x: num(el, "x"), y: num(el, "y") })
+  const segments: TextSegment[] = []
+  collectSegments(el, style, segments)
+  if (segments.length === 0) return []
+
+  const rootX = num(el, "x")
+  const rootY = num(el, "y")
+  const chunks: { segments: TextSegment[]; x: number; y: number }[] = []
+  for (const segment of segments) {
+    const previous = chunks[chunks.length - 1]
+    if (!previous || segment.x !== undefined || segment.y !== undefined) {
+      chunks.push({
+        segments: [segment],
+        x: segment.x ?? previous?.x ?? rootX,
+        y: segment.y ?? previous?.y ?? rootY,
+      })
+      continue
+    }
+    previous.segments.push(segment)
+  }
+
+  const boxes: DepthBox[] = []
+  for (const chunk of chunks) {
+    const content = chunk.segments.map((s) => s.text).join("")
+    if (content.trim() === "") continue
+    // Each glyph pays its own advance and its own tracking; the last glyph on
+    // the chunk keeps no trailing gap.
+    const last = chunk.segments[chunk.segments.length - 1]!
+    const width = Math.max(
+      0,
+      chunk.segments.reduce((sum, s) => sum + runAdvance(s.text, s.style), 0) - last.style.letterSpacing,
+    )
+    const anchor = chunk.segments[0]!.style.textAnchor
+    const fontSize = Math.max(...chunk.segments.map((s) => s.style.fontSize))
+    const x = anchor === "end" ? chunk.x - width : anchor === "middle" ? chunk.x - width / 2 : chunk.x
+    boxes.push({
+      x,
+      y: chunk.y - fontSize * TEXT_INK_ASCENT,
+      w: width,
+      h: fontSize * (TEXT_INK_ASCENT + TEXT_INK_DESCENT),
+    })
+  }
   return boxes
 }
 
