@@ -1575,9 +1575,23 @@ function radialSliceLabels(
     pitch,
     priority: slice.value,
   })
+  // A fit that came back with nothing is a drop, not a label, and it never
+  // reaches the column.
+  //
+  // `fitProtectedLabel` returns an empty string for the one case it refuses
+  // to fake: a slice whose own value will not fit whole, where a shortened
+  // number would be a wrong number. `renderSeriesGutterLabels` has always
+  // read that as a drop — it filters the empty ones out before stacking and
+  // counts them into its own declared loss. The radial path sent them into
+  // the column anyway, where each took a slot away from a slice that had
+  // something to say and then painted `<text data-value-label="1"
+  // data-truncated="1"></text>`: an empty node, carrying a marker the export
+  // gate does not read, on a page whose wedge was still there and whose
+  // value was not. Three of those and `generatePptx` still shipped the file.
+  const painted = slices.filter((slice) => slice.fitted.text !== "")
   const placed = new Map(
     [true, false].flatMap((side) =>
-      stackLabelColumn(slices.filter((s) => s.right === side).map(columnSpec), bounds).map(
+      stackLabelColumn(painted.filter((s) => s.right === side).map(columnSpec), bounds).map(
         (label) => [label.id, label] as const,
       ),
     ),
@@ -1587,7 +1601,8 @@ function radialSliceLabels(
   // names in a pile), but it used to be an invisible one: the wedge stayed,
   // the author's name for it left, and nothing on the page or in the audit
   // said so. The count is declared here, silent because the page itself
-  // cannot show it.
+  // cannot show it. A slice whose value would not fit is counted the same
+  // way — it is absent from `placed` entirely, so it lands in this count.
   const hidden = slices.filter((slice) => placed.get(String(slice.key))?.hidden ?? true).length
   return (
     <>
@@ -1598,18 +1613,17 @@ function radialSliceLabels(
         const elbowX = slice.right ? slice.textX - PIE_LEADER_GAP : slice.textX + PIE_LEADER_GAP
         return (
           <g key={`label-${slice.key}`}>
-            {/* No leader without a label at the end of it: a fit that came
-                back with nothing keeps its own cut marker below, and a line
-                pointing at empty air is a defect a reader can see. */}
-            {slice.fitted.text !== "" && (
-              <polyline
-                points={`${slice.arcX},${slice.arcY} ${slice.stubX},${slice.stubY} ${elbowX},${label.y}`}
-                fill="none"
-                stroke={mutedColor}
-                strokeWidth={1}
-                strokeOpacity={0.55}
-              />
-            )}
+            {/* No leader without a label at the end of it — a line pointing
+                at empty air is a defect a reader can see. Nothing reaching
+                here has an empty fit any more (those are dropped above), so
+                this is a leader for a label that really is painted. */}
+            <polyline
+              points={`${slice.arcX},${slice.arcY} ${slice.stubX},${slice.stubY} ${elbowX},${label.y}`}
+              fill="none"
+              stroke={mutedColor}
+              strokeWidth={1}
+              strokeOpacity={0.55}
+            />
             <text
               data-value-label="1"
               data-truncated={slice.fitted.truncated ? "1" : undefined}

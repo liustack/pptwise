@@ -1580,3 +1580,59 @@ describe("a radial chart's extra height is whitespace, not a bigger disc", () =>
     })
   }
 })
+
+/**
+ * A radial slice whose own value will not fit whole is a declared drop, the
+ * same answer the line and area gutters give. It used to paint an empty
+ * `<text data-value-label="1" data-truncated="1">` instead: an empty node
+ * carrying a marker the export gate does not read, on a page whose wedge was
+ * still there and whose value was not.
+ */
+describe("a radial slice that cannot print its value declares the drop", () => {
+  const slices = (ys: readonly number[]) => ({
+    type: "chart" as const,
+    series: [{ name: "S", data: ys.map((y, i) => ({ x: "ABC"[i]!, y })) }],
+  })
+
+  // The review's own geometries, at the component's measured minimum.
+  const CASES: ReadonlyArray<readonly [string, readonly number[], number]> = [
+    ["short values in an 80px box", [40, 35, 25], 80],
+    ["four-digit values at 200px", [4000, 3500, 2500], 200],
+    ["seven-digit values at 260px", [1_000_000, 2_000_000, 3_000_000], 260],
+    ["nine-digit values at 80px", [123456789, 987654321, 111111111], 80],
+    ["nine-digit values at 260px", [123456789, 987654321, 111111111], 260],
+  ]
+
+  for (const chart_type of ["pie", "donut"] as const) {
+    for (const [label, ys, w] of CASES) {
+      it(`${chart_type}: ${label} — nothing empty on the page, every loss counted`, () => {
+        const component = { ...slices(ys), chart_type }
+        const { container } = svg(
+          chart.render(component, { x: 0, y: 0, w, h: chart.measure(component, w, ctx) }, ctx),
+        )
+        const labels = [...container.querySelectorAll("text[data-value-label]")]
+        // No empty label node ever reaches the page.
+        for (const el of labels) expect(el.textContent).not.toBe("")
+        // Every slice that lost its label is counted where the export gate
+        // reads it.
+        const marker = container.querySelector("[data-dropped-silent]")
+        const dropped = marker ? Number(marker.getAttribute("data-dropped-silent")) : 0
+        expect(labels.length + dropped).toBe(ys.length)
+        expect(dropped).toBeGreaterThan(0)
+        // And no leader is left pointing at air.
+        expect(container.querySelectorAll("polyline")).toHaveLength(labels.length)
+      })
+    }
+
+    it(`${chart_type}: keeps the slices that fit and declares only the one that does not`, () => {
+      const component = { ...slices([1, 2, 123456789]), chart_type }
+      const { container } = svg(
+        chart.render(component, { x: 0, y: 0, w: 260, h: chart.measure(component, 260, ctx) }, ctx),
+      )
+      const texts = [...container.querySelectorAll("text[data-value-label]")].map((el) => el.textContent)
+      expect(texts).toEqual(["A 1", "B 2"])
+      expect(container.querySelector("[data-dropped-silent]")!.getAttribute("data-dropped-silent")).toBe("1")
+      expect(container.querySelectorAll("polyline")).toHaveLength(2)
+    })
+  }
+})
