@@ -319,14 +319,21 @@ export const chart: SvgComponent<ChartComponent> = {
     // Under-allocation is a layout defect, not something to paint through.
     // Nothing paints and the loss is declared, the same answer
     // `WholeShareDeclined` (chart-svg.tsx) already gives a chart handed data
-    // it cannot draw: a `data-dropped` mark that `checkContentDropGate`
-    // refuses to export and `deck-audit` reports. A thrown error was the
-    // other candidate and is wrong here — a face's content band is a fixed
-    // constant on several of them, so an under-allocated box stays reachable
-    // by construction, and a page that renders with one declared gap beats a
-    // deck that cannot render at all.
+    // it cannot draw. A thrown error was the other candidate and is wrong
+    // here — a face's content band is a fixed constant on several of them,
+    // so an under-allocated box stays reachable by construction, and a page
+    // that renders with one declared gap beats a deck that cannot render at
+    // all.
+    //
+    // `data-dropped-silent`, not `data-dropped` alone: `slideToRender`
+    // (render-slide.tsx) counts *only* the silent attribute, and that count
+    // is what `checkContentDropGate` refuses the export on. A whole chart
+    // vanishing is the most silent loss this component can suffer — nothing
+    // is left on the page to hint at it — so it belongs in exactly that
+    // count. Marked with the plain attribute alone, the deck shipped a page
+    // with no chart on it and no error anywhere.
     if ((box.h ?? minimum) + 0.5 < minimum) {
-      return <g data-dropped={1} />
+      return <g data-dropped={1} data-dropped-silent={1} />
     }
 
     // P1 variety wave, task 2 (review fix round, Major finding): rotation
