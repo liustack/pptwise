@@ -25,6 +25,7 @@ import { buildMatrix } from "./matrix"
 import { renderMatrix } from "./render"
 import { chart } from "@/components/chart"
 import { MIN_CARTESIAN_BOX_W } from "@/components/cartesian-axis"
+import { MIN_DIRECT_LABEL_BOX_W } from "@/components/chart-svg"
 import { renderSvgMarkup } from "@/render/serialize"
 import { Fragment, createElement } from "react"
 import { parseEmphasis, renderEmphasisTspans, stripEmphasis } from "@/render/emphasis"
@@ -337,11 +338,51 @@ describe("an unbounded axis label cannot push the plot out of its box", () => {
     }
   })
 
-  it("declines a box too narrow for any plot, and draws at the width just above it", () => {
+  it("draws a line with every series named, or declines — never a line with none", () => {
+    // This used to assert "there is still a plot mark at
+    // `MIN_CARTESIAN_BOX_W`", which is a fact about the implementation, not
+    // the contract. At that width the chart drew six marks, zero value
+    // labels and `data-dropped-silent="4"`: a nameless line on the page and
+    // a refused export. `MIN_DIRECT_LABEL_BOX_W` is the width at which the
+    // gutters can host a label at all, and it is the width the chart now
+    // declines below.
     const component = {
       type: "chart" as const,
       chart_type: "line" as const,
       axes: { x_title: "月", y_title: "数" },
+      series: [
+        { name: "Alpha", data: [{ x: "A", y: 1 }, { x: "B", y: 2 }] },
+        { name: "Beta", data: [{ x: "A", y: 3 }, { x: "B", y: 4 }] },
+      ],
+    }
+    const render = (w: number) => {
+      const h = chart.measure(component, w, ctx)
+      const markup = renderSvgMarkup(chart.render(component, { x: 0, y: 0, w, h }, ctx))
+      return {
+        marks: (markup.match(/data-plot-mark/g) ?? []).length,
+        labels: (markup.match(/data-value-label/g) ?? []).length,
+        declared: /data-dropped-silent/.test(markup),
+        findings: collectInkFindings(boxed(markup, w, h)),
+      }
+    }
+    const tooNarrow = render(MIN_DIRECT_LABEL_BOX_W - 1)
+    expect(tooNarrow.marks).toBe(0)
+    expect(tooNarrow.labels).toBe(0)
+    expect(tooNarrow.declared).toBe(true)
+    expect(tooNarrow.findings).toEqual([])
+    // At the threshold there is a line, and every series on it is named.
+    const wideEnough = render(MIN_DIRECT_LABEL_BOX_W)
+    expect(wideEnough.marks).toBeGreaterThan(0)
+    expect(wideEnough.labels).toBeGreaterThan(0)
+    expect(wideEnough.declared).toBe(false)
+    expect(wideEnough.findings).toEqual([])
+  })
+
+  it("still declines a bar chart below the width at which a plot exists", () => {
+    // Bar carries no gutters, so `MIN_CARTESIAN_BOX_W` is its whole floor.
+    const component = {
+      type: "chart" as const,
+      chart_type: "bar" as const,
       series: [{ name: "S", data: [{ x: "A", y: 1 }, { x: "B", y: 2 }] }],
     }
     const render = (w: number) => {
@@ -349,15 +390,10 @@ describe("an unbounded axis label cannot push the plot out of its box", () => {
       const markup = renderSvgMarkup(chart.render(component, { x: 0, y: 0, w, h }, ctx))
       return {
         marks: (markup.match(/data-plot-mark/g) ?? []).length,
-        declared: /data-dropped-silent/.test(markup),
         findings: collectInkFindings(boxed(markup, w, h)),
       }
     }
-    const tooNarrow = render(MIN_CARTESIAN_BOX_W - 1)
-    expect(tooNarrow.marks).toBe(0)
-    expect(tooNarrow.declared).toBe(true)
-    expect(tooNarrow.findings).toEqual([])
-    // One pixel wider there is a plot, and it stays inside the box.
+    expect(render(MIN_CARTESIAN_BOX_W - 1).marks).toBe(0)
     const wideEnough = render(MIN_CARTESIAN_BOX_W)
     expect(wideEnough.marks).toBeGreaterThan(0)
     expect(wideEnough.findings).toEqual([])

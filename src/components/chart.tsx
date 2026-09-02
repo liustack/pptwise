@@ -6,7 +6,7 @@ import { accessibleInk } from "../render/ink"
 import { axisTitlePairHeight } from "./axis-titles"
 import { MIN_CARTESIAN_BOX_W, PLOT_TOP_PAD, X_TICK_BAND } from "./cartesian-axis"
 import { labelLinePitch } from "./label-collision"
-import { DIRECT_LABEL_FONT_SIZE } from "./chart-svg"
+import { DIRECT_LABEL_FONT_SIZE, MIN_DIRECT_LABEL_BOX_W } from "./chart-svg"
 import { buildChartModel } from "./chart-model"
 import type { RenderDef, SvgComponent } from "./types"
 import {
@@ -445,6 +445,16 @@ export const chart: SvgComponent<ChartComponent> = {
     // anything and, before the gutter cap was made to bind, ink outside the
     // box.
     if (axesApplicable(component) && box.w < MIN_CARTESIAN_BOX_W) {
+      return <g data-dropped={1} data-dropped-silent={1} />
+    }
+    // A directly-labelled chart has a second, wider floor. Between the two
+    // widths a line was painted whose every series name silently vanished:
+    // the gutters collapsed, every label fitted to the empty string, and the
+    // chart declared a silent drop that refused the export while still
+    // drawing the line. Draw with labels, or decline — not both.
+    // `MIN_DIRECT_LABEL_BOX_W` states where that boundary is and how it is
+    // derived from the gutter arithmetic.
+    if (DIRECT_LABELLED.has(component.chart_type) && box.w < MIN_DIRECT_LABEL_BOX_W) {
       return <g data-dropped={1} data-dropped-silent={1} />
     }
 

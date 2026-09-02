@@ -14,6 +14,8 @@ import {
   TICK_MIN_FONT_SIZE,
   TICK_TO_AXIS_GAP,
   X_TICK_BAND,
+  PLOT_RIGHT_PAD,
+  Y_TICK_MAX_W_RATIO,
   type DomainPadMode,
 } from "./cartesian-axis"
 import { buildChartModel, zeroAxisRatio, type ChartDomain } from "./chart-model"
@@ -494,6 +496,38 @@ export function splitSeriesGutters(
   const rightW = rightText > 0 ? rightGrant + SERIES_GUTTER_OVERHEAD : 0
   return { leftW, rightW, dataW: plotW - leftW - rightW }
 }
+
+/**
+ * Narrowest box a line or area chart can be drawn in and still name a series.
+ *
+ * `MIN_CARTESIAN_BOX_W` answers a different question — the width below which
+ * there is no plot at all — and a chart between the two widths painted a line
+ * whose every series name silently vanished: at 48px the plot is 25px, the
+ * grantable share is 11.25px, the two leaders alone cost 32px, so both
+ * gutters collapsed to zero, every label fitted to the empty string and the
+ * chart declared `data-dropped-silent="4"`. The line was drawn and the
+ * export refused it. Painting the chart was the wrong half of the contract:
+ * a face has to get a chart with labels, or a refusal it can act on.
+ *
+ * Derived, in four steps, from the gutter arithmetic itself:
+ *
+ *  1. Each side that carries a label pays its leader in full, so a chart
+ *     with both a start value and an end label owes `2 ×
+ *     SERIES_GUTTER_OVERHEAD` before a single glyph is placed.
+ *  2. Each side then needs room for at least one glyph, so the text budget
+ *     has to reach `2 × MIN_GUTTER_LABEL_W` — the max-min split hands each
+ *     side at least its own share of that.
+ *  3. `splitSeriesGutters` only ever grants `1 - SERIES_PLOT_MIN_W_RATIO` of
+ *     the plot, which fixes the plot width those two costs imply.
+ *  4. The plot is what is left of the box after the y-tick gutter (capped at
+ *     `Y_TICK_MAX_W_RATIO` of the box) and the right pad.
+ */
+const MIN_GUTTER_LABEL_W = measureTextUnits("0", { bold: true }) * DIRECT_LABEL_FONT_SIZE
+const MIN_GUTTER_PLOT_W =
+  (2 * SERIES_GUTTER_OVERHEAD + 2 * MIN_GUTTER_LABEL_W) / (1 - SERIES_PLOT_MIN_W_RATIO)
+export const MIN_DIRECT_LABEL_BOX_W = Math.ceil(
+  (MIN_GUTTER_PLOT_W + PLOT_RIGHT_PAD) / (1 - Y_TICK_MAX_W_RATIO),
+)
 
 /** One label wanting a place in a series gutter. */
 interface GutterLabel {
