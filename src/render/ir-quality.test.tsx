@@ -1108,6 +1108,36 @@ describe("checkIrQuality", () => {
       x: "East",
       chartType: "bar",
     })
+    // A folding type really does lose the later value, so it keeps the
+    // first-wins wording.
+    expect(issue?.message).toContain("仅保留首次出现的取值")
+  })
+
+  it("tells a non-folding chart that both entries are drawn, not that one is dropped", () => {
+    // A pie reads its points in order and never folds them: two slices
+    // called East draw as two slices and both values print. The advisory
+    // used to tell every author that the later value was dropped, which
+    // named a loss the page had not taken.
+    const ir = makeIR([
+      {
+        type: "content",
+        kind: "points",
+        heading: "Share",
+        components: [
+          {
+            type: "chart",
+            chart_type: "pie",
+            series: [{ name: "Q1 Actuals", data: [{ x: "East", y: 10 }, { x: "East", y: 20 }] }],
+          },
+        ],
+      },
+    ])
+    const issue = checkIrQuality(ir).find((i) => i.code === "chart_duplicate_category")
+    expect(issue?.severity).toBe("warn")
+    expect(issue?.chartDuplicateCategory?.chartType).toBe("pie")
+    expect(issue?.message).toContain("两条都会画出来")
+    expect(issue?.message).not.toContain("仅保留首次出现的取值")
+    expect(issue?.message).not.toContain("其余将被忽略")
   })
 
   // ── chart_line_too_many_series ──
