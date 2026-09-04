@@ -17,7 +17,8 @@
 // buttons offer, what the tally counts, and what the export writes.
 
 import { describe, expect, it, beforeEach } from "vitest"
-import { buildGalleryHtml } from "./html"
+import { buildGalleryHtml, inlineRule } from "./html"
+import { effectiveVerdict } from "./verdict"
 import type { Manifest, ManifestPage } from "./render"
 
 const STORE_KEY = "pptwise-gallery-verdicts-v1"
@@ -70,7 +71,10 @@ function manifest(): Manifest {
 }
 
 /** Build the page, put its data blocks in the document, and run its script. */
-function openShell(stored: Record<string, unknown>): { run: () => void } {
+function openShell(
+  stored: Record<string, unknown>,
+  transform: (script: string) => string = (x) => x,
+): { run: () => void } {
   const m = manifest()
   const svgs = new Map(m.pages.map((p) => [p.id, SVG]))
   const html = buildGalleryHtml(m, svgs)
@@ -78,7 +82,7 @@ function openShell(stored: Record<string, unknown>): { run: () => void } {
   document.body.innerHTML = body.slice(body.indexOf(">") + 1)
   localStorage.setItem(STORE_KEY, JSON.stringify(stored))
   const scripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((s) => s[1]!)
-  const shell = scripts[scripts.length - 1]!
+  const shell = transform(scripts[scripts.length - 1]!)
   return { run: () => new Function(shell)() }
 }
 
@@ -182,5 +186,91 @@ describe("the review shell holds the same floor as the automated merge", () => {
     expect(loser.verdict).toBe("rework")
     expect(loser.findings).toContain("content-dropped")
     expect(payload.verdicts.find((v) => v.id === CLEAN)!.verdict).toBe("pass")
+  })
+})
+
+// The rule travels as source, and source can be renamed on the way.
+describe("the embedded rule is bound to the name the page calls", () => {
+  const embedded = (): string => {
+    const m = manifest()
+    const html = buildGalleryHtml(m, new Map(m.pages.map((p) => [p.id, SVG])))
+    const match = /const effectiveVerdict = \(([\s\S]*?)\);\n/.exec(html)
+    expect(match, "the shell no longer binds the rule to a name it controls").not.toBeNull()
+    return match![1]!
+  }
+
+  it("carries a source that parses and answers exactly like the module export", () => {
+    const copy = new Function(`return (${embedded()});`)() as typeof effectiveVerdict
+    const cases: [string | null | undefined, string[]][] = [
+      ["pass", ["content-dropped"]],
+      ["limit", ["content-dropped"]],
+      ["rework", ["content-dropped"]],
+      ["pass", []],
+      ["limit", ["content-truncated"]],
+      [undefined, ["content-dropped"]],
+      [null, []],
+    ]
+    for (const [verdict, codes] of cases) {
+      expect(copy(verdict, codes), `${String(verdict)} / ${codes.join()}`).toEqual(
+        effectiveVerdict(verdict, codes),
+      )
+    }
+  })
+
+  it("still runs when the embedded function has been renamed, as a minifier would", () => {
+    // The reported failure, reproduced: esbuild with renaming turns the
+    // declaration into `function $l(...)` while the call sites keep saying
+    // `effectiveVerdict`. The binding is the page's, so the rename is
+    // confined to the expression and the shell is unaffected.
+    const rename = (script: string) =>
+      script.replace("const effectiveVerdict = (function effectiveVerdict(", "const effectiveVerdict = (function $l(")
+    const { run } = openShell({ [LOSER]: entry(LOSER, "pass") }, (script) => {
+      const renamed = rename(script)
+      expect(renamed, "the rename did not apply — check the embedded shape").not.toBe(script)
+      return renamed
+    })
+    run()
+    expect(storedVerdicts()[LOSER]!.verdict).toBe("rework")
+    expect(document.getElementById("n-rework")!.textContent).toBe("1")
+  })
+
+  it("carries nothing that could break out of the page it is pasted into", () => {
+    const source = embedded()
+    expect(source).not.toContain("`")
+    expect(source).not.toContain("${")
+    expect(source).not.toContain("__name(")
+    expect(source.toLowerCase()).not.toContain("</script")
+    // eslint-disable-next-line no-control-regex
+    expect(/[^\x00-\x7F]/.test(source)).toBe(false)
+  })
+
+  it("refuses to embed a rule that would break the page, at build time", () => {
+    // Built with `new Function` so the bundler that compiles this file
+    // cannot sand the hazard off first: esbuild escapes `</script` inside a
+    // string literal, which is a good habit and would have made the case
+    // untestable through ordinary source.
+    const hazards: [string, string][] = [
+      ["a backtick", "return `x`"],
+      ["a template placeholder", 'return "${x}"'],
+      ["a script close", 'return "</script>"'],
+      // Composed at runtime so the character reaches the function's own
+      // source, rather than an escape sequence that is pure ASCII.
+      ["non-ASCII", 'return "' + String.fromCharCode(0x4e22) + '"'],
+    ]
+    for (const [why, body] of hazards) {
+      const fn = new Function(body) as (...args: never[]) => unknown
+      expect(() => inlineRule("rule", fn), why).toThrow(/cannot embed rule/)
+    }
+    // A keepNames wrapper is the other way an embedded rule arrives broken.
+    // That one is stripped rather than refused, which is the whole reason
+    // this helper existed before the binding was added.
+    const wrapped = { toString: () => 'function rule(a) { return a } __name(rule, "rule");' }
+    const embeddedWrapped = inlineRule("rule", wrapped as unknown as (...args: never[]) => unknown)
+    expect(embeddedWrapped).not.toContain("__name(")
+    expect(embeddedWrapped).toContain("const rule = (")
+    // And the shape it does accept stays accepted.
+    expect(inlineRule("rule", ((a: number) => a) as unknown as (...args: never[]) => unknown)).toContain(
+      "const rule = (",
+    )
   })
 })

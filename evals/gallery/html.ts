@@ -159,16 +159,46 @@ export const COMPONENT_FAMILIES: readonly GroupFamily[] = [
 ]
 
 /**
- * Embed a function's own source in the page's script block.
+ * Embed a function's own source in the page's script block, under a name the
+ * page controls.
+ *
+ * Two things make a copied-out function stop working, and both are silent.
  *
  * `tsx` and Vite run esbuild with `keepNames: true`, which appends a
  * `__name(fn, "fn")` call after every named declaration — referencing a
  * helper that exists in the Node module scope and nowhere in a standalone
- * page. Stripping it is what makes the embedded copy actually runnable, the
+ * page. Stripping it is what makes the embedded copy runnable at all, the
  * same problem `serializePageFunction` solves for the browser audit.
+ *
+ * The second is the name. `Function.prototype.toString` returns the source as
+ * it stands now, not as it was written: run this generator through anything
+ * that renames — a minified build, esbuild without `keepNames` — and the
+ * declaration arrives as `function $l(...)` while the call sites below still
+ * say `verdictOf`'s spelling. The page then throws `ReferenceError` on the
+ * first card and the whole review shell is unusable. So the source is bound
+ * here, to the name the script uses, and whatever the function calls itself
+ * inside that expression stops mattering.
+ *
+ * The checks are the rest of the contract: the source has to be usable as an
+ * expression, and it has to survive being pasted into an HTML `<script>`
+ * inside a template literal. A rule that fails any of them is a build error
+ * rather than a page that loads and misbehaves.
  */
-function inlineRule(fn: (...args: never[]) => unknown): string {
-  return fn.toString().replace(/__name\([^)]*\);?/g, "")
+export function inlineRule(name: string, fn: (...args: never[]) => unknown): string {
+  const source = fn.toString().replace(/__name\([^)]*\);?/g, "").trim()
+  const fail = (why: string): never => {
+    throw new Error(`cannot embed ${name} in the gallery shell: ${why} — see inlineRule in evals/gallery/html.ts`)
+  }
+  if (!/^(async\s+)?function\b|^\(|^[A-Za-z_$][\w$]*\s*=>/.test(source)) {
+    fail("the source is not a plain function expression")
+  }
+  if (source.includes("__name(")) fail("an esbuild keepNames wrapper survived")
+  if (source.includes("`")) fail("a backtick would close the template literal building this page")
+  if (source.includes("${")) fail("a template placeholder would be interpolated at build time")
+  if (/<\/script/i.test(source)) fail("the text would close the script block")
+  // eslint-disable-next-line no-control-regex
+  if (/[^\x00-\x7F]/.test(source)) fail("a non-ASCII character would depend on the page's charset")
+  return `const ${name} = (${source});`
 }
 
 /** Escape for embedding arbitrary text inside an HTML text node/attribute. */
@@ -703,7 +733,7 @@ kbd {
   // Shipped in as source rather than restated here, so the rule the reviewer
   // sees is byte-for-byte the one render.test.mts tests. See its own doc
   // comment in render.ts for why it is written to survive toString().
-${inlineRule(verdictFreshness)}
+${inlineRule("verdictFreshness", verdictFreshness)}
 
   const VERDICT_LABELS = { pass: "通过", limit: "限制使用", rework: "返工" };
   const VERDICT_FLOOR_REASON = "这一页丢了内容且页面上没有任何提示，至少是 rework";
@@ -787,7 +817,7 @@ ${inlineRule(verdictFreshness)}
 
   // The floor, embedded verbatim from verdict.ts so this shell and the
   // automated merge cannot drift apart about a machine-checkable fact.
-  ${effectiveVerdict.toString()}
+  ${inlineRule("effectiveVerdict", effectiveVerdict)}
 
   const findingCodesOf = (id) => ((pageById.get(id) || {}).findings || []).map((f) => f.code);
   /** What this page's verdict is, after the floor. Every reader uses it. */

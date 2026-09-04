@@ -597,7 +597,7 @@ describe("gallery page", () => {
     const { manifest, svgs } = renderMatrix(jobs, outDir, "test")
     const html = buildGalleryHtml(manifest, svgs)
 
-    expect(html).toContain("function verdictFreshness")
+    expect(html).toContain("const verdictFreshness = (")
     expect(html).toContain('"recolored"')
     const script = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => m[1]!).join("\n")
     expect(script).not.toContain("__name(")
@@ -620,7 +620,9 @@ describe("gallery page", () => {
     const { manifest, svgs } = renderMatrix(jobs, outDir, "test")
     const html = buildGalleryHtml(manifest, svgs)
 
-    expect(html).toContain("function effectiveVerdict")
+    // Bound to the name the script calls, not to whatever the function is
+    // called after the generator has been through a renaming build.
+    expect(html).toContain("const effectiveVerdict = (")
     const script = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => m[1]!).join("\n")
     expect(script).not.toContain("__name(")
     // Every place a verdict is read goes through the floor: what load does
