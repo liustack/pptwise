@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest"
 import { KIND_STORIES } from "@/ir/kind-stories"
 import { KIND_VALUES } from "@/ir/narrative-values"
 import { THEME_DEFINITIONS } from "@/themes/definitions"
-import { ThemeFileSchema } from "@/themes/schema"
+import { StructuralThemeFileSchema, ThemeFileSchema } from "@/themes/schema"
 import { themeFileFromPreset } from "@/cli/theme-resolve"
-import { FORBIDDEN_NAME_WORDS, findForbiddenNameWords, isForbiddenName } from "./design-story"
+import { FORBIDDEN_NAME_WORDS, findForbiddenNameWords } from "./design-story"
 import { LEGACY_THEME_NAMES } from "./themes/legacy-names"
 
 /**
@@ -118,23 +118,37 @@ describe("a name names a voice, never a vertical", () => {
     ).toThrow(/fintech/)
   })
 
-  it("holds an id to being a forbidden name, not to containing one", () => {
-    // An id is one handle, and handles get composed out of internal parts
-    // the rule was never about. A label or a story name is prose and stays
-    // on the full scan.
+  it("scans an id word by word, exactly as it scans a label", () => {
+    // A vertical with a style word bolted on either side is the most common
+    // custom id there is, and it is still a name that answers who the theme
+    // is for. Nothing about the shape of the string earns an exception.
     const base = themeFileFromPreset("swiss", { id: "acme" })
     const withId = (id: string) => ({ ...base, id, style: { ...base.style, id } })
-    expect(() => ThemeFileSchema.parse(withId("healthcare"))).toThrow(/healthcare/)
-    expect(() => ThemeFileSchema.parse(withId("matrix-classroom-cover-fashion-masthead"))).not.toThrow()
+    for (const id of ["healthcare", "fintech-dark", "dark-fintech", "acme-healthcare-deck"]) {
+      expect(() => ThemeFileSchema.parse(withId(id)), id).toThrow(
+        /never a vertical, a function, an audience, or an organization type/,
+      )
+    }
     expect(() => ThemeFileSchema.parse({ ...base, label: "A Classroom Deck" })).toThrow(/classroom/)
   })
 
-  it("knows a forbidden name from a name that merely says one", () => {
-    expect(isForbiddenName("healthcare")).toBe(true)
-    expect(isForbiddenName("Real Estate")).toBe(true)
-    expect(isForbiddenName("real-estate")).toBe(true)
-    expect(isForbiddenName("acme-healthcare-deck")).toBe(false)
-    expect(isForbiddenName("swiss")).toBe(false)
+  it("keeps the corpus's composed ids out of the public contract entirely", () => {
+    // The review corpus composes an id out of a source theme, a page type,
+    // and the internal name of the drawing under test. That id is a handle,
+    // and it installs through the private structural entry — the public
+    // contract still refuses it, which is the point.
+    const base = themeFileFromPreset("swiss", { id: "acme" })
+    const composed = "matrix-classroom-cover-fashion-masthead"
+    const file = { ...base, id: composed, style: { ...base.style, id: composed } }
+    expect(() => ThemeFileSchema.parse(file)).toThrow(/classroom/)
+    expect(() => StructuralThemeFileSchema.parse(file)).not.toThrow()
+  })
+
+  it("still holds the structural entry to everything but the naming rule", () => {
+    const base = themeFileFromPreset("swiss", { id: "acme" })
+    expect(() => StructuralThemeFileSchema.parse({ ...base, id: "other" })).toThrow(/style\.id/)
+    expect(() => StructuralThemeFileSchema.parse({ ...base, version: 3 })).toThrow()
+    expect(() => StructuralThemeFileSchema.parse({ ...base, surprise: true })).toThrow()
   })
 
   it("reports what the rename batch still owes", () => {
@@ -175,8 +189,8 @@ describe("findForbiddenNameWords", () => {
     expect(findForbiddenNameWords("real-estate")).toEqual(["real estate"])
     expect(findForbiddenNameWords("real--estate")).toEqual(["real estate"])
     expect(findForbiddenNameWords("life_science")).toEqual(["life science"])
-    expect(findForbiddenNameWords("e_commerce")).toEqual(["e commerce"])
-    expect(findForbiddenNameWords("E-Commerce")).toEqual(["e commerce"])
+    expect(findForbiddenNameWords("e_commerce")).toEqual(["ecommerce"])
+    expect(findForbiddenNameWords("E-Commerce")).toEqual(["ecommerce"])
   })
 
   it("normalizes word forms instead of listing them", () => {
@@ -185,6 +199,33 @@ describe("findForbiddenNameWords", () => {
     expect(findForbiddenNameWords("life sciences")).toEqual(["life science"])
     expect(findForbiddenNameWords("Consultancies")).toEqual(["consultancy"])
     expect(findForbiddenNameWords("Pharmaceuticals")).toEqual(["pharmaceutical"])
+  })
+
+  it("reads an ampersand as the word it stands for", () => {
+    expect(findForbiddenNameWords("Oil & Gas Review")).toEqual(["oil and gas"])
+    expect(findForbiddenNameWords("Food & Beverage Report")).toEqual(["food and beverage"])
+  })
+
+  it("reads a compound however it is spaced, without listing each spelling", () => {
+    for (const name of ["Non-Profit Brief", "non profit", "Nonprofit"]) {
+      expect(findForbiddenNameWords(name), name).toEqual(["nonprofit"])
+    }
+    for (const name of ["Cyber-Security Ledger", "cyber security"]) {
+      expect(findForbiddenNameWords(name), name).toEqual(["cybersecurity"])
+    }
+  })
+
+  it("carries the spellings normalization cannot derive", () => {
+    expect(findForbiddenNameWords("Defence Review")).toEqual(["defence"])
+    expect(findForbiddenNameWords("Telecommunications Brief")).toEqual(["telecommunication"])
+  })
+
+  it("does not invent a match by joining tokens", () => {
+    // Squashing the tokens is what reads `non profit` as `nonprofit`. Both
+    // ends must land on a token boundary or it would also read `tech` out of
+    // `fintech`, which is a different and wrong statement.
+    expect(findForbiddenNameWords("fintech-dark")).toEqual(["fintech"])
+    expect(findForbiddenNameWords("Multimedia")).toEqual([])
   })
 
   it("covers the verticals a next theme would reach for", () => {
