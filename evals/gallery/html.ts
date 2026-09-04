@@ -25,7 +25,7 @@ import { LAYOUT_REGISTRY } from "@/layouts/registry"
 import { slideEdgeFill } from "@/lib/slide-edge"
 import { namespaceSvgIds, svgIdPrefix } from "@/lib/svg-ids"
 import { BOUNDARY_SLOTS, FACE_SLOTS } from "./matrix"
-import { verdictFreshness, type Manifest } from "./render"
+import { MANIFEST_VERSION, verdictFreshness, type Manifest } from "./render"
 import { STORY_ZH } from "./stories.zh"
 import { effectiveVerdict } from "./verdict"
 
@@ -230,6 +230,15 @@ function jsonScript(value: unknown): string {
 }
 
 export function buildGalleryHtml(manifest: Manifest, svgs: ReadonlyMap<string, string>): string {
+  // A manifest can arrive from `--from`, which means it can be older than
+  // this page builder. Say so here rather than shipping a review page whose
+  // design cards are silently missing — a reviewer would read that as "these
+  // themes have nothing to say", which is a different and wrong statement.
+  if (manifest.manifestVersion !== MANIFEST_VERSION) {
+    throw new Error(
+      `this gallery manifest is version ${String(manifest.manifestVersion)} and the review page is built for version ${MANIFEST_VERSION}. Re-render it with \`pnpm gallery\` first.`,
+    )
+  }
   // Namespaced here rather than in the browser: several hundred standalone
   // SVG documents share one page, and their id spaces would otherwise merge
   // (see `src/lib/svg-ids.ts`). Doing it at build time is the same transform
@@ -1669,7 +1678,7 @@ ${inlineRule("verdictFreshness", verdictFreshness)}
   ];
 
   function designCard(objectId) {
-    const story = MANIFEST.stories ? MANIFEST.stories[objectId] : undefined;
+    const story = MANIFEST.stories[objectId];
     if (!story) return null;
     const zh = STORY_ZH[objectId] || {};
 

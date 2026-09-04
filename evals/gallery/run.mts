@@ -21,7 +21,7 @@ import { judgeL2, l2SkipReason, VERDICT_SCHEMA_NAME } from "./l2"
 import type { GalleryPageMeta, L2Verdict } from "./l2"
 import { buildMatrix } from "./matrix"
 import { replayPlanted } from "./planted/replay"
-import { renderMatrix, type Manifest, type ManifestPage } from "./render"
+import { decodeManifest, renderMatrix, type Manifest, type ManifestPage } from "./render"
 import { mergeVerdict } from "./verdict"
 
 const ROOT = resolve(fileURLToPath(new URL("../..", import.meta.url)))
@@ -34,7 +34,8 @@ function runId(): string {
 }
 
 function loadFromGallery(dir: string): { manifest: Manifest; svgs: Map<string, string> } {
-  const manifest = JSON.parse(readFileSync(join(dir, "manifest.json"), "utf8")) as Manifest
+  const file = join(dir, "manifest.json")
+  const manifest = decodeManifest(JSON.parse(readFileSync(file, "utf8")), file)
   const svgs = new Map<string, string>()
   for (const page of manifest.pages) {
     if (!page.file) continue

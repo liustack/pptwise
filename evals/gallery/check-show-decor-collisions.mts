@@ -20,7 +20,7 @@ import {
   type DepthBox,
   type SvgMatrix,
 } from "@/render/depth-contract/geometry"
-import type { Manifest } from "./render"
+import { decodeManifest } from "./render"
 
 const SHOW_ARCHETYPE_SELECTOR = '[data-face^="show-"]'
 const LOGO_BOX = { x: 1120, y: 630, w: 96, h: 40 } as const
@@ -107,7 +107,8 @@ function showTextBoxes(root: Element): { text: string; box: DepthBox }[] {
 
 await installNodePlatform()
 const galleryDir = resolve(process.argv[2] ?? ".gallery")
-const manifest = JSON.parse(readFileSync(join(galleryDir, "manifest.json"), "utf8")) as Manifest
+const manifestFile = join(galleryDir, "manifest.json")
+const manifest = decodeManifest(JSON.parse(readFileSync(manifestFile, "utf8")), manifestFile)
 const Parser = getPlatform().domParser ?? globalThis.DOMParser
 if (!Parser) throw new Error("DOMParser unavailable after installing the Node platform")
 

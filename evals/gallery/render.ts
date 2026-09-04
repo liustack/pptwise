@@ -127,7 +127,7 @@ export interface Manifest {
    * 5 adds `stories`, on the same terms and for the same reason: an empty
    * card is not the same statement as no card at all.
    */
-  readonly manifestVersion: 5
+  readonly manifestVersion: typeof MANIFEST_VERSION
   readonly generator: string
   readonly pptwiseVersion: string
   readonly generatedAt: string
@@ -177,6 +177,34 @@ function sectionBlurb(id: string, pages: readonly ManifestPage[]): string {
   }
   const counts = BAND_IDS.map((band) => ({ band, n: pages.filter((p) => p.band === band).length })).filter((b) => b.n > 0)
   return counts.map(({ band, n }) => `${BAND_META[band].label} ${n} 页`).join(" · ")
+}
+
+/**
+ * The manifest schema this build writes and reads.
+ *
+ * Bumping it fences out every older file, on purpose. A gallery directory
+ * outlives the code that wrote it, and the whole reason the number exists is
+ * so a reader can tell "this build predates design cards" from "these
+ * objects have no story" — which it can only do if something actually looks.
+ */
+export const MANIFEST_VERSION = 5
+
+/**
+ * Read a manifest off disk, or refuse it.
+ *
+ * Every caller that opens a gallery directory goes through here. A blind
+ * cast would let a stale directory through and quietly drop whatever the
+ * older file has no field for, which is exactly the failure the version
+ * number is supposed to prevent.
+ */
+export function decodeManifest(raw: unknown, source: string): Manifest {
+  const version = (raw as { manifestVersion?: unknown } | null)?.manifestVersion
+  if (version !== MANIFEST_VERSION) {
+    throw new Error(
+      `${source} is a version ${String(version)} gallery manifest and this build reads version ${MANIFEST_VERSION}. Re-render it with \`pnpm gallery\` (or \`pnpm evals:gallery\`) before reading it again.`,
+    )
+  }
+  return raw as Manifest
 }
 
 /** The component behind a gallery group id, variant suffix and all removed. */
@@ -409,7 +437,7 @@ export function renderMatrix(jobs: readonly Job[], outDir: string, pptwiseVersio
   }
 
   const manifest: Manifest = {
-    manifestVersion: 5,
+    manifestVersion: MANIFEST_VERSION,
     generator: "pptwise gallery",
     pptwiseVersion,
     generatedAt: new Date().toISOString(),
