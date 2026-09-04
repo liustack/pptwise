@@ -4,6 +4,7 @@ import type { LayoutDefinition } from "./registry"
 import type { ContentRect } from "../render/layout"
 import type { ComponentCtx } from "../components/types"
 import { SvgContent } from "../render/svg-content"
+import { stepAside } from "../render/step-aside"
 import { SCALABLE_TYPES } from "../render/component-traits"
 import { measureComponent, renderComponent } from "../components"
 import { chapterNumberFor, sectionNameFor } from "../lib/derive"
@@ -247,13 +248,14 @@ function renderStackedContent(
     : Math.max(120, contentH - headingExtra - subheadingBudget)
 
   const bodyRect = { x: 56, y: contentRectY, w: 1168, h: contentRectH }
-  // Not wired to the step-aside (`render/step-aside.tsx`). The poster path
-  // above already asks whether a component fits its slot
-  // (`componentFitsSlot`) and lands here when it does not, and this stack is
-  // the most generous rect in the content pool: x56, w1168, floor 640 (600
-  // with a footnote). Measured against the step-aside sheet on the same
-  // page it is 64px wider and within about 10px of the same height, so a
-  // page this stack cannot hold is one the sheet cannot hold either.
+  // The poster path above already asks whether a component fits its slot
+  // (`componentFitsSlot`) and lands here when it does not. This stack is
+  // wider than the sheet (1168 against 1104) but not always taller: its top
+  // follows a 64px display heading down where the sheet's follows a 34px
+  // one, so a subheading and fifteen citations measure 1168x414 here and
+  // 1104x448 there. Width is not the axis that runs out.
+  const aside = stepAside({ face: "stacked-poster", slide, ctx, bodyRect })
+  if (aside) return aside
 
   if (treated) {
     return (

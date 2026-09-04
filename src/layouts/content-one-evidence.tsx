@@ -6,6 +6,7 @@ import { fitEmphasisHeading, headingEmphasisPaint, renderEmphasisHeading } from 
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { accessibleInk } from "../render/ink"
 import { SvgContent } from "../render/svg-content"
+import { stepAside } from "../render/step-aside"
 import { renderFittedEvidence } from "./fitted-evidence"
 import { sparseFace } from "./sparse/registry"
 
@@ -100,12 +101,14 @@ function OneEvidenceFallbackContent({ slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(footnoteSource, { maxWidth: HEADING_MAX_W, fontSize: FOOTNOTE_SIZE, minFontSize: 16 })
     : null
 
-  // Not wired to the step-aside (`render/step-aside.tsx`): this page is
-  // already the plain rendering, and its rect (x80, w1120, floor 640) is
-  // wider than the step-aside sheet's 1104 and no shorter, so handing the
-  // page over could only ever cost room. Where this rect is too small the
-  // whole page is, and the component's own decline is the honest answer.
+  // This page is already a fallback and it can still come up short. Its
+  // floor is 640 against the sheet's 612, which reads like more room until
+  // the heading is set: `bodyTop` follows a two-line title down, and the
+  // sheet's own title is 34px where this one is display size. Sixteen
+  // citations measure 1120x439 here and 1104x477 there.
   const bodyRect = { x: HEADING_X, y: bodyTop, w: HEADING_MAX_W, h: Math.max(80, EVIDENCE_BOTTOM - bodyTop) }
+  const aside = stepAside({ face: "one-evidence", slide, ctx, bodyRect })
+  if (aside) return aside
 
   return (
     <g data-evidence-mode="fallback">

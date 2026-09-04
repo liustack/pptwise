@@ -120,10 +120,11 @@ export function ShowSpotlightContent({ slide, ctx }: SvgTemplateProps) {
    */
   const FOOTNOTE_Y = 672
 
-  // Not wired to the step-aside (`render/step-aside.tsx`): this fallback
-  // band is 1152x500, taller and wider than the step-aside sheet ever is
-  // (1104, and at most 477 high once a heading has been set). There is no
-  // page this face can hand over to advantage.
+  // Not wired to the step-aside (`render/step-aside.tsx`). This fallback
+  // band is a constant 1152x500 that no heading moves, and the sheet is
+  // 1104 wide by at most 477 high once its own title has been set (441 with
+  // a footnote). Wider and taller on both axes, on every page: there is no
+  // page this face could hand over to advantage.
 
   return (
     <g data-show-mode={exact ? "spotlight" : "fallback"}>
