@@ -4,7 +4,7 @@ import { fitHeadingLines } from "../../render/heading-fit"
 import { fitSvgLine } from "../../lib/svg-text-layout"
 import { renderEmphasisTspans, emphasisRunInk } from "../../render/emphasis"
 import { accessibleOpacity, readableOn } from "../../render/ink"
-import { findImageSelection, singlePictureExact } from "../find-image"
+import { bleedSlotCanHost, findImageSelection, singlePictureExact } from "../find-image"
 import { DroppedContentMarker } from "../../render/drop-marker"
 import { heroCaption, heroUnit, heroSource, heroValue } from "../minimal-shared"
 import { fitHeroLine, fitSparseHeading, fitStatementSource, heroUnitMark, isNumericHero, rotateRectPolygon, splitTrailingPercent } from "./shared"
@@ -219,7 +219,10 @@ export function monoBleed(props: SvgTemplateProps) {
   // its first picture, and the ones it did not choose would leave with their
   // captions and no mark on the page. This face steps back to type-on-field
   // and records the loss instead of painting one of six in silence.
-  if (!singlePictureExact(slide)) {
+  // A `device_mockup` gets the same answer for a different reason: this face's
+  // picture runs off three page edges, and a device drawn without its own
+  // edges is not a device. See `bleedSlotCanHost`.
+  if (!singlePictureExact(slide) || !bleedSlotCanHost(slide)) {
     return (
       <>
         {playbillTypeOnField(props)}

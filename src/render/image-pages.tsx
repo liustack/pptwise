@@ -5,7 +5,7 @@ import type { LayoutDefinition } from "../layouts/registry"
 import { renderComponent, measureComponent } from "../components"
 import { layoutContentFit, stackBottom } from "./layout"
 import { DroppedContentMarker } from "./drop-marker"
-import { findImageSelection, singlePictureExact } from "../layouts/find-image"
+import { bleedSlotCanHost, findImageSelection, singlePictureExact } from "../layouts/find-image"
 import { CANVAS_W_PX, CANVAS_H_PX } from "../constants"
 import { layoutSvgText, fitSvgLine } from "../lib/svg-text-layout"
 import { scaleTypePx } from "./heading-fit"
@@ -295,7 +295,7 @@ export function ImageSplitPage({
   ctx: ComponentCtx
   page: PageRenderContext
 }) {
-  if (!singlePictureExact(slide)) return <TakeoverFallbackPage slide={slide} ctx={ctx} />
+  if (!singlePictureExact(slide) || !bleedSlotCanHost(slide)) return <TakeoverFallbackPage slide={slide} ctx={ctx} />
   const imageSelection = findImageSelection(slide)
   if (!imageSelection) return <MissingRequiredImageMarker slide={slide} />
   const { image: imageComponent, source: imageSource } = imageSelection
@@ -502,7 +502,7 @@ export function ImageTopPage({
   ctx: ComponentCtx
   page: PageRenderContext
 }) {
-  if (!singlePictureExact(slide)) return <TakeoverFallbackPage slide={slide} ctx={ctx} />
+  if (!singlePictureExact(slide) || !bleedSlotCanHost(slide)) return <TakeoverFallbackPage slide={slide} ctx={ctx} />
   const imageSelection = findImageSelection(slide)
   if (!imageSelection) return <MissingRequiredImageMarker slide={slide} />
   const { image: imageComponent, source: imageSource } = imageSelection
@@ -678,6 +678,11 @@ const ANN_NOTE_INDENT = 34
 /** 两条说明之间的行距。 */
 const ANN_NOTE_GAP = 26
 
+/** The photo card's outer width for a given picture width. */
+function frameWFor(imgW: number): number {
+  return imgW + ANN_FRAME_PAD * 2
+}
+
 const ANN_NOTE_X = ANN_MARGIN_X + ANN_IMG_W + ANN_FRAME_PAD * 2 + ANN_COL_GAP
 const ANN_NOTE_W = W - ANN_MARGIN_X - ANN_NOTE_X
 const ANN_NOTE_TEXT_W = ANN_NOTE_W - ANN_NOTE_INDENT
@@ -819,9 +824,19 @@ function ImageAnnotateSoloPage({
     maxLines: 2,
     lineHeightRatio: 1.3,
   })
-  const caption = imageComponent.caption
-    ? fitSvgLine(imageComponent.caption, { maxWidth: 620, fontSize: 16, minFontSize: 16 })
-    : null
+  // The one takeover that keeps a `device_mockup`. Its picture area is a
+  // bounded card inside the page rather than a bleed, so the device's own
+  // renderer can draw the whole component — window bar, bezel, screen and the
+  // caption band inside it — at the size the card already reserved. The other
+  // takeovers run the picture off the page edge and step aside instead
+  // (`bleedSlotCanHost`).
+  const device = imageSource.type === "device_mockup" ? imageSource : undefined
+  // The device paints the caption itself, in its own screen. Drawing the
+  // face's caption line as well would print it twice.
+  const caption =
+    imageComponent.caption && !device
+      ? fitSvgLine(imageComponent.caption, { maxWidth: 620, fontSize: 16, minFontSize: 16 })
+      : null
 
   // 竖向从上往下紧排，间距是常量而非「剩余空间的一份」。
   let cursor = ANN_HEAD_TOP
@@ -832,13 +847,19 @@ function ImageAnnotateSoloPage({
   const bodyTop = cursor + 22
 
   const imgW = hasNotes ? ANN_IMG_W : ANN_SOLO_IMG_W
-  const frameW = imgW + ANN_FRAME_PAD * 2
+  const frameW = frameWFor(imgW)
   const frameX = hasNotes ? ANN_MARGIN_X : Math.round((W - frameW) / 2)
   const availFrameH = ANN_BODY_BOTTOM - bodyTop - (caption ? ANN_CAPTION_SLOT : 0)
-  const frameH = Math.max(
-    ANN_IMG_H_MIN + ANN_FRAME_PAD * 2,
-    Math.min(Math.round(imgW / ANN_IMG_ASPECT) + ANN_FRAME_PAD * 2, availFrameH),
-  )
+  // A device draws its own frame, so it gets the card's whole footprint with
+  // no white mount around it — two frames around one screenshot reads as a
+  // photo of a monitor, not as software running.
+  const deviceH = device ? Math.min(measureComponent(device, frameWFor(imgW), ctx), availFrameH) : 0
+  const frameH = device
+    ? deviceH
+    : Math.max(
+        ANN_IMG_H_MIN + ANN_FRAME_PAD * 2,
+        Math.min(Math.round(imgW / ANN_IMG_ASPECT) + ANN_FRAME_PAD * 2, availFrameH),
+      )
   const imgH = frameH - ANN_FRAME_PAD * 2
 
   // 说明清单顶端与照片卡顶端齐平：两栏是一个整体，不是两块各自居中的东西。
@@ -914,34 +935,40 @@ function ImageAnnotateSoloPage({
           />
         ),
       )}
-      {/* 白框照片卡（showcase 的 photo-print 质感，深浅主题通用） */}
-      <rect
-        x={frameX}
-        y={bodyTop}
-        width={frameW}
-        height={frameH}
-        fill="#FFFFFF"
-        stroke={ctx.colors.border}
-        strokeWidth={1}
-      />
-      {src ? (
-        <image
-          href={src}
-          x={frameX + ANN_FRAME_PAD}
-          y={bodyTop + ANN_FRAME_PAD}
-          width={imgW}
-          height={imgH}
-          preserveAspectRatio="xMidYMid slice"
-          aria-label={alt || undefined}
-        />
+      {device ? (
+        renderComponent(device, { x: frameX, y: bodyTop, w: frameW, h: deviceH }, ctx)
       ) : (
-        <rect
-          x={frameX + ANN_FRAME_PAD}
-          y={bodyTop + ANN_FRAME_PAD}
-          width={imgW}
-          height={imgH}
-          fill={ctx.colors.surface}
-        />
+        <>
+          {/* 白框照片卡（showcase 的 photo-print 质感，深浅主题通用） */}
+          <rect
+            x={frameX}
+            y={bodyTop}
+            width={frameW}
+            height={frameH}
+            fill="#FFFFFF"
+            stroke={ctx.colors.border}
+            strokeWidth={1}
+          />
+          {src ? (
+            <image
+              href={src}
+              x={frameX + ANN_FRAME_PAD}
+              y={bodyTop + ANN_FRAME_PAD}
+              width={imgW}
+              height={imgH}
+              preserveAspectRatio="xMidYMid slice"
+              aria-label={alt || undefined}
+            />
+          ) : (
+            <rect
+              x={frameX + ANN_FRAME_PAD}
+              y={bodyTop + ANN_FRAME_PAD}
+              width={imgW}
+              height={imgH}
+              fill={ctx.colors.surface}
+            />
+          )}
+        </>
       )}
       {caption && (
         <text
@@ -1034,7 +1061,7 @@ export function ImageBottomPage({
   ctx: ComponentCtx
   page: PageRenderContext
 }) {
-  if (!singlePictureExact(slide)) return <TakeoverFallbackPage slide={slide} ctx={ctx} />
+  if (!singlePictureExact(slide) || !bleedSlotCanHost(slide)) return <TakeoverFallbackPage slide={slide} ctx={ctx} />
   const imageSelection = findImageSelection(slide)
   if (!imageSelection) return <MissingRequiredImageMarker slide={slide} />
   const { image: imageComponent, source: imageSource } = imageSelection

@@ -46,6 +46,32 @@ export function singlePictureExact(slide: Slide): boolean {
   )
 }
 
+/**
+ * Whether a picture slot that bleeds off the page edge can host this page's
+ * picture.
+ *
+ * A `device_mockup` is a screenshot drawn inside a device — a browser window
+ * with its own bar and address pill, or a phone with its bezel and notch. The
+ * frame is not decoration around the picture, it is the whole component: it is
+ * what makes a screenshot read as software that is running rather than a flat
+ * image pasted on a slide, which is the one thing the component exists to say.
+ *
+ * A bleed slot runs the picture off two or three page edges. There is no
+ * bezel to draw when the picture has no edges, so a face that took a
+ * `device_mockup` into a bleed slot painted the screen contents alone and the
+ * component silently became an `image` — exactly the "take part of what the
+ * author wrote and drop the rest" posture the face discipline forbids, with
+ * nothing on the page to say the device had gone.
+ *
+ * So the bleed takeovers step aside here and the ordinary component renderer
+ * draws the page, frame and all. A face whose picture area is a bounded
+ * rectangle inside the page — `image-annotate`'s card — has room for the frame
+ * and draws it instead of asking this question.
+ */
+export function bleedSlotCanHost(slide: Slide): boolean {
+  return !slide.components.some((component) => component.type === "device_mockup")
+}
+
 export function findImageSelection(slide: Slide): ImageSelection | undefined {
   for (const component of slide.components) {
     if (component.type === "image") return { source: component, image: component }
