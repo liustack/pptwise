@@ -349,7 +349,38 @@ describe("image takeover dropped-content propagation", () => {
     })
     const doc = makeIr(themeId, slide)
 
-    expect(slideToRender(doc, slide, 0).dropped).toBe(2)
+    // Two losses, two units. They used to be added together and declared as
+    // two content blocks, which was true of neither: one annotation past the
+    // fourth is a bullet item, and the paragraph is the only block that went.
+    const render = slideToRender(doc, slide, 0)
+    expect(render.dropped).toBe(2)
+    expect(render.drops).toEqual(
+      expect.arrayContaining([
+        { kind: "item", count: 1 },
+        { kind: "component", count: 1 },
+      ]),
+    )
+    expect(render.drops).toHaveLength(2)
+  })
+
+  it("image-annotate declares a fifth annotation as an item, not a content block", () => {
+    // The shape a real deck reaches this face with: an image and its
+    // annotations, one past what the surface holds. Nothing about this page
+    // lost a component, and the export error must not say it did.
+    const slide: Slide = {
+      type: "content",
+      kind: "photo",
+      heading: "Annotated image",
+      components: [
+        { type: "image", asset_id: "hero", fit: "cover" },
+        { type: "bullets", items: ["One", "Two", "Three", "Four", "Five"] },
+      ],
+    }
+    const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "consulting", {
+      content: { photo: "image-annotate" },
+    })
+    const render = slideToRender(makeIr(themeId, slide), slide, 0)
+    expect(render.drops).toEqual([{ kind: "item", count: 1 }])
   })
 
   it("image-annotate marks a kept annotation it had to cut", () => {

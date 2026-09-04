@@ -801,9 +801,16 @@ function ImageAnnotateSoloPage({
     (b): b is Extract<Slide["components"][number], { type: "bullets" }> => b.type === "bullets",
   )
   const annotations = (bulletsComponent?.items ?? []).slice(0, 4).map(splitAnnotation)
-  const dropped =
-    Math.max(0, (bulletsComponent?.items.length ?? 0) - 4) +
-    slide.components.filter((component) => component !== imageSource && component !== bulletsComponent).length
+  // Two different things can be lost here and they are not the same unit: an
+  // annotation past the fourth is one bullet item, and a component this face
+  // has no place for is a whole block. Added together under one noun they
+  // exported as "1 content block" for a page that lost its fifth bullet and
+  // no block at all, sending an author to look for a component that was
+  // never missing. Each is declared in its own unit instead.
+  const droppedItems = Math.max(0, (bulletsComponent?.items.length ?? 0) - 4)
+  const droppedComponents = slide.components.filter(
+    (component) => component !== imageSource && component !== bulletsComponent,
+  ).length
   const hasNotes = annotations.length > 0
 
   const bg = ctx.defaultBg ?? ctx.colors.bg
@@ -974,10 +981,11 @@ function ImageAnnotateSoloPage({
             {note.index}
           </text>
           {/* An annotation this page kept but could not set whole says so
-              on the line that carries the cut. `dropped` below counts the
-              items and siblings this face turned away, and counted nothing
-              for an item it accepted and then trimmed to one or two lines,
-              so a long bullet used to lose its tail with no mark anywhere. */}
+              on the line that carries the cut. The declarations below count
+              the items and the siblings this face turned away, each in its
+              own unit, and count nothing for an item it accepted and then
+              trimmed to one or two lines, so a long bullet used to lose its
+              tail with no mark anywhere. */}
           {note.title.lines.map((line, li) => (
             <text
               key={li}
@@ -1009,7 +1017,8 @@ function ImageAnnotateSoloPage({
           ))}
         </g>
       ))}
-      <DroppedContentMarker count={dropped} />
+      <DroppedContentMarker count={droppedItems} kind="item" />
+      <DroppedContentMarker count={droppedComponents} kind="component" />
     </g>
   )
 }

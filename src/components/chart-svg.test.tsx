@@ -602,12 +602,17 @@ describe("renderDonut — center total label", () => {
   // (`ir/components/chart.ts`), so this is the defence behind the gate: IR
   // assembled in memory, a test, a chart_type added to the dispatch and not
   // to the refinement. There is still nothing to draw, and the answer is
-  // still to draw nothing, but the page now says how much went with it
+  // still to draw nothing, but the page now says the component went with it
   // instead of losing the series name and every slice in silence.
+  //
+  // One component, whatever the point count. Counting the points under the
+  // `component` unit made two cancelling slices declare two lost content
+  // blocks on a page that holds one chart.
   it.each([
     ["all zero", [0, 0]],
     ["cancelling to zero", [5, -5]],
     ["negative", [-1, -2]],
+    ["five points, still one component", [0, 0, 0, 0, 0]],
   ] as const)("declines a ring whose slices total %s and declares what it dropped", (_label, values) => {
     for (const render of [renderDonut, renderPie]) {
       const { container } = svg(render(seriesOf(...values), PALETTE, 0, 0, W, H, MUTED, TEXT))
@@ -615,7 +620,8 @@ describe("renderDonut — center total label", () => {
       expect(container.querySelectorAll("text")).toHaveLength(0)
       const dropped = container.querySelector("[data-dropped]")
       expect(dropped).not.toBeNull()
-      expect(Number(dropped!.getAttribute("data-dropped"))).toBe(values.length)
+      expect(Number(dropped!.getAttribute("data-dropped"))).toBe(1)
+      expect(dropped!.getAttribute("data-dropped-kind")).toBe("component")
     }
   })
 })

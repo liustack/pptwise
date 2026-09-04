@@ -42,17 +42,18 @@ import {
  * nothing to draw from a total of zero, and the old answer, an empty
  * fragment, took the series name, every point name and every value off the
  * page with no error and no mark. This one paints nothing either, and says
- * how much went with it.
+ * that the component went with it.
  */
-function WholeShareDeclined({ data }: { data: readonly { x: string | number; y: number }[] }): ReactElement {
-  // Never zero. An empty `data` is refused at the schema now, so the only way
-  // here is the in-memory route this function exists for — and on that route
-  // `data.length` was written straight out as a `data-dropped` count of zero,
-  // which `slideToRender` sums and `checkContentDropGate` reads as no loss at
-  // all. The series still left the page with its own name, so one is the
-  // smallest honest number.
-  const count = Math.max(1, data.length)
-  return <g data-dropped={count} data-dropped-kind="component" />
+function WholeShareDeclined(): ReactElement {
+  // One component, because one component is what went: the chart draws
+  // nothing at all. The count used to be `Math.max(1, data.length)`, so two
+  // cancelling pie points declared two lost content blocks on a page that
+  // holds one chart. The old zero-length case is why the floor existed —
+  // an empty `data` is refused at the schema now, but the in-memory route
+  // this function exists for could still write `data-dropped="0"`, a count
+  // `slideToRender` sums and `checkContentDropGate` reads as no loss at all.
+  // A constant of one is both the floor and the truth.
+  return <g data-dropped={1} data-dropped-kind="component" />
 }
 
 /** The `chart` IR component, for the renderers whose geometry needs
@@ -1667,7 +1668,7 @@ export function renderPie(
 ): ReactElement {
   const data = series[0]?.data ?? []
   const total = data.reduce((s, d) => s + d.y, 0)
-  if (total <= 0) return <WholeShareDeclined data={data} />
+  if (total <= 0) return <WholeShareDeclined />
   const cx = x0 + w / 2
   const cy = y0 + h / 2
   const fullR = radialFullRadius(w, h)
@@ -2327,7 +2328,7 @@ export function renderDonut(
   const showCenter = component?.chart_type === "donut" ? component.center_total === true : true
   const data = series[0]?.data ?? []
   const total = data.reduce((s, d) => s + d.y, 0)
-  if (total <= 0) return <WholeShareDeclined data={data} />
+  if (total <= 0) return <WholeShareDeclined />
   const cx = x0 + w / 2
   const cy = y0 + h / 2
   const fullR = radialFullRadius(w, h)
