@@ -1,5 +1,6 @@
 import { z } from "zod"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
+import type { DesignStory } from "../../design-story"
 
 // positional cells vs data_table's keyed cells (probe evidence-gate
 // byproduct, 2026-07-26 — `.issues/notes/quality-evidence.md`
@@ -63,3 +64,11 @@ export const traits = {
   fullBody: false,
   evidence: true,
 } as const satisfies ComponentTraits
+
+export const story: DesignStory = {
+  name: "Side by Side",
+  story: "Named columns answering the same questions in turn, one row per attribute. The specification table a buying guide prints so nothing goes unanswered.",
+  positioning: "Choose it when a few named options must answer the same set of questions in words. Use matrix when placement on two axes is the point, and a fixed frame like swot or pest when the frame is the argument.",
+  audience: "Deciders weighing named options attribute by attribute.",
+  notFor: "Numbers to be read exactly, which belong in data_table.",
+}

@@ -1,5 +1,6 @@
 import { z } from "zod"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
+import type { DesignStory } from "../../design-story"
 
 // Porter's Five Forces hub-and-spoke (structure-components wave 2 task 1,
 // second component of this task): `rivalry` is the center panel
@@ -47,3 +48,12 @@ export const traits = {
   fullBody: true,
   evidence: false,
 } as const satisfies ComponentTraits
+
+export const story: DesignStory = {
+  name: "Five Forces",
+  story: "Competitive rivalry in the centre, four pressures around it, each rated for intensity. Porter's arrangement, drawn as it has been taught for decades.",
+  positioning: "Choose it to size the structural pressure on a market from five named directions. Use swot when the assessment weighs one organisation's own strengths, and pest for the wider outside conditions.",
+  audience: "Strategists judging whether a market is worth entering.",
+  notFor: "An open centre-and-satellites picture, which belongs in hub_spoke.",
+  lineage: "Porter's five forces, taught in every strategy course since 1979.",
+}

@@ -1,5 +1,6 @@
 import { z } from "zod"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
+import type { DesignStory } from "../../design-story"
 
 // 结构化组件族（structure-components wave task 1）：named-slot 满幅组件
 // ——不走 bullets 那种弱模型易错序的位置数组，每个语义槽是独立具名字段，
@@ -47,3 +48,11 @@ export const traits = {
   fullBody: true,
   evidence: false,
 } as const satisfies ComponentTraits
+
+export const story: DesignStory = {
+  name: "SWOT",
+  story: "Strengths, weaknesses, opportunities, and threats in four fixed squares, internal above and external below. The assessment grid every planning offsite reaches for.",
+  positioning: "Choose it when one organisation's own strengths and weaknesses must be weighed against outside opportunities and threats. Use pest when only the outside conditions matter.",
+  audience: "Teams taking an honest look at themselves before deciding.",
+  notFor: "A free two-axis placement, which belongs in matrix.",
+}

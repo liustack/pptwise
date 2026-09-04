@@ -1,5 +1,6 @@
 import { z } from "zod"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
+import type { DesignStory } from "../../design-story"
 
 export const schema = z
   .object({
@@ -34,3 +35,11 @@ export const traits = {
   fullBody: false,
   evidence: false,
 } as const satisfies ComponentTraits
+
+export const story: DesignStory = {
+  name: "Quadrants",
+  story: "A tinted grid with axis titles, items placed cell by cell so position carries the verdict. The positioning matrix drawn on every strategy board.",
+  positioning: "Choose it when where a thing sits on two axes is the meaning. Use comparison when options answer questions in words, and a fixed frame like swot or pest when the frame itself is named.",
+  audience: "Deciders sorting options into places rather than ranks.",
+  notFor: "Attributes compared row by row, which belong in comparison.",
+}

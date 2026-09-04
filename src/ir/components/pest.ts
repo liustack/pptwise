@@ -1,5 +1,6 @@
 import { z } from "zod"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
+import type { DesignStory } from "../../design-story"
 
 // PEST macro-environment scan (structure-components wave task 1, second
 // component of this task — same "named-slot family" discipline as
@@ -44,3 +45,11 @@ export const traits = {
   fullBody: true,
   evidence: false,
 } as const satisfies ComponentTraits
+
+export const story: DesignStory = {
+  name: "Macro Scan",
+  story: "The four outside forces in a fixed two-by-two sweep: political, economic, social, technological. The environment scan a planning cycle opens with.",
+  positioning: "Choose it to scan the outside conditions a plan must survive. Use swot when the assessment also weighs the organisation's own strengths and weaknesses.",
+  audience: "Planners testing a strategy against the world it lands in.",
+  notFor: "Internal strengths and weaknesses, which belong in swot.",
+}

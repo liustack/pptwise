@@ -1,5 +1,6 @@
 import { z } from "zod"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
+import type { DesignStory } from "../../design-story"
 
 export const schema = z
   .object({
@@ -39,3 +40,11 @@ export const traits = {
   fullBody: true,
   evidence: false,
 } as const satisfies ComponentTraits
+
+export const story: DesignStory = {
+  name: "Canvas",
+  story: "The nine panes of the business model canvas, each a fixed named slot: partners, activities, resources, value, relationships, channels, customers, costs, revenue.",
+  positioning: "Choose it when the whole business model has to be shown at once in its standard nine panes. Use swot for a strategic assessment and matrix for a free two-axis grid.",
+  audience: "Founders and planners walking a room through a model end to end.",
+  notFor: "A partial sketch of one or two panes.",
+}
