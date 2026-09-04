@@ -113,6 +113,7 @@ export const traits = {
   passthroughShell: true,
   fullBody: false,
   evidence: true,
+  cutsContentWhenShort: true,
 } as const satisfies ComponentTraits
 
 export const story: DesignStory = {

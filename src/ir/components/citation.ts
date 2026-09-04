@@ -26,6 +26,7 @@ export const traits = {
   passthroughShell: false,
   fullBody: false,
   evidence: false,
+  cutsContentWhenShort: true,
 } as const satisfies ComponentTraits
 
 export const story: DesignStory = {

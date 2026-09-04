@@ -319,3 +319,28 @@ export function pickEvidence(components: readonly Component[]): Component | unde
  * `traits.fullBody`, aggregated here.
  */
 export const FULL_BODY_TYPES: ReadonlySet<ComponentType> = typesWith("fullBody")
+
+/**
+ * Component types that lose content when a layout hands them less height
+ * than they measured for.
+ *
+ * `layoutContentFit`'s last branch is the one place that hands out a budget
+ * rather than a box, and `layout.ts` names the three legal answers to one:
+ * cut the content and declare the rest, decline outright and declare the
+ * whole thing, or ignore `box.h` and draw at natural size. The first two
+ * lose content and stop the export. The third loses nothing — a `cycle` or
+ * a `numbered_cards` drawn in a short band is still the whole component, and
+ * the geometry gate (`evals/gallery/ink-containment.ts`) proves the ink
+ * stays on the page.
+ *
+ * That difference is what a face's step-aside turns on
+ * (`render/step-aside.tsx`): a short band is only a reason to hand the page
+ * over when the band costs content. Declared per-component via
+ * `traits.cutsContentWhenShort`, aggregated here.
+ *
+ * Full-body components are outside this question by construction —
+ * `svg-content.tsx` hands one the whole rect before `layoutContentFit` is
+ * reached, and they fill it themselves.
+ */
+export const CUTS_CONTENT_WHEN_SHORT_TYPES: ReadonlySet<ComponentType> =
+  typesWith("cutsContentWhenShort")
