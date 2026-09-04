@@ -60,7 +60,7 @@ The table gives each component's normal kind home. A component may serve more th
 - Use `pest` for the four external macro factors. Use `swot` for internal and external strategic assessment.
 - Use `sankey` when band width carries an amount through branches and merges, and a gap should show where a flow is not accounted for. Use `flowchart` when branches carry decisions rather than quantities.
 - Use `data_table` when exact values must be read row by row. Use `chart` when the audience should grasp a numeric shape at a glance. Use `comparison` for qualitative attributes.
-- Use `gauge` inside `chart` for one value against one target. Use `progress_donuts` for several completion rates and `kpi_cards` for several independent headline values.
+- Use `gauge` inside `chart` for one value against one target. Use `progress_donuts` for several completion rates and `kpi_cards` for one or more independent headline values.
 - Use `tag_row` only for short labels. Use `bullets` for prose items and cards for items with their own description.
 
 `architecture.layers` paints top to bottom by default. Set `direction: "bottom_up"` when the authored order should begin at the foundation. Keep the array in narrative order.
