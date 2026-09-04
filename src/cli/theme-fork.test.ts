@@ -38,6 +38,17 @@ describe("forkTheme", () => {
     expect(forked.menu).toEqual(source.menu)
   })
 
+  it("carries the design story through a preset copy and a fork", () => {
+    // The story is what the theme is for. A copy and a repaint both keep it,
+    // the way `emphasis` is kept, so a workspace theme is never handed to a
+    // reviewer or a model with nothing to say for itself.
+    const copied = themeFileFromPreset("swiss", { id: "acme-swiss", label: "Acme Swiss" })
+    expect(copied.story?.name).toBe("Swiss")
+
+    const forked = forkTheme(copied, { primary: "#0B5FFF" }, { id: "acme-swiss-blue" })
+    expect(forked.story).toEqual(copied.story)
+  })
+
   it("keeps the source theme's emphasis stroke", () => {
     // A fork repaints the palette. How the theme strikes a `**marked**` run
     // is handwriting, not palette, so it survives the repaint on both

@@ -105,6 +105,7 @@ export function themeFileFromPreset(
     occasions: copy.occasions !== undefined ? [...copy.occasions] : undefined,
     identity: copy.identity,
     emphasis: copy.emphasis,
+    story: copy.story,
     menu: copy.menu,
   }
   return ThemeFileSchema.parse(file) as ThemeFile

@@ -108,6 +108,11 @@ export function copyThemePreset(presetId: string, targetId: string): BuiltinThem
     occasions: [...record.occasions],
     identity: record.identity,
     ...(preset.emphasis ? { emphasis: preset.emphasis } : {}),
+    // The story travels with the copy for the same reason `emphasis` does:
+    // it is what the theme is, not how it was built. A copy that lost it
+    // would come out of the box with nothing to say for itself, and the
+    // gallery and the docs read the copy, not the preset it came from.
+    ...(preset.story ? { story: structuredClone(preset.story) } : {}),
     menu: copyMenu(preset.menu, preset.motif),
   }
 }

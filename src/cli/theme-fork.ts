@@ -304,6 +304,9 @@ function buildForkedTheme(
     // rebased above like every other color; the stroke that ink is applied
     // with belongs to the source theme and travels unchanged.
     emphasis: source.emphasis,
+    // Same reasoning as `emphasis`: a fork repaints, it does not rewrite.
+    // The palette changes, what the theme is for does not.
+    story: source.story,
     menu: structuredClone(source.menu),
   }
   return ThemeFileSchema.parse(file) as ThemeFile
