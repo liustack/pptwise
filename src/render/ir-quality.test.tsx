@@ -414,18 +414,18 @@ describe("checkIrQuality", () => {
     })
   })
 
-  // ── comparison_overflow / comparison_count_overflow, citation_overflow /
-  // citation_count_overflow, architecture_overflow / architecture_count_overflow
-  // (carried-items wave — P0 hardening's family sweep gave these three
+  // ── comparison_overflow / comparison_count_overflow,
+  // architecture_overflow / architecture_count_overflow
+  // (carried-items wave — P0 hardening's family sweep gave these
   // vertical-stacking components a render-time box.h cap + data-dropped
   // marker, same as bullets, but zero pre-render editorial signal: bullets_
   // overflow/bullets_count_overflow's own dual-threshold shape applied here.
   // Unlike bullets_overflow (a per-pacing PACING_BUDGETS editorial number),
-  // these three components have no pacing table of their own — both the warn
+  // these components have no pacing table of their own — both the warn
   // and error thresholds live in CAPACITY (capacity.ts), flat and pacing-
   // independent, mirroring bullet_item_overflow/bullets_count_overflow's own
   // "flat CAPACITY constant" shape instead. See CAPACITY.comparison/
-  // .citation/.architecture's own derivation comments (capacity.ts) for the
+  // .architecture's own derivation comments (capacity.ts) for the
   // box-geometry arithmetic (warn) and two-sided bracketing (error). ──
 
   function comparisonRows(n: number): { label: string; cells: string[] }[] {
@@ -519,99 +519,6 @@ describe("checkIrQuality", () => {
         },
       ])
       expect(codes(checkIrQuality(ir))).toContain("comparison_count_overflow")
-    })
-  })
-
-  function citationSources(n: number): { label: string }[] {
-    return Array.from({ length: n }, (_, i) => ({ label: `source ${i}` }))
-  }
-
-  describe("citation_overflow (warn, geometric render-capacity budget)", () => {
-    const threshold = CAPACITY.citation.warnSources
-
-    it(`does NOT warn at exactly ${threshold} sources (the worst-case content box's own no-drop boundary)`, () => {
-      const ir = makeIR([
-        {
-          type: "content",
-          kind: "points",
-          heading: "引用页",
-          components: [{ type: "citation", sources: citationSources(threshold) }],
-        },
-      ])
-      expect(codes(checkIrQuality(ir))).not.toContain("citation_overflow")
-    })
-
-    it(`warns (severity warn) at ${threshold + 1} sources`, () => {
-      const ir = makeIR([
-        {
-          type: "content",
-          kind: "points",
-          heading: "引用页",
-          components: [{ type: "citation", sources: citationSources(threshold + 1) }],
-        },
-      ])
-      const issues = checkIrQuality(ir)
-      expect(codes(issues)).toContain("citation_overflow")
-      expect(issues.find((i) => i.code === "citation_overflow")!.severity).toBe("warn")
-    })
-  })
-
-  describe("citation_count_overflow (error, extreme ceiling mirroring bullets_count_overflow's bracketing)", () => {
-    const threshold = CAPACITY.citation.errorSources
-
-    it(`does NOT report at exactly ${threshold} sources`, () => {
-      const ir = makeIR([
-        {
-          type: "content",
-          kind: "points",
-          heading: "引用压力测试",
-          components: [{ type: "citation", sources: citationSources(threshold) }],
-        },
-      ])
-      expect(codes(checkIrQuality(ir))).not.toContain("citation_count_overflow")
-    })
-
-    it(`reports (severity error) over ${threshold} sources`, () => {
-      const ir = makeIR([
-        {
-          type: "content",
-          kind: "points",
-          heading: "引用压力测试",
-          components: [{ type: "citation", sources: citationSources(threshold + 1) }],
-        },
-      ])
-      const issues = checkIrQuality(ir)
-      expect(codes(issues)).toContain("citation_count_overflow")
-      expect(issues.find((i) => i.code === "citation_count_overflow")!.severity).toBe("error")
-    })
-
-    // Lower bracket anchor (carried-items wave's own new fixture — citation
-    // has no pre-existing depth-axis-hardening.test.ts scenario to anchor
-    // against, unlike comparison — 300 mirrors that file's own comparison
-    // anchor for family consistency): a genuinely large, if excessive,
-    // source list must still land gracefully, not be hard-rejected.
-    it("does NOT report for 300 sources (must land gracefully, not be hard-rejected)", () => {
-      const ir = makeIR([
-        {
-          type: "content",
-          kind: "points",
-          heading: "300-source citation stress",
-          components: [{ type: "citation", sources: citationSources(300) }],
-        },
-      ])
-      expect(codes(checkIrQuality(ir))).not.toContain("citation_count_overflow")
-    })
-
-    it("reports for 20000 sources (clearly pathological, must reject)", () => {
-      const ir = makeIR([
-        {
-          type: "content",
-          kind: "points",
-          heading: "extreme citation",
-          components: [{ type: "citation", sources: citationSources(20_000) }],
-        },
-      ])
-      expect(codes(checkIrQuality(ir))).toContain("citation_count_overflow")
     })
   })
 

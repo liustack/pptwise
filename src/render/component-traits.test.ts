@@ -20,7 +20,6 @@ import { traits as roadmapTraits } from "@/ir/components/roadmap"
 import { traits as matrixTraits } from "@/ir/components/matrix"
 import { traits as insightPanelTraits } from "@/ir/components/insight-panel"
 import { traits as verdictBannerTraits } from "@/ir/components/verdict-banner"
-import { traits as citationTraits } from "@/ir/components/citation"
 import { traits as imageTraits } from "@/ir/components/image"
 import { traits as imageGridTraits } from "@/ir/components/image-grid"
 import { traits as imageCompareTraits } from "@/ir/components/image-compare"
@@ -80,7 +79,6 @@ const DOMAIN_FILE_TRAITS: readonly (readonly [string, { readonly evidence: boole
   ["matrix", matrixTraits],
   ["insight_panel", insightPanelTraits],
   ["verdict_banner", verdictBannerTraits],
-  ["citation", citationTraits],
   ["image", imageTraits],
   ["image_grid", imageGridTraits],
   ["image_compare", imageCompareTraits],

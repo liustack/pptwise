@@ -107,13 +107,13 @@ describe("journal sparse faces", () => {
     expect(hair?.getAttribute("stroke")).toBe(ctx.colors.primary)
   })
 
-  it("statement closes on the cited source, not on a masthead of our own", () => {
+  it("statement closes on the source the author wrote, not on a masthead of our own", () => {
     const slide: Slide = {
       type: "content",
       kind: "points",
       layout: "statement",
       heading: VERSE,
-      components: [{ type: "citation", sources: [{ label: "读者问卷全量统计" }] }],
+      components: [{ type: "paragraph", text: "读者问卷全量统计" }],
     } as Slide
     const { markup, root } = render(
       <StatementContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />,

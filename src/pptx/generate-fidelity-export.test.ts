@@ -260,7 +260,6 @@ const COMPONENT_BY_TYPE: Record<Component["type"], Component> = {
   paragraph: { type: "paragraph", text: "This is a plain paragraph of body text for the probe deck." },
   bullets: { type: "bullets", items: ["one", "two", "three"] },
   code: { type: "code", language: "ts", code: "const x = 1" },
-  citation: { type: "citation", sources: [{ label: "Source A", url: "https://example.com" }] },
   image: imageDangling,
   image_grid: imageGridDangling,
   image_compare: imageCompareDangling,
@@ -361,7 +360,6 @@ function noAssetIr(): PptxIR {
       contentSlide("Insight + Verdict", [COMPONENT_BY_TYPE.insight_panel, COMPONENT_BY_TYPE.verdict_banner]),
       contentSlide("Blockquote + Paragraph", [COMPONENT_BY_TYPE.blockquote, COMPONENT_BY_TYPE.paragraph]),
       contentSlide("Bullets + Code", [COMPONENT_BY_TYPE.bullets, COMPONENT_BY_TYPE.code]),
-      contentSlide("Citation", [COMPONENT_BY_TYPE.citation]),
       contentSlide("Data Table", [COMPONENT_BY_TYPE.data_table]),
       // The 3 image-family types, all pointed at unresolvable asset ids —
       // must fall back to a placeholder, never emit `<image>`.

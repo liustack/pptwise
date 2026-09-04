@@ -26,7 +26,6 @@ import { renderDef as roadmapRenderDef } from "./roadmap"
 import { renderDef as matrixRenderDef } from "./matrix"
 import { renderDef as insightPanelRenderDef } from "./insight-panel"
 import { renderDef as verdictBannerRenderDef } from "./verdict-banner"
-import { renderDef as citationRenderDef } from "./citation"
 import { renderDef as swotRenderDef } from "./swot"
 import { renderDef as bmcRenderDef } from "./bmc"
 import { renderDef as waterfallRenderDef } from "./waterfall"
@@ -87,7 +86,6 @@ const RENDER_DEFS: Record<ComponentType, RenderDef> = {
   matrix: matrixRenderDef,
   insight_panel: insightPanelRenderDef,
   verdict_banner: verdictBannerRenderDef,
-  citation: citationRenderDef,
   swot: swotRenderDef,
   bmc: bmcRenderDef,
   waterfall: waterfallRenderDef,

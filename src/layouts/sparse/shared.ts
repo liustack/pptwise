@@ -3,7 +3,7 @@ import { fitHeadingLines } from "../../render/heading-fit"
 import { fitSvgLine, measureTextUnits } from "../../lib/svg-text-layout"
 import type { Slide } from "@/ir"
 import type { EmphasisSegment } from "../../render/emphasis"
-import { citationSources, statementAttribution } from "../minimal-shared"
+import { statementAttribution } from "../minimal-shared"
 
 export function pad2(n: number): string {
   return String(n).padStart(2, "0")
@@ -124,14 +124,7 @@ export function fitStatementSource(
 }
 
 export function evidenceSource(slide: Slide): string | undefined {
-  const footnote = slide.footnote?.trim()
-  if (footnote) return footnote
-  const citation = slide.components.find((c) => c.type === "citation")
-  if (citation) {
-    const cited = citationSources(citation)
-    if (cited) return cited
-  }
-  return undefined
+  return slide.footnote?.trim() || undefined
 }
 
 const CJK_STOP = /[，。；、]/

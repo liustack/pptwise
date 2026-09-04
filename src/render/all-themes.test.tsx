@@ -32,7 +32,6 @@ const allComponents: Component[] = [
     columns: ["甲", "乙"],
     rows: [{ label: "行", cells: ["1", "2"] }],
   },
-  { type: "citation", sources: [{ label: "来源", url: "https://e.x" }] },
 ]
 
 function deck(themeId: (typeof BUILTIN_THEME_IDS)[number]): { ir: PptxIR; slides: Slide[] } {

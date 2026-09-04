@@ -20,7 +20,6 @@ import { describe, it, expect } from "vitest"
 import { render } from "@testing-library/react"
 import type { ComponentCtx } from "./types"
 import { bullets } from "./bullets"
-import { citation } from "./citation"
 import { timeline } from "./timeline"
 import { comparison } from "./comparison"
 import { dataTable } from "./data-table"
@@ -89,20 +88,6 @@ const CASES: Case[] = [
         ),
       ).container,
     painted: (c) => textsMatching(c, (t) => /要点 \d/.test(t.textContent ?? "")),
-  },
-  {
-    name: "citation declares the sources it could not draw",
-    kind: "source",
-    authored: 8,
-    render: () =>
-      svg(
-        citation.render(
-          { type: "citation", sources: Array.from({ length: 8 }, (_, i) => ({ label: `来源 ${i}` })) },
-          { x: 0, y: 0, w: 900, h: 90 },
-          ctx,
-        ),
-      ).container,
-    painted: (c) => textsMatching(c, (t) => /来源 \d/.test(t.textContent ?? "")),
   },
   {
     name: "timeline declares the events it could not draw",

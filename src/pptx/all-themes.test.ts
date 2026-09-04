@@ -13,7 +13,6 @@ const components: Component[] = [
   { type: "comparison", columns: ["A", "B"], rows: [{ label: "成本", cells: ["高", "低"] }] },
   { type: "timeline", milestones: [{ date: "Q1", title: "启动" }, { date: "Q2", title: "上线" }] },
   { type: "architecture", layers: [{ title: "接入", items: ["nginx"] }, { title: "服务", items: ["api", "worker"] }] },
-  { type: "citation", sources: [{ label: "来源 A", url: "https://example.com" }] },
 ]
 
 describe("all themes export v2 (download path)", () => {

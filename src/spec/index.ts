@@ -390,6 +390,15 @@ function checkFocusVocabulary(spec: DeckSpec): SpecValidationIssue[] {
       })
       return
     }
+    if (page.focus === "citation") {
+      errors.push({
+        path: `pages.${i}.focus`,
+        pageId: page.id,
+        message:
+          'component type "citation" was removed — a reference list is document content, not slide content. Name a source on the component that rests on it, in its own "source" field',
+      })
+      return
+    }
     if (page.focus === "banner-heading") {
       errors.push({
         path: `pages.${i}.focus`,

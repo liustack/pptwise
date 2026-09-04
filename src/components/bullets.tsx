@@ -112,7 +112,7 @@ function layoutItems(component: BulletsComponent, w: number, baseFontSize: numbe
   // composes a short, space-bearing literal prefix ahead of arbitrary
   // (possibly space-free CJK) caller content before a `layoutSvgText` call —
   // fixing the space-delimited heuristic in `tokenize` itself would instead
-  // touch the shared wrap engine that headings, paragraphs, kpi, citation,
+  // touch the shared wrap engine that headings, paragraphs, kpi,
   // icon-cards, steps, and verdict-banner all depend on too, for a defect
   // only this one composition pattern actually triggers.
   const contentMaxWidth = (fontSize: number, i: number) =>

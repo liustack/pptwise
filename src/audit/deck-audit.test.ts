@@ -490,35 +490,6 @@ describe("auditDeck — content-truncated / content-dropped (bench-driven fix ro
     )
   })
 
-  it("surfaces a clipped citation ref as content-truncated", () => {
-    const ir = deck("homeroom", [
-      {
-        type: "content",
-        kind: "data",
-        id: "citation-ref-clip",
-        heading: "经营数据口径",
-        components: [
-          {
-            type: "citation",
-            sources: [
-              {
-                label: "云觅科技 2026 年第二季度经营数据",
-                ref: LONG_CJK.repeat(4),
-              },
-            ],
-          },
-        ],
-      },
-    ])
-    const markup = renderSlideSvg(ir, 0)
-    expect(markup).toContain('data-truncated="1"')
-    expect(markup).not.toContain("…")
-    expect(auditDeck(ir).findings).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ page: 1, slideId: "citation-ref-clip", code: "content-truncated" }),
-      ]),
-    )
-  })
 
   it("surfaces layoutContentFit's fully-dropped components as 'content-dropped' findings", () => {
     // Same fixture shape as svg-content.test.tsx's own "renders a

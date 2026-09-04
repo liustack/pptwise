@@ -134,27 +134,16 @@
  *     的 311px 结论相同，仍是 3）
  *   - `bullets.maxItems`：`floor(277/64)=4`（原按 380 算得 5，与 Task 5 时
  *     的 311px 结论相同，仍是 4）
- *   - `citation.maxSources`：`floor(277/28)=9`（原按 380 算得 13，S3b 首轮
- *     误算按 297px 得 10，二次修正后再收紧 1 到 9）
- * 三者理论上都会收紧，但本任务不在这次改动里下调这三个常量，理由：
+ * 两者理论上都会收紧，但本任务不在这次改动里下调这三个常量，理由：
  *   1. 它们是 IR 层的软预算/lint 提示，真正的渲染期安全网是
  *      `layoutContentFit` 的间距收紧+丢块兜底、以及 `fitSvgLine`/
- *      `layoutSvgText` 的动态缩字号/截断，取值宽松不会导致真实溢出——
- *      `citation.tsx` 是例外，见下。
+ *      `layoutSvgText` 的动态缩字号/截断，取值宽松不会导致真实溢出。
  *   2. 本任务的零溢出真机门与 svg 全量 vitest 套件已跑过，正是本文件
  *      一贯依赖的"用真实渲染验证、不依赖表内经验值"方法论（参见上面
  *      magazine/brief 两轮复核的同一结论句式）。
  *   3. 下调是一次跨主题、跨场景的 `ir-quality.ts` lint 阈值变更，影响面覆盖
  *      所有主题的所有内容页（不止带副题句的），应作为独立评审的任务，不
  *      适合作为模板几何任务的隐性副作用捎带下调。
- * `citation.maxSources` 例外说明：`citation.tsx` 逐条按整块计量
- * （`sources.length * ROW`），不像 `bullets`/`paragraph` 那样有单块内动态
- * 换行/截断兜底——13 条源在 277px 预算下会被 `layoutContentFit` 判定整块
- * 不 fit，触发丢块保护（不会溢出，但可能比预期更早丢内容，见 `layout.ts`
- * 的 `layoutContentFit` 丢块分支）。如实记录，是否收紧留给后续任务判断。
- * **后续任务已接手（carried-items 波，2026-07-24）**：三者中的 `citation`
- * 一支已按这里推导的 9（277px 基准）重命名为 `warnSources` 并真正接入
- * `ir-quality.ts`（`citation_overflow` warn），见该字段自己的新推导注释。
  * `maxBlocksPerSlide`/`bullets.maxItems` 仍不在本次改动范围内，维持上面
  * 第 3 点理由（跨主题跨场景的独立评审范畴）不变。
  *
@@ -310,7 +299,7 @@ export const CAPACITY = {
    * `layoutSvgText`（纯 CJK 正文因此照常落回逐字符分词），预留出前缀宽度后
    * 单独拼回首行渲染——`bullets.tsx` 是全仓唯一在 `layoutSvgText` 调用前
    * 拼接「短、带空格字面量前缀 + 任意（可能无空格的 CJK）调用方内容」的
-   * 组件，改这里不影响 heading/paragraph/kpi/citation/icon-cards/steps/
+   * 组件，改这里不影响 heading/paragraph/kpi/icon-cards/steps/
    * verdict-banner 共享的同一套 wrap 引擎。
    *
    * 同一测法（`installNodePlatform()` + `renderSlideSvg()`，magazine 主题、
@@ -408,57 +397,13 @@ export const CAPACITY = {
     labelMaxUnits: 15,
   },
   /**
-   * `citation.tsx` 每条源单行堆叠，行高 `ROW = 28`，无额外间距，且不参与
-   * 换行修复（后续修复仅缩字+截断，行数不变）。
-   *
-   * **carried-items 波（2026-07-24）改口径**：本字段原名 `maxSources`，
-   * 值 13（`floor(minRectH(380)/28)`，旧 380px 基准），仅供文档参考，从未
-   * 接入 `ir-quality.ts`——本文件当时的 S3b 复核已指出新真实最坏值
-   * （277px）会把这个数收紧到 `floor(277/28)=9`，但"本次改动不下调"，把
-   * 接线留给后续任务（见文件头「按新真实最坏值复核下游常量」一节）。本波
-   * 就是那个后续任务：P0 hardening 给 `citation.tsx` 加了 render-time
-   * box.h 截断+`data-dropped`标记（同 bullets.tsx 家族），但截断前从没有
-   * 编辑性预警——弱模型看不到警告就先丢内容。现在把这个字段真正接入
-   * `ir-quality.ts`（`citation_overflow` warn），改用当时已推导但未采用的
-   * 277px 基准，重命名为 `warnSources` 以反映"现在是活跃阈值而非文档参考
-   * 值"这一语义变化：
-   *   warnSources = floor(277 / 28) - 0 = 9（`citation.tsx`
-   *   自身的截断公式 `naturalHeight(=count*28) > truncBudget` 在
-   *   count=9 时 252<=277 不截断，count=10 时 280>277 才开始截断——9 正是
-   *   最坏情况下"一条不丢"的最大条数，即真实渲染容量本身）
-   *
-   * `errorSources`（新增，error 级，两头夹逼——同
-   * `CAPACITY.bullets.countOverflowItems` 的括号法，非同一组数字，各自
-   * 独立核对）：
-   *   下界——carried-items 波新立的"必须优雅落地"夹具（300 条，与
-   *   `comparison.errorRows` 的同名夹具同一量级，family 内部一致，见该
-   *   夹具本身）必须放行，errorSources 需严格大于 300。
-   *   上界——把整块 720px 画布（`CANVAS_H_PX`，无标题无页边距）全部让给
-   *   citation 这一个"慷慨到不现实"的物理显示上限：
-   *     floor(720 / 28) = 25 条
-   *   （与 bullets 物理上限恰好相同——两者共享同一个 28px/条的几何量级，
-   *   非巧合）。取 1000（`errorSources`），与 `CAPACITY.bullets
-   *   .countOverflowItems` 同值且推导比例几乎相同：1000/25=40×物理上限，
-   *   与 `CAPACITY.bullets.countOverflowItems`'s own 1000/25=40× 逐位对齐
-   *   ——citation 与 bullets 共享同一个 28px 行高基准，这不是巧合而是同一
-   *   何几何量级的直接结果。1000 相对 300 下界留 3.3× 余量，相对 20000
-   *   （新立的"明显病态、必须拒收"夹具，量级同 D 报告 bullets 20000 例）
-   *   留 20× 余量，两头都留了充足空间。
-   *
-   * 物理上限说明：该值曾是文档参考值（`maxSources`，从未拦截任何输入）
-   * ——citation 块通常与标题/其他块共页，实际可用高度更小，由
-   * `maxBlocksPerSlide` 与「一页一观点」设计原则另行约束，`warnSources`
-   * 现在是真正接入 `ir-quality.ts` 的活跃编辑性预警阈值，不再只是参考。
-   */
-  citation: { warnSources: 9, errorSources: 1000 },
-  /**
    * `comparison.tsx`（carried-items 波新增字段，P0 hardening 已给
    * `comparison.tsx` 加了 render-time box.h 截断+`data-dropped`标记，同
-   * bullets/citation/architecture 家族，但截断前从没有编辑性预警）。每行
+   * bullets/architecture 家族，但截断前从没有编辑性预警）。每行
    * 固定 `ROW = 44` px（含表头行），不随内容/字号变化——列内文字自身会
    * 缩字号/截断，但行高本身是硬常量。
    *
-   * `warnRows`（warn 级，几何渲染容量推导，同 citation.warnSources 的口径
+   * `warnRows`（warn 级，几何渲染容量推导，同 bullets 家族的口径
    * ——两者共享同一个"最坏内容区高度 277px"基准，见文件头「按新真实最坏值
    * 复核下游常量」S3b 二次修正结论）：`comparison.tsx` 自身的截断公式是
    * `naturalHeight(=(rows+1)*44，+1 为表头行) > truncBudget` 时才截断，
@@ -480,7 +425,7 @@ export const CAPACITY = {
    *   comparison 这一个"慷慨到不现实"的物理显示上限：
    *     floor(720 / 44) = 16 行
    *   取 1000（`errorRows`），换算成物理上限的倍数：1000/16≈62.5×，比
-   *   bullets/citation 自己的 40× 倍数更宽松（更保守，不会误拒合法但夸张
+   *   bullets 自己的 40× 倍数更宽松（更保守，不会误拒合法但夸张
    *   的输入）。1000 相对 300 下界留 3.3× 余量，相对 20000（新立的"明显
    *   病态、必须拒收"夹具，量级同 D 报告 bullets 20000 例）留 20× 余量，
    *   两头都留了充足空间。

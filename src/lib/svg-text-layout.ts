@@ -1084,7 +1084,7 @@ export function truncateToWidth(
 // Mono sibling of `truncateToUnits` above, measuring with
 // `measureMonoTextUnits` instead of `measureTextUnits` -- a separate
 // function rather than a parameterized one so `truncateToUnits`'s existing
-// callers (bullets/kpi/citation/steps/icon-cards/BigNumber/emphasis/
+// callers (bullets/kpi/steps/icon-cards/BigNumber/emphasis/
 // heading-fit, all proportional-model roles) are untouched by this borrow-
 // wave Task 3 fix-round addition. Only `code.tsx` calls this one.
 export function truncateToMonoUnits(text: string, maxUnits: number): string {

@@ -128,7 +128,7 @@ export function AssertionEvidence({
   // least one placed component" branch (`layout.ts`) and every box.h-aware
   // support component's own "never render zero visible units" floor
   // (`bullets.tsx`'s `visibleItemCount`, `Math.max(1, visible)`, mirrored by
-  // data-table/comparison/citation/timeline/row-cards/kpi/architecture)
+  // data-table/comparison/timeline/row-cards/kpi/architecture)
   // *guarantee* at least one unit renders regardless of how small a box.h
   // they're given — so a near-zero `supportRectH` didn't drop content, it
   // just let that guaranteed-minimum content spill past its own box,
@@ -138,7 +138,7 @@ export function AssertionEvidence({
   // `SUPPORT_FLOOR` derives the exact worst case that guarantee can produce
   // for `bullets.tsx` (the support type in every reproduced case, and the
   // tightest-capacity box.h-aware type in this codebase — data-table/
-  // comparison/citation/timeline/row-cards/kpi/architecture each cap their
+  // comparison/timeline/row-cards/kpi/architecture each cap their
   // own "kept" unit at 1-2 lines too, same order of magnitude): one item
   // wrapped to bullets.tsx's own hardcoded `maxLines: 2` ceiling, plus its
   // own trailing drop-marker line immediately below it — every constant below is

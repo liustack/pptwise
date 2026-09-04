@@ -94,5 +94,8 @@ export function componentTypeError(issue: z.core.$ZodRawIssue<z.core.$ZodIssueIn
   if (raw === "logo_wall") {
     return 'component type "logo_wall" was removed — use "image_grid" instead'
   }
+  if (raw === "citation") {
+    return 'component type "citation" was removed — a reference list is document content, not slide content. Name a source on the component that rests on it, in its own "source" field'
+  }
   return enumMismatchMessage("component type", raw, options.map(String))
 }

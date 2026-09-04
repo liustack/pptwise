@@ -39,8 +39,8 @@ const FOOTNOTE_SIZE = 12
  * Every construction on this face — the generic one below and the nine theme
  * faces in `sparse/` — puts exactly one component in exactly one frame, and
  * finds it with `pickEvidence`. `pickEvidence` knows `EVIDENCE_TYPES` and
- * nothing else, so an `insight_panel`, a `code` listing or a `citation`
- * returned `undefined` and the theme faces rendered no component at all: 29
+ * nothing else, so an `insight_panel` or a `code` listing returned
+ * `undefined` and the theme faces rendered no component at all: 29
  * gallery pages shipped as a kicker and a heading over an empty frame, with
  * no ellipsis, no `data-dropped`, and no validate error. Drawing none of one
  * and saying nothing about it is the posture the face discipline forbids.
@@ -104,8 +104,8 @@ function OneEvidenceFallbackContent({ slide, ctx }: SvgTemplateProps) {
   // This page is already a fallback and it can still come up short. Its
   // floor is 640 against the sheet's 612, which reads like more room until
   // the heading is set: `bodyTop` follows a two-line title down, and the
-  // sheet's own title is 34px where this one is display size. Sixteen
-  // citations measure 1120x439 here and 1104x477 there.
+  // sheet's own title is 34px where this one is display size. A sixteen-row
+  // stack measures 1120x439 here and 1104x477 there.
   const bodyRect = { x: HEADING_X, y: bodyTop, w: HEADING_MAX_W, h: Math.max(80, EVIDENCE_BOTTOM - bodyTop) }
   const aside = stepAside({ face: "one-evidence", slide, ctx, bodyRect })
   if (aside) return aside
@@ -241,6 +241,13 @@ export const layoutDef = {
   // component). Page decor and branding posture belong to the menu entry.
   id: "one-evidence",
   kind: "standard",
+  story: {
+    name: "Claim and Proof",
+    story: "A full-sentence assertion runs across the top in up to three lines. Below it a single chart, table or image fills the remaining canvas as evidence, no second block.",
+    positioning: "Serves evidence at exactly one visual block. This page holds one claim and one piece of proof, and refuses a second exhibit: state it, then prove it.",
+    audience: "A review board or executive meeting where one chart must back one sentence.",
+    notFor: "Multiple charts or items that each need their own frame, which belong in bento-panel.",
+  },
   slideTypes: ["content"],
   slots: [
     { name: "heading", accepts: [] },

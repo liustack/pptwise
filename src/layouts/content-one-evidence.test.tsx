@@ -295,7 +295,7 @@ describe("one-evidence evidence vs assertion partition", () => {
   })
   // The 2026-09 fidelity sweep: nine theme faces call `pickEvidence` and
   // render its result, and `pickEvidence` knows only `EVIDENCE_TYPES`. An
-  // `insight_panel` / `code` / `citation` therefore reached no frame on any
+  // `insight_panel` / `code` therefore reached no frame on any
   // of them — 29 gallery pages drew a heading over an empty page with no
   // mark of any kind. The face now steps aside for content it cannot place.
   it("steps aside for a component the evidence frame cannot place, and draws it whole", () => {

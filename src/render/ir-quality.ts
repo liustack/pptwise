@@ -118,7 +118,7 @@ function isBackgroundImageOnly(slide: Slide): boolean {
 
 /**
  * Shared push-plumbing for the item-count dual-threshold checks the
- * carried-items wave adds for comparison/citation/architecture (mirrors
+ * carried-items wave adds for comparison/architecture (mirrors
  * bullet_item_overflow/bullets_count_overflow's shape: a warn budget and a
  * separate, always-higher error ceiling, both flat/pacing-independent
  * `CAPACITY` constants — see each call site's own `CAPACITY.*` derivation
@@ -325,9 +325,8 @@ function checkSlide(ir: PptxIR, slide: Slide, index: number, resolvedAxes: Narra
     }
   }
 
-  // comparison_overflow/citation_overflow/architecture_overflow +
-  // their _count_overflow error tiers. comparison/citation still fold at
-  // render with a data-dropped marker. architecture no longer folds: the
+  // comparison_overflow/architecture_overflow + their _count_overflow error
+  // tiers. comparison still folds at render with a data-dropped marker. architecture no longer folds: the
   // count ceiling is a validate hard stop. Same dual-threshold shape as
   // bullets (warn at a budget, error at a ceiling). Thresholds come from
   // CAPACITY (capacity.ts).
@@ -340,15 +339,6 @@ function checkSlide(ir: PptxIR, slide: Slide, index: number, resolvedAxes: Narra
         errorCode: "comparison_count_overflow",
         warnMessage: `对比表行数过多（>${CAPACITY.comparison.warnRows}行），极端版式下可能被截断显示，建议精简或拆页`,
         errorMessage: `对比表行数远超合理上限（>${CAPACITY.comparison.errorRows}），"优雅截断"已不再是诚实描述——请精简内容或拆分为多页`,
-      })
-    } else if (component.type === "citation") {
-      pushItemCountOverflow(issues, index, component.sources.length, {
-        warnThreshold: CAPACITY.citation.warnSources,
-        errorThreshold: CAPACITY.citation.errorSources,
-        warnCode: "citation_overflow",
-        errorCode: "citation_count_overflow",
-        warnMessage: `引用来源数量过多（>${CAPACITY.citation.warnSources}条），极端版式下可能被截断显示，建议精简或拆页`,
-        errorMessage: `引用来源数量远超合理上限（>${CAPACITY.citation.errorSources}），"优雅截断"已不再是诚实描述——请精简内容或拆分为多页`,
       })
     } else if (component.type === "architecture") {
       pushItemCountOverflow(issues, index, component.layers.length, {

@@ -62,13 +62,13 @@ describe("memo sparse faces", () => {
     expect(markup).not.toContain("MEMORANDUM")
   })
 
-  it("statement is one Songti line, a blank chop, and the cited source", () => {
+  it("statement is one Songti line, a blank chop, and the source line", () => {
     const slide: Slide = {
       type: "content",
       kind: "points",
       layout: "statement",
       heading: VERSE,
-      components: [{ type: "citation", sources: [{ label: "两年银行流水与记账导出" }] }],
+      components: [{ type: "paragraph", text: "两年银行流水与记账导出" }],
     } as Slide
     const { markup, root } = render(
       <StatementContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />,

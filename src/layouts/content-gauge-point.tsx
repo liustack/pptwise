@@ -170,11 +170,18 @@ export const layoutDef = {
   branding: "none",
   id: "gauge-point",
   kind: "standard",
+  story: {
+    name: "Gauge Verdict",
+    story: "A 60-point bold heading with a tall accent lead bar down its left edge. A body quote or paragraph sits below, and the section label floats above in tracked capitals.",
+    positioning: "Serves statement and quote at one body block, Brief theme only. Choose it for a single conclusion or recommendation anchoring a report section.",
+    audience: "Structured-report readers who need one takeaway to land clearly.",
+    notFor: "Multiple data blocks or charts, which belong in gauge-stats.",
+  },
   slideTypes: ["content"],
   slots: [
     { name: "kicker", accepts: [] },
     { name: "heading", accepts: [] },
-    { name: "body", accepts: ["blockquote", "paragraph", "citation"], capacity: 1 },
+    { name: "body", accepts: ["blockquote", "paragraph"], capacity: 1 },
     { name: "meta", accepts: [] },
   ],
   headingFit: {

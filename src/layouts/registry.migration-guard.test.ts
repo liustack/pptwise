@@ -39,6 +39,30 @@ const fixture = JSON.parse(
 /** Layouts retired after the capture. Compare the rest, skip these ids. */
 const RETIRED_LAYOUT_IDS = new Set(["image-lead-split", "side-highlight", "banner-heading"])
 
+/**
+ * Component types the IR vocabulary retired after the capture. A slot that
+ * once listed one has not drifted; the word it named stopped existing, and
+ * this fixture's whole value is that it is never re-recorded. Dropped from
+ * the captured side before the comparison, so every other entry in the same
+ * `accepts` list still has to match.
+ */
+const RETIRED_COMPONENT_TYPES = new Set(["citation"])
+
+/** `captured` with every retired component type filtered out of its slot lists. */
+function withoutRetiredComponents(captured: unknown): unknown {
+  if (Array.isArray(captured)) {
+    return captured
+      .filter((value) => typeof value !== "string" || !RETIRED_COMPONENT_TYPES.has(value))
+      .map(withoutRetiredComponents)
+  }
+  if (captured !== null && typeof captured === "object") {
+    return Object.fromEntries(
+      Object.entries(captured as Record<string, unknown>).map(([key, value]) => [key, withoutRetiredComponents(value)]),
+    )
+  }
+  return captured
+}
+
 /** `live`, recursively cut down to the shape `captured` has. */
 function capturedShapeOf(live: unknown, captured: unknown): unknown {
   if (Array.isArray(captured)) {
@@ -68,8 +92,9 @@ describe("LAYOUT_REGISTRY migration guard (registry.ts aggregator conversion, T1
 
   it("every captured field is deep-equal to its pre-migration counterpart", () => {
     const live = LAYOUT_REGISTRY as unknown as Record<string, Record<string, unknown>>
-    for (const [id, captured] of Object.entries(fixture.registry)) {
+    for (const [id, raw] of Object.entries(fixture.registry)) {
       if (RETIRED_LAYOUT_IDS.has(id)) continue
+      const captured = withoutRetiredComponents(raw)
       expect(live[id], id).toBeDefined()
       expect(capturedShapeOf(live[id]!, captured), id).toEqual(captured)
     }

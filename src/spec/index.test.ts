@@ -237,6 +237,18 @@ describe("deck spec hard gates", () => {
     expect(text).not.toMatch(/pptwise migrate/)
   })
 
+  it("rejects a citation focus and points at the component's own source field", () => {
+    const result = validateSpec(
+      valid({
+        pages: [cover(), content("a", { focus: "citation" }), content("b"), content("c"), content("d"), ending()],
+      }),
+    )
+    expect(result.ok).toBe(false)
+    const text = formatSpecIssues(result.errors)
+    expect(text).toContain('"citation" was removed')
+    expect(text).toContain('"source" field')
+  })
+
   it("rejects logo_wall and banner-heading focus without a migrate pointer", () => {
     const logoWall = validateSpec(
       valid({

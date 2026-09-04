@@ -46,14 +46,11 @@ import { ToneAdaptiveContent } from "./content-tone-adaptive-content"
 import { TwoColumnContent } from "./content-two-column"
 import type { ContentLayout } from "./types"
 
-/** `n` sources, one line each. The dial for a face a chart cannot measure. */
-function citations(n: number) {
+/** `n` bullet rows, one line each. The dial for a face a chart cannot measure. */
+function bulletRows(n: number) {
   return {
-    type: "citation",
-    sources: Array.from({ length: n }, (_, i) => ({
-      label: `Quarterly operations review, volume ${i + 1}`,
-      ref: `R-${i + 1}`,
-    })),
+    type: "bullets",
+    items: Array.from({ length: n }, (_, i) => `Quarterly operations review, volume ${i + 1}`),
   }
 }
 
@@ -122,15 +119,15 @@ const CASES: FaceCase[] = [
   { face: "show-gallery", Face: ShowGalleryContent, themeId: "runway", shortPage: true, regions: ["face", "aside", "declined"] },
   { face: "show-statement", Face: ShowStatementContent, themeId: "runway", shortPage: true, regions: ["face", "aside", "declined"] },
   // A chart is evidence this face places by shrinking it to fit, so a lone
-  // one never reaches the body slot. A citation list is not evidence at all,
-  // and its height grows one source at a time. Its floor of 640 reads like
+  // one never reaches the body slot. A bullet list is not evidence at all,
+  // and its height grows one row at a time. Its floor of 640 reads like
   // more room than the sheet's 612 until the heading is set: `bodyTop`
   // follows a display title down where the sheet's follows a 34px one.
   {
     face: "one-evidence",
     Face: OneEvidenceContent,
     themeId: "brief",
-    components: (n) => [citations(n)],
+    components: (n) => [bulletRows(n)],
     shortPage: true,
     regions: ["face", "aside", "declined"],
   },
@@ -142,12 +139,16 @@ const CASES: FaceCase[] = [
   // 1168x360 against 1104x367 and there is none — a face's own heading size
   // is part of how much room its body has left, so whether this trade is
   // ever worth making is a per-theme fact, not a per-face one.
+  //
+  // The full page, not the short one: the poster band pays for a subheading
+  // out of the same 460px the body wants, where the sheet pays a line of
+  // 18px type for it. On a short page the two rects land within one bullet
+  // row of each other and the window closes between two integers.
   {
     face: "stacked-poster",
     Face: StackedPosterContent,
     themeId: "brief",
-    components: (n) => [citations(n)],
-    shortPage: true,
+    components: (n) => [bulletRows(n)],
     regions: ["face", "aside", "declined"],
   },
   // A lone hero figure is this face's page. Two KPI items are not, so the

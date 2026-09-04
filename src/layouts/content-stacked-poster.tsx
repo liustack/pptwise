@@ -252,7 +252,7 @@ function renderStackedContent(
   // (`componentFitsSlot`) and lands here when it does not. This stack is
   // wider than the sheet (1168 against 1104) but not always taller: its top
   // follows a 64px display heading down where the sheet's follows a 34px
-  // one, so a subheading and fifteen citations measure 1168x414 here and
+  // one, so a subheading and a fifteen-row stack measure 1168x414 here and
   // 1104x448 there. Width is not the axis that runs out.
   const aside = stepAside({ face: "stacked-poster", slide, ctx, bodyRect })
   if (aside) return aside
@@ -611,6 +611,13 @@ export const layoutDef: LayoutDefinition = {
   // (capacity 1). Footnote (meta) renders on both paths.
   id: "stacked-poster",
   kind: "standard",
+  story: {
+    name: "Centered Poster",
+    story: "Everything centres: section label, accent bar, heavy heading, then one hero visual filling the lower page. A second block gets a caption strip below a divider, and three or more drop to a full-width stack.",
+    positioning: "Serves data and photo at one or two blocks in a centred poster composition. The centre axis suits a chart or image that needs the whole page.",
+    audience: "A dark hall where one large visual must carry the room.",
+    notFor: "Three or more equal blocks, which fit better in bento-panel.",
+  },
   slideTypes: ["content"],
   slots: [
     { name: "kicker", accepts: [] },

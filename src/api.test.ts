@@ -105,6 +105,23 @@ describe("validateIr", () => {
     expect(message).toMatch(/image_grid/)
   })
 
+  it("hard-rejects the removed citation component and says where a source goes", () => {
+    const v = validateIr({
+      theme: { id: "brief" },
+      slides: [
+        {
+          kind: "points",
+          heading: "x",
+          components: [{ type: "citation", sources: [{ label: "Quarterly report" }] }],
+        },
+      ],
+    })
+    expect(v.ok).toBe(false)
+    const message = v.errors.map((e) => e.message).join("\n")
+    expect(message).toMatch(/"citation" was removed/)
+    expect(message).toMatch(/"source" field/)
+  })
+
   it("rejects the retired layout field before interpreting its value", () => {
     const v = validateIr({
       theme: { id: "brief" },
@@ -1354,71 +1371,15 @@ describe("describeQualityIssue: data_table_missing_cell English message (R1 evid
   })
 })
 
-// carried-items wave: comparison/citation/architecture got a render-time
+// carried-items wave: comparison/architecture got a render-time
 // box.h cap + data-dropped marker from P0 hardening's family sweep (same
 // fix bullets.tsx got) but no pre-render editorial signal of their own —
 // this wave's warn tier (English message coverage below) plus its error
 // tier (the following describe block, mirroring bullets_count_overflow's
 // end-to-end generatePptx enforcement) close that gap. Thresholds come from
-// CAPACITY.comparison/.citation/.architecture (capacity.ts's own derivation
+// CAPACITY.comparison/.architecture (capacity.ts's own derivation
 // comments carry the box-geometry arithmetic).
-describe("describeQualityIssue: comparison/citation/architecture English messages (carried-items wave)", () => {
-  it("comparison_overflow names the row count and stays ok:true (warn, not error)", () => {
-    const threshold = CAPACITY.comparison.warnRows
-    const v = validateIr({
-      ...raw,
-      slides: [
-        raw.slides[0],
-        {
-          type: "content",
-          kind: "points",
-          heading: "Comparison",
-          components: [
-            {
-              type: "comparison",
-              columns: ["A", "B"],
-              rows: Array.from({ length: threshold + 1 }, (_, i) => ({ label: `row ${i}`, cells: ["x", "y"] })),
-            },
-          ],
-        },
-      ],
-    })
-    expect(v.ok).toBe(true)
-    const warning = v.warnings?.find((w) => w.message.includes("comparison table"))
-    expect(warning).toBeTruthy()
-    expect(warning?.message).toMatch(/too many rows/)
-    expect(warning?.message).toContain(String(threshold))
-    // public surface (CLI output/error messages) is English — never leak
-    // ir-quality.ts's own internal Chinese wording.
-    expect(warning?.message).not.toMatch(/[一-鿿]/)
-  })
-
-  it("citation_overflow names the source count and stays ok:true (warn, not error)", () => {
-    const threshold = CAPACITY.citation.warnSources
-    const v = validateIr({
-      ...raw,
-      slides: [
-        raw.slides[0],
-        {
-          type: "content",
-          kind: "points",
-          heading: "Citation",
-          components: [
-            {
-              type: "citation",
-              sources: Array.from({ length: threshold + 1 }, (_, i) => ({ label: `source ${i}` })),
-            },
-          ],
-        },
-      ],
-    })
-    expect(v.ok).toBe(true)
-    const warning = v.warnings?.find((w) => w.message.includes("citation list"))
-    expect(warning).toBeTruthy()
-    expect(warning?.message).toMatch(/too many sources/)
-    expect(warning?.message).toContain(String(threshold))
-    expect(warning?.message).not.toMatch(/[一-鿿]/)
-  })
+describe("describeQualityIssue: comparison/architecture English messages (carried-items wave)", () => {
 
   it("architecture_overflow names the layer count and stays ok:true (warn, not error)", () => {
     const threshold = CAPACITY.architecture.warnLayers
@@ -1451,66 +1412,8 @@ describe("describeQualityIssue: comparison/citation/architecture English message
 // carried-items wave: the error-tier counterpart of the warn messages above
 // — same dual-threshold end-to-end enforcement bullets_count_overflow's own
 // describe block (above) already pins for bullets, applied to the other
-// three vertical-stacking family members.
-describe("comparison/citation/architecture count geometric hard error (carried-items wave, mirrors bullets_count_overflow)", () => {
-  it(`comparison: a table past the count ceiling (${CAPACITY.comparison.errorRows} rows) hard-blocks generatePptx with a bounded English message`, async () => {
-    const tooMany = Array.from({ length: CAPACITY.comparison.errorRows + 1 }, (_, i) => ({ label: `row ${i}`, cells: ["x", "y"] }))
-    const ir = {
-      ...raw,
-      slides: [raw.slides[0], { type: "content", kind: "points", heading: "Overflow", components: [{ type: "comparison", columns: ["A", "B"], rows: tooMany }] }],
-    }
-    const v = validateIr(ir)
-    expect(v.ok).toBe(false)
-    expect(v.errors.some((e) => e.message.includes("far too many rows"))).toBe(true)
-    let caught: Error | undefined
-    try {
-      await generatePptx(ir)
-    } catch (e) {
-      caught = e as Error
-    }
-    expect(caught).toBeTruthy()
-    expect(caught!.message).toContain(String(CAPACITY.comparison.errorRows))
-    expect(caught!.message.length).toBeLessThan(2_000)
-  })
-
-  it(`does NOT report comparison_count_overflow at exactly ${CAPACITY.comparison.errorRows} rows — still ok:true`, () => {
-    const atCeiling = Array.from({ length: CAPACITY.comparison.errorRows }, (_, i) => ({ label: `row ${i}`, cells: ["x", "y"] }))
-    const v = validateIr({
-      ...raw,
-      slides: [raw.slides[0], { type: "content", kind: "points", heading: "At ceiling", components: [{ type: "comparison", columns: ["A", "B"], rows: atCeiling }] }],
-    })
-    expect(v.ok).toBe(true)
-  })
-
-  it(`citation: a list past the count ceiling (${CAPACITY.citation.errorSources} sources) hard-blocks generatePptx with a bounded English message`, async () => {
-    const tooMany = Array.from({ length: CAPACITY.citation.errorSources + 1 }, (_, i) => ({ label: `source ${i}` }))
-    const ir = {
-      ...raw,
-      slides: [raw.slides[0], { type: "content", kind: "points", heading: "Overflow", components: [{ type: "citation", sources: tooMany }] }],
-    }
-    const v = validateIr(ir)
-    expect(v.ok).toBe(false)
-    expect(v.errors.some((e) => e.message.includes("far too many sources"))).toBe(true)
-    let caught: Error | undefined
-    try {
-      await generatePptx(ir)
-    } catch (e) {
-      caught = e as Error
-    }
-    expect(caught).toBeTruthy()
-    expect(caught!.message).toContain(String(CAPACITY.citation.errorSources))
-    expect(caught!.message.length).toBeLessThan(2_000)
-  })
-
-  it(`does NOT report citation_count_overflow at exactly ${CAPACITY.citation.errorSources} sources — still ok:true`, () => {
-    const atCeiling = Array.from({ length: CAPACITY.citation.errorSources }, (_, i) => ({ label: `source ${i}` }))
-    const v = validateIr({
-      ...raw,
-      slides: [raw.slides[0], { type: "content", kind: "points", heading: "At ceiling", components: [{ type: "citation", sources: atCeiling }] }],
-    })
-    expect(v.ok).toBe(true)
-  })
-
+// two vertical-stacking family members.
+describe("comparison/architecture count geometric hard error (carried-items wave, mirrors bullets_count_overflow)", () => {
   it(`architecture: a diagram past the count ceiling (${CAPACITY.architecture.errorLayers} layers) hard-blocks generatePptx with a bounded English message`, async () => {
     const tooMany = Array.from({ length: CAPACITY.architecture.errorLayers + 1 }, (_, i) => ({ title: `layer ${i}`, items: ["a"] }))
     const ir = {

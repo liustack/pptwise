@@ -234,14 +234,14 @@ describe("QuoteStageContent", () => {
     })
   })
 
-  it("CJK two-line heading does not overlap itself, and the citation sits below last ink with air", () => {
+  it("CJK two-line heading does not overlap itself, and the annotation sits below last ink with air", () => {
     const ctx = buildCtx(resolveStyle("ledger"), {})
     const slide: Slide = {
       type: "content",
       kind: "points",
       layout: "quote-stage",
       heading: "竞品在中小客户市场的价格压力",
-      components: [{ type: "citation", sources: [{ label: "[1] 云觅科技 2026 年第二季度经营数据" }] }],
+      components: [{ type: "paragraph", text: "[1] 云觅科技 2026 年第二季度经营数据" }],
     } as Slide
     const { root } = render(<QuoteStageContent ir={ir("ledger", [slide])} slide={slide} index={0} ctx={ctx} />)
     const headings = Array.from(root.querySelectorAll("text")).filter((t) => t.getAttribute("font-weight") === "800")
@@ -252,21 +252,21 @@ describe("QuoteStageContent", () => {
     expect(y1 - fs).toBeGreaterThan(y0 + fs * 0.16)
     const lastInk = y1 + fs * 0.16
     const body = root.querySelector("g[data-audit-rect]")!
-    const [, citY] = (body.getAttribute("data-audit-rect") ?? "").split(",").map(Number)
-    expect(citY).toBeGreaterThan(lastInk + 24)
+    const [, bodyY] = (body.getAttribute("data-audit-rect") ?? "").split(",").map(Number)
+    expect(bodyY).toBeGreaterThan(lastInk + 24)
     const bar = Array.from(root.querySelectorAll("rect")).find((r) => r.getAttribute("width") === "56")!
     const barBottom = Number(bar.getAttribute("y")) + Number(bar.getAttribute("height"))
     expect(y0 - fs).toBeGreaterThan(barBottom)
   })
 
-  it("English three-line heading shrinks or wraps so the last line clears the citation", () => {
+  it("English three-line heading shrinks or wraps so the last line clears the annotation", () => {
     const ctx = buildCtx(resolveStyle("ledger"), {})
     const slide: Slide = {
       type: "content",
       kind: "points",
       layout: "quote-stage",
       heading: "Competitors are pricing below cost in the mid-market",
-      components: [{ type: "citation", sources: [{ label: "[1] CloudSeek Collaboration Q2 2026 operating data" }] }],
+      components: [{ type: "paragraph", text: "[1] CloudSeek Collaboration Q2 2026 operating data" }],
     } as Slide
     const { root } = render(<QuoteStageContent ir={ir("ledger", [slide])} slide={slide} index={0} ctx={ctx} />)
     const headings = Array.from(root.querySelectorAll("text")).filter((t) => t.getAttribute("font-weight") === "800")
@@ -275,9 +275,9 @@ describe("QuoteStageContent", () => {
     const fs = Number(last.getAttribute("font-size"))
     const lastInk = Number(last.getAttribute("y")) + fs * 0.22
     const body = root.querySelector("g[data-audit-rect]")!
-    const [, citY, , citH] = (body.getAttribute("data-audit-rect") ?? "").split(",").map(Number)
-    expect(citY).toBeGreaterThan(lastInk + 24)
-    expect(citY + citH).toBeLessThanOrEqual(640)
+    const [, bodyY, , bodyH] = (body.getAttribute("data-audit-rect") ?? "").split(",").map(Number)
+    expect(bodyY).toBeGreaterThan(lastInk + 24)
+    expect(bodyY + bodyH).toBeLessThanOrEqual(640)
   })
 
   it("brief tokens: no creative/ledger baked hex leaks (token discipline)", () => {

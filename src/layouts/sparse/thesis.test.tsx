@@ -156,14 +156,14 @@ describe("thesis sparse faces", () => {
     }
   })
 
-  it("statement closes on the cited source, not on a promise about later pages", () => {
+  it("statement closes on the source the author wrote, not on a promise about later pages", () => {
     const chapter: Slide = { type: "chapter", heading: "命题 3.1", components: [] } as Slide
     const slide: Slide = {
       type: "content",
       kind: "points",
       layout: "statement",
       heading: VERSE,
-      components: [{ type: "citation", sources: [{ label: "论文第四章实验记录" }] }],
+      components: [{ type: "paragraph", text: "论文第四章实验记录" }],
     } as Slide
     const { markup, root } = render(
       <StatementContent ir={ir([chapter, slide])} slide={slide} index={1} ctx={ctx} />,

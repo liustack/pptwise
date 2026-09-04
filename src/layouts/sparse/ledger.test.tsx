@@ -38,12 +38,12 @@ function render(body: React.ReactElement): { markup: string; root: Element } {
 describe("ledger sparse faces", () => {
   const ctx = buildCtx(resolveStyle("ledger"), {})
 
-  it("statement is a prompt line with a muted >, amber verse, a cursor, and the cited source", () => {
+  it("statement is a prompt line with a muted >, amber verse, a cursor, and the source line", () => {
     const slide: Slide = {
       type: "content",
       kind: "statement",
       heading: VERSE,
-      components: [{ type: "citation", sources: [{ label: "去年对账全文" }] }],
+      components: [{ type: "paragraph", text: "去年对账全文" }],
     }
     const doc = ir([slide], { date: "2026-05-01" })
     const { markup, root } = render(

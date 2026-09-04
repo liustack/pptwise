@@ -3,7 +3,7 @@
 // P0 hardening, Task 1 (depth-axis hardening) — red-first permanent tests
 // pinning the robustness deep-review's D1 finding: an unbounded text-
 // stacking component (bullets/comparison and the family-sweep siblings
-// citation/architecture/timeline-vertical) has no schema ceiling on its
+// architecture/timeline-vertical) has no schema ceiling on its
 // array field, and pre-fix its renderer stacked one item's worth of `y`
 // per item with no cap against the component's own box — an extreme item
 // count pushed `y` far enough off the 1280×720 canvas to cross pptxgenjs's
@@ -188,7 +188,7 @@ describe("extreme bullets item count: bullets_count_overflow blocks at validate 
 })
 
 describe("byte-inertness for normal decks (hard requirement)", () => {
-  // Method: box.h is only ever attached to a bullets/comparison/citation/
+  // Method: box.h is only ever attached to a bullets/comparison/
   // architecture/timeline component by `layoutContentFit`'s overflow-
   // defense branch (`layout.ts`) — the sole-surviving-component-still-
   // doesn't-fit last resort. An ordinary deck's components never reach
@@ -197,7 +197,7 @@ describe("byte-inertness for normal decks (hard requirement)", () => {
   // render, and each touched component's own `truncBudget = box.h ??
   // Number.POSITIVE_INFINITY` guard makes the new cap logic a total
   // no-op on that path — pinned per-component in
-  // bullets/comparison/citation/architecture/timeline's own test suites
+  // bullets/comparison/architecture/timeline's own test suites
   // ("byte-identical no-op when box.h is omitted"). This test re-pins the
   // same guarantee at the full generatePptx level: a realistic, non-
   // abusive deck's output is unaffected by this task's changes.

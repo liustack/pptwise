@@ -1332,7 +1332,6 @@ const MUTED_SURFACE_CLASS: Record<string, MutedSurfaceClass> = {
   // directly against the ambient page background, verified empirically across
   // every built-in theme.
   verdict_banner: "page-bg",
-  citation: "page-bg", // URL tspan, no card
   image: "flat-surface", // missing-asset placeholder text on a colors.surface rect
   image_grid: "flat-surface", // same missing-asset placeholder pattern
   image_compare: "flat-surface", // same missing-asset placeholder pattern

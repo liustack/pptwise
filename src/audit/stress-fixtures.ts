@@ -389,35 +389,6 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
     },
   ]),
 
-  // citation: 4 sources with extreme-length labels and URLs.
-  citation: deck([
-    {
-      type: "content",
-      kind: "points",
-      heading: "引用压力测试",
-      components: [
-        {
-          type: "citation",
-          sources: [
-            {
-              label: CJK_LONG,
-              url: `https://example.com/${EN_LONG}/${EN_LONG}?query=${EN_LONG}`,
-            },
-            { label: CJK_LONG, url: `https://example.com/${EN_LONG}` },
-            {
-              label: CJK_LONG,
-              url: `https://example.com/${EN_LONG}/${EN_LONG}`,
-            },
-            {
-              label: CJK_LONG,
-              url: `https://example.com/${EN_LONG}/${EN_LONG}/${EN_LONG}`,
-            },
-          ],
-        },
-      ],
-    },
-  ]),
-
   // paragraph_stack: 6 paragraphs, each 3x CJK_LONG — vertical overflow
   // pressure on a single content page (no horizontal pressure; paragraph
   // wraps by design).

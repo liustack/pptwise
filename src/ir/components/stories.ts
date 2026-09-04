@@ -5,7 +5,6 @@ import * as bmc from "./bmc"
 import * as bullets from "./bullets"
 import * as callout from "./callout"
 import * as chart from "./chart"
-import * as citation from "./citation"
 import * as code from "./code"
 import * as comparison from "./comparison"
 import * as cycle from "./cycle"
@@ -65,7 +64,6 @@ const COMPONENT_STORY_MODULES: Readonly<Record<string, ComponentStoryModule>> = 
   bullets,
   callout,
   chart,
-  citation,
   code,
   comparison,
   cycle,

@@ -120,7 +120,7 @@ describe("content-gauge-point", () => {
     })
     expect(layoutDef.slots.find((slot) => slot.name === "body")).toEqual({
       name: "body",
-      accepts: ["blockquote", "paragraph", "citation"],
+      accepts: ["blockquote", "paragraph"],
       capacity: 1,
     })
   })

@@ -25,7 +25,7 @@ import { stepAside } from "../render/step-aside"
  * 数字优先 kpi_cards 第一项的 value（单位单独一行），否则 heading 自己就是
  * 英雄位——无 kpi 组件时 heading 即主体，是本脸的明示语义。说明一行来自
  * kpi.label（有 kpi 时）或 subheading。出处来自 kpi.source / footnote /
- * citation / paragraph。
+ * paragraph。
  *
  * 这一页只有一个英雄位。作者写下两个以上指标时本脸退位（`heroExact` 返回
  * false），整页交给通用组件渲染，四个指标一个不少地画出来——不是画第一个、
@@ -262,11 +262,18 @@ export const layoutDef = {
   // intentionally sparse and uses the full canvas.
   id: "stat-hero",
   kind: "standard",
+  story: {
+    name: "Scoreboard",
+    story: "One number or short phrase fills the page at 180-point display size, a caption names what it measures, a source line names where it came from. Nothing else competes.",
+    positioning: "Serves fact at exactly one KPI or none. This page holds one number and refuses a second: the lone figure is the argument, anything beside it dilutes it.",
+    audience: "A keynote stage or annual report where one statistic must command the room.",
+    notFor: "Multiple metrics shown side by side, which belong in gauge-stats or show-figures.",
+  },
   slideTypes: ["content"],
   slots: [
     { name: "kicker", accepts: [] },
     { name: "heading", accepts: [] },
-    { name: "body", accepts: ["kpi_cards", "paragraph", "citation"], capacity: 1 },
+    { name: "body", accepts: ["kpi_cards", "paragraph"], capacity: 1 },
     { name: "meta", accepts: [] },
   ],
   headingFit: {

@@ -233,7 +233,7 @@ function baseCardH(component: KpiComponent): number {
  * exact repro, 50 items with delta).
  *
  * Same idiom as the vertical-axis family sweep (bullets/comparison/
- * citation/architecture/timeline — same task): cap the number of rendered
+ * architecture/timeline — same task): cap the number of rendered
  * cards to what fits `box.w` at a sane minimum card width, reflow the
  * visible cards to fill the freed-up space, and mark the drop with the
  * same `data-dropped` declaration every other member uses (row-cards.tsx's

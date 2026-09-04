@@ -187,11 +187,18 @@ export const layoutDef = {
   // to the menu entry, not this face declaration.
   id: "statement",
   kind: "standard",
+  story: {
+    name: "Verse",
+    story: "Two to four italic lines at weight 500 sit centred on the page, no bar, no rule, a tracked section label above and a small source caption below. The rest is air.",
+    positioning: "Serves statement at one attribution block or none. This page carries a single declaration and has no place for a second block.",
+    audience: "The room where a speaker pauses and lets one sentence do all the work.",
+    notFor: "A page where a large number is the point, which belongs in stat-hero.",
+  },
   slideTypes: ["content"],
   slots: [
     { name: "kicker", accepts: [] },
     { name: "heading", accepts: [] },
-    { name: "body", accepts: ["paragraph", "blockquote", "citation"], capacity: 1 },
+    { name: "body", accepts: ["paragraph", "blockquote"], capacity: 1 },
     { name: "meta", accepts: [] },
   ],
   headingFit: {

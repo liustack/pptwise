@@ -53,11 +53,11 @@ const TITLE_Y = 300 // first-line baseline anchor
 const HEADING_LINE_HEIGHT_RATIO = 1.25
 
 const ANNOTATION_GAP = 64 // heading's last line -> subheading annotation
-const CITATION_AIR = 36 // last heading ink -> citation box
+const BODY_AIR = 36 // last heading ink -> annotation box
 const BODY_RECT_W = 760
 const BODY_RECT_H = 80
 const LATIN_DESCENT_RATIO = 0.22
-const CITATION_BOTTOM_LIMIT = 608
+const BODY_BOTTOM_LIMIT = 608
 const HEADING_BAR_AIR = 24
 
 // Above the brand frame's footer divider (`branding.tsx`, y=664), not
@@ -95,7 +95,7 @@ export function QuoteStageContent({ slide, ctx }: SvgTemplateProps) {
     const emTop = TITLE_Y - h.fontSize * 0.88
     if (emTop < ACCENT_BAR_Y + ACCENT_BAR_H + HEADING_BAR_AIR) return false
     if (!hasBody) return lastInkBottom(h) <= 640
-    return lastInkBottom(h) + CITATION_AIR + BODY_RECT_H <= CITATION_BOTTOM_LIMIT
+    return lastInkBottom(h) + BODY_AIR + BODY_RECT_H <= BODY_BOTTOM_LIMIT
   }
   let fontSize = heading.fontSize
   let maxLines = layoutDef.headingFit.maxLines ?? 4
@@ -123,10 +123,10 @@ export function QuoteStageContent({ slide, ctx }: SvgTemplateProps) {
     : null
   const subheadingY = titleLastY + ANNOTATION_GAP
 
-  const citationTop = lastInkBottom(heading) + CITATION_AIR
+  const bodyTop = lastInkBottom(heading) + BODY_AIR
   const bodyY = Math.min(
-    subheading ? subheadingY + 24 : citationTop,
-    CITATION_BOTTOM_LIMIT - BODY_RECT_H,
+    subheading ? subheadingY + 24 : bodyTop,
+    BODY_BOTTOM_LIMIT - BODY_RECT_H,
   )
   const bodyRect: ContentRect = {
     x: CENTER_X - BODY_RECT_W / 2,
@@ -233,6 +233,13 @@ export const layoutDef = {
   // whitespace and the oversized heading are the whole composition.
   id: "quote-stage",
   kind: "standard",
+  story: {
+    name: "Keynote Line",
+    story: "The heading fills the page as oversized centred type, up to four lines at 92 points. A small annotation line below it holds an attribution or one sentence of context, nothing more.",
+    positioning: "Serves quote and statement at one block or none. This page holds exactly one idea and refuses a second: the line is the entire page.",
+    audience: "A keynote hall where one sentence must reach the last row.",
+    notFor: "A quote with a visible source line and a paragraph of context, which belongs in pull-quote.",
+  },
   slideTypes: ["content"],
   slots: [
     { name: "heading", accepts: [] },

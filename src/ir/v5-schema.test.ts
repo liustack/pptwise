@@ -126,4 +126,22 @@ describe("component namespace in IR v5", () => {
     expect(blockquote.success).toBe(true)
     expect(retired.success).toBe(false)
   })
+
+  it("rejects the removed citation component and says where a source belongs", () => {
+    const result = parsePptxIR(
+      deck([
+        {
+          type: "content",
+          kind: "evidence",
+          heading: "Where the numbers came from",
+          components: [{ type: "citation", sources: [{ label: "Quarterly report" }] }],
+        },
+      ]),
+    )
+
+    expect(result.success).toBe(false)
+    const message = result.success ? "" : result.error
+    expect(message).toMatch(/"citation" was removed/)
+    expect(message).toMatch(/"source" field/)
+  })
 })

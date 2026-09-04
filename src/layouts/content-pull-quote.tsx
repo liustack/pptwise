@@ -226,12 +226,19 @@ export const layoutDef = {
   // is intentionally sparse.
   id: "pull-quote",
   kind: "standard",
+  story: {
+    name: "Attributed Voice",
+    story: "Large italic centred text delivers the quote, an accent-coloured line names the speaker, and a muted paragraph adds context. The heading becomes a small context line above the quote.",
+    positioning: "Serves quote at one body block or none. This page carries a quotation, its speaker and a paragraph of context, and a second quote has no place here.",
+    audience: "A presentation where the exact words matter and the speaker deserves a byline.",
+    notFor: "A bare sentence with no source or speaker, which reads better as statement.",
+  },
   slideTypes: ["content"],
   slots: [
     { name: "kicker", accepts: [] },
     { name: "heading", accepts: [] },
     { name: "subheading", accepts: [] },
-    { name: "body", accepts: ["paragraph", "blockquote", "citation"], capacity: 1 },
+    { name: "body", accepts: ["paragraph", "blockquote"], capacity: 1 },
     { name: "meta", accepts: [] },
   ],
   // Unchanged since the registry capture, and it already suits the quote:

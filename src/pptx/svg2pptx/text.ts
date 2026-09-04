@@ -191,7 +191,7 @@ function buildRuns(el: Element, baseBold: boolean, baseItalic: boolean): TextRun
  * "never silently pass" posture (Audit v2 spec §4.4) favors that loud
  * failure over a converter-level guess. The actual fix is upstream, at the
  * component that emits the coordinate: every text-stacking component this
- * task's family sweep found (bullets/comparison/citation/architecture/
+ * task's family sweep found (bullets/comparison/architecture/
  * timeline-vertical) now caps its own rendered item count to its box, so
  * `y` never runs away in the first place — see each component's own doc
  * comment. `formatViolations`' dedup+truncation fix (same task,
