@@ -1573,3 +1573,50 @@ describe("a flowchart never loses a label without saying so", () => {
     expect(container.querySelector("[data-dropped]")).toBeNull()
   })
 })
+
+// The budget boundary between "fits its gap whole" and "has to be cut".
+//
+// `computeEdgeLabel` fits the label, wraps it in a chip that is
+// `LABEL_CHIP_PAD_X * 2` wider than the text, and asks `parkEdgeLabel` to
+// place the chip. Taking that padding out of the fit budget up front, so the
+// chip can never exceed the gap it was measured against, shortens every
+// label sized close to its own gap — including ones the parker had always
+// accepted. These two inputs sit exactly at that boundary: on the whole-gap
+// budget both draw complete, and each loses its last character the moment
+// the padding is charged before placement rather than after it fails.
+describe("an edge label that fits its gap is drawn whole", () => {
+  const twoNodes = (label: string) => ({
+    type: "flowchart" as const,
+    direction: "LR" as const,
+    nodes: [
+      { id: "a", label: "甲", kind: "rect" as const },
+      { id: "b", label: "乙", kind: "rect" as const },
+    ],
+    edges: [{ from: "a", to: "b", label }],
+  })
+
+  function edgeLabel(label: string) {
+    const { container } = svg(flowchart.render(twoNodes(label), { x: 0, y: 0, w: 600 }, ctx))
+    const texts = Array.from(container.querySelectorAll("text"))
+    return texts.find((el) => (el.textContent ?? "").length > 0 && !["甲", "乙"].includes(el.textContent ?? ""))
+  }
+
+  it("keeps all seven characters of a CJK label sized to its gap", () => {
+    const el = edgeLabel("一二三四五六七")
+    expect(el?.textContent).toBe("一二三四五六七")
+    expect(el?.getAttribute("data-truncated")).toBeNull()
+  })
+
+  it("keeps all thirteen characters of a Latin label sized to its gap", () => {
+    const el = edgeLabel("abcdefghijklm")
+    expect(el?.textContent).toBe("abcdefghijklm")
+    expect(el?.getAttribute("data-truncated")).toBeNull()
+  })
+
+  it("still declares nothing dropped for either", () => {
+    for (const label of ["一二三四五六七", "abcdefghijklm"]) {
+      const { container } = svg(flowchart.render(twoNodes(label), { x: 0, y: 0, w: 600 }, ctx))
+      expect(container.querySelector("[data-dropped]")).toBeNull()
+    }
+  })
+})

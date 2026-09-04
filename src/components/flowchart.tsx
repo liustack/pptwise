@@ -922,40 +922,6 @@ function computeEdgeLabel(
   if (availableWidth < MIN_LABEL_WIDTH) return null
 
   const idealFont = Math.max(9, Math.min(16, Math.round(FONT_SIZE * scale)))
-  // Fit the text to what is left *after* the chip's own horizontal padding,
-  // not to the whole gap. The chip is what `parkEdgeLabel` has to place, and
-  // it is `LABEL_CHIP_PAD_X * 2` wider than the text inside it — so a label
-  // fitted right up to `availableWidth` produced a chip 8px wider than the
-  // space this function had just measured as available, and parking rejected
-  // it against the arrowhead. The component was measuring one width and
-  // painting another, and the label it dropped was one it had room for
-  // (consulting's English and mixed `process` pages, both fixed by this).
-  const fitted = fitSvgLine(edge.label, {
-    maxWidth: Math.max(0, availableWidth - LABEL_CHIP_PAD_X * 2),
-    fontSize: idealFont,
-    minFontSize: MIN_FONT_SIZE,
-  })
-
-  const labelW = measureTextUnits(fitted.text) * fitted.fontSize
-  const chipW = labelW + LABEL_CHIP_PAD_X * 2
-  const chipH = fitted.fontSize + LABEL_CHIP_PAD_Y * 2
-  const parked = parkEdgeLabel(
-    mid.x * scale,
-    mid.y * scale,
-    chipW,
-    chipH,
-    nodeBoxes,
-    scale,
-    horizontal,
-    ownStroke,
-    otherStrokes,
-    arrowBoxes,
-    { x: seg.a.x * scale, y: seg.a.y * scale },
-    { x: seg.b.x * scale, y: seg.b.y * scale },
-  )
-  if (!parked) return null
-  const x = parked.x
-  const y = parked.y
   // The *un-margined* gap, centered on the same point as the chip/text —
   // deliberately wider than `availableWidth` (which already has the fit
   // margin taken out): this is the real physical space neighboring nodes
@@ -964,20 +930,62 @@ function computeEdgeLabel(
   // actually re-checks the constraint the original bug violated — a label
   // spilling into a neighboring node card.
   const gapWidth = spanLocal * scale
+  const label = edge.label
 
-  return {
-    x,
-    y,
-    text: fitted.text,
-    fontSize: fitted.fontSize,
-    truncated: fitted.truncated,
-    chipX: x - chipW / 2,
-    chipY: y - chipH / 2,
-    chipW,
-    chipH,
-    boxX: x - gapWidth / 2,
-    boxW: gapWidth,
+  /** Fit the label to `budget`, build its chip, and try to park that chip. */
+  const place = (budget: number): EdgeLabelVisual | null => {
+    const fitted = fitSvgLine(label, {
+      maxWidth: Math.max(0, budget),
+      fontSize: idealFont,
+      minFontSize: MIN_FONT_SIZE,
+    })
+    const labelW = measureTextUnits(fitted.text) * fitted.fontSize
+    const chipW = labelW + LABEL_CHIP_PAD_X * 2
+    const chipH = fitted.fontSize + LABEL_CHIP_PAD_Y * 2
+    const parked = parkEdgeLabel(
+      mid.x * scale,
+      mid.y * scale,
+      chipW,
+      chipH,
+      nodeBoxes,
+      scale,
+      horizontal,
+      ownStroke,
+      otherStrokes,
+      arrowBoxes,
+      { x: seg.a.x * scale, y: seg.a.y * scale },
+      { x: seg.b.x * scale, y: seg.b.y * scale },
+    )
+    if (!parked) return null
+    return {
+      x: parked.x,
+      y: parked.y,
+      text: fitted.text,
+      fontSize: fitted.fontSize,
+      truncated: fitted.truncated,
+      chipX: parked.x - chipW / 2,
+      chipY: parked.y - chipH / 2,
+      chipW,
+      chipH,
+      boxX: parked.x - gapWidth / 2,
+      boxW: gapWidth,
+    }
   }
+
+  // The whole gap first. That is the budget this function has always fitted
+  // against, so every label with somewhere to sit today is fitted, sized and
+  // parked exactly as before, down to the byte.
+  //
+  // Only when that finds nowhere at all does the chip's own padding come out
+  // of the budget and the placement run again. A chip is `LABEL_CHIP_PAD_X *
+  // 2` wider than the text inside it, so a label fitted to the whole gap
+  // hands the parker something wider than the space just measured as
+  // available, and a label that would have fitted its gap by those eight
+  // pixels was declared dropped instead. Narrowing the text is what buys the
+  // retry its room. Doing it up front, as this once did, shortened labels
+  // that had a home all along: a seven-character CJK label sized exactly to
+  // its gap came out six characters long and marked truncated.
+  return place(availableWidth) ?? place(availableWidth - LABEL_CHIP_PAD_X * 2)
 }
 
 interface PreparedFlow {
