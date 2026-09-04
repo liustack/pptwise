@@ -1,5 +1,12 @@
 # @liustack/pptwise
 
+## 0.31.0
+
+### Minor Changes
+
+- A device mockup keeps its frame on every face: bleed takeovers that cannot draw the browser or phone frame step aside for a fallback that does, image-annotate hosts the framed device in its card, a device that is not the chosen bleed picture stays body content, and frame geometry never leaves its slot (controls scale with the body, a slot too small to draw declines). The browser frame keeps its 16:10 proportion instead of stretching to the slot. The review gallery's screenshots are now rendered by pptwise itself instead of an intentionally blurred AI image: a landscape dashboard for the browser specimen and a portrait 9:19 app screen for a new phone specimen, each with a reproducible script, provenance and recipe digests, header-level JPEG checks that work on any machine, and byte identity on the canonical one.
+- 7fd628f: A slide never says what it left out. The overflow count 0.30.0 taught chart legends to paint is gone: a chart names the series that fit and declares the rest, and no component, face or layout paints a count of what is missing, an ellipsis pill, or any other bookkeeping. Content that does not fit has two honest outcomes, the face declines so another one draws the page, or the loss is declared and `generatePptx` refuses the deck by default, until the author shortens the content or the caller explicitly accepts the loss with `--allow-dropped-content`. With no painted cut left anywhere there is no second, quietly exportable kind of loss either: `data-dropped` is the whole protocol, and every declaration names its own unit, so a chart that could not name fourteen series is refused with "14 series names" rather than "14 content blocks". The review gallery grades a declared drop as rework, over any verdict the vision pass returns, instead of passing a page that quietly lost its chart, and its fidelity scan credits a component that declined outright instead of reporting each of its fields as unexplained.
+
 ## 0.30.0
 
 ### Minor Changes

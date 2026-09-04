@@ -1,5 +1,0 @@
----
-"@liustack/pptwise": minor
----
-
-A slide never says what it left out. The overflow count 0.30.0 taught chart legends to paint is gone: a chart names the series that fit and declares the rest, and no component, face or layout paints a count of what is missing, an ellipsis pill, or any other bookkeeping. Content that does not fit has two honest outcomes, the face declines so another one draws the page, or the loss is declared and `generatePptx` refuses the deck by default, until the author shortens the content or the caller explicitly accepts the loss with `--allow-dropped-content`. With no painted cut left anywhere there is no second, quietly exportable kind of loss either: `data-dropped` is the whole protocol, and every declaration names its own unit, so a chart that could not name fourteen series is refused with "14 series names" rather than "14 content blocks". The review gallery grades a declared drop as rework, over any verdict the vision pass returns, instead of passing a page that quietly lost its chart, and its fidelity scan credits a component that declined outright instead of reporting each of its fields as unexplained.
