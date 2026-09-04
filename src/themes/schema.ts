@@ -9,7 +9,7 @@ import {
 } from "@/ir"
 import { findForbiddenNameWords, validateDesignStory, type DesignStory } from "../design-story"
 import { isLegacyThemeName } from "./legacy-names"
-import { retiredMotifIdMessage } from "./retired-ids"
+import { retiredMotifIdMessage, retiredThemeIdMessage } from "./retired-ids"
 import type { MotifId } from "../motifs/types"
 import { OCCASION_VOCAB, type Occasion } from "./occasions"
 import type { StyleTokens } from "./tokens"
@@ -147,9 +147,12 @@ const CommonThemeFileFields = {
  * all held to — a rule the engine enforces on itself and waives for everyone
  * else is a style guide, not a contract.
  *
- * The thirteen names that predate the rule were renamed in one batch, so
- * `legacy-names.ts` licences nothing any more and every name answers to the
- * rule directly.
+ * The thirteen names that predate the rule were renamed in one batch, and it
+ * has shipped: `legacy-names.ts` licences nothing any more, and every name —
+ * built-in, workspace, copy, fork — answers to the rule directly. The nine
+ * ids that batch retired are refused here by name (see
+ * {@link checkRetiredId}), because a rule that only removed the built-in
+ * would let the next workspace theme take the freed word straight back.
  */
 function checkNameRule(text: string | undefined, path: (string | number)[], ctx: z.RefinementCtx): void {
   if (text === undefined || isLegacyThemeName(text)) return
@@ -179,12 +182,23 @@ function checkNameRule(text: string | undefined, path: (string | number)[], ctx:
  */
 export type ThemeNameEnforcement = "named" | "structural"
 
+/**
+ * A retired theme id is not a free name. Refused at the public contract, so
+ * a theme file, a registration, an install, a preset copy, and a colour fork
+ * all get the same answer with the new name in it.
+ */
+function checkRetiredId(id: string, ctx: z.RefinementCtx): void {
+  const message = retiredThemeIdMessage(id)
+  if (message !== undefined) ctx.addIssue({ code: "custom", path: ["id"], message })
+}
+
 function validateCommonThemeFields(
   value: { id: string; label?: string; story?: DesignStory; style: { id: string } },
   ctx: z.RefinementCtx,
   enforcement: ThemeNameEnforcement,
 ): void {
   if (enforcement === "named") {
+    checkRetiredId(value.id, ctx)
     checkNameRule(value.id, ["id"], ctx)
     checkNameRule(value.label, ["label"], ctx)
     checkNameRule(value.story?.name, ["story", "name"], ctx)

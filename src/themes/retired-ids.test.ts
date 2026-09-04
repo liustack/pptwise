@@ -1,16 +1,25 @@
 // @vitest-environment node
+import { mkdir, mkdtemp, writeFile } from "node:fs/promises"
+import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it } from "vitest"
 import { validateIr } from "@/api"
 import { validateSpec } from "@/spec"
-import { resolveThemeByName, themeFileFromPreset } from "@/cli/theme-resolve"
+import { runThemeFork, runThemeNew } from "@/cli/commands"
+import { assertThemeId, resolveThemeByName, themeFileFromPreset } from "@/cli/theme-resolve"
+import { forkTheme } from "@/cli/theme-fork"
 import { installNodePlatform } from "@/platform/node"
+import { __resetRegisteredThemes, installThemeFile, registerTheme } from "./definitions"
 import { RETIRED_MOTIF_IDS, RETIRED_THEME_IDS } from "./retired-ids"
 import { ThemeFileSchema } from "./schema"
 import { copyThemePreset, getThemePreset } from "./presets"
 import { resolveThemeId } from "./index"
 
 installNodePlatform()
+
+afterEach(() => {
+  __resetRegisteredThemes()
+})
 
 /**
  * The rename is zero-compat: an old theme id is gone, not aliased, and not
@@ -20,6 +29,10 @@ installNodePlatform()
  * reissue the exact word the rename removed.
  */
 const RETIRED = Object.entries(RETIRED_THEME_IDS)
+
+function tmp(prefix: string): Promise<string> {
+  return mkdtemp(join(tmpdir(), prefix))
+}
 
 /** A complete, valid public theme file carrying `id`. */
 function fileWithId(id: string) {
@@ -75,6 +88,49 @@ describe("a retired theme id is not a theme", () => {
 
   it("says nothing extra about a name that was never a theme", () => {
     expect(() => resolveThemeId("neon")).toThrow(/unknown theme "neon"\. Installed/)
+  })
+})
+
+describe("a retired theme id cannot be taken back", () => {
+  it.each(RETIRED)("the public theme-file contract refuses %s", (old, current) => {
+    expect(() => ThemeFileSchema.parse(fileWithId(old))).toThrow(named(current))
+    expect(() => ThemeFileSchema.parse(fileWithId(old))).toThrow(/cannot be reused/)
+  })
+
+  it.each(RETIRED)("registerTheme and installThemeFile refuse %s", (old, current) => {
+    expect(() => registerTheme(fileWithId(old))).toThrow(named(current))
+    expect(() => installThemeFile(fileWithId(old))).toThrow(named(current))
+  })
+
+  it.each(RETIRED)("a preset copy refuses %s as its target", (old, current) => {
+    expect(() => copyThemePreset("swiss", old)).toThrow(named(current))
+  })
+
+  it.each(RETIRED)("a colour fork refuses %s as its target", (old, current) => {
+    const source = themeFileFromPreset("swiss", { id: "acme" })
+    expect(() => forkTheme(source, { primary: "#123456" }, { id: old })).toThrow(named(current))
+  })
+
+  it.each(RETIRED)("the CLI id gate refuses %s", (old, current) => {
+    expect(() => assertThemeId(old)).toThrow(named(current))
+  })
+
+  it.each(RETIRED)("theme new and theme fork refuse --id %s", async (old, current) => {
+    const cwd = await tmp("pptwise-retired-new-")
+    await expect(runThemeNew({ from: "swiss", id: old, cwd })).rejects.toThrow(named(current))
+    await expect(runThemeFork("swiss", { primary: "#123456", id: old, cwd })).rejects.toThrow(named(current))
+  })
+
+  it.each(RETIRED)("lookup refuses %s before it searches for a file", async (old, current) => {
+    // The point of the ordering: a workspace or deck file that kept the old
+    // name is not a way back in. Both directories hold one, and the name is
+    // still refused with the id it became.
+    const cwd = await tmp("pptwise-retired-lookup-")
+    await mkdir(join(cwd, "themes"), { recursive: true })
+    const shadow = JSON.stringify({ ...fileWithId("acme"), id: old, style: { ...fileWithId("acme").style, id: old } })
+    await writeFile(join(cwd, "themes", `${old}.theme.json`), shadow)
+    await writeFile(join(cwd, "theme.json"), shadow)
+    await expect(resolveThemeByName(old, { startDir: cwd, deckDir: cwd })).rejects.toThrow(named(current))
   })
 })
 

@@ -5,7 +5,7 @@ import { parseBrandThemeFile } from "../themes/brand-theme-file"
 import { getThemeDefinition, installThemeFile, type ThemeDefinition } from "../themes/definitions"
 import { CANONICAL_THEME_IDS } from "../themes"
 import { copyThemePreset } from "../themes/presets"
-import { retiredThemeHint } from "../themes/retired-ids"
+import { assertNotRetiredThemeId } from "../themes/retired-ids"
 import {
   ThemeFileSchema,
   type Menu,
@@ -36,10 +36,17 @@ export function menusEqual(a: Menu, b: Menu): boolean {
   return JSON.stringify(sortKeysDeep(a)) === JSON.stringify(sortKeysDeep(b))
 }
 
+/**
+ * The CLI's own theme-id gate: shape first, then the retired names. Every
+ * command that writes or looks up a theme by name runs it, and
+ * `resolveThemeByName` runs it before it searches a directory, so a
+ * `consulting.theme.json` a workspace kept cannot answer to the old name.
+ */
 export function assertThemeId(id: string): void {
   if (!THEME_ID_PATTERN.test(id)) {
     throw new PptwiseError(`invalid theme id "${id}". ${THEME_ID_CONSTRAINT}`)
   }
+  assertNotRetiredThemeId(id)
 }
 
 /** Read, parse, and register a theme file. The previous registration of the
@@ -214,7 +221,7 @@ export async function resolveThemeByName(
     `workspace ${WORKSPACE_THEMES_DIRNAME}/ walking up from ${resolve(opts.startDir)}`,
     "built-in presets",
   ].filter((place): place is string => place !== undefined)
-  throw new PptwiseError(`unknown theme "${name}"${retiredThemeHint(name)}. Searched ${places.join(", ")}.`)
+  throw new PptwiseError(`unknown theme "${name}". Searched ${places.join(", ")}.`)
 }
 
 const REBIND_SUFFIX =

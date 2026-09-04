@@ -20,7 +20,7 @@ import { THEME_ID_CONSTRAINT, THEME_ID_PATTERN } from "@/ir"
 import { PptwiseError } from "../errors"
 import { BUILTIN_THEME_FILES, CANONICAL_THEME_IDS, type CanonicalThemeId } from "./index"
 import { THEME_OCCASIONS, type IdentityStrength, type Occasion } from "./occasions"
-import { retiredThemeHint } from "./retired-ids"
+import { assertNotRetiredThemeId, retiredThemeHint } from "./retired-ids"
 import { getLayout } from "../layouts/registry"
 import type { BuiltinThemeDeclaration, Menu, MenuEntry } from "./schema"
 
@@ -98,6 +98,7 @@ export function copyThemePreset(presetId: string, targetId: string): BuiltinThem
   if (!THEME_ID_PATTERN.test(targetId)) {
     throw new PptwiseError(`invalid theme id "${targetId}". ${THEME_ID_CONSTRAINT}`)
   }
+  assertNotRetiredThemeId(targetId)
   const preset: BuiltinThemeDeclaration = BUILTIN_THEME_FILES[presetId as CanonicalThemeId]
   const record = THEME_OCCASIONS[preset.id]
   return {
