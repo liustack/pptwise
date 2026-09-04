@@ -284,8 +284,15 @@ export const COMPONENT_BUILDERS: Record<string, (lex: Lexicon) => Component> = {
     edges: [
       { from: "a", to: "b" },
       { from: "b", to: "c" },
-      { from: "c", to: "d", label: lex.labels[0] },
-      { from: "c", to: "b", label: lex.labels[1] },
+      // Short labels, and ones no node already prints. A decision node's
+      // outgoing gap is the width between two cards, and the label font has
+      // a hard 16px floor, so a ten-character English entry from the head of
+      // the pool could not be drawn whole there. These two fit in every
+      // language track, and neither repeats a stage name (an edge label a
+      // node already says is skipped, which would leave the specimen with
+      // nothing to review).
+      { from: "c", to: "d", label: lex.labels[3] },
+      { from: "c", to: "b", label: lex.labels[7] },
       { from: "d", to: "e" },
     ],
   }),
