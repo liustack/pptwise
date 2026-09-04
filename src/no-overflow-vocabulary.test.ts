@@ -66,6 +66,9 @@ const EXTENSIONS = [".ts", ".tsx", ".mts", ".md", ".js", ".mjs"]
 /** The release this branch ships. Entries at or above it describe today. */
 const CURRENT_RELEASE = [0, 31, 0] as const
 
+/** The package a pending changeset has to name to count as this release's. */
+const PACKAGE_NAME = "@liustack/pptwise"
+
 const BANNED: readonly { name: string; pattern: RegExp; why: string }[] = [
   { name: "+N", pattern: /\+N\b/, why: "a slide never paints an overflow count" },
   { name: "N more", pattern: /\bN more\b/, why: "a slide never paints an overflow count" },
@@ -90,30 +93,84 @@ function filesUnder(scope: string): string[] {
 }
 
 /**
+ * Every second-level heading this changelog uses, as a version or as nothing.
+ *
+ * Both shapes are in the file today: `## 0.30.0` for the entries changesets
+ * writes, and `## 0.4.0 (2026-07-20)` for the four hand-written ones at the
+ * bottom. A parser that knew only the first read a dated heading as body text
+ * and kept attributing its lines to whatever section came before, which is
+ * how a scan can be looking at the wrong release without saying so.
+ * `## Unreleased` is a heading and not a version, and it correctly ends the
+ * section above it.
+ */
+function headingVersion(line: string): readonly [number, number, number] | null | undefined {
+  if (!/^##\s+\S/.test(line)) return undefined
+  const version = /^##\s+v?(\d+)\.(\d+)\.(\d+)\b/.exec(line)
+  if (!version) return null
+  return [Number(version[1]), Number(version[2]), Number(version[3])] as const
+}
+
+function atOrAboveTarget(v: readonly [number, number, number]): boolean {
+  const [a, b, c] = v
+  const [x, y, z] = CURRENT_RELEASE
+  return a > x || (a === x && (b > y || (b === y && c >= z)))
+}
+
+/**
  * A changelog entry describes what shipped when it shipped, so past sections
  * keep their wording. Only the sections at or above the release this branch
- * is cutting have to describe today — and until that section exists, the
- * changeset that will become it is scanned in its place.
+ * is cutting have to describe today.
+ *
+ * `found` is separate from the lines: a scan that reads no current section is
+ * not a clean scan, it is a scan of nothing, and until the release is cut
+ * there is no such section to read. What stands in for it is the pending
+ * changeset, which `pendingChangesets` accounts for.
  */
-function currentChangelogLines(): { line: string; number: number }[] {
-  const path = join(ROOT, "CHANGELOG.md")
-  if (!existsSync(path)) return []
-  const lines = readFileSync(path, "utf8").split("\n")
+function parseChangelog(text: string | null): { found: boolean; lines: { line: string; number: number }[] } {
+  if (text === null) return { found: false, lines: [] }
   const out: { line: string; number: number }[] = []
   let current: readonly [number, number, number] | null = null
-  lines.forEach((line, i) => {
-    const heading = /^##\s+(\d+)\.(\d+)\.(\d+)\s*$/.exec(line)
-    if (heading) {
-      current = [Number(heading[1]), Number(heading[2]), Number(heading[3])] as const
+  let found = false
+  text.split("\n").forEach((line, i) => {
+    const heading = headingVersion(line)
+    if (heading !== undefined) {
+      current = heading
+      if (heading && atOrAboveTarget(heading)) found = true
       return
     }
-    if (!current) return
-    const [a, b, c] = current
-    const [x, y, z] = CURRENT_RELEASE
-    const atOrAbove = a > x || (a === x && (b > y || (b === y && c >= z)))
-    if (atOrAbove) out.push({ line, number: i + 1 })
+    if (current && atOrAboveTarget(current)) out.push({ line, number: i + 1 })
   })
-  return out
+  return { found, lines: out }
+}
+
+function currentChangelog(): { found: boolean; lines: { line: string; number: number }[] } {
+  const path = join(ROOT, "CHANGELOG.md")
+  return parseChangelog(existsSync(path) ? readFileSync(path, "utf8") : null)
+}
+
+/**
+ * Changesets waiting to become the next entry: a markdown file under
+ * `.changeset` that is not the directory's own permanent README and that
+ * names this package in its front matter.
+ *
+ * The `.changeset` floor alone could never prove this. `README.md` lives
+ * there forever, so a scope minimum of one was satisfied by the directory
+ * being empty of actual changesets — the release note this guard exists to
+ * check could be deleted and every assertion would stay green.
+ */
+function selectChangesets(entries: readonly { name: string; text: string }[]): string[] {
+  return entries
+    .filter((e) => e.name.endsWith(".md") && e.name.toLowerCase() !== "readme.md")
+    .filter((e) => e.text.includes(PACKAGE_NAME))
+    .map((e) => e.name)
+}
+
+function pendingChangesets(): string[] {
+  const dir = join(ROOT, ".changeset")
+  if (!existsSync(dir)) return []
+  return selectChangesets(
+    readdirSync(dir).map((name) => ({ name, text: readFileSync(join(dir, name), "utf8") })),
+  )
 }
 
 function exemptTestTitle(line: string): boolean {
@@ -142,6 +199,20 @@ describe("the retired overflow vocabulary stays retired", () => {
     expect(filesUnder(path).length).toBeGreaterThanOrEqual(min)
   })
 
+  it("has a release note to check: a current changelog section, or a pending changeset", () => {
+    // Without this the third banned-word check can scan nothing at all and
+    // still pass: before the release is cut the changelog has no section at
+    // or above it, and `.changeset` clears its own floor on the permanent
+    // README alone. One of the two has to actually be there.
+    const changelog = currentChangelog()
+    const pending = pendingChangesets()
+    expect(
+      changelog.found || pending.length > 0,
+      `no CHANGELOG section at or above ${CURRENT_RELEASE.join(".")} and no pending changeset naming ${PACKAGE_NAME}`,
+    ).toBe(true)
+    if (!changelog.found) expect(pending.length).toBeGreaterThan(0)
+  })
+
   it("excludes only files that exist, so a stale name cannot hide a live one", () => {
     for (const file of EXCLUDED_FILES) {
       expect(existsSync(join(ROOT, file)), `${file} is excluded but missing`).toBe(true)
@@ -160,9 +231,57 @@ describe("the retired overflow vocabulary stays retired", () => {
           })
       }
     }
-    for (const { line, number } of currentChangelogLines()) {
+    for (const { line, number } of currentChangelog().lines) {
       if (pattern.test(line)) hits.push(`CHANGELOG.md:${number}: ${line.trim().slice(0, 100)}`)
     }
     expect(hits).toEqual([])
+  })
+})
+
+// The parser and the pending-source rule, on the shapes that made the check
+// pass while reading nothing.
+describe("the release-note scan knows what it is reading", () => {
+  const DATED = ["## 0.31.0 (2026-09-04)", "", "- ships the thing"].join("\n")
+  const OLD_ONLY = ["## 0.30.0", "", "- an entry that describes 0.30.0"].join("\n")
+
+  it("reads nothing, and says so, when the changelog is missing", () => {
+    const parsed = parseChangelog(null)
+    expect(parsed.found).toBe(false)
+    expect(parsed.lines).toEqual([])
+  })
+
+  it("recognizes a dated heading as the version it names", () => {
+    // `## 0.4.0 (2026-07-20)` is in this repo's changelog four times. Read as
+    // body text it never ends the section above it, so the scan silently
+    // attributes its lines to the wrong release.
+    const parsed = parseChangelog(DATED)
+    expect(parsed.found).toBe(true)
+    expect(parsed.lines.map((l) => l.line)).toContain("- ships the thing")
+    const older = parseChangelog(["## 0.31.0", "- current", "## 0.4.0 (2026-07-20)", "- ancient"].join("\n"))
+    expect(older.lines.map((l) => l.line)).toEqual(["- current"])
+  })
+
+  it("reports no current section when every entry predates the target", () => {
+    const parsed = parseChangelog(OLD_ONLY)
+    expect(parsed.found).toBe(false)
+    expect(parsed.lines).toEqual([])
+  })
+
+  it("does not count the permanent README as a pending changeset", () => {
+    const readmeOnly = [{ name: "README.md", text: `changesets for ${PACKAGE_NAME}` }]
+    expect(selectChangesets(readmeOnly)).toEqual([])
+    const withOne = [...readmeOnly, { name: "brisk-pans-shave.md", text: `---\n"${PACKAGE_NAME}": minor\n---\n` }]
+    expect(selectChangesets(withOne)).toEqual(["brisk-pans-shave.md"])
+    // A changeset for some other package is not this release's note either.
+    const foreign = [...readmeOnly, { name: "other.md", text: `---\n"@someone/else": patch\n---\n` }]
+    expect(selectChangesets(foreign)).toEqual([])
+  })
+
+  it("would fail the release-note assertion when neither source exists", () => {
+    // The combination the assertion above exists to reject, evaluated
+    // directly: no current section, and nothing pending but the README.
+    const changelog = parseChangelog(OLD_ONLY)
+    const pending = selectChangesets([{ name: "README.md", text: PACKAGE_NAME }])
+    expect(changelog.found || pending.length > 0).toBe(false)
   })
 })
