@@ -20,6 +20,17 @@
 //
 // There is no exclusion list, and there must not be one. A page allowed to
 // drop is a page nobody reviews.
+//
+// What this covers is exactly the gallery, which is narrower than the whole
+// product of theme, face and language. `buildMatrix` draws the deck and face
+// bands in each theme's own Chinese lexicon, and adds English and mixed
+// script only for `consulting`, the theme the corpus gives the shared
+// three-language duty (`corpus/native/index.ts`). So of the pages below,
+// every deck and face page is Chinese, and the Latin and mixed pages are
+// consulting's component band plus the handful of adjacency pages. An
+// English component page on another theme is a legal deck this scan says
+// nothing about — `cross-language-capacity.test.mts` is the sweep that does,
+// and it holds a ratchet of the shapes that still overflow there.
 
 import { mkdtempSync } from "node:fs"
 import { tmpdir } from "node:os"
@@ -46,7 +57,7 @@ function drops(svg: string): string[] {
 }
 
 describe("the gallery corpus declares no content drops", () => {
-  it("scans every theme/layout/component page in zh/en/mixed", { timeout: 180_000 }, async () => {
+  it("scans every page the gallery renders", { timeout: 180_000 }, async () => {
     const themeIds = listThemes()
       .map((t) => t.id)
       .sort()
