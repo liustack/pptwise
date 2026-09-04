@@ -63,7 +63,7 @@ say what it is, when to choose it, who it is for, and when not to choose it.
 
 | field | what it says |
 | --- | --- |
-| `name` | The display name. A voice or a genre, never an industry and never an id. |
+| `name` | The display name. A voice or a genre, never an id — see the naming rule below. |
 | `story` | What it is, and which real-world form of print or staging it borrows. |
 | `positioning` | When to choose it. |
 | `audience` | Who speaks from it, and who is listening. |
@@ -79,23 +79,35 @@ character caps in `src/design-story.ts` are checked by
 Stories are public copy. They are the source for the gallery's design cards,
 for per-theme documentation, and for the words a model reads when it picks a
 theme or a component, so they are written as product prose in English: no file
-names, no registry names, no internal ids, nothing about how any of it is
-built. The gallery translates them field by field in
-`evals/gallery/stories.zh.ts` and marks anything untranslated.
+names, no registry names, no internal ids, and nothing about the machinery
+that draws a page. `validateDesignStory()` refuses a story that says `face`,
+`layout`, `renderer`, `component`, `IR`, or `slot`. The gallery translates
+them field by field in `evals/gallery/stories.zh.ts` and marks anything
+untranslated.
 
-**A name names a voice or a genre, never an industry.** A name that squats on
-an industry tells every other industry the object is not for them, and hides
-what it actually offers, which is a way of speaking: the report voice that
-opens with its conclusion serves a hospital board as well as a bank. An
-industry belongs in `positioning`, in `audience`, and in a theme's occasions,
-which is where it says who a voice happens to suit rather than who owns it.
-`src/naming-rule.test.ts` enforces the rule over theme ids, labels, and story
-names, and carries the list of built-ins still waiting on a rename.
+**A name names a voice or a genre, never a vertical, a function, an audience,
+or an organization type.** All four answer "who is this for" instead of "how
+does this sound", and all four lock the object to one customer while what it
+actually sells is a way of speaking: the report voice that opens with its
+conclusion serves a hospital board as well as a bank. So the forbidden list
+holds `enterprise` (an organization type), `kids` and `academic` (audiences),
+`marketing` (a function) and `startup` (a company stage) alongside the
+verticals. Words that name a form, a venue, or a craft — runway, museum,
+playbill, ledger, clinic, almanac — are deliberately absent. Any of the
+forbidden words is welcome in `positioning`, in `audience`, and in a theme's
+occasions, which is where a story says who a voice happens to suit rather than
+who owns it.
 
-`src/design-story.test.ts` holds the line the other way: an object with no
-story fails unless it is named in that test's pending list, and an object
-named there that has since been written fails too, so the list can only
-shrink.
+The rule is enforced on the public theme-file contract itself — a theme file's
+`id`, `label`, and `story.name` are all checked when it is loaded — and again
+by `src/naming-rule.test.ts` over the built-ins.
+
+Two frozen baselines carry the objects that predate all of this: the thirteen
+theme names awaiting a rename (`src/themes/legacy-names.ts`) and the storyless
+objects, which is now empty (`src/design-story.test.ts`). A baseline is a
+licence, not a work list. Each may lose entries and neither may gain one — the
+tests assert the contents against what they were frozen with, so a new broken
+name or a new storyless object cannot be waved through by appending a line.
 
 ## The menu model
 
