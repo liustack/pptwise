@@ -102,12 +102,21 @@ The rule is enforced on the public theme-file contract itself — a theme file's
 `id`, `label`, and `story.name` are all checked when it is loaded — and again
 by `src/naming-rule.test.ts` over the built-ins.
 
-Two frozen baselines carry the objects that predate all of this: the thirteen
-theme names awaiting a rename (`src/themes/legacy-names.ts`) and the storyless
-objects, which is now empty (`src/design-story.test.ts`). A baseline is a
-licence, not a work list. Each may lose entries and neither may gain one — the
-tests assert the contents against what they were frozen with, so a new broken
-name or a new storyless object cannot be waved through by appending a line.
+Two frozen baselines carried the objects that predate all of this: the thirteen
+theme names written before the rule (`src/themes/legacy-names.ts`) and the
+storyless objects (`src/design-story.test.ts`). Both are empty now. The thirteen were
+renamed in one batch, so nine theme ids changed and every name answers to the
+rule directly. A baseline is a licence, not a work list. Each may lose entries
+and neither may gain one — the tests assert the contents against what they were
+frozen with, so a new broken name or a new storyless object cannot be waved
+through by appending a line.
+
+A retired name is not a free name. The nine ids that batch removed
+(`src/themes/retired-ids.ts`), and the five motif ids renamed with them, are
+refused wherever a theme is named or resolved, and each refusal says the name
+it became. A workspace theme, a preset copy, or a colour fork cannot take one
+back: a reissued word would make every deck that names it read as valid again
+while meaning a different theme.
 
 ## The menu model
 
