@@ -207,7 +207,20 @@ function componentKind(component: Component): PageKind {
  * show. Not full-body (a real deck may still stack them), just too tall to
  * review alongside anything.
  */
-const TALL_COMPONENT_TYPES = new Set<Component["type"]>(["numbered_cards", "cycle", "hub_spoke"])
+const TALL_COMPONENT_TYPES = new Set<Component["type"]>(["numbered_cards", "cycle", "hub_spoke", "row_cards", "data_table"])
+
+/**
+ * Drawings whose items are packed along one horizontal run, so what they can
+ * hold is set by the width they are given rather than the height.
+ * `architecture` prints each layer's parts as a single `·`-separated strip
+ * (`fitItemRuns`, `src/components/architecture.tsx`) — on a full content
+ * rect all four parts of a layer fit, but sharing the page with a lead-in
+ * sentence sends it into `asymmetric-triptych`'s 424px side panel, where the
+ * strip runs out of room and the layer drops its tail. Same remedy as the
+ * tall set above, different axis, so it is named for its own reason instead
+ * of being filed under a name that would be untrue of it.
+ */
+const WIDE_COMPONENT_TYPES = new Set<Component["type"]>(["architecture"])
 
 // ─────────────────────────────────────────────────────────────────────────
 // Theme table — one ten-page deck, rendered once per theme
@@ -689,6 +702,18 @@ export function componentPage(
     opts.solo ??
     (FULL_BODY_TYPES.has(component.type) ||
       TALL_COMPONENT_TYPES.has(component.type) ||
+      WIDE_COMPONENT_TYPES.has(component.type) ||
+      // The lead-in is itself a paragraph, so a paragraph page paired with
+      // one is two paragraphs stacked — nothing about the component is
+      // clearer for the company, and on consulting's short `points` rect the
+      // English body was dropped and the review saw only the lead-in.
+      component.type === "paragraph" ||
+      // A flowchart scales to whatever box it is handed (`SCALABLE_TYPES`),
+      // so sharing the page turns it into a thumbnail — the same reason a
+      // chart owns its page. Under a lead-in sentence on consulting it drew
+      // in a 96px band of a 437px rect and an edge label had nowhere left to
+      // park, which the drawing declared as a drop.
+      component.type === "flowchart" ||
       chart ||
       ["quote", "evidence", "statement", "fact", "photo"].includes(kind))
 
