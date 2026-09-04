@@ -366,6 +366,26 @@
       "geometry": "wr3v5w",
       "color": "gfdc1k"
     },
+    "academic--adj--data-table--zh": {
+      "hash": "w2t8sp",
+      "geometry": "14f4165",
+      "color": "774s1z"
+    },
+    "academic--adj--row-cards--zh": {
+      "hash": "bnd6p7",
+      "geometry": "180q5xx",
+      "color": "sfjaqz"
+    },
+    "academic--adj--paragraph--zh": {
+      "hash": "bzmqzl",
+      "geometry": "7a0wmv",
+      "color": "1ds0vtx"
+    },
+    "academic--adj--flowchart--zh": {
+      "hash": "i0o7vi",
+      "geometry": "nf39yx",
+      "color": "1xi6xc2"
+    },
     "arena--deck--p01": {
       "hash": "oonvn1",
       "geometry": "10toy7r",
@@ -2620,6 +2640,11 @@
       "hash": "d0rcq9",
       "geometry": "1apj0cb",
       "color": "sp1nd2"
+    },
+    "crayon--adj--architecture--zh": {
+      "hash": "14zzgld",
+      "geometry": "cedxq1",
+      "color": "1su6gew"
     },
     "ember--deck--p01": {
       "hash": "1s76wnw",
