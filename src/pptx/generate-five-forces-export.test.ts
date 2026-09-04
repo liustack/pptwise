@@ -201,6 +201,6 @@ describe("five_forces over-capacity content is refused, not quietly shortened", 
         substitutes: panel(5),
       },
     ])
-    await expect(generatePptx(ir)).rejects.toThrow(/deck drops \d+ content blocks?/)
+    await expect(generatePptx(ir)).rejects.toThrow(/deck drops content.*: \d+ items\./s)
   })
 })

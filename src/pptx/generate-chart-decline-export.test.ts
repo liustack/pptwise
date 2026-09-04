@@ -64,7 +64,8 @@ function declinedChartDeck(seriesCount: number): PptxIR {
 
 describe("a declined chart blocks the export", () => {
   it("refuses a deck whose chart was handed less than its measured minimum", async () => {
-    await expect(generatePptx(declinedChartDeck(16))).rejects.toThrow(/deck drops \d+ content block/)
+    // The whole chart declined, so the unit is the component itself.
+    await expect(generatePptx(declinedChartDeck(16))).rejects.toThrow(/deck drops content.*: 1 content block\./s)
   })
 
   it("still exports the same deck when the caller opts in", async () => {
@@ -114,8 +115,10 @@ function manySeriesBarDeck(seriesCount: number): PptxIR {
 
 describe("a legend that cannot name every series stops the export", () => {
   it("refuses a 24-series bar chart, and the message tells the author to shorten it", async () => {
+    // The legend lost series names, and the message says so: an author sent
+    // looking for "14 content blocks" on a one-component page finds nothing.
     await expect(generatePptx(manySeriesBarDeck(24))).rejects.toThrow(
-      /deck drops \d+ content blocks? that do not fit the content area/,
+      /deck drops content that does not fit the content area.*: \d+ series names\./s,
     )
   })
 

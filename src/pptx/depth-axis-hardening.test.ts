@@ -311,6 +311,6 @@ describe("pathological content is refused by the export, not quietly shortened",
         },
       ],
     })
-    await expect(generatePptx(ir)).rejects.toThrow(/deck drops \d+ content block/)
+    await expect(generatePptx(ir)).rejects.toThrow(/deck drops content.*: \d+ items\./s)
   })
 })

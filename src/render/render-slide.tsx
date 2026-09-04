@@ -3,6 +3,7 @@ import type { PptxIR, Slide } from "@/ir"
 import { svgToOps, type Op } from "../pptx/svg2pptx/dispatch"
 import { FullSlideSvg } from "./full-slide-svg"
 import { renderSvgMarkup, parseSvgRoot } from "./serialize"
+import { parseDropKind, type DropKind } from "./drop-marker"
 
 /**
  * Export-side entry: render one slide through the single source. `FullSlideSvg`
@@ -17,13 +18,20 @@ export function slideToSvgMarkup(ir: PptxIR, slide: Slide, index: number): strin
 export interface SlideRender {
   ops: Op[]
   /**
-   * How many content blocks this slide lost — the sum of every
-   * `data-dropped` marker in its markup, whether the page-level drop path
-   * (`DroppedContentMarker`) or a component declaring its own cut. Nothing
-   * on a slide ever says a drop happened, so every drop counts here and
-   * `checkContentDropGate` (`../pptx/generate.ts`) refuses the export.
+   * How much this slide lost — the sum of every `data-dropped` marker in its
+   * markup, whether the page-level drop path (`DroppedContentMarker`) or a
+   * component declaring its own cut. Nothing on a slide ever says a drop
+   * happened, so every drop counts here and `checkContentDropGate`
+   * (`../pptx/generate.ts`) refuses the export.
    */
   dropped: number
+  /**
+   * The same loss broken down by what was lost, in input order and merged
+   * per unit. One number could only ever be called "content blocks", which
+   * was a lie about the chart that dropped fourteen series names, so the
+   * unit travels with the count (`data-dropped-kind`, `./drop-marker.tsx`).
+   */
+  drops: readonly { kind: DropKind; count: number }[]
 }
 
 /**
@@ -36,11 +44,17 @@ export interface SlideRender {
  */
 export function slideToRender(ir: PptxIR, slide: Slide, index: number): SlideRender {
   const root = parseSvgRoot(slideToSvgMarkup(ir, slide, index))
-  const dropped = Array.from(root.querySelectorAll("[data-dropped]")).reduce(
-    (sum, el) => sum + (Number(el.getAttribute("data-dropped")) || 0),
-    0,
-  )
-  return { ops: svgToOps(root), dropped }
+  const byKind = new Map<DropKind, number>()
+  let dropped = 0
+  for (const el of Array.from(root.querySelectorAll("[data-dropped]"))) {
+    const count = Number(el.getAttribute("data-dropped")) || 0
+    if (count <= 0) continue
+    const kind = parseDropKind(el.getAttribute("data-dropped-kind"))
+    byKind.set(kind, (byKind.get(kind) ?? 0) + count)
+    dropped += count
+  }
+  const drops = Array.from(byKind, ([kind, count]) => ({ kind, count }))
+  return { ops: svgToOps(root), dropped, drops }
 }
 
 /** Render a slide to pptxgenjs ops via single-source SVG → svg2pptx. */

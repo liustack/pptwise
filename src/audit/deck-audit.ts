@@ -4,6 +4,7 @@ import { PptwiseError } from "../errors"
 import { measureMonoTextUnits, measureTextUnits } from "../lib/svg-text-layout"
 import { getPlatform } from "../platform/registry"
 import { isBold, isMonoFontFamily } from "../render/fonts"
+import { dropPhrase, parseDropKind, type DropKind } from "../render/drop-marker"
 import { auditSvgMarkup, parseNums, parseTransform, type OverflowIssue } from "./svg-audit"
 
 /**
@@ -2452,14 +2453,14 @@ function truncatedFindings(markup: string, page: number, slideId: string | undef
   })
 }
 
-function droppedMessage(count: number): string {
-  const unit = count === 1 ? "item" : "items"
+function droppedMessage(count: number, kind: DropKind): string {
+  const what = dropPhrase(kind, count)
   const verb = count === 1 ? "is" : "are"
   // A slide never says it left something out (`svg-content.tsx`, visual
   // review 2026-08-15) — the drop is invisible to a reader, so the message
   // says so rather than pointing at a mark that is never painted.
   return (
-    `${count} ${unit} of content ${verb} missing from the rendered slide, with nothing on it to say so — ` +
+    `${what} ${verb} missing from the rendered slide, with nothing on it to say so — ` +
     `the content area is over capacity, split the slide or trim its content`
   )
 }
@@ -2469,12 +2470,13 @@ function droppedFindings(markup: string, page: number, slideId: string | undefin
   const els = Array.from(root.querySelectorAll("[data-dropped]"))
   return els.map((el) => {
     const count = Number(el.getAttribute("data-dropped") ?? 0)
+    const kind = parseDropKind(el.getAttribute("data-dropped-kind"))
     return {
       page,
       ...(slideId !== undefined ? { slideId } : {}),
       code: "content-dropped" as const,
-      message: droppedMessage(count),
-      detail: { count },
+      message: droppedMessage(count, kind),
+      detail: { count, kind },
     }
   })
 }

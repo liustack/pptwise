@@ -430,7 +430,7 @@ export const chart: SvgComponent<ChartComponent> = {
     // lets the page still render for preview and review, and moves the
     // refusal to the one place that ships a file.
     if ((box.h ?? minimum) + 0.5 < minimum) {
-      return <g data-dropped={1} />
+      return <g data-dropped={1} data-dropped-kind="component" />
     }
     // Same contract on the other axis. Below `MIN_CARTESIAN_BOX_W` the y-tick
     // gutter and the right pad leave no plot to speak of, and the frame would
@@ -438,7 +438,7 @@ export const chart: SvgComponent<ChartComponent> = {
     // anything and, before the gutter cap was made to bind, ink outside the
     // box.
     if (axesApplicable(component) && box.w < MIN_CARTESIAN_BOX_W) {
-      return <g data-dropped={1} />
+      return <g data-dropped={1} data-dropped-kind="component" />
     }
     // A directly-labelled chart has a second contract on this axis, and it
     // is not a width: line and area carry no legend, so the only place a
@@ -451,7 +451,7 @@ export const chart: SvgComponent<ChartComponent> = {
       DIRECT_LABELLED.has(component.chart_type) &&
       !seriesGutterLabelsFit(component.series, box.w, component, ctx.fonts.body)
     ) {
-      return <g data-dropped={1} />
+      return <g data-dropped={1} data-dropped-kind="component" />
     }
 
     // P1 variety wave, task 2 (review fix round, Major finding): rotation
@@ -533,7 +533,7 @@ export const chart: SvgComponent<ChartComponent> = {
             })}
             {/* Series the row could not name are declared, never counted
                 on the page: the export refuses instead. */}
-            {legendLayout.droppedCount > 0 && <g data-dropped={legendLayout.droppedCount} />}
+            {legendLayout.droppedCount > 0 && <g data-dropped={legendLayout.droppedCount} data-dropped-kind="series-name" />}
           </g>
         ) : null}
       </g>

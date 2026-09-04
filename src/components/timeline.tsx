@@ -259,7 +259,7 @@ function renderVertical(
           </g>
         )
       })}
-      {hiddenCount > 0 && <g data-dropped={hiddenCount} />}
+      {hiddenCount > 0 && <g data-dropped={hiddenCount} data-dropped-kind="event" />}
     </g>
   )
 }

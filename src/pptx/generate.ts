@@ -23,6 +23,7 @@ import type { ImageOp } from "./svg2pptx/image"
 import { dedupeMediaInZip } from "./pptx-dedupe-media"
 import { applySlideTransitions, applyElementAnimations } from "./pptx-animations"
 import { applyEaFontFaces } from "./pptx-ea-fonts"
+import { dropPhrase, type DropKind } from "../render/drop-marker"
 import { auditPptxPackage } from "./package-audit"
 import { finalizePptxZip, normalizePptxTimestamps, PptxSealViolationError } from "./pptx-fixed-timestamps"
 
@@ -33,6 +34,8 @@ interface DroppedPage {
   page: number
   slideId?: string
   count: number
+  /** What the count counts, per unit — see `DropKind` in `../render/drop-marker`. */
+  drops: readonly { kind: DropKind; count: number }[]
 }
 
 /**
@@ -58,6 +61,12 @@ interface DroppedPage {
  * the text itself is a different thing and stays legal: that is
  * `data-truncated`, which this gate does not read.
  *
+ * The message names the loss in its own unit. Every declaration carries one
+ * (`data-dropped-kind`), because a single count folded rows, cards, legend
+ * names and whole components into one word: a one-component chart page was
+ * told it dropped "14 content blocks", and its author had fourteen things to
+ * look for that were never there.
+ *
  * It lives here rather than beside `checkDraftGate` because the question
  * "will this deck lose content?" can only be answered by a real layout, and
  * this is where the export already renders every slide — `slideToRender`
@@ -73,12 +82,15 @@ interface DroppedPage {
  */
 function checkContentDropGate(dropped: DroppedPage[]): void {
   if (dropped.length === 0) return
-  const total = dropped.reduce((sum, d) => sum + d.count, 0)
   const refs = dropped
-    .map((d) => (d.slideId ? `${d.slideId} (page ${d.page}, ${d.count})` : `page ${d.page} (${d.count})`))
-    .join(", ")
+    .map((d) => {
+      const what = d.drops.map((drop) => dropPhrase(drop.kind, drop.count)).join(", ")
+      const where = d.slideId ? `${d.slideId} (page ${d.page})` : `page ${d.page}`
+      return `${where}: ${what}`
+    })
+    .join("; ")
   throw new PptwiseError(
-    `deck drops ${total} content block${total === 1 ? "" : "s"} that do not fit the content area, on ${dropped.length} page${dropped.length === 1 ? "" : "s"}: ${refs} — shorten the content, split the page in two, or pass --allow-dropped-content`,
+    `deck drops content that does not fit the content area, on ${dropped.length} page${dropped.length === 1 ? "" : "s"} — ${refs}. Shorten the content, split the page in two, or pass --allow-dropped-content`,
   )
 }
 
@@ -116,9 +128,9 @@ export async function generatePptxBlob(
   const droppedPages: DroppedPage[] = []
   ir.slides.forEach((slide, index) => {
     const s = pptx.addSlide({ masterName: slide.type })
-    const { ops, dropped } = slideToRender(ir, slide, index)
+    const { ops, dropped, drops } = slideToRender(ir, slide, index)
     if (dropped > 0) {
-      droppedPages.push({ page: index + 1, ...(slide.id ? { slideId: slide.id } : {}), count: dropped })
+      droppedPages.push({ page: index + 1, ...(slide.id ? { slideId: slide.id } : {}), count: dropped, drops })
     }
     imageOpsBySlide.push(ops.filter((op): op is ImageOp => op.kind === "image"))
     gradientPatches.push(...renderOps(s, ops, index))

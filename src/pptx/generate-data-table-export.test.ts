@@ -177,6 +177,6 @@ describe("data_table native-vector differentiation claim (sankey's own T3 preced
 describe("data_table over-capacity content is refused, not quietly shortened", () => {
   it("the schema-max shape is refused without the opt-in, and the message names the loss", async () => {
     const ir = makeIr([table(8, 12, (r, c) => `r${r}c${c}`)])
-    await expect(generatePptx(ir)).rejects.toThrow(/deck drops \d+ content blocks?/)
+    await expect(generatePptx(ir)).rejects.toThrow(/deck drops content.*: \d+ rows\./s)
   })
 })

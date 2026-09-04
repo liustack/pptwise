@@ -491,7 +491,7 @@ function renderPanel(
           </g>
         )
       })}
-      {dropped > 0 ? <g data-dropped={dropped} /> : null}
+      {dropped > 0 ? <g data-dropped={dropped} data-dropped-kind="item" /> : null}
     </g>
   )
 }

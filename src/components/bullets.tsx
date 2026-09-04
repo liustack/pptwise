@@ -281,7 +281,7 @@ export const bullets: SvgComponent<BulletsComponent> = {
             )}
           </Fragment>
         ))}
-        {hidden > 0 && <g data-dropped={hidden} />}
+        {hidden > 0 && <g data-dropped={hidden} data-dropped-kind="item" />}
       </g>
     )
   },

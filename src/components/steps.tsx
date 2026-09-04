@@ -183,7 +183,7 @@ export const steps: SvgComponent<StepsComponent> = {
           </g>
         )
       })}
-      {hidden > 0 ? <g data-dropped={hidden} /> : null}
+      {hidden > 0 ? <g data-dropped={hidden} data-dropped-kind="step" /> : null}
     </g>
   )
   },

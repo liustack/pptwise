@@ -93,7 +93,7 @@ export const citation: SvgComponent<CitationComponent> = {
             </text>
           )
         })}
-        {hiddenCount > 0 && <g data-dropped={hiddenCount} />}
+        {hiddenCount > 0 && <g data-dropped={hiddenCount} data-dropped-kind="source" />}
       </g>
     )
   },

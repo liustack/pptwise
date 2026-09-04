@@ -562,7 +562,7 @@ describe("runRender", () => {
       const out = join(dir, "out-dropped-blocked.pptx")
       await expect(
         runRender(join(dir, "deck-dropped-content.json"), { output: out }),
-      ).rejects.toThrow(/deck drops \d+ content blocks.*p-2 \(page 2.*--allow-dropped-content/s)
+      ).rejects.toThrow(/deck drops content.*p-2 \(page 2\): \d+ content blocks.*--allow-dropped-content/s)
     })
 
     it("renders the deck when --allow-dropped-content is passed", async () => {

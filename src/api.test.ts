@@ -2205,7 +2205,7 @@ describe("generatePptx content-drop gate (deep-review P1)", () => {
 
   it("throws PptwiseError naming the page, the count and the way out", async () => {
     await expect(generatePptx(dropping)).rejects.toThrow(
-      /deck drops \d+ content blocks that do not fit the content area, on 1 page: p-2 \(page 2, \d+\) — shorten the content, split the page in two, or pass --allow-dropped-content/,
+      /deck drops content that does not fit the content area, on 1 page — p-2 \(page 2\): \d+ content blocks\. Shorten the content, split the page in two, or pass --allow-dropped-content/,
     )
   })
 
@@ -2237,7 +2237,7 @@ describe("generatePptx content-drop gate (deep-review P1)", () => {
 
     expect(validateIr(takeoverDropping).ok).toBe(true)
     await expect(generatePptx(takeoverDropping)).rejects.toThrow(
-      /deck drops 1 content block.*photo-2 \(page 2, 1\).*--allow-dropped-content/,
+      /deck drops content.*photo-2 \(page 2\): 1 content block\..*--allow-dropped-content/,
     )
   })
 
@@ -2246,7 +2246,7 @@ describe("generatePptx content-drop gate (deep-review P1)", () => {
       ...raw,
       slides: [raw.slides[0], { type: "content" as const, kind: "points", heading: "Too much", components: overfull(8) }],
     }
-    await expect(generatePptx(noId)).rejects.toThrow(/on 1 page: page 2 \(\d+\)/)
+    await expect(generatePptx(noId)).rejects.toThrow(/on 1 page — page 2: \d+ content blocks\./)
   })
 
   it("exports when { allowDroppedContent: true } is passed", async () => {
@@ -2291,7 +2291,8 @@ describe("generatePptx content-drop gate (deep-review P1)", () => {
     expect(svg).toMatch(/data-dropped="[1-9]/)
     // Nothing on the page admits the cut.
     expect(svg).not.toMatch(/>[^<]*\+\s*\d+[^<]*</)
-    await expect(generatePptx(manyBullets)).rejects.toThrow(/deck drops \d+ content block/)
+    // Bullets cut their own items, and the message says items, not blocks.
+    await expect(generatePptx(manyBullets)).rejects.toThrow(/deck drops content.*: \d+ items\./s)
     const bytes = await generatePptx(manyBullets, { allowDroppedContent: true })
     expect([bytes[0], bytes[1]]).toEqual([0x50, 0x4b])
   })

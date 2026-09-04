@@ -295,7 +295,7 @@ export const dataTable: SvgComponent<DataTableComponent> = {
           )
         })}
 
-        {hiddenRowCount > 0 && <g data-dropped={hiddenRowCount} />}
+        {hiddenRowCount > 0 && <g data-dropped={hiddenRowCount} data-dropped-kind="row" />}
 
         {sourceFit ? (
           <text

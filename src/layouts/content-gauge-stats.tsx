@@ -254,7 +254,10 @@ export function GaugeStatsContent({ ir, slide, index, ctx }: SvgTemplateProps) {
       />
 
       {kpis ? (
-        <g data-dropped={droppedStats > 0 ? droppedStats : undefined}>
+        <g
+          data-dropped={droppedStats > 0 ? droppedStats : undefined}
+          data-dropped-kind={droppedStats > 0 ? "stat" : undefined}
+        >
           {DIVIDER_X.map((x) => (
             <line key={x} x1={x} y1={DIVIDER_Y1} x2={x} y2={DIVIDER_Y2} stroke={border} strokeWidth={1} />
           ))}

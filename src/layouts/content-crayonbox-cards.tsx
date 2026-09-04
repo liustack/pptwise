@@ -162,7 +162,10 @@ export function CrayonboxCardsContent({ ir, slide, index, ctx }: SvgTemplateProp
       )}
 
       {block ? (
-        <g data-dropped={dropped > 0 ? dropped : undefined}>
+        <g
+          data-dropped={dropped > 0 ? dropped : undefined}
+          data-dropped-kind={dropped > 0 ? "card" : undefined}
+        >
           {cards.map((card, cardIndex) => (
             <g key={cardIndex}>
               <rect

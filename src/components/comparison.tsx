@@ -338,7 +338,7 @@ function renderDefault(rawComponent: ComparisonComponent, box: Parameters<SvgCom
             </Fragment>
           )
         })}
-        {hiddenRowCount > 0 && <g data-dropped={hiddenRowCount} />}
+        {hiddenRowCount > 0 && <g data-dropped={hiddenRowCount} data-dropped-kind="row" />}
       </g>
     )
 }

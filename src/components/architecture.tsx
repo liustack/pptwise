@@ -163,7 +163,7 @@ export const architecture: SvgComponent<ArchitectureComponent> = {
                   `deck-audit` reports it as `content-dropped`, so a layer
                   whose 構件串 outran its column says so somewhere a machine
                   can find. */}
-              {items.dropped > 0 && <g data-dropped={items.dropped} />}
+              {items.dropped > 0 && <g data-dropped={items.dropped} data-dropped-kind="item" />}
             </g>
           )
         })}

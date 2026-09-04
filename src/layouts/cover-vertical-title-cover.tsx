@@ -247,7 +247,10 @@ export function VerticalTitleCover({ ir, slide, ctx }: SvgTemplateProps) {
   return (
     <>
       {titleColumn && (
-        <g data-dropped={titleColumn.dropped > 0 ? String(titleColumn.dropped) : undefined}>
+        <g
+          data-dropped={titleColumn.dropped > 0 ? String(titleColumn.dropped) : undefined}
+          data-dropped-kind={titleColumn.dropped > 0 ? "title-character" : undefined}
+        >
           {titleColumn.glyphs.map((ch, i) => (
             <text
               key={`title-${i}`}

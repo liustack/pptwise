@@ -147,6 +147,6 @@ describe("pest over-capacity content is refused, not quietly shortened", () => {
     const ir = makeIr([
       { type: "pest", political: quadrant(5), economic: quadrant(5), social: quadrant(5), technological: quadrant(5) },
     ])
-    await expect(generatePptx(ir)).rejects.toThrow(/deck drops \d+ content blocks?/)
+    await expect(generatePptx(ir)).rejects.toThrow(/deck drops content.*: \d+ items\./s)
   })
 })

@@ -262,7 +262,7 @@ export const rowCards: SvgComponent<RowCardsComponent> = {
             </g>
           )
         })}
-        {hidden > 0 && <g data-dropped={hidden} />}
+        {hidden > 0 && <g data-dropped={hidden} data-dropped-kind="card" />}
       </g>
     )
   },
