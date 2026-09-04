@@ -1,5 +1,6 @@
 import { z } from "zod"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
+import type { DesignStory } from "../../design-story"
 
 export const schema = z
   .object({
@@ -25,3 +26,11 @@ export const traits = {
   fullBody: false,
   evidence: false,
 } as const satisfies ComponentTraits
+
+export const story: DesignStory = {
+  name: "Standpoint",
+  story: "A titled panel under a colour bar, a few labelled lines of judgement, an optional note at the foot. The analyst's column standing beside the numbers.",
+  positioning: "Choose it when several judgements share one heading and sit next to the evidence. Use callout for a single remark and verdict_banner for one line of conclusion.",
+  audience: "Readers who want the reading of the data, not only the data.",
+  notFor: "A single aside, which belongs in callout.",
+}

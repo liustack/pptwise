@@ -26,14 +26,9 @@ import {
  * and a listed object that has since been written fails too, so nobody can
  * write the copy and leave the list claiming otherwise.
  */
-const PENDING: readonly string[] = [
-  "component:callout",
-  "component:verdict_banner",
-  "component:insight_panel",
-  "component:blockquote",
-  "component:citation",
-  "component:code",
-]
+// Empty: every theme, kind, and component carries its copy. Faces are the
+// batch that follows, and they join this sweep with the first face story.
+const PENDING: readonly string[] = []
 
 interface StoriedObject {
   /** Namespaced so a theme and a component may share a plain id. */
