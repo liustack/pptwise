@@ -74,7 +74,7 @@ describe("SvgContent", () => {
       </svg>,
     )
     // The marker is audit-only (visual review 2026-08-15): `deck-audit.ts`'s
-    // `droppedFindings` selects on the attribute, and a "+N more" string in
+    // `droppedFindings` selects on the attribute, and an overflow-count string in
     // the corner of a finished slide is a debug affordance no reader outside
     // this repo can act on.
     expect(markup).toMatch(/data-dropped="\d+"/)
@@ -157,7 +157,7 @@ describe("SvgContent full-body components (structure-components wave task 1)", (
     // No settle — the component's own <g> children translate straight to
     // rect.y (176), never to a golden-position y like the lone-component
     // bullets case above (which lands at 208). It fills the rect's whole
-    // height, so it never reaches the drop path's "+N" marker either.
+    // height, so it never reaches the drop path's marker either.
     expect(markup).not.toContain("未展示")
   })
 

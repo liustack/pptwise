@@ -1030,7 +1030,7 @@ describe("bullets count geometric hard error (P0 hardening, robustness deep-revi
     expect(v.ok).toBe(true)
   })
 
-  it("names the ceiling and stays free of a leaked '+N more'-style per-item dump — message stays short regardless of item count", async () => {
+  it("names the ceiling and stays free of a leaked per-item dump — message stays short regardless of item count", async () => {
     const tooMany = Array.from({ length: 20_000 }, (_, i) => `item ${i}`)
     const ir = {
       ...raw,

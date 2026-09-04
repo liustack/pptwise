@@ -429,7 +429,7 @@ describe("auditDeck — overflow / out-of-bounds", () => {
 })
 
 // bench-driven fix round, defect E: `fitSvgLine`'s ellipsis truncation and
-// `layoutContentFit`'s "+N more" drop marker used to be invisible to audit —
+// `layoutContentFit`'s drop marker used to be invisible to audit —
 // a model (or human) had to eyeball the rendered SVG to notice row_cards
 // silently dropping items or a slide silently dropping a whole component.
 // Both checks below are thin readers of the `data-truncated`/`data-dropped`
@@ -532,7 +532,7 @@ describe("auditDeck — content-truncated / content-dropped (bench-driven fix ro
     expect(dropped.length).toBeGreaterThan(0)
     expect(dropped[0]).toMatchObject({ page: 1, slideId: "s1", code: "content-dropped" })
     // The page-level drop paints nothing on the slide any more, so the
-    // message no longer points at a "+N more" marker that is not there.
+    // message no longer points at an overflow mark that is not there.
     expect(dropped[0].message).toMatch(/missing from the rendered slide, with nothing on it to say so/)
     expect((dropped[0].detail as { count?: number }).count).toBeGreaterThan(0)
   })

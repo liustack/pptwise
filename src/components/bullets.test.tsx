@@ -327,7 +327,7 @@ describe("bullets component spacious-pacing shrink (MIN_FONT floor)", () => {
 
       // Every rendered line's baseline (plus a descent allowance) stays
       // within box.h — the actual geometric guarantee this fix exists for.
-      // Review fix (I1): the "+N …" marker text is included in this
+      // Review fix (I1): the drop marker is included in this
       // loop, not excluded — the marker itself overflowing box.h (reviewer
       // repro: marker y=304.8 vs box.h=300) is exactly the class of bug a
       // marker-excluding assertion would hide.

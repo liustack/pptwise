@@ -342,7 +342,7 @@ describe("architecture layer-stack", () => {
     expect(Number(items!.getAttribute("x"))).toBeGreaterThan(Number(title!.getAttribute("x")))
   })
 
-  it("draws hairline separators between layers, not a leftover +N marker", () => {
+  it("draws hairline separators between layers, not a leftover overflow marker", () => {
     const { container } = svg(
       architecture.render({ type: "architecture", layers }, { x: 0, y: 0, w: 1120 }, ctx),
     )

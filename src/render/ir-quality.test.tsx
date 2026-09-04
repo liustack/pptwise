@@ -1143,7 +1143,7 @@ describe("checkIrQuality", () => {
   // ── chart_line_too_many_series ──
   // Dataviz's 8-series ceiling (CAPACITY.chart.lineSeriesAdvisoryMax). A
   // line chart past that is still legal IR and still renders — the legend
-  // drops overflow into "+N …" rather than the renderer refusing. This is
+  // drops the overflow rather than the renderer refusing. This is
   // the editorial warning that the authoring problem exists, warn-only.
 
   function nSeries(n: number) {
