@@ -26,6 +26,7 @@ import { slideEdgeFill } from "@/lib/slide-edge"
 import { namespaceSvgIds, svgIdPrefix } from "@/lib/svg-ids"
 import { BOUNDARY_SLOTS, FACE_SLOTS } from "./matrix"
 import { verdictFreshness, type Manifest } from "./render"
+import { STORY_ZH } from "./stories.zh"
 import { effectiveVerdict } from "./verdict"
 
 /**
@@ -429,6 +430,30 @@ main { padding: 20px; }
 .idn { flex: 0 0 auto; font-size: 11px; color: var(--ink-dim); font-variant-numeric: tabular-nums; }
 .idnote { font-size: 12px; color: var(--ink-dim); }
 
+/* The design card: what this theme or component is, who it is for, and when
+   not to reach for it. It sits where the reviewer arrives — the section head
+   on 按主题, the group head on 按组件 — because "is this good" is not a
+   question anyone can answer without first knowing what it was trying to be.
+   Quiet like the identity card above, with the name carrying the only weight
+   and the 不适用 line tinted so the reverse positioning is findable at a
+   glance, since that is the line that catches a misuse. */
+.dstory {
+  background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 10px 12px 11px; margin: 0 0 16px; max-width: 96ch;
+}
+.dstory h4 { margin: 0; font-size: 14px; font-weight: 650; letter-spacing: -0.01em; }
+.dstory p { margin: 6px 0 0; font-size: 13px; line-height: 1.6; }
+.drow { display: flex; gap: 10px; align-items: baseline; margin-top: 5px; }
+.dkey { flex: 0 0 42px; font-size: 11px; font-weight: 600; color: var(--ink-dim); }
+.dval { flex: 1 1 auto; min-width: 0; font-size: 12px; line-height: 1.6; }
+.dstory .no .dval { color: var(--ink-dim); }
+/* Untranslated copy still reads — in English, tagged, so the gap is a work
+   list rather than a blank. */
+.dtag {
+  margin-left: 6px; padding: 0 4px; border: 1px solid var(--line); border-radius: 3px;
+  font-size: 10px; line-height: 1.5; color: var(--ink-dim); vertical-align: 1px; white-space: nowrap;
+}
+
 .groupgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(196px, 1fr)); gap: 14px; }
 .gcard {
   appearance: none; font: inherit; color: var(--ink); text-align: left; padding: 0; cursor: pointer;
@@ -681,6 +706,7 @@ kbd {
   const EDGES = JSON.parse(document.getElementById("edge-data").textContent);
   const STORE_KEY = "pptwise-gallery-verdicts-v1";
   const SLOT_LABELS = ${jsonScript(SLOT_LABELS)};
+  const STORY_ZH = ${jsonScript(STORY_ZH)};
   // The menu slots in reading order — the two openings, the eleven content
   // kinds, the close. Shipped rather than read off SLOT_LABELS' key order,
   // which happens to match but would be a silent dependency on it.
@@ -1142,6 +1168,9 @@ ${inlineRule("verdictFreshness", verdictFreshness)}
       lead: "一格一个组件，点开看它穿上每套主题的皮各画成什么样。",
       families: COMPONENT_FAMILIES,
       nameOf: (v) => ({ zh: "", code: v }),
+      // "chart · pie" and "device_mockup · phone" are drawings of a
+      // component, not components. They share the component's card.
+      detailHead: (v) => designCard("component:" + v.split(" · ")[0]),
     },
   };
 
@@ -1338,6 +1367,8 @@ ${inlineRule("verdictFreshness", verdictFreshness)}
       const blurb = document.createElement("p");
       blurb.textContent = section.blurb;
       head.append(h2, blurb);
+      const story = designCard("theme:" + section.id);
+      if (story) head.appendChild(story);
       // The appendix has no menu — it is what no menu asked for — so it gets
       // no strip rather than a row of em-dashes pretending to be one.
       if (section.menu) head.appendChild(skeletonStrip(section));
@@ -1617,6 +1648,56 @@ ${inlineRule("verdictFreshness", verdictFreshness)}
     if (card) main.appendChild(card);
 
     main.appendChild(visible.length === 0 ? emptyNote() : grid(visible.slice().sort(bySection), "grid"));
+  }
+
+  /**
+   * The design card: one object's own account of itself.
+   *
+   * Read from the manifest, which reads it from the theme or the component
+   * definition, so the card cannot describe a theme that is no longer the
+   * theme on screen. Chinese comes from the translation table field by
+   * field, and any field it has not reached falls back to the English source
+   * under a 未译 tag — a reviewer who cannot read the field still gets to
+   * read it, and the tag is the only place the remaining work is counted.
+   */
+  const STORY_FIELDS = [
+    { key: "story", label: "是什么" },
+    { key: "positioning", label: "何时用" },
+    { key: "audience", label: "讲给谁" },
+    { key: "notFor", label: "不适用" },
+    { key: "lineage", label: "来路" },
+  ];
+
+  function designCard(objectId) {
+    const story = MANIFEST.stories ? MANIFEST.stories[objectId] : undefined;
+    if (!story) return null;
+    const zh = STORY_ZH[objectId] || {};
+
+    const box = document.createElement("div");
+    box.className = "dstory";
+
+    const h4 = document.createElement("h4");
+    h4.textContent = zh.name || story.name;
+    if (!zh.name) h4.appendChild(headText("span", "dtag", "未译"));
+    box.appendChild(h4);
+
+    for (const field of STORY_FIELDS) {
+      const source = story[field.key];
+      if (!source) continue;
+      const row = document.createElement("div");
+      row.className = "drow" + (field.key === "notFor" ? " no" : "");
+      row.appendChild(headText("span", "dkey", field.label));
+      const val = document.createElement("span");
+      val.className = "dval";
+      val.textContent = zh[field.key] || source;
+      if (!zh[field.key]) {
+        val.appendChild(headText("span", "dtag", "未译"));
+        val.title = source;
+      }
+      row.appendChild(val);
+      box.appendChild(row);
+    }
+    return box;
   }
 
   /**

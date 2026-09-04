@@ -59,7 +59,7 @@ const CUT = "consulting--comp--truncated--zh"
 function manifest(): Manifest {
   const pages = [page(LOSER, DROPPED), page(CLEAN), page(CUT, TRUNCATED)]
   return {
-    manifestVersion: 4,
+    manifestVersion: 5,
     generator: "test",
     pptwiseVersion: "0.31.0",
     generatedAt: "2026-09-04T00:00:00Z",
@@ -67,6 +67,7 @@ function manifest(): Manifest {
     sections: [{ id: "consulting", label: "consulting", blurb: "", pages: pages.length }],
     bands: [{ id: "component", label: "组件皮肤", question: "" }],
     pages,
+    stories: {},
   } as unknown as Manifest
 }
 

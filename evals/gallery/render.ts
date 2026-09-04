@@ -18,6 +18,9 @@
 import { mkdirSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { renderSlideSvg, validateIr } from "@/api"
+import type { DesignStory } from "@/design-story"
+import { componentStory } from "@/ir/components/stories"
+import { getThemeDefinition } from "@/themes/definitions"
 import { CANVAS_H_PX, CANVAS_W_PX } from "@/constants"
 import { auditDeck } from "@/audit/deck-audit"
 import { BAND_IDS, menuFaces, UNSERVED_SECTION, type BandId, type Job } from "./matrix"
@@ -120,8 +123,11 @@ export interface Manifest {
    * moves anyway because a manifest outlives the code that wrote it, and a
    * reader that finds no faces should be able to tell "this build predates
    * the face axis" from "these pages have no face".
+   *
+   * 5 adds `stories`, on the same terms and for the same reason: an empty
+   * card is not the same statement as no card at all.
    */
-  readonly manifestVersion: 4
+  readonly manifestVersion: 5
   readonly generator: string
   readonly pptwiseVersion: string
   readonly generatedAt: string
@@ -132,6 +138,17 @@ export interface Manifest {
   readonly bands: readonly ManifestBand[]
   /** Section order × band order × natural order inside the band. */
   readonly pages: readonly ManifestPage[]
+  /**
+   * The design story of every theme and component this build shows, keyed by
+   * namespaced object id (`theme:swiss`, `component:bullets`). Objects whose
+   * copy is unwritten are simply absent.
+   *
+   * A flat map rather than a field on each section, because a component is
+   * not a section — it is a group the review page derives — and one shape for
+   * both keeps the design card, and its translation table, reading from a
+   * single key space.
+   */
+  readonly stories: Readonly<Record<string, DesignStory>>
 }
 
 const BAND_META: Record<BandId, { label: string; question: string }> = {
@@ -160,6 +177,11 @@ function sectionBlurb(id: string, pages: readonly ManifestPage[]): string {
   }
   const counts = BAND_IDS.map((band) => ({ band, n: pages.filter((p) => p.band === band).length })).filter((b) => b.n > 0)
   return counts.map(({ band, n }) => `${BAND_META[band].label} ${n} 页`).join(" · ")
+}
+
+/** The component behind a gallery group id, variant suffix and all removed. */
+export function componentTypeOf(groupId: string): string {
+  return groupId.split(" · ")[0] ?? groupId
 }
 
 export interface RenderResult {
@@ -371,8 +393,23 @@ export function renderMatrix(jobs: readonly Job[], outDir: string, pptwiseVersio
     question: BAND_META[id].question,
   }))
 
+  const stories: Record<string, DesignStory> = {}
+  for (const section of sections) {
+    if (section.id === UNSERVED_SECTION) continue
+    const story = getThemeDefinition(section.id).story
+    if (story) stories[`theme:${section.id}`] = story
+  }
+  // A component group id may name one drawing of a component rather than the
+  // component itself (`chart · pie`, `device_mockup · phone`). The story
+  // belongs to the component, so the variant is dropped on the way in and the
+  // review page drops it again on the way out.
+  for (const type of new Set(pages.flatMap((p) => (p.component === undefined ? [] : [componentTypeOf(p.component)])))) {
+    const story = componentStory(type)
+    if (story) stories[`component:${type}`] = story
+  }
+
   const manifest: Manifest = {
-    manifestVersion: 4,
+    manifestVersion: 5,
     generator: "pptwise gallery",
     pptwiseVersion,
     generatedAt: new Date().toISOString(),
@@ -380,6 +417,7 @@ export function renderMatrix(jobs: readonly Job[], outDir: string, pptwiseVersio
     sections,
     bands,
     pages,
+    stories,
   }
 
   writeFileSync(join(outDir, "manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`, "utf8")
