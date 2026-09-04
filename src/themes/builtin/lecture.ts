@@ -98,6 +98,14 @@ export const LECTURE_THEME = {
   version: 2,
   id: "lecture",
   label: "Lecture Hall",
+  story: {
+    name: "Lecture",
+    story: "A dark green board after the lights go down, and one chalk line under the thing that matters. It teaches one lesson per page and practices it on the spot.",
+    positioning: "Choose it for adult classes, evening courses, internal training, and technical teaching.",
+    audience: "A teacher to adults who came to learn one thing tonight.",
+    notFor: "Children, marketing, or formal institutional reporting.",
+    lineage: "The university blackboard and the night-school handout.",
+  },
   style: LECTURE_TOKENS,
   // A chalk line under the marked run, drawn the way it is on the board
   // this theme is named after.

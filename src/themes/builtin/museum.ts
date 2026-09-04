@@ -90,6 +90,14 @@ export const MUSEUM_THEME = {
   version: 2,
   id: "museum",
   label: "Museum",
+  story: {
+    name: "Museum",
+    story: "The gallery lights are off and the labels are still lit. Fifty lux, a hairline, and every page answers one question: what did this illuminate?",
+    positioning: "Choose it for exhibitions, curator talks, and quiet narrative decks where each page is an object with a label.",
+    audience: "A curator guiding visitors, one object at a time.",
+    notFor: "Sales decks, rapid-fire updates, or dense tables.",
+    lineage: "The exhibition label and the museum catalog.",
+  },
   style: MUSEUM_TOKENS,
   menu: {
     cover: { face: "poster-center" },

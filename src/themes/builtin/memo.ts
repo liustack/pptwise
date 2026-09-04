@@ -114,6 +114,14 @@ export const MEMO_THEME = {
   version: 2,
   id: "memo",
   label: "Decision Memo",
+  story: {
+    name: "Memo",
+    story: "Typewriter rhythm, a letterhead rule, FROM and RE lines. This is not a discussion, it is a decision that has already been written down.",
+    positioning: "Choose it for decisions, leave-behinds, and policy notes that people will read later, alone.",
+    audience: "One person writing to be held to their word, including by themselves.",
+    notFor: "Live performance, visual spectacle, or anything with many pictures.",
+    lineage: "The memorandum and the typed decision record.",
+  },
   style: MEMO_TOKENS,
   menu: {
     cover: { face: "memo-head" },

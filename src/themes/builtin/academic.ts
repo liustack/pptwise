@@ -90,6 +90,14 @@ export const ACADEMIC_THEME = {
   version: 2,
   id: "academic",
   label: "Academic",
+  story: {
+    name: "Thesis",
+    story: "Emerald on manuscript white, set in a bookish serif. It argues the way a defense does: hypothesis, method, evidence, and an honest account of the limits.",
+    positioning: "Choose it for research, a defense, or any talk where the credibility of the method is the point.",
+    audience: "A researcher speaking to peers who will probe the reasoning.",
+    notFor: "Sales, hype, or pages that need to move fast.",
+    lineage: "The dissertation and the seminar handout, with the footnote rule as its signature.",
+  },
   style: ACADEMIC_TOKENS,
   menu: {
     cover: { face: "thesis-plate-cover" },

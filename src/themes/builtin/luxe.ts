@@ -92,6 +92,14 @@ export const LUXE_THEME = {
   version: 2,
   id: "luxe",
   label: "Luxe",
+  story: {
+    name: "Luxe",
+    story: "Black field, gold rule, a serif that whispers. It is the invitation to a dinner where every chair is already assigned.",
+    positioning: "Choose it for invitations, anniversaries, and brands that trade on restraint and craft.",
+    audience: "A house addressing guests it already knows by name.",
+    notFor: "Anything loud, urgent, or mass-market.",
+    lineage: "The engraved invitation and the couture atelier.",
+  },
   style: LUXE_TOKENS,
   menu: {
     cover: { face: "invitation-plate-cover" },

@@ -100,6 +100,14 @@ export const TECH_THEME = {
   version: 2,
   id: "tech",
   label: "Tech",
+  story: {
+    name: "Terminal",
+    story: "Blue-black depth with a celadon glow, a hairline rule at the top, one accent point per page. It speaks the way a maintainer explains an architecture: precise, unhurried, allergic to hype.",
+    positioning: "Choose it for engineering talks, architecture reviews, and open-source stories where tradeoffs matter more than slogans.",
+    audience: "Engineers explaining a system to engineers.",
+    notFor: "Consumer launches, warm human stories, or pages that need color to carry emotion.",
+    lineage: "The conference tech talk and the design doc, set in the dark.",
+  },
   style: TECH_TOKENS,
   menu: {
     cover: { face: "type-rule-cover" },

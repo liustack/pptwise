@@ -103,6 +103,14 @@ export const JOURNAL_THEME = {
   version: 2,
   id: "journal",
   label: "Editorial Journal",
+  story: {
+    name: "Journal",
+    story: "Warm paper, brick red, a serif masthead and issue numbers. It reads like a small magazine explaining itself to its readers.",
+    positioning: "Choose it for editorial voices: a redesign note, a letter to subscribers, a long-form argument that takes its time.",
+    audience: "An editor or writer speaking to a loyal readership.",
+    notFor: "Fast pitches, dashboards, or corporate mobilization.",
+    lineage: "The independent periodical and its masthead conventions.",
+  },
   style: JOURNAL_TOKENS,
   menu: {
     cover: { face: "issue-head-cover" },

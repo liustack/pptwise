@@ -114,6 +114,14 @@ export const RUNWAY_THEME = {
   version: 2,
   id: "runway",
   label: "Fashion Runway",
+  story: {
+    name: "Runway",
+    story: "Show-white paper, a black masthead, one drop of crimson. Seven bespoke faces make every page a look walking past you.",
+    positioning: "Choose it for collections, lookbooks, and any presentation where the images are the argument and the words are captions.",
+    audience: "A designer or studio presenting work to an audience that came to see.",
+    notFor: "Data-heavy reporting or pages with more than a few lines of text.",
+    lineage: "The fashion show program and the lookbook.",
+  },
   style: RUNWAY_TOKENS,
   menu: {
     cover: { face: "show-headline" },

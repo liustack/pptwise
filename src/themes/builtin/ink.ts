@@ -70,6 +70,14 @@ export const INK_THEME = {
   version: 2,
   id: "ink",
   label: "Ink Wash",
+  story: {
+    name: "Ink",
+    story: "Rice paper, ink black, a seal of cinnabar, headings set in kaishu. Text can stand vertically, the way a scroll does.",
+    positioning: "Choose it for culture, calligraphy, tea, festivals, and any story that wants the register of the literati.",
+    audience: "A society, curator, or host speaking to guests who read slowly.",
+    notFor: "Corporate reporting, dashboards, or Latin-heavy copy.",
+    lineage: "Chinese ink painting and the hanging scroll.",
+  },
   style: INK_TOKENS,
   brand: { suppressFooterRule: true, suppressFooterMeta: true },
   menu: {

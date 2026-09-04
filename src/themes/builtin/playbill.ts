@@ -96,6 +96,14 @@ export const PLAYBILL_THEME = {
   version: 2,
   id: "playbill",
   label: "Playbill",
+  story: {
+    name: "Playbill",
+    story: "Fluorescent yellow fills the page and hard black type does the shouting. It is the program handed out ten minutes before the curtain.",
+    positioning: "Choose it for events, recruiting, festival lineups, and short pieces under ten pages that must be seen across a room.",
+    audience: "A troupe or organizer calling an audience in.",
+    notFor: "Long reports, data pages, or anything that must feel official.",
+    lineage: "The theatre playbill and the concert flyer.",
+  },
   style: PLAYBILL_TOKENS,
   menu: {
     cover: { face: "bill-head" },

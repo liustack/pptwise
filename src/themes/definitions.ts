@@ -1,4 +1,5 @@
 import type { BackgroundSpec, BrandConfig, Slide } from "@/ir"
+import type { DesignStory } from "../design-story"
 import { PptwiseError } from "../errors"
 import type { MotifId } from "../motifs/types"
 import { hasExactWidthTable, resolveFontFace } from "../render/fonts"
@@ -36,6 +37,11 @@ export interface ThemeDefinition {
   tags: readonly string[]
   occasions?: readonly Occasion[]
   identity?: "low" | "medium" | "high"
+  /**
+   * The theme's design story: the voice it speaks in, when to reach for it,
+   * and when not to. Public copy — the gallery and the docs read it.
+   */
+  story?: DesignStory
   /** How this theme strikes a `**marked**` run. `undefined` equals `"tint"`. */
   emphasis?: EmphasisTreatment
   /** The theme's semantic page menu: one face per served kind. Authoritative. */
@@ -62,6 +68,7 @@ export function compileBuiltinTheme(file: BuiltinThemeDeclaration): ThemeDefinit
     tags: record.occasions,
     occasions: record.occasions,
     identity: record.identity,
+    story: file.story,
     emphasis: file.emphasis,
     menu: file.menu,
     motif: file.motif?.id,
@@ -278,6 +285,7 @@ function compileThemeFile(file: ThemeFile): ThemeDefinition {
     tags: file.occasions ?? [],
     occasions: file.occasions,
     identity: file.identity,
+    story: file.story,
     emphasis: file.emphasis,
     menu: file.menu,
   }

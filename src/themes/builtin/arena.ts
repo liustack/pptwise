@@ -79,6 +79,14 @@ export const ARENA_THEME = {
   version: 2,
   id: "arena",
   label: "Esports & Entertainment",
+  story: {
+    name: "Arena",
+    story: "Purple-black one second before kickoff, and electric green as the only HUD that is on. Fast, loud, exact about the numbers.",
+    positioning: "Choose it for esports, fan events, season reviews, and live entertainment where energy is the message.",
+    audience: "A club or organizer speaking to fans and players.",
+    notFor: "Institutional, academic, or quiet narrative work.",
+    lineage: "The esports broadcast overlay and the arena screen.",
+  },
   style: ARENA_TOKENS,
   menu: {
     cover: { face: "cut-panel-cover" },

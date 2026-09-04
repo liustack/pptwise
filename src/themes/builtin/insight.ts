@@ -79,6 +79,14 @@ export const INSIGHT_THEME = {
   version: 2,
   id: "insight",
   label: "Financial Insight",
+  story: {
+    name: "Ledger",
+    story: "Warm black terminal, amber figures, a serif for the argument. It talks like a strategist who publishes the odds and settles the account every quarter.",
+    positioning: "Choose it when the story is a bet with numbers attached and the audience will remember whether you were right.",
+    audience: "An analyst or strategist addressing people who allocate money.",
+    notFor: "Soft narratives, celebrations, or anything without a number to defend.",
+    lineage: "The market screen and the annual strategy note, ticker lines and all.",
+  },
   style: INSIGHT_TOKENS,
   menu: {
     cover: { face: "stat-cover" },

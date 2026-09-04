@@ -103,6 +103,14 @@ export const TERRA_THEME = {
   version: 2,
   id: "terra",
   label: "Sustainability & ESG",
+  story: {
+    name: "Almanac",
+    story: "Sand, olive, ochre, and a calendar that runs on solar terms. It keeps the land's account across years, not quarters.",
+    positioning: "Choose it for sustainability, farms, communities, and long-horizon reports where patience is the argument.",
+    audience: "A cooperative, foundation, or steward reporting to members and neighbors.",
+    notFor: "Fast commercial pitches or urban tech.",
+    lineage: "The farmer's almanac and the seasonal ledger.",
+  },
   style: TERRA_TOKENS,
   menu: {
     cover: { face: "pledge-open-cover" },

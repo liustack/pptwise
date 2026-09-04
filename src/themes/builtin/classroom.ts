@@ -96,6 +96,14 @@ export const CLASSROOM_THEME = {
   version: 2,
   id: "classroom",
   label: "Classroom",
+  story: {
+    name: "Homeroom",
+    story: "Morandi tones on daytime handout paper, a soft sans, plenty of air. It is the teacher talking to parents: specific, calm, not alarming and not flattering.",
+    positioning: "Choose it for parent meetings, class reports, and teaching material that must stay friendly while it stays honest.",
+    audience: "A teacher addressing parents or students.",
+    notFor: "Corporate audiences, research, or anything that should feel severe.",
+    lineage: "The school handout and the term report.",
+  },
   style: CLASSROOM_TOKENS,
   menu: {
     cover: { face: "chalk-band-cover" },

@@ -7,6 +7,7 @@ import {
   type BrandConfig,
   type BUILTIN_THEME_IDS,
 } from "@/ir"
+import { validateDesignStory, type DesignStory } from "../design-story"
 import type { MotifId } from "../motifs/types"
 import { OCCASION_VOCAB, type Occasion } from "./occasions"
 import type { StyleTokens } from "./tokens"
@@ -95,6 +96,32 @@ export const EMPHASIS_TREATMENTS = ["tint", "pad", "underline"] as const
 export type EmphasisTreatment = (typeof EMPHASIS_TREATMENTS)[number]
 export const EmphasisTreatmentSchema = z.enum(EMPHASIS_TREATMENTS)
 
+/**
+ * A theme's design story: the public record of the voice it speaks in, when
+ * to reach for it, and when not to. Optional on the file contract because a
+ * theme still renders without one, and refused at the boundary when it
+ * breaks a field cap or names an industry — see `../design-story.ts`.
+ */
+export const DesignStoryFileSchema = z
+  .object({
+    name: z.string().min(1),
+    story: z.string().min(1),
+    positioning: z.string().min(1),
+    audience: z.string().min(1),
+    notFor: z.string().min(1),
+    lineage: z.string().min(1).optional(),
+  })
+  .strict()
+  .superRefine((value, ctx) => {
+    for (const problem of validateDesignStory(value)) {
+      ctx.addIssue({ code: "custom", path: [problem.field], message: problem.message })
+    }
+  })
+
+type DesignStoryFileShape = z.infer<typeof DesignStoryFileSchema>
+const DESIGN_STORY_FILE_MATCHES_TYPE: DesignStoryFileShape extends DesignStory ? true : never = true
+void DESIGN_STORY_FILE_MATCHES_TYPE
+
 const CommonThemeFileFields = {
   id: z.string().regex(THEME_ID_PATTERN, THEME_ID_CONSTRAINT),
   label: z.string().min(1).optional(),
@@ -102,6 +129,8 @@ const CommonThemeFileFields = {
   brand: BrandConfigSchema.optional(),
   occasions: z.array(z.enum(Object.keys(OCCASION_VOCAB) as [Occasion, ...Occasion[]])).min(1).optional(),
   identity: z.enum(["low", "medium", "high"]).optional(),
+  /** The theme's design story. See {@link DesignStoryFileSchema}. */
+  story: DesignStoryFileSchema.optional(),
   /** Emphasis stroke for `**marked**` runs. Omitted equals `"tint"`. */
   emphasis: EmphasisTreatmentSchema.optional(),
 }
@@ -243,6 +272,8 @@ export interface BuiltinThemeDeclaration {
   brand?: BrandConfig
   occasions?: readonly Occasion[]
   identity?: "low" | "medium" | "high"
+  /** The theme's design story. */
+  story?: DesignStory
   emphasis?: EmphasisTreatment
   menu: Menu
   motif?: {

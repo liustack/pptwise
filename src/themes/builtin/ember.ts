@@ -91,6 +91,14 @@ export const EMBER_THEME = {
   version: 2,
   id: "ember",
   label: "Startup Pitch",
+  story: {
+    name: "Ember",
+    story: "Charcoal ground, ivory type, and a single fire orange that appears in exactly one place per page. It is the pitch that has slept in the orchard and knows the numbers by heart.",
+    positioning: "Choose it when you are asking for money or belief and must make the problem hurt before the solution glows.",
+    audience: "Founders pitching to investors or early partners.",
+    notFor: "Institutional reporting or anything that must feel neutral.",
+    lineage: "The seed-round deck, stripped to one spark.",
+  },
   style: EMBER_TOKENS,
   menu: {
     cover: { face: "corner-wedge" },

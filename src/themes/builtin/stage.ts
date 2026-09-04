@@ -97,6 +97,14 @@ export const STAGE_THEME = {
   version: 2,
   id: "stage",
   label: "Keynote Stage",
+  story: {
+    name: "Stage",
+    story: "The house lights go down and one sentence is left on a black field. Nothing competes with it.",
+    positioning: "Choose it for a launch or keynote where each page carries a single claim and the speaker carries the rest.",
+    audience: "A founder or presenter on a big screen in front of a full room.",
+    notFor: "Dense reporting, tables, or any page that needs more than one idea.",
+    lineage: "The keynote tradition of one giant line per slide.",
+  },
   style: STAGE_TOKENS,
   menu: {
     cover: { face: "poster-center" },

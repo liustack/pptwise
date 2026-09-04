@@ -85,6 +85,14 @@ export const CRAYON_THEME = {
   version: 2,
   id: "crayon",
   label: "Kids Education",
+  story: {
+    name: "Crayon",
+    story: "A box of crayons on cardboard, rounded corners, hand-drawn lines, not one cold gray anywhere. Bright without shouting.",
+    positioning: "Choose it for kindergarten and early-years reports, family activities, and picture-book sharing.",
+    audience: "Teachers and children speaking to families.",
+    notFor: "Any adult professional setting.",
+    lineage: "The kindergarten wall and the picture book.",
+  },
   style: CRAYON_TOKENS,
   menu: {
     cover: { face: "crayonbox-open" },

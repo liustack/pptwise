@@ -110,6 +110,14 @@ export const CONSULTING_THEME = {
   version: 2,
   id: "consulting",
   label: "Business Consulting",
+  story: {
+    name: "Brief",
+    story: "Navy ink, one line of yellow, a serif that reads like a bound report. The conclusion comes first and every page after it is the evidence that earns it.",
+    positioning: "Choose it when the audience wants the answer before the argument and will judge you on how tightly the numbers support it.",
+    audience: "A team presenting a verdict to people who decide.",
+    notFor: "Storytelling that needs suspense, warmth, or a slow reveal.",
+    lineage: "The consulting deliverable: assertion headings, quiet gauges, a single accent that points.",
+  },
   style: CONSULTING_TOKENS,
   // A marker-pen swipe behind the marked run — the board-room habit of
   // highlighting the one phrase the room should leave with.

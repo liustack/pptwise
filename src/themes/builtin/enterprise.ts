@@ -140,6 +140,14 @@ export const ENTERPRISE_THEME = {
   version: 2,
   id: "enterprise",
   label: "Enterprise",
+  story: {
+    name: "Bulletin",
+    story: "A white wall and International Klein Blue, set in a plain grotesque. It is the voice of a large organization telling thirty thousand people what happens on the first of the month.",
+    positioning: "Choose it for mobilization, rollouts, and internal announcements where clarity and authority beat personality.",
+    audience: "Leadership addressing a whole organization.",
+    notFor: "Intimate stories, boutique brands, or pages that want to feel handmade.",
+    lineage: "The corporate bulletin board and the rollout deck.",
+  },
   style: ENTERPRISE_TOKENS,
   brand: { suppressFooterOnCardContent: true },
   menu: {

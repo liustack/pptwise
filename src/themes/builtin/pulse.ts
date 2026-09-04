@@ -107,6 +107,14 @@ export const PULSE_THEME = {
   version: 2,
   id: "pulse",
   label: "Health & Life Science",
+  story: {
+    name: "Clinic",
+    story: "Mint white and deep teal, clean lines, nothing decorative that could be mistaken for data. It speaks plainly, the way a good doctor does.",
+    positioning: "Choose it for health, wellbeing, and any talk that must feel clean, trustworthy, and calm while it delivers numbers.",
+    audience: "A clinician or health team speaking to patients or the public.",
+    notFor: "Luxury, entertainment, or anything that trades on drama.",
+    lineage: "The health talk and the clinical summary.",
+  },
   style: PULSE_TOKENS,
   menu: {
     cover: { face: "report-open-cover" },

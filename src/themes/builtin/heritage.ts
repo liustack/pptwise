@@ -89,6 +89,14 @@ export const HERITAGE_THEME = {
   version: 2,
   id: "heritage",
   label: "Heritage",
+  story: {
+    name: "Heritage",
+    story: "Burgundy and caramel, a Song-style serif, framed pages. It speaks for a name that has been kept for a century and intends to keep it another.",
+    positioning: "Choose it for legacy brands, anniversaries, and handovers where continuity is the promise.",
+    audience: "A family or house explaining what will not change to people who care.",
+    notFor: "Disruption stories, startups, or minimal modern brands.",
+    lineage: "The old-money brand book and the family ledger.",
+  },
   style: HERITAGE_TOKENS,
   menu: {
     cover: { face: "double-frame-cover" },

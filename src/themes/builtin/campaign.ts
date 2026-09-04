@@ -84,6 +84,14 @@ export const CAMPAIGN_THEME = {
   version: 2,
   id: "campaign",
   label: "Marketing Campaign",
+  story: {
+    name: "Rally",
+    story: "Deep purple with sharp accents, built for short slogans and hard deadlines. It is a launch room where every page is a call to move.",
+    positioning: "Choose it for launches, marketing pushes, and mobilization pieces where a single phrase must carry across all materials.",
+    audience: "A team rallying partners, channels, and its own people.",
+    notFor: "Reflective, academic, or slow-paced storytelling.",
+    lineage: "The campaign kickoff and the launch war room.",
+  },
   style: CAMPAIGN_TOKENS,
   menu: {
     cover: { face: "poster-center" },

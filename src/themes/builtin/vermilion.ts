@@ -114,6 +114,14 @@ export const VERMILION_THEME = {
   version: 2,
   id: "vermilion",
   label: "Official Report",
+  story: {
+    name: "Vermilion",
+    story: "Vermilion red, a line of gold, warm off-white paper. It carries the gravity of an official report read aloud in a hall.",
+    positioning: "Choose it for government and institutional work reports, reviews, and year-end summaries in the formal register.",
+    audience: "An office reporting upward and outward in a formal setting.",
+    notFor: "Startups, playful brands, or anything that should feel casual.",
+    lineage: "The Chinese official report, red and gold on paper.",
+  },
   style: VERMILION_TOKENS,
   menu: {
     cover: { face: "red-head-cover" },
