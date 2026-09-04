@@ -29,12 +29,20 @@ import {
   layoutFaceSlot,
   layoutPage,
   themeDeck,
+  stepAsidePage,
   type CorpusAssets,
 } from "./corpus/decks"
 import { LANGUAGE_IDS, LEXICONS, type LanguageId } from "./corpus/lexicon"
 import { nativeLexiconFor } from "./corpus/native"
 
-export const BAND_IDS = ["deck", "face", "component"] as const
+export const BAND_IDS = ["deck", "face", "aside", "component"] as const
+/**
+ * The bands every theme section owes. `aside` is not one of them: it exists
+ * to show the shared step-aside (`src/render/step-aside.tsx`) to a reviewer,
+ * and three pages cover that rendering for all 24 skins because the sheet is
+ * the same sheet on every one of them. See `STEP_ASIDE_PAGES`.
+ */
+export const UNIVERSAL_BAND_IDS = ["deck", "face", "component"] as const
 export type BandId = (typeof BAND_IDS)[number]
 
 /** The appendix section's id. It is not a theme. */
@@ -246,6 +254,33 @@ function componentEntries(): ComponentEntry[] {
   return base.sort((a, b) => safe(a.id).localeCompare(safe(b.id)))
 }
 
+/**
+ * The pages that exercise the shared step-aside (`src/render/step-aside.tsx`).
+ *
+ * Every other page in this matrix is inside its face, which is the whole
+ * point of the corpus and also why none of them shows what happens when a
+ * face cannot cope. These three do. One per family that suppresses something
+ * of the theme's own on its ordinary page, because that suppression is what a
+ * stepped-aside page must not inherit: `gauge-stats` declares
+ * `branding: "none"` and draws the deck's metadata itself, `crayonbox-cards`
+ * and `show-figures` declare `suppressMotif`.
+ *
+ * `series` is the smallest count that trips each face. It is pinned rather
+ * than searched for so a refit that moves the boundary shows up as a hash
+ * change on a page a reviewer looks at, and `step-aside-corpus.test.mts`
+ * fails loudly if one of these stops stepping aside.
+ */
+export const STEP_ASIDE_PAGES: readonly {
+  readonly theme: string
+  readonly kind: PageKind
+  readonly face: string
+  readonly series: number
+}[] = [
+  { theme: "consulting", kind: "data", face: "gauge-stats", series: 13 },
+  { theme: "runway", kind: "data", face: "show-figures", series: 14 },
+  { theme: "crayon", kind: "list", face: "crayonbox-cards", series: 13 },
+]
+
 export function buildMatrix(
   themeIds: readonly string[],
   assets: Readonly<Record<LanguageId, CorpusAssets>>,
@@ -319,6 +354,34 @@ export function buildMatrix(
           page: 1,
           pageCount: 1,
           slideType: ir.slides[0]!.type ?? "content",
+          heading: ir.slides[0]!.heading ?? "",
+          ir,
+          slideIndex: 0,
+        })
+      }
+    }
+
+    // ── step-aside: the one page per family the face cannot hold ────────
+    if (wantsBand("aside")) {
+      for (const spec of STEP_ASIDE_PAGES.filter((p) => p.theme === themeId)) {
+        const ir = stepAsidePage(nativeLexiconFor(themeId), assets[themeLanguage], themeId, spec.kind, spec.series)
+        push({
+          id: `${safe(themeId)}--aside--${safe(spec.face)}`,
+          section: themeId,
+          sectionLabel,
+          band: "aside",
+          subject: spec.face,
+          slot: spec.kind,
+          // Deliberately no `face`. 按版式 shows one specimen per
+          // section-and-face pair and the face band already owns that slot
+          // for this pair — the same reason the component band carries none
+          // (`scripts/gallery.test.mts`). This page is here to show a face
+          // *not* drawing, which is not a specimen of it.
+          language: themeLanguage,
+          theme: themeId,
+          page: 1,
+          pageCount: 1,
+          slideType: "content",
           heading: ir.slides[0]!.heading ?? "",
           ir,
           slideIndex: 0,

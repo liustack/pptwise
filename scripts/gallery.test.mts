@@ -34,6 +34,7 @@ import {
   FACE_SLOTS,
   menuFaces,
   unservedLayoutIds,
+  STEP_ASIDE_PAGES,
   UNSERVED_SECTION,
 } from "../evals/gallery/matrix"
 import { installNodePlatform } from "@/platform/node"
@@ -104,15 +105,20 @@ describe("gallery coverage", () => {
     expect(appendix.map((job) => job.subject)).toEqual(unservedLayoutIds(themeIds))
   })
 
-  it("emits one section per theme plus the appendix, each theme section carrying all three bands", async () => {
+  it("emits one section per theme plus the appendix, each theme section carrying the three universal bands", async () => {
     const jobs = buildMatrix(themeIds, await assets())
-    expect([...new Set(jobs.map((j) => j.band))].sort()).toEqual(["component", "deck", "face"])
+    expect([...new Set(jobs.map((j) => j.band))].sort()).toEqual(["aside", "component", "deck", "face"])
     const sections = [...new Set(jobs.map((j) => j.section))]
     expect(sections).toEqual([...themeIds, UNSERVED_SECTION])
     for (const themeId of themeIds) {
       const bands = new Set(jobs.filter((j) => j.section === themeId).map((j) => j.band))
-      expect([...bands].sort(), themeId).toEqual(["component", "deck", "face"])
+      // `aside` is not owed by every section: the step-aside sheet is the
+      // same sheet on all 24 skins, so three pages cover it (see
+      // `STEP_ASIDE_PAGES`). The other three are per-theme promises.
+      expect([...bands].sort().filter((b) => b !== "aside"), themeId).toEqual(["component", "deck", "face"])
     }
+    const asideSections = new Set(jobs.filter((j) => j.band === "aside").map((j) => j.section))
+    expect([...asideSections].sort()).toEqual([...new Set(STEP_ASIDE_PAGES.map((p) => p.theme))].sort())
     // The appendix is faces only — it exists to close the layout gap, not to
     // be a 25th theme.
     expect([...new Set(jobs.filter((j) => j.section === UNSERVED_SECTION).map((j) => j.band))]).toEqual(["face"])

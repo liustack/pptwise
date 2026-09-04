@@ -753,3 +753,56 @@ export function componentPage(
   const safeId = componentId.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "")
   return deckShell(lex, assets, renderingThemeId, `component-${safeId}-${lex.id}`, [slide])
 }
+
+/**
+ * A page rich enough that the theme's own face for `kind` cannot hold it and
+ * hands it to the shared step-aside (`src/render/step-aside.tsx`).
+ *
+ * The gallery corpus is Chinese and comfortably inside every face, which is
+ * why not one of its 1849 pages steps aside — good news for the faces and no
+ * coverage at all for the rendering that stands in when one cannot cope. So
+ * these pages are built to trip it: a directly-labelled line chart names
+ * every series in a gutter, one row each, so `seriesCount` is a dial that
+ * walks a page from "the face holds it" to "the face cannot" one step at a
+ * time.
+ *
+ * `branding: "full"` because that is the posture under review here. A
+ * stepped-aside page has none of the face's own furniture, so the deck's
+ * branding is the only thing left carrying the organization and the date,
+ * and a reviewer needs to see whether it arrived.
+ */
+export function stepAsidePage(
+  lex: Lexicon,
+  assets: CorpusAssets,
+  themeId: string,
+  kind: PageKind,
+  seriesCount: number,
+): PptxIR {
+  const slide = {
+    type: "content",
+    kind,
+    heading: lex.headings[8]!,
+    subheading: lex.sentences[0]!,
+    components: [
+      {
+        type: "chart",
+        chart_type: "line",
+        axes: {
+          x_title: lex.periodAxis,
+          y_title: lex.metrics[2]!.label,
+          y_unit: lex.metrics[2]!.unit,
+          show_grid: true,
+        },
+        series: Array.from({ length: seriesCount }, (_, i) => ({
+          name: `${lex.labels[8]!}${i + 1}`,
+          data: lex.periods.slice(0, 5).map((x, j) => ({ x, y: 40 + i + j * 6 })),
+        })),
+      },
+    ],
+    footnote: lex.sources[2]!.label,
+  } as unknown as Slide
+  return {
+    ...deckShell(lex, assets, themeId, `step-aside-${themeId}-${lex.id}`, [slide]),
+    branding: "full",
+  }
+}

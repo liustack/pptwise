@@ -160,6 +160,10 @@ const BAND_META: Record<BandId, { label: string; question: string }> = {
     label: "骨架全脸",
     question: "这套主题菜单上的每一张脸，用它自己的皮渲一页——这套主题的骨相成不成立？",
   },
+  aside: {
+    label: "让位页",
+    question: "把这张脸装不下的内容交给共享页画一遍——退位之后，主题的底、纹样、品牌与强调色还在不在？",
+  },
   component: {
     label: "组件皮肤",
     question: "37 个组件（chart 拆成九张图）穿上这套主题的皮各一页——每个组件在这套皮下画出来能不能看？",

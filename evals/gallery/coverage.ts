@@ -25,7 +25,7 @@ import { COMPONENT_TYPES } from "@/ir"
 import { LAYOUT_REGISTRY } from "@/layouts/registry"
 import { CANONICAL_THEME_IDS } from "@/themes"
 import { CHART_VARIANTS, DEVICE_VARIANTS } from "./corpus/components"
-import { BAND_IDS, UNSERVED_SECTION, servedLayoutIds, type BandId, type Job } from "./matrix"
+import { UNIVERSAL_BAND_IDS, UNSERVED_SECTION, servedLayoutIds, type BandId, type Job } from "./matrix"
 
 export type InventoryKind = "theme" | "layout" | "component"
 
@@ -65,6 +65,11 @@ function mapComponent(job: GallerySubject): MappedSubject | undefined {
 const BAND_SUBJECT_MAPPERS: Record<string, (job: GallerySubject) => MappedSubject | undefined> = {
   deck: mapTheme,
   face: mapLayout,
+  // Subject is the face that stood down, so the same mapper reads it. These
+  // pages are not the face's specimen (see `matrix.ts`'s own note on why they
+  // carry no `face`), but the layout they name is a real registry entry and
+  // a typo in it should fail here like any other.
+  aside: mapLayout,
   component: mapComponent,
 }
 
@@ -126,7 +131,7 @@ export function galleryCoverageGaps(jobs: readonly Job[]): CoverageGaps {
   const themeSections = [...bandsBySection.keys()].sort()
   const missingBands: string[] = []
   for (const section of themeSections) {
-    for (const band of BAND_IDS) {
+    for (const band of UNIVERSAL_BAND_IDS) {
       if (!bandsBySection.get(section)!.has(band)) missingBands.push(`${section} ${band}`)
     }
   }
