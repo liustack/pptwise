@@ -29,7 +29,7 @@
 // content it cannot hold (AGENTS.md) — a rendering that can draw the page
 // takes over — which does not exist yet. Shortening the corpus' English
 // headings moves the failures around instead of removing them, and refitting
-// every component page's heading changed 1196 of the 1859 pages a human
+// every component page's heading changed 1196 of the 1849 pages a human
 // actually reviews, which is not a price this buys.
 
 import { describe, expect, it } from "vitest"
