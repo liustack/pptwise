@@ -450,12 +450,12 @@ describe("auditL1 on a page whose component declines outright", () => {
       {
         type: "content",
         kind: "data",
-        heading: "十六条系列的折线图",
+        heading: "二十四条系列的折线图",
         components: [
           {
             type: "chart",
             chart_type: "line",
-            series: Array.from({ length: 16 }, (_, i) => ({
+            series: Array.from({ length: 24 }, (_, i) => ({
               name: `系列 ${i + 1}`,
               data: [
                 { x: "Q1", y: i + 1 },
@@ -468,7 +468,9 @@ describe("auditL1 on a page whose component declines outright", () => {
     ],
   }
 
-  it("cannot pass: a 16-series line chart declines in the band and L1 reports the drop", () => {
+  // 24 series, not 16: through 20 the face steps aside and the sheet holds
+  // the chart (`render/step-aside.tsx`), so there is nothing to report.
+  it("cannot pass: a 24-series line chart declines on every rendering and L1 reports the drop", () => {
     const v = validateIr(declinedChartDeck)
     expect(v.ok).toBe(true)
     const svg = renderSlideSvg(v.ir!, 0)

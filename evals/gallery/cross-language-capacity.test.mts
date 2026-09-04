@@ -43,17 +43,7 @@ import { LEXICONS } from "./corpus/lexicon"
 await installNodePlatform()
 
 /** Theme/component/language triples known to overflow, with what they lose. */
-const KNOWN_OVERFLOWS: readonly string[] = [
-  "crayon · chart · area · en: 1×component",
-  "crayon · chart · bar · en: 1×component",
-  "crayon · chart · bar horizontal · en: 1×component",
-  "crayon · chart · line · en: 1×component",
-  "crayon · chart · scatter · en: 1×component",
-  "crayon · people_cards · en: 1×component",
-  "crayon · rings · en: 1×component",
-  "runway · people_cards · en: 1×component",
-  "runway · rings · en: 1×component",
-]
+const KNOWN_OVERFLOWS: readonly string[] = []
 
 describe("every theme holds every component in Latin and mixed script", () => {
   it("drops exactly the shapes the ratchet already names", { timeout: 600_000 }, async () => {

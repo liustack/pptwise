@@ -247,7 +247,12 @@ describe("a drop declaration speaks only for the component that made it", () => 
 })
 
 describe("a live component that declines outright is not fifty unexplained fields", () => {
-  it("a 16-series line chart in a band that cannot hold it reports zero missing fields", () => {
+  // 24 series, not 16. A directly-labelled line chart's measured minimum grows
+  // with the count, and up to 20 the face now steps aside
+  // (`render/step-aside.tsx`) and the whole sheet holds the chart, so nothing
+  // declines. Past 20 no rendering of the page can hold it and the decline is
+  // the honest answer — that is the page this test is about.
+  it("a 24-series line chart no rendering can hold reports zero missing fields", () => {
     const ir = validateIr({
       version: "5",
       filename: "declined-chart",
@@ -258,12 +263,12 @@ describe("a live component that declines outright is not fifty unexplained field
         {
           type: "content",
           kind: "data",
-          heading: "十六条系列的折线图",
+          heading: "二十四条系列的折线图",
           components: [
             {
               type: "chart",
               chart_type: "line",
-              series: Array.from({ length: 16 }, (_, i) => ({
+              series: Array.from({ length: 24 }, (_, i) => ({
                 name: `系列 ${i + 1}`,
                 data: [
                   { x: "Q1", y: i + 1 },
