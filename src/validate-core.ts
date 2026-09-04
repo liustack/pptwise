@@ -32,6 +32,7 @@ import { boundarySlotBlocks, drawableItems } from "./layouts/boundary-content"
 import { findImageSelection } from "./layouts/find-image"
 import type { LayoutDefinition } from "./layouts/registry"
 import { CANONICAL_THEME_IDS, THEME_LABELS, THEME_STYLES } from "./themes"
+import { retiredThemeHint } from "./themes/retired-ids"
 import { getInstalledThemeIds, getThemeDefinition } from "./themes/definitions"
 
 export interface ValidationIssue {
@@ -817,7 +818,7 @@ export function validateIr(input: unknown): ValidateResult {
       errors: [
         {
           path: "theme.id",
-          message: `unknown theme "${themeId}". Themes available: ${installedThemeIds.join(", ")} (see \`pptwise themes\`)`,
+          message: `unknown theme "${themeId}"${retiredThemeHint(themeId)}. Themes available: ${installedThemeIds.join(", ")} (see \`pptwise themes\`)`,
         },
       ],
     })

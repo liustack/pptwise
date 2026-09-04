@@ -1,6 +1,7 @@
 import { PptwiseError } from "../errors";
 import type { StyleTokens } from "./tokens";
 import { REGISTERED_THEMES } from "./registered-themes";
+import { retiredThemeHint } from "./retired-ids";
 import { CONSULTING_THEME } from "./builtin/brief";
 import { ENTERPRISE_THEME } from "./builtin/bulletin";
 import { ACADEMIC_THEME } from "./builtin/thesis";
@@ -125,7 +126,7 @@ export const THEME_LABELS = Object.fromEntries(
 export function resolveThemeId(id: string): CanonicalThemeId {
   if (!(CANONICAL_THEME_IDS as readonly string[]).includes(id)) {
     throw new PptwiseError(
-      `unknown theme "${id}". Installed built-in themes: ${CANONICAL_THEME_IDS.join(", ")}`,
+      `unknown theme "${id}"${retiredThemeHint(id)}. Installed built-in themes: ${CANONICAL_THEME_IDS.join(", ")}`,
     );
   }
   return id as CanonicalThemeId;

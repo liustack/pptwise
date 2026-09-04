@@ -20,6 +20,7 @@ import { THEME_ID_CONSTRAINT, THEME_ID_PATTERN } from "@/ir"
 import { PptwiseError } from "../errors"
 import { BUILTIN_THEME_FILES, CANONICAL_THEME_IDS, type CanonicalThemeId } from "./index"
 import { THEME_OCCASIONS, type IdentityStrength, type Occasion } from "./occasions"
+import { retiredThemeHint } from "./retired-ids"
 import { getLayout } from "../layouts/registry"
 import type { BuiltinThemeDeclaration, Menu, MenuEntry } from "./schema"
 
@@ -49,7 +50,7 @@ export function getThemePreset(id: string): ThemePresetSummary {
   const summary = THEME_PRESETS.find((preset) => preset.id === id)
   if (!summary) {
     throw new PptwiseError(
-      `unknown theme preset "${id}". Installed presets: ${CANONICAL_THEME_IDS.join(", ")}`,
+      `unknown theme preset "${id}"${retiredThemeHint(id)}. Installed presets: ${CANONICAL_THEME_IDS.join(", ")}`,
     )
   }
   return summary

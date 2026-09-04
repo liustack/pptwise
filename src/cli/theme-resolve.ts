@@ -5,6 +5,7 @@ import { parseBrandThemeFile } from "../themes/brand-theme-file"
 import { getThemeDefinition, installThemeFile, type ThemeDefinition } from "../themes/definitions"
 import { CANONICAL_THEME_IDS } from "../themes"
 import { copyThemePreset } from "../themes/presets"
+import { retiredThemeHint } from "../themes/retired-ids"
 import {
   ThemeFileSchema,
   type Menu,
@@ -213,7 +214,7 @@ export async function resolveThemeByName(
     `workspace ${WORKSPACE_THEMES_DIRNAME}/ walking up from ${resolve(opts.startDir)}`,
     "built-in presets",
   ].filter((place): place is string => place !== undefined)
-  throw new PptwiseError(`unknown theme "${name}". Searched ${places.join(", ")}.`)
+  throw new PptwiseError(`unknown theme "${name}"${retiredThemeHint(name)}. Searched ${places.join(", ")}.`)
 }
 
 const REBIND_SUFFIX =

@@ -29,6 +29,7 @@ import { CAPACITY } from "../audit/capacity"
 import { type SlideType } from "../layouts/registry"
 import { offeredContentKinds, resolveLayoutId } from "../render/layout-selection"
 import { getInstalledThemeIds, getThemeDefinition } from "../themes/definitions"
+import { RETIRED_THEME_IDS } from "../themes/retired-ids"
 
 // ── schema ───────────────────────────────────────────────────────────────
 
@@ -358,10 +359,13 @@ function checkTheme(spec: DeckSpec): SpecValidationIssue[] {
   const themeId = resolveSpecThemeId(spec)
   const installed = getInstalledThemeIds()
   if (installed.includes(themeId)) return []
+  const renamed = RETIRED_THEME_IDS[themeId]
   const message =
     themeId === "bloom"
       ? 'theme id "bloom" was removed — current format uses an installed theme id (see `pptwise themes`)'
-      : `unknown theme "${themeId}" — available: ${installed.join(", ")} (see \`pptwise themes\`)`
+      : renamed !== undefined
+        ? `theme id "${themeId}" was renamed to "${renamed}" — bind the spec to the new id (see \`pptwise themes\`)`
+        : `unknown theme "${themeId}" — available: ${installed.join(", ")} (see \`pptwise themes\`)`
   return [{ path: "theme", message }]
 }
 
