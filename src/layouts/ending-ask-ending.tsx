@@ -148,7 +148,7 @@ export const layoutDef: LayoutDefinition = {
   kind: "standard",
   story: {
     name: "Open Ask",
-    story: "The heading is the ask, set large and left-aligned, with an optional line of subtitle under it. One button in the theme's main colour closes the page, and emphasis words take the same tint.",
+    story: "The heading is the ask, set large and left-aligned, with an optional line of subtitle under it. One button in the theme's main colour closes the page, and emphasis words carry the theme's highlight.",
     positioning: "The closing page for a direct request and one call to action. No gratitude, no list, no contact block.",
     audience: "Pitch rooms where the ask needs to land on one screen, readable from the investor seats.",
     notFor: "Closings that carry a list of next steps, which belong in Next Steps Pad or Numbered Resolution.",

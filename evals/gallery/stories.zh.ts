@@ -1146,7 +1146,7 @@ export const STORY_ZH: Readonly<Record<string, Partial<Record<DesignStoryField, 
   },
   "layout:ask-ending": {
     name: "开口请求",
-    story: "标题本身就是请求，大号左齐，下方可以附一行副标题。再往下一枚主色按钮收尾，强调词用同一种色。",
+    story: "标题本身就是请求，大号左齐，下方可以附一行副标题。再往下一枚主色按钮收尾，强调词按主题的强调方式突出。",
     positioning: "用于直接请求加一个行动号召的收束页。不致谢，不列清单，不带联系区块。",
     audience: "路演会议室，请求句需要在一屏之内打动投资人。",
     notFor: "需要下一步清单的收束页。改用「下一步垫块」或「编号决议」。",
