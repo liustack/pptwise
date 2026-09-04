@@ -47,8 +47,8 @@ export function singlePictureExact(slide: Slide): boolean {
 }
 
 /**
- * Whether a picture slot that bleeds off the page edge can host this page's
- * picture.
+ * Whether a picture slot that bleeds off the page edge can host the picture
+ * the slot actually chose.
  *
  * A `device_mockup` is a screenshot drawn inside a device — a browser window
  * with its own bar and address pill, or a phone with its bezel and notch. The
@@ -56,20 +56,24 @@ export function singlePictureExact(slide: Slide): boolean {
  * what makes a screenshot read as software that is running rather than a flat
  * image pasted on a slide, which is the one thing the component exists to say.
  *
- * A bleed slot runs the picture off two or three page edges. There is no
- * bezel to draw when the picture has no edges, so a face that took a
- * `device_mockup` into a bleed slot painted the screen contents alone and the
- * component silently became an `image` — exactly the "take part of what the
- * author wrote and drop the rest" posture the face discipline forbids, with
- * nothing on the page to say the device had gone.
+ * A bleed slot runs the picture off two or three page edges. There is no bezel
+ * to draw when the picture has no edges, so a face that took a `device_mockup`
+ * into a bleed slot painted the screen contents alone and the component
+ * silently became an `image` — exactly the "take part of what the author wrote
+ * and drop the rest" posture the face discipline forbids, with nothing on the
+ * page to say the device had gone. Those faces step aside and the ordinary
+ * component renderer draws the page, frame and all.
  *
- * So the bleed takeovers step aside here and the ordinary component renderer
- * draws the page, frame and all. A face whose picture area is a bounded
- * rectangle inside the page — `image-annotate`'s card — has room for the frame
- * and draws it instead of asking this question.
+ * The question is asked of `findImageSelection`'s chosen `source`, never of
+ * the slide. Scanning every component declined the whole face for a legal page
+ * that wrote a plain `image` first and a `device_mockup` after it: the bleed
+ * slot had taken the plain image and had no quarrel with anything, yet the
+ * face stepped aside and the fallback's single stack then dropped the mockup
+ * outright. A device that is not the bleed source is ordinary body content,
+ * and the face's own body slot renders it framed like any other component.
  */
-export function bleedSlotCanHost(slide: Slide): boolean {
-  return !slide.components.some((component) => component.type === "device_mockup")
+export function bleedSlotCanHost(source: ImageFamilyComponent): boolean {
+  return source.type !== "device_mockup"
 }
 
 export function findImageSelection(slide: Slide): ImageSelection | undefined {

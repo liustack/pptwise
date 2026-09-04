@@ -219,10 +219,7 @@ export function monoBleed(props: SvgTemplateProps) {
   // its first picture, and the ones it did not choose would leave with their
   // captions and no mark on the page. This face steps back to type-on-field
   // and records the loss instead of painting one of six in silence.
-  // A `device_mockup` gets the same answer for a different reason: this face's
-  // picture runs off three page edges, and a device drawn without its own
-  // edges is not a device. See `bleedSlotCanHost`.
-  if (!singlePictureExact(slide) || !bleedSlotCanHost(slide)) {
+  if (!singlePictureExact(slide)) {
     return (
       <>
         {playbillTypeOnField(props)}
@@ -230,7 +227,19 @@ export function monoBleed(props: SvgTemplateProps) {
       </>
     )
   }
-  const image = findImageSelection(slide)?.image
+  const selection = findImageSelection(slide)
+  // A `device_mockup` chosen as the bleed picture gets the same answer for a
+  // different reason: this face's picture runs off three page edges, and a
+  // device drawn without its own edges is not a device. See `bleedSlotCanHost`.
+  if (selection && !bleedSlotCanHost(selection.source)) {
+    return (
+      <>
+        {playbillTypeOnField(props)}
+        <DroppedContentMarker count={slide.components.length} />
+      </>
+    )
+  }
+  const image = selection?.image
   const src = image ? ctx.images?.[image.asset_id]?.src : undefined
   const alt = image ? ctx.images?.[image.asset_id]?.alt : undefined
   if (!src) return playbillTypeOnField(props)

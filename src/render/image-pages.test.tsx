@@ -449,6 +449,43 @@ describe("device_mockup keeps its frame", () => {
     expect(slideToRender(doc, slide, 0).dropped).toBe(0)
   })
 
+  // A device that is not the bleed source is ordinary body content. The guard
+  // used to scan every component, so this legal page — a plain photo first, a
+  // mockup after it — declined the whole face even though the bleed slot had
+  // taken the photo and had no quarrel with anything, and the fallback's
+  // single stack then dropped the mockup outright.
+  it.each(["image-split", "image-top", "image-bottom"] as const)(
+    "%s keeps the face when the bleed picture is a plain image and a mockup rides along",
+    (face) => {
+      const slide: Slide = {
+        type: "content",
+        kind: "photo",
+        heading: "The floor and the console behind it",
+        components: [
+          { type: "image", asset_id: "hero", fit: "cover", caption: "Delivery floor" },
+          {
+            type: "device_mockup",
+            device: "browser",
+            asset_id: "hero",
+            url: "portal.example.com/workspaces",
+            caption: "The console behind it",
+          },
+        ],
+      } as Slide
+      const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "consulting", {
+        content: { photo: face },
+      })
+      const doc = makeIr(themeId, slide)
+      const root = parseSvgRoot(slideToSvgMarkup(doc, slide, 0))
+
+      expect(root.querySelector("[data-takeover-mode='fallback']")).toBeNull()
+      expect(root.querySelector("[data-device-mockup='browser']")).not.toBeNull()
+      expect(root.textContent).toContain("Delivery floor")
+      expect(root.textContent).toContain("The console behind it")
+      expect(slideToRender(doc, slide, 0).dropped).toBe(0)
+    },
+  )
+
   // The bleed faces decline rather than host: their picture runs off two or
   // three page edges, and a device without edges is not a device.
   it.each(["image-split", "image-top", "image-bottom"] as const)("%s declines and falls back", (face) => {

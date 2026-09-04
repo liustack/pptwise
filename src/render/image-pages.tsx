@@ -295,9 +295,10 @@ export function ImageSplitPage({
   ctx: ComponentCtx
   page: PageRenderContext
 }) {
-  if (!singlePictureExact(slide) || !bleedSlotCanHost(slide)) return <TakeoverFallbackPage slide={slide} ctx={ctx} />
+  if (!singlePictureExact(slide)) return <TakeoverFallbackPage slide={slide} ctx={ctx} />
   const imageSelection = findImageSelection(slide)
   if (!imageSelection) return <MissingRequiredImageMarker slide={slide} />
+  if (!bleedSlotCanHost(imageSelection.source)) return <TakeoverFallbackPage slide={slide} ctx={ctx} />
   const { image: imageComponent, source: imageSource } = imageSelection
   // 图文范式族（ppt-master P04 右图出血）：image_side=right 时整页镜像——
   // 图列贴右缘、文字区在左。
@@ -502,9 +503,10 @@ export function ImageTopPage({
   ctx: ComponentCtx
   page: PageRenderContext
 }) {
-  if (!singlePictureExact(slide) || !bleedSlotCanHost(slide)) return <TakeoverFallbackPage slide={slide} ctx={ctx} />
+  if (!singlePictureExact(slide)) return <TakeoverFallbackPage slide={slide} ctx={ctx} />
   const imageSelection = findImageSelection(slide)
   if (!imageSelection) return <MissingRequiredImageMarker slide={slide} />
+  if (!bleedSlotCanHost(imageSelection.source)) return <TakeoverFallbackPage slide={slide} ctx={ctx} />
   const { image: imageComponent, source: imageSource } = imageSelection
   const src = ctx.images?.[imageComponent.asset_id]?.src
   // A11Y-01 alt 链路收尾（q15 根因）：见 ImageSplitPage 同名变量的注释。
@@ -1061,9 +1063,10 @@ export function ImageBottomPage({
   ctx: ComponentCtx
   page: PageRenderContext
 }) {
-  if (!singlePictureExact(slide) || !bleedSlotCanHost(slide)) return <TakeoverFallbackPage slide={slide} ctx={ctx} />
+  if (!singlePictureExact(slide)) return <TakeoverFallbackPage slide={slide} ctx={ctx} />
   const imageSelection = findImageSelection(slide)
   if (!imageSelection) return <MissingRequiredImageMarker slide={slide} />
+  if (!bleedSlotCanHost(imageSelection.source)) return <TakeoverFallbackPage slide={slide} ctx={ctx} />
   const { image: imageComponent, source: imageSource } = imageSelection
   const src = ctx.images?.[imageComponent.asset_id]?.src
   // A11Y-01 alt 链路收尾（q15 根因）：见 ImageSplitPage 同名变量的注释。
