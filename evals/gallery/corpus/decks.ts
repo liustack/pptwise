@@ -341,9 +341,18 @@ function sliceBullets(component: Component, n: number): Component {
   return component.type === "bullets" ? { ...component, items: component.items.slice(0, n) } : component
 }
 
-/** One sentence, the size an annotation slot holds. */
+/**
+ * One sentence, the size an annotation slot holds.
+ *
+ * From the far end of the sentence pool, for the reason `stepAsidePage`
+ * gives below: every component builder draws from the near end
+ * (`sentences[0]` through `sentences[7]`), and a note beside a `steps`
+ * stack taken from the same end printed step one's text a second time on
+ * every `rail-numbered` page. `no-repeats.test.mts` holds the whole corpus
+ * to that, page by page.
+ */
 function shortNote(lex: Lexicon): Component {
-  return { type: "paragraph", text: lex.sentences[0]! }
+  return { type: "paragraph", text: lex.sentences[10]! }
 }
 
 /**
@@ -724,7 +733,12 @@ export function componentPage(
   // runs long enough in English that it consumed the content rect and the
   // component under review got dropped — the review table was showing the
   // lead-in instead of the thing it exists to show, on 40 pages.
-  const leadIn: Component = { type: "paragraph", text: lex.sentences[0]! }
+  //
+  // From the far end of the pool, same reason as `stepAsidePage` below:
+  // `steps`, `rings` and `insight_panel` all write `sentences[0]` into their
+  // first row, so a lead-in taken from the near end said the same thing
+  // twice on every one of their pages.
+  const leadIn: Component = { type: "paragraph", text: lex.sentences[9]! }
   const menuFace = getThemeDefinition(themeId).menu.content[kind]?.face
   const renderingThemeId =
     menuFace !== undefined
@@ -794,13 +808,13 @@ export function stepAsidePage(
   // One sentence of argument above the thing it is arguing about, which is
   // how a real page carries a component that is not the whole page.
   //
-  // `componentPage` uses `sentences[0]` for this. These pages cannot: `rings`
-  // draws its own descriptions from `sentences[0]` onward, so a lead-in taken
-  // from the same end of the pool printed the identical sentence twice on the
-  // runway page, once above the onion and once inside its third ring. Taken
-  // from the far end, no component in this table reaches it — and
-  // `step-aside-corpus.test.mts` holds that for every page here rather than
-  // for the three that exist today.
+  // From the far end of the pool, the same rule `componentPage` follows:
+  // `rings` draws its own descriptions from `sentences[0]` onward, so a
+  // lead-in taken from the same end printed the identical sentence twice on
+  // the runway page, once above the onion and once inside its third ring. No
+  // component builder reaches the far end — and `step-aside-corpus.test.mts`
+  // holds that for every page here, as `no-repeats.test.mts` does for the
+  // whole corpus.
   const leadIn: Component = { type: "paragraph", text: lex.sentences[6]! }
   const slide = {
     type: "content",
