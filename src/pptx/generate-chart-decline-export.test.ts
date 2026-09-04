@@ -5,11 +5,12 @@
 // `chart.render` declines a box below its own measured minimum: it paints
 // nothing and declares the loss. That declaration is only worth anything if
 // the export refuses to ship the page — and it very nearly was not.
-// `slideToRender` (../render/render-slide.tsx) counts `[data-dropped]`
-// and nothing else, so the first version of the decline, marked with the
-// plain `data-dropped` attribute, produced a countable-looking marker that
-// the gate never counted: a deck shipped with a page where the chart used to
-// be, no chart on it, and no error anywhere.
+// `slideToRender` (../render/render-slide.tsx) counts `[data-dropped]`, and
+// for a while the decline was marked with a second attribute the gate did
+// not read, which produced a countable-looking marker nobody counted: a deck
+// shipped with a page where the chart used to be, no chart on it, and no
+// error anywhere. There is one attribute now, and this is the test that
+// would notice if a decline stopped writing it.
 //
 // So this test does not assert an attribute. It asserts the user-visible
 // contract that attribute exists to serve: `generatePptx` refuses.

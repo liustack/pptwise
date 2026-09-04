@@ -214,9 +214,9 @@ export const schema = z
         // parts, and it names those parts on the marks themselves — with no
         // parts there are no marks, so the series name and everything under
         // it reach the page nowhere. The renderer's answer was a page of
-        // nothing carrying `data-dropped-silent="0"`, a count the export gate
-        // reads as no loss at all: validate passed, the preview was blank and
-        // the file shipped.
+        // nothing carrying a `data-dropped` count of zero, which the export
+        // gate reads as no loss at all: validate passed, the preview was
+        // blank and the file shipped.
         if (s.data.length === 0) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,

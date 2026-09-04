@@ -576,6 +576,10 @@ export function checkPageFidelity(svg: string, slide: Slide): PageFidelity {
   /**
    * Does a declaration on this page answer for this component's loss?
    *
+   * `data-dropped` is the whole of the declaration protocol: there is no
+   * second attribute separating a loss a reader can see from one they
+   * cannot, because a slide never shows one (`render/drop-marker.tsx`).
+   *
    * A marker speaks for where it sits, which is the whole of the attribution
    * the SVG supports and all it needs to be. A component placed by
    * `SvgContent` gets a `data-audit-box`, and a marker inside that box is

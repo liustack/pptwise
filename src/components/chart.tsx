@@ -413,16 +413,14 @@ export const chart: SvgComponent<ChartComponent> = {
     // declared, the same answer `WholeShareDeclined` (chart-svg.tsx) already
     // gives a chart handed data it cannot draw.
     //
-    // What that declaration *does* is refuse the deck. `data-dropped-silent`
-    // is the attribute `slideToRender` (render-slide.tsx) counts, and that
-    // count is what `checkContentDropGate` throws on, so an under-allocated
-    // chart stops the export until someone fixes the band or passes
+    // What that declaration *does* is refuse the deck. `data-dropped` is the
+    // attribute `slideToRender` (render-slide.tsx) counts, and that count is
+    // what `checkContentDropGate` throws on, so an under-allocated chart
+    // stops the export until someone fixes the band or passes
     // `--allow-dropped-content` (`generate-chart-decline-export.test.ts`
     // pins both halves). That is the point, not a regrettable side effect: a
     // chart painted through the sentence below it ships a wrong page in
-    // silence, and this ships nothing until a person decides. The plain
-    // attribute alone would have been the silent version — a marker the gate
-    // does not read, on a page with no chart and no error anywhere.
+    // silence, and this ships nothing until a person decides.
     //
     // A thrown error was the other candidate and is wrong here. A face's
     // content band is a fixed constant on several of them, so an

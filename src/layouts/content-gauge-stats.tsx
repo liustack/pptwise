@@ -75,7 +75,7 @@ const CONCLUSION_MAX_W = 970
  * It is not widened to cover that, because it cannot be: the band already
  * runs from the rule to 620, and 620 is where the footnote's own ink starts.
  * The bound is the page, not a number someone picked. Past it the exhibit
- * declines and declares (`data-dropped-silent`), which stops the export
+ * declines and declares (`data-dropped`), which stops the export
  * rather than painting a chart through the footnote — the behaviour this
  * face's own history is about. A 13-series line chart is legal IR
  * (`ir-quality` only warns past 8), so that path is reachable and is meant

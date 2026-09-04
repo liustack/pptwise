@@ -1,0 +1,5 @@
+---
+"@liustack/pptwise": minor
+---
+
+A slide never says what it left out. The legend `+N` that 0.30.0 introduced is gone: a chart names the series that fit and declares the rest, and no component, face or layout paints an overflow count, an ellipsis pill or any other bookkeeping. Content that does not fit has two honest outcomes, the face declines so another one draws the page, or the loss is declared and the export refuses the deck until an author shortens it. With no painted cut left anywhere there is no second, exportable kind of loss either: `data-dropped` is the whole protocol, every drop stops `generatePptx`, and each declaration names its own unit, so a chart that could not name fourteen series is refused with "14 series names" rather than "14 content blocks". The review gallery grades a declared drop as rework instead of passing a page that quietly lost its chart, and its fidelity scan credits a component that declined outright instead of reporting each of its fields as unexplained.

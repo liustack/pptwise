@@ -474,7 +474,7 @@ console.log("old-command hard-fail leg OK (removed commands and options are unkn
 //    widths before writing this fixture: a full-width single column needs
 //    ~676px for 6 items, well past any real content rect's ~380-471px range,
 //    see docs/concepts.md's capacity section) to trip `content-dropped` via
-//    row-cards.tsx's own item-level "+N …" marker, and a page with a
+//    row-cards.tsx's own item-level declaration, and a page with a
 //    verdict_banner carrying far more text than its fixed 18px/2-line budget
 //    can hold to trip `content-truncated`. Both human and --json mode exit 1.
 console.log("--- audit leg ---")

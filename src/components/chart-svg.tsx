@@ -47,8 +47,8 @@ import {
 function WholeShareDeclined({ data }: { data: readonly { x: string | number; y: number }[] }): ReactElement {
   // Never zero. An empty `data` is refused at the schema now, so the only way
   // here is the in-memory route this function exists for — and on that route
-  // `data.length` was written straight out as `data-dropped-silent="0"`, a
-  // count `slideToRender` sums and `checkContentDropGate` reads as no loss at
+  // `data.length` was written straight out as a `data-dropped` count of zero,
+  // which `slideToRender` sums and `checkContentDropGate` reads as no loss at
   // all. The series still left the page with its own name, so one is the
   // smallest honest number.
   const count = Math.max(1, data.length)
