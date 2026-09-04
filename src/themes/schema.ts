@@ -7,7 +7,8 @@ import {
   type BrandConfig,
   type BUILTIN_THEME_IDS,
 } from "@/ir"
-import { validateDesignStory, type DesignStory } from "../design-story"
+import { findForbiddenNameWords, validateDesignStory, type DesignStory } from "../design-story"
+import { isLegacyThemeName } from "./legacy-names"
 import type { MotifId } from "../motifs/types"
 import { OCCASION_VOCAB, type Occasion } from "./occasions"
 import type { StyleTokens } from "./tokens"
@@ -135,7 +136,38 @@ const CommonThemeFileFields = {
   emphasis: EmphasisTreatmentSchema.optional(),
 }
 
-function validateCommonThemeFields(value: { id: string; style: { id: string } }, ctx: z.RefinementCtx): void {
+/**
+ * The naming rule at the public boundary: a theme's id, its display label,
+ * and its story name all name a voice or a genre, never a vertical, a
+ * function, an audience, or an organization type.
+ *
+ * Checked here rather than only in a test over the built-ins, because the
+ * contract is what a workspace theme, a copied preset, and a colour fork are
+ * all held to — a rule the engine enforces on itself and waives for everyone
+ * else is a style guide, not a contract.
+ *
+ * The thirteen names that predate the rule are waved through by exact match
+ * (see `legacy-names.ts`), so copying one of those presets still works until
+ * the rename lands.
+ */
+function checkNameRule(text: string | undefined, path: (string | number)[], ctx: z.RefinementCtx): void {
+  if (text === undefined || isLegacyThemeName(text)) return
+  for (const word of findForbiddenNameWords(text)) {
+    ctx.addIssue({
+      code: "custom",
+      path,
+      message: `"${text}" says "${word}" — a name names a voice or a genre, never a vertical, a function, an audience, or an organization type`,
+    })
+  }
+}
+
+function validateCommonThemeFields(
+  value: { id: string; label?: string; story?: DesignStory; style: { id: string } },
+  ctx: z.RefinementCtx,
+): void {
+  checkNameRule(value.id, ["id"], ctx)
+  checkNameRule(value.label, ["label"], ctx)
+  checkNameRule(value.story?.name, ["story", "name"], ctx)
   if (value.style.id !== value.id) {
     ctx.addIssue({
       code: "custom",
