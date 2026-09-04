@@ -27,8 +27,14 @@ import { CANVAS_H_PX, CANVAS_W_PX } from "../src/constants"
 export const FIXTURE_JPG = "evals/gallery/fixtures/images/screenshot-1.jpg"
 export const FIXTURE_JSON = "evals/gallery/fixtures/images/screenshot-1.json"
 
-/** JPEG quality — the fixture stays well under the ~150KB the repo budgets. */
-const QUALITY = 88
+/**
+ * Every encoder setting that decides this file's bytes. Exported and recorded
+ * in the provenance, because the fixture's contract is not only "which page"
+ * but "written how": editing the quality and forgetting to regenerate used to
+ * leave a JPEG nothing checked, and the pixel tolerance is deliberately wide
+ * enough to absorb a re-encode down to quality 60.
+ */
+export const ENCODER = { quality: 88, chromaSubsampling: "4:4:4" } as const
 
 /**
  * The screen contents: an analytics dashboard for a made-up product, in the
@@ -108,22 +114,85 @@ export function screenshotIrDigest(): string {
   return createHash("sha256").update(JSON.stringify(SCREENSHOT_IR)).digest("hex")
 }
 
-export async function renderScreenshotJpeg(): Promise<Buffer> {
+/**
+ * Digest of everything this repository decides about the committed bytes: the
+ * page, the encoder settings and the size. The IR digest alone said which page
+ * the JPEG shows, never how it was written, so a quality edit slipped past it.
+ */
+export function screenshotRecipeDigest(): string {
+  return createHash("sha256")
+    .update(JSON.stringify({ ir: SCREENSHOT_IR, encoder: ENCODER, width: FIXTURE_W, height: FIXTURE_H }))
+    .digest("hex")
+}
+
+/**
+ * The page as SVG, before any raster. Split out so the fixture test can read
+ * the font stack the page actually asks for and decide whether this machine
+ * resolves it the way the committed bytes did.
+ */
+export function renderScreenshotSvg(): string {
   installNodePlatform()
-  const rasterize = getPlatform().rasterizeSvg
-  if (!rasterize) throw new Error("rasterizeSvg unavailable — installNodePlatform() did not run")
   // Validate through the public entry point, exactly as the CLI does — the
   // fixture must be a page the product itself would accept.
   const verdict = validateIr(SCREENSHOT_IR)
   if (!verdict.ok) {
     throw new Error(`SCREENSHOT_IR rejected: ${verdict.errors.map((e) => `${e.path}: ${e.message}`).join("; ")}`)
   }
-  const svg = renderSlideSvg(verdict.ir!, 0)
+  return renderSlideSvg(verdict.ir!, 0)
+}
+
+/**
+ * The first real typeface in the page's own font stack that this machine can
+ * actually draw with, or `"generic"` when none of them resolve and the
+ * rasterizer falls back on its own default.
+ *
+ * Probed by drawing one line twice — once in the candidate face, once in a
+ * name no system has — and looking for any difference. A face that is not
+ * installed produces the same pixels as a name that cannot exist.
+ */
+export async function resolvedScreenshotFace(): Promise<string> {
+  installNodePlatform()
+  const rasterize = getPlatform().rasterizeSvg
+  if (!rasterize) throw new Error("rasterizeSvg unavailable — installNodePlatform() did not run")
+  const stack = renderScreenshotSvg().match(/font-family="([^"]+)"/)?.[1] ?? ""
+  const named = stack
+    .split(",")
+    .map((f) => f.trim().replace(/^['"]|['"]$/g, ""))
+    .filter((f) => f && !GENERIC_FAMILIES.has(f.toLowerCase()))
+  for (const family of named) {
+    if (await faceDrawsDistinctly(family)) return family
+  }
+  return "generic"
+}
+
+const GENERIC_FAMILIES = new Set(["sans-serif", "serif", "monospace", "cursive", "fantasy", "system-ui"])
+/** A family name no machine has installed, so it always lands on the default. */
+const SENTINEL_FAMILY = "PptwiseNoSuchFaceExists"
+
+async function faceDrawsDistinctly(family: string): Promise<boolean> {
+  const rasterize = getPlatform().rasterizeSvg
+  if (!rasterize) throw new Error("rasterizeSvg unavailable — installNodePlatform() did not run")
+  const draw = (f: string) =>
+    `<svg xmlns="http://www.w3.org/2000/svg" width="260" height="64">` +
+    `<text x="4" y="46" font-size="40" font-family="${f}">云雀 18.4</text></svg>`
+  const bytes = async (f: string) => {
+    const img = await rasterize(draw(f), 260, 64)
+    return Buffer.from(img.data.buffer, img.data.byteOffset, img.data.byteLength)
+  }
+  const [target, sentinel] = await Promise.all([bytes(family), bytes(SENTINEL_FAMILY)])
+  return !target.equals(sentinel)
+}
+
+export async function renderScreenshotJpeg(): Promise<Buffer> {
+  installNodePlatform()
+  const rasterize = getPlatform().rasterizeSvg
+  if (!rasterize) throw new Error("rasterizeSvg unavailable — installNodePlatform() did not run")
+  const svg = renderScreenshotSvg()
   const img = await rasterize(svg, FIXTURE_W, FIXTURE_H)
   const raw = Buffer.from(img.data.buffer, img.data.byteOffset, img.data.byteLength)
   return sharp(raw, { raw: { width: img.width, height: img.height, channels: 4 } })
     .flatten({ background: "#FFFFFF" })
-    .jpeg({ quality: QUALITY, chromaSubsampling: "4:4:4" })
+    .jpeg({ ...ENCODER })
     .toBuffer()
 }
 
@@ -143,7 +212,15 @@ async function main() {
         source: "SCREENSHOT_IR in that script, rendered through validateIr + renderSlideSvg",
         theme: SCREENSHOT_IR.theme.id,
         ir_sha256: screenshotIrDigest(),
-        quality: QUALITY,
+        recipe_sha256: screenshotRecipeDigest(),
+        encoder: ENCODER,
+        // The one environment fact in here, and it is recorded rather than
+        // asserted: the page names a stack of CJK faces and the machine that
+        // wrote these bytes drew them with this one. A machine that resolves
+        // the stack to a different face draws the same page in different
+        // glyphs, so the fixture test compares its own probe against this and
+        // skips the pixel comparison instead of failing over a font.
+        rendered_with_face: await resolvedScreenshotFace(),
         width: FIXTURE_W,
         height: FIXTURE_H,
       },

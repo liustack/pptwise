@@ -4,7 +4,12 @@
   "source": "SCREENSHOT_IR in that script, rendered through validateIr + renderSlideSvg",
   "theme": "enterprise",
   "ir_sha256": "e8f639a337463ce14045f28b7cb560046c193bde76a3ce4fd8c387dd9088e459",
-  "quality": 88,
+  "recipe_sha256": "432e9ea7adad9b54cfa182e857a8b48646ca40b07af55892149391c95f540e53",
+  "encoder": {
+    "quality": 88,
+    "chromaSubsampling": "4:4:4"
+  },
+  "rendered_with_face": "PingFang SC",
   "width": 1280,
   "height": 720
 }
