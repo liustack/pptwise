@@ -35,6 +35,7 @@ Browser services are isolated behind `src/platform`. The Node installer provides
 
 - The dependency closure of `src/index.ts` must remain free of Node-only dependencies. Commander, filesystem shells, linkedom, and sharp belong under `src/cli*` or `src/platform/node.ts`.
 - Migrated code keeps its Chinese comments. Do not translate them wholesale or combine a migration with unrelated refactoring.
+- Every theme, kind, face, and component carries a design story, written as public copy beside its definition. A name names a voice or a genre, never an industry. See `docs/concepts.md`.
 - The alias `@/*` maps to `src/*` in both TypeScript paths and the Vitest alias. Change both declarations together.
 - Public theme files are always complete v2 objects. Creation means copy. Palette changes use a fork with full token rederivation.
 - Assembly combines spec semantics and page content into IR v5 without persisting face choices or other rendering state.

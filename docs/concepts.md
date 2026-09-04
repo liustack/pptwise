@@ -56,6 +56,47 @@ A kind is the semantic move made by one content page. It is the only load-bearin
 
 Every content page requires exactly one kind, including content pages in a bare IR file. `cover`, `chapter`, and `ending` are boundary page types and carry no kind.
 
+## Design stories
+
+Every theme, kind, face, and component carries a design story: six fields that
+say what it is, when to choose it, who it is for, and when not to choose it.
+
+| field | what it says |
+| --- | --- |
+| `name` | The display name. A voice or a genre, never an industry and never an id. |
+| `story` | What it is, and which real-world form of print or staging it borrows. |
+| `positioning` | When to choose it. |
+| `audience` | Who speaks from it, and who is listening. |
+| `notFor` | When not to choose it. |
+| `lineage` | Optional. Where it comes from, what it references. |
+
+`story` and `positioning` run to two sentences, the rest to one, and the
+character caps in `src/design-story.ts` are checked by
+`validateDesignStory()`. A theme keeps its story in its theme file, a kind in
+`src/ir/kind-stories.ts`, a component beside its schema in
+`src/ir/components/`, and a face on its layout definition.
+
+Stories are public copy. They are the source for the gallery's design cards,
+for per-theme documentation, and for the words a model reads when it picks a
+theme or a component, so they are written as product prose in English: no file
+names, no registry names, no internal ids, nothing about how any of it is
+built. The gallery translates them field by field in
+`evals/gallery/stories.zh.ts` and marks anything untranslated.
+
+**A name names a voice or a genre, never an industry.** A name that squats on
+an industry tells every other industry the object is not for them, and hides
+what it actually offers, which is a way of speaking: the report voice that
+opens with its conclusion serves a hospital board as well as a bank. An
+industry belongs in `positioning`, in `audience`, and in a theme's occasions,
+which is where it says who a voice happens to suit rather than who owns it.
+`src/naming-rule.test.ts` enforces the rule over theme ids, labels, and story
+names, and carries the list of built-ins still waiting on a rename.
+
+`src/design-story.test.ts` holds the line the other way: an object with no
+story fails unless it is named in that test's pending list, and an object
+named there that has since been written fails too, so the list can only
+shrink.
+
 ## The menu model
 
 A theme menu is a pure table. It maps `cover`, `chapter`, each offered content kind, and `ending` to exactly one face. A theme may offer only a subset of the eleven content kinds. Omission is a design decision, not an incomplete theme.
