@@ -55,8 +55,8 @@ type QuadrantKey = "strengths" | "weaknesses" | "opportunities" | "threats"
  * independent reviewer stress matrix (13 themes × 5 heading lengths, real
  * validate→render→audit CLI pipeline) confirmed this. `render` now mirrors
  * `bmc.tsx`/`pest.tsx`/`five-forces.tsx`'s exact two-stage fix: a
- * `fontScale` (< 1 only when `box.h` is short of the natural total, floored
- * at `MIN_FONT_SCALE`) shrinks every quadrant's font size/vertical rhythm
+ * `rhythmScale` (< 1 only when `box.h` is short of the natural total,
+ * floored at `MIN_RHYTHM_SCALE`) closes up every quadrant's vertical rhythm
  * uniformly before geometry is derived, and the pre-existing `Math.max`
  * grow path still handles `box.h` exceeding the natural total — the two
  * never engage at once. Unlike `five-forces.tsx`'s own admitted residual,
@@ -91,7 +91,7 @@ const CARD_RADIUS = 10
 // `BADGE` is a horizontal reservation for the unboxed letter (see
 // `renderQuadrant`'s comment) — no rect this wide is ever painted. Its
 // *height* footprint (`Math.max(BADGE, titleSize)` in `quadrantLayout`)
-// does shrink with `fontScale` below, same as every other vertical
+// does shrink with `rhythmScale` below, same as every other vertical
 // measurement in this file.
 const BADGE = 34
 const BADGE_FONT = 22
@@ -108,13 +108,17 @@ const ITEM_GAP = 6
 const BULLET_R = 2.5
 const BULLET_INDENT = 14
 
-// fix round (post-review): floor for render's box.h-undersized font-shrink
-// below, ported from `pest.tsx`/`five-forces.tsx`/`bmc.tsx` — see file
-// header. Derived the same way: it equals the item text's own width-axis
-// shrink floor (`ITEM_SIZE_MIN / ITEM_SIZE`), so the new height-axis floor
-// never asks item text to go smaller than a size this file already treats
-// as an acceptable edge.
-const MIN_FONT_SCALE = ITEM_SIZE_MIN / ITEM_SIZE
+// Floor for render's box.h-undersized shrink below, the same repair
+// `pest.tsx`/`five-forces.tsx`/`bmc.tsx` carry — see file header.
+//
+// This closes up the *vertical rhythm* and never the type. The floor used to
+// be `ITEM_SIZE_MIN / ITEM_SIZE`, a real fraction when those were 9.5 and
+// 12.5. Both are 16 now (the legibility floor was raised to meet the
+// type-size gate), which made the expression exactly 1 and left this whole
+// stage dead: an undersized box had nothing left to give, so every quadrant
+// went straight to dropping items. Type holds at its own declared floor and
+// the rhythm closes up instead.
+const MIN_RHYTHM_SCALE = 0.55
 
 /** Badge fill (a solid, un-blended theme token) per quadrant — the panel tint
  * below blends this same color toward `colors.surface`, so the badge always
@@ -144,7 +148,7 @@ interface QuadrantLayout {
   title: { text: string; fontSize: number; truncated: boolean }
   items: { text: string; fontSize: number; truncated: boolean }[]
   contentH: number
-  // fontScale-applied nominal rhythm — `renderQuadrant` positions against
+  // rhythmScale-applied nominal rhythm — `renderQuadrant` positions against
   // these, not each fitted title/item's own (possibly further width-shrunk)
   // `fontSize`. Same nominal/fitted split `bmc.tsx`'s own `BlockLayout`/
   // `pest.tsx`/`five-forces.tsx`'s own layout structs use.
@@ -162,10 +166,11 @@ interface QuadrantLayout {
 }
 
 /**
- * `fontScale` (default 1, nominal) shrinks every vertical measurement —
- * font sizes, line-height, padding, gaps, the badge's height footprint — by
- * the same proportion; `quadW`/`PAD_X`/`BULLET_INDENT` (the horizontal
- * axis) are untouched. At `fontScale === 1` every returned field reduces to
+ * `rhythmScale` (default 1, nominal) closes up every vertical measurement
+ * that is not type — line-height, padding, gaps, the badge's height
+ * footprint — by the same proportion, while each type size stops at the
+ * floor it declares for itself; `quadW`/`PAD_X`/`BULLET_INDENT` (the
+ * horizontal axis) are untouched. At `rhythmScale === 1` every returned field reduces to
  * this file's nominal constants exactly — same as `pest.tsx`'s own
  * `quadrantLayout` (byte-for-byte ported from there).
  */
@@ -183,26 +188,34 @@ function quadrantLayout(
   items: string[],
   title: string,
   quadW: number,
-  fontScale: number = 1,
+  rhythmScale: number = 1,
   fontFamily?: string,
 ): QuadrantLayout {
   const contentW = quadW - PAD_X * 2
-  const badgeSize = BADGE * fontScale
-  const badgeFont = BADGE_FONT * fontScale
-  const titleSize = TITLE_SIZE * fontScale
-  const padTop = PAD_TOP * fontScale
-  const padBottom = PAD_BOTTOM * fontScale
-  const gapBadgeTitle = GAP_BADGE_TITLE * fontScale
-  const gapHeaderItems = GAP_HEADER_ITEMS * fontScale
-  const itemSize = ITEM_SIZE * fontScale
-  const itemLH = Math.round(itemSize * ITEM_LH_RATIO)
-  const itemGap = ITEM_GAP * fontScale
-  const bulletR = BULLET_R * fontScale
+  // Type stops at the floor each size already declares for itself: the item
+  // size is the legibility floor outright, the title may still give up its
+  // one point down to `TITLE_SIZE_MIN`, and the badge letter and the
+  // horizontal reservation it sits in scale together so the letter never
+  // outgrows its own space, stopping once the letter reaches `ITEM_SIZE_MIN`.
+  // Everything else here is rhythm and gives freely.
+  const badgeScale = Math.max(rhythmScale, ITEM_SIZE_MIN / BADGE_FONT)
+  const badgeSize = BADGE * badgeScale
+  const badgeFont = BADGE_FONT * badgeScale
+  const titleSize = Math.max(TITLE_SIZE_MIN, TITLE_SIZE * rhythmScale)
+  const padTop = PAD_TOP * rhythmScale
+  const padBottom = PAD_BOTTOM * rhythmScale
+  const gapBadgeTitle = GAP_BADGE_TITLE * rhythmScale
+  const gapHeaderItems = GAP_HEADER_ITEMS * rhythmScale
+  const itemSize = ITEM_SIZE
+  // Never shorter than the type it holds, so glyphs cannot collide.
+  const itemLH = Math.round(itemSize * Math.max(1, ITEM_LH_RATIO * rhythmScale))
+  const itemGap = ITEM_GAP * rhythmScale
+  const bulletR = BULLET_R
 
   const fittedTitle = fitSvgLine(title, {
     maxWidth: contentW - badgeSize - gapBadgeTitle,
     fontSize: titleSize,
-    minFontSize: TITLE_SIZE_MIN * fontScale,
+    minFontSize: TITLE_SIZE_MIN,
     bold: true,
     fontFamily,
   })
@@ -210,7 +223,7 @@ function quadrantLayout(
     fitSvgLine(it, {
       maxWidth: contentW - BULLET_INDENT,
       fontSize: itemSize,
-      minFontSize: ITEM_SIZE_MIN * fontScale,
+      minFontSize: ITEM_SIZE_MIN,
     }),
   )
   const itemsH = fittedItems.length * itemLH + Math.max(0, fittedItems.length - 1) * itemGap
@@ -234,10 +247,10 @@ function quadrantLayout(
   }
 }
 
-function gridGeom(component: SwotComponent, w: number, fontScale: number = 1, fontFamily?: string) {
+function gridGeom(component: SwotComponent, w: number, rhythmScale: number = 1, fontFamily?: string) {
   const quadW = (w - GRID_GAP) / 2
   const layouts = QUADRANTS.map((q) =>
-    quadrantLayout(component[q], component.labels?.[q] ?? DEFAULT_LABELS[q], quadW, fontScale, fontFamily),
+    quadrantLayout(component[q], component.labels?.[q] ?? DEFAULT_LABELS[q], quadW, rhythmScale, fontFamily),
   )
   const cellH = Math.max(...layouts.map((l) => l.contentH))
   return { quadW, cellH, layouts }
@@ -344,17 +357,17 @@ export const swot: SvgComponent<SwotComponent> = {
     // fix round (post-review), ported from pest.tsx/five-forces.tsx/
     // bmc.tsx — see file header. A box shorter than the natural total
     // shrinks every quadrant's font size/vertical rhythm by the same
-    // proportion the box is short by, floored at MIN_FONT_SCALE, instead of
+    // proportion the box is short by, floored at MIN_RHYTHM_SCALE, instead of
     // silently drawing past box.h (this file's pre-fix
     // `Math.max(cellH, ...)` floor). A box at or above natural size keeps
-    // fontScale === 1 and reuses `natural` as-is rather than recomputing.
-    const fontScale = naturalTotal > 0 && totalH < naturalTotal ? Math.max(MIN_FONT_SCALE, totalH / naturalTotal) : 1
-    const scaled = fontScale === 1 ? natural : gridGeom(component, box.w, fontScale, ctx.fonts.heading)
+    // rhythmScale === 1 and reuses `natural` as-is rather than recomputing.
+    const rhythmScale = naturalTotal > 0 && totalH < naturalTotal ? Math.max(MIN_RHYTHM_SCALE, totalH / naturalTotal) : 1
+    const scaled = rhythmScale === 1 ? natural : gridGeom(component, box.w, rhythmScale, ctx.fonts.heading)
     const finalTotalH = totalH
 
     const { quadW, layouts } = scaled
     // Growth-only stretch (this file's own pre-existing idiom, kept
-    // byte-identical at fontScale===1/no-grow): both rows are always equal
+    // byte-identical at rhythmScale===1/no-grow): both rows are always equal
     // height by construction, so an exact `(finalTotalH - GAP) / 2` split
     // both reproduces `scaled.cellH` exactly when finalTotalH ===
     // scaledNaturalTotal (the undersized-box case, nothing left to grow)
