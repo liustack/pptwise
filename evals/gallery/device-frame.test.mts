@@ -59,9 +59,23 @@ const EXPECTED_DECK_PAGES = [
 const BROWSER_ASPECT = 1.6
 
 /**
+ * A property as this element declares it, from its attribute or its inline
+ * style, or `undefined` when it says nothing about it.
+ */
+function declared(el: Element, name: string): string | undefined {
+  const attr = el.getAttribute(name)
+  if (attr !== null) return attr
+  const style = el.getAttribute("style")
+  if (!style) return undefined
+  const hit = new RegExp(`(?:^|;)\\s*${name}\\s*:\\s*([^;]+)`, "i").exec(style)
+  return hit ? hit[1]!.trim() : undefined
+}
+
+/**
  * What is left of an element's opacity once every ancestor has had its say,
  * and zero as soon as anything in the chain is hidden outright.
  *
+ * `opacity` composites rather than inherits, so it multiplies down the chain.
  * Reading only the element's own attributes proved a local property, not a
  * visible one: setting `opacity="0"` on the `[data-device-mockup]` group hid
  * the bar, the dots, the pill, the outline, the body and the notch on all 56
@@ -70,28 +84,45 @@ const BROWSER_ASPECT = 1.6
 function effectiveOpacity(el: Element): number {
   let opacity = 1
   for (let node: Element | null = el; node; node = node.parentElement) {
-    const display = node.getAttribute("display")
-    const visibility = node.getAttribute("visibility")
+    const display = declared(node, "display")
+    const visibility = declared(node, "visibility")
     if (display === "none" || visibility === "hidden" || visibility === "collapse") return 0
-    const own = node.getAttribute("opacity")
-    if (own !== null) opacity *= Number(own)
+    const own = declared(node, "opacity")
+    if (own !== undefined) opacity *= Number(own)
   }
   return opacity
 }
 
+/**
+ * A painting property as it actually resolves, walking up for the nearest
+ * ancestor that declares it.
+ *
+ * `fill`, `stroke` and their opacities are inherited, so a child that says
+ * nothing takes its parent's. Reading only the leaf left a second way to hide
+ * the whole frame: `fill-opacity="0"` and `stroke-opacity="0"` on the
+ * `[data-device-mockup]` group pass down to the bar, dots, pill, outline, body
+ * and notch — none of which override them — and all 56 pages still reported
+ * every part painted.
+ */
+function inherited(el: Element, name: string, fallback: string): string {
+  for (let node: Element | null = el; node; node = node.parentElement) {
+    const value = declared(node, name)
+    if (value !== undefined) return value
+  }
+  return fallback
+}
+
 /** Whether this element would put ink on the page at all. */
 function paints(el: Element): boolean {
-  const num = (name: string, fallback: number) => {
-    const raw = el.getAttribute(name)
-    return raw === null ? fallback : Number(raw)
-  }
   if (effectiveOpacity(el) <= 0) return false
-  const fill = el.getAttribute("fill")
-  // No `fill` attribute at all means SVG's own default, which is black.
-  const filled = fill !== "none" && num("fill-opacity", 1) > 0
-  const stroke = el.getAttribute("stroke")
+  // No `fill` anywhere up the chain means SVG's own default, which is black.
+  const fill = inherited(el, "fill", "black")
+  const filled = fill !== "none" && Number(inherited(el, "fill-opacity", "1")) > 0
+  const stroke = inherited(el, "stroke", "none")
   const stroked =
-    stroke !== null && stroke !== "none" && num("stroke-opacity", 1) > 0 && num("stroke-width", 1) > 0
+    stroke !== "none" &&
+    Number(inherited(el, "stroke-opacity", "1")) > 0 &&
+    Number(inherited(el, "stroke-width", "1")) > 0
   return filled || stroked
 }
 
