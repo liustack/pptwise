@@ -1,5 +1,11 @@
 # @liustack/pptwise
 
+## 0.32.0
+
+### Minor Changes
+
+- Nothing in the review gallery drops content any more: every specimen draws its whole component, tall or wide components get a page of their own with an adjacency page beside a lead-in, and a guard test keeps the corpus at zero drops. Two engine faults surfaced on the way and are fixed — a flowchart edge label measured one width and painted a wider chip (labels now park on the whole gap first and only retry with chip padding), and image-annotate ate the colon it split a bullet on. The grid components (bmc, five_forces, pest, swot) regain their undersized-box compression: the old shrink floor had become a no-op when the type floor rose to 16, so a box a few percent short went straight to dropping items; now rhythm tightens while type holds. A cross-language capacity sweep renders every theme in English and mixed script and names the nine remaining overflows as a ratchet.
+
 ## 0.31.0
 
 ### Minor Changes
