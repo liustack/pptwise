@@ -296,7 +296,10 @@ export function themeDeck(themeId: string, lex: Lexicon, assets: CorpusAssets): 
 function thickenThemeContent(themeId: string, slotIndex: number, lex: Lexicon): Component[] {
   const shortParagraph: Component = { type: "paragraph", text: lex.shortParagraph }
   if (themeId === "stage" && slotIndex === 0) return [shortParagraph]
-  if (themeId === "swiss" && slotIndex === 0) return [COMPONENT_BUILDERS.bullets!(lex)]
+  // Two bullets, not five: split-band gives the pie chart 260px of its 400px
+  // rect, and the full list did not fit in the ~124px left over — so the
+  // companion meant to fill the band under the plot was dropped whole.
+  if (themeId === "swiss" && slotIndex === 0) return [sliceBullets(COMPONENT_BUILDERS.bullets!(lex), 2)]
   if (themeId === "arena" && slotIndex === 2) return [shortParagraph]
   if (themeId === "pulse" && slotIndex === 3) return [shortParagraph]
   if (themeId === "runway" && slotIndex === 5) return [shortParagraph]
