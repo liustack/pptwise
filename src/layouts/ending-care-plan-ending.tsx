@@ -191,6 +191,13 @@ export const layoutDef: LayoutDefinition = {
   // Optional bullets fill the list.
   id: "care-plan-ending",
   kind: "standard",
+  story: {
+    name: "Plan Summary",
+    story: "A heading at the top, up to three recommendation lines stacked below, a foot rule, and an optional sign-off. Compact and clinical, no ornament beyond the rule.",
+    positioning: "The closing page for up to three follow-up items and a sign-off, with a foot rule as the only mark. Heading stays at reading size.",
+    audience: "Printed handouts and close-range screens where each line must be legible at body-text size.",
+    notFor: "Closings that tint numbers or emphasis words, which belong in scorecard-ending for primary-colored figures.",
+  },
   slideTypes: ["ending"],
   slots: [
     { name: "heading", accepts: [] },

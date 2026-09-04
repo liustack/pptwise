@@ -143,6 +143,13 @@ export const layoutDef = {
   // Motif yields. Empty heading invents no chapter title.
   id: "gilt-ordinal-chapter",
   kind: "standard",
+  story: {
+    name: "Gilt Ordinal",
+    story: "A small ordinal number in the accent color centers above the title, with a thin border rule below. Most of the page is whitespace, and the ordinal barely whispers.",
+    positioning: "A restrained break for chapters that need numbering without announcement. The generous whitespace lets the audience breathe between topics.",
+    audience: "Readers on a projector or shared screen who glance at the ordinal and move on.",
+    notFor: "Decks that need a bold visual reset, which suit seal-numeral-chapter or field-band-chapter.",
+  },
   slideTypes: ["chapter"],
   slots: [
     { name: "kicker", accepts: [] },

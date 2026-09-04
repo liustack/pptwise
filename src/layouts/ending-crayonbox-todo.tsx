@@ -171,6 +171,13 @@ export const layoutDef = {
   suppressMotif: true,
   id: "crayonbox-todo",
   kind: "standard",
+  story: {
+    name: "Candy Checklist",
+    story: "A kicker at the top, then up to three items stacked with candy-colored number badges beside each line. A contact line from the subtitle anchors the bottom.",
+    positioning: "The closing page for up to three to-do items marked with playful number badges. No rule, no CTA button.",
+    audience: "Workshop handouts and casual presentations where the cheerful badges invite action.",
+    notFor: "Closings that need a formal kicker label, which belong in homework-close-ending with an accent label box.",
+  },
   slideTypes: ["ending"],
   slots: [
     { name: "kicker", accepts: [] },

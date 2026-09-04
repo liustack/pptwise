@@ -282,6 +282,13 @@ export const layoutDef: LayoutDefinition = {
   // bg mode collapses meta to one white overlay line (same slot names).
   id: "tone-adaptive-header",
   kind: "standard",
+  story: {
+    name: "Adaptive Masthead",
+    story: "A large left-aligned title fills the upper half, an org label sits top-left, and a divider plus meta row close the bottom. When a background image is present the whole page switches to white type on a dark scrim.",
+    positioning: "Opens a deck that may or may not carry a cover photo. By default it holds a title with a date and author, but can shift into a heavier image-led opening.",
+    audience: "A laptop or projector, where the same file may appear with or without a cover image.",
+    notFor: "Openings that always show a photograph, which suit show-headline.",
+  },
   slideTypes: ["cover"],
   params: {
     titleSize: { type: "number", min: 48, max: 120 },

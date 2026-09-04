@@ -1130,6 +1130,13 @@ export const layoutDef: LayoutDefinition = {
   // footnote (meta).
   id: "bento-panel",
   kind: "standard",
+  story: {
+    name: "Mosaic Tiles",
+    story: "Content explodes into up to six unequal cards sorted by weight, the heaviest taking the widest tile. Small items tile beside the hero.",
+    positioning: "Serves list, points and hierarchy at up to six blocks. Choose it when several items of different weight each need their own card on one page.",
+    audience: "Readers scanning a set of cards on a shared screen or printout.",
+    notFor: "A single chart or image that needs the full page, which belongs in stacked-poster or one-evidence.",
+  },
   slideTypes: ["content"],
   slots: [
     { name: "kicker", accepts: [] },

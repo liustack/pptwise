@@ -165,6 +165,13 @@ export const layoutDef = {
   // thank-you. Empty heading invents no 今天，开放下载.
   id: "release-close-ending",
   kind: "standard",
+  story: {
+    name: "Launch Word",
+    story: "One oversized centered line fills the page, with a website address or subtitle just below it. An organization-and-date foot anchors the bottom.",
+    positioning: "The closing page for a single release announcement and a web address. No list, no button, no QR code.",
+    audience: "Press events and launch keynotes projected on a big screen, where one line is the entire message.",
+    notFor: "Closings that need a CTA button, which belong in ticket-cta-ending or seat-cta-ending.",
+  },
   slideTypes: ["ending"],
   slots: [
     { name: "heading", accepts: [] },

@@ -174,6 +174,13 @@ export const layoutDef = {
   // paintsOwnBackground. Empty heading invents no close and no email.
   id: "window-close-ending",
   kind: "standard",
+  story: {
+    name: "Dark Window",
+    story: "A full-bleed primary field fills the page. A reversed heading, a subtitle note, a border rule, and a contact line stack centered top to bottom.",
+    positioning: "The closing page for one headline, one note, and contact details on a dark colored ground. No list, no CTA.",
+    audience: "Large projection in a dark hall, where the inverted type reads clearly from the back row.",
+    notFor: "Closings where the background should stay light, which belong in rule-close-ending or masthead-ending.",
+  },
   paintsOwnBackground: true,
   slideTypes: ["ending"],
   slots: [

@@ -30,6 +30,13 @@ export const layoutDef = {
   // branding posture belong to the menu entry.
   id: "mono-bleed",
   kind: "standard",
+  story: {
+    name: "Colour Wall",
+    story: "The brand colour floods the entire page and inverted type floats over it, up to three lines, no blocks, no images, no rules. The colour is the content.",
+    positioning: "Serves statement at zero body blocks: this page carries only the heading and refuses any content beneath it. Use it as a full-bleed pause between sections.",
+    audience: "A dark hall where a wall of colour resets the atmosphere between acts.",
+    notFor: "A page that needs to carry actual content blocks, which belongs in any other page in this set.",
+  },
   paintsOwnBackground: true,
   slideTypes: ["content"],
   slots: [

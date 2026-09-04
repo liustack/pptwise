@@ -146,6 +146,13 @@ export const layoutDef = {
   // edge. Motif yields. Theme paints the mint paper.
   id: "subject-rule-chapter",
   kind: "standard",
+  story: {
+    name: "Subject Rule",
+    story: "A narrow vertical bar in the primary color stands at the left edge, and the part kicker and title sit to its right. The bar is a structural mark that anchors the text cluster rather than framing it.",
+    positioning: "A clinical, no-frills break that files each chapter like a tab on a folder. The bar gives the eye a fixed point without adding decoration.",
+    audience: "Readers at a meeting table or shared screen, close enough to read the kicker next to the bar.",
+    notFor: "Decks that need a dramatic or immersive transition, which suit field-band-chapter.",
+  },
   slideTypes: ["chapter"],
   slots: [
     { name: "rule", accepts: [] },

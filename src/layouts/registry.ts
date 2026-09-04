@@ -335,10 +335,12 @@ export interface LayoutDefinition {
    * serves, and the viewing distance it is drawn for. Public copy, the same
    * six fields a theme, a kind, and a component carry.
    *
-   * Optional and unfilled today: the faces are being written in their own
-   * batch, and `design-story.test.ts` leaves them out of the drift sweep
-   * until they are. Only the general faces will carry one — a skin variant
-   * inherits the story of the face it dresses.
+   * Every face in this registry carries one, and `design-story.test.ts`
+   * sweeps them with the themes, the kinds, and the components. The field
+   * stays optional so a face can be added and its copy written in the same
+   * change without the type fighting the order the work happens in. A theme's
+   * sparse dressing (`layouts/sparse`) writes none of its own: it is keyed by
+   * theme and face id, so it inherits the story of the face it dresses.
    */
   story?: DesignStory
   slideTypes: readonly SlideType[]

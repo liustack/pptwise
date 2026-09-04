@@ -117,6 +117,13 @@ export const layoutDef = {
   // fallback. Bottom ticker belongs to the motif. pinOnly.
   id: "close-word-ending",
   kind: "standard",
+  story: {
+    name: "Tinted Word",
+    story: "Two lines of centered text fill the page, with one emphasized word picked out in the accent tint. A footer drawn from the subtitle or the organization sits near the bottom.",
+    positioning: "The closing page for a two-line wrap-up sentence where one word carries the accent. No list, no CTA.",
+    audience: "Close reading at a desk or on a tablet, where the single tinted word lands quietly.",
+    notFor: "Closings that need a list of follow-ups, which belong in scorecard-ending or reminder-list-ending.",
+  },
   slideTypes: ["ending"],
   slots: [
     { name: "heading", accepts: [] },

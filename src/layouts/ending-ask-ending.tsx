@@ -146,6 +146,13 @@ export const layoutDef: LayoutDefinition = {
   // CTA block. board lock. No thank-you fallback.
   id: "ask-ending",
   kind: "standard",
+  story: {
+    name: "Open Ask",
+    story: "The heading is the ask, set large and centered with a single accent-colored button below it and emphasis words tinted to the accent. Nothing else on the page.",
+    positioning: "The closing page for a direct request and one call to action. No gratitude, no list, no contact block.",
+    audience: "Pitch rooms where the ask needs to land on one screen, readable from the investor seats.",
+    notFor: "Closings that carry a list of next steps, which belong in action-pad-ending or resolution-ending.",
+  },
   slideTypes: ["ending"],
   slots: [
     { name: "heading", accepts: [] },

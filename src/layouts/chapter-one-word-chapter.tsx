@@ -128,6 +128,13 @@ export const layoutDef = {
   // muted footnote. No decor. Empty heading invents no 性能.
   id: "one-word-chapter",
   kind: "standard",
+  story: {
+    name: "Stage Word",
+    story: "A single word fills the center of the page at display scale, and the act label plus subheading shrink to a muted footnote below. Everything else is empty space.",
+    positioning: "A keynote-grade break that turns the chapter title into a spoken word. Works best when each section is named in one or two words, landing like a title card.",
+    audience: "Viewers in a large venue or darkened auditorium who can read the word from the last row.",
+    notFor: "Chapters with long titles or explanatory subheadings, which suit chalk-rule-chapter.",
+  },
   slideTypes: ["chapter"],
   slots: [
     { name: "heading", accepts: [] },

@@ -219,6 +219,13 @@ export const layoutDef: LayoutDefinition = {
   // render.
   id: "tone-adaptive-ending",
   kind: "standard",
+  story: {
+    name: "Bare Close",
+    story: "A left-aligned oversized heading takes most of the page, with a full-width divider and the contact block underneath. Background images get a dark scrim and white text.",
+    positioning: "The closing page for a single farewell line with contact attribution. No subtitle, no bullets.",
+    audience: "Any screen size, adapting to a background photo when one is present.",
+    notFor: "Endings that carry a subtitle or a list, which belong in close-word-ending or defense-close-ending.",
+  },
   slideTypes: ["ending"],
   slots: [
     { name: "kicker", accepts: [] },

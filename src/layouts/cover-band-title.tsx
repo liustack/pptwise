@@ -241,6 +241,13 @@ export const layoutDef: LayoutDefinition = {
   // Band geometry and optional marks come from this menu face's parameters.
   id: "band-title",
   kind: "standard",
+  story: {
+    name: "Title Band",
+    story: "A full-width primary-color band cuts across the page with the title reversed inside it. A kicker clings to the band's top edge, and the meta line sits above the band at the top of the page.",
+    positioning: "Opens a deck that wraps its title in a color strip. A title, kicker, and below-band subheading are the standard set.",
+    audience: "A classroom wall or projector, where the color band reads like a banner from the back of the room.",
+    notFor: "Openings where the title sits on plain paper rather than inside a band, which is what editorial-masthead does.",
+  },
   slideTypes: ["cover"],
   params: {
     bandY: { type: "number", min: 160, max: 360 },

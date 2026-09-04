@@ -281,6 +281,13 @@ export const layoutDef: LayoutDefinition = {
   // the authored contact line + copyright (meta).
   id: "banner-ending",
   kind: "standard",
+  story: {
+    name: "Italic Banner",
+    story: "An organization dot-mark kicker tops the page. A large italic heading fills the middle, a subtitle sits below, and a full-width rule separates the contact block at the bottom.",
+    positioning: "The closing page for a farewell sentence with organization and contact attribution. No list of next steps.",
+    audience: "Projected in a meeting room, where the italic weight and divider rule read clearly at distance.",
+    notFor: "Endings that need action items or a CTA button, which belong in action-pad-ending or pill-cta-ending.",
+  },
   slideTypes: ["ending"],
   slots: [
     { name: "kicker", accepts: [] },

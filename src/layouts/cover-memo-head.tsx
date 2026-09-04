@@ -223,6 +223,13 @@ export const layoutDef: LayoutDefinition = {
   // typewriter footer. Decision-memo grammar.
   id: "memo-head",
   kind: "standard",
+  story: {
+    name: "Typed Memo",
+    story: "A wide-tracked MEMORANDUM eyebrow runs across the top, followed by a pair of accent rules spanning the full width and a large serif title whose last word carries a heavy underline. The lower half holds monospaced FROM and RE lines.",
+    positioning: "Opens a deck that reads as a written decision rather than a presentation. A title, author, and subject line are the expected content.",
+    audience: "A screen or printed page, where the document header signals that what follows has already been decided.",
+    notFor: "Openings that need visual punch or bold graphics, which suit fashion-masthead or poster-center.",
+  },
   slideTypes: ["cover"],
   slots: [
     { name: "kicker", accepts: [] },

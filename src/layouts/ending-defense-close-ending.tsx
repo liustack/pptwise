@@ -169,6 +169,13 @@ export const layoutDef: LayoutDefinition = {
   // thank-you fallback. Optional bullets fill the list.
   id: "defense-close-ending",
   kind: "standard",
+  story: {
+    name: "Conclusions List",
+    story: "A kicker labeled CONCLUSIONS tops the page, with up to three conclusion lines stacked below from bullets or the heading. A foot rule and optional sign-off close the bottom.",
+    positioning: "The closing page for up to three conclusion points and a sign-off. Not a thank-you page.",
+    audience: "Conference rooms and lecture halls where a panel reads the conclusions projected on screen.",
+    notFor: "Closings that record a formal decision or resolution, which belong in resolution-ending or decision-close-ending.",
+  },
   slideTypes: ["ending"],
   slots: [
     { name: "kicker", accepts: [] },

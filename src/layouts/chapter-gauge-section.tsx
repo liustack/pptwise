@@ -109,6 +109,13 @@ export const layoutDef: LayoutDefinition = {
   branding: "none",
   id: "gauge-section",
   kind: "standard",
+  story: {
+    name: "Gauge Section",
+    story: "A zero-padded ordinal sits on a full-bleed dark field, the chapter title below it, and a single accent gauge bar marks the transition. Meta information occupies the lower zone.",
+    positioning: "A dashboard-grade break that gives each section the feel of a gauge reading. The dark field and accent bar make it the second-heaviest pause after the full color field.",
+    audience: "Viewers on a projector or large screen, where the dark ground and accent bar read like an instrument panel.",
+    notFor: "Decks that need a bright, airy section break, which suit hall-label-chapter or gilt-ordinal-chapter.",
+  },
   paintsOwnBackground: true,
   slideTypes: ["chapter"],
   slots: [

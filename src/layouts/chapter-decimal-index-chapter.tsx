@@ -162,6 +162,13 @@ export const layoutDef = {
   // paints the top red bar. Empty heading invents no section name.
   id: "decimal-index-chapter",
   kind: "standard",
+  story: {
+    name: "Decimal Index",
+    story: "A display-scale decimal number anchors the upper-left, and the chapter title and subheading stack beneath it. A measuring rule with three tick marks spans the full width at the bottom.",
+    positioning: "A technical-document break that indexes sections by decimal number. The measuring rule gives the page the precision and grid feel of an engineering drawing.",
+    audience: "Readers on a laptop or printed page who treat the decimal as a reference number for later citation.",
+    notFor: "Decks that need a warm or dramatic entrance, which suit day-bill-chapter or one-word-chapter.",
+  },
   slideTypes: ["chapter"],
   slots: [
     { name: "kicker", accepts: [] },

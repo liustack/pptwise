@@ -139,6 +139,13 @@ export const layoutDef = {
   // Empty heading invents no thank-you.
   id: "gilt-word-ending",
   kind: "standard",
+  story: {
+    name: "Gilt Accent",
+    story: "Two lines of centered text fill the middle of the page, with one emphasized word rendered in gilt. A footer drawn from the organization or author sits near the bottom.",
+    positioning: "The closing page for a two-line sign-off where one gilt word is the only decoration. No list, no frame, no rule.",
+    audience: "Intimate settings on a laptop or tablet, where the gilt detail rewards close reading.",
+    notFor: "Closings that need a border frame, since the double frame belongs to the motif, not this page.",
+  },
   slideTypes: ["ending"],
   slots: [
     { name: "heading", accepts: [] },

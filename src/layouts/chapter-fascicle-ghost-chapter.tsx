@@ -200,6 +200,13 @@ export const layoutDef = {
   // br logo does not eat the ghost.
   id: "fascicle-ghost-chapter",
   kind: "standard",
+  story: {
+    name: "Ghost Fascicle",
+    story: "An accent fascicle kicker sits in the upper-left, a left-aligned title carries a short accent rule beneath it, and a roman ghost numeral sinks into the bottom-right at near-invisible opacity.",
+    positioning: "A gentle break that numbers the next section without stopping the deck's momentum. The ghost numeral gives a sense of place without raising its voice.",
+    audience: "Readers following along on a laptop or printed handout, close enough to notice the watermark.",
+    notFor: "Decks that need a loud curtain between sections, which suit one-word-chapter or field-band-chapter.",
+  },
   slideTypes: ["chapter"],
   slots: [
     { name: "kicker", accepts: [] },

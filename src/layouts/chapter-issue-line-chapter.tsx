@@ -148,6 +148,13 @@ export const layoutDef = {
   // never a fill.
   id: "issue-line-chapter",
   kind: "standard",
+  story: {
+    name: "Issue Line",
+    story: "An accent-color issue kicker sits on an otherwise clean page, with a left-aligned title below it and nothing else. No rules, no frames, no decoration.",
+    positioning: "A memo-paced break that labels each section as a numbered issue. The bare page makes the transition fast, a line item rather than a curtain.",
+    audience: "Readers scanning a printed memo or shared document who glance at the issue number and move on.",
+    notFor: "Decks that need visual weight or a dramatic pause, which suit seal-numeral-chapter.",
+  },
   slideTypes: ["chapter"],
   slots: [
     { name: "kicker", accepts: [] },

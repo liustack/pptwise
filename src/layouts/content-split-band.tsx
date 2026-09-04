@@ -352,6 +352,13 @@ export const layoutDef: LayoutDefinition = {
   // measurement above, so no `audit/capacity.ts` floor needs tightening.
   id: "split-band",
   kind: "standard",
+  story: {
+    name: "Horizon Band",
+    story: "A full-bleed colour band runs edge to edge across the top, carrying kicker, heading and subheading. Below it the body stacks on the plain page surface with no divider.",
+    positioning: "Serves data and points at up to four blocks. This is the only page that cuts the canvas into two full-width horizontal bands, one filled, one plain.",
+    audience: "A projection or large screen where a bold header band anchors the eye from across the room.",
+    notFor: "Content that needs columns, which belongs in two-column or asymmetric-triptych.",
+  },
   slideTypes: ["content"],
   slots: [
     { name: "kicker", accepts: [] },

@@ -173,6 +173,13 @@ export const layoutDef: LayoutDefinition = {
   // bullets fill the list.
   id: "homework-close-ending",
   kind: "standard",
+  story: {
+    name: "Assignment Box",
+    story: "An accent-colored box at top-left holds a label in reversed type. Up to three task lines stack below, a foot rule marks the boundary, and a preview line sits at the bottom.",
+    positioning: "The closing page for up to three assigned tasks and a preview of what comes next. The colored box is the only decoration.",
+    audience: "Classrooms and workshops where attendees copy down the task list from the projected screen.",
+    notFor: "Closings that list formal conclusions, which belong in defense-close-ending with a CONCLUSIONS kicker.",
+  },
   slideTypes: ["ending"],
   slots: [
     { name: "kicker", accepts: [] },

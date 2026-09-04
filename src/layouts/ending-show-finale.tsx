@@ -141,6 +141,13 @@ export const layoutDef = {
   suppressMotif: true,
   id: "show-finale",
   kind: "standard",
+  story: {
+    name: "Final Curtain",
+    story: "A full-bleed primary field with a faint center-line runs top to bottom. The heading is set oversized, a subtitle and meta line sit below, and a version kicker floats at the top.",
+    positioning: "The closing page for one oversized word on a colored runway. No list, no CTA, no rule.",
+    audience: "Fashion shows and launches projected in a dark hall, where one word is the curtain call.",
+    notFor: "Closings with body text or a list, which belong in signoff-ending for items on a colored field.",
+  },
   paintsOwnBackground: true,
   slideTypes: ["ending"],
   slots: [

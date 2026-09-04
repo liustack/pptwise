@@ -285,6 +285,13 @@ export const layoutDef: LayoutDefinition = {
   // org/contact/date meta lines.
   id: "constellation-ending",
   kind: "standard",
+  story: {
+    name: "Accent Period",
+    story: "The heading sits centered with its trailing period punched in the accent color. A short accent bar marks the signature line, and stacked meta lines anchor the bottom.",
+    positioning: "A single farewell sentence with contact details stacked below. No bullets, no action items.",
+    audience: "Conference-room screens where one bright punctuation mark reads across the table.",
+    notFor: "Endings that need a list of next steps, which belong in defense-close-ending or resolution-ending.",
+  },
   slideTypes: ["ending"],
   slots: [
     { name: "heading", accepts: [] },

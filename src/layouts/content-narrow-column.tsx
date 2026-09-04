@@ -326,6 +326,13 @@ export const layoutDef: LayoutDefinition = {
   // (meta).
   id: "narrow-column",
   kind: "standard",
+  story: {
+    name: "Margin Column",
+    story: "A narrow 880px column runs down the left while a broad right-hand gutter holds nothing but a large muted page number. The eye follows the column, the whitespace gives the page its calm.",
+    positioning: "Serves points, list, data and process at up to four blocks in a single stack. The open gutter lets a dense page breathe without splitting into columns.",
+    audience: "Readers scanning a printed handout or a shared screen at a meeting table.",
+    notFor: "Content that needs two columns side by side, which belongs in two-column.",
+  },
   slideTypes: ["content"],
   slots: [
     { name: "rule", accepts: [] },

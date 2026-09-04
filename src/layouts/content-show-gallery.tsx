@@ -220,6 +220,13 @@ export const layoutDef = {
   suppressMotif: true,
   id: "show-gallery",
   kind: "standard",
+  story: {
+    name: "Strip Grid",
+    story: "Four to six images tile in a numbered grid of tall frames, each captioned below its number. The heading and a summary line span the top, a rule separating them from the grid.",
+    positioning: "Serves photo at one image grid of four to six items, Runway theme only. Choose it to present a curated set of images the audience will browse as a collection.",
+    audience: "A lookbook review or creative pitch where pictures speak as a group.",
+    notFor: "One hero image with text beside it, which belongs in show-spotlight.",
+  },
   slideTypes: ["content"],
   slots: [
     { name: "kicker", accepts: [] },

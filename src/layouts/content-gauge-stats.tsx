@@ -365,6 +365,13 @@ export const layoutDef: LayoutDefinition = {
   branding: "none",
   id: "gauge-stats",
   kind: "standard",
+  story: {
+    name: "Gauge Columns",
+    story: "Section label, heading and rule sit at the top. Below them up to four stat columns fill a grid with values, labels and trend arrows, divided by vertical hairlines.",
+    positioning: "Serves data and points at up to four blocks, Brief theme only. Choose it for metrics, charts or any exhibit that needs a structured report page.",
+    audience: "Readers paging through a printed report or a shared PDF.",
+    notFor: "A single dominant metric, which belongs in gauge-point or stat-hero.",
+  },
   slideTypes: ["content"],
   slots: [
     { name: "kicker", accepts: [] },

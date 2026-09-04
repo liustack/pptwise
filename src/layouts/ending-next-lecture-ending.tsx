@@ -185,6 +185,13 @@ export const layoutDef: LayoutDefinition = {
   // and no invented homework.
   id: "next-lecture-ending",
   kind: "standard",
+  story: {
+    name: "After Class",
+    story: "A kicker at the top, up to two task lines below, a border rule across the page, and a preview of the next session from the subtitle at the bottom.",
+    positioning: "The closing page for up to two follow-up tasks and a next-session preview. The rule separates the tasks from the preview.",
+    audience: "Classroom projectors and workshop screens where attendees note down the short task list.",
+    notFor: "Closings with three or more items, which belong in defense-close-ending or homework-close-ending.",
+  },
   slideTypes: ["ending"],
   slots: [
     { name: "kicker", accepts: [] },

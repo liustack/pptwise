@@ -196,6 +196,13 @@ export const layoutDef: LayoutDefinition = {
   // invented resolution number. Optional bullets fill the list.
   id: "resolution-ending",
   kind: "standard",
+  story: {
+    name: "Numbered Resolution",
+    story: "A kicker labeled RESOLUTION sits at the top. Up to three resolution items stack below, a border rule runs across, and an optional sign-off anchors the bottom.",
+    positioning: "The closing page for up to three formally recorded resolution items and a sign-off. Not a task list.",
+    audience: "Board meetings and review panels where the resolution is projected on a wall screen.",
+    notFor: "Closings that list informal next steps, which belong in action-pad-ending as a casual to-do list.",
+  },
   slideTypes: ["ending"],
   slots: [
     { name: "kicker", accepts: [] },

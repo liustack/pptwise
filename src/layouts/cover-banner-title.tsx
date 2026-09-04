@@ -226,6 +226,13 @@ export const layoutDef: LayoutDefinition = {
   // bar, italic subheading, meta divider + author/date/version row.
   id: "banner-title",
   kind: "standard",
+  story: {
+    name: "Report Banner",
+    story: "A large title sits in the upper half of the page, left-aligned, with a short accent bar marking its close and an italic subheading below. The eye follows the rhythm of a bound report: conclusion on top, attribution at the bottom.",
+    positioning: "Opens a deck that leads with its conclusion. A title alone works best, though a date line and author fit naturally underneath.",
+    audience: "A meeting table where the opening page doubles as the printout people take away.",
+    notFor: "Decks that open with a question rather than a claim, which suit poster-center.",
+  },
   slideTypes: ["cover"],
   slots: [
     { name: "kicker", accepts: [] },

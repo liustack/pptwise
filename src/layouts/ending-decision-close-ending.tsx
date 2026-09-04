@@ -205,6 +205,13 @@ export const layoutDef: LayoutDefinition = {
   // No thank-you and no invented departments. Red is never a fill.
   id: "decision-close-ending",
   kind: "standard",
+  story: {
+    name: "Recorded Decision",
+    story: "A kicker labeled DECISION sits at the top. Two decision lines stack below, a border rule runs across, and a multi-line sign-off anchors the bottom.",
+    positioning: "The closing page for exactly two recorded decisions and a sign-off. The kicker carries the accent color.",
+    audience: "Internal meetings and memos where the decision must be stated on one projected page.",
+    notFor: "Closings with three items, which belong in resolution-ending for three formally recorded points.",
+  },
   slideTypes: ["ending"],
   slots: [
     { name: "kicker", accepts: [] },

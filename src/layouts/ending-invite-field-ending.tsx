@@ -184,6 +184,13 @@ export const layoutDef = {
   // draws no rule. Theme ending paper stays light.
   id: "invite-field-ending",
   kind: "standard",
+  story: {
+    name: "Open Invitation",
+    story: "A full-bleed primary field covers the page. One invitation sentence sits centered in reversed type, a short accent rule underneath, and a faded colophon at the bottom.",
+    positioning: "The closing page for a single invitation sentence on bold-colored ground. No list, no CTA button.",
+    audience: "Event invitations projected or shared digitally, where the colored field reads as a card.",
+    notFor: "Closings that need a CTA button, which belong in seat-cta-ending or ticket-cta-ending.",
+  },
   paintsOwnBackground: true,
   slideTypes: ["ending"],
   slots: [

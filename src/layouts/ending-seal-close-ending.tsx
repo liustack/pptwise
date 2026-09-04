@@ -129,6 +129,13 @@ export const layoutDef = {
   // close copy and no thank-you. Motif owns the right remnant mountain.
   id: "seal-close-ending",
   kind: "standard",
+  story: {
+    name: "Chop Mark",
+    story: "One centered sentence fills the page, with a small seal glyph on the center axis below it standing as a visual period. A next-talk line from the subtitle anchors the bottom.",
+    positioning: "The closing page for a single sentence where the seal stamp is the only mark. No list, no rule, no CTA.",
+    audience: "Projected in lecture halls or cultural venues where the seal reads as a signature.",
+    notFor: "Closings that need a list of follow-up items, which belong in next-lecture-ending or reminder-list-ending.",
+  },
   slideTypes: ["ending"],
   slots: [
     { name: "heading", accepts: [] },

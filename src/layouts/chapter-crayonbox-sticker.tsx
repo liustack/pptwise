@@ -135,6 +135,13 @@ export const layoutDef = {
   suppressMotif: true,
   id: "crayonbox-sticker",
   kind: "standard",
+  story: {
+    name: "Crayon Sticker",
+    story: "A tilted sticker carries a large bold chapter number, next to a sky-blue capsule label, with a sun doodle peeking from the corner. The title sits left-aligned to the right of the sticker.",
+    positioning: "A hand-drawn, cheerful break for decks aimed at a young or playful audience. The tilted sticker and sun doodle keep each chapter entrance warm.",
+    audience: "Viewers on a tablet, whiteboard, or classroom screen who notice the sticker number first.",
+    notFor: "Decks that need a refined or formal section break, which suit mirror-volume-chapter.",
+  },
   slideTypes: ["chapter"],
   slots: [
     { name: "kicker", accepts: [] },

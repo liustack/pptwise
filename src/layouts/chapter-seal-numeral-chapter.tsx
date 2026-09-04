@@ -160,6 +160,13 @@ export const layoutDef = {
   // theme. Motif yields on chapter. Empty heading draws no title.
   id: "seal-numeral-chapter",
   kind: "standard",
+  story: {
+    name: "Numeral Seal",
+    story: "A solid primary-color square holds the chapter number in reversed type, and the title sits to its right. An accent-colored rule spans the full width below, closing the title zone.",
+    positioning: "A stamped, formal break that marks each section the way a seal stamps a document. The block is compact enough to share a line with a two-line title.",
+    audience: "Readers at a desk or laptop who recognize the colored square as a chapter stamp.",
+    notFor: "Decks that need a quiet unnumbered transition, which suit gilt-ordinal-chapter.",
+  },
   slideTypes: ["chapter"],
   slots: [
     { name: "kicker", accepts: [] },

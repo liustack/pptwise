@@ -680,6 +680,13 @@ export const layoutDef: LayoutDefinition = {
   // same slot, two renderings).
   id: "tone-adaptive-content",
   kind: "standard",
+  story: {
+    name: "Overlay Card",
+    story: "When the page carries a background image, an opaque white card floats over it and the text stays dark. Without an image the card vanishes and the body fills the page as usual.",
+    positioning: "Serves data and list at up to four blocks. The card-over-photo mode suits pages where a photograph and a chart or bullet list share one page.",
+    audience: "Presenters who mix photography and structured content frequently.",
+    notFor: "A full-bleed photo with no text overlay, which belongs in image-top or image-bottom.",
+  },
   slideTypes: ["content"],
   slots: [
     { name: "kicker", accepts: [] },

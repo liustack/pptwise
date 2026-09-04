@@ -255,6 +255,13 @@ export const layoutDef = {
   suppressMotif: true,
   id: "crayonbox-cards",
   kind: "standard",
+  story: {
+    name: "Crayon Triptych",
+    story: "Up to three rounded cards sit side by side, each with a coloured number badge and hand-drawn sun doodles in the corner. The heading spans the top.",
+    positioning: "Serves list and points at up to four blocks, Crayon theme only. Choose it for numbered steps or parallel ideas that each carry a title.",
+    audience: "A workshop or classroom screen where colour and playfulness hold attention.",
+    notFor: "A single point with no siblings, which belongs in crayonbox-point.",
+  },
   slideTypes: ["content"],
   slots: [
     { name: "kicker", accepts: [] },

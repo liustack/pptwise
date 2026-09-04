@@ -286,6 +286,13 @@ export const layoutDef: LayoutDefinition = {
   // bullets component. Empty components draw no preview columns.
   id: "verdict-index",
   kind: "standard",
+  story: {
+    name: "Verdict Board",
+    story: "The title is a verdict sentence, with an accent block behind the emphasized phrase. Below it, up to three numbered short arguments stand in columns, making the cover double as a table of contents.",
+    positioning: "Opens a deck that gives the conclusion first, then spreads three short reasons. A title, subheading, and a set of short items are the expected content.",
+    audience: "A meeting room where the opening page works as a summary and is sometimes the only page anyone reads.",
+    notFor: "Openings without listed arguments or numbered evidence, which suit banner-title.",
+  },
   slideTypes: ["cover"],
   params: {
     verdictTitleY: { type: "number", min: 180, max: 480 },

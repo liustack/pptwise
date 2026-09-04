@@ -158,6 +158,13 @@ export const layoutDef: LayoutDefinition = {
   branding: "none",
   id: "gauge-next",
   kind: "standard",
+  story: {
+    name: "Gauge Wrap",
+    story: "A kicker at the top, up to three action items stacked below, a border rule, an optional sign-off, and a meta line at the bottom. Dense but orderly.",
+    positioning: "The closing page for up to three next steps with full meta attribution. The most information-dense closing page available.",
+    audience: "Close-range screens and printed briefs where the reader needs every detail on one page.",
+    notFor: "Closings that need a minimal farewell, which belong in masthead-ending or constellation-ending.",
+  },
   slideTypes: ["ending"],
   slots: [
     { name: "kicker", accepts: [] },

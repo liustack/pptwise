@@ -212,6 +212,13 @@ export const layoutDef: LayoutDefinition = {
   // italic byline bottom-right. Lecture-hall grammar.
   id: "board-head",
   kind: "standard",
+  story: {
+    name: "Chalk Podium",
+    story: "Light-weight serif type runs down the left axis at large scale, and any emphasized word earns a chalk-arc underline in the accent color. A tracked kicker sits above, and an italic byline anchors the bottom-right.",
+    positioning: "Opens a deck that borrows the texture of a chalk lecture. A title, kicker, and byline are the natural set.",
+    audience: "A classroom projector or lecture-hall screen, where light type on a dark ground carries to the back row.",
+    notFor: "Light-ground openings or those carrying body text, which suit header-band or verdict-index.",
+  },
   slideTypes: ["cover"],
   slots: [
     { name: "kicker", accepts: [] },

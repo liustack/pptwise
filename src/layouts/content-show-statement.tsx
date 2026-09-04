@@ -220,6 +220,13 @@ export const layoutDef = {
   suppressMotif: true,
   id: "show-statement",
   kind: "standard",
+  story: {
+    name: "Runway Columns",
+    story: "A 62-point heading fills the upper half. Below it one block renders as up to three titled columns under a full-width rule, and a closing accent bar finishes the page.",
+    positioning: "Serves statement and list at one block, Runway theme only. Choose it for a bold claim followed by two or three supporting pillars laid out in columns.",
+    audience: "A creative keynote where one sentence leads and short items follow.",
+    notFor: "Data or charts, which belong in show-figures.",
+  },
   slideTypes: ["content"],
   slots: [
     { name: "kicker", accepts: [] },

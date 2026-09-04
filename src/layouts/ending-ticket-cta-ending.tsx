@@ -198,6 +198,13 @@ export const layoutDef = {
   // price and no canned ticket CTA.
   id: "ticket-cta-ending",
   kind: "standard",
+  story: {
+    name: "Stub Reverse",
+    story: "A full-bleed primary field fills the page, with an oversized inverted heading, a lighter subtitle, and a paper-colored CTA rectangle stacked centered. An organization foot anchors the bottom.",
+    positioning: "The closing page for one giant headline and one CTA block on a dark colored ground, with the label drawn from the contact name. No list.",
+    audience: "Venue screens and event lobbies where the reversed giant type reads across a crowded room.",
+    notFor: "Closings on a light background, which belong in pill-cta-ending for a capsule CTA on neutral ground.",
+  },
   paintsOwnBackground: true,
   slideTypes: ["ending"],
   slots: [

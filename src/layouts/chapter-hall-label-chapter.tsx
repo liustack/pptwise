@@ -154,6 +154,13 @@ export const layoutDef = {
   // name. Copper gold is the hall label only.
   id: "hall-label-chapter",
   kind: "standard",
+  story: {
+    name: "Hall Label",
+    story: "A small hall number in the accent color sits above the left-aligned title, and the page carries no rules, frames, or marks. The accent color belongs to the hall number alone.",
+    positioning: "A gallery-walk break that numbers sections as halls. The emptiness around the title treats each chapter as a room to walk into.",
+    audience: "Readers on a personal screen or printed guide, close enough to read the small hall number.",
+    notFor: "Decks that need a structural mark or rule to anchor the break, which suit subject-rule-chapter.",
+  },
   slideTypes: ["chapter"],
   slots: [
     { name: "kicker", accepts: [] },

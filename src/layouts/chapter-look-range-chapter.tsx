@@ -171,6 +171,13 @@ export const layoutDef = {
   // Does not invent a look range. Empty heading draws no title.
   id: "look-range-chapter",
   kind: "standard",
+  story: {
+    name: "Look Range",
+    story: "A small tracked kicker reads LOOK plus a zero-padded chapter number in the upper-left. A large title fills the middle of the page, and a thin full-width border rule closes the bottom.",
+    positioning: "A runway-paced break that numbers sections like looks in a collection. The oversized title and floor rule frame each section as a chapter in a lookbook.",
+    audience: "Viewers on a large screen or projection display, where the oversized title reads from across the room.",
+    notFor: "Decks that need an academic or institutional feel, which suit decimal-index-chapter.",
+  },
   slideTypes: ["chapter"],
   slots: [
     { name: "kicker", accepts: [] },

@@ -222,6 +222,13 @@ export const layoutDef: LayoutDefinition = {
   // foot rule and sign-off. No thank-you. Optional bullets fill the list.
   id: "action-pad-ending",
   kind: "standard",
+  story: {
+    name: "Next Steps Pad",
+    story: "A kicker labeled NEXT sits at the top, with up to three action items stacked below. An accent-colored pad holds the call to action, and a foot rule with sign-off closes the bottom.",
+    positioning: "The closing page for a short list of up to three next steps and one highlighted call to action. Not a thank-you page.",
+    audience: "Meeting-room screens where attendees photograph the action list.",
+    notFor: "Closings with no action items that only need a farewell, which belong in masthead-ending or poster-ending.",
+  },
   slideTypes: ["ending"],
   slots: [
     { name: "kicker", accepts: [] },

@@ -187,6 +187,13 @@ export const layoutDef = {
   suppressMotif: true,
   id: "show-plate",
   kind: "standard",
+  story: {
+    name: "Show Plate",
+    story: "The left half of the page holds a tall image plate, and the right half is dominated by a display-scale chapter number with a short kicker, title, and subtitle stacked beneath it. Corner brackets frame the image edge.",
+    positioning: "A cinematic chapter card that pairs a photograph with a number. Works when each section opens with a key image and needs a bold numeral to anchor the right side.",
+    audience: "Viewers on a large screen or in a darkened room, where the image and number split the stage in two.",
+    notFor: "Chapters that have no image, where the empty plate wastes half the page, making round-mark-chapter a better fit.",
+  },
   slideTypes: ["chapter"],
   slots: [
     { name: "kicker", accepts: [] },

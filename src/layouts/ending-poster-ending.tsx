@@ -204,6 +204,13 @@ export const layoutDef: LayoutDefinition = {
   // No standalone kicker.
   id: "poster-ending",
   kind: "standard",
+  story: {
+    name: "Broadsheet Close",
+    story: "A large italic heading centered on the page, a short accent bar below it, then a subtitle. A full-width divider separates one combined line of organization, contact, and copyright.",
+    positioning: "The closing page for one sign-off line with minimal attribution. No list, no CTA, no kicker.",
+    audience: "Large screens in dark presentation halls, where the centered italic heading carries across the room.",
+    notFor: "Closings that need an organization kicker at the top, which belong in banner-ending or rail-ending.",
+  },
   slideTypes: ["ending"],
   slots: [
     { name: "heading", accepts: [] },

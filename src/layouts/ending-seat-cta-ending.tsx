@@ -216,6 +216,13 @@ export const layoutDef = {
   // Motif owns the energy bar.
   id: "seat-cta-ending",
   kind: "standard",
+  story: {
+    name: "Cut Corner CTA",
+    story: "A centered heading fills the upper half, with a cut-corner accent button below holding a call-to-action label from the contact name or subtitle. A contact foot anchors the bottom.",
+    positioning: "The closing page for one headline and one CTA button with a cut corner. No list, no rule.",
+    audience: "Event screens and shared decks where the angled button shape grabs attention.",
+    notFor: "Closings where the CTA should be a rounded pill, which belong in pill-cta-ending.",
+  },
   slideTypes: ["ending"],
   slots: [
     { name: "heading", accepts: [] },

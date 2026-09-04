@@ -235,6 +235,13 @@ export const layoutDef: LayoutDefinition = {
   // under that run.
   id: "header-band",
   kind: "standard",
+  story: {
+    name: "Top Band",
+    story: "A short color band spans the top of the page carrying only the meta line. The title sits below the band on a clear ground, large and left-aligned, with an optional accent wave under the emphasized word.",
+    positioning: "Opens a deck where the meta retreats and the title owns the paper. A title alone or a title with a subheading is the expected set.",
+    audience: "A classroom or workshop, where the band marks the subject without stealing attention from the title.",
+    notFor: "Openings where the title goes inside the band rather than below it, which is what band-title does.",
+  },
   slideTypes: ["cover"],
   slots: [
     { name: "meta", accepts: [] },
