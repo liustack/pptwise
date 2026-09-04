@@ -63,11 +63,22 @@ function withoutRetiredComponents(captured: unknown): unknown {
   return captured
 }
 
-/** `live`, recursively cut down to the shape `captured` has. */
+/**
+ * `live`, recursively cut down to the shape `captured` has.
+ *
+ * Objects are cut to the captured key set, which is the point: optional
+ * metadata added after the capture is not drift. Arrays are not cut. Walking
+ * only the captured indices used to truncate the live list, so an appended
+ * value, a retired value swapped for a live one, or a retired value put back
+ * all compared equal — the exact holes `arrayComparisonCases` below pins.
+ * Both lists are walked to the longer length, so a length difference reaches
+ * the assertion as a missing or extra entry instead of disappearing.
+ */
 function capturedShapeOf(live: unknown, captured: unknown): unknown {
   if (Array.isArray(captured)) {
     if (!Array.isArray(live)) return live
-    return captured.map((value, index) => capturedShapeOf(live[index], value))
+    const length = Math.max(live.length, captured.length)
+    return Array.from({ length }, (_, index) => capturedShapeOf(live[index], captured[index]))
   }
   if (captured !== null && typeof captured === "object") {
     if (live === null || typeof live !== "object") return live
@@ -78,6 +89,36 @@ function capturedShapeOf(live: unknown, captured: unknown): unknown {
   }
   return live
 }
+
+/**
+ * The captured `pull-quote` body slot, and the four ways a live one can
+ * differ from it. Exactly one of them — the retired type dropped, nothing
+ * else touched — is the change this file is asked to let through.
+ */
+const CAPTURED_BODY_SLOT = { name: "body", accepts: ["paragraph", "blockquote", "citation"], capacity: 1 }
+
+const arrayComparisonCases: { name: string; accepts: string[]; equal: boolean }[] = [
+  { name: "the retired type dropped and nothing else", accepts: ["paragraph", "blockquote"], equal: true },
+  // A live type standing where the retired one stood is also an append
+  // against the filtered baseline, which is why one array covers both: the
+  // captured length is gone, so only comparing the full lists catches it.
+  { name: "a live type in the retired one's place", accepts: ["paragraph", "blockquote", "image"], equal: false },
+  { name: "the retired type put back", accepts: ["paragraph", "blockquote", "citation"], equal: false },
+  { name: "a captured type swapped for another", accepts: ["paragraph", "image"], equal: false },
+  { name: "a captured type dropped", accepts: ["paragraph"], equal: false },
+]
+
+describe("the guard's own comparison", () => {
+  const captured = withoutRetiredComponents(CAPTURED_BODY_SLOT)
+  for (const item of arrayComparisonCases) {
+    it(`${item.equal ? "accepts" : "catches"} ${item.name}`, () => {
+      const live = { ...CAPTURED_BODY_SLOT, accepts: item.accepts }
+      const compared = capturedShapeOf(live, captured)
+      if (item.equal) expect(compared).toEqual(captured)
+      else expect(compared).not.toEqual(captured)
+    })
+  }
+})
 
 describe("LAYOUT_REGISTRY migration guard (registry.ts aggregator conversion, T1d)", () => {
   it("captured key order is a subsequence of the live registry (later waves may append)", () => {
