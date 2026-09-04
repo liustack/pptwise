@@ -6,6 +6,7 @@ import { KIND_VALUES } from "@/ir/narrative-values"
 import { THEME_DEFINITIONS } from "@/themes/definitions"
 import {
   isValidDesignStory,
+  scanSentences,
   STORY_LIMITS,
   validateDesignStory,
   type DesignStory,
@@ -17,18 +18,21 @@ import {
  *
  * Faces are deliberately out of the sweep. `LayoutDefinition` has the field,
  * no face fills it yet, and the copy for the general faces lands in its own
- * batch — adding 134 ids to the pending list below would bury the ids that
- * are actually close to being written. Add the face registry here in the
- * same change that writes the first face story.
+ * batch — adding 134 ids to the baseline below would bury the one thing it
+ * is for. Add the face registry here in the same change that writes the
+ * first face story.
  *
- * The pending list is a shrinking list, not a configuration knob. It fails
- * in both directions: an object that has no story and is not listed fails,
- * and a listed object that has since been written fails too, so nobody can
- * write the copy and leave the list claiming otherwise.
+ * `STORYLESS_BASELINE` is a frozen licence, not a work list. It was frozen
+ * empty, because every theme, kind, and component was written before this
+ * test landed, and it may only lose entries. That is what makes this a
+ * ratchet rather than a list: a new object with no story cannot be waved
+ * through by appending a line, because the baseline is asserted to hold
+ * nothing it was not frozen with.
  */
-// Empty: every theme, kind, and component carries its copy. Faces are the
-// batch that follows, and they join this sweep with the first face story.
-const PENDING: readonly string[] = []
+const STORYLESS_BASELINE: readonly string[] = []
+
+/** What the baseline was frozen with. Editing this is editing the rule. */
+const FROZEN_BASELINE: readonly string[] = []
 
 interface StoriedObject {
   /** Namespaced so a theme and a component may share a plain id. */
@@ -54,33 +58,36 @@ describe("design story drift", () => {
     expect([...COMPONENT_STORY_TYPES].sort()).toEqual([...COMPONENT_TYPES].sort())
   })
 
-  it("gives every theme, kind, and component a story, or names it as pending", () => {
-    const unlisted = subjects()
-      .filter((subject) => subject.story === undefined)
-      .map((subject) => subject.id)
-      .filter((id) => !PENDING.includes(id))
-    expect(unlisted, "these objects need a design story, or a line in PENDING").toEqual([])
+  it("has a baseline that only shrinks", () => {
+    expect(STORYLESS_BASELINE.filter((id) => !FROZEN_BASELINE.includes(id)), "the baseline is frozen — an object with no story is written, not licenced").toEqual([])
   })
 
-  it("keeps the pending list shrinking", () => {
+  it("gives every theme, kind, and component a story", () => {
+    const storyless = subjects()
+      .filter((subject) => subject.story === undefined)
+      .map((subject) => subject.id)
+      .filter((id) => !STORYLESS_BASELINE.includes(id))
+    expect(storyless, "these objects need a design story — the baseline is frozen and cannot take a new line").toEqual([])
+  })
+
+  it("drops a baseline entry as soon as its story is written", () => {
     const known = new Set(subjects().map((subject) => subject.id))
-    const stale = PENDING.filter((id) => !known.has(id))
-    expect(stale, "PENDING names objects that no longer exist").toEqual([])
+    expect(STORYLESS_BASELINE.filter((id) => !known.has(id)), "the baseline names an object that is gone").toEqual([])
 
     const written = subjects()
-      .filter((subject) => subject.story !== undefined && PENDING.includes(subject.id))
+      .filter((subject) => subject.story !== undefined && STORYLESS_BASELINE.includes(subject.id))
       .map((subject) => subject.id)
-    expect(written, "these stories are written — take them out of PENDING").toEqual([])
+    expect(written, "these stories are written — delete their lines from the baseline").toEqual([])
   })
 
   it("reports how much copy is left", () => {
     const total = subjects().length
-    const done = total - PENDING.length
-    console.info(`design stories: ${done}/${total} written, ${PENDING.length} pending\n${PENDING.join("\n")}`)
+    const done = total - STORYLESS_BASELINE.length
+    console.info(`design stories: ${done}/${total} written, ${STORYLESS_BASELINE.length} pending`)
     expect(done).toBeGreaterThan(0)
   })
 
-  it("holds every written story inside the field caps", () => {
+  it("holds every written story inside the field caps and the copy rules", () => {
     const problems = subjects().flatMap((subject) =>
       subject.story === undefined
         ? []
@@ -93,6 +100,34 @@ describe("design story drift", () => {
     const names = subjects().flatMap((subject) => (subject.story === undefined ? [] : [subject.story.name]))
     expect(new Set(names).size).toBe(names.length)
   })
+})
+
+describe("scanSentences", () => {
+  const cases: readonly [string, number, boolean][] = [
+    ["Warm black, amber figures.", 1, true],
+    ["One. Two. Three.", 3, true],
+    // An abbreviation's full stop closes nothing.
+    ["Leaders, e.g. directors.", 1, true],
+    ["Choose it for reports, memos, etc.", 1, true],
+    ["Read chapter No. 5 first.", 1, true],
+    // Decimals are not sentence ends.
+    ["It grew 3.5 times.", 1, true],
+    // Chinese runs sentences together with no space between them.
+    ["第一句。第二句。", 2, true],
+    ["一句话。", 1, true],
+    // A closing quote or bracket may sit after the full stop.
+    ["Readers who ask \u201cWhy?\u201d", 1, true],
+    ["The answer (finally.)", 1, true],
+    // A fragment after the last full stop leaves the text unfinished.
+    ["Leaders listen. trailing fragment", 1, false],
+    ["anything loud", 0, false],
+  ]
+
+  for (const [text, count, closed] of cases) {
+    it(`reads ${JSON.stringify(text)} as ${count} ${closed ? "closed" : "open"}`, () => {
+      expect(scanSentences(text)).toEqual({ count, closed })
+    })
+  }
 })
 
 describe("validateDesignStory", () => {
@@ -125,21 +160,39 @@ describe("validateDesignStory", () => {
   })
 
   it("refuses prose that never finishes its sentence", () => {
-    const problems = validateDesignStory({ ...good, notFor: "anything loud" })
-    expect(problems.map((problem) => problem.code)).toContain("unfinished_sentence")
+    expect(validateDesignStory({ ...good, notFor: "anything loud" }).map((p) => p.code)).toContain(
+      "unfinished_sentence",
+    )
+    expect(
+      validateDesignStory({ ...good, notFor: "Anything loud. and a fragment" }).map((p) => p.code),
+    ).toContain("unfinished_sentence")
   })
 
-  it("refuses a name written as a sentence", () => {
-    const problems = validateDesignStory({ ...good, name: "Ledger." })
-    expect(problems.map((problem) => problem.code)).toContain("name_reads_as_sentence")
+  it("accepts an abbreviation without counting it as a sentence", () => {
+    expect(validateDesignStory({ ...good, audience: "Deciders, e.g. a board, who read fast." })).toEqual([])
   })
 
-  it("refuses a name that squats on an industry", () => {
-    const problems = validateDesignStory({ ...good, name: "Financial Insight" })
-    expect(problems.map((problem) => problem.code)).toContain("industry_word")
+  it("refuses a name that ends on punctuation", () => {
+    expect(validateDesignStory({ ...good, name: "Ledger." }).map((p) => p.code)).toContain(
+      "name_reads_as_sentence",
+    )
   })
 
-  it("welcomes an industry in positioning and audience", () => {
+  it("allows punctuation inside a name", () => {
+    // Anchored at the end only: the rule is that a name must not read as a
+    // sentence, not that it may hold no full stop at all.
+    expect(validateDesignStory({ ...good, name: "No. 5" })).toEqual([])
+  })
+
+  it("refuses a name that answers who it is for", () => {
+    for (const name of ["Financial Insight", "Kids Education", "Enterprise", "Wealth Management"]) {
+      expect(validateDesignStory({ ...good, name }).map((p) => p.code), name).toContain(
+        "forbidden_name_word",
+      )
+    }
+  })
+
+  it("welcomes a vertical in positioning and audience", () => {
     expect(
       validateDesignStory({
         ...good,
@@ -147,5 +200,15 @@ describe("validateDesignStory", () => {
         audience: "A finance team reporting to its board.",
       }),
     ).toEqual([])
+  })
+
+  it("refuses maintainer vocabulary anywhere in the prose", () => {
+    for (const field of ["story", "positioning", "audience", "notFor"] as const) {
+      const problems = validateDesignStory({ ...good, [field]: "It picks the right face for the page." })
+      expect(problems.map((p) => [p.field, p.code]), field).toContainEqual([field, "maintainer_word"])
+    }
+    expect(
+      validateDesignStory({ ...good, story: "Nine named slots, one component, one layout." }).map((p) => p.code),
+    ).toContain("maintainer_word")
   })
 })
