@@ -51,6 +51,33 @@ describe("mergeVerdict folds the findings the render already recorded", () => {
     expect(v.findings).toContain("content-dropped")
   })
 
+  it("a vision limit cannot hold a dropping page above rework", () => {
+    const l2 = { id: page().id, verdict: "limit", note: "字体不可判读", findings: ["limit"] } as unknown as L2Verdict
+    const v = mergeVerdict(page(DROPPED), { findings: [] }, l2)
+    expect(v.verdict).toBe("rework")
+    expect(v.findings).toEqual(expect.arrayContaining(["limit", "content-dropped"]))
+  })
+
+  it("L1's own drop is a floor too, with no manifest finding to back it up", () => {
+    // `--from` reads an outside or older manifest, and `findings` is optional
+    // on a page, so a deterministic drop can arrive from L1 alone.
+    const l1 = { findings: [{ code: "content-dropped" as const, message: "1 piece of content was dropped" }] }
+    for (const verdict of ["pass", "limit"] as const) {
+      const l2 = { id: page().id, verdict, note: "看着没问题", findings: [] } as unknown as L2Verdict
+      expect(mergeVerdict(page(), l1, l2).verdict, verdict).toBe("rework")
+    }
+  })
+
+  it("a vision verdict still rules on everything that is not a content drop", () => {
+    // Truncation is on the page and a reader can judge it, and so are the
+    // ordinary geometry findings. Only the invisible loss overrides L2.
+    const truncated = [{ code: "content-truncated", message: "text was cut" }]
+    const l2 = { id: page().id, verdict: "pass", note: "读起来干净", findings: [] } as unknown as L2Verdict
+    expect(mergeVerdict(page(truncated), { findings: [] }, l2).verdict).toBe("pass")
+    const overflow = { findings: [{ code: "overflow" as const, message: "text overflows" }] }
+    expect(mergeVerdict(page(), overflow, l2).verdict).toBe("pass")
+  })
+
   it("leaves a vision rework verdict alone and still lists the drop", () => {
     const l2 = { id: page().id, verdict: "rework", note: "构图松散", findings: ["composition"] } as unknown as L2Verdict
     const v = mergeVerdict(page(DROPPED), { findings: [] }, l2)

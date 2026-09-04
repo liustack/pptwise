@@ -25,13 +25,35 @@ export function manifestFindings(page: ManifestPage): { codes: string[]; notes: 
   return { codes: rework.map((f) => f.code), notes: rework.map((f) => f.message) }
 }
 
+/**
+ * The one finding a vision model does not get a vote on.
+ *
+ * `content-dropped` is not an opinion about how a page looks. It is a count
+ * the render wrote down: this many things the author put in the IR are not on
+ * the slide, and nothing on the slide says so. A model looking at the page
+ * cannot see the absence — that is the whole reason the export refuses these
+ * decks — so a `pass` or a `limit` from L2 is not disagreement, it is the
+ * model answering a question it cannot be asked. The deterministic finding is
+ * a floor: the page is at least `rework`, whoever else looked at it.
+ *
+ * `content-truncated` is deliberately not on this list. A cut string is on
+ * the page and a reader can judge it, so it stays an ordinary finding that
+ * L2 may adjudicate. Every other L1 finding keeps its existing semantics too.
+ */
+const DETERMINISTIC_LOSS = "content-dropped"
+
+function droppedContent(l1: ReturnType<typeof auditL1>, manifestCodes: readonly string[]): boolean {
+  return manifestCodes.includes(DETERMINISTIC_LOSS) || l1.findings.some((f) => f.code === DETERMINISTIC_LOSS)
+}
+
 export function mergeVerdict(page: ManifestPage, l1: ReturnType<typeof auditL1>, l2: L2Verdict | undefined) {
   const manifest = manifestFindings(page)
+  const lost = droppedContent(l1, manifest.codes)
   if (l2) {
     const findings = [...new Set([...l1.findings.map((f) => f.code), ...l2.findings, ...manifest.codes])]
     return {
       ...l2,
-      verdict: manifest.codes.length > 0 && l2.verdict === "pass" ? "rework" : l2.verdict,
+      verdict: lost ? "rework" : l2.verdict,
       note: [l2.note, ...manifest.notes].filter(Boolean).join(" "),
       findings,
     }
