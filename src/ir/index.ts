@@ -520,7 +520,6 @@ export type FlowEdge = { from: string; to: string; label?: string }
 export type ArchitectureLayer = { title: string; items: string[] }
 export type TimelineMilestone = { date: string; title: string; desc?: string }
 export type ComparisonRow = { label: string; cells: string[] }
-export type CitationSource = { label: string; url?: string; ref?: string }
 
 function isRetiredIrVersion(input: unknown): boolean {
   if (typeof input !== "object" || input === null || Array.isArray(input)) return false
