@@ -64,7 +64,7 @@ export const traits = {
 
 export const story: DesignStory = {
   name: "Flow",
-  story: "Labelled boxes joined by arrows, with a diamond wherever the path splits. The process map drawn on a whiteboard and then drawn properly.",
+  story: "Labelled boxes joined by arrows: mark a branch as a decision and it draws as a diamond. The process map drawn on a whiteboard and then drawn properly.",
   positioning: "Choose it when the path branches on a decision and reaches a real end. Use steps for a straight sequence, cycle when the end returns to the start, and sankey when the branches carry quantities.",
   audience: "People who must know which way the work turns and when.",
   notFor: "A loop with no endpoint, which belongs in cycle.",
