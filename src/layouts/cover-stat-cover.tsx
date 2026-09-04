@@ -193,6 +193,13 @@ export const layoutDef = {
   // Does not invent a statistic. board lock.
   id: "stat-cover",
   kind: "standard",
+  story: {
+    name: "Ledger Figure",
+    story: "A number the size of the page anchors the left edge, bold and unmissable. Beneath it a single serif line reads the figure aloud, grounding the scale in a sentence.",
+    positioning: "Opens a deck that leads with one headline number and a reading of it. A title with a date kicker and an author foot, nothing more.",
+    audience: "A meeting room where the first page must land a figure before anyone reads a word.",
+    notFor: "Covers that carry a prose title rather than a number, which belong on type-rule-cover.",
+  },
   slideTypes: ["cover"],
   slots: [
     { name: "kicker", accepts: [] },

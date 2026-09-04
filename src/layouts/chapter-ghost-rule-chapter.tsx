@@ -122,6 +122,13 @@ export const layoutDef: LayoutDefinition = {
   // starts the title cluster. Theme paints the chapter field.
   id: "ghost-rule-chapter",
   kind: "standard",
+  story: {
+    name: "Ghost Bar",
+    story: "A short accent bar starts the title cluster on the left, and a ghosted chapter number at 6% opacity sinks to the lower right. The title and subheading align left under the bar.",
+    positioning: "A firm but quiet break that anchors every section with an accent bar and a barely-there number. The ghost numeral gives the page a chapter address without competing with the title.",
+    audience: "Readers at a meeting table or shared screen where the accent bar is the first thing the eye catches.",
+    notFor: "Decks that need the number to be the loudest element, which belong in poster-chapter or constellation-chapter.",
+  },
   slideTypes: ["chapter"],
   slots: [
     { name: "watermark", accepts: [] },

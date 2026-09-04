@@ -182,6 +182,13 @@ export const layoutDef: LayoutDefinition = {
   // kept inside the canvas. Theme paints the ivory field.
   id: "folio-ghost-chapter",
   kind: "standard",
+  story: {
+    name: "Folio Rule",
+    story: "A chapter kicker and a short accent rule sit above a left-aligned title, with a ghosted single-digit chapter number filling the lower right at near-background opacity.",
+    positioning: "A bookish, paper-toned break that labels each chapter the way a folio numbers its pages. The ghost numeral gives spatial weight without competing for attention.",
+    audience: "Readers at a meeting table or on a laptop, close enough to catch the kicker and the quiet rule.",
+    notFor: "Decks that need a loud or full-bleed break, which belong in fashion-chapter or banner-chapter.",
+  },
   slideTypes: ["chapter"],
   slots: [
     { name: "watermark", accepts: [] },

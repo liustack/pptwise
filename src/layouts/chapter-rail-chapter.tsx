@@ -244,6 +244,13 @@ export const layoutDef: LayoutDefinition = {
   // a horizontal chapter-progress dot row + track → rail.
   id: "rail-chapter",
   kind: "standard",
+  story: {
+    name: "Progress Dots",
+    story: "A centered title and italic subheading sit over the theme color field, with a faint watermark number behind them. A horizontal row of dots near the bottom marks how far through the deck this chapter falls.",
+    positioning: "A color-field break with a built-in progress indicator. The dot row shows the audience where they are in a multi-chapter arc, so it suits longer decks that need orientation.",
+    audience: "Presenters in a lecture room or all-hands meeting where the audience needs to know how many sections remain.",
+    notFor: "Decks with only one or two chapters, where the progress dots add nothing, which belong in banner-chapter.",
+  },
   slideTypes: ["chapter"],
   slots: [
     { name: "watermark", accepts: [] },

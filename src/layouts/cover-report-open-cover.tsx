@@ -195,6 +195,13 @@ export const layoutDef = {
   // Missing date/authors skips the sign-off. No invented privacy line.
   id: "report-open-cover",
   kind: "standard",
+  story: {
+    name: "Report Card",
+    story: "A left-aligned title in the upper third, a smaller subtitle below it, and an author-and-date sign-off at the foot. The page is open paper with generous white space on the right.",
+    positioning: "Opens a deck that carries a document title, an explanatory subtitle, and a sign-off line. No image, no number, no colored field.",
+    audience: "A shared PDF, a printed handout, or a laptop screen where the cover is read at arm's length.",
+    notFor: "Covers that need a centered title or a colored meta block, which belong on double-frame-cover or thesis-plate-cover.",
+  },
   slideTypes: ["cover"],
   slots: [
     { name: "kicker", accepts: [] },

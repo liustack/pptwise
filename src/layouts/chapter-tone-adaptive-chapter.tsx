@@ -143,6 +143,13 @@ export const layoutDef: LayoutDefinition = {
   // centered heading only — no kicker, no subheading render at all.
   id: "tone-adaptive-chapter",
   kind: "standard",
+  story: {
+    name: "Solo Title",
+    story: "Nothing but a centered title at display size, with a faint chapter number behind it. When a background image is present, a dark scrim drops in and the text turns white.",
+    positioning: "The quietest section break in the set: just a title and empty space. It works as a breath between chapters when no subtitle or kicker is needed.",
+    audience: "Any screen or print size where a single centered line is enough to signal the next section.",
+    notFor: "Chapters that carry a subtitle or need a visible number, which belong in rail-chapter or banner-chapter.",
+  },
   slideTypes: ["chapter"],
   slots: [
     { name: "watermark", accepts: [] },

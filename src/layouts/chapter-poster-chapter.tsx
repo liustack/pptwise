@@ -160,6 +160,13 @@ export const layoutDef: LayoutDefinition = {
   // large opaque chapter-number watermark, heading. No subheading render.
   id: "poster-chapter",
   kind: "standard",
+  story: {
+    name: "Broadsheet Numeral",
+    story: "A large opaque chapter number in the primary color sits top-left, with the title below it and two full-width hairlines framing the top and bottom. The organization name sits small in the upper right.",
+    positioning: "A vertical-rhythm break that reads like a newspaper section front. The number and title stack on the left, giving each chapter the weight of a headline above the fold.",
+    audience: "Viewers in a boardroom or on screen where the oversized number registers as a section flag.",
+    notFor: "Decks that need a centered or symmetrical section break, which belong in rail-chapter or banner-chapter.",
+  },
   slideTypes: ["chapter"],
   slots: [
     { name: "kicker", accepts: [] },

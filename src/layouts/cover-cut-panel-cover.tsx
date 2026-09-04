@@ -194,6 +194,13 @@ export const layoutDef = {
   // Empty heading invents no ignition line. Title stays inside the panel.
   id: "cut-panel-cover",
   kind: "standard",
+  story: {
+    name: "Cut Panel",
+    story: "A diagonal-cut trapezoid panel sits on the left carrying the title, with a bright accent strip along the cut edge. The right half of the page stays open.",
+    positioning: "Opens a deck whose cover needs one punchy line inside a shaped panel. A subtitle and a date foot can appear, but the right side stays empty.",
+    audience: "A projected screen in a large room where the angled cut grabs attention before the title is read.",
+    notFor: "Covers that need two full-width title lines or a centered axis, which belong on chalk-band-cover or double-frame-cover.",
+  },
   slideTypes: ["cover"],
   slots: [
     { name: "kicker", accepts: [] },

@@ -191,6 +191,13 @@ export const layoutDef: LayoutDefinition = {
   branding: "none",
   id: "gauge-verdict",
   kind: "standard",
+  story: {
+    name: "Rated Verdict",
+    story: "A bold title anchors the upper left with a gold underline bar beneath it, then three numbered evidence columns spread across the bottom. Each column carries a tick rule and a short line of proof.",
+    positioning: "Opens a deck that leads with a conclusion and up to three supporting facts. A title, a subtitle, and a short bullet list on one page.",
+    audience: "A review board or a meeting table where the verdict and its evidence must be visible in one glance.",
+    notFor: "Covers that carry a title alone with no supporting evidence, which belong on pledge-open-cover.",
+  },
   slideTypes: ["cover"],
   slots: [
     { name: "kicker", accepts: [] },

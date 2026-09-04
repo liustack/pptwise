@@ -218,6 +218,13 @@ export const layoutDef = {
   // cover sentence. Paper field stays on the theme default background.
   id: "double-frame-cover",
   kind: "standard",
+  story: {
+    name: "Double Frame",
+    story: "Two nested rectangles, one in a muted hairline and one in the accent color, center the page. Inside the frames a large title, a spaced year, and a quiet colophon stack on the vertical axis.",
+    positioning: "Opens a deck whose cover is a centered ceremonial frame: a title, a date, and an author line. No sidebar, no image, no body text.",
+    audience: "A printed card, a projected ceremony screen, or a formal report where the double border says the occasion matters.",
+    notFor: "Covers that need left-aligned type or a color field, which belong on type-rule-cover or ikb-field-cover.",
+  },
   slideTypes: ["cover"],
   slots: [
     { name: "kicker", accepts: [] },

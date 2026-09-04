@@ -270,6 +270,13 @@ export const layoutDef = {
   suppressMotif: true,
   id: "show-headline",
   kind: "standard",
+  story: {
+    name: "Split Stage",
+    story: "The page splits in two: a dark left half carries oversized display type with a brand name and a rule, while the right half fills with the accent color or an image. A large year floats on the right.",
+    positioning: "Opens a deck that pairs a display title with a hero image or a color block. A brand line, a date, and a byline share the page.",
+    audience: "A large projected screen where the split and the extreme type size read from the back of a hall.",
+    notFor: "Covers that need a centered single-surface title, which belong on double-frame-cover or poster-center.",
+  },
   paintsOwnBackground: true,
   slideTypes: ["cover"],
   slots: [

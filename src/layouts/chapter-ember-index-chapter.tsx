@@ -127,6 +127,13 @@ export const layoutDef: LayoutDefinition = {
   // the wedge keeps the corner.
   id: "ember-index-chapter",
   kind: "standard",
+  story: {
+    name: "Wedge Index",
+    story: "An opaque accent chapter number dominates the upper left, with the title directly below it. A small triangular wedge in the lower-right corner marks the end of the page.",
+    positioning: "A punchy, left-weighted break that leads with a bold number. The corner wedge acts as a tail light, giving the break a directional push toward the content that follows.",
+    audience: "Viewers at a pitch or presentation where each section opens with a confident number.",
+    notFor: "Decks that need a quiet or centered break, which belong in verse-chapter or gilt-ordinal-chapter.",
+  },
   slideTypes: ["chapter"],
   slots: [
     { name: "watermark", accepts: [] },

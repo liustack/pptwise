@@ -230,6 +230,13 @@ export const layoutDef = {
   // red-head line, not a fake agency name.
   id: "red-head-cover",
   kind: "standard",
+  story: {
+    name: "Red Seal",
+    story: "The organization name spans the top in large red type, then a thick red rule and a thin gold rule run across the page. The document title drops in centered ink below, with a date and author foot at the bottom.",
+    positioning: "Opens a deck that names an issuing body and a document title beneath a colored rule pair. A formal dispatch page with no image and no body text.",
+    audience: "A printed memo or a projected briefing where the red header signals the page is issued under a name.",
+    notFor: "Covers that omit the issuing body or use left-aligned type, which belong on type-rule-cover.",
+  },
   slideTypes: ["cover"],
   slots: [
     { name: "kicker", accepts: [] },

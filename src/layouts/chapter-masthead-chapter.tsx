@@ -150,6 +150,13 @@ export const layoutDef: LayoutDefinition = {
   // chapter-number watermark.
   id: "masthead-chapter",
   kind: "standard",
+  story: {
+    name: "Hairline Index",
+    story: "Two hairlines run the full width, one near the top and one lower, bracketing a left-aligned title and an italic subheading. A large translucent chapter number sinks to the lower right as a watermark.",
+    positioning: "A measured, editorial break that numbers each section without raising its voice. The hairlines frame the title cluster, giving the page the feel of a broadsheet header.",
+    audience: "Readers at a meeting table or on a laptop, close enough to read the italic subheading.",
+    notFor: "Decks that need a bold color-block section reset, which belong in banner-chapter.",
+  },
   slideTypes: ["chapter"],
   slots: [
     { name: "rule", accepts: [] },

@@ -187,6 +187,13 @@ export const layoutDef = {
   // title. No header band.
   id: "capsule-open-cover",
   kind: "standard",
+  story: {
+    name: "Date Card",
+    story: "A large left-aligned title on open paper, followed by a bold date line in the primary color. The page is mostly white space, letting the title and the date breathe.",
+    positioning: "Opens a deck whose cover carries a title and a date or event line. No subtitle block, no author attribution, no image.",
+    audience: "A shared screen or tablet where one title and one date are all the reader needs to orient.",
+    notFor: "Covers that need a subtitle or author foot, which belong on report-open-cover.",
+  },
   slideTypes: ["cover"],
   slots: [
     { name: "kicker", accepts: [] },
