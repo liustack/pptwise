@@ -3,6 +3,7 @@ import { COMPONENT_TYPES } from "@/ir"
 import { COMPONENT_STORY_TYPES, componentStory } from "@/ir/components/stories"
 import { KIND_STORIES } from "@/ir/kind-stories"
 import { KIND_VALUES } from "@/ir/narrative-values"
+import { LAYOUT_REGISTRY } from "@/layouts/registry"
 import { THEME_DEFINITIONS } from "@/themes/definitions"
 import {
   isValidDesignStory,
@@ -13,14 +14,15 @@ import {
 } from "./design-story"
 
 /**
- * Every theme, kind, and component must carry a design story, and this test
- * is what keeps that true as objects are added.
+ * Every theme, kind, face, and component must carry a design story, and this
+ * test is what keeps that true as objects are added.
  *
- * Faces are deliberately out of the sweep. `LayoutDefinition` has the field,
- * no face fills it yet, and the copy for the general faces lands in its own
- * batch — adding 134 ids to the baseline below would bury the one thing it
- * is for. Add the face registry here in the same change that writes the
- * first face story.
+ * The face registry is the whole set of general faces: a theme's sparse
+ * dressings are keyed by theme *and* face id in `layouts/sparse`, so they are
+ * variants of the faces swept here rather than faces of their own, and they
+ * inherit the story of the one they dress. That is why nothing is subtracted
+ * from the registry below — there is no list of exceptions to keep, because
+ * the two sets live in two tables.
  *
  * `STORYLESS_BASELINE` is a frozen licence, not a work list. It was frozen
  * empty, because every theme, kind, and component was written before this
@@ -46,11 +48,12 @@ function subjects(): readonly StoriedObject[] {
     story: theme.story,
   }))
   const kinds = KIND_VALUES.map((kind) => ({ id: `kind:${kind}`, story: KIND_STORIES[kind] as DesignStory }))
+  const faces = Object.values(LAYOUT_REGISTRY).map((face) => ({ id: `layout:${face.id}`, story: face.story }))
   const components = COMPONENT_TYPES.map((type) => ({
     id: `component:${type}`,
     story: componentStory(type),
   }))
-  return [...themes, ...kinds, ...components]
+  return [...themes, ...kinds, ...faces, ...components]
 }
 
 describe("design story drift", () => {
@@ -62,7 +65,7 @@ describe("design story drift", () => {
     expect(STORYLESS_BASELINE.filter((id) => !FROZEN_BASELINE.includes(id)), "the baseline is frozen — an object with no story is written, not licenced").toEqual([])
   })
 
-  it("gives every theme, kind, and component a story", () => {
+  it("gives every theme, kind, face, and component a story", () => {
     const storyless = subjects()
       .filter((subject) => subject.story === undefined)
       .map((subject) => subject.id)
