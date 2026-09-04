@@ -348,17 +348,23 @@ export const COMPONENT_BUILDERS: Record<string, (lex: Lexicon) => Component> = {
     substitutes: { items: lex.threats.slice(2, 4), intensity: "low" },
   }),
 
+  // Three items in the three tall spanning columns, two in the stacked half
+  // cells and the bottom band — the shape a real canvas has, and the shape
+  // that fits. Three everywhere measured 474px at the 1088px deck width
+  // while the content rect a `hierarchy` face hands a full-body component is
+  // 448px, so the two half cells with a two-line title and both bottom-band
+  // blocks were dropping their last item on every theme.
   bmc: (lex) => ({
     type: "bmc",
     key_partners: slice(lex.orgs, 3),
-    key_activities: lex.phrases.slice(0, 3),
-    key_resources: lex.phrases.slice(3, 6),
+    key_activities: lex.phrases.slice(0, 2),
+    key_resources: lex.phrases.slice(3, 5),
     value_propositions: lex.strengths.slice(0, 3),
-    customer_relationships: lex.phrases.slice(6, 9),
-    channels: slice(lex.labels, 3, 12),
+    customer_relationships: lex.phrases.slice(6, 8),
+    channels: slice(lex.labels, 2, 12),
     customer_segments: slice(lex.labels, 3, 8),
-    cost_structure: lex.weaknesses.slice(0, 3),
-    revenue_streams: lex.opportunities.slice(0, 3),
+    cost_structure: lex.weaknesses.slice(0, 2),
+    revenue_streams: lex.opportunities.slice(0, 2),
   }),
 
   // ── People and brands ──────────────────────────────────────────────────
