@@ -24,6 +24,9 @@ const ctx: ComponentCtx = {
   },
 }
 
+/** The notch's natural width, mirrored from the component's own constant. */
+const PHONE_NOTCH_NATURAL_W = 90
+
 function svg(node: React.ReactElement) {
   return render(<svg>{node}</svg>)
 }
@@ -305,5 +308,117 @@ describe("device_mockup frame color derivation (review fix round, Important-2)",
     // its own (now-derived) pill fill, not the ambient page background.
     const urlText = Array.from(container.querySelectorAll("text")).find((t) => t.textContent?.includes("app.example.com"))!
     expect(contrastRatio(urlText.getAttribute("fill")!, pillFill)).toBeGreaterThanOrEqual(3)
+  })
+})
+
+// ── slot boundary table ────────────────────────────────────────────────────
+//
+// A device frame must never draw outside the box it was handed, and every
+// rect it draws must have a real size. Three ways that used to break: a floor
+// raised a short slot's frame back above the slot's own height (400x20 drew a
+// 53x33 window), the notch and home indicator were fixed at 90px and hung off
+// the sides of any narrower body (600x100 drew a 47px phone), and a slot
+// narrower than two bezels produced a screen of negative width (15x100).
+//
+// Below a legal minimum the component declines with a drop mark instead of
+// drawing a broken device, so each row here is one of exactly two outcomes.
+describe("device_mockup slot boundaries", () => {
+  const SLOTS: readonly { w: number; h?: number }[] = [
+    { w: 1120 },
+    { w: 1120, h: 200 },
+    { w: 544, h: 340 },
+    { w: 400, h: 20 },
+    { w: 400, h: 64 },
+    { w: 600, h: 100 },
+    { w: 300, h: 300 },
+    { w: 100, h: 400 },
+    { w: 72, h: 64 },
+    { w: 60, h: 400 },
+    { w: 15, h: 100 },
+    { w: 15, h: 15 },
+    { w: 1, h: 1 },
+  ]
+
+  /** Every drawn box, in the slot's own coordinates. */
+  function drawnBoxes(root: Element): { x: number; y: number; w: number; h: number }[] {
+    const out: { x: number; y: number; w: number; h: number }[] = []
+    const walk = (el: Element, dx: number, dy: number) => {
+      const transform = el.getAttribute("transform") ?? ""
+      const m = transform.match(/translate\(([-\d.]+),\s*([-\d.]+)\)/)
+      const ox = dx + (m ? Number(m[1]) : 0)
+      const oy = dy + (m ? Number(m[2]) : 0)
+      if (el.tagName === "rect" || el.tagName === "image") {
+        out.push({
+          x: ox + Number(el.getAttribute("x") ?? 0),
+          y: oy + Number(el.getAttribute("y") ?? 0),
+          w: Number(el.getAttribute("width") ?? 0),
+          h: Number(el.getAttribute("height") ?? 0),
+        })
+      }
+      for (const child of Array.from(el.children)) walk(child, ox, oy)
+    }
+    walk(root, 0, 0)
+    return out
+  }
+
+  it.each(["browser", "phone"] as const)("%s stays inside every slot or declines", (device) => {
+    const offenders: string[] = []
+    for (const slot of SLOTS) {
+      const component = {
+        type: "device_mockup" as const,
+        device,
+        asset_id: "dash",
+        caption: "Live health board",
+      }
+      const { container } = svg(
+        deviceMockup.render(component, { x: 0, y: 0, w: slot.w, ...(slot.h === undefined ? {} : { h: slot.h }) }, ctx),
+      )
+      const label = `${device} ${slot.w}x${slot.h ?? "auto"}`
+      const framed = container.querySelector(`[data-device-mockup='${device}']`)
+      if (!framed) {
+        // The only legal alternative is an explicit drop.
+        if (!container.querySelector("[data-dropped]")) offenders.push(`${label}: neither frame nor drop mark`)
+        continue
+      }
+      // Height is unbounded only when the caller named no height.
+      const limitH = slot.h ?? Number.POSITIVE_INFINITY
+      for (const box of drawnBoxes(container)) {
+        if (box.w < 0 || box.h < 0) offenders.push(`${label}: negative box ${box.w}x${box.h}`)
+        if (box.x < -0.5 || box.y < -0.5) offenders.push(`${label}: box starts at ${box.x},${box.y}`)
+        if (box.x + box.w > slot.w + 0.5) offenders.push(`${label}: box right edge ${box.x + box.w} > ${slot.w}`)
+        if (box.y + box.h > limitH + 0.5) offenders.push(`${label}: box bottom edge ${box.y + box.h} > ${limitH}`)
+      }
+    }
+    expect(offenders).toEqual([])
+  })
+
+  it("declines a slot too short for a window instead of overflowing it", () => {
+    const component = { type: "device_mockup" as const, device: "browser" as const, asset_id: "dash" }
+    const { container } = svg(deviceMockup.render(component, { x: 0, y: 0, w: 400, h: 20 }, ctx))
+    expect(container.querySelector("[data-device-mockup]")).toBeNull()
+    expect(container.querySelector("[data-dropped]")).not.toBeNull()
+  })
+
+  it("keeps the notch and the home indicator inside a narrow body", () => {
+    const component = { type: "device_mockup" as const, device: "phone" as const, asset_id: "dash" }
+    const { container } = svg(deviceMockup.render(component, { x: 0, y: 0, w: 600, h: 100 }, ctx))
+    const body = container.querySelector("rect")
+    const bodyW = Number(body?.getAttribute("width"))
+    expect(bodyW).toBeLessThan(PHONE_NOTCH_NATURAL_W)
+    for (const rect of Array.from(container.querySelectorAll("rect"))) {
+      expect(Number(rect.getAttribute("width"))).toBeLessThanOrEqual(bodyW)
+    }
+  })
+
+  it("declines a body narrower than its own two bezels", () => {
+    const component = { type: "device_mockup" as const, device: "phone" as const, asset_id: "dash" }
+    const { container } = svg(deviceMockup.render(component, { x: 0, y: 0, w: 15, h: 100 }, ctx))
+    expect(container.querySelector("[data-device-mockup]")).toBeNull()
+    expect(container.querySelector("[data-dropped]")).not.toBeNull()
+  })
+
+  it("reserves nothing in measure for a slot it would decline", () => {
+    expect(deviceMockup.measure({ type: "device_mockup", device: "browser", asset_id: "dash" }, 40, ctx)).toBe(0)
+    expect(deviceMockup.measure({ type: "device_mockup", device: "phone", asset_id: "dash" }, 10, ctx)).toBe(0)
   })
 })

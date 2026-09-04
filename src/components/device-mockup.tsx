@@ -1,5 +1,6 @@
 import type { Component } from "@/ir"
 import { fitSvgLine } from "../lib/svg-text-layout"
+import { DroppedContentMarker } from "../render/drop-marker"
 import { metaInk, readableOn } from "../render/ink"
 import { mixHex } from "./color-mix"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
@@ -54,8 +55,21 @@ const URL_PILL_MIX = FRAME_BAR_MIX * 2
 const BROWSER_ASPECT = 1.6
 
 /**
- * The browser frame's drawn size inside a `w`-wide slot, capped at
- * `MAX_DEVICE_H` and at `maxH` when the slot is shorter than that.
+ * Smallest browser frame that is still a browser window.
+ *
+ * Width comes from the window bar's own furniture: three traffic-light dots
+ * inset `DOT_START_X` from the left edge need the same inset clear on the
+ * right, so the bar cannot be narrower than both insets plus the dots and the
+ * gaps between them. Height is the bar plus a screen at least as deep as the
+ * bar itself — under that the "window" is more chrome than content, and what
+ * it frames is no longer a screen anyone can read.
+ */
+const MIN_BROWSER_W = DOT_START_X * 2 + DOT_R * 6 + DOT_GAP * 2
+const MIN_BROWSER_H = FRAME_BAR_H * 2
+
+/**
+ * The browser frame's drawn size inside a `w`-wide, optionally `maxH`-tall
+ * slot, or `null` when the slot is too small to hold a legal window.
  *
  * The cap takes width off the frame, not depth. Capping the height alone left
  * the frame as wide as its slot: in a 1104px content rect the window came out
@@ -64,11 +78,18 @@ const BROWSER_ASPECT = 1.6
  * header and the chart's axis were both off-screen. The frame keeps
  * `BROWSER_ASPECT` and is centered in the slot, the same posture
  * `phoneFrameSize` already takes for a portrait device in a wide column.
+ *
+ * Nothing here ever exceeds the slot. A floor that raised a short slot's frame
+ * back up to a minimum bar height did exactly that — a 400x20 slot drew a
+ * 53x33 window, 13px taller than the box it was given. A slot that cannot hold
+ * the smallest legal window gets `null` and the component declines.
  */
-function browserFrameSize(w: number, maxH?: number): { w: number; h: number } {
+function browserFrameSize(w: number, maxH?: number): { w: number; h: number } | null {
   const ceiling = Math.min(MAX_DEVICE_H, maxH ?? Number.POSITIVE_INFINITY)
-  const h = Math.max(FRAME_BAR_H + 1, Math.min(Math.round(w / BROWSER_ASPECT), ceiling))
-  return { w: Math.min(w, Math.round(h * BROWSER_ASPECT)), h }
+  const h = Math.min(Math.round(w / BROWSER_ASPECT), ceiling)
+  const frameW = Math.min(w, Math.round(h * BROWSER_ASPECT))
+  if (frameW < MIN_BROWSER_W || h < MIN_BROWSER_H) return null
+  return { w: frameW, h }
 }
 
 /**
@@ -105,6 +126,29 @@ const PHONE_HOME_H = 4
 const PHONE_HOME_MARGIN = 8
 
 /**
+ * Smallest phone body that can still carry its own furniture.
+ *
+ * Width: two bezels plus a screen at least as wide as the notch is deep —
+ * under that the notch comes out wider than it is tall and stops reading as a
+ * notch. Height: two bezels plus the home indicator and the margin holding it
+ * off the bottom edge.
+ */
+const MIN_PHONE_W = PHONE_BEZEL * 2 + PHONE_NOTCH_H
+const MIN_PHONE_H = PHONE_BEZEL * 2 + PHONE_HOME_MARGIN + PHONE_HOME_H
+
+/**
+ * A notch or home indicator never wider than the screen it sits over.
+ *
+ * Both were fixed at 90px, so a body narrower than that hung them off its own
+ * sides: a 600x100 slot draws a 47px-wide phone with 90px controls, 21px of
+ * each protruding into the page on both sides. They now shrink with the body
+ * and keep the constants as their natural size on a body wide enough for them.
+ */
+function phoneControlW(deviceW: number, naturalW: number): number {
+  return Math.min(naturalW, deviceW - PHONE_BEZEL * 2)
+}
+
+/**
  * Phone frame's own natural size at a `MAX_DEVICE_H`-tall budget, clamped to
  * the column width `w` when the column itself is narrower than that natural
  * width (裁定 3's own flagged risk: "phone 窄高构图在列布局里的表现要人检" —
@@ -112,16 +156,18 @@ const PHONE_HOME_MARGIN = 8
  * a portrait aspect instead of a landscape one). The device is centered
  * horizontally within `w` at render time — a phone mockup is never
  * stretched to fill a wide column, it stays phone-shaped.
+ *
+ * `null` when the slot cannot hold a legal body. The old floor forced a body
+ * at least `PHONE_BEZEL * 2 + 1` deep whatever the slot said, and clamped no
+ * width at all, so a 15px-wide slot produced a body narrower than its own two
+ * bezels and a screen of negative width.
  */
-function phoneFrameSize(w: number, maxH?: number): { w: number; h: number } {
-  if (maxH != null && maxH < MAX_DEVICE_H) {
-    const deviceH = Math.max(PHONE_BEZEL * 2 + 1, Math.floor(maxH))
-    const deviceW = Math.min(w, Math.floor(deviceH / PHONE_ASPECT))
-    return { w: deviceW, h: Math.round(deviceW * PHONE_ASPECT) }
-  }
-  let deviceW = Math.round(MAX_DEVICE_H / PHONE_ASPECT)
-  if (deviceW > w) deviceW = w
+function phoneFrameSize(w: number, maxH?: number): { w: number; h: number } | null {
+  const ceiling = Math.min(MAX_DEVICE_H, maxH ?? Number.POSITIVE_INFINITY)
+  const budgetH = Math.min(Math.round(w * PHONE_ASPECT), ceiling)
+  const deviceW = Math.min(w, Math.floor(budgetH / PHONE_ASPECT))
   const deviceH = Math.round(deviceW * PHONE_ASPECT)
+  if (deviceW < MIN_PHONE_W || deviceH < MIN_PHONE_H) return null
   return { w: deviceW, h: deviceH }
 }
 
@@ -184,7 +230,10 @@ function CaptionBand({
 
 export const deviceMockup: SvgComponent<DeviceMockupComponent> = {
   measure(component, w) {
-    return component.device === "browser" ? browserFrameSize(w).h : phoneFrameSize(w).h
+    // A slot too small for a legal frame reserves nothing, and `render`
+    // declines it with a drop mark rather than drawing an illegal device.
+    const size = component.device === "browser" ? browserFrameSize(w) : phoneFrameSize(w)
+    return size?.h ?? 0
   },
   render(component, box, ctx) {
     const src = ctx.images?.[component.asset_id]?.src
@@ -194,7 +243,12 @@ export const deviceMockup: SvgComponent<DeviceMockupComponent> = {
     const alt = ctx.images?.[component.asset_id]?.alt
 
     if (component.device === "browser") {
-      const { w: frameW, h: frameH } = browserFrameSize(box.w, box.h)
+      const size = browserFrameSize(box.w, box.h)
+      // Declined, not squashed: below `MIN_BROWSER_W` x `MIN_BROWSER_H` there
+      // is no window left to draw, and a frame that spills past its own slot
+      // is worse than an honest drop mark.
+      if (!size) return <DroppedContentMarker count={1} />
+      const { w: frameW, h: frameH } = size
       const offsetX = (box.w - frameW) / 2
       const screenH = frameH - FRAME_BAR_H
       const dotsRightEdge = DOT_START_X + 2 * (DOT_R * 2 + DOT_GAP) + DOT_R
@@ -301,8 +355,13 @@ export const deviceMockup: SvgComponent<DeviceMockupComponent> = {
     }
 
     // device === "phone"
-    const { w: deviceW, h: deviceH } = phoneFrameSize(box.w, box.h)
+    const phone = phoneFrameSize(box.w, box.h)
+    if (!phone) return <DroppedContentMarker count={1} />
+    const { w: deviceW, h: deviceH } = phone
     const offsetX = (box.w - deviceW) / 2
+    const notchW = phoneControlW(deviceW, PHONE_NOTCH_W)
+    const homeW = phoneControlW(deviceW, PHONE_HOME_W)
+    const bodyRadius = Math.min(PHONE_RADIUS, deviceW / 2, deviceH / 2)
     const screenX = PHONE_BEZEL
     const screenY = PHONE_BEZEL
     const screenW = deviceW - PHONE_BEZEL * 2
@@ -310,7 +369,7 @@ export const deviceMockup: SvgComponent<DeviceMockupComponent> = {
 
     return (
       <g data-device-mockup="phone" transform={`translate(${box.x + offsetX},${box.y})`}>
-        <rect x={0} y={0} width={deviceW} height={deviceH} rx={PHONE_RADIUS} fill={ctx.colors.border ?? ctx.colors.muted} />
+        <rect x={0} y={0} width={deviceW} height={deviceH} rx={bodyRadius} fill={ctx.colors.border ?? ctx.colors.muted} />
         {/* Square-cornered on purpose (review fix round, Minor-1): this rect
             is always fully occluded by whatever renders on top of it — the
             asset <image> at the exact same box (no corner clipping in the
@@ -338,18 +397,18 @@ export const deviceMockup: SvgComponent<DeviceMockupComponent> = {
         </g>
         {/* notch */}
         <rect
-          x={(deviceW - PHONE_NOTCH_W) / 2}
+          x={(deviceW - notchW) / 2}
           y={0}
-          width={PHONE_NOTCH_W}
-          height={PHONE_NOTCH_H}
-          rx={PHONE_NOTCH_H / 2}
+          width={notchW}
+          height={Math.min(PHONE_NOTCH_H, screenH)}
+          rx={Math.min(PHONE_NOTCH_H, screenH) / 2}
           fill={ctx.colors.border ?? ctx.colors.muted}
         />
         {/* home indicator */}
         <rect
-          x={(deviceW - PHONE_HOME_W) / 2}
+          x={(deviceW - homeW) / 2}
           y={deviceH - PHONE_HOME_MARGIN - PHONE_HOME_H}
-          width={PHONE_HOME_W}
+          width={homeW}
           height={PHONE_HOME_H}
           rx={PHONE_HOME_H / 2}
           fill={ctx.colors.surface}
