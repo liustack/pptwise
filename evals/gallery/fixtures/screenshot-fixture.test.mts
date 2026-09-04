@@ -1,67 +1,62 @@
 // @vitest-environment node
 //
-// The gallery's `device_mockup` asset is a contract, not a decoration.
+// The gallery's `device_mockup` assets are a contract, not decoration.
 //
-// Every mockup specimen in the review matrix is this one file behind a device
-// frame, and the frame's geometry assumes a 16:9 screen. A fixture that drifts
-// off 1280x720 gets sliced by `preserveAspectRatio` and the review starts
-// judging a crop instead of the page. It also has to stay a file a reviewer
-// can read: the asset this replaced was generated with a prompt that asked for
-// the letters to be unreadable, and nobody noticed for a release.
+// Every mockup specimen in the review matrix is one of these two files behind
+// a device frame, and each frame's geometry assumes its picture's shape: 16:9
+// behind the browser, 9:19 behind the phone. A fixture that drifts off its size
+// gets sliced by `preserveAspectRatio` and the review starts judging a crop
+// instead of the page. They also have to stay files a reviewer can read: the
+// asset they replaced was generated with a prompt that asked for the letters to
+// be unreadable, and nobody noticed for a release.
 //
-// Four things are checked, and only one of them depends on the machine.
+// Five things are checked, and only one of them depends on the machine.
 //
-//   dimensions and size budget   the file's own shape
-//   encoder signature           the committed pixels re-encoded at the
-//                               declared quality come back the same size, so
-//                               editing ENCODER without regenerating goes red
-//   provenance digests          the IR and the whole recipe, exact
-//   pixel comparison            the generator is run and its output compared
-//                               to the committed file
+//   dimensions and budget   the file's own shape, read from its frame header
+//   encoder markers         the sampling factors, scan type and quantization
+//                           tables the file actually carries, against a
+//                           re-encode of its own pixels with the recorded
+//                           recipe — so an edit to the recipe that never
+//                           reached the bytes goes red
+//   provenance digests      the page and the whole recipe, exact
+//   pixel comparison        the generator is run and its output compared to
+//                           the committed file
 //
-// The first three hold anywhere. The last cannot: the page names a stack of
-// CJK faces, and a machine that resolves it to a different face draws the same
-// page in different glyphs. Measured on substituted faces, that lands well
-// past any tolerance wide enough to be worth having — Helvetica Neue, Arial
-// and Verdana all trip the loud-pixel share, and Noto Sans CJK SC trips both.
-// Widening the tolerance to swallow them would swallow real regressions too.
+// The first three hold anywhere. Quantization tables come from the quality and
+// the table selection, never from the picture, so they travel between encoders:
+// measured here, sharp, cjpeg and ImageMagick all land within 0.03% on size and
+// identical on tables. Size is logged rather than asserted — quality 87 and 89
+// both sit inside 1.5% of 88, which is why it could never carry this proof.
 //
-// So the pixel step runs only when this machine resolves the page's font stack
-// to the same face the committed bytes were drawn with, and otherwise skips
-// with the reason printed. Byte identity is never the contract: sharp's libvips
-// build differs per platform too.
+// The pixel comparison cannot travel: the pages name a stack of CJK faces, and
+// a machine that resolves it to a different face draws the same page in
+// different glyphs. Measured on substituted faces that lands well past any
+// tolerance worth having — Helvetica Neue, Arial and Verdana all trip the
+// loud-pixel share, and Noto Sans CJK SC trips both. So it runs only when this
+// machine resolves the stack to the face the committed bytes were drawn with,
+// and otherwise skips with the reason printed.
 
 import { readFileSync } from "node:fs"
 import { resolve } from "node:path"
 import sharp from "sharp"
 import { describe, expect, it } from "vitest"
 import {
-  ENCODER,
-  resolvedScreenshotFace,
-  FIXTURE_H,
-  FIXTURE_JPG,
-  FIXTURE_JSON,
-  FIXTURE_W,
-  renderScreenshotJpeg,
-  screenshotIrDigest,
-  screenshotRecipeDigest,
+  FIXTURES,
+  RECIPE,
+  fixtureRecipeDigest,
+  fixtureSourceDigest,
+  renderFixtureJpeg,
+  resolvedFixtureFace,
+  type FixtureSpec,
 } from "../../../scripts/make-screenshot-fixture.mts"
+import { readJpegMarkers } from "./jpeg-markers"
 
-// Vitest runs from the repository root, which is what the fixture constants
-// are relative to.
-const JPG = resolve(process.cwd(), FIXTURE_JPG)
-const JSON_PATH = resolve(process.cwd(), FIXTURE_JSON)
+// Vitest runs from the repository root, which is what the fixture paths are
+// relative to.
+const at = (p: string) => resolve(process.cwd(), p)
 
-/** Budget, not a measurement: the gallery ships this file in every page. */
+/** Budget, not a measurement: the gallery ships these files in every page. */
 const MAX_BYTES = 150 * 1024
-
-/**
- * How far the committed file's size may sit from a re-encode of its own pixels
- * at the declared quality. Measured here: quality 88 reproduces the size to
- * 0.0%, quality 85 lands at 4.0%, quality 60 at 53.1%. 2% is comfortably above
- * the rounding and below any real edit.
- */
-const MAX_SIZE_DRIFT = 0.02
 
 /**
  * Tolerances for "the same picture", set from measurement rather than taste.
@@ -71,13 +66,6 @@ const MAX_SIZE_DRIFT = 0.02
  *   regenerated on this machine   mean 0        loud 0
  *   re-encoded at quality 60      mean 1.10     loud 2.2e-3
  *   the same page, another theme  mean 59.9     loud 3.2e-1
- *
- * The middle row is a deliberately harsh stand-in for encoder and rasterizer
- * noise — far harsher than the quality the generator actually writes — and the
- * last is the shape of a real failure, a page whose type and color came out
- * different. The thresholds sit above the noise and a hundred times below the
- * failure. A forgotten regeneration after an edit to `SCREENSHOT_IR` is caught
- * exactly by the digest below, not by these.
  */
 const MAX_MEAN_ABS_DIFF = 1.5
 const LOUD_PIXEL_CHANNEL_DIFF = 32
@@ -87,19 +75,58 @@ async function rawPixels(jpeg: Buffer): Promise<Buffer> {
   return sharp(jpeg).removeAlpha().raw().toBuffer()
 }
 
-describe("screenshot-1 fixture", () => {
-  it("is exactly the canvas size the device frames assume", async () => {
-    const meta = await sharp(JPG).metadata()
-    expect({ width: meta.width, height: meta.height }).toEqual({ width: FIXTURE_W, height: FIXTURE_H })
+describe.each(Object.entries(FIXTURES))("%s fixture", (_name, spec: FixtureSpec) => {
+  const jpgPath = at(spec.jpg)
+  const jsonPath = at(spec.json)
+
+  it("is exactly the size its device frame assumes", () => {
+    const markers = readJpegMarkers(readFileSync(jpgPath))
+    expect({ width: markers.width, height: markers.height }).toEqual({ width: spec.width, height: spec.height })
   })
 
   it("stays inside the size budget", () => {
-    expect(readFileSync(JPG).byteLength).toBeLessThan(MAX_BYTES)
+    expect(readFileSync(jpgPath).byteLength).toBeLessThan(MAX_BYTES)
+  })
+
+  it("carries the encoder markers the recorded recipe produces", async () => {
+    const provenance = JSON.parse(readFileSync(jsonPath, "utf8"))
+    // Exact and environment-independent: these are settings this repository
+    // chose, not anything the machine decides.
+    expect(provenance.recipe).toEqual(RECIPE)
+    expect(provenance.recipe_sha256).toBe(fixtureRecipeDigest(spec))
+
+    // And the bytes have to carry that recipe's own fingerprints. Re-encoding
+    // the committed file's own pixels isolates the encoder from the renderer,
+    // so fonts never enter into it.
+    const committed = readFileSync(jpgPath)
+    const { data, info } = await sharp(committed).removeAlpha().raw().toBuffer({ resolveWithObject: true })
+    const reencoded = await sharp(data, { raw: { width: info.width, height: info.height, channels: 3 } })
+      .jpeg({ ...RECIPE })
+      .toBuffer()
+
+    const mine = readJpegMarkers(committed)
+    const theirs = readJpegMarkers(reencoded)
+    expect({
+      progressive: mine.progressive,
+      chromaSubsampling: mine.chromaSubsampling,
+      quantisationTables: mine.quantisationTables,
+    }).toEqual({
+      progressive: RECIPE.progressive,
+      chromaSubsampling: RECIPE.chromaSubsampling,
+      quantisationTables: theirs.quantisationTables,
+    })
+
+    // Advisory only. Size cannot separate quality 87 from 88, so it proves
+    // nothing on its own, but a wild number here is worth seeing in the log.
+    const drift = Math.abs(committed.byteLength - reencoded.byteLength) / reencoded.byteLength
+    if (drift > 0.02) {
+      console.warn(`${spec.id}: size drifts ${(drift * 100).toFixed(2)}% from a fresh encode of its own pixels`)
+    }
   })
 
   it("still shows what the generator renders today", { timeout: 120_000 }, async (ctx) => {
-    const recorded = JSON.parse(readFileSync(JSON_PATH, "utf8")).rendered_with_face
-    const here = await resolvedScreenshotFace()
+    const recorded = JSON.parse(readFileSync(jsonPath, "utf8")).rendered_with_face
+    const here = await resolvedFixtureFace(spec)
     if (here !== recorded) {
       // Not a failure: the page would render correctly, in other glyphs.
       ctx.skip(
@@ -108,7 +135,10 @@ describe("screenshot-1 fixture", () => {
       )
       return
     }
-    const [committed, regenerated] = await Promise.all([rawPixels(readFileSync(JPG)), renderScreenshotJpeg().then(rawPixels)])
+    const [committed, regenerated] = await Promise.all([
+      rawPixels(readFileSync(jpgPath)),
+      renderFixtureJpeg(spec).then(rawPixels),
+    ])
     expect(regenerated.byteLength).toBe(committed.byteLength)
 
     let total = 0
@@ -127,47 +157,19 @@ describe("screenshot-1 fixture", () => {
       meanAbsDiff: meanAbsDiff <= MAX_MEAN_ABS_DIFF,
       loudShare: loudShare <= MAX_LOUD_PIXEL_SHARE,
       measured: { meanAbsDiff, loudShare },
-    }).toEqual({
-      meanAbsDiff: true,
-      loudShare: true,
-      measured: { meanAbsDiff, loudShare },
-    })
-  })
-
-  it("was written with the encoder settings the script still declares", async () => {
-    const provenance = JSON.parse(readFileSync(JSON_PATH, "utf8"))
-    // Exact and environment-independent: these are settings this repository
-    // chose, not anything the machine decides.
-    expect(provenance.encoder).toEqual(ENCODER)
-    expect(provenance.recipe_sha256).toBe(screenshotRecipeDigest())
-
-    // And the bytes have to look like that encode. Re-encoding the committed
-    // file's own pixels at the declared quality reproduces its size to within
-    // rounding, while quality 60 comes back 53% smaller — so a quality edit
-    // that never reached the JPEG fails here whatever fonts the machine has.
-    // A hand-edited provenance would satisfy the digest above and nothing else.
-    const committed = readFileSync(JPG)
-    const { data, info } = await sharp(committed).removeAlpha().raw().toBuffer({ resolveWithObject: true })
-    const reencoded = await sharp(data, {
-      raw: { width: info.width, height: info.height, channels: 3 },
-    })
-      .jpeg({ ...ENCODER })
-      .toBuffer()
-    const drift = Math.abs(committed.byteLength - reencoded.byteLength) / reencoded.byteLength
-    expect({ withinBand: drift <= MAX_SIZE_DRIFT, committed: committed.byteLength, reencoded: reencoded.byteLength }).toEqual({
-      withinBand: true,
-      committed: committed.byteLength,
-      reencoded: reencoded.byteLength,
-    })
+    }).toEqual({ meanAbsDiff: true, loudShare: true, measured: { meanAbsDiff, loudShare } })
   })
 
   it("records the renderer and the page that produced it", () => {
-    const provenance = JSON.parse(readFileSync(JSON_PATH, "utf8"))
+    const provenance = JSON.parse(readFileSync(jsonPath, "utf8"))
     expect(provenance.generator).toBe("pptwise renderer")
     expect(provenance.script).toBe("scripts/make-screenshot-fixture.mts")
-    expect({ width: provenance.width, height: provenance.height }).toEqual({ width: FIXTURE_W, height: FIXTURE_H })
-    // Exact, unlike the pixels: the IR is text this repository owns outright.
-    expect(provenance.ir_sha256).toBe(screenshotIrDigest())
+    expect({ width: provenance.width, height: provenance.height }).toEqual({
+      width: spec.width,
+      height: spec.height,
+    })
+    // Exact, unlike the pixels: the page is text this repository owns outright.
+    expect(provenance.source_sha256).toBe(fixtureSourceDigest(spec))
     // A regenerated bundle is byte-stable, so no run date lives in here.
     expect(provenance.date).toBeUndefined()
   })
