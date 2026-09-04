@@ -3,7 +3,8 @@
   "script": "scripts/make-screenshot-fixture.mts",
   "source": "SCREENSHOT_IR in that script, rendered through validateIr + renderSlideSvg",
   "theme": "enterprise",
-  "date": "2026-09-04",
+  "ir_sha256": "e8f639a337463ce14045f28b7cb560046c193bde76a3ce4fd8c387dd9088e459",
+  "quality": 88,
   "width": 1280,
   "height": 720
 }

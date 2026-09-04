@@ -12,6 +12,7 @@
  *   pnpm tsx scripts/make-screenshot-fixture.mts
  */
 
+import { createHash } from "node:crypto"
 import { mkdirSync, writeFileSync } from "node:fs"
 import { dirname, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
@@ -95,6 +96,18 @@ export const SCREENSHOT_IR: PptxIR = {
 export const FIXTURE_W = CANVAS_W_PX
 export const FIXTURE_H = CANVAS_H_PX
 
+/**
+ * Digest of the page this fixture is a picture of.
+ *
+ * Recorded instead of a generation date. A date changes on every run, so the
+ * committed bundle was never twice the same bytes even when the picture was
+ * identical, and it said nothing about whether the JPEG on disk still matches
+ * the IR above it. The digest says exactly that, and the test compares it.
+ */
+export function screenshotIrDigest(): string {
+  return createHash("sha256").update(JSON.stringify(SCREENSHOT_IR)).digest("hex")
+}
+
 export async function renderScreenshotJpeg(): Promise<Buffer> {
   installNodePlatform()
   const rasterize = getPlatform().rasterizeSvg
@@ -129,7 +142,8 @@ async function main() {
         script: "scripts/make-screenshot-fixture.mts",
         source: "SCREENSHOT_IR in that script, rendered through validateIr + renderSlideSvg",
         theme: SCREENSHOT_IR.theme.id,
-        date: new Date().toISOString().slice(0, 10),
+        ir_sha256: screenshotIrDigest(),
+        quality: QUALITY,
         width: FIXTURE_W,
         height: FIXTURE_H,
       },
