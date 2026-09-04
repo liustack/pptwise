@@ -249,8 +249,8 @@ export const traits = {
 
 export const story: DesignStory = {
   name: "Flow Bands",
-  story: "Bands whose width carries a quantity from source to destination, splitting and merging without losing the total. The energy flow diagram, where nothing appears from nowhere.",
-  positioning: "Choose it when a conserved quantity moves through branches and merges and the widths are the argument. Use flowchart when the branches carry decisions rather than amounts.",
-  audience: "Readers tracing where a total went on its way through.",
+  story: "Bands whose width carries an amount from source to destination as it splits and merges. The energy diagram: the widths are the argument, and a gap shows where a flow is not accounted for.",
+  positioning: "Choose it when an amount moves through branches and merges and the widths are the argument. Use flowchart when the branches carry decisions rather than amounts.",
+  audience: "Readers tracing where an amount went on its way through.",
   notFor: "Branching decisions, which belong in flowchart.",
 }
