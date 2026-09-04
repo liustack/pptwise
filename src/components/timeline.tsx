@@ -141,9 +141,12 @@ function verticalLayout(component: TimelineComponent, w: number) {
 
 /**
  * How many leading rows of `rows` fit within `truncBudget` px (group-
- * relative, same space `rowTops[i] + rows[i].rowH` is measured in), leaving
- * ~20px of bottom headroom — at least 1, matching
- * row-cards.tsx's "never render zero visible units" precedent.
+ * relative, same space `rowTops[i] + rows[i].rowH` is measured in), with no
+ * headroom held back: a row that fits is drawn. This comment used to claim
+ * ~20px was reserved for the overflow line the component painted. That line is
+ * gone (`render/drop-marker.tsx`) and the reservation was never in the loop
+ * below to begin with. At least 1 row, matching row-cards.tsx's "never
+ * render zero visible units" precedent.
  */
 function visibleVerticalRowCount(
   rowTops: number[],

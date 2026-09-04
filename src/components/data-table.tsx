@@ -172,9 +172,11 @@ export const dataTable: SvgComponent<DataTableComponent> = {
     const naturalRowsH = (fullRowCount + 1) * ROW
     let visibleRowCount = fullRowCount
     if (naturalRowsH > truncBudget) {
-      // 预留 1 个 ROW 给表头、1 个 ROW 给底部留白——与
-      // comparison.tsx 的 `-2` 预留同一账法。下限钳到 1（"宁可只留一行也不
-      // 要整页只剩一行 marker"，comparison.tsx/row-cards.tsx 共同先例）。
+      // 只预留 1 个 ROW 给表头，别的不留：可见数据行 + 表头一共要放进
+      // truncBudget，所以上限就是 floor(truncBudget / ROW) - 1。这条注释
+      // 一度写成"表头 1 行 + 底部留白 1 行"，与代码里的单个 -1 对不上，
+      // 而那第二行本来是留给已经不再绘制的溢出提示的。下限钳到 1
+      // （row-cards.tsx"绝不渲染零个可见单元"先例）。
       visibleRowCount = Math.max(1, Math.min(fullRowCount, Math.floor(truncBudget / ROW) - 1))
     }
     const hiddenRowCount = fullRowCount - visibleRowCount

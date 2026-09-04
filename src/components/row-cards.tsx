@@ -162,7 +162,8 @@ export const rowCards: SvgComponent<RowCardsComponent> = {
           // routed around) used to add this gap unconditionally, including
           // after the *last* visible card — the acceptance loop never
           // budgeted for that extra 14px, so the drop marker below
-          // (placed at `cursor + 14`) could land up to 8px past `box.h`,
+          // (placed at `cursor + 14`, back when the drop was painted rather
+          // than declared) could land up to 8px past `box.h`,
           // outside the real overflow auditor's own tolerance. The marker
           // is meant to sit 14px below the last card's own shell, not
           // 14px below "last card + one more unnecessary gap" — see
