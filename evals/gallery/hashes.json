@@ -77,14 +77,14 @@
       "color": "12u6uhn"
     },
     "almanac--face--process--rail-numbered": {
-      "hash": "v955l5",
-      "geometry": "tt4m7",
-      "color": "1eh6907"
+      "hash": "1yx3fl8",
+      "geometry": "14nsv1b",
+      "color": "tafcb7"
     },
     "almanac--face--data--split-band": {
-      "hash": "1hlx3nq",
-      "geometry": "kvh0c5",
-      "color": "mvcztw"
+      "hash": "n6750d",
+      "geometry": "lxyjxh",
+      "color": "u0zzvq"
     },
     "almanac--face--photo--image-top": {
       "hash": "1tta2li",
@@ -92,8 +92,8 @@
       "color": "1v0rdra"
     },
     "almanac--face--statement--statement": {
-      "hash": "1v0hi5f",
-      "geometry": "15uev39",
+      "hash": "18vji6g",
+      "geometry": "9ja8xi",
       "color": "1uaden3"
     },
     "almanac--face--fact--stat-hero": {
@@ -190,11 +190,6 @@
       "hash": "n0ui59",
       "geometry": "18feaqh",
       "color": "n15zvt"
-    },
-    "almanac--comp--citation--zh": {
-      "hash": "1i4dh59",
-      "geometry": "1p4oipp",
-      "color": "1jby1e4"
     },
     "almanac--comp--code--zh": {
       "hash": "886f5i",
@@ -437,14 +432,14 @@
       "color": "1dbxbqq"
     },
     "arena--face--process--rail-numbered": {
-      "hash": "1vpx7fi",
-      "geometry": "1tmer3s",
-      "color": "1b4go4e"
+      "hash": "uajvtn",
+      "geometry": "148zv8u",
+      "color": "uzaqhi"
     },
     "arena--face--data--split-band": {
-      "hash": "mekr6",
-      "geometry": "oa0o5l",
-      "color": "efpela"
+      "hash": "1rxso53",
+      "geometry": "xdglbv",
+      "color": "1c7v5hy"
     },
     "arena--face--photo--image-top": {
       "hash": "69niac",
@@ -452,8 +447,8 @@
       "color": "158qkmh"
     },
     "arena--face--statement--statement": {
-      "hash": "1bm1t6a",
-      "geometry": "1rubilf",
+      "hash": "1yfxxg8",
+      "geometry": "u5o7zj",
       "color": "eika51"
     },
     "arena--face--fact--stat-hero": {
@@ -550,11 +545,6 @@
       "hash": "j5m1cw",
       "geometry": "sw575a",
       "color": "1tr6vqy"
-    },
-    "arena--comp--citation--zh": {
-      "hash": "87mepn",
-      "geometry": "1yg6nws",
-      "color": "19cadq0"
     },
     "arena--comp--code--zh": {
       "hash": "zzuu1q",
@@ -757,9 +747,9 @@
       "color": "1mfbe5i"
     },
     "brief--deck--p08": {
-      "hash": "clyd5t",
-      "geometry": "1ssc442",
-      "color": "aox0fh"
+      "hash": "jgrb9i",
+      "geometry": "15dh0kj",
+      "color": "14lignk"
     },
     "brief--deck--p09": {
       "hash": "1tpmmw1",
@@ -797,9 +787,9 @@
       "color": "1v1wqrj"
     },
     "brief--face--process--rail-numbered": {
-      "hash": "98kcfq",
-      "geometry": "1iymkn1",
-      "color": "6che97"
+      "hash": "cnv52v",
+      "geometry": "6lh8zt",
+      "color": "vdm12x"
     },
     "brief--face--data--gauge-stats": {
       "hash": "1jl36w7",
@@ -1065,21 +1055,6 @@
       "hash": "qzhe9u",
       "geometry": "34fp7v",
       "color": "bxi2by"
-    },
-    "brief--comp--citation--zh": {
-      "hash": "10bw02v",
-      "geometry": "1bppr1e",
-      "color": "zx6isu"
-    },
-    "brief--comp--citation--en": {
-      "hash": "5wh46x",
-      "geometry": "1s9yliq",
-      "color": "zx6isu"
-    },
-    "brief--comp--citation--mixed": {
-      "hash": "1taq3id",
-      "geometry": "mpylha",
-      "color": "1lschh"
     },
     "brief--comp--code--zh": {
       "hash": "73uq",
@@ -1652,14 +1627,14 @@
       "color": "7d0rvc"
     },
     "bulletin--face--process--rail-numbered": {
-      "hash": "jvibdu",
-      "geometry": "1mst88i",
-      "color": "ryxekt"
+      "hash": "14r8sv6",
+      "geometry": "1hzgo07",
+      "color": "1pq92y9"
     },
     "bulletin--face--data--split-band": {
-      "hash": "eswi4k",
-      "geometry": "5o2y98",
-      "color": "djvdde"
+      "hash": "k3d5wa",
+      "geometry": "gtsamn",
+      "color": "1gop8j0"
     },
     "bulletin--face--photo--image-split": {
       "hash": "1xg2npq",
@@ -1750,11 +1725,6 @@
       "hash": "1m1130f",
       "geometry": "26d0vd",
       "color": "8rg83f"
-    },
-    "bulletin--comp--citation--zh": {
-      "hash": "lkk2i4",
-      "geometry": "v3f3pq",
-      "color": "1cerbld"
     },
     "bulletin--comp--code--zh": {
       "hash": "1uv8swu",
@@ -1997,14 +1967,14 @@
       "color": "1mjb7ph"
     },
     "clinic--face--process--rail-numbered": {
-      "hash": "yjyhh1",
-      "geometry": "1t0vh4o",
-      "color": "llfgrw"
+      "hash": "19nzuso",
+      "geometry": "qkcgdx",
+      "color": "m4pbrj"
     },
     "clinic--face--data--split-band": {
-      "hash": "1adpris",
-      "geometry": "1ohiivv",
-      "color": "d81i7j"
+      "hash": "74n1u7",
+      "geometry": "aelmh2",
+      "color": "1cins0i"
     },
     "clinic--face--photo--image-annotate": {
       "hash": "bhvhhq",
@@ -2095,11 +2065,6 @@
       "hash": "1hhs8f5",
       "geometry": "1i1aj7y",
       "color": "cyuydy"
-    },
-    "clinic--comp--citation--zh": {
-      "hash": "ifvjsh",
-      "geometry": "12uov6e",
-      "color": "13mxw2f"
     },
     "clinic--comp--code--zh": {
       "hash": "1scm15",
@@ -2342,9 +2307,9 @@
       "color": "10mdpa3"
     },
     "crayon--face--process--rail-numbered": {
-      "hash": "bwcayp",
-      "geometry": "1cg0srr",
-      "color": "7ctwlk"
+      "hash": "1vd28iu",
+      "geometry": "gqhiw7",
+      "color": "1g0gp1e"
     },
     "crayon--face--photo--image-top": {
       "hash": "2eykx",
@@ -2440,11 +2405,6 @@
       "hash": "f9v1ph",
       "geometry": "4jfjyb",
       "color": "1l6mmm8"
-    },
-    "crayon--comp--citation--zh": {
-      "hash": "eimnt9",
-      "geometry": "kpsakz",
-      "color": "gd36uk"
     },
     "crayon--comp--code--zh": {
       "hash": "12lh41p",
@@ -2692,14 +2652,14 @@
       "color": "1fkpyfk"
     },
     "ember--face--process--rail-numbered": {
-      "hash": "wqk0pq",
-      "geometry": "1ji7ag4",
-      "color": "1ysblst"
+      "hash": "14e98c6",
+      "geometry": "jjahhs",
+      "color": "1yo1dh0"
     },
     "ember--face--data--stacked-poster": {
-      "hash": "1veyr1n",
-      "geometry": "fb61zi",
-      "color": "15m58ki"
+      "hash": "1k50x2r",
+      "geometry": "e6qkoo",
+      "color": "1ais47h"
     },
     "ember--face--photo--image-split": {
       "hash": "t7p14i",
@@ -2790,11 +2750,6 @@
       "hash": "r0qe96",
       "geometry": "1i8r53x",
       "color": "12quibe"
-    },
-    "ember--comp--citation--zh": {
-      "hash": "1ljzsr4",
-      "geometry": "9fdg06",
-      "color": "ibnc0c"
     },
     "ember--comp--code--zh": {
       "hash": "1fx95xu",
@@ -3037,14 +2992,14 @@
       "color": "w9bn9w"
     },
     "heritage--face--process--rail-numbered": {
-      "hash": "j059sn",
-      "geometry": "13jz3wf",
-      "color": "1rpirkx"
+      "hash": "2svcld",
+      "geometry": "1txa2on",
+      "color": "100tobg"
     },
     "heritage--face--data--split-band": {
-      "hash": "1036u9m",
-      "geometry": "15700s7",
-      "color": "dd2yxe"
+      "hash": "1ho3d93",
+      "geometry": "1979p8i",
+      "color": "1n4kuxx"
     },
     "heritage--face--photo--image-split": {
       "hash": "96wp3y",
@@ -3052,8 +3007,8 @@
       "color": "1vcgiaw"
     },
     "heritage--face--statement--statement": {
-      "hash": "1dptswc",
-      "geometry": "l43tj9",
+      "hash": "m76xf9",
+      "geometry": "143m6ug",
       "color": "x6fzv8"
     },
     "heritage--face--quote--pull-quote": {
@@ -3150,11 +3105,6 @@
       "hash": "js8dju",
       "geometry": "1ikd6y9",
       "color": "1n6037h"
-    },
-    "heritage--comp--citation--zh": {
-      "hash": "1rehhqo",
-      "geometry": "45nghc",
-      "color": "1s99j47"
     },
     "heritage--comp--code--zh": {
       "hash": "1nx9fmy",
@@ -3397,14 +3347,14 @@
       "color": "1b74wtk"
     },
     "homeroom--face--process--rail-numbered": {
-      "hash": "78gank",
-      "geometry": "rbejmj",
-      "color": "189sdoe"
+      "hash": "185mnyj",
+      "geometry": "1s5w7fg",
+      "color": "lfksk3"
     },
     "homeroom--face--data--split-band": {
-      "hash": "1vlnzrs",
-      "geometry": "175cm8i",
-      "color": "flcd4i"
+      "hash": "2104wb",
+      "geometry": "qoa02p",
+      "color": "1pji6z3"
     },
     "homeroom--face--photo--image-top": {
       "hash": "u8pmuz",
@@ -3495,11 +3445,6 @@
       "hash": "voguxl",
       "geometry": "pvg4ga",
       "color": "1sureuw"
-    },
-    "homeroom--comp--citation--zh": {
-      "hash": "pun6ax",
-      "geometry": "kgkux5",
-      "color": "127ls67"
     },
     "homeroom--comp--code--zh": {
       "hash": "1f2ryxa",
@@ -3742,14 +3687,14 @@
       "color": "1lxy4lk"
     },
     "ink--face--process--rail-numbered": {
-      "hash": "1i8zscm",
-      "geometry": "10chxof",
-      "color": "ixvpyr"
+      "hash": "10u8d0y",
+      "geometry": "quvl2l",
+      "color": "1r0581s"
     },
     "ink--face--data--split-band": {
-      "hash": "r16prs",
-      "geometry": "qrt7lf",
-      "color": "1f3cqvz"
+      "hash": "5wi5jy",
+      "geometry": "rsvu2r",
+      "color": "1im0sxg"
     },
     "ink--face--photo--image-split": {
       "hash": "n636al",
@@ -3757,8 +3702,8 @@
       "color": "1d4loth"
     },
     "ink--face--statement--statement": {
-      "hash": "5oivhf",
-      "geometry": "w0awvj",
+      "hash": "azmavt",
+      "geometry": "164kpih",
       "color": "s1f0xt"
     },
     "ink--face--quote--pull-quote": {
@@ -3855,11 +3800,6 @@
       "hash": "f8n8z1",
       "geometry": "1tlf3ce",
       "color": "9wleom"
-    },
-    "ink--comp--citation--zh": {
-      "hash": "18bj7fb",
-      "geometry": "1bv0s65",
-      "color": "nobh6u"
     },
     "ink--comp--code--zh": {
       "hash": "1c8ss3y",
@@ -4102,14 +4042,14 @@
       "color": "139j38q"
     },
     "journal--face--process--rail-numbered": {
-      "hash": "1ym0z5w",
-      "geometry": "1fsxozv",
-      "color": "exo7hz"
+      "hash": "1oxykqi",
+      "geometry": "1ft7cof",
+      "color": "1cj01gg"
     },
     "journal--face--data--split-band": {
-      "hash": "odz82d",
-      "geometry": "1sg68fv",
-      "color": "mdusd6"
+      "hash": "1pmln0l",
+      "geometry": "1s3rx49",
+      "color": "avk34v"
     },
     "journal--face--photo--image-split": {
       "hash": "1e5bspf",
@@ -4117,8 +4057,8 @@
       "color": "1dynwx9"
     },
     "journal--face--statement--statement": {
-      "hash": "71o0qb",
-      "geometry": "1snj8yz",
+      "hash": "10x978",
+      "geometry": "i95cos",
       "color": "1pgukrf"
     },
     "journal--face--quote--pull-quote": {
@@ -4215,11 +4155,6 @@
       "hash": "2awiip",
       "geometry": "1jfy7k0",
       "color": "9w4wq2"
-    },
-    "journal--comp--citation--zh": {
-      "hash": "84oyt8",
-      "geometry": "1sy1o9y",
-      "color": "weucqr"
     },
     "journal--comp--code--zh": {
       "hash": "1pkzbq4",
@@ -4427,9 +4362,9 @@
       "color": "1cbt3mo"
     },
     "lecture--deck--p09": {
-      "hash": "1chbjy8",
-      "geometry": "kja3nw",
-      "color": "1ohmrgw"
+      "hash": "fxjhej",
+      "geometry": "mi9unl",
+      "color": "1o08ye2"
     },
     "lecture--deck--p10": {
       "hash": "e0r2o",
@@ -4462,9 +4397,9 @@
       "color": "1msxhma"
     },
     "lecture--face--process--rail-numbered": {
-      "hash": "y0kusy",
-      "geometry": "1l5hwkw",
-      "color": "ooes0e"
+      "hash": "1bblfav",
+      "geometry": "emeov6",
+      "color": "a1inzk"
     },
     "lecture--face--data--tone-adaptive-content": {
       "hash": "1vo6fbq",
@@ -4477,8 +4412,8 @@
       "color": "g2644h"
     },
     "lecture--face--statement--statement": {
-      "hash": "q0dk8u",
-      "geometry": "15widf1",
+      "hash": "ayr3p",
+      "geometry": "uonvve",
       "color": "utnzpk"
     },
     "lecture--face--fact--stat-hero": {
@@ -4575,11 +4510,6 @@
       "hash": "1j7zbj0",
       "geometry": "9xvfk9",
       "color": "1bo2xge"
-    },
-    "lecture--comp--citation--zh": {
-      "hash": "195blgw",
-      "geometry": "w3w3fw",
-      "color": "1urs7j7"
     },
     "lecture--comp--code--zh": {
       "hash": "hpvfgj",
@@ -4822,18 +4752,18 @@
       "color": "bxhts1"
     },
     "ledger--face--process--rail-numbered": {
-      "hash": "189bcm3",
-      "geometry": "1w8zsyh",
-      "color": "1q1sjda"
+      "hash": "n2r3xw",
+      "geometry": "ll3mxz",
+      "color": "rv69we"
     },
     "ledger--face--data--split-band": {
-      "hash": "1fhmtzi",
-      "geometry": "54g307",
-      "color": "y9tuhx"
+      "hash": "19tg37u",
+      "geometry": "xa0ikm",
+      "color": "xuq8tj"
     },
     "ledger--face--statement--statement": {
-      "hash": "e0qfmh",
-      "geometry": "iyy4hu",
+      "hash": "1y3vswm",
+      "geometry": "2ffl1p",
       "color": "w0pb58"
     },
     "ledger--face--quote--pull-quote": {
@@ -4930,11 +4860,6 @@
       "hash": "1moycis",
       "geometry": "1jstzpv",
       "color": "15spc3i"
-    },
-    "ledger--comp--citation--zh": {
-      "hash": "1ii7w2o",
-      "geometry": "1nijdoa",
-      "color": "12uyg1o"
     },
     "ledger--comp--code--zh": {
       "hash": "1p961n8",
@@ -5177,9 +5102,9 @@
       "color": "15g5mv9"
     },
     "luxe--face--process--rail-numbered": {
-      "hash": "1nvpkki",
-      "geometry": "1lc2duy",
-      "color": "rb7arf"
+      "hash": "7p3dqs",
+      "geometry": "1e6ykza",
+      "color": "8bgrwu"
     },
     "luxe--face--data--tone-adaptive-content": {
       "hash": "1a8we8p",
@@ -5192,8 +5117,8 @@
       "color": "167a4mz"
     },
     "luxe--face--statement--statement": {
-      "hash": "13z9gwr",
-      "geometry": "m6mzz6",
+      "hash": "16jdr1k",
+      "geometry": "t59apr",
       "color": "1hltj84"
     },
     "luxe--face--quote--pull-quote": {
@@ -5290,11 +5215,6 @@
       "hash": "1gigp55",
       "geometry": "1gvgczy",
       "color": "167sae8"
-    },
-    "luxe--comp--citation--zh": {
-      "hash": "1stv64f",
-      "geometry": "1khp19o",
-      "color": "1jz05tb"
     },
     "luxe--comp--code--zh": {
       "hash": "uqsjqu",
@@ -5537,18 +5457,18 @@
       "color": "vk52tl"
     },
     "memo--face--process--rail-numbered": {
-      "hash": "17whv6x",
-      "geometry": "vjil27",
-      "color": "14v4uzx"
+      "hash": "1dwa0r",
+      "geometry": "2o8daz",
+      "color": "ix6r26"
     },
     "memo--face--data--split-band": {
-      "hash": "1l92dce",
-      "geometry": "1jfyvqg",
-      "color": "mj285s"
+      "hash": "1vtt75o",
+      "geometry": "va4nhu",
+      "color": "olyuhd"
     },
     "memo--face--statement--statement": {
-      "hash": "118kf9s",
-      "geometry": "kb1egp",
+      "hash": "dkgai7",
+      "geometry": "19gdf0e",
       "color": "1l78r13"
     },
     "memo--face--quote--pull-quote": {
@@ -5645,11 +5565,6 @@
       "hash": "ptywdx",
       "geometry": "3ya4bn",
       "color": "1rhr4tf"
-    },
-    "memo--comp--citation--zh": {
-      "hash": "14okkn1",
-      "geometry": "1eh2kbx",
-      "color": "7zt7oc"
     },
     "memo--comp--code--zh": {
       "hash": "1ubnlxl",
@@ -5892,14 +5807,14 @@
       "color": "1fe766m"
     },
     "museum--face--process--rail-numbered": {
-      "hash": "1wsr02",
-      "geometry": "lqfob",
-      "color": "1v4233k"
+      "hash": "1p8uo8u",
+      "geometry": "14kdg7n",
+      "color": "1mopq1t"
     },
     "museum--face--data--split-band": {
-      "hash": "nxe33x",
-      "geometry": "1n0wn5k",
-      "color": "migxp0"
+      "hash": "19myy8",
+      "geometry": "1k6hsg3",
+      "color": "wqr451"
     },
     "museum--face--photo--image-split": {
       "hash": "12u1un9",
@@ -5907,8 +5822,8 @@
       "color": "1xt6lsf"
     },
     "museum--face--statement--statement": {
-      "hash": "1g23opk",
-      "geometry": "11yfep8",
+      "hash": "1dyrfq",
+      "geometry": "so0hs2",
       "color": "10tfyb8"
     },
     "museum--face--fact--stat-hero": {
@@ -6005,11 +5920,6 @@
       "hash": "1o510pf",
       "geometry": "29ehgy",
       "color": "nzt8l4"
-    },
-    "museum--comp--citation--zh": {
-      "hash": "14ef4xc",
-      "geometry": "1w29tfd",
-      "color": "1ijajqe"
     },
     "museum--comp--code--zh": {
       "hash": "1s9vp2f",
@@ -6252,14 +6162,14 @@
       "color": "j7j02d"
     },
     "playbill--face--process--rail-numbered": {
-      "hash": "1d3x9g5",
-      "geometry": "1hq41i7",
-      "color": "wyc7ir"
+      "hash": "19jxa3d",
+      "geometry": "1s5wtjf",
+      "color": "1pl3we6"
     },
     "playbill--face--data--stacked-poster": {
-      "hash": "1x9p3oi",
-      "geometry": "1xv70ai",
-      "color": "11i5jf1"
+      "hash": "1leiwrk",
+      "geometry": "pl066",
+      "color": "j4ufbk"
     },
     "playbill--face--photo--image-top": {
       "hash": "5n1mcx",
@@ -6360,11 +6270,6 @@
       "hash": "69n6b9",
       "geometry": "1cemodp",
       "color": "k5cj1k"
-    },
-    "playbill--comp--citation--zh": {
-      "hash": "r0b0gn",
-      "geometry": "b4o22l",
-      "color": "lmhtm4"
     },
     "playbill--comp--code--zh": {
       "hash": "1h0hib8",
@@ -6607,14 +6512,14 @@
       "color": "1blyr5o"
     },
     "rally--face--process--rail-numbered": {
-      "hash": "vteunc",
-      "geometry": "76q8ih",
-      "color": "qwx0ax"
+      "hash": "1gt2is0",
+      "geometry": "besp0k",
+      "color": "g2g7y1"
     },
     "rally--face--data--stacked-poster": {
-      "hash": "7onp7m",
-      "geometry": "1cn897l",
-      "color": "vbc4fg"
+      "hash": "4zv2os",
+      "geometry": "1ankvfu",
+      "color": "12qm0h6"
     },
     "rally--face--photo--image-top": {
       "hash": "p8naw7",
@@ -6622,8 +6527,8 @@
       "color": "1rl8xh1"
     },
     "rally--face--statement--statement": {
-      "hash": "bpubmk",
-      "geometry": "wdoexm",
+      "hash": "1iu3ga6",
+      "geometry": "lrtnk4",
       "color": "14j3itj"
     },
     "rally--face--fact--stat-hero": {
@@ -6720,11 +6625,6 @@
       "hash": "ddic70",
       "geometry": "11e0evu",
       "color": "insk4d"
-    },
-    "rally--comp--citation--zh": {
-      "hash": "2fykop",
-      "geometry": "11d7iw4",
-      "color": "pcfa69"
     },
     "rally--comp--code--zh": {
       "hash": "1rnuyxh",
@@ -6967,9 +6867,9 @@
       "color": "1h4yfdf"
     },
     "runway--face--process--rail-numbered": {
-      "hash": "orz38",
-      "geometry": "1e8s8s1",
-      "color": "1ydtxi6"
+      "hash": "14nk54f",
+      "geometry": "171hxbv",
+      "color": "1oh9340"
     },
     "runway--face--data--show-figures": {
       "hash": "123ln1i",
@@ -7070,11 +6970,6 @@
       "hash": "19n9x3j",
       "geometry": "17z1bal",
       "color": "1k8i6xl"
-    },
-    "runway--comp--citation--zh": {
-      "hash": "138l38n",
-      "geometry": "1puqpb5",
-      "color": "1c6z1c0"
     },
     "runway--comp--code--zh": {
       "hash": "1c95n6z",
@@ -7317,14 +7212,14 @@
       "color": "huaajd"
     },
     "stage--face--process--rail-numbered": {
-      "hash": "13hqjp5",
-      "geometry": "1g2i0ti",
-      "color": "shm1zx"
+      "hash": "1hbjnne",
+      "geometry": "1xj98is",
+      "color": "pk6pev"
     },
     "stage--face--data--stacked-poster": {
-      "hash": "1rz4h8x",
-      "geometry": "8ysvzt",
-      "color": "3qfjed"
+      "hash": "1kauy00",
+      "geometry": "vhtnx3",
+      "color": "1wkc30v"
     },
     "stage--face--photo--image-top": {
       "hash": "kzwu7w",
@@ -7332,8 +7227,8 @@
       "color": "uhkmy8"
     },
     "stage--face--statement--statement": {
-      "hash": "1bg7vsd",
-      "geometry": "pm0ig3",
+      "hash": "1lywv1f",
+      "geometry": "kkjrnx",
       "color": "297dvg"
     },
     "stage--face--quote--pull-quote": {
@@ -7430,11 +7325,6 @@
       "hash": "wu4ndo",
       "geometry": "1wf6yj1",
       "color": "iamf2q"
-    },
-    "stage--comp--citation--zh": {
-      "hash": "1o50qqx",
-      "geometry": "1l427vz",
-      "color": "1bephn4"
     },
     "stage--comp--code--zh": {
       "hash": "1ib5yb",
@@ -7637,9 +7527,9 @@
       "color": "lc4bq"
     },
     "swiss--deck--p08": {
-      "hash": "3ksjnd",
-      "geometry": "sgj4bw",
-      "color": "ckbn2e"
+      "hash": "1u259uo",
+      "geometry": "1ogh9it",
+      "color": "1dxwdta"
     },
     "swiss--deck--p09": {
       "hash": "397ase",
@@ -7677,14 +7567,14 @@
       "color": "1o8nf4t"
     },
     "swiss--face--process--rail-numbered": {
-      "hash": "6nzj3m",
-      "geometry": "whhsxd",
-      "color": "16ugz7t"
+      "hash": "1bsuuyo",
+      "geometry": "j9w52i",
+      "color": "154hsvz"
     },
     "swiss--face--data--split-band": {
-      "hash": "90entc",
-      "geometry": "quwy9z",
-      "color": "4vw056"
+      "hash": "rlu5k6",
+      "geometry": "1ttvb90",
+      "color": "6u0q9q"
     },
     "swiss--face--photo--image-top": {
       "hash": "w5bxae",
@@ -7692,8 +7582,8 @@
       "color": "9drv4w"
     },
     "swiss--face--statement--statement": {
-      "hash": "1xj7ci6",
-      "geometry": "b2isxl",
+      "hash": "196i0p1",
+      "geometry": "15vxbb4",
       "color": "5cnmsl"
     },
     "swiss--face--fact--stat-hero": {
@@ -7790,11 +7680,6 @@
       "hash": "1qq6fxr",
       "geometry": "f6dxbi",
       "color": "12ggpud"
-    },
-    "swiss--comp--citation--zh": {
-      "hash": "1twgco1",
-      "geometry": "1y56jqg",
-      "color": "1079be3"
     },
     "swiss--comp--code--zh": {
       "hash": "rrq6mb",
@@ -7987,9 +7872,9 @@
       "color": "qk633c"
     },
     "terminal--deck--p06": {
-      "hash": "z3galu",
-      "geometry": "12dv35k",
-      "color": "786u9r"
+      "hash": "1h9njlu",
+      "geometry": "74d0os",
+      "color": "1sgdanq"
     },
     "terminal--deck--p07": {
       "hash": "1hyr1q3",
@@ -8037,14 +7922,14 @@
       "color": "it026y"
     },
     "terminal--face--process--rail-numbered": {
-      "hash": "xss0d",
-      "geometry": "ukgrnw",
-      "color": "8qxxtc"
+      "hash": "1wx5ol4",
+      "geometry": "144c0vz",
+      "color": "dr9o03"
     },
     "terminal--face--data--split-band": {
-      "hash": "tqucy0",
-      "geometry": "15l1gyi",
-      "color": "1xjktob"
+      "hash": "1a0im89",
+      "geometry": "1o1qqtv",
+      "color": "1w884o2"
     },
     "terminal--face--photo--image-annotate": {
       "hash": "rie0a2",
@@ -8052,8 +7937,8 @@
       "color": "1j85i1u"
     },
     "terminal--face--statement--statement": {
-      "hash": "s0upth",
-      "geometry": "zsny9d",
+      "hash": "1aecfqb",
+      "geometry": "1o8rj1r",
       "color": "1in7cf2"
     },
     "terminal--face--fact--stat-hero": {
@@ -8150,11 +8035,6 @@
       "hash": "gx8dal",
       "geometry": "uzyz1p",
       "color": "1chn7q"
-    },
-    "terminal--comp--citation--zh": {
-      "hash": "v5bks0",
-      "geometry": "5hvacx",
-      "color": "1l9oinb"
     },
     "terminal--comp--code--zh": {
       "hash": "1kukw9u",
@@ -8362,9 +8242,9 @@
       "color": "1gq3086"
     },
     "thesis--deck--p09": {
-      "hash": "11udx5l",
-      "geometry": "cl3rwp",
-      "color": "nm4geu"
+      "hash": "jjjb4p",
+      "geometry": "pmmlwp",
+      "color": "1pzkd7p"
     },
     "thesis--deck--p10": {
       "hash": "kvdyit",
@@ -8397,14 +8277,14 @@
       "color": "198u3yv"
     },
     "thesis--face--process--rail-numbered": {
-      "hash": "126tr8q",
-      "geometry": "zd3nmf",
-      "color": "1sbtyjw"
+      "hash": "1xetrx8",
+      "geometry": "1b17bb4",
+      "color": "19xb01i"
     },
     "thesis--face--data--split-band": {
-      "hash": "1v2y4p4",
-      "geometry": "vxarv5",
-      "color": "9as0zk"
+      "hash": "157c72r",
+      "geometry": "5o8l3p",
+      "color": "12jn2aq"
     },
     "thesis--face--photo--image-annotate": {
       "hash": "1fa3fpm",
@@ -8412,8 +8292,8 @@
       "color": "1h5hgsn"
     },
     "thesis--face--statement--statement": {
-      "hash": "1m9awhh",
-      "geometry": "1ds1yw3",
+      "hash": "1rsdv9f",
+      "geometry": "556zx9",
       "color": "mgijd3"
     },
     "thesis--face--quote--pull-quote": {
@@ -8515,11 +8395,6 @@
       "hash": "kqyyui",
       "geometry": "18arrxw",
       "color": "11spjf9"
-    },
-    "thesis--comp--citation--zh": {
-      "hash": "3zi6ls",
-      "geometry": "1jyfh9b",
-      "color": "12i47ue"
     },
     "thesis--comp--code--zh": {
       "hash": "199uls7",
@@ -8732,9 +8607,9 @@
       "color": "1s3v919"
     },
     "vermilion--deck--p06": {
-      "hash": "mkpad",
-      "geometry": "19kne1u",
-      "color": "142enx3"
+      "hash": "1jd9do0",
+      "geometry": "cvdsib",
+      "color": "1oqx01e"
     },
     "vermilion--deck--p07": {
       "hash": "1sqi9t0",
@@ -8782,18 +8657,18 @@
       "color": "1igqf5i"
     },
     "vermilion--face--process--rail-numbered": {
-      "hash": "28t02s",
-      "geometry": "1mg1m9z",
-      "color": "1g629py"
+      "hash": "11fcgsl",
+      "geometry": "8giqkb",
+      "color": "1bspr32"
     },
     "vermilion--face--data--split-band": {
-      "hash": "wctvzl",
-      "geometry": "1gaoxrc",
-      "color": "1ezff20"
+      "hash": "5aesya",
+      "geometry": "y6z1kc",
+      "color": "1fi1tqs"
     },
     "vermilion--face--statement--statement": {
-      "hash": "1qvygra",
-      "geometry": "a43vtx",
+      "hash": "d9foh1",
+      "geometry": "1cmrz1k",
       "color": "zge9th"
     },
     "vermilion--face--fact--stat-hero": {
@@ -8890,11 +8765,6 @@
       "hash": "1d42pbj",
       "geometry": "1dcambw",
       "color": "aar2iu"
-    },
-    "vermilion--comp--citation--zh": {
-      "hash": "1q6kcc4",
-      "geometry": "1lbvzc1",
-      "color": "16qqe50"
     },
     "vermilion--comp--code--zh": {
       "hash": "1rjwl4t",
@@ -9192,9 +9062,9 @@
       "color": "y4ndm6"
     },
     "unserved--face--quote-stage": {
-      "hash": "p0njzv",
-      "geometry": "159snjc",
-      "color": "vfj8qq"
+      "hash": "cz40gw",
+      "geometry": "gxym5s",
+      "color": "1s68x8q"
     },
     "unserved--face--rail-chapter": {
       "hash": "147ywdi",
