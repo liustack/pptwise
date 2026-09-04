@@ -46,7 +46,13 @@ function svg(node: React.ReactElement) {
   return render(<svg>{node}</svg>)
 }
 
-/** The declaration a render made, or null when it declared nothing. */
+/**
+ * The declaration a render made, or null when it declared nothing.
+ *
+ * A marker carrying zero is not "no declaration" — it is a declaration that
+ * says nothing was lost, which is its own defect and which the caller has to
+ * see rather than have smoothed away here.
+ */
 function declaration(container: Element): { count: number; kind: string | null } | null {
   const el = container.querySelector("[data-dropped]")
   if (!el) return null
@@ -212,7 +218,20 @@ describe("a declaration's count counts the unit its kind names", () => {
     const declared = declaration(container)
     expect(declared, "this case is supposed to force a drop").not.toBeNull()
     const onPage = painted(container)
+
+    // The equation below is only worth anything if both sides are real. A
+    // fixture that stops overflowing paints all nine of its items, leaves a
+    // `data-dropped="0"` behind, and satisfies `count === authored - onPage`
+    // as `0 === 0` — a sweep named "supposed to force a drop" passing on a
+    // page that dropped nothing. So the loss is asserted first, and asserted
+    // as a real one: something painted, something missing, and a count that
+    // is a positive whole number rather than a `NaN` from a missing
+    // attribute.
     expect(onPage, "the case must still paint something, or it proves nothing").toBeGreaterThan(0)
+    expect(onPage, "the case must still lose something, or it proves nothing").toBeLessThan(authored)
+    expect(Number.isInteger(declared!.count), `count ${declared!.count} is not a whole number`).toBe(true)
+    expect(declared!.count).toBeGreaterThan(0)
+
     expect(declared!.kind).toBe(kind)
     expect(declared!.count).toBe(authored - onPage)
   })
