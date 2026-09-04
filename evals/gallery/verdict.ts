@@ -42,6 +42,36 @@ export function manifestFindings(page: ManifestPage): { codes: string[]; notes: 
  */
 const DETERMINISTIC_LOSS = "content-dropped"
 
+/**
+ * The floor, as one function both graders run.
+ *
+ * The automated merge below is not the only thing that grades a page: the
+ * review shell (`html.ts`) keeps its own verdicts in `localStorage`, and it
+ * used to let a reviewer save and export `pass` on a page whose manifest says
+ * it dropped content — the same page `evals:gallery` must call `rework`. Two
+ * graders disagreeing about a machine-checkable fact is not a matter of
+ * taste, so the rule lives here once and the shell embeds this function's own
+ * source (`effectiveVerdict.toString()`), rather than keeping a second copy
+ * that can drift.
+ *
+ * Written in the subset both sides can run: no imports, no module-scope
+ * references, everything it needs declared inside. `coerced` is what lets the
+ * shell tell a reviewer why the buttons will not take a `pass`.
+ */
+export function effectiveVerdict(
+  verdict: string | null | undefined,
+  findingCodes: readonly string[] | null | undefined,
+): { verdict: string | null | undefined; coerced: boolean } {
+  const deterministicLoss = "content-dropped"
+  const codes = findingCodes || []
+  let lost = false
+  for (let i = 0; i < codes.length; i++) {
+    if (codes[i] === deterministicLoss) lost = true
+  }
+  if (lost && (verdict === "pass" || verdict === "limit")) return { verdict: "rework", coerced: true }
+  return { verdict: verdict, coerced: false }
+}
+
 function droppedContent(l1: ReturnType<typeof auditL1>, manifestCodes: readonly string[]): boolean {
   return manifestCodes.includes(DETERMINISTIC_LOSS) || l1.findings.some((f) => f.code === DETERMINISTIC_LOSS)
 }
@@ -53,7 +83,7 @@ export function mergeVerdict(page: ManifestPage, l1: ReturnType<typeof auditL1>,
     const findings = [...new Set([...l1.findings.map((f) => f.code), ...l2.findings, ...manifest.codes])]
     return {
       ...l2,
-      verdict: lost ? "rework" : l2.verdict,
+      verdict: effectiveVerdict(l2.verdict, lost ? [DETERMINISTIC_LOSS] : []).verdict,
       note: [l2.note, ...manifest.notes].filter(Boolean).join(" "),
       findings,
     }

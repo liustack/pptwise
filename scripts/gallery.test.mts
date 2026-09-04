@@ -603,6 +603,38 @@ describe("gallery page", () => {
     expect(script).not.toContain("__name(")
   }, 60_000)
 
+  it("carries the shared verdict floor in a form the browser can run", async () => {
+    // Same reason as the freshness rule above, with more at stake: the shell
+    // grades pages, and it graded them by its own rule until this. A page
+    // whose findings say it dropped content is at least rework in
+    // `evals:gallery`, and a reviewer must not be able to save or export a
+    // pass for it. The function is shipped as source so the two can never be
+    // two versions.
+    const { renderMatrix } = await import("../evals/gallery/render")
+    const { mkdtempSync } = await import("node:fs")
+    const { tmpdir } = await import("node:os")
+    const { join } = await import("node:path")
+
+    const jobs = buildMatrix(themeIds, await assets(), { only: "component", languages: ["zh"], section: BASELINE_THEME })
+    const outDir = mkdtempSync(join(tmpdir(), "pptwise-gallery-floor-"))
+    const { manifest, svgs } = renderMatrix(jobs, outDir, "test")
+    const html = buildGalleryHtml(manifest, svgs)
+
+    expect(html).toContain("function effectiveVerdict")
+    const script = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => m[1]!).join("\n")
+    expect(script).not.toContain("__name(")
+    // Every place a verdict is read goes through the floor: what load does
+    // with a stored value, what the buttons offer, what the tally counts and
+    // what the export writes. The behaviour itself is exercised against the
+    // real shell in `evals/gallery/html-verdict-floor.test.mts`.
+    expect(script).toContain("const verdictOf =")
+    expect(script).toContain("verdict: verdictOf(p.id) || null")
+    expect(script).toMatch(/if \(eff\.coerced && eff\.verdict !== stored\)/)
+    expect(script).toContain("btn.disabled = true")
+    // And no reader is left on the raw stored value.
+    expect(script).not.toMatch(/\(verdicts\[p\.id\] \|\| \{\}\)\.verdict/)
+  }, 60_000)
+
   it("escapes the payload so no embedded content can close the script block", async () => {
     const { renderMatrix } = await import("../evals/gallery/render")
     const { mkdtempSync } = await import("node:fs")

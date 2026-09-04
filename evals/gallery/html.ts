@@ -26,6 +26,7 @@ import { slideEdgeFill } from "@/lib/slide-edge"
 import { namespaceSvgIds, svgIdPrefix } from "@/lib/svg-ids"
 import { BOUNDARY_SLOTS, FACE_SLOTS } from "./matrix"
 import { verdictFreshness, type Manifest } from "./render"
+import { effectiveVerdict } from "./verdict"
 
 /**
  * Chinese names for the menu slots, so the cross-cut view's rows read as
@@ -705,6 +706,7 @@ kbd {
 ${inlineRule(verdictFreshness)}
 
   const VERDICT_LABELS = { pass: "通过", limit: "限制使用", rework: "返工" };
+  const VERDICT_FLOOR_REASON = "这一页丢了内容且页面上没有任何提示，至少是 rework";
   // Short Chinese labels for the auditor's codes, plus which ones are worth
   // drawing in the alarm color. Truncation and dropped content mean the
   // reader is missing text outright; the rest are worth knowing but are
@@ -783,9 +785,35 @@ ${inlineRule(verdictFreshness)}
   }
   const isArchived = (id) => Boolean(archive[id]);
 
+  // The floor, embedded verbatim from verdict.ts so this shell and the
+  // automated merge cannot drift apart about a machine-checkable fact.
+  ${effectiveVerdict.toString()}
+
+  const findingCodesOf = (id) => ((pageById.get(id) || {}).findings || []).map((f) => f.code);
+  /** What this page's verdict is, after the floor. Every reader uses it. */
+  const verdictOf = (id) => effectiveVerdict((verdicts[id] || {}).verdict, findingCodesOf(id)).verdict;
+  /** True when the page dropped content, so pass and limit are not available. */
+  const floored = (id) => findingCodesOf(id).indexOf("content-dropped") !== -1;
+
+  // A verdict already in storage was saved before the floor existed, or under
+  // an older build of the same page. It is normalized on load rather than
+  // left to be exported as a pass over a page that lost content.
+  {
+    let changed = false;
+    for (const id of Object.keys(verdicts)) {
+      const stored = verdicts[id].verdict;
+      const eff = effectiveVerdict(stored, findingCodesOf(id));
+      if (eff.coerced && eff.verdict !== stored) { verdicts[id].verdict = eff.verdict; changed = true; }
+    }
+    if (changed) save();
+  }
+
   function setVerdict(id, value) {
     const e = entry(id);
-    e.verdict = e.verdict === value ? undefined : value;
+    const next = e.verdict === value ? undefined : value;
+    // Coerced rather than refused: the buttons for an unavailable grade are
+    // disabled, and a keyboard shortcut still lands on the honest answer.
+    e.verdict = effectiveVerdict(next, findingCodesOf(id)).verdict;
     stampHash(id, e);
     if (!e.verdict && !e.note) delete verdicts[id];
     save(); refreshCard(id); refreshTally();
@@ -910,6 +938,12 @@ ${inlineRule(verdictFreshness)}
       btn.dataset.verdict = key;
       btn.type = "button";
       btn.textContent = VERDICT_LABELS[key];
+      // A page whose manifest says it dropped content is at least rework, so
+      // the other two grades are not on offer and the button says why.
+      if (key !== "rework" && floored(p.id)) {
+        btn.disabled = true;
+        btn.title = VERDICT_FLOOR_REASON;
+      }
       btn.addEventListener("click", () => setVerdict(p.id, key));
       verdictsRow.appendChild(btn);
     }
@@ -959,7 +993,7 @@ ${inlineRule(verdictFreshness)}
   function refreshCard(id) {
     const c = cards.get(id);
     if (!c) return;
-    const v = (verdicts[id] || {}).verdict;
+    const v = verdictOf(id);
     c.card.classList.toggle("is-pass", v === "pass");
     c.card.classList.toggle("is-limit", v === "limit");
     c.card.classList.toggle("is-rework", v === "rework");
@@ -978,7 +1012,7 @@ ${inlineRule(verdictFreshness)}
     // one hover away, in the tooltip.
     let pass = 0, limit = 0, rework = 0;
     for (const p of visible) {
-      const v = (verdicts[p.id] || {}).verdict;
+      const v = verdictOf(p.id);
       if (v === "pass") pass++;
       else if (v === "limit") limit++;
       else if (v === "rework") rework++;
@@ -989,7 +1023,7 @@ ${inlineRule(verdictFreshness)}
     // what the export already does.
     let gp = 0, gl = 0, gr = 0;
     for (const p of MANIFEST.pages) {
-      const v = (verdicts[p.id] || {}).verdict;
+      const v = verdictOf(p.id);
       if (v === "pass") gp++;
       else if (v === "limit") gl++;
       else if (v === "rework") gr++;
@@ -1147,7 +1181,7 @@ ${inlineRule(verdictFreshness)}
     if (state.language !== "all" && p.language !== state.language) return false;
     if (state.theme !== "all" && p.section !== state.theme) return false;
     if (state.verdict !== "all") {
-      const v = (verdicts[p.id] || {}).verdict;
+      const v = verdictOf(p.id);
       if (state.verdict === "none" ? Boolean(v) : v !== state.verdict) return false;
     }
     if (state.finding === "stale") {
@@ -1407,7 +1441,7 @@ ${inlineRule(verdictFreshness)}
     bar.className = "gbar";
     let judged = 0;
     for (const key of ["pass", "limit", "rework"]) {
-      const n = ordered.filter((p) => (verdicts[p.id] || {}).verdict === key).length;
+      const n = ordered.filter((p) => verdictOf(p.id) === key).length;
       judged += n;
       if (n === 0) continue;
       const seg = document.createElement("i");
@@ -1846,9 +1880,14 @@ ${inlineRule(verdictFreshness)}
     bits.push(viewerIndex + 1 + " / " + viewerQueue.length);
     document.getElementById("viewer-facts").textContent = bits.join(" · ");
     document.getElementById("viewer-facehint").hidden = state.view !== "face";
-    const v = (verdicts[p.id] || {}).verdict;
+    const v = verdictOf(p.id);
     for (const btn of document.getElementById("viewer-verdicts").children) {
       btn.setAttribute("aria-pressed", String(btn.dataset.verdict === v));
+      // Same floor as the cards: a page that dropped content cannot be
+      // called pass or limit here either.
+      const unavailable = floored(p.id) && btn.dataset.verdict !== "rework";
+      btn.disabled = unavailable;
+      btn.title = unavailable ? VERDICT_FLOOR_REASON : "";
     }
     document.getElementById("viewer-note").value = (verdicts[p.id] || {}).note || "";
     // Only the axes this page is actually on. A component page names no face
@@ -2069,7 +2108,7 @@ ${inlineRule(verdictFreshness)}
           language: p.language,
           theme: p.theme,
           page: p.page,
-          verdict: verdicts[p.id].verdict || null,
+          verdict: verdictOf(p.id) || null,
           note: (verdicts[p.id].note || "").trim() || null,
           findings: (p.findings || []).map((f) => f.code),
           // Stale verdicts never reach this export: they are auto-archived
