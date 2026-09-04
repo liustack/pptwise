@@ -234,7 +234,7 @@ export const layoutDef: LayoutDefinition = {
     story: "A magazine-scale title runs left-aligned in oversized type while the year stacks vertically along the right edge, one character per line. A kicker sits top-left and a byline bottom-left.",
     positioning: "Opens a deck whose cover reads like a magazine front page. A short title, kicker, and date are the expected set.",
     audience: "A screen or printed page, where the oversized type and vertical date read as a masthead rather than a slide.",
-    notFor: "Openings that need a centered title or a full-bleed color field, which suit poster-center or fashion-masthead.",
+    notFor: "Openings that need a centered title or a full-bleed color field, which suit Center Stage or Full-Bleed Masthead.",
   },
   slideTypes: ["cover"],
   slots: [

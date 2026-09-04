@@ -176,10 +176,10 @@ export const layoutDef = {
   kind: "standard",
   story: {
     name: "Chalk Arc",
-    story: "A lecture kicker sits above the left-aligned title, and any bold-marked word earns a chalk-arc underline in the accent color. The page reads like a blackboard heading.",
+    story: "A lecture kicker sits above the left-aligned title, and any bold-marked word earns a chalk-arc underline in the highlight color. The page reads like a blackboard heading.",
     positioning: "A classroom-paced break that labels each section as a numbered lecture. The chalk arc appears only under bold runs, so a plain-text title stays clean.",
     audience: "Readers in a classroom or workshop following along on a screen or printed handout.",
-    notFor: "Decks that need a formal or corporate-paced transition, which suit subject-rule-chapter.",
+    notFor: "Decks that need a formal or corporate-paced transition, which suit Subject Rule.",
   },
   slideTypes: ["chapter"],
   slots: [

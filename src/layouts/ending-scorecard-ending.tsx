@@ -165,10 +165,10 @@ export const layoutDef = {
   kind: "standard",
   story: {
     name: "Tally Close",
-    story: "A heading tops the page, with up to three scored items stacked below and numbers or emphasis words tinted in the primary color. A sign-off line from the subtitle sits at the bottom.",
-    positioning: "The closing page for up to three items whose numbers or key words carry the primary tint. No rule, no kicker.",
+    story: "A heading tops the page, with up to three scored items stacked below and numbers or emphasis words tinted in the main color. A sign-off line from the subtitle sits at the bottom.",
+    positioning: "The closing page for up to three items whose numbers or key words carry the main-colour tint. No rule, no kicker.",
     audience: "Review meetings on a laptop or projector, where the tinted figures catch the eye.",
-    notFor: "Closings that need a labeled kicker, which belong in deliberation-ending or resolution-ending.",
+    notFor: "Closings that need a labeled kicker, which belong in Arranged Close or Numbered Resolution.",
   },
   slideTypes: ["ending"],
   slots: [

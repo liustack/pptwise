@@ -224,7 +224,7 @@ export const layoutDef: LayoutDefinition = {
     story: "A left-aligned oversized heading takes most of the page, with a full-width divider and the contact block underneath. Background images get a dark scrim and white text.",
     positioning: "The closing page for a single farewell line with contact attribution. No subtitle, no bullets.",
     audience: "Any screen size, adapting to a background photo when one is present.",
-    notFor: "Endings that carry a subtitle or a list, which belong in close-word-ending or defense-close-ending.",
+    notFor: "Endings that carry a subtitle or a list, which belong in Tinted Word or Conclusions List.",
   },
   slideTypes: ["ending"],
   slots: [

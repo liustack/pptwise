@@ -203,10 +203,10 @@ export const layoutDef: LayoutDefinition = {
   kind: "standard",
   story: {
     name: "Block Title",
-    story: "Heavyweight black type stretches across the left side of the page at the largest size on any opening. A tracked org name sits above, an accent signature bar anchors the bottom-left, and a two-line byline closes the bottom-right.",
+    story: "Heavyweight black type stretches across the left side of the page at the largest size on any opening. A tracked org name sits above, a highlight signature bar anchors the bottom-left, and a two-line byline closes the bottom-right.",
     positioning: "Opens a deck that carries institutional weight. The title owns the whole page, with no subheading and no image.",
     audience: "A boardroom or auditorium, where the oversized type is legible from the last row.",
-    notFor: "Openings that need a subheading or a lighter tone, which suit editorial-masthead or colophon.",
+    notFor: "Openings that need a subheading or a lighter tone, which suit Serif Masthead or colophon.",
   },
   slideTypes: ["cover"],
   slots: [

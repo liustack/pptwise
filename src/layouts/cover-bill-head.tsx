@@ -230,10 +230,10 @@ export const layoutDef: LayoutDefinition = {
   kind: "standard",
   story: {
     name: "Bill Poster",
-    story: "Extra-bold type bleeds from the left edge at poster scale, a thick primary rule spans the bottom, and a tilted date chip sits in the top-right corner. The footer splits the org name left and venue info right.",
+    story: "Extra-bold type bleeds from the left edge at poster scale, a thick main-colour rule spans the bottom, and a tilted date chip sits in the top-right corner. The footer splits the org name left and venue info right.",
     positioning: "Opens a deck that announces an event. A short punchy title and a date are the minimum.",
     audience: "A lobby screen or social-media thumbnail, where the oversized type grabs attention even at small sizes.",
-    notFor: "Openings with a subheading or a long title, which suit band-title or banner-title.",
+    notFor: "Openings with a subheading or a long title, which suit Title Band or Report Banner.",
   },
   slideTypes: ["cover"],
   slots: [

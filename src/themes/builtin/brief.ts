@@ -116,7 +116,7 @@ export const CONSULTING_THEME = {
     positioning: "Choose it when the audience wants the answer before the argument and will judge you on how tightly the numbers support it.",
     audience: "A team presenting a verdict to people who decide.",
     notFor: "Storytelling that needs suspense, warmth, or a slow reveal.",
-    lineage: "The brief deliverable: assertion headings, quiet gauges, a single accent that points.",
+    lineage: "The brief deliverable: assertion headings, quiet gauges, a single highlight that points.",
   },
   style: CONSULTING_TOKENS,
   // A marker-pen swipe behind the marked run — the board-room habit of

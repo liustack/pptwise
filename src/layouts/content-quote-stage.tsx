@@ -235,10 +235,10 @@ export const layoutDef = {
   kind: "standard",
   story: {
     name: "Keynote Line",
-    story: "The heading fills the page as oversized centred type, up to four lines at 92 points. A small annotation line below it holds an attribution or one sentence of context, nothing more.",
+    story: "The heading fills the page as oversized centred type, up to four lines. A small annotation line below it holds an attribution or one sentence of context, nothing more.",
     positioning: "Serves quote and statement at one block or none. This page holds exactly one idea and refuses a second: the line is the entire page.",
     audience: "A keynote hall where one sentence must reach the last row.",
-    notFor: "A quote with a visible source line and a paragraph of context, which belongs in pull-quote.",
+    notFor: "A quote that needs its speaker named beneath it, which belongs in Attributed Voice.",
   },
   slideTypes: ["content"],
   slots: [

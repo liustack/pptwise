@@ -170,7 +170,7 @@ export const layoutDef: LayoutDefinition = {
     story: "A vertical volume label hangs from the upper-right corner while the chapter title sits left-aligned in the lower half. A hand-drawn ink-stroke curve trails beneath the title.",
     positioning: "A quiet, literary break that reads like a bookmark between chapters. The brushstroke marks the pause without filling the page.",
     audience: "Readers at a desk or personal screen, close enough to see the vertical volume label.",
-    notFor: "Decks that need a high-energy entrance, which suit day-bill-chapter.",
+    notFor: "Decks that need a high-energy entrance, which suit Day Bill.",
   },
   slideTypes: ["chapter"],
   slots: [

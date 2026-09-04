@@ -284,10 +284,10 @@ export const layoutDef: LayoutDefinition = {
   kind: "standard",
   story: {
     name: "Corner Wedge",
-    story: "A triangular primary-color wedge enters from the bottom-right corner, with a brighter overlay slash inset from the hypotenuse. The title sits on the clear ground above or beside the wedge.",
-    positioning: "Opens a deck that needs a sharp geometric accent without splitting the page in half. A title, kicker, and subheading are the standard set.",
+    story: "A triangular main-colour wedge enters from the bottom-right corner, with a brighter overlay slash inset from the hypotenuse. The title sits on the clear ground above or beside the wedge.",
+    positioning: "Opens a deck that needs a sharp geometric highlight without splitting the page in half. A title, kicker, and subheading are the standard set.",
     audience: "A stage screen or tournament backdrop, where the angular cut reads as energy rather than decoration.",
-    notFor: "Openings that need a horizontal band or a full-height color block, which suit band-title or left-anchor.",
+    notFor: "Openings that need a horizontal band or a full-height color block, which suit Title Band or Color Anchor.",
   },
   slideTypes: ["cover"],
   params: {

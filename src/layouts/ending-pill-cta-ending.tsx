@@ -164,10 +164,10 @@ export const layoutDef = {
   kind: "standard",
   story: {
     name: "Capsule Button",
-    story: "A bold centered heading fills the upper half. Beneath it, an accent-colored capsule pill holds one call-to-action line drawn from the first bullet or paragraph.",
+    story: "A bold centered heading fills the upper half. Beneath it, a highlight-coloured capsule pill holds one call-to-action line drawn from the first bullet or paragraph.",
     positioning: "The closing page for a date or event line plus one CTA capsule. Holds one action item only.",
     audience: "Event screens and shared decks where the pill button needs to pop against a plain background.",
-    notFor: "Closings that carry more than one action item, which belong in action-pad-ending for a list of up to three.",
+    notFor: "Closings that carry more than one action item, which belong in Next Steps Pad for a list of up to three.",
   },
   slideTypes: ["ending"],
   slots: [

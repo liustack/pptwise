@@ -165,7 +165,7 @@ export const layoutDef = {
     story: "A solid-colored square holds the chapter number in inverted type, and the title sits to its right. A tick-mark rule near the bottom shows chapter progress along four segments.",
     positioning: "A structured break that stamps each section with a numbered block. The progress ticks at the bottom let the audience gauge how far through the deck they are.",
     audience: "Viewers on a projector or monitor who register the colored square as a section marker from across the room.",
-    notFor: "Decks that need a centered or full-width section break, which belong in rail-chapter or banner-chapter.",
+    notFor: "Decks that need a centered or full-width section break, which belong in Progress Dots or Underline Banner.",
   },
   slideTypes: ["chapter"],
   slots: [

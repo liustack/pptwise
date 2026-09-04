@@ -190,10 +190,10 @@ export const layoutDef: LayoutDefinition = {
   kind: "standard",
   story: {
     name: "Runway Black",
-    story: "A full-bleed primary field covers the page. The heading is set enormous with wide letter-spacing, an accent band runs across below it, and reversed-out meta sits at the bottom.",
-    positioning: "The closing page for one oversized word or short phrase, with the accent band as the only ornament. No list, no CTA.",
+    story: "A full-bleed main-colour field covers the page. The heading is set enormous with wide letter-spacing, a highlight band runs across below it, and reversed-out meta sits at the bottom.",
+    positioning: "The closing page for one oversized word or short phrase, with the highlight band as the only ornament. No list, no CTA.",
     audience: "Large projection in a dark venue, where the giant reversed lettering hits the back wall.",
-    notFor: "Closings that need readable body text or a list, which belong in signoff-ending or action-pad-ending.",
+    notFor: "Closings that need readable body text or a list, which belong in Field Roster or Next Steps Pad.",
   },
   paintsOwnBackground: true,
   slideTypes: ["ending"],

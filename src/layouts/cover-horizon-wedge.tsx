@@ -188,10 +188,10 @@ export const layoutDef: LayoutDefinition = {
   kind: "standard",
   story: {
     name: "Horizon Ramp",
-    story: "A full-width primary-color wedge covers the bottom of the page, rising gently from left to right, with an optional pulse polyline on its slope. The title and subheading sit on the clear ground above, and reversed meta tucks into the wedge.",
+    story: "A full-width main-colour wedge covers the bottom of the page, rising gently from left to right, with an optional pulse polyline on its slope. The title and subheading sit on the clear ground above, and reversed meta tucks into the wedge.",
     positioning: "Opens a deck that needs a horizon line rather than a vertical split or a centered title. A title, kicker, and subheading fit naturally.",
     audience: "A projector or widescreen, where the wedge reads as a rising ground plane.",
-    notFor: "Openings that need a vertical color block, which suit left-anchor or split-diagonal.",
+    notFor: "Openings that need a vertical color block, which suit Color Anchor or Diagonal Cut.",
   },
   slideTypes: ["cover"],
   slots: [

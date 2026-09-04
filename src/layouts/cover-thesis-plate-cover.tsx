@@ -184,7 +184,7 @@ export const layoutDef = {
     story: "A serif title on ivory paper, a colored block below carrying the author and date in reversed type. A thin rule at the foot closes the page like a title page closes a book.",
     positioning: "Opens a deck that names a document, its author, and its date. No subtitle, no image, no bullet points beside the heading.",
     audience: "A printed binding or a shared PDF where the cover doubles as a formal title page.",
-    notFor: "Covers that omit authorship and rely on color alone, which belong on ikb-field-cover.",
+    notFor: "Covers that omit authorship and rely on color alone, which belong on Signal Field.",
   },
   slideTypes: ["cover"],
   slots: [

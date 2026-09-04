@@ -330,10 +330,10 @@ export const layoutDef = {
   kind: "standard",
   story: {
     name: "Runway Metrics",
-    story: "Two to four KPI values run side by side in large type, vertical hairlines between them, each with a label and a trend note below. The most critical value takes the accent colour.",
-    positioning: "Serves data and fact at one KPI block of two to four items, Runway theme only. Choose it to land several key numbers side by side.",
+    story: "Two to four KPI values run side by side in large type, vertical hairlines between them, each with a label and a trend note below. The most critical value takes the highlight colour.",
+    positioning: "Serves data and fact at one KPI block of two to four items, and the data page of the Runway preset uses it. Choose it to land several key numbers side by side.",
     audience: "A stage presentation where metrics must read from a distance.",
-    notFor: "A single dominant number, which belongs in stat-hero.",
+    notFor: "A single dominant number, which belongs in Scoreboard.",
   },
   slideTypes: ["content"],
   slots: [

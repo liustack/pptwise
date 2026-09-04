@@ -245,10 +245,10 @@ export const layoutDef: LayoutDefinition = {
   kind: "standard",
   story: {
     name: "Colophon Plate",
-    story: "A narrow accent leader block marks the first line of the title, which runs down a left axis in large type. A tracked org name and subheading follow beneath, and a small byline sits in the bottom-left corner.",
+    story: "A narrow highlight leader block marks the first line of the title, which runs down a left axis in large type. A tracked org name and subheading follow beneath, and a small byline sits in the bottom-left corner.",
     positioning: "Opens a deck whose cover reads like a book's colophon page. A title, org name, and byline are the expected content.",
     audience: "Paper or a laptop screen, where the quiet left column reads as a title page rather than a poster.",
-    notFor: "Openings that need centered or oversized type, which suit poster-center or institutional-block.",
+    notFor: "Openings that need centered or oversized type, which suit Center Stage or Block Title.",
   },
   slideTypes: ["cover"],
   slots: [

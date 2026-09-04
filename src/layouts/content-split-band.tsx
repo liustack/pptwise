@@ -354,10 +354,10 @@ export const layoutDef: LayoutDefinition = {
   kind: "standard",
   story: {
     name: "Horizon Band",
-    story: "A full-bleed colour band runs edge to edge across the top, carrying kicker, heading and subheading. Below it the body stacks on the plain page surface with no divider.",
+    story: "A full-bleed colour band runs edge to edge across the top, carrying kicker, heading and subheading. Below it the body stacks on the plain page below with no divider.",
     positioning: "Serves data and points at up to four blocks. This is the only page that cuts the canvas into two full-width horizontal bands, one filled, one plain.",
     audience: "A projection or large screen where a bold header band anchors the eye from across the room.",
-    notFor: "Content that needs columns, which belongs in two-column or asymmetric-triptych.",
+    notFor: "Content that needs columns, which belongs in Twin Columns or Lead and Panels.",
   },
   slideTypes: ["content"],
   slots: [

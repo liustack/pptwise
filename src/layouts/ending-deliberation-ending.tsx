@@ -200,10 +200,10 @@ export const layoutDef: LayoutDefinition = {
   kind: "standard",
   story: {
     name: "Arranged Close",
-    story: "A kicker from the heading or labeled ARRANGEMENTS sits at the top. Up to three arrangement lines stack below, an accent closing rule marks the boundary, and a sign-off anchors the bottom.",
-    positioning: "The closing page for up to three formal arrangements and a sign-off. The accent rule is the only ornament.",
+    story: "A kicker from the heading or labeled ARRANGEMENTS sits at the top. Up to three arrangement lines stack below, a highlight closing rule marks the boundary, and a sign-off anchors the bottom.",
+    positioning: "The closing page for up to three formal arrangements and a sign-off. The highlight rule is the only ornament.",
     audience: "Committee rooms and review panels reading the arrangements projected on a wall screen.",
-    notFor: "Closings that carry informal reminders, which belong in reminder-list-ending as a plain undecorated list.",
+    notFor: "Closings that carry informal reminders, which belong in Bare Checklist as a plain undecorated list.",
   },
   slideTypes: ["ending"],
   slots: [

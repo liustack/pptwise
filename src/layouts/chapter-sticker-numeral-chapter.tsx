@@ -134,10 +134,10 @@ export const layoutDef = {
   kind: "standard",
   story: {
     name: "Tilted Badge",
-    story: "A rounded accent square, tilted a few degrees, holds the chapter number in inverted type. The title sits to its right, aligned with the badge center.",
+    story: "A rounded highlight square, tilted a few degrees, holds the chapter number in inverted type. The title sits to its right, aligned with the badge center.",
     positioning: "A playful section break whose tilted badge gives the page a casual, handmade feel. It works as a chapter marker in decks that want energy without formality.",
     audience: "Viewers on a shared screen or printed handout in an informal setting.",
-    notFor: "Decks that need a formal or corporate-register break, which belong in subject-rule-chapter or block-numeral-chapter.",
+    notFor: "Decks that need a formal or corporate-register break, which belong in Subject Rule or Square Index.",
   },
   slideTypes: ["chapter"],
   slots: [

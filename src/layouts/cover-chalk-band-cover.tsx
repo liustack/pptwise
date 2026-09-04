@@ -226,7 +226,7 @@ export const layoutDef = {
     story: "A horizontal color band spans the page and holds the title in reversed ink. Above the band sits a quiet kicker, below it a date or focus line and an author foot.",
     positioning: "Opens a deck with a title, an optional subtitle inside the band, and a date or topic note underneath. No image, no columns.",
     audience: "A classroom projector or a shared display where the colored stripe catches the eye before anyone sits down.",
-    notFor: "Covers that need a full-bleed field rather than a stripe, which belong on ikb-field-cover.",
+    notFor: "Covers that need a full-bleed field rather than a stripe, which belong on Signal Field.",
   },
   slideTypes: ["cover"],
   slots: [

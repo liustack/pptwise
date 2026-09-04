@@ -132,10 +132,10 @@ export const layoutDef = {
   kind: "standard",
   story: {
     name: "Mirror Act",
-    story: "Two accent bars flank a centered act kicker, and the title sits centered below. The mirrored bars give the break a theatrical symmetry, like a playbill announcing the next act.",
+    story: "Two highlight bars flank a centered act kicker, and the title sits centered below. The mirrored bars give the break a theatrical symmetry, like a playbill announcing the next act.",
     positioning: "A centered, ceremony-pace break for decks that count their sections as acts. The symmetry and generous whitespace suit a presentation that unfolds in deliberate stages.",
     audience: "Viewers in a lecture room or event hall who read the act number before the title.",
-    notFor: "Decks that need an asymmetric or left-aligned break, which belong in poster-chapter or ghost-rule-chapter.",
+    notFor: "Decks that need an asymmetric or left-aligned break, which belong in Broadsheet Numeral or Ghost Bar.",
   },
   slideTypes: ["chapter"],
   slots: [

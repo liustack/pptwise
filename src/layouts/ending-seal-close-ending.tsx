@@ -134,7 +134,7 @@ export const layoutDef = {
     story: "One centered sentence fills the page, with a small seal glyph on the center axis below it standing as a visual period. A next-talk line from the subtitle anchors the bottom.",
     positioning: "The closing page for a single sentence where the seal stamp is the only mark. No list, no rule, no CTA.",
     audience: "Projected in lecture halls or cultural venues where the seal reads as a signature.",
-    notFor: "Closings that need a list of follow-up items, which belong in next-lecture-ending or reminder-list-ending.",
+    notFor: "Closings that need a list of follow-up items, which belong in After Class or Bare Checklist.",
   },
   slideTypes: ["ending"],
   slots: [

@@ -177,10 +177,10 @@ export const layoutDef = {
   kind: "standard",
   story: {
     name: "Gallery Exit",
-    story: "A centered sentence fills the middle, a subtitle guide line sits below, and a short accent rule runs on the center axis between them. An organization-and-date foot anchors the bottom.",
+    story: "A centered sentence fills the middle, a subtitle guide line sits below, and a short highlight rule runs on the center axis between them. An organization-and-date foot anchors the bottom.",
     positioning: "The closing page for one sentence and a directional note. The centered short rule is the only mark.",
     audience: "Gallery and venue screens at reading distance, where the quiet rule reads as a wayfinding mark.",
-    notFor: "Closings that need a full-width rule, which belong in rule-close-ending where the line spans the page.",
+    notFor: "Closings that need a full-width rule, which belong in Lead Rule where the line spans the page.",
   },
   slideTypes: ["ending"],
   slots: [

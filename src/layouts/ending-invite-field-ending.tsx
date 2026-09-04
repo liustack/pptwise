@@ -186,10 +186,10 @@ export const layoutDef = {
   kind: "standard",
   story: {
     name: "Open Invitation",
-    story: "A full-bleed primary field covers the page. One invitation sentence sits centered in reversed type, a short accent rule underneath, and a faded colophon at the bottom.",
+    story: "A full-bleed main-colour field covers the page. One invitation sentence sits centered in reversed type, a short highlight rule underneath, and a faded colophon at the bottom.",
     positioning: "The closing page for a single invitation sentence on bold-colored ground. No list, no CTA button.",
     audience: "Event invitations projected or shared digitally, where the colored field reads as a card.",
-    notFor: "Closings that need a CTA button, which belong in seat-cta-ending or ticket-cta-ending.",
+    notFor: "Closings that need a CTA button, which belong in Cut Corner CTA or Stub Reverse.",
   },
   paintsOwnBackground: true,
   slideTypes: ["ending"],

@@ -344,7 +344,7 @@ export const layoutDef: LayoutDefinition = {
     story: "A wide left column holds one lead block. A narrower right column splits into two framed panels, a vertical divider marking the boundary.",
     positioning: "Serves hierarchy and evidence at up to four blocks: one lead item plus up to three secondaries. Choose it when one thing matters most and the rest annotate it.",
     audience: "A meeting where the main conclusion lands first and supporting material sits alongside.",
-    notFor: "Two things of equal weight, which belong in two-column.",
+    notFor: "Two things of equal weight, which belong in Twin Columns.",
   },
   slideTypes: ["content"],
   slots: [

@@ -121,7 +121,7 @@ export const layoutDef = {
     story: "A tracked chapter-index kicker sits centered near the top, followed by a centered title in lighter weight and an optional italic subheading below. No watermark, no rule, no decoration.",
     positioning: "A breath-pace break that reads like a title page in a poetry collection. The generous whitespace makes it the gentlest section divider in the set.",
     audience: "Readers on a laptop or printed page who pause at the verse before turning to the content.",
-    notFor: "Decks that need a numbered or bold section break, which belong in act-chapter or block-numeral-chapter.",
+    notFor: "Decks that need a numbered or bold section break, which belong in Mirror Act or Square Index.",
   },
   slideTypes: ["chapter"],
   slots: [

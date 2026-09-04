@@ -166,10 +166,10 @@ export const layoutDef: LayoutDefinition = {
   kind: "standard",
   story: {
     name: "Bare Checklist",
-    story: "A heading at the top, then up to three reminder lines stacked plain, no decoration, no kicker. A contact line in primary color sits at the bottom.",
-    positioning: "The closing page for up to three takeaway items with zero ornament. No rule, no box, no accent block.",
+    story: "A heading at the top, then up to three reminder lines stacked plain, no decoration, no kicker. A contact line in main color sits at the bottom.",
+    positioning: "The closing page for up to three takeaway items with zero ornament. No rule, no box, no highlight block.",
     audience: "Shared slide decks read on phones and laptops, where a clean list photographs well.",
-    notFor: "Closings that need a labeled kicker or accent box, which belong in homework-close-ending or action-pad-ending.",
+    notFor: "Closings that need a labeled kicker or highlight box, which belong in Assignment Box or Next Steps Pad.",
   },
   slideTypes: ["ending"],
   slots: [

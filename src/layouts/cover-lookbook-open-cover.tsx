@@ -229,10 +229,10 @@ export const layoutDef = {
   kind: "standard",
   story: {
     name: "Season Folio",
-    story: "A brand name in tracked caps sits top-left, a season or date sits top-right, and a bold primary rule runs the full width between them. Below the rule a single-line display title dominates the page.",
-    positioning: "Opens a deck that needs a large single-line title, a brand identity line, and a page number. No subtitle body, no image, no multi-line heading.",
+    story: "A brand name in tracked caps sits top-left, a season or date sits top-right, and a bold coloured rule runs the full width between them. Below the rule a single-line display title dominates the page.",
+    positioning: "Opens a deck that needs a large single-line title, a brand identity line, and a page number. One subtitle line can sit under the title, and there is no image and no second title line.",
     audience: "A projected display or a printed lookbook where oversized type and a bold rule read as editorial authority.",
-    notFor: "Covers that need two lines of title or a subtitle, which belong on type-rule-cover.",
+    notFor: "Covers whose title needs a second line, which belong on Rule and Type.",
   },
   slideTypes: ["cover"],
   slots: [

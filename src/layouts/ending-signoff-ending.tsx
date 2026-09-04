@@ -168,10 +168,10 @@ export const layoutDef = {
   kind: "standard",
   story: {
     name: "Field Roster",
-    story: "A full-bleed primary field covers the page. A left-aligned heading sits in the upper half, up to four sign-off items stack below, a short white rule marks the boundary, and a colophon anchors the bottom.",
+    story: "A full-bleed main-colour field covers the page. A left-aligned heading sits in the upper half, up to four sign-off items stack below, a short white rule marks the boundary, and a colophon anchors the bottom.",
     positioning: "The closing page for up to four action or sign-off items on a bold colored ground. Not a thank-you page.",
     audience: "Projected screens where the colored field and white text read from the back of a room.",
-    notFor: "Endings where the background should stay neutral, which belong in action-pad-ending on paper-colored ground.",
+    notFor: "Endings where the background should stay neutral, which belong in Next Steps Pad on paper-colored ground.",
   },
   paintsOwnBackground: true,
   slideTypes: ["ending"],

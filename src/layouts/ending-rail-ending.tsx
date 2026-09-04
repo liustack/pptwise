@@ -251,7 +251,7 @@ export const layoutDef: LayoutDefinition = {
     story: "Two overlapping color rectangles sit in the lower-left corner. The heading is centered and large, with a hairline dividing it from a contact block and copyright line below.",
     positioning: "A closing page for one farewell line plus authored contact details. No bullet list, no call to action.",
     audience: "Meeting rooms where the corner blocks give the eye a landmark from across the table.",
-    notFor: "Endings that need a full-bleed colored field, which belong in signoff-ending or invite-field-ending.",
+    notFor: "Endings that need a full-bleed colored field, which belong in Field Roster or Open Invitation.",
   },
   slideTypes: ["ending"],
   slots: [

@@ -359,7 +359,7 @@ export const layoutDef: LayoutDefinition = {
     story: "A filled badge prints the chapter-dot-page number where the usual section label would be, pinning each page to its position in the deck. The heading sits beside the badge, content stacks below.",
     positioning: "Serves process and list at up to four blocks. The visible ordinal makes it the page for sequenced steps or any run the audience counts through.",
     audience: "A speaker walking through numbered steps in a lecture or workshop.",
-    notFor: "Unordered points with no sequence, which read more naturally on narrow-column.",
+    notFor: "Unordered points with no sequence, which read more naturally on Margin Column.",
   },
   slideTypes: ["content"],
   slots: [

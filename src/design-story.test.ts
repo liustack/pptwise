@@ -4,6 +4,7 @@ import { COMPONENT_STORY_TYPES, componentStory } from "@/ir/components/stories"
 import { KIND_STORIES } from "@/ir/kind-stories"
 import { KIND_VALUES } from "@/ir/narrative-values"
 import { LAYOUT_REGISTRY } from "@/layouts/registry"
+import { MOTIFS } from "@/motifs"
 import { THEME_DEFINITIONS } from "@/themes/definitions"
 import {
   isValidDesignStory,
@@ -97,6 +98,51 @@ describe("design story drift", () => {
         : validateDesignStory(subject.story).map((problem) => `${subject.id} ${problem.field}: ${problem.message}`),
     )
     expect(problems).toEqual([])
+  })
+
+  /**
+   * Words a customer would have to read the source to understand.
+   *
+   * Two kinds. A page design's own id is hyphenated in every case that
+   * matters (`bento-panel`, `action-pad-ending`), and so is every motif id,
+   * so a hyphenated id in prose is never anything but a leak — the public
+   * name is right there in the same story's `name`. And the colour tokens a
+   * theme is built from are code, not colours a reader can picture: nobody
+   * outside this repo knows what `accent` or `primary` is.
+   *
+   * What is deliberately absent is as important. `statement`, `colophon` and
+   * `constellation` are ids too, and all three are ordinary English a story
+   * is allowed to use — `statement` is one of the eleven content moves
+   * besides. A theme's id is absent for a different reason: since the label
+   * alignment, a theme's id, its label, and its story name are one word, so
+   * naming Brief in prose names the preset a customer can see, not an
+   * internal key. `text` stays out because forbidding it would forbid
+   * describing a page.
+   */
+  const CODE_WORDS: readonly string[] = [
+    ...Object.keys(LAYOUT_REGISTRY).filter((id) => id.includes("-")),
+    ...Object.keys(MOTIFS),
+    "primary",
+    "accent",
+    "surface",
+    "muted",
+    "bg",
+    "fg",
+  ]
+
+  it("keeps ids and colour tokens out of every story", () => {
+    const leaks = subjects().flatMap((subject) =>
+      subject.story === undefined
+        ? []
+        : (Object.entries(subject.story) as [string, string][]).flatMap(([field, text]) =>
+            field === "name" || typeof text !== "string"
+              ? []
+              : CODE_WORDS.filter((word) =>
+                  new RegExp(`(?<![\\p{L}\\p{N}-])${word}(?![\\p{L}\\p{N}-])`, "iu").test(text),
+                ).map((word) => `${subject.id}.${field} says "${word}"`),
+          ),
+    )
+    expect(leaks, "a story is read by customers — name the page, not the code").toEqual([])
   })
 
   it("gives each object a distinct name", () => {

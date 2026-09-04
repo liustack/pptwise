@@ -163,7 +163,7 @@ export const layoutDef: LayoutDefinition = {
     story: "A kicker at the top, up to three action items stacked below, a border rule, an optional sign-off, and a meta line at the bottom. Dense but orderly.",
     positioning: "The closing page for up to three next steps with full meta attribution. The most information-dense closing page available.",
     audience: "Close-range screens and printed briefs where the reader needs every detail on one page.",
-    notFor: "Closings that need a minimal farewell, which belong in masthead-ending or constellation-ending.",
+    notFor: "Closings that need a minimal farewell, which belong in Serif Curtain or Closing Dot.",
   },
   slideTypes: ["ending"],
   slots: [

@@ -239,7 +239,7 @@ export const layoutDef: LayoutDefinition = {
     story: "A giant roman numeral with a trailing period anchors the upper left, followed by a title and an italic subheading. A fine-line arc ornament occupies the right half of the page.",
     positioning: "A section break that counts chapters in roman numerals, lending each part a classical weight. The arc ornament varies by theme, giving the break a visual signature beyond the number.",
     audience: "Readers at a meeting table or projected screen who register the roman numeral before the title.",
-    notFor: "Decks that need arabic numerals or a clean page with no decoration, which belong in constellation-chapter.",
+    notFor: "Decks that need arabic numerals or a clean page with no decoration, which belong in Solid Numeral.",
   },
   slideTypes: ["chapter"],
   params: {

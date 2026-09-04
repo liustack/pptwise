@@ -220,7 +220,7 @@ export const layoutDef = {
     story: "Title, subtitle, and a short horizontal rule, nothing else. The title pins to the lower third and lets a second line grow upward, keeping the page quiet and anchored.",
     positioning: "Opens a deck whose cover needs a title, an explanatory line, and an author foot. No image, no number, no color field.",
     audience: "A laptop screen or a printed page where clean type is easier to read than a poster.",
-    notFor: "Covers that lead with a figure or a saturated color field, which belong on stat-cover or ikb-field-cover.",
+    notFor: "Covers that lead with a figure or a saturated color field, which belong on Ledger Figure or Signal Field.",
   },
   slideTypes: ["cover"],
   slots: [

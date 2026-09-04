@@ -225,10 +225,10 @@ export const layoutDef = {
   kind: "standard",
   story: {
     name: "Gilt Card",
-    story: "Everything centers on one vertical axis against a dark ground. The title glows in the accent color, a short muted rule divides it from the foot, and letter-spaced lines frame it above and below.",
+    story: "Everything centers on one vertical axis against a dark ground. The title glows in the highlight color, a short soft grey rule divides it from the foot, and letter-spaced lines frame it above and below.",
     positioning: "Opens a deck whose cover reads like a card pulled from an envelope: a title, a host line, and a date. No image, no body text.",
     audience: "A projected screen or a printed handout where the centered, ceremonial composition signals something worth attending.",
-    notFor: "Covers that need left-aligned type or a color field, which belong on pledge-open-cover or ikb-field-cover.",
+    notFor: "Covers that need left-aligned type or a color field, which belong on Open Pledge or Signal Field.",
   },
   slideTypes: ["cover"],
   slots: [

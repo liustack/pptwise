@@ -247,10 +247,10 @@ export const layoutDef: LayoutDefinition = {
   kind: "standard",
   story: {
     name: "Center Stage",
-    story: "Every element sits on one vertical axis: an oversized title, a thin accent rule, an italic subheading, and a quiet meta line at the bottom. Nothing competes with the title for attention.",
+    story: "Every element sits on one vertical axis: an oversized title, a thin highlight rule, an italic subheading, and a quiet meta line at the bottom. Nothing competes with the title for attention.",
     positioning: "Opens a deck built around a single concept. A short title hits hardest, though two lines still hold the center.",
     audience: "A darkened auditorium with a projector, where the title must reach the back row.",
-    notFor: "Openings that need a kicker, a date chip, or top-of-page attribution, which suit banner-title.",
+    notFor: "Openings that need a kicker, a date chip, or top-of-page attribution, which suit Report Banner.",
   },
   slideTypes: ["cover"],
   params: {

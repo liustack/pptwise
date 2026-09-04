@@ -195,9 +195,9 @@ export const layoutDef = {
   story: {
     name: "Crayon Callout",
     story: "A bold heading in up to two lines sits left, a large sun doodle fills the right. A crayon underline accents the heading, and a small body block or quote sits below.",
-    positioning: "Serves statement and quote at one body block, Crayon theme only. Choose it to make one finding or one quote memorable on a playful page.",
+    positioning: "Serves statement and quote at one body block, and the statement page of the Crayon preset uses it. Choose it to make one finding or one quote memorable on a playful page.",
     audience: "A workshop screen where one lively takeaway needs to stick.",
-    notFor: "Multiple items that each need a card, which belong in crayonbox-cards.",
+    notFor: "Multiple items that each need a card, which belong in Crayon Triptych.",
   },
   slideTypes: ["content"],
   slots: [

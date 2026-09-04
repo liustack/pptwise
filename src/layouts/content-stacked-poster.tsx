@@ -613,10 +613,10 @@ export const layoutDef: LayoutDefinition = {
   kind: "standard",
   story: {
     name: "Centered Poster",
-    story: "Everything centres: section label, accent bar, heavy heading, then one hero visual filling the lower page. A second block gets a caption strip below a divider, and three or more drop to a full-width stack.",
+    story: "Everything centres: section label, highlight bar, heavy heading, then one hero visual filling the lower page. A second block gets a caption strip below a divider, and three or more drop to a full-width stack.",
     positioning: "Serves data and photo at one or two blocks in a centred poster composition. The centre axis suits a chart or image that needs the whole page.",
     audience: "A dark hall where one large visual must carry the room.",
-    notFor: "Three or more equal blocks, which fit better in bento-panel.",
+    notFor: "Three or more equal blocks, which fit better in Mosaic Tiles.",
   },
   slideTypes: ["content"],
   slots: [

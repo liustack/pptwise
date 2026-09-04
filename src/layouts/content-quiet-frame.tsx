@@ -281,10 +281,10 @@ export const layoutDef: LayoutDefinition = {
   kind: "standard",
   story: {
     name: "Open Frame",
-    story: "Symmetric 200px margins on both sides, every element centred. A short accent hairline sits between heading and body, and the whitespace itself is the page's only decoration.",
+    story: "Symmetric 200px margins on both sides, every element centred. A short highlight hairline sits between heading and body, and the whitespace itself is the page's only decoration.",
     positioning: "Serves points, list and statement at up to four blocks. Choose it when the page needs room to breathe and the content is light enough to float.",
     audience: "A boardroom or gallery where restraint signals confidence.",
-    notFor: "Dense multi-block pages, which arrange better in bento-panel.",
+    notFor: "Dense multi-block pages, which arrange better in Mosaic Tiles.",
   },
   slideTypes: ["content"],
   slots: [

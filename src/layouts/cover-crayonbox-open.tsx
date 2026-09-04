@@ -176,7 +176,7 @@ export const layoutDef = {
     story: "A rounded pill carries the kicker at the top, then a chunky two-line title drops below with a crayon underline mark. Hand-drawn sun and star doodles float in the upper right.",
     positioning: "Opens a deck with a playful title, a date, and decorative doodles. No image, no body text, no formal attribution.",
     audience: "A projected screen or a tablet where bright color and drawn marks set a casual, energetic mood.",
-    notFor: "Covers that need a formal kicker or a document-style meta block, which belong on thesis-plate-cover.",
+    notFor: "Covers that need a formal kicker or a document-style meta block, which belong on Title Plate.",
   },
   slideTypes: ["cover"],
   slots: [

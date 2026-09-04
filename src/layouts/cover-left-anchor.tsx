@@ -352,10 +352,10 @@ export const layoutDef: LayoutDefinition = {
   kind: "standard",
   story: {
     name: "Color Anchor",
-    story: "A full-height primary-color block claims the left forty percent of the page, with the title written inside it in white. The right panel carries a kicker, subheading, and meta line on a clear ground.",
+    story: "A full-height main-colour block claims the left forty percent of the page, with the title written inside it in white. The right panel carries a kicker, subheading, and meta line on a clear ground.",
     positioning: "Opens a deck whose title pairs with a long subheading or a right-side kicker. The two panels split the first page into separate reading zones.",
     audience: "A conference-room screen or printed report, where the color block reads like a book spine from across the table.",
-    notFor: "Openings where the title should span the full width, which suit banner-title or poster-center.",
+    notFor: "Openings where the title should span the full width, which suit Report Banner or Center Stage.",
   },
   slideTypes: ["cover"],
   params: {

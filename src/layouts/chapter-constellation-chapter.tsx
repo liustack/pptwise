@@ -145,11 +145,11 @@ export const layoutDef: LayoutDefinition = {
   id: "constellation-chapter",
   kind: "standard",
   story: {
-    name: "Accent Numeral",
-    story: "A bold accent-colored chapter number anchors the left side of the page while the title and subheading sit to its right. A single hairline at the bottom closes the composition.",
+    name: "Solid Numeral",
+    story: "A bold highlight-coloured chapter number anchors the left side of the page while the title and subheading sit to its right. A single hairline at the bottom closes the composition.",
     positioning: "A section break whose large opaque number draws the eye before the title does. The number dominates, making each chapter feel counted rather than merely named.",
-    audience: "Viewers at a projector or shared screen where the accent digit registers across the room.",
-    notFor: "Decks that need a translucent or ghosted number, which belong in ghost-rule-chapter or ghost-section-chapter.",
+    audience: "Viewers at a projector or shared screen where the highlight digit registers across the room.",
+    notFor: "Decks that need a translucent or ghosted number, which belong in Ghost Bar or Section Kicker.",
   },
   slideTypes: ["chapter"],
   slots: [

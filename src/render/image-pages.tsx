@@ -1262,7 +1262,7 @@ export const imageSplitLayoutDef: LayoutDefinition = {
     story: "A full-height bleed image fills one half of the page, left or right. The other half holds the heading, a rule, the subheading and any remaining blocks in a single column.",
     positioning: "Serves photo with one required image plus text in a vertical split. Choose it when a photograph and paragraphs each need a full-height column on one page.",
     audience: "Readers viewing a proposal or plan on screen, where the image anchors the argument.",
-    notFor: "An image above or below the text, which belongs in image-top or image-bottom.",
+    notFor: "An image above or below the text, which belongs in Top Takeover or Base Takeover.",
   },
   slideTypes: ["content"],
   slots: [
@@ -1285,7 +1285,7 @@ export const imageTopLayoutDef: LayoutDefinition = {
     story: "A full-width bleed image fills the top of the page. Below it the heading and up to three columns of text share the remaining space, each column stacking its own block.",
     positioning: "Serves photo with one required image above and up to three text columns below. Choose it when the image leads and a few short texts follow underneath.",
     audience: "A screen or projection where the image enters first and the text completes it.",
-    notFor: "An image at the bottom of the page, which belongs in image-bottom.",
+    notFor: "An image at the bottom of the page, which belongs in Base Takeover.",
   },
   slideTypes: ["content"],
   slots: [
@@ -1306,7 +1306,7 @@ export const imageBottomLayoutDef: LayoutDefinition = {
     story: "Centred heading and text blocks fill the upper page. A full-width bleed image stretches from the lower half to the bottom edge, with an optional translucent caption overlay.",
     positioning: "Serves photo with one required image below the text. Choose it when the argument comes first and the photograph closes the page as visual evidence.",
     audience: "A presentation where text sets up the image rather than the image setting up the text.",
-    notFor: "An image that should lead from the top, which belongs in image-top.",
+    notFor: "An image that should lead from the top, which belongs in Top Takeover.",
   },
   slideTypes: ["content"],
   slots: [
@@ -1331,7 +1331,7 @@ export const imageAnnotateLayoutDef: LayoutDefinition = {
     story: "A framed image sits centred with an optional caption beneath it, and up to four numbered annotations surround it, each drawn from one list item. Heading and subheading float above.",
     positioning: "Serves photo and evidence with one required image and up to four annotation items. Choose it to label details inside the picture the way a textbook diagram would.",
     audience: "A lecture or training session where the audience needs to identify specific details in the frame.",
-    notFor: "An image paired with free-form text blocks instead of annotations, which belongs in image-split.",
+    notFor: "An image paired with free-form text blocks instead of annotations, which belongs in Side Takeover.",
   },
   slideTypes: ["content"],
   slots: [

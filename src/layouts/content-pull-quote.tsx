@@ -228,10 +228,10 @@ export const layoutDef = {
   kind: "standard",
   story: {
     name: "Attributed Voice",
-    story: "Large italic centred text delivers the quote, an accent-coloured line names the speaker, and a muted paragraph adds context. The heading becomes a small context line above the quote.",
-    positioning: "Serves quote at one body block or none. This page carries a quotation, its speaker and a paragraph of context, and a second quote has no place here.",
+    story: "Large italic centred text carries the words, with the heading set small above it as context. Lead with a quotation and the speaker prints beneath it, lead with a paragraph and the heading itself becomes the quote.",
+    positioning: "Serves quote at exactly one block, in one of two modes: a quotation that prints its speaker, or a heading quote with a paragraph of background beneath it. It draws one mode or the other, never both.",
     audience: "A presentation where the exact words matter and the speaker deserves a byline.",
-    notFor: "A bare sentence with no source or speaker, which reads better as statement.",
+    notFor: "A bare sentence with no source or speaker, which reads better as Verse.",
   },
   slideTypes: ["content"],
   slots: [

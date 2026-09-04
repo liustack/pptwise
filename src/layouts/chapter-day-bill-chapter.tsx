@@ -151,7 +151,7 @@ export const layoutDef = {
     story: "A bold DAY kicker fills the upper half, and a display-scale title in heavy weight fills the lower half. The title is the loudest element on the page, set at billboard scale.",
     positioning: "A playbill-energy break that splits the deck into numbered days or acts. The oversized title announces each day like a marquee.",
     audience: "Viewers at a conference or event venue reading the screen from several rows back.",
-    notFor: "Decks that need a quiet academic section break, which suit gilt-ordinal-chapter.",
+    notFor: "Decks that need a quiet academic section break, which suit Gilt Ordinal.",
   },
   slideTypes: ["chapter"],
   slots: [

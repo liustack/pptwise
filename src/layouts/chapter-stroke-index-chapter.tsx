@@ -153,10 +153,10 @@ export const layoutDef = {
   kind: "standard",
   story: {
     name: "Hollow Numeral",
-    story: "A large stroked chapter number drawn in outline sits above the title, with a full-width rule near the bottom. An accent segment on that rule fills proportionally to the chapter count.",
+    story: "A large stroked chapter number drawn in outline sits above the title, with a full-width rule near the bottom. A highlight segment on that rule fills proportionally to the chapter count.",
     positioning: "A technical-register break whose hollow number reads as a wireframe index. The progress rule underneath gives the audience a visual anchor for how far they are in the deck.",
     audience: "Viewers on a monitor or projector following a structured presentation with several numbered sections.",
-    notFor: "Decks that need a solid, filled number or a color-field break, which belong in block-numeral-chapter or fashion-chapter.",
+    notFor: "Decks that need a solid, filled number or a color-field break, which belong in Square Index or Color Block.",
   },
   slideTypes: ["chapter"],
   slots: [

@@ -163,10 +163,10 @@ export const layoutDef = {
   kind: "standard",
   story: {
     name: "Round Mark",
-    story: "An accent-color vertical mark anchors the left edge beside a ROUND kicker and left-aligned title. A thin full-width rule at the bottom gives the page a heads-up-display feel.",
+    story: "A highlight-color vertical mark anchors the left edge beside a ROUND kicker and left-aligned title. A thin full-width rule at the bottom gives the page a heads-up-display feel.",
     positioning: "A match-strip break that counts rounds in a competition-structured deck. The HUD floor rule keeps tension taut between chapters.",
     audience: "Viewers on a large screen or monitor, where the bar and floor rule read like a scoreboard marker.",
-    notFor: "Decks that need a quiet, bookish section break, which suit mirror-volume-chapter.",
+    notFor: "Decks that need a quiet, bookish section break, which suit Mirror Volume.",
   },
   slideTypes: ["chapter"],
   slots: [

@@ -244,10 +244,10 @@ export const layoutDef: LayoutDefinition = {
   kind: "standard",
   story: {
     name: "Full-Bleed Masthead",
-    story: "The entire page is a solid primary-color field. An oversized title dominates the upper half, a full-width accent band cuts through the middle, and a tracked subheading and meta line sit below.",
+    story: "The entire page is a solid main-colour field. An oversized title dominates the upper half, a full-width highlight band cuts through the middle, and a tracked subheading and meta line sit below.",
     positioning: "Opens a deck that demands maximum first-page impact. A short title or a single bold word hits hardest.",
     audience: "A darkened auditorium where the saturated color field fills the wall.",
-    notFor: "Light-ground or photo-led openings, which suit paper-masthead or show-headline.",
+    notFor: "Light-ground or photo-led openings, which suit Typeset Masthead or Split Stage.",
   },
   paintsOwnBackground: true,
   slideTypes: ["cover"],

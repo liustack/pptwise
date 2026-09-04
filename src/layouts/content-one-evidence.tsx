@@ -246,7 +246,7 @@ export const layoutDef = {
     story: "A full-sentence assertion runs across the top in up to three lines. Below it a single chart, table or image fills the remaining canvas as evidence, no second block.",
     positioning: "Serves evidence at exactly one visual block. This page holds one claim and one piece of proof, and refuses a second exhibit: state it, then prove it.",
     audience: "A review board or executive meeting where one chart must back one sentence.",
-    notFor: "Multiple charts or items that each need their own frame, which belong in bento-panel.",
+    notFor: "Multiple charts or items that each need their own frame, which belong in Mosaic Tiles.",
   },
   slideTypes: ["content"],
   slots: [

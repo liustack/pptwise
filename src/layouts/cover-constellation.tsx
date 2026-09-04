@@ -266,7 +266,7 @@ export const layoutDef: LayoutDefinition = {
     story: "The title anchors to the bottom of the page while nine glowing nodes and a connecting polyline float in the right half. A rule and subheading sit between the title and the constellation.",
     positioning: "Opens a deck on a technical or data-driven topic, where the first page hints at a network, a system, or a set of linked ideas.",
     audience: "A conference stage or widescreen monitor, where the constellation pattern is large enough to register.",
-    notFor: "Openings that give the full page to text alone, which suit banner-title or editorial-masthead.",
+    notFor: "Openings that give the full page to text alone, which suit Report Banner or Serif Masthead.",
   },
   slideTypes: ["cover"],
   params: {

@@ -185,10 +185,10 @@ export const layoutDef = {
   kind: "standard",
   story: {
     name: "Mirror Volume",
-    story: "A muted volume kicker centers above the title, and when a subtitle appears a pair of short accent bars flanks it on either side. Everything sits on a center axis, symmetrical and still.",
+    story: "A soft grey volume kicker centers above the title, and when a subtitle appears a pair of short highlight bars flanks it on either side. Everything sits on a center axis, symmetrical and still.",
     positioning: "A ceremonial break that treats each section as a named volume. The mirrored bars appear only when a subtitle is present, keeping an empty page clean.",
     audience: "Readers in a boardroom or lecture hall who read the centered title as a deliberate pause in the argument.",
-    notFor: "Decks that need an informal or fast-paced transition, which suit issue-line-chapter.",
+    notFor: "Decks that need an informal or fast-paced transition, which suit Issue Line.",
   },
   slideTypes: ["chapter"],
   slots: [

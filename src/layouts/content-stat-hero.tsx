@@ -264,10 +264,10 @@ export const layoutDef = {
   kind: "standard",
   story: {
     name: "Scoreboard",
-    story: "One number or short phrase fills the page at 180-point display size, a caption names what it measures, a source line names where it came from. Nothing else competes.",
+    story: "One number or short phrase fills the page at display size, a caption names what it measures, a source line names where it came from. Nothing else competes.",
     positioning: "Serves fact at exactly one KPI or none. This page holds one number and refuses a second: the lone figure is the argument, anything beside it dilutes it.",
     audience: "A keynote stage or annual report where one statistic must command the room.",
-    notFor: "Multiple metrics shown side by side, which belong in gauge-stats or show-figures.",
+    notFor: "Multiple metrics shown side by side, which belong in Gauge Columns or Runway Metrics.",
   },
   slideTypes: ["content"],
   slots: [

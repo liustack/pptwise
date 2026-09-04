@@ -178,7 +178,7 @@ export const layoutDef: LayoutDefinition = {
     story: "A centered serif title sits above a short underline and an italic subheading. The page is quiet, the type moderately large, and nothing else competes for the eye.",
     positioning: "Opens a deck that reads like a journal or review cover. Only a title and optional subheading, no argument, no image.",
     audience: "Readers at arm's length, whether on a laptop screen or a printed handout.",
-    notFor: "Openings that need a bold or oversized title, which suit poster-center or fashion-masthead.",
+    notFor: "Openings that need a bold or oversized title, which suit Center Stage or Full-Bleed Masthead.",
   },
   slideTypes: ["cover"],
   params: {

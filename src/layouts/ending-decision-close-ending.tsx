@@ -208,9 +208,9 @@ export const layoutDef: LayoutDefinition = {
   story: {
     name: "Recorded Decision",
     story: "A kicker labeled DECISION sits at the top. Two decision lines stack below, a border rule runs across, and a multi-line sign-off anchors the bottom.",
-    positioning: "The closing page for exactly two recorded decisions and a sign-off. The kicker carries the accent color.",
+    positioning: "The closing page for exactly two recorded decisions and a sign-off. The kicker carries the highlight color.",
     audience: "Internal meetings and memos where the decision must be stated on one projected page.",
-    notFor: "Closings with three items, which belong in resolution-ending for three formally recorded points.",
+    notFor: "Closings with three items, which belong in Numbered Resolution for three formally recorded points.",
   },
   slideTypes: ["ending"],
   slots: [

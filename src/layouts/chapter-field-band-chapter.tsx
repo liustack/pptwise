@@ -147,10 +147,10 @@ export const layoutDef = {
   kind: "standard",
   story: {
     name: "Color Field",
-    story: "The entire page fills with the primary color, and the chapter title appears in reversed type on the left, with a part kicker above. Nothing else is on the page.",
+    story: "The entire page fills with the main color, and the chapter title appears in reversed type on the left, with a part kicker above. Nothing else is on the page.",
     positioning: "A full-immersion break that floods the screen between sections. This is the loudest section page in the set, a curtain rather than a beat.",
     audience: "Viewers in a darkened auditorium or at a projector who feel the color hit as a physical shift.",
-    notFor: "Decks that need a subtle pause between topics, which suit gilt-ordinal-chapter or ghost-rule-chapter.",
+    notFor: "Decks that need a subtle pause between topics, which suit Gilt Ordinal or Ghost Bar.",
   },
   paintsOwnBackground: true,
   slideTypes: ["chapter"],

@@ -1132,10 +1132,10 @@ export const layoutDef: LayoutDefinition = {
   kind: "standard",
   story: {
     name: "Mosaic Tiles",
-    story: "Content explodes into up to six unequal cards sorted by weight, the heaviest taking the widest tile. Small items tile beside the hero.",
-    positioning: "Serves list, points and hierarchy at up to six blocks. Choose it when several items of different weight each need their own card on one page.",
+    story: "Content splits into card items that tile across the page. Two to five items take areas sized by weight with the heaviest widest, six share an equal three-by-two grid.",
+    positioning: "Serves list, points and hierarchy at up to six card items, counted after each block is split, so one set of figures can fill several tiles on its own. Choose it when several items each need their own frame.",
     audience: "Readers scanning a set of cards on a shared screen or printout.",
-    notFor: "A single chart or image that needs the full page, which belongs in stacked-poster or one-evidence.",
+    notFor: "A single chart or image that needs the full page, which belongs in Centered Poster or Claim and Proof.",
   },
   slideTypes: ["content"],
   slots: [

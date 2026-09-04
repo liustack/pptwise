@@ -158,10 +158,10 @@ export const layoutDef = {
   kind: "standard",
   story: {
     name: "Open Pledge",
-    story: "A bold left-aligned sentence fills the page, with emphasized words picked out in the primary color. Above it a small kicker names the source, and a date sits at the foot.",
+    story: "A bold left-aligned sentence fills the page, with emphasized words picked out in the main color. Above it a small kicker names the source, and a date sits at the foot.",
     positioning: "Opens a deck with a single declarative title that reads as a commitment or a thesis. No subtitle, no image, no meta block.",
     audience: "A projected screen or a shared document where one sentence must land as a public statement.",
-    notFor: "Covers that need a subtitle or a meta attribution block, which belong on thesis-plate-cover.",
+    notFor: "Covers that need a subtitle or a meta attribution block, which belong on Title Plate.",
   },
   slideTypes: ["cover"],
   slots: [

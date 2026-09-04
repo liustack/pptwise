@@ -285,9 +285,9 @@ export const layoutDef: LayoutDefinition = {
   story: {
     name: "Adaptive Masthead",
     story: "A large left-aligned title fills the upper half, an org label sits top-left, and a divider plus meta row close the bottom. When a background image is present the whole page switches to white type on a dark scrim.",
-    positioning: "Opens a deck that may or may not carry a cover photo. By default it holds a title with a date and author, but can shift into a heavier image-led opening.",
+    positioning: "Opens a deck that may or may not carry a cover photo. An author and a date ride along when the chosen branding mode prints document details, and a supplied photograph turns it into an image-led opening.",
     audience: "A laptop or projector, where the same file may appear with or without a cover image.",
-    notFor: "Openings that always show a photograph, which suit show-headline.",
+    notFor: "Openings that always show a photograph, which suit Split Stage.",
   },
   slideTypes: ["cover"],
   params: {

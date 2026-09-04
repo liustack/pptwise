@@ -160,7 +160,7 @@ export const layoutDef: LayoutDefinition = {
     story: "A centered heading in the display serif fills the upper half, an italic subtitle underneath. One quiet line of contact details sits near the bottom, well away from everything else.",
     positioning: "The closing page for a single sign-off line and an attribution. No list, no call to action.",
     audience: "Readers at a boardroom table or on a laptop, close enough to read the small footer.",
-    notFor: "Closings that carry a next-step list, which belong in action-pad-ending or signoff-ending.",
+    notFor: "Closings that carry a next-step list, which belong in Next Steps Pad or Field Roster.",
   },
   slideTypes: ["ending"],
   slots: [

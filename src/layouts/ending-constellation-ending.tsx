@@ -286,11 +286,11 @@ export const layoutDef: LayoutDefinition = {
   id: "constellation-ending",
   kind: "standard",
   story: {
-    name: "Accent Period",
-    story: "The heading sits centered with its trailing period punched in the accent color. A short accent bar marks the signature line, and stacked meta lines anchor the bottom.",
+    name: "Closing Dot",
+    story: "The heading sits centered with its trailing period punched in the highlight color. A short highlight bar marks the signature line, and stacked meta lines anchor the bottom.",
     positioning: "A single farewell sentence with contact details stacked below. No bullets, no action items.",
     audience: "Conference-room screens where one bright punctuation mark reads across the table.",
-    notFor: "Endings that need a list of next steps, which belong in defense-close-ending or resolution-ending.",
+    notFor: "Endings that need a list of next steps, which belong in Conclusions List or Numbered Resolution.",
   },
   slideTypes: ["ending"],
   slots: [

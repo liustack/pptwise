@@ -383,7 +383,7 @@ export const layoutDef = {
     story: "CJK characters drop one by one down a right-hand column, reading top to bottom. A small vermilion seal anchors the lower right, and the organization name runs as a quiet foot line.",
     positioning: "Opens a deck with a short CJK title, an optional vertical subtitle beside it, and a seal mark. Latin titles revert to horizontal left-aligned type.",
     audience: "A projected screen or printed page where vertical CJK type signals a deliberate departure from the landscape default.",
-    notFor: "Latin-heavy titles that need horizontal display weight, which belong on type-rule-cover.",
+    notFor: "Latin-heavy titles that need horizontal display weight, which belong on Rule and Type.",
   },
   slideTypes: ["cover"],
   slots: [

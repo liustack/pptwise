@@ -149,10 +149,10 @@ export const layoutDef = {
   kind: "standard",
   story: {
     name: "Lead Rule",
-    story: "A centered sentence or two sits in the middle of the page, with a full-width hairline below whose leading segment is thicker and colored in the accent. A sign-off sits underneath.",
-    positioning: "The closing page for a single wrap-up sentence. The accent lead on the rule is the only ornament.",
+    story: "A centered sentence or two sits in the middle of the page, with a full-width hairline below whose leading segment is thicker and colored in the highlight. A sign-off sits underneath.",
+    positioning: "The closing page for a single wrap-up sentence. The highlight lead on the rule is the only ornament.",
     audience: "Screen readers and meeting-room projectors, where the rule gives the eye a clean stop.",
-    notFor: "Endings that need a colored field or a CTA button, which belong in invite-field-ending or pill-cta-ending.",
+    notFor: "Endings that need a colored field or a CTA button, which belong in Open Invitation or Capsule Button.",
   },
   slideTypes: ["ending"],
   slots: [

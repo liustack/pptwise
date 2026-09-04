@@ -202,10 +202,10 @@ export const layoutDef: LayoutDefinition = {
   kind: "standard",
   story: {
     name: "Underline Banner",
-    story: "A centered title and subheading float over the theme color field, with a faint watermark number behind them. An accent-colored underline traces the width of the last text line.",
-    positioning: "A color-field break that marks each section with a quiet accent rule under the final line. The underline ties the title cluster together, making the break feel finished rather than floating.",
+    story: "A centered title and subheading float over the theme color field, with a faint watermark number behind them. A highlight-coloured underline traces the width of the last text line.",
+    positioning: "A color-field break that marks each section with a quiet highlight rule under the final line. The underline ties the title cluster together, making the break feel finished rather than floating.",
     audience: "Presenters projecting to a mid-size room where the color field and underline register without effort.",
-    notFor: "Decks that need a progress indicator across chapters, which belong in rail-chapter.",
+    notFor: "Decks that need a progress indicator across chapters, which belong in Progress Dots.",
   },
   slideTypes: ["chapter"],
   slots: [

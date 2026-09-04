@@ -277,7 +277,7 @@ export const layoutDef = {
     story: "A publication name sits left, a date sits right, and a pair of rules, one thick and one thin, runs the full width between them. The lead title drops below the rules in large type.",
     positioning: "Opens a deck that borrows the front-page form of a periodical: a masthead, a date, and one headline. A subtitle and a colophon foot complete the page.",
     audience: "A screen or printed page where the double rule and masthead lend the cover the weight of a serial publication.",
-    notFor: "Covers that center everything on one axis, which belong on double-frame-cover.",
+    notFor: "Covers that center everything on one axis, which belong on Double Frame.",
   },
   slideTypes: ["cover"],
   slots: [

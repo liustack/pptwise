@@ -178,10 +178,10 @@ export const layoutDef: LayoutDefinition = {
   kind: "standard",
   story: {
     name: "Twin Columns",
-    story: "The page splits down the middle into two equal columns under a shared heading and accent bar. A hairline rule runs the full width beneath them.",
+    story: "The page splits down the middle into two equal columns under a shared heading and highlight bar. A hairline rule runs the full width beneath them.",
     positioning: "Serves comparison and list at up to four blocks divided across two columns. Choose it when two ideas need to stand side by side on one page.",
     audience: "A meeting room where both halves can be read at once from every seat.",
-    notFor: "A single dominant item with secondary notes beside it, which belongs in asymmetric-triptych.",
+    notFor: "A single dominant item with secondary notes beside it, which belongs in Lead and Panels.",
   },
   slideTypes: ["content"],
   slots: [

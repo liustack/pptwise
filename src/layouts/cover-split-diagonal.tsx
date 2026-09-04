@@ -198,10 +198,10 @@ export const layoutDef: LayoutDefinition = {
   kind: "standard",
   story: {
     name: "Diagonal Cut",
-    story: "A primary-color block fills the left side of the page and tapers along a diagonal edge. The title sits in the clear zone to the right, followed by a short accent bar and subheading.",
+    story: "A main-colour block fills the left side of the page and tapers along a diagonal edge. The title sits in the clear zone to the right, followed by a short highlight bar and subheading.",
     positioning: "Opens a deck that needs a geometric split without centering the title. A title, subheading, and kicker fit naturally.",
     audience: "A conference-room projector or widescreen, where the diagonal reads as a structural edge rather than decoration.",
-    notFor: "Openings where the title belongs inside the color block, which is what left-anchor does.",
+    notFor: "Openings where the title belongs inside the color block, which is what Color Anchor does.",
   },
   slideTypes: ["cover"],
   slots: [

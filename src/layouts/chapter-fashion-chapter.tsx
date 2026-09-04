@@ -152,10 +152,10 @@ export const layoutDef: LayoutDefinition = {
   kind: "standard",
   story: {
     name: "Color Block",
-    story: "The entire page fills with the accent color, a giant numeral sinks into the field as a tonal watermark, and the title sits heavy-weight over it. A thin rule and organization name close the bottom.",
+    story: "The entire page fills with the highlight color, a giant numeral sinks into the field as a tonal watermark, and the title sits heavy-weight over it. A thin rule and organization name close the bottom.",
     positioning: "The loudest section break available: a full-bleed color wall that resets the eye between chapters. It carries only a title and a chapter label, so every word has to earn its place.",
     audience: "Viewers in a dark auditorium or event hall where a saturated color field projects as a visual curtain.",
-    notFor: "Decks that need a neutral or paper-toned break, which belong in ghost-section-chapter or folio-ghost-chapter.",
+    notFor: "Decks that need a neutral or paper-toned break, which belong in Section Kicker or Folio Rule.",
   },
   paintsOwnBackground: true,
   slideTypes: ["chapter"],

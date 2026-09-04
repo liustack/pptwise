@@ -148,10 +148,10 @@ export const layoutDef: LayoutDefinition = {
   kind: "standard",
   story: {
     name: "Open Ask",
-    story: "The heading is the ask, set large and centered with a single accent-colored button below it and emphasis words tinted to the accent. Nothing else on the page.",
+    story: "The heading is the ask, set large and left-aligned, with an optional line of subtitle under it. One button in the theme's main colour closes the page, and emphasis words take the same tint.",
     positioning: "The closing page for a direct request and one call to action. No gratitude, no list, no contact block.",
     audience: "Pitch rooms where the ask needs to land on one screen, readable from the investor seats.",
-    notFor: "Closings that carry a list of next steps, which belong in action-pad-ending or resolution-ending.",
+    notFor: "Closings that carry a list of next steps, which belong in Next Steps Pad or Numbered Resolution.",
   },
   slideTypes: ["ending"],
   slots: [

@@ -146,7 +146,7 @@ export const layoutDef = {
     story: "A solid-colored box holds an inverted lesson number, and the title sits left-aligned below it. The box reads like a tab or badge, stamping each section with its place in a sequence.",
     positioning: "A classroom-pace break that counts sections as lessons. The inverted-number box is the only decoration, keeping the page spare enough for a workbook or teaching deck.",
     audience: "Readers in a workshop or training session, following along on screen or in a printed handout.",
-    notFor: "Decks that need a large display number or a dramatic reset, which belong in poster-chapter or fashion-chapter.",
+    notFor: "Decks that need a large display number or a dramatic reset, which belong in Broadsheet Numeral or Color Block.",
   },
   slideTypes: ["chapter"],
   slots: [

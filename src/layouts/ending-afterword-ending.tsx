@@ -203,7 +203,7 @@ export const layoutDef: LayoutDefinition = {
     story: "A kicker labeled AFTERWORD sits at the top. Two lines of closing text fill the middle, a foot rule runs below, and an optional next-issue preview anchors the bottom.",
     positioning: "The closing page for a two-line editorial sign-off and a teaser for the next issue. No list, no CTA.",
     audience: "Newsletter readers and periodical audiences, on screen or in print.",
-    notFor: "Closings that carry a task list, which belong in reminder-list-ending or homework-close-ending.",
+    notFor: "Closings that carry a task list, which belong in Bare Checklist or Assignment Box.",
   },
   slideTypes: ["ending"],
   slots: [

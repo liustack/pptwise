@@ -168,10 +168,10 @@ export const layoutDef = {
   kind: "standard",
   story: {
     name: "Section Kicker",
-    story: "A tracked SECTION kicker in the accent color sits above a left-aligned title, with the chapter number ghosted at near-background opacity in the lower right. The title carries the meaning, the ghost carries the count.",
+    story: "A tracked SECTION kicker in the highlight color sits above a left-aligned title, with the chapter number ghosted at near-background opacity in the lower right. The title carries the meaning, the ghost carries the count.",
     positioning: "A labeled section break that announces each part by name and number. The SECTION kicker makes the structure explicit for decks whose audience reads linearly.",
     audience: "Readers on a shared screen or laptop following a structured report or analysis.",
-    notFor: "Decks that need a centered or symmetrical break, which belong in verse-chapter or act-chapter.",
+    notFor: "Decks that need a centered or symmetrical break, which belong in Verse Opening or Mirror Act.",
   },
   slideTypes: ["chapter"],
   slots: [

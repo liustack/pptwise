@@ -165,9 +165,9 @@ export const layoutDef = {
   story: {
     name: "Signal Field",
     story: "A single saturated field covers the page edge to edge. The title sits left in reversed ink, large and bold, with a short bar underneath that closes the thought.",
-    positioning: "Opens a deck whose title alone must carry the page. No subtitle, no date chip, no co-pilot text beside the heading.",
+    positioning: "Opens a deck whose title alone must carry the page. A short subtitle can sit near the foot, and there is no room for a date chip or a byline beside the heading.",
     audience: "A projected wall or shared screen where one color and one sentence set the tone from across the room.",
-    notFor: "Covers that need visible authorship or a date line on the title page, which belong on report-open-cover.",
+    notFor: "Covers that need visible authorship or a date line on the title page, which belong on Report Card.",
   },
   paintsOwnBackground: true,
   slideTypes: ["cover"],

@@ -365,9 +365,9 @@ export const layoutDef = {
   story: {
     name: "Feature Frame",
     story: "A large framed image sits on one side, decorative corner brackets cropping its edges. A bold heading and up to three parameter rows stand across a vertical divide.",
-    positioning: "Serves photo at one image plus up to two body blocks, Runway theme only. Choose it to feature one photograph and annotate it with specs or insight alongside.",
+    positioning: "Serves photo at one image plus up to two body blocks, and the photo page of the Runway preset uses it. Choose it to feature one photograph and annotate it with specs or insight alongside.",
     audience: "A creative review where one image needs commentary on the same page.",
-    notFor: "Multiple images shown as a collection, which belong in show-gallery.",
+    notFor: "Multiple images shown as a collection, which belong in Strip Grid.",
   },
   slideTypes: ["content"],
   slots: [
