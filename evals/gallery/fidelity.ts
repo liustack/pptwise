@@ -553,6 +553,8 @@ export function checkPageFidelity(svg: string, slide: Slide): PageFidelity {
    * placed.
    */
   const owner = new Map<Element, number>()
+  /** Every box that holds at least one painted field, whoever it belongs to. */
+  const inked = new Set<Element>()
   {
     const ink = new Map<Element, Map<number, number>>()
     for (const [component, els] of footprint) {
@@ -562,6 +564,7 @@ export function checkPageFidelity(svg: string, slide: Slide): PageFidelity {
         const counts = ink.get(box) ?? new Map<number, number>()
         counts.set(component, (counts.get(component) ?? 0) + 1)
         ink.set(box, counts)
+        inked.add(box)
       }
     }
     for (const [box, counts] of ink) {
@@ -581,15 +584,27 @@ export function checkPageFidelity(svg: string, slide: Slide): PageFidelity {
    * that was never placed has no box, and the marker `layoutContentFit`
    * leaves for it sits outside every box, at the page's own level.
    *
-   * `data-dropped-silent` is deliberately not consulted. It separates a loss
-   * a reader can see from one they cannot (`render/drop-marker.tsx`), which
-   * is `deck-audit`'s severity question, not this scan's: both say content
-   * was lost here, and here is what this function reads.
+   * A component that painted nothing at all is the third case, and the one
+   * that has no footprint to reason from: `SvgContent` still gave it a box,
+   * the box holds its declaration, and no text in it belongs to anybody. An
+   * empty box that declares a loss is the component that was meant to fill
+   * it saying it drew none of itself — a 16-series line chart declining in a
+   * 328px band used to be reported as fifty separately unexplained fields.
+   * Each such box speaks once: two vanished components need two of them, so
+   * one decline cannot cover for a second.
    *
    * What it stops is the blanket: one chart declaring three cut labels used
    * to excuse every other loss on its page, a paragraph that reached nobody
    * included.
    */
+  /**
+   * Boxes that declare a loss and hold no painted field of anyone's — one
+   * entry per box, spent by the first component that claims it.
+   */
+  const vacantDeclarations = drops
+    .map((drop) => boxOf(drop))
+    .filter((box): box is Element => box !== null && !owner.has(box) && !inked.has(box))
+
   function licenses(component: number): boolean {
     const owned = Array.from(owner)
       .filter(([, c]) => c === component)
@@ -599,6 +614,12 @@ export function checkPageFidelity(svg: string, slide: Slide): PageFidelity {
     // subtree its painted fields share is the block that speaks for it.
     const scope = scopes.get(component)
     if (scope && drops.some((drop) => boxOf(drop) === null && contains(scope, drop))) return true
+    // Painted nothing anywhere: an empty box declaring a loss is this
+    // component's own decline, and it answers for exactly one component.
+    if (!scope && vacantDeclarations.length > 0) {
+      vacantDeclarations.shift()
+      return true
+    }
     // Nothing of this component is anywhere on the page, so the declaration
     // that covers it is the page's own.
     return drops.some((drop) => boxOf(drop) === null)

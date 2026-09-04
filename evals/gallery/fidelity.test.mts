@@ -23,7 +23,7 @@ import { installNodePlatform } from "@/platform/node"
 import { COMPONENT_BUILDERS } from "./corpus/components"
 import { corpusAssets, layoutPage, type CorpusAssets } from "./corpus/decks"
 import { LANGUAGE_IDS, LEXICONS, type LanguageId } from "./corpus/lexicon"
-import { checkPageFidelity, exempt, faceOf, scanned, widened } from "./fidelity"
+import { checkPageFidelity, exempt, faceOf, jobSlide, scanned, widened } from "./fidelity"
 import { buildMatrix } from "./matrix"
 import { renderMatrix } from "./render"
 
@@ -243,6 +243,93 @@ describe("a drop declaration speaks only for the component that made it", () => 
       components: [{ type: "bullets", items: ["kept one", "kept two", "cut away"], style: "default" }],
     } as unknown as Slide
     expect(checkPageFidelity(page(`<g data-dropped="1" />`), overflowing).missing).toEqual([])
+  })
+})
+
+describe("a live component that declines outright is not fifty unexplained fields", () => {
+  it("a 16-series line chart in a band that cannot hold it reports zero missing fields", () => {
+    const ir = validateIr({
+      version: "5",
+      filename: "declined-chart",
+      theme: { id: "consulting" },
+      meta: {},
+      assets: { images: {} },
+      slides: [
+        {
+          type: "content",
+          kind: "data",
+          heading: "十六条系列的折线图",
+          components: [
+            {
+              type: "chart",
+              chart_type: "line",
+              series: Array.from({ length: 16 }, (_, i) => ({
+                name: `系列 ${i + 1}`,
+                data: [
+                  { x: "Q1", y: i + 1 },
+                  { x: "Q2", y: i + 2 },
+                ],
+              })),
+            },
+          ],
+        },
+      ],
+    }).ir!
+    const slide = jobSlide(ir, 0)
+    const svg = renderSlideSvg(ir, 0)
+    // The chart really did decline, inside its own box, painting no field.
+    expect(svg).toMatch(/data-dropped="[1-9]/)
+    const result = checkPageFidelity(svg, slide)
+    expect(result.authored).toBeGreaterThan(40)
+    expect(result.missing).toEqual([])
+  })
+})
+
+describe("a component that painted nothing is answered for by its own empty box", () => {
+  const slide = {
+    type: "content",
+    kind: "points",
+    heading: "Head",
+    components: [
+      { type: "bullets", items: ["kept one", "kept two"], style: "default" },
+      { type: "paragraph", text: "VANISHED" },
+    ],
+  } as unknown as Slide
+
+  /** Two boxes: one with painted bullets, one holding only a declaration. */
+  const page = (secondBox: string) =>
+    `<svg xmlns="http://www.w3.org/2000/svg"><g data-face="two-column">` +
+    `<text x="96" y="150" font-size="46">Head</text>` +
+    `<g data-audit-rect="96,228,1088,412">` +
+    `<g data-audit-box="96,244,1088"><text x="96" y="260" font-size="18">kept one</text>` +
+    `<text x="96" y="290" font-size="18">kept two</text></g>` +
+    `${secondBox}</g></g></svg>`
+
+  it("accepts the loss when the empty box declares it", () => {
+    const svg = page(`<g data-audit-box="96,400,1088"><g data-dropped="1" /></g>`)
+    expect(checkPageFidelity(svg, slide).missing).toEqual([])
+  })
+
+  it("still reports it when the empty box declares nothing", () => {
+    const svg = page(`<g data-audit-box="96,400,1088"></g>`)
+    expect(checkPageFidelity(svg, slide).missing.map((m) => m.path)).toEqual([
+      "components[1](paragraph).text",
+    ])
+  })
+
+  it("one empty declaration answers for one component, not for both", () => {
+    const twoGone = {
+      ...slide,
+      components: [
+        { type: "bullets", items: ["kept one", "kept two"], style: "default" },
+        { type: "paragraph", text: "VANISHED" },
+        { type: "paragraph", text: "ALSO VANISHED" },
+      ],
+    } as unknown as Slide
+    const svg = page(
+      `<g data-audit-box="96,400,1088"><g data-dropped="1" /></g><g data-audit-box="96,500,1088"></g>`,
+    )
+    expect(checkPageFidelity(svg, twoGone).missing).toHaveLength(1)
   })
 })
 
