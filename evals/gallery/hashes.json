@@ -1566,6 +1566,11 @@
       "geometry": "1uocd4n",
       "color": "iog3d9"
     },
+    "consulting--aside--gauge-stats": {
+      "hash": "b9ogar",
+      "geometry": "1aodkxe",
+      "color": "1vui6vs"
+    },
     "consulting--comp--architecture--zh": {
       "hash": "67bnac",
       "geometry": "10j0tj7",
@@ -2395,6 +2400,11 @@
       "hash": "w4iruk",
       "geometry": "9hnh6n",
       "color": "ce37na"
+    },
+    "crayon--aside--crayonbox-cards": {
+      "hash": "4ki1id",
+      "geometry": "jmftm7",
+      "color": "zx5dy1"
     },
     "crayon--comp--architecture--zh": {
       "hash": "i3zg2n",
@@ -7005,6 +7015,11 @@
       "hash": "fanshk",
       "geometry": "1t6kw5p",
       "color": "15xlnzb"
+    },
+    "runway--aside--show-figures": {
+      "hash": "1fsbg6s",
+      "geometry": "ucbynt",
+      "color": "j588oc"
     },
     "runway--comp--architecture--zh": {
       "hash": "1459my9",
