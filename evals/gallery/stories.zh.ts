@@ -1029,7 +1029,7 @@ export const STORY_ZH: Readonly<Record<string, Partial<Record<DesignStoryField, 
     name: "小数编号",
     story: "一个展示级小数编号锚定在左上方，章节标题和副标题叠在它下面。底部一条带三个刻度的测量尺贯穿页面全宽。",
     positioning: "一种技术文档式的分隔，用小数索引为章节编号。测量尺赋予页面工程图的精确和栅格感。",
-    audience: "在笔记本电脑或打印页面上把小数当作日后引用的编号来对待的读者。",
+    audience: "在笔记本电脑或打印页面上会报出小数编号来指认某一节的读者。",
     notFor: "需要温暖或戏剧化入场的演示，那种场合适合 day-bill-chapter 或 one-word-chapter。",
   },
   "layout:issue-line-chapter": {
