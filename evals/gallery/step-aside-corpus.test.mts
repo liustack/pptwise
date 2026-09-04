@@ -24,16 +24,21 @@ describe("the corpus pages that exercise the step-aside", () => {
     it(`${spec.theme} · ${spec.face} steps aside and keeps its theme`, { timeout: 60_000 }, async () => {
       const lex = nativeLexiconFor(spec.theme)
       const assets = await corpusAssets(lex)
-      const ir = stepAsidePage(lex, assets, spec.theme, spec.kind, spec.series)
+      const ir = stepAsidePage(lex, assets, spec.theme, spec.kind, spec.component)
       const svg = renderSlideSvg(ir, 0)
 
       expect(svg).toContain(`data-face-stepped-aside="${spec.face}"`)
       // The whole point: the page the reviewer sees has lost nothing.
       expect(svg).not.toMatch(/data-dropped="[1-9]/)
-      // One series short of the pin, the face still holds its own page. A
-      // refit that moves the boundary changes a page a human looks at, and
-      // this is what says so out loud rather than only in a hash.
-      const held = renderSlideSvg(stepAsidePage(lex, assets, spec.theme, spec.kind, spec.series - 1), 0)
+      // And the content is not inflated to force the outcome: the same
+      // component on the same page, without the lead-in sentence above it,
+      // still fits the face's own composition. What tips these pages over is
+      // one paragraph of argument, which is the shape a real deck runs into
+      // rather than a number someone raised until something broke.
+      const held = renderSlideSvg(
+        stepAsidePage(lex, assets, spec.theme, spec.kind, spec.component, { withLeadIn: false }),
+        0,
+      )
       expect(held).not.toContain("data-face-mode")
       expect(held).not.toMatch(/data-dropped="[1-9]/)
 
@@ -55,7 +60,7 @@ describe("the corpus pages that exercise the step-aside", () => {
     // `consulting` may legitimately never reach for one.
     const spec = STEP_ASIDE_PAGES.find((p) => p.theme === "runway")!
     const lex = nativeLexiconFor(spec.theme)
-    const svg = renderSlideSvg(stepAsidePage(lex, await corpusAssets(lex), spec.theme, spec.kind, spec.series), 0)
+    const svg = renderSlideSvg(stepAsidePage(lex, await corpusAssets(lex), spec.theme, spec.kind, spec.component), 0)
     expect(svg.toUpperCase()).toContain(resolveStyle(spec.theme).colors.accent.toUpperCase())
   })
 })

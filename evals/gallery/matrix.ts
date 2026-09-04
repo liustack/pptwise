@@ -265,20 +265,22 @@ function componentEntries(): ComponentEntry[] {
  * `branding: "none"` and draws the deck's metadata itself, `crayonbox-cards`
  * and `show-figures` declare `suppressMotif`.
  *
- * `series` is the smallest count that trips each face. It is pinned rather
- * than searched for so a refit that moves the boundary shows up as a hash
- * change on a page a reviewer looks at, and `step-aside-corpus.test.mts`
- * fails loudly if one of these stops stepping aside.
+ * Each is one ordinary corpus component under a lead-in sentence: a
+ * four-quarter two-series bar chart, a three-ring onion, a five-person
+ * roster. Nothing here is inflated to force the outcome — every one of them
+ * fits its face on its own, and it is the sentence above it that takes the
+ * page past what the face can hold, which is exactly the shape a real deck
+ * runs into. `step-aside-corpus.test.mts` holds both halves.
  */
 export const STEP_ASIDE_PAGES: readonly {
   readonly theme: string
   readonly kind: PageKind
   readonly face: string
-  readonly series: number
+  readonly component: string
 }[] = [
-  { theme: "consulting", kind: "data", face: "gauge-stats", series: 13 },
-  { theme: "runway", kind: "data", face: "show-figures", series: 14 },
-  { theme: "crayon", kind: "list", face: "crayonbox-cards", series: 13 },
+  { theme: "consulting", kind: "data", face: "gauge-stats", component: "chart · bar" },
+  { theme: "runway", kind: "data", face: "show-figures", component: "rings" },
+  { theme: "crayon", kind: "list", face: "crayonbox-cards", component: "people_cards" },
 ]
 
 export function buildMatrix(
@@ -364,7 +366,7 @@ export function buildMatrix(
     // ── step-aside: the one page per family the face cannot hold ────────
     if (wantsBand("aside")) {
       for (const spec of STEP_ASIDE_PAGES.filter((p) => p.theme === themeId)) {
-        const ir = stepAsidePage(nativeLexiconFor(themeId), assets[themeLanguage], themeId, spec.kind, spec.series)
+        const ir = stepAsidePage(nativeLexiconFor(themeId), assets[themeLanguage], themeId, spec.kind, spec.component)
         push({
           id: `${safe(themeId)}--aside--${safe(spec.face)}`,
           section: themeId,

@@ -19,7 +19,7 @@ import { resolveFontStack } from "@/render/fonts"
 import { CANONICAL_THEME_IDS, resolveStyle, type CanonicalThemeId } from "@/themes"
 import { getInstalledThemeIds, getThemeDefinition } from "@/themes/definitions"
 import { registerTestTheme, type TestThemeFaces } from "@/themes/test-fixtures"
-import { COMPONENT_BUILDERS, PHOTO_ASSETS, PHONE_SCREENSHOT_ASSET, SCREENSHOT_ASSET } from "./components"
+import { CHART_VARIANTS, COMPONENT_BUILDERS, PHOTO_ASSETS, PHONE_SCREENSHOT_ASSET, SCREENSHOT_ASSET } from "./components"
 import type { LanguageId, Lexicon } from "./lexicon"
 import { THEME_CONTENT_SLOTS, buildThemeSlot } from "./theme-slots"
 
@@ -755,50 +755,54 @@ export function componentPage(
 }
 
 /**
- * A page rich enough that the theme's own face for `kind` cannot hold it and
- * hands it to the shared step-aside (`src/render/step-aside.tsx`).
+ * A page whose theme's own face for `kind` cannot hold it, so the face hands
+ * it to the shared step-aside (`src/render/step-aside.tsx`).
  *
  * The gallery corpus is Chinese and comfortably inside every face, which is
- * why not one of its 1849 pages steps aside — good news for the faces and no
- * coverage at all for the rendering that stands in when one cannot cope. So
- * these pages are built to trip it: a directly-labelled line chart names
- * every series in a gutter, one row each, so `seriesCount` is a dial that
- * walks a page from "the face holds it" to "the face cannot" one step at a
- * time.
+ * why not one of its other pages steps aside — good news for the faces and
+ * no coverage at all for the rendering that stands in when one cannot cope.
+ *
+ * The content is the corpus's own. Each of these pages is one component from
+ * `COMPONENT_BUILDERS`, in the theme's native lexicon, under the same
+ * one-sentence lead-in `componentPage` puts above a component that does not
+ * own its page. They are ordinary authored pages — a quarterly bar chart, a
+ * roster, an onion — that happen to be a little more than the face they land
+ * on can hold. That is the whole point: a reviewer should be able to look at
+ * one and ask whether the page is good, which is not a question a
+ * fourteen-series stress chart lets anyone answer.
  *
  * `branding: "full"` because that is the posture under review here. A
  * stepped-aside page has none of the face's own furniture, so the deck's
  * branding is the only thing left carrying the organization and the date,
  * and a reviewer needs to see whether it arrived.
  */
+/** Both corpus builder tables, so a step-aside page can name a chart skin. */
+const STEP_ASIDE_COMPONENT_BUILDERS: Record<string, (lex: Lexicon) => Component> = {
+  ...COMPONENT_BUILDERS,
+  ...CHART_VARIANTS,
+}
+
 export function stepAsidePage(
   lex: Lexicon,
   assets: CorpusAssets,
   themeId: string,
   kind: PageKind,
-  seriesCount: number,
+  componentId: string,
+  opts: { withLeadIn?: boolean } = {},
 ): PptxIR {
+  const build = STEP_ASIDE_COMPONENT_BUILDERS[componentId]
+  if (!build) throw new Error(`unknown step-aside component id: ${componentId}`)
+  const component = build(lex)
+  // The same lead-in `componentPage` uses: one sentence of argument above the
+  // thing it is arguing about, which is how a real page carries a component
+  // that is not the whole page.
+  const leadIn: Component = { type: "paragraph", text: lex.sentences[0]! }
   const slide = {
     type: "content",
     kind,
     heading: lex.headings[8]!,
-    subheading: lex.sentences[0]!,
-    components: [
-      {
-        type: "chart",
-        chart_type: "line",
-        axes: {
-          x_title: lex.periodAxis,
-          y_title: lex.metrics[2]!.label,
-          y_unit: lex.metrics[2]!.unit,
-          show_grid: true,
-        },
-        series: Array.from({ length: seriesCount }, (_, i) => ({
-          name: `${lex.labels[8]!}${i + 1}`,
-          data: lex.periods.slice(0, 5).map((x, j) => ({ x, y: 40 + i + j * 6 })),
-        })),
-      },
-    ],
+    subheading: lex.sentences[3],
+    components: opts.withLeadIn === false ? [component] : [leadIn, component],
     footnote: lex.sources[2]!.label,
   } as unknown as Slide
   return {
