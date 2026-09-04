@@ -18,7 +18,7 @@
 // components leg uses one modest, representative fixture, not schema-max.
 import { afterEach, beforeAll, describe, expect, it } from "vitest"
 import type { Component, PptxIR } from "@/ir"
-import { generatePptx } from "@/api"
+import { generatePptx, renderSlideSvg, validateIr } from "@/api"
 import { installNodePlatform } from "../platform/node"
 import { __resetRegisteredThemes } from "../themes/definitions"
 import { registerTestTheme } from "../themes/test-fixtures"
@@ -47,18 +47,35 @@ function makeIr(components: Component[]): PptxIR {
 }
 
 /**
- * A real export (zip magic "PK"), not a thrown PptwiseError.
+ * A real export (zip magic "PK"), not a thrown PptwiseError — on the default
+ * path, which is also the proof the page lost nothing.
  *
- * `allowDroppedContent` because this file asks a structural question — does
- * the XML this content produces survive svg2pptx and the package audit — and
- * some of these shapes are past what the face can hold. A cut is never
- * painted on a slide, so the content-drop gate refuses those decks by
- * design (see `checkContentDropGate`, and the refusal pinned at the bottom
- * of this file). Opting in here keeps that policy question out of a
- * structural probe instead of hiding it.
+ * The opt-in belongs to the handful of fixtures that are deliberately past
+ * what the face can hold, and to nothing else. Handing it to every fixture
+ * made "exports cleanly" survive a renderer that started dropping content
+ * from a two-row table, which is the regression these files exist to catch:
+ * the default path is the assertion.
  */
 async function expectExports(components: Component[]): Promise<void> {
-  const bytes = await generatePptx(makeIr(components), { allowDroppedContent: true })
+  const ir = makeIr(components)
+  expect(renderSlideSvg(validateIr(ir).ir!, 1), "fixture is expected to fit").not.toContain("data-dropped")
+  const bytes = await generatePptx(ir)
+  expect(bytes.length).toBeGreaterThan(10_000)
+  expect([bytes[0], bytes[1]]).toEqual([0x50, 0x4b])
+}
+
+/**
+ * The same structural probe for content that is knowingly over capacity.
+ *
+ * A cut is never painted on a slide, so the content-drop gate refuses these
+ * decks by design (`checkContentDropGate`) and the refusal is pinned at the
+ * bottom of this file. The opt-in keeps that policy question out of a probe
+ * about XML validity, one named fixture at a time.
+ */
+async function expectExportsOverCapacity(components: Component[]): Promise<void> {
+  const ir = makeIr(components)
+  expect(renderSlideSvg(validateIr(ir).ir!, 1), "fixture is expected to overflow").toMatch(/data-dropped="[1-9]/)
+  const bytes = await generatePptx(ir, { allowDroppedContent: true })
   expect(bytes.length).toBeGreaterThan(10_000)
   expect([bytes[0], bytes[1]]).toEqual([0x50, 0x4b])
 }
@@ -71,8 +88,8 @@ function quadrant(n: number, title?: string) {
 }
 
 describe("pest pathological content through the real generatePptx", () => {
-  it("schema-max content (5 items in every one of the 4 quadrants) exports cleanly", async () => {
-    await expectExports([
+  it("schema-max content (5 items in every one of the 4 quadrants) is over capacity and still produces valid XML", async () => {
+    await expectExportsOverCapacity([
       { type: "pest", political: quadrant(5), economic: quadrant(5), social: quadrant(5), technological: quadrant(5) },
     ])
   })

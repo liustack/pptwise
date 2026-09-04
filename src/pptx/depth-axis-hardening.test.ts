@@ -299,6 +299,25 @@ describe("kpi_cards horizontal-axis sibling: 50-item deck with delta (review rou
 // content cut this hard is never announced on the slide, so the export is
 // where an author is told to shorten it.
 describe("pathological content is refused by the export, not quietly shortened", () => {
+  it("the 50-KPI deck is refused without --allow-dropped-content, in cards", async () => {
+    // The horizontal sibling of the bullets case below. Its structural probe
+    // opts out of the gate, so without this the writer that drops cards had
+    // no test at all on the default path.
+    const fiftyKpis = Array.from({ length: 50 }, (_, i) => ({
+      value: `${i + 1}`,
+      label: `metric ${i}`,
+      delta: "up" as const,
+    }))
+    const ir = baseIr({
+      slides: [
+        { type: "cover", heading: "Cover" },
+        { type: "content", kind: "points", heading: "50 KPI cards", components: [{ type: "kpi_cards", items: fiftyKpis }] },
+        { type: "ending", heading: "Thanks" },
+      ],
+    })
+    await expect(generatePptx(ir)).rejects.toThrow(/deck drops content.*: \d+ cards\./s)
+  })
+
   it("the 500-item bullets deck is refused without --allow-dropped-content", async () => {
     const ir = baseIr({
       slides: [
