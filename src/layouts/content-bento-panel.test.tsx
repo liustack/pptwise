@@ -140,6 +140,15 @@ const SOLO_KPI_TECH_MARKUP =
 const OVERFLOW_TECH_MARKUP =
   "<text x=\"96\" y=\"150\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"44\" font-weight=\"700\" fill=\"#EAF1FA\" dominant-baseline=\"alphabetic\">\u4e03\u9879\u8981\u70b9</text><g data-audit-rect=\"96,186,1088,426\"><g data-audit-box=\"96,186,1088,60\"><g transform=\"translate(96,186)\"><circle cx=\"5\" cy=\"18.8\" r=\"3\" fill=\"#14294A\"></circle><text x=\"26\" y=\"26\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"24\" fill=\"#EAF1FA\" dominant-baseline=\"alphabetic\">\u8981\u70b9 0</text></g></g><g data-audit-box=\"96,252,1088,60\"><g transform=\"translate(96,252)\"><circle cx=\"5\" cy=\"18.8\" r=\"3\" fill=\"#14294A\"></circle><text x=\"26\" y=\"26\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"24\" fill=\"#EAF1FA\" dominant-baseline=\"alphabetic\">\u8981\u70b9 1</text></g></g><g data-audit-box=\"96,318,1088,60\"><g transform=\"translate(96,318)\"><circle cx=\"5\" cy=\"18.8\" r=\"3\" fill=\"#14294A\"></circle><text x=\"26\" y=\"26\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"24\" fill=\"#EAF1FA\" dominant-baseline=\"alphabetic\">\u8981\u70b9 2</text></g></g><g data-audit-box=\"96,384,1088,60\"><g transform=\"translate(96,384)\"><circle cx=\"5\" cy=\"18.8\" r=\"3\" fill=\"#14294A\"></circle><text x=\"26\" y=\"26\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"24\" fill=\"#EAF1FA\" dominant-baseline=\"alphabetic\">\u8981\u70b9 3</text></g></g><g data-audit-box=\"96,450,1088,60\"><g transform=\"translate(96,450)\"><circle cx=\"5\" cy=\"18.8\" r=\"3\" fill=\"#14294A\"></circle><text x=\"26\" y=\"26\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"24\" fill=\"#EAF1FA\" dominant-baseline=\"alphabetic\">\u8981\u70b9 4</text></g></g><g data-audit-box=\"96,516,1088,60\"><g transform=\"translate(96,516)\"><circle cx=\"5\" cy=\"18.8\" r=\"3\" fill=\"#14294A\"></circle><text x=\"26\" y=\"26\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"24\" fill=\"#EAF1FA\" dominant-baseline=\"alphabetic\">\u8981\u70b9 5</text></g></g><g data-dropped=\"1\" data-dropped-kind=\"component\"></g></g>"
 
+/**
+ * The same page after the face steps aside: heading on the shared sheet,
+ * all seven blocks drawn, no drop marker. Pinned byte for byte because the
+ * shared fallback is one composition every face in the pool can reach, and
+ * substring checks would sign off on any change to its geometry or colour.
+ */
+const STEP_ASIDE_TECH_MARKUP =
+  "<g data-face-mode=\"fallback\" data-face-stepped-aside=\"bento-panel\"><line x1=\"88\" y1=\"76\" x2=\"1192\" y2=\"76\" stroke=\"#24304A\" stroke-width=\"1.2\"></line><text x=\"88\" y=\"127\" font-size=\"34\" font-weight=\"600\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" fill=\"#EAF1FA\" dominant-baseline=\"alphabetic\">七项要点</text><g data-audit-rect=\"88,171,1104,477\"><g data-audit-box=\"88,178.98,1104,60\"><g transform=\"translate(88,178.98)\"><circle cx=\"5\" cy=\"18.8\" r=\"3\" fill=\"#14294A\"></circle><text x=\"26\" y=\"26\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"24\" fill=\"#EAF1FA\" dominant-baseline=\"alphabetic\">要点 0</text></g></g><g data-audit-box=\"88,244.98,1104,60\"><g transform=\"translate(88,244.98)\"><circle cx=\"5\" cy=\"18.8\" r=\"3\" fill=\"#14294A\"></circle><text x=\"26\" y=\"26\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"24\" fill=\"#EAF1FA\" dominant-baseline=\"alphabetic\">要点 1</text></g></g><g data-audit-box=\"88,310.98,1104,60\"><g transform=\"translate(88,310.98)\"><circle cx=\"5\" cy=\"18.8\" r=\"3\" fill=\"#14294A\"></circle><text x=\"26\" y=\"26\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"24\" fill=\"#EAF1FA\" dominant-baseline=\"alphabetic\">要点 2</text></g></g><g data-audit-box=\"88,376.98,1104,60\"><g transform=\"translate(88,376.98)\"><circle cx=\"5\" cy=\"18.8\" r=\"3\" fill=\"#14294A\"></circle><text x=\"26\" y=\"26\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"24\" fill=\"#EAF1FA\" dominant-baseline=\"alphabetic\">要点 3</text></g></g><g data-audit-box=\"88,442.98,1104,60\"><g transform=\"translate(88,442.98)\"><circle cx=\"5\" cy=\"18.8\" r=\"3\" fill=\"#14294A\"></circle><text x=\"26\" y=\"26\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"24\" fill=\"#EAF1FA\" dominant-baseline=\"alphabetic\">要点 4</text></g></g><g data-audit-box=\"88,508.98,1104,60\"><g transform=\"translate(88,508.98)\"><circle cx=\"5\" cy=\"18.8\" r=\"3\" fill=\"#14294A\"></circle><text x=\"26\" y=\"26\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"24\" fill=\"#EAF1FA\" dominant-baseline=\"alphabetic\">要点 5</text></g></g><g data-audit-box=\"88,574.98,1104,60\"><g transform=\"translate(88,574.98)\"><circle cx=\"5\" cy=\"18.8\" r=\"3\" fill=\"#14294A\"></circle><text x=\"26\" y=\"26\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"24\" fill=\"#EAF1FA\" dominant-baseline=\"alphabetic\">要点 6</text></g></g></g></g>"
+
 describe("BentoPanelContent", () => {
   it("tech tokens 下与旧 BentoTechContent 输出逐字节一致，唯一例外是 defect B 修复的 delta 箭头墨色（kpi_cards+icon_cards 混排拼盘，4-cell 网格）", () => {
     const ctx = buildCtx(resolveStyle("tech"), {})
@@ -266,7 +275,7 @@ describe("BentoPanelContent", () => {
     expect(next).toContain("88")
   })
 
-  it(">6 单元时降级为 SvgContent 单栈布局，与旧模板逐字节一致（bento 网格上限）", () => {
+  it(">6 单元时让位共享页，逐字节锁定 fallback 输出（bento 网格上限）", () => {
     const ctx = buildCtx(resolveStyle("tech"), {})
     const overflowComponents: Component[] = Array.from({ length: 7 }, (_, i) => ({
       type: "bullets" as const,
@@ -284,14 +293,19 @@ describe("BentoPanelContent", () => {
     const next = renderSvgMarkup(
       <BentoPanelContent ir={deck} slide={overflowSlide} index={0} ctx={ctx} />,
     )
-    // 降级路径不画 bento 卡壳（无 data-bento-shell）。
-    expect(next).not.toContain("data-bento-shell")
-    // The single stack this degrades to used to fit 6 of the 7 items and
-    // drop the seventh (`OVERFLOW_TECH_MARKUP`, kept above as the record of
-    // what this page was). A dropped block is a page nobody chose, so the
-    // face now steps aside and the plain sheet holds all seven.
+    // The single stack this used to degrade to fit 6 of the 7 items and
+    // dropped the seventh (`OVERFLOW_TECH_MARKUP`, kept above as the record
+    // of what this page was). A dropped block is a page nobody chose, so the
+    // face steps aside and the plain sheet holds all seven.
+    //
+    // Pinned byte for byte, like the markup it replaces. A handful of
+    // `toContain` checks would let the heading's geometry, its colour and
+    // any chrome the sheet grows change in silence, and the shared fallback
+    // is the one composition in the pool that every face can fall to.
+    expect(next).toBe(STEP_ASIDE_TECH_MARKUP)
     expect(OVERFLOW_TECH_MARKUP).toContain('data-dropped="1"')
-    expect(next).toContain('data-face-stepped-aside="bento-panel"')
+    // 让位路径不画 bento 卡壳（无 data-bento-shell）。
+    expect(next).not.toContain("data-bento-shell")
     for (let i = 0; i < 7; i++) expect(next).toContain(`要点 ${i}`)
     expect(next).not.toContain("data-dropped")
     expect(next).not.toContain("+1 …")

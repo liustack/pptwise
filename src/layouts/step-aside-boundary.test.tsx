@@ -21,6 +21,8 @@
 // A face with no first region on this fixture (its band is short for a
 // two-series chart already) is still checked for the other two.
 import { describe, expect, it } from "vitest"
+import { readFileSync, readdirSync } from "node:fs"
+import { join } from "node:path"
 import type { PptxIR, Slide } from "@/ir"
 import { resolveStyle } from "../themes"
 import { buildCtx, resolveBackgroundHex } from "../render/full-slide-svg"
@@ -29,6 +31,9 @@ import { AsymmetricTriptychContent } from "./content-asymmetric-triptych"
 import { BentoPanelContent } from "./content-bento-panel"
 import { CrayonboxCardsContent } from "./content-crayonbox-cards"
 import { GaugeStatsContent } from "./content-gauge-stats"
+import { OneEvidenceContent } from "./content-one-evidence"
+import { QuoteStageContent } from "./content-quote-stage"
+import { StackedPosterContent } from "./content-stacked-poster"
 import { NarrowColumnContent } from "./content-narrow-column"
 import { QuietFrameContent } from "./content-quiet-frame"
 import { RailNumberedContent } from "./content-rail-numbered"
@@ -40,6 +45,17 @@ import { StatHeroContent } from "./content-stat-hero"
 import { ToneAdaptiveContent } from "./content-tone-adaptive-content"
 import { TwoColumnContent } from "./content-two-column"
 import type { ContentLayout } from "./types"
+
+/** `n` sources, one line each. The dial for a face a chart cannot measure. */
+function citations(n: number) {
+  return {
+    type: "citation",
+    sources: Array.from({ length: n }, (_, i) => ({
+      label: `Quarterly operations review, volume ${i + 1}`,
+      ref: `R-${i + 1}`,
+    })),
+  }
+}
 
 /** A line chart of `n` series: one label row per series, so `n` is height. */
 function lineChart(n: number) {
@@ -67,24 +83,73 @@ interface FaceCase {
   Face: ContentLayout
   themeId: string
   /**
-   * The page at series count `n`, when a lone chart is not the shape that
+   * The page at dial position `n`, when a lone chart is not the shape that
    * reaches this face's body slot. Each override says why.
    */
   components?: (n: number) => unknown[]
+  /**
+   * A page with a one-line heading, no subheading and no footnote, for a
+   * face whose body band is a constant. The sheet's own body is what those
+   * three shrink, so a face with a fixed 390px band only ever has room to
+   * gain on a page that does not spend it on furniture.
+   */
+  shortPage?: true
+  /**
+   * A page that keeps its heading and subheading but carries no footnote.
+   * The sheet drops its body floor from 648 to 612 to make room for one, so
+   * a footnote is 36px the sheet spends and a face with its own footnote
+   * slot does not.
+   */
+  omitFootnote?: true
+  /** The regions this page walks through, in order. Each must be non-empty. */
+  regions: Verdict[]
 }
 
 const CASES: FaceCase[] = [
-  { face: "narrow-column", Face: NarrowColumnContent, themeId: "consulting" },
-  { face: "two-column", Face: TwoColumnContent, themeId: "consulting" },
-  { face: "rail-numbered", Face: RailNumberedContent, themeId: "consulting" },
-  { face: "quiet-frame", Face: QuietFrameContent, themeId: "consulting" },
-  { face: "split-band", Face: SplitBandContent, themeId: "consulting" },
-  { face: "tone-adaptive-content", Face: ToneAdaptiveContent, themeId: "tech" },
-  { face: "gauge-stats", Face: GaugeStatsContent, themeId: "consulting" },
-  { face: "crayonbox-cards", Face: CrayonboxCardsContent, themeId: "crayon" },
-  { face: "show-figures", Face: ShowFiguresContent, themeId: "runway" },
-  { face: "show-gallery", Face: ShowGalleryContent, themeId: "runway" },
-  { face: "show-statement", Face: ShowStatementContent, themeId: "runway" },
+  { face: "narrow-column", Face: NarrowColumnContent, themeId: "consulting", regions: ["aside", "declined"] },
+  { face: "two-column", Face: TwoColumnContent, themeId: "consulting", regions: ["face", "aside", "declined"] },
+  { face: "rail-numbered", Face: RailNumberedContent, themeId: "consulting", regions: ["face", "aside", "declined"] },
+  { face: "quiet-frame", Face: QuietFrameContent, themeId: "consulting", regions: ["face", "aside", "declined"] },
+  { face: "split-band", Face: SplitBandContent, themeId: "consulting", regions: ["face", "aside", "declined"] },
+  { face: "quote-stage", Face: QuoteStageContent, themeId: "consulting", regions: ["aside", "declined"] },
+  { face: "tone-adaptive-content", Face: ToneAdaptiveContent, themeId: "tech", regions: ["face", "aside", "declined"] },
+  { face: "gauge-stats", Face: GaugeStatsContent, themeId: "consulting", regions: ["face", "aside", "declined"] },
+  { face: "crayonbox-cards", Face: CrayonboxCardsContent, themeId: "crayon", regions: ["face", "aside", "declined"] },
+  // A fixed body band is only ever worth trading for the sheet on a page
+  // that has not already spent the sheet's room on a second heading line, a
+  // subheading and a footnote — see `shortPage`.
+  { face: "show-figures", Face: ShowFiguresContent, themeId: "runway", shortPage: true, regions: ["face", "aside", "declined"] },
+  { face: "show-gallery", Face: ShowGalleryContent, themeId: "runway", shortPage: true, regions: ["face", "aside", "declined"] },
+  { face: "show-statement", Face: ShowStatementContent, themeId: "runway", shortPage: true, regions: ["face", "aside", "declined"] },
+  // A chart is evidence this face places by shrinking it to fit, so a lone
+  // one never reaches the body slot. A citation list is not evidence at all,
+  // and its height grows one source at a time. Its floor of 640 reads like
+  // more room than the sheet's 612 until the heading is set: `bodyTop`
+  // follows a display title down where the sheet's follows a 34px one.
+  {
+    face: "one-evidence",
+    Face: OneEvidenceContent,
+    themeId: "consulting",
+    components: (n) => [citations(n)],
+    shortPage: true,
+    regions: ["face", "aside", "declined"],
+  },
+  // Same reason: the poster grammar keeps a scalable chart and scales it
+  // into the hero slot, so the dial has to be something that busts it.
+  //
+  // On `consulting`'s type scale the degrade stack measures 1168x360 against
+  // a 1104x448 sheet, which is the window. On `stage` the same page is
+  // 1168x360 against 1104x367 and there is none — a face's own heading size
+  // is part of how much room its body has left, so whether this trade is
+  // ever worth making is a per-theme fact, not a per-face one.
+  {
+    face: "stacked-poster",
+    Face: StackedPosterContent,
+    themeId: "consulting",
+    components: (n) => [citations(n)],
+    shortPage: true,
+    regions: ["face", "aside", "declined"],
+  },
   // A lone hero figure is this face's page. Two KPI items are not, so the
   // page falls to the body slot the chart shares with them.
   {
@@ -101,12 +166,12 @@ const CASES: FaceCase[] = [
       },
       lineChart(n),
     ],
+    regions: ["face", "aside", "declined"],
   },
   // A chart is scalable, so the bento grid shrinks one into whatever cell it
   // gets and the degrade path is never reached. A bullets list is not: it
   // busts its card's budget, the grid gives up, and the single stack it
-  // degrades to is this face's body slot. Its measure grows one row at a
-  // time, the same dial the chart is elsewhere.
+  // degrades to is this face's body slot.
   {
     face: "bento-panel",
     Face: BentoPanelContent,
@@ -115,6 +180,7 @@ const CASES: FaceCase[] = [
       { type: "bullets", items: Array.from({ length: n }, (_, i) => `Point number ${i}`), style: "default" },
       { type: "paragraph", text: "Renewal recovered across every segment." },
     ],
+    regions: ["face", "aside", "declined"],
   },
   // The lead column is the tall one. The two framed panels on the right are
   // where a region runs short, so the chart goes second.
@@ -127,6 +193,7 @@ const CASES: FaceCase[] = [
       lineChart(n),
       { type: "paragraph", text: "Activation coverage reached eighty-eight percent." },
     ],
+    regions: ["aside", "declined"],
   },
 ]
 
@@ -140,10 +207,10 @@ function verdictAt(c: FaceCase, n: number): Verdict {
   const slide = {
     type: "content",
     kind: "data",
-    heading: "The build iteration cadence lags what the business expects",
-    subheading: "Delivery time fell from nine weeks to five.",
+    heading: c.shortPage ? "Renewal by quarter" : "The build iteration cadence lags what the business expects",
+    ...(c.shortPage ? {} : { subheading: "Delivery time fell from nine weeks to five." }),
     components: (c.components?.(n) ?? [lineChart(n)]) as never[],
-    footnote: "Annual customer satisfaction survey",
+    ...(c.shortPage || c.omitFootnote ? {} : { footnote: "Annual customer satisfaction survey" }),
   } as unknown as Slide
   const ir = {
     version: "5",
@@ -174,36 +241,31 @@ function sweep(c: FaceCase): { verdicts: Verdict[]; from: number } {
 describe("a wired face steps aside exactly where its body slot starts costing content", () => {
   for (const c of CASES) {
     it(`${c.face}`, { timeout: 60_000 }, () => {
-      const { verdicts, from } = sweep(c)
-
-      // The three regions appear in this order and nothing appears twice:
-      // once a page is too tall for the face it never fits it again, and
-      // once it is too tall for the sheet it never fits that again.
-      const order: Verdict[] = ["face", "aside", "declined"]
-      const seen = verdicts.map((v) => order.indexOf(v))
-      expect(seen).toEqual([...seen].sort((a, b) => a - b))
-
-      // The middle region exists. This is the whole point: a band of pages
-      // that used to lose the chart and now draw it.
-      const firstAside = verdicts.indexOf("aside")
-      expect(firstAside, `${c.face} never steps aside`).toBeGreaterThanOrEqual(0)
-
-      // It does not fire one step early. Either the count below it draws the
-      // face's own composition, or it is the very first count swept (the
-      // face's band is short for even a two-series chart).
-      if (firstAside > 0) expect(verdicts[firstAside - 1]).toBe("face")
-
-      // Nothing is lost anywhere inside it.
-      const firstDeclined = verdicts.indexOf("declined")
-      const asideRegion = verdicts.slice(firstAside, firstDeclined < 0 ? undefined : firstDeclined)
-      expect(asideRegion.every((v) => v === "aside")).toBe(true)
-
-      // And where the sheet runs out too, the face keeps its page and the
-      // chart's own decline stands rather than a plain page that also fails.
-      if (firstDeclined >= 0) {
-        expect(verdicts[firstDeclined - 1]).toBe("aside")
-        expect(firstDeclined + from).toBeGreaterThan(firstAside + from)
-      }
+      const { verdicts } = sweep(c)
+      // The page walks exactly the regions this case declares, in order. One
+      // equality carries every property the regions are supposed to have:
+      // each declared region is present (the run exists), each is contiguous
+      // (a second run of the same verdict would show up as an extra entry),
+      // and none appears out of order — an `aside` at a count where the face
+      // still holds the page would land before `face` and fail here.
+      const runs: Verdict[] = verdicts.filter((v, i) => i === 0 || v !== verdicts[i - 1])
+      expect(runs).toEqual(c.regions)
     })
   }
+})
+
+describe("the table covers every face that is wired", () => {
+  it("names each one, so a new caller cannot arrive untested", () => {
+    // The first version of this file was missing `quote-stage` and nobody
+    // could tell, because a table of cases only proves things about the
+    // cases in it. This reads the wiring back off the faces themselves.
+    const dir = join(import.meta.dirname, ".")
+    const wired = new Set<string>()
+    for (const file of readdirSync(dir)) {
+      if (!file.startsWith("content-") || !file.endsWith(".tsx") || file.includes(".test.")) continue
+      const src = readFileSync(join(dir, file), "utf8")
+      for (const m of src.matchAll(/stepAside\(\{[\s\S]{0,80}?face: "([a-z-]+)"/g)) wired.add(m[1]!)
+    }
+    expect([...wired].sort()).toEqual([...new Set(CASES.map((c) => c.face))].sort())
+  })
 })
