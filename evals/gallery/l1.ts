@@ -3,8 +3,8 @@
  *
  * Reuses `auditSvgMarkup` (overflow / page-overflow) and `findOverlapIssues`.
  * Extra checks: strikethrough vs underline, ink-box overlap, boxless card
- * overflow, page-edge stick, font-size floor, overflow markers, Latin
- * vertical type, axis-title vs data-mark intersection, isolated midground
+ * overflow, page-edge stick, font-size floor, overflow markers, declared
+ * content drops, Latin vertical type, axis-title vs data-mark intersection, isolated midground
  * ticks and filled dots. Five-dot progress is left to L2.
  */
 
@@ -41,6 +41,7 @@ export const L1_CODES = [
   "edge-stick",
   "font-size",
   "overflow-marker",
+  "content-dropped",
   "latin-vertical",
   "depth-contract",
   "mid-text-bleed",
@@ -896,6 +897,29 @@ function walkText(
   visit(root, 0, 0, 1)
 }
 
+/**
+ * Content the page was given and did not draw.
+ *
+ * A drop is the reader-visible failure now, not a maintainer's note: nothing
+ * on the slide says a chart, a row or a series name went missing, so the only
+ * way a reviewer learns of it is a check that reads the declaration. Before
+ * this, a page whose whole chart declined painted a heading over empty space
+ * and scored `pass` — the visible overflow count that used to give it away is
+ * gone (`overflow-marker` above bans it), and `data-dropped` is what replaced
+ * it. `deck-audit.ts` reports the same attribute for the CLI, and
+ * `checkContentDropGate` refuses to export the deck.
+ */
+function findDeclaredDrops(root: Element, findings: L1Finding[]): void {
+  for (const el of Array.from(root.querySelectorAll("[data-dropped]"))) {
+    const count = Number(el.getAttribute("data-dropped") ?? 0)
+    if (!Number.isFinite(count) || count <= 0) continue
+    findings.push({
+      code: "content-dropped",
+      message: `${count} piece${count === 1 ? "" : "s"} of content ${count === 1 ? "was" : "were"} dropped and nothing on the page says so — shorten the content or give it a page that can hold it`,
+    })
+  }
+}
+
 export function auditL1(svg: string): L1Result {
   const findings: L1Finding[] = []
   for (const issue of auditSvgMarkup(svg)) {
@@ -926,6 +950,7 @@ export function auditL1(svg: string): L1Result {
   findValueLabelCollision(root, findings)
   const layout = layoutOf(svg)
   walkText(root, layout, findings, collectDividers(root))
+  findDeclaredDrops(root, findings)
   const geo = collectGeometry(root)
   findStrikethrough(geo, findings)
   findInkOverlap(geo, findings)

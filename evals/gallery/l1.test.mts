@@ -9,6 +9,7 @@ import { installNodePlatform } from "@/platform/node"
 import { COMPONENT_BUILDERS, CHART_VARIANTS } from "./corpus/components"
 import { componentPage, corpusAssets, layoutPage, themeDeck } from "./corpus/decks"
 import { LEXICONS } from "./corpus/lexicon"
+import { validateIr } from "@/api"
 import { auditL1, classifyL1 } from "./l1"
 import { loadPlantedManifest, plantedSvg } from "./planted/load"
 
@@ -40,6 +41,14 @@ describe("auditL1 planted defects", () => {
   it("flags +3 more and +2 … as overflow-marker", () => {
     expect(codes(wrap(`<text x="40" y="40" font-size="14">+3 more</text>`))).toContain("overflow-marker")
     expect(codes(wrap(`<text x="40" y="40" font-size="14">+2 …</text>`))).toContain("overflow-marker")
+  })
+
+  it("flags a declared drop as content-dropped, and ignores a zero count", () => {
+    expect(codes(wrap(`<g data-dropped="3"></g>`))).toContain("content-dropped")
+    expect(codes(wrap(`<g data-dropped="1"></g>`))).toContain("content-dropped")
+    // The marker is invisible, so nothing else on the page can give it away.
+    expect(codes(wrap(`<g data-dropped="0"></g>`))).not.toContain("content-dropped")
+    expect(codes(wrap(`<text x="40" y="40" font-size="16">all of it fits</text>`))).not.toContain("content-dropped")
   })
 
   it("flags a bare ellipsis or standalone ... inside text as overflow-marker", () => {
@@ -424,5 +433,50 @@ describe("auditL1 live sample", () => {
       }
       expect(classifyL1(auditL1(svg)), id).not.toContain("axis-title-overlap")
     }
+  })
+})
+
+// A page that loses its whole chart is the case the visible overflow count
+// used to give away. It paints a heading over empty space and says nothing,
+// so L1 is the only pass that can still see it.
+describe("auditL1 on a page whose component declines outright", () => {
+  const declinedChartDeck = {
+    version: "5",
+    filename: "declined-chart",
+    theme: { id: "consulting" },
+    meta: {},
+    assets: { images: {} },
+    slides: [
+      {
+        type: "content",
+        kind: "data",
+        heading: "十六条系列的折线图",
+        components: [
+          {
+            type: "chart",
+            chart_type: "line",
+            series: Array.from({ length: 16 }, (_, i) => ({
+              name: `系列 ${i + 1}`,
+              data: [
+                { x: "Q1", y: i + 1 },
+                { x: "Q2", y: i + 2 },
+              ],
+            })),
+          },
+        ],
+      },
+    ],
+  }
+
+  it("cannot pass: a 16-series line chart declines in the band and L1 reports the drop", () => {
+    const v = validateIr(declinedChartDeck)
+    expect(v.ok).toBe(true)
+    const svg = renderSlideSvg(v.ir!, 0)
+    // The page really does lose the chart, and really does say nothing.
+    expect(svg).toMatch(/data-dropped="[1-9]/)
+    expect(svg).not.toMatch(/>[^<]*\+\s*\d+[^<]*</)
+    const result = auditL1(svg)
+    expect(classifyL1(result)).toContain("content-dropped")
+    expect(result.findings.length).toBeGreaterThan(0)
   })
 })

@@ -22,6 +22,7 @@ import type { GalleryPageMeta, L2Verdict } from "./l2"
 import { buildMatrix } from "./matrix"
 import { replayPlanted } from "./planted/replay"
 import { renderMatrix, type Manifest, type ManifestPage } from "./render"
+import { mergeVerdict } from "./verdict"
 
 const ROOT = resolve(fileURLToPath(new URL("../..", import.meta.url)))
 const VERDICTS_DIR = join(ROOT, "evals/gallery/verdicts")
@@ -51,28 +52,6 @@ function metaOf(page: ManifestPage): GalleryPageMeta {
     language: page.language,
     theme: page.theme,
     page: page.page,
-  }
-}
-
-function mergeVerdict(page: ManifestPage, l1: ReturnType<typeof auditL1>, l2: L2Verdict | undefined) {
-  if (l2) {
-    return {
-      ...l2,
-      findings: [...new Set([...l1.findings.map((f) => f.code), ...l2.findings])],
-    }
-  }
-  return {
-    id: page.id,
-    section: page.section,
-    band: page.band,
-    subject: page.subject,
-    language: page.language,
-    theme: page.theme,
-    page: page.page,
-    verdict: l1.findings.length > 0 ? "rework" : "pass",
-    note: l1.findings.map((f) => f.message).join(" ") || "",
-    findings: l1.findings.map((f) => f.code),
-    source: "l1" as const,
   }
 }
 
