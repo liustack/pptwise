@@ -604,10 +604,22 @@ export function checkPageFidelity(svg: string, slide: Slide): PageFidelity {
   /**
    * Boxes that declare a loss and hold no painted field of anyone's — one
    * entry per box, spent by the first component that claims it.
+   *
+   * Deduplicated, because the unit here is the box and not the marker. A
+   * component may write several declarations inside its own box: the kind
+   * breakdown made that a normal shape, and `bmc` and `architecture` already
+   * did it. Mapping markers straight to boxes put the same box in twice, so
+   * two `shift()`s let one empty box answer for two components that painted
+   * nothing — the blanket this whole function exists to prevent, arriving
+   * through the back door.
    */
-  const vacantDeclarations = drops
-    .map((drop) => boxOf(drop))
-    .filter((box): box is Element => box !== null && !owner.has(box) && !inked.has(box))
+  const vacantDeclarations = Array.from(
+    new Set(
+      drops
+        .map((drop) => boxOf(drop))
+        .filter((box): box is Element => box !== null && !owner.has(box) && !inked.has(box)),
+    ),
+  )
 
   function licenses(component: number): boolean {
     const owned = Array.from(owner)

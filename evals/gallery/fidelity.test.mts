@@ -317,6 +317,29 @@ describe("a component that painted nothing is answered for by its own empty box"
     ])
   })
 
+  it("one empty box answers for one component however many markers it holds", () => {
+    // A component may declare more than once inside its own box, now that
+    // each declaration names its own unit. Counting markers instead of boxes
+    // let one empty box license two vanished components.
+    const twoGone = {
+      ...slide,
+      components: [
+        { type: "bullets", items: ["kept one", "kept two"], style: "default" },
+        { type: "paragraph", text: "VANISHED" },
+        { type: "paragraph", text: "ALSO VANISHED" },
+      ],
+    } as unknown as Slide
+    const svg = page(
+      `<g data-audit-box="96,400,1088">` +
+        `<g data-dropped="1" data-dropped-kind="item" />` +
+        `<g data-dropped="2" data-dropped-kind="label" />` +
+        `</g>`,
+    )
+    expect(checkPageFidelity(svg, twoGone).missing.map((m) => m.path)).toEqual([
+      "components[2](paragraph).text",
+    ])
+  })
+
   it("one empty declaration answers for one component, not for both", () => {
     const twoGone = {
       ...slide,
