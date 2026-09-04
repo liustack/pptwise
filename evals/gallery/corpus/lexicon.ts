@@ -138,7 +138,7 @@ export interface Lexicon {
     readonly warning: string
     readonly neutral: string
   }
-  /** Source citations. */
+  /** Source lines a component names under its own content. */
   readonly sources: readonly { label: string; ref?: string; url?: string }[]
   /** Caption text for image slots. */
   readonly captions: Pool

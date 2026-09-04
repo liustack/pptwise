@@ -123,7 +123,6 @@ export const COMPONENT_FAMILIES: readonly GroupFamily[] = [
       "blockquote",
       "code",
       "callout",
-      "citation",
       "insight_panel",
       "verdict_banner",
       "tag_row",
@@ -1170,7 +1169,16 @@ ${inlineRule("verdictFreshness", verdictFreshness)}
       lead: "一格一张脸，点开看同一段版式代码被派到各主题上画出来的样子。这条轴比的是脸，所以一套主题一张脸只留一张样张（骨架全脸那一张）：样张带里画法相同的重复页不上轴，组件皮肤那一带也不上轴，它们比的是组件，会把脸淹掉。",
       families: FACE_FAMILIES,
       nameOf: (v) => ({ zh: "", code: v }),
-      detailHead: faceIdentity,
+      // Two statements about one face: its own account of itself, then the
+      // record of every menu that sends work here.
+      detailHead: (v) => {
+        const both = document.createDocumentFragment();
+        const card = designCard("layout:" + v);
+        if (card) both.appendChild(card);
+        const routes = faceIdentity(v);
+        if (routes) both.appendChild(routes);
+        return both.childNodes.length > 0 ? both : null;
+      },
     },
     component: {
       key: "component",

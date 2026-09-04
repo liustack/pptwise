@@ -11,7 +11,7 @@
  *
  * The review is cut theme first, so the promise is per section as well as
  * global: every theme section carries all three bands, and its component
- * band carries all 37 component types. A layout no menu offers still needs
+ * band carries all 36 component types. A layout no menu offers still needs
  * a page, and it must be in the appendix rather than missing — the appendix
  * is asserted to be exactly the complement of what the menus serve, in both
  * directions, so a face cannot hide by being in neither place.

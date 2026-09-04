@@ -22,6 +22,7 @@ import type { DesignStory } from "@/design-story"
 import { componentStory } from "@/ir/components/stories"
 import { kindStory } from "@/ir/kind-stories"
 import { KIND_VALUES } from "@/ir/narrative-values"
+import { getLayout } from "@/layouts/registry"
 import { getThemeDefinition } from "@/themes/definitions"
 import { CANVAS_H_PX, CANVAS_W_PX } from "@/constants"
 import { auditDeck } from "@/audit/deck-audit"
@@ -141,9 +142,10 @@ export interface Manifest {
   /** Section order × band order × natural order inside the band. */
   readonly pages: readonly ManifestPage[]
   /**
-   * The design story of every theme, content kind, and component this build
-   * shows, keyed by namespaced object id (`theme:swiss`, `kind:points`,
-   * `component:bullets`). Objects whose copy is unwritten are simply absent.
+   * The design story of every theme, content kind, face, and component this
+   * build shows, keyed by namespaced object id (`theme:swiss`, `kind:points`,
+   * `layout:two-column`, `component:bullets`). Objects whose copy is
+   * unwritten are simply absent.
    *
    * A flat map rather than a field on each section, because a component is
    * not a section — it is a group the review page derives — and one shape for
@@ -168,7 +170,7 @@ const BAND_META: Record<BandId, { label: string; question: string }> = {
   },
   component: {
     label: "组件皮肤",
-    question: "37 个组件（chart 拆成九张图）穿上这套主题的皮各一页——每个组件在这套皮下画出来能不能看？",
+    question: "36 个组件（chart 拆成九张图）穿上这套主题的皮各一页——每个组件在这套皮下画出来能不能看？",
   },
 }
 
@@ -453,6 +455,12 @@ export function renderMatrix(jobs: readonly Job[], outDir: string, pptwiseVersio
     if (!isKind(slot)) continue
     const story = kindStory(slot)
     if (story) stories[`kind:${slot}`] = story
+  }
+  // A face's own account of itself, on the axis that judges the face rather
+  // than the menu that sent work to it.
+  for (const face of new Set(pages.flatMap((p) => (p.face === undefined ? [] : [p.face])))) {
+    const story = getLayout(face)?.story
+    if (story) stories[`layout:${face}`] = story
   }
 
   const manifest: Manifest = {

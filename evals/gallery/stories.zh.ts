@@ -334,13 +334,6 @@ export const STORY_ZH: Readonly<Record<string, Partial<Record<DesignStoryField, 
     audience: "读一条趋势比读一列数字快的满场听众。",
     notFor: "几个独立的大数字，那属于 kpi_cards。",
   },
-  "component:citation": {
-    name: "来源",
-    story: "页面结尾的出处行：标签、参考文献和链接，排列方式和参考书目一样。",
-    positioning: "论断依托外部材料、听众必须能去查的时候用它。blockquote 适合引用的原话本身是内容的情形。",
-    audience: "要先查来源才肯信的读者。",
-    notFor: "被引用的句子本身，那属于 blockquote。",
-  },
   "component:code": {
     name: "代码块",
     story: "一段等宽排版的源代码，标注了语言。技术书籍在原始字符串不可改写时印出的那种代码清单。",

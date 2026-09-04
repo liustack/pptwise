@@ -16,13 +16,12 @@ import type { Lexicon } from "./lexicon"
  * does not silently get absorbed without a human adding it here.
  */
 export const THEME_TABLE_REQUIRED_SURFACES = [
-  // 37 IR types, COMPONENT_BUILDERS key order
+  // 38 IR types, COMPONENT_BUILDERS key order
   "paragraph",
   "bullets",
   "blockquote",
   "callout",
   "code",
-  "citation",
   "verdict_banner",
   "tag_row",
   "kpi_cards",
@@ -113,11 +112,11 @@ function chart(chart_type: ThemeChartType, direction?: "horizontal"): ThemeConte
  * is noted on chart slots.
  */
 export const THEME_CONTENT_SLOTS: Record<string, readonly ThemeContentSlot[]> = {
-  thesis: [slot("icon_cards"), slot("paragraph"), chart("funnel"), slot("blockquote"), slot("callout"), slot("code"), slot("citation")],
+  thesis: [slot("icon_cards"), slot("paragraph"), chart("funnel"), slot("blockquote"), slot("callout"), slot("code"), slot("insight_panel")],
   arena: [chart("scatter"), slot("verdict_banner"), slot("tag_row"), slot("data_table"), slot("waterfall"), slot("heatmap"), slot("gantt")],
   rally: [chart("dumbbell"), slot("hub_spoke"), slot("insight_panel"), slot("swot"), slot("pest"), slot("five_forces"), slot("bmc")],
   homeroom: [chart("gauge"), slot("image_grid"), slot("image"), slot("image_compare"), slot("device_mockup"), slot("data_table"), slot("bullets")],
-  brief: [chart("bar"), slot("bullets"), slot("kpi_cards"), slot("people_cards"), slot("heatmap"), slot("citation"), slot("architecture")],
+  brief: [chart("bar"), slot("bullets"), slot("kpi_cards"), slot("people_cards"), slot("heatmap"), slot("row_cards"), slot("architecture")],
   crayon: [slot("numbered_cards"), slot("bullets"), slot("swot"), slot("gantt"), slot("callout"), slot("image_grid"), slot("comparison")],
   ember: [slot("numbered_cards"), slot("data_table"), slot("flowchart"), slot("rings"), slot("image"), slot("pest"), slot("people_cards")],
   bulletin: [slot("waterfall"), slot("bullets"), slot("icon_cards"), slot("bmc"), slot("timeline"), slot("architecture"), slot("device_mockup")],
@@ -125,7 +124,7 @@ export const THEME_CONTENT_SLOTS: Record<string, readonly ThemeContentSlot[]> = 
   ink: [chart("bar", "horizontal"), slot("row_cards"), slot("blockquote"), slot("steps"), slot("tag_row"), slot("heatmap"), slot("image_grid")],
   ledger: [slot("cycle"), slot("kpi_cards"), slot("bullets"), slot("blockquote"), slot("sankey"), slot("verdict_banner"), slot("architecture")],
   journal: [chart("line"), slot("numbered_cards"), slot("comparison"), slot("blockquote"), slot("roadmap"), slot("callout"), slot("people_cards")],
-  lecture: [chart("area"), slot("timeline"), slot("bmc"), slot("bullets"), slot("image_grid"), slot("matrix"), slot("citation")],
+  lecture: [chart("area"), slot("timeline"), slot("bmc"), slot("bullets"), slot("image_grid"), slot("matrix"), slot("paragraph")],
   luxe: [slot("progress_donuts"), slot("swot"), slot("gantt"), slot("blockquote"), slot("device_mockup"), slot("flowchart"), slot("tag_row")],
   memo: [chart("donut"), slot("paragraph"), slot("icon_cards"), slot("pest"), slot("blockquote"), slot("rings"), slot("waterfall")],
   museum: [slot("cycle"), slot("kpi_cards"), slot("bullets"), slot("heatmap"), slot("people_cards"), slot("callout"), slot("architecture")],
@@ -133,10 +132,10 @@ export const THEME_CONTENT_SLOTS: Record<string, readonly ThemeContentSlot[]> = 
   clinic: [slot("numbered_cards"), slot("comparison"), slot("sankey"), slot("people_cards"), slot("image_compare"), slot("architecture"), slot("bullets")],
   runway: [slot("steps"), slot("data_table"), slot("callout"), slot("image_grid"), slot("bullets"), slot("verdict_banner"), slot("gantt")],
   stage: [slot("timeline"), slot("kpi_cards"), slot("bullets"), slot("bmc"), slot("image"), slot("blockquote"), slot("architecture")],
-  swiss: [chart("pie"), slot("numbered_cards"), slot("comparison"), slot("people_cards"), slot("heatmap"), slot("citation"), slot("flowchart")],
-  terminal: [slot("icon_cards"), slot("data_table"), slot("waterfall"), slot("citation"), slot("device_mockup"), slot("swot"), slot("roadmap")],
+  swiss: [chart("pie"), slot("numbered_cards"), slot("comparison"), slot("people_cards"), slot("heatmap"), slot("tag_row"), slot("flowchart")],
+  terminal: [slot("icon_cards"), slot("data_table"), slot("waterfall"), slot("code"), slot("device_mockup"), slot("swot"), slot("roadmap")],
   almanac: [slot("icon_cards"), slot("bullets"), slot("timeline"), slot("pest"), slot("image_compare"), slot("rings"), slot("people_cards")],
-  vermilion: [slot("comparison"), slot("kpi_cards"), slot("gantt"), slot("citation"), slot("people_cards"), slot("code"), slot("architecture")],
+  vermilion: [slot("comparison"), slot("kpi_cards"), slot("gantt"), slot("bullets"), slot("people_cards"), slot("code"), slot("architecture")],
 }
 
 /** Build the lead component for one theme-table content slot. */

@@ -52,11 +52,6 @@ export const COMPONENT_BUILDERS: Record<string, (lex: Lexicon) => Component> = {
 
   code: (lex) => ({ type: "code", language: lex.code.language, code: lex.code.code }),
 
-  citation: (lex) => ({
-    type: "citation",
-    sources: lex.sources.map((s) => ({ label: s.label, ref: s.ref, url: s.url })),
-  }),
-
   verdict_banner: (lex) => ({ type: "verdict_banner", text: lex.verdicts.warning, tone: "warning", icon: "alert-triangle" }),
 
   tag_row: (lex) => ({ type: "tag_row", title: lex.kickers[2], items: slice(lex.tags, 10), emphasis: "first" }),

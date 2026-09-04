@@ -176,9 +176,9 @@ interface TextSegment {
  * A single-valued `dx`/`dy`, or 0.
  *
  * SVG lets both take a list, one entry per glyph. Nothing in this renderer
- * emits a list — `citation.tsx`'s separator dots, the only live producer,
- * writes one number — and a per-glyph kerning model is a text engine, not a
- * bounds check. A list is read as no shift rather than guessed at.
+ * emits a list — every producer writes one number — and a per-glyph kerning
+ * model is a text engine, not a bounds check. A list is read as no shift
+ * rather than guessed at.
  */
 function relativeShift(el: Element, attr: string): number {
   const raw = el.getAttribute(attr)

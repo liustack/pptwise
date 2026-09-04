@@ -91,7 +91,6 @@ const NON_TEXT_KEYS = new Set([
   "icon", // icon name from a fixed set
   "alt", // accessibility attribute, carried as aria-label, never painted
   "url", // link target
-  "ref", // citation ref, painted only where a face opts in
   "from", // flowchart edge endpoint: a node id
   "to", // flowchart edge endpoint: a node id
   "key", // data_table column key: the cell lookup, not the header text
@@ -748,11 +747,6 @@ export const WIDENED_PATHS: readonly WidenedPath[] = [
       "the nine theme faces behind one-evidence found their component with pickEvidence, which knows only EVIDENCE_TYPES, so a panel reached no frame at all: 12 pages drew a heading over nothing. The face now steps aside for content its single frame cannot place (`evidenceExact`).",
   },
   {
-    path: "(citation).sources",
-    reason:
-      "same one-evidence swallow as insight_panel, 5 pages. The guard covers every construction on that face, not just the one that happened to be reported. The statement, pull-quote and stat-hero families then had their own half of it: each read sources[0] and left every later source unpainted, which is why the source line now sets all of them.",
-  },
-  {
     path: "(code).code",
     reason:
       "two separate faults met on the same 28 pages. 12 were the one-evidence swallow above. The other 16 were the scan's own: the line-number gutter prints a number between every pair of lines, so the page-wide text join read '1const a = 12const b = 2' and no listing could be found in it. The gutter now says what it is (`data-gutter`) and each block is read a second time without it.",
@@ -826,7 +820,7 @@ export function widened(path: string, slide: Slide): boolean {
 export interface FidelityExemption {
   /** Face id the exemption applies to. */
   readonly face: string
-  /** Substring of the authored text's IR path, e.g. `"(citation).sources"`. */
+  /** Substring of the authored text's IR path, e.g. `"(architecture).layers"`. */
   readonly path: string
   readonly reason: string
 }

@@ -157,7 +157,6 @@ const COMPONENT_KINDS: Record<Component["type"], PageKind> = {
   blockquote: "quote",
   callout: "points",
   code: "evidence",
-  citation: "evidence",
   verdict_banner: "points",
   tag_row: "list",
   kpi_cards: "data",
@@ -342,9 +341,9 @@ function sliceBullets(component: Component, n: number): Component {
   return component.type === "bullets" ? { ...component, items: component.items.slice(0, n) } : component
 }
 
-function shortCitation(lex: Lexicon): Component {
-  const s = lex.sources[0]!
-  return { type: "citation", sources: [{ label: s.label, ref: s.ref }] }
+/** One sentence, the size an annotation slot holds. */
+function shortNote(lex: Lexicon): Component {
+  return { type: "paragraph", text: lex.sentences[0]! }
 }
 
 /**
@@ -362,13 +361,13 @@ function bodyFor(def: LayoutDefinition, lex: Lexicon): Component[] {
   // annotation slot below an oversized heading". Feeding it a full
   // paragraph is authoring the page wrong, and the first review round spent
   // three findings on the resulting mess rather than on the layout itself.
-  // One source, not the corpus' full three: the slot is ~80px tall and a
-  // three-entry citation does not fit, which showed up as dropped content
-  // on every quote-stage page.
+  // One sentence, not the corpus' full paragraph: the slot is ~80px tall and
+  // a paragraph does not fit, which showed up as dropped content on every
+  // quote-stage page.
   if (capacity === 0) return []
 
-  // stat-hero's one slot is the hero itself: fed a citation, the heading has
-  // to carry the 180px hero figure and the corpus' long English heading
+  // stat-hero's one slot is the hero itself: fed an annotation, the heading
+  // has to carry the 180px hero figure and the corpus' long English heading
   // overruns the render-safety floor. Author the page as intended — a KPI
   // whose value is the hero — so the heading drops to the caption row.
   if (def.id === "stat-hero") {
@@ -419,7 +418,8 @@ function bodyFor(def: LayoutDefinition, lex: Lexicon): Component[] {
   }
 
   // Sparse and a few ordinary layouts have a body slot whose declared
-  // capacity is the wrong signal: citation is the capacity-1 default, but
+  // capacity is the wrong signal: a one-sentence note is the capacity-1
+  // default, but
   // these pages draw a quote, a chart, a bento grid, or a hero+strip. Match
   // the layout's own comments rather than broadening the default.
   if (def.id === "pull-quote") return [b.blockquote!(lex)]
@@ -435,14 +435,14 @@ function bodyFor(def: LayoutDefinition, lex: Lexicon): Component[] {
   }
   if (def.id === "stacked-poster") {
     // The 108px caption strip under the poster hero cannot hold
-    // shortParagraph. A one-source citation fits the strip, so the page
-    // stays on the two-block poster path instead of dropping the body.
-    return [b.image!(lex), shortCitation(lex)]
+    // shortParagraph. One sentence fits the strip, so the page stays on the
+    // two-block poster path instead of dropping the body.
+    return [b.image!(lex), shortNote(lex)]
   }
-  if (def.id === "quote-stage") return [shortCitation(lex)]
-  if (def.id === "statement") return [shortCitation(lex)]
+  if (def.id === "quote-stage") return [shortNote(lex)]
+  if (def.id === "statement") return [shortNote(lex)]
 
-  if (capacity <= 1) return [shortCitation(lex)]
+  if (capacity <= 1) return [shortNote(lex)]
 
   const shortParagraph: Component = { type: "paragraph", text: lex.shortParagraph }
 
@@ -466,11 +466,11 @@ function bodyFor(def: LayoutDefinition, lex: Lexicon): Component[] {
     // corpus' usual five because memo and clinic spend 100px more on the
     // header, leaving a 325px rect where the fifth row does not fit.
     "narrow-column": [b.callout!(lex), sliceBullets(b.bullets!(lex), 4)],
-    "rail-numbered": [b.steps!(lex), shortCitation(lex)],
+    "rail-numbered": [b.steps!(lex), shortNote(lex)],
     "banner-heading": [b.icon_cards!(lex), b.bullets!(lex)],
     "tone-adaptive-content": [b.blockquote!(lex), b.kpi_cards!(lex)],
     "quiet-frame": [b.tag_row!(lex), b.callout!(lex)],
-    "split-band": [b.icon_cards!(lex), shortCitation(lex)],
+    "split-band": [b.icon_cards!(lex), shortNote(lex)],
     "asymmetric-triptych": [b.image!(lex), b.blockquote!(lex)],
     "image-split": [b.image!(lex), b.bullets!(lex), shortParagraph],
     "image-top": [b.image!(lex), b.callout!(lex), shortParagraph],
@@ -727,9 +727,7 @@ export function componentPage(
   const leadIn: Component = { type: "paragraph", text: lex.sentences[0]! }
   const menuFace = getThemeDefinition(themeId).menu.content[kind]?.face
   const renderingThemeId =
-    component.type === "citation"
-      ? ensureGalleryFaceTheme(themeId, "narrow-column", "content", kind)
-      : menuFace !== undefined
+    menuFace !== undefined
       ? themeId
       : ensureGalleryFaceTheme(themeId, kind === "quote" ? "pull-quote" : "narrow-column", "content", kind)
 

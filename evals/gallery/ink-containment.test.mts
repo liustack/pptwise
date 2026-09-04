@@ -170,7 +170,7 @@ describe("the walker keeps the current text position", () => {
   })
 
   it("shifts by dx without starting a chunk", () => {
-    // 162 tspans in the live corpus carry dx; citation.tsx writes them.
+    // Tspans in the live corpus carry dx: the sparse faces write them.
     const markup = `<svg xmlns="http://www.w3.org/2000/svg"><g data-audit-rect="0,0,100,100"><g data-audit-box="0,0,100"><text x="10" y="50" font-size="10">AAAA<tspan dx="80">BBBB</tspan></text></g></g></svg>`
     const findings = collectInkFindings(markup)
     expect(findings.map((f) => f.side)).toEqual(["right"])
@@ -188,8 +188,8 @@ describe("the walker keeps the current text position", () => {
     // The walker reads a `dx`/`dy` list as no shift, which under-reports a
     // real per-glyph offset — and asserting *that* is asserting the
     // simplification. What makes the simplification safe is the fact
-    // underneath it: nothing in this renderer emits a list. `citation.tsx`,
-    // the only live producer of either attribute, writes one number. So the
+    // underneath it: nothing in this renderer emits a list. Every live
+    // producer of either attribute writes one number. So the
     // contract to hold is the absence, checked against every page the
     // matrix renders rather than against a hand-written string.
     const svgs = await renderCorpus()
