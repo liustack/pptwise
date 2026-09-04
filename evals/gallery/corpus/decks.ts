@@ -17,7 +17,7 @@ import { LAYOUT_REGISTRY, type LayoutDefinition } from "@/layouts/registry"
 import { CANONICAL_THEME_IDS, type CanonicalThemeId } from "@/themes"
 import { getInstalledThemeIds, getThemeDefinition } from "@/themes/definitions"
 import { registerTestTheme, type TestThemeFaces } from "@/themes/test-fixtures"
-import { COMPONENT_BUILDERS, PHOTO_ASSETS, SCREENSHOT_ASSET } from "./components"
+import { COMPONENT_BUILDERS, PHOTO_ASSETS, PHONE_SCREENSHOT_ASSET, SCREENSHOT_ASSET } from "./components"
 import type { LanguageId, Lexicon } from "./lexicon"
 import { THEME_CONTENT_SLOTS, buildThemeSlot } from "./theme-slots"
 
@@ -116,6 +116,12 @@ export async function corpusAssets(lex: Lexicon): Promise<CorpusAssets> {
   images[SCREENSHOT_ASSET] = {
     src: fixtureJpegDataUri(SCREENSHOT_ASSET),
     alt: lex.captions[2]!,
+  }
+  // The phone screen's own alt: `captions[3]` is the mobile line in every
+  // register, where `captions[2]` is the desktop dashboard the browser shows.
+  images[PHONE_SCREENSHOT_ASSET] = {
+    src: fixtureJpegDataUri(PHONE_SCREENSHOT_ASSET),
+    alt: lex.captions[3]!,
   }
   return { images }
 }
