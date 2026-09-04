@@ -203,6 +203,34 @@ interface ComponentEntry {
   readonly solo?: boolean
 }
 
+/**
+ * The other half of a specimen that owns its page.
+ *
+ * Five component types get a page to themselves in the band above, because
+ * sharing one with the lead-in sentence cost them the very thing the page
+ * exists to show. That is the right specimen, and on its own it is also an
+ * incomplete one: none of these types is `fullBody`, the page schema and
+ * every face's body slot still accept them beside a neighbour, and the band
+ * would no longer draw a single such page. What used to be covered by
+ * accident now has to be covered on purpose.
+ *
+ * So each of the five is drawn once more the other way, beside the same
+ * lead-in paragraph, on a theme whose face for that kind has the room. Not
+ * the theme that ran out of it: `data_table` shares academic's `data` face
+ * happily and cannot share consulting's, and `architecture` needs a
+ * `hierarchy` face that gives it the full width rather than
+ * asymmetric-triptych's 424px side panel, which is crayon and runway.
+ * Spacing against a neighbour stays under review, and the pairing stays
+ * pinned at zero drops by `no-drops.test.mts` and the cross-language sweep.
+ */
+export const ADJACENCY_PAGES: readonly { readonly component: string; readonly theme: string }[] = [
+  { component: "data_table", theme: "academic" },
+  { component: "row_cards", theme: "academic" },
+  { component: "paragraph", theme: "academic" },
+  { component: "flowchart", theme: "academic" },
+  { component: "architecture", theme: "crayon" },
+]
+
 function componentEntries(): ComponentEntry[] {
   const base: ComponentEntry[] = [
     // `chart` renders nine unrelated drawings behind one type name, so the
@@ -317,6 +345,36 @@ export function buildMatrix(
             band: "component",
             subject: entry.id,
             component: entry.id,
+            language,
+            theme: themeId,
+            page: 1,
+            pageCount: 1,
+            slideType: "content",
+            heading: ir.slides[0]!.heading ?? "",
+            ir,
+            slideIndex: 0,
+          })
+        }
+      }
+
+      // The theme's own language only, like every other page in its section:
+      // a theme other than the baseline is judged on one script so two
+      // sections differ by exactly one variable. The Latin and mixed halves
+      // of these same pairings are covered as a test rather than a specimen,
+      // by `cross-language-capacity.test.mts`.
+      for (const adj of ADJACENCY_PAGES.filter((a) => a.theme === themeId)) {
+        const build = COMPONENT_BUILDERS[adj.component]
+        if (!build) throw new Error(`adjacency page names unknown component "${adj.component}"`)
+        for (const language of [themeLanguage]) {
+          const entryLex = nativeLexiconFor(themeId)
+          const ir = componentPage(adj.component, build, entryLex, assets[language], themeId, { solo: false })
+          push({
+            id: `${safe(themeId)}--adj--${safe(adj.component)}--${language}`,
+            section: themeId,
+            sectionLabel,
+            band: "component",
+            subject: adj.component,
+            component: adj.component,
             language,
             theme: themeId,
             page: 1,
