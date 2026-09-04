@@ -321,6 +321,11 @@ function wantsImage(def: LayoutDefinition): boolean {
   return def.slots.some((s) => s.name === "image" || s.name === "hero" || s.name === "lead")
 }
 
+/** A bullets component narrowed to the rows a tight annotation rail holds. */
+function sliceBullets(component: Component, n: number): Component {
+  return component.type === "bullets" ? { ...component, items: component.items.slice(0, n) } : component
+}
+
 function shortCitation(lex: Lexicon): Component {
   const s = lex.sources[0]!
   return { type: "citation", sources: [{ label: s.label, ref: s.ref }] }
@@ -437,7 +442,14 @@ function bodyFor(def: LayoutDefinition, lex: Lexicon): Component[] {
       if (kpi.type === "kpi_cards") kpi.items = kpi.items.slice(0, 2)
       return [b.bullets!(lex), kpi]
     })(),
-    "narrow-column": [b.callout!(lex), b.numbered_cards!(lex)],
+    // Four bullets, not a numbered_cards stack: narrow-column is the `points`
+    // face, and a numbered card stack is ~400px tall on its own
+    // (`TALL_COMPONENT_TYPES`), so under the callout it overran this face's
+    // body rect and the density gate dropped the whole block. A bulleted list
+    // is what a points page actually carries. Four rows rather than the
+    // corpus' usual five because memo and pulse spend 100px more on the
+    // header, leaving a 325px rect where the fifth row does not fit.
+    "narrow-column": [b.callout!(lex), sliceBullets(b.bullets!(lex), 4)],
     "rail-numbered": [b.steps!(lex), shortCitation(lex)],
     "banner-heading": [b.icon_cards!(lex), b.bullets!(lex)],
     "tone-adaptive-content": [b.blockquote!(lex), b.kpi_cards!(lex)],
@@ -447,7 +459,10 @@ function bodyFor(def: LayoutDefinition, lex: Lexicon): Component[] {
     "image-split": [b.image!(lex), b.bullets!(lex), shortParagraph],
     "image-top": [b.image!(lex), b.callout!(lex), shortParagraph],
     "image-bottom": [b.image!(lex), b.blockquote!(lex), shortParagraph],
-    "image-annotate": [b.image!(lex), b.bullets!(lex)],
+    // Four notes, not the corpus' usual five: image-annotate's annotation
+    // rail beside the picture holds exactly four rows, and the fifth was
+    // being dropped on every theme that offers this face.
+    "image-annotate": [b.image!(lex), sliceBullets(b.bullets!(lex), 4)],
   }
 
   const mapped = bodies[def.id]
