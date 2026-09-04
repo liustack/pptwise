@@ -242,7 +242,21 @@ export function monoBleed(props: SvgTemplateProps) {
   const image = selection?.image
   const src = image ? ctx.images?.[image.asset_id]?.src : undefined
   const alt = image ? ctx.images?.[image.asset_id]?.alt : undefined
-  if (!src) return playbillTypeOnField(props)
+  if (!src) {
+    return (
+      <>
+        {playbillTypeOnField(props)}
+        <DroppedContentMarker count={slide.components.length} />
+      </>
+    )
+  }
+  // This face has one bleed and no body slot at all (`content-mono-bleed.tsx`
+  // declares `body` as `accepts: []`, capacity 0), so anything beside the
+  // picture it chose has nowhere to go. The other three bleed faces hand a
+  // sibling to their own body slot, which is why their guard only asks about
+  // the chosen picture — this one cannot, and a sibling used to leave with no
+  // mark on the page at all. It is counted here instead.
+  const unconsumed = slide.components.length - (selection ? 1 : 0)
   const title = slide.heading?.trim()
   // The picture's own caption, not the page heading. It used to have no place
   // on this face at all: a photo authored with a caption reached the slide as
@@ -287,6 +301,7 @@ export function monoBleed(props: SvgTemplateProps) {
           {caption}
         </text>
       )}
+      <DroppedContentMarker count={unconsumed} />
     </>
   )
 }

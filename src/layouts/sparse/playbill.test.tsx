@@ -290,9 +290,10 @@ describe("playbill sparse faces", () => {
     expect(root.querySelector("[data-dropped]")).not.toBeNull()
   })
 
-  // A device that is not the bleed picture is ordinary body content, so the
-  // face has no quarrel with it and keeps its own composition.
-  it("mono-bleed keeps the bleed when a mockup rides along behind a plain image", () => {
+  // This face has no body slot, so a sibling beside the chosen picture has
+  // nowhere to go. It keeps its bleed and says what it could not paint —
+  // never both painting the photo and losing the device in silence.
+  it("mono-bleed marks a mockup it cannot paint beside the bleed picture", () => {
     const slide: Slide = {
       type: "content",
       kind: "points",
@@ -308,5 +309,8 @@ describe("playbill sparse faces", () => {
     )
     expect(() => assertSubset(root)).not.toThrow()
     expect(root.querySelector("image")).not.toBeNull()
+    // The device is gone from the page, so the page has to say so.
+    expect(root.querySelector("[data-device-mockup]")).toBeNull()
+    expect(root.querySelector("[data-dropped]")?.getAttribute("data-dropped")).toBe("1")
   })
 })
