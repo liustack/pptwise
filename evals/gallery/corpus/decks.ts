@@ -348,8 +348,8 @@ function sliceBullets(component: Component, n: number): Component {
  * gives below: every component builder draws from the near end
  * (`sentences[0]` through `sentences[7]`), and a note beside a `steps`
  * stack taken from the same end printed step one's text a second time on
- * every `rail-numbered` page. `no-repeats.test.mts` holds the whole corpus
- * to that, page by page.
+ * every `rail-numbered` page. `no-drops.test.mts` holds the whole corpus to
+ * that, page by page.
  */
 function shortNote(lex: Lexicon): Component {
   return { type: "paragraph", text: lex.sentences[10]! }
@@ -813,7 +813,7 @@ export function stepAsidePage(
   // lead-in taken from the same end printed the identical sentence twice on
   // the runway page, once above the onion and once inside its third ring. No
   // component builder reaches the far end — and `step-aside-corpus.test.mts`
-  // holds that for every page here, as `no-repeats.test.mts` does for the
+  // holds that for every page here, as `no-drops.test.mts` does for the
   // whole corpus.
   const leadIn: Component = { type: "paragraph", text: lex.sentences[6]! }
   const slide = {

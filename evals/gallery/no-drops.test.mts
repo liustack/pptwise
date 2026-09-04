@@ -1,6 +1,12 @@
 // @vitest-environment node
 //
-// Constitutional nail: no gallery page may declare a content drop.
+// The two constitutional nails that need the whole corpus rendered: no page
+// declares a content drop, and no page says the same thing twice. They share
+// a file because they share that render — the matrix is 1826 pages, and a
+// second file rendering it again is nine seconds every `pnpm check` pays for
+// nothing.
+//
+// Nail one: no gallery page may declare a content drop.
 //
 // `data-dropped` means a page lost authored content and says nothing about
 // it on its own face, and the export gate refuses any deck carrying one
@@ -58,8 +64,62 @@ function drops(svg: string): string[] {
     .map((el) => `${el.getAttribute("data-dropped")}×${el.getAttribute("data-dropped-kind") ?? "component"}`)
 }
 
-describe("the gallery corpus declares no content drops", () => {
-  it("scans every page the gallery renders", { timeout: 180_000 }, async () => {
+/**
+ * Nail two: no page prints the same line twice.
+ *
+ * `step-aside-corpus.test.mts` already holds its three pages to this, and it
+ * found the fault that put it there: the lead-in and the `rings` builder drew
+ * from the same end of the sentence pool, so the runway page printed one
+ * sentence above the onion and again inside its third ring. The same shape
+ * came back the moment the capacity-1 annotation slot stopped carrying a
+ * source and started carrying a sentence — `steps` writes `sentences[0]` into
+ * step one, the note beside it was `sentences[0]` too, and 24 `rail-numbered`
+ * pages said it twice. A corpus page is product content, and product content
+ * does not repeat itself in two places on one slide.
+ *
+ * The scan reads the page the way a reader does: text is compared with all
+ * whitespace removed, because a wrapped line is split across elements at a
+ * break the reader never sees. Only that spelling catches a sentence that is
+ * wrapped in one place and whole in another, which is exactly how the 24
+ * pages hid from an element-by-element comparison.
+ */
+
+/** The shortest run worth calling a repetition. A word is not a repetition. */
+const MIN_RUN = 12
+
+/** A run that closes on a full stop is a sentence, not a label. */
+const SENTENCE_END = /[。．.！!？?]$/
+
+/** Every painted run of {@link MIN_RUN} characters or more the page draws twice, whitespace removed. */
+function repeatedRuns(svg: string): string[] {
+  const Parser = getPlatform().domParser ?? globalThis.DOMParser
+  if (!Parser) throw new Error("DOMParser unavailable")
+  const root = new Parser().parseFromString(svg, "image/svg+xml").documentElement
+  const runs = Array.from(root.querySelectorAll("text")).map((el) => (el.textContent ?? "").replace(/\s+/g, ""))
+  const page = runs.join("")
+  return [...new Set(runs.filter((run) => run.length >= MIN_RUN && page.split(run).length - 1 > 1))]
+}
+
+/**
+ * The labels the corpus repeats today, page by page.
+ *
+ * A cycling pool, not a lead-in drawn from the wrong end: `show-gallery` lays
+ * six tiles over four captions, playbill's `icon_cards` title opens one of
+ * its own sentences, and two pages reuse one phrase in two rows. Those are
+ * corpus writing rather than wiring, so they are pinned here and the set can
+ * only shrink — an entry leaves when someone writes the missing caption.
+ * Nothing may join it, and a repeated *sentence* may never be listed at all.
+ */
+const KNOWN_LABEL_REPEATS: readonly string[] = [
+  "brief--comp--roadmap--mixed\tobservability",
+  "playbill--comp--icon-cards--zh\t首演两场七百张票三天售罄",
+  "terminal--deck--p04\t三次重写RFC与否决记录",
+  "unserved--face--show-gallery\t临江咨询三号团队的协作工",
+  "unserved--face--show-gallery\t文档模板库在咨询项目中的",
+]
+
+describe("the gallery corpus", () => {
+  it("declares no content drops, and repeats no sentence", { timeout: 180_000 }, async () => {
     const themeIds = listThemes()
       .map((t) => t.id)
       .sort()
@@ -67,16 +127,23 @@ describe("the gallery corpus declares no content drops", () => {
       await Promise.all(LANGUAGE_IDS.map(async (id) => [id, await corpusAssets(LEXICONS[id])])),
     ) as Record<LanguageId, Awaited<ReturnType<typeof corpusAssets>>>
     const jobs = buildMatrix(themeIds, assets)
-    const outDir = mkdtempSync(join(tmpdir(), "pptwise-no-drops-"))
+    const outDir = mkdtempSync(join(tmpdir(), "pptwise-corpus-scan-"))
     const { svgs, manifest } = renderMatrix(jobs, outDir, "no-drops")
     expect(svgs.size).toBeGreaterThan(0)
     expect(manifest.pages.length).toBe(jobs.length)
 
     const declared: string[] = []
+    const sentences: string[] = []
+    const labels: string[] = []
     for (const [id, svg] of svgs) {
       const found = drops(svg)
       if (found.length > 0) declared.push(`${id}: ${found.join(", ")}`)
+      for (const run of repeatedRuns(svg)) {
+        ;(SENTENCE_END.test(run) ? sentences : labels).push(`${id}\t${run}`)
+      }
     }
-    expect(declared).toEqual([])
+    expect(declared, "a page lost authored content").toEqual([])
+    expect(sentences, "a page says the same sentence twice").toEqual([])
+    expect(labels.sort(), "a page repeats a label the pinned list does not name").toEqual([...KNOWN_LABEL_REPEATS].sort())
   })
 })
