@@ -134,7 +134,7 @@ Narrative guides the argument, tone, theme choice, body-text baseline, and edito
 
 ## Components
 
-`components` is a discriminated union of 39 typed units. Ask the installed schema for exact fields:
+`components` is a discriminated union of 38 typed units. Ask the installed schema for exact fields:
 
 ```bash
 pptwise schema > ir.schema.json

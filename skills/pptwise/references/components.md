@@ -32,7 +32,6 @@ The table gives each component's normal kind home. A component may serve more th
 | `matrix` | `comparison`, `hierarchy` |
 | `insight_panel` | `points`, `evidence` |
 | `verdict_banner` | `statement`, `points` |
-| `citation` | `quote`, `evidence` |
 | `image` | `photo`, `evidence` |
 | `image_grid` | `photo`, `list` |
 | `image_compare` | `comparison`, `evidence` |

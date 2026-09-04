@@ -37,7 +37,6 @@ mirror_of: skills/pptwise/references/components.md
 | `matrix` | `comparison`, `hierarchy` |
 | `insight_panel` | `points`, `evidence` |
 | `verdict_banner` | `statement`, `points` |
-| `citation` | `quote`, `evidence` |
 | `image` | `photo`, `evidence` |
 | `image_grid` | `photo`, `list` |
 | `image_compare` | `comparison`, `evidence` |
