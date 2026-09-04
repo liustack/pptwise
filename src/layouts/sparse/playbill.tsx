@@ -4,7 +4,7 @@ import { fitHeadingLines } from "../../render/heading-fit"
 import { fitSvgLine } from "../../lib/svg-text-layout"
 import { renderEmphasisTspans, emphasisRunInk } from "../../render/emphasis"
 import { accessibleOpacity, readableOn } from "../../render/ink"
-import { findImageSelection, singlePictureExact } from "../find-image"
+import { bleedSlotCanHost, findImageSelection, singlePictureExact } from "../find-image"
 import { DroppedContentMarker } from "../../render/drop-marker"
 import { heroCaption, heroUnit, heroSource, heroValue } from "../minimal-shared"
 import { fitHeroLine, fitSparseHeading, fitStatementSource, heroUnitMark, isNumericHero, rotateRectPolygon, splitTrailingPercent } from "./shared"
@@ -227,10 +227,36 @@ export function monoBleed(props: SvgTemplateProps) {
       </>
     )
   }
-  const image = findImageSelection(slide)?.image
+  const selection = findImageSelection(slide)
+  // A `device_mockup` chosen as the bleed picture gets the same answer for a
+  // different reason: this face's picture runs off three page edges, and a
+  // device drawn without its own edges is not a device. See `bleedSlotCanHost`.
+  if (selection && !bleedSlotCanHost(selection.source)) {
+    return (
+      <>
+        {playbillTypeOnField(props)}
+        <DroppedContentMarker count={slide.components.length} />
+      </>
+    )
+  }
+  const image = selection?.image
   const src = image ? ctx.images?.[image.asset_id]?.src : undefined
   const alt = image ? ctx.images?.[image.asset_id]?.alt : undefined
-  if (!src) return playbillTypeOnField(props)
+  if (!src) {
+    return (
+      <>
+        {playbillTypeOnField(props)}
+        <DroppedContentMarker count={slide.components.length} />
+      </>
+    )
+  }
+  // This face has one bleed and no body slot at all (`content-mono-bleed.tsx`
+  // declares `body` as `accepts: []`, capacity 0), so anything beside the
+  // picture it chose has nowhere to go. The other three bleed faces hand a
+  // sibling to their own body slot, which is why their guard only asks about
+  // the chosen picture — this one cannot, and a sibling used to leave with no
+  // mark on the page at all. It is counted here instead.
+  const unconsumed = slide.components.length - (selection ? 1 : 0)
   const title = slide.heading?.trim()
   // The picture's own caption, not the page heading. It used to have no place
   // on this face at all: a photo authored with a caption reached the slide as
@@ -275,6 +301,7 @@ export function monoBleed(props: SvgTemplateProps) {
           {caption}
         </text>
       )}
+      <DroppedContentMarker count={unconsumed} />
     </>
   )
 }

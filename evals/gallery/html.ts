@@ -155,7 +155,12 @@ export const COMPONENT_FAMILIES: readonly GroupFamily[] = [
     label: "流程与结构",
     members: ["steps", "flowchart", "cycle", "hub_spoke", "rings", "architecture", "timeline", "roadmap", "gantt"],
   },
-  { label: "图像", members: ["image", "image_grid", "image_compare", "device_mockup"] },
+  {
+    label: "图像",
+    // `device_mockup` files under both its devices, the way `chart` files
+    // under each of its drawings: one type name, a browser window and a phone.
+    members: ["image", "image_grid", "image_compare", "device_mockup · browser", "device_mockup · phone"],
+  },
 ]
 
 /**

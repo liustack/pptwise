@@ -267,4 +267,50 @@ describe("playbill sparse faces", () => {
     expect(root.querySelector("image")).toBeNull()
     expect(root.querySelector("[data-dropped]")).not.toBeNull()
   })
+
+  // The bleed is 1280x600 off three page edges, and a device drawn without its
+  // own edges is not a device. This face draws the picture or says it did not,
+  // and it never quietly turns a device_mockup into a bare screenshot.
+  it("mono-bleed steps aside when the bleed picture is a device_mockup", () => {
+    const slide: Slide = {
+      type: "content",
+      kind: "points",
+      layout: "mono-bleed",
+      heading: "凌晨两点的会议，以后交给工作区",
+      components: [
+        { type: "device_mockup", device: "browser", asset_id: "shot", url: "portal.example.com", caption: PLACEHOLDER },
+      ],
+    } as Slide
+    const { root } = render(
+      <MonoBleedContent ir={irWithShot([slide])} slide={slide} index={0} ctx={shotCtx} />,
+    )
+    expect(() => assertSubset(root)).not.toThrow()
+    expect(root.querySelector("image")).toBeNull()
+    expect(root.querySelector("[data-device-mockup]")).toBeNull()
+    expect(root.querySelector("[data-dropped]")).not.toBeNull()
+  })
+
+  // This face has no body slot, so a sibling beside the chosen picture has
+  // nowhere to go. It keeps its bleed and says what it could not paint —
+  // never both painting the photo and losing the device in silence.
+  it("mono-bleed marks a mockup it cannot paint beside the bleed picture", () => {
+    const slide: Slide = {
+      type: "content",
+      kind: "points",
+      layout: "mono-bleed",
+      heading: "凌晨两点的会议，以后交给工作区",
+      components: [
+        { type: "image", asset_id: "shot", fit: "cover", caption: PLACEHOLDER },
+        { type: "device_mockup", device: "browser", asset_id: "shot", url: "portal.example.com" },
+      ],
+    } as Slide
+    const { root } = render(
+      <MonoBleedContent ir={irWithShot([slide])} slide={slide} index={0} ctx={shotCtx} />,
+    )
+    expect(() => assertSubset(root)).not.toThrow()
+    expect(root.querySelector("image")).not.toBeNull()
+    // The device is gone from the page, so the page has to say so.
+    expect(root.querySelector("[data-device-mockup]")).toBeNull()
+    expect(root.querySelector("[data-dropped]")?.getAttribute("data-dropped")).toBe("1")
+  })
 })

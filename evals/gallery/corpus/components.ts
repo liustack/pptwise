@@ -21,6 +21,13 @@ import type { Lexicon } from "./lexicon"
 /** Asset ids the corpus declares — see `deck.ts`, which materializes them. */
 export const PHOTO_ASSETS = ["photo-1", "photo-2", "photo-3", "photo-4"] as const
 export const SCREENSHOT_ASSET = "screenshot-1"
+/**
+ * The portrait screen behind the phone frame. A separate asset because a phone
+ * showing the desktop dashboard is a phone showing a cropped desktop: the frame
+ * slices a 16:9 picture to 9:19 and what survives is half a KPI card and a
+ * piece of a chart. This one is drawn mobile-shaped to begin with.
+ */
+export const PHONE_SCREENSHOT_ASSET = "screenshot-phone-1"
 
 /** Take `n` items starting at `from`, wrapping — keeps builders total. */
 function slice(pool: readonly string[], n: number, from = 0): string[] {
@@ -383,6 +390,31 @@ export const COMPONENT_BUILDERS: Record<string, (lex: Lexicon) => Component> = {
     asset_id: SCREENSHOT_ASSET,
     url: lex.url,
     caption: lex.captions[2],
+  }),
+}
+
+/**
+ * The two devices this component draws. Like `CHART_VARIANTS` these replace
+ * the bare `device_mockup` entry rather than sitting beside it: one type name
+ * covers a landscape browser window with an address bar and a portrait phone
+ * with a bezel and a notch, and reviewing only the browser left the phone
+ * drawn by nobody's eyes and asserted by no corpus test.
+ *
+ * The phone carries no `url` on purpose — the schema forbids one, since a
+ * phone has no address bar — which is also the corpus's only page where a
+ * browser-shaped assertion about an address pill must not fire. It carries no
+ * caption either: a portrait screen leaves about seven characters on the
+ * caption band, so every register's caption arrived chopped and marked, and 26
+ * pages of a cut line teach a reviewer nothing the browser page does not
+ * already show. The band itself stays covered by the browser specimen.
+ */
+export const DEVICE_VARIANTS: Record<string, (lex: Lexicon) => Component> = {
+  "device_mockup · browser": (lex) => COMPONENT_BUILDERS.device_mockup!(lex),
+
+  "device_mockup · phone": () => ({
+    type: "device_mockup",
+    device: "phone",
+    asset_id: PHONE_SCREENSHOT_ASSET,
   }),
 }
 

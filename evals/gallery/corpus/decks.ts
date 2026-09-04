@@ -14,10 +14,12 @@ import { fileURLToPath } from "node:url"
 import type { Component, PageKind, PptxIR, Slide } from "@/ir"
 import { FULL_BODY_TYPES } from "@/render/component-traits"
 import { LAYOUT_REGISTRY, type LayoutDefinition } from "@/layouts/registry"
-import { CANONICAL_THEME_IDS, type CanonicalThemeId } from "@/themes"
+import { fitSvgLine } from "@/lib/svg-text-layout"
+import { resolveFontStack } from "@/render/fonts"
+import { CANONICAL_THEME_IDS, resolveStyle, type CanonicalThemeId } from "@/themes"
 import { getInstalledThemeIds, getThemeDefinition } from "@/themes/definitions"
 import { registerTestTheme, type TestThemeFaces } from "@/themes/test-fixtures"
-import { COMPONENT_BUILDERS, PHOTO_ASSETS, SCREENSHOT_ASSET } from "./components"
+import { COMPONENT_BUILDERS, PHOTO_ASSETS, PHONE_SCREENSHOT_ASSET, SCREENSHOT_ASSET } from "./components"
 import type { LanguageId, Lexicon } from "./lexicon"
 import { THEME_CONTENT_SLOTS, buildThemeSlot } from "./theme-slots"
 
@@ -116,6 +118,12 @@ export async function corpusAssets(lex: Lexicon): Promise<CorpusAssets> {
   images[SCREENSHOT_ASSET] = {
     src: fixtureJpegDataUri(SCREENSHOT_ASSET),
     alt: lex.captions[2]!,
+  }
+  // The phone screen's own alt: `captions[3]` is the mobile line in every
+  // register, where `captions[2]` is the desktop dashboard the browser shows.
+  images[PHONE_SCREENSHOT_ASSET] = {
+    src: fixtureJpegDataUri(PHONE_SCREENSHOT_ASSET),
+    alt: lex.captions[3]!,
   }
   return { images }
 }
@@ -611,6 +619,38 @@ function isBubbleChart(component: Component): boolean {
   )
 }
 
+/**
+ * A heading short enough for the narrowest face a specimen page can land on.
+ *
+ * `show-spotlight`'s fallback fits the page heading to a single 496px line
+ * with a 36px floor — about thirteen CJK glyphs — and runway routes `photo`
+ * there, so the pool's usual `headings[8]` lost its last character on runway's
+ * device pages and the review compared a cut line against whole ones. Picking
+ * the first entry in the theme's own pool that survives that budget keeps the
+ * register the lexicon authored, instead of inventing a short line per theme,
+ * and fits every wider face by construction.
+ *
+ * Only device pages ask for it: they are the specimen the frame is judged on,
+ * and the frame leaves the heading less room than a bare picture does.
+ */
+const NARROW_HEADING_W = 496
+const NARROW_HEADING_FLOOR = 36
+
+function headingThatFitsAnywhere(lex: Lexicon, themeId: string): string {
+  const fontFamily = resolveFontStack(resolveStyle(themeId).fonts.heading, "heading")
+  for (const heading of lex.headings) {
+    const fitted = fitSvgLine(heading, {
+      maxWidth: NARROW_HEADING_W,
+      fontSize: 56,
+      minFontSize: NARROW_HEADING_FLOOR,
+      fontFamily,
+      bold: true,
+    })
+    if (!fitted.truncated) return heading
+  }
+  return lex.headings[0]!
+}
+
 export function componentPage(
   componentId: string,
   build: (lex: Lexicon) => Component,
@@ -653,7 +693,12 @@ export function componentPage(
   const slide = {
     type: "content",
     kind,
-    heading: cartesian && component.chart_type === "scatter" ? lex.scatterHeading : lex.headings[8]!,
+    heading:
+      cartesian && component.chart_type === "scatter"
+        ? lex.scatterHeading
+        : component.type === "device_mockup"
+        ? headingThatFitsAnywhere(lex, themeId)
+        : lex.headings[8]!,
     subheading: cartesian
       ? component.chart_type === "scatter"
         ? lex.scatterSubhead

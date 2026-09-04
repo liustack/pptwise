@@ -427,3 +427,119 @@ describe("image takeover dropped-content propagation", () => {
     expect(slideToRender(doc, slide, 0).dropped).toBeGreaterThan(0)
   })
 })
+
+// ── device_mockup keeps its frame on every face ────────────────────────────
+//
+// The frame is the component: a browser window bar or a phone bezel is what
+// makes a screenshot read as software that is running. A takeover that took a
+// `device_mockup` through `findImageSelection` painted the screen contents
+// alone, and the component silently degenerated into an `image`. Every face
+// that can be routed a photo kind now has exactly one of two postures, and
+// both of them put the frame on the page.
+describe("device_mockup keeps its frame", () => {
+  const TAKEOVERS = ["image-split", "image-top", "image-bottom", "image-annotate", "show-spotlight"] as const
+
+  function mockupSlide(device: "browser" | "phone"): Slide {
+    return {
+      type: "content",
+      kind: "photo",
+      heading: "The console customers actually open",
+      components: [
+        {
+          type: "device_mockup",
+          device,
+          asset_id: "hero",
+          ...(device === "browser" ? { url: "portal.example.com/workspaces" } : {}),
+          caption: "Live health board",
+        },
+      ],
+    } as Slide
+  }
+
+  it.each(TAKEOVERS)("%s draws the device frame for a browser mockup", (face) => {
+    const slide = mockupSlide("browser")
+    const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "consulting", {
+      content: { photo: face },
+    })
+    const doc = makeIr(themeId, slide)
+    const root = parseSvgRoot(slideToSvgMarkup(doc, slide, 0))
+
+    expect(root.querySelector("[data-device-mockup='browser']")).not.toBeNull()
+    expect(slideToRender(doc, slide, 0).dropped).toBe(0)
+  })
+
+  it.each(TAKEOVERS)("%s draws the device frame for a phone mockup", (face) => {
+    const slide = mockupSlide("phone")
+    const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "consulting", {
+      content: { photo: face },
+    })
+    const doc = makeIr(themeId, slide)
+    const root = parseSvgRoot(slideToSvgMarkup(doc, slide, 0))
+
+    expect(root.querySelector("[data-device-mockup='phone']")).not.toBeNull()
+    expect(slideToRender(doc, slide, 0).dropped).toBe(0)
+  })
+
+  // A device that is not the bleed source is ordinary body content. The guard
+  // used to scan every component, so this legal page — a plain photo first, a
+  // mockup after it — declined the whole face even though the bleed slot had
+  // taken the photo and had no quarrel with anything, and the fallback's
+  // single stack then dropped the mockup outright.
+  it.each(["image-split", "image-top", "image-bottom"] as const)(
+    "%s keeps the face when the bleed picture is a plain image and a mockup rides along",
+    (face) => {
+      const slide: Slide = {
+        type: "content",
+        kind: "photo",
+        heading: "The floor and the console behind it",
+        components: [
+          { type: "image", asset_id: "hero", fit: "cover", caption: "Delivery floor" },
+          {
+            type: "device_mockup",
+            device: "browser",
+            asset_id: "hero",
+            url: "portal.example.com/workspaces",
+            caption: "The console behind it",
+          },
+        ],
+      } as Slide
+      const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "consulting", {
+        content: { photo: face },
+      })
+      const doc = makeIr(themeId, slide)
+      const root = parseSvgRoot(slideToSvgMarkup(doc, slide, 0))
+
+      expect(root.querySelector("[data-takeover-mode='fallback']")).toBeNull()
+      expect(root.querySelector("[data-device-mockup='browser']")).not.toBeNull()
+      expect(root.textContent).toContain("Delivery floor")
+      expect(root.textContent).toContain("The console behind it")
+      expect(slideToRender(doc, slide, 0).dropped).toBe(0)
+    },
+  )
+
+  // The bleed faces decline rather than host: their picture runs off two or
+  // three page edges, and a device without edges is not a device.
+  it.each(["image-split", "image-top", "image-bottom"] as const)("%s declines and falls back", (face) => {
+    const slide = mockupSlide("browser")
+    const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "consulting", {
+      content: { photo: face },
+    })
+    const root = parseSvgRoot(slideToSvgMarkup(makeIr(themeId, slide), slide, 0))
+    expect(root.querySelector("[data-takeover-mode='fallback']")).not.toBeNull()
+  })
+
+  // image-annotate hosts it: its picture area is a bounded card inside the
+  // page, so the device's own renderer fills the slot the card reserved and
+  // the white photo mount steps out of the way.
+  it("image-annotate hosts the framed component instead of declining", () => {
+    const slide = mockupSlide("browser")
+    const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "consulting", {
+      content: { photo: "image-annotate" },
+    })
+    const root = parseSvgRoot(slideToSvgMarkup(makeIr(themeId, slide), slide, 0))
+    expect(root.querySelector("[data-takeover-mode='fallback']")).toBeNull()
+    expect(root.querySelector("[data-device-mockup='browser']")).not.toBeNull()
+    // The caption belongs to the screen, and it is printed once.
+    expect(root.textContent?.match(/Live health board/g)).toHaveLength(1)
+  })
+})

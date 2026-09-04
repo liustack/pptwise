@@ -1,9 +1,9 @@
 {
   "generator": "pptwise renderer",
   "script": "scripts/make-screenshot-fixture.mts",
-  "source": "SCREENSHOT_IR in that script, rendered through validateIr + renderSlideSvg",
-  "source_sha256": "e8f639a337463ce14045f28b7cb560046c193bde76a3ce4fd8c387dd9088e459",
-  "recipe_sha256": "eca4e5735de2d8a0550973a1d7466baa9ea57d385755b8e4ee0e08e5617bb547",
+  "source": "PHONE_SCREEN in that script, its components rendered through renderComponent into a 9:19 phone canvas",
+  "source_sha256": "11c62edbd7eca1a6ebe4b2c7349f8e5b2dc5c2e0b4b95cd752ced152ca0ec984",
+  "recipe_sha256": "a908811f3756c95153a73ce006c9457cdbef4810ded6bded2a5602ff97309243",
   "recipe": {
     "quality": 88,
     "progressive": false,
@@ -16,6 +16,6 @@
     "mozjpeg": false
   },
   "rendered_with_face": "PingFang SC",
-  "width": 1280,
-  "height": 720
+  "width": 720,
+  "height": 1520
 }

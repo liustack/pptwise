@@ -22,7 +22,7 @@ import { COMPONENT_TYPES, type PageKind, type PptxIR } from "@/ir"
 import { LAYOUT_REGISTRY } from "@/layouts/registry"
 import { resolveEffectiveFace } from "@/render/layout-selection"
 import { getThemeDefinition } from "@/themes/definitions"
-import { CHART_VARIANTS, COMPONENT_BUILDERS } from "./corpus/components"
+import { CHART_VARIANTS, COMPONENT_BUILDERS, DEVICE_VARIANTS } from "./corpus/components"
 import {
   BASELINE_THEME,
   componentPage,
@@ -193,7 +193,7 @@ export function unservedLayoutIds(themeIds: readonly string[]): string[] {
 
 /**
  * The component band's page list: every component type, with `chart` replaced
- * by its nine drawings. Every theme's band carries the same list — a
+ * by its nine drawings and `device_mockup` by its two devices. Every theme's band carries the same list — a
  * component draws one way everywhere, so what a reviewer compares across two
  * sections is the skin, not the drawing.
  */
@@ -208,9 +208,12 @@ function componentEntries(): ComponentEntry[] {
     // `chart` renders nine unrelated drawings behind one type name, so the
     // variants replace the bare `chart` entry rather than sitting next to it.
     ...Object.entries(COMPONENT_BUILDERS)
-      .filter(([id]) => id !== "chart")
+      .filter(([id]) => id !== "chart" && id !== "device_mockup")
       .map(([id, build]) => ({ id, build: build! })),
     ...Object.entries(CHART_VARIANTS).map(([id, build]) => ({ id, build: build! })),
+    // Same reason as `chart`: one type name, two devices that look nothing
+    // alike. See `DEVICE_VARIANTS`.
+    ...Object.entries(DEVICE_VARIANTS).map(([id, build]) => ({ id, build: build! })),
   ]
   return base.sort((a, b) => safe(a.id).localeCompare(safe(b.id)))
 }
