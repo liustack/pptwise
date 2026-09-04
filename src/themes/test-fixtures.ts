@@ -1,6 +1,6 @@
 import type { PageKind } from "@/ir"
 import { getLayout } from "../layouts/registry"
-import { registerTheme, THEME_DEFINITIONS } from "./definitions"
+import { __registerStructuralTheme, THEME_DEFINITIONS } from "./definitions"
 import type { CanonicalThemeId } from "./index"
 import type { Menu, MenuDecor, MenuEntry, ThemeFile } from "./schema"
 
@@ -78,14 +78,13 @@ export function registerTestTheme(
     ending: replaceFace(source.menu.ending, faces.ending, fallbackDecor)!,
   }
 
-  registerTheme({
+  // Structural install: this id is composed out of a source theme, a page
+  // type, and the internal name of the drawing under test, so it is a handle
+  // and not a name. Every other gate the public contract runs still runs.
+  __registerStructuralTheme({
     version: 2,
     id,
-    // Deliberately says nothing about the theme it copies. A label is a
-    // public name, held to the naming rule, and a fixture that echoed
-    // `classroom` or `consulting` into its label would be asking the rule for
-    // an exception it should not get.
-    label: "Test fixture",
+    label: `Test copy of ${sourceThemeId}`,
     style: publicStyle(sourceThemeId, id),
     brand: structuredClone(source.brand),
     occasions: source.occasions === undefined ? undefined : [...source.occasions],

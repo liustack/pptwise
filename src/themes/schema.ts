@@ -7,7 +7,7 @@ import {
   type BrandConfig,
   type BUILTIN_THEME_IDS,
 } from "@/ir"
-import { findForbiddenNameWords, isForbiddenName, validateDesignStory, type DesignStory } from "../design-story"
+import { findForbiddenNameWords, validateDesignStory, type DesignStory } from "../design-story"
 import { isLegacyThemeName } from "./legacy-names"
 import type { MotifId } from "../motifs/types"
 import { OCCASION_VOCAB, type Occasion } from "./occasions"
@@ -152,11 +152,7 @@ const CommonThemeFileFields = {
  */
 function checkNameRule(text: string | undefined, path: (string | number)[], ctx: z.RefinementCtx): void {
   if (text === undefined || isLegacyThemeName(text)) return
-  // An id is one handle and handles get composed, so it is held to being a
-  // forbidden name rather than to containing a forbidden word. See
-  // `isForbiddenName`.
-  const words = path[0] === "id" ? (isForbiddenName(text) ? findForbiddenNameWords(text) : []) : findForbiddenNameWords(text)
-  for (const word of words) {
+  for (const word of findForbiddenNameWords(text)) {
     ctx.addIssue({
       code: "custom",
       path,
@@ -165,13 +161,33 @@ function checkNameRule(text: string | undefined, path: (string | number)[], ctx:
   }
 }
 
+/**
+ * Whether this parse is holding the file to the customer naming rule.
+ *
+ * `"named"` is the public contract and the only mode a theme file, the CLI,
+ * or the SDK can ask for. `"structural"` exists for one caller: the review
+ * corpus and the unit fixtures, which compose a theme id out of a source
+ * theme, a page type, and the internal name of the drawing under test.
+ * Those ids are handles nobody reads, and they are the only reason the rule
+ * ever looked like it needed a loophole.
+ *
+ * The exception is drawn at the *source* of the theme rather than at the
+ * shape of its id, which is the only place it can be drawn safely. A rule
+ * that waved through any id merely containing a style word would wave
+ * through `fintech-dark` too, and a user can write that.
+ */
+export type ThemeNameEnforcement = "named" | "structural"
+
 function validateCommonThemeFields(
   value: { id: string; label?: string; story?: DesignStory; style: { id: string } },
   ctx: z.RefinementCtx,
+  enforcement: ThemeNameEnforcement,
 ): void {
-  checkNameRule(value.id, ["id"], ctx)
-  checkNameRule(value.label, ["label"], ctx)
-  checkNameRule(value.story?.name, ["story", "name"], ctx)
+  if (enforcement === "named") {
+    checkNameRule(value.id, ["id"], ctx)
+    checkNameRule(value.label, ["label"], ctx)
+    checkNameRule(value.story?.name, ["story", "name"], ctx)
+  }
   if (value.style.id !== value.id) {
     ctx.addIssue({
       code: "custom",
@@ -276,16 +292,29 @@ export const MenuSchema = z
   .strict()
 
 /** Public v2 theme-file contract. Every file is complete and self-contained. */
-export const ThemeFileSchema = z
-  .object({
-    ...CommonThemeFileFields,
-    version: z.literal(2),
-    menu: MenuSchema,
-  })
-  .strict()
-  .superRefine((value, ctx) => {
-    validateCommonThemeFields(value, ctx)
-  })
+function themeFileSchema(enforcement: ThemeNameEnforcement) {
+  return z
+    .object({
+      ...CommonThemeFileFields,
+      version: z.literal(2),
+      menu: MenuSchema,
+    })
+    .strict()
+    .superRefine((value, ctx) => {
+      validateCommonThemeFields(value, ctx, enforcement)
+    })
+}
+
+/** Public v2 theme-file contract: structure, and the customer naming rule. */
+export const ThemeFileSchema = themeFileSchema("named")
+
+/**
+ * The same contract with the naming rule stood down, and nothing else.
+ * Version, strict shape, `style.id === id`, and the whole menu contract are
+ * all still checked — see {@link ThemeNameEnforcement} for who may use it.
+ * Deliberately absent from `src/index.ts`, so no CLI or SDK path can reach it.
+ */
+export const StructuralThemeFileSchema = themeFileSchema("structural")
 
 export type MenuParamValue = z.infer<typeof MenuParamValueSchema>
 export type MenuDecor = z.infer<typeof MenuDecorSchema>

@@ -8,6 +8,7 @@ import { contrastRatio } from "../render/ink"
 import { getLayout, type LayoutParamDeclaration } from "../layouts/registry"
 import { REGISTERED_THEMES } from "./registered-themes"
 import {
+  StructuralThemeFileSchema,
   ThemeFileSchema,
   type BuiltinThemeDeclaration,
   type Menu,
@@ -263,9 +264,10 @@ function warnUnmeasuredFace(id: string, role: "heading" | "body", stack: string[
   }
 }
 
-function parseThemeFile(value: unknown): ThemeFile {
+type ThemeFileContract = typeof ThemeFileSchema
 
-  const result = ThemeFileSchema.safeParse(value)
+function parseThemeFile(value: unknown, schema: ThemeFileContract = ThemeFileSchema): ThemeFile {
+  const result = schema.safeParse(value)
   if (!result.success) {
     const detail = result.error.issues
       .map((issue) => `${issue.path.join(".") || "(root)"}: ${issue.message}`)
@@ -458,6 +460,26 @@ export function registerTheme(input: unknown): void {
     throw new PptwiseError(`theme "${file.id}" is already installed`)
   }
   installParsedThemeFile(file)
+}
+
+/**
+ * Install a theme whose id and label are internal handles, not names anyone
+ * reads: the review corpus composes one out of a source theme, a page type,
+ * and the internal name of the drawing under test.
+ *
+ * Everything the public contract checks is still checked — version, strict
+ * shape, `style.id === id`, the menu contract, the contrast floor — and only
+ * the customer naming rule stands down. The double underscore and this
+ * module's absence from `src/index.ts` are the fence: no CLI command, no
+ * SDK caller, and no theme file on disk can reach this. Drawing the
+ * exception at the source of the theme is the only place it is safe to draw
+ * it, because any exception keyed on the shape of an id can be written by a
+ * user too.
+ *
+ * The only caller is `themes/test-fixtures.ts`.
+ */
+export function __registerStructuralTheme(input: unknown): ThemeDefinition {
+  return installParsedThemeFile(parseThemeFile(input, StructuralThemeFileSchema))
 }
 
 /**
