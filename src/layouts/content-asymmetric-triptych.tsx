@@ -2,6 +2,7 @@ import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import type { ContentRect } from "../render/layout"
 import { SvgContent } from "../render/svg-content"
+import { bodySlotUnderAllocates, stepAside } from "../render/step-aside"
 import { sectionNameFor } from "../lib/derive"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { fitEmphasisHeading, fitEmphasisLine, headingEmphasisPaint, renderEmphasisHeading, renderEmphasisText } from "../render/emphasis"
@@ -160,6 +161,17 @@ export function AsymmetricTriptychContent({ ir, slide, index, ctx }: SvgTemplate
   const footnote = slide.footnote
     ? fitSvgLine(slide.footnote, { maxWidth: HEADING_MAX_W, fontSize: 16, minFontSize: 16 })
     : null
+
+  // Three regions, each laid out on its own, so the question has to be asked
+  // three times: a page steps aside when any one of them is short. The lead
+  // column and the two framed panels are all narrower than the page and the
+  // panels lose `PANEL_PAD_Y` twice more on top of that.
+  const regionsUnderAllocate =
+    (leadComponent !== undefined && bodySlotUnderAllocates([leadComponent], leadRect, ctx)) ||
+    (hasTop && bodySlotUnderAllocates(topComponents, padded(topRect), ctx)) ||
+    (hasBottom && bodySlotUnderAllocates(bottomComponents, padded(bottomRect), ctx))
+  const aside = stepAside({ face: "asymmetric-triptych", slide, ctx, cramped: regionsUnderAllocate })
+  if (aside) return aside
 
   const triptychBody = (
     <>

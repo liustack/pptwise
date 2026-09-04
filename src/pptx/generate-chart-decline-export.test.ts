@@ -24,11 +24,20 @@ beforeAll(() => {
 })
 
 /**
- * A line chart with more series than any face's content band can give a
+ * A line chart with more series than any rendering of the page can give a
  * label column for. `chart.measure` grows with the series count now that
- * line and area name every series in a gutter, so at this count the minimum
- * passes what `content-gauge-stats`'s fallback band hands out and the chart
- * declines rather than painting over the page below it.
+ * line and area name every series in a gutter.
+ *
+ * Three regions, measured on `consulting`'s `data` face:
+ *
+ *  - up to 12 series the face's own band holds the chart.
+ *  - 13 to 16 the band is short and the face steps aside
+ *    (`render/step-aside.tsx`), which hands the chart the whole sheet — 412px
+ *    instead of 328 — and it draws in full. Nothing is dropped, so nothing
+ *    refuses, which is the point of the step-aside.
+ *  - past 16 the whole sheet is short too. There is no rendering left that
+ *    can draw the page, the step-aside declines to make things worse, and
+ *    the chart's own decline stands. That is the deck this file is about.
  */
 function declinedChartDeck(seriesCount: number): PptxIR {
   return {
@@ -66,16 +75,24 @@ function declinedChartDeck(seriesCount: number): PptxIR {
 describe("a declined chart blocks the export", () => {
   it("refuses a deck whose chart was handed less than its measured minimum", async () => {
     // The whole chart declined, so the unit is the component itself.
-    await expect(generatePptx(declinedChartDeck(16))).rejects.toThrow(/deck drops content.*: 1 content block\./s)
+    await expect(generatePptx(declinedChartDeck(17))).rejects.toThrow(/deck drops content.*: 1 content block\./s)
   })
 
   it("still exports the same deck when the caller opts in", async () => {
-    const out = await generatePptx(declinedChartDeck(16), { allowDroppedContent: true })
+    const out = await generatePptx(declinedChartDeck(17), { allowDroppedContent: true })
     expect(out.byteLength).toBeGreaterThan(0)
   })
 
   it("exports cleanly at a series count the band can hold", async () => {
     const out = await generatePptx(declinedChartDeck(2))
+    expect(out.byteLength).toBeGreaterThan(0)
+  })
+
+  it("exports cleanly at a count only the step-aside can hold", async () => {
+    // 13 is past the face's own band and inside the full sheet. Before the
+    // step-aside this deck refused; the chart is drawn now, in full.
+    expect(renderSlideSvg(validateIr(declinedChartDeck(13)).ir!, 0)).toContain('data-face-mode="fallback"')
+    const out = await generatePptx(declinedChartDeck(13))
     expect(out.byteLength).toBeGreaterThan(0)
   })
 })

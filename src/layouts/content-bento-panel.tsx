@@ -5,6 +5,7 @@ import type { ContentRect } from "../render/layout"
 import type { StyleColors } from "../themes/tokens"
 import type { ComponentCtx } from "../components/types"
 import { SvgContent } from "../render/svg-content"
+import { stepAside } from "../render/step-aside"
 import {
   layoutBento,
   explodeIntoUnits,
@@ -933,6 +934,17 @@ export function BentoPanelContent({ ir, slide, index, ctx }: SvgTemplateProps) {
     const cell = { unit: onlyUnit, box }
     body = renderCell(cell, 0, ctx, colors, prepareBentoKpiValuePaints([cell], ctx))
   } else if (onlyUnit) {
+    // Not a grid any more, just one component in the bento rect — and that
+    // rect is what is left after the header block, which grows with the
+    // heading.
+    const aside = stepAside({
+      face: "bento-panel",
+      slide,
+      ctx,
+      bodyRect: bentoRect,
+      arrangement: "single",
+    })
+    if (aside) return aside
     body = (
       <SvgContent
         arrangement="single"
@@ -969,6 +981,17 @@ export function BentoPanelContent({ ir, slide, index, ctx }: SvgTemplateProps) {
     const degraded =
       units.length > 6 || cells.some((cell) => cellOverBudget(cell, ctx))
     if (degraded) {
+      // The grid already gave up on this page. The single stack it degrades
+      // to is the last composition available, so if the rect cannot hold
+      // that either, the page steps aside.
+      const aside = stepAside({
+        face: "bento-panel",
+        slide,
+        ctx,
+        bodyRect: bentoRect,
+        arrangement: "single",
+      })
+      if (aside) return aside
       body = (
         <SvgContent
           arrangement="single"

@@ -1,4 +1,5 @@
 import type { SvgTemplateProps } from "./types"
+import { stepAside } from "../render/step-aside"
 import type { LayoutDefinition } from "./registry"
 import { SvgContent } from "../render/svg-content"
 import { chapterNumberFor, sectionNameFor } from "../lib/derive"
@@ -190,8 +191,28 @@ export function ToneAdaptiveContent({ ir, slide, index, ctx, page }: SvgTemplate
   })
 
   if (treated) {
+    const treatedRect = {
+      x: treated.contentRect.x,
+      y: treated.contentRect.y,
+      w: treated.contentRect.w,
+      h: Math.max(120, treated.contentRect.h),
+    }
     if (withBg) {
       const footerFill = accessibleInk(colors.muted, "#FFFFFF", 20)
+      // The white plate stays: it is what makes any ink legible over the
+      // background image, and it costs the body nothing.
+      const cardPlate = (
+        <rect x="48" y="44" width="1184" height="632" rx={ctx.shape?.radius ?? 14} fill="#FFFFFF" />
+      )
+      const cardAside = stepAside({ face: "tone-adaptive-content", slide, ctx: cardCtx, bodyRect: treatedRect })
+      if (cardAside) {
+        return (
+          <>
+            {cardPlate}
+            {cardAside}
+          </>
+        )
+      }
       return (
         <>
           <rect
@@ -203,16 +224,7 @@ export function ToneAdaptiveContent({ ir, slide, index, ctx, page }: SvgTemplate
             fill="#FFFFFF"
           />
           {treated.chrome}
-          <SvgContent
-            components={slide.components}
-            rect={{
-              x: treated.contentRect.x,
-              y: treated.contentRect.y,
-              w: treated.contentRect.w,
-              h: Math.max(120, treated.contentRect.h),
-            }}
-            ctx={cardCtx}
-          />
+          <SvgContent components={slide.components} rect={treatedRect} ctx={cardCtx} />
           <text
             x="92"
             y="636"
@@ -234,19 +246,12 @@ export function ToneAdaptiveContent({ ir, slide, index, ctx, page }: SvgTemplate
         </>
       )
     }
+    const treatedAside = stepAside({ face: "tone-adaptive-content", slide, ctx, bodyRect: treatedRect })
+    if (treatedAside) return treatedAside
     return (
       <>
         {treated.chrome}
-        <SvgContent
-          components={slide.components}
-          rect={{
-            x: treated.contentRect.x,
-            y: treated.contentRect.y,
-            w: treated.contentRect.w,
-            h: Math.max(120, treated.contentRect.h),
-          }}
-          ctx={ctx}
-        />
+        <SvgContent components={slide.components} rect={treatedRect} ctx={ctx} />
         {slide.footnote && (
           <text
             x="64"
@@ -347,6 +352,22 @@ export function ToneAdaptiveContent({ ir, slide, index, ctx, page }: SvgTemplate
     }
     const footerFill = accessibleInk(colors.muted, "#FFFFFF", 20)
 
+    const cardBodyRect = { x: 92, y: contentRectY, w: 1096, h: contentRectH }
+    const cardAsideUntreated = stepAside({
+      face: "tone-adaptive-content",
+      slide,
+      ctx: cardCtx,
+      bodyRect: cardBodyRect,
+    })
+    if (cardAsideUntreated) {
+      return (
+        <>
+          <rect x="48" y="44" width="1184" height="632" rx={ctx.shape?.radius ?? 14} fill="#FFFFFF" />
+          {cardAsideUntreated}
+        </>
+      )
+    }
+
     /* White content card floating on the background image — see file
        header's "白色卡片豁免". */
     return (
@@ -441,7 +462,7 @@ export function ToneAdaptiveContent({ ir, slide, index, ctx, page }: SvgTemplate
         {/* Content area inside card (SvgContent replaces foreignObject) */}
         <SvgContent
           components={slide.components}
-          rect={{ x: 92, y: contentRectY, w: 1096, h: contentRectH }}
+          rect={cardBodyRect}
           ctx={cardCtx}
         />
 
@@ -525,6 +546,12 @@ export function ToneAdaptiveContent({ ir, slide, index, ctx, page }: SvgTemplate
   const contentRectY = 180 + headingExtra + subheadingBudget
   const contentRectH = Math.max(120, contentH - headingExtra - subheadingBudget)
 
+  // Kicker, heading, subheading and divider all stack above the body, and
+  // each of them grows when a heading wraps.
+  const bodyRect = { x: 64, y: contentRectY, w: 1152, h: contentRectH }
+  const aside = stepAside({ face: "tone-adaptive-content", slide, ctx, bodyRect })
+  if (aside) return aside
+
   return (
     <>
       {/* Section label (kicker) — Task 5b: accent, not muted */}
@@ -607,7 +634,7 @@ export function ToneAdaptiveContent({ ir, slide, index, ctx, page }: SvgTemplate
       {/* Content components (SvgContent replaces foreignObject) */}
       <SvgContent
         components={slide.components}
-        rect={{ x: 64, y: contentRectY, w: 1152, h: contentRectH }}
+        rect={bodyRect}
         ctx={ctx}
       />
 

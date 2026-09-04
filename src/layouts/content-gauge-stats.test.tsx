@@ -10,6 +10,13 @@ import { auditSvgMarkup } from "../audit/svg-audit"
 import { STRESS_DECKS } from "../audit/stress-fixtures"
 import { GaugeStatsContent, layoutDef } from "./content-gauge-stats"
 
+/**
+ * The first series count no rendering of this page can hold: past the band
+ * (12) and past the step-aside sheet (16), which is 412px of exhibit against
+ * the band's 328.
+ */
+const SERIES_PAST_EVERY_RENDERING = 17
+
 const chapter: Slide = { type: "chapter", heading: "增长路径", components: [] } as Slide
 const slide: Slide = {
   type: "content",
@@ -218,12 +225,18 @@ describe("content-gauge-stats", () => {
     expect(auditSvgMarkup(markup)).toEqual([])
   })
 
-  it("names the series count where the 328px band runs out, and is loud past it", () => {
+  it("names the series count where the 328px band runs out, hands the page over, and is loud past that", () => {
     // The band is bounded by the page, not by a number someone picked: it
     // runs from the rule to 620, and 620 is where the footnote's ink starts.
     // A directly-labelled line chart grows with its series count, so there is
-    // a real boundary — 12 series with axis titles fit, 13 do not. Past it the
-    // exhibit declines and declares rather than painting through the footnote.
+    // a real boundary — 12 series with axis titles fit the band, 13 do not.
+    //
+    // 13 used to be where the exhibit declined. It is now where this face
+    // steps aside (`render/step-aside.tsx`): the standfirst construction
+    // costs height the exhibit needs, so the page is drawn plainly instead
+    // and the chart gets the whole sheet. It draws in full and nothing is
+    // dropped. The loud answer moves out to where no rendering of the page
+    // can hold the chart at all.
     const lineSlide = (n: number): Slide =>
       ({
         type: "content",
@@ -252,14 +265,25 @@ describe("content-gauge-stats", () => {
     expect(fits.markup).toMatch(/data-plot-mark/)
     expect(auditSvgMarkup(fits.markup)).toEqual([])
 
-    const overflows = renderContent(lineSlide(13))
+    const steppedAside = renderContent(lineSlide(13))
+    expect(steppedAside.markup).toContain('data-face-stepped-aside="gauge-stats"')
+    expect(steppedAside.markup).toMatch(/data-plot-mark/)
+    expect(steppedAside.root.querySelector("[data-dropped]")).toBeNull()
+    expect(auditSvgMarkup(steppedAside.markup)).toEqual([])
+
+    const overflows = renderContent(lineSlide(SERIES_PAST_EVERY_RENDERING))
     expect(overflows.markup).not.toMatch(/data-plot-mark/)
     expect(overflows.root.querySelector("[data-dropped]")).not.toBeNull()
   })
 
   it("keeps an oversized fallback block inside the fixed body region", () => {
+    // A blockquote too long for the band trims itself to fit and says so
+    // (`data-truncated`). Visible truncation of the text is not a loss and
+    // does not make this face step aside (`render/step-aside.tsx`): the page
+    // still shows what it is showing, and the reader can see it was cut.
     const oversized = STRESS_DECKS.comparison_quote_code.slides[1]!
     const { markup, root } = renderContent(oversized)
+    expect(markup).not.toContain("data-face-mode")
     expect(auditSvgMarkup(markup)).toEqual([])
     expect(root.querySelector('[data-truncated="1"]')).not.toBeNull()
   })

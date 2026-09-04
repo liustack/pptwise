@@ -246,15 +246,20 @@ function renderStackedContent(
     ? Math.max(120, (slide.footnote ? 600 : 640) - treated.contentRect.y)
     : Math.max(120, contentH - headingExtra - subheadingBudget)
 
+  const bodyRect = { x: 56, y: contentRectY, w: 1168, h: contentRectH }
+  // Not wired to the step-aside (`render/step-aside.tsx`). The poster path
+  // above already asks whether a component fits its slot
+  // (`componentFitsSlot`) and lands here when it does not, and this stack is
+  // the most generous rect in the content pool: x56, w1168, floor 640 (600
+  // with a footnote). Measured against the step-aside sheet on the same
+  // page it is 64px wider and within about 10px of the same height, so a
+  // page this stack cannot hold is one the sheet cannot hold either.
+
   if (treated) {
     return (
       <>
         {treated.chrome}
-        <SvgContent
-          components={slide.components}
-          rect={{ x: 56, y: contentRectY, w: 1168, h: contentRectH }}
-          ctx={ctx}
-        />
+        <SvgContent components={slide.components} rect={bodyRect} ctx={ctx} />
         {slide.footnote && (
           <text
             x="56"
@@ -346,7 +351,7 @@ function renderStackedContent(
       {/* Content components (was a foreignObject) */}
       <SvgContent
         components={slide.components}
-        rect={{ x: 56, y: contentRectY, w: 1168, h: contentRectH }}
+        rect={bodyRect}
         ctx={ctx}
       />
 

@@ -33,6 +33,9 @@ function exactSpotlight(slide: SvgTemplateProps["slide"]): {
 /** Closing-line baseline on the fallback path, under its content block. */
 const FALLBACK_CONCLUSION_Y = 664
 
+/** The band this face gives a page its own construction cannot hold. */
+const SPOTLIGHT_FALLBACK_RECT = { x: 64, y: 124, w: 1152, h: 500 } as const
+
 export function ShowSpotlightContent({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const bg = ctx.defaultBg ?? colors.bg
@@ -116,6 +119,11 @@ export function ShowSpotlightContent({ slide, ctx }: SvgTemplateProps) {
    * rather than as the panel's own note.
    */
   const FOOTNOTE_Y = 672
+
+  // Not wired to the step-aside (`render/step-aside.tsx`): this fallback
+  // band is 1152x500, taller and wider than the step-aside sheet ever is
+  // (1104, and at most 477 high once a heading has been set). There is no
+  // page this face can hand over to advantage.
 
   return (
     <g data-show-mode={exact ? "spotlight" : "fallback"}>
@@ -321,7 +329,7 @@ export function ShowSpotlightContent({ slide, ctx }: SvgTemplateProps) {
           )}
           <SvgContent
             components={slide.components}
-            rect={{ x: 64, y: 124, w: 1152, h: 500 }}
+            rect={SPOTLIGHT_FALLBACK_RECT}
             ctx={showNeutralFallbackCtx(ctx)}
           />
           {/* The closing line is the page's, not the spotlight's. It used to

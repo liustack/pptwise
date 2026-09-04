@@ -1,4 +1,5 @@
 import type { SvgTemplateProps } from "./types"
+import { stepAside } from "../render/step-aside"
 import type { LayoutDefinition } from "./registry"
 import { SvgContent } from "../render/svg-content"
 import { FULL_BODY_TYPES } from "../render/component-traits"
@@ -144,6 +145,8 @@ export function QuietFrameContent({ ir, slide, index, ctx }: SvgTemplateProps) {
     const treatedRect = isSingleOrdinaryComponent
       ? { x: CENTER_X - SINGLE_COMPONENT_W / 2, y, w: SINGLE_COMPONENT_W, h }
       : { x: FRAME_X, y, w: FRAME_W, h }
+    const treatedAside = stepAside({ face: "quiet-frame", slide, ctx, bodyRect: treatedRect })
+    if (treatedAside) return treatedAside
     return (
       <>
         {treated.chrome}
@@ -166,6 +169,12 @@ export function QuietFrameContent({ ir, slide, index, ctx }: SvgTemplateProps) {
       </>
     )
   }
+
+  // Whitespace is this face's whole point: 880 of 1088 wide, 640 when a lone
+  // component re-centres, and a centred header block above. All of it comes
+  // out of the body band.
+  const aside = stepAside({ face: "quiet-frame", slide, ctx, bodyRect: contentRect })
+  if (aside) return aside
 
   return (
     <>

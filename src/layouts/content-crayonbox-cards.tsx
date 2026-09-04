@@ -1,5 +1,6 @@
 import type { Component } from "@/ir"
 import type { SvgTemplateProps } from "./types"
+import { stepAside } from "../render/step-aside"
 import type { LayoutDefinition } from "./registry"
 import { sectionNameFor } from "../lib/derive"
 import { fitSvgLine, layoutSvgText } from "../lib/svg-text-layout"
@@ -65,6 +66,9 @@ function cardBodyLines(item: NumberedCards["items"][number], fontFamily: string)
 }
 
 /** crayonbox-cards：三张图画纸卡片组成的满密度内容页。 */
+/** The band a non-card page gets, between the header block and the closing line. */
+const CARDS_FALLBACK_RECT = { x: 96, y: 248, w: 1088, h: 330 } as const
+
 export function CrayonboxCardsContent({ ir, slide, index, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const bg = ctx.defaultBg ?? colors.bg
@@ -113,6 +117,12 @@ export function CrayonboxCardsContent({ ir, slide, index, ctx }: SvgTemplateProp
     }),
     body: cardBodyLines(item, fonts.body),
   }))
+
+  // The three-card grammar is this face's page. Anything else falls through
+  // to a fixed 330px band between the heading block and the closing line,
+  // and 330 is under the measured minimum of most charts.
+  const asideBody = block ? null : stepAside({ face: "crayonbox-cards", slide, ctx, bodyRect: CARDS_FALLBACK_RECT })
+  if (asideBody) return asideBody
 
   return (
     <>
@@ -221,11 +231,7 @@ export function CrayonboxCardsContent({ ir, slide, index, ctx }: SvgTemplateProp
           ))}
         </g>
       ) : (
-        <SvgContent
-          components={slide.components}
-          rect={{ x: 96, y: 248, w: 1088, h: 330 }}
-          ctx={ctx}
-        />
+        <SvgContent components={slide.components} rect={CARDS_FALLBACK_RECT} ctx={ctx} />
       )}
 
       {conclusion && (

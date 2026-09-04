@@ -100,6 +100,13 @@ function OneEvidenceFallbackContent({ slide, ctx }: SvgTemplateProps) {
     ? fitSvgLine(footnoteSource, { maxWidth: HEADING_MAX_W, fontSize: FOOTNOTE_SIZE, minFontSize: 16 })
     : null
 
+  // Not wired to the step-aside (`render/step-aside.tsx`): this page is
+  // already the plain rendering, and its rect (x80, w1120, floor 640) is
+  // wider than the step-aside sheet's 1104 and no shorter, so handing the
+  // page over could only ever cost room. Where this rect is too small the
+  // whole page is, and the component's own decline is the honest answer.
+  const bodyRect = { x: HEADING_X, y: bodyTop, w: HEADING_MAX_W, h: Math.max(80, EVIDENCE_BOTTOM - bodyTop) }
+
   return (
     <g data-evidence-mode="fallback">
       {renderEmphasisHeading(
@@ -125,7 +132,7 @@ function OneEvidenceFallbackContent({ slide, ctx }: SvgTemplateProps) {
       )}
       <SvgContent
         components={slide.components}
-        rect={{ x: HEADING_X, y: bodyTop, w: HEADING_MAX_W, h: Math.max(80, EVIDENCE_BOTTOM - bodyTop) }}
+        rect={bodyRect}
         ctx={ctx}
       />
       {footnote && (

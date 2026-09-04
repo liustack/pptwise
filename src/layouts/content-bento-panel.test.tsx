@@ -284,17 +284,16 @@ describe("BentoPanelContent", () => {
     const next = renderSvgMarkup(
       <BentoPanelContent ir={deck} slide={overflowSlide} index={0} ctx={ctx} />,
     )
-    expect(next).toBe(OVERFLOW_TECH_MARKUP)
     // 降级路径不画 bento 卡壳（无 data-bento-shell）。
     expect(next).not.toContain("data-bento-shell")
-    // W4 task 3 re-pin: at the 24px balanced baseline the single-stack
-    // fallback only fits 6 of the 7 demo items — item 6 drops via
-    // SvgContent's own overflow-marker path (see OVERFLOW_TECH_MARKUP's own
-    // comment above).
-    for (let i = 0; i < 6; i++) expect(next).toContain(`要点 ${i}`)
-    expect(next).not.toContain("要点 6")
-    // The drop is recorded for the audit, not painted — see svg-content.tsx.
-    expect(next).toContain('data-dropped="1"')
+    // The single stack this degrades to used to fit 6 of the 7 items and
+    // drop the seventh (`OVERFLOW_TECH_MARKUP`, kept above as the record of
+    // what this page was). A dropped block is a page nobody chose, so the
+    // face now steps aside and the plain sheet holds all seven.
+    expect(OVERFLOW_TECH_MARKUP).toContain('data-dropped="1"')
+    expect(next).toContain('data-face-stepped-aside="bento-panel"')
+    for (let i = 0; i < 7; i++) expect(next).toContain(`要点 ${i}`)
+    expect(next).not.toContain("data-dropped")
     expect(next).not.toContain("+1 …")
   })
 

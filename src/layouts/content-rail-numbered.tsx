@@ -1,4 +1,5 @@
 import type { SvgTemplateProps } from "./types"
+import { stepAside } from "../render/step-aside"
 import type { LayoutDefinition } from "./registry"
 import { SvgContent } from "../render/svg-content"
 import { chapterNumberFor, contentIndexInChapter } from "../lib/derive"
@@ -190,6 +191,8 @@ export function RailNumberedContent({ ir, slide, index, ctx }: SvgTemplateProps)
       // for that self-bounded form.
       h: Math.max(480, contentBottom - treated.contentRect.y),
     }
+    const treatedAside = stepAside({ face: "rail-numbered", slide, ctx, bodyRect: treatedRect })
+    if (treatedAside) return treatedAside
     return (
       <>
         {treated.chrome}
@@ -232,6 +235,11 @@ export function RailNumberedContent({ ir, slide, index, ctx }: SvgTemplateProps)
       </>
     )
   }
+
+  // The numbered badge column and the heading block both take height off the
+  // top of the body band, and the footnote takes more off the bottom.
+  const aside = stepAside({ face: "rail-numbered", slide, ctx, bodyRect: contentRect })
+  if (aside) return aside
 
   return (
     <>

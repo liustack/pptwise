@@ -14,6 +14,7 @@ import { SvgContent } from "../render/svg-content"
 import { stripEmphasis } from "../render/emphasis"
 import { fitHeadingLines } from "../render/heading-fit"
 import { sparseFace } from "./sparse/registry"
+import { stepAside } from "../render/step-aside"
 
 /**
  * 未注册的 (themeId, layoutId) 与自定义主题仍走此脸。
@@ -87,6 +88,10 @@ function StatHeroFallbackContent({ slide, ctx }: SvgTemplateProps) {
     fontFamily: fonts.heading,
   })
   const headingStart = FALLBACK_HEADING_Y - Math.max(0, heading.lines.length - 1) * heading.lineHeight
+  // A fixed 400px band inside a 960px column. The hero page gives its body
+  // less room than an ordinary page would, so ask before drawing it.
+  const aside = stepAside({ face: "stat-hero", slide, ctx, bodyRect: FALLBACK_RECT })
+  if (aside) return aside
   return (
     <g data-hero-mode="fallback">
       {heading.lines.map((line, i) => (

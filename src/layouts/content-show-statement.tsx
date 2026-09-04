@@ -5,6 +5,7 @@ import { stripEmphasis } from "../render/emphasis"
 import { fitHeadingLines } from "../render/heading-fit"
 import { accessibleInk, groupValueInks } from "../render/ink"
 import { SvgContent } from "../render/svg-content"
+import { stepAside } from "../render/step-aside"
 import type { LayoutDefinition } from "./registry"
 import { showNeutralFallbackCtx, withoutOverflowMark } from "./show-shared"
 import type { SvgTemplateProps } from "./types"
@@ -36,6 +37,9 @@ function statementItems(block: NumberedCards | Bullets): StatementItem[] {
 }
 
 /** show-statement。三点以内的观点内容进入陈述句加三列定稿构图。 */
+/** The band this face gives a page its own construction cannot hold. */
+const STATEMENT_FALLBACK_RECT = { x: 64, y: 230, w: 1152, h: 390 } as const
+
 export function ShowStatementContent({ ir, slide, index, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const bg = ctx.defaultBg ?? colors.bg
@@ -73,6 +77,14 @@ export function ShowStatementContent({ ir, slide, index, ctx }: SvgTemplateProps
     items.map(() => ({ preferredFill: colors.muted, backgroundFill: bg, fontSizePx: 16 })),
     colors.text,
   )
+
+  // Past this face's own guard the page is already drawn plainly, into a
+  // fixed band. A band is a constant and a constant never asks what it is
+  // about to hold, so ask here.
+  const aside = block
+    ? null
+    : stepAside({ face: "show-statement", slide, ctx: showNeutralFallbackCtx(ctx), bodyRect: STATEMENT_FALLBACK_RECT })
+  if (aside) return aside
 
   return (
     <g data-show-mode={block ? "statement" : "fallback"}>
@@ -195,7 +207,7 @@ export function ShowStatementContent({ ir, slide, index, ctx }: SvgTemplateProps
           <line x1={64} y1={200} x2={1216} y2={200} stroke={colors.border ?? colors.muted} strokeWidth={1} />
           <SvgContent
             components={slide.components}
-            rect={{ x: 64, y: 230, w: 1152, h: 390 }}
+            rect={STATEMENT_FALLBACK_RECT}
             ctx={showNeutralFallbackCtx(ctx)}
           />
         </>

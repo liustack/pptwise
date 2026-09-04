@@ -4,6 +4,7 @@ import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout"
 import { stripEmphasis } from "../render/emphasis"
 import { accessibleInk, groupValueInks } from "../render/ink"
 import { SvgContent } from "../render/svg-content"
+import { stepAside } from "../render/step-aside"
 import type { LayoutDefinition } from "./registry"
 import { showNeutralFallbackCtx, withoutOverflowMark } from "./show-shared"
 import type { SvgTemplateProps } from "./types"
@@ -81,6 +82,9 @@ function noteFor(item: KpiCards["items"][number]): string {
 const SUMMARY_Y = 642
 const SUMMARY_LINE_GAP = 22
 
+/** The band this face gives a page its own construction cannot hold. */
+const FIGURES_FALLBACK_RECT = { x: 64, y: 244, w: 1152, h: 350 } as const
+
 export function ShowFiguresContent({ ir, slide, index, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const bg = ctx.defaultBg ?? colors.bg
@@ -147,6 +151,14 @@ export function ShowFiguresContent({ ir, slide, index, ctx }: SvgTemplateProps) 
     items.map(() => ({ preferredFill: colors.muted, backgroundFill: bg, fontSizePx: 15 })),
     colors.text,
   )
+
+  // Past this face's own guard the page is already drawn plainly, into a
+  // fixed band. A band is a constant and a constant never asks what it is
+  // about to hold, so ask here.
+  const aside = block
+    ? null
+    : stepAside({ face: "show-figures", slide, ctx: showNeutralFallbackCtx(ctx), bodyRect: FIGURES_FALLBACK_RECT })
+  if (aside) return aside
 
   return (
     <g data-show-mode={block ? "figures" : "fallback"}>
@@ -273,7 +285,7 @@ export function ShowFiguresContent({ ir, slide, index, ctx }: SvgTemplateProps) 
           </g>
           <SvgContent
             components={slide.components}
-            rect={{ x: 64, y: 244, w: 1152, h: 350 }}
+            rect={FIGURES_FALLBACK_RECT}
             ctx={showNeutralFallbackCtx(ctx)}
           />
         </>

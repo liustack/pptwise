@@ -1,5 +1,6 @@
 import type { PptxIR } from "@/ir"
 import type { SvgTemplateProps } from "./types"
+import { stepAside } from "../render/step-aside"
 import type { LayoutDefinition } from "./registry"
 import { SvgContent } from "../render/svg-content"
 import { sectionNameFor } from "../lib/derive"
@@ -188,6 +189,8 @@ export function SplitBandContent({ ir, slide, index, ctx }: SvgTemplateProps) {
     const footnote = slide.footnote
       ? fitSvgLine(slide.footnote, { maxWidth: TEXT_MAX_W, fontSize: 16, minFontSize: 16 })
       : null
+    const treatedAside = stepAside({ face: "split-band", slide, ctx, bodyRect })
+    if (treatedAside) return treatedAside
     return (
       <>
         {treated.chrome}
@@ -246,6 +249,11 @@ export function SplitBandContent({ ir, slide, index, ctx }: SvgTemplateProps) {
   const footnote = slide.footnote
     ? fitSvgLine(slide.footnote, { maxWidth: TEXT_MAX_W, fontSize: 16, minFontSize: 16 })
     : null
+
+  // The header band is a fixed slab of page and its depth grows with the
+  // heading, so the body band below it is the part that gives.
+  const aside = stepAside({ face: "split-band", slide, ctx, bodyRect })
+  if (aside) return aside
 
   return (
     <>

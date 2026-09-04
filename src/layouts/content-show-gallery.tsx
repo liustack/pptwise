@@ -4,6 +4,7 @@ import { fitSvgLine } from "../lib/svg-text-layout"
 import { stripEmphasis } from "../render/emphasis"
 import { accessibleInk, groupValueInks } from "../render/ink"
 import { SvgContent } from "../render/svg-content"
+import { stepAside } from "../render/step-aside"
 import type { LayoutDefinition } from "./registry"
 import {
   SHOW_IMAGE_FILL,
@@ -25,6 +26,9 @@ function exactImageGrid(slide: SvgTemplateProps["slide"]): ImageGrid | null {
 }
 
 /** show-gallery。只有一个四至六图的 image_grid 才进入六格定稿构图。 */
+/** The band this face gives a page its own construction cannot hold. */
+const GALLERY_FALLBACK_RECT = { x: 64, y: 222, w: 1152, h: 390 } as const
+
 export function ShowGalleryContent({ ir, slide, index, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const bg = ctx.defaultBg ?? colors.bg
@@ -65,6 +69,14 @@ export function ShowGalleryContent({ ir, slide, index, ctx }: SvgTemplateProps) 
     FRAME_X.map(() => ({ preferredFill: colors.muted, backgroundFill: bg, fontSizePx: 12 })),
     colors.text,
   )
+
+  // Past this face's own guard the page is already drawn plainly, into a
+  // fixed band. A band is a constant and a constant never asks what it is
+  // about to hold, so ask here.
+  const aside = block
+    ? null
+    : stepAside({ face: "show-gallery", slide, ctx: showNeutralFallbackCtx(ctx), bodyRect: GALLERY_FALLBACK_RECT })
+  if (aside) return aside
 
   return (
     <g data-show-mode={block ? "gallery" : "fallback"}>
@@ -181,7 +193,7 @@ export function ShowGalleryContent({ ir, slide, index, ctx }: SvgTemplateProps) 
       ) : (
         <SvgContent
           components={slide.components}
-          rect={{ x: 64, y: 222, w: 1152, h: 390 }}
+          rect={GALLERY_FALLBACK_RECT}
           ctx={showNeutralFallbackCtx(ctx)}
         />
       )}

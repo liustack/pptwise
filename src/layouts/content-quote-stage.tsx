@@ -1,4 +1,5 @@
 import type { SvgTemplateProps } from "./types"
+import { stepAside } from "../render/step-aside"
 import type { LayoutDefinition } from "./registry"
 import type { ContentRect } from "../render/layout"
 import { SvgContent } from "../render/svg-content"
@@ -137,6 +138,11 @@ export function QuoteStageContent({ slide, ctx }: SvgTemplateProps) {
   const footnote = slide.footnote
     ? fitSvgLine(slide.footnote, { maxWidth: 900, fontSize: 16, minFontSize: 16 })
     : null
+
+  // A fixed 1-capacity annotation slot under a centred quote. It is a
+  // constant band, and a constant never asks what it is about to hold.
+  const aside = stepAside({ face: "quote-stage", slide, ctx, bodyRect, arrangement: "single" })
+  if (aside) return aside
 
   return (
     <>

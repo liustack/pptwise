@@ -1,5 +1,6 @@
 import type { Component } from "@/ir"
 import type { SvgTemplateProps } from "./types"
+import { stepAside } from "../render/step-aside"
 import type { LayoutDefinition } from "./registry"
 import { sectionNameFor } from "../lib/derive"
 import { fitSvgLine } from "../lib/svg-text-layout"
@@ -197,6 +198,17 @@ export function GaugeStatsContent({ ir, slide, index, ctx }: SvgTemplateProps) {
   const danger = resolveSemanticColor("danger", colors)
   const fallbackArrangement = "single" as const
 
+  // The exhibit band is 328px whatever the page carries — the bound is the
+  // page, not a number someone picked (see `STANDFIRST_Y`). Past it the
+  // exhibit used to decline; now the page steps aside first and the exhibit
+  // gets the whole sheet, which is enough for the 13-series line chart the
+  // band could never reach.
+  const fallbackRect = { x: RULE_X1, y: FALLBACK_Y, w: RULE_X2 - RULE_X1, h: FALLBACK_BOTTOM - FALLBACK_Y }
+  const aside = kpis
+    ? null
+    : stepAside({ face: "gauge-stats", slide, ctx: fallbackCtx, bodyRect: fallbackRect, arrangement: fallbackArrangement })
+  if (aside) return aside
+
   return (
     <>
       <GaugeMeta ir={ir} ctx={ctx} tone="light" />
@@ -307,7 +319,7 @@ export function GaugeStatsContent({ ir, slide, index, ctx }: SvgTemplateProps) {
         <SvgContent
           arrangement={fallbackArrangement}
           components={slide.components}
-          rect={{ x: RULE_X1, y: FALLBACK_Y, w: RULE_X2 - RULE_X1, h: FALLBACK_BOTTOM - FALLBACK_Y }}
+          rect={fallbackRect}
           ctx={fallbackCtx}
         />
       )}

@@ -7,6 +7,7 @@ import { fitEmphasisHeading, fitEmphasisLine, headingEmphasisPaint, renderEmphas
 import { accessibleInk, contrastRatio, requiredContrastRatio } from "../render/ink"
 import { footnoteBaselineFor } from "../render/branding-geometry"
 import { tryContentHeadingTreatment } from "../render/heading-treatments/render"
+import { stepAside } from "../render/step-aside"
 
 /**
  * narrow-column content layout（spec §3.2，Wave 3 Task 17）：trades the
@@ -51,6 +52,8 @@ export function NarrowColumnContent({ ir, slide, index, ctx }: SvgTemplateProps)
     const w = x > COLUMN_X ? COLUMN_X + COLUMN_W - x : COLUMN_W
     const y = treated.contentRect.y
     const columnH = Math.max(0, COLUMN_BOTTOM - y)
+    const aside = stepAside({ face: "narrow-column", slide, ctx, bodyRect: { x, y, w, h: columnH } })
+    if (aside) return aside
     const pageLabel = String(index + 1).padStart(2, "0")
     const footnote = slide.footnote
       ? fitSvgLine(slide.footnote, { maxWidth: 980, fontSize: 20, minFontSize: 16 })
@@ -167,6 +170,18 @@ export function NarrowColumnContent({ ir, slide, index, ctx }: SvgTemplateProps)
 
   const columnY = headingLastY + 40 + subheadingBudget
   const columnH = Math.max(0, COLUMN_BOTTOM - columnY)
+
+  // The narrow column is 880 of the page's 1088, and its top edge follows the
+  // heading down every time a second line appears. Both are this face's
+  // identity and both cost the body height, so this is exactly the face that
+  // can hand a component less than it measured for itself.
+  const aside = stepAside({
+    face: "narrow-column",
+    slide,
+    ctx,
+    bodyRect: { x: COLUMN_X, y: columnY, w: COLUMN_W, h: columnH },
+  })
+  if (aside) return aside
 
   const pageLabel = String(index + 1).padStart(2, "0")
 

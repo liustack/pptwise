@@ -6,6 +6,7 @@ import { fitEmphasisHeading, fitEmphasisLine, headingEmphasisPaint, renderEmphas
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { accessibleInk } from "../render/ink"
 import { tryContentHeadingTreatment } from "../render/heading-treatments/render"
+import { stepAside } from "../render/step-aside"
 
 /**
  * two-column content layout（P3 Item ②，spec §3.2/§3.4）：跨主题通用的
@@ -29,18 +30,21 @@ import { tryContentHeadingTreatment } from "../render/heading-treatments/render"
 export function TwoColumnContent({ ir, slide, index, ctx }: SvgTemplateProps) {
   const treated = tryContentHeadingTreatment({ ir, slide, index, ctx })
   if (treated) {
+    const treatedRect = {
+      x: treated.contentRect.x,
+      y: treated.contentRect.y,
+      w: treated.contentRect.w,
+      h: Math.max(120, treated.contentRect.h),
+    }
+    const aside = stepAside({ face: "two-column", slide, ctx, bodyRect: treatedRect, arrangement: "two_column" })
+    if (aside) return aside
     return (
       <>
         {treated.chrome}
         <SvgContent
           arrangement="two_column"
           components={slide.components}
-          rect={{
-            x: treated.contentRect.x,
-            y: treated.contentRect.y,
-            w: treated.contentRect.w,
-            h: Math.max(120, treated.contentRect.h),
-          }}
+          rect={treatedRect}
           ctx={ctx}
         />
       </>
@@ -77,6 +81,13 @@ export function TwoColumnContent({ ir, slide, index, ctx }: SvgTemplateProps) {
   const ruleY = accentY + 22
   const contentY = ruleY + 34
   const contentH = 640 - contentY
+
+  // This face halves the page down the middle whatever the slide carries, so
+  // a block measured for 1088 gets 528 — and the band's own top follows the
+  // heading. Either can leave a component short of its measured minimum.
+  const bodyRect = { x: 96, y: contentY, w: 1088, h: Math.max(120, contentH) }
+  const aside = stepAside({ face: "two-column", slide, ctx, bodyRect, arrangement: "two_column" })
+  if (aside) return aside
 
   return (
     <>
@@ -142,7 +153,7 @@ export function TwoColumnContent({ ir, slide, index, ctx }: SvgTemplateProps) {
       <SvgContent
         arrangement="two_column"
         components={slide.components}
-        rect={{ x: 96, y: contentY, w: 1088, h: Math.max(120, contentH) }}
+        rect={bodyRect}
         ctx={ctx}
       />
     </>
