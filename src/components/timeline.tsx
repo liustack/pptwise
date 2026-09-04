@@ -142,7 +142,7 @@ function verticalLayout(component: TimelineComponent, w: number) {
 /**
  * How many leading rows of `rows` fit within `truncBudget` px (group-
  * relative, same space `rowTops[i] + rows[i].rowH` is measured in), leaving
- * ~20px of headroom for the "+N …" marker line — at least 1, matching
+ * ~20px of bottom headroom — at least 1, matching
  * row-cards.tsx's "never render zero visible units" precedent.
  */
 function visibleVerticalRowCount(

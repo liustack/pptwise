@@ -5,7 +5,7 @@
 // `chart.render` declines a box below its own measured minimum: it paints
 // nothing and declares the loss. That declaration is only worth anything if
 // the export refuses to ship the page — and it very nearly was not.
-// `slideToRender` (../render/render-slide.tsx) counts `[data-dropped-silent]`
+// `slideToRender` (../render/render-slide.tsx) counts `[data-dropped]`
 // and nothing else, so the first version of the decline, marked with the
 // plain `data-dropped` attribute, produced a countable-looking marker that
 // the gate never counted: a deck shipped with a page where the chart used to
@@ -15,7 +15,7 @@
 // contract that attribute exists to serve: `generatePptx` refuses.
 import { beforeAll, describe, expect, it } from "vitest"
 import type { PptxIR } from "@/ir"
-import { generatePptx } from "@/api"
+import { generatePptx, renderSlideSvg, validateIr } from "@/api"
 import { installNodePlatform } from "../platform/node"
 
 beforeAll(() => {
@@ -80,9 +80,10 @@ describe("a declined chart blocks the export", () => {
 
 /**
  * The legend's own half of the same contract. A bar chart with more series
- * than its legend row can name used to mark a bare `data-dropped` count —
- * the one marker the gate does not read — so thirteen series shipped with no
- * name anywhere on the page and `generatePptx` succeeded.
+ * than its legend row can name paints the entries that fit and nothing
+ * where the rest went — no count, no sign, no pill. Those series are
+ * declared instead, so this deck does not ship until an author gives the
+ * chart fewer series or a wider band.
  */
 function manySeriesBarDeck(seriesCount: number): PptxIR {
   return {
@@ -111,10 +112,19 @@ function manySeriesBarDeck(seriesCount: number): PptxIR {
   } as unknown as PptxIR
 }
 
-describe("a legend that cuts its tail says so on the page", () => {
-  it("exports a 24-series bar chart, because the row paints its own +N", async () => {
-    const out = await generatePptx(manySeriesBarDeck(24))
-    expect(out.byteLength).toBeGreaterThan(0)
+describe("a legend that cannot name every series stops the export", () => {
+  it("refuses a 24-series bar chart, and the message tells the author to shorten it", async () => {
+    await expect(generatePptx(manySeriesBarDeck(24))).rejects.toThrow(
+      /deck drops \d+ content blocks? that do not fit the content area/,
+    )
+  })
+
+  it("paints no overflow count on the page it refuses", () => {
+    const svg = renderSlideSvg(validateIr(manySeriesBarDeck(24)).ir!, 0)
+    expect(svg).toMatch(/data-dropped="[1-9]/)
+    expect(svg).not.toContain("data-legend-overflow")
+    // No text node is a bare plus-and-count.
+    expect(svg).not.toMatch(/>\s*\+\s*\d+\s*</)
   })
 
   it("exports a series count the row can name in full", async () => {

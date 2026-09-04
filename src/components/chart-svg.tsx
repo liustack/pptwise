@@ -52,7 +52,7 @@ function WholeShareDeclined({ data }: { data: readonly { x: string | number; y: 
   // all. The series still left the page with its own name, so one is the
   // smallest honest number.
   const count = Math.max(1, data.length)
-  return <g data-dropped={count} data-dropped-silent={count} />
+  return <g data-dropped={count} />
 }
 
 /** The `chart` IR component, for the renderers whose geometry needs
@@ -742,7 +742,7 @@ function renderSeriesGutterLabels(opts: {
   ).length
   return (
     <>
-      {hidden > 0 && <g data-dropped={hidden} data-dropped-silent={hidden} />}
+      {hidden > 0 && <g data-dropped={hidden} />}
       {prepared.map(({ label, fitted }) => {
         const slot = placed.get(label.id)
         if (!slot || slot.hidden) return null
@@ -1606,7 +1606,7 @@ function radialSliceLabels(
   const hidden = slices.filter((slice) => placed.get(String(slice.key))?.hidden ?? true).length
   return (
     <>
-      {hidden > 0 && <g data-dropped={hidden} data-dropped-silent={hidden} />}
+      {hidden > 0 && <g data-dropped={hidden} />}
       {slices.map((slice) => {
         const label = placed.get(String(slice.key))
         if (!label || label.hidden) return null
@@ -1759,7 +1759,7 @@ export function renderFunnel(
           neighbouring labels apart at this row height. Every stage name the
           author wrote is off the page and the bands say nothing about it, so
           the count is declared here. */}
-      {!labeled && data.length > 0 && <g data-dropped={data.length} data-dropped-silent={data.length} />}
+      {!labeled && data.length > 0 && <g data-dropped={data.length} />}
       {data.map((d, i) => {
         const ratio = d.y / max
         const barW = clampChartExtent(bandsW * ratio)

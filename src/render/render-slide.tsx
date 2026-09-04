@@ -17,12 +17,11 @@ export function slideToSvgMarkup(ir: PptxIR, slide: Slide, index: number): strin
 export interface SlideRender {
   ops: Op[]
   /**
-   * How many content blocks the layout dropped *without the slide saying
-   * so* — the sum of every `data-dropped-silent` marker in this slide's
-   * markup (`DroppedContentMarker`, emitted at `layoutContentFit`'s drop
-   * path). A component's own "+N …" line carries `data-dropped` but not
-   * this one: the reader can see that cut, so it stays an advisory `audit`
-   * finding rather than a blocked export.
+   * How many content blocks this slide lost — the sum of every
+   * `data-dropped` marker in its markup, whether the page-level drop path
+   * (`DroppedContentMarker`) or a component declaring its own cut. Nothing
+   * on a slide ever says a drop happened, so every drop counts here and
+   * `checkContentDropGate` (`../pptx/generate.ts`) refuses the export.
    */
   dropped: number
 }
@@ -37,8 +36,8 @@ export interface SlideRender {
  */
 export function slideToRender(ir: PptxIR, slide: Slide, index: number): SlideRender {
   const root = parseSvgRoot(slideToSvgMarkup(ir, slide, index))
-  const dropped = Array.from(root.querySelectorAll("[data-dropped-silent]")).reduce(
-    (sum, el) => sum + (Number(el.getAttribute("data-dropped-silent")) || 0),
+  const dropped = Array.from(root.querySelectorAll("[data-dropped]")).reduce(
+    (sum, el) => sum + (Number(el.getAttribute("data-dropped")) || 0),
     0,
   )
   return { ops: svgToOps(root), dropped }

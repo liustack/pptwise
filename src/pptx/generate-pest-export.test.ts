@@ -46,9 +46,19 @@ function makeIr(components: Component[]): PptxIR {
   } as PptxIR
 }
 
-/** A real export (zip magic "PK"), not a thrown PptwiseError. */
+/**
+ * A real export (zip magic "PK"), not a thrown PptwiseError.
+ *
+ * `allowDroppedContent` because this file asks a structural question — does
+ * the XML this content produces survive svg2pptx and the package audit — and
+ * some of these shapes are past what the face can hold. A cut is never
+ * painted on a slide, so the content-drop gate refuses those decks by
+ * design (see `checkContentDropGate`, and the refusal pinned at the bottom
+ * of this file). Opting in here keeps that policy question out of a
+ * structural probe instead of hiding it.
+ */
 async function expectExports(components: Component[]): Promise<void> {
-  const bytes = await generatePptx(makeIr(components))
+  const bytes = await generatePptx(makeIr(components), { allowDroppedContent: true })
   expect(bytes.length).toBeGreaterThan(10_000)
   expect([bytes[0], bytes[1]]).toEqual([0x50, 0x4b])
 }
@@ -121,8 +131,22 @@ describe("pest pathological content through the real generatePptx", () => {
         },
         { type: "ending", heading: "Thanks" },
       ],
-    } as unknown as PptxIR)
+    } as unknown as PptxIR,
+      // Structural probe, same reason as `expectExports` above.
+      { allowDroppedContent: true })
     expect(bytes.length).toBeGreaterThan(10_000)
     expect([bytes[0], bytes[1]]).toEqual([0x50, 0x4b])
+  })
+})
+
+// The drop protocol, on this file's own fixtures: a page that cannot hold
+// what it was given paints no count of the loss, so the export is where the
+// author finds out. Every other case above opts out of this gate on purpose.
+describe("pest over-capacity content is refused, not quietly shortened", () => {
+  it("schema-max content is refused without the opt-in, and the message names the loss", async () => {
+    const ir = makeIr([
+      { type: "pest", political: quadrant(5), economic: quadrant(5), social: quadrant(5), technological: quadrant(5) },
+    ])
+    await expect(generatePptx(ir)).rejects.toThrow(/deck drops \d+ content blocks?/)
   })
 })

@@ -20,7 +20,9 @@
 //   - 500-item bullets + 300-row comparison: now a graceful landing — the
 //     render-side box.h cap (bullets.tsx/comparison.tsx, same task) lands
 //     the file with zero package-audit violations and honest
-//     data-dropped markers, instead of a hard-blocked export.
+//     data-dropped markers, instead of a crash. The export still refuses
+//     those decks unless the caller opts in: a cut nothing on the page
+//     admits to is exactly what the drop gate exists to stop.
 //   - a bullets item count far past the pacing budget (this task's new
 //     bullets_count_overflow error, ir-quality.ts): blocked at validate,
 //     before ever reaching the renderer, with a bounded error message —
@@ -41,7 +43,7 @@
 // all have a schema `.max()` bound (3-8) unlike kpi_cards, so a legal IR
 // can never drive their divisor past a safe count. Fixed with the same
 // idiom as the vertical family sweep: cap visible cards to what fits
-// box.w at a sane minimum width, "+N …"/data-dropped marker.
+// box.w at a sane minimum width, with a `data-dropped` declaration.
 //
 // Runs the REAL generatePptx/generatePptxBlob/validateIr (src/api.ts) —
 // never a mock — the same production entry points the investigation's own
@@ -102,7 +104,11 @@ describe("500-item bullets + 300-row comparison: graceful landing (D1 pathologic
   })
 
   it("generatePptx succeeds — no package-audit rejection (pre-fix: 621 invariant violations)", async () => {
-    const bytes = await generatePptx(ir)
+    // `allowDroppedContent` because the question here is structural: does
+    // this content produce valid XML. Content this far past capacity is cut,
+    // no slide says it was, so the content-drop gate refuses the deck by
+    // design — pinned separately below.
+    const bytes = await generatePptx(ir, { allowDroppedContent: true })
     // A real zip (magic "PK"), not a thrown PptwiseError.
     expect(bytes[0]).toBe(0x50)
     expect(bytes[1]).toBe(0x4b)
@@ -251,7 +257,9 @@ describe("kpi_cards horizontal-axis sibling: 50-item deck with delta (review rou
   })
 
   it("generatePptx succeeds — no package-audit rejection (pre-fix: invalid-shape-transform, negative-width delta-arrow text shape)", async () => {
-    const bytes = await generatePptx(ir)
+    // Structural probe — see the sibling case above for why the drop gate
+    // is opted out of here and pinned on its own.
+    const bytes = await generatePptx(ir, { allowDroppedContent: true })
     expect(bytes[0]).toBe(0x50)
     expect(bytes[1]).toBe(0x4b)
   })
@@ -284,5 +292,25 @@ describe("kpi_cards horizontal-axis sibling: 50-item deck with delta (review rou
     expect(bytes[1]).toBe(0x4b)
     const svg = renderSlideSvg(smallIr, 1)
     expect(svg).not.toContain("data-dropped")
+  })
+})
+
+// The drop gate on the same two fixtures, without the structural opt-in:
+// content cut this hard is never announced on the slide, so the export is
+// where an author is told to shorten it.
+describe("pathological content is refused by the export, not quietly shortened", () => {
+  it("the 500-item bullets deck is refused without --allow-dropped-content", async () => {
+    const ir = baseIr({
+      slides: [
+        { type: "cover", heading: "Cover" },
+        {
+          type: "content",
+          kind: "points",
+          heading: "bullets stress",
+          components: [{ type: "bullets", items: Array.from({ length: 400 }, (_, i) => `要点 ${i}`) }],
+        },
+      ],
+    })
+    await expect(generatePptx(ir)).rejects.toThrow(/deck drops \d+ content block/)
   })
 })

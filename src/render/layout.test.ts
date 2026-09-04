@@ -348,7 +348,7 @@ describe("the single-survivor rescue hands a budget, and the loss is always decl
     const markup = renderSvgMarkup(renderComponent(placed[0]!.component, placed[0]!.box, ctx))
     // Blank is only half the story, and the wrong half on its own: the point
     // is that the page says so, and that `checkContentDropGate` reads it.
-    expect(markup).toMatch(/data-dropped-silent="1"/)
+    expect(markup).toMatch(/data-dropped="1"/)
     expect(markup).not.toMatch(/data-plot-mark/)
   })
 
@@ -357,7 +357,7 @@ describe("the single-survivor rescue hands a budget, and the loss is always decl
     const { placed } = layoutContentFit("single", [lineChart(3)], roomy, ctx)
     const markup = renderSvgMarkup(renderComponent(placed[0]!.component, placed[0]!.box, ctx))
     expect(markup).toMatch(/data-plot-mark/)
-    expect(markup).not.toMatch(/data-dropped-silent/)
+    expect(markup).not.toMatch(/data-dropped/)
   })
 })
 

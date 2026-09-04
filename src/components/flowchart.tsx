@@ -1270,7 +1270,7 @@ export const flowchart: SvgComponent<FlowchartComponent> = {
           )
         })}
         {/* Recorded, never painted — see `droppedLabels` in `prepareFlow`. */}
-        {droppedLabels > 0 && <g data-dropped={droppedLabels} data-dropped-silent={droppedLabels} />}
+        {droppedLabels > 0 && <g data-dropped={droppedLabels} />}
       </g>
     )
   },

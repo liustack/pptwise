@@ -236,8 +236,8 @@ function baseCardH(component: KpiComponent): number {
  * citation/architecture/timeline — same task): cap the number of rendered
  * cards to what fits `box.w` at a sane minimum card width, reflow the
  * visible cards to fill the freed-up space, and mark the drop with the
- * same "+N …"/`data-dropped` convention (row-cards.tsx's precedent,
- * adapted to a horizontal trailing slot instead of a line below).
+ * same `data-dropped` declaration every other member uses (row-cards.tsx's
+ * precedent). Nothing is painted where the cut happened.
  *
  * The floor itself is a *readability* floor, not the 80px anti-crash one it
  * started as (review round 3, D-cluster 5a's second half). 80px only ever

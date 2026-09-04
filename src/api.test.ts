@@ -2199,7 +2199,7 @@ describe("generatePptx content-drop gate (deep-review P1)", () => {
     const v = validateIr(dropping)
     expect(v.ok).toBe(true)
     const svg = renderSlideSvg(v.ir!, 1)
-    expect(svg).toMatch(/data-dropped-silent="[1-9]/)
+    expect(svg).toMatch(/data-dropped="[1-9]/)
     expect(svg).not.toContain("more")
   })
 
@@ -2265,10 +2265,12 @@ describe("generatePptx content-drop gate (deep-review P1)", () => {
     expect(() => renderSlideSvg(v.ir!, 1)).not.toThrow()
   })
 
-  it("does not fire on a component's own visible '+N …' trim", async () => {
-    // `bullets.tsx` caps its items to what `box.h` holds and *says so* on
-    // the slide. The reader is not misled, so this stays an advisory audit
-    // finding — blocking it here would make the gate unfalsifiable noise.
+  it("fires on a component's own trim too — a component that cuts its items is not a lesser drop", async () => {
+    // `bullets.tsx` caps its items to what `box.h` holds and paints nothing
+    // where the rest went: a slide carries no overflow count. There used to
+    // be an exportable category here for cuts "the reader was told about",
+    // and there is nothing left to tell them with, so the gate refuses this
+    // deck like any other loss and the author shortens the list.
     const manyBullets = {
       ...raw,
       slides: [
@@ -2286,9 +2288,11 @@ describe("generatePptx content-drop gate (deep-review P1)", () => {
     const v = validateIr(manyBullets)
     expect(v.ok).toBe(true)
     const svg = renderSlideSvg(v.ir!, 1)
-    expect(svg).toContain("data-dropped=")
-    expect(svg).not.toContain("data-dropped-silent")
-    const bytes = await generatePptx(manyBullets)
+    expect(svg).toMatch(/data-dropped="[1-9]/)
+    // Nothing on the page admits the cut.
+    expect(svg).not.toMatch(/>[^<]*\+\s*\d+[^<]*</)
+    await expect(generatePptx(manyBullets)).rejects.toThrow(/deck drops \d+ content block/)
+    const bytes = await generatePptx(manyBullets, { allowDroppedContent: true })
     expect([bytes[0], bytes[1]]).toEqual([0x50, 0x4b])
   })
 })

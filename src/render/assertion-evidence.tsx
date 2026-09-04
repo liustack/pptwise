@@ -141,7 +141,7 @@ export function AssertionEvidence({
   // comparison/citation/timeline/row-cards/kpi/architecture each cap their
   // own "kept" unit at 1-2 lines too, same order of magnitude): one item
   // wrapped to bullets.tsx's own hardcoded `maxLines: 2` ceiling, plus its
-  // own "+N …" drop-pill immediately below it — every constant below is
+  // own trailing drop-marker line immediately below it — every constant below is
   // copied from bullets.tsx's own `layoutItems`/`render` arithmetic (not
   // approximated), evaluated at `ctx.bodyFontPx` (the un-shrunk upper bound
   // bullets.tsx's own per-content font-fit starts from and can only shrink
@@ -199,10 +199,11 @@ export function AssertionEvidence({
       {placed.map((p, i) => (
         <Fragment key={i}>{renderComponent(p.component, p.box, ctx)}</Fragment>
       ))}
-      {/* Same marker as the sibling branch above. This site previously
-          painted "+N more" *without* a `data-dropped` attribute, so content
-          lost here was visible to the reader and invisible to
-          `deck-audit.ts` — exactly backwards. */}
+      {/* Same marker as the sibling branch above. This site once painted an
+          overflow count *without* a `data-dropped` attribute, so content lost
+          here was visible to the reader and invisible to `deck-audit.ts` —
+          exactly backwards. Now nothing is painted and the drop is
+          declared. */}
       <DroppedContentMarker count={dropped} />
     </>
   )

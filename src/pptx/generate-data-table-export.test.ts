@@ -35,9 +35,19 @@ function makeIr(components: Component[]): PptxIR {
   } as PptxIR
 }
 
-/** A real export (zip magic "PK"), not a thrown PptwiseError. */
+/**
+ * A real export (zip magic "PK"), not a thrown PptwiseError.
+ *
+ * `allowDroppedContent` because this file asks a structural question — does
+ * the XML this content produces survive svg2pptx and the package audit — and
+ * some of these shapes are past what the face can hold. A cut is never
+ * painted on a slide, so the content-drop gate refuses those decks by
+ * design (see `checkContentDropGate`, and the refusal pinned at the bottom
+ * of this file). Opting in here keeps that policy question out of a
+ * structural probe instead of hiding it.
+ */
 async function expectExports(components: Component[]): Promise<void> {
-  const bytes = await generatePptx(makeIr(components))
+  const bytes = await generatePptx(makeIr(components), { allowDroppedContent: true })
   expect(bytes.length).toBeGreaterThan(10_000)
   expect([bytes[0], bytes[1]]).toEqual([0x50, 0x4b])
 }
@@ -158,5 +168,15 @@ describe("data_table native-vector differentiation claim (sankey's own T3 preced
     // Every rendered leaf should be a native rect/line/text run — a coarse
     // but direct confirmation alongside the <p:pic> absence above.
     expect(xml).toMatch(/<p:sp>/)
+  })
+})
+
+// The drop protocol, on this file's own fixtures: a table that cannot print
+// every row paints no count of the missing ones, so the export is where the
+// author finds out. Every other case above opts out of this gate on purpose.
+describe("data_table over-capacity content is refused, not quietly shortened", () => {
+  it("the schema-max shape is refused without the opt-in, and the message names the loss", async () => {
+    const ir = makeIr([table(8, 12, (r, c) => `r${r}c${c}`)])
+    await expect(generatePptx(ir)).rejects.toThrow(/deck drops \d+ content blocks?/)
   })
 })

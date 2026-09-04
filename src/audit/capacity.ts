@@ -356,8 +356,9 @@ export const CAPACITY = {
      * （同一任务），所以极端条目数不再让渲染器崩溃或撞上 pptxgenjs
      * `getSmartParseNumber()` 陷阱（见 `chart-svg.tsx`
      * `MAX_CHART_GEOMETRY_PX` 同源问题）。但这只解决了"不崩"，没解决
-     * "该不该"——20000 项要点里 render 层最多能落地几十项，其余全部变成
-     * 一行「+19970 more」，这已经不是"截断"，是"几乎丢光"。该在 validate
+     * "该不该"——20000 项要点里 render 层最多能落地几十项，其余 19970 项
+     * 直接从页面上消失且页面上不会有任何提示，这已经不是"截断"，是"几乎
+     * 丢光"。该在 validate
      * 阶段就诚实拒绝，而不是悄悄生成一份 99%+ 内容缺失的文件。
      *
      * 阈值推导（两头夹逼，而非单侧外推）：
@@ -487,7 +488,7 @@ export const CAPACITY = {
   comparison: { warnRows: 5, errorRows: 1000 },
   /**
    * `architecture.tsx` layer-stack（2026-08-23）：每层固定 `LAYER_H = 64`
-   * px，层间发丝分隔，不再按盒高切片。装不下走 validate，不画 +N。
+   * px，层间发丝分隔，不再按盒高切片。装不下走 validate，页面不画任何溢出提示。
    *
    * `warnLayers`：277px 最坏内容区 277/64 = 4.3，3 层（192px）必装得下，
    * 4 层开始在最窄栏发挤。编辑建议停在 3。
@@ -588,7 +589,7 @@ export const CAPACITY = {
    * Line-chart series count. Editorial, not geometric: dataviz's usual
    * 8-series ceiling (Few, *Show Me the Numbers*; the common 5–8 series
    * rule of thumb). Past this, a line chart stops being readable as a
-   * comparison — the legend drops overflow into "+N …" and the plot
+   * comparison — the legend leaves the overflow unnamed and the plot
    * becomes a hairball. ir-quality.ts warns. Render still lands. The
    * authoring problem is not rescued here.
    */

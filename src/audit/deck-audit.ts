@@ -2410,7 +2410,7 @@ function overlapFindings(markup: string, page: number, slideId: string | undefin
 // Content-truncated / content-dropped — bench-driven fix round, defect E:
 // two silent content-loss paths the benchmark found *invisible* to audit —
 // `fitSvgLine`'s (and the emphasis-segment family's) ellipsis truncation,
-// and `layoutContentFit`'s "+N more" drop marker — that models had to
+// and `layoutContentFit`'s drop marker — that models had to
 // eyeball a rendered SVG to catch (row_cards silently dropping 2 of 5
 // items, a two-column slide silently dropping its second component). The
 // render chain already knows exactly when either happens; it just wasn't
@@ -2418,7 +2418,7 @@ function overlapFindings(markup: string, page: number, slideId: string | undefin
 // of the marker attributes the render chain now stamps at the point of
 // the cut — `data-truncated="1"` on a truncated `<text>` (`fitSvgLine`'s own
 // doc comment, `../lib/svg-text-layout.ts`), `data-dropped="N"` on a
-// "+N …" marker (six render sites: `SvgContent`, `BigNumber`,
+// drop marker (six render sites: `SvgContent`, `BigNumber`,
 // `AssertionEvidence`×2, `ImagePages`, `row-cards.tsx`'s own item-level
 // marker) — neither re-derives truncation/capacity logic here, so there is
 // exactly one place (the render chain itself) that decides what got cut.
@@ -2455,9 +2455,9 @@ function truncatedFindings(markup: string, page: number, slideId: string | undef
 function droppedMessage(count: number): string {
   const unit = count === 1 ? "item" : "items"
   const verb = count === 1 ? "is" : "are"
-  // No "+N more" text on the slide any more (`svg-content.tsx`, visual
+  // A slide never says it left something out (`svg-content.tsx`, visual
   // review 2026-08-15) — the drop is invisible to a reader, so the message
-  // says so rather than pointing at a marker that is no longer painted.
+  // says so rather than pointing at a mark that is never painted.
   return (
     `${count} ${unit} of content ${verb} missing from the rendered slide, with nothing on it to say so — ` +
     `the content area is over capacity, split the slide or trim its content`

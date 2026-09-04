@@ -71,13 +71,13 @@ describe("chart component", () => {
     // Nothing painted, and the loss declared where the gate reads it.
     // `data-dropped` alone was the assertion here, and that is the attribute
     // `slideToRender` does *not* count — the marker the export gate acts on
-    // is `data-dropped-silent`, and a decline that only wrote the plain one
+    // is `data-dropped`, and a decline that only wrote the plain one
     // would be a page with no chart, no error, and a shipped file.
     expect(container.querySelectorAll("text")).toHaveLength(0)
     expect(container.querySelectorAll("polyline")).toHaveLength(0)
     const marker = container.querySelector("[data-dropped]")!
     expect(marker.getAttribute("data-dropped")).toBe("1")
-    expect(marker.getAttribute("data-dropped-silent")).toBe("1")
+    expect(marker.getAttribute("data-dropped")).toBe("1")
   })
 
   it("refuses an empty line or area series at the schema, where the loss is preventable", () => {
@@ -841,16 +841,16 @@ describe("chart component — legend (n>=2 series)", () => {
     expect(truncated!.textContent!.length).toBeLessThan(longName.length)
   })
 
-  it("count overflow: the tail it cannot name is counted on the page as +N", () => {
+  it("count overflow: names the entries that fit and paints no count of the rest", () => {
     // Header-row packing starts at 72px per short name, so a 1120px plot
     // holds ~15 of these. 24 is enough to force the drop.
     //
-    // This used to assert the defect: a bare `data-dropped` count and no
-    // text on the marker. `data-dropped` without `data-dropped-silent` is
-    // the one marker the export gate does not read, so thirteen series were
-    // drawn with no name anywhere and the file shipped. The contract is
-    // `generate.ts`'s own: a cut the reader is told about may export, a cut
-    // nothing on the page admits to may not.
+    // Two defects were fixed on this line in turn. The first was a bare
+    // `data-dropped` count on a legend that had quietly dropped thirteen
+    // names, which the export gate did not read, so the file shipped. The
+    // second was the fix: an overflow mark painted on the slide. A slide
+    // carries no bookkeeping, so the row now names what it can and declares
+    // the rest, and the export refuses the deck.
     const manySeries = Array.from({ length: 24 }, (_, i) => ({
       name: `S${i + 1}`,
       data: [{ x: "A", y: i + 1 }],
@@ -860,21 +860,17 @@ describe("chart component — legend (n>=2 series)", () => {
     const dropped = container.querySelector("[data-dropped]")!
     const droppedCount = Number(dropped.getAttribute("data-dropped"))
     expect(droppedCount).toBeGreaterThan(0)
-    // Exportable, because the page says so.
-    expect(dropped.hasAttribute("data-dropped-silent")).toBe(false)
-    const mark = container.querySelector('[data-legend-overflow="1"]')
-    expect(mark).toBeTruthy()
-    expect(mark!.textContent).toBe(`+${droppedCount}`)
-    const nameEntries = legendTexts(container).filter(
-      (t) => t.getAttribute("data-legend-overflow") !== "1",
-    )
+    const nameEntries = legendTexts(container)
     expect(nameEntries.length).toBeLessThan(manySeries.length)
     expect(nameEntries.length + droppedCount).toBe(manySeries.length)
+    // Nothing on the page says a name went missing.
+    expect(container.querySelector("[data-legend-overflow]")).toBeNull()
+    expect(container.textContent).not.toMatch(/\+\s*\d/)
   })
 
-  it("count overflow: a row too narrow for even +N declares a silent drop instead", () => {
+  it("count overflow: a row too narrow for any entry declares every series it could not name", () => {
     // A dumbbell carries a legend and no cartesian plot, so it is the one
-    // legend-bearing type a box can be narrower than its own overflow mark.
+    // legend-bearing type a box can be narrower than a single entry.
     const component = {
       type: "chart" as const,
       chart_type: "dumbbell" as const,
@@ -887,13 +883,13 @@ describe("chart component — legend (n>=2 series)", () => {
     const { container } = svg(
       chart.render(component, { x: 0, y: 0, w, h: chart.measure(component, w, ctx) }, ctx),
     )
-    const dropped = container.querySelector("[data-dropped-silent]")
+    const dropped = container.querySelector("[data-dropped]")
     expect(dropped).toBeTruthy()
-    expect(Number(dropped!.getAttribute("data-dropped-silent"))).toBeGreaterThan(0)
-    expect(container.querySelector('[data-legend-overflow="1"]')).toBeNull()
+    expect(Number(dropped!.getAttribute("data-dropped"))).toBe(2)
+    expect(legendTexts(container)).toHaveLength(0)
   })
 
-  it("count overflow: the +N mark stays inside the box it was laid out against", () => {
+  it("count overflow: the entries it does paint stay inside the box they were laid out against", () => {
     const manySeries = Array.from({ length: 24 }, (_, i) => ({
       name: `S${i + 1}`,
       data: [{ x: "A", y: i + 1 }],
@@ -902,11 +898,14 @@ describe("chart component — legend (n>=2 series)", () => {
     const { container } = svg(
       chart.render(component, { x: 0, y: 0, w: 1120, h: chart.measure(component, 1120, ctx) }, ctx),
     )
-    const mark = container.querySelector('[data-legend-overflow="1"]')!
-    const x = Number(mark.getAttribute("x"))
-    const w = measureTextUnits(mark.textContent!, { fontFamily: ctx.fonts.body }) * 16
-    expect(x).toBeGreaterThanOrEqual(0)
-    expect(x + w).toBeLessThanOrEqual(1120 + 1)
+    const entries = legendTexts(container)
+    expect(entries.length).toBeGreaterThan(0)
+    for (const t of entries) {
+      const x = Number(t.getAttribute("x"))
+      const w = measureTextUnits(t.textContent!, { fontFamily: ctx.fonts.body }) * Number(t.getAttribute("font-size"))
+      expect(x).toBeGreaterThanOrEqual(0)
+      expect(x + w).toBeLessThanOrEqual(1120 + 1)
+    }
   })
 
   it("audit-visibility: deck-audit reads both the truncated name and the dropped-count marker as content-truncated/content-dropped findings", () => {
@@ -1443,7 +1442,7 @@ describe("an empty whole-share series is refused where the loss is preventable",
     // A pie, donut or funnel names its parts on the marks themselves. With
     // no parts there are no marks, so the series name and everything under
     // it reach the page nowhere. The renderer's answer was a blank page
-    // carrying `data-dropped-silent="0"` — a count the export gate reads as
+    // carrying `data-dropped="0"` — a count the export gate reads as
     // no loss at all, so validate passed and the file shipped.
     for (const chart_type of ["pie", "donut", "funnel"] as const) {
       const parsed = chartSchema.safeParse({
@@ -1470,8 +1469,8 @@ describe("an empty whole-share series is refused where the loss is preventable",
     for (const chart_type of ["pie", "donut"] as const) {
       const component = { type: "chart" as const, chart_type, series: [{ name: "Share", data: [] }] }
       const { container } = svg(chart.render(component, { x: 0, y: 0, w: 600, h: 240 }, ctx))
-      const marker = container.querySelector("[data-dropped-silent]")!
-      expect(Number(marker.getAttribute("data-dropped-silent")), chart_type).toBeGreaterThan(0)
+      const marker = container.querySelector("[data-dropped]")!
+      expect(Number(marker.getAttribute("data-dropped")), chart_type).toBeGreaterThan(0)
     }
   })
 })
@@ -1615,8 +1614,8 @@ describe("a radial slice that cannot print its value declares the drop", () => {
         for (const el of labels) expect(el.textContent).not.toBe("")
         // Every slice that lost its label is counted where the export gate
         // reads it.
-        const marker = container.querySelector("[data-dropped-silent]")
-        const dropped = marker ? Number(marker.getAttribute("data-dropped-silent")) : 0
+        const marker = container.querySelector("[data-dropped]")
+        const dropped = marker ? Number(marker.getAttribute("data-dropped")) : 0
         expect(labels.length + dropped).toBe(ys.length)
         expect(dropped).toBeGreaterThan(0)
         // And no leader is left pointing at air.
@@ -1631,7 +1630,7 @@ describe("a radial slice that cannot print its value declares the drop", () => {
       )
       const texts = [...container.querySelectorAll("text[data-value-label]")].map((el) => el.textContent)
       expect(texts).toEqual(["A 1", "B 2"])
-      expect(container.querySelector("[data-dropped-silent]")!.getAttribute("data-dropped-silent")).toBe("1")
+      expect(container.querySelector("[data-dropped]")!.getAttribute("data-dropped")).toBe("1")
       expect(container.querySelectorAll("polyline")).toHaveLength(2)
     })
   }

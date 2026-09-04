@@ -2098,6 +2098,6 @@ describe("a value that does not fit is dropped, never shortened", () => {
   it("counts a dropped label so the export refuses it", () => {
     const series: ChartSeries[] = [{ name: "S", data: [{ x: "A", y: 123456789 }, { x: "B", y: 987654321 }] }]
     const { container } = svg(renderLine(series, PALETTE, 0, 0, 260, H, MUTED, TEXT, ACCENT))
-    expect(container.querySelector("[data-dropped-silent]")).not.toBeNull()
+    expect(container.querySelector("[data-dropped]")).not.toBeNull()
   })
 })

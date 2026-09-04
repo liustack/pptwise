@@ -254,7 +254,7 @@ describe("content-gauge-stats", () => {
 
     const overflows = renderContent(lineSlide(13))
     expect(overflows.markup).not.toMatch(/data-plot-mark/)
-    expect(overflows.root.querySelector("[data-dropped-silent]")).not.toBeNull()
+    expect(overflows.root.querySelector("[data-dropped]")).not.toBeNull()
   })
 
   it("keeps an oversized fallback block inside the fixed body region", () => {

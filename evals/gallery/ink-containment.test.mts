@@ -501,7 +501,7 @@ describe("an unbounded axis label cannot push the plot out of its box", () => {
       markup,
       marks: (markup.match(/data-plot-mark/g) ?? []).length,
       labels: [...markup.matchAll(/data-value-label[^>]*>([^<]*)</g)].map((m) => m[1]!),
-      declared: /data-dropped-silent/.test(markup),
+      declared: /data-dropped/.test(markup),
       findings: collectInkFindings(boxed(markup, w, h)),
     }
   }
@@ -520,7 +520,7 @@ describe("an unbounded axis label cannot push the plot out of its box", () => {
     ["short ticks", [1, 2, 3, 4]],
     // The y-tick gutter is capped at a share of the box, so nine-digit ticks
     // leave a different plot at the same width. At 200px this painted six
-    // marks, zero labels and `data-dropped-silent="4"` — drawing and
+    // marks, zero labels and `data-dropped="4"` — drawing and
     // declaring at once.
     ["nine-digit ticks", [100_000_000, 200_000_000, 300_000_000, 400_000_000]],
   ] as const) {

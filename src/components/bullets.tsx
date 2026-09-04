@@ -228,8 +228,8 @@ export const bullets: SvgComponent<BulletsComponent> = {
     // `box.h` is only ever set on this non-stretchable component type by
     // `layoutContentFit`'s overflow-defense branch, so its presence always
     // means "cap to this budget," never "stretch" (`row-cards.tsx` is the
-    // precedent for both this convention and the "+N …"/`data-dropped`
-    // marker below).
+    // precedent for both this convention and the `data-dropped`
+    // declaration below).
     const truncBudget = box.h ?? Number.POSITIVE_INFINITY
     const naturalBottom = allItems.length > 0 ? allItems[allItems.length - 1].contentBottom : 0
     // Only reserve the marker's headroom when a cut is actually needed —

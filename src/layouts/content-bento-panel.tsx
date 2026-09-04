@@ -954,7 +954,7 @@ export function BentoPanelContent({ ir, slide, index, ctx }: SvgTemplateProps) {
     // renders bento cards:
     //  - >6 units: the bento grid only ever has 6 cells. Rather than
     //    cramming the rest into the same rect (overlapping cards) or
-    //    bolting on an ad-hoc "+N" card, abandon the bento grammar for this
+    //    bolting on an ad-hoc overflow card, abandon the bento grammar for this
     //    slide entirely.
     //  - any unit's content overflows its card's fit budget (see
     //    `cellOverBudget`) — a text component can't scroll or truncate, so an

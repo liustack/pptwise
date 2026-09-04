@@ -424,7 +424,7 @@ function bodyFor(def: LayoutDefinition, lex: Lexicon): Component[] {
   const bodies: Record<string, Component[]> = {
     "two-column": (() => {
       // Four KPI cards in a half-width column fall under MIN_READABLE_CARD_W
-      // and draw a +N marker. Two cards still read as a kpi pair.
+      // and get dropped from the page. Two cards still read as a kpi pair.
       const kpi = b.kpi_cards!(lex)
       if (kpi.type === "kpi_cards") kpi.items = kpi.items.slice(0, 2)
       return [b.bullets!(lex), kpi]

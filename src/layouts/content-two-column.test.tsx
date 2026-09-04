@@ -104,7 +104,7 @@ describe("TwoColumnContent", () => {
     const markup = render(enSlide, [enSlide], 0)
     const root = parseSvgRoot(`<svg xmlns="http://www.w3.org/2000/svg">${markup}</svg>`)
     expect(root.querySelector("[data-dropped]")).toBeNull()
-    expect(root.querySelector("[data-dropped-silent]")).toBeNull()
+    expect(root.querySelector("[data-dropped]")).toBeNull()
     expect(markup).not.toMatch(/\+\d+ …/)
     expect(markup).toContain("Renewals back to 91%")
     expect(markup).toContain("In-house compute cut unit cost by 31%")
@@ -141,7 +141,7 @@ describe("TwoColumnContent", () => {
     } as Slide
     const markup = render(chartSlide, [chartSlide], 0)
     const root = parseSvgRoot(`<svg xmlns="http://www.w3.org/2000/svg">${markup}</svg>`)
-    expect(root.querySelector("[data-dropped-silent]")).toBeNull()
+    expect(root.querySelector("[data-dropped]")).toBeNull()
     const rectG = root.querySelector("g[data-audit-rect]")!
     const rectY = Number(rectG.getAttribute("data-audit-rect")!.split(",")[1])
     const body = root.querySelector("g[data-audit-box]")!

@@ -43,18 +43,20 @@ interface DroppedPage {
  * Same shape and same reason as `checkDraftGate` in `../api.ts`: shipping a
  * deck that is quietly missing content is a worse failure mode than a loud
  * refusal, and the reader of the finished file is the one person who cannot
- * tell. `layoutContentFit` drops blocks that do not fit and marks them with
- * an invisible `data-dropped-silent` (`DroppedContentMarker` — the visible
- * "+N more" text was removed because a debug marker on a customer-facing
- * slide helps nobody), so before this gate the only trace was an `audit`
- * run nobody was obliged to make.
+ * tell.
  *
- * Scoped to the silent kind on purpose. A component that trims its own
- * items still paints "+N …" on the slide (`components/bullets.tsx`,
- * `data-table.tsx`, `timeline.tsx`) — the reader is told, the deck is not
- * pretending to be complete, and `docs/concepts.md` already adjudicated
- * that case as graceful degradation plus an advisory audit finding. This
- * gate is for the case where nothing on the page admits anything is gone.
+ * **Every drop is this kind.** There used to be a second, exportable
+ * category: a component that trimmed its own items printed a count of what
+ * it left out, the reader was told, and the deck shipped. A slide does not
+ * carry bookkeeping — no overflow count, no trailing sign, nothing that
+ * says "there was more" — so that category no longer exists, and with it
+ * the second attribute that marked it. `data-dropped="N"` is the whole
+ * protocol: content did not make it onto the page, nothing on the page
+ * admits it, and this gate refuses the file. Content that does not fit has
+ * two honest outcomes before this point — the face declines so another one
+ * draws the page, or the author shortens the content. Visible truncation of
+ * the text itself is a different thing and stays legal: that is
+ * `data-truncated`, which this gate does not read.
  *
  * It lives here rather than beside `checkDraftGate` because the question
  * "will this deck lose content?" can only be answered by a real layout, and

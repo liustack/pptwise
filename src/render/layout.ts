@@ -460,7 +460,7 @@ export function settleToGolden(
  * Vertical overflow guard: retries `layoutContent` with progressively tighter
  * gaps, then — if the tightest gap still overflows — keeps only the components
  * whose bottom edge fits the rect and reports how many were dropped so the
- * caller can render a "+N more" marker. Quality gates upstream (ir-quality
+ * caller can declare the loss. Quality gates upstream (ir-quality
  * warn, backend lint) are meant to keep real decks from ever reaching the
  * drop path — this is the last line of defense.
  *
@@ -563,12 +563,12 @@ export function layoutContentFit(
   const fits = (p: PlacedComponent) =>
     p.box.y + measureComponent(p.component, p.box.w, ctx) <= rect.y + rect.h + 1
   const kept = placed.filter(fits)
-  // A slide degraded to nothing but the "+N more" marker is worse than
+  // A slide degraded to nothing but a declared drop is worse than
   // one with a single overflowing component — keep the first placed component even
   // if it alone doesn't fit the rect (upstream quality gates make this rare).
   // 保留块带上剩余可用高（box.h < 测量高 = 截断预算，2026-07-11 存量
   // deck 5 项长卡画出页外实锤）：可分割块（row_cards）据此块内截断并
-  // 自画「+N …」，不感知 box.h 的块行为不变（照旧溢出渲染）。
+  // 声明丢弃，不感知 box.h 的块行为不变（照旧溢出渲染）。
   //
   // **This hands out a budget, not a box, and it is the one place that does.**
   // `box.h` here is deliberately below `measureComponent` — that is the whole
@@ -576,16 +576,17 @@ export function layoutContentFit(
   // there is", not "this is what you were promised". Three answers are legal
   // and none of them is silent:
   //
-  //  - **Truncate into it and say so.** `row_cards` splits at the budget and
-  //    draws its own "+N …". The loss is on the page and in the audit.
+  //  - **Truncate into it and declare the rest.** `row_cards` splits at the
+  //    budget and marks what it left out. Nothing on the page says so, which
+  //    is why the loss stops the export.
   //  - **Draw at natural size.** A component that never reads `box.h` renders
   //    as it always did. `cycle` and `numbered_cards` reach this path on 24
   //    corpus pages and their ink still lands inside the content rect — which
   //    is now proven rather than assumed, by the geometry gate
   //    (`evals/gallery/ink-containment.ts`), not by this comment.
   //  - **Decline and declare.** A component that treats `box.h` as a contract
-  //    rather than a budget paints nothing and marks
-  //    `data-dropped-silent`, which stops the export. `chart` is the one that
+  //    rather than a budget paints nothing and marks `data-dropped`, which
+  //    stops the export. `chart` is the one that
   //    does this today (`components/chart.tsx`), and a chart is exactly the
   //    kind of block for which a squashed rendering would be a wrong page
   //    rather than a short one.

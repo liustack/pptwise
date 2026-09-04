@@ -224,13 +224,13 @@ describe("row_cards EN gallery trio is not silently dropped (r2 A6)", () => {
     }
   })
 
-  it("the EN component page on bento-panel shows three titles and no data-dropped-silent", async () => {
+  it("the EN component page on bento-panel shows three titles and no data-dropped", async () => {
     installNodePlatform()
     const assets = await corpusAssets(LEXICONS.en)
     const ir = componentPage("row_cards", COMPONENT_BUILDERS.row_cards!, LEXICONS.en, assets)
     ;(ir.slides[0]! as unknown as { layout?: string }).layout = "bento-panel"
     const svg = renderSlideSvg(ir, 0)
-    expect(svg).not.toMatch(/data-dropped-silent/)
+    expect(svg).not.toMatch(/data-dropped/)
     const rows = COMPONENT_BUILDERS.row_cards!(LEXICONS.en)
     if (rows.type === "row_cards") {
       for (const item of rows.items) {

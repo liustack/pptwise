@@ -233,7 +233,7 @@ describe("a drop declaration speaks only for the component that made it", () => 
   })
 
   it("accepts it when the page itself declares the component was never placed", () => {
-    const svg = page("", `<g data-dropped="1" data-dropped-silent="1" />`)
+    const svg = page("", `<g data-dropped="1" />`)
     expect(checkPageFidelity(svg, slide).missing).toEqual([])
   })
 

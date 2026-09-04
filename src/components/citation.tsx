@@ -38,8 +38,8 @@ export const citation: SvgComponent<CitationComponent> = {
     const naturalHeight = fullCount * ROW
     let visibleCount = fullCount
     if (naturalHeight > truncBudget) {
-      // Reserve 1 ROW inside the budget for the "+N …" marker line
-      // itself — same reservation shape row-cards.tsx's own
+      // Reserve 1 ROW inside the budget as bottom headroom — same
+      // reservation shape row-cards.tsx's own
       // `truncBudget - 20` uses. Floored at 1 (row-cards.tsx's "never
       // render zero visible units" precedent).
       visibleCount = Math.max(1, Math.min(fullCount, Math.floor(truncBudget / ROW)))
