@@ -75,7 +75,7 @@ export function ShowGalleryContent({ ir, slide, index, ctx }: SvgTemplateProps) 
   // about to hold, so ask here.
   const aside = block
     ? null
-    : stepAside({ face: "show-gallery", slide, ctx: showNeutralFallbackCtx(ctx), bodyRect: GALLERY_FALLBACK_RECT })
+    : stepAside({ face: "show-gallery", slide, ctx, bodyRect: GALLERY_FALLBACK_RECT })
   if (aside) return aside
 
   return (

@@ -53,24 +53,42 @@ export function resolveDeckBrandedFrameBottomY(
   return resolveDeckDocumentMetaOn(ir) ? FRAME_BOTTOM_BRANDED : unbrandedBottomY
 }
 
-/** Resolve page-level motif, brand, document-meta, and dependent geometry once. */
+/**
+ * Resolve page-level motif, brand, document-meta, and dependent geometry once.
+ *
+ * `steppedAside` says the chosen face handed its page to the shared
+ * step-aside (`render/step-aside.tsx`) instead of drawing its own
+ * composition. Two of the decisions below are the face's statements *about
+ * that composition* and stop being true when it is not on the page:
+ * `suppressMotif` is a face keeping a motif off its own artwork, and
+ * `branding: "none"` is a face that draws the deck's metadata itself in a
+ * place of its own. A stepped-aside page has neither the artwork nor that
+ * drawing, so honouring them strips the page of its theme and loses the
+ * organization, version and date outright.
+ *
+ * The menu's own decisions survive. `decor: "silent"` and `brand: "none"`
+ * are what a theme said about this page rather than what a face said about
+ * its picture, and a page does not acquire furniture by being drawn plainly.
+ * `decorKeepOut` goes, because the furniture it fences off is gone.
+ */
 export function resolvePageRenderContext(
   ir: PptxIR,
   slide: Slide,
   effectiveFace: EffectiveFace,
   theme: ThemeDefinition,
+  steppedAside = false,
 ): PageRenderContext {
   const decor = effectiveFace.entry?.decor
   const motifId = decor?.kind === "motif" ? decor.id : theme.motif
   const motifOn =
     effectiveFace.route !== "image-cover" &&
-    effectiveFace.layout?.suppressMotif !== true &&
+    (steppedAside || effectiveFace.layout?.suppressMotif !== true) &&
     decor?.kind !== "silent" &&
     motifId !== undefined
   const motifIntensity = decor?.kind === "motif" ? decor.params?.intensity : theme.motifParameters?.intensity
 
   const metadataOn = effectiveFace.entry?.brand !== "none"
-  const brandOn = effectiveFace.layout?.branding !== "none" && metadataOn
+  const brandOn = (steppedAside || effectiveFace.layout?.branding !== "none") && metadataOn
   const deckBranding = resolveDeckBranding(ir)
   const branding: EffectiveBranding = brandOn ? deckBranding : "none"
   const documentMetaOn = metadataOn && deckBranding === "full"
@@ -83,7 +101,9 @@ export function resolvePageRenderContext(
     branding,
     metadataOn,
     documentMetaOn,
-    ...(effectiveFace.layout?.decorKeepOut ? { decorKeepOut: effectiveFace.layout.decorKeepOut } : {}),
+    ...(effectiveFace.layout?.decorKeepOut && !steppedAside
+      ? { decorKeepOut: effectiveFace.layout.decorKeepOut }
+      : {}),
     geometry: {
       ...(branding === "full" ? { brandedFrameBottomY: FRAME_BOTTOM_BRANDED } : {}),
       imageBottomCaptionBottomY:

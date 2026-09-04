@@ -17,6 +17,7 @@ import { CHAPTER_LAYOUTS } from "../layouts/index-chapter"
 import { CONTENT_LAYOUTS } from "../layouts/index-content"
 import { ENDING_LAYOUTS } from "../layouts/index-ending"
 import { MOTIFS } from "../motifs"
+import { treeStepsAside } from "./step-aside"
 import { getThemeDefinition, resolveThemeEmphasis } from "../themes/definitions"
 import { resolveEffectiveFace } from "./layout-selection"
 import { partitionSvgDepth, type SvgDepthLayers } from "./depth-contract/partition"
@@ -302,15 +303,13 @@ export function FullSlideSvg({
     throw new Error(effectiveFace.error ?? `cannot resolve a theme-menu face for "${slide.type}" page`)
   }
   const themeDef = getThemeDefinition(ir.theme.id)
-  const page = resolvePageRenderContext(ir, slide, effectiveFace, themeDef)
-  const renderIr: PptxIR = page.metadataOn
+  let page = resolvePageRenderContext(ir, slide, effectiveFace, themeDef)
+  let renderIr: PptxIR = page.metadataOn
     ? ir
     : {
         ...ir,
         meta: ir.meta.animation === undefined ? {} : { animation: ir.meta.animation },
       }
-  const Decor = page.motifOn && page.motifId !== undefined ? MOTIFS[page.motifId] : undefined
-  const motifOpacity = page.motifIntensity === "subtle" ? 0.62 : undefined
   let bgSpec = slide.background ?? tokens.defaultBackgrounds[slide.type]
   // 压图页接管（图片排版 polish，2026-07-09 用户反馈）：cover/chapter 的
   // asset 背景 → 暗遮罩 + 白字 bespoke 版式（ImageCoverPage）——图保持清晰
@@ -380,6 +379,20 @@ export function FullSlideSvg({
       params: effectiveFace.entry?.params,
     })
   }
+  // A face that could not hold what it was given hands the page to the
+  // shared step-aside, and its own suppressions were statements about a
+  // composition that is no longer on the page. Resolve the page again
+  // without them, so the motif still paints and the deck's branding still
+  // reaches a page whose face used to draw that metadata itself. The body
+  // is already built and consults neither, so nothing needs re-rendering.
+  if (pageBody !== null && treeStepsAside(pageBody)) {
+    page = resolvePageRenderContext(ir, slide, effectiveFace, themeDef, true)
+    renderIr = page.metadataOn
+      ? ir
+      : { ...ir, meta: ir.meta.animation === undefined ? {} : { animation: ir.meta.animation } }
+  }
+  const Decor = page.motifOn && page.motifId !== undefined ? MOTIFS[page.motifId] : undefined
+  const motifOpacity = page.motifIntensity === "subtle" ? 0.62 : undefined
   const motif =
     Decor && !imageCoverTakeover ? (
       <g data-decor>

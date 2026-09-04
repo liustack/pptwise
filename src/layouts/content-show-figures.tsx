@@ -157,7 +157,7 @@ export function ShowFiguresContent({ ir, slide, index, ctx }: SvgTemplateProps) 
   // about to hold, so ask here.
   const aside = block
     ? null
-    : stepAside({ face: "show-figures", slide, ctx: showNeutralFallbackCtx(ctx), bodyRect: FIGURES_FALLBACK_RECT })
+    : stepAside({ face: "show-figures", slide, ctx, bodyRect: FIGURES_FALLBACK_RECT })
   if (aside) return aside
 
   return (

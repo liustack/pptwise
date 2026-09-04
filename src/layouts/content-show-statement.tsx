@@ -83,7 +83,7 @@ export function ShowStatementContent({ ir, slide, index, ctx }: SvgTemplateProps
   // about to hold, so ask here.
   const aside = block
     ? null
-    : stepAside({ face: "show-statement", slide, ctx: showNeutralFallbackCtx(ctx), bodyRect: STATEMENT_FALLBACK_RECT })
+    : stepAside({ face: "show-statement", slide, ctx, bodyRect: STATEMENT_FALLBACK_RECT })
   if (aside) return aside
 
   return (
