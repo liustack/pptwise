@@ -58,13 +58,34 @@ const EXPECTED_DECK_PAGES = [
 /** The browser frame's declared proportion, window bar included. */
 const BROWSER_ASPECT = 1.6
 
+/**
+ * What is left of an element's opacity once every ancestor has had its say,
+ * and zero as soon as anything in the chain is hidden outright.
+ *
+ * Reading only the element's own attributes proved a local property, not a
+ * visible one: setting `opacity="0"` on the `[data-device-mockup]` group hid
+ * the bar, the dots, the pill, the outline, the body and the notch on all 56
+ * pages while every one of them still reported paint.
+ */
+function effectiveOpacity(el: Element): number {
+  let opacity = 1
+  for (let node: Element | null = el; node; node = node.parentElement) {
+    const display = node.getAttribute("display")
+    const visibility = node.getAttribute("visibility")
+    if (display === "none" || visibility === "hidden" || visibility === "collapse") return 0
+    const own = node.getAttribute("opacity")
+    if (own !== null) opacity *= Number(own)
+  }
+  return opacity
+}
+
 /** Whether this element would put ink on the page at all. */
 function paints(el: Element): boolean {
   const num = (name: string, fallback: number) => {
     const raw = el.getAttribute(name)
     return raw === null ? fallback : Number(raw)
   }
-  if (num("opacity", 1) <= 0) return false
+  if (effectiveOpacity(el) <= 0) return false
   const fill = el.getAttribute("fill")
   // No `fill` attribute at all means SVG's own default, which is black.
   const filled = fill !== "none" && num("fill-opacity", 1) > 0
