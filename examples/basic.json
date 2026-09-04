@@ -1,7 +1,7 @@
 {
   "version": "5",
   "filename": "pptwise-basic-demo",
-  "theme": { "id": "consulting" },
+  "theme": { "id": "brief" },
   "meta": { "organization": "pptwise", "date": "2026-07-17" },
   "slides": [
     { "type": "cover", "heading": "pptwise", "subheading": "Stable, editable PPTX from a semantic IR" },

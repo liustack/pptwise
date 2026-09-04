@@ -56,7 +56,7 @@ const FOUR: Slide[] = [
 
 describe("chapter-block-numeral-chapter — board geometry", () => {
   it("paints a square primary numeral block with the number inside, matching board coordinates", () => {
-    const { root, tokens } = renderChapter("enterprise", FOUR, 0)
+    const { root, tokens } = renderChapter("bulletin", FOUR, 0)
     const block = Array.from(root.querySelectorAll("rect")).find(
       (r) => r.getAttribute("width") === "132" && r.getAttribute("height") === "132",
     )
@@ -72,7 +72,7 @@ describe("chapter-block-numeral-chapter — board geometry", () => {
   })
 
   it("places the heading to the right of the block and leaves the number inside the square", () => {
-    const { root } = renderChapter("enterprise", FOUR, 0)
+    const { root } = renderChapter("bulletin", FOUR, 0)
     const title = Array.from(root.querySelectorAll("text")).find((t) =>
       (t.textContent ?? "").includes("门店与运营"),
     )!
@@ -85,7 +85,7 @@ describe("chapter-block-numeral-chapter — board geometry", () => {
   })
 
   it("draws a four-segment midground tick rule and fills through the current chapter", () => {
-    const { root, tokens } = renderChapter("enterprise", FOUR, 1)
+    const { root, tokens } = renderChapter("bulletin", FOUR, 1)
     expect(Array.from(root.querySelectorAll("text")).some((t) => t.textContent === "02")).toBe(true)
     const mid = root.querySelector("g[data-depth='mid']")
     expect(mid).toBeTruthy()
@@ -99,7 +99,7 @@ describe("chapter-block-numeral-chapter — board geometry", () => {
   })
 
   it("does not paint a full-bleed field of its own", () => {
-    const { root } = renderChapter("enterprise", FOUR, 0)
+    const { root } = renderChapter("bulletin", FOUR, 0)
     expect(root.querySelector("rect[width='1280']")).toBeNull()
   })
 })
@@ -127,8 +127,8 @@ describe("chapter-block-numeral-chapter — shared pool", () => {
     }
   })
 
-  it("uses tokens, not a baked enterprise hex, when another theme borrows it", () => {
-    const { markup, tokens } = renderChapter("tech", FOUR, 0)
+  it("uses tokens, not a baked bulletin hex, when another theme borrows it", () => {
+    const { markup, tokens } = renderChapter("terminal", FOUR, 0)
     expect(markup).toContain(tokens.colors.primary)
     expect(markup).not.toContain("#0032A0")
     expect(markup).not.toContain("#2F6FBF")
@@ -142,11 +142,11 @@ describe("chapter-block-numeral-chapter — shared pool", () => {
   })
 
   it("renders byte-identically on repeat", () => {
-    expect(renderChapter("enterprise", FOUR, 0).markup).toBe(renderChapter("enterprise", FOUR, 0).markup)
+    expect(renderChapter("bulletin", FOUR, 0).markup).toBe(renderChapter("bulletin", FOUR, 0).markup)
   })
 
   it("CJK title has no letter-spacing", () => {
-    const { root } = renderChapter("enterprise", FOUR, 0)
+    const { root } = renderChapter("bulletin", FOUR, 0)
     const title = Array.from(root.querySelectorAll("text")).find((t) =>
       (t.textContent ?? "").includes("门店"),
     )!
@@ -154,7 +154,7 @@ describe("chapter-block-numeral-chapter — shared pool", () => {
   })
 
   it("tick leaves stay inside the canvas", () => {
-    const { root } = renderChapter("enterprise", FOUR, 3)
+    const { root } = renderChapter("bulletin", FOUR, 3)
     for (const l of Array.from(root.querySelectorAll("line"))) {
       for (const attr of ["x1", "x2", "y1", "y2"] as const) {
         const v = Number(l.getAttribute(attr))

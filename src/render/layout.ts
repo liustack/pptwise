@@ -552,7 +552,7 @@ export function layoutContentFit(
     // its own about where a stack belongs.
     //
     // Two earlier answers here, both refused by the same person: splitting
-    // the leftover evenly (academic p06 sat 106px clear of the rule line it
+    // the leftover evenly (thesis p06 sat 106px clear of the rule line it
     // hangs under) and sinking all of it (the same page welded to that line,
     // 0px). Measured at 38%: 61px.
     if (single.dropped === 0) return single

@@ -141,7 +141,7 @@ describe("ending-decision-close-ending — board geometry", () => {
       subheading: "Draft: Ops",
       components: [{ type: "bullets", items: ["Renew East for two years", "Defer South build"] }],
     } as Slide
-    const { root, markup } = renderEnding("consulting", latin)
+    const { root, markup } = renderEnding("brief", latin)
     expect(markup).toContain("DECISION")
     expect(markup).not.toContain("决定")
     const kicker = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "DECISION")
@@ -149,7 +149,7 @@ describe("ending-decision-close-ending — board geometry", () => {
   })
 
   it("uses tokens, not baked memo hex, when another theme draws it", () => {
-    const { root, tokens } = renderEnding("enterprise")
+    const { root, tokens } = renderEnding("bulletin")
     const rule = Array.from(root.querySelectorAll("line")).find((l) => l.getAttribute("y1") === "440")
     expect(rule?.getAttribute("stroke")).toBe(tokens.colors.border)
     expect(root.innerHTML).not.toMatch(/#F6F1E7/i)

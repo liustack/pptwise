@@ -12,7 +12,7 @@ import {
 import { fitHeroLine, heroUnitMark, fitSparseHeading, fitSparseQuote, fitStatementSource, quoteBlockBaseline, splitTrailingPercent } from "./shared"
 import { underlineDescentRatio } from "../underline"
 
-/** academic 稀排脸：脚注引文、百分号巨数、命题格言。不画点轨和角标。 */
+/** thesis 稀排脸：脚注引文、百分号巨数、命题格言。不画点轨和角标。 */
 
 export function pullQuote({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
@@ -90,10 +90,10 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
   const caption = heroCaption(slide)
   const source = heroSource(slide)
   // The rule hangs from the numeral's ink floor rather than a fixed y.
-  // academic's heading serif sets old-style figures — 3 4 5 7 9 hang below the
+  // thesis's heading serif sets old-style figures — 3 4 5 7 9 hang below the
   // baseline — so a 300px "4" puts ink 66px under a baseline the frozen y=448
   // sat only 56px below. The rule ran through the stem. `underlineDescentRatio`
-  // is the same measured floor banner-chapter, memo-head and consulting's own
+  // is the same measured floor banner-chapter, memo-head and brief's own
   // stat-hero already hang their rules from.
   const ruleY = Math.round(HERO_BASELINE + fitted.fontSize * underlineDescentRatio(fitted.text) + RULE_AIR)
   // Caption and source follow the rule so the approved spacing between the

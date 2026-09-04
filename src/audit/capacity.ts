@@ -10,13 +10,13 @@
  *   1280×720px = 13.333×7.5in）。
  * - 内容区最窄矩形：`custom.tsx` `CustomContent` 背景图态
  *   （`withBg` 分支）最窄：`{ w: 1096, h: 400 }`（其余：custom 白底态
- *   1152×420|460、creative 1168×380|400|420|460）。academic 已随
+ *   1152×420|460、creative 1168×380|400|420|460）。thesis 已随
  *   Task 2 换骨改为编号导轨式（见下），不再是 1120×380|400 的贡献者。
  *   ikb-swiss/anthropic-clay 已随主题换骨硬删（Task 5），不再计入。
- *   tech 走卡片拼盘（`bento-layout.ts`），不经
+ *   terminal 走卡片拼盘（`bento-layout.ts`），不经
  *   `layoutContentFit`/两栏切分，不引入比 1096 更窄的矩形，同样不改变本表。
- * - **consulting 结论横幅式换骨（Task 1，2026-07-06）**：Content 页改为
- *   `MckinseyNavyContent`（`consulting.tsx`）——顶部一条 `x=96 w=1088` 的
+ * - **brief 结论横幅式换骨（Task 1，2026-07-06）**：Content 页改为
+ *   `MckinseyNavyContent`（`brief.tsx`）——顶部一条 `x=96 w=1088` 的
  *   filled 断言横幅（1 行标题高 88px / 2 行 132px），`SvgContent` 内容矩形随
  *   横幅高度下移，`y = 横幅底 + 32`，底边固定 620，故 `h` 在 384px（2 行
  *   横幅）～428px（1 行横幅）之间——不再有 `contentH = footnote ? 380 : 400`
@@ -24,11 +24,11 @@
  *   与内容矩形高度解耦）。宽度 1088 比本表此前引用的最窄矩形 custom 1096
  *   更窄 8px，two_column 单列会算出 `(1088 - 32) / 2 = 528px`（比下面基准
  *   532px 更窄，但仍宽于 magazine 已验证过的 424px）——沿用与
- *   magazine 相同的结论：`audit-baseline.test.ts` 对 consulting 在
+ *   magazine 相同的结论：`audit-baseline.test.ts` 对 brief 在
  *   新 528px 单列下跑全部压力 fixture（含 `bullets`/`chart` 的 `two_column`
  *   变体）零溢出门 100% 通过，证明动态缩字号/换行/截断已经兜住，不需要为
  *   这一更窄场景收紧本表任何常量。高度上界（384px）仍不小于本表其余数字所
- *   依赖的 380px 基准（该基准现由 academic 单独提供，见下），故
+ *   依赖的 380px 基准（该基准现由 thesis 单独提供，见下），故
  *   `maxBlocksPerSlide`/`bullets.maxItems` 均不受影响。
  * - **magazine 窄栏复核（Task 6，2026-07-06 已做）**：内容栏刻意收窄到
  *   880（`magazine.tsx` `COLUMN_W`，杂志窄栏版式），且 `arrangement` 原样
@@ -47,18 +47,18 @@
  *   兜底的安全，换一个只在极端主题×版式组合下才有意义的更紧软警告阈值，不
  *   划算。若未来要做主题感知的精确预算，应先把 `ir-quality.ts` 改造成按
  *   `(theme, arrangement)` 查表，而不是在这里硬调一个全局数字。
- * - 内容区最窄高度（含 footnote 时收窄）：academic 此前的
+ * - 内容区最窄高度（含 footnote 时收窄）：thesis 此前的
  *   `contentH = slide.footnote ? 380 : 400` → 380px 已随 Task 2 换骨废弃
  *   （改为编号导轨式：`SvgContent` 矩形 `y = 标题末行 + 36`、`h = 640 - y`，
  *   标题与徽章行垂直居中在固定枢轴 `BADGE_CENTER_Y` 上）。**Fix wave 1
- *   （2026-07-06，见 templates/academic.test.tsx 同批断言）**：编号徽章
+ *   （2026-07-06，见 templates/thesis.test.tsx 同批断言）**：编号徽章
  *   `BADGE_Y` 从 64 下移到 96（避让 Branding 左上 logo 带 x 64-160 /
  *   y 48-88），`BADGE_CENTER_Y = BADGE_Y + BADGE_H/2` 随之从 80 变为
  *   112——最坏场景仍是 2 行标题、`minPt = 24`：
  *   `lineHeight = round(24 * 1.08) = 26`，`headingFudge = round(24 * 0.32)
  *   = 8`，`titleLastY = 112 + (2-1)*26/2 + 8 = 133`（原 101），
  *   `h = 640 - (133 + 36) = 471px`（原 503px）——仍远高于 380px，不再贡献
- *   这一基准的结论不变。consulting 同样已随 Task 1 换骨改为横幅
+ *   这一基准的结论不变。brief 同样已随 Task 1 换骨改为横幅
  *   行数驱动的 384～428px（见上）。**380px 基准现仅由 creative 提供**
  *   （该主题未随本轮换骨改动，仍是 `contentH` 公式最窄的贡献者），下面依赖
  *   此基准的常量（`maxBlocksPerSlide`/`bullets.maxItems`）不受影响。
@@ -74,10 +74,10 @@
  * 字号——此时 `lineHeight` 最大，对内容区的挤占也最狠，不是直觉上的"字越小
  * 行越挤"）逐主题复核 titleLastY→内容区推导（用 `fitHeadingLines` 实测二分
  * 找出"恰好 2 行仍是满字号"的最长文本验证过每个数字，而非手算假设）：
- *   - consulting：`bannerH` 是 1/2 行的固定字面量（88/132px），不随字号
+ *   - brief：`bannerH` 是 1/2 行的固定字面量（88/132px），不随字号
  *     变化，无最大字号歧义。2 行横幅 + 副题句最坏：
  *     `h = 620 - (72+132+32+38) = 346px`。
- *   - academic：`headingFudge`/`lineHeight` 都随 `heading.fontSize` 走，
+ *   - thesis：`headingFudge`/`lineHeight` 都随 `heading.fontSize` 走，
  *     最大字号（40pt，而非下面 fix-wave 注释沿用的 `minPt=24`）下 2 行：
  *     `lineHeight=round(40*1.08)=43`，`headingFudge=round(40*0.32)=13`，
  *     `titleLastY=112+43/2+13=146.5`。+ 副题句：
@@ -91,7 +91,7 @@
  *     副题句最坏：`h=max(120,420-50-46)=324px`。
  *   - custom 背景图态：2 行标题最大字号 44pt 下 `lineHeight=48`。+ 副题句：
  *     `h=max(120,400-48-46)=306px`。
- *   - tech：不走本文件的线性堆叠预算模型（见上，网格布局靠真实渲染
+ *   - terminal：不走本文件的线性堆叠预算模型（见上，网格布局靠真实渲染
  *     零溢出验证，不是公式推导）。2 行标题最大字号 44pt 下 `lineHeight=48`。
  *     + 副题句：`h=640-(150+48+36+46)=360px`——仅供参考，不影响下面任何
  *     常量。
@@ -101,7 +101,7 @@
  * 各 `templates/*.tsx` 自己的 S3b 注释），随基线偏移增量同步调整了对应
  * slot（34px → 各主题新值，见上）——上面每条推导已按新 slot 重算，`h` 全部
  * 比 Task 5 落地时的数字更紧（因为 slot 变大，挤占内容区的量也变大）。
- * consulting 是唯一的基线不变来源不同的例外：它的副题句锚定横幅底边
+ * brief 是唯一的基线不变来源不同的例外：它的副题句锚定横幅底边
  * （无字形 descent），S3b 把 `bannerBottom+20` 改为 `+24`（flat +4，非
  * 公式推导），slot 同步从 34 到 38。
  *
@@ -143,7 +143,7 @@
  *      `citation.tsx` 是例外，见下。
  *   2. 本任务的零溢出真机门与 svg 全量 vitest 套件已跑过，正是本文件
  *      一贯依赖的"用真实渲染验证、不依赖表内经验值"方法论（参见上面
- *      magazine/consulting 两轮复核的同一结论句式）。
+ *      magazine/brief 两轮复核的同一结论句式）。
  *   3. 下调是一次跨主题、跨场景的 `ir-quality.ts` lint 阈值变更，影响面覆盖
  *      所有主题的所有内容页（不止带副题句的），应作为独立评审的任务，不
  *      适合作为模板几何任务的隐性副作用捎带下调。

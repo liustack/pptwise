@@ -7,7 +7,7 @@ import type { BuiltinThemeDeclaration } from "../schema";
  * 目标场景：机构年报、政策汇报、审计交付。
  *
  * 三家报告语域分腔，不是换色：
- *   - consulting = 报告腔（藏青承结构，黄只当一把高亮尺）
+ *   - brief = 报告腔（藏青承结构，黄只当一把高亮尺）
  *   - vermilion  = 公文腔（米白纸 + 正红成面，红头承白字）
  *   - swiss      = 制度腔（冷白纸 + 硬黑即正文即色块，瑞士红成边）
  *
@@ -16,16 +16,16 @@ import type { BuiltinThemeDeclaration } from "../schema";
  *   swiss 的红只出现在页缘边条与小色块，永不承字成横幅。封面倾向的
  *   left-anchor / split-diagonal 色块走 primary 硬黑，不走 accent。
  *
- * 四轴 L / bottom-right / light / tight。最近邻 tech（L / BR / medium /
- * tight），岔在装饰轴：tech 是右缘星座链的 medium，swiss 是顶边 12px 红条
- * + 右缘三格灰刻度的 light。enterprise 也是 L / tight，但 meta 在 top-band、
+ * 四轴 L / bottom-right / light / tight。最近邻 terminal（L / BR / medium /
+ * tight），岔在装饰轴：terminal 是右缘星座链的 medium，swiss 是顶边 12px 红条
+ * + 右缘三格灰刻度的 light。bulletin 也是 L / tight，但 meta 在 top-band、
  * 装饰是 IKB 方块的 medium，两轴都岔开。
  *
  * 逐条来历（设计定稿板 `theme-wave7/Swiss.dc.html` 给死五格，surface 与
  * chart 四色自推，本仓库 `svg/ink.ts` 的 `contrastRatio` 压 `bg #F7F7F5`
  * 实测）：
  *   - `bg` `#F7F7F5`：冷白纸。板上原值。
- *   - `surface` `#FFFFFF`：制度卡纯白，从冷白纸上抬一档（consulting 同形）。
+ *   - `surface` `#FFFFFF`：制度卡纯白，从冷白纸上抬一档（brief 同形）。
  *   - `primary` `#101010`：硬黑。即正文即色块。压 bg 17.74:1，白字压它
  *     19.03:1。横幅、斜切、签名块走它，不走红。章节页改走冷白纸。
  *   - `accent` `#D7282F`：瑞士红（4.62:1）。只给页缘边条与小色块，永不承字
@@ -50,7 +50,7 @@ import type { BuiltinThemeDeclaration } from "../schema";
  *
  * 字体：heading 加粗 sans。板上 Archivo 900 落地为 Microsoft YaHei 族
  * （字重导出只有粗/不粗两档，900 → 加粗）。圆角 0 + gapScale 1（tight，
- * 与 tech 同档）。
+ * 与 terminal 同档）。
  *
  * 装饰见 `../../motifs/motif-swiss-motif.tsx`（顶边 12px 红条四页都画。
  * 右缘三格灰刻度只留封面，章节 / 内容 / ending 不画刻度）。light 档。
@@ -84,7 +84,7 @@ export const SWISS_TOKENS: StyleTokens = {
     heading: ["Microsoft YaHei", "PingFang SC", "Helvetica Neue", "Arial", "system-ui"],
     body: ["Microsoft YaHei", "PingFang SC", "Helvetica Neue", "Arial", "system-ui"],
   },
-  shape: { radius: 0, gapScale: 1 }, // 制度直角 + tight（与 tech 同档）
+  shape: { radius: 0, gapScale: 1 }, // 制度直角 + tight（与 terminal 同档）
   defaultBackgrounds: {
     cover: { kind: "color", value: "#F7F7F5" },
     chapter: { kind: "color", value: "#F7F7F5" }, // 冷白纸（第八波批 4：板上章节是白纸 + 小数编号）

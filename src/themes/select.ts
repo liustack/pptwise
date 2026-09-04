@@ -28,7 +28,7 @@ export interface ThemeSelectSignals {
   strategy?: string
 }
 
-const FALLBACK_THEME_ID: BuiltinThemeId = "consulting"
+const FALLBACK_THEME_ID: BuiltinThemeId = "brief"
 
 function vocabOccasions(input: readonly string[] | undefined): string[] {
   if (!input || input.length === 0) return []
@@ -117,7 +117,7 @@ function compareCandidates(
  * 1. Occasion hits (non-empty vocab intersection), sorted as above.
  * 2. Narrative recs for `signals.strategy` (preset id or strategy axis).
  * 3. Every builtin on `signals.identity`, catalog order.
- * 4. `consulting`.
+ * 4. `brief`.
  *
  * Theme reachability lives in `src/themes/occasions.ts`. This function
  * is the selection entry. Narrative `themeRecommendations` is a

@@ -8,7 +8,7 @@ describe("IR theme.style overlay is rejected", () => {
     const r = parsePptxIR({
       version: "5",
       filename: "t.pptx",
-      theme: { id: "consulting", style: { colors: { text: "#fff" } } },
+      theme: { id: "brief", style: { colors: { text: "#fff" } } },
       slides: [{ type: "cover", heading: "Hello Tokens" }],
     })
     expect(r.success).toBe(false)
@@ -18,7 +18,7 @@ describe("IR theme.style overlay is rejected", () => {
     const v = validateIr({
       version: "5",
       filename: "t.pptx",
-      theme: { id: "consulting", style: { colors: { text: "#fff" } } },
+      theme: { id: "brief", style: { colors: { text: "#fff" } } },
       slides: [{ type: "cover", heading: "Hello Tokens" }],
     })
     expect(v.ok).toBe(false)
@@ -27,6 +27,6 @@ describe("IR theme.style overlay is rejected", () => {
 
   it("resolveStyle returns builtin tokens and takes only the theme id", () => {
     expect(resolveStyle.length).toBe(1)
-    expect(resolveStyle("consulting")).toBe(THEME_STYLES.consulting)
+    expect(resolveStyle("brief")).toBe(THEME_STYLES.brief)
   })
 })

@@ -40,7 +40,7 @@ const galleryFour = {
   items: GALLERY_PILL_ITEMS,
 }
 
-const PILL_THEMES = ["pulse", "enterprise", "classroom"] as const
+const PILL_THEMES = ["clinic", "bulletin", "homeroom"] as const
 const BADGE_DIAMETER_RATIO = 0.8
 const DISC_PILL_GAP = 12
 
@@ -210,17 +210,17 @@ function isNumLabel(text: string | null): boolean {
 
 describe("numbered_pills", () => {
   it("paints items[].sub, right-aligned, without pushing the title off its own pill", () => {
-    const pulse = themeCtx("pulse")
+    const clinic = themeCtx("clinic")
     const withSub = cards(4, { text: "一句说明。", sub: "一季度" })
     const box = { x: 0, y: 0, w: 1088 }
-    const { container } = svg(numberedCards.render(withSub, box, pulse))
+    const { container } = svg(numberedCards.render(withSub, box, clinic))
     // The field was in the schema and in no renderer: an author's qualifier
     // went into the deck and onto no slide.
     const subs = Array.from(container.querySelectorAll("text")).filter((t) => t.textContent === "一季度")
     expect(subs).toHaveLength(4)
     for (const sub of subs) {
       expect(sub.getAttribute("text-anchor")).toBe("end")
-      expect(sub.getAttribute("fill")).toBe(pulse.colors.muted)
+      expect(sub.getAttribute("fill")).toBe(clinic.colors.muted)
     }
     // Titles still reach the page — the sub takes width out of their column
     // rather than sitting on top of them.
@@ -233,13 +233,13 @@ describe("numbered_pills", () => {
     // both go undrawn. The body's loss was already marked and the sub's was
     // not, so a card with a title and a sub and no body lost a word with no
     // trace anywhere — not on the page, not in validate, not in the audit.
-    const pulse = themeCtx("pulse")
+    const clinic = themeCtx("clinic")
     const eight = {
       type: "numbered_cards" as const,
       items: Array.from({ length: 8 }, (_, i) => ({ title: `要点${i + 1}`, sub: `SUB_${i + 1}` })),
     }
     const box = { x: 96, y: 186, w: 640, h: 392 }
-    const { container } = svg(numberedCards.render(eight, box, pulse))
+    const { container } = svg(numberedCards.render(eight, box, clinic))
     expect(container.textContent).not.toContain("SUB_1")
     expect(container.querySelectorAll("g[data-truncated]")).toHaveLength(8)
 
@@ -249,34 +249,34 @@ describe("numbered_pills", () => {
       type: "numbered_cards" as const,
       items: Array.from({ length: 8 }, (_, i) => ({ title: `要点${i + 1}`, text: `TEXT_${i + 1}` })),
     }
-    const bodies = svg(numberedCards.render(withText, box, pulse)).container
+    const bodies = svg(numberedCards.render(withText, box, clinic)).container
     expect(bodies.textContent).not.toContain("TEXT_1")
     expect(bodies.querySelectorAll("g[data-truncated]")).toHaveLength(8)
   })
 
   it("leaves the pill unmarked when the sub reaches the page", () => {
-    const pulse = themeCtx("pulse")
+    const clinic = themeCtx("clinic")
     const four = cards(4, { sub: "一季度" })
-    const { container } = svg(numberedCards.render(four, { x: 0, y: 0, w: 1088 }, pulse))
+    const { container } = svg(numberedCards.render(four, { x: 0, y: 0, w: 1088 }, clinic))
     expect(container.textContent).toContain("一季度")
     expect(container.querySelectorAll("g[data-truncated]")).toHaveLength(0)
   })
 
   it("draws a large left count circle plus one pill per item, all pills sharing a left edge", () => {
-    const pulse = themeCtx("pulse")
-    const { container } = svg(numberedCards.render(four, { x: 0, y: 0, w: 1088 }, pulse))
+    const clinic = themeCtx("clinic")
+    const { container } = svg(numberedCards.render(four, { x: 0, y: 0, w: 1088 }, clinic))
     const circles = Array.from(container.querySelectorAll("circle"))
     expect(circles.length).toBeGreaterThanOrEqual(1)
     const large = circles.reduce((a, b) =>
       Number(a.getAttribute("r")) > Number(b.getAttribute("r")) ? a : b,
     )
     expect(Number(large.getAttribute("r"))).toBeGreaterThan(40)
-    expect(large.getAttribute("fill")).toBe(pulse.colors.primary)
+    expect(large.getAttribute("fill")).toBe(clinic.colors.primary)
     const pills = pillRects(container)
     expect(pills).toHaveLength(4)
     pills.forEach((p) => {
-      expect(p.getAttribute("fill")).toBe(pulse.colors.surface)
-      expect(Number(p.getAttribute("rx"))).toBe(pulse.shape?.radius ?? 8)
+      expect(p.getAttribute("fill")).toBe(clinic.colors.surface)
+      expect(Number(p.getAttribute("rx"))).toBe(clinic.shape?.radius ?? 8)
     })
     const xs = pills.map((p) => Number(p.getAttribute("x")))
     expect(new Set(xs).size).toBe(1)
@@ -289,16 +289,16 @@ describe("numbered_pills", () => {
     expect(pillLeft - (discCx + discR)).toBeGreaterThanOrEqual(16)
     const markup = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg">
-        {numberedCards.render(four, { x: 0, y: 0, w: 1088 }, pulse)}
+        {numberedCards.render(four, { x: 0, y: 0, w: 1088 }, clinic)}
       </svg>,
     )
     expect(() => assertSubset(parseSvgRoot(markup))).not.toThrow()
   })
 
-  it("pulse left count disc fits a 640-wide slot, stays vertically centered, and leaves air to the pills", () => {
-    const pulse = themeCtx("pulse")
+  it("clinic left count disc fits a 640-wide slot, stays vertically centered, and leaves air to the pills", () => {
+    const clinic = themeCtx("clinic")
     const box = { x: 0, y: 0, w: 640, h: 392 }
-    const { container } = svg(numberedCards.render(four, box, pulse))
+    const { container } = svg(numberedCards.render(four, box, clinic))
     const large = Array.from(container.querySelectorAll("circle")).reduce((a, b) =>
       Number(a.getAttribute("r")) > Number(b.getAttribute("r")) ? a : b,
     )
@@ -337,12 +337,12 @@ describe("numbered_pills", () => {
 
 
   it.each([
-    ["pulse", { x: 96, y: 186, w: 640, h: 280 }],
-    ["pulse", { x: 8, y: 80, w: 400, h: 320 }],
-    ["enterprise", { x: 96, y: 186, w: 640, h: 280 }],
-    ["enterprise", { x: 8, y: 80, w: 400, h: 320 }],
-    ["classroom", { x: 96, y: 186, w: 640, h: 280 }],
-    ["classroom", { x: 8, y: 80, w: 400, h: 320 }],
+    ["clinic", { x: 96, y: 186, w: 640, h: 280 }],
+    ["clinic", { x: 8, y: 80, w: 400, h: 320 }],
+    ["bulletin", { x: 96, y: 186, w: 640, h: 280 }],
+    ["bulletin", { x: 8, y: 80, w: 400, h: 320 }],
+    ["homeroom", { x: 96, y: 186, w: 640, h: 280 }],
+    ["homeroom", { x: 8, y: 80, w: 400, h: 320 }],
   ] as const)("%s left disc fits remaining column in %j", (themeId, box) => {
     const theme = themeCtx(themeId)
     const { container } = svg(numberedCards.render(four, box, theme))
@@ -416,7 +416,7 @@ describe("numbered_pills", () => {
   })
 
   it("pathological overflow uses data-truncated, not an ellipsis", () => {
-    const theme = themeCtx("pulse")
+    const theme = themeCtx("clinic")
     const component = {
       type: "numbered_cards" as const,
       items: [{ title: "字".repeat(80), text: "短句" }],
@@ -433,7 +433,7 @@ describe("numbered_pills", () => {
   })
 
   it("paints an author ellipsis that sits inside the title", () => {
-    const theme = themeCtx("pulse")
+    const theme = themeCtx("clinic")
     const component = {
       type: "numbered_cards" as const,
       items: [{ title: "区间 A…B", text: "短句" }],
@@ -471,10 +471,10 @@ describe("numbered_pills", () => {
 
 describe("numbered_cards n=3 and n=8 stay in box", () => {
   it.each([
-    ["pulse", 3],
-    ["pulse", 8],
-    ["tech", 3],
-    ["tech", 8],
+    ["clinic", 3],
+    ["clinic", 8],
+    ["terminal", 3],
+    ["terminal", 8],
   ] as const)("%s n=%s stays inside the box", (themeId, n) => {
     const theme = themeCtx(themeId)
     const component = cards(n)

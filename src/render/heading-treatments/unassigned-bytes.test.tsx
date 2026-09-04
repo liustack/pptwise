@@ -18,7 +18,7 @@ installNodePlatform()
 // the marked layer groups are now part of the serialized SVG contract. The
 // same matrix remains a byte nail for every later change.
 //
-// Recaptured (wave8 batch 2, 2026-08-23). classroom and crayon content
+// Recaptured (wave8 batch 2, 2026-08-23). homeroom and crayon content
 // motifs change on every heading matrix key. Other unassigned themes stay
 // byte-identical.
 //
@@ -30,13 +30,13 @@ installNodePlatform()
 // from LAYOUTS (6 -> 5). 63 banner-heading keys removed. Remaining 315
 // hashes stay byte-identical.
 //
-// Recaptured (audit round-2 C/D, 2026-08-24). tech KEEP_NATIVE pages pick
+// Recaptured (audit round-2 C/D, 2026-08-24). terminal KEEP_NATIVE pages pick
 // up the centered constellation piece and bento card inset. Other keys
 // stay byte-identical.
 //
 // Recaptured (ink duty sweep, 2026-08-25). The no-treatment narrow-column
 // kicker now resolves its 16px ink against the page background. Only the
-// nine chapter-context keys for classroom, crayon, and pulse move.
+// nine chapter-context keys for homeroom, crayon, and clinic move.
 const fixture = JSON.parse(
   readFileSync(HEADING_UNASSIGNED_BYTES_URL, "utf-8"),
 ) as { pages: Record<string, string> }

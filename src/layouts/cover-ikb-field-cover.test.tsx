@@ -48,7 +48,7 @@ function renderCover(themeId: string, s: Slide = slide(), meta: PptxIR["meta"] =
 
 describe("cover-ikb-field-cover — board geometry", () => {
   it("paints a full-bleed primary field and left-aligned inverted title at the board coordinates", () => {
-    const { root, tokens } = renderCover("enterprise")
+    const { root, tokens } = renderCover("bulletin")
     const field = root.querySelector("rect[width='1280']")
     expect(field?.getAttribute("fill")).toBe(tokens.colors.primary)
     expect(field?.getAttribute("height")).toBe("720")
@@ -63,7 +63,7 @@ describe("cover-ikb-field-cover — board geometry", () => {
   })
 
   it("draws the title-closing bar under the last heading line in inverted ink", () => {
-    const { root, tokens } = renderCover("enterprise")
+    const { root, tokens } = renderCover("bulletin")
     const headings = Array.from(root.querySelectorAll("text")).filter(
       (t) => t.getAttribute("font-weight") === "700" && t.getAttribute("x") === "96",
     )
@@ -78,7 +78,7 @@ describe("cover-ikb-field-cover — board geometry", () => {
   })
 
   it("places the organization kicker at the board coordinate without CJK tracking", () => {
-    const { root } = renderCover("enterprise")
+    const { root } = renderCover("bulletin")
     const kicker = Array.from(root.querySelectorAll("text")).find((t) =>
       (t.textContent ?? "").includes("星桥零售集团"),
     )
@@ -89,7 +89,7 @@ describe("cover-ikb-field-cover — board geometry", () => {
   })
 
   it("does not invent cover copy when heading is empty, and skips the rule", () => {
-    const { root, markup } = renderCover("enterprise", slide("", { heading: "", subheading: "" }))
+    const { root, markup } = renderCover("bulletin", slide("", { heading: "", subheading: "" }))
     expect(markup).not.toContain("Thank you")
     expect(markup).not.toContain("谢谢")
     const bars = Array.from(root.querySelectorAll("rect")).filter(
@@ -120,8 +120,8 @@ describe("cover-ikb-field-cover — shared pool", () => {
     }
   })
 
-  it("uses tokens, not a baked enterprise hex, when another theme borrows it", () => {
-    const { markup, tokens } = renderCover("tech")
+  it("uses tokens, not a baked bulletin hex, when another theme borrows it", () => {
+    const { markup, tokens } = renderCover("terminal")
     expect(markup).toContain(tokens.colors.primary)
     expect(markup).not.toContain("#0032A0")
     expect(markup).not.toContain("#2F6FBF")
@@ -135,11 +135,11 @@ describe("cover-ikb-field-cover — shared pool", () => {
   })
 
   it("renders byte-identically on repeat", () => {
-    expect(renderCover("enterprise").markup).toBe(renderCover("enterprise").markup)
+    expect(renderCover("bulletin").markup).toBe(renderCover("bulletin").markup)
   })
 
   it("CJK title has no letter-spacing", () => {
-    const { root } = renderCover("enterprise")
+    const { root } = renderCover("bulletin")
     for (const t of Array.from(root.querySelectorAll("text")).filter(
       (el) => el.getAttribute("font-weight") === "700",
     )) {
@@ -148,7 +148,7 @@ describe("cover-ikb-field-cover — shared pool", () => {
   })
 
   it("kicker meta ink follows metaInk against the field", () => {
-    const { root, tokens } = renderCover("enterprise")
+    const { root, tokens } = renderCover("bulletin")
     const kicker = Array.from(root.querySelectorAll("text")).find((t) =>
       (t.textContent ?? "").includes("星桥"),
     )!

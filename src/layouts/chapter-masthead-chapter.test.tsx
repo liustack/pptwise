@@ -9,7 +9,7 @@ import type { PptxIR, Slide } from "@/ir"
 
 // W4 fix round: MastheadChapter's heading/subheading now adapt to
 // `ctx.defaultBg` (accessibleInk) — a ctx built without the theme's *true*
-// chapter default background (consulting's is a distinct dark navy, not its
+// chapter default background (brief's is a distinct dark navy, not its
 // light colors.bg) can't exercise that path. See chapter-rail-chapter.test.tsx's
 // own `chapterCtx` helper for the same pattern.
 function chapterCtx(themeId: string) {
@@ -64,24 +64,24 @@ describe("MastheadChapter", () => {
     expect(next2).toContain(">02<")
   })
 
-  it("consulting tokens 下用 consulting 的色（证明 token 化成立，无 baked hex）", () => {
-    const ctx = buildCtx(resolveStyle("consulting"), {})
-    const deck = ir("consulting")
+  it("brief tokens 下用 brief 的色（证明 token 化成立，无 baked hex）", () => {
+    const ctx = buildCtx(resolveStyle("brief"), {})
+    const deck = ir("brief")
     const out = renderSvgMarkup(<MastheadChapter ir={deck} slide={chapter1} index={0} ctx={ctx} />)
-    expect(out).toContain("#F5C518") // consulting accent
+    expect(out).toContain("#F5C518") // brief accent
     expect(out).not.toContain("#8C4A3C") // journal accent 不得残留
   })
 
-  it("W4 fix round：consulting 的 colors.text/muted 压自己的 chapter 默认底都读不出来（1.18:1 / 2.24:1），标题与副标题双双退回反白（design decision 8 台账 #1）", () => {
-    const ctx = chapterCtx("consulting")
+  it("W4 fix round：brief 的 colors.text/muted 压自己的 chapter 默认底都读不出来（1.18:1 / 2.24:1），标题与副标题双双退回反白（design decision 8 台账 #1）", () => {
+    const ctx = chapterCtx("brief")
     // 编辑组换血（2026-08-20）之前这里是「同色压同色」：text 与 chapter 底
     // 都是 #051C2C。换血把 text（#1C1E23）与 primary/chapter 底（#1E2A4A）
     // 拆成两个值，所以「撞色」这个说法不再字面成立——但两个都还是近黑压近
     // 藏青，实测 1.18:1，`accessibleInk` 照样退回反白，本条断言的结论不变。
     expect(ctx.defaultBg).toBe("#1E2A4A")
-    expect(resolveStyle("consulting").colors.text).toBe("#1C1E23")
+    expect(resolveStyle("brief").colors.text).toBe("#1C1E23")
 
-    const deck = ir("consulting")
+    const deck = ir("brief")
     const root = parseSvgRoot(
       `<svg xmlns="http://www.w3.org/2000/svg">${renderSvgMarkup(<MastheadChapter ir={deck} slide={chapter2} index={2} ctx={ctx} />)}</svg>`,
     )
@@ -95,7 +95,7 @@ describe("MastheadChapter", () => {
     // 起也退回反白：编辑组把纸面脚注灰压深（#6B6B6B → #5B6069）、chapter
     // 底提亮偏蓝（#051C2C → #1E2A4A），muted 压这块底从 3.26:1 掉到
     // 2.24:1，24px 副题的 3:1 大字门槛因此失守，`accessibleInk` 接手。
-    // 这是本轮 consulting 在 chapter 上唯一一处观感变化，且是往可读的方向
+    // 这是本轮 brief 在 chapter 上唯一一处观感变化，且是往可读的方向
     // 变——两个 token 各自为纸面而调，压满版藏青时由 accessibleInk 兜底，
     // 正是这个 helper 存在的理由。
     expect(heading.getAttribute("fill")).toBe("#FFFFFF")

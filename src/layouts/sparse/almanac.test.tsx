@@ -17,7 +17,7 @@ function ir(slides: Slide[]): PptxIR {
   return {
     version: "5",
     filename: "x.pptx",
-    theme: { id: "terra" },
+    theme: { id: "almanac" },
     meta: {},
     assets: { images: {} },
     slides,
@@ -33,8 +33,8 @@ function render(body: React.ReactElement): { markup: string; root: Element } {
   return { markup, root: parseSvgRoot(markup) }
 }
 
-describe("terra sparse faces", () => {
-  const ctx = buildCtx(resolveStyle("terra"), {})
+describe("almanac sparse faces", () => {
+  const ctx = buildCtx(resolveStyle("almanac"), {})
 
   it("statement is left olive type over two layout q-curves", () => {
     const slide: Slide = { type: "content", kind: "points", layout: "statement", heading: VERSE, components: [] } as Slide

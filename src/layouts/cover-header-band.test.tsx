@@ -88,9 +88,9 @@ describe("cover-header-band — board geometry", () => {
     expect(plain.root.querySelector("path")).toBeNull()
   })
 
-  it("consulting replaces the wave treatment with one readable pad", () => {
+  it("brief replaces the wave treatment with one readable pad", () => {
     const marked = slide("每个孩子都能画出**自己的星球**")
-    const { root, tokens } = renderCover("consulting", marked)
+    const { root, tokens } = renderCover("brief", marked)
     const pad = root.querySelector("[data-emphasis-pad]")
     const emphasized = Array.from(root.querySelectorAll("tspan")).find(
       (span) => span.textContent === "自己的星球",

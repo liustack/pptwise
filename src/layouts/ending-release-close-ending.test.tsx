@@ -122,7 +122,7 @@ describe("ending-release-close-ending — board geometry", () => {
 
   it("keeps a Latin year as digits", () => {
     const s = slide("Now shipping")
-    const { root } = renderEnding("consulting", s, { organization: "White Sail", date: "2026" })
+    const { root } = renderEnding("brief", s, { organization: "White Sail", date: "2026" })
     const foot = Array.from(root.querySelectorAll("text")).find((t) => (t.textContent ?? "").includes("White Sail"))
     expect(foot?.textContent).toBe("White Sail · 2026")
     expect(foot?.textContent).not.toContain("二〇二六")
@@ -152,7 +152,7 @@ describe("ending-release-close-ending — shared pool", () => {
   })
 
   it("uses tokens, not baked stage hex, when another theme draws it", () => {
-    const { markup, tokens } = renderEnding("tech")
+    const { markup, tokens } = renderEnding("terminal")
     expect(markup).toContain(tokens.colors.text)
     for (const hex of STAGE_HEX) {
       expect(markup, `stage token ${hex} leaked`).not.toContain(hex)

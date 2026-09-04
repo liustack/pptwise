@@ -371,7 +371,7 @@ export interface LayoutDefinition {
    * A face that only *occupies a corner* needs the narrower statement: the
    * motif is still welcome, just not there. `rail-numbered` is the first
    * case (gallery visual review fix/gallery-verdict-round, item 5): its left
-   * progress rail runs 4px from consulting's locator corner, and two
+   * progress rail runs 4px from brief's locator corner, and two
    * structural marks that close together read as one botched line.
    *
    * A face states where it paints. How much clearance a mark needs is the
@@ -482,7 +482,7 @@ const COVER_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [coverIssueHeadCover.id]: coverIssueHeadCover,
   [coverDoubleFrameCover.id]: coverDoubleFrameCover,
   [coverVerticalTitleCover.id]: coverVerticalTitleCover,
-  // Wave 8 batch 3 (2026-08-23): luxe / runway / vermilion / terra / pulse / arena board locks.
+  // Wave 8 batch 3 (2026-08-23): luxe / runway / vermilion / almanac / clinic / arena board locks.
   [coverInvitationPlateCover.id]: coverInvitationPlateCover,
   [coverLookbookOpenCover.id]: coverLookbookOpenCover,
   [coverRedHeadCover.id]: coverRedHeadCover,
@@ -625,7 +625,7 @@ const ENDING_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
 //   - bento-panel: 6, matching this same layout's own `grid` slot
 //     capacity below — not the flat default. `layoutBento`'s hard 6-cell
 //     ceiling (bento-layout.ts: "the bento grid only ever has 6 cells") and
-//     the former theme-keyed `CAPACITY.maxBlocksPerSlideOverrides.tech = 6`
+//     the former theme-keyed `CAPACITY.maxBlocksPerSlideOverrides.terminal = 6`
 //     (deleted in W3 — this layout-keyed entry is its home now) both land on the
 //     same number for the same non-linear grid geometry independently.
 //     `body` is bento-panel's *degraded* single-stack rendering of the exact
@@ -633,7 +633,7 @@ const ENDING_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
 //     entry's own comment), so it shares the grid's number rather than a
 //     lesser invented one.
 //     Final semantics (W4, recorded once the full-set rollout made
-//     bento-panel reachable from every theme, not just tech): this capacity-6
+//     bento-panel reachable from every theme, not just terminal): this capacity-6
 //     ceiling never actually binds the `min(pacing editorial budget, layout
 //     capacity)` density gate. `PACING_BUDGETS`'s loosest pacing
 //     (`dense`) tops out at 5 components/slide — still under 6 — so every

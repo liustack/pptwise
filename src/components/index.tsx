@@ -148,11 +148,11 @@ function renderComponentContent(component: Component, box: ComponentBox, ctx: Co
  * `svg2pptx/dispatch.ts` can tag every shape underneath with its source
  * component. This is the single chokepoint every template/arrangement renders a
  * component through (`SvgContent`, `BigNumber`, `AssertionEvidence`,
- * tech's own non-exploded-component cell, creative's poster slot),
+ * terminal's own non-exploded-component cell, creative's poster slot),
  * so tagging happens here once rather than at each call site — the one
- * exception is tech's exploded `kpi-item`/`icon-card-item` cells,
+ * exception is terminal's exploded `kpi-item`/`icon-card-item` cells,
  * which bypass this function entirely and tag themselves directly (see
- * `templates/tech.tsx`'s `renderCell`).
+ * `templates/terminal.tsx`'s `renderCell`).
  */
 export function renderComponent(component: Component, box: ComponentBox, ctx: ComponentCtx): React.ReactElement {
   const content = renderComponentContent(component, box, ctx)

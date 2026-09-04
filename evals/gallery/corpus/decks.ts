@@ -35,11 +35,11 @@ interface EmphasisPhrases {
  * Themes whose pages carry a `**run**` so the emphasis forms are visible on
  * the review wall. Emphasis forms draw inside body text, so a theme-table
  * page with a marked run is the only surface that can show them:
- * `consulting` shows `pad`, `lecture` shows `underline`.
+ * `brief` shows `pad`, `lecture` shows `underline`.
  * `evals/gallery/coverage.ts` asserts every form reaches a page this way.
  */
 const THEME_EMPHASIS_PHRASES: Record<string, Record<LanguageId, EmphasisPhrases>> = {
-  consulting: {
+  brief: {
     zh: { cover: "业务评审", heading: "新签", bullet: "九成一" },
     en: { cover: "Business Review", heading: "new business", bullet: "91%" },
     mixed: { cover: "Kubernetes 托管", heading: "90 秒", bullet: "12 分钟" },
@@ -101,7 +101,7 @@ function fixtureJpegDataUri(id: string): string {
 }
 
 /** The theme held fixed while layouts and components are under review. */
-export const BASELINE_THEME = "consulting"
+export const BASELINE_THEME = "brief"
 
 export type CorpusAssets = PptxIR["assets"]
 
@@ -260,7 +260,7 @@ export function themeDeck(themeId: string, lex: Lexicon, assets: CorpusAssets): 
     {
       type: "cover",
       heading:
-        themeId === "insight"
+        themeId === "ledger"
           ? statCoverHeading(lex)
           : themeId === "runway"
             ? showHeadlineCoverHeading(lex)
@@ -269,13 +269,13 @@ export function themeDeck(themeId: string, lex: Lexicon, assets: CorpusAssets): 
               : lex.deckTitle,
       subheading: lex.deckSubtitle,
       components:
-        themeId === "consulting"
+        themeId === "brief"
           ? [{ type: "bullets", items: [lex.bullets[0]!, lex.bullets[1]!, lex.bullets[2]!] }]
           : [],
     },
     { type: "chapter", heading: lex.chapters[0]!, subheading: lex.kickers[0], components: [] },
     ...content,
-    themeId === "academic" || themeId === "consulting" || themeId === "crayon"
+    themeId === "thesis" || themeId === "brief" || themeId === "crayon"
       ? {
           type: "ending" as const,
           heading: lex.chapters[5]!,
@@ -301,14 +301,14 @@ function thickenThemeContent(themeId: string, slotIndex: number, lex: Lexicon): 
   // companion meant to fill the band under the plot was dropped whole.
   if (themeId === "swiss" && slotIndex === 0) return [sliceBullets(COMPONENT_BUILDERS.bullets!(lex), 2)]
   if (themeId === "arena" && slotIndex === 2) return [shortParagraph]
-  if (themeId === "pulse" && slotIndex === 3) return [shortParagraph]
+  if (themeId === "clinic" && slotIndex === 3) return [shortParagraph]
   if (themeId === "runway" && slotIndex === 5) return [shortParagraph]
   if (themeId === "heritage" && slotIndex === 3) return [shortParagraph]
   return []
 }
 
 function fitThemeLead(themeId: string, slotIndex: number, component: Component): Component {
-  if (themeId === "enterprise" && slotIndex === 2 && component.type === "icon_cards") {
+  if (themeId === "bulletin" && slotIndex === 2 && component.type === "icon_cards") {
     return { ...component, items: component.items.slice(0, 3) }
   }
   return component
@@ -463,7 +463,7 @@ function bodyFor(def: LayoutDefinition, lex: Lexicon): Component[] {
     // (`TALL_COMPONENT_TYPES`), so under the callout it overran this face's
     // body rect and the density gate dropped the whole block. A bulleted list
     // is what a points page actually carries. Four rows rather than the
-    // corpus' usual five because memo and pulse spend 100px more on the
+    // corpus' usual five because memo and clinic spend 100px more on the
     // header, leaving a 325px rect where the fifth row does not fit.
     "narrow-column": [b.callout!(lex), sliceBullets(b.bullets!(lex), 4)],
     "rail-numbered": [b.steps!(lex), shortCitation(lex)],
@@ -708,12 +708,12 @@ export function componentPage(
       WIDE_COMPONENT_TYPES.has(component.type) ||
       // The lead-in is itself a paragraph, so a paragraph page paired with
       // one is two paragraphs stacked — nothing about the component is
-      // clearer for the company, and on consulting's short `points` rect the
+      // clearer for the company, and on brief's short `points` rect the
       // English body was dropped and the review saw only the lead-in.
       component.type === "paragraph" ||
       // A flowchart scales to whatever box it is handed (`SCALABLE_TYPES`),
       // so sharing the page turns it into a thumbnail — the same reason a
-      // chart owns its page. Under a lead-in sentence on consulting it drew
+      // chart owns its page. Under a lead-in sentence on brief it drew
       // in a 96px band of a 437px rect and an edge label had nowhere left to
       // park, which the drawing declared as a drop.
       component.type === "flowchart" ||

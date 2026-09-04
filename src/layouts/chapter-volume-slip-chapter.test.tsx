@@ -126,7 +126,7 @@ describe("chapter-volume-slip-chapter — board geometry", () => {
   })
 
   it("uses tokens, not baked ink hex, when another theme draws it", () => {
-    const { root, tokens } = renderChapter("tech")
+    const { root, tokens } = renderChapter("terminal")
     expect(root.querySelector("path")?.getAttribute("stroke")).toBe(tokens.colors.primary)
     for (const hex of INK_HEX) expect(root.innerHTML).not.toMatch(new RegExp(hex, "i"))
   })

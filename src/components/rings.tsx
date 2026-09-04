@@ -68,7 +68,7 @@ export const rings: SvgComponent<RingsComponent> = {
             circle used to fall through to the ambient page background for
             contrast purposes (never the circle it's actually rendered on)
             — full-matrix scanning (post defect-A fix) found
-            campaign/insight/classroom measure ~1.0-1.2:1 there.
+            rally/ledger/homeroom measure ~1.0-1.2:1 there.
             `accessibleInk` keeps `colors.surface` when it already clears
             the ratio against the circle's own `colors.primary` fill
             (every other theme, byte-identical), falls back to

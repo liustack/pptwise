@@ -52,7 +52,7 @@ function ghostEl(root: Element): Element {
 
 describe("chapter-ghost-section-chapter — board geometry", () => {
   it("sinks a ghost index to the bottom right, whole glyph inside the canvas", () => {
-    const { root, tokens } = renderChapter("insight", [chapter(), { type: "content", kind: "points", heading: "x", components: [] } as Slide, chapter()], 2)
+    const { root, tokens } = renderChapter("ledger", [chapter(), { type: "content", kind: "points", heading: "x", components: [] } as Slide, chapter()], 2)
     const ghost = ghostEl(root)
     expect(ghost.textContent).toBe("02")
     expect(ghost.getAttribute("text-anchor")).toBe("end")
@@ -79,7 +79,7 @@ describe("chapter-ghost-section-chapter — board geometry", () => {
   })
 
   it("paints an amber SECTION kicker and a left-aligned heading", () => {
-    const { root, tokens } = renderChapter("insight")
+    const { root, tokens } = renderChapter("ledger")
     const kicker = Array.from(root.querySelectorAll("text")).find((t) => (t.textContent ?? "").includes("SECTION"))!
     expect(kicker.textContent).toBe("SECTION 01")
     expect(kicker.getAttribute("x")).toBe("96")
@@ -97,7 +97,7 @@ describe("chapter-ghost-section-chapter — board geometry", () => {
   })
 
   it("does not invent a quarter watermark or isolated ticks", () => {
-    const { root } = renderChapter("insight")
+    const { root } = renderChapter("ledger")
     const texts = Array.from(root.querySelectorAll("text")).map((t) => t.textContent ?? "")
     expect(texts.some((t) => /^Q[1-4]$/.test(t))).toBe(false)
     expect(root.querySelectorAll("line")).toHaveLength(0)
@@ -113,12 +113,12 @@ describe("chapter-ghost-section-chapter — shared pool", () => {
   })
 
   it("foreground text clears its contrast tier. ghost is skipped (midground, not body ink)", () => {
-    const insight = renderChapter("insight")
+    const ledger = renderChapter("ledger")
     const insightBg = resolveBackgroundHex(
-      insight.tokens.defaultBackgrounds.chapter,
-      insight.tokens.colors.surface,
+      ledger.tokens.defaultBackgrounds.chapter,
+      ledger.tokens.colors.surface,
     )
-    const insightGhost = ghostEl(insight.root)
+    const insightGhost = ghostEl(ledger.root)
     expect(contrastRatio(insightGhost.getAttribute("fill")!, insightBg)).toBeLessThan(3)
 
     for (const themeId of CANONICAL_THEME_IDS) {
@@ -142,13 +142,13 @@ describe("chapter-ghost-section-chapter — shared pool", () => {
   })
 
   it("renders byte-identically on repeat", () => {
-    expect(renderChapter("insight").markup).toBe(renderChapter("insight").markup)
+    expect(renderChapter("ledger").markup).toBe(renderChapter("ledger").markup)
   })
 
-  it("consulting tokens do not leak insight hex", () => {
-    const { markup } = renderChapter("consulting")
+  it("brief tokens do not leak ledger hex", () => {
+    const { markup } = renderChapter("brief")
     for (const hex of ["#0F1216", "#171C22", "#16202B", "#F0A63C", "#F2EFE8", "#9AA7B4", "#2A3440"]) {
-      expect(markup, `insight token ${hex} leaked`).not.toContain(hex)
+      expect(markup, `ledger token ${hex} leaked`).not.toContain(hex)
     }
   })
 })

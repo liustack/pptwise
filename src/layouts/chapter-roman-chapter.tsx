@@ -18,16 +18,16 @@ import { faceParam } from "./face-params"
  *   A 日食弧：大圆细亮边只亮 3/4 弧 + 端点高光
  *   B 同心细环组：4 圈不等距细圆（唱片密纹）+ 单段 accent 短弧
  *   C 页缘切弧：更大的圆右缘出血只露左弧，弦切构图
- * 共享 layout——manifest 决定谁用（先挂 insight）。
+ * 共享 layout——manifest 决定谁用（先挂 ledger）。
  *
  * 对比度自适应修复（W4 fix round，本轮扩大排查——同 chapter-poster-
  * chapter.tsx 一样不在 Important I1 原文窄口径扫描内）：巨幅罗马数字 +
  * 句点、org 标签、标题、副标题四处消费 `colors.primary`/`colors.muted`/
- * `colors.text`，对 academic/classroom/consulting 三个 chapter 页型另开
+ * `colors.text`，对 thesis/homeroom/brief 三个 chapter 页型另开
  * 一档默认背景的主题同 chapter-poster-chapter.tsx 先例失败（罗马数字与
  * `colors.primary` 恰好等于三主题各自的 `defaultBackgrounds.chapter`，精确
  * 1.00:1）。四处统一改用 `accessibleInk(..., ctx.defaultBg, fontSize)`。
- * pre-W4 三主题均未策展 roman-chapter（仅 insight 策展过，其 chapter 默认
+ * pre-W4 三主题均未策展 roman-chapter（仅 ledger 策展过，其 chapter 默认
  * 背景与「均匀」默认背景同色调，不受影响），是全集放开新暴露的组合。圆弧
  * 装饰（`colors.border`/`colors.muted`/`accent` 描边，非文字）不受 WCAG
  * 文字对比度检查约束，原样保留不改。
@@ -35,8 +35,8 @@ import { faceParam } from "./face-params"
  * 句点透明度修正（W4 fix round，全矩阵扫描发现）：罗马数字末尾句点原以
  * `fillOpacity={0.85}` 略微调淡（纯排印修饰，无设计文档记录必须如此）。
  * `accessibleInk` 按满不透明度验证 `romanInk` 达标，但句点渲染在 0.85
- * 透明度下与背景混合后实际对比度会低于验证值——campaign（3.49→2.90）、
- * classroom（3.58→2.98，均计算自渲染态而非估算）两个新可达组合因此跌破
+ * 透明度下与背景混合后实际对比度会低于验证值——rally（3.49→2.90）、
+ * homeroom（3.58→2.98，均计算自渲染态而非估算）两个新可达组合因此跌破
  * 3:1。改为满不透明度：句点观感几乎不变（0.85 本就是极轻微的调淡），且
  * 与已验证的 `romanInk` 对比度保持一致，不再需要为透明度混合单独验证。
  *

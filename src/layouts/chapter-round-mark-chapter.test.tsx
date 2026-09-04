@@ -106,7 +106,7 @@ describe("chapter-round-mark-chapter — board geometry", () => {
   })
 
   it("uses tokens, not baked arena hex, when another theme draws it", () => {
-    const { root, tokens } = renderChapter("enterprise")
+    const { root, tokens } = renderChapter("bulletin")
     expect(root.querySelector("rect")?.getAttribute("fill")).toBe(tokens.colors.accent)
     for (const hex of ARENA_HEX) expect(root.innerHTML, hex).not.toMatch(new RegExp(hex, "i"))
   })

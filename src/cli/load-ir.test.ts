@@ -47,7 +47,7 @@ describe("resolveLocalAssets", () => {
     const ir = PptxIRSchema.parse({
       version: "5",
       filename: "t",
-      theme: { id: "consulting" },
+      theme: { id: "brief" },
       assets: { images: { logo: { src: "logo.png" } } },
       slides: [{ type: "cover", heading: "x" }],
     })
@@ -59,7 +59,7 @@ describe("resolveLocalAssets", () => {
     const ir = PptxIRSchema.parse({
       version: "5",
       filename: "t",
-      theme: { id: "consulting" },
+      theme: { id: "brief" },
       assets: { images: { a: { src: "data:image/png;base64,AAAA" }, b: { src: "https://x.test/i.png" } } },
       slides: [{ type: "cover", heading: "x" }],
     })
@@ -78,7 +78,7 @@ describe("resolveLocalAssets", () => {
     const ir = PptxIRSchema.parse({
       version: "5",
       filename: "t",
-      theme: { id: "consulting" },
+      theme: { id: "brief" },
       assets: { images: { photo: { src } } },
       slides: [{ type: "cover", heading: "x" }],
     })
@@ -94,7 +94,7 @@ describe("resolveLocalAssets", () => {
     const ir = PptxIRSchema.parse({
       version: "5",
       filename: "t",
-      theme: { id: "consulting" },
+      theme: { id: "brief" },
       assets: { images: { gone: { src: "missing.png" } } },
       slides: [{ type: "cover", heading: "x" }],
     })
@@ -111,7 +111,7 @@ describe("resolveLocalAssets", () => {
     const ir = PptxIRSchema.parse({
       version: "5",
       filename: "t",
-      theme: { id: "consulting" },
+      theme: { id: "brief" },
       assets: { images: { hero: { src: "hero.png" } } },
       slides: [{ type: "cover", heading: "x" }],
     })
@@ -131,7 +131,7 @@ describe("resolveLocalAssets", () => {
       const ir = PptxIRSchema.parse({
         version: "5",
         filename: "t",
-        theme: { id: "consulting" },
+        theme: { id: "brief" },
         assets: { images: { photo: { src: "empty.png" } } },
         slides: [{ type: "cover", heading: "x" }],
       })
@@ -144,7 +144,7 @@ describe("resolveLocalAssets", () => {
       const ir = PptxIRSchema.parse({
         version: "5",
         filename: "t",
-        theme: { id: "consulting" },
+        theme: { id: "brief" },
         assets: { images: { photo: { src: "garbage.png" } } },
         slides: [{ type: "cover", heading: "x" }],
       })
@@ -157,7 +157,7 @@ describe("resolveLocalAssets", () => {
       const ir = PptxIRSchema.parse({
         version: "5",
         filename: "t",
-        theme: { id: "consulting" },
+        theme: { id: "brief" },
         assets: { images: { photo: { src: "photo.jpg" } } },
         slides: [{ type: "cover", heading: "x" }],
       })
@@ -172,7 +172,7 @@ describe("resolveLocalAssets", () => {
       const ir = PptxIRSchema.parse({
         version: "5",
         filename: "t",
-        theme: { id: "consulting" },
+        theme: { id: "brief" },
         assets: { images: { logo: { src: "logo.png" } } },
         slides: [{ type: "cover", heading: "x" }],
       })

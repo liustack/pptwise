@@ -49,10 +49,10 @@ await installNodePlatform()
 const EXPECTED_DEVICE_PAGES = 56
 const EXPECTED_BY_DEVICE = { browser: 30, phone: 26 }
 const EXPECTED_DECK_PAGES = [
-  "classroom--deck--p07",
-  "enterprise--deck--p09",
+  "bulletin--deck--p09",
+  "homeroom--deck--p07",
   "luxe--deck--p07",
-  "tech--deck--p07",
+  "terminal--deck--p07",
 ]
 
 /** The browser frame's declared proportion, window bar included. */

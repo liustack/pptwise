@@ -99,7 +99,7 @@ describe("chapter-seal-numeral-chapter — board geometry", () => {
     expect(numeral(renderChapter("vermilion", FOUR, 0).root)).toBe("一")
     expect(numeral(renderChapter("vermilion", FOUR, 1).root)).toBe("二")
     const latin = [chapter("Opening"), chapter("Burden reduction")]
-    const { markup, root } = renderChapter("consulting", latin, 1)
+    const { markup, root } = renderChapter("brief", latin, 1)
     expect(numeral(root)).toBe("2")
     expect(markup).not.toContain("二")
   })
@@ -153,7 +153,7 @@ describe("chapter-seal-numeral-chapter — shared pool", () => {
   })
 
   it("uses tokens, not a baked vermilion hex, when another theme borrows it", () => {
-    const { markup, tokens } = renderChapter("tech", FOUR, 1)
+    const { markup, tokens } = renderChapter("terminal", FOUR, 1)
     expect(markup).toContain(tokens.colors.primary)
     expect(markup).not.toContain("#B02318")
     expect(markup).not.toContain("#C79A3B")

@@ -38,7 +38,7 @@ function renderSide({
   const alt = ctx.images?.[asset_id]?.alt
   // bold-metrics fix (round 2, 2026-07-24): this label renders
   // `fontWeight={600}` in `ctx.fonts.body` below -- bold by this codebase's
-  // own threshold, and `fonts.body` resolves to Georgia for the consulting
+  // own threshold, and `fonts.body` resolves to Georgia for the brief
   // theme (the same face the reported defect traced to), not just YaHei.
   // `letterSpacing` is budgeted here because the label below is *painted*
   // with it. It is an absolute px advance between glyphs, so it appears in
@@ -138,7 +138,7 @@ export const imageCompare: SvgComponent<ImageCompareComponent> = {
           // handoff): identical colors.surface-on-colors.primary pairing as
           // rings.tsx's core label (this component paints its own circle,
           // so contrast must be checked against that circle's own fill, not
-          // the ambient page background) — same campaign/insight/classroom
+          // the ambient page background) — same rally/ledger/homeroom
           // failure, same accessibleInk fix.
           <g>
             <circle
@@ -168,7 +168,7 @@ export const imageCompare: SvgComponent<ImageCompareComponent> = {
           // handoff): a small rect (52x24=1,248px^2, well below the area
           // floor `deck-audit.ts` used to gate text-background attribution
           // by) — the AFTER chip (i===1, colors.accent fill) measures
-          // ~1:1 on consulting/academic/classroom/luxe/heritage once
+          // ~1:1 on brief/thesis/homeroom/luxe/heritage once
           // correctly attributed to its own chip instead of falling through
           // to a background that always happened to pass. The BEFORE chip
           // (i===0, colors.muted fill) already clears the ratio on every

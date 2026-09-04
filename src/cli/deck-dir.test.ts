@@ -24,7 +24,7 @@ function makePlan(extra: Record<string, unknown> = {}): Record<string, unknown> 
   return {
     version: "1",
     narrative: { pacing: "spacious" },
-    theme: "consulting",
+    theme: "brief",
     filename: "q3-review",
     pages: [
       { id: "p-cover", type: "cover", heading: "Q3 Review" },
@@ -366,7 +366,7 @@ describe("readDeckDir", () => {
   describe("invalid spec", () => {
     it("surfaces validateSpec's own formatted error", async () => {
       const dir = await tmp()
-      await writeDeckSpec(dir, { theme: "consulting", pages: [] })
+      await writeDeckSpec(dir, { theme: "brief", pages: [] })
       await expect(readDeckDir(dir)).rejects.toThrow(/invalid spec.*no pages/s)
     })
   })

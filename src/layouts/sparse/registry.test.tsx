@@ -34,7 +34,7 @@ describe("sparseFace dispatch", () => {
   it("looks up by (themeId, layoutId) and misses fall through to undefined", () => {
     expect(sparseFace("statement", "stage")).toBeTypeOf("function")
     expect(sparseFace("statement", "lecture")).toBeTypeOf("function")
-    expect(sparseFace("statement", "consulting")).toBeTypeOf("function")
+    expect(sparseFace("statement", "brief")).toBeTypeOf("function")
     expect(sparseFace("one-evidence", "stage")).toBeUndefined()
     expect(sparseFace("mono-bleed", "luxe")).toBeUndefined()
     expect(sparseFace("statement", undefined)).toBeUndefined()
@@ -74,9 +74,9 @@ describe("sparseFace dispatch", () => {
     expect(crayonHeading.getAttribute("font-style")).toBe("italic")
     expect(crayonHeading.getAttribute("font-weight")).toBe("500")
 
-    const consultingCtx = buildCtx(resolveStyle("consulting"), {})
+    const consultingCtx = buildCtx(resolveStyle("brief"), {})
     const consultingRoot = render(
-      <StatementContent ir={ir("consulting", [slide])} slide={slide} index={0} ctx={consultingCtx} />,
+      <StatementContent ir={ir("brief", [slide])} slide={slide} index={0} ctx={consultingCtx} />,
     )
     const consultingHeading = Array.from(consultingRoot.querySelectorAll("text")).find((t) =>
       (t.textContent ?? "").includes("设备不会"),

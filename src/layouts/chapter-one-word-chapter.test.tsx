@@ -97,7 +97,7 @@ describe("chapter-one-word-chapter — board geometry", () => {
 
   it("Latin heading uses ACT n, not 幕", () => {
     const slide = chapterSlide("Speed", { subheading: "Honesty, at the speed of light" })
-    const { markup, root } = renderChapter("consulting", [slide], 0)
+    const { markup, root } = renderChapter("brief", [slide], 0)
     expect(markup).toContain("ACT 1")
     expect(markup).not.toContain("幕")
     const foot = Array.from(root.querySelectorAll("text")).find((t) => (t.textContent ?? "").includes("ACT 1"))
@@ -142,7 +142,7 @@ describe("chapter-one-word-chapter — shared pool", () => {
   })
 
   it("uses tokens, not baked stage hex, when another theme draws it", () => {
-    const { markup, tokens } = renderChapter("tech")
+    const { markup, tokens } = renderChapter("terminal")
     expect(markup).toContain(tokens.colors.text)
     for (const hex of STAGE_HEX) {
       expect(markup, `stage token ${hex} leaked`).not.toContain(hex)

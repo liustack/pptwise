@@ -1,11 +1,11 @@
 import { describe, it, expect } from "vitest"
 import { resolveFontFace } from "../../render/fonts"
 import { contrastRatio } from "../../render/ink"
-import { TECH_TOKENS } from "./tech"
+import { TECH_TOKENS } from "./terminal"
 import { JOURNAL_TOKENS } from "./journal"
 import { LUXE_TOKENS } from "./luxe"
-import { PULSE_TOKENS } from "./pulse"
-import { TERRA_TOKENS } from "./terra"
+import { PULSE_TOKENS } from "./clinic"
+import { TERRA_TOKENS } from "./almanac"
 import { EMBER_TOKENS } from "./ember"
 import { VERMILION_TOKENS } from "./vermilion"
 import { CRAYON_TOKENS } from "./crayon"
@@ -27,10 +27,10 @@ import type { StyleTokens } from "../tokens"
 // they're asserting the raw token shape, not the registry wiring — that's
 // covered separately by themes/index.test.ts and
 // svg/legacy-theme-mapping.test.tsx.
-describe("tech tokens", () => {
+describe("terminal tokens", () => {
   it("satisfies the StyleTokens shape", () => {
     const t: StyleTokens = TECH_TOKENS
-    expect(t.id).toBe("tech")
+    expect(t.id).toBe("terminal")
   })
 
   it("heading font resolves to Microsoft YaHei (no CJK tofu on export)", () => {
@@ -61,14 +61,14 @@ describe("journal (ex-magazine) tokens", () => {
   })
 })
 
-// themes-16 wave, task T1 (2026-07-28): pulse is the 14th built-in theme
+// themes-16 wave, task T1 (2026-07-28): clinic is the 14th built-in theme
 // (healthcare/life-science). Same shape-only assertions as the two blocks
 // above — registry wiring (CANONICAL_THEME_IDS/THEME_STYLES/BUILTIN_THEME_IDS)
 // is covered separately by themes/index.test.ts and svg/legacy-theme-mapping.test.tsx.
-describe("pulse tokens", () => {
+describe("clinic tokens", () => {
   it("satisfies the StyleTokens shape", () => {
     const t: StyleTokens = PULSE_TOKENS
-    expect(t.id).toBe("pulse")
+    expect(t.id).toBe("clinic")
   })
 
   it("heading font resolves to Microsoft YaHei (exact width table, clean sans stack)", () => {
@@ -97,18 +97,18 @@ describe("pulse tokens", () => {
   })
 })
 
-// themes-16 wave, task T2 (2026-07-28): terra is the 15th built-in theme
+// themes-16 wave, task T2 (2026-07-28): almanac is the 15th built-in theme
 // (sustainability/ESG). Same shape-only assertions as the blocks above —
 // registry wiring (CANONICAL_THEME_IDS/THEME_STYLES/BUILTIN_THEME_IDS) is
 // covered separately by themes/index.test.ts and svg/legacy-theme-mapping.test.tsx.
-describe("terra tokens", () => {
+describe("almanac tokens", () => {
   it("satisfies the StyleTokens shape", () => {
     const t: StyleTokens = TERRA_TOKENS
-    expect(t.id).toBe("terra")
+    expect(t.id).toBe("almanac")
   })
 
   // Warm-group reskin (2026-08-19): the board's own cross-check line reads
-  // "heritage 衬线、其余 sans" — terra moved off Georgia's serif register onto
+  // "heritage 衬线、其余 sans" — almanac moved off Georgia's serif register onto
   // the sans stack. Microsoft YaHei is the other of the only two faces with an
   // exact width table, so the metric guarantee Georgia was picked for is kept.
   it("heading font resolves to Microsoft YaHei (exact width table, sans stack per the warm-group board)", () => {
@@ -212,13 +212,13 @@ describe("crayon tokens", () => {
     expect(t.id).toBe("crayon")
   })
 
-  it("heading font resolves to Microsoft YaHei (exact width table, same CJK-safe stack as classroom)", () => {
+  it("heading font resolves to Microsoft YaHei (exact width table, same CJK-safe stack as homeroom)", () => {
     expect(resolveFontFace(CRAYON_TOKENS.fonts.heading, "heading")).toBe(
       "Microsoft YaHei",
     )
   })
 
-  it("body font resolves to Microsoft YaHei (exact width table, same CJK-safe stack as classroom)", () => {
+  it("body font resolves to Microsoft YaHei (exact width table, same CJK-safe stack as homeroom)", () => {
     expect(resolveFontFace(CRAYON_TOKENS.fonts.body, "body")).toBe(
       "Microsoft YaHei",
     )
@@ -228,7 +228,7 @@ describe("crayon tokens", () => {
     expect(CRAYON_TOKENS.colors.accentPool).toBeUndefined()
   })
 
-  it("shape.radius is 12 (roundest built-in — same classroom-affinity register)", () => {
+  it("shape.radius is 12 (roundest built-in — same homeroom-affinity register)", () => {
     expect(CRAYON_TOKENS.shape?.radius).toBe(12)
   })
 
@@ -511,7 +511,7 @@ describe("swiss tokens", () => {
     expect(SWISS_TOKENS.colors.accentPool).toBeUndefined()
   })
 
-  it("shape.radius is 0 (institutional square) and gapScale is 1 (tight, same as tech)", () => {
+  it("shape.radius is 0 (institutional square) and gapScale is 1 (tight, same as terminal)", () => {
     expect(SWISS_TOKENS.shape?.radius).toBe(0)
     expect(SWISS_TOKENS.shape?.gapScale).toBe(1)
   })
@@ -564,7 +564,7 @@ describe("memo tokens", () => {
     expect(MEMO_TOKENS.colors.accentPool).toBeUndefined()
   })
 
-  it("shape.radius is 2 (restrained report) and gapScale is 0.9 (tight, one notch under consulting)", () => {
+  it("shape.radius is 2 (restrained report) and gapScale is 0.9 (tight, one notch under brief)", () => {
     expect(MEMO_TOKENS.shape?.radius).toBe(2)
     expect(MEMO_TOKENS.shape?.gapScale).toBe(0.9)
   })
@@ -788,9 +788,9 @@ describe("lecture tokens", () => {
     const darkNeighbors = {
       stage: "#141C22",
       museum: "#211A12",
-      insight: "#0F1216",
+      ledger: "#0F1216",
       luxe: "#0B0908",
-      tech: "#0A0F1E",
+      terminal: "#0A0F1E",
       arena: "#120B22",
     } as const
     for (const [id, hex] of Object.entries(darkNeighbors)) {

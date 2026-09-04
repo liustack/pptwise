@@ -44,7 +44,7 @@ function themeForMotif(id: MotifId): string {
   for (const [theme, def] of Object.entries(THEME_DEFINITIONS)) {
     if (def.motif === id) return theme
   }
-  return "consulting"
+  return "brief"
 }
 
 function slideOf(type: Slide["type"]): Slide {
@@ -90,11 +90,11 @@ describe("B1 decoration budget: at most 3 pieces per page", () => {
     expect(over, over.join(" | ")).toEqual([])
   })
 
-  it("tech cover (the named offender) does not paint sparse stars or branch tracks", () => {
+  it("terminal cover (the named offender) does not paint sparse stars or branch tracks", () => {
     const { root } = drawMotif("constellation-motif", "cover")
     expect(countDecorPieces(root)).toBeLessThanOrEqual(MAX_DECOR_PIECES)
     expect(root.querySelectorAll("polyline")).toHaveLength(1)
-    const muted = resolveStyle("tech").colors.muted
+    const muted = resolveStyle("terminal").colors.muted
     const stars = Array.from(root.querySelectorAll("circle")).filter((c) => c.getAttribute("fill") === muted)
     expect(stars).toHaveLength(0)
   })

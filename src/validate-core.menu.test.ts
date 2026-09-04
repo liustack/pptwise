@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest"
-import { CONSULTING_TOKENS } from "./themes/builtin/consulting"
+import { CONSULTING_TOKENS } from "./themes/builtin/brief"
 import { __resetRegisteredThemes, registerTheme } from "./themes/definitions"
 import type { Menu } from "./themes/schema"
 import { validateIr } from "./validate-core"

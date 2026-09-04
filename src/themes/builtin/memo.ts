@@ -21,7 +21,7 @@ import type { BuiltinThemeDeclaration } from "../schema";
  * `#D7282F`。memo 的印章红只出现在 motif 双线与「MEMORANDUM」眉字，
  * `primary` 是墨不是红，所以 banner-title 抽到时横幅是墨底白字，不是红条。
  *
- * 四轴：L / bottom-left / light / tight。最近邻 consulting
+ * 四轴：L / bottom-left / light / tight。最近邻 brief
  * （L / BL / light / medium），岔留白轴。封面倾向 banner-title /
  * editorial-masthead（briefing 已锁 banner-title，editorial-masthead 是
  * 真正的边际权重：报头双线构图吃的是本主题的打字机双线，不是 vermilion
@@ -56,7 +56,7 @@ import type { BuiltinThemeDeclaration } from "../schema";
  * Lucida Console，打字机头行取 Courier New（Consolas 是编程面）。
  * 等宽并未缺席，无需退化成纯双线。
  *
- * 圆角 2 + gapScale 0.9：咨询报告那一档的微圆，留白收到 tight（consulting
+ * 圆角 2 + gapScale 0.9：咨询报告那一档的微圆，留白收到 tight（brief
  * 是 1.0 的 medium，本主题在最近邻上只岔这一轴）。
  *
  * 装饰见 `../../motifs/motif-memo-motif.tsx`（顶部红双线 + Latin 等宽眉字
@@ -101,7 +101,7 @@ export const MEMO_TOKENS: StyleTokens = {
     // 用 Courier New（Consolas 是编程面，不承担公文眉字）。
     mono: ["Courier New", "Consolas"],
   },
-  shape: { radius: 2, gapScale: 0.9 }, // 微圆克制 + tight 留白（consulting 同圆角，留白再收一档）
+  shape: { radius: 2, gapScale: 0.9 }, // 微圆克制 + tight 留白（brief 同圆角，留白再收一档）
   defaultBackgrounds: {
     cover: { kind: "color", value: "#F6F1E7" },
     chapter: { kind: "color", value: "#F6F1E7" },

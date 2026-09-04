@@ -11,22 +11,22 @@ import { faceParam } from "./face-params"
 /**
  * left-anchor cover layout（spec §3.2）：左侧 40%宽通栏色块 + 右侧留白面板——
  * 色块内嵌对比度自适应主标题，org / 保密标 / 副标题 / meta 全部挪到右侧白
- * 面板。自 templates/academic.tsx 的 BCGEmeraldCover（62-234 行）提炼，无
+ * 面板。自 templates/thesis.tsx 的 BCGEmeraldCover（62-234 行）提炼，无
  * 随迁 helper。
  * 纪律：本文件禁 theme id、禁颜色 hex 字面量——本文件有一处豁免（装饰深色
  * 三角 `TRIANGLE_DEEP`，理由见下方），grep 清零门预期恰好命中这一处（标题
  * 色改为 `readableOn` 调用后不再是字面量）。
  *
- * 替换表（Step B，逐十六进制核实，对照 themes/academic.ts 的 colors。
+ * 替换表（Step B，逐十六进制核实，对照 themes/thesis.ts 的 colors。
  * 十六进制值本身不抄进本注释——避免污染本文件的 grep 清零门，核实过程见
  * w1t1 任务报告）：
  *   - `colors.primary` / `colors.accent`：源函数已直接消费 `ctx.colors`，未
  *     烤死，原样保留。
- *   - 源文件私有常量 `TEXT`  → `ctx.colors.text`  —— 与 academic token 表逐
+ *   - 源文件私有常量 `TEXT`  → `ctx.colors.text`  —— 与 thesis token 表逐
  *     字符精确匹配。
  *   - 源文件私有常量 `MUTED` → `ctx.colors.muted` —— 精确匹配。
  *   - 源文件私有常量 `HAIRLINE` → `ctx.colors.border ?? ctx.colors.muted` ——
- *     精确匹配 academic 的 border 字段，`??` 兜底沿用 cover-banner-title.tsx
+ *     精确匹配 thesis 的 border 字段，`??` 兜底沿用 cover-banner-title.tsx
  *     的既有写法（`border` 在 StyleColors 上是可选字段）。
  *
  * 装饰色豁免（修订，取代最初的"孤儿色并入 primary"方案——见下方修复记录）：
@@ -35,7 +35,7 @@ import { faceParam } from "./face-params"
  * 一号"的纯装饰对比色，不代表 token 表里任何一个语义字段（不是 primary、不是
  * accent，也没有 primaryDark 这类字段）——若强行并入 primary，三角形会与背景
  * 色块同色而彻底隐形，等于删除了一个可见装饰元素，不是"观感等价的降级"而是
- * "观感被破坏"。比照计划 Wave 3 Task 22（tech 主题 Decor 的渐变款私有装饰常量
+ * "观感被破坏"。比照计划 Wave 3 Task 22（terminal 主题 Decor 的渐变款私有装饰常量
  * 先例：装饰性数值留在 layout 文件内、不进 ctx.colors），本文件原样保留
  * `TRIANGLE_DEEP` 的十六进制值作为文件私有装饰常量（不导出、不进 token 替换
  * 表），在测试里用同白字豁免一样的锁法断言其值出现在输出中。
@@ -43,14 +43,14 @@ import { faceParam } from "./face-params"
  * 白字例外（Global Constraints "产品逻辑白字"豁免，同 custom.tsx withBg 分支
  * 先例）——**W4 fix round 前**：主标题固定画在不透明的 40%宽 `colors.primary`
  * 色块内部，标题字色曾写死为纯白，注释断言"任意主题色下都可读"。design
- * decision 8 的实测推翻了这个断言：tech 偏亮的 `primary`（`#2DD4E6`）上白字
+ * decision 8 的实测推翻了这个断言：terminal 偏亮的 `primary`（`#2DD4E6`）上白字
  * 只有 ~1.80:1，一度靠策展排除（`COVER_WITHOUT_LEFT_ANCHOR`）处理。
  *
  * 对比度自适应修复（W4 fix round，根因处置）：标题改用
  * `readableOn(colors.primary)`——色块本身就是标题唯一的背景来源（本文件自
  * 画，不依赖页面级默认背景），`readableOn` 按 `colors.primary` 的相对明度
- * 选中性黑/白。academic（本文件唯一 pre-W4 策展主题，`primary` 深绿）算出的
- * 仍是纯白，逐字节不变。tech（`primary` 亮青）算出深墨黑，对比度 ~10.75:1，
+ * 选中性黑/白。thesis（本文件唯一 pre-W4 策展主题，`primary` 深绿）算出的
+ * 仍是纯白，逐字节不变。terminal（`primary` 亮青）算出深墨黑，对比度 ~10.75:1，
  * 使 `COVER_WITHOUT_LEFT_ANCHOR` 排除失去存在依据（见 definitions.ts 是否
  * 保留该常量的裁定）。
  *
@@ -70,7 +70,7 @@ const META_MIN_FONT_SIZE = 18
 const COVER_RIGHT_EDGE = 1184 // mirrors the 96px page margin used elsewhere (1280 - 96)
 const COVER_RIGHT_MAX_W = COVER_RIGHT_EDGE - COVER_RIGHT_X
 
-// Shared vertical-centering convention (see consulting.tsx's assertion
+// Shared vertical-centering convention (see brief.tsx's assertion
 // banner for the original derivation): for a single line at `fontSize`,
 // `pivotY + round(fontSize * 0.32)` lands the baseline visually centered on
 // `pivotY`; multi-line blocks spread symmetrically around the same pivot.
@@ -81,7 +81,7 @@ const BASELINE_FUDGE_RATIO = 0.32
 // contrast. Deliberately NOT mapped to any `ctx.colors` field — there is no
 // token for "primary but darker", and merging it into `primary` would make
 // the triangle invisible against the block it sits on (see the header's
-// fix-record). Ported verbatim from templates/academic.tsx.
+// fix-record). Ported verbatim from templates/thesis.tsx.
 const TRIANGLE_DEEP = "#004C38"
 
 const IN_BLOCK_KICKER_Y = 250
@@ -249,7 +249,7 @@ export function LeftAnchorCover({ ir, slide, ctx, page, params }: SvgTemplatePro
 
       {/* Confidentiality badge (top right, over the white panel). y=104 keeps
           it clear of Branding's tr logo band (x 1120-1216, y 48-88) —
-          same safety margin as consulting's y=100 equivalent badge. */}
+          same safety margin as brief's y=100 equivalent badge. */}
       {confLabel && (
         <g>
           <rect

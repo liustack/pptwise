@@ -77,7 +77,7 @@ const SKILL_ROOTS = [
 const SELF_TEST_DECK = {
   version: "5",
   filename: "pptwise-doctor-self-test.pptx",
-  theme: { id: "consulting" },
+  theme: { id: "brief" },
   slides: [
     { type: "cover", heading: "pptwise doctor", subheading: "self-test render" },
     {

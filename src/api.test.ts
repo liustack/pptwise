@@ -18,7 +18,7 @@ const realPngDataUri = makeSolidRegionPngDataUri(2, 2, () => [10, 20, 30])
 const raw = {
   version: "5",
   filename: "api-test",
-  theme: { id: "consulting" },
+  theme: { id: "brief" },
   slides: [
     { type: "cover", heading: "Hello" },
     { type: "content", kind: "points", heading: "Points", components: [{ type: "bullets", items: ["a", "b"] }] },
@@ -54,7 +54,7 @@ describe("validateIr", () => {
   })
 
   it.each(["1", "2", "3", "4"])("hard-rejects IR v%s with the current v5 contract and no migration pointer", (version) => {
-    const v = validateIr({ version, filename: "x", theme: { id: "tech" }, slides: [] })
+    const v = validateIr({ version, filename: "x", theme: { id: "terminal" }, slides: [] })
     expect(v.ok).toBe(false)
     expect(v.errors).toHaveLength(1)
     expect(v.errors[0]!.path).toBe("version")
@@ -68,7 +68,7 @@ describe("validateIr", () => {
     const v = validateIr({ theme: { id: "neon" }, slides: [{ kind: "points", heading: "x" }] })
     expect(v.ok).toBe(false)
     expect(v.errors[0]!.message).toMatch(/unknown theme "neon"/)
-    expect(v.errors[0]!.message).toMatch(/available:.*consulting/i)
+    expect(v.errors[0]!.message).toMatch(/available:.*brief/i)
     expect(v.errors[0]!.message).not.toMatch(/pptwise migrate/)
     expect(v.errors[0]!.message).not.toMatch(/was removed/)
   })
@@ -78,13 +78,13 @@ describe("validateIr", () => {
     expect(v.ok).toBe(false)
     expect(v.errors[0]!.path).toBe("theme.id")
     expect(v.errors[0]!.message).toMatch(/unknown theme "bloom"/)
-    expect(v.errors[0]!.message).toMatch(/available:.*consulting/)
+    expect(v.errors[0]!.message).toMatch(/available:.*brief/)
     expect(v.errors[0]!.message).not.toMatch(/migrate|was removed/i)
   })
 
   it("hard-rejects leftover logo_wall without pointing at a removed migration command", () => {
     const v = validateIr({
-      theme: { id: "consulting" },
+      theme: { id: "brief" },
       slides: [
         {
           kind: "points",
@@ -107,7 +107,7 @@ describe("validateIr", () => {
 
   it("rejects the retired layout field before interpreting its value", () => {
     const v = validateIr({
-      theme: { id: "consulting" },
+      theme: { id: "brief" },
       slides: [{ kind: "points", heading: "x", layout: "banner-heading" }],
     })
     expect(v.ok).toBe(false)
@@ -118,7 +118,7 @@ describe("validateIr", () => {
 
   it("rejects every layout value through the same removed-field contract", () => {
     const v = validateIr({
-      theme: { id: "consulting" },
+      theme: { id: "brief" },
       slides: [{ kind: "points", heading: "x", layout: "not-a-real-layout" }],
     })
     expect(v.ok).toBe(false)
@@ -129,7 +129,7 @@ describe("validateIr", () => {
 
   it("unknown other component types still do NOT mention migrate", () => {
     const v = validateIr({
-      theme: { id: "consulting" },
+      theme: { id: "brief" },
       slides: [{ kind: "points", heading: "x", components: [{ type: "not_a_real_component" }] }],
     })
     expect(v.ok).toBe(false)
@@ -597,9 +597,9 @@ describe("boundary-page render-surface gate (bench-driven fixes wave, defect D)"
     (type) => {
       const v = validateIr({
         ...raw,
-        // academic ending now accepts bullets (defense-close). tech's locked
+        // thesis ending now accepts bullets (defense-close). terminal's locked
         // ending still has no body slot.
-        theme: { id: type === "ending" ? "tech" : "academic" },
+        theme: { id: type === "ending" ? "terminal" : "thesis" },
         slides: [{ type, heading: "H", components: [bullets] }],
       })
       expect(v.ok).toBe(false)
@@ -612,7 +612,7 @@ describe("boundary-page render-surface gate (bench-driven fixes wave, defect D)"
     },
   )
 
-  it("accepts bullets on a consulting cover — verdict-index declares a body slot for them", () => {
+  it("accepts bullets on a brief cover — verdict-index declares a body slot for them", () => {
     const v = validateIr({
       ...raw,
       slides: [{ type: "cover", heading: "H", components: [bullets] }],
@@ -621,7 +621,7 @@ describe("boundary-page render-surface gate (bench-driven fixes wave, defect D)"
     expect(v.errors).toEqual([])
   })
 
-  it("still rejects a paragraph on a consulting cover — verdict-index only accepts bullets", () => {
+  it("still rejects a paragraph on a brief cover — verdict-index only accepts bullets", () => {
     const v = validateIr({
       ...raw,
       slides: [{ type: "cover", heading: "H", components: [{ type: "paragraph", text: "x" }] }],
@@ -647,7 +647,7 @@ describe("boundary-page render-surface gate (bench-driven fixes wave, defect D)"
   it("names both offending fields, components first, when a slide carries both", () => {
     const v = validateIr({
       ...raw,
-      theme: { id: "academic" },
+      theme: { id: "thesis" },
       slides: [{ type: "cover", heading: "H", components: [bullets], footnote: "source: x" }],
     })
     expect(v.ok).toBe(false)
@@ -656,7 +656,7 @@ describe("boundary-page render-surface gate (bench-driven fixes wave, defect D)"
     )
   })
 
-  it("names only footnote when a consulting cover carries accepted bullets plus a footnote", () => {
+  it("names only footnote when a brief cover carries accepted bullets plus a footnote", () => {
     const v = validateIr({
       ...raw,
       slides: [{ type: "cover", heading: "H", components: [bullets], footnote: "source: x" }],
@@ -708,7 +708,7 @@ describe("boundary-page render-surface gate (bench-driven fixes wave, defect D)"
   it("sets slideId when the offending slide has one (same shape as checkLayoutApplicability/checkFullBodyExclusivity)", () => {
     const v = validateIr({
       ...raw,
-      theme: { id: "tech" },
+      theme: { id: "terminal" },
       slides: [{ type: "ending", id: "p-end", heading: "Thanks", components: [bullets] }],
     })
     expect(v.ok).toBe(false)
@@ -718,7 +718,7 @@ describe("boundary-page render-surface gate (bench-driven fixes wave, defect D)"
   it("lists one issue per offending slide, not just the first", () => {
     const v = validateIr({
       ...raw,
-      theme: { id: "academic" },
+      theme: { id: "thesis" },
       slides: [
         { type: "cover", heading: "C", components: [bullets] },
         { type: "content", kind: "points", heading: "OK", components: [bullets] },
@@ -875,7 +875,7 @@ describe("describeQualityIssue: density/bullets English messages (W3 task 3, spe
   it("pacing binds but the layout allows more (bento-panel exception): names both sides", () => {
     const v = validateIr({
       ...raw,
-      theme: { id: "tech" },
+      theme: { id: "terminal" },
       narrative: { pacing: "balanced" },
       slides: [raw.slides[0], denseSlide(5, { kind: "list" })],
     })
@@ -1601,7 +1601,7 @@ describe("narrative field (W3 task 2, renamed from scenario spec §8.1)", () => 
 })
 
 describe("narrative {id} shape rescue (T0b fix 2, bench-evidence)", () => {
-  // A weak model that just wrote `theme: {id: "consulting"}` pattern-matches
+  // A weak model that just wrote `theme: {id: "brief"}` pattern-matches
   // the same wrapper shape onto `narrative`. Real bench-failing inputs
   // (.issues/notes/quality-evidence.md item 2, 3 real failures — 60%
   // of flash's total): {"id":"training"}, {"id":"boardroom-report"}.
@@ -1762,7 +1762,7 @@ describe("unrecognized-key rescue hints (borrow-wave task 3, generalizing the sc
   })
 
   it("hints theme.override was removed, scoped to the theme object", () => {
-    const v = validateIr({ ...raw, theme: { id: "consulting", override: { accent: "#ff0000" } } })
+    const v = validateIr({ ...raw, theme: { id: "brief", override: { accent: "#ff0000" } } })
     expect(v.ok).toBe(false)
     expect(
       v.errors.some((e) =>
@@ -1784,7 +1784,7 @@ describe("unrecognized-key rescue hints (borrow-wave task 3, generalizing the sc
   })
 
   it("P4: an unrecognized key that is neither a documented rename nor at slide level gets no hint at all (out of this task's scope)", () => {
-    const v = validateIr({ ...raw, theme: { id: "consulting", colour: "#ff0000" } })
+    const v = validateIr({ ...raw, theme: { id: "brief", colour: "#ff0000" } })
     expect(v.ok).toBe(false)
     expect(v.errors).toHaveLength(1)
     expect(v.errors[0]!.message).toBe('Unrecognized key: "colour"')
@@ -2008,7 +2008,7 @@ describe("generatePptx", () => {
     const omitted = {
       version: "5",
       filename: "omit-branding",
-      theme: { id: "consulting" },
+      theme: { id: "brief" },
       meta: { organization: "ACME", date: "2026" },
       slides: [
         { type: "cover", heading: "Pitch" },
@@ -2027,7 +2027,7 @@ describe("generatePptx", () => {
   })
 
   it("omitted branding leaves confidentiality and date off the cover, branding full paints them", () => {
-    const themeId = registerTestTheme("api-branding-face", "consulting", {
+    const themeId = registerTestTheme("api-branding-face", "brief", {
       cover: "tone-adaptive-header",
       content: { points: "quiet-frame" },
     })
@@ -2086,7 +2086,7 @@ describe("generatePptx", () => {
     const talk = {
       version: "5",
       filename: "talk-branding",
-      theme: { id: "consulting" },
+      theme: { id: "brief" },
       branding: "cover-only",
       meta: { organization: "ACME", date: "2026" },
       slides: [
@@ -2210,7 +2210,7 @@ describe("generatePptx content-drop gate (deep-review P1)", () => {
   })
 
   it("blocks an image-top takeover that omits its fourth body component", async () => {
-    const themeId = registerTestTheme("api-image-top-drop", "consulting", {
+    const themeId = registerTestTheme("api-image-top-drop", "brief", {
       content: { photo: "image-top" },
     })
     const takeoverDropping = {
@@ -2430,8 +2430,8 @@ describe("listThemes", () => {
     const themes = listThemes()
     expect(themes).toHaveLength(24)
     expect(themes.map((t) => t.id)).not.toContain("bloom")
-    expect(themes.map((t) => t.id)).toContain("classroom")
-    expect(themes.map((t) => t.id)).toContain("consulting")
+    expect(themes.map((t) => t.id)).toContain("homeroom")
+    expect(themes.map((t) => t.id)).toContain("brief")
     expect(themes.map((t) => t.id)).toContain("crayon")
     expect(themes.map((t) => t.id)).toContain("museum")
     expect(themes.map((t) => t.id)).toContain("stage")

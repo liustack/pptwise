@@ -89,13 +89,13 @@ pptwise themes --json
 Copy one into the workspace:
 
 ```bash
-pptwise theme new --from consulting \
+pptwise theme new --from brief \
   -o themes/acme-report.theme.json \
   --id acme-report \
   --label "Acme Report"
 ```
 
-The written file contains copied style tokens, brand configuration, metadata, and menu. It has no link back to `consulting`. Later changes to either file do not affect the other.
+The written file contains copied style tokens, brand configuration, metadata, and menu. It has no link back to `brief`. Later changes to either file do not affect the other.
 
 `--from` can also name another workspace theme. This is the standard way to begin menu editing or create a visual sibling.
 
@@ -104,7 +104,7 @@ The written file contains copied style tokens, brand configuration, metadata, an
 `theme try` renders one fixed fitting-room sample across two to four named themes and writes a contact sheet:
 
 ```bash
-pptwise theme try consulting,swiss,memo
+pptwise theme try brief,swiss,memo
 ```
 
 The sample is independent of any deck. It exists so visual choice happens before the spec. Render and preview commands do not accept a temporary theme override.
@@ -129,7 +129,7 @@ Name resolution uses three levels in order:
 2. Workspace `themes/` directories while walking upward from the starting directory.
 3. The 24 factory presets.
 
-Deck and workspace files may shadow a factory preset by keeping the same id. Freeze is a copy that preserves the bound name, for example `pptwise theme new --from consulting -o deck-dir/theme.json --id consulting`. Unknown names fail loudly and report the searched locations.
+Deck and workspace files may shadow a factory preset by keeping the same id. Freeze is a copy that preserves the bound name, for example `pptwise theme new --from brief -o deck-dir/theme.json --id brief`. Unknown names fail loudly and report the searched locations.
 
 To freeze a workspace theme for one deck, copy it into the deck directory as `theme.json` while preserving its id:
 
@@ -163,7 +163,7 @@ A same-menu fork may replace a deck binding inside the workflow. If menus differ
 pptwise brand extract corp.pptx \
   -o themes/acme-brand.theme.json \
   --id acme-brand \
-  --from consulting
+  --from brief
 ```
 
 Extraction runs locally, reads Office colors and fonts, copies the donor's complete menu, rederives the full token system, and writes a complete v2 file. Choose the donor for its menu and occasion fit, not only its colors. See [Brand extraction](./brand-extraction.md).

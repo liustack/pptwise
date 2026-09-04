@@ -114,7 +114,7 @@ describe("ending-deliberation-ending — board geometry", () => {
   })
 
   it("uses tokens, not baked vermilion hex, when another theme draws it", () => {
-    const { root, tokens } = renderEnding("enterprise")
+    const { root, tokens } = renderEnding("bulletin")
     const rule = Array.from(root.querySelectorAll("line")).find((l) => l.getAttribute("y1") === "490")
     expect(rule?.getAttribute("stroke")).toBe(tokens.colors.accent)
     expect(root.innerHTML).not.toMatch(/#B02318/i)

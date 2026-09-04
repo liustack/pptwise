@@ -208,7 +208,7 @@ describe("matrix component", () => {
     }
 
     it("paints a long CJK y_title as one horizontal line even when box.h is left undefined", () => {
-      // Reviewer's exact repro: tech theme, content-bento-panel layout
+      // Reviewer's exact repro: terminal theme, content-bento-panel layout
       // (which never sets a child's box.h — `renderCell` calls
       // `renderComponent(component, { x, y, w }, ctx)` with no `h` field),
       // x_title="客户需求水平", y_title="资产投入水平强度评估" (16 chars),

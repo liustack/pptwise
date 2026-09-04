@@ -1540,7 +1540,7 @@ ${inlineRule("verdictFreshness", verdictFreshness)}
    * The face's identity card: every menu choice that leads here.
    *
    * A face is reused, and that reuse is the thing a face audit has to hold in
-   * mind — the same code draws consulting's 要点 and museum's 清单, so a
+   * mind — the same code draws brief's 要点 and museum's 清单, so a
    * change that suits one can break the other. The card is the reverse of the
    * menu lookup, one row per 讲法 and the themes that route it here.
    *

@@ -229,12 +229,12 @@ describe("device_mockup component — phone", () => {
   })
 })
 
-// Review fix round, Important-2: on a near-black theme (tech: bg #060A13 vs
+// Review fix round, Important-2: on a near-black theme (terminal: bg #060A13 vs
 // surface #0A101C) the window bar/dots/url pill barely separated
 // from the page behind them or from each other — a plain `colors.surface`
 // fill has almost no luminance headroom against a `colors.bg` that close.
 // These two ctx fixtures reproduce the two real shapes that failure took
-// (near-black *and* the flat-white enterprise/runway case where bg and
+// (near-black *and* the flat-white bulletin/runway case where bg and
 // surface are the exact same hex, zero headroom by construction) rather
 // than re-deriving the fix's own formula and asserting it matches itself.
 const darkCtx: ComponentCtx = {

@@ -44,15 +44,15 @@ Hanging quotation marks are not L1 overlap (punctuation-only strings are skipped
 
 ## What L2 catches on pre-fix
 
-The five-dot progress motif still fires on academic, asymmetric-triptych, callout, banner-heading, quote-stage, image-split, rail-numbered. That decoration is real at SHA `321748d`.
+The five-dot progress motif still fires on thesis, asymmetric-triptych, callout, banner-heading, quote-stage, image-split, rail-numbered. That decoration is real at SHA `321748d`.
 
-New, taught hits on the old miss list: pill radius, playbill counter-rotate, arena overlap, lecture cards past the board, vermilion round pills, enterprise gravity. See the orig-13 table below.
+New, taught hits on the old miss list: pill radius, playbill counter-rotate, arena overlap, lecture cards past the board, vermilion round pills, bulletin gravity. See the orig-13 table below.
 
 ## Orig 13 (human rework, first L2 `pass`)
 
 | Page | Human issue | New pre-fix L1 | New pre-fix L2 | HEAD |
 | --- | --- | --- | --- | --- |
-| theme--enterprise--zh--p01 | pale banner square | clean | rework (banner vertically centered) | rework, same gravity note, not the pale square |
+| theme--bulletin--zh--p01 | pale banner square | clean | rework (banner vertically centered) | rework, same gravity note, not the pale square |
 | comparison-pill-panels zh/en/mixed | rounded chips on square cards | clean | rework (stadium pill on square card) | pass |
 | theme--playbill--zh--p01 | date type not with the sticker | clean | rework (rotate opposite the chip) | pass |
 | layout--banner-chapter zh | underline as strikethrough | clean | **pass** (rule is under the kicker, not through x-height) | pass |
@@ -76,7 +76,7 @@ What still flags on HEAD:
 | 12px floor | banner-heading en, two-column en, ember p05, five-forces en, people-cards zh, rail-numbered zh/en/mixed | Same leftover the first report named. Captions and shrunk card copy. |
 | Footer rule through `07` | vermilion p07 | L1 `strikethrough` + `edge-stick`. Real leftover, not the old pill issue. |
 | Blue-orange / missing crayon language | crayon p01/p04/p07 | p01 `limit` (star gone, hand-drawn language gone). p04/p07 still pair vivid blue with gold-orange. |
-| Gravity on a centered poster | academic p01, enterprise p01, banner-chapter mixed, quote-stage zh/en/mixed | Rubric allows a named center-axis poster. L2 still scores several as hanging. |
+| Gravity on a centered poster | thesis p01, bulletin p01, banner-chapter mixed, quote-stage zh/en/mixed | Rubric allows a named center-axis poster. L2 still scores several as hanging. |
 | People-card type + blue-orange | people-cards zh | Role labels under 12px, gold vs blue avatars. |
 
 Runner failed on HEAD (not scored): `layout--asymmetric-triptych--en`, `theme--lecture--zh--p04`, `component--five-forces--zh`, `component--row-cards--mixed`, `component--cycle-petal-wheel--zh`. Siblings that did finish are `pass` for triptych and row-cards.
@@ -118,7 +118,7 @@ Wave 8 HEAD of the same 44 ids is leftover vs false alarm, not recall. Combined 
 | Kind | Pages | Note |
 | --- | --- | --- |
 | 12px floor | banner-heading en, two-column en, ember p05, five-forces en, people-cards zh, rail-numbered zh/en/mixed | Same leftover the first report named. |
-| Gravity on a centered poster | crayon p01, enterprise p01, playbill p01, banner-chapter zh/en/mixed, quote-stage en/mixed, arena p01 | Rubric allows a named center-axis poster. L2 still scores several as hanging. `quote-stage` zh and `academic` p01 now `pass`. |
+| Gravity on a centered poster | crayon p01, bulletin p01, playbill p01, banner-chapter zh/en/mixed, quote-stage en/mixed, arena p01 | Rubric allows a named center-axis poster. L2 still scores several as hanging. `quote-stage` zh and `thesis` p01 now `pass`. |
 | Blue-orange | crayon p07 | Vivid orange kicker/sun with a vivid blue star. p01 is gravity, not the old star. p04 `pass`. |
 | Runner fake | `layout--asymmetric-triptych--zh` | 11s `Placeholder while inspecting`. en/mixed siblings `pass`. Not scored as a hit. |
 

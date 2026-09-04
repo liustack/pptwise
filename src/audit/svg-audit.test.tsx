@@ -300,12 +300,12 @@ describe("auditSvgMarkup — bold-weight alignment with the real exporter (bold-
   // could never disagree (a tautology); after this fix, they use the same
   // bold-aware formula on real bold text and must still agree.
   it("real renderer + real auditor agree: the fixed heading's own chosen fontSize is judged fitting for the same box it was sized against", () => {
-    const ctx = buildCtx(resolveStyle("consulting"), {})
+    const ctx = buildCtx(resolveStyle("brief"), {})
     const slide: Slide = { type: "cover", heading: "Structure Components Demo", components: [] } as Slide
     const ir: PptxIR = {
       version: "3",
       filename: "x.pptx",
-      theme: { id: "consulting" },
+      theme: { id: "brief" },
       meta: {},
       assets: { images: {} },
       slides: [slide],

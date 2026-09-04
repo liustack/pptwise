@@ -1,7 +1,7 @@
 /**
  * Render-side content-page heading treatment assignment table. Treatments
  * are not IR: one theme maps to at most one treatment, looked up here.
- * 16 rows. classroom is not listed.
+ * 16 rows. homeroom is not listed.
  *
  * ghost_index and tag_box need a chapter page. Runtime falls back to the
  * native heading when `chapterNumberFor === 0`. The table still lists those
@@ -56,17 +56,17 @@ export interface HeadingAssignment {
 const ASSIGNMENTS: Record<string, HeadingAssignment> = {
   // Needs a chapter page. Runtime falls back to the native heading when
   // chapterNumberFor === 0.
-  consulting: {
+  brief: {
     treatment: "ghost_index",
     knobs: { indexStyle: "ghost-bleed", noTitleAnchor: "mini-index" },
   },
   // Needs a chapter page. Runtime falls back to the native heading when
   // chapterNumberFor === 0.
-  tech: {
+  terminal: {
     treatment: "ghost_index",
     knobs: { indexStyle: "stroke-corner", noTitleAnchor: "mini-index" },
   },
-  insight: {
+  ledger: {
     treatment: "baseline",
     knobs: { rule: "hairline", rightSlot: "none", noTitleAnchor: "none" },
   },
@@ -86,7 +86,7 @@ const ASSIGNMENTS: Record<string, HeadingAssignment> = {
   },
   // Needs a chapter page. Runtime falls back to the native heading when
   // chapterNumberFor === 0.
-  enterprise: {
+  bulletin: {
     treatment: "tag_box",
     knobs: { box: "solid-primary", chapterLabel: "part" },
   },
@@ -96,12 +96,12 @@ const ASSIGNMENTS: Record<string, HeadingAssignment> = {
     treatment: "tag_box",
     knobs: { box: "hud-brackets", chapterLabel: "round" },
   },
-  academic: {
+  thesis: {
     treatment: "lead_accent",
     // Isolated gold-dot tail retired (wave8 solo-dot ban).
     knobs: { accentStyle: "typeface-shift", tail: "none", noTitleAnchor: "none" },
   },
-  terra: {
+  almanac: {
     treatment: "lead_accent",
     knobs: { accentStyle: "color", tail: "olive-rule", noTitleAnchor: "none" },
   },
@@ -139,7 +139,7 @@ const ASSIGNMENTS: Record<string, HeadingAssignment> = {
     treatment: "center_mirror",
     knobs: { mirror: "hairline", diamond: true, chapterLabel: "chapter", noTitleAnchor: "none" },
   },
-  campaign: {
+  rally: {
     treatment: "center_mirror",
     knobs: { mirror: "bar", diamond: false, chapterLabel: "act", noTitleAnchor: "none" },
   },

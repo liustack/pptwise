@@ -21,13 +21,14 @@ import { LEGACY_THEME_NAMES } from "./themes/legacy-names"
  * does not cover positioning, audience, or occasions: naming the customers a
  * voice happens to suit is exactly what those fields are for.
  *
- * Thirteen built-ins predate the rule. Their licence is the frozen baseline
- * in `themes/legacy-names.ts`, and this test is what makes it a ratchet
- * rather than a list anybody can grow: a broken name that is not already in
- * the baseline fails, and a baseline name that has been fixed fails until
- * its line is deleted. Neither failure can be answered by adding a line,
- * because the baseline is asserted to hold nothing but the names it was
- * frozen with.
+ * Thirteen built-ins predated the rule. Their licence was the frozen
+ * baseline in `themes/legacy-names.ts`, and this test is what made it a
+ * ratchet rather than a list anybody can grow: a broken name that is not
+ * already in the baseline fails, and a baseline name that has been fixed
+ * fails until its line is deleted. Neither failure can be answered by adding
+ * a line, because the baseline is asserted to hold nothing but the names it
+ * was frozen with. All thirteen were renamed in one batch, so the baseline
+ * is empty and every theme now answers to the rule directly.
  */
 const FROZEN_BASELINE_IDS: readonly string[] = [
   "academic",
@@ -98,9 +99,9 @@ describe("a name names a voice, never a vertical", () => {
   })
 
   it("licences the exact legacy label, not anything that resembles it", () => {
-    // The exemption is what lets `theme new --from consulting` copy the old
-    // label forward. It must not become cover for a new name built out of
-    // the same word.
+    // The exemption was what let `theme new --from consulting` copy the old
+    // label onto a new theme. Nothing is licenced now, and a new name built
+    // out of one of those words never was.
     expect(() =>
       ThemeFileSchema.parse({ ...themeFileFromPreset("swiss", { id: "acme" }), label: "Fashion Weekly" }),
     ).toThrow(/fashion/)
@@ -138,9 +139,9 @@ describe("a name names a voice, never a vertical", () => {
     // and it installs through the private structural entry — the public
     // contract still refuses it, which is the point.
     const base = themeFileFromPreset("swiss", { id: "acme" })
-    const composed = "matrix-classroom-cover-fashion-masthead"
+    const composed = "matrix-homeroom-cover-fashion-masthead"
     const file = { ...base, id: composed, style: { ...base.style, id: composed } }
-    expect(() => ThemeFileSchema.parse(file)).toThrow(/classroom/)
+    expect(() => ThemeFileSchema.parse(file)).toThrow(/fashion/)
     expect(() => StructuralThemeFileSchema.parse(file)).not.toThrow()
   })
 
@@ -151,12 +152,9 @@ describe("a name names a voice, never a vertical", () => {
     expect(() => StructuralThemeFileSchema.parse({ ...base, surprise: true })).toThrow()
   })
 
-  it("reports what the rename batch still owes", () => {
-    const report = themeNamings()
-      .filter((theme) => LEGACY_THEME_NAMES.some((name) => name.id === theme.id))
-      .flatMap((theme) => offences(theme))
-    console.info(`${LEGACY_THEME_NAMES.length} themes await a rename:\n${report.join("\n")}`)
-    expect(report.length).toBeGreaterThan(0)
+  it("holds for every built-in, with nothing licenced", () => {
+    expect(LEGACY_THEME_NAMES).toEqual([])
+    expect(themeNamings().flatMap((theme) => offences(theme))).toEqual([])
   })
 
   it("holds for every story name a theme already carries", () => {

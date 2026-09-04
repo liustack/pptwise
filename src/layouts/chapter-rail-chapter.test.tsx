@@ -10,7 +10,7 @@ import type { PptxIR, Slide } from "@/ir"
 // W4 fix round: RailChapter's heading/subheading now adapt to
 // `ctx.defaultBg` (readableOn) instead of a hardcoded white — every ctx in
 // this file must carry the theme's *true* chapter default background, not
-// `buildCtx`'s own `colors.bg` fallback. academic chapter default is now
+// `buildCtx`'s own `colors.bg` fallback. thesis chapter default is now
 // ivory paper after wave 8 batch 2, so heading ink is dark.
 function chapterCtx(themeId: string) {
   const tokens = resolveStyle(themeId)
@@ -43,8 +43,8 @@ const ir = (theme: string): PptxIR =>
     slides: [chapter1, content, chapter2],
   }) as unknown as PptxIR
 
-// Literal markup fixed from `templates/academic.tsx`'s `BCGEmeraldChapter`
-// under academic tokens (captured once, pre-templates-deletion, via a
+// Literal markup fixed from `templates/thesis.tsx`'s `BCGEmeraldChapter`
+// under thesis tokens (captured once, pre-templates-deletion, via a
 // throwaway render — see task report) — this is what `toBe(legacy)` used to
 // assert at runtime. Fixating it here keeps the same byte-for-byte assertion
 // strength without importing the (soon-to-be-deleted) templates/ module.
@@ -60,9 +60,9 @@ const EXPECTED_CHAPTER2 =
   '<text x="1224" y="650" font-family="Georgia, Songti SC, STSong, serif" font-size="260" font-weight="700" fill="#FFFFFF" opacity="0.06" text-anchor="end" dominant-baseline="alphabetic">02</text><text x="640" y="392" font-family="Georgia, Songti SC, STSong, serif" font-size="84" font-weight="600" fill="#0A0E14" text-anchor="middle" dominant-baseline="alphabetic">第二部分：方法与证据</text><text x="640" y="452" font-family="Georgia, Songti SC, STSong, serif" font-size="34" fill="#0A0E14" opacity="0.7" text-anchor="middle" font-style="italic" dominant-baseline="alphabetic">面向可复现的实证研究</text><line x1="620" y1="600" x2="660" y2="600" stroke="#FFFFFF" stroke-opacity="0.3" stroke-width="1.6"></line><circle cx="620" cy="600" r="5" fill="#FFFFFF" fill-opacity="0.35"></circle><circle cx="660" cy="600" r="7" fill="#FFFFFF" fill-opacity="1"></circle>'
 
 describe("RailChapter", () => {
-  it("academic tokens 下输出与迁移前的 BCGEmeraldChapter 逐字节一致（档位一，含多 chapter 序号）", () => {
-    const ctx = chapterCtx("academic")
-    const deck = ir("academic")
+  it("thesis tokens 下输出与迁移前的 BCGEmeraldChapter 逐字节一致（档位一，含多 chapter 序号）", () => {
+    const ctx = chapterCtx("thesis")
+    const deck = ir("thesis")
 
     const next1 = renderSvgMarkup(<RailChapter ir={deck} slide={chapter1} index={0} ctx={ctx} />)
     expect(next1).toBe(EXPECTED_CHAPTER1)
@@ -73,13 +73,13 @@ describe("RailChapter", () => {
     expect(next2).toContain(">02<")
   })
 
-  it("章节标题过长时收缩到 <=2 行、字号落在 [40,84) 区间，不整段输出原文（迁移自 academic.test.tsx 的 Chapter 长标题分支）", () => {
-    const ctx = chapterCtx("academic")
+  it("章节标题过长时收缩到 <=2 行、字号落在 [40,84) 区间，不整段输出原文（迁移自 thesis.test.tsx 的 Chapter 长标题分支）", () => {
+    const ctx = chapterCtx("thesis")
     const slide: Slide = { type: "chapter", heading: CJK_LONG, subheading: CJK_LONG, components: [] } as Slide
     const doc: PptxIR = {
       version: "3",
       filename: "x.pptx",
-      theme: { id: "academic" },
+      theme: { id: "thesis" },
       meta: {},
       assets: { images: {} },
       slides: [slide],
@@ -111,7 +111,7 @@ describe("RailChapter", () => {
   it("副标题与大标题之间留出与字号成比例的墨隙（84px 标题 >=16px，收缩后仍 >=8px）", () => {
     const INK_DESCENT = 0.12
     const INK_ASCENT = 0.88
-    const ctx = chapterCtx("academic")
+    const ctx = chapterCtx("thesis")
 
     const inkGap = (slide: Slide, deck: PptxIR, index: number) => {
       const root = parseSvgRoot(
@@ -130,7 +130,7 @@ describe("RailChapter", () => {
       return { gap: subInkTop - headInkBottom, headSize }
     }
 
-    const nominal = inkGap(chapter2, ir("academic"), 2)
+    const nominal = inkGap(chapter2, ir("thesis"), 2)
     expect(nominal.headSize).toBe(84)
     expect(nominal.gap).toBeGreaterThanOrEqual(16)
 
@@ -143,7 +143,7 @@ describe("RailChapter", () => {
     const longDeck = {
       version: "3",
       filename: "x.pptx",
-      theme: { id: "academic" },
+      theme: { id: "thesis" },
       meta: {},
       assets: { images: {} },
       slides: [longSlide],
@@ -155,35 +155,35 @@ describe("RailChapter", () => {
     expect(shrunk.gap).toBeLessThan(nominal.gap)
   })
 
-  it("tech tokens 下白字例外跨主题稳定（不被 tech 的 colors.surface/primary 替换——见文件头'逐字节陷阱'说明）", () => {
-    const techTheme = resolveStyle("tech")
+  it("terminal tokens 下白字例外跨主题稳定（不被 terminal 的 colors.surface/primary 替换——见文件头'逐字节陷阱'说明）", () => {
+    const techTheme = resolveStyle("terminal")
     const ctx = buildCtx(techTheme, {})
-    const deck = ir("tech")
+    const deck = ir("terminal")
     const out = renderSvgMarkup(<RailChapter ir={deck} slide={chapter1} index={0} ctx={ctx} />)
 
     // 白字例外：固定纯白，不随主题变化
     expect(out).toContain('fill="#FFFFFF"')
-    // tech 的 surface 是深色（#121A30），若被误映射会让文字在深色背景上隐形
+    // terminal 的 surface 是深色（#121A30），若被误映射会让文字在深色背景上隐形
     expect(ctx.colors.surface).not.toBe("#FFFFFF")
     expect(out).not.toContain(ctx.colors.surface as string)
-    // academic 自己的烤死色不得残留（本函数本就不消费 ctx.colors，属于回归锁）
+    // thesis 自己的烤死色不得残留（本函数本就不消费 ctx.colors，属于回归锁）
     expect(out).not.toContain("#006A4E")
-    // ctx 确实按主题切换生效：heading 字体走 tech 的解析结果，不是写死的 academic 字体
+    // ctx 确实按主题切换生效：heading 字体走 terminal 的解析结果，不是写死的 thesis 字体
     expect(out).toContain(`font-family="${ctx.fonts.heading}"`)
 
     // 结构性锚点：进度轨道 + 章节序号水印仍然存在
     expect(out).toContain(">01<")
   })
 
-  it("W4 fix round Critical C1：runway/enterprise 的 chapter 默认背景是近白，标题/副标题不再是不可见的白字压白底", () => {
+  it("W4 fix round Critical C1：runway/bulletin 的 chapter 默认背景是近白，标题/副标题不再是不可见的白字压白底", () => {
     // Both themes' `defaultBackgrounds.chapter` is a near-white — runway's is
-    // literal #FFFFFF, enterprise's became #F7F7F4 when the cool-group skin
+    // literal #FFFFFF, bulletin's became #F7F7F4 when the cool-group skin
     // redesign (2026-08-20) moved its gallery wall off pure white and handed
     // pure white to `surface` instead. Assert each theme's real value (the
     // fix's premise) before asserting the fix's effect, so a future token
     // edit can't silently invalidate this test.
-    const CHAPTER_BG = { runway: "#F2F0EB", enterprise: "#F7F7F4" } as const
-    for (const themeId of ["runway", "enterprise"] as const) {
+    const CHAPTER_BG = { runway: "#F2F0EB", bulletin: "#F7F7F4" } as const
+    for (const themeId of ["runway", "bulletin"] as const) {
       const ctx = chapterCtx(themeId)
       expect(ctx.defaultBg).toBe(CHAPTER_BG[themeId])
       const deck = ir(themeId)

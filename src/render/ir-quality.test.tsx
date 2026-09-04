@@ -6,13 +6,13 @@ import { chart } from "../components/chart"
 import type { ComponentCtx } from "../components/types"
 import { PACING_BUDGETS, resolveNarrative, type Pacing, type NarrativeProfile } from "@/narrative"
 import type { Component, PptxIR, Slide } from "@/ir"
-import { CONSULTING_TOKENS } from "../themes/builtin/consulting"
+import { CONSULTING_TOKENS } from "../themes/builtin/brief"
 import { __resetRegisteredThemes, registerTheme } from "../themes/definitions"
 import type { Menu } from "../themes/schema"
 
 // ── helpers ──
 
-function makeIR(slides: Slide[], themeId: PptxIR["theme"]["id"] = "consulting"): PptxIR {
+function makeIR(slides: Slide[], themeId: PptxIR["theme"]["id"] = "brief"): PptxIR {
   return {
     version: "5",
     filename: "test.pptx",

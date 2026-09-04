@@ -68,7 +68,7 @@ function makeIR(): PptxIR {
   return {
     version: "5",
     filename: "gradient-fallback.pptx",
-    theme: { id: "tech" },
+    theme: { id: "terminal" },
     meta: {},
     assets: { images: {} },
     slides: [makeSlide()],

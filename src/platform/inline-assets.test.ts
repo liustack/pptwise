@@ -18,7 +18,7 @@ function ir(images: Record<string, { src: string }>): PptxIR {
   return {
     version: "5",
     filename: "t.pptx",
-    theme: { id: "enterprise" },
+    theme: { id: "bulletin" },
     meta: {},
     assets: { images },
     slides: [

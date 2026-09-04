@@ -47,8 +47,8 @@ describe("THEME_OCCASIONS", () => {
   })
 
   it("pins the brief's identity-band examples", () => {
-    const low = ["swiss", "enterprise", "memo", "vermilion"] as const
-    const medium = ["consulting", "academic", "insight"] as const
+    const low = ["swiss", "bulletin", "memo", "vermilion"] as const
+    const medium = ["brief", "thesis", "ledger"] as const
     const high = ["runway", "stage", "crayon", "arena", "playbill", "ink", "museum"] as const
     for (const id of low) expect(THEME_OCCASIONS[id].identity).toBe("low")
     for (const id of medium) expect(THEME_OCCASIONS[id].identity).toBe("medium")
@@ -56,13 +56,13 @@ describe("THEME_OCCASIONS", () => {
   })
 
   it("pins unique occasion owners from the 24-theme catalog", () => {
-    expect(THEME_OCCASIONS.insight.occasions).toEqual(["finance"])
-    expect(THEME_OCCASIONS.pulse.occasions).toEqual(["health"])
-    expect(THEME_OCCASIONS.terra.occasions).toEqual(["sustainability"])
+    expect(THEME_OCCASIONS.ledger.occasions).toEqual(["finance"])
+    expect(THEME_OCCASIONS.clinic.occasions).toEqual(["health"])
+    expect(THEME_OCCASIONS.almanac.occasions).toEqual(["sustainability"])
     expect(THEME_OCCASIONS.ember.occasions).toEqual(["startup"])
     expect(THEME_OCCASIONS.runway.occasions).toEqual(["fashion"])
     expect(THEME_OCCASIONS.journal.occasions).toEqual(["editorial"])
-    expect(THEME_OCCASIONS.tech.occasions).toEqual(["tech"])
+    expect(THEME_OCCASIONS.terminal.occasions).toEqual(["tech"])
     expect(THEME_OCCASIONS.stage.occasions).toEqual(["keynote"])
     expect(THEME_OCCASIONS.vermilion.occasions).toContain("government")
     expect(THEME_OCCASIONS.crayon.occasions).toContain("kids")

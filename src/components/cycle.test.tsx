@@ -293,7 +293,7 @@ describe("cycle component", () => {
   })
 
   it("paints use theme tokens, not board hex literals — on every theme skin", () => {
-    for (const theme of ["museum", "insight", "academic", "campaign", "tech", "heritage", "journal"]) {
+    for (const theme of ["museum", "ledger", "thesis", "rally", "terminal", "heritage", "journal"]) {
       const themeCtx = themed(theme)
       const { container } = svg(cycle.render(four, { x: 80, y: 80, w: 1088 }, themeCtx))
       const allowed = allowedPaints(themeCtx.colors)
@@ -314,7 +314,7 @@ describe("cycle component", () => {
         .join(",")
     }
     const baseline = shapesOf("museum")
-    for (const theme of ["insight", "academic", "campaign", "tech", "heritage", "journal", "consulting"]) {
+    for (const theme of ["ledger", "thesis", "rally", "terminal", "heritage", "journal", "brief"]) {
       expect(shapesOf(theme), theme).toBe(baseline)
     }
   })

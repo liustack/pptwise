@@ -2,8 +2,8 @@
   "generator": "pptwise renderer",
   "script": "scripts/make-screenshot-fixture.mts",
   "source": "SCREENSHOT_IR in that script, rendered through validateIr + renderSlideSvg",
-  "source_sha256": "e8f639a337463ce14045f28b7cb560046c193bde76a3ce4fd8c387dd9088e459",
-  "recipe_sha256": "eca4e5735de2d8a0550973a1d7466baa9ea57d385755b8e4ee0e08e5617bb547",
+  "source_sha256": "0e910bd17fcab55eedf6dc46bb2f187acfa241c5be3024176bd2900c0379e1a0",
+  "recipe_sha256": "41ab3fc19efaddebfdd819a9131cd73c563145916757b3953c53436d1dea7b69",
   "recipe": {
     "quality": 88,
     "progressive": false,

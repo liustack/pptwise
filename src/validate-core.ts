@@ -742,7 +742,7 @@ function checkAssetReferences(ir: PptxIR): ValidationIssue[] {
  *  - {@link normalizeNarrativeShape} (`./narrative`, T0b bench-evidence fix
  *    2 — see its own doc comment for the full rationale): the root-level
  *    `narrative: {id: <preset>}` shape rescue. A model that just wrote
- *    `theme: {id: "consulting"}` a few lines above pattern-matches the same
+ *    `theme: {id: "brief"}` a few lines above pattern-matches the same
  *    wrapper shape onto `narrative`; this rewrites it to the bare preset
  *    string `resolveNarrative`'s string branch actually expects. Fires only
  *    when `id` is the object's sole narrative-relevant key (none of

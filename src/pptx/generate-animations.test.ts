@@ -7,7 +7,7 @@ import { registerTestTheme } from "../themes/test-fixtures"
 const ANIMATION_THEME_ID = "animation-fixture"
 
 beforeEach(() => {
-  registerTestTheme(ANIMATION_THEME_ID, "consulting", { content: { points: "bento-panel" } })
+  registerTestTheme(ANIMATION_THEME_ID, "brief", { content: { points: "bento-panel" } })
 })
 
 afterEach(() => {

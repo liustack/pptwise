@@ -10,7 +10,7 @@ import { trackingPx } from "./minimal-shared"
 /**
  * act-chapter layout（第八波批 1，新表达）：对镜居中。洋红对杠夹幕次，
  * 幕次来自 `chapterNumberFor`（CJK「第N幕」/ Latin「ACT N」），标题与副题
- * 落在同一中轴。构图抄 campaign 板章节页，进共享池，零 theme id、零 hex。
+ * 落在同一中轴。构图抄 rally 板章节页，进共享池，零 theme id、零 hex。
  *
  * `pinOnly`。品牌静默由主题菜单条目声明。无 body 槽。无水印巨号。对杠依附幕次，
  * 不是漂在角落的孤立小件。

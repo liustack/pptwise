@@ -79,7 +79,7 @@ export interface ComponentCtx {
   bodyFontPx: number
   /**
    * Component → its 0-based index in the slide's own `components` array. `renderComponent`
-   * (and tech's exploded kpi/icon-card units, which bypass `renderComponent`
+   * (and terminal's exploded kpi/icon-card units, which bypass `renderComponent`
    * — see `bento-layout.ts`'s `BentoUnit.component`) consult this to tag their SVG
    * output with `data-blk="{index}"`, the anchor `svg2pptx/dispatch.ts` walks
    * to stamp each op's `blockIndex` for the wave-C S3 per-component
@@ -103,7 +103,7 @@ export interface ComponentCtx {
    * `ctx.colors.chartPalette` by fixed position for their own decorative
    * fills (see each file's own header comment), so a motif's decoration
    * color drifted with the chart's phase even though nothing about motif
-   * rendering is supposed to depend on chart state at all — campaign (a
+   * rendering is supposed to depend on chart state at all — rally (a
    * settled 1-member candidate set that must render byte-identically across
    * every seed) differed across seeds purely from this leak. The chart
    * component (`./chart.tsx`, the only reader of this field) is

@@ -147,7 +147,7 @@ pptwise brand extract <file.thmx|file.potx|file.pptx> \
   [--id <id>] [--label <label>] [--from <donor>]
 ```
 
-Extraction is local. It copies the donor's complete menu, applies extracted color and font anchors through full palette derivation, and writes a complete v2 theme. `--from` defaults to `consulting`.
+Extraction is local. It copies the donor's complete menu, applies extracted color and font anchors through full palette derivation, and writes a complete v2 theme. `--from` defaults to `brief`.
 
 ## Narratives and engine inspection
 

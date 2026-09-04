@@ -11,7 +11,7 @@ import { fitEmphasisText, headingEmphasisPaint, renderEmphasisHeading, stripEmph
  * 题下一条短杠收题。构图抄 `.issues/design-boards/wave8/b1/Enterprise.dc.html`
  * 封面：kicker y132、标题两行约 y348/440、白杠 y496、底句 y662。
  *
- * 进共享池，不是 enterprise 专用。零 theme id、零 baked hex。方块阶归
+ * 进共享池，不是 bulletin 专用。零 theme id、零 baked hex。方块阶归
  * motif，本版式不重画。满版色场由本文件自己铺（`paintsOwnBackground`），
  * 主题 `defaultBackgrounds.cover` 保持浅底，避免 `assertContrastFloor`
  * 拿深字压深底判红。

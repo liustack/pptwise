@@ -27,7 +27,7 @@ import { CrayonboxMotif } from "./motif-crayonbox-motif"
 export type { Motif, MotifId } from "./types"
 
 // Wave 3 motif 注册表：六 motif id（每主题一个）已随各自的 content 任务
-// 全部迁完，tech 的 constellation-motif 是最后一个（Wave 3 Task 22）——收紧
+// 全部迁完，terminal 的 constellation-motif 是最后一个（Wave 3 Task 22）——收紧
 // 回完整 Record，不再是 Partial 过渡态（沿用 chapter 页型在 Wave 2 收尾任务
 // 的同一模式，见 index-chapter.ts）。
 export const MOTIFS: Record<MotifId, Motif> = {

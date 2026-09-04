@@ -9,7 +9,7 @@ import { showsDocumentMeta } from "../render/document-meta"
 
 /**
  * banner-title cover layout（spec §3.2）：结论横幅式封面——org 圆点标、
- * 大标题、accent 短粗条、meta 分隔线。自 templates/consulting.tsx 的
+ * 大标题、accent 短粗条、meta 分隔线。自 templates/brief.tsx 的
  * MckinseyNavyCover 提炼，baked 常量全部换 ctx.colors（替换表见 P1 计划
  * Task 4）。纪律：本文件禁 theme id、禁颜色 hex 字面量。
  *
@@ -23,9 +23,9 @@ import { showsDocumentMeta } from "../render/document-meta"
  *
  * 2026-08-19（深底组皮肤重设计）：四处以 `colors.primary` 作**文字**色的
  * 填充改走 `accessibleInk`。起因是深底组把 primary 从「亮色主色」改成
- * 「与底几乎同色的横幅/色块底色」（设计稿的角色定义，见 `themes/tech.ts`
+ * 「与底几乎同色的横幅/色块底色」（设计稿的角色定义，见 `themes/terminal.ts`
  * 的「承 readableOn 反白」一条），本版式却把 primary 直接当页面底色上的
- * 文字用——insight/tech/luxe 三家的大标题因此掉到 1.08-1.28:1。
+ * 文字用——ledger/terminal/luxe 三家的大标题因此掉到 1.08-1.28:1。
  * `accessibleInk` 对「本来就过线」的配对是逐字节 no-op（见其自身注释），
  * 实测其余 14 家 primary 压各自背景 3.09-19.80:1，全部过 3:1，输出不变。
  * 装饰用的 primary（标题下的短粗条、密级框描边）不动——那是色块与描边，
@@ -58,11 +58,11 @@ export function BannerTitleCover({ ir, slide, ctx, page }: SvgTemplateProps) {
   const titleLastY =
     titleY + Math.max(0, title.lines.length - 1) * title.lineHeight
   // 2026-07-09 有意偏离旧模板修叠压 bug：旧 MckinseyNavyCover
-  // （templates/consulting.tsx 29-183 行）用 titleLastY+68，但下方 accent 条
+  // （templates/brief.tsx 29-183 行）用 titleLastY+68，但下方 accent 条
   // 占 [titleLastY+40, titleLastY+48]（40 gap + 8 height），只给条底到副题
   // 基线留了 20px（68-48）。副题是 34px 中文 sans body 字（dominantBaseline
   // ="alphabetic"）——按本仓库其余 layout 已反复验证的"六主题统一公式"
-  // 惯例（见 content-rail-numbered.tsx/academic.tsx 等 subheadingY 注释：
+  // 惯例（见 content-rail-numbered.tsx/thesis.tsx 等 subheadingY 注释：
   // 22px 副题的可视 ascent 按其字号本身估算，即 ascent≈fontSize，外加 14px
   // 目标可视间距），34px 副题的可视 ascent≈34，所以条底到副题基线至少要留
   // 34+14=48px 才不叠压，20px 远远不够，字形顶部与 accent 条底边重叠。这里

@@ -83,10 +83,10 @@ function perceivedBrightness(hex: string): number {
   return 0.299 * r + 0.587 * g + 0.114 * b
 }
 
-/** Dark-background themes in the current 6-theme set: tech (#060A13)
+/** Dark-background themes in the current 6-theme set: terminal (#060A13)
  * and creative (#0A0A0C), both far below the midpoint threshold; every
- * other theme's `bg` is a light neutral far above it (consulting #F7F7F2,
- * academic #FAFAF6, custom #FFFFFF, magazine #FAF7F2) — checked
+ * other theme's `bg` is a light neutral far above it (brief #F7F7F2,
+ * thesis #FAFAF6, custom #FFFFFF, magazine #FAF7F2) — checked
  * against every theme token file before picking 128 as the threshold. */
 function isDarkTheme(colors: { bg: string }): boolean {
   return perceivedBrightness(colors.bg) < 128

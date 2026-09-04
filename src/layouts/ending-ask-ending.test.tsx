@@ -70,7 +70,7 @@ describe("ending-ask-ending — board geometry", () => {
   })
 
   it("uses tokens, not baked hex", () => {
-    const { root, tokens } = renderEnding("consulting")
+    const { root, tokens } = renderEnding("brief")
     const button = Array.from(root.querySelectorAll("rect")).find((el) => el.getAttribute("y") === "540")
     expect(button?.getAttribute("fill")).toBe(tokens.colors.primary)
     expect(root.innerHTML).not.toMatch(/#E56A2C/i)

@@ -21,7 +21,7 @@ import { showsDocumentMeta } from "../render/document-meta"
  * 副题兜底逻辑（按当前源码实际行为原样迁移，不改语义）：
  * `slide.subheading || (slide.heading ? "" : "We appreciate your time.")`——
  * 仅当 `slide.heading` 也缺省时才兜底显示该文案；若 heading 有值但
- * subheading 缺省，则不显示副题（同 2026-07-09 consulting 去重裁决，见源码
+ * subheading 缺省，则不显示副题（同 2026-07-09 brief 去重裁决，见源码
  * 同一行注释）。测试覆盖有 heading（无兜底）与无 heading（兜底
  * "We appreciate your time."）两种 ir。defect C 修复：主标题兜底"致谢"改
  * "Thank You"，副标题兜底"谢谢。"改"We appreciate your time."——两个中文
@@ -70,7 +70,7 @@ export function MastheadEnding({ ir, slide, ctx, page }: SvgTemplateProps) {
     HEADING_LAST_BASELINE - Math.max(0, heading.lines.length - 1) * heading.lineHeight
   const headingLastY = HEADING_LAST_BASELINE
 
-  // 兜底只服务完全默认的 ending 页（同 consulting 2026-07-09 去重裁决）
+  // 兜底只服务完全默认的 ending 页（同 brief 2026-07-09 去重裁决）
   const subheading = fitEmphasisLine(slide.subheading || (slide.heading ? "" : "We appreciate your time."), {
     maxWidth: 1088,
     fontSize: 28,

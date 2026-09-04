@@ -80,7 +80,7 @@ function auditFindings(ir: PptxIR): AuditFinding[] {
 }
 
 // Zero-delta white-on-white is 1.0000. The faintest production cover mark
-// (enterprise's 0.28 white rect on paper) measures ~1.018.
+// (bulletin's 0.28 white rect on paper) measures ~1.018.
 const VISIBILITY_FLOOR = 1.01
 
 /** Same alpha-composite math as `../render/ink.ts`'s own (private) `blendOver`. */

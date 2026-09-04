@@ -26,7 +26,7 @@ function ir(theme: string, slides: Slide[]): PptxIR {
 function para(text: string): Component {
   // bento 中"有壳普通块"的代表——paragraph 已去框（passthrough，见
   // PASSTHROUGH_SHELL_TYPES），改用 bullets（仍走 bento shell），同
-  // templates/tech.test.tsx 的先例。
+  // templates/terminal.test.tsx 的先例。
   return { type: "bullets", items: [text], style: "default" }
 }
 
@@ -37,7 +37,7 @@ function para(text: string): Component {
  * boxes/diamonds set fill=surface + stroke={colors.primary}, and
  * primary===accent in bento's single-accent palette). content-bento-panel.tsx
  * stamps its own shell rects with an explicit `data-bento-shell` marker, so
- * this checks that marker directly (see templates/tech.test.tsx's original
+ * this checks that marker directly (see templates/terminal.test.tsx's original
  * doc comment for the fuller disambiguation history).
  */
 function isBentoOutlineShell(r: Element): boolean {
@@ -102,17 +102,17 @@ const sourcedKpiSlide: Slide = {
 // `full-matrix-contrast.test.ts`'s "defect B real contrast fixes" sweep.
 //
 // Semantic-color wave re-pin (visual review round 4): the same arrow is now
-// `#FF6B7D`, tech's own `colors.danger`. The neutral `#FFFFFF` above was
+// `#FF6B7D`, terminal's own `colors.danger`. The neutral `#FFFFFF` above was
 // never a design decision, it was `accessibleInk` throwing away a red that
-// could not carry on a near-black card; tech's own alert rose measures
+// could not carry on a near-black card; terminal's own alert rose measures
 // 6.29:1 there, so the guard keeps it and the arrow reads as an alert again
 // instead of as plain white text. The one differing token in this pin is
 // that fill — no geometry, no other attribute.
 //
 // graphicInk re-pin (gallery visual review fix/gallery-verdict-round, items
-// 3 and 4): the two icon-card icons' stroke moves from `#14294A` (tech's
+// 3 and 4): the two icon-card icons' stroke moves from `#14294A` (terminal's
 // `colors.primary`) to `#FFFFFF`. Primary is a block-fill token on the eight
-// dark themes — it measures 1.19:1 against tech's own `colors.surface`
+// dark themes — it measures 1.19:1 against terminal's own `colors.surface`
 // `#121A30`, so those icons were drawn but invisible. `graphicInk` holds an
 // icon stroke to WCAG's 3:1 non-text floor and falls back to
 // `readableOn(surface)`. Two tokens differ in this pin, both icon strokes —
@@ -150,9 +150,9 @@ const STEP_ASIDE_TECH_MARKUP =
   "<g data-face-mode=\"fallback\" data-face-stepped-aside=\"bento-panel\"><line x1=\"88\" y1=\"76\" x2=\"1192\" y2=\"76\" stroke=\"#24304A\" stroke-width=\"1.2\"></line><text x=\"88\" y=\"127\" font-size=\"34\" font-weight=\"600\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" fill=\"#EAF1FA\" dominant-baseline=\"alphabetic\">七项要点</text><g data-audit-rect=\"88,171,1104,477\"><g data-audit-box=\"88,178.98,1104,60\"><g transform=\"translate(88,178.98)\"><circle cx=\"5\" cy=\"18.8\" r=\"3\" fill=\"#14294A\"></circle><text x=\"26\" y=\"26\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"24\" fill=\"#EAF1FA\" dominant-baseline=\"alphabetic\">要点 0</text></g></g><g data-audit-box=\"88,244.98,1104,60\"><g transform=\"translate(88,244.98)\"><circle cx=\"5\" cy=\"18.8\" r=\"3\" fill=\"#14294A\"></circle><text x=\"26\" y=\"26\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"24\" fill=\"#EAF1FA\" dominant-baseline=\"alphabetic\">要点 1</text></g></g><g data-audit-box=\"88,310.98,1104,60\"><g transform=\"translate(88,310.98)\"><circle cx=\"5\" cy=\"18.8\" r=\"3\" fill=\"#14294A\"></circle><text x=\"26\" y=\"26\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"24\" fill=\"#EAF1FA\" dominant-baseline=\"alphabetic\">要点 2</text></g></g><g data-audit-box=\"88,376.98,1104,60\"><g transform=\"translate(88,376.98)\"><circle cx=\"5\" cy=\"18.8\" r=\"3\" fill=\"#14294A\"></circle><text x=\"26\" y=\"26\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"24\" fill=\"#EAF1FA\" dominant-baseline=\"alphabetic\">要点 3</text></g></g><g data-audit-box=\"88,442.98,1104,60\"><g transform=\"translate(88,442.98)\"><circle cx=\"5\" cy=\"18.8\" r=\"3\" fill=\"#14294A\"></circle><text x=\"26\" y=\"26\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"24\" fill=\"#EAF1FA\" dominant-baseline=\"alphabetic\">要点 4</text></g></g><g data-audit-box=\"88,508.98,1104,60\"><g transform=\"translate(88,508.98)\"><circle cx=\"5\" cy=\"18.8\" r=\"3\" fill=\"#14294A\"></circle><text x=\"26\" y=\"26\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"24\" fill=\"#EAF1FA\" dominant-baseline=\"alphabetic\">要点 5</text></g></g><g data-audit-box=\"88,574.98,1104,60\"><g transform=\"translate(88,574.98)\"><circle cx=\"5\" cy=\"18.8\" r=\"3\" fill=\"#14294A\"></circle><text x=\"26\" y=\"26\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"24\" fill=\"#EAF1FA\" dominant-baseline=\"alphabetic\">要点 6</text></g></g></g></g>"
 
 describe("BentoPanelContent", () => {
-  it("tech tokens 下与旧 BentoTechContent 输出逐字节一致，唯一例外是 defect B 修复的 delta 箭头墨色（kpi_cards+icon_cards 混排拼盘，4-cell 网格）", () => {
-    const ctx = buildCtx(resolveStyle("tech"), {})
-    const deck = ir("tech", [bentoSlide])
+  it("terminal tokens 下与旧 BentoTechContent 输出逐字节一致，唯一例外是 defect B 修复的 delta 箭头墨色（kpi_cards+icon_cards 混排拼盘，4-cell 网格）", () => {
+    const ctx = buildCtx(resolveStyle("terminal"), {})
+    const deck = ir("terminal", [bentoSlide])
 
     const next = renderSvgMarkup(
       <BentoPanelContent ir={deck} slide={bentoSlide} index={0} ctx={ctx} />,
@@ -217,8 +217,8 @@ describe("BentoPanelContent", () => {
   })
 
   it("paints a kpi item's source under its label", () => {
-    const ctx = buildCtx(resolveStyle("tech"), {})
-    const deck = ir("tech", [sourcedKpiSlide])
+    const ctx = buildCtx(resolveStyle("terminal"), {})
+    const deck = ir("terminal", [sourcedKpiSlide])
     const root = parseSvgRoot(
       renderSvgMarkup(
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">
@@ -251,9 +251,9 @@ describe("BentoPanelContent", () => {
     expect(shell.getAttribute("rx")).toBe(String(resolveStyle("vermilion").shape?.radius))
   })
 
-  it("tech tokens 下单个孤立 KPI 项与旧模板逐字节一致——居中小卡退化路径（非满 rect 空壳）", () => {
-    const ctx = buildCtx(resolveStyle("tech"), {})
-    const deck = ir("tech", [soloKpiSlide])
+  it("terminal tokens 下单个孤立 KPI 项与旧模板逐字节一致——居中小卡退化路径（非满 rect 空壳）", () => {
+    const ctx = buildCtx(resolveStyle("terminal"), {})
+    const deck = ir("terminal", [soloKpiSlide])
 
     const next = renderSvgMarkup(
       <BentoPanelContent ir={deck} slide={soloKpiSlide} index={0} ctx={ctx} />,
@@ -276,7 +276,7 @@ describe("BentoPanelContent", () => {
   })
 
   it(">6 单元时让位共享页，逐字节锁定 fallback 输出（bento 网格上限）", () => {
-    const ctx = buildCtx(resolveStyle("tech"), {})
+    const ctx = buildCtx(resolveStyle("terminal"), {})
     const overflowComponents: Component[] = Array.from({ length: 7 }, (_, i) => ({
       type: "bullets" as const,
       items: [`要点 ${i}`],
@@ -288,7 +288,7 @@ describe("BentoPanelContent", () => {
       heading: "七项要点",
       components: overflowComponents,
     } as Slide
-    const deck = ir("tech", [overflowSlide])
+    const deck = ir("terminal", [overflowSlide])
 
     const next = renderSvgMarkup(
       <BentoPanelContent ir={deck} slide={overflowSlide} index={0} ctx={ctx} />,
@@ -311,35 +311,35 @@ describe("BentoPanelContent", () => {
     expect(next).not.toContain("+1 …")
   })
 
-  it("consulting tokens 下用 consulting 自己的 surface/accent/text/muted（证明 token 化成立），tech 烤死色不残留", () => {
-    const consultingTheme = resolveStyle("consulting")
+  it("brief tokens 下用 brief 自己的 surface/accent/text/muted（证明 token 化成立），terminal 烤死色不残留", () => {
+    const consultingTheme = resolveStyle("brief")
     const ctx = buildCtx(consultingTheme, {})
-    const deck = ir("consulting", [bentoSlide])
+    const deck = ir("brief", [bentoSlide])
     const out = renderSvgMarkup(
       <BentoPanelContent ir={deck} slide={bentoSlide} index={0} ctx={ctx} />,
     )
 
     expect(out).toContain(ctx.colors.surface as string) // bento 卡壳 fill
-    // 卡壳描边 + 发光点缀命中——W8 fix round 起 KPI 数值文字本身在 consulting
+    // 卡壳描边 + 发光点缀命中——W8 fix round 起 KPI 数值文字本身在 brief
     // 上改走 accessibleInk 回退色，不再是这处命中的来源之一（见下一条用例）。
     expect(out).toContain(ctx.colors.accent as string)
     expect(out).toContain(ctx.colors.text as string)
     expect(out).toContain(ctx.colors.muted as string)
 
-    // tech 自己的青瓷青光/深蓝烤死色不得残留（本函数体内本无烤死色字面量，
-    // 这里是回归锁：确认没有意外把 tech 的 accent/primary 当字面量写死）。
-    expect(out).not.toContain("#53E0D2") // tech accent
-    expect(out).not.toContain("#14294A") // tech primary（深底组重设计后与 accent 不再同色，两个角色各锁一条）
-    expect(out).not.toContain("#121A30") // tech surface
-    expect(out).not.toContain("#0A0F1E") // tech bg
+    // terminal 自己的青瓷青光/深蓝烤死色不得残留（本函数体内本无烤死色字面量，
+    // 这里是回归锁：确认没有意外把 terminal 的 accent/primary 当字面量写死）。
+    expect(out).not.toContain("#53E0D2") // terminal accent
+    expect(out).not.toContain("#14294A") // terminal primary（深底组重设计后与 accent 不再同色，两个角色各锁一条）
+    expect(out).not.toContain("#121A30") // terminal surface
+    expect(out).not.toContain("#0A0F1E") // terminal bg
 
     expect(out).toContain("架构拼盘")
   })
 
-  it("W8 fix round：consulting 的 colors.accent（#FFC72C）对 KPI 卡片自己的 surface（#FFFFFF）只有 ~1.56:1，数值文字不再是几乎不可读的黄字压白卡", () => {
-    const consultingTheme = resolveStyle("consulting")
+  it("W8 fix round：brief 的 colors.accent（#FFC72C）对 KPI 卡片自己的 surface（#FFFFFF）只有 ~1.56:1，数值文字不再是几乎不可读的黄字压白卡", () => {
+    const consultingTheme = resolveStyle("brief")
     const ctx = buildCtx(consultingTheme, {})
-    const deck = ir("consulting", [bentoSlide])
+    const deck = ir("brief", [bentoSlide])
     const markup = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg">
         <BentoPanelContent ir={deck} slide={bentoSlide} index={0} ctx={ctx} />
@@ -356,7 +356,7 @@ describe("BentoPanelContent", () => {
     expect(valueTexts).toHaveLength(2) // kpiComponent's 2 items
 
     for (const valueText of valueTexts) {
-      // The whole sibling group falls back to consulting's own text token.
+      // The whole sibling group falls back to brief's own text token.
       // colors.accent itself measures ~1.56:1 against this card's surface,
       // the same ratio the W8 walkthrough's live `pptwise audit` run caught.
       expect(valueText.getAttribute("fill")).toBe(consultingTheme.colors.text)
@@ -373,7 +373,7 @@ describe("BentoPanelContent", () => {
   })
 
   it("falls every sibling KPI value back when one narrow card crosses below the large-text floor", () => {
-    const base = buildCtx(resolveStyle("tech"), {})
+    const base = buildCtx(resolveStyle("terminal"), {})
     const mixed = {
       ...base,
       defaultBg: "#3D2E78",
@@ -398,7 +398,7 @@ describe("BentoPanelContent", () => {
       heading: "混合门槛",
       components: [component],
     } as Slide
-    const deck = ir("tech", [slide])
+    const deck = ir("terminal", [slide])
     const root = parseSvgRoot(
       renderSvgMarkup(
         <svg xmlns="http://www.w3.org/2000/svg">
@@ -417,7 +417,7 @@ describe("BentoPanelContent", () => {
   })
 
   it("keeps every sibling KPI value's accent when the whole bento group clears", () => {
-    const base = buildCtx(resolveStyle("tech"), {})
+    const base = buildCtx(resolveStyle("terminal"), {})
     const passing = {
       ...base,
       defaultBg: "#FFFFFF",
@@ -442,7 +442,7 @@ describe("BentoPanelContent", () => {
       heading: "全组过线",
       components: [component],
     } as Slide
-    const deck = ir("tech", [slide])
+    const deck = ir("terminal", [slide])
     const root = parseSvgRoot(
       renderSvgMarkup(
         <svg xmlns="http://www.w3.org/2000/svg">
@@ -458,17 +458,17 @@ describe("BentoPanelContent", () => {
     ])
   })
 
-  // ── 以下为从 templates/tech.test.tsx 回填的 Content/bento 场景覆盖 ──
+  // ── 以下为从 templates/terminal.test.tsx 回填的 Content/bento 场景覆盖 ──
 
   it("passes assertSubset (no forbidden elements)", () => {
-    const ctx = buildCtx(resolveStyle("tech"), {})
+    const ctx = buildCtx(resolveStyle("terminal"), {})
     const slide: Slide = {
       type: "content",
       kind: "points",
       heading: "四大支柱",
       components: [para("一"), para("二"), para("三"), para("四")],
     } as Slide
-    const doc = ir("tech", [slide])
+    const doc = ir("terminal", [slide])
     const markup = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg">
         <BentoPanelContent ir={doc} slide={slide} index={0} ctx={ctx} />
@@ -480,14 +480,14 @@ describe("BentoPanelContent", () => {
   })
 
   it("4 components 精确产出 4 个 data-audit-box 卡片，每张都是细描边卡（fill=surface, stroke=accent@0.3, rx=6），无角标", () => {
-    const ctx = buildCtx(resolveStyle("tech"), {})
+    const ctx = buildCtx(resolveStyle("terminal"), {})
     const slide: Slide = {
       type: "content",
       kind: "points",
       heading: "四大支柱",
       components: [para("一"), para("二"), para("三"), para("四")],
     } as Slide
-    const doc = ir("tech", [slide])
+    const doc = ir("terminal", [slide])
     const markup = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg">
         <BentoPanelContent ir={doc} slide={slide} index={0} ctx={ctx} />
@@ -516,7 +516,7 @@ describe("BentoPanelContent", () => {
   })
 
   it("explodes a 4-item kpi_cards component into 4 individual bento cards, each showing its own value", () => {
-    const ctx = buildCtx(resolveStyle("tech"), {})
+    const ctx = buildCtx(resolveStyle("terminal"), {})
     const kpiComponent4: Component = {
       type: "kpi_cards",
       items: [
@@ -532,7 +532,7 @@ describe("BentoPanelContent", () => {
       heading: "核心指标",
       components: [kpiComponent4],
     } as Slide
-    const doc = ir("tech", [slide])
+    const doc = ir("terminal", [slide])
     const markup = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg">
         <BentoPanelContent ir={doc} slide={slide} index={0} ctx={ctx} />
@@ -557,7 +557,7 @@ describe("BentoPanelContent", () => {
   })
 
   it("explodes a 3-item icon_cards component into 3 individual bento cards, each showing icon/title/text at 22px bold titles", () => {
-    const ctx = buildCtx(resolveStyle("tech"), {})
+    const ctx = buildCtx(resolveStyle("terminal"), {})
     const iconCardsComponent3: Component = {
       type: "icon_cards",
       items: [
@@ -572,7 +572,7 @@ describe("BentoPanelContent", () => {
       heading: "三大原则",
       components: [iconCardsComponent3],
     } as Slide
-    const doc = ir("tech", [slide])
+    const doc = ir("terminal", [slide])
     const markup = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg">
         <BentoPanelContent ir={doc} slide={slide} index={0} ctx={ctx} />
@@ -608,7 +608,7 @@ describe("BentoPanelContent", () => {
   })
 
   it("keeps a steps component as one whole bento cell, not exploded into per-item cards", () => {
-    const ctx = buildCtx(resolveStyle("tech"), {})
+    const ctx = buildCtx(resolveStyle("terminal"), {})
     const stepsComponent: Component = {
       type: "steps",
       items: [
@@ -623,7 +623,7 @@ describe("BentoPanelContent", () => {
       heading: "操作流程",
       components: [stepsComponent, para("补充说明")],
     } as Slide
-    const doc = ir("tech", [slide])
+    const doc = ir("terminal", [slide])
     const markup = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg">
         <BentoPanelContent ir={doc} slide={slide} index={0} ctx={ctx} />
@@ -683,7 +683,7 @@ describe("BentoPanelContent", () => {
   ] as const)(
     "renders a %s component bare in the grid (double-shell governance) — no outline shell, own frame intact",
     (_label, component, expectedText) => {
-      const ctx = buildCtx(resolveStyle("tech"), {})
+      const ctx = buildCtx(resolveStyle("terminal"), {})
       const paragraphComponent: Component = para("普通块仍然有卡壳")
       const slide: Slide = {
         type: "content",
@@ -691,7 +691,7 @@ describe("BentoPanelContent", () => {
         heading: "双壳治理",
         components: [component, paragraphComponent],
       } as Slide
-      const doc = ir("tech", [slide])
+      const doc = ir("terminal", [slide])
       const markup = renderSvgMarkup(
         <svg xmlns="http://www.w3.org/2000/svg">
           <BentoPanelContent ir={doc} slide={slide} index={0} ctx={ctx} />
@@ -720,7 +720,7 @@ describe("BentoPanelContent", () => {
   )
 
   it("keeps each exploded KPI card's label baseline >=30px below its value baseline (no label/value overlap)", () => {
-    const ctx = buildCtx(resolveStyle("tech"), {})
+    const ctx = buildCtx(resolveStyle("terminal"), {})
     const kpiComponent4: Component = {
       type: "kpi_cards",
       items: [
@@ -736,7 +736,7 @@ describe("BentoPanelContent", () => {
       heading: "核心指标",
       components: [kpiComponent4],
     } as Slide
-    const doc = ir("tech", [slide])
+    const doc = ir("terminal", [slide])
     const markup = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg">
         <BentoPanelContent ir={doc} slide={slide} index={0} ctx={ctx} />
@@ -761,7 +761,7 @@ describe("BentoPanelContent", () => {
   })
 
   it("renders each exploded KPI card's value at display-level size (72px hero tier) in colors.accent, plus a restrained glow accent past it", () => {
-    const ctx = buildCtx(resolveStyle("tech"), {})
+    const ctx = buildCtx(resolveStyle("terminal"), {})
     const kpiComponent4: Component = {
       type: "kpi_cards",
       items: [
@@ -777,7 +777,7 @@ describe("BentoPanelContent", () => {
       heading: "核心指标",
       components: [kpiComponent4],
     } as Slide
-    const doc = ir("tech", [slide])
+    const doc = ir("terminal", [slide])
     const markup = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg">
         <BentoPanelContent ir={doc} slide={slide} index={0} ctx={ctx} />
@@ -822,7 +822,7 @@ describe("BentoPanelContent", () => {
   })
 
   it("bumps a KPI card's value to the 72px hero size in a full-height cell, and reserves extra glow clearance from a co-present delta arrow", () => {
-    const ctx = buildCtx(resolveStyle("tech"), {})
+    const ctx = buildCtx(resolveStyle("terminal"), {})
     // 2-unit grid: both cells span the bento rect's full height — comfortably
     // over the hero threshold, so both items earn the 72px tier. Item 0 has
     // no icon + a long, unit-less value (forces fitSvgLine to shrink until
@@ -847,7 +847,7 @@ describe("BentoPanelContent", () => {
       heading: "核心指标",
       components: [kpiComponent2],
     } as Slide
-    const doc = ir("tech", [slide])
+    const doc = ir("terminal", [slide])
     const markup = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg">
         <BentoPanelContent ir={doc} slide={slide} index={0} ctx={ctx} />
@@ -905,7 +905,7 @@ describe("BentoPanelContent", () => {
   })
 
   it("mixes an exploded 2-item kpi_cards component with a chart component into a 3-unit bento grid", () => {
-    const ctx = buildCtx(resolveStyle("tech"), {})
+    const ctx = buildCtx(resolveStyle("terminal"), {})
     const kpiComponent2: Component = {
       type: "kpi_cards",
       items: [
@@ -924,7 +924,7 @@ describe("BentoPanelContent", () => {
       heading: "混合拼盘",
       components: [kpiComponent2, chartComponent],
     } as Slide
-    const doc = ir("tech", [slide])
+    const doc = ir("terminal", [slide])
     const markup = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg">
         <BentoPanelContent ir={doc} slide={slide} index={0} ctx={ctx} />
@@ -943,7 +943,7 @@ describe("BentoPanelContent", () => {
   })
 
   it("centers a lone KPI item's value vertically in a tall bento cell (2-unit grid, mixed with a paragraph)", () => {
-    const ctx = buildCtx(resolveStyle("tech"), {})
+    const ctx = buildCtx(resolveStyle("terminal"), {})
     const kpiComponent1: Component = {
       type: "kpi_cards",
       items: [{ value: "88", label: "达成率" }],
@@ -954,7 +954,7 @@ describe("BentoPanelContent", () => {
       heading: "双元混排",
       components: [kpiComponent1, para("这里是配对展示的另一块说明文字。")],
     } as Slide
-    const doc = ir("tech", [slide])
+    const doc = ir("terminal", [slide])
     const markup = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg">
         <BentoPanelContent ir={doc} slide={slide} index={0} ctx={ctx} />
@@ -977,7 +977,7 @@ describe("BentoPanelContent", () => {
   })
 
   it("lays out exactly 5 components as a 3+2 bento grid (no degrade) — verifies capacity.ts's per-theme 5/6 override", () => {
-    const ctx = buildCtx(resolveStyle("tech"), {})
+    const ctx = buildCtx(resolveStyle("terminal"), {})
     const texts = Array.from({ length: 5 }, (_, i) => `要点 ${i}`)
     const components = texts.map(para)
     const slide: Slide = {
@@ -986,7 +986,7 @@ describe("BentoPanelContent", () => {
       heading: "五项要点",
       components,
     } as Slide
-    const doc = ir("tech", [slide])
+    const doc = ir("terminal", [slide])
     const markup = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg">
         <BentoPanelContent ir={doc} slide={slide} index={0} ctx={ctx} />
@@ -1005,7 +1005,7 @@ describe("BentoPanelContent", () => {
   })
 
   it("lays out exactly 6 components as a 3x2 bento grid (no degrade)", () => {
-    const ctx = buildCtx(resolveStyle("tech"), {})
+    const ctx = buildCtx(resolveStyle("terminal"), {})
     const texts = Array.from({ length: 6 }, (_, i) => `要点 ${i}`)
     const components = texts.map(para)
     const slide: Slide = {
@@ -1014,7 +1014,7 @@ describe("BentoPanelContent", () => {
       heading: "六项要点",
       components,
     } as Slide
-    const doc = ir("tech", [slide])
+    const doc = ir("terminal", [slide])
     const markup = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg">
         <BentoPanelContent ir={doc} slide={slide} index={0} ctx={ctx} />
@@ -1032,7 +1032,7 @@ describe("BentoPanelContent", () => {
   })
 
   it("lays out 6 short bullets components as a real 3x2 grid — 6 panel cards, zero-overflow audit clean", () => {
-    const ctx = buildCtx(resolveStyle("tech"), {})
+    const ctx = buildCtx(resolveStyle("terminal"), {})
     const components: Component[] = Array.from({ length: 6 }, (_, i) => ({
       type: "bullets" as const,
       items: [`要点 ${i}-A`, `要点 ${i}-B`],
@@ -1043,7 +1043,7 @@ describe("BentoPanelContent", () => {
       heading: "六项要点",
       components,
     } as Slide
-    const doc = ir("tech", [slide])
+    const doc = ir("terminal", [slide])
     const markup = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg">
         <BentoPanelContent ir={doc} slide={slide} index={0} ctx={ctx} />
@@ -1059,7 +1059,7 @@ describe("BentoPanelContent", () => {
   })
 
   it("renders self-visual components (callout/code) bare in the grid — no outline shell, no accent stripe", () => {
-    const ctx = buildCtx(resolveStyle("tech"), {})
+    const ctx = buildCtx(resolveStyle("terminal"), {})
     const calloutComponent: Component = {
       type: "callout",
       variant: "tip",
@@ -1077,7 +1077,7 @@ describe("BentoPanelContent", () => {
       heading: "卡壳感知",
       components: [calloutComponent, codeComponent, paragraphComponent],
     } as Slide
-    const doc = ir("tech", [slide])
+    const doc = ir("terminal", [slide])
     const markup = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg">
         <BentoPanelContent ir={doc} slide={slide} index={0} ctx={ctx} />
@@ -1103,7 +1103,7 @@ describe("BentoPanelContent", () => {
   })
 
   it("renders a verdict_banner bare in the grid — no outline shell, no accent stripe (joins SELF_VISUAL_TYPES)", () => {
-    const ctx = buildCtx(resolveStyle("tech"), {})
+    const ctx = buildCtx(resolveStyle("terminal"), {})
     const verdictComponent: Component = {
       type: "verdict_banner",
       tone: "positive",
@@ -1116,7 +1116,7 @@ describe("BentoPanelContent", () => {
       heading: "结论条卡壳感知",
       components: [verdictComponent, paragraphComponent],
     } as Slide
-    const doc = ir("tech", [slide])
+    const doc = ir("terminal", [slide])
     const markup = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg">
         <BentoPanelContent ir={doc} slide={slide} index={0} ctx={ctx} />
@@ -1136,7 +1136,7 @@ describe("BentoPanelContent", () => {
     )
     expect(stripes).toHaveLength(0)
     // verdict_banner still renders its own frame. Its short editorial mark
-    // resolves to tech's dark-theme bright variant without restoring a card.
+    // resolves to terminal's dark-theme bright variant without restoring a card.
     expect(markup).toContain("自带视觉的结论条。")
     const bannerMark = Array.from(root.querySelectorAll("rect")).find(
       (r) => r.getAttribute("height") === "4" && r.getAttribute("rx") == null,
@@ -1145,14 +1145,14 @@ describe("BentoPanelContent", () => {
   })
 
   it("renders a single ordinary component with no shell card — bare, centered in the bento rect", () => {
-    const ctx = buildCtx(resolveStyle("tech"), {})
+    const ctx = buildCtx(resolveStyle("terminal"), {})
     const slide: Slide = {
       type: "content",
       kind: "points",
       heading: "唯一要点",
       components: [para("独占一页的普通块。")],
     } as Slide
-    const doc = ir("tech", [slide])
+    const doc = ir("terminal", [slide])
     const markup = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg">
         <BentoPanelContent ir={doc} slide={slide} index={0} ctx={ctx} />
@@ -1171,7 +1171,7 @@ describe("BentoPanelContent", () => {
   })
 
   it("keeps a single KPI item as one modest centered card (400 wide), not a rect-filling shell", () => {
-    const ctx = buildCtx(resolveStyle("tech"), {})
+    const ctx = buildCtx(resolveStyle("terminal"), {})
     const kpiComponent1: Component = {
       type: "kpi_cards",
       items: [{ value: "42", unit: "%", label: "唯一指标", delta: "up" }],
@@ -1182,7 +1182,7 @@ describe("BentoPanelContent", () => {
       heading: "单一指标",
       components: [kpiComponent1],
     } as Slide
-    const doc = ir("tech", [slide])
+    const doc = ir("terminal", [slide])
     const markup = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg">
         <BentoPanelContent ir={doc} slide={slide} index={0} ctx={ctx} />
@@ -1209,7 +1209,7 @@ describe("BentoPanelContent", () => {
   })
 
   it("degrades when a single card's component content overflows its height budget (4 components, one tall)", () => {
-    const ctx = buildCtx(resolveStyle("tech"), {})
+    const ctx = buildCtx(resolveStyle("terminal"), {})
     // 6 long bullet items in a single card: even a single unwrapped line per
     // item already exceeds a bento cell's content budget, and these CJK
     // sentences are long enough to wrap to 2 lines in the narrower cells too.
@@ -1224,7 +1224,7 @@ describe("BentoPanelContent", () => {
       heading: "四大支柱",
       components,
     } as Slide
-    const doc = ir("tech", [slide])
+    const doc = ir("terminal", [slide])
     const markup = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg">
         <BentoPanelContent ir={doc} slide={slide} index={0} ctx={ctx} />
@@ -1238,7 +1238,7 @@ describe("BentoPanelContent", () => {
   })
 
   it("scales an oversized chart component to fit its card instead of degrading (4 components, chart in a quarter-height cell)", () => {
-    const ctx = buildCtx(resolveStyle("tech"), {})
+    const ctx = buildCtx(resolveStyle("terminal"), {})
     const chartComponent: Component = {
       type: "chart",
       chart_type: "bar",
@@ -1259,7 +1259,7 @@ describe("BentoPanelContent", () => {
       heading: "四项要点",
       components,
     } as Slide
-    const doc = ir("tech", [slide])
+    const doc = ir("terminal", [slide])
     const markup = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg">
         <BentoPanelContent ir={doc} slide={slide} index={0} ctx={ctx} />
@@ -1284,14 +1284,14 @@ describe("BentoPanelContent", () => {
   })
 
   it("each bento card carries both a data-audit-box (h-overflow) and a card-level data-audit-rect (v-overflow)", () => {
-    const ctx = buildCtx(resolveStyle("tech"), {})
+    const ctx = buildCtx(resolveStyle("terminal"), {})
     const slide: Slide = {
       type: "content",
       kind: "points",
       heading: "四大支柱",
       components: [para("一"), para("二"), para("三"), para("四")],
     } as Slide
-    const doc = ir("tech", [slide])
+    const doc = ir("terminal", [slide])
     const markup = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg">
         <BentoPanelContent ir={doc} slide={slide} index={0} ctx={ctx} />
@@ -1313,7 +1313,7 @@ describe("BentoPanelContent", () => {
   })
 
   it("heading converges a pathologically long (48-char) heading to <44pt or 2 lines", () => {
-    const ctx = buildCtx(resolveStyle("tech"), {})
+    const ctx = buildCtx(resolveStyle("terminal"), {})
     const longHeading = "微服务架构下分布式事务一致性保障机制补偿策略设计".repeat(3).slice(0, 48)
     expect(longHeading.length).toBe(48)
     const slide: Slide = {
@@ -1322,7 +1322,7 @@ describe("BentoPanelContent", () => {
       heading: longHeading,
       components: [para("概要")],
     } as Slide
-    const doc = ir("tech", [slide])
+    const doc = ir("terminal", [slide])
     const markup = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg">
         <BentoPanelContent ir={doc} slide={slide} index={0} ctx={ctx} />
@@ -1359,8 +1359,8 @@ describe("BentoPanelContent", () => {
     }
 
     it("no subheading: bento rect y stays at the pre-subheading formula (headingLastY + 36)", () => {
-      const ctx = buildCtx(resolveStyle("tech"), {})
-      const doc = ir("tech", [base])
+      const ctx = buildCtx(resolveStyle("terminal"), {})
+      const doc = ir("terminal", [base])
       const markup = renderSvgMarkup(
         <svg xmlns="http://www.w3.org/2000/svg">
           <BentoPanelContent ir={doc} slide={base} index={0} ctx={ctx} />
@@ -1372,9 +1372,9 @@ describe("BentoPanelContent", () => {
     })
 
     it("with subheading: renders in colors.accent below the heading, and pushes the bento grid down 46 (S3b: headingLastY+42)", () => {
-      const ctx = buildCtx(resolveStyle("tech"), {})
+      const ctx = buildCtx(resolveStyle("terminal"), {})
       const slide: Slide = { ...base, subheading: "效率提升三成，风险敞口下降" } as Slide
-      const doc = ir("tech", [slide])
+      const doc = ir("terminal", [slide])
       const markup = renderSvgMarkup(
         <svg xmlns="http://www.w3.org/2000/svg">
           <BentoPanelContent ir={doc} slide={slide} index={0} ctx={ctx} />
@@ -1391,9 +1391,9 @@ describe("BentoPanelContent", () => {
     })
 
     it("emphasis markup: ** ** segments invert to colors.text at fontWeight 700", () => {
-      const ctx = buildCtx(resolveStyle("tech"), {})
+      const ctx = buildCtx(resolveStyle("terminal"), {})
       const slide: Slide = { ...base, subheading: "**效率提升三成**，风险敞口下降" } as Slide
-      const doc = ir("tech", [slide])
+      const doc = ir("terminal", [slide])
       const markup = renderSvgMarkup(
         <svg xmlns="http://www.w3.org/2000/svg">
           <BentoPanelContent ir={doc} slide={slide} index={0} ctx={ctx} />
@@ -1412,9 +1412,9 @@ describe("BentoPanelContent", () => {
     })
 
     it("overly long subheading shrinks to 16px then truncates", () => {
-      const ctx = buildCtx(resolveStyle("tech"), {})
+      const ctx = buildCtx(resolveStyle("terminal"), {})
       const slide: Slide = { ...base, subheading: CJK_LONG.repeat(2) } as Slide
-      const doc = ir("tech", [slide])
+      const doc = ir("terminal", [slide])
       const markup = renderSvgMarkup(
         <svg xmlns="http://www.w3.org/2000/svg">
           <BentoPanelContent ir={doc} slide={slide} index={0} ctx={ctx} />

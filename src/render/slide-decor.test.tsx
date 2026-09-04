@@ -24,7 +24,7 @@ function deck(slides: Slide[]): PptxIR {
   return {
     version: "5",
     filename: "d.pptx",
-    theme: { id: "consulting" },
+    theme: { id: "brief" },
     meta: {},
     assets: { images: {} },
     slides,

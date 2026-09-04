@@ -17,7 +17,7 @@ import { DecorPiece } from "./decor-piece"
  *
  * 身份件：accent 形状即主题签名，留中景压在字下，原色满画，不减淡。
  * 位置写死，不读内容、不随 seed 变。零 theme id、零 hex，颜色只来自 ctx。
- * pulse 是 MOTIF_CANDIDATES 单成员，改画不带跑别家。
+ * clinic 是 MOTIF_CANDIDATES 单成员，改画不带跑别家。
  */
 
 /** Absolute points for the board path `M 96 560 h 300 l 24 -36 l 36 72 l 24 -36 h 700`. A relative `path` bbox is parsed as number pairs and swallows the title, so the midground contract drops it. */

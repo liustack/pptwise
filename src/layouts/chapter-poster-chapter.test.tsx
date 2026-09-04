@@ -46,15 +46,15 @@ describe("PosterChapter", () => {
     // big-number spacing」一案——PosterChapter 与旧 EditorialDarkChapter 是
     // 同一份构图逻辑做 token 替换，几何值不变，这里固化为字面量而非与已删除
     // 的旧模板逐字节比较。
-    const ctx = buildCtx(resolveStyle("insight"), {})
-    const deck = ir("insight")
+    const ctx = buildCtx(resolveStyle("ledger"), {})
+    const deck = ir("ledger")
 
     const { root: root1 } = render(<PosterChapter ir={deck} slide={chapter1} index={0} ctx={ctx} />)
     const number1 = Array.from(root1.querySelectorAll("text")).find((t) => t.textContent === "01")!
     expect(number1.getAttribute("y")).toBe("400")
     expect(number1.getAttribute("font-size")).toBe("224")
     expect(number1.getAttribute("font-weight")).toBe("800")
-    // 深底组皮肤重设计（2026-08-19）后 insight 的 primary 变成「与底几乎同色的
+    // 深底组皮肤重设计（2026-08-19）后 ledger 的 primary 变成「与底几乎同色的
     // 色块底色」，压 chapter 底色只剩 1.x:1——本版式早就有的 accessibleInk
     // 因此接管，巨幅数字落到 readableOn 的白墨（压 #0F1216 实测 18.78:1）。
     // 断言锁的仍是「数字色由对比度自适应挑出来」这件事，只是钉的值换了。
@@ -83,12 +83,12 @@ describe("PosterChapter", () => {
     const deck: PptxIR = {
       version: "3",
       filename: "x.pptx",
-      theme: { id: "insight" },
+      theme: { id: "ledger" },
       meta: {},
       assets: { images: {} },
       slides: [longSlide],
     } as unknown as PptxIR
-    const ctx = buildCtx(resolveStyle("insight"), {})
+    const ctx = buildCtx(resolveStyle("ledger"), {})
     const { root } = render(<PosterChapter ir={deck} slide={longSlide} index={0} ctx={ctx} />)
     expect(() => assertSubset(root)).not.toThrow()
 
@@ -104,21 +104,21 @@ describe("PosterChapter", () => {
     }
   })
 
-  it("consulting tokens 下用 consulting 的 primary/border/muted 色，creative 的烤死色不残留（token 化成立）", () => {
-    const consultingTheme = resolveStyle("consulting")
+  it("brief tokens 下用 brief 的 primary/border/muted 色，creative 的烤死色不残留（token 化成立）", () => {
+    const consultingTheme = resolveStyle("brief")
     const ctx = buildCtx(consultingTheme, {})
-    const deck = ir("consulting")
+    const deck = ir("brief")
     const out = renderSvgMarkup(<PosterChapter ir={deck} slide={chapter1} index={0} ctx={ctx} />)
 
-    // token 化成立：章节数字走 consulting 的 primary，不是写死的 insight RED
-    expect(out).toContain("#1E2A4A") // consulting primary（编辑组换血后与 text 不再同值）
-    expect(out).not.toContain("#16202B") // insight primary 不得残留
-    expect(out).not.toContain("#F0A63C") // insight accent（终端琥珀）本就不该出现
-    expect(out).not.toContain("#F2EFE8") // insight text 不得残留
-    expect(out).not.toContain("#9AA7B4") // insight muted 不得残留
-    expect(out).not.toContain("#2A3440") // insight border 不得残留
+    // token 化成立：章节数字走 brief 的 primary，不是写死的 ledger RED
+    expect(out).toContain("#1E2A4A") // brief primary（编辑组换血后与 text 不再同值）
+    expect(out).not.toContain("#16202B") // ledger primary 不得残留
+    expect(out).not.toContain("#F0A63C") // ledger accent（终端琥珀）本就不该出现
+    expect(out).not.toContain("#F2EFE8") // ledger text 不得残留
+    expect(out).not.toContain("#9AA7B4") // ledger muted 不得残留
+    expect(out).not.toContain("#2A3440") // ledger border 不得残留
 
-    // ctx 确实按主题切换：heading 字体走 consulting 的解析结果
+    // ctx 确实按主题切换：heading 字体走 brief 的解析结果
     expect(out).toContain(`font-family="${ctx.fonts.heading}"`)
     expect(out).toContain(">01<")
   })

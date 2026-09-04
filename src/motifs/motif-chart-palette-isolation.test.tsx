@@ -6,7 +6,7 @@
 // for their own decorative fills (`ctx.colors.chartPalette` — see each
 // file's own header comment: "颜色取 ctx.colors.chartPalette"). Chart
 // palette rotation therefore silently leaked into decor color choice —
-// campaign (a settled 1-member candidate set that MUST render
+// rally (a settled 1-member candidate set that MUST render
 // byte-identically across every seed, per `motif-selection.ts`'s own
 // byte-inertness contract) differed across seeds purely because a page
 // happening to also carry a different implicit chart-palette offset
@@ -44,8 +44,8 @@ const endingSlide: Slide = { type: "ending", components: [] } as Slide
 
 describe("decorative chartPalette-reading motifs are isolated from chart-palette rotation", () => {
   it.each([
-    ["campaign", CampaignMotif, coverSlide] as const,
-    ["classroom", ClassroomMotif, coverSlide] as const,
+    ["rally", CampaignMotif, coverSlide] as const,
+    ["homeroom", ClassroomMotif, coverSlide] as const,
     // cover 撤底带且太阳让位，不再读 chartPalette。ending 才有太阳芯与彩虹划。
     ["crayon", CrayonMotif, endingSlide] as const,
     ["arena", ArenaMotif, coverSlide] as const,

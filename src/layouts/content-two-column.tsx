@@ -23,7 +23,7 @@ import { stepAside } from "../render/step-aside"
  * 对比度自适应修复（W4 fix round，全矩阵扫描发现——与 content-banner-
  * heading.tsx/content-rail-numbered.tsx 同一枚"substitutes colors.primary
  * for accent"缺陷模式，副题固定消费 `colors.primary` 未检查是否真的对当前
- * content 默认背景达标）：classroom（3.09:1）、campaign（3.49:1）均未过
+ * content 默认背景达标）：homeroom（3.09:1）、rally（3.49:1）均未过
  * 22px 副题所需的 4.5:1。改用 `accessibleInk(colors.primary, ctx.defaultBg,
  * fontSize)`——通过校验的主题原样返回、逐字节不变。
  */

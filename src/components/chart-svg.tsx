@@ -89,7 +89,7 @@ export type ChartRenderFn = (
    *
    * Threaded in for *text* ink only. `accentColor` is right for bars, dots
    * and wedges — a fill has no contrast floor — but wrong for a value or
-   * category label painted straight onto the page: consulting's accent is a
+   * category label painted straight onto the page: brief's accent is a
    * light yellow that measures 1.45:1 on its own light background, which is
    * how the 2026-08-15 visual review found unreadable value labels on
    * dumbbell, timeline and the horizontal bar. Text sites route the accent
@@ -122,7 +122,7 @@ const VALUE_FONT_WEIGHT = 600
  */
 const VALUE_LABEL_GAP = 9
 /**
- * Gauge caption keeps 11px (classroom theme-table pages pin this size).
+ * Gauge caption keeps 11px (homeroom theme-table pages pin this size).
  * Dumbbell "from" values sit on the 16px (12pt) readable floor. The two used to share
  * one leftover 11px constant.
  */

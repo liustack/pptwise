@@ -8,7 +8,7 @@ import { readableOn } from "../render/ink"
 import { RailNumberedContent } from "./content-rail-numbered"
 import type { PptxIR, Slide } from "@/ir"
 
-// Branding's brand logo bands (see templates/academic.test.tsx's own
+// Branding's brand logo bands (see templates/thesis.test.tsx's own
 // LOGO_BANDS) — any brand frame placed near a page corner must stay clear
 // of these; the number badge sits top-left (BADGE_Y=96, not 64, specifically
 // to clear TL_LOGO).
@@ -64,8 +64,8 @@ const ir = (theme: string): PptxIR =>
     slides: [chapter1, content1a, content1b, chapter2, content2a],
   }) as unknown as PptxIR
 
-// Literal markup fixed from `templates/academic.tsx`'s `BCGEmeraldContent`
-// under academic tokens (captured once, pre-templates-deletion — see task
+// Literal markup fixed from `templates/thesis.tsx`'s `BCGEmeraldContent`
+// under thesis tokens (captured once, pre-templates-deletion — see task
 // report) — this is what `toBe(legacy)` used to assert at runtime. Fixating
 // it here keeps the same byte-for-byte assertion strength (including the
 // exact rail-node cy at each chapter position, the badge label per slide,
@@ -106,9 +106,9 @@ const EXPECTED_CONTENT_BARE =
   "<rect x=\"96\" y=\"96\" width=\"64\" height=\"32\" rx=\"6\" fill=\"#4A6B8A\"></rect><text x=\"128\" y=\"117\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"16\" font-weight=\"700\" fill=\"#FFFFFF\" text-anchor=\"middle\" dominant-baseline=\"alphabetic\">1.1</text><text x=\"180\" y=\"125\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"40\" font-weight=\"600\" fill=\"#23282E\" dominant-baseline=\"alphabetic\">\u7b80\u62a5</text><g data-audit-rect=\"96,161,1088,479\"><g data-audit-box=\"96,177,1088,34\"><g transform=\"translate(96,177)\"><text x=\"0\" y=\"24\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"24\" fill=\"#23282E\" dominant-baseline=\"alphabetic\">\u4e00</text></g></g></g>"
 
 describe("RailNumberedContent", () => {
-  it("academic tokens 下输出与迁移前的 BCGEmeraldContent 逐字节一致（档位一，含跨章节编号 + 多 component/subheading/footnote）", () => {
-    const ctx = buildCtx({ ...resolveStyle("classroom"), shape: undefined }, {})
-    const deck = ir("classroom")
+  it("thesis tokens 下输出与迁移前的 BCGEmeraldContent 逐字节一致（档位一，含跨章节编号 + 多 component/subheading/footnote）", () => {
+    const ctx = buildCtx({ ...resolveStyle("homeroom"), shape: undefined }, {})
+    const deck = ir("homeroom")
 
     const next1a = renderSvgMarkup(<RailNumberedContent ir={deck} slide={content1a} index={1} ctx={ctx} />)
     expect(next1a).toBe(EXPECTED_CONTENT_1A)
@@ -131,13 +131,13 @@ describe("RailNumberedContent", () => {
   })
 
   it("单块 slide（无 subheading/footnote，单章节 deck）同样逐字节一致", () => {
-    const ctx = buildCtx({ ...resolveStyle("classroom"), shape: undefined }, {})
+    const ctx = buildCtx({ ...resolveStyle("homeroom"), shape: undefined }, {})
     const bare: Slide = { type: "content", kind: "points", heading: "简报", components: [{ type: "paragraph", text: "一" }] } as Slide
     const soloChapter: Slide = { type: "chapter", heading: "唯一章节", components: [] } as Slide
     const deck: PptxIR = {
       version: "3",
       filename: "x.pptx",
-      theme: { id: "classroom" },
+      theme: { id: "homeroom" },
       meta: {},
       assets: { images: {} },
       slides: [soloChapter, bare],
@@ -149,8 +149,8 @@ describe("RailNumberedContent", () => {
   })
 
   it("paints no left rail track (author ruling 2026-09-01), keeps the number badge clear of all four logo bands, no foreignObject", () => {
-    const ctx = buildCtx({ ...resolveStyle("classroom"), shape: undefined }, {})
-    const deck = ir("classroom")
+    const ctx = buildCtx({ ...resolveStyle("homeroom"), shape: undefined }, {})
+    const deck = ir("homeroom")
     const markup = renderSvgMarkup(<RailNumberedContent ir={deck} slide={content1a} index={1} ctx={ctx} />)
     const root = parseSvgRoot(
       `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">${markup}</svg>`,
@@ -189,8 +189,8 @@ describe("RailNumberedContent", () => {
     }
   })
 
-  it("shrinks the number badge label through fitSvgLine instead of overflowing the 64px-wide badge（迁移自 academic.test.tsx，12/10 常规场景 + 100/1000 极端收缩场景）", () => {
-    const ctx = buildCtx({ ...resolveStyle("classroom"), shape: undefined }, {})
+  it("shrinks the number badge label through fitSvgLine instead of overflowing the 64px-wide badge（迁移自 thesis.test.tsx，12/10 常规场景 + 100/1000 极端收缩场景）", () => {
+    const ctx = buildCtx({ ...resolveStyle("homeroom"), shape: undefined }, {})
 
     // Common two-digit-on-both-sides shape ("12.10") still renders at the
     // nominal 14px size — the fit fallback is a safety net, not a change to
@@ -206,7 +206,7 @@ describe("RailNumberedContent", () => {
       heading: `内容${i + 1}`,
       components: [],
     }))
-    const doc12 = ir("classroom")
+    const doc12 = ir("homeroom")
     doc12.slides = [...manyChapters12, ...tenContent]
     const lastContent = tenContent[9]
     const lastIndex = manyChapters12.length + tenContent.length - 1
@@ -233,7 +233,7 @@ describe("RailNumberedContent", () => {
       heading: `内容${i + 1}`,
       components: [],
     }))
-    const doc100 = ir("classroom")
+    const doc100 = ir("homeroom")
     doc100.slides = [...manyChapters100, ...thousandContent]
     const bigContent = thousandContent[999]
     const bigIndex = manyChapters100.length + thousandContent.length - 1
@@ -277,8 +277,8 @@ describe("RailNumberedContent", () => {
     expect(badge.getAttribute("rx")).toBe(String(tokens.shape?.radius))
   })
 
-  it("Content body passes subset validation（迁移自 academic.test.tsx）", () => {
-    const ctx = buildCtx({ ...resolveStyle("classroom"), shape: undefined }, {})
+  it("Content body passes subset validation（迁移自 thesis.test.tsx）", () => {
+    const ctx = buildCtx({ ...resolveStyle("homeroom"), shape: undefined }, {})
     const slide: Slide = {
       type: "content",
       kind: "points",
@@ -291,7 +291,7 @@ describe("RailNumberedContent", () => {
     const doc: PptxIR = {
       version: "3",
       filename: "x.pptx",
-      theme: { id: "classroom" },
+      theme: { id: "homeroom" },
       meta: {},
       assets: { images: {} },
       slides: [slide],
@@ -304,7 +304,7 @@ describe("RailNumberedContent", () => {
   })
 
   it("超长标题（40+ 字）经 fitHeadingLines 收缩/换行渲染，不整段输出原文，通过 subset validation（补齐迁移前遗漏的长标题边缘场景）", () => {
-    const ctx = buildCtx({ ...resolveStyle("classroom"), shape: undefined }, {})
+    const ctx = buildCtx({ ...resolveStyle("homeroom"), shape: undefined }, {})
     const CJK_LONG =
       "微服务架构下的分布式事务一致性保障机制与补偿策略设计规范以及跨可用区容灾演练的完整落地路径说明"
     const slide: Slide = {
@@ -316,7 +316,7 @@ describe("RailNumberedContent", () => {
     const doc: PptxIR = {
       version: "3",
       filename: "x.pptx",
-      theme: { id: "classroom" },
+      theme: { id: "homeroom" },
       meta: {},
       assets: { images: {} },
       slides: [slide],
@@ -344,8 +344,8 @@ describe("RailNumberedContent", () => {
     expect(headingTexts.every((t) => t.textContent !== CJK_LONG)).toBe(true)
   })
 
-  it("overly long subheading shrinks to 16px then truncates with an ellipsis（迁移自 academic.test.tsx 的 Content subheading Task 5 分支）", () => {
-    const ctx = buildCtx({ ...resolveStyle("classroom"), shape: undefined }, {})
+  it("overly long subheading shrinks to 16px then truncates with an ellipsis（迁移自 thesis.test.tsx 的 Content subheading Task 5 分支）", () => {
+    const ctx = buildCtx({ ...resolveStyle("homeroom"), shape: undefined }, {})
     const CJK_LONG =
       "微服务架构下的分布式事务一致性保障机制与补偿策略设计规范以及跨可用区容灾演练的完整落地路径说明"
     const slide: Slide = {
@@ -358,7 +358,7 @@ describe("RailNumberedContent", () => {
     const doc: PptxIR = {
       version: "3",
       filename: "x.pptx",
-      theme: { id: "classroom" },
+      theme: { id: "homeroom" },
       meta: {},
       assets: { images: {} },
       slides: [slide],
@@ -376,22 +376,22 @@ describe("RailNumberedContent", () => {
     expect(sub.textContent).not.toBe(CJK_LONG.repeat(2))
   })
 
-  it("tech tokens 下用 tech 的色（证明 token 化成立，无 baked hex），徽章对比度自适应出反白", () => {
-    const techTheme = resolveStyle("tech")
+  it("terminal tokens 下用 terminal 的色（证明 token 化成立，无 baked hex），徽章对比度自适应出反白", () => {
+    const techTheme = resolveStyle("terminal")
     const ctx = buildCtx(techTheme, {})
-    const deck = ir("tech")
+    const deck = ir("terminal")
     const out = renderSvgMarkup(<RailNumberedContent ir={deck} slide={content1a} index={1} ctx={ctx} />)
 
-    expect(out).toContain(ctx.colors.primary as string) // tech 的 primary 驱动 rail/badge
-    expect(out).toContain(ctx.colors.text as string) // tech 的 text 驱动标题
-    expect(out).toContain(ctx.colors.muted as string) // tech 的 muted 驱动 footnote
-    // academic 自己的烤死色不得残留
-    expect(out).not.toContain("#23251F") // academic TEXT
-    expect(out).not.toContain("#62655B") // academic MUTED
-    expect(out).not.toContain("#0E6245") // academic primary（回归锁，本函数未烤死但仍确认没有意外硬编码）
+    expect(out).toContain(ctx.colors.primary as string) // terminal 的 primary 驱动 rail/badge
+    expect(out).toContain(ctx.colors.text as string) // terminal 的 text 驱动标题
+    expect(out).toContain(ctx.colors.muted as string) // terminal 的 muted 驱动 footnote
+    // thesis 自己的烤死色不得残留
+    expect(out).not.toContain("#23251F") // thesis TEXT
+    expect(out).not.toContain("#62655B") // thesis MUTED
+    expect(out).not.toContain("#0E6245") // thesis primary（回归锁，本函数未烤死但仍确认没有意外硬编码）
 
     // W4 fix round: 徽章文字墨色由 readableOn(colors.primary) 挑，不是写死的
-    // 纯白。当时 tech 的 primary 还是亮青，白字压上去只有 ~1.80:1（全矩阵扫描
+    // 纯白。当时 terminal 的 primary 还是亮青，白字压上去只有 ~1.80:1（全矩阵扫描
     // 一度报成精确 1.00:1，因为 audit 把徽章误判到页面背景，见
     // full-matrix-contrast.test.ts 的 allowlist 说明；真实渲染是 badge 自画的
     // primary 色块），挑出来的是中性深墨。深底组皮肤重设计（2026-08-19）把
@@ -402,7 +402,7 @@ describe("RailNumberedContent", () => {
     expect(out).not.toContain('fill="#0A0E14"') // 另一半墨色不得同时出现
     expect(ctx.colors.text).not.toBe("#FFFFFF")
 
-    // ctx 确实按主题切换生效：heading 字体走 tech 的解析结果
+    // ctx 确实按主题切换生效：heading 字体走 terminal 的解析结果
     expect(out).toContain(`font-family="${ctx.fonts.heading}"`)
   })
 })

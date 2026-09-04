@@ -2,7 +2,7 @@
   "version": "5",
   "filename": "atlas-product-pitch",
   "narrative": "pitch",
-  "theme": { "id": "academic" },
+  "theme": { "id": "thesis" },
   "meta": { "organization": "Atlas Robotics", "date": "2026-08-15" },
   "slides": [
     {

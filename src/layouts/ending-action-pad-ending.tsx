@@ -12,7 +12,7 @@ import { accessibleInk, metaInk, readableOn } from "../render/ink"
  * 清单优先取第一个 `bullets` 的前三项。没有 bullets 时从 heading 按换行
  * 或「一、/1.」切开，CTA 走 subheading。有 bullets 时 heading 就是 CTA。
  *
- * 构图抄 consulting 设计板 ending：kicker y150，三条 y256/344/432，
+ * 构图抄 brief 设计板 ending：kicker y150，三条 y256/344/432，
  * 垫块 y500 高 56，底线 y640，落款 y676。
  *
  * 纪律：零 theme id、零 baked hex。公开 kicker 用英文 NEXT。

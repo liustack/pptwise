@@ -47,15 +47,15 @@ function svg(node: React.ReactElement) {
 }
 
 describe("Branding footer suppression (W1: theme brand.suppressFooterOnCardContent via resolveBrand)", () => {
-  it("enterprise 主题：content 页 + 卡片背景图 → 页脚整体消失（theme brand 驱动）", () => {
-    const doc = ir("enterprise", [cardBgContentSlide], "full")
+  it("bulletin 主题：content 页 + 卡片背景图 → 页脚整体消失（theme brand 驱动）", () => {
+    const doc = ir("bulletin", [cardBgContentSlide], "full")
     const { container } = svg(<Branding ir={doc} slide={cardBgContentSlide} ctx={ctx} />)
     expect(container.querySelector("line")).toBeNull()
     expect(container.textContent).not.toContain("ACME")
     expect(container.textContent).not.toContain("v1")
   })
 
-  it.each(["consulting", "insight", "academic", "tech", "journal"] as const)(
+  it.each(["brief", "ledger", "thesis", "terminal", "journal"] as const)(
     "%s 主题：同样的 content 页 + 卡片背景图 → 页脚正常显示（未设 brand.suppressFooterOnCardContent，不受影响）",
     (themeId) => {
       const doc = ir(themeId, [cardBgContentSlide], "full")
@@ -96,7 +96,7 @@ describe("Branding footer meta suppression (brand.suppressFooterMeta, ink v3)", 
     expect(container.querySelector("line")).toBeNull()
   })
 
-  it.each(["consulting", "insight", "academic", "tech", "journal", "enterprise"] as const)(
+  it.each(["brief", "ledger", "thesis", "terminal", "journal", "bulletin"] as const)(
     "%s 主题：同一页页脚 meta 照排（未设 suppressFooterMeta，逐字节不受影响）",
     (themeId) => {
       const doc = ir(themeId, [plainContentSlide], "full")
@@ -108,7 +108,7 @@ describe("Branding footer meta suppression (brand.suppressFooterMeta, ink v3)", 
   )
 
   it("密级/机构组在左，版本/日期组在右", () => {
-    const doc = ir("consulting", [plainContentSlide], "full")
+    const doc = ir("brief", [plainContentSlide], "full")
     const { container } = svg(<Branding ir={doc} slide={plainContentSlide} ctx={ctx} />)
     const texts = Array.from(container.querySelectorAll("text"))
     const left = texts.find((el) => el.getAttribute("x") === "56")
@@ -125,7 +125,7 @@ const coverSlide: Slide = { type: "cover", heading: "封面", components: [] }
 const chapterSlide: Slide = { type: "chapter", heading: "章节", components: [] }
 const endingSlide: Slide = { type: "ending", heading: "收束", components: [] }
 function branded(slides: Slide[], branding?: PptxIR["branding"]): PptxIR {
-  const base = ir("consulting", slides)
+  const base = ir("brief", slides)
   return {
     ...base,
     brand: { logo_asset_id: "logo", position: "br" },

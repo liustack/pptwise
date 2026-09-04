@@ -41,7 +41,7 @@ export function FashionChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
   // 4.5:1——`accessibleOpacity` 正是为这一类「淡一档的次级文字」建的：混合
   // 后仍达标就保留 0.85，否则退回全不透明（`ink.ts` 的同名函数注释）。
   // 暖纸组皮肤重设计（2026-08-19）落地时实测：heritage 的新焦糖 accent 让
-  // 这行掉到 4.41:1、terra 的新赭石掉到 3.81:1，而 journal(4.34)/runway(4.06)
+  // 这行掉到 4.41:1、almanac 的新赭石掉到 3.81:1，而 journal(4.34)/runway(4.06)
   // 在本轮之前就已经在违例——满版 accent 的明度只要落在 readableOn 两墨的
   // 交叠带附近，固定 0.85 就必然不够。改在这一处根治，四家的 finding 一并
   // 消失，其余主题（混合后本就达标的）逐字节不变。

@@ -77,7 +77,7 @@ function lineWidth(el: Element): number {
 
 describe("image-split / image-top gallery English heading overflow", () => {
   it("image-split: every title line of the gallery English heading fits the 564px text column", () => {
-    for (const theme of ["consulting", "journal"] as const) {
+    for (const theme of ["brief", "journal"] as const) {
       const slide = makeSlide(GALLERY_EN_HEADING)
       const root = renderRoot(theme, "image-split", slide)
       const titles = titleNodes(root, GALLERY_EN_HEADING)
@@ -95,7 +95,7 @@ describe("image-split / image-top gallery English heading overflow", () => {
   })
 
   it("image-top: gallery English heading stays inside the band box and is not one overflowing line", () => {
-    for (const theme of ["consulting", "journal"] as const) {
+    for (const theme of ["brief", "journal"] as const) {
       const slide = makeSlide(GALLERY_EN_HEADING)
       const root = renderRoot(theme, "image-top", slide)
       const titles = titleNodes(root, GALLERY_EN_HEADING)
@@ -204,7 +204,7 @@ describe("image takeover dropped-content propagation", () => {
         heading: "Missing required image",
         components: [{ type: "paragraph", text: "This content cannot be rendered by the takeover." }],
       }
-      const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "consulting", {
+      const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "brief", {
         content: { photo: face },
       })
       const doc = makeIr(themeId, slide)
@@ -223,7 +223,7 @@ describe("image takeover dropped-content propagation", () => {
         ...["One", "Two", "Three", "Four"].map((text) => ({ type: "paragraph" as const, text })),
       ],
     }
-    const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "consulting", {
+    const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "brief", {
       content: { photo: "image-top" },
     })
     const doc = makeIr(themeId, slide)
@@ -251,7 +251,7 @@ describe("image takeover dropped-content propagation", () => {
           },
         ],
       }
-      const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "consulting", {
+      const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "brief", {
         content: { photo: face },
       })
       const doc = makeIr(themeId, slide)
@@ -282,7 +282,7 @@ describe("image takeover dropped-content propagation", () => {
           },
         ],
       }
-      const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "consulting", {
+      const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "brief", {
         content: { photo: face },
       })
       const doc = makeIr(themeId, slide)
@@ -302,7 +302,7 @@ describe("image takeover dropped-content propagation", () => {
       heading: "One selected image",
       components: [{ type: "image", asset_id: "hero", fit: "cover", caption: "Field station, winter" }],
     }
-    const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "consulting", {
+    const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "brief", {
       content: { photo: "image-top" },
     })
     const root = parseSvgRoot(slideToSvgMarkup(makeIr(themeId, slide), slide, 0))
@@ -325,7 +325,7 @@ describe("image takeover dropped-content propagation", () => {
         },
       ],
     }
-    const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "consulting", {
+    const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "brief", {
       content: { photo: "image-annotate" },
     })
     const doc = makeIr(themeId, slide)
@@ -344,7 +344,7 @@ describe("image takeover dropped-content propagation", () => {
         { type: "paragraph", text: "This component has no slot on the annotation surface." },
       ],
     }
-    const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "consulting", {
+    const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "brief", {
       content: { photo: "image-annotate" },
     })
     const doc = makeIr(themeId, slide)
@@ -376,7 +376,7 @@ describe("image takeover dropped-content propagation", () => {
         { type: "bullets", items: ["One", "Two", "Three", "Four", "Five"] },
       ],
     }
-    const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "consulting", {
+    const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "brief", {
       content: { photo: "image-annotate" },
     })
     const render = slideToRender(makeIr(themeId, slide), slide, 0)
@@ -395,7 +395,7 @@ describe("image takeover dropped-content propagation", () => {
         { type: "bullets", items: [long] },
       ],
     }
-    const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "consulting", {
+    const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "brief", {
       content: { photo: "image-annotate" },
     })
     const doc = makeIr(themeId, slide)
@@ -419,7 +419,7 @@ describe("image takeover dropped-content propagation", () => {
         })),
       ],
     }
-    const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "consulting", {
+    const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "brief", {
       content: { photo: "image-bottom" },
     })
     const doc = makeIr(themeId, slide)
@@ -458,7 +458,7 @@ describe("device_mockup keeps its frame", () => {
 
   it.each(TAKEOVERS)("%s draws the device frame for a browser mockup", (face) => {
     const slide = mockupSlide("browser")
-    const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "consulting", {
+    const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "brief", {
       content: { photo: face },
     })
     const doc = makeIr(themeId, slide)
@@ -470,7 +470,7 @@ describe("device_mockup keeps its frame", () => {
 
   it.each(TAKEOVERS)("%s draws the device frame for a phone mockup", (face) => {
     const slide = mockupSlide("phone")
-    const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "consulting", {
+    const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "brief", {
       content: { photo: face },
     })
     const doc = makeIr(themeId, slide)
@@ -503,7 +503,7 @@ describe("device_mockup keeps its frame", () => {
           },
         ],
       } as Slide
-      const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "consulting", {
+      const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "brief", {
         content: { photo: face },
       })
       const doc = makeIr(themeId, slide)
@@ -521,7 +521,7 @@ describe("device_mockup keeps its frame", () => {
   // three page edges, and a device without edges is not a device.
   it.each(["image-split", "image-top", "image-bottom"] as const)("%s declines and falls back", (face) => {
     const slide = mockupSlide("browser")
-    const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "consulting", {
+    const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "brief", {
       content: { photo: face },
     })
     const root = parseSvgRoot(slideToSvgMarkup(makeIr(themeId, slide), slide, 0))
@@ -533,7 +533,7 @@ describe("device_mockup keeps its frame", () => {
   // the white photo mount steps out of the way.
   it("image-annotate hosts the framed component instead of declining", () => {
     const slide = mockupSlide("browser")
-    const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "consulting", {
+    const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "brief", {
       content: { photo: "image-annotate" },
     })
     const root = parseSvgRoot(slideToSvgMarkup(makeIr(themeId, slide), slide, 0))

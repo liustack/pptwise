@@ -34,20 +34,20 @@ const ENDING_REGISTRY: Record<string, unknown> = ENDING_LAYOUTS
  * edit has to be re-审 here instead of passing silently.
  */
 const BOARD: Record<string, { cover: string; chapter: string; ending: string }> = {
-  consulting: { cover: "gauge-verdict", chapter: "gauge-section", ending: "gauge-next" },
-  enterprise: { cover: "ikb-field-cover", chapter: "block-numeral-chapter", ending: "signoff-ending" },
-  academic: { cover: "thesis-plate-cover", chapter: "folio-ghost-chapter", ending: "defense-close-ending" },
-  insight: { cover: "stat-cover", chapter: "ghost-section-chapter", ending: "close-word-ending" },
-  campaign: { cover: "poster-center", chapter: "act-chapter", ending: "pill-cta-ending" },
-  classroom: { cover: "chalk-band-cover", chapter: "lesson-box-chapter", ending: "homework-close-ending" },
+  brief: { cover: "gauge-verdict", chapter: "gauge-section", ending: "gauge-next" },
+  bulletin: { cover: "ikb-field-cover", chapter: "block-numeral-chapter", ending: "signoff-ending" },
+  thesis: { cover: "thesis-plate-cover", chapter: "folio-ghost-chapter", ending: "defense-close-ending" },
+  ledger: { cover: "stat-cover", chapter: "ghost-section-chapter", ending: "close-word-ending" },
+  rally: { cover: "poster-center", chapter: "act-chapter", ending: "pill-cta-ending" },
+  homeroom: { cover: "chalk-band-cover", chapter: "lesson-box-chapter", ending: "homework-close-ending" },
   ink: { cover: "vertical-title-cover", chapter: "volume-slip-chapter", ending: "seal-close-ending" },
-  tech: { cover: "type-rule-cover", chapter: "stroke-index-chapter", ending: "rule-close-ending" },
+  terminal: { cover: "type-rule-cover", chapter: "stroke-index-chapter", ending: "rule-close-ending" },
   runway: { cover: "show-headline", chapter: "show-plate", ending: "show-finale" },
   journal: { cover: "issue-head-cover", chapter: "fascicle-ghost-chapter", ending: "afterword-ending" },
   luxe: { cover: "invitation-plate-cover", chapter: "gilt-ordinal-chapter", ending: "gilt-word-ending" },
   heritage: { cover: "double-frame-cover", chapter: "mirror-volume-chapter", ending: "invite-field-ending" },
-  pulse: { cover: "report-open-cover", chapter: "subject-rule-chapter", ending: "care-plan-ending" },
-  terra: { cover: "pledge-open-cover", chapter: "field-band-chapter", ending: "scorecard-ending" },
+  clinic: { cover: "report-open-cover", chapter: "subject-rule-chapter", ending: "care-plan-ending" },
+  almanac: { cover: "pledge-open-cover", chapter: "field-band-chapter", ending: "scorecard-ending" },
   ember: { cover: "corner-wedge", chapter: "ember-index-chapter", ending: "ask-ending" },
   vermilion: { cover: "red-head-cover", chapter: "seal-numeral-chapter", ending: "deliberation-ending" },
   crayon: { cover: "crayonbox-open", chapter: "crayonbox-sticker", ending: "crayonbox-todo" },
@@ -62,11 +62,11 @@ const BOARD: Record<string, { cover: string; chapter: string; ending: string }> 
 
 describe("THEME_DEFINITIONS", () => {
   it("runs built-in declarations through the shared menu contract gate", () => {
-    const invalid = structuredClone(BUILTIN_THEME_FILES.consulting)
+    const invalid = structuredClone(BUILTIN_THEME_FILES.brief)
     invalid.menu.cover.face = "missing-builtin-face"
 
     expect(() => compileBuiltinTheme(invalid)).toThrow(
-      /theme "consulting" menu\.cover\.face references unknown layout id "missing-builtin-face"/i,
+      /theme "brief" menu\.cover\.face references unknown layout id "missing-builtin-face"/i,
     )
   })
 
@@ -103,11 +103,11 @@ describe("THEME_DEFINITIONS", () => {
   })
 
   it("carries the two legacy branding flags to their owners", () => {
-    expect(THEME_DEFINITIONS.enterprise.brand.suppressFooterOnCardContent).toBe(true)
+    expect(THEME_DEFINITIONS.bulletin.brand.suppressFooterOnCardContent).toBe(true)
     expect(THEME_DEFINITIONS.ink.brand.suppressFooterRule).toBe(true)
     // ink v3：落款列吞并页脚 meta 文字（`BRANDS.ink` 自己的注释交代了代价）
     expect(THEME_DEFINITIONS.ink.brand.suppressFooterMeta).toBe(true)
-    expect(THEME_DEFINITIONS.consulting.brand).toEqual({})
+    expect(THEME_DEFINITIONS.brief.brand).toEqual({})
   })
 
   it("24 主题四页型菜单均非空。motif 可选", () => {
@@ -151,8 +151,8 @@ describe("THEME_DEFINITIONS", () => {
 
   it("每套主题各自的专属脸只出现在自己的菜单里，不外溢", () => {
     const exclusive: Record<string, string> = {
-      "gauge-stats": "consulting",
-      "gauge-point": "consulting",
+      "gauge-stats": "brief",
+      "gauge-point": "brief",
       "crayonbox-cards": "crayon",
       "crayonbox-point": "crayon",
       "show-statement": "runway",
@@ -168,7 +168,7 @@ describe("THEME_DEFINITIONS", () => {
     }
   })
 
-  it("未知 id 不再回落 consulting，resolveThemeId 直接报错", () => {
+  it("未知 id 不再回落 brief，resolveThemeId 直接报错", () => {
     expect(() => resolveThemeId("nonexistent-theme")).toThrow(/unknown theme "nonexistent-theme"/)
   })
 })
@@ -215,7 +215,7 @@ describe("resolveBrand", () => {
   it("returns the theme definition brand", () => {
     expect(resolveBrand("ink")).toEqual({ suppressFooterRule: true, suppressFooterMeta: true })
   })
-  it("throws for an unknown id instead of borrowing consulting's brand frame", () => {
+  it("throws for an unknown id instead of borrowing brief's brand frame", () => {
     expect(() => resolveBrand("nope")).toThrow(/unknown theme "nope"/)
   })
 })
@@ -279,15 +279,15 @@ describe("registerTheme", () => {
   })
 
   it("rejects a built-in id as already installed on the SDK seam", () => {
-    expect(() => registerTheme(themeNamed("consulting"))).toThrow(/theme "consulting" is already installed/)
+    expect(() => registerTheme(themeNamed("brief"))).toThrow(/theme "brief" is already installed/)
   })
 
   it("installThemeFile shadows a builtin and dedupes getInstalledThemeIds", () => {
-    const factoryPrimary = getThemeDefinition("consulting").style.colors.primary
-    installThemeFile(themeNamed("consulting"))
-    expect(getThemeDefinition("consulting").style.colors.primary).toBe("#112233")
-    expect(getThemeDefinition("consulting").style.colors.primary).not.toBe(factoryPrimary)
-    expect(getInstalledThemeIds().filter((id) => id === "consulting")).toHaveLength(1)
+    const factoryPrimary = getThemeDefinition("brief").style.colors.primary
+    installThemeFile(themeNamed("brief"))
+    expect(getThemeDefinition("brief").style.colors.primary).toBe("#112233")
+    expect(getThemeDefinition("brief").style.colors.primary).not.toBe(factoryPrimary)
+    expect(getInstalledThemeIds().filter((id) => id === "brief")).toHaveLength(1)
   })
 
   // The built-in shelf has been held to this since the token existed (see
@@ -404,8 +404,8 @@ describe("registerTheme", () => {
     ).toThrow(/colors\.text.*"ending"/)
   })
 
-  // A first draft checked all four page types and found academic/classroom/
-  // consulting measuring as low as 1.00:1 against their own `chapter`
+  // A first draft checked all four page types and found thesis/homeroom/
+  // brief measuring as low as 1.00:1 against their own `chapter`
   // background — not a theme bug (nothing renders that raw pairing), a false
   // positive in the check itself. This locks the exclusion.
   it("deliberately excludes chapter from the check — a bad chapter background alone does not throw", () => {
@@ -548,13 +548,13 @@ describe("getThemeDefinition", () => {
     expect(def.menu.ending.face).toBe("banner-ending")
   })
 
-  it("throws for an unknown id instead of falling back to consulting", () => {
+  it("throws for an unknown id instead of falling back to brief", () => {
     registerTheme(testTheme())
     expect(() => getThemeDefinition("still-unknown")).toThrow(/unknown theme "still-unknown"/)
   })
 
   it("matches THEME_DEFINITIONS for a builtin id", () => {
-    expect(getThemeDefinition("tech")).toBe(THEME_DEFINITIONS.tech)
+    expect(getThemeDefinition("terminal")).toBe(THEME_DEFINITIONS.terminal)
   })
 })
 

@@ -54,7 +54,7 @@ export function Branding({
 
   // 背景图 + 卡片态 content 页整页抑制页脚——是否生效由 theme 的 brand 配置
   // 驱动（W1 从旧 theme-manifest 的页脚开关拆出，见 themes/definitions.ts resolveBrand；
-  // enterprise 持有 suppressFooterOnCardContent，其余主题不设 = 默认 false）。
+  // bulletin 持有 suppressFooterOnCardContent，其余主题不设 = 默认 false）。
   const bgAsset =
     slide.background?.kind === "asset" ? assets.images[slide.background.asset_id] : null
   const brandConfig = resolveBrand(ir.theme.id)

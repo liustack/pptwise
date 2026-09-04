@@ -18,7 +18,7 @@ function ir(slides: Slide[]): PptxIR {
   return {
     version: "5",
     filename: "x.pptx",
-    theme: { id: "campaign" },
+    theme: { id: "rally" },
     meta: {},
     assets: { images: {} },
     slides,
@@ -34,8 +34,8 @@ function render(body: React.ReactElement): { markup: string; root: Element } {
   return { markup, root: parseSvgRoot(markup) }
 }
 
-describe("campaign sparse faces", () => {
-  const ctx = buildCtx(resolveStyle("campaign"), {})
+describe("rally sparse faces", () => {
+  const ctx = buildCtx(resolveStyle("rally"), {})
 
   it("statement is centered heavy type with a magenta closer bar and accent on **", () => {
     const slide: Slide = { type: "content", kind: "points", layout: "statement", heading: VERSE, components: [] } as Slide

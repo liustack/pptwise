@@ -374,8 +374,8 @@ export const layoutDef: LayoutDefinition = {
     { name: "rule", accepts: [] },
     { name: "meta", accepts: [] },
   ],
-  // `pinOnly` keeps consulting's own face out of `fullLayoutSet`, the pool
-  // every other builtin auto-picks from. consulting reaches it by *listing*
+  // `pinOnly` keeps brief's own face out of `fullLayoutSet`, the pool
+  // every other builtin auto-picks from. brief reaches it by *listing*
   // it in `layouts.content`, which `resolveLayoutId` honours for a listed
   // id (see its Wave 8 board-lock comment). Without this the gauge
   // face leaks into all 24 themes.

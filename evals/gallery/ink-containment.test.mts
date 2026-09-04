@@ -6,7 +6,7 @@
 //
 // Both scans were red when they were written. Sixteen pages painted past the
 // bottom of their content rect — every one of them a cartesian chart on
-// consulting's `gauge-stats` face, which handed the content region a
+// brief's `gauge-stats` face, which handed the content region a
 // hard-coded 208px band and got 316px of chart drawn into it. Twenty-seven
 // pages, every line chart in the corpus, had an endpoint value label sitting
 // on a plot mark, because a pairwise nudger only ever looks at other labels.

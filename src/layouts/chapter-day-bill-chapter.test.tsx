@@ -121,7 +121,7 @@ describe("chapter-day-bill-chapter — board geometry", () => {
   })
 
   it("uses tokens, not baked playbill hex, when another theme draws it", () => {
-    const { markup } = renderChapter("enterprise")
+    const { markup } = renderChapter("bulletin")
     for (const hex of PLAYBILL_HEX) expect(markup, hex).not.toMatch(new RegExp(hex, "i"))
   })
 })

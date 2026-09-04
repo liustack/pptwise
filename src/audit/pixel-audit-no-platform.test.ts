@@ -42,14 +42,14 @@ function deck(themeId: string, slides: Slide[], overrides: Partial<PptxIR> = {})
 describe("auditDeck({ pixels: true }) — no platform rasterization capability", () => {
   it("rejects explicitly (never a silent clean report) when a page actually needs rasterization", async () => {
     const photo = makeSolidRegionPngDataUri(20, 20, () => [0xf5, 0xf5, 0xf0])
-    const ir = deck("consulting", [{ type: "cover", heading: "No Platform", background: { kind: "asset", asset_id: "photo" }, components: [] }], {
+    const ir = deck("brief", [{ type: "cover", heading: "No Platform", background: { kind: "asset", asset_id: "photo" }, components: [] }], {
       assets: { images: { photo: { src: photo } } },
     })
     await expect(auditDeck(ir, { pixels: true })).rejects.toThrow(/rasterizeSvg unavailable/)
   })
 
   it("does not throw when no page needs rasterization, even with no platform capability at all", async () => {
-    const ir = deck("consulting", [{ type: "cover", heading: "Plain Cover, No Platform", components: [] }])
+    const ir = deck("brief", [{ type: "cover", heading: "Plain Cover, No Platform", components: [] }])
     await expect(auditDeck(ir, { pixels: true })).resolves.toMatchObject({
       checks: { svg: "completed", pixels: "completed" },
     })

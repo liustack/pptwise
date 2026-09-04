@@ -50,23 +50,23 @@ function render(body: React.ReactElement): { markup: string; root: Element } {
 
 describe("PosterCenterCover", () => {
   it("creative tokens 下标题居中、短横条走 primary（RED≡primary）且无旧 baked hex 残留（观感等价档）", () => {
-    const ctx = buildCtx(tokensWithoutCover("insight"), {})
-    const out = renderSvgMarkup(<PosterCenterCover ir={ir("insight")} slide={slide} index={0} ctx={ctx} />)
+    const ctx = buildCtx(tokensWithoutCover("ledger"), {})
+    const out = renderSvgMarkup(<PosterCenterCover ir={ir("ledger")} slide={slide} index={0} ctx={ctx} />)
     expect(out).toContain("创意提案")
     expect(out).toContain('text-anchor="middle"')
-    expect(out).toContain("#16202B") // RED 经 ctx.colors.primary 而来，与 insight primary 逐字节相同
-    expect(out).not.toContain("#F0A63C") // insight accent（终端琥珀）不应出现——RED 不映射到 accent
+    expect(out).toContain("#16202B") // RED 经 ctx.colors.primary 而来，与 ledger primary 逐字节相同
+    expect(out).not.toContain("#F0A63C") // ledger accent（终端琥珀）不应出现——RED 不映射到 accent
     expect(out).not.toContain("#666670") // META_MUTED 并入 muted 后不得残留
   })
-  it("consulting tokens 下用 consulting 的 primary 色（token 化成立）", () => {
-    const ctx = buildCtx(resolveStyle("consulting"), {})
-    const out = renderSvgMarkup(<PosterCenterCover ir={ir("consulting")} slide={slide} index={0} ctx={ctx} />)
-    expect(out).toContain("#1E2A4A") // consulting primary
-    expect(out).not.toContain("#16202B") // insight primary 不得残留
+  it("brief tokens 下用 brief 的 primary 色（token 化成立）", () => {
+    const ctx = buildCtx(resolveStyle("brief"), {})
+    const out = renderSvgMarkup(<PosterCenterCover ir={ir("brief")} slide={slide} index={0} ctx={ctx} />)
+    expect(out).toContain("#1E2A4A") // brief primary
+    expect(out).not.toContain("#16202B") // ledger primary 不得残留
   })
 
   it("accent 短横条精确坐标(width=60/height=4)走 primary、副标题居中、底部合并 meta 行含组织/密级/日期", () => {
-    const ctx = buildCtx(tokensWithoutCover("insight"), {})
+    const ctx = buildCtx(tokensWithoutCover("ledger"), {})
     const fullSlide: Slide = {
       type: "cover",
       heading: "年度财务报告",
@@ -76,7 +76,7 @@ describe("PosterCenterCover", () => {
     const fullIr: PptxIR = {
       version: "3",
       filename: "deck.pptx",
-      theme: { id: "insight" },
+      theme: { id: "ledger" },
       branding: "full",
       meta: { organization: "DarkCo", confidentiality: "internal", version: "v2", date: "2026" },
       assets: { images: {} },
@@ -109,8 +109,8 @@ describe("PosterCenterCover", () => {
   })
 
   it("Cover 元素避开四角 Branding logo 条带", () => {
-    const ctx = buildCtx(tokensWithoutCover("insight"), {})
-    const { root } = render(<PosterCenterCover ir={ir("insight")} slide={slide} index={0} ctx={ctx} />)
+    const ctx = buildCtx(tokensWithoutCover("ledger"), {})
+    const { root } = render(<PosterCenterCover ir={ir("ledger")} slide={slide} index={0} ctx={ctx} />)
     const accentBar = Array.from(root.querySelectorAll("rect")).find(
       (r) => r.getAttribute("width") === "60" && r.getAttribute("height") === "4",
     )!
@@ -126,8 +126,8 @@ describe("PosterCenterCover", () => {
   })
 
   it("Cover 页通过 subset 校验", () => {
-    const ctx = buildCtx(tokensWithoutCover("insight"), {})
-    const { root } = render(<PosterCenterCover ir={ir("insight")} slide={slide} index={0} ctx={ctx} />)
+    const ctx = buildCtx(tokensWithoutCover("ledger"), {})
+    const { root } = render(<PosterCenterCover ir={ir("ledger")} slide={slide} index={0} ctx={ctx} />)
     expect(() => assertSubset(root)).not.toThrow()
   })
 })
@@ -183,9 +183,9 @@ describe("PosterCenterCover — cover knobs (board-cover-restore wave 2)", () =>
     expect(kickers.every((k) => Number(k.getAttribute("y")) >= 600) || texts.filter((t) => t.textContent === "云觅科技").length === 1).toBe(true)
   })
 
-  it("campaign knobs: kicker present, bar fill accent, meta start + left", () => {
+  it("rally knobs: kicker present, bar fill accent, meta start + left", () => {
     const knobs = { showKicker: true, barFill: "accent" as const, metaPlacement: "bottom-left" as const }
-    const { root, tokens, ctx } = renderCover("campaign", knobs)
+    const { root, tokens, ctx } = renderCover("rally", knobs)
     expect(bar(root).getAttribute("fill")).toBe(tokens.colors.accent)
     const kicker = Array.from(root.querySelectorAll("text")).find(
       (t) => t.textContent === "云觅科技" && Number(t.getAttribute("y")) < 280,
@@ -207,8 +207,8 @@ describe("PosterCenterCover — cover knobs (board-cover-restore wave 2)", () =>
     )).toBe(false)
   })
 
-  it("insight knobs: no bottom meta at y650, org appears once at top", () => {
-    const { root } = renderCover("insight", { metaPlacement: "top" })
+  it("ledger knobs: no bottom meta at y650, org appears once at top", () => {
+    const { root } = renderCover("ledger", { metaPlacement: "top" })
     const orgRuns = Array.from(root.querySelectorAll("text")).filter((t) => (t.textContent ?? "").includes("云觅科技"))
     expect(orgRuns).toHaveLength(1)
     expect(Number(orgRuns[0]!.getAttribute("y"))).toBeLessThan(100)
@@ -239,8 +239,8 @@ describe("PosterCenterCover — cover knobs (board-cover-restore wave 2)", () =>
   })
 
   it("omitted textAnchor equals explicit middle (default poster geometry)", () => {
-    const omitted = renderCover("insight", { metaPlacement: "top" })
-    const middle = renderCover("insight", { metaPlacement: "top", textAnchor: "middle" })
+    const omitted = renderCover("ledger", { metaPlacement: "top" })
+    const middle = renderCover("ledger", { metaPlacement: "top", textAnchor: "middle" })
     expect(omitted.markup).toBe(middle.markup)
     const title = Array.from(omitted.root.querySelectorAll("text")).find((t) =>
       (t.textContent ?? "").includes("创意提案"),
@@ -257,7 +257,7 @@ describe("PosterCenterCover — cover knobs (board-cover-restore wave 2)", () =>
       metaPlacement: "bottom-left" as const,
       textAnchor: "start" as const,
     }
-    const { root } = renderCover("campaign", knobs)
+    const { root } = renderCover("rally", knobs)
     const title = Array.from(root.querySelectorAll("text")).find((t) => (t.textContent ?? "").includes("创意提案"))!
     expect(title.getAttribute("text-anchor")).toBe("start")
     expect(title.getAttribute("x")).toBe("96")

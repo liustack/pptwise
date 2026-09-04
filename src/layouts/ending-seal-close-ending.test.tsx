@@ -94,7 +94,7 @@ describe("ending-seal-close-ending — board geometry", () => {
   })
 
   it("uses tokens, not baked ink hex, when another theme draws it", () => {
-    const { root, tokens } = renderEnding("tech")
+    const { root, tokens } = renderEnding("terminal")
     expect(root.querySelector("rect")?.getAttribute("fill")).toBe(tokens.colors.accent)
     for (const hex of INK_HEX) expect(root.innerHTML).not.toMatch(new RegExp(hex, "i"))
   })

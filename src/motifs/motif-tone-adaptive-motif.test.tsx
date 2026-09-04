@@ -162,13 +162,13 @@ describe("ToneAdaptiveMotif", () => {
     expect(() => assertSubset(root)).not.toThrow()
   })
 
-  it("tech tokens 下渐变起点随主题走 ctx.colors.bg（证明真正 token 化），装饰性孤儿色 #F0F0F0 跨主题保持不变（未被并入任何 tech token）", () => {
-    const techTheme = resolveStyle("tech")
+  it("terminal tokens 下渐变起点随主题走 ctx.colors.bg（证明真正 token 化），装饰性孤儿色 #F0F0F0 跨主题保持不变（未被并入任何 terminal token）", () => {
+    const techTheme = resolveStyle("terminal")
     const ctx = buildCtx(techTheme, {})
-    const deck = ir("tech")
+    const deck = ir("terminal")
     const out = renderSvgMarkup(<ToneAdaptiveMotif ir={deck} slide={coverSlide} ctx={ctx} />)
 
-    expect(out).toContain(ctx.colors.bg) // tech 的 bg 驱动渐变起点
+    expect(out).toContain(ctx.colors.bg) // terminal 的 bg 驱动渐变起点
     expect(ctx.colors.bg).not.toBe("#FFFFFF") // custom 自己的 bg 不得残留
     // 装饰豁免色是文件私有常量，不随主题变化——跨主题依然渲染同一个 hex
     expect(out).toContain("#F0F0F0")

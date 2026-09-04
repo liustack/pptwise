@@ -15,10 +15,10 @@ pptwise brand extract corp.pptx \
   -o themes/acme.theme.json \
   --id acme \
   --label "Acme" \
-  --from consulting
+  --from brief
 ```
 
-`--from` names the donor theme whose complete menu, occasion metadata, identity strength, brand configuration, shape controls, and default-background structure are copied. It defaults to `consulting`. Choose a donor whose menu fits the intended deck, not merely one with similar colors.
+`--from` names the donor theme whose complete menu, occasion metadata, identity strength, brand configuration, shape controls, and default-background structure are copied. It defaults to `brief`. Choose a donor whose menu fits the intended deck, not merely one with similar colors.
 
 The extracted anchors and fonts are then applied through the same full-palette derivation used by `theme fork`. The output contains:
 

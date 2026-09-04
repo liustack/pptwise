@@ -62,7 +62,7 @@ IR v5 是一份描述完整绑定 deck 的 JSON 文件。每张内容页都要�
 {
   "version": "5",
   "filename": "hello.pptx",
-  "theme": { "id": "consulting" },
+  "theme": { "id": "brief" },
   "slides": [
     {
       "type": "cover",
@@ -96,15 +96,15 @@ pptwise preview deck.json -o out/review --html
 按 `pptwise themes --json` 的 `occasions` 与 `identity` 选择主题。绑定前可以比较两到四个候选：
 
 ```bash
-pptwise theme try consulting,swiss,memo
+pptwise theme try brief,swiss,memo
 ```
 
 可以通过拷贝预设、创建配色分叉，或抽取 Office 品牌，得到完整独立的 v2 主题：
 
 ```bash
-pptwise theme new --from consulting -o themes/acme.theme.json --id acme
+pptwise theme new --from brief -o themes/acme.theme.json --id acme
 pptwise theme fork acme --primary "#0B5FFF" -o themes/acme-blue.theme.json --id acme-blue
-pptwise brand extract corp.pptx -o themes/acme-brand.theme.json --id acme-brand --from consulting
+pptwise brand extract corp.pptx -o themes/acme-brand.theme.json --id acme-brand --from brief
 ```
 
 Deck 项目在 `deck.spec.json` 中绑定唯一主题，再把页面内容放进 `pages/<id>.json`。渲染阶段没有临时主题切换。菜单相同的配色分叉可以替换绑定。菜单不同则需要回到主题选择，再修订 spec、受影响的 kind 与页面填充。

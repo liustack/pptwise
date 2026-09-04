@@ -314,7 +314,7 @@ const ONE_PX_PNG =
 
 function contentSlide(heading: string, components: Component[]): Slide {
   // Pin a dense-but-roomy layout. This file is about rasterization, not
-  // auto-pick, and consulting's second-front content tendencies would
+  // auto-pick, and brief's second-front content tendencies would
   // otherwise land a tight layout that drops a block on one of these pages.
   return { type: "content", kind: "points", heading,  components }
 }
@@ -325,7 +325,7 @@ function noAssetIr(): PptxIR {
   return {
     version: "5",
     filename: "fidelity-no-asset",
-    theme: { id: "consulting" },
+    theme: { id: "brief" },
     meta: {},
     assets: { images: {} },
     slides: [

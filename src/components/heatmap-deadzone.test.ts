@@ -17,7 +17,7 @@
 // synthetic constructions (adjacent-but-both-confined, and flat) through a
 // real `registerTheme` + `renderSlideSvg` + `auditDeck` — never a mock —
 // with a *realistic* `colors.text` token (a real theme's own value,
-// `consulting`'s `#051C2C` — not literally `#000000`, which is darker than
+// `brief`'s `#051C2C` — not literally `#000000`, which is darker than
 // this codebase's own `DARK_INK` and would silently mask the exact defect
 // this pin exists to catch, a mistake this fix round's own investigation
 // made and corrected before writing this file). Answer: **yes** —
@@ -46,7 +46,7 @@ afterEach(() => {
 
 /** A minimal registerable theme whose (surface, primary) pair is the only
  * thing that varies across the cases below — every other token is a
- * realistic value borrowed from a real shipped theme (`consulting`'s own
+ * realistic value borrowed from a real shipped theme (`brief`'s own
  * `text`), not an artificially extreme one, so the reconstruction is
  * faithful to what a real `registerTheme` caller's token set would
  * actually look like. */
@@ -61,7 +61,7 @@ function confinedTheme(id: string, surface: string, primary: string) {
         surface,
         primary,
         accent: "#AA00FF",
-        text: "#051C2C", // consulting's own colors.text — a realistic dark ink, not pure #000000
+        text: "#051C2C", // brief's own colors.text — a realistic dark ink, not pure #000000
         muted: "#051C2C",
         chartPalette: [primary, "#AA00FF"],
       },

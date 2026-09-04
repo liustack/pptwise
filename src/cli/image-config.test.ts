@@ -225,13 +225,13 @@ describe("runConfigSet", () => {
     // Windows has no POSIX permission bits, so chmod 0600 is not a product bug.
     const home = await tmpHome()
     const path = join(home, "config.json")
-    await writeFile(path, JSON.stringify({ theme: "consulting" }), { mode: 0o644 })
+    await writeFile(path, JSON.stringify({ theme: "brief" }), { mode: 0o644 })
     chmodSync(path, 0o644)
     await runConfigSet("pexels.apiKey", "TESTPEXELSKEY99")
     const { stat } = await import("node:fs/promises")
     expect((await stat(path)).mode & 0o777).toBe(0o600)
     const parsed = JSON.parse(await readFile(path, "utf8")) as { theme: string; images: { pexels: { apiKey: string } } }
-    expect(parsed.theme).toBe("consulting")
+    expect(parsed.theme).toBe("brief")
     expect(parsed.images.pexels.apiKey).toBe("TESTPEXELSKEY99")
   })
 

@@ -170,8 +170,8 @@ describe("resolveEmphasisForm", () => {
 
   it("reads the stroke off the theme definition, not a per-component table", () => {
     expect(getThemeDefinition("lecture").emphasis).toBe("underline")
-    expect(getThemeDefinition("consulting").emphasis).toBe("pad")
-    expect(getThemeDefinition("insight").emphasis).toBeUndefined()
+    expect(getThemeDefinition("brief").emphasis).toBe("pad")
+    expect(getThemeDefinition("ledger").emphasis).toBeUndefined()
   })
 })
 

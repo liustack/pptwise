@@ -182,10 +182,10 @@ describe("ToneAdaptiveEnding", () => {
     })
   })
 
-  it("tech tokens 下（无背景图）用 tech 的 text/muted/border，custom 自己的烤色不再出现（证明真正 token 化）", () => {
-    const tokens = resolveStyle("tech")
+  it("terminal tokens 下（无背景图）用 terminal 的 text/muted/border，custom 自己的烤色不再出现（证明真正 token 化）", () => {
+    const tokens = resolveStyle("terminal")
     const ctx = buildCtx(tokens, {})
-    const deck = ir("tech", endingWithHeading)
+    const deck = ir("terminal", endingWithHeading)
     const out = renderSvgMarkup(
       <ToneAdaptiveEnding ir={deck} slide={endingWithHeading} index={0} ctx={ctx} />,
     )
@@ -195,7 +195,7 @@ describe("ToneAdaptiveEnding", () => {
     expect(out).toContain(ctx.colors.muted) // MUTED→muted：org/联系标签/版权
     expect(out).toContain(ctx.colors.border ?? ctx.colors.muted) // BORDER→border：分隔线
 
-    // custom 自己的烤死常量不得残留（tech 的 text/muted/border 均与 custom 不同值）
+    // custom 自己的烤死常量不得残留（terminal 的 text/muted/border 均与 custom 不同值）
     expect(ctx.colors.text).not.toBe("#18181B")
     expect(ctx.colors.muted).not.toBe("#71717A")
     expect(ctx.colors.border).not.toBe("#E4E4E7")
@@ -207,16 +207,16 @@ describe("ToneAdaptiveEnding", () => {
   })
 
   it("withBg 分支跨主题：白字/黑幕豁免固定为纯白/纯黑，不随主题变化", () => {
-    const tokens = resolveStyle("tech")
+    const tokens = resolveStyle("terminal")
     const ctxWithImg = buildCtx(tokens, bgImages)
-    const deck = ir("tech", endingWithHeadingAndBg, bgImages)
+    const deck = ir("terminal", endingWithHeadingAndBg, bgImages)
     const out = renderSvgMarkup(
       <ToneAdaptiveEnding ir={deck} slide={endingWithHeadingAndBg} index={0} ctx={ctxWithImg} />,
     )
 
     expect(out).toContain('fill="#FFFFFF"')
     expect(out).toContain('fill="#000000"')
-    // 有背景图时切到白字，不应再出现 tech 自己的 text/muted/border
+    // 有背景图时切到白字，不应再出现 terminal 自己的 text/muted/border
     expect(out).not.toContain(ctxWithImg.colors.text)
     expect(out).not.toContain(ctxWithImg.colors.muted)
   })

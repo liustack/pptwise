@@ -45,7 +45,7 @@ function renderEnding(themeId: string, s: Slide = slide(), meta: PptxIR["meta"] 
 
 describe("ending-homework-close-ending — board geometry", () => {
   it("draws an accent homework box, three tasks, a foot rule, and a preview line", () => {
-    const { root, tokens } = renderEnding("classroom")
+    const { root, tokens } = renderEnding("homeroom")
     const box = root.querySelector("rect")
     expect(box?.getAttribute("x")).toBe("96")
     expect(box?.getAttribute("y")).toBe("96")
@@ -75,7 +75,7 @@ describe("ending-homework-close-ending — board geometry", () => {
   })
 
   it("does not thank the reader or invent a textbook page", () => {
-    const { root, markup } = renderEnding("classroom", { type: "ending", components: [] } as Slide)
+    const { root, markup } = renderEnding("homeroom", { type: "ending", components: [] } as Slide)
     const texts = Array.from(root.querySelectorAll("text")).map((t) => t.textContent ?? "").join(" ")
     expect(texts).not.toMatch(/Thank you/i)
     expect(texts).not.toMatch(/appreciate/i)
@@ -90,7 +90,7 @@ describe("ending-homework-close-ending — board geometry", () => {
       subheading: PREVIEW,
       components: [{ type: "bullets", items: ITEMS }],
     })
-    const { root } = renderEnding("classroom", withBullets)
+    const { root } = renderEnding("homeroom", withBullets)
     const texts = Array.from(root.querySelectorAll("text")).map((t) => t.textContent ?? "")
     expect(texts).toContain(ITEMS[0])
     expect(texts).toContain(PREVIEW)
@@ -102,16 +102,16 @@ describe("ending-homework-close-ending — board geometry", () => {
       heading: "Graph the vertex form\nState the axis of symmetry\nPreview the intercepts",
       subheading: "Quiz tomorrow",
     })
-    const { root } = renderEnding("classroom", latin)
+    const { root } = renderEnding("homeroom", latin)
     expect(Array.from(root.querySelectorAll("text")).some((t) => t.textContent === "HOMEWORK")).toBe(true)
     expect(Array.from(root.querySelectorAll("text")).some((t) => t.textContent === "课后作业")).toBe(false)
   })
 
-  it("uses tokens, not baked classroom hex, when another theme draws it", () => {
-    const { root, tokens, markup } = renderEnding("enterprise")
+  it("uses tokens, not baked homeroom hex, when another theme draws it", () => {
+    const { root, tokens, markup } = renderEnding("bulletin")
     expect(root.querySelector("rect")?.getAttribute("fill")).toBe(tokens.colors.accent)
     for (const hex of CLASSROOM_HEX) {
-      expect(markup, `classroom token ${hex} leaked`).not.toContain(hex)
+      expect(markup, `homeroom token ${hex} leaked`).not.toContain(hex)
     }
   })
 })
@@ -148,6 +148,6 @@ describe("ending-homework-close-ending — shared pool", () => {
   })
 
   it("renders byte-identically on repeat", () => {
-    expect(renderEnding("classroom").markup).toBe(renderEnding("classroom").markup)
+    expect(renderEnding("homeroom").markup).toBe(renderEnding("homeroom").markup)
   })
 })

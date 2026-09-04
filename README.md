@@ -62,7 +62,7 @@ IR v5 is one JSON file describing a complete bound deck. Every content page name
 {
   "version": "5",
   "filename": "hello.pptx",
-  "theme": { "id": "consulting" },
+  "theme": { "id": "brief" },
   "slides": [
     {
       "type": "cover",
@@ -96,15 +96,15 @@ pptwise preview deck.json -o out/review --html
 Choose a theme from `pptwise themes --json` by matching `occasions` and `identity`. Compare two to four candidates before binding:
 
 ```bash
-pptwise theme try consulting,swiss,memo
+pptwise theme try brief,swiss,memo
 ```
 
 Create a complete independent v2 theme by copying a preset, forking a palette, or extracting an Office brand:
 
 ```bash
-pptwise theme new --from consulting -o themes/acme.theme.json --id acme
+pptwise theme new --from brief -o themes/acme.theme.json --id acme
 pptwise theme fork acme --primary "#0B5FFF" -o themes/acme-blue.theme.json --id acme-blue
-pptwise brand extract corp.pptx -o themes/acme-brand.theme.json --id acme-brand --from consulting
+pptwise brand extract corp.pptx -o themes/acme-brand.theme.json --id acme-brand --from brief
 ```
 
 A deck project binds one theme in `deck.spec.json`, then keeps page content in `pages/<id>.json`. Render has no temporary theme switch. A same-menu color fork can replace the binding. A different menu requires returning to theme selection, then revisiting the spec and affected page fills.

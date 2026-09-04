@@ -21,8 +21,8 @@ import { accessibleInk } from "../render/ink"
  * 对比度自适应修复（W4 fix round，design decision 8 台账 #1 的根因处置）：
  * 标题/副标题原样消费 `colors.text`/`colors.muted`——这两个 token 是为该
  * 主题「均匀」的默认背景校准的，对 chapter 页型自己另开一档默认背景的三个
- * 主题（academic 深绿、classroom 雾蓝、consulting 深藏青）不成立，
- * consulting 的 `colors.text` 恰与自己的 chapter 默认背景同色（1:1，此前
+ * 主题（thesis 深绿、homeroom 雾蓝、brief 深藏青）不成立，
+ * brief 的 `colors.text` 恰与自己的 chapter 默认背景同色（1:1，此前
  * 靠策展排除 `CHAPTER_WITHOUT_MASTHEAD` 处理）。改用
  * `accessibleInk(colors.text, ctx.defaultBg, fontSize)`：`colors.text`/
  * `colors.muted` 通过校验就原样返回（其余十主题的 chapter 默认背景与主题

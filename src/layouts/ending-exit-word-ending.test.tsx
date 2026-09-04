@@ -149,7 +149,7 @@ describe("ending-exit-word-ending — shared pool", () => {
   })
 
   it("uses tokens, not baked museum hex, when another theme draws it", () => {
-    const { markup, tokens } = renderEnding("enterprise")
+    const { markup, tokens } = renderEnding("bulletin")
     expect(markup).toContain(tokens.colors.accent)
     for (const hex of MUSEUM_HEX) {
       expect(markup, `museum token ${hex} leaked`).not.toContain(hex)

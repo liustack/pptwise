@@ -35,7 +35,7 @@ import { fitSvgLine } from "../lib/svg-text-layout"
  * 唯一的消费点（底部合并 meta 行）随之改为 `ctx.colors.muted`，接受 creative
  * 下观感等价而非逐字节一致。
  *
- * 副题兜底语义（按当前源码实际行为原样迁移，不改语义，同 consulting
+ * 副题兜底语义（按当前源码实际行为原样迁移，不改语义，同 brief
  * 2026-07-09 去重裁决）：`slide.subheading || (slide.heading ? "" : "Questions
  * & Discussion")`——只有 `slide.heading` 也缺省时，副标题才兜底为固定文案
  * "Questions & Discussion"，避免用户填了标题、只是恰好没填副标题时被强行塞入
@@ -71,7 +71,7 @@ export function PosterEnding({ ir, slide, ctx }: SvgTemplateProps) {
   // Last-line-anchored（同源文件 2026-07-07 addendum）：把末行锚定在固定基线，
   // 无论标题是一行还是两行，下方 accent bar / 副标题 / 分隔线 / meta 的整条链路
   // 都不随行数变化，首行随行数向上让位。
-  // 396→424（2026-07-13 campaign ending 用户反馈标题偏上：几何居中但
+  // 396→424（2026-07-13 rally ending 用户反馈标题偏上：几何居中但
   // 光学偏上——顶部装饰压近+底部 570-720 空腔。下移 28px 光学居中，
   // 全 poster-ending 主题统一受益）
   const HEADING_LAST_BASELINE = 424

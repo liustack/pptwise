@@ -76,13 +76,13 @@ function renderFace(id: string, slide: Slide): string {
     | ((props: SvgTemplateProps) => React.ReactElement)
     | undefined
   if (!Face) throw new Error(`no template registered for face "${id}"`)
-  const tokens = resolveStyle("consulting")
+  const tokens = resolveStyle("brief")
   const bg = resolveBackgroundHex(tokens.defaultBackgrounds.ending, tokens.colors.surface)
   const ctx = buildCtx(tokens, {}, undefined, bg)
   const ir = {
     version: "5",
     filename: "boundary.pptx",
-    theme: { id: "consulting" },
+    theme: { id: "brief" },
     meta: { organization: "云觅咨询" },
     assets: { images: {} },
     slides: [slide],

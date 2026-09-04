@@ -150,7 +150,7 @@ memory, so run one deck through the file path too:
 cat > /tmp/pptwise-hello.json <<'EOF'
 {
   "filename": "hello.pptx",
-  "theme": { "id": "consulting" },
+  "theme": { "id": "brief" },
   "slides": [
     { "type": "cover", "heading": "Hello pptwise", "subheading": "A first deck in ten minutes" },
     { "type": "content", "heading": "Why it works", "components": [
@@ -166,7 +166,7 @@ bash ~/.claude/skills/pptwise/scripts/run.sh render /tmp/pptwise-hello.json -o /
 Expected output, line for line:
 
 ```
-OK — 3 slides, theme "consulting"
+OK — 3 slides, theme "brief"
 wrote /tmp/pptwise-hello.pptx (3 slides, 23783 bytes)
 ```
 

@@ -74,8 +74,8 @@ import { FRAMED_CONTENT_BOTTOM } from "./framed-content-bottom"
  *
  * 对比度自适应修复（W4 fix round，Important I1「content layout 的
  * subheading 出现同类回声」台账）：两分支的 subheading 都原样消费
- * `colors.accent`，同 content-narrow-column.tsx 先例——对 consulting/
- * classroom/heritage/academic 五个主题不达标。两分支的有效背景不同（`withBg`
+ * `colors.accent`，同 content-narrow-column.tsx 先例——对 brief/
+ * homeroom/heritage/thesis 五个主题不达标。两分支的有效背景不同（`withBg`
  * 分支落在自画的不透明白色卡片上，无背景分支落在页面默认背景上），各自改用
  * `accessibleInk(colors.accent, <对应背景>, fontSize)`：`withBg` 分支传固定
  * `"#FFFFFF"`（卡片色本身，不随主题变化，见上方"白色卡片豁免"），无背景分支
@@ -87,7 +87,7 @@ import { FRAMED_CONTENT_BOTTOM } from "./framed-content-bottom"
  * （同样读 `colors.text`/`colors.muted`）、页脚 meta（`colors.muted`）三处此前
  * 直接消费主题 token，未经上面 subheading 早已在用的 accessibleInk 守卫——对
  * `colors.text` 是深色 token 的 9/13 主题无害（其本就是为浅底设计的墨色），
- * 但 campaign/insight/luxe/tech 四个 `colors.text` 是浅色 token 的主题（各自
+ * 但 rally/ledger/luxe/terminal 四个 `colors.text` 是浅色 token 的主题（各自
  * 页面本底是深色，浅字对深底才对）画在这张固定纯白的卡片上，实测约
  * 1:1——不是当前主题的"页面默认底色"出问题，是这张卡片自己的纯白底色和
  * 四个主题的浅色 `colors.text` 撞车。补齐同一套 accessibleInk 守卫，参照
@@ -107,7 +107,7 @@ import { FRAMED_CONTENT_BOTTOM } from "./framed-content-bottom"
  * briefing 内容权重重推导后新落到的选型序列，在 `examples/basic.json` 上首次
  * 实测命中曝光）：两分支的 section label（kicker）此前一直原样消费
  * `colors.accent`，是本文件唯一没跟上"对比度自适应修复"那一轮的文字——subheading/
- * heading/footer meta 早已套 `accessibleInk`，kicker 被漏掉。consulting 主题
+ * heading/footer meta 早已套 `accessibleInk`，kicker 被漏掉。brief 主题
  * `accent=#FFC72C` 对 `#F7F7F2` 页面默认底实测约 1.45:1，远低于 22px kicker 所
  * 需的 4.5:1。补齐同一套守卫：无背景图分支传 `ctx.defaultBg ?? colors.bg`（同
  * subheading 先例），`withBg` 分支传卡片自身的 `"#FFFFFF"`（同 heading/footer
@@ -155,8 +155,8 @@ const KICKER_FONT_SIZE = 22
  * themes ran this line within 11px of the decoration above it, four of them
  * within 4px: heritage/luxe's frame inner rule (1.6px, the "Chapter 01 这行
  * 太靠近容器的框的上边缘" the review reported on `theme--heritage--zh--p09`),
- * journal/luxe's masthead hairline (3.6px), consulting's dot (4.0px), and
- * insight's tick marks (7.0px, the `theme--insight--zh--p09` report).
+ * journal/luxe's masthead hairline (3.6px), brief's dot (4.0px), and
+ * ledger's tick marks (7.0px, the `theme--ledger--zh--p09` report).
  *
  * Seating the em box exactly on `TITLE_ZONE_TOP` hands the whole decoration
  * band back to the motifs and fixes all ten at once. Below it the heading's

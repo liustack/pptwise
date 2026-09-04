@@ -19,7 +19,7 @@ import { tryContentHeadingTreatment } from "../render/heading-treatments/render"
  * stray vertical line beside the content, and the badge alone already says
  * where the slide sits. The face id keeps its historical name. The heading
  * sits to the right of the badge, vertically centered on it. Extracted from
- * templates/academic.tsx 的 `BCGEmeraldContent`（390-531 行，Step A 实测边界，
+ * templates/thesis.tsx 的 `BCGEmeraldContent`（390-531 行，Step A 实测边界，
  * 比 brief 给出的 390-558 短——558 行已进入下一节"Ending"的头注释）。随迁
  * helper：无——本函数消费的 `SvgContent`/`chapterNumberFor`/
  * `contentIndexInChapter`/`fitHeadingLines`/`fitSvgLine`/`fitEmphasisLine`/
@@ -30,7 +30,7 @@ import { tryContentHeadingTreatment } from "../render/heading-treatments/render"
  * 文件私有常量，不建公共 util（同 chapter-rail-chapter.tsx 对 `CH_DOT_*`
  * 的处理）。
  *
- * 替换表（Step B，逐十六进制核实，对照 themes/academic.ts 的 colors。
+ * 替换表（Step B，逐十六进制核实，对照 themes/thesis.ts 的 colors。
  * 十六进制值本身不抄进本注释——避免污染本文件的 grep 清零门，同
  * cover-left-anchor.tsx 先例）：
  *   - `colors.primary`：源函数已直接消费 `ctx.colors.primary`（
@@ -39,7 +39,7 @@ import { tryContentHeadingTreatment } from "../render/heading-treatments/render"
  *   - 源文件私有常量 `MUTED` → `ctx.colors.muted` —— 逐字符精确匹配。
  *   - `colors.text`/`colors.primary`（`renderEmphasisText` 的
  *     accent/baseFill 入参）：源函数已直接消费，未烤死，原样保留。
- * 两处烤死常量都在 academic 的 token 表里有精确匹配，**无孤儿色**。
+ * 两处烤死常量都在 thesis 的 token 表里有精确匹配，**无孤儿色**。
  *
  * 白字例外（同 chapter-rail-chapter.tsx / cover-left-anchor.tsx 先例）——
  * **W4 fix round 前**：徽章文字曾固定写死纯白字面量，注释断言"任意主题色下
@@ -58,7 +58,7 @@ import { tryContentHeadingTreatment } from "../render/heading-treatments/render"
  * 均已改为 token 或 `../render/ink` 调用，grep 清零门预期不再命中任何纯白字面量。
  */
 
-// Shared vertical-centering convention (see consulting.tsx's assertion
+// Shared vertical-centering convention (see brief.tsx's assertion
 // banner for the original derivation, also copied privately into
 // cover-left-anchor.tsx): for a single line at `fontSize`, `pivotY +
 // round(fontSize * 0.32)` lands the baseline visually centered on `pivotY`;
@@ -101,7 +101,7 @@ const CONTENT_GAP = 36 // gap between the title's last line and the content rect
 // when `slide.subheading` is set, so a slide without one gets byte-identical
 // geometry to before this feature existed. subheadingY = titleLastY + 41
 // (subheading ascent + target visual gap + glyph-descent fudge, six-theme
-// unified formula — see templates/academic.tsx's own S3b note for the
+// unified formula — see templates/thesis.tsx's own S3b note for the
 // full derivation this was ported from).
 const SUBHEADING_FONT_SIZE = 22
 const SUBHEADING_MIN_FONT_SIZE = 16
@@ -135,7 +135,7 @@ export function RailNumberedContent({ ir, slide, index, ctx }: SvgTemplateProps)
   const titleLastY =
     BADGE_CENTER_Y + ((heading.lines.length - 1) * heading.lineHeight) / 2 + headingFudge
 
-  // academic's own `colors.accent` (emerald) measures well below even WCAG
+  // thesis's own `colors.accent` (emerald) measures well below even WCAG
   // AA's 3:1 floor for *large* text against the off-white content bg, let
   // alone the 4.5:1 floor this 22px/regular-weight line actually needs — so,
   // like navy, this theme substitutes `colors.primary` (measured
@@ -143,9 +143,9 @@ export function RailNumberedContent({ ir, slide, index, ctx }: SvgTemplateProps)
   // `colors.accent` (see the task report's contrast table).
   //
   // W4 fix round: that substitution was itself a fixed per-theme assumption
-  // baked into the layout (colors.primary passes for academic, but
-  // full-matrix scanning found campaign's own colors.primary falls to
-  // 3.49:1 against campaign's own content background — same defect class
+  // baked into the layout (colors.primary passes for thesis, but
+  // full-matrix scanning found rally's own colors.primary falls to
+  // 3.49:1 against rally's own content background — same defect class
   // as content-banner-heading.tsx's identical primary-for-accent
   // substitution). `subheadingFill` below keeps colors.primary when it
   // already clears the ratio (every theme this substitution was actually
@@ -317,7 +317,7 @@ export function RailNumberedContent({ ir, slide, index, ctx }: SvgTemplateProps)
 
       {/* Footnote only — Branding already renders the y=664 footer
        * hairline for content pages, so this layout must not draw its own
-       * line down there (see consulting.tsx's fix-wave note on the same
+       * line down there (see brief.tsx's fix-wave note on the same
        * double-hairline bug). */}
       {footnote && (
         <text

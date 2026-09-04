@@ -35,9 +35,9 @@ import type { PageRenderContext } from "./page-context"
  * 版式上修过一遍，这里是同型的第五处、当时漏掉的一处。
  *
  * 不是本轮才坏的：改动前实测 `auditDeck`，luxe（primary 压 bg 1.08:1）、
- * insight（1.14）、tech（1.31）三家在这四个版式上各报 5 条 low-contrast，
- * 一共十五条，早在本轮之前就在报。柔和组把 campaign 的 primary 从品红翻成
- * 舞台暗紫（`themes/campaign.ts` 的逐条来历）之后，campaign 会成为第四家
+ * ledger（1.14）、terminal（1.31）三家在这四个版式上各报 5 条 low-contrast，
+ * 一共十五条，早在本轮之前就在报。柔和组把 rally 的 primary 从品红翻成
+ * 舞台暗紫（`themes/rally.ts` 的逐条来历）之后，rally 会成为第四家
  * ——与其给它开例外，不如把这处共享版式的根因一起修掉：`accessibleInk`
  * 在 primary 本就过线时逐字节不变（其余 13 家），过不了线时回落
  * `readableOn` 的中性墨。全 17 主题实测见本轮报告。

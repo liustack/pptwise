@@ -49,7 +49,7 @@ export function GaugeSectionChapter({ ir, slide, index, ctx }: SvgTemplateProps)
     : null
   const ordinalInk = accessibleInk(colors.surface, colors.primary, ORDINAL_SIZE)
   const titleInk = accessibleInk(colors.bg, colors.primary, title?.fontSize ?? TITLE_SIZE)
-  // Derived, not baked: the board's #B7BBC4 only clears 3:1 on consulting's
+  // Derived, not baked: the board's #B7BBC4 only clears 3:1 on brief's
   // own navy. metaInk keeps it wherever it passes and nudges it elsewhere.
   const subtitleInk = metaInk(GAUGE_DARK_META, colors.primary)
 
@@ -124,7 +124,7 @@ export const layoutDef: LayoutDefinition = {
     maxLines: 1,
     minPt: TITLE_MIN_PT,
   },
-  // `pinOnly`: consulting locks this face by *listing* it in its own
+  // `pinOnly`: brief locks this face by *listing* it in its own
   // `layouts`, which `resolveLayoutId` honours. Without it the face joins
   // `fullLayoutSet`, the pool the other 23 builtins auto-pick from.
 }

@@ -22,7 +22,7 @@ import { splitPaint, verdictFreshness } from "./render"
 
 await installNodePlatform()
 
-function deck(themeId = "consulting"): PptxIR {
+function deck(themeId = "brief"): PptxIR {
   const ir = {
     version: "5",
     filename: "fingerprint-probe",
@@ -51,7 +51,7 @@ const render = (ir: PptxIR) => renderSlideSvg(ir, 0)
 describe("splitPaint, against a real recolor", () => {
   // The modern recolor is a fork: same menu, different skin. Geometry must
   // hold while every paint value moves.
-  const donor = themeFileFromPreset("consulting", { id: "recolor-donor" })
+  const donor = themeFileFromPreset("brief", { id: "recolor-donor" })
   const forked = forkTheme(
     donor,
     { bg: "#FFF4F7", surface: "#FFF9FB", text: "#3D1022", primary: "#7A1F3D", accent: "#0E7C66" },

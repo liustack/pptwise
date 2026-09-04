@@ -7,7 +7,7 @@ import { faceParam } from "./face-params"
 
 /**
  * constellation cover layout（spec §3.2）：底锚英雄标题 + 右侧半区的 9 点
- * 星座光点 motif（hero 点带三层同心光晕）。自 templates/tech.tsx 的
+ * 星座光点 motif（hero 点带三层同心光晕）。自 templates/terminal.tsx 的
  * `BentoTechCover`（703-864 行）提炼，无随迁 helper——函数体本身消费的两处
  * 模块级私有常量（`COVER_MOTIF_POINTS`/`COVER_MOTIF_HERO_POINT`，687-700 行，
  * 星座坐标几何）与三个不透明度/描边宽度常量（`BENTO_CARD_STROKE_WIDTH`
@@ -15,7 +15,7 @@ import { faceParam } from "./face-params"
  * 170-171 行，光晕环复用 KPI 卡片同款视觉语言）随迁为本文件私有常量（不导出、
  * 不建公共 util）。
  *
- * 替换表（Step B，逐十六进制核实，对照 themes/tech.ts 的 colors）：
+ * 替换表（Step B，逐十六进制核实，对照 themes/terminal.ts 的 colors）：
  * Step A 对函数区间（687-864 行）复核 grep 未命中任何 `#XXXXXX` 字面量或
  * theme id 字符串——源函数体已直接消费 `ctx.colors`/`ctx.fonts`
  * （`colors.text`/`colors.muted`/`colors.accent`），无烤死颜色常量。随迁的
@@ -25,7 +25,7 @@ import { faceParam } from "./face-params"
  * 纪律：本文件禁 theme id、禁颜色 hex 字面量。
  */
 
-// Ported verbatim from templates/tech.tsx (56/170-171 行) — opacity/stroke
+// Ported verbatim from templates/terminal.tsx (56/170-171 行) — opacity/stroke
 // width constants consumed by the glow rings below, not colors.
 const BENTO_CARD_STROKE_WIDTH = "1"
 const BENTO_KPI_GLOW_RING1_OPACITY = "0.18"
@@ -36,7 +36,7 @@ const BENTO_KPI_GLOW_RING2_OPACITY = "0.07"
  * organic "constellation" rather than a uniform dot grid), connected in
  * order by one polyline. Geometry is IR-independent, so this is a plain
  * constant, not something computed per-render. Ported verbatim from
- * templates/tech.tsx（687-697 行）.
+ * templates/terminal.tsx（687-697 行）.
  */
 const COVER_MOTIF_POINTS = [
   { x: 700, y: 300, r: 2 },
@@ -50,7 +50,7 @@ const COVER_MOTIF_POINTS = [
   { x: 1180, y: 128, r: 5 },
 ]
 /** The largest node (last in `COVER_MOTIF_POINTS`) — the one that earns the
- * extra concentric glow rings. Ported verbatim from templates/tech.tsx（700 行）. */
+ * extra concentric glow rings. Ported verbatim from templates/terminal.tsx（700 行）. */
 const COVER_MOTIF_HERO_POINT = COVER_MOTIF_POINTS[COVER_MOTIF_POINTS.length - 1]
 
 const TITLE_BASELINE = 520

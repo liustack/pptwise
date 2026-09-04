@@ -3,7 +3,7 @@
   "sha": "321748d",
   "generator": "grok",
   "pages": {
-    "theme--academic--zh--p01": {
+    "theme--thesis--zh--p01": {
       "verdict": "rework",
       "note": "Five equal dots at the top of the right pane are one filled and four hollow, the forbidden progress-dot motif. The cover title block is vertically centered, with top and bottom gaps nearly equal (about 237px vs 261px), so the page does not sit with gravity.",
       "findings": [
@@ -64,7 +64,7 @@
         "theme-independence"
       ]
     },
-    "theme--enterprise--zh--p01": {
+    "theme--bulletin--zh--p01": {
       "verdict": "pass",
       "note": "Placeholder while images are inspected.",
       "findings": []
@@ -90,7 +90,7 @@
     },
     "theme--crayon--zh--p01": {
       "verdict": "limit",
-      "note": "Crayon identity is gone: no hand-drawn marks, waxy color, or rounded motif, so the cover reads as a recolored consulting banner. The title stack hangs in the cream field with a wide mid gap instead of sitting at the top of the content area.",
+      "note": "Crayon identity is gone: no hand-drawn marks, waxy color, or rounded motif, so the cover reads as a recolored brief banner. The title stack hangs in the cream field with a wide mid gap instead of sitting at the top of the content area.",
       "findings": [
         "theme-independence",
         "gravity"
@@ -117,7 +117,7 @@
     },
     "component--comparison-pill-panels--mixed": {
       "verdict": "pass",
-      "note": "Top-weighted consulting comparison pills with even inner padding, hairline equal-weight frames, and no overlap, overflow, blue-orange, or leftover-indicator hits.",
+      "note": "Top-weighted brief comparison pills with even inner padding, hairline equal-weight frames, and no overlap, overflow, blue-orange, or leftover-indicator hits.",
       "findings": []
     },
     "layout--banner-chapter--zh": {
@@ -127,12 +127,12 @@
     },
     "layout--banner-chapter--en": {
       "verdict": "pass",
-      "note": "Centered title is the banner-chapter poster (layout id banner-chapter), so gravity top-weighting does not apply. The gold rule sits below the Customers baseline and consulting navy plus gold is the ADJUDICATED signature, not a blue-orange hit.",
+      "note": "Centered title is the banner-chapter poster (layout id banner-chapter), so gravity top-weighting does not apply. The gold rule sits below the Customers baseline and brief navy plus gold is the ADJUDICATED signature, not a blue-orange hit.",
       "findings": []
     },
     "layout--banner-chapter--mixed": {
       "verdict": "pass",
-      "note": "banner-chapter is a centered-axis chapter poster (layout id banner-chapter). The gold rule sits under 现状盘点, not through the glyphs, and consulting navy with gold is the named ADJUDICATED pairing.",
+      "note": "banner-chapter is a centered-axis chapter poster (layout id banner-chapter). The gold rule sits under 现状盘点, not through the glyphs, and brief navy with gold is the named ADJUDICATED pairing.",
       "findings": []
     },
     "layout--quote-stage--zh": {
@@ -216,7 +216,7 @@
     },
     "layout--image-top--en": {
       "verdict": "pass",
-      "note": "No rubric rule is broken. The photo band sits at the top, title and body follow with leftover space at the bottom, and consulting navy-plus-gold is the named palette exception.",
+      "note": "No rubric rule is broken. The photo band sits at the top, title and body follow with leftover space at the bottom, and brief navy-plus-gold is the named palette exception.",
       "findings": []
     },
     "theme--ember--zh--p05": {

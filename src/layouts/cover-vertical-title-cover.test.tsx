@@ -187,7 +187,7 @@ describe("cover-vertical-title-cover — shared pool", () => {
   })
 
   it("uses tokens, not a baked ink hex, when another theme borrows it", () => {
-    const { markup, tokens } = renderCover("tech")
+    const { markup, tokens } = renderCover("terminal")
     expect(markup).toContain(tokens.colors.accent)
     for (const hex of INK_HEX) expect(markup).not.toContain(hex)
   })
@@ -256,12 +256,12 @@ describe("cover-vertical-title-cover — vertical overflow without ellipsis", ()
   })
 
   it("never leaves the drop-cap as an orphan ink when the accent cannot hold it", () => {
-    // consulting: accent is 1.51:1 at title size, so the first glyph must not
+    // brief: accent is 1.51:1 at title size, so the first glyph must not
     // fall back to accessibleInk's orphan near-black while the rest of the
     // column stays on titleInk — the half-and-half defect from the
     // 2026-08-25 ink-duty audit. The whole column shares one ink instead.
-    const consulting = renderCover("consulting")
-    const singles = Array.from(consulting.root.querySelectorAll("text")).filter(
+    const brief = renderCover("brief")
+    const singles = Array.from(brief.root.querySelectorAll("text")).filter(
       (t) => t.textContent?.length === 1 && t.getAttribute("text-anchor") === "middle",
     )
     // The title column is the largest glyph run on the page; the org column

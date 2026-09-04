@@ -63,7 +63,7 @@ function withoutVerdictKnobs(themeId: string): StyleTokens {
 
 describe("cover-verdict-index — board geometry", () => {
   it("omitted knobs keep the restore-wave-1 coordinates", () => {
-    const { root, tokens } = renderCover("consulting", slide(), FULL_META, withoutVerdictKnobs("consulting"))
+    const { root, tokens } = renderCover("brief", slide(), FULL_META, withoutVerdictKnobs("brief"))
     const headings = Array.from(root.querySelectorAll("text")).filter((t) => t.getAttribute("font-weight") === "700" && t.getAttribute("x") === "96")
     expect(headings[0]?.getAttribute("y")).toBe("316")
     expect(Number(headings[0]?.getAttribute("font-size"))).toBeGreaterThanOrEqual(50)
@@ -73,8 +73,8 @@ describe("cover-verdict-index — board geometry", () => {
     expect(root.innerHTML).not.toMatch(/#F5C518/i)
   })
 
-  it("consulting knobs move the cluster onto the wave8 board", () => {
-    const { root } = renderCover("consulting")
+  it("brief knobs move the cluster onto the wave8 board", () => {
+    const { root } = renderCover("brief")
     const kicker = Array.from(root.querySelectorAll("text")).find((t) => (t.textContent ?? "").includes("云觅科技"))
     expect(kicker?.getAttribute("y")).toBe("150")
     const headings = Array.from(root.querySelectorAll("text")).filter((t) => t.getAttribute("font-weight") === "700" && t.getAttribute("x") === "96")
@@ -89,7 +89,7 @@ describe("cover-verdict-index — board geometry", () => {
   })
 
   it("does not invent numbered columns when components are empty", () => {
-    const { root } = renderCover("consulting")
+    const { root } = renderCover("brief")
     const texts = Array.from(root.querySelectorAll("text")).map((t) => t.textContent)
     expect(texts).not.toContain("01")
     expect(texts).not.toContain("02")
@@ -97,7 +97,7 @@ describe("cover-verdict-index — board geometry", () => {
   })
 
   it("draws no punch-hole / ruler / gold-rule motif pieces", () => {
-    const { root } = renderCover("consulting")
+    const { root } = renderCover("brief")
     expect(root.querySelectorAll("circle")).toHaveLength(0)
     expect(root.querySelectorAll("polygon")).toHaveLength(0)
   })
@@ -106,18 +106,18 @@ describe("cover-verdict-index — board geometry", () => {
 describe("cover-verdict-index — emphasis and bullets", () => {
   it("with **emphasis** draws an accent pad, without it does not", () => {
     const marked = slide("下半年应加倍投入**交付侧**")
-    const { root, tokens } = renderCover("consulting", marked)
+    const { root, tokens } = renderCover("brief", marked)
     const pad = root.querySelector("[data-emphasis-pad]")
     expect(pad?.tagName.toLowerCase()).toBe("path")
     expect(pad?.getAttribute("fill")).toBe(tokens.colors.accent)
 
-    const plain = renderCover("consulting", slide(HEADING))
+    const plain = renderCover("brief", slide(HEADING))
     expect(plain.root.querySelector("[data-emphasis-pad]")).toBeNull()
   })
 
   it("with 3 bullet items draws 01/02/03 at the default columns", () => {
     const withBullets = slide(HEADING, { components: [{ type: "bullets", items: ITEMS }] })
-    const { root } = renderCover("consulting", withBullets, FULL_META, withoutVerdictKnobs("consulting"))
+    const { root } = renderCover("brief", withBullets, FULL_META, withoutVerdictKnobs("brief"))
     const texts = Array.from(root.querySelectorAll("text"))
     expect(texts.some((t) => t.textContent === "01" && t.getAttribute("x") === "96" && t.getAttribute("y") === "556")).toBe(true)
     expect(texts.some((t) => t.textContent === "02" && t.getAttribute("x") === "470")).toBe(true)
@@ -125,9 +125,9 @@ describe("cover-verdict-index — emphasis and bullets", () => {
     expect(root.querySelectorAll("line").length).toBeGreaterThanOrEqual(2)
   })
 
-  it("consulting knobs drop the column rules and sit the numbers on the wave8 row", () => {
+  it("brief knobs drop the column rules and sit the numbers on the wave8 row", () => {
     const withBullets = slide(HEADING, { components: [{ type: "bullets", items: ITEMS }] })
-    const { root } = renderCover("consulting", withBullets)
+    const { root } = renderCover("brief", withBullets)
     const texts = Array.from(root.querySelectorAll("text"))
     expect(texts.some((t) => t.textContent === "01" && t.getAttribute("x") === "96" && t.getAttribute("y") === "560")).toBe(true)
     expect(texts.some((t) => t.textContent === "02" && t.getAttribute("x") === "470" && t.getAttribute("y") === "560")).toBe(true)
@@ -138,7 +138,7 @@ describe("cover-verdict-index — emphasis and bullets", () => {
   })
 
   it("with components: [] draws no numbered columns", () => {
-    const { root } = renderCover("consulting", slide(HEADING, { components: [] }), FULL_META, withoutVerdictKnobs("consulting"))
+    const { root } = renderCover("brief", slide(HEADING, { components: [] }), FULL_META, withoutVerdictKnobs("brief"))
     expect(Array.from(root.querySelectorAll("text")).map((t) => t.textContent)).not.toContain("01")
     expect(root.querySelectorAll("line")).toHaveLength(0)
   })
@@ -175,11 +175,11 @@ describe("cover-verdict-index — shared pool", () => {
   })
 
   it("renders byte-identically on repeat", () => {
-    expect(renderCover("consulting").markup).toBe(renderCover("consulting").markup)
+    expect(renderCover("brief").markup).toBe(renderCover("brief").markup)
   })
 
   it("CJK title has no letter-spacing", () => {
-    const { root } = renderCover("consulting")
+    const { root } = renderCover("brief")
     for (const t of Array.from(root.querySelectorAll("text")).filter((el) => el.getAttribute("font-weight") === "700" && (el.textContent ?? "").includes("预测"))) {
       expect(t.getAttribute("letter-spacing")).toBeNull()
     }

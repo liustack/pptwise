@@ -54,7 +54,7 @@ describe("layoutDef", () => {
 
 describe("chapter-act-chapter — board geometry", () => {
   it("places mirrored accent bars around the act kicker at the board coordinates", () => {
-    const { root, tokens } = renderChapter("campaign")
+    const { root, tokens } = renderChapter("rally")
     expect(Array.from(root.querySelectorAll("text")).some((t) => t.textContent === "第一幕")).toBe(true)
     const act = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "第一幕")!
     expect(act.getAttribute("x")).toBe("640")
@@ -76,7 +76,7 @@ describe("chapter-act-chapter — board geometry", () => {
   })
 
   it("centers the heading on the mirror axis at the board baseline", () => {
-    const { root } = renderChapter("campaign")
+    const { root } = renderChapter("rally")
     const heading = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === HEADING)!
     expect(heading.getAttribute("x")).toBe("640")
     expect(heading.getAttribute("y")).toBe("392")
@@ -88,21 +88,21 @@ describe("chapter-act-chapter — board geometry", () => {
   it("second chapter in a deck is 第二幕", () => {
     const first = chapterSlide("开场")
     const second = chapterSlide(HEADING)
-    const { markup } = renderChapter("campaign", [first, second], 1)
+    const { markup } = renderChapter("rally", [first, second], 1)
     expect(markup).toContain("第二幕")
     expect(markup).not.toContain("第一幕")
   })
 
   it("Latin heading uses ACT N, not 第 N 幕", () => {
     const slide = chapterSlide("Content playbook")
-    const { markup } = renderChapter("consulting", [slide])
+    const { markup } = renderChapter("brief", [slide])
     expect(markup).toContain("ACT 1")
     expect(markup).not.toContain("第")
   })
 
   it("empty subheading degrades to kicker + heading + bars", () => {
     const slide = chapterSlide(HEADING, { subheading: undefined })
-    const { root } = renderChapter("campaign", [slide])
+    const { root } = renderChapter("rally", [slide])
     const texts = Array.from(root.querySelectorAll("text")).map((t) => t.textContent)
     expect(texts).toContain("第一幕")
     expect(texts).toContain(HEADING)
@@ -125,11 +125,11 @@ describe("chapter-act-chapter — shared pool", () => {
     }
   })
 
-  it("emits only export-safe primitives and no baked campaign hex under another theme", () => {
+  it("emits only export-safe primitives and no baked rally hex under another theme", () => {
     for (const themeId of CANONICAL_THEME_IDS) {
       const { root, markup } = renderChapter(themeId)
       expect(() => assertSubset(root), themeId).not.toThrow()
-      if (themeId !== "campaign") {
+      if (themeId !== "rally") {
         expect(markup, themeId).not.toContain("#E84F8A")
         expect(markup, themeId).not.toContain("#2A1E3F")
       }
@@ -137,11 +137,11 @@ describe("chapter-act-chapter — shared pool", () => {
   })
 
   it("renders byte-identically on repeat", () => {
-    expect(renderChapter("campaign").markup).toBe(renderChapter("campaign").markup)
+    expect(renderChapter("rally").markup).toBe(renderChapter("rally").markup)
   })
 
   it("CJK title has no letter-spacing", () => {
-    const { root } = renderChapter("campaign")
+    const { root } = renderChapter("rally")
     const heading = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === HEADING)!
     expect(heading.getAttribute("letter-spacing")).toBeNull()
   })

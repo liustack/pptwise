@@ -107,7 +107,7 @@ export function CornerWedgeCover({ ir, slide, ctx, params }: SvgTemplateProps) {
   // further left than the outer wedge, so the title budget uses the more
   // left of the two. Default knobs omit inner, so arena geometry is
   // unchanged. Long CJK headings at display size would otherwise spill
-  // onto the wedge and fail large-text 3:1 (academic 2.10, ink 1.10,
+  // onto the wedge and fail large-text 3:1 (thesis 2.10, ink 1.10,
   // journal 1.09 on the matrix heading).
   const titleBoundX = innerStartX !== undefined ? Math.min(startX, innerStartX) : startX
   const titleMaxW = centered

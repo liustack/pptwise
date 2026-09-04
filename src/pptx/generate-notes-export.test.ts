@@ -23,7 +23,7 @@ function makeIR(slides: Slide[]): PptxIR {
   return {
     version: "5",
     filename: "notes-export.pptx",
-    theme: { id: "consulting" },
+    theme: { id: "brief" },
     meta: {},
     assets: { images: {} },
     slides,

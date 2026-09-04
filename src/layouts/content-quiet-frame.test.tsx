@@ -38,7 +38,7 @@ function ir(slides: Slide[]): PptxIR {
   return {
     version: "5",
     filename: "x.pptx",
-    theme: { id: "classroom" },
+    theme: { id: "homeroom" },
     meta: {},
     assets: { images: {} },
     slides,

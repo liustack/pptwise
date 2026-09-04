@@ -88,7 +88,7 @@ describe("chapter-gilt-ordinal-chapter — board geometry", () => {
 
   it("Latin heading uses a roman numeral, not 其", () => {
     const slide = chapterSlide("This Year's Thanks")
-    const { markup, root } = renderChapter("consulting", [slide], 0)
+    const { markup, root } = renderChapter("brief", [slide], 0)
     expect(markup).toContain(">I<")
     expect(markup).not.toContain("其")
     const ordinal = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "I")
@@ -136,7 +136,7 @@ describe("chapter-gilt-ordinal-chapter — shared pool", () => {
   })
 
   it("uses tokens, not baked luxe hex, when another theme draws it", () => {
-    const { markup, tokens } = renderChapter("tech")
+    const { markup, tokens } = renderChapter("terminal")
     expect(markup).toContain(tokens.colors.accent)
     for (const hex of LUXE_HEX) {
       expect(markup, `luxe token ${hex} leaked`).not.toContain(hex)

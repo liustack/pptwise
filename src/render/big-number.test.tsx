@@ -50,7 +50,7 @@ describe("big_number variant", () => {
   })
 
   it("renders the hero value and unit in one text-derived ink", () => {
-    const themeCtx = buildCtx(resolveStyle("consulting"), {})
+    const themeCtx = buildCtx(resolveStyle("brief"), {})
     const { container } = renderBig(components, themeCtx)
     const hero = Array.from(container.querySelectorAll("text")).find((text) =>
       (text.textContent ?? "").includes("82"),

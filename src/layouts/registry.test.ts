@@ -49,7 +49,7 @@ describe("LAYOUT_REGISTRY completeness (layout ids)", () => {
     const layoutEntries = Object.values(LAYOUT_REGISTRY).filter((e) => e.kind === "standard")
     // Wave 8 batch 4: +6 chapter +6 ending pinOnly faces, 102 -> 114.
     // banner-heading retired: 114 -> 113.
-    // consulting gauge adds five pin-only faces: 113 -> 118. All five are
+    // brief gauge adds five pin-only faces: 113 -> 118. All five are
     // theme-locked, so none of them joins the shared automatic pools.
     // One-box-of-crayons adds five theme-locked pin-only faces: 118 -> 123.
     // Runway show adds seven pin-only faces: 123 -> 130.

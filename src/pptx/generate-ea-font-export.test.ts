@@ -51,9 +51,9 @@ async function slideXml(blob: Blob): Promise<string> {
 }
 
 describe("generatePptxBlob CJK east-asian font-slot (a:ea)", () => {
-  it("consulting theme (Georgia heading+body, zero CJK glyphs): <a:ea> is corrected to Microsoft YaHei", async () => {
+  it("brief theme (Georgia heading+body, zero CJK glyphs): <a:ea> is corrected to Microsoft YaHei", async () => {
     const { generatePptxBlob } = await import("./generate")
-    const ir = makeIR("consulting", [contentSlide("中文标题 CJK Heading", "中文正文 body text 混排", false)])
+    const ir = makeIR("brief", [contentSlide("中文标题 CJK Heading", "中文正文 body text 混排", false)])
 
     const xml = await slideXml(await generatePptxBlob(ir))
     expect(xml).toContain("中文标题 CJK Heading")
@@ -61,9 +61,9 @@ describe("generatePptxBlob CJK east-asian font-slot (a:ea)", () => {
     expect(xml).not.toContain('<a:ea typeface="Georgia"')
   }, 30000)
 
-  it("tech theme (Microsoft YaHei heading+body): <a:ea> self-references Microsoft YaHei", async () => {
+  it("terminal theme (Microsoft YaHei heading+body): <a:ea> self-references Microsoft YaHei", async () => {
     const { generatePptxBlob } = await import("./generate")
-    const ir = makeIR("tech", [contentSlide("中文标题 CJK Heading", "中文正文 body text 混排", false)])
+    const ir = makeIR("terminal", [contentSlide("中文标题 CJK Heading", "中文正文 body text 混排", false)])
 
     const xml = await slideXml(await generatePptxBlob(ir))
     expect(xml).toContain("中文标题 CJK Heading")
@@ -72,7 +72,7 @@ describe("generatePptxBlob CJK east-asian font-slot (a:ea)", () => {
 
   it("every theme's Consolas code block: <a:ea> falls back to Microsoft YaHei regardless of the deck's own theme", async () => {
     const { generatePptxBlob } = await import("./generate")
-    for (const themeId of ["consulting", "tech"] as const) {
+    for (const themeId of ["brief", "terminal"] as const) {
       const ir = makeIR(themeId, [contentSlide("Code", "正文", true)])
       const xml = await slideXml(await generatePptxBlob(ir))
       expect(xml).toContain("// 中文注释")
@@ -100,7 +100,7 @@ async function sha256(blob: Blob): Promise<string> {
 describe("generatePptxBlob a:ea export determinism", () => {
   it("a CJK deck exports byte-identical slide XML across two renders", async () => {
     const { generatePptxBlob } = await import("./generate")
-    const ir = makeIR("consulting", [
+    const ir = makeIR("brief", [
       contentSlide("中文标题 CJK Heading", "中文正文 body text 混排", true),
       contentSlide("第二页", "第二段正文", false),
     ])

@@ -147,7 +147,7 @@ pptwise brand extract <file.thmx|file.potx|file.pptx> \
   [--id <id>] [--label <label>] [--from <donor>]
 ```
 
-抽取完全在本机运行。它复制供体的完整菜单，把抽出的颜色与字体锚点送入整套配色推导，并写出完整 v2 主题。`--from` 默认是 `consulting`。
+抽取完全在本机运行。它复制供体的完整菜单，把抽出的颜色与字体锚点送入整套配色推导，并写出完整 v2 主题。`--from` 默认是 `brief`。
 
 ## 叙事与引擎检查
 

@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 import { PptwiseError } from "../errors"
-import { CONSULTING_TOKENS } from "../themes/builtin/consulting"
+import { CONSULTING_TOKENS } from "../themes/builtin/brief"
 import { __resetRegisteredThemes, registerTheme } from "../themes/definitions"
 import { assembleDeck, disassembleDeck, type PageContent } from "./assemble"
 

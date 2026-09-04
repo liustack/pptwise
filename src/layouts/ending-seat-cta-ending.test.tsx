@@ -114,7 +114,7 @@ describe("ending-seat-cta-ending — board geometry", () => {
   })
 
   it("uses tokens, not baked arena hex, when another theme draws it", () => {
-    const { root, tokens } = renderEnding("enterprise")
+    const { root, tokens } = renderEnding("bulletin")
     expect(root.querySelector("polygon")?.getAttribute("fill")).toBe(tokens.colors.accent)
     for (const hex of ARENA_HEX) expect(root.innerHTML, hex).not.toMatch(new RegExp(hex, "i"))
   })

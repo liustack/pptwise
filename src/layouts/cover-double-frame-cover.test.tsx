@@ -145,7 +145,7 @@ describe("cover-double-frame-cover — shared pool", () => {
   })
 
   it("uses tokens, not a baked heritage hex, when another theme borrows it", () => {
-    const { markup, tokens } = renderCover("tech")
+    const { markup, tokens } = renderCover("terminal")
     expect(markup).toContain(tokens.colors.accent)
     expect(markup).not.toContain("#6E1F2A")
     expect(markup).not.toContain("#B8742C")
@@ -174,8 +174,8 @@ describe("double-frame-cover — no top rule on a framed page", () => {
     __resetRegisteredThemes()
   })
 
-  it("consulting motif does not paint a top divider over the double frame", () => {
-    const themeId = registerTestTheme("consulting-double-frame", "consulting", {
+  it("brief motif does not paint a top divider over the double frame", () => {
+    const themeId = registerTestTheme("brief-double-frame", "brief", {
       cover: "double-frame-cover",
     })
     const deck: PptxIR = {

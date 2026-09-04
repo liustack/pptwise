@@ -4,7 +4,7 @@ import { resolveStyle } from "./index"
 
 const DANGER_TEXT_HEADROOM = 4.8
 
-describe.each(["insight", "lecture", "luxe"] as const)(
+describe.each(["ledger", "lecture", "luxe"] as const)(
   "%s semantic ink duties",
   (themeId) => {
     it("keeps the 20px KPI danger arrow above the requested contrast headroom", () => {

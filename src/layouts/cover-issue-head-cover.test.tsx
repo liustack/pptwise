@@ -139,7 +139,7 @@ describe("cover-issue-head-cover — shared pool", () => {
   })
 
   it("uses tokens, not a baked journal hex, when another theme borrows it", () => {
-    const { markup, tokens, root } = renderCover("tech")
+    const { markup, tokens, root } = renderCover("terminal")
     expect(markup).toContain(tokens.colors.primary)
     expect(markup).not.toContain("#2C2C2A")
     expect(markup).not.toContain("#8C4A3C")

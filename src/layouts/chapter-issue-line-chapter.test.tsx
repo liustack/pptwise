@@ -95,7 +95,7 @@ describe("chapter-issue-line-chapter — board geometry", () => {
 
   it("Latin heading uses ISSUE nn, not 议题", () => {
     const latin = { type: "chapter", heading: "Build or lease", subheading: "Decide today", components: [] } as Slide
-    const { root, markup } = renderChapter("consulting", latin, 0, [latin])
+    const { root, markup } = renderChapter("brief", latin, 0, [latin])
     expect(markup).toContain("ISSUE 01")
     expect(markup).not.toContain("议题")
     const kicker = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "ISSUE 01")
@@ -113,7 +113,7 @@ describe("chapter-issue-line-chapter — board geometry", () => {
   })
 
   it("uses tokens, not baked memo hex, when another theme draws it", () => {
-    const { root, tokens, ctx } = renderChapter("enterprise")
+    const { root, tokens, ctx } = renderChapter("bulletin")
     const bg = ctx.defaultBg ?? tokens.colors.bg
     const kicker = Array.from(root.querySelectorAll("text")).find((t) => (t.textContent ?? "").startsWith("议题"))
     expect(kicker?.getAttribute("fill")).toBe(accessibleInk(tokens.colors.accent, bg, Number(kicker?.getAttribute("font-size"))))

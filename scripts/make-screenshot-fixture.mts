@@ -65,7 +65,7 @@ const PRODUCT_SUB = "近三十天核心指标"
 export const SCREENSHOT_IR: PptxIR = {
   version: "5",
   filename: "screenshot-1",
-  theme: { id: "enterprise" },
+  theme: { id: "bulletin" },
   meta: { organization: "云雀数据" },
   // The page draws itself — no picture on it, so no asset to declare.
   assets: { images: {} },
@@ -132,7 +132,7 @@ export const SCREENSHOT_IR: PptxIR = {
  * header and tab bar that say "app" rather than "page".
  */
 export const PHONE_SCREEN = {
-  theme: "enterprise",
+  theme: "bulletin",
   title: PRODUCT,
   subtitle: PRODUCT_SUB,
   /** Bottom tab bar labels, the current one first. */

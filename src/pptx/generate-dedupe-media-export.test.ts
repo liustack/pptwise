@@ -28,7 +28,7 @@ function deckWithDuplicateMedia(): PptxIR {
   return {
     version: "5",
     filename: "dedupe-integration-fixture.pptx",
-    theme: { id: "consulting" },
+    theme: { id: "brief" },
     meta: {},
     assets: {
       images: {

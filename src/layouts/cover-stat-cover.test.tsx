@@ -55,7 +55,7 @@ function renderCover(themeId: string, s: Slide = slide(), meta: PptxIR["meta"] =
 
 describe("cover-stat-cover — board geometry", () => {
   it("places a left-aligned giant heading at the board coordinates and uses tokens, not hex", () => {
-    const { root, tokens } = renderCover("insight")
+    const { root, tokens } = renderCover("ledger")
     const heading = Array.from(root.querySelectorAll("text")).find((t) => (t.textContent ?? "").includes("+34%"))!
     expect(heading.getAttribute("x")).toBe("96")
     expect(heading.getAttribute("y")).toBe("392")
@@ -66,7 +66,7 @@ describe("cover-stat-cover — board geometry", () => {
   })
 
   it("draws the serif conclusion from subheading, not a second invented stat", () => {
-    const { root, tokens } = renderCover("insight")
+    const { root, tokens } = renderCover("ledger")
     const conclusion = Array.from(root.querySelectorAll("text")).find((t) =>
       (t.textContent ?? "").includes("增长的质量"),
     )!
@@ -80,7 +80,7 @@ describe("cover-stat-cover — board geometry", () => {
     const heading = "The quarter in review"
     const subheading = "Where the second half goes"
     const cover = slide(heading, { subheading })
-    const root = parseSvgRoot(renderSlideSvg(ir("insight", {}, cover), 0))
+    const root = parseSvgRoot(renderSlideSvg(ir("ledger", {}, cover), 0))
     const title = Array.from(root.querySelectorAll("text")).find((text) => text.textContent === heading)!
     const conclusion = Array.from(root.querySelectorAll("text")).find((text) => text.textContent === subheading)!
     const titleSize = Number(title.getAttribute("font-size"))
@@ -94,7 +94,7 @@ describe("cover-stat-cover — board geometry", () => {
     const heading = "The quarter in review and where the second half goes"
     const subheading = "Second-half choices and tradeoffs"
     const cover = slide(heading, { subheading })
-    const root = parseSvgRoot(renderSlideSvg(ir("insight", {}, cover), 0))
+    const root = parseSvgRoot(renderSlideSvg(ir("ledger", {}, cover), 0))
     const conclusion = Array.from(root.querySelectorAll("text")).find((text) => text.textContent === subheading)!
     const titleLines = Array.from(root.querySelectorAll("text")).filter((text) => text !== conclusion)
 
@@ -112,21 +112,21 @@ describe("cover-stat-cover — board geometry", () => {
   })
 
   it("does not invent +34% when the heading is a sentence", () => {
-    const { root } = renderCover("insight", slide(SENTENCE_HEADING))
+    const { root } = renderCover("ledger", slide(SENTENCE_HEADING))
     const texts = Array.from(root.querySelectorAll("text")).map((t) => t.textContent ?? "")
     expect(texts.some((t) => t.includes("续约率回到九成一"))).toBe(true)
     expect(texts.join("")).not.toContain("+34%")
   })
 
   it("keeps the board conclusion baseline when the optional heading is absent", () => {
-    const { root } = renderCover("insight", slide("", { heading: "" }))
+    const { root } = renderCover("ledger", slide("", { heading: "" }))
     const conclusion = Array.from(root.querySelectorAll("text")).find((text) => text.textContent === SUBHEADING)!
 
     expect(conclusion.getAttribute("y")).toBe("470")
   })
 
   it("draws no ticker polyline or isolated ticks — those belong to the motif", () => {
-    const { root } = renderCover("insight")
+    const { root } = renderCover("ledger")
     expect(root.querySelectorAll("polyline")).toHaveLength(0)
     expect(root.querySelectorAll("line")).toHaveLength(0)
     expect(root.querySelectorAll("circle")).toHaveLength(0)
@@ -161,21 +161,21 @@ describe("cover-stat-cover — shared pool", () => {
   })
 
   it("renders byte-identically on repeat", () => {
-    expect(renderCover("insight").markup).toBe(renderCover("insight").markup)
+    expect(renderCover("ledger").markup).toBe(renderCover("ledger").markup)
   })
 
   it("CJK title has no letter-spacing", () => {
-    const { root } = renderCover("insight", slide(SENTENCE_HEADING))
+    const { root } = renderCover("ledger", slide(SENTENCE_HEADING))
     const heading = Array.from(root.querySelectorAll("text")).find((t) =>
       (t.textContent ?? "").includes("续约率"),
     )!
     expect(heading.getAttribute("letter-spacing")).toBeNull()
   })
 
-  it("consulting tokens do not leak insight hex", () => {
-    const { markup } = renderCover("consulting")
+  it("brief tokens do not leak ledger hex", () => {
+    const { markup } = renderCover("brief")
     for (const hex of ["#0F1216", "#171C22", "#16202B", "#F0A63C", "#F2EFE8", "#9AA7B4", "#2A3440"]) {
-      expect(markup, `insight token ${hex} leaked`).not.toContain(hex)
+      expect(markup, `ledger token ${hex} leaked`).not.toContain(hex)
     }
   })
 })

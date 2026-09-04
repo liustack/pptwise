@@ -22,7 +22,7 @@ describe("runThemeNew", () => {
   it("copies a builtin preset into a v2 file with no base", async () => {
     const cwd = await tmp("pptwise-theme-new-")
     const out = join(cwd, "themes", "acme.theme.json")
-    const msg = await runThemeNew({ from: "consulting", output: out, cwd })
+    const msg = await runThemeNew({ from: "brief", output: out, cwd })
     expect(msg).toContain("Set spec.theme to \"acme\"")
     expect(msg).not.toContain("--theme-file")
     const written = JSON.parse(await readFile(out, "utf8")) as {
@@ -54,12 +54,12 @@ describe("runThemeNew", () => {
   })
 
   it("keeps the preset's emphasis stroke in the written file", async () => {
-    // `theme new --from consulting` used to write a theme that drew its
+    // `theme new --from brief` used to write a theme that drew its
     // `**marked**` runs in the plain accent tint: the copy chain built a
     // fresh object and never listed `emphasis` among the fields it copied.
     const cwd = await tmp("pptwise-theme-new-emphasis-")
     const pad = join(cwd, "themes", "pad.theme.json")
-    await runThemeNew({ from: "consulting", output: pad, id: "pad-copy", cwd })
+    await runThemeNew({ from: "brief", output: pad, id: "pad-copy", cwd })
     expect(JSON.parse(await readFile(pad, "utf8")).emphasis).toBe("pad")
 
     const underline = join(cwd, "themes", "underline.theme.json")
@@ -70,23 +70,23 @@ describe("runThemeNew", () => {
   it("freezes a builtin under the same id into deck/theme.json", async () => {
     const cwd = await tmp("pptwise-theme-new-freeze-")
     const out = join(cwd, "deck", "theme.json")
-    const msg = await runThemeNew({ from: "consulting", output: out, id: "consulting", cwd })
-    expect(msg).toContain('theme "consulting"')
+    const msg = await runThemeNew({ from: "brief", output: out, id: "brief", cwd })
+    expect(msg).toContain('theme "brief"')
     const written = JSON.parse(await readFile(out, "utf8")) as { id: string }
-    expect(written.id).toBe("consulting")
+    expect(written.id).toBe("brief")
   })
 
   it("refuses a path-like id before joining an output path", async () => {
     const cwd = await tmp("pptwise-theme-new-escape-")
-    await expect(runThemeNew({ from: "consulting", id: "../../escape", cwd })).rejects.toThrow(/a-z0-9-/)
-    await expect(runThemeNew({ from: "consulting", id: "Consulting", cwd })).rejects.toThrow(/a-z0-9-/)
-    await expect(runThemeNew({ from: "consulting", id: "foo_bar", cwd })).rejects.toThrow(/a-z0-9-/)
+    await expect(runThemeNew({ from: "brief", id: "../../escape", cwd })).rejects.toThrow(/a-z0-9-/)
+    await expect(runThemeNew({ from: "brief", id: "Consulting", cwd })).rejects.toThrow(/a-z0-9-/)
+    await expect(runThemeNew({ from: "brief", id: "foo_bar", cwd })).rejects.toThrow(/a-z0-9-/)
   })
 
   it("refuses to overwrite an existing file unless --force", async () => {
     const cwd = await tmp("pptwise-theme-new-force-")
     const out = join(cwd, "themes", "acme.theme.json")
-    await runThemeNew({ from: "consulting", output: out, cwd })
+    await runThemeNew({ from: "brief", output: out, cwd })
     const original = await readFile(out)
     await expect(runThemeNew({ from: "lecture", output: out, id: "acme", cwd })).rejects.toThrow(/--force/)
     expect(await readFile(out)).toEqual(original)
@@ -104,7 +104,7 @@ describe("runThemeNew", () => {
     const out = join(cwd, "themes", "acme.theme.json")
 
     const results = await Promise.allSettled([
-      runThemeNew({ from: "consulting", output: out, id: "acme", cwd }),
+      runThemeNew({ from: "brief", output: out, id: "acme", cwd }),
       runThemeNew({ from: "lecture", output: out, id: "acme", cwd }),
     ])
 
@@ -124,7 +124,7 @@ describe("runThemeNew", () => {
   it("keeps overwrite linearizable when --force and no-force writers interleave", async () => {
     const cwd = await tmp("pptwise-theme-new-mixed-")
     const out = join(cwd, "themes", "acme.theme.json")
-    await runThemeNew({ from: "consulting", output: out, id: "acme", cwd })
+    await runThemeNew({ from: "brief", output: out, id: "acme", cwd })
 
     const results = await Promise.allSettled([
       runThemeNew({ from: "lecture", output: out, id: "acme", cwd }),
@@ -156,7 +156,7 @@ describe("runThemeFork", () => {
   it("writes a same-menu color fork", async () => {
     const cwd = await tmp("pptwise-theme-fork-")
     const src = join(cwd, "themes", "acme.theme.json")
-    await runThemeNew({ from: "consulting", output: src, cwd })
+    await runThemeNew({ from: "brief", output: src, cwd })
     const out = join(cwd, "themes", "acme-blue.theme.json")
     const msg = await runThemeFork("acme", { primary: "#0B5FFF", output: out, cwd })
     expect(msg).toContain("Set spec.theme to \"acme-blue\"")
@@ -187,7 +187,7 @@ describe("runThemeFork", () => {
   it("treats contrast failure as a hard error", async () => {
     const cwd = await tmp("pptwise-theme-fork-bad-")
     await expect(
-      runThemeFork("consulting", {
+      runThemeFork("brief", {
         primary: "#FFFFFF",
         bg: "#FFFFFF",
         text: "#F0F0F0",
@@ -205,7 +205,7 @@ describe("runBrandExtract v2 wrap", () => {
     const src = join(cwd, "corp.pptx")
     await writeFile(src, Buffer.from(await buildThmxBytes({ schemeName: "Acme" })))
     const out = join(cwd, "themes", "acme.theme.json")
-    const msg = await runBrandExtract(src, { output: out, from: "consulting" })
+    const msg = await runBrandExtract(src, { output: out, from: "brief" })
     expect(msg).toContain("set spec.theme")
     const written = JSON.parse(await readFile(out, "utf8")) as {
       version: number
@@ -224,7 +224,7 @@ describe("runBrandExtract v2 wrap", () => {
     const src = join(cwd, "corp.pptx")
     await writeFile(src, Buffer.from(await buildThmxBytes({ schemeName: "Acme" })))
     const out = join(cwd, "themes", "acme.theme.json")
-    await runBrandExtract(src, { output: out, from: "consulting" })
+    await runBrandExtract(src, { output: out, from: "brief" })
     expect(JSON.parse(await readFile(out, "utf8")).emphasis).toBe("pad")
   })
 })
@@ -233,10 +233,10 @@ describe("runThemeTry", () => {
   it("writes a contact sheet with kind rows that do not collapse", async () => {
     const cwd = await tmp("pptwise-theme-try-")
     const out = join(cwd, "sheet")
-    const msg = await runThemeTry("consulting,swiss,memo", { output: out, cwd, gitIgnore: false })
+    const msg = await runThemeTry("brief,swiss,memo", { output: out, cwd, gitIgnore: false })
     expect(msg).toContain("contact-sheet.html")
     const html = await readFile(join(out, "contact-sheet.html"), "utf8")
-    expect(html).toContain("consulting")
+    expect(html).toContain("brief")
     expect(html).toContain("swiss")
     expect(html).toContain("memo")
     expect(html).toContain("points")
@@ -247,14 +247,14 @@ describe("runThemeTry", () => {
 
   it("rejects duplicate ids and out-of-range lists", async () => {
     const cwd = await tmp("pptwise-theme-try-err-")
-    await expect(runThemeTry("consulting", { cwd })).rejects.toThrow(/expects 2-4 theme ids, got 1/)
-    await expect(runThemeTry("consulting,swiss,memo,tech,ink", { cwd })).rejects.toThrow(/expects 2-4 theme ids, got 5/)
-    await expect(runThemeTry("consulting, consulting", { cwd })).rejects.toThrow(/duplicate/)
+    await expect(runThemeTry("brief", { cwd })).rejects.toThrow(/expects 2-4 theme ids, got 1/)
+    await expect(runThemeTry("brief,swiss,memo,terminal,ink", { cwd })).rejects.toThrow(/expects 2-4 theme ids, got 5/)
+    await expect(runThemeTry("brief, brief", { cwd })).rejects.toThrow(/duplicate/)
   })
 
   it("defaults to .pptwise/theme-try/", async () => {
     const cwd = await tmp("pptwise-theme-try-default-")
-    const msg = await runThemeTry("consulting,swiss", { cwd, gitIgnore: false })
+    const msg = await runThemeTry("brief,swiss", { cwd, gitIgnore: false })
     expect(msg).toContain(join(cwd, ".pptwise", "theme-try", "contact-sheet.html"))
     expect(await readdir(join(cwd, ".pptwise", "theme-try"))).toContain("contact-sheet.html")
   })

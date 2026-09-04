@@ -4,7 +4,7 @@ import { parsePptxIR, BUILTIN_THEME_IDS } from "./index"
 
 const minimal = () => ({
   version: "5", filename: "d.pptx",
-  theme: { id: "consulting" }, meta: { organization: "ACME" },
+  theme: { id: "brief" }, meta: { organization: "ACME" },
   assets: { images: {} },
   slides: [{ type: "cover", heading: "标题" }],
 })
@@ -26,17 +26,17 @@ describe("IR v5 theme field", () => {
   })
   it("rejects the retired top-level style field (strict)", () => {
     const d: any = minimal()
-    d.style = { id: "consulting" }
+    d.style = { id: "brief" }
     expect(parsePptxIR(d).success).toBe(false)
   })
   it("rejects the dropped override field", () => {
     const d: any = minimal()
-    d.theme = { id: "consulting", override: { primary: "#123456" } }
+    d.theme = { id: "brief", override: { primary: "#123456" } }
     expect(parsePptxIR(d).success).toBe(false)
   })
   it("keeps an unrecognized theme key as an unrecognized-key error, not a missing-theme error", () => {
     const d: any = minimal()
-    d.theme = { id: "consulting", colour: "#ff0000" }
+    d.theme = { id: "brief", colour: "#ff0000" }
     const r = parsePptxIR(d)
     expect(r.success).toBe(false)
     if (!r.success) {
@@ -191,8 +191,8 @@ describe("pptx-ir v5", () => {
       expect(r.data.assets).toEqual({ images: {} })
     }
   })
-  it("consulting is a built-in theme id, stripe-purple is not", () => {
-    expect(BUILTIN_THEME_IDS).toContain("consulting")
+  it("brief is a built-in theme id, stripe-purple is not", () => {
+    expect(BUILTIN_THEME_IDS).toContain("brief")
     expect(BUILTIN_THEME_IDS).not.toContain("stripe-purple")
   })
 })
@@ -1999,7 +1999,7 @@ describe("theme.style overlay", () => {
   it("rejects theme.style as an extra key", () => {
     const d: any = minimal()
     d.theme = {
-      id: "consulting",
+      id: "brief",
       style: {
         colors: { primary: "#0B5FFF", chartPalette: ["#111111", "#222222"] },
         fonts: { heading: ["Inter"] },
@@ -2010,7 +2010,7 @@ describe("theme.style overlay", () => {
   })
   it("rejects theme.brand as an extra key", () => {
     const d: any = minimal()
-    d.theme = { id: "consulting", brand: { suppressFooterRule: false } }
+    d.theme = { id: "brief", brand: { suppressFooterRule: false } }
     expect(parsePptxIR(d).success).toBe(false)
   })
 })

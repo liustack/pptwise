@@ -30,7 +30,7 @@ function hueDistance(a: string, b: string): number {
 }
 
 describe("forkTheme", () => {
-  const source = themeFileFromPreset("consulting", { id: "acme", label: "Acme" })
+  const source = themeFileFromPreset("brief", { id: "acme", label: "Acme" })
 
   it("keeps the menu byte-identical", () => {
     const forked = forkTheme(source, { primary: "#0B5FFF" }, { id: "acme-blue", label: "Acme Blue" })
@@ -53,7 +53,7 @@ describe("forkTheme", () => {
     // A fork repaints the palette. How the theme strikes a `**marked**` run
     // is handwriting, not palette, so it survives the repaint on both
     // presets that declare one.
-    const pad = themeFileFromPreset("consulting", { id: "pad-src" })
+    const pad = themeFileFromPreset("brief", { id: "pad-src" })
     expect(pad.emphasis).toBe("pad")
     expect(forkTheme(pad, { primary: "#0B5FFF" }, { id: "pad-fork" }).emphasis).toBe("pad")
 
@@ -75,7 +75,7 @@ describe("forkTheme", () => {
     )
   })
 
-  it("consulting chapter bg follows the new primary", () => {
+  it("brief chapter bg follows the new primary", () => {
     expect(source.style.defaultBackgrounds.chapter).toEqual({
       kind: "color",
       value: source.style.colors.primary,
@@ -166,11 +166,11 @@ describe("forkTheme", () => {
   })
 
   it("rebuilds non-anchor default background colors by page role", () => {
-    const insight = themeFileFromPreset("insight", { id: "insight-source" })
-    const before = insight.style.defaultBackgrounds.cover
+    const ledger = themeFileFromPreset("ledger", { id: "ledger-source" })
+    const before = ledger.style.defaultBackgrounds.cover
     expect(before.kind).toBe("gradient")
     const forked = forkTheme(
-      insight,
+      ledger,
       {
         primary: "#2B59C3",
         accent: "#C24172",
@@ -178,7 +178,7 @@ describe("forkTheme", () => {
         surface: "#FFFFFF",
         text: "#15171A",
       },
-      { id: "insight-light" },
+      { id: "ledger-light" },
     )
     const after = forked.style.defaultBackgrounds.cover
     expect(forked.style.colors.chartPalette[0]).toBe("#2B59C3")

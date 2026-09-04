@@ -34,7 +34,7 @@ const ir = (theme: string): PptxIR =>
   }) as unknown as PptxIR
 
 // A minimal, subheading-less cover — matches the fixture
-// templates/tech.test.tsx's Decor describe block used for the motif's own
+// templates/terminal.test.tsx's Decor describe block used for the motif's own
 // structural/logo-clearance checks (a subheading would add an accent bar
 // <rect>, which the motif-shape assertions below don't want to see).
 const minimalSlide: Slide = { type: "cover", heading: "封面", components: [] } as Slide
@@ -46,7 +46,7 @@ const COVER_TECH_MARKUP =
 
 // Branding's brand logo bands (branding.tsx logoBox: image at
 // width=96 height=40, positioned tl/tr/bl/br) — same constants
-// templates/tech.test.tsx used to verify the constellation motif never
+// templates/terminal.test.tsx used to verify the constellation motif never
 // collides with the corner logos.
 const TL_LOGO = { x: 64, y: 48, w: 96, h: 40 }
 const TR_LOGO = { x: 1120, y: 48, w: 96, h: 40 }
@@ -64,24 +64,24 @@ function rectsOverlap(
 }
 
 describe("ConstellationCover", () => {
-  it("tech tokens 下与旧 BentoTechCover 输出逐字节一致（档位一）", () => {
-    const ctx = buildCtx(tokensWithoutCover("tech"), {})
-    const next = renderSvgMarkup(<ConstellationCover ir={ir("tech")} slide={slide} index={0} ctx={ctx} />)
+  it("terminal tokens 下与旧 BentoTechCover 输出逐字节一致（档位一）", () => {
+    const ctx = buildCtx(tokensWithoutCover("terminal"), {})
+    const next = renderSvgMarkup(<ConstellationCover ir={ir("terminal")} slide={slide} index={0} ctx={ctx} />)
     expect(next).toBe(COVER_TECH_MARKUP)
   })
 
-  it("consulting tokens 下用 consulting 的色（证明 token 化成立，无 baked hex）", () => {
-    const ctx = buildCtx(resolveStyle("consulting"), {})
-    const out = renderSvgMarkup(<ConstellationCover ir={ir("consulting")} slide={slide} index={0} ctx={ctx} />)
-    expect(out).toContain("#F5C518") // consulting accent
-    expect(out).not.toContain("#53E0D2") // tech accent 不得残留
+  it("brief tokens 下用 brief 的色（证明 token 化成立，无 baked hex）", () => {
+    const ctx = buildCtx(resolveStyle("brief"), {})
+    const out = renderSvgMarkup(<ConstellationCover ir={ir("brief")} slide={slide} index={0} ctx={ctx} />)
+    expect(out).toContain("#F5C518") // brief accent
+    expect(out).not.toContain("#53E0D2") // terminal accent 不得残留
   })
 
   it("renders markup that passes assertSubset (no forbidden elements)", () => {
-    const ctx = buildCtx(tokensWithoutCover("tech"), {})
+    const ctx = buildCtx(tokensWithoutCover("terminal"), {})
     const markup = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg">
-        <ConstellationCover ir={ir("tech")} slide={slide} index={0} ctx={ctx} />
+        <ConstellationCover ir={ir("terminal")} slide={slide} index={0} ctx={ctx} />
       </svg>,
     )
     expect(markup).not.toContain("foreignObject")
@@ -90,10 +90,10 @@ describe("ConstellationCover", () => {
   })
 
   it("signature motif is a 9-node constellation (varying radii) with a glow on the largest node — no 2x2 corner badge", () => {
-    const ctx = buildCtx(tokensWithoutCover("tech"), {})
+    const ctx = buildCtx(tokensWithoutCover("terminal"), {})
     const markup = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">
-        <ConstellationCover ir={ir("tech")} slide={minimalSlide} index={0} ctx={ctx} />
+        <ConstellationCover ir={ir("terminal")} slide={minimalSlide} index={0} ctx={ctx} />
       </svg>,
     )
     const root = parseSvgRoot(markup)
@@ -125,10 +125,10 @@ describe("ConstellationCover", () => {
   })
 
   it("the motif (including its largest node's glow) sits clear of all four Branding logo bands", () => {
-    const ctx = buildCtx(tokensWithoutCover("tech"), {})
+    const ctx = buildCtx(tokensWithoutCover("terminal"), {})
     const markup = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">
-        <ConstellationCover ir={ir("tech")} slide={minimalSlide} index={0} ctx={ctx} />
+        <ConstellationCover ir={ir("terminal")} slide={minimalSlide} index={0} ctx={ctx} />
       </svg>,
     )
     const root = parseSvgRoot(markup)
@@ -166,7 +166,7 @@ function renderConstellation(
 
 describe("ConstellationCover — cover knobs (board-cover-restore wave 2)", () => {
   it("default keeps last line on y520 and the 84×4 bar plus 9-point", () => {
-    const { root } = renderConstellation("consulting")
+    const { root } = renderConstellation("brief")
     const title = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "数据驱动的增长引擎")!
     expect(title.getAttribute("y")).toBe("520")
     const rule = Array.from(root.querySelectorAll("rect")).find(
@@ -177,8 +177,8 @@ describe("ConstellationCover — cover knobs (board-cover-restore wave 2)", () =
     expect(dots).toHaveLength(9)
   })
 
-  it("tech knobs: last line not 520, no 84×4 bar, four-dot chain present, 9-point still present", () => {
-    const { root } = renderConstellation("tech", { titleBottomAnchor: false, ruleStyle: "star-chain" })
+  it("terminal knobs: last line not 520, no 84×4 bar, four-dot chain present, 9-point still present", () => {
+    const { root } = renderConstellation("terminal", { titleBottomAnchor: false, ruleStyle: "star-chain" })
     const title = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "数据驱动的增长引擎")!
     expect(title.getAttribute("y")).not.toBe("520")
     expect(Number(title.getAttribute("y"))).toBeGreaterThanOrEqual(340)

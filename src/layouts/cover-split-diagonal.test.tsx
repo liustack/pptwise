@@ -25,18 +25,18 @@ const ir = (theme: string): PptxIR =>
   }) as unknown as PptxIR
 
 describe("SplitDiagonalCover", () => {
-  it("academic tokens 下：标题存在、色块用 ctx.colors.primary", () => {
-    const ctx = buildCtx(resolveStyle("academic"), {})
-    const out = renderSvgMarkup(<SplitDiagonalCover ir={ir("academic")} slide={slide} index={0} ctx={ctx} />)
+  it("thesis tokens 下：标题存在、色块用 ctx.colors.primary", () => {
+    const ctx = buildCtx(resolveStyle("thesis"), {})
+    const out = renderSvgMarkup(<SplitDiagonalCover ir={ir("thesis")} slide={slide} index={0} ctx={ctx} />)
     expect(out).toContain("对角分割封面")
     expect(out).toContain(ctx.colors.primary) // #006A4E
   })
 
-  it("tech tokens 下：色块颜色随 tokens 变化（证明零烤色）", () => {
-    const ctx = buildCtx(resolveStyle("tech"), {})
-    const out = renderSvgMarkup(<SplitDiagonalCover ir={ir("tech")} slide={slide} index={0} ctx={ctx} />)
-    expect(out).toContain("#14294A") // tech primary
-    expect(out).not.toContain("#006A4E") // academic primary 不得残留
+  it("terminal tokens 下：色块颜色随 tokens 变化（证明零烤色）", () => {
+    const ctx = buildCtx(resolveStyle("terminal"), {})
+    const out = renderSvgMarkup(<SplitDiagonalCover ir={ir("terminal")} slide={slide} index={0} ctx={ctx} />)
+    expect(out).toContain("#14294A") // terminal primary
+    expect(out).not.toContain("#006A4E") // thesis primary 不得残留
   })
 
   // `readableOn`'s own contrast-adaptivity/hex-parsing unit tests moved to
@@ -57,9 +57,9 @@ describe("SplitDiagonalCover", () => {
     const RUN = "Brandxxxxxxxxxxxxxxx"
     const literalPin = `${RUN}：让工程团队将大模型推理性能提升`
     const literalSlide: Slide = { type: "cover", heading: literalPin, components: [] } as Slide
-    const ctx = buildCtx(resolveStyle("academic"), {})
+    const ctx = buildCtx(resolveStyle("thesis"), {})
     const out = renderSvgMarkup(
-      <SplitDiagonalCover ir={ir("academic")} slide={literalSlide} index={0} ctx={ctx} />,
+      <SplitDiagonalCover ir={ir("thesis")} slide={literalSlide} index={0} ctx={ctx} />,
     )
     const root = parseSvgRoot(
       `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">${out}</svg>`,
@@ -95,9 +95,9 @@ describe("SplitDiagonalCover", () => {
     const RUN = "Brandxxxxxxxxxx"
     const heading15 = `${RUN}：让工程团队将大模型推理性能提升`
     const slide15: Slide = { type: "cover", heading: heading15, components: [] } as Slide
-    const ctx = buildCtx(resolveStyle("academic"), {})
+    const ctx = buildCtx(resolveStyle("thesis"), {})
     const out = renderSvgMarkup(
-      <SplitDiagonalCover ir={ir("academic")} slide={slide15} index={0} ctx={ctx} />,
+      <SplitDiagonalCover ir={ir("thesis")} slide={slide15} index={0} ctx={ctx} />,
     )
     const root = parseSvgRoot(
       `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">${out}</svg>`,
@@ -130,9 +130,9 @@ describe("SplitDiagonalCover", () => {
     const RUN = "Brandxxxxxxxxxxxxxxxxxxx"
     const heading24 = `${RUN}：让工程团队将大模型推理性能提升`
     const slide24: Slide = { type: "cover", heading: heading24, components: [] } as Slide
-    const ctx = buildCtx(resolveStyle("academic"), {})
+    const ctx = buildCtx(resolveStyle("thesis"), {})
     const out = renderSvgMarkup(
-      <SplitDiagonalCover ir={ir("academic")} slide={slide24} index={0} ctx={ctx} />,
+      <SplitDiagonalCover ir={ir("thesis")} slide={slide24} index={0} ctx={ctx} />,
     )
     const root = parseSvgRoot(
       `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">${out}</svg>`,
@@ -160,9 +160,9 @@ describe("SplitDiagonalCover", () => {
     const RUN = "OpenAPIGateway"
     const fusedHeading = "统一接入层OpenAPIGateway让跨团队协作效率显著提升"
     const fusedSlide: Slide = { type: "cover", heading: fusedHeading, components: [] } as Slide
-    const ctx = buildCtx(resolveStyle("academic"), {})
+    const ctx = buildCtx(resolveStyle("thesis"), {})
     const out = renderSvgMarkup(
-      <SplitDiagonalCover ir={ir("academic")} slide={fusedSlide} index={0} ctx={ctx} />,
+      <SplitDiagonalCover ir={ir("thesis")} slide={fusedSlide} index={0} ctx={ctx} />,
     )
     const root = parseSvgRoot(
       `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">${out}</svg>`,

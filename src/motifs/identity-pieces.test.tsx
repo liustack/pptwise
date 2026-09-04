@@ -72,11 +72,11 @@ function themeForMotif(id: MotifId): string {
     "heritage-motif": "heritage",
     "playbill-motif": "playbill",
     "arena-motif": "arena",
-    "pulse-motif": "pulse",
+    "pulse-motif": "clinic",
     "corner-ornament-motif": "journal",
-    "poster-motif": "insight",
+    "poster-motif": "ledger",
   }
-  return map[id] ?? "consulting"
+  return map[id] ?? "brief"
 }
 
 function draw(id: MotifId, type: Slide["type"]) {

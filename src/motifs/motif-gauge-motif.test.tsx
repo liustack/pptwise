@@ -13,13 +13,13 @@ const SLIDES = ["cover", "chapter", "content", "ending"].map(
 )
 
 function renderMotif(slide: Slide, page?: PageRenderContext) {
-  const tokens = resolveStyle("consulting")
+  const tokens = resolveStyle("brief")
   const bg = resolveBackgroundHex(tokens.defaultBackgrounds[slide.type], tokens.colors.surface)
   const ctx = buildCtx(tokens, {}, undefined, bg)
   const ir = {
     version: "5",
     filename: "gauge-motif.pptx",
-    theme: { id: "consulting" },
+    theme: { id: "brief" },
     meta: {},
     assets: { images: {} },
     slides: [slide],
@@ -65,8 +65,8 @@ describe("GaugeMotif", () => {
     }
   })
 
-  it("uses consulting navy on paper and white on the navy chapter field", () => {
-    const tokens = resolveStyle("consulting")
+  it("uses brief navy on paper and white on the navy chapter field", () => {
+    const tokens = resolveStyle("brief")
     for (const slide of SLIDES) {
       const strokes = Array.from(renderMotif(slide).root.querySelectorAll("line")).map((line) =>
         line.getAttribute("stroke"),

@@ -258,8 +258,8 @@ describe("data-blk propagation (wave-C S3)", () => {
 // that does not set its own, and `opacity` on a `<g>` composites the whole
 // subtree (so a child's own `opacity` multiplies with it rather than replacing
 // it). `walk` used to compose only `transform`, so a motif that painted its
-// group and left its shapes bare — pulse's cell rings, terra's contours,
-// ember's sparks, enterprise's ticks, rail's corners, vermilion's rays — came
+// group and left its shapes bare — clinic's cell rings, almanac's contours,
+// ember's sparks, bulletin's ticks, rail's corners, vermilion's rays — came
 // out of the exporter colorless (or, for `<line>`, black, from `line.ts`'s own
 // `#000000` stroke default) while the browser preview showed it painted.
 describe("paint inheritance from containers", () => {

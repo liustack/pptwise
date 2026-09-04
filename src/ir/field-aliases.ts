@@ -171,7 +171,7 @@ export const COMPONENT_ITEM_FIELD_ALIASES: Readonly<Record<string, readonly Item
   // `title`→`label` alias above — the same generic title-for-label slip on
   // any labeled-card-like item shape.
   sankey: sankeyAliases.items,
-  // Real-world tech-deck mental model: layers have a "name" and hold
+  // Real-world terminal-deck mental model: layers have a "name" and hold
   // "components" or "nodes" — pptwise's own top-level components array
   // shares the word "components" by coincidence only; this alias is scoped
   // to one architecture layer's own item shape, never the deck-level array.

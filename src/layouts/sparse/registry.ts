@@ -7,16 +7,16 @@ import * as playbill from "./playbill"
 import * as museum from "./museum"
 import * as luxe from "./luxe"
 import * as ink from "./ink"
-import * as consulting from "./consulting"
-import * as insight from "./insight"
-import * as tech from "./tech"
+import * as brief from "./brief"
+import * as ledger from "./ledger"
+import * as terminal from "./terminal"
 import * as heritage from "./heritage"
 import * as vermilion from "./vermilion"
 import * as journal from "./journal"
-import * as campaign from "./campaign"
+import * as rally from "./rally"
 import * as arena from "./arena"
-import * as terra from "./terra"
-import * as academic from "./academic"
+import * as almanac from "./almanac"
+import * as thesis from "./thesis"
 
 export type SparseLayoutId = Extract<
   ContentLayoutId,
@@ -70,20 +70,20 @@ export const FACES: Partial<Record<string, FaceMap>> = {
     "stat-hero": ink.statHero,
     "pull-quote": ink.pullQuote,
   },
-  consulting: {
-    statement: consulting.statement,
-    "stat-hero": consulting.statHero,
-    "one-evidence": consulting.oneEvidence,
+  brief: {
+    statement: brief.statement,
+    "stat-hero": brief.statHero,
+    "one-evidence": brief.oneEvidence,
   },
-  insight: {
-    statement: insight.statement,
-    "stat-hero": insight.statHero,
-    "pull-quote": insight.pullQuote,
+  ledger: {
+    statement: ledger.statement,
+    "stat-hero": ledger.statHero,
+    "pull-quote": ledger.pullQuote,
   },
-  tech: {
-    "stat-hero": tech.statHero,
-    statement: tech.statement,
-    "one-evidence": tech.oneEvidence,
+  terminal: {
+    "stat-hero": terminal.statHero,
+    statement: terminal.statement,
+    "one-evidence": terminal.oneEvidence,
   },
   heritage: {
     "pull-quote": heritage.pullQuote,
@@ -100,25 +100,25 @@ export const FACES: Partial<Record<string, FaceMap>> = {
     "stat-hero": journal.statHero,
     statement: journal.statement,
   },
-  campaign: {
-    statement: campaign.statement,
-    "stat-hero": campaign.statHero,
-    "one-evidence": campaign.oneEvidence,
+  rally: {
+    statement: rally.statement,
+    "stat-hero": rally.statHero,
+    "one-evidence": rally.oneEvidence,
   },
   arena: {
     "stat-hero": arena.statHero,
     statement: arena.statement,
     "one-evidence": arena.oneEvidence,
   },
-  terra: {
-    statement: terra.statement,
-    "stat-hero": terra.statHero,
-    "one-evidence": terra.oneEvidence,
+  almanac: {
+    statement: almanac.statement,
+    "stat-hero": almanac.statHero,
+    "one-evidence": almanac.oneEvidence,
   },
-  academic: {
-    "pull-quote": academic.pullQuote,
-    "stat-hero": academic.statHero,
-    statement: academic.statement,
+  thesis: {
+    "pull-quote": thesis.pullQuote,
+    "stat-hero": thesis.statHero,
+    statement: thesis.statement,
   },
 }
 

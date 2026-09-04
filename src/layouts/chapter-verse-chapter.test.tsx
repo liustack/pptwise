@@ -84,9 +84,9 @@ describe("VerseChapter", () => {
   })
 
   it("Latin heading uses CHAPTER 01 kicker, not 第 N 章", () => {
-    const ctx = chapterCtx("consulting")
+    const ctx = chapterCtx("brief")
     const { markup } = render(
-      <VerseChapter ir={ir("consulting", [chapterEn])} slide={chapterEn} index={0} ctx={ctx} />,
+      <VerseChapter ir={ir("brief", [chapterEn])} slide={chapterEn} index={0} ctx={ctx} />,
     )
     expect(markup).toContain("CHAPTER 01")
     expect(markup).not.toContain("第 ")
@@ -103,9 +103,9 @@ describe("VerseChapter", () => {
   })
 
   it("empty subheading degrades: only kicker + heading", () => {
-    const ctx = chapterCtx("insight")
+    const ctx = chapterCtx("ledger")
     const slide: Slide = { type: "chapter", layout: "verse-chapter", heading: "羽", components: [] } as Slide
-    const { root } = render(<VerseChapter ir={ir("insight", [slide])} slide={slide} index={0} ctx={ctx} />)
+    const { root } = render(<VerseChapter ir={ir("ledger", [slide])} slide={slide} index={0} ctx={ctx} />)
     const texts = Array.from(root.querySelectorAll("text"))
     expect(texts).toHaveLength(2)
     expect(texts.every((t) => (t.textContent ?? "").trim().length > 0)).toBe(true)

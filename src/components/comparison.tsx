@@ -24,7 +24,7 @@ function headerTitles(component: ComparisonComponent, labelHeader = ""): string[
 }
 
 /**
- * 弱模型首列重复归一化（2026-07-10 无图矩阵真机抓到：consulting 对比表
+ * 弱模型首列重复归一化（2026-07-10 无图矩阵真机抓到：brief 对比表
  * 「维度」值逐行双渲）：模型把行标签又抄进 cells[0]（cells.length 等于
  * columns.length 而非 columns.length-1）。全部行都命中时判定为该病型：
  * 丢每行 cells[0]，columns[0]（如「维度」）移作标签列表头。非全行命中

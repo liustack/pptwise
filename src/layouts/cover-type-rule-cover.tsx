@@ -7,7 +7,7 @@ import { hasCjk } from "./minimal-shared"
 import { parseEmphasis, renderEmphasisText, sliceEmphasisForLines, stripEmphasis } from "../render/emphasis"
 
 /**
- * type-rule-cover（第八波 tech 板，新 pinOnly）：纯排印封面。kicker / 标题 /
+ * type-rule-cover（第八波 terminal 板，新 pinOnly）：纯排印封面。kicker / 标题 /
  * 副题 / 题下短规线 / 落款，没有星座、没有碎点。青光只走标题或副题里的
  * `**强调**`（tint），没有标记就不点亮。规线取 `colors.border`，永不亮色。
  *

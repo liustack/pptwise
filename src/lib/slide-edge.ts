@@ -15,8 +15,8 @@
  * roughly a fifth to a quarter of it — in a one-to-two pixel strip down the
  * slide's edge. When the box is painted in a neutral light grey and the
  * slide is dark, that strip reads as a pale vertical line hugging the page,
- * which is exactly what the 2026-08-20 review reported on campaign p01/p02,
- * ink p01/p03 and insight p07. Measured, not reasoned about: setting the
+ * which is exactly what the 2026-08-20 review reported on rally p01/p02,
+ * ink p01/p03 and ledger p07. Measured, not reasoned about: setting the
  * gallery's stage colour to magenta turned the line magenta, and setting it
  * to the slide's own background made the line disappear.
  *

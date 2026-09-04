@@ -1,6 +1,6 @@
 {
   "version": "1",
-  "theme": "consulting",
+  "theme": "brief",
   "filename": "fixture-fx95",
   "pages": [
     { "id": "p-cover", "type": "cover", "heading": "Fixture 95" },

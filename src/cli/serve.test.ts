@@ -16,7 +16,7 @@ installNodePlatform()
 const VALID_IR = {
   version: "5",
   filename: "serve-test",
-  theme: { id: "tech" },
+  theme: { id: "terminal" },
   slides: [
     { type: "cover", heading: "Serve Test" },
     { type: "content", kind: "points", heading: "Body", components: [{ type: "paragraph", text: "hello from serve" }] },
@@ -48,7 +48,7 @@ function makeDeckPlan(): Record<string, unknown> {
   return {
     version: "1",
     narrative: "boardroom-report",
-    theme: "consulting",
+    theme: "brief",
     filename: "serve-deck",
     pages: [
       { id: "p-cover", type: "cover", heading: "Serve Deck" },

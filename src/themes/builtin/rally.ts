@@ -2,15 +2,15 @@ import type { StyleTokens } from "../tokens";
 import type { BuiltinThemeDeclaration } from "../schema";
 
 /**
- * campaign（活力营销）——2026-07-13 memphis 拆分主题 A（用户拍板：场景命名
- * campaign + 深紫方向，参考「炫彩简约活动策划」类模板），面向活动策划/
- * 营销 campaign/发布会/年轻化品牌。存量 memphis/doodle deck 经
+ * rally（活力营销）——2026-07-13 memphis 拆分主题 A（用户拍板：场景命名
+ * rally + 深紫方向，参考「炫彩简约活动策划」类模板），面向活动策划/
+ * 营销 rally/发布会/年轻化品牌。存量 memphis/doodle deck 经
  * LEGACY_THEME_MAP 兜底到本主题。紫色系是全主题色域里唯一的空位。
  *
  * **柔和组皮肤重设计（2026-08-20，设计源
  * `.issues/2026-08-18-theme-redesign/skins/group4-soft-boards.dc.html` 的
- * `section#g4` 里 campaign 的色板角色表 + 封面样例）**：这一组是频谱两端，
- * campaign 是闹的那半。旧表是「深紫底 + 四彩笔刷涂鸦」，新表把整台戏挪进
+ * `section#g4` 里 rally 的色板角色表 + 封面样例）**：这一组是频谱两端，
+ * rally 是闹的那半。旧表是「深紫底 + 四彩笔刷涂鸦」，新表把整台戏挪进
  * 剧场——幕布深紫的舞台、开灯前的暗、荧光洋红的主音、四色纸屑当彩带。
  * 逐条来历：
  *   - `bg` `#3D2E78` → `#2A1E3F`：偏蓝深紫 → 幕布深紫。压暗一大档，纸屑
@@ -47,7 +47,7 @@ import type { BuiltinThemeDeclaration } from "../schema";
  * **菜单分派（S1-B）**：海报腔：data 交给居中的 stacked-poster（一张图当主角的海报路径），photo 用顶部满幅的 image-top，营销讲自己的话，quote 不上。
  */
 export const CAMPAIGN_TOKENS: StyleTokens = {
-  id: "campaign",
+  id: "rally",
   colors: {
     bg: "#2A1E3F", // 幕布深紫。页底，正文墨压它 14.00:1，答 4.5
     surface: "#35284E", // 侧幕紫。卡面，正文墨压它 12.13:1，答 4.5
@@ -69,7 +69,7 @@ export const CAMPAIGN_TOKENS: StyleTokens = {
   },
   shape: {
     radius: 10,
-    gapScale: 1.0, // 活力圆润（tech 同档）
+    gapScale: 1.0, // 活力圆润（terminal 同档）
     cover: { showKicker: true, barFill: "accent", metaPlacement: "bottom-left", textAnchor: "start" },
   },
   defaultBackgrounds: {
@@ -82,15 +82,15 @@ export const CAMPAIGN_TOKENS: StyleTokens = {
 
 export const CAMPAIGN_THEME = {
   version: 2,
-  id: "campaign",
-  label: "Marketing Campaign",
+  id: "rally",
+  label: "Rally",
   story: {
     name: "Rally",
     story: "Deep purple with sharp accents, built for short slogans and hard deadlines. It is a launch room where every page is a call to move.",
     positioning: "Choose it for launches, marketing pushes, and mobilization pieces where a single phrase must carry across all materials.",
     audience: "A team rallying partners, channels, and its own people.",
-    notFor: "Reflective, academic, or slow-paced storytelling.",
-    lineage: "The campaign kickoff and the launch war room.",
+    notFor: "Reflective, thesis, or slow-paced storytelling.",
+    lineage: "The rally kickoff and the launch war room.",
   },
   style: CAMPAIGN_TOKENS,
   menu: {

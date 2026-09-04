@@ -170,7 +170,7 @@ export function formatInvalidSpecError(errors: SpecValidationIssue[]): string {
 
 /**
  * Bound theme id on a validated spec. Theme is required. There is no
- * consulting fallback.
+ * brief fallback.
  */
 export function resolveSpecThemeId(spec: DeckSpec): string {
   return spec.theme

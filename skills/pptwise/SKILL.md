@@ -71,14 +71,14 @@ Resolve theme names in this order:
 Use request and workspace signals to shortlist themes by `occasions` and `identity`. Compare two to four candidates with the fixed fitting-room sample:
 
 ```bash
-pptwise theme try consulting,swiss,memo
+pptwise theme try brief,swiss,memo
 ```
 
 Create means copy. With no existing asset, copy the closest preset into the workspace. With an Office brand file, extract its colors and fonts while copying a suitable donor menu. For a color change, fork the current theme so the whole palette is rederived and the original stays untouched.
 
 ```bash
-pptwise theme new --from consulting --id acme-report
-pptwise brand extract corp.pptx -o themes/acme.theme.json --from consulting
+pptwise theme new --from brief --id acme-report
+pptwise brand extract corp.pptx -o themes/acme.theme.json --from brief
 pptwise theme fork acme --primary '#0B5FFF' --id acme-blue
 ```
 

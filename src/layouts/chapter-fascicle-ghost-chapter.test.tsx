@@ -128,7 +128,7 @@ describe("chapter-fascicle-ghost-chapter — board geometry", () => {
   })
 
   it("uses tokens, not baked journal hex, when another theme draws it", () => {
-    const { root, tokens } = renderChapter("enterprise")
+    const { root, tokens } = renderChapter("bulletin")
     expect(root.querySelector("line")?.getAttribute("stroke")).toBe(tokens.colors.accent)
     expect(root.innerHTML).not.toMatch(/#8C4A3C/i)
     expect(root.innerHTML).not.toMatch(/#2C2C2A/i)

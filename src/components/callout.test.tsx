@@ -104,7 +104,7 @@ describe("callout TintPanel has no card stroke", () => {
     }
   })
 
-  it("no canonical TintPanel theme strokes the panel, including enterprise/runway", () => {
+  it("no canonical TintPanel theme strokes the panel, including bulletin/runway", () => {
     for (const id of CANONICAL_THEME_IDS) {
       const themeCtx = buildCtx(resolveStyle(id), {})
       const { container } = svg(callout.render(component, { x: 80, y: 100, w: 1120 }, themeCtx))

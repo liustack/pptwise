@@ -92,12 +92,12 @@ describe("MastheadEnding", () => {
     expect(inkBottom).toBeLessThanOrEqual(680)
   })
 
-  it("consulting tokens 下用 consulting 的色（证明 token 化成立，无 baked hex）", () => {
-    const ctx = buildCtx(resolveStyle("consulting"), {})
-    const deck = ir("consulting", endingWithHeading)
+  it("brief tokens 下用 brief 的色（证明 token 化成立，无 baked hex）", () => {
+    const ctx = buildCtx(resolveStyle("brief"), {})
+    const deck = ir("brief", endingWithHeading)
     const out = renderSvgMarkup(<MastheadEnding ir={deck} slide={endingWithHeading} index={0} ctx={ctx} />)
-    expect(out).toContain("#1C1E23") // consulting text
-    expect(out).toContain("#5B6069") // consulting muted
+    expect(out).toContain("#1C1E23") // brief text
+    expect(out).toContain("#5B6069") // brief muted
     expect(out).not.toContain("#26261F") // journal text 不得残留
     expect(out).not.toContain("#626159") // journal muted 不得残留
   })

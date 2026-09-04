@@ -49,7 +49,7 @@ function renderCover(themeId: string, s: Slide = slide(), meta: PptxIR["meta"] =
 
 describe("cover-horizon-wedge — board geometry", () => {
   it("wedge path matches the board, polyline sits on the wedge, title sits above the left ramp", () => {
-    const { root, tokens } = renderCover("pulse")
+    const { root, tokens } = renderCover("clinic")
     const wedge = root.querySelector("path")!
     expect(wedge.getAttribute("d")?.replace(/\s+/g, "")).toBe("M0,720L0,600L1280,440L1280,720Z")
     expect(wedge.getAttribute("fill")).toBe(tokens.colors.primary)
@@ -95,11 +95,11 @@ describe("cover-horizon-wedge — shared pool", () => {
   })
 
   it("renders byte-identically on repeat", () => {
-    expect(renderCover("pulse").markup).toBe(renderCover("pulse").markup)
+    expect(renderCover("clinic").markup).toBe(renderCover("clinic").markup)
   })
 
   it("CJK title has no letter-spacing", () => {
-    const { root } = renderCover("pulse")
+    const { root } = renderCover("clinic")
     for (const t of Array.from(root.querySelectorAll("text")).filter((el) => el.getAttribute("font-weight") === "700")) {
       expect(t.getAttribute("letter-spacing")).toBeNull()
     }

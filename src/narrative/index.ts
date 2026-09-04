@@ -191,37 +191,37 @@ export const NARRATIVE_PRESETS: Record<string, NarrativePreset> = {
   general: {
     id: "general",
     axes: Object.freeze({ strategy: "briefing", pacing: "balanced", audience: "public" }),
-    themeRecommendations: ["consulting"],
+    themeRecommendations: ["brief"],
   },
   "boardroom-report": {
     id: "boardroom-report",
     axes: Object.freeze({ strategy: "pyramid", pacing: "spacious", audience: "executive" }),
-    themeRecommendations: ["consulting", "enterprise", "insight"],
+    themeRecommendations: ["brief", "bulletin", "ledger"],
   },
   pitch: {
     id: "pitch",
     axes: Object.freeze({ strategy: "pyramid", pacing: "spacious", audience: "customer" }),
-    themeRecommendations: ["consulting", "tech", "campaign"],
+    themeRecommendations: ["brief", "terminal", "rally"],
   },
   training: {
     id: "training",
     axes: Object.freeze({ strategy: "instructional", pacing: "balanced", audience: "technical" }),
-    themeRecommendations: ["classroom", "academic", "tech"],
+    themeRecommendations: ["homeroom", "thesis", "terminal"],
   },
   "product-launch": {
     id: "product-launch",
     axes: Object.freeze({ strategy: "showcase", pacing: "spacious", audience: "customer" }),
-    themeRecommendations: ["campaign", "runway", "tech"],
+    themeRecommendations: ["rally", "runway", "terminal"],
   },
   "weekly-brief": {
     id: "weekly-brief",
     axes: Object.freeze({ strategy: "briefing", pacing: "dense", audience: "technical" }),
-    themeRecommendations: ["enterprise", "consulting"],
+    themeRecommendations: ["bulletin", "brief"],
   },
   "annual-review": {
     id: "annual-review",
     axes: Object.freeze({ strategy: "storytelling", pacing: "balanced", audience: "public" }),
-    themeRecommendations: ["journal", "heritage", "insight"],
+    themeRecommendations: ["journal", "heritage", "ledger"],
   },
 }
 
@@ -282,7 +282,7 @@ function rescueIdShape(value: unknown): string | undefined {
  *   axis falls back to the whole default object")
  * - an `{id: <preset>}` object (T0b fix 2, scope-extended — see
  *   {@link rescueIdShape}) → silently treated as that bare preset-id string,
- *   the same weak-model shape slip `theme: {id: "consulting"}` invites by
+ *   the same weak-model shape slip `theme: {id: "brief"}` invites by
  *   analogy. Folded directly into this function's own entry (not just a
  *   pre-parse pass two of its six call sites happen to run) so every caller
  *   — `validateIr`, `validateSpec`, `layout-selection.ts`,

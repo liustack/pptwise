@@ -57,7 +57,7 @@ function textPaint(el: Element): string {
 
 describe("cover-type-rule-cover — board geometry", () => {
   it("places kicker, title, subtitle, short border rule, and foot on the board coordinates", () => {
-    const { root, tokens } = renderCover("tech")
+    const { root, tokens } = renderCover("terminal")
     const texts = Array.from(root.querySelectorAll("text"))
     const kicker = texts.find((t) => (t.textContent ?? "").includes("白帆科技"))
     expect(kicker?.getAttribute("x")).toBe("96")
@@ -85,7 +85,7 @@ describe("cover-type-rule-cover — board geometry", () => {
   })
 
   it("draws no constellation nodes, orbits, or star-chain", () => {
-    const { root } = renderCover("tech")
+    const { root } = renderCover("terminal")
     expect(root.querySelectorAll("circle")).toHaveLength(0)
     expect(root.querySelectorAll("polyline")).toHaveLength(0)
     expect(root.querySelectorAll("polygon")).toHaveLength(0)
@@ -95,7 +95,7 @@ describe("cover-type-rule-cover — board geometry", () => {
 describe("cover-type-rule-cover — emphasis", () => {
   it("with **emphasis** in the subtitle tints only that run in accent", () => {
     const marked = slide(HEADING, { subheading: "从热度榜到**实时个性化**的架构演进" })
-    const { root, tokens } = renderCover("tech", marked)
+    const { root, tokens } = renderCover("terminal", marked)
     const tspans = Array.from(root.querySelectorAll("tspan"))
     expect(tspans.some((t) => t.textContent === "实时个性化" && t.getAttribute("fill") === tokens.colors.accent)).toBe(
       true,
@@ -103,7 +103,7 @@ describe("cover-type-rule-cover — emphasis", () => {
   })
 
   it("without **emphasis** does not paint accent on text runs", () => {
-    const { root, tokens } = renderCover("tech")
+    const { root, tokens } = renderCover("terminal")
     const fills = Array.from(root.querySelectorAll("text, tspan")).map((el) => el.getAttribute("fill"))
     expect(fills).not.toContain(tokens.colors.accent)
   })
@@ -137,22 +137,22 @@ describe("cover-type-rule-cover — shared pool", () => {
   })
 
   it("renders byte-identically on repeat", () => {
-    expect(renderCover("tech").markup).toBe(renderCover("tech").markup)
+    expect(renderCover("terminal").markup).toBe(renderCover("terminal").markup)
   })
 
   it("CJK title has no letter-spacing", () => {
-    const { root } = renderCover("tech")
+    const { root } = renderCover("terminal")
     for (const t of Array.from(root.querySelectorAll("text")).filter((el) => el.getAttribute("font-weight") === "700")) {
       expect(t.getAttribute("letter-spacing")).toBeNull()
     }
   })
 
-  it("uses tokens, not baked tech hex, when another theme renders it", () => {
-    const { markup, tokens } = renderCover("consulting")
+  it("uses tokens, not baked terminal hex, when another theme renders it", () => {
+    const { markup, tokens } = renderCover("brief")
     expect(markup).toContain(tokens.colors.text)
     expect(markup).toContain(tokens.colors.border)
     for (const hex of TECH_HEX) {
-      expect(markup, `tech token ${hex} leaked`).not.toContain(hex)
+      expect(markup, `terminal token ${hex} leaked`).not.toContain(hex)
     }
   })
 })

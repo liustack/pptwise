@@ -8,7 +8,7 @@ import { accessibleInk, readableOn } from "../render/ink"
 
 /**
  * pill-cta-ending layout（第八波批 1，新表达）：居中日期句 + 洋红胶囊 CTA。
- * 构图抄 campaign 板 ending 页。进共享池，零 theme id、零 hex。胶囊圆角
+ * 构图抄 rally 板 ending 页。进共享池，零 theme id、零 hex。胶囊圆角
  * 走 `shape.radius`，封顶半高，不烤板上的 31。CTA 文案取第一条 bullets
  * 项，没有就不画胶囊，不编造致谢。
  *

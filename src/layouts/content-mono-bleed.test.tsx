@@ -46,7 +46,7 @@ describe("layoutDef", () => {
 
 describe("MonoBleedContent", () => {
   it("paints a full-bleed primary field and inverts type with readableOn", () => {
-    const ctx = buildCtx(resolveStyle("consulting"), {})
+    const ctx = buildCtx(resolveStyle("brief"), {})
     const slide: Slide = {
       type: "content",
       kind: "points",
@@ -56,7 +56,7 @@ describe("MonoBleedContent", () => {
       components: [],
     } as Slide
     const { markup, root } = render(
-      <MonoBleedContent ir={ir("consulting", [slide])} slide={slide} index={0} ctx={ctx} />,
+      <MonoBleedContent ir={ir("brief", [slide])} slide={slide} index={0} ctx={ctx} />,
     )
     const field = root.querySelector("rect")
     expect(field?.getAttribute("width")).toBe("1280")
@@ -73,11 +73,11 @@ describe("MonoBleedContent", () => {
     expect(() => assertSubset(root)).not.toThrow()
   })
 
-  it("English heading renders on academic against academic primary, not consulting navy", () => {
-    const ctx = buildCtx(resolveStyle("academic"), {})
+  it("English heading renders on thesis against thesis primary, not brief navy", () => {
+    const ctx = buildCtx(resolveStyle("thesis"), {})
     const slide: Slide = { type: "content", kind: "points", layout: "mono-bleed", heading: EN_LINE, components: [] } as Slide
     const { markup, root } = render(
-      <MonoBleedContent ir={ir("academic", [slide])} slide={slide} index={0} ctx={ctx} />,
+      <MonoBleedContent ir={ir("thesis", [slide])} slide={slide} index={0} ctx={ctx} />,
     )
     expect(markup).toContain("lights")
     expect(root.querySelector("rect")?.getAttribute("fill")).toBe(ctx.colors.primary)
@@ -85,11 +85,11 @@ describe("MonoBleedContent", () => {
     expect(() => assertSubset(root)).not.toThrow()
   })
 
-  it("insight primary field is not luxe champagne gold", () => {
-    const ctx = buildCtx(resolveStyle("insight"), {})
+  it("ledger primary field is not luxe champagne gold", () => {
+    const ctx = buildCtx(resolveStyle("ledger"), {})
     const slide: Slide = { type: "content", kind: "points", layout: "mono-bleed", heading: CJK_LINE, components: [] } as Slide
     const { markup, root } = render(
-      <MonoBleedContent ir={ir("insight", [slide])} slide={slide} index={0} ctx={ctx} />,
+      <MonoBleedContent ir={ir("ledger", [slide])} slide={slide} index={0} ctx={ctx} />,
     )
     expect(root.querySelector("rect")?.getAttribute("fill")).toBe(ctx.colors.primary)
     expect(markup).not.toContain("#C6A15B")
@@ -97,11 +97,11 @@ describe("MonoBleedContent", () => {
   })
 
   it("mixed long heading shrinks/wraps to at most 3 lines and never dumps the raw source verbatim", () => {
-    const ctx = buildCtx(resolveStyle("insight"), {})
+    const ctx = buildCtx(resolveStyle("ledger"), {})
     const extreme = `${CJK_LONG}${MIXED_LONG}`
     const slide: Slide = { type: "content", kind: "points", layout: "mono-bleed", heading: extreme, components: [] } as Slide
     const { markup, root } = render(
-      <MonoBleedContent ir={ir("insight", [slide])} slide={slide} index={0} ctx={ctx} />,
+      <MonoBleedContent ir={ir("ledger", [slide])} slide={slide} index={0} ctx={ctx} />,
     )
     expect(() => assertSubset(root)).not.toThrow()
     const headingTexts = Array.from(root.querySelectorAll("text")).filter(
@@ -113,10 +113,10 @@ describe("MonoBleedContent", () => {
   })
 
   it("empty subheading: no empty text node, heading still renders", () => {
-    const ctx = buildCtx(resolveStyle("consulting"), {})
+    const ctx = buildCtx(resolveStyle("brief"), {})
     const slide: Slide = { type: "content", kind: "points", layout: "mono-bleed", heading: CJK_LINE, components: [] } as Slide
     const { root } = render(
-      <MonoBleedContent ir={ir("consulting", [slide])} slide={slide} index={0} ctx={ctx} />,
+      <MonoBleedContent ir={ir("brief", [slide])} slide={slide} index={0} ctx={ctx} />,
     )
     const texts = Array.from(root.querySelectorAll("text"))
     expect(texts.every((t) => (t.textContent ?? "").trim().length > 0)).toBe(true)

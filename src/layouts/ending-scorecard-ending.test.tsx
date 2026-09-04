@@ -62,7 +62,7 @@ function textPaint(el: Element): string {
 
 describe("ending-scorecard-ending — board geometry", () => {
   it("draws the heading, three score rows, and the subheading sign-off at board coordinates", () => {
-    const { root } = renderEnding("terra")
+    const { root } = renderEnding("almanac")
     const title = Array.from(root.querySelectorAll("text")).find((t) => (t.textContent ?? "").includes("对表 2030"))
     expect(title?.getAttribute("x")).toBe("96")
     expect(title?.getAttribute("y")).toBe("160")
@@ -81,7 +81,7 @@ describe("ending-scorecard-ending — board geometry", () => {
   })
 
   it("tints **emphasis** with primary, not accent ochre", () => {
-    const { root, tokens } = renderEnding("terra")
+    const { root, tokens } = renderEnding("almanac")
     const bg = resolveBackgroundHex(tokens.defaultBackgrounds.ending, tokens.colors.surface)
     const marks = Array.from(root.querySelectorAll("tspan")).filter((t) =>
       ["-18%", "34%", "71%"].includes(t.textContent ?? ""),
@@ -95,7 +95,7 @@ describe("ending-scorecard-ending — board geometry", () => {
   })
 
   it("does not thank the reader or invent an attestation", () => {
-    const { root, markup } = renderEnding("terra", { type: "ending", heading: "", components: [] } as Slide)
+    const { root, markup } = renderEnding("almanac", { type: "ending", heading: "", components: [] } as Slide)
     const texts = Array.from(root.querySelectorAll("text")).map((t) => t.textContent ?? "").join(" ")
     expect(texts).not.toMatch(/Thank you/i)
     expect(texts).not.toMatch(/谢谢/)
@@ -105,7 +105,7 @@ describe("ending-scorecard-ending — board geometry", () => {
   })
 
   it("reads bullets as the list and subheading as the sign-off", () => {
-    const { root } = renderEnding("terra")
+    const { root } = renderEnding("almanac")
     const texts = Array.from(root.querySelectorAll("text")).map((t) => t.textContent ?? "")
     expect(texts.some((t) => t.includes("碳强度较基准年"))).toBe(true)
     expect(texts).toContain(SIGNOFF)
@@ -113,7 +113,7 @@ describe("ending-scorecard-ending — board geometry", () => {
   })
 
   it("does not invent rows when bullets are missing", () => {
-    const { root } = renderEnding("terra", {
+    const { root } = renderEnding("almanac", {
       type: "ending",
       heading: HEADING,
       subheading: SIGNOFF,
@@ -125,11 +125,11 @@ describe("ending-scorecard-ending — board geometry", () => {
     expect(texts.some((t) => t.includes("碳强度"))).toBe(false)
   })
 
-  it("uses tokens, not baked terra hex, when another theme draws it", () => {
-    const { markup, tokens } = renderEnding("tech")
+  it("uses tokens, not baked almanac hex, when another theme draws it", () => {
+    const { markup, tokens } = renderEnding("terminal")
     expect(markup).toContain(tokens.colors.text)
     for (const hex of TERRA_HEX) {
-      expect(markup, `terra token ${hex} leaked`).not.toContain(hex)
+      expect(markup, `almanac token ${hex} leaked`).not.toContain(hex)
     }
   })
 })
@@ -164,11 +164,11 @@ describe("ending-scorecard-ending — shared pool", () => {
   })
 
   it("renders byte-identically on repeat", () => {
-    expect(renderEnding("terra").markup).toBe(renderEnding("terra").markup)
+    expect(renderEnding("almanac").markup).toBe(renderEnding("almanac").markup)
   })
 
   it("CJK title has no letter-spacing", () => {
-    const { root } = renderEnding("terra")
+    const { root } = renderEnding("almanac")
     for (const t of Array.from(root.querySelectorAll("text")).filter(
       (el) => el.getAttribute("font-weight") === "700" && (el.textContent ?? "").includes("对表"),
     )) {
@@ -180,7 +180,7 @@ describe("ending-scorecard-ending — shared pool", () => {
     const long = slide({
       components: [{ type: "bullets", items: ["碳".repeat(120), "电".repeat(120), "包".repeat(120)] }],
     })
-    const { markup } = renderEnding("terra", long)
+    const { markup } = renderEnding("almanac", long)
     expect(markup).not.toContain("…")
     expect(markup).not.toContain("...")
   })

@@ -18,8 +18,8 @@ function consultingPadDeck(): PptxIR {
   const plain = { type: "paragraph" as const, text: "普通正文" }
   return {
     version: "5",
-    filename: "emphasis-consulting-pad-paths.pptx",
-    theme: { id: "consulting" },
+    filename: "emphasis-brief-pad-paths.pptx",
+    theme: { id: "brief" },
     meta: { organization: "pptwise" },
     assets: { images: {} },
     slides: [
@@ -67,26 +67,26 @@ function consultingPadDeck(): PptxIR {
 //
 // Recaptured (wave8 batch 1, 2026-08-23). Cover/content paths on the five
 // boarded themes pick up lock-board covers, motifs, and ink. Changed keys
-// are enterprise/insight/campaign/tech/ember × pages 0,2,3,4,5 (25 of 115).
-// Other unassigned themes stay byte-identical. consulting is not in this
+// are bulletin/ledger/rally/terminal/ember × pages 0,2,3,4,5 (25 of 115).
+// Other unassigned themes stay byte-identical. brief is not in this
 // fixture.
 //
 // Recaptured (pptwise rename, 2026-08-23). Cover `meta.organization`
 // changed `pptpress` → `pptwise`. Replay of `renderSlideSvg` over the same
 // 23×5 matrix. Only `*|0` hashes move. Content pages stay byte-identical.
 //
-// Recaptured (wave8 batch 2, 2026-08-23). academic / classroom / crayon /
+// Recaptured (wave8 batch 2, 2026-08-23). thesis / homeroom / crayon /
 // journal / heritage / ink covers and content motifs lock to the board.
-// consulting is not in this fixture.
+// brief is not in this fixture.
 //
-// Recaptured (wave8 batch 3, 2026-08-23). luxe / runway / vermilion / terra /
-// pulse / arena covers lock to the board. lecture also moves: its chalk
+// Recaptured (wave8 batch 3, 2026-08-23). luxe / runway / vermilion / almanac /
+// clinic / arena covers lock to the board. lecture also moves: its chalk
 // tray is a hollow stroked rect whose bbox used to be dropped on title
 // intersect. The depth contract now keeps motif identity and dims it.
 //
 // Recaptured (wave8 batch 4, 2026-08-23). swiss content pages drop the
 // right-edge ticks (cover-only). Covers of all 23 unassigned themes stay
-// byte-identical. consulting is not in this fixture.
+// byte-identical. brief is not in this fixture.
 //
 // Recaptured (allocated-height declaration). Every stacked component box now
 // declares the height it was allocated as a fourth number, so the
@@ -101,19 +101,19 @@ function consultingPadDeck(): PptxIR {
 // page in the matrix stays byte-identical.
 //
 // Recaptured (no-ellipsis-root, 2026-08-23). Shared text-fit drops overflow
-// marks. insight content pages 2-5 and campaign cover plus content 2-5 move.
-// Other unassigned themes stay byte-identical. consulting is not in this
+// marks. ledger content pages 2-5 and rally cover plus content 2-5 move.
+// Other unassigned themes stay byte-identical. brief is not in this
 // fixture.
 // Recaptured (audit round-1 group F, 2026-08-23). lecture leaves the
 // unassigned matrix: emphasis form is now underline. Remaining 22
-// themes × five paths = 110 hashes. consulting is not in this fixture.
+// themes × five paths = 110 hashes. brief is not in this fixture.
 //
 // Recaptured (audit round-1 group E, 2026-08-23). Page 3 swaps the retired
 // banner-heading pin for split-band. Only `|3` hashes move (22 of 110).
 // Other unassigned pages stay byte-identical.
 //
-// Recaptured (audit round-2 C/D, 2026-08-24). campaign cover kicker air
-// and tech constellation / bento inset move. Other unassigned pages stay
+// Recaptured (audit round-2 C/D, 2026-08-24). rally cover kicker air
+// and terminal constellation / bento inset move. Other unassigned pages stay
 // byte-identical.
 //
 // Recaptured (runway show, 2026-08-26). The runway cover lock moves from
@@ -134,7 +134,7 @@ describe("unassigned emphasis forms stay pinned to the depth-contract fixture", 
   const pages = auditEmphasisUnassignedPages()
   it("covers 22 themes across five real render paths", () => {
     expect(UNASSIGNED).not.toContain("lecture")
-    expect(UNASSIGNED).not.toContain("consulting")
+    expect(UNASSIGNED).not.toContain("brief")
     expect(UNASSIGNED).toHaveLength(22)
     expect(Object.keys(pages)).toHaveLength(110)
     expect(Object.keys(fixture.pages)).toHaveLength(110)
@@ -186,7 +186,7 @@ describe("lecture underline reaches every shared emphasis path", () => {
   })
 })
 
-describe("consulting gauge cover and shared emphasis paths", () => {
+describe("brief gauge cover and shared emphasis paths", () => {
   const ir = consultingPadDeck()
 
   it("gauge cover replaces the keyword pad with its one fixed gold underline", () => {

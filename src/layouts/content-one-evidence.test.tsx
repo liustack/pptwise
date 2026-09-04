@@ -69,7 +69,7 @@ describe("layoutDef", () => {
 
 describe("OneEvidenceContent", () => {
   it("CJK claim is left-aligned, chart is the evidence, y-title sits as a horizontal pair", () => {
-    const ctx = buildCtx(resolveStyle("insight"), {})
+    const ctx = buildCtx(resolveStyle("ledger"), {})
     const slide: Slide = {
       type: "content",
       kind: "points",
@@ -79,7 +79,7 @@ describe("OneEvidenceContent", () => {
       components: [BAR_CHART],
     } as Slide
     const { markup, root } = render(
-      <OneEvidenceContent ir={ir("insight", [slide])} slide={slide} index={0} ctx={ctx} />,
+      <OneEvidenceContent ir={ir("ledger", [slide])} slide={slide} index={0} ctx={ctx} />,
     )
     expect(markup).toContain(CJK_CLAIM)
     expect(markup).toContain("万人次  ↑")
@@ -96,7 +96,7 @@ describe("OneEvidenceContent", () => {
   })
 
   it("picks chart over image when both are present (shared pickEvidence order)", () => {
-    const ctx = buildCtx(resolveStyle("consulting"), {})
+    const ctx = buildCtx(resolveStyle("brief"), {})
     const slide: Slide = {
       type: "content",
       kind: "points",
@@ -105,14 +105,14 @@ describe("OneEvidenceContent", () => {
       components: [{ type: "image", asset_id: "img1", fit: "cover" }, BAR_CHART],
     } as Slide
     const { root } = render(
-      <OneEvidenceContent ir={ir("consulting", [slide])} slide={slide} index={0} ctx={ctx} />,
+      <OneEvidenceContent ir={ir("brief", [slide])} slide={slide} index={0} ctx={ctx} />,
     )
     expect(root.querySelectorAll("rect").length).toBeGreaterThan(0)
     expect(() => assertSubset(root)).not.toThrow()
   })
 
-  it("English claim renders on academic without a crash", () => {
-    const ctx = buildCtx(resolveStyle("academic"), {})
+  it("English claim renders on thesis without a crash", () => {
+    const ctx = buildCtx(resolveStyle("thesis"), {})
     const slide: Slide = {
       type: "content",
       kind: "points",
@@ -121,14 +121,14 @@ describe("OneEvidenceContent", () => {
       components: [BAR_CHART],
     } as Slide
     const { markup, root } = render(
-      <OneEvidenceContent ir={ir("academic", [slide])} slide={slide} index={0} ctx={ctx} />,
+      <OneEvidenceContent ir={ir("thesis", [slide])} slide={slide} index={0} ctx={ctx} />,
     )
     expect(markup).toContain("corridor")
     expect(() => assertSubset(root)).not.toThrow()
   })
 
   it("mixed long heading shrinks/wraps to at most 3 lines and never dumps the raw source verbatim", () => {
-    const ctx = buildCtx(resolveStyle("insight"), {})
+    const ctx = buildCtx(resolveStyle("ledger"), {})
     const extreme = `${CJK_LONG}${MIXED_LONG}`
     const slide: Slide = {
       type: "content",
@@ -138,7 +138,7 @@ describe("OneEvidenceContent", () => {
       components: [],
     } as Slide
     const { markup, root } = render(
-      <OneEvidenceContent ir={ir("insight", [slide])} slide={slide} index={0} ctx={ctx} />,
+      <OneEvidenceContent ir={ir("ledger", [slide])} slide={slide} index={0} ctx={ctx} />,
     )
     expect(() => assertSubset(root)).not.toThrow()
     const headingTexts = Array.from(root.querySelectorAll("text")).filter(
@@ -150,7 +150,7 @@ describe("OneEvidenceContent", () => {
   })
 
   it("0 components: heading still renders, no empty text node", () => {
-    const ctx = buildCtx(resolveStyle("consulting"), {})
+    const ctx = buildCtx(resolveStyle("brief"), {})
     const slide: Slide = {
       type: "content",
       kind: "points",
@@ -159,15 +159,15 @@ describe("OneEvidenceContent", () => {
       components: [],
     } as Slide
     const { root } = render(
-      <OneEvidenceContent ir={ir("consulting", [slide])} slide={slide} index={0} ctx={ctx} />,
+      <OneEvidenceContent ir={ir("brief", [slide])} slide={slide} index={0} ctx={ctx} />,
     )
     const texts = Array.from(root.querySelectorAll("text"))
     expect(texts.every((t) => (t.textContent ?? "").trim().length > 0)).toBe(true)
     expect(texts.some((t) => (t.textContent ?? "").includes("迁徙路线"))).toBe(true)
   })
 
-  it("consulting tokens: no luxe baked hex leaks", () => {
-    const ctx = buildCtx(resolveStyle("consulting"), {})
+  it("brief tokens: no luxe baked hex leaks", () => {
+    const ctx = buildCtx(resolveStyle("brief"), {})
     const slide: Slide = {
       type: "content",
       kind: "points",
@@ -176,7 +176,7 @@ describe("OneEvidenceContent", () => {
       components: [BAR_CHART],
     } as Slide
     const out = renderSvgMarkup(
-      <OneEvidenceContent ir={ir("consulting", [slide])} slide={slide} index={0} ctx={ctx} />,
+      <OneEvidenceContent ir={ir("brief", [slide])} slide={slide} index={0} ctx={ctx} />,
     )
     expect(out).not.toContain("#0B0908")
     expect(out).not.toContain("#C6A15B")
@@ -184,17 +184,17 @@ describe("OneEvidenceContent", () => {
 })
 
 const ONE_EVIDENCE_FACES = [
-  "insight",
-  "academic",
+  "ledger",
+  "thesis",
   "lecture",
   "swiss",
   "museum",
-  "consulting",
-  "tech",
+  "brief",
+  "terminal",
   "vermilion",
-  "campaign",
+  "rally",
   "arena",
-  "terra",
+  "almanac",
 ] as const
 
 const PARTITION_CLAIM = "竞品在中小客户市场的价格压力已经传导到续约谈判"
@@ -251,7 +251,7 @@ describe("one-evidence evidence vs assertion partition", () => {
   })
 
   it("generic face keeps heading at x=80 / y=72 and parks evidence below the claim", () => {
-    const ctx = buildCtx(resolveStyle("insight"), {})
+    const ctx = buildCtx(resolveStyle("ledger"), {})
     const slide: Slide = {
       type: "content",
       kind: "points",
@@ -260,7 +260,7 @@ describe("one-evidence evidence vs assertion partition", () => {
       components: [BAR_CHART],
     } as Slide
     const { root } = render(
-      <OneEvidenceContent ir={ir("insight", [slide])} slide={slide} index={0} ctx={ctx} />,
+      <OneEvidenceContent ir={ir("ledger", [slide])} slide={slide} index={0} ctx={ctx} />,
     )
     const heading = Array.from(root.querySelectorAll("text")).find((t) =>
       (t.textContent ?? "").includes("迁徙路线"),
@@ -299,7 +299,7 @@ describe("one-evidence evidence vs assertion partition", () => {
   // of them — 29 gallery pages drew a heading over an empty page with no
   // mark of any kind. The face now steps aside for content it cannot place.
   it("steps aside for a component the evidence frame cannot place, and draws it whole", () => {
-    for (const themeId of ["consulting", "tech", "swiss", "vermilion", "academic"]) {
+    for (const themeId of ["brief", "terminal", "swiss", "vermilion", "thesis"]) {
       const ctx = buildCtx(resolveStyle(themeId), {})
       const slide: Slide = {
         type: "content",
@@ -334,7 +334,7 @@ describe("one-evidence evidence vs assertion partition", () => {
   })
 
   it("draws a code listing line by line rather than dropping it", () => {
-    const ctx = buildCtx(resolveStyle("consulting"), {})
+    const ctx = buildCtx(resolveStyle("brief"), {})
     const slide: Slide = {
       type: "content",
       kind: "evidence",
@@ -343,14 +343,14 @@ describe("one-evidence evidence vs assertion partition", () => {
       components: [{ type: "code", language: "ts", code: "const a = 1\nconst b = 2\nconst c = 3" }],
     } as Slide
     const { markup, root } = render(
-      <OneEvidenceContent ir={ir("consulting", [slide])} slide={slide} index={0} ctx={ctx} />,
+      <OneEvidenceContent ir={ir("brief", [slide])} slide={slide} index={0} ctx={ctx} />,
     )
     expect(root.querySelector("g[data-evidence-mode]")?.getAttribute("data-evidence-mode")).toBe("fallback")
     for (const line of ["const a = 1", "const b = 2", "const c = 3"]) expect(markup).toContain(line)
   })
 
   it("keeps the evidence frame when the component is one the frame can hold", () => {
-    const ctx = buildCtx(resolveStyle("consulting"), {})
+    const ctx = buildCtx(resolveStyle("brief"), {})
     const slide: Slide = {
       type: "content",
       kind: "evidence",
@@ -359,7 +359,7 @@ describe("one-evidence evidence vs assertion partition", () => {
       components: [BAR_CHART],
     } as Slide
     const { root } = render(
-      <OneEvidenceContent ir={ir("consulting", [slide])} slide={slide} index={0} ctx={ctx} />,
+      <OneEvidenceContent ir={ir("brief", [slide])} slide={slide} index={0} ctx={ctx} />,
     )
     expect(root.querySelector("g[data-evidence-mode]")).toBeNull()
   })

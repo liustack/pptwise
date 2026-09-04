@@ -135,10 +135,10 @@ describe("ToneAdaptiveChapter", () => {
     }
   })
 
-  it("tech tokens 下（无背景图）用 tech 的 text 色，custom 自己的烤色不再出现（证明真正 token 化）", () => {
-    const tokens = resolveStyle("tech")
+  it("terminal tokens 下（无背景图）用 terminal 的 text 色，custom 自己的烤色不再出现（证明真正 token 化）", () => {
+    const tokens = resolveStyle("terminal")
     const ctx = buildCtx(tokens, {})
-    const deck = ir("tech")
+    const deck = ir("terminal")
     const out = renderSvgMarkup(
       <ToneAdaptiveChapter ir={deck} slide={chapter1} index={0} ctx={ctx} />,
     )
@@ -146,22 +146,22 @@ describe("ToneAdaptiveChapter", () => {
     expect(out).toContain("第一部分：市场回顾")
     expect(out).toContain(ctx.colors.text) // INK→text 语境：章节号水印/章节标题
 
-    // custom 自己的烤死常量不得残留（tech 的 text 与 custom 不同值）
+    // custom 自己的烤死常量不得残留（terminal 的 text 与 custom 不同值）
     expect(ctx.colors.text).not.toBe("#18181B")
     expect(out).not.toContain("#18181B")
   })
 
   it("withBg 分支跨主题：白字/黑幕豁免固定为纯白/纯黑，不随主题变化", () => {
-    const tokens = resolveStyle("tech")
+    const tokens = resolveStyle("terminal")
     const ctxWithImg = buildCtx(tokens, bgImages)
-    const deck = ir("tech", bgImages)
+    const deck = ir("terminal", bgImages)
     const out = renderSvgMarkup(
       <ToneAdaptiveChapter ir={deck} slide={chapter1WithBg} index={0} ctx={ctxWithImg} />,
     )
 
     expect(out).toContain('fill="#FFFFFF"')
     expect(out).toContain('fill="#000000"')
-    // 有背景图时切到白字，不应再出现 tech 自己的 text
+    // 有背景图时切到白字，不应再出现 terminal 自己的 text
     expect(out).not.toContain(ctxWithImg.colors.text)
   })
 })

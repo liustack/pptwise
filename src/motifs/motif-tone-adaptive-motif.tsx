@@ -34,7 +34,7 @@ import type { DecorProps } from "./types"
  * 判定为①：该常量的语义是"把 `colors.bg` 按固定比例掺黑得到的渐变终点"——
  * 定义上就绑定 `colors.bg`（渐变起点已经是活的 `ctx.colors.bg`），不是
  * `surface`/`panel`（卡片实色背景语义）或 `border`（描边语义）里任何一个
- * 字段本来的角色。比照 cover-left-anchor.tsx 对 academic `TRIANGLE_DEEP`
+ * 字段本来的角色。比照 cover-left-anchor.tsx 对 thesis `TRIANGLE_DEEP`
  * 的处理先例（同属"和某 token 同色系但更深/更暗一档的纯装饰计算值，语义上
  * 不对应任何字段"），原样保留为本文件私有装饰常量，不做 token 映射，也不
  * 改写成读取 `colors.surface`（若真的换成 `colors.surface`，在其他主题的

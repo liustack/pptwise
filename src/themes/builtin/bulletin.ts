@@ -2,9 +2,9 @@ import type { StyleTokens } from "../tokens";
 import type { BuiltinThemeDeclaration } from "../schema";
 
 /**
- * enterprise（企业蓝）——原 custom→gallery→avant 的最终定名
+ * bulletin（企业蓝）——原 custom→gallery→avant 的最终定名
  * （2026-07-10 用户四轮裁决收官：转企业风后 avant「先锋设计」名实不符，
- * 改 enterprise，场景词「企业介绍/产品方案/商务提案」）。以下沿革注释保留：
+ * 改 bulletin，场景词「企业介绍/产品方案/商务提案」）。以下沿革注释保留：
  * avant——原 custom→gallery 改造的形态（2026-07-10 用户视觉伴侣
  * 三轮裁决）：白墙 + 正宗国际克莱因蓝 IKB + 天蓝单色系辅助，企业风。
  * 演化链：custom（自定义，白底黑字）→ gallery（克莱因蓝 v1，冷白底
@@ -16,8 +16,8 @@ import type { BuiltinThemeDeclaration } from "../schema";
  * 存量 custom/gallery deck 经 LEGACY_THEME_MAP 兜底到本主题。
  *
  * **冷调组皮肤重设计（2026-08-20，`.issues/2026-08-18-theme-redesign/skins/`
- * 的 `group3-cool-boards.dc.html` 里 enterprise 的色板角色表 + 封面样例）**：
- * enterprise 在冷调三家里拿到的语域是「IKB 白墙」——画廊白墙上的工业秩序，
+ * 的 `group3-cool-boards.dc.html` 里 bulletin 的色板角色表 + 封面样例）**：
+ * bulletin 在冷调三家里拿到的语域是「IKB 白墙」——画廊白墙上的工业秩序，
  * 设计板当时把蓝橘对撞写成本家签名（**第四轮评审已推翻这半句，见下面
  * `accent` 与 `chartPalette` 两条：装饰、强调与图表面上不再出现暖色。留在
  * 表里的暖色只剩语义色 `warning` 的深琥珀，那是警示岗位，不参与配色语言**）。
@@ -38,10 +38,10 @@ import type { BuiltinThemeDeclaration } from "../schema";
  *     「我不知道 claude design 为什么又把橙配蓝弄出来，这个真的太丑了，应该
  *     列为禁忌」「不要蓝配橙，超级丑」。谁是主谁是客没有悬念：本主题名字就叫
  *     企业蓝，primary 是正 IKB，橘是客，客走。
- *     改的是 token 本身而不是某一支装饰：`accent` 在 enterprise 的每一个落点
+ *     改的是 token 本身而不是某一支装饰：`accent` 在 bulletin 的每一个落点
  *     都是「蓝旁边的橙」（p01 封面标题条压顶缘蓝线、p04/p06 的 kicker 方块与
  *     标题下强调线压右上蓝方块阶、p09 的橘色起手段、p03/p07/p08/p10 的左下
- *     橘方块），而其中 p09 那一支来自 banner-motif——journal 与 consulting
+ *     橘方块），而其中 p09 那一支来自 banner-motif——journal 与 brief
  *     共用的同一支装饰，改不得。治在 token 上，一刀全主题一致。
  *     取值 `#2F6FBF`（工业蓝）：同一冷语系里比 IKB 亮一大档（Lab L 26 → 47），
  *     退掉撞色又不退成单色泥。同一轮评审里另有一刀（单独一支分支）把
@@ -100,7 +100,7 @@ import type { BuiltinThemeDeclaration } from "../schema";
  * **菜单分派（S1-B）**：企业蓝白墙是机构低调档，只上七道常规讲法（编号轨承 process，卡组承 list），宣言、引用、大数字、单证据这类高潮页原本就不在它的供给里，一律不上。
  */
 export const ENTERPRISE_TOKENS: StyleTokens = {
-  id: "enterprise",
+  id: "bulletin",
   colors: {
     bg: "#F7F7F4", // 画廊白墙。页底，正文墨压它 16.55:1，答 4.5
     surface: "#FFFFFF", // 纯白卡。卡面，正文墨压它 17.77:1，答 4.5
@@ -138,8 +138,8 @@ export const ENTERPRISE_TOKENS: StyleTokens = {
 
 export const ENTERPRISE_THEME = {
   version: 2,
-  id: "enterprise",
-  label: "Enterprise",
+  id: "bulletin",
+  label: "Bulletin",
   story: {
     name: "Bulletin",
     story: "A white wall and International Klein Blue, set in a plain grotesque. It is the voice of a large organization telling thirty thousand people what happens on the first of the month.",

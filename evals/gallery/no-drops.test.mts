@@ -24,10 +24,10 @@
 // What this covers is exactly the gallery, which is narrower than the whole
 // product of theme, face and language. `buildMatrix` draws the deck and face
 // bands in each theme's own Chinese lexicon, and adds English and mixed
-// script only for `consulting`, the theme the corpus gives the shared
+// script only for `brief`, the theme the corpus gives the shared
 // three-language duty (`corpus/native/index.ts`). So of the pages below,
 // every deck, face and adjacency page is Chinese, and the only Latin and
-// mixed pages are consulting's component band. The adjacency pairings do
+// mixed pages are brief's component band. The adjacency pairings do
 // get Latin and mixed coverage, but as renders inside the sweep test, not
 // as gallery pages. An
 // English component page on another theme is a legal deck this scan says

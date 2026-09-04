@@ -187,7 +187,7 @@ theme
   .option("--id <id>", "theme id (default: slug of the output filename)")
   .option("--label <label>", "human-readable theme label")
   .option("--force", "overwrite an existing theme file")
-  .addHelpText("after", "\nExample:\n  $ pptwise theme new --from consulting -o themes/acme.theme.json")
+  .addHelpText("after", "\nExample:\n  $ pptwise theme new --from brief -o themes/acme.theme.json")
   .action(async (opts: { from: string; output?: string; id?: string; label?: string; force?: boolean }) => {
     try {
       console.log(await runThemeNew({ from: opts.from, output: opts.output, id: opts.id, label: opts.label, force: opts.force, cwd: process.cwd() }))
@@ -239,7 +239,7 @@ theme
   .description("Render the fitting-room sample across 2-4 themes into a contact sheet")
   .argument("<ids>", "comma-separated theme ids (2-4)")
   .option("-o, --output <dir>", "output directory (default: .pptwise/theme-try/)")
-  .addHelpText("after", "\nExample:\n  $ pptwise theme try consulting,swiss,memo")
+  .addHelpText("after", "\nExample:\n  $ pptwise theme try brief,swiss,memo")
   .action(async (ids: string, opts: { output?: string }) => {
     try {
       console.log(await runThemeTry(ids, { output: opts.output, cwd: process.cwd() }))
@@ -267,9 +267,9 @@ brand
   .requiredOption("-o, --output <file>", "output theme JSON path (e.g. my-brand.theme.json)")
   .option("--id <id>", "theme id to register under (default: slug of the output filename)")
   .option("--label <label>", "human-readable theme label (default: the source theme's color-scheme name)")
-  .option("--from <preset>", "donor preset whose menu is copied (default: consulting)")
+  .option("--from <preset>", "donor preset whose menu is copied (default: brief)")
   .option("--force", "overwrite an existing theme file")
-  .addHelpText("after", "\nExample:\n  $ pptwise brand extract corp.pptx -o themes/acme.theme.json --from consulting")
+  .addHelpText("after", "\nExample:\n  $ pptwise brand extract corp.pptx -o themes/acme.theme.json --from brief")
   .action(async (file: string, opts: { output: string; id?: string; label?: string; from?: string; force?: boolean }) => {
     try {
       console.log(await runBrandExtract(file, {

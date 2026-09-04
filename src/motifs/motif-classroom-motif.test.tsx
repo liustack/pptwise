@@ -78,7 +78,7 @@ const intersects = (b: Box, z: { x: number; y: number; w: number; h: number }) =
 describe("ClassroomMotif（横线簿格线）", () => {
   it("装订孔、铅笔虚线、回形针全部退役，只剩横线", () => {
     for (const slide of [...DRAWN_SLIDES, endingSlide]) {
-      const { root } = draw("classroom", slide)
+      const { root } = draw("homeroom", slide)
       expect(root.querySelectorAll("circle"), `circles on ${slide.type}`).toHaveLength(0)
       expect(root.querySelectorAll("path"), `paths on ${slide.type}`).toHaveLength(0)
       expect(root.querySelectorAll("rect"), `rects on ${slide.type}`).toHaveLength(0)
@@ -89,7 +89,7 @@ describe("ClassroomMotif（横线簿格线）", () => {
   })
 
   it("chapter 按板画两条沉底格线，一个 DecorPiece", () => {
-    const { root, tokens } = draw("classroom", chapterSlide)
+    const { root, tokens } = draw("homeroom", chapterSlide)
     const lines = Array.from(root.querySelectorAll("line"))
     expect(lines).toHaveLength(2)
     expect(lines.map((l) => [num(l, "x1"), num(l, "y1"), num(l, "x2"), num(l, "y2")])).toEqual([
@@ -106,7 +106,7 @@ describe("ClassroomMotif（横线簿格线）", () => {
   })
 
   it("cover 两条淡格线避开板书带，成组，对比低于 3:1", () => {
-    const { root, defaultBg } = draw("classroom", coverSlide)
+    const { root, defaultBg } = draw("homeroom", coverSlide)
     const lines = Array.from(root.querySelectorAll("line"))
     expect(lines).toHaveLength(2)
     expect(lines.map((l) => [num(l, "x1"), num(l, "y1"), num(l, "x2"), num(l, "y2")])).toEqual([
@@ -126,7 +126,7 @@ describe("ClassroomMotif（横线簿格线）", () => {
   })
 
   it("content 两条格线成组，对比低于 3:1", () => {
-    const { root, defaultBg } = draw("classroom", contentSlide)
+    const { root, defaultBg } = draw("homeroom", contentSlide)
     expect(Array.from(root.querySelectorAll("line"))).toHaveLength(2)
     expect(countDecorPieces(root)).toBe(1)
     for (const el of paintedLeaves(root)) {
@@ -138,14 +138,14 @@ describe("ClassroomMotif（横线簿格线）", () => {
   })
 
   it("ending 完全退让，避免与作业底线叠一条", () => {
-    const { root } = draw("classroom", endingSlide)
+    const { root } = draw("homeroom", endingSlide)
     expect(root.children).toHaveLength(0)
     expect(countDecorPieces(root)).toBe(0)
   })
 
   it("没有孤立小件：无角标、无括弧、无 tick、无短竖线", () => {
     for (const slide of DRAWN_SLIDES) {
-      const { root } = draw("classroom", slide)
+      const { root } = draw("homeroom", slide)
       expect(root.querySelectorAll("circle")).toHaveLength(0)
       expect(root.querySelectorAll("rect")).toHaveLength(0)
       for (const l of Array.from(root.querySelectorAll("line"))) {
@@ -160,7 +160,7 @@ describe("ClassroomMotif（横线簿格线）", () => {
 
   it("没有出血幽灵字", () => {
     for (const slide of [...DRAWN_SLIDES, endingSlide]) {
-      const { root } = draw("classroom", slide)
+      const { root } = draw("homeroom", slide)
       expect(root.querySelectorAll("text")).toHaveLength(0)
       for (const t of Array.from(root.querySelectorAll("text"))) {
         const box = textInkBox({
@@ -181,7 +181,7 @@ describe("ClassroomMotif（横线簿格线）", () => {
   })
 
   it("画笔属性写在叶子上，不挂 <g>", () => {
-    const { root } = draw("classroom", chapterSlide)
+    const { root } = draw("homeroom", chapterSlide)
     for (const g of Array.from(root.querySelectorAll("g"))) {
       for (const attr of ["fill", "stroke", "opacity", "stroke-width"]) {
         expect(g.getAttribute(attr), `<g> carries ${attr}, which svg2pptx drops`).toBeNull()
@@ -193,12 +193,12 @@ describe("ClassroomMotif（横线簿格线）", () => {
   })
 
   it("motif 不读 chartPalette——图表调色板轮转改不动它一个字节", () => {
-    const tokens = resolveStyle("classroom")
+    const tokens = resolveStyle("homeroom")
     const markups = new Set(
       tokens.colors.chartPalette.map((_, offset) =>
         renderSvgMarkup(
           <ClassroomMotif
-            ir={ir("classroom")}
+            ir={ir("homeroom")}
             slide={coverSlide}
             ctx={buildCtx(tokens, {}, undefined, undefined, undefined, offset)}
           />,
@@ -211,27 +211,27 @@ describe("ClassroomMotif（横线簿格线）", () => {
     )
     expect(chartOnly.length).toBeGreaterThan(0)
     const markup = renderSvgMarkup(
-      <ClassroomMotif ir={ir("classroom")} slide={coverSlide} ctx={buildCtx(tokens, {})} />,
+      <ClassroomMotif ir={ir("homeroom")} slide={coverSlide} ctx={buildCtx(tokens, {})} />,
     )
     for (const hex of chartOnly) expect(markup, `chart-only ${hex} painted by the motif`).not.toContain(hex)
   })
 
-  it("换一家 tokens 渲染时颜色跟着换，classroom 的色一处不残留", () => {
-    const academic = resolveStyle("academic")
-    const ctx = buildCtx(academic, {})
-    const { markup } = render(<ClassroomMotif ir={ir("academic")} slide={coverSlide} ctx={ctx} />)
-    expect(markup).toContain(academic.colors.border)
+  it("换一家 tokens 渲染时颜色跟着换，homeroom 的色一处不残留", () => {
+    const thesis = resolveStyle("thesis")
+    const ctx = buildCtx(thesis, {})
+    const { markup } = render(<ClassroomMotif ir={ir("thesis")} slide={coverSlide} ctx={ctx} />)
+    expect(markup).toContain(thesis.colors.border)
     for (const hex of CLASSROOM_HEX) {
-      expect(markup, `classroom token ${hex} leaked into the academic render`).not.toContain(hex)
+      expect(markup, `homeroom token ${hex} leaked into the thesis render`).not.toContain(hex)
     }
   })
 
   it("装饰位置写死：换 seed（filename）输出逐字节不变", () => {
-    const ctx = buildCtx(resolveStyle("classroom"), {})
+    const ctx = buildCtx(resolveStyle("homeroom"), {})
     const markups = new Set(
       Array.from({ length: 12 }, (_, i) =>
         renderSvgMarkup(
-          <ClassroomMotif ir={{ ...ir("classroom"), filename: `probe-${i}.pptx` } as PptxIR} slide={coverSlide} ctx={ctx} />,
+          <ClassroomMotif ir={{ ...ir("homeroom"), filename: `probe-${i}.pptx` } as PptxIR} slide={coverSlide} ctx={ctx} />,
         ),
       ),
     )
@@ -240,7 +240,7 @@ describe("ClassroomMotif（横线簿格线）", () => {
 
   it("Decor body passes subset validation", () => {
     for (const slide of [...DRAWN_SLIDES, endingSlide]) {
-      expect(() => assertSubset(draw("classroom", slide).root)).not.toThrow()
+      expect(() => assertSubset(draw("homeroom", slide).root)).not.toThrow()
     }
   })
 })

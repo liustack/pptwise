@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { CONSULTING_TOKENS } from "./builtin/consulting"
+import { CONSULTING_TOKENS } from "./builtin/brief"
 import { ThemeFileSchema } from "./schema"
 
 /**
@@ -79,9 +79,9 @@ describe("ThemeFileSchema", () => {
   })
 
   it("accepts a public theme id that shadows a built-in", () => {
-    const result = ThemeFileSchema.safeParse(theme({ id: "consulting", style: publicStyle("consulting") }))
+    const result = ThemeFileSchema.safeParse(theme({ id: "brief", style: publicStyle("brief") }))
     expect(result.success).toBe(true)
-    if (result.success) expect(result.data.id).toBe("consulting")
+    if (result.success) expect(result.data.id).toBe("brief")
   })
 
   it.each(["../../escape", "Consulting", "foo_bar", "foo.bar", ""])(

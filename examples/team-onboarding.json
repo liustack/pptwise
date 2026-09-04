@@ -2,7 +2,7 @@
   "version": "5",
   "filename": "platform-team-onboarding",
   "narrative": "training",
-  "theme": { "id": "classroom" },
+  "theme": { "id": "homeroom" },
   "meta": { "organization": "Relay Engineering", "date": "2026-08-15" },
   "slides": [
     {

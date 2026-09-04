@@ -8,58 +8,58 @@
  * individuals, classes, troupes, foundations, families — not one company
  * reviewing its quarter twenty-four times.
  *
- * `consulting` keeps the shared tri-language duty (`LEXICONS`), so it has no
+ * `brief` keeps the shared tri-language duty (`LEXICONS`), so it has no
  * entry here and intentionally falls back to the shared zh lexicon.
  */
 import type { Lexicon } from "../lexicon"
 import { LEXICONS } from "../lexicon"
-import { ACADEMIC_LEXICON } from "./academic"
+import { ACADEMIC_LEXICON } from "./thesis"
 import { ARENA_LEXICON } from "./arena"
-import { CAMPAIGN_LEXICON } from "./campaign"
-import { CLASSROOM_LEXICON } from "./classroom"
+import { CAMPAIGN_LEXICON } from "./rally"
+import { CLASSROOM_LEXICON } from "./homeroom"
 import { CRAYON_LEXICON } from "./crayon"
 import { EMBER_LEXICON } from "./ember"
-import { ENTERPRISE_LEXICON } from "./enterprise"
+import { ENTERPRISE_LEXICON } from "./bulletin"
 import { HERITAGE_LEXICON } from "./heritage"
 import { INK_LEXICON } from "./ink"
-import { INSIGHT_LEXICON } from "./insight"
+import { INSIGHT_LEXICON } from "./ledger"
 import { JOURNAL_LEXICON } from "./journal"
 import { LECTURE_LEXICON } from "./lecture"
 import { LUXE_LEXICON } from "./luxe"
 import { MEMO_LEXICON } from "./memo"
 import { MUSEUM_LEXICON } from "./museum"
 import { PLAYBILL_LEXICON } from "./playbill"
-import { PULSE_LEXICON } from "./pulse"
+import { PULSE_LEXICON } from "./clinic"
 import { RUNWAY_LEXICON } from "./runway"
 import { STAGE_LEXICON } from "./stage"
 import { SWISS_LEXICON } from "./swiss"
-import { TECH_LEXICON } from "./tech"
-import { TERRA_LEXICON } from "./terra"
+import { TECH_LEXICON } from "./terminal"
+import { TERRA_LEXICON } from "./almanac"
 import { VERMILION_LEXICON } from "./vermilion"
 
 export const NATIVE_LEXICONS: Readonly<Record<string, Lexicon>> = {
-  academic: ACADEMIC_LEXICON,
+  thesis: ACADEMIC_LEXICON,
   arena: ARENA_LEXICON,
-  campaign: CAMPAIGN_LEXICON,
-  classroom: CLASSROOM_LEXICON,
+  rally: CAMPAIGN_LEXICON,
+  homeroom: CLASSROOM_LEXICON,
   crayon: CRAYON_LEXICON,
   ember: EMBER_LEXICON,
-  enterprise: ENTERPRISE_LEXICON,
+  bulletin: ENTERPRISE_LEXICON,
   heritage: HERITAGE_LEXICON,
   ink: INK_LEXICON,
-  insight: INSIGHT_LEXICON,
+  ledger: INSIGHT_LEXICON,
   journal: JOURNAL_LEXICON,
   lecture: LECTURE_LEXICON,
   luxe: LUXE_LEXICON,
   memo: MEMO_LEXICON,
   museum: MUSEUM_LEXICON,
   playbill: PLAYBILL_LEXICON,
-  pulse: PULSE_LEXICON,
+  clinic: PULSE_LEXICON,
   runway: RUNWAY_LEXICON,
   stage: STAGE_LEXICON,
   swiss: SWISS_LEXICON,
-  tech: TECH_LEXICON,
-  terra: TERRA_LEXICON,
+  terminal: TECH_LEXICON,
+  almanac: TERRA_LEXICON,
   vermilion: VERMILION_LEXICON,
 }
 

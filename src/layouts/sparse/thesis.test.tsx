@@ -19,7 +19,7 @@ function ir(slides: Slide[]): PptxIR {
   return {
     version: "5",
     filename: "x.pptx",
-    theme: { id: "academic" },
+    theme: { id: "thesis" },
     meta: {},
     assets: { images: {} },
     slides,
@@ -35,8 +35,8 @@ function render(body: React.ReactElement): { markup: string; root: Element } {
   return { markup, root: parseSvgRoot(markup) }
 }
 
-describe("academic sparse faces", () => {
-  const ctx = buildCtx(resolveStyle("academic"), {})
+describe("thesis sparse faces", () => {
+  const ctx = buildCtx(resolveStyle("thesis"), {})
 
   it("pull-quote adds a [1] tspan with dy=-18 only when attribution exists", () => {
     const slide: Slide = {
@@ -111,7 +111,7 @@ describe("academic sparse faces", () => {
     expect(hair?.getAttribute("x1")).toBe("470")
     expect(hair?.getAttribute("x2")).toBe("810")
     // 392 baseline + 300 × 0.22 ink floor + 16 air. Was a frozen 448, which
-    // sat inside the descender of academic's old-style figures — see the
+    // sat inside the descender of thesis's old-style figures — see the
     // collision sweep below for the contract this coordinate satisfies.
     expect(hair?.getAttribute("y1")).toBe("474")
     expect(hair?.getAttribute("stroke")).toBe(ctx.colors.accent)
@@ -120,7 +120,7 @@ describe("academic sparse faces", () => {
   })
 
   it("keeps the gold rule below the numeral's ink for every value the corpus can author", () => {
-    // academic's heading serif sets old-style figures: 3 4 5 7 9 hang below
+    // thesis's heading serif sets old-style figures: 3 4 5 7 9 hang below
     // the baseline. The rule used to sit at a fixed y=448, two pixels under
     // the descending stem of a 300px "4" — inside the descender zone the
     // shared `underlineDescentRatio` floor declares, and across the stem on

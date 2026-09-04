@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
-import { CONSULTING_TOKENS } from "../themes/builtin/consulting"
+import { CONSULTING_TOKENS } from "../themes/builtin/brief"
 import { __resetRegisteredThemes, registerTheme } from "../themes/definitions"
 import {
   DeckSpecSchema,

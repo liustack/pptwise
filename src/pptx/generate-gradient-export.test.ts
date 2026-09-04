@@ -45,18 +45,18 @@ async function slideXml(blob: Blob): Promise<string> {
 }
 
 describe("generatePptxBlob real theme decor gradients", () => {
-  // tech 的满页 decor 渐变场已在 2026-08-19 深底组皮肤重设计里删除
+  // terminal 的满页 decor 渐变场已在 2026-08-19 深底组皮肤重设计里删除
   // （`motif-constellation-motif.tsx` 的改动来历：那块 rect 把主题自己的
   // `defaultBackgrounds` 整个遮死，装饰与背景的职责本轮分清），所以这里
-  // 原来那条「tech 的 decor 渐变导出为真实 a:gradFill」的用例没有主语了。
-  // 这与下面那条用例名里记的是同一类事——2026-07-12 insight 的 poster-motif
+  // 原来那条「terminal 的 decor 渐变导出为真实 a:gradFill」的用例没有主语了。
+  // 这与下面那条用例名里记的是同一类事——2026-07-12 ledger 的 poster-motif
   // 光晕被裁掉时，渐变导出链的 fixture 就从 decor 换到了图表渐变。
   // 现在十七家 builtin 里已没有任何主题的 decor 或版式画 linearGradient
   // （`motif-tone-adaptive-motif.tsx` 还有一个，但没有 builtin 主题用它；
   // tone-adaptive 版式那条 2026 年已换成 scrim），渐变导出链由下面这条
   // 图表渐变用例单独承担。背景渐变不算在内：`background.tsx` 刻意把它画成
   // 24 条实心 rect，本就不会产出 a:gradFill。
-  it("chart bar 渐变柱导出为真实 a:gradFill（2026-07-12 光晕移除后渐变链 fixture 换 chart——insight 的 poster-motif 光晕已按用户裁决删除，渐变导出链由图表渐变持续覆盖）", async () => {
+  it("chart bar 渐变柱导出为真实 a:gradFill（2026-07-12 光晕移除后渐变链 fixture 换 chart——ledger 的 poster-motif 光晕已按用户裁决删除，渐变导出链由图表渐变持续覆盖）", async () => {
     const { generatePptxBlob } = await import("./generate")
     const chartSlide: Slide = {
       type: "content",
@@ -72,18 +72,18 @@ describe("generatePptxBlob real theme decor gradients", () => {
         },
       ],
     } as Slide
-    const blob = await generatePptxBlob(makeIR("insight", [chartSlide]))
+    const blob = await generatePptxBlob(makeIR("ledger", [chartSlide]))
     expect(await slideXml(blob)).toContain("a:gradFill")
   }, 30000)
 
-  it("enterprise's decor gradient field is skipped (not present) when a slide has a background image", async () => {
+  it("bulletin's decor gradient field is skipped (not present) when a slide has a background image", async () => {
     const { generatePptxBlob } = await import("./generate")
     const RED_PNG =
       "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
     const ir: PptxIR = {
       version: "5",
       filename: "decor-gradient-bg.pptx",
-      theme: { id: "enterprise" },
+      theme: { id: "bulletin" },
       meta: {},
       assets: { images: { bg: { src: RED_PNG } } },
       slides: [
@@ -107,7 +107,7 @@ describe("generatePptxBlob real theme decor gradients", () => {
  * double-`generatePptxBlob`-call methodology as
  * `generate-notes-export.test.ts`'s "omitted-notes export is byte-identical
  * across repeated calls" — that test's fixture never carries a gradient, so
- * it never exercised this path; `tech`'s full-page decor gradient (the first
+ * it never exercised this path; `terminal`'s full-page decor gradient (the first
  * test in this file) reliably does. Whole-file SHA256 (P0 hardening Task 4
  * pinned every zip timestamp — see generate-determinism.test.ts) —
  * previously this compared decompressed part content with
@@ -121,7 +121,7 @@ async function sha256(blob: Blob): Promise<string> {
 describe("generatePptxBlob gradient export determinism", () => {
   it("a gradient-bearing deck exports byte-identical slide XML across two renders", async () => {
     const { generatePptxBlob } = await import("./generate")
-    const ir = makeIR("tech", [slide("content"), slide("content")])
+    const ir = makeIR("terminal", [slide("content"), slide("content")])
 
     const blobA = await generatePptxBlob(ir)
     const blobB = await generatePptxBlob(ir)

@@ -18,7 +18,7 @@ export type IconCardItem = IconCardsComponent["items"][number]
  * `kpi_cards`/`icon_cards` component (see `explodeIntoUnits`) — each item gets
  * its own card instead of the whole component sharing a single card. The
  * exploded variants still carry their *source* component (not just the one
- * item) — `renderCell` (`templates/tech.tsx`) needs it to resolve
+ * item) — `renderCell` (`templates/terminal.tsx`) needs it to resolve
  * `ctx.blockIndex` and tag the cell `data-blk`, since exploded units bypass
  * `renderComponent` (the usual tagging chokepoint) entirely.
  */

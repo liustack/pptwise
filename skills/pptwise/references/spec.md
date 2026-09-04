@@ -41,7 +41,7 @@ Theme is the second decision and must be settled before the spec. A theme is one
 Shortlist by occasion first and identity strength second. Compare two to four candidates with the fixed fitting-room sample:
 
 ```bash
-pptwise theme try consulting,swiss,memo
+pptwise theme try brief,swiss,memo
 ```
 
 `theme try` renders the same fixed sample deck under every candidate. It is the only place to compare themes without binding a deck. Choose from the images, not from names alone.
@@ -49,13 +49,13 @@ pptwise theme try consulting,swiss,memo
 Create means copy. Prefer a workspace-owned theme even when the starting point is a factory preset:
 
 ```bash
-pptwise theme new --from consulting --id acme-report
+pptwise theme new --from brief --id acme-report
 ```
 
 With an Office theme or template, choose the donor menu by occasion, then extract colors and fonts into one complete v2 file:
 
 ```bash
-pptwise brand extract corp.pptx -o themes/acme.theme.json --from consulting
+pptwise brand extract corp.pptx -o themes/acme.theme.json --from brief
 ```
 
 With an existing theme and a requested color change, fork it. The fork keeps the menu byte-identical and rederives the full palette:
@@ -79,24 +79,24 @@ This section is generated from the preset library and each preset menu. `identit
 
 | id | label | occasions | identity | menu words | offered kinds |
 | --- | --- | --- | --- | ---: | --- |
-| `consulting` | Business Consulting | business | medium | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `fact`, `evidence`, `hierarchy` |
-| `enterprise` | Enterprise | business, institutional | low | 7 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `hierarchy` |
-| `academic` | Academic | education | medium | 11 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `quote`, `fact`, `evidence`, `hierarchy` |
-| `insight` | Financial Insight | finance | medium | 9 | `points`, `list`, `comparison`, `process`, `data`, `statement`, `quote`, `fact`, `hierarchy` |
-| `campaign` | Marketing Campaign | marketing, event | high | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `fact`, `evidence`, `hierarchy` |
-| `classroom` | Classroom | education | medium | 7 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `hierarchy` |
+| `brief` | Brief | business | medium | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `fact`, `evidence`, `hierarchy` |
+| `bulletin` | Bulletin | business, institutional | low | 7 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `hierarchy` |
+| `thesis` | Thesis | education | medium | 11 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `quote`, `fact`, `evidence`, `hierarchy` |
+| `ledger` | Ledger | finance | medium | 9 | `points`, `list`, `comparison`, `process`, `data`, `statement`, `quote`, `fact`, `hierarchy` |
+| `rally` | Rally | marketing, event | high | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `fact`, `evidence`, `hierarchy` |
+| `homeroom` | Homeroom | education | medium | 7 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `hierarchy` |
 | `ink` | Ink Wash | culture | high | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `quote`, `fact`, `hierarchy` |
-| `tech` | Tech | tech | medium | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `fact`, `evidence`, `hierarchy` |
-| `runway` | Fashion Runway | fashion | high | 7 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement` |
+| `terminal` | Terminal | tech | medium | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `fact`, `evidence`, `hierarchy` |
+| `runway` | Runway | fashion | high | 7 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement` |
 | `journal` | Editorial Journal | editorial | medium | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `quote`, `fact`, `hierarchy` |
 | `luxe` | Luxe | luxury, event | high | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `quote`, `fact`, `hierarchy` |
 | `heritage` | Heritage | culture, luxury | medium | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `quote`, `fact`, `hierarchy` |
-| `pulse` | Health & Life Science | health | medium | 7 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `hierarchy` |
-| `terra` | Sustainability & ESG | sustainability | medium | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `fact`, `evidence`, `hierarchy` |
-| `ember` | Startup Pitch | startup | high | 7 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `hierarchy` |
+| `clinic` | Clinic | health | medium | 7 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `hierarchy` |
+| `almanac` | Almanac | sustainability | medium | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `fact`, `evidence`, `hierarchy` |
+| `ember` | Ember | startup | high | 7 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `hierarchy` |
 | `vermilion` | Official Report | government, institutional | low | 9 | `points`, `list`, `comparison`, `process`, `data`, `statement`, `fact`, `evidence`, `hierarchy` |
-| `crayon` | Kids Education | kids, education | high | 6 | `points`, `list`, `comparison`, `process`, `photo`, `statement` |
-| `arena` | Esports & Entertainment | entertainment | high | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `fact`, `evidence`, `hierarchy` |
+| `crayon` | Crayon | kids, education | high | 6 | `points`, `list`, `comparison`, `process`, `photo`, `statement` |
+| `arena` | Arena | entertainment | high | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `fact`, `evidence`, `hierarchy` |
 | `museum` | Museum | museum, culture | high | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `fact`, `evidence`, `hierarchy` |
 | `stage` | Keynote Stage | keynote | high | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `quote`, `fact`, `hierarchy` |
 | `lecture` | Lecture Hall | education | high | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `fact`, `evidence`, `hierarchy` |

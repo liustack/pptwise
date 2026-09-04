@@ -40,14 +40,14 @@ const ir = (theme: string, slide: Slide): PptxIR =>
 // contrast-policy 波 T1（推翻本文件头旧裁决"COPYRIGHT_FAINT 跨主题固定不
 // 变"）：版权行不再是文件私有孤儿色，改用 `metaInk(colors.muted, bg)`
 // （`../render/ink`）——B 层门槛 3:1 下已达标时原样保留 `colors.muted`，这里两个
-// theme 的 `colors.muted` 对各自真实背景都已经 >=3:1（academic 5.34:1、
-// tech 5.96:1，见 task-1-report.md 的实测），所以两处断言都从"跨主题保持
+// theme 的 `colors.muted` 对各自真实背景都已经 >=3:1（thesis 5.34:1、
+// terminal 5.96:1，见 task-1-report.md 的实测），所以两处断言都从"跨主题保持
 // 同一个 hex 不变"改为"等于该主题自己的 colors.muted，随主题变化"——这正是
 // 新裁决要断言的属性：派生色随背景变，不是钉死不变。
 describe("RailEnding", () => {
-  it("academic tokens 下渲染角块 + 联系区块 + B 层版权行（data-contrast-tier=meta），heading 存在时不兜底", () => {
-    const ctx = buildCtx(resolveStyle("academic"), {})
-    const deck = ir("academic", endingWithHeading)
+  it("thesis tokens 下渲染角块 + 联系区块 + B 层版权行（data-contrast-tier=meta），heading 存在时不兜底", () => {
+    const ctx = buildCtx(resolveStyle("thesis"), {})
+    const deck = ir("thesis", endingWithHeading)
     const out = renderSvgMarkup(
       <RailEnding ir={deck} slide={endingWithHeading} index={0} ctx={ctx} />,
     )
@@ -67,12 +67,12 @@ describe("RailEnding", () => {
     expect(out).toContain('width="280" height="240"')
     expect(out).toContain('width="140" height="120"')
 
-    // academic 自己的 primary/accent 用在角块上（冷调组皮肤重设计换成祖母绿
-    // #0E6245 + 学者金 #A8861D，见 `themes/academic.ts` 的文件头）
+    // thesis 自己的 primary/accent 用在角块上（冷调组皮肤重设计换成祖母绿
+    // #0E6245 + 学者金 #A8861D，见 `themes/thesis.ts` 的文件头）
     expect(out).toContain("#0E6245")
     expect(out).toContain("#A8861D")
 
-    // 版权行现在派生自 colors.muted（academic 的 #62655B 对真实渲染背景
+    // 版权行现在派生自 colors.muted（thesis 的 #62655B 对真实渲染背景
     // #F5F3EC 实测 5.36:1，clears B 层 3:1，metaInk 原样保留），挂
     // data-contrast-tier="meta"。不再是独立于 muted 的孤儿色——副标题/联系
     // 标签本来就已经用 #62655B，版权行现在与它们同色是预期结果，不是要
@@ -85,32 +85,32 @@ describe("RailEnding", () => {
     expect(copyrightText.getAttribute("data-contrast-tier")).toBe("meta")
   })
 
-  it("tech tokens 下用 tech 的 primary/accent/text/muted/border，academic 烤色不残留，版权行随主题派生（不再跨主题固定同一 hex）", () => {
-    const ctx = buildCtx(resolveStyle("tech"), {})
-    const deck = ir("tech", endingWithHeading)
+  it("terminal tokens 下用 terminal 的 primary/accent/text/muted/border，thesis 烤色不残留，版权行随主题派生（不再跨主题固定同一 hex）", () => {
+    const ctx = buildCtx(resolveStyle("terminal"), {})
+    const deck = ir("terminal", endingWithHeading)
     const out = renderSvgMarkup(
       <RailEnding ir={deck} slide={endingWithHeading} index={0} ctx={ctx} />,
     )
 
     // 深底组皮肤重设计（2026-08-19）把 primary 与 accent 拆成两个色，此前它们
     // 同值、一条断言就够，现在两个角色各锁一条。
-    expect(out).toContain("#14294A") // tech primary，用在大角块 + 角块上的 org 文字上
-    expect(out).toContain("#53E0D2") // tech accent，用在小角块/org 圆点上
-    expect(out).toContain("#EAF1FA") // tech text，用在主标题上
-    expect(out).toContain("#93A5C0") // tech muted，用在副标题/联系标签上
-    expect(out).toContain("#24304A") // tech border，用在 hairline 上
+    expect(out).toContain("#14294A") // terminal primary，用在大角块 + 角块上的 org 文字上
+    expect(out).toContain("#53E0D2") // terminal accent，用在小角块/org 圆点上
+    expect(out).toContain("#EAF1FA") // terminal text，用在主标题上
+    expect(out).toContain("#93A5C0") // terminal muted，用在副标题/联系标签上
+    expect(out).toContain("#24304A") // terminal border，用在 hairline 上
 
-    // academic 的烤死 token 值不得残留
+    // thesis 的烤死 token 值不得残留
     expect(out).not.toContain("#0E6245")
     expect(out).not.toContain("#A8861D")
     expect(out).not.toContain("#23251F")
     expect(out).not.toContain("#62655B")
     expect(out).not.toContain("#DDD9C8")
 
-    // 版权行派生自 tech 自己的 colors.muted（#93A5C0 对本例真正渲染到的底
+    // 版权行派生自 terminal 自己的 colors.muted（#93A5C0 对本例真正渲染到的底
     // colors.bg #0A0F1E 实测 7.622:1，压 ending 默认渐变更严的起点 #0E1630
     // 也有 7.128:1，clears B 层，metaInk 原样保留）——跟上一个测试
-    // academic 断言的 #62655B 不是同一个 hex，证明这是随主题派生，不是
+    // thesis 断言的 #62655B 不是同一个 hex，证明这是随主题派生，不是
     // 跨主题固定不变的孤儿色。
     const root = parseSvgRoot(`<svg xmlns="http://www.w3.org/2000/svg">${out}</svg>`)
     const copyrightText = Array.from(root.querySelectorAll("text")).find(
@@ -120,23 +120,23 @@ describe("RailEnding", () => {
     expect(copyrightText.getAttribute("data-contrast-tier")).toBe("meta")
   })
 
-  // contrast-policy 波 T3（T1 review 遗留 minor b）：tech 已实测深底可读，这
-  // 里补齐另外两个深底主题 insight/luxe——避免"只测过一个深底主题"的覆盖
+  // contrast-policy 波 T3（T1 review 遗留 minor b）：terminal 已实测深底可读，这
+  // 里补齐另外两个深底主题 ledger/luxe——避免"只测过一个深底主题"的覆盖
   // 假象。两个主题的 colors.muted 相对各自真实渲染背景（`ctx.defaultBg`，
   // ending 页 defaultBackgrounds）都远超 B 层 3:1 门槛，metaInk 原样保留。
-  it("insight tokens（深底）下版权行随主题派生，实测远超 B 层门槛", () => {
-    const ctx = buildCtx(resolveStyle("insight"), {})
-    const deck = ir("insight", endingWithHeading)
+  it("ledger tokens（深底）下版权行随主题派生，实测远超 B 层门槛", () => {
+    const ctx = buildCtx(resolveStyle("ledger"), {})
+    const deck = ir("ledger", endingWithHeading)
     const out = renderSvgMarkup(
       <RailEnding ir={deck} slide={endingWithHeading} index={0} ctx={ctx} />,
     )
 
-    expect(out).toContain("#16202B") // insight primary，用在左下角块上
-    expect(out).toContain("#F0A63C") // insight accent，用在角块/org 圆点上
-    expect(out).toContain("#F2EFE8") // insight text，用在主标题/联系值上
-    expect(out).toContain("#9AA7B4") // insight muted，用在副标题/联系标签上
+    expect(out).toContain("#16202B") // ledger primary，用在左下角块上
+    expect(out).toContain("#F0A63C") // ledger accent，用在角块/org 圆点上
+    expect(out).toContain("#F2EFE8") // ledger text，用在主标题/联系值上
+    expect(out).toContain("#9AA7B4") // ledger muted，用在副标题/联系标签上
 
-    // 版权行派生自 insight 自己的 colors.muted（#9AA7B4 对本例真正渲染到的底
+    // 版权行派生自 ledger 自己的 colors.muted（#9AA7B4 对本例真正渲染到的底
     // colors.bg #0F1216 实测 7.654:1，压 ending 默认渐变更严的起点 #151B23
     // 也有 7.058:1，远超 B 层 3:1 门槛，metaInk 原样保留）。
     const root = parseSvgRoot(`<svg xmlns="http://www.w3.org/2000/svg">${out}</svg>`)
@@ -169,9 +169,9 @@ describe("RailEnding", () => {
     expect(copyrightText.getAttribute("data-contrast-tier")).toBe("meta")
   })
 
-  it("academic tokens 下无 heading 时标题兜底为“Thank you”，副标题没有独立兜底文案（不渲染任何斜体副标题元素）", () => {
-    const ctx = buildCtx(resolveStyle("academic"), {})
-    const deck = ir("academic", endingBare)
+  it("thesis tokens 下无 heading 时标题兜底为“Thank you”，副标题没有独立兜底文案（不渲染任何斜体副标题元素）", () => {
+    const ctx = buildCtx(resolveStyle("thesis"), {})
+    const deck = ir("thesis", endingBare)
     const out = renderSvgMarkup(<RailEnding ir={deck} slide={endingBare} index={0} ctx={ctx} />)
 
     expect(out).toContain("Thank you")
@@ -186,9 +186,9 @@ describe("RailEnding", () => {
   // 无 subheading"这一常见组合下，副标题槽位不渲染任何元素，且不影响标题
   // 正常渲染。
   it("heading 存在但 subheading 缺省：标题正常渲染，副标题槽位不渲染任何元素", () => {
-    const ctx = buildCtx(resolveStyle("academic"), {})
+    const ctx = buildCtx(resolveStyle("thesis"), {})
     const slide: Slide = { type: "ending", heading: "衷心感谢", components: [] } as Slide
-    const deck = ir("academic", slide)
+    const deck = ir("thesis", slide)
     const out = renderSvgMarkup(<RailEnding ir={deck} slide={slide} index={0} ctx={ctx} />)
 
     expect(out).toContain("衷心感谢")
@@ -196,10 +196,10 @@ describe("RailEnding", () => {
     expect(out).not.toContain("italic") // 唯一的斜体来源（副标题）未渲染
   })
 
-  it("标题过长时收缩字号、不整段输出原文，Ending body 通过 subset validation（迁移自 academic.test.tsx）", () => {
-    const ctx = buildCtx(resolveStyle("academic"), {})
+  it("标题过长时收缩字号、不整段输出原文，Ending body 通过 subset validation（迁移自 thesis.test.tsx）", () => {
+    const ctx = buildCtx(resolveStyle("thesis"), {})
     const slide: Slide = { type: "ending", heading: CJK_LONG, subheading: CJK_LONG, components: [] } as Slide
-    const deck = ir("academic", slide)
+    const deck = ir("thesis", slide)
     const markup = renderSvgMarkup(<RailEnding ir={deck} slide={slide} index={0} ctx={ctx} />)
     const root = parseSvgRoot(
       `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">${markup}</svg>`,
@@ -208,11 +208,11 @@ describe("RailEnding", () => {
     expect(markup).not.toContain(`>${CJK_LONG}<`)
   })
 
-  describe("两行标题重排（S3b addendum，迁移自 academic.test.tsx 的 'Ending: two-line title reflow' 分支）", () => {
+  describe("两行标题重排（S3b addendum，迁移自 thesis.test.tsx 的 'Ending: two-line title reflow' 分支）", () => {
     it("1 行标题：headingY=356，hairline y1=476（S3b 修复前的基线值，未触发重排逻辑）", () => {
-      const ctx = buildCtx(resolveStyle("academic"), {})
+      const ctx = buildCtx(resolveStyle("thesis"), {})
       const slide: Slide = { type: "ending", heading: "谢谢", components: [] } as Slide
-      const deck = ir("academic", slide)
+      const deck = ir("thesis", slide)
       const markup = renderSvgMarkup(<RailEnding ir={deck} slide={slide} index={0} ctx={ctx} />)
       const root = parseSvgRoot(
         `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">${markup}</svg>`,
@@ -224,9 +224,9 @@ describe("RailEnding", () => {
     })
 
     it("2 行标题最坏情形（“从今天开始用声”，nominal 120px 字号下恰好换行的最大 lineHeight）：首行上移封顶 88px，hairline 间距收紧到 100，末行/所有文字 y 均不越过页面底部", () => {
-      const ctx = buildCtx(resolveStyle("academic"), {})
+      const ctx = buildCtx(resolveStyle("thesis"), {})
       const slide: Slide = { type: "ending", heading: "从今天开始用声", components: [] } as Slide
-      const deck = ir("academic", slide)
+      const deck = ir("thesis", slide)
       const markup = renderSvgMarkup(<RailEnding ir={deck} slide={slide} index={0} ctx={ctx} />)
       const root = parseSvgRoot(
         `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">${markup}</svg>`,

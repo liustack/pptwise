@@ -12,7 +12,7 @@ import { stripEmphasis } from "../render/emphasis"
  * 示进度。构图抄 `.issues/design-boards/wave8/b1/Enterprise.dc.html` 章节：
  * 方块 (96,264,132)、号 y352、题 y330、副题 y382、刻度 y560。
  *
- * 进共享池，不是 enterprise 专用。零 theme id、零 baked hex。进度按本章
+ * 进共享池，不是 bulletin 专用。零 theme id、零 baked hex。进度按本章
  * 在 deck 里的章节序号映射到四段刻度，motif 不读章节号。
  *
  * 板上做不到、最近落地：

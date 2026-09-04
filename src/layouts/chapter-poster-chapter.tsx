@@ -33,15 +33,15 @@ import { accessibleInk } from "../render/ink"
  * 对比度自适应修复（W4 fix round，本轮扩大排查——不在 Important I1 原文的
  * 窄口径扫描内，因为它只匹配 "Sample heading"/"Sample subheading" 字面文本，
  * 本文件的巨幅章节数字和 org 标签都不是那两个字符串）：本文件对
- * academic/classroom/consulting 三个 chapter 页型另开一档默认背景的主题有
+ * thesis/homeroom/brief 三个 chapter 页型另开一档默认背景的主题有
  * **三处**同根因失败，其中巨幅章节数字最严重——`colors.primary` 恰好就是
  * 这三个主题各自的 `defaultBackgrounds.chapter`（三者的主题 token 表把
  * "chapter 底色"直接设成了 primary 本身，同 rail-chapter.tsx 文件头记录的
- * academic 先例），色号与色号相同，实测精确 1.00:1（三主题全部如此，同
+ * thesis 先例），色号与色号相同，实测精确 1.00:1（三主题全部如此，同
  * design decision 8 台账里已处置的 1.00:1 案例同一严重度）：
- *   - org 标签（`colors.muted`，22px）：academic 1.18:1、classroom 1.34:1
+ *   - org 标签（`colors.muted`，22px）：thesis 1.18:1、homeroom 1.34:1
  *   - 巨幅章节数字（`colors.primary`，224px）：三主题均精确 1.00:1
- *   - 标题（`colors.text`）：academic 2.41:1、classroom 同量级
+ *   - 标题（`colors.text`）：thesis 2.41:1、homeroom 同量级
  * 三处统一改用 `accessibleInk(..., ctx.defaultBg, fontSize)`。这三个主题
  * pre-W4 均未策展 poster-chapter（分别是 rail-chapter/rail-chapter/
  * banner-chapter），是全集放开新暴露的组合，不影响任何既有钉值渲染。

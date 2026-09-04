@@ -132,7 +132,7 @@ describe("ending-window-close-ending — shared pool", () => {
   })
 
   it("uses tokens, not a baked runway hex, when another theme draws it", () => {
-    const { root, tokens, markup } = renderEnding("tech")
+    const { root, tokens, markup } = renderEnding("terminal")
     expect(root.querySelector("rect[width='1280']")?.getAttribute("fill")).toBe(tokens.colors.primary)
     for (const hex of RUNWAY_HEX) {
       expect(markup, `runway token ${hex} leaked`).not.toContain(hex)
@@ -163,11 +163,11 @@ describe("ending-window-close-ending — shared pool", () => {
 })
 
 describe("ending-window-close-ending — no leftover top-left motif stub", () => {
-  it("consulting banner-motif does not paint the yellow lead on this ending", () => {
+  it("brief banner-motif does not paint the yellow lead on this ending", () => {
     const deck: PptxIR = {
       version: "5",
       filename: "window-close-no-stub.pptx",
-      theme: { id: "consulting" },
+      theme: { id: "brief" },
       meta: FULL_META,
       assets: { images: {} },
       seed: 1,

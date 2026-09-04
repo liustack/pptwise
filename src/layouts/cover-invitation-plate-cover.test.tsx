@@ -158,7 +158,7 @@ describe("cover-invitation-plate-cover — shared pool", () => {
   })
 
   it("uses tokens, not a baked luxe hex, when another theme borrows it", () => {
-    const { markup, tokens } = renderCover("tech")
+    const { markup, tokens } = renderCover("terminal")
     expect(markup).toContain(tokens.colors.accent)
     for (const hex of LUXE_HEX) {
       expect(markup, `luxe token ${hex} leaked`).not.toContain(hex)

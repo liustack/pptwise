@@ -99,17 +99,17 @@ describe("generatePptxBlob v2 master wiring", () => {
 
   it("defines masters for each slide type and creates slides by slide.type", async () => {
     const { generatePptxBlob } = await import("./generate")
-    // "consulting" rather than the legacy "ikb-swiss" (→ tech) id:
-    // since T7's decor layer, tech always emits a real gradient fill,
+    // "brief" rather than the legacy "ikb-swiss" (→ terminal) id:
+    // since T7's decor layer, terminal always emits a real gradient fill,
     // and its patch would flow into applyGradientFills against this file's
     // FakePptx.write() (a non-zip placeholder Blob) — which fails loud by
     // design (render.ts), unlike generate.ts's own try/catch around
-    // dedupeMediaInZip. consulting's decor is solid-fill only, keeping this
+    // dedupeMediaInZip. brief's decor is solid-fill only, keeping this
     // master-wiring test clear of that path entirely.
     const ir: PptxIR = {
       version: "5",
       filename: "master.pptx",
-      theme: { id: "consulting" },
+      theme: { id: "brief" },
       meta: {},
       assets: { images: {} },
       slides: [

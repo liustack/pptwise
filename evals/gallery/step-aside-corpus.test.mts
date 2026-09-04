@@ -39,7 +39,7 @@ await installNodePlatform()
  * pages and what its handover restores is the branding instead.
  */
 const EXPECTED: Record<string, { motifPieces: readonly string[]; gainsMotif: boolean }> = {
-  consulting: { motifPieces: ["locator-corner"], gainsMotif: false },
+  brief: { motifPieces: ["locator-corner"], gainsMotif: false },
   crayon: { motifPieces: ["crayonbox-sun", "crayonbox-stars"], gainsMotif: true },
   runway: { motifPieces: [], gainsMotif: false },
 }
@@ -112,7 +112,7 @@ describe("the corpus pages that exercise the step-aside", () => {
     // for `primary`. That is a decision about the show composition, and this
     // page is not one. Asserted on runway alone because it is the theme
     // whose accent this page actually spends: a chart palette on
-    // `consulting` may legitimately never reach for one.
+    // `brief` may legitimately never reach for one.
     const spec = STEP_ASIDE_PAGES.find((p) => p.theme === "runway")!
     const lex = nativeLexiconFor(spec.theme)
     const svg = renderSlideSvg(stepAsidePage(lex, await corpusAssets(lex), spec.theme, spec.kind, spec.component), 0)

@@ -3,10 +3,10 @@ import { describe, it, expect } from "vitest"
 import { render } from "@testing-library/react"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
-import { TECH_TOKENS } from "../themes/builtin/tech"
+import { TECH_TOKENS } from "../themes/builtin/terminal"
 import { LEGACY_CUSTOM_TOKENS } from "../layouts/legacy-custom-tokens"
-import { INSIGHT_TOKENS } from "../themes/builtin/insight"
-import { CONSULTING_TOKENS } from "../themes/builtin/consulting"
+import { INSIGHT_TOKENS } from "../themes/builtin/ledger"
+import { CONSULTING_TOKENS } from "../themes/builtin/brief"
 import { verdictBanner } from "./verdict-banner"
 import type { ComponentCtx } from "./types"
 
@@ -196,7 +196,7 @@ describe("verdict_banner component: tone color mapping", () => {
     )
   })
 
-  it("positive/warning resolve to the bright dark-theme variant on tech's real ctx", () => {
+  it("positive/warning resolve to the bright dark-theme variant on terminal's real ctx", () => {
     const darkCtx: ComponentCtx = {
       colors: TECH_TOKENS.colors,
       fonts: {
@@ -272,9 +272,9 @@ describe("verdict_banner component: tone color mapping", () => {
     )
   })
 
-  it("resolves to the base color on consulting's real ctx (keys off bg, not a literal-navy primary)", () => {
-    // Regression guard: consulting's `primary`/`text` are a literal navy
-    // `#051C2C` (see themes/consulting.ts) while its `bg` stays a
+  it("resolves to the base color on brief's real ctx (keys off bg, not a literal-navy primary)", () => {
+    // Regression guard: brief's `primary`/`text` are a literal navy
+    // `#051C2C` (see themes/brief.ts) while its `bg` stays a
     // light `#F7F7F2` — the tone resolution must key off `colors.bg`'s own
     // brightness, not `colors.primary`/`colors.text`, or a name/color this
     // literally "navy" would wrongly flip to the dark-theme bright variant.

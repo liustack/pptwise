@@ -185,18 +185,18 @@ describe("row_cards title-to-source air", () => {
 })
 
 describe("row_cards EN gallery trio is not silently dropped (r2 A6)", () => {
-  const consulting = buildCtx(resolveStyle("consulting"), {})
+  const brief = buildCtx(resolveStyle("brief"), {})
   const BENTO_BODY = { x: 96, y: 234, w: 1088, h: 378 }
 
   it("three EN cards plus the lead-in paragraph fit the 378px bento body", () => {
     const rows = COMPONENT_BUILDERS.row_cards!(LEXICONS.en)
     const leadIn = { type: "paragraph" as const, text: LEXICONS.en.sentences[0]! }
-    const { placed, dropped } = layoutContentFit("single", [leadIn, rows], BENTO_BODY, consulting)
+    const { placed, dropped } = layoutContentFit("single", [leadIn, rows], BENTO_BODY, brief)
     expect(dropped).toBe(0)
     expect(placed.map((p) => p.component.type)).toEqual(["paragraph", "row_cards"])
     const rowBox = placed.find((p) => p.component.type === "row_cards")!.box
     const markup = renderSvgMarkup(
-      <svg xmlns="http://www.w3.org/2000/svg">{rowCards.render(rows as never, rowBox, consulting)}</svg>,
+      <svg xmlns="http://www.w3.org/2000/svg">{rowCards.render(rows as never, rowBox, brief)}</svg>,
     )
     expect(markup).not.toContain("data-dropped")
     if (rows.type === "row_cards") {
@@ -208,11 +208,11 @@ describe("row_cards EN gallery trio is not silently dropped (r2 A6)", () => {
 
   it("a tight box.h still paints every card instead of dropping the tail", () => {
     const rows = COMPONENT_BUILDERS.row_cards!(LEXICONS.en)
-    const natural = rowCards.measure(rows as never, 1088, consulting)
+    const natural = rowCards.measure(rows as never, 1088, brief)
     const tight = natural - 20
     const markup = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg">
-        {rowCards.render(rows as never, { x: 0, y: 0, w: 1088, h: tight }, consulting)}
+        {rowCards.render(rows as never, { x: 0, y: 0, w: 1088, h: tight }, brief)}
       </svg>,
     )
     expect(markup).not.toContain("data-dropped")

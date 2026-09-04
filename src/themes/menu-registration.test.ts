@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
 import { LAYOUT_REGISTRY, type LayoutDefinition } from "../layouts/registry"
 import { __resetRegisteredThemes, registerTheme } from "./definitions"
-import { CONSULTING_TOKENS } from "./builtin/consulting"
+import { CONSULTING_TOKENS } from "./builtin/brief"
 
 const twoColumn = LAYOUT_REGISTRY["two-column"]!
 const ORPHAN_TAKEOVER_ID = "orphan-takeover"

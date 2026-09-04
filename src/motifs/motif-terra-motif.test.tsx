@@ -128,7 +128,7 @@ function pathYRange(d: string): { min: number; max: number } {
 describe("TerraMotif（等高线）", () => {
   it("cover/content/ending 画同一张：三条左上顶缘等高线，一件", () => {
     for (const slide of DRAWN_SLIDES) {
-      const { root } = draw("terra", slide)
+      const { root } = draw("almanac", slide)
       expect(Array.from(root.querySelectorAll("path")), `contours on ${slide.type}`).toHaveLength(3)
       expect(Array.from(root.querySelectorAll("circle")), `no seeds on ${slide.type}`).toHaveLength(0)
       expect(root.querySelector(`[${DECOR_PIECE_ATTR}="contours"]`)).toBeTruthy()
@@ -137,15 +137,15 @@ describe("TerraMotif（等高线）", () => {
   })
 
   it("chapter 完全退让——整版 primary 橄榄底上画 border 细线等于看不见", () => {
-    const { root } = draw("terra", chapterSlide)
+    const { root } = draw("almanac", chapterSlide)
     expect(Array.from(root.querySelectorAll("path"))).toHaveLength(0)
     expect(Array.from(root.querySelectorAll("circle"))).toHaveLength(0)
     expect(countDecorPieces(root)).toBe(0)
   })
 
   it("颜色一律读 token：等高线走 border，1.5px，退役种子点", () => {
-    const t = resolveStyle("terra")
-    const { root } = draw("terra", coverSlide)
+    const t = resolveStyle("almanac")
+    const { root } = draw("almanac", coverSlide)
     const contours = Array.from(root.querySelectorAll("path"))
     expect(contours).toHaveLength(3)
     for (const p of contours) {
@@ -157,13 +157,13 @@ describe("TerraMotif（等高线）", () => {
   })
 
   it("等高线几何：三条都按板抄，自 x0 起贴左上顶缘", () => {
-    const { root } = draw("terra", coverSlide)
+    const { root } = draw("almanac", coverSlide)
     const ds = Array.from(root.querySelectorAll("path")).map((p) => p.getAttribute("d")!)
     expect(ds).toEqual([...BOARD_PATHS])
   })
 
   it("安全区：等高线整组落在正文区上沿 y200 之上、页脚 meta 带之上", () => {
-    const { root } = draw("terra", coverSlide)
+    const { root } = draw("almanac", coverSlide)
     for (const p of Array.from(root.querySelectorAll("path"))) {
       const { min, max } = pathYRange(p.getAttribute("d")!)
       expect(max, `contour drops into the body zone: ${p.getAttribute("d")}`).toBeLessThan(BODY_ZONE.y)
@@ -174,7 +174,7 @@ describe("TerraMotif（等高线）", () => {
 
   it("没有孤立小件：不画种子点、不画左竖条、不画短 tick", () => {
     for (const slide of DRAWN_SLIDES) {
-      const { root } = draw("terra", slide)
+      const { root } = draw("almanac", slide)
       expect(root.querySelectorAll("circle")).toHaveLength(0)
       expect(root.querySelectorAll("text")).toHaveLength(0)
       for (const r of Array.from(root.querySelectorAll("rect"))) {
@@ -189,7 +189,7 @@ describe("TerraMotif（等高线）", () => {
 
   it("件数不超过预算，叶子都包在 data-decor-piece 里", () => {
     for (const slide of [...DRAWN_SLIDES, chapterSlide]) {
-      const { root } = draw("terra", slide)
+      const { root } = draw("almanac", slide)
       expect(countDecorPieces(root)).toBeLessThanOrEqual(MAX_DECOR_PIECES)
       for (const el of paintedLeaves(root)) {
         expect(el.closest(`[${DECOR_PIECE_ATTR}]`), el.outerHTML).toBeTruthy()
@@ -198,8 +198,8 @@ describe("TerraMotif（等高线）", () => {
   })
 
   it("内容页叶子按 3:1 天花板退底", () => {
-    const { root } = draw("terra", contentSlide)
-    const tokens = resolveStyle("terra")
+    const { root } = draw("almanac", contentSlide)
+    const tokens = resolveStyle("almanac")
     const ground = tokens.colors.bg
     for (const el of paintedLeaves(root)) {
       const paint = leafPaint(el)
@@ -209,22 +209,22 @@ describe("TerraMotif（等高线）", () => {
     }
   })
 
-  it("换一家 tokens 渲染时颜色跟着换，terra 的色一处不残留（零 hex 纪律的实证）", () => {
+  it("换一家 tokens 渲染时颜色跟着换，almanac 的色一处不残留（零 hex 纪律的实证）", () => {
     const heritage = resolveStyle("heritage")
     const ctx = buildCtx(heritage, {})
     const { markup } = render(<TerraMotif ir={ir("heritage")} slide={coverSlide} ctx={ctx} />)
     expect(markup).toContain(heritage.colors.border)
     for (const hex of ["#EFE9DC", "#F7F3E8", "#4D5D39", "#B25E38", "#2B2A22", "#656155", "#D8D0BC"]) {
-      expect(markup, `terra token ${hex} leaked into the heritage render`).not.toContain(hex)
+      expect(markup, `almanac token ${hex} leaked into the heritage render`).not.toContain(hex)
     }
   })
 
   it("装饰位置写死：换 seed（filename）输出逐字节不变", () => {
-    const ctx = buildCtx(resolveStyle("terra"), {})
+    const ctx = buildCtx(resolveStyle("almanac"), {})
     const markups = new Set(
       Array.from({ length: 12 }, (_, i) =>
         renderSvgMarkup(
-          <TerraMotif ir={{ ...ir("terra"), filename: `probe-${i}.pptx` } as PptxIR} slide={coverSlide} ctx={ctx} />,
+          <TerraMotif ir={{ ...ir("almanac"), filename: `probe-${i}.pptx` } as PptxIR} slide={coverSlide} ctx={ctx} />,
         ),
       ),
     )
@@ -232,12 +232,12 @@ describe("TerraMotif（等高线）", () => {
   })
 
   it("cover 与 ending 画同一张", () => {
-    expect(draw("terra", coverSlide).markup).toBe(draw("terra", endingSlide).markup)
+    expect(draw("almanac", coverSlide).markup).toBe(draw("almanac", endingSlide).markup)
   })
 
   it("Decor body passes subset validation", () => {
     for (const slide of [...DRAWN_SLIDES, chapterSlide]) {
-      expect(() => assertSubset(draw("terra", slide).root)).not.toThrow()
+      expect(() => assertSubset(draw("almanac", slide).root)).not.toThrow()
     }
   })
 })

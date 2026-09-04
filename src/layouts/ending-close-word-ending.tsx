@@ -7,11 +7,11 @@ import { fitEmphasisLine, headingEmphasisPaint, parseEmphasis, renderEmphasisTex
 
 /**
  * close-word-ending layout（2026-08-22 第八波批 1，新表达）：
- * **收盘两行，accent 只点 `**强调**` 词**。构图抄 insight 设计板 ending。
+ * **收盘两行，accent 只点 `**强调**` 词**。构图抄 ledger 设计板 ending。
  * 底缘暗线归 motif，本版式不画。不致谢，不兜底 Thank you。
  *
- * **它进共享池，不是 insight 专用**。零 theme id、零 hex。强调走 tint
- * （insight 未分派 pad），没有标记就不改色。
+ * **它进共享池，不是 ledger 专用**。零 theme id、零 hex。强调走 tint
+ * （ledger 未分派 pad），没有标记就不改色。
  *
  * 服务场景：财报收口、投资备忘结尾、周报收盘。一句读完，点一个词。
  */

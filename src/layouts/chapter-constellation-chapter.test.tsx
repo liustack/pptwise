@@ -10,8 +10,8 @@ import type { PptxIR, Slide } from "@/ir"
 // W4 fix round: ConstellationChapter's number/heading/subheading now adapt
 // to `ctx.defaultBg` — every ctx in this file must carry the theme's *true*
 // chapter default background, not `buildCtx`'s own `colors.bg` fallback
-// (wrong for consulting; see chapter-rail-chapter.tsx's file header for the
-// same per-theme fact about academic/classroom).
+// (wrong for brief; see chapter-rail-chapter.tsx's file header for the
+// same per-theme fact about thesis/homeroom).
 function chapterCtx(themeId: string) {
   const tokens = resolveStyle(themeId)
   return buildCtx(tokens, {}, undefined, resolveBackgroundHex(tokens.defaultBackgrounds.chapter, tokens.colors.surface))
@@ -50,9 +50,9 @@ const CHAPTER_TECH_2_MARKUP =
   '<text x="96" y="400" font-family="Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif" font-size="160" font-weight="700" fill="#53E0D2" dominant-baseline="alphabetic">02</text><text x="320" y="392" font-family="Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif" font-size="56" font-weight="600" fill="#EAF1FA" dominant-baseline="alphabetic">第二部分：技术路线图</text><text x="320" y="448" font-family="Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif" font-size="26" fill="#93A5C0" dominant-baseline="alphabetic">面向 2027 的演进方向</text><line x1="96" y1="560" x2="1184" y2="560" stroke="#24304A" stroke-width="1.4"></line>'
 
 describe("ConstellationChapter", () => {
-  it("tech tokens 下与旧 BentoTechChapter 输出逐字节一致（档位一，含章节序号）", () => {
-    const ctx = buildCtx(resolveStyle("tech"), {})
-    const deck = ir("tech")
+  it("terminal tokens 下与旧 BentoTechChapter 输出逐字节一致（档位一，含章节序号）", () => {
+    const ctx = buildCtx(resolveStyle("terminal"), {})
+    const deck = ir("terminal")
 
     const next1 = renderSvgMarkup(
       <ConstellationChapter ir={deck} slide={chapter1} index={0} ctx={ctx} />,
@@ -67,19 +67,19 @@ describe("ConstellationChapter", () => {
     expect(next2).toContain(">02<")
   })
 
-  it("consulting tokens 下用 consulting 的色（证明 token 化成立，无 baked hex）", () => {
-    const ctx = chapterCtx("consulting")
-    const deck = ir("consulting")
+  it("brief tokens 下用 brief 的色（证明 token 化成立，无 baked hex）", () => {
+    const ctx = chapterCtx("brief")
+    const deck = ir("brief")
     const out = renderSvgMarkup(
       <ConstellationChapter ir={deck} slide={chapter1} index={0} ctx={ctx} />,
     )
-    expect(out).toContain("#F5C518") // consulting accent
-    expect(out).not.toContain("#53E0D2") // tech accent 不得残留
+    expect(out).toContain("#F5C518") // brief accent
+    expect(out).not.toContain("#53E0D2") // terminal accent 不得残留
   })
 
   it("renders markup that passes assertSubset (no forbidden elements)", () => {
-    const ctx = buildCtx(resolveStyle("tech"), {})
-    const deck = ir("tech")
+    const ctx = buildCtx(resolveStyle("terminal"), {})
+    const deck = ir("terminal")
     const markup = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg">
         <ConstellationChapter ir={deck} slide={chapter1} index={0} ctx={ctx} />
@@ -98,8 +98,8 @@ describe("ConstellationChapter", () => {
       components: [],
     } as Slide
     // Single-chapter deck so chapterNumberFor derives "01" unambiguously.
-    const soloDeck: PptxIR = { ...ir("tech"), slides: [slide] }
-    const ctx = buildCtx(resolveStyle("tech"), {})
+    const soloDeck: PptxIR = { ...ir("terminal"), slides: [slide] }
+    const ctx = buildCtx(resolveStyle("terminal"), {})
     const markup = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg">
         <ConstellationChapter ir={soloDeck} slide={slide} index={0} ctx={ctx} />
@@ -117,8 +117,8 @@ describe("ConstellationChapter", () => {
 
   it("shrinks a pathologically long heading instead of overflowing", () => {
     const slide: Slide = { type: "chapter", heading: CJK_LONG, components: [] } as Slide
-    const deck: PptxIR = { ...ir("tech"), slides: [slide] }
-    const ctx = buildCtx(resolveStyle("tech"), {})
+    const deck: PptxIR = { ...ir("terminal"), slides: [slide] }
+    const ctx = buildCtx(resolveStyle("terminal"), {})
     const markup = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg">
         <ConstellationChapter ir={deck} slide={slide} index={0} ctx={ctx} />

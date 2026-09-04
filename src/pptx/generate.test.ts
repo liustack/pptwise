@@ -94,18 +94,18 @@ function makeSlide(type: Slide["type"], heading?: string): Slide {
   } as Slide
 }
 
-// Theme defaults to "consulting" rather than the legacy "ikb-swiss"
-// (→ tech) id: since T7's decor layer, tech/creative/custom
+// Theme defaults to "brief" rather than the legacy "ikb-swiss"
+// (→ terminal) id: since T7's decor layer, terminal/creative/custom
 // themes always emit a real gradient fill, and `renderOps`'s returned
 // patches now flow into `applyGradientFills` (pptx-generate.ts) — but this
 // file's `FakePptx.write()` returns a non-zip placeholder `Blob`, which
 // `applyGradientFills` (deliberately, unlike `dedupeMediaInZip`'s own call
 // site in generate.ts, wrapped in a try/catch) fails loud on rather than
-// swallowing. consulting's decor is solid-fill only (grid lines / a color
+// swallowing. brief's decor is solid-fill only (grid lines / a color
 // band, no gradients), so it keeps this file's generic wiring tests
 // (masterName/addSlide/blob-shape — not about any theme's rendering) clear
 // of that gradient-patch path entirely.
-function makeIR(slides: Slide[], themeId = "consulting"): PptxIR {
+function makeIR(slides: Slide[], themeId = "brief"): PptxIR {
   return {
     version: "5",
     filename: "test.pptx",

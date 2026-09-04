@@ -177,7 +177,7 @@ const BAND_META: Record<BandId, { label: string; question: string }> = {
  */
 function sectionBlurb(id: string, pages: readonly ManifestPage[]): string {
   if (id === UNSERVED_SECTION) {
-    return `没有任何主题菜单点过的 ${pages.length} 张注册版式，统一穿 ${pages[0]?.theme ?? "consulting"} 的皮各渲一页——它们还站不站得住？`
+    return `没有任何主题菜单点过的 ${pages.length} 张注册版式，统一穿 ${pages[0]?.theme ?? "brief"} 的皮各渲一页——它们还站不站得住？`
   }
   const counts = BAND_IDS.map((band) => ({ band, n: pages.filter((p) => p.band === band).length })).filter((b) => b.n > 0)
   return counts.map(({ band, n }) => `${BAND_META[band].label} ${n} 页`).join(" · ")

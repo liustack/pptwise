@@ -224,18 +224,18 @@ interface ComponentEntry {
  *
  * So each of the five is drawn once more the other way, beside the same
  * lead-in paragraph, on a theme whose face for that kind has the room. Not
- * the theme that ran out of it: `data_table` shares academic's `data` face
- * happily and cannot share consulting's, and `architecture` needs a
+ * the theme that ran out of it: `data_table` shares thesis's `data` face
+ * happily and cannot share brief's, and `architecture` needs a
  * `hierarchy` face that gives it the full width rather than
  * asymmetric-triptych's 424px side panel, which is crayon and runway.
  * Spacing against a neighbour stays under review, and the pairing stays
  * pinned at zero drops by `no-drops.test.mts` and the cross-language sweep.
  */
 export const ADJACENCY_PAGES: readonly { readonly component: string; readonly theme: string }[] = [
-  { component: "data_table", theme: "academic" },
-  { component: "row_cards", theme: "academic" },
-  { component: "paragraph", theme: "academic" },
-  { component: "flowchart", theme: "academic" },
+  { component: "data_table", theme: "thesis" },
+  { component: "row_cards", theme: "thesis" },
+  { component: "paragraph", theme: "thesis" },
+  { component: "flowchart", theme: "thesis" },
   { component: "architecture", theme: "crayon" },
 ]
 
@@ -278,7 +278,7 @@ export const STEP_ASIDE_PAGES: readonly {
   readonly face: string
   readonly component: string
 }[] = [
-  { theme: "consulting", kind: "data", face: "gauge-stats", component: "chart · bar" },
+  { theme: "brief", kind: "data", face: "gauge-stats", component: "chart · bar" },
   { theme: "runway", kind: "data", face: "show-figures", component: "rings" },
   { theme: "crayon", kind: "list", face: "crayonbox-cards", component: "people_cards" },
 ]

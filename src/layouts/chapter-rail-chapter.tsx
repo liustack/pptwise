@@ -10,15 +10,15 @@ import { accessibleOpacity, readableOn } from "../render/ink"
  * 通栏色块上（色块本身由 FullSlideSvg 按 theme 的
  * `defaultBackgrounds.chapter` 绘制，本文件不画背景），底部一条水平章节
  * 进度点轨（`totalChapters` 只有 1 时收起轨道线，只留单点）。自
- * templates/academic.tsx 的 `BCGEmeraldChapter`（235-328 行）提炼。随迁
+ * templates/thesis.tsx 的 `BCGEmeraldChapter`（235-328 行）提炼。随迁
  * helper：`CH_DOT_Y`/`CH_DOT_SPACING`（源文件 232-233 行的模块级私有常量，
- * grep 确认整个 academic.tsx 里只有本函数消费，随函数体一并复制为本文件
+ * grep 确认整个 thesis.tsx 里只有本函数消费，随函数体一并复制为本文件
  * 私有常量，不建公共 util）。
  *
  * Step A 复核（现状表标"烤色同款"，逐字核实后订正——十六进制值本身不抄进
  * 本注释，避免污染本文件的 grep 清零门，同 cover-left-anchor.tsx 先例）：
  * 对函数区间（235-328 行）grep 具名烤色常量，函数体内一次也没有出现
- * `DEEP_GREEN`/`EMERALD`/`TEXT`/`MUTED`/`HAIRLINE` 这些 academic.tsx
+ * `DEEP_GREEN`/`EMERALD`/`TEXT`/`MUTED`/`HAIRLINE` 这些 thesis.tsx
  * 模块级烤色常量，也没有任何 `ctx.colors.*` 消费——本函数唯一读取的 ctx
  * 字段是 `ctx.fonts.heading`。函数体内出现的颜色字面量只有一种取值
  * （代码里能看到的那个纯白字面量，出现 5 处：水印章节号 / 主标题 / 副标题
@@ -26,15 +26,15 @@ import { accessibleOpacity, readableOn } from "../render/ink"
  * 建立映射的具名烤色，**档位一・逐字节等价**。
  *
  * 对比度自适应修复（W4 fix round，Critical C1）：主标题/副标题原先写死纯白
- * ——假设章节默认背景总是深色。全集放开后该假设对 enterprise/
- * heritage/ink/journal/runway 六个浅底章节主题不成立（runway/enterprise 精确
+ * ——假设章节默认背景总是深色。全集放开后该假设对 bulletin/
+ * heritage/ink/journal/runway 六个浅底章节主题不成立（runway/bulletin 精确
  * 1.00:1，白字压白底完全不可见。其余四个 1.05-1.14:1，米白/浅棕底同样远低于
- * 3:1 门槛）——同一缺陷模式已在 design decision 8 的台账记录过（consulting×
- * masthead-chapter、tech×left-anchor/banner-heading）。改用 `readableOn(ctx.
+ * 3:1 门槛）——同一缺陷模式已在 design decision 8 的台账记录过（brief×
+ * masthead-chapter、terminal×left-anchor/banner-heading）。改用 `readableOn(ctx.
  * defaultBg)`：`ctx.defaultBg` 就是 FullSlideSvg 实际画在本页背后的那个
  * `defaultBackgrounds.chapter` 色（见 `ComponentCtx` 自己的文档），
- * `readableOn` 按其明度选中性黑/白——对本来就深色的七个章节底（academic/
- * campaign/classroom/consulting/insight/luxe/tech）算出的仍是白色，是同一个
+ * `readableOn` 按其明度选中性黑/白——对本来就深色的七个章节底（thesis/
+ * rally/homeroom/brief/ledger/luxe/terminal）算出的仍是白色，是同一个
  * 字面量，输出不变。水印章节号（0.05-0.06 透明度）与进度轨道/进度点两类装饰
  * 元素保留原样纯白字面量——不是本次缺陷范围（低透明度已被审计的
  * `DECORATIVE_ALPHA` 豁免，从未被判定不可读），改动面收在 heading/subheading
@@ -47,8 +47,8 @@ import { accessibleOpacity, readableOn } from "../render/ink"
  * `headingLastY + 46` 这个与字号无关的定值，在本版式实际渲染的 84px 标题下
  * 只留 6px 墨隙（用户在 `theme--ink--zh--p02` 上点名"副标题距离上面的大标题
  * 那么近"）。定值换成 `subheadingDrop()` 这个纯函数，推导见它自身的注释。
- * 本条属共享版式（campaign/classroom/enterprise/heritage/ink/luxe/
- * tech/terra 九家 chapter 页共用），修一次九家同时受益，不是 ink 专属补丁。
+ * 本条属共享版式（rally/homeroom/bulletin/heritage/ink/luxe/
+ * terminal/almanac 九家 chapter 页共用），修一次九家同时受益，不是 ink 专属补丁。
  *
  * 纪律：本文件禁 theme id、禁颜色 hex 字面量——唯一豁免是水印/进度轨/进度点
  * 三类装饰元素的纯白字面量（代码里的 3 处 `fill`/`stroke`），grep 清零门
@@ -57,7 +57,7 @@ import { accessibleOpacity, readableOn } from "../render/ink"
  */
 
 // Horizontal chapter-progress dot row's fixed y and per-dot spacing. Ported
-// verbatim from templates/academic.tsx module scope (232-233 行)——only
+// verbatim from templates/thesis.tsx module scope (232-233 行)——only
 // BCGEmeraldChapter consumed them there, so they move here as file-private
 // constants rather than staying module-level in the shared templates file.
 const CH_DOT_Y = 600
@@ -128,12 +128,12 @@ export function RailChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
     ? headingLastY + subheadingDrop(heading.fontSize, subheading.fontSize)
     : headingLastY
   // Dimmed subheading tier (0.7 opacity for visual hierarchy under the
-  // heading) — W4 fix round: classroom's chapter background (#6E8E9E) gives
+  // heading) — W4 fix round: homeroom's chapter background (#6E8E9E) gives
   // `ink` only 3.48:1 at full opacity to begin with (comfortably >=3, but
   // the *tightest* margin of any theme this layout's white ink already
   // covered), and blending it toward that background at 0.7 alpha drops the
   // rendered ratio to ~2.53:1 — a real, pre-existing gap (present since
-  // before this fix round; classroom's rail-chapter pairing was already
+  // before this fix round; homeroom's rail-chapter pairing was already
   // curated pre-W4) that `accessibleOpacity` catches by verifying the
   // *blended* result, not just `ink`'s own full-opacity ratio.
   const subheadingOpacity = subheading

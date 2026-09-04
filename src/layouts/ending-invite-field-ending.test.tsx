@@ -99,7 +99,7 @@ describe("ending-invite-field-ending — board geometry", () => {
   })
 
   it("uses tokens, not a baked heritage hex, when another theme draws it", () => {
-    const { root, tokens, markup } = renderEnding("tech")
+    const { root, tokens, markup } = renderEnding("terminal")
     expect(root.querySelector("rect[width='1280']")?.getAttribute("fill")).toBe(tokens.colors.primary)
     expect(markup).not.toContain("#6E1F2A")
     expect(markup).not.toContain("#B8742C")

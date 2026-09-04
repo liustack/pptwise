@@ -1,7 +1,7 @@
 {
   "version": "5",
   "filename": "fixture-fx96",
-  "theme": { "id": "consulting" },
+  "theme": { "id": "brief" },
   "assets": { "images": { "pic": { "src": "assets/pic.png" } } },
   "slides": [
     {

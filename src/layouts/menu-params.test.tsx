@@ -3,7 +3,7 @@ import { render } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 import type { PptxIR, Slide } from "@/ir"
 import { FullSlideSvg } from "../render/full-slide-svg"
-import { CONSULTING_TOKENS } from "../themes/builtin/consulting"
+import { CONSULTING_TOKENS } from "../themes/builtin/brief"
 import { __resetRegisteredThemes, registerTheme } from "../themes/definitions"
 import type { Menu } from "../themes/schema"
 

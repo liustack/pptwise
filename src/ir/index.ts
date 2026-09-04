@@ -82,20 +82,20 @@ export { KIND_VALUES }
 // below is an open z.string(), the installed-theme check lives in
 // api.ts validateIr).
 export const BUILTIN_THEME_IDS = [
-  "consulting",
-  "enterprise",
-  "academic",
-  "insight",
-  "campaign",
-  "classroom",
+  "brief",
+  "bulletin",
+  "thesis",
+  "ledger",
+  "rally",
+  "homeroom",
   "ink",
-  "tech",
+  "terminal",
   "runway",
   "journal",
   "luxe",
   "heritage",
-  "pulse",
-  "terra",
+  "clinic",
+  "almanac",
   "ember",
   "vermilion",
   "crayon",
@@ -150,7 +150,7 @@ const BackgroundSpecSchema = z.discriminatedUnion("kind", [
  */
 export const BrandConfigSchema = z
   .object({
-    /** Suppress the footer entirely on content slides with a card background (enterprise legacy semantics). */
+    /** Suppress the footer entirely on content slides with a card background (bulletin legacy semantics). */
     suppressFooterOnCardContent: z.boolean().optional(),
     /** Skip the footer divider line — for themes that draw their own frame (ink). */
     suppressFooterRule: z.boolean().optional(),

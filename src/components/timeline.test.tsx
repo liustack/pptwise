@@ -71,7 +71,7 @@ describe("timeline component", () => {
     // Dates are accent-colored *when the accent is readable on the page*.
     // This ctx's accent (#00A878 on white, ~2.6:1) is not, so `accessibleInk`
     // substitutes a readable ink — the 2026-08-15 visual review found the
-    // unsubstituted version rendering date labels at 1.45:1 on consulting,
+    // unsubstituted version rendering date labels at 1.45:1 on brief,
     // whose accent is a light yellow. The date is content a reader is meant
     // to read, not decoration, so it takes the content floor.
     const dateTexts = Array.from(texts).filter((t) => t.textContent === "2024-01" || t.textContent === "2024-06" || t.textContent === "2024-12")
@@ -87,7 +87,7 @@ describe("timeline component", () => {
   })
 
   it("uses muted ink for horizontal dates and the quiet primary for unmarked dots", () => {
-    const themeCtx = buildCtx(resolveStyle("enterprise"), {})
+    const themeCtx = buildCtx(resolveStyle("bulletin"), {})
     const { container } = svg(
       timeline.render(component, { x: 0, y: 0, w: 1000 }, themeCtx),
     )
@@ -116,7 +116,7 @@ describe("timeline component", () => {
     // `highlight` is one field with one meaning. The horizontal row read it
     // nowhere: every dot came out the same size and the same color, so the
     // turn an author marked reached the page as nothing at all.
-    const themeCtx = buildCtx(resolveStyle("consulting"), {})
+    const themeCtx = buildCtx(resolveStyle("brief"), {})
     const milestones = [
       { date: "第一季度", title: "基线" },
       { date: "第二季度", title: "转折", highlight: true },
@@ -209,7 +209,7 @@ describe("timeline component", () => {
     })
 
     it("keeps the highlight on the dot while its date and title share the theme text ink", () => {
-      const themeCtx = buildCtx(resolveStyle("consulting"), {})
+      const themeCtx = buildCtx(resolveStyle("brief"), {})
       const highlighted = {
         type: "timeline" as const,
         layout: "vertical" as const,

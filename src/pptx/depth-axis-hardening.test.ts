@@ -67,7 +67,7 @@ function baseIr(overrides: Record<string, any> = {}): PptxIR {
   return {
     version: "5",
     filename: "depth-axis-hardening-fixture",
-    theme: { id: "consulting" },
+    theme: { id: "brief" },
     meta: {},
     assets: { images: {} },
     slides: [{ type: "cover", heading: "Cover" }, { type: "ending", heading: "Thanks" }],

@@ -507,25 +507,25 @@ describe("buildContactSheetHtml", () => {
       title: "cli-test",
       themes: [
         {
-          id: "consulting",
+          id: "brief",
           slides: [
-            { type: "cover", svg: cell("cover-consulting") },
-            { type: "content", svg: cell("content-consulting") },
+            { type: "cover", svg: cell("cover-brief") },
+            { type: "content", svg: cell("content-brief") },
           ],
         },
         {
-          id: "tech",
+          id: "terminal",
           slides: [
-            { type: "cover", svg: cell("cover-tech") },
-            { type: "content", svg: cell("content-tech") },
+            { type: "cover", svg: cell("cover-terminal") },
+            { type: "content", svg: cell("content-terminal") },
           ],
         },
       ],
     })
-    expect(html).toContain("consulting")
-    expect(html).toContain("tech")
-    expect(html).toContain("cover-consulting")
-    expect(html).toContain("content-tech")
+    expect(html).toContain("brief")
+    expect(html).toContain("terminal")
+    expect(html).toContain("cover-brief")
+    expect(html).toContain("content-terminal")
     expect((html.match(/<svg\b/g) ?? []).length).toBe(4)
     expect(html).toContain("<style")
     expect(html).not.toMatch(/<img\b[^>]*\ssrc=/)
@@ -540,18 +540,18 @@ describe("buildContactSheetHtml", () => {
       title: "kinds",
       themes: [
         {
-          id: "consulting",
+          id: "brief",
           slides: [
-            { type: "content", label: "points", svg: cell("points-consulting") },
-            { type: "content", label: "list", svg: cell("list-consulting") },
+            { type: "content", label: "points", svg: cell("points-brief") },
+            { type: "content", label: "list", svg: cell("list-brief") },
           ],
         },
       ],
     })
     expect(html).toContain("points")
     expect(html).toContain("list")
-    expect(html).toContain("points-consulting")
-    expect(html).toContain("list-consulting")
+    expect(html).toContain("points-brief")
+    expect(html).toContain("list-brief")
     expect((html.match(/<svg\b/g) ?? []).length).toBe(2)
   })
 })

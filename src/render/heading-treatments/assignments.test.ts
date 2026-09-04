@@ -14,17 +14,17 @@ type AssignmentRow = {
 
 const ASSIGNMENTS: AssignmentRow[] = [
   {
-    themeId: "consulting",
+    themeId: "brief",
     treatment: "ghost_index",
     knobs: { indexStyle: "ghost-bleed", noTitleAnchor: "mini-index" },
   },
   {
-    themeId: "tech",
+    themeId: "terminal",
     treatment: "ghost_index",
     knobs: { indexStyle: "stroke-corner", noTitleAnchor: "mini-index" },
   },
   {
-    themeId: "insight",
+    themeId: "ledger",
     treatment: "baseline",
     knobs: { rule: "hairline", rightSlot: "none", noTitleAnchor: "none" },
   },
@@ -44,7 +44,7 @@ const ASSIGNMENTS: AssignmentRow[] = [
     knobs: { box: "solid-invert", chapterLabel: "act" },
   },
   {
-    themeId: "enterprise",
+    themeId: "bulletin",
     treatment: "tag_box",
     knobs: { box: "solid-primary", chapterLabel: "part" },
   },
@@ -54,12 +54,12 @@ const ASSIGNMENTS: AssignmentRow[] = [
     knobs: { box: "hud-brackets", chapterLabel: "round" },
   },
   {
-    themeId: "academic",
+    themeId: "thesis",
     treatment: "lead_accent",
     knobs: { accentStyle: "typeface-shift", tail: "none", noTitleAnchor: "none" },
   },
   {
-    themeId: "terra",
+    themeId: "almanac",
     treatment: "lead_accent",
     knobs: { accentStyle: "color", tail: "olive-rule", noTitleAnchor: "none" },
   },
@@ -99,7 +99,7 @@ const ASSIGNMENTS: AssignmentRow[] = [
     knobs: { mirror: "hairline", diamond: true, chapterLabel: "chapter", noTitleAnchor: "none" },
   },
   {
-    themeId: "campaign",
+    themeId: "rally",
     treatment: "center_mirror",
     knobs: { mirror: "bar", diamond: false, chapterLabel: "act", noTitleAnchor: "none" },
   },
@@ -113,14 +113,14 @@ const ASSIGNMENTS: AssignmentRow[] = [
 describe("resolveHeadingTreatment", () => {
   describe("unassigned / missing themeId → undefined", () => {
     it.each([
-      "classroom",
+      "homeroom",
       "swiss",
       "stage",
       "memo",
       "crayon",
       "ember",
       "runway",
-      "pulse",
+      "clinic",
       "unknown",
     ] as const)("%s → undefined", (themeId) => {
       expect(resolveHeadingTreatment(themeId)).toBeUndefined()
@@ -150,9 +150,9 @@ describe("resolveHeadingTreatment", () => {
     })
   })
 
-  it("classroom is not in the table", () => {
-    expect(resolveHeadingTreatment("classroom")).toBeUndefined()
-    expect(assignedThemeIds()).not.toContain("classroom")
+  it("homeroom is not in the table", () => {
+    expect(resolveHeadingTreatment("homeroom")).toBeUndefined()
+    expect(assignedThemeIds()).not.toContain("homeroom")
   })
 
   it("assignment count is 16", () => {

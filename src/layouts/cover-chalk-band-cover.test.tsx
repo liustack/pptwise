@@ -57,7 +57,7 @@ function textPaint(el: Element): string {
 
 describe("cover-chalk-band-cover — board geometry", () => {
   it("paints an inset primary chalk band and inverted title at the board coordinates", () => {
-    const { root, tokens } = renderCover("classroom")
+    const { root, tokens } = renderCover("homeroom")
     const band = Array.from(root.querySelectorAll("rect")).find(
       (r) => r.getAttribute("width") === "1088" && r.getAttribute("height") === "176",
     )
@@ -76,7 +76,7 @@ describe("cover-chalk-band-cover — board geometry", () => {
   })
 
   it("places the inverted subtitle inside the band, not under it", () => {
-    const { root, tokens } = renderCover("classroom")
+    const { root, tokens } = renderCover("homeroom")
     const sub = Array.from(root.querySelectorAll("text")).find((t) =>
       (t.textContent ?? "").includes("抛物线"),
     )
@@ -87,7 +87,7 @@ describe("cover-chalk-band-cover — board geometry", () => {
   })
 
   it("places the organization kicker above the band without CJK tracking", () => {
-    const { root } = renderCover("classroom")
+    const { root } = renderCover("homeroom")
     const kicker = Array.from(root.querySelectorAll("text")).find((t) =>
       (t.textContent ?? "").includes("高一数学"),
     )
@@ -98,7 +98,7 @@ describe("cover-chalk-band-cover — board geometry", () => {
   })
 
   it("paints the lesson/focus row under the band, with **emphasis** in accent", () => {
-    const { root, tokens, ctx } = renderCover("classroom")
+    const { root, tokens, ctx } = renderCover("homeroom")
     const paper = ctx.defaultBg ?? tokens.colors.bg
     const focus = Array.from(root.querySelectorAll("text")).find((t) =>
       (t.textContent ?? "").includes("第 3 课时"),
@@ -113,7 +113,7 @@ describe("cover-chalk-band-cover — board geometry", () => {
   })
 
   it("places the author row at the board foot and does not invent a 授课 prefix", () => {
-    const { root, markup } = renderCover("classroom")
+    const { root, markup } = renderCover("homeroom")
     const author = Array.from(root.querySelectorAll("text")).find((t) =>
       (t.textContent ?? "").includes("程雨桐"),
     )
@@ -124,7 +124,7 @@ describe("cover-chalk-band-cover — board geometry", () => {
   })
 
   it("does not draw a clay wave or a top-right band mark", () => {
-    const { root } = renderCover("classroom")
+    const { root } = renderCover("homeroom")
     expect(root.querySelectorAll("path")).toHaveLength(0)
     const mark = Array.from(root.querySelectorAll("rect")).find(
       (r) => r.getAttribute("width") === "26" && r.getAttribute("height") === "26",
@@ -133,7 +133,7 @@ describe("cover-chalk-band-cover — board geometry", () => {
   })
 
   it("does not invent cover copy when heading is empty", () => {
-    const { markup } = renderCover("classroom", slide("", { heading: "", subheading: "" }), {
+    const { markup } = renderCover("homeroom", slide("", { heading: "", subheading: "" }), {
       organization: "高一数学 · 必修一",
     })
     expect(markup).not.toContain("二次函数")
@@ -178,11 +178,11 @@ describe("cover-chalk-band-cover — shared pool", () => {
     }
   })
 
-  it("uses tokens, not a baked classroom hex, when another theme borrows it", () => {
-    const { markup, tokens } = renderCover("tech")
+  it("uses tokens, not a baked homeroom hex, when another theme borrows it", () => {
+    const { markup, tokens } = renderCover("terminal")
     expect(markup).toContain(tokens.colors.primary)
     for (const hex of CLASSROOM_HEX) {
-      expect(markup, `classroom token ${hex} leaked`).not.toContain(hex)
+      expect(markup, `homeroom token ${hex} leaked`).not.toContain(hex)
     }
   })
 
@@ -193,11 +193,11 @@ describe("cover-chalk-band-cover — shared pool", () => {
   })
 
   it("renders byte-identically on repeat", () => {
-    expect(renderCover("classroom").markup).toBe(renderCover("classroom").markup)
+    expect(renderCover("homeroom").markup).toBe(renderCover("homeroom").markup)
   })
 
   it("CJK title has no letter-spacing", () => {
-    const { root } = renderCover("classroom")
+    const { root } = renderCover("homeroom")
     for (const t of Array.from(root.querySelectorAll("text")).filter(
       (el) => el.getAttribute("font-weight") === "700",
     )) {

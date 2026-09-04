@@ -12,7 +12,7 @@ import { leafRecessOpacity } from "./decor-budget"
  *     `.issues/design-boards/wave8/b3/Terra.dc.html` 封面抄，stroke 走
  *     `border`（层注：border 色细线），1.5px，包一个 DecorPiece。
  *
- * chapter 继续完全退让（`return null`）：terra 的 chapter 默认底色是整版
+ * chapter 继续完全退让（`return null`）：almanac 的 chapter 默认底色是整版
  * primary 橄榄，等高线是 border 色，画上去看不见。第八波章节板也是「零
  * 装饰」。封面 / 内容 / ending 画同一张。
  *
@@ -27,7 +27,7 @@ import { leafRecessOpacity } from "./decor-budget"
  *   - 右缘种子点退役后，右上 logo 盒不再被本 motif 碰到。
  *
  * 位置全部写死，不读内容、不随 seed 变。纪律：零 theme id、零 hex，颜色
- * 只来自 ctx。本 motif 是 terra 独占的单成员候选集。
+ * 只来自 ctx。本 motif 是 almanac 独占的单成员候选集。
  */
 
 const CONTOURS: readonly string[] = [

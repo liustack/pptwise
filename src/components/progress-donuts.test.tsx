@@ -40,7 +40,7 @@ function parseArcEnd(d: string): { ex: number; ey: number; large: number } {
 function deck(component: Component): unknown {
   return {
     version: "5",
-    theme: { id: "consulting" },
+    theme: { id: "brief" },
     slides: [{ type: "content", kind: "data", heading: "rates", components: [component] }],
   }
 }

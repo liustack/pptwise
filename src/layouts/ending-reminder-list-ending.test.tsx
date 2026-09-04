@@ -110,7 +110,7 @@ describe("ending-reminder-list-ending — board geometry", () => {
   })
 
   it("uses tokens, not baked crayon hex, when another theme draws it", () => {
-    const { markup, root, tokens } = renderEnding("tech")
+    const { markup, root, tokens } = renderEnding("terminal")
     expect(markup).toContain(tokens.colors.text)
     const bg = resolveBackgroundHex(tokens.defaultBackgrounds.ending, tokens.colors.surface)
     const foot = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === CONTACT)

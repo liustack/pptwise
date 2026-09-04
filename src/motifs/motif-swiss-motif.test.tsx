@@ -194,13 +194,13 @@ describe("SwissMotif（冷白制度页缘）", () => {
   })
 
   it("换一家 tokens 渲染时颜色跟着换，swiss 的色一处不残留", () => {
-    const academic = resolveStyle("academic")
-    const ctx = buildCtx(academic, {})
-    const { markup } = render(<SwissMotif ir={ir("academic")} slide={coverSlide} ctx={ctx} />)
-    expect(markup).toContain(academic.colors.accent)
-    expect(markup).toContain(academic.colors.muted)
+    const thesis = resolveStyle("thesis")
+    const ctx = buildCtx(thesis, {})
+    const { markup } = render(<SwissMotif ir={ir("thesis")} slide={coverSlide} ctx={ctx} />)
+    expect(markup).toContain(thesis.colors.accent)
+    expect(markup).toContain(thesis.colors.muted)
     for (const hex of ["#F7F7F5", "#101010", "#D7282F", "#5F5F5C", "#E3E3E0", "#4A7A8A", "#C41F26"]) {
-      expect(markup, `swiss token ${hex} leaked into the academic render`).not.toContain(hex)
+      expect(markup, `swiss token ${hex} leaked into the thesis render`).not.toContain(hex)
     }
   })
 

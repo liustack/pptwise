@@ -834,7 +834,7 @@ function parkEdgeLabel(
   // vertex — a long way inside its own bounding box. Centring on that
   // segment parks a decision node's outgoing label on the diamond's card,
   // every candidate is rejected for node overlap, and a label the drawing
-  // has room for is declared dropped instead (consulting's English and
+  // has room for is declared dropped instead (brief's English and
   // mixed `process` pages). Measuring the free span between the two cards
   // puts it where it belongs. Only reached when the ordinary placement
   // found nothing, so every drawing that already parks its labels is

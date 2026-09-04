@@ -85,7 +85,7 @@ function assertInsideBox(container: HTMLElement, w: number, h: number, slack = 2
 // title and description, in columns. No card shell, no accent bar.
 describe("icon_cards component", () => {
   it("draws one circled icon node per item and no card shell", () => {
-    const ctx = themeCtx("terra")
+    const ctx = themeCtx("almanac")
     const { container } = svg(iconCards.render(four, BOX, ctx))
     const nodes = nodeCircles(container)
     expect(nodes).toHaveLength(4)
@@ -111,14 +111,14 @@ describe("icon_cards component", () => {
         .map((el) => el.tagName.toLowerCase())
         .join(",")
     }
-    const baseline = shapesOf("terra")
+    const baseline = shapesOf("almanac")
     for (const id of CANONICAL_THEME_IDS) {
       expect(shapesOf(id), id).toBe(baseline)
     }
   })
 
   it("renders an icon, a title, and description text for every item", () => {
-    const { container } = svg(iconCards.render(four, BOX, themeCtx("terra")))
+    const { container } = svg(iconCards.render(four, BOX, themeCtx("almanac")))
     const texts = Array.from(container.querySelectorAll("text")).map((t) => t.textContent)
     for (const item of four.items) {
       expect(texts).toContain(item.title)
@@ -134,7 +134,7 @@ describe("icon_cards component", () => {
     // Adding `box.x`/`box.y` back in made the declaration mean something
     // different from the ink under it the moment a layout wrapper scaled or
     // moved the whole component.
-    const { container } = svg(iconCards.render(four, BOX, themeCtx("terra")))
+    const { container } = svg(iconCards.render(four, BOX, themeCtx("almanac")))
     const boxes = Array.from(container.querySelectorAll("[data-audit-box]")).map((el) =>
       (el.getAttribute("data-audit-box") ?? "").split(",").map(Number),
     )
@@ -159,7 +159,7 @@ describe("icon_cards component", () => {
         card(`一个相当长的断言标题第${i + 1}条`, "这一句说明写得比一般情况长一些，用来把换行与缩字都逼出来。"),
       ),
     }
-    const { container } = svg(iconCards.render(wordy, BOX, themeCtx("terra")))
+    const { container } = svg(iconCards.render(wordy, BOX, themeCtx("almanac")))
     for (const t of Array.from(container.querySelectorAll("text"))) {
       if (isInsideScaledIcon(t)) continue
       expect(Number(t.getAttribute("font-size")), `"${t.textContent}"`).toBeGreaterThanOrEqual(FORM_BODY_FLOOR)
@@ -167,7 +167,7 @@ describe("icon_cards component", () => {
   })
 
   it("6 items stay inside the box on every theme", () => {
-    for (const id of ["terra", "tech", "academic", "swiss", "lecture"] as const) {
+    for (const id of ["almanac", "terminal", "thesis", "swiss", "lecture"] as const) {
       const ctx = themeCtx(id)
       const h = iconCards.measure(six, BOX.w, ctx)
       const { container } = svg(iconCards.render(six, { ...BOX, h }, ctx))
@@ -176,13 +176,13 @@ describe("icon_cards component", () => {
   })
 
   it("stays within the controlled SVG subset", () => {
-    const markup = markupOf(iconCards.render(six, BOX, themeCtx("terra")))
+    const markup = markupOf(iconCards.render(six, BOX, themeCtx("almanac")))
     expect(markup).not.toContain("foreignObject")
     expect(() => assertSubset(parseSvgRoot(markup))).not.toThrow()
   })
 
   it("degrades without throwing when an item names no icon", () => {
-    const ctx = themeCtx("terra")
+    const ctx = themeCtx("almanac")
     const emptyIcon = {
       type: "icon_cards" as const,
       items: [
@@ -195,7 +195,7 @@ describe("icon_cards component", () => {
   })
 
   it("draws every icon in the catalog without leaving the subset", () => {
-    const ctx = themeCtx("terra")
+    const ctx = themeCtx("almanac")
     for (const name of PPTX_ICON_NAMES.slice(0, 40)) {
       const one = { type: "icon_cards" as const, items: [{ icon: name, title: name, text: "说明" }] }
       const markup = markupOf(iconCards.render(one, BOX, ctx))

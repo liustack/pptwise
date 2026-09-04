@@ -6,7 +6,7 @@ import { fitEmphasisHeading, fitEmphasisLine, headingEmphasisPaint, renderEmphas
 import { accessibleInk, metaInk } from "../render/ink"
 
 /**
- * stroke-index-chapter（第八波 tech 板，新 pinOnly）：描边空心序号 + 底规线
+ * stroke-index-chapter（第八波 terminal 板，新 pinOnly）：描边空心序号 + 底规线
  * 青段示进度。装饰计数 = 2（空心序号一件，底规线与青段共一件）。
  *
  * 构图抄 `.issues/design-boards/wave8/b1/Tech.dc.html` 章节：序号 y316 /

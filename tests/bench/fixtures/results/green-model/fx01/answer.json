@@ -1,7 +1,7 @@
 {
   "version": "5",
   "filename": "fixture-fx01",
-  "theme": { "id": "consulting" },
+  "theme": { "id": "brief" },
   "slides": [
     { "type": "cover", "heading": "Fixture One", "subheading": "clean bare IR" },
     {

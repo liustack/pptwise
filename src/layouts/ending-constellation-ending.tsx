@@ -9,10 +9,10 @@ import { showsDocumentMeta } from "../render/document-meta"
  * constellation-ending layout（spec §3.2）：底部收束的大号"Thank you."式
  * 标题（末尾句号单独染 accent 色）+ 可选副题 + 短 accent 签名条 + 居中机构/联系
  * 方式/日期元信息，呼应 constellation cover/chapter 同一"星座科技"气质。自
- * templates/tech.tsx 的 `BentoTechEnding`（实测边界 1183-1339 行，brief 给的
+ * templates/terminal.tsx 的 `BentoTechEnding`（实测边界 1183-1339 行，brief 给的
  * 1183-1404 含了其后的 Decor 注释块，Step A 复核后收窄）提炼。
  *
- * 随迁 helper：`splitTrailingPeriod`（tech.tsx 1174-1180 行，私有复制，函数
+ * 随迁 helper：`splitTrailingPeriod`（terminal.tsx 1174-1180 行，私有复制，函数
  * 体本身与颜色无关，纯字符串处理，逐字符原样迁移，未改一处逻辑；defect C 修复
  * 时泛化为同时识别 ASCII "."，理由见函数自己的注释）——用于把结束标题末尾的
  * 句号拆出来单独渲染为 accent 色的 tspan。
@@ -24,7 +24,7 @@ import { showsDocumentMeta } from "../render/document-meta"
  * 或 `BentoTechDecor`，不属于本函数）——本函数体内没有星座点位/光晕环渲染，
  * 因此本任务无常量需要随迁，仅 `splitTrailingPeriod` 一项。
  *
- * 替换表（Step B，逐十六进制核实，对照 themes/tech.ts 的 colors）：
+ * 替换表（Step B，逐十六进制核实，对照 themes/terminal.ts 的 colors）：
  * Step A 对函数区间（1174-1339 行）grep 未命中任何 `#XXXXXX` 字面量或 theme
  * id 字符串——源函数体已直接消费 `ctx.colors`/`ctx.fonts`
  * （`colors.text`/`colors.accent`/`colors.muted`），无烤死颜色常量，无孤儿
@@ -43,7 +43,7 @@ import { showsDocumentMeta } from "../render/document-meta"
  * 纪律：本文件禁 theme id、禁颜色 hex 字面量。
  */
 
-// Ported from templates/tech.tsx（1174-1180 行）— pure string helper, no
+// Ported from templates/terminal.tsx（1174-1180 行）— pure string helper, no
 // color/theme dependency. Splits a trailing period off a line of text so the
 // Ending heading's closing punctuation can render in accent color while the
 // rest of the line stays `colors.text`. Generalized (defect C fix) to
@@ -161,7 +161,7 @@ export function ConstellationEnding({ ir, slide, ctx, page }: SvgTemplateProps) 
         // falling back to a generic near-black instead of the heading's own
         // ink would visibly split one sentence into two different darks on
         // any theme whose `colors.text` isn't already near-black (
-        // classroom `#48545C`, ember `#26221E`, ...). Falling
+        // homeroom `#48545C`, ember `#26221E`, ...). Falling
         // back to `colors.text` keeps the sentence visually one piece, and
         // is always safe: every theme's `colors.text` is calibrated to
         // clear 4.5:1 against its own `colors.bg`, comfortably above this
@@ -170,13 +170,13 @@ export function ConstellationEnding({ ir, slide, ctx, page }: SvgTemplateProps) 
         //
         // A real 16-theme sweep (`deck-audit.test.ts`'s own
         // "constellation-ending accent period contrast" block) found 7
-        // themes below the floor on the raw accent fill — consulting
-        // (1.45:1), academic (2.92:1), classroom (2.09:1),
-        // heritage (2.61:1), pulse (1.94:1), ember (1.57:1) — all seven now
+        // themes below the floor on the raw accent fill — brief
+        // (1.45:1), thesis (2.92:1), homeroom (2.09:1),
+        // heritage (2.61:1), clinic (1.94:1), ember (1.57:1) — all seven now
         // fall back to their own `colors.text` (not a shared neutral ink,
         // and not identical to each other — see the fix commit message for
         // the per-theme old→new fill table). The other 9
-        // (enterprise/insight/campaign/ink/tech/runway/journal/luxe/terra)
+        // (bulletin/ledger/rally/ink/terminal/runway/journal/luxe/almanac)
         // already cleared 3:1 and render byte-identical accent fills.
         const { rest, period } = splitTrailingPeriod(line)
         const periodFill =

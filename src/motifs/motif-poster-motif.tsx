@@ -4,7 +4,7 @@ import { leafRecessOpacity } from "./decor-budget"
 import { yieldsOnSparseFace } from "./branded-frame"
 
 /**
- * poster-motif —— insight 的行情语汇（2026-08-22 第八波批 1 演化）：
+ * poster-motif —— ledger 的行情语汇（2026-08-22 第八波批 1 演化）：
  * 顶缘行情带、刻度齿、封面 430px 幽灵季字全部退役。留下的是板上那根
  * **底缘暗线**（Catmull-Rom 三次贝塞尔 path，stroke 走 border，中景普通装饰）。
  * 深底上 border 满不透明大约 1.4:1，对比上限抓不到，看起来却像地平线，
@@ -35,7 +35,7 @@ const FOOT_POINTS: readonly (readonly [number, number])[] = [
 ]
 
 const STROKE = 2
-/** Designed fade. Full-opacity border on insight's dark ground is only ~1.4:1, so the 3:1 ceiling cannot catch it, yet the line still reads as a horizon. */
+/** Designed fade. Full-opacity border on ledger's dark ground is only ~1.4:1, so the 3:1 ceiling cannot catch it, yet the line still reads as a horizon. */
 const BASELINE_OPACITY = 0.4
 
 function pathCoord(n: number): number {

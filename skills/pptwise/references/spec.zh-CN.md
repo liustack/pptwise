@@ -46,7 +46,7 @@ pptwise themes --json
 先按场合筛选，再按视觉个性强度筛选。用固定样张比较 2 到 4 个候选：
 
 ```bash
-pptwise theme try consulting,swiss,memo
+pptwise theme try brief,swiss,memo
 ```
 
 `theme try` 用每个候选渲染同一份固定样张 deck。只有这里会在不绑定 deck 的情况下比较主题。按图选，不要只看名字。
@@ -54,13 +54,13 @@ pptwise theme try consulting,swiss,memo
 创建就是拷贝。即使从出厂预设开始，也优先创建工作区自有主题：
 
 ```bash
-pptwise theme new --from consulting --id acme-report
+pptwise theme new --from brief --id acme-report
 ```
 
 有 Office 主题或模板时，先按场合选择菜单来源，再把配色与字体抽进一个完整的 v2 文件：
 
 ```bash
-pptwise brand extract corp.pptx -o themes/acme.theme.json --from consulting
+pptwise brand extract corp.pptx -o themes/acme.theme.json --from brief
 ```
 
 已有主题要改色时，fork 它。fork 保持菜单逐字节相同，并重新派生整套配色：
@@ -84,24 +84,24 @@ pptwise theme fork acme --primary '#0B5FFF' --id acme-blue
 
 | id | label | occasions | identity | 菜单词数 | 提供的 kind |
 | --- | --- | --- | --- | ---: | --- |
-| `consulting` | Business Consulting | business | medium | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `fact`, `evidence`, `hierarchy` |
-| `enterprise` | Enterprise | business, institutional | low | 7 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `hierarchy` |
-| `academic` | Academic | education | medium | 11 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `quote`, `fact`, `evidence`, `hierarchy` |
-| `insight` | Financial Insight | finance | medium | 9 | `points`, `list`, `comparison`, `process`, `data`, `statement`, `quote`, `fact`, `hierarchy` |
-| `campaign` | Marketing Campaign | marketing, event | high | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `fact`, `evidence`, `hierarchy` |
-| `classroom` | Classroom | education | medium | 7 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `hierarchy` |
+| `brief` | Brief | business | medium | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `fact`, `evidence`, `hierarchy` |
+| `bulletin` | Bulletin | business, institutional | low | 7 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `hierarchy` |
+| `thesis` | Thesis | education | medium | 11 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `quote`, `fact`, `evidence`, `hierarchy` |
+| `ledger` | Ledger | finance | medium | 9 | `points`, `list`, `comparison`, `process`, `data`, `statement`, `quote`, `fact`, `hierarchy` |
+| `rally` | Rally | marketing, event | high | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `fact`, `evidence`, `hierarchy` |
+| `homeroom` | Homeroom | education | medium | 7 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `hierarchy` |
 | `ink` | Ink Wash | culture | high | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `quote`, `fact`, `hierarchy` |
-| `tech` | Tech | tech | medium | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `fact`, `evidence`, `hierarchy` |
-| `runway` | Fashion Runway | fashion | high | 7 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement` |
+| `terminal` | Terminal | tech | medium | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `fact`, `evidence`, `hierarchy` |
+| `runway` | Runway | fashion | high | 7 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement` |
 | `journal` | Editorial Journal | editorial | medium | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `quote`, `fact`, `hierarchy` |
 | `luxe` | Luxe | luxury, event | high | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `quote`, `fact`, `hierarchy` |
 | `heritage` | Heritage | culture, luxury | medium | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `quote`, `fact`, `hierarchy` |
-| `pulse` | Health & Life Science | health | medium | 7 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `hierarchy` |
-| `terra` | Sustainability & ESG | sustainability | medium | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `fact`, `evidence`, `hierarchy` |
-| `ember` | Startup Pitch | startup | high | 7 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `hierarchy` |
+| `clinic` | Clinic | health | medium | 7 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `hierarchy` |
+| `almanac` | Almanac | sustainability | medium | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `fact`, `evidence`, `hierarchy` |
+| `ember` | Ember | startup | high | 7 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `hierarchy` |
 | `vermilion` | Official Report | government, institutional | low | 9 | `points`, `list`, `comparison`, `process`, `data`, `statement`, `fact`, `evidence`, `hierarchy` |
-| `crayon` | Kids Education | kids, education | high | 6 | `points`, `list`, `comparison`, `process`, `photo`, `statement` |
-| `arena` | Esports & Entertainment | entertainment | high | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `fact`, `evidence`, `hierarchy` |
+| `crayon` | Crayon | kids, education | high | 6 | `points`, `list`, `comparison`, `process`, `photo`, `statement` |
+| `arena` | Arena | entertainment | high | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `fact`, `evidence`, `hierarchy` |
 | `museum` | Museum | museum, culture | high | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `fact`, `evidence`, `hierarchy` |
 | `stage` | Keynote Stage | keynote | high | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `quote`, `fact`, `hierarchy` |
 | `lecture` | Lecture Hall | education | high | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `fact`, `evidence`, `hierarchy` |

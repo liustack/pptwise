@@ -25,7 +25,7 @@ import { ShowFiguresContent } from "./content-show-figures"
 
 export type { ContentLayout, ContentLayoutId } from "./types"
 
-// Wave 3 content 页型注册表：六主题四页型的 content 段已全部到位（tech 的
+// Wave 3 content 页型注册表：六主题四页型的 content 段已全部到位（terminal 的
 // bento-panel 是最后一个，见 Wave 3 Task 22）——收紧回完整 Record，不再是
 // Partial 过渡态（沿用 chapter 页型在 Wave 2 收尾任务的同一模式）。
 // P1 variety wave, task 4：content 池 7 -> 10，新增三个（顺序与
@@ -35,7 +35,7 @@ export type { ContentLayout, ContentLayoutId } from "./types"
 // (quote-stage, statement, pull-quote, stat-hero, one-evidence, mono-bleed).
 // Gallery r2 D10 retired image-lead-split. side-highlight retired next.
 // This change retires banner-heading. Auto-selectable content pool is 9.
-// consulting, crayon, and runway families bring the pin-only count to 14,
+// brief, crayon, and runway families bring the pin-only count to 14,
 // for 23 registered content layouts in total.
 export const CONTENT_LAYOUTS: Record<ContentLayoutId, ContentLayout> = {
   "narrow-column": NarrowColumnContent,

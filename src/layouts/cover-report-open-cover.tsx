@@ -13,7 +13,7 @@ import { fitEmphasisText, headingEmphasisPaint, renderEmphasisText, sliceEmphasi
  * `.issues/design-boards/wave8/b3/Pulse.dc.html` 封面：kicker y150、
  * 标题 y330 / 58px、副题 y410、落款 y662。
  *
- * 进共享池，不是 pulse 专用。零 theme id、零 baked hex。心搏线归 motif，
+ * 进共享池，不是 clinic 专用。零 theme id、零 baked hex。心搏线归 motif，
  * 本版式不重画。空 heading 不编造报告题。缺 date / authors 就少画，不写死
  * 「数据已脱敏」。CJK 不加 letter-spacing。标题装得下就用板上 58px，
  * 不放大铺满。

@@ -56,7 +56,7 @@ function textPaint(el: Element): string {
 
 describe("cover-pledge-open-cover — board geometry", () => {
   it("places the org kicker, two-line pledge, and date at the board coordinates", () => {
-    const { root } = renderCover("terra")
+    const { root } = renderCover("almanac")
     const kicker = Array.from(root.querySelectorAll("text")).find((t) =>
       (t.textContent ?? "").includes("绿洲乳业"),
     )
@@ -82,14 +82,14 @@ describe("cover-pledge-open-cover — board geometry", () => {
   })
 
   it("does not paint a full-bleed field. Motif owns the contours", () => {
-    const { root } = renderCover("terra")
+    const { root } = renderCover("almanac")
     expect(root.querySelector("rect[width='1280']")).toBeNull()
     expect(root.querySelectorAll("path")).toHaveLength(0)
     expect(root.querySelectorAll("circle")).toHaveLength(0)
   })
 
   it("tints **emphasis** with primary olive, not accent ochre", () => {
-    const { root, tokens } = renderCover("terra")
+    const { root, tokens } = renderCover("almanac")
     const bg = resolveBackgroundHex(tokens.defaultBackgrounds.cover, tokens.colors.surface)
     const tspans = Array.from(root.querySelectorAll("tspan"))
     const mark = tspans.find((t) => t.textContent === "对外公开")
@@ -99,7 +99,7 @@ describe("cover-pledge-open-cover — board geometry", () => {
   })
 
   it("does not invent cover copy when heading and meta are empty", () => {
-    const { root, markup } = renderCover("terra", slide("", { heading: "" }), {})
+    const { root, markup } = renderCover("almanac", slide("", { heading: "" }), {})
     expect(markup).not.toContain("每一杯奶")
     expect(markup).not.toContain("对外公开")
     expect(markup).not.toContain("Thank you")
@@ -108,7 +108,7 @@ describe("cover-pledge-open-cover — board geometry", () => {
   })
 
   it("omits the foot when meta.date is missing", () => {
-    const { root } = renderCover("terra", slide(), { organization: "绿洲乳业" })
+    const { root } = renderCover("almanac", slide(), { organization: "绿洲乳业" })
     expect(Array.from(root.querySelectorAll("text")).some((t) => (t.textContent ?? "").includes("ESG"))).toBe(
       false,
     )
@@ -137,11 +137,11 @@ describe("cover-pledge-open-cover — shared pool", () => {
     }
   })
 
-  it("uses tokens, not a baked terra hex, when another theme borrows it", () => {
-    const { markup, tokens } = renderCover("tech")
+  it("uses tokens, not a baked almanac hex, when another theme borrows it", () => {
+    const { markup, tokens } = renderCover("terminal")
     expect(markup).toContain(tokens.colors.text)
     for (const hex of TERRA_HEX) {
-      expect(markup, `terra token ${hex} leaked`).not.toContain(hex)
+      expect(markup, `almanac token ${hex} leaked`).not.toContain(hex)
     }
   })
 
@@ -152,18 +152,18 @@ describe("cover-pledge-open-cover — shared pool", () => {
   })
 
   it("renders byte-identically on repeat", () => {
-    expect(renderCover("terra").markup).toBe(renderCover("terra").markup)
+    expect(renderCover("almanac").markup).toBe(renderCover("almanac").markup)
   })
 
   it("CJK title and kicker have no letter-spacing", () => {
-    const { root } = renderCover("terra")
+    const { root } = renderCover("almanac")
     for (const t of Array.from(root.querySelectorAll("text"))) {
       expect(t.getAttribute("letter-spacing")).toBeNull()
     }
   })
 
   it("kicker meta ink follows metaInk against the paper", () => {
-    const { root, tokens } = renderCover("terra")
+    const { root, tokens } = renderCover("almanac")
     const bg = resolveBackgroundHex(tokens.defaultBackgrounds.cover, tokens.colors.surface)
     const kicker = Array.from(root.querySelectorAll("text")).find((t) =>
       (t.textContent ?? "").includes("绿洲"),
@@ -172,7 +172,7 @@ describe("cover-pledge-open-cover — shared pool", () => {
   })
 
   it("does not paint an ellipsis when the heading overflows", () => {
-    const { markup } = renderCover("terra", slide("碳".repeat(80)))
+    const { markup } = renderCover("almanac", slide("碳".repeat(80)))
     expect(markup).not.toContain("…")
     expect(markup).not.toContain("...")
   })

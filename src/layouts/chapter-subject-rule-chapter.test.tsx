@@ -54,7 +54,7 @@ function renderChapter(themeId: string, s: Slide = chapter3, index = 4, slides?:
 
 describe("chapter-subject-rule-chapter — board geometry", () => {
   it("places the primary vertical rule, part kicker, and left title on the board", () => {
-    const { root, tokens } = renderChapter("pulse")
+    const { root, tokens } = renderChapter("clinic")
     const bar = Array.from(root.querySelectorAll("rect")).find(
       (r) => r.getAttribute("width") === "8" && r.getAttribute("height") === "120",
     )
@@ -80,7 +80,7 @@ describe("chapter-subject-rule-chapter — board geometry", () => {
   })
 
   it("does not draw a card, a heartbeat, or a left border around a panel", () => {
-    const { root } = renderChapter("pulse")
+    const { root } = renderChapter("clinic")
     expect(root.querySelector("path")).toBeNull()
     expect(root.querySelector("polyline")).toBeNull()
     expect(root.querySelector("circle")).toBeNull()
@@ -92,7 +92,7 @@ describe("chapter-subject-rule-chapter — board geometry", () => {
 
   it("uses a Latin PART kicker when the heading has no CJK", () => {
     const latin = { type: "chapter", heading: "Metabolic Risk", components: [] } as Slide
-    const { root } = renderChapter("pulse", latin, 4, [chapter1, content, chapter2, content, latin])
+    const { root } = renderChapter("clinic", latin, 4, [chapter1, content, chapter2, content, latin])
     const kicker = Array.from(root.querySelectorAll("text")).find((t) => (t.textContent ?? "").startsWith("PART"))
     expect(kicker?.textContent).toBe("PART 3")
     expect(kicker?.getAttribute("letter-spacing")).toBe("8")
@@ -101,18 +101,18 @@ describe("chapter-subject-rule-chapter — board geometry", () => {
 
   it("does not invent a section name when heading is empty", () => {
     const empty: Slide = { type: "chapter", heading: "", components: [] } as Slide
-    const { markup, root } = renderChapter("pulse", empty, 4, [chapter1, content, chapter2, content, empty])
+    const { markup, root } = renderChapter("clinic", empty, 4, [chapter1, content, chapter2, content, empty])
     expect(markup).not.toContain("代谢三高")
     expect(markup).not.toContain("Thank you")
     const labels = Array.from(root.querySelectorAll("text")).map((t) => t.textContent ?? "")
     expect(labels.some((t) => t === "PART 3" || t === "第三部分")).toBe(true)
   })
 
-  it("uses tokens, not baked pulse hex, when another theme draws it", () => {
-    const { root, tokens, markup } = renderChapter("enterprise")
+  it("uses tokens, not baked clinic hex, when another theme draws it", () => {
+    const { root, tokens, markup } = renderChapter("bulletin")
     expect(root.querySelector("rect")?.getAttribute("fill")).toBe(tokens.colors.primary)
     for (const hex of PULSE_HEX) {
-      expect(markup, `pulse token ${hex} leaked`).not.toContain(hex)
+      expect(markup, `clinic token ${hex} leaked`).not.toContain(hex)
     }
   })
 })
@@ -145,11 +145,11 @@ describe("chapter-subject-rule-chapter — shared pool", () => {
   })
 
   it("renders byte-identically on repeat", () => {
-    expect(renderChapter("pulse").markup).toBe(renderChapter("pulse").markup)
+    expect(renderChapter("clinic").markup).toBe(renderChapter("clinic").markup)
   })
 
   it("CJK title has no letter-spacing", () => {
-    const { root } = renderChapter("pulse")
+    const { root } = renderChapter("clinic")
     for (const t of Array.from(root.querySelectorAll("text")).filter(
       (el) => el.getAttribute("font-weight") === "700",
     )) {
@@ -163,7 +163,7 @@ describe("chapter-subject-rule-chapter — shared pool", () => {
       heading: "代谢三高随访与干预路径说明项".repeat(8),
       components: [],
     } as Slide
-    const { markup } = renderChapter("pulse", long, 4, [chapter1, content, chapter2, content, long])
+    const { markup } = renderChapter("clinic", long, 4, [chapter1, content, chapter2, content, long])
     expect(markup).not.toContain("…")
     expect(markup).not.toContain("...")
   })

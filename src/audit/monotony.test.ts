@@ -53,12 +53,12 @@ const CODE_OVERFLOW = Array.from({ length: 60 }, (_, i) => `const line${i} = ${i
 
 describe("auditDeck — monotony", () => {
   it("does not flag 2 consecutive pages with the same lead component", () => {
-    const ir = deck("consulting", [bulletsSlide("a", "s1"), bulletsSlide("b", "s2")])
+    const ir = deck("brief", [bulletsSlide("a", "s1"), bulletsSlide("b", "s2")])
     expect(monotony(ir)).toEqual([])
   })
 
   it("flags 3 consecutive bullets pages as one monotony finding of length 3", () => {
-    const ir = deck("consulting", [
+    const ir = deck("brief", [
       bulletsSlide("a", "s1"),
       bulletsSlide("b", "s2"),
       bulletsSlide("c", "s3"),
@@ -76,7 +76,7 @@ describe("auditDeck — monotony", () => {
   })
 
   it("flags 4 consecutive pages as one maximal streak, not overlapping windows", () => {
-    const ir = deck("consulting", [
+    const ir = deck("brief", [
       bulletsSlide("a", "s1"),
       bulletsSlide("b"),
       bulletsSlide("c"),
@@ -93,7 +93,7 @@ describe("auditDeck — monotony", () => {
   })
 
   it("does not flag when a different type splits a run short of 3", () => {
-    const ir = deck("consulting", [
+    const ir = deck("brief", [
       bulletsSlide("a"),
       bulletsSlide("b"),
       kpiSlide("break"),
@@ -104,7 +104,7 @@ describe("auditDeck — monotony", () => {
   })
 
   it("emits one finding per maximal streak when two runs are split by a different type", () => {
-    const ir = deck("consulting", [
+    const ir = deck("brief", [
       bulletsSlide("a", "s1"),
       bulletsSlide("b"),
       bulletsSlide("c"),
@@ -128,7 +128,7 @@ describe("auditDeck — monotony", () => {
   })
 
   it("still flags a 3-page content run after a cover with no components", () => {
-    const ir = deck("consulting", [
+    const ir = deck("brief", [
       { type: "cover", heading: "Cover", components: [] },
       bulletsSlide("a", "s2"),
       bulletsSlide("b"),
@@ -149,7 +149,7 @@ describe("auditDeck — monotony", () => {
   it("treats a placeholder in the middle as a streak break, not a skipped-but-continued run", () => {
     // Without the break this would be 3 consecutive bullets. The placeholder
     // is not an audited consecutive page, so the run splits 2 + 1.
-    const ir = deck("consulting", [
+    const ir = deck("brief", [
       bulletsSlide("a"),
       bulletsSlide("b"),
       { type: "content", kind: "points", placeholder: true, components: [] },
@@ -167,7 +167,7 @@ describe("auditDeck — monotony", () => {
       language: "js",
       code: CODE_OVERFLOW,
     }
-    const ir = deck("consulting", [
+    const ir = deck("brief", [
       { type: "content", kind: "points", id: "s1", heading: "overflow a", components: [overflowingCode] },
       { type: "content", kind: "points", id: "s2", heading: "overflow b", components: [overflowingCode] },
       { type: "content", kind: "points", id: "s3", heading: "overflow c", components: [overflowingCode] },

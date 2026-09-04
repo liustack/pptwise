@@ -864,7 +864,7 @@ export interface BrandExtractOptions {
   id?: string
   /** `--label` — defaults to the source theme's own color-scheme name. */
   label?: string
-  /** Donor preset whose menu and remaining tokens are copied. Default consulting. */
+  /** Donor preset whose menu and remaining tokens are copied. Default brief. */
   from?: string
   force?: boolean
 }
@@ -942,7 +942,7 @@ export async function runBrandExtract(file: string, opts: BrandExtractOptions): 
   } catch (error) {
     rethrowBrandColorError(error, id)
   }
-  const from = opts.from ?? "consulting"
+  const from = opts.from ?? "brief"
   const cwd = dirname(resolve(opts.output))
   const donorResolved = await resolveThemeByName(from, { startDir: cwd })
   const donor = await themeFileFromResolved(donorResolved, { id: extracted.id, label: extracted.label })

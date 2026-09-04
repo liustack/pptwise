@@ -39,7 +39,7 @@ import { accessibleInk } from "../render/ink"
  *
  * 对比度自适应修复（W4 fix round，Important I1「tone-adaptive-chapter（无 bg
  * 分支）」台账）：`!withBg` 分支的 `textFg` 原样消费 `colors.text`，对
- * academic/classroom/consulting 三个 chapter 页型另开一档默认背景的主题
+ * thesis/homeroom/brief 三个 chapter 页型另开一档默认背景的主题
  * 不成立。改用 `accessibleInk(colors.text, ctx.defaultBg, heading.fontSize)`
  * ——`withBg` 分支的强制白字豁免不变（背景图上的产品逻辑白字，与 chapter
  * 默认背景无关）。

@@ -71,7 +71,7 @@ export function OneEvidenceContent(props: SvgTemplateProps) {
  *
  * Lower than the face's own `HEADING_Y`, and for a reason a raster showed:
  * the nine theme faces this fallback stands in for keep their heading well
- * inside the page (consulting's starts at x=224), and their themes decorate
+ * inside the page (brief's starts at x=224), and their themes decorate
  * the corner those faces leave empty — a `locator-corner` runs an arm along
  * y=56 out to x=128. A heading on this page's own left margin at y=72 has
  * that arm drawn through its first two glyphs. Starting below the corner's

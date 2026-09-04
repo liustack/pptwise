@@ -48,7 +48,7 @@ function renderEnding(themeId: string, s: Slide = slide(), meta: PptxIR["meta"] 
 
 describe("ending-defense-close-ending — board geometry", () => {
   it("draws 结论, three conclusions, a foot rule, and the subheading sign-off", () => {
-    const { root, tokens } = renderEnding("academic")
+    const { root, tokens } = renderEnding("thesis")
     const kicker = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "结论")
     expect(kicker?.getAttribute("y")).toBe("140")
     expect(kicker?.getAttribute("letter-spacing")).toBe("8")
@@ -69,7 +69,7 @@ describe("ending-defense-close-ending — board geometry", () => {
   })
 
   it("does not thank the reader or invent a defense plea", () => {
-    const { root, markup } = renderEnding("academic", { type: "ending", components: [] } as Slide, {})
+    const { root, markup } = renderEnding("thesis", { type: "ending", components: [] } as Slide, {})
     const texts = Array.from(root.querySelectorAll("text")).map((t) => t.textContent ?? "").join(" ")
     expect(texts).not.toMatch(/Thank you/i)
     expect(texts).not.toMatch(/appreciate/i)
@@ -83,7 +83,7 @@ describe("ending-defense-close-ending — board geometry", () => {
       heading: "One.\nTwo.\nThree.",
       subheading: "Comments welcome",
     })
-    const { root } = renderEnding("academic", latin)
+    const { root } = renderEnding("thesis", latin)
     const texts = Array.from(root.querySelectorAll("text")).map((t) => t.textContent ?? "")
     expect(texts).toContain("CONCLUSIONS")
     expect(texts).not.toContain("结论")
@@ -95,15 +95,15 @@ describe("ending-defense-close-ending — board geometry", () => {
       subheading: SIGNOFF,
       components: [{ type: "bullets", items: ITEMS }],
     })
-    const { root } = renderEnding("academic", withBullets)
+    const { root } = renderEnding("thesis", withBullets)
     const texts = Array.from(root.querySelectorAll("text")).map((t) => t.textContent ?? "")
     expect(texts).toContain(ITEMS[0])
     expect(texts).toContain(SIGNOFF)
     expect(texts).not.toContain("ignored as list")
   })
 
-  it("uses tokens, not baked academic hex, when another theme draws it", () => {
-    const { root, tokens } = renderEnding("enterprise")
+  it("uses tokens, not baked thesis hex, when another theme draws it", () => {
+    const { root, tokens } = renderEnding("bulletin")
     const rule = Array.from(root.querySelectorAll("line")).find((l) => l.getAttribute("y1") === "470")
     expect(rule?.getAttribute("stroke")).toBe(tokens.colors.border)
     expect(root.innerHTML).not.toMatch(/#0E6245/i)
@@ -139,6 +139,6 @@ describe("ending-defense-close-ending — shared pool", () => {
   })
 
   it("renders byte-identically on repeat", () => {
-    expect(renderEnding("academic").markup).toBe(renderEnding("academic").markup)
+    expect(renderEnding("thesis").markup).toBe(renderEnding("thesis").markup)
   })
 })

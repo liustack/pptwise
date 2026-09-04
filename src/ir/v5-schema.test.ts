@@ -6,7 +6,7 @@ function deck(slides: unknown[], extra: Record<string, unknown> = {}) {
   return {
     version: "5",
     filename: "v5-contract",
-    theme: { id: "consulting" },
+    theme: { id: "brief" },
     slides,
     ...extra,
   }

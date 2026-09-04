@@ -29,7 +29,7 @@ export function GaugeMotif({ ctx, page }: DecorProps) {
       {/* The board drew this corner at (96,96) with 72px arms, which works for
           the gauge faces because their content starts at x160. This motif is
           theme-wide, so it also paints on the nine shared content layouts
-          consulting still samples, and those set their heading at x96 / y150 /
+          brief still samples, and those set their heading at x96 / y150 /
           46px — cap top y111. At (96,96) the vertical arm ran straight through
           the heading's first glyph. Moving the whole mark into the outer
           margin keeps designing-themes.md's "decoration stays out of the

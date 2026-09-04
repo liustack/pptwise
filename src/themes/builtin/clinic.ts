@@ -2,26 +2,26 @@ import type { StyleTokens } from "../tokens";
 import type { BuiltinThemeDeclaration } from "../schema";
 
 /**
- * pulse（医疗健康/生命科学）——2026-07-28 themes-16 wave task T1（第 14
+ * clinic（医疗健康/生命科学）——2026-07-28 themes-16 wave task T1（第 14
  * 主题）。用户拍板方向：13 个内置主题里没有一个青绿清洁诊疗气质，覆盖
  * 体检报告/医院介绍/生物医药 BD 场景。极浅薄荷白底 + 深青绿主色，气质
  * 一句话：清洁、可信、生命力（.issues/2026-07-28-themes-16/plan.md 裁定 1）。
  *
  * **冷调组皮肤重设计（2026-08-20，`.issues/2026-08-18-theme-redesign/skins/`
- * 的 `group3-cool-boards.dc.html` 里 pulse 的色板角色表 + 封面样例）**：
- * pulse 在冷调三家里拿到的语域是「清洁诊疗」——诊室晨光的薄荷白，全程冷
- * 配角。这一轮最要紧的一件事是拆青绿双胞胎：pulse 与 academic 的 primary
- * 肉眼几乎同色，板上的解法是底色与配角系统反向拉开（pulse 偏蓝 + 全冷
- * 配角、薄荷冷底；academic 偏绿 + 学者金暖配角、象牙暖底）。逐条来历：
+ * 的 `group3-cool-boards.dc.html` 里 clinic 的色板角色表 + 封面样例）**：
+ * clinic 在冷调三家里拿到的语域是「清洁诊疗」——诊室晨光的薄荷白，全程冷
+ * 配角。这一轮最要紧的一件事是拆青绿双胞胎：clinic 与 thesis 的 primary
+ * 肉眼几乎同色，板上的解法是底色与配角系统反向拉开（clinic 偏蓝 + 全冷
+ * 配角、薄荷冷底；thesis 偏绿 + 学者金暖配角、象牙暖底）。逐条来历：
  *   - `bg` `#F4F9F8` → `#F2F7F4`：薄荷白往绿里挪半档。旧值偏蓝灰，新值是
- *     诊室晨光；与 academic 的暖象牙 `#F5F3EC` 色温相反，这是双胞胎拆分的
+ *     诊室晨光；与 thesis 的暖象牙 `#F5F3EC` 色温相反，这是双胞胎拆分的
  *     第一处可辨点。
  *   - `surface` `#FFFFFF` → `#FBFDFC`：净白面板。纯白在薄荷底上显硬，压
  *     半档之后卡与墙才是同一间屋子里的两样东西。
  *   - `primary` `#0E6E66` → `#0E6B5C`：深青绿偏蓝一档，实测压 bg 5.92:1
- *     （板上自标 5.5:1）。与 academic 的 `#0E6245`（偏绿）分家。
+ *     （板上自标 5.5:1）。与 thesis 的 `#0E6245`（偏绿）分家。
  *   - `accent` `#F4A259` → `#3D9B82`：暖琥珀 → 浅青。**这是双胞胎拆分的
- *     主要手段**：pulse 从此全程冷配角，暖色一律不出场；academic 那边反过来
+ *     主要手段**：clinic 从此全程冷配角，暖色一律不出场；thesis 那边反过来
  *     用学者金作暖配角。浅青只给线与点，实测 3.12:1（板上自标 3.1:1）。
  *     大字 3.0 门槛的余量只有 0.12，字号掉到 24px 以下就会翻车。
  *   - `text` `#10312E` → `#1E2B27`：墨青 → 墨绿黑，13.56:1。
@@ -31,7 +31,7 @@ import type { BuiltinThemeDeclaration } from "../schema";
  *     `#DDEDE8`，`components/matrix.tsx` 的 `toneFill`）只有 4.47:1——跌破
  *     4.5:1 正文门槛，`full-matrix-contrast.test.ts` 的 `colors.muted
  *     component-type coverage` 实测报红。按同色相压暗一档到 `#5A6C66`
- *     （consulting muted `#6C6C6C`→`#6B6B6B`、terra `#6B675A`→`#656155`
+ *     （brief muted `#6C6C6C`→`#6B6B6B`、almanac `#6B675A`→`#656155`
  *     的同一条校准先例）：压 bg 5.14:1、压 surface 5.45:1、压三档 tone
  *     格底 4.60/4.84/4.90:1，全部过线——5.14 正是设计板自己写的「5:1」，
  *     板上的 hex 与板上的数字对不上时按数字走。
@@ -41,10 +41,10 @@ import type { BuiltinThemeDeclaration } from "../schema";
  *     琥珀 `#F4A259` 随 accent 一并退役（暖色不再出场），砂灰 `#B8AD98`
  *     压新底只有 2.06:1，是旧四色里唯一读不出来的一格。
  *     **第四轮评审把第四格也换了：警示褐 `#B9722F` → 墨蓝灰 `#2E4257`
- *     9.54:1**。两条理由：①用户把蓝配橙定为禁忌（原话在 enterprise
+ *     9.54:1**。两条理由：①用户把蓝配橙定为禁忌（原话在 bulletin
  *     p09/p10），而警示褐与静脉蓝 `#4A7FB5` 正是同表相邻的橙与蓝；
  *     ②这一格本来就跟本主题自己的规矩打架——上面 `accent` 那条白纸黑字写着
- *     「pulse 从此全程冷配角，暖色一律不出场」，四色里却留着一格暖褐。
+ *     「clinic 从此全程冷配角，暖色一律不出场」，四色里却留着一格暖褐。
  *     换成墨蓝灰之后，四格明度台阶反而更整齐（Lab L 27 / 40 / 52 / 58），
  *     彼此最近的一格 ΔE 30.9、色盲模拟最近 ΔE 19.8。
  *     告警这件事从此只由 `warning` 一格承担（值未动，仍是 `#B9722F`），
@@ -65,7 +65,7 @@ import type { BuiltinThemeDeclaration } from "../schema";
  * **菜单分派（S1-B）**：诊疗件求稳，七道常规讲法就够，photo 用可加角注的 image-annotate 承影像图。高潮页会把临床语气带偏，宣言、引用、大数字、单证据都不上。
  */
 export const PULSE_TOKENS: StyleTokens = {
-  id: "pulse",
+  id: "clinic",
   colors: {
     bg: "#F2F7F4", // 薄荷白。页底，正文墨压它 13.56:1，答 4.5
     surface: "#FBFDFC", // 净白面板。卡面，正文墨压它 14.38:1，答 4.5
@@ -105,8 +105,8 @@ export const PULSE_TOKENS: StyleTokens = {
 
 export const PULSE_THEME = {
   version: 2,
-  id: "pulse",
-  label: "Health & Life Science",
+  id: "clinic",
+  label: "Clinic",
   story: {
     name: "Clinic",
     story: "Mint white and deep teal, clean lines, nothing decorative that could be mistaken for data. It speaks plainly, the way a good doctor does.",

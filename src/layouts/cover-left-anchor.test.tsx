@@ -38,7 +38,7 @@ function renderCover(
   }
 }
 
-// Branding's brand logo bands (see templates/academic.test.tsx's own
+// Branding's brand logo bands (see templates/thesis.test.tsx's own
 // LOGO_BANDS) — the confidentiality badge sits top-right (y=104, not 64,
 // specifically to clear TR_LOGO).
 const TL_LOGO = { x: 64, y: 48, w: 96, h: 40 }
@@ -76,9 +76,9 @@ const ir = (theme: string): PptxIR =>
 // 等价），原样保留为文件私有 hex 常量。验收：结构锚点 + 内容存在 + 该装饰
 // hex（同白字例外一样）跨主题稳定出现，而非逐字节 toBe。
 describe("LeftAnchorCover", () => {
-  it("academic tokens 下渲染左侧色块 + 白字标题 + 未隐形的装饰三角（TRIANGLE_DEEP）", () => {
-    const ctx = buildCtx(tokensWithoutCover("academic"), {})
-    const out = renderSvgMarkup(<LeftAnchorCover ir={ir("academic")} slide={slide} index={0} ctx={ctx} />)
+  it("thesis tokens 下渲染左侧色块 + 白字标题 + 未隐形的装饰三角（TRIANGLE_DEEP）", () => {
+    const ctx = buildCtx(tokensWithoutCover("thesis"), {})
+    const out = renderSvgMarkup(<LeftAnchorCover ir={ir("thesis")} slide={slide} index={0} ctx={ctx} />)
 
     // 标题文本存在
     expect(out).toContain("创新前沿")
@@ -87,27 +87,27 @@ describe("LeftAnchorCover", () => {
     expect(out).toContain("0,720 0,520 200,720")
     // 白字例外：标题在色块上固定纯白，不是主题色
     expect(out).toContain('fill="#FFFFFF"')
-    // academic 自己的 primary 用在色块上（冷调组皮肤重设计把祖母绿换成
-    // #0E6245，见 `themes/academic.ts` 的文件头）
+    // thesis 自己的 primary 用在色块上（冷调组皮肤重设计把祖母绿换成
+    // #0E6245，见 `themes/thesis.ts` 的文件头）
     expect(out).toContain("#0E6245")
-    // 装饰豁免色原样保留、未被并入 primary——三角形在 academic 下仍然可见
+    // 装饰豁免色原样保留、未被并入 primary——三角形在 thesis 下仍然可见
     // （与 primary 的 #0E6245 不同色，是它本该有的"深一号"视觉对比）
     expect(out).toContain("#004C38")
   })
 
-  it("tech tokens 下用 tech 的 primary/accent 色，标题对比度自适应出反白，装饰三角豁免跨主题保持不变（证明 token 化成立）", () => {
-    const techTokens = resolveStyle("tech")
+  it("terminal tokens 下用 terminal 的 primary/accent 色，标题对比度自适应出反白，装饰三角豁免跨主题保持不变（证明 token 化成立）", () => {
+    const techTokens = resolveStyle("terminal")
     const ctx = buildCtx(techTokens, {})
-    const out = renderSvgMarkup(<LeftAnchorCover ir={ir("tech")} slide={slide} index={0} ctx={ctx} />)
+    const out = renderSvgMarkup(<LeftAnchorCover ir={ir("terminal")} slide={slide} index={0} ctx={ctx} />)
 
-    // 深底组皮肤重设计（2026-08-19）把 tech 的 primary 与 accent 拆成两个色，
+    // 深底组皮肤重设计（2026-08-19）把 terminal 的 primary 与 accent 拆成两个色，
     // 此前它们同值、一条断言就够，现在两个角色各锁一条。
-    expect(out).toContain("#14294A") // tech primary，40% 宽通栏色块
-    expect(out).toContain("#53E0D2") // tech accent，org 圆点
-    expect(out).not.toContain("#0E6245") // academic primary 不得残留
+    expect(out).toContain("#14294A") // terminal primary，40% 宽通栏色块
+    expect(out).toContain("#53E0D2") // terminal accent，org 圆点
+    expect(out).not.toContain("#0E6245") // thesis primary 不得残留
     // W4 fix round: 标题墨色由 readableOn(colors.primary) 挑，不是写死的纯白。
-    // 当时 tech 的 primary 还是亮青（白字压上去只有 ~1.80:1），挑出来的是中性
-    // 深墨；深底组重设计把 primary 换成深蓝（`themes/tech.ts`：「横幅重新承得
+    // 当时 terminal 的 primary 还是亮青（白字压上去只有 ~1.80:1），挑出来的是中性
+    // 深墨；深底组重设计把 primary 换成深蓝（`themes/terminal.ts`：「横幅重新承得
     // 起反白」），同一个 readableOn 现在挑回纯白，实测 14.52:1。断言锁的仍是
     // 「墨色由 readableOn 决定」，只是钉的值随 token 换了一边。
     const expectedInk = readableOn(techTokens.colors.primary)
@@ -118,17 +118,17 @@ describe("LeftAnchorCover", () => {
     expect(out).toContain("#004C38")
   })
 
-  it("academic tokens 下标题仍是纯白——readableOn 对当前既有策展主题（academic 是本文件唯一 pre-W4 owner）产出与旧硬编码逐字节相同的结果", () => {
-    const academicTokens = tokensWithoutCover("academic")
+  it("thesis tokens 下标题仍是纯白——readableOn 对当前既有策展主题（thesis 是本文件唯一 pre-W4 owner）产出与旧硬编码逐字节相同的结果", () => {
+    const academicTokens = tokensWithoutCover("thesis")
     const ctx = buildCtx(academicTokens, {})
-    const out = renderSvgMarkup(<LeftAnchorCover ir={ir("academic")} slide={slide} index={0} ctx={ctx} />)
+    const out = renderSvgMarkup(<LeftAnchorCover ir={ir("thesis")} slide={slide} index={0} ctx={ctx} />)
     expect(readableOn(academicTokens.colors.primary)).toBe("#FFFFFF")
     expect(out).toContain('fill="#FFFFFF"')
   })
 
-  it("org 文本渲染在右侧白面板（translate(576,168)），Cover body 通过 subset validation（迁移自 academic.test.tsx）", () => {
-    const ctx = buildCtx(tokensWithoutCover("academic"), {})
-    const out = renderSvgMarkup(<LeftAnchorCover ir={ir("academic")} slide={slide} index={0} ctx={ctx} />)
+  it("org 文本渲染在右侧白面板（translate(576,168)），Cover body 通过 subset validation（迁移自 thesis.test.tsx）", () => {
+    const ctx = buildCtx(tokensWithoutCover("thesis"), {})
+    const out = renderSvgMarkup(<LeftAnchorCover ir={ir("thesis")} slide={slide} index={0} ctx={ctx} />)
     expect(out).toContain("测试所")
 
     const root = parseSvgRoot(
@@ -142,14 +142,14 @@ describe("LeftAnchorCover", () => {
     expect(() => assertSubset(root)).not.toThrow()
   })
 
-  describe("标题过长换行收缩（迁移自 academic.test.tsx 的 'Cover title leaves a real margin' 分支，user-reported 2026-07-08）", () => {
+  describe("标题过长换行收缩（迁移自 thesis.test.tsx 的 'Cover title leaves a real margin' 分支，user-reported 2026-07-08）", () => {
     const REPORTED_HEADING = "DSpark：让大模型推理快 60-85% 的工程突破"
 
     it("wraps to 3 lines and shrinks to fontSize=47 — matches fitHeadingLines(maxWidth=360) directly", () => {
       const reportedSlide: Slide = { type: "cover", heading: REPORTED_HEADING, components: [] } as Slide
-      const ctx = buildCtx(tokensWithoutCover("academic"), {})
+      const ctx = buildCtx(tokensWithoutCover("thesis"), {})
       const out = renderSvgMarkup(
-        <LeftAnchorCover ir={ir("academic")} slide={reportedSlide} index={0} ctx={ctx} />,
+        <LeftAnchorCover ir={ir("thesis")} slide={reportedSlide} index={0} ctx={ctx} />,
       )
       const root = parseSvgRoot(
         `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">${out}</svg>`,
@@ -159,7 +159,7 @@ describe("LeftAnchorCover", () => {
       )
       expect(titleLines.length).toBe(3)
       // bold-metrics fix (2026-07-24): 44, not the pre-fix 47 -- this
-      // heading renders `fontWeight="600"` (LeftAnchorCover.tsx), academic's
+      // heading renders `fontWeight="600"` (LeftAnchorCover.tsx), thesis's
       // heading face resolves to Georgia, and Georgia Bold's real per-
       // character advances (the round-2 exact model, svg-text-layout.ts's
       // `GEORGIA_BOLD_EXACT`) size this line a hair larger than round 1's
@@ -187,9 +187,9 @@ describe("LeftAnchorCover", () => {
       const longer =
         "DSpark：让大规模语言模型推理速度提升 60-85% 的关键工程突破与实践路径"
       const longerSlide: Slide = { type: "cover", heading: longer, components: [] } as Slide
-      const ctx = buildCtx(tokensWithoutCover("academic"), {})
+      const ctx = buildCtx(tokensWithoutCover("thesis"), {})
       const out = renderSvgMarkup(
-        <LeftAnchorCover ir={ir("academic")} slide={longerSlide} index={0} ctx={ctx} />,
+        <LeftAnchorCover ir={ir("thesis")} slide={longerSlide} index={0} ctx={ctx} />,
       )
       const root = parseSvgRoot(
         `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">${out}</svg>`,
@@ -231,9 +231,9 @@ describe("LeftAnchorCover", () => {
       const RUN = "Brandxxxxxxxxxxxxxxx"
       const literalPin = `${RUN}：让工程团队将大模型推理性能提升`
       const literalSlide: Slide = { type: "cover", heading: literalPin, components: [] } as Slide
-      const ctx = buildCtx(tokensWithoutCover("academic"), {})
+      const ctx = buildCtx(tokensWithoutCover("thesis"), {})
       const out = renderSvgMarkup(
-        <LeftAnchorCover ir={ir("academic")} slide={literalSlide} index={0} ctx={ctx} />,
+        <LeftAnchorCover ir={ir("thesis")} slide={literalSlide} index={0} ctx={ctx} />,
       )
       const root = parseSvgRoot(
         `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">${out}</svg>`,
@@ -263,8 +263,8 @@ describe("LeftAnchorCover", () => {
       const RUN = "Brandxxxxxxxxxxx"
       const heading16 = `${RUN}：让工程团队将大模型推理性能提升`
       const slide16: Slide = { type: "cover", heading: heading16, components: [] } as Slide
-      const ctx = buildCtx(tokensWithoutCover("academic"), {})
-      const out = renderSvgMarkup(<LeftAnchorCover ir={ir("academic")} slide={slide16} index={0} ctx={ctx} />)
+      const ctx = buildCtx(tokensWithoutCover("thesis"), {})
+      const out = renderSvgMarkup(<LeftAnchorCover ir={ir("thesis")} slide={slide16} index={0} ctx={ctx} />)
       const root = parseSvgRoot(
         `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">${out}</svg>`,
       )
@@ -294,9 +294,9 @@ describe("LeftAnchorCover", () => {
       const RUN = "OpenAPIGateway"
       const fusedHeading = "统一接入层OpenAPIGateway让跨团队协作效率显著提升"
       const fusedSlide: Slide = { type: "cover", heading: fusedHeading, components: [] } as Slide
-      const ctx = buildCtx(tokensWithoutCover("academic"), {})
+      const ctx = buildCtx(tokensWithoutCover("thesis"), {})
       const out = renderSvgMarkup(
-        <LeftAnchorCover ir={ir("academic")} slide={fusedSlide} index={0} ctx={ctx} />,
+        <LeftAnchorCover ir={ir("thesis")} slide={fusedSlide} index={0} ctx={ctx} />,
       )
       const root = parseSvgRoot(
         `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">${out}</svg>`,
@@ -324,12 +324,12 @@ describe("LeftAnchorCover", () => {
     })
   })
 
-  it("confidentiality 徽标 (1064,104,120,48) 避让 Branding 四个 logo 带（迁移自 academic.test.tsx）", () => {
-    const ctx = buildCtx(tokensWithoutCover("academic"), {})
+  it("confidentiality 徽标 (1064,104,120,48) 避让 Branding 四个 logo 带（迁移自 thesis.test.tsx）", () => {
+    const ctx = buildCtx(tokensWithoutCover("thesis"), {})
     const deck: PptxIR = {
       version: "3",
       filename: "x.pptx",
-      theme: { id: "academic" },
+      theme: { id: "thesis" },
       branding: "full",
       meta: { organization: "测试所", date: "2026-07", confidentiality: "internal" },
       assets: { images: {} },
@@ -365,11 +365,11 @@ describe("LeftAnchorCover", () => {
   // deliberately bleeds into the bl logo band by construction — same
   // precedent as the confidentiality badge's non-overlap check above (a
   // solid-fill area under an opaque logo loses no information, see
-  // templates/academic.test.tsx's own "documents (not asserts false)" case).
+  // templates/thesis.test.tsx's own "documents (not asserts false)" case).
   // Documented here, not silently skipped.
-  it("documents (not asserts false) that the corner triangle overlaps the bl logo band by design（迁移自 academic.test.tsx）", () => {
-    const ctx = buildCtx(tokensWithoutCover("academic"), {})
-    const out = renderSvgMarkup(<LeftAnchorCover ir={ir("academic")} slide={slide} index={0} ctx={ctx} />)
+  it("documents (not asserts false) that the corner triangle overlaps the bl logo band by design（迁移自 thesis.test.tsx）", () => {
+    const ctx = buildCtx(tokensWithoutCover("thesis"), {})
+    const out = renderSvgMarkup(<LeftAnchorCover ir={ir("thesis")} slide={slide} index={0} ctx={ctx} />)
     const root = parseSvgRoot(
       `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">${out}</svg>`,
     )
@@ -388,15 +388,15 @@ describe("LeftAnchorCover — cover knobs (board-cover-restore wave 2)", () => {
   }
 
   it("default still draws the corner triangle and vertically centers the title", () => {
-    const { root } = renderCover("consulting")
+    const { root } = renderCover("brief")
     const triangle = root.querySelector("polygon")
     expect(triangle?.getAttribute("points")).toBe("0,720 0,520 200,720")
     const title = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "创新前沿")!
     expect(Number(title.getAttribute("y"))).toBeGreaterThan(340)
   })
 
-  it("academic knobs: no triangle, first title baseline 340, in-block kicker, no right-panel org duplicate", () => {
-    const { root, tokens } = renderCover("academic", slide, ACADEMIC_KNOBS)
+  it("thesis knobs: no triangle, first title baseline 340, in-block kicker, no right-panel org duplicate", () => {
+    const { root, tokens } = renderCover("thesis", slide, ACADEMIC_KNOBS)
     expect(root.querySelector("polygon")).toBeNull()
     const title = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "创新前沿")!
     expect(title.getAttribute("y")).toBe("340")
@@ -413,7 +413,7 @@ describe("LeftAnchorCover — cover knobs (board-cover-restore wave 2)", () => {
   })
 
   it("does not draw progress dots in the layout", () => {
-    const { root } = renderCover("academic", slide, ACADEMIC_KNOBS)
+    const { root } = renderCover("thesis", slide, ACADEMIC_KNOBS)
     expect(root.querySelectorAll("circle")).toHaveLength(0)
   })
 })

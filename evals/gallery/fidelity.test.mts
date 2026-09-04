@@ -43,11 +43,11 @@ interface ScanPage {
  * page the face has to have an answer for.
  */
 function contractPages(lex: (typeof LEXICONS)[LanguageId], assets: CorpusAssets): ScanPage[] {
-  const statHero = layoutPage("stat-hero", lex, assets, "consulting", "fact")
+  const statHero = layoutPage("stat-hero", lex, assets, "brief", "fact")
   const heroSlide = statHero.slides[0] as Slide
   heroSlide.components = [COMPONENT_BUILDERS.kpi_cards!(lex)]
 
-  const pullQuote = layoutPage("pull-quote", lex, assets, "consulting", "quote")
+  const pullQuote = layoutPage("pull-quote", lex, assets, "brief", "quote")
   const quoteSlide = pullQuote.slides[0] as Slide
   quoteSlide.components = [COMPONENT_BUILDERS.blockquote!(lex)]
 
@@ -256,7 +256,7 @@ describe("a live component that declines outright is not fifty unexplained field
     const ir = validateIr({
       version: "5",
       filename: "declined-chart",
-      theme: { id: "consulting" },
+      theme: { id: "brief" },
       meta: {},
       assets: { images: {} },
       slides: [

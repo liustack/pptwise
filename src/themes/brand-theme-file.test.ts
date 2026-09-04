@@ -35,7 +35,7 @@ describe("parseBrandThemeFile", () => {
 
   it("rejects retired v1 fields through the ordinary v2 schema, naming the current format", async () => {
     const current = await extractFixtureTheme()
-    for (const retired of [{ version: 1 }, { base: "consulting" }, { faces: { cover: ["poster-center"] } }]) {
+    for (const retired of [{ version: 1 }, { base: "brief" }, { faces: { cover: ["poster-center"] } }]) {
       expect(() => parseBrandThemeFile({ ...current, ...retired }, "legacy.theme.json")).toThrow(
         /current theme format is version 2.*self-contained/is,
       )
@@ -61,8 +61,8 @@ describe("registerBrandThemeFile", () => {
     expect(def.style.shape?.cover).toBeUndefined()
     expect(def.menu).toEqual(theme.menu)
     expect(def.motif).toBeUndefined()
-    const consulting = getThemeDefinition("consulting")
-    expect(def.menu).not.toEqual(consulting.menu)
+    const brief = getThemeDefinition("brief")
+    expect(def.menu).not.toEqual(brief.menu)
   })
 
   it("loads a complete v2 menu", async () => {
@@ -141,12 +141,12 @@ describe("registerBrandThemeFile", () => {
   })
 
   it("shadows a builtin id so getThemeDefinition reads the file", async () => {
-    const theme = await extractFixtureTheme("consulting")
-    expect(registerBrandThemeFile(theme)).toBe("consulting")
-    const def = getThemeDefinition("consulting")
+    const theme = await extractFixtureTheme("brief")
+    expect(registerBrandThemeFile(theme)).toBe("brief")
+    const def = getThemeDefinition("brief")
     expect(def.style.colors.primary).toBe(theme.style.colors.primary)
     expect(def.menu).toEqual(theme.menu)
-    expect(getInstalledThemeIds().filter((id) => id === "consulting")).toHaveLength(1)
+    expect(getInstalledThemeIds().filter((id) => id === "brief")).toHaveLength(1)
   })
 
   it("is idempotent for the same already-registered id (serve rebuild loop)", async () => {

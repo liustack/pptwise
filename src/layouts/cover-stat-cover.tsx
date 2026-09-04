@@ -9,11 +9,11 @@ import { underlineDescentRatio } from "./underline"
 
 /**
  * stat-cover layout（2026-08-22 第八波批 1，新表达）：
- * **左齐巨号标题（heading 本文）+ 其下衬线结论句**。构图抄 insight 设计板
+ * **左齐巨号标题（heading 本文）+ 其下衬线结论句**。构图抄 ledger 设计板
  * 封面（`.issues/design-boards/wave8/b1/Insight.dc.html`）：一个数扛封面，
  * 行情线归 motif，本版式不画。
  *
- * **它进共享池，不是 insight 专用**。零 theme id、零 hex。巨号吃 heading
+ * **它进共享池，不是 ledger 专用**。零 theme id、零 hex。巨号吃 heading
  * 本文，不编造数字。结论句走 subheading。accent 是巨号的墨，text 是结论。
  *
  * 服务场景：财报解读开场、投资分析封面、数据周报首页。任何需要「先甩一个

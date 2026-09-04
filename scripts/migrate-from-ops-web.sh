@@ -31,7 +31,7 @@ cp "$SHARED/constants/pptx-icons.ts"  src/icons.ts
 cp "$OPS/scripts/gen-pptx-icons.mts"  scripts/gen-pptx-icons.mts
 
 # scratch 测试不迁（依赖 ops-web 本地 scratchpad 素材）
-rm -f src/render/layout-matrix.scratch.test.tsx src/render/tech-audit.scratch.test.tsx
+rm -f src/render/layout-matrix.scratch.test.tsx src/render/terminal-audit.scratch.test.tsx
 
 # specifier 机械重写：只动 ts/tsx，.snap 不碰。顺序重要（长串先替）
 find src -type f \( -name "*.ts" -o -name "*.tsx" \) -print0 | xargs -0 perl -pi -e '

@@ -70,7 +70,7 @@ export const EMBER_TOKENS: StyleTokens = {
   },
   shape: {
     radius: 10,
-    gapScale: 1, // 友好圆润（创业路演的亲和感，介于 pulse 的 8 与更方正的既有主题之间）
+    gapScale: 1, // 友好圆润（创业路演的亲和感，介于 clinic 的 8 与更方正的既有主题之间）
     cover: {
       textAnchor: "start",
       wedgePeakY: 260,
@@ -90,7 +90,7 @@ export const EMBER_TOKENS: StyleTokens = {
 export const EMBER_THEME = {
   version: 2,
   id: "ember",
-  label: "Startup Pitch",
+  label: "Ember",
   story: {
     name: "Ember",
     story: "Charcoal ground, ivory type, and a single fire orange that appears in exactly one place per page. It is the pitch that has slept in the orchard and knows the numbers by heart.",

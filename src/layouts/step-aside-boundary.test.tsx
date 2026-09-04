@@ -106,14 +106,14 @@ interface FaceCase {
 }
 
 const CASES: FaceCase[] = [
-  { face: "narrow-column", Face: NarrowColumnContent, themeId: "consulting", regions: ["aside", "declined"] },
-  { face: "two-column", Face: TwoColumnContent, themeId: "consulting", regions: ["face", "aside", "declined"] },
-  { face: "rail-numbered", Face: RailNumberedContent, themeId: "consulting", regions: ["face", "aside", "declined"] },
-  { face: "quiet-frame", Face: QuietFrameContent, themeId: "consulting", regions: ["face", "aside", "declined"] },
-  { face: "split-band", Face: SplitBandContent, themeId: "consulting", regions: ["face", "aside", "declined"] },
-  { face: "quote-stage", Face: QuoteStageContent, themeId: "consulting", regions: ["aside", "declined"] },
-  { face: "tone-adaptive-content", Face: ToneAdaptiveContent, themeId: "tech", regions: ["face", "aside", "declined"] },
-  { face: "gauge-stats", Face: GaugeStatsContent, themeId: "consulting", regions: ["face", "aside", "declined"] },
+  { face: "narrow-column", Face: NarrowColumnContent, themeId: "brief", regions: ["aside", "declined"] },
+  { face: "two-column", Face: TwoColumnContent, themeId: "brief", regions: ["face", "aside", "declined"] },
+  { face: "rail-numbered", Face: RailNumberedContent, themeId: "brief", regions: ["face", "aside", "declined"] },
+  { face: "quiet-frame", Face: QuietFrameContent, themeId: "brief", regions: ["face", "aside", "declined"] },
+  { face: "split-band", Face: SplitBandContent, themeId: "brief", regions: ["face", "aside", "declined"] },
+  { face: "quote-stage", Face: QuoteStageContent, themeId: "brief", regions: ["aside", "declined"] },
+  { face: "tone-adaptive-content", Face: ToneAdaptiveContent, themeId: "terminal", regions: ["face", "aside", "declined"] },
+  { face: "gauge-stats", Face: GaugeStatsContent, themeId: "brief", regions: ["face", "aside", "declined"] },
   { face: "crayonbox-cards", Face: CrayonboxCardsContent, themeId: "crayon", regions: ["face", "aside", "declined"] },
   // A fixed body band is only ever worth trading for the sheet on a page
   // that has not already spent the sheet's room on a second heading line, a
@@ -129,7 +129,7 @@ const CASES: FaceCase[] = [
   {
     face: "one-evidence",
     Face: OneEvidenceContent,
-    themeId: "consulting",
+    themeId: "brief",
     components: (n) => [citations(n)],
     shortPage: true,
     regions: ["face", "aside", "declined"],
@@ -137,7 +137,7 @@ const CASES: FaceCase[] = [
   // Same reason: the poster grammar keeps a scalable chart and scales it
   // into the hero slot, so the dial has to be something that busts it.
   //
-  // On `consulting`'s type scale the degrade stack measures 1168x360 against
+  // On `brief`'s type scale the degrade stack measures 1168x360 against
   // a 1104x448 sheet, which is the window. On `stage` the same page is
   // 1168x360 against 1104x367 and there is none — a face's own heading size
   // is part of how much room its body has left, so whether this trade is
@@ -145,7 +145,7 @@ const CASES: FaceCase[] = [
   {
     face: "stacked-poster",
     Face: StackedPosterContent,
-    themeId: "consulting",
+    themeId: "brief",
     components: (n) => [citations(n)],
     shortPage: true,
     regions: ["face", "aside", "declined"],
@@ -155,7 +155,7 @@ const CASES: FaceCase[] = [
   {
     face: "stat-hero",
     Face: StatHeroContent,
-    themeId: "consulting",
+    themeId: "brief",
     components: (n) => [
       {
         type: "kpi_cards",
@@ -175,7 +175,7 @@ const CASES: FaceCase[] = [
   {
     face: "bento-panel",
     Face: BentoPanelContent,
-    themeId: "tech",
+    themeId: "terminal",
     components: (n) => [
       { type: "bullets", items: Array.from({ length: n }, (_, i) => `Point number ${i}`), style: "default" },
       { type: "paragraph", text: "Renewal recovered across every segment." },
@@ -187,7 +187,7 @@ const CASES: FaceCase[] = [
   {
     face: "asymmetric-triptych",
     Face: AsymmetricTriptychContent,
-    themeId: "consulting",
+    themeId: "brief",
     components: (n) => [
       { type: "paragraph", text: "Renewal recovered." },
       lineChart(n),

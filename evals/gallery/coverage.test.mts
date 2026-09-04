@@ -25,9 +25,9 @@ function jobs(opts?: Parameters<typeof buildMatrix>[2]): Job[] {
 
 describe("mapJobSubject", () => {
   it("maps current bands onto their inventories", () => {
-    expect(mapJobSubject({ band: "deck", subject: "consulting" })).toEqual({
+    expect(mapJobSubject({ band: "deck", subject: "brief" })).toEqual({
       inventory: "theme",
-      id: "consulting",
+      id: "brief",
     })
     expect(mapJobSubject({ band: "face", subject: "two-column" })).toEqual({
       inventory: "layout",
@@ -53,7 +53,7 @@ describe("mapJobSubject", () => {
     expect(mapJobSubject({ band: "component", subject: "logo-wall" })).toBeUndefined()
     expect(mapJobSubject({ band: "face", subject: "side-highlight" })).toBeUndefined()
     expect(mapJobSubject({ band: "component", subject: "speech" })).toBeUndefined()
-    expect(mapJobSubject({ band: "unknown", subject: "consulting" })).toBeUndefined()
+    expect(mapJobSubject({ band: "unknown", subject: "brief" })).toBeUndefined()
   })
 
   it("maps every chart variant onto the chart component type", () => {
@@ -105,7 +105,7 @@ describe("gallery inventory coverage", () => {
     const appendix = matrix.filter((job) => job.section === UNSERVED_SECTION)
     expect(appendix.length).toBeGreaterThan(0)
     expect(appendix.every((job) => job.band === "face")).toBe(true)
-    expect(appendix.every((job) => job.theme === "consulting")).toBe(true)
+    expect(appendix.every((job) => job.theme === "brief")).toBe(true)
     expect([...new Set(appendix.map((job) => job.subject))].sort()).toEqual(unservedLayoutIds(CANONICAL_THEME_IDS))
     expect(appendix.some((job) => served.has(job.subject))).toBe(false)
   })
@@ -119,7 +119,7 @@ describe("gallery inventory coverage", () => {
   it("names unmapped leftover subjects instead of mixing them into the review wall", () => {
     const ghost: Job = {
       ...jobs({ only: "component", languages: ["zh"] })[0]!,
-      id: "consulting--comp--logo-wall--zh",
+      id: "brief--comp--logo-wall--zh",
       subject: "logo-wall",
     }
     expect(() => assertInventoryCoverage([ghost])).toThrow(/logo-wall/)

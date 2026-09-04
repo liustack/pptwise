@@ -42,14 +42,14 @@ const ir = (theme: string, slide: Slide): PptxIR =>
 // contrast-policy 波 T1（推翻本文件头旧裁决"COPYRIGHT_FAINT 跨主题固定不
 // 变"）：版权行不再是文件私有孤儿色，改用 `metaInk(colors.muted, bg)`
 // （`../render/ink`）——B 层门槛 3:1 下已达标时原样保留 `colors.muted`，这里两个
-// theme 的 `colors.muted` 对各自真实背景都已经 >=3:1（consulting 4.96:1、
-// tech 5.96:1，见 task-1-report.md 的实测），所以两处断言都从"跨主题保持
+// theme 的 `colors.muted` 对各自真实背景都已经 >=3:1（brief 4.96:1、
+// terminal 5.96:1，见 task-1-report.md 的实测），所以两处断言都从"跨主题保持
 // 同一个 hex 不变"改为"等于该主题自己的 colors.muted，随主题变化"——这正是
 // 新裁决要断言的属性：派生色随背景变，不是钉死不变。
 describe("BannerEnding", () => {
-  it("consulting tokens 下渲染 org 标 + 联系区块 + B 层版权行（data-contrast-tier=meta），heading 存在时不兜底", () => {
-    const ctx = buildCtx(resolveStyle("consulting"), {})
-    const deck = ir("consulting", endingWithHeading)
+  it("brief tokens 下渲染 org 标 + 联系区块 + B 层版权行（data-contrast-tier=meta），heading 存在时不兜底", () => {
+    const ctx = buildCtx(resolveStyle("brief"), {})
+    const deck = ir("brief", endingWithHeading)
     const out = renderSvgMarkup(
       <BannerEnding ir={deck} slide={endingWithHeading} index={0} ctx={ctx} />,
     )
@@ -72,11 +72,11 @@ describe("BannerEnding", () => {
     expect(out).toContain('x1="96"')
     expect(out).toContain('x2="1184"')
 
-    // consulting 自己的 primary/accent 用在标题/org 圆点上
+    // brief 自己的 primary/accent 用在标题/org 圆点上
     expect(out).toContain("#1E2A4A")
     expect(out).toContain("#F5C518")
 
-    // 版权行现在派生自 colors.muted（编辑组换血后 consulting 的 #5B6069
+    // 版权行现在派生自 colors.muted（编辑组换血后 brief 的 #5B6069
     // 对真实渲染背景 #F7F6F2 是 5.85:1，clears B 层 3:1，metaInk 原样保留），挂
     // data-contrast-tier="meta"。不再是独立于 muted 的孤儿色。
     const root = parseSvgRoot(`<svg xmlns="http://www.w3.org/2000/svg">${out}</svg>`)
@@ -87,9 +87,9 @@ describe("BannerEnding", () => {
     expect(copyrightText.getAttribute("data-contrast-tier")).toBe("meta")
   })
 
-  it("tech tokens 下用 tech 的 primary/accent/muted，consulting 烤色不残留，版权行随主题派生（不再跨主题固定同一 hex）", () => {
-    const ctx = buildCtx(resolveStyle("tech"), {})
-    const deck = ir("tech", endingWithHeading)
+  it("terminal tokens 下用 terminal 的 primary/accent/muted，brief 烤色不残留，版权行随主题派生（不再跨主题固定同一 hex）", () => {
+    const ctx = buildCtx(resolveStyle("terminal"), {})
+    const deck = ir("terminal", endingWithHeading)
     const out = renderSvgMarkup(
       <BannerEnding ir={deck} slide={endingWithHeading} index={0} ctx={ctx} />,
     )
@@ -98,21 +98,21 @@ describe("BannerEnding", () => {
     // 同值、一条断言就够，现在两个角色各锁一条。同一轮把本版式三处「primary
     // 当文字用」的填充改走 accessibleInk（见 ending-banner-ending.tsx 文件头），
     // 深蓝 primary 压深底只有 1.x:1，标题/org 标签/联系值因此落到反白。
-    expect(out).toContain("#14294A") // tech primary，用在分隔线上
-    expect(out).toContain("#53E0D2") // tech accent，用在 org 圆点上
+    expect(out).toContain("#14294A") // terminal primary，用在分隔线上
+    expect(out).toContain("#53E0D2") // terminal accent，用在 org 圆点上
     expect(out).toContain('fill="#FFFFFF"') // accessibleInk 兜出的反白，用在标题/org 标签/联系值上
-    expect(out).toContain("#93A5C0") // tech muted，用在副标题/联系标签上
+    expect(out).toContain("#93A5C0") // terminal muted，用在副标题/联系标签上
 
-    // consulting 的烤死 token 值不得残留
+    // brief 的烤死 token 值不得残留
     expect(out).not.toContain("#051C2C")
     expect(out).not.toContain("#FFC72C")
     expect(out).not.toContain("#6C6C6C")
     expect(out).not.toContain("#D5D5CB")
 
-    // 版权行派生自 tech 自己的 colors.muted（#93A5C0 对本例真正渲染到的底
+    // 版权行派生自 terminal 自己的 colors.muted（#93A5C0 对本例真正渲染到的底
     // colors.bg #0A0F1E 实测 7.622:1，压 ending 默认渐变更严的起点 #0E1630
     // 也有 7.128:1，clears B 层，metaInk 原样保留）——跟上一个测试
-    // consulting 断言的 #6B6B6B 不是同一个 hex，证明这是随主题派生，不是
+    // brief 断言的 #6B6B6B 不是同一个 hex，证明这是随主题派生，不是
     // 跨主题固定不变的孤儿色。
     const root = parseSvgRoot(`<svg xmlns="http://www.w3.org/2000/svg">${out}</svg>`)
     const copyrightText = Array.from(root.querySelectorAll("text")).find(
@@ -122,23 +122,23 @@ describe("BannerEnding", () => {
     expect(copyrightText.getAttribute("data-contrast-tier")).toBe("meta")
   })
 
-  // contrast-policy 波 T3（T1 review 遗留 minor b）：tech 已实测深底可读，这
-  // 里补齐另外两个深底主题 insight/luxe——避免"只测过一个深底主题"的覆盖
+  // contrast-policy 波 T3（T1 review 遗留 minor b）：terminal 已实测深底可读，这
+  // 里补齐另外两个深底主题 ledger/luxe——避免"只测过一个深底主题"的覆盖
   // 假象。两个主题的 colors.muted 相对各自真实渲染背景（`ctx.defaultBg`，
   // ending 页 defaultBackgrounds）都远超 B 层 3:1 门槛，metaInk 原样保留。
-  it("insight tokens（深底）下版权行随主题派生，实测远超 B 层门槛", () => {
-    const ctx = buildCtx(resolveStyle("insight"), {})
-    const deck = ir("insight", endingWithHeading)
+  it("ledger tokens（深底）下版权行随主题派生，实测远超 B 层门槛", () => {
+    const ctx = buildCtx(resolveStyle("ledger"), {})
+    const deck = ir("ledger", endingWithHeading)
     const out = renderSvgMarkup(
       <BannerEnding ir={deck} slide={endingWithHeading} index={0} ctx={ctx} />,
     )
 
-    expect(out).toContain("#16202B") // insight primary，用在分隔线上
-    expect(out).toContain("#F0A63C") // insight accent，用在 org 圆点上
+    expect(out).toContain("#16202B") // ledger primary，用在分隔线上
+    expect(out).toContain("#F0A63C") // ledger accent，用在 org 圆点上
     expect(out).toContain('fill="#FFFFFF"') // accessibleInk 兜出的反白，用在标题/org 标签/联系值上
-    expect(out).toContain("#9AA7B4") // insight muted，用在副标题/联系标签上
+    expect(out).toContain("#9AA7B4") // ledger muted，用在副标题/联系标签上
 
-    // 版权行派生自 insight 自己的 colors.muted（#9AA7B4 对本例真正渲染到的底
+    // 版权行派生自 ledger 自己的 colors.muted（#9AA7B4 对本例真正渲染到的底
     // colors.bg #0F1216 实测 7.654:1，压 ending 默认渐变更严的起点 #151B23
     // 也有 7.058:1，远超 B 层 3:1 门槛，metaInk 原样保留）。
     const root = parseSvgRoot(`<svg xmlns="http://www.w3.org/2000/svg">${out}</svg>`)
@@ -171,9 +171,9 @@ describe("BannerEnding", () => {
     expect(copyrightText.getAttribute("data-contrast-tier")).toBe("meta")
   })
 
-  it("consulting tokens 下无 heading 时标题兜底为“Thank you.”，副题兜底“We appreciate your time.”（双重兜底）", () => {
-    const ctx = buildCtx(resolveStyle("consulting"), {})
-    const deck = ir("consulting", endingBare)
+  it("brief tokens 下无 heading 时标题兜底为“Thank you.”，副题兜底“We appreciate your time.”（双重兜底）", () => {
+    const ctx = buildCtx(resolveStyle("brief"), {})
+    const deck = ir("brief", endingBare)
     const out = renderSvgMarkup(<BannerEnding ir={deck} slide={endingBare} index={0} ctx={ctx} />)
 
     expect(out).toContain("Thank you.")
@@ -181,12 +181,12 @@ describe("BannerEnding", () => {
   })
 
   // 回填旧测试「Ending shrinks a pathologically long heading instead of
-  // overflowing」（旧文件 consulting.test.tsx L373-384）：超长 heading 必须被
+  // overflowing」（旧文件 brief.test.tsx L373-384）：超长 heading 必须被
   // 压缩，不能原样溢出，且 assertSubset 通过。
   it("超长 heading 会被压缩（assertSubset 通过），不会原样渲染整段长文本", () => {
-    const ctx = buildCtx(resolveStyle("consulting"), {})
+    const ctx = buildCtx(resolveStyle("brief"), {})
     const slide: Slide = { type: "ending", heading: CJK_LONG, subheading: CJK_LONG, components: [] } as Slide
-    const deck = ir("consulting", slide)
+    const deck = ir("brief", slide)
     const markup = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg">
         <BannerEnding ir={deck} slide={slide} index={0} ctx={ctx} />
@@ -198,12 +198,12 @@ describe("BannerEnding", () => {
   })
 
   // 回填旧测试「Ending: two-line title reflow (S3b addendum, 2026-07-07)」的
-  // 1 行分支（旧文件 consulting.test.tsx L387-402）：单行 heading 时
+  // 1 行分支（旧文件 brief.test.tsx L387-402）：单行 heading 时
   // headingY=356、分隔线间距=164（修复前的基准行为不变）。
   it("单行 heading：headingY=356、分隔线间距=164", () => {
-    const ctx = buildCtx(resolveStyle("consulting"), {})
+    const ctx = buildCtx(resolveStyle("brief"), {})
     const slide: Slide = { type: "ending", heading: "Thank you.", components: [] } as Slide
-    const deck = ir("consulting", slide)
+    const deck = ir("brief", slide)
     const markup = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg">
         <BannerEnding ir={deck} slide={slide} index={0} ctx={ctx} />
@@ -217,13 +217,13 @@ describe("BannerEnding", () => {
   })
 
   // 回填旧测试「Ending: two-line title reflow」的 2 行最坏情形分支（旧文件
-  // consulting.test.tsx L404-437）：恰好换行为 2 行且字号未收缩（132px）时，
+  // brief.test.tsx L404-437）：恰好换行为 2 行且字号未收缩（132px）时，
   // 首行上移（封顶 85px）、分隔线间距收紧到 128、且所有文字 y 不超出页面
   // （<=714）。
   it("2 行 heading 最坏情形（恰好 2 行、132px 未收缩）：首行上移封顶 85、分隔线间距收紧为 128、版权不超出页面", () => {
-    const ctx = buildCtx(resolveStyle("consulting"), {})
+    const ctx = buildCtx(resolveStyle("brief"), {})
     const slide: Slide = { type: "ending", heading: "从今天开始用声明式", components: [] } as Slide
-    const deck = ir("consulting", slide)
+    const deck = ir("brief", slide)
     const markup = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg">
         <BannerEnding ir={deck} slide={slide} index={0} ctx={ctx} />

@@ -9,10 +9,10 @@ import type { BuiltinThemeDeclaration } from "../schema";
  * 或舞台金 `#FFD84D`，能量条改舞台电平条即从「赛场」变「演出」。chart 红蓝
  * 对抗位在演出场景退化为双主色。色板角色化，气质不焊死在 hex 上。
  *
- * 深底第四色温：insight 暖黑 `#0F1216` / tech 蓝黑 `#0A0F1E` / luxe 真黑
- * `#0B0908` 之后，arena 紫黑 `#120B22`。比 campaign `#2A1E3F` 深两档，是
- * 灯灭不是幕布。撞脸自查：arena vs campaign（紫黑灯灭 vs 深紫幕布、斜切
- * 面板 vs 纸屑场），arena vs tech（能量条 vs 星座链、绿 vs 青）。
+ * 深底第四色温：ledger 暖黑 `#0F1216` / terminal 蓝黑 `#0A0F1E` / luxe 真黑
+ * `#0B0908` 之后，arena 紫黑 `#120B22`。比 rally `#2A1E3F` 深两档，是
+ * 灯灭不是幕布。撞脸自查：arena vs rally（紫黑灯灭 vs 深紫幕布、斜切
+ * 面板 vs 纸屑场），arena vs terminal（能量条 vs 星座链、绿 vs 青）。
  *
  * 逐条来历（设计源 `design-project/skin-boards` 的 arena 板）：
  *   - `bg` `#120B22`：紫黑灯灭。账面上与深底三家互差 ≥1 位色相通道。
@@ -64,7 +64,7 @@ export const ARENA_TOKENS: StyleTokens = {
   },
   shape: {
     radius: 10,
-    gapScale: 0.9, // HUD 卡片圆角 + tight 留白（比 campaign 的 1.0 再收一档）
+    gapScale: 0.9, // HUD 卡片圆角 + tight 留白（比 rally 的 1.0 再收一档）
     cover: { textAnchor: "middle", wedgePeakY: 340, wedgeStartX: 980 },
   },
   defaultBackgrounds: {
@@ -78,13 +78,13 @@ export const ARENA_TOKENS: StyleTokens = {
 export const ARENA_THEME = {
   version: 2,
   id: "arena",
-  label: "Esports & Entertainment",
+  label: "Arena",
   story: {
     name: "Arena",
     story: "Purple-black one second before kickoff, and electric green as the only HUD that is on. Fast, loud, exact about the numbers.",
     positioning: "Choose it for esports, fan events, season reviews, and live entertainment where energy is the message.",
     audience: "A club or organizer speaking to fans and players.",
-    notFor: "Institutional, academic, or quiet narrative work.",
+    notFor: "Institutional, thesis, or quiet narrative work.",
     lineage: "The esports broadcast overlay and the arena screen.",
   },
   style: ARENA_TOKENS,

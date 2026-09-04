@@ -68,7 +68,7 @@ describe("loadThemeFile transactional replace", () => {
   it("keeps the previous registration when the new file fails the menu gate", async () => {
     const cwd = await tmp("pptwise-reload-")
     const path = join(cwd, "acme.theme.json")
-    await runThemeNew({ from: "consulting", output: path, id: "acme", cwd })
+    await runThemeNew({ from: "brief", output: path, id: "acme", cwd })
     await loadThemeFile(path)
     const previous = structuredClone(getThemeDefinition("acme").menu)
     const broken = JSON.parse(await readFile(path, "utf8")) as {
@@ -85,7 +85,7 @@ describe("resolveThemeByName", () => {
   it("does not register a deck theme.json whose id does not match the lookup name", async () => {
     const deck = await tmp("pptwise-mismatch-")
     const bound = join(deck, "theme.json")
-    await runThemeNew({ from: "consulting", output: bound, id: "other", cwd: deck })
+    await runThemeNew({ from: "brief", output: bound, id: "other", cwd: deck })
     await expect(resolveThemeByName("acme", { startDir: deck, deckDir: deck })).rejects.toThrow(/unknown theme "acme"/)
     expect(() => getThemeDefinition("other")).toThrow(/unknown theme "other"/)
   })

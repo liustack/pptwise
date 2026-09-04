@@ -37,7 +37,7 @@ function assertTight(estimateUnits: number, realEm: number, maxAbsPct: number) {
   expect(Math.abs(gapPct)).toBeLessThanOrEqual(maxAbsPct)
 }
 
-const CONSULTING_HEADING = "Georgia, Songti SC, STSong, serif" // resolveFontStack("consulting" theme)
+const CONSULTING_HEADING = "Georgia, Songti SC, STSong, serif" // resolveFontStack("brief" theme)
 const CAMPAIGN_HEADING = "Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif"
 
 function estimateUnits(text: string, fontFamily: string): number {
@@ -45,7 +45,7 @@ function estimateUnits(text: string, fontFamily: string): number {
 }
 
 describe("measureTextUnits — bold golden widths (data-anchored, bold-metrics fix)", () => {
-  describe("Georgia bold (consulting/academic/insight heading) — exact per-character model", () => {
+  describe("Georgia bold (brief/thesis/ledger heading) — exact per-character model", () => {
     // The user-reported defect's own trigger line — see
     // cover-fashion-masthead.test.tsx for the full layout-level
     // red-first assertion. "Components Demo" (the actual overflowing
@@ -78,7 +78,7 @@ describe("measureTextUnits — bold golden widths (data-anchored, bold-metrics f
     })
   })
 
-  describe("Microsoft YaHei bold (campaign/classroom/enterprise/heritage/luxe/tech heading) — exact per-character model", () => {
+  describe("Microsoft YaHei bold (rally/homeroom/bulletin/heritage/luxe/terminal heading) — exact per-character model", () => {
     it("\"Components Demo\" (the reported overflow line, second real-world confirmation on this face): estimate matches the genuine YaHei Bold hmtx reading almost exactly", () => {
       // real_em 9.7319, this fix's own direct fontTools re-measurement
       // against the genuine msyhbd.ttc (not tabulated in bold-data-
@@ -212,13 +212,13 @@ describe("measureTextUnits — bold golden widths (data-anchored, bold-metrics f
   // titles (not synthetic worst-case strings) that clipped visibly in a
   // real LibreOffice render under round 1's class-average-plus-margin
   // model, on the *exact* layout+theme combination the original user
-  // report traced to (cover-fashion-masthead + consulting/Georgia). See
+  // report traced to (cover-fashion-masthead + brief/Georgia). See
   // this fix's report round-2 section for the LibreOffice screenshots
   // (scratchpad, not shipped in this repo) and the single-character
   // fontTools reads that explain why ("W" +51.8% over its class's assumed
   // weight, "m" a 1.8136x ratio -- both now exact table lookups, not class
   // averages, in this file).
-  describe("round-2 red-first: the reviewer's two real, ordinary clipping headings (Georgia, consulting theme, cover-fashion-masthead's own 1168px budget)", () => {
+  describe("round-2 red-first: the reviewer's two real, ordinary clipping headings (Georgia, brief theme, cover-fashion-masthead's own 1168px budget)", () => {
     const GEORGIA_ROLE_FONT_FAMILY = CONSULTING_HEADING
 
     it("\"Maximum Momentum Wave\" wraps to 'Maximum' / 'Momentum Wave' and 'Momentum Wave's exact-model width fits 1168px at the fitted fontSize", async () => {

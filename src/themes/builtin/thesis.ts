@@ -2,23 +2,23 @@ import type { StyleTokens } from "../tokens";
 import type { BuiltinThemeDeclaration } from "../schema";
 
 /**
- * academic（学术/研究报告）——祖母绿 + 稿纸白的书卷气质。
+ * thesis（学术/研究报告）——祖母绿 + 稿纸白的书卷气质。
  *
  * **冷调组皮肤重设计（2026-08-20，`.issues/2026-08-18-theme-redesign/skins/`
- * 的 `group3-cool-boards.dc.html` 里 academic 的色板角色表 + 封面样例）**：
- * academic 在冷调三家里拿到的语域是「书卷祖母绿」——绿是书脊的绿，不是
- * 实验室的绿，靠一张暖象牙纸压住它的寒气。这一轮与 pulse 一起拆青绿双胞胎
- * （两家 primary 肉眼几乎同色）：academic 走偏绿 + 学者金暖配角 + 暖底，
- * pulse 走偏蓝 + 全冷配角 + 冷底，两家 bg 色温相反。逐条来历：
+ * 的 `group3-cool-boards.dc.html` 里 thesis 的色板角色表 + 封面样例）**：
+ * thesis 在冷调三家里拿到的语域是「书卷祖母绿」——绿是书脊的绿，不是
+ * 实验室的绿，靠一张暖象牙纸压住它的寒气。这一轮与 clinic 一起拆青绿双胞胎
+ * （两家 primary 肉眼几乎同色）：thesis 走偏绿 + 学者金暖配角 + 暖底，
+ * clinic 走偏蓝 + 全冷配角 + 冷底，两家 bg 色温相反。逐条来历：
  *   - `bg` `#FAFAF6` → `#F5F3EC`：近白 → 暖象牙纸。旧值几乎是纸白，绿压
- *     上去发寒；压暖压深之后才是书页而不是实验台，也把它与 pulse 的薄荷
+ *     上去发寒；压暖压深之后才是书页而不是实验台，也把它与 clinic 的薄荷
  *     冷底拉到色温的两头。
  *   - `surface` `#FFFFFF` → `#FCFBF6`：稿纸白，跟着底色暖半档。
  *   - `primary` `#006A4E` → `#0E6245`：祖母绿压深偏绿，实测压 bg 6.63:1
  *     （板上自标 6.5:1），色块直接承白字（白压 primary 7.36:1）。
  *   - `accent` `#00A878` → `#A8861D`：亮翡翠 → 学者金。旧值是 primary 的
  *     高饱和亮版，与 primary 同色相、只差明度，等于没有配角；学者金是绿的
- *     暖配角，也是与 pulse 全冷配角形成对照的那一处。只给线与点，不承小字，
+ *     暖配角，也是与 clinic 全冷配角形成对照的那一处。只给线与点，不承小字，
  *     实测 3.10:1（板上自标 3.1:1）。
  *     大字 3.0 门槛的余量只有 0.10，字号掉到 24px 以下就会翻车。
  *   - `text` `#1A2421` → `#23251F`：墨绿黑 → 油墨黑，13.95:1。
@@ -47,13 +47,13 @@ import type { BuiltinThemeDeclaration } from "../schema";
  *     报头对齐、vermilion 通栏红条留给版式级的处理）。
  *
  * 装饰见 `src/motifs/motif-rail-motif.tsx`（第八波批 2 演化：封面开卷
- * 金线，退役五枚空心点与右上双线角标）。academic 的锚点 motif 仍是
+ * 金线，退役五枚空心点与右上双线角标）。thesis 的锚点 motif 仍是
  * `rail-motif`，id 不改。章节金短线与幽灵章号归章节版式，不进 motif。
  *
  * **菜单分派（S1-B）**：论文腔十一词全上：photo 用带角注的 image-annotate（学术里的图就是配注的图版），evidence 是断言加展品的本行，虽然旧 sparse 表没给 one-evidence，本轮按词表补齐。
  */
 export const ACADEMIC_TOKENS: StyleTokens = {
-  id: "academic",
+  id: "thesis",
   colors: {
     bg: "#F5F3EC", // 暖象牙纸。页底，正文墨压它 13.95:1，答 4.5
     surface: "#FCFBF6", // 稿纸白。卡面，正文墨压它 14.95:1，答 4.5
@@ -88,8 +88,8 @@ export const ACADEMIC_TOKENS: StyleTokens = {
 
 export const ACADEMIC_THEME = {
   version: 2,
-  id: "academic",
-  label: "Academic",
+  id: "thesis",
+  label: "Thesis",
   story: {
     name: "Thesis",
     story: "Emerald on manuscript white, set in a bookish serif. It argues the way a defense does: hypothesis, method, evidence, and an honest account of the limits.",

@@ -149,7 +149,7 @@ describe("ending-ticket-cta-ending — board geometry", () => {
   })
 
   it("uses tokens, not baked playbill hex, when another theme draws it", () => {
-    const { root, tokens, markup } = renderEnding("tech")
+    const { root, tokens, markup } = renderEnding("terminal")
     expect(root.querySelector("rect[width='1280']")?.getAttribute("fill")).toBe(tokens.colors.primary)
     for (const hex of PLAYBILL_HEX) {
       expect(markup, `playbill token ${hex} leaked`).not.toContain(hex)

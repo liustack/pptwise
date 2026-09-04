@@ -123,24 +123,24 @@ function pathYRange(d: string): { minY: number; maxY: number } {
  */
 describe("PosterMotif（底缘暗线）", () => {
   it("稀排条目不带 decor：脸自带无框事实，主题 motif 照画", () => {
-    const content = THEME_DEFINITIONS.insight.menu.content
+    const content = THEME_DEFINITIONS.ledger.menu.content
     for (const kind of ["statement", "quote", "fact"] as const) {
       expect(content[kind]?.decor, kind).toBeUndefined()
     }
-    expect(draw("insight", contentSlide).root.querySelectorAll("path")).toHaveLength(1)
-    expect(draw("insight", coverSlide).root.querySelectorAll("path")).toHaveLength(1)
+    expect(draw("ledger", contentSlide).root.querySelectorAll("path")).toHaveLength(1)
+    expect(draw("ledger", coverSlide).root.querySelectorAll("path")).toHaveLength(1)
   })
 
   it("退役顶缘行情带、刻度齿、封面幽灵季字（走线是 path，不是 line/text/circle）", () => {
     for (const slide of [coverSlide, contentSlide, endingSlide]) {
-      const { root } = draw("insight", slide, "2026-07-15")
+      const { root } = draw("ledger", slide, "2026-07-15")
       expect(root.querySelectorAll("line"), slide.type).toHaveLength(0)
       expect(root.querySelectorAll("text"), slide.type).toHaveLength(0)
       expect(root.querySelectorAll("circle"), slide.type).toHaveLength(0)
       expect(root.querySelectorAll("polyline"), slide.type).toHaveLength(0)
       expect(root.querySelectorAll("path"), slide.type).toHaveLength(1)
     }
-    const { root } = draw("insight", chapterSlide, "2026-07-15")
+    const { root } = draw("ledger", chapterSlide, "2026-07-15")
     expect(root.querySelectorAll("line")).toHaveLength(0)
     expect(root.querySelectorAll("text")).toHaveLength(0)
     expect(root.querySelectorAll("circle")).toHaveLength(0)
@@ -148,7 +148,7 @@ describe("PosterMotif（底缘暗线）", () => {
   })
 
   it("chapter 整片退让，幽灵序号改由章节版式画", () => {
-    const { root } = draw("insight", chapterSlide, "2026-07-15")
+    const { root } = draw("ledger", chapterSlide, "2026-07-15")
     expect(root.querySelectorAll("polyline")).toHaveLength(0)
     expect(root.querySelectorAll("path")).toHaveLength(0)
     expect(root.children).toHaveLength(0)
@@ -161,7 +161,7 @@ describe("PosterMotif（底缘暗线）", () => {
       { slide: endingSlide, start: [0, 600], end: [1280, 586] },
     ]
     for (const { slide, start, end } of cases) {
-      const { root } = draw("insight", slide)
+      const { root } = draw("ledger", slide)
       expect(root.querySelectorAll("polyline"), slide.type).toHaveLength(0)
       expect(root.querySelectorAll("path"), slide.type).toHaveLength(1)
       const d = tickerPath(root).getAttribute("d") ?? ""
@@ -174,7 +174,7 @@ describe("PosterMotif（底缘暗线）", () => {
   })
 
   it("封面画板上那根底缘暗线：border，中景，一件", () => {
-    const { root, tokens } = draw("insight", coverSlide)
+    const { root, tokens } = draw("ledger", coverSlide)
     expect(countDecorPieces(root)).toBe(1)
     const line = tickerPath(root)
     expect(line.getAttribute("stroke")).toBe(tokens.colors.border)
@@ -191,7 +191,7 @@ describe("PosterMotif（底缘暗线）", () => {
 
   it("ending / content 画 ending 板上那根更贴底缘的线", () => {
     for (const slide of [endingSlide, contentSlide]) {
-      const { root, tokens } = draw("insight", slide)
+      const { root, tokens } = draw("ledger", slide)
       const line = tickerPath(root)
       const { start, end } = pathEndpoints(line.getAttribute("d") ?? "")
       expect(start, slide.type).toEqual([0, 600])
@@ -202,8 +202,8 @@ describe("PosterMotif（底缘暗线）", () => {
   })
 
   it("pins the cover and foot cubic d so float drift fails", () => {
-    const coverD = tickerPath(draw("insight", coverSlide).root).getAttribute("d")
-    const footD = tickerPath(draw("insight", contentSlide).root).getAttribute("d")
+    const coverD = tickerPath(draw("ledger", coverSlide).root).getAttribute("d")
+    const footD = tickerPath(draw("ledger", contentSlide).root).getAttribute("d")
     expect(coverD).toBe(catmullRomCubicD(COVER_POINTS))
     expect(footD).toBe(catmullRomCubicD(FOOT_POINTS))
     expect(coverD).toMatch(/C/)
@@ -211,8 +211,8 @@ describe("PosterMotif（底缘暗线）", () => {
   })
 
   it("内容页中景对比低于 3:1 上限", () => {
-    const t = resolveStyle("insight")
-    const { root } = draw("insight", contentSlide)
+    const t = resolveStyle("ledger")
+    const { root } = draw("ledger", contentSlide)
     const ground = resolveBackgroundHex(t.defaultBackgrounds.content, t.colors.bg)
     const line = tickerPath(root)
     const hex = (s: string) => [1, 3, 5].map((i) => parseInt(s.slice(i, i + 2), 16))
@@ -226,25 +226,25 @@ describe("PosterMotif（底缘暗线）", () => {
     expect(ratio).toBeLessThan(CONTENT_DECOR_CONTRAST_CEILING)
   })
 
-  it("换一家 tokens 渲染时颜色整体跟着换，insight 的色一处不残留", () => {
-    const consulting = resolveStyle("consulting")
-    const ctx = buildCtx(consulting, {})
+  it("换一家 tokens 渲染时颜色整体跟着换，ledger 的色一处不残留", () => {
+    const brief = resolveStyle("brief")
+    const ctx = buildCtx(brief, {})
     const { markup } = render(
-      <PosterMotif ir={ir("consulting", "2026-07-15")} slide={coverSlide} ctx={ctx} />,
+      <PosterMotif ir={ir("brief", "2026-07-15")} slide={coverSlide} ctx={ctx} />,
     )
-    expect(markup).toContain(consulting.colors.border)
+    expect(markup).toContain(brief.colors.border)
     for (const hex of ["#0F1216", "#171C22", "#16202B", "#F0A63C", "#F2EFE8", "#9AA7B4", "#2A3440"]) {
-      expect(markup, `insight token ${hex} leaked into consulting render`).not.toContain(hex)
+      expect(markup, `ledger token ${hex} leaked into brief render`).not.toContain(hex)
     }
   })
 
   it("装饰位置写死：换 seed（filename）输出逐字节不变", () => {
-    const ctx = buildCtx(resolveStyle("insight"), {})
+    const ctx = buildCtx(resolveStyle("ledger"), {})
     const markups = new Set(
       Array.from({ length: 12 }, (_, i) =>
         renderSvgMarkup(
           <PosterMotif
-            ir={{ ...ir("insight", "2026-07-15"), filename: `probe-${i}.pptx` } as PptxIR}
+            ir={{ ...ir("ledger", "2026-07-15"), filename: `probe-${i}.pptx` } as PptxIR}
             slide={coverSlide}
             ctx={ctx}
           />,
@@ -256,7 +256,7 @@ describe("PosterMotif（底缘暗线）", () => {
 
   it("不画任何左竖条，也不画孤立角标", () => {
     for (const slide of [coverSlide, contentSlide, endingSlide]) {
-      const { root } = draw("insight", slide)
+      const { root } = draw("ledger", slide)
       expect(root.querySelectorAll("rect")).toHaveLength(0)
       expect(root.querySelectorAll("circle")).toHaveLength(0)
       expect(root.querySelectorAll("polygon")).toHaveLength(0)
@@ -265,7 +265,7 @@ describe("PosterMotif（底缘暗线）", () => {
 
   it("Decor body passes subset validation", () => {
     for (const slide of [coverSlide, chapterSlide, contentSlide, endingSlide]) {
-      const { root } = draw("insight", slide, "2026-07-15")
+      const { root } = draw("ledger", slide, "2026-07-15")
       expect(() => assertSubset(root)).not.toThrow()
     }
   })

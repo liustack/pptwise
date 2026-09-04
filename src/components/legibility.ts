@@ -12,7 +12,7 @@ export const FORM_TITLE_FLOOR = 20
 export const FORM_BODY_FLOOR = 16
 
 /**
- * Card body ceiling vs the item title. Measured on academic p03
+ * Card body ceiling vs the item title. Measured on thesis p03
  * (outline_grid upscaled 41 / 29.5 ≈ 0.72) and museum p03 (cycle labels
  * at the title floor). Body may sit above this ratio only to honor
  * `FORM_BODY_FLOOR` when the title is still near 20px.

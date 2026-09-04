@@ -44,7 +44,7 @@ describe("layoutDef", () => {
 
 describe("PullQuoteContent", () => {
   it("sets the authored quote as the page, with the heading demoted to a context line", () => {
-    const ctx = buildCtx(resolveStyle("consulting"), {})
+    const ctx = buildCtx(resolveStyle("brief"), {})
     const chapter: Slide = { type: "chapter", heading: "第六章 · 羽毛下的智识", components: [] } as Slide
     const slide: Slide = {
       type: "content",
@@ -54,7 +54,7 @@ describe("PullQuoteContent", () => {
       components: [{ type: "blockquote", text: CJK_QUOTE, attribution: "佩珀伯格" }],
     } as Slide
     const { markup, root } = render(
-      <PullQuoteContent ir={ir("consulting", [chapter, slide])} slide={slide} index={1} ctx={ctx} />,
+      <PullQuoteContent ir={ir("brief", [chapter, slide])} slide={slide} index={1} ctx={ctx} />,
     )
     expect(markup).toContain(CJK_QUOTE)
     expect(markup).toContain("佩珀伯格")
@@ -78,7 +78,7 @@ describe("PullQuoteContent", () => {
   })
 
   it("takes the attribution from the component and never from the subheading", () => {
-    const ctx = buildCtx(resolveStyle("consulting"), {})
+    const ctx = buildCtx(resolveStyle("brief"), {})
     const slide: Slide = {
       type: "content",
       kind: "quote",
@@ -88,7 +88,7 @@ describe("PullQuoteContent", () => {
       components: [{ type: "blockquote", text: EN_QUOTE, attribution: "Irene Pepperberg" }],
     } as Slide
     const { markup } = render(
-      <PullQuoteContent ir={ir("consulting", [slide])} slide={slide} index={0} ctx={ctx} />,
+      <PullQuoteContent ir={ir("brief", [slide])} slide={slide} index={0} ctx={ctx} />,
     )
     expect(markup).toContain("IRENE PEPPERBERG")
     expect(markup).toContain("never forgets")
@@ -99,7 +99,7 @@ describe("PullQuoteContent", () => {
   })
 
   it("a paragraph stays the prose slot and the heading is the quote when no blockquote exists", () => {
-    const ctx = buildCtx(resolveStyle("consulting"), {})
+    const ctx = buildCtx(resolveStyle("brief"), {})
     const slide: Slide = {
       type: "content",
       kind: "quote",
@@ -108,7 +108,7 @@ describe("PullQuoteContent", () => {
       components: [{ type: "paragraph", text: "亚历克斯能数到六，分辨七种颜色，还会问自己是什么颜色。" }],
     } as Slide
     const { markup, root } = render(
-      <PullQuoteContent ir={ir("consulting", [slide])} slide={slide} index={0} ctx={ctx} />,
+      <PullQuoteContent ir={ir("brief", [slide])} slide={slide} index={0} ctx={ctx} />,
     )
     expect(markup).toContain(CJK_QUOTE)
     expect(markup).toContain("亚历克斯")
@@ -121,7 +121,7 @@ describe("PullQuoteContent", () => {
   })
 
   it("kicker uppercases a Latin section name from the preceding chapter", () => {
-    const ctx = buildCtx(resolveStyle("consulting"), {})
+    const ctx = buildCtx(resolveStyle("brief"), {})
     const chapter: Slide = { type: "chapter", heading: "Mind", components: [] } as Slide
     const slide: Slide = {
       type: "content",
@@ -131,16 +131,16 @@ describe("PullQuoteContent", () => {
       components: [{ type: "paragraph", text: EN_BODY }],
     } as Slide
     const { markup } = render(
-      <PullQuoteContent ir={ir("consulting", [chapter, slide])} slide={slide} index={1} ctx={ctx} />,
+      <PullQuoteContent ir={ir("brief", [chapter, slide])} slide={slide} index={1} ctx={ctx} />,
     )
     expect(markup).toContain("MIND")
   })
 
   it("empty meta fields degrade: no kicker, no context, no attribution, quote remains", () => {
-    const ctx = buildCtx(resolveStyle("consulting"), {})
+    const ctx = buildCtx(resolveStyle("brief"), {})
     const slide: Slide = { type: "content", kind: "quote", layout: "pull-quote", heading: CJK_QUOTE, components: [] } as Slide
     const { root } = render(
-      <PullQuoteContent ir={ir("consulting", [slide])} slide={slide} index={0} ctx={ctx} />,
+      <PullQuoteContent ir={ir("brief", [slide])} slide={slide} index={0} ctx={ctx} />,
     )
     const texts = Array.from(root.querySelectorAll("text"))
     expect(texts.some((t) => (t.textContent ?? "").includes("鹦鹉"))).toBe(true)
@@ -148,7 +148,7 @@ describe("PullQuoteContent", () => {
   })
 
   it("a quote far past the page's measure wraps to at most 4 italic lines", () => {
-    const ctx = buildCtx(resolveStyle("consulting"), {})
+    const ctx = buildCtx(resolveStyle("brief"), {})
     const slide: Slide = {
       type: "content",
       kind: "quote",
@@ -157,7 +157,7 @@ describe("PullQuoteContent", () => {
       components: [{ type: "blockquote", text: `${CJK_LONG}${CJK_LONG}` }],
     } as Slide
     const { root } = render(
-      <PullQuoteContent ir={ir("consulting", [slide])} slide={slide} index={0} ctx={ctx} />,
+      <PullQuoteContent ir={ir("brief", [slide])} slide={slide} index={0} ctx={ctx} />,
     )
     const quoteTexts = Array.from(root.querySelectorAll("text")).filter(
       (t) => t.getAttribute("font-style") === "italic",
@@ -167,7 +167,7 @@ describe("PullQuoteContent", () => {
   })
 
   it("a forty-character CJK quote still reads at full size, not shrunk to the floor", () => {
-    const ctx = buildCtx(resolveStyle("consulting"), {})
+    const ctx = buildCtx(resolveStyle("brief"), {})
     const long = "群众不关心事项归哪个部门，只关心这件事今天能不能办成。窗口的全部改革，都是围绕这句话做的。"
     const slide: Slide = {
       type: "content",
@@ -177,7 +177,7 @@ describe("PullQuoteContent", () => {
       components: [{ type: "blockquote", text: long, attribution: "周正明" }],
     } as Slide
     const { root } = render(
-      <PullQuoteContent ir={ir("consulting", [slide])} slide={slide} index={0} ctx={ctx} />,
+      <PullQuoteContent ir={ir("brief", [slide])} slide={slide} index={0} ctx={ctx} />,
     )
     const quoteTexts = Array.from(root.querySelectorAll("text")).filter(
       (t) => t.getAttribute("font-style") === "italic",

@@ -10,10 +10,10 @@ import { faceParam } from "./face-params"
 /**
  * verdict-index cover layout（2026-08-22 封面还原第一波，新表达）：
  * **结论句当标题 + 强调段背后铺 accent 色块 + 最多三列编号短论据**。构图抄
- * consulting 设计板封面样例（`audit19/covers/consulting.html`）：关键词下面
+ * brief 设计板封面样例（`audit19/covers/brief.html`）：关键词下面
  * 一条强调色，标题下面三条短论据，报告的目录即封面。
  *
- * **它进共享池，不是 consulting 专用**。零 theme id、零 hex。色块跟标题里
+ * **它进共享池，不是 brief 专用**。零 theme id、零 hex。色块跟标题里
  * 的 `**...**` 走，所以画在版式里（motif 恒位红线不许内容感知）。gallery
  * 封面没有强调标记，也就没有色块。
  *
@@ -29,7 +29,7 @@ import { faceParam } from "./face-params"
  *   4. 左下落款收到 x96、y688，让开 logo 盒 (1120,630,96×40)。
  *
  * 第八波（2026-08-22）：几何由菜单中本脸的 verdict* 参数控制。
- * 缺省等于上面这组常量，别的主题抽到本版式时逐字节不变。consulting 把
+ * 缺省等于上面这组常量，别的主题抽到本版式时逐字节不变。brief 把
  * kicker / 标题 / 论据 / 落款收到板上，并打开底缘规矩线。列间竖线板上
  * 没有：一旦写入 wave8 列位或底线 knobs，竖线不画。
  */

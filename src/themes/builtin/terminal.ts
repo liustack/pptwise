@@ -4,16 +4,16 @@ import type { BuiltinThemeDeclaration } from "../schema";
 /**
  * **深底组皮肤重设计（2026-08-19，`.issues/2026-08-18-theme-redesign/skins/`
  * 的 `group1-dark-boards.dc.html` 色板角色表 + 封面样例）**：深底三家共用
- * 一张脸是本轮的反面基线，tech 的处方是往深空工程走——蓝黑底配青瓷青光。
+ * 一张脸是本轮的反面基线，terminal 的处方是往深空工程走——蓝黑底配青瓷青光。
  * 第八波把右缘星座链退役，装饰改成顶缘细规线（border）+ 内容页青点睛。
  * 色板本身不动。逐条来历：
- *   - `bg` `#060A13` → `#0A0F1E`：近黑 → 蓝黑深空。与 insight 的暖黑拉开
+ *   - `bg` `#060A13` → `#0A0F1E`：近黑 → 蓝黑深空。与 ledger 的暖黑拉开
  *     色温，三家并排时第一眼就能分开。
  *   - `surface` `#0A101C` → `#121A30`：舱内面板蓝，抬升一档（bento 卡底）。
  *   - `primary` `#2DD4E6` → `#14294A`：此前 primary 与 accent 是同一个电光
  *     青（单 accent 重设计的遗留），横幅因此整块发光、`readableOn` 只能靠
  *     深色字勉强站住。primary 退成深蓝，横幅重新承得起反白。
- *   - `accent` `#2DD4E6` → `#53E0D2`：电光青 → 青瓷青光。保住 tech 的色相
+ *   - `accent` `#2DD4E6` → `#53E0D2`：电光青 → 青瓷青光。保住 terminal 的色相
  *     记忆，但离开刺眼的纯 cyan。
  *   - `text` `#F2F6FA` → `#EAF1FA`、`muted` `#8A94A6` → `#93A5C0`：冷白与
  *     舱灰，跟着蓝黑底一起偏蓝。
@@ -24,7 +24,7 @@ import type { BuiltinThemeDeclaration } from "../schema";
  *     motif 的节点也从这条色序取蓝/紫两位，图表与装饰同源。
  *     **第四格在第四轮评审里换掉了：警示琥珀 `#FFC14D` → 薄荷绿
  *     `#4BD98A`**（压 bg 10.54:1、压渐变起点 9.86:1）。原因是用户把蓝配橙
- *     定为禁忌（原话在 enterprise p09/p10），而琥珀在这张全冷的表里正是
+ *     定为禁忌（原话在 bulletin p09/p10），而琥珀在这张全冷的表里正是
  *     唯一一枚暖色，四系列图上它就贴着蓝与紫。换成薄荷绿之后整条色序真的
  *     全冷了——设计板本来写的就是「4 色冷序列」，只是当时给第四格挂了个
  *     告警位的名分。实测这一格还是四色里两两 ΔE 最大的选择（最近的一格
@@ -48,7 +48,7 @@ import type { BuiltinThemeDeclaration } from "../schema";
  * **菜单分派（S1-B）**：工程件的图是要标注的架构图，photo 因此选 image-annotate，evidence 承担跑分与实测这类断言配展品的页，quote 不上。
  */
 export const TECH_TOKENS: StyleTokens = {
-  id: "tech",
+  id: "terminal",
   colors: {
     bg: "#0A0F1E", // 蓝黑深空。页底，正文墨压它 16.78:1，答 4.5
     // No `panel` override (Task 1, electric-cyan single-accent redesign):
@@ -71,7 +71,7 @@ export const TECH_TOKENS: StyleTokens = {
   },
   fonts: {
     // Microsoft YaHei 前置：导出的 pptx 单字体无法回退，纯拉丁 sans 无 CJK
-    // 字形会渲染成豆腐块。雅黑承担 tech 的科技感无衬线气质。
+    // 字形会渲染成豆腐块。雅黑承担 terminal 的科技感无衬线气质。
     heading: ["Microsoft YaHei", "Helvetica Neue", "Helvetica", "Inter", "Arial", "system-ui"],
     body: [
       "Microsoft YaHei",
@@ -98,15 +98,15 @@ export const TECH_TOKENS: StyleTokens = {
 
 export const TECH_THEME = {
   version: 2,
-  id: "tech",
-  label: "Tech",
+  id: "terminal",
+  label: "Terminal",
   story: {
     name: "Terminal",
     story: "Blue-black depth with a celadon glow, a hairline rule at the top, one accent point per page. It speaks the way a maintainer explains an architecture: precise, unhurried, allergic to hype.",
     positioning: "Choose it for engineering talks, architecture reviews, and open-source stories where tradeoffs matter more than slogans.",
     audience: "Engineers explaining a system to engineers.",
     notFor: "Consumer launches, warm human stories, or pages that need color to carry emotion.",
-    lineage: "The conference tech talk and the design doc, set in the dark.",
+    lineage: "The conference terminal talk and the design doc, set in the dark.",
   },
   style: TECH_TOKENS,
   menu: {

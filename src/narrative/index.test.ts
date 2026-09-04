@@ -126,13 +126,13 @@ describe("NARRATIVE_PRESETS", () => {
   })
 
   it("pins the spec §5 theme recommendation table", () => {
-    expect(NARRATIVE_PRESETS["boardroom-report"].themeRecommendations).toEqual(["consulting", "enterprise", "insight"])
-    expect(NARRATIVE_PRESETS.pitch.themeRecommendations).toEqual(["consulting", "tech", "campaign"])
-    expect(NARRATIVE_PRESETS.training.themeRecommendations).toEqual(["classroom", "academic", "tech"])
-    expect(NARRATIVE_PRESETS["product-launch"].themeRecommendations).toEqual(["campaign", "runway", "tech"])
-    expect(NARRATIVE_PRESETS["weekly-brief"].themeRecommendations).toEqual(["enterprise", "consulting"])
-    expect(NARRATIVE_PRESETS["annual-review"].themeRecommendations).toEqual(["journal", "heritage", "insight"])
-    expect(NARRATIVE_PRESETS.general.themeRecommendations).toEqual(["consulting"])
+    expect(NARRATIVE_PRESETS["boardroom-report"].themeRecommendations).toEqual(["brief", "bulletin", "ledger"])
+    expect(NARRATIVE_PRESETS.pitch.themeRecommendations).toEqual(["brief", "terminal", "rally"])
+    expect(NARRATIVE_PRESETS.training.themeRecommendations).toEqual(["homeroom", "thesis", "terminal"])
+    expect(NARRATIVE_PRESETS["product-launch"].themeRecommendations).toEqual(["rally", "runway", "terminal"])
+    expect(NARRATIVE_PRESETS["weekly-brief"].themeRecommendations).toEqual(["bulletin", "brief"])
+    expect(NARRATIVE_PRESETS["annual-review"].themeRecommendations).toEqual(["journal", "heritage", "ledger"])
+    expect(NARRATIVE_PRESETS.general.themeRecommendations).toEqual(["brief"])
   })
 })
 
@@ -267,7 +267,7 @@ describe("resolveNarrative", () => {
 
 // ── normalizeNarrativeShape (T0b fix 2, bench-evidence `{id}` shape rescue) ──
 //
-// A weak model that just wrote `theme: {id: "consulting"}` a few lines above
+// A weak model that just wrote `theme: {id: "brief"}` a few lines above
 // pattern-matches the same "object wrapping an id" shape onto `narrative`.
 // Real bench-failing inputs (.issues/notes/quality-evidence.md item 2,
 // 3 real failures — 60% of flash's total): `{"id":"training"}`,

@@ -9,7 +9,7 @@ const META_SECOND_Y = 122
 const META_SIZE = 14
 const META_MAX_W = 440
 
-/** 定稿在 consulting 藏青底上给的次级墨色。它是**起点**不是终点：
+/** 定稿在 brief 藏青底上给的次级墨色。它是**起点**不是终点：
  *  `metaInk` 会先看它压当前底色够不够 3:1，不够就朝可读墨走最小的一步。
  *  烤死这个 hex 会在别家更浅的 primary 上跌到 2.90:1，contrast-system.md
  *  正是为此规定次级文字必须推导。 */

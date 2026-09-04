@@ -20,7 +20,7 @@ function ir(slides: Slide[]): PptxIR {
   return {
     version: "5",
     filename: "x.pptx",
-    theme: { id: "consulting" },
+    theme: { id: "brief" },
     meta: {},
     assets: { images: {} },
     slides,
@@ -36,8 +36,8 @@ function render(body: React.ReactElement): { markup: string; root: Element } {
   return { markup, root: parseSvgRoot(markup) }
 }
 
-describe("consulting sparse faces", () => {
-  const ctx = buildCtx(resolveStyle("consulting"), {})
+describe("brief sparse faces", () => {
+  const ctx = buildCtx(resolveStyle("brief"), {})
 
   it("statement is left navy serif under the deck's own section, with a yellow pad only on the first ** run", () => {
     const chapter: Slide = { type: "chapter", heading: "试点结论", components: [] } as Slide

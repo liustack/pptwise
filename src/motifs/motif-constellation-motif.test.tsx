@@ -67,7 +67,7 @@ function lineBox(el: Element): { x: number; y: number; w: number; h: number } {
 describe("ConstellationMotif（细规线，星座链退役）", () => {
   it("不再画节点链、轨道弧、碎点", () => {
     for (const slide of ALL_SLIDES) {
-      const { root } = draw("tech", slide)
+      const { root } = draw("terminal", slide)
       const orbits = Array.from(root.querySelectorAll("circle")).filter((c) => c.getAttribute("fill") === "none")
       expect(orbits, slide.type).toHaveLength(0)
       for (const pl of Array.from(root.querySelectorAll("polyline"))) {
@@ -77,7 +77,7 @@ describe("ConstellationMotif（细规线，星座链退役）", () => {
   })
 
   it("chapter 完全退让", () => {
-    const { root } = draw("tech", chapterSlide)
+    const { root } = draw("terminal", chapterSlide)
     expect(countDecorPieces(root)).toBe(0)
     expect(root.querySelectorAll("polyline")).toHaveLength(0)
     expect(root.querySelectorAll("circle")).toHaveLength(0)
@@ -85,9 +85,9 @@ describe("ConstellationMotif（细规线，星座链退役）", () => {
   })
 
   it("cover/ending 只画一条 border 规线，不点青", () => {
-    const tokens = resolveStyle("tech")
+    const tokens = resolveStyle("terminal")
     for (const slide of [coverSlide, endingSlide]) {
-      const { root } = draw("tech", slide)
+      const { root } = draw("terminal", slide)
       const chains = Array.from(root.querySelectorAll("polyline"))
       expect(chains).toHaveLength(1)
       expect(chains[0]!.getAttribute("stroke")).toBe(tokens.colors.border)
@@ -95,12 +95,12 @@ describe("ConstellationMotif（细规线，星座链退役）", () => {
       expect(root.querySelectorAll("circle")).toHaveLength(0)
       expect(countDecorPieces(root)).toBe(1)
     }
-    expect(draw("tech", coverSlide).markup).toBe(draw("tech", endingSlide).markup)
+    expect(draw("terminal", coverSlide).markup).toBe(draw("terminal", endingSlide).markup)
   })
 
   it("内容页规线走 border，青点睛骑在线上，件数 1", () => {
-    const tokens = resolveStyle("tech")
-    const { root } = draw("tech", contentSlide)
+    const tokens = resolveStyle("terminal")
+    const { root } = draw("terminal", contentSlide)
     expect(countDecorPieces(root)).toBe(1)
     const chain = root.querySelector("polyline")
     expect(chain?.getAttribute("stroke")).toBe(tokens.colors.border)
@@ -120,8 +120,8 @@ describe("ConstellationMotif（细规线，星座链退役）", () => {
   })
 
   it("内容页叶子按 3:1 天花板退底，没有孤立小件", () => {
-    const { root } = draw("tech", contentSlide)
-    const tokens = resolveStyle("tech")
+    const { root } = draw("terminal", contentSlide)
+    const tokens = resolveStyle("terminal")
     const bg = tokens.defaultBackgrounds.content
     const ground = bg.kind === "gradient" ? bg.from : tokens.colors.bg
     for (const el of paintedLeaves(root)) {
@@ -137,7 +137,7 @@ describe("ConstellationMotif（细规线，星座链退役）", () => {
   })
 
   it("安全区：规线与点不进标题/正文/页脚/logo", () => {
-    const { root } = draw("tech", contentSlide)
+    const { root } = draw("terminal", contentSlide)
     const chain = root.querySelector("polyline")!
     expect(overlaps(lineBox(chain), TITLE_ZONE)).toBe(false)
     expect(overlaps(lineBox(chain), BODY_ZONE)).toBe(false)
@@ -159,25 +159,25 @@ describe("ConstellationMotif（细规线，星座链退役）", () => {
     }
   })
 
-  it("换一家 tokens 渲染时颜色整体跟着换，tech 的色一处不残留", () => {
-    const consulting = resolveStyle("consulting")
-    const ctx = buildCtx(consulting, {})
+  it("换一家 tokens 渲染时颜色整体跟着换，terminal 的色一处不残留", () => {
+    const brief = resolveStyle("brief")
+    const ctx = buildCtx(brief, {})
     const { markup } = render(
-      <ConstellationMotif ir={ir("consulting")} slide={coverSlide} ctx={ctx} />,
+      <ConstellationMotif ir={ir("brief")} slide={coverSlide} ctx={ctx} />,
     )
-    expect(markup).toContain(consulting.colors.border)
+    expect(markup).toContain(brief.colors.border)
     for (const hex of ["#0A0F1E", "#121A30", "#14294A", "#53E0D2", "#EAF1FA", "#93A5C0", "#24304A"]) {
-      expect(markup, `tech token ${hex} leaked into consulting render`).not.toContain(hex)
+      expect(markup, `terminal token ${hex} leaked into brief render`).not.toContain(hex)
     }
   })
 
   it("装饰位置写死：换 seed（filename）输出逐字节不变", () => {
-    const ctx = buildCtx(resolveStyle("tech"), {})
+    const ctx = buildCtx(resolveStyle("terminal"), {})
     const markups = new Set(
       Array.from({ length: 12 }, (_, i) =>
         renderSvgMarkup(
           <ConstellationMotif
-            ir={{ ...ir("tech"), filename: `probe-${i}.pptx` } as PptxIR}
+            ir={{ ...ir("terminal"), filename: `probe-${i}.pptx` } as PptxIR}
             slide={contentSlide}
             ctx={ctx}
           />,
@@ -189,7 +189,7 @@ describe("ConstellationMotif（细规线，星座链退役）", () => {
 
   it("不画任何左竖条", () => {
     for (const slide of ALL_SLIDES) {
-      const { root } = draw("tech", slide)
+      const { root } = draw("terminal", slide)
       for (const r of Array.from(root.querySelectorAll("rect"))) {
         const w = Number(r.getAttribute("width"))
         const h = Number(r.getAttribute("height"))
@@ -200,7 +200,7 @@ describe("ConstellationMotif（细规线，星座链退役）", () => {
 
   it("Decor body passes subset validation", () => {
     for (const slide of ALL_SLIDES) {
-      expect(() => assertSubset(draw("tech", slide).root)).not.toThrow()
+      expect(() => assertSubset(draw("terminal", slide).root)).not.toThrow()
     }
   })
 })

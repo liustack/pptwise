@@ -12,7 +12,7 @@ function fakePptx() {
 }
 
 describe("defineMastersForIR (slim, single-source era)", () => {
-  const tokens = resolveStyle("tech")
+  const tokens = resolveStyle("terminal")
 
   it("defines one master per slide type", () => {
     const pptx = fakePptx()

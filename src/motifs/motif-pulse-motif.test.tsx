@@ -47,7 +47,7 @@ const num = (el: Element, a: string) => Number(el.getAttribute(a))
  */
 describe("PulseMotif（心搏线）", () => {
   it("cover 只画一笔心搏线，包在 heartbeat 里", () => {
-    const { root } = draw("pulse", coverSlide)
+    const { root } = draw("clinic", coverSlide)
     expect(Array.from(root.querySelectorAll("path"))).toHaveLength(0)
     expect(Array.from(root.querySelectorAll("polyline"))).toHaveLength(1)
     expect(Array.from(root.querySelectorAll("circle"))).toHaveLength(0)
@@ -57,8 +57,8 @@ describe("PulseMotif（心搏线）", () => {
   })
 
   it("cover 心搏线几何与板上一致，stroke accent，宽 2", () => {
-    const t = resolveStyle("pulse")
-    const { root } = draw("pulse", coverSlide)
+    const t = resolveStyle("clinic")
+    const { root } = draw("clinic", coverSlide)
     const line = root.querySelector("polyline")!
     expect(line.getAttribute("points")).toBe(HEARTBEAT_POINTS)
     expect(line.getAttribute("stroke")).toBe(t.colors.accent)
@@ -68,7 +68,7 @@ describe("PulseMotif（心搏线）", () => {
   })
 
   it("chapter 完全退让：竖标归章节版式", () => {
-    const { root } = draw("pulse", chapterSlide)
+    const { root } = draw("clinic", chapterSlide)
     expect(root.children).toHaveLength(0)
     expect(root.querySelectorAll("path")).toHaveLength(0)
     expect(root.querySelectorAll("circle")).toHaveLength(0)
@@ -77,7 +77,7 @@ describe("PulseMotif（心搏线）", () => {
 
   it("content 与 ending 不画细胞，也不再画顶缘线", () => {
     for (const slide of [contentSlide, endingSlide]) {
-      const { root } = draw("pulse", slide)
+      const { root } = draw("clinic", slide)
       expect(root.querySelectorAll("path"), slide.type).toHaveLength(0)
       expect(root.querySelectorAll("polyline"), slide.type).toHaveLength(0)
       expect(root.querySelectorAll("circle"), slide.type).toHaveLength(0)
@@ -87,7 +87,7 @@ describe("PulseMotif（心搏线）", () => {
 
   it("退役顶缘心电线与右缘细胞圈，没有孤立小件", () => {
     for (const slide of [coverSlide, chapterSlide, contentSlide, endingSlide]) {
-      const { root } = draw("pulse", slide)
+      const { root } = draw("clinic", slide)
       expect(root.querySelectorAll("circle")).toHaveLength(0)
       expect(root.querySelectorAll("polyline")).toHaveLength(slide.type === "cover" ? 1 : 0)
       for (const r of Array.from(root.querySelectorAll("rect"))) {
@@ -98,7 +98,7 @@ describe("PulseMotif（心搏线）", () => {
 
   it("件数不超过预算，叶子都包在 data-decor-piece 里", () => {
     for (const slide of [coverSlide, chapterSlide, contentSlide, endingSlide]) {
-      const { root } = draw("pulse", slide)
+      const { root } = draw("clinic", slide)
       expect(countDecorPieces(root)).toBeLessThanOrEqual(MAX_DECOR_PIECES)
       for (const el of Array.from(root.querySelectorAll("path,circle,rect,polyline,line"))) {
         expect(el.closest(`[${DECOR_PIECE_ATTR}]`), el.outerHTML).toBeTruthy()
@@ -107,7 +107,7 @@ describe("PulseMotif（心搏线）", () => {
   })
 
   it("心搏线整段落在画布内，且在标题簇与落款之间", () => {
-    const { root } = draw("pulse", coverSlide)
+    const { root } = draw("clinic", coverSlide)
     const line = root.querySelector("polyline")!
     expect(line.getAttribute("points")).toBe(HEARTBEAT_POINTS)
     // 板上 path：基线 y560，尖峰 y524–596，x96–1180。
@@ -118,18 +118,18 @@ describe("PulseMotif（心搏线）", () => {
 
   it("不画幽灵序号，中景没有出血大字", () => {
     for (const slide of [coverSlide, chapterSlide, contentSlide, endingSlide]) {
-      const { root } = draw("pulse", slide)
+      const { root } = draw("clinic", slide)
       expect(Array.from(root.querySelectorAll("text"))).toHaveLength(0)
     }
   })
 
   it("motif 不读 chartPalette——图表调色板轮转改不动它一个字节", () => {
-    const tokens = resolveStyle("pulse")
+    const tokens = resolveStyle("clinic")
     const markups = new Set(
       tokens.colors.chartPalette.map((_, offset) =>
         renderSvgMarkup(
           <PulseMotif
-            ir={ir("pulse")}
+            ir={ir("clinic")}
             slide={coverSlide}
             ctx={buildCtx(tokens, {}, undefined, undefined, undefined, offset)}
           />,
@@ -139,22 +139,22 @@ describe("PulseMotif（心搏线）", () => {
     expect(markups.size).toBe(1)
   })
 
-  it("换一家 tokens 渲染时颜色跟着换，pulse 的色一处不残留", () => {
-    const academic = resolveStyle("academic")
-    const ctx = buildCtx(academic, {})
-    const { markup } = render(<PulseMotif ir={ir("academic")} slide={coverSlide} ctx={ctx} />)
-    expect(markup).toContain(academic.colors.accent)
+  it("换一家 tokens 渲染时颜色跟着换，clinic 的色一处不残留", () => {
+    const thesis = resolveStyle("thesis")
+    const ctx = buildCtx(thesis, {})
+    const { markup } = render(<PulseMotif ir={ir("thesis")} slide={coverSlide} ctx={ctx} />)
+    expect(markup).toContain(thesis.colors.accent)
     for (const hex of PULSE_HEX) {
-      expect(markup, `pulse token ${hex} leaked into the academic render`).not.toContain(hex)
+      expect(markup, `clinic token ${hex} leaked into the thesis render`).not.toContain(hex)
     }
   })
 
   it("装饰位置写死：换 seed（filename）输出逐字节不变", () => {
-    const ctx = buildCtx(resolveStyle("pulse"), {})
+    const ctx = buildCtx(resolveStyle("clinic"), {})
     const markups = new Set(
       Array.from({ length: 12 }, (_, i) =>
         renderSvgMarkup(
-          <PulseMotif ir={{ ...ir("pulse"), filename: `probe-${i}.pptx` } as PptxIR} slide={coverSlide} ctx={ctx} />,
+          <PulseMotif ir={{ ...ir("clinic"), filename: `probe-${i}.pptx` } as PptxIR} slide={coverSlide} ctx={ctx} />,
         ),
       ),
     )
@@ -163,7 +163,7 @@ describe("PulseMotif（心搏线）", () => {
 
   it("Decor body passes subset validation", () => {
     for (const slide of [coverSlide, chapterSlide, contentSlide, endingSlide]) {
-      expect(() => assertSubset(draw("pulse", slide).root)).not.toThrow()
+      expect(() => assertSubset(draw("clinic", slide).root)).not.toThrow()
     }
   })
 })

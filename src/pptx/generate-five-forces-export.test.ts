@@ -48,7 +48,7 @@ function makeIr(components: Component[], heading = "Five Forces"): PptxIR {
   return {
     version: "5",
     filename: "five-forces-export-fixture",
-    theme: { id: "consulting" },
+    theme: { id: "brief" },
     meta: {},
     assets: { images: {} },
     slides: [
@@ -182,7 +182,7 @@ describe("five_forces pathological content through the real generatePptx", () =>
   })
 
   it("schema-max content on the narrowest curated layout (defect-F fontScale floor) still exports cleanly", async () => {
-    const themeId = registerTestTheme("five-forces-narrow", "consulting", {
+    const themeId = registerTestTheme("five-forces-narrow", "brief", {
       content: { hierarchy: "narrow-column" },
     })
     const bytes = await generatePptx({

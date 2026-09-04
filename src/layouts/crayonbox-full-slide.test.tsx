@@ -151,7 +151,7 @@ describe("crayonbox final depth contract", () => {
   })
 
   it("recesses dedicated decoration when another theme menu offers the face", () => {
-    const themeId = registerTestTheme("insight-crayonbox-cover", "insight", {
+    const themeId = registerTestTheme("ledger-crayonbox-cover", "ledger", {
       cover: { face: "crayonbox-open", decor: { kind: "silent" } },
     })
     const container = draw(dedicatedSlides[0]!, themeId)

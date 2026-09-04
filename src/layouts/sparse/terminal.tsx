@@ -6,7 +6,7 @@ import { fitSvgLine, measureTextUnits } from "../../lib/svg-text-layout"
 import { renderFittedEvidence, textColumnMaxWidth } from "../fitted-evidence"
 import { evidenceSource, fitHeroLine, fitSparseHeading, fitStatementSource, heroUnitMark, pad2 } from "./shared"
 
-/** tech 稀排脸：青光巨数、轨道格言、节点证据卡。不画右缘星座链。 */
+/** terminal 稀排脸：青光巨数、轨道格言、节点证据卡。不画右缘星座链。 */
 
 const STAR_R = [5, 3.5, 3.5, 5] as const
 const STAR_SPAN = 490

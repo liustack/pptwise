@@ -30,7 +30,7 @@ function gaugeDeck(seriesCount: number, branding: "full" | "cover-only"): PptxIR
   return {
     version: "5",
     filename: "identity.pptx",
-    theme: { id: "consulting" },
+    theme: { id: "brief" },
     branding,
     meta: { organization: "云觅咨询", version: "v2", date: "2026-08" },
     assets: { images: {} },
@@ -174,7 +174,7 @@ describe("a stepped-aside page keeps the theme it belongs to", () => {
   })
 
   it("is reached through the face, not only through FullSlideSvg", () => {
-    const ctx = ctxFor("consulting")
+    const ctx = ctxFor("brief")
     const ir = gaugeDeck(13, "full")
     const slide = ir.slides[0]!
     const markup = renderSvgMarkup(

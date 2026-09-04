@@ -207,7 +207,7 @@ export const layoutDef: LayoutDefinition = {
     minPt: TITLE_MIN_PT,
     lineHeightRatio: TITLE_LINE_HEIGHT / TITLE_SIZE,
   },
-  // `pinOnly`: consulting locks this face by *listing* it in its own
+  // `pinOnly`: brief locks this face by *listing* it in its own
   // `layouts`, which `resolveLayoutId` honours. Without it the face joins
   // `fullLayoutSet`, the pool the other 23 builtins auto-pick from.
 }

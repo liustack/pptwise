@@ -182,7 +182,7 @@ describe("layoutContentFit", () => {
 
   it("sets the degraded single column down at the golden position, capped so leftover cannot open an island", () => {
     // The degrade branch has now been given all three answers. Splitting the
-    // leftover evenly hung academic p06's first card 106px clear of the rule
+    // leftover evenly hung thesis p06's first card 106px clear of the rule
     // line it belongs under; dropping the whole leftover to the bottom
     // welded that card to the same line ("99% 页面不能看"). The golden
     // 38% share is the 2026-08-21 ruling. The fifth review capped that

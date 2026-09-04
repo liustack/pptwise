@@ -115,10 +115,10 @@ describe("24 themes, 24 structures", () => {
     const kindSets = CANONICAL_THEME_IDS.map((id) =>
       Object.keys(BUILTIN_THEME_FILES[id].menu.content).sort().join(","),
     )
-    // academic serves all eleven, crayon serves six, and several themes
+    // thesis serves all eleven, crayon serves six, and several themes
     // share a subset — the count only has to prove the axis is used.
     expect(new Set(kindSets).size).toBeGreaterThan(5)
-    expect(Object.keys(BUILTIN_THEME_FILES.academic.menu.content)).toHaveLength(11)
+    expect(Object.keys(BUILTIN_THEME_FILES.thesis.menu.content)).toHaveLength(11)
     expect(Object.keys(BUILTIN_THEME_FILES.crayon.menu.content).length).toBeLessThan(11)
   })
 

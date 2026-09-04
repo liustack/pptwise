@@ -157,7 +157,7 @@ describe("ToneAdaptiveContent", () => {
    * 自己的安全区注释都写着的那条线：标题区上沿 (96,48,1040×122)，装饰只在
    * 它之上画。kicker 的 em 框顶原本落在 40，比这条线还高 8px，于是十七家主题
    * 里有十家的这行字贴上了顶部装饰（heritage/luxe 的框内线 1.6px、journal/
-   * luxe 的报头细线 3.6px、consulting 的圆点 4.0px、insight 的刻度 7.0px）。
+   * luxe 的报头细线 3.6px、brief 的圆点 4.0px、ledger 的刻度 7.0px）。
    * 把 kicker 基线改回 62 这条立刻红。
    */
   it("kicker 的 em 框顶不进标题区上沿以上的装饰带（无背景图分支）", () => {
@@ -208,10 +208,10 @@ describe("ToneAdaptiveContent", () => {
     expect(nextBg).toBe(EXPECTED_CONTENT_BARE_WITH_BG)
   })
 
-  it("tech tokens 下用 tech 的 text/muted/border/accent 色（证明 token 化成立，无 baked hex）", () => {
-    const tokens = resolveStyle("tech")
+  it("terminal tokens 下用 terminal 的 text/muted/border/accent 色（证明 token 化成立，无 baked hex）", () => {
+    const tokens = resolveStyle("terminal")
     const ctx = buildCtx(tokens, {})
-    const deck = ir("tech")
+    const deck = ir("terminal")
     const out = renderSvgMarkup(<ToneAdaptiveContent ir={deck} slide={content} index={1} ctx={ctx} />)
 
     expect(out).toContain(ctx.colors.text) // INK→text 语境：标题
@@ -219,7 +219,7 @@ describe("ToneAdaptiveContent", () => {
     expect(out).toContain(ctx.colors.accent) // 本就直接消费：kicker/subheading/divider
     expect(out).toContain(ctx.colors.border as string) // BORDER→border：divider 第二段
 
-    // custom 自己的烤死常量不得残留（tech 的对应字段与 custom 均不同值）
+    // custom 自己的烤死常量不得残留（terminal 的对应字段与 custom 均不同值）
     expect(ctx.colors.text).not.toBe("#18181B")
     expect(ctx.colors.muted).not.toBe("#71717A")
     expect(ctx.colors.border).not.toBe("#E4E4E7")
@@ -229,15 +229,15 @@ describe("ToneAdaptiveContent", () => {
   })
 
   it("跨主题 withBg 分支：白色卡片豁免跨主题保持不变，卡片内文字走对白卡可读的墨色（不切白字）", () => {
-    const tokens = resolveStyle("tech")
+    const tokens = resolveStyle("terminal")
     const ctxWithImg = buildCtx(tokens, bgImages)
-    const deck = ir("tech", bgImages)
+    const deck = ir("terminal", bgImages)
     const out = renderSvgMarkup(
       <ToneAdaptiveContent ir={deck} slide={contentWithBg} index={1} ctx={ctxWithImg} />,
     )
 
     expect(out).toContain('fill="#FFFFFF"') // 白色卡片豁免，跨主题不变
-    // tech 的 colors.text 是浅色（对白卡不可读），卡片内文字必须是
+    // terminal 的 colors.text 是浅色（对白卡不可读），卡片内文字必须是
     // accessibleInk 校正后的墨色——原始浅色一处都不得残留（此前该断言
     // 靠强调段 tspan 泄漏的裸浅色意外通过，泄漏封死后按意图重钉）
     const cardInk = accessibleInk(ctxWithImg.colors.text, "#FFFFFF", 44)
@@ -530,15 +530,15 @@ describe("ToneAdaptiveContent", () => {
   // that never got the accessibleInk contrast guard heading/subheading/
   // footer meta already had — both branches rendered it in raw
   // `colors.accent` regardless of background. The exact combo that exposed
-  // it: consulting's theme, no-bg branch (`examples/basic.json` carries no
+  // it: brief's theme, no-bg branch (`examples/basic.json` carries no
   // background-image slides, so this is the branch a real deck's auto-pick
-  // actually reaches) — `accent` (#FFC72C) against consulting's page
+  // actually reaches) — `accent` (#FFC72C) against brief's page
   // background (#F7F7F2, `ctx.defaultBg`) measures ~1.452:1, far under the
   // 4.5:1 a 22px kicker needs. Reverting the fix (raw `fill={colors.accent}`
   // in the no-bg branch's kicker `<text>`) makes the second test below fail
   // — verified directly during implementation by temporarily reintroducing
   // that exact line and confirming this test goes red, then restoring it.
-  describe("181892a regression: kicker clears contrast on consulting's no-bg page background (pre-fix ~1.452:1)", () => {
+  describe("181892a regression: kicker clears contrast on brief's no-bg page background (pre-fix ~1.452:1)", () => {
     const chapterFirst: Slide = { type: "chapter", heading: "第一章", components: [] } as Slide
     const withSection: Slide = {
       type: "content",
@@ -553,8 +553,8 @@ describe("ToneAdaptiveContent", () => {
       )!
     }
 
-    it("characterizes the pre-fix defect: consulting's raw accent fails the 22px kicker's required ratio against its own page background", () => {
-      const tokens = resolveStyle("consulting")
+    it("characterizes the pre-fix defect: brief's raw accent fails the 22px kicker's required ratio against its own page background", () => {
+      const tokens = resolveStyle("brief")
       const ctx = buildCtx(tokens, {})
       // 原钉的是 1.452:1（旧 accent #FFC72C 压旧 bg #F7F7F2）。编辑组换血
       // （2026-08-20）把一线黄压深半档、纸底收掉绿味，实测变成 1.507:1
@@ -566,12 +566,12 @@ describe("ToneAdaptiveContent", () => {
     })
 
     it("no-bg branch: the rendered kicker's ink now clears the required ratio (accessibleInk-guarded, not raw colors.accent)", () => {
-      const tokens = resolveStyle("classroom")
+      const tokens = resolveStyle("homeroom")
       const ctx = buildCtx(tokens, {})
       const deck: PptxIR = {
         version: "3",
         filename: "x.pptx",
-        theme: { id: "classroom" },
+        theme: { id: "homeroom" },
         meta: {},
         assets: { images: {} },
         slides: [chapterFirst, withSection],

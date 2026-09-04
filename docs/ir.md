@@ -16,7 +16,7 @@ IR is the typed semantic input to pptwise. Version 5 describes what the deck say
   "version": "5",
   "filename": "hello.pptx",
   "narrative": "general",
-  "theme": { "id": "consulting" },
+  "theme": { "id": "brief" },
   "meta": { "organization": "Acme", "date": "2026-08-30" },
   "assets": { "images": {} },
   "slides": [

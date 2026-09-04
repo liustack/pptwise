@@ -60,7 +60,7 @@ describe("layoutDef", () => {
 
 describe("ending-pill-cta-ending — board geometry", () => {
   it("centers the date sentence and the supporting line", () => {
-    const { root } = renderEnding("campaign")
+    const { root } = renderEnding("rally")
     const heading = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === HEADING)!
     expect(heading.getAttribute("x")).toBe("640")
     expect(heading.getAttribute("y")).toBe("300")
@@ -73,7 +73,7 @@ describe("ending-pill-cta-ending — board geometry", () => {
   })
 
   it("draws an accent capsule whose radius follows shape.radius, CTA from the first bullet", () => {
-    const { root, tokens } = renderEnding("campaign")
+    const { root, tokens } = renderEnding("rally")
     const pill = Array.from(root.querySelectorAll("rect")).find((r) => r.getAttribute("height") === "62")!
     expect(pill.getAttribute("fill")).toBe(tokens.colors.accent)
     expect(Number(pill.getAttribute("rx"))).toBe(Math.min(31, tokens.shape?.radius ?? 31))
@@ -86,7 +86,7 @@ describe("ending-pill-cta-ending — board geometry", () => {
   })
 
   it("empty components draw no pill and invent no thank-you", () => {
-    const { root, markup } = renderEnding("campaign", endingSlide({ components: [] }))
+    const { root, markup } = renderEnding("rally", endingSlide({ components: [] }))
     expect(root.querySelectorAll("rect")).toHaveLength(0)
     expect(markup).not.toContain("Thank you")
     expect(markup).not.toContain("谢谢")
@@ -94,7 +94,7 @@ describe("ending-pill-cta-ending — board geometry", () => {
   })
 
   it("does not thank the audience", () => {
-    const { markup } = renderEnding("campaign")
+    const { markup } = renderEnding("rally")
     expect(markup).not.toContain("Thank you")
     expect(markup).not.toContain("We appreciate")
   })
@@ -119,11 +119,11 @@ describe("ending-pill-cta-ending — shared pool", () => {
     }
   })
 
-  it("emits only export-safe primitives and no baked campaign hex under another theme", () => {
+  it("emits only export-safe primitives and no baked rally hex under another theme", () => {
     for (const themeId of CANONICAL_THEME_IDS) {
       const { root, markup } = renderEnding(themeId)
       expect(() => assertSubset(root), themeId).not.toThrow()
-      if (themeId !== "campaign") {
+      if (themeId !== "rally") {
         expect(markup, themeId).not.toContain("#E84F8A")
         expect(markup, themeId).not.toContain("#2A1E3F")
       }
@@ -131,6 +131,6 @@ describe("ending-pill-cta-ending — shared pool", () => {
   })
 
   it("renders byte-identically on repeat", () => {
-    expect(renderEnding("campaign").markup).toBe(renderEnding("campaign").markup)
+    expect(renderEnding("rally").markup).toBe(renderEnding("rally").markup)
   })
 })

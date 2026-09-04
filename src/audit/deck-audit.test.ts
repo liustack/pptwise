@@ -69,7 +69,7 @@ describe("auditDeck — clean deck baseline", () => {
 
   // Cross-check against the pre-existing stress-content fixtures (extreme
   // text length, every component type) across a representative theme
-  // spread — including `tech`, the one built-in theme whose *default*
+  // spread — including `terminal`, the one built-in theme whose *default*
   // background is a gradient, so the gradient-band background regions get
   // exercised against real (not hand-crafted) markup too. `audit-
   // baseline.test.ts` already proves these render with zero *overflow*;
@@ -92,7 +92,7 @@ describe("auditDeck — clean deck baseline", () => {
   //   1. `code.tsx`'s `LINE_NUM_COLOR` — a hardcoded editor-gutter gray.
   //   2. `architecture.tsx`'s layer title (`ctx.colors.primary` on
   //      `ctx.colors.panel ?? ctx.colors.surface`) — a *theme's own*
-  //      internal colour pairing, not a hardcoded value; on `insight`
+  //      internal colour pairing, not a hardcoded value; on `ledger`
   //      specifically it computes to 4.40:1, essentially a rounding
   //      distance under the 4.5:1 body threshold.
   // Every one of these is a real (if minor/borderline) WCAG deviation an
@@ -115,14 +115,14 @@ describe("auditDeck — clean deck baseline", () => {
   // exists exactly for a theme where `colors.muted` alone wouldn't clear
   // it), so the `data-contrast-tier="meta"` marker alone is enough to keep
   // both sites off this list everywhere — on the two themes each layout
-  // actually ships natively pinned to (consulting/banner-ending,
-  // academic/rail-ending) the fix goes further still: `colors.muted` itself
+  // actually ships natively pinned to (brief/banner-ending,
+  // thesis/rail-ending) the fix goes further still: `colors.muted` itself
   // already clears the plain 4.5:1 body threshold against each theme's real
   // background (`colors.muted` is calibrated to clear 4.5:1 generally —
   // `docs/contrast-system.md`'s "Muted calibration discipline" section), so
   // `metaInk` returns it unchanged and the copyright line produces no
   // low-contrast finding at all, meta tier or not.
-  const THEMES = ["consulting", "insight", "tech", "campaign", "luxe"] as const
+  const THEMES = ["brief", "ledger", "terminal", "rally", "luxe"] as const
   for (const themeId of THEMES) {
     for (const [name, stressDeck] of Object.entries(STRESS_DECKS)) {
       it(`${themeId} / ${name} stress deck: no false-positive overlap findings, no crash`, () => {
@@ -162,7 +162,7 @@ describe("auditDeck — understood pre-existing low-contrast sources (not audit 
     // meta tier and held to the hard 3:1 floor it comfortably clears. The
     // gray is unchanged; what changed is that the renderer now says which
     // floor applies.
-    const ir = deck("consulting", [
+    const ir = deck("brief", [
       {
         type: "content",
         kind: "points",
@@ -181,7 +181,7 @@ describe("auditDeck — understood pre-existing low-contrast sources (not audit 
     expect(svg).toContain("#6A737D")
   })
 
-  // 2026-08-19 深底组皮肤重设计把 insight 的 `primary` 从正红 `#E63946`
+  // 2026-08-19 深底组皮肤重设计把 ledger 的 `primary` 从正红 `#E63946`
   // 换成墨蓝 `#16202B`（设计稿把 primary 定义成让位给 accent 的色块底色）。
   // 这处配对因此从「差一点点」变成「差很远」：原来是 `#E63946` 压面板约
   // 4.4:1，现在是 `#16202B` 压 surface `#171C22` 的 1.04:1。
@@ -193,8 +193,8 @@ describe("auditDeck — understood pre-existing low-contrast sources (not audit 
   // 另外两处（`cover-banner-title.tsx` / `ending-banner-ending.tsx`）本轮
   // 已改走 `accessibleInk`，因为那两处是**新增**的 finding；这一处是既有的，
   // 连同其余九个同样把 primary 当文字用的 component 一起留给下一棒裁决。
-  it("architecture.tsx's theme-derived primary-on-panel pairing is far under 4.5:1 on insight (1.04:1 since the dark-group redesign)", () => {
-    const ir = deck("insight", [
+  it("architecture.tsx's theme-derived primary-on-panel pairing is far under 4.5:1 on ledger (1.04:1 since the dark-group redesign)", () => {
+    const ir = deck("ledger", [
       {
         type: "content",
         kind: "points",
@@ -220,7 +220,7 @@ describe("auditDeck — understood pre-existing low-contrast sources (not audit 
 // its own heading ink (`colors.text` — in-sentence coherence with the rest
 // of the heading, not a shared neutral ink; see the layout's own comment)
 // on the 7 that used to fail
-// (consulting/academic/classroom/heritage/pulse/ember) and stays
+// (brief/thesis/homeroom/heritage/clinic/ember) and stays
 // byte-identical (still the theme's own accent fill) on the other 9. See
 // `ending-constellation-ending.test.tsx`'s 16-theme coherence-property test
 // for the fill-value-level assertion this block's low-contrast-findings
@@ -264,14 +264,14 @@ describe("constellation-ending accent period contrast (contrast-policy wave, tas
 // own badge already was: each call site now runs its ink through
 // `accessibleInk`, keeping the preferred fill when it already clears the
 // ratio (byte-identical on every theme that never failed) and falling back
-// to `readableOn`'s neutral ink only where it doesn't. `tech`/`campaign`/
-// `consulting` are used below (each is among the affected themes for its
+// to `readableOn`'s neutral ink only where it doesn't. `terminal`/`rally`/
+// `brief` are used below (each is among the affected themes for its
 // call site, confirmed by a real 13-theme sweep) — the same probes this
 // block's pre-fix version used to pin the defect, now re-pinned to assert
 // it's gone (red→green evidence).
 describe("auditDeck — B-group ink fixes (bench-driven fix round, defect A handoff, Task 3)", () => {
-  it("steps.tsx's numbered badge digit clears contrast against tech's light primary once measured against its own circle", () => {
-    const ir = deck("tech", [
+  it("steps.tsx's numbered badge digit clears contrast against terminal's light primary once measured against its own circle", () => {
+    const ir = deck("terminal", [
       {
         type: "content",
         kind: "points",
@@ -284,7 +284,7 @@ describe("auditDeck — B-group ink fixes (bench-driven fix round, defect A hand
   })
 
   it("roadmap.tsx's numbered badge digit clears contrast against the same light theme primaries as steps.tsx (identical pattern, separate call site)", () => {
-    const ir = deck("tech", [
+    const ir = deck("terminal", [
       {
         type: "content",
         kind: "points",
@@ -301,7 +301,7 @@ describe("auditDeck — B-group ink fixes (bench-driven fix round, defect A hand
     expect(contrast.some((f) => f.detail?.text === "01")).toBe(false)
   })
 
-  it("rings.tsx's core label (colors.surface on colors.primary, no card shell at all) clears contrast against campaign once measured against its own circle", () => {
+  it("rings.tsx's core label (colors.surface on colors.primary, no card shell at all) clears contrast against rally once measured against its own circle", () => {
     // rings.tsx paints no rect/card of its own — pre-fix, the core label's
     // *only* possible fallback was the ambient page background, and
     // colors.surface sits close enough to that background on every one of
@@ -309,7 +309,7 @@ describe("auditDeck — B-group ink fixes (bench-driven fix round, defect A hand
     // near-miss before the defect-A fix (ratio ~1.0-1.2 everywhere,
     // confirmed by a real sweep) — not just a "sometimes passes by
     // coincidence" case like the two badges above.
-    const ir = deck("campaign", [
+    const ir = deck("rally", [
       {
         type: "content",
         kind: "points",
@@ -321,8 +321,8 @@ describe("auditDeck — B-group ink fixes (bench-driven fix round, defect A hand
     expect(contrast.some((f) => f.detail?.text === "Core")).toBe(false)
   })
 
-  it("image-compare.tsx's \"VS\" badge (identical colors.surface-on-colors.primary pattern as rings.tsx, separate call site) clears contrast against campaign the same way", () => {
-    const ir = deck("campaign", [
+  it("image-compare.tsx's \"VS\" badge (identical colors.surface-on-colors.primary pattern as rings.tsx, separate call site) clears contrast against rally the same way", () => {
+    const ir = deck("rally", [
       {
         type: "content",
         kind: "points",
@@ -341,7 +341,7 @@ describe("auditDeck — B-group ink fixes (bench-driven fix round, defect A hand
     expect(contrast.some((f) => f.detail?.text === "VS")).toBe(false)
   })
 
-  it("image-compare.tsx's \"before_after\" style AFTER chip (colors.surface on colors.accent, a small rect not a circle) clears contrast against consulting once measured against its own chip", () => {
+  it("image-compare.tsx's \"before_after\" style AFTER chip (colors.surface on colors.accent, a small rect not a circle) clears contrast against brief once measured against its own chip", () => {
     // Same defect family, third shape kind: a <rect> this time (the "AFTER"
     // chip, 52x24=1,248px^2 — well below MIN_BG_REGION_AREA), not a circle —
     // proving the defect-A fix's no-area-floor change (not just the new
@@ -352,7 +352,7 @@ describe("auditDeck — B-group ink fixes (bench-driven fix round, defect A hand
     // fell through to a background that always happened to pass. The
     // BEFORE chip (colors.muted fill) is unaffected on every theme — no
     // low-contrast finding for it before or after this fix.
-    const ir = deck("consulting", [
+    const ir = deck("brief", [
       {
         type: "content",
         kind: "points",
@@ -389,7 +389,7 @@ describe("auditDeck — overflow / out-of-bounds", () => {
     // canvas and over the footer, so it now honors `box.h` like `bullets`
     // and `row_cards` already did. Its new behaviour is locked in by the
     // content-truncated test below rather than here.
-    const ir = deck("consulting", [
+    const ir = deck("brief", [
       { type: "content", kind: "points", id: "s1", heading: "overflow probe", components: [{ type: "code", language: "js", code: CODE_OVERFLOW }] },
     ])
     const report = auditDeck(ir)
@@ -401,7 +401,7 @@ describe("auditDeck — overflow / out-of-bounds", () => {
   })
 
   it("omits slideId when the slide carries none", () => {
-    const ir = deck("consulting", [
+    const ir = deck("brief", [
       { type: "content", kind: "points", heading: "overflow probe", components: [{ type: "code", language: "js", code: CODE_OVERFLOW }] },
     ])
     const report = auditDeck(ir)
@@ -417,7 +417,7 @@ describe("auditDeck — overflow / out-of-bounds", () => {
     // capacity-1 annotation slot). It now truncates into the budget
     // `layoutContentFit` hands it and stamps `data-truncated`, so the loss
     // is reported instead of being discovered by the reader.
-    const ir = deck("consulting", [
+    const ir = deck("brief", [
       { type: "content", kind: "points", id: "s1", heading: "overflow probe", components: [{ type: "paragraph", text: LONG_CJK.repeat(20) }] },
     ])
     const report = auditDeck(ir)
@@ -443,7 +443,7 @@ describe("auditDeck — content-truncated / content-dropped (bench-driven fix ro
     // verdict_banner renders at a responsive but still fixed two-line budget
     // for each resolved width. A long enough unbroken run forces
     // `truncateEmphasisSegments` to cut regardless of the selected layout.
-    const ir = deck("consulting", [
+    const ir = deck("brief", [
       {
         type: "content",
         kind: "points",
@@ -461,7 +461,7 @@ describe("auditDeck — content-truncated / content-dropped (bench-driven fix ro
   })
 
   it("surfaces a clipped assigned icon-card form body as content-truncated", () => {
-    const ir = deck("terra", [
+    const ir = deck("almanac", [
       {
         type: "content",
         kind: "data",
@@ -491,7 +491,7 @@ describe("auditDeck — content-truncated / content-dropped (bench-driven fix ro
   })
 
   it("surfaces a clipped citation ref as content-truncated", () => {
-    const ir = deck("classroom", [
+    const ir = deck("homeroom", [
       {
         type: "content",
         kind: "data",
@@ -526,7 +526,7 @@ describe("auditDeck — content-truncated / content-dropped (bench-driven fix ro
     // instead of calling SvgContent directly.
     const longText = LONG_CJK.repeat(3)
     const many: Component[] = Array.from({ length: 8 }, () => ({ type: "paragraph", text: longText }))
-    const ir = deck("consulting", [{ type: "content", kind: "points", id: "s1", heading: "drop probe", components: many }])
+    const ir = deck("brief", [{ type: "content", kind: "points", id: "s1", heading: "drop probe", components: many }])
     const report = auditDeck(ir)
     const dropped = report.findings.filter((f) => f.code === "content-dropped")
     expect(dropped.length).toBeGreaterThan(0)
@@ -547,7 +547,7 @@ describe("auditDeck — content-truncated / content-dropped (bench-driven fix ro
       text: LONG_CJK,
       sub: "补充说明文字用于撑高卡片高度",
     })
-    const ir = deck("consulting", [
+    const ir = deck("brief", [
       {
         type: "content",
         kind: "points",
@@ -575,7 +575,7 @@ describe("auditDeck — content-truncated / content-dropped (bench-driven fix ro
   // so the least amount of shrink headroom before a pathological heading
   // hits the truncate branch.
   it("surfaces a heading that outgrows even its layout's minPt floor as 'content-truncated'", () => {
-    const themeId = registerTestTheme("audit-fashion-masthead-positive", "campaign", {
+    const themeId = registerTestTheme("audit-fashion-masthead-positive", "rally", {
       cover: "fashion-masthead",
     })
     const ir = deck(themeId, [
@@ -605,7 +605,7 @@ describe("auditDeck — content-truncated / content-dropped (bench-driven fix ro
   // permanently, next to the positive one above.
   it("does not mark or report a heading that only shrinks to its layout's minPt floor", () => {
     const plain = "微服务架构下的分布式事务一致性保障机制与补偿策略设计规范以及"
-    const themeId = registerTestTheme("audit-fashion-masthead-negative", "campaign", {
+    const themeId = registerTestTheme("audit-fashion-masthead-negative", "rally", {
       cover: "fashion-masthead",
     })
     const ir = deck(themeId, [
@@ -639,7 +639,7 @@ describe("auditDeck — placeholder pages", () => {
       // "happened not to have findings".
       { type: "content", kind: "points", placeholder: true, components: [] },
     ]
-    const ir = deck("consulting", slides)
+    const ir = deck("brief", slides)
     const report = auditDeck(ir)
     expect(report.pagesAudited).toBe(1)
     expect(report.pagesSkipped).toBe(1)
@@ -648,7 +648,7 @@ describe("auditDeck — placeholder pages", () => {
 })
 
 describe("findContrastIssues — low-contrast", () => {
-  const BG = "#F7F7F2" // consulting theme colors.bg
+  const BG = "#F7F7F2" // brief theme colors.bg
   // Background is now derived from the rendered geometry itself (see
   // findContrastIssues's doc comment) — every fixture here starts with a
   // real full-page background <rect>, the same thing background.tsx always
@@ -803,7 +803,7 @@ describe("findContrastIssues — low-contrast", () => {
   // author/date/version meta line's markup
   // (`<text x="576" y="268" ...><tspan fill="#...">Jane Doe · Lead</tspan>
   // <tspan fill="#...">    ·    2026-07-19</tspan>...</text>`, captured
-  // from a real academic-theme render).
+  // from a real thesis-theme render).
   it("attributes a multi-tspan run without its own x/y to the owning <text>'s real position, not the ancestor transform origin", () => {
     const markup = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">
       <rect x="0" y="0" width="1280" height="720" fill="#FFFFFF"/>
@@ -1104,7 +1104,7 @@ describe("__collectImageBackedTextRuns — audit-v2 phase B pixel-audit input", 
 
 describe("gradient (url()) shape fills route to pixel-audit instead of misattributing (task R3)", () => {
   it("collects a run painted over a gradient-filled <rect> instead of misattributing it to whatever lies beneath (rect/path registration gate)", () => {
-    // Pre-fix defect (recon for this task, measured live on the tech theme's
+    // Pre-fix defect (recon for this task, measured live on the terminal theme's
     // constellation motif): `fill="url(#...)"` failed the old
     // `shapeFill?.startsWith("#")` registration gate outright, so the
     // gradient rect never became a PaintedShape at all — `backgroundAt`
@@ -1707,7 +1707,7 @@ describe("parseWedgePath — geometric round-trip hardening (post-review, falsif
   })
 
   it("recognizes a ring whose end lands on atan2's own branch cut", () => {
-    // A real academic-theme donut wedge ending on the horizontal: the outer
+    // A real thesis-theme donut wedge ending on the horizontal: the outer
     // endpoint reads +pi and the inner endpoint, a rounding bit below the
     // axis, reads -pi. The ray cross-check wrapped that with a sign-keeping
     // `%` and answered a full turn, so the wedge was rejected and the ring
@@ -1890,10 +1890,10 @@ describe("parseWedgePath — real renderDonut/renderPie output round-trips (rend
 describe("findContrastIssues — decor/motif subtrees excluded from background-region collection", () => {
   // Real-render regression lock (not synthetic markup, unlike the suite
   // above) for the `data-decor` exclusion: reviewer measured 7-9 spurious
-  // background regions per slide on campaign-theme covers before this fix,
-  // dormant only because no test rendered a campaign cover through
+  // background regions per slide on rally-theme covers before this fix,
+  // dormant only because no test rendered a rally cover through
   // `findContrastIssues`'s region collector and looked. `campaign-motif`
-  // (`motif-campaign-motif.tsx`, `themeDef.motif` for the campaign theme)
+  // (`motif-campaign-motif.tsx`, `themeDef.motif` for the rally theme)
   // draws several large, >=0.64-effective-opacity crayon-stroke `<path>`s —
   // exactly the shape `MIN_BG_REGION_AREA`/`MIN_BG_OPACITY` would otherwise
   // accept as real backgrounds — inside the `<g data-decor>` wrapper
@@ -1905,7 +1905,7 @@ describe("findContrastIssues — decor/motif subtrees excluded from background-r
   // side-by-side with the decor exclusion in the same render, tying both
   // halves of this fix together. That gives an exact, hand-verified
   // legitimate region count of 2 (read from source, not guessed): the
-  // campaign theme's solid `#3D2E78` full-page background
+  // rally theme's solid `#3D2E78` full-page background
   // (`background.tsx`'s `spec.kind === "color"` branch paints exactly one
   // `<rect>`) and `cover-split-diagonal.tsx`'s own `#F0559E` (`ctx.colors.
   // primary`) diagonal color panel (its accent bar is 72x5=360px², under
@@ -1913,8 +1913,8 @@ describe("findContrastIssues — decor/motif subtrees excluded from background-r
   // all — neither contributes a region). `Branding` renders nothing for
   // a cover slide with no `ir.brand` configured. If the decor exclusion
   // regressed, this count would jump well past 2.
-  it("sees exactly the two legitimate background regions on a real campaign-theme cover, none from the motif", () => {
-    const themeId = registerTestTheme("audit-campaign-split", "campaign", {
+  it("sees exactly the two legitimate background regions on a real rally-theme cover, none from the motif", () => {
+    const themeId = registerTestTheme("audit-rally-split", "rally", {
       cover: "split-diagonal",
     })
     const ir = deck(themeId, [
@@ -1923,7 +1923,7 @@ describe("findContrastIssues — decor/motif subtrees excluded from background-r
     const markup = renderSlideSvg(ir, 0)
     const regions = __collectBgRegions(markup)
     expect(regions).toHaveLength(2)
-    // 柔和组皮肤重设计（2026-08-20）换掉了 campaign 的色板：底色幕布深紫
+    // 柔和组皮肤重设计（2026-08-20）换掉了 rally 的色板：底色幕布深紫
     // `#2A1E3F`，斜切色块走 `ctx.colors.primary` 的舞台暗紫 `#23173A`
     // （旧值是 `#3D2E78` 与品红 `#F0559E`）。这里钉的是「两块、且都不来自
     // motif」这件事，色值随主题走。
@@ -1997,15 +1997,15 @@ describe("findContrastIssues — text painted on a decor shape resolves against 
     // the honest assertion here is now silence — and this stays a live
     // regression net, not a deleted test: a future motif edit that walks any
     // opaque decor shape back into the bottom-right slot re-lands a finding
-    // here and fails. The mechanism itself is still pinned by the tech and
-    // consulting cases below, which still collide.
+    // here and fails. The mechanism itself is still pinned by the terminal and
+    // brief cases below, which still collide.
     expect(contrastFindings(quarterly("ink")).filter((f) => f.page === 1)).toEqual([])
     // Differential, so "no finding" can't be mistaken for "attribution went
     // blind": ink's own seal fill would still fail if it were under the run —
     // `#686056` on `#C3272B` is the 1.07:1 that used to be reported here.
     //
-    // 2026-08-19: this used to also point at tech's collision "below" as a
-    // live example on the same page. That example is gone — tech's `primary`
+    // 2026-08-19: this used to also point at terminal's collision "below" as a
+    // live example on the same page. That example is gone — terminal's `primary`
     // (the fill of the decor square the date lands on) was redesigned from a
     // bright cyan to a dark navy, which took the same geometric collision
     // from 1.70:1 to 5.80:1. The collision still happens; it just reads fine
@@ -2013,7 +2013,7 @@ describe("findContrastIssues — text painted on a decor shape resolves against 
     expect(contrastRatio("#686056", "#C3272B")).toBeCloseTo(1.073, 3)
   })
 
-  it("tech: the same cover slot now clears the floor against the motif's own corner square (1.70:1 -> 5.80:1)", () => {
+  it("terminal: the same cover slot now clears the floor against the motif's own corner square (1.70:1 -> 5.80:1)", () => {
     // Same layout slot, same motif (`enterprise-motif`'s 24px square at
     // (1200, 624), filled `colors.primary`), same geometric collision: its
     // bottom edge clears the date's baseline by 2px.
@@ -2023,35 +2023,35 @@ describe("findContrastIssues — text painted on a decor shape resolves against 
     // single motif's. That defect is untouched and still worth its own fix.
     //
     // What changed on 2026-08-19 is the color, not the geometry: 深底组皮肤
-    // 重设计 split tech's `primary` away from its `accent` (both used to be
+    // 重设计 split terminal's `primary` away from its `accent` (both used to be
     // the same `#2DD4E6`) and made primary a dark navy `#14294A`. The date
     // line is `colors.muted`, so the pairing went from muted-on-bright-cyan
     // (1.70:1) to muted-on-dark-navy (5.80:1) and the honest verdict here is
     // now silence.
-    const findings = contrastFindings(quarterly("tech")).filter((f) => f.page === 1)
+    const findings = contrastFindings(quarterly("terminal")).filter((f) => f.page === 1)
     expect(findings).toEqual([])
     // Pinned arithmetic, so "no finding" can't be mistaken for "attribution
     // went blind" — the reason for the silence is a real measurement, and the
     // old failing number is kept alongside it so a future token change that
-    // walks tech back under the floor is recognisable as a return, not a
+    // walks terminal back under the floor is recognisable as a return, not a
     // novelty.
     expect(contrastRatio("#93A5C0", "#14294A")).toBeCloseTo(5.799, 3)
     expect(contrastRatio("#8A94A6", "#2DD4E6")).toBeCloseTo(1.700, 3)
   })
 
-  it("consulting: the same collision measures 3.26:1 against its decor square — a real pairing that clears the 3:1 floor, so no finding", () => {
+  it("brief: the same collision measures 3.26:1 against its decor square — a real pairing that clears the 3:1 floor, so no finding", () => {
     // The third theme in the same slot (`#051C2C` square, same geometry as
-    // tech's). Measured 3.26:1, which clears the B-tier/large-text 3:1 floor
+    // terminal's). Measured 3.26:1, which clears the B-tier/large-text 3:1 floor
     // the 24px date line is graded against, so the honest verdict here is
     // silence — recorded rather than left implicit, because "no finding" now
     // means "measured against the square and passed" instead of the
     // pre-fix "measured against the page background and passed", and only
     // one of those two silences is worth anything.
     expect(contrastRatio("#6B6B6B", "#051C2C")).toBeCloseTo(3.26, 2)
-    expect(contrastFindings(quarterly("consulting")).filter((f) => f.page === 1)).toEqual([])
+    expect(contrastFindings(quarterly("brief")).filter((f) => f.page === 1)).toEqual([])
   })
 
-  it("consulting: the decor square left the bottom-right slot entirely, so even a token that would fail against it finds nothing there", () => {
+  it("brief: the decor square left the bottom-right slot entirely, so even a token that would fail against it finds nothing there", () => {
     // This used to be the live differential for the two silences above:
     // `#3A4E60` measures 2.02:1 against the decor square and 8.01:1 against
     // the page background `#F7F7F2`, so a finding could only appear if
@@ -2060,7 +2060,7 @@ describe("findContrastIssues — text painted on a decor shape resolves against 
     // registered theme, not an IR overlay.
     //
     // 2026-08-20 (冷调组皮肤重设计): `enterprise-motif` — the motif all
-    // three of these consulting/tech cases actually render — was redrawn.
+    // three of these brief/terminal cases actually render — was redrawn.
     // Its 24px square at (1200, 624) is gone along with the rest of the
     // seed-varied composition; the new fixed mark puts a top ruler, a
     // stepped run of squares top-right and a single accent square at the
@@ -2081,7 +2081,7 @@ describe("findContrastIssues — text painted on a decor shape resolves against 
     // "routes a gradient-filled <rect> inside <g data-decor> to
     // pixel-audit" — which is where that proof always belonged, since it
     // does not depend on any one theme's decoration staying put.
-    const mutedId = registerTestTheme("audit-quarterly-consulting-muted", "consulting", {
+    const mutedId = registerTestTheme("audit-quarterly-brief-muted", "brief", {
       cover: "tone-adaptive-header",
     })
     getThemeDefinition(mutedId).style.colors.muted = "#3A4E60"
@@ -2097,21 +2097,21 @@ describe("findContrastIssues — text painted on a decor shape resolves against 
     expect(contrastRatio("#3A4E60", "#F7F7F2")).toBeCloseTo(8.01, 2)
   })
 
-  // 原本这条守卫是拿 campaign 的蜡笔条布陷阱的：一条 crayon `<path>` 的
+  // 原本这条守卫是拿 rally 的蜡笔条布陷阱的：一条 crayon `<path>` 的
   // `pathBoundingBox` 盖住日期行、透明度也过 `MIN_BG_OPACITY`，于是「decor
   // path 不参与归因」这条规则被真渲染真验了一次。**柔和组皮肤重设计
   // （2026-08-20）把蜡笔条整族退役**（`motif-campaign-motif.tsx` 换成纸屑
   // 场：40 枚 8×5 的斜方片，每一枚的包围盒都在页缘带里，够不着任何文字），
   // 全 17 主题重扫一遍，**没有任何一家还能布上这个陷阱**
   // （`.issues/2026-08-18-theme-redesign/skins/tools/probe-armed-decor.mts`：
-  // decor path 数 campaign 40 / terra 3 / ink·classroom 各 1、其余为
+  // decor path 数 rally 40 / almanac 3 / ink·homeroom 各 1、其余为
   // 0，armed 全 0）。
   //
   // 与其让守卫烂成一句空断言（`armed.length > 0` 恒假就再也测不到规则本身），
   // 改成合成标记直接钉规则的两面，比原来更严：同一块几何、同一个透明度，
   // 走 `<path>` 必须不归因，走 `<rect>` 必须归因。第二条是防空转的那一半
   // ——它一旦跟着变绿，说明整条归因链路断了，而不是规则生效了。
-  it("a decor <path> stays out of attribution where the identical <rect> geometry attributes (the rule's two sides, synthetic — campaign's crayon strokes retired with the soft-group reskin)", () => {
+  it("a decor <path> stays out of attribution where the identical <rect> geometry attributes (the rule's two sides, synthetic — rally's crayon strokes retired with the soft-group reskin)", () => {
     const textRun = '<text x="1216" y="650" text-anchor="end" font-size="24" fill="#D5CFE8">2026-08-15</text>'
     const cover = (shape: string) =>
       `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">` +
@@ -2140,7 +2140,7 @@ describe("auditDeck — photo background robustness", () => {
     // checkable backgrounds, see findContrastIssues's own asset/scrim
     // fixtures above); it only proves the whole pipeline stays robust
     // (parses, resolves, never throws) end-to-end for this background kind.
-    const ir = deck("consulting", [
+    const ir = deck("brief", [
       {
         type: "content",
         kind: "points",
@@ -2331,7 +2331,7 @@ describe("auditDeck — finding shape contract", () => {
     // established above), so this only asserts the shape contract on
     // whatever findings a deliberately tiny deck can produce, via the
     // exported AuditFinding fields.
-    const ir = deck("consulting", [{ type: "cover", heading: "hello", components: [] }])
+    const ir = deck("brief", [{ type: "cover", heading: "hello", components: [] }])
     const report: { findings: AuditFinding[] } = auditDeck(ir)
     for (const f of report.findings) {
       expect(f.page).toBeGreaterThan(0)
@@ -2372,7 +2372,7 @@ describe("auditDeck — raw/unvalidated-input guard (Task 2, borrow wave — A4)
   })
 
   it("does not throw for a properly validated/constructed IR (the deck() test helper's own shape)", () => {
-    const ir = deck("consulting", [{ type: "cover", heading: "hello", components: [] }])
+    const ir = deck("brief", [{ type: "cover", heading: "hello", components: [] }])
     expect(() => auditDeck(ir)).not.toThrow()
   })
 })
@@ -2395,7 +2395,7 @@ describe("auditDeck — raw/unvalidated-input guard (Task 2, borrow wave — A4)
 // and relative).
 describe("__pathBoundingBox — arc-bbox root fix (fix/arc-bbox)", () => {
   // A real `insight_panel` accent-bar `d` string, captured from
-  // `renderSlideSvg` (insight theme, 2-row panel) before this fix —
+  // `renderSlideSvg` (ledger theme, 2-row panel) before this fix —
   // `roundedTopBarPath(96, 322.34.., 1088, 6, 2)`'s exact output. Kept as a
   // literal (not re-derived from the component) so this test stays a fixed
   // characterization of the real defect, immune to unrelated future layout
@@ -2800,12 +2800,12 @@ describe("__pathBoundingBox — compressed SVG arc-flag fix (fix/arc-bbox, flag-
 // (`accessibleInk`, same file, established precedent) — these two tests are
 // the red->green pin for that fix, using two of the eight affected themes.
 describe("auditDeck — arc-bbox reclassification ink fixes (fix/arc-bbox)", () => {
-  it("insight-panel.tsx's title clears contrast against academic's accent-on-surface pairing once measured against its real panel background", () => {
-    const ir = deck("academic", [
+  it("insight-panel.tsx's title clears contrast against thesis's accent-on-surface pairing once measured against its real panel background", () => {
+    const ir = deck("thesis", [
       {
         type: "content",
         kind: "points",
-        heading: "insight",
+        heading: "ledger",
         components: [
           {
             type: "insight_panel",

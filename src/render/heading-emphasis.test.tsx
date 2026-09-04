@@ -90,8 +90,8 @@ describe("a theme with a declared stroke keeps it", () => {
     expect(paintedText(svg)).not.toContain("*")
   })
 
-  it("consulting swipes its marker pad under a marked heading", () => {
-    const svg = contentPage("consulting", MARKED)
+  it("brief swipes its marker pad under a marked heading", () => {
+    const svg = contentPage("brief", MARKED)
     expect(svg).toContain('data-emphasis-pad=""')
     expect(paintedText(svg)).not.toContain("*")
   })

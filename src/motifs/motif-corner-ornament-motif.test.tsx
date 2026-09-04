@@ -19,7 +19,7 @@ const DRAWN_SLIDES = [coverSlide, contentSlide, endingSlide]
 const RULE_SLIDES = [contentSlide, endingSlide]
 
 /** 本 motif 的四家消费者：锚点 + `MOTIF_CANDIDATES` 里借它的三家。 */
-const CONSUMERS = ["journal", "academic", "luxe", "heritage"] as const
+const CONSUMERS = ["journal", "thesis", "luxe", "heritage"] as const
 
 /** 设计板上的四条红虚线禁区。 */
 const BOARD_ZONES = {
@@ -38,7 +38,7 @@ const LOGO_BOXES = [
 ] as const
 
 /**
- * 全版式 + 主题 deck 十页在 journal/academic/luxe/heritage 四家上实测出来的
+ * 全版式 + 主题 deck 十页在 journal/thesis/luxe/heritage 四家上实测出来的
  * 排字外沿（工具：`.issues/2026-08-18-theme-redesign/skins/tools/
  * text-margin-sweep.mts`，非 chapter 页 1833 条文字）。推导写在
  * `motif-corner-ornament-motif.tsx` 的文件头。
@@ -53,7 +53,7 @@ const TEXT_ENVELOPE = { top: 40, bottom: 709.5 } as const
  * （右组）各写一行，中间整段是空的。四家消费者 × 全版式 + 十页 deck 实测，
  * 这个中间窗口一条文字都没有——连放宽到 160×28 都是 0 碰撞：
  *   tsx .issues/2026-08-18-theme-redesign/skins/tools/text-margin-sweep.mts \
- *     --themes=journal,academic,luxe,heritage --skip-types=chapter \
+ *     --themes=journal,thesis,luxe,heritage --skip-types=chapter \
  *     --probe=560,686,160,28,issue-mark-generous   → 0 collisions
  * 所以期号按实测的中间窗口收边，而不是按板上那条通栏带——「板是意图、
  * 实测是事实」这条纪律在这一件上指向的正是「板画宽了」。

@@ -42,7 +42,7 @@ function makeIr(overrides: Partial<PptxIR> = {}): PptxIR {
   return {
     version: "5",
     filename: "package-audit-fixture",
-    theme: { id: "consulting" },
+    theme: { id: "brief" },
     meta: {},
     assets: { images: {} },
     slides: [
@@ -418,7 +418,7 @@ describe("auditPptxPackage — image-alt-dropped, image-takeover closure (q15 mi
   const REAL_PNG =
     "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
 
-  it("round-trips green for the consulting photo menu's image-split face (q15 slide3 minimal repro)", async () => {
+  it("round-trips green for the brief photo menu's image-split face (q15 slide3 minimal repro)", async () => {
     const ir = makeIr({
       slides: [
         { type: "cover", heading: "Package Audit Fixture", components: [] },
@@ -444,7 +444,7 @@ describe("auditPptxPackage — image-alt-dropped, image-takeover closure (q15 mi
   })
 
   it("round-trips green for a photo menu bound to image-top (q15 slide5 minimal repro)", async () => {
-    const themeId = registerTestTheme("package-audit-image-top", "consulting", {
+    const themeId = registerTestTheme("package-audit-image-top", "brief", {
       content: { photo: "image-top" },
     })
     const ir = makeIr({
@@ -632,7 +632,7 @@ describe("auditPptxPackage — image-alt-dropped, rekeyed on rendered ops (alt-e
           kind: "points",
           heading: "Body",
           // Pin a tight auto-pool layout. After banner-heading retired,
-          // consulting's free pick no longer overflows this slide, which
+          // brief's free pick no longer overflows this slide, which
           // would skip the drop this fixture is here to prove.
           components: [
             { type: "bullets", items: Array.from({ length: 40 }, () => LONG_BULLET) },

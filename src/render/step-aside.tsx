@@ -87,7 +87,7 @@ const DROPPED = /data-dropped="[1-9]/
  * Asked by drawing it. `SvgContent` is the same component the face is about
  * to call, so the probe runs the dispatch the real page will run — the
  * full-body single-component branch that hands one component the whole rect
- * without consulting `layoutContentFit`, the arrangement branches, the
+ * without brief `layoutContentFit`, the arrangement branches, the
  * layout's own gap tiers and drop path — and every component decides for
  * itself, on this box and this instance, whether it can draw.
  *

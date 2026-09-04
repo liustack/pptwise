@@ -2,7 +2,7 @@
   "version": "5",
   "filename": "saas-metrics-review",
   "narrative": "general",
-  "theme": { "id": "insight" },
+  "theme": { "id": "ledger" },
   "meta": { "organization": "Meridian Analytics", "date": "2026-08-15" },
   "slides": [
     {

@@ -32,7 +32,7 @@ async function tmpThemesDir(): Promise<string> {
   return join(await mkdtemp(join(tmpdir(), "pptwise-theme-write-")), "themes")
 }
 
-const consulting = () => themeFileFromPreset("consulting", { id: "acme" })
+const brief = () => themeFileFromPreset("brief", { id: "acme" })
 const swiss = () => themeFileFromPreset("swiss", { id: "acme" })
 
 describe("theme-file publish protocol", () => {
@@ -43,7 +43,7 @@ describe("theme-file publish protocol", () => {
     let observedDuringWindow: boolean | undefined
     let publishedDuringWindow: unknown
     await expect(
-      writeThemeFile(target, consulting(), false, {
+      writeThemeFile(target, brief(), false, {
         beforePublish: async () => {
           // Old wx protocol: an empty reserved file already sits here.
           observedDuringWindow = await targetExists(target)
@@ -71,7 +71,7 @@ describe("theme-file publish protocol", () => {
     // the no-force writer resumes. The old protocol renamed over the force
     // file here; the current one must fail with the overwrite hint.
     await expect(
-      writeThemeFile(target, consulting(), false, {
+      writeThemeFile(target, brief(), false, {
         beforePublish: async () => {
           await writeThemeFile(target, swiss(), true)
         },
@@ -88,7 +88,7 @@ describe("theme-file publish protocol", () => {
     const target = join(dir, "acme.theme.json")
 
     await expect(
-      writeThemeFile(target, consulting(), false, {
+      writeThemeFile(target, brief(), false, {
         beforePublish: async () => {
           throw new Error("simulated crash inside the publish window")
         },

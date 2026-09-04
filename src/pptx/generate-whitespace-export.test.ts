@@ -49,7 +49,7 @@ function codeDeck(): PptxIR {
   return {
     version: "5",
     filename: "whitespace.pptx",
-    theme: { id: "tech" },
+    theme: { id: "terminal" },
     meta: {},
     assets: { images: {} },
     slides: [

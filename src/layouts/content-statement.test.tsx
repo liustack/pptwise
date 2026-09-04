@@ -70,11 +70,11 @@ describe("StatementContent", () => {
     expect(() => assertSubset(root)).not.toThrow()
   })
 
-  it("English verse renders on consulting without a crash", () => {
-    const ctx = buildCtx(resolveStyle("consulting"), {})
+  it("English verse renders on brief without a crash", () => {
+    const ctx = buildCtx(resolveStyle("brief"), {})
     const slide: Slide = { ...zeroSlide, heading: EN_VERSE } as Slide
     const { markup, root } = render(
-      <StatementContent ir={ir("consulting", [slide])} slide={slide} index={0} ctx={ctx} />,
+      <StatementContent ir={ir("brief", [slide])} slide={slide} index={0} ctx={ctx} />,
     )
     expect(markup).toContain("remember")
     expect(() => assertSubset(root)).not.toThrow()
@@ -128,19 +128,19 @@ describe("StatementContent", () => {
   })
 
   it("empty subheading and 0 components: no empty text node, heading still renders", () => {
-    const ctx = buildCtx(resolveStyle("consulting"), {})
+    const ctx = buildCtx(resolveStyle("brief"), {})
     const { root } = render(
-      <StatementContent ir={ir("consulting", [zeroSlide])} slide={zeroSlide} index={0} ctx={ctx} />,
+      <StatementContent ir={ir("brief", [zeroSlide])} slide={zeroSlide} index={0} ctx={ctx} />,
     )
     const texts = Array.from(root.querySelectorAll("text"))
     expect(texts.every((t) => (t.textContent ?? "").trim().length > 0)).toBe(true)
     expect(texts.some((t) => (t.textContent ?? "").includes("天气"))).toBe(true)
   })
 
-  it("consulting tokens: no luxe baked hex leaks", () => {
-    const ctx = buildCtx(resolveStyle("consulting"), {})
+  it("brief tokens: no luxe baked hex leaks", () => {
+    const ctx = buildCtx(resolveStyle("brief"), {})
     const out = renderSvgMarkup(
-      <StatementContent ir={ir("consulting", [zeroSlide])} slide={zeroSlide} index={0} ctx={ctx} />,
+      <StatementContent ir={ir("brief", [zeroSlide])} slide={zeroSlide} index={0} ctx={ctx} />,
     )
     expect(out).toContain(ctx.colors.primary)
     expect(out).not.toContain("#0B0908")

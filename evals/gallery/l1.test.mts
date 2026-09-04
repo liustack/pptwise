@@ -56,7 +56,7 @@ describe("auditL1 planted defects", () => {
     expect(codes(wrap(`<text x="40" y="40" font-size="14">cut short...</text>`))).toContain("overflow-marker")
   })
 
-  it("does not treat academic statement gold-dot circles as overflow-marker", () => {
+  it("does not treat thesis statement gold-dot circles as overflow-marker", () => {
     const svg = wrap(
       `<text x="96" y="350" font-size="48">设备不会突然坏</text>` +
         `<circle cx="200" cy="400" r="4" fill="#C6A15B"/>` +
@@ -399,9 +399,9 @@ describe("auditL1 live sample", () => {
     expect(classifyL1(result)).toEqual(classifyL1(auditL1(svg)))
   })
 
-  it("academic content pages have no isolated midground dot", async () => {
+  it("thesis content pages have no isolated midground dot", async () => {
     const assets = await corpusAssets(LEXICONS.zh)
-    const ir = themeDeck("academic", LEXICONS.zh, assets)
+    const ir = themeDeck("thesis", LEXICONS.zh, assets)
     for (let index = 2; index <= 8; index++) {
       const svg = renderSlideSvg(ir, index)
       expect(classifyL1(auditL1(svg)), `p${String(index + 1).padStart(2, "0")}`).not.toContain("isolated-mid-piece")
@@ -443,7 +443,7 @@ describe("auditL1 on a page whose component declines outright", () => {
   const declinedChartDeck = {
     version: "5",
     filename: "declined-chart",
-    theme: { id: "consulting" },
+    theme: { id: "brief" },
     meta: {},
     assets: { images: {} },
     slides: [

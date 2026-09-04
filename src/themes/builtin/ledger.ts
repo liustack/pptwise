@@ -1,4 +1,4 @@
-// insight（深度洞察）——原 creative 改名（2026-07-10 用户裁决：深底红金
+// ledger（深度洞察）——原 creative 改名（2026-07-10 用户裁决：深底红金
 // 气质其实是 terminal/Economist 财经信息图风，不配叫 creative；真正的
 // 创意子类由 doodle/ink 两新主题承接）。
 import type { StyleTokens } from "../tokens";
@@ -7,11 +7,11 @@ import type { BuiltinThemeDeclaration } from "../schema";
 /**
  * **深底组皮肤重设计（2026-08-19，`.issues/2026-08-18-theme-redesign/skins/`
  * 的 `group1-dark-boards.dc.html` 色板角色表 + 封面样例）**：深底三家
- * （insight / tech / luxe）此前共用「深底 + 左竖条 + 左上标题」一张脸，
- * covers-review 把它记成反面基线。insight 的处方是往行情屏走——暖黑终端底
+ * （ledger / terminal / luxe）此前共用「深底 + 左竖条 + 左上标题」一张脸，
+ * covers-review 把它记成反面基线。ledger 的处方是往行情屏走——暖黑终端底
  * 配终端琥珀，装饰换成「行情语汇」。逐条来历：
  *   - `bg` `#0A0A0C` → `#0F1216`：中性死黑 → 暖黑终端底。死黑没有色温，
- *     三家并排时分不出谁是谁；暖黑与 tech 的蓝黑、luxe 的真黑各占一档。
+ *     三家并排时分不出谁是谁；暖黑与 terminal 的蓝黑、luxe 的真黑各占一档。
  *   - `surface` `#14141A` → `#171C22`：数据面板跟着底色转暖，仍只抬一档，
  *     深底主题不出白卡。
  *   - `primary` `#E63946` → `#16202B`：正红 → 墨蓝。红色横幅在深底上抢走
@@ -42,7 +42,7 @@ import type { BuiltinThemeDeclaration } from "../schema";
  * **菜单分派（S1-B）**：行情屏靠数字立身，data 用通栏的 split-band 放表和图，fact 用整页大数字，画面不是它的语言，photo 不上。
  */
 export const INSIGHT_TOKENS: StyleTokens = {
-  id: "insight",
+  id: "ledger",
   colors: {
     bg: "#0F1216", // 暖黑终端底。页底，正文墨压它 16.35:1，答 4.5
     surface: "#171C22", // 数据面板。卡面，正文墨压它 14.92:1，答 4.5
@@ -77,8 +77,8 @@ export const INSIGHT_TOKENS: StyleTokens = {
 
 export const INSIGHT_THEME = {
   version: 2,
-  id: "insight",
-  label: "Financial Insight",
+  id: "ledger",
+  label: "Ledger",
   story: {
     name: "Ledger",
     story: "Warm black terminal, amber figures, a serif for the argument. It talks like a strategist who publishes the odds and settles the account every quarter.",

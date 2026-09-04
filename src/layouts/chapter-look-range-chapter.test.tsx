@@ -132,7 +132,7 @@ describe("chapter-look-range-chapter — shared pool", () => {
   })
 
   it("uses tokens, not a baked runway hex, when another theme draws it", () => {
-    const { root, tokens, markup } = renderChapter("tech")
+    const { root, tokens, markup } = renderChapter("terminal")
     expect(root.querySelector("line")?.getAttribute("stroke")).toBe(tokens.colors.border)
     for (const hex of RUNWAY_HEX) {
       expect(markup, `runway token ${hex} leaked`).not.toContain(hex)

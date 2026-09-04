@@ -36,7 +36,7 @@ function tinyIr(): PptxIR {
   return {
     version: "5",
     filename: "seal-catch-fixture.pptx",
-    theme: { id: "consulting" },
+    theme: { id: "brief" },
     meta: {},
     assets: { images: {} },
     slides: [

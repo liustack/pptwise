@@ -36,7 +36,7 @@ function makeIr(components: Component[]): PptxIR {
   return {
     version: "5",
     filename: "chart-export-fixture",
-    theme: { id: "consulting" },
+    theme: { id: "brief" },
     meta: {},
     assets: { images: {} },
     slides: [

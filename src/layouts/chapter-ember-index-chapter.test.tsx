@@ -79,7 +79,7 @@ describe("chapter-ember-index-chapter — board geometry", () => {
   })
 
   it("uses tokens, not baked hex", () => {
-    const { root, tokens } = renderChapter("consulting")
+    const { root, tokens } = renderChapter("brief")
     const fills = new Set(Array.from(root.querySelectorAll("[fill]")).map((el) => el.getAttribute("fill")))
     expect(fills.has(tokens.colors.accent) || fills.has(tokens.colors.primary)).toBe(true)
     expect(root.innerHTML).not.toMatch(/#E56A2C/i)

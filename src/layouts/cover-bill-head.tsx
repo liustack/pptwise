@@ -26,7 +26,7 @@ import { accessibleInk, metaInk } from "../render/ink"
  *   3. 底线板上约 y627，落在第五带 y620-664。上收到 y610（tone-adaptive
  *      底部分隔线同款：版式的线停在第五带之上）。落款字仍在线下面。
  *   4. 左下落款板上在 x56。enterprise-motif 在 (60,626) 有一枚 16×16
- *      accent 方块（tech 会抽到这家 motif），字压上去 1.42:1。左缘收到
+ *      accent 方块（terminal 会抽到这家 motif），字压上去 1.42:1。左缘收到
  *      x96，躲开那一枚方块。左落款板上 6px 字距是 CJK，引擎不加。
  *   5. 右下落款板上顶到右缘 56px，压 logo 盒。右缘收到 x1108。
  *   6. 日期贴片在本文件当前景画。几何对齐 wave 7：`top:64px; right:56px;

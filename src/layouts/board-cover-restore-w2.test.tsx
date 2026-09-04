@@ -18,15 +18,15 @@ const COVER: Slide = {
 } as Slide
 
 const WAVE2 = [
-  { id: "academic", face: "thesis-plate-cover" },
-  { id: "campaign", face: "poster-center" },
-  { id: "insight", face: "stat-cover" },
-  { id: "tech", face: "type-rule-cover" },
+  { id: "thesis", face: "thesis-plate-cover" },
+  { id: "rally", face: "poster-center" },
+  { id: "ledger", face: "stat-cover" },
+  { id: "terminal", face: "type-rule-cover" },
   { id: "luxe", face: "invitation-plate-cover" },
   { id: "journal", face: "issue-head-cover" },
   { id: "ink", face: "vertical-title-cover" },
   { id: "museum", face: "poster-center" },
-  { id: "terra", face: "pledge-open-cover" },
+  { id: "almanac", face: "pledge-open-cover" },
   { id: "heritage", face: "double-frame-cover" },
 ] as const
 
@@ -101,12 +101,12 @@ describe("board-cover-restore wave 2 — locked cover faces", () => {
 })
 
 const WAVE8_B2_LOCKS = [
-  { id: "academic", type: "cover" as const, face: "thesis-plate-cover" },
-  { id: "academic", type: "chapter" as const, face: "folio-ghost-chapter" },
-  { id: "academic", type: "ending" as const, face: "defense-close-ending" },
-  { id: "classroom", type: "cover" as const, face: "chalk-band-cover" },
-  { id: "classroom", type: "chapter" as const, face: "lesson-box-chapter" },
-  { id: "classroom", type: "ending" as const, face: "homework-close-ending" },
+  { id: "thesis", type: "cover" as const, face: "thesis-plate-cover" },
+  { id: "thesis", type: "chapter" as const, face: "folio-ghost-chapter" },
+  { id: "thesis", type: "ending" as const, face: "defense-close-ending" },
+  { id: "homeroom", type: "cover" as const, face: "chalk-band-cover" },
+  { id: "homeroom", type: "chapter" as const, face: "lesson-box-chapter" },
+  { id: "homeroom", type: "ending" as const, face: "homework-close-ending" },
   { id: "crayon", type: "cover" as const, face: "crayonbox-open" },
   { id: "crayon", type: "chapter" as const, face: "crayonbox-sticker" },
   { id: "crayon", type: "ending" as const, face: "crayonbox-todo" },
@@ -151,12 +151,12 @@ const WAVE8_B3_LOCKS = [
   { id: "vermilion", type: "cover" as const, face: "red-head-cover" },
   { id: "vermilion", type: "chapter" as const, face: "seal-numeral-chapter" },
   { id: "vermilion", type: "ending" as const, face: "deliberation-ending" },
-  { id: "terra", type: "cover" as const, face: "pledge-open-cover" },
-  { id: "terra", type: "chapter" as const, face: "field-band-chapter" },
-  { id: "terra", type: "ending" as const, face: "scorecard-ending" },
-  { id: "pulse", type: "cover" as const, face: "report-open-cover" },
-  { id: "pulse", type: "chapter" as const, face: "subject-rule-chapter" },
-  { id: "pulse", type: "ending" as const, face: "care-plan-ending" },
+  { id: "almanac", type: "cover" as const, face: "pledge-open-cover" },
+  { id: "almanac", type: "chapter" as const, face: "field-band-chapter" },
+  { id: "almanac", type: "ending" as const, face: "scorecard-ending" },
+  { id: "clinic", type: "cover" as const, face: "report-open-cover" },
+  { id: "clinic", type: "chapter" as const, face: "subject-rule-chapter" },
+  { id: "clinic", type: "ending" as const, face: "care-plan-ending" },
   { id: "arena", type: "cover" as const, face: "cut-panel-cover" },
   { id: "arena", type: "chapter" as const, face: "round-mark-chapter" },
   { id: "arena", type: "ending" as const, face: "seat-cta-ending" },
@@ -252,25 +252,25 @@ describe("wave 8 batch 3 — midground identity survives FullSlideSvg", () => {
     expect(piece.querySelectorAll("rect")).toHaveLength(0)
   })
 
-  it("pulse cover keeps the heartbeat polyline in mid", () => {
-    const { mid } = renderPage("pulse", "cover")
+  it("clinic cover keeps the heartbeat polyline in mid", () => {
+    const { mid } = renderPage("clinic", "cover")
     const polylines = mid.querySelectorAll("polyline")
     expect(polylines).toHaveLength(1)
     expect(polylines[0]?.getAttribute("points")).toBe(HEARTBEAT_POINTS)
   })
 
-  it.each(["chapter", "ending"] as const)("pulse %s has no polyline in mid", (type) => {
-    const { mid } = renderPage("pulse", type)
+  it.each(["chapter", "ending"] as const)("clinic %s has no polyline in mid", (type) => {
+    const { mid } = renderPage("clinic", type)
     expect(mid.querySelectorAll("polyline")).toHaveLength(0)
   })
 
-  it.each(["cover", "content", "ending"] as const)("terra %s keeps three contour paths", (type) => {
-    const { mid } = renderPage("terra", type)
+  it.each(["cover", "content", "ending"] as const)("almanac %s keeps three contour paths", (type) => {
+    const { mid } = renderPage("almanac", type)
     expect(mid.querySelectorAll("path")).toHaveLength(3)
   })
 
-  it("terra chapter has no contour paths", () => {
-    const { mid } = renderPage("terra", "chapter")
+  it("almanac chapter has no contour paths", () => {
+    const { mid } = renderPage("almanac", "chapter")
     expect(mid.querySelectorAll("path")).toHaveLength(0)
   })
 

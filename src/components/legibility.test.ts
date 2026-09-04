@@ -26,7 +26,7 @@ import {
 } from "./legibility"
 
 describe("form text contrast", () => {
-  it("replaces unreadable white on consulting yellow with a passing ink", () => {
+  it("replaces unreadable white on brief yellow with a passing ink", () => {
     const fill = "#F5C518"
     const fontSize = 20
     const ink = formLegibleInk("#FFFFFF", fill, fontSize)
@@ -146,9 +146,9 @@ describe("assigned icon-card form clipping markers", () => {
     })),
   }
   const cases = [
-    { theme: "terra", box: { x: 0, y: 0, w: 1088, h: 320 } },
-    { theme: "academic", box: { x: 0, y: 0, w: 640, h: 320 } },
-    { theme: "tech", box: { x: 0, y: 0, w: 640, h: 320 } },
+    { theme: "almanac", box: { x: 0, y: 0, w: 1088, h: 320 } },
+    { theme: "thesis", box: { x: 0, y: 0, w: 640, h: 320 } },
+    { theme: "terminal", box: { x: 0, y: 0, w: 640, h: 320 } },
   ]
 
   for (const { theme, box } of cases) {
@@ -160,8 +160,8 @@ describe("assigned icon-card form clipping markers", () => {
 })
 
 describe("numbered_pills legibility", () => {
-  it("pulse 4 items keep title ≥20 and body ≥15 (or omit body, never 13)", () => {
-    const ctx = themeCtx("pulse")
+  it("clinic 4 items keep title ≥20 and body ≥15 (or omit body, never 13)", () => {
+    const ctx = themeCtx("clinic")
     const component = {
       type: "numbered_cards" as const,
       items: GALLERY_FOUR.items.map(({ title, text }) => ({ title, text })),
@@ -222,8 +222,8 @@ describe("cycle node legibility", () => {
   // In-circle node labels sit against FORM_BODY_FLOOR, not FORM_TITLE_FLOOR:
   // a label inside a ring node has a chord's worth of width, and the ring
   // scale already shrank the whole drawing to fit its slot.
-  it("tech 4-char CJK node labels wrap at ≥16 instead of 现场…", () => {
-    const ctx = themeCtx("tech")
+  it("terminal 4-char CJK node labels wrap at ≥16 instead of 现场…", () => {
+    const ctx = themeCtx("terminal")
     const component = {
       type: "cycle" as const,
       title: "能力面",
@@ -304,8 +304,8 @@ describe("form body title cap", () => {
     expect(capFormBody(40, 30)).toBeCloseTo(24)
   })
 
-  it("academic outline_grid on a tall slot keeps body ≤ 0.6 title", () => {
-    const ctx = themeCtx("academic")
+  it("thesis outline_grid on a tall slot keeps body ≤ 0.6 title", () => {
+    const ctx = themeCtx("thesis")
     const box = { x: 0, y: 0, w: 1088, h: 520 }
     const { container } = svg(iconCards.render(GALLERY_THREE, box, ctx))
     const item = GALLERY_THREE.items[0]!

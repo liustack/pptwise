@@ -133,10 +133,10 @@ describe("ToneAdaptiveHeaderCover", () => {
     expect(fontSize).toBeGreaterThanOrEqual(18)
   })
 
-  it("tech tokens 下（无背景图）用 tech 的 primary/text/muted/border 色，custom 自己的烤色不再出现（证明真正 token 化）", () => {
-    const tokens = resolveStyle("tech")
+  it("terminal tokens 下（无背景图）用 terminal 的 primary/text/muted/border 色，custom 自己的烤色不再出现（证明真正 token 化）", () => {
+    const tokens = resolveStyle("terminal")
     const ctx = buildCtx(tokens, {})
-    const doc = ir("tech", {}, "full")
+    const doc = ir("terminal", {}, "full")
     const out = renderSvgMarkup(
       <ToneAdaptiveHeaderCover ir={doc} slide={slide} index={0} ctx={ctx} />,
     )
@@ -147,7 +147,7 @@ describe("ToneAdaptiveHeaderCover", () => {
     expect(out).toContain(ctx.colors.muted) // MUTED→muted：org/副标题/右下角meta
     expect(out).toContain(ctx.colors.border) // BORDER→border：底部分隔线
 
-    // custom 自己的烤死常量不得残留（tech 的对应字段与 custom 均不同值）
+    // custom 自己的烤死常量不得残留（terminal 的对应字段与 custom 均不同值）
     expect(ctx.colors.text).not.toBe("#18181B")
     expect(ctx.colors.primary).not.toBe("#18181B")
     expect(ctx.colors.muted).not.toBe("#71717A")
@@ -158,16 +158,16 @@ describe("ToneAdaptiveHeaderCover", () => {
   })
 
   it("withBg 分支跨主题：白字/黑幕豁免固定为纯白/纯黑，不随主题变化", () => {
-    const tokens = resolveStyle("tech")
+    const tokens = resolveStyle("terminal")
     const ctxWithImg = buildCtx(tokens, bgImages)
-    const doc = ir("tech", bgImages)
+    const doc = ir("terminal", bgImages)
     const out = renderSvgMarkup(
       <ToneAdaptiveHeaderCover ir={doc} slide={bgSlide} index={0} ctx={ctxWithImg} />,
     )
 
     expect(out).toContain('fill="#FFFFFF"')
     expect(out).toContain('fill="#000000"')
-    // 有背景图时切到白字，不应再出现 tech 自己的 text/primary/muted/border
+    // 有背景图时切到白字，不应再出现 terminal 自己的 text/primary/muted/border
     expect(out).not.toContain(ctxWithImg.colors.text)
     expect(out).not.toContain(ctxWithImg.colors.primary)
     expect(out).not.toContain(ctxWithImg.colors.muted)
@@ -178,9 +178,9 @@ describe("ToneAdaptiveHeaderCover", () => {
   // 单元格会空掉。svg2pptx 的 textToOp 对空 runs 照样产出一只文本框，所以这格
   // 必须整个不画，而不是画一个空的。
   it("右下角 meta 无内容时不画空 <text>（省略 branding + 无 version）", () => {
-    const tokens = resolveStyle("tech")
+    const tokens = resolveStyle("terminal")
     const ctx = buildCtx(tokens, {})
-    const doc = ir("tech")
+    const doc = ir("terminal")
     const bare: PptxIR = {
       ...doc,
       meta: { ...doc.meta, version: undefined },
@@ -218,7 +218,7 @@ function renderTone(
 
 describe("ToneAdaptiveHeaderCover — cover knobs (board-cover-restore wave 2)", () => {
   it("default title is 92 and the right-bottom date is drawn under branding full", () => {
-    const { root } = renderTone("consulting")
+    const { root } = renderTone("brief")
     const title = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "年度战略回顾")!
     expect(title.getAttribute("font-size")).toBe("92")
     const right = Array.from(root.querySelectorAll("text")).find(
@@ -228,8 +228,8 @@ describe("ToneAdaptiveHeaderCover — cover knobs (board-cover-restore wave 2)",
     expect(right!.textContent).toMatch(/2026|v1/)
   })
 
-  it("terra knobs: font-size 64 and no right-bottom date text when date is in meta with branding full", () => {
-    const { root } = renderTone("terra", { titleSize: 64, hideRightMeta: true }, "full")
+  it("almanac knobs: font-size 64 and no right-bottom date text when date is in meta with branding full", () => {
+    const { root } = renderTone("almanac", { titleSize: 64, hideRightMeta: true }, "full")
     const title = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "年度战略回顾")!
     expect(title.getAttribute("font-size")).toBe("64")
     const right = Array.from(root.querySelectorAll("text")).find(

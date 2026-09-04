@@ -74,7 +74,7 @@ const slide1 = await zip.file("ppt/slides/slide1.xml")!.async("string")
 if (!slide1.includes("pptwise")) throw new Error("e2e: cover heading text not found in slide1.xml")
 
 // 2a) a:ea font-slot leg (a:ea follow-up task): examples/basic.json's
-//     consulting theme leads with Georgia (zero CJK glyphs), so every
+//     brief theme leads with Georgia (zero CJK glyphs), so every
 //     exported run's <a:ea> must be corrected to Microsoft YaHei by
 //     applyEaFontFaces (src/pptx/pptx-ea-fonts.ts) — asserted here against
 //     the *built* CLI binary's real output, not a vitest mock. Unconditional
@@ -282,7 +282,7 @@ if (sharpMod) {
   const webpDeck = {
     version: "5",
     filename: "pptwise-webp-smoke",
-    theme: { id: "consulting" },
+    theme: { id: "brief" },
     assets: { images: { smoke: { src: "smoke.webp" } } },
     slides: [
       { type: "cover", heading: "webp smoke" },
@@ -329,7 +329,7 @@ mkdirSync(join(deckDir, "pages"), { recursive: true })
 const deckSpec = {
   version: "1",
   narrative: "boardroom-report",
-  theme: "consulting",
+  theme: "brief",
   filename: "pptwise-e2e-deck-dir",
   pages: [
     { id: "p-cover", type: "cover", heading: "pptwise Deck Directory Demo" },
@@ -468,7 +468,7 @@ if (!/unknown command.*plan/i.test(planValidateStderr) || /pptwise spec validate
 console.log("old-command hard-fail leg OK (removed commands and options are unknown with no replacement pointers)")
 
 // 7) audit leg (W6 task 2, spec §7 workflow ④): a clean deck must exit 0.
-//    A fixture on a normal theme (consulting, no style override) carries a
+//    A fixture on a normal theme (brief, no style override) carries a
 //    page that overflows a single row_cards component (6 schema-legal items,
 //    each with substantial title/text/sub — measured directly against real
 //    widths before writing this fixture: a full-width single column needs
@@ -502,7 +502,7 @@ const VERDICT_LONG_TEXT =
 const findingsDeck = {
   version: "5",
   filename: "pptwise-e2e-audit-findings",
-  theme: { id: "consulting" },
+  theme: { id: "brief" },
   slides: [
     { type: "cover", heading: "Audit Fixture" },
     {
@@ -510,7 +510,7 @@ const findingsDeck = {
       kind: "points",
       id: "p-body",
       heading: "readable heading",
-      components: [{ type: "paragraph", text: "some body copy on a normal consulting page" }],
+      components: [{ type: "paragraph", text: "some body copy on a normal brief page" }],
     },
     {
       type: "content",
@@ -608,7 +608,7 @@ console.log("audit --pixels leg OK (real Sharp through dist/cli.js, checks.pixel
 //    across both waves (swot/bmc/waterfall/gantt/pest/five_forces/heatmap/
 //    sankey), one per content slide, cover+ending bookending them —
 //    must render to a well-formed pptx and audit clean (exit 0, 0 findings).
-//    Each page states the component's semantic kind. The consulting menu
+//    Each page states the component's semantic kind. The brief menu
 //    owns the exact face, so this leg exercises the same author-facing path
 //    as a real v5 deck.
 //
@@ -629,7 +629,7 @@ console.log("--- structure-components leg ---")
 const structuresDeck = {
   version: "5",
   filename: "pptwise-e2e-structure-components",
-  theme: { id: "consulting" },
+  theme: { id: "brief" },
   slides: [
     { type: "cover", heading: "Structure Components Demo" },
     {
@@ -886,7 +886,7 @@ console.log("--- dual-threshold severity leg ---")
 const warnOnlyDeck = {
   version: "5",
   filename: "pptwise-e2e-warn-only",
-  theme: { id: "tech" },
+  theme: { id: "terminal" },
   slides: [
     { type: "cover" }, // missing heading — warn only since Task 2
     { type: "content", kind: "points", heading: "Body", components: [{ type: "paragraph", text: "hello" }] },
@@ -924,7 +924,7 @@ console.log("dual-threshold warn-only render leg OK (exit 0, file written, warni
 const bulletOverflowDeck = {
   version: "5",
   filename: "pptwise-e2e-bullet-overflow",
-  theme: { id: "tech" },
+  theme: { id: "terminal" },
   slides: [
     { type: "cover", heading: "Overflow" },
     { type: "content", kind: "points", heading: "Body", components: [{ type: "bullets", items: ["测".repeat(51)] }] },
@@ -1009,7 +1009,7 @@ const PNG_1PX_STOCK = Buffer.from(
 const stockIr = {
   version: "5",
   filename: "stock",
-  theme: { id: "consulting" },
+  theme: { id: "brief" },
   slides: [
     { type: "cover", heading: "Stock" },
     {

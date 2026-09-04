@@ -150,12 +150,12 @@ const CONTRAST_RATIO_GRAPHIC = 3
  * otherwise fall back to `readableOn`'s neutral ink.
  *
  * Why icons need their own call rather than a token picked by hand: several
- * themes give `colors.primary` a block-fill job, not an ink job — `campaign`
+ * themes give `colors.primary` a block-fill job, not an ink job — `rally`
  * names it "更深一档给横幅/色块" and measures 1.08:1 against its own page
  * background on purpose, because the only thing ever painted *on* primary is
  * white type. A renderer that hands that token to `Icon` as a stroke inherits
  * the block-fill luminance and paints a mark nobody can see (gallery visual
- * review fix/gallery-verdict-round, items 3 and 4: campaign's bento and
+ * review fix/gallery-verdict-round, items 3 and 4: rally's bento and
  * kpi-card icons at 1.25:1 against `colors.surface`). The fix belongs on the
  * ink seam every text element already goes through, not on the palette.
  *

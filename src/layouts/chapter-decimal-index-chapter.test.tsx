@@ -119,7 +119,7 @@ describe("chapter-decimal-index-chapter — board geometry", () => {
   })
 
   it("uses tokens, not baked swiss hex, when another theme draws it", () => {
-    const { root, tokens } = renderChapter("enterprise")
+    const { root, tokens } = renderChapter("bulletin")
     expect(root.querySelector("g[data-depth='mid'] line")?.getAttribute("stroke")).toBe(tokens.colors.border)
     for (const hex of SWISS_HEX) expect(root.innerHTML, hex).not.toMatch(new RegExp(hex, "i"))
   })

@@ -5,7 +5,7 @@ import type { BuiltinThemeDeclaration } from "../schema";
  * vermilion（庄重公务汇报——工作汇报/述职/年度总结语域）——2026-08-06 gov-theme
  * wave（第 17 个内置主题，也是第一个从立项就以中文语域为主的主题，plan
  * `.issues/2026-08-06-gov-theme/plan.md`）。现有 16 主题无一覆盖庄重红金公务
- * 语域（ink 是文人水墨、heritage 是酒红典藏西式、campaign 是营销紫）。正红
+ * 语域（ink 是文人水墨、heritage 是酒红典藏西式、rally 是营销紫）。正红
  * 主色 + 金强调 + 暖米白底，气质一句话：庄重、提气、汇报体。专属
  * vermilion-motif 画公文金线（抽象传达提气感，刻意不用五角星等政治符号——
  * 过线风险，plan 裁定 2）。
@@ -23,8 +23,8 @@ import type { BuiltinThemeDeclaration } from "../schema";
  * 红色结构型 layout（banner-title 的红强调条、left-anchor 的 40% 红色块、
  * split-diagonal 的红斜切块——后两者走 readableOn 反白，banner-title 则是
  * 浅底上的红标题+红条，靠 primary·bg 5.93:1 直接达标）+ 红金 motif 承载
- * （红作结构色，正是裁定 1「红作结构色」的落地）。这与 ember/academic/
- * consulting/pulse/terra 先例一致（封面浅、章节饱和）。
+ * （红作结构色，正是裁定 1「红作结构色」的落地）。这与 ember/thesis/
+ * brief/clinic/almanac 先例一致（封面浅、章节饱和）。
  *
  * **暖纸组皮肤重设计（2026-08-19，`.issues/2026-08-18-theme-redesign/skins/`
  * 的 `group2-warm-boards.dc.html` 里 vermilion 的色板角色表 + 封面样例）**：

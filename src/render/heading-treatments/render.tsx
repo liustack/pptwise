@@ -53,7 +53,7 @@ function aabbIntersect(a: BandRect, b: BandRect): boolean {
 
 /** Shift a heading-band chrome box right of any reserved rect it hits, or
  * that it shares a column with inside `RESERVE_GAP`. tag_box sat 2px above
- * the rail-numbered `{chapter}.{n}` badge (enterprise p06 / playbill / arena)
+ * the rail-numbered `{chapter}.{n}` badge (bulletin p06 / playbill / arena)
  * because the boxes did not AABB-intersect, so `leftTitleX` left the chip
  * on the badge. */
 function nudgeXForReserve(box: BandRect, reserve: HeadingBandReserve | undefined): number {

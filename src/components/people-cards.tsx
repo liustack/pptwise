@@ -199,7 +199,7 @@ function cardGeometry(component: PeopleCardsComponent, w: number) {
  * Ink is `readableOn(fill)` computed against *this exact fill*, not a
  * fixed "#FFFFFF" preference (unlike steps.tsx's `accessibleInk("#FFFFFF",
  * ...)`, which keeps white when it already clears the ratio) — theme
- * chartPalettes range from near-white (e.g. enterprise's `#C9D3E8`) to
+ * chartPalettes range from near-white (e.g. bulletin's `#C9D3E8`) to
  * near-black (e.g. runway's `#0A0A0A`), so a single assumed preference
  * would fail contrast on roughly half of any given theme's palette
  * entries. Always resolving per-entry is the correct, not merely

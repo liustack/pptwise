@@ -10,10 +10,10 @@ import type { PptxIR, Slide } from "@/ir"
 // W4 fix round: BannerChapter's heading/subheading now adapt to
 // `ctx.defaultBg` (readableOn) instead of a hardcoded white — every ctx in
 // this file must carry the theme's *true* chapter default background, not
-// `buildCtx`'s own `colors.bg` fallback (wrong for consulting, whose
+// `buildCtx`'s own `colors.bg` fallback (wrong for brief, whose
 // `defaultBackgrounds.chapter` is a distinct dark navy, not its light
 // `colors.bg`; see `chapter-rail-chapter.tsx`'s file header for the same
-// per-theme fact about academic/classroom).
+// per-theme fact about thesis/homeroom).
 function chapterCtx(themeId: string) {
   const tokens = resolveStyle(themeId)
   return buildCtx(tokens, {}, undefined, resolveBackgroundHex(tokens.defaultBackgrounds.chapter, tokens.colors.surface))
@@ -44,7 +44,7 @@ const ir = (theme: string): PptxIR =>
     slides: [chapter1, content, chapter2],
   }) as unknown as PptxIR
 
-// Captured verbatim from the legacy `MckinseyNavyChapter` (templates/consulting.tsx)
+// Captured verbatim from the legacy `MckinseyNavyChapter` (templates/brief.tsx)
 // for these exact fixtures before templates/ was deleted — see P2 Task 26
 // dependency-break note (same pattern as cover-banner-title.test.tsx).
 const LEGACY_CHAPTER1_MARKUP = `<text x="1224" y="650" font-family="Georgia, Songti SC, STSong, serif" font-size="260" font-weight="700" fill="#FFFFFF" opacity="0.05" text-anchor="end" dominant-baseline="alphabetic">01</text><text x="640" y="404" font-family="Georgia, Songti SC, STSong, serif" font-size="84" font-weight="600" fill="#FFFFFF" text-anchor="middle" dominant-baseline="alphabetic">第一章：市场洞察</text><line x1="560" y1="452" x2="720" y2="452" stroke="#F5C518" stroke-width="1.6" opacity="0.6"></line>`
@@ -62,9 +62,9 @@ const withoutRule = (markup: string) => markup.replace(RULE_RE, "")
 const ruleOf = (markup: string) => markup.match(RULE_RE)?.[0] ?? ""
 
 describe("BannerChapter", () => {
-  it("consulting tokens 下除装饰线外与旧 MckinseyNavyChapter 输出逐字节一致（档位一，含多 chapter 序号）", () => {
-    const ctx = chapterCtx("consulting")
-    const deck = ir("consulting")
+  it("brief tokens 下除装饰线外与旧 MckinseyNavyChapter 输出逐字节一致（档位一，含多 chapter 序号）", () => {
+    const ctx = chapterCtx("brief")
+    const deck = ir("brief")
 
     const next1 = renderSvgMarkup(<BannerChapter ir={deck} slide={chapter1} index={0} ctx={ctx} />)
     expect(withoutRule(next1)).toBe(withoutRule(LEGACY_CHAPTER1_MARKUP))
@@ -84,8 +84,8 @@ describe("BannerChapter", () => {
   })
 
   it("装饰线是它上面那行字的下划线：宽度随该行文本，落点随该行字号", () => {
-    const ctx = chapterCtx("consulting")
-    const deck = ir("consulting")
+    const ctx = chapterCtx("brief")
+    const deck = ir("brief")
     const root = (slide: Slide, index: number) =>
       parseSvgRoot(
         `<svg xmlns="http://www.w3.org/2000/svg">${renderSvgMarkup(
@@ -112,8 +112,8 @@ describe("BannerChapter", () => {
   })
 
   it("underline sits below script-safe descent for a CJK line and a Latin line", () => {
-    const ctx = chapterCtx("consulting")
-    const deck = ir("consulting")
+    const ctx = chapterCtx("brief")
+    const deck = ir("brief")
     const wrap = (slide: Slide, index: number) =>
       parseSvgRoot(
         `<svg xmlns="http://www.w3.org/2000/svg">${renderSvgMarkup(
@@ -146,7 +146,7 @@ describe("BannerChapter", () => {
     const latinDeck: PptxIR = {
       version: "3",
       filename: "x.pptx",
-      theme: { id: "consulting" },
+      theme: { id: "brief" },
       meta: {},
       assets: { images: {} },
       slides: [latinSlide],
@@ -168,12 +168,12 @@ describe("BannerChapter", () => {
   })
 
   it("没有可下划的文字时不画装饰线", () => {
-    const ctx = chapterCtx("consulting")
+    const ctx = chapterCtx("brief")
     const slide: Slide = { type: "chapter", heading: "", components: [] } as unknown as Slide
     const deck: PptxIR = {
       version: "3",
       filename: "x.pptx",
-      theme: { id: "consulting" },
+      theme: { id: "brief" },
       meta: {},
       assets: { images: {} },
       slides: [slide],
@@ -183,13 +183,13 @@ describe("BannerChapter", () => {
   })
 
   // 回填旧测试「Chapter positions subheading/hairline off a fixed single-line
-  // heading baseline」（旧文件 consulting.test.tsx L440-460）：单行标题时
+  // heading baseline」（旧文件 brief.test.tsx L440-460）：单行标题时
   // headingY/subheadingY/hairlineY 的三个固定基线值。上面的逐字节测试已经
   // 隐含验证了这些数字（字面量里就是 404/460/452），这里显式断言，避免
   // 「值虽正确但没有可读断言」。
   it("单行标题时 heading/subheading 落在固定基线 y=404/460，hairline 落在副标题之下", () => {
-    const ctx = chapterCtx("consulting")
-    const deck = ir("consulting")
+    const ctx = chapterCtx("brief")
+    const deck = ir("brief")
     const markup = renderSvgMarkup(<BannerChapter ir={deck} slide={chapter2} index={2} ctx={ctx} />)
     const root = parseSvgRoot(`<svg xmlns="http://www.w3.org/2000/svg">${markup}</svg>`)
 
@@ -220,15 +220,15 @@ describe("BannerChapter", () => {
   })
 
   // 回填旧测试「Chapter shrinks a pathologically long heading onto <=2 lines
-  // instead of overflowing」（旧文件 consulting.test.tsx L347-371）：超长
+  // instead of overflowing」（旧文件 brief.test.tsx L347-371）：超长
   // heading 必须被压缩换行/缩字号，不能原样溢出。
   it("超长标题被压缩到 <=2 行且字号收缩（40-84px 之间），不会原样溢出", () => {
-    const ctx = chapterCtx("consulting")
+    const ctx = chapterCtx("brief")
     const slide: Slide = { type: "chapter", heading: CJK_LONG, subheading: CJK_LONG, components: [] } as Slide
     const deck: PptxIR = {
       version: "3",
       filename: "x.pptx",
-      theme: { id: "consulting" },
+      theme: { id: "brief" },
       meta: {},
       assets: { images: {} },
       slides: [slide],
@@ -249,34 +249,34 @@ describe("BannerChapter", () => {
     expect(headingTexts.every((t) => t.textContent !== CJK_LONG)).toBe(true)
   })
 
-  it("tech tokens 下用 tech 的 accent 色画装饰线，consulting 的烤死色不残留；白字例外跨主题稳定", () => {
-    const techTheme = resolveStyle("tech")
+  it("terminal tokens 下用 terminal 的 accent 色画装饰线，brief 的烤死色不残留；白字例外跨主题稳定", () => {
+    const techTheme = resolveStyle("terminal")
     const ctx = buildCtx(techTheme, {})
-    const deck = ir("tech")
+    const deck = ir("terminal")
     const out = renderSvgMarkup(<BannerChapter ir={deck} slide={chapter1} index={0} ctx={ctx} />)
 
-    // token 化成立：装饰线走 tech 的 accent，不是写死的 consulting YELLOW
-    expect(out).toContain("#53E0D2") // tech accent
-    expect(out).not.toContain("#FFC72C") // consulting accent 不得残留
-    expect(out).not.toContain("#051C2C") // consulting primary 不得残留
+    // token 化成立：装饰线走 terminal 的 accent，不是写死的 brief YELLOW
+    expect(out).toContain("#53E0D2") // terminal accent
+    expect(out).not.toContain("#FFC72C") // brief accent 不得残留
+    expect(out).not.toContain("#051C2C") // brief primary 不得残留
 
     // 白字例外：固定纯白，不随主题变化
     expect(out).toContain('fill="#FFFFFF"')
-    // tech 的 surface 是深色，若误映射会让文字在深色背景上隐形
+    // terminal 的 surface 是深色，若误映射会让文字在深色背景上隐形
     expect(ctx.colors.surface).not.toBe("#FFFFFF")
     expect(out).not.toContain(String(ctx.colors.surface))
 
-    // ctx 确实按主题切换：heading 字体走 tech 的解析结果
+    // ctx 确实按主题切换：heading 字体走 terminal 的解析结果
     expect(out).toContain(`font-family="${ctx.fonts.heading}"`)
     expect(out).toContain(">01<")
   })
 
-  it("W4 fix round Critical C1：runway/enterprise 的 chapter 默认背景是近白，标题/副标题不再是不可见的白字压白底", () => {
-    // 冷调组皮肤重设计（2026-08-20）把 enterprise 的白墙从纯白压到
+  it("W4 fix round Critical C1：runway/bulletin 的 chapter 默认背景是近白，标题/副标题不再是不可见的白字压白底", () => {
+    // 冷调组皮肤重设计（2026-08-20）把 bulletin 的白墙从纯白压到
     // #F7F7F4（纯白让给 surface），runway 仍是纯白——两家都还是「近白底」，
     // 也就是本条修复的前提。逐家断言各自的真实值，不再共用一个字面量。
-    const CHAPTER_BG = { runway: "#F2F0EB", enterprise: "#F7F7F4" } as const
-    for (const themeId of ["runway", "enterprise"] as const) {
+    const CHAPTER_BG = { runway: "#F2F0EB", bulletin: "#F7F7F4" } as const
+    for (const themeId of ["runway", "bulletin"] as const) {
       const ctx = chapterCtx(themeId)
       expect(ctx.defaultBg).toBe(CHAPTER_BG[themeId])
       const deck = ir(themeId)

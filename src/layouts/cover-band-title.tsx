@@ -10,8 +10,8 @@ import { faceParam } from "./face-params"
 
 /**
  * band-title cover layout（2026-08-22 封面还原第一波，新表达）：
- * **通栏主色带承反白标题**。kicker 贴带上沿，meta 走顶栏。构图抄 classroom /
- * enterprise / vermilion 三家封面样例：一条色带把标题反白写进去，对齐、带的
+ * **通栏主色带承反白标题**。kicker 贴带上沿，meta 走顶栏。构图抄 homeroom /
+ * bulletin / vermilion 三家封面样例：一条色带把标题反白写进去，对齐、带的
  * y/h、带上小帽由菜单中本脸的参数控制。
  *
  * **它进共享池，不是某一家专用**。零 theme id、零 hex。打孔、刻度尺、金双线
@@ -24,7 +24,7 @@ import { faceParam } from "./face-params"
  * 板上做不到、最近落地：
  *   1. CJK 标题不加 letter-spacing，即便板上给 Latin kicker 加了字距。
  *   2. 带上那枚方块走标题同一套 on-band ink（`readableOn(primary)`），不烤 accent hex。
- *   3. classroom 带下陶土波浪是 layout 的强调件（固定 path，不跟标题宽度），
+ *   3. homeroom 带下陶土波浪是 layout 的强调件（固定 path，不跟标题宽度），
  *      打孔排仍归 motif。
  *   4. 顶栏右 meta 收到 x1108，躲开 (1120,48) 顶右 logo 带。
  *   5. 本版式不设 `paintsOwnBackground`：色带画在 `Background` 上面。

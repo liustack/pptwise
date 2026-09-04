@@ -1,55 +1,51 @@
 import type { SvgTemplateProps } from "../types"
-import { sectionNameFor } from "../../lib/derive"
 import { pickEvidence } from "../../render/component-traits"
 import { renderEmphasisTspans, emphasisRunInk } from "../../render/emphasis"
-import { heroCaption, heroUnit, heroSource, heroValue } from "../minimal-shared"
+import { heroCaption, heroSource, heroUnit, heroValue } from "../minimal-shared"
 import { fitSvgLine } from "../../lib/svg-text-layout"
 import { renderFittedEvidence, textColumnMaxWidth } from "../fitted-evidence"
 import { evidenceSource, fitHeroLine, fitSparseHeading, fitStatementSource, heroUnitMark, pad2 } from "./shared"
 
-/** campaign 稀排脸：洋红收尾杠、侧幕卡。不画纸屑场。 */
+/** almanac 稀排脸：等高线格言、橄榄横线巨数、样点卡。不画 motif 左下线和右缘点。 */
 
 export function statement({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const heading = fitSparseHeading(slide.heading, {
-    maxWidth: 1100,
-    fontSize: 60,
+    maxWidth: 1088,
+    fontSize: 54,
     maxLines: 2,
     minPt: 32,
-    lineHeightRatio: 96 / 60,
+    lineHeightRatio: 88 / 54,
     fontFamily: fonts.heading,
     bold: true,
   })
-  const source = fitStatementSource(slide, { maxWidth: 1000, fontSize: 16, fontFamily: fonts.body })
+  const source = fitStatementSource(slide, { maxWidth: 1088, fontSize: 17, fontFamily: fonts.body })
   return (
     <>
       {heading.lines.map((line, i) => (
         <text
           key={i}
           data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
-          x={640}
-          y={340 + i * heading.lineHeight}
-          textAnchor="middle"
+          x={96}
+          y={330 + i * heading.lineHeight}
           fontFamily={fonts.heading}
           fontSize={heading.fontSize}
           fontWeight="700"
-          fill={colors.text}
+          fill={colors.primary}
           dominantBaseline="alphabetic"
         >
           {renderEmphasisTspans(heading.lineSegs[i] ?? [{ text: line, emphasized: false }], {
             accent: emphasisRunInk(colors),
-            baseFill: colors.text,
+            baseFill: colors.primary,
             fontWeight: "700",
           })}
         </text>
       ))}
-      <rect x={576} y={490} width={128} height={6} fill={colors.accent} />
       {source && (
         <text
           data-truncated={source.truncated ? "1" : undefined}
-          x={640}
-          y={552}
-          textAnchor="middle"
+          x={96}
+          y={510}
           fontFamily={fonts.body}
           fontSize={source.fontSize}
           fill={colors.muted}
@@ -58,37 +54,24 @@ export function statement({ slide, ctx }: SvgTemplateProps) {
           {source.text}
         </text>
       )}
+      <path d="M 60 610 q 220 -40 430 0 t 430 0" fill="none" stroke={colors.border} strokeWidth={1.5} />
+      <path d="M 20 650 q 260 -34 500 0 t 500 0" fill="none" stroke={colors.border} strokeWidth={1.5} />
     </>
   )
 }
 
-export function statHero({ ir, slide, index, ctx }: SvgTemplateProps) {
+export function statHero({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
-  const section = sectionNameFor(ir.slides, index)
-  const fitted = fitHeroLine(heroValue(slide), { maxWidth: 1100, fontSize: 320, fontFamily: fonts.heading, bold: true })
+  const fitted = fitHeroLine(heroValue(slide), { maxWidth: 1100, fontSize: 300, fontFamily: fonts.heading, bold: true })
   const unit = heroUnit(slide)
   const unitMark = heroUnitMark(fitted.fontSize)
   const caption = heroCaption(slide)
   const source = heroSource(slide)
   return (
     <>
-      {section && (
-        <text
-          x={640}
-          y={200}
-          textAnchor="middle"
-          fontFamily={fonts.body}
-          fontSize={20}
-          fill={colors.muted}
-          dominantBaseline="alphabetic"
-        >
-          {section}
-        </text>
-      )}
       <text
-        x={640}
-        y={480}
-        textAnchor="middle"
+        x={96}
+        y={460}
         fontFamily={fonts.heading}
         fontSize={fitted.fontSize}
         fontWeight="700"
@@ -102,29 +85,14 @@ export function statHero({ ir, slide, index, ctx }: SvgTemplateProps) {
           </tspan>
         )}
       </text>
+      <rect x={104} y={504} width={430} height={2} fill={colors.primary} />
       {caption && (
-        <text
-          x={640}
-          y={580}
-          textAnchor="middle"
-          fontFamily={fonts.body}
-          fontSize={23}
-          fill={colors.muted}
-          dominantBaseline="alphabetic"
-        >
+        <text x={96} y={570} fontFamily={fonts.body} fontSize={24} fill={colors.primary} dominantBaseline="alphabetic">
           {caption}
         </text>
       )}
       {source && (
-        <text
-          x={640}
-          y={616}
-        textAnchor="middle"
-          fontFamily={fonts.body}
-          fontSize={16}
-          fill={colors.muted}
-          dominantBaseline="alphabetic"
-        >
+        <text x={96} y={612} fontFamily={fonts.body} fontSize={17} fill={colors.muted} dominantBaseline="alphabetic">
           {source}
         </text>
       )}
@@ -161,10 +129,9 @@ export function oneEvidence({ slide, index, ctx }: SvgTemplateProps) {
   return (
     <>
       <rect x={160} y={190} width={960} height={320} fill={colors.surface} stroke={colors.border} strokeWidth={1} />
-      <rect x={160} y={502} width={960} height={8} fill={colors.accent} />
-      {/* 板上 21px。accent 压 surface 3.78:1，21px 走 4.5:1 会红，24px 走大字 3:1。 */}
-      <text x={224} y={292} fontFamily={fonts.body} fontSize={24} fill={colors.accent} dominantBaseline="alphabetic">
-        {`实测 · ${pad2(index + 1)}`}
+      <circle cx={238} cy={282} r={7} fill={colors.accent} />
+      <text x={262} y={290} fontFamily={fonts.body} fontSize={21} fill={colors.primary} dominantBaseline="alphabetic">
+        {`样点 ${pad2(index + 1)}`}
       </text>
       {heading.lines.map((line, i) => (
         <text

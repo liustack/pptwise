@@ -10,7 +10,7 @@ import {
 } from "../minimal-shared"
 import { fitHeroLine, fitSparseHeading, fitSparseQuote, fitStatementSource, heroUnitMark, quoteBlockBaseline, yearQuarter } from "./shared"
 
-/** insight 稀排脸：行情格言、幽灵季度、折线引文。不画顶缘刻度尺和底缘面积线。 */
+/** ledger 稀排脸：行情格言、幽灵季度、折线引文。不画顶缘刻度尺和底缘面积线。 */
 
 const PULL_QUOTE_TICKER: readonly (readonly [number, number])[] = [
   [96, 150], [240, 142], [390, 158], [540, 138], [740, 138], [890, 158],

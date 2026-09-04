@@ -83,7 +83,7 @@ describe("resolveFontStack", () => {
   })
 
   it("appends a sans-serif preview fallback for a sans-resolved face", () => {
-    // tech's heading stack resolves to Microsoft YaHei.
+    // terminal's heading stack resolves to Microsoft YaHei.
     const stack = resolveFontStack(["Inter", "Microsoft YaHei"], "heading")
     expect(stack).toBe("Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif")
   })

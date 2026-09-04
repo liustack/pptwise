@@ -91,21 +91,21 @@ describe("roman-chapter ornament", () => {
   })
 
   it("default (no param) renders eclipse", () => {
-    const root = renderFace("insight")
+    const root = renderFace("ledger")
     expect(hasEclipse(root)).toBe(true)
     expect(hasGrooves(root)).toBe(false)
     expect(hasChord(root)).toBe(false)
   })
 
   it("ornament grooves switches the concentric rings", () => {
-    const root = renderFace("insight", { ornament: "grooves" })
+    const root = renderFace("ledger", { ornament: "grooves" })
     expect(hasGrooves(root)).toBe(true)
     expect(hasEclipse(root)).toBe(false)
     expect(hasChord(root)).toBe(false)
   })
 
   it("ornament chord switches the page-edge arc", () => {
-    const root = renderFace("insight", { ornament: "chord" })
+    const root = renderFace("ledger", { ornament: "chord" })
     expect(hasChord(root)).toBe(true)
     expect(hasEclipse(root)).toBe(false)
     expect(hasGrooves(root)).toBe(false)
@@ -117,14 +117,14 @@ describe("roman-chapter ornament", () => {
       { type: "content", kind: "points", heading: "中间", components: [] },
       { type: "chapter", heading: "第二章", components: [] },
     ]
-    const first = renderFace("insight", undefined, 0, slides)
-    const second = renderFace("insight", undefined, 2, slides)
+    const first = renderFace("ledger", undefined, 0, slides)
+    const second = renderFace("ledger", undefined, 2, slides)
     expect(hasEclipse(first)).toBe(true)
     expect(hasEclipse(second)).toBe(true)
   })
 
   it("menu without ornament param renders eclipse", () => {
-    const themeId = registerTestTheme("roman-chapter-default", "insight", {
+    const themeId = registerTestTheme("roman-chapter-default", "ledger", {
       chapter: "roman-chapter",
     })
     const root = parseSvgRoot(renderSlideSvg(deck(themeId), 0))
@@ -133,7 +133,7 @@ describe("roman-chapter ornament", () => {
   })
 
   it("menu params select grooves through renderSlideSvg", () => {
-    const themeId = registerTestTheme("roman-chapter-grooves", "insight", {
+    const themeId = registerTestTheme("roman-chapter-grooves", "ledger", {
       chapter: { face: "roman-chapter", params: { ornament: "grooves" } },
     })
     const root = parseSvgRoot(renderSlideSvg(deck(themeId), 0))
@@ -142,7 +142,7 @@ describe("roman-chapter ornament", () => {
   })
 
   it("menu params select chord through renderSlideSvg", () => {
-    const themeId = registerTestTheme("roman-chapter-chord", "insight", {
+    const themeId = registerTestTheme("roman-chapter-chord", "ledger", {
       chapter: { face: "roman-chapter", params: { ornament: "chord" } },
     })
     const root = parseSvgRoot(renderSlideSvg(deck(themeId), 0))

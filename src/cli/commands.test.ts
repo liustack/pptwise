@@ -39,7 +39,7 @@ const PNG_1PX = Buffer.from(
 const VALID_IR = {
   version: "5",
   filename: "cli-test",
-  theme: { id: "tech" },
+  theme: { id: "terminal" },
   slides: [
     { type: "cover", heading: "CLI" },
     { type: "content", kind: "points", heading: "Body", components: [{ type: "paragraph", text: "hello from the CLI test" }] },
@@ -52,7 +52,7 @@ const IR_NO_THEME = { version: "5", filename: "cli-test", slides: VALID_IR.slide
 const IR_WITH_LOCAL_ASSET = {
   version: "5",
   filename: "cli-test-asset",
-  theme: { id: "tech" },
+  theme: { id: "terminal" },
   assets: { images: { logo: { src: "logo.png" } } },
   slides: [
     { type: "cover", heading: "CLI" },
@@ -67,7 +67,7 @@ const IR_WITH_LOCAL_ASSET = {
 const IR_WITH_CORRUPT_LOCAL_ASSET = {
   version: "5",
   filename: "cli-test-corrupt-asset",
-  theme: { id: "tech" },
+  theme: { id: "terminal" },
   assets: { images: { logo: { src: "corrupt-logo.png" } } },
   slides: [
     { type: "cover", heading: "CLI" },
@@ -78,19 +78,19 @@ const IR_WITH_CORRUPT_LOCAL_ASSET = {
 const IR_WITH_PLACEHOLDER = {
   version: "5",
   filename: "cli-test-placeholder",
-  theme: { id: "tech" },
+  theme: { id: "terminal" },
   slides: [
     { type: "cover", heading: "CLI" },
     { type: "content", kind: "points", id: "p-2", placeholder: true },
   ],
 }
 
-// Slide background matches consulting's body ink, so heading and paragraph
+// Slide background matches brief's body ink, so heading and paragraph
 // (both painted with colors.text) fail auditDeck's contrast check.
 const IR_LOW_CONTRAST = {
   version: "5",
   filename: "cli-test-low-contrast",
-  theme: { id: "consulting" },
+  theme: { id: "brief" },
   slides: [
     {
       type: "content",
@@ -108,7 +108,7 @@ const IR_LOW_CONTRAST = {
 const IR_WITH_FIELD_ALIAS = {
   version: "5",
   filename: "cli-test-alias",
-  theme: { id: "tech" },
+  theme: { id: "terminal" },
   slides: [
     { type: "cover", heading: "CLI" },
     { type: "content", kind: "points", heading: "Body", components: [{ type: "kpi_cards", items: [{ value: "42", title: "Revenue" }] }] },
@@ -118,7 +118,7 @@ const IR_WITH_FIELD_ALIAS = {
 const VALID_PLAN = {
   version: "1",
   narrative: "boardroom-report",
-  theme: "consulting",
+  theme: "brief",
   pages: [
     { id: "p-cover", type: "cover", heading: "CLI Plan" },
     { id: "p-kpi", type: "content", kind: "points", heading: "Body content page", focus: "kpi_cards" },
@@ -127,16 +127,16 @@ const VALID_PLAN = {
   ],
 }
 
-const BAD_PLAN = { theme: "consulting", pages: [] }
+const BAD_PLAN = { theme: "brief", pages: [] }
 
 // T0b fix 2 (scope-extended, controller ruling): same shape as VALID_PLAN,
 // but narrative written as the {id: <preset>} wrapper shape a weak model
-// generalizes from theme: {id: "consulting"} — proves runSpecValidate's
+// generalizes from theme: {id: "brief"} — proves runSpecValidate's
 // note-printing channel, not just validateSpec's own return value.
 const PLAN_WITH_NARRATIVE_ID_SHAPE = {
   version: "1",
   narrative: { id: "boardroom-report" },
-  theme: "consulting",
+  theme: "brief",
   pages: [
     { id: "p-cover", type: "cover", heading: "CLI Plan" },
     { id: "p-kpi", type: "content", kind: "points", heading: "Body content page", focus: "kpi_cards" },
@@ -152,7 +152,7 @@ const PLAN_WITH_NARRATIVE_ID_SHAPE = {
 const IR_WITH_WARN_ONLY = {
   version: "5",
   filename: "cli-test-warn-only",
-  theme: { id: "tech" },
+  theme: { id: "terminal" },
   slides: [
     { type: "cover" }, // missing heading — warn only since Task 2
     { type: "content", kind: "points", heading: "Body", components: [{ type: "paragraph", text: "hello" }] },
@@ -165,7 +165,7 @@ const IR_WITH_WARN_ONLY = {
 const IR_WITH_BULLET_OVERFLOW = {
   version: "5",
   filename: "cli-test-bullet-overflow",
-  theme: { id: "tech" },
+  theme: { id: "terminal" },
   slides: [
     { type: "cover", heading: "CLI" },
     {
@@ -183,7 +183,7 @@ const IR_WITH_BULLET_OVERFLOW = {
 const IR_WITH_DROPPED_CONTENT = {
   version: "5",
   filename: "cli-test-dropped",
-  theme: { id: "tech" },
+  theme: { id: "terminal" },
   slides: [
     { type: "cover", heading: "CLI" },
     {
@@ -253,7 +253,7 @@ function makeDeckPlan(extra: Record<string, unknown> = {}): Record<string, unkno
   return {
     version: "1",
     narrative: "boardroom-report", // pyramid/spacious/executive
-    theme: "consulting",
+    theme: "brief",
     filename: "q3-review",
     pages: [
       { id: "p-cover", type: "cover", heading: "Q3 Review" },
@@ -279,7 +279,7 @@ function makeDeckDir(prefix = "pptwise-deck-"): Promise<string> {
 const ROUNDTRIPPABLE_IR = {
   version: "5",
   filename: "roundtrip-test",
-  theme: { id: "tech" },
+  theme: { id: "terminal" },
   narrative: { pacing: "spacious" },
   slides: [
     { id: "s-cover", type: "cover", heading: "Cover" },
@@ -298,7 +298,7 @@ const ROUNDTRIPPABLE_IR = {
 const ROUNDTRIPPABLE_IR_WITH_ASSET = {
   version: "5",
   filename: "roundtrip-asset-test",
-  theme: { id: "tech" },
+  theme: { id: "terminal" },
   narrative: { pacing: "spacious" },
   assets: { images: { logo: { src: `data:image/png;base64,${PNG_1PX.toString("base64")}` } } },
   slides: [
@@ -316,7 +316,7 @@ const ROUNDTRIPPABLE_IR_WITH_ASSET = {
 const IR_ALL_PLACEHOLDERS = {
   version: "5",
   filename: "cli-test-all-placeholder",
-  theme: { id: "tech" },
+  theme: { id: "terminal" },
   slides: [
     { id: "p-1", type: "cover", placeholder: true },
     { id: "p-2", type: "content", kind: "points", placeholder: true },
@@ -504,7 +504,7 @@ describe("runAudit (W6 task 2)", () => {
 describe("runSpecValidate", () => {
   it("reports OK with page count, resolved narrative, and theme for a valid spec", async () => {
     await expect(runSpecValidate(join(dir, "plan.json"))).resolves.toBe(
-      'OK — 4 pages, narrative pyramid/spacious/executive, theme "consulting"',
+      'OK — 4 pages, narrative pyramid/spacious/executive, theme "brief"',
     )
   })
   it("throws with the issue list, including page ids, for an invalid spec", async () => {
@@ -520,7 +520,7 @@ describe("runSpecValidate", () => {
 describe("runSpecValidate narrative {id} shape rescue note (T0b fix 2, scope-extended)", () => {
   it("prints a note after OK, the same channel runValidate's field-alias note uses, for the narrative {id} shape rescue", async () => {
     const report = await runSpecValidate(join(dir, "plan-with-narrative-id-shape.json"))
-    expect(report).toMatch(/^OK — 4 pages, narrative pyramid\/spacious\/executive, theme "consulting"/)
+    expect(report).toMatch(/^OK — 4 pages, narrative pyramid\/spacious\/executive, theme "brief"/)
     expect(report).toContain("note: 1 field alias normalized")
     expect(report).toContain('narrative: {"id":"boardroom-report"} → "boardroom-report"')
   })
@@ -638,7 +638,7 @@ describe("runNarratives", () => {
     const generalLine = lines.find((l) => l.startsWith("general"))
     expect(generalLine).toBeDefined()
     expect(generalLine).toMatch(/briefing\/balanced\/public/)
-    expect(generalLine).toMatch(/consulting/)
+    expect(generalLine).toMatch(/brief/)
   })
 
   it("prints the full machine payload in json mode", () => {
@@ -809,7 +809,7 @@ describe("applyDeckConfig resolution (spec/IR theme id)", () => {
     const d = await freshDir()
     const raw: any = structuredClone(VALID_IR)
     await applyDeckConfig(raw, { cwd: d })
-    expect(raw.theme.id).toBe("tech")
+    expect(raw.theme.id).toBe("terminal")
   })
 
   it("leaves the IR untouched when there is no flag and no config", async () => {
@@ -984,7 +984,7 @@ describe("structural deck-directory errors surface through the CLI shell (W5 tas
 
   it("surfaces an invalid-spec error through runAssemble", async () => {
     const deckDir = await makeDeckDir()
-    await writeFile(join(deckDir, "deck.spec.json"), JSON.stringify({ theme: "consulting", pages: [] }))
+    await writeFile(join(deckDir, "deck.spec.json"), JSON.stringify({ theme: "brief", pages: [] }))
     await expect(runAssemble(deckDir)).rejects.toThrow(/invalid spec.*no pages/s)
   })
 })
@@ -1165,7 +1165,7 @@ describe("runDisassemble", () => {
 
     const spec = JSON.parse(await readFile(join(outDir, "deck.spec.json"), "utf8"))
     expect(spec.pages).toHaveLength(2)
-    expect(spec.theme).toBe("tech")
+    expect(spec.theme).toBe("terminal")
 
     // VALID_IR's slides omit `id` — disassembleDeck synthesizes p-<ordinal>-<type>.
     const pageFiles = (await readdir(join(outDir, "pages"))).sort()
@@ -1517,11 +1517,11 @@ describe("brand extract + deck theme.json / workspace themes/", () => {
   it("brand extract can freeze onto a builtin id", async () => {
     const d = await freshDir()
     const src = await writeFixtureTemplate(d)
-    const out = join(d, "consulting.theme.json")
-    const msg = await runBrandExtract(src, { output: out, id: "consulting" })
-    expect(msg).toContain('theme "consulting"')
+    const out = join(d, "brief.theme.json")
+    const msg = await runBrandExtract(src, { output: out, id: "brief" })
+    expect(msg).toContain('theme "brief"')
     const written = JSON.parse(await readFile(out, "utf8")) as { id: string }
-    expect(written.id).toBe("consulting")
+    expect(written.id).toBe("brief")
   })
 
   it("brand extract rejects a pathological palette before writing by default", async () => {
@@ -1618,7 +1618,7 @@ describe("brand extract + deck theme.json / workspace themes/", () => {
     await runBrandExtract(src, { output: join(d, "themes", "acme.theme.json"), id: "acme" })
     await writeFile(join(d, "deck.json"), JSON.stringify(VALID_IR))
     const report = await runValidate(join(d, "deck.json"), d)
-    expect(report).toContain('theme "tech"')
+    expect(report).toContain('theme "terminal"')
   })
 
   it("IR that names the custom id selects a workspace theme file", async () => {
@@ -1636,24 +1636,24 @@ describe("brand extract + deck theme.json / workspace themes/", () => {
     const src = await writeFixtureTemplate(d)
     await mkdir(join(d, "themes"))
     await runBrandExtract(src, { output: join(d, "themes", "acme.theme.json"), id: "acme" })
-    await writeFile(join(d, "deck.json"), JSON.stringify({ ...IR_NO_THEME, theme: { id: "consulting" } }))
-    const pptxOut = join(d, "consulting.pptx")
+    await writeFile(join(d, "deck.json"), JSON.stringify({ ...IR_NO_THEME, theme: { id: "brief" } }))
+    const pptxOut = join(d, "brief.pptx")
     const msg = await runRender(join(d, "deck.json"), { output: pptxOut, cwd: d })
     expect(msg).toContain("wrote")
     const report = await runValidate(join(d, "deck.json"), d)
-    expect(report).toContain('theme "consulting"')
+    expect(report).toContain('theme "brief"')
   })
 
-  it("a workspace file named consulting.theme.json with id=consulting shadows the builtin", async () => {
+  it("a workspace file named brief.theme.json with id=brief shadows the builtin", async () => {
     const d = await freshDir()
     const src = await writeFixtureTemplate(d)
     await mkdir(join(d, "themes"))
-    const themeOut = join(d, "themes", "consulting.theme.json")
-    await runBrandExtract(src, { output: themeOut, id: "consulting" })
-    await writeFile(join(d, "deck.json"), JSON.stringify({ ...IR_NO_THEME, theme: { id: "consulting" } }))
+    const themeOut = join(d, "themes", "brief.theme.json")
+    await runBrandExtract(src, { output: themeOut, id: "brief" })
+    await writeFile(join(d, "deck.json"), JSON.stringify({ ...IR_NO_THEME, theme: { id: "brief" } }))
     const report = await runValidate(join(d, "deck.json"), d)
-    expect(report).toContain('theme "consulting"')
-    expect(getThemeDefinition("consulting").style.colors.primary).toBe(`#${DEFAULT_THMX_COLORS.accent1}`)
+    expect(report).toContain('theme "brief"')
+    expect(getThemeDefinition("brief").style.colors.primary).toBe(`#${DEFAULT_THMX_COLORS.accent1}`)
   })
 
   it("an IR file uses its directory as the deck lookup layer for sibling theme.json", async () => {

@@ -8,7 +8,7 @@ export const GALLERY_TIDE_THEME_ID = "gallery-tide"
 export const GALLERY_STUDIO_THEME_ID = "gallery-studio"
 export const GALLERY_SAMPLE_THEME_IDS = [GALLERY_TIDE_THEME_ID, GALLERY_STUDIO_THEME_ID] as const
 
-const consulting = THEME_DEFINITIONS.consulting.style
+const brief = THEME_DEFINITIONS.brief.style
 
 function publicStyle(
   id: string,
@@ -24,16 +24,16 @@ function publicStyle(
 ): ThemeFile["style"] {
   return {
     id,
-    colors: { ...consulting.colors, ...colors },
+    colors: { ...brief.colors, ...colors },
     fonts: {
-      heading: [...consulting.fonts.heading],
-      body: [...consulting.fonts.body],
-      ...(consulting.fonts.mono ? { mono: [...consulting.fonts.mono] } : {}),
+      heading: [...brief.fonts.heading],
+      body: [...brief.fonts.body],
+      ...(brief.fonts.mono ? { mono: [...brief.fonts.mono] } : {}),
     },
     shape: {
-      radius: consulting.shape?.radius,
-      gapScale: consulting.shape?.gapScale,
-      typeScale: consulting.shape?.typeScale,
+      radius: brief.shape?.radius,
+      gapScale: brief.shape?.gapScale,
+      typeScale: brief.shape?.typeScale,
     },
     defaultBackgrounds: {
       cover: { kind: "color", value: colors.bg },

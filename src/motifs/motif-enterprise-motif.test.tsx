@@ -45,7 +45,7 @@ const num = (el: Element, a: string) => Number(el.getAttribute(a))
  */
 describe("EnterpriseMotif（方块秩序 v3）", () => {
   it("cover 只画右上三枚方块阶，不画刻度尺，不画左下 accent 方块", () => {
-    const { root } = draw("enterprise", coverSlide)
+    const { root } = draw("bulletin", coverSlide)
     expect(Array.from(root.querySelectorAll("line"))).toHaveLength(0)
     expect(Array.from(root.querySelectorAll("rect"))).toHaveLength(3)
     expect(root.querySelector(`[${DECOR_PIECE_ATTR}="ikb-steps"]`)).toBeTruthy()
@@ -54,7 +54,7 @@ describe("EnterpriseMotif（方块秩序 v3）", () => {
   })
 
   it("cover 方块阶几何与板上一致，opacity 0.28（第三枚再半档）", () => {
-    const { root, ctx } = draw("enterprise", coverSlide)
+    const { root, ctx } = draw("bulletin", coverSlide)
     const ink = readableOn(ctx.colors.primary)
     const rects = Array.from(root.querySelectorAll("rect"))
     expect(rects.map((r) => [num(r, "x"), num(r, "y"), num(r, "width"), num(r, "height")])).toEqual([
@@ -69,27 +69,27 @@ describe("EnterpriseMotif（方块秩序 v3）", () => {
   })
 
   it("chapter 浅底画顶缘刻度尺，不画方块阶、不画孤立 accent", () => {
-    const { root } = draw("enterprise", chapterSlide)
+    const { root } = draw("bulletin", chapterSlide)
     expect(Array.from(root.querySelectorAll("line"))).toHaveLength(7)
     expect(Array.from(root.querySelectorAll("rect"))).toHaveLength(0)
     expect(root.querySelector(`[${DECOR_PIECE_ATTR}="ruler"]`)).toBeTruthy()
   })
 
   it("ending 完全退让", () => {
-    const { root } = draw("enterprise", endingSlide)
+    const { root } = draw("bulletin", endingSlide)
     expect(Array.from(root.querySelectorAll("rect"))).toHaveLength(0)
     expect(Array.from(root.querySelectorAll("line"))).toHaveLength(0)
   })
 
   it("content 画尺 + 三枚递减方块阶，不画左下 accent", () => {
-    const { root } = draw("enterprise", contentSlide)
+    const { root } = draw("bulletin", contentSlide)
     expect(Array.from(root.querySelectorAll("line"))).toHaveLength(7)
     expect(Array.from(root.querySelectorAll("rect"))).toHaveLength(3)
     expect(root.querySelector(`[${DECOR_PIECE_ATTR}="spark"]`)).toBeNull()
   })
 
   it("content 方块阶仍是 v2 几何：三枚递减方块底边同在 y40", () => {
-    const { root } = draw("enterprise", contentSlide)
+    const { root } = draw("bulletin", contentSlide)
     const rects = Array.from(root.querySelectorAll("rect")).map((r) => [
       num(r, "x"),
       num(r, "y"),
@@ -105,8 +105,8 @@ describe("EnterpriseMotif（方块秩序 v3）", () => {
   })
 
   it("颜色一律读 token：尺身 border、齿 muted、content 方块阶 primary", () => {
-    const t = resolveStyle("enterprise")
-    const { root } = draw("enterprise", contentSlide)
+    const t = resolveStyle("bulletin")
+    const { root } = draw("bulletin", contentSlide)
     const rule = Array.from(root.querySelectorAll("line")).find((l) => num(l, "x1") !== num(l, "x2"))!
     expect(rule.getAttribute("stroke")).toBe(t.colors.border)
     const ticks = Array.from(root.querySelectorAll("line")).filter((l) => l.getAttribute("stroke") === t.colors.muted)
@@ -116,12 +116,12 @@ describe("EnterpriseMotif（方块秩序 v3）", () => {
   })
 
   it("motif 不读 chartPalette——图表调色板轮转改不动它一个字节", () => {
-    const tokens = resolveStyle("enterprise")
+    const tokens = resolveStyle("bulletin")
     const markups = new Set(
       tokens.colors.chartPalette.map((_, offset) =>
         renderSvgMarkup(
           <EnterpriseMotif
-            ir={ir("enterprise")}
+            ir={ir("bulletin")}
             slide={coverSlide}
             ctx={buildCtx(tokens, {}, undefined, undefined, undefined, offset)}
           />,
@@ -132,7 +132,7 @@ describe("EnterpriseMotif（方块秩序 v3）", () => {
   })
 
   it("chapter 刻度尺几何：y36 一条 x48→1120 的尺身，六枚齿两长四短、等距 214", () => {
-    const { root } = draw("enterprise", chapterSlide)
+    const { root } = draw("bulletin", chapterSlide)
     const lines = Array.from(root.querySelectorAll("line")).map((l) => [
       num(l, "x1"),
       num(l, "y1"),
@@ -152,7 +152,7 @@ describe("EnterpriseMotif（方块秩序 v3）", () => {
 
   it("没有左下 16×16 孤立方块，也没有左竖条", () => {
     for (const slide of [coverSlide, chapterSlide, contentSlide, endingSlide]) {
-      const { root } = draw("enterprise", slide)
+      const { root } = draw("bulletin", slide)
       for (const r of Array.from(root.querySelectorAll("rect"))) {
         expect([num(r, "x"), num(r, "y"), num(r, "width"), num(r, "height")]).not.toEqual([60, 626, 16, 16])
         expect(num(r, "width") < 40 && num(r, "height") > 30, `narrow-tall bar rendered: ${r.outerHTML}`).toBe(false)
@@ -166,7 +166,7 @@ describe("EnterpriseMotif（方块秩序 v3）", () => {
 
   it("每一页件数不超过预算，且每组叶子都包在 data-decor-piece 里", () => {
     for (const slide of [coverSlide, chapterSlide, contentSlide, endingSlide]) {
-      const { root } = draw("enterprise", slide)
+      const { root } = draw("bulletin", slide)
       expect(countDecorPieces(root)).toBeLessThanOrEqual(MAX_DECOR_PIECES)
       for (const el of Array.from(root.querySelectorAll("rect,line"))) {
         expect(el.closest(`[${DECOR_PIECE_ATTR}]`), el.outerHTML).toBeTruthy()
@@ -174,23 +174,23 @@ describe("EnterpriseMotif（方块秩序 v3）", () => {
     }
   })
 
-  it("换一家 tokens 渲染时颜色跟着换，enterprise 的色一处不残留", () => {
-    const tech = resolveStyle("tech")
-    const ctx = buildCtx(tech, {})
-    const { markup } = render(<EnterpriseMotif ir={ir("tech")} slide={contentSlide} ctx={ctx} />)
-    expect(markup).toContain(tech.colors.primary)
+  it("换一家 tokens 渲染时颜色跟着换，bulletin 的色一处不残留", () => {
+    const terminal = resolveStyle("terminal")
+    const ctx = buildCtx(terminal, {})
+    const { markup } = render(<EnterpriseMotif ir={ir("terminal")} slide={contentSlide} ctx={ctx} />)
+    expect(markup).toContain(terminal.colors.primary)
     for (const hex of ["#F7F7F4", "#0032A0", "#2F6FBF", "#17181A", "#5C6066", "#DEE0DB"]) {
-      expect(markup, `enterprise token ${hex} leaked into the tech render`).not.toContain(hex)
+      expect(markup, `bulletin token ${hex} leaked into the terminal render`).not.toContain(hex)
     }
   })
 
   it("装饰位置写死：换 seed（filename）输出逐字节不变", () => {
-    const ctx = buildCtx(resolveStyle("enterprise"), {})
+    const ctx = buildCtx(resolveStyle("bulletin"), {})
     const markups = new Set(
       Array.from({ length: 12 }, (_, i) =>
         renderSvgMarkup(
           <EnterpriseMotif
-            ir={{ ...ir("enterprise"), filename: `probe-${i}.pptx` } as PptxIR}
+            ir={{ ...ir("bulletin"), filename: `probe-${i}.pptx` } as PptxIR}
             slide={coverSlide}
             ctx={ctx}
           />,
@@ -201,7 +201,7 @@ describe("EnterpriseMotif（方块秩序 v3）", () => {
   })
 
   it("cover 方块阶整组落在画布内，且在标题主块（y348）之上", () => {
-    const { root } = draw("enterprise", coverSlide)
+    const { root } = draw("bulletin", coverSlide)
     for (const r of Array.from(root.querySelectorAll("rect"))) {
       expect(num(r, "x")).toBeGreaterThanOrEqual(0)
       expect(num(r, "x") + num(r, "width")).toBeLessThanOrEqual(1280)
@@ -211,14 +211,14 @@ describe("EnterpriseMotif（方块秩序 v3）", () => {
 
   it("不画幽灵序号，中景没有出血大字", () => {
     for (const slide of [coverSlide, chapterSlide, contentSlide, endingSlide]) {
-      const { root } = draw("enterprise", slide)
+      const { root } = draw("bulletin", slide)
       expect(Array.from(root.querySelectorAll("text"))).toHaveLength(0)
     }
   })
 
   it("Decor body passes subset validation", () => {
     for (const slide of [coverSlide, chapterSlide, contentSlide, endingSlide]) {
-      expect(() => assertSubset(draw("enterprise", slide).root)).not.toThrow()
+      expect(() => assertSubset(draw("bulletin", slide).root)).not.toThrow()
     }
   })
 })

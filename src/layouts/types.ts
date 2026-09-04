@@ -35,7 +35,7 @@ export type EndingLayout = (p: SvgTemplateProps) => React.ReactElement
 export type CoverLayoutId =
   | "banner-title" | "poster-center"
   | "left-anchor" | "constellation" | "editorial-masthead" | "tone-adaptive-header"
-  | "split-diagonal" // P3 Item ①：新表达（非提炼），academic/tech 吸纳
+  | "split-diagonal" // P3 Item ①：新表达（非提炼），thesis/terminal 吸纳
   | "fashion-masthead" // 2026-07-10：时尚 magazine 超大报头（新表达）
   // 主题重设计第一期（2026-08-18，cover 池 8 -> 9）：左轴单栏 + 引首块，
   // 内容右边界收在 x1180 给右缘落款列让路——见 cover-colophon.tsx 的文件头。
@@ -74,7 +74,7 @@ export type CoverLayoutId =
   | "issue-head-cover"
   | "double-frame-cover"
   | "vertical-title-cover"
-  // Wave 8 batch 3 (2026-08-23): luxe / runway / vermilion / terra / pulse / arena board locks.
+  // Wave 8 batch 3 (2026-08-23): luxe / runway / vermilion / almanac / clinic / arena board locks.
   | "invitation-plate-cover"
   | "lookbook-open-cover"
   | "red-head-cover"
@@ -90,7 +90,7 @@ export type ChapterLayoutId =
   | "banner-chapter" | "rail-chapter" | "poster-chapter"
   | "constellation-chapter" | "masthead-chapter" | "tone-adaptive-chapter"
   | "fashion-chapter" // 2026-07-10：时尚 magazine 满版色块出血大号（新表达）
-  | "roman-chapter" // 2026-07-12：财经罗马数字+圆环光晕（新表达，insight 先挂）
+  | "roman-chapter" // 2026-07-12：财经罗马数字+圆环光晕（新表达，ledger 先挂）
   | "verse-chapter" // editorial-verse wave: pinOnly centered verse as chapter open
   // Wave 8 batch 1 pinOnly chapter faces.
   | "ghost-rule-chapter"

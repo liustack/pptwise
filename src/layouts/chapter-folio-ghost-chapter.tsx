@@ -12,7 +12,7 @@ import { fitEmphasisLine, headingEmphasisPaint, renderEmphasisText, stripEmphasi
 /**
  * folio-ghost-chapter（第八波 pinOnly）：浅底章首。kicker「第三章」走
  * `formatChapterLabel("chapter")`，金短线 96×2 依附 kicker，标题左齐，
- * 5% 幽灵章号沉右下。构图抄 academic 设计板章节页。
+ * 5% 幽灵章号沉右下。构图抄 thesis 设计板章节页。
  *
  * 进共享池。零 theme id、零 baked hex。金短线是标题簇起手，不是角落 tick。
  * 幽灵号显式 `data-depth="mid"`，量 `textInkBox`，出血内收。空 heading

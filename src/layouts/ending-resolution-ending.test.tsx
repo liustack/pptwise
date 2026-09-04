@@ -134,7 +134,7 @@ describe("ending-resolution-ending — board geometry", () => {
   })
 
   it("uses tokens, not baked swiss hex, when another theme draws it", () => {
-    const { root, tokens } = renderEnding("enterprise")
+    const { root, tokens } = renderEnding("bulletin")
     const rule = Array.from(root.querySelectorAll("line")).find((l) => l.getAttribute("y1") === "520")
     expect(rule?.getAttribute("stroke")).toBe(tokens.colors.border)
     expect(root.innerHTML).not.toMatch(/#D7282F/i)

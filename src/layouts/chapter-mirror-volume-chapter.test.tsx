@@ -118,7 +118,7 @@ describe("chapter-mirror-volume-chapter — board geometry", () => {
 
   it("Latin heading uses VOL. N, not 卷", () => {
     const slide = chapterSlide("Transmission")
-    const { markup } = renderChapter("consulting", [slide], 0)
+    const { markup } = renderChapter("brief", [slide], 0)
     expect(markup).toContain("VOL. 1")
     expect(markup).not.toContain("卷")
   })

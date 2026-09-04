@@ -19,7 +19,7 @@
  * common case) and a real long heading that `fitHeadingLines` actually
  * wraps to 2 lines (not a manually-split string) — added per the S3b
  * addendum after two user screenshots showed the subheading crowding the
- * title specifically in the 2-line case (tech, magazine).
+ * title specifically in the 2-line case (terminal, magazine).
  * `TWO_LINE_HEADING` is verified (see the task report) to wrap to exactly 2
  * lines on all six themes' own Content heading fontSize/maxWidth via
  * `fitHeadingLines` — same string everywhere, for comparability.
@@ -134,7 +134,7 @@ interface ThemeCase {
 
 const CJK_THEME_CASES: ThemeCase[] = [
   {
-    id: "classroom",
+    id: "homeroom",
     layoutId: "rail-numbered",
     isTitleLine: (el) => el.getAttribute("font-weight") === "600",
     renderContent: (contentLayout, ctx, heading) => {
@@ -145,7 +145,7 @@ const CJK_THEME_CASES: ThemeCase[] = [
         subheading: SUBHEADING,
         components: [{ type: "paragraph", text: "核心概要。" }],
       }
-      return render(contentLayout({ ir: ir("classroom", [slide]), slide, index: 0, ctx }))
+      return render(contentLayout({ ir: ir("homeroom", [slide]), slide, index: 0, ctx }))
     },
   },
   {
@@ -164,7 +164,7 @@ const CJK_THEME_CASES: ThemeCase[] = [
     },
   },
   {
-    // tone-adaptive-content 已不被 canonical 主题引用（custom→gallery→avant→enterprise
+    // tone-adaptive-content 已不被 canonical 主题引用（custom→gallery→avant→bulletin
     // 换成高色彩版式），但 layout 保留在库中，S3b 的 gap 保证仍需覆盖——
     // 忽略 harness 传入的 contentLayout 参数，直接取注册表渲染。
     id: "swiss",

@@ -32,7 +32,7 @@ describe("CLI argv under Electron (#25)", () => {
       )
       expect(result.status, result.stderr || result.stdout).toBe(0)
       expect(result.stderr).not.toMatch(/unknown command|too many arguments|extra argument/i)
-      expect(result.stdout).toMatch(/consulting/)
+      expect(result.stdout).toMatch(/brief/)
     } finally {
       rmSync(dir, { recursive: true, force: true })
     }

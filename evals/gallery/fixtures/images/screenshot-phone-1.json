@@ -2,8 +2,8 @@
   "generator": "pptwise renderer",
   "script": "scripts/make-screenshot-fixture.mts",
   "source": "PHONE_SCREEN in that script, its components rendered through renderComponent into a 9:19 phone canvas",
-  "source_sha256": "11c62edbd7eca1a6ebe4b2c7349f8e5b2dc5c2e0b4b95cd752ced152ca0ec984",
-  "recipe_sha256": "a908811f3756c95153a73ce006c9457cdbef4810ded6bded2a5602ff97309243",
+  "source_sha256": "198a7dbd193d32a47dd0a49e611b284a315b783bac125cf50c1b201a02026dd1",
+  "recipe_sha256": "add039efb733d15e3fde0c62c569ce15c6f4145b1d2ee8027480c1e5f0854b5b",
   "recipe": {
     "quality": 88,
     "progressive": false,

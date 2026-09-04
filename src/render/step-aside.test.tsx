@@ -23,7 +23,7 @@ describe("the sheet's fit is a geometry twin of its paint", () => {
   // not a smaller kind of correct: this is the one failure it exists to stop.
   const heading = "W".repeat(49)
 
-  for (const themeId of ["consulting", "runway", "crayon", "tech"]) {
+  for (const themeId of ["brief", "runway", "crayon", "terminal"]) {
     it(`keeps a 49-character heading on the page on ${themeId}`, () => {
       const ctx = ctxFor(themeId)
       const slide = { type: "content", kind: "data", heading, components: [] } as unknown as Slide
@@ -53,7 +53,7 @@ describe("the sheet's fit is a geometry twin of its paint", () => {
   }
 
   it("strips emphasis from the footnote instead of printing the asterisks", () => {
-    const ctx = ctxFor("consulting")
+    const ctx = ctxFor("brief")
     const slide = {
       type: "content",
       kind: "data",

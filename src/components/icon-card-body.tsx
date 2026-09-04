@@ -10,7 +10,7 @@ type IconCardsComponent = Extract<Component, { type: "icon_cards" }>
 /**
  * One icon card's inner body — icon, title, text — measured and drawn
  * without any card shell around it. Shared between the bento panel's own
- * card cells and tech's exploded icon-card units, which each paint their
+ * card cells and terminal's exploded icon-card units, which each paint their
  * own shell and hand this the padded content area inside it.
  */
 
@@ -41,7 +41,7 @@ interface IconCardTextLayout {
 }
 
 /**
- * Bento-only injection point (tech.tsx's `BENTO_ICON_CARD_TITLE_SIZE`):
+ * Bento-only injection point (terminal.tsx's `BENTO_ICON_CARD_TITLE_SIZE`):
  * lets a caller bump the title's *requested* font size without touching this
  * file's own `TITLE_FONT_SIZE` module constant, which `iconCards.render`'s
  * standalone row-card layout (used by the other 5 themes) still reads
@@ -51,7 +51,7 @@ interface IconCardTextLayout {
  */
 interface IconCardLayoutOptions {
   titleFontSize?: number
-  /** 图标尺寸覆盖（tech bento 卡传更大值增强存在感），缺省共享 ICON_SIZE。 */
+  /** 图标尺寸覆盖（terminal bento 卡传更大值增强存在感），缺省共享 ICON_SIZE。 */
   iconSize?: number
   /** Title wrap. Default 1 keeps the standalone row-card byte-identical. */
   titleMaxLines?: number
@@ -121,9 +121,9 @@ function layoutIconCard(
 /**
  * Pure content height (icon + gaps + title's single line + text's 1-2
  * lines) — deliberately excludes any padding, so a caller with its own
- * padding convention (this file's PAD_TOP/PAD_BOTTOM, or tech.tsx's
+ * padding convention (this file's PAD_TOP/PAD_BOTTOM, or terminal.tsx's
  * BENTO_CARD_TOP_PAD/BOTTOM_PAD) can subtract its own budget and compare,
- * exactly mirroring `kpi.tsx`/tech.tsx's `kpiContentHeight` split.
+ * exactly mirroring `kpi.tsx`/terminal.tsx's `kpiContentHeight` split.
  */
 export function iconCardContentHeight(
   item: IconCardItem,
@@ -146,9 +146,9 @@ export function iconCardContentHeight(
  * *padded content area* (its top-left is where the icon starts, its width is
  * the text-wrap budget). Does not paint the card shell —
  * callers compose those separately (this file's `iconCards.render` paints a
- * surface shell; `templates/tech.tsx`'s exploded tiles paint
+ * surface shell; `templates/terminal.tsx`'s exploded tiles paint
  * their own outline shell instead), mirroring `renderKpiCardBody`'s
- * content-only contract in tech.tsx.
+ * content-only contract in terminal.tsx.
  */
 export function renderIconCardBody(
   item: IconCardItem,

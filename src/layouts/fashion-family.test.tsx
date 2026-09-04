@@ -77,8 +77,8 @@ describe("fashion 家族（runway）", () => {
     // runway：白字 @0.85 混到正红上只有 4.06:1 → 退回 1
     expect(markup).toMatch(/fill-opacity="1"[^>]*>时尚编辑部</)
 
-    // 达标的一家保留 0.85——academic 的 accent 上，深墨 @0.85 混完 5.28:1。
-    const academicCtx = buildCtx(resolveStyle("academic"), {})
+    // 达标的一家保留 0.85——thesis 的 accent 上，深墨 @0.85 混完 5.28:1。
+    const academicCtx = buildCtx(resolveStyle("thesis"), {})
     const academicMarkup = renderSvgMarkup(
       <FashionChapter ir={deck} slide={chapter} index={0} ctx={academicCtx} />,
     )
@@ -95,9 +95,9 @@ describe("fashion 家族（runway）", () => {
 
   // 与上面 chapter org 行同型的既有缺陷，这次是 ending 的两处：顶部 org 小字
   // 固定叠 0.72、底部 meta 行固定叠 0.6，混到满版 primary 上都可能跌破正文的
-  // 4.5:1。17 家钉 fashion-ending 实测，8 家在违例——org 行 academic 4.24 /
-  // campaign 4.10 / classroom 3.76 / pulse 3.98 / ember 3.44 /
-  // vermilion 4.14，meta 行再多一家 terra 3.75。两处各走 `accessibleOpacity`
+  // 4.5:1。17 家钉 fashion-ending 实测，8 家在违例——org 行 thesis 4.24 /
+  // rally 4.10 / homeroom 3.76 / clinic 3.98 / ember 3.44 /
+  // vermilion 4.14，meta 行再多一家 almanac 3.75。两处各走 `accessibleOpacity`
   // 之后，达标的保留原不透明度、不达标的退回全不透明。
   it("ending：org 与 meta 两处不透明度各走 accessibleOpacity——按各自字号独立判定", () => {
     const deck = ir([ending])
@@ -114,11 +114,11 @@ describe("fashion 家族（runway）", () => {
     expect(emberMarkup).toMatch(/fill-opacity="1"[^>]*letter-spacing="8"[^>]*>时尚编辑部</)
     expect(emberMarkup).toMatch(/fill-opacity="1"[^>]*letter-spacing="3"[^>]*>时尚编辑部</)
 
-    // terra 是分辨用例：同一底色（#4D5D39）上 20px 的 org @0.72 混完 4.64:1
+    // almanac 是分辨用例：同一底色（#4D5D39）上 20px 的 org @0.72 混完 4.64:1
     // 达标、19px 的 meta @0.6 混完只有 3.75:1 不达标——两处必须各判各的，
     // 一处失守不该把另一处也一起顶满。
     const terraMarkup = renderSvgMarkup(
-      <FashionEnding ir={deck} slide={ending} index={0} ctx={buildCtx(resolveStyle("terra"), {})} />,
+      <FashionEnding ir={deck} slide={ending} index={0} ctx={buildCtx(resolveStyle("almanac"), {})} />,
     )
     expect(terraMarkup).toMatch(/fill-opacity="0\.72"[^>]*letter-spacing="8"[^>]*>时尚编辑部</)
     expect(terraMarkup).toMatch(/fill-opacity="1"[^>]*letter-spacing="3"[^>]*>时尚编辑部</)
@@ -142,10 +142,10 @@ describe("fashion 家族（runway）", () => {
 
     // 长副题：17 家都缩到 14px，floor 翻成 4.5:1，这 5 家混完不达标 → 退回
     // 全不透明；其余 12 家仍达标 → 保留 0.72。名单是「明度谷」主题的实测
-    // 集合，随 token 变动：冷调组把 academic 的绿加深（#006A4E → #0E6245）
-    // 后它退出过一次；柔和组（2026-08-20）把 campaign 的 primary 从品红
+    // 集合，随 token 变动：冷调组把 thesis 的绿加深（#006A4E → #0E6245）
+    // 后它退出过一次；柔和组（2026-08-20）把 rally 的 primary 从品红
     // #F0559E 翻成舞台暗紫 #23173A，白字 @0.72 在 21px 上重新过线，
-    // **campaign 也退出**。classroom 的 primary 换了色相但仍在明度谷
+    // **rally 也退出**。homeroom 的 primary 换了色相但仍在明度谷
     // 里（#4A6B8A），留在名单上。逐主题实测工具：
     // `.issues/2026-08-18-theme-redesign/skins/tools/probe-fashion-flip.mts`
     // ——这个数组钉的是当前 token 下的实测结果，token 换血时它应当跟着换
@@ -158,7 +158,7 @@ describe("fashion 家族（runway）", () => {
     // 越出这个盒子 35.1px。**这条测试要判的那件事没变**：21 和 14 同在 24px
     // 大字号线以下，floor 都是 4.5:1，FLIPPED 名单逐个主题实测前后完全一致，
     // 动的只是那个被扣款扣小了的字号常量。
-    const FLIPPED = ["classroom", "pulse", "ember", "vermilion", "crayon"]
+    const FLIPPED = ["homeroom", "clinic", "ember", "vermilion", "crayon"]
     const longDeck = ir([endingLongSub])
     for (const themeId of CANONICAL_THEME_IDS) {
       const markup = renderSvgMarkup(

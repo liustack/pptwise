@@ -446,7 +446,7 @@ export function fitEmphasisText(
  * background, which is right for the ordinary face drawing on the page and
  * wrong for every face that covers it: `cover-fashion-masthead` fills 1280
  * by 720 with `colors.primary` and sets its masthead on that, so the helper
- * was grading a gold run against academic's ivory (about 3.1:1, a pass) and
+ * was grading a gold run against thesis's ivory (about 3.1:1, a pass) and
  * painting it on green (about 2.1:1, well under the large-text floor). The
  * face already measured its meta line against the panel; this is the same
  * "measure what you painted" rule reaching the runs.

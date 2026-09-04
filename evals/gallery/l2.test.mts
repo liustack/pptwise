@@ -15,12 +15,12 @@ import { auditL1 } from "./l1"
 await installNodePlatform()
 
 const PAGE = {
-  id: "consulting--comp--callout--zh",
-  section: "consulting",
+  id: "brief--comp--callout--zh",
+  section: "brief",
   band: "component",
   subject: "callout",
   language: "zh",
-  theme: "consulting",
+  theme: "brief",
   page: 1,
 }
 

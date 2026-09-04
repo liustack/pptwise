@@ -16,7 +16,7 @@ IR 是 pptwise 的类型化语义输入。版本 5 描述 deck 说什么、绑�
   "version": "5",
   "filename": "hello.pptx",
   "narrative": "general",
-  "theme": { "id": "consulting" },
+  "theme": { "id": "brief" },
   "meta": { "organization": "Acme", "date": "2026-08-30" },
   "assets": { "images": {} },
   "slides": [

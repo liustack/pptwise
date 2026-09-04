@@ -25,14 +25,14 @@ const slide: Slide = {
 const ir: PptxIR = {
   version: "5",
   filename: "gauge-point.pptx",
-  theme: { id: "consulting" },
+  theme: { id: "brief" },
   meta: { organization: "云觅咨询", version: "v2", date: "2026-08" },
   assets: { images: {} },
   slides: [chapter, slide],
 } as PptxIR
 
 function renderPoint() {
-  const tokens = resolveStyle("consulting")
+  const tokens = resolveStyle("brief")
   const bg = resolveBackgroundHex(tokens.defaultBackgrounds.content, tokens.colors.surface)
   const ctx = buildCtx(tokens, {}, undefined, bg)
   const markup = renderSvgMarkup(

@@ -11,7 +11,7 @@
  * discipline `branding-geometry.ts`'s `FOOTNOTE_DESCENT_RATIO` states for the
  * footnote it keeps off the footer divider.
  *
- * Shared by banner-chapter, memo-head, and consulting stat-hero so an
+ * Shared by banner-chapter, memo-head, and brief stat-hero so an
  * underline sits below glyph ink at a size-proportional offset (C9).
  */
 export const LATIN_DESCENT_RATIO = 0.22

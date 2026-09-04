@@ -62,7 +62,7 @@ function textPaint(el: Element): string {
 
 describe("chapter-stroke-index-chapter — board geometry", () => {
   it("draws a hollow stroked index at the board coordinates", () => {
-    const { root, tokens } = renderChapter("tech")
+    const { root, tokens } = renderChapter("terminal")
     const numeral = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "03")
     const chapterBg = resolveBackgroundHex(tokens.defaultBackgrounds.chapter, tokens.colors.surface)
     const numberInk = accessibleInk(tokens.colors.accent, chapterBg, 110)
@@ -76,7 +76,7 @@ describe("chapter-stroke-index-chapter — board geometry", () => {
   })
 
   it("places the title and subheading under the index", () => {
-    const { root } = renderChapter("tech")
+    const { root } = renderChapter("terminal")
     const title = Array.from(root.querySelectorAll("text")).find((t) => (t.textContent ?? "").includes("推理为什么敢上主站"))
     expect(title?.getAttribute("x")).toBe("96")
     expect(title?.getAttribute("y")).toBe("414")
@@ -86,7 +86,7 @@ describe("chapter-stroke-index-chapter — board geometry", () => {
   })
 
   it("draws a border rule with an accent progress segment at 3/4", () => {
-    const { root, tokens } = renderChapter("tech")
+    const { root, tokens } = renderChapter("terminal")
     const lines = Array.from(root.querySelectorAll("line"))
     expect(lines).toHaveLength(2)
     const border = lines.find((l) => l.getAttribute("stroke") === tokens.colors.border)
@@ -102,12 +102,12 @@ describe("chapter-stroke-index-chapter — board geometry", () => {
   })
 
   it("counts two decoration pieces (index + progress rule)", () => {
-    const { root } = renderChapter("tech")
+    const { root } = renderChapter("terminal")
     expect(countDecorPieces(root)).toBe(2)
   })
 
   it("keeps the hollow index glyph box inside the canvas", () => {
-    const { root } = renderChapter("tech")
+    const { root } = renderChapter("terminal")
     const numeral = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "03")!
     const x = Number(numeral.getAttribute("x"))
     const y = Number(numeral.getAttribute("y"))
@@ -147,15 +147,15 @@ describe("chapter-stroke-index-chapter — shared pool", () => {
   })
 
   it("renders byte-identically on repeat", () => {
-    expect(renderChapter("tech").markup).toBe(renderChapter("tech").markup)
+    expect(renderChapter("terminal").markup).toBe(renderChapter("terminal").markup)
   })
 
-  it("uses tokens, not baked tech hex, when another theme renders it", () => {
-    const { markup, tokens } = renderChapter("consulting")
+  it("uses tokens, not baked terminal hex, when another theme renders it", () => {
+    const { markup, tokens } = renderChapter("brief")
     expect(markup).toContain(tokens.colors.accent)
     expect(markup).toContain(tokens.colors.border)
     for (const hex of TECH_HEX) {
-      expect(markup, `tech token ${hex} leaked`).not.toContain(hex)
+      expect(markup, `terminal token ${hex} leaked`).not.toContain(hex)
     }
   })
 })

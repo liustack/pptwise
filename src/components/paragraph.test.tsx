@@ -4,7 +4,7 @@ import { render } from "@testing-library/react"
 import { paragraph } from "./paragraph"
 import type { ComponentCtx } from "./types"
 import { PACING_BUDGETS } from "@/narrative"
-import { CONSULTING_TOKENS } from "@/themes/builtin/consulting"
+import { CONSULTING_TOKENS } from "@/themes/builtin/brief"
 import { measureTextUnits } from "@/lib/svg-text-layout"
 import { contrastRatio, requiredContrastRatio } from "../render/ink"
 
@@ -53,11 +53,11 @@ describe("paragraph component", () => {
 })
 
 describe("paragraph component emphasis", () => {
-  it("renders consulting emphasis as a measured foreground pad before readable text", () => {
+  it("renders brief emphasis as a measured foreground pad before readable text", () => {
     const consultingCtx: ComponentCtx = {
       ...ctx,
       colors: CONSULTING_TOKENS.colors,
-      themeId: "consulting",
+      themeId: "brief",
       emphasis: "pad",
     }
     const marked = { type: "paragraph" as const, text: "普通 **强调内容** 普通" }
@@ -148,11 +148,11 @@ describe("paragraph component emphasis", () => {
     expect(linesWithAccent.length).toBeGreaterThan(1)
   })
 
-  it("draws one consulting pad for each wrapped line of a cross-line emphasis run", () => {
+  it("draws one brief pad for each wrapped line of a cross-line emphasis run", () => {
     const consultingCtx: ComponentCtx = {
       ...ctx,
       colors: CONSULTING_TOKENS.colors,
-      themeId: "consulting",
+      themeId: "brief",
       emphasis: "pad",
     }
     const long = {

@@ -11,7 +11,7 @@ import type { PptxIR, Slide } from "@/ir"
 
 // Red-first regression for the user-reported cover-overflow defect
 // (bold-metrics fix, 2026-07-24). Root cause (full writeup: this task's
-// root-cause.md, scratchpad, not shipped in this repo): consulting theme's
+// root-cause.md, scratchpad, not shipped in this repo): brief theme's
 // cover picks `cover-fashion-masthead.tsx`, whose heading renders
 // `fontWeight="900"` -- OOXML export collapses that to a real Georgia Bold
 // glyph outline (`isBold()`, fonts.ts) -- but `fitHeadingLines` sized the
@@ -23,7 +23,7 @@ import type { PptxIR, Slide } from "@/ir"
 // (`wrap="none"` on export).
 //
 // Exact reproduction of `scripts/e2e.mts`'s `structuresDeck`: `theme: { id:
-// "consulting" }`, cover slide `heading: "Structure Components Demo"`.
+// "brief" }`, cover slide `heading: "Structure Components Demo"`.
 
 function coverSlide(heading: string): Slide {
   return { type: "cover", heading, components: [] } as Slide
@@ -33,7 +33,7 @@ function coverIr(heading: string): PptxIR {
   return {
     version: "3",
     filename: "x.pptx",
-    theme: { id: "consulting" },
+    theme: { id: "brief" },
     meta: { organization: "pptwise", date: "2026-07" },
     assets: { images: {} },
     slides: [coverSlide(heading)],
@@ -41,9 +41,9 @@ function coverIr(heading: string): PptxIR {
 }
 
 describe("cover-fashion-masthead — bold-metrics fix red-first (user-reported cover-overflow defect)", () => {
-  const ctx = buildCtx(resolveStyle("consulting"), {})
+  const ctx = buildCtx(resolveStyle("brief"), {})
 
-  it("sanity: consulting's heading face resolves to Georgia (the defect's own trigger face)", () => {
+  it("sanity: brief's heading face resolves to Georgia (the defect's own trigger face)", () => {
     expect(ctx.fonts.heading.split(",")[0].trim()).toBe("Georgia")
   })
 
@@ -116,10 +116,10 @@ describe("cover-fashion-masthead — bold-metrics fix red-first (user-reported c
     // correction) rather than one blanket conservative number applied
     // everywhere regardless of which face actually renders.
     const cases: Array<[theme: string, expectFace: string]> = [
-      ["academic", "Georgia"],
-      ["insight", "Georgia"],
-      ["campaign", "Microsoft YaHei"],
-      ["classroom", "Microsoft YaHei"],
+      ["thesis", "Georgia"],
+      ["ledger", "Georgia"],
+      ["rally", "Microsoft YaHei"],
+      ["homeroom", "Microsoft YaHei"],
       ["ink", "KaiTi"],
     ]
 
@@ -164,8 +164,8 @@ describe("cover-fashion-masthead — bold-metrics fix red-first (user-reported c
     // aware estimate matches a genuine hmtx reading almost exactly, while
     // the envelope (structurally incapable of per-string exactness) does
     // not.
-    it("YaHei (campaign) exact model matches the genuine hmtx reading; the conservative envelope alone would not have (face-awareness's real payoff is accuracy, not just a smaller number)", () => {
-      const campaignCtx = buildCtx(resolveStyle("campaign"), {})
+    it("YaHei (rally) exact model matches the genuine hmtx reading; the conservative envelope alone would not have (face-awareness's real payoff is accuracy, not just a smaller number)", () => {
+      const campaignCtx = buildCtx(resolveStyle("rally"), {})
       const faceAware = measureTextUnits("Components Demo", { bold: true, fontFamily: campaignCtx.fonts.heading })
       const envelopeOnly = measureTextUnits("Components Demo", { bold: true, fontFamily: undefined })
       // real_em 9.7319 -- this fix's own direct fontTools re-measurement
@@ -224,7 +224,7 @@ describe("cover-fashion-masthead — letter-spacing wrap budget (round-3 D-clust
   }
 
   it("every subtitle line stays inside its declared 1168px budget once its own tracking is counted", () => {
-    const lines = subtitleLines("consulting")
+    const lines = subtitleLines("brief")
     expect(lines.length).toBeGreaterThan(0)
     for (const line of lines) {
       expect(renderedWidth(line)).toBeLessThanOrEqual(SUBTITLE_MAX_W + 1) // +1: float slack, heading-fit.test.ts's convention
@@ -232,25 +232,25 @@ describe("cover-fashion-masthead — letter-spacing wrap budget (round-3 D-clust
   })
 
   it("and therefore inside the 1280px page — the finding as the reviewer saw it", () => {
-    for (const line of subtitleLines("consulting")) {
+    for (const line of subtitleLines("brief")) {
       expect(SUBTITLE_X + renderedWidth(line)).toBeLessThanOrEqual(PAGE_W)
     }
   })
 
   it("re-wraps rather than dropping text: the whole subheading still renders", () => {
-    const lines = subtitleLines("consulting")
+    const lines = subtitleLines("brief")
     expect(lines.map((l) => l.textContent).join(" ")).toBe(EN_SUBHEADING)
     expect(lines.length).toBeLessThanOrEqual(2) // the call site's own maxLines
   })
 
   it("does not over-shrink: the subtitle keeps its declared 30px size", () => {
-    for (const line of subtitleLines("consulting")) {
+    for (const line of subtitleLines("brief")) {
       expect(Number(line.getAttribute("font-size"))).toBe(30)
     }
   })
 
   it("holds across heading faces (the budget is tracking, not face, driven)", () => {
-    for (const theme of ["campaign", "ink", "academic"]) {
+    for (const theme of ["rally", "ink", "thesis"]) {
       const lines = subtitleLines(theme)
       expect(lines.length, theme).toBeGreaterThan(0)
       for (const line of lines) {
@@ -260,8 +260,8 @@ describe("cover-fashion-masthead — letter-spacing wrap budget (round-3 D-clust
   })
 
   it("the meta line budgets its own 3px tracking too (same blind spot, same page)", () => {
-    const ctx = buildCtx(resolveStyle("consulting"), {})
-    const ir = coverIrWithSubheading("consulting")
+    const ctx = buildCtx(resolveStyle("brief"), {})
+    const ir = coverIrWithSubheading("brief")
     const out = renderSvgMarkup(<FashionMastheadCover ir={ir} slide={ir.slides[0]} index={0} ctx={ctx} />)
     const root = parseSvgRoot(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">${out}</svg>`)
     const meta = Array.from(root.querySelectorAll("text")).filter((t) => t.getAttribute("letter-spacing") === "3")
@@ -271,11 +271,11 @@ describe("cover-fashion-masthead — letter-spacing wrap budget (round-3 D-clust
 })
 
 describe("cover-fashion-masthead — no leftover top-left motif stub", () => {
-  it("consulting banner-motif does not paint the yellow lead on this cover", () => {
+  it("brief banner-motif does not paint the yellow lead on this cover", () => {
     const deck: PptxIR = {
       version: "5",
       filename: "fashion-masthead-no-stub.pptx",
-      theme: { id: "consulting" },
+      theme: { id: "brief" },
       meta: { organization: "Platform Engineering 团队" },
       assets: { images: {} },
       seed: 1,
@@ -299,7 +299,7 @@ describe("cover-fashion-masthead — no leftover top-left motif stub", () => {
 // masthead straight onto it. The meta line already measured against that
 // panel; the emphasis helper did not, choosing the run's ink against
 // `ctx.defaultBg` instead — the theme's page background, which this cover
-// never shows. On academic that is ivory behind a green panel, so the helper
+// never shows. On thesis that is ivory behind a green panel, so the helper
 // passed a gold run at ~3.1:1 against ivory and painted it at ~2.1:1 against
 // the green a reader actually sees.
 describe("cover-fashion-masthead — an emphasis run measured against the panel it lands on", () => {
@@ -321,7 +321,7 @@ describe("cover-fashion-masthead — an emphasis run measured against the panel 
     return { root, ctx }
   }
 
-  it.each(["academic", "consulting", "swiss"])(
+  it.each(["thesis", "brief", "swiss"])(
     "%s: the marked run clears the large-text floor against the panel, not the page",
     (themeId) => {
       const { root, ctx } = markedCover(themeId)

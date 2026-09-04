@@ -20,7 +20,7 @@ import { contentRecessOpacity, leafRecessOpacity } from "./decor-budget"
  * 叶子走 `leafRecessOpacity` / `contentRecessOpacity`。画笔写在叶子上。
  *
  * 纪律：零 theme id、零 hex，颜色只来自 ctx（border，缺则 muted）。不读
- * `chartPalette`。本 motif 仍是 classroom 的唯一候选。
+ * `chartPalette`。本 motif 仍是 homeroom 的唯一候选。
  */
 
 const RULE_X1 = 96

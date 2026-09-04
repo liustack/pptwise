@@ -9,11 +9,11 @@ import { CANVAS_H_PX } from "../constants"
 
 /**
  * ghost-section-chapter layout（2026-08-22 第八波批 1，新表达）：
- * **幽灵序号沉右下 + 琥珀 SECTION 眉 + 左齐标题**。构图抄 insight 设计板
+ * **幽灵序号沉右下 + 琥珀 SECTION 眉 + 左齐标题**。构图抄 ledger 设计板
  * 章节页。幽灵序号与背景几乎同明度（fill 走 surface，不走 accessibleInk），
  * 整字落在 1280×720 内，不声明 data-bleed。
  *
- * **它进共享池，不是 insight 专用**。零 theme id、零 hex。章号从
+ * **它进共享池，不是 ledger 专用**。零 theme id、零 hex。章号从
  * `chapterNumberFor` 推，不写死 02。
  *
  * 主题菜单应声明 `decor: silent`。右下是幽灵序号的位置，默认 br logo 盒会整枚吃掉这层

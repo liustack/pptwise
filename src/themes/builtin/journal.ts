@@ -48,7 +48,7 @@ import type { BuiltinThemeDeclaration } from "../schema";
  *
  * 装饰见 `src/motifs/motif-corner-ornament-motif.tsx`（报头双线 v2：
  * 顶缘文武双线 + 底缘单线 + 线上中点期号）——journal 的锚点 motif 是
- * `corner-ornament-motif`，academic / luxe / heritage 三家在各自的候选集里
+ * `corner-ornament-motif`，thesis / luxe / heritage 三家在各自的候选集里
  * 也借它，本轮换血因此波及那三家的借用页（归因见编辑组报告）。
  *
  * **第八波刊头规制（2026-08-23，`.issues/design-boards/wave8/b2/Journal.dc.html`）**：

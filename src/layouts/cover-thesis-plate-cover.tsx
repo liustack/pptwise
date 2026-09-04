@@ -12,7 +12,7 @@ import { stripEmphasis } from "../render/emphasis"
  * 两行衬线标题，primary 绿块承答辩属性（作者 / 院系 / 日期），底 border 线。
  * 构图抄 `.issues/design-boards/wave8/b2/Academic.dc.html` 封面。
  *
- * 进共享池，不是 academic 专用。零 theme id、零 baked hex。开卷金线归
+ * 进共享池，不是 thesis 专用。零 theme id、零 baked hex。开卷金线归
  * motif（y120），本版式不画。空 heading 不编造封面句，缺 meta 就少画绿块。
  *
  * 板上做不到、最近落地：

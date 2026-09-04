@@ -24,7 +24,7 @@ import { blendOver, metaInk, readableOn } from "../render/ink"
  * 是 `readableOn(colors.primary)` 已经选出的、相对这块满版底对比度最高的
  * 中性墨色，0.6 是这一行自己的既有弱化倍率（同页副题用 0.72，是同一构图
  * 语言）。`full-matrix-contrast.test.ts` 曾为此单独留一条
- * `tech/fashion-masthead` ALLOWLIST 条目（实测 tech 主题下 ~4.16:1，够不上
+ * `terminal/fashion-masthead` ALLOWLIST 条目（实测 terminal 主题下 ~4.16:1，够不上
  * 旧的 4.5:1 正文线但早已清 B 层 3:1 线），该条目自己的注释已经点名"这一行
  * 尚未接入 metaInk/data-contrast-tier=meta，是未来主题打磨范围"——本次就是
  * 那次打磨，条目本身随之删除（`isAllowlisted` 的判定改交给 `deck-audit` 的
@@ -39,9 +39,9 @@ import { blendOver, metaInk, readableOn } from "../render/ink"
  * （复合色 = `blendOver(fg, colors.primary, META_LINE_ALPHA)`，与旧
  * `fill+fillOpacity` 渲染出的像素完全一致），把这个复合色本身作为
  * `metaInk` 的 `preferredFill`，测的背景是 `colors.primary`——已经清 3:1 的
- * 主题（16 个里 15 个，含 tech 自己的 ~4.16:1）`metaInk` 原样放行，输出与
+ * 主题（16 个里 15 个，含 terminal 自己的 ~4.16:1）`metaInk` 原样放行，输出与
  * 复合色逐字节相同，改用纯色 `fill` 渲染（不再需要 `fillOpacity`，对不透明
- * 底色而言两者是同一像素）不改变任何已渲染的主题。唯一改变的是 `insight`
+ * 底色而言两者是同一像素）不改变任何已渲染的主题。唯一改变的是 `ledger`
  * 主题：旧复合色相对 `colors.primary`（`#E63946`）实测仅 2.886:1（该主题
  * 从未被任何既有测试覆盖过——`full-matrix-contrast.test.ts` 自己的 sweep
  * fixture 不填 organization/date，`metaLine` 从未在那个文件的扫描里真正
@@ -73,10 +73,10 @@ export function FashionMastheadCover({ ir, slide, ctx, page }: SvgTemplateProps)
     // bold-metrics fix (2026-07-24): this line's fontWeight="900" render
     // below relies on `fitHeadingLines`'s bold-default flip (opts.bold
     // defaults true) plus this explicit fontFamily so the estimate is
-    // face-aware (Georgia under consulting/academic/insight) rather than
+    // face-aware (Georgia under brief/thesis/ledger) rather than
     // falling back to the cross-face envelope. This is the exact layout
     // + slot the user-reported cover-overflow defect traced to
-    // (root-cause.md: "Components Demo" on the consulting theme) — see
+    // (root-cause.md: "Components Demo" on the brief theme) — see
     // this fix's red-first test in cover-fashion-masthead.test.tsx.
     fontFamily: ctx.fonts.heading,
     typeScale: ctx.shape?.typeScale,
@@ -122,7 +122,7 @@ export function FashionMastheadCover({ ir, slide, ctx, page }: SvgTemplateProps)
   // preserves this line's own long-standing dim ratio (was `fillOpacity`,
   // now folded into the composite hex `metaInk` grades) — a no-op on every
   // theme whose composite already clears 3:1 (byte-identical fill to the
-  // old `fill+fillOpacity` render), only nudged on `insight` (~2.886:1
+  // old `fill+fillOpacity` render), only nudged on `ledger` (~2.886:1
   // baseline).
   const META_LINE_ALPHA = 0.6
   const metaFill = metaInk(blendOver(fg, ctx.colors.primary, META_LINE_ALPHA), ctx.colors.primary)

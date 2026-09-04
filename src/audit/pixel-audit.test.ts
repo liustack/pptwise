@@ -287,7 +287,7 @@ describe("worstCaseSample — single-pixel noise robustness (deep-acceptance rev
 
 describe("auditDeck({ pixels: true }) — real Sharp rasterization", () => {
   it("stays synchronous and Promise-free when pixels is omitted (spec §11.7 semantic-layer contract)", () => {
-    const ir = deck("consulting", [{ type: "cover", heading: "Cover", components: [] }])
+    const ir = deck("brief", [{ type: "cover", heading: "Cover", components: [] }])
     const result = auditDeck(ir)
     expect(result).not.toBeInstanceOf(Promise)
     expect(result.checks).toEqual({ svg: "completed", pixels: "not-requested" })
@@ -296,7 +296,7 @@ describe("auditDeck({ pixels: true }) — real Sharp rasterization", () => {
   it("reports zero pixel findings for white cover text over a near-black photo (image-pages.tsx's real ImageCoverPage/DarkScrim geometry)", async () => {
     const darkPhoto = makeSolidRegionPngDataUri(20, 20, () => [0x05, 0x05, 0x08])
     const ir = deck(
-      "consulting",
+      "brief",
       [{ type: "cover", heading: "Dark Cover Photo", background: { kind: "asset", asset_id: "photo" }, components: [] }],
       { meta: { organization: "Acme Co" }, assets: { images: { photo: { src: darkPhoto } } } },
     )
@@ -307,7 +307,7 @@ describe("auditDeck({ pixels: true }) — real Sharp rasterization", () => {
   })
 
   it("never calls the rasterizer at all when no page has image-backed text (a solid-color-only deck stays cheap)", async () => {
-    const ir = deck("consulting", [
+    const ir = deck("brief", [
       { type: "cover", heading: "Plain Cover", components: [] },
       { type: "content", kind: "points", heading: "Body", components: [{ type: "paragraph", text: "hello" }] },
     ])
@@ -319,7 +319,7 @@ describe("auditDeck({ pixels: true }) — real Sharp rasterization", () => {
   it("is deterministic on the same platform: two runs on the same IR produce byte-identical JSON", async () => {
     const photo = makeSolidRegionPngDataUri(20, 20, () => [0xf5, 0xf5, 0xf0])
     const ir = deck(
-      "consulting",
+      "brief",
       [{ type: "cover", heading: "Determinism Check", background: { kind: "asset", asset_id: "photo" }, components: [] }],
       { meta: { organization: "Acme Co" }, assets: { images: { photo: { src: photo } } } },
     )
@@ -328,7 +328,7 @@ describe("auditDeck({ pixels: true }) — real Sharp rasterization", () => {
   })
 
   it("rejects with an explicit error (not a silent clean report) when an image-backed run sits on a remote http(s) asset", async () => {
-    const ir = deck("consulting", [{ type: "cover", heading: "Remote Photo", background: { kind: "asset", asset_id: "photo" }, components: [] }], {
+    const ir = deck("brief", [{ type: "cover", heading: "Remote Photo", background: { kind: "asset", asset_id: "photo" }, components: [] }], {
       assets: { images: { photo: { src: "https://example.com/photo.jpg" } } },
     })
     await expect(auditDeck(ir, { pixels: true })).rejects.toThrow(/remote image/)
@@ -358,7 +358,7 @@ describe("auditDeck({ pixels: true }) — full pipeline with an injected rasteri
       },
     })
     const ir = deck(
-      "consulting",
+      "brief",
       [{ type: "cover", heading: "Injected White Page", background: { kind: "asset", asset_id: "photo" }, components: [] }],
       { meta: { organization: "Acme Co" }, assets: { images: { photo: { src: "data:image/png;base64,x" } } } },
     )

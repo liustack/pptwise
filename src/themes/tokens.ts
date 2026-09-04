@@ -14,7 +14,7 @@ export interface StyleColors {
   chartPalette: string[];
   /**
    * Optional accent color pool for themes whose layout grammar cycles through
-   * multiple accent colors (e.g. tech card corner stripes). Themes that
+   * multiple accent colors (e.g. terminal card corner stripes). Themes that
    * only use a single accent color can omit this.
    */
   accentPool?: string[];
@@ -134,9 +134,9 @@ export interface StyleShape {
     textAnchor?: "start" | "middle"
     bandY?: number
     bandH?: number
-    /** Small accent square on the band (enterprise). */
+    /** Small accent square on the band (bulletin). */
     bandMark?: boolean
-    /** Accent q-curve under the band (classroom). */
+    /** Accent q-curve under the band (homeroom). */
     bandWave?: boolean
     wedgePeakY?: number
     wedgeStartX?: number

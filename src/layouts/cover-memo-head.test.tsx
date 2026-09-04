@@ -92,7 +92,7 @@ describe("cover-memo-head — board geometry", () => {
 
   it("sits the last-run underline under the last Latin word using exact Regular widths", () => {
     const heading = "Q2 2026 Business Review"
-    const { root } = renderCover("consulting", slide(heading, null), {})
+    const { root } = renderCover("brief", slide(heading, null), {})
     const last = Array.from(root.querySelectorAll("text")).find((t) => (t.textContent ?? "").includes("Review"))!
     const underline = Array.from(root.querySelectorAll("line")).find((l) => l.getAttribute("stroke-width") === "6")!
     const fontSize = Number(last.getAttribute("font-size"))

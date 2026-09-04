@@ -213,9 +213,9 @@ describe("pptwise SKILL model and bilingual mirrors", () => {
   it("pins theme creation, comparison, binding, and menu mismatch handling", () => {
     for (const rel of [REF("spec.md"), REF("spec.zh-CN.md")]) {
       const text = read(rel)
-      expect(text).toContain("pptwise theme try consulting,swiss,memo")
-      expect(text).toContain("pptwise theme new --from consulting --id acme-report")
-      expect(text).toContain("pptwise brand extract corp.pptx -o themes/acme.theme.json --from consulting")
+      expect(text).toContain("pptwise theme try brief,swiss,memo")
+      expect(text).toContain("pptwise theme new --from brief --id acme-report")
+      expect(text).toContain("pptwise brand extract corp.pptx -o themes/acme.theme.json --from brief")
       expect(text).toContain("pptwise theme fork acme --primary '#0B5FFF' --id acme-blue")
       expect(text).toContain("theme.json")
       expect(text).toContain("kind")

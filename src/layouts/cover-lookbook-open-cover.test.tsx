@@ -186,7 +186,7 @@ describe("cover-lookbook-open-cover — shared pool", () => {
   })
 
   it("uses tokens, not a baked runway hex, when another theme borrows it", () => {
-    const { markup, tokens } = renderCover("tech")
+    const { markup, tokens } = renderCover("terminal")
     expect(markup).toContain(tokens.colors.primary)
     for (const hex of RUNWAY_HEX) {
       expect(markup, `runway token ${hex} leaked`).not.toContain(hex)

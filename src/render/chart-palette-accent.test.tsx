@@ -36,7 +36,7 @@ describe("paletteWithoutAccent", () => {
 })
 
 describe("gauge-stats' fallback chart", () => {
-  // consulting's accent is chart-palette slot 1. Mapping it onto `primary`
+  // brief's accent is chart-palette slot 1. Mapping it onto `primary`
   // made slot 1 the same colour as slot 0, so a two-series bar chart painted
   // both series `#1E2A4A` — in the bars and in the legend — and read as one
   // series. Dropping the entry is what the face meant all along.
@@ -58,12 +58,12 @@ describe("gauge-stats' fallback chart", () => {
   } as unknown as Slide
 
   it("paints two series in two colours", () => {
-    const tokens = resolveStyle("consulting")
+    const tokens = resolveStyle("brief")
     const ctx = buildCtx(tokens, {}, undefined, resolveBackgroundHex(tokens.defaultBackgrounds.content, tokens.colors.surface))
     const ir = {
       version: "5",
       filename: "f.pptx",
-      theme: { id: "consulting" },
+      theme: { id: "brief" },
       meta: {},
       assets: { images: {} },
       slides: [slide],
@@ -80,7 +80,7 @@ describe("gauge-stats' fallback chart", () => {
   })
 
   it("still gives a lone component the whole palette when the face is not neutralising", () => {
-    const tokens = resolveStyle("consulting")
+    const tokens = resolveStyle("brief")
     const ctx = buildCtx(tokens, {}, undefined, resolveBackgroundHex(tokens.defaultBackgrounds.content, tokens.colors.surface))
     const markup = renderSvgMarkup(
       <svg>{renderComponent(slide.components[0]!, { x: 0, y: 0, w: 1000, h: 400 }, ctx)}</svg>,

@@ -53,7 +53,7 @@ function renderChapter(themeId: string, s: Slide = chapter2, index = 2) {
 
 describe("chapter-ghost-rule-chapter — board geometry", () => {
   it("places the ghost numeral, accent bar, and left title on the board", () => {
-    const { root, tokens, ctx } = renderChapter("consulting")
+    const { root, tokens, ctx } = renderChapter("brief")
     const ghost = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "02")
     expect(ghost?.getAttribute("x")).toBe("1170")
     expect(ghost?.getAttribute("y")).toBe("560")
@@ -77,7 +77,7 @@ describe("chapter-ghost-rule-chapter — board geometry", () => {
   })
 
   it("keeps the ghost glyph box inside the canvas", () => {
-    const { root } = renderChapter("consulting")
+    const { root } = renderChapter("brief")
     const ghost = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "02")!
     const box = textInkBox({
       content: ghost.textContent ?? "",
@@ -95,8 +95,8 @@ describe("chapter-ghost-rule-chapter — board geometry", () => {
     expect(box.y + box.h).toBeLessThanOrEqual(720)
   })
 
-  it("uses tokens, not baked consulting hex, when another theme draws it", () => {
-    const { root, tokens } = renderChapter("enterprise")
+  it("uses tokens, not baked brief hex, when another theme draws it", () => {
+    const { root, tokens } = renderChapter("bulletin")
     expect(root.querySelector("rect")?.getAttribute("fill")).toBe(tokens.colors.accent)
     expect(root.innerHTML).not.toMatch(/#F5C518/i)
     expect(root.innerHTML).not.toMatch(/#1E2A4A/i)
@@ -130,6 +130,6 @@ describe("chapter-ghost-rule-chapter — shared pool", () => {
   })
 
   it("renders byte-identically on repeat", () => {
-    expect(renderChapter("consulting").markup).toBe(renderChapter("consulting").markup)
+    expect(renderChapter("brief").markup).toBe(renderChapter("brief").markup)
   })
 })

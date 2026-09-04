@@ -28,7 +28,7 @@ afterEach(() => {
 
 describe("当前渲染契约", () => {
   it("注册主题的装饰由命中的菜单条目携带", () => {
-    const id = registerTestTheme("menu-motif-contract", "insight")
+    const id = registerTestTheme("menu-motif-contract", "ledger")
     const deck = makeIR(id)
     expect(resolveEffectiveFace(deck, deck.slides[0]!).entry?.decor).toEqual({
       kind: "motif",

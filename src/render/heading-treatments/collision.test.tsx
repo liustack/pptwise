@@ -247,7 +247,7 @@ describe("assigned themes on menu-selected rail-numbered", () => {
 })
 
 describe("tag_box chapter chip vs rail-numbered badge", () => {
-  it.each(["enterprise", "playbill", "arena"] as const)(
+  it.each(["bulletin", "playbill", "arena"] as const)(
     "%s: chapter chip stays a full reserve-gap clear of the {chapter}.{n} badge",
     (themeId) => {
       const { root } = renderRailPage(themeId)
@@ -268,9 +268,9 @@ describe("tag_box chapter chip vs rail-numbered badge", () => {
 })
 
 describe("gallery theme-table rail-numbered pages", () => {
-  it("insight zh slide 6 is not a rail-numbered false positive after banner-heading retired", async () => {
+  it("ledger zh slide 6 is not a rail-numbered false positive after banner-heading retired", async () => {
     const assets = await corpusAssets(LEXICONS.zh)
-    const ir = themeDeck("insight", nativeLexiconFor("insight"), assets)
+    const ir = themeDeck("ledger", nativeLexiconFor("ledger"), assets)
     expect(ir.slides[5]?.type).toBe("content")
     const svg = renderSlideSvg(ir, 5)
     const root = parseSvgRoot(svg)

@@ -1,7 +1,7 @@
 {
   "version": "5",
   "filename": "fixture-fx03",
-  "theme": { "id": "consulting" },
+  "theme": { "id": "brief" },
   "slides": [
     { "type": "cover", "heading": "Fixture Three" },
     {

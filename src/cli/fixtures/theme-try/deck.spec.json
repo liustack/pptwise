@@ -1,7 +1,7 @@
 {
   "version": "1",
   "narrative": "boardroom-report",
-  "theme": "consulting",
+  "theme": "brief",
   "filename": "northstar-review",
   "pages": [
     { "id": "p-cover", "type": "cover", "heading": "Northstar Review" },

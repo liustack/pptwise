@@ -20,7 +20,7 @@ function ir(slides: Slide[]): PptxIR {
   return {
     version: "5",
     filename: "x.pptx",
-    theme: { id: "tech" },
+    theme: { id: "terminal" },
     meta: {},
     assets: { images: {} },
     slides,
@@ -36,8 +36,8 @@ function render(body: React.ReactElement): { markup: string; root: Element } {
   return { markup, root: parseSvgRoot(markup) }
 }
 
-describe("tech sparse faces", () => {
-  const ctx = buildCtx(resolveStyle("tech"), {})
+describe("terminal sparse faces", () => {
+  const ctx = buildCtx(resolveStyle("terminal"), {})
 
   it("stat-hero is a cyan numeral with a four-dot star chain, none of the constellation", () => {
     const slide: Slide = {

@@ -7,7 +7,7 @@ import { showsDocumentMeta } from "../render/document-meta"
 import { parseEmphasis, renderEmphasisText, sliceEmphasisForLines, stripEmphasis } from "../render/emphasis"
 
 /**
- * rule-close-ending（第八波 tech 板，新 pinOnly）：收束句 + 通栏细线起端
+ * rule-close-ending（第八波 terminal 板，新 pinOnly）：收束句 + 通栏细线起端
  * 加粗青段。收束感来自线，不来自点，不致谢。
  *
  * 构图抄 `.issues/design-boards/wave8/b1/Tech.dc.html` ending：标题首行

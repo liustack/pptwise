@@ -14,7 +14,7 @@ import { stripEmphasis } from "../render/emphasis"
  * `.issues/design-boards/wave8/b2/Classroom.dc.html` 章节：盒 (96,264,176×64)，
  * 号 y308，题 y416 / 52px，副题 y470。
  *
- * 进共享池，不是 classroom 专用。零 theme id、零 baked hex。两条横线簿格线
+ * 进共享池，不是 homeroom 专用。零 theme id、零 baked hex。两条横线簿格线
  * 归 motif，本版式不画。空 heading 不编造环节名。
  */
 

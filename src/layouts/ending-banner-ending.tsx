@@ -7,7 +7,7 @@ import { accessibleInk, metaInk } from "../render/ink"
 /**
  * banner-ending layout（spec §3.2）：org 圆点标 + 巨幅斜体主标题 + 中文
  * 副标题 + 一条通栏分隔线 + "联系"区块 + 版权行，呼应 banner-title cover /
- * banner-chapter 同一"结论横幅"气质。自 templates/consulting.tsx 的
+ * banner-chapter 同一"结论横幅"气质。自 templates/brief.tsx 的
  * `MckinseyNavyEnding` 提炼。
  *
  * Step A 实测边界（订正 brief 的"约 504-680 行"）：函数体实际是
@@ -15,19 +15,19 @@ import { accessibleInk, metaInk } from "../render/ink"
  * 止）。639 行起是模块级 Decor 相关注释/`MckinseyNavyDecor`，不属于本函数。
  * 随迁的只有函数体正上方 500-502 行的三个模块级私有数值常量
  * （`ENDING_HEADING_LAST_BASELINE` / `ENDING_TWO_LINE_SHIFT_MAX` /
- * `ENDING_TWO_LINE_DIVIDER_GAP`，整个 consulting.tsx 里只有本函数消费），同
+ * `ENDING_TWO_LINE_DIVIDER_GAP`，整个 brief.tsx 里只有本函数消费），同
  * ending-rail-ending.tsx 处理 `ENDING_HEADING_LAST_BASELINE` 等三个常量的
  * 先例，作为文件私有常量复制，不建公共 util。
  *
- * 替换表（Step B，逐十六进制核实，对照 themes/consulting.ts 的
+ * 替换表（Step B，逐十六进制核实，对照 themes/brief.ts 的
  * colors。十六进制值本身不抄进本注释——避免污染本文件的 grep 清零门，同
- * ending-rail-ending.tsx / cover-left-anchor.tsx 先例）：consulting.tsx
+ * ending-rail-ending.tsx / cover-left-anchor.tsx 先例）：brief.tsx
  * 模块级共有 4 个烤死常量（`NAVY`/`YELLOW`/`MUTED`/`DIVIDER`，23-26 行），
  * 但 grep 该函数区间（504-638 行）后确认 `DIVIDER` 在本函数体内**未被
  * 使用**（分隔线用的是 `NAVY`，不是 `DIVIDER`——与 banner-title cover 的
  * meta 分隔线用 `DIVIDER` 不同，是本函数自己的构图选择，原样保留不改
  * 语义）。本函数实际消费的只有以下三个，均逐字符精确匹配
- * `themes/consulting.ts` 的对应字段：
+ * `themes/brief.ts` 的对应字段：
  *   - `NAVY`   → `colors.primary`。
  *   - `YELLOW` → `colors.accent`。
  *   - `MUTED`  → `colors.muted`。
@@ -39,8 +39,8 @@ import { accessibleInk, metaInk } from "../render/ink"
  * 文本"）：版权行是真实信息（署名/法务功能），不是纯装饰，理应像其余
  * token 化颜色一样随主题派生，而不是一个跨 16 个主题原样不变的固定灰——
  * 固定灰在深底主题下可能完全不可读（对比度这件事恰恰是"随背景变化"这个
- * 属性，一个跨主题不变的常量在 token 化主题体系里是异物）。consulting 自
- * 己的实测：`0x8a8a86` 对 consulting 真实渲染背景 `#F7F7F2` 只有 3.22:1
+ * 属性，一个跨主题不变的常量在 token 化主题体系里是异物）。brief 自
+ * 己的实测：`0x8a8a86` 对 brief 真实渲染背景 `#F7F7F2` 只有 3.22:1
  * ——过 B 层 3:1 线但不过 WCAG 正文 4.5:1 线，任何主题背景更接近该灰阶
  * 时都可能跌破 3:1，无法靠手工挑一个值一次性封死。
  *
@@ -56,17 +56,17 @@ import { accessibleInk, metaInk } from "../render/ink"
  *
  * 旧裁决全文（推翻前的判断过程，保留供考古，不再是当前依据）：
  *   版权行 `fill` 用的一个内联十六进制字面量（630 行，不是模块级具名
- *   常量，grep 整个 consulting.tsx 只出现这一处）在 consulting.ts 的
+ *   常量，grep 整个 brief.tsx 只出现这一处）在 brief.ts 的
  *   colors 表里没有精确匹配。判断过程（Step B，参照 ending-rail-ending.tsx
- *   对 academic 同类孤儿色 `COPYRIGHT_FAINT` 的裁决）：
+ *   对 thesis 同类孤儿色 `COPYRIGHT_FAINT` 的裁决）：
  *   1. 十六进制差值检验——该字面量相对 `colors.muted` 是三通道几乎均匀的
- *      整体调亮，同色相、同去饱和灰调，只是更浅一档——与 academic 版权行
+ *      整体调亮，同色相、同去饱和灰调，只是更浅一档——与 thesis 版权行
  *      孤儿色相对 `muted` 的偏移模式同构。
  *   2. 页面内的层级证据——同一页里，"联系"标签与联系方式正文都用
  *      `colors.muted`（`MUTED`），版权行故意比它们更浅一档，形成"正文 >
  *      联系信息 (muted) > 版权 (更浅)"的三级弱化梯度，若并入 `muted` 会把
  *      这个梯度抹平。
- *   3. 跨主题旁证——ending-rail-ending.tsx 文件头已记录：`academic` 的
+ *   3. 跨主题旁证——ending-rail-ending.tsx 文件头已记录：`thesis` 的
  *      `BCGEmeraldEnding` 版权行独立烤了一个跟自己 `muted` 不同的近似灰
  *      （`COPYRIGHT_FAINT`），两个主题各自独立为"版权行"发明一个比
  *      `muted` 更浅的专属灰——不是巧合的抄近似值，是"版权行天生该比其余
@@ -93,7 +93,7 @@ import { accessibleInk, metaInk } from "../render/ink"
  * 应对本文件零命中，不再有点名豁免项。
  */
 
-// 随迁自 consulting.tsx 模块作用域（500-502 行），只有 MckinseyNavyEnding
+// 随迁自 brief.tsx 模块作用域（500-502 行），只有 MckinseyNavyEnding
 // 消费，随函数体一并复制为本文件私有常量。含义见源文件注释：两行标题时把
 // 首行上移一个 lineHeight（封顶 85px）以保持末行基线不变，分隔线间距同步
 // 收紧。
@@ -144,7 +144,7 @@ export function BannerEnding({ ir, slide, ctx }: SvgTemplateProps) {
   const headingLastY =
     headingY + Math.max(0, heading.lines.length - 1) * heading.lineHeight
   // 兜底只服务完全默认的 ending 页（模型填了 heading 时再兜底必然语义重复，
-  // 同 consulting 源码 2026-07-09 去重裁决，原样迁移）。defect C 修复：原
+  // 同 brief 源码 2026-07-09 去重裁决，原样迁移）。defect C 修复：原
   // 兜底文案"谢谢。"改为英文"We appreciate your time."——不直译成与主标题
   // 相同的"Thank you."，避免同页大小标题重复同一句话（主标题兜底已是
   // "Thank you."，见上方）。

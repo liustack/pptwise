@@ -71,7 +71,7 @@ function deviationPct(text: string, realEm: number): number {
 }
 
 describe("measureTextUnits — golden proportional widths (data-anchored, breaks the layout/audit tautology for heading/body)", () => {
-  describe("Georgia (consulting heading+body default -- academic/insight heading)", () => {
+  describe("Georgia (brief heading+body default -- thesis/ledger heading)", () => {
     it("uppercase run: real width stays within tolerance of the measured Georgia upper-class advance", () => {
       // Pure-uppercase synthetic run (17 chars, no spaces/digits/punctuation)
       // -- real width computed from the measured per-char class average

@@ -3,7 +3,7 @@
 export const THEME_TRY_SAMPLE_IR = {
   version: "5",
   filename: "northstar-review",
-  theme: { id: "consulting" },
+  theme: { id: "brief" },
   slides: [
     {
       type: "cover",

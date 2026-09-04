@@ -1,20 +1,20 @@
 import { PptwiseError } from "../errors";
 import type { StyleTokens } from "./tokens";
 import { REGISTERED_THEMES } from "./registered-themes";
-import { CONSULTING_THEME } from "./builtin/consulting";
-import { ENTERPRISE_THEME } from "./builtin/enterprise";
-import { ACADEMIC_THEME } from "./builtin/academic";
-import { INSIGHT_THEME } from "./builtin/insight";
-import { CAMPAIGN_THEME } from "./builtin/campaign";
-import { CLASSROOM_THEME } from "./builtin/classroom";
+import { CONSULTING_THEME } from "./builtin/brief";
+import { ENTERPRISE_THEME } from "./builtin/bulletin";
+import { ACADEMIC_THEME } from "./builtin/thesis";
+import { INSIGHT_THEME } from "./builtin/ledger";
+import { CAMPAIGN_THEME } from "./builtin/rally";
+import { CLASSROOM_THEME } from "./builtin/homeroom";
 import { INK_THEME } from "./builtin/ink";
-import { TECH_THEME } from "./builtin/tech";
+import { TECH_THEME } from "./builtin/terminal";
 import { RUNWAY_THEME } from "./builtin/runway";
 import { JOURNAL_THEME } from "./builtin/journal";
 import { LUXE_THEME } from "./builtin/luxe";
 import { HERITAGE_THEME } from "./builtin/heritage";
-import { PULSE_THEME } from "./builtin/pulse";
-import { TERRA_THEME } from "./builtin/terra";
+import { PULSE_THEME } from "./builtin/clinic";
+import { TERRA_THEME } from "./builtin/almanac";
 import { EMBER_THEME } from "./builtin/ember";
 import { VERMILION_THEME } from "./builtin/vermilion";
 import { CRAYON_THEME } from "./builtin/crayon";
@@ -29,17 +29,19 @@ import type { BuiltinThemeDeclaration } from "./schema";
 
 /**
  * The 24 canonical theme ids, registered/renderable（产品口径 24 套主题、
- * 24 个 id）。场景化命名：对外 theme.id
- * 按内容场景命名（consulting Business Consulting / enterprise Enterprise /
- * academic Academic / insight Financial Insight / campaign Marketing Campaign /
- * classroom Classroom / ink Ink Wash / tech Tech /
- * runway Fashion Runway / journal Editorial Journal / luxe Luxe /
- * heritage Heritage / pulse Health & Life Science——themes-16 wave task T1
- * 新增第 14 个 / terra Sustainability & ESG——themes-16 wave task T2 新增
- * 第 15 个 / ember Startup Pitch——themes-16 wave task T3 新增第 16 个 /
+ * 24 个 id）。命名规矩：id、label、story.name 一律命名腔调或体裁，
+ * 不命名行业、职能、受众或组织类型（见 `design-story.ts`；九个场景名
+ * 已在改名批次里一次性换掉，旧 id 直接硬错并报出新名，见
+ * `retired-ids.ts`）（brief Brief / bulletin Bulletin /
+ * thesis Thesis / ledger Ledger / rally Rally /
+ * homeroom Homeroom / ink Ink Wash / terminal Terminal /
+ * runway Runway / journal Editorial Journal / luxe Luxe /
+ * heritage Heritage / clinic Clinic——themes-16 wave task T1
+ * 新增第 14 个 / almanac Almanac——themes-16 wave task T2 新增
+ * 第 15 个 / ember Ember——themes-16 wave task T3 新增第 16 个 /
  * vermilion Official Report——gov-theme wave 新增第 17 个，庄重公务汇报语域，
- * 第一个从立项即以中文语域为主的主题 / crayon Kids Education——低龄教育
- * 蜡笔卡纸 / arena Esports & Entertainment——娱乐电竞·竞技场紫黑 /
+ * 第一个从立项即以中文语域为主的主题 / crayon Crayon——低龄教育
+ * 蜡笔卡纸 / arena Arena——娱乐电竞·竞技场紫黑 /
  * museum Museum——博物·棕黑厅堂衬线铜金，2026-08-21 鹦鹉站气质立项 /
  * stage Keynote Stage——黑场·冷玄黑无框发布会演讲，2026-08-21 huashu 风格库
  * Top 5 第 3，结构身份 19 → 20 / lecture Lecture Hall——黑板夜校，2026-08-21
@@ -54,20 +56,20 @@ import type { BuiltinThemeDeclaration } from "./schema";
  * 兼容包袱，不维护 legacy id 映射表（resolveThemeId 对未知 id 一律硬错）。
  */
 export const CANONICAL_THEME_IDS = [
-  "consulting",
-  "enterprise",
-  "academic",
-  "insight",
-  "campaign",
-  "classroom",
+  "brief",
+  "bulletin",
+  "thesis",
+  "ledger",
+  "rally",
+  "homeroom",
   "ink",
-  "tech",
+  "terminal",
   "runway",
   "journal",
   "luxe",
   "heritage",
-  "pulse",
-  "terra",
+  "clinic",
+  "almanac",
   "ember",
   "vermilion",
   "crayon",
@@ -84,20 +86,20 @@ export type CanonicalThemeId = (typeof CANONICAL_THEME_IDS)[number];
 
 /** Canonical declaration source shared by built-in registration and style lookup. */
 export const BUILTIN_THEME_FILES = {
-  consulting: CONSULTING_THEME,
-  enterprise: ENTERPRISE_THEME,
-  academic: ACADEMIC_THEME,
-  insight: INSIGHT_THEME,
-  campaign: CAMPAIGN_THEME,
-  classroom: CLASSROOM_THEME,
+  brief: CONSULTING_THEME,
+  bulletin: ENTERPRISE_THEME,
+  thesis: ACADEMIC_THEME,
+  ledger: INSIGHT_THEME,
+  rally: CAMPAIGN_THEME,
+  homeroom: CLASSROOM_THEME,
   ink: INK_THEME,
-  tech: TECH_THEME,
+  terminal: TECH_THEME,
   runway: RUNWAY_THEME,
   journal: JOURNAL_THEME,
   luxe: LUXE_THEME,
   heritage: HERITAGE_THEME,
-  pulse: PULSE_THEME,
-  terra: TERRA_THEME,
+  clinic: PULSE_THEME,
+  almanac: TERRA_THEME,
   ember: EMBER_THEME,
   vermilion: VERMILION_THEME,
   crayon: CRAYON_THEME,

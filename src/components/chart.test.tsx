@@ -916,7 +916,7 @@ describe("chart component — legend (n>=2 series)", () => {
     const ir: PptxIR = {
       version: "5",
       filename: "legend-audit-fixture",
-      theme: { id: "consulting" },
+      theme: { id: "brief" },
       meta: {},
       assets: { images: {} },
       slides: [

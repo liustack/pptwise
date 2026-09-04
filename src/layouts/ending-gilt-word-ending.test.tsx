@@ -162,7 +162,7 @@ describe("ending-gilt-word-ending — shared pool", () => {
   })
 
   it("uses tokens, not baked luxe hex, when another theme renders it", () => {
-    const { markup, tokens } = renderEnding("consulting")
+    const { markup, tokens } = renderEnding("brief")
     expect(markup).toContain(tokens.colors.text)
     for (const hex of LUXE_HEX) {
       expect(markup, `luxe token ${hex} leaked`).not.toContain(hex)

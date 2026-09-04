@@ -100,7 +100,7 @@ describe("chapter-sticker-numeral-chapter — board geometry", () => {
   })
 
   it("uses tokens, not baked crayon hex, when another theme draws it", () => {
-    const { root, tokens, markup } = renderChapter("tech", TWO, 1)
+    const { root, tokens, markup } = renderChapter("terminal", TWO, 1)
     expect(root.querySelector("rect")?.getAttribute("fill")).toBe(tokens.colors.accent)
     for (const hex of CRAYON_HEX) {
       expect(markup, hex).not.toContain(hex)

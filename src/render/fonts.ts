@@ -29,7 +29,7 @@
  *
  * Anthropic's official pptx-generation skill classifies both Georgia and
  * Consolas -- two of this file's SAFE_FONTS members, and the actual export
- * faces for pptwise's default theme (consulting: Georgia heading+body) and
+ * faces for pptwise's default theme (brief: Georgia heading+body) and
  * every theme's code component (Consolas, all 13 themes, via ROLE_DEFAULT
  * below) -- as "QA-unreliable" rather than "safe". That is axis (2)
  * judgment. This file's SAFE_FONTS is axis (1) judgment. The two
@@ -45,7 +45,7 @@
  * measureText()` -- see task-3-report.md, borrow-wave scratchpad, not
  * shipped in this repo) resolved axis (2) for all three fonts this file
  * actually exports today:
- *   - Georgia (consulting heading+body default, academic/insight heading):
+ *   - Georgia (brief heading+body default, thesis/ledger heading):
  *     measured safe. No width factor added -- see the calibration note
  *     above `measureTextUnits` in svg-text-layout.ts.
  *   - Consolas (mono/code, all 13 themes via ROLE_DEFAULT): measured
@@ -80,7 +80,7 @@
  * whichever Latin face the same run also carries.
  *
  * Swapping a SAFE_FONTS member for a more metric-reliable one (e.g.
- * consulting's Georgia -> Cambria, which Anthropic's skill does classify
+ * brief's Georgia -> Cambria, which Anthropic's skill does classify
  * safe) is a real, available option -- but it is a user-facing visual
  * design decision, not a mechanical safety fix, so this task documents it
  * as an option in task-3-report.md rather than executing it. SAFE_FONTS
@@ -298,7 +298,7 @@ export function resolveFontStack(stack: string[], role: FontRole): string {
  * (`PREVIEW_FALLBACK.mono`), not the resolved face name. The face name
  * varies with theme/input (`ROLE_DEFAULT.mono` = "Consolas" today, but any
  * `SAFE_FONTS` mono entry a theme lists first would resolve instead — e.g.
- * tech/journal's `["Consolas", "Courier New"]` stack still resolves to
+ * terminal/journal's `["Consolas", "Courier New"]` stack still resolves to
  * "Consolas" only because it's listed first); what actually decides which
  * width model `code.tsx` uses is the *role*, not that specific face.
  * `resolveFontStack` appends `PREVIEW_FALLBACK.mono` only when

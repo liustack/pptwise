@@ -88,11 +88,11 @@ describe("EmberMotif（火星退役）", () => {
   })
 
   it("换一家 tokens 渲染时 ember 的色一处不残留（零 hex 纪律的实证）", () => {
-    const terra = resolveStyle("terra")
-    const ctx = buildCtx(terra, {})
-    const { markup } = render(<EmberMotif ir={ir("terra")} slide={coverSlide} ctx={ctx} />)
+    const almanac = resolveStyle("almanac")
+    const ctx = buildCtx(almanac, {})
+    const { markup } = render(<EmberMotif ir={ir("almanac")} slide={coverSlide} ctx={ctx} />)
     for (const hex of ["#241B14", "#2C221A", "#E56A2C", "#F2E9DF", "#C4AE97", "#6B5648", "#FBF5EE", "#BC4620"]) {
-      expect(markup, `ember token ${hex} leaked into the terra render`).not.toContain(hex)
+      expect(markup, `ember token ${hex} leaked into the almanac render`).not.toContain(hex)
     }
   })
 

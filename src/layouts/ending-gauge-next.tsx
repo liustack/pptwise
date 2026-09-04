@@ -167,7 +167,7 @@ export const layoutDef: LayoutDefinition = {
     { name: "rule", accepts: [] },
     { name: "meta", accepts: [] },
   ],
-  // `pinOnly`: consulting locks this face by *listing* it in its own
+  // `pinOnly`: brief locks this face by *listing* it in its own
   // `layouts`, which `resolveLayoutId` honours. Without it the face joins
   // `fullLayoutSet`, the pool the other 23 builtins auto-pick from.
 }

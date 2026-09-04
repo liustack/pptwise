@@ -203,15 +203,15 @@ interface AllowlistEntry {
  * swallow.
  */
 const ALLOWLIST: readonly AllowlistEntry[] = [
-  // The `tech`/`fashion-masthead` entry that used to live here (the org/date
-  // meta line, ~4.16:1 against tech's primary block — under the old blanket
+  // The `terminal`/`fashion-masthead` entry that used to live here (the org/date
+  // meta line, ~4.16:1 against terminal's primary block — under the old blanket
   // 4.5:1 body floor this entry pre-dates the tier split for) is gone
   // (fashion-masthead metaInk migration, task-1-report.md): the line now
   // renders through `metaInk` and carries `data-contrast-tier="meta"`
   // (`cover-fashion-masthead.tsx`), so `deck-audit` grades it against the
   // real B-tier 3:1 floor directly — no allowlist needed. The migration also
-  // exposed a genuine pre-existing gap this entry's own theme scope (`tech`
-  // only) never covered: `insight`'s same composite measured 2.886:1, a real
+  // exposed a genuine pre-existing gap this entry's own theme scope (`terminal`
+  // only) never covered: `ledger`'s same composite measured 2.886:1, a real
   // sub-3:1 miss `metaInk` now corrects to 3.094:1. See the dedicated
   // "fashion-masthead meta line contrast" describe block below (16-theme
   // sweep, real render) for the regression net this entry's removal now
@@ -233,22 +233,22 @@ const ALLOWLIST: readonly AllowlistEntry[] = [
     // layout regardless of how far its ratio has drifted — this band closes
     // that gap. Originally measured (2026-07-19, `pnpm exec tsx` against a
     // real render of every theme whose curated chapter set then included
-    // fashion-chapter — 10 of 13; classroom/heritage excluded it via
+    // fashion-chapter — 10 of 13; homeroom/heritage excluded it via
     // `CHAPTER_WITHOUT_FASHION`) and **re-measured all 13/13** the same day
     // after the post-v0.3 W8 fix round (backlog item 2) revoked that
     // exclusion (`readableOn` moved from a fixed 0.4 luminance threshold to
     // a real two-ink contrast comparison, which flips the layout's own
-    // `fg = readableOn(ctx.colors.accent)` for academic/heritage — same
+    // `fg = readableOn(ctx.colors.accent)` for thesis/heritage — same
     // fix also cleared the *heading* text that used to fail on
-    // classroom/heritage, the actual reason those two were
+    // homeroom/heritage, the actual reason those two were
     // curation-excluded — see `themes/definitions.ts`'s own history there).
     // The watermark blend itself (`mixHex(accent, fg, 0.22)`) depends on
     // `fg`, so every theme whose `fg` flipped got a new ratio too; every
     // theme's ratio still lands inside the existing band. Current 13-theme
     // spread: runway 1.242 (lowest), ink 1.424, luxe 1.448, journal 1.459,
-    // academic 1.498, heritage 1.498, classroom 1.537,
-    // insight 1.539, tech 1.583, campaign 1.600, consulting 1.601,
-    // enterprise 1.752 (highest). `ratioMin`/`ratioMax` round the original
+    // thesis 1.498, heritage 1.498, homeroom 1.537,
+    // ledger 1.539, terminal 1.583, rally 1.600, brief 1.601,
+    // bulletin 1.752 (highest). `ratioMin`/`ratioMax` round the original
     // 10-theme extremes outward by a small margin (~0.04-0.05, absorbing
     // harmless token-value drift) without moving the ceiling anywhere close
     // to the 3:1 floor this whole entry is about staying under — both the
@@ -260,7 +260,7 @@ const ALLOWLIST: readonly AllowlistEntry[] = [
     ratioMin: 1.2,
     ratioMax: 1.8,
     rationale:
-      "the chapter-number watermark digit (mixHex(accent, fg, 0.22) — chapter-fashion-chapter.tsx's own header calls it decorative by design) measures under 3:1 against every theme's accent (runway's ~1.24:1 is the current lowest, enterprise's ~1.75:1 the current highest — see the ratioMin/ratioMax comment above for the full 13-theme spread) — a deliberately faint blend, not body text, blanket-allowlisted by content (a bare 1-2 digit chapter number) rather than enumerated per theme since the blend's whole point is to be faint everywhere it's used. Unlike when this entry was first written, no theme curation-excludes fashion-chapter any more (post-v0.3 W8 fix round revoked the last three exclusions once their *heading* text — the actual failure — cleared 3:1 under the fixed `readableOn`) — this entry now covers all 13 themes' watermark uniformly. It never matches non-numeric text, so a real heading failure under this layout still fails the net. The added ratio band is a second, independent guard on top of that shape match, not a replacement for it.",
+      "the chapter-number watermark digit (mixHex(accent, fg, 0.22) — chapter-fashion-chapter.tsx's own header calls it decorative by design) measures under 3:1 against every theme's accent (runway's ~1.24:1 is the current lowest, bulletin's ~1.75:1 the current highest — see the ratioMin/ratioMax comment above for the full 13-theme spread) — a deliberately faint blend, not body text, blanket-allowlisted by content (a bare 1-2 digit chapter number) rather than enumerated per theme since the blend's whole point is to be faint everywhere it's used. Unlike when this entry was first written, no theme curation-excludes fashion-chapter any more (post-v0.3 W8 fix round revoked the last three exclusions once their *heading* text — the actual failure — cleared 3:1 under the fixed `readableOn`) — this entry now covers all 13 themes' watermark uniformly. It never matches non-numeric text, so a real heading failure under this layout still fails the net. The added ratio band is a second, independent guard on top of that shape match, not a replacement for it.",
   },
   {
     theme: "*",
@@ -270,8 +270,8 @@ const ALLOWLIST: readonly AllowlistEntry[] = [
     // so a real heading failure here still fails the net.
     // Band derivation: measured across the decor-collision sweep's own three
     // fixtures (default deck hash + seeds 0 and 1, the motif rolls those
-    // reach) — ink 1.073 (its motif's vermilion seal under the date), tech
-    // 1.700 and enterprise 1.756 (each theme's own corner-ornament square
+    // reach) — ink 1.073 (its motif's vermilion seal under the date), terminal
+    // 1.700 and bulletin 1.756 (each theme's own corner-ornament square
     // under the date, and under the org line where the roll puts one at the
     // top-left too). Rounded outward to [1.0, 1.8] the same way the
     // fashion-chapter entry above rounds its own spread. Consulting's
@@ -451,7 +451,7 @@ describe("full-matrix contrast/overflow regression net (W4 fix round)", () => {
 // leftover, closed here): the sweep above never exercises this — its own
 // fixtures deliberately set no `ir.meta.organization`/`date` (file header),
 // so `FashionMastheadCover`'s meta line never renders under that sweep and
-// the now-removed `tech`/`fashion-masthead` ALLOWLIST entry never actually
+// the now-removed `terminal`/`fashion-masthead` ALLOWLIST entry never actually
 // matched a finding there. This dedicated block fills that real gap with a
 // real render, org/date populated, across all 16 canonical themes — the
 // same `CANONICAL_THEME_IDS` loop shape `colors.muted contrast` above uses.
@@ -504,29 +504,29 @@ describe("fashion-masthead meta line contrast (contrast-policy wave, metaInk mig
     })
   }
 
-  // History: insight used to be the one theme whose pre-migration composite
+  // History: ledger used to be the one theme whose pre-migration composite
   // (`fg` at 60% opacity over `colors.primary`) measured under 3:1 —
   // 2.886:1, with `metaInk` correcting it to 3.094:1. That was a property of
-  // insight's old mid-tone red primary `#E63946`: a 92%-white ink over a
+  // ledger's old mid-tone red primary `#E63946`: a 92%-white ink over a
   // mid-tone ground lands close to that ground.
   //
-  // 2026-08-19 深底组皮肤重设计 moved insight's `primary` to the near-black
+  // 2026-08-19 深底组皮肤重设计 moved ledger's `primary` to the near-black
   // `#16202B` (the design board defines primary as a quiet banner/block
-  // ground so `accent` can lead — see `themes/insight.ts`). A near-black
-  // ground puts insight in the same family as consulting/ink/journal, and the
+  // ground so `accent` can lead — see `themes/ledger.ts`). A near-black
+  // ground puts ledger in the same family as brief/ink/journal, and the
   // composite jumps to 6.72:1. This test keeps its original job — catch a
-  // silent regression in insight's `primary` by name rather than only
+  // silent regression in ledger's `primary` by name rather than only
   // through the generic >=3 loop above — and now pins the post-redesign
   // numbers instead of the pre-redesign ones.
-  it("insight: the composite clears 3:1 with room (6.72:1) now that primary is near-black — pinned by name so a future primary change is caught here", () => {
-    const ir = bindFace("insight", "fashion-masthead", mastheadDeck("insight"))
+  it("ledger: the composite clears 3:1 with room (6.72:1) now that primary is near-black — pinned by name so a future primary change is caught here", () => {
+    const ir = bindFace("ledger", "fashion-masthead", mastheadDeck("ledger"))
     const svg = renderSlideSvg(ir, 0)
     const root = parseSvgRoot(svg)
     const metaText = Array.from(root.querySelectorAll("text")).find(
       (t) => t.getAttribute("data-contrast-tier") === "meta",
     )!
     const fill = metaText.getAttribute("fill")
-    const primary = THEME_DEFINITIONS.insight.style.colors.primary
+    const primary = THEME_DEFINITIONS.ledger.style.colors.primary
     expect(primary).toBe("#16202B")
     expect(contrastRatio(fill!, primary)).toBeGreaterThanOrEqual(3)
     expect(contrastRatio(fill!, primary)).toBeCloseTo(6.72, 1)
@@ -540,7 +540,7 @@ describe("fashion-masthead meta line contrast (contrast-policy wave, metaInk mig
 // never rendered under it and its contrast was never measured by any gate.
 //
 // Rendered with org meta across all 17 themes, exactly one theme failed:
-// insight's `#E63946` composites the adaptive dark ink at 92% to 4.409:1,
+// ledger's `#E63946` composites the adaptive dark ink at 92% to 4.409:1,
 // which clears WCAG's large-text 3:1 but misses the 4.5:1 body floor
 // deck-audit applied to a 22px run. The org name is B-tier
 // meta-information (`docs/contrast-system.md`'s three-tier policy puts
@@ -600,21 +600,21 @@ describe("split-diagonal org kicker contrast (B-tier reclassification)", () => {
     })
   }
 
-  // insight is the whole reason this block exists — pinned exactly so a
-  // future recalibration of insight's `primary` that silently moves this
+  // ledger is the whole reason this block exists — pinned exactly so a
+  // future recalibration of ledger's `primary` that silently moves this
   // number is caught here by name, not just by the generic >=3 loop.
   //
-  // Until 2026-08-19 insight's old red primary `#E63946` put this composite
+  // Until 2026-08-19 ledger's old red primary `#E63946` put this composite
   // at 4.409:1 — inside the [3, 4.5) band, which is what made the B-tier
   // reclassification necessary in the first place. 深底组皮肤重设计 moved
   // `primary` to the near-black `#16202B`, and the composite went to
   // 14.044:1. The reclassification is still the right call (it is what the
   // kicker's *tier* is, not what one theme's numbers happen to be), but
-  // insight is no longer the theme that demonstrates the band.
-  it("insight: the composite now sits at 14.044:1 — the near-black primary took it clear of the [3, 4.5) band it used to demonstrate", () => {
-    const primary = THEME_DEFINITIONS.insight.style.colors.primary
+  // ledger is no longer the theme that demonstrates the band.
+  it("ledger: the composite now sits at 14.044:1 — the near-black primary took it clear of the [3, 4.5) band it used to demonstrate", () => {
+    const primary = THEME_DEFINITIONS.ledger.style.colors.primary
     expect(primary).toBe("#16202B")
-    const fill = kicker("insight").getAttribute("fill")!
+    const fill = kicker("ledger").getAttribute("fill")!
     expect(fill).toBe("#ecedee")
     expect(contrastRatio(fill, primary)).toBeCloseTo(14.044, 2)
   })
@@ -692,7 +692,7 @@ describe("bento-panel kpi_cards contrast (W8 fix round, targeted — see comment
 
   // Sweep all 13 canonical themes rather than hand-picking the ones known to
   // fail — this both proves the defect on the affected themes (red before
-  // the fix: classroom/consulting/heritage measure <3:1 between
+  // the fix: homeroom/brief/heritage measure <3:1 between
   // colors.accent and colors.surface at the kpi value's real render size,
   // independently confirmed against each theme's own token file) and proves
   // accessibleInk is a no-op everywhere else (the other 9 already clear the
@@ -821,10 +821,10 @@ describe("B-group ink fixes — full 13-theme sweep (bench-driven fix round, def
 // layout *and* `content-bento-panel.tsx`'s separate bento-cell call site,
 // same shared `deltaProps` root cause, found failing on every one of the
 // 13 themes across the two call sites combined once actually swept, not
-// just the plan's named journal/enterprise), `numbered_cards.tsx`'s large
-// digit (classroom 2.09:1, academic 2.92:1 — both measured, matching the
+// just the plan's named journal/bulletin), `numbered_cards.tsx`'s large
+// digit (homeroom 2.09:1, thesis 2.92:1 — both measured, matching the
 // plan's own "<3:1" description), and `quote.tsx`'s decorative open-quote
-// mark (heritage 2.61:1, plus consulting 1.45:1 — the latter already a
+// mark (heritage 2.61:1, plus brief 1.45:1 — the latter already a
 // known pre-existing pin in `deck-audit.test.ts`, removed from that
 // "understood, not fixed" list now that it's actually fixed here).
 //
@@ -840,15 +840,15 @@ describe("B-group ink fixes — full 13-theme sweep (bench-driven fix round, def
 //     (`chapter-fashion-chapter.tsx`'s own header calls it decorative), not
 //     a "folio" (a small running chapter-number label) by any reasonable
 //     reading of that term — the watermark is a 420px full-bleed digit.
-//   - "classroom×fashion-chapter kicker": `fashion-chapter`'s actual kicker
+//   - "homeroom×fashion-chapter kicker": `fashion-chapter`'s actual kicker
 //     text (the small "CHAPTER 01" line, `fill={readableOn(colors.accent)}`
 //     — an editorial kicker in the conventional sense) renders zero
-//     findings for classroom, confirmed by direct measurement. This exact
+//     findings for homeroom, confirmed by direct measurement. This exact
 //     combination was the named subject of an *earlier* fix
 //     (`themes/definitions.ts`'s own history comment: `readableOn`'s W8
-//     two-ink-comparison fix cleared classroom's fashion-chapter text,
+//     two-ink-comparison fix cleared homeroom's fashion-chapter text,
 //     re-measured 8.19:1). The only finding under this combo is, again,
-//     the same already-allowlisted watermark digit (classroom's own ratio,
+//     the same already-allowlisted watermark digit (homeroom's own ratio,
 //     1.537, also recorded in the `ALLOWLIST` entry's spread comment) —
 //     not the kicker, and not a new defect.
 // Both are documented here rather than silently dropped from the plan's own
@@ -1022,11 +1022,11 @@ describe("defect B ink guards hold on the asset-scrim ctx.defaultBg branch (Task
   // Distinguishing assertion (red-pre-fix-by-construction, same discipline
   // full-slide-svg.test.tsx's own 03976da regression uses, and verified red by
   // literally reverting full-slide-svg.tsx's `defaultBg` asset branch back to
-  // `tokens.colors.surface` and re-running this file: academic is the theme
+  // `tokens.colors.surface` and re-running this file: thesis is the theme
   // that flips under that revert, not every theme — `accessibleInk`'s
   // fallback ink can coincidentally clear both candidate backgrounds for
   // some themes, so this is an empirically-chosen witness, not a guessed
-  // one). `colors.accent` ("#00A878") measures 2.92:1 against academic's
+  // one). `colors.accent` ("#00A878") measures 2.92:1 against thesis's
   // real content-slide background ("#FAFAF6", `defaultBackgrounds.content`
   // — the exact value this file's own "defect B real contrast fixes" block
   // above cites for the plain-background case) but 3.06:1 against
@@ -1037,14 +1037,14 @@ describe("defect B ink guards hold on the asset-scrim ctx.defaultBg branch (Task
   // scrim, themeDefaultBg): `accessibleInk` would wrongly keep the raw
   // accent color, and the audit — which independently reads the real
   // painted scrim, not the ink decision's own background — would catch it.
-  it("regression lock: academic's asset-scrim ctx.defaultBg agrees with the real painted scrim, not colors.surface (the pre-03976da wrong fallback)", () => {
+  it("regression lock: thesis's asset-scrim ctx.defaultBg agrees with the real painted scrim, not colors.surface (the pre-03976da wrong fallback)", () => {
     expect(contrastRatio("#00A878", "#FAFAF6")).toBeLessThan(3)
     expect(contrastRatio("#00A878", "#FFFFFF")).toBeGreaterThanOrEqual(3)
-    const numberedFindings = auditFindings(deckFor("academic", NUMBERED_CARDS_ASSET_BG_SLIDE, ASSET_BG_IMAGES))
+    const numberedFindings = auditFindings(deckFor("thesis", NUMBERED_CARDS_ASSET_BG_SLIDE, ASSET_BG_IMAGES))
     expect(
       numberedFindings.filter((f) => f.code === "low-contrast" && (f.detail?.text === "01" || f.detail?.text === "02")),
     ).toEqual([])
-    const quoteFindings = auditFindings(deckFor("academic", QUOTE_ASSET_BG_SLIDE, ASSET_BG_IMAGES))
+    const quoteFindings = auditFindings(deckFor("thesis", QUOTE_ASSET_BG_SLIDE, ASSET_BG_IMAGES))
     expect(quoteFindings.filter((f) => f.code === "low-contrast" && f.detail?.text === "“")).toEqual([])
   })
 })
@@ -1129,7 +1129,7 @@ describe("colors.muted contrast (post-v0.3 W8 fix round, backlog item 5a)", () =
 //     tracks the calibration the renderer actually performs.
 // `warning` is deliberately held to 3:1, not 4.5:1: no renderer paints it as
 // text today, and several themes' caution tier is an amber whose 4.5:1
-// weight on paper stock is a mud brown (pulse's own `警示褐` measures
+// weight on paper stock is a mud brown (clinic's own `警示褐` measures
 // 3.73:1). If a renderer ever paints `warning` as text it must go through
 // `accessibleInk` like the delta arrow does, and this pin should tighten
 // with it.
@@ -1178,7 +1178,7 @@ describe("semantic colors follow the theme (visual review round 4)", () => {
 // never rendered — confirmed independently: a real `matrix` component
 // through the real `auditDeck` pipeline reports genuine low-contrast
 // findings on 9/13 themes' `colors.muted`-filled tag text pre-fix,
-// including `consulting`, which the original recalibration never even
+// including `brief`, which the original recalibration never even
 // considered.
 //
 // The root defect wasn't "matrix specifically" — it was that the
@@ -1285,7 +1285,7 @@ const MUTED_SURFACE_CLASS: Record<string, MutedSurfaceClass> = {
   // routed): `sub` now renders `accessibleOpacity(colors.muted,
   // ctx.defaultBg ?? ctx.colors.bg, sub.fontSize, 0.75)`
   // (`numbered-cards.tsx`'s own comment at that call site), which falls back
-  // to full opacity on 12/13 themes and keeps 0.75 on campaign (already
+  // to full opacity on 12/13 themes and keeps 0.75 on rally (already
   // clears 4.5:1 there) — same page background `text` above it already sits
   // on, so no longer a distinct surface to track. Locked by the
   // "colors.muted opacity-blend fix" describe block below.
@@ -1780,7 +1780,7 @@ describe("swot zero-residual under a 2-line-wrapped heading + schema-max content
     components: [
       {
         type: "swot",
-        strengths: ["Strong brand recognition", "Stable cash flow", "Experienced leadership", "Proprietary tech platform", "item number 5"],
+        strengths: ["Strong brand recognition", "Stable cash flow", "Experienced leadership", "Proprietary terminal platform", "item number 5"],
         weaknesses: ["Narrow product line", "High channel dependency", "Limited global presence", "Aging infrastructure", "item number 5"],
         opportunities: ["Fast-growing markets", "Favorable policy window", "Adjacent category growth", "Partnership potential", "item number 5"],
         threats: ["New entrant price wars", "Rising material costs", "Currency volatility", "Shifting preferences", "item number 5"],
@@ -2228,7 +2228,7 @@ const SANKEY_MULTI_LAYER_SLIDE: Slide = {
 // including a wide value spread (5..95) so band thickness varies a lot,
 // and one particularly long label to also exercise truncation under
 // crossing bands simultaneously. This is the fixture the review's own
-// Major finding was measured against (campaign 4.30:1, insight 4.34:1,
+// Major finding was measured against (rally 4.30:1, ledger 4.34:1,
 // pre-fix).
 const SANKEY_DENSE_CROSSING_SLIDE: Slide = {
   type: "content",
@@ -2332,7 +2332,7 @@ describe("sankey contrast (structure-components wave 2 task 3)", () => {
 //
 // Pre-fix, this exact method (analytic blend + real geometric overlap)
 // reproduced the review's own measured violations on this branch's HEAD
-// before the fix (campaign/insight, ratios in the 4.3 range) — this block
+// before the fix (rally/ledger, ratios in the 4.3 range) — this block
 // stayed red against the pre-fix renderer and is green now.
 describe("sankey label-over-band blended contrast (task 3 fix round, review Major finding — permanent guard)", () => {
   interface BandGeom {
@@ -2483,16 +2483,16 @@ describe("waterfall/gantt contrast (structure-components wave task 2, decision 7
 //     0.7 alpha toward `colors.surface` pulled the *effective* color close
 //     enough to the background that all 13 themes failed.
 //   - numbered-cards.tsx's `sub` line: `fill={colors.muted}
-//     opacity={0.75}`. Same mechanism, 12/13 themes failed (campaign's
+//     opacity={0.75}`. Same mechanism, 12/13 themes failed (rally's
 //     post-matrix-recalibration muted had already moved light enough to
 //     clear even the 0.75-blended case, a side effect, not a targeted fix).
 // This was first recorded rather than fixed (commit c523994) after
 // evaluating and rejecting a recalibrate-the-hex-instead approach:
 // independently computed, the 4 themes with *no other* colors.muted issue
-// at all (academic/classroom/tech/journal) would still need to darken
+// at all (thesis/homeroom/terminal/journal) would still need to darken
 // ~16-19 percentage points of lightness to clear kpi.tsx's source line at
 // 0.7 alpha — an order of magnitude past every adjustment either
-// recalibration round made (max 8.7pp, campaign) — landing muted's own raw
+// recalibration round made (max 8.7pp, rally) — landing muted's own raw
 // contrast around 11:1 against its card surface, next to colors.text's own
 // ~16-17:1 there. That stops reading as a *softer* secondary tier at all —
 // the exact invariant this token's calibration exists to protect.
@@ -2504,7 +2504,7 @@ describe("waterfall/gantt contrast (structure-components wave task 2, decision 7
 // numbered-cards.tsx (no card, sits on the page background like its `text`
 // field). Confirmed by measurement, not assumed: `accessibleOpacity` falls
 // back to full opacity for every theme whose blended ratio missed 4.5:1 —
-// all 13/13 for kpi.tsx, 12/13 for numbered-cards.tsx (campaign keeps its
+// all 13/13 for kpi.tsx, 12/13 for numbered-cards.tsx (rally keeps its
 // preferred 0.75, already clearing the floor there without falling back) —
 // exactly the blast radius this comment's predecessor predicted when it
 // deferred the fix. `findsMuted` below (unchanged) now finds zero affected
@@ -2591,9 +2591,9 @@ describe("colors.muted opacity-blend fix (post-v0.3 W8 fix round, task-2 review 
 // a throwaway probe script computing `contrastRatio` for every theme's
 // `colors.accent`/`colors.primary` against both `colors.surface` and the
 // real `themeDefaultBg`): today's real flips are either latent
-// (academic/campaign's dangerous-direction flip needs a >=24px subheading no
+// (thesis/rally's dangerous-direction flip needs a >=24px subheading no
 // current content layout requests — every real subheading call site is
-// 20-22px) or cosmetic-safe (insight/luxe's flip swaps *which* ink renders,
+// 20-22px) or cosmetic-safe (ledger/luxe's flip swaps *which* ink renders,
 // from the theme's own accent/primary token to `readableOn`'s neutral pick,
 // never producing a sub-threshold pairing either way). This sweep's job is
 // durable regression coverage against a *future* layout/theme combination
@@ -2622,10 +2622,10 @@ describe("asset-background content contrast (final-review Major finding, backlog
   // unguarded way. Safe for the 9/13 themes whose `colors.text` is a dark
   // token (correct for *their own* page backgrounds) — broke for the 4 whose
   // `colors.text` is light because *their* own surface is dark
-  // (`campaign`/`insight`/`luxe`/`tech`, confirmed by grepping every theme's
+  // (`rally`/`ledger`/`luxe`/`terminal`, confirmed by grepping every theme's
   // own `text:` token): a light token painted on this layout's own
   // hardcoded-white card measured ~1:1, not a near-miss. Reproduced directly
-  // (`campaign`, real render): heading/paragraph/bullets all rendered
+  // (`rally`, real render): heading/paragraph/bullets all rendered
   // `fill="#FFFFFF"` on the `fill="#FFFFFF"` card.
   //
   // Resolved (post-v0.3 backlog closure,

@@ -60,7 +60,7 @@ function ghostEl(root: Element): Element {
 
 describe("chapter-folio-ghost-chapter — board geometry", () => {
   it("places the ghost numeral, chapter kicker, accent rule, and left title on the board", () => {
-    const { root, tokens, ctx } = renderChapter("academic")
+    const { root, tokens, ctx } = renderChapter("thesis")
     const ghost = ghostEl(root)
     expect(ghost.textContent).toBe("3")
     expect(ghost.getAttribute("x")).toBe("1160")
@@ -90,7 +90,7 @@ describe("chapter-folio-ghost-chapter — board geometry", () => {
   })
 
   it("keeps the ghost glyph box inside the canvas", () => {
-    const { root } = renderChapter("academic")
+    const { root } = renderChapter("thesis")
     const ghost = ghostEl(root)
     const box = textInkBox({
       content: ghost.textContent ?? "",
@@ -111,14 +111,14 @@ describe("chapter-folio-ghost-chapter — board geometry", () => {
 
   it("uses a Latin CHAPTER kicker when the heading has no CJK", () => {
     const latin = { type: "chapter", heading: "Model Design", components: [] } as Slide
-    const { root } = renderChapter("academic", latin, 4)
+    const { root } = renderChapter("thesis", latin, 4)
     const kicker = Array.from(root.querySelectorAll("text")).find((t) => (t.textContent ?? "").startsWith("CHAPTER"))
     expect(kicker?.textContent).toBe("CHAPTER 03")
     expect(kicker?.getAttribute("letter-spacing")).toBe("8")
   })
 
-  it("uses tokens, not baked academic hex, when another theme draws it", () => {
-    const { root, tokens } = renderChapter("enterprise")
+  it("uses tokens, not baked thesis hex, when another theme draws it", () => {
+    const { root, tokens } = renderChapter("bulletin")
     expect(root.querySelector("rect")?.getAttribute("fill")).toBe(tokens.colors.accent)
     expect(root.innerHTML).not.toMatch(/#A8861D/i)
     expect(root.innerHTML).not.toMatch(/#0E6245/i)
@@ -152,6 +152,6 @@ describe("chapter-folio-ghost-chapter — shared pool", () => {
   })
 
   it("renders byte-identically on repeat", () => {
-    expect(renderChapter("academic").markup).toBe(renderChapter("academic").markup)
+    expect(renderChapter("thesis").markup).toBe(renderChapter("thesis").markup)
   })
 })

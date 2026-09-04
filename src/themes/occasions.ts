@@ -51,21 +51,21 @@ export interface ThemeOccasionRecord {
  */
 export const THEME_OCCASIONS: Record<BuiltinThemeId, ThemeOccasionRecord> = {
   // 先结论报告腔，咨询件专业表达，不是机构隐身档
-  consulting: { occasions: ["business"], identity: "medium" },
+  brief: { occasions: ["business"], identity: "medium" },
   // 企业蓝白墙，机构低调档（任务书点名）
-  enterprise: { occasions: ["business", "institutional"], identity: "low" },
+  bulletin: { occasions: ["business", "institutional"], identity: "low" },
   // 书卷学术研究，专业表达但不扮戏
-  academic: { occasions: ["education"], identity: "medium" },
+  thesis: { occasions: ["education"], identity: "medium" },
   // 行情屏财经洞察，专业表达（任务书点名 medium）
-  insight: { occasions: ["finance"], identity: "medium" },
+  ledger: { occasions: ["finance"], identity: "medium" },
   // 幕布深紫营销剧场，荧光主音，强表达
-  campaign: { occasions: ["marketing", "event"], identity: "high" },
+  rally: { occasions: ["marketing", "event"], identity: "high" },
   // 讲义雾蓝，亲和教与学，不是蜡笔戏服
-  classroom: { occasions: ["education"], identity: "medium" },
+  homeroom: { occasions: ["education"], identity: "medium" },
   // 水墨国风，任务书点名强表达
   ink: { occasions: ["culture"], identity: "high" },
   // 深空工程专业科技件，有声但不是发布会戏服
-  tech: { occasions: ["tech"], identity: "medium" },
+  terminal: { occasions: ["tech"], identity: "medium" },
   // 时尚秀场，任务书点名强表达
   runway: { occasions: ["fashion"], identity: "high" },
   // 人文期刊铅字编辑腔，有声但不扮戏
@@ -75,9 +75,9 @@ export const THEME_OCCASIONS: Record<BuiltinThemeId, ThemeOccasionRecord> = {
   // 藏书票轻奢传承，比 luxe 克制
   heritage: { occasions: ["culture", "luxury"], identity: "medium" },
   // 清洁诊疗生命科学，可信专业件
-  pulse: { occasions: ["health"], identity: "medium" },
+  clinic: { occasions: ["health"], identity: "medium" },
   // ESG 田野纸，朴素长期主义
-  terra: { occasions: ["sustainability"], identity: "medium" },
+  almanac: { occasions: ["sustainability"], identity: "medium" },
   // 炭黑火橙路演舞台，强表达
   ember: { occasions: ["startup"], identity: "high" },
   // 公文汇报机构低调档（任务书点名 low）
@@ -90,7 +90,7 @@ export const THEME_OCCASIONS: Record<BuiltinThemeId, ThemeOccasionRecord> = {
   museum: { occasions: ["museum", "culture"], identity: "high" },
   // 黑场发布会，任务书点名强表达
   stage: { occasions: ["keynote"], identity: "high" },
-  // 黑板夜校是场景戏服，与 classroom 讲义纸分昼夜
+  // 黑板夜校是场景戏服，与 homeroom 讲义纸分昼夜
   lecture: { occasions: ["education"], identity: "high" },
   // 冷白制度年报，任务书点名机构低调档
   swiss: { occasions: ["institutional"], identity: "low" },

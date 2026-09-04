@@ -52,7 +52,7 @@ function renderCover(themeId: string, s: Slide = slide(), meta: PptxIR["meta"] =
 
 describe("cover-report-open-cover — board geometry", () => {
   it("places kicker, left title, subtitle, and date/authors sign-off on the board", () => {
-    const { root } = renderCover("pulse")
+    const { root } = renderCover("clinic")
     const kicker = Array.from(root.querySelectorAll("text")).find((t) =>
       (t.textContent ?? "").includes("安和健康"),
     )
@@ -82,7 +82,7 @@ describe("cover-report-open-cover — board geometry", () => {
   })
 
   it("does not paint a heartbeat, a full-bleed field, or a vertical bar", () => {
-    const { root } = renderCover("pulse")
+    const { root } = renderCover("clinic")
     expect(root.querySelector("path")).toBeNull()
     expect(root.querySelector("polyline")).toBeNull()
     expect(root.querySelector("rect[width='1280']")).toBeNull()
@@ -93,7 +93,7 @@ describe("cover-report-open-cover — board geometry", () => {
   })
 
   it("does not invent cover copy or a privacy line when heading and meta are empty", () => {
-    const { root, markup } = renderCover("pulse", slide("", { heading: "", subheading: "" }), {})
+    const { root, markup } = renderCover("clinic", slide("", { heading: "", subheading: "" }), {})
     expect(markup).not.toContain("数据已脱敏")
     expect(markup).not.toContain("Thank you")
     expect(markup).not.toContain("星桥集团员工健康年报")
@@ -101,7 +101,7 @@ describe("cover-report-open-cover — board geometry", () => {
   })
 
   it("skips the sign-off when date and authors are missing", () => {
-    const { root } = renderCover("pulse", slide(), { organization: "安和健康" })
+    const { root } = renderCover("clinic", slide(), { organization: "安和健康" })
     const texts = Array.from(root.querySelectorAll("text")).map((t) => t.textContent ?? "")
     expect(texts.some((t) => t.includes("安和健康"))).toBe(true)
     expect(texts.some((t) => t.includes(DATE))).toBe(false)
@@ -130,8 +130,8 @@ describe("cover-report-open-cover — shared pool", () => {
     }
   })
 
-  it("uses tokens, not a baked pulse hex, when another theme borrows it", () => {
-    const { markup, tokens } = renderCover("tech")
+  it("uses tokens, not a baked clinic hex, when another theme borrows it", () => {
+    const { markup, tokens } = renderCover("terminal")
     expect(markup).toContain(tokens.colors.text)
     for (const hex of PULSE_HEX) {
       expect(markup, hex).not.toContain(hex)
@@ -145,11 +145,11 @@ describe("cover-report-open-cover — shared pool", () => {
   })
 
   it("renders byte-identically on repeat", () => {
-    expect(renderCover("pulse").markup).toBe(renderCover("pulse").markup)
+    expect(renderCover("clinic").markup).toBe(renderCover("clinic").markup)
   })
 
   it("CJK title has no letter-spacing", () => {
-    const { root } = renderCover("pulse")
+    const { root } = renderCover("clinic")
     for (const t of Array.from(root.querySelectorAll("text")).filter(
       (el) => el.getAttribute("font-weight") === "700",
     )) {
@@ -158,7 +158,7 @@ describe("cover-report-open-cover — shared pool", () => {
   })
 
   it("kicker meta ink follows metaInk against the page ground", () => {
-    const { root, tokens } = renderCover("pulse")
+    const { root, tokens } = renderCover("clinic")
     const kicker = Array.from(root.querySelectorAll("text")).find((t) =>
       (t.textContent ?? "").includes("安和健康"),
     )!
@@ -167,7 +167,7 @@ describe("cover-report-open-cover — shared pool", () => {
   })
 
   it("does not paint an ellipsis when the title is too long", () => {
-    const { markup } = renderCover("pulse", slide("年报解读与干预建议项".repeat(12)))
+    const { markup } = renderCover("clinic", slide("年报解读与干预建议项".repeat(12)))
     expect(markup).not.toContain("…")
     expect(markup).not.toContain("...")
   })

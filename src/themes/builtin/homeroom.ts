@@ -2,21 +2,21 @@ import type { StyleTokens } from "../tokens";
 import type { BuiltinThemeDeclaration } from "../schema";
 
 /**
- * classroom（教学课堂）——2026-07-13 第 13 主题（用户参考三张莫兰迪教学
+ * homeroom（教学课堂）——2026-07-13 第 13 主题（用户参考三张莫兰迪教学
  * 模板拍板新增教育培训类）。面向教学课件/课堂授课/培训机构/K12 儿童教育。
- * 与 academic（深绿严肃学术研究/答辩）场景切分：classroom 主打「亲和的
- * 教与学」，academic 主打「严谨的学术」。
+ * 与 thesis（深绿严肃学术研究/答辩）场景切分：homeroom 主打「亲和的
+ * 教与学」，thesis 主打「严谨的学术」。
  *
  * **柔和组皮肤重设计（2026-08-20，设计源
  * `.issues/2026-08-18-theme-redesign/skins/group4-soft-boards.dc.html` 的
- * `section#g4` 里 classroom 的色板角色表 + 封面样例）**：这一轮把 classroom
+ * `section#g4` 里 homeroom 的色板角色表 + 封面样例）**：这一轮把 homeroom
  * 从「莫兰迪灰调米白纸」挪到「讲义雾蓝」——一间课室里真正有的东西是雾蓝的
  * 板书带、横线簿的格线、批改笔的红。旧表的藕粉/奶咖是装饰性的柔，不是教学
  * 场景自己的颜色。逐条来历：
  *   - `bg` `#F4F1EB` → `#ECF0F2`：米白纸 → 雾蓝讲义纸。整组「一静一闹」里
- *     classroom 是静的那半，底色本身就要凉下来。
+ *     homeroom 是静的那半，底色本身就要凉下来。
  *   - `surface` `#FFFFFF` → `#F9FBFC`：纯白 → 作业纸白。纯白压在雾蓝底上
- *     太硬，压半档之后卡片与墙才像同一间屋子里的两样东西（pulse 同款先例）。
+ *     太硬，压半档之后卡片与墙才像同一间屋子里的两样东西（clinic 同款先例）。
  *   - `primary` `#6E8E9E` → `#4A6B8A`：雾蓝压深。旧值白字只有 ~2.9:1，
  *     content 因此长期禁配 `banner-heading`；新值白字实测 5.58:1，板书带
  *     终于真的能承白字。压 bg 实测 4.87:1（设计板自标 5.3:1，见下）。
@@ -35,7 +35,7 @@ import type { BuiltinThemeDeclaration } from "../schema";
  *
  * **一处偏离设计板 hex（板上数字赢，group2/group3 的同一条先例）**：
  * 板上砂黄写的是 `#C2A36B`，自标 3.3:1，但压新底实测只有 **2.09:1**——
- * 跌破装饰线 3.0 门槛，是四格里唯一读不出来的一格（group3 给 pulse 退役
+ * 跌破装饰线 3.0 门槛，是四格里唯一读不出来的一格（group3 给 clinic 退役
  * 砂灰 `#B8AD98` 时实测 2.06:1，同一个病）。按同色相压暗到 `#988054`，
  * 实测 3.30:1，正是设计板自己写的那个数。其余六个 token 与四格里的前三格
  * 一字未改。
@@ -58,7 +58,7 @@ import type { BuiltinThemeDeclaration } from "../schema";
  * **菜单分派（S1-B）**：讲义纸只做讲清楚的七道常规讲法，课堂不喊口号也不刷大数字，宣言、引用、大数字、单证据一律不上。
  */
 export const CLASSROOM_TOKENS: StyleTokens = {
-  id: "classroom",
+  id: "homeroom",
   colors: {
     bg: "#ECF0F2", // 雾蓝讲义纸。页底，正文墨压它 12.95:1，答 4.5
     surface: "#F9FBFC", // 作业纸白。卡面，正文墨压它 14.30:1，答 4.5
@@ -94,8 +94,8 @@ export const CLASSROOM_TOKENS: StyleTokens = {
 
 export const CLASSROOM_THEME = {
   version: 2,
-  id: "classroom",
-  label: "Classroom",
+  id: "homeroom",
+  label: "Homeroom",
   story: {
     name: "Homeroom",
     story: "Morandi tones on daytime handout paper, a soft sans, plenty of air. It is the teacher talking to parents: specific, calm, not alarming and not flattering.",

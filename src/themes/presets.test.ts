@@ -17,46 +17,46 @@ describe("the factory preset shelf", () => {
   it("rejects an unknown preset id instead of falling back", () => {
     expect(() => getThemePreset("nope")).toThrow(PptwiseError)
     expect(isThemePresetId("nope")).toBe(false)
-    expect(isThemePresetId("consulting")).toBe(true)
+    expect(isThemePresetId("brief")).toBe(true)
   })
 
   it("copies under a new id and rewrites style.id to match", () => {
-    const copy = copyThemePreset("consulting", "acme-report")
+    const copy = copyThemePreset("brief", "acme-report")
     expect(copy.id).toBe("acme-report")
     expect(copy.style.id).toBe("acme-report")
     expect(copy.version).toBe(2)
-    expect(copy.occasions).toEqual(THEME_OCCASIONS.consulting.occasions)
+    expect(copy.occasions).toEqual(THEME_OCCASIONS.brief.occasions)
   })
 
   it("allows a freeze copy that keeps the preset id", () => {
-    const frozen = copyThemePreset("consulting", "consulting")
-    expect(frozen.id).toBe("consulting")
-    expect(frozen.style.id).toBe("consulting")
-    const shadowed = copyThemePreset("consulting", "academic")
-    expect(shadowed.id).toBe("academic")
-    expect(shadowed.style.id).toBe("academic")
+    const frozen = copyThemePreset("brief", "brief")
+    expect(frozen.id).toBe("brief")
+    expect(frozen.style.id).toBe("brief")
+    const shadowed = copyThemePreset("brief", "thesis")
+    expect(shadowed.id).toBe("thesis")
+    expect(shadowed.style.id).toBe("thesis")
   })
 
   it("carries the preset's emphasis stroke into the copy", () => {
     // The two presets that declare one. A copy that dropped the field left
     // both drawing a `**marked**` run in the plain accent tint, which is a
     // different theme than the one the author asked to copy.
-    expect(copyThemePreset("consulting", "acme-pad").emphasis).toBe("pad")
+    expect(copyThemePreset("brief", "acme-pad").emphasis).toBe("pad")
     expect(copyThemePreset("lecture", "acme-underline").emphasis).toBe("underline")
-    expect(copyThemePreset("academic", "acme-tint").emphasis).toBeUndefined()
+    expect(copyThemePreset("thesis", "acme-tint").emphasis).toBeUndefined()
   })
 
   it("shares no mutable state with the preset it copied", () => {
-    const copy = copyThemePreset("academic", "fork-a")
+    const copy = copyThemePreset("thesis", "fork-a")
     copy.style.colors.bg = "#000000"
     copy.menu.content.points!.face = "quiet-frame"
-    const second = copyThemePreset("academic", "fork-b")
+    const second = copyThemePreset("thesis", "fork-b")
     expect(second.style.colors.bg).not.toBe("#000000")
     expect(second.menu.content.points!.face).not.toBe("quiet-frame")
   })
 
   it("pushes the theme-wide motif down into every entry whose face can take one", () => {
-    const copy = copyThemePreset("academic", "fork-motif")
+    const copy = copyThemePreset("thesis", "fork-motif")
     expect(copy.motif).toBeUndefined()
     expect(copy.menu.cover.decor).toEqual({ kind: "motif", id: "rail-motif" })
     expect(copy.menu.content.points?.decor).toEqual({ kind: "motif", id: "rail-motif" })

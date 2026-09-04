@@ -4,7 +4,7 @@ import type { PageRenderContext } from "../render/page-context"
 /**
  * How much empty page a structural motif mark wants between itself and any
  * furniture the face paints. Two hairlines closer than this read as one
- * botched line rather than as two deliberate marks — consulting's locator
+ * botched line rather than as two deliberate marks — brief's locator
  * corner sat 4px from `rail-numbered`'s progress rail and looked like a
  * misprint (gallery visual review fix/gallery-verdict-round, item 5).
  *

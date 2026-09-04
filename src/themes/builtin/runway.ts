@@ -55,7 +55,7 @@ import type { BuiltinThemeDeclaration } from "../schema";
  *   - **正文 22**：板上这一档在浅底上走 `muted`，搬进黑底构造就得走
  *     `readableOn(primary)` 的 0.72 淡出复合色。实测把该行从 30px 降到
  *     22px，会让复合色从「大字 3:1 门槛」掉进「正文 4.5:1 门槛」，
- *     classroom 3.79 / pulse 4.17 / ember 3.44 / vermilion
+ *     homeroom 3.79 / clinic 4.17 / ember 3.44 / vermilion
  *     4.14 五家组外主题当场新增违例（`fashion-masthead` 是全主题共享构造）。
  *     变异先跑后宣称：这一档一降就是五条新审计发现，不是零新增。
  *   - **展示 132**：该版式的字号常量是**上限**不是定值，真实渲染由
@@ -66,7 +66,7 @@ import type { BuiltinThemeDeclaration } from "../schema";
  *     token 可钉（`themes/tokens.ts` 的 `StyleShape` 只有 `radius`/
  *     `gapScale`），无处安放。
  * 三档一并记进编辑组报告的「板与版式差距清单」，等封面构造那一条裁定
- * （照 academic 上一轮同类情形的处理）。本轮 runway 的装饰侧与版式侧
+ * （照 thesis 上一轮同类情形的处理）。本轮 runway 的装饰侧与版式侧
  * **零改动**，只换色板——decor=none 由 `motif-selection.ts` 的守卫与
  * `new-themes.test.ts` 的断言钉住。
  *
@@ -113,7 +113,7 @@ export const RUNWAY_TOKENS: StyleTokens = {
 export const RUNWAY_THEME = {
   version: 2,
   id: "runway",
-  label: "Fashion Runway",
+  label: "Runway",
   story: {
     name: "Runway",
     story: "Show-white paper, a black masthead, one drop of crimson. Every page is a look walking past you, and the pictures do the talking.",

@@ -44,13 +44,13 @@ function imageComponent(assetId: string, extra: Partial<Component> = {}): Compon
 
 /**
  * The controller's own probe deck (task brief §"验收" 1 / plan §"验收"):
- * two-column + consulting, a real visual slot. `image.tsx`'s
+ * two-column + brief, a real visual slot. `image.tsx`'s
  * own `measure` (613 * 0.5 rounds to 307, under the 340 cap) is what this
  * pins against — but this test never imports that constant, it only asserts
  * on `buildAssetBrief`'s output, which is exactly the point (裁定 1: the
  * frame must come from a real render, not a copied formula).
  */
-function probeDeck(assetId = "pic", sourceTheme: CanonicalThemeId = "consulting"): PptxIR {
+function probeDeck(assetId = "pic", sourceTheme: CanonicalThemeId = "brief"): PptxIR {
   const themeId = registerTestTheme(`asset-brief-${themeSerial++}`, sourceTheme, {
     content: { photo: "two-column" },
   })
@@ -139,7 +139,7 @@ describe("buildAssetBrief — component never rendered under the selected layout
     // IR yet never emit an `<image>` anywhere in the rendered markup. This is
     // a deterministic, structural way to exercise the "component silently
     // has no slot" path without depending on a fragile overflow-budget guess.
-    const ir = deck("consulting", [
+    const ir = deck("brief", [
       {
         type: "cover",
         id: "c1",
@@ -177,7 +177,7 @@ describe("buildAssetBrief — shared asset_id across multiple components on one 
   // swapped) — instead emit one honest, explicitly `shared` item per real
   // rendered frame, both present, neither claiming a specific component.
   it("emits one shared item per rendered frame, both real frames present and correctly valued, no swapped attribution claim", () => {
-    const themeId = registerTestTheme(`asset-brief-${themeSerial++}`, "consulting", {
+    const themeId = registerTestTheme(`asset-brief-${themeSerial++}`, "brief", {
       content: { photo: "two-column" },
     })
     const ir = deck(themeId, [

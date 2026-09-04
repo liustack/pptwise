@@ -85,7 +85,7 @@ function copyMenu(menu: Menu, motif: BuiltinThemeDeclaration["motif"]): Menu {
  * theme-wide motif anchor has been written into the menu entries.
  *
  * `emphasis` travels with the copy. It is theme identity, not decoration:
- * consulting swipes a marker pad behind a `**marked**` run and lecture
+ * brief swipes a marker pad behind a `**marked**` run and lecture
  * chalks a line under it, so a copy that lost the field silently reverted
  * both to the plain accent tint.
  *

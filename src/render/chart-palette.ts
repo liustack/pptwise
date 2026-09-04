@@ -36,7 +36,7 @@ export function rotateChartPalette(palette: readonly string[], offset: number): 
  * "so what" its grammar allows, and the `show` family keeps the crimson for
  * its own one mark. Both used to do it by mapping the accent entry onto
  * `primary`, which does not remove a colour from the palette — it makes two
- * entries the same one. On `consulting` the accent *is* chart-palette slot 1,
+ * entries the same one. On `brief` the accent *is* chart-palette slot 1,
  * so a two-series bar chart painted both series `#1E2A4A` and read as one
  * series, in the bars and in the legend alike.
  *

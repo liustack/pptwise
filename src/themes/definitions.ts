@@ -159,7 +159,7 @@ const CONTRAST_FLOOR = 3.0
  * this check would otherwise measure is structurally never what actually
  * renders, for any theme this function could ever accept, not just the 13
  * built-ins. A probe against all 24 built-ins' real tokens confirms this is
- * load-bearing, not theoretical: `academic`/`classroom`/`consulting` are the
+ * load-bearing, not theoretical: `thesis`/`homeroom`/`brief` are the
  * 3 builtins whose `defaultBackgrounds.chapter` intentionally diverges from
  * their own `colors.bg` (a dark divider tone, see {@link resolveBackgroundHex}'s
  * own doc comment) — checking `chapter` here would hard-reject `colors.text`

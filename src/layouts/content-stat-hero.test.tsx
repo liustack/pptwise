@@ -98,11 +98,11 @@ describe("StatHeroContent", () => {
     expect(() => assertSubset(root)).not.toThrow()
   })
 
-  it("English short stat renders on consulting without a crash", () => {
-    const ctx = buildCtx(resolveStyle("consulting"), {})
+  it("English short stat renders on brief without a crash", () => {
+    const ctx = buildCtx(resolveStyle("brief"), {})
     const slide: Slide = { type: "content", kind: "points", layout: "stat-hero", heading: EN_STAT, components: [] } as Slide
     const { markup, root } = render(
-      <StatHeroContent ir={ir("consulting", [slide])} slide={slide} index={0} ctx={ctx} />,
+      <StatHeroContent ir={ir("brief", [slide])} slide={slide} index={0} ctx={ctx} />,
     )
     expect(markup).toContain("95.7")
     expect(() => assertSubset(root)).not.toThrow()
@@ -125,21 +125,21 @@ describe("StatHeroContent", () => {
   })
 
   it("empty meta fields degrade: no empty text node, hero still renders", () => {
-    const ctx = buildCtx(resolveStyle("academic"), {})
+    const ctx = buildCtx(resolveStyle("thesis"), {})
     const slide: Slide = { type: "content", kind: "points", layout: "stat-hero", heading: CJK_STAT, components: [] } as Slide
     const { root } = render(
-      <StatHeroContent ir={ir("academic", [slide])} slide={slide} index={0} ctx={ctx} />,
+      <StatHeroContent ir={ir("thesis", [slide])} slide={slide} index={0} ctx={ctx} />,
     )
     const texts = Array.from(root.querySelectorAll("text"))
     expect(texts.every((t) => (t.textContent ?? "").trim().length > 0)).toBe(true)
     expect(texts.some((t) => (t.textContent ?? "").includes("3.2"))).toBe(true)
   })
 
-  it("consulting tokens: no luxe baked hex leaks", () => {
-    const ctx = buildCtx(resolveStyle("consulting"), {})
+  it("brief tokens: no luxe baked hex leaks", () => {
+    const ctx = buildCtx(resolveStyle("brief"), {})
     const slide: Slide = { type: "content", kind: "points", layout: "stat-hero", heading: EN_STAT, components: [] } as Slide
     const out = renderSvgMarkup(
-      <StatHeroContent ir={ir("consulting", [slide])} slide={slide} index={0} ctx={ctx} />,
+      <StatHeroContent ir={ir("brief", [slide])} slide={slide} index={0} ctx={ctx} />,
     )
     expect(out).not.toContain("#0B0908")
     expect(out).not.toContain("#C6A15B")

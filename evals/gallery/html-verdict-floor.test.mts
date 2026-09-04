@@ -28,14 +28,14 @@ const SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720"><tex
 function page(id: string, findings?: { code: string; message: string }[]): ManifestPage {
   return {
     id,
-    section: "consulting",
-    sectionLabel: "consulting",
+    section: "brief",
+    sectionLabel: "brief",
     band: "component",
     subject: "bullets",
     component: "bullets",
     language: "zh",
     languageLabel: "中文",
-    theme: "consulting",
+    theme: "brief",
     page: 1,
     pageCount: 1,
     slideType: "content",
@@ -52,9 +52,9 @@ function page(id: string, findings?: { code: string; message: string }[]): Manif
 const DROPPED = [{ code: "content-dropped", message: "1 item is missing from the rendered slide" }]
 const TRUNCATED = [{ code: "content-truncated", message: "text was truncated to fit" }]
 
-const LOSER = "consulting--comp--dropped--zh"
-const CLEAN = "consulting--comp--clean--zh"
-const CUT = "consulting--comp--truncated--zh"
+const LOSER = "brief--comp--dropped--zh"
+const CLEAN = "brief--comp--clean--zh"
+const CUT = "brief--comp--truncated--zh"
 
 function manifest(): Manifest {
   const pages = [page(LOSER, DROPPED), page(CLEAN), page(CUT, TRUNCATED)]
@@ -64,7 +64,7 @@ function manifest(): Manifest {
     pptwiseVersion: "0.31.0",
     generatedAt: "2026-09-04T00:00:00Z",
     slide: { width: 1280, height: 720 },
-    sections: [{ id: "consulting", label: "consulting", blurb: "", pages: pages.length }],
+    sections: [{ id: "brief", label: "brief", blurb: "", pages: pages.length }],
     bands: [{ id: "component", label: "组件皮肤", question: "" }],
     pages,
     stories: {},

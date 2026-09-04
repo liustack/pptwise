@@ -95,7 +95,7 @@ describe("ending-afterword-ending — board geometry", () => {
   })
 
   it("uses tokens, not baked journal hex, when another theme draws it", () => {
-    const { root, tokens, markup } = renderEnding("enterprise")
+    const { root, tokens, markup } = renderEnding("bulletin")
     expect(Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "AFTERWORD")?.getAttribute("fill")).toBe(
       tokens.colors.accent,
     )

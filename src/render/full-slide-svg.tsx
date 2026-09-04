@@ -36,8 +36,8 @@ import { resolvePageRenderContext } from "./page-context"
  * Exported (W4 fix round) so layout tests can build a `ComponentCtx`
  * whose `defaultBg` matches a theme's *true* `defaultBackgrounds[slideType]`
  * — required whenever the theme under test gives that slide type a
- * different default than its own `colors.bg` (only `academic`/`classroom`/
- * `consulting`'s `chapter` do, among the 13 built-ins), since `buildCtx`'s
+ * different default than its own `colors.bg` (only `thesis`/`homeroom`/
+ * `brief`'s `chapter` do, among the 13 built-ins), since `buildCtx`'s
  * own same-named fallback (`colors.bg`) is wrong for exactly those three.
  */
 export function resolveBackgroundHex(spec: BackgroundSpec, surfaceFallback: string): string {
@@ -56,8 +56,8 @@ export function resolveBackgroundHex(spec: BackgroundSpec, surfaceFallback: stri
  * item 1 — `.issues/notes/engineering-history.md` #1) —
  * `resolveBackgroundHex` keeps its `.from`/`surfaceFallback` policy untouched
  * and still exclusively backs `tokens.defaultBackgrounds`, which is real
- * production input today (`tech`'s own cover/chapter/content/ending default
- * *is* a gradient, see `themes/tech.ts`) and must stay byte-identical for a
+ * production input today (`terminal`'s own cover/chapter/content/ending default
+ * *is* a gradient, see `themes/terminal.ts`) and must stay byte-identical for a
  * slide with no override of its own.
  *
  * Gradient policy rationale — the representative-color choice here must be
@@ -140,7 +140,7 @@ export function resolveOverrideBackgroundHex(
  * Omitting it (as every pre-existing test call site does) falls back to
  * `tokens.colors.bg` — exact for every slide type on 10 of the 13 built-in
  * themes, and still a plausible same-family value on the other 3
- * (`academic`/`classroom`/`consulting`, whose `chapter` background alone
+ * (`thesis`/`homeroom`/`brief`, whose `chapter` background alone
  * diverges from their own `colors.bg`).
  *
  * `bodyFontPx` (W4 task 3, `ComponentCtx.bodyFontPx`'s own doc comment): the

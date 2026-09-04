@@ -11,7 +11,7 @@ import { hasCjk } from "./minimal-shared"
  * CONCLUSIONS。清单优先取 bullets 前三项，否则按换行或「一、/1.」切 heading。
  * 落款句取 subheading，不写死「恳请各位老师批评指正」。无 Thank you。
  *
- * 构图抄 academic 设计板 ending：kicker y140（中文「结论」、拉丁 CONCLUSIONS），
+ * 构图抄 thesis 设计板 ending：kicker y140（中文「结论」、拉丁 CONCLUSIONS），
  * 三条 y240/316/392，底线 y470，落款 y560。进共享池。零 theme id、零 baked hex。
  */
 

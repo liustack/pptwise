@@ -9,7 +9,7 @@ import { accessibleInk, metaInk, readableOn } from "../render/ink"
  * 沉右下，整字落在 1280×720 内。左黄杠起手，标题左齐。底色走主题
  * `defaultBackgrounds.chapter`，本文件不自绘满版。
  *
- * 构图抄 consulting 设计板章节样例：杠 96×8 在 y300，标题基线 y392 /
+ * 构图抄 brief 设计板章节样例：杠 96×8 在 y300，标题基线 y392 /
  * 58px，副题 y446。序号 "02" 在 x1170 / y560 / 440px / opacity 0.06，
  * text-anchor end。
  *

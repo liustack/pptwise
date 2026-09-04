@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { CONSULTING_TOKENS } from "./builtin/consulting"
+import { CONSULTING_TOKENS } from "./builtin/brief"
 import { MenuEntrySchema, MenuSchema, ThemeFileSchema } from "./schema"
 
 function style(id: string) {
@@ -45,7 +45,7 @@ describe("theme schema v2", () => {
   it("rejects v1 inheritance and structural pool fields", () => {
     for (const retired of [
       { version: 1 },
-      { base: "consulting" },
+      { base: "brief" },
       { faces: { cover: ["poster-center"] } },
       { tendencies: { content: ["two-column"] } },
       { sparse: ["statement"] },

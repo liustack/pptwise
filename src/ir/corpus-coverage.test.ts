@@ -52,7 +52,7 @@ const EXAMPLES_DIR = new URL("../../examples/", import.meta.url)
 function minimalDeck(component: Record<string, unknown>): unknown {
   return {
     version: "5",
-    theme: { id: "consulting" },
+    theme: { id: "brief" },
     slides: [{ type: "content", kind: "points", heading: "coverage probe", components: [component] }],
   }
 }

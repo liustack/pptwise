@@ -19,7 +19,7 @@ const slide: Slide = {
 const ir: PptxIR = {
   version: "5",
   filename: "gauge-verdict.pptx",
-  theme: { id: "consulting" },
+  theme: { id: "brief" },
   meta: {
     organization: "云觅咨询",
     confidentiality: "internal",
@@ -31,7 +31,7 @@ const ir: PptxIR = {
 } as PptxIR
 
 function renderCover() {
-  const tokens = resolveStyle("consulting")
+  const tokens = resolveStyle("brief")
   const bg = resolveBackgroundHex(tokens.defaultBackgrounds.cover, tokens.colors.surface)
   const ctx = buildCtx(tokens, {}, undefined, bg)
   const markup = renderSvgMarkup(

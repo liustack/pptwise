@@ -19,7 +19,7 @@ function ir(slides: Slide[], meta: Record<string, string> = {}): PptxIR {
   return {
     version: "5",
     filename: "x.pptx",
-    theme: { id: "insight" },
+    theme: { id: "ledger" },
     meta,
     assets: { images: {} },
     slides,
@@ -35,8 +35,8 @@ function render(body: React.ReactElement): { markup: string; root: Element } {
   return { markup, root: parseSvgRoot(markup) }
 }
 
-describe("insight sparse faces", () => {
-  const ctx = buildCtx(resolveStyle("insight"), {})
+describe("ledger sparse faces", () => {
+  const ctx = buildCtx(resolveStyle("ledger"), {})
 
   it("statement is a prompt line with a muted >, amber verse, a cursor, and the cited source", () => {
     const slide: Slide = {

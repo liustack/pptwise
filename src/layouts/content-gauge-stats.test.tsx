@@ -39,13 +39,13 @@ const slide: Slide = {
 const META = { organization: "云觅咨询", version: "v2", date: "2026-08" }
 
 function renderContent(contentSlide: Slide = slide) {
-  const tokens = resolveStyle("consulting")
+  const tokens = resolveStyle("brief")
   const bg = resolveBackgroundHex(tokens.defaultBackgrounds.content, tokens.colors.surface)
   const ctx = buildCtx(tokens, {}, undefined, bg)
   const ir = {
     version: "5",
     filename: "gauge-stats.pptx",
-    theme: { id: "consulting" },
+    theme: { id: "brief" },
     meta: META,
     assets: { images: {} },
     slides: [chapter, contentSlide],

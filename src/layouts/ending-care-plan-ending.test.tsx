@@ -56,7 +56,7 @@ function renderEnding(themeId: string, s: Slide = slide(), meta: PptxIR["meta"] 
 
 describe("ending-care-plan-ending — board geometry", () => {
   it("draws the title, three suggestions, a foot rule, and the subheading sign-off", () => {
-    const { root, tokens } = renderEnding("pulse")
+    const { root, tokens } = renderEnding("clinic")
     const title = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === TITLE)
     expect(title?.getAttribute("x")).toBe("96")
     expect(title?.getAttribute("y")).toBe("160")
@@ -80,7 +80,7 @@ describe("ending-care-plan-ending — board geometry", () => {
   })
 
   it("does not thank the reader or invent a privacy line", () => {
-    const { root, markup } = renderEnding("pulse", { type: "ending", components: [] } as Slide, {})
+    const { root, markup } = renderEnding("clinic", { type: "ending", components: [] } as Slide, {})
     const texts = Array.from(root.querySelectorAll("text")).map((t) => t.textContent ?? "").join(" ")
     expect(texts).not.toMatch(/Thank you/i)
     expect(texts).not.toMatch(/appreciate/i)
@@ -90,7 +90,7 @@ describe("ending-care-plan-ending — board geometry", () => {
   })
 
   it("reads bullets as the list and heading as the title", () => {
-    const { root } = renderEnding("pulse")
+    const { root } = renderEnding("clinic")
     const texts = Array.from(root.querySelectorAll("text")).map((t) => t.textContent ?? "")
     expect(texts).toContain(TITLE)
     expect(texts.some((t) => t.includes(ITEMS[0]!))).toBe(true)
@@ -103,19 +103,19 @@ describe("ending-care-plan-ending — board geometry", () => {
       subheading: SIGNOFF,
       components: [],
     })
-    const { root } = renderEnding("pulse", withLines)
+    const { root } = renderEnding("clinic", withLines)
     const texts = Array.from(root.querySelectorAll("text")).map((t) => t.textContent ?? "")
     expect(texts.some((t) => t.includes(ITEMS[0]!))).toBe(true)
     expect(texts).toContain(SIGNOFF)
     expect(texts).not.toContain(TITLE)
   })
 
-  it("uses tokens, not baked pulse hex, when another theme draws it", () => {
-    const { root, tokens, markup } = renderEnding("enterprise")
+  it("uses tokens, not baked clinic hex, when another theme draws it", () => {
+    const { root, tokens, markup } = renderEnding("bulletin")
     const rule = Array.from(root.querySelectorAll("line")).find((l) => l.getAttribute("y1") === "510")
     expect(rule?.getAttribute("stroke")).toBe(tokens.colors.border)
     for (const hex of PULSE_HEX) {
-      expect(markup, `pulse token ${hex} leaked`).not.toContain(hex)
+      expect(markup, `clinic token ${hex} leaked`).not.toContain(hex)
     }
   })
 })
@@ -150,11 +150,11 @@ describe("ending-care-plan-ending — shared pool", () => {
   })
 
   it("renders byte-identically on repeat", () => {
-    expect(renderEnding("pulse").markup).toBe(renderEnding("pulse").markup)
+    expect(renderEnding("clinic").markup).toBe(renderEnding("clinic").markup)
   })
 
   it("CJK title has no letter-spacing", () => {
-    const { root } = renderEnding("pulse")
+    const { root } = renderEnding("clinic")
     for (const t of Array.from(root.querySelectorAll("text")).filter(
       (el) => el.getAttribute("font-weight") === "700",
     )) {
@@ -166,7 +166,7 @@ describe("ending-care-plan-ending — shared pool", () => {
     const long = slide({
       components: [{ type: "bullets", items: ["随访与干预建议说明项".repeat(20), ITEMS[1]!, ITEMS[2]!] }],
     })
-    const { markup } = renderEnding("pulse", long)
+    const { markup } = renderEnding("clinic", long)
     expect(markup).not.toContain("…")
     expect(markup).not.toContain("...")
   })

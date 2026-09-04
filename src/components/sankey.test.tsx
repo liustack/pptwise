@@ -386,13 +386,13 @@ describe("sankey label ink is safe against real band composites (task 3 fix roun
     // Two bands sharing one target, colored so their two blends genuinely
     // disagree on ink direction against a dark page bg — the exact
     // opposite-direction conflict class this fix's own header comment
-    // documents. Values are a frozen snapshot of campaign theme's real
+    // documents. Values are a frozen snapshot of rally theme's real
     // `colors.bg`/two of its four `chartPalette` entries
-    // (`src/themes/builtin/campaign.ts`) at the time this defect was found and
+    // (`src/themes/builtin/rally.ts`) at the time this defect was found and
     // fixed — copied as literal hex here (not imported live) specifically
     // so this test keeps exercising the exact numeric scenario that
-    // motivated the fix even if campaign's own tokens are retuned later —
-    // campaign's *live* theme is separately and continuously covered by
+    // motivated the fix even if rally's own tokens are retuned later —
+    // rally's *live* theme is separately and continuously covered by
     // `full-matrix-contrast.test.ts`'s permanent 13-theme analytic sweep
     // regardless. Verified analytically (a real computation run, not
     // estimated) before writing this test: blended over this bg at

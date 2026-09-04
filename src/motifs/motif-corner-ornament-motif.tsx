@@ -13,7 +13,7 @@ import { CANVAS_H_PX, CANVAS_W_PX } from "../constants"
  * **文件名与 motif id 未改，画的东西整个换了**——id 是注册表键
  * （`motifs/index.ts` 的 `MOTIFS`、`motif-selection.ts` 的
  * `MOTIF_CANDIDATES`、`definitions.ts` 的锚点），改名会牵动注册表与测试。
- * board-cover-restore wave 2 把 journal 钉成单成员，academic / luxe /
+ * board-cover-restore wave 2 把 journal 钉成单成员，thesis / luxe /
  * heritage 不再轮换到这里。前四组换血时（rail/banner/poster/constellation/heritage…）
  * 一律留 id 换画，本轮照办。读这个 id 时请以本文件为准，不要按字面理解成
  * 「角花」。
@@ -51,16 +51,16 @@ import { CANVAS_H_PX, CANVAS_W_PX } from "../constants"
  *      位置 0 碰撞）。
  *   2. **借用方那边两条线直接消失**。本 motif 的线走 `ctx.colors.primary`：
  *      luxe 的 chapter 底是 `#0B0908`、primary 是 `#171310`，实测
- *      **1.08:1**；academic 的 chapter 底就是它自己的 primary，**1.00:1**。
+ *      **1.08:1**；thesis 的 chapter 底就是它自己的 primary，**1.00:1**。
  *      journal 自己（11.75:1）与 heritage（9.54:1）画得出，但同一 motif 在
  *      四家上必须是同一件东西，不按主题分叉。
- * 与 pulse/enterprise/rail/classroom/banner 本轮统一的 chapter 处理一致。
+ * 与 clinic/bulletin/rail/homeroom/banner 本轮统一的 chapter 处理一致。
  *
  * 安全区：板上四条红虚线是「意图」，实测排字外沿是「事实」
  *
  * 工具 `.issues/2026-08-18-theme-redesign/skins/tools/text-margin-sweep.mts`
  * （柔和组建，本轮复用并自校验）。把 `LAYOUT_REGISTRY` 全部版式 + 主题十页
- * deck 在 journal / academic / luxe / heritage 四家上各渲一遍，非 chapter 页
+ * deck 在 journal / thesis / luxe / heritage 四家上各渲一遍，非 chapter 页
  * 共 1833 条文字，真实空边是 **y<40 / y>709.5 / x<56 / x>1224**。逐条对账：
  *   1. 顶缘文武双线（墨迹 y25-27 与 y31.6-32.4）——实测 0 碰撞，一处未改。
  *      两条都在 y40 之上，从 x48 起，避开两个顶部 logo 盒（y48 起）。

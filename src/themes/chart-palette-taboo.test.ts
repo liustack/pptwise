@@ -1,7 +1,7 @@
 // @vitest-environment node
 //
 // The blue-with-orange ban, swept across every built-in theme's
-// `chartPalette` (round-4 review). The user's own words, on enterprise p09
+// `chartPalette` (round-4 review). The user's own words, on bulletin p09
 // and p10: 「我不知道 claude design 为什么又把橙配蓝弄出来，这个真的太丑了，
 // 应该列为禁忌」 and 「不要蓝配橙，超级丑」. This file is the durable form of
 // that verdict: a palette must not put a vivid orange and a vivid blue in
@@ -18,29 +18,29 @@
 //     deliberately generous: it swallows gold and yellow too, which is why
 //     three themes below need an adjudicated exception rather than a
 //     narrower band. Trying to split "amber" from "gold" numerically does
-//     not survive contact with the real values — tech's #FFC14D is at 39.1
-//     and campaign's #F0B429 at 41.9, and no honest line runs between them.
+//     not survive contact with the real values — terminal's #FFC14D is at 39.1
+//     and rally's #F0B429 at 41.9, and no honest line runs between them.
 //     So the band is wide and the judgement is written down by name.
 //   - blue: hue 195-260 with saturation >= 0.35. Below 195 the color reads
-//     as teal (terra's #3E6B63 at 169, pulse's own greens at 164-170) and
+//     as teal (almanac's #3E6B63 at 169, clinic's own greens at 164-170) and
 //     orange-against-teal is not what the user rejected. The saturation
 //     floor is what keeps the slate grey-blues out — heritage's #3F5361
-//     (s=0.21), insight's #7E93A8 (0.19), vermilion's #4A5C6E (0.20),
+//     (s=0.21), ledger's #7E93A8 (0.19), vermilion's #4A5C6E (0.20),
 //     luxe's #77808E (0.09) all read as neutrals on the page, not as blue,
-//     and classroom sits just under the line too
+//     and homeroom sits just under the line too
 //     (#4A6B8A at 0.30 against #988054 at 0.29).
 //
 // ## The four palettes this verdict actually changed
 //
-//   - enterprise: 炸橘 #E85D1F → 工业蓝 #2F6FBF. Named by the user.
+//   - bulletin: 炸橘 #E85D1F → 工业蓝 #2F6FBF. Named by the user.
 //   - ember: 天蓝 #3E7CB1 → 余烬紫 #6B3F5C in the round-4 triage, then
 //     wave 8 (2026-08-22) lifted that purple to 浅余烬紫 #C48AA8, swapped
 //     the fire orange to the board's #E56A2C, and the ash grey to 暖沙
 //     #A89888. Current table: #E56A2C / #E8A13C / #C48AA8 / #A89888.
-//   - pulse: 警示褐 #B9722F → 墨蓝灰 #2E4257. Same shape, plus the theme's
+//   - clinic: 警示褐 #B9722F → 墨蓝灰 #2E4257. Same shape, plus the theme's
 //     own file already said 「全程冷配角，暖色一律不出场」 while keeping a
 //     burnt orange in its chart table.
-//   - tech: 警示琥珀 #FFC14D → 薄荷绿 #4BD98A. Same shape: one lone warm
+//   - terminal: 警示琥珀 #FFC14D → 薄荷绿 #4BD98A. Same shape: one lone warm
 //     against a cyan/blue/violet trio.
 //
 // Each replacement stays inside its own theme's colour language, clears the
@@ -115,13 +115,13 @@ function isVividBlue(hex: string): boolean {
  * narrower threshold that would only look objective.
  */
 const ADJUDICATED: Record<string, string> = {
-  academic:
+  thesis:
     "学者金 #A8861D (hue 45.3) 与靛青 #3F5B8C：金配靛是期刊语域的常规搭配，" +
     "不是用户点名的亮橙压亮蓝。靛青饱和度 0.38 也只是刚过线。",
-  consulting:
+  brief:
     "高亮黄 #F5C518 (hue 47.0) 与藏青 #1E2A4A / 数据蓝 #3B76A8：藏青配黄是" +
-    "本主题的战略咨询签名，用户逐页看过 consulting 全部十页未提。",
-  campaign:
+    "本主题的战略咨询签名，用户逐页看过 brief 全部十页未提。",
+  rally:
     "鎏金 #F0B429 (hue 41.9) 与天青 #4FC1E9 (hue 196)：这张表是洋红/鎏金/" +
     "天青/荧绿的四色纸屑，色相绕满整个色轮，不是「蓝与橙二选一」的配色故事；" +
     "而且 motif-campaign-motif 直接把这四色当纸屑用（每色 30 枚，有测试钉住），" +
@@ -165,19 +165,19 @@ describe("chart palette: no vivid orange beside a vivid blue (round-4 taboo)", (
       "#C48AA8",
       "#A89888",
     ])
-    expect(THEME_STYLES["enterprise"].colors.chartPalette).toEqual([
+    expect(THEME_STYLES["bulletin"].colors.chartPalette).toEqual([
       "#0032A0",
       "#2F6FBF",
       "#0E7C86",
       "#7A7F87",
     ])
-    expect(THEME_STYLES["pulse"].colors.chartPalette).toEqual([
+    expect(THEME_STYLES["clinic"].colors.chartPalette).toEqual([
       "#0E6B5C",
       "#3D9B82",
       "#4A7FB5",
       "#2E4257",
     ])
-    expect(THEME_STYLES["tech"].colors.chartPalette).toEqual([
+    expect(THEME_STYLES["terminal"].colors.chartPalette).toEqual([
       "#53E0D2",
       "#5B8CFF",
       "#9A7CFF",
@@ -195,11 +195,11 @@ describe("chart palette: no vivid orange beside a vivid blue (round-4 taboo)", (
 describe("chart palette replacements stay readable and distinguishable", () => {
   const REPLACEMENT = {
     ember: "#C48AA8",
-    enterprise: "#2F6FBF",
-    pulse: "#2E4257",
-    tech: "#4BD98A",
+    bulletin: "#2F6FBF",
+    clinic: "#2E4257",
+    terminal: "#4BD98A",
   } as const
-  const CHANGED = ["ember", "enterprise", "pulse", "tech"] as const
+  const CHANGED = ["ember", "bulletin", "clinic", "terminal"] as const
 
   /** Backgrounds a chart actually lands on: content pages and the surface a
    * card paints. `chapter` is deliberately excluded — it is a full-bleed

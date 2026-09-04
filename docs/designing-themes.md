@@ -121,7 +121,7 @@ The menu is the theme's structural identity. Style and menu must be reviewed tog
 Start from the nearest complete theme:
 
 ```bash
-pptwise theme new --from consulting \
+pptwise theme new --from brief \
   -o themes/new-theme.theme.json \
   --id new-theme
 ```

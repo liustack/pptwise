@@ -52,9 +52,9 @@ const ENDING_TECH_BARE_MARKUP =
   '<text x="640" y="330" font-family="Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif" font-size="88" font-weight="700" fill="#EAF1FA" text-anchor="middle" dominant-baseline="alphabetic">Thank you<tspan fill="#53E0D2">.</tspan></text><rect x="610" y="420" width="60" height="3" fill="#53E0D2"></rect><text x="640" y="463" font-family="Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif" font-size="16" fill="#93A5C0" text-anchor="middle" dominant-baseline="alphabetic">维岚科技</text>'
 
 describe("ConstellationEnding", () => {
-  it("tech tokens 下与旧 BentoTechEnding 输出逐字节一致（档位一，有 heading，不兜底）", () => {
-    const ctx = buildCtx(resolveStyle("tech"), {})
-    const deck = ir("tech", endingWithHeading)
+  it("terminal tokens 下与旧 BentoTechEnding 输出逐字节一致（档位一，有 heading，不兜底）", () => {
+    const ctx = buildCtx(resolveStyle("terminal"), {})
+    const deck = ir("terminal", endingWithHeading)
 
     const next = renderSvgMarkup(
       <ConstellationEnding ir={deck} slide={endingWithHeading} index={0} ctx={ctx} />,
@@ -64,34 +64,34 @@ describe("ConstellationEnding", () => {
     expect(next).not.toContain("Thank you")
   })
 
-  it("tech tokens 下无 heading 时与旧 BentoTechEnding 输出逐字节一致（档位一，兜底 + 句号拆分）", () => {
-    const ctx = buildCtx(resolveStyle("tech"), {})
-    const deck = ir("tech", endingBare)
+  it("terminal tokens 下无 heading 时与旧 BentoTechEnding 输出逐字节一致（档位一，兜底 + 句号拆分）", () => {
+    const ctx = buildCtx(resolveStyle("terminal"), {})
+    const deck = ir("terminal", endingBare)
 
     const next = renderSvgMarkup(
       <ConstellationEnding ir={deck} slide={endingBare} index={0} ctx={ctx} />,
     )
     expect(next).toBe(ENDING_TECH_BARE_MARKUP)
     expect(next).toContain("Thank you")
-    // 结尾句号拆成独立 accent 色 tspan，验证 tech 的 accent 值确实用上了。
+    // 结尾句号拆成独立 accent 色 tspan，验证 terminal 的 accent 值确实用上了。
     // defect C 修复：兜底文案的中文句号"。"改英文句号"."，splitTrailingPeriod
     // 泛化后两者都能拆分（见该函数注释），这里锁的是新值。
     expect(next).toContain('<tspan fill="#53E0D2">.</tspan>')
   })
 
-  it("consulting tokens 下用 consulting 的色（证明 token 化成立，无 baked hex）", () => {
-    const ctx = buildCtx(resolveStyle("consulting"), {})
-    const deck = ir("consulting", endingBare)
+  it("brief tokens 下用 brief 的色（证明 token 化成立，无 baked hex）", () => {
+    const ctx = buildCtx(resolveStyle("brief"), {})
+    const deck = ir("brief", endingBare)
     const out = renderSvgMarkup(<ConstellationEnding ir={deck} slide={endingBare} index={0} ctx={ctx} />)
-    expect(out).toContain("#1C1E23") // consulting text
-    expect(out).toContain("#F5C518") // consulting accent
-    expect(out).not.toContain("#EAF1FA") // tech text 不得残留
-    expect(out).not.toContain("#53E0D2") // tech accent 不得残留
+    expect(out).toContain("#1C1E23") // brief text
+    expect(out).toContain("#F5C518") // brief accent
+    expect(out).not.toContain("#EAF1FA") // terminal text 不得残留
+    expect(out).not.toContain("#53E0D2") // terminal accent 不得残留
   })
 
   it("renders markup that passes assertSubset (no forbidden elements)", () => {
-    const ctx = buildCtx(resolveStyle("tech"), {})
-    const deck = ir("tech", endingWithHeading)
+    const ctx = buildCtx(resolveStyle("terminal"), {})
+    const deck = ir("terminal", endingWithHeading)
     const markup = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg">
         <ConstellationEnding ir={deck} slide={endingWithHeading} index={0} ctx={ctx} />
@@ -107,9 +107,9 @@ describe("ConstellationEnding", () => {
     // replaced by a plain 60x3 accent bar (no card) plus bare centered meta
     // text.
     const slide: Slide = { type: "ending", heading: "谢谢", components: [] } as Slide
-    const ctx = buildCtx(resolveStyle("tech"), {})
+    const ctx = buildCtx(resolveStyle("terminal"), {})
 
-    const docWithMeta = ir("tech", slide)
+    const docWithMeta = ir("terminal", slide)
     const markupWithMeta = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg">
         <ConstellationEnding ir={docWithMeta} slide={slide} index={0} ctx={ctx} />
@@ -129,7 +129,7 @@ describe("ConstellationEnding", () => {
     expect(rects[0].getAttribute("height")).toBe("3")
     expect(rects[0].getAttribute("fill")).toBe(ctx.colors.accent)
 
-    const docNoMeta = irNoMeta("tech", slide)
+    const docNoMeta = irNoMeta("terminal", slide)
     const markupNoMeta = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg">
         <ConstellationEnding ir={docNoMeta} slide={slide} index={0} ctx={ctx} />
@@ -148,8 +148,8 @@ describe("ConstellationEnding", () => {
       subheading: "感谢聆听与支持",
       components: [],
     } as Slide
-    const ctx = buildCtx(resolveStyle("tech"), {})
-    const doc = ir("tech", slide)
+    const ctx = buildCtx(resolveStyle("terminal"), {})
+    const doc = ir("terminal", slide)
     const markup = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg">
         <ConstellationEnding ir={doc} slide={slide} index={0} ctx={ctx} />
@@ -166,7 +166,7 @@ describe("ConstellationEnding", () => {
     // also renders centered muted text) is omitted entirely — isolates the
     // assertion to just the subheading line, and confirms no orphaned bar.
     const slideNoSub: Slide = { type: "ending", heading: "谢谢", components: [] } as Slide
-    const docNoSub = irNoMeta("tech", slideNoSub)
+    const docNoSub = irNoMeta("terminal", slideNoSub)
     const markupNoSub = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg">
         <ConstellationEnding ir={docNoSub} slide={slideNoSub} index={0} ctx={ctx} />
@@ -182,8 +182,8 @@ describe("ConstellationEnding", () => {
 
   it("a heading that doesn't end in '。' renders unchanged — no split accent tspan", () => {
     const customSlide: Slide = { type: "ending", heading: "Thank you", components: [] } as Slide
-    const ctx = buildCtx(resolveStyle("tech"), {})
-    const customDoc = ir("tech", customSlide)
+    const ctx = buildCtx(resolveStyle("terminal"), {})
+    const customDoc = ir("terminal", customSlide)
     const customMarkup = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg">
         <ConstellationEnding ir={customDoc} slide={customSlide} index={0} ctx={ctx} />
@@ -207,8 +207,8 @@ describe("ConstellationEnding", () => {
   // Chinese-language decks benefited from.
   it("an explicit heading ending in ASCII '.' also splits the trailing period into an accent tspan (not just the CJK '。' the helper originally supported)", () => {
     const customSlide: Slide = { type: "ending", heading: "Let's grow together.", components: [] } as Slide
-    const ctx = buildCtx(resolveStyle("tech"), {})
-    const customDoc = ir("tech", customSlide)
+    const ctx = buildCtx(resolveStyle("terminal"), {})
+    const customDoc = ir("terminal", customSlide)
     const customMarkup = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg">
         <ConstellationEnding ir={customDoc} slide={customSlide} index={0} ctx={ctx} />
@@ -218,7 +218,7 @@ describe("ConstellationEnding", () => {
     const customRoot = parseSvgRoot(customMarkup)
     // bold-metrics fix (2026-07-24): round 1's class-average-plus-margin
     // model wrapped this heading to 2 lines ("Let's grow" / "together.");
-    // round 2's exact per-character model (tech's YaHei heading face) is
+    // round 2's exact per-character model (terminal's YaHei heading face) is
     // more precise for this particular string and fits it back onto one
     // line at fontSize 88, the layout's own declared max -- see this
     // fix's report round-2 section's aesthetic-comparison data (round 2
@@ -243,19 +243,19 @@ describe("ConstellationEnding", () => {
     // Ending, so anchoring the last line is unconditionally safe.
     const twoLineSlide: Slide = { type: "ending", heading: "从今天开始用声明式管理你的", components: [] } as Slide
     const oneLineSlide: Slide = { type: "ending", heading: "谢谢", components: [] } as Slide
-    const ctx = buildCtx(resolveStyle("tech"), {})
+    const ctx = buildCtx(resolveStyle("terminal"), {})
 
     const twoLineRoot = parseSvgRoot(
       renderSvgMarkup(
         <svg xmlns="http://www.w3.org/2000/svg">
-          <ConstellationEnding ir={ir("tech", twoLineSlide)} slide={twoLineSlide} index={0} ctx={ctx} />
+          <ConstellationEnding ir={ir("terminal", twoLineSlide)} slide={twoLineSlide} index={0} ctx={ctx} />
         </svg>,
       ),
     )
     const oneLineRoot = parseSvgRoot(
       renderSvgMarkup(
         <svg xmlns="http://www.w3.org/2000/svg">
-          <ConstellationEnding ir={ir("tech", oneLineSlide)} slide={oneLineSlide} index={0} ctx={ctx} />
+          <ConstellationEnding ir={ir("terminal", oneLineSlide)} slide={oneLineSlide} index={0} ctx={ctx} />
         </svg>,
       ),
     )
@@ -307,17 +307,17 @@ describe("ConstellationEnding", () => {
 
   // Themes whose accent already clears 3:1 against their own real ending
   // background stay byte-identical — `accessibleInk` is a no-op there.
-  // `tech` is already locked by this file's own "无 heading 时" test above
+  // `terminal` is already locked by this file's own "无 heading 时" test above
   // (`<tspan fill="#53E0D2">.</tspan>`); this adds a second, independently
-  // measured no-op witness (`enterprise`, one of the 9 themes whose accent
+  // measured no-op witness (`bulletin`, one of the 9 themes whose accent
   // already clears 3:1 against its own ending background — the full
   // pass/fail split across all 17 themes is measured and recorded in
   // `deck-audit.test.ts`'s dedicated 16-theme sweep, not repeated here).
-  it("enterprise: the accent-colored period keeps the theme's own accent fill (already clears 3:1 — accessibleInk is a no-op)", () => {
-    const ctx = buildCtx(resolveStyle("enterprise"), {})
+  it("bulletin: the accent-colored period keeps the theme's own accent fill (already clears 3:1 — accessibleInk is a no-op)", () => {
+    const ctx = buildCtx(resolveStyle("bulletin"), {})
     const slide: Slide = { type: "ending", heading: "Thank you.", components: [] } as Slide
     const markup = renderSvgMarkup(
-      <ConstellationEnding ir={ir("enterprise", slide)} slide={slide} index={0} ctx={ctx} />,
+      <ConstellationEnding ir={ir("bulletin", slide)} slide={slide} index={0} ctx={ctx} />,
     )
     expect(markup).toContain('<tspan fill="#2F6FBF">.</tspan>')
   })

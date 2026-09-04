@@ -3,7 +3,7 @@ import { DecorPiece } from "./decor-piece"
 import { leafRecessOpacity } from "./decor-budget"
 
 /**
- * campaign-motif v7 —— 右上一簇纸屑（第八波批 1，campaign 板对账）。
+ * campaign-motif v7 —— 右上一簇纸屑（第八波批 1，rally 板对账）。
  *
  * 换掉的东西：v6 是页缘三带共 120 枚的纸屑场。板上封面只留右上三枚斜方片，
  * 50% 透明，避字。满场百级点阵退役。

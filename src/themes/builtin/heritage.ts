@@ -8,7 +8,7 @@ import type { BuiltinThemeDeclaration } from "../schema";
  * 与 magazine 暖纸的区分：主色勃艮第酒红大面积出现（banner/巨号数字）vs
  * magazine 黑标题+砖红点缀。
  * **零版式代码**：沿用原 retail v1 验证过的浅底混搭（creative 家族
- * cover/chapter + consulting 家族 content/ending + two-column 轮换）。
+ * cover/chapter + brief 家族 content/ending + two-column 轮换）。
  *
  * **暖纸组皮肤重设计（2026-08-19，`.issues/2026-08-18-theme-redesign/skins/`
  * 的 `group2-warm-boards.dc.html` 里 heritage 的色板角色表 + 封面样例）**：

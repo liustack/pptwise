@@ -128,11 +128,11 @@ const WIDE_CHAR_RE = /[\u2014\u2018-\u201f\u2e80-\u9fff\uff00-\uffef]/
 // Export-font calibration (borrow-wave Task 3, 2026-07-21): this weight
 // table is font-agnostic by design, but heading/body text ultimately
 // exports in whatever `resolveFontFace` (fonts.ts) resolves -- Georgia (the
-// consulting theme's default heading+body face, and academic/insight's
+// brief theme's default heading+body face, and thesis/ledger's
 // heading face) and Microsoft YaHei (the resolved body face for 12 of
-// pptwise's 13 themes -- declared directly by 10, and by academic/insight's
+// pptwise's 13 themes -- declared directly by 10, and by thesis/ledger's
 // role-default fallback since neither's declared body stack hits
-// SAFE_FONTS -- every theme except consulting, whose body resolves to
+// SAFE_FONTS -- every theme except brief, whose body resolves to
 // Georgia). Both were measured against the real
 // exported binaries (Georgia: the genuine macOS system font. Microsoft
 // YaHei: the genuine binary Microsoft ships inside Office for Mac's private

@@ -49,7 +49,7 @@ function renderEnding(themeId: string, s: Slide = slide(), meta: PptxIR["meta"] 
 
 describe("ending-action-pad-ending — board geometry", () => {
   it("draws NEXT, three actions, an accent pad CTA, and a foot rule", () => {
-    const { root, tokens } = renderEnding("consulting")
+    const { root, tokens } = renderEnding("brief")
     const kicker = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "NEXT")
     expect(kicker?.getAttribute("y")).toBe("150")
     expect(kicker?.getAttribute("letter-spacing")).toBe("8")
@@ -76,7 +76,7 @@ describe("ending-action-pad-ending — board geometry", () => {
   })
 
   it("does not thank the reader", () => {
-    const { root } = renderEnding("consulting", { type: "ending", components: [] } as Slide, {})
+    const { root } = renderEnding("brief", { type: "ending", components: [] } as Slide, {})
     const texts = Array.from(root.querySelectorAll("text")).map((t) => t.textContent ?? "").join(" ")
     expect(texts).not.toMatch(/Thank you/i)
     expect(texts).not.toMatch(/appreciate/i)
@@ -90,15 +90,15 @@ describe("ending-action-pad-ending — board geometry", () => {
       subheading: "ignored as list",
       components: [{ type: "bullets", items: ITEMS }],
     })
-    const { root } = renderEnding("consulting", withBullets)
+    const { root } = renderEnding("brief", withBullets)
     const texts = Array.from(root.querySelectorAll("text")).map((t) => t.textContent ?? "")
     expect(texts).toContain(ITEMS[0])
     expect(texts).toContain(CTA)
     expect(texts).not.toContain("ignored as list")
   })
 
-  it("uses tokens, not baked consulting hex, when another theme draws it", () => {
-    const { root, tokens } = renderEnding("enterprise")
+  it("uses tokens, not baked brief hex, when another theme draws it", () => {
+    const { root, tokens } = renderEnding("bulletin")
     expect(root.querySelector("rect")?.getAttribute("fill")).toBe(tokens.colors.accent)
     expect(root.innerHTML).not.toMatch(/#F5C518/i)
     expect(root.innerHTML).not.toMatch(/#1E2A4A/i)
@@ -139,6 +139,6 @@ describe("ending-action-pad-ending — shared pool", () => {
   })
 
   it("renders byte-identically on repeat", () => {
-    expect(renderEnding("consulting").markup).toBe(renderEnding("consulting").markup)
+    expect(renderEnding("brief").markup).toBe(renderEnding("brief").markup)
   })
 })

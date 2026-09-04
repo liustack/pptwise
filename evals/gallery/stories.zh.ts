@@ -17,7 +17,7 @@ import type { DesignStoryField } from "@/design-story"
 export const STORY_ZH: Readonly<Record<string, Partial<Record<DesignStoryField, string>>>> = {
   // ── themes (24) ─────────────────────────────────────────────────────────
 
-  "theme:academic": {
+  "theme:thesis": {
     name: "论文",
     story: "祖母绿落在稿纸白上，衬线字体带书卷气。论证按答辩的路子走：假说、方法、证据，加一段坦诚的局限说明。",
     positioning: "研究汇报、答辩，或任何靠方法论可信度立足的场合。",
@@ -33,7 +33,7 @@ export const STORY_ZH: Readonly<Record<string, Partial<Record<DesignStoryField, 
     notFor: "机构汇报、学术场合，或需要安静叙事的内容。",
     lineage: "电竞直播叠加层和赛场大屏。",
   },
-  "theme:campaign": {
+  "theme:rally": {
     name: "动员",
     story: "深紫配锋利的强调色，为短标语和硬截止日期而生。每一页都是作战室里的行动号令。",
     positioning: "发布会、推广战役、动员宣讲，一句话必须穿透所有物料的场合。",
@@ -41,7 +41,7 @@ export const STORY_ZH: Readonly<Record<string, Partial<Record<DesignStoryField, 
     notFor: "沉思、学术或慢节奏叙事。",
     lineage: "上线倒计时和发布作战室。",
   },
-  "theme:classroom": {
+  "theme:homeroom": {
     name: "班会",
     story: "莫兰迪色系印在白天发的纸上，柔软的无衬线体，留白充裕。像老师跟家长谈话：具体、平静，不吓人也不捧人。",
     positioning: "家长会、班级报告、需要友善但诚实的教学材料。",
@@ -49,7 +49,7 @@ export const STORY_ZH: Readonly<Record<string, Partial<Record<DesignStoryField, 
     notFor: "职场受众、研究场合，或需要严肃感的内容。",
     lineage: "学校通知单和学期报告。",
   },
-  "theme:consulting": {
+  "theme:brief": {
     name: "简报",
     story: "藏青墨色，一线明黄，衬线字体像一份装订好的报告。结论先行，后面每页都是撑住结论的证据。",
     positioning: "听众想先听答案再听论证，而且会看数字能不能对上。",
@@ -73,7 +73,7 @@ export const STORY_ZH: Readonly<Record<string, Partial<Record<DesignStoryField, 
     notFor: "机构汇报或需要保持中立感的内容。",
     lineage: "种子轮路演，削到只剩一点火星。",
   },
-  "theme:enterprise": {
+  "theme:bulletin": {
     name: "公告",
     story: "白墙配国际克莱因蓝，用朴素的无衬线体。像一个大组织在告诉三万人下个月一号会发生什么。",
     positioning: "动员、推行、内部通告，清晰和权威比个性更重要的场合。",
@@ -97,7 +97,7 @@ export const STORY_ZH: Readonly<Record<string, Partial<Record<DesignStoryField, 
     notFor: "公司汇报、数据仪表盘，或拉丁字母为主的内容。",
     lineage: "中国水墨画与挂轴。",
   },
-  "theme:insight": {
+  "theme:ledger": {
     name: "账簿",
     story: "暖黑终端底，琥珀数字，衬线用来写论点。像一位策略师，公开赔率，每季度结一次账。",
     positioning: "故事是一场押注，附带数字佐证，而且听众会记得你押对没有。",
@@ -153,7 +153,7 @@ export const STORY_ZH: Readonly<Record<string, Partial<Record<DesignStoryField, 
     notFor: "长报告、数据页，或需要正式感的内容。",
     lineage: "剧院节目单和演出海报。",
   },
-  "theme:pulse": {
+  "theme:clinic": {
     name: "诊室",
     story: "薄荷白配深青，干净线条，没有任何装饰会被误认为数据。说话朴素，像一位好医生。",
     positioning: "健康、身心，以及任何需要干净、可信、平静地传递数字的场合。",
@@ -185,7 +185,7 @@ export const STORY_ZH: Readonly<Record<string, Partial<Record<DesignStoryField, 
     notFor: "需要温度、庆祝气氛，或需要品牌个性登场的场合。",
     lineage: "机构在用的瑞士现代主义排版。",
   },
-  "theme:tech": {
+  "theme:terminal": {
     name: "终端",
     story: "蓝黑纵深带青瓷微光，顶部一条细线，每页一个强调点。像一位维护者在解释架构：精确、不急、对炒作过敏。",
     positioning: "工程讲座、架构评审、开源项目叙事，取舍比口号重要的场合。",
@@ -193,7 +193,7 @@ export const STORY_ZH: Readonly<Record<string, Partial<Record<DesignStoryField, 
     notFor: "消费者发布、暖色人文故事，或需要颜色传递情感的页面。",
     lineage: "技术大会演讲和设计文档，放在暗色里。",
   },
-  "theme:terra": {
+  "theme:almanac": {
     name: "年鉴",
     story: "沙色、橄榄、赭石，日历按节气走。它按年记土地的账，不是按季度。",
     positioning: "可持续发展、农业、社区、长周期报告，耐心本身就是论据的场合。",

@@ -112,9 +112,9 @@ export const image: SvgComponent<ImageComponent> = {
                   // the band this component just painted, not the ambient
                   // page background (docs/contrast-system.md's own rule).
                   // `colors.surface` is near-white on most themes and fails
-                  // outright on a bright primary — campaign's pink measured
-                  // 2.84:1 in the 2026-08-15 visual review, with classroom,
-                  // ember and insight all under the floor too.
+                  // outright on a bright primary — rally's pink measured
+                  // 2.84:1 in the 2026-08-15 visual review, with homeroom,
+                  // ember and ledger all under the floor too.
                   fill={accessibleInk(ctx.colors.surface, ctx.colors.primary, fittedCaption.fontSize)}
                   fontFamily={ctx.fonts.body}
                   dominantBaseline="alphabetic"

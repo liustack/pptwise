@@ -156,7 +156,7 @@ describe("cover-cut-panel-cover — shared pool", () => {
   })
 
   it("uses tokens, not a baked arena hex, when another theme borrows it", () => {
-    const { markup, tokens } = renderCover("tech")
+    const { markup, tokens } = renderCover("terminal")
     expect(markup).toContain(tokens.colors.surface)
     expect(markup).toContain(tokens.colors.accent)
     for (const hex of ARENA_HEX) expect(markup, hex).not.toContain(hex)

@@ -17,7 +17,7 @@ const SLIDES = [
   { type: "content", kind: "points", heading: "Body", components: [{ type: "paragraph", text: "hello from the CLI test" }] },
 ]
 
-const IR_TECH = { version: "5", filename: "cli-test", theme: { id: "tech" }, slides: SLIDES }
+const IR_TECH = { version: "5", filename: "cli-test", theme: { id: "terminal" }, slides: SLIDES }
 const IR_NO_THEME = { version: "5", filename: "cli-test", slides: SLIDES }
 
 const originalPptwiseHome = process.env.PPTWISE_HOME
@@ -36,7 +36,7 @@ function makeDeckPlan(extra: Record<string, unknown> = {}): Record<string, unkno
   return {
     version: "1",
     narrative: "boardroom-report",
-    theme: "consulting",
+    theme: "brief",
     filename: "q3-review",
     pages: [
       { id: "p-cover", type: "cover", heading: "Q3 Review" },
@@ -106,22 +106,22 @@ describe("theme selection chain", () => {
     await expect(runValidate(deckDir, nested)).resolves.toMatch(/theme "acme"/)
   })
 
-  it("4. spec.theme=consulting with no files -> builtin", async () => {
-    const deckDir = await writeDeckDir(makeDeckPlan({ theme: "consulting" }))
+  it("4. spec.theme=brief with no files -> builtin", async () => {
+    const deckDir = await writeDeckDir(makeDeckPlan({ theme: "brief" }))
     const cwd = await projectDir()
-    await expect(runValidate(deckDir, cwd)).resolves.toMatch(/theme "consulting"/)
+    await expect(runValidate(deckDir, cwd)).resolves.toMatch(/theme "brief"/)
   })
 
   it("5. spec.theme selects the deck theme", async () => {
-    const deckDir = await writeDeckDir(makeDeckPlan({ theme: "tech" }))
+    const deckDir = await writeDeckDir(makeDeckPlan({ theme: "terminal" }))
     const cwd = await projectDir()
-    await expect(runValidate(deckDir, cwd)).resolves.toMatch(/theme "tech"/)
+    await expect(runValidate(deckDir, cwd)).resolves.toMatch(/theme "terminal"/)
   })
 
   it("6. bare IR theme.id selects the file theme", async () => {
     const irPath = await writeIrFile(IR_TECH)
     const cwd = await projectDir()
-    await expect(runValidate(irPath, cwd)).resolves.toMatch(/theme "tech"/)
+    await expect(runValidate(irPath, cwd)).resolves.toMatch(/theme "terminal"/)
   })
 
   it("7. bare IR with no theme key is a hard error pointing at theme new", async () => {
@@ -131,11 +131,11 @@ describe("theme selection chain", () => {
     await expect(runValidate(irPath, cwd)).rejects.toThrow(/"theme": \{ "id": "<id>" \}/)
   })
 
-  it("8. unknown name errors, no consulting fallback", async () => {
+  it("8. unknown name errors, no brief fallback", async () => {
     const deckDir = await writeDeckDir(makeDeckPlan({ theme: "not-a-real-theme" }))
     const cwd = await projectDir()
     await expect(runValidate(deckDir, cwd)).rejects.toThrow(/unknown theme "not-a-real-theme"/)
-    await expect(runValidate(deckDir, cwd)).rejects.not.toThrow(/theme "consulting"/)
+    await expect(runValidate(deckDir, cwd)).rejects.not.toThrow(/theme "brief"/)
     const raw: Record<string, unknown> = { ...IR_NO_THEME }
     await expect(
       applyDeckConfig(raw, {
@@ -174,21 +174,21 @@ describe("theme selection chain", () => {
   it("11. workspace and deck files can shadow a builtin id", async () => {
     const root = await tmp("pptwise-sel-shadow-")
     await mkdir(join(root, "themes"))
-    await extractTheme(join(root, "themes"), "consulting", "consulting.theme.json")
-    const deckDir = await writeDeckDir(makeDeckPlan({ theme: "consulting" }))
-    await expect(runValidate(deckDir, root)).resolves.toMatch(/theme "consulting"/)
-    expect(getThemeDefinition("consulting").style.colors.primary).toBe(`#${DEFAULT_THMX_COLORS.accent1}`)
+    await extractTheme(join(root, "themes"), "brief", "brief.theme.json")
+    const deckDir = await writeDeckDir(makeDeckPlan({ theme: "brief" }))
+    await expect(runValidate(deckDir, root)).resolves.toMatch(/theme "brief"/)
+    expect(getThemeDefinition("brief").style.colors.primary).toBe(`#${DEFAULT_THMX_COLORS.accent1}`)
 
     __resetRegisteredThemes()
-    const frozenDeck = await writeDeckDir(makeDeckPlan({ theme: "consulting" }))
-    await extractTheme(frozenDeck, "consulting", "theme.json")
-    await expect(runValidate(frozenDeck, await projectDir())).resolves.toMatch(/theme "consulting"/)
-    expect(getThemeDefinition("consulting").style.colors.primary).toBe(`#${DEFAULT_THMX_COLORS.accent1}`)
+    const frozenDeck = await writeDeckDir(makeDeckPlan({ theme: "brief" }))
+    await extractTheme(frozenDeck, "brief", "theme.json")
+    await expect(runValidate(frozenDeck, await projectDir())).resolves.toMatch(/theme "brief"/)
+    expect(getThemeDefinition("brief").style.colors.primary).toBe(`#${DEFAULT_THMX_COLORS.accent1}`)
 
     __resetRegisteredThemes()
-    const plainDeck = await writeDeckDir(makeDeckPlan({ theme: "consulting" }))
-    await expect(runValidate(plainDeck, await projectDir())).resolves.toMatch(/theme "consulting"/)
-    expect(getThemeDefinition("consulting").style.colors.primary).not.toBe(`#${DEFAULT_THMX_COLORS.accent1}`)
+    const plainDeck = await writeDeckDir(makeDeckPlan({ theme: "brief" }))
+    await expect(runValidate(plainDeck, await projectDir())).resolves.toMatch(/theme "brief"/)
+    expect(getThemeDefinition("brief").style.colors.primary).not.toBe(`#${DEFAULT_THMX_COLORS.accent1}`)
   })
 
   it("12. runSpecValidate sees a workspace custom id", async () => {

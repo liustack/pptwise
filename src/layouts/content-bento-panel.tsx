@@ -38,10 +38,10 @@ import { CARD_INSET_PX } from "../render/spacing"
 
 /**
  * bento-panel content layout（spec §3.2，Wave 3 Task 22，本 wave 体量最大
- * 的一个）：tech 主题 content 页型的"换骨"语法——不是「kicker + 标题 + 分隔线 +
+ * 的一个）：terminal 主题 content 页型的"换骨"语法——不是「kicker + 标题 + 分隔线 +
  * 满宽内容」，而是把 component 序列炸成一组不等宽的 bento 卡片网格（最多 6 格），
  * `kpi_cards`/`icon_cards` 先炸成逐 item 独立卡片，再按"英雄权重"重排进最大
- * 的网格位。自 templates/tech.tsx 的 `BentoTechContent`（959-1163 行，Step A
+ * 的网格位。自 templates/terminal.tsx 的 `BentoTechContent`（959-1163 行，Step A
  * 用 `grep -n` 实测边界——与 brief 给出的 959-1173 略有出入：959-1163 是函数
  * 体本身，1165-1180 行是 Ending 页型的私有 helper `splitTrailingPeriod` 的头
  * 注释与实现，不属于 Content 函数，未随迁）提炼。
@@ -80,9 +80,9 @@ import { CARD_INSET_PX } from "../render/spacing"
  * `deltaProps`/`splitKpiValueWidths` 定义于 `../components/kpi`；
  * `iconCardContentHeight`/`renderIconCardBody` 定义于 `../components/icon-card-body`；
  * `fitEmphasisLine`/`renderEmphasisText` 定义于 `../render/emphasis`——全部是已
- * 公开导出的模块，没有任何一个又回头依赖 `templates/tech.tsx` 文件私有的
+ * 公开导出的模块，没有任何一个又回头依赖 `templates/terminal.tsx` 文件私有的
  * 其它符号（`CONF_LABEL`/`chapterNumberFor` 等 Cover/Chapter 专属依赖均未
- * 被此区间引用）。本文件不 import `../templates/tech`。
+ * 被此区间引用）。本文件不 import `../templates/terminal`。
  *
  * 替换表（Step B）：Step A 对 227-702 行 ∪ 959-1163 行区间执行 Global
  * Constraints 第 4 条给出的 hex/主题 id 字符串扫描（零命中，具体正则不抄进
@@ -90,15 +90,15 @@ import { CARD_INSET_PX } from "../render/spacing"
  * 先例）——函数体与全部随迁 helper 已直接消费
  * `ctx.colors`/`colors`/`ctx.fonts`/`fonts`（`colors.surface`/
  * `colors.accent`/`colors.text`/`colors.muted`/`colors.primary`），无任何
- * 烤死颜色常量，无孤儿色。**档位一・逐字节等价**（tech 是零烤色主题，与 brief
+ * 烤死颜色常量，无孤儿色。**档位一・逐字节等价**（terminal 是零烤色主题，与 brief
  * 表格标注一致）。
  *
  * 对比度自适应修复（W4 fix round，Important I1「content layout 的
  * subheading 出现同类回声」台账）：subheading 原样消费 `colors.accent`，同
- * content-narrow-column.tsx 先例——对 consulting/classroom/heritage/
- * academic 五个主题不达标（该 layout 在这些主题 pre-W4 策展集里都不
+ * content-narrow-column.tsx 先例——对 brief/homeroom/heritage/
+ * thesis 五个主题不达标（该 layout 在这些主题 pre-W4 策展集里都不
  * 存在，全集放开新暴露）。改用 `accessibleInk(colors.accent, ctx.defaultBg,
- * fontSize)`，通过校验的主题（包括本文件原生 tech）原样返回、逐字节不变。
+ * fontSize)`，通过校验的主题（包括本文件原生 terminal）原样返回、逐字节不变。
  *
  * 对比度自适应修复补漏（W8 fix round，0.3.0 发布前终态走查发现）：
  * `renderKpiCardBody` 的 KPI 数值文字同样原样消费 `colors.accent`，W4 那轮
@@ -111,8 +111,8 @@ import { CARD_INSET_PX } from "../render/spacing"
  * 必须整组保留 accent，或整组回到 `colors.text`。背景参数仍是
  * `colors.surface`，不是 `ctx.defaultBg`。数值字号固定
  * >=24px（56/72 两档，仅在极端窄卡下可能收缩到 `BENTO_KPI_VALUE_MIN_SIZE`
- * =20），大字号 3:1 门槛下实测 consulting/classroom/heritage 三个
- * 主题不达标（`pptwise audit` 实测 consulting 1.56:1，见
+ * =20），大字号 3:1 门槛下实测 brief/homeroom/heritage 三个
+ * 主题不达标（`pptwise audit` 实测 brief 1.56:1，见
  * `full-matrix-contrast.test.ts` 的同名回归网）——与 subheading 22px 走
  * 4.5:1 门槛时不达标的五主题集合不是同一批，纯粹是字号不同导致门槛不同，非
  * 主题名单不一致的疑点。卡壳描边、发光点缀（dot/ring）仍是纯装饰形状（非

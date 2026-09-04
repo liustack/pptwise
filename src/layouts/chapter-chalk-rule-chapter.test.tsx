@@ -137,7 +137,7 @@ describe("chapter-chalk-rule-chapter — board geometry", () => {
 
   it("Latin heading uses LECTURE n with tracking, not 第n讲", () => {
     const slide = { type: "chapter", heading: "Nash Equilibrium", subheading: "Why defect", components: [] } as Slide
-    const { root, markup } = renderChapter("consulting", slide, 2, [chapter1, chapter2, slide])
+    const { root, markup } = renderChapter("brief", slide, 2, [chapter1, chapter2, slide])
     expect(markup).toContain("LECTURE 3")
     expect(markup).not.toContain("第三讲")
     const kicker = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "LECTURE 3")
@@ -187,7 +187,7 @@ describe("chapter-chalk-rule-chapter — shared pool", () => {
   })
 
   it("uses tokens, not baked lecture hex, when another theme draws it", () => {
-    const { markup, tokens } = renderChapter("tech")
+    const { markup, tokens } = renderChapter("terminal")
     expect(markup).toContain(tokens.colors.accent)
     for (const hex of LECTURE_HEX) {
       expect(markup, `lecture token ${hex} leaked`).not.toContain(hex)

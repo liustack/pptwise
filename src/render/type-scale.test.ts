@@ -42,7 +42,7 @@ function coverIr(source: CanonicalThemeId, heading: string, typeScale?: number):
 }
 
 function contentIr(typeScale?: number): PptxIR {
-  const themeId = registerTestTheme(`type-scale-content-${themeSerial++}`, "consulting")
+  const themeId = registerTestTheme(`type-scale-content-${themeSerial++}`, "brief")
   if (typeScale !== undefined) applyTypeScale(themeId, typeScale)
   const v = validateIr({
     version: "5",
@@ -147,8 +147,8 @@ describe("typeScale multiplies heading/display size before fit", () => {
   })
 
   it("poster-center heading at typeScale 1.5 is 1.5× the omitted size", () => {
-    const baseSvg = renderSlideSvg(coverIr("consulting", "战略"), 0)
-    const scaledSvg = renderSlideSvg(coverIr("consulting", "战略", 1.5), 0)
+    const baseSvg = renderSlideSvg(coverIr("brief", "战略"), 0)
+    const scaledSvg = renderSlideSvg(coverIr("brief", "战略", 1.5), 0)
     expect(fontSizeFor(scaledSvg, "战略")).toBe(Math.round(fontSizeFor(baseSvg, "战略") * 1.5))
   })
 
@@ -161,8 +161,8 @@ describe("typeScale multiplies heading/display size before fit", () => {
   })
 
   it("a statement heading is display type and does grow", () => {
-    const baseId = registerTestTheme("acme-type-scale", "consulting", { content: { statement: "statement" } })
-    const scaledId = registerTestTheme("acme-type-scale-15", "consulting", { content: { statement: "statement" } })
+    const baseId = registerTestTheme("acme-type-scale", "brief", { content: { statement: "statement" } })
+    const scaledId = registerTestTheme("acme-type-scale-15", "brief", { content: { statement: "statement" } })
     applyTypeScale(scaledId, 1.5)
     const ir = (themeId: string) => {
       const v = validateIr({

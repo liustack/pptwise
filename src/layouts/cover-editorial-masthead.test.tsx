@@ -48,10 +48,10 @@ describe("EditorialMastheadCover", () => {
     expect(next).toBe(MAGAZINE_EXPECTED)
   })
 
-  it("consulting tokens 下用 consulting 的色（证明 token 化成立，无 baked hex）", () => {
-    const ctx = buildCtx(resolveStyle("consulting"), {})
-    const out = renderSvgMarkup(<EditorialMastheadCover ir={ir("consulting")} slide={slide} index={0} ctx={ctx} />)
-    expect(out).toContain("#F5C518") // consulting accent
+  it("brief tokens 下用 brief 的色（证明 token 化成立，无 baked hex）", () => {
+    const ctx = buildCtx(resolveStyle("brief"), {})
+    const out = renderSvgMarkup(<EditorialMastheadCover ir={ir("brief")} slide={slide} index={0} ctx={ctx} />)
+    expect(out).toContain("#F5C518") // brief accent
     expect(out).not.toContain("#8C4A3C") // journal accent 不得残留
   })
 

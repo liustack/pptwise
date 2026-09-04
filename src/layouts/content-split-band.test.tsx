@@ -45,7 +45,7 @@ function ir(slides: Slide[]): PptxIR {
   return {
     version: "5",
     filename: "x.pptx",
-    theme: { id: "consulting" },
+    theme: { id: "brief" },
     meta: {},
     assets: { images: {} },
     slides,
@@ -250,7 +250,7 @@ describe("SplitBandContent lower-band capacity (the ratio the measurement chose)
 
     it(`${pacing} pacing (n=${n} components, bodyFontPx=${budget.bodyBaselinePx}): zero data-dropped, no footnote (h=400)`, () => {
       const slide: Slide = { type: "content", kind: "points", heading: "容量压测", components: contentFor(n) } as Slide
-      const ctx = buildCtx(resolveStyle("consulting"), {}, undefined, undefined, budget.bodyBaselinePx)
+      const ctx = buildCtx(resolveStyle("brief"), {}, undefined, undefined, budget.bodyBaselinePx)
       const markup = renderSvgMarkup(
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">
           <SplitBandContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />
@@ -269,7 +269,7 @@ describe("SplitBandContent lower-band capacity (the ratio the measurement chose)
         footnote: "来源：内部数据",
         components: contentFor(n),
       } as Slide
-      const ctx = buildCtx(resolveStyle("consulting"), {}, undefined, undefined, budget.bodyBaselinePx)
+      const ctx = buildCtx(resolveStyle("brief"), {}, undefined, undefined, budget.bodyBaselinePx)
       const markup = renderSvgMarkup(
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">
           <SplitBandContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />
@@ -307,7 +307,7 @@ describe("SplitBandContent candidate-ratio comparison (why 70/30, not 60/40 or 5
 
   function dropCountAt(pacing: "dense" | "balanced", h: number): number {
     const budget = PACING_BUDGETS[pacing]
-    const ctx = buildCtx(resolveStyle("consulting"), {}, undefined, undefined, budget.bodyBaselinePx)
+    const ctx = buildCtx(resolveStyle("brief"), {}, undefined, undefined, budget.bodyBaselinePx)
     const markup = renderSvgMarkup(
       SvgContent({ components: moderateComponents(4), rect: { x: 96, y: 250, w: 1088, h }, ctx }),
     )

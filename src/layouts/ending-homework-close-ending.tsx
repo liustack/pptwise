@@ -15,7 +15,7 @@ import { stripEmphasis } from "../render/emphasis"
  * subheading。盒内白字按标题脚本切：CJK「课后作业」，Latin `HOMEWORK`。
  * 不写死课本页码，无 Thank you。
  *
- * 进共享池，不是 classroom 专用。零 theme id、零 baked hex。批改红盒只此一处。
+ * 进共享池，不是 homeroom 专用。零 theme id、零 baked hex。批改红盒只此一处。
  */
 
 const BOX_X = 96

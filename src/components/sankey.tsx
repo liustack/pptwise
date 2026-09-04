@@ -133,7 +133,7 @@ type SankeyComponent = Extract<Component, { type: "sankey" }>
  * *composite* of the band's fill over the page bg at `BAND_OPACITY`, and
  * that composite can measure meaningfully worse contrast than the page bg
  * alone (confirmed empirically at real rendered-pixel ground truth: the
- * dense-crossing fixture's own `campaign`/`insight` themes measured
+ * dense-crossing fixture's own `rally`/`ledger` themes measured
  * 4.30:1/4.34:1 against a plain-page-bg-computed ink, both under the 4.5:1
  * body floor). Neither audit layer can ever be taught to see this
  * *without* also re-admitting the exact false-positive `BAND_OPACITY`
@@ -639,7 +639,7 @@ function formatBBox(b: BBox): string {
  * label sits at the node's vertical center — three stacked bands of
  * different `chartPalette` hues can each cross that narrow band), and
  * those bands' blends can require *opposite* ink directions — e.g.
- * measured directly on campaign's own palette: a blend toward `#3d70aa`
+ * measured directly on rally's own palette: a blend toward `#3d70aa`
  * only clears 4.5:1 with white (5.13 vs black's 3.77), while a blend
  * toward `#91785e` only clears it with near-black (4.65 vs white's 4.16).
  * No single flat ink can satisfy both simultaneously. This function still
@@ -732,7 +732,7 @@ export const sankey: SvgComponent<SankeyComponent> = {
           // confirms whether that best-effort answer actually clears every
           // candidate — when it doesn't (the opposite-direction-conflict
           // residual both functions' own doc comments name, empirically
-          // real on campaign's own palette), a small opaque backing chip
+          // real on rally's own palette), a small opaque backing chip
           // makes the label's *real* background the flat, known `bg` color
           // regardless of any band still visually passing behind the chip
           // itself, and a plain `accessibleInk` against `bg` becomes correct

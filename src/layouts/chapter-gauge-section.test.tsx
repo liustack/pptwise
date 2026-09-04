@@ -7,7 +7,7 @@ import { parseSvgRoot, renderSvgMarkup } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
 import { GaugeSectionChapter, layoutDef } from "./chapter-gauge-section"
 import { metaInk } from "../render/ink"
-import { CONSULTING_TOKENS } from "../themes/builtin/consulting"
+import { CONSULTING_TOKENS } from "../themes/builtin/brief"
 import { GAUGE_DARK_META } from "./gauge-shared"
 
 const slide: Slide = {
@@ -20,14 +20,14 @@ const slide: Slide = {
 const ir: PptxIR = {
   version: "5",
   filename: "gauge-section.pptx",
-  theme: { id: "consulting" },
+  theme: { id: "brief" },
   meta: { organization: "云觅咨询", version: "v2", date: "2026-08" },
   assets: { images: {} },
   slides: [slide],
 } as PptxIR
 
 function renderChapter() {
-  const tokens = resolveStyle("consulting")
+  const tokens = resolveStyle("brief")
   const bg = resolveBackgroundHex(tokens.defaultBackgrounds.chapter, tokens.colors.surface)
   const ctx = buildCtx(tokens, {}, undefined, bg)
   const markup = renderSvgMarkup(

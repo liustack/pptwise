@@ -14,7 +14,7 @@ import { blendOver, metaInk, readableOn } from "../render/ink"
  *
  * 与 P1/P2 六个 cover layout 的新问题：色块上的文字色不能像其余六个那样
  * 假设固定（它们的文字都画在页型默认底色上），色块用 ctx.colors.primary、
- * 而 primary 的明暗随主题/override 变（academic 深绿 → 浅字，tech 亮青 →
+ * 而 primary 的明暗随主题/override 变（thesis 深绿 → 浅字，terminal 亮青 →
  * 深字）。故引入 `readableOn(primary)` 按相对明度自适应选前景色（W4 fix
  * round：提炼进 `../render/ink` 单一共享实现——`chapter-fashion-chapter.tsx`/
  * `ending-fashion-ending.tsx`/`cover-fashion-masthead.tsx` 与本文件同款
@@ -24,7 +24,7 @@ import { blendOver, metaInk, readableOn } from "../render/ink"
  * 机构名是三层对比度政策里的 B 层 meta-information text
  * （`docs/contrast-system.md` — 机构名与版权行、页码、日期同层），不是 A 层
  * 正文。此前它按 `fill={readableOn(primary)} fillOpacity={0.92}` 画，
- * deck-audit 按 22px 正文的 4.5:1 去量它——十七个主题里十六个过，insight
+ * deck-audit 按 22px 正文的 4.5:1 去量它——十七个主题里十六个过，ledger
  * 的 `#E63946` 上深墨复合出 4.409:1，差 0.09 卡在 A 层线下。这不是取色错
  * 了，是层级判错了：B 层的硬线是 3:1，4.409 过得很稳。
  *

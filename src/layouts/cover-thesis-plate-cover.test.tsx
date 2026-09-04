@@ -58,7 +58,7 @@ function plateRect(root: Element) {
 
 describe("cover-thesis-plate-cover — board geometry", () => {
   it("places the kicker, two-line title, primary plate, and foot rule on the board", () => {
-    const { root, tokens } = renderCover("academic")
+    const { root, tokens } = renderCover("thesis")
     const kicker = Array.from(root.querySelectorAll("text")).find((t) =>
       (t.textContent ?? "").includes("城市数据科学实验室"),
     )
@@ -94,13 +94,13 @@ describe("cover-thesis-plate-cover — board geometry", () => {
   })
 
   it("does not paint the opening gold rule at y120 (motif owns it)", () => {
-    const { root } = renderCover("academic")
+    const { root } = renderCover("thesis")
     const gold = Array.from(root.querySelectorAll("line")).filter((l) => l.getAttribute("y1") === "120")
     expect(gold).toHaveLength(0)
   })
 
   it("does not invent cover copy when heading is empty, and skips the plate without meta", () => {
-    const { root, markup } = renderCover("academic", slide("", { heading: "" }), {})
+    const { root, markup } = renderCover("thesis", slide("", { heading: "" }), {})
     expect(markup).not.toContain("Thank you")
     expect(markup).not.toContain("谢谢")
     expect(markup).not.toContain("硕士学位论文")
@@ -137,8 +137,8 @@ describe("cover-thesis-plate-cover — shared pool", () => {
     }
   })
 
-  it("uses tokens, not a baked academic hex, when another theme borrows it", () => {
-    const { markup, tokens } = renderCover("tech")
+  it("uses tokens, not a baked thesis hex, when another theme borrows it", () => {
+    const { markup, tokens } = renderCover("terminal")
     expect(markup).toContain(tokens.colors.primary)
     expect(markup).not.toContain("#0E6245")
     expect(markup).not.toContain("#A8861D")
@@ -152,11 +152,11 @@ describe("cover-thesis-plate-cover — shared pool", () => {
   })
 
   it("renders byte-identically on repeat", () => {
-    expect(renderCover("academic").markup).toBe(renderCover("academic").markup)
+    expect(renderCover("thesis").markup).toBe(renderCover("thesis").markup)
   })
 
   it("CJK title has no letter-spacing", () => {
-    const { root } = renderCover("academic")
+    const { root } = renderCover("thesis")
     for (const t of Array.from(root.querySelectorAll("text")).filter(
       (el) => el.getAttribute("font-weight") === "700",
     )) {
@@ -165,7 +165,7 @@ describe("cover-thesis-plate-cover — shared pool", () => {
   })
 
   it("kicker meta ink follows metaInk against the page ground", () => {
-    const { root, tokens } = renderCover("academic")
+    const { root, tokens } = renderCover("thesis")
     const kicker = Array.from(root.querySelectorAll("text")).find((t) =>
       (t.textContent ?? "").includes("城市数据科学实验室"),
     )!

@@ -4,15 +4,15 @@ import type { BuiltinThemeDeclaration } from "../schema";
 /**
  * lecture（黑板夜校）——2026-08-21 新增第 22 个 theme id（第 21 个结构身份）。
  * 性格：灯灭之后的大学黑板，粉笔只划一道
- * 重点。目标场景：大学/成人课程、技术分享、内训。与 classroom（小学生
- * 白日讲义纸）分昼夜，与 academic（祖母绿压暖象牙纸的书卷）分底色。
+ * 重点。目标场景：大学/成人课程、技术分享、内训。与 homeroom（小学生
+ * 白日讲义纸）分昼夜，与 thesis（祖母绿压暖象牙纸的书卷）分底色。
  *
- * 全仓唯一绿底。深底第七色温：insight 暖黑终端 `#0F1216` / tech 蓝黑
+ * 全仓唯一绿底。深底第七色温：ledger 暖黑终端 `#0F1216` / terminal 蓝黑
  * `#0A0F1E` / luxe 真黑 `#0B0908` / arena 紫黑 `#120B22` / museum 棕黑
  * `#211A12` / stage 青灰黑 `#141C22` 之后，lecture 墨绿板面 `#1C2823`
  * （RGB 28,40,35，H 155.0，L 0.133）。缩略图里是那块绿，不是又一块死黑。
  * 与最近六家深底的 CIE76 ΔE（本仓库实测）：stage 9.85 / museum 11.01 /
- * insight 12.29 / luxe 14.16 / tech 18.07 / arena 23.58。最近的是 stage，
+ * ledger 12.29 / luxe 14.16 / terminal 18.07 / arena 23.58。最近的是 stage，
  * 色相差 51°（绿板 vs 青灰黑），大色块一眼可辨。
  *
  * 黄粉笔与两家金分家（设计板点名写进注释）：
@@ -54,7 +54,7 @@ import type { BuiltinThemeDeclaration } from "../schema";
  * 四页都画。黄粉笔弧仍不进 motif。token hex / fonts / defaultBackgrounds
  * 四页墨绿 `#1C2823` 都不动。
  *
- * 四轴：L / top-band / light / tight。最近邻 enterprise（L / top / medium /
+ * 四轴：L / top-band / light / tight。最近邻 bulletin（L / top / medium /
  * tight），岔装饰轴。封面倾向 banner-title / tone-adaptive-header。
  *
  * 可拉伸性：黄粉笔即参数（夜校品牌分享可换成品牌色，仍避开香槟金 / 铜金）。

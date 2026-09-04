@@ -34,17 +34,17 @@ function gold(pages: Record<string, GoldPageHash>): GoldHashes {
 describe("diffAffectedPages", () => {
   it("circles only the recolored theme's pages when one theme's hash moves", () => {
     const before = gold({
-      "theme--academic--zh--p01": page("h-acad", "g-acad", "c-acad"),
-      "theme--consulting--zh--p01": page("h-cons", "g-cons", "c-cons"),
+      "theme--thesis--zh--p01": page("h-acad", "g-acad", "c-acad"),
+      "theme--brief--zh--p01": page("h-cons", "g-cons", "c-cons"),
       "layout--two-column--zh": page("h-layout", "g-layout", "c-layout"),
     })
     const after = gold({
-      "theme--academic--zh--p01": page("h-acad-recolor", "g-acad", "c-acad-recolor"),
-      "theme--consulting--zh--p01": page("h-cons", "g-cons", "c-cons"),
+      "theme--thesis--zh--p01": page("h-acad-recolor", "g-acad", "c-acad-recolor"),
+      "theme--brief--zh--p01": page("h-cons", "g-cons", "c-cons"),
       "layout--two-column--zh": page("h-layout", "g-layout", "c-layout"),
     })
     expect(diffAffectedPages(before, after)).toEqual({
-      changed: ["theme--academic--zh--p01"],
+      changed: ["theme--thesis--zh--p01"],
       added: [],
       removed: [],
     })
@@ -52,7 +52,7 @@ describe("diffAffectedPages", () => {
 
   it("reports no change when every page hash is identical", () => {
     const same = gold({
-      "theme--academic--zh--p01": page("h1"),
+      "theme--thesis--zh--p01": page("h1"),
       "component--callout--zh": page("h2"),
     })
     expect(diffAffectedPages(same, structuredClone(same))).toEqual({
@@ -131,7 +131,7 @@ describe("gold sample against a live render", () => {
         // One section is enough to catch a stale pin: the mechanism is what is
         // under test, and rendering all 24 skins' component bands here would
         // add nine seconds to every `pnpm check`.
-        { only: "component", languages: ["zh"], section: "consulting" },
+        { only: "component", languages: ["zh"], section: "brief" },
       ),
       // The whole `aside` band, across every section that has one. Three
       // pages, and they are the only pages in the matrix that draw the

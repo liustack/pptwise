@@ -53,7 +53,7 @@ function renderChapter(themeId: string, s: Slide = chapter2, index = 2, slides?:
 
 describe("chapter-lesson-box-chapter — board geometry", () => {
   it("paints a primary lesson box with 环节二 and a left-aligned title on the board", () => {
-    const { root, tokens } = renderChapter("classroom")
+    const { root, tokens } = renderChapter("homeroom")
     const box = Array.from(root.querySelectorAll("rect")).find(
       (r) => r.getAttribute("width") === "176" && r.getAttribute("height") === "64",
     )
@@ -80,13 +80,13 @@ describe("chapter-lesson-box-chapter — board geometry", () => {
   })
 
   it("does not draw the notebook rules (those belong to the motif)", () => {
-    const { root } = renderChapter("classroom")
+    const { root } = renderChapter("homeroom")
     expect(root.querySelectorAll("line")).toHaveLength(0)
   })
 
   it("uses LESSON n when the heading is Latin", () => {
     const latin: Slide = { type: "chapter", heading: "Sketch three parabolas", components: [] } as Slide
-    const { root } = renderChapter("classroom", latin, 2, [chapter1, content, latin])
+    const { root } = renderChapter("homeroom", latin, 2, [chapter1, content, latin])
     const label = Array.from(root.querySelectorAll("text")).find((t) => (t.textContent ?? "").startsWith("LESSON"))
     expect(label?.textContent).toBe("LESSON 2")
     expect(Array.from(root.querySelectorAll("text")).some((t) => (t.textContent ?? "").includes("环节"))).toBe(false)
@@ -94,18 +94,18 @@ describe("chapter-lesson-box-chapter — board geometry", () => {
 
   it("does not invent a section name when heading is empty", () => {
     const empty: Slide = { type: "chapter", heading: "", components: [] } as Slide
-    const { markup, root } = renderChapter("classroom", empty, 2, [chapter1, content, empty])
+    const { markup, root } = renderChapter("homeroom", empty, 2, [chapter1, content, empty])
     expect(markup).not.toContain("动手画一画")
     expect(markup).not.toContain("Thank you")
     const labels = Array.from(root.querySelectorAll("text")).map((t) => t.textContent ?? "")
     expect(labels.some((t) => t === "LESSON 2" || t === "环节二")).toBe(true)
   })
 
-  it("uses tokens, not baked classroom hex, when another theme draws it", () => {
-    const { root, tokens, markup } = renderChapter("enterprise")
+  it("uses tokens, not baked homeroom hex, when another theme draws it", () => {
+    const { root, tokens, markup } = renderChapter("bulletin")
     expect(root.querySelector("rect")?.getAttribute("fill")).toBe(tokens.colors.primary)
     for (const hex of CLASSROOM_HEX) {
-      expect(markup, `classroom token ${hex} leaked`).not.toContain(hex)
+      expect(markup, `homeroom token ${hex} leaked`).not.toContain(hex)
     }
   })
 })
@@ -140,6 +140,6 @@ describe("chapter-lesson-box-chapter — shared pool", () => {
   })
 
   it("renders byte-identically on repeat", () => {
-    expect(renderChapter("classroom").markup).toBe(renderChapter("classroom").markup)
+    expect(renderChapter("homeroom").markup).toBe(renderChapter("homeroom").markup)
   })
 })

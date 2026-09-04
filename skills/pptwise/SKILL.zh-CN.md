@@ -73,14 +73,14 @@ pptwise themes --json
 按请求与工作区信号，用 `occasions` 和 `identity` 筛出候选。用固定样张比较 2 到 4 个候选：
 
 ```bash
-pptwise theme try consulting,swiss,memo
+pptwise theme try brief,swiss,memo
 ```
 
 创建就是拷贝。没有现成资产时，把最接近的预设拷进工作区。有 Office 品牌文件时，抽取配色与字体，同时拷入合适的菜单。要改色时，fork 当前主题，让整套配色重新派生，原主题保持不动。
 
 ```bash
-pptwise theme new --from consulting --id acme-report
-pptwise brand extract corp.pptx -o themes/acme.theme.json --from consulting
+pptwise theme new --from brief --id acme-report
+pptwise brand extract corp.pptx -o themes/acme.theme.json --from brief
 pptwise theme fork acme --primary '#0B5FFF' --id acme-blue
 ```
 

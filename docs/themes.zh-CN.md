@@ -86,13 +86,13 @@ pptwise themes --json
 把一个预设拷入工作区：
 
 ```bash
-pptwise theme new --from consulting \
+pptwise theme new --from brief \
   -o themes/acme-report.theme.json \
   --id acme-report \
   --label "Acme Report"
 ```
 
-写出的文件包含拷贝后的样式 token、品牌配置、元数据和菜单。它不再链接 `consulting`。之后任一文件的变化都不会影响另一个。
+写出的文件包含拷贝后的样式 token、品牌配置、元数据和菜单。它不再链接 `brief`。之后任一文件的变化都不会影响另一个。
 
 `--from` 也可以命名另一个工作区主题。这是开始编辑菜单或创建视觉同类主题的标准入口。
 
@@ -101,7 +101,7 @@ pptwise theme new --from consulting \
 `theme try` 用同一份固定试衣样稿渲染两到四个命名主题，并输出对比图：
 
 ```bash
-pptwise theme try consulting,swiss,memo
+pptwise theme try brief,swiss,memo
 ```
 
 样稿独立于任何 deck，用于在 spec 之前做视觉选择。`render` 与 `preview` 命令不接受临时主题覆盖。
@@ -126,7 +126,7 @@ Deck spec 按名称绑定主题：
 2. 从起始目录向上查找各级工作区 `themes/`。
 3. 24 个出厂预设。
 
-Deck 与工作区文件可以保名遮蔽出厂预设。冻结就是下沉拷贝并保留绑定名，例如 `pptwise theme new --from consulting -o deck-dir/theme.json --id consulting`。未知名称会明确报错，并列出查过的位置。
+Deck 与工作区文件可以保名遮蔽出厂预设。冻结就是下沉拷贝并保留绑定名，例如 `pptwise theme new --from brief -o deck-dir/theme.json --id brief`。未知名称会明确报错，并列出查过的位置。
 
 要把工作区主题冻结给一份 deck，保留 id 并拷入 deck 目录的 `theme.json`：
 
@@ -160,7 +160,7 @@ pptwise theme fork acme-report \
 pptwise brand extract corp.pptx \
   -o themes/acme-brand.theme.json \
   --id acme-brand \
-  --from consulting
+  --from brief
 ```
 
 抽取完全在本机运行。它读取 Office 颜色与字体，复制供体的完整菜单，重推导整套 token，并写出完整 v2 文件。供体应按菜单与场合适配来选，不应只看配色。详见 [品牌抽取](./brand-extraction.md)（英文）。

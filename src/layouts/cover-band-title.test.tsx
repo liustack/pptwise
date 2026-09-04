@@ -68,8 +68,8 @@ function bandRect(root: Element) {
 }
 
 describe("cover-band-title — board geometry", () => {
-  it("classroom: left title, band at 260/200, accent wave, no punch holes", () => {
-    const { root, tokens } = renderCover("classroom", slide(), FULL_META, {
+  it("homeroom: left title, band at 260/200, accent wave, no punch holes", () => {
+    const { root, tokens } = renderCover("homeroom", slide(), FULL_META, {
       textAnchor: "start",
       bandY: 260,
       bandH: 200,
@@ -99,8 +99,8 @@ describe("cover-band-title — board geometry", () => {
     expect(root.querySelectorAll("circle")).toHaveLength(0)
   })
 
-  it("enterprise: on-band-ink mark on the band, not a baked hex", () => {
-    const { root, tokens } = renderCover("enterprise", slide(), FULL_META, {
+  it("bulletin: on-band-ink mark on the band, not a baked hex", () => {
+    const { root, tokens } = renderCover("bulletin", slide(), FULL_META, {
       textAnchor: "start",
       bandY: 256,
       bandH: 220,
@@ -119,7 +119,7 @@ describe("cover-band-title — board geometry", () => {
   })
 
   it("band mark uses the same on-band ink as the heading, never the accent token", () => {
-    const { root, tokens } = renderCover("enterprise", slide(), FULL_META, {
+    const { root, tokens } = renderCover("bulletin", slide(), FULL_META, {
       textAnchor: "start",
       bandY: 256,
       bandH: 220,
@@ -146,7 +146,7 @@ describe("cover-band-title — board geometry", () => {
   })
 
   it("parameter changes move the band", () => {
-    const { root } = renderCover("consulting", slide(), FULL_META, {
+    const { root } = renderCover("brief", slide(), FULL_META, {
       bandY: 180,
       bandH: 140,
     })
@@ -189,11 +189,11 @@ describe("cover-band-title — shared pool", () => {
   })
 
   it("renders byte-identically on repeat", () => {
-    expect(renderCover("classroom").markup).toBe(renderCover("classroom").markup)
+    expect(renderCover("homeroom").markup).toBe(renderCover("homeroom").markup)
   })
 
   it("CJK title has no letter-spacing", () => {
-    const { root } = renderCover("classroom", slide(), FULL_META, { textAnchor: "start", bandY: 260, bandH: 200 })
+    const { root } = renderCover("homeroom", slide(), FULL_META, { textAnchor: "start", bandY: 260, bandH: 200 })
     for (const t of Array.from(root.querySelectorAll("text")).filter((el) => el.getAttribute("font-weight") === "700")) {
       expect(t.getAttribute("letter-spacing")).toBeNull()
     }

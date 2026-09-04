@@ -7,15 +7,15 @@ import { CANONICAL_THEME_IDS, resolveStyle } from "../themes"
 // used to live in that layout's test file, now testing the shared
 // module directly.
 describe("readableOn", () => {
-  // `#006A4E` is academic's pre-cool-group primary (the theme moved to
+  // `#006A4E` is thesis's pre-cool-group primary (the theme moved to
   // `#0E6245` in the 2026-08-20 skin redesign). Kept as a real measured
   // fixture for `readableOn`'s own behaviour, not as a claim about today's
   // token — same for the other `#006A4E`/`#FAFAF6` fixtures further down.
-  it("dark background (academic's pre-cool-group primary #006A4E) gets white ink", () => {
+  it("dark background (thesis's pre-cool-group primary #006A4E) gets white ink", () => {
     expect(readableOn("#006A4E")).toBe("#FFFFFF")
   })
 
-  it("light background (tech primary #2DD4E6) gets near-black ink", () => {
+  it("light background (terminal primary #2DD4E6) gets near-black ink", () => {
     expect(readableOn("#2DD4E6")).toBe("#0A0E14")
   })
 
@@ -70,10 +70,10 @@ describe("requiredContrastRatio", () => {
 
 describe("accessibleInk", () => {
   it("keeps the preferred fill unchanged when it already clears the required ratio (byte-identical, no fallback)", () => {
-    // white heading (34px, large tier, needs 3:1) on academic's dark-green
+    // white heading (34px, large tier, needs 3:1) on thesis's dark-green
     // chapter background — the pre-fix hardcoded value, already passing.
     expect(accessibleInk("#FFFFFF", "#006A4E", 34)).toBe("#FFFFFF")
-    // consulting's colors.text on its own light content background.
+    // brief's colors.text on its own light content background.
     expect(accessibleInk("#051C2C", "#F7F7F2", 46)).toBe("#051C2C")
   })
 
@@ -87,8 +87,8 @@ describe("accessibleInk", () => {
   it("uses the size-appropriate threshold — a fill passing 3:1 but not 4.5:1 keeps preferred at large size, falls back at body size", () => {
     // Contrast ratio between these two is ~3.5:1 (in the WCAG 3-4.5 gap):
     // pick a background/fill pair that lands there.
-    const bg = "#3D2E78" // campaign bg
-    const fill = "#F0559E" // campaign primary — measured ~3.2:1 against bg
+    const bg = "#3D2E78" // rally bg
+    const fill = "#F0559E" // rally primary — measured ~3.2:1 against bg
     const ratio = contrastRatio(fill, bg)
     expect(ratio).toBeGreaterThanOrEqual(3)
     expect(ratio).toBeLessThan(4.5)
@@ -103,7 +103,7 @@ describe("graphicInk", () => {
   })
 
   it("falls back to neutral ink for a block-fill token used as a stroke", () => {
-    // campaign: `primary` is the banner/colour-block dark, 1.25:1 against the
+    // rally: `primary` is the banner/colour-block dark, 1.25:1 against the
     // card surface it would be stroked on.
     expect(contrastRatio("#23173A", "#35284E")).toBeLessThan(3)
     expect(graphicInk("#23173A", "#35284E")).toBe(readableOn("#35284E"))
@@ -156,13 +156,13 @@ describe("groupValueInks", () => {
 
 describe("accessibleOpacity", () => {
   it("keeps the preferred opacity when the blended result still clears the required ratio", () => {
-    // white on academic's dark-green chapter background: 6.62:1 at full
+    // white on thesis's dark-green chapter background: 6.62:1 at full
     // opacity, comfortably clears 3:1 even blended at 0.7.
     expect(accessibleOpacity("#FFFFFF", "#006A4E", 34, 0.7)).toBe(0.7)
   })
 
-  it("keeps the preferred opacity now that the two-ink comparison picks classroom's higher-contrast option", () => {
-    // classroom's chapter background (#6E8E9E == its own colors.primary,
+  it("keeps the preferred opacity now that the two-ink comparison picks homeroom's higher-contrast option", () => {
+    // homeroom's chapter background (#6E8E9E == its own colors.primary,
     // luminance ~0.251) used to get white ink under the old fixed-0.4
     // threshold (white measures only ~3.48:1 there — the tightest margin of
     // any theme chapter-rail-chapter.tsx/chapter-banner-chapter.tsx's ink
@@ -196,7 +196,7 @@ describe("accessibleOpacity", () => {
 // comments for why a hardcoded per-file grey was overturned. Real,
 // measured fixture values below (not invented): `#8A968F` was
 // ending-rail-ending.tsx's own former `COPYRIGHT_FAINT` literal, and
-// `#FAFAF6`/`#F7F7F2` are academic's/consulting's own real `ending`
+// `#FAFAF6`/`#F7F7F2` are thesis's/brief's own real `ending`
 // `defaultBackgrounds` — this is the exact failing/passing pair the policy
 // wave's own TDD red step reproduces (see deck-audit.test.ts's "meta tier"
 // describe block for the corresponding audit-level red→green pin, and
@@ -205,14 +205,14 @@ describe("accessibleOpacity", () => {
 // which theme they were filed under was not).
 describe("metaInk", () => {
   it("keeps the preferred fill when it already clears the 3:1 meta floor", () => {
-    // consulting's own former COPYRIGHT_FAINT against consulting's real
+    // brief's own former COPYRIGHT_FAINT against brief's real
     // ending background: 3.224:1, already over the B-tier floor.
     expect(contrastRatio("#8a8a86", "#F7F7F2")).toBeGreaterThanOrEqual(3)
     expect(metaInk("#8a8a86", "#F7F7F2")).toBe("#8a8a86")
   })
 
   it("nudges a failing preferred fill just far enough to clear 3:1, not all the way to readableOn", () => {
-    // academic's own former COPYRIGHT_FAINT against academic's real ending
+    // thesis's own former COPYRIGHT_FAINT against thesis's real ending
     // background: 2.934:1 — under the floor.
     const pref = "#8A968F"
     const bg = "#FAFAF6"
@@ -232,7 +232,7 @@ describe("metaInk", () => {
     // break-even (readableOn's tightest possible case, ~4.58:1 for either
     // ink) leaves very little room for a light preferred fill to clear 3:1
     // without walking almost all the way to the neutral ink itself.
-    const bg = "#6E8E9E" // classroom's own primary — see readableOn's own test above
+    const bg = "#6E8E9E" // homeroom's own primary — see readableOn's own test above
     const pref = "#DDE7EC" // a light, subdued preferred fill that fails 3:1 here
     expect(contrastRatio(pref, bg)).toBeLessThan(3)
     const out = metaInk(pref, bg)

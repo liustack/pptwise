@@ -22,7 +22,7 @@ function stockIr(opts: { includeAsset: boolean; assetId: string }): unknown {
   return {
     version: "5",
     filename: "stock",
-    theme: { id: "consulting" },
+    theme: { id: "brief" },
     assets: opts.includeAsset ? { images: { [opts.assetId]: { src: `${opts.assetId}.png` } } } : { images: {} },
     slides: [
       { type: "cover", heading: "Cover" },

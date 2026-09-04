@@ -3,7 +3,7 @@ import { DecorPiece } from "./decor-piece"
 import { leafRecessOpacity } from "./decor-budget"
 
 /**
- * constellation-motif —— tech 的细规线（第八波，星座链退役）。
+ * constellation-motif —— terminal 的细规线（第八波，星座链退役）。
  *
  * 删掉的三件，逐条交代去向：
  *   - **右缘节点链**（主链七折点 + accent/冷序列节点 + 辉光）：删。用户否决

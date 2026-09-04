@@ -8,7 +8,7 @@ import { renderFittedEvidence, textColumnMaxWidth } from "../fitted-evidence"
 import { evidenceSource, fitHeroLine, heroUnitMark, fitSparseHeading, pad2 } from "./shared"
 import { underlineYFromBaseline } from "../underline"
 
-/** consulting 稀排脸：结论先行、藏青巨数、白卡单证据。不画顶缘规矩线。 */
+/** brief 稀排脸：结论先行、藏青巨数、白卡单证据。不画顶缘规矩线。 */
 
 export function statement({ ir, slide, index, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx

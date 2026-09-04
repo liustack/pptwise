@@ -38,7 +38,7 @@ function makeIr(components: Component[]): PptxIR {
   return {
     version: "5",
     filename: "icon-export-fixture",
-    theme: { id: "consulting" },
+    theme: { id: "brief" },
     meta: {},
     assets: { images: {} },
     slides: [
@@ -149,7 +149,7 @@ describe("icon catalog sample survives the real export pipeline (task 1 blocking
     const ir: PptxIR = {
       version: "5",
       filename: "icon-catalog-sample",
-      theme: { id: "consulting" },
+      theme: { id: "brief" },
       meta: {},
       assets: { images: {} },
       slides,

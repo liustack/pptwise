@@ -7,10 +7,10 @@ import { accessibleInk, metaInk, readableOn } from "../render/ink"
 
 /**
  * horizon-wedge cover layout（2026-08-22 封面还原第一波，新表达）：
- * **满宽底缘缓坡楔，标题留在楔上纸面**。构图抄 pulse 封面样例
- * （`audit19/covers/pulse.html`）：楔从左 y600 铺到右 y440，楔面走一条折线。
+ * **满宽底缘缓坡楔，标题留在楔上纸面**。构图抄 clinic 封面样例
+ * （`audit19/covers/clinic.html`）：楔从左 y600 铺到右 y440，楔面走一条折线。
  *
- * **它进共享池，不是 pulse 专用**。零 theme id、零 hex。细胞圈和顶缘心电线
+ * **它进共享池，不是 clinic 专用**。零 theme id、零 hex。细胞圈和顶缘心电线
  * 是主题 motif 的事。版式若在楔面再走一条折线，motif 在封面要让开顶缘那条，
  * 避免两条心搏。
  *

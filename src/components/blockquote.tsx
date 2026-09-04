@@ -104,7 +104,7 @@ export const blockquote: SvgComponent<BlockquoteComponent> = {
             card-less component in this codebase uses. `colors.accent`
             unwrapped measured well under the 3:1 large-text floor on
             several themes once actually re-measured against a real render
-            (heritage 2.61:1, consulting 1.45:1 — the latter already a
+            (heritage 2.61:1, brief 1.45:1 — the latter already a
             known, pinned pre-existing case; the fix clears both the same
             way) — `accessibleInk` keeps `colors.accent` on every theme
             that already passed, byte-identical. */}

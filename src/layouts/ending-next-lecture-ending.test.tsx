@@ -134,7 +134,7 @@ describe("ending-next-lecture-ending — board geometry", () => {
       subheading: "Next: signaling",
       components: [{ type: "bullets", items: ["Read chapters 1 and 2", "Finish problem set 3.1"] }],
     } as Slide
-    const { root, markup } = renderEnding("consulting", latin)
+    const { root, markup } = renderEnding("brief", latin)
     expect(markup).toContain("AFTER")
     expect(markup).not.toContain("课后")
     const kicker = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "AFTER")
@@ -143,7 +143,7 @@ describe("ending-next-lecture-ending — board geometry", () => {
   })
 
   it("uses tokens, not baked lecture hex, when another theme draws it", () => {
-    const { root, tokens } = renderEnding("enterprise")
+    const { root, tokens } = renderEnding("bulletin")
     const rule = Array.from(root.querySelectorAll("line")).find((l) => l.getAttribute("y1") === "430")
     expect(rule?.getAttribute("stroke")).toBe(tokens.colors.border)
     for (const hex of LECTURE_HEX) {

@@ -35,7 +35,7 @@ function makeIr(components: Component[]): PptxIR {
   return {
     version: "5",
     filename: "pest-export-fixture",
-    theme: { id: "consulting" },
+    theme: { id: "brief" },
     meta: {},
     assets: { images: {} },
     slides: [
@@ -86,7 +86,7 @@ async function expectExports(components: Component[]): Promise<void> {
  * sibling file and `generate-chart-decline-export.test.ts`.
  */
 function narrowIr(): PptxIR {
-  const themeId = registerTestTheme("pest-narrow", "consulting", {
+  const themeId = registerTestTheme("pest-narrow", "brief", {
     content: { comparison: "narrow-column" },
   })
   return {

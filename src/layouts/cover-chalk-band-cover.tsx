@@ -12,7 +12,7 @@ import { fitEmphasisLine, renderEmphasisText, stripEmphasis } from "../render/em
  * y128 在带上，带 (96,252,1088×176)，标题 x152/y332，副题 y392，带下课时
  * 行 y530，作者 y662。
  *
- * 进共享池，不是 classroom 专用。零 theme id、零 baked hex。不要波浪，不要
+ * 进共享池，不是 homeroom 专用。零 theme id、零 baked hex。不要波浪，不要
  * 右上 mark。格线归 motif。课时/重点行取 `meta.date`，有 `**强调**` 时强调
  * 走 accent（批改红只给这一处）。空 heading 不编造课题，缺 date / 作者就少画。
  */
@@ -46,7 +46,7 @@ const FOCUS_X = 96
 const FOCUS_Y = 530
 const FOCUS_SIZE = 19
 const FOCUS_MAX_W = 1088
-/** 课时行是 19px meta 档。accessibleInk 按字号走 4.5:1 会把 classroom 自己的
+/** 课时行是 19px meta 档。accessibleInk 按字号走 4.5:1 会把 homeroom 自己的
  * 批改红换成中性墨。按大字 3:1 收，板上的 accent 才能留下。 */
 const FOCUS_ACCENT_FLOOR_PX = 24
 

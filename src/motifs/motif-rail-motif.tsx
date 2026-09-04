@@ -15,7 +15,7 @@ import { leafRecessOpacity } from "./decor-budget"
  * 内容 / ending 不画第二条金线：标题下金线是内容版式的事。
  *
  * 位置写死，不读内容、不随 seed 变。零 theme id、零 hex，颜色只来自 ctx。
- * academic 是 MOTIF_CANDIDATES 单成员，改画不带跑别家。
+ * thesis 是 MOTIF_CANDIDATES 单成员，改画不带跑别家。
  */
 
 const RULE_X1 = 96

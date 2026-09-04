@@ -114,33 +114,33 @@ const PUNCTUATION_STRESS =
 /**
  * ending "tightest nominal two-line" stress heading (5b, wave-B S3b review
  * Important #2). The pre-existing `ending` entry below uses `CJK_LONG`,
- * which is so long it shrinks academic/consulting's Ending heading
+ * which is so long it shrinks thesis/brief's Ending heading
  * all the way down to (or near) their `minPt` floor — a much smaller glyph
  * pushes the downstream contact/copyright chain far less than a *realistic*
  * heading that wraps to 2 lines without shrinking at all, so `CJK_LONG`
  * alone never exercised those two themes' actual worst case (their Ending
  * templates clamp the first line's upward shift to `ENDING_TWO_LINE_SHIFT_
- * MAX` — see academic.tsx/consulting.tsx's own "Two-line title
+ * MAX` — see thesis.tsx/brief.tsx's own "Two-line title
  * reflow" comments — so a 2-line heading at *nominal* size pushes
  * `headingLastY`, and everything anchored off it, further down than any
  * shrunk heading can).
  *
  * This is the first 12 characters of `"从今天开始，用声明式管理你的
  * 集群"` — the literal user-reported repro string already named in
- * academic.tsx/consulting.tsx/creative.tsx's own "Two-line
+ * thesis.tsx/brief.tsx/creative.tsx's own "Two-line
  * title reflow" comments — truncated to the exact length window (verified
  * by brute-force probing every prefix length through the real
  * `fitHeadingLines`, the same method `templates/subheading-spacing.test.
  * tsx`'s `HEADING_TWO_LINE` used) where *both* org-logo-constrained themes
  * simultaneously wrap to exactly 2 lines at their own nominal (un-shrunk)
- * Ending fontSize — academic's window is 7-12 chars (fontSize 120,
- * maxWidth 768) and consulting's is 9-16 chars (fontSize 132, maxWidth
+ * Ending fontSize — thesis's window is 7-12 chars (fontSize 120,
+ * maxWidth 768) and brief's is 9-16 chars (fontSize 132, maxWidth
  * 1088); 9-12 is the overlap, and every length in that overlap resolves to
  * the theme's own identical worst-case downstream Y (only `lines.length`
  * and the nominal `lineHeight` matter once fontSize stops shrinking — the
  * exact split point between the two lines does not), so any prefix in that
  * range is equally "worst case", not just this one. The other four themes
- * (tech/custom/creative/magazine) anchor their Ending's
+ * (terminal/custom/creative/magazine) anchor their Ending's
  * *last* heading line to a fixed baseline regardless of line count (see
  * each template's own "Last-line-anchored" comment), so unlike the two
  * constrained themes above, a 2-line heading costs them nothing — this
@@ -190,7 +190,7 @@ function deck(slides: Slide[]): PptxIR {
   return {
     version: "5",
     filename: "stress.pptx",
-    theme: { id: "consulting" },
+    theme: { id: "brief" },
     meta: { organization: "压力测试" },
     assets: { images: {} },
     slides,

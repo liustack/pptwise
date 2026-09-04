@@ -2,7 +2,7 @@
  * Local brand-color/font extraction from a user's own `.thmx`/`.potx`/`.pptx`
  * OOXML theme part (brand-extract wave, roadmap §2.0.1: the free
  * adoption-friction remover — "the output doesn't look like our company" is
- * pptwise's #1 enterprise-adoption blocker, and every user who hits it
+ * pptwise's #1 bulletin-adoption blocker, and every user who hits it
  * already has a company template on disk). Everything in this module runs
  * against zip bytes only (`jszip`, already a browser-safe dependency) —
  * `src/index.ts`'s dependency closure stays free of Node-only deps
@@ -71,7 +71,7 @@ export interface ExtractBrandThemeOptions {
   label?: string
 }
 
-/** Materialized consulting-style menu used by shallow brand extraction. */
+/** Materialized brief-style menu used by shallow brand extraction. */
 const EXTRACTED_THEME_MENU = {
   cover: { face: "poster-center" },
   chapter: { face: "masthead-chapter" },
@@ -219,8 +219,8 @@ export function deriveMuted(text: string, bg: string, surface: string): string {
 /** Keywords (lower-cased, substring match) that mark a font name as
  *  belonging to the serif family — used only to pick which of two
  *  `SAFE_FONTS` fallback chains {@link buildFontStack} appends after the
- *  extracted face, mirroring consulting's own `["Bower", "Georgia", "Source
- *  Han Serif SC", "serif"]` precedent (`../builtin/consulting.ts`) for a serif brand
+ *  extracted face, mirroring brief's own `["Bower", "Georgia", "Source
+ *  Han Serif SC", "serif"]` precedent (`../builtin/brief.ts`) for a serif brand
  *  font, or a sans equivalent otherwise. This is a display-quality heuristic,
  *  not a safety one: `resolveFontFace` (`../../render/fonts.ts`) already falls
  *  back to a Windows-safe CJK default (`Microsoft YaHei`) when nothing in

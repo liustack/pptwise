@@ -26,7 +26,7 @@ const CARD_H = 120
 // one). Pre-fix, both call sites rendered `dp.color` raw — a real,
 // reproducible defect (not theme-specific: the full-matrix sweep found at
 // least one of up/down failing on every one of the 13 themes across the two
-// call sites combined, not just the journal/enterprise/luxe instances the
+// call sites combined, not just the journal/bulletin/luxe instances the
 // benchmark happened to name).
 //
 // The up/down colors are theme tokens now (`colors.success`/`colors.danger`),
@@ -195,7 +195,7 @@ export function rowValueFontSize(
 }
 
 /**
- * 弱模型冗余单位去重（2026-07-10 无图矩阵真机抓到：tech 4/4、magazine 1/4
+ * 弱模型冗余单位去重（2026-07-10 无图矩阵真机抓到：terminal 4/4、magazine 1/4
  * KPI 卡渲成「35%%」）：模型常把 "35%" 填进 value 后又把 "%" 填进 unit，
  * 拼接即重复。value 已以 unit 结尾时丢弃 unit。导出供 bento KPI 卡
  * （content-bento-panel）同源复用，两条 KPI 渲染路径不漂移。
@@ -323,7 +323,7 @@ export const kpi: SvgComponent<KpiComponent> = {
           // found #16A34A (up) failing against several themes' white/light
           // surfaces and #DC2626 (down) failing against dark/saturated
           // ones — a real, theme-independent defect, not just the
-          // journal/enterprise/luxe instances the benchmark happened to
+          // journal/bulletin/luxe instances the benchmark happened to
           // name. `accessibleInk` keeps the semantic color when it already
           // clears 20px body text's 4.5:1 (every theme this arrow already
           // passed on, byte-identical), falls back to neutral ink only

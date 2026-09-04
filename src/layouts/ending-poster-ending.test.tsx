@@ -52,8 +52,8 @@ const ir = (theme: string, slide: Slide): PptxIR =>
 // 锚点 + 内容存在 + 归并掉的孤儿色不再出现，而非逐字节 toBe。
 describe("PosterEnding", () => {
   it("creative tokens 下居中标题、accent 短横条走 primary（RED≡primary）、meta 合并行走 muted，heading 存在时不触发任何兜底", () => {
-    const ctx = buildCtx(resolveStyle("insight"), {})
-    const deck = ir("insight", endingWithHeading)
+    const ctx = buildCtx(resolveStyle("ledger"), {})
+    const deck = ir("ledger", endingWithHeading)
     const out = renderSvgMarkup(
       <PosterEnding ir={deck} slide={endingWithHeading} index={0} ctx={ctx} />,
     )
@@ -72,27 +72,27 @@ describe("PosterEnding", () => {
     expect(out).toContain('text-anchor="middle"')
     expect(out).toContain('width="60" height="4"')
 
-    // RED 经 ctx.colors.primary 而来，与 insight primary 逐字节相同
+    // RED 经 ctx.colors.primary 而来，与 ledger primary 逐字节相同
     expect(out).toContain("#16202B")
-    // insight accent（终端琥珀）不应出现——RED 不映射到 accent
+    // ledger accent（终端琥珀）不应出现——RED 不映射到 accent
     expect(out).not.toContain("#F0A63C")
     // META_MUTED（#666670）已并入 muted，不得残留
     expect(out).not.toContain("#666670")
   })
 
-  it("consulting tokens 下用 consulting 自己的 primary/text/muted/border，creative 烤色不残留（token 化成立）", () => {
-    const ctx = buildCtx(resolveStyle("consulting"), {})
-    const deck = ir("consulting", endingWithHeading)
+  it("brief tokens 下用 brief 自己的 primary/text/muted/border，creative 烤色不残留（token 化成立）", () => {
+    const ctx = buildCtx(resolveStyle("brief"), {})
+    const deck = ir("brief", endingWithHeading)
     const out = renderSvgMarkup(
       <PosterEnding ir={deck} slide={endingWithHeading} index={0} ctx={ctx} />,
     )
 
-    expect(out).toContain("#1E2A4A") // consulting primary，短横条
-    expect(out).toContain("#1C1E23") // consulting text（编辑组换血后与 primary 拆开）
-    expect(out).toContain("#5B6069") // consulting muted，副标题/meta 行
-    expect(out).toContain("#DDDCD4") // consulting border，分隔线
+    expect(out).toContain("#1E2A4A") // brief primary，短横条
+    expect(out).toContain("#1C1E23") // brief text（编辑组换血后与 primary 拆开）
+    expect(out).toContain("#5B6069") // brief muted，副标题/meta 行
+    expect(out).toContain("#DDDCD4") // brief border，分隔线
 
-    // insight 烤死的 hex 一律不得残留
+    // ledger 烤死的 hex 一律不得残留
     expect(out).not.toContain("#16202B")
     expect(out).not.toContain("#F2EFE8")
     expect(out).not.toContain("#9AA7B4")
@@ -101,8 +101,8 @@ describe("PosterEnding", () => {
   })
 
   it("creative tokens 下无 heading 时主标题兜底“Questions & Discussion”，且连带触发副标题兜底同一文案（defect C 修复：中文兜底改为英文，主副标题此前已是同一句话的两种语言，译文延续该文案而非臆造新词，见文件头「副题兜底语义」）", () => {
-    const ctx = buildCtx(resolveStyle("insight"), {})
-    const deck = ir("insight", endingBare)
+    const ctx = buildCtx(resolveStyle("ledger"), {})
+    const deck = ir("ledger", endingBare)
     const { root } = render(<PosterEnding ir={deck} slide={endingBare} index={0} ctx={ctx} />)
 
     // Heading: 150px wraps "Questions & Discussion" across two <text> lines
@@ -129,9 +129,9 @@ describe("PosterEnding", () => {
   // && (...)}` 因而完全不渲染该 <text> 元素。这与 endingBare（heading 和
   // subheading 都缺省，触发 Q&A 兜底）是两条不同的分支，此前未被单独断言过。
   it("heading 存在但 subheading 缺省：既不渲染用户副标题，也不触发 Q&A 连带兜底（不同于 heading 也缺省的 endingBare 分支）", () => {
-    const ctx = buildCtx(resolveStyle("insight"), {})
+    const ctx = buildCtx(resolveStyle("ledger"), {})
     const slide: Slide = { type: "ending", heading: "感谢聆听", components: [] } as Slide
-    const deck = ir("insight", slide)
+    const deck = ir("ledger", slide)
     const out = renderSvgMarkup(<PosterEnding ir={deck} slide={slide} index={0} ctx={ctx} />)
 
     expect(out).toContain("感谢聆听")
@@ -154,8 +154,8 @@ describe("PosterEnding", () => {
 
   it("shrinks a pathologically long custom heading instead of overflowing", () => {
     const longSlide: Slide = { type: "ending", heading: CJK_LONG, subheading: CJK_LONG, components: [] } as Slide
-    const ctx = buildCtx(resolveStyle("insight"), {})
-    const deck = ir("insight", longSlide)
+    const ctx = buildCtx(resolveStyle("ledger"), {})
+    const deck = ir("ledger", longSlide)
     const { root } = render(<PosterEnding ir={deck} slide={longSlide} index={0} ctx={ctx} />)
     expect(() => assertSubset(root)).not.toThrow()
   })
@@ -169,13 +169,13 @@ describe("PosterEnding", () => {
       // is the same construction under token replacement.
       const twoLineSlide: Slide = { type: "ending", heading: "从今天开始用声明", components: [] } as Slide
       const oneLineSlide: Slide = { type: "ending", heading: "提问与讨论", components: [] } as Slide
-      const ctx = buildCtx(resolveStyle("insight"), {})
+      const ctx = buildCtx(resolveStyle("ledger"), {})
 
       const { root: twoLineRoot } = render(
-        <PosterEnding ir={ir("insight", twoLineSlide)} slide={twoLineSlide} index={0} ctx={ctx} />,
+        <PosterEnding ir={ir("ledger", twoLineSlide)} slide={twoLineSlide} index={0} ctx={ctx} />,
       )
       const { root: oneLineRoot } = render(
-        <PosterEnding ir={ir("insight", oneLineSlide)} slide={oneLineSlide} index={0} ctx={ctx} />,
+        <PosterEnding ir={ir("ledger", oneLineSlide)} slide={oneLineSlide} index={0} ctx={ctx} />,
       )
 
       const twoLineHeadingTexts = Array.from(twoLineRoot.querySelectorAll("text")).filter(
@@ -209,8 +209,8 @@ describe("PosterEnding", () => {
 
     it("user-reported repro heading ('从今天开始，用声明式管理你的集群') renders with the whole downstream chain within the page", () => {
       const slide: Slide = { type: "ending", heading: "从今天开始，用声明式管理你的集群", components: [] } as Slide
-      const ctx = buildCtx(resolveStyle("insight"), {})
-      const { root } = render(<PosterEnding ir={ir("insight", slide)} slide={slide} index={0} ctx={ctx} />)
+      const ctx = buildCtx(resolveStyle("ledger"), {})
+      const { root } = render(<PosterEnding ir={ir("ledger", slide)} slide={slide} index={0} ctx={ctx} />)
       const allYs = Array.from(root.querySelectorAll("text")).map((t) => Number(t.getAttribute("y")))
       expect(Math.max(...allYs)).toBeLessThanOrEqual(714)
     })

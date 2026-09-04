@@ -44,7 +44,7 @@ function parseTranslate(el: Element): { dx: number; dy: number } {
 
 describe("hub_spoke component", () => {
   it("draws one center circle, one capsule per element, and one spoke each", () => {
-    const ctx = themed("insight")
+    const ctx = themed("ledger")
     const { container } = svg(hubSpoke.render(four, { x: 80, y: 80, w: 1088 }, ctx))
     // 1 hub + 1 badge per capsule
     expect(container.querySelectorAll("circle").length).toBe(5)
@@ -57,20 +57,20 @@ describe("hub_spoke component", () => {
   })
 
   it("prints the center concept inside the hub", () => {
-    const { container } = svg(hubSpoke.render(four, { x: 80, y: 80, w: 1088 }, themed("insight")))
+    const { container } = svg(hubSpoke.render(four, { x: 80, y: 80, w: 1088 }, themed("ledger")))
     const texts = Array.from(container.querySelectorAll("text")).map((t) => t.textContent ?? "")
     expect(texts.join("")).toContain("数据平台")
   })
 
   it("numbers the elements rather than ordering them — no arrows between spokes", () => {
-    const { container } = svg(hubSpoke.render(four, { x: 80, y: 80, w: 1088 }, themed("insight")))
+    const { container } = svg(hubSpoke.render(four, { x: 80, y: 80, w: 1088 }, themed("ledger")))
     const texts = Array.from(container.querySelectorAll("text")).map((t) => t.textContent)
     expect(texts).toEqual(expect.arrayContaining(["1", "2", "3", "4"]))
     expect(container.querySelectorAll("polygon").length).toBe(0)
   })
 
   it("spoke endpoints sit on the hub circle and on a capsule", () => {
-    const ctx = themed("insight")
+    const ctx = themed("ledger")
     const box = { x: 80, y: 80, w: 1088 }
     const { container } = svg(hubSpoke.render(four, box, ctx))
     const root = container.querySelector("svg") ?? container
@@ -105,7 +105,7 @@ describe("hub_spoke component", () => {
   it("centers the capsule group on the box midline at every legal element count", () => {
     for (const n of [3, 4, 5, 6]) {
       const box = { x: 80, y: 80, w: 1088 }
-      const { container } = svg(hubSpoke.render(withN(n), box, themed("campaign")))
+      const { container } = svg(hubSpoke.render(withN(n), box, themed("rally")))
       const root = container.querySelector("svg") ?? container
       const { dx } = parseTranslate(root.querySelector("g")!)
       const caps = Array.from(container.querySelectorAll("rect")).map((r) => ({
@@ -121,7 +121,7 @@ describe("hub_spoke component", () => {
 
   it("stays inside its own box and reports a bounded height", () => {
     for (const n of [3, 6]) {
-      const ctx = themed("academic")
+      const ctx = themed("thesis")
       const box = { x: 80, y: 60, w: 1088 }
       const h = hubSpoke.measure(withN(n), box.w, ctx)
       expect(h).toBeGreaterThan(0)
@@ -158,15 +158,15 @@ describe("hub_spoke component", () => {
         .map((el) => el.tagName.toLowerCase())
         .join(",")
     }
-    const baseline = shapesOf("insight")
-    for (const theme of ["academic", "campaign", "tech", "heritage", "consulting"]) {
+    const baseline = shapesOf("ledger")
+    for (const theme of ["thesis", "rally", "terminal", "heritage", "brief"]) {
       expect(shapesOf(theme), theme).toBe(baseline)
     }
   })
 
   it("is deterministic — the same IR renders byte-identical markup on repeat calls", () => {
     const box = { x: 60, y: 60, w: 1000 }
-    const ctx = themed("tech")
+    const ctx = themed("terminal")
     const a = renderToStaticMarkup(<svg>{hubSpoke.render(four, box, ctx)}</svg>)
     const b = renderToStaticMarkup(<svg>{hubSpoke.render(four, box, ctx)}</svg>)
     expect(a).toBe(b)

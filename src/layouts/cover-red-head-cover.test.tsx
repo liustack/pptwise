@@ -163,7 +163,7 @@ describe("cover-red-head-cover — shared pool", () => {
   })
 
   it("uses tokens, not a baked vermilion hex, when another theme borrows it", () => {
-    const { markup, tokens } = renderCover("tech")
+    const { markup, tokens } = renderCover("terminal")
     expect(markup).toContain(tokens.colors.primary)
     expect(markup).toContain(tokens.colors.accent)
     expect(markup).not.toContain("#B02318")

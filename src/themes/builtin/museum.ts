@@ -7,7 +7,7 @@ import type { BuiltinThemeDeclaration } from "../schema";
  * 目标场景：博物馆与展览解说、自然科普、人文讲座、演讲型极简叙事 deck。
  * 三个新极简版式的第一签约主题（版式本轮不动，倾向只用现有池）。
  *
- * 深底第五色温：insight 暖黑终端 `#0F1216` / tech 蓝黑 `#0A0F1E` / luxe
+ * 深底第五色温：ledger 暖黑终端 `#0F1216` / terminal 蓝黑 `#0A0F1E` / luxe
  * 真黑 `#0B0908` / arena 紫黑 `#120B22` 之后，museum 棕黑厅堂 `#211A12`
  * （RGB 33,26,18，R > G ≫ B）。比 luxe 亮一档才看得出褐，缩略图里是那块
  * 褐，不是又一块死黑。

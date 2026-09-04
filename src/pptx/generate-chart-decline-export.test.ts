@@ -28,7 +28,7 @@ beforeAll(() => {
  * label column for. `chart.measure` grows with the series count now that
  * line and area name every series in a gutter.
  *
- * Three regions, measured on `consulting`'s `data` face:
+ * Three regions, measured on `brief`'s `data` face:
  *
  *  - up to 12 series the face's own band holds the chart.
  *  - 13 to 16 the band is short and the face steps aside
@@ -43,7 +43,7 @@ function declinedChartDeck(seriesCount: number): PptxIR {
   return {
     version: "5",
     filename: "chart-decline-fixture",
-    theme: { id: "consulting" },
+    theme: { id: "brief" },
     meta: {},
     assets: { images: {} },
     slides: [
@@ -108,7 +108,7 @@ function manySeriesBarDeck(seriesCount: number): PptxIR {
   return {
     version: "5",
     filename: "chart-legend-overflow-fixture",
-    theme: { id: "consulting" },
+    theme: { id: "brief" },
     meta: {},
     assets: { images: {} },
     slides: [

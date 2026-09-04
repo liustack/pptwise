@@ -18,7 +18,7 @@ const slide: Slide = {
 const ir: PptxIR = {
   version: "5",
   filename: "deck.pptx",
-  theme: { id: "academic" },
+  theme: { id: "thesis" },
   meta: { organization: "ACME" },
   assets: { images: {} },
   slides: [slide],

@@ -23,8 +23,8 @@ const TEST_THEME_ID = "image-bottom-caption"
 const SILENT_THEME_ID = "image-bottom-caption-silent"
 
 beforeEach(() => {
-  registerTestTheme(TEST_THEME_ID, "consulting", { content: { photo: "image-bottom" } })
-  registerTestTheme(SILENT_THEME_ID, "consulting", {
+  registerTestTheme(TEST_THEME_ID, "brief", { content: { photo: "image-bottom" } })
+  registerTestTheme(SILENT_THEME_ID, "brief", {
     content: { photo: { face: "image-bottom", brand: "none" } },
   })
 })

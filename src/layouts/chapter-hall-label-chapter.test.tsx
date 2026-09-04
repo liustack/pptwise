@@ -91,7 +91,7 @@ describe("chapter-hall-label-chapter — board geometry", () => {
 
   it("Latin heading uses HALL n, with tracking, not 展厅", () => {
     const slide = chapterSlide("Ritual Order")
-    const { markup, root } = renderChapter("consulting", [slide], 0)
+    const { markup, root } = renderChapter("brief", [slide], 0)
     expect(markup).toContain("HALL 1")
     expect(markup).not.toContain("展厅")
     const kicker = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "HALL 1")
@@ -136,7 +136,7 @@ describe("chapter-hall-label-chapter — shared pool", () => {
   })
 
   it("uses tokens, not baked museum hex, when another theme draws it", () => {
-    const { markup, tokens } = renderChapter("enterprise")
+    const { markup, tokens } = renderChapter("bulletin")
     expect(markup).toContain(tokens.colors.accent)
     for (const hex of MUSEUM_HEX) {
       expect(markup, `museum token ${hex} leaked`).not.toContain(hex)

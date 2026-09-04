@@ -48,7 +48,7 @@ function renderEnding(themeId: string, s: Slide = slide(), meta: PptxIR["meta"] 
 
 describe("ending-signoff-ending — board geometry", () => {
   it("paints a full-bleed primary field and left-aligned action heading", () => {
-    const { root, tokens } = renderEnding("enterprise")
+    const { root, tokens } = renderEnding("bulletin")
     const field = root.querySelector("rect[width='1280']")
     expect(field?.getAttribute("fill")).toBe(tokens.colors.primary)
     const heading = Array.from(root.querySelectorAll("text")).find((t) =>
@@ -62,7 +62,7 @@ describe("ending-signoff-ending — board geometry", () => {
 
   it("with 3 bullet items draws the sign-off list at the board rows", () => {
     const withList = slide(HEADING, { components: [{ type: "bullets", items: ITEMS }] })
-    const { root } = renderEnding("enterprise", withList)
+    const { root } = renderEnding("bulletin", withList)
     const texts = Array.from(root.querySelectorAll("text"))
     expect(texts.some((t) => t.textContent === ITEMS[0] && t.getAttribute("y") === "392")).toBe(true)
     expect(texts.some((t) => t.textContent === ITEMS[1] && t.getAttribute("y") === "436")).toBe(true)
@@ -70,7 +70,7 @@ describe("ending-signoff-ending — board geometry", () => {
   })
 
   it("with components: [] draws no invented list and no thank-you", () => {
-    const { root, markup } = renderEnding("enterprise", slide(HEADING, { components: [] }))
+    const { root, markup } = renderEnding("bulletin", slide(HEADING, { components: [] }))
     expect(Array.from(root.querySelectorAll("text")).map((t) => t.textContent)).not.toContain("01")
     expect(markup).not.toContain("Thank you")
     expect(markup).not.toContain("谢谢")
@@ -78,7 +78,7 @@ describe("ending-signoff-ending — board geometry", () => {
   })
 
   it("empty heading does not fall back to a thank-you", () => {
-    const { markup, root } = renderEnding("enterprise", slide("", { heading: "", components: [] }))
+    const { markup, root } = renderEnding("bulletin", slide("", { heading: "", components: [] }))
     expect(markup).not.toContain("Thank you")
     expect(markup).not.toContain("谢谢")
     const bars = Array.from(root.querySelectorAll("rect")).filter(
@@ -88,7 +88,7 @@ describe("ending-signoff-ending — board geometry", () => {
   })
 
   it("draws the closing bar and the colophon", () => {
-    const { root } = renderEnding("enterprise")
+    const { root } = renderEnding("bulletin")
     const bar = Array.from(root.querySelectorAll("rect")).find(
       (r) => r.getAttribute("width") === "120" && r.getAttribute("height") === "8",
     )
@@ -127,8 +127,8 @@ describe("ending-signoff-ending — shared pool", () => {
     }
   })
 
-  it("uses tokens, not a baked enterprise hex, when another theme borrows it", () => {
-    const { markup, tokens } = renderEnding("tech")
+  it("uses tokens, not a baked bulletin hex, when another theme borrows it", () => {
+    const { markup, tokens } = renderEnding("terminal")
     expect(markup).toContain(tokens.colors.primary)
     expect(markup).not.toContain("#0032A0")
     expect(markup).not.toContain("#2F6FBF")
@@ -142,11 +142,11 @@ describe("ending-signoff-ending — shared pool", () => {
   })
 
   it("renders byte-identically on repeat", () => {
-    expect(renderEnding("enterprise").markup).toBe(renderEnding("enterprise").markup)
+    expect(renderEnding("bulletin").markup).toBe(renderEnding("bulletin").markup)
   })
 
   it("CJK title has no letter-spacing", () => {
-    const { root } = renderEnding("enterprise")
+    const { root } = renderEnding("bulletin")
     const heading = Array.from(root.querySelectorAll("text")).find((t) =>
       (t.textContent ?? "").includes("三件事"),
     )!

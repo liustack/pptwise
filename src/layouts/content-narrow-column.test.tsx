@@ -87,8 +87,8 @@ const MAGAZINE_EXPECTED_BARE =
 
 describe("NarrowColumnContent", () => {
   it("magazine tokens 下输出与固化的基准 markup 逐字节一致（档位一，含多种 component/kicker/subheading/footnote，档案来自旧 EditorialSerifContent）", () => {
-    const ctx = buildCtx({ ...resolveStyle("classroom"), shape: undefined }, {})
-    const deck = ir("classroom")
+    const ctx = buildCtx({ ...resolveStyle("homeroom"), shape: undefined }, {})
+    const deck = ir("homeroom")
 
     const next = renderSvgMarkup(<NarrowColumnContent ir={deck} slide={content} index={1} ctx={ctx} />)
     expect(next).toBe(MAGAZINE_EXPECTED)
@@ -102,17 +102,17 @@ describe("NarrowColumnContent", () => {
   })
 
   it("单块 slide（无 subheading/footnote）同样与固化基准逐字节一致", () => {
-    const ctx = buildCtx({ ...resolveStyle("classroom"), shape: undefined }, {})
+    const ctx = buildCtx({ ...resolveStyle("homeroom"), shape: undefined }, {})
     const bare: Slide = { type: "content", kind: "points", heading: "简报", components: [{ type: "paragraph", text: "一" }] } as Slide
-    const deck = ir("classroom", [bare])
+    const deck = ir("homeroom", [bare])
 
     const next = renderSvgMarkup(<NarrowColumnContent ir={deck} slide={bare} index={0} ctx={ctx} />)
     expect(next).toBe(MAGAZINE_EXPECTED_BARE)
   })
 
-  it("consulting tokens 下用 consulting 的色（证明 token 化成立，无 baked hex）", () => {
-    const ctx = buildCtx(resolveStyle("consulting"), {})
-    const deck = ir("consulting")
+  it("brief tokens 下用 brief 的色（证明 token 化成立，无 baked hex）", () => {
+    const ctx = buildCtx(resolveStyle("brief"), {})
+    const deck = ir("brief")
     const out = renderSvgMarkup(<NarrowColumnContent ir={deck} slide={content} index={1} ctx={ctx} />)
     expect(out).toContain(ctx.colors.text)
     expect(out).not.toContain("#8C4A3C") // journal accent 不得残留
@@ -120,7 +120,7 @@ describe("NarrowColumnContent", () => {
   })
 
   it("falls an unreadable kicker back to the theme text ink without a heading treatment", () => {
-    const baseCtx = buildCtx(resolveStyle("consulting"), {})
+    const baseCtx = buildCtx(resolveStyle("brief"), {})
     const ctx = { ...baseCtx, themeId: undefined }
     const deck = ir("unassigned")
     const markup = renderSvgMarkup(
@@ -138,8 +138,8 @@ describe("NarrowColumnContent", () => {
   })
 
   it("passes assertSubset (no forbidden elements)", () => {
-    const ctx = buildCtx({ ...resolveStyle("classroom"), shape: undefined }, {})
-    const deck = ir("classroom")
+    const ctx = buildCtx({ ...resolveStyle("homeroom"), shape: undefined }, {})
+    const deck = ir("homeroom")
     const markup = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg">
         <NarrowColumnContent ir={deck} slide={content} index={1} ctx={ctx} />
@@ -151,14 +151,14 @@ describe("NarrowColumnContent", () => {
   })
 
   it("lays components into the deliberately narrow 880-wide column (not the full 1088 width)", () => {
-    const ctx = buildCtx({ ...resolveStyle("classroom"), shape: undefined }, {})
+    const ctx = buildCtx({ ...resolveStyle("homeroom"), shape: undefined }, {})
     const slide: Slide = {
       type: "content",
       kind: "points",
       heading: "窄栏叙事",
       components: [para("一"), para("二"), para("三")],
     } as Slide
-    const deck = ir("classroom", [slide])
+    const deck = ir("homeroom", [slide])
     const markup = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg">
         <NarrowColumnContent ir={deck} slide={slide} index={0} ctx={ctx} />
@@ -175,11 +175,11 @@ describe("NarrowColumnContent", () => {
   })
 
   it("renders a large, 30%-opacity, zero-padded page number anchored to the right gutter", () => {
-    const ctx = buildCtx({ ...resolveStyle("classroom"), shape: undefined }, {})
+    const ctx = buildCtx({ ...resolveStyle("homeroom"), shape: undefined }, {})
     const slide: Slide = { type: "content", kind: "points", heading: "标题", components: [para("一")] } as Slide
     // 9th slide (index 8) => page label "09"
     const slides = Array.from({ length: 9 }, () => ({ ...slide }))
-    const deck = ir("classroom", slides)
+    const deck = ir("homeroom", slides)
     const markup = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg">
         <NarrowColumnContent ir={deck} slide={slide} index={8} ctx={ctx} />
@@ -196,7 +196,7 @@ describe("NarrowColumnContent", () => {
     // Single-digit pages are still zero-padded.
     const markupFirst = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg">
-        <NarrowColumnContent ir={ir("classroom", [slide])} slide={slide} index={0} ctx={ctx} />
+        <NarrowColumnContent ir={ir("homeroom", [slide])} slide={slide} index={0} ctx={ctx} />
       </svg>,
     )
     const rootFirst = parseSvgRoot(markupFirst)
@@ -205,7 +205,7 @@ describe("NarrowColumnContent", () => {
   })
 
   it("converges a pathologically long (48-char) heading to <32pt or 2 lines within the 880 column", () => {
-    const ctx = buildCtx({ ...resolveStyle("classroom"), shape: undefined }, {})
+    const ctx = buildCtx({ ...resolveStyle("homeroom"), shape: undefined }, {})
     const longHeading = "微服务架构下分布式事务一致性保障机制补偿策略设计".repeat(3).slice(0, 48)
     expect(longHeading.length).toBe(48)
     const slide: Slide = {
@@ -214,7 +214,7 @@ describe("NarrowColumnContent", () => {
       heading: longHeading,
       components: [para("概要")],
     } as Slide
-    const deck = ir("classroom", [slide])
+    const deck = ir("homeroom", [slide])
     const markup = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg">
         <NarrowColumnContent ir={deck} slide={slide} index={0} ctx={ctx} />
@@ -235,7 +235,7 @@ describe("NarrowColumnContent", () => {
   })
 
   it("kicker fits an overlong section name instead of overflowing at fixed 16px", () => {
-    const ctx = buildCtx({ ...resolveStyle("classroom"), shape: undefined }, {})
+    const ctx = buildCtx({ ...resolveStyle("homeroom"), shape: undefined }, {})
     const chapterSlide: Slide = { type: "chapter", heading: CJK_LONG.repeat(2), components: [] } as Slide
     const contentSlide: Slide = {
       type: "content",
@@ -243,7 +243,7 @@ describe("NarrowColumnContent", () => {
       heading: "小节标题",
       components: [para("一")],
     } as Slide
-    const deck = ir("classroom", [chapterSlide, contentSlide])
+    const deck = ir("homeroom", [chapterSlide, contentSlide])
     const markup = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg">
         <NarrowColumnContent ir={deck} slide={contentSlide} index={1} ctx={ctx} />
@@ -261,7 +261,7 @@ describe("NarrowColumnContent", () => {
   })
 
   it("footnote stays within the 980-wide budget instead of colliding with the page number", () => {
-    const ctx = buildCtx({ ...resolveStyle("classroom"), shape: undefined }, {})
+    const ctx = buildCtx({ ...resolveStyle("homeroom"), shape: undefined }, {})
     const longFootnote = "数据来源：" + "内部报告与季度审计草案汇总说明".repeat(6)
     const slide: Slide = {
       type: "content",
@@ -270,7 +270,7 @@ describe("NarrowColumnContent", () => {
       components: [para("一")],
       footnote: longFootnote,
     } as Slide
-    const deck = ir("classroom", [slide])
+    const deck = ir("homeroom", [slide])
     const markup = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg">
         <NarrowColumnContent ir={deck} slide={slide} index={0} ctx={ctx} />
@@ -304,8 +304,8 @@ describe("NarrowColumnContent", () => {
     }
 
     it("no subheading: narrow column y stays at the pre-subheading formula (headingLastY + 40)", () => {
-      const ctx = buildCtx({ ...resolveStyle("classroom"), shape: undefined }, {})
-      const deck = ir("classroom", [base])
+      const ctx = buildCtx({ ...resolveStyle("homeroom"), shape: undefined }, {})
+      const deck = ir("homeroom", [base])
       const markup = renderSvgMarkup(
         <svg xmlns="http://www.w3.org/2000/svg">
           <NarrowColumnContent ir={deck} slide={base} index={0} ctx={ctx} />
@@ -317,9 +317,9 @@ describe("NarrowColumnContent", () => {
     })
 
     it("with subheading: italic accent text below the heading, and pushes the narrow column down 68 (S3b: headingLastY+64)", () => {
-      const ctx = buildCtx({ ...resolveStyle("classroom"), shape: undefined }, {})
+      const ctx = buildCtx({ ...resolveStyle("homeroom"), shape: undefined }, {})
       const slide: Slide = { ...base, subheading: "效率提升三成，风险敞口下降" } as Slide
-      const deck = ir("classroom", [slide])
+      const deck = ir("homeroom", [slide])
       const markup = renderSvgMarkup(
         <svg xmlns="http://www.w3.org/2000/svg">
           <NarrowColumnContent ir={deck} slide={slide} index={0} ctx={ctx} />
@@ -337,11 +337,11 @@ describe("NarrowColumnContent", () => {
       expect(columnRectY(root)).toBe(190 + 40 + 68)
     })
 
-    it("W4 fix round Important I1：consulting 的 colors.accent（#FFC72C）对自己的 content 默认背景只有 ~1.45:1，副题不再是几乎不可读的黄字压米白底", () => {
-      const consultingTokens = resolveStyle("consulting")
+    it("W4 fix round Important I1：brief 的 colors.accent（#FFC72C）对自己的 content 默认背景只有 ~1.45:1，副题不再是几乎不可读的黄字压米白底", () => {
+      const consultingTokens = resolveStyle("brief")
       const ctx = buildCtx(consultingTokens, {})
       const slide: Slide = { ...base, subheading: "效率提升三成，风险敞口下降" } as Slide
-      const deck = ir("consulting", [slide])
+      const deck = ir("brief", [slide])
       const markup = renderSvgMarkup(
         <svg xmlns="http://www.w3.org/2000/svg">
           <NarrowColumnContent ir={deck} slide={slide} index={0} ctx={ctx} />
@@ -352,16 +352,16 @@ describe("NarrowColumnContent", () => {
         (t.textContent ?? "").includes("效率提升三成"),
       )!
       // Fell back to readableOn's neutral dark ink (colors.accent itself
-      // measures ~1.45:1 against consulting's own light content background
+      // measures ~1.45:1 against brief's own light content background
       // — squarely in Important I1's cited 1.45-2.92:1 range).
       expect(sub.getAttribute("fill")).toBe("#0A0E14")
       expect(sub.getAttribute("fill")).not.toBe(consultingTokens.colors.accent)
     })
 
     it("unassigned theme subheading fill is accessibleInk(accent), not a raw failing accent", () => {
-      const ctx = buildCtx({ ...resolveStyle("classroom"), shape: undefined }, {})
+      const ctx = buildCtx({ ...resolveStyle("homeroom"), shape: undefined }, {})
       const slide: Slide = { ...base, subheading: "效率提升三成，风险敞口下降" } as Slide
-      const deck = ir("classroom", [slide])
+      const deck = ir("homeroom", [slide])
       const markup = renderSvgMarkup(
         <svg xmlns="http://www.w3.org/2000/svg">
           <NarrowColumnContent ir={deck} slide={slide} index={0} ctx={ctx} />
@@ -377,9 +377,9 @@ describe("NarrowColumnContent", () => {
     })
 
     it("emphasis markup: ** ** segments invert to colors.text at fontWeight 700, staying italic", () => {
-      const ctx = buildCtx({ ...resolveStyle("classroom"), shape: undefined }, {})
+      const ctx = buildCtx({ ...resolveStyle("homeroom"), shape: undefined }, {})
       const slide: Slide = { ...base, subheading: "**效率提升三成**，风险敞口下降" } as Slide
-      const deck = ir("classroom", [slide])
+      const deck = ir("homeroom", [slide])
       const markup = renderSvgMarkup(
         <svg xmlns="http://www.w3.org/2000/svg">
           <NarrowColumnContent ir={deck} slide={slide} index={0} ctx={ctx} />
@@ -404,9 +404,9 @@ describe("NarrowColumnContent", () => {
     })
 
     it("overly long subheading shrinks to 16px then truncates", () => {
-      const ctx = buildCtx({ ...resolveStyle("classroom"), shape: undefined }, {})
+      const ctx = buildCtx({ ...resolveStyle("homeroom"), shape: undefined }, {})
       const slide: Slide = { ...base, subheading: CJK_LONG.repeat(2) } as Slide
-      const deck = ir("classroom", [slide])
+      const deck = ir("homeroom", [slide])
       const markup = renderSvgMarkup(
         <svg xmlns="http://www.w3.org/2000/svg">
           <NarrowColumnContent ir={deck} slide={slide} index={0} ctx={ctx} />

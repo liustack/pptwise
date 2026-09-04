@@ -148,7 +148,7 @@ describe("scoreQuestion — degraded-model (validate-failing / audit-positive / 
     expect(score.deterministic).toBeNull()
   })
 
-  it("fx03 (degraded): validates clean but auditDeck flags a real low-contrast finding (architecture on insight)", async () => {
+  it("fx03 (degraded): validates clean but auditDeck flags a real low-contrast finding (architecture on ledger)", async () => {
     // This fixture needs a low-contrast source that is real, theme-stable
     // and out of scope for whatever fix round is running — and it has now
     // outlived two of them. It started as kpi_cards' hardcoded delta-arrow
@@ -158,7 +158,7 @@ describe("scoreQuestion — degraded-model (validate-failing / audit-positive / 
     // see `code.tsx`'s own `LINE_NUM_COLOR` comment).
     //
     // Now `architecture`'s theme-derived primary-on-panel pairing on
-    // `insight`, which `deck-audit.test.ts`'s "understood pre-existing
+    // `ledger`, which `deck-audit.test.ts`'s "understood pre-existing
     // low-contrast sources" block pins from the other side. Unlike the two
     // before it this one is not a hardcoded literal at all — it is a real
     // theme token pairing a rounding distance under 4.5:1 — so a future

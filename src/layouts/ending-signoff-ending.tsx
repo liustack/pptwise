@@ -12,7 +12,7 @@ import { stripEmphasis } from "../render/emphasis"
  * 单，题下白杠，落款。构图抄 `.issues/design-boards/wave8/b1/Enterprise.dc.html`
  * ending：标题 y300、三条清单 y392/436/480、白杠 y580、落款 y650。
  *
- * 进共享池，不是 enterprise 专用。零 theme id、零 baked hex。不致谢：heading
+ * 进共享池，不是 bulletin 专用。零 theme id、零 baked hex。不致谢：heading
  * 缺省不兜底 "Thank you."。清单来自第一个 bullets 的 items，空 components
  * 一列都不画，不编造预览文案。
  *

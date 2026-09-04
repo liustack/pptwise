@@ -60,9 +60,9 @@ describe("layoutDef", () => {
 
 describe("QuoteStageContent", () => {
   it("0 components: renders the heading as a centered, oversized main visual with no crash", () => {
-    const ctx = buildCtx(resolveStyle("insight"), {})
+    const ctx = buildCtx(resolveStyle("ledger"), {})
     const { markup, root } = render(
-      <QuoteStageContent ir={ir("insight", [zeroComponentSlide])} slide={zeroComponentSlide} index={0} ctx={ctx} />,
+      <QuoteStageContent ir={ir("ledger", [zeroComponentSlide])} slide={zeroComponentSlide} index={0} ctx={ctx} />,
     )
     expect(markup).toContain("简洁是最终的复杂")
     const heading = Array.from(root.querySelectorAll("text")).find((t) =>
@@ -76,9 +76,9 @@ describe("QuoteStageContent", () => {
   })
 
   it("1 component: renders as a small centered attribution annotation below the heading, not a full-width body", () => {
-    const ctx = buildCtx(resolveStyle("insight"), {})
+    const ctx = buildCtx(resolveStyle("ledger"), {})
     const { markup, root } = render(
-      <QuoteStageContent ir={ir("insight", [oneComponentSlide])} slide={oneComponentSlide} index={0} ctx={ctx} />,
+      <QuoteStageContent ir={ir("ledger", [oneComponentSlide])} slide={oneComponentSlide} index={0} ctx={ctx} />,
     )
     expect(markup).toContain("达·芬奇")
     const bodyGroup = root.querySelector("g[data-audit-rect]")!
@@ -88,9 +88,9 @@ describe("QuoteStageContent", () => {
   })
 
   it("accent hairline is the only primary-filled element; heading uses colors.text, never accent, unwrapped (no accessibleInk needed)", () => {
-    const ctx = buildCtx(resolveStyle("insight"), {})
+    const ctx = buildCtx(resolveStyle("ledger"), {})
     const { root } = render(
-      <QuoteStageContent ir={ir("insight", [zeroComponentSlide])} slide={zeroComponentSlide} index={0} ctx={ctx} />,
+      <QuoteStageContent ir={ir("ledger", [zeroComponentSlide])} slide={zeroComponentSlide} index={0} ctx={ctx} />,
     )
     const accentBar = Array.from(root.querySelectorAll("rect")).find(
       (r) => r.getAttribute("fill") === ctx.colors.primary,
@@ -103,9 +103,9 @@ describe("QuoteStageContent", () => {
   })
 
   it("subheading renders as a small muted annotation (never accent, never emphasis tspans)", () => {
-    const ctx = buildCtx(resolveStyle("insight"), {})
+    const ctx = buildCtx(resolveStyle("ledger"), {})
     const slide: Slide = { ...zeroComponentSlide, subheading: "**强调** 的附注" } as Slide
-    const { root } = render(<QuoteStageContent ir={ir("insight", [slide])} slide={slide} index={0} ctx={ctx} />)
+    const { root } = render(<QuoteStageContent ir={ir("ledger", [slide])} slide={slide} index={0} ctx={ctx} />)
     const sub = Array.from(root.querySelectorAll("text")).find((t) => (t.textContent ?? "").includes("附注"))!
     expect(sub.getAttribute("fill")).toBe(ctx.colors.muted)
     expect(sub.getAttribute("text-anchor")).toBe("middle")
@@ -118,9 +118,9 @@ describe("QuoteStageContent", () => {
   })
 
   it("footnote renders as a small italic muted caption, independent of the body annotation slot", () => {
-    const ctx = buildCtx(resolveStyle("insight"), {})
+    const ctx = buildCtx(resolveStyle("ledger"), {})
     const slide: Slide = { ...oneComponentSlide, footnote: "数据来源：内部审计" } as Slide
-    const { root } = render(<QuoteStageContent ir={ir("insight", [slide])} slide={slide} index={0} ctx={ctx} />)
+    const { root } = render(<QuoteStageContent ir={ir("ledger", [slide])} slide={slide} index={0} ctx={ctx} />)
     const footnote = Array.from(root.querySelectorAll("text")).find((t) =>
       (t.textContent ?? "").includes("数据来源"),
     )!
@@ -129,11 +129,11 @@ describe("QuoteStageContent", () => {
   })
 
   it("no kicker/section-label text is rendered even when preceded by a chapter — quote-stage is deliberately uninterrupted", () => {
-    const ctx = buildCtx(resolveStyle("insight"), {})
+    const ctx = buildCtx(resolveStyle("ledger"), {})
     const chapter: Slide = { type: "chapter", heading: "第一章", components: [] } as Slide
     const { root } = render(
       <QuoteStageContent
-        ir={ir("insight", [chapter, zeroComponentSlide])}
+        ir={ir("ledger", [chapter, zeroComponentSlide])}
         slide={zeroComponentSlide}
         index={1}
         ctx={ctx}
@@ -146,9 +146,9 @@ describe("QuoteStageContent", () => {
 
   describe("pathological long-quote content (CJK_LONG / MIXED_LONG)", () => {
     it("a single CJK_LONG heading shrinks/wraps via fitHeadingLines but does not truncate (well within budget)", () => {
-      const ctx = buildCtx(resolveStyle("insight"), {})
+      const ctx = buildCtx(resolveStyle("ledger"), {})
       const slide: Slide = { type: "content", kind: "points", layout: "quote-stage", heading: CJK_LONG, components: [] } as Slide
-      const { markup, root } = render(<QuoteStageContent ir={ir("insight", [slide])} slide={slide} index={0} ctx={ctx} />)
+      const { markup, root } = render(<QuoteStageContent ir={ir("ledger", [slide])} slide={slide} index={0} ctx={ctx} />)
       expect(() => assertSubset(root)).not.toThrow()
       expect(root.querySelector('[data-truncated="1"]')).toBeNull()
       expect(markup).toContain("微服务架构")
@@ -163,10 +163,10 @@ describe("QuoteStageContent", () => {
     })
 
     it("a pathologically long heading (2x CJK_LONG + MIXED_LONG) still renders without throwing, shrinks to minPt, wraps to at most maxLines, and never dumps the raw source string verbatim", () => {
-      const ctx = buildCtx(resolveStyle("insight"), {})
+      const ctx = buildCtx(resolveStyle("ledger"), {})
       const extreme = `${CJK_LONG}${CJK_LONG}${MIXED_LONG}`
       const slide: Slide = { type: "content", kind: "points", layout: "quote-stage", heading: extreme, components: [] } as Slide
-      const { markup, root } = render(<QuoteStageContent ir={ir("insight", [slide])} slide={slide} index={0} ctx={ctx} />)
+      const { markup, root } = render(<QuoteStageContent ir={ir("ledger", [slide])} slide={slide} index={0} ctx={ctx} />)
       expect(() => assertSubset(root)).not.toThrow()
 
       const headingTexts = Array.from(root.querySelectorAll("text")).filter(
@@ -188,11 +188,11 @@ describe("QuoteStageContent", () => {
     })
 
     it("0-component + 1-component variants both stay within the SVG page bounds for extreme content (body rect never runs past y=720)", () => {
-      const ctx = buildCtx(resolveStyle("insight"), {})
+      const ctx = buildCtx(resolveStyle("ledger"), {})
       const extreme = `${CJK_LONG}${CJK_LONG}${MIXED_LONG}`
       for (const components of [[], [{ type: "paragraph", text: MIXED_LONG }]] as Slide["components"][]) {
         const slide: Slide = { type: "content", kind: "points", layout: "quote-stage", heading: extreme, subheading: MIXED_LONG, components } as Slide
-        const { root } = render(<QuoteStageContent ir={ir("insight", [slide])} slide={slide} index={0} ctx={ctx} />)
+        const { root } = render(<QuoteStageContent ir={ir("ledger", [slide])} slide={slide} index={0} ctx={ctx} />)
         const bodyGroup = root.querySelector("g[data-audit-rect]")!
         const [, y, , h] = (bodyGroup.getAttribute("data-audit-rect") ?? "").split(",").map(Number)
         expect(y + h).toBeLessThanOrEqual(720)
@@ -225,7 +225,7 @@ describe("QuoteStageContent", () => {
         heading: CJK_LONG,
         components: [{ type: "paragraph", text: "—— 出处" }],
       } as Slide
-      const doc = ir("consulting", [slide])
+      const doc = ir("brief", [slide])
 
       const svgA = renderSlideSvg(doc, 0)
       const svgB = renderSlideSvg(doc, 0)
@@ -235,7 +235,7 @@ describe("QuoteStageContent", () => {
   })
 
   it("CJK two-line heading does not overlap itself, and the citation sits below last ink with air", () => {
-    const ctx = buildCtx(resolveStyle("insight"), {})
+    const ctx = buildCtx(resolveStyle("ledger"), {})
     const slide: Slide = {
       type: "content",
       kind: "points",
@@ -243,7 +243,7 @@ describe("QuoteStageContent", () => {
       heading: "竞品在中小客户市场的价格压力",
       components: [{ type: "citation", sources: [{ label: "[1] 云觅科技 2026 年第二季度经营数据" }] }],
     } as Slide
-    const { root } = render(<QuoteStageContent ir={ir("insight", [slide])} slide={slide} index={0} ctx={ctx} />)
+    const { root } = render(<QuoteStageContent ir={ir("ledger", [slide])} slide={slide} index={0} ctx={ctx} />)
     const headings = Array.from(root.querySelectorAll("text")).filter((t) => t.getAttribute("font-weight") === "800")
     expect(headings.length).toBe(2)
     const fs = Number(headings[0]!.getAttribute("font-size"))
@@ -260,7 +260,7 @@ describe("QuoteStageContent", () => {
   })
 
   it("English three-line heading shrinks or wraps so the last line clears the citation", () => {
-    const ctx = buildCtx(resolveStyle("insight"), {})
+    const ctx = buildCtx(resolveStyle("ledger"), {})
     const slide: Slide = {
       type: "content",
       kind: "points",
@@ -268,7 +268,7 @@ describe("QuoteStageContent", () => {
       heading: "Competitors are pricing below cost in the mid-market",
       components: [{ type: "citation", sources: [{ label: "[1] CloudSeek Collaboration Q2 2026 operating data" }] }],
     } as Slide
-    const { root } = render(<QuoteStageContent ir={ir("insight", [slide])} slide={slide} index={0} ctx={ctx} />)
+    const { root } = render(<QuoteStageContent ir={ir("ledger", [slide])} slide={slide} index={0} ctx={ctx} />)
     const headings = Array.from(root.querySelectorAll("text")).filter((t) => t.getAttribute("font-weight") === "800")
     expect(headings.length).toBeGreaterThanOrEqual(2)
     const last = headings[headings.length - 1]!
@@ -280,13 +280,13 @@ describe("QuoteStageContent", () => {
     expect(citY + citH).toBeLessThanOrEqual(640)
   })
 
-  it("consulting tokens: no creative/insight baked hex leaks (token discipline)", () => {
-    const ctx = buildCtx(resolveStyle("consulting"), {})
+  it("brief tokens: no creative/ledger baked hex leaks (token discipline)", () => {
+    const ctx = buildCtx(resolveStyle("brief"), {})
     const out = renderSvgMarkup(
-      <QuoteStageContent ir={ir("consulting", [zeroComponentSlide])} slide={zeroComponentSlide} index={0} ctx={ctx} />,
+      <QuoteStageContent ir={ir("brief", [zeroComponentSlide])} slide={zeroComponentSlide} index={0} ctx={ctx} />,
     )
     expect(out).toContain(ctx.colors.text)
-    expect(out).not.toContain("#16202B") // insight primary
-    expect(out).not.toContain("#2A3440") // insight border
+    expect(out).not.toContain("#16202B") // ledger primary
+    expect(out).not.toContain("#2A3440") // ledger border
   })
 })

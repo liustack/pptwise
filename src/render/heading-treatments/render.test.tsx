@@ -117,11 +117,11 @@ function rectAt(root: Element, x: number, y: number, w?: number, h?: number): El
 
 describe("tryContentHeadingTreatment null cases", () => {
   it("returns null for an unassigned theme", () => {
-    expect(withChapter("classroom").treated).toBeNull()
+    expect(withChapter("homeroom").treated).toBeNull()
   })
 
   it("returns null for ghost_index without a chapter", () => {
-    expect(treat("consulting", [contentSlide({ heading: HEADING })], 0).treated).toBeNull()
+    expect(treat("brief", [contentSlide({ heading: HEADING })], 0).treated).toBeNull()
   })
 
   it("returns null for tag_box without a chapter", () => {
@@ -129,13 +129,13 @@ describe("tryContentHeadingTreatment null cases", () => {
   })
 
   it("returns null when the slide is not content", () => {
-    expect(treat("insight", [coverSlide()], 0).treated).toBeNull()
+    expect(treat("ledger", [coverSlide()], 0).treated).toBeNull()
   })
 })
 
-describe("ghost_index consulting", () => {
+describe("ghost_index brief", () => {
   it("renders a measured pad behind marked title text", () => {
-    const { treated, colors } = withChapter("consulting", { heading: EMPHASIZED })
+    const { treated, colors } = withChapter("brief", { heading: EMPHASIZED })
     const root = rootOf(treated!.chrome)
     const title = textContaining(root, "算法团队的迭代节奏")
     const pad = root.querySelector("[data-emphasis-pad]")!
@@ -153,7 +153,7 @@ describe("ghost_index consulting", () => {
   })
 
   it("title-only: ghost bleed index + title geometry", () => {
-    const { treated, colors } = withChapter("consulting")
+    const { treated, colors } = withChapter("brief")
     expect(treated).not.toBeNull()
     expect(treated!.contentRect).toEqual({ x: 96, y: 196, w: 1088, h: 444 })
     const root = rootOf(treated!.chrome)
@@ -172,7 +172,7 @@ describe("ghost_index consulting", () => {
   })
 
   it("enhanced: sub under title, contentRect y=238", () => {
-    const { treated, colors } = withChapter("consulting", { subheading: SUB })
+    const { treated, colors } = withChapter("brief", { subheading: SUB })
     expect(treated!.contentRect.y).toBe(238)
     const root = rootOf(treated!.chrome)
     const sub = textContaining(root, SUB)
@@ -183,7 +183,7 @@ describe("ghost_index consulting", () => {
 
   it("renders a pad for a marked subheading without leaking markers", () => {
     const markedSubheading = "先看**关键判断**，再展开证据"
-    const { treated, colors } = withChapter("consulting", { subheading: markedSubheading })
+    const { treated, colors } = withChapter("brief", { subheading: markedSubheading })
     const root = rootOf(treated!.chrome)
     const sub = textContaining(root, "关键判断")
     const emphasized = Array.from(sub.querySelectorAll("tspan")).find(
@@ -199,7 +199,7 @@ describe("ghost_index consulting", () => {
   })
 
   it("no-title: mini-index, contentRect y=64 h=576, no heading text", () => {
-    const { treated } = withChapter("consulting", { heading: "" })
+    const { treated } = withChapter("brief", { heading: "" })
     expect(treated!.contentRect).toEqual({ x: 96, y: 64, w: 1088, h: 576 })
     const root = rootOf(treated!.chrome)
     expect(texts(root).some((t) => (t.textContent ?? "").includes(HEADING))).toBe(false)
@@ -211,9 +211,9 @@ describe("ghost_index consulting", () => {
   })
 })
 
-describe("ghost_index tech", () => {
+describe("ghost_index terminal", () => {
   it("filled accent number, not stroke, plus short border line", () => {
-    const { treated, colors } = withChapter("tech")
+    const { treated, colors } = withChapter("terminal")
     const root = rootOf(treated!.chrome)
     const number = texts(root).find((t) => t.textContent === "01" && num(t, "font-size") === 34)!
     expect(number).toBeTruthy()
@@ -226,16 +226,16 @@ describe("ghost_index tech", () => {
   })
 
   it("no-title mini-index uses accent", () => {
-    const { treated, colors } = withChapter("tech", { heading: "" })
+    const { treated, colors } = withChapter("terminal", { heading: "" })
     const root = rootOf(treated!.chrome)
     const mini = textContaining(root, "01")
     expect(mini.getAttribute("fill")).toBe(colors.accent)
   })
 })
 
-describe("baseline insight", () => {
+describe("baseline ledger", () => {
   it("title-only hairline", () => {
-    const { treated, colors } = withChapter("insight")
+    const { treated, colors } = withChapter("ledger")
     expect(treated!.contentRect.y).toBe(210)
     const root = rootOf(treated!.chrome)
     const title = textContaining(root, HEADING)
@@ -247,7 +247,7 @@ describe("baseline insight", () => {
   })
 
   it("enhanced: sub right-aligned as a short phrase, contentRect stays 210", () => {
-    const { treated, colors } = withChapter("insight", { subheading: SUB })
+    const { treated, colors } = withChapter("ledger", { subheading: SUB })
     expect(treated!.contentRect.y).toBe(210)
     const root = rootOf(treated!.chrome)
     const sub = texts(root).find((t) => num(t, "x") === 1184 && num(t, "y") === 132)
@@ -260,7 +260,7 @@ describe("baseline insight", () => {
   })
 
   it("no-title: no anchor, contentRect y=64", () => {
-    const { treated } = withChapter("insight", { heading: "" })
+    const { treated } = withChapter("ledger", { heading: "" })
     expect(treated!.contentRect).toEqual({ x: 96, y: 64, w: 1088, h: 576 })
     const root = rootOf(treated!.chrome)
     expect(texts(root)).toHaveLength(0)
@@ -355,9 +355,9 @@ describe("tag_box playbill", () => {
   })
 })
 
-describe("tag_box enterprise", () => {
+describe("tag_box bulletin", () => {
   it("solid-primary box + 第N部分", () => {
-    const { treated, colors } = withChapter("enterprise")
+    const { treated, colors } = withChapter("bulletin")
     const root = rootOf(treated!.chrome)
     const box = rectAt(root, 96, 56, 150, 38)
     expect(box.getAttribute("fill")).toBe(colors.primary)
@@ -380,9 +380,9 @@ describe("tag_box arena", () => {
   })
 })
 
-describe("lead_accent academic", () => {
+describe("lead_accent thesis", () => {
   it("no ** → whole title fill=text, no gold-dot tail", () => {
-    const { treated, colors } = withChapter("academic")
+    const { treated, colors } = withChapter("thesis")
     expect(treated!.contentRect.y).toBe(184)
     const root = rootOf(treated!.chrome)
     const title = textContaining(root, HEADING)
@@ -395,7 +395,7 @@ describe("lead_accent academic", () => {
   })
 
   it("with ** → typeface-shift tspans", () => {
-    const { treated, colors, fonts } = withChapter("academic", { heading: EMPHASIZED })
+    const { treated, colors, fonts } = withChapter("thesis", { heading: EMPHASIZED })
     const root = rootOf(treated!.chrome)
     const tspans = Array.from(root.querySelectorAll("tspan"))
     const emph = tspans.find((t) => (t.textContent ?? "").includes("算法团队的迭代节奏"))!
@@ -407,7 +407,7 @@ describe("lead_accent academic", () => {
   })
 
   it("enhanced: two-line right notes, contentRect y=200", () => {
-    const { treated, colors } = withChapter("academic", { subheading: SUB })
+    const { treated, colors } = withChapter("thesis", { subheading: SUB })
     expect(treated!.contentRect.y).toBe(200)
     const root = rootOf(treated!.chrome)
     const notes = texts(root).filter((t) => num(t, "x") === 1184 && t.getAttribute("text-anchor") === "end")
@@ -418,9 +418,9 @@ describe("lead_accent academic", () => {
   })
 })
 
-describe("lead_accent terra", () => {
+describe("lead_accent almanac", () => {
   it("color emphasis + olive-rule", () => {
-    const { treated, colors } = withChapter("terra", { heading: EMPHASIZED })
+    const { treated, colors } = withChapter("almanac", { heading: EMPHASIZED })
     const root = rootOf(treated!.chrome)
     const tspans = Array.from(root.querySelectorAll("tspan"))
     const emph = tspans.find((t) => (t.textContent ?? "").includes("算法团队的迭代节奏"))!
@@ -637,9 +637,9 @@ describe("center_mirror luxe", () => {
   })
 })
 
-describe("center_mirror campaign", () => {
+describe("center_mirror rally", () => {
   it("bars, title fill=text, eyebrow 第N幕", () => {
-    const { treated, colors } = withChapter("campaign")
+    const { treated, colors } = withChapter("rally")
     expect(treated!.contentRect.y).toBe(212)
     const root = rootOf(treated!.chrome)
     const title = textContaining(root, HEADING)
@@ -706,7 +706,7 @@ describe("engine", () => {
   })
 
   it("CJK text nodes have no letter-spacing", () => {
-    for (const themeId of ["consulting", "luxe", "playbill", "ink", "journal"] as const) {
+    for (const themeId of ["brief", "luxe", "playbill", "ink", "journal"] as const) {
       const { treated } = withChapter(themeId)
       const root = rootOf(treated!.chrome)
       for (const t of texts(root)) {
@@ -719,7 +719,7 @@ describe("engine", () => {
   })
 
   it("font-weight only 400/700/bold", () => {
-    for (const themeId of ["consulting", "playbill", "academic", "luxe", "arena"] as const) {
+    for (const themeId of ["brief", "playbill", "thesis", "luxe", "arena"] as const) {
       const { treated } = withChapter(themeId)
       const root = rootOf(treated!.chrome)
       for (const el of Array.from(root.querySelectorAll("[font-weight]"))) {

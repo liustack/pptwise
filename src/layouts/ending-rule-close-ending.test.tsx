@@ -55,7 +55,7 @@ function textPaint(el: Element): string {
 
 describe("ending-rule-close-ending — board geometry", () => {
   it("places the closing sentence, full-width rule, accent start, and foot", () => {
-    const { root, tokens } = renderEnding("tech")
+    const { root, tokens } = renderEnding("terminal")
     const title = Array.from(root.querySelectorAll("text")).find((t) => t.getAttribute("font-weight") === "700")
     expect(title?.getAttribute("x")).toBe("96")
     expect(title?.getAttribute("y")).toBe("300")
@@ -78,7 +78,7 @@ describe("ending-rule-close-ending — board geometry", () => {
 
   it("tints **emphasis** in accent and does not invent a thank-you", () => {
     const marked = slide("架构已经就位，下一步是把它**扛过大促**。")
-    const { root, tokens, markup } = renderEnding("tech", marked)
+    const { root, tokens, markup } = renderEnding("terminal", marked)
     const tspans = Array.from(root.querySelectorAll("tspan"))
     expect(tspans.some((t) => t.textContent === "扛过大促" && t.getAttribute("fill") === tokens.colors.accent)).toBe(
       true,
@@ -88,7 +88,7 @@ describe("ending-rule-close-ending — board geometry", () => {
   })
 
   it("draws no floating dots", () => {
-    const { root } = renderEnding("tech")
+    const { root } = renderEnding("terminal")
     expect(root.querySelectorAll("circle")).toHaveLength(0)
   })
 })
@@ -121,15 +121,15 @@ describe("ending-rule-close-ending — shared pool", () => {
   })
 
   it("renders byte-identically on repeat", () => {
-    expect(renderEnding("tech").markup).toBe(renderEnding("tech").markup)
+    expect(renderEnding("terminal").markup).toBe(renderEnding("terminal").markup)
   })
 
-  it("uses tokens, not baked tech hex, when another theme renders it", () => {
-    const { markup, tokens } = renderEnding("consulting")
+  it("uses tokens, not baked terminal hex, when another theme renders it", () => {
+    const { markup, tokens } = renderEnding("brief")
     expect(markup).toContain(tokens.colors.border)
     expect(markup).toContain(tokens.colors.accent)
     for (const hex of TECH_HEX) {
-      expect(markup, `tech token ${hex} leaked`).not.toContain(hex)
+      expect(markup, `terminal token ${hex} leaked`).not.toContain(hex)
     }
   })
 })

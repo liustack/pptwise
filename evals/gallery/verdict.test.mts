@@ -13,14 +13,14 @@ import type { L2Verdict } from "./l2"
 
 const page = (findings?: { code: string; message: string }[]) =>
   ({
-    id: "consulting--comp--chart--zh",
-    section: "consulting",
-    sectionLabel: "consulting",
+    id: "brief--comp--chart--zh",
+    section: "brief",
+    sectionLabel: "brief",
     band: "component",
     subject: "chart",
     language: "zh",
     languageLabel: "中文",
-    theme: "consulting",
+    theme: "brief",
     page: 1,
     pageCount: 1,
     slideType: "content",

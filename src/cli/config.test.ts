@@ -36,7 +36,7 @@ describe("findConfig", () => {
   it("rejects the removed project config theme field", async () => {
     const root = await tmp()
     const configPath = join(root, "pptwise.config.json")
-    await writeFile(configPath, JSON.stringify({ theme: "tech" }))
+    await writeFile(configPath, JSON.stringify({ theme: "terminal" }))
     const nested = join(root, "a", "b")
     await mkdir(nested, { recursive: true })
     await expect(findConfig(nested)).rejects.toThrow(
@@ -56,7 +56,7 @@ describe("findConfig", () => {
   it("rejects unknown keys with the config path in the message", async () => {
     const root = await tmp()
     const configPath = join(root, "pptwise.config.json")
-    await writeFile(configPath, JSON.stringify({ them: "tech" }))
+    await writeFile(configPath, JSON.stringify({ them: "terminal" }))
     // Exact text (backlog item 7a, `.issues/notes/engineering-history.md`
     // #7a): config.ts:110-114's real `invalid <path>:\n<field>: <message>`
     // template, `(root)` because zod's `.strict()` unrecognized-key issue
@@ -76,7 +76,7 @@ describe("findConfig", () => {
   it("rejects a config that is not valid JSON", async () => {
     const root = await tmp()
     const configPath = join(root, "pptwise.config.json")
-    const badJson = "{ theme: tech }"
+    const badJson = "{ theme: terminal }"
     await writeFile(configPath, badJson)
     // Exact text (backlog item 7a): config.ts:107's real
     // `<path> is not valid JSON: <message>` template — see
@@ -161,7 +161,7 @@ describe("findUserConfig (W5 task 5: four-layer chain, user layer)", () => {
     const home = await tmp()
     process.env.PPTWISE_HOME = home
     const configPath = join(home, "config.json")
-    await writeFile(configPath, JSON.stringify({ theme: "tech", decksDir: "/elsewhere/decks" }))
+    await writeFile(configPath, JSON.stringify({ theme: "terminal", decksDir: "/elsewhere/decks" }))
     await expect(findUserConfig()).rejects.toThrow(
       new Error(`invalid ${configPath}:\n(root): Unrecognized key: "theme"`),
     )
@@ -189,7 +189,7 @@ describe("findUserConfig (W5 task 5: four-layer chain, user layer)", () => {
     const home = await tmp()
     process.env.PPTWISE_HOME = home
     const configPath = join(home, "config.json")
-    await writeFile(configPath, JSON.stringify({ them: "tech" }))
+    await writeFile(configPath, JSON.stringify({ them: "terminal" }))
     // Exact text (backlog item 7a) — same template and unrecognized-key
     // message shape as the project-config case above, only the path differs.
     await expect(findUserConfig()).rejects.toThrow(new Error(`invalid ${configPath}:\n(root): Unrecognized key: "them"`))
@@ -199,7 +199,7 @@ describe("findUserConfig (W5 task 5: four-layer chain, user layer)", () => {
     const home = await tmp()
     process.env.PPTWISE_HOME = home
     const configPath = join(home, "config.json")
-    const badJson = "{ theme: tech }"
+    const badJson = "{ theme: terminal }"
     await writeFile(configPath, badJson)
     // Exact text (backlog item 7a) — see jsonParseErrorMessage's own doc
     // comment for why the suffix is derived live rather than hardcoded.

@@ -45,7 +45,7 @@ function renderEnding(themeId: string, s: Slide = ending(), meta: PptxIR["meta"]
 
 describe("ending-close-word-ending — board geometry", () => {
   it("places a left-aligned two-line close, not a thank-you poster", () => {
-    const { root, tokens } = renderEnding("insight")
+    const { root, tokens } = renderEnding("ledger")
     const lines = Array.from(root.querySelectorAll("text")).filter((t) => {
       const s = t.textContent ?? ""
       return s.includes("数字") || s.includes("兑现") || s.includes("牌面")
@@ -62,25 +62,25 @@ describe("ending-close-word-ending — board geometry", () => {
   })
 
   it("with **emphasis** tints only that word in accent, without it does not", () => {
-    const marked = renderEnding("insight", ending(MARKED))
+    const marked = renderEnding("ledger", ending(MARKED))
     const tspan = Array.from(marked.root.querySelectorAll("tspan")).find((el) => el.textContent === "兑现")
     expect(tspan).not.toBeUndefined()
     expect(tspan?.getAttribute("fill")).toBe(marked.tokens.colors.accent)
 
-    const plain = renderEnding("insight", ending(HEADING))
+    const plain = renderEnding("ledger", ending(HEADING))
     expect(plain.root.querySelector("tspan")).toBeNull()
     expect(plain.markup).not.toContain(`fill="${plain.tokens.colors.accent}"`)
   })
 
   it("does not draw the bottom ticker — that belongs to the motif", () => {
-    const { root } = renderEnding("insight")
+    const { root } = renderEnding("ledger")
     expect(root.querySelectorAll("polyline")).toHaveLength(0)
     expect(root.querySelectorAll("line")).toHaveLength(0)
     expect(root.querySelectorAll("rect")).toHaveLength(0)
   })
 
   it("empty heading does not invent a thank-you line", () => {
-    const { root } = renderEnding("insight", { type: "ending", heading: "", components: [] } as Slide)
+    const { root } = renderEnding("ledger", { type: "ending", heading: "", components: [] } as Slide)
     const texts = Array.from(root.querySelectorAll("text")).map((t) => t.textContent ?? "")
     expect(texts.join("")).not.toMatch(/Thank/i)
     expect(texts.join("")).not.toMatch(/致谢/)
@@ -115,20 +115,20 @@ describe("ending-close-word-ending — shared pool", () => {
   })
 
   it("renders byte-identically on repeat", () => {
-    expect(renderEnding("insight", ending(MARKED)).markup).toBe(renderEnding("insight", ending(MARKED)).markup)
+    expect(renderEnding("ledger", ending(MARKED)).markup).toBe(renderEnding("ledger", ending(MARKED)).markup)
   })
 
   it("CJK close has no letter-spacing", () => {
-    const { root } = renderEnding("insight")
+    const { root } = renderEnding("ledger")
     for (const t of Array.from(root.querySelectorAll("text")).filter((el) => (el.textContent ?? "").includes("数字"))) {
       expect(t.getAttribute("letter-spacing")).toBeNull()
     }
   })
 
-  it("consulting tokens do not leak insight hex", () => {
-    const { markup } = renderEnding("consulting")
+  it("brief tokens do not leak ledger hex", () => {
+    const { markup } = renderEnding("brief")
     for (const hex of ["#0F1216", "#171C22", "#16202B", "#F0A63C", "#F2EFE8", "#9AA7B4", "#2A3440"]) {
-      expect(markup, `insight token ${hex} leaked`).not.toContain(hex)
+      expect(markup, `ledger token ${hex} leaked`).not.toContain(hex)
     }
   })
 })

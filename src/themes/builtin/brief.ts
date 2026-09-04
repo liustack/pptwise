@@ -2,12 +2,12 @@ import type { StyleTokens } from "../tokens";
 import type { BuiltinThemeDeclaration } from "../schema";
 
 /**
- * consulting（先结论报告）——藏青 + 一线黄的咨询报告腔。
+ * brief（先结论报告）——藏青 + 一线黄的咨询报告腔。
  *
  * **编辑组皮肤重设计（2026-08-20，`.issues/2026-08-18-theme-redesign/skins/`
- * 的 `group5-editorial-boards.dc.html` 里 `section#g5` consulting 的色板
+ * 的 `group5-editorial-boards.dc.html` 里 `section#g5` brief 的色板
  * 角色表 + 封面样例）**：编辑组三家都靠排印立身、装饰预算全组最低，
- * consulting 拿到的语域是「先结论的报告腔」——藏青承结构，黄只当一把高亮
+ * brief 拿到的语域是「先结论的报告腔」——藏青承结构，黄只当一把高亮
  * 尺，全页只许亮一次。逐条来历：
  *   - `bg` `#F7F7F2` → `#F7F6F2`：报告纸白，几乎不动，只把绿味收掉半档
  *     （旧值偏绿，与新藏青同框时纸面发青）。
@@ -42,28 +42,28 @@ import type { BuiltinThemeDeclaration } from "../schema";
  *     全库审计因此新增 3 条 low-contrast。压深一档到 `#3B76A8` 之后白墨
  *     4.84:1，压 bg 4.47:1（板上自标 4:1，实测高 0.47，方向安全）。
  *
- * chapter 底色仍取 primary（同 academic/pulse/terra 先例），白字压藏青
+ * chapter 底色仍取 primary（同 thesis/clinic/almanac 先例），白字压藏青
  * 14.14:1，`readableOn` 两墨取优后稳态可读。
  *
  * 装饰见 `src/motifs/motif-banner-motif.tsx`（批注线 v2：顶缘藏青细线
- * + 左上黄色高亮块 + 底缘页码线）。consulting 的旧锚点 motif 是
- * `banner-motif`，academic / enterprise 两家在各自的候选集里也借它。
+ * + 左上黄色高亮块 + 底缘页码线）。brief 的旧锚点 motif 是
+ * `banner-motif`，thesis / bulletin 两家在各自的候选集里也借它。
  *
  * 第八波（2026-08-22）：封面锁 `verdict-index`，用 `shape.cover` 的
  * verdict* knobs 把几何收到板上（kicker y150、标题 y304/60、论据
  * y560/592、底线 y640、落款 y676）。色板本轮不动。
  *
- * **量规重构（2026-08-25）**：consulting 从顶缘通栏批注线切换为左上
+ * **量规重构（2026-08-25）**：brief 从顶缘通栏批注线切换为左上
  * 定位角标，正文轴移到 x160，meta 移到右上眉线。新建 `gauge-motif` 与
  * 五个 `gauge-*` 版式，而不是修改 `banner-motif`、`verdict-index`、
  * `ghost-rule-chapter` 或 `action-pad-ending`。这些旧构件仍由既有主题和页面
- * 引用，原地修改会把 consulting 的设计变更扩散给借用方。本轮只改
- * consulting 的锁，色板不动。
+ * 引用，原地修改会把 brief 的设计变更扩散给借用方。本轮只改
+ * brief 的锁，色板不动。
  *
  * **菜单分派（S1-B）**：量规家族承主场（data 走 gauge-stats，statement 走同族的 gauge-point），先结论的报告腔靠 points 的窄栏与 evidence 的单证据页说话，不借别人的嘴，故无 quote。
  */
 export const CONSULTING_TOKENS: StyleTokens = {
-  id: "consulting",
+  id: "brief",
   colors: {
     bg: "#F7F6F2", // 报告纸白。页底，正文墨压它 15.42:1，答 4.5
     surface: "#FFFFFF", // 图表卡纯白。卡面，正文墨压它 16.68:1，答 4.5
@@ -108,15 +108,15 @@ export const CONSULTING_TOKENS: StyleTokens = {
 
 export const CONSULTING_THEME = {
   version: 2,
-  id: "consulting",
-  label: "Business Consulting",
+  id: "brief",
+  label: "Brief",
   story: {
     name: "Brief",
     story: "Navy ink, one line of yellow, a serif that reads like a bound report. The conclusion comes first and every page after it is the evidence that earns it.",
     positioning: "Choose it when the audience wants the answer before the argument and will judge you on how tightly the numbers support it.",
     audience: "A team presenting a verdict to people who decide.",
     notFor: "Storytelling that needs suspense, warmth, or a slow reveal.",
-    lineage: "The consulting deliverable: assertion headings, quiet gauges, a single accent that points.",
+    lineage: "The brief deliverable: assertion headings, quiet gauges, a single accent that points.",
   },
   style: CONSULTING_TOKENS,
   // A marker-pen swipe behind the marked run — the board-room habit of

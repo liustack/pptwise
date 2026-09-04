@@ -315,7 +315,7 @@ export function blendOver(fg: string, bg: string, alpha: number): string {
  * Minimum absolute-page area (px²) a `<rect>`/`<image>` must cover to count
  * as a *page-level* background region — `regions`/`BgRegion`/
  * `__collectBgRegions`'s own contract below, e.g. "how many real background
- * layers does this campaign cover paint" (see that test's own doc comment).
+ * layers does this rally cover paint" (see that test's own doc comment).
  *
  * Calibrated against real geometry found while investigating the original
  * (W6) version of this task: the smallest legitimate background this
@@ -1450,7 +1450,7 @@ function directText(el: Element): string {
  * gradient-specific color approximation (which stop, at which offset, would
  * even be the "representative" one?). The `<g data-decor>` exclusion below
  * applies identically regardless of fill kind — a decor-layer gradient (e.g.
- * the tech theme's `constellation-motif` background field) was already
+ * the terminal theme's `constellation-motif` background field) was already
  * excluded from candidacy before this fix and still is; this routing change
  * only ever affects a *content-layer* gradient shape, since decoration never
  * reaches the fill check at all (see the exclusion's own boolean guard).
@@ -1518,8 +1518,8 @@ function directText(el: Element): string {
  * line straight across it. Real contrast: 1.07:1. What this walk reported
  * before the fix: 5.44:1, measured against the page background the seal
  * completely covers — not a missing check but a wrong answer, which is
- * worse. Same shape in tech (1.70:1 on a corner-ornament square) and
- * consulting (3.26:1). So the gate is now
+ * worse. Same shape in terminal (1.70:1 on a corner-ornament square) and
+ * brief (3.26:1). So the gate is now
  * `registersExactOutline(tag) && !hasUnmodelledTransform(...)`:
  * `rect`/`circle`/`ellipse` under a transform this walk actually models
  * join attribution, `path`/`polygon` and anything rotated/skewed stay out.
@@ -1545,7 +1545,7 @@ export function findContrastIssues(markup: string): ContrastIssue[] {
 /**
  * Test-only: the background regions `findContrastIssues` collects while
  * walking `markup`, exposed so the `data-decor` exclusion documented above
- * can be asserted directly against a real render (a campaign-theme cover's
+ * can be asserted directly against a real render (a rally-theme cover's
  * motif, concretely) instead of only inferred through a contrast verdict.
  * Not part of any public barrel — `deck-audit.ts`'s own exports are already
  * SDK-internal/audit-package-only (see `findContrastIssues`'s and
@@ -1692,7 +1692,7 @@ function runContrastWalk(markup: string): { issues: ContrastIssue[]; regions: Bg
    * glyph bodies but not that one corner was invisible to attribution even
    * once it was a registered candidate: the ink theme's cover date renders
    * its last characters over the motif's vermilion seal (a 32px square whose
-   * bottom edge is 10px *above* that baseline), and the tech/consulting
+   * bottom edge is 10px *above* that baseline), and the terminal/brief
    * covers put the same date's tail on a 24px decor square whose bottom edge
    * clears the baseline by 2px. Point-sampling the baseline corner reports a
    * clean 5.44:1 against the page background for text that really renders at
@@ -1902,7 +1902,7 @@ function runContrastWalk(markup: string): { issues: ContrastIssue[]; regions: Bg
           // (`motif-campaign-motif.tsx`'s ink/sweep paths use `opacity`, not
           // `fill-opacity`) or through an *ancestor* `<g>`'s opacity, and
           // missing either would let a faint decoration masquerade as an
-          // opaque background (found empirically: a campaign-theme motif
+          // opaque background (found empirically: a rally-theme motif
           // path at `opacity={0.1}` was being read as fully opaque white,
           // silently overriding the real dark-purple page background for
           // every subsequent text check).

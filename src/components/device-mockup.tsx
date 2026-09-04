@@ -31,7 +31,7 @@ const BROWSER_RADIUS = 8
 /**
  * Fixed fraction `colors.surface` blends toward `readableOn(bg)` ink to
  * derive the frame bar's own fill (review fix round, Important-2). On a
- * near-black theme (tech: bg #060A13 vs surface #0A101C) plain `colors
+ * near-black theme (terminal: bg #060A13 vs surface #0A101C) plain `colors
  * .surface` reads as indistinguishable from the page behind it, so the
  * window bar — the component's whole "this is really running" signal —
  * disappeared into the background. `mixHex` (`./color-mix.ts`, the same

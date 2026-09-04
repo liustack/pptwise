@@ -11,21 +11,21 @@ import { registerTestTheme } from "../../themes/test-fixtures"
  */
 
 export const UNASSIGNED = [
-  "classroom",
+  "homeroom",
   "swiss",
   "stage",
   "memo",
   "crayon",
   "ember",
   "runway",
-  "pulse",
+  "clinic",
 ] as const
 
 export const KEEP_NATIVE_WITHOUT_CHAPTER = [
-  "consulting",
-  "tech",
+  "brief",
+  "terminal",
   "playbill",
-  "enterprise",
+  "bulletin",
   "arena",
 ] as const
 
