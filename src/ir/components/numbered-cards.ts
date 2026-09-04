@@ -38,7 +38,7 @@ export const traits = {
 export const story: DesignStory = {
   name: "Numbered Index",
   story: "Items numbered from 01 upward, divided by hairline rules into a grid. The contents page of a magazine, where the numbers are how you refer to things.",
-  positioning: "Choose it when each item is a titled card with body text that will be quoted by its number. Use bullets when short lines are enough, and steps when the order is a procedure to follow.",
+  positioning: "Choose it when each item carries its own title and a stable number it will be referred to by. Use bullets when short lines with no titles are enough, and steps when the order is a procedure to follow.",
   audience: "Readers who will point at item three later.",
   notFor: "A procedure to be carried out in order, which belongs in steps.",
 }
