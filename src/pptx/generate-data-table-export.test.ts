@@ -190,7 +190,9 @@ describe("data_table native-vector differentiation claim (sankey's own T3 preced
 
 // The drop protocol, on this file's own fixtures: a table that cannot print
 // every row paints no count of the missing ones, so the export is where the
-// author finds out. Every other case above opts out of this gate on purpose.
+// author finds out. Every other case above runs the default path and asserts
+// its fixture drops nothing — only the named schema-max shape opts out,
+// through `expectExportsOverCapacity`, which makes it prove it overflows.
 describe("data_table over-capacity content is refused, not quietly shortened", () => {
   it("the schema-max shape is refused without the opt-in, and the message names the loss", async () => {
     const ir = makeIr([table(8, 12, (r, c) => `r${r}c${c}`)])

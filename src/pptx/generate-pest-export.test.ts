@@ -158,7 +158,9 @@ describe("pest pathological content through the real generatePptx", () => {
 
 // The drop protocol, on this file's own fixtures: a page that cannot hold
 // what it was given paints no count of the loss, so the export is where the
-// author finds out. Every other case above opts out of this gate on purpose.
+// author finds out. Every other case above runs the default path and asserts
+// its fixture drops nothing — only the named schema-max fixture opts out,
+// through `expectExportsOverCapacity`, which makes it prove it overflows.
 describe("pest over-capacity content is refused, not quietly shortened", () => {
   it("schema-max content is refused without the opt-in, and the message names the loss", async () => {
     const ir = makeIr([
