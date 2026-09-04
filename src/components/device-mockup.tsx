@@ -50,9 +50,25 @@ const FRAME_BAR_MIX = 0.14
 const URL_PILL_MIX = FRAME_BAR_MIX * 2
 
 /** Browser frame's own aspect ratio (裁定 3: "~16:10 含 window bar" — a
- * shallow, landscape "browser window" proportion), capped at `MAX_DEVICE_H`. */
-function browserFrameH(w: number): number {
-  return Math.min(Math.round(w / 1.6), MAX_DEVICE_H)
+ * shallow, landscape "browser window" proportion). */
+const BROWSER_ASPECT = 1.6
+
+/**
+ * The browser frame's drawn size inside a `w`-wide slot, capped at
+ * `MAX_DEVICE_H` and at `maxH` when the slot is shorter than that.
+ *
+ * The cap takes width off the frame, not depth. Capping the height alone left
+ * the frame as wide as its slot: in a 1104px content rect the window came out
+ * 1104x340, a 3.2:1 letterbox no browser has ever been, and the 16:9
+ * screenshot inside it got `slice`-cropped to its middle third — the page
+ * header and the chart's axis were both off-screen. The frame keeps
+ * `BROWSER_ASPECT` and is centered in the slot, the same posture
+ * `phoneFrameSize` already takes for a portrait device in a wide column.
+ */
+function browserFrameSize(w: number, maxH?: number): { w: number; h: number } {
+  const ceiling = Math.min(MAX_DEVICE_H, maxH ?? Number.POSITIVE_INFINITY)
+  const h = Math.max(FRAME_BAR_H + 1, Math.min(Math.round(w / BROWSER_ASPECT), ceiling))
+  return { w: Math.min(w, Math.round(h * BROWSER_ASPECT)), h }
 }
 
 /**
@@ -168,7 +184,7 @@ function CaptionBand({
 
 export const deviceMockup: SvgComponent<DeviceMockupComponent> = {
   measure(component, w) {
-    return component.device === "browser" ? browserFrameH(w) : phoneFrameSize(w).h
+    return component.device === "browser" ? browserFrameSize(w).h : phoneFrameSize(w).h
   },
   render(component, box, ctx) {
     const src = ctx.images?.[component.asset_id]?.src
@@ -178,14 +194,12 @@ export const deviceMockup: SvgComponent<DeviceMockupComponent> = {
     const alt = ctx.images?.[component.asset_id]?.alt
 
     if (component.device === "browser") {
-      const frameH = Math.min(
-        browserFrameH(box.w),
-        Math.max(FRAME_BAR_H + 1, box.h ?? Number.POSITIVE_INFINITY),
-      )
+      const { w: frameW, h: frameH } = browserFrameSize(box.w, box.h)
+      const offsetX = (box.w - frameW) / 2
       const screenH = frameH - FRAME_BAR_H
       const dotsRightEdge = DOT_START_X + 2 * (DOT_R * 2 + DOT_GAP) + DOT_R
       const urlBarX = dotsRightEdge + URLBAR_GAP
-      const urlBarW = box.w - urlBarX - DOT_START_X
+      const urlBarW = frameW - urlBarX - DOT_START_X
       const fittedUrl =
         component.url && urlBarW > URLBAR_PAD_X * 2
           ? fitSvgLine(component.url, { maxWidth: urlBarW - URLBAR_PAD_X * 2, fontSize: 16, minFontSize: 16 })
@@ -199,8 +213,13 @@ export const deviceMockup: SvgComponent<DeviceMockupComponent> = {
       const urlPillFill = mixHex(ctx.colors.surface, frameInk, URL_PILL_MIX)
 
       return (
-        <g transform={`translate(${box.x},${box.y})`}>
-          <path d={roundedTopBarPath(0, 0, box.w, FRAME_BAR_H, BROWSER_RADIUS)} fill={frameBarFill} />
+        // `data-device-mockup` is the machine-findable mark that the frame was
+        // actually drawn. A takeover face that paints only the screen contents
+        // turns this component into an `image` and loses the one thing it is
+        // for, so tests and the gallery corpus check assert this attribute per
+        // face rather than eyeballing a bezel.
+        <g data-device-mockup="browser" transform={`translate(${box.x + offsetX},${box.y})`}>
+          <path d={roundedTopBarPath(0, 0, frameW, FRAME_BAR_H, BROWSER_RADIUS)} fill={frameBarFill} />
           {[0, 1, 2].map((i) => (
             <circle
               key={i}
@@ -257,20 +276,20 @@ export const deviceMockup: SvgComponent<DeviceMockupComponent> = {
                 href={src}
                 x={0}
                 y={0}
-                width={box.w}
+                width={frameW}
                 height={screenH}
                 preserveAspectRatio="xMidYMid slice"
                 aria-label={alt || undefined}
               />
             ) : (
-              <ScreenPlaceholder w={box.w} h={screenH} ctx={ctx} />
+              <ScreenPlaceholder w={frameW} h={screenH} ctx={ctx} />
             )}
-            {component.caption && <CaptionBand caption={component.caption} w={box.w} h={screenH} ctx={ctx} />}
+            {component.caption && <CaptionBand caption={component.caption} w={frameW} h={screenH} ctx={ctx} />}
           </g>
           <rect
             x={0.5}
             y={0.5}
-            width={box.w - 1}
+            width={frameW - 1}
             height={frameH - 1}
             rx={BROWSER_RADIUS}
             fill="none"
@@ -290,7 +309,7 @@ export const deviceMockup: SvgComponent<DeviceMockupComponent> = {
     const screenH = deviceH - PHONE_BEZEL * 2
 
     return (
-      <g transform={`translate(${box.x + offsetX},${box.y})`}>
+      <g data-device-mockup="phone" transform={`translate(${box.x + offsetX},${box.y})`}>
         <rect x={0} y={0} width={deviceW} height={deviceH} rx={PHONE_RADIUS} fill={ctx.colors.border ?? ctx.colors.muted} />
         {/* Square-cornered on purpose (review fix round, Minor-1): this rect
             is always fully occluded by whatever renders on top of it — the

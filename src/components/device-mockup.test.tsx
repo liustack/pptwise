@@ -29,11 +29,51 @@ function svg(node: React.ReactElement) {
 }
 
 describe("device_mockup component — browser", () => {
+  it("keeps its 16:10 proportion instead of stretching to a wide slot", () => {
+    // The height cap used to take depth off the frame and leave the width at
+    // the slot's, so a wide content rect produced a 3.2:1 window and the
+    // screenshot inside it was slice-cropped to its middle band.
+    const component = { type: "device_mockup" as const, device: "browser" as const, asset_id: "dash" }
+    const { container } = svg(deviceMockup.render(component, { x: 0, y: 0, w: 1120 }, ctx))
+    const outline = Array.from(container.querySelectorAll("rect")).at(-1)
+    const w = Number(outline?.getAttribute("width"))
+    const h = Number(outline?.getAttribute("height"))
+    expect(h).toBe(339)
+    expect(w / h).toBeCloseTo(1.6, 1)
+  })
+
+  it("fills a slot narrower than its capped width", () => {
+    const component = { type: "device_mockup" as const, device: "browser" as const, asset_id: "dash" }
+    const { container } = svg(deviceMockup.render(component, { x: 0, y: 0, w: 400 }, ctx))
+    const g = container.querySelector("g")
+    expect(g?.getAttribute("transform")).toBe("translate(0,0)")
+    const outline = Array.from(container.querySelectorAll("rect")).at(-1)
+    expect(Number(outline?.getAttribute("width"))).toBe(399)
+  })
+
+  it("marks the drawn frame so a face cannot silently reduce it to a picture", () => {
+    const browser = { type: "device_mockup" as const, device: "browser" as const, asset_id: "dash" }
+    const phone = { type: "device_mockup" as const, device: "phone" as const, asset_id: "dash" }
+    expect(
+      svg(deviceMockup.render(browser, { x: 0, y: 0, w: 600 }, ctx)).container.querySelector(
+        "[data-device-mockup='browser']",
+      ),
+    ).not.toBeNull()
+    expect(
+      svg(deviceMockup.render(phone, { x: 0, y: 0, w: 600 }, ctx)).container.querySelector(
+        "[data-device-mockup='phone']",
+      ),
+    ).not.toBeNull()
+  })
+
   it("renders <image> cover-cropped below the frame bar", () => {
     const component = { type: "device_mockup" as const, device: "browser" as const, asset_id: "dash" }
     const { container } = svg(deviceMockup.render(component, { x: 80, y: 100, w: 1120 }, ctx))
+    // Centered, not left-aligned: a 1120px slot is far wider than the frame's
+    // own 16:10 at the 340px height cap, so the window keeps its proportion
+    // and sits in the middle of the slot. (1120 - 544) / 2 = 288.
     const g = container.querySelector("g")
-    expect(g?.getAttribute("transform")).toBe("translate(80,100)")
+    expect(g?.getAttribute("transform")).toBe("translate(368,100)")
 
     const img = container.querySelector("image")
     expect(img).not.toBeNull()
