@@ -116,7 +116,7 @@ export const RUNWAY_THEME = {
   label: "Fashion Runway",
   story: {
     name: "Runway",
-    story: "Show-white paper, a black masthead, one drop of crimson. Seven bespoke faces make every page a look walking past you.",
+    story: "Show-white paper, a black masthead, one drop of crimson. Every page is a look walking past you, and the pictures do the talking.",
     positioning: "Choose it for collections, lookbooks, and any presentation where the images are the argument and the words are captions.",
     audience: "A designer or studio presenting work to an audience that came to see.",
     notFor: "Data-heavy reporting or pages with more than a few lines of text.",

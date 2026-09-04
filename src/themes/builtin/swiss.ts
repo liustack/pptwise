@@ -102,7 +102,7 @@ export const SWISS_THEME = {
     story: "Cold white, a red bar along one edge, grid discipline everywhere else. It is the cover of an institutional annual report that has nothing to hide.",
     positioning: "Choose it for transparency reports, audits, and policy briefings where the design must not distract from the accounting.",
     audience: "A foundation, agency, or auditor reporting to the public or a board.",
-    notFor: "Warmth, celebration, or a brand that needs a face.",
+    notFor: "Warmth, celebration, or a brand that needs a personality.",
     lineage: "Swiss typographic modernism as practiced by institutions.",
   },
   style: SWISS_TOKENS,

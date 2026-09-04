@@ -51,7 +51,7 @@ export const KIND_STORIES = {
   photo: {
     name: "Photo",
     story: "The picture is the content, and everything else steps aside.",
-    positioning: "Use it when an image says what a paragraph cannot: a product, a place, a face, a moment.",
+    positioning: "Use it when an image says what a paragraph cannot: a product, a place, a person, a moment.",
     audience: "Anyone who came to see rather than read.",
     notFor: "Diagrams or screenshots that need annotation, which belong in evidence.",
   },

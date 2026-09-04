@@ -22,7 +22,7 @@ export const STORY_ZH: Readonly<Record<string, Partial<Record<DesignStoryField, 
     story: "冷白底色，一道红色沿边压住，其余全是网格纪律。像一份没有什么要藏的机构年报封面。",
     positioning: "透明度报告、审计、政策通报——设计不该抢走对账目的注意力时选它。",
     audience: "基金会、机构或审计方，面向公众或理事会陈述。",
-    notFor: "需要温度、庆祝气氛，或需要一张品牌面孔的场合。",
+    notFor: "需要温度、庆祝气氛，或需要品牌个性登场的场合。",
     lineage: "机构在用的瑞士现代主义排版。",
   },
 }
