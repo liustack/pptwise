@@ -1,5 +1,6 @@
 import { z } from "zod"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
+import type { DesignStory } from "../../design-story"
 
 export const schema = z
   .object({
@@ -59,3 +60,11 @@ export const traits = {
   fullBody: false,
   evidence: false,
 } as const satisfies ComponentTraits
+
+export const story: DesignStory = {
+  name: "Hub",
+  story: "One concept in the middle, three to six peers attached around it on labelled spokes. The mind map's centre, drawn with a steady hand.",
+  positioning: "Choose it when the elements relate to the centre and not to each other, with no order between them. Use steps when they run in sequence, cycle when the last leads back to the first, and rings when they nest.",
+  audience: "People who need to see what everything hangs off.",
+  notFor: "Elements that follow one another, which belong in steps.",
+}

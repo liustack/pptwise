@@ -1,5 +1,6 @@
 import { z } from "zod"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
+import type { DesignStory } from "../../design-story"
 
 export const schema = z
   .object({
@@ -30,3 +31,11 @@ export const traits = {
   fullBody: false,
   evidence: false,
 } as const satisfies ComponentTraits
+
+export const story: DesignStory = {
+  name: "Onion",
+  story: "Concentric rings from a solid core outward, each layer labelled on a leader line. The onion model a textbook draws when things live inside things.",
+  positioning: "Choose it when the layers nest, each one containing the one before. Use hub_spoke when the elements only attach to a centre, and cycle when they close a loop.",
+  audience: "Readers who need to see what surrounds what.",
+  notFor: "Peers arranged around a centre, which belong in hub_spoke.",
+}

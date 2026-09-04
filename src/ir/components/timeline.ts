@@ -1,5 +1,6 @@
 import { z } from "zod"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
+import type { DesignStory } from "../../design-story"
 
 export const schema = z
   .object({
@@ -33,3 +34,11 @@ export const traits = {
   fullBody: false,
   evidence: false,
 } as const satisfies ComponentTraits
+
+export const story: DesignStory = {
+  name: "Chronology",
+  story: "Dated milestones along an axis, laid out across the page or down it, with the turning points marked. The chronology an exhibition mounts along a wall.",
+  positioning: "Choose it when dated moments and their order are the message. Use roadmap for phases of work without dates, and gantt for durations that share one measured axis.",
+  audience: "An audience placing events in the order they happened.",
+  notFor: "Durations that overlap, which belong in gantt.",
+}

@@ -1,5 +1,6 @@
 import { z } from "zod"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
+import type { DesignStory } from "../../design-story"
 
 // order semantics (probe evidence-gate byproduct, 2026-07-26 —
 // `.issues/notes/quality-evidence.md` tier_stack section):
@@ -53,3 +54,11 @@ export const traits = {
   fullBody: false,
   evidence: false,
 } as const satisfies ComponentTraits
+
+export const story: DesignStory = {
+  name: "Stack",
+  story: "Named layers drawn as bands, each holding its own parts, one sitting on the next. It borrows the system diagram an engineer draws on a whiteboard, foundation to surface.",
+  positioning: "Choose it when the meaning is what sits on top of what, and the layers read in one direction. Use hub_spoke when the parts only attach to a centre, and rings when they nest inside one another.",
+  audience: "Readers who need the shape of a system before its details.",
+  notFor: "A sequence of actions, which belongs in steps.",
+}

@@ -1,5 +1,6 @@
 import { z } from "zod"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
+import type { DesignStory } from "../../design-story"
 
 // cycle component wave (`.issues/2026-08-05-component-waves/plan-cycle.md`,
 // 控制器裁定 1-4): closes the probe evidence gate's "closed-loop process"
@@ -92,3 +93,11 @@ export const traits = {
   fullBody: false,
   evidence: false,
 } as const satisfies ComponentTraits
+
+export const story: DesignStory = {
+  name: "Loop",
+  story: "Stages set at equal steps around a closed ring, the last one arcing back into the first. The wheel painted on a wall: plan, do, check, act, again.",
+  positioning: "Choose it when the process has no endpoint and the last stage leads back to the start. Use flowchart when it reaches a real end, even if it branches on the way, and steps for a straight run.",
+  audience: "People who must see that the work comes back around.",
+  notFor: "A process that finishes, which belongs in steps or flowchart.",
+}
