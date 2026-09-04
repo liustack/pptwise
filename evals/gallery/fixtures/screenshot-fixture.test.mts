@@ -10,31 +10,31 @@
 // asset they replaced was generated with a prompt that asked for the letters to
 // be unreadable, and nobody noticed for a release.
 //
-// Five things are checked, and only one of them depends on the machine.
+// The checks come in two layers, because only one of them can travel.
 //
-//   dimensions and budget   the file's own shape, read from its frame header
-//   encoder markers         the sampling factors, scan type and quantization
-//                           tables the file actually carries, against a
-//                           re-encode of its own pixels with the recorded
-//                           recipe — so an edit to the recipe that never
-//                           reached the bytes goes red
-//   provenance digests      the page and the whole recipe, exact
-//   pixel comparison        the generator is run and its output compared to
-//                           the committed file
+// Portable, on any machine:
+//   dimensions            read from the file's own frame header
+//   size budget           the gallery ships these files in every page
+//   provenance digests    the page and the whole recipe, exact
+//   marker triple         scan type, sampling ratio and quantization tables,
+//                         against a re-encode of the file's own pixels
 //
-// The first three hold anywhere. Quantization tables come from the quality and
-// the table selection, never from the picture, so they travel between encoders:
-// measured here, sharp, cjpeg and ImageMagick all land within 0.03% on size and
-// identical on tables. Size is logged rather than asserted — quality 87 and 89
-// both sit inside 1.5% of 88, which is why it could never carry this proof.
+// Canonical machine only, when the font probe matches:
+//   byte identity         the committed file against a fresh generator run
 //
-// The pixel comparison cannot travel: the pages name a stack of CJK faces, and
-// a machine that resolves it to a different face draws the same page in
-// different glyphs. Measured on substituted faces that lands well past any
-// tolerance worth having — Helvetica Neue, Arial and Verdana all trip the
-// loud-pixel share, and Noto Sans CJK SC trips both. So it runs only when this
-// machine resolves the stack to the face the committed bytes were drawn with,
-// and otherwise skips with the reason printed.
+// The split is not tidiness, it is what each layer can prove. The marker triple
+// is header evidence, so it catches quality, scan type, sampling and the table
+// selection — but Huffman optimisation, trellis quantisation and overshoot
+// deringing move only entropy-coded data and leave every header field
+// identical while changing the file by up to 22%. Those are proved by byte
+// identity and by nothing else here.
+//
+// Byte identity cannot travel because the pages name a stack of CJK faces, and
+// a machine resolving it to a different face draws the same page in different
+// glyphs. So it runs only where the probe says the face matches what the
+// committed bytes were drawn with, and otherwise skips with the reason printed.
+// When it does fail, the pixel metrics are computed and reported alongside, so
+// a reader can tell an encoder difference from a page that genuinely changed.
 
 import { readFileSync } from "node:fs"
 import { resolve } from "node:path"
@@ -59,17 +59,12 @@ const at = (p: string) => resolve(process.cwd(), p)
 const MAX_BYTES = 150 * 1024
 
 /**
- * Tolerances for "the same picture", set from measurement rather than taste.
- * Mean absolute channel difference and the share of channels off by more than
- * `LOUD_PIXEL_CHANNEL_DIFF`, both against the committed file:
- *
- *   regenerated on this machine   mean 0        loud 0
- *   re-encoded at quality 60      mean 1.10     loud 2.2e-3
- *   the same page, another theme  mean 59.9     loud 3.2e-1
+ * Channel difference counted as "loud" when reporting why a byte comparison
+ * failed. Not a threshold anything passes on: the assertion above is exact.
+ * For scale, a re-encode at quality 60 puts 0.2% of channels over this line
+ * and the same page in another theme puts 32% over it.
  */
-const MAX_MEAN_ABS_DIFF = 1.5
 const LOUD_PIXEL_CHANNEL_DIFF = 32
-const MAX_LOUD_PIXEL_SHARE = 3e-3
 
 async function rawPixels(jpeg: Buffer): Promise<Buffer> {
   return sharp(jpeg).removeAlpha().raw().toBuffer()
@@ -95,9 +90,10 @@ describe.each(Object.entries(FIXTURES))("%s fixture", (_name, spec: FixtureSpec)
     expect(provenance.recipe).toEqual(RECIPE)
     expect(provenance.recipe_sha256).toBe(fixtureRecipeDigest(spec))
 
-    // And the bytes have to carry that recipe's own fingerprints. Re-encoding
-    // the committed file's own pixels isolates the encoder from the renderer,
-    // so fonts never enter into it.
+    // And the bytes have to carry that recipe's own header fingerprints.
+    // Re-encoding the committed file's own pixels isolates the encoder from
+    // the renderer, so fonts never enter into it. Header evidence only: the
+    // options that move entropy data alone are the byte check's to catch.
     const committed = readFileSync(jpgPath)
     const { data, info } = await sharp(committed).removeAlpha().raw().toBuffer({ resolveWithObject: true })
     const reencoded = await sharp(data, { raw: { width: info.width, height: info.height, channels: 3 } })
@@ -115,49 +111,43 @@ describe.each(Object.entries(FIXTURES))("%s fixture", (_name, spec: FixtureSpec)
       chromaSubsampling: RECIPE.chromaSubsampling,
       quantisationTables: theirs.quantisationTables,
     })
-
-    // Advisory only. Size cannot separate quality 87 from 88, so it proves
-    // nothing on its own, but a wild number here is worth seeing in the log.
-    const drift = Math.abs(committed.byteLength - reencoded.byteLength) / reencoded.byteLength
-    if (drift > 0.02) {
-      console.warn(`${spec.id}: size drifts ${(drift * 100).toFixed(2)}% from a fresh encode of its own pixels`)
-    }
   })
 
-  it("still shows what the generator renders today", { timeout: 120_000 }, async (ctx) => {
+  it("is byte-identical to what the generator produces today", { timeout: 120_000 }, async (ctx) => {
     const recorded = JSON.parse(readFileSync(jsonPath, "utf8")).rendered_with_face
     const here = await resolvedFixtureFace(spec)
     if (here !== recorded) {
       // Not a failure: the page would render correctly, in other glyphs.
       ctx.skip(
         `font stack resolves to "${here}" here, the committed bytes were drawn with "${recorded}" — ` +
-          `pixel comparison needs the same face`,
+          `byte identity needs the same face`,
       )
       return
     }
-    const [committed, regenerated] = await Promise.all([
-      rawPixels(readFileSync(jpgPath)),
-      renderFixtureJpeg(spec).then(rawPixels),
-    ])
-    expect(regenerated.byteLength).toBe(committed.byteLength)
+    const committed = readFileSync(jpgPath)
+    const regenerated = await renderFixtureJpeg(spec)
+    if (committed.equals(regenerated)) return
 
+    // Same face, different bytes. Say how the pictures differ so the reader
+    // can tell "the encoder build moved" from "the page changed": an encoder
+    // difference leaves the decoded pixels alone or nearly so, a changed page
+    // does not.
+    const [before, after] = await Promise.all([rawPixels(committed), rawPixels(regenerated)])
     let total = 0
     let loud = 0
-    for (let i = 0; i < committed.byteLength; i++) {
-      const diff = Math.abs(committed[i]! - regenerated[i]!)
+    const n = Math.min(before.byteLength, after.byteLength)
+    for (let i = 0; i < n; i++) {
+      const diff = Math.abs(before[i]! - after[i]!)
       total += diff
       if (diff > LOUD_PIXEL_CHANNEL_DIFF) loud++
     }
-    const meanAbsDiff = total / committed.byteLength
-    const loudShare = loud / committed.byteLength
-
-    // Reported, not just asserted: a failure here needs to say how far off it
-    // was to tell encoder drift apart from a page that genuinely changed.
     expect({
-      meanAbsDiff: meanAbsDiff <= MAX_MEAN_ABS_DIFF,
-      loudShare: loudShare <= MAX_LOUD_PIXEL_SHARE,
-      measured: { meanAbsDiff, loudShare },
-    }).toEqual({ meanAbsDiff: true, loudShare: true, measured: { meanAbsDiff, loudShare } })
+      identical: false,
+      committedBytes: committed.byteLength,
+      regeneratedBytes: regenerated.byteLength,
+      meanAbsDiff: total / n,
+      loudPixelShare: loud / n,
+    }).toEqual({ identical: true })
   })
 
   it("records the renderer and the page that produced it", () => {
