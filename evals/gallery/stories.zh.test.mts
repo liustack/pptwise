@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import { findForbiddenNameWords, STORY_LIMITS, type DesignStory, type DesignStoryField } from "@/design-story"
 import { COMPONENT_TYPES } from "@/ir"
 import { componentStory } from "@/ir/components/stories"
+import { KIND_STORIES } from "@/ir/kind-stories"
 import { THEME_DEFINITIONS } from "@/themes/definitions"
 import { decodeManifest, MANIFEST_VERSION } from "./render"
 import { STORY_ZH } from "./stories.zh"
@@ -19,6 +20,7 @@ const SOURCE_STORIES: ReadonlyMap<string, DesignStory> = new Map([
   ...Object.values(THEME_DEFINITIONS).flatMap((theme) =>
     theme.story === undefined ? [] : ([[`theme:${theme.id}`, theme.story]] as [string, DesignStory][]),
   ),
+  ...Object.entries(KIND_STORIES).map(([kind, story]) => [`kind:${kind}`, story] as [string, DesignStory]),
   ...COMPONENT_TYPES.flatMap((type) => {
     const story = componentStory(type)
     return story === undefined ? [] : ([[`component:${type}`, story]] as [string, DesignStory][])
