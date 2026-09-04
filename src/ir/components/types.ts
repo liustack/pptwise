@@ -82,19 +82,6 @@ export interface ComponentTraits {
   readonly fullBody: boolean
   /** Feeds `COLUMN_SPANNING_TYPES` — should this page-level component span a multi-column arrangement instead of occupying one column? */
   readonly columnSpanning?: true
-  /**
-   * Feeds `CUTS_CONTENT_WHEN_SHORT_TYPES` — handed a `box.h` below its own
-   * `measure`, does this component answer by cutting its content or by
-   * declining outright, rather than simply drawing at its natural size?
-   *
-   * `layoutContentFit`'s last branch hands out a budget instead of a box
-   * (`render/layout.ts` documents all three legal answers to one). Two of
-   * them lose content and declare it, which stops the export; the third
-   * loses nothing. Only the first two are worth a face stepping aside for,
-   * and this is which components give them. Opt-in: absence means the
-   * component draws at natural size and nothing is lost.
-   */
-  readonly cutsContentWhenShort?: true
   /** Feeds the membership (not the order) of `EVIDENCE_TYPES` — see this interface's own doc comment for why order stays aggregator-owned. */
   readonly evidence: boolean
 }

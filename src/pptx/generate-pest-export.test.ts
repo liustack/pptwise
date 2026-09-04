@@ -64,36 +64,26 @@ async function expectExports(components: Component[]): Promise<void> {
   expect([bytes[0], bytes[1]]).toEqual([0x50, 0x4b])
 }
 
-/**
- * The same structural probe for content that is knowingly over capacity.
- *
- * A cut is never painted on a slide, so the content-drop gate refuses these
- * decks by design (`checkContentDropGate`) and the refusal is pinned at the
- * bottom of this file. The opt-in keeps that policy question out of a probe
- * about XML validity, one named fixture at a time.
- *
- * Takes a whole IR rather than a component list: schema-max content on an
- * ordinary curated layout is no longer over capacity (see `narrowIr`), so
- * the one fixture that still is has to name its own face and heading.
- */
-async function expectExportsOverCapacity(ir: PptxIR): Promise<void> {
-  expect(renderSlideSvg(validateIr(ir).ir!, 1), "fixture is expected to overflow").toMatch(/data-dropped="[1-9]/)
-  const bytes = await generatePptx(ir, { allowDroppedContent: true })
-  expect(bytes.length).toBeGreaterThan(10_000)
-  expect([bytes[0], bytes[1]]).toEqual([0x50, 0x4b])
-}
 
 /**
  * Schema-max content on the narrowest curated layout, under a heading long
  * enough to take two lines — the tightest box this component can be handed
- * through a real theme menu, and now the only fixture here that overflows.
+ * through a real theme menu.
  *
- * Schema-max on an ordinary layout used to overflow too. It stopped when
- * `pest.tsx`'s undersized-box shrink was repaired: the stage had been dead
- * since its floor `ITEM_SIZE_MIN / ITEM_SIZE` became exactly 1, and with the
- * rhythm free to close up again the 2x2 grid absorbs its own schema ceiling.
- * That fixture moved to the default path above, where it now proves it loses
- * nothing.
+ * It no longer overflows, and this file no longer has a fixture that does.
+ * Two repairs took the overflow away one after the other. First `pest.tsx`'s
+ * undersized-box shrink: its stage had been dead since the floor
+ * `ITEM_SIZE_MIN / ITEM_SIZE` became exactly 1, and with the rhythm free to
+ * close up again the 2x2 grid absorbed its own schema ceiling on an ordinary
+ * layout. Then the step-aside (`src/render/step-aside.tsx`): the two-line
+ * heading is exactly what makes `narrow-column` hand this page over, and the
+ * sheet it hands it to is wider and taller than the 880px column, so the
+ * grid fits there too.
+ *
+ * So the fixture stays, and proves the other half — that the tightest real
+ * box in the menu costs this component nothing. The export gate's own
+ * refusal is still pinned, on fixtures that still overflow: `five_forces`'s
+ * sibling file and `generate-chart-decline-export.test.ts`.
  */
 function narrowIr(): PptxIR {
   const themeId = registerTestTheme("pest-narrow", "consulting", {
@@ -166,18 +156,32 @@ describe("pest pathological content through the real generatePptx", () => {
     ])
   })
 
-  it("schema-max content on the narrowest curated layout is over capacity and still produces valid XML", async () => {
-    await expectExportsOverCapacity(narrowIr())
+  it("schema-max content on the narrowest curated layout loses nothing and exports cleanly", async () => {
+    const ir = narrowIr()
+    const svg = renderSlideSvg(validateIr(ir).ir!, 1)
+    // The face handed the page over rather than squeezing the grid, and the
+    // page it handed it to holds every item.
+    expect(svg).toContain('data-face-stepped-aside="narrow-column"')
+    expect(svg).not.toMatch(/data-dropped="[1-9]/)
+    const bytes = await generatePptx(ir)
+    expect(bytes.length).toBeGreaterThan(10_000)
+    expect([bytes[0], bytes[1]]).toEqual([0x50, 0x4b])
   })
 })
 
 // The drop protocol, on this file's own fixtures: a page that cannot hold
 // what it was given paints no count of the loss, so the export is where the
-// author finds out. Every other case above runs the default path and asserts
-// its fixture drops nothing — only the named narrow-layout fixture opts out,
-// through `expectExportsOverCapacity`, which makes it prove it overflows.
+// author finds out. Every case above runs the default path and asserts its
+// fixture drops nothing, the narrow-layout one included — this component no
+// longer has a page in the menu it cannot fill.
 describe("pest over-capacity content is refused, not quietly shortened", () => {
-  it("the narrow-layout fixture is refused without the opt-in, and the message names the loss", async () => {
-    await expect(generatePptx(narrowIr())).rejects.toThrow(/deck drops content.*: \d+ items\./s)
+  it("has no fixture left to refuse, and says so rather than pretending", async () => {
+    // This used to refuse `narrowIr()`. The step-aside closed that page (see
+    // `narrowIr`'s own comment), and a refusal test whose fixture no longer
+    // overflows is a test that passes for the wrong reason or not at all.
+    // The gate itself is unchanged and still pinned by the fixtures that do
+    // overflow, so what is asserted here is the fact that replaced the old
+    // one: the tightest box a menu can hand this component costs it nothing.
+    await expect(generatePptx(narrowIr())).resolves.toBeDefined()
   })
 })

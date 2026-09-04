@@ -29,7 +29,22 @@ afterEach(() => {
   __resetRegisteredThemes()
 })
 
-function makeIr(components: Component[]): PptxIR {
+/**
+ * The heading the over-capacity fixtures carry.
+ *
+ * A page's own heading is part of how much room its body has left, and on
+ * this face two lines of title is the difference between a grid that fits
+ * and one that does not. Under the short "Five Forces" the schema-max
+ * fixture stopped overflowing once faces gained the step-aside
+ * (`src/render/step-aside.tsx`): the sheet it hands the page to is wider and
+ * taller than the face's own band, and the 3x3 cross fits there. Under two
+ * lines the sheet is short too, the step-aside declines to make things
+ * worse, and the component's own decline stands — which is the case these
+ * two tests are about.
+ */
+const CROWDED_HEADING = "The competitive structure of the workspace collaboration market"
+
+function makeIr(components: Component[], heading = "Five Forces"): PptxIR {
   return {
     version: "5",
     filename: "five-forces-export-fixture",
@@ -38,7 +53,7 @@ function makeIr(components: Component[]): PptxIR {
     assets: { images: {} },
     slides: [
       { type: "cover", heading: "Cover" },
-      { type: "content", kind: "hierarchy", heading: "Five Forces", components },
+      { type: "content", kind: "hierarchy", heading, components },
       { type: "ending", heading: "Thanks" },
     ],
   } as PptxIR
@@ -71,7 +86,7 @@ async function expectExports(components: Component[]): Promise<void> {
  * about XML validity, one named fixture at a time.
  */
 async function expectExportsOverCapacity(components: Component[]): Promise<void> {
-  const ir = makeIr(components)
+  const ir = makeIr(components, CROWDED_HEADING)
   expect(renderSlideSvg(validateIr(ir).ir!, 1), "fixture is expected to overflow").toMatch(/data-dropped="[1-9]/)
   const bytes = await generatePptx(ir, { allowDroppedContent: true })
   expect(bytes.length).toBeGreaterThan(10_000)
@@ -86,7 +101,7 @@ function panel(n: number, opts: { label?: string; intensity?: "low" | "medium" |
 }
 
 describe("five_forces pathological content through the real generatePptx", () => {
-  it("schema-max content (5 items in every one of the 5 panels) is over capacity and still produces valid XML", async () => {
+  it("schema-max content under a two-line heading is over capacity and still produces valid XML", async () => {
     await expectExportsOverCapacity([
       {
         type: "five_forces",
@@ -210,16 +225,19 @@ describe("five_forces pathological content through the real generatePptx", () =>
 // through `expectExportsOverCapacity`, which makes it prove it overflows.
 describe("five_forces over-capacity content is refused, not quietly shortened", () => {
   it("schema-max content is refused without the opt-in, and the message names the loss", async () => {
-    const ir = makeIr([
-      {
-        type: "five_forces",
-        rivalry: panel(5),
-        new_entrants: panel(5),
-        supplier_power: panel(5),
-        buyer_power: panel(5),
-        substitutes: panel(5),
-      },
-    ])
+    const ir = makeIr(
+      [
+        {
+          type: "five_forces",
+          rivalry: panel(5),
+          new_entrants: panel(5),
+          supplier_power: panel(5),
+          buyer_power: panel(5),
+          substitutes: panel(5),
+        },
+      ],
+      CROWDED_HEADING,
+    )
     await expect(generatePptx(ir)).rejects.toThrow(/deck drops content.*: \d+ items\./s)
   })
 })

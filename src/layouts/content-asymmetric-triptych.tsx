@@ -2,7 +2,7 @@ import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import type { ContentRect } from "../render/layout"
 import { SvgContent } from "../render/svg-content"
-import { bodySlotUnderAllocates, stepAside } from "../render/step-aside"
+import { bodySlotDropsContent, stepAside } from "../render/step-aside"
 import { sectionNameFor } from "../lib/derive"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { fitEmphasisHeading, fitEmphasisLine, headingEmphasisPaint, renderEmphasisHeading, renderEmphasisText } from "../render/emphasis"
@@ -167,9 +167,9 @@ export function AsymmetricTriptychContent({ ir, slide, index, ctx }: SvgTemplate
   // column and the two framed panels are all narrower than the page and the
   // panels lose `PANEL_PAD_Y` twice more on top of that.
   const regionsUnderAllocate =
-    (leadComponent !== undefined && bodySlotUnderAllocates([leadComponent], leadRect, ctx)) ||
-    (hasTop && bodySlotUnderAllocates(topComponents, padded(topRect), ctx)) ||
-    (hasBottom && bodySlotUnderAllocates(bottomComponents, padded(bottomRect), ctx))
+    (leadComponent !== undefined && bodySlotDropsContent([leadComponent], leadRect, ctx)) ||
+    (hasTop && bodySlotDropsContent(topComponents, padded(topRect), ctx)) ||
+    (hasBottom && bodySlotDropsContent(bottomComponents, padded(bottomRect), ctx))
   const aside = stepAside({ face: "asymmetric-triptych", slide, ctx, cramped: regionsUnderAllocate })
   if (aside) return aside
 

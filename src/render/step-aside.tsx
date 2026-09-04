@@ -1,14 +1,19 @@
+import { Children, isValidElement, type ReactNode } from "react"
+import { renderToStaticMarkup } from "react-dom/server"
 import type React from "react"
-import type { Slide } from "@/ir"
-import type { Component } from "@/ir"
+import type { Component, Slide } from "@/ir"
 import type { ComponentCtx } from "../components/types"
-import { measureComponent } from "../components"
 import { CANVAS_W_PX } from "../constants"
-import { layoutContentFit, type Arrangement, type ContentRect } from "./layout"
-import { CUTS_CONTENT_WHEN_SHORT_TYPES } from "./component-traits"
+import type { Arrangement, ContentRect } from "./layout"
 import { SvgContent } from "./svg-content"
-import { fitEmphasisText, headingEmphasisPaint, renderEmphasisHeading } from "./emphasis"
-import { fitSvgLine } from "../lib/svg-text-layout"
+import {
+  fitEmphasisHeading,
+  fitEmphasisLine,
+  fitEmphasisText,
+  headingEmphasisPaint,
+  renderEmphasisHeading,
+  renderEmphasisText,
+} from "./emphasis"
 import { scaleTypePx } from "./heading-fit"
 import { accessibleInk } from "./ink"
 import { footnoteBaselineFor } from "./branding-geometry"
@@ -18,26 +23,30 @@ import { footnoteBaselineFor } from "./branding-geometry"
  *
  * AGENTS.md gives a face two legal postures toward what an author wrote:
  * render it completely, or decline the page. A third shape kept appearing
- * anyway — the face draws its chrome, hands the body slot less height than
- * the component measured for itself, and the component declines inside an
- * otherwise finished page. The reader gets a heading over an empty rectangle
- * and the export refuses the deck. Nobody chose that page; it fell out of a
- * heading wrapping onto a second line.
+ * anyway. The face draws its chrome, hands the body slot less room than the
+ * component needs, and the component declines inside an otherwise finished
+ * page. The reader gets a heading over an empty rectangle and the export
+ * refuses the deck. Nobody chose that page; it fell out of a heading
+ * wrapping onto a second line.
  *
  * So a face that cannot hold what it was given steps aside, and this is the
  * rendering that takes over: the page's own heading and subheading, set
  * modestly, over a body that owns the rest of the sheet. It keeps nothing of
- * the face's composition — a narrow magazine column, a poster band, a bento
- * grid are all constructions that cost height, and height is the one thing
- * the page is short of. Identity survives elsewhere: background, motif and
- * page branding are painted by `FullSlideSvg` around the face, so a
- * stepped-aside page still reads as its theme.
+ * the face's composition. A narrow magazine column, a poster band, a bento
+ * grid are all constructions that cost room, and room is the one thing the
+ * page is short of.
+ *
+ * Theme identity does not go with it. `FullSlideSvg` reads
+ * {@link treeStepsAside} off the body it just built and resolves the page's
+ * motif and branding again without the face's own suppressions, because
+ * those were declarations about a composition that is no longer on the page
+ * (`resolvePageRenderContext`). A face passes its ordinary `ctx` here, not a
+ * neutralised one, so the theme's accent survives too.
  *
  * The root carries `data-face-mode="fallback"` and `data-face-stepped-aside`
- * names the face that stood down, so a sweep can tell a designed page from a
- * degraded one without reading pixels. Neither is a bookkeeping mark in the
- * sense AGENTS.md forbids: nothing is painted, and nothing is lost — the
- * point of the step-aside is that the whole component gets drawn.
+ * names the face that stood down. Neither is a bookkeeping mark in the sense
+ * AGENTS.md forbids: nothing is painted, and nothing is lost — the point of
+ * the step-aside is that the whole component gets drawn.
  *
  * This is not the takeover fallback in `image-pages.tsx`. That one answers a
  * different question (a single-picture frame handed something other than one
@@ -57,6 +66,8 @@ const BODY_BOTTOM = 648
 const BODY_BOTTOM_WITH_FOOTNOTE = 612
 const TITLE_PX = 34
 const TITLE_MAX_LINES = 2
+const TITLE_MIN_PX = 22
+const TITLE_WEIGHT = "600"
 const SUB_PX = 18
 const SUB_MAX_LINES = 2
 const FOOTNOTE_PX = 16
@@ -67,34 +78,89 @@ const HEAD_TO_BODY = 26
 
 const CONTENT_W = CANVAS_W_PX - MARGIN_X * 2
 
+/** A `data-dropped` count that is actually a loss. Zero is never emitted. */
+const DROPPED = /data-dropped="[1-9]/
+
+/**
+ * Whether drawing `components` into `rect` costs the page content.
+ *
+ * Asked by drawing it. `SvgContent` is the same component the face is about
+ * to call, so the probe runs the dispatch the real page will run — the
+ * full-body single-component branch that hands one component the whole rect
+ * without consulting `layoutContentFit`, the arrangement branches, the
+ * layout's own gap tiers and drop path — and every component decides for
+ * itself, on this box and this instance, whether it can draw.
+ *
+ * Nothing else was honest enough. Comparing `box.h` against
+ * `measureComponent` saw neither the width a cartesian chart refuses below
+ * nor the padding a `row_cards` gives up before it drops a card, and a
+ * per-type "does this one cut when short" flag was a claim about a type
+ * where the question is about an instance in a box. `data-dropped` is the
+ * engine's own answer to exactly this question, written by the component
+ * that would be doing the losing, and it is what the export gate reads.
+ *
+ * The cost is one extra render of the body per content page, and a second
+ * only on the pages that come up short.
+ */
+export function bodySlotDropsContent(
+  components: readonly Component[],
+  rect: ContentRect,
+  ctx: ComponentCtx,
+  arrangement?: Arrangement,
+): boolean {
+  if (components.length === 0) return false
+  // Inside an `<svg>` root, which is where the real body renders. React
+  // resolves tag names against the surrounding namespace, and an SVG subtree
+  // probed at the document root logs a casing warning for every
+  // `<linearGradient>` a motif or component draws.
+  return DROPPED.test(
+    renderToStaticMarkup(
+      <svg>
+        <SvgContent arrangement={arrangement} components={[...components]} rect={rect} ctx={ctx} />
+      </svg>,
+    ),
+  )
+}
+
 interface StepAsideGeometry {
-  title: ReturnType<typeof fitEmphasisText>
+  title: ReturnType<typeof fitEmphasisHeading>
   sub: ReturnType<typeof fitEmphasisText>
+  footnote: ReturnType<typeof fitEmphasisLine>
   titleY: number
   subY: number
   rect: ContentRect
-  footnote: ReturnType<typeof fitSvgLine> | null
 }
 
 /**
  * Where the step-aside sheet puts its heading, subheading and body.
+ *
+ * Every fit here is a geometry twin of the paint below it: same font family,
+ * same weight, same size. A fit measured against the wrong metrics is not a
+ * smaller kind of correct — it reports `truncated: false` for a line that
+ * runs off the canvas, which is the one failure the fit exists to prevent.
  *
  * Exported for the trigger: whether stepping aside is worth doing is a
  * question about the body rect this returns, so the decision and the drawing
  * read the same numbers.
  */
 export function stepAsideGeometry(slide: Slide, ctx: ComponentCtx): StepAsideGeometry {
-  const title = fitEmphasisText(slide.heading, {
+  const { fonts } = ctx
+  const title = fitEmphasisHeading(slide.heading, {
     maxWidth: CONTENT_W,
     fontSize: scaleTypePx(TITLE_PX, ctx.shape?.typeScale),
     maxLines: TITLE_MAX_LINES,
+    minPt: TITLE_MIN_PX,
     lineHeightRatio: 1.2,
+    fontFamily: fonts.heading,
+    bold: true,
   })
   const sub = fitEmphasisText(slide.subheading, {
     maxWidth: Math.min(CONTENT_W, 900),
     fontSize: SUB_PX,
     maxLines: SUB_MAX_LINES,
     lineHeightRatio: 1.3,
+    fontFamily: fonts.body,
+    bold: false,
   })
   let cursor = HEAD_TOP
   const titleY = cursor + title.lineHeight - 10
@@ -102,65 +168,22 @@ export function stepAsideGeometry(slide: Slide, ctx: ComponentCtx): StepAsideGeo
   const subY = cursor + sub.lineHeight - 8
   if (sub.lines.length > 0) cursor += sub.lines.length * sub.lineHeight + SUB_TO_BODY
   const bodyTop = cursor + HEAD_TO_BODY
-  const footnote = slide.footnote
-    ? fitSvgLine(slide.footnote, { maxWidth: CONTENT_W, fontSize: FOOTNOTE_PX, minFontSize: FOOTNOTE_PX })
-    : null
+  const footnote = fitEmphasisLine(slide.footnote, {
+    maxWidth: CONTENT_W,
+    fontSize: FOOTNOTE_PX,
+    minFontSize: FOOTNOTE_PX,
+    fontFamily: fonts.body,
+    bold: false,
+  })
   const bottom = footnote ? BODY_BOTTOM_WITH_FOOTNOTE : BODY_BOTTOM
   return {
     title,
     sub,
+    footnote,
     titleY,
     subY,
-    footnote,
     rect: { x: MARGIN_X, y: bodyTop, w: CONTENT_W, h: Math.max(80, bottom - bodyTop) },
   }
-}
-
-/**
- * Whether laying `components` into `rect` costs one of them content.
- *
- * Two shapes count, and they are the same defect seen from either end. The
- * layout can refuse to place a block at all (`dropped`), and it can place
- * one with a `box.h` below the height it measured for itself — the one path
- * in `layoutContentFit` that hands out a budget rather than a box.
- *
- * The second shape only counts for a component that answers a short budget
- * by cutting its content or declining outright
- * (`CUTS_CONTENT_WHEN_SHORT_TYPES`). The third legal answer is to ignore
- * `box.h` and draw at natural size, and a component that gives it has lost
- * nothing: a `waterfall` or a `numbered_cards` in a short band is still the
- * whole component, on a page the geometry gate already proves the ink stays
- * inside. Reading "short" as "cannot hold it" cost 37 gallery pages their
- * face for no gain at all — none of the 37 was losing anything.
- *
- * `measureComponent` is the same call the density gate and every face's own
- * capacity arithmetic make, so "the minimum a caller owes this component"
- * means one thing across the engine.
- *
- * A single full-body component never reaches `layoutContentFit` —
- * `SvgContent` hands it the whole rect and it fills that itself — so it is
- * outside this question, and a short rect there is answered by the
- * component's own declaration if it ever does cost anything. The
- * `big_number` and `assertion_evidence` arrangements are not mirrored
- * because no content face passes them: they are internal words `SvgContent`
- * reaches through other callers, and IR v5 has no `arrangement` field for an
- * author to set.
- */
-export function bodySlotUnderAllocates(
-  components: readonly Component[],
-  rect: ContentRect,
-  ctx: ComponentCtx,
-  arrangement?: Arrangement,
-): boolean {
-  if (components.length === 0) return false
-  const { placed, dropped } = layoutContentFit(arrangement, [...components], rect, ctx)
-  if (dropped > 0) return true
-  return placed.some(
-    (p) =>
-      p.box.h !== undefined &&
-      CUTS_CONTENT_WHEN_SHORT_TYPES.has(p.component.type) &&
-      p.box.h + 0.5 < measureComponent(p.component, p.box.w, ctx),
-  )
 }
 
 export interface StepAsideProps {
@@ -173,9 +196,9 @@ export interface StepAsideProps {
   arrangement?: Arrangement
   /**
    * The answer, when the face already has it. A face that splits its body
-   * into regions (`asymmetric-triptych`) has to ask `bodySlotUnderAllocates`
-   * once per region, and passing the verdict is honest where passing one of
-   * the three rects would not be. Exactly one of `bodyRect` and `cramped`.
+   * into regions (`asymmetric-triptych`) has to probe once per region, and
+   * passing the verdict is honest where passing one of the three rects would
+   * not be. Exactly one of `bodyRect` and `cramped`.
    */
   cramped?: boolean
 }
@@ -183,21 +206,52 @@ export interface StepAsideProps {
 /**
  * The step-aside rendering, or `null` when the face should draw its own page.
  *
- * Null on both sides of the question. A body slot that holds everything needs
- * no help. A body slot that does not, on a page the *full* sheet cannot hold
- * either, gets none: stepping aside there would trade a face's composition
- * for a plain one and still end in the same declared drop, so the face keeps
- * its page and the component's own decline stands. The step-aside never
- * under-allocates, which is what lets a face call it without checking.
+ * Null on both sides of the question. A body slot that loses nothing needs no
+ * help. A body slot that loses something, on a page the *full* sheet would
+ * lose something on too, gets none: stepping aside there would trade a
+ * face's composition for a plain one and still end in a declared drop, so
+ * the face keeps its page and the component's own decline stands. The
+ * step-aside never ships a loss of its own, which is what lets a face call
+ * it without checking.
  */
 export function stepAside(props: StepAsideProps): React.ReactElement | null {
   const { face, slide, ctx, bodyRect, arrangement, cramped } = props
   const short =
-    cramped ?? (bodyRect !== undefined && bodySlotUnderAllocates(slide.components, bodyRect, ctx, arrangement))
+    cramped ?? (bodyRect !== undefined && bodySlotDropsContent(slide.components, bodyRect, ctx, arrangement))
   if (!short) return null
   const geometry = stepAsideGeometry(slide, ctx)
-  if (bodySlotUnderAllocates(slide.components, geometry.rect, ctx)) return null
-  return <StepAsidePage face={face} slide={slide} ctx={ctx} geometry={geometry} />
+  if (bodySlotDropsContent(slide.components, geometry.rect, ctx)) return null
+  // Called, not mounted. `FullSlideSvg` reads {@link treeStepsAside} off the
+  // tree a face hands back, and a `<StepAsidePage/>` element keeps its markup
+  // (the marker included) inside an unrendered component — the same reason
+  // `FullSlideSvg` calls a face's own component rather than mounting it.
+  return StepAsidePage({ face, slide, ctx, geometry })
+}
+
+/** The attribute `FullSlideSvg` reads to know a face handed its page over. */
+export const STEP_ASIDE_ATTR = "data-face-mode"
+
+/**
+ * Whether a face's rendered body is the step-aside rather than the face's own
+ * composition.
+ *
+ * Read off the element tree rather than the markup because `FullSlideSvg`
+ * has the tree in hand and needs the answer before it decides the page's
+ * motif and branding. A face may wrap the step-aside in furniture that costs
+ * the body nothing (`tone-adaptive-content` keeps the white plate its ink
+ * needs to be legible over a background image), so the search is a walk, not
+ * a look at the root.
+ */
+export function treeStepsAside(node: ReactNode): boolean {
+  if (Array.isArray(node)) return node.some(treeStepsAside)
+  if (!isValidElement(node)) return false
+  const props = node.props as Record<string, unknown> & { children?: ReactNode }
+  if (props[STEP_ASIDE_ATTR] === "fallback") return true
+  let found = false
+  Children.forEach(props.children, (child) => {
+    if (!found && treeStepsAside(child)) found = true
+  })
+  return found
 }
 
 function StepAsidePage({
@@ -215,6 +269,7 @@ function StepAsidePage({
   const bg = ctx.defaultBg ?? colors.bg
   const { title, sub, titleY, subY, rect, footnote } = geometry
   const titleFill = accessibleInk(colors.text, bg, title.fontSize)
+  const footnoteFill = footnote ? accessibleInk(colors.muted, bg, footnote.fontSize) : colors.muted
   return (
     <g data-face-mode="fallback" data-face-stepped-aside={face}>
       <line
@@ -229,7 +284,7 @@ function StepAsidePage({
         title,
         headingEmphasisPaint(ctx, title, {
           baseFill: titleFill,
-          fontWeight: "600",
+          fontWeight: TITLE_WEIGHT,
           fontFamily: fonts.heading,
         }),
         (_line, i) => (
@@ -239,7 +294,7 @@ function StepAsidePage({
             x={MARGIN_X}
             y={titleY + i * title.lineHeight}
             fontSize={title.fontSize}
-            fontWeight={600}
+            fontWeight={TITLE_WEIGHT}
             fontFamily={fonts.heading}
             fill={titleFill}
             dominantBaseline="alphabetic"
@@ -263,19 +318,26 @@ function StepAsidePage({
         ),
       )}
       <SvgContent components={slide.components} rect={rect} ctx={ctx} />
-      {footnote && (
-        <text
-          data-truncated={footnote.truncated ? "1" : undefined}
-          x={MARGIN_X}
-          y={footnoteBaselineFor(footnote.fontSize)}
-          fontFamily={fonts.body}
-          fontSize={footnote.fontSize}
-          fill={colors.muted}
-          dominantBaseline="alphabetic"
-        >
-          {footnote.text}
-        </text>
-      )}
+      {footnote &&
+        renderEmphasisText(
+          footnote.segments,
+          {
+            accent: colors.accent,
+            padFill: colors.accent,
+            baseFill: footnoteFill,
+            fontWeight: "700",
+            emphasis: ctx.emphasis,
+          },
+          <text
+            data-truncated={footnote.truncated ? "1" : undefined}
+            x={MARGIN_X}
+            y={footnoteBaselineFor(footnote.fontSize)}
+            fontFamily={fonts.body}
+            fontSize={footnote.fontSize}
+            fill={footnoteFill}
+            dominantBaseline="alphabetic"
+          />,
+        )}
     </g>
   )
 }
