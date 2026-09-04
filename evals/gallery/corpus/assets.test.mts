@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest"
 import { renderSlideSvg } from "@/api"
 import { findRemoteAssetRef } from "@/platform/registry"
 import { installNodePlatform } from "@/platform/node"
-import { PHOTO_ASSETS, SCREENSHOT_ASSET } from "./components"
+import { PHONE_SCREENSHOT_ASSET, PHOTO_ASSETS, SCREENSHOT_ASSET } from "./components"
 import { corpusAssets, layoutPage } from "./decks"
 import { LEXICONS } from "./lexicon"
 
@@ -28,6 +28,28 @@ describe("corpusAssets", () => {
     }
     expect(assets.images?.[SCREENSHOT_ASSET]?.alt).toBe(lex.captions[2])
     expect(assets.images?.[SCREENSHOT_ASSET]?.src).toMatch(/^data:image\/jpeg;base64,/)
+  })
+
+  // Two screens, two bindings. The phone specimen used to frame the desktop
+  // dashboard, so the frame cropped a 16:9 picture to 9:19; it has its own
+  // portrait fixture now, and its own alt line. Nothing else asserted that
+  // binding, so dropping the asset left 26 phone pages rendering the
+  // component's "Image missing" placeholder inside an otherwise correct frame.
+  it("binds each device screen to its own fixture and alt line", async () => {
+    for (const language of ["zh", "en", "mixed"] as const) {
+      const lex = LEXICONS[language]
+      const assets = await corpusAssets(lex)
+      const desktop = assets.images?.[SCREENSHOT_ASSET]
+      const phone = assets.images?.[PHONE_SCREENSHOT_ASSET]
+      expect(desktop?.src).toMatch(/^data:image\/jpeg;base64,/)
+      expect(phone?.src).toMatch(/^data:image\/jpeg;base64,/)
+      // captions[3] is the mobile line in every register, captions[2] the
+      // desktop dashboard the browser shows.
+      expect(desktop?.alt).toBe(lex.captions[2])
+      expect(phone?.alt).toBe(lex.captions[3])
+      // Two different pictures, not the same bytes behind both frames.
+      expect(phone?.src).not.toBe(desktop?.src)
+    }
   })
 })
 

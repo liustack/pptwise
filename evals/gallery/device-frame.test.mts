@@ -179,11 +179,16 @@ describe("every device_mockup page in the corpus shows its frame", () => {
     // Which pages carry a device comes from the IR, never from the page id,
     // and the authored component travels with it so the assertions can ask
     // what this page actually declared rather than assume.
-    const devicePages = new Map<string, { device: string; url?: string }>()
+    const devicePages = new Map<string, { device: string; url?: string; assetId: string; src?: string }>()
     for (const job of jobs) {
       const mockup = job.ir.slides[job.slideIndex]?.components.find((c) => c.type === "device_mockup")
       if (mockup && mockup.type === "device_mockup") {
-        devicePages.set(job.id, { device: mockup.device, url: mockup.url })
+        devicePages.set(job.id, {
+          device: mockup.device,
+          url: mockup.url,
+          assetId: mockup.asset_id,
+          src: job.ir.assets.images?.[mockup.asset_id]?.src,
+        })
       }
     }
 
@@ -213,6 +218,20 @@ describe("every device_mockup page in the corpus shows its frame", () => {
       }
       const origin = offsetOf(frame)
       const rects = Array.from(frame.querySelectorAll("rect"))
+
+      // The screen is the point of the whole component. A frame drawn around
+      // the component's own "Image missing" placeholder satisfies every bezel
+      // assertion below and shows the reviewer nothing: dropping the phone
+      // fixture from the corpus left 26 pages exactly like that, framed and
+      // empty, with no drop mark because nothing had been dropped.
+      const screens = Array.from(frame.querySelectorAll("image")).filter(
+        (img) => (img.getAttribute("href") ?? img.getAttribute("xlink:href")) === authored.src,
+      )
+      if (!authored.src) offenders.push(`${id}: corpus has no asset for "${authored.assetId}"`)
+      else if (screens.length !== 1) offenders.push(`${id}: ${screens.length} screens showing ${authored.assetId}`)
+      if ((frame.textContent ?? "").includes("Image missing")) {
+        offenders.push(`${id}: frame drawn around the missing-asset placeholder`)
+      }
 
       if (device === "browser") {
         // The window bar is a drawn path carrying paint, not an attribute claim.
