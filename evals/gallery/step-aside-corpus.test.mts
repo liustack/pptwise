@@ -63,4 +63,22 @@ describe("the corpus pages that exercise the step-aside", () => {
     const svg = renderSlideSvg(stepAsidePage(lex, await corpusAssets(lex), spec.theme, spec.kind, spec.component), 0)
     expect(svg.toUpperCase()).toContain(resolveStyle(spec.theme).colors.accent.toUpperCase())
   })
+
+  it("never prints the same sentence twice on one page", async () => {
+    // The runway page used to say "系列共十四个 look，女装十一个，无性别三个。"
+    // once as the lead-in and again as the third ring's description, because
+    // the lead-in and the `rings` builder drew from the same end of the
+    // sentence pool. A corpus page is product content, and product content
+    // does not repeat itself in two places on one slide.
+    for (const spec of STEP_ASIDE_PAGES) {
+      const lex = nativeLexiconFor(spec.theme)
+      const svg = renderSlideSvg(stepAsidePage(lex, await corpusAssets(lex), spec.theme, spec.kind, spec.component), 0)
+      const sentences = [...svg.matchAll(/>([^<>]{12,})</g)]
+        .map((m) => m[1]!.trim())
+        .filter((t) => t.length >= 12)
+      const seen = new Set<string>()
+      const repeated = sentences.filter((t) => (seen.has(t) ? true : (seen.add(t), false)))
+      expect(repeated, `${spec.theme} repeats a line`).toEqual([])
+    }
+  })
 })

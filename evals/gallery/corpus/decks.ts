@@ -793,10 +793,17 @@ export function stepAsidePage(
   const build = STEP_ASIDE_COMPONENT_BUILDERS[componentId]
   if (!build) throw new Error(`unknown step-aside component id: ${componentId}`)
   const component = build(lex)
-  // The same lead-in `componentPage` uses: one sentence of argument above the
-  // thing it is arguing about, which is how a real page carries a component
-  // that is not the whole page.
-  const leadIn: Component = { type: "paragraph", text: lex.sentences[0]! }
+  // One sentence of argument above the thing it is arguing about, which is
+  // how a real page carries a component that is not the whole page.
+  //
+  // `componentPage` uses `sentences[0]` for this. These pages cannot: `rings`
+  // draws its own descriptions from `sentences[0]` onward, so a lead-in taken
+  // from the same end of the pool printed the identical sentence twice on the
+  // runway page, once above the onion and once inside its third ring. Taken
+  // from the far end, no component in this table reaches it — and
+  // `step-aside-corpus.test.mts` holds that for every page here rather than
+  // for the three that exist today.
+  const leadIn: Component = { type: "paragraph", text: lex.sentences[6]! }
   const slide = {
     type: "content",
     kind,
