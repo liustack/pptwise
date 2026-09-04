@@ -6,6 +6,7 @@ import { sectionNameFor } from "../lib/derive"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { SvgContent } from "../render/svg-content"
 import { accessibleInk, resolveSemanticColor } from "../render/ink"
+import { paletteWithoutAccent } from "../render/chart-palette"
 import { stripEmphasis } from "../render/emphasis"
 import { GaugeMeta, withoutOverflowMark } from "./gauge-shared"
 
@@ -161,12 +162,16 @@ export function GaugeStatsContent({ ir, slide, index, ctx }: SvgTemplateProps) {
       })
     : null
   const kpis = exactKpiBlock(slide)
+  // The highlight yellow is this face's single "so what" and does not belong
+  // to a series. Dropped from the palette rather than mapped onto `primary`:
+  // mapping made slot 1 the same colour as slot 0, and a two-series bar chart
+  // then painted both series the same navy — see `paletteWithoutAccent`.
   const fallbackCtx = {
     ...ctx,
     colors: {
       ...colors,
       accent: colors.primary,
-      chartPalette: colors.chartPalette.map((color) => color === colors.accent ? colors.primary : color),
+      chartPalette: paletteWithoutAccent(colors.chartPalette, colors.accent),
     },
   }
   const droppedStats = kpis ? Math.max(0, kpis.items.length - 4) : 0
@@ -206,7 +211,7 @@ export function GaugeStatsContent({ ir, slide, index, ctx }: SvgTemplateProps) {
   const fallbackRect = { x: RULE_X1, y: FALLBACK_Y, w: RULE_X2 - RULE_X1, h: FALLBACK_BOTTOM - FALLBACK_Y }
   const aside = kpis
     ? null
-    : stepAside({ face: "gauge-stats", slide, ctx: fallbackCtx, bodyRect: fallbackRect, arrangement: fallbackArrangement })
+    : stepAside({ face: "gauge-stats", slide, ctx, bodyRect: fallbackRect, arrangement: fallbackArrangement })
   if (aside) return aside
 
   return (

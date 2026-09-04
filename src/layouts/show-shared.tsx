@@ -1,4 +1,5 @@
 import type { StyleColors } from "../themes/tokens"
+import { paletteWithoutAccent } from "../render/chart-palette"
 import type { ComponentCtx } from "../components/types"
 import { accessibleInk, blendOver, metaInk } from "../render/ink"
 import { DecorPiece } from "../motifs/decor-piece"
@@ -32,14 +33,15 @@ export function showPlaceholderInk(colors: StyleColors, fontSizePx: number): str
 
 /** 回退内容保留全部组件，同时把绯红留给版式自己的唯一强调。 */
 export function showNeutralFallbackCtx(ctx: ComponentCtx): ComponentCtx {
+  // Dropped from the palette rather than mapped onto `primary`, which made
+  // two entries the same colour and painted two series alike — see
+  // `paletteWithoutAccent`.
   return {
     ...ctx,
     colors: {
       ...ctx.colors,
       accent: ctx.colors.primary,
-      chartPalette: ctx.colors.chartPalette.map((color) =>
-        color === ctx.colors.accent ? ctx.colors.primary : color,
-      ),
+      chartPalette: paletteWithoutAccent(ctx.colors.chartPalette, ctx.colors.accent),
     },
   }
 }
