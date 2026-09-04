@@ -689,10 +689,15 @@ const ANN_NOTE_X = ANN_MARGIN_X + ANN_IMG_W + ANN_FRAME_PAD * 2 + ANN_COL_GAP
 const ANN_NOTE_W = W - ANN_MARGIN_X - ANN_NOTE_X
 const ANN_NOTE_TEXT_W = ANN_NOTE_W - ANN_NOTE_INDENT
 
-/** bullets 条目按「：/:」拆 标题+说明（无冒号时整条做标题换行）。 */
+/** bullets 条目按「：/:」拆 标题+说明（无冒号时整条做标题换行）。
+ *
+ * 冒号跟着标题走，不吞掉。这条注记本来是把冒号当分隔符吃掉的，于是作者写下的
+ * 一个字符没有画到页上——`fidelity` 扫描把它算作内容缺失，而它确实是：一张脸
+ * 要么完整画出交给它的内容，要么让位（见 AGENTS.md）。带冒号的标题行本就是
+ * 正常排法，留着它既不改版式，也不再丢字。 */
 function splitAnnotation(item: string): { title: string; desc: string } {
-  const m = item.match(/^(.{1,18}?)[：:]\s*(.+)$/)
-  if (m) return { title: m[1], desc: m[2] }
+  const m = item.match(/^(.{1,18}?)([：:])\s*(.+)$/)
+  if (m) return { title: `${m[1]}${m[2]}`, desc: m[3] }
   return { title: item, desc: "" }
 }
 
