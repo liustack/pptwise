@@ -19,6 +19,31 @@ import { STEP_ASIDE_PAGES } from "./matrix"
 
 await installNodePlatform()
 
+/**
+ * What each page must carry of its theme, named rather than sniffed.
+ *
+ * `svg.includes("data-decor")` was not an identity assertion. It does not
+ * even distinguish the attribute: a face's own `data-decor-piece="sun"`
+ * satisfies it, and crayon's *un*-stepped-aside control page carries exactly
+ * that while carrying no motif at all. A wrong motif, an empty decor
+ * container or leftover face decoration all passed. These are the pieces the
+ * motif actually paints, by name.
+ *
+ * `motifPieces: []` is runway's, and it is a claim, not a gap: runway carries
+ * no theme motif on purpose (`themes/builtin/runway.ts` — "decor=none 成为
+ * 正式的、可测试的身份值"), so the page must have no decor at all.
+ *
+ * `gainsMotif` says the motif arrives *because* the face stepped aside.
+ * `crayonbox-cards` and `show-figures` declare `suppressMotif`, so their
+ * ordinary page has none. `gauge-stats` does not, so its motif is on both
+ * pages and what its handover restores is the branding instead.
+ */
+const EXPECTED: Record<string, { motifPieces: readonly string[]; gainsMotif: boolean }> = {
+  consulting: { motifPieces: ["locator-corner"], gainsMotif: false },
+  crayon: { motifPieces: ["crayonbox-sun", "crayonbox-stars"], gainsMotif: true },
+  runway: { motifPieces: [], gainsMotif: false },
+}
+
 describe("the corpus pages that exercise the step-aside", () => {
   for (const spec of STEP_ASIDE_PAGES) {
     it(`${spec.theme} · ${spec.face} steps aside and keeps its theme`, { timeout: 60_000 }, async () => {
@@ -42,13 +67,43 @@ describe("the corpus pages that exercise the step-aside", () => {
       expect(held).not.toContain("data-face-mode")
       expect(held).not.toMatch(/data-dropped="[1-9]/)
 
-      // Theme identity survives the handover. The deck's own branding
-      // reaches a page whose face used to draw that metadata itself
-      // (`gauge-stats` declares `branding: "none"` and paints `GaugeMeta`),
-      // and the motif is painted on every page whose theme has one, even
-      // where the face had it suppressed.
-      expect(svg).toContain(lex.author)
-      expect(svg.includes("data-decor")).toBe(getThemeDefinition(spec.theme).motif !== undefined)
+      // Theme identity survives the handover, asserted piece by piece.
+      //
+      // Branding: both fields the deck asked for, on a page whose face used
+      // to paint that metadata itself (`gauge-stats` declares
+      // `branding: "none"` and draws `GaugeMeta`). Organization and date both
+      // vanished when the shared Branding stayed switched off, so both are
+      // named here rather than one standing in for the other.
+      expect(svg, "organization").toContain(lex.author)
+      expect(svg, "date").toContain(lex.date)
+
+      // Accent: the theme's own hex, not a face's neutralised stand-in.
+      const accent = resolveStyle(spec.theme).colors.accent
+      expect(svg.toUpperCase(), "accent").toContain(accent.toUpperCase())
+
+      // Motif: the exact pieces this theme's motif paints, inside the shared
+      // decor container `FullSlideSvg` wraps a motif in — not any element
+      // that happens to start with `data-decor`.
+      const expected = EXPECTED[spec.theme]!
+      const pieces = [...svg.matchAll(/data-decor-piece="([^"]+)"/g)].map((m) => m[1]!)
+      if (expected.motifPieces.length === 0) {
+        expect(svg, "runway paints no decor by design").not.toContain("data-decor")
+        expect(getThemeDefinition(spec.theme).motif, "and declares none").toBeUndefined()
+      } else {
+        expect(svg).toContain('data-decor="true"')
+        expect(pieces.sort()).toEqual([...expected.motifPieces].sort())
+      }
+
+      // And where the motif is the thing the handover restores, the page
+      // that did not hand over must not already have it. Without this the
+      // assertion above would pass on a face that never suppressed anything.
+      const heldPieces = [...held.matchAll(/data-decor-piece="([^"]+)"/g)].map((m) => m[1]!)
+      if (expected.gainsMotif) {
+        expect(held, "the face's own page keeps the motif off").not.toContain('data-decor="true"')
+        expect(heldPieces).not.toEqual(expect.arrayContaining([...expected.motifPieces]))
+      } else if (expected.motifPieces.length > 0) {
+        expect(held).toContain('data-decor="true"')
+      }
     })
   }
 

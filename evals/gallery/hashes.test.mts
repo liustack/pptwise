@@ -115,19 +115,31 @@ describe("hashesFromManifest", () => {
 })
 
 describe("gold sample against a live render", () => {
-  it("matches hashes.json for the baseline theme's component/zh page ids", async () => {
+  it("matches hashes.json for the baseline theme's component/zh pages and every step-aside page", async () => {
     const goldFile = loadGoldHashes()
     const themeIds = listThemes()
       .map((t) => t.id)
       .sort()
-    const jobs = buildMatrix(
-      themeIds,
-      { zh: await corpusAssets(LEXICONS.zh) } as Record<LanguageId, Awaited<ReturnType<typeof corpusAssets>>>,
-      // One section is enough to catch a stale pin: the mechanism is what is
-      // under test, and rendering all 24 skins' component bands here would
-      // add nine seconds to every `pnpm check`.
-      { only: "component", languages: ["zh"], section: "consulting" },
-    )
+    const assets = { zh: await corpusAssets(LEXICONS.zh) } as Record<
+      LanguageId,
+      Awaited<ReturnType<typeof corpusAssets>>
+    >
+    const jobs = [
+      ...buildMatrix(
+        themeIds,
+        assets,
+        // One section is enough to catch a stale pin: the mechanism is what is
+        // under test, and rendering all 24 skins' component bands here would
+        // add nine seconds to every `pnpm check`.
+        { only: "component", languages: ["zh"], section: "consulting" },
+      ),
+      // The whole `aside` band, across every section that has one. Three
+      // pages, and they are the only pages in the matrix that draw the
+      // shared step-aside — a regression in its geometry, its branding or
+      // its motif would otherwise sit in a committed hash nothing renders,
+      // and `pnpm check` would stay green through it.
+      ...buildMatrix(themeIds, assets, { only: "aside", languages: ["zh"] }),
+    ]
     const outDir = mkdtempSync(join(tmpdir(), "pptwise-gold-sample-"))
     const current = hashesFromManifest(renderMatrix(jobs, outDir, "pin").manifest)
     const subset: GoldHashes = {

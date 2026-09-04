@@ -115,7 +115,14 @@ describe("a stepped-aside page keeps the theme it belongs to", () => {
     } as unknown as PptxIR
     const markup = page(ir)
     expect(markup).toContain('data-face-stepped-aside="crayonbox-cards"')
-    expect(markup).toContain("data-decor")
+    // Named, not sniffed. `data-decor` alone does not even distinguish the
+    // attribute: this face paints its own `data-decor-piece="sun"` on the
+    // page it draws itself, so the loose check passed while carrying no
+    // motif at all. These are the two pieces `crayonbox-motif` paints,
+    // inside the container `FullSlideSvg` wraps a motif in.
+    expect(markup).toContain('data-decor="true"')
+    const pieces = [...markup.matchAll(/data-decor-piece="([^"]+)"/g)].map((m) => m[1]!).sort()
+    expect(pieces).toEqual(["crayonbox-stars", "crayonbox-sun"])
   })
 
   it("keeps the theme accent rather than the face's neutralised one", () => {
