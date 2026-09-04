@@ -1,5 +1,6 @@
 import { z } from "zod"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
+import type { DesignStory } from "../../design-story"
 
 /** One plotted datum. `x` is a category label (string) or a numeric
  * coordinate (number); `y` is always numeric. `size` is scatter-only (see
@@ -304,3 +305,11 @@ export const traits = {
   fullBody: false,
   evidence: true,
 } as const satisfies ComponentTraits
+
+export const story: DesignStory = {
+  name: "Plot",
+  story: "Numbers drawn as a shape: bars, a line, an area, slices, a funnel, a from-and-to pair, a point cloud, or one arc against a target.",
+  positioning: "Choose it when the audience should grasp the shape of the numbers at a glance. Use data_table when exact values must be read row by row, and comparison when the attributes are words rather than figures.",
+  audience: "A room that reads a trend faster than a column of digits.",
+  notFor: "Several independent headline figures, which belong in kpi_cards.",
+}

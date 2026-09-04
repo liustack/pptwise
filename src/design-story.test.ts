@@ -27,13 +27,6 @@ import {
  * write the copy and leave the list claiming otherwise.
  */
 const PENDING: readonly string[] = [
-  "component:chart",
-  "component:kpi_cards",
-  "component:progress_donuts",
-  "component:heatmap",
-  "component:waterfall",
-  "component:sankey",
-  "component:data_table",
   "component:image",
   "component:image_grid",
   "component:image_compare",

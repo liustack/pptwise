@@ -1,6 +1,7 @@
 import { z } from "zod"
 import { IconNameSchema } from "./shared"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
+import type { DesignStory } from "../../design-story"
 
 /**
  * A complete number, and nothing else: optional sign, digits (grouped in
@@ -97,3 +98,11 @@ export const traits = {
   fullBody: false,
   evidence: true,
 } as const satisfies ComponentTraits
+
+export const story: DesignStory = {
+  name: "Completion Dials",
+  story: "A row of rings, each filled to its own share of the whole, so progress is felt before it is read. The dial that closes as the day's target is met.",
+  positioning: "Choose it when every figure is a completion, attainment, or share between 0 and 100 and the sense of progress should be visible. Use kpi_cards for absolute quantities or growth rates.",
+  audience: "Readers tracking how far along several efforts are.",
+  notFor: "Absolute quantities such as counts or revenue, which belong in kpi_cards.",
+}

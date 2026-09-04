@@ -1,6 +1,7 @@
 import { z } from "zod"
 import type { ItemFieldAliasSpec } from "../field-aliases"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
+import type { DesignStory } from "../../design-story"
 
 // Sankey flow diagram (structure-components wave 2 task 3 — the wave's
 // largest component and its sharpest differentiator: Anthropic's own
@@ -245,3 +246,11 @@ export const traits = {
   fullBody: true,
   evidence: false,
 } as const satisfies ComponentTraits
+
+export const story: DesignStory = {
+  name: "Flow Bands",
+  story: "Bands whose width carries a quantity from source to destination, splitting and merging without losing the total. The energy flow diagram, where nothing appears from nowhere.",
+  positioning: "Choose it when a conserved quantity moves through branches and merges and the widths are the argument. Use flowchart when the branches carry decisions rather than amounts.",
+  audience: "Readers tracing where a total went on its way through.",
+  notFor: "Branching decisions, which belong in flowchart.",
+}

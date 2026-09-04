@@ -1,6 +1,7 @@
 import { z } from "zod"
 import { IconNameSchema } from "./shared"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
+import type { DesignStory } from "../../design-story"
 
 export const schema = z
   .object({
@@ -34,3 +35,11 @@ export const traits = {
   fullBody: false,
   evidence: true,
 } as const satisfies ComponentTraits
+
+export const story: DesignStory = {
+  name: "Headline Numbers",
+  story: "A row of cards, each with a figure, its label, the direction it moved, and where it came from. The top strip of a report, read before anything else.",
+  positioning: "Choose it for several independent headline figures side by side. Use progress_donuts when every figure is a completion rate, and chart when the shape of a series is the point.",
+  audience: "A room that will remember the numbers and nothing else.",
+  notFor: "Completion rates, which belong in progress_donuts.",
+}

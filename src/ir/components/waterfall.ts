@@ -1,5 +1,6 @@
 import { z } from "zod"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
+import type { DesignStory } from "../../design-story"
 
 // 数值轴家族（structure-components wave task 2）：另一支满幅组件——不是
 // named-slot（swot/bmc 的具名槽治的是「弱模型排错序」），而是「运行合计/
@@ -40,3 +41,11 @@ export const traits = {
   fullBody: true,
   evidence: false,
 } as const satisfies ComponentTraits
+
+export const story: DesignStory = {
+  name: "Bridge",
+  story: "Bars stepping up and down from a running total, each labelled with what added or removed it, closing on the balance. The bridge chart in a results pack.",
+  positioning: "Choose it when the audience must see how a figure got from one total to another. Use chart for levels and trends rather than the movements between them.",
+  audience: "Readers asking where the difference came from.",
+  notFor: "Levels over time, which belong in a chart.",
+}

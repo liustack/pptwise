@@ -1,5 +1,6 @@
 import { z } from "zod"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
+import type { DesignStory } from "../../design-story"
 
 // data_table（R1 证据表达波 Task T3 —— 第 33 个组件，wave-2 域文件自持流程
 // 首次真实演练）：结构化证据表格，与 comparison（纯文本、无独立列宽/对齐/
@@ -113,3 +114,11 @@ export const traits = {
   fullBody: false,
   evidence: true,
 } as const satisfies ComponentTraits
+
+export const story: DesignStory = {
+  name: "Table",
+  story: "Columns with headers, rows of records, emphasis on the rows that matter, and a source line underneath. The table a report prints when the figures must survive inspection.",
+  positioning: "Choose it when exact values must be read row by row. Use chart when the shape of the numbers matters more than their digits, and comparison when the cells are qualitative.",
+  audience: "Readers who will check a figure rather than take an impression.",
+  notFor: "A trend meant to be seen at a glance, which belongs in a chart.",
+}

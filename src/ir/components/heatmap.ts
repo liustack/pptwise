@@ -1,5 +1,6 @@
 import { z } from "zod"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
+import type { DesignStory } from "../../design-story"
 
 // 值驱动数值网格家族（structure-components wave 2 task 2）：另一支满幅
 // 组件——形状由 x_labels/y_labels 两个具名数组直接推导（无独立 cols/rows
@@ -66,3 +67,11 @@ export const traits = {
   fullBody: true,
   evidence: false,
 } as const satisfies ComponentTraits
+
+export const story: DesignStory = {
+  name: "Heat Grid",
+  story: "A labelled grid where each cell's colour carries its value, read by shade before it is read by number. The density map a weather page prints.",
+  positioning: "Choose it when the pattern across two labelled dimensions is the message. Use data_table when each figure has to be read exactly, and chart when one series carries the story.",
+  audience: "Readers looking for where a value clusters or falls away.",
+  notFor: "Figures that must be read precisely, which belong in data_table.",
+}
