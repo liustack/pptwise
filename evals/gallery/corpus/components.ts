@@ -387,6 +387,31 @@ export const COMPONENT_BUILDERS: Record<string, (lex: Lexicon) => Component> = {
 }
 
 /**
+ * The two devices this component draws. Like `CHART_VARIANTS` these replace
+ * the bare `device_mockup` entry rather than sitting beside it: one type name
+ * covers a landscape browser window with an address bar and a portrait phone
+ * with a bezel and a notch, and reviewing only the browser left the phone
+ * drawn by nobody's eyes and asserted by no corpus test.
+ *
+ * The phone carries no `url` on purpose — the schema forbids one, since a
+ * phone has no address bar — which is also the corpus's only page where a
+ * browser-shaped assertion about an address pill must not fire. It carries no
+ * caption either: a portrait screen leaves about seven characters on the
+ * caption band, so every register's caption arrived chopped and marked, and 26
+ * pages of a cut line teach a reviewer nothing the browser page does not
+ * already show. The band itself stays covered by the browser specimen.
+ */
+export const DEVICE_VARIANTS: Record<string, (lex: Lexicon) => Component> = {
+  "device_mockup · browser": (lex) => COMPONENT_BUILDERS.device_mockup!(lex),
+
+  "device_mockup · phone": () => ({
+    type: "device_mockup",
+    device: "phone",
+    asset_id: SCREENSHOT_ASSET,
+  }),
+}
+
+/**
  * Extra chart shapes. `chart` is one IR type but nine visually unrelated
  * drawings, and reviewing only the bar form would leave eight untouched —
  * the exact "count the types, miss the surfaces" gap the review exists to

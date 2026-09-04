@@ -7,7 +7,7 @@
  * Inventories (source of truth):
  *   theme      CANONICAL_THEME_IDS
  *   layout     Object.keys(LAYOUT_REGISTRY), including pinOnly
- *   component  COMPONENT_TYPES (chart via the chart-variant pages)
+ *   component  COMPONENT_TYPES (chart and device_mockup via their variant pages)
  *
  * The review is cut theme first, so the promise is per section as well as
  * global: every theme section carries all three bands, and its component
@@ -24,7 +24,7 @@
 import { COMPONENT_TYPES } from "@/ir"
 import { LAYOUT_REGISTRY } from "@/layouts/registry"
 import { CANONICAL_THEME_IDS } from "@/themes"
-import { CHART_VARIANTS } from "./corpus/components"
+import { CHART_VARIANTS, DEVICE_VARIANTS } from "./corpus/components"
 import { BAND_IDS, UNSERVED_SECTION, servedLayoutIds, type BandId, type Job } from "./matrix"
 
 export type InventoryKind = "theme" | "layout" | "component"
@@ -54,6 +54,7 @@ function mapLayout(job: GallerySubject): MappedSubject | undefined {
 function mapComponent(job: GallerySubject): MappedSubject | undefined {
   if (COMPONENT_TYPE_SET.has(job.subject)) return { inventory: "component", id: job.subject }
   if (job.subject in CHART_VARIANTS) return { inventory: "component", id: "chart" }
+  if (job.subject in DEVICE_VARIANTS) return { inventory: "component", id: "device_mockup" }
   return undefined
 }
 
@@ -202,7 +203,7 @@ export function assertInventoryCoverage(jobs: readonly Job[]): void {
   if (gaps.missingComponents.length > 0) {
     problems.push(
       `no gallery page for component type(s): ${sample(gaps.missingComponents)} — ` +
-        `chart may be covered by chart-variant pages rather than a bare chart id`,
+        `chart and device_mockup may be covered by their variant pages rather than a bare type id`,
     )
   }
   if (gaps.missingSectionComponents.length > 0) {
