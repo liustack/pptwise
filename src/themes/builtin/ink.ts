@@ -69,7 +69,7 @@ export const INK_TOKENS: StyleTokens = {
 export const INK_THEME = {
   version: 2,
   id: "ink",
-  label: "Ink Wash",
+  label: "Ink",
   story: {
     name: "Ink",
     story: "Rice paper, ink black, a seal of cinnabar, headings set in kaishu. Text can stand vertically, the way a scroll does.",

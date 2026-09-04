@@ -113,7 +113,7 @@ export const VERMILION_TOKENS: StyleTokens = {
 export const VERMILION_THEME = {
   version: 2,
   id: "vermilion",
-  label: "Official Report",
+  label: "Vermilion",
   story: {
     name: "Vermilion",
     story: "Vermilion red, a line of gold, warm off-white paper. It carries the gravity of an official report read aloud in a hall.",

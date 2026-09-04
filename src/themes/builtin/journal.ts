@@ -102,7 +102,7 @@ export const JOURNAL_TOKENS: StyleTokens = {
 export const JOURNAL_THEME = {
   version: 2,
   id: "journal",
-  label: "Editorial Journal",
+  label: "Journal",
   story: {
     name: "Journal",
     story: "Warm paper, brick red, a serif masthead and issue numbers. It reads like a small magazine explaining itself to its readers.",

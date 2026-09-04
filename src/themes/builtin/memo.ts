@@ -113,7 +113,7 @@ export const MEMO_TOKENS: StyleTokens = {
 export const MEMO_THEME = {
   version: 2,
   id: "memo",
-  label: "Decision Memo",
+  label: "Memo",
   story: {
     name: "Memo",
     story: "Typewriter rhythm, a letterhead rule, FROM and RE lines. This is not a discussion, it is a decision that has already been written down.",

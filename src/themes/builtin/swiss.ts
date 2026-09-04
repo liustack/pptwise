@@ -96,7 +96,7 @@ export const SWISS_TOKENS: StyleTokens = {
 export const SWISS_THEME = {
   version: 2,
   id: "swiss",
-  label: "Swiss Institutional",
+  label: "Swiss",
   story: {
     name: "Swiss",
     story: "Cold white, a red bar along one edge, grid discipline everywhere else. It is the cover of an institutional annual report that has nothing to hide.",

@@ -96,7 +96,7 @@ export const STAGE_TOKENS: StyleTokens = {
 export const STAGE_THEME = {
   version: 2,
   id: "stage",
-  label: "Keynote Stage",
+  label: "Stage",
   story: {
     name: "Stage",
     story: "The house lights go down and one sentence is left on a black field. Nothing competes with it.",

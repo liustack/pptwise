@@ -98,6 +98,17 @@ describe("a name names a voice, never a vertical", () => {
     expect(fixed, "these themes are clean now — delete their lines from the baseline").toEqual([])
   })
 
+  it("gives a built-in one name, not a label and a story name that differ", () => {
+    // The label is what the review page heads a section with and what
+    // `pptwise themes` prints; the story name is what the design card says.
+    // Two spellings of one theme reads as two themes to anyone comparing the
+    // list to the card, so a built-in answers to one name in both places.
+    const split = Object.values(THEME_DEFINITIONS)
+      .filter((theme) => theme.story !== undefined && theme.label !== theme.story.name)
+      .map((theme) => `${theme.id}: label "${theme.label}" vs name "${theme.story!.name}"`)
+    expect(split, "a built-in's label is its story name").toEqual([])
+  })
+
   it("licences the exact legacy label, not anything that resembles it", () => {
     // The exemption was what let `theme new --from consulting` copy the old
     // label onto a new theme. Nothing is licenced now, and a new name built

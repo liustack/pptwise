@@ -97,7 +97,7 @@ export const LECTURE_TOKENS: StyleTokens = {
 export const LECTURE_THEME = {
   version: 2,
   id: "lecture",
-  label: "Lecture Hall",
+  label: "Lecture",
   story: {
     name: "Lecture",
     story: "A dark green board after the lights go down, and one chalk line under the thing that matters. It teaches one lesson per page and practices it on the spot.",
