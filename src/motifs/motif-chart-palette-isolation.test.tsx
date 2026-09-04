@@ -2,7 +2,7 @@
 //
 // Review fix round (P1 variety wave, task 2 — Major finding): buildCtx used
 // to rotate `ctx.colors.chartPalette` itself, which is the exact token
-// campaign-motif/classroom-motif destructure by fixed position
+// rally-motif/homeroom-motif destructure by fixed position
 // for their own decorative fills (`ctx.colors.chartPalette` — see each
 // file's own header comment: "颜色取 ctx.colors.chartPalette"). Chart
 // palette rotation therefore silently leaked into decor color choice —
@@ -23,8 +23,8 @@ import type { PptxIR, Slide } from "@/ir"
 import { buildCtx } from "../render/full-slide-svg"
 import { resolveStyle } from "../themes"
 import { renderSvgMarkup } from "../render/serialize"
-import { CampaignMotif } from "./motif-campaign-motif"
-import { ClassroomMotif } from "./motif-classroom-motif"
+import { RallyMotif } from "./motif-rally-motif"
+import { HomeroomMotif } from "./motif-homeroom-motif"
 import { CrayonMotif } from "./motif-crayon-motif"
 import { ArenaMotif } from "./motif-arena-motif"
 
@@ -44,8 +44,8 @@ const endingSlide: Slide = { type: "ending", components: [] } as Slide
 
 describe("decorative chartPalette-reading motifs are isolated from chart-palette rotation", () => {
   it.each([
-    ["rally", CampaignMotif, coverSlide] as const,
-    ["homeroom", ClassroomMotif, coverSlide] as const,
+    ["rally", RallyMotif, coverSlide] as const,
+    ["homeroom", HomeroomMotif, coverSlide] as const,
     // cover 撤底带且太阳让位，不再读 chartPalette。ending 才有太阳芯与彩虹划。
     ["crayon", CrayonMotif, endingSlide] as const,
     ["arena", ArenaMotif, coverSlide] as const,

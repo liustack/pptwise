@@ -5,7 +5,7 @@ import { assertSubset } from "../render/subset-validate"
 import { buildCtx } from "../render/full-slide-svg"
 import { resolveStyle } from "../themes"
 import { __pathBoundingBox } from "../audit/deck-audit"
-import { CampaignMotif, CONFETTI_COUNT, PIECE_REACH } from "./motif-campaign-motif"
+import { RallyMotif, CONFETTI_COUNT, PIECE_REACH } from "./motif-rally-motif"
 import { CONTENT_DECOR_CONTRAST_CEILING, countDecorPieces, leafOpacity, leafPaint, paintedLeaves } from "./decor-budget"
 import { blendOver, contrastRatio } from "../render/ink"
 import type { Component, PptxIR, Slide } from "@/ir"
@@ -50,7 +50,7 @@ function render(body: React.ReactElement | null): { markup: string; root: Elemen
 
 function draw(theme: string, slide: Slide, filename?: string) {
   const ctx = buildCtx(resolveStyle(theme), {})
-  return render(<CampaignMotif ir={ir(theme, filename)} slide={slide} ctx={ctx} />)
+  return render(<RallyMotif ir={ir(theme, filename)} slide={slide} ctx={ctx} />)
 }
 
 const num = (el: Element, a: string) => Number(el.getAttribute(a))
@@ -72,10 +72,10 @@ const intersects = (b: Box, z: { x: number; y: number; w: number; h: number }) =
   b.x0 < z.x + z.w && b.x1 > z.x && b.y0 < z.y + z.h && b.y1 > z.y
 
 /**
- * campaign-motif v7「右上一簇纸屑」（第八波批 1）。
+ * rally-motif v7「右上一簇纸屑」（第八波批 1）。
  * 设计源：`.issues/design-boards/wave8/b1/Campaign.dc.html`
  */
-describe("CampaignMotif（右上一簇纸屑）", () => {
+describe("RallyMotif（右上一簇纸屑）", () => {
   it("满场不超过 3 枚，不再是 120 点", () => {
     expect(CONFETTI_COUNT).toBeLessThanOrEqual(3)
     expect(CONFETTI_COUNT).toBeGreaterThan(0)
@@ -121,7 +121,7 @@ describe("CampaignMotif（右上一簇纸屑）", () => {
     const markups = new Set(
       tokens.colors.chartPalette.map((_, offset) =>
         renderSvgMarkup(
-          <CampaignMotif
+          <RallyMotif
             ir={ir("rally")}
             slide={coverSlide}
             ctx={buildCtx(tokens, {}, undefined, undefined, undefined, offset)}
@@ -219,7 +219,7 @@ describe("CampaignMotif（右上一簇纸屑）", () => {
 
   it("换一家 tokens 渲染时颜色跟着换，rally 的色一处不残留", () => {
     const luxe = resolveStyle("luxe")
-    const { markup } = render(<CampaignMotif ir={ir("luxe")} slide={coverSlide} ctx={buildCtx(luxe, {})} />)
+    const { markup } = render(<RallyMotif ir={ir("luxe")} slide={coverSlide} ctx={buildCtx(luxe, {})} />)
     for (const hex of ["#2A1E3F", "#35284E", "#23173A", "#E84F8A", "#F6F2F9", "#B3A6C7", "#4A3A66", "#F0B429", "#4FC1E9", "#9BE36D"]) {
       expect(markup, `rally token ${hex} leaked into the luxe render`).not.toContain(hex)
     }

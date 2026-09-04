@@ -5,14 +5,14 @@ import { BannerMotif } from "./motif-banner-motif"
 import { PosterMotif } from "./motif-poster-motif"
 import { ToneAdaptiveMotif } from "./motif-tone-adaptive-motif"
 import { ConstellationMotif } from "./motif-constellation-motif"
-import { CampaignMotif } from "./motif-campaign-motif"
-import { ClassroomMotif } from "./motif-classroom-motif"
+import { RallyMotif } from "./motif-rally-motif"
+import { HomeroomMotif } from "./motif-homeroom-motif"
 import { InkMotif } from "./motif-ink-motif"
 import { LuxeMotif } from "./motif-luxe-motif"
-import { EnterpriseMotif } from "./motif-enterprise-motif"
+import { BulletinMotif } from "./motif-bulletin-motif"
 import { HeritageMotif } from "./motif-heritage-motif"
-import { PulseMotif } from "./motif-pulse-motif"
-import { TerraMotif } from "./motif-terra-motif"
+import { ClinicMotif } from "./motif-clinic-motif"
+import { AlmanacMotif } from "./motif-almanac-motif"
 import { EmberMotif } from "./motif-ember-motif"
 import { VermilionMotif } from "./motif-vermilion-motif"
 import { CrayonMotif } from "./motif-crayon-motif"
@@ -37,14 +37,14 @@ export const MOTIFS: Record<MotifId, Motif> = {
   "poster-motif": PosterMotif,
   "constellation-motif": ConstellationMotif,
   "tone-adaptive-motif": ToneAdaptiveMotif,
-  "campaign-motif": CampaignMotif,
-  "classroom-motif": ClassroomMotif,
+  "rally-motif": RallyMotif,
+  "homeroom-motif": HomeroomMotif,
   "ink-motif": InkMotif,
   "luxe-motif": LuxeMotif,
-  "enterprise-motif": EnterpriseMotif,
+  "bulletin-motif": BulletinMotif,
   "heritage-motif": HeritageMotif,
-  "pulse-motif": PulseMotif,
-  "terra-motif": TerraMotif,
+  "clinic-motif": ClinicMotif,
+  "almanac-motif": AlmanacMotif,
   "ember-motif": EmberMotif,
   "vermilion-motif": VermilionMotif,
   "crayon-motif": CrayonMotif,

@@ -14,7 +14,7 @@ import {
   MAX_DECOR_PIECES,
   paintedLeaves,
 } from "./decor-budget"
-import { TerraMotif } from "./motif-terra-motif"
+import { AlmanacMotif } from "./motif-almanac-motif"
 import type { PptxIR, Slide } from "@/ir"
 
 const coverSlide: Slide = { type: "cover", heading: "封面", components: [] } as Slide
@@ -53,7 +53,7 @@ function render(body: React.ReactElement | null): { markup: string; root: Elemen
 
 function draw(theme: string, slide: Slide) {
   const ctx = buildCtx(resolveStyle(theme), {})
-  return { ...render(<TerraMotif ir={ir(theme)} slide={slide} ctx={ctx} />), ctx }
+  return { ...render(<AlmanacMotif ir={ir(theme)} slide={slide} ctx={ctx} />), ctx }
 }
 
 /**
@@ -122,10 +122,10 @@ function pathYRange(d: string): { min: number; max: number } {
 }
 
 /**
- * terra-motif v3「等高线」（第八波批 3）。
+ * almanac-motif v3「等高线」（第八波批 3）。
  * 设计源：`.issues/design-boards/wave8/b3/Terra.dc.html`
  */
-describe("TerraMotif（等高线）", () => {
+describe("AlmanacMotif（等高线）", () => {
   it("cover/content/ending 画同一张：三条左上顶缘等高线，一件", () => {
     for (const slide of DRAWN_SLIDES) {
       const { root } = draw("almanac", slide)
@@ -212,7 +212,7 @@ describe("TerraMotif（等高线）", () => {
   it("换一家 tokens 渲染时颜色跟着换，almanac 的色一处不残留（零 hex 纪律的实证）", () => {
     const heritage = resolveStyle("heritage")
     const ctx = buildCtx(heritage, {})
-    const { markup } = render(<TerraMotif ir={ir("heritage")} slide={coverSlide} ctx={ctx} />)
+    const { markup } = render(<AlmanacMotif ir={ir("heritage")} slide={coverSlide} ctx={ctx} />)
     expect(markup).toContain(heritage.colors.border)
     for (const hex of ["#EFE9DC", "#F7F3E8", "#4D5D39", "#B25E38", "#2B2A22", "#656155", "#D8D0BC"]) {
       expect(markup, `almanac token ${hex} leaked into the heritage render`).not.toContain(hex)
@@ -224,7 +224,7 @@ describe("TerraMotif（等高线）", () => {
     const markups = new Set(
       Array.from({ length: 12 }, (_, i) =>
         renderSvgMarkup(
-          <TerraMotif ir={{ ...ir("almanac"), filename: `probe-${i}.pptx` } as PptxIR} slide={coverSlide} ctx={ctx} />,
+          <AlmanacMotif ir={{ ...ir("almanac"), filename: `probe-${i}.pptx` } as PptxIR} slide={coverSlide} ctx={ctx} />,
         ),
       ),
     )

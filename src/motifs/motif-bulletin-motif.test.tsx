@@ -5,7 +5,7 @@ import { assertSubset } from "../render/subset-validate"
 import { buildCtx } from "../render/full-slide-svg"
 import { resolveStyle } from "../themes"
 import { readableOn } from "../render/ink"
-import { EnterpriseMotif } from "./motif-enterprise-motif"
+import { BulletinMotif } from "./motif-bulletin-motif"
 import { countDecorPieces, DECOR_PIECE_ATTR, MAX_DECOR_PIECES } from "./decor-budget"
 import type { PptxIR, Slide } from "@/ir"
 
@@ -35,15 +35,15 @@ function render(body: React.ReactElement | null): { markup: string; root: Elemen
 
 function draw(theme: string, slide: Slide) {
   const ctx = buildCtx(resolveStyle(theme), {})
-  return { ...render(<EnterpriseMotif ir={ir(theme)} slide={slide} ctx={ctx} />), ctx }
+  return { ...render(<BulletinMotif ir={ir(theme)} slide={slide} ctx={ctx} />), ctx }
 }
 
 const num = (el: Element, a: string) => Number(el.getAttribute(a))
 
 /**
- * enterprise-motif v3「方块秩序」（第八波制度板对账）。
+ * bulletin-motif v3「方块秩序」（第八波制度板对账）。
  */
-describe("EnterpriseMotif（方块秩序 v3）", () => {
+describe("BulletinMotif（方块秩序 v3）", () => {
   it("cover 只画右上三枚方块阶，不画刻度尺，不画左下 accent 方块", () => {
     const { root } = draw("bulletin", coverSlide)
     expect(Array.from(root.querySelectorAll("line"))).toHaveLength(0)
@@ -120,7 +120,7 @@ describe("EnterpriseMotif（方块秩序 v3）", () => {
     const markups = new Set(
       tokens.colors.chartPalette.map((_, offset) =>
         renderSvgMarkup(
-          <EnterpriseMotif
+          <BulletinMotif
             ir={ir("bulletin")}
             slide={coverSlide}
             ctx={buildCtx(tokens, {}, undefined, undefined, undefined, offset)}
@@ -177,7 +177,7 @@ describe("EnterpriseMotif（方块秩序 v3）", () => {
   it("换一家 tokens 渲染时颜色跟着换，bulletin 的色一处不残留", () => {
     const terminal = resolveStyle("terminal")
     const ctx = buildCtx(terminal, {})
-    const { markup } = render(<EnterpriseMotif ir={ir("terminal")} slide={contentSlide} ctx={ctx} />)
+    const { markup } = render(<BulletinMotif ir={ir("terminal")} slide={contentSlide} ctx={ctx} />)
     expect(markup).toContain(terminal.colors.primary)
     for (const hex of ["#F7F7F4", "#0032A0", "#2F6FBF", "#17181A", "#5C6066", "#DEE0DB"]) {
       expect(markup, `bulletin token ${hex} leaked into the terminal render`).not.toContain(hex)
@@ -189,7 +189,7 @@ describe("EnterpriseMotif（方块秩序 v3）", () => {
     const markups = new Set(
       Array.from({ length: 12 }, (_, i) =>
         renderSvgMarkup(
-          <EnterpriseMotif
+          <BulletinMotif
             ir={{ ...ir("bulletin"), filename: `probe-${i}.pptx` } as PptxIR}
             slide={coverSlide}
             ctx={ctx}

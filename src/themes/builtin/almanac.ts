@@ -53,7 +53,7 @@ import type { BuiltinThemeDeclaration } from "../schema";
  *   - chapter 底色取 primary（同 thesis/brief/clinic 先例），白字对
  *     primary 7.14:1，`readableOn` 自适应两墨取优后稳态可读。
  *
- * 装饰见 `src/motifs/motif-terra-motif.tsx`（等高线 v3：左上顶缘三条
+ * 装饰见 `src/motifs/motif-almanac-motif.tsx`（等高线 v3：左上顶缘三条
  * border 色细线，退役左下簇与右缘种子点。chapter 整版橄榄底上完全不画）。
  *
  * **菜单分派（S1-B）**：ESG 报告靠承诺与实证说话，statement 与 evidence 都上，photo 用顶部满幅的 image-top 放田野照片，quote 不上。
@@ -129,5 +129,5 @@ export const TERRA_THEME = {
     },
     ending: { face: "scorecard-ending" },
   },
-  motif: { id: "terra-motif" },
+  motif: { id: "almanac-motif" },
 } satisfies BuiltinThemeDeclaration;

@@ -41,7 +41,7 @@ import type { BuiltinThemeDeclaration } from "../schema";
  * 色块底，不是画在 bg 上的字。画在 primary 上的字由 `readableOn`/
  * `accessibleInk` 自适应取墨（白字 16.73:1）。
  *
- * 装饰见 `../../motifs/motif-campaign-motif.tsx`（右上一簇纸屑，最多三枚
+ * 装饰见 `../../motifs/motif-rally-motif.tsx`（右上一簇纸屑，最多三枚
  * 斜方片，opacity 0.5，避字。封面口号左齐走 poster-center 的 textAnchor start）。
  *
  * **菜单分派（S1-B）**：海报腔：data 交给居中的 stacked-poster（一张图当主角的海报路径），photo 用顶部满幅的 image-top，营销讲自己的话，quote 不上。
@@ -110,5 +110,5 @@ export const CAMPAIGN_THEME = {
     },
     ending: { face: "pill-cta-ending" },
   },
-  motif: { id: "campaign-motif" },
+  motif: { id: "rally-motif" },
 } satisfies BuiltinThemeDeclaration;

@@ -3,7 +3,7 @@ import { DecorPiece } from "./decor-piece"
 import { leafRecessOpacity } from "./decor-budget"
 
 /**
- * terra-motif v3 —— 「等高线」（第八波批 3，沿用左上顶缘原位）。
+ * almanac-motif v3 —— 「等高线」（第八波批 3，沿用左上顶缘原位）。
  *
  * 换掉的东西：v2 是左下三条缓线（x48→420，y634-658，primary 1.2px /
  * 0.25 不透明）+ 右缘三枚种子点（x1252，y64/96/128）。种子点是孤立小件，
@@ -37,7 +37,7 @@ const CONTOURS: readonly string[] = [
 ]
 const CONTOUR_STROKE = 1.5
 
-export function TerraMotif({ slide, ctx }: DecorProps) {
+export function AlmanacMotif({ slide, ctx }: DecorProps) {
   const ink = ctx.colors.border ?? ctx.colors.muted
   const bg = ctx.defaultBg ?? ctx.colors.bg
 

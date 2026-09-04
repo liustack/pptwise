@@ -9,6 +9,7 @@ import {
 } from "@/ir"
 import { findForbiddenNameWords, validateDesignStory, type DesignStory } from "../design-story"
 import { isLegacyThemeName } from "./legacy-names"
+import { retiredMotifIdMessage } from "./retired-ids"
 import type { MotifId } from "../motifs/types"
 import { OCCASION_VOCAB, type Occasion } from "./occasions"
 import type { StyleTokens } from "./tokens"
@@ -146,9 +147,9 @@ const CommonThemeFileFields = {
  * all held to — a rule the engine enforces on itself and waives for everyone
  * else is a style guide, not a contract.
  *
- * The thirteen names that predate the rule are waved through by exact match
- * (see `legacy-names.ts`), so copying one of those presets still works until
- * the rename lands.
+ * The thirteen names that predate the rule were renamed in one batch, so
+ * `legacy-names.ts` licences nothing any more and every name answers to the
+ * rule directly.
  */
 function checkNameRule(text: string | undefined, path: (string | number)[], ctx: z.RefinementCtx): void {
   if (text === undefined || isLegacyThemeName(text)) return
@@ -204,14 +205,14 @@ export const MOTIF_IDS = [
   "constellation-motif",
   "corner-ornament-motif",
   "tone-adaptive-motif",
-  "campaign-motif",
-  "classroom-motif",
+  "rally-motif",
+  "homeroom-motif",
   "ink-motif",
   "luxe-motif",
-  "enterprise-motif",
+  "bulletin-motif",
   "heritage-motif",
-  "pulse-motif",
-  "terra-motif",
+  "clinic-motif",
+  "almanac-motif",
   "ember-motif",
   "vermilion-motif",
   "crayon-motif",
@@ -236,11 +237,30 @@ export const MenuParamValueSchema = z.union([z.string(), z.number().finite(), z.
  * decorative layer. Omission leaves decoration at the theme renderer's
  * ordinary posture.
  */
+/**
+ * A motif id, with the retired names answered by name rather than by a bare
+ * "invalid option". The five motifs that carried a renamed theme's word were
+ * renamed with it, and a theme file written before that says so.
+ */
+const MotifIdSchema: z.ZodType<MotifId> = z
+  .string()
+  .superRefine((id, ctx) => {
+    const retired = retiredMotifIdMessage(id)
+    if (retired !== undefined) {
+      ctx.addIssue({ code: "custom", message: retired })
+      return
+    }
+    if (!(MOTIF_IDS as readonly string[]).includes(id)) {
+      ctx.addIssue({ code: "custom", message: `unknown motif id "${id}" — one of: ${MOTIF_IDS.join(", ")}` })
+    }
+  })
+  .transform((id) => id as MotifId)
+
 export const MenuDecorSchema = z.discriminatedUnion("kind", [
   z
     .object({
       kind: z.literal("motif"),
-      id: z.enum(MOTIF_IDS),
+      id: MotifIdSchema,
       params: z.object({ intensity: z.enum(["subtle", "normal"]).optional() }).strict().optional(),
     })
     .strict(),

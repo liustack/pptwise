@@ -3,7 +3,7 @@ import { DecorPiece } from "./decor-piece"
 import { contentRecessOpacity, leafRecessOpacity } from "./decor-budget"
 
 /**
- * classroom-motif v3 —— 横线簿格线（第八波批 2 演化）。
+ * homeroom-motif v3 —— 横线簿格线（第八波批 2 演化）。
  *
  * 退役：顶缘装订孔排、底缘铅笔虚线、回形针。板上中景改成横线簿的格线
  * （border 色），成组，不要角标。
@@ -38,7 +38,7 @@ function ruleYs(type: DecorProps["slide"]["type"]): readonly number[] | null {
   return null
 }
 
-export function ClassroomMotif({ slide, ctx }: DecorProps) {
+export function HomeroomMotif({ slide, ctx }: DecorProps) {
   const ys = ruleYs(slide.type)
   if (!ys) return null
 

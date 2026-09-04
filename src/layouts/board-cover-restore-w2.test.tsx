@@ -7,7 +7,7 @@ import { __resetRegisteredThemes, getThemeDefinition, THEME_DEFINITIONS } from "
 import { registerTestTheme } from "../themes/test-fixtures"
 import type { CanonicalThemeId } from "../themes"
 import type { MenuDecor } from "../themes/schema"
-import { HEARTBEAT_POINTS } from "../motifs/motif-pulse-motif"
+import { HEARTBEAT_POINTS } from "../motifs/motif-clinic-motif"
 import type { PptxIR, Slide } from "@/ir"
 
 const COVER: Slide = {

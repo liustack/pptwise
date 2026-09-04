@@ -44,7 +44,7 @@ const STRUCTURE_BY_MOTIF: Partial<Record<MotifId, Partial<Record<Slide["type"], 
 const IDENTITY_BY_MOTIF: Partial<Record<MotifId, Partial<Record<Slide["type"], readonly string[]>>>> = {
   "crayonbox-motif": { content: ["crayonbox-stars", "crayonbox-sun"] },
   "ink-motif": { content: ["seal"] },
-  "pulse-motif": { cover: ["heartbeat"] },
+  "clinic-motif": { cover: ["heartbeat"] },
 }
 
 function slideOf(type: Slide["type"]): Slide {
@@ -72,7 +72,7 @@ function themeForMotif(id: MotifId): string {
     "heritage-motif": "heritage",
     "playbill-motif": "playbill",
     "arena-motif": "arena",
-    "pulse-motif": "clinic",
+    "clinic-motif": "clinic",
     "corner-ornament-motif": "journal",
     "poster-motif": "ledger",
   }

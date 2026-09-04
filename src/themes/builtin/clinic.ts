@@ -59,7 +59,7 @@ import type { BuiltinThemeDeclaration } from "../schema";
  *   - chapter 底色（第八波批 3）：从 primary 青绿改为薄荷白 `#F2F7F4`，与
  *     bg 同值。板上章节是浅底 + 深青竖标，不是整版青绿。
  *
- * 装饰见 `src/motifs/motif-pulse-motif.tsx`（心搏线 v3：封面页中一笔
+ * 装饰见 `src/motifs/motif-clinic-motif.tsx`（心搏线 v3：封面页中一笔
  * 心搏线。顶缘心电线与右缘细胞圈退役）。
  *
  * **菜单分派（S1-B）**：诊疗件求稳，七道常规讲法就够，photo 用可加角注的 image-annotate 承影像图。高潮页会把临床语气带偏，宣言、引用、大数字、单证据都不上。
@@ -130,5 +130,5 @@ export const PULSE_THEME = {
     },
     ending: { face: "care-plan-ending" },
   },
-  motif: { id: "pulse-motif" },
+  motif: { id: "clinic-motif" },
 } satisfies BuiltinThemeDeclaration;

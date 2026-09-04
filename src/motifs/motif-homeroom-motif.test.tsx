@@ -5,7 +5,7 @@ import { assertSubset } from "../render/subset-validate"
 import { buildCtx, resolveBackgroundHex } from "../render/full-slide-svg"
 import { resolveStyle } from "../themes"
 import { blendOver, contrastRatio } from "../render/ink"
-import { ClassroomMotif } from "./motif-classroom-motif"
+import { HomeroomMotif } from "./motif-homeroom-motif"
 import {
   CONTENT_DECOR_CONTRAST_CEILING,
   DECOR_PIECE_ATTR,
@@ -49,7 +49,7 @@ function draw(theme: string, slide: Slide) {
   const tokens = resolveStyle(theme)
   const defaultBg = resolveBackgroundHex(tokens.defaultBackgrounds[slide.type], tokens.colors.surface)
   const ctx = buildCtx(tokens, {}, undefined, defaultBg)
-  return { ...render(<ClassroomMotif ir={ir(theme)} slide={slide} ctx={ctx} />), ctx, tokens, defaultBg }
+  return { ...render(<HomeroomMotif ir={ir(theme)} slide={slide} ctx={ctx} />), ctx, tokens, defaultBg }
 }
 
 const num = (el: Element, a: string) => Number(el.getAttribute(a))
@@ -72,10 +72,10 @@ const intersects = (b: Box, z: { x: number; y: number; w: number; h: number }) =
   b.x0 < z.x + z.w && b.x1 > z.x && b.y0 < z.y + z.h && b.y1 > z.y
 
 /**
- * classroom-motif v3「横线簿格线」（第八波批 2）。
+ * homeroom-motif v3「横线簿格线」（第八波批 2）。
  * 设计源：`.issues/design-boards/wave8/b2/Classroom.dc.html`
  */
-describe("ClassroomMotif（横线簿格线）", () => {
+describe("HomeroomMotif（横线簿格线）", () => {
   it("装订孔、铅笔虚线、回形针全部退役，只剩横线", () => {
     for (const slide of [...DRAWN_SLIDES, endingSlide]) {
       const { root } = draw("homeroom", slide)
@@ -197,7 +197,7 @@ describe("ClassroomMotif（横线簿格线）", () => {
     const markups = new Set(
       tokens.colors.chartPalette.map((_, offset) =>
         renderSvgMarkup(
-          <ClassroomMotif
+          <HomeroomMotif
             ir={ir("homeroom")}
             slide={coverSlide}
             ctx={buildCtx(tokens, {}, undefined, undefined, undefined, offset)}
@@ -211,7 +211,7 @@ describe("ClassroomMotif（横线簿格线）", () => {
     )
     expect(chartOnly.length).toBeGreaterThan(0)
     const markup = renderSvgMarkup(
-      <ClassroomMotif ir={ir("homeroom")} slide={coverSlide} ctx={buildCtx(tokens, {})} />,
+      <HomeroomMotif ir={ir("homeroom")} slide={coverSlide} ctx={buildCtx(tokens, {})} />,
     )
     for (const hex of chartOnly) expect(markup, `chart-only ${hex} painted by the motif`).not.toContain(hex)
   })
@@ -219,7 +219,7 @@ describe("ClassroomMotif（横线簿格线）", () => {
   it("换一家 tokens 渲染时颜色跟着换，homeroom 的色一处不残留", () => {
     const thesis = resolveStyle("thesis")
     const ctx = buildCtx(thesis, {})
-    const { markup } = render(<ClassroomMotif ir={ir("thesis")} slide={coverSlide} ctx={ctx} />)
+    const { markup } = render(<HomeroomMotif ir={ir("thesis")} slide={coverSlide} ctx={ctx} />)
     expect(markup).toContain(thesis.colors.border)
     for (const hex of CLASSROOM_HEX) {
       expect(markup, `homeroom token ${hex} leaked into the thesis render`).not.toContain(hex)
@@ -231,7 +231,7 @@ describe("ClassroomMotif（横线簿格线）", () => {
     const markups = new Set(
       Array.from({ length: 12 }, (_, i) =>
         renderSvgMarkup(
-          <ClassroomMotif ir={{ ...ir("homeroom"), filename: `probe-${i}.pptx` } as PptxIR} slide={coverSlide} ctx={ctx} />,
+          <HomeroomMotif ir={{ ...ir("homeroom"), filename: `probe-${i}.pptx` } as PptxIR} slide={coverSlide} ctx={ctx} />,
         ),
       ),
     )

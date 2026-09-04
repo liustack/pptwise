@@ -1403,7 +1403,7 @@ describe("findContrastIssues — circle/ellipse containment and paint-order safe
 
   it("does not attribute text to an opaque <path> inside a <g data-decor> subtree — a bbox is not an outline (fix/decor-contrast-attribution)", () => {
     // The other half of the same criterion, and the case the original
-    // blanket exclusion was really written for: `motif-campaign-motif.tsx`'s
+    // blanket exclusion was really written for: `motif-rally-motif.tsx`'s
     // crayon strokes are large, opaque `<path>`s whose `pathBoundingBox`
     // covers far more of the page than the stroke's own ink does. This
     // fixture is that shape in miniature — a thin diagonal stroke whose bbox
@@ -1420,7 +1420,7 @@ describe("findContrastIssues — circle/ellipse containment and paint-order safe
   })
 
   it("does not attribute text to a rotated <rect> inside a <g data-decor> subtree — a rotated box is neither its outline nor where parseTransform puts it", () => {
-    // `motif-pulse-motif.tsx`'s `capsule()` is exactly this shape: a filled
+    // `motif-clinic-motif.tsx`'s `capsule()` is exactly this shape: a filled
     // `<rect>` under `rotate(angle cx cy)`. `parseTransform` models only
     // translate + uniform scale, so it would register this rect at its
     // *un-rotated* position, and an axis-aligned box is not a rotated rect's
@@ -1464,7 +1464,7 @@ describe("findContrastIssues — circle/ellipse containment and paint-order safe
   })
 
   it("keeps a rotated ancestor <g> sticky over the whole decor subtree", () => {
-    // `motif-terra-motif.tsx`'s `leafVein()` puts the rotation on a wrapper
+    // `motif-almanac-motif.tsx`'s `leafVein()` puts the rotation on a wrapper
     // `<g>`, not on the shapes themselves — so the taint has to accumulate
     // down the subtree the same way `data-decor` itself does, not be read
     // off each element in isolation.
@@ -1892,8 +1892,8 @@ describe("findContrastIssues — decor/motif subtrees excluded from background-r
   // above) for the `data-decor` exclusion: reviewer measured 7-9 spurious
   // background regions per slide on rally-theme covers before this fix,
   // dormant only because no test rendered a rally cover through
-  // `findContrastIssues`'s region collector and looked. `campaign-motif`
-  // (`motif-campaign-motif.tsx`, `themeDef.motif` for the rally theme)
+  // `findContrastIssues`'s region collector and looked. `rally-motif`
+  // (`motif-rally-motif.tsx`, `themeDef.motif` for the rally theme)
   // draws several large, >=0.64-effective-opacity crayon-stroke `<path>`s —
   // exactly the shape `MIN_BG_REGION_AREA`/`MIN_BG_OPACITY` would otherwise
   // accept as real backgrounds — inside the `<g data-decor>` wrapper
@@ -2014,7 +2014,7 @@ describe("findContrastIssues — text painted on a decor shape resolves against 
   })
 
   it("terminal: the same cover slot now clears the floor against the motif's own corner square (1.70:1 -> 5.80:1)", () => {
-    // Same layout slot, same motif (`enterprise-motif`'s 24px square at
+    // Same layout slot, same motif (`bulletin-motif`'s 24px square at
     // (1200, 624), filled `colors.primary`), same geometric collision: its
     // bottom edge clears the date's baseline by 2px.
     // `.issues/2026-08-17-spatial-contract/design.md` §4 names the shared
@@ -2059,7 +2059,7 @@ describe("findContrastIssues — text painted on a decor shape resolves against 
     // which one it found. The worst-case muted token lives on a complete
     // registered theme, not an IR overlay.
     //
-    // 2026-08-20 (冷调组皮肤重设计): `enterprise-motif` — the motif all
+    // 2026-08-20 (冷调组皮肤重设计): `bulletin-motif` — the motif all
     // three of these brief/terminal cases actually render — was redrawn.
     // Its 24px square at (1200, 624) is gone along with the rest of the
     // seed-varied composition; the new fixed mark puts a top ruler, a
@@ -2100,7 +2100,7 @@ describe("findContrastIssues — text painted on a decor shape resolves against 
   // 原本这条守卫是拿 rally 的蜡笔条布陷阱的：一条 crayon `<path>` 的
   // `pathBoundingBox` 盖住日期行、透明度也过 `MIN_BG_OPACITY`，于是「decor
   // path 不参与归因」这条规则被真渲染真验了一次。**柔和组皮肤重设计
-  // （2026-08-20）把蜡笔条整族退役**（`motif-campaign-motif.tsx` 换成纸屑
+  // （2026-08-20）把蜡笔条整族退役**（`motif-rally-motif.tsx` 换成纸屑
   // 场：40 枚 8×5 的斜方片，每一枚的包围盒都在页缘带里，够不着任何文字），
   // 全 17 主题重扫一遍，**没有任何一家还能布上这个陷阱**
   // （`.issues/2026-08-18-theme-redesign/skins/tools/probe-armed-decor.mts`：

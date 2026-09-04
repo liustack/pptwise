@@ -4,7 +4,7 @@ import { leafRecessOpacity } from "./decor-budget"
 import { readableOn } from "../render/ink"
 
 /**
- * enterprise-motif v3 —— 「方块秩序」（第八波制度板对账，沿用 v2 方块阶）。
+ * bulletin-motif v3 —— 「方块秩序」（第八波制度板对账，沿用 v2 方块阶）。
  *
  * 相对 v2（2026-08-20 冷调组皮肤）：
  *   - **封面只留右上阶**，opacity 0.28，几何抄第八波板右上三枚 26×26。
@@ -79,7 +79,7 @@ function Ruler({
   )
 }
 
-export function EnterpriseMotif({ slide, ctx }: DecorProps) {
+export function BulletinMotif({ slide, ctx }: DecorProps) {
   if (slide.type === "ending") return null
 
   const ikb = ctx.colors.primary

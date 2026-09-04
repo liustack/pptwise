@@ -34,7 +34,7 @@ import type { BuiltinThemeDeclaration } from "../schema";
  *     的岗位（只给方块与强调线，不承正文），蓝橘对撞由此写成本家签名，实测
  *     压 bg 3.25:1。**第四轮评审把这个签名整个否掉**：用户逐页看到 p09
  *     （banner-motif 的顶缘规矩线，橘色起手段与 IKB 主段首尾相接）与 p10
- *     （enterprise-motif 的右上 IKB 方块阶 + 左下一枚橘方块）之后写下
+ *     （bulletin-motif 的右上 IKB 方块阶 + 左下一枚橘方块）之后写下
  *     「我不知道 claude design 为什么又把橙配蓝弄出来，这个真的太丑了，应该
  *     列为禁忌」「不要蓝配橙，超级丑」。谁是主谁是客没有悬念：本主题名字就叫
  *     企业蓝，primary 是正 IKB，橘是客，客走。
@@ -90,7 +90,7 @@ import type { BuiltinThemeDeclaration } from "../schema";
  * 上是逐字节 no-op（深底组给 `cover-banner-title` 等四处加的那道自适应
  * 不会在这里改任何一个字节）。
  *
- * 装饰见 `src/motifs/motif-enterprise-motif.tsx`（方块秩序 v3，第八波
+ * 装饰见 `src/motifs/motif-bulletin-motif.tsx`（方块秩序 v3，第八波
  * 制度板对账）：封面只留右上阶 0.28，删左下孤立 accent 方块，chapter 浅底
  * 可画顶缘刻度尺。封面 / ending 的满版 IKB 由 pinOnly 版式自己铺
  * （`paintsOwnBackground`），本文件 `defaultBackgrounds.cover/ending` 仍走
@@ -164,5 +164,5 @@ export const ENTERPRISE_THEME = {
     },
     ending: { face: "signoff-ending" },
   },
-  motif: { id: "enterprise-motif" },
+  motif: { id: "bulletin-motif" },
 } satisfies BuiltinThemeDeclaration;

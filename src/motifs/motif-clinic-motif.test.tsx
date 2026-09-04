@@ -4,7 +4,7 @@ import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
 import { buildCtx } from "../render/full-slide-svg"
 import { resolveStyle } from "../themes"
-import { HEARTBEAT_POINTS, PulseMotif } from "./motif-pulse-motif"
+import { HEARTBEAT_POINTS, ClinicMotif } from "./motif-clinic-motif"
 import { countDecorPieces, DECOR_PIECE_ATTR, MAX_DECOR_PIECES } from "./decor-budget"
 import type { PptxIR, Slide } from "@/ir"
 
@@ -36,16 +36,16 @@ function render(body: React.ReactElement | null): { markup: string; root: Elemen
 
 function draw(theme: string, slide: Slide) {
   const ctx = buildCtx(resolveStyle(theme), {})
-  return { ...render(<PulseMotif ir={ir(theme)} slide={slide} ctx={ctx} />), ctx }
+  return { ...render(<ClinicMotif ir={ir(theme)} slide={slide} ctx={ctx} />), ctx }
 }
 
 const num = (el: Element, a: string) => Number(el.getAttribute(a))
 
 /**
- * pulse-motif v3「心搏线」（第八波批 3 演化）。
+ * clinic-motif v3「心搏线」（第八波批 3 演化）。
  * 设计源：`.issues/design-boards/wave8/b3/Pulse.dc.html`
  */
-describe("PulseMotif（心搏线）", () => {
+describe("ClinicMotif（心搏线）", () => {
   it("cover 只画一笔心搏线，包在 heartbeat 里", () => {
     const { root } = draw("clinic", coverSlide)
     expect(Array.from(root.querySelectorAll("path"))).toHaveLength(0)
@@ -128,7 +128,7 @@ describe("PulseMotif（心搏线）", () => {
     const markups = new Set(
       tokens.colors.chartPalette.map((_, offset) =>
         renderSvgMarkup(
-          <PulseMotif
+          <ClinicMotif
             ir={ir("clinic")}
             slide={coverSlide}
             ctx={buildCtx(tokens, {}, undefined, undefined, undefined, offset)}
@@ -142,7 +142,7 @@ describe("PulseMotif（心搏线）", () => {
   it("换一家 tokens 渲染时颜色跟着换，clinic 的色一处不残留", () => {
     const thesis = resolveStyle("thesis")
     const ctx = buildCtx(thesis, {})
-    const { markup } = render(<PulseMotif ir={ir("thesis")} slide={coverSlide} ctx={ctx} />)
+    const { markup } = render(<ClinicMotif ir={ir("thesis")} slide={coverSlide} ctx={ctx} />)
     expect(markup).toContain(thesis.colors.accent)
     for (const hex of PULSE_HEX) {
       expect(markup, `clinic token ${hex} leaked into the thesis render`).not.toContain(hex)
@@ -154,7 +154,7 @@ describe("PulseMotif（心搏线）", () => {
     const markups = new Set(
       Array.from({ length: 12 }, (_, i) =>
         renderSvgMarkup(
-          <PulseMotif ir={{ ...ir("clinic"), filename: `probe-${i}.pptx` } as PptxIR} slide={coverSlide} ctx={ctx} />,
+          <ClinicMotif ir={{ ...ir("clinic"), filename: `probe-${i}.pptx` } as PptxIR} slide={coverSlide} ctx={ctx} />,
         ),
       ),
     )

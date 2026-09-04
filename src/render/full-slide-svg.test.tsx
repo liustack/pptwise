@@ -867,7 +867,7 @@ describe("menu decoration determinism", () => {
   })
 
   it("rally 的菜单装饰 id 不随页面 id 改变", () => {
-    expect(THEME_DEFINITIONS.rally.motif).toBe("campaign-motif")
+    expect(THEME_DEFINITIONS.rally.motif).toBe("rally-motif")
   })
 
   it("rally 的同一菜单条目重复渲染字节一致", () => {

@@ -41,7 +41,7 @@ import type { BuiltinThemeDeclaration } from "../schema";
  * 一字未改。
  *
  * `chartPalette` 即莫兰迪装饰四色，但 motif 本轮起不再读它（见
- * `../../motifs/motif-classroom-motif.tsx` 的文件头，以及
+ * `../../motifs/motif-homeroom-motif.tsx` 的文件头，以及
  * `motif-chart-palette-isolation.test.tsx` 记着的那次图表调色板轮转改色的
  * Major）——图表色与装饰色从此各管各的。
  *
@@ -52,7 +52,7 @@ import type { BuiltinThemeDeclaration } from "../schema";
  * `chalk-band-cover`，不再走 `band-title`。`shape.cover` 里 bandWave 等旧
  * knobs 留下，别的路径可能还读。角色色与 fonts 不动。
  *
- * 装饰见 `../../motifs/motif-classroom-motif.tsx`（横线簿格线：装订孔排与
+ * 装饰见 `../../motifs/motif-homeroom-motif.tsx`（横线簿格线：装订孔排与
  * 铅笔虚线退役）。
  *
  * **菜单分派（S1-B）**：讲义纸只做讲清楚的七道常规讲法，课堂不喊口号也不刷大数字，宣言、引用、大数字、单证据一律不上。
@@ -119,5 +119,5 @@ export const CLASSROOM_THEME = {
     },
     ending: { face: "homework-close-ending" },
   },
-  motif: { id: "classroom-motif" },
+  motif: { id: "homeroom-motif" },
 } satisfies BuiltinThemeDeclaration;

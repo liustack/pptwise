@@ -3,7 +3,7 @@ import { DecorPiece } from "./decor-piece"
 import { leafRecessOpacity } from "./decor-budget"
 
 /**
- * campaign-motif v7 —— 右上一簇纸屑（第八波批 1，rally 板对账）。
+ * rally-motif v7 —— 右上一簇纸屑（第八波批 1，rally 板对账）。
  *
  * 换掉的东西：v6 是页缘三带共 120 枚的纸屑场。板上封面只留右上三枚斜方片，
  * 50% 透明，避字。满场百级点阵退役。
@@ -72,7 +72,7 @@ const CONFETTI = CHIPS.map((c) => ({
 /** 纸屑总枚数。测试读这个数，不复述字面量。 */
 export const CONFETTI_COUNT = CONFETTI.length
 
-export function CampaignMotif({ slide, ctx }: DecorProps) {
+export function RallyMotif({ slide, ctx }: DecorProps) {
   if (slide.type === "chapter") return null
 
   const bg = ctx.defaultBg ?? ctx.colors.bg

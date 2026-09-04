@@ -2,7 +2,7 @@ import type { DecorProps } from "./types"
 import { DecorPiece } from "./decor-piece"
 
 /**
- * pulse-motif v3 —— 「心搏线」（第八波批 3 演化，设计源
+ * clinic-motif v3 —— 「心搏线」（第八波批 3 演化，设计源
  * `.issues/design-boards/wave8/b3/Pulse.dc.html`）。
  *
  * 退役：v2 顶缘极细心电线（y30，x48→1232）与右缘三枚细胞圈
@@ -24,7 +24,7 @@ import { DecorPiece } from "./decor-piece"
 export const HEARTBEAT_POINTS = "96,560 396,560 420,524 456,596 480,560 1180,560"
 const HEARTBEAT_STROKE = 2
 
-export function PulseMotif({ slide, ctx }: DecorProps) {
+export function ClinicMotif({ slide, ctx }: DecorProps) {
   if (slide.type !== "cover") return null
 
   const ink = ctx.colors.accent

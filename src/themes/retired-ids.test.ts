@@ -1,27 +1,37 @@
 // @vitest-environment node
-import { mkdtemp } from "node:fs/promises"
-import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { describe, expect, it } from "vitest"
 import { validateIr } from "@/api"
 import { validateSpec } from "@/spec"
-import { resolveThemeByName } from "@/cli/theme-resolve"
+import { resolveThemeByName, themeFileFromPreset } from "@/cli/theme-resolve"
 import { installNodePlatform } from "@/platform/node"
-import { RETIRED_THEME_IDS } from "./retired-ids"
+import { RETIRED_MOTIF_IDS, RETIRED_THEME_IDS } from "./retired-ids"
+import { ThemeFileSchema } from "./schema"
+import { copyThemePreset, getThemePreset } from "./presets"
 import { resolveThemeId } from "./index"
-import { getThemePreset } from "./presets"
 
 installNodePlatform()
 
 /**
- * The rename is zero-compat: an old theme id is gone, not aliased. Every
- * surface that resolves a theme therefore has to say two things — the name
- * is not a theme, and here is the name it became — so one edit fixes the
- * deck. A fallback map would render a deck under a name nobody asked for.
+ * The rename is zero-compat: an old theme id is gone, not aliased, and not
+ * free for the taking either. Every surface that resolves a theme has to say
+ * two things — the name is not a theme, and here is the name it became — and
+ * every surface that *names* one has to refuse it, or a workspace file could
+ * reissue the exact word the rename removed.
  */
 const RETIRED = Object.entries(RETIRED_THEME_IDS)
 
-describe("a retired theme id", () => {
+/** A complete, valid public theme file carrying `id`. */
+function fileWithId(id: string) {
+  const base = themeFileFromPreset("swiss", { id: "acme" })
+  return { ...base, id, style: { ...base.style, id } }
+}
+
+// A zod issue reaches the caller as JSON with its quotes escaped, so the
+// probe tolerates a backslash where a plain throw has none.
+const named = (current: string) => new RegExp(`renamed to \\\\?"${current}`)
+
+describe("a retired theme id is not a theme", () => {
   it("covers all nine renamed built-ins", () => {
     expect(RETIRED.map(([old]) => old).sort()).toEqual(
       ["academic", "campaign", "classroom", "consulting", "enterprise", "insight", "pulse", "tech", "terra"],
@@ -38,7 +48,7 @@ describe("a retired theme id", () => {
     expect(v.ok).toBe(false)
     expect(v.errors[0]!.path).toBe("theme.id")
     expect(v.errors[0]!.message).toContain(`unknown theme "${old}"`)
-    expect(v.errors[0]!.message).toContain(`renamed to "${current}"`)
+    expect(v.errors[0]!.message).toMatch(named(current))
   })
 
   it.each(RETIRED)("fails spec validation and names %s's new id", (old, current) => {
@@ -58,19 +68,54 @@ describe("a retired theme id", () => {
     )
   })
 
-  it.each(RETIRED)("fails CLI theme resolution and names %s's new id", async (old, current) => {
-    const cwd = await mkdtemp(join(tmpdir(), "pptwise-retired-"))
-    await expect(resolveThemeByName(old, { startDir: cwd, deckDir: cwd })).rejects.toThrow(
-      new RegExp(`unknown theme "${old}" — renamed to "${current}"`),
-    )
-  })
-
-  it.each(RETIRED)("fails preset copy and built-in lookup for %s", (old, current) => {
-    expect(() => resolveThemeId(old)).toThrow(new RegExp(`renamed to "${current}"`))
-    expect(() => getThemePreset(old)).toThrow(new RegExp(`renamed to "${current}"`))
+  it.each(RETIRED)("fails built-in lookup and preset lookup for %s", (old, current) => {
+    expect(() => resolveThemeId(old)).toThrow(named(current))
+    expect(() => getThemePreset(old)).toThrow(named(current))
   })
 
   it("says nothing extra about a name that was never a theme", () => {
     expect(() => resolveThemeId("neon")).toThrow(/unknown theme "neon"\. Installed/)
+  })
+})
+
+describe("a retired motif id is not a motif", () => {
+  const RETIRED_MOTIFS = Object.entries(RETIRED_MOTIF_IDS)
+
+  it("renames one motif per renamed theme", () => {
+    expect(RETIRED_MOTIFS.map(([old]) => old).sort()).toEqual([
+      "campaign-motif",
+      "classroom-motif",
+      "enterprise-motif",
+      "pulse-motif",
+      "terra-motif",
+    ])
+  })
+
+  it.each(RETIRED_MOTIFS)("the theme-file contract refuses %s by name", (old, current) => {
+    const base = themeFileFromPreset("swiss", { id: "acme" })
+    const withDecor = (id: string) => ({
+      ...base,
+      menu: { ...base.menu, cover: { ...base.menu.cover, decor: { kind: "motif", id } } },
+    })
+    expect(() => ThemeFileSchema.parse(withDecor(old))).toThrow(named(current))
+    expect(() => ThemeFileSchema.parse(withDecor(old))).toThrow(/cannot be reused/)
+    expect(() => ThemeFileSchema.parse(withDecor(current))).not.toThrow()
+  })
+
+  it("still says what the choices are for a motif id that was never one", () => {
+    const base = themeFileFromPreset("swiss", { id: "acme" })
+    const file = {
+      ...base,
+      menu: { ...base.menu, cover: { ...base.menu.cover, decor: { kind: "motif", id: "sparkle-motif" } } },
+    }
+    expect(() => ThemeFileSchema.parse(file)).toThrow(/unknown motif id \\?"sparkle-motif/)
+    expect(() => ThemeFileSchema.parse(file)).toThrow(/banner-motif/)
+  })
+
+  it("writes only current motif ids into a copied preset", () => {
+    for (const id of ["rally", "homeroom", "bulletin", "clinic", "almanac"]) {
+      const copy = JSON.stringify(copyThemePreset(id, `acme-${id}`))
+      for (const old of Object.keys(RETIRED_MOTIF_IDS)) expect(copy, id).not.toContain(old)
+    }
   })
 })

@@ -1088,7 +1088,7 @@ function polygonBoundingBox(pointsAttr: string): { x: number; y: number; w: numb
  * Falls back to `pathBoundingBoxByTokenMinMax` (the pre-fix behavior) only
  * for a `d` string the grammar walk can't parse — genuinely malformed
  * input, not any path this renderer itself emits — see that function's own
- * doc comment. `motif-campaign-motif.tsx`'s crayon-stroke decor paths stay
+ * doc comment. `motif-rally-motif.tsx`'s crayon-stroke decor paths stay
  * out of scope for a different, unrelated reason: `findContrastIssues`'s
  * `data-decor` exclusion skips every motif/decor subtree before this
  * function is ever called on it, so whatever bbox either path here would
@@ -1506,7 +1506,7 @@ function directText(el: Element): string {
  * (`fix/decor-contrast-attribution`).** The blanket attribution exclusion
  * was written for a real problem: nothing in this renderer's motif
  * discipline stops a motif from drawing large, opaque-enough shapes, and
- * `motif-campaign-motif.tsx`'s crayon strokes are exactly that (each
+ * `motif-rally-motif.tsx`'s crayon strokes are exactly that (each
  * stroke's core-density bucket alone renders at >=0.64 effective opacity
  * across every call site in that file, comfortably clear of
  * `MIN_BG_OPACITY`). Those are `<path>`s, registered by their
@@ -1614,8 +1614,8 @@ const MODELLED_TRANSFORM_RE = /translate\(\s*-?[\d.]+[\s,]+-?[\d.]+\s*\)|scale\(
  * layer, which provably emits nothing else (grepped across `src/layouts`
  * and `src/components`; `parseTransform`'s own doc comment states the
  * same contract), but *not* fine for decoration, which really does rotate:
- * `motif-pulse-motif.tsx`'s `capsule()` emits a filled `<rect>` under
- * `rotate(angle cx cy)` and `motif-terra-motif.tsx`'s `leafVein()` wraps its
+ * `motif-clinic-motif.tsx`'s `capsule()` emits a filled `<rect>` under
+ * `rotate(angle cx cy)` and `motif-almanac-motif.tsx`'s `leafVein()` wraps its
  * strokes in a rotated `<g>`. A rotated rect is registered by
  * `parseTransform` at its *un-rotated* position, and its axis-aligned box is
  * no longer its outline either — both reasons a shape under one of these is
@@ -1638,7 +1638,7 @@ function hasUnmodelledTransform(el: Element): boolean {
  * `<ellipse>` register through `ellipseShape`'s exact normalized-distance
  * test. `<path>`/`<polygon>` register through `pathBoundingBox`/
  * `polygonBoundingBox` — a *bounding box*, which for a curved stroke covers
- * far more area than the stroke does (`motif-campaign-motif.tsx`'s crayon
+ * far more area than the stroke does (`motif-rally-motif.tsx`'s crayon
  * strokes are the live case the blanket exclusion was written for). `<image>`
  * is a bbox too, and decoration never emits one.
  *
@@ -1790,7 +1790,7 @@ function runContrastWalk(markup: string): { issues: ContrastIssue[]; regions: Bg
     const inMidgroundSubtree = inMidground || el.getAttribute("data-depth") === "mid"
     // Same sticky-subtree accumulation as `inDecorSubtree`: a rotated `<g>`
     // taints every descendant's geometry, not only its own (see
-    // `hasUnmodelledTransform` — `motif-terra-motif.tsx`'s `leafVein()` is
+    // `hasUnmodelledTransform` — `motif-almanac-motif.tsx`'s `leafVein()` is
     // exactly that shape, a rotated wrapper around the shapes that matter).
     const unmodelledTransformHere = underUnmodelledTransform || hasUnmodelledTransform(el)
 
@@ -1899,7 +1899,7 @@ function runContrastWalk(markup: string): { issues: ContrastIssue[]; regions: Bg
           // computed above for text), not a fresh read of just this
           // element's own `fill-opacity` attribute — a decorative shape can
           // just as easily dim through the generic `opacity` attribute
-          // (`motif-campaign-motif.tsx`'s ink/sweep paths use `opacity`, not
+          // (`motif-rally-motif.tsx`'s ink/sweep paths use `opacity`, not
           // `fill-opacity`) or through an *ancestor* `<g>`'s opacity, and
           // missing either would let a faint decoration masquerade as an
           // opaque background (found empirically: a rally-theme motif
