@@ -20,6 +20,8 @@ import { join } from "node:path"
 import { renderSlideSvg, validateIr } from "@/api"
 import type { DesignStory } from "@/design-story"
 import { componentStory } from "@/ir/components/stories"
+import { kindStory } from "@/ir/kind-stories"
+import { KIND_VALUES } from "@/ir/narrative-values"
 import { getThemeDefinition } from "@/themes/definitions"
 import { CANVAS_H_PX, CANVAS_W_PX } from "@/constants"
 import { auditDeck } from "@/audit/deck-audit"
@@ -139,9 +141,9 @@ export interface Manifest {
   /** Section order × band order × natural order inside the band. */
   readonly pages: readonly ManifestPage[]
   /**
-   * The design story of every theme and component this build shows, keyed by
-   * namespaced object id (`theme:swiss`, `component:bullets`). Objects whose
-   * copy is unwritten are simply absent.
+   * The design story of every theme, content kind, and component this build
+   * shows, keyed by namespaced object id (`theme:swiss`, `kind:points`,
+   * `component:bullets`). Objects whose copy is unwritten are simply absent.
    *
    * A flat map rather than a field on each section, because a component is
    * not a section — it is a group the review page derives — and one shape for
@@ -209,6 +211,11 @@ export function decodeManifest(raw: unknown, source: string): Manifest {
     )
   }
   return raw as Manifest
+}
+
+/** Is this menu slot one of the eleven content moves rather than a boundary page? */
+function isKind(slot: string): slot is (typeof KIND_VALUES)[number] {
+  return (KIND_VALUES as readonly string[]).includes(slot)
 }
 
 /** The component behind a gallery group id, variant suffix and all removed. */
@@ -438,6 +445,14 @@ export function renderMatrix(jobs: readonly Job[], outDir: string, pptwiseVersio
   for (const type of new Set(pages.flatMap((p) => (p.component === undefined ? [] : [componentTypeOf(p.component)])))) {
     const story = componentStory(type)
     if (story) stories[`component:${type}`] = story
+  }
+  // A menu slot names either a content kind or a boundary type. Only the
+  // kinds are part of the eleven-move vocabulary, so `cover`, `chapter` and
+  // `ending` pass through here without a card rather than with an empty one.
+  for (const slot of new Set(pages.flatMap((p) => (p.slot === undefined ? [] : [p.slot])))) {
+    if (!isKind(slot)) continue
+    const story = kindStory(slot)
+    if (story) stories[`kind:${slot}`] = story
   }
 
   const manifest: Manifest = {

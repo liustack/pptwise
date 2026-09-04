@@ -1154,6 +1154,9 @@ ${inlineRule("verdictFreshness", verdictFreshness)}
       lead: "一格一种讲法，点开看每套主题的菜单给它派了哪张脸。",
       families: SLOT_FAMILIES,
       nameOf: (v) => ({ zh: SLOT_LABELS[v] || "", code: v }),
+      // The eleven content moves have a card; 封面/章节/结尾 are boundary
+      // pages, not moves, and get none rather than an empty one.
+      detailHead: (v) => designCard("kind:" + v),
     },
     // 按讲法 judges the menus: one kind, 24 answers. 按版式 judges the face
     // code itself: one face, everywhere it was sent — across themes and
@@ -1651,8 +1654,8 @@ ${inlineRule("verdictFreshness", verdictFreshness)}
     main.appendChild(viewHead(head, ""));
 
     // Whatever this view wants said about the group itself before the pages
-    // start. Only 按版式 has one: a face is reused across menus, and knowing
-    // which menus is half of judging it.
+    // start: the group's own design card on 按讲法, 按版式 and 按组件, and on
+    // 按版式 the record of which menus send work here as well.
     const card = view.detailHead ? view.detailHead(value) : null;
     if (card) main.appendChild(card);
 
