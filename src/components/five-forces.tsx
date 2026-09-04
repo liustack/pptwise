@@ -45,7 +45,7 @@ type Intensity = "low" | "medium" | "high"
  *    comfortable values toward their `_TIGHT` ones, by exactly as much as
  *    `box.h` is short by and no more. Air carries no legibility obligation,
  *    so it is what a tight box spends first — see `GAP_LABEL_MARKER_TIGHT`.
- * 2. **Type** (`fontScale` < 1, floored at `MIN_FONT_SCALE`): still short
+ * 2. **Rhythm** (`rhythmScale` < 1, floored at `MIN_RHYTHM_SCALE`): still short
  *    once the air is gone, so every panel's font size and vertical rhythm
  *    shrink uniformly before geometry is derived.
  * 3. **Stretch** (`growScale` >= 1, `swot.tsx`/`bmc.tsx`'s uncapped idiom):
@@ -56,7 +56,7 @@ type Intensity = "low" | "medium" | "high"
  * 13-theme schema-max sweep cleanly (verified: zero findings,
  * "pest/five_forces schema-max content" describe block) — and with room to
  * spare that the pre-2026-08-20 build did not have, since that sweep used
- * to clear `MIN_FONT_SCALE`'s floor by one percent and now clears it on air
+ * to clear the second stage's floor by one percent and now clears it on air
  * alone. The one compound edge case still not fully absorbed — the same
  * residual `bmc.tsx`'s own header already names — is schema-max content
  * *and* a heading long enough to force a 2-line wrap *and* the narrowest
@@ -164,14 +164,14 @@ const GAP_HEADER_ITEMS = 24
  * sweep (`../audit/full-matrix-contrast.test.ts`, 5 items in all 5 panels
  * on `narrow-column`, the narrowest curated content layout) fits its
  * component into a 410px rect. At 11/13 the natural total was 512.5, so it
- * needed a `fontScale` of 0.800 — clearing `MIN_FONT_SCALE`'s 0.792 floor
+ * needed a second-stage scale of 0.800 — clearing the floor of the day
  * by one percent. At 16/18 the natural total is 542.5 and the required
  * scale is 0.756, i.e. under the floor, so the floor clamps and 15.2px of
  * item text spills past the content rect on every one of the 17 themes.
  *
  * Shrinking type further is the wrong way to buy that back: `padTop`,
  * `padBottom` and these two gaps are the only vertical terms carrying no
- * legibility obligation at all, while `MIN_FONT_SCALE` exists precisely to
+ * legibility obligation at all, while `MIN_RHYTHM_SCALE` exists precisely to
  * say how small item text is allowed to get. So the shrink path spends air
  * first and type second (`render`), and these constants are how far the
  * air is allowed to be spent. A box that is short by less than the
@@ -201,7 +201,14 @@ const SIDE_COL_RATIO = 0.27
 // (`ITEM_SIZE_MIN / ITEM_SIZE`), so the new height-axis floor never asks
 // item text to go smaller than a size this file already treats as an
 // acceptable edge.
-const MIN_FONT_SCALE = ITEM_SIZE_MIN / ITEM_SIZE
+// Same repair bmc.tsx carries: this shrinks the *vertical rhythm* — padding,
+// gaps, line height — and never the type. The floor used to be
+// `ITEM_SIZE_MIN / ITEM_SIZE`, a real fraction when those were 9.5 and 12.5.
+// Both are 16 now (the legibility floor was raised to meet the type-size
+// gate), which made the floor exactly 1 and left this whole stage dead: once
+// the air stage ran out there was nothing left to give, so panels dropped
+// items instead. Type holds at 16 and the rhythm closes up.
+const MIN_RHYTHM_SCALE = 0.55
 
 const INTENSITY_LEVEL: Record<Intensity, number> = { low: 1, medium: 2, high: 3 }
 
@@ -232,7 +239,7 @@ interface PanelLayout {
   items: { text: string; fontSize: number; truncated: boolean }[]
   intensity?: Intensity
   contentH: number
-  // fontScale-applied nominal rhythm — renderPanel positions against these,
+  // rhythmScale-applied nominal rhythm — renderPanel positions against these,
   // not each fitted item/label's own (possibly further width-shrunk)
   // fontSize. Same nominal/fitted split `bmc.tsx`'s own `BlockLayout` uses.
   labelSize: number
@@ -249,19 +256,19 @@ interface PanelLayout {
 }
 
 /**
- * `fontScale` (default 1, nominal) shrinks every vertical measurement — font
+ * `rhythmScale` (default 1, nominal) closes up every vertical measurement that is not type — line-height,
  * sizes, line-height, padding, gaps, marker dot size — by the same
  * proportion; `w`/`PAD_X`/`BULLET_INDENT` (the horizontal axis) are
- * untouched. At `fontScale === 1` every returned field reduces to this
+ * untouched. At `rhythmScale === 1` every returned field reduces to this
  * file's nominal constants exactly — same as `bmc.tsx`'s `blockLayout`.
  *
  * `airScale` (default 1, comfortable) independently slides the two header
  * gaps between their comfortable and `_TIGHT` values — 1 is comfortable, 0
  * is tight, and `render` picks the largest value the box can pay for. It is
- * a second axis rather than a second `fontScale` because it must be able to
- * keep giving after `fontScale` has hit `MIN_FONT_SCALE`; see
+ * a second axis rather than a second `rhythmScale` because it must be able to
+ * keep giving after `rhythmScale` has hit `MIN_RHYTHM_SCALE`; see
  * `GAP_LABEL_MARKER_TIGHT`. Both scales compose: the gaps are interpolated
- * by `airScale` first, then scaled by `fontScale` like every other vertical
+ * by `airScale` first, then scaled by `rhythmScale` like every other vertical
  * term, so `airScale === 1` reduces to exactly the previous behaviour.
  */
 // `fontFamily` (bold-metrics fix, round 2, 2026-07-24): the rendered label
@@ -275,28 +282,31 @@ function panelLayout(
   key: ForceKey,
   panel: { label?: string; intensity?: Intensity; items: string[] },
   w: number,
-  fontScale: number = 1,
+  rhythmScale: number = 1,
   airScale: number = 1,
   fontFamily?: string,
 ): PanelLayout {
   const contentW = Math.max(1, w - PAD_X * 2)
-  const labelSize = LABEL_SIZE * fontScale
-  const itemSize = ITEM_SIZE * fontScale
-  const itemLH = Math.round(itemSize * ITEM_LH_RATIO)
-  const padTop = PAD_TOP * fontScale
-  const padBottom = PAD_BOTTOM * fontScale
+  // Type never scales: `LABEL_SIZE`/`ITEM_SIZE` are the legibility floor
+  // already. Only the rhythm gives, and the line box stays at least as tall
+  // as the type it holds so glyphs cannot collide.
+  const labelSize = LABEL_SIZE
+  const itemSize = ITEM_SIZE
+  const itemLH = Math.round(itemSize * Math.max(1, ITEM_LH_RATIO * rhythmScale))
+  const padTop = PAD_TOP * rhythmScale
+  const padBottom = PAD_BOTTOM * rhythmScale
   const air = (tight: number, comfortable: number) => tight + (comfortable - tight) * airScale
-  const gapLabelMarker = air(GAP_LABEL_MARKER_TIGHT, GAP_LABEL_MARKER) * fontScale
-  const gapHeaderItems = air(GAP_HEADER_ITEMS_TIGHT, GAP_HEADER_ITEMS) * fontScale
-  const itemGap = ITEM_GAP * fontScale
-  const bulletR = BULLET_R * fontScale
-  const markerDotR = MARKER_DOT_R * fontScale
-  const markerDotGap = MARKER_DOT_GAP * fontScale
+  const gapLabelMarker = air(GAP_LABEL_MARKER_TIGHT, GAP_LABEL_MARKER) * rhythmScale
+  const gapHeaderItems = air(GAP_HEADER_ITEMS_TIGHT, GAP_HEADER_ITEMS) * rhythmScale
+  const itemGap = ITEM_GAP * rhythmScale
+  const bulletR = BULLET_R
+  const markerDotR = MARKER_DOT_R
+  const markerDotGap = MARKER_DOT_GAP
 
   const label = fitSvgLine(panel.label ?? DEFAULT_LABELS[key], {
     maxWidth: contentW,
     fontSize: labelSize,
-    minFontSize: LABEL_SIZE_MIN * fontScale,
+    minFontSize: LABEL_SIZE_MIN,
     bold: true,
     fontFamily,
   })
@@ -304,7 +314,7 @@ function panelLayout(
     fitSvgLine(it, {
       maxWidth: contentW - BULLET_INDENT,
       fontSize: itemSize,
-      minFontSize: ITEM_SIZE_MIN * fontScale,
+      minFontSize: ITEM_SIZE_MIN,
     }),
   )
   const itemsH = items.length * itemLH + Math.max(0, items.length - 1) * itemGap
@@ -339,14 +349,14 @@ interface CrossGeom {
   layouts: Record<ForceKey, PanelLayout>
 }
 
-/** Pure function of `component`'s own real content at width `w`, `fontScale`
+/** Pure function of `component`'s own real content at width `w`, `rhythmScale`
  * and `airScale` (both default 1) — the natural (unstretched) 3×3 cross
  * geometry `measure()` and `render()` both derive from, never a hardcoded
  * ratio. */
 function crossGeom(
   component: FiveForcesComponent,
   w: number,
-  fontScale: number = 1,
+  rhythmScale: number = 1,
   airScale: number = 1,
   fontFamily?: string,
 ): CrossGeom {
@@ -356,11 +366,11 @@ function crossGeom(
   const centerW = usableW - leftW - rightW
 
   const layouts: Record<ForceKey, PanelLayout> = {
-    rivalry: panelLayout("rivalry", component.rivalry, centerW, fontScale, airScale, fontFamily),
-    new_entrants: panelLayout("new_entrants", component.new_entrants, centerW, fontScale, airScale, fontFamily),
-    supplier_power: panelLayout("supplier_power", component.supplier_power, leftW, fontScale, airScale, fontFamily),
-    buyer_power: panelLayout("buyer_power", component.buyer_power, rightW, fontScale, airScale, fontFamily),
-    substitutes: panelLayout("substitutes", component.substitutes, centerW, fontScale, airScale, fontFamily),
+    rivalry: panelLayout("rivalry", component.rivalry, centerW, rhythmScale, airScale, fontFamily),
+    new_entrants: panelLayout("new_entrants", component.new_entrants, centerW, rhythmScale, airScale, fontFamily),
+    supplier_power: panelLayout("supplier_power", component.supplier_power, leftW, rhythmScale, airScale, fontFamily),
+    buyer_power: panelLayout("buyer_power", component.buyer_power, rightW, rhythmScale, airScale, fontFamily),
+    substitutes: panelLayout("substitutes", component.substitutes, centerW, rhythmScale, airScale, fontFamily),
   }
 
   const topH = layouts.new_entrants.contentH
@@ -531,20 +541,20 @@ export const fiveForces: SvgComponent<FiveForcesComponent> = {
     // bench-driven fix round, defect F, ported from bmc.tsx — see file
     // header. Still short after the air is gone, so every panel's font
     // size/vertical rhythm shrinks by the proportion still missing,
-    // floored at MIN_FONT_SCALE, instead of silently drawing past box.h. A
-    // box at or above natural size keeps fontScale === 1 and reuses
+    // floored at MIN_RHYTHM_SCALE, instead of silently drawing past box.h. A
+    // box at or above natural size keeps rhythmScale === 1 and reuses
     // `aired` as-is rather than recomputing (`bmc.tsx`'s own "one walk"
     // efficiency note). Measured against the *air-spent* total, not the
     // comfortable one, so the air already given back is not paid for twice
     // in shrunken type.
-    const fontScale = airedTotal > 0 && totalH < airedTotal ? Math.max(MIN_FONT_SCALE, totalH / airedTotal) : 1
-    const scaled = fontScale === 1 ? aired : crossGeom(component, box.w, fontScale, airScale, ctx.fonts.heading)
+    const rhythmScale = airedTotal > 0 && totalH < airedTotal ? Math.max(MIN_RHYTHM_SCALE, totalH / airedTotal) : 1
+    const scaled = rhythmScale === 1 ? aired : crossGeom(component, box.w, rhythmScale, airScale, ctx.fonts.heading)
     const { topH: scaledNatTop, midH: scaledNatMid, layouts } = scaled
     const scaledNaturalTotal = crossTotal(scaled)
     const finalTotalH = totalH
 
     // Stretch (or shrink) all three row bands by the same proportion
-    // finalTotalH vs the already fontScale-adjusted natural total. Type
+    // finalTotalH vs the already rhythmScale-adjusted natural total. Type
     // cannot go below the 16px floor, so a short box shrinks the bands
     // and `renderPanel` drops items that no longer fit.
     const growScale = scaledNaturalTotal > 0 ? finalTotalH / scaledNaturalTotal : 1

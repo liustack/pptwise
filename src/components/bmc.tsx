@@ -85,21 +85,20 @@ type BlockKey =
  * (`cost_structure`/`revenue_streams`) spilled first (and worst) because
  * it's the last band painted and sits lowest, but every one of the 9 cells
  * was equally capable of overflowing its own drawn rect given a heavy
- * enough item count. Fix: shrink every cell's font size and vertical
- * rhythm (padding/line-height/gaps — never the horizontal axis; column
- * math in `gridGeom` is untouched) by the same proportion the box itself
- * is short by — `fontScale = totalH / naturalTotal`, threaded through
- * `blockLayout`/`renderBlock` — floored at `MIN_FONT_SCALE` so text never
- * degrades past legibility. The floor is derived, not guessed: it equals
- * `ITEM_SIZE_MIN / ITEM_SIZE` (9.5/12.5 = 0.76), the same 9.5px this file
- * already accepts as its per-item *width*-axis shrink floor (`fitSvgLine`'s
- * own `minFontSize`) — the new height-axis floor never asks item text to
- * go smaller than a size this file already treats as an acceptable edge.
+ * enough item count. Fix: close up every cell's vertical rhythm
+ * (padding/line-height/gaps — never the type, and never the horizontal
+ * axis; column math in `gridGeom` is untouched) by the same proportion the
+ * box itself is short by — `rhythmScale = totalH / naturalTotal`, threaded
+ * through `blockLayout`/`renderBlock` — floored at `MIN_RHYTHM_SCALE`. The
+ * floor used to be derived from the type:
+ * `ITEM_SIZE_MIN / ITEM_SIZE`, which was 9.5/12.5 = 0.76 when it was
+ * written. Both constants are 16 today, so that expression became exactly 1
+ * and the shrink stopped happening at all — see `MIN_RHYTHM_SCALE`.
  * A box at or above natural size (the common case — every non-schema-max
- * fixture in this codebase's test suite) keeps `fontScale === 1` and takes
+ * fixture in this codebase's test suite) keeps `rhythmScale === 1` and takes
  * the exact pre-fix code path, byte-identical (verified by construction:
  * `blockLayout`/`renderBlock`'s scaled fields all reduce to the pre-fix
- * hardcoded constants at `fontScale === 1`, and `naturalBandHeights` is
+ * hardcoded constants at `rhythmScale === 1`, and `naturalBandHeights` is
  * reused rather than recomputed on that path). See the task report for the
  * concrete verified ratios (~0.92 for the schema-max 13-theme regression
  * fixture below; the plan's own literal "3 items" repro needs ~0.90) and
@@ -140,19 +139,28 @@ const ITEM_GAP = 5
 const BULLET_R = 2
 const BULLET_INDENT = 11
 
-// bench-driven fix round, defect F — floor for `render`'s box.h-undersized
-// font-shrink below. See file header's "The inverse case" paragraph for the
-// mechanism and why this specific ratio (not an arbitrary one).
-const MIN_FONT_SCALE = ITEM_SIZE_MIN / ITEM_SIZE
+// Floor for `render`'s box.h-undersized shrink below. See the file header's
+// "The inverse case" paragraph for the mechanism.
+//
+// This shrinks the *vertical rhythm* — padding, gaps, line height — and never
+// the type. It used to shrink the type too, floored at `ITEM_SIZE_MIN /
+// ITEM_SIZE`. That ratio was 9.5/12.5 when it was written; both constants are
+// 16 now (the legibility floor was raised to meet the type-size gate), which
+// silently made the floor exactly 1 and left the whole shrink path dead: an
+// undersized box could no longer give anywhere, so every cell went straight
+// to dropping items instead. Separating the two axes brings the documented
+// behaviour back under the newer floor — type stays at 16 and the rhythm
+// closes up, which is the order a typesetter would give things up in anyway.
+const MIN_RHYTHM_SCALE = 0.55
 
 interface BlockLayout {
   title: { lines: string[]; fontSize: number; truncated: boolean }
   items: { text: string; fontSize: number; truncated: boolean }[]
   contentH: number
-  /** `fontScale`-applied nominal sizes/rhythm `renderBlock` positions
+  /** `rhythmScale`-applied nominal sizes/rhythm `renderBlock` positions
    * against — nominal, not each fitted item/title's own (possibly further
    * width-shrunk) `fontSize`. Same "nominal size drives position, fitted
-   * size only affects glyph width" split this file used pre-`fontScale`
+   * size only affects glyph width" split this file used pre-`rhythmScale`
    * too (the old `renderBlock` positioned off the module-level `ITEM_SIZE`
    * constant, never a fitted item's own shrunk `fontSize`). */
   titleSize: number
@@ -167,13 +175,13 @@ interface BlockLayout {
 }
 
 /**
- * `fontScale` (default 1, the pre-fix nominal size) shrinks every vertical
- * measurement — font sizes, line-heights, padding, gaps — by the same
- * proportion; the horizontal axis (`w`/`contentW`/`PAD_X`/`BULLET_INDENT`)
- * is untouched (see file header — this is a vertical-axis fix only). At
- * `fontScale === 1` every returned field reduces to this file's pre-fix
- * hardcoded constants exactly (same `TITLE_SIZE`/`ITEM_SIZE`, same 1.3/1.35
- * ratios, same 10/9.5 width-axis floors) — byte-identical output.
+ * `rhythmScale` (default 1) closes up every vertical measurement that is
+ * not type — line-heights, padding, gaps — by the same proportion; type
+ * itself holds at its own floor, and the horizontal axis
+ * (`w`/`contentW`/`PAD_X`/`BULLET_INDENT`) is untouched (see file header —
+ * this is a vertical-axis fix only). At `rhythmScale === 1` every returned
+ * field reduces to this file's hardcoded constants exactly (same
+ * `TITLE_SIZE`/`ITEM_SIZE`, same 1.3/1.35 ratios) — byte-identical output.
  */
 // `fontFamily` (bold-metrics fix, round 2, 2026-07-24): `renderBlock`'s own
 // title `<text>` declares `fontWeight="700"` in `ctx.fonts.heading` -- the
@@ -192,26 +200,31 @@ function blockLayout(
   items: string[],
   key: BlockKey,
   w: number,
-  fontScale: number = 1,
+  rhythmScale: number = 1,
   fontFamily?: string,
 ): BlockLayout {
   const contentW = Math.max(1, w - PAD_X * 2)
-  const titleSize = TITLE_SIZE * fontScale
-  const itemSize = ITEM_SIZE * fontScale
-  const titleLH = Math.round(titleSize * TITLE_LH_RATIO)
-  const itemLH = Math.round(itemSize * ITEM_LH_RATIO)
-  const padTop = PAD_TOP * fontScale
-  const padBottom = PAD_BOTTOM * fontScale
-  const gapTitleItems = GAP_TITLE_ITEMS * fontScale
-  const itemGap = ITEM_GAP * fontScale
-  const bulletR = BULLET_R * fontScale
+  // Type never scales: `TITLE_SIZE`/`ITEM_SIZE` are the legibility floor
+  // already. Only the rhythm around it gives, and every line box stays at
+  // least as tall as the type it holds so glyphs cannot collide.
+  const titleSize = TITLE_SIZE
+  const itemSize = ITEM_SIZE
+  const titleLHRatio = Math.max(1, TITLE_LH_RATIO * rhythmScale)
+  const itemLHRatio = Math.max(1, ITEM_LH_RATIO * rhythmScale)
+  const titleLH = Math.round(titleSize * titleLHRatio)
+  const itemLH = Math.round(itemSize * itemLHRatio)
+  const padTop = PAD_TOP * rhythmScale
+  const padBottom = PAD_BOTTOM * rhythmScale
+  const gapTitleItems = GAP_TITLE_ITEMS * rhythmScale
+  const itemGap = ITEM_GAP * rhythmScale
+  const bulletR = BULLET_R
 
   const titleLaid = layoutSvgText(BLOCK_LABELS[key], {
     maxWidth: contentW,
-    fontSize: Math.max(titleSize, TITLE_SIZE_MIN * fontScale),
+    fontSize: Math.max(titleSize, TITLE_SIZE_MIN),
     maxLines: 2,
-    lineHeightRatio: TITLE_LH_RATIO,
-    minPt: TITLE_SIZE_MIN * fontScale,
+    lineHeightRatio: titleLHRatio,
+    minPt: TITLE_SIZE_MIN,
     bold: true,
     fontFamily,
   })
@@ -224,7 +237,7 @@ function blockLayout(
     fitSvgLine(it, {
       maxWidth: contentW - BULLET_INDENT,
       fontSize: itemSize,
-      minFontSize: ITEM_SIZE_MIN * fontScale,
+      minFontSize: ITEM_SIZE_MIN,
     }),
   )
   const itemsH = fittedItems.length * itemLH + Math.max(0, fittedItems.length - 1) * itemGap
@@ -251,25 +264,25 @@ const BOTTOM_ROW_KEYS: readonly BlockKey[] = ["key_resources", "channels"]
 const SPAN_KEYS: readonly BlockKey[] = ["key_partners", "value_propositions", "customer_segments"]
 const BOTTOM_BAND_KEYS: readonly BlockKey[] = ["cost_structure", "revenue_streams"]
 
-/** Natural (unstretched, `fontScale`-adjusted) top-band/bottom-band
+/** Natural (unstretched, `rhythmScale`-adjusted) top-band/bottom-band
  * heights, pure function of `component`'s real content at width `w` and
- * `fontScale` — see file header. `fontScale` defaults to 1 (nominal size);
+ * `rhythmScale` — see file header. `rhythmScale` defaults to 1 (nominal);
  * `render`'s undersized-box shrink path is the only caller that ever
  * passes a smaller value. */
 function naturalBandHeights(
   component: BmcComponent,
   w: number,
-  fontScale: number = 1,
+  rhythmScale: number = 1,
 ): { topBandH: number; bottomBandH: number } {
   const colW = (w - GAP * 4) / 5
   const bottomColW = (w - GAP) / 2
   const halfRowH = Math.max(
-    ...[...TOP_ROW_KEYS, ...BOTTOM_ROW_KEYS].map((k) => blockLayout(component[k], k, colW, fontScale).contentH),
+    ...[...TOP_ROW_KEYS, ...BOTTOM_ROW_KEYS].map((k) => blockLayout(component[k], k, colW, rhythmScale).contentH),
   )
-  const spanH = Math.max(...SPAN_KEYS.map((k) => blockLayout(component[k], k, colW, fontScale).contentH))
+  const spanH = Math.max(...SPAN_KEYS.map((k) => blockLayout(component[k], k, colW, rhythmScale).contentH))
   const topBandH = Math.max(halfRowH * 2 + GAP, spanH)
   const bottomBandH = Math.max(
-    ...BOTTOM_BAND_KEYS.map((k) => blockLayout(component[k], k, bottomColW, fontScale).contentH),
+    ...BOTTOM_BAND_KEYS.map((k) => blockLayout(component[k], k, bottomColW, rhythmScale).contentH),
   )
   return { topBandH, bottomBandH }
 }
@@ -341,7 +354,7 @@ function renderBlock(
   const x = ox + cell.x
   const y = oy + cell.y
   const titleBaseline = y + layout.padTop + layout.titleSize
-  const titleLineH = Math.round(layout.title.fontSize * TITLE_LH_RATIO)
+  const titleLineH = layout.titleLH
   let itemY = y + layout.padTop + layout.title.lines.length * titleLineH + layout.gapTitleItems
   const itemLimit = y + cell.h - layout.padBottom
   const visibleItems = layout.items.filter((_, ii) => {
@@ -419,15 +432,15 @@ export const bmc: SvgComponent<BmcComponent> = {
     // `svg-content.tsx`), so this shrinks every cell's font size/vertical
     // rhythm by the same proportion the box is short by instead of
     // silently drawing taller than `box.h` (see file header). A box at or
-    // above natural size keeps `fontScale === 1` — the exact pre-fix path,
+    // above natural size keeps `rhythmScale === 1` — the exact pre-fix path,
     // byte-identical (`natTop`/`natBottom` above are reused as-is rather
     // than recomputed).
-    const fontScale =
-      naturalTotal > 0 && totalH < naturalTotal ? Math.max(MIN_FONT_SCALE, totalH / naturalTotal) : 1
+    const rhythmScale =
+      naturalTotal > 0 && totalH < naturalTotal ? Math.max(MIN_RHYTHM_SCALE, totalH / naturalTotal) : 1
     const { topBandH: scaledTop, bottomBandH: scaledBottom } =
-      fontScale === 1
+      rhythmScale === 1
         ? { topBandH: natTop, bottomBandH: natBottom }
-        : naturalBandHeights(component, box.w, fontScale)
+        : naturalBandHeights(component, box.w, rhythmScale)
     const finalTotalH = totalH
 
     const { cells } = gridGeom(box.w, finalTotalH, scaledTop, scaledBottom)
@@ -435,7 +448,7 @@ export const bmc: SvgComponent<BmcComponent> = {
     return (
       <g>
         {cells.map((cell) => {
-          const layout = blockLayout(component[cell.key], cell.key, cell.w, fontScale, ctx.fonts.heading)
+          const layout = blockLayout(component[cell.key], cell.key, cell.w, rhythmScale, ctx.fonts.heading)
           return renderBlock(cell, layout, ctx, box.x, box.y, r)
         })}
       </g>
