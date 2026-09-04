@@ -1,5 +1,12 @@
 # @liustack/pptwise
 
+## 0.34.0
+
+### Minor Changes
+
+- 3c04fbb: Every page design now carries a design story, and the review gallery shows one on every axis. All 134 registered page designs say in the same five fields what a theme, a content move and a content block already said: how the page arranges attention, which moves and content volume it serves, the viewing distance it is drawn for, and the closest wrong use. A theme's sparse dressing writes none of its own, because it is keyed by theme and page design and inherits the story of the design it dresses. The drift test that held themes, moves and blocks to a complete story now sweeps the page-design registry too, so a new page design cannot ship without its copy. The gallery renders the card on the 按讲法 detail (the eleven content moves already had the copy and showed none of it) and above the routing card on 按版式, with a Chinese translation for all 134 new entries and no untranslated fields anywhere. Seven built-ins also lost their second name: the label printed by `pptwise themes` is now the name on the design card, so Ink Wash is Ink, Editorial Journal is Journal, and five more agree with their card. Theme ids are unchanged and no rendered page changes.
+- 505c3d7: Breaking: the `citation` component is removed, and the IR now has 38 typed components. A list of references is document content, not slide content: it belongs to the PDF or the report a deck is presented alongside, and a page that stacked labels, refs and links was reproducing a bibliography on a screen nobody reads it from. Every component that rests on outside material keeps its own one-line `source` field, which stays the only form a source takes on a slide. There is no migration and no alias: a page with `type: "citation"` is refused, in the IR and in a spec page's `focus`, with a message that says the component was removed and where a source goes instead. The faces that offered it a body slot no longer list it, and the review corpus draws another component on every page that used to carry one.
+
 ## 0.33.0
 
 ### Minor Changes
