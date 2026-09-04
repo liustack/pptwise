@@ -1,5 +1,6 @@
 import { z } from "zod"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
+import type { DesignStory } from "../../design-story"
 
 // tag_row component wave (`.issues/2026-08-06-tag-row/plan.md`, 控制器裁定
 // 1-3): the 38th component. Closes the internal invented-name gap Cluster C
@@ -105,3 +106,11 @@ export const traits = {
   fullBody: false,
   evidence: false,
 } as const satisfies ComponentTraits
+
+export const story: DesignStory = {
+  name: "Tags",
+  story: "A row of short labels in capsules, with a title above and one label allowed to lead. The tag strip printed under an article.",
+  positioning: "Choose it only for short labels: keywords, categories, tools, markets. Use bullets when the items are prose, and cards when each one needs its own description.",
+  audience: "Readers taking in a vocabulary at a glance.",
+  notFor: "Items with a sentence each, which belong in bullets.",
+}

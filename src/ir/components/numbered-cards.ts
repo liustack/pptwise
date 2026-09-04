@@ -1,5 +1,6 @@
 import { z } from "zod"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
+import type { DesignStory } from "../../design-story"
 
 export const schema = z
   .object({
@@ -33,3 +34,11 @@ export const traits = {
   fullBody: false,
   evidence: false,
 } as const satisfies ComponentTraits
+
+export const story: DesignStory = {
+  name: "Numbered Index",
+  story: "Items numbered from 01 upward, divided by hairline rules into a grid. The contents page of a magazine, where the numbers are how you refer to things.",
+  positioning: "Choose it when parallel items should be countable and quotable by number. Use steps when the order is a procedure to follow, and bullets when plain lines are enough.",
+  audience: "Readers who will point at item three later.",
+  notFor: "A procedure to be carried out in order, which belongs in steps.",
+}

@@ -1,6 +1,7 @@
 import { z } from "zod"
 import { IconNameSchema } from "./shared"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
+import type { DesignStory } from "../../design-story"
 
 export const schema = z
   .object({
@@ -37,3 +38,11 @@ export const traits = {
   fullBody: false,
   evidence: false,
 } as const satisfies ComponentTraits
+
+export const story: DesignStory = {
+  name: "Full-Width Rows",
+  story: "Full-width bands stacked down the page, each numbered, optionally marked with a symbol, and carrying up to three levels of text. The itemised list in an annual report.",
+  positioning: "Choose it when each item carries more than a line and deserves a band of its own. Use icon_cards for short parallel items, and bullets when one line each is enough.",
+  audience: "Readers who will read each entry rather than scan the set.",
+  notFor: "Short parallel items, which belong in icon_cards.",
+}

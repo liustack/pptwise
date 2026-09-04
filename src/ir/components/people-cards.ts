@@ -1,5 +1,6 @@
 import { z } from "zod"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
+import type { DesignStory } from "../../design-story"
 
 // people_cards component wave (`.issues/2026-08-05-component-waves/
 // plan-people-cards.md`, 控制器裁定 1-4): closes the probe evidence gate's
@@ -101,3 +102,11 @@ export const traits = {
   fullBody: false,
   evidence: false,
 } as const satisfies ComponentTraits
+
+export const story: DesignStory = {
+  name: "Roster",
+  story: "Two to twelve people with initials badges, names, roles, and affiliations. The speaker lineup printed on the back of a programme.",
+  positioning: "Choose it when the people are the content: a team, a panel, a lineup, a jury. Use callout or plain prose for a single person's biography.",
+  audience: "An audience working out who is in the room and why.",
+  notFor: "One person's biography, which needs no grid.",
+}

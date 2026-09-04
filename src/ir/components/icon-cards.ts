@@ -1,6 +1,7 @@
 import { z } from "zod"
 import { IconNameSchema } from "./shared"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
+import type { DesignStory } from "../../design-story"
 
 export const schema = z
   .object({
@@ -31,3 +32,11 @@ export const traits = {
   fullBody: false,
   evidence: false,
 } as const satisfies ComponentTraits
+
+export const story: DesignStory = {
+  name: "Icon Grid",
+  story: "Two to six cards, each with a symbol, a title, and a line of text. The feature row a product page has run at the top since product pages existed.",
+  positioning: "Choose it for a handful of parallel items that each earn a symbol and one line. Use row_cards when items carry more text than that, and bullets when a plain line each is enough.",
+  audience: "Readers scanning for the capability that concerns them.",
+  notFor: "Items with several levels of text, which belong in row_cards.",
+}
