@@ -1,5 +1,6 @@
 import { z } from "zod"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
+import type { DesignStory } from "../../design-story"
 
 // device_mockup component wave (`.issues/2026-08-05-component-waves/
 // plan-device-mockup.md`, 控制器裁定 1): closes the "product screenshot
@@ -80,3 +81,11 @@ export const traits = {
   fullBody: false,
   evidence: true,
 } as const satisfies ComponentTraits
+
+export const story: DesignStory = {
+  name: "Screen",
+  story: "A screenshot framed inside a browser window or a phone, so it reads as software actually running rather than a flat picture pasted on the page.",
+  positioning: "Choose it for a screenshot of an interface, a dashboard, or an app. Keep photographs, illustrations, and anything that is not a screen in image.",
+  audience: "Buyers who need proof the product exists and runs.",
+  notFor: "A photograph or illustration, which belongs in image.",
+}

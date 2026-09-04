@@ -1,5 +1,6 @@
 import { z } from "zod"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
+import type { DesignStory } from "../../design-story"
 
 export const schema = z
   .object({
@@ -20,3 +21,11 @@ export const traits = {
   fullBody: false,
   evidence: false,
 } as const satisfies ComponentTraits
+
+export const story: DesignStory = {
+  name: "Before and After",
+  story: "Two pictures with their labels, set against each other as a versus or as a before and after. The pair a renovation brochure prints on facing pages.",
+  positioning: "Choose it when the difference between exactly two images is the argument. Use image_grid when the pictures are a set rather than a pair.",
+  audience: "Viewers who will judge the change with their own eyes.",
+  notFor: "A set of pictures with no pairing, which belongs in image_grid.",
+}
