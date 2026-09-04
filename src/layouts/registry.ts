@@ -57,6 +57,7 @@
 // structural typing makes them freely interchangeable at every call site, so
 // no cast is ever needed where the two meet (`layout-selection.ts`'s
 // `resolveLayoutId`).
+import type { DesignStory } from "@/design-story"
 import type { STRATEGY_VALUES } from "@/ir/narrative-values"
 
 // layoutDef imports (src domain reorg wave 1, task T1d): 130 layout files
@@ -329,6 +330,17 @@ export interface LayoutDefinition {
    * belongs in its own change, not in a rename.
    */
   kind: "standard" | "takeover"
+  /**
+   * The face's design story: how it arranges attention, which moves it
+   * serves, and the viewing distance it is drawn for. Public copy, the same
+   * six fields a theme, a kind, and a component carry.
+   *
+   * Optional and unfilled today: the faces are being written in their own
+   * batch, and `design-story.test.ts` leaves them out of the drift sweep
+   * until they are. Only the general faces will carry one — a skin variant
+   * inherits the story of the face it dresses.
+   */
+  story?: DesignStory
   slideTypes: readonly SlideType[]
   slots: readonly LayoutSlot[]
   /**
