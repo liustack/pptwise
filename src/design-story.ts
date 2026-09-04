@@ -504,6 +504,24 @@ export function findForbiddenNameWords(text: string): readonly string[] {
   return [...latin, ...zh]
 }
 
+/**
+ * Whether a piece of text *is* one of the forbidden names, rather than merely
+ * containing one.
+ *
+ * This is the form the rule takes on an id. An id is a single handle, and
+ * handles get composed: the review corpus builds
+ * `matrix-classroom-cover-boundary-fashion-masthead` out of a theme, a slot,
+ * and the internal name of the drawing under test. Scanning that for words
+ * says nothing about whether anybody named anything after a customer, while
+ * an id that simply reads `healthcare` says exactly that. Labels and story
+ * names are prose a person reads, so they stay on the full scan.
+ */
+export function isForbiddenName(text: string): boolean {
+  const tokens = nameTokens(text).join(" ")
+  return FORBIDDEN_NAME_WORDS.some((word) => nameTokens(word).join(" ") === tokens) ||
+    FORBIDDEN_NAME_WORDS_ZH.some((word) => text.trim() === word)
+}
+
 /** Every maintainer word a piece of prose says, in list order. */
 export function findMaintainerWords(text: string): readonly string[] {
   const tokens = new Set(nameTokens(text))

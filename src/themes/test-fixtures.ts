@@ -81,7 +81,11 @@ export function registerTestTheme(
   registerTheme({
     version: 2,
     id,
-    label: `Test copy of ${sourceThemeId}`,
+    // Deliberately says nothing about the theme it copies. A label is a
+    // public name, held to the naming rule, and a fixture that echoed
+    // `classroom` or `consulting` into its label would be asking the rule for
+    // an exception it should not get.
+    label: "Test fixture",
     style: publicStyle(sourceThemeId, id),
     brand: structuredClone(source.brand),
     occasions: source.occasions === undefined ? undefined : [...source.occasions],

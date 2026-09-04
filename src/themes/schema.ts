@@ -7,7 +7,7 @@ import {
   type BrandConfig,
   type BUILTIN_THEME_IDS,
 } from "@/ir"
-import { findForbiddenNameWords, validateDesignStory, type DesignStory } from "../design-story"
+import { findForbiddenNameWords, isForbiddenName, validateDesignStory, type DesignStory } from "../design-story"
 import { isLegacyThemeName } from "./legacy-names"
 import type { MotifId } from "../motifs/types"
 import { OCCASION_VOCAB, type Occasion } from "./occasions"
@@ -152,7 +152,11 @@ const CommonThemeFileFields = {
  */
 function checkNameRule(text: string | undefined, path: (string | number)[], ctx: z.RefinementCtx): void {
   if (text === undefined || isLegacyThemeName(text)) return
-  for (const word of findForbiddenNameWords(text)) {
+  // An id is one handle and handles get composed, so it is held to being a
+  // forbidden name rather than to containing a forbidden word. See
+  // `isForbiddenName`.
+  const words = path[0] === "id" ? (isForbiddenName(text) ? findForbiddenNameWords(text) : []) : findForbiddenNameWords(text)
+  for (const word of words) {
     ctx.addIssue({
       code: "custom",
       path,

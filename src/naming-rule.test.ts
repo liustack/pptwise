@@ -4,7 +4,7 @@ import { KIND_VALUES } from "@/ir/narrative-values"
 import { THEME_DEFINITIONS } from "@/themes/definitions"
 import { ThemeFileSchema } from "@/themes/schema"
 import { themeFileFromPreset } from "@/cli/theme-resolve"
-import { FORBIDDEN_NAME_WORDS, findForbiddenNameWords } from "./design-story"
+import { FORBIDDEN_NAME_WORDS, findForbiddenNameWords, isForbiddenName } from "./design-story"
 import { LEGACY_THEME_NAMES } from "./themes/legacy-names"
 
 /**
@@ -116,6 +116,25 @@ describe("a name names a voice, never a vertical", () => {
     expect(() =>
       ThemeFileSchema.parse({ ...base, story: { ...base.story!, name: "Fintech" } }),
     ).toThrow(/fintech/)
+  })
+
+  it("holds an id to being a forbidden name, not to containing one", () => {
+    // An id is one handle, and handles get composed out of internal parts
+    // the rule was never about. A label or a story name is prose and stays
+    // on the full scan.
+    const base = themeFileFromPreset("swiss", { id: "acme" })
+    const withId = (id: string) => ({ ...base, id, style: { ...base.style, id } })
+    expect(() => ThemeFileSchema.parse(withId("healthcare"))).toThrow(/healthcare/)
+    expect(() => ThemeFileSchema.parse(withId("matrix-classroom-cover-fashion-masthead"))).not.toThrow()
+    expect(() => ThemeFileSchema.parse({ ...base, label: "A Classroom Deck" })).toThrow(/classroom/)
+  })
+
+  it("knows a forbidden name from a name that merely says one", () => {
+    expect(isForbiddenName("healthcare")).toBe(true)
+    expect(isForbiddenName("Real Estate")).toBe(true)
+    expect(isForbiddenName("real-estate")).toBe(true)
+    expect(isForbiddenName("acme-healthcare-deck")).toBe(false)
+    expect(isForbiddenName("swiss")).toBe(false)
   })
 
   it("reports what the rename batch still owes", () => {
