@@ -118,6 +118,15 @@ describe("scanSentences", () => {
     // A closing quote or bracket may sit after the full stop.
     ["Readers who ask \u201cWhy?\u201d", 1, true],
     ["The answer (finally.)", 1, true],
+    // An abbreviation starts a word. Without a left boundary `st.` ate the
+    // end of "robust." and `co.` the end of "Mexico.", losing a sentence.
+    ["It was robust. Next.", 2, true],
+    ["We serve Mexico. Then leave.", 2, true],
+    // A closing quote sits between the full stop and the sentence end, on
+    // either side of the boundary.
+    ["First.\u201d Second.", 2, true],
+    ["Choose reports, etc.\u201d", 1, true],
+    ["The U.S.\u201d", 1, true],
     // A fragment after the last full stop leaves the text unfinished.
     ["Leaders listen. trailing fragment", 1, false],
     ["anything loud", 0, false],
@@ -173,9 +182,12 @@ describe("validateDesignStory", () => {
   })
 
   it("refuses a name that ends on punctuation", () => {
-    expect(validateDesignStory({ ...good, name: "Ledger." }).map((p) => p.code)).toContain(
-      "name_reads_as_sentence",
-    )
+    // A closing quote or bracket does not launder the full stop under it.
+    for (const name of ["Ledger.", "Ledger.\u201d", "Ledger?)", "Ledger\u3002\u3011"]) {
+      expect(validateDesignStory({ ...good, name }).map((p) => p.code), name).toContain(
+        "name_reads_as_sentence",
+      )
+    }
   })
 
   it("allows punctuation inside a name", () => {

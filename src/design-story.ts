@@ -126,10 +126,18 @@ function escapeRegExp(text: string): string {
  */
 function maskNonBoundaries(text: string): string {
   const lastIndex = text.replace(/\s+$/, "").length
+  const closers = new RegExp(`^[${SENTENCE_CLOSERS}]*$`)
   let masked = text
   for (const abbreviation of ABBREVIATIONS) {
-    masked = masked.replace(new RegExp(escapeRegExp(abbreviation), "gi"), (match, offset: number) => {
-      const endsText = offset + match.length === lastIndex
+    // The left boundary is what stops `co.` from eating the end of "Mexico."
+    // and `st.` the end of "robust." — an abbreviation starts a word.
+    const pattern = new RegExp(`(?<![\\p{L}\\p{N}])${escapeRegExp(abbreviation)}`, "giu")
+    masked = masked.replace(pattern, (match, offset: number) => {
+      // A quote or bracket may sit between the abbreviation and the end of
+      // the text, and the abbreviation's own full stop is still the one
+      // closing the sentence: `Choose reports, etc.”` is finished.
+      const tail = masked.slice(offset + match.length, lastIndex)
+      const endsText = closers.test(tail)
       const body = "x".repeat(match.length - 1)
       return endsText ? body + match.slice(-1) : `${body}x`
     })
@@ -235,8 +243,11 @@ export function validateDesignStory(story: DesignStory): readonly StoryProblem[]
   }
 
   // Anchored: a name may carry a full stop inside it ("No. 5"), it just may
-  // not end on one, which is what would make it read as a sentence.
-  if (typeof story.name === "string" && new RegExp(`[${escapeRegExp(TERMINATORS)}]\\s*$`).test(story.name)) {
+  // not end on one, which is what would make it read as a sentence. A
+  // closing quote or bracket does not launder it — `Ledger.”` still ends a
+  // sentence, and so does `Ledger?)`.
+  const nameEndsSentence = new RegExp(`[${escapeRegExp(TERMINATORS)}][${SENTENCE_CLOSERS}]*\\s*$`)
+  if (typeof story.name === "string" && nameEndsSentence.test(story.name)) {
     add("name", "name_reads_as_sentence", "name is a name, not a sentence — drop the closing punctuation")
   }
   for (const word of findForbiddenNameWords(story.name ?? "")) {
@@ -298,8 +309,8 @@ export const FORBIDDEN_NAME_WORDS: readonly string[] = [
   "consultant",
   "cybersecurity",
   "defense",
+  "defence",
   "ecommerce",
-  "e commerce",
   "education",
   "energy",
   "esports",
@@ -340,6 +351,7 @@ export const FORBIDDEN_NAME_WORDS: readonly string[] = [
   "tech",
   "technology",
   "telecom",
+  "telecommunication",
   "tourism",
   "transportation",
   "utilities",
@@ -467,6 +479,9 @@ export const MAINTAINER_WORDS: readonly string[] = ["face", "layout", "renderer"
 function nameTokens(text: string): readonly string[] {
   return text
     .toLowerCase()
+    // An ampersand is a word, not a separator. "Oil & Gas" and "Oil and Gas"
+    // are the same name, and only one of them was being read.
+    .replace(/&/g, " and ")
     .replace(/[^\p{L}\p{N}]+/gu, " ")
     .trim()
     .split(/\s+/)
@@ -484,10 +499,27 @@ function singularize(token: string): string {
   return token
 }
 
-function containsSequence(haystack: readonly string[], needle: readonly string[]): boolean {
+/**
+ * Does the name say the listed phrase, however it is spaced?
+ *
+ * The comparison runs on the tokens joined together, with the token
+ * boundaries remembered, so `nonprofit`, `non-profit` and `non profit` are
+ * one name and the list needs one entry rather than three. Requiring both
+ * ends to land on a boundary is what keeps the join from inventing matches:
+ * `fintech-dark` squashes to `fintechdark`, and `tech` appears inside it at
+ * no boundary at all, so it is not a match — while `fintech` is.
+ */
+function containsPhrase(haystack: readonly string[], needle: readonly string[]): boolean {
   if (needle.length === 0) return false
-  for (let i = 0; i + needle.length <= haystack.length; i += 1) {
-    if (needle.every((token, j) => haystack[i + j] === token)) return true
+  const boundaries = new Set<number>([0])
+  let squashed = ""
+  for (const token of haystack) {
+    squashed += token
+    boundaries.add(squashed.length)
+  }
+  const target = needle.join("")
+  for (let at = squashed.indexOf(target); at !== -1; at = squashed.indexOf(target, at + 1)) {
+    if (boundaries.has(at) && boundaries.has(at + target.length)) return true
   }
   return false
 }
@@ -499,27 +531,9 @@ function containsSequence(haystack: readonly string[], needle: readonly string[]
  */
 export function findForbiddenNameWords(text: string): readonly string[] {
   const tokens = nameTokens(text)
-  const latin = FORBIDDEN_NAME_WORDS.filter((word) => containsSequence(tokens, nameTokens(word)))
+  const latin = FORBIDDEN_NAME_WORDS.filter((word) => containsPhrase(tokens, nameTokens(word)))
   const zh = FORBIDDEN_NAME_WORDS_ZH.filter((word) => text.includes(word))
   return [...latin, ...zh]
-}
-
-/**
- * Whether a piece of text *is* one of the forbidden names, rather than merely
- * containing one.
- *
- * This is the form the rule takes on an id. An id is a single handle, and
- * handles get composed: the review corpus builds
- * `matrix-classroom-cover-boundary-fashion-masthead` out of a theme, a slot,
- * and the internal name of the drawing under test. Scanning that for words
- * says nothing about whether anybody named anything after a customer, while
- * an id that simply reads `healthcare` says exactly that. Labels and story
- * names are prose a person reads, so they stay on the full scan.
- */
-export function isForbiddenName(text: string): boolean {
-  const tokens = nameTokens(text).join(" ")
-  return FORBIDDEN_NAME_WORDS.some((word) => nameTokens(word).join(" ") === tokens) ||
-    FORBIDDEN_NAME_WORDS_ZH.some((word) => text.trim() === word)
 }
 
 /** Every maintainer word a piece of prose says, in list order. */
