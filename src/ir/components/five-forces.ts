@@ -51,7 +51,7 @@ export const traits = {
 
 export const story: DesignStory = {
   name: "Five Forces",
-  story: "Competitive rivalry in the centre, four pressures around it, each rated for intensity. Porter's arrangement, drawn as it has been taught for decades.",
+  story: "Competitive rivalry in the centre and four pressures around it, each rated for intensity when a rating is given. Porter's arrangement, drawn as it has been taught for decades.",
   positioning: "Choose it to size the structural pressure on a market from five named directions. Use swot when the assessment weighs one organisation's own strengths, and pest for the wider outside conditions.",
   audience: "Strategists judging whether a market is worth entering.",
   notFor: "An open centre-and-satellites picture, which belongs in hub_spoke.",

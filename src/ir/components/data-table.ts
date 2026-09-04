@@ -117,7 +117,7 @@ export const traits = {
 
 export const story: DesignStory = {
   name: "Table",
-  story: "Columns with headers, rows of records, emphasis on the rows that matter, and a source line underneath. The table a report prints when the figures must survive inspection.",
+  story: "Columns with headers and rows of records, with emphasis on the rows that matter and a source line underneath when they are given. The table a report prints when figures must survive inspection.",
   positioning: "Choose it when exact values must be read row by row. Use chart when the shape of the numbers matters more than their digits, and comparison when the cells are qualitative.",
   audience: "Readers who will check a figure rather than take an impression.",
   notFor: "A trend meant to be seen at a glance, which belongs in a chart.",

@@ -105,7 +105,7 @@ export const traits = {
 
 export const story: DesignStory = {
   name: "Roster",
-  story: "Two to twelve people with initials badges, names, roles, and affiliations. The speaker lineup printed on the back of a programme.",
+  story: "Two to twelve people with initials badges and names, plus roles and affiliations when they are given. The speaker lineup printed on the back of a programme.",
   positioning: "Choose it when the people are the content: a team, a panel, a lineup, a jury. Use callout or plain prose for a single person's biography.",
   audience: "An audience working out who is in the room and why.",
   notFor: "One person's biography, which needs no grid.",

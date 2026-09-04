@@ -54,7 +54,7 @@ export const traits = {
 
 export const story: DesignStory = {
   name: "Schedule",
-  story: "Bars on one shared axis, each beginning and ending where its work does, with tick labels along the bottom. The schedule pinned above the desk.",
+  story: "Bars on one shared axis, each beginning and ending where its work does, with tick labels along the bottom when the axis is labelled. The schedule pinned above the desk.",
   positioning: "Choose it when work items share one measured axis and their overlaps are the point. Use roadmap for phases with no common axis, and timeline when dated moments matter more than durations.",
   audience: "Teams checking what runs at the same time as what.",
   notFor: "Phases without a shared axis, which belong in roadmap.",

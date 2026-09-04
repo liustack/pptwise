@@ -38,8 +38,8 @@ export const traits = {
 
 export const story: DesignStory = {
   name: "Headline Numbers",
-  story: "A row of cards, each with a figure, its label, the direction it moved, and where it came from. The top strip of a report, read before anything else.",
-  positioning: "Choose it for several independent headline figures side by side. Use progress_donuts when every figure is a completion rate, and chart when the shape of a series is the point.",
+  story: "A row of cards, each with a figure and its label, plus the direction it moved and where it came from when those are given. The top strip of a report, read first.",
+  positioning: "Choose it for independent headline figures set side by side. Use progress_donuts when every figure is a completion rate, and chart when the shape of a series is the point.",
   audience: "A room that will remember the numbers and nothing else.",
   notFor: "Completion rates, which belong in progress_donuts.",
 }

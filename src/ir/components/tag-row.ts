@@ -109,7 +109,7 @@ export const traits = {
 
 export const story: DesignStory = {
   name: "Tags",
-  story: "A row of short labels in capsules, with a title above and one label allowed to lead. The tag strip printed under an article.",
+  story: "A row of short labels in capsules, under a title when there is one, and one label may lead. The tag strip printed under an article.",
   positioning: "Choose it only for short labels: keywords, categories, tools, markets. Use bullets when the items are prose, and cards when each one needs its own description.",
   audience: "Readers taking in a vocabulary at a glance.",
   notFor: "Items with a sentence each, which belong in bullets.",
