@@ -827,6 +827,40 @@ function parkEdgeLabel(
           { x: p.x + (LABEL_LINE_CLEAR + chipW / 2), y: p.y },
         ],
   )
+  // Last resort: centre the chip on what the neighbouring cards actually
+  // leave free, rather than on the polyline segment.
+  //
+  // The segment runs anchor to anchor, and a diamond's anchor is its side
+  // vertex — a long way inside its own bounding box. Centring on that
+  // segment parks a decision node's outgoing label on the diamond's card,
+  // every candidate is rejected for node overlap, and a label the drawing
+  // has room for is declared dropped instead (consulting's English and
+  // mixed `process` pages). Measuring the free span between the two cards
+  // puts it where it belongs. Only reached when the ordinary placement
+  // found nothing, so every drawing that already parks its labels is
+  // untouched.
+  const freeSpanCandidates = (): { x: number; y: number }[] => {
+    if (!horizontal) return []
+    const segLo = Math.min(segA.x, segB.x)
+    const segHi = Math.max(segA.x, segB.x)
+    const bandTop = midY - LABEL_LINE_CLEAR - chipH
+    const bandBottom = midY + LABEL_LINE_CLEAR + chipH
+    let freeLo = segLo
+    let freeHi = segHi
+    for (const n of nodeBoxes) {
+      if (n.y >= bandBottom || n.y + n.h <= bandTop) continue
+      const right = n.x + n.w
+      if (right > freeLo && right < segHi) freeLo = right
+      if (n.x < freeHi && n.x > segLo) freeHi = n.x
+    }
+    if (freeHi - freeLo < chipW) return []
+    const fx = (freeLo + freeHi) / 2
+    return [
+      { x: fx, y: midY - (LABEL_LINE_CLEAR + chipH / 2) },
+      { x: fx, y: midY + (LABEL_LINE_CLEAR + chipH / 2) },
+    ]
+  }
+
   const candidates = [...offsets, ...extra]
   const scored: { x: number; y: number; other: number }[] = []
   for (const c of candidates) {
@@ -848,7 +882,16 @@ function parkEdgeLabel(
     if (blocked) continue
     scored.push({ x: c.x, y: c.y, other })
   }
-  if (scored.length === 0) return null
+  if (scored.length === 0) {
+    for (const c of freeSpanCandidates()) {
+      const chip = chipAt(c.x, c.y)
+      if (nodeBoxes.some((n) => aabbOverlap(chip, n))) continue
+      if (arrowBoxes.some((a) => aabbOverlap(chip, a))) continue
+      if (otherStrokes.some((stroke) => minDistChipToPolyline(chip, stroke) < 6)) continue
+      return { x: c.x, y: c.y }
+    }
+    return null
+  }
   scored.sort((a, b) => b.other - a.other)
   return { x: scored[0]!.x, y: scored[0]!.y }
 }
@@ -879,8 +922,16 @@ function computeEdgeLabel(
   if (availableWidth < MIN_LABEL_WIDTH) return null
 
   const idealFont = Math.max(9, Math.min(16, Math.round(FONT_SIZE * scale)))
+  // Fit the text to what is left *after* the chip's own horizontal padding,
+  // not to the whole gap. The chip is what `parkEdgeLabel` has to place, and
+  // it is `LABEL_CHIP_PAD_X * 2` wider than the text inside it — so a label
+  // fitted right up to `availableWidth` produced a chip 8px wider than the
+  // space this function had just measured as available, and parking rejected
+  // it against the arrowhead. The component was measuring one width and
+  // painting another, and the label it dropped was one it had room for
+  // (consulting's English and mixed `process` pages, both fixed by this).
   const fitted = fitSvgLine(edge.label, {
-    maxWidth: availableWidth,
+    maxWidth: Math.max(0, availableWidth - LABEL_CHIP_PAD_X * 2),
     fontSize: idealFont,
     minFontSize: MIN_FONT_SIZE,
   })
