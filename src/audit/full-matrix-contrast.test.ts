@@ -1493,10 +1493,16 @@ const MUTED_SURFACE_CLASS: Record<string, MutedSurfaceClass> = {
   // pageBg, …)` on the ambient page background, same shape as timeline's.
   progress_donuts: "page-bg",
   // staircase.tsx paints `colors.muted` for a tread's unit and note, always
-  // on the unblended `colors.surface` tread fill. The one tread filled with
-  // `colors.primary` routes both through `accessibleInk(colors.surface, …)`
-  // instead, so muted never lands on it.
+  // on the unblended `colors.surface` tread fill. The one highlighted tread
+  // routes both through `accessibleInk(colors.surface, …)` against its own
+  // reversed fill instead, so muted never lands on it.
   staircase: "flat-surface",
+  // chevron-process.tsx paints `colors.muted` twice: the stage index inside
+  // a chevron whose fill is the unblended `colors.surface` token, and the
+  // note line under the band, which sits on the ambient page background and
+  // routes through `accessibleInk` against it. The one highlighted chevron
+  // takes its index ink from `colors.surface` instead.
+  chevron_process: "flat-surface",
 }
 
 describe("colors.muted component-type coverage (task-2 fix round, backlog 5a completeness sweep)", () => {

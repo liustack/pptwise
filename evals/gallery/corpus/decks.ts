@@ -175,6 +175,7 @@ const COMPONENT_KINDS: Record<Component["type"], PageKind> = {
   roadmap: "process",
   cycle: "process",
   staircase: "process",
+  chevron_process: "process",
   hub_spoke: "hierarchy",
   rings: "hierarchy",
   matrix: "comparison",

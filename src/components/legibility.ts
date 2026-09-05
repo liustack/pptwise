@@ -5,7 +5,7 @@ import {
   truncateToUnits,
   type TextWeightHint,
 } from "../lib/svg-text-layout"
-import { accessibleInk } from "../render/ink"
+import { accessibleInk, contrastRatio } from "../render/ink"
 
 /** User-visible type floors for component-form item titles and body (1280×720 px). */
 export const FORM_TITLE_FLOOR = 20
@@ -25,6 +25,29 @@ export const BOARD_CARD_H = 280
 export const BOARD_TITLE = 23
 export const BOARD_BODY = 16.5
 export const TITLE_BODY_RATIO = BOARD_TITLE / BOARD_BODY
+
+/**
+ * How far a highlighted card's fill must sit from its siblings' before it
+ * reads as a different card rather than a printing artifact. Well under the
+ * text floors on purpose: this is two panels side by side, not ink on paper.
+ */
+const HIGHLIGHT_MIN_RATIO = 2
+
+/**
+ * The fill that singles one card out from its siblings.
+ *
+ * The ruling is that a highlighted card is filled whole and its text
+ * reversed — never an edge bar, a dash, or a coloured square.
+ * `colors.primary` is the fill that says so on a light theme. A dark theme's
+ * primary is a *deeper* shade of its own surface, though (luxe paints
+ * `#171310` on `#14110E`), so filling with it there produces a card nobody
+ * can see. Those themes fall back to the text token: a light slab on a dark
+ * page is the same inversion read the other way round, and the text on it
+ * still resolves through `accessibleInk` against whatever came back.
+ */
+export function formHighlightFill(colors: { primary: string; surface: string; text: string }): string {
+  return contrastRatio(colors.primary, colors.surface) >= HIGHLIGHT_MIN_RATIO ? colors.primary : colors.text
+}
 
 /** Keep a form's preferred text color when it is readable on its own fill. */
 export function formLegibleInk(preferredFill: string, fill: string, fontSize: number): string {

@@ -70,6 +70,7 @@ import { aliases as sankeyAliases } from "./components/sankey"
 import { aliases as hubSpokeAliases } from "./components/hub-spoke"
 import { aliases as progressDonutsAliases } from "./components/progress-donuts"
 import { aliases as staircaseAliases } from "./components/staircase"
+import { aliases as chevronProcessAliases } from "./components/chevron-process"
 
 /** One component type's `{ aliasKey: canonicalKey }` map. */
 export type FieldAliasMap = Readonly<Record<string, string>>
@@ -186,6 +187,9 @@ export const COMPONENT_ITEM_FIELD_ALIASES: Readonly<Record<string, readonly Item
   // Staircase levels are cards in every respect but their height, so the
   // same generic title-for-label and text-for-note slips apply.
   staircase: staircaseAliases.items,
+  // A chevron stage is a card with a point on it, so the same
+  // title-for-label and description-for-text slips apply.
+  chevron_process: chevronProcessAliases.items,
 }
 
 /**

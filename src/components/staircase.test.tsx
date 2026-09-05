@@ -9,6 +9,8 @@ import { staircase } from "./staircase"
 import { FORM_BODY_FLOOR, FORM_TITLE_FLOOR } from "./legibility"
 import { buildCtx } from "../render/full-slide-svg"
 import { resolveStyle } from "../themes"
+import { listThemes } from "../api"
+import { contrastRatio } from "../render/ink"
 import type { ComponentCtx } from "./types"
 
 function themed(id: string): ComponentCtx {
@@ -128,6 +130,19 @@ describe("staircase component", () => {
         expect(r.x, `n=${n}`).toBeGreaterThanOrEqual(-1)
         expect(r.x + r.w, `n=${n}`).toBeLessThanOrEqual(box.w + 1)
       }
+    }
+  })
+
+
+  it("keeps the highlighted tread visible on every theme, dark ones included", () => {
+    for (const theme of listThemes().map((t) => t.id)) {
+      const ctx = themed(theme)
+      const { container } = svg(staircase.render(five, { x: 88, y: 96, w: 1104 }, ctx))
+      const treads = rects(container)
+      const fill = treads.at(-1)!.fill!
+      expect(fill, theme).not.toBe(ctx.colors.surface)
+      // Same floor `formHighlightFill` promises: two panels apart, not ink on paper.
+      expect(contrastRatio(fill, ctx.colors.surface), theme).toBeGreaterThanOrEqual(2)
     }
   })
 

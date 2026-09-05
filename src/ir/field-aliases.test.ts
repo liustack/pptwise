@@ -638,6 +638,42 @@ const ITEM_CASES: readonly ItemCase[] = [
     pad: [{ title: "Rollout", value: "248" }, { title: "Platform", value: "96" }],
     expected: "one seat, one team",
   },
+  {
+    type: "chevron_process",
+    itemsKey: "items",
+    alias: "label",
+    canonical: "title",
+    item: { label: "Scope" },
+    pad: [{ title: "Build" }, { title: "Hand over" }],
+    expected: "Scope",
+  },
+  {
+    type: "chevron_process",
+    itemsKey: "items",
+    alias: "name",
+    canonical: "title",
+    item: { name: "Scope" },
+    pad: [{ title: "Build" }, { title: "Hand over" }],
+    expected: "Scope",
+  },
+  {
+    type: "chevron_process",
+    itemsKey: "items",
+    alias: "description",
+    canonical: "text",
+    item: { title: "Scope", description: "one page of intent" },
+    pad: [{ title: "Build" }, { title: "Hand over" }],
+    expected: "one page of intent",
+  },
+  {
+    type: "chevron_process",
+    itemsKey: "items",
+    alias: "desc",
+    canonical: "text",
+    item: { title: "Scope", desc: "one page of intent" },
+    pad: [{ title: "Build" }, { title: "Hand over" }],
+    expected: "one page of intent",
+  },
 ]
 
 describe("COMPONENT_ITEM_FIELD_ALIASES: every row round-trips", () => {
@@ -667,7 +703,7 @@ describe("COMPONENT_ITEM_FIELD_ALIASES: every row round-trips", () => {
 // ── total pair count pinned (docs/changeset "53 total synonym pairs") ──────
 
 describe("total synonym-pair count", () => {
-  it("COMPONENT_FIELD_ALIASES + COMPONENT_ITEM_FIELD_ALIASES flatten to exactly 68 pairs", () => {
+  it("COMPONENT_FIELD_ALIASES + COMPONENT_ITEM_FIELD_ALIASES flatten to exactly 72 pairs", () => {
     // The "covers every row exactly once" completeness guards above only
     // prove BLOCK_CASES/ITEM_CASES stay in lockstep with each table's own
     // rows — a row deleted from a table *and* its matching test case would
@@ -684,7 +720,7 @@ describe("total synonym-pair count", () => {
       (n, specs) => n + specs.reduce((m, spec) => m + Object.keys(spec.aliases).length, 0),
       0,
     )
-    expect(blockCount + itemCount).toBe(68)
+    expect(blockCount + itemCount).toBe(72)
   })
 })
 

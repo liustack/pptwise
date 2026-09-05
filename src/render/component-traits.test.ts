@@ -181,7 +181,7 @@ describe("SCALABLE_TYPES duplication verdict (content-bento-panel.tsx:105 vs con
 })
 
 describe("PASSTHROUGH_SHELL_TYPES equivalence (was content-bento-panel.tsx:134-143, plus R1's data_table addition)", () => {
-  it("matches the pre-refactor members plus data_table, cycle, hub_spoke, and staircase", () => {
+  it("matches the pre-refactor members plus data_table, cycle, hub_spoke, staircase, and chevron_process", () => {
     // content-bento-panel.tsx:134-143 (pre-refactor):
     // new Set(["steps", "flowchart", "architecture", "timeline", "paragraph", "blockquote"])
     const preRefactor = ["steps", "flowchart", "architecture", "timeline", "paragraph", "blockquote"]
@@ -201,7 +201,7 @@ describe("PASSTHROUGH_SHELL_TYPES equivalence (was content-bento-panel.tsx:134-1
     // element, same self-framed-node family — third and last addition.
     // staircase (flow-components wave): a flight of self-framed treads, same
     // family again.
-    const current = [...preRefactor, "data_table", "cycle", "hub_spoke", "staircase"]
+    const current = [...preRefactor, "data_table", "cycle", "hub_spoke", "staircase", "chevron_process"]
     expect(new Set(PASSTHROUGH_SHELL_TYPES)).toEqual(new Set(current))
     expect(PASSTHROUGH_SHELL_TYPES.size).toBe(current.length)
   })

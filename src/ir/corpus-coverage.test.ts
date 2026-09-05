@@ -208,6 +208,16 @@ const COVERAGE_ENTRIES: Record<string, unknown> = {
   }),
   // staircase's own hard check is the level-count floor: two treads read as
   // a comparison, not a climb.
+  // chevron_process' own hard check is the stage-count floor: two chevrons
+  // read as a before/after, which is `comparison`.
+  "coverage/chevron_process-valid": minimalDeck({
+    type: "chevron_process",
+    items: [{ title: "Scope" }, { title: "Build" }, { title: "Hand over" }],
+  }),
+  "coverage/chevron_process-tripwire": minimalDeck({
+    type: "chevron_process",
+    items: [{ title: "Scope" }, { title: "Hand over" }],
+  }),
   "coverage/staircase-valid": minimalDeck({
     type: "staircase",
     items: [

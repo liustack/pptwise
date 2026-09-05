@@ -42,6 +42,7 @@ import { renderDef as tagRowRenderDef } from "./tag-row"
 import { renderDef as hubSpokeRenderDef } from "./hub-spoke"
 import { renderDef as progressDonutsRenderDef } from "./progress-donuts"
 import { renderDef as staircaseRenderDef } from "./staircase"
+import { renderDef as chevronProcessRenderDef } from "./chevron-process"
 
 /**
  * Dispatch table (src domain reorg wave 2, spec §4.2/§4.3): replaces the
@@ -103,6 +104,7 @@ const RENDER_DEFS: Record<ComponentType, RenderDef> = {
   hub_spoke: hubSpokeRenderDef,
   progress_donuts: progressDonutsRenderDef,
   staircase: staircaseRenderDef,
+  chevron_process: chevronProcessRenderDef,
 }
 
 /**

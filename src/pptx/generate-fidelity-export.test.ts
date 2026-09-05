@@ -284,6 +284,14 @@ const COMPONENT_BY_TYPE: Record<Component["type"], Component> = {
       { value: "72%", label: "closure" },
     ],
   },
+  chevron_process: {
+    type: "chevron_process",
+    items: [
+      { title: "Scope", text: "one page of intent" },
+      { title: "Build" },
+      { title: "Hand over" },
+    ],
+  },
   staircase: {
     type: "staircase",
     items: [

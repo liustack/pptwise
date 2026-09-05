@@ -7,6 +7,7 @@ import {
   FORM_TITLE_FLOOR,
   fitFormLine,
   fitFormTitleLine,
+  formHighlightFill,
   formLineHeight,
 } from "./legibility"
 import type { RenderDef, SvgComponent } from "./types"
@@ -15,8 +16,9 @@ type StaircaseComponent = Extract<Component, { type: "staircase" }>
 
 /**
  * 真楼梯：每一级是一块踏板，压在前一级的立板上，从左到右升高，所有踏板
- * 共用同一条底线。最高的一级整块填 primary、字反白——这是「突出一项」
- * 唯一允许的做法（不画边条、不画装饰方块）。全部 rect/text 原语，导出安全。
+ * 共用同一条底线。最高的一级整块反色填满、字反白（填色见 formHighlightFill，
+ * 深色主题的 primary 与 surface 几乎同色，那里换成 text）——这是「突出一项」
+ * 唯一允许的做法，不画边条、不画装饰方块。全部 rect/text 原语，导出安全。
  */
 
 /** Whole drawing at its tallest, before the rise is clamped. */
@@ -86,13 +88,14 @@ export const staircase: SvgComponent<StaircaseComponent> = {
     const border = ctx.colors.border ?? ctx.colors.muted
     const radius = ctx.shape?.radius ?? 4
     const top = component.items.length - 1
+    const highlight = formHighlightFill(ctx.colors)
 
     return (
       <g transform={`translate(${box.x},${box.y})`}>
         {steps.map((step, i) => {
           const item = component.items[i]!
           const filled = i === top
-          const fill = filled ? ctx.colors.primary : ctx.colors.surface
+          const fill = filled ? highlight : ctx.colors.surface
           const inner = step.w - step.pad * 2
           const title = fitFormTitleLine(item.title, {
             maxWidth: inner,
@@ -130,7 +133,7 @@ export const staircase: SvgComponent<StaircaseComponent> = {
                 height={step.h}
                 rx={radius}
                 fill={fill}
-                stroke={filled ? ctx.colors.primary : border}
+                stroke={filled ? highlight : border}
                 strokeWidth={1}
               />
               <text
