@@ -39,6 +39,7 @@ export type DropKind =
   | "value-label"
   | "stage-name"
   | "title-character"
+  | "asset"
 
 const DROP_UNITS: Record<DropKind, readonly [singular: string, plural: string]> = {
   component: ["content block", "content blocks"],
@@ -54,6 +55,10 @@ const DROP_UNITS: Record<DropKind, readonly [singular: string, plural: string]> 
   "value-label": ["value label", "value labels"],
   "stage-name": ["stage name", "stage names"],
   "title-character": ["title character", "title characters"],
+  // A component whose schema requires a picture was handed an asset id the
+  // deck's asset map does not resolve. Nothing is invented in its place, and
+  // "picture" is the word an author fixing it would use.
+  asset: ["picture", "pictures"],
 }
 
 /** `14 series names`, `1 content block` — the phrase an error message uses. */
