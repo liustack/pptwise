@@ -179,6 +179,7 @@ const COMPONENT_KINDS: Record<Component["type"], PageKind> = {
   swimlane: "process",
   journey_map: "process",
   decision_tree: "hierarchy",
+  from_to: "comparison",
   hub_spoke: "hierarchy",
   rings: "hierarchy",
   matrix: "comparison",

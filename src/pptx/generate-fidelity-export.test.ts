@@ -284,6 +284,17 @@ const COMPONENT_BY_TYPE: Record<Component["type"], Component> = {
       { value: "72%", label: "closure" },
     ],
   },
+  from_to: {
+    type: "from_to",
+    from: { kicker: "from", title: "First half, actual" },
+    to: { kicker: "to", title: "Second half, target" },
+    rows: [
+      { label: "Time to open", from: "9", to: "5", unit: "weeks", change: "four weeks off" },
+      { label: "Renewal rate", from: "91", to: "95", unit: "%", change: "four points on" },
+      { label: "Seats per account", from: "46", to: "72", unit: "seats" },
+    ],
+    span: "twelve months",
+  },
   decision_tree: {
     type: "decision_tree",
     question: "Does the customer already run a data platform?",

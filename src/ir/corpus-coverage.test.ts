@@ -208,6 +208,27 @@ const COVERAGE_ENTRIES: Record<string, unknown> = {
   }),
   // staircase's own hard check is the level-count floor: two treads read as
   // a comparison, not a climb.
+  // from_to's own hard check is the row-count floor: one or two measures are
+  // a kpi_cards pair, not a shift.
+  "coverage/from_to-valid": minimalDeck({
+    type: "from_to",
+    from: { title: "Today" },
+    to: { title: "Next year" },
+    rows: [
+      { label: "Time to open", from: "9", to: "5" },
+      { label: "Renewal rate", from: "91", to: "95" },
+      { label: "Seats", from: "46", to: "72" },
+    ],
+  }),
+  "coverage/from_to-tripwire": minimalDeck({
+    type: "from_to",
+    from: { title: "Today" },
+    to: { title: "Next year" },
+    rows: [
+      { label: "Time to open", from: "9", to: "5" },
+      { label: "Renewal rate", from: "91", to: "95" },
+    ],
+  }),
   // decision_tree's own hard check is the single recommendation: two filled
   // outcomes read as two answers to one question.
   "coverage/decision_tree-valid": minimalDeck({

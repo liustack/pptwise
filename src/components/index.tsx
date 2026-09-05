@@ -46,6 +46,7 @@ import { renderDef as chevronProcessRenderDef } from "./chevron-process"
 import { renderDef as swimlaneRenderDef } from "./swimlane"
 import { renderDef as journeyMapRenderDef } from "./journey-map"
 import { renderDef as decisionTreeRenderDef } from "./decision-tree"
+import { renderDef as fromToRenderDef } from "./from-to"
 
 /**
  * Dispatch table (src domain reorg wave 2, spec §4.2/§4.3): replaces the
@@ -111,6 +112,7 @@ const RENDER_DEFS: Record<ComponentType, RenderDef> = {
   swimlane: swimlaneRenderDef,
   journey_map: journeyMapRenderDef,
   decision_tree: decisionTreeRenderDef,
+  from_to: fromToRenderDef,
 }
 
 /**

@@ -28,6 +28,12 @@ interface BlockCase {
 }
 
 const BLOCK_CASES: readonly BlockCase[] = [
+  // from_to: a model that has written a before/after slide names the two
+  // states after the words on the slide, and the row array `items` like
+  // every other component's.
+  { type: "from_to", alias: "before", canonical: "from", component: { type: "from_to", before: { title: "Today" }, to: { title: "Next year" }, rows: [{ label: "Time to open", from: "9", to: "5" }, { label: "Renewal rate", from: "91", to: "95" }, { label: "Seats", from: "46", to: "72" }] }, expected: { title: "Today" } },
+  { type: "from_to", alias: "after", canonical: "to", component: { type: "from_to", from: { title: "Today" }, after: { title: "Next year" }, rows: [{ label: "Time to open", from: "9", to: "5" }, { label: "Renewal rate", from: "91", to: "95" }, { label: "Seats", from: "46", to: "72" }] }, expected: { title: "Next year" } },
+  { type: "from_to", alias: "items", canonical: "rows", component: { type: "from_to", from: { title: "Today" }, to: { title: "Next year" }, items: [{ label: "Time to open", from: "9", to: "5" }, { label: "Renewal rate", from: "91", to: "95" }, { label: "Seats", from: "46", to: "72" }] }, expected: [{ label: "Time to open", from: "9", to: "5" }, { label: "Renewal rate", from: "91", to: "95" }, { label: "Seats", from: "46", to: "72" }] },
   // decision_tree: the root question is the field a model most often names
   // after the component ("decision"), and its branch array is the one it
   // calls "options" by analogy to a multiple-choice question.
@@ -835,6 +841,56 @@ const ITEM_CASES: readonly ItemCase[] = [
     extra: { question: "Buy or build?" },
     expected: "one contract",
   },
+  {
+    type: "from_to",
+    itemsKey: "rows",
+    alias: "title",
+    canonical: "label",
+    item: { title: "Time to open", from: "9", to: "5" },
+    pad: [{ label: "Renewal rate", from: "91", to: "95" }, { label: "Seats", from: "46", to: "72" }],
+    extra: { from: { title: "Today" }, to: { title: "Next year" } },
+    expected: "Time to open",
+  },
+  {
+    type: "from_to",
+    itemsKey: "rows",
+    alias: "name",
+    canonical: "label",
+    item: { name: "Time to open", from: "9", to: "5" },
+    pad: [{ label: "Renewal rate", from: "91", to: "95" }, { label: "Seats", from: "46", to: "72" }],
+    extra: { from: { title: "Today" }, to: { title: "Next year" } },
+    expected: "Time to open",
+  },
+  {
+    type: "from_to",
+    itemsKey: "rows",
+    alias: "before",
+    canonical: "from",
+    item: { label: "Time to open", before: "9", to: "5" },
+    pad: [{ label: "Renewal rate", from: "91", to: "95" }, { label: "Seats", from: "46", to: "72" }],
+    extra: { from: { title: "Today" }, to: { title: "Next year" } },
+    expected: "9",
+  },
+  {
+    type: "from_to",
+    itemsKey: "rows",
+    alias: "after",
+    canonical: "to",
+    item: { label: "Time to open", from: "9", after: "5" },
+    pad: [{ label: "Renewal rate", from: "91", to: "95" }, { label: "Seats", from: "46", to: "72" }],
+    extra: { from: { title: "Today" }, to: { title: "Next year" } },
+    expected: "5",
+  },
+  {
+    type: "from_to",
+    itemsKey: "rows",
+    alias: "delta",
+    canonical: "change",
+    item: { label: "Time to open", from: "9", to: "5", delta: "four weeks off" },
+    pad: [{ label: "Renewal rate", from: "91", to: "95" }, { label: "Seats", from: "46", to: "72" }],
+    extra: { from: { title: "Today" }, to: { title: "Next year" } },
+    expected: "four weeks off",
+  },
 ]
 
 describe("COMPONENT_ITEM_FIELD_ALIASES: every row round-trips", () => {
@@ -864,7 +920,7 @@ describe("COMPONENT_ITEM_FIELD_ALIASES: every row round-trips", () => {
 // ── total pair count pinned (docs/changeset "53 total synonym pairs") ──────
 
 describe("total synonym-pair count", () => {
-  it("COMPONENT_FIELD_ALIASES + COMPONENT_ITEM_FIELD_ALIASES flatten to exactly 91 pairs", () => {
+  it("COMPONENT_FIELD_ALIASES + COMPONENT_ITEM_FIELD_ALIASES flatten to exactly 99 pairs", () => {
     // The "covers every row exactly once" completeness guards above only
     // prove BLOCK_CASES/ITEM_CASES stay in lockstep with each table's own
     // rows — a row deleted from a table *and* its matching test case would
@@ -881,7 +937,7 @@ describe("total synonym-pair count", () => {
       (n, specs) => n + specs.reduce((m, spec) => m + Object.keys(spec.aliases).length, 0),
       0,
     )
-    expect(blockCount + itemCount).toBe(91)
+    expect(blockCount + itemCount).toBe(99)
   })
 })
 

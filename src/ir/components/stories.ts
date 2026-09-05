@@ -14,6 +14,7 @@ import * as decisionTree from "./decision-tree"
 import * as deviceMockup from "./device-mockup"
 import * as fiveForces from "./five-forces"
 import * as flowchart from "./flowchart"
+import * as fromTo from "./from-to"
 import * as gantt from "./gantt"
 import * as heatmap from "./heatmap"
 import * as hubSpoke from "./hub-spoke"
@@ -78,6 +79,7 @@ const COMPONENT_STORY_MODULES: Readonly<Record<string, ComponentStoryModule>> = 
   device_mockup: deviceMockup,
   five_forces: fiveForces,
   flowchart,
+  from_to: fromTo,
   gantt,
   heatmap,
   hub_spoke: hubSpoke,

@@ -74,6 +74,7 @@ import { aliases as chevronProcessAliases } from "./components/chevron-process"
 import { aliases as swimlaneAliases } from "./components/swimlane"
 import { aliases as journeyMapAliases } from "./components/journey-map"
 import { aliases as decisionTreeAliases } from "./components/decision-tree"
+import { aliases as fromToAliases } from "./components/from-to"
 
 /** One component type's `{ aliasKey: canonicalKey }` map. */
 export type FieldAliasMap = Readonly<Record<string, string>>
@@ -134,6 +135,10 @@ export const COMPONENT_FIELD_ALIASES: Readonly<Record<string, FieldAliasMap>> = 
   // subject, and "options" for the branches, by analogy to a multiple-choice
   // question rather than to a tree.
   decision_tree: decisionTreeAliases.block,
+  // from_to names its two states after the direction of the move. A model
+  // that has written a before/after slide reaches for that pair instead, and
+  // for the generic `items` for the row array.
+  from_to: fromToAliases.block,
 }
 
 /** One component type's item-array field aliases: which array to walk, and the alias map applied to each item object in it. */
@@ -211,6 +216,9 @@ export const COMPONENT_ITEM_FIELD_ALIASES: Readonly<Record<string, readonly Item
   // A branch is a card whose one unusual field is `edge`, the condition on
   // the line into it — "condition" is the word a model reaches for.
   decision_tree: decisionTreeAliases.items,
+  // The same before/after slip one level down, plus the generic
+  // title-for-label and "delta" for the change the row shows.
+  from_to: fromToAliases.items,
 }
 
 /**
