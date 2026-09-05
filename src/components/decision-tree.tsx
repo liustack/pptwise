@@ -7,6 +7,8 @@ import {
   FORM_BODY_FLOOR,
   fitFormLine,
   formHighlightFill,
+  formTextClipMarker,
+  layoutAtSize,
 } from "./legibility"
 import type { RenderDef, SvgComponent } from "./types"
 
@@ -34,7 +36,12 @@ type DecisionTreeComponent = Extract<Component, { type: "decision_tree" }>
  */
 const MAX_H = 330
 const ROW_GAP = 10
-const COL_GAP = 46
+/**
+ * Gutter between two columns. Wide enough to hold a condition on its own: a
+ * label that cannot reach back over the column behind it has only this gap to
+ * stand in, and a narrow one leaves "62%" showing as "%".
+ */
+const COL_GAP = 92
 const CARD_MAX = 84
 const CARD_MIN = 32
 /**
@@ -45,7 +52,7 @@ const CARD_MIN = 32
  * a percentage on a line to a bare `%`. The tree declines the box instead —
  * a page that says nothing is honest, a page that says "手三" is not.
  */
-const MIN_W = 660
+const MIN_W = 700
 /** Below this a card holds its title and nothing else. */
 const DETAIL_FLOOR = 62
 
@@ -62,6 +69,7 @@ interface Geometry {
   outcomes: Node[][]
   cardH: number
   titleSize: number
+  rootLines: number
   pad: number
   showDetail: boolean
   h: number
@@ -77,8 +85,8 @@ function resolve(component: DecisionTreeComponent, w: number, boxH?: number): Ge
     Math.min(CARD_MAX, Math.max(CARD_MIN, (budget - ROW_GAP * (total - 1)) / total)),
   )
   const h = cardH * total + ROW_GAP * (total - 1)
-  const rootW = Math.round(w * 0.23)
-  const branchW = Math.round(w * 0.23)
+  const rootW = Math.round(w * 0.21)
+  const branchW = Math.round(w * 0.21)
   const outcomeX = rootW + branchW + COL_GAP * 2
   const outcomeW = w - outcomeX
 
@@ -102,7 +110,10 @@ function resolve(component: DecisionTreeComponent, w: number, boxH?: number): Ge
     w: branchW,
     h: branchH,
   }))
-  const rootH = Math.min(CARD_MAX, Math.max(CARD_MIN, cardH))
+  // The question is the one card that stands alone in its column, so it takes
+  // half a row more than an outcome does — a decision worth drawing a tree for
+  // is rarely four words, and one line of it is a stub.
+  const rootH = Math.min(h, Math.round(cardH * 1.5))
   const root = {
     x: 0,
     y: Math.round(centerOf(outcomes.flat()) - rootH / 2),
@@ -110,12 +121,15 @@ function resolve(component: DecisionTreeComponent, w: number, boxH?: number): Ge
     h: rootH,
   }
   const pad = cardH >= DETAIL_FLOOR ? 12 : 8
+  const titleSize = Math.max(FORM_BODY_FLOOR, Math.min(21, Math.round(cardH * 0.26)))
   return {
     root,
     branches,
     outcomes,
     cardH,
-    titleSize: Math.max(FORM_BODY_FLOOR, Math.min(21, Math.round(cardH * 0.26))),
+    titleSize,
+    // However many lines of the question the root box can actually hold.
+    rootLines: Math.max(1, Math.min(3, Math.floor((rootH - pad * 2) / Math.round(titleSize * 1.4)))),
     pad,
     showDetail: cardH >= DETAIL_FLOOR,
     h: Math.round(h),
@@ -167,26 +181,30 @@ export const decisionTree: SvgComponent<DecisionTreeComponent> = {
      * just before the elbow turns — left of the vertical, so a digit never
      * has a connector drawn through it.
      *
-     * How far left it may reach depends on where the target sits. A target on
-     * a different row than its source leaves the page beside the source box
-     * empty at that height, so the label runs back over the source column —
-     * which is what gives a root condition like "already runs one · 61%" the
-     * room to be a phrase. A target on the *same* row has the source box
-     * directly to its left at exactly that height, so the label stays inside
-     * the gap and a long one truncates rather than printing over a card.
+     * Where it may stand depends on whether the source card is beside it. A
+     * label whose own line clears the source card top or bottom runs back over
+     * that column, which is what gives a root condition like "already runs
+     * one · 61%" the room to be a phrase. A label level with the source card
+     * stands in the gutter after the elbow instead, and a long one truncates
+     * there rather than printing over the card.
      */
     const edgeLabel = (
       text: string | undefined,
       from: Node,
+      to: Node,
       spine: number,
       tipY: number,
       key: string,
     ): ReactElement | null => {
       const value = text?.trim()
       if (!value) return null
-      const right = spine - 6
-      const clear = Math.abs(tipY - (from.y + from.h / 2)) > edgeSize + 6
-      const left = clear ? from.x + from.w * 0.45 : from.x + from.w + 4
+      // The line the label occupies, so "does it clear the card" is asked of
+      // the text's own band and not of a point on it.
+      const top = tipY - 7 - edgeSize
+      const bottom = tipY - 7
+      const clear = bottom < from.y || top > from.y + from.h
+      const right = clear ? spine - 6 : to.x - ARROW - 6
+      const left = clear ? from.x + from.w * 0.45 : spine + 5
       const fit = fitFormLine(value, {
         maxWidth: Math.max(24, right - left),
         fontSize: edgeSize,
@@ -218,6 +236,8 @@ export const decisionTree: SvgComponent<DecisionTreeComponent> = {
         unit?: string
         filled?: boolean
         strong?: boolean
+        /** The question gets two lines; every other card is one. */
+        lines?: number
       },
     ): ReactElement => {
       const filled = opts.filled === true
@@ -239,9 +259,10 @@ export const decisionTree: SvgComponent<DecisionTreeComponent> = {
         ? measureTextUnits(valueFit.text, { bold: true, fontFamily: ctx.fonts.heading }) * valueFit.fontSize
         : 0
       const textW = Math.max(24, node.w - g.pad * 2 - (valueFit ? valueW + unitW + 18 : 0))
-      const title = fitFormLine(opts.title, {
+      const title = layoutAtSize(opts.title, {
         maxWidth: textW,
         fontSize: g.titleSize,
+        maxLines: opts.lines ?? 1,
         bold: true,
         fontFamily: ctx.fonts.body,
       })
@@ -249,7 +270,8 @@ export const decisionTree: SvgComponent<DecisionTreeComponent> = {
       const detailFit = detail
         ? fitFormLine(detail, { maxWidth: textW, fontSize: FORM_BODY_FLOOR, fontFamily: ctx.fonts.body })
         : null
-      const blockH = title.fontSize + (detailFit ? detailFit.fontSize + 7 : 0)
+      const titleH = title.lines.length * title.lineHeight
+      const blockH = titleH + (detailFit ? detailFit.fontSize + 7 : 0)
       const top = node.y + node.h / 2 - blockH / 2
       const ink = (preferred: string, size: number) =>
         accessibleInk(filled ? ctx.colors.surface : preferred, fill, size)
@@ -266,22 +288,25 @@ export const decisionTree: SvgComponent<DecisionTreeComponent> = {
             stroke={filled ? highlight : opts.strong ? ctx.colors.primary : border}
             strokeWidth={opts.strong ? 1.75 : 1}
           />
-          <text
-            data-truncated={title.truncated ? "1" : undefined}
-            x={node.x + g.pad}
-            y={top + title.fontSize * 0.9}
-            fontFamily={ctx.fonts.body}
-            fontSize={title.fontSize}
-            fontWeight="700"
-            fill={ink(ctx.colors.text, title.fontSize)}
-          >
-            {title.text}
-          </text>
+          {title.lines.map((line, li) => (
+            <text
+              key={`title-${li}`}
+              data-truncated={formTextClipMarker(title, li)}
+              x={node.x + g.pad}
+              y={top + li * title.lineHeight + title.fontSize * 0.9}
+              fontFamily={ctx.fonts.body}
+              fontSize={title.fontSize}
+              fontWeight="700"
+              fill={ink(ctx.colors.text, title.fontSize)}
+            >
+              {line}
+            </text>
+          ))}
           {detailFit ? (
             <text
               data-truncated={detailFit.truncated ? "1" : undefined}
               x={node.x + g.pad}
-              y={top + title.fontSize + 7 + detailFit.fontSize * 0.9}
+              y={top + titleH + 7 + detailFit.fontSize * 0.9}
               fontFamily={ctx.fonts.body}
               fontSize={detailFit.fontSize}
               fill={ink(ctx.colors.muted, detailFit.fontSize)}
@@ -334,7 +359,7 @@ export const decisionTree: SvgComponent<DecisionTreeComponent> = {
             <g key={`root-edge-${b}`}>
               <path d={d} fill="none" stroke={line} strokeWidth={1.25} />
               {arrowHead(branch.x - ARROW, tipY, line)}
-              {edgeLabel(component.branches[b]!.edge, g.root, spine, tipY, `root-label-${b}`)}
+              {edgeLabel(component.branches[b]!.edge, g.root, branch, spine, tipY, `root-label-${b}`)}
             </g>
           )
         })}
@@ -345,12 +370,12 @@ export const decisionTree: SvgComponent<DecisionTreeComponent> = {
               <g key={`edge-${b}-${o}`}>
                 <path d={d} fill="none" stroke={line} strokeWidth={1.25} />
                 {arrowHead(outcome.x - ARROW, tipY, line)}
-                {edgeLabel(component.branches[b]!.outcomes[o]!.edge, g.branches[b]!, spine, tipY, `label-${b}-${o}`)}
+                {edgeLabel(component.branches[b]!.outcomes[o]!.edge, g.branches[b]!, outcome, spine, tipY, `label-${b}-${o}`)}
               </g>
             )
           }),
         )}
-        {card(g.root, "root", { title: component.question, strong: true })}
+        {card(g.root, "root", { title: component.question, strong: true, lines: g.rootLines })}
         {g.branches.map((branch, b) =>
           card(branch, `branch-${b}`, {
             title: component.branches[b]!.title,
