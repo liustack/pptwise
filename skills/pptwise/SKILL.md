@@ -133,7 +133,7 @@ Use `--draft` or `--allow-dropped-content` only when the user explicitly request
 | Page intent | `kind` | Typical component |
 | --- | --- | --- |
 | Ordered reasoning | `points` | `bullets`, `numbered_cards`, `paragraph` |
-| Reorderable inventory | `list` | `row_cards`, `icon_cards`, `tag_row`, `people_cards` |
+| Reorderable inventory | `list` | `row_cards`, `icon_cards`, `people_cards` |
 | Side-by-side differences | `comparison` | `comparison`, `from_to`, `image_compare`, `matrix`, `swot` |
 | Directed steps or time | `process` | `steps`, `chevron_process`, `staircase`, `swimlane`, `journey_map`, `flowchart`, `timeline`, `roadmap`, `gantt`, `cycle` |
 | Numeric structure | `data` | `chart`, `data_table`, `kpi_cards`, `progress_donuts`, `heatmap`, `sankey` |
