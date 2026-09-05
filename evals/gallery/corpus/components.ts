@@ -54,8 +54,6 @@ export const COMPONENT_BUILDERS: Record<string, (lex: Lexicon) => Component> = {
 
   verdict_banner: (lex) => ({ type: "verdict_banner", text: lex.verdicts.warning, tone: "warning", icon: "alert-triangle" }),
 
-  tag_row: (lex) => ({ type: "tag_row", title: lex.kickers[2], items: slice(lex.tags, 10), emphasis: "first" }),
-
   // ── Numbers ────────────────────────────────────────────────────────────
   kpi_cards: (lex) => ({
     type: "kpi_cards",
