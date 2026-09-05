@@ -16,10 +16,11 @@ import type { Lexicon } from "./lexicon"
  * does not silently get absorbed without a human adding it here.
  */
 export const THEME_TABLE_REQUIRED_SURFACES = [
-  // 45 IR types, COMPONENT_BUILDERS key order
+  // 46 IR types, COMPONENT_BUILDERS key order
   "paragraph",
   "bullets",
   "blockquote",
+  "quote_wall",
   "callout",
   "code",
   "verdict_banner",
@@ -119,7 +120,7 @@ function chart(chart_type: ThemeChartType, direction?: "horizontal"): ThemeConte
  * is noted on chart slots.
  */
 export const THEME_CONTENT_SLOTS: Record<string, readonly ThemeContentSlot[]> = {
-  thesis: [slot("icon_cards"), slot("paragraph"), chart("funnel"), slot("blockquote"), slot("callout"), slot("code"), slot("insight_panel")],
+  thesis: [slot("icon_cards"), slot("paragraph"), chart("funnel"), slot("quote_wall"), slot("callout"), slot("code"), slot("insight_panel")],
   arena: [chart("scatter"), slot("verdict_banner"), slot("insight_panel"), slot("data_table"), slot("waterfall"), slot("heatmap"), slot("gantt")],
   rally: [chart("dumbbell"), slot("hub_spoke"), slot("insight_panel"), slot("swot"), slot("pest"), slot("five_forces"), slot("bmc")],
   homeroom: [chart("gauge"), slot("image_grid"), slot("image"), slot("image_compare"), slot("device_mockup"), slot("data_table"), slot("bullets")],

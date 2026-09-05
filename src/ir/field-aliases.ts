@@ -77,6 +77,7 @@ import { aliases as decisionTreeAliases } from "./components/decision-tree"
 import { aliases as fromToAliases } from "./components/from-to"
 import { aliases as logoWallAliases } from "./components/logo-wall"
 import { aliases as productCardsAliases } from "./components/product-cards"
+import { aliases as quoteWallAliases } from "./components/quote-wall"
 
 /** One component type's `{ aliasKey: canonicalKey }` map. */
 export type FieldAliasMap = Readonly<Record<string, string>>
@@ -228,6 +229,10 @@ export const COMPONENT_ITEM_FIELD_ALIASES: Readonly<Record<string, readonly Item
   // other card family calls it, and its picture attracts the same
   // `image_id` slip as logo_wall's.
   product_cards: productCardsAliases.items,
+  // A quotation's own vocabulary — `quote`/`author`/`speaker` — crosses with
+  // blockquote's `text`/`attribution` pair, and `title` is the natural word
+  // for the line under a speaker's name.
+  quote_wall: quoteWallAliases.items,
 }
 
 /**

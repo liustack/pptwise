@@ -37,6 +37,7 @@ The table gives each component's normal kind home. A component may serve more th
 | `image_compare` | `comparison`, `evidence` |
 | `logo_wall` | `list` |
 | `product_cards` | `list`, `comparison` |
+| `quote_wall` | `evidence` |
 | `swot` | `comparison` |
 | `bmc` | `hierarchy` |
 | `waterfall` | `data`, `process` |
@@ -75,6 +76,8 @@ The table gives each component's normal kind home. A component may serve more th
 - Use `logo_wall` when a set of organization names is itself the claim and every name carries the same weight. Use `image_grid` for photographs and `row_cards` when each name needs a line of its own.
 
 - Use `product_cards` when each item is a thing someone could buy and has its own picture. Use `comparison` when options are weighed on shared attributes and `data_table` when specifications must be read row by row.
+
+- Use `quote_wall` when several people saying the same thing is the argument. Use `blockquote` for one remark set at full size and `people_cards` when the page is about who the speakers are.
 
 `architecture.layers` paints top to bottom by default. Set `direction: "bottom_up"` when the authored order should begin at the foundation. Keep the array in narrative order.
 

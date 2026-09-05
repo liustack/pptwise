@@ -1480,6 +1480,12 @@ const MUTED_SURFACE_CLASS: Record<string, MutedSurfaceClass> = {
   // `readableOn(primary)` on the featured one. Never a bare `colors.muted`
   // and never text on the ambient page background.
   product_cards: "flat-surface",
+  // quote-wall.tsx resolves every ink against the card's own fill: on a
+  // default card the role line is `accessibleInk(colors.muted,
+  // colors.surface, 16)`, and on the featured card it is a `mixHex` blend
+  // toward `readableOn(primary)`. Never a bare `colors.muted`, and never
+  // text on the ambient page background.
+  quote_wall: "flat-surface",
   // hub-spoke.tsx's only `colors.muted` text is each element's one-line
   // description, drawn inside the element's own `colors.surface`-filled
   // capsule through `accessibleInk(colors.muted, colors.surface, …)` — the

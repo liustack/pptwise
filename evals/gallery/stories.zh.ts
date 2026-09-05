@@ -532,6 +532,13 @@ export const STORY_ZH: Readonly<Record<string, Partial<Record<DesignStoryField, 
     audience: "在追踪多项工作完成进度的读者。",
     notFor: "计数或营收这类绝对量，那属于 kpi_cards。",
   },
+  "component:quote_wall": {
+    name: "众声",
+    story: "两到四段原话并排站着，每段一个大引号起头，下面是首字母圆章、姓名和头衔，其中一段可以整块着色。平装书封底印的那一片推荐语。",
+    positioning: "几个人说同一件事本身就是论据、谁也不该被放大到压过其他人时用它。一个人说一句要放大到整页用 blockquote，页面讲的是这些人是谁用 people_cards。",
+    audience: "在判断还有没有别人被说服的读者。",
+    notFor: "一个人的长段落，那属于 blockquote。",
+  },
   "component:rings": {
     name: "洋葱",
     story: "从实心核心向外的同心环，每层用引线标注。教科书画的洋葱模型，表示事物嵌在事物里。",

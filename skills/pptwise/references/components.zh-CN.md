@@ -42,6 +42,7 @@ mirror_of: skills/pptwise/references/components.md
 | `image_compare` | `comparison`, `evidence` |
 | `logo_wall` | `list` |
 | `product_cards` | `list`, `comparison` |
+| `quote_wall` | `evidence` |
 | `swot` | `comparison` |
 | `bmc` | `hierarchy` |
 | `waterfall` | `data`, `process` |
@@ -80,6 +81,8 @@ mirror_of: skills/pptwise/references/components.md
 - `logo_wall` 用在一串组织名字本身就是论据、每个名字权重相同时。照片用 `image_grid`，每个名字都要配一句说明用 `row_cards`。
 
 - `product_cards` 用在每一项都是可购买的东西、各自带一张图时。同一组属性横向权衡用 `comparison`，参数要逐行读用 `data_table`。
+
+- `quote_wall` 用在几个人说同一件事本身就是论据时。一个人说一句、要放大到整页用 `blockquote`，页面讲的是这些人是谁用 `people_cards`。
 
 `architecture.layers` 默认从上向下绘制。作者按基座优先的顺序写作时，设置 `direction: "bottom_up"`，不要手工倒置数组。
 

@@ -199,6 +199,22 @@ const COVERAGE_ENTRIES: Record<string, unknown> = {
       { value: "72", label: "closure" },
     ],
   }),
+  // quote_wall's own hard checks are the 140-char remark ceiling and the
+  // single featured card.
+  "coverage/quote_wall-valid": minimalDeck({
+    type: "quote_wall",
+    quotes: [
+      { text: "Onboarding went from nine weeks to five.", name: "Sarah Chen", role: "Acme Corp" },
+      { text: "续约看板把要流失的客户提前六周推到我面前。", name: "李蔚", featured: true },
+    ],
+  }),
+  "coverage/quote_wall-tripwire": minimalDeck({
+    type: "quote_wall",
+    quotes: [
+      { text: "a".repeat(141), name: "Sarah Chen" },
+      { text: "Short enough.", name: "李蔚" },
+    ],
+  }),
   // product_cards' own hard check is the picture: a card without one is a
   // row_cards row, and only one card may wear the whole-fill highlight.
   "coverage/product_cards-valid": minimalDeck({

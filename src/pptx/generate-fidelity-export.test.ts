@@ -372,6 +372,13 @@ const COMPONENT_BY_TYPE: Record<Component["type"], Component> = {
       { name: "明远教育" },
     ],
   },
+  quote_wall: {
+    type: "quote_wall",
+    quotes: [
+      { text: "Onboarding went from nine weeks to five.", name: "Sarah Chen", role: "Acme Corp · Customer Success" },
+      { text: "续约看板把要流失的客户提前六周推到我面前。", name: "李蔚", role: "星岚数据 · 运营负责人", featured: true },
+    ],
+  },
   product_cards: {
     type: "product_cards",
     items: [

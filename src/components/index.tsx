@@ -14,6 +14,7 @@ import { renderDef as imageGridRenderDef } from "./image-grid"
 import { renderDef as imageCompareRenderDef } from "./image-compare"
 import { renderDef as logoWallRenderDef } from "./logo-wall"
 import { renderDef as productCardsRenderDef } from "./product-cards"
+import { renderDef as quoteWallRenderDef } from "./quote-wall"
 import { renderDef as chartRenderDef } from "./chart"
 import { renderDef as flowchartRenderDef } from "./flowchart"
 import { renderDef as architectureRenderDef } from "./architecture"
@@ -81,6 +82,7 @@ const RENDER_DEFS: Record<ComponentType, RenderDef> = {
   image_compare: imageCompareRenderDef,
   logo_wall: logoWallRenderDef,
   product_cards: productCardsRenderDef,
+  quote_wall: quoteWallRenderDef,
   chart: chartRenderDef,
   flowchart: flowchartRenderDef,
   architecture: architectureRenderDef,

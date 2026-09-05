@@ -33,6 +33,7 @@ import * as pest from "./pest"
 import * as progressDonuts from "./progress-donuts"
 import * as logoWall from "./logo-wall"
 import * as productCards from "./product-cards"
+import * as quoteWall from "./quote-wall"
 import * as rings from "./rings"
 import * as roadmap from "./roadmap"
 import * as rowCards from "./row-cards"
@@ -99,6 +100,7 @@ const COMPONENT_STORY_MODULES: Readonly<Record<string, ComponentStoryModule>> = 
   progress_donuts: progressDonuts,
   logo_wall: logoWall,
   product_cards: productCards,
+  quote_wall: quoteWall,
   rings,
   roadmap,
   row_cards: rowCards,

@@ -669,6 +669,42 @@ const ITEM_CASES: readonly ItemCase[] = [
     expected: "One screen for renewals",
   },
   {
+    type: "quote_wall",
+    itemsKey: "quotes",
+    alias: "quote",
+    canonical: "text",
+    item: { quote: "It halved our onboarding.", name: "Sarah Chen" },
+    pad: [{ text: "We stopped guessing.", name: "李蔚" }],
+    expected: "It halved our onboarding.",
+  },
+  {
+    type: "quote_wall",
+    itemsKey: "quotes",
+    alias: "author",
+    canonical: "name",
+    item: { text: "It halved our onboarding.", author: "Sarah Chen" },
+    pad: [{ text: "We stopped guessing.", name: "李蔚" }],
+    expected: "Sarah Chen",
+  },
+  {
+    type: "quote_wall",
+    itemsKey: "quotes",
+    alias: "speaker",
+    canonical: "name",
+    item: { text: "It halved our onboarding.", speaker: "Sarah Chen" },
+    pad: [{ text: "We stopped guessing.", name: "李蔚" }],
+    expected: "Sarah Chen",
+  },
+  {
+    type: "quote_wall",
+    itemsKey: "quotes",
+    alias: "title",
+    canonical: "role",
+    item: { text: "It halved our onboarding.", name: "Sarah Chen", title: "Customer Success" },
+    pad: [{ text: "We stopped guessing.", name: "李蔚" }],
+    expected: "Customer Success",
+  },
+  {
     type: "progress_donuts",
     itemsKey: "items",
     alias: "title",
@@ -1001,7 +1037,7 @@ describe("COMPONENT_ITEM_FIELD_ALIASES: every row round-trips", () => {
 // ── total pair count pinned (docs/changeset "53 total synonym pairs") ──────
 
 describe("total synonym-pair count", () => {
-  it("COMPONENT_FIELD_ALIASES + COMPONENT_ITEM_FIELD_ALIASES flatten to exactly 108 pairs", () => {
+  it("COMPONENT_FIELD_ALIASES + COMPONENT_ITEM_FIELD_ALIASES flatten to exactly 112 pairs", () => {
     // The "covers every row exactly once" completeness guards above only
     // prove BLOCK_CASES/ITEM_CASES stay in lockstep with each table's own
     // rows — a row deleted from a table *and* its matching test case would
@@ -1018,7 +1054,7 @@ describe("total synonym-pair count", () => {
       (n, specs) => n + specs.reduce((m, spec) => m + Object.keys(spec.aliases).length, 0),
       0,
     )
-    expect(blockCount + itemCount).toBe(108)
+    expect(blockCount + itemCount).toBe(112)
   })
 })
 

@@ -48,6 +48,21 @@ export const COMPONENT_BUILDERS: Record<string, (lex: Lexicon) => Component> = {
 
   blockquote: (lex) => ({ type: "blockquote", text: lex.quote.text, attribution: lex.quote.attribution }),
 
+  quote_wall: (lex) => ({
+    type: "quote_wall",
+    quotes: lex.people.slice(0, 3).map((person, i) => ({
+      text: lex.sentences[i]!,
+      name: person.name,
+      // Role first, organization second: three colleagues share one employer,
+      // and an org-first line fitted to a narrow card left all three reading
+      // the same truncated company name.
+      role: `${person.role} · ${person.org}`,
+      // The middle voice takes the whole-fill highlight, the one emphasis
+      // this house allows and the thing worth looking at here.
+      ...(i === 1 ? { featured: true as const } : {}),
+    })),
+  }),
+
   callout: (lex) => ({ type: "callout", variant: "warn", text: lex.callouts.warn, icon: "alert-triangle" }),
 
   code: (lex) => ({ type: "code", language: lex.code.language, code: lex.code.code }),

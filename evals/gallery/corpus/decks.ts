@@ -155,6 +155,7 @@ const COMPONENT_KINDS: Record<Component["type"], PageKind> = {
   paragraph: "points",
   bullets: "points",
   blockquote: "quote",
+  quote_wall: "evidence",
   callout: "points",
   code: "evidence",
   verdict_banner: "points",

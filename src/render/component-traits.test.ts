@@ -135,7 +135,7 @@ describe("COLUMN_SPANNING_TYPES", () => {
 })
 
 describe("SELF_VISUAL_TYPES equivalence (was bento-layout.ts:210-216, plus R1's data_table addition)", () => {
-  it("matches the pre-refactor members plus data_table (R1 evidence wave, Task T3 — first new selfVisual:true declaration since the W2 task 5 refactor)", () => {
+  it("matches the pre-refactor members plus data_table, device_mockup, and quote_wall", () => {
     // bento-layout.ts:210-216 (pre-refactor):
     // new Set(["callout", "code", "comparison", "blockquote", "verdict_banner"])
     const preRefactor = ["callout", "code", "comparison", "blockquote", "verdict_banner"]
@@ -152,7 +152,11 @@ describe("SELF_VISUAL_TYPES equivalence (was bento-layout.ts:210-216, plus R1's 
     // plan-device-mockup.md`): device_mockup also declares selfVisual: true
     // — the device frame (browser window bar, phone bezel/notch) *is* its
     // own frame, same "already carded" reasoning as every member above.
-    const current = [...preRefactor, "data_table", "device_mockup"]
+    // component build wave A: quote_wall declares selfVisual: true for the
+    // same reason blockquote above it does — every remark already stands in
+    // its own card under its own quote mark, so a bento shell behind it is a
+    // card inside a card.
+    const current = [...preRefactor, "data_table", "device_mockup", "quote_wall"]
     expect(new Set(SELF_VISUAL_TYPES)).toEqual(new Set(current))
     expect(SELF_VISUAL_TYPES.size).toBe(current.length)
   })
