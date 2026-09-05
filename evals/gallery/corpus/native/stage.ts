@@ -108,6 +108,33 @@ export const STAGE_LEXICON: Lexicon = {
   periodAxis: "月份",
   segmentAxis: "版本",
   decision: "这一代先做哪一件",
+  levels: [
+    { title: "试戴过", value: "4200", unit: "人" },
+    { title: "戴满十分钟", value: "1800", unit: "人" },
+    { title: "预约了", value: "620", unit: "人" },
+    { title: "首发下单", value: "210", unit: "人" },
+  ],
+  handover: { owners: [1, 1, 2, 0, 0], note: "光学定型冻结后工业设计才敢开模，中间来回过三轮" },
+  choices: [
+    {
+      edge: "先做投影 · 61%",
+      title: "视网膜投影上量产",
+      detail: "重量是代价",
+      outcomes: [
+        { edge: "39%", title: "只做单目", detail: "轻但视野窄", value: "42", unit: "克" },
+        { edge: "61%", title: "做双目", detail: "多两颗光机", value: "58", unit: "克", recommended: true },
+      ],
+    },
+    {
+      edge: "先做交互 · 39%",
+      title: "指环先出",
+      detail: "光学沿用上一代",
+      outcomes: [
+        { edge: "54%", title: "只做指环", detail: "眼镜不变", value: "51", unit: "克" },
+        { edge: "46%", title: "指环加语音", detail: "要加一颗麦", value: "53", unit: "克" },
+      ],
+    },
+  ],
 
   orgs: [
     "目光科技",

@@ -108,6 +108,33 @@ export const JOURNAL_LEXICON: Lexicon = {
   periodAxis: "月份",
   segmentAxis: "栏目",
   decision: "版面先给哪一栏",
+  levels: [
+    { title: "翻过一期", value: "4200", unit: "人" },
+    { title: "读完一篇", value: "1600", unit: "人" },
+    { title: "订了一年", value: "480", unit: "人" },
+    { title: "续订第二年", value: "190", unit: "人" },
+  ],
+  handover: { owners: [0, 0, 1, 2, 0], note: "记者交稿到美编排版之间压着两天，试刊打样常常等它" },
+  choices: [
+    {
+      edge: "给长报道 · 58%",
+      title: "每期一篇长报道",
+      detail: "每期一篇",
+      outcomes: [
+        { edge: "45%", title: "只做本地选题", detail: "脚力够得着", value: "12", unit: "期" },
+        { edge: "55%", title: "本地加外地", detail: "差旅要翻倍", value: "8", unit: "期", recommended: true },
+      ],
+    },
+    {
+      edge: "给街角人物 · 42%",
+      title: "每期三个人",
+      detail: "篇幅短",
+      outcomes: [
+        { edge: "51%", title: "只写店主", detail: "素材好找", value: "16", unit: "期" },
+        { edge: "49%", title: "店主加常客", detail: "采访排期更密", value: "12", unit: "期" },
+      ],
+    },
+  ],
 
   orgs: [
     "《巷口》编辑部",

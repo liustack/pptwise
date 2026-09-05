@@ -108,6 +108,33 @@ export const MUSEUM_LEXICON: Lexicon = {
   periodAxis: "月份",
   segmentAxis: "展段",
   decision: "展线按什么走",
+  levels: [
+    { title: "进过展厅", value: "42000", unit: "人" },
+    { title: "走完全展线", value: "18000", unit: "人" },
+    { title: "参加过导览", value: "4200", unit: "人" },
+    { title: "看过修复纪录", value: "900", unit: "人" },
+  ],
+  handover: { owners: [0, 1, 2, 2, 0], note: "修复师放件到灯光调试只有一夜，导烟管那批最赶" },
+  choices: [
+    {
+      edge: "按年代 · 55%",
+      title: "从战国排到民国",
+      detail: "教科书顺序",
+      outcomes: [
+        { edge: "47%", title: "只按朝代", detail: "观众走得快", value: "42", unit: "件" },
+        { edge: "53%", title: "朝代加地域", detail: "展柜要多六个", value: "56", unit: "件" },
+      ],
+    },
+    {
+      edge: "按一个夜晚 · 45%",
+      title: "从掌灯排到熄灯",
+      detail: "叙事更强",
+      outcomes: [
+        { edge: "58%", title: "只做主线", detail: "重点件突出", value: "38", unit: "件", recommended: true },
+        { edge: "42%", title: "主线加支线", detail: "灯光要重调", value: "51", unit: "件" },
+      ],
+    },
+  ],
 
   orgs: [
     "江原博物馆",

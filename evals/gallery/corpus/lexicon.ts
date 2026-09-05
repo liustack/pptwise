@@ -126,6 +126,47 @@ export interface Lexicon {
    * would print each option twice.
    */
   readonly decision: string
+  /**
+   * A ladder of degrees, lowest rung first, and how many sit on each.
+   *
+   * Deliberately not `stages`: a stage is a step in time and every step
+   * carries equal weight, where a rung is a degree and the one above it is
+   * further up. The counts thin towards the top, the way a maturity ladder
+   * does. Each rung brings its own unit, so nothing has to be paired with a
+   * number from somewhere else.
+   */
+  readonly levels: readonly { readonly title: string; readonly value: string; readonly unit: string }[]
+  /**
+   * Who owns each of `stages`, as an index into `people`, and the one line
+   * worth saying about the moment work changes hands.
+   *
+   * Authored rather than dealt out in rotation: which desk a step sits on is
+   * the whole argument of a swimlane, and a repeating pattern hands the wrong
+   * step to the wrong person on almost every track.
+   */
+  readonly handover: { readonly owners: readonly number[]; readonly note: string }
+  /**
+   * The paths out of `decision`: two conditions, where each leads, and the
+   * two endings under each with what they cost.
+   *
+   * Written as a tree because a tree is what makes it one. Assembled from
+   * pool positions instead, the branches answer a question nobody asked and
+   * the endings cost nothing in particular — four cards and four arrows that
+   * happen to point at each other.
+   */
+  readonly choices: readonly {
+    readonly edge: string
+    readonly title: string
+    readonly detail: string
+    readonly outcomes: readonly {
+      readonly edge: string
+      readonly title: string
+      readonly detail: string
+      readonly value: string
+      readonly unit: string
+      readonly recommended?: boolean
+    }[]
+  }[]
   /** Organization names — at least 12 (logo wall needs up to 12). */
   readonly orgs: Pool
   /** Named people with roles. */
@@ -299,6 +340,33 @@ const zh: Lexicon = {
   periodAxis: "季度",
   segmentAxis: "客群",
   decision: "下半年的投入先放在哪一头",
+  levels: [
+    { title: "单点试用", value: "412", unit: "家" },
+    { title: "流程打通", value: "386", unit: "家" },
+    { title: "数据贯通", value: "248", unit: "家" },
+    { title: "平台共建", value: "96", unit: "家" },
+  ],
+  handover: { owners: [2, 0, 1, 1, 1], note: "方案设计交给交付之后要等两周才排上开通，是全链路最长的一次等待" },
+  choices: [
+    {
+      edge: "放渠道下沉 · 61%",
+      title: "招二十家区域伙伴",
+      detail: "复制已验证的客群",
+      outcomes: [
+        { edge: "38%", title: "只给培训", detail: "伙伴自己找单", value: "4.2", unit: "万席" },
+        { edge: "62%", title: "培训带联合交付", detail: "要抽两名实施", value: "6.8", unit: "万席", recommended: true },
+      ],
+    },
+    {
+      edge: "放开通自动化 · 39%",
+      title: "把开通周期压到三周",
+      detail: "不新增销售",
+      outcomes: [
+        { edge: "55%", title: "只做模板", detail: "复杂客户还是手工", value: "3.1", unit: "万席" },
+        { edge: "45%", title: "模板加自助配置", detail: "要一个季度开发", value: "5.4", unit: "万席" },
+      ],
+    },
+  ],
 
   orgs: [
     "临江咨询",
@@ -529,6 +597,33 @@ const en: Lexicon = {
   periodAxis: "Quarter",
   segmentAxis: "Vertical",
   decision: "Where does the second half's money go first",
+  levels: [
+    { title: "Trial seat", value: "412", unit: "accounts" },
+    { title: "Team rollout", value: "386", unit: "accounts" },
+    { title: "Data connected", value: "248", unit: "accounts" },
+    { title: "Platform partner", value: "96", unit: "accounts" },
+  ],
+  handover: { owners: [2, 0, 1, 1, 1], note: "Solutioning hands to delivery and then waits a fortnight for a setup slot" },
+  choices: [
+    {
+      edge: "Channel depth · 61%",
+      title: "Sign twenty regional partners",
+      detail: "Repeats a proven segment",
+      outcomes: [
+        { edge: "38%", title: "Training only", detail: "Partners find their own deals", value: "4.2", unit: "k seats" },
+        { edge: "62%", title: "Training and joint delivery", detail: "Costs two implementers", value: "6.8", unit: "k seats", recommended: true },
+      ],
+    },
+    {
+      edge: "Opening automation · 39%",
+      title: "Cut setup to three weeks",
+      detail: "No new sales headcount",
+      outcomes: [
+        { edge: "55%", title: "Templates only", detail: "Complex accounts stay manual", value: "3.1", unit: "k seats" },
+        { edge: "45%", title: "Templates and self-serve", detail: "One quarter of build", value: "5.4", unit: "k seats" },
+      ],
+    },
+  ],
 
   orgs: [
     "Linjiang Group",
@@ -759,6 +854,33 @@ const mixed: Lexicon = {
   periodAxis: "月份",
   segmentAxis: "平台组件",
   decision: "下半年的预算先投哪一条线",
+  levels: [
+    { title: "跑在 ECS 上", value: "412", unit: "个 service" },
+    { title: "上了 Kubernetes", value: "268", unit: "个 service" },
+    { title: "接入 HPA", value: "141", unit: "个 service" },
+    { title: "全托管", value: "63", unit: "个 service" },
+  ],
+  handover: { owners: [0, 1, 1, 2, 1], note: "Platform 交出 Terraform state 之后 SRE 才接得了 Staging，中间空了两周" },
+  choices: [
+    {
+      edge: "投弹性 · 61%",
+      title: "HPA 加 warm pool",
+      detail: "热路径收益最大",
+      outcomes: [
+        { edge: "38%", title: "只加 HPA", detail: "冷启还是四十秒", value: "12", unit: "s" },
+        { edge: "62%", title: "HPA 带 warm pool", detail: "常驻成本涨两成", value: "4", unit: "s", recommended: true },
+      ],
+    },
+    {
+      edge: "投可观测 · 39%",
+      title: "Prometheus 加 Loki",
+      detail: "先看清再动手",
+      outcomes: [
+        { edge: "55%", title: "只上指标", detail: "日志还要翻机器", value: "18", unit: "s" },
+        { edge: "45%", title: "指标加日志聚合", detail: "存储要扩两倍", value: "9", unit: "s" },
+      ],
+    },
+  ],
 
   orgs: [
     "Linjiang Group 临江咨询",

@@ -108,6 +108,33 @@ export const LUXE_LEXICON: Lexicon = {
   periodAxis: "时辰",
   segmentAxis: "环节",
   decision: "十二套衣按什么次序上台",
+  levels: [
+    { title: "试过衣", value: "420", unit: "位" },
+    { title: "定过一套", value: "168", unit: "位" },
+    { title: "定过三套", value: "62", unit: "位" },
+    { title: "每年都来", value: "21", unit: "位" },
+  ],
+  handover: { owners: [0, 1, 0, 2, 0], note: "绣娘交衣到试装只有一天" },
+  choices: [
+    {
+      edge: "按工艺 · 57%",
+      title: "从简到繁上台",
+      detail: "压轴留缂丝",
+      outcomes: [
+        { edge: "44%", title: "只按工时排", detail: "节奏偏慢", value: "26", unit: "秒" },
+        { edge: "56%", title: "工时加颜色", detail: "换装间要多两人", value: "19", unit: "秒", recommended: true },
+      ],
+    },
+    {
+      edge: "按年份 · 43%",
+      title: "从第一套排到今年",
+      detail: "讲十年",
+      outcomes: [
+        { edge: "51%", title: "只讲衣", detail: "故事线散", value: "22", unit: "秒" },
+        { edge: "49%", title: "衣带人", detail: "要请老客上台", value: "31", unit: "秒" },
+      ],
+    },
+  ],
 
   orgs: [
     "锦官高定工作室",

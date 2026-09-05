@@ -108,6 +108,33 @@ export const EMBER_LEXICON: Lexicon = {
   periodAxis: "季次",
   segmentAxis: "品类",
   decision: "这一轮的钱先投哪一头",
+  levels: [
+    { title: "能走通垄间", value: "42", unit: "园" },
+    { title: "能连续采摘", value: "26", unit: "园" },
+    { title: "碰伤率达标", value: "14", unit: "园" },
+    { title: "愿意续签", value: "5", unit: "园" },
+  ],
+  handover: { owners: [2, 0, 2, 1, 0], note: "碰伤样本要等下一个采摘季才复现" },
+  choices: [
+    {
+      edge: "投硬件 · 58%",
+      title: "重做软手爪",
+      detail: "碰伤率是签约门槛",
+      outcomes: [
+        { edge: "43%", title: "只换材料", detail: "成本降一成", value: "3.2", unit: "%" },
+        { edge: "57%", title: "材料加结构", detail: "要多压一个采摘季", value: "1.4", unit: "%", recommended: true },
+      ],
+    },
+    {
+      edge: "投驻园 · 42%",
+      title: "扩驻园队到八人",
+      detail: "覆盖两个产区",
+      outcomes: [
+        { edge: "49%", title: "只加人", detail: "响应快了", value: "2.8", unit: "%" },
+        { edge: "51%", title: "加人加远程诊断", detail: "要装车载模块", value: "2.1", unit: "%" },
+      ],
+    },
+  ],
 
   orgs: [
     "焰序机器人",

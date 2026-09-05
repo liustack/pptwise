@@ -108,6 +108,33 @@ export const ACADEMIC_LEXICON: Lexicon = {
   periodAxis: "年度",
   segmentAxis: "方言点",
   decision: "低资源方言先补哪一头",
+  levels: [
+    { title: "只有录音", value: "412", unit: "小时" },
+    { title: "转写对齐", value: "268", unit: "小时" },
+    { title: "音位标注", value: "141", unit: "小时" },
+    { title: "可进训练", value: "63", unit: "小时" },
+  ],
+  handover: { owners: [2, 0, 2, 0, 1], note: "发音人交回录音，要等两周才排上清洗" },
+  choices: [
+    {
+      edge: "先补语料 · 61%",
+      title: "再采两个方言点",
+      detail: "田野时间换数据量",
+      outcomes: [
+        { edge: "38%", title: "只补录音", detail: "转写仍要排队", value: "3.1", unit: "pp" },
+        { edge: "62%", title: "录音带转写一起补", detail: "对齐后可直接进训练", value: "5.4", unit: "pp", recommended: true },
+      ],
+    },
+    {
+      edge: "先补先验 · 39%",
+      title: "注入音系规则",
+      detail: "不新增田野时间",
+      outcomes: [
+        { edge: "55%", title: "只加声母规则", detail: "覆盖三个方言点", value: "1.8", unit: "pp" },
+        { edge: "45%", title: "声韵调一起加", detail: "要重训两轮", value: "2.6", unit: "pp" },
+      ],
+    },
+  ],
 
   orgs: [
     "计算语言学实验室",

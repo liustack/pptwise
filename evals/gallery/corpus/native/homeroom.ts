@@ -108,6 +108,33 @@ export const CLASSROOM_LEXICON: Lexicon = {
   periodAxis: "月份",
   segmentAxis: "题型",
   decision: "暑假先补哪一项",
+  levels: [
+    { title: "会做例题", value: "42", unit: "人" },
+    { title: "会做变式", value: "31", unit: "人" },
+    { title: "会讲思路", value: "19", unit: "人" },
+    { title: "会自己出题", value: "7", unit: "人" },
+  ],
+  handover: { owners: [2, 0, 0, 2, 1], note: "课代表收齐错题本，老师才看得出共性，通常要压两天" },
+  choices: [
+    {
+      edge: "先补计算 · 57%",
+      title: "每天二十道口算",
+      detail: "十分钟就够",
+      outcomes: [
+        { edge: "46%", title: "只练速度", detail: "错题面不变", value: "6", unit: "分" },
+        { edge: "54%", title: "速度加检查", detail: "养成回看的习惯", value: "11", unit: "分", recommended: true },
+      ],
+    },
+    {
+      edge: "先补几何 · 43%",
+      title: "每天一道辅助线",
+      detail: "需要家长陪看",
+      outcomes: [
+        { edge: "58%", title: "只做课本题", detail: "考试还是会卡", value: "5", unit: "分" },
+        { edge: "42%", title: "课本加拓展", detail: "要占一小时", value: "13", unit: "分" },
+      ],
+    },
+  ],
 
   orgs: [
     "初二（3）班",

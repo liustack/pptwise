@@ -108,6 +108,33 @@ export const HERITAGE_LEXICON: Lexicon = {
   periodAxis: "节气",
   segmentAxis: "品类",
   decision: "新铺先做哪一件",
+  levels: [
+    { title: "认得招牌", value: "4200", unit: "人" },
+    { title: "买过一次", value: "1800", unit: "人" },
+    { title: "每年都买", value: "620", unit: "人" },
+    { title: "带人来买", value: "180", unit: "人" },
+  ],
+  handover: { owners: [2, 1, 0, 0, 1], note: "账房盘完家底才轮到守缸师傅封工序，中间隔了一个伏天" },
+  choices: [
+    {
+      edge: "先开新铺 · 57%",
+      title: "老街口那一间",
+      detail: "租期五年",
+      outcomes: [
+        { edge: "44%", title: "只做零售", detail: "回本慢", value: "4", unit: "年" },
+        { edge: "56%", title: "零售带参观动线", detail: "要留出后坊", value: "3", unit: "年", recommended: true },
+      ],
+    },
+    {
+      edge: "先做小罐 · 43%",
+      title: "试销两百罐",
+      detail: "不动门店",
+      outcomes: [
+        { edge: "52%", title: "只在门店卖", detail: "客群不变", value: "5", unit: "年" },
+        { edge: "48%", title: "门店加线上", detail: "得请人拍图", value: "4", unit: "年" },
+      ],
+    },
+  ],
 
   orgs: [
     "沈记酱园",

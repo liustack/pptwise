@@ -108,6 +108,33 @@ export const TECH_LEXICON: Lexicon = {
   periodAxis: "项目年份",
   segmentAxis: "模块",
   decision: "第四次重写先做哪一件",
+  levels: [
+    { title: "star 过", value: "4200", unit: "人" },
+    { title: "提过 issue", value: "620", unit: "人" },
+    { title: "提过 PR", value: "210", unit: "人" },
+    { title: "有合并记录", value: "42", unit: "人" },
+  ],
+  handover: { owners: [0, 0, 1, 2, 1], note: "基准工作组跑完影子运行才敢灰度，两边结果对不齐就退回实现" },
+  choices: [
+    {
+      edge: "先做向量化 · 61%",
+      title: "重写执行器",
+      detail: "热路径收益最大",
+      outcomes: [
+        { edge: "38%", title: "只做扫描算子", detail: "join 还是慢", value: "2.4", unit: "倍" },
+        { edge: "62%", title: "扫描加 join", detail: "要重做内存布局", value: "4.1", unit: "倍", recommended: true },
+      ],
+    },
+    {
+      edge: "先收接口面 · 39%",
+      title: "公开接口砍到二十九个",
+      detail: "给下一次重写让路",
+      outcomes: [
+        { edge: "55%", title: "只标记废弃", detail: "两个大版本才清干净", value: "1.2", unit: "倍" },
+        { edge: "45%", title: "废弃加迁移脚本", detail: "要写文档和 codemod", value: "1.5", unit: "倍" },
+      ],
+    },
+  ],
 
   orgs: [
     "Quill 项目",

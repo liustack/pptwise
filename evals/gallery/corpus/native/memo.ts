@@ -108,6 +108,33 @@ export const MEMO_LEXICON: Lexicon = {
   periodAxis: "月份",
   segmentAxis: "科目",
   decision: "现在走还是先试两个月",
+  levels: [
+    { title: "做过一件", value: "42", unit: "件" },
+    { title: "卖出一件", value: "18", unit: "件" },
+    { title: "有人回购", value: "7", unit: "件" },
+    { title: "有人定制", value: "2", unit: "件" },
+  ],
+  handover: { owners: [0, 0, 2, 0, 1], note: "师傅只在周末带课，空了半个月" },
+  choices: [
+    {
+      edge: "现在就走 · 46%",
+      title: "交接完就辞",
+      detail: "存款撑十八个月",
+      outcomes: [
+        { edge: "42%", title: "不留退路", detail: "压力最大", value: "18", unit: "个月" },
+        { edge: "58%", title: "留一份兼职", detail: "手艺进度会慢", value: "24", unit: "个月", recommended: true },
+      ],
+    },
+    {
+      edge: "先试两个月 · 54%",
+      title: "周末做，平时上班",
+      detail: "不动收入",
+      outcomes: [
+        { edge: "55%", title: "只做周末", detail: "两个月出不了三件", value: "2", unit: "个月" },
+        { edge: "45%", title: "周末加年假", detail: "要提前排假", value: "3", unit: "个月" },
+      ],
+    },
+  ],
 
   orgs: [
     "现公司",

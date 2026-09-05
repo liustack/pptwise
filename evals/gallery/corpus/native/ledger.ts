@@ -108,6 +108,33 @@ export const INSIGHT_LEXICON: Lexicon = {
   periodAxis: "季度",
   segmentAxis: "资产",
   decision: "明年的仓位先放哪一头",
+  levels: [
+    { title: "看过的行业", value: "42", unit: "个" },
+    { title: "调研过的", value: "26", unit: "个" },
+    { title: "建了模型的", value: "14", unit: "个" },
+    { title: "进了组合的", value: "5", unit: "个" },
+  ],
+  handover: { owners: [1, 2, 0, 0, 1], note: "产业调研的结论要等利率研究给完贴现假设，才落得进组合" },
+  choices: [
+    {
+      edge: "放出海 · 61%",
+      title: "配制造出海链",
+      detail: "汇率是主要风险",
+      outcomes: [
+        { edge: "38%", title: "只配整机", detail: "波动大", value: "180", unit: "bp" },
+        { edge: "62%", title: "整机加零部件", detail: "分散单一客户", value: "240", unit: "bp", recommended: true },
+      ],
+    },
+    {
+      edge: "放内需 · 39%",
+      title: "配存款搬家受益",
+      detail: "看利率下行",
+      outcomes: [
+        { edge: "55%", title: "只配银行", detail: "股息稳", value: "120", unit: "bp" },
+        { edge: "45%", title: "银行加保险", detail: "久期更长", value: "160", unit: "bp" },
+      ],
+    },
+  ],
 
   orgs: [
     "枢机研究所",

@@ -108,6 +108,33 @@ export const PLAYBILL_LEXICON: Lexicon = {
   periodAxis: "月份",
   segmentAxis: "组别",
   decision: "散场之后先做哪一件",
+  levels: [
+    { title: "看过海报", value: "1200", unit: "人" },
+    { title: "买过票", value: "420", unit: "人" },
+    { title: "看完全场", value: "380", unit: "人" },
+    { title: "二刷", value: "46", unit: "人" },
+  ],
+  handover: { owners: [0, 1, 2, 0, 0], note: "彩排改的台词要连夜发给两位主角，正式场前只剩一次对词" },
+  choices: [
+    {
+      edge: "先巡演 · 52%",
+      title: "去三所学校",
+      detail: "场地免费",
+      outcomes: [
+        { edge: "44%", title: "只演一场", detail: "队伍好凑", value: "9", unit: "天" },
+        { edge: "56%", title: "每校两场", detail: "要请两周假", value: "14", unit: "天", recommended: true },
+      ],
+    },
+    {
+      edge: "先留校复排 · 48%",
+      title: "把第十一稿定本演完",
+      detail: "不出校门",
+      outcomes: [
+        { edge: "53%", title: "只加排练", detail: "细节更稳", value: "11", unit: "天" },
+        { edge: "47%", title: "排练加录像", detail: "要借设备", value: "16", unit: "天" },
+      ],
+    },
+  ],
 
   orgs: [
     "拾光剧社",

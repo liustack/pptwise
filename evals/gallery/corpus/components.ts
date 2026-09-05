@@ -249,40 +249,34 @@ export const COMPONENT_BUILDERS: Record<string, (lex: Lexicon) => Component> = {
     items: slice(lex.labels, 4, 8).map((label, i) => ({ label, description: lex.phrases[i] })),
   }),
 
-  // Four levels, the middle of the schema's range: enough for the rise to
-  // read as a climb, wide enough that a tread still holds its own number.
-  // Stage names, not the label pool: a staircase's levels differ in degree,
-  // and the labels are a flat bag of nouns — printing four of them as a climb
-  // claims a ladder the words do not have. How far along a subject has come
-  // is exactly what `stages` names, and the counts fall as the level rises,
-  // the way a maturity ladder thins out towards the top.
-  staircase: (lex) => ({
-    type: "staircase",
-    items: slice(lex.stages, 4).map((title, i) => ({
-      title,
-      value: String(412 - i * 88),
-      unit: lex.metrics[0]!.unit,
-    })),
-  }),
+  // Straight from `levels`, name and number and unit together. Nothing here
+  // is paired by index any more: a rung and the count on it are one authored
+  // fact, because a ladder is the relation between them and no arrangement of
+  // separate pools produces it. `stages` stood here for one round and was
+  // wrong for the same reason the label pool was — a stage is a step in time,
+  // and a staircase claims each rung sits above the last.
+  staircase: (lex) => ({ type: "staircase", items: lex.levels.slice(0, 4).map((level) => ({ ...level })) }),
 
   chevron_process: (lex) => ({
     type: "chevron_process",
     items: slice(lex.stages, 4).map((title, i) => ({ title, text: lex.phrases[i]! })),
   }),
 
-  // Three lanes and five steps that cross them twice, so both the handover
-  // arrow and an ordinary in-lane one are on show. A lane is a role, so the
-  // lane names come from the people pool — the only place this corpus keeps
-  // words for who does something rather than for what is done.
+  // Three lanes and five steps. Which desk a step sits on is the whole
+  // argument of a swimlane, so it is authored per track (`handover.owners`)
+  // rather than dealt out in rotation — the rotation handed a clinic's
+  // blood-pressure booklets to the resident who models keeping one. The note
+  // beside the crossing arrow is authored for the same reason: it is about
+  // that particular handover, and no pool of loose phrases is.
   swimlane: (lex) => ({
     type: "swimlane",
     lanes: lex.people.slice(0, 3).map((person) => ({ label: person.role })),
     steps: slice(lex.stages, 5).map((title, i) => ({
-      lane: lex.people[[0, 1, 2, 1, 0][i]!]!.role,
+      lane: lex.people[lex.handover.owners[i]!]!.role,
       title,
       detail: lex.periods[i],
     })),
-    handoff_note: lex.phrases[4],
+    handoff_note: lex.handover.note,
   }),
 
   // Row names are left unset on purpose, so the page shows the four words
@@ -298,39 +292,22 @@ export const COMPONENT_BUILDERS: Record<string, (lex: Lexicon) => Component> = {
     })),
   }),
 
-  // The root is the track's own `decision`, which is written as a question and
-  // deliberately does not name its options — the branches do that. A heading
-  // used to stand here, and a heading is an assertion: a tree rooted in its own
-  // conclusion has nothing left to decide.
-  //
-  // Details come from `labels`, not `bullets`: the mixed track writes a bullet
-  // that opens with the same product name a phrase uses ("ArgoCD app-of-apps"
-  // and "ArgoCD app-of-apps 纳管 40 个 service"), so a card would have restated
-  // its own title one line down. The unit is the metric pool's, not a period:
-  // a value is counted in something, and "4 第一季度" counts nothing.
+  // The whole tree comes from the track: the question from `decision`, and
+  // the two paths under it from `choices`. Assembled from pool positions, the
+  // branches answered a question nobody asked — a clinic asking whether to
+  // measure at home or come in was answered with 高压低压 and 静坐五分钟, and
+  // recommended 自行停药. A condition, where it leads and what it costs are
+  // one authored fact, the same as a staircase rung and its count.
+  // Copied out rather than handed over: the IR is a mutable shape and the
+  // lexicon is read-only, and a page built straight from the pool would let a
+  // later render edit the corpus under the pages already drawn from it.
   decision_tree: (lex) => ({
     type: "decision_tree",
     question: lex.decision,
-    branches: [
-      {
-        edge: "61%",
-        title: lex.phrases[0]!,
-        detail: lex.labels[6]!,
-        outcomes: [
-          { edge: "38%", title: lex.phrases[1]!, detail: lex.labels[0]!, value: "4", unit: lex.metrics[0]!.unit },
-          { edge: "62%", title: lex.phrases[2]!, detail: lex.labels[1]!, value: "6", unit: lex.metrics[0]!.unit, recommended: true },
-        ],
-      },
-      {
-        edge: "39%",
-        title: lex.phrases[3]!,
-        detail: lex.labels[7]!,
-        outcomes: [
-          { edge: "55%", title: lex.phrases[4]!, detail: lex.labels[2]!, value: "9", unit: lex.metrics[0]!.unit },
-          { edge: "45%", title: lex.phrases[5]!, detail: lex.labels[3]!, value: "14", unit: lex.metrics[0]!.unit },
-        ],
-      },
-    ],
+    branches: lex.choices.slice(0, 2).map((branch) => ({
+      ...branch,
+      outcomes: branch.outcomes.map((outcome) => ({ ...outcome })),
+    })),
   }),
 
   // The delta is worked out from the two values on its own row rather than

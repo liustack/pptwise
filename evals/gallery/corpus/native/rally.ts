@@ -108,6 +108,33 @@ export const CAMPAIGN_LEXICON: Lexicon = {
   periodAxis: "周次",
   segmentAxis: "媒介",
   decision: "预算先压在哪一头",
+  levels: [
+    { title: "看到广告", value: "412", unit: "万人" },
+    { title: "记住名字", value: "186", unit: "万人" },
+    { title: "进店找货", value: "74", unit: "万人" },
+    { title: "买过第二次", value: "21", unit: "万人" },
+  ],
+  handover: { owners: [1, 2, 1, 0, 2], note: "物料锁定后渠道才报档期，空了两周" },
+  choices: [
+    {
+      edge: "压曝光 · 63%",
+      title: "买两周开屏",
+      detail: "覆盖一线城市",
+      outcomes: [
+        { edge: "41%", title: "只买开屏", detail: "到店靠自然流", value: "38", unit: "万人" },
+        { edge: "59%", title: "开屏加达人", detail: "口碑有二次传播", value: "62", unit: "万人", recommended: true },
+      ],
+    },
+    {
+      edge: "压终端 · 37%",
+      title: "买冰柜陈列",
+      detail: "只做华东",
+      outcomes: [
+        { edge: "52%", title: "只做冰柜", detail: "开盖率高", value: "29", unit: "万人" },
+        { edge: "48%", title: "冰柜加试饮", detail: "要临时导购", value: "44", unit: "万人" },
+      ],
+    },
+  ],
 
   orgs: [
     "山茶气泡项目组",

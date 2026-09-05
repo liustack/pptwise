@@ -108,6 +108,33 @@ export const CRAYON_LEXICON: Lexicon = {
   periodAxis: "月份",
   segmentAxis: "活动区",
   decision: "下学期先练哪一样",
+  levels: [
+    { title: "会自己吃饭", value: "32", unit: "人" },
+    { title: "会自己穿衣", value: "24", unit: "人" },
+    { title: "会收拾玩具", value: "17", unit: "人" },
+    { title: "会照顾同伴", value: "6", unit: "人" },
+  ],
+  handover: { owners: [0, 2, 1, 0, 1], note: "保育员记的自理情况要交回班主任，午睡后才对得上" },
+  choices: [
+    {
+      edge: "先练自理 · 62%",
+      title: "把穿脱交给孩子",
+      detail: "从穿鞋开始",
+      outcomes: [
+        { edge: "45%", title: "只在园里练", detail: "回家还是家长代劳", value: "9", unit: "人" },
+        { edge: "55%", title: "园里家里一起练", detail: "要家长每天回执", value: "17", unit: "人", recommended: true },
+      ],
+    },
+    {
+      edge: "先练相处 · 38%",
+      title: "每天一次小组游戏",
+      detail: "每天三十分钟",
+      outcomes: [
+        { edge: "53%", title: "只加时长", detail: "抢玩具还会有", value: "7", unit: "人" },
+        { edge: "47%", title: "时长加轮流规则", detail: "老师要盯前两周", value: "12", unit: "人" },
+      ],
+    },
+  ],
 
   orgs: [
     "向日葵班",

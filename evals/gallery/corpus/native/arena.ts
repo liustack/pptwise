@@ -108,6 +108,33 @@ export const ARENA_LEXICON: Lexicon = {
   periodAxis: "月份",
   segmentAxis: "位置",
   decision: "新赛季先补哪一环",
+  levels: [
+    { title: "能上场", value: "42", unit: "人" },
+    { title: "进首发", value: "18", unit: "人" },
+    { title: "打进季后赛", value: "9", unit: "人" },
+    { title: "拿过冠军", value: "2", unit: "人" },
+  ],
+  handover: { owners: [0, 2, 0, 0, 1], note: "集训名单主教练定，伤病队长先报" },
+  choices: [
+    {
+      edge: "补阵容 · 58%",
+      title: "签一个新打野",
+      detail: "转会窗还有十天",
+      outcomes: [
+        { edge: "44%", title: "签成熟打野", detail: "薪资吃掉一半预算", value: "6", unit: "个胜场" },
+        { edge: "56%", title: "签青训打野", detail: "要半个赛季磨合", value: "9", unit: "个胜场", recommended: true },
+      ],
+    },
+    {
+      edge: "补状态 · 42%",
+      title: "延长季中集训",
+      detail: "不动阵容",
+      outcomes: [
+        { edge: "51%", title: "只加体能", detail: "对线期更稳", value: "3", unit: "个胜场" },
+        { edge: "49%", title: "体能加复盘", detail: "占用休假两周", value: "5", unit: "个胜场" },
+      ],
+    },
+  ],
 
   orgs: [
     "雷隼战队",

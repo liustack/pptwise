@@ -108,6 +108,33 @@ export const LECTURE_LEXICON: Lexicon = {
   periodAxis: "课次",
   segmentAxis: "光型",
   decision: "下节课先练哪一样",
+  levels: [
+    { title: "报了名", value: "62", unit: "人" },
+    { title: "来满三次", value: "41", unit: "人" },
+    { title: "交过作业", value: "24", unit: "人" },
+    { title: "拍出成片", value: "9", unit: "人" },
+  ],
+  handover: { owners: [1, 0, 0, 0, 2], note: "助教收作业到主讲讲评之间隔一周，学员常忘了当时怎么拍的" },
+  choices: [
+    {
+      edge: "先练光 · 60%",
+      title: "只讲窗边一步",
+      detail: "不用带脚架",
+      outcomes: [
+        { edge: "46%", title: "只看方向", detail: "阴天就抓瞎", value: "18", unit: "人" },
+        { edge: "54%", title: "方向加强弱", detail: "多花二十分钟", value: "27", unit: "人", recommended: true },
+      ],
+    },
+    {
+      edge: "先练构图 · 40%",
+      title: "三分法起步",
+      detail: "室内就能练",
+      outcomes: [
+        { edge: "53%", title: "只讲取景", detail: "人像还是歪", value: "15", unit: "人" },
+        { edge: "47%", title: "取景加前景", detail: "需要外拍", value: "21", unit: "人" },
+      ],
+    },
+  ],
 
   orgs: [
     "河西社区夜校",

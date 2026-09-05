@@ -108,6 +108,33 @@ export const PULSE_LEXICON: Lexicon = {
   periodAxis: "月份",
   segmentAxis: "指标",
   decision: "先在家量还是直接来复诊",
+  levels: [
+    { title: "量过一次", value: "420", unit: "人" },
+    { title: "记满两周", value: "260", unit: "人" },
+    { title: "按时复诊", value: "140", unit: "人" },
+    { title: "血压达标", value: "62", unit: "人" },
+  ],
+  handover: { owners: [1, 0, 1, 2, 0], note: "血压本交回护士，医生才排复诊" },
+  choices: [
+    {
+      edge: "先在家量 · 58%",
+      title: "两周自测",
+      detail: "每天早晚各一次",
+      outcomes: [
+        { edge: "46%", title: "只记数字", detail: "看不出诱因", value: "62", unit: "人" },
+        { edge: "54%", title: "数字带备注", detail: "要教会怎么写", value: "104", unit: "人", recommended: true },
+      ],
+    },
+    {
+      edge: "直接来复诊 · 42%",
+      title: "当天就测",
+      detail: "省下两周",
+      outcomes: [
+        { edge: "51%", title: "只测一次", detail: "白大衣效应", value: "38", unit: "人" },
+        { edge: "49%", title: "测两次取平均", detail: "候诊多半小时", value: "57", unit: "人" },
+      ],
+    },
+  ],
 
   orgs: [
     "梧桐里社区卫生服务中心",

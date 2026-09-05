@@ -108,6 +108,33 @@ export const VERMILION_LEXICON: Lexicon = {
   periodAxis: "月份",
   segmentAxis: "业务板块",
   decision: "下半年先推哪一项",
+  levels: [
+    { title: "到过大厅", value: "42", unit: "万人次" },
+    { title: "一次办成", value: "31", unit: "万人次" },
+    { title: "全程网办", value: "14", unit: "万人次" },
+    { title: "不用到场", value: "5", unit: "万人次" },
+  ],
+  handover: { owners: [1, 1, 2, 0, 1], note: "综合窗口收件后要转专窗预审，工程类件常常卡在这一步" },
+  choices: [
+    {
+      edge: "推全程网办 · 58%",
+      title: "先上二十个高频事项",
+      detail: "系统已具备",
+      outcomes: [
+        { edge: "44%", title: "只上申报", detail: "取件还要跑一趟", value: "8", unit: "万件" },
+        { edge: "56%", title: "申报带邮寄", detail: "要跟邮政签约", value: "14", unit: "万件", recommended: true },
+      ],
+    },
+    {
+      edge: "推帮办代办 · 42%",
+      title: "增设两个帮办席",
+      detail: "面向老年人",
+      outcomes: [
+        { edge: "53%", title: "只在大厅", detail: "覆盖有限", value: "5", unit: "万件" },
+        { edge: "47%", title: "大厅加社区", detail: "要培训四十人", value: "9", unit: "万件" },
+      ],
+    },
+  ],
 
   orgs: [
     "区市场监管局",

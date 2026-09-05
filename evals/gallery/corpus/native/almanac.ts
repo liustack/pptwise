@@ -108,6 +108,33 @@ export const TERRA_LEXICON: Lexicon = {
   periodAxis: "节气",
   segmentAxis: "地块",
   decision: "来年先做哪一件",
+  levels: [
+    { title: "试过一季", value: "42", unit: "户" },
+    { title: "连种两年", value: "26", unit: "户" },
+    { title: "转有机", value: "14", unit: "户" },
+    { title: "拿到认证", value: "5", unit: "户" },
+  ],
+  handover: { owners: [1, 2, 1, 1, 0], note: "鸭子下田要跟插秧对上，差一周就白搭" },
+  choices: [
+    {
+      edge: "先扩稻鸭 · 57%",
+      title: "再放两百只",
+      detail: "除草不用药",
+      outcomes: [
+        { edge: "45%", title: "只扩面积", detail: "看田的人不够", value: "1.8", unit: "%" },
+        { edge: "55%", title: "扩面积加围网", detail: "冬天要修渠", value: "2.6", unit: "%", recommended: true },
+      ],
+    },
+    {
+      edge: "先养地 · 43%",
+      title: "轮作豆科一季",
+      detail: "少收一茬",
+      outcomes: [
+        { edge: "52%", title: "只轮一块", detail: "有机质慢慢爬", value: "1.1", unit: "%" },
+        { edge: "48%", title: "轮两块", detail: "当年收成少三成", value: "2.2", unit: "%" },
+      ],
+    },
+  ],
 
   orgs: [
     "青禾农场合作社",

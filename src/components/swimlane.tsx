@@ -9,6 +9,7 @@ import {
   fitFormLine,
   fitFormTitleLine,
   formHighlightFill,
+  layoutFormBody,
 } from "./legibility"
 import type { RenderDef, SvgComponent } from "./types"
 
@@ -123,7 +124,7 @@ export const swimlane: SvgComponent<SwimlaneComponent> = {
     // to point at, so it is the one that carries the note and the heavy stroke.
     const crossing = g.boxes.findIndex((b, i) => i > 0 && b.lane !== g.boxes[i - 1]!.lane)
     const note: string = component.handoff_note?.trim() ?? ""
-    let noteFit: { text: string; fontSize: number; truncated: boolean } | null = null
+    let noteFit: { lines: readonly string[]; fontSize: number; lineHeight: number } | null = null
     let noteX = 0
     let noteY = 0
     if (note && crossing > 0) {
@@ -139,11 +140,19 @@ export const swimlane: SvgComponent<SwimlaneComponent> = {
       // arrow says less than nothing, so a note that will not fit whole is
       // declared dropped rather than cut — the export gate then refuses the
       // deck instead of shipping a page that lost a line without saying so.
+      // Two lines, not one: a lane band is taller than a step box, and where
+      // the next step in that lane follows soon after the crossing the note
+      // has half a column of width and a whole band of height to use.
       const fitted =
         room >= NOTE_FLOOR
-          ? fitFormLine(note, { maxWidth: room, fontSize: FORM_BODY_FLOOR, fontFamily: ctx.fonts.body })
+          ? layoutFormBody(note, {
+              maxWidth: room,
+              fontSize: FORM_BODY_FLOOR,
+              maxLines: 2,
+              fontFamily: ctx.fonts.body,
+            })
           : null
-      noteFit = fitted && !fitted.truncated ? fitted : null
+      noteFit = fitted && !fitted.truncated && fitted.lines.length > 0 ? fitted : null
     }
     const noteDeclined = note !== "" && crossing > 0 && noteFit === null ? 1 : 0
 
@@ -270,18 +279,20 @@ export const swimlane: SvgComponent<SwimlaneComponent> = {
             </g>
           )
         })}
-        {noteFit ? (
-          <text
-            data-truncated={noteFit.truncated ? "1" : undefined}
-            x={noteX}
-            y={noteY + noteFit.fontSize * 0.35}
-            fontFamily={ctx.fonts.body}
-            fontSize={noteFit.fontSize}
-            fill={accessibleInk(ctx.colors.text, bandFill, noteFit.fontSize)}
-          >
-            {noteFit.text}
-          </text>
-        ) : null}
+        {noteFit
+          ? noteFit.lines.map((line, i) => (
+              <text
+                key={`note-${i}`}
+                x={noteX}
+                y={noteY - ((noteFit!.lines.length - 1) * noteFit!.lineHeight) / 2 + i * noteFit!.lineHeight + noteFit!.fontSize * 0.35}
+                fontFamily={ctx.fonts.body}
+                fontSize={noteFit!.fontSize}
+                fill={accessibleInk(ctx.colors.text, bandFill, noteFit!.fontSize)}
+              >
+                {line}
+              </text>
+            ))
+          : null}
         <DroppedContentMarker count={noteDeclined} kind="label" />
       </g>
     )

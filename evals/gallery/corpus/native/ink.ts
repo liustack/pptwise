@@ -108,6 +108,33 @@ export const INK_LEXICON: Lexicon = {
   periodAxis: "节气",
   segmentAxis: "书体",
   decision: "社课先排哪一课",
+  levels: [
+    { title: "来看过", value: "420", unit: "人" },
+    { title: "报名社课", value: "168", unit: "人" },
+    { title: "交过日课", value: "72", unit: "人" },
+    { title: "有作品入展", value: "19", unit: "人" },
+  ],
+  handover: { owners: [0, 0, 1, 1, 2], note: "考据写完展签才定得了展线，布展那两天最紧" },
+  choices: [
+    {
+      edge: "先排日课 · 59%",
+      title: "每天一纸",
+      detail: "门槛最低",
+      outcomes: [
+        { edge: "47%", title: "只临帖", detail: "进步看得见", value: "26", unit: "人" },
+        { edge: "53%", title: "临帖加讲评", detail: "要占社长两个晚上", value: "41", unit: "人", recommended: true },
+      ],
+    },
+    {
+      edge: "先排通临 · 41%",
+      title: "全卷临一遍",
+      detail: "需要三个月",
+      outcomes: [
+        { edge: "55%", title: "只排一卷", detail: "完成率高", value: "14", unit: "人" },
+        { edge: "45%", title: "排两卷", detail: "中途会掉人", value: "9", unit: "人" },
+      ],
+    },
+  ],
 
   orgs: [
     "听雨书社",

@@ -108,6 +108,33 @@ export const RUNWAY_LEXICON: Lexicon = {
   periodAxis: "月份",
   segmentAxis: "品类",
   decision: "首发先做哪一件",
+  levels: [
+    { title: "看过秀", value: "620", unit: "人" },
+    { title: "进过展厅", value: "240", unit: "人" },
+    { title: "下过单", value: "86", unit: "人" },
+    { title: "回头买第二件", value: "22", unit: "人" },
+  ],
+  handover: { owners: [0, 1, 1, 2, 0], note: "匠人做完盘扣才轮到试装，十一天那批常压着排练" },
+  choices: [
+    {
+      edge: "先做发售 · 56%",
+      title: "十四个 look 全上",
+      detail: "走自有渠道",
+      outcomes: [
+        { edge: "43%", title: "只做定制", detail: "交期长", value: "14", unit: "个" },
+        { edge: "57%", title: "定制加成衣", detail: "要备两批料", value: "26", unit: "个", recommended: true },
+      ],
+    },
+    {
+      edge: "先谈联名 · 44%",
+      title: "找一个箱包品牌",
+      detail: "分摊面料成本",
+      outcomes: [
+        { edge: "52%", title: "只做胶囊系列", detail: "露出有限", value: "8", unit: "个" },
+        { edge: "48%", title: "胶囊加主线", detail: "档期要让一季", value: "18", unit: "个" },
+      ],
+    },
+  ],
 
   orgs: [
     "沈鹤工作室",

@@ -108,6 +108,33 @@ export const ENTERPRISE_LEXICON: Lexicon = {
   periodAxis: "月份",
   segmentAxis: "基地",
   decision: "老系统怎么退场",
+  levels: [
+    { title: "装了新系统", value: "4200", unit: "人" },
+    { title: "上过课", value: "3100", unit: "人" },
+    { title: "每天在用", value: "1800", unit: "人" },
+    { title: "不再回老系统", value: "640", unit: "人" },
+  ],
+  handover: { owners: [2, 1, 1, 0, 2], note: "车间清洗完的数据要办公室复核，两班倒之间最容易断档" },
+  choices: [
+    {
+      edge: "一次切换 · 66%",
+      title: "全集团同一天切",
+      detail: "老系统当天封库",
+      outcomes: [
+        { edge: "39%", title: "不留回滚", detail: "出问题只能现场修", value: "3", unit: "天" },
+        { edge: "61%", title: "留一周回滚窗", detail: "要多备一套值班", value: "5", unit: "天", recommended: true },
+      ],
+    },
+    {
+      edge: "双轨过渡 · 34%",
+      title: "两套并行一个季度",
+      detail: "各基地自己排期",
+      outcomes: [
+        { edge: "57%", title: "只并行录入", detail: "数据要对两遍", value: "45", unit: "天" },
+        { edge: "43%", title: "并行加强制截止", detail: "到期直接停老系统", value: "30", unit: "天" },
+      ],
+    },
+  ],
 
   orgs: [
     "宏川重工集团",

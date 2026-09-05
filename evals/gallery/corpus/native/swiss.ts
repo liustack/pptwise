@@ -108,6 +108,33 @@ export const SWISS_LEXICON: Lexicon = {
   periodAxis: "季度",
   segmentAxis: "科目",
   decision: "明年预算先加哪一头",
+  levels: [
+    { title: "报过需求", value: "420", unit: "校" },
+    { title: "通过核报", value: "260", unit: "校" },
+    { title: "建成图书角", value: "140", unit: "校" },
+    { title: "借阅活跃", value: "62", unit: "校" },
+  ],
+  handover: { owners: [2, 1, 1, 2, 0], note: "财务付完款要把物流单据交回项目部，偏远校常常对不上时间" },
+  choices: [
+    {
+      edge: "加项目 · 62%",
+      title: "再建六十个图书角",
+      detail: "单点成本已摊薄",
+      outcomes: [
+        { edge: "44%", title: "只建不运营", detail: "半年后借阅掉一半", value: "86", unit: "万元" },
+        { edge: "56%", title: "建成加驻点", detail: "要招四名专员", value: "124", unit: "万元", recommended: true },
+      ],
+    },
+    {
+      edge: "降管理费 · 38%",
+      title: "从八个点降到六个",
+      detail: "对捐赠人交代",
+      outcomes: [
+        { edge: "51%", title: "只降费率", detail: "人手更紧", value: "0", unit: "万元" },
+        { edge: "49%", title: "降费加志愿者", detail: "培训要一个季度", value: "18", unit: "万元" },
+      ],
+    },
+  ],
 
   orgs: [
     "萤火乡村阅读基金会",
