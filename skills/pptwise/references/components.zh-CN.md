@@ -63,9 +63,20 @@ mirror_of: skills/pptwise/references/components.md
 | `journey_map` | `process` |
 | `decision_tree` | `hierarchy`, `process` |
 | `from_to` | `comparison` |
+| `org_tree` | `hierarchy` |
+| `issue_tree` | `hierarchy` |
+| `pyramid` | `hierarchy` |
+| `iceberg` | `hierarchy`, `statement` |
+| `pillar_model` | `hierarchy` |
+| `value_chain` | `process` |
 
 ## 相近组件
 
+- 线的含义是「向谁汇报」用 `org_tree`，是「拆解成」用 `issue_tree`，是按条件做判断用 `flowchart`。
+- 上层由下层支撑（结论压在论据上、高一级压在低一级上）用 `pyramid`，同心包含用 `rings`，每层装的是系统构件用 `architecture`，有先后顺序用 `steps`。
+- 要说「说得出口的只是一小部分」用 `iceberg`，两组东西平级掂量用 `comparison`。
+- 目标要靠几件事同时立住才成立用 `pillar_model`，只是并列几项用 `icon_cards`。
+- 问「价值出在哪一环」用 `value_chain`，只讲先后用 `steps`，讲数量的分合用 `sankey`。
 - 直线步骤用 `steps`，有决策分支用 `flowchart`，末段回到首段用 `cycle`。
 - 工作必须依次穿过每个环节、交接本身是重点时用 `chevron_process`；环节之间差的是程度而不是先后用 `staircase`；每一步归谁做也是论点用 `swimlane`。
 - 每个阶段都带 1-5 的情绪分、最低点就是论点时用 `journey_map`；阶段不带情绪用 `chevron_process`。

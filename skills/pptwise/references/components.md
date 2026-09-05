@@ -58,9 +58,20 @@ The table gives each component's normal kind home. A component may serve more th
 | `journey_map` | `process` |
 | `decision_tree` | `hierarchy`, `process` |
 | `from_to` | `comparison` |
+| `org_tree` | `hierarchy` |
+| `issue_tree` | `hierarchy` |
+| `pyramid` | `hierarchy` |
+| `iceberg` | `hierarchy`, `statement` |
+| `pillar_model` | `hierarchy` |
+| `value_chain` | `process` |
 
 ## Lookalikes
 
+- Use `org_tree` when a line means reports to, `issue_tree` when it means breaks down into, and `flowchart` when a branch is a decision taken on a condition.
+- Use `pyramid` when each level supports the one above — a claim over its evidence, a rank over the ranks that hold it. Use `rings` when the levels nest one inside another, `architecture` when each level holds the parts of a system, and `steps` when they run in order.
+- Use `iceberg` when the argument is that the stated reason is the small part. Use `comparison` when the two sets are peers being weighed.
+- Use `pillar_model` when a goal only stands if every pillar stands. Use `icon_cards` when the items are merely parallel.
+- Use `value_chain` when the question is which link makes the value. Use `steps` when only the order matters and `sankey` when a quantity splits between stages.
 - Use `steps` for a linear sequence, `flowchart` for branching decisions, and `cycle` when the final stage returns to the first.
 - Use `chevron_process` when work passes through every stage in order and the handover between them is the point. Use `staircase` when the stages climb in degree rather than follow one another, and `swimlane` when who does each step is part of the argument.
 - Use `journey_map` when each stage carries a 1-5 feeling and the low point is the argument. Use `chevron_process` when no feeling is attached to the stages.

@@ -135,14 +135,14 @@ Use `--draft` or `--allow-dropped-content` only when the user explicitly request
 | Ordered reasoning | `points` | `bullets`, `numbered_cards`, `paragraph` |
 | Reorderable inventory | `list` | `row_cards`, `icon_cards`, `people_cards` |
 | Side-by-side differences | `comparison` | `comparison`, `from_to`, `image_compare`, `matrix`, `swot` |
-| Directed steps or time | `process` | `steps`, `chevron_process`, `staircase`, `swimlane`, `journey_map`, `flowchart`, `timeline`, `roadmap`, `gantt`, `cycle` |
+| Directed steps or time | `process` | `steps`, `chevron_process`, `staircase`, `swimlane`, `journey_map`, `flowchart`, `timeline`, `roadmap`, `gantt`, `cycle`, `value_chain` |
 | Numeric structure | `data` | `chart`, `data_table`, `kpi_cards`, `progress_donuts`, `heatmap`, `sankey` |
 | Image as the message | `photo` | `image`, `image_grid`, `device_mockup` |
 | Author's own proposition | `statement` | `verdict_banner`, `callout`, or no component |
 | Another speaker's words | `quote` | `blockquote` |
 | One number as the message | `fact` | one-item `kpi_cards` or no component |
 | Claim plus one exhibit | `evidence` | `image`, `chart`, `data_table`, `code`, `device_mockup` |
-| Containment or levels | `hierarchy` | `architecture`, `bmc`, `five_forces`, `rings`, `hub_spoke`, `decision_tree` |
+| Containment or levels | `hierarchy` | `architecture`, `bmc`, `five_forces`, `rings`, `hub_spoke`, `decision_tree`, `org_tree`, `issue_tree`, `pyramid`, `iceberg`, `pillar_model` |
 
 ## Rules
 
