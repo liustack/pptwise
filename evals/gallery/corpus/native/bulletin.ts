@@ -107,6 +107,7 @@ export const ENTERPRISE_LEXICON: Lexicon = {
   periods: ["五月", "六月", "七月", "八月", "九月"],
   periodAxis: "月份",
   segmentAxis: "基地",
+  decision: "老系统怎么退场",
 
   orgs: [
     "宏川重工集团",

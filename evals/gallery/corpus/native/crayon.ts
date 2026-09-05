@@ -107,6 +107,7 @@ export const CRAYON_LEXICON: Lexicon = {
   periods: ["九月", "十一月", "一月", "四月", "六月"],
   periodAxis: "月份",
   segmentAxis: "活动区",
+  decision: "下学期先练哪一样",
 
   orgs: [
     "向日葵班",

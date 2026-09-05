@@ -107,6 +107,7 @@ export const EMBER_LEXICON: Lexicon = {
   periods: ["去年夏", "去年秋", "今年春", "今年夏", "今年秋"],
   periodAxis: "季次",
   segmentAxis: "品类",
+  decision: "这一轮的钱先投哪一头",
 
   orgs: [
     "焰序机器人",

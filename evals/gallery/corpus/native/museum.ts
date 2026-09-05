@@ -107,6 +107,7 @@ export const MUSEUM_LEXICON: Lexicon = {
   periods: ["四月", "五月", "六月", "七月", "八月"],
   periodAxis: "月份",
   segmentAxis: "展段",
+  decision: "展线按什么走",
 
   orgs: [
     "江原博物馆",

@@ -107,6 +107,7 @@ export const MEMO_LEXICON: Lexicon = {
   periods: ["第一月", "第二月", "第三月", "第四月", "第五月"],
   periodAxis: "月份",
   segmentAxis: "科目",
+  decision: "现在走还是先试两个月",
 
   orgs: [
     "现公司",

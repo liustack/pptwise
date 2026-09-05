@@ -107,6 +107,7 @@ export const INK_LEXICON: Lexicon = {
   periods: ["立秋", "处暑", "白露", "秋分", "寒露"],
   periodAxis: "节气",
   segmentAxis: "书体",
+  decision: "社课先排哪一课",
 
   orgs: [
     "听雨书社",

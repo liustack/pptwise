@@ -107,6 +107,7 @@ export const LUXE_LEXICON: Lexicon = {
   periods: ["酉时", "戌时初", "戌时半", "亥时初", "亥时半"],
   periodAxis: "时辰",
   segmentAxis: "环节",
+  decision: "十二套衣按什么次序上台",
 
   orgs: [
     "锦官高定工作室",

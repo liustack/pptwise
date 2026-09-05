@@ -107,6 +107,7 @@ export const INSIGHT_LEXICON: Lexicon = {
   periods: ["一季度", "二季度", "三季度", "四季度", "次年一季度"],
   periodAxis: "季度",
   segmentAxis: "资产",
+  decision: "明年的仓位先放哪一头",
 
   orgs: [
     "枢机研究所",

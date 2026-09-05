@@ -107,6 +107,7 @@ export const JOURNAL_LEXICON: Lexicon = {
   periods: ["二月", "三月", "四月", "五月", "六月"],
   periodAxis: "月份",
   segmentAxis: "栏目",
+  decision: "版面先给哪一栏",
 
   orgs: [
     "《巷口》编辑部",

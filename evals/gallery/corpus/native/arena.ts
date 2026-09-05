@@ -107,6 +107,7 @@ export const ARENA_LEXICON: Lexicon = {
   periods: ["一月", "三月", "六月", "九月", "十一月"],
   periodAxis: "月份",
   segmentAxis: "位置",
+  decision: "新赛季先补哪一环",
 
   orgs: [
     "雷隼战队",

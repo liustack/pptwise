@@ -107,6 +107,7 @@ export const PULSE_LEXICON: Lexicon = {
   periods: ["一月", "三月", "五月", "七月", "九月"],
   periodAxis: "月份",
   segmentAxis: "指标",
+  decision: "先在家量还是直接来复诊",
 
   orgs: [
     "梧桐里社区卫生服务中心",

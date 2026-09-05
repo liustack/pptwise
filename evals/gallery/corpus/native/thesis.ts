@@ -107,6 +107,7 @@ export const ACADEMIC_LEXICON: Lexicon = {
   periods: ["第一年", "第二年", "第三年", "第四年", "第五年"],
   periodAxis: "年度",
   segmentAxis: "方言点",
+  decision: "低资源方言先补哪一头",
 
   orgs: [
     "计算语言学实验室",

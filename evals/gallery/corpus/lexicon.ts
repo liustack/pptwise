@@ -117,6 +117,15 @@ export interface Lexicon {
    * Same rule as `periodAxis`: the dimension, never one of its members.
    */
   readonly segmentAxis: string
+  /**
+   * The decision a `decision_tree` page is about, written as the question it
+   * answers rather than as the answer.
+   *
+   * Deliberately open — "where does the money go first", not "A or B": the
+   * page's own branches name the paths, and a question that names them too
+   * would print each option twice.
+   */
+  readonly decision: string
   /** Organization names — at least 12 (logo wall needs up to 12). */
   readonly orgs: Pool
   /** Named people with roles. */
@@ -289,6 +298,7 @@ const zh: Lexicon = {
   periods: ["第一季度", "第二季度", "第三季度", "第四季度", "明年上半年"],
   periodAxis: "季度",
   segmentAxis: "客群",
+  decision: "下半年的投入先放在哪一头",
 
   orgs: [
     "临江咨询",
@@ -518,6 +528,7 @@ const en: Lexicon = {
   periods: ["Q1", "Q2", "Q3", "Q4", "H1 next year"],
   periodAxis: "Quarter",
   segmentAxis: "Vertical",
+  decision: "Where does the second half's money go first",
 
   orgs: [
     "Linjiang Group",
@@ -747,6 +758,7 @@ const mixed: Lexicon = {
   periods: ["Q3 第 1 月", "Q3 第 2 月", "Q3 第 3 月", "Q4 第 1 月", "Q4 第 2 月"],
   periodAxis: "月份",
   segmentAxis: "平台组件",
+  decision: "下半年的预算先投哪一条线",
 
   orgs: [
     "Linjiang Group 临江咨询",

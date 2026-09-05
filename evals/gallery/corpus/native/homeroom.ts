@@ -107,6 +107,7 @@ export const CLASSROOM_LEXICON: Lexicon = {
   periods: ["三月", "四月", "五月", "六月", "七月"],
   periodAxis: "月份",
   segmentAxis: "题型",
+  decision: "暑假先补哪一项",
 
   orgs: [
     "初二（3）班",

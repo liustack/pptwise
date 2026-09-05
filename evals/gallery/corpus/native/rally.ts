@@ -107,6 +107,7 @@ export const CAMPAIGN_LEXICON: Lexicon = {
   periods: ["第一周", "第二周", "第三周", "第四周", "第五周"],
   periodAxis: "周次",
   segmentAxis: "媒介",
+  decision: "预算先压在哪一头",
 
   orgs: [
     "山茶气泡项目组",

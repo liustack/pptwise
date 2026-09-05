@@ -107,6 +107,7 @@ export const PLAYBILL_LEXICON: Lexicon = {
   periods: ["三月", "四月", "五月", "六月上", "六月下"],
   periodAxis: "月份",
   segmentAxis: "组别",
+  decision: "散场之后先做哪一件",
 
   orgs: [
     "拾光剧社",

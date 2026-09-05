@@ -107,6 +107,7 @@ export const TECH_LEXICON: Lexicon = {
   periods: ["第一年", "第三年", "第五年", "第六年", "第七年"],
   periodAxis: "项目年份",
   segmentAxis: "模块",
+  decision: "第四次重写先做哪一件",
 
   orgs: [
     "Quill 项目",

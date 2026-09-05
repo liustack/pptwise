@@ -107,6 +107,7 @@ export const HERITAGE_LEXICON: Lexicon = {
   periods: ["立春", "谷雨", "小暑", "白露", "冬至"],
   periodAxis: "节气",
   segmentAxis: "品类",
+  decision: "新铺先做哪一件",
 
   orgs: [
     "沈记酱园",

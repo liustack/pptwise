@@ -107,6 +107,7 @@ export const RUNWAY_LEXICON: Lexicon = {
   periods: ["三月", "五月", "七月", "九月", "十月"],
   periodAxis: "月份",
   segmentAxis: "品类",
+  decision: "首发先做哪一件",
 
   orgs: [
     "沈鹤工作室",

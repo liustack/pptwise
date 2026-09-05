@@ -107,6 +107,7 @@ export const TERRA_LEXICON: Lexicon = {
   periods: ["惊蛰", "芒种", "大暑", "秋分", "小雪"],
   periodAxis: "节气",
   segmentAxis: "地块",
+  decision: "来年先做哪一件",
 
   orgs: [
     "青禾农场合作社",

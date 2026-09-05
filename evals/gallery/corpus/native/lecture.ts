@@ -107,6 +107,7 @@ export const LECTURE_LEXICON: Lexicon = {
   periods: ["第一课", "第二课", "第三课", "第四课", "第五课"],
   periodAxis: "课次",
   segmentAxis: "光型",
+  decision: "下节课先练哪一样",
 
   orgs: [
     "河西社区夜校",

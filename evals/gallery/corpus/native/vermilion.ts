@@ -107,6 +107,7 @@ export const VERMILION_LEXICON: Lexicon = {
   periods: ["二月", "三月", "四月", "五月", "六月"],
   periodAxis: "月份",
   segmentAxis: "业务板块",
+  decision: "下半年先推哪一项",
 
   orgs: [
     "区市场监管局",

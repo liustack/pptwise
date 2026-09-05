@@ -107,6 +107,7 @@ export const STAGE_LEXICON: Lexicon = {
   periods: ["五月", "六月", "七月", "八月", "九月"],
   periodAxis: "月份",
   segmentAxis: "版本",
+  decision: "这一代先做哪一件",
 
   orgs: [
     "目光科技",

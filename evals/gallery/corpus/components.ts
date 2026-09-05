@@ -251,12 +251,14 @@ export const COMPONENT_BUILDERS: Record<string, (lex: Lexicon) => Component> = {
 
   // Four levels, the middle of the schema's range: enough for the rise to
   // read as a climb, wide enough that a tread still holds its own number.
+  // Stage names, not the label pool: a staircase's levels differ in degree,
+  // and the labels are a flat bag of nouns — printing four of them as a climb
+  // claims a ladder the words do not have. How far along a subject has come
+  // is exactly what `stages` names, and the counts fall as the level rises,
+  // the way a maturity ladder thins out towards the top.
   staircase: (lex) => ({
     type: "staircase",
-    // `labels[0..3]`, not the segment names further along the pool: a
-    // staircase's levels differ in degree, and printing four industries as a
-    // climb would claim one industry sits above another.
-    items: slice(lex.labels, 4).map((title, i) => ({
+    items: slice(lex.stages, 4).map((title, i) => ({
       title,
       value: String(412 - i * 88),
       unit: lex.metrics[0]!.unit,
@@ -269,12 +271,14 @@ export const COMPONENT_BUILDERS: Record<string, (lex: Lexicon) => Component> = {
   }),
 
   // Three lanes and five steps that cross them twice, so both the handover
-  // arrow and an ordinary in-lane one are on show.
+  // arrow and an ordinary in-lane one are on show. A lane is a role, so the
+  // lane names come from the people pool — the only place this corpus keeps
+  // words for who does something rather than for what is done.
   swimlane: (lex) => ({
     type: "swimlane",
-    lanes: slice(lex.labels, 3, 12).map((label) => ({ label })),
+    lanes: lex.people.slice(0, 3).map((person) => ({ label: person.role })),
     steps: slice(lex.stages, 5).map((title, i) => ({
-      lane: lex.labels[12 + [0, 1, 2, 1, 0][i]!]!,
+      lane: lex.people[[0, 1, 2, 1, 0][i]!]!.role,
       title,
       detail: lex.periods[i],
     })),
@@ -294,21 +298,27 @@ export const COMPONENT_BUILDERS: Record<string, (lex: Lexicon) => Component> = {
     })),
   }),
 
+  // The root is the track's own `decision`, which is written as a question and
+  // deliberately does not name its options — the branches do that. A heading
+  // used to stand here, and a heading is an assertion: a tree rooted in its own
+  // conclusion has nothing left to decide.
+  //
   // Details come from `labels`, not `bullets`: the mixed track writes a bullet
   // that opens with the same product name a phrase uses ("ArgoCD app-of-apps"
   // and "ArgoCD app-of-apps 纳管 40 个 service"), so a card would have restated
-  // its own title one line down.
+  // its own title one line down. The unit is the metric pool's, not a period:
+  // a value is counted in something, and "4 第一季度" counts nothing.
   decision_tree: (lex) => ({
     type: "decision_tree",
-    question: lex.headings[12]!,
+    question: lex.decision,
     branches: [
       {
         edge: "61%",
         title: lex.phrases[0]!,
         detail: lex.labels[6]!,
         outcomes: [
-          { edge: "38%", title: lex.phrases[1]!, detail: lex.labels[0]!, value: "4", unit: lex.periods[0] },
-          { edge: "62%", title: lex.phrases[2]!, detail: lex.labels[1]!, value: "6", unit: lex.periods[0], recommended: true },
+          { edge: "38%", title: lex.phrases[1]!, detail: lex.labels[0]!, value: "4", unit: lex.metrics[0]!.unit },
+          { edge: "62%", title: lex.phrases[2]!, detail: lex.labels[1]!, value: "6", unit: lex.metrics[0]!.unit, recommended: true },
         ],
       },
       {
@@ -316,27 +326,34 @@ export const COMPONENT_BUILDERS: Record<string, (lex: Lexicon) => Component> = {
         title: lex.phrases[3]!,
         detail: lex.labels[7]!,
         outcomes: [
-          { edge: "55%", title: lex.phrases[4]!, detail: lex.labels[2]!, value: "9", unit: lex.periods[0] },
-          { edge: "45%", title: lex.phrases[5]!, detail: lex.labels[3]!, value: "14", unit: lex.periods[0] },
+          { edge: "55%", title: lex.phrases[4]!, detail: lex.labels[2]!, value: "9", unit: lex.metrics[0]!.unit },
+          { edge: "45%", title: lex.phrases[5]!, detail: lex.labels[3]!, value: "14", unit: lex.metrics[0]!.unit },
         ],
       },
     ],
   }),
 
-  // The deltas are written as signed numbers rather than words: this row is
-  // the one piece of copy the corpus cannot take from a language track's own
-  // pools, and a sign reads the same in all three.
+  // The delta is worked out from the two values on its own row rather than
+  // written down beside them: a hand-kept list drifts from the arithmetic the
+  // moment either number moves, and a review page printing "+38%" over a rise
+  // from 21 to 22 teaches a reader to distrust the drawing. Signed percentages
+  // read the same in all three tracks, which is why they are not words.
   from_to: (lex) => ({
     type: "from_to",
     from: { title: lex.periods[0]! },
     to: { title: lex.periods[1]! },
-    rows: lex.metrics.slice(0, 4).map((metric, i) => ({
-      label: metric.label,
-      from: String(9 + i * 12),
-      to: String(5 + i * 17),
-      unit: metric.unit,
-      change: ["-44%", "+38%", "+56%", "+64%"][i]!,
-    })),
+    rows: lex.metrics.slice(0, 4).map((metric, i) => {
+      const from = 9 + i * 12
+      const to = 5 + i * 17
+      const move = Math.round(((to - from) / from) * 100)
+      return {
+        label: metric.label,
+        from: String(from),
+        to: String(to),
+        unit: metric.unit,
+        change: `${move > 0 ? "+" : ""}${move}%`,
+      }
+    }),
   }),
 
   rings: (lex) => ({

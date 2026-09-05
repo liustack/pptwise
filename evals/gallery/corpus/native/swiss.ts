@@ -107,6 +107,7 @@ export const SWISS_LEXICON: Lexicon = {
   periods: ["一季度", "二季度", "三季度", "四季度", "次年一季度"],
   periodAxis: "季度",
   segmentAxis: "科目",
+  decision: "明年预算先加哪一头",
 
   orgs: [
     "萤火乡村阅读基金会",
