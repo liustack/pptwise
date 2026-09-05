@@ -162,3 +162,27 @@ describe("logo_wall component", () => {
     expect(() => assertSubset(parseSvgRoot(markup))).not.toThrow()
   })
 })
+
+describe("logo_wall in a box it cannot draw in", () => {
+  it("declines and declares rather than squashing a row", () => {
+    const component = comp(12)
+    const measured = logoWall.measure(component, box.w, ctx)
+    const { container } = svg(logoWall.render(component, { ...box, h: measured - 40 }, ctx))
+    const marker = container.querySelector("[data-dropped]")!
+    expect(marker.getAttribute("data-dropped")).toBe("1")
+    expect(marker.getAttribute("data-dropped-kind")).toBe("component")
+    // Nothing is painted through: no half wall, no shrunken tiles.
+    expect(container.querySelectorAll("text")).toHaveLength(0)
+    expect(container.querySelectorAll("rect")).toHaveLength(0)
+  })
+
+  it("draws in full at exactly its measured height, and above it", () => {
+    const component = comp(12)
+    const measured = logoWall.measure(component, box.w, ctx)
+    for (const h of [measured, measured + 120]) {
+      const { container } = svg(logoWall.render(component, { ...box, h }, ctx))
+      expect(container.querySelector("[data-dropped]")).toBeNull()
+      expect(container.querySelectorAll("text")).toHaveLength(12)
+    }
+  })
+})

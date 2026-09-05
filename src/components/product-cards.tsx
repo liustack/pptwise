@@ -52,7 +52,22 @@ const RULE_GAP_BELOW = 12
 const PRICE_FONT_SIZE = 28
 const PRICE_MIN_FONT_SIZE = 18
 const PRICE_UNIT_FONT_SIZE = 16
-const PRICE_UNIT_GAP = 8
+/**
+ * Air between the price and its small print.
+ *
+ * Wider than it looks like it needs to be, and deliberately so. The two runs
+ * are separate `<text>` elements — the export path carries no `dx`, so a
+ * tspan offset would open a gap in the browser and none in the PPTX — which
+ * means the unit's x is placed off `measureTextUnits`' estimate of the price.
+ * That model classes a currency sign with "other" at 0.46em, and Georgia bold
+ * draws "¥" nearer 0.6, so a three-character price under-measures by around
+ * 7px and an 8px gap closed to nothing: "¥68席位 / 月". The gap absorbs the
+ * model's error on a short bold run rather than pretending the estimate is
+ * exact.
+ */
+const PRICE_UNIT_GAP = 18
+/** 强调卡上小字退后一档的混合比例，混完仍要过对比度。 */
+const SOFT_INK_MIX = 0.78
 
 interface CardText {
   name: { text: string; fontSize: number; truncated: boolean }
@@ -107,11 +122,26 @@ function layoutCard(item: ProductItem, contentW: number, ctx: ComponentCtx): Car
   return { name, note, price, priceUnit, priceW }
 }
 
-/** 一张卡的内容高度（不含图片区与上下内边距）。 */
-function cardTextHeight(text: CardText): number {
-  const noteH = text.note ? GAP_NAME_NOTE + text.note.lines.length * text.note.lineHeight : 0
-  const priceH = text.price || text.priceUnit ? RULE_GAP_ABOVE + 1 + RULE_GAP_BELOW + PRICE_FONT_SIZE : 0
-  return NAME_LINE_HEIGHT + noteH + priceH
+/**
+ * 说明文字那一段的高度预算，全套共用最高的一张。
+ *
+ * 卡壳等高一度是「对齐」的全部实现，但那只对齐了外框：一行说明的卡和两行
+ * 说明的卡壳子一样高，价格基线却差 22px，读起来就是三条参差的价格线。真正
+ * 要对齐的是分隔线和价格，所以说明段按全套最高的一张预留，短的那张下面留空
+ * 白——留白在卡里，不在卡下面。
+ */
+function noteBandOf(texts: readonly CardText[]): number {
+  return Math.max(
+    0,
+    ...texts.map((text) => (text.note ? GAP_NAME_NOTE + text.note.lines.length * text.note.lineHeight : 0)),
+  )
+}
+
+/** 价格那一段（分隔线 + 价格行）的高度，任一张卡有价格就全套都留。 */
+function priceBandOf(texts: readonly CardText[]): number {
+  return texts.some((text) => text.price || text.priceUnit)
+    ? RULE_GAP_ABOVE + 1 + RULE_GAP_BELOW + PRICE_FONT_SIZE
+    : 0
 }
 
 interface CardGeometry {
@@ -121,6 +151,10 @@ interface CardGeometry {
   contentW: number
   cardH: number
   texts: CardText[]
+  /** 说明段的共用高度，决定分隔线的 y。 */
+  noteBand: number
+  /** 价格段的共用高度。 */
+  priceBand: number
 }
 
 function cardGeometry(component: ProductCardsComponent, w: number, ctx: ComponentCtx): CardGeometry {
@@ -130,9 +164,12 @@ function cardGeometry(component: ProductCardsComponent, w: number, ctx: Componen
   const cardW = (w - GAP * (cols - 1)) / cols
   const contentW = Math.max(1, cardW - PAD * 2)
   const texts = component.items.map((item) => layoutCard(item, contentW, ctx))
-  // 等高：最高的一张决定全套，价格线才对得齐。
-  const cardH = IMAGE_H + PAD + Math.max(...texts.map(cardTextHeight)) + PAD
-  return { cols, rows, cardW, contentW, cardH, texts }
+  // 等高：名字一行 + 全套共用的说明段 + 全套共用的价格段。三段都共用，所以
+  // 分隔线和价格在每张卡上落在同一条基线。
+  const noteBand = noteBandOf(texts)
+  const priceBand = priceBandOf(texts)
+  const cardH = IMAGE_H + PAD + NAME_LINE_HEIGHT + noteBand + priceBand + PAD
+  return { cols, rows, cardW, contentW, cardH, texts, noteBand, priceBand }
 }
 
 /** 一张卡自己的一套墨：底色决定其余全部颜色，`featured` 只是换了底。 */
@@ -143,10 +180,13 @@ function cardInks(featured: boolean, ctx: ComponentCtx) {
     return {
       fill,
       name: ink,
-      note: mixHex(fill, ink, 0.78),
+      // 调淡一档是为了让说明和价格单位退到名字后面，但调淡之后还要再过一遍
+      // 对比度：homeroom 与 crayon 的强调底上，0.78 那一档量出来只有 4.11:1
+      // 和 3.81:1，都低于 16px 文字要求的 4.5:1。过不了就退回满墨。
+      note: accessibleInk(mixHex(fill, ink, SOFT_INK_MIX), fill, NOTE_FONT_SIZE),
       rule: mixHex(fill, ink, 0.3),
       price: ink,
-      unit: mixHex(fill, ink, 0.78),
+      unit: accessibleInk(mixHex(fill, ink, SOFT_INK_MIX), fill, PRICE_UNIT_FONT_SIZE),
       stroke: undefined as string | undefined,
     }
   }
@@ -156,10 +196,24 @@ function cardInks(featured: boolean, ctx: ComponentCtx) {
     name: ctx.colors.text,
     note: accessibleInk(ctx.colors.muted, fill, NOTE_FONT_SIZE),
     rule: stroke ?? mixHex(fill, ctx.colors.text, 0.2),
-    price: accessibleInk(ctx.colors.primary, fill, PRICE_FONT_SIZE),
+    price: textInkNotAccent(ctx.colors.primary, fill, PRICE_FONT_SIZE, ctx),
     unit: accessibleInk(ctx.colors.muted, fill, PRICE_UNIT_FONT_SIZE),
     stroke,
   }
+}
+
+/**
+ * 承载文字的墨，且保证它不是 accent。
+ *
+ * 规矩是「accent 永远不承载文字」，而这条规矩要按最终画出来的颜色验收，
+ * 不是按读了哪个 token 验收：ember 把 primary 和 accent 定义成同一个
+ * `#E56A2C`，于是「用 primary 画价格」画出来的就是 accent。对比度是合格的，
+ * 违反的是规矩本身。撞上就退回正文墨，层次交给字号和字重去分。
+ */
+function textInkNotAccent(preferred: string, bg: string, fontSizePx: number, ctx: ComponentCtx): string {
+  const ink = accessibleInk(preferred, bg, fontSizePx)
+  if (ink.toUpperCase() !== ctx.colors.accent.toUpperCase()) return ink
+  return accessibleInk(ctx.colors.text, bg, fontSizePx)
 }
 
 function renderPicture(item: ProductItem, x: number, y: number, w: number, ctx: ComponentCtx): React.ReactElement {
@@ -170,8 +224,17 @@ function renderPicture(item: ProductItem, x: number, y: number, w: number, ctx: 
       <image href={src} x={x} y={y} width={w} height={IMAGE_H} preserveAspectRatio="xMidYMid slice" aria-label={alt} />
     )
   }
-  // 资产没交上来。画一块空底并留下机器找得到的记号，不画假图。
-  return <rect data-dropped="asset" x={x} y={y} width={w} height={IMAGE_H} fill={ctx.colors.bg} />
+  // 资产没交上来。画一块空底，不画假图，并按共用的丢弃协议声明——
+  // `data-dropped` 是计数，`data-dropped-kind` 是单位，两个一起才被
+  // `slideToRender` 数到、被 `checkContentDropGate` 拒绝。此前只写了
+  // `data-dropped="asset"`，`Number("asset") || 0` 把它算成零次丢弃，
+  // 缺图的商品卡照样导出。
+  return (
+    <>
+      <rect x={x} y={y} width={w} height={IMAGE_H} fill={ctx.colors.bg} />
+      <g data-dropped={1} data-dropped-kind="asset" />
+    </>
+  )
 }
 
 export const productCards: SvgComponent<ProductCardsComponent> = {
@@ -180,7 +243,13 @@ export const productCards: SvgComponent<ProductCardsComponent> = {
     return rows * cardH + Math.max(0, rows - 1) * GAP
   },
   render(component: ProductCardsComponent, box: ComponentBox, ctx: ComponentCtx) {
-    const { cols, cardW, contentW, cardH, texts } = cardGeometry(component, box.w, ctx)
+    const { cols, rows, cardW, contentW, cardH, texts, noteBand } = cardGeometry(component, box.w, ctx)
+    const measured = rows * cardH + Math.max(0, rows - 1) * GAP
+    // 盒子矮过量出来的最小高度就不画、只声明（chart.tsx 的同一条约定）：
+    // 图片有自己的宽高比，卡片没有可以压缩的地方，压扁只会画到页外。
+    if ((box.h ?? measured) + 0.5 < measured) {
+      return <g data-dropped={1} data-dropped-kind="component" />
+    }
     // 图片齐着卡片上沿铺满，而导出链路不会裁切图片的圆角（同
     // device-mockup.tsx 的屏幕矩形），所以卡片自己也不假装有大圆角：
     // 主题半径在这里封顶到 4px，圆角主题上仍读作一张卡，图片却不会探出去。
@@ -193,10 +262,10 @@ export const productCards: SvgComponent<ProductCardsComponent> = {
           const text = texts[i]!
           const imageY = 0
           const nameBaselineY = IMAGE_H + PAD + NAME_FONT_SIZE
-          let cursorY = IMAGE_H + PAD + NAME_LINE_HEIGHT
-          const noteTopY = cursorY + (text.note ? GAP_NAME_NOTE : 0)
-          if (text.note) cursorY = noteTopY + text.note.lines.length * text.note.lineHeight
-          const ruleY = cursorY + RULE_GAP_ABOVE
+          const noteTopY = IMAGE_H + PAD + NAME_LINE_HEIGHT + (text.note ? GAP_NAME_NOTE : 0)
+          // 分隔线和价格挂在全套共用的说明段下缘，不挂在这一张自己的最后一
+          // 行——短说明的卡把空白留在说明和分隔线之间，三条价格线才齐平。
+          const ruleY = IMAGE_H + PAD + NAME_LINE_HEIGHT + noteBand + RULE_GAP_ABOVE
           const priceBaselineY = ruleY + 1 + RULE_GAP_BELOW + PRICE_FONT_SIZE
           const hasPriceRow = Boolean(text.price || text.priceUnit)
           const inks = cardInks(Boolean(item.featured), ctx)

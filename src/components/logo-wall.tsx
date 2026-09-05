@@ -134,6 +134,14 @@ export const logoWall: SvgComponent<LogoWallComponent> = {
   },
   render(component: LogoWallComponent, box: ComponentBox, ctx: ComponentCtx) {
     const { cols, rows, tileW, titleBand, rowCounts } = wallGeometry(component, box.w)
+    const measured = titleBand + rows * TILE_H + Math.max(0, rows - 1) * ROW_GAP
+    // 盒子矮过自己量出来的最小高度时不画、只声明（chart.tsx 的同一条约定）。
+    // 一堵墙没有可以压缩的地方：格子等大是它的全部意思，压扁一行就等于说
+    // 某几家比另几家小。声明出来，让位流程才拿得到信号去换一个画得下的
+    // 版式，换不到时导出会拒绝这份 deck。
+    if ((box.h ?? measured) + 0.5 < measured) {
+      return <g data-dropped={1} data-dropped-kind="component" />
+    }
     const pageBg = ctx.defaultBg ?? ctx.colors.bg
     const ink = accessibleInk(ctx.colors.muted, pageBg, WORDMARK_FONT_SIZE)
     const rule = ctx.colors.border ?? ctx.colors.muted

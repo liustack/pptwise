@@ -202,3 +202,50 @@ describe("quote_wall speaker line", () => {
     expect(roleLines.join("")).toContain("锦官坊")
   })
 })
+
+describe("quote_wall in a box it cannot draw in", () => {
+  it("declines and declares rather than drawing the last card off the page", () => {
+    const measured = quoteWall.measure(three, box.w, ctx)
+    const { container } = svg(quoteWall.render(three, { ...box, h: measured - 40 }, ctx))
+    const marker = container.querySelector("[data-dropped]")!
+    expect(marker.getAttribute("data-dropped")).toBe("1")
+    expect(marker.getAttribute("data-dropped-kind")).toBe("component")
+    expect(container.querySelectorAll("text")).toHaveLength(0)
+    expect(container.querySelectorAll("circle")).toHaveLength(0)
+  })
+
+  it("draws in full at exactly its measured height, and above it", () => {
+    const measured = quoteWall.measure(three, box.w, ctx)
+    for (const h of [measured, measured + 120]) {
+      const { container } = svg(quoteWall.render(three, { ...box, h }, ctx))
+      expect(container.querySelector("[data-dropped]")).toBeNull()
+      expect(container.querySelectorAll("circle")).toHaveLength(3)
+    }
+  })
+})
+
+describe("quote_wall speaker baseline", () => {
+  it("puts every card's rule and speaker on one baseline, whatever the remark runs to", () => {
+    const uneven = {
+      type: "quote_wall" as const,
+      quotes: [
+        { text: "很短。", name: "宋海", role: "客户成功总监" },
+        {
+          text: "这一句长得多，会折成好几行，把这张卡的正文占满，另一张卡的署名仍然要和它齐平。",
+          name: "李蔚",
+          role: "运营负责人",
+        },
+        { text: "中等长度的一句话，两行左右。", name: "赵沁", role: "信息化经理" },
+      ],
+    }
+    const { container } = svg(quoteWall.render(uneven, box, ctx))
+    const cards = Array.from(container.querySelectorAll("g[data-audit-box]"))
+    const nameYs = cards.map(
+      (card, i) =>
+        Array.from(card.querySelectorAll("text")).find((t) => t.textContent === uneven.quotes[i]!.name)!.getAttribute("y"),
+    )
+    expect(new Set(nameYs).size).toBe(1)
+    const ruleYs = cards.map((card) => Array.from(card.querySelectorAll("rect"))[1]!.getAttribute("y"))
+    expect(new Set(ruleYs).size).toBe(1)
+  })
+})

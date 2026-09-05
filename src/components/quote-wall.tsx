@@ -53,6 +53,8 @@ const ROLE_FONT_SIZE = 16
 const ROLE_MAX_LINES = 2
 const ROLE_LINE_HEIGHT_RATIO = 1.3
 const NAME_TO_ROLE = 4
+/** 强调卡上小字退后一档的混合比例，混完仍要过对比度。 */
+const SOFT_INK_MIX = 0.78
 
 interface QuoteLayout {
   lines: { lines: string[]; fontSize: number; lineHeight: number; truncated: boolean }
@@ -101,17 +103,25 @@ function identityHeight(layout: QuoteLayout): number {
   return Math.max(AVATAR_R * 2, textH)
 }
 
-function quoteCardHeight(layout: QuoteLayout): number {
+/**
+ * 引语正文那一段的高度预算，全套共用最长的一段。
+ *
+ * 卡壳等高一度是「对齐」的全部实现，但那只对齐了外框：两段长短不同的话装
+ * 在一样高的卡里，署名基线却差 27px。真正要对齐的是分隔线和署名，所以正文
+ * 段按全套最长的一段预留，短的那张把空白留在话和分隔线之间。
+ */
+function textBandOf(layouts: readonly QuoteLayout[]): number {
+  return Math.max(...layouts.map((layout) => layout.lines.lines.length * layout.lines.lineHeight))
+}
+
+/** 身份区的共用高度，全套取最高的一张（两行头衔的那张说了算）。 */
+function identityBandOf(layouts: readonly QuoteLayout[]): number {
+  return Math.max(...layouts.map(identityHeight))
+}
+
+function quoteCardHeight(textBand: number, identityBand: number): number {
   return (
-    PAD +
-    MARK_BASELINE +
-    MARK_TO_TEXT +
-    layout.lines.lines.length * layout.lines.lineHeight +
-    RULE_GAP_ABOVE +
-    1 +
-    RULE_GAP_BELOW +
-    identityHeight(layout) +
-    PAD
+    PAD + MARK_BASELINE + MARK_TO_TEXT + textBand + RULE_GAP_ABOVE + 1 + RULE_GAP_BELOW + identityBand + PAD
   )
 }
 
@@ -122,6 +132,10 @@ interface WallGeometry {
   contentW: number
   cardH: number
   layouts: QuoteLayout[]
+  /** 正文段的共用高度，决定分隔线的 y。 */
+  textBand: number
+  /** 身份区的共用高度。 */
+  identityBand: number
 }
 
 function wallGeometry(component: QuoteWallComponent, w: number, ctx: ComponentCtx): WallGeometry {
@@ -131,9 +145,12 @@ function wallGeometry(component: QuoteWallComponent, w: number, ctx: ComponentCt
   const cardW = (w - GAP * (cols - 1)) / cols
   const contentW = Math.max(1, cardW - PAD * 2)
   const layouts = component.quotes.map((quote) => layoutQuote(quote, contentW, ctx))
-  // 等高：最长的一段话决定全套，底部的姓名才对得齐。
-  const cardH = Math.max(...layouts.map(quoteCardHeight))
-  return { cols, rows, cardW, contentW, cardH, layouts }
+  // 三段共用：引号带、正文段、身份区。共用之后每张卡的分隔线和署名落在
+  // 同一条基线，等高的卡壳才真的等于对齐。
+  const textBand = textBandOf(layouts)
+  const identityBand = identityBandOf(layouts)
+  const cardH = quoteCardHeight(textBand, identityBand)
+  return { cols, rows, cardW, contentW, cardH, layouts, textBand, identityBand }
 }
 
 /** 一张卡自己的一套墨：底色决定其余全部颜色，`featured` 只是换了底。 */
@@ -145,7 +162,10 @@ function cardInks(featured: boolean, ctx: ComponentCtx) {
       fill,
       text: ink,
       name: ink,
-      role: mixHex(fill, ink, 0.78),
+      // 调淡一档让头衔退到姓名后面，调淡之后再过一遍对比度：homeroom 与
+      // crayon 的强调底上，0.78 那一档只有 4.11:1 和 3.81:1，都低于 16px
+      // 文字要求的 4.5:1。过不了就退回满墨。
+      role: accessibleInk(mixHex(fill, ink, SOFT_INK_MIX), fill, ROLE_FONT_SIZE),
       rule: mixHex(fill, ink, 0.3),
       mark: mixHex(fill, ink, 0.42),
       avatarFill: ink,
@@ -171,7 +191,18 @@ export const quoteWall: SvgComponent<QuoteWallComponent> = {
     return rows * cardH + Math.max(0, rows - 1) * GAP
   },
   render(component: QuoteWallComponent, box: ComponentBox, ctx: ComponentCtx) {
-    const { cols, cardW, contentW, cardH, layouts } = wallGeometry(component, box.w, ctx)
+    const { cols, rows, cardW, contentW, cardH, layouts, textBand, identityBand } = wallGeometry(
+      component,
+      box.w,
+      ctx,
+    )
+    const measured = rows * cardH + Math.max(0, rows - 1) * GAP
+    // 盒子矮过量出来的最小高度就不画、只声明（chart.tsx 的同一条约定）。
+    // 一堵引语墙没有可以压缩的地方：再压就是把最后一张卡画到页外，页面上
+    // 却什么都不说。声明出来，让位流程才拿得到信号。
+    if ((box.h ?? measured) + 0.5 < measured) {
+      return <g data-dropped={1} data-dropped-kind="component" />
+    }
     const radius = ctx.shape?.radius ?? CARD_RADIUS
     return (
       <g transform={`translate(${box.x},${box.y})`}>
@@ -181,10 +212,10 @@ export const quoteWall: SvgComponent<QuoteWallComponent> = {
           const cardX = (i % cols) * (cardW + GAP)
           const cardY = Math.floor(i / cols) * (cardH + GAP)
           const textTopY = PAD + MARK_BASELINE + MARK_TO_TEXT
-          const textBottomY = textTopY + layout.lines.lines.length * layout.lines.lineHeight
-          const ruleY = textBottomY + RULE_GAP_ABOVE
+          // 分隔线挂在全套共用的正文段下缘，不挂在这一张自己的最后一行。
+          const ruleY = textTopY + textBand + RULE_GAP_ABOVE
           const identityTopY = ruleY + 1 + RULE_GAP_BELOW
-          const idH = identityHeight(layout)
+          const idH = identityBand
           const avatarCy = identityTopY + idH / 2
           const nameX = PAD + AVATAR_R * 2 + AVATAR_TO_NAME
           const textH =

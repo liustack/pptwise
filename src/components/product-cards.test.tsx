@@ -111,8 +111,11 @@ describe("product_cards component", () => {
     }
     const { container } = svg(productCards.render(component, box, ctx))
     expect(container.querySelectorAll("image")).toHaveLength(1)
+    // The shared drop protocol, not a private spelling: a count the export
+    // gate can add up, and the noun it reports back to the author.
     const dropped = container.querySelector("[data-dropped]")!
-    expect(dropped.getAttribute("data-dropped")).toBe("asset")
+    expect(dropped.getAttribute("data-dropped")).toBe("1")
+    expect(dropped.getAttribute("data-dropped-kind")).toBe("asset")
     // Nothing is invented in its place: no fake screen, no label.
     expect(Array.from(container.querySelectorAll("text")).map((t) => t.textContent)).toEqual(["A", "B"])
   })
@@ -141,5 +144,67 @@ describe("product_cards component", () => {
       renderToStaticMarkup(<svg viewBox="0 0 1280 720">{productCards.render(three, { x: 88, y: 120, w: 1104 }, ctx)}</svg>),
     )
     expect(() => assertSubset(parseSvgRoot(markup))).not.toThrow()
+  })
+})
+
+describe("product_cards in a box it cannot draw in", () => {
+  it("declines and declares rather than squashing a picture", () => {
+    const measured = productCards.measure(three, box.w, ctx)
+    const { container } = svg(productCards.render(three, { ...box, h: measured - 40 }, ctx))
+    const marker = container.querySelector("[data-dropped]")!
+    expect(marker.getAttribute("data-dropped")).toBe("1")
+    expect(marker.getAttribute("data-dropped-kind")).toBe("component")
+    expect(container.querySelectorAll("image")).toHaveLength(0)
+    expect(container.querySelectorAll("text")).toHaveLength(0)
+  })
+
+  it("draws in full at exactly its measured height, and above it", () => {
+    const measured = productCards.measure(three, box.w, ctx)
+    for (const h of [measured, measured + 120]) {
+      const { container } = svg(productCards.render(three, { ...box, h }, ctx))
+      expect(container.querySelector("[data-dropped]")).toBeNull()
+      expect(container.querySelectorAll("image")).toHaveLength(3)
+    }
+  })
+})
+
+describe("product_cards price line", () => {
+  it("puts every card's rule and price on one baseline, whatever the note runs to", () => {
+    const uneven = {
+      type: "product_cards" as const,
+      items: [
+        { asset_id: "shot-1", name: "A", note: "一行很短", price: "¥1", price_unit: "件" },
+        {
+          asset_id: "shot-2",
+          name: "B",
+          note: "这一行长得多，会折成两行来占更多高度，价格线仍然要和左边那张齐平",
+          price: "¥2",
+          price_unit: "件",
+        },
+        { asset_id: "shot-3", name: "C", price: "¥3", price_unit: "件" },
+      ],
+    }
+    const { container } = svg(productCards.render(uneven, box, ctx))
+    const cards = Array.from(container.querySelectorAll("g[data-audit-box]"))
+    const priceYs = cards.map(
+      (card) => Array.from(card.querySelectorAll("text")).find((t) => t.textContent!.startsWith("¥"))!.getAttribute("y"),
+    )
+    expect(new Set(priceYs).size).toBe(1)
+    const ruleYs = cards.map((card) => Array.from(card.querySelectorAll("rect"))[1]!.getAttribute("y"))
+    expect(new Set(ruleYs).size).toBe(1)
+  })
+
+  it("never draws the price in the accent, even where a theme makes primary and accent one colour", () => {
+    // ember defines both tokens as the same hex, so "draw the price in
+    // primary" drew it in the accent. The rule is about the colour that
+    // lands on the page, not the token the code read.
+    const ember: ComponentCtx = {
+      ...ctx,
+      colors: { ...ctx.colors, primary: "#E56A2C", accent: "#E56A2C" },
+    }
+    const { container } = svg(productCards.render(three, box, ember))
+    const price = Array.from(container.querySelectorAll("text")).find((t) => t.textContent === "¥68")!
+    expect(price.getAttribute("fill")!.toUpperCase()).not.toBe("#E56A2C")
+    expect(contrastRatio(price.getAttribute("fill")!, ctx.colors.surface)).toBeGreaterThan(4.5)
   })
 })
