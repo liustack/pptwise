@@ -190,6 +190,52 @@ export const TERRA_LEXICON: Lexicon = {
     { name: "荆条蜜 · 秋", note: "山场三十箱，一年只取一次", price: "¥136", priceUnit: "罐" },
   ],
 
+  orgChart: {
+    root: { name: "麦穗", role: "合作社发起人" },
+    managers: [
+      {
+        name: "老甄",
+        role: "田间总管",
+        reports: [{ name: "阿澈", role: "返乡青年 · 管鸭子" }, { name: "苗苗", role: "返乡青年 · 管菜箱" }],
+      },
+      {
+        name: "小卫",
+        role: "土壤取样",
+        reports: [{ name: "张姐", role: "五年老会员" }],
+      },
+      {
+        name: "阿禾",
+        role: "仓储与配送",
+        reports: [{ name: "老井", role: "修渠" }, { name: "豆子", role: "晒谷场" }],
+      },
+    ],
+  },
+  iceberg: {
+    waterline: "水面",
+    aboveLabel: "年记写的",
+    above: ["有机质五年翻了近三倍"],
+    belowLabel: "账本上的",
+    below: [
+      "产量仍然低于常规农场",
+      "人力在农忙季吃紧",
+      "冷链短板限制配送半径",
+      "账面盈余薄如纸",
+    ],
+  },
+  chain: {
+    links: [
+      { label: "春耕备秧", value: "15", unit: "%" },
+      { label: "插秧放鸭", value: "23", unit: "%" },
+      { label: "夏耘防涝", value: "19", unit: "%" },
+      { label: "秋收晒谷", value: "28", unit: "%" },
+    ],
+    support: [
+      { label: "土壤与轮作", note: "有机质监测 · 二十七种轮作 · 绿肥翻压" },
+      { label: "生态与共作", note: "稻鸭共作 · 田埂留草 · 不打除草剂" },
+      { label: "会员与配送", note: "菜箱预订 · 每周配送 · 开放田日" },
+    ],
+    margin: { label: "合作社结余", value: "15%" },
+  },
   quote: {
     text: "老甄说，地跟人一样，你哄它一年，它记你五年。",
     attribution: "麦穗，年记序言",

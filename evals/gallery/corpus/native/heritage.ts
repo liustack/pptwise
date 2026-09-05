@@ -190,6 +190,52 @@ export const HERITAGE_LEXICON: Lexicon = {
     { name: "百年礼盒", note: "酱油、豆瓣与酱菜各一", price: "¥298", priceUnit: "盒" },
   ],
 
+  orgChart: {
+    root: { name: "沈曼笙", role: "第四代主理人" },
+    managers: [
+      {
+        name: "沈二伯",
+        role: "守缸师傅 · 第三代",
+        reports: [{ name: "小满", role: "学徒 · 十九岁" }, { name: "阿栓", role: "翻缸工" }],
+      },
+      {
+        name: "沈三姑",
+        role: "账房 · 第三代",
+        reports: [{ name: "阿改", role: "店面设计师" }],
+      },
+      {
+        name: "顾奶奶",
+        role: "老主顾顾问",
+        reports: [{ name: "小林", role: "小罐试销" }, { name: "阿桃", role: "门店接待" }],
+      },
+    ],
+  },
+  iceberg: {
+    waterline: "水面",
+    aboveLabel: "牌匾上写的",
+    above: ["两百一十七口老缸一口不动"],
+    belowLabel: "账房本子里的",
+    below: [
+      "客群老化得比想象快",
+      "产能被工序天花板锁死",
+      "包装设计长期缺位",
+      "年轻学徒才刚刚起步",
+    ],
+  },
+  chain: {
+    links: [
+      { label: "家底盘点", value: "9", unit: "%" },
+      { label: "工序封档", value: "18", unit: "%" },
+      { label: "门店翻新", value: "20", unit: "%" },
+      { label: "小罐试销", value: "32", unit: "%" },
+    ],
+    support: [
+      { label: "工艺与守缸", note: "三伏晒制 · 翻缸时序 · 老缸养护" },
+      { label: "字号与门店", note: "招牌复原 · 前店后坊 · 试吃台" },
+      { label: "学徒与传承", note: "开班带教 · 工序口诀 · 手写工单" },
+    ],
+    margin: { label: "小罐毛利", value: "21%" },
+  },
   quote: {
     text: "缸是祖上的，手艺是师傅的，招牌是街坊给的，我只是这一棒的跑腿人。",
     attribution: "沈曼笙，交底会上",

@@ -190,6 +190,52 @@ export const ACADEMIC_LEXICON: Lexicon = {
     { name: "识别模型接口", note: "低资源方言，按调用计费", price: "¥0.6", priceUnit: "千次" },
   ],
 
+  orgChart: {
+    root: { name: "郑北辰", role: "导师" },
+    managers: [
+      {
+        name: "宋知微",
+        role: "答辩人",
+        reports: [{ name: "陈律", role: "标注组长" }, { name: "王田", role: "田野协作员" }],
+      },
+      {
+        name: "李声远",
+        role: "答辩委员会主席",
+        reports: [{ name: "阿婆金花", role: "首席发音人" }],
+      },
+      {
+        name: "方叙",
+        role: "评测负责人",
+        reports: [{ name: "温岚", role: "声调标注" }, { name: "邵行", role: "模型训练" }],
+      },
+    ],
+  },
+  iceberg: {
+    waterline: "水面",
+    aboveLabel: "论文写得出的",
+    above: ["字错率降了八点四个百分点"],
+    belowLabel: "脚注里才敢写的",
+    below: [
+      "声调建模仍靠人工模板",
+      "藏缅语支迁移只部分成功",
+      "老年发音人样本严重不足",
+      "长语音场景一次没测过",
+    ],
+  },
+  chain: {
+    links: [
+      { label: "田野采集", value: "26", unit: "%" },
+      { label: "语料清洗", value: "18", unit: "%" },
+      { label: "协同标注", value: "31", unit: "%" },
+      { label: "模型训练", value: "12", unit: "%" },
+    ],
+    support: [
+      { label: "设备与场地", note: "便携录音棚 · 三地田野站 · 静音室" },
+      { label: "协作与伦理", note: "发音人知情同意 · 署名与酬劳 · 数据回馈" },
+      { label: "算力与工具", note: "标注平台 · 训练集群 · 评测脚本" },
+    ],
+    margin: { label: "可复用语料", value: "13%" },
+  },
   quote: {
     text: "技术的意义不在识别率那一位小数，而在金花阿婆第一次看到自己的话变成字。",
     attribution: "宋知微，论文致谢",

@@ -190,6 +190,52 @@ export const MUSEUM_LEXICON: Lexicon = {
     { name: "豆灯复刻摆件", note: "按馆藏一比一翻模", price: "¥480", priceUnit: "件" },
   ],
 
+  orgChart: {
+    root: { name: "章馆长", role: "馆方总协调" },
+    managers: [
+      {
+        name: "闻照",
+        role: "策展人",
+        reports: [{ name: "小樊", role: "志愿讲解队长" }, { name: "顾拾遗", role: "借展联络" }],
+      },
+      {
+        name: "梅屿",
+        role: "首席修复师",
+        reports: [{ name: "阿钿", role: "金工修复" }],
+      },
+      {
+        name: "老熊",
+        role: "灯光设计",
+        reports: [{ name: "小照", role: "布光执行" }, { name: "周版", role: "展签设计" }],
+      },
+    ],
+  },
+  iceberg: {
+    waterline: "水面",
+    aboveLabel: "导览词说的",
+    above: ["一百四十六件排成一条光路"],
+    belowLabel: "馆务会才提的",
+    below: [
+      "低照度增加了观展难度",
+      "重点展件保险费高企",
+      "夜场人力成本翻倍",
+      "导览册印量偏保守",
+    ],
+  },
+  chain: {
+    links: [
+      { label: "借展谈判", value: "16", unit: "%" },
+      { label: "修复整理", value: "28", unit: "%" },
+      { label: "展陈搭建", value: "19", unit: "%" },
+      { label: "灯光调试", value: "22", unit: "%" },
+    ],
+    support: [
+      { label: "文保与修复", note: "恒湿展柜 · 金工除锈 · 灯油残留取样" },
+      { label: "借展与保险", note: "十一家机构 · 点交清单 · 全险投保" },
+      { label: "讲解与导览", note: "志愿讲解 · 夜场专场 · 导览册" },
+    ],
+    margin: { label: "展期结余", value: "15%" },
+  },
   quote: {
     text: "博物馆的灯照了文物一百年，这一次，我们想让文物自己发光。",
     attribution: "闻照，媒体导览开场",

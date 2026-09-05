@@ -190,6 +190,52 @@ export const STAGE_LEXICON: Lexicon = {
     { name: "定制镜片", note: "按验光单磨制，两周取", price: "¥899", priceUnit: "副" },
   ],
 
+  orgChart: {
+    root: { name: "林目", role: "创始人" },
+    managers: [
+      {
+        name: "许晨",
+        role: "光学负责人",
+        reports: [{ name: "郑南", role: "隐私架构师" }, { name: "白桦", role: "工业设计师" }],
+      },
+      {
+        name: "方圆",
+        role: "开发者关系",
+        reports: [{ name: "凌一舟", role: "首批测试用户" }],
+      },
+      {
+        name: "秦岭",
+        role: "供应链负责人",
+        reports: [{ name: "小池", role: "量产爬坡" }, { name: "阿岚", role: "渠道铺货" }],
+      },
+    ],
+  },
+  iceberg: {
+    waterline: "水面",
+    aboveLabel: "发布会讲的",
+    above: ["整机三十八克，镜腿十二克"],
+    belowLabel: "产线上的",
+    below: [
+      "产能爬坡期交付吃紧",
+      "指环还要单独充电",
+      "深度近视定制要十天",
+      "应用生态刚刚起步",
+    ],
+  },
+  chain: {
+    links: [
+      { label: "光学定型", value: "24", unit: "%" },
+      { label: "工程样机", value: "19", unit: "%" },
+      { label: "量产爬坡", value: "27", unit: "%" },
+      { label: "渠道铺货", value: "16", unit: "%" },
+    ],
+    support: [
+      { label: "光学与显示", note: "视网膜投影 · 三千尼特 · 屈光定制" },
+      { label: "隐私与安全", note: "硬件级指示灯 · 本地推理 · 录制提示音" },
+      { label: "生态与开发者", note: "SDK 首发 · 指环交互规范 · 示例应用" },
+    ],
+    margin: { label: "整机毛利", value: "14%" },
+  },
   quote: {
     text: "最好的屏幕，是需要时在眼前、不需要时不存在的那一块。",
     attribution: "林目，目光科技创始人",

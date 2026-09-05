@@ -190,6 +190,52 @@ export const TECH_LEXICON: Lexicon = {
     { name: "企业支持", note: "四小时响应，含版本升级", price: "¥18万", priceUnit: "年" },
   ],
 
+  orgChart: {
+    root: { name: "边城", role: "创始维护者" },
+    managers: [
+      {
+        name: "薄荷",
+        role: "执行器负责人",
+        reports: [{ name: "阿计", role: "分诊轮值发明者" }, { name: "静静", role: "文档与拒绝模板" }],
+      },
+      {
+        name: "Kai",
+        role: "基准工作组发起人",
+        reports: [{ name: "老雷", role: "最大生产用户架构师" }],
+      },
+      {
+        name: "宿羽",
+        role: "发布管理",
+        reports: [{ name: "小岑", role: "兼容性测试" }, { name: "阿柯", role: "翻译协调" }],
+      },
+    ],
+  },
+  iceberg: {
+    waterline: "水面",
+    aboveLabel: "README 写的",
+    above: ["热路径提速八点三倍"],
+    belowLabel: "维护者群里的",
+    below: [
+      "总线因子仍然偏低",
+      "文档翻译长期滞后",
+      "视窗函数支持不全",
+      "维护者时间靠业余挤",
+    ],
+  },
+  chain: {
+    links: [
+      { label: "动机成立", value: "11", unit: "%" },
+      { label: "设计评审", value: "22", unit: "%" },
+      { label: "并行实现", value: "31", unit: "%" },
+      { label: "影子运行", value: "20", unit: "%" },
+    ],
+    support: [
+      { label: "基准与回归", note: "基准工作组 · 每夜跑分 · 回归语料" },
+      { label: "接口与文档", note: "公开接口二十九个 · 迁移指南 · 拒绝模板" },
+      { label: "分诊与发布", note: "议题分诊轮值 · 灰度切换 · 版本公告" },
+    ],
+    margin: { label: "重写红利", value: "16%" },
+  },
   quote: {
     text: "用户不读文档，但每个人都读报错。报错写好了，文档就少一半。",
     attribution: "边城，大会现场",

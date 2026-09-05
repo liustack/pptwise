@@ -190,6 +190,52 @@ export const RUNWAY_LEXICON: Lexicon = {
     { name: "信封手袋", note: "植鞣皮，可压印姓名", price: "¥3200", priceUnit: "只" },
   ],
 
+  orgChart: {
+    root: { name: "沈鹤", role: "设计师" },
+    managers: [
+      {
+        name: "阿禾",
+        role: "工作室主理",
+        reports: [{ name: "程一", role: "摄影师" }, { name: "小满", role: "秀场导演" }],
+      },
+      {
+        name: "秦师傅",
+        role: "盘扣匠人",
+        reports: [{ name: "阿绦", role: "缝制" }],
+      },
+      {
+        name: "杜青",
+        role: "织造负责人",
+        reports: [{ name: "蓝汀", role: "植物染" }, { name: "木木", role: "面料仓" }],
+      },
+    ],
+  },
+  iceberg: {
+    waterline: "水面",
+    aboveLabel: "秀场说明写的",
+    above: ["十四个 look，七灰一红"],
+    belowLabel: "工作室清楚的",
+    below: [
+      "产能受手工工时约束",
+      "植物染批次色差要反复沟通",
+      "个人品牌渠道单薄",
+      "定价高于同类新锐",
+    ],
+  },
+  chain: {
+    links: [
+      { label: "草图", value: "11", unit: "%" },
+      { label: "坯布试样", value: "18", unit: "%" },
+      { label: "面料定染", value: "26", unit: "%" },
+      { label: "工艺制作", value: "31", unit: "%" },
+    ],
+    support: [
+      { label: "面料与染色", note: "回收面料 · 植物染缸 · 色卡留样" },
+      { label: "手工与工艺", note: "盘扣两百一十四工时 · 手缝里襟" },
+      { label: "秀场与影像", note: "模特试装 · 走位排练 · 成衣拍摄" },
+    ],
+    margin: { label: "首季结余", value: "14%" },
+  },
   quote: {
     text: "衣服的完成度停在九成就够了，剩下那一成，是穿它的人带来的生活。",
     attribution: "沈鹤，系列设计师",

@@ -190,6 +190,52 @@ export const PLAYBILL_LEXICON: Lexicon = {
     { name: "纪念节目册", note: "含剧本节选与后台照片", price: "¥35", priceUnit: "本" },
   ],
 
+  orgChart: {
+    root: { name: "戚照野", role: "编剧 · 导演" },
+    managers: [
+      {
+        name: "满天星",
+        role: "女主角",
+        reports: [{ name: "胡十一", role: "男主角" }, { name: "阿桐", role: "群戏统筹" }],
+      },
+      {
+        name: "毛豆",
+        role: "舞美组长",
+        reports: [{ name: "简单", role: "灯光执行" }],
+      },
+      {
+        name: "老白师傅",
+        role: "剧场技术指导",
+        reports: [{ name: "小雀", role: "票务" }, { name: "阿鸣", role: "音效" }],
+      },
+    ],
+  },
+  iceberg: {
+    waterline: "水面",
+    aboveLabel: "海报上写的",
+    above: ["三幕九场，中间不休息"],
+    belowLabel: "排练厅里的",
+    below: [
+      "舞美经费捉襟见肘",
+      "男生角色长期缺人",
+      "灯光设备全靠外借",
+      "巡演经验干脆是零",
+    ],
+  },
+  chain: {
+    links: [
+      { label: "剧本围读", value: "12", unit: "%" },
+      { label: "分幕排练", value: "26", unit: "%" },
+      { label: "合成联排", value: "24", unit: "%" },
+      { label: "正式公演", value: "23", unit: "%" },
+    ],
+    support: [
+      { label: "舞美与道具", note: "霓虹灯手作 · 旅馆前台 · 雨声装置" },
+      { label: "灯光与音效", note: "外借灯具 · 便签本 cue 表 · 返场音乐" },
+      { label: "票务与宣传", note: "首轮七百张 · 校内海报 · 谢幕合影" },
+    ],
+    margin: { label: "巡演余力", value: "15%" },
+  },
   quote: {
     text: "旅馆是假的，床是宿舍的，雨是录的，只有告别是真的。",
     attribution: "戚照野，导演的话",

@@ -190,6 +190,52 @@ export const VERMILION_LEXICON: Lexicon = {
     { name: "公证代办", note: "全程代跑，七个工作日", price: "¥260", priceUnit: "件" },
   ],
 
+  orgChart: {
+    root: { name: "周正明", role: "中心主任" },
+    managers: [
+      {
+        name: "郑晓芸",
+        role: "综合窗口负责人",
+        reports: [{ name: "刘敏", role: "帮办代办队长" }, { name: "沈玉兰", role: "监督员" }],
+      },
+      {
+        name: "吴建国",
+        role: "工程建设专窗负责人",
+        reports: [{ name: "黄立群", role: "审改科科长" }],
+      },
+      {
+        name: "陆平",
+        role: "数据与终端",
+        reports: [{ name: "小岑", role: "自助终端运维" }, { name: "阿彬", role: "电子证照" }],
+      },
+    ],
+  },
+  iceberg: {
+    waterline: "水面",
+    aboveLabel: "报告里写的",
+    above: ["办件总量四十一万件，同比增一成二"],
+    belowLabel: "窗口自己知道的",
+    below: [
+      "三个事项承诺时限没兑现",
+      "窗口人员流动率偏高",
+      "部分部门授权事项仍未进驻",
+      "自助终端使用率很不均衡",
+    ],
+  },
+  chain: {
+    links: [
+      { label: "申请受理", value: "19", unit: "%" },
+      { label: "材料流转", value: "16", unit: "%" },
+      { label: "部门审批", value: "31", unit: "%" },
+      { label: "结果制证", value: "18", unit: "%" },
+    ],
+    support: [
+      { label: "一窗与帮办", note: "五百四十项一窗受理 · 帮办代办 · 老年专窗" },
+      { label: "数据与证照", note: "电子证照互认 · 材料免提交 · 自助终端" },
+      { label: "监督与评价", note: "好差评 · 监督员巡查 · 超时预警" },
+    ],
+    margin: { label: "时限结余", value: "16%" },
+  },
   quote: {
     text: "群众不关心事项归哪个部门，只关心这件事今天能不能办成。窗口的全部改革，都是围绕这句话做的。",
     attribution: "周正明，云江区政务服务中心主任",

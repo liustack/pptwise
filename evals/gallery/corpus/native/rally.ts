@@ -190,6 +190,52 @@ export const CAMPAIGN_LEXICON: Lexicon = {
     { name: "整箱囤货装", note: "二十四瓶，含冰袋直发", price: "¥199", priceUnit: "箱" },
   ],
 
+  orgChart: {
+    root: { name: "夏一舟", role: "战役操盘手" },
+    managers: [
+      {
+        name: "米朵",
+        role: "创意负责人",
+        reports: [{ name: "阿蔓", role: "达人投放" }, { name: "小林", role: "短视频剪辑" }],
+      },
+      {
+        name: "梁千帆",
+        role: "渠道总监",
+        reports: [{ name: "赵冰", role: "试饮车队长" }],
+      },
+      {
+        name: "何数",
+        role: "数据复盘",
+        reports: [{ name: "陈盒", role: "铺市稽核" }, { name: "小唐", role: "冰柜巡检" }],
+      },
+    ],
+  },
+  iceberg: {
+    waterline: "水面",
+    aboveLabel: "发布会讲的",
+    above: ["首月铺市率目标七成"],
+    belowLabel: "项目组自己知道的",
+    below: [
+      "品牌资产几乎从零开始",
+      "预算买不起头部声量",
+      "南方市场只有三个人",
+      "口味到现在只有一个 SKU",
+    ],
+  },
+  chain: {
+    links: [
+      { label: "物料锁定", value: "9", unit: "%" },
+      { label: "渠道进场", value: "17", unit: "%" },
+      { label: "预热种草", value: "24", unit: "%" },
+      { label: "开售引爆", value: "29", unit: "%" },
+    ],
+    support: [
+      { label: "内容与创意", note: "主视觉 · 达人脚本 · 试饮话术" },
+      { label: "渠道与陈列", note: "冰柜贴纸 · 端架排面 · 便利店进场" },
+      { label: "数据与复盘", note: "铺市稽核 · 动销日报 · 达人 ROI" },
+    ],
+    margin: { label: "渠道净利", value: "21%" },
+  },
   quote: {
     text: "广告的终点不在屏幕上，在便利店冰柜打开的那三秒钟。",
     attribution: "夏一舟，战役操盘手",

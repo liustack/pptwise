@@ -190,6 +190,52 @@ export const MEMO_LEXICON: Lexicon = {
     { name: "写作陪跑", note: "每周一次，连着做八周", price: "¥1.2万", priceUnit: "期" },
   ],
 
+  orgChart: {
+    root: { name: "周野", role: "本备忘作者" },
+    managers: [
+      {
+        name: "郑师傅",
+        role: "木工师傅 · 周末班",
+        reports: [{ name: "小满", role: "妹妹 · 备忘保管人" }, { name: "阿刨", role: "同班学徒" }],
+      },
+      {
+        name: "老曹",
+        role: "旧同事 · 潜在介绍人",
+        reports: [{ name: "父亲", role: "反对意见第一至四条" }],
+      },
+      {
+        name: "陈大夫",
+        role: "手外科随访",
+        reports: [{ name: "小林", role: "康复训练" }, { name: "阿柚", role: "工坊房东" }],
+      },
+    ],
+  },
+  iceberg: {
+    waterline: "水面",
+    aboveLabel: "跟人说的理由",
+    above: ["存款撑得住二十二个月"],
+    belowLabel: "半夜才承认的",
+    below: [
+      "从来没有卖过任何东西",
+      "报价体系一片空白",
+      "独处工作的纪律没验证过",
+      "收入归零的冲击不知道多大",
+    ],
+  },
+  chain: {
+    links: [
+      { label: "交接离职", value: "8", unit: "%" },
+      { label: "工坊安顿", value: "17", unit: "%" },
+      { label: "手艺补课", value: "32", unit: "%" },
+      { label: "首单交付", value: "24", unit: "%" },
+    ],
+    support: [
+      { label: "工具与场地", note: "手工刨 · 台锯 · 两平米晾木架" },
+      { label: "身体与作息", note: "手外科随访 · 每日八小时上限 · 护目" },
+      { label: "退路与账目", note: "二十二个月存款 · 月开销上限 · 旧同事介绍" },
+    ],
+    margin: { label: "试错余量", value: "19%" },
+  },
   quote: {
     text: "我不是在逃离一份工作，我是在赶去见一个还来得及成为的人。",
     attribution: "周野，写给自己",

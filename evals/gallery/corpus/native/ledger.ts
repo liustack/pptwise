@@ -190,6 +190,52 @@ export const INSIGHT_LEXICON: Lexicon = {
     { name: "定制研究", note: "按题立项，六到八周交付", price: "¥25万", priceUnit: "起 / 项" },
   ],
 
+  orgChart: {
+    root: { name: "凌枢", role: "首席宏观分析师" },
+    managers: [
+      {
+        name: "简繁",
+        role: "利率研究",
+        reports: [{ name: "郝井", role: "数据工程" }, { name: "秦揽月", role: "组合策略" }],
+      },
+      {
+        name: "武行舟",
+        role: "产业调研负责人",
+        reports: [{ name: "小滕", role: "实地调研" }],
+      },
+      {
+        name: "方持",
+        role: "风险与合规",
+        reports: [{ name: "陈镜", role: "归因复核" }, { name: "老范", role: "机构客户代表" }],
+      },
+    ],
+  },
+  iceberg: {
+    waterline: "水面",
+    aboveLabel: "路演讲得出的",
+    above: ["宽松不再等于普涨"],
+    belowLabel: "底稿里写着的",
+    below: [
+      "海外数据依赖第三方",
+      "组合只覆盖流动性资产",
+      "小组仅七人扩容受限",
+      "高频数据处理能力一般",
+    ],
+  },
+  chain: {
+    links: [
+      { label: "数据采集", value: "11", unit: "%" },
+      { label: "产业验证", value: "24", unit: "%" },
+      { label: "判断成形", value: "28", unit: "%" },
+      { label: "组合落地", value: "21", unit: "%" },
+    ],
+    support: [
+      { label: "数据与工程", note: "行情底座 · 另类数据 · 回测框架" },
+      { label: "调研与验证", note: "产业走访 · 专家访谈 · 渠道核查" },
+      { label: "风控与合规", note: "归因复核 · 集中度限额 · 留痕存档" },
+    ],
+    margin: { label: "超额收益", value: "16%" },
+  },
   quote: {
     text: "研究的信用不来自说对，来自错了以后怎么写下一页。",
     attribution: "凌枢，策略会开场",

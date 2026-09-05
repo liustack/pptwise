@@ -168,7 +168,12 @@ export const COMPONENT_FAMILIES: readonly GroupFamily[] = [
       "timeline",
       "roadmap",
       "gantt",
+      "value_chain",
     ],
+  },
+  {
+    label: "层级",
+    members: ["org_tree", "issue_tree", "pyramid", "iceberg", "pillar_model"],
   },
   {
     label: "图像",

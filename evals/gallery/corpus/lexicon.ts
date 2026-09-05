@@ -206,6 +206,51 @@ export interface Lexicon {
    */
   readonly products?: readonly Product[]
 
+  /**
+   * Who reports to whom, said outright.
+   *
+   * `people` lists a cast and states no line between any two of them, so a
+   * chart assembled from it invents the one thing it exists to show — a
+   * museum's own coordinator ended up under its lighting designer. Here the
+   * root, the managers under the root, and the people under each manager are
+   * authored as one shape, in roles short enough to sit in a node box.
+   */
+  readonly orgChart: {
+    readonly root: { readonly name: string; readonly role: string }
+    readonly managers: readonly {
+      readonly name: string
+      readonly role: string
+      readonly reports: readonly { readonly name: string; readonly role: string }[]
+    }[]
+  }
+  /**
+   * What this deck says out loud, and what it does not.
+   *
+   * Not derivable: a headline and a weakness are both things the deck states,
+   * and nothing marks one as the part everyone repeats and the other as the
+   * part nobody raises. Borrowing a section eyebrow for the two band labels
+   * filed a farm's cash-flow problems under "wildlife".
+   */
+  readonly iceberg: {
+    readonly waterline: string
+    readonly aboveLabel: string
+    readonly above: readonly string[]
+    readonly belowLabel: string
+    readonly below: readonly string[]
+  }
+  /**
+   * Where along the chain the value is made, and what spans it.
+   *
+   * `stages` is an order and says nothing about attribution, so a share per
+   * link has to be authored — the first cut wrote the same five percentages
+   * on all twenty-four themes. The link shares sum with the margin figure, so
+   * the drawing adds up when a reader checks it.
+   */
+  readonly chain: {
+    readonly links: readonly { readonly label: string; readonly value: string; readonly unit: string }[]
+    readonly support: readonly { readonly label: string; readonly note: string }[]
+    readonly margin: { readonly label: string; readonly value: string }
+  }
   readonly quote: { readonly text: string; readonly attribution: string }
   readonly callouts: {
     readonly info: string
@@ -452,6 +497,52 @@ const zh: Lexicon = {
     { name: "数据洞察包", note: "按周推送经营简报与流失预警", price: "¥8万", priceUnit: "起 / 年" },
   ],
 
+  orgChart: {
+    root: { name: "陈砚清", role: "首席技术官" },
+    managers: [
+      {
+        name: "林知远",
+        role: "交付负责人",
+        reports: [{ name: "何予安", role: "数字化负责人" }, { name: "顾南乔", role: "知识经理" }],
+      },
+      {
+        name: "苏未晚",
+        role: "产品总监",
+        reports: [{ name: "赵长风", role: "协作总监" }],
+      },
+      {
+        name: "秦昭",
+        role: "客户成功总监",
+        reports: [{ name: "方晴", role: "续约经理" }, { name: "卢延", role: "满意度研究" }],
+      },
+    ],
+  },
+  iceberg: {
+    waterline: "水面",
+    aboveLabel: "客户说得出口的",
+    above: ["开通九周，客户每周追进度"],
+    belowLabel: "没人在会上摊开的",
+    below: [
+      "客户数据分散在六套系统",
+      "席位口径三个部门三种算法",
+      "实施与销售的考核彼此相反",
+      "健康分算完不回写客户系统",
+    ],
+  },
+  chain: {
+    links: [
+      { label: "线索获取", value: "8", unit: "%" },
+      { label: "方案验证", value: "9", unit: "%" },
+      { label: "开通实施", value: "14", unit: "%" },
+      { label: "续约扩容", value: "31", unit: "%" },
+    ],
+    support: [
+      { label: "技术平台与数据", note: "多租户平台 · 用量与健康度底座 · 自助报表" },
+      { label: "人力与顾问梯队", note: "实施顾问认证 · 客户成功培训 · 行业方案库" },
+      { label: "企业管理与合规", note: "合同与信息安全审核 · 分级授权制度" },
+    ],
+    margin: { label: "经营毛利", value: "38%" },
+  },
   quote: {
     text: "我们不是在卖席位，是在卖一个团队少开一场会。客户能不能感知到这件事，决定了这单能不能续。",
     attribution: "陈砚清，云觅科技首席技术官",
@@ -715,6 +806,52 @@ const en: Lexicon = {
     { name: "Insight Pack", note: "Weekly operating brief and churn warnings", price: "$12,000", priceUnit: "from / year" },
   ],
 
+  orgChart: {
+    root: { name: "Yanqing Chen", role: "Chief Technology Officer" },
+    managers: [
+      {
+        name: "Zhiyuan Lin",
+        role: "Head of Delivery",
+        reports: [{ name: "Yuan He", role: "Head of Digital" }, { name: "Nanqiao Gu", role: "Knowledge Lead" }],
+      },
+      {
+        name: "Weiwan Su",
+        role: "Workspace Lead",
+        reports: [{ name: "Changfeng Zhao", role: "Collaboration Lead" }],
+      },
+      {
+        name: "Zhao Qin",
+        role: "Head of Success",
+        reports: [{ name: "Fang Qing", role: "Renewals Manager" }, { name: "Yan Lu", role: "Voice of Customer" }],
+      },
+    ],
+  },
+  iceberg: {
+    waterline: "Waterline",
+    aboveLabel: "What customers say",
+    above: ["Setup runs nine weeks"],
+    belowLabel: "What no one raises",
+    below: [
+      "Customer data sits in six systems",
+      "Three teams count seats three ways",
+      "Delivery and sales are paid to disagree",
+      "Health scores never write back",
+    ],
+  },
+  chain: {
+    links: [
+      { label: "Find", value: "8", unit: "%" },
+      { label: "Prove", value: "9", unit: "%" },
+      { label: "Set up", value: "14", unit: "%" },
+      { label: "Renew", value: "31", unit: "%" },
+    ],
+    support: [
+      { label: "Platform and data", note: "One tenant model · usage base · self-serve reports" },
+      { label: "People and practice", note: "Consultant certification · success training · playbooks" },
+      { label: "Governance", note: "Contract and security review · tiered authorisation" },
+    ],
+    margin: { label: "Operating margin", value: "38%" },
+  },
   quote: {
     text: "We are not selling an interface. We are selling one fewer status meeting on a weekly calendar. Whether the customer can feel that is what decides the renewal.",
     attribution: "Yanqing Chen, CTO, CloudSeek Collaboration",
@@ -978,6 +1115,52 @@ const mixed: Lexicon = {
     { name: "Insight Pack 洞察包", note: "按周推送经营简报与流失预警", price: "¥8万", priceUnit: "起 / 年" },
   ],
 
+  orgChart: {
+    root: { name: "陈砚清", role: "CTO" },
+    managers: [
+      {
+        name: "Zhiyuan Lin",
+        role: "Platform Lead",
+        reports: [{ name: "苏未晚", role: "SRE Manager" }, { name: "何予安", role: "Security Engineer" }],
+      },
+      {
+        name: "Changfeng Zhao",
+        role: "Infra Architect",
+        reports: [{ name: "Nanqiao Gu", role: "FinOps Analyst" }],
+      },
+      {
+        name: "郝井",
+        role: "Data Engineering",
+        reports: [{ name: "阿计", role: "Release Engineer" }, { name: "静静", role: "Docs Maintainer" }],
+      },
+    ],
+  },
+  iceberg: {
+    waterline: "水面",
+    aboveLabel: "工单里写的",
+    above: ["ECS 扩容 12 分钟，SLO 要求 90 秒"],
+    belowLabel: "复盘才说的",
+    below: [
+      "observability 栈要整套重建",
+      "etcd 跨 AZ 写放大没解",
+      "on-call runbook 还差 9 条",
+      "chaos 演练一直排不进迭代",
+    ],
+  },
+  chain: {
+    links: [
+      { label: "方案评审", value: "7", unit: "%" },
+      { label: "Terraform 重构", value: "12", unit: "%" },
+      { label: "Staging 迁移", value: "16", unit: "%" },
+      { label: "Canary 灰度", value: "27", unit: "%" },
+    ],
+    support: [
+      { label: "平台与工具链", note: "Terraform 模块 · ArgoCD app-of-apps · 镜像基线" },
+      { label: "可观测性", note: "Prometheus 指标 · Loki 日志 · SLO 看板" },
+      { label: "值班与文档", note: "on-call runbook · 事故复盘模板" },
+    ],
+    margin: { label: "成本下降", value: "38%" },
+  },
   quote: {
     text: "迁移不是把 workload 搬过去就算完，observability 没跑通之前，Kubernetes 只是一个你看不见内部的黑盒。",
     attribution: "苏未晚，云觅科技 SRE Manager",

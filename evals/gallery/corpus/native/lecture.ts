@@ -190,6 +190,52 @@ export const LECTURE_LEXICON: Lexicon = {
     { name: "周末外拍", note: "老街半日，最多十二人", price: "¥120", priceUnit: "人次" },
   ],
 
+  orgChart: {
+    root: { name: "陈干事", role: "夜校教务" },
+    managers: [
+      {
+        name: "江一苇",
+        role: "主讲 · 自由摄影师",
+        reports: [{ name: "小鹿", role: "助教" }, { name: "老蔡", role: "夜市外拍模特" }],
+      },
+      {
+        name: "王阿姨",
+        role: "学员代表",
+        reports: [{ name: "老魏", role: "全勤学员" }],
+      },
+      {
+        name: "方灯",
+        role: "场地与器材",
+        reports: [{ name: "小童", role: "器材借还" }, { name: "阿棠", role: "作业收集" }],
+      },
+    ],
+  },
+  iceberg: {
+    waterline: "水面",
+    aboveLabel: "课上说的",
+    above: ["只记三个词：顺侧逆"],
+    belowLabel: "助教发现的",
+    below: [
+      "教室灯光条件受限",
+      "学员手机新旧差距很大",
+      "一周一课很容易忘",
+      "助教从头到尾只有一位",
+    ],
+  },
+  chain: {
+    links: [
+      { label: "认识器材", value: "10", unit: "%" },
+      { label: "认识光", value: "27", unit: "%" },
+      { label: "学构图", value: "24", unit: "%" },
+      { label: "外拍实战", value: "23", unit: "%" },
+    ],
+    support: [
+      { label: "场地与器材", note: "反光板 · 三脚架 · 借还登记" },
+      { label: "作业与点评", note: "每周交作业 · 课上互评 · 一对一改图" },
+      { label: "外拍组织", note: "夜市踩点 · 模特协调 · 安全提醒" },
+    ],
+    margin: { label: "学员留存", value: "16%" },
+  },
   quote: {
     text: "王阿姨上周把孙子从窗边挪了一步，全家都问她是不是换了新手机。",
     attribution: "江一苇，课堂实录",

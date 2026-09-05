@@ -190,6 +190,52 @@ export const LUXE_LEXICON: Lexicon = {
     { name: "量体定制", note: "三次试身，六周成衣", price: "¥6.8万", priceUnit: "起 / 套" },
   ],
 
+  orgChart: {
+    root: { name: "顾锦官", role: "主理人 · 制衣三十年" },
+    managers: [
+      {
+        name: "秦绣娘",
+        role: "首席绣娘",
+        reports: [{ name: "小顾", role: "学徒 · 主理人之女" }, { name: "阿绫", role: "盘扣" }],
+      },
+      {
+        name: "任缂",
+        role: "缂丝师傅",
+        reports: [{ name: "云机", role: "织造" }],
+      },
+      {
+        name: "白厨",
+        role: "宴席主厨",
+        reports: [{ name: "林女士", role: "首套衣主" }, { name: "阿宴", role: "场务" }],
+      },
+    ],
+  },
+  iceberg: {
+    waterline: "水面",
+    aboveLabel: "宴上讲的",
+    above: ["十年交付三百零七套"],
+    belowLabel: "工坊里的",
+    below: [
+      "年产能锁死在四十套",
+      "主理人事必躬亲难分身",
+      "价格门槛挡住年轻客",
+      "工坊空间已近饱和",
+    ],
+  },
+  chain: {
+    links: [
+      { label: "量体与议样", value: "14", unit: "%" },
+      { label: "织造定料", value: "19", unit: "%" },
+      { label: "绣作缂丝", value: "33", unit: "%" },
+      { label: "试衣交付", value: "18", unit: "%" },
+    ],
+    support: [
+      { label: "工艺传承", note: "盘扣口诀 · 缂丝上机 · 绣绷调线" },
+      { label: "客人关系", note: "一衣一档 · 回场保养 · 十年回访" },
+      { label: "工坊与空间", note: "裁台排布 · 面料库 · 试衣间" },
+    ],
+    margin: { label: "工坊留存", value: "16%" },
+  },
   quote: {
     text: "客人把最重要的日子交给我们，我们能回报的只有针脚。",
     attribution: "顾锦官，夜宴致辞",

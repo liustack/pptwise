@@ -190,6 +190,52 @@ export const SWISS_LEXICON: Lexicon = {
     { name: "专项捐赠", note: "指定项目，年度专项审计", price: "¥1万", priceUnit: "起 / 项" },
   ],
 
+  orgChart: {
+    root: { name: "费明澈", role: "秘书长" },
+    managers: [
+      {
+        name: "谷雨",
+        role: "项目总监",
+        reports: [{ name: "老崔", role: "仓储与配送" }, { name: "小禾", role: "县级伙伴对接" }],
+      },
+      {
+        name: "尹一诺",
+        role: "财务负责人",
+        reports: [{ name: "查审计", role: "签字会计师" }],
+      },
+      {
+        name: "阿蓝",
+        role: "捐赠人监督员",
+        reports: [{ name: "小月", role: "月捐运营" }, { name: "方图", role: "图书角建设" }],
+      },
+    ],
+  },
+  iceberg: {
+    waterline: "水面",
+    aboveLabel: "年报写的",
+    above: ["管理费率八点七"],
+    belowLabel: "理事会才讨论的",
+    below: [
+      "预算缺口靠年末冲刺",
+      "县级伙伴能力参差不齐",
+      "数据系统还在用表格",
+      "全职团队只有九人",
+    ],
+  },
+  chain: {
+    links: [
+      { label: "需求核报", value: "13", unit: "%" },
+      { label: "联合采购", value: "24", unit: "%" },
+      { label: "物流配送", value: "18", unit: "%" },
+      { label: "图书角建设", value: "27", unit: "%" },
+    ],
+    support: [
+      { label: "财务与透明", note: "逐笔公示 · 独立审计 · 管理费率公开" },
+      { label: "伙伴与培训", note: "县级伙伴带教 · 图书管理员培训" },
+      { label: "仓储与物流", note: "集采仓 · 分箱清单 · 到货签收" },
+    ],
+    margin: { label: "借阅运营", value: "18%" },
+  },
   quote: {
     text: "把四十七万的失误写进正文那天，我们收到了七年来最多的一天复捐。",
     attribution: "费明澈，发布会现场",

@@ -44,6 +44,20 @@ function productsOf(lex: Lexicon): NonNullable<Lexicon["products"]> {
   return lex.products
 }
 
+/** Which link of a track's chain carries the largest share. */
+function largestLink(lex: Lexicon): number {
+  return lex.chain.links.reduce(
+    (best, link, i) => (Number(link.value) > Number(lex.chain.links[best]!.value) ? i : best),
+    0,
+  )
+}
+
+/** One measure written as the check it is: what it counts, and where it stands. */
+function metricLine(lex: Lexicon, i: number): string {
+  const m = lex.metrics[i % lex.metrics.length]!
+  return `${m.label} ${m.value}${m.unit ?? ""}`
+}
+
 /** Take `n` items starting at `from`, wrapping — keeps builders total. */
 function slice(pool: readonly string[], n: number, from = 0): string[] {
   return Array.from({ length: n }, (_, i) => pool[(from + i) % pool.length]!)
@@ -105,6 +119,87 @@ export const COMPONENT_BUILDERS: Record<string, (lex: Lexicon) => Component> = {
       { value: "72%", label: lex.metrics[1]!.label },
       { value: "48%", label: lex.metrics[2]!.label },
     ],
+  }),
+
+  // ── Hierarchy ──────────────────────────────────────────────────────────
+  // What these six draw is a relation, and a relation is the one thing an
+  // index into a word pool cannot supply. Three of them read a relation the
+  // track states outright (`orgChart`, `iceberg`, `chain`); the other three
+  // read pools whose meaning already matches the slot. Either way nothing
+  // here pairs two lists by position and hopes they agree —
+  // `corpus/relations.test.mts` holds every claim these builders make.
+
+  // Who reports to whom, as the track wrote it: a root, the managers under
+  // the root, and the people under each manager.
+  org_tree: (lex) => ({
+    type: "org_tree",
+    root: { name: lex.orgChart.root.name, role: lex.orgChart.root.role },
+    children: lex.orgChart.managers.map((manager) => ({
+      name: manager.name,
+      role: manager.role,
+      children: manager.reports.map((report) => ({ name: report.name, role: report.role })),
+    })),
+  }),
+
+  // One section of the deck, the problems the deck itself names inside it,
+  // and under each the measures that would test it. `weaknesses` is the only
+  // pool written as "what is not working", which is what a hypothesis is.
+  issue_tree: (lex) => ({
+    type: "issue_tree",
+    question: lex.chapters[2]!,
+    branches: slice(lex.weaknesses, 3).map((label, i) => ({
+      label,
+      // The first is the one the deck leads with; every track writes its
+      // weaknesses worst first.
+      ...(i === 0 ? { emphasis: true as const } : {}),
+      children: [{ label: metricLine(lex, i * 2) }, { label: metricLine(lex, i * 2 + 1) }],
+    })),
+  }),
+
+  // `kickers` and `chapters` are the same sections written short and written
+  // long, index for index — the eyebrow on the band, its full name in the
+  // legend beside it, in the deck's own order.
+  pyramid: (lex) => ({
+    type: "pyramid",
+    layers: slice(lex.kickers, 4).map((label, i) => ({ label, note: lex.chapters[i % lex.chapters.length] })),
+  }),
+
+  // What the track says out loud, what it does not, and the words it uses for
+  // the line between them — all authored, because nothing marks a headline as
+  // the part everyone repeats and a weakness as the part nobody raises.
+  iceberg: (lex) => ({
+    type: "iceberg",
+    above: [...lex.iceberg.above],
+    below: [...lex.iceberg.below],
+    waterline: lex.iceberg.waterline,
+    above_label: lex.iceberg.aboveLabel,
+    below_label: lex.iceberg.belowLabel,
+  }),
+
+  // The verdict the deck reaches on the beam, the headline measures it
+  // reaches it on as the columns, the deck's own scope line as the base.
+  pillar_model: (lex) => ({
+    type: "pillar_model",
+    goal: lex.verdicts.positive,
+    pillars: lex.metrics.slice(0, 3).map((m) => ({ title: m.label, value: m.value, unit: m.unit })),
+    base: lex.deckSubtitle,
+  }),
+
+  // ── Chain ──────────────────────────────────────────────────────────────
+  // Where the value is made, attributed by the track rather than by the
+  // corpus: the link shares and the closing wedge sum to a hundred, so the
+  // page adds up when a reader checks it.
+  value_chain: (lex) => ({
+    type: "value_chain",
+    primary: lex.chain.links.map((link, i) => ({
+      label: link.label,
+      value: link.value,
+      unit: link.unit,
+      // The link that makes the most of it is the one the page is about.
+      ...(i === largestLink(lex) ? { emphasis: true as const } : {}),
+    })),
+    support: lex.chain.support.map((band) => ({ label: band.label, note: band.note })),
+    margin: { label: lex.chain.margin.label, value: lex.chain.margin.value },
   }),
 
   // No `show_grid` here: a bar chart's house default is gridline-free

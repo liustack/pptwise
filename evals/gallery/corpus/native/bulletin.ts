@@ -190,6 +190,52 @@ export const ENTERPRISE_LEXICON: Lexicon = {
     { name: "切换值守服务", note: "上线首月七乘二十四小时", price: "¥18万", priceUnit: "月" },
   ],
 
+  orgChart: {
+    root: { name: "祁鸿川", role: "集团总裁 · 切换总指挥" },
+    managers: [
+      {
+        name: "白露",
+        role: "数字化办公室主任",
+        reports: [{ name: "程远", role: "实施项目经理" }, { name: "孙一苇", role: "主数据负责人" }],
+      },
+      {
+        name: "老蒋",
+        role: "江州基地总装车间主任",
+        reports: [{ name: "何师傅", role: "种子用户 · 三十年工龄" }],
+      },
+      {
+        name: "罗启",
+        role: "培训与支持负责人",
+        reports: [{ name: "小徐", role: "夜班支持" }, { name: "阿泉", role: "外协厂对接" }],
+      },
+    ],
+  },
+  iceberg: {
+    waterline: "水面",
+    aboveLabel: "动员会上讲的",
+    above: ["每年省回四千三百小时等待"],
+    belowLabel: "切换清单最后一页的",
+    below: [
+      "老员工键盘操作不熟练",
+      "夜班时段支持力量偏薄",
+      "部分外协厂网络条件差",
+      "历史数据质量参差不齐",
+    ],
+  },
+  chain: {
+    links: [
+      { label: "试点验证", value: "12", unit: "%" },
+      { label: "全员培训", value: "21", unit: "%" },
+      { label: "数据清洗", value: "25", unit: "%" },
+      { label: "割接切换", value: "28", unit: "%" },
+    ],
+    support: [
+      { label: "主数据治理", note: "物料编码 · 供应商档案 · 工艺路线" },
+      { label: "培训与支持", note: "车间带教 · 夜班值守 · 一线答疑" },
+      { label: "网络与终端", note: "外协厂专线 · 车间工位机 · 扫码枪" },
+    ],
+    margin: { label: "效率结余", value: "14%" },
+  },
   quote: {
     text: "老系统陪了我们二十七年，体面地送它退休，办法只有一个：新系统第一天就好好用。",
     attribution: "祁鸿川，动员大会现场",

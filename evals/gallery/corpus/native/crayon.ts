@@ -190,6 +190,52 @@ export const CRAYON_LEXICON: Lexicon = {
     { name: "成长纪念册", note: "一学期的照片与作品装订", price: "¥98", priceUnit: "本" },
   ],
 
+  orgChart: {
+    root: { name: "陈园长", role: "园长" },
+    managers: [
+      {
+        name: "王雨晴",
+        role: "班主任",
+        reports: [{ name: "李慧敏", role: "配班老师" }, { name: "周阿姨", role: "保育员" }],
+      },
+      {
+        name: "林医生",
+        role: "保健医生",
+        reports: [{ name: "小何", role: "晨检" }],
+      },
+      {
+        name: "豆豆妈妈",
+        role: "家委会代表",
+        reports: [{ name: "苗苗妈妈", role: "绘本借阅" }, { name: "阿乐爸爸", role: "亲子活动" }],
+      },
+    ],
+  },
+  iceberg: {
+    waterline: "水面",
+    aboveLabel: "家长看得见的",
+    above: ["出勤率九成四，二十八个孩子能自己吃饭"],
+    belowLabel: "老师记在本子上的",
+    below: [
+      "六个孩子还不敢当众发言",
+      "指尖精细动作参差很大",
+      "整理玩具还要老师提醒",
+      "部分孩子挑食反反复复",
+    ],
+  },
+  chain: {
+    links: [
+      { label: "入园适应", value: "14", unit: "%" },
+      { label: "生活自理", value: "24", unit: "%" },
+      { label: "同伴相处", value: "21", unit: "%" },
+      { label: "合作游戏", value: "18", unit: "%" },
+    ],
+    support: [
+      { label: "一日流程", note: "晨检 · 加餐 · 午睡 · 离园" },
+      { label: "环境与材料", note: "娃娃家 · 建构区 · 绘本角" },
+      { label: "家园共育", note: "成长手册 · 每周照片 · 家长开放日" },
+    ],
+    margin: { label: "成长余量", value: "23%" },
+  },
   quote: {
     text: "别急着让孩子学会什么，先让他每天都想来。想来了，剩下的都会发生。",
     attribution: "陈园长，阳光幼儿园",

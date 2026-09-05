@@ -190,6 +190,52 @@ export const JOURNAL_LEXICON: Lexicon = {
     { name: "旧刊合订本", note: "第一至四十八期，两卷", price: "¥360", priceUnit: "套" },
   ],
 
+  orgChart: {
+    root: { name: "阮巷", role: "主编" },
+    managers: [
+      {
+        name: "老柯",
+        role: "长报道记者",
+        reports: [{ name: "丁一楷", role: "专职校对" }, { name: "苏晚晴", role: "美术编辑" }],
+      },
+      {
+        name: "赵掌柜",
+        role: "独立书店代表",
+        reports: [{ name: "老葛", role: "街角人物专栏" }],
+      },
+      {
+        name: "宋纸",
+        role: "发行与订户",
+        reports: [{ name: "小杜", role: "邮件组维护" }, { name: "阿宁", role: "打样跟印" }],
+      },
+    ],
+  },
+  iceberg: {
+    waterline: "水面",
+    aboveLabel: "改版说明写的",
+    above: ["月刊改双月刊，长报道下限八千字"],
+    belowLabel: "编辑部内部的",
+    below: [
+      "收入九成依赖发行",
+      "人手六人抗风险很弱",
+      "摄影力量长期外借",
+      "数字端只有一个邮件组",
+    ],
+  },
+  chain: {
+    links: [
+      { label: "问卷复盘", value: "12", unit: "%" },
+      { label: "栏目重构", value: "20", unit: "%" },
+      { label: "作者约稿", value: "30", unit: "%" },
+      { label: "试刊打样", value: "19", unit: "%" },
+    ],
+    support: [
+      { label: "编辑与校对", note: "三审三校 · 事实核查 · 引文回溯" },
+      { label: "视觉与装帧", note: "版式重排 · 封面摄影 · 纸样比选" },
+      { label: "发行与订户", note: "书店寄售 · 订户续订 · 邮件通告" },
+    ],
+    margin: { label: "发行结余", value: "19%" },
+  },
   quote: {
     text: "我们不缺选题，缺的是在巷口坐一下午的时间。现在把它买回来。",
     attribution: "阮巷，改版说明会",

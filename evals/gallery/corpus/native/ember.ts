@@ -190,6 +190,52 @@ export const EMBER_LEXICON: Lexicon = {
     { name: "果园测绘服务", note: "先测后配，一周出方案", price: "¥8000", priceUnit: "次" },
   ],
 
+  orgChart: {
+    root: { name: "何燃", role: "联合创始人 · 硬件" },
+    managers: [
+      {
+        name: "秦序",
+        role: "联合创始人 · 算法",
+        reports: [{ name: "林工", role: "手爪结构工程师" }, { name: "小舟", role: "视觉标定" }],
+      },
+      {
+        name: "苗苗",
+        role: "驻园服务队长",
+        reports: [{ name: "老王", role: "首个签约果园主" }],
+      },
+      {
+        name: "陈教授",
+        role: "软体机器人顾问",
+        reports: [{ name: "阿凛", role: "试验田记录" }, { name: "小满", role: "代工对接" }],
+      },
+    ],
+  },
+  iceberg: {
+    waterline: "水面",
+    aboveLabel: "路演讲的",
+    above: ["碰伤率压到百分之一以下"],
+    belowLabel: "内部清单上的",
+    below: [
+      "产能压在单一代工厂",
+      "品类只覆盖两种水果",
+      "服务队复制速度没验证过",
+      "冬季设备闲置率很高",
+    ],
+  },
+  chain: {
+    links: [
+      { label: "产区调研", value: "10", unit: "%" },
+      { label: "样机迭代", value: "23", unit: "%" },
+      { label: "驻园验证", value: "26", unit: "%" },
+      { label: "签约服务", value: "24", unit: "%" },
+    ],
+    support: [
+      { label: "硬件与结构", note: "柔性手爪 · 悬挂底盘 · 快换电池" },
+      { label: "算法与视觉", note: "果实识别 · 成熟度判定 · 路径规划" },
+      { label: "驻园服务", note: "季节性驻场 · 培训果园工 · 备件前置" },
+    ],
+    margin: { label: "单台毛利", value: "17%" },
+  },
   quote: {
     text: "投资人问我们壁垒是什么。壁垒是那两个夏天，我们的工程师和果子一起晒在地里。",
     attribution: "何燃，路演现场",

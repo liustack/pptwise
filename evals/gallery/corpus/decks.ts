@@ -204,6 +204,12 @@ const COMPONENT_KINDS: Record<Component["type"], PageKind> = {
   product_cards: "list",
   image_compare: "photo",
   device_mockup: "photo",
+  org_tree: "hierarchy",
+  issue_tree: "hierarchy",
+  pyramid: "hierarchy",
+  iceberg: "hierarchy",
+  pillar_model: "hierarchy",
+  value_chain: "process",
 }
 
 function componentKind(component: Component): PageKind {
@@ -220,7 +226,25 @@ function componentKind(component: Component): PageKind {
  * show. Not full-body (a real deck may still stack them), just too tall to
  * review alongside anything.
  */
-const TALL_COMPONENT_TYPES = new Set<Component["type"]>(["numbered_cards", "cycle", "hub_spoke", "row_cards", "data_table"])
+const TALL_COMPONENT_TYPES = new Set<Component["type"]>([
+  "numbered_cards",
+  "cycle",
+  "hub_spoke",
+  "row_cards",
+  "data_table",
+  // The hierarchy family draws a whole sheet: a three-row tree, a stack of
+  // trapezoids beside its legend, a berg with its waterline, a beam over its
+  // columns, a chain with its supporting bands. Each measures around 400px
+  // and declares a decline rather than shrink into half a rect, so a lead-in
+  // sentence above one would send the review page to the step-aside instead
+  // of showing the drawing.
+  "org_tree",
+  "issue_tree",
+  "pyramid",
+  "iceberg",
+  "pillar_model",
+  "value_chain",
+])
 
 /**
  * Drawings whose items are packed along one horizontal run, so what they can
@@ -256,7 +280,7 @@ export function themeDeck(themeId: string, lex: Lexicon, assets: CorpusAssets): 
   const content: Slide[] = slots.map((spec, i) => {
     const built = fitThemeLead(themeId, i, buildThemeSlot(spec, lex))
     const component = emphasis ? emphasizedLead(themeId, built, i, lex) : built
-    const extra = thickenThemeContent(themeId, i, lex)
+    const extra = thickenThemeContent(themeId, i, lex, component)
     const kind = componentKind(component)
     if (getThemeDefinition(themeId).menu.content[kind] === undefined) {
       throw new Error(`theme table slot ${themeId}[${i}] uses ${component.type}, but its menu does not offer ${kind}`)
@@ -306,7 +330,13 @@ export function themeDeck(themeId: string, lex: Lexicon, assets: CorpusAssets): 
  * frames, a 56px card in a poster hero). Inject a short companion where the
  * menu-selected face needs one.
  */
-function thickenThemeContent(themeId: string, slotIndex: number, lex: Lexicon): Component[] {
+function thickenThemeContent(themeId: string, slotIndex: number, lex: Lexicon, lead: Component): Component[] {
+  // A lead that fills the sheet on its own never wants a companion. The
+  // thickening list is keyed by theme and slot, so a lead swapped into one of
+  // those slots inherits a companion meant for the component that used to sit
+  // there — and a component that declines rather than shrink then draws
+  // nothing at all, which is how a hierarchy page arrived blank.
+  if (TALL_COMPONENT_TYPES.has(lead.type) || WIDE_COMPONENT_TYPES.has(lead.type)) return []
   const shortParagraph: Component = { type: "paragraph", text: lex.shortParagraph }
   if (themeId === "stage" && slotIndex === 0) return [shortParagraph]
   // Two bullets, not five: split-band gives the pie chart 260px of its 400px

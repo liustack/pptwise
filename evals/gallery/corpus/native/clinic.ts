@@ -190,6 +190,52 @@ export const PULSE_LEXICON: Lexicon = {
     { name: "中老年体检套餐", note: "含血脂、心电与颈动脉超声", price: "¥580", priceUnit: "人次" },
   ],
 
+  orgChart: {
+    root: { name: "韩心禾", role: "全科医生 · 主讲" },
+    managers: [
+      {
+        name: "小甘",
+        role: "随访护士",
+        reports: [{ name: "老袁", role: "复诊提醒志愿者" }, { name: "程药师", role: "用药咨询" }],
+      },
+      {
+        name: "钱伯伯",
+        role: "血压本模范",
+        reports: [{ name: "何阿婆", role: "曾自行停药" }],
+      },
+      {
+        name: "方护士长",
+        role: "慢病管理",
+        reports: [{ name: "小卫", role: "上门测量" }, { name: "阿丁", role: "健康档案" }],
+      },
+    ],
+  },
+  iceberg: {
+    waterline: "水面",
+    aboveLabel: "居民说得出的",
+    above: ["头不晕就是没事"],
+    belowLabel: "随访记录里的",
+    below: [
+      "独居老人测量依从性低",
+      "冬季讲堂出勤明显下滑",
+      "年轻家属几乎不参与",
+      "随访人手只有两名",
+    ],
+  },
+  chain: {
+    links: [
+      { label: "现场测量", value: "14", unit: "%" },
+      { label: "讲解答疑", value: "23", unit: "%" },
+      { label: "发放血压本", value: "18", unit: "%" },
+      { label: "两周回访", value: "29", unit: "%" },
+    ],
+    support: [
+      { label: "测量与设备", note: "上臂式血压计 · 校准 · 两克盐勺" },
+      { label: "用药与咨询", note: "药师门诊 · 漏服处理 · 副作用记录" },
+      { label: "随访与提醒", note: "楼组长提醒 · 复诊短信 · 上门补测" },
+    ],
+    margin: { label: "达标提升", value: "16%" },
+  },
   quote: {
     text: "钱伯伯的血压本记了三年，比任何一张化验单都让我心里有底。",
     attribution: "韩心禾，讲堂现场",

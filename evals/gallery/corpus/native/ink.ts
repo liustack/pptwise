@@ -190,6 +190,52 @@ export const INK_LEXICON: Lexicon = {
     { name: "社课 · 秋季", note: "每周一课，十二课一期", price: "¥1600", priceUnit: "期" },
   ],
 
+  orgChart: {
+    root: { name: "陆听雨", role: "社长 · 立社人" },
+    managers: [
+      {
+        name: "邵九如",
+        role: "考据 · 展签执笔",
+        reports: [{ name: "温阿宝", role: "最小社友 · 十一岁" }, { name: "霍老", role: "最长社友 · 八十三岁" }],
+      },
+      {
+        name: "裴云装",
+        role: "装裱师",
+        reports: [{ name: "沈拓", role: "拓片修复" }],
+      },
+      {
+        name: "阮砚",
+        role: "布展与调光",
+        reports: [{ name: "小雪", role: "展签誊写" }, { name: "周晏", role: "开幕雅集" }],
+      },
+    ],
+  },
+  iceberg: {
+    waterline: "水面",
+    aboveLabel: "请柬上写的",
+    above: ["社藏五十件首次公开"],
+    belowLabel: "库房里知道的",
+    below: [
+      "展陈经验几乎为零",
+      "库房恒湿设备老旧",
+      "社费只够日常笔墨",
+      "考据人手只有两位",
+    ],
+  },
+  chain: {
+    links: [
+      { label: "选目定件", value: "13", unit: "%" },
+      { label: "修复装池", value: "29", unit: "%" },
+      { label: "展签考据", value: "22", unit: "%" },
+      { label: "布展调光", value: "19", unit: "%" },
+    ],
+    support: [
+      { label: "库房与养护", note: "恒湿柜 · 樟木箱 · 防虫香" },
+      { label: "考据与文墨", note: "题跋比对 · 印鉴查证 · 展签誊写" },
+      { label: "社课与雅集", note: "每月社课 · 秋集开幕 · 拓片同乐" },
+    ],
+    margin: { label: "可续办余力", value: "17%" },
+  },
   quote: {
     text: "把字挂起来，不是让人来评的，是让字透一口气。",
     attribution: "陆听雨，开幕致辞",

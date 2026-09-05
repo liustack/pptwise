@@ -190,6 +190,52 @@ export const CLASSROOM_LEXICON: Lexicon = {
     { name: "家庭练习册", note: "每周一套，附答题分析", price: "¥88", priceUnit: "学期" },
   ],
 
+  orgChart: {
+    root: { name: "方晴", role: "数学老师 · 班主任" },
+    managers: [
+      {
+        name: "老周",
+        role: "数学教研组长",
+        reports: [{ name: "苏老师", role: "心理老师" }, { name: "小陆", role: "作业批改" }],
+      },
+      {
+        name: "林小满",
+        role: "课代表",
+        reports: [{ name: "陈默", role: "错题本组长" }],
+      },
+      {
+        name: "豆豆爸爸",
+        role: "家委会代表",
+        reports: [{ name: "何妈妈", role: "晚自习陪读" }, { name: "赵爸爸", role: "家校联络" }],
+      },
+    ],
+  },
+  iceberg: {
+    waterline: "水面",
+    aboveLabel: "家长会上说的",
+    above: ["平均分八十六点五，提高四点二"],
+    belowLabel: "试卷背后的",
+    below: [
+      "辅助线变式见得太少",
+      "计算失误比例仍然偏高",
+      "晚自习后段效率明显下滑",
+      "个别孩子畏难情绪加重",
+    ],
+  },
+  chain: {
+    links: [
+      { label: "课前预习", value: "11", unit: "%" },
+      { label: "课堂听讲", value: "26", unit: "%" },
+      { label: "作业订正", value: "22", unit: "%" },
+      { label: "周末重做", value: "19", unit: "%" },
+    ],
+    support: [
+      { label: "教研与备课", note: "集体备课 · 分层作业 · 变式题库" },
+      { label: "家校配合", note: "错题本签字 · 晚自习陪读 · 每周反馈" },
+      { label: "心理与习惯", note: "畏难情绪疏导 · 时间管理 · 同伴互助" },
+    ],
+    margin: { label: "提分空间", value: "22%" },
+  },
   quote: {
     text: "我不需要孩子回家说老师讲了什么，只需要他敢把错题本摊开给你看。",
     attribution: "方晴，家长会现场",

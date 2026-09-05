@@ -190,6 +190,52 @@ export const ARENA_LEXICON: Lexicon = {
     { name: "看台应援包", note: "灯牌、手幅与赛程贴纸", price: "¥89", priceUnit: "套" },
   ],
 
+  orgChart: {
+    root: { name: "顾川", role: "主教练" },
+    managers: [
+      {
+        name: "陆惊蛰",
+        role: "队长 · 中单",
+        reports: [{ name: "小满", role: "打野 · 最佳新秀" }, { name: "阿灼", role: "上单" }],
+      },
+      {
+        name: "老白",
+        role: "数据分析师",
+        reports: [{ name: "橘座", role: "视野复盘" }],
+      },
+      {
+        name: "阿禾",
+        role: "后援会会长",
+        reports: [{ name: "小池", role: "应援统筹" }, { name: "桃子", role: "周边运营" }],
+      },
+    ],
+  },
+  iceberg: {
+    waterline: "水面",
+    aboveLabel: "直播间在骂的",
+    above: ["决胜局胜率还不到五成"],
+    belowLabel: "复盘室才讲的",
+    below: [
+      "前期十分钟经济常落后",
+      "上单英雄池只剩三个",
+      "中野换线的信号没统一",
+      "替补席一年没上过场",
+    ],
+  },
+  chain: {
+    links: [
+      { label: "BP 准备", value: "12", unit: "%" },
+      { label: "对线期", value: "19", unit: "%" },
+      { label: "中期运营", value: "28", unit: "%" },
+      { label: "决胜团战", value: "33", unit: "%" },
+    ],
+    support: [
+      { label: "数据与复盘", note: "对手 BP 库 · 分均插眼 · 团战录像" },
+      { label: "体能与作息", note: "训练时长管理 · 睡眠监测 · 手腕康复" },
+      { label: "粉丝与商务", note: "后援会应援 · 赛季周边 · 直播排期" },
+    ],
+    margin: { label: "赛季净胜", value: "8%" },
+  },
   quote: {
     text: "第九名的时候看台也是满的。今天这个位置，是你们一场一场陪出来的。",
     attribution: "陆惊蛰，粉丝之夜现场",
