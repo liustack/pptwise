@@ -284,6 +284,15 @@ const COMPONENT_BY_TYPE: Record<Component["type"], Component> = {
       { value: "72%", label: "closure" },
     ],
   },
+  journey_map: {
+    type: "journey_map",
+    stages: [
+      { label: "Learn", touchpoints: ["report"], action: "compares three vendors", emotion: 4, opportunity: "targeted placement" },
+      { label: "Onboard", touchpoints: ["checklist"], action: "chases permissions", emotion: 2, opportunity: "automate the handover" },
+      { label: "Renew", action: "asks for budget", emotion: 4, opportunity: "bundle the upgrade" },
+    ],
+    row_labels: { touchpoints: "Touchpoints", action: "Behaviour", emotion: "Feeling", opportunity: "Opportunity" },
+  },
   swimlane: {
     type: "swimlane",
     lanes: [{ label: "Success", role: "account team" }, { label: "Delivery" }],

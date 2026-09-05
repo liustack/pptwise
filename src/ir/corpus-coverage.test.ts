@@ -208,6 +208,24 @@ const COVERAGE_ENTRIES: Record<string, unknown> = {
   }),
   // staircase's own hard check is the level-count floor: two treads read as
   // a comparison, not a climb.
+  // journey_map's own hard check is the 1-5 emotion domain: a curve is only
+  // a curve when every stage scores on the same scale.
+  "coverage/journey_map-valid": minimalDeck({
+    type: "journey_map",
+    stages: [
+      { label: "Learn", emotion: 4 },
+      { label: "Onboard", emotion: 2 },
+      { label: "Renew", emotion: 4 },
+    ],
+  }),
+  "coverage/journey_map-tripwire": minimalDeck({
+    type: "journey_map",
+    stages: [
+      { label: "Learn", emotion: 4 },
+      { label: "Onboard", emotion: 9 },
+      { label: "Renew", emotion: 4 },
+    ],
+  }),
   // swimlane's own hard check is the cross-reference: a step names a lane,
   // and a lane it names has to exist.
   "coverage/swimlane-valid": minimalDeck({

@@ -21,6 +21,7 @@ import * as imageCompare from "./image-compare"
 import * as imageGrid from "./image-grid"
 import * as image from "./image"
 import * as insightPanel from "./insight-panel"
+import * as journeyMap from "./journey-map"
 import * as kpiCards from "./kpi-cards"
 import * as matrix from "./matrix"
 import * as numberedCards from "./numbered-cards"
@@ -83,6 +84,7 @@ const COMPONENT_STORY_MODULES: Readonly<Record<string, ComponentStoryModule>> = 
   image_grid: imageGrid,
   image,
   insight_panel: insightPanel,
+  journey_map: journeyMap,
   kpi_cards: kpiCards,
   matrix,
   numbered_cards: numberedCards,

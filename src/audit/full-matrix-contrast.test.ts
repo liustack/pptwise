@@ -1510,6 +1510,11 @@ const MUTED_SURFACE_CLASS: Record<string, MutedSurfaceClass> = {
   // the surface they land on; the tinted lane band carries no text of its own
   // except the handover note, which takes `colors.text`, not muted.
   swimlane: "flat-surface",
+  // journey-map.tsx paints `colors.muted` for its four row names and for the
+  // emotion value above each dot except the low one — every one of them on
+  // the ambient page background, routed through `accessibleInk` against it.
+  // The pills and the opportunity cards carry `colors.text`, not muted.
+  journey_map: "page-bg",
 }
 
 describe("colors.muted component-type coverage (task-2 fix round, backlog 5a completeness sweep)", () => {

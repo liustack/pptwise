@@ -674,6 +674,121 @@ const ITEM_CASES: readonly ItemCase[] = [
     pad: [{ title: "Build" }, { title: "Hand over" }],
     expected: "one page of intent",
   },
+  {
+    type: "journey_map",
+    itemsKey: "stages",
+    alias: "title",
+    canonical: "label",
+    item: { title: "Learn", emotion: 4 },
+    pad: [{ label: "Onboard", emotion: 2 }, { label: "Renew", emotion: 4 }],
+    expected: "Learn",
+  },
+  {
+    type: "journey_map",
+    itemsKey: "stages",
+    alias: "name",
+    canonical: "label",
+    item: { name: "Learn", emotion: 4 },
+    pad: [{ label: "Onboard", emotion: 2 }, { label: "Renew", emotion: 4 }],
+    expected: "Learn",
+  },
+  {
+    type: "journey_map",
+    itemsKey: "stages",
+    alias: "channels",
+    canonical: "touchpoints",
+    item: { label: "Learn", emotion: 4, channels: ["report"] },
+    pad: [{ label: "Onboard", emotion: 2 }, { label: "Renew", emotion: 4 }],
+    expected: ["report"],
+  },
+  {
+    type: "journey_map",
+    itemsKey: "stages",
+    alias: "behaviour",
+    canonical: "action",
+    item: { label: "Learn", emotion: 4, behaviour: "compares three vendors" },
+    pad: [{ label: "Onboard", emotion: 2 }, { label: "Renew", emotion: 4 }],
+    expected: "compares three vendors",
+  },
+  {
+    type: "journey_map",
+    itemsKey: "stages",
+    alias: "behavior",
+    canonical: "action",
+    item: { label: "Learn", emotion: 4, behavior: "compares three vendors" },
+    pad: [{ label: "Onboard", emotion: 2 }, { label: "Renew", emotion: 4 }],
+    expected: "compares three vendors",
+  },
+  {
+    type: "swimlane",
+    itemsKey: "lanes",
+    alias: "name",
+    canonical: "label",
+    item: { name: "Success" },
+    pad: [{ label: "Delivery" }],
+    extra: { steps: [{ lane: "Success", title: "Signal" }, { lane: "Delivery", title: "Schedule" }, { lane: "Success", title: "Sign" }] },
+    expected: "Success",
+  },
+  {
+    type: "swimlane",
+    itemsKey: "lanes",
+    alias: "title",
+    canonical: "label",
+    item: { title: "Success" },
+    pad: [{ label: "Delivery" }],
+    extra: { steps: [{ lane: "Success", title: "Signal" }, { lane: "Delivery", title: "Schedule" }, { lane: "Success", title: "Sign" }] },
+    expected: "Success",
+  },
+  {
+    type: "swimlane",
+    itemsKey: "lanes",
+    alias: "owner",
+    canonical: "role",
+    item: { label: "Success", owner: "account team" },
+    pad: [{ label: "Delivery" }],
+    extra: { steps: [{ lane: "Success", title: "Signal" }, { lane: "Delivery", title: "Schedule" }, { lane: "Success", title: "Sign" }] },
+    expected: "account team",
+  },
+  {
+    type: "swimlane",
+    itemsKey: "steps",
+    alias: "label",
+    canonical: "title",
+    item: { lane: "Success", label: "Signal" },
+    pad: [{ lane: "Delivery", title: "Schedule" }, { lane: "Success", title: "Sign" }],
+    extra: { lanes: [{ label: "Success" }, { label: "Delivery" }] },
+    expected: "Signal",
+  },
+  {
+    type: "swimlane",
+    itemsKey: "steps",
+    alias: "name",
+    canonical: "title",
+    item: { lane: "Success", name: "Signal" },
+    pad: [{ lane: "Delivery", title: "Schedule" }, { lane: "Success", title: "Sign" }],
+    extra: { lanes: [{ label: "Success" }, { label: "Delivery" }] },
+    expected: "Signal",
+  },
+  {
+    type: "swimlane",
+    itemsKey: "steps",
+    alias: "text",
+    canonical: "detail",
+    item: { lane: "Success", title: "Signal", text: "2 days" },
+    pad: [{ lane: "Delivery", title: "Schedule" }, { lane: "Success", title: "Sign" }],
+    extra: { lanes: [{ label: "Success" }, { label: "Delivery" }] },
+    expected: "2 days",
+  },
+  {
+    type: "swimlane",
+    itemsKey: "steps",
+    alias: "desc",
+    canonical: "detail",
+    item: { lane: "Success", title: "Signal", desc: "2 days" },
+    pad: [{ lane: "Delivery", title: "Schedule" }, { lane: "Success", title: "Sign" }],
+    extra: { lanes: [{ label: "Success" }, { label: "Delivery" }] },
+    expected: "2 days",
+  },
 ]
 
 describe("COMPONENT_ITEM_FIELD_ALIASES: every row round-trips", () => {
@@ -703,7 +818,7 @@ describe("COMPONENT_ITEM_FIELD_ALIASES: every row round-trips", () => {
 // ── total pair count pinned (docs/changeset "53 total synonym pairs") ──────
 
 describe("total synonym-pair count", () => {
-  it("COMPONENT_FIELD_ALIASES + COMPONENT_ITEM_FIELD_ALIASES flatten to exactly 72 pairs", () => {
+  it("COMPONENT_FIELD_ALIASES + COMPONENT_ITEM_FIELD_ALIASES flatten to exactly 84 pairs", () => {
     // The "covers every row exactly once" completeness guards above only
     // prove BLOCK_CASES/ITEM_CASES stay in lockstep with each table's own
     // rows — a row deleted from a table *and* its matching test case would
@@ -720,7 +835,7 @@ describe("total synonym-pair count", () => {
       (n, specs) => n + specs.reduce((m, spec) => m + Object.keys(spec.aliases).length, 0),
       0,
     )
-    expect(blockCount + itemCount).toBe(72)
+    expect(blockCount + itemCount).toBe(84)
   })
 })
 

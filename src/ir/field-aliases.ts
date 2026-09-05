@@ -72,6 +72,7 @@ import { aliases as progressDonutsAliases } from "./components/progress-donuts"
 import { aliases as staircaseAliases } from "./components/staircase"
 import { aliases as chevronProcessAliases } from "./components/chevron-process"
 import { aliases as swimlaneAliases } from "./components/swimlane"
+import { aliases as journeyMapAliases } from "./components/journey-map"
 
 /** One component type's `{ aliasKey: canonicalKey }` map. */
 export type FieldAliasMap = Readonly<Record<string, string>>
@@ -195,6 +196,11 @@ export const COMPONENT_ITEM_FIELD_ALIASES: Readonly<Record<string, readonly Item
   // ("name"/"title" for its label, "owner" for the role under it) and a step
   // is a card ("label"/"name" for its title, "text"/"desc" for its detail).
   swimlane: swimlaneAliases.items,
+  // A stage is a card ("title"/"name" for its label), and the two rows a
+  // weak model renames are the ones whose canonical word is domain
+  // vocabulary rather than plain English: "channels" for touchpoints,
+  // "behaviour"/"behavior" for the action.
+  journey_map: journeyMapAliases.items,
 }
 
 /**
