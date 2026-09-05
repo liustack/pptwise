@@ -43,7 +43,19 @@ import { LEXICONS } from "./corpus/lexicon"
 await installNodePlatform()
 
 /** Theme/component/language triples known to overflow, with what they lose. */
-const KNOWN_OVERFLOWS: readonly string[] = []
+const KNOWN_OVERFLOWS: readonly string[] = [
+  // `playbill` and `stage` route the `comparison` kind to a two-column face,
+  // which hands its body 528px. A from_to table is three columns and a
+  // gutter: a row name, a number with its unit, and a delta beside the second
+  // number, all on one line. Under about 600px they stop holding their own
+  // content, so the component declines the box rather than printing three
+  // columns of stubs (`from-to.tsx`'s own `MIN_W`). Both themes read Chinese
+  // on their own gallery pages, where the same face is wide enough; this is
+  // the English pairing an author can still reach, and closing it needs the
+  // step-aside this file's header already names.
+  "playbill · from_to · en: 1×component",
+  "stage · from_to · en: 1×component",
+]
 
 describe("every theme holds every component in Latin and mixed script", () => {
   it("drops exactly the shapes the ratchet already names", { timeout: 600_000 }, async () => {

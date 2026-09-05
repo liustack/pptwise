@@ -1521,13 +1521,13 @@ const MUTED_SURFACE_CLASS: Record<string, MutedSurfaceClass> = {
   // The one recommended card reverses both to `colors.surface` instead, so
   // muted never lands on it.
   decision_tree: "flat-surface",
-  // from-to.tsx paints `colors.muted` for a row's label and unit and for the
-  // state kicker, all on the unblended `colors.surface` panel fill on the
-  // starting side; the arriving panel reverses every one of them to
-  // `colors.surface` against its own fill. The span line under the arrow is
-  // the one muted text on the ambient page background, and it routes through
-  // `accessibleInk` against it.
-  from_to: "flat-surface",
+  // from-to.tsx paints `colors.muted` for a unit, a state kicker and the span
+  // line under the arrow. The starting column and the span sit on the ambient
+  // page background, routed through `accessibleInk` against it; the arriving
+  // column reverses every one of them to `colors.surface` against its own
+  // fill, so muted never lands on that panel either. No text of this
+  // component's ever sits on an unblended `colors.surface` rect.
+  from_to: "page-bg",
 }
 
 describe("colors.muted component-type coverage (task-2 fix round, backlog 5a completeness sweep)", () => {

@@ -400,7 +400,7 @@ export const STORY_ZH: Readonly<Record<string, Partial<Record<DesignStoryField, 
   },
   "component:from_to": {
     name: "位移",
-    story: "同一批指标摆成左右两块，中间一支箭头，每一行都印着这一行动了多少。账本上的期初与期末两栏，摆在一起看。",
+    story: "一张表：指标名在最左边写一次，两个状态各占一列，箭头站在中间的空档里。账本上的期初与期末两栏，摆在一起看。",
     positioning: "两个状态在每一行上都有值、移动幅度就是论点时用它。两边是不同的东西而不是同一件东西的两次用 comparison。",
     audience: "需要逐行看清某件事走了多远的读者。",
     notFor: "两个不同主体的对垒，那属于 comparison。",

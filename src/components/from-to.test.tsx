@@ -49,40 +49,76 @@ function withN(n: number) {
   }
 }
 
-function panels(container: HTMLElement) {
-  return Array.from(container.querySelectorAll("rect")).map((r) => ({
-    x: Number(r.getAttribute("x")),
-    w: Number(r.getAttribute("width")),
-    h: Number(r.getAttribute("height")),
-    fill: r.getAttribute("fill"),
+function texts(container: HTMLElement) {
+  return Array.from(container.querySelectorAll("text")).map((t) => ({
+    text: t.textContent ?? "",
+    x: Number(t.getAttribute("x")),
+    y: Number(t.getAttribute("y")),
+    size: Number(t.getAttribute("font-size")),
+    anchor: t.getAttribute("text-anchor"),
   }))
 }
 
 describe("from_to component", () => {
-  it("draws two panels of the same height with one arrow between them", () => {
-    const { container } = svg(fromTo.render(target, { x: 88, y: 96, w: 1104 }, themed("brief")))
-    const two = panels(container)
-    expect(two).toHaveLength(2)
-    expect(two[0]!.h).toBe(two[1]!.h)
-    expect(two[0]!.w).toBe(two[1]!.w)
-    expect(two[1]!.x).toBeGreaterThan(two[0]!.x + two[0]!.w)
+  it("draws one table: a filled column for the destination, one arrow, no second panel", () => {
+    const ctx = themed("brief")
+    const { container } = svg(fromTo.render(target, { x: 88, y: 96, w: 1104 }, ctx))
+    const rects = Array.from(container.querySelectorAll("rect"))
+    expect(rects).toHaveLength(1)
+    expect(rects[0]!.getAttribute("fill")).toBe(ctx.colors.primary)
     expect(container.querySelectorAll("polygon")).toHaveLength(1)
   })
 
-  it("aligns each row across both panels so the move is read horizontally", () => {
+  it("names each row once, in a column of its own left of both values", () => {
     const { container } = svg(fromTo.render(target, { x: 88, y: 96, w: 1104 }, themed("brief")))
-    const rules = Array.from(container.querySelectorAll("line")).map((l) => Number(l.getAttribute("y1")))
-    // One rule above each row on each side, at the same four heights.
-    expect(rules).toHaveLength(8)
-    expect(new Set(rules).size).toBe(4)
+    const all = texts(container)
+    for (const row of target.rows) {
+      const hits = all.filter((t) => t.text === row.label)
+      expect(hits, row.label).toHaveLength(1)
+      // Left of the first value on its row.
+      const values = all.filter((t) => t.y === hits[0]!.y && t.size > hits[0]!.size)
+      expect(values.length).toBeGreaterThan(0)
+      for (const v of values) expect(v.x).toBeGreaterThan(hits[0]!.x)
+    }
   })
 
-  it("fills the arriving panel whole and leaves the starting one on the surface", () => {
-    const ctx = themed("brief")
-    const { container } = svg(fromTo.render(target, { x: 88, y: 96, w: 1104 }, ctx))
-    const [left, right] = panels(container)
-    expect(left!.fill).toBe(ctx.colors.surface)
-    expect(right!.fill).toBe(ctx.colors.primary)
+  it("sets a row's name and both its values on one baseline", () => {
+    const { container } = svg(fromTo.render(target, { x: 88, y: 96, w: 1104 }, themed("brief")))
+    const all = texts(container)
+    for (const row of target.rows) {
+      const y = all.find((t) => t.text === row.label)!.y
+      expect(all.some((t) => t.text === row.from && t.y === y), `${row.label} from`).toBe(true)
+      expect(all.some((t) => t.text === row.to && t.y === y), `${row.label} to`).toBe(true)
+      expect(all.some((t) => t.text === row.change && t.y === y), `${row.label} change`).toBe(true)
+    }
+  })
+
+  it("puts the destination values and their deltas inside the filled column", () => {
+    const { container } = svg(fromTo.render(target, { x: 88, y: 96, w: 1104 }, themed("brief")))
+    const panel = container.querySelector("rect")!
+    const left = Number(panel.getAttribute("x"))
+    const right = left + Number(panel.getAttribute("width"))
+    for (const row of target.rows) {
+      for (const text of [row.to, row.change]) {
+        const t = texts(container).find((e) => e.text === text)!
+        expect(t.x, text).toBeGreaterThanOrEqual(left)
+        expect(t.x, text).toBeLessThanOrEqual(right)
+      }
+    }
+  })
+
+  it("stands the arrow in the gutter between the two value columns", () => {
+    const { container } = svg(fromTo.render(target, { x: 88, y: 96, w: 1104 }, themed("brief")))
+    const points = (container.querySelector("polygon")!.getAttribute("points") ?? "")
+      .trim()
+      .split(/\s+/)
+      .map((p) => p.split(",").map(Number) as [number, number])
+    const arrowLeft = Math.min(...points.map(([x]) => x))
+    const arrowRight = Math.max(...points.map(([x]) => x))
+    const panelLeft = Number(container.querySelector("rect")!.getAttribute("x"))
+    const lastFrom = texts(container).find((t) => t.text === "12")!
+    expect(arrowLeft).toBeGreaterThan(lastFrom.x)
+    expect(arrowRight).toBeLessThan(panelLeft)
   })
 
   it("lets the arrow carry the accent and never a letter", () => {
@@ -95,32 +131,32 @@ describe("from_to component", () => {
 
   it("prints both values, the unit, the change and the span", () => {
     const { container } = svg(fromTo.render(target, { x: 88, y: 96, w: 1104 }, themed("brief")))
-    const text = Array.from(container.querySelectorAll("text")).map((t) => t.textContent ?? "").join("|")
+    const text = texts(container).map((t) => t.text).join("|")
     expect(text).toContain(target.from.title)
     expect(text).toContain(target.to.title)
     for (const row of target.rows) {
       expect(text).toContain(row.label)
       expect(text).toContain(row.change)
+      expect(text).toContain(row.unit)
     }
     expect(text).toContain("12 个月")
     expect(container.querySelectorAll("[data-dropped]").length).toBe(0)
   })
 
-  it("prints the change only on the arriving side, where the move landed", () => {
-    const { container } = svg(fromTo.render(target, { x: 88, y: 96, w: 1104 }, themed("brief")))
-    const [, right] = panels(container)
-    const changes = Array.from(container.querySelectorAll("text")).filter((t) =>
-      target.rows.some((row) => row.change === t.textContent),
-    )
-    expect(changes).toHaveLength(4)
-    for (const t of changes) expect(Number(t.getAttribute("x"))).toBeGreaterThan(right!.x)
+  it("declines a box too narrow for three columns rather than squeezing them", () => {
+    const { container } = svg(fromTo.render(target, { x: 88, y: 96, w: 470 }, themed("brief")))
+    expect(container.querySelectorAll("rect")).toHaveLength(0)
+    expect(container.querySelectorAll("text")).toHaveLength(0)
+    const marker = container.querySelector("[data-dropped]")
+    expect(marker?.getAttribute("data-dropped")).toBe("1")
+    expect(marker?.getAttribute("data-dropped-kind")).toBe("component")
   })
 
-  it("keeps the arriving panel visible on every theme, dark ones included", () => {
+  it("keeps the filled column visible on every theme, dark ones included", () => {
     for (const theme of listThemes().map((t) => t.id)) {
       const ctx = themed(theme)
       const { container } = svg(fromTo.render(target, { x: 88, y: 96, w: 1104 }, ctx))
-      const fill = panels(container)[1]!.fill!
+      const fill = container.querySelector("rect")!.getAttribute("fill")!
       expect(fill, theme).not.toBe(ctx.colors.surface)
       expect(contrastRatio(fill, ctx.colors.surface), theme).toBeGreaterThanOrEqual(2)
     }
@@ -135,12 +171,15 @@ describe("from_to component", () => {
       expect(h, `n=${n}`).toBeGreaterThan(0)
       expect(h, `n=${n}`).toBeLessThanOrEqual(400)
       const { container } = svg(fromTo.render(component, box, ctx))
-      for (const p of panels(container)) {
-        expect(p.h, `n=${n}`).toBeLessThanOrEqual(h + 1)
-        expect(p.x + p.w, `n=${n}`).toBeLessThanOrEqual(box.w + 1)
-      }
-      for (const t of container.querySelectorAll("text")) {
-        expect(Number(t.getAttribute("font-size")), t.textContent ?? "").toBeGreaterThanOrEqual(FORM_BODY_FLOOR)
+      const panel = container.querySelector("rect")!
+      expect(Number(panel.getAttribute("height")), `n=${n}`).toBeLessThanOrEqual(h + 1)
+      expect(
+        Number(panel.getAttribute("x")) + Number(panel.getAttribute("width")),
+        `n=${n}`,
+      ).toBeLessThanOrEqual(box.w + 1)
+      for (const t of texts(container)) {
+        expect(t.size, t.text).toBeGreaterThanOrEqual(FORM_BODY_FLOOR)
+        expect(t.y, t.text).toBeLessThanOrEqual(h + 1)
       }
     }
   })
