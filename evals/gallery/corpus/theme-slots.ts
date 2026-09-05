@@ -83,6 +83,7 @@ export const THEME_TABLE_REQUIRED_SURFACES = [
   "harvey_balls",
   "scorecard",
   "pictogram",
+  "word_cloud",
 ] as const
 
 export type ThemeChartType =
@@ -145,7 +146,7 @@ export const THEME_CONTENT_SLOTS: Record<string, readonly ThemeContentSlot[]> = 
   luxe: [slot("progress_donuts"), slot("swot"), slot("gantt"), slot("blockquote"), slot("device_mockup"), slot("flowchart"), slot("timeline")],
   memo: [chart("donut"), slot("paragraph"), slot("icon_cards"), slot("pest"), slot("blockquote"), slot("rings"), slot("waterfall")],
   museum: [slot("cycle"), slot("kpi_cards"), slot("org_tree"), slot("heatmap"), slot("people_cards"), slot("logo_wall"), slot("architecture")],
-  playbill: [slot("image_grid"), slot("data_table"), slot("callout"), slot("steps"), slot("five_forces"), slot("image"), slot("row_cards")],
+  playbill: [slot("image_grid"), slot("data_table"), slot("word_cloud"), slot("steps"), slot("five_forces"), slot("image"), slot("row_cards")],
   clinic: [slot("numbered_cards"), slot("comparison"), slot("sankey"), slot("people_cards"), slot("image_compare"), slot("issue_tree"), slot("swimlane")],
   runway: [slot("steps"), slot("data_table"), slot("product_cards"), slot("image_grid"), slot("chevron_process"), slot("verdict_banner"), slot("gantt")],
   stage: [slot("timeline"), slot("kpi_cards"), slot("pyramid"), slot("bmc"), slot("image"), slot("blockquote"), slot("architecture")],

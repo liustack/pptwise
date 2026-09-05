@@ -246,6 +246,14 @@ export const COMPONENT_BUILDERS: Record<string, (lex: Lexicon) => Component> = {
     })),
   }),
 
+  // The words this track's subject keeps coming back to, at the weights its
+  // own author gave them. Weight is a reading of frequency, not a function of
+  // how long the word is.
+  word_cloud: (lex) => ({
+    type: "word_cloud",
+    words: lex.frequencies.map((entry) => ({ text: entry.text, weight: entry.weight })),
+  }),
+
   // No `show_grid` here: a bar chart's house default is gridline-free
   // (round-4 review, `journal p05` — every bar already prints its value, see
   // `renderBar`'s own `showGrid` doc comment), and this page is the one the

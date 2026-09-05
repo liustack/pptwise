@@ -67,6 +67,7 @@ The table gives each component's normal kind home. A component may serve more th
 | `harvey_balls` | `data`, `comparison` |
 | `scorecard` | `data`, `comparison` |
 | `pictogram` | `data`, `fact` |
+| `word_cloud` | `data`, `list` |
 
 ## Lookalikes
 
@@ -99,6 +100,8 @@ The table gives each component's normal kind home. A component may serve more th
 
 - Use `pictogram` to land a rate as a countable number of people. Use `progress_donuts` when the rate itself is the subject.
 
+- Use `word_cloud` when the point is which words keep coming back. Use `chart` when the counts must be read and `tag_row` for a line of labels that carry no weight against each other.
+
 `architecture.layers` paints top to bottom by default. Set `direction: "bottom_up"` when the authored order should begin at the foundation. Keep the array in narrative order.
 
-`swot`, `bmc`, `waterfall`, `gantt`, `pest`, `five_forces`, `heatmap`, `sankey`, `harvey_balls`, `scorecard`, and `pictogram` are full-body components. Each must be the page's only component.
+`swot`, `bmc`, `waterfall`, `gantt`, `pest`, `five_forces`, `heatmap`, `sankey`, `harvey_balls`, `scorecard`, `pictogram`, and `word_cloud` are full-body components. Each must be the page's only component.

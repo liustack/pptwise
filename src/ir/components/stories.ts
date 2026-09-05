@@ -48,6 +48,7 @@ import * as swot from "./swot"
 import * as timeline from "./timeline"
 import * as verdictBanner from "./verdict-banner"
 import * as waterfall from "./waterfall"
+import * as wordCloud from "./word-cloud"
 import * as iceberg from "./iceberg"
 import * as issueTree from "./issue-tree"
 import * as orgTree from "./org-tree"
@@ -130,6 +131,7 @@ const COMPONENT_STORY_MODULES: Readonly<Record<string, ComponentStoryModule>> = 
   harvey_balls: harveyBalls,
   scorecard,
   pictogram,
+  word_cloud: wordCloud,
 }
 
 /**

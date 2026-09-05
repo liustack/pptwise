@@ -558,6 +558,34 @@ const BLOCK_CASES: readonly BlockCase[] = [
     component: { type: "pictogram", items: [{ filled: 7, label: "were set up in the first week" }] },
     expected: [{ filled: 7, label: "were set up in the first week" }],
   },
+  {
+    type: "word_cloud",
+    alias: "items",
+    canonical: "words",
+    component: {
+      type: "word_cloud",
+      items: [
+        { text: "renewal", weight: 4 },
+        { text: "success", weight: 4 },
+        { text: "churn", weight: 3 },
+        { text: "setup", weight: 3 },
+        { text: "seats", weight: 2 },
+        { text: "pricing", weight: 2 },
+        { text: "partners", weight: 1 },
+        { text: "training", weight: 1 },
+      ],
+    },
+    expected: [
+      { text: "renewal", weight: 4 },
+      { text: "success", weight: 4 },
+      { text: "churn", weight: 3 },
+      { text: "setup", weight: 3 },
+      { text: "seats", weight: 2 },
+      { text: "pricing", weight: 2 },
+      { text: "partners", weight: 1 },
+      { text: "training", weight: 1 },
+    ],
+  },
 ]
 
 describe("COMPONENT_FIELD_ALIASES: every row round-trips", () => {
@@ -1320,6 +1348,40 @@ const ITEM_CASES: readonly ItemCase[] = [
     item: { filled: 7, label: "were set up in the first week", kicker: "Of ten new customers" },
     expected: "Of ten new customers",
   },
+  {
+    type: "word_cloud",
+    itemsKey: "words",
+    alias: "label",
+    canonical: "text",
+    item: { label: "renewal", weight: 4 },
+    pad: [
+      { text: "success", weight: 4 },
+      { text: "churn", weight: 3 },
+      { text: "setup", weight: 3 },
+      { text: "seats", weight: 2 },
+      { text: "pricing", weight: 2 },
+      { text: "partners", weight: 1 },
+      { text: "training", weight: 1 },
+    ],
+    expected: "renewal",
+  },
+  {
+    type: "word_cloud",
+    itemsKey: "words",
+    alias: "count",
+    canonical: "weight",
+    item: { text: "renewal", count: 4 },
+    pad: [
+      { text: "success", weight: 4 },
+      { text: "churn", weight: 3 },
+      { text: "setup", weight: 3 },
+      { text: "seats", weight: 2 },
+      { text: "pricing", weight: 2 },
+      { text: "partners", weight: 1 },
+      { text: "training", weight: 1 },
+    ],
+    expected: 4,
+  },
 ]
 
 describe("COMPONENT_ITEM_FIELD_ALIASES: every row round-trips", () => {
@@ -1349,7 +1411,7 @@ describe("COMPONENT_ITEM_FIELD_ALIASES: every row round-trips", () => {
 // ── total pair count pinned (docs/changeset "53 total synonym pairs") ──────
 
 describe("total synonym-pair count", () => {
-  it("COMPONENT_FIELD_ALIASES + COMPONENT_ITEM_FIELD_ALIASES flatten to exactly 160 pairs", () => {
+  it("COMPONENT_FIELD_ALIASES + COMPONENT_ITEM_FIELD_ALIASES flatten to exactly 163 pairs", () => {
     // The "covers every row exactly once" completeness guards above only
     // prove BLOCK_CASES/ITEM_CASES stay in lockstep with each table's own
     // rows — a row deleted from a table *and* its matching test case would
@@ -1366,7 +1428,7 @@ describe("total synonym-pair count", () => {
       (n, specs) => n + specs.reduce((m, spec) => m + Object.keys(spec.aliases).length, 0),
       0,
     )
-    expect(blockCount + itemCount).toBe(160)
+    expect(blockCount + itemCount).toBe(163)
   })
 })
 

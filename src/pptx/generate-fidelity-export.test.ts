@@ -379,6 +379,23 @@ const COMPONENT_BY_TYPE: Record<Component["type"], Component> = {
       { filled: 9, caption: "Of ten renewals", label: "added seats", highlight: true },
     ],
   },
+  word_cloud: {
+    type: "word_cloud",
+    words: [
+      { text: "Renewal", weight: 4 },
+      { text: "Success", weight: 4 },
+      { text: "Churn", weight: 4 },
+      { text: "Setup", weight: 3 },
+      { text: "Seats", weight: 3 },
+      { text: "Response", weight: 3 },
+      { text: "Pricing", weight: 2 },
+      { text: "Migration", weight: 2 },
+      { text: "Reporting", weight: 2 },
+      { text: "Partners", weight: 1 },
+      { text: "Training", weight: 1 },
+      { text: "Handover", weight: 1 },
+    ],
+  },
   hub_spoke: {
     type: "hub_spoke",
     center: "Platform",
@@ -539,6 +556,7 @@ function noAssetIr(): PptxIR {
       contentSlide("Harvey balls", [COMPONENT_BY_TYPE.harvey_balls]),
       contentSlide("Scorecard", [COMPONENT_BY_TYPE.scorecard]),
       contentSlide("Pictogram", [COMPONENT_BY_TYPE.pictogram]),
+      contentSlide("Word cloud", [COMPONENT_BY_TYPE.word_cloud]),
       { type: "ending", heading: "Thanks", components: [] },
     ],
   }

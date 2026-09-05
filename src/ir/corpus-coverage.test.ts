@@ -557,6 +557,34 @@ const COVERAGE_ENTRIES: Record<string, unknown> = {
     type: "pictogram",
     rows: [{ filled: 11, label: "were set up in the first week" }],
   }),
+  // word_cloud's own hard check is the ban on a repeated word: a word appears
+  // once, at the weight its whole count earns.
+  "coverage/word_cloud-valid": minimalDeck({
+    type: "word_cloud",
+    words: [
+      { text: "renewal", weight: 4 },
+      { text: "success", weight: 4 },
+      { text: "churn", weight: 3 },
+      { text: "setup", weight: 3 },
+      { text: "seats", weight: 2 },
+      { text: "pricing", weight: 2 },
+      { text: "partners", weight: 1 },
+      { text: "training", weight: 1 },
+    ],
+  }),
+  "coverage/word_cloud-tripwire": minimalDeck({
+    type: "word_cloud",
+    words: [
+      { text: "renewal", weight: 4 },
+      { text: "renewal", weight: 4 },
+      { text: "churn", weight: 3 },
+      { text: "setup", weight: 3 },
+      { text: "seats", weight: 2 },
+      { text: "pricing", weight: 2 },
+      { text: "partners", weight: 1 },
+      { text: "training", weight: 1 },
+    ],
+  }),
 }
 
 // Assembles the validation corpus from all three sources, keyed by

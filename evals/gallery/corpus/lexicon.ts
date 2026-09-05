@@ -109,6 +109,18 @@ export interface Tally {
   readonly label: string
 }
 
+/**
+ * A word this track's subject keeps coming back to, and how loudly.
+ *
+ * Weight is a reading of how often it came up, not a function of how long the
+ * word is: sorting a general label pool by length and calling the result a
+ * frequency says nothing about the subject.
+ */
+export interface Frequency {
+  readonly text: string
+  readonly weight: 1 | 2 | 3 | 4
+}
+
 export interface Person {
   readonly name: string
   readonly role: string
@@ -250,6 +262,8 @@ export interface Lexicon {
   readonly metrics: readonly Metric[]
   /** Technology / capability tags, <= 24 chars each. */
   readonly tags: Pool
+  /** The words this subject keeps coming back to, weighted by how often — at least 14. */
+  readonly frequencies: readonly Frequency[]
   /** Three of this subject's own proportions, each restated as a count out of ten. */
   readonly tallies: readonly Tally[]
   /** Promises this subject made and what came of them — at least 5. */
@@ -548,6 +562,22 @@ const zh: Lexicon = {
     "SCIMv2",
     "审计日志",
     "Kubernetes",
+  ],
+  frequencies: [
+    { text: "续约率", weight: 4 },
+    { text: "开通周期", weight: 4 },
+    { text: "席位扩容", weight: 4 },
+    { text: "自助报表", weight: 3 },
+    { text: "集成能力", weight: 3 },
+    { text: "服务响应", weight: 3 },
+    { text: "价格压力", weight: 3 },
+    { text: "渠道伙伴", weight: 2 },
+    { text: "数据迁移", weight: 2 },
+    { text: "权限治理", weight: 2 },
+    { text: "工单响应", weight: 2 },
+    { text: "培训认证", weight: 1 },
+    { text: "教育客群", weight: 1 },
+    { text: "现场巡检", weight: 1 },
   ],
   tallies: [
     { filled: 7, caption: "十家新签客户中", label: "在签约后第一周内完成开通" },
@@ -881,6 +911,22 @@ const en: Lexicon = {
     "LDAP",
     "Kubernetes",
   ],
+  frequencies: [
+    { text: "Renewal", weight: 4 },
+    { text: "Setup time", weight: 4 },
+    { text: "Seat growth", weight: 4 },
+    { text: "Self-serve", weight: 3 },
+    { text: "Integrations", weight: 3 },
+    { text: "Response time", weight: 3 },
+    { text: "Pricing", weight: 3 },
+    { text: "Partners", weight: 2 },
+    { text: "Migration", weight: 2 },
+    { text: "Permissions", weight: 2 },
+    { text: "Tickets", weight: 2 },
+    { text: "Training", weight: 1 },
+    { text: "Onboarding kit", weight: 1 },
+    { text: "Site visits", weight: 1 },
+  ],
   tallies: [
     { filled: 7, caption: "Of ten new customers", label: "were live in the first week" },
     { filled: 5, caption: "Of ten workspace admins", label: "kept self-serve reporting on" },
@@ -1212,6 +1258,22 @@ const mixed: Lexicon = {
     "Spot 实例",
     "PostgreSQL RDS",
     "SLSA 签名",
+  ],
+  frequencies: [
+    { text: "续约率", weight: 4 },
+    { text: "开通周期", weight: 4 },
+    { text: "席位扩容", weight: 4 },
+    { text: "Insights", weight: 3 },
+    { text: "API 集成", weight: 3 },
+    { text: "服务响应", weight: 3 },
+    { text: "价格压力", weight: 3 },
+    { text: "渠道伙伴", weight: 2 },
+    { text: "数据迁移", weight: 2 },
+    { text: "SSO 权限", weight: 2 },
+    { text: "工单响应", weight: 2 },
+    { text: "培训认证", weight: 1 },
+    { text: "教育客群", weight: 1 },
+    { text: "现场巡检", weight: 1 },
   ],
   tallies: [
     { filled: 7, caption: "十家新签客户中", label: "第一周内完成 onboarding" },

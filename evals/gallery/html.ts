@@ -126,6 +126,7 @@ export const COMPONENT_FAMILIES: readonly GroupFamily[] = [
       "insight_panel",
       "verdict_banner",
       "quote_wall",
+      "word_cloud",
     ],
   },
   { label: "卡片", members: ["kpi_cards", "icon_cards", "numbered_cards", "row_cards", "people_cards"] },

@@ -1566,6 +1566,10 @@ const MUTED_SURFACE_CLASS: Record<string, MutedSurfaceClass> = {
   // denominator, both on the page background; the hollow figures use
   // `colors.border ?? colors.muted` as a *stroke*, never a text fill.
   pictogram: "page-bg",
+  // word-cloud.tsx sets its two small tiers in `colors.muted` on the panel it
+  // paints itself, an unblended `colors.surface` rect — the same flat-surface
+  // shape as icon_cards' description text.
+  word_cloud: "flat-surface",
 }
 
 describe("colors.muted component-type coverage (task-2 fix round, backlog 5a completeness sweep)", () => {

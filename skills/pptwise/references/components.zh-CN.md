@@ -72,6 +72,7 @@ mirror_of: skills/pptwise/references/components.md
 | `harvey_balls` | `data`, `comparison` |
 | `scorecard` | `data`, `comparison` |
 | `pictogram` | `data`, `fact` |
+| `word_cloud` | `data`, `list` |
 
 ## 相近组件
 
@@ -104,6 +105,8 @@ mirror_of: skills/pptwise/references/components.md
 
 - 要把比例还原成数得过来的人时用 `pictogram`。比例本身是主角时用 `progress_donuts`。
 
+- 重点是「哪些词反复出现」时用 `word_cloud`。次数要被读出来时用 `chart`，一排等重短标签用 `tag_row`。
+
 `architecture.layers` 默认从上向下绘制。作者按基座优先的顺序写作时，设置 `direction: "bottom_up"`，不要手工倒置数组。
 
-`swot`、`bmc`、`waterfall`、`gantt`、`pest`、`five_forces`、`heatmap`、`sankey`、`harvey_balls`、`scorecard` 与 `pictogram` 是全页组件。它们必须独占页面。
+`swot`、`bmc`、`waterfall`、`gantt`、`pest`、`five_forces`、`heatmap`、`sankey`、`harvey_balls`、`scorecard`、`pictogram` 与 `word_cloud` 是全页组件。它们必须独占页面。

@@ -87,6 +87,7 @@ import { aliases as valueChainAliases } from "./components/value-chain"
 import { aliases as harveyBallsAliases } from "./components/harvey-balls"
 import { aliases as scorecardAliases } from "./components/scorecard"
 import { aliases as pictogramAliases } from "./components/pictogram"
+import { aliases as wordCloudAliases } from "./components/word-cloud"
 
 /** One component type's `{ aliasKey: canonicalKey }` map. */
 export type FieldAliasMap = Readonly<Record<string, string>>
@@ -150,6 +151,8 @@ export const COMPONENT_FIELD_ALIASES: Readonly<Record<string, FieldAliasMap>> = 
   scorecard: scorecardAliases.block,
   // Same generic-container slip as scorecard's `items` above.
   pictogram: pictogramAliases.block,
+  // Same again, on the array a word cloud calls `words`.
+  word_cloud: wordCloudAliases.block,
   // decision_tree names its root string after what it is — a question — and
   // its child array after what the lines out of it are. A model reaches for
   // the generic `title` for the first, "decision" for the component's own
@@ -272,6 +275,7 @@ export const COMPONENT_ITEM_FIELD_ALIASES: Readonly<Record<string, readonly Item
   harvey_balls: harveyBallsAliases.items,
   scorecard: scorecardAliases.items,
   pictogram: pictogramAliases.items,
+  word_cloud: wordCloudAliases.items,
 }
 
 /**

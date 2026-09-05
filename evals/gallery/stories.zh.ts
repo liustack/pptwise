@@ -632,6 +632,13 @@ export const STORY_ZH: Readonly<Record<string, Partial<Record<DesignStoryField, 
     audience: "需要先知道答案再听论证的满场听众。",
     notFor: "别人的话，那属于 blockquote。",
   },
+  "component:word_cloud": {
+    name: "复调",
+    story: "一屋子人反复说的那些词，按四档字号从中心向外排开，没有一个是竖着的。一墙便利贴被人数完之后的样子。",
+    positioning: "结论是「哪些词反复出现」，而不是「各出现了多少次」。次数本身要被读出来时用条形图。",
+    audience: "想先看清说了什么、再看数字的读者。",
+    notFor: "需要精确比较的次数，那属于图表。",
+  },
   "component:waterfall": {
     name: "桥式",
     story: "柱子从累计值上下台阶，每根标注了是什么加上去或减下来的，收在余额上。业绩报告里的桥式图。",
