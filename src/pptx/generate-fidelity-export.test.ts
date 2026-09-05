@@ -393,6 +393,39 @@ const COMPONENT_BY_TYPE: Record<Component["type"], Component> = {
       { name: "王小明", role: "Product Manager", org: "Acme Corp" },
     ],
   },
+  org_tree: {
+    type: "org_tree",
+    root: { name: "Ada", role: "Lead" },
+    children: [{ name: "Bo" }, { name: "Cy" }],
+  },
+  issue_tree: {
+    type: "issue_tree",
+    question: "Why did renewals stall?",
+    branches: [{ label: "Onboarding" }, { label: "Pricing" }],
+  },
+  pyramid: {
+    type: "pyramid",
+    layers: [{ label: "Claim" }, { label: "Evidence" }, { label: "Data" }],
+  },
+  iceberg: {
+    type: "iceberg",
+    above: ["Onboarding feels slow"],
+    below: ["Six systems", "Three seat definitions", "No write-back"],
+  },
+  pillar_model: {
+    type: "pillar_model",
+    goal: "Hold renewal at 93%",
+    pillars: [
+      { title: "Onboarding", value: "5", unit: "weeks" },
+      { title: "Activation", value: "88", unit: "%" },
+    ],
+    base: "One shared customer record",
+  },
+  value_chain: {
+    type: "value_chain",
+    primary: [{ label: "Acquire" }, { label: "Prove" }, { label: "Renew" }],
+    support: [{ label: "Platform" }, { label: "People" }],
+  },
 }
 
 const ONE_PX_PNG =
@@ -448,6 +481,28 @@ function noAssetIr(): PptxIR {
       contentSlide("Blockquote + Paragraph", [COMPONENT_BY_TYPE.blockquote, COMPONENT_BY_TYPE.paragraph]),
       contentSlide("Bullets + Code", [COMPONENT_BY_TYPE.bullets, COMPONENT_BY_TYPE.code]),
       contentSlide("Data Table", [COMPONENT_BY_TYPE.data_table]),
+      // Twelve more the deck had never drawn before the completeness
+      // assertion below went in: registered as fixtures, on no slide.
+      contentSlide("Cycle", [COMPONENT_BY_TYPE.cycle]),
+      contentSlide("People", [COMPONENT_BY_TYPE.people_cards]),
+      contentSlide("Device mockup (no resolvable asset)", [COMPONENT_BY_TYPE.device_mockup]),
+      contentSlide("Staircase", [COMPONENT_BY_TYPE.staircase]),
+      contentSlide("Chevrons", [COMPONENT_BY_TYPE.chevron_process]),
+      contentSlide("Swimlane", [COMPONENT_BY_TYPE.swimlane]),
+      contentSlide("Journey", [COMPONENT_BY_TYPE.journey_map]),
+      contentSlide("Decision tree", [COMPONENT_BY_TYPE.decision_tree]),
+      contentSlide("From / to", [COMPONENT_BY_TYPE.from_to]),
+      contentSlide("Logo wall", [COMPONENT_BY_TYPE.logo_wall]),
+      contentSlide("Quote wall", [COMPONENT_BY_TYPE.quote_wall]),
+      // The hierarchy family and the chain each own a page: every one of them
+      // measures around 400px and declares a decline rather than shrink, so
+      // pairing two would send one of them off the page.
+      contentSlide("Org tree", [COMPONENT_BY_TYPE.org_tree]),
+      contentSlide("Issue tree", [COMPONENT_BY_TYPE.issue_tree]),
+      contentSlide("Pyramid", [COMPONENT_BY_TYPE.pyramid]),
+      contentSlide("Iceberg", [COMPONENT_BY_TYPE.iceberg]),
+      contentSlide("Pillar model", [COMPONENT_BY_TYPE.pillar_model]),
+      contentSlide("Value chain", [COMPONENT_BY_TYPE.value_chain]),
       // The 3 image-family types, all pointed at unresolvable asset ids —
       // must fall back to a placeholder, never emit `<image>`.
       // One per page for the same reason as RowCards/Steps above — all
@@ -489,6 +544,21 @@ function slideParts(zip: JSZip): string[] {
 describe("component-type fixture completeness", () => {
   it("COMPONENT_BY_TYPE covers every entry in COMPONENT_TYPES — fails the moment a new component type ships uncovered", () => {
     expect(Object.keys(COMPONENT_BY_TYPE).sort()).toEqual([...COMPONENT_TYPES].sort())
+  })
+
+  // Registering a fixture only proves a literal exists. Until this assertion
+  // landed, ten component types sat in `COMPONENT_BY_TYPE` and appeared on no
+  // slide of the deck the export test actually converts, so "covers every
+  // component type" passed while those ten never touched the export chain.
+  it("puts every registered fixture on a slide of the deck the export test converts", () => {
+    // `product_cards` is the one type this deck cannot carry: a card without
+    // its picture is not a smaller card, so the component drops it, and this
+    // deck resolves no assets at all by construction. It rides the
+    // asset-bearing deck instead, which the test below converts.
+    const ASSET_BOUND = ["product_cards"]
+    const drawn = new Set<string>(withAssetIr().slides.flatMap((slide) => slide.components.map((c) => c.type)))
+    const missing = [...COMPONENT_TYPES].filter((type) => !drawn.has(type)).sort()
+    expect(missing, `these types export nothing: ${missing.join(", ")}`).toEqual(ASSET_BOUND)
   })
 })
 
