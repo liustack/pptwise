@@ -206,6 +206,11 @@
       "geometry": "1c4g17r",
       "color": "1ayxmnf"
     },
+    "almanac--comp--concept-equation--zh": {
+      "hash": "1lhczmz",
+      "geometry": "1gsv55b",
+      "color": "lc4xvk"
+    },
     "almanac--comp--cycle--zh": {
       "hash": "1izwx0l",
       "geometry": "17b7s6a",
@@ -230,6 +235,11 @@
       "hash": "1vcxiwj",
       "geometry": "ec0exf",
       "color": "59bro7"
+    },
+    "almanac--comp--fishbone--zh": {
+      "hash": "mr7cp7",
+      "geometry": "17f8ric",
+      "color": "1qd5hbz"
     },
     "almanac--comp--five-forces--zh": {
       "hash": "n0wmop",
@@ -356,6 +366,11 @@
       "geometry": "he16wp",
       "color": "1yjy1tf"
     },
+    "almanac--comp--positioning-map--zh": {
+      "hash": "8isga",
+      "geometry": "10tg06o",
+      "color": "1hix9p4"
+    },
     "almanac--comp--product-cards--zh": {
       "hash": "lbq6hr",
       "geometry": "d1ux4s",
@@ -365,6 +380,11 @@
       "hash": "1qj2mkz",
       "geometry": "uuh7kx",
       "color": "we3yhd"
+    },
+    "almanac--comp--pros-cons--zh": {
+      "hash": "52555t",
+      "geometry": "7gz6d2",
+      "color": "z3mfbn"
     },
     "almanac--comp--pyramid--zh": {
       "hash": "15tup3p",
@@ -401,6 +421,11 @@
       "geometry": "xe3yks",
       "color": "1w9y74l"
     },
+    "almanac--comp--segmented-wheel--zh": {
+      "hash": "kef0em",
+      "geometry": "16snlt6",
+      "color": "6wtkkx"
+    },
     "almanac--comp--staircase--zh": {
       "hash": "19q66iz",
       "geometry": "1h3nbdj",
@@ -430,6 +455,11 @@
       "hash": "82niub",
       "geometry": "1reft2m",
       "color": "h78865"
+    },
+    "almanac--comp--venn--zh": {
+      "hash": "ty03ez",
+      "geometry": "1brk2a1",
+      "color": "1lnc4x5"
     },
     "almanac--comp--verdict-banner--zh": {
       "hash": "1mgvm1p",
@@ -472,9 +502,9 @@
       "color": "1n3xv7g"
     },
     "arena--deck--p06": {
-      "hash": "1q6osls",
-      "geometry": "1056lfp",
-      "color": "ieyh84"
+      "hash": "1xgpml3",
+      "geometry": "138l74s",
+      "color": "1javp2i"
     },
     "arena--deck--p07": {
       "hash": "1d0eeq8",
@@ -651,6 +681,11 @@
       "geometry": "bud714",
       "color": "pnxs5f"
     },
+    "arena--comp--concept-equation--zh": {
+      "hash": "1ian26w",
+      "geometry": "t3iimt",
+      "color": "1n1glet"
+    },
     "arena--comp--cycle--zh": {
       "hash": "5fjchr",
       "geometry": "137zm41",
@@ -675,6 +710,11 @@
       "hash": "q4ynkn",
       "geometry": "mwaj6f",
       "color": "1sghmeo"
+    },
+    "arena--comp--fishbone--zh": {
+      "hash": "124fljx",
+      "geometry": "owl249",
+      "color": "1c2r2tr"
     },
     "arena--comp--five-forces--zh": {
       "hash": "64m3yj",
@@ -801,6 +841,11 @@
       "geometry": "1l1oavj",
       "color": "2vgk2e"
     },
+    "arena--comp--positioning-map--zh": {
+      "hash": "d6vysl",
+      "geometry": "v9qib1",
+      "color": "1eatfmc"
+    },
     "arena--comp--product-cards--zh": {
       "hash": "11j4oah",
       "geometry": "p5wf1z",
@@ -810,6 +855,11 @@
       "hash": "ga8gwh",
       "geometry": "1ysawge",
       "color": "15zig7i"
+    },
+    "arena--comp--pros-cons--zh": {
+      "hash": "lpzqgc",
+      "geometry": "1f7c2s6",
+      "color": "12d9cn4"
     },
     "arena--comp--pyramid--zh": {
       "hash": "9qoj6d",
@@ -846,6 +896,11 @@
       "geometry": "1nj8ejr",
       "color": "9du1s0"
     },
+    "arena--comp--segmented-wheel--zh": {
+      "hash": "17hm6pp",
+      "geometry": "vmdte9",
+      "color": "2e90do"
+    },
     "arena--comp--staircase--zh": {
       "hash": "sm34nx",
       "geometry": "1t7k8j3",
@@ -875,6 +930,11 @@
       "hash": "1foxto9",
       "geometry": "1b1i6p8",
       "color": "1kyo6x8"
+    },
+    "arena--comp--venn--zh": {
+      "hash": "10on450",
+      "geometry": "eh25sc",
+      "color": "1yg8ukz"
     },
     "arena--comp--verdict-banner--zh": {
       "hash": "1jolfvd",
@@ -917,9 +977,9 @@
       "color": "5rz791"
     },
     "brief--deck--p06": {
-      "hash": "iyy9m0",
-      "geometry": "yk31ir",
-      "color": "1ooap9l"
+      "hash": "1pllbln",
+      "geometry": "1jwf7ll",
+      "color": "rbp0eu"
     },
     "brief--deck--p07": {
       "hash": "9iqj7n",
@@ -1281,6 +1341,21 @@
       "geometry": "ta19ip",
       "color": "9v11nk"
     },
+    "brief--comp--concept-equation--zh": {
+      "hash": "19fu29o",
+      "geometry": "zhemxq",
+      "color": "zwqxgb"
+    },
+    "brief--comp--concept-equation--en": {
+      "hash": "rsmj4z",
+      "geometry": "1epp1zp",
+      "color": "j3ucdo"
+    },
+    "brief--comp--concept-equation--mixed": {
+      "hash": "balyji",
+      "geometry": "1kqnc3a",
+      "color": "7e5akm"
+    },
     "brief--comp--cycle--zh": {
       "hash": "1925rr9",
       "geometry": "1s1a7tx",
@@ -1355,6 +1430,21 @@
       "hash": "19tdzj1",
       "geometry": "bjdr3t",
       "color": "vwo3t9"
+    },
+    "brief--comp--fishbone--zh": {
+      "hash": "18475n5",
+      "geometry": "mhrzb6",
+      "color": "prczuf"
+    },
+    "brief--comp--fishbone--en": {
+      "hash": "1bpdbd9",
+      "geometry": "1hyzghs",
+      "color": "5h0jy4"
+    },
+    "brief--comp--fishbone--mixed": {
+      "hash": "9izlyu",
+      "geometry": "1onceu",
+      "color": "lp8jhd"
     },
     "brief--comp--five-forces--zh": {
       "hash": "5uvjbl",
@@ -1731,6 +1821,21 @@
       "geometry": "n15ka0",
       "color": "yhu6bj"
     },
+    "brief--comp--positioning-map--zh": {
+      "hash": "ypxahh",
+      "geometry": "pg3opw",
+      "color": "1ta9d0y"
+    },
+    "brief--comp--positioning-map--en": {
+      "hash": "1hajtly",
+      "geometry": "6usg37",
+      "color": "1e5q6s3"
+    },
+    "brief--comp--positioning-map--mixed": {
+      "hash": "1yzfzmm",
+      "geometry": "11z4orx",
+      "color": "1ta9d0y"
+    },
     "brief--comp--product-cards--zh": {
       "hash": "1snbaxk",
       "geometry": "yqf044",
@@ -1760,6 +1865,21 @@
       "hash": "95dr1c",
       "geometry": "x3quzz",
       "color": "1m418z5"
+    },
+    "brief--comp--pros-cons--zh": {
+      "hash": "11lexz6",
+      "geometry": "b40cpd",
+      "color": "1hxize"
+    },
+    "brief--comp--pros-cons--en": {
+      "hash": "1sz9acv",
+      "geometry": "buiuvc",
+      "color": "1v79l0z"
+    },
+    "brief--comp--pros-cons--mixed": {
+      "hash": "1vrp9eb",
+      "geometry": "1wo0uc8",
+      "color": "1hxize"
     },
     "brief--comp--pyramid--zh": {
       "hash": "11hojt5",
@@ -1866,6 +1986,21 @@
       "geometry": "1nz4r03",
       "color": "term49"
     },
+    "brief--comp--segmented-wheel--zh": {
+      "hash": "1srbzo",
+      "geometry": "h6hi9l",
+      "color": "201kbm"
+    },
+    "brief--comp--segmented-wheel--en": {
+      "hash": "s8e6vb",
+      "geometry": "11818kl",
+      "color": "1xlar73"
+    },
+    "brief--comp--segmented-wheel--mixed": {
+      "hash": "1nr0mvj",
+      "geometry": "1p8lsac",
+      "color": "1d4edr6"
+    },
     "brief--comp--staircase--zh": {
       "hash": "18dss6a",
       "geometry": "1qh22bw",
@@ -1955,6 +2090,21 @@
       "hash": "egh24z",
       "geometry": "1g8j6ln",
       "color": "cdhege"
+    },
+    "brief--comp--venn--zh": {
+      "hash": "1dqxyd4",
+      "geometry": "y3owr8",
+      "color": "4izkxg"
+    },
+    "brief--comp--venn--en": {
+      "hash": "1c3kb40",
+      "geometry": "129p4il",
+      "color": "to54cr"
+    },
+    "brief--comp--venn--mixed": {
+      "hash": "8zkg2d",
+      "geometry": "pnc7k6",
+      "color": "txwrqo"
     },
     "brief--comp--verdict-banner--zh": {
       "hash": "17a2kjw",
@@ -2191,6 +2341,11 @@
       "geometry": "1m0kkii",
       "color": "1t4afh3"
     },
+    "bulletin--comp--concept-equation--zh": {
+      "hash": "1p6p1k6",
+      "geometry": "l4joxh",
+      "color": "6103qw"
+    },
     "bulletin--comp--cycle--zh": {
       "hash": "15sdlo",
       "geometry": "19nlrk2",
@@ -2215,6 +2370,11 @@
       "hash": "194somt",
       "geometry": "wsxwkv",
       "color": "f0cbpn"
+    },
+    "bulletin--comp--fishbone--zh": {
+      "hash": "1s5cri2",
+      "geometry": "1o6csoy",
+      "color": "1mq97wp"
     },
     "bulletin--comp--five-forces--zh": {
       "hash": "97knrh",
@@ -2341,6 +2501,11 @@
       "geometry": "1nce3bi",
       "color": "1cj381b"
     },
+    "bulletin--comp--positioning-map--zh": {
+      "hash": "9vaqhw",
+      "geometry": "z7ekpm",
+      "color": "1hztd8f"
+    },
     "bulletin--comp--product-cards--zh": {
       "hash": "ymfz91",
       "geometry": "1szf6a3",
@@ -2350,6 +2515,11 @@
       "hash": "1p2six6",
       "geometry": "nfeb2r",
       "color": "1v3ame7"
+    },
+    "bulletin--comp--pros-cons--zh": {
+      "hash": "humlbx",
+      "geometry": "n3gvov",
+      "color": "16z4iof"
     },
     "bulletin--comp--pyramid--zh": {
       "hash": "19yf38f",
@@ -2386,6 +2556,11 @@
       "geometry": "137dkd",
       "color": "1c0lgub"
     },
+    "bulletin--comp--segmented-wheel--zh": {
+      "hash": "1kwyapq",
+      "geometry": "1mu1zqd",
+      "color": "1lbb57g"
+    },
     "bulletin--comp--staircase--zh": {
       "hash": "cgd0e2",
       "geometry": "9iry6t",
@@ -2415,6 +2590,11 @@
       "hash": "9hf0o3",
       "geometry": "jkhmsp",
       "color": "eqts2q"
+    },
+    "bulletin--comp--venn--zh": {
+      "hash": "w2sql5",
+      "geometry": "jc97zi",
+      "color": "10wm6l9"
     },
     "bulletin--comp--verdict-banner--zh": {
       "hash": "16w6j",
@@ -2621,6 +2801,11 @@
       "geometry": "o5zq4v",
       "color": "ty2jno"
     },
+    "clinic--comp--concept-equation--zh": {
+      "hash": "19xzi10",
+      "geometry": "1l96sz1",
+      "color": "vt6495"
+    },
     "clinic--comp--cycle--zh": {
       "hash": "zcozus",
       "geometry": "55cq0h",
@@ -2645,6 +2830,11 @@
       "hash": "b3kqeu",
       "geometry": "aiuumh",
       "color": "13w4vco"
+    },
+    "clinic--comp--fishbone--zh": {
+      "hash": "emf3s",
+      "geometry": "1vit416",
+      "color": "qqwv5x"
     },
     "clinic--comp--five-forces--zh": {
       "hash": "n26rx8",
@@ -2771,6 +2961,11 @@
       "geometry": "13o6nr9",
       "color": "1bd0pjd"
     },
+    "clinic--comp--positioning-map--zh": {
+      "hash": "owcr8b",
+      "geometry": "lqz8uk",
+      "color": "1vki7m2"
+    },
     "clinic--comp--product-cards--zh": {
       "hash": "hi188h",
       "geometry": "14vo9tj",
@@ -2780,6 +2975,11 @@
       "hash": "1yu1tbc",
       "geometry": "19ep81p",
       "color": "17ipziv"
+    },
+    "clinic--comp--pros-cons--zh": {
+      "hash": "1hpsob3",
+      "geometry": "12oybzs",
+      "color": "135k1xw"
     },
     "clinic--comp--pyramid--zh": {
       "hash": "162rtfi",
@@ -2816,6 +3016,11 @@
       "geometry": "1liqz6j",
       "color": "12xqjpn"
     },
+    "clinic--comp--segmented-wheel--zh": {
+      "hash": "11poytb",
+      "geometry": "hye7gt",
+      "color": "1gnjez7"
+    },
     "clinic--comp--staircase--zh": {
       "hash": "1lrrznx",
       "geometry": "1j3vde4",
@@ -2845,6 +3050,11 @@
       "hash": "1sr48wc",
       "geometry": "sz7ztt",
       "color": "549kk1"
+    },
+    "clinic--comp--venn--zh": {
+      "hash": "aqswwr",
+      "geometry": "1an3aa2",
+      "color": "pi5gyk"
     },
     "clinic--comp--verdict-banner--zh": {
       "hash": "2zfhdr",
@@ -3051,6 +3261,11 @@
       "geometry": "ilu7yb",
       "color": "1l9apli"
     },
+    "crayon--comp--concept-equation--zh": {
+      "hash": "t4pdtj",
+      "geometry": "1491itw",
+      "color": "1tv1s39"
+    },
     "crayon--comp--cycle--zh": {
       "hash": "1s6dldw",
       "geometry": "b90vyn",
@@ -3075,6 +3290,11 @@
       "hash": "1qvymiv",
       "geometry": "1hu4fm5",
       "color": "717w0j"
+    },
+    "crayon--comp--fishbone--zh": {
+      "hash": "1796xpv",
+      "geometry": "1c1h10s",
+      "color": "wrd2kt"
     },
     "crayon--comp--five-forces--zh": {
       "hash": "1kdq7qc",
@@ -3201,6 +3421,11 @@
       "geometry": "ntjjk0",
       "color": "1rnoh8y"
     },
+    "crayon--comp--positioning-map--zh": {
+      "hash": "1dv45wx",
+      "geometry": "dl1qie",
+      "color": "ygl0fc"
+    },
     "crayon--comp--product-cards--zh": {
       "hash": "1d3qs34",
       "geometry": "sqmtzv",
@@ -3210,6 +3435,11 @@
       "hash": "1vom7sd",
       "geometry": "197dutu",
       "color": "1d9xify"
+    },
+    "crayon--comp--pros-cons--zh": {
+      "hash": "1fl0317",
+      "geometry": "1fybj6x",
+      "color": "1ln2eif"
     },
     "crayon--comp--pyramid--zh": {
       "hash": "pso84i",
@@ -3246,6 +3476,11 @@
       "geometry": "1b210r4",
       "color": "19t35s1"
     },
+    "crayon--comp--segmented-wheel--zh": {
+      "hash": "1q4dpfd",
+      "geometry": "18y9vo2",
+      "color": "1e89p2w"
+    },
     "crayon--comp--staircase--zh": {
       "hash": "1j850di",
       "geometry": "1x7i6j1",
@@ -3275,6 +3510,11 @@
       "hash": "342klm",
       "geometry": "1575yw8",
       "color": "6za4gi"
+    },
+    "crayon--comp--venn--zh": {
+      "hash": "1apkioa",
+      "geometry": "n8jrem",
+      "color": "e6kghu"
     },
     "crayon--comp--verdict-banner--zh": {
       "hash": "4obetu",
@@ -3337,9 +3577,9 @@
       "color": "1nx62eb"
     },
     "ember--deck--p09": {
-      "hash": "o2cdbg",
-      "geometry": "1219mwj",
-      "color": "nuvz1n"
+      "hash": "r6kclv",
+      "geometry": "ocqws",
+      "color": "aiduhq"
     },
     "ember--deck--p10": {
       "hash": "yzml6j",
@@ -3486,6 +3726,11 @@
       "geometry": "1319zqm",
       "color": "1wros9j"
     },
+    "ember--comp--concept-equation--zh": {
+      "hash": "ekhdol",
+      "geometry": "81xje1",
+      "color": "1cipzlo"
+    },
     "ember--comp--cycle--zh": {
       "hash": "1ovljyf",
       "geometry": "1n0j3fj",
@@ -3510,6 +3755,11 @@
       "hash": "13vvke0",
       "geometry": "fjnvvh",
       "color": "1qts0vg"
+    },
+    "ember--comp--fishbone--zh": {
+      "hash": "1pek8cj",
+      "geometry": "jwpplo",
+      "color": "z9svej"
     },
     "ember--comp--five-forces--zh": {
       "hash": "iv23lc",
@@ -3636,6 +3886,11 @@
       "geometry": "giy7bk",
       "color": "8wmea4"
     },
+    "ember--comp--positioning-map--zh": {
+      "hash": "9j3qqd",
+      "geometry": "1uqdrbr",
+      "color": "7th4v9"
+    },
     "ember--comp--product-cards--zh": {
       "hash": "1k212uu",
       "geometry": "rlb0st",
@@ -3645,6 +3900,11 @@
       "hash": "17tjjda",
       "geometry": "12wir98",
       "color": "1l1ik0f"
+    },
+    "ember--comp--pros-cons--zh": {
+      "hash": "1e43u9b",
+      "geometry": "5h2hqn",
+      "color": "6j7fqf"
     },
     "ember--comp--pyramid--zh": {
       "hash": "5txbkq",
@@ -3681,6 +3941,11 @@
       "geometry": "19z4p5c",
       "color": "1w5jd4o"
     },
+    "ember--comp--segmented-wheel--zh": {
+      "hash": "11whpen",
+      "geometry": "1sddsr8",
+      "color": "fluyaf"
+    },
     "ember--comp--staircase--zh": {
       "hash": "16y96s7",
       "geometry": "191fg81",
@@ -3710,6 +3975,11 @@
       "hash": "ralhuh",
       "geometry": "2xnedz",
       "color": "1gex3ua"
+    },
+    "ember--comp--venn--zh": {
+      "hash": "1uj7rok",
+      "geometry": "31ljhr",
+      "color": "stp2un"
     },
     "ember--comp--verdict-banner--zh": {
       "hash": "1c0tywh",
@@ -3931,6 +4201,11 @@
       "geometry": "td1i4p",
       "color": "pzrxa1"
     },
+    "heritage--comp--concept-equation--zh": {
+      "hash": "y6gi79",
+      "geometry": "1wvw9y",
+      "color": "oxz5gb"
+    },
     "heritage--comp--cycle--zh": {
       "hash": "6yv6q4",
       "geometry": "fjzud7",
@@ -3955,6 +4230,11 @@
       "hash": "tlffxe",
       "geometry": "t3pm38",
       "color": "15v2qu5"
+    },
+    "heritage--comp--fishbone--zh": {
+      "hash": "dmydca",
+      "geometry": "1kug43s",
+      "color": "mi4tdi"
     },
     "heritage--comp--five-forces--zh": {
       "hash": "1uab7u7",
@@ -4081,6 +4361,11 @@
       "geometry": "eoshr6",
       "color": "11ts9ky"
     },
+    "heritage--comp--positioning-map--zh": {
+      "hash": "a83jle",
+      "geometry": "6o68ho",
+      "color": "s5gwle"
+    },
     "heritage--comp--product-cards--zh": {
       "hash": "wqp1i9",
       "geometry": "1tiku2c",
@@ -4090,6 +4375,11 @@
       "hash": "6fltvn",
       "geometry": "10fo3lp",
       "color": "4mx71h"
+    },
+    "heritage--comp--pros-cons--zh": {
+      "hash": "1aqwg05",
+      "geometry": "1xpw50q",
+      "color": "1qk97yj"
     },
     "heritage--comp--pyramid--zh": {
       "hash": "fdyv5h",
@@ -4126,6 +4416,11 @@
       "geometry": "k39jbb",
       "color": "e82wy4"
     },
+    "heritage--comp--segmented-wheel--zh": {
+      "hash": "i7whpl",
+      "geometry": "iwm35k",
+      "color": "7pluv8"
+    },
     "heritage--comp--staircase--zh": {
       "hash": "so96sa",
       "geometry": "szn7jj",
@@ -4155,6 +4450,11 @@
       "hash": "pypvbu",
       "geometry": "l9mq7j",
       "color": "16xgdqd"
+    },
+    "heritage--comp--venn--zh": {
+      "hash": "1245olj",
+      "geometry": "myrp1s",
+      "color": "1ub9fse"
     },
     "heritage--comp--verdict-banner--zh": {
       "hash": "1su02ke",
@@ -4361,6 +4661,11 @@
       "geometry": "1csxtz6",
       "color": "3o7fuq"
     },
+    "homeroom--comp--concept-equation--zh": {
+      "hash": "x33705",
+      "geometry": "619r06",
+      "color": "11l7pqw"
+    },
     "homeroom--comp--cycle--zh": {
       "hash": "jfm1nr",
       "geometry": "qjykmd",
@@ -4385,6 +4690,11 @@
       "hash": "1bkdpk5",
       "geometry": "1kpzjry",
       "color": "rxhvfg"
+    },
+    "homeroom--comp--fishbone--zh": {
+      "hash": "qrlxma",
+      "geometry": "fz0iqb",
+      "color": "1pgen45"
     },
     "homeroom--comp--five-forces--zh": {
       "hash": "nusmda",
@@ -4511,6 +4821,11 @@
       "geometry": "17srlu1",
       "color": "1rsynyf"
     },
+    "homeroom--comp--positioning-map--zh": {
+      "hash": "15stifi",
+      "geometry": "ph6byn",
+      "color": "1l6sqcy"
+    },
     "homeroom--comp--product-cards--zh": {
       "hash": "cyxups",
       "geometry": "134ofcc",
@@ -4520,6 +4835,11 @@
       "hash": "1sw36os",
       "geometry": "1f8z0dd",
       "color": "1wi56yv"
+    },
+    "homeroom--comp--pros-cons--zh": {
+      "hash": "gelzm",
+      "geometry": "1pyt6ci",
+      "color": "1oovnk7"
     },
     "homeroom--comp--pyramid--zh": {
       "hash": "vmvw79",
@@ -4556,6 +4876,11 @@
       "geometry": "w3obbh",
       "color": "1lht91c"
     },
+    "homeroom--comp--segmented-wheel--zh": {
+      "hash": "1nw1ngd",
+      "geometry": "q4dsjz",
+      "color": "pisddf"
+    },
     "homeroom--comp--staircase--zh": {
       "hash": "1rwh2rq",
       "geometry": "138y81a",
@@ -4585,6 +4910,11 @@
       "hash": "vagvp7",
       "geometry": "gu3282",
       "color": "z31g3z"
+    },
+    "homeroom--comp--venn--zh": {
+      "hash": "1pbbqql",
+      "geometry": "a8anp1",
+      "color": "c3a8m9"
     },
     "homeroom--comp--verdict-banner--zh": {
       "hash": "1siyvrs",
@@ -4806,6 +5136,11 @@
       "geometry": "1ei6dd1",
       "color": "kky2q6"
     },
+    "ink--comp--concept-equation--zh": {
+      "hash": "dnq9el",
+      "geometry": "13uh2g1",
+      "color": "1vbmuvn"
+    },
     "ink--comp--cycle--zh": {
       "hash": "1scedvq",
       "geometry": "1jxj550",
@@ -4830,6 +5165,11 @@
       "hash": "1qcaxkw",
       "geometry": "cjun5b",
       "color": "1snk3k3"
+    },
+    "ink--comp--fishbone--zh": {
+      "hash": "64ly2p",
+      "geometry": "ecftv9",
+      "color": "f7ydgv"
     },
     "ink--comp--five-forces--zh": {
       "hash": "oi9fba",
@@ -4956,6 +5296,11 @@
       "geometry": "1vol2y8",
       "color": "1rgahc2"
     },
+    "ink--comp--positioning-map--zh": {
+      "hash": "lfan3y",
+      "geometry": "ri7sa0",
+      "color": "1rvuvxf"
+    },
     "ink--comp--product-cards--zh": {
       "hash": "1jj2vgj",
       "geometry": "1j2ku1l",
@@ -4965,6 +5310,11 @@
       "hash": "1gl6u8s",
       "geometry": "1urkvp1",
       "color": "n4gcil"
+    },
+    "ink--comp--pros-cons--zh": {
+      "hash": "rm77u5",
+      "geometry": "39j8c2",
+      "color": "1mbvf3c"
     },
     "ink--comp--pyramid--zh": {
       "hash": "g9vigk",
@@ -5001,6 +5351,11 @@
       "geometry": "1ef0uyu",
       "color": "d2kl25"
     },
+    "ink--comp--segmented-wheel--zh": {
+      "hash": "w49pah",
+      "geometry": "1ae95h1",
+      "color": "20nfyx"
+    },
     "ink--comp--staircase--zh": {
       "hash": "1d4ueak",
       "geometry": "vra24v",
@@ -5030,6 +5385,11 @@
       "hash": "1qr7eqy",
       "geometry": "ls4my",
       "color": "axm4wj"
+    },
+    "ink--comp--venn--zh": {
+      "hash": "1craqn6",
+      "geometry": "11j9cv3",
+      "color": "lz83s5"
     },
     "ink--comp--verdict-banner--zh": {
       "hash": "rgz9j5",
@@ -5251,6 +5611,11 @@
       "geometry": "ioi2q0",
       "color": "2xu41d"
     },
+    "journal--comp--concept-equation--zh": {
+      "hash": "17pyvgu",
+      "geometry": "d6glvb",
+      "color": "ukhthc"
+    },
     "journal--comp--cycle--zh": {
       "hash": "144hjt6",
       "geometry": "315h11",
@@ -5275,6 +5640,11 @@
       "hash": "ncyjtj",
       "geometry": "4ztmzb",
       "color": "1xx3kmw"
+    },
+    "journal--comp--fishbone--zh": {
+      "hash": "5yvdlr",
+      "geometry": "1wneo1h",
+      "color": "aq0cr2"
     },
     "journal--comp--five-forces--zh": {
       "hash": "paxeum",
@@ -5401,6 +5771,11 @@
       "geometry": "xkkr6z",
       "color": "1c8ofec"
     },
+    "journal--comp--positioning-map--zh": {
+      "hash": "12b323y",
+      "geometry": "1bjep46",
+      "color": "i0wybj"
+    },
     "journal--comp--product-cards--zh": {
       "hash": "hxm0ay",
       "geometry": "17n1x3y",
@@ -5410,6 +5785,11 @@
       "hash": "1pyc73r",
       "geometry": "18zsq4v",
       "color": "1mhckni"
+    },
+    "journal--comp--pros-cons--zh": {
+      "hash": "hoy8oz",
+      "geometry": "tucfrl",
+      "color": "kdzgp"
     },
     "journal--comp--pyramid--zh": {
       "hash": "1g0opt0",
@@ -5446,6 +5826,11 @@
       "geometry": "1yxv1jo",
       "color": "139ss12"
     },
+    "journal--comp--segmented-wheel--zh": {
+      "hash": "1kvpkcc",
+      "geometry": "1srsle6",
+      "color": "3it2xs"
+    },
     "journal--comp--staircase--zh": {
       "hash": "19uf84i",
       "geometry": "cp65jz",
@@ -5475,6 +5860,11 @@
       "hash": "17z9pcu",
       "geometry": "1hwsoyb",
       "color": "fnnyps"
+    },
+    "journal--comp--venn--zh": {
+      "hash": "1jlkqrl",
+      "geometry": "1y8b7y6",
+      "color": "u6cca3"
     },
     "journal--comp--verdict-banner--zh": {
       "hash": "w9oakv",
@@ -5696,6 +6086,11 @@
       "geometry": "14lzn84",
       "color": "npitlr"
     },
+    "lecture--comp--concept-equation--zh": {
+      "hash": "p7q454",
+      "geometry": "11hh263",
+      "color": "1sr85rj"
+    },
     "lecture--comp--cycle--zh": {
       "hash": "zleiel",
       "geometry": "1mdru59",
@@ -5720,6 +6115,11 @@
       "hash": "18kn7ip",
       "geometry": "zj7nj8",
       "color": "1ixj8oi"
+    },
+    "lecture--comp--fishbone--zh": {
+      "hash": "19hu6k2",
+      "geometry": "drjfif",
+      "color": "f8lr79"
     },
     "lecture--comp--five-forces--zh": {
       "hash": "161fr3h",
@@ -5846,6 +6246,11 @@
       "geometry": "1pdrwdy",
       "color": "178hgwq"
     },
+    "lecture--comp--positioning-map--zh": {
+      "hash": "bb8m5t",
+      "geometry": "1rizmdn",
+      "color": "1e8ssbs"
+    },
     "lecture--comp--product-cards--zh": {
       "hash": "b1tf9l",
       "geometry": "1c6ixh8",
@@ -5855,6 +6260,11 @@
       "hash": "4bguag",
       "geometry": "12zl2tx",
       "color": "pw24bs"
+    },
+    "lecture--comp--pros-cons--zh": {
+      "hash": "1egh70m",
+      "geometry": "xwrgk4",
+      "color": "iv1puc"
     },
     "lecture--comp--pyramid--zh": {
       "hash": "1y79d",
@@ -5891,6 +6301,11 @@
       "geometry": "1x6vnb6",
       "color": "n5ttp0"
     },
+    "lecture--comp--segmented-wheel--zh": {
+      "hash": "184vkod",
+      "geometry": "1nooyrk",
+      "color": "flusmc"
+    },
     "lecture--comp--staircase--zh": {
       "hash": "qt9shj",
       "geometry": "cg1yq1",
@@ -5920,6 +6335,11 @@
       "hash": "5z89k7",
       "geometry": "1b6zohd",
       "color": "a0b47s"
+    },
+    "lecture--comp--venn--zh": {
+      "hash": "1x590mn",
+      "geometry": "13i5doz",
+      "color": "giuv47"
     },
     "lecture--comp--verdict-banner--zh": {
       "hash": "1c889aj",
@@ -5962,9 +6382,9 @@
       "color": "1hjks1m"
     },
     "ledger--deck--p06": {
-      "hash": "sxhmwc",
-      "geometry": "l8vm44",
-      "color": "dmorzc"
+      "hash": "eskcce",
+      "geometry": "b5fnwp",
+      "color": "13e5rj6"
     },
     "ledger--deck--p07": {
       "hash": "1dcd1k1",
@@ -6136,6 +6556,11 @@
       "geometry": "mqgf3x",
       "color": "1w4qyb2"
     },
+    "ledger--comp--concept-equation--zh": {
+      "hash": "1tpuj9x",
+      "geometry": "1p3mc7s",
+      "color": "1sewode"
+    },
     "ledger--comp--cycle--zh": {
       "hash": "rclg45",
       "geometry": "aafqon",
@@ -6160,6 +6585,11 @@
       "hash": "1yw5btd",
       "geometry": "znqsh5",
       "color": "qgxuwg"
+    },
+    "ledger--comp--fishbone--zh": {
+      "hash": "amy8jf",
+      "geometry": "ejamjj",
+      "color": "1d4wp2n"
     },
     "ledger--comp--five-forces--zh": {
       "hash": "1j5wwmb",
@@ -6286,6 +6716,11 @@
       "geometry": "1aslkg0",
       "color": "159zxvu"
     },
+    "ledger--comp--positioning-map--zh": {
+      "hash": "3b4len",
+      "geometry": "58jgee",
+      "color": "1o6hdcq"
+    },
     "ledger--comp--product-cards--zh": {
       "hash": "qwr5hu",
       "geometry": "12c69j1",
@@ -6295,6 +6730,11 @@
       "hash": "88z3ty",
       "geometry": "2vvy3z",
       "color": "19g3r6v"
+    },
+    "ledger--comp--pros-cons--zh": {
+      "hash": "1l0rubn",
+      "geometry": "22r3lq",
+      "color": "lr72k0"
     },
     "ledger--comp--pyramid--zh": {
       "hash": "wv1rl0",
@@ -6331,6 +6771,11 @@
       "geometry": "122s4rq",
       "color": "stchwr"
     },
+    "ledger--comp--segmented-wheel--zh": {
+      "hash": "6rx8yc",
+      "geometry": "1hta3i0",
+      "color": "1lxostu"
+    },
     "ledger--comp--staircase--zh": {
       "hash": "1q1q340",
       "geometry": "t68rc1",
@@ -6360,6 +6805,11 @@
       "hash": "f5g0k5",
       "geometry": "152ddyq",
       "color": "ixr2g6"
+    },
+    "ledger--comp--venn--zh": {
+      "hash": "3g50mg",
+      "geometry": "q1mskj",
+      "color": "f1vhsy"
     },
     "ledger--comp--verdict-banner--zh": {
       "hash": "qrz9dy",
@@ -6581,6 +7031,11 @@
       "geometry": "112tq07",
       "color": "1lr1ul0"
     },
+    "luxe--comp--concept-equation--zh": {
+      "hash": "792dqn",
+      "geometry": "1hvk99j",
+      "color": "1y1a6th"
+    },
     "luxe--comp--cycle--zh": {
       "hash": "34br95",
       "geometry": "1nr0tez",
@@ -6605,6 +7060,11 @@
       "hash": "12k9n98",
       "geometry": "phy00y",
       "color": "xs6mdd"
+    },
+    "luxe--comp--fishbone--zh": {
+      "hash": "1igbdra",
+      "geometry": "36kxek",
+      "color": "957pfd"
     },
     "luxe--comp--five-forces--zh": {
       "hash": "1lar5wf",
@@ -6731,6 +7191,11 @@
       "geometry": "bjfz6a",
       "color": "1a7h39t"
     },
+    "luxe--comp--positioning-map--zh": {
+      "hash": "1b46i8d",
+      "geometry": "14wtuv5",
+      "color": "phtj9p"
+    },
     "luxe--comp--product-cards--zh": {
       "hash": "mrv9uk",
       "geometry": "e1g75c",
@@ -6740,6 +7205,11 @@
       "hash": "12rcwlo",
       "geometry": "1efutba",
       "color": "i79o7y"
+    },
+    "luxe--comp--pros-cons--zh": {
+      "hash": "1clf2lw",
+      "geometry": "u5cq35",
+      "color": "161u7b6"
     },
     "luxe--comp--pyramid--zh": {
       "hash": "1ao0mk",
@@ -6776,6 +7246,11 @@
       "geometry": "17h4eh4",
       "color": "1pwyhxy"
     },
+    "luxe--comp--segmented-wheel--zh": {
+      "hash": "jx2ebb",
+      "geometry": "185rcp",
+      "color": "1n8tsrd"
+    },
     "luxe--comp--staircase--zh": {
       "hash": "1mv6xmq",
       "geometry": "1abi4ge",
@@ -6805,6 +7280,11 @@
       "hash": "1vfv9z7",
       "geometry": "816l6p",
       "color": "192rrop"
+    },
+    "luxe--comp--venn--zh": {
+      "hash": "12gnmif",
+      "geometry": "kvdmtb",
+      "color": "18w1tlc"
     },
     "luxe--comp--verdict-banner--zh": {
       "hash": "1voeit4",
@@ -7021,6 +7501,11 @@
       "geometry": "11k7ixd",
       "color": "fe7fl8"
     },
+    "memo--comp--concept-equation--zh": {
+      "hash": "1ni4ydb",
+      "geometry": "14sda0t",
+      "color": "14ocndi"
+    },
     "memo--comp--cycle--zh": {
       "hash": "104jyz8",
       "geometry": "16661xq",
@@ -7045,6 +7530,11 @@
       "hash": "1crkkuv",
       "geometry": "1brke28",
       "color": "dlj0bo"
+    },
+    "memo--comp--fishbone--zh": {
+      "hash": "aqwwou",
+      "geometry": "1j9ryhx",
+      "color": "1ft3xtv"
     },
     "memo--comp--five-forces--zh": {
       "hash": "1cwpyul",
@@ -7171,6 +7661,11 @@
       "geometry": "zspkwn",
       "color": "136iozk"
     },
+    "memo--comp--positioning-map--zh": {
+      "hash": "ozufqf",
+      "geometry": "1s5zdyi",
+      "color": "70gk1e"
+    },
     "memo--comp--product-cards--zh": {
       "hash": "12q11c0",
       "geometry": "jbpp93",
@@ -7180,6 +7675,11 @@
       "hash": "rosyhv",
       "geometry": "1cm36gf",
       "color": "ldtv8s"
+    },
+    "memo--comp--pros-cons--zh": {
+      "hash": "m6lqk3",
+      "geometry": "1c2eslk",
+      "color": "gfhwh4"
     },
     "memo--comp--pyramid--zh": {
       "hash": "kdmyrm",
@@ -7216,6 +7716,11 @@
       "geometry": "e08xtm",
       "color": "1nyz3zm"
     },
+    "memo--comp--segmented-wheel--zh": {
+      "hash": "13c0v3t",
+      "geometry": "1cbr9t2",
+      "color": "xwu8vk"
+    },
     "memo--comp--staircase--zh": {
       "hash": "wwds12",
       "geometry": "9134n0",
@@ -7245,6 +7750,11 @@
       "hash": "bornrp",
       "geometry": "19t8pwf",
       "color": "1k5ehj0"
+    },
+    "memo--comp--venn--zh": {
+      "hash": "101suza",
+      "geometry": "90hitf",
+      "color": "2af5p5"
     },
     "memo--comp--verdict-banner--zh": {
       "hash": "oh67fk",
@@ -7292,9 +7802,9 @@
       "color": "4eckal"
     },
     "museum--deck--p07": {
-      "hash": "ucmjkr",
-      "geometry": "nd15e",
-      "color": "463pdo"
+      "hash": "14a0q0c",
+      "geometry": "10beqnz",
+      "color": "1kvis25"
     },
     "museum--deck--p08": {
       "hash": "1faqnll",
@@ -7466,6 +7976,11 @@
       "geometry": "1t6w5b9",
       "color": "afho8p"
     },
+    "museum--comp--concept-equation--zh": {
+      "hash": "kwg129",
+      "geometry": "6iuvcx",
+      "color": "17mivbg"
+    },
     "museum--comp--cycle--zh": {
       "hash": "nx581m",
       "geometry": "1f4r9m",
@@ -7490,6 +8005,11 @@
       "hash": "13qz3z7",
       "geometry": "13jgmi6",
       "color": "1i5a1ls"
+    },
+    "museum--comp--fishbone--zh": {
+      "hash": "1qij5t0",
+      "geometry": "wwgazy",
+      "color": "ntaw4r"
     },
     "museum--comp--five-forces--zh": {
       "hash": "4r17ax",
@@ -7616,6 +8136,11 @@
       "geometry": "13i8b70",
       "color": "hhsu51"
     },
+    "museum--comp--positioning-map--zh": {
+      "hash": "adbgne",
+      "geometry": "aq2v0p",
+      "color": "l50act"
+    },
     "museum--comp--product-cards--zh": {
       "hash": "68hdey",
       "geometry": "71os9i",
@@ -7625,6 +8150,11 @@
       "hash": "19hwty7",
       "geometry": "1pnnkb7",
       "color": "nje447"
+    },
+    "museum--comp--pros-cons--zh": {
+      "hash": "ti7uc8",
+      "geometry": "buqei0",
+      "color": "1ol5q4w"
     },
     "museum--comp--pyramid--zh": {
       "hash": "xnng7s",
@@ -7661,6 +8191,11 @@
       "geometry": "1es0dw6",
       "color": "ucr9cy"
     },
+    "museum--comp--segmented-wheel--zh": {
+      "hash": "1fqlcsc",
+      "geometry": "8yllrf",
+      "color": "9p8mxb"
+    },
     "museum--comp--staircase--zh": {
       "hash": "1oax8q8",
       "geometry": "1oxraih",
@@ -7690,6 +8225,11 @@
       "hash": "1hwi80r",
       "geometry": "qtre86",
       "color": "3r9jvf"
+    },
+    "museum--comp--venn--zh": {
+      "hash": "1y4eqtx",
+      "geometry": "un3y6a",
+      "color": "7m4z16"
     },
     "museum--comp--verdict-banner--zh": {
       "hash": "1gomj97",
@@ -7906,6 +8446,11 @@
       "geometry": "ysbn54",
       "color": "y9g8u9"
     },
+    "playbill--comp--concept-equation--zh": {
+      "hash": "1ro4uhp",
+      "geometry": "okg6o2",
+      "color": "8f0gjj"
+    },
     "playbill--comp--cycle--zh": {
       "hash": "1k8priu",
       "geometry": "cra7vl",
@@ -7930,6 +8475,11 @@
       "hash": "gnoa15",
       "geometry": "1iwe92n",
       "color": "1ivn9dx"
+    },
+    "playbill--comp--fishbone--zh": {
+      "hash": "1wiyvgw",
+      "geometry": "3hdx8a",
+      "color": "x3nsvo"
     },
     "playbill--comp--five-forces--zh": {
       "hash": "qddlf0",
@@ -8056,6 +8606,11 @@
       "geometry": "d0rdv",
       "color": "a1scfi"
     },
+    "playbill--comp--positioning-map--zh": {
+      "hash": "8uro9i",
+      "geometry": "1qt3sag",
+      "color": "1jkinxx"
+    },
     "playbill--comp--product-cards--zh": {
       "hash": "3ewb66",
       "geometry": "1r0o2wm",
@@ -8065,6 +8620,11 @@
       "hash": "b7c11x",
       "geometry": "zjfpmv",
       "color": "w2hz4f"
+    },
+    "playbill--comp--pros-cons--zh": {
+      "hash": "1j8s0u7",
+      "geometry": "1aio6ze",
+      "color": "1e0pkg0"
     },
     "playbill--comp--pyramid--zh": {
       "hash": "wc67cj",
@@ -8101,6 +8661,11 @@
       "geometry": "1ro3uf4",
       "color": "15unk54"
     },
+    "playbill--comp--segmented-wheel--zh": {
+      "hash": "uov7s",
+      "geometry": "1s4zgf9",
+      "color": "1mkhxni"
+    },
     "playbill--comp--staircase--zh": {
       "hash": "1cpt7ze",
       "geometry": "19ytntb",
@@ -8130,6 +8695,11 @@
       "hash": "zid4rj",
       "geometry": "1if5cvd",
       "color": "19lscja"
+    },
+    "playbill--comp--venn--zh": {
+      "hash": "fa84o6",
+      "geometry": "1ta6rws",
+      "color": "mky3oo"
     },
     "playbill--comp--verdict-banner--zh": {
       "hash": "78wyps",
@@ -8351,6 +8921,11 @@
       "geometry": "1jyder6",
       "color": "nkwlgr"
     },
+    "rally--comp--concept-equation--zh": {
+      "hash": "1mtsbre",
+      "geometry": "ple4xq",
+      "color": "31az67"
+    },
     "rally--comp--cycle--zh": {
       "hash": "1fsby94",
       "geometry": "17mgkmy",
@@ -8375,6 +8950,11 @@
       "hash": "1ru9wgj",
       "geometry": "1h82tk9",
       "color": "2j0o2w"
+    },
+    "rally--comp--fishbone--zh": {
+      "hash": "migdo5",
+      "geometry": "15j0dhv",
+      "color": "9dr1cn"
     },
     "rally--comp--five-forces--zh": {
       "hash": "7ufyzk",
@@ -8501,6 +9081,11 @@
       "geometry": "1rxqul7",
       "color": "8d9zjr"
     },
+    "rally--comp--positioning-map--zh": {
+      "hash": "c8zunr",
+      "geometry": "1rnedw2",
+      "color": "15p8agu"
+    },
     "rally--comp--product-cards--zh": {
       "hash": "invpa",
       "geometry": "6q3633",
@@ -8510,6 +9095,11 @@
       "hash": "r1i2jk",
       "geometry": "wmz4u3",
       "color": "t34f8d"
+    },
+    "rally--comp--pros-cons--zh": {
+      "hash": "vz1f2c",
+      "geometry": "1j0tstv",
+      "color": "ry1uw8"
     },
     "rally--comp--pyramid--zh": {
       "hash": "mkexra",
@@ -8546,6 +9136,11 @@
       "geometry": "xuh7mt",
       "color": "thxw2o"
     },
+    "rally--comp--segmented-wheel--zh": {
+      "hash": "1ya9rnh",
+      "geometry": "54bly9",
+      "color": "111r69v"
+    },
     "rally--comp--staircase--zh": {
       "hash": "o77ad1",
       "geometry": "o9gdiu",
@@ -8575,6 +9170,11 @@
       "hash": "1uamqp7",
       "geometry": "kj9a18",
       "color": "1iw2lra"
+    },
+    "rally--comp--venn--zh": {
+      "hash": "5h7h9l",
+      "geometry": "pstl64",
+      "color": "pi1qso"
     },
     "rally--comp--verdict-banner--zh": {
       "hash": "zexkoa",
@@ -8786,6 +9386,11 @@
       "geometry": "15m1qu8",
       "color": "9i6huh"
     },
+    "runway--comp--concept-equation--zh": {
+      "hash": "w8y5vv",
+      "geometry": "egcdgt",
+      "color": "zy0v1q"
+    },
     "runway--comp--cycle--zh": {
       "hash": "nmqzj5",
       "geometry": "1ddd8k",
@@ -8810,6 +9415,11 @@
       "hash": "efzcjk",
       "geometry": "hwg7kn",
       "color": "ne6f6e"
+    },
+    "runway--comp--fishbone--zh": {
+      "hash": "18phu6c",
+      "geometry": "1cdpovy",
+      "color": "14ksw67"
     },
     "runway--comp--five-forces--zh": {
       "hash": "z0whz4",
@@ -8936,6 +9546,11 @@
       "geometry": "2sskrb",
       "color": "gbbu5z"
     },
+    "runway--comp--positioning-map--zh": {
+      "hash": "1sb13z8",
+      "geometry": "16bij18",
+      "color": "1lyseq1"
+    },
     "runway--comp--product-cards--zh": {
       "hash": "1w47ehq",
       "geometry": "1ld8u8l",
@@ -8945,6 +9560,11 @@
       "hash": "1bwyg6e",
       "geometry": "7db59v",
       "color": "5q2h4z"
+    },
+    "runway--comp--pros-cons--zh": {
+      "hash": "qhz30t",
+      "geometry": "9a3l8q",
+      "color": "352g4"
     },
     "runway--comp--pyramid--zh": {
       "hash": "r6n63k",
@@ -8981,6 +9601,11 @@
       "geometry": "12y6s8e",
       "color": "1hsng1a"
     },
+    "runway--comp--segmented-wheel--zh": {
+      "hash": "1ugr6ne",
+      "geometry": "1g345z7",
+      "color": "1yxv0za"
+    },
     "runway--comp--staircase--zh": {
       "hash": "1v6tb0q",
       "geometry": "12twni8",
@@ -9010,6 +9635,11 @@
       "hash": "1hkbtdq",
       "geometry": "154ks8f",
       "color": "7z9k1l"
+    },
+    "runway--comp--venn--zh": {
+      "hash": "11pei1k",
+      "geometry": "d22hbn",
+      "color": "1578sjs"
     },
     "runway--comp--verdict-banner--zh": {
       "hash": "1abvva1",
@@ -9231,6 +9861,11 @@
       "geometry": "xxs4tx",
       "color": "aag15e"
     },
+    "stage--comp--concept-equation--zh": {
+      "hash": "ypir0j",
+      "geometry": "isiavt",
+      "color": "17kvbw9"
+    },
     "stage--comp--cycle--zh": {
       "hash": "lm96g5",
       "geometry": "1ivc8o0",
@@ -9255,6 +9890,11 @@
       "hash": "qfqiez",
       "geometry": "1e4q2at",
       "color": "nfe8db"
+    },
+    "stage--comp--fishbone--zh": {
+      "hash": "183pt18",
+      "geometry": "5bu78q",
+      "color": "4zju6u"
     },
     "stage--comp--five-forces--zh": {
       "hash": "pgx2wv",
@@ -9381,6 +10021,11 @@
       "geometry": "1uqkouw",
       "color": "tsgtd5"
     },
+    "stage--comp--positioning-map--zh": {
+      "hash": "u6ix6m",
+      "geometry": "m0arj6",
+      "color": "1qx9iu7"
+    },
     "stage--comp--product-cards--zh": {
       "hash": "1kqrepy",
       "geometry": "tvyj4h",
@@ -9390,6 +10035,11 @@
       "hash": "14fuaix",
       "geometry": "11h2qvg",
       "color": "1gh5ng6"
+    },
+    "stage--comp--pros-cons--zh": {
+      "hash": "on15i9",
+      "geometry": "6qmh8f",
+      "color": "1hczp2x"
     },
     "stage--comp--pyramid--zh": {
       "hash": "1e03vxv",
@@ -9426,6 +10076,11 @@
       "geometry": "11issay",
       "color": "j7ejnu"
     },
+    "stage--comp--segmented-wheel--zh": {
+      "hash": "1jyod7p",
+      "geometry": "bqlzxc",
+      "color": "ph30fg"
+    },
     "stage--comp--staircase--zh": {
       "hash": "jruqw5",
       "geometry": "1hfoupa",
@@ -9455,6 +10110,11 @@
       "hash": "1jay8ku",
       "geometry": "3lg2m7",
       "color": "kncdrb"
+    },
+    "stage--comp--venn--zh": {
+      "hash": "1t5h0ep",
+      "geometry": "9sqkf3",
+      "color": "2ct0rz"
     },
     "stage--comp--verdict-banner--zh": {
       "hash": "9o1dnv",
@@ -9487,9 +10147,9 @@
       "color": "1musobd"
     },
     "swiss--deck--p04": {
-      "hash": "ie74fh",
-      "geometry": "1qyqh74",
-      "color": "19xeao1"
+      "hash": "1wxzo14",
+      "geometry": "eg609l",
+      "color": "1jnlk5f"
     },
     "swiss--deck--p05": {
       "hash": "13dczps",
@@ -9676,6 +10336,11 @@
       "geometry": "11oem8s",
       "color": "1mkza5n"
     },
+    "swiss--comp--concept-equation--zh": {
+      "hash": "15diwr6",
+      "geometry": "1go5weq",
+      "color": "1de6nvm"
+    },
     "swiss--comp--cycle--zh": {
       "hash": "z65ozx",
       "geometry": "13f4qdi",
@@ -9700,6 +10365,11 @@
       "hash": "22j7cu",
       "geometry": "1xmi8uh",
       "color": "1e7ww5n"
+    },
+    "swiss--comp--fishbone--zh": {
+      "hash": "1w5vzjh",
+      "geometry": "t5k3he",
+      "color": "t2sznn"
     },
     "swiss--comp--five-forces--zh": {
       "hash": "c1higl",
@@ -9826,6 +10496,11 @@
       "geometry": "1blqcz",
       "color": "1hjs4y1"
     },
+    "swiss--comp--positioning-map--zh": {
+      "hash": "1scrrer",
+      "geometry": "150r110",
+      "color": "zos41f"
+    },
     "swiss--comp--product-cards--zh": {
       "hash": "b0pcvh",
       "geometry": "ic78vk",
@@ -9835,6 +10510,11 @@
       "hash": "9oahod",
       "geometry": "1hptr3l",
       "color": "1e22lzx"
+    },
+    "swiss--comp--pros-cons--zh": {
+      "hash": "bfdkd1",
+      "geometry": "lhz880",
+      "color": "1vurbsr"
     },
     "swiss--comp--pyramid--zh": {
       "hash": "1vt7bjd",
@@ -9871,6 +10551,11 @@
       "geometry": "17ga2t6",
       "color": "1laqn4q"
     },
+    "swiss--comp--segmented-wheel--zh": {
+      "hash": "oxssk7",
+      "geometry": "1jwqnih",
+      "color": "oujtsc"
+    },
     "swiss--comp--staircase--zh": {
       "hash": "ut1g3p",
       "geometry": "1fjp4ga",
@@ -9900,6 +10585,11 @@
       "hash": "10oh424",
       "geometry": "se3o16",
       "color": "1ktqghb"
+    },
+    "swiss--comp--venn--zh": {
+      "hash": "1i9pxu5",
+      "geometry": "9ykmqj",
+      "color": "10ysbwe"
     },
     "swiss--comp--verdict-banner--zh": {
       "hash": "1n2my84",
@@ -10121,6 +10811,11 @@
       "geometry": "tqc1cg",
       "color": "1ioutop"
     },
+    "terminal--comp--concept-equation--zh": {
+      "hash": "ijala4",
+      "geometry": "5ydzrk",
+      "color": "iucnrc"
+    },
     "terminal--comp--cycle--zh": {
       "hash": "15plpxb",
       "geometry": "1malikl",
@@ -10145,6 +10840,11 @@
       "hash": "afa9lx",
       "geometry": "12cv2az",
       "color": "1fjoxpq"
+    },
+    "terminal--comp--fishbone--zh": {
+      "hash": "1crk0zz",
+      "geometry": "3pz48e",
+      "color": "1c4npi0"
     },
     "terminal--comp--five-forces--zh": {
       "hash": "2j45mw",
@@ -10271,6 +10971,11 @@
       "geometry": "137t06c",
       "color": "krnow2"
     },
+    "terminal--comp--positioning-map--zh": {
+      "hash": "19jykms",
+      "geometry": "1245vp6",
+      "color": "1333hhq"
+    },
     "terminal--comp--product-cards--zh": {
       "hash": "hgebld",
       "geometry": "cvmfvn",
@@ -10280,6 +10985,11 @@
       "hash": "q268ya",
       "geometry": "t9lk1f",
       "color": "1p62snm"
+    },
+    "terminal--comp--pros-cons--zh": {
+      "hash": "16u1j7e",
+      "geometry": "ng6147",
+      "color": "1ervma7"
     },
     "terminal--comp--pyramid--zh": {
       "hash": "13hmf1i",
@@ -10316,6 +11026,11 @@
       "geometry": "1rvpqmu",
       "color": "fsl1gj"
     },
+    "terminal--comp--segmented-wheel--zh": {
+      "hash": "1jcxt67",
+      "geometry": "1nek7zr",
+      "color": "18simkg"
+    },
     "terminal--comp--staircase--zh": {
       "hash": "amo94r",
       "geometry": "106df53",
@@ -10345,6 +11060,11 @@
       "hash": "7htewj",
       "geometry": "3xh0wy",
       "color": "lozq88"
+    },
+    "terminal--comp--venn--zh": {
+      "hash": "vur7s5",
+      "geometry": "1vg8lbl",
+      "color": "16pb4qw"
     },
     "terminal--comp--verdict-banner--zh": {
       "hash": "byc3ve",
@@ -10571,6 +11291,11 @@
       "geometry": "gsnsgn",
       "color": "1i7vvc1"
     },
+    "thesis--comp--concept-equation--zh": {
+      "hash": "19rnwaf",
+      "geometry": "xxk9x8",
+      "color": "9colp6"
+    },
     "thesis--comp--cycle--zh": {
       "hash": "10vlrz",
       "geometry": "15xerdx",
@@ -10595,6 +11320,11 @@
       "hash": "10sau7p",
       "geometry": "1m3ftg8",
       "color": "1l9ntke"
+    },
+    "thesis--comp--fishbone--zh": {
+      "hash": "13f7wpj",
+      "geometry": "1214dd5",
+      "color": "22ir7p"
     },
     "thesis--comp--five-forces--zh": {
       "hash": "2om162",
@@ -10721,6 +11451,11 @@
       "geometry": "1vcoxwd",
       "color": "uqktp0"
     },
+    "thesis--comp--positioning-map--zh": {
+      "hash": "k98d47",
+      "geometry": "1w1u9ii",
+      "color": "1xy1ez"
+    },
     "thesis--comp--product-cards--zh": {
       "hash": "welanu",
       "geometry": "1i8yk0",
@@ -10730,6 +11465,11 @@
       "hash": "7szeuy",
       "geometry": "14ynygu",
       "color": "9ii5ij"
+    },
+    "thesis--comp--pros-cons--zh": {
+      "hash": "6t2ikb",
+      "geometry": "1k99sxf",
+      "color": "1mig20o"
     },
     "thesis--comp--pyramid--zh": {
       "hash": "742yev",
@@ -10766,6 +11506,11 @@
       "geometry": "v0wvse",
       "color": "1ri22kx"
     },
+    "thesis--comp--segmented-wheel--zh": {
+      "hash": "1s8lgwz",
+      "geometry": "1wen96a",
+      "color": "1bfs7o2"
+    },
     "thesis--comp--staircase--zh": {
       "hash": "9ks0ae",
       "geometry": "10h8c7c",
@@ -10795,6 +11540,11 @@
       "hash": "12kze4y",
       "geometry": "1nc0ccx",
       "color": "pn9ib5"
+    },
+    "thesis--comp--venn--zh": {
+      "hash": "hbaqwn",
+      "geometry": "fuboz8",
+      "color": "1a8tvy9"
     },
     "thesis--comp--verdict-banner--zh": {
       "hash": "1g22gtv",
@@ -11031,6 +11781,11 @@
       "geometry": "e1yiy6",
       "color": "1btfavm"
     },
+    "vermilion--comp--concept-equation--zh": {
+      "hash": "1c97d2i",
+      "geometry": "19vw3mb",
+      "color": "glqsp9"
+    },
     "vermilion--comp--cycle--zh": {
       "hash": "tn7gkk",
       "geometry": "13ue89f",
@@ -11055,6 +11810,11 @@
       "hash": "1a0g6ik",
       "geometry": "1lfgkcr",
       "color": "p4qnam"
+    },
+    "vermilion--comp--fishbone--zh": {
+      "hash": "c2absb",
+      "geometry": "1ofwfmx",
+      "color": "1qo4wpq"
     },
     "vermilion--comp--five-forces--zh": {
       "hash": "18m1gak",
@@ -11181,6 +11941,11 @@
       "geometry": "5h1nww",
       "color": "1v8uutc"
     },
+    "vermilion--comp--positioning-map--zh": {
+      "hash": "18smhee",
+      "geometry": "1bhe5mj",
+      "color": "6eec0l"
+    },
     "vermilion--comp--product-cards--zh": {
       "hash": "1mskymv",
       "geometry": "1bj1joq",
@@ -11190,6 +11955,11 @@
       "hash": "47b9fd",
       "geometry": "1tc2lxt",
       "color": "mlfdq9"
+    },
+    "vermilion--comp--pros-cons--zh": {
+      "hash": "vzgfri",
+      "geometry": "1iz8z07",
+      "color": "177592r"
     },
     "vermilion--comp--pyramid--zh": {
       "hash": "tsib0t",
@@ -11226,6 +11996,11 @@
       "geometry": "1aisgd2",
       "color": "hlkekd"
     },
+    "vermilion--comp--segmented-wheel--zh": {
+      "hash": "3cc3rw",
+      "geometry": "1rdx418",
+      "color": "wdaddp"
+    },
     "vermilion--comp--staircase--zh": {
       "hash": "lzvofe",
       "geometry": "uqba95",
@@ -11255,6 +12030,11 @@
       "hash": "1slx8p1",
       "geometry": "jr0ja2",
       "color": "1l8gw6r"
+    },
+    "vermilion--comp--venn--zh": {
+      "hash": "1eauskd",
+      "geometry": "zxsitt",
+      "color": "31rqdh"
     },
     "vermilion--comp--verdict-banner--zh": {
       "hash": "18jve2v",
