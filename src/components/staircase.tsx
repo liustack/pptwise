@@ -52,7 +52,7 @@ function typeScale(stepW: number): { titleSize: number; valueSize: number; noteS
   return { titleSize, valueSize, noteSize: FORM_BODY_FLOOR, pad }
 }
 
-function resolve(component: StaircaseComponent, w: number): Geometry {
+function resolve(component: StaircaseComponent, w: number, boxH?: number): Geometry {
   const n = component.items.length
   const stepW = Math.max(48, (w - GAP * (n - 1)) / n)
   const { titleSize, valueSize, noteSize, pad } = typeScale(stepW)
@@ -60,7 +60,10 @@ function resolve(component: StaircaseComponent, w: number): Geometry {
   const textH =
     formLineHeight(titleSize) + valueSize + (hasNote ? formLineHeight(noteSize) : 0) + (hasNote ? 6 : 0)
   const baseH = Math.round(textH + pad * 2)
-  const rise = Math.max(MIN_RISE, Math.min(MAX_RISE, (TARGET_H - baseH) / Math.max(1, n - 1)))
+  // A face may hand over less than the natural height; the flight climbs
+  // less steeply into whatever arrives rather than drawing past its edge.
+  const target = boxH !== undefined && boxH > 0 ? Math.min(TARGET_H, boxH) : TARGET_H
+  const rise = Math.max(MIN_RISE, Math.min(MAX_RISE, (target - baseH) / Math.max(1, n - 1)))
   const h = Math.round(baseH + rise * (n - 1))
   const steps = component.items.map((_, i) => {
     const stepH = Math.round(baseH + rise * i)
@@ -84,7 +87,7 @@ export const staircase: SvgComponent<StaircaseComponent> = {
   },
 
   render(component, box, ctx): ReactElement {
-    const { steps } = resolve(component, box.w)
+    const { steps } = resolve(component, box.w, box.h)
     const border = ctx.colors.border ?? ctx.colors.muted
     const radius = ctx.shape?.radius ?? 4
     const top = component.items.length - 1

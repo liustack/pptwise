@@ -20,7 +20,8 @@ type SwimlaneComponent = Extract<Component, { type: "swimlane" }>
  * 画，不用 marker——svg2pptx 会跳过 marker。
  */
 
-const MAX_H = 400
+/** Natural height. Under an ordinary content rect on purpose — see decision-tree.tsx. */
+const MAX_H = 330
 const LANE_GAP = 14
 const BOX_GAP = 18
 const ARROW = 7
@@ -48,9 +49,10 @@ interface Geometry {
   h: number
 }
 
-function resolve(component: SwimlaneComponent, w: number): Geometry {
+function resolve(component: SwimlaneComponent, w: number, budgetH?: number): Geometry {
   const laneCount = component.lanes.length
-  const laneH = Math.min(126, (MAX_H - LANE_GAP * (laneCount - 1)) / laneCount)
+  const budget = budgetH !== undefined && budgetH > 0 ? Math.min(MAX_H, budgetH) : MAX_H
+  const laneH = Math.floor(Math.min(126, (budget - LANE_GAP * (laneCount - 1)) / laneCount))
   const h = Math.round(laneH * laneCount + LANE_GAP * (laneCount - 1))
   const lanes: Lane[] = component.lanes.map((_, i) => ({
     y: Math.round(i * (laneH + LANE_GAP)),
@@ -59,7 +61,7 @@ function resolve(component: SwimlaneComponent, w: number): Geometry {
   const labelW = Math.round(Math.min(200, Math.max(120, w * 0.16)))
   const trackX = labelW + 24
   const colW = (w - trackX) / component.steps.length
-  const boxH = Math.round(Math.min(84, laneH - 32))
+  const stepH = Math.round(Math.min(84, laneH - 32))
   const laneOf = (label: string) => Math.max(0, component.lanes.findIndex((lane) => lane.label === label))
   const boxes: StepBox[] = component.steps.map((step, i) => {
     const lane = laneOf(step.lane)
@@ -67,9 +69,9 @@ function resolve(component: SwimlaneComponent, w: number): Geometry {
       i,
       lane,
       x: Math.round(trackX + i * colW + BOX_GAP / 2),
-      y: Math.round(lanes[lane]!.y + (lanes[lane]!.h - boxH) / 2),
+      y: Math.round(lanes[lane]!.y + (lanes[lane]!.h - stepH) / 2),
       w: Math.round(colW - BOX_GAP),
-      h: boxH,
+      h: stepH,
     }
   })
   return { labelW, lanes, boxes, h }
@@ -97,7 +99,7 @@ export const swimlane: SvgComponent<SwimlaneComponent> = {
   },
 
   render(component, box, ctx): ReactElement {
-    const g = resolve(component, box.w)
+    const g = resolve(component, box.w, box.h)
     const border = ctx.colors.border ?? ctx.colors.muted
     // The lane band is a tint of the page, not a card: it groups the boxes
     // sitting on it without becoming a second surface behind them.

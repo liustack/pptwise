@@ -61,8 +61,8 @@ export const traits = {
 } as const satisfies ComponentTraits
 
 export const story: DesignStory = {
-  name: "Before and After",
-  story: "Two panels of the same measures, an arrow between them, and the move printed on every row. The two photographs pinned side by side with a date under each.",
+  name: "Shift",
+  story: "Two panels of the same measures, an arrow between them, and the move printed on every row. The opening and closing columns of a ledger, set against each other.",
   positioning: "Choose it when both states carry a value on every row and the size of the move is the point. Use comparison when the two sides are different things rather than one thing twice.",
   audience: "Readers who need to see how far something moved, row by row.",
   notFor: "Two different subjects set against each other, which belong in comparison.",

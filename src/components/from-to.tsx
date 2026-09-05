@@ -14,13 +14,15 @@ type FromToComponent = Extract<Component, { type: "from_to" }>
 
 /**
  * 两块状态面板左右对开，中间一支箭头。同一批行在两侧逐行对齐，所以
- * 「动了多少」是横着读出来的，不用另画一列。到达的一侧整块反色填满
+ * 「动了多少」是横着读出来的，不用另画一列。行名只印在起点一侧：两边都印
+ * 就是同一句话在一页上说两遍，而这两行本来就靠水平对齐互相指认。到达的一侧整块反色填满
  * （formHighlightFill），变化量印在该侧行内右端。箭头是 polygon，
  * 用 accent——它是形状不是字，accent 从不承载文字。
  */
 
-const MAX_H = 400
-const HEAD_H = 84
+/** Natural height. Under an ordinary content rect on purpose — see decision-tree.tsx. */
+const MAX_H = 348
+const HEAD_H = 76
 const ROW_MIN = 46
 const ROW_MAX = 88
 const ARROW_W = 104
@@ -42,18 +44,22 @@ interface Geometry {
   h: number
 }
 
-function resolve(component: FromToComponent, w: number): Geometry {
+function resolve(component: FromToComponent, w: number, boxH?: number): Geometry {
   const n = component.rows.length
   const panelW = (w - ARROW_W) / 2
-  // Floored, not rounded: rounding six rows up puts the drawing over MAX_H.
-  const rowH = Math.floor(Math.min(ROW_MAX, Math.max(ROW_MIN, (MAX_H - HEAD_H) / n)))
+  const budget = boxH !== undefined && boxH > 0 ? Math.min(MAX_H, boxH) : MAX_H
+  // Floored, not rounded: rounding six rows up puts the drawing over budget.
+  const rowH = Math.floor(Math.min(ROW_MAX, Math.max(ROW_MIN, (budget - HEAD_H) / n)))
   const labelSize = FORM_BODY_FLOOR
   return {
     panelW,
     rightX: panelW + ARROW_W,
     rowH,
     labelSize,
-    valueSize: Math.max(labelSize + 6, Math.min(34, Math.round(rowH * 0.5))),
+    // Under half the row on purpose: the label above it and the rule above
+    // that both need air, and a number that eats the row leaves the two rows
+    // reading as one block.
+    valueSize: Math.max(labelSize + 6, Math.min(34, Math.round(rowH * 0.44))),
     h: HEAD_H + rowH * n,
   }
 }
@@ -64,7 +70,7 @@ export const fromTo: SvgComponent<FromToComponent> = {
   },
 
   render(component, box, ctx): ReactElement {
-    const g = resolve(component, box.w)
+    const g = resolve(component, box.w, box.h)
     const border = ctx.colors.border ?? ctx.colors.muted
     const pageBg = ctx.defaultBg ?? ctx.colors.bg
     const radius = ctx.shape?.radius ?? 4
@@ -139,11 +145,15 @@ export const fromTo: SvgComponent<FromToComponent> = {
               ? measureTextUnits(changeFit.text, { bold: true, fontFamily: ctx.fonts.body }) * changeFit.fontSize + 16
               : 0
             const unitW = unit ? measureTextUnits(unit, { fontFamily: ctx.fonts.body }) * unitSize + 5 : 0
-            const labelFit = fitFormLine(row.label, {
-              maxWidth: inner - changeW,
-              fontSize: g.labelSize,
-              fontFamily: ctx.fonts.body,
-            })
+            // The label prints once, on the side the reader starts from. The
+            // arriving row is identified by sitting level with it.
+            const labelFit = filled
+              ? null
+              : fitFormLine(row.label, {
+                  maxWidth: inner - changeW,
+                  fontSize: g.labelSize,
+                  fontFamily: ctx.fonts.body,
+                })
             const valueFit = fitFormLine(value, {
               maxWidth: Math.max(24, inner - changeW - unitW),
               fontSize: g.valueSize,
@@ -152,8 +162,12 @@ export const fromTo: SvgComponent<FromToComponent> = {
             })
             const valueW =
               measureTextUnits(valueFit.text, { bold: true, fontFamily: ctx.fonts.heading }) * valueFit.fontSize
-            const blockH = labelFit.fontSize + 8 + valueFit.fontSize
-            const textTop = top + g.rowH / 2 - blockH / 2
+            // The label's line is reserved on both sides even though only the
+            // starting one prints it, so the two numbers of a row sit on one
+            // baseline — which is the whole reason the rows are aligned.
+            const labelSlot = g.labelSize + 8
+            const textTop = top + g.rowH / 2 - (labelSlot + valueFit.fontSize) / 2
+            const valueBaseline = textTop + labelSlot + valueFit.fontSize * 0.86
             return (
               <g key={`${side}-row-${i}`}>
                 <line
@@ -165,20 +179,22 @@ export const fromTo: SvgComponent<FromToComponent> = {
                   strokeWidth={1}
                   strokeOpacity={filled ? 0.35 : 1}
                 />
-                <text
-                  data-truncated={labelFit.truncated ? "1" : undefined}
-                  x={x + pad}
-                  y={textTop + labelFit.fontSize * 0.9}
-                  fontFamily={ctx.fonts.body}
-                  fontSize={labelFit.fontSize}
-                  fill={ink(ctx.colors.muted, labelFit.fontSize)}
-                >
-                  {labelFit.text}
-                </text>
+                {labelFit ? (
+                  <text
+                    data-truncated={labelFit.truncated ? "1" : undefined}
+                    x={x + pad}
+                    y={textTop + labelFit.fontSize * 0.9}
+                    fontFamily={ctx.fonts.body}
+                    fontSize={labelFit.fontSize}
+                    fill={ink(ctx.colors.muted, labelFit.fontSize)}
+                  >
+                    {labelFit.text}
+                  </text>
+                ) : null}
                 <text
                   data-truncated={valueFit.truncated ? "1" : undefined}
                   x={x + pad}
-                  y={textTop + labelFit.fontSize + 8 + valueFit.fontSize * 0.86}
+                  y={valueBaseline}
                   fontFamily={ctx.fonts.heading}
                   fontSize={valueFit.fontSize}
                   fontWeight="700"
@@ -189,7 +205,7 @@ export const fromTo: SvgComponent<FromToComponent> = {
                 {unit ? (
                   <text
                     x={x + pad + valueW + 5}
-                    y={textTop + labelFit.fontSize + 8 + valueFit.fontSize * 0.86}
+                    y={valueBaseline}
                     fontFamily={ctx.fonts.body}
                     fontSize={unitSize}
                     fill={ink(ctx.colors.muted, unitSize)}

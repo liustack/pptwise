@@ -29,6 +29,8 @@ const HEAD_H = 34
 const PILL_H = 26
 const PILL_GAP = 6
 const EMOTION_H = 96
+/** The curve still reads a rise and a dip at this height and no less. */
+const EMOTION_MIN = 62
 const DOT = 5
 
 interface Row {
@@ -49,7 +51,7 @@ interface Geometry {
   low: number
 }
 
-function resolve(component: JourneyMapComponent, w: number): Geometry {
+function resolve(component: JourneyMapComponent, w: number, boxH?: number): Geometry {
   const n = component.stages.length
   const hasLabels = component.row_labels !== undefined
   const labelW = hasLabels ? Math.round(Math.min(120, Math.max(72, w * 0.09))) : 0
@@ -60,6 +62,20 @@ function resolve(component: JourneyMapComponent, w: number): Geometry {
   const actionLines = component.stages.some((s) => (s.action ?? "").trim() !== "") ? 2 : 0
   const hasChance = component.stages.some((s) => (s.opportunity ?? "").trim() !== "")
 
+  // Every other row is text at its own floor, so a face that hands over less
+  // than the natural height takes it out of the curve, which is the one row
+  // with slack in it.
+  const fixed =
+    HEAD_H +
+    ROW_GAP +
+    (pillRows > 0 ? pillRows * PILL_H + (pillRows - 1) * PILL_GAP + ROW_GAP : 0) +
+    (actionLines > 0 ? actionLines * formLineHeight(FORM_BODY_FLOOR) + ROW_GAP : 0) +
+    (hasChance ? 68 + ROW_GAP : 0)
+  const emotionH =
+    boxH !== undefined && boxH > 0
+      ? Math.max(EMOTION_MIN, Math.min(EMOTION_H, boxH - fixed))
+      : EMOTION_H
+
   let y = 0
   const head: Row = { y, h: HEAD_H }
   y += HEAD_H + ROW_GAP
@@ -68,8 +84,8 @@ function resolve(component: JourneyMapComponent, w: number): Geometry {
   if (touch) y += touch.h + ROW_GAP
   const action = actionLines > 0 ? { y, h: actionLines * formLineHeight(FORM_BODY_FLOOR) } : null
   if (action) y += action.h + ROW_GAP
-  const emotion: Row = { y, h: EMOTION_H }
-  y += EMOTION_H + ROW_GAP
+  const emotion: Row = { y, h: emotionH }
+  y += emotionH + ROW_GAP
   const chance = hasChance ? { y, h: 68 } : null
   if (chance) y += chance.h
 
@@ -97,7 +113,7 @@ export const journeyMap: SvgComponent<JourneyMapComponent> = {
   },
 
   render(component, box, ctx): ReactElement {
-    const g = resolve(component, box.w)
+    const g = resolve(component, box.w, box.h)
     const border = ctx.colors.border ?? ctx.colors.muted
     const pageBg = ctx.defaultBg ?? ctx.colors.bg
     const radius = ctx.shape?.radius ?? 4

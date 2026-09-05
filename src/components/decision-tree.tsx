@@ -22,7 +22,16 @@ type DecisionTreeComponent = Extract<Component, { type: "decision_tree" }>
  * 因此拦下这一页。
  */
 
-const MAX_H = 380
+/**
+ * Natural height at the widest shape.
+ *
+ * Set under the height an ordinary content rect grants rather than at it: a
+ * face whose English heading takes a second line hands its body 350-odd
+ * pixels, and a drawing measured taller than that is dropped whole by the
+ * layout instead of drawn — which is how a component that fits every Chinese
+ * page vanishes from every English one.
+ */
+const MAX_H = 330
 const ROW_GAP = 10
 const COL_GAP = 46
 const CARD_MAX = 84
@@ -48,11 +57,14 @@ interface Geometry {
   h: number
 }
 
-function resolve(component: DecisionTreeComponent, w: number): Geometry {
+function resolve(component: DecisionTreeComponent, w: number, boxH?: number): Geometry {
   const counts = component.branches.map((branch) => branch.outcomes.length)
   const total = counts.reduce((n, c) => n + c, 0)
-  const cardH = Math.round(
-    Math.min(CARD_MAX, Math.max(CARD_MIN, (MAX_H - ROW_GAP * (total - 1)) / total)),
+  // A face may hand over less than the natural height; the rows shrink into
+  // whatever arrives rather than drawing past its bottom edge.
+  const budget = boxH !== undefined && boxH > 0 ? Math.min(MAX_H, boxH) : MAX_H
+  const cardH = Math.floor(
+    Math.min(CARD_MAX, Math.max(CARD_MIN, (budget - ROW_GAP * (total - 1)) / total)),
   )
   const h = cardH * total + ROW_GAP * (total - 1)
   const rootW = Math.round(w * 0.23)
@@ -123,7 +135,7 @@ export const decisionTree: SvgComponent<DecisionTreeComponent> = {
   },
 
   render(component, box, ctx): ReactElement {
-    const g = resolve(component, box.w)
+    const g = resolve(component, box.w, box.h)
     const border = ctx.colors.border ?? ctx.colors.muted
     const pageBg = ctx.defaultBg ?? ctx.colors.bg
     const radius = ctx.shape?.radius ?? 4
