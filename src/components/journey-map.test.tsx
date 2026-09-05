@@ -173,6 +173,53 @@ describe("journey_map component", () => {
     }
   })
 
+
+  it("declines a box shorter than its own floors rather than drawing past the edge", () => {
+    const { container } = svg(journeyMap.render(journey, { x: 88, y: 96, w: 1104, h: 120 }, themed("brief")))
+    expect(container.querySelectorAll("rect, text, path, circle, polygon, line")).toHaveLength(0)
+    const marker = container.querySelector("[data-dropped]")
+    expect(marker?.getAttribute("data-dropped")).toBe("1")
+    expect(marker?.getAttribute("data-dropped-kind")).toBe("component")
+  })
+
+  it("draws inside every height the layout may hand it, or declares it cannot", () => {
+    for (const h of [120, 180, 240, 300, 348, 400]) {
+      const box = { x: 88, y: 96, w: 1104, h }
+      const { container } = svg(journeyMap.render(journey, box, themed("brief")))
+      if (container.querySelector("[data-dropped]")) continue
+      for (const el of container.querySelectorAll("rect, line, circle, text, polygon, path")) {
+        const tag = el.tagName.toLowerCase()
+        const bottom =
+          tag === "rect"
+            ? Number(el.getAttribute("y")) + Number(el.getAttribute("height"))
+            : tag === "circle"
+              ? Number(el.getAttribute("cy")) + Number(el.getAttribute("r"))
+              : tag === "text"
+                ? Number(el.getAttribute("y"))
+                : tag === "line"
+                  ? Math.max(Number(el.getAttribute("y1")), Number(el.getAttribute("y2")))
+                  : Math.max(
+                      ...(el.getAttribute("points") ?? el.getAttribute("d") ?? "0,0")
+                        .replace(/[MLmlz]/g, " ")
+                        .trim()
+                        .split(/[\s,]+/)
+                        .map(Number)
+                        .filter((_, i) => i % 2 === 1),
+                    )
+        const top =
+          tag === "circle"
+            ? Number(el.getAttribute("cy")) - Number(el.getAttribute("r"))
+            : tag === "text"
+              ? Number(el.getAttribute("y")) - Number(el.getAttribute("font-size"))
+              : tag === "rect"
+                ? Number(el.getAttribute("y"))
+                : 0
+        expect(top, `h=${h} ${tag}`).toBeGreaterThanOrEqual(-1)
+        expect(bottom, `h=${h} ${tag}`).toBeLessThanOrEqual(h + 1)
+      }
+    }
+  })
+
   it("stays inside the controlled SVG subset and passes the overflow auditor", () => {
     const markup = renderToStaticMarkup(
       <svg viewBox="0 0 1280 720">{journeyMap.render(withN(6), { x: 40, y: 40, w: 1200 }, themed("terminal"))}</svg>,

@@ -7,6 +7,7 @@ import {
   FORM_BODY_FLOOR,
   fitFormLine,
   fitFormTitleLine,
+  boxTooShort,
   formHighlightFill,
 } from "./legibility"
 import type { RenderDef, SvgComponent } from "./types"
@@ -92,7 +93,7 @@ export const fromTo: SvgComponent<FromToComponent> = {
     const radius = ctx.shape?.radius ?? 4
     const highlight = formHighlightFill(ctx.colors)
 
-    if (box.w < MIN_W) {
+    if (box.w < MIN_W || boxTooShort(g.h, box.h)) {
       return (
         <g transform={`translate(${box.x},${box.y})`}>
           <DroppedContentMarker count={1} kind="component" />
@@ -160,7 +161,13 @@ export const fromTo: SvgComponent<FromToComponent> = {
       key: string,
     ): ReactElement => {
       const unitSize = Math.max(FORM_BODY_FLOOR, Math.round(g.valueSize * 0.5))
-      const unitW = unit ? measureTextUnits(unit, { fontFamily: ctx.fonts.body }) * unitSize + 5 : 0
+      // Fitted, not just measured — see staircase.tsx's own note.
+      const unitFit = unit
+        ? fitFormLine(unit, { maxWidth: Math.max(24, maxW * 0.5), fontSize: unitSize, fontFamily: ctx.fonts.body })
+        : null
+      const unitW = unitFit
+        ? measureTextUnits(unitFit.text, { fontFamily: ctx.fonts.body }) * unitFit.fontSize + 5
+        : 0
       const fit = fitFormLine(text, {
         maxWidth: Math.max(24, maxW - unitW),
         fontSize: g.valueSize,
@@ -181,15 +188,16 @@ export const fromTo: SvgComponent<FromToComponent> = {
           >
             {fit.text}
           </text>
-          {unit ? (
+          {unitFit ? (
             <text
+              data-truncated={unitFit.truncated ? "1" : undefined}
               x={x + w + 5}
               y={baseline}
               fontFamily={ctx.fonts.body}
-              fontSize={unitSize}
-              fill={ink(ctx.colors.muted, unitSize, filled)}
+              fontSize={unitFit.fontSize}
+              fill={ink(ctx.colors.muted, unitFit.fontSize, filled)}
             >
-              {unit}
+              {unitFit.text}
             </text>
           ) : null}
         </g>

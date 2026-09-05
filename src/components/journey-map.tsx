@@ -7,6 +7,7 @@ import {
   FORM_BODY_FLOOR,
   fitFormLine,
   fitFormTitleLine,
+  boxTooShort,
   formHighlightFill,
   formLineHeight,
   layoutFormBody,
@@ -143,6 +144,13 @@ export const journeyMap: SvgComponent<JourneyMapComponent> = {
 
   render(component, box, ctx): ReactElement {
     const g = resolve(component, box.w, box.h)
+    if (boxTooShort(g.h, box.h)) {
+      return (
+        <g transform={`translate(${box.x},${box.y})`}>
+          <DroppedContentMarker count={1} kind="component" />
+        </g>
+      )
+    }
     const border = ctx.colors.border ?? ctx.colors.muted
     const pageBg = ctx.defaultBg ?? ctx.colors.bg
     const radius = ctx.shape?.radius ?? 4

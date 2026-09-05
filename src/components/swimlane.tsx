@@ -5,6 +5,7 @@ import { mixHex } from "./color-mix"
 import { DroppedContentMarker } from "../render/drop-marker"
 import {
   FORM_BODY_FLOOR,
+  boxTooShort,
   fitFormLine,
   fitFormTitleLine,
   formHighlightFill,
@@ -23,6 +24,8 @@ type SwimlaneComponent = Extract<Component, { type: "swimlane" }>
 /** Natural height. Under an ordinary content rect on purpose — see decision-tree.tsx. */
 const MAX_H = 330
 const LANE_GAP = 14
+/** A band shorter than this cannot hold a step box with a name in it. */
+const LANE_MIN = 66
 const BOX_GAP = 18
 const ARROW = 7
 /** No room at all for a note: not even the first two characters would land. */
@@ -52,7 +55,7 @@ interface Geometry {
 function resolve(component: SwimlaneComponent, w: number, budgetH?: number): Geometry {
   const laneCount = component.lanes.length
   const budget = budgetH !== undefined && budgetH > 0 ? Math.min(MAX_H, budgetH) : MAX_H
-  const laneH = Math.floor(Math.min(126, (budget - LANE_GAP * (laneCount - 1)) / laneCount))
+  const laneH = Math.max(LANE_MIN, Math.floor(Math.min(126, (budget - LANE_GAP * (laneCount - 1)) / laneCount)))
   const h = Math.round(laneH * laneCount + LANE_GAP * (laneCount - 1))
   const lanes: Lane[] = component.lanes.map((_, i) => ({
     y: Math.round(i * (laneH + LANE_GAP)),
@@ -100,6 +103,13 @@ export const swimlane: SvgComponent<SwimlaneComponent> = {
 
   render(component, box, ctx): ReactElement {
     const g = resolve(component, box.w, box.h)
+    if (boxTooShort(g.h, box.h)) {
+      return (
+        <g transform={`translate(${box.x},${box.y})`}>
+          <DroppedContentMarker count={1} kind="component" />
+        </g>
+      )
+    }
     const border = ctx.colors.border ?? ctx.colors.muted
     // The lane band is a tint of the page, not a card: it groups the boxes
     // sitting on it without becoming a second surface behind them.

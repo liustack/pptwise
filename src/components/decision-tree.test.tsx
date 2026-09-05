@@ -11,6 +11,7 @@ import { buildCtx } from "../render/full-slide-svg"
 import { resolveStyle } from "../themes"
 import { listThemes } from "../api"
 import { contrastRatio } from "../render/ink"
+import { measureTextUnits } from "../lib/svg-text-layout"
 import type { ComponentCtx } from "./types"
 
 function themed(id: string): ComponentCtx {
@@ -205,6 +206,67 @@ describe("decision_tree component", () => {
     const marker = container.querySelector("[data-dropped]")
     expect(marker?.getAttribute("data-dropped")).toBe("1")
     expect(marker?.getAttribute("data-dropped-kind")).toBe("component")
+  })
+
+
+  it("declines a box shorter than its own floors rather than drawing past the edge", () => {
+    const { container } = svg(decisionTree.render(routing, { x: 88, y: 96, w: 1104, h: 120 }, themed("brief")))
+    expect(container.querySelectorAll("rect, text, path, circle, polygon, line")).toHaveLength(0)
+    const marker = container.querySelector("[data-dropped]")
+    expect(marker?.getAttribute("data-dropped")).toBe("1")
+    expect(marker?.getAttribute("data-dropped-kind")).toBe("component")
+  })
+
+  it("draws inside every height the layout may hand it, or declares it cannot", () => {
+    for (const h of [120, 180, 240, 300, 348, 400]) {
+      const box = { x: 88, y: 96, w: 1104, h }
+      const { container } = svg(decisionTree.render(routing, box, themed("brief")))
+      if (container.querySelector("[data-dropped]")) continue
+      for (const el of container.querySelectorAll("rect, line, circle, text, polygon, path")) {
+        const tag = el.tagName.toLowerCase()
+        const bottom =
+          tag === "rect"
+            ? Number(el.getAttribute("y")) + Number(el.getAttribute("height"))
+            : tag === "circle"
+              ? Number(el.getAttribute("cy")) + Number(el.getAttribute("r"))
+              : tag === "text"
+                ? Number(el.getAttribute("y"))
+                : tag === "line"
+                  ? Math.max(Number(el.getAttribute("y1")), Number(el.getAttribute("y2")))
+                  : Math.max(
+                      ...(el.getAttribute("points") ?? el.getAttribute("d") ?? "0,0")
+                        .replace(/[MLmlz]/g, " ")
+                        .trim()
+                        .split(/[\s,]+/)
+                        .map(Number)
+                        .filter((_, i) => i % 2 === 1),
+                    )
+        const top =
+          tag === "circle"
+            ? Number(el.getAttribute("cy")) - Number(el.getAttribute("r"))
+            : tag === "text"
+              ? Number(el.getAttribute("y")) - Number(el.getAttribute("font-size"))
+              : tag === "rect"
+                ? Number(el.getAttribute("y"))
+                : 0
+        expect(top, `h=${h} ${tag}`).toBeGreaterThanOrEqual(-1)
+        expect(bottom, `h=${h} ${tag}`).toBeLessThanOrEqual(h + 1)
+      }
+    }
+  })
+
+  it("fits a long unit into the row instead of letting it walk off the edge", () => {
+    const { container } = svg(decisionTree.render({ ...routing, branches: routing.branches.map((b) => ({ ...b, outcomes: b.outcomes.map((o) => ({ ...o, unit: "W".repeat(60) })) })) }, { x: 88, y: 96, w: 1104 }, themed("brief")))
+    for (const t of container.querySelectorAll("text")) {
+      const label = t.textContent ?? ""
+      const size = Number(t.getAttribute("font-size"))
+      const width = measureTextUnits(label, { bold: t.getAttribute("font-weight") === "700" }) * size
+      // An end-anchored line grows leftwards from its x, a start-anchored one
+      // rightwards, so the right edge is not the same arithmetic for both.
+      const right = t.getAttribute("text-anchor") === "end" ? Number(t.getAttribute("x")) : Number(t.getAttribute("x")) + width
+      expect(right, label).toBeLessThanOrEqual(1104 + 1)
+    }
+    expect(container.querySelector('[data-truncated="1"]')).not.toBeNull()
   })
 
   it("stays inside the controlled SVG subset and passes the overflow auditor", () => {

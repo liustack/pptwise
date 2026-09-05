@@ -49,6 +49,18 @@ export function formHighlightFill(colors: { primary: string; surface: string; te
   return contrastRatio(colors.primary, colors.surface) >= HIGHLIGHT_MIN_RATIO ? colors.primary : colors.text
 }
 
+/**
+ * A box shorter than the drawing's own floors.
+ *
+ * A component's geometry shrinks what it can and then stops at its minimums,
+ * so a short enough box leaves it measuring past the bottom edge it was
+ * handed. Drawing anyway is the one thing a component may not do: it declines
+ * the box and declares the loss instead, and the export gate stops the page.
+ */
+export function boxTooShort(natural: number, boxH: number | undefined): boolean {
+  return boxH !== undefined && boxH > 0 && natural > boxH + 1
+}
+
 /** Keep a form's preferred text color when it is readable on its own fill. */
 export function formLegibleInk(preferredFill: string, fill: string, fontSize: number): string {
   return accessibleInk(preferredFill, fill, fontSize)

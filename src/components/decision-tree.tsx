@@ -6,6 +6,7 @@ import { DroppedContentMarker } from "../render/drop-marker"
 import {
   FORM_BODY_FLOOR,
   fitFormLine,
+  boxTooShort,
   formHighlightFill,
   formTextClipMarker,
   layoutAtSize,
@@ -210,12 +211,16 @@ export const decisionTree: SvgComponent<DecisionTreeComponent> = {
         fontSize: edgeSize,
         fontFamily: ctx.fonts.body,
       })
+      // The topmost row's line sits close enough to the top edge that a label
+      // set above it would hang off the drawing. It drops to the first
+      // baseline that keeps its own ascent inside instead.
+      const baseline = Math.max(tipY - 7, edgeSize + 1)
       return (
         <text
           key={key}
           data-truncated={fit.truncated ? "1" : undefined}
           x={right}
-          y={tipY - 7}
+          y={baseline}
           textAnchor="end"
           fontFamily={ctx.fonts.body}
           fontSize={fit.fontSize}
@@ -246,7 +251,17 @@ export const decisionTree: SvgComponent<DecisionTreeComponent> = {
       const unit = value ? opts.unit?.trim() : undefined
       const valueSize = Math.min(32, Math.round(g.cardH * 0.4))
       const unitSize = Math.max(FORM_BODY_FLOOR, Math.round(valueSize * 0.5))
-      const unitW = unit ? measureTextUnits(unit, { fontFamily: ctx.fonts.body }) * unitSize + 5 : 0
+      // Fitted, not just measured — see staircase.tsx's own note.
+      const unitFit = unit
+        ? fitFormLine(unit, {
+            maxWidth: Math.max(24, node.w * 0.22),
+            fontSize: unitSize,
+            fontFamily: ctx.fonts.body,
+          })
+        : null
+      const unitW = unitFit
+        ? measureTextUnits(unitFit.text, { fontFamily: ctx.fonts.body }) * unitFit.fontSize + 5
+        : 0
       const valueFit = value
         ? fitFormLine(value, {
             maxWidth: node.w * 0.3,
@@ -328,22 +343,23 @@ export const decisionTree: SvgComponent<DecisionTreeComponent> = {
               {valueFit.text}
             </text>
           ) : null}
-          {valueFit && unit ? (
+          {valueFit && unitFit ? (
             <text
+              data-truncated={unitFit.truncated ? "1" : undefined}
               x={valueRight + 5}
               y={node.y + node.h / 2 + valueFit.fontSize * 0.35}
               fontFamily={ctx.fonts.body}
-              fontSize={unitSize}
-              fill={ink(ctx.colors.muted, unitSize)}
+              fontSize={unitFit.fontSize}
+              fill={ink(ctx.colors.muted, unitFit.fontSize)}
             >
-              {unit}
+              {unitFit.text}
             </text>
           ) : null}
         </g>
       )
     }
 
-    if (box.w < MIN_W) {
+    if (box.w < MIN_W || boxTooShort(g.h, box.h)) {
       return (
         <g transform={`translate(${box.x},${box.y})`}>
           <DroppedContentMarker count={1} kind="component" />

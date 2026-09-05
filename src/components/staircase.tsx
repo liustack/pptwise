@@ -1,12 +1,14 @@
 import type { ReactElement } from "react"
 import type { Component } from "@/ir"
 import { accessibleInk } from "../render/ink"
+import { DroppedContentMarker } from "../render/drop-marker"
 import { measureTextUnits } from "../lib/svg-text-layout"
 import {
   FORM_BODY_FLOOR,
   FORM_TITLE_FLOOR,
   fitFormLine,
   fitFormTitleLine,
+  boxTooShort,
   formHighlightFill,
   formLineHeight,
 } from "./legibility"
@@ -87,7 +89,15 @@ export const staircase: SvgComponent<StaircaseComponent> = {
   },
 
   render(component, box, ctx): ReactElement {
-    const { steps } = resolve(component, box.w, box.h)
+    const g = resolve(component, box.w, box.h)
+    const { steps } = g
+    if (boxTooShort(g.h, box.h)) {
+      return (
+        <g transform={`translate(${box.x},${box.y})`}>
+          <DroppedContentMarker count={1} kind="component" />
+        </g>
+      )
+    }
     const border = ctx.colors.border ?? ctx.colors.muted
     const radius = ctx.shape?.radius ?? 4
     const top = component.items.length - 1
@@ -105,9 +115,21 @@ export const staircase: SvgComponent<StaircaseComponent> = {
             fontSize: step.titleSize,
             fontFamily: ctx.fonts.body,
           })
+          // The unit is fitted, not just measured: a long one used to be
+          // written out at whatever width it wanted and walk off the tread,
+          // while the number it belongs to was squeezed to a 24px stub.
           const unit = (item.unit ?? "").trim()
           const unitSize = Math.max(FORM_BODY_FLOOR, Math.round(step.valueSize * 0.46))
-          const unitW = unit ? measureTextUnits(unit, { fontFamily: ctx.fonts.body }) * unitSize + 6 : 0
+          const unitFit = unit
+            ? fitFormLine(unit, {
+                maxWidth: Math.max(24, inner * 0.45),
+                fontSize: unitSize,
+                fontFamily: ctx.fonts.body,
+              })
+            : null
+          const unitW = unitFit
+            ? measureTextUnits(unitFit.text, { fontFamily: ctx.fonts.body }) * unitFit.fontSize + 6
+            : 0
           const value = fitFormLine(item.value, {
             maxWidth: Math.max(24, inner - unitW),
             fontSize: step.valueSize,
@@ -121,7 +143,7 @@ export const staircase: SvgComponent<StaircaseComponent> = {
             : null
           const titleInk = accessibleInk(filled ? ctx.colors.surface : ctx.colors.primary, fill, title.fontSize)
           const valueInk = accessibleInk(filled ? ctx.colors.surface : ctx.colors.primary, fill, value.fontSize)
-          const unitInk = accessibleInk(filled ? ctx.colors.surface : ctx.colors.muted, fill, unitSize)
+          const unitInk = accessibleInk(filled ? ctx.colors.surface : ctx.colors.muted, fill, unitFit?.fontSize ?? unitSize)
           const noteInk = accessibleInk(filled ? ctx.colors.surface : ctx.colors.muted, fill, step.noteSize)
           const titleY = step.y + step.pad + title.fontSize * 0.9
           const valueY = titleY + formLineHeight(step.titleSize) * 0.86 + value.fontSize * 0.78
@@ -161,15 +183,16 @@ export const staircase: SvgComponent<StaircaseComponent> = {
               >
                 {value.text}
               </text>
-              {unit ? (
+              {unitFit ? (
                 <text
+                  data-truncated={unitFit.truncated ? "1" : undefined}
                   x={step.x + step.pad + valueW + 5}
                   y={valueY}
                   fontFamily={ctx.fonts.body}
-                  fontSize={unitSize}
+                  fontSize={unitFit.fontSize}
                   fill={unitInk}
                 >
-                  {unit}
+                  {unitFit.text}
                 </text>
               ) : null}
               {noteFit ? (
