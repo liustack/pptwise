@@ -33,7 +33,8 @@ export const schema = z
       .min(3, "journey_map.stages needs at least 3 stages — a curve through two points is a line, not a journey")
       .max(6, "journey_map.stages accepts at most 6 stages — past that a stage column is narrower than one touchpoint pill")
       .describe("3-6 stages in the order the person passes through them."),
-    /** 行名（触点 / 行为 / 情绪 / 机会）。省略则不画行名，各行靠内容自证。 */
+    /** 行名（触点 / 行为 / 情绪 / 机会）。省略则用组件自带的词，写中文的
+     * 旅程图拿中文那一套。只有要换说法时才写这个字段。 */
     row_labels: z
       .object({
         touchpoints: z.string().optional(),
@@ -44,7 +45,7 @@ export const schema = z
       .strict()
       .optional()
       .describe(
-        "Names for the four rows, in the deck's own language. Omit a name and that row goes unlabelled; omit the object and none are labelled."
+        "Names for the four rows. Omitted, each row prints the component's own word, in the script the stages are written in — write this only to say it differently."
       ),
   })
   .strict()

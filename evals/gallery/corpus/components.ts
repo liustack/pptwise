@@ -281,9 +281,8 @@ export const COMPONENT_BUILDERS: Record<string, (lex: Lexicon) => Component> = {
     handoff_note: lex.phrases[4],
   }),
 
-  // Row names are deliberately unset: the four rows have no vocabulary in
-  // this corpus's own pools, and borrowing a label pool would print the
-  // wrong word in every language track.
+  // Row names are left unset on purpose, so the page shows the four words
+  // the component supplies rather than a corpus rewording of them.
   journey_map: (lex) => ({
     type: "journey_map",
     stages: slice(lex.stages, 4).map((label, i) => ({

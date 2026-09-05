@@ -22,6 +22,11 @@ type JourneyMapComponent = Extract<Component, { type: "journey_map" }>
  * （1-5 的折线，最低点画大画重）、机会（每格一张卡）。情绪最低的那一段是
  * 这张图的论点，所以它的机会卡整块反色填满（formHighlightFill），
  * 而不是在卡边上加一条色条。折线用 path，点用 circle，全部导出安全。
+ *
+ * 四个行名是组件自带的词（`ROW_WORDS`），作者可用 `row_labels` 覆写——
+ * 和 swot 的象限名同一个做法。区别是这四个词有两套：一张写着中文的旅程图
+ * 印英文行名就是半张外文页，所以选哪一套看这张图自己的内容里有没有汉字，
+ * 不另外向上要一个语言字段（`flowchart.tsx` 的 `hasCjk` 同一个判据）。
  */
 
 const ROW_GAP = 14
@@ -32,6 +37,30 @@ const EMOTION_H = 96
 /** The curve still reads a rise and a dip at this height and no less. */
 const EMOTION_MIN = 62
 const DOT = 5
+
+/** The four row names the component supplies, one set per script. */
+const ROW_WORDS = {
+  latin: { touchpoints: "Touchpoints", action: "Actions", emotion: "Emotion", opportunity: "Opportunity" },
+  cjk: { touchpoints: "触点", action: "行为", emotion: "情绪", opportunity: "机会" },
+} as const
+
+type RowKey = keyof (typeof ROW_WORDS)["latin"]
+
+/** True when the drawing's own content is written in a CJK script. */
+function readsCjk(component: JourneyMapComponent): boolean {
+  return component.stages.some((stage) =>
+    /[\u2e80-\u9fff\u3040-\u30ff\uac00-\ud7af]/.test(
+      [stage.label, stage.action ?? "", stage.opportunity ?? "", ...(stage.touchpoints ?? [])].join(""),
+    ),
+  )
+}
+
+/** The name a row prints: what the author wrote, else the component's own word. */
+function rowName(component: JourneyMapComponent, key: RowKey): string {
+  const authored = component.row_labels?.[key]?.trim()
+  if (authored) return authored
+  return ROW_WORDS[readsCjk(component) ? "cjk" : "latin"][key]
+}
 
 interface Row {
   y: number
@@ -53,9 +82,9 @@ interface Geometry {
 
 function resolve(component: JourneyMapComponent, w: number, boxH?: number): Geometry {
   const n = component.stages.length
-  const hasLabels = component.row_labels !== undefined
-  const labelW = hasLabels ? Math.round(Math.min(120, Math.max(72, w * 0.09))) : 0
-  const trackX = labelW + (hasLabels ? 20 : 0)
+  // Always reserved: every row carries a name, authored or built in.
+  const labelW = Math.round(Math.min(124, Math.max(76, w * 0.1)))
+  const trackX = labelW + 20
   const colW = (w - trackX) / n
 
   const pillRows = Math.max(0, ...component.stages.map((s) => s.touchpoints?.length ?? 0))
@@ -120,7 +149,6 @@ export const journeyMap: SvgComponent<JourneyMapComponent> = {
     const highlight = formHighlightFill(ctx.colors)
     const danger = resolveSemanticColor("danger", ctx.colors)
     const curve = graphicInk(ctx.colors.primary, pageBg)
-    const labels = component.row_labels
     const inset = 10
 
     // Laid out before the tree is built rather than inside it: the drop count
@@ -141,9 +169,9 @@ export const journeyMap: SvgComponent<JourneyMapComponent> = {
     })
     const dropped = chanceLayouts.filter((entry) => entry !== null && entry.layout.lines.length === 0).length
 
-    const rowLabel = (row: Row | null, text: string | undefined): ReactElement | null => {
-      const value = text?.trim()
-      if (!row || !value || g.labelW === 0) return null
+    const rowLabel = (row: Row | null, key: RowKey): ReactElement | null => {
+      if (!row) return null
+      const value = rowName(component, key)
       const fit = fitFormLine(value, { maxWidth: g.labelW, fontSize: FORM_BODY_FLOOR, fontFamily: ctx.fonts.body })
       return (
         <text
@@ -195,7 +223,7 @@ export const journeyMap: SvgComponent<JourneyMapComponent> = {
           )
         })}
 
-        {rowLabel(g.touch, labels?.touchpoints)}
+        {rowLabel(g.touch, "touchpoints")}
         {g.touch
           ? component.stages.flatMap((stage, i) =>
               (stage.touchpoints ?? []).map((point, k) => {
@@ -237,7 +265,7 @@ export const journeyMap: SvgComponent<JourneyMapComponent> = {
             )
           : null}
 
-        {rowLabel(g.action, labels?.action)}
+        {rowLabel(g.action, "action")}
         {g.action
           ? component.stages.map((stage, i) => {
               const value = stage.action?.trim()
@@ -268,7 +296,7 @@ export const journeyMap: SvgComponent<JourneyMapComponent> = {
             })
           : null}
 
-        {rowLabel(g.emotion, labels?.emotion)}
+        {rowLabel(g.emotion, "emotion")}
         <path d={curvePath} fill="none" stroke={curve} strokeWidth={1.75} />
         {dots.map((d) => {
           const lowest = d.i === g.low
@@ -293,7 +321,7 @@ export const journeyMap: SvgComponent<JourneyMapComponent> = {
           )
         })}
 
-        {rowLabel(g.chance, labels?.opportunity)}
+        {rowLabel(g.chance, "opportunity")}
         {g.chance
           ? chanceLayouts.map((entry, i) => {
               if (!entry) return null

@@ -95,7 +95,9 @@ describe("journey_map component", () => {
 
   it("prints every stage, touchpoint, action, score and opportunity", () => {
     const { container } = svg(journeyMap.render(journey, { x: 88, y: 96, w: 1104 }, themed("brief")))
-    const text = Array.from(container.querySelectorAll("text")).map((t) => t.textContent ?? "").join("|")
+    // Joined bare: an action or an opportunity may wrap to a second line, and
+    // a separator between the two halves would hide the whole sentence.
+    const text = Array.from(container.querySelectorAll("text")).map((t) => t.textContent ?? "").join("")
     for (const stage of journey.stages) {
       expect(text).toContain(stage.label)
       for (const point of stage.touchpoints) expect(text).toContain(point)
@@ -107,14 +109,33 @@ describe("journey_map component", () => {
     expect(container.querySelectorAll("[data-dropped]").length).toBe(0)
   })
 
-  it("leaves the rows unlabelled, and the label column unreserved, when no names are authored", () => {
+  it("names the four rows itself when the author writes none", () => {
     const bare = { type: "journey_map" as const, stages: journey.stages }
     const { container } = svg(journeyMap.render(bare, { x: 88, y: 96, w: 1104 }, themed("brief")))
     const text = Array.from(container.querySelectorAll("text")).map((t) => t.textContent ?? "")
-    for (const label of Object.values(journey.row_labels)) expect(text).not.toContain(label)
-    // The first stage name starts at the drawing's own left edge.
-    const first = Array.from(container.querySelectorAll("text")).find((t) => t.textContent === "认知")!
-    expect(Number(first.getAttribute("x"))).toBeLessThan(20)
+    // The stages are written in Chinese, so the Chinese words come out.
+    expect(text).toEqual(expect.arrayContaining(["触点", "行为", "情绪", "机会"]))
+  })
+
+  it("takes its row names from the script the stages are written in", () => {
+    const latin = {
+      type: "journey_map" as const,
+      stages: [
+        { label: "Learn", touchpoints: ["report"], action: "compares vendors", emotion: 4, opportunity: "place the report" },
+        { label: "Onboard", touchpoints: ["checklist"], action: "chases permissions", emotion: 2, opportunity: "automate it" },
+        { label: "Renew", touchpoints: ["review"], action: "asks for budget", emotion: 4, opportunity: "bundle it" },
+      ],
+    }
+    const { container } = svg(journeyMap.render(latin, { x: 88, y: 96, w: 1104 }, themed("brief")))
+    const text = Array.from(container.querySelectorAll("text")).map((t) => t.textContent ?? "")
+    expect(text).toEqual(expect.arrayContaining(["Touchpoints", "Actions", "Emotion", "Opportunity"]))
+    expect(text).not.toContain("触点")
+  })
+
+  it("prints what the author wrote instead, when they write it", () => {
+    const { container } = svg(journeyMap.render(journey, { x: 88, y: 96, w: 1104 }, themed("brief")))
+    const text = Array.from(container.querySelectorAll("text")).map((t) => t.textContent ?? "")
+    for (const label of Object.values(journey.row_labels)) expect(text).toContain(label)
   })
 
   it("keeps the dip's opportunity card visible on every theme, dark ones included", () => {
