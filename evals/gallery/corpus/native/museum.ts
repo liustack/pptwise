@@ -183,6 +183,11 @@ export const MUSEUM_LEXICON: Lexicon = {
     "策展导览",
     "巡展",
   ],
+  tallies: [
+    { filled: 7, caption: "十件展品中", label: "是第一次离开库房与观众见面" },
+    { filled: 3, caption: "十件借展文物中", label: "需要单独控温控湿" },
+    { filled: 6, caption: "十位夜场观众中", label: "走完了完整的一条展线" },
+  ],
   goals: [
     { title: "展品总数", target: "140 件", actual: "146 件", gap: "+6 件", status: "on_track" },
     { title: "借展机构", target: "9 家", actual: "11 家", gap: "+2 家", status: "on_track" },

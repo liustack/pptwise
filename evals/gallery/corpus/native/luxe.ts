@@ -183,6 +183,11 @@ export const LUXE_LEXICON: Lexicon = {
     "故人席",
     "弱音礼",
   ],
+  tallies: [
+    { filled: 8, caption: "十位今夜到场的衣主中", label: "穿着当年那套回了场" },
+    { filled: 4, caption: "十套代表作中", label: "用了工坊自己染的料子" },
+    { filled: 6, caption: "十次试衣中", label: "一次改样就定了版" },
+  ],
   goals: [
     { title: "十年交付", target: "300 套", actual: "307 套", gap: "+7 套", status: "on_track" },
     { title: "回场代表作", target: "12 套", actual: "12 套", gap: "0 套", status: "on_track" },

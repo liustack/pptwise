@@ -31,6 +31,7 @@ import * as numberedCards from "./numbered-cards"
 import * as paragraph from "./paragraph"
 import * as peopleCards from "./people-cards"
 import * as pest from "./pest"
+import * as pictogram from "./pictogram"
 import * as progressDonuts from "./progress-donuts"
 import * as logoWall from "./logo-wall"
 import * as productCards from "./product-cards"
@@ -128,6 +129,7 @@ const COMPONENT_STORY_MODULES: Readonly<Record<string, ComponentStoryModule>> = 
   value_chain: valueChain,
   harvey_balls: harveyBalls,
   scorecard,
+  pictogram,
 }
 
 /**

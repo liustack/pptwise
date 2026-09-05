@@ -183,6 +183,11 @@ export const TECH_LEXICON: Lexicon = {
     "赞助透明",
     "总线因子",
   ],
+  tallies: [
+    { filled: 3, caption: "十位提过 PR 的人中", label: "在一年后仍在提交" },
+    { filled: 7, caption: "十个新开议题中", label: "在一天内得到了第一次回复" },
+    { filled: 2, caption: "十家生产环境用户中", label: "回报了自己的压测数据" },
+  ],
   goals: [
     { title: "仓库星标", target: "40000 star", actual: "42000 star", gap: "+2000 star", status: "on_track" },
     { title: "热路径提速", target: "5 倍", actual: "8.3 倍", gap: "+3.3 倍", status: "on_track" },

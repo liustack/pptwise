@@ -183,6 +183,11 @@ export const PULSE_LEXICON: Lexicon = {
     "健康讲堂",
     "老年友好",
   ],
+  tallies: [
+    { filled: 6, caption: "十位在册患者中", label: "这个月按时把药吃完了" },
+    { filled: 4, caption: "十个家庭中", label: "厨房换上了两克的盐勺" },
+    { filled: 7, caption: "十位来听讲的街坊中", label: "晨起测过一次血压" },
+  ],
   goals: [
     { title: "规律服药率", target: "60%", actual: "64%", gap: "+4 pp", status: "on_track" },
     { title: "在册患者建档", target: "400 人", actual: "412 人", gap: "+12 人", status: "on_track" },

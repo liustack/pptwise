@@ -82,6 +82,7 @@ export const THEME_TABLE_REQUIRED_SURFACES = [
   "value_chain",
   "harvey_balls",
   "scorecard",
+  "pictogram",
 ] as const
 
 export type ThemeChartType =
@@ -150,7 +151,7 @@ export const THEME_CONTENT_SLOTS: Record<string, readonly ThemeContentSlot[]> = 
   stage: [slot("timeline"), slot("kpi_cards"), slot("pyramid"), slot("bmc"), slot("image"), slot("blockquote"), slot("architecture")],
   swiss: [chart("pie"), slot("numbered_cards"), slot("comparison"), slot("people_cards"), slot("scorecard"), slot("icon_cards"), slot("flowchart")],
   terminal: [slot("icon_cards"), slot("data_table"), slot("waterfall"), slot("code"), slot("device_mockup"), slot("decision_tree"), slot("roadmap")],
-  almanac: [slot("icon_cards"), slot("iceberg"), slot("timeline"), slot("pest"), slot("image_compare"), slot("rings"), slot("people_cards")],
+  almanac: [slot("icon_cards"), slot("iceberg"), slot("timeline"), slot("pest"), slot("image_compare"), slot("rings"), slot("pictogram")],
   vermilion: [slot("comparison"), slot("kpi_cards"), slot("gantt"), slot("from_to"), slot("people_cards"), slot("code"), slot("architecture")],
 }
 

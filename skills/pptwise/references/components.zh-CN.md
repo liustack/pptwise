@@ -71,6 +71,7 @@ mirror_of: skills/pptwise/references/components.md
 | `value_chain` | `process` |
 | `harvey_balls` | `data`, `comparison` |
 | `scorecard` | `data`, `comparison` |
+| `pictogram` | `data`, `fact` |
 
 ## 相近组件
 
@@ -101,6 +102,8 @@ mirror_of: skills/pptwise/references/components.md
 
 - 每个数字都对着一个目标、还要给结论时用 `scorecard`。只报数字不下结论用 `data_table`。
 
+- 要把比例还原成数得过来的人时用 `pictogram`。比例本身是主角时用 `progress_donuts`。
+
 `architecture.layers` 默认从上向下绘制。作者按基座优先的顺序写作时，设置 `direction: "bottom_up"`，不要手工倒置数组。
 
-`swot`、`bmc`、`waterfall`、`gantt`、`pest`、`five_forces`、`heatmap`、`sankey`、`harvey_balls` 与 `scorecard` 是全页组件。它们必须独占页面。
+`swot`、`bmc`、`waterfall`、`gantt`、`pest`、`five_forces`、`heatmap`、`sankey`、`harvey_balls`、`scorecard` 与 `pictogram` 是全页组件。它们必须独占页面。

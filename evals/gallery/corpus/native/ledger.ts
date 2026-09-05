@@ -183,6 +183,11 @@ export const INSIGHT_LEXICON: Lexicon = {
     "错误预案",
     "季度对账",
   ],
+  tallies: [
+    { filled: 3, caption: "去年写下的十条判断中", label: "在年内被数据证实" },
+    { filled: 4, caption: "十次公开对账中", label: "承认了一次判断错误" },
+    { filled: 7, caption: "十家路演机构中", label: "把这三条主线写进了自己的年度框架" },
+  ],
   goals: [
     { title: "利率中枢下移", target: "30 bp", actual: "40 bp", gap: "+10 bp", status: "on_track" },
     { title: "年度公开对账", target: "4 次", actual: "4 次", gap: "0 次", status: "on_track" },

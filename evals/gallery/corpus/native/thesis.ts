@@ -183,6 +183,11 @@ export const ACADEMIC_LEXICON: Lexicon = {
     "迁移学习",
     "伦理合规",
   ],
+  tallies: [
+    { filled: 3, caption: "十小时田野录音中", label: "达到了可用于训练的信噪比" },
+    { filled: 6, caption: "十位受访发音人中", label: "同意录音公开用于研究" },
+    { filled: 4, caption: "十个跨点测试句中", label: "迁移后仍然全句正确" },
+  ],
   goals: [
     { title: "字错率降幅", target: "6 pp", actual: "8.4 pp", gap: "+2.4 pp", status: "on_track" },
     { title: "田野录音总量", target: "10000 小时", actual: "12000 小时", gap: "+2000 小时", status: "on_track" },

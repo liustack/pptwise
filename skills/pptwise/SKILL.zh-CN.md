@@ -138,11 +138,11 @@ pptwise render deck-dir/
 | 可换序的并列项 | `list` | `row_cards`、`icon_cards`、`people_cards` |
 | 并排看差异 | `comparison` | `comparison`、`from_to`、`image_compare`、`matrix`、`swot`、`harvey_balls` |
 | 有方向的步骤或时间 | `process` | `steps`、`chevron_process`、`staircase`、`swimlane`、`journey_map`、`flowchart`、`timeline`、`roadmap`、`gantt`、`cycle`、`value_chain` |
-| 一组数字的结构 | `data` | `chart`、`data_table`、`kpi_cards`、`progress_donuts`、`scorecard`、`heatmap`、`sankey` |
+| 一组数字的结构 | `data` | `chart`、`data_table`、`kpi_cards`、`progress_donuts`、`scorecard`、`pictogram`、`heatmap`、`sankey` |
 | 画面本身就是信息 | `photo` | `image`、`image_grid`、`device_mockup` |
 | 作者自己的立论 | `statement` | `verdict_banner`、`callout`，也可以没有组件 |
 | 借别人之口 | `quote` | `blockquote` |
-| 一个数字就是全部 | `fact` | 单项 `kpi_cards`，也可以没有组件 |
+| 一个数字就是全部 | `fact` | 单项 `kpi_cards`、`pictogram`，也可以没有组件 |
 | 断言配一件展品 | `evidence` | `image`、`chart`、`data_table`、`code`、`device_mockup` |
 | 包含或层级 | `hierarchy` | `architecture`、`bmc`、`five_forces`、`rings`、`hub_spoke`、`decision_tree`、`org_tree`、`issue_tree`、`pyramid`、`iceberg`、`pillar_model` |
 

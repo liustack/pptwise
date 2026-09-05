@@ -183,6 +183,11 @@ export const TERRA_LEXICON: Lexicon = {
     "自然教育",
     "五年之约",
   ],
+  tallies: [
+    { filled: 9, caption: "十位订菜箱的社员中", label: "今年续订了下一季" },
+    { filled: 6, caption: "十块轮作地块中", label: "有机质比去年这时候高" },
+    { filled: 4, caption: "十个夏季配送周中", label: "叶菜按原计划装满了箱" },
+  ],
   goals: [
     { title: "菜箱续订率", target: "85%", actual: "87%", gap: "+2 pp", status: "on_track" },
     { title: "土壤有机质", target: "2.8%", actual: "2.9%", gap: "+0.1 pp", status: "on_track" },

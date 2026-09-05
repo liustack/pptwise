@@ -183,6 +183,11 @@ export const VERMILION_LEXICON: Lexicon = {
     "自助终端",
     "适老服务",
   ],
+  tallies: [
+    { filled: 9, caption: "十件办件中", label: "在承诺时限内办结" },
+    { filled: 6, caption: "十位到场群众中", label: "此前已在网上预约" },
+    { filled: 3, caption: "十位老年办事群众中", label: "独立完成了自助机取号" },
+  ],
   goals: [
     { title: "上半年办件总量", target: "38 万件", actual: "41 万件", gap: "+3 万件", status: "on_track" },
     { title: "一窗受理事项", target: "500 项", actual: "540 项", gap: "+40 项", status: "on_track" },

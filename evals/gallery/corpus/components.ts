@@ -233,6 +233,19 @@ export const COMPONENT_BUILDERS: Record<string, (lex: Lexicon) => Component> = {
     note: lex.sources[0]!.label,
   }),
 
+  // Three of this track's own proportions. The count and the sentence under it
+  // are authored together (`Tally`), so nine filled figures never sit beside a
+  // line about a different rate.
+  pictogram: (lex) => ({
+    type: "pictogram",
+    rows: lex.tallies.slice(0, 3).map((tally, i) => ({
+      filled: tally.filled,
+      caption: tally.caption,
+      label: tally.label,
+      highlight: i === 2 ? true : undefined,
+    })),
+  }),
+
   // No `show_grid` here: a bar chart's house default is gridline-free
   // (round-4 review, `journal p05` — every bar already prints its value, see
   // `renderBar`'s own `showGrid` doc comment), and this page is the one the

@@ -183,6 +183,11 @@ export const LECTURE_LEXICON: Lexicon = {
     "外拍预告",
     "结课影展",
   ],
+  tallies: [
+    { filled: 6, caption: "十位在册学员中", label: "上次按时交了作业" },
+    { filled: 3, caption: "十位学员中", label: "已经会用手动曝光" },
+    { filled: 8, caption: "十张课上互拍的照片中", label: "把人放在了窗边的光里" },
+  ],
   goals: [
     { title: "在册学员", target: "30 人", actual: "34 人", gap: "+4 人", status: "on_track" },
     { title: "交作业人数", target: "18 人", actual: "21 人", gap: "+3 人", status: "on_track" },

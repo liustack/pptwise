@@ -183,6 +183,11 @@ export const RUNWAY_LEXICON: Lexicon = {
     "旧物改造",
     "信笺主题",
   ],
+  tallies: [
+    { filled: 8, caption: "十件成衣中", label: "主料用的是回收面料" },
+    { filled: 3, caption: "十缸植物染打样中", label: "上身后色牢度过了关" },
+    { filled: 6, caption: "十位下预定的客人中", label: "接受了五十天以上的等待" },
+  ],
   goals: [
     { title: "系列 look", target: "14 个", actual: "14 个", gap: "0 个", status: "on_track" },
     { title: "回收面料占比", target: "50%", actual: "60%", gap: "+10 pp", status: "on_track" },

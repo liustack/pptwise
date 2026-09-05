@@ -183,6 +183,11 @@ export const ENTERPRISE_LEXICON: Lexicon = {
     "班组认证",
     "观察周",
   ],
+  tallies: [
+    { filled: 8, caption: "十位试点厂区班组长中", label: "已经能独立完成开单" },
+    { filled: 4, caption: "十条产线中", label: "本月完成了主数据清洗" },
+    { filled: 6, caption: "十次演练回退中", label: "在七十二小时窗口内收工" },
+  ],
   goals: [
     { title: "切换覆盖员工", target: "30000 人", actual: "30400 人", gap: "+400 人", status: "on_track" },
     { title: "年等待时间", target: "5000 小时", actual: "4300 小时", gap: "-700 小时", status: "on_track" },

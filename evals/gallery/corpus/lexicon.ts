@@ -92,6 +92,23 @@ export interface Goal {
   readonly status: "on_track" | "watch" | "off_track"
 }
 
+/**
+ * A proportion restated as a count out of ten.
+ *
+ * `caption` names the ten and `label` says what the filled ones did, so the
+ * sentence and the number are authored together. Paired from separate pools
+ * they contradict each other — nine filled figures beside a line about a
+ * five-in-ten rate.
+ */
+export interface Tally {
+  /** 0 to 10, the count actually drawn. */
+  readonly filled: number
+  /** Who or what the ten are. */
+  readonly caption: string
+  /** What the filled ones did. */
+  readonly label: string
+}
+
 export interface Person {
   readonly name: string
   readonly role: string
@@ -233,6 +250,8 @@ export interface Lexicon {
   readonly metrics: readonly Metric[]
   /** Technology / capability tags, <= 24 chars each. */
   readonly tags: Pool
+  /** Three of this subject's own proportions, each restated as a count out of ten. */
+  readonly tallies: readonly Tally[]
   /** Promises this subject made and what came of them — at least 5. */
   readonly goals: readonly Goal[]
   /** One decision this subject actually faced, with the criteria it was weighed on. */
@@ -529,6 +548,11 @@ const zh: Lexicon = {
     "SCIMv2",
     "审计日志",
     "Kubernetes",
+  ],
+  tallies: [
+    { filled: 7, caption: "十家新签客户中", label: "在签约后第一周内完成开通" },
+    { filled: 5, caption: "十位工作区管理员中", label: "启用了自助报表并持续使用" },
+    { filled: 9, caption: "十家续约客户中", label: "在续约时扩了席位" },
   ],
   goals: [
     { title: "客户续约率", target: "88%", actual: "91%", gap: "+3 pp", status: "on_track" },
@@ -857,6 +881,11 @@ const en: Lexicon = {
     "LDAP",
     "Kubernetes",
   ],
+  tallies: [
+    { filled: 7, caption: "Of ten new customers", label: "were live in the first week" },
+    { filled: 5, caption: "Of ten workspace admins", label: "kept self-serve reporting on" },
+    { filled: 9, caption: "Of ten renewals", label: "added seats" },
+  ],
   goals: [
     { title: "Renewal rate", target: "88%", actual: "91%", gap: "+3 pp", status: "on_track" },
     { title: "New bookings", target: "$42.0M", actual: "$43.9M", gap: "+$1.9M", status: "on_track" },
@@ -1183,6 +1212,11 @@ const mixed: Lexicon = {
     "Spot 实例",
     "PostgreSQL RDS",
     "SLSA 签名",
+  ],
+  tallies: [
+    { filled: 7, caption: "十家新签客户中", label: "第一周内完成 onboarding" },
+    { filled: 5, caption: "十位 workspace 管理员中", label: "启用了 Insights 报表" },
+    { filled: 9, caption: "十家续约客户中", label: "续约时扩了席位" },
   ],
   goals: [
     { title: "客户续约率", target: "88%", actual: "91%", gap: "+3 pp", status: "on_track" },

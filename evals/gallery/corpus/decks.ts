@@ -212,6 +212,7 @@ const COMPONENT_KINDS: Record<Component["type"], PageKind> = {
   value_chain: "process",
   harvey_balls: "comparison",
   scorecard: "data",
+  pictogram: "data",
 }
 
 function componentKind(component: Component): PageKind {

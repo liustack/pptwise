@@ -183,6 +183,11 @@ export const CAMPAIGN_LEXICON: Lexicon = {
     "价格带卡位",
     "冷链保障",
   ],
+  tallies: [
+    { filled: 7, caption: "十家覆盖门店中", label: "首月把货摆进了冰柜第一层" },
+    { filled: 1, caption: "十位试饮过的人中", label: "一个月内自己回来买了一瓶" },
+    { filled: 5, caption: "十座巡回城市中", label: "试饮当天完成了当月铺市目标" },
+  ],
   goals: [
     { title: "首月铺市率", target: "70%", actual: "74%", gap: "+4 pp", status: "on_track" },
     { title: "冰柜贴纸覆盖", target: "20000 家", actual: "21600 家", gap: "+1600 家", status: "on_track" },

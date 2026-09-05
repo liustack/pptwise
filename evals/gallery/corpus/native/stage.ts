@@ -183,6 +183,11 @@ export const STAGE_LEXICON: Lexicon = {
     "会议字幕",
     "无障碍模式",
   ],
+  tallies: [
+    { filled: 9, caption: "十位试戴者中", label: "连续戴满一小时没有摘下来" },
+    { filled: 4, caption: "十次户外强光测试中", label: "无需手动调亮就能读清" },
+    { filled: 7, caption: "十位预约用户中", label: "选了带指环的版本" },
+  ],
   goals: [
     { title: "整机重量", target: "40 克", actual: "38 克", gap: "-2 克", status: "on_track" },
     { title: "峰值亮度", target: "2500 尼特", actual: "3000 尼特", gap: "+500 尼特", status: "on_track" },

@@ -66,6 +66,7 @@ The table gives each component's normal kind home. A component may serve more th
 | `value_chain` | `process` |
 | `harvey_balls` | `data`, `comparison` |
 | `scorecard` | `data`, `comparison` |
+| `pictogram` | `data`, `fact` |
 
 ## Lookalikes
 
@@ -96,6 +97,8 @@ The table gives each component's normal kind home. A component may serve more th
 
 - Use `scorecard` when each figure is judged against a target and carries a verdict. Use `data_table` when the numbers are reported without one.
 
+- Use `pictogram` to land a rate as a countable number of people. Use `progress_donuts` when the rate itself is the subject.
+
 `architecture.layers` paints top to bottom by default. Set `direction: "bottom_up"` when the authored order should begin at the foundation. Keep the array in narrative order.
 
-`swot`, `bmc`, `waterfall`, `gantt`, `pest`, `five_forces`, `heatmap`, `sankey`, `harvey_balls`, and `scorecard` are full-body components. Each must be the page's only component.
+`swot`, `bmc`, `waterfall`, `gantt`, `pest`, `five_forces`, `heatmap`, `sankey`, `harvey_balls`, `scorecard`, and `pictogram` are full-body components. Each must be the page's only component.

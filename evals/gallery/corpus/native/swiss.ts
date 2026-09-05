@@ -183,6 +183,11 @@ export const SWISS_LEXICON: Lexicon = {
     "预算缺口",
     "复捐率",
   ],
+  tallies: [
+    { filled: 9, caption: "每十元捐款中", label: "有九元直接落到了项目上" },
+    { filled: 6, caption: "十个新建图书角中", label: "半年后仍在按周开放" },
+    { filled: 3, caption: "十位月捐人中", label: "读完了年度透明度报告" },
+  ],
   goals: [
     { title: "年度总收入", target: "1000 万元", actual: "1142.6 万元", gap: "+142.6 万元", status: "on_track" },
     { title: "管理费率", target: "10%", actual: "8.7%", gap: "-1.3 pp", status: "on_track" },

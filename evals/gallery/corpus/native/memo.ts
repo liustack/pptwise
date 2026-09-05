@@ -183,6 +183,11 @@ export const MEMO_LEXICON: Lexicon = {
     "防篡改",
     "半年复盘",
   ],
+  tallies: [
+    { filled: 6, caption: "十次记账的月份里", label: "开销压在了六千五以内" },
+    { filled: 2, caption: "十位谈过的潜在客户中", label: "回信问了报价" },
+    { filled: 8, caption: "十个练手项目中", label: "做完了并且留下了成品" },
+  ],
   goals: [
     { title: "存款可撑月数", target: "18 个月", actual: "22 个月", gap: "+4 个月", status: "on_track" },
     { title: "月开销上限", target: "7000 元", actual: "6500 元", gap: "-500 元", status: "on_track" },

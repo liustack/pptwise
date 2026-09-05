@@ -183,6 +183,11 @@ export const INK_LEXICON: Lexicon = {
     "留言代润",
     "同临一帖",
   ],
+  tallies: [
+    { filled: 3, caption: "十位在社社友中", label: "今年通临了一遍书谱" },
+    { filled: 7, caption: "十件社课作品中", label: "被选入了这次社藏展" },
+    { filled: 5, caption: "十张残拓中", label: "已经完成揭裱与补全" },
+  ],
   goals: [
     { title: "社藏展件", target: "48 件", actual: "50 件", gap: "+2 件", status: "on_track" },
     { title: "社课作品", target: "30 件", actual: "36 件", gap: "+6 件", status: "on_track" },

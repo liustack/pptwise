@@ -183,6 +183,11 @@ export const PLAYBILL_LEXICON: Lexicon = {
     "戏剧节投递",
     "散伙饭",
   ],
+  tallies: [
+    { filled: 6, caption: "十位社员中", label: "今年就要毕业离开剧社" },
+    { filled: 9, caption: "十张首轮票中", label: "在开票当天卖了出去" },
+    { filled: 4, caption: "十次合成排练中", label: "从头到尾没有中断" },
+  ],
   goals: [
     { title: "排练天数", target: "90 天", actual: "102 天", gap: "+12 天", status: "on_track" },
     { title: "首轮票量", target: "600 张", actual: "700 张", gap: "+100 张", status: "on_track" },

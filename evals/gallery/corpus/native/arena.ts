@@ -183,6 +183,11 @@ export const ARENA_LEXICON: Lexicon = {
     "主场票房",
     "冬窗",
   ],
+  tallies: [
+    { filled: 6, caption: "十场常规赛里", label: "拿下了第一条小龙" },
+    { filled: 7, caption: "十次开雾团中", label: "打野先手且没有交闪现" },
+    { filled: 3, caption: "十名二队队员中", label: "本赛季完成了一队首秀" },
+  ],
   goals: [
     { title: "常规赛胜率", target: "55%", actual: "58%", gap: "+3 pp", status: "on_track" },
     { title: "中野参团率", target: "62%", actual: "67%", gap: "+5 pp", status: "on_track" },

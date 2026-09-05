@@ -183,6 +183,11 @@ export const CRAYON_LEXICON: Lexicon = {
     "混龄活动",
     "幼小衔接",
   ],
+  tallies: [
+    { filled: 9, caption: "班里每十个孩子中", label: "这学期能自己吃完一整碗饭" },
+    { filled: 7, caption: "十个孩子中", label: "午睡能在十五分钟内睡着" },
+    { filled: 6, caption: "十个孩子中", label: "玩完会把积木送回筐里" },
+  ],
   goals: [
     { title: "学期出勤率", target: "92%", actual: "94%", gap: "+2 pp", status: "on_track" },
     { title: "独立进餐人数", target: "26 人", actual: "28 人", gap: "+2 人", status: "on_track" },

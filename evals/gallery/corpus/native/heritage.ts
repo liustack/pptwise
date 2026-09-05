@@ -183,6 +183,11 @@ export const HERITAGE_LEXICON: Lexicon = {
     "非遗申报",
     "字号维权",
   ],
+  tallies: [
+    { filled: 4, caption: "十位买过小罐的客人中", label: "半年内回来买了第二次" },
+    { filled: 7, caption: "现存每十口老缸中", label: "今年三伏仍在下酱" },
+    { filled: 2, caption: "十位新来的学徒中", label: "熬过了第一个夏天" },
+  ],
   goals: [
     { title: "小罐复购率", target: "30%", actual: "36%", gap: "+6 pp", status: "on_track" },
     { title: "新收学徒", target: "3 人", actual: "4 人", gap: "+1 人", status: "on_track" },

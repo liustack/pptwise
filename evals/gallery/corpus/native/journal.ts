@@ -183,6 +183,11 @@ export const JOURNAL_LEXICON: Lexicon = {
     "订户告知",
     "慢出版",
   ],
+  tallies: [
+    { filled: 6, caption: "十位填问卷的读者中", label: "说愿意为更长的报道多付钱" },
+    { filled: 8, caption: "十位老订户中", label: "改版后续订了下一年" },
+    { filled: 4, caption: "十篇约稿中", label: "在截稿日之前交齐了" },
+  ],
   goals: [
     { title: "问卷回收", target: "800 份", actual: "1100 份", gap: "+300 份", status: "on_track" },
     { title: "长报道下限", target: "6000 字", actual: "8000 字", gap: "+2000 字", status: "on_track" },

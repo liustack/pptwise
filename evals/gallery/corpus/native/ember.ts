@@ -183,6 +183,11 @@ export const EMBER_LEXICON: Lexicon = {
     "碰伤险",
     "百台计划",
   ],
+  tallies: [
+    { filled: 8, caption: "十家试用果园中", label: "第二季继续租了机器" },
+    { filled: 9, caption: "每十筐机采果中", label: "有九筐达到一级果标准" },
+    { filled: 3, caption: "十家谈过的投资机构中", label: "进入了尽调" },
+  ],
   goals: [
     { title: "真机碰伤率", target: "1.0%", actual: "0.8%", gap: "-0.2 pp", status: "on_track" },
     { title: "单台日采量", target: "1.0 吨", actual: "1.1 吨", gap: "+0.1 吨", status: "on_track" },

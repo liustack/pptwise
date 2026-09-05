@@ -547,6 +547,16 @@ const COVERAGE_ENTRIES: Record<string, unknown> = {
       { label: "Setup", target: "4.0", actual: "5.2", gap: "+1.2", status: "off_track" },
     ],
   }),
+  // pictogram's own hard check is the denominator: the row counts out of ten,
+  // so an eleventh figure has nowhere to stand.
+  "coverage/pictogram-valid": minimalDeck({
+    type: "pictogram",
+    rows: [{ filled: 7, label: "were set up in the first week" }],
+  }),
+  "coverage/pictogram-tripwire": minimalDeck({
+    type: "pictogram",
+    rows: [{ filled: 11, label: "were set up in the first week" }],
+  }),
 }
 
 // Assembles the validation corpus from all three sources, keyed by

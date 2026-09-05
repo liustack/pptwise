@@ -145,6 +145,7 @@ export const COMPONENT_FAMILIES: readonly GroupFamily[] = [
       "waterfall",
       "sankey",
       "progress_donuts",
+      "pictogram",
     ],
   },
   {

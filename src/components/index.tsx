@@ -57,6 +57,7 @@ import { renderDef as pillarModelRenderDef } from "./pillar-model"
 import { renderDef as valueChainRenderDef } from "./value-chain"
 import { renderDef as harveyBallsRenderDef } from "./harvey-balls"
 import { renderDef as scorecardRenderDef } from "./scorecard"
+import { renderDef as pictogramRenderDef } from "./pictogram"
 
 /**
  * Dispatch table (src domain reorg wave 2, spec §4.2/§4.3): replaces the
@@ -133,6 +134,7 @@ const RENDER_DEFS: Record<ComponentType, RenderDef> = {
   value_chain: valueChainRenderDef,
   harvey_balls: harveyBallsRenderDef,
   scorecard: scorecardRenderDef,
+  pictogram: pictogramRenderDef,
 }
 
 /**

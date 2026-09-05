@@ -183,6 +183,11 @@ export const CLASSROOM_LEXICON: Lexicon = {
     "暑假清单",
     "收心周",
   ],
+  tallies: [
+    { filled: 4, caption: "全班每十个学生中", label: "期末的辅助线题拿到了满分" },
+    { filled: 7, caption: "十个学生中", label: "这学期把错题本坚持记完了" },
+    { filled: 3, caption: "十道扣分题中", label: "错在计算而不是思路" },
+  ],
   goals: [
     { title: "班级平均分", target: "85 分", actual: "86.5 分", gap: "+1.5 分", status: "on_track" },
     { title: "九十分以上", target: "15 人", actual: "18 人", gap: "+3 人", status: "on_track" },

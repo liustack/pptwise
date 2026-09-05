@@ -551,6 +551,13 @@ const BLOCK_CASES: readonly BlockCase[] = [
     },
     expected: "Gap is actual minus target.",
   },
+  {
+    type: "pictogram",
+    alias: "items",
+    canonical: "rows",
+    component: { type: "pictogram", items: [{ filled: 7, label: "were set up in the first week" }] },
+    expected: [{ filled: 7, label: "were set up in the first week" }],
+  },
 ]
 
 describe("COMPONENT_FIELD_ALIASES: every row round-trips", () => {
@@ -1289,6 +1296,30 @@ const ITEM_CASES: readonly ItemCase[] = [
     ],
     expected: "on_track",
   },
+  {
+    type: "pictogram",
+    itemsKey: "rows",
+    alias: "value",
+    canonical: "filled",
+    item: { value: 7, label: "were set up in the first week" },
+    expected: 7,
+  },
+  {
+    type: "pictogram",
+    itemsKey: "rows",
+    alias: "title",
+    canonical: "label",
+    item: { filled: 7, title: "were set up in the first week" },
+    expected: "were set up in the first week",
+  },
+  {
+    type: "pictogram",
+    itemsKey: "rows",
+    alias: "kicker",
+    canonical: "caption",
+    item: { filled: 7, label: "were set up in the first week", kicker: "Of ten new customers" },
+    expected: "Of ten new customers",
+  },
 ]
 
 describe("COMPONENT_ITEM_FIELD_ALIASES: every row round-trips", () => {
@@ -1318,7 +1349,7 @@ describe("COMPONENT_ITEM_FIELD_ALIASES: every row round-trips", () => {
 // ── total pair count pinned (docs/changeset "53 total synonym pairs") ──────
 
 describe("total synonym-pair count", () => {
-  it("COMPONENT_FIELD_ALIASES + COMPONENT_ITEM_FIELD_ALIASES flatten to exactly 156 pairs", () => {
+  it("COMPONENT_FIELD_ALIASES + COMPONENT_ITEM_FIELD_ALIASES flatten to exactly 160 pairs", () => {
     // The "covers every row exactly once" completeness guards above only
     // prove BLOCK_CASES/ITEM_CASES stay in lockstep with each table's own
     // rows — a row deleted from a table *and* its matching test case would
@@ -1335,7 +1366,7 @@ describe("total synonym-pair count", () => {
       (n, specs) => n + specs.reduce((m, spec) => m + Object.keys(spec.aliases).length, 0),
       0,
     )
-    expect(blockCount + itemCount).toBe(156)
+    expect(blockCount + itemCount).toBe(160)
   })
 })
 

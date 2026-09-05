@@ -372,6 +372,13 @@ const COMPONENT_BY_TYPE: Record<Component["type"], Component> = {
     ],
     note: "Gap is actual minus target.",
   },
+  pictogram: {
+    type: "pictogram",
+    rows: [
+      { filled: 7, caption: "Of ten new customers", label: "were set up in the first week" },
+      { filled: 9, caption: "Of ten renewals", label: "added seats", highlight: true },
+    ],
+  },
   hub_spoke: {
     type: "hub_spoke",
     center: "Platform",
@@ -531,6 +538,7 @@ function noAssetIr(): PptxIR {
       contentSlide("Image compare (no resolvable asset)", [COMPONENT_BY_TYPE.image_compare]),
       contentSlide("Harvey balls", [COMPONENT_BY_TYPE.harvey_balls]),
       contentSlide("Scorecard", [COMPONENT_BY_TYPE.scorecard]),
+      contentSlide("Pictogram", [COMPONENT_BY_TYPE.pictogram]),
       { type: "ending", heading: "Thanks", components: [] },
     ],
   }
