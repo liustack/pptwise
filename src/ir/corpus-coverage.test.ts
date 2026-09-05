@@ -208,6 +208,26 @@ const COVERAGE_ENTRIES: Record<string, unknown> = {
   }),
   // staircase's own hard check is the level-count floor: two treads read as
   // a comparison, not a climb.
+  // swimlane's own hard check is the cross-reference: a step names a lane,
+  // and a lane it names has to exist.
+  "coverage/swimlane-valid": minimalDeck({
+    type: "swimlane",
+    lanes: [{ label: "Success" }, { label: "Delivery" }],
+    steps: [
+      { lane: "Success", title: "Signal" },
+      { lane: "Delivery", title: "Schedule" },
+      { lane: "Success", title: "Sign" },
+    ],
+  }),
+  "coverage/swimlane-tripwire": minimalDeck({
+    type: "swimlane",
+    lanes: [{ label: "Success" }, { label: "Delivery" }],
+    steps: [
+      { lane: "Success", title: "Signal" },
+      { lane: "Finance", title: "Schedule" },
+      { lane: "Success", title: "Sign" },
+    ],
+  }),
   // chevron_process' own hard check is the stage-count floor: two chevrons
   // read as a before/after, which is `comparison`.
   "coverage/chevron_process-valid": minimalDeck({

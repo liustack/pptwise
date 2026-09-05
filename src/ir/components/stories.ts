@@ -34,6 +34,7 @@ import * as rowCards from "./row-cards"
 import * as sankey from "./sankey"
 import * as staircase from "./staircase"
 import * as steps from "./steps"
+import * as swimlane from "./swimlane"
 import * as swot from "./swot"
 import * as tagRow from "./tag-row"
 import * as timeline from "./timeline"
@@ -95,6 +96,7 @@ const COMPONENT_STORY_MODULES: Readonly<Record<string, ComponentStoryModule>> = 
   sankey,
   staircase,
   steps,
+  swimlane,
   swot,
   tag_row: tagRow,
   timeline,

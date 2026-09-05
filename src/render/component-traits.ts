@@ -40,6 +40,7 @@ import { traits as hubSpokeTraits } from "@/ir/components/hub-spoke"
 import { traits as progressDonutsTraits } from "@/ir/components/progress-donuts"
 import { traits as staircaseTraits } from "@/ir/components/staircase"
 import { traits as chevronProcessTraits } from "@/ir/components/chevron-process"
+import { traits as swimlaneTraits } from "@/ir/components/swimlane"
 
 /**
  * Component trait registry (W2 task 5, spec §3/§6/§8 — re-derived as a pure
@@ -157,6 +158,7 @@ const ALL_TRAITS: Record<ComponentType, ComponentTraits> = {
   progress_donuts: progressDonutsTraits,
   staircase: staircaseTraits,
   chevron_process: chevronProcessTraits,
+  swimlane: swimlaneTraits,
 }
 
 /** Every component type whose own domain-file `traits` declares `trait: true`, collected as a `ReadonlySet`. */

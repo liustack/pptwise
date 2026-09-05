@@ -71,6 +71,7 @@ import { aliases as hubSpokeAliases } from "./components/hub-spoke"
 import { aliases as progressDonutsAliases } from "./components/progress-donuts"
 import { aliases as staircaseAliases } from "./components/staircase"
 import { aliases as chevronProcessAliases } from "./components/chevron-process"
+import { aliases as swimlaneAliases } from "./components/swimlane"
 
 /** One component type's `{ aliasKey: canonicalKey }` map. */
 export type FieldAliasMap = Readonly<Record<string, string>>
@@ -190,6 +191,10 @@ export const COMPONENT_ITEM_FIELD_ALIASES: Readonly<Record<string, readonly Item
   // A chevron stage is a card with a point on it, so the same
   // title-for-label and description-for-text slips apply.
   chevron_process: chevronProcessAliases.items,
+  // Two item arrays, same as sankey's nodes/links: a lane is named
+  // ("name"/"title" for its label, "owner" for the role under it) and a step
+  // is a card ("label"/"name" for its title, "text"/"desc" for its detail).
+  swimlane: swimlaneAliases.items,
 }
 
 /**

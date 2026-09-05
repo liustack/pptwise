@@ -1503,6 +1503,13 @@ const MUTED_SURFACE_CLASS: Record<string, MutedSurfaceClass> = {
   // routes through `accessibleInk` against it. The one highlighted chevron
   // takes its index ink from `colors.surface` instead.
   chevron_process: "flat-surface",
+  // swimlane.tsx paints `colors.muted` for a lane's role line (on the ambient
+  // page background, left of the bands) and for a step's detail line (on the
+  // unblended `colors.surface` box fill, or reversed to `colors.surface`
+  // against the highlighted box). Both route through `accessibleInk` against
+  // the surface they land on; the tinted lane band carries no text of its own
+  // except the handover note, which takes `colors.text`, not muted.
+  swimlane: "flat-surface",
 }
 
 describe("colors.muted component-type coverage (task-2 fix round, backlog 5a completeness sweep)", () => {

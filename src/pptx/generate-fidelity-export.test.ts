@@ -284,6 +284,16 @@ const COMPONENT_BY_TYPE: Record<Component["type"], Component> = {
       { value: "72%", label: "closure" },
     ],
   },
+  swimlane: {
+    type: "swimlane",
+    lanes: [{ label: "Success", role: "account team" }, { label: "Delivery" }],
+    steps: [
+      { lane: "Success", title: "Signal", detail: "2 days" },
+      { lane: "Delivery", title: "Schedule", detail: "4 days" },
+      { lane: "Success", title: "Sign" },
+    ],
+    handoff_note: "six days waiting between the two",
+  },
   chevron_process: {
     type: "chevron_process",
     items: [
