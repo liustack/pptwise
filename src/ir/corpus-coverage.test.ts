@@ -235,16 +235,35 @@ const COVERAGE_ENTRIES: Record<string, unknown> = {
     type: "decision_tree",
     question: "Buy or build?",
     branches: [
-      { edge: "buy", title: "Licence it", outcomes: [{ title: "Standard tier" }, { title: "Enterprise tier", recommended: true }] },
-      { edge: "build", title: "Build it", outcomes: [{ title: "One team" }, { title: "Two teams" }] },
+      { edge: "buy", title: "Licence it", outcomes: [{ edge: "60%", title: "Standard tier" }, { edge: "40%", title: "Enterprise tier", recommended: true }] },
+      { edge: "build", title: "Build it", outcomes: [{ edge: "70%", title: "One team" }, { edge: "30%", title: "Two teams" }] },
     ],
   }),
   "coverage/decision_tree-tripwire": minimalDeck({
     type: "decision_tree",
     question: "Buy or build?",
     branches: [
-      { edge: "buy", title: "Licence it", outcomes: [{ title: "Standard tier" }, { title: "Enterprise tier", recommended: true }] },
-      { edge: "build", title: "Build it", outcomes: [{ title: "One team", recommended: true }, { title: "Two teams" }] },
+      { edge: "buy", title: "Licence it", outcomes: [{ edge: "60%", title: "Standard tier" }, { edge: "40%", title: "Enterprise tier", recommended: true }] },
+      { edge: "build", title: "Build it", outcomes: [{ edge: "70%", title: "One team", recommended: true }, { edge: "30%", title: "Two teams" }] },
+    ],
+  }),
+  // Every line into an outcome carries its condition; a second level that says
+  // nothing about why a reader lands there is a list drawn with arrows.
+  "coverage/decision_tree-edgeless-tripwire": minimalDeck({
+    type: "decision_tree",
+    question: "Buy or build?",
+    branches: [
+      { edge: "buy", title: "Licence it", outcomes: [{ title: "Standard tier" }, { title: "Enterprise tier" }] },
+      { edge: "build", title: "Build it", outcomes: [{ edge: "70%", title: "One team" }, { edge: "30%", title: "Two teams" }] },
+    ],
+  }),
+  // A unit is what a number is counted in, and there is no number here.
+  "coverage/decision_tree-unitless-tripwire": minimalDeck({
+    type: "decision_tree",
+    question: "Buy or build?",
+    branches: [
+      { edge: "buy", title: "Licence it", outcomes: [{ edge: "60%", title: "Standard tier", unit: "weeks" }, { edge: "40%", title: "Enterprise tier" }] },
+      { edge: "build", title: "Build it", outcomes: [{ edge: "70%", title: "One team" }, { edge: "30%", title: "Two teams" }] },
     ],
   }),
   // journey_map's own hard check is the 1-5 emotion domain: a curve is only
@@ -275,6 +294,27 @@ const COVERAGE_ENTRIES: Record<string, unknown> = {
       { lane: "Delivery", title: "Schedule" },
       { lane: "Success", title: "Sign" },
     ],
+  }),
+  // Two lanes with one name leave a step no way to say which it belongs to.
+  "coverage/swimlane-duplicate-lane-tripwire": minimalDeck({
+    type: "swimlane",
+    lanes: [{ label: "Success" }, { label: "Success", role: "second team" }],
+    steps: [
+      { lane: "Success", title: "Signal" },
+      { lane: "Success", title: "Schedule" },
+      { lane: "Success", title: "Sign" },
+    ],
+  }),
+  // A note about a handover, on a process that never hands anything over.
+  "coverage/swimlane-note-without-handover-tripwire": minimalDeck({
+    type: "swimlane",
+    lanes: [{ label: "Success" }, { label: "Delivery" }],
+    steps: [
+      { lane: "Success", title: "Signal" },
+      { lane: "Success", title: "Schedule" },
+      { lane: "Success", title: "Sign" },
+    ],
+    handoff_note: "six days waiting between the two",
   }),
   "coverage/swimlane-tripwire": minimalDeck({
     type: "swimlane",

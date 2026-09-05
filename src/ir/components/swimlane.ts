@@ -43,16 +43,41 @@ export const schema = z
   })
   .strict()
   .superRefine((value, ctx) => {
-    const known = new Set(value.lanes.map((lane) => lane.label))
+    // A lane is addressed by its own name, so two lanes cannot share one: the
+    // steps naming it would all land in whichever came first, and the input
+    // has no way to say which one the author meant.
+    const seen = new Set<string>()
+    value.lanes.forEach((lane, i) => {
+      if (seen.has(lane.label)) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["lanes", i, "label"],
+          message: `swimlane.lanes[${i}].label repeats "${lane.label}" — a step names its lane by that label, so two lanes with one name leave no way to say which of them a step belongs to`,
+        })
+      }
+      seen.add(lane.label)
+    })
     value.steps.forEach((step, i) => {
-      if (!known.has(step.lane)) {
+      if (!seen.has(step.lane)) {
         ctx.addIssue({
           code: "custom",
           path: ["steps", i, "lane"],
-          message: `swimlane.steps[${i}].lane is "${step.lane}", which is not one of the declared lanes (${[...known].join(", ")}) — a step belongs to exactly one lane, and a lane it names has to exist`,
+          message: `swimlane.steps[${i}].lane is "${step.lane}", which is not one of the declared lanes (${[...seen].join(", ")}) — a step belongs to exactly one lane, and a lane it names has to exist`,
         })
       }
     })
+    // The note is about a handover, and it is drawn beside the arrow that makes
+    // one. A process that never leaves its first lane has no such arrow, so the
+    // note would have nowhere to stand and would go missing on the page.
+    const crosses = value.steps.some((step, i) => i > 0 && step.lane !== value.steps[i - 1]!.lane)
+    if (value.handoff_note !== undefined && !crosses) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["handoff_note"],
+        message:
+          "swimlane.handoff_note describes a handover, and it is drawn beside the arrow that crosses lanes — these steps never leave one lane, so there is no handover for it to sit beside. Move a step into another lane, or drop the note.",
+      })
+    }
   })
   .describe(
     "One process running left to right across 2-4 lanes, one lane per role, so the moment work changes hands " +

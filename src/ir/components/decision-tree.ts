@@ -4,7 +4,13 @@ import type { DesignStory } from "../../design-story"
 
 const OutcomeSchema = z
   .object({
-    edge: z.string().optional().describe("Label on the line into this outcome — a share, a probability, a condition."),
+    edge: z
+      .string()
+      .min(
+        1,
+        "decision_tree outcomes carry a condition on the line into them, the same as branches do — a share, a probability, or the case that leads here. A tree whose second level says nothing about why a reader lands on one ending rather than another is a list drawn with arrows."
+      )
+      .describe("Label on the line into this outcome — a share, a probability, a condition."),
     title: z.string().min(1).describe("The outcome itself, named in a few words."),
     detail: z.string().optional().describe("Optional single line on what this outcome costs or means."),
     value: z.string().optional().describe("The one number this outcome carries, written as it should read."),
@@ -15,6 +21,11 @@ const OutcomeSchema = z
       .describe("Marks the one outcome the deck is arguing for. It is filled whole; at most one may be set."),
   })
   .strict()
+  .refine((outcome) => outcome.unit === undefined || (outcome.value ?? "").trim() !== "", {
+    error:
+      "decision_tree outcome has a unit and no value — a unit is what a number is counted in, and there is no number here for it to belong to. Write the value, or drop the unit.",
+    path: ["unit"],
+  })
 
 const BranchSchema = z
   .object({
