@@ -191,6 +191,11 @@
       "geometry": "18feaqh",
       "color": "n15zvt"
     },
+    "almanac--comp--chevron-process--zh": {
+      "hash": "hiemoc",
+      "geometry": "1u0pc2k",
+      "color": "20w88"
+    },
     "almanac--comp--code--zh": {
       "hash": "886f5i",
       "geometry": "1g98ohc",
@@ -211,6 +216,11 @@
       "geometry": "at14gx",
       "color": "4fneid"
     },
+    "almanac--comp--decision-tree--zh": {
+      "hash": "1uar1gp",
+      "geometry": "ffatcq",
+      "color": "1dug2z6"
+    },
     "almanac--comp--device-mockup-browser--zh": {
       "hash": "17817yf",
       "geometry": "1g780t7",
@@ -230,6 +240,11 @@
       "hash": "1oxn3wa",
       "geometry": "1tj0rty",
       "color": "mr1y77"
+    },
+    "almanac--comp--from-to--zh": {
+      "hash": "ht0nwv",
+      "geometry": "1rhqk23",
+      "color": "10q5jvo"
     },
     "almanac--comp--gantt--zh": {
       "hash": "a2t8f9",
@@ -270,6 +285,11 @@
       "hash": "acbhqq",
       "geometry": "o103xu",
       "color": "houavp"
+    },
+    "almanac--comp--journey-map--zh": {
+      "hash": "19khoju",
+      "geometry": "x6xrrc",
+      "color": "votarj"
     },
     "almanac--comp--kpi-cards--zh": {
       "hash": "qbpsk7",
@@ -326,10 +346,20 @@
       "geometry": "si7z8t",
       "color": "a17kn5"
     },
+    "almanac--comp--staircase--zh": {
+      "hash": "1x3ob8s",
+      "geometry": "1ijvpm8",
+      "color": "89899c"
+    },
     "almanac--comp--steps--zh": {
       "hash": "cn6xew",
       "geometry": "1n8cc7j",
       "color": "12ljsgb"
+    },
+    "almanac--comp--swimlane--zh": {
+      "hash": "1bf8plg",
+      "geometry": "1v4h79l",
+      "color": "11n6xz9"
     },
     "almanac--comp--swot--zh": {
       "hash": "4b18si",
@@ -546,6 +576,11 @@
       "geometry": "sw575a",
       "color": "1tr6vqy"
     },
+    "arena--comp--chevron-process--zh": {
+      "hash": "1uty95h",
+      "geometry": "uxrqad",
+      "color": "k4sf5x"
+    },
     "arena--comp--code--zh": {
       "hash": "zzuu1q",
       "geometry": "aosepk",
@@ -566,6 +601,11 @@
       "geometry": "1a62agb",
       "color": "101ek8i"
     },
+    "arena--comp--decision-tree--zh": {
+      "hash": "yub6gp",
+      "geometry": "ddadw4",
+      "color": "1ebr5oq"
+    },
     "arena--comp--device-mockup-browser--zh": {
       "hash": "dl9qex",
       "geometry": "139h970",
@@ -585,6 +625,11 @@
       "hash": "uxklb4",
       "geometry": "y00kh4",
       "color": "3j45kv"
+    },
+    "arena--comp--from-to--zh": {
+      "hash": "1v291b5",
+      "geometry": "tfy61t",
+      "color": "19sn6id"
     },
     "arena--comp--gantt--zh": {
       "hash": "dxb6e5",
@@ -625,6 +670,11 @@
       "hash": "vn24q4",
       "geometry": "br4ixw",
       "color": "13dta4s"
+    },
+    "arena--comp--journey-map--zh": {
+      "hash": "11637pn",
+      "geometry": "1fwnlmc",
+      "color": "1hta6lz"
     },
     "arena--comp--kpi-cards--zh": {
       "hash": "1vyd2vj",
@@ -681,10 +731,20 @@
       "geometry": "bktytl",
       "color": "1bggmks"
     },
+    "arena--comp--staircase--zh": {
+      "hash": "331b3e",
+      "geometry": "16r45uw",
+      "color": "1yn7e77"
+    },
     "arena--comp--steps--zh": {
       "hash": "i7mz6c",
       "geometry": "77lcyz",
       "color": "8g7ydy"
+    },
+    "arena--comp--swimlane--zh": {
+      "hash": "71jlea",
+      "geometry": "i23e8d",
+      "color": "1k5lmme"
     },
     "arena--comp--swot--zh": {
       "hash": "9wk8y1",
@@ -1056,6 +1116,21 @@
       "geometry": "34fp7v",
       "color": "bxi2by"
     },
+    "brief--comp--chevron-process--zh": {
+      "hash": "193wo32",
+      "geometry": "1o05iye",
+      "color": "jj96fk"
+    },
+    "brief--comp--chevron-process--en": {
+      "hash": "zl0t5h",
+      "geometry": "1nq6bv7",
+      "color": "1mj7csu"
+    },
+    "brief--comp--chevron-process--mixed": {
+      "hash": "mzjudn",
+      "geometry": "1b31bxx",
+      "color": "jj96fk"
+    },
     "brief--comp--code--zh": {
       "hash": "73uq",
       "geometry": "1d8hsj1",
@@ -1116,6 +1191,21 @@
       "geometry": "1of2i3w",
       "color": "hwdy96"
     },
+    "brief--comp--decision-tree--zh": {
+      "hash": "cl1s16",
+      "geometry": "mvhvw5",
+      "color": "1csszx1"
+    },
+    "brief--comp--decision-tree--en": {
+      "hash": "1i8yl7",
+      "geometry": "6iyane",
+      "color": "g41ggf"
+    },
+    "brief--comp--decision-tree--mixed": {
+      "hash": "1fjxie",
+      "geometry": "1a5vh4l",
+      "color": "1csszx1"
+    },
     "brief--comp--device-mockup-browser--zh": {
       "hash": "1yl82cd",
       "geometry": "1oz1ul2",
@@ -1175,6 +1265,21 @@
       "hash": "1m0aai1",
       "geometry": "pnu0kr",
       "color": "exiuo9"
+    },
+    "brief--comp--from-to--zh": {
+      "hash": "kkk6ok",
+      "geometry": "6oca3o",
+      "color": "1t3f0q4"
+    },
+    "brief--comp--from-to--en": {
+      "hash": "plcix2",
+      "geometry": "1vd0bd2",
+      "color": "1t3f0q4"
+    },
+    "brief--comp--from-to--mixed": {
+      "hash": "mi5cgt",
+      "geometry": "mecegx",
+      "color": "1t3f0q4"
     },
     "brief--comp--gantt--zh": {
       "hash": "1cwxva2",
@@ -1295,6 +1400,21 @@
       "hash": "14flcrz",
       "geometry": "ykfyqn",
       "color": "w9115z"
+    },
+    "brief--comp--journey-map--zh": {
+      "hash": "801d2w",
+      "geometry": "qyd2ki",
+      "color": "1n4uyby"
+    },
+    "brief--comp--journey-map--en": {
+      "hash": "10bxyko",
+      "geometry": "1ca24tt",
+      "color": "3zt423"
+    },
+    "brief--comp--journey-map--mixed": {
+      "hash": "xc25ap",
+      "geometry": "1crhs9n",
+      "color": "l6wc6z"
     },
     "brief--comp--kpi-cards--zh": {
       "hash": "12ho4j5",
@@ -1461,6 +1581,21 @@
       "geometry": "1uvg2y4",
       "color": "1bf1466"
     },
+    "brief--comp--staircase--zh": {
+      "hash": "ckd2ih",
+      "geometry": "jbw5np",
+      "color": "1hde5fw"
+    },
+    "brief--comp--staircase--en": {
+      "hash": "pavctd",
+      "geometry": "64evf5",
+      "color": "1g8htkm"
+    },
+    "brief--comp--staircase--mixed": {
+      "hash": "th8pnh",
+      "geometry": "ng1tfx",
+      "color": "1hde5fw"
+    },
     "brief--comp--steps--zh": {
       "hash": "vlyzw0",
       "geometry": "qhvd24",
@@ -1475,6 +1610,21 @@
       "hash": "eqtrpz",
       "geometry": "tnrlz4",
       "color": "v4vcyl"
+    },
+    "brief--comp--swimlane--zh": {
+      "hash": "4oxh7z",
+      "geometry": "1t87s2l",
+      "color": "164wcoi"
+    },
+    "brief--comp--swimlane--en": {
+      "hash": "jc4net",
+      "geometry": "12c3br9",
+      "color": "12y1x1g"
+    },
+    "brief--comp--swimlane--mixed": {
+      "hash": "139alik",
+      "geometry": "xt02wm",
+      "color": "164wcoi"
     },
     "brief--comp--swot--zh": {
       "hash": "hhbu07",
@@ -1726,6 +1876,11 @@
       "geometry": "26d0vd",
       "color": "8rg83f"
     },
+    "bulletin--comp--chevron-process--zh": {
+      "hash": "inohcf",
+      "geometry": "1kczxke",
+      "color": "tmb9lf"
+    },
     "bulletin--comp--code--zh": {
       "hash": "1uv8swu",
       "geometry": "1detyxi",
@@ -1746,6 +1901,11 @@
       "geometry": "wfg8h",
       "color": "12f40ek"
     },
+    "bulletin--comp--decision-tree--zh": {
+      "hash": "14s7hhs",
+      "geometry": "1d1441k",
+      "color": "xe79vb"
+    },
     "bulletin--comp--device-mockup-browser--zh": {
       "hash": "sg5kma",
       "geometry": "1h6qog4",
@@ -1765,6 +1925,11 @@
       "hash": "1e8a2l",
       "geometry": "3zfxml",
       "color": "gki1d9"
+    },
+    "bulletin--comp--from-to--zh": {
+      "hash": "te0ffh",
+      "geometry": "13mvwha",
+      "color": "3yfzyx"
     },
     "bulletin--comp--gantt--zh": {
       "hash": "1y4i90d",
@@ -1805,6 +1970,11 @@
       "hash": "iewgaq",
       "geometry": "14aotxr",
       "color": "1cjnnlf"
+    },
+    "bulletin--comp--journey-map--zh": {
+      "hash": "1cc4hc2",
+      "geometry": "sra3dm",
+      "color": "c1lbtd"
     },
     "bulletin--comp--kpi-cards--zh": {
       "hash": "5u2yok",
@@ -1861,10 +2031,20 @@
       "geometry": "1eysjjn",
       "color": "1xg9v0z"
     },
+    "bulletin--comp--staircase--zh": {
+      "hash": "yu7pz2",
+      "geometry": "1m05xab",
+      "color": "fp1wgj"
+    },
     "bulletin--comp--steps--zh": {
       "hash": "16gmbid",
       "geometry": "1adpymi",
       "color": "1efzlnt"
+    },
+    "bulletin--comp--swimlane--zh": {
+      "hash": "185p0g",
+      "geometry": "x2hpgy",
+      "color": "1omjm54"
     },
     "bulletin--comp--swot--zh": {
       "hash": "12qmat0",
@@ -1932,9 +2112,9 @@
       "color": "f6bzep"
     },
     "clinic--deck--p09": {
-      "hash": "1cpu99i",
-      "geometry": "17vauz5",
-      "color": "1us1sz6"
+      "hash": "1p0z1xi",
+      "geometry": "owiety",
+      "color": "gqotdo"
     },
     "clinic--deck--p10": {
       "hash": "18hcla9",
@@ -2066,6 +2246,11 @@
       "geometry": "1i1aj7y",
       "color": "cyuydy"
     },
+    "clinic--comp--chevron-process--zh": {
+      "hash": "3w8fdr",
+      "geometry": "c7atgo",
+      "color": "1d6vo8h"
+    },
     "clinic--comp--code--zh": {
       "hash": "1scm15",
       "geometry": "8v600p",
@@ -2086,6 +2271,11 @@
       "geometry": "11w02my",
       "color": "897hbi"
     },
+    "clinic--comp--decision-tree--zh": {
+      "hash": "fhvr6c",
+      "geometry": "1a7ojnt",
+      "color": "yukpi6"
+    },
     "clinic--comp--device-mockup-browser--zh": {
       "hash": "18uxww9",
       "geometry": "1lnfsxn",
@@ -2105,6 +2295,11 @@
       "hash": "1c0tjtn",
       "geometry": "pnqykz",
       "color": "dbzq86"
+    },
+    "clinic--comp--from-to--zh": {
+      "hash": "78eq6u",
+      "geometry": "158p5m1",
+      "color": "1wqnkc9"
     },
     "clinic--comp--gantt--zh": {
       "hash": "1rmt0gm",
@@ -2145,6 +2340,11 @@
       "hash": "1f02osf",
       "geometry": "yuc2bi",
       "color": "x7if42"
+    },
+    "clinic--comp--journey-map--zh": {
+      "hash": "47j3tc",
+      "geometry": "1mzuii5",
+      "color": "60zgwq"
     },
     "clinic--comp--kpi-cards--zh": {
       "hash": "1nnj5vu",
@@ -2201,10 +2401,20 @@
       "geometry": "1xorh2t",
       "color": "17cufo2"
     },
+    "clinic--comp--staircase--zh": {
+      "hash": "13d7wge",
+      "geometry": "h67y8l",
+      "color": "18no9fj"
+    },
     "clinic--comp--steps--zh": {
       "hash": "kde4vc",
       "geometry": "14qw2dh",
       "color": "1a3kykf"
+    },
+    "clinic--comp--swimlane--zh": {
+      "hash": "11mzgt3",
+      "geometry": "d5ltpl",
+      "color": "1sczjma"
     },
     "clinic--comp--swot--zh": {
       "hash": "16jm9no",
@@ -2406,6 +2616,11 @@
       "geometry": "4jfjyb",
       "color": "1l6mmm8"
     },
+    "crayon--comp--chevron-process--zh": {
+      "hash": "1sff23o",
+      "geometry": "70nxvd",
+      "color": "1plt88n"
+    },
     "crayon--comp--code--zh": {
       "hash": "12lh41p",
       "geometry": "53v8vh",
@@ -2426,6 +2641,11 @@
       "geometry": "zowvj6",
       "color": "1g8ce7w"
     },
+    "crayon--comp--decision-tree--zh": {
+      "hash": "1do126b",
+      "geometry": "omy3ym",
+      "color": "c0wtri"
+    },
     "crayon--comp--device-mockup-browser--zh": {
       "hash": "1sz6pz1",
       "geometry": "1bgka33",
@@ -2445,6 +2665,11 @@
       "hash": "1c1fm3y",
       "geometry": "wspv31",
       "color": "j0u96y"
+    },
+    "crayon--comp--from-to--zh": {
+      "hash": "axwqbo",
+      "geometry": "1yrpnpo",
+      "color": "1nk95ak"
     },
     "crayon--comp--gantt--zh": {
       "hash": "1e5ivlr",
@@ -2485,6 +2710,11 @@
       "hash": "17n0xdz",
       "geometry": "1mhipla",
       "color": "3g1xi8"
+    },
+    "crayon--comp--journey-map--zh": {
+      "hash": "1da6i06",
+      "geometry": "1m9mhvm",
+      "color": "wdfsy6"
     },
     "crayon--comp--kpi-cards--zh": {
       "hash": "fho3le",
@@ -2541,10 +2771,20 @@
       "geometry": "sh15d4",
       "color": "1d4tq0"
     },
+    "crayon--comp--staircase--zh": {
+      "hash": "10743eo",
+      "geometry": "10s1qul",
+      "color": "1rfzhrr"
+    },
     "crayon--comp--steps--zh": {
       "hash": "7bifcl",
       "geometry": "15octiy",
       "color": "9mexaw"
+    },
+    "crayon--comp--swimlane--zh": {
+      "hash": "107rx57",
+      "geometry": "1mi6vhx",
+      "color": "12ws1s6"
     },
     "crayon--comp--swot--zh": {
       "hash": "11rq5p8",
@@ -2751,6 +2991,11 @@
       "geometry": "1i8r53x",
       "color": "12quibe"
     },
+    "ember--comp--chevron-process--zh": {
+      "hash": "lho1fr",
+      "geometry": "1y15qmi",
+      "color": "18yvmb3"
+    },
     "ember--comp--code--zh": {
       "hash": "1fx95xu",
       "geometry": "18jqgjc",
@@ -2771,6 +3016,11 @@
       "geometry": "lmu4bp",
       "color": "1s4zvw"
     },
+    "ember--comp--decision-tree--zh": {
+      "hash": "1tndmuf",
+      "geometry": "7o8ra8",
+      "color": "1o3s592"
+    },
     "ember--comp--device-mockup-browser--zh": {
       "hash": "1w7wcbb",
       "geometry": "14jkkip",
@@ -2790,6 +3040,11 @@
       "hash": "115wuo3",
       "geometry": "84l5zj",
       "color": "15mgh5p"
+    },
+    "ember--comp--from-to--zh": {
+      "hash": "1oik80w",
+      "geometry": "8dmdtt",
+      "color": "1a3z4tj"
     },
     "ember--comp--gantt--zh": {
       "hash": "abt1o3",
@@ -2830,6 +3085,11 @@
       "hash": "ww9vyl",
       "geometry": "r03nuv",
       "color": "1jjh0cn"
+    },
+    "ember--comp--journey-map--zh": {
+      "hash": "1tyt6ad",
+      "geometry": "t6mmj8",
+      "color": "z5l0h2"
     },
     "ember--comp--kpi-cards--zh": {
       "hash": "1mtoyb",
@@ -2886,10 +3146,20 @@
       "geometry": "10mecrg",
       "color": "ns85sw"
     },
+    "ember--comp--staircase--zh": {
+      "hash": "17wwf89",
+      "geometry": "yhn19d",
+      "color": "tla4k"
+    },
     "ember--comp--steps--zh": {
       "hash": "at9ptf",
       "geometry": "i54dt1",
       "color": "1ecz5go"
+    },
+    "ember--comp--swimlane--zh": {
+      "hash": "ofk1dr",
+      "geometry": "b14opr",
+      "color": "1mpzzlm"
     },
     "ember--comp--swot--zh": {
       "hash": "yhl96k",
@@ -3106,6 +3376,11 @@
       "geometry": "1ikd6y9",
       "color": "1n6037h"
     },
+    "heritage--comp--chevron-process--zh": {
+      "hash": "1m64cmp",
+      "geometry": "gxbp7n",
+      "color": "1uw2j9u"
+    },
     "heritage--comp--code--zh": {
       "hash": "1nx9fmy",
       "geometry": "onrute",
@@ -3126,6 +3401,11 @@
       "geometry": "11gdfsi",
       "color": "1o0yhtn"
     },
+    "heritage--comp--decision-tree--zh": {
+      "hash": "lx3dmu",
+      "geometry": "18tsbao",
+      "color": "gadp8v"
+    },
     "heritage--comp--device-mockup-browser--zh": {
       "hash": "11atbm5",
       "geometry": "25bekx",
@@ -3145,6 +3425,11 @@
       "hash": "xa08bd",
       "geometry": "12929qw",
       "color": "lpbjzi"
+    },
+    "heritage--comp--from-to--zh": {
+      "hash": "oypy6e",
+      "geometry": "9ek602",
+      "color": "m7omnk"
     },
     "heritage--comp--gantt--zh": {
       "hash": "vpov4h",
@@ -3185,6 +3470,11 @@
       "hash": "o7ccqt",
       "geometry": "1ufosz",
       "color": "1nnrldm"
+    },
+    "heritage--comp--journey-map--zh": {
+      "hash": "9b50hy",
+      "geometry": "rttq37",
+      "color": "1alhsck"
     },
     "heritage--comp--kpi-cards--zh": {
       "hash": "1th260r",
@@ -3241,10 +3531,20 @@
       "geometry": "knwlc4",
       "color": "o8tg9w"
     },
+    "heritage--comp--staircase--zh": {
+      "hash": "1boswo1",
+      "geometry": "1rirvk4",
+      "color": "1xmf8r3"
+    },
     "heritage--comp--steps--zh": {
       "hash": "v5dllg",
       "geometry": "1a3se46",
       "color": "1qp74f0"
+    },
+    "heritage--comp--swimlane--zh": {
+      "hash": "1wesobw",
+      "geometry": "1nprc37",
+      "color": "159923v"
     },
     "heritage--comp--swot--zh": {
       "hash": "1z1124x",
@@ -3446,6 +3746,11 @@
       "geometry": "pvg4ga",
       "color": "1sureuw"
     },
+    "homeroom--comp--chevron-process--zh": {
+      "hash": "nh0h1o",
+      "geometry": "1tkb62c",
+      "color": "1l5767y"
+    },
     "homeroom--comp--code--zh": {
       "hash": "1f2ryxa",
       "geometry": "1acohlp",
@@ -3466,6 +3771,11 @@
       "geometry": "hcds56",
       "color": "2wm22f"
     },
+    "homeroom--comp--decision-tree--zh": {
+      "hash": "1rctig1",
+      "geometry": "1rfgq6o",
+      "color": "1fc08fc"
+    },
     "homeroom--comp--device-mockup-browser--zh": {
       "hash": "t9ukvq",
       "geometry": "h6xek3",
@@ -3485,6 +3795,11 @@
       "hash": "170rw0v",
       "geometry": "fvlidd",
       "color": "18egget"
+    },
+    "homeroom--comp--from-to--zh": {
+      "hash": "se0xpc",
+      "geometry": "cyoatj",
+      "color": "64mi2l"
     },
     "homeroom--comp--gantt--zh": {
       "hash": "98ex0",
@@ -3525,6 +3840,11 @@
       "hash": "mh33bs",
       "geometry": "1xndv4i",
       "color": "1hapc9i"
+    },
+    "homeroom--comp--journey-map--zh": {
+      "hash": "eakx6l",
+      "geometry": "1pgqnm6",
+      "color": "2m6m8h"
     },
     "homeroom--comp--kpi-cards--zh": {
       "hash": "cigc5e",
@@ -3581,10 +3901,20 @@
       "geometry": "5hagpk",
       "color": "vr3mbe"
     },
+    "homeroom--comp--staircase--zh": {
+      "hash": "yxjbks",
+      "geometry": "18t6eu",
+      "color": "13h5si0"
+    },
     "homeroom--comp--steps--zh": {
       "hash": "1byr253",
       "geometry": "1vfx9kw",
       "color": "1is4kdf"
+    },
+    "homeroom--comp--swimlane--zh": {
+      "hash": "12z2ru7",
+      "geometry": "k9iyqp",
+      "color": "w0spz6"
     },
     "homeroom--comp--swot--zh": {
       "hash": "1n77zft",
@@ -3801,6 +4131,11 @@
       "geometry": "1tlf3ce",
       "color": "9wleom"
     },
+    "ink--comp--chevron-process--zh": {
+      "hash": "1ovj0a9",
+      "geometry": "10txgqy",
+      "color": "y636z0"
+    },
     "ink--comp--code--zh": {
       "hash": "1c8ss3y",
       "geometry": "1cmkd71",
@@ -3821,6 +4156,11 @@
       "geometry": "1ec8nmb",
       "color": "n96g09"
     },
+    "ink--comp--decision-tree--zh": {
+      "hash": "1e3twui",
+      "geometry": "ov2p4x",
+      "color": "ygyiio"
+    },
     "ink--comp--device-mockup-browser--zh": {
       "hash": "oe0bu7",
       "geometry": "1hull4f",
@@ -3840,6 +4180,11 @@
       "hash": "nu1cif",
       "geometry": "1ptbpnm",
       "color": "dcxt25"
+    },
+    "ink--comp--from-to--zh": {
+      "hash": "1rz7bf2",
+      "geometry": "m7fgq7",
+      "color": "1lkc588"
     },
     "ink--comp--gantt--zh": {
       "hash": "1aoht1j",
@@ -3880,6 +4225,11 @@
       "hash": "w62pec",
       "geometry": "1v0gqrt",
       "color": "aot97i"
+    },
+    "ink--comp--journey-map--zh": {
+      "hash": "gpejwl",
+      "geometry": "8fcu8g",
+      "color": "e3nyp"
     },
     "ink--comp--kpi-cards--zh": {
       "hash": "7lbm9m",
@@ -3936,10 +4286,20 @@
       "geometry": "hr6sde",
       "color": "143np60"
     },
+    "ink--comp--staircase--zh": {
+      "hash": "nztrjb",
+      "geometry": "8s44n4",
+      "color": "1r0n1l8"
+    },
     "ink--comp--steps--zh": {
       "hash": "wtyibe",
       "geometry": "bwt1ah",
       "color": "jufpaw"
+    },
+    "ink--comp--swimlane--zh": {
+      "hash": "m2b0a3",
+      "geometry": "1vl572q",
+      "color": "hwuv3i"
     },
     "ink--comp--swot--zh": {
       "hash": "ieo1x7",
@@ -4007,9 +4367,9 @@
       "color": "8tv7fg"
     },
     "journal--deck--p09": {
-      "hash": "1acq54o",
-      "geometry": "11lfwd6",
-      "color": "1byd0zr"
+      "hash": "9sun70",
+      "geometry": "lg5fh2",
+      "color": "18mal9p"
     },
     "journal--deck--p10": {
       "hash": "1moms6l",
@@ -4156,6 +4516,11 @@
       "geometry": "1jfy7k0",
       "color": "9w4wq2"
     },
+    "journal--comp--chevron-process--zh": {
+      "hash": "13jd607",
+      "geometry": "wfiahw",
+      "color": "x4e2im"
+    },
     "journal--comp--code--zh": {
       "hash": "1pkzbq4",
       "geometry": "1up5ngk",
@@ -4176,6 +4541,11 @@
       "geometry": "1qwkihg",
       "color": "8czehu"
     },
+    "journal--comp--decision-tree--zh": {
+      "hash": "u9m8n1",
+      "geometry": "1cove3c",
+      "color": "12esexe"
+    },
     "journal--comp--device-mockup-browser--zh": {
       "hash": "16mzcum",
       "geometry": "uwcokc",
@@ -4195,6 +4565,11 @@
       "hash": "1hgwwvz",
       "geometry": "1v8w7hi",
       "color": "1lcqrur"
+    },
+    "journal--comp--from-to--zh": {
+      "hash": "c1jo6x",
+      "geometry": "p5vf6r",
+      "color": "1vihik1"
     },
     "journal--comp--gantt--zh": {
       "hash": "k7too6",
@@ -4235,6 +4610,11 @@
       "hash": "1086htl",
       "geometry": "12rck50",
       "color": "1rdmajv"
+    },
+    "journal--comp--journey-map--zh": {
+      "hash": "p3nkoa",
+      "geometry": "1agjbjr",
+      "color": "1d93qzn"
     },
     "journal--comp--kpi-cards--zh": {
       "hash": "16p9iq2",
@@ -4291,10 +4671,20 @@
       "geometry": "l484t4",
       "color": "1qtivlh"
     },
+    "journal--comp--staircase--zh": {
+      "hash": "1kjpypp",
+      "geometry": "e54f5e",
+      "color": "1lyvhgo"
+    },
     "journal--comp--steps--zh": {
       "hash": "p85ejx",
       "geometry": "1j89fue",
       "color": "18oxgdk"
+    },
+    "journal--comp--swimlane--zh": {
+      "hash": "1tp8ui9",
+      "geometry": "1vggmo7",
+      "color": "ktnm3"
     },
     "journal--comp--swot--zh": {
       "hash": "rpro24",
@@ -4511,6 +4901,11 @@
       "geometry": "9xvfk9",
       "color": "1bo2xge"
     },
+    "lecture--comp--chevron-process--zh": {
+      "hash": "ksh0bn",
+      "geometry": "1rkg319",
+      "color": "1ntjtsw"
+    },
     "lecture--comp--code--zh": {
       "hash": "hpvfgj",
       "geometry": "tx8bnw",
@@ -4531,6 +4926,11 @@
       "geometry": "qq5fk9",
       "color": "61wm1d"
     },
+    "lecture--comp--decision-tree--zh": {
+      "hash": "1kiw9cs",
+      "geometry": "fu6icv",
+      "color": "3tlb2v"
+    },
     "lecture--comp--device-mockup-browser--zh": {
       "hash": "1m7o85p",
       "geometry": "5zruoh",
@@ -4550,6 +4950,11 @@
       "hash": "oodw4o",
       "geometry": "1awril7",
       "color": "azqn2f"
+    },
+    "lecture--comp--from-to--zh": {
+      "hash": "gkm2qk",
+      "geometry": "182n01a",
+      "color": "1k0o1jw"
     },
     "lecture--comp--gantt--zh": {
       "hash": "lx70i1",
@@ -4590,6 +4995,11 @@
       "hash": "1vf72a1",
       "geometry": "1xrveaw",
       "color": "tadqze"
+    },
+    "lecture--comp--journey-map--zh": {
+      "hash": "nd2wrt",
+      "geometry": "1dxx6cj",
+      "color": "19m5i09"
     },
     "lecture--comp--kpi-cards--zh": {
       "hash": "pkv0o8",
@@ -4646,10 +5056,20 @@
       "geometry": "1567nsf",
       "color": "1fhpeyd"
     },
+    "lecture--comp--staircase--zh": {
+      "hash": "9ykjvz",
+      "geometry": "87bleh",
+      "color": "8ovtf6"
+    },
     "lecture--comp--steps--zh": {
       "hash": "naunhs",
       "geometry": "9o5j7t",
       "color": "1otnh5k"
+    },
+    "lecture--comp--swimlane--zh": {
+      "hash": "1861x1q",
+      "geometry": "57467z",
+      "color": "1r7hjnh"
     },
     "lecture--comp--swot--zh": {
       "hash": "1fmeovw",
@@ -4697,9 +5117,9 @@
       "color": "39lia3"
     },
     "ledger--deck--p05": {
-      "hash": "1sadcsc",
-      "geometry": "1afx8tx",
-      "color": "1g3azqu"
+      "hash": "hfrhnm",
+      "geometry": "p2ngnd",
+      "color": "1hjks1m"
     },
     "ledger--deck--p06": {
       "hash": "9j4hi0",
@@ -4861,6 +5281,11 @@
       "geometry": "1jstzpv",
       "color": "15spc3i"
     },
+    "ledger--comp--chevron-process--zh": {
+      "hash": "1lc7ibi",
+      "geometry": "ih5nap",
+      "color": "1c88br8"
+    },
     "ledger--comp--code--zh": {
       "hash": "1p961n8",
       "geometry": "6o93q0",
@@ -4881,6 +5306,11 @@
       "geometry": "1plbaf9",
       "color": "bpm0r7"
     },
+    "ledger--comp--decision-tree--zh": {
+      "hash": "1bbryl1",
+      "geometry": "139izlk",
+      "color": "17dix88"
+    },
     "ledger--comp--device-mockup-browser--zh": {
       "hash": "feaf04",
       "geometry": "1idi2qi",
@@ -4900,6 +5330,11 @@
       "hash": "1f7q7pr",
       "geometry": "1wgpse6",
       "color": "3h7cd5"
+    },
+    "ledger--comp--from-to--zh": {
+      "hash": "1dp3dy5",
+      "geometry": "1yvwjsm",
+      "color": "14r9dqy"
     },
     "ledger--comp--gantt--zh": {
       "hash": "14wxodj",
@@ -4940,6 +5375,11 @@
       "hash": "w4pdvc",
       "geometry": "sjwz2s",
       "color": "1fol1f5"
+    },
+    "ledger--comp--journey-map--zh": {
+      "hash": "1by7nep",
+      "geometry": "18gc4v6",
+      "color": "ocg0oh"
     },
     "ledger--comp--kpi-cards--zh": {
       "hash": "15xot42",
@@ -4996,10 +5436,20 @@
       "geometry": "pd6hqw",
       "color": "lqh5sx"
     },
+    "ledger--comp--staircase--zh": {
+      "hash": "arylye",
+      "geometry": "d3jp7z",
+      "color": "1onqv6g"
+    },
     "ledger--comp--steps--zh": {
       "hash": "1h77hdh",
       "geometry": "f1btkc",
       "color": "9rfoim"
+    },
+    "ledger--comp--swimlane--zh": {
+      "hash": "ox4stu",
+      "geometry": "1ge2xvh",
+      "color": "fp2ple"
     },
     "ledger--comp--swot--zh": {
       "hash": "1wfr8u2",
@@ -5216,6 +5666,11 @@
       "geometry": "1gvgczy",
       "color": "167sae8"
     },
+    "luxe--comp--chevron-process--zh": {
+      "hash": "1mb1gj0",
+      "geometry": "1rv4ucs",
+      "color": "1but87d"
+    },
     "luxe--comp--code--zh": {
       "hash": "uqsjqu",
       "geometry": "1uun7q9",
@@ -5236,6 +5691,11 @@
       "geometry": "1vsek59",
       "color": "y3m3ne"
     },
+    "luxe--comp--decision-tree--zh": {
+      "hash": "j4t3cv",
+      "geometry": "1uoxcic",
+      "color": "alvzk2"
+    },
     "luxe--comp--device-mockup-browser--zh": {
       "hash": "cbwrou",
       "geometry": "1fl2tma",
@@ -5255,6 +5715,11 @@
       "hash": "fg5zf2",
       "geometry": "163rkpq",
       "color": "tqr17j"
+    },
+    "luxe--comp--from-to--zh": {
+      "hash": "jutjqi",
+      "geometry": "1tfvv83",
+      "color": "g11frd"
     },
     "luxe--comp--gantt--zh": {
       "hash": "10c0lc9",
@@ -5295,6 +5760,11 @@
       "hash": "1mnkamp",
       "geometry": "i607e1",
       "color": "hn5w3j"
+    },
+    "luxe--comp--journey-map--zh": {
+      "hash": "1hp3bg3",
+      "geometry": "zoajy8",
+      "color": "18cetvh"
     },
     "luxe--comp--kpi-cards--zh": {
       "hash": "7vu7bv",
@@ -5351,10 +5821,20 @@
       "geometry": "8ya61s",
       "color": "1rm1p01"
     },
+    "luxe--comp--staircase--zh": {
+      "hash": "modp50",
+      "geometry": "17t8ut6",
+      "color": "r17kg1"
+    },
     "luxe--comp--steps--zh": {
       "hash": "f47txg",
       "geometry": "11pztce",
       "color": "i8q6d8"
+    },
+    "luxe--comp--swimlane--zh": {
+      "hash": "12tpw0s",
+      "geometry": "mxpncj",
+      "color": "92vl94"
     },
     "luxe--comp--swot--zh": {
       "hash": "10h595r",
@@ -5566,6 +6046,11 @@
       "geometry": "3ya4bn",
       "color": "1rhr4tf"
     },
+    "memo--comp--chevron-process--zh": {
+      "hash": "1q1x06s",
+      "geometry": "15senxq",
+      "color": "5drrvc"
+    },
     "memo--comp--code--zh": {
       "hash": "1ubnlxl",
       "geometry": "1y82vjo",
@@ -5586,6 +6071,11 @@
       "geometry": "hmo276",
       "color": "h5k35x"
     },
+    "memo--comp--decision-tree--zh": {
+      "hash": "56pqnt",
+      "geometry": "u99mc7",
+      "color": "1oxcc7l"
+    },
     "memo--comp--device-mockup-browser--zh": {
       "hash": "5av8o0",
       "geometry": "1e13baw",
@@ -5605,6 +6095,11 @@
       "hash": "1jk5zss",
       "geometry": "1cdcdfm",
       "color": "bljn61"
+    },
+    "memo--comp--from-to--zh": {
+      "hash": "bmivj6",
+      "geometry": "14lqqfr",
+      "color": "k0cm71"
     },
     "memo--comp--gantt--zh": {
       "hash": "1716ujx",
@@ -5645,6 +6140,11 @@
       "hash": "1i5a9ik",
       "geometry": "1o66o88",
       "color": "1ckxjwh"
+    },
+    "memo--comp--journey-map--zh": {
+      "hash": "1ouenlm",
+      "geometry": "1r1y98k",
+      "color": "5tgfon"
     },
     "memo--comp--kpi-cards--zh": {
       "hash": "1lxavyq",
@@ -5701,10 +6201,20 @@
       "geometry": "19h3xbu",
       "color": "bgv3qd"
     },
+    "memo--comp--staircase--zh": {
+      "hash": "h3hx8k",
+      "geometry": "1kjhebs",
+      "color": "cevw7g"
+    },
     "memo--comp--steps--zh": {
       "hash": "1y89yj",
       "geometry": "153kmk3",
       "color": "ugu8p2"
+    },
+    "memo--comp--swimlane--zh": {
+      "hash": "4sm579",
+      "geometry": "8jbflb",
+      "color": "ugfaqm"
     },
     "memo--comp--swot--zh": {
       "hash": "ovmzw1",
@@ -5921,6 +6431,11 @@
       "geometry": "29ehgy",
       "color": "nzt8l4"
     },
+    "museum--comp--chevron-process--zh": {
+      "hash": "14o042h",
+      "geometry": "4b4x0s",
+      "color": "114ip6j"
+    },
     "museum--comp--code--zh": {
       "hash": "1s9vp2f",
       "geometry": "12ohqr7",
@@ -5941,6 +6456,11 @@
       "geometry": "1umwz65",
       "color": "1vzz3f4"
     },
+    "museum--comp--decision-tree--zh": {
+      "hash": "1u6m37f",
+      "geometry": "5ri67g",
+      "color": "q8egzl"
+    },
     "museum--comp--device-mockup-browser--zh": {
       "hash": "1iunlun",
       "geometry": "d9ers5",
@@ -5960,6 +6480,11 @@
       "hash": "upnboz",
       "geometry": "1i6l7vh",
       "color": "111qn3j"
+    },
+    "museum--comp--from-to--zh": {
+      "hash": "158ita7",
+      "geometry": "1xl5jfg",
+      "color": "ozqu9d"
     },
     "museum--comp--gantt--zh": {
       "hash": "6bk347",
@@ -6000,6 +6525,11 @@
       "hash": "94bjw5",
       "geometry": "tmozg7",
       "color": "11wnb75"
+    },
+    "museum--comp--journey-map--zh": {
+      "hash": "rlf9um",
+      "geometry": "1xi4jxk",
+      "color": "1w5skrh"
     },
     "museum--comp--kpi-cards--zh": {
       "hash": "1ddff7x",
@@ -6056,10 +6586,20 @@
       "geometry": "zowxsh",
       "color": "jsbvez"
     },
+    "museum--comp--staircase--zh": {
+      "hash": "13zn3co",
+      "geometry": "ig272h",
+      "color": "48o9kf"
+    },
     "museum--comp--steps--zh": {
       "hash": "1yx3yy2",
       "geometry": "144rtpr",
       "color": "48ac2h"
+    },
+    "museum--comp--swimlane--zh": {
+      "hash": "pwbvss",
+      "geometry": "kuwe9",
+      "color": "xml7ux"
     },
     "museum--comp--swot--zh": {
       "hash": "11rp04i",
@@ -6271,6 +6811,11 @@
       "geometry": "1cemodp",
       "color": "k5cj1k"
     },
+    "playbill--comp--chevron-process--zh": {
+      "hash": "12o7zg2",
+      "geometry": "15sj6u1",
+      "color": "wolg25"
+    },
     "playbill--comp--code--zh": {
       "hash": "1h0hib8",
       "geometry": "9j7so0",
@@ -6291,6 +6836,11 @@
       "geometry": "1tg9fzv",
       "color": "3ms4o5"
     },
+    "playbill--comp--decision-tree--zh": {
+      "hash": "16q5qri",
+      "geometry": "21lahq",
+      "color": "134ar87"
+    },
     "playbill--comp--device-mockup-browser--zh": {
       "hash": "h0pyci",
       "geometry": "zs5nkg",
@@ -6310,6 +6860,11 @@
       "hash": "yg4jk8",
       "geometry": "h55awz",
       "color": "otlz70"
+    },
+    "playbill--comp--from-to--zh": {
+      "hash": "1tf2dpq",
+      "geometry": "1fdv8qi",
+      "color": "1nsg5io"
     },
     "playbill--comp--gantt--zh": {
       "hash": "2nmff1",
@@ -6350,6 +6905,11 @@
       "hash": "845ma",
       "geometry": "1t7e2s7",
       "color": "55js0a"
+    },
+    "playbill--comp--journey-map--zh": {
+      "hash": "w7p4ln",
+      "geometry": "1qqfcdm",
+      "color": "15shdi4"
     },
     "playbill--comp--kpi-cards--zh": {
       "hash": "19ijz01",
@@ -6406,10 +6966,20 @@
       "geometry": "1y1ug39",
       "color": "6h4884"
     },
+    "playbill--comp--staircase--zh": {
+      "hash": "k99ycp",
+      "geometry": "c2f0r6",
+      "color": "1v7vqnp"
+    },
     "playbill--comp--steps--zh": {
       "hash": "x8koz5",
       "geometry": "8t218t",
       "color": "1n9jeha"
+    },
+    "playbill--comp--swimlane--zh": {
+      "hash": "p43nqa",
+      "geometry": "1vbuq19",
+      "color": "1mzlkb1"
     },
     "playbill--comp--swot--zh": {
       "hash": "1xwmq4c",
@@ -6626,6 +7196,11 @@
       "geometry": "11e0evu",
       "color": "insk4d"
     },
+    "rally--comp--chevron-process--zh": {
+      "hash": "c1yrk",
+      "geometry": "1i6ils",
+      "color": "23ivlb"
+    },
     "rally--comp--code--zh": {
       "hash": "1rnuyxh",
       "geometry": "86mmn4",
@@ -6646,6 +7221,11 @@
       "geometry": "1ptpbmn",
       "color": "8omrqf"
     },
+    "rally--comp--decision-tree--zh": {
+      "hash": "jlhdr1",
+      "geometry": "19rtmfi",
+      "color": "4yvghu"
+    },
     "rally--comp--device-mockup-browser--zh": {
       "hash": "12dnq9d",
       "geometry": "4sdvjm",
@@ -6665,6 +7245,11 @@
       "hash": "4go3q4",
       "geometry": "1j1ie86",
       "color": "1u8eqlm"
+    },
+    "rally--comp--from-to--zh": {
+      "hash": "18okcf4",
+      "geometry": "imghh",
+      "color": "h7br2w"
     },
     "rally--comp--gantt--zh": {
       "hash": "y1umqc",
@@ -6705,6 +7290,11 @@
       "hash": "bbax1g",
       "geometry": "13vuc8q",
       "color": "xe3lpm"
+    },
+    "rally--comp--journey-map--zh": {
+      "hash": "1b4z66z",
+      "geometry": "yxbqwc",
+      "color": "flncj1"
     },
     "rally--comp--kpi-cards--zh": {
       "hash": "yyxjmr",
@@ -6761,10 +7351,20 @@
       "geometry": "jzwu38",
       "color": "1m1g6vn"
     },
+    "rally--comp--staircase--zh": {
+      "hash": "1r9j51o",
+      "geometry": "19acczd",
+      "color": "o7mo5c"
+    },
     "rally--comp--steps--zh": {
       "hash": "r7jas3",
       "geometry": "hf832h",
       "color": "bjcgoh"
+    },
+    "rally--comp--swimlane--zh": {
+      "hash": "1dzcjli",
+      "geometry": "va5upv",
+      "color": "1iqpddk"
     },
     "rally--comp--swot--zh": {
       "hash": "11i2ts2",
@@ -6822,9 +7422,9 @@
       "color": "1skra1x"
     },
     "runway--deck--p07": {
-      "hash": "otsp38",
-      "geometry": "18hj3sa",
-      "color": "3ntv0v"
+      "hash": "rf5wyj",
+      "geometry": "dwvwf7",
+      "color": "1hmply"
     },
     "runway--deck--p08": {
       "hash": "1qx6rce",
@@ -6971,6 +7571,11 @@
       "geometry": "17z1bal",
       "color": "1k8i6xl"
     },
+    "runway--comp--chevron-process--zh": {
+      "hash": "1na65n5",
+      "geometry": "v293tp",
+      "color": "v22lrm"
+    },
     "runway--comp--code--zh": {
       "hash": "1c95n6z",
       "geometry": "pec25y",
@@ -6991,6 +7596,11 @@
       "geometry": "195xhnq",
       "color": "1y02p6u"
     },
+    "runway--comp--decision-tree--zh": {
+      "hash": "1fmbt45",
+      "geometry": "wk1eqz",
+      "color": "18d8byj"
+    },
     "runway--comp--device-mockup-browser--zh": {
       "hash": "13prj4e",
       "geometry": "ep8v0g",
@@ -7010,6 +7620,11 @@
       "hash": "1yfpyiv",
       "geometry": "1skihxt",
       "color": "1vu4u1r"
+    },
+    "runway--comp--from-to--zh": {
+      "hash": "5pracb",
+      "geometry": "1og2f8g",
+      "color": "1tji3ar"
     },
     "runway--comp--gantt--zh": {
       "hash": "19hixqe",
@@ -7050,6 +7665,11 @@
       "hash": "141u0fv",
       "geometry": "17awwqs",
       "color": "11vzqn6"
+    },
+    "runway--comp--journey-map--zh": {
+      "hash": "1ebehb0",
+      "geometry": "14ws2to",
+      "color": "11ecl4j"
     },
     "runway--comp--kpi-cards--zh": {
       "hash": "rbkm1o",
@@ -7106,10 +7726,20 @@
       "geometry": "13kl5uz",
       "color": "1d5bql5"
     },
+    "runway--comp--staircase--zh": {
+      "hash": "q29zf0",
+      "geometry": "q2uct6",
+      "color": "1j9qmwe"
+    },
     "runway--comp--steps--zh": {
       "hash": "6ugz06",
       "geometry": "1cqt8gw",
       "color": "15bb694"
+    },
+    "runway--comp--swimlane--zh": {
+      "hash": "fxodgz",
+      "geometry": "d6mf1p",
+      "color": "1i5q82k"
     },
     "runway--comp--swot--zh": {
       "hash": "1h5vibu",
@@ -7326,6 +7956,11 @@
       "geometry": "1wf6yj1",
       "color": "iamf2q"
     },
+    "stage--comp--chevron-process--zh": {
+      "hash": "h22ul0",
+      "geometry": "1u0i7sa",
+      "color": "1rhgjf6"
+    },
     "stage--comp--code--zh": {
       "hash": "1ib5yb",
       "geometry": "wf2xy5",
@@ -7346,6 +7981,11 @@
       "geometry": "4kh2ts",
       "color": "11jikwr"
     },
+    "stage--comp--decision-tree--zh": {
+      "hash": "17y99vr",
+      "geometry": "1bn8qey",
+      "color": "cxalca"
+    },
     "stage--comp--device-mockup-browser--zh": {
       "hash": "111938q",
       "geometry": "6i2ioi",
@@ -7365,6 +8005,11 @@
       "hash": "1yawflm",
       "geometry": "k84vg3",
       "color": "1qemiaq"
+    },
+    "stage--comp--from-to--zh": {
+      "hash": "18ujxo5",
+      "geometry": "nk286i",
+      "color": "3he4f7"
     },
     "stage--comp--gantt--zh": {
       "hash": "cja7dq",
@@ -7405,6 +8050,11 @@
       "hash": "7m3nsq",
       "geometry": "js89xt",
       "color": "e5pr3m"
+    },
+    "stage--comp--journey-map--zh": {
+      "hash": "r5kt4i",
+      "geometry": "1afxjmv",
+      "color": "1u60soa"
     },
     "stage--comp--kpi-cards--zh": {
       "hash": "1y1fqfy",
@@ -7461,10 +8111,20 @@
       "geometry": "al8vm2",
       "color": "1k9unfr"
     },
+    "stage--comp--staircase--zh": {
+      "hash": "infz56",
+      "geometry": "1g8dyj9",
+      "color": "60ul83"
+    },
     "stage--comp--steps--zh": {
       "hash": "1kpwow0",
       "geometry": "6oye6i",
       "color": "ibgirz"
+    },
+    "stage--comp--swimlane--zh": {
+      "hash": "v5n8ax",
+      "geometry": "mrmoqa",
+      "color": "3no4n"
     },
     "stage--comp--swot--zh": {
       "hash": "q3bv3e",
@@ -7681,6 +8341,11 @@
       "geometry": "f6dxbi",
       "color": "12ggpud"
     },
+    "swiss--comp--chevron-process--zh": {
+      "hash": "ju803z",
+      "geometry": "17ykhxf",
+      "color": "wqj60t"
+    },
     "swiss--comp--code--zh": {
       "hash": "rrq6mb",
       "geometry": "7inqfa",
@@ -7701,6 +8366,11 @@
       "geometry": "1u27ke7",
       "color": "1hymmsr"
     },
+    "swiss--comp--decision-tree--zh": {
+      "hash": "13jmvjd",
+      "geometry": "s2cs1l",
+      "color": "17pnezk"
+    },
     "swiss--comp--device-mockup-browser--zh": {
       "hash": "1qkm8ts",
       "geometry": "qa07gb",
@@ -7720,6 +8390,11 @@
       "hash": "cdn7zs",
       "geometry": "2qv2il",
       "color": "1x1xdkx"
+    },
+    "swiss--comp--from-to--zh": {
+      "hash": "1sz096h",
+      "geometry": "16nnaob",
+      "color": "w6c3s3"
     },
     "swiss--comp--gantt--zh": {
       "hash": "1vozide",
@@ -7760,6 +8435,11 @@
       "hash": "179kxxb",
       "geometry": "499mlx",
       "color": "181uahw"
+    },
+    "swiss--comp--journey-map--zh": {
+      "hash": "1fdz82i",
+      "geometry": "vju9w3",
+      "color": "c1jxnr"
     },
     "swiss--comp--kpi-cards--zh": {
       "hash": "ha01py",
@@ -7816,10 +8496,20 @@
       "geometry": "120bdj0",
       "color": "1tclf2v"
     },
+    "swiss--comp--staircase--zh": {
+      "hash": "1d52b11",
+      "geometry": "1tyz7ym",
+      "color": "qh1yx2"
+    },
     "swiss--comp--steps--zh": {
       "hash": "c9kkdn",
       "geometry": "10rx5c3",
       "color": "1ho7ren"
+    },
+    "swiss--comp--swimlane--zh": {
+      "hash": "1azr3qi",
+      "geometry": "luenir",
+      "color": "hfxwc6"
     },
     "swiss--comp--swot--zh": {
       "hash": "1yh9m95",
@@ -7882,9 +8572,9 @@
       "color": "1t0upd"
     },
     "terminal--deck--p08": {
-      "hash": "ho5cv7",
-      "geometry": "1d9g6os",
-      "color": "3quwgz"
+      "hash": "qirewh",
+      "geometry": "1ilbd4g",
+      "color": "1xsszx8"
     },
     "terminal--deck--p09": {
       "hash": "1125daz",
@@ -8036,6 +8726,11 @@
       "geometry": "uzyz1p",
       "color": "1chn7q"
     },
+    "terminal--comp--chevron-process--zh": {
+      "hash": "1w5700v",
+      "geometry": "1vogq1x",
+      "color": "oqmiij"
+    },
     "terminal--comp--code--zh": {
       "hash": "1kukw9u",
       "geometry": "q64pa2",
@@ -8056,6 +8751,11 @@
       "geometry": "1meqs2c",
       "color": "dk3s94"
     },
+    "terminal--comp--decision-tree--zh": {
+      "hash": "6dzkkz",
+      "geometry": "pyxibv",
+      "color": "90kzns"
+    },
     "terminal--comp--device-mockup-browser--zh": {
       "hash": "5s8mwa",
       "geometry": "ze3k2m",
@@ -8075,6 +8775,11 @@
       "hash": "r8lwvk",
       "geometry": "656ks4",
       "color": "p0dq0y"
+    },
+    "terminal--comp--from-to--zh": {
+      "hash": "1mwj7ro",
+      "geometry": "zvifjj",
+      "color": "1xnutry"
     },
     "terminal--comp--gantt--zh": {
       "hash": "gzystt",
@@ -8115,6 +8820,11 @@
       "hash": "1v0acf6",
       "geometry": "19w1s98",
       "color": "xbrtjm"
+    },
+    "terminal--comp--journey-map--zh": {
+      "hash": "1j2xv0p",
+      "geometry": "1ryfrkt",
+      "color": "1v1k0e0"
     },
     "terminal--comp--kpi-cards--zh": {
       "hash": "lsbesn",
@@ -8171,10 +8881,20 @@
       "geometry": "1681yfy",
       "color": "1nzpatc"
     },
+    "terminal--comp--staircase--zh": {
+      "hash": "18c6deb",
+      "geometry": "1wn5kf5",
+      "color": "fd6wwx"
+    },
     "terminal--comp--steps--zh": {
       "hash": "gq73ma",
       "geometry": "1e5rlbd",
       "color": "cscve9"
+    },
+    "terminal--comp--swimlane--zh": {
+      "hash": "1le8r3u",
+      "geometry": "9gjv70",
+      "color": "1o644uh"
     },
     "terminal--comp--swot--zh": {
       "hash": "1em1y29",
@@ -8396,6 +9116,11 @@
       "geometry": "18arrxw",
       "color": "11spjf9"
     },
+    "thesis--comp--chevron-process--zh": {
+      "hash": "f45ol0",
+      "geometry": "2pe6rh",
+      "color": "16mbo0f"
+    },
     "thesis--comp--code--zh": {
       "hash": "199uls7",
       "geometry": "190i3o6",
@@ -8416,6 +9141,11 @@
       "geometry": "1id1f4b",
       "color": "8kmhlq"
     },
+    "thesis--comp--decision-tree--zh": {
+      "hash": "1ex9fni",
+      "geometry": "1sardgf",
+      "color": "14ez8je"
+    },
     "thesis--comp--device-mockup-browser--zh": {
       "hash": "1fy0ler",
       "geometry": "6ri940",
@@ -8435,6 +9165,11 @@
       "hash": "g9bdj7",
       "geometry": "osxa6r",
       "color": "1wgmb77"
+    },
+    "thesis--comp--from-to--zh": {
+      "hash": "1qx59j2",
+      "geometry": "1cbhm7t",
+      "color": "4jekef"
     },
     "thesis--comp--gantt--zh": {
       "hash": "gcsl6q",
@@ -8475,6 +9210,11 @@
       "hash": "qc88j6",
       "geometry": "1o2613m",
       "color": "1pzkd7p"
+    },
+    "thesis--comp--journey-map--zh": {
+      "hash": "lzimxa",
+      "geometry": "6n1tjt",
+      "color": "1ruphr2"
     },
     "thesis--comp--kpi-cards--zh": {
       "hash": "1dhu5o",
@@ -8531,10 +9271,20 @@
       "geometry": "151pdwq",
       "color": "gfdskv"
     },
+    "thesis--comp--staircase--zh": {
+      "hash": "1ycf0jb",
+      "geometry": "1yte8jn",
+      "color": "7e5f9q"
+    },
     "thesis--comp--steps--zh": {
       "hash": "47y2fw",
       "geometry": "16u2xli",
       "color": "xff8qe"
+    },
+    "thesis--comp--swimlane--zh": {
+      "hash": "1m1bvn2",
+      "geometry": "enq9qt",
+      "color": "16ytpgx"
     },
     "thesis--comp--swot--zh": {
       "hash": "1nch7qs",
@@ -8607,9 +9357,9 @@
       "color": "1s3v919"
     },
     "vermilion--deck--p06": {
-      "hash": "1jd9do0",
-      "geometry": "cvdsib",
-      "color": "1oqx01e"
+      "hash": "10r8rzc",
+      "geometry": "1u7c5j0",
+      "color": "psjcj5"
     },
     "vermilion--deck--p07": {
       "hash": "1sqi9t0",
@@ -8766,6 +9516,11 @@
       "geometry": "1dcambw",
       "color": "aar2iu"
     },
+    "vermilion--comp--chevron-process--zh": {
+      "hash": "11n8eg3",
+      "geometry": "f23w6m",
+      "color": "178klvd"
+    },
     "vermilion--comp--code--zh": {
       "hash": "1rjwl4t",
       "geometry": "1iard6f",
@@ -8786,6 +9541,11 @@
       "geometry": "q0m362",
       "color": "1hzsoau"
     },
+    "vermilion--comp--decision-tree--zh": {
+      "hash": "12mzktl",
+      "geometry": "8h8cqh",
+      "color": "kqp6e9"
+    },
     "vermilion--comp--device-mockup-browser--zh": {
       "hash": "wqccin",
       "geometry": "1mkoate",
@@ -8805,6 +9565,11 @@
       "hash": "1hoja9y",
       "geometry": "3nfw7c",
       "color": "487h1l"
+    },
+    "vermilion--comp--from-to--zh": {
+      "hash": "1oriia8",
+      "geometry": "aomian",
+      "color": "1fxej8f"
     },
     "vermilion--comp--gantt--zh": {
       "hash": "7vyjnz",
@@ -8845,6 +9610,11 @@
       "hash": "159u5u8",
       "geometry": "3kisck",
       "color": "drkwpz"
+    },
+    "vermilion--comp--journey-map--zh": {
+      "hash": "1jc9gaa",
+      "geometry": "111kwrz",
+      "color": "1rx9qer"
     },
     "vermilion--comp--kpi-cards--zh": {
       "hash": "1cvtbu8",
@@ -8901,10 +9671,20 @@
       "geometry": "1ar9rzx",
       "color": "1j4y12r"
     },
+    "vermilion--comp--staircase--zh": {
+      "hash": "1g0nl9o",
+      "geometry": "7mdirv",
+      "color": "i01pab"
+    },
     "vermilion--comp--steps--zh": {
       "hash": "fbe4vm",
       "geometry": "175he8e",
       "color": "ltgjvq"
+    },
+    "vermilion--comp--swimlane--zh": {
+      "hash": "1k7vx75",
+      "geometry": "m5gppm",
+      "color": "18jrs2z"
     },
     "vermilion--comp--swot--zh": {
       "hash": "1kxoa9k",
