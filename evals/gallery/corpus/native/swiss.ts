@@ -136,6 +136,71 @@ export const SWISS_LEXICON: Lexicon = {
     },
   ],
 
+  sets: {
+    labels: ["月捐持续一年", "参与联合采购", "回传借阅数据"],
+    overlap: "三样齐备的项目点",
+  },
+  causes: {
+    effect: "一次仓储决策浪费了四十七万",
+    categories: [
+      { label: "决策", causes: ["仓库租期与采购季错配", "没有比价即定点"] },
+      { label: "预估", causes: ["按去年借阅量估需求", "县级伙伴上报口径不一"] },
+      { label: "物流", causes: ["跨省配送二次转运", "雨季道路中断两周"] },
+      { label: "监督", causes: ["单笔支出未过理事会", "内审在年末才做"] },
+    ],
+  },
+  positions: {
+    x: { title: "捐赠稳定度", low: "波动", high: "稳定" },
+    y: { title: "管理费率", low: "低", high: "高" },
+    quadrants: ["不稳定又贵，最该改", "稳定但费率高，可优化", "不稳定但便宜，靠年末冲刺", "又稳定又便宜，目标区"],
+    points: [
+      { label: "萤火基金会", x: 74, y: 26, mine: true },
+      { label: "月捐共同体", x: 88, y: 18 },
+      { label: "大额捐赠", x: 34, y: 40 },
+      { label: "企业配捐", x: 46, y: 52 },
+      { label: "利息收入", x: 62, y: 12 },
+      { label: "同类基金会甲", x: 56, y: 62 },
+      { label: "同类基金会乙", x: 30, y: 74 },
+      { label: "县级伙伴", x: 24, y: 58 },
+    ],
+  },
+  equation: {
+    operands: [
+      { label: "年度总收入", value: "1142.6 万元", note: "月捐占四成一" },
+      { label: "管理费率", value: "8.7%", note: "低于承诺的十个点" },
+    ],
+    result: { label: "借阅儿童", value: "43200 人", note: "人均年借十一点四册" },
+  },
+  wheel: {
+    whole: "一本书到孩子手里",
+    sectors: [
+      { label: "需求核报", value: "二百一十七点" },
+      { label: "联合采购", value: "低于市价两成一" },
+      { label: "物流配送", value: "三省" },
+      { label: "图书角建设", value: "二百一十七个" },
+      { label: "借阅运营", value: "全年" },
+      { label: "年度审计", value: "无保留" },
+    ],
+    marked: 1,
+  },
+  debate: {
+    proposal: "把仓储外包给一家全国物流商",
+    forTitle: "支持",
+    againstTitle: "反对",
+    pros: [
+      { label: "不会再有自租仓的决策", note: "四十七万的教训来自自租" },
+      { label: "跨省转运减少一段", note: "现在雨季必断两周" },
+      { label: "费用可逐单核对", note: "透明度报告更好写" },
+      { label: "人力可回到项目点", note: "两名同事现在管仓" },
+    ],
+    cons: [
+      { label: "单价高出自营两成", note: "管理费率会被推高" },
+      { label: "县级伙伴自提受限", note: "现在多是就近取书" },
+      { label: "合同期三年", note: "捐赠波动时无法退" },
+      { label: "旧书回流没有方案", note: "外包商不收退回件" },
+    ],
+    verdict: "华北两省先外包一年并逐单公开费用，其余省份维持自提，旧书回流另找社会仓。",
+  },
   orgs: [
     "萤火乡村阅读基金会",
     "理事会",

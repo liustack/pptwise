@@ -68,6 +68,12 @@ The table gives each component's normal kind home. A component may serve more th
 | `scorecard` | `data`, `comparison` |
 | `pictogram` | `data`, `fact` |
 | `word_cloud` | `data`, `list` |
+| `venn` | `comparison` |
+| `fishbone` | `hierarchy` |
+| `positioning_map` | `comparison` |
+| `concept_equation` | `points`, `statement` |
+| `segmented_wheel` | `hierarchy`, `list` |
+| `pros_cons` | `comparison` |
 
 ## Lookalikes
 
@@ -82,6 +88,12 @@ The table gives each component's normal kind home. A component may serve more th
 - Use `decision_tree` when a condition sends the reader down one of two or three paths and each ending has its own cost. Use `flowchart` for one thread with decisions along it.
 - Use `from_to` when the same measures carry a value in both states and the size of the move is the point. Use `comparison` when the two sides are different subjects rather than one subject twice.
 - Use `hub_spoke` for one central concept with unordered peer elements attached to it. Use `cycle` when they close a loop and `rings` when they nest inside one another.
+- Use `venn` when two or three sets overlap and the shared region is the point. Use `comparison` when the sides are weighed against each other and `rings` when each set contains the next.
+- Use `fishbone` when the result is known and the page sorts the causes behind it into categories. Use `flowchart` when the boxes lead somewhere.
+- Use `positioning_map` when where each subject sits on two continuous dimensions is the argument. Use `matrix` when the two dimensions are categories rather than scales.
+- Use `concept_equation` when two or three things together produce a fourth and the addition is the argument. Use `icon_cards` when the items produce nothing between them.
+- Use `segmented_wheel` when four to eight equal parts together make up one whole. Use `cycle` when the last part returns to the first and `pie` inside `chart` when the parts are unequal shares.
+- Use `pros_cons` when both columns argue about the same proposal and the page has to land on a verdict. Use `comparison` when the columns are two different subjects.
 - Use `roadmap` for workstreams without a shared numeric axis. Use `gantt` for dated bars on one shared axis.
 - Use `pest` for the four external macro factors. Use `swot` for internal and external strategic assessment.
 - Use `sankey` when band width carries an amount through branches and merges, and a gap should show where a flow is not accounted for. Use `flowchart` when branches carry decisions rather than quantities.

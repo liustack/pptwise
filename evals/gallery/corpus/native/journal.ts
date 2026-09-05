@@ -136,6 +136,71 @@ export const JOURNAL_LEXICON: Lexicon = {
     },
   ],
 
+  sets: {
+    labels: ["本地题材", "长报道体量", "作者是本地人"],
+    overlap: "三条都占的稿子",
+  },
+  causes: {
+    effect: "四十八期以来订户只增了三百",
+    categories: [
+      { label: "内容", causes: ["长报道排期常被压后", "书评占版面比重偏高"] },
+      { label: "渠道", causes: ["寄售点集中在一条街", "独立书店联盟未覆盖新区"] },
+      { label: "节奏", causes: ["月刊在选题上追不动", "约稿到发刊要六周"] },
+      { label: "人手", causes: ["六个人兼采编与发行", "校对常在发刊前夜"] },
+    ],
+  },
+  positions: {
+    x: { title: "选题本地程度", low: "泛", high: "本地" },
+    y: { title: "读者停留时长", low: "短", high: "长" },
+    quadrants: ["泛题材但读得久，靠文笔", "本地又读得久，我们的位置", "泛题材读得也快，最没必要", "本地但读得快，信息类"],
+    points: [
+      { label: "《巷口》", x: 86, y: 78, mine: true },
+      { label: "本地日报副刊", x: 74, y: 40 },
+      { label: "城市生活号", x: 52, y: 30 },
+      { label: "文学季刊", x: 24, y: 84 },
+      { label: "社区通讯", x: 82, y: 22 },
+      { label: "书评周刊", x: 18, y: 62 },
+      { label: "同城播客", x: 68, y: 58 },
+      { label: "外地同类刊", x: 30, y: 66 },
+    ],
+  },
+  equation: {
+    operands: [
+      { label: "问卷回收", value: "1100 份", note: "订户的四成一" },
+      { label: "长报道下限", value: "8000 字", note: "改版后写进体例" },
+    ],
+    result: { label: "改版后期数", value: "第 49 期", note: "从这一期起慢下来" },
+  },
+  wheel: {
+    whole: "一期刊物的六道工序",
+    sectors: [
+      { label: "问卷复盘", value: "一千一百份" },
+      { label: "栏目重构", value: "六栏" },
+      { label: "作者约稿", value: "十七位" },
+      { label: "试刊打样", value: "两版" },
+      { label: "订户告知", value: "全部" },
+      { label: "四十九期发刊", value: "十月" },
+    ],
+    marked: 1,
+  },
+  debate: {
+    proposal: "改成双月刊",
+    forTitle: "支持",
+    againstTitle: "反对",
+    pros: [
+      { label: "长报道有时间做扎实", note: "现在六周从约到印" },
+      { label: "校对不再压在前夜", note: "六个人的排班能喘口气" },
+      { label: "印装成本降三成", note: "同页数一年少六次开机" },
+      { label: "选题可以追长线", note: "拆迁与河道两个题跟了半年" },
+    ],
+    cons: [
+      { label: "订阅收入按期计", note: "全年少六期即少六期的钱" },
+      { label: "寄售点靠上架频次", note: "两个月不见新刊会被撤架" },
+      { label: "作者稿费节奏被打乱", note: "多数作者按期结算" },
+      { label: "读者会活动少一半", note: "每期一次是现在的黏性来源" },
+    ],
+    verdict: "先做双月刊一年，订阅价按年不按期，读者会照旧每月一次。",
+  },
   orgs: [
     "《巷口》编辑部",
     "本地印厂",

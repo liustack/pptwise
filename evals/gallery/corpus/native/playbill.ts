@@ -136,6 +136,71 @@ export const PLAYBILL_LEXICON: Lexicon = {
     },
   ],
 
+  sets: {
+    labels: ["三幕都到场", "台词背熟", "有替补"],
+    overlap: "三样齐备的角色",
+  },
+  causes: {
+    effect: "第二幕合成联排延了三次",
+    categories: [
+      { label: "人", causes: ["男生角色长期缺人", "两位主演考试周撞车"] },
+      { label: "本子", causes: ["第二幕改到第十一稿", "第二场的调度未定"] },
+      { label: "场地", causes: ["大剧场每周只批两晚", "小剧场无侧台"] },
+      { label: "舞美", causes: ["旅馆布景搭建超时", "灯光挂杆需另请工人"] },
+    ],
+  },
+  positions: {
+    x: { title: "排练投入", low: "少", high: "多" },
+    y: { title: "现场效果", low: "弱", high: "强" },
+    quadrants: ["投入少效果好，天赋场次", "投入多效果也好，压轴", "投入少效果也弱，可裁", "投入多效果弱，要改本"],
+    points: [
+      { label: "第三幕", x: 82, y: 88, mine: true },
+      { label: "第一幕", x: 62, y: 74 },
+      { label: "第二幕", x: 90, y: 52 },
+      { label: "序场", x: 24, y: 46 },
+      { label: "尾声", x: 30, y: 78 },
+      { label: "群戏一", x: 70, y: 40 },
+      { label: "独白段", x: 18, y: 66 },
+      { label: "谢幕", x: 14, y: 30 },
+    ],
+  },
+  equation: {
+    operands: [
+      { label: "排练天数", value: "102 天", note: "出勤近乎全勤" },
+      { label: "剧本修改", value: "11 稿", note: "第二幕改得最多" },
+    ],
+    result: { label: "首轮票量", value: "700 张", note: "两场坐满" },
+  },
+  wheel: {
+    whole: "一台戏的六段",
+    sectors: [
+      { label: "剧本围读", value: "十一稿" },
+      { label: "分幕排练", value: "七十天" },
+      { label: "合成联排", value: "三次" },
+      { label: "带妆彩排", value: "两晚" },
+      { label: "正式公演", value: "两场" },
+      { label: "复盘散伙饭", value: "散场后" },
+    ],
+    marked: 2,
+  },
+  debate: {
+    proposal: "把第二幕删掉一场",
+    forTitle: "支持",
+    againstTitle: "反对",
+    pros: [
+      { label: "联排三次都卡在这场", note: "调度到今天仍未定" },
+      { label: "总时长能回到两小时", note: "现在超出十七分钟" },
+      { label: "舞美搭建可省一景", note: "经费正好差这一笔" },
+      { label: "两位主演压力减半", note: "考试周与彩排重叠" },
+    ],
+    cons: [
+      { label: "旅馆老板的动机断了", note: "第三幕的转折要靠这场铺" },
+      { label: "两位配角戏份归零", note: "毕业公演，谁都想上台" },
+      { label: "第十一稿刚改完这场", note: "编剧熬了两周" },
+      { label: "宣传已按三幕做过", note: "海报与节目单都印了" },
+    ],
+    verdict: "第二幕第二场压缩到六分钟，保留旅馆老板的两段独白，配角改到序场里出场。",
+  },
   orgs: [
     "拾光剧社",
     "校学生活动中心",

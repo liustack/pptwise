@@ -136,6 +136,71 @@ export const CLASSROOM_LEXICON: Lexicon = {
     },
   ],
 
+  sets: {
+    labels: ["按时交作业", "错题本坚持", "考前自己梳理"],
+    overlap: "三样都做到的孩子",
+  },
+  causes: {
+    effect: "压轴题得分率只有三成一",
+    categories: [
+      { label: "读题", causes: ["条件多的题读漏一句", "图形题不先标已知"] },
+      { label: "方法", causes: ["辅助线变式见得太少", "常用模型没有归类"] },
+      { label: "计算", causes: ["分式化简跳步", "符号错误占失分四成"] },
+      { label: "时间", causes: ["前面小题耗时过长", "留给压轴不足十分钟"] },
+    ],
+  },
+  positions: {
+    x: { title: "作业完成度", low: "低", high: "高" },
+    y: { title: "期末成绩", low: "低", high: "高" },
+    quadrants: ["交得少考得好，靠聪明", "交得多考得好，方法对路", "交得少考得差，先抓习惯", "交得多考得差，方法要换"],
+    points: [
+      { label: "本班平均", x: 72, y: 68, mine: true },
+      { label: "基础组", x: 66, y: 42 },
+      { label: "提高组", x: 88, y: 86 },
+      { label: "初二（1）班", x: 78, y: 74 },
+      { label: "初二（5）班", x: 62, y: 60 },
+      { label: "年级平均", x: 70, y: 64 },
+      { label: "上学期本班", x: 58, y: 56 },
+      { label: "订正未跟组", x: 40, y: 34 },
+    ],
+  },
+  equation: {
+    operands: [
+      { label: "错题本坚持率", value: "76%", note: "每周五交一次" },
+      { label: "周末重做完成率", value: "68%", note: "只重做错过的题" },
+    ],
+    result: { label: "班级平均分", value: "86.5 分", note: "较上学期升四点二分" },
+  },
+  wheel: {
+    whole: "一道题的六步",
+    sectors: [
+      { label: "课前预习", value: "十分钟" },
+      { label: "课堂听讲", value: "记方法" },
+      { label: "作业订正", value: "当天" },
+      { label: "错题整理", value: "每周" },
+      { label: "周末重做", value: "只做错题" },
+      { label: "考前梳理", value: "两轮" },
+    ],
+    marked: 3,
+  },
+  debate: {
+    proposal: "暑假布置每天一套限时卷",
+    forTitle: "支持",
+    againstTitle: "反对",
+    pros: [
+      { label: "时间分配能练出来", note: "压轴题现在只剩十分钟" },
+      { label: "计算手感不掉", note: "开学摸底通常降六分" },
+      { label: "家长容易监督", note: "每天一张，交在群里" },
+      { label: "错题来源集中", note: "同一套卷便于横向比较" },
+    ],
+    cons: [
+      { label: "重复练已会的题", note: "限时卷八成是基础题" },
+      { label: "错题本会被挤掉", note: "整理时间与做卷冲突" },
+      { label: "两极分化会加剧", note: "基础组做不完更挫败" },
+      { label: "假期强度难持续", note: "去年第三周起交卷率减半" },
+    ],
+    verdict: "暑假前两周做限时卷练时间分配，后面改成隔天一套，空出的时间给错题本。",
+  },
   orgs: [
     "初二（3）班",
     "初二（1）班",

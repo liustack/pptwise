@@ -136,6 +136,71 @@ export const TECH_LEXICON: Lexicon = {
     },
   ],
 
+  sets: {
+    labels: ["嵌入式定位", "错误信息清楚", "接口向后兼容"],
+    overlap: "三条都守住的版本",
+  },
+  causes: {
+    effect: "总线因子仍然只有二",
+    categories: [
+      { label: "代码", causes: ["优化器只有两人读得懂", "执行器缺少注释"] },
+      { label: "流程", causes: ["分诊轮值只排了两人", "合并权限集中在核心组"] },
+      { label: "文档", causes: ["翻译长期滞后两个版本", "架构决策没有留档"] },
+      { label: "社区", causes: ["新贡献者从 issue 起步难", "基准工作组无人接手"] },
+    ],
+  },
+  positions: {
+    x: { title: "接入成本", low: "低", high: "高" },
+    y: { title: "热路径性能", low: "慢", high: "快" },
+    quadrants: ["接入贵但不快，没人用", "接入贵而快，服务端引擎", "接入便宜也不快，玩具", "接入便宜又快，我们的位置"],
+    points: [
+      { label: "Quill 项目", x: 22, y: 84, mine: true },
+      { label: "服务端引擎甲", x: 88, y: 92 },
+      { label: "服务端引擎乙", x: 76, y: 78 },
+      { label: "嵌入式同类", x: 30, y: 58 },
+      { label: "脚本库", x: 14, y: 30 },
+      { label: "云托管查询", x: 92, y: 66 },
+      { label: "v1 时代自己", x: 26, y: 34 },
+      { label: "v2 时代自己", x: 24, y: 62 },
+    ],
+  },
+  equation: {
+    operands: [
+      { label: "热路径提速", value: "8.3 倍", note: "第三次重写之后" },
+      { label: "公开接口数", value: "29 个", note: "三次重写只增两个" },
+    ],
+    result: { label: "仓库星标", value: "42000", note: "嵌入式定位换来的" },
+  },
+  wheel: {
+    whole: "一次重写的六步",
+    sectors: [
+      { label: "动机成立", value: "两个季度" },
+      { label: "设计评审", value: "三轮" },
+      { label: "并行实现", value: "四个月" },
+      { label: "影子运行", value: "六周" },
+      { label: "灰度切换", value: "三批" },
+      { label: "旧路径下线", value: "两个版本后" },
+    ],
+    marked: 3,
+  },
+  debate: {
+    proposal: "把优化器交给社区共同维护",
+    forTitle: "支持",
+    againstTitle: "反对",
+    pros: [
+      { label: "总线因子必须抬起来", note: "现在只有两人读得懂" },
+      { label: "基准工作组可以接手", note: "已有三人长期跑基准" },
+      { label: "设计决策会被迫留档", note: "现在只在两个人脑子里" },
+      { label: "分诊压力可分摊", note: "轮值现只排得出两人" },
+    ],
+    cons: [
+      { label: "热路径最容易被改慢", note: "8.3 倍是三次重写换来的" },
+      { label: "评审人力反而增加", note: "每个 PR 都要核基准" },
+      { label: "文档滞后会更明显", note: "翻译已落后两个版本" },
+      { label: "接口兼容承诺难守", note: "外部贡献常带签名变化" },
+    ],
+    verdict: "先把规划器交出去，优化器保留核心组合并权，基准回归通过后再逐步开放。",
+  },
   orgs: [
     "Quill 项目",
     "核心维护组",

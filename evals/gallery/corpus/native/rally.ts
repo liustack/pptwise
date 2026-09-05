@@ -136,6 +136,71 @@ export const CAMPAIGN_LEXICON: Lexicon = {
     },
   ],
 
+  sets: {
+    labels: ["冰柜独家位", "达人内容", "校园试饮点"],
+    overlap: "三样都做到的城市",
+  },
+  causes: {
+    effect: "首月铺市率只到五成一",
+    categories: [
+      { label: "渠道", causes: ["便利店排面谈判排期滞后", "校园店暑期闭店"] },
+      { label: "物料", causes: ["冰柜贴纸尺寸未统一", "试饮车牌照办理慢"] },
+      { label: "投放", causes: ["梯媒排期与开售错开", "达人内容集中在开售当周"] },
+      { label: "供给", causes: ["首批产能只够六成订单", "华南仓补货周期五天"] },
+    ],
+  },
+  positions: {
+    x: { title: "铺市速度", low: "慢", high: "快" },
+    y: { title: "单城预算", low: "低", high: "高" },
+    quadrants: ["慢铺市高预算，钱没花对", "快铺市高预算，正面强攻", "慢铺市低预算，慢慢来", "快铺市低预算，效率区"],
+    points: [
+      { label: "山茶气泡", x: 66, y: 44, mine: true },
+      { label: "便利蜂系", x: 84, y: 72 },
+      { label: "罗森华东", x: 72, y: 66 },
+      { label: "全家华南", x: 58, y: 60 },
+      { label: "分众传媒", x: 30, y: 86 },
+      { label: "青柠创意", x: 24, y: 30 },
+      { label: "校园店渠道", x: 44, y: 18 },
+      { label: "社区团购", x: 88, y: 22 },
+    ],
+  },
+  equation: {
+    operands: [
+      { label: "冰柜贴纸覆盖", value: "20000 家", note: "独家位谈到六个月" },
+      { label: "试饮车触达", value: "38 万人", note: "校园与写字楼各半" },
+    ],
+    result: { label: "首月铺市率", value: "70%", note: "战役目标，现为五成一" },
+  },
+  wheel: {
+    whole: "战役的六步",
+    sectors: [
+      { label: "物料锁定", value: "两周" },
+      { label: "渠道进场", value: "四千家" },
+      { label: "预热种草", value: "十天" },
+      { label: "开售引爆", value: "首日" },
+      { label: "续销运营", value: "四周" },
+      { label: "战役复盘", value: "第三十天" },
+    ],
+    marked: 1,
+  },
+  debate: {
+    proposal: "把梯媒预算整体挪去冰柜物料",
+    forTitle: "支持",
+    againstTitle: "反对",
+    pros: [
+      { label: "冰柜是最后一米", note: "开盖决策发生在柜前三秒" },
+      { label: "独家位可锁六个月", note: "梯媒排期只有四周" },
+      { label: "单位触达成本更低", note: "同预算多覆盖八千家" },
+      { label: "铺市率与销量直连", note: "试点城市相关系数 0.72" },
+    ],
+    cons: [
+      { label: "品牌认知仍近于零", note: "梯媒是唯一的心智入口" },
+      { label: "冰柜位无法覆盖校园", note: "校园店多为常温货架" },
+      { label: "谈判周期长过战役", note: "独家位平均谈四周" },
+      { label: "复用价值一次性", note: "贴纸不随包装升级" },
+    ],
+    verdict: "梯媒保留开售前两周，其余预算转冰柜，校园渠道另立试饮车预算。",
+  },
   orgs: [
     "山茶气泡项目组",
     "便利蜂系",

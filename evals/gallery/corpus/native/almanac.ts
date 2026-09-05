@@ -136,6 +136,71 @@ export const TERRA_LEXICON: Lexicon = {
     },
   ],
 
+  sets: {
+    labels: ["有机质达标", "轮作过绿肥", "会员认领"],
+    overlap: "三样齐备的地块",
+  },
+  causes: {
+    effect: "产量仍低于常规农场两成",
+    categories: [
+      { label: "土壤", causes: ["有机质才回到二点九", "旱地区保水能力弱"] },
+      { label: "耕作", causes: ["不打除草剂靠人工", "插秧放鸭错过最佳窗口"] },
+      { label: "人力", causes: ["农忙季只有九名社员", "秋收晒谷靠天排期"] },
+      { label: "品种", causes: ["旱稻品种尚在试种", "时令菜种类过多分散"] },
+    ],
+  },
+  positions: {
+    x: { title: "投入强度", low: "低", high: "高" },
+    y: { title: "土壤有机质", low: "低", high: "高" },
+    quadrants: ["投入少地却肥，理想区", "投入多地也肥，我们在这", "投入少地也瘦，撂荒", "投入多但地瘦，越种越亏"],
+    points: [
+      { label: "青禾水田区", x: 72, y: 78, mine: true },
+      { label: "青禾旱地区", x: 66, y: 52 },
+      { label: "果园地块", x: 48, y: 62 },
+      { label: "绿肥轮作区", x: 40, y: 84 },
+      { label: "邻村常规田", x: 82, y: 26 },
+      { label: "撂荒地", x: 8, y: 30 },
+      { label: "县农技示范田", x: 88, y: 66 },
+      { label: "五年前的自己", x: 60, y: 34 },
+    ],
+  },
+  equation: {
+    operands: [
+      { label: "土壤有机质", value: "2.9%", note: "五年连续向好" },
+      { label: "轮作作物", value: "27 种", note: "含四季绿肥" },
+    ],
+    result: { label: "会员续订率", value: "88%", note: "菜箱按周配送" },
+  },
+  wheel: {
+    whole: "一年的六件农事",
+    sectors: [
+      { label: "春耕备秧", value: "三月" },
+      { label: "插秧放鸭", value: "四月" },
+      { label: "夏耘防涝", value: "六月" },
+      { label: "秋收晒谷", value: "九月" },
+      { label: "冬闲修渠", value: "十一月" },
+      { label: "社员大会", value: "腊月" },
+    ],
+    marked: 1,
+  },
+  debate: {
+    proposal: "把二十亩旱地改回水田",
+    forTitle: "支持",
+    againstTitle: "反对",
+    pros: [
+      { label: "水田有机质涨得更快", note: "水田区已到二点九" },
+      { label: "放鸭能省一半除草工", note: "旱地全靠人工" },
+      { label: "产量差距能补上一成", note: "水稻单产比旱稻高" },
+      { label: "会员菜箱主粮更稳", note: "旱稻批次口感不一" },
+    ],
+    cons: [
+      { label: "修渠要一个冬天", note: "冬闲的人力全押上" },
+      { label: "旱地轮作会少八种", note: "二十七种是会员认的卖点" },
+      { label: "用水指标要重新申请", note: "县里按亩核批" },
+      { label: "改回来就难再改回去", note: "田埂与灌渠都是硬工程" },
+    ],
+    verdict: "先改八亩靠渠的旱地，冬闲修渠只做这一段，两季之后按有机质数据再定其余十二亩。",
+  },
   orgs: [
     "青禾农场合作社",
     "社员大会",

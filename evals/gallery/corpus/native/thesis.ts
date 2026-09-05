@@ -136,6 +136,71 @@ export const ACADEMIC_LEXICON: Lexicon = {
     },
   ],
 
+  sets: {
+    labels: ["田野录音", "人工标注", "社区回访"],
+    overlap: "三样齐全的方言点",
+  },
+  causes: {
+    effect: "藏缅语支的字错率只降了两个点",
+    categories: [
+      { label: "语料", causes: ["南片点录音多在户外", "老年发音人比例过高"] },
+      { label: "标注", causes: ["声调标注仍靠人工模板", "两位标注员一致率偏低"] },
+      { label: "模型", causes: ["编码器沿用普通话预训练", "声调通道与音素通道未解耦"] },
+      { label: "评测", causes: ["测试集只覆盖三个片区", "自发语速段落占比不足"] },
+    ],
+  },
+  positions: {
+    x: { title: "标注语料量", low: "少", high: "多" },
+    y: { title: "字错率降幅", low: "小", high: "大" },
+    quadrants: ["少语料高收益，方法吃劲", "多语料高收益，路径已通", "少语料低收益，尚待补录", "多语料低收益，方法见顶"],
+    points: [
+      { label: "本研究三地", x: 42, y: 84, mine: true },
+      { label: "北片基线", x: 30, y: 46 },
+      { label: "中片基线", x: 36, y: 52 },
+      { label: "南片基线", x: 22, y: 34 },
+      { label: "跨语支迁移", x: 18, y: 20 },
+      { label: "通用大模型", x: 92, y: 58 },
+      { label: "人工规则法", x: 12, y: 12 },
+      { label: "混合训练组", x: 62, y: 70 },
+    ],
+  },
+  equation: {
+    operands: [
+      { label: "协同标注语料", value: "30 小时", note: "两名标注员双盲复核" },
+      { label: "声调通道解耦", value: "3 层", note: "编码器末三层独立训练" },
+    ],
+    result: { label: "字错率降幅", value: "8.4pp", note: "三地测试集一致下降" },
+  },
+  wheel: {
+    whole: "研究的六个环节",
+    sectors: [
+      { label: "田野采集", value: "一万二千小时" },
+      { label: "语料清洗", value: "去噪两轮" },
+      { label: "协同标注", value: "三十小时" },
+      { label: "模型训练", value: "四组消融" },
+      { label: "三地评测", value: "盲测协议" },
+      { label: "社区部署", value: "两个村点" },
+    ],
+    marked: 2,
+  },
+  debate: {
+    proposal: "把标注预算全部投向声调层",
+    forTitle: "支持",
+    againstTitle: "反对",
+    pros: [
+      { label: "声调是当前最大误差源", note: "占剩余错误的四成三" },
+      { label: "标注模板已可复用", note: "三地共用一套调型表" },
+      { label: "对下游任务收益直接", note: "词切分随之受益" },
+      { label: "老年发音人可覆盖", note: "调型比音素更稳定" },
+    ],
+    cons: [
+      { label: "音素标注会停滞一年", note: "南片音素表尚未封版" },
+      { label: "标注员需重训", note: "调型判读一致率现为七成" },
+      { label: "跨语支迁移无收益", note: "藏缅语支调类不对应" },
+      { label: "评测协议要改", note: "现协议按音素计错" },
+    ],
+    verdict: "先把北片与中片的声调标注做完，南片音素表封版后再定第二期投入。",
+  },
   orgs: [
     "计算语言学实验室",
     "北片镇文化馆",

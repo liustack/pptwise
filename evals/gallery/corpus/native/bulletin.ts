@@ -136,6 +136,71 @@ export const ENTERPRISE_LEXICON: Lexicon = {
     },
   ],
 
+  sets: {
+    labels: ["完成培训", "数据已清洗", "有班组种子用户"],
+    overlap: "三样齐备的班组",
+  },
+  causes: {
+    effect: "试点期工单平均等待四点二小时",
+    categories: [
+      { label: "操作", causes: ["老员工键盘录入慢", "扫码枪与工位距离远"] },
+      { label: "数据", causes: ["外协件编码两套并存", "库存基数与实物有差"] },
+      { label: "排班", causes: ["夜班支持只有一人", "交接班时段并发最高"] },
+      { label: "培训", causes: ["培训与上线间隔六周", "手册按岗位而非按场景"] },
+    ],
+  },
+  positions: {
+    x: { title: "切换准备度", low: "低", high: "高" },
+    y: { title: "订单密度", low: "低", high: "高" },
+    quadrants: ["订单重但没准备好，最危险", "订单重且准备足，先切", "订单轻也没准备好，缓切", "订单轻但准备足，可试点"],
+    points: [
+      { label: "江州基地", x: 82, y: 88, mine: true },
+      { label: "北岭基地", x: 62, y: 74 },
+      { label: "临港基地", x: 46, y: 66 },
+      { label: "铸造车间", x: 70, y: 40 },
+      { label: "装配车间", x: 78, y: 58 },
+      { label: "外协管理", x: 34, y: 52 },
+      { label: "备件仓", x: 56, y: 24 },
+      { label: "试验中心", x: 40, y: 16 },
+    ],
+  },
+  equation: {
+    operands: [
+      { label: "切换覆盖员工", value: "30400 人", note: "三个基地同日切" },
+      { label: "停单窗口", value: "6 小时", note: "十月一日零点起" },
+    ],
+    result: { label: "年等待时间", value: "4300 小时", note: "试点口径折算全集团" },
+  },
+  wheel: {
+    whole: "切换的六道工序",
+    sectors: [
+      { label: "试点验证", value: "两个车间" },
+      { label: "全员培训", value: "三万人" },
+      { label: "数据清洗", value: "六周" },
+      { label: "割接切换", value: "六小时" },
+      { label: "观察保障", value: "两周" },
+      { label: "固化复盘", value: "十一月" },
+    ],
+    marked: 3,
+  },
+  debate: {
+    proposal: "三个基地同日切换",
+    forTitle: "支持",
+    againstTitle: "反对",
+    pros: [
+      { label: "跨基地单据不必双轨", note: "外协件当天起走一套编码" },
+      { label: "停单窗口只需一次", note: "分批要停三次共十八小时" },
+      { label: "支持力量可集中", note: "全部专家在同一夜到岗" },
+      { label: "员工预期一致", note: "不必解释谁先谁后" },
+    ],
+    cons: [
+      { label: "夜班支持力量摊薄", note: "三地同时只有一人当值" },
+      { label: "回退方案难分地执行", note: "一地失败就是全集团回退" },
+      { label: "老员工集中求助", note: "首夜工单预计超三千" },
+      { label: "临港基地准备度最低", note: "数据清洗还差两周" },
+    ],
+    verdict: "江州与北岭同日切，临港延后两周，回退方案按基地各自独立。",
+  },
   orgs: [
     "宏川重工集团",
     "江州基地",

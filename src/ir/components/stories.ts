@@ -8,11 +8,13 @@ import * as chart from "./chart"
 import * as chevronProcess from "./chevron-process"
 import * as code from "./code"
 import * as comparison from "./comparison"
+import * as conceptEquation from "./concept-equation"
 import * as cycle from "./cycle"
 import * as dataTable from "./data-table"
 import * as decisionTree from "./decision-tree"
 import * as deviceMockup from "./device-mockup"
 import * as fiveForces from "./five-forces"
+import * as fishbone from "./fishbone"
 import * as flowchart from "./flowchart"
 import * as fromTo from "./from-to"
 import * as gantt from "./gantt"
@@ -32,20 +34,24 @@ import * as paragraph from "./paragraph"
 import * as peopleCards from "./people-cards"
 import * as pest from "./pest"
 import * as pictogram from "./pictogram"
+import * as positioningMap from "./positioning-map"
 import * as progressDonuts from "./progress-donuts"
 import * as logoWall from "./logo-wall"
 import * as productCards from "./product-cards"
 import * as quoteWall from "./quote-wall"
+import * as prosCons from "./pros-cons"
 import * as rings from "./rings"
 import * as roadmap from "./roadmap"
 import * as rowCards from "./row-cards"
 import * as sankey from "./sankey"
 import * as scorecard from "./scorecard"
 import * as staircase from "./staircase"
+import * as segmentedWheel from "./segmented-wheel"
 import * as steps from "./steps"
 import * as swimlane from "./swimlane"
 import * as swot from "./swot"
 import * as timeline from "./timeline"
+import * as venn from "./venn"
 import * as verdictBanner from "./verdict-banner"
 import * as waterfall from "./waterfall"
 import * as wordCloud from "./word-cloud"
@@ -85,10 +91,12 @@ const COMPONENT_STORY_MODULES: Readonly<Record<string, ComponentStoryModule>> = 
   chevron_process: chevronProcess,
   code,
   comparison,
+  concept_equation: conceptEquation,
   cycle,
   data_table: dataTable,
   decision_tree: decisionTree,
   device_mockup: deviceMockup,
+  fishbone,
   five_forces: fiveForces,
   flowchart,
   from_to: fromTo,
@@ -107,19 +115,23 @@ const COMPONENT_STORY_MODULES: Readonly<Record<string, ComponentStoryModule>> = 
   paragraph,
   people_cards: peopleCards,
   pest,
+  positioning_map: positioningMap,
   progress_donuts: progressDonuts,
   logo_wall: logoWall,
   product_cards: productCards,
   quote_wall: quoteWall,
+  pros_cons: prosCons,
   rings,
   roadmap,
   row_cards: rowCards,
   sankey,
   staircase,
+  segmented_wheel: segmentedWheel,
   steps,
   swimlane,
   swot,
   timeline,
+  venn,
   verdict_banner: verdictBanner,
   waterfall,
   org_tree: orgTree,

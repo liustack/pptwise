@@ -134,9 +134,9 @@ pptwise render deck-dir/
 
 | 页面意图 | `kind` | 常用组件 |
 | --- | --- | --- |
-| 有顺序的论证 | `points` | `bullets`、`numbered_cards`、`paragraph` |
+| 有顺序的论证 | `points` | `bullets`、`numbered_cards`、`paragraph`、`concept_equation` |
 | 可换序的并列项 | `list` | `row_cards`、`icon_cards`、`people_cards`、`word_cloud` |
-| 并排看差异 | `comparison` | `comparison`、`from_to`、`image_compare`、`matrix`、`swot`、`harvey_balls` |
+| 并排看差异 | `comparison` | `comparison`、`from_to`、`image_compare`、`matrix`、`swot`、`harvey_balls`、`venn`、`positioning_map`、`pros_cons` |
 | 有方向的步骤或时间 | `process` | `steps`、`chevron_process`、`staircase`、`swimlane`、`journey_map`、`flowchart`、`timeline`、`roadmap`、`gantt`、`cycle`、`value_chain` |
 | 一组数字的结构 | `data` | `chart`、`data_table`、`kpi_cards`、`progress_donuts`、`scorecard`、`pictogram`、`heatmap`、`sankey` |
 | 画面本身就是信息 | `photo` | `image`、`image_grid`、`device_mockup` |

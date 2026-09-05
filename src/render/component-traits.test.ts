@@ -44,6 +44,12 @@ import { traits as harveyBallsTraits } from "@/ir/components/harvey-balls"
 import { traits as scorecardTraits } from "@/ir/components/scorecard"
 import { traits as pictogramTraits } from "@/ir/components/pictogram"
 import { traits as wordCloudTraits } from "@/ir/components/word-cloud"
+import { traits as vennTraits } from "@/ir/components/venn"
+import { traits as fishboneTraits } from "@/ir/components/fishbone"
+import { traits as positioningMapTraits } from "@/ir/components/positioning-map"
+import { traits as conceptEquationTraits } from "@/ir/components/concept-equation"
+import { traits as segmentedWheelTraits } from "@/ir/components/segmented-wheel"
+import { traits as prosConsTraits } from "@/ir/components/pros-cons"
 import {
   EVIDENCE_TYPES,
   FULL_BODY_TYPES,
@@ -69,6 +75,12 @@ const COLUMN_SPANNING_TYPES = (
  * rather than component-traits.ts trivially agreeing with itself.
  */
 const DOMAIN_FILE_TRAITS: readonly (readonly [string, { readonly evidence: boolean }])[] = [
+  ["venn", vennTraits],
+  ["fishbone", fishboneTraits],
+  ["positioning_map", positioningMapTraits],
+  ["concept_equation", conceptEquationTraits],
+  ["segmented_wheel", segmentedWheelTraits],
+  ["pros_cons", prosConsTraits],
   ["bullets", bulletsTraits],
   ["paragraph", paragraphTraits],
   ["blockquote", blockquoteTraits],
@@ -176,7 +188,10 @@ describe("SELF_VISUAL_TYPES equivalence (was bento-layout.ts:210-216, plus R1's 
     // same reason blockquote above it does — every remark already stands in
     // its own card under its own quote mark, so a bento shell behind it is a
     // card inside a card.
-    const current = [...preRefactor, "data_table", "device_mockup", "quote_wall"]
+    // relation wave: concept_equation paints a panel per term and pros_cons
+    // two columns and a verdict band, so a bento shell behind either is a
+    // second frame around a framed row.
+    const current = [...preRefactor, "data_table", "device_mockup", "quote_wall", "concept_equation", "pros_cons"]
     expect(new Set(SELF_VISUAL_TYPES)).toEqual(new Set(current))
     expect(SELF_VISUAL_TYPES.size).toBe(current.length)
   })
@@ -245,6 +260,15 @@ describe("PASSTHROUGH_SHELL_TYPES equivalence (was content-bento-panel.tsx:134-1
       "iceberg",
       "pillar_model",
       "value_chain",
+      // relation wave: venn's discs and chip, fishbone's spine and ribs,
+      // positioning_map's axes and the wheel's hub are each one composed
+      // figure, and the equation and the debate paint their own panels.
+      "venn",
+      "fishbone",
+      "positioning_map",
+      "segmented_wheel",
+      "concept_equation",
+      "pros_cons",
     ]
     expect(new Set(PASSTHROUGH_SHELL_TYPES)).toEqual(new Set(current))
     expect(PASSTHROUGH_SHELL_TYPES.size).toBe(current.length)

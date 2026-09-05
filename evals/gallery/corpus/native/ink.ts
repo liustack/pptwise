@@ -136,6 +136,71 @@ export const INK_LEXICON: Lexicon = {
     },
   ],
 
+  sets: {
+    labels: ["社藏原件", "考据完整", "有社课临本"],
+    overlap: "三样齐全的展件",
+  },
+  causes: {
+    effect: "布展进度落后两周",
+    categories: [
+      { label: "展件", causes: ["三件手卷待修复装池", "两件展签考据未定"] },
+      { label: "场地", causes: ["文史馆档期临时后移", "展墙尺寸与立轴不合"] },
+      { label: "人手", causes: ["在社社友多为在职", "布展经验几乎为零"] },
+      { label: "设备", causes: ["库房恒湿设备老旧", "调光轨道需另租"] },
+    ],
+  },
+  positions: {
+    x: { title: "展陈经验", low: "生", high: "熟" },
+    y: { title: "藏品完整度", low: "散", high: "全" },
+    quadrants: ["藏得全但不会展，我们在这", "又全又会展，可办巡展", "既不全也不会展，先积累", "会展但藏得散，靠借展"],
+    points: [
+      { label: "听雨书社", x: 22, y: 78, mine: true },
+      { label: "区文史馆", x: 76, y: 52 },
+      { label: "高校书法社", x: 34, y: 36 },
+      { label: "青少年书法班", x: 28, y: 20 },
+      { label: "装裱工坊", x: 62, y: 30 },
+      { label: "纸墨庄", x: 44, y: 24 },
+      { label: "邻市书社", x: 58, y: 68 },
+      { label: "省书协展", x: 88, y: 74 },
+    ],
+  },
+  equation: {
+    operands: [
+      { label: "社藏展件", value: "50 件", note: "立轴手卷册页各有" },
+      { label: "社课作品", value: "36 件", note: "十四年日课所出" },
+    ],
+    result: { label: "秋集展线", value: "86 件", note: "分四厅一线走完" },
+  },
+  wheel: {
+    whole: "办一次秋集",
+    sectors: [
+      { label: "选目定件", value: "五十件" },
+      { label: "修复装池", value: "三件" },
+      { label: "展签考据", value: "两件待定" },
+      { label: "布展调光", value: "三天" },
+      { label: "开幕雅集", value: "重阳" },
+      { label: "闭幕同临", value: "全社" },
+    ],
+    marked: 2,
+  },
+  debate: {
+    proposal: "秋集全部展件都配考据展签",
+    forTitle: "支持",
+    againstTitle: "反对",
+    pros: [
+      { label: "来宾多为初次观展", note: "去年问得最多的是年代" },
+      { label: "考据是社课的成果", note: "十四年日课的另一半" },
+      { label: "展签可留作社藏档案", note: "此后每次展览可复用" },
+      { label: "社友愿意分担撰写", note: "已有九人报名" },
+    ],
+    cons: [
+      { label: "两件出处尚有争议", note: "写定等于替争议下结论" },
+      { label: "撰写周期压到十天", note: "布展本已落后两周" },
+      { label: "展签排版需另请人", note: "社内无人做过版式" },
+      { label: "字数一多观众不读", note: "去年长签前少有人停留" },
+    ],
+    verdict: "四十八件配短签，两件存疑的只标现藏与尺寸，考据长文另编一册放在案头。",
+  },
   orgs: [
     "听雨书社",
     "区文史馆",

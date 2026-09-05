@@ -136,6 +136,71 @@ export const VERMILION_LEXICON: Lexicon = {
     },
   ],
 
+  sets: {
+    labels: ["纳入一窗受理", "全程网办", "材料可复用"],
+    overlap: "三样齐备的事项",
+  },
+  causes: {
+    effect: "三个事项承诺时限未兑现",
+    categories: [
+      { label: "流转", causes: ["跨部门盖章仍走纸质", "退件重报不计入时限"] },
+      { label: "系统", causes: ["两套审批系统未打通", "材料复用只覆盖本部门"] },
+      { label: "窗口", causes: ["窗口人员流动率偏高", "综合窗口业务面过宽"] },
+      { label: "标准", causes: ["受理标准逐窗解释不一", "补正一次即重新计时"] },
+    ],
+  },
+  positions: {
+    x: { title: "网办深度", low: "线下办", high: "全程网办" },
+    y: { title: "办件量", low: "少", high: "多" },
+    quadrants: ["量大却只能线下，最堵", "量大又能网办，改革样板", "量少也只能线下，可缓", "量少但已网办，成本高"],
+    points: [
+      { label: "市场准入", x: 84, y: 88, mine: true },
+      { label: "社保医保", x: 76, y: 82 },
+      { label: "税务", x: 88, y: 74 },
+      { label: "不动产", x: 42, y: 70 },
+      { label: "工程建设", x: 26, y: 44 },
+      { label: "公安户籍", x: 58, y: 62 },
+      { label: "社会事务", x: 64, y: 40 },
+      { label: "综合窗口", x: 34, y: 30 },
+    ],
+  },
+  equation: {
+    operands: [
+      { label: "一窗受理事项", value: "540 项", note: "覆盖面居全市前列" },
+      { label: "平均办理时限", value: "3.2 工作日", note: "连续四个季度下降" },
+    ],
+    result: { label: "上半年办件量", value: "41 万件", note: "同比增一成七" },
+  },
+  wheel: {
+    whole: "一件事的六个环节",
+    sectors: [
+      { label: "申请受理", value: "一窗" },
+      { label: "材料流转", value: "两日内" },
+      { label: "部门审批", value: "三点二日" },
+      { label: "结果制证", value: "当日" },
+      { label: "送达反馈", value: "免费寄" },
+      { label: "好差评回访", value: "全覆盖" },
+    ],
+    marked: 1,
+  },
+  debate: {
+    proposal: "把综合窗口拆成四个专业窗口",
+    forTitle: "支持",
+    againstTitle: "反对",
+    pros: [
+      { label: "受理标准能统一到人", note: "现在逐窗解释不一" },
+      { label: "新人上手周期缩短", note: "业务面从九类降到两类" },
+      { label: "退件率有望降三成", note: "补正多因受理口径" },
+      { label: "三个超时事项集中在两类", note: "专窗可专项盯" },
+    ],
+    cons: [
+      { label: "一窗受理的招牌被削", note: "改革覆盖面是首要指标" },
+      { label: "高峰期排队会分布不均", note: "税务窗常年最长" },
+      { label: "窗位不足要挤走自助区", note: "自助机使用率正在上升" },
+      { label: "人员流动率偏高", note: "专窗一旦缺人无法互补" },
+    ],
+    verdict: "保留一窗受理的对外口径，内部按四类分组坐班，三个超时事项由专组盯到年底。",
+  },
   orgs: [
     "区市场监管局",
     "区人社局",

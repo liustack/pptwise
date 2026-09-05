@@ -73,6 +73,12 @@ mirror_of: skills/pptwise/references/components.md
 | `scorecard` | `data`, `comparison` |
 | `pictogram` | `data`, `fact` |
 | `word_cloud` | `data`, `list` |
+| `venn` | `comparison` |
+| `fishbone` | `hierarchy` |
+| `positioning_map` | `comparison` |
+| `concept_equation` | `points`、`statement` |
+| `segmented_wheel` | `hierarchy`、`list` |
+| `pros_cons` | `comparison` |
 
 ## 相近组件
 
@@ -87,6 +93,12 @@ mirror_of: skills/pptwise/references/components.md
 - 一个条件把读者送上两三条路之一、每个结局各有代价时用 `decision_tree`；一条主线上带若干决策用 `flowchart`。
 - 同一批指标在两个状态下都有值、移动幅度就是论点时用 `from_to`；两边是不同主体而不是同一主体的两次用 `comparison`。
 - 一个中心概念带一组无序并列要素用 `hub_spoke`，要素闭环用 `cycle`，层层包含用 `rings`。
+- 两三个集合互相重叠、重叠处才是结论时用 `venn`，两边互相权衡用 `comparison`，层层包含用 `rings`。
+- 结果已经发生、页面在给原因分类时用 `fishbone`，方框通向某个终点时用 `flowchart`。
+- 每个主体在两个连续维度上的位置就是论据时用 `positioning_map`，两个维度是分类而不是刻度时用 `matrix`。
+- 两三个要素加起来得到一个结果、相加本身就是论证时用 `concept_equation`，条目之间不产生结果时用 `icon_cards`。
+- 四到八块对等的部分合起来正好是一个整体时用 `segmented_wheel`，末段回到首段用 `cycle`，各块占比不等用 `chart` 内的 `pie`。
+- 两栏说的是同一个方案的正反两面、最后要落一句结论时用 `pros_cons`，两栏是两个不同对象时用 `comparison`。
 - 没有共享数值轴的工作线用 `roadmap`，在同一日期轴上比较条形用 `gantt`。
 - 四类外部宏观因素用 `pest`，同时评估内外部战略条件用 `swot`。
 - 带宽承载数量并发生分支与汇合时用 `sankey`：宽度即论据，缺口显示未核算的流量。分支表达决策而非数量时用 `flowchart`。

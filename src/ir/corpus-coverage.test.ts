@@ -585,6 +585,113 @@ const COVERAGE_ENTRIES: Record<string, unknown> = {
       { text: "training", weight: 1 },
     ],
   }),
+  // venn's own hard check is the set-count ceiling: a fourth circle cannot
+  // show every intersection, so the schema refuses it rather than letting the
+  // drawing claim overlaps it never drew.
+  // fishbone's own hard check is the per-rib cause floor: a category with a
+  // single cause under it is just the cause.
+  // positioning_map's own hard check is the single-subject rule: a map with
+  // two points marked has no subject.
+  // concept_equation's own hard check is the term-count floor: one term and
+  // a result is a claim, not an equation.
+  // segmented_wheel's own hard check is the single-mark rule: two marked
+  // parts mark nothing.
+  // pros_cons' own hard check is the per-side floor: one point against three
+  // is not a weighing.
+  "coverage/pros_cons-valid": minimalDeck({
+    type: "pros_cons",
+    pros: { title: "For", items: [{ label: "Shorter cycle" }, { label: "Lower threshold" }] },
+    cons: { title: "Against", items: [{ label: "Contracts reopen" }, { label: "Billing rework" }] },
+    verdict: "Trial it on new business this quarter.",
+  }),
+  "coverage/pros_cons-tripwire": minimalDeck({
+    type: "pros_cons",
+    pros: { title: "For", items: [{ label: "Shorter cycle" }] },
+    cons: { title: "Against", items: [{ label: "Contracts reopen" }, { label: "Billing rework" }] },
+    verdict: "Trial it on new business this quarter.",
+  }),
+  "coverage/segmented_wheel-valid": minimalDeck({
+    type: "segmented_wheel",
+    center: "Customer success",
+    segments: [
+      { label: "Onboarding" },
+      { label: "Activation", emphasis: true },
+      { label: "Health check" },
+      { label: "Renewal" },
+    ],
+  }),
+  "coverage/segmented_wheel-tripwire": minimalDeck({
+    type: "segmented_wheel",
+    center: "Customer success",
+    segments: [
+      { label: "Onboarding", emphasis: true },
+      { label: "Activation", emphasis: true },
+      { label: "Health check" },
+      { label: "Renewal" },
+    ],
+  }),
+  "coverage/concept_equation-valid": minimalDeck({
+    type: "concept_equation",
+    operands: [{ label: "Onboarding time" }, { label: "Seat activation" }],
+    result: { label: "Renewal rate" },
+  }),
+  "coverage/concept_equation-tripwire": minimalDeck({
+    type: "concept_equation",
+    operands: [{ label: "Onboarding time" }],
+    result: { label: "Renewal rate" },
+  }),
+  "coverage/positioning_map-valid": minimalDeck({
+    type: "positioning_map",
+    x_axis: { title: "Delivery depth", low: "Light", high: "Deep" },
+    y_axis: { title: "Contract value", low: "Low", high: "High" },
+    points: [
+      { label: "Northwind", x: 78, y: 82, emphasis: true },
+      { label: "Contoso", x: 88, y: 60 },
+      { label: "Fabrikam", x: 30, y: 74 },
+      { label: "Tailspin", x: 20, y: 24 },
+    ],
+  }),
+  "coverage/positioning_map-tripwire": minimalDeck({
+    type: "positioning_map",
+    x_axis: { title: "Delivery depth", low: "Light", high: "Deep" },
+    y_axis: { title: "Contract value", low: "Low", high: "High" },
+    points: [
+      { label: "Northwind", x: 78, y: 82, emphasis: true },
+      { label: "Contoso", x: 88, y: 60, emphasis: true },
+      { label: "Fabrikam", x: 30, y: 74 },
+      { label: "Tailspin", x: 20, y: 24 },
+    ],
+  }),
+  "coverage/fishbone-valid": minimalDeck({
+    type: "fishbone",
+    effect: "Renewals stalled",
+    ribs: [
+      { label: "People", causes: ["Load per rep", "Ramp time"] },
+      { label: "Process", causes: ["No escalation", "Split calendars"] },
+      { label: "Tools", causes: ["Tickets apart", "Manual scoring"] },
+      { label: "Data", causes: ["Team-level only", "Late signals"] },
+    ],
+  }),
+  "coverage/fishbone-tripwire": minimalDeck({
+    type: "fishbone",
+    effect: "Renewals stalled",
+    ribs: [
+      { label: "People", causes: ["Load per rep"] },
+      { label: "Process", causes: ["No escalation", "Split calendars"] },
+      { label: "Tools", causes: ["Tickets apart", "Manual scoring"] },
+      { label: "Data", causes: ["Team-level only", "Late signals"] },
+    ],
+  }),
+  "coverage/venn-valid": minimalDeck({
+    type: "venn",
+    sets: [{ label: "Product" }, { label: "Delivery" }, { label: "Data" }],
+    center: "All three",
+  }),
+  "coverage/venn-tripwire": minimalDeck({
+    type: "venn",
+    sets: [{ label: "Product" }, { label: "Delivery" }, { label: "Data" }, { label: "Price" }],
+    center: "All four",
+  }),
 }
 
 // Assembles the validation corpus from all three sources, keyed by

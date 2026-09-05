@@ -508,6 +508,83 @@ export const COMPONENT_BUILDERS: Record<string, (lex: Lexicon) => Component> = {
     }),
   }),
 
+  // Three sets this world actually has, and the name it gives the ground
+  // they share (`lexicon.ts`'s `sets`). Assembled from a label pool instead,
+  // the circles overlap in the drawing and nowhere else.
+  venn: (lex) => ({
+    type: "venn",
+    sets: lex.sets.labels.map((label) => ({ label })),
+    center: lex.sets.overlap,
+  }),
+
+  // One result that already happened and the categories of reason behind it
+  // (`lexicon.ts`'s `causes`). The first cut sorted the customers instead of
+  // the causes, which is a different diagram with the same shape.
+  fishbone: (lex) => ({
+    type: "fishbone",
+    effect: lex.causes.effect,
+    ribs: lex.causes.categories.map((category) => ({
+      label: category.label,
+      causes: [...category.causes],
+    })),
+  }),
+
+  // Two real scales, both ends named, and every subject where this world
+  // would put it (`lexicon.ts`'s `positions`). Coordinates dealt out by
+  // position in a pool put competitors nowhere in particular.
+  positioning_map: (lex) => ({
+    type: "positioning_map",
+    x_axis: { title: lex.positions.x.title, low: lex.positions.x.low, high: lex.positions.x.high },
+    y_axis: { title: lex.positions.y.title, low: lex.positions.y.low, high: lex.positions.y.high },
+    quadrants: {
+      top_left: lex.positions.quadrants[0],
+      top_right: lex.positions.quadrants[1],
+      bottom_left: lex.positions.quadrants[2],
+      bottom_right: lex.positions.quadrants[3],
+    },
+    points: lex.positions.points.map((point) => ({
+      label: point.label,
+      x: point.x,
+      y: point.y,
+      ...(point.mine ? { emphasis: true as const } : {}),
+    })),
+  }),
+
+  // An addition someone could argue with (`lexicon.ts`'s `equation`): three
+  // unrelated headline numbers with a plus between them is arithmetic nobody
+  // wrote.
+  concept_equation: (lex) => ({
+    type: "concept_equation",
+    operands: lex.equation.operands.map((term) => ({ label: term.label, value: term.value, note: term.note })),
+    result: {
+      label: lex.equation.result.label,
+      value: lex.equation.result.value,
+      note: lex.equation.result.note,
+    },
+  }),
+
+  // Parts of one whole, not steps in time (`lexicon.ts`'s `wheel`): the
+  // stage pool reads as a sequence, and a wheel claims the opposite.
+  segmented_wheel: (lex) => ({
+    type: "segmented_wheel",
+    center: lex.wheel.whole,
+    segments: lex.wheel.sectors.map((sector, i) => ({
+      label: sector.label,
+      value: sector.value,
+      ...(i === lex.wheel.marked ? { emphasis: true as const } : {}),
+    })),
+  }),
+
+  // Both columns about the same proposal (`lexicon.ts`'s `debate`). An
+  // organisation's strengths against its weaknesses is two subjects, which is
+  // what `swot` is for.
+  pros_cons: (lex) => ({
+    type: "pros_cons",
+    pros: { title: lex.debate.forTitle, items: lex.debate.pros.map((p) => ({ label: p.label, note: p.note })) },
+    cons: { title: lex.debate.againstTitle, items: lex.debate.cons.map((c) => ({ label: c.label, note: c.note })) },
+    verdict: lex.debate.verdict,
+  }),
+
   rings: (lex) => ({
     type: "rings",
     items: slice(lex.labels, 3).map((label, i) => ({ label, desc: lex.sentences[i]! })),

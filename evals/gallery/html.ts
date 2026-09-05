@@ -129,7 +129,7 @@ export const COMPONENT_FAMILIES: readonly GroupFamily[] = [
       "word_cloud",
     ],
   },
-  { label: "卡片", members: ["kpi_cards", "icon_cards", "numbered_cards", "row_cards", "people_cards"] },
+  { label: "卡片", members: ["kpi_cards", "icon_cards", "numbered_cards", "row_cards", "people_cards", "concept_equation"] },
   {
     label: "图表",
     members: [
@@ -147,11 +147,12 @@ export const COMPONENT_FAMILIES: readonly GroupFamily[] = [
       "sankey",
       "progress_donuts",
       "pictogram",
+      "positioning_map",
     ],
   },
   {
     label: "表格与框架",
-    members: ["data_table", "scorecard", "harvey_balls", "heatmap", "matrix", "comparison", "from_to", "swot", "bmc", "pest", "five_forces"],
+    members: ["data_table", "scorecard", "harvey_balls", "heatmap", "matrix", "comparison", "from_to", "venn", "pros_cons", "swot", "bmc", "pest", "five_forces"],
   },
   {
     label: "流程与结构",
@@ -163,8 +164,10 @@ export const COMPONENT_FAMILIES: readonly GroupFamily[] = [
       "journey_map",
       "flowchart",
       "decision_tree",
+      "fishbone",
       "cycle",
       "hub_spoke",
+      "segmented_wheel",
       "rings",
       "architecture",
       "timeline",

@@ -136,6 +136,71 @@ export const LECTURE_LEXICON: Lexicon = {
     },
   ],
 
+  sets: {
+    labels: ["会看光", "会站位", "会等时机"],
+    overlap: "三样都会的学员",
+  },
+  causes: {
+    effect: "上次交作业只有二十一人",
+    categories: [
+      { label: "时间", causes: ["课后一周才交", "学员多为晚班工作"] },
+      { label: "题目", causes: ["题目要求外拍", "天气连续两周阴雨"] },
+      { label: "设备", causes: ["旧手机夜景噪点重", "部分机型无手动模式"] },
+      { label: "反馈", causes: ["点评只在课上口头", "没交的人看不到别人的片"] },
+    ],
+  },
+  positions: {
+    x: { title: "光线难度", low: "顺光好拍", high: "逆光难拍" },
+    y: { title: "出片率", low: "低", high: "高" },
+    quadrants: ["好拍却出不了片，方法问题", "好拍又出片，先练这里", "难拍也出不了片，暂缓", "难拍还出片，练成了"],
+    points: [
+      { label: "本班这次", x: 42, y: 66, mine: true },
+      { label: "窗光人像", x: 30, y: 78 },
+      { label: "顺光静物", x: 14, y: 84 },
+      { label: "侧光人像", x: 46, y: 62 },
+      { label: "逆光轮廓", x: 84, y: 44 },
+      { label: "顶光正午", x: 72, y: 22 },
+      { label: "夜景灯光", x: 90, y: 18 },
+      { label: "上节课平均", x: 40, y: 48 },
+    ],
+  },
+  equation: {
+    operands: [
+      { label: "在册学员", value: "34 人", note: "夜校第三讲" },
+      { label: "今晚学的光", value: "3 种", note: "顺光、侧光、窗光" },
+    ],
+    result: { label: "当堂出片", value: "27 张", note: "每人至少一张能用" },
+  },
+  wheel: {
+    whole: "一门课的六讲",
+    sectors: [
+      { label: "认识器材", value: "第一讲" },
+      { label: "认识光", value: "第三讲" },
+      { label: "学构图", value: "第四讲" },
+      { label: "拍人像", value: "第五讲" },
+      { label: "外拍实战", value: "第六讲" },
+      { label: "结课影展", value: "第八讲" },
+    ],
+    marked: 1,
+  },
+  debate: {
+    proposal: "作业改成当堂拍当堂交",
+    forTitle: "支持",
+    againstTitle: "反对",
+    pros: [
+      { label: "交作业的人会翻倍", note: "上次课后交只有二十一人" },
+      { label: "点评能当场对上片子", note: "现在隔一周谁都记不清" },
+      { label: "不受天气影响", note: "教室窗光稳定可控" },
+      { label: "旧手机也能完成", note: "室内光比夜景友好" },
+    ],
+    cons: [
+      { label: "练不到真实场景", note: "外拍才有难处理的光" },
+      { label: "课上时间要挪四十分钟", note: "讲解就得压缩" },
+      { label: "同一场景片子雷同", note: "影展会少了层次" },
+      { label: "拍得快的人先走", note: "课堂气氛会散" },
+    ],
+    verdict: "每讲留二十分钟当堂拍，外拍作业保留但改成两周一次，交不了的可用当堂片顶替。",
+  },
   orgs: [
     "河西社区夜校",
     "摄影班",

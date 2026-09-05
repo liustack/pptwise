@@ -136,6 +136,71 @@ export const RUNWAY_LEXICON: Lexicon = {
     },
   ],
 
+  sets: {
+    labels: ["回收面料", "手工盘扣", "可量产版型"],
+    overlap: "三样齐备的 look",
+  },
+  causes: {
+    effect: "十四个 look 只有六个能进买手店",
+    categories: [
+      { label: "工时", causes: ["盘扣一件二百一十四小时", "手织坊每月只出三匹"] },
+      { label: "面料", causes: ["植物染批次色差明显", "回收料幅宽不统一"] },
+      { label: "版型", causes: ["四个 look 只有单一码", "试装只做过一轮"] },
+      { label: "渠道", causes: ["买手店要现货交付", "美术馆展期与订货期错开"] },
+    ],
+  },
+  positions: {
+    x: { title: "可复制程度", low: "孤品", high: "可量产" },
+    y: { title: "工艺叙事分量", low: "轻", high: "重" },
+    quadrants: ["孤品但故事重，秀场担当", "可量产又有故事，首发款", "孤品故事也轻，不做", "可量产但故事轻，走货款"],
+    points: [
+      { label: "LOOK 09", x: 66, y: 84, mine: true },
+      { label: "LOOK 01", x: 24, y: 92 },
+      { label: "LOOK 05", x: 48, y: 70 },
+      { label: "LOOK 14", x: 18, y: 88 },
+      { label: "外套线", x: 74, y: 52 },
+      { label: "衬衫线", x: 88, y: 40 },
+      { label: "裙装线", x: 62, y: 46 },
+      { label: "裤装线", x: 80, y: 28 },
+    ],
+  },
+  equation: {
+    operands: [
+      { label: "回收面料占比", value: "60%", note: "十四个 look 合计" },
+      { label: "盘扣手工工时", value: "214 小时", note: "单件计" },
+    ],
+    result: { label: "首发款", value: "6 个 look", note: "买手店可交付的部分" },
+  },
+  wheel: {
+    whole: "一个系列的六步",
+    sectors: [
+      { label: "草图", value: "四十张" },
+      { label: "坯布试样", value: "两轮" },
+      { label: "面料定染", value: "三个月" },
+      { label: "工艺制作", value: "二百一十四小时" },
+      { label: "试装排练", value: "一次" },
+      { label: "发布巡展", value: "两城" },
+    ],
+    marked: 3,
+  },
+  debate: {
+    proposal: "首发只做六个可量产的 look",
+    forTitle: "支持",
+    againstTitle: "反对",
+    pros: [
+      { label: "买手店要的是现货", note: "两家都写进了订货条件" },
+      { label: "手工工时能排得开", note: "盘扣件不必同时开工" },
+      { label: "色差可控在一个批次内", note: "植物染按批集中处理" },
+      { label: "现金回得快", note: "巡展与订货期能对上" },
+    ],
+    cons: [
+      { label: "系列的叙事被切一半", note: "未完成的信本是十四封" },
+      { label: "孤品才是媒体的兴趣点", note: "LOOK 01 与 14 是秀场记忆点" },
+      { label: "手织坊的量被压", note: "每月三匹的产能会闲置" },
+      { label: "美术馆展陈已按十四件设计", note: "展墙与顺序都要改" },
+    ],
+    verdict: "秀场与展陈保留十四个 look，买手店首发只上六款，其余接受定制排期。",
+  },
   orgs: [
     "沈鹤工作室",
     "青浦手织工坊",

@@ -121,6 +121,13 @@ export interface Frequency {
   readonly weight: 1 | 2 | 3 | 4
 }
 
+/** One term in a `concept_equation`: what it is, its figure, and one line about it. */
+export interface EquationTerm {
+  readonly label: string
+  readonly value: string
+  readonly note: string
+}
+
 export interface Person {
   readonly name: string
   readonly role: string
@@ -254,6 +261,95 @@ export interface Lexicon {
       readonly recommended?: boolean
     }[]
   }[]
+  /**
+   * Three sets that genuinely overlap in this world, and what being inside
+   * all three at once means.
+   *
+   * A Venn diagram claims membership. Three labels taken from a pool of nouns
+   * overlap in the drawing and nowhere else — the first cut set a foundation's
+   * 月捐 against 图书采购 and called the middle 月捐 again. The overlap has to
+   * be a thing the world actually has a name for.
+   */
+  readonly sets: {
+    readonly labels: readonly [string, string, string]
+    readonly overlap: string
+  }
+  /**
+   * A result that already happened and the categories of cause behind it.
+   *
+   * The categories are kinds of reason, not kinds of thing: a fishbone whose
+   * ribs are 咨询 / 软件 / 教育 / 金融 has sorted the customers, not the
+   * causes. Each category carries two causes that could plausibly have
+   * produced this effect and no other.
+   */
+  readonly causes: {
+    readonly effect: string
+    readonly categories: readonly {
+      readonly label: string
+      readonly causes: readonly [string, string]
+    }[]
+  }
+  /**
+   * Two continuous dimensions, the words at each end, the four quadrants they
+   * make, and where each subject sits.
+   *
+   * Both axes have to be scales — "shallow to deep", not "east region / south
+   * region" — because the drawing's whole claim is that one subject is further
+   * along than another. Coordinates are authored, not dealt out, so a subject
+   * lands where this world would actually put it.
+   */
+  readonly positions: {
+    readonly x: { readonly title: string; readonly low: string; readonly high: string }
+    readonly y: { readonly title: string; readonly low: string; readonly high: string }
+    /** Top-left, top-right, bottom-left, bottom-right. */
+    readonly quadrants: readonly [string, string, string, string]
+    readonly points: readonly {
+      readonly label: string
+      readonly x: number
+      readonly y: number
+      /** The one subject the page is about. Exactly one point carries it. */
+      readonly mine?: boolean
+    }[]
+  }
+  /**
+   * Two things that add up to a third, with the figure each one carries.
+   *
+   * The addition has to be arguable: "opening time plus seat activation
+   * equals renewal rate" is a claim someone could dispute, where three
+   * unrelated headline numbers with a plus between them is arithmetic
+   * nobody wrote.
+   */
+  readonly equation: {
+    readonly operands: readonly [EquationTerm, EquationTerm]
+    readonly result: EquationTerm
+  }
+  /**
+   * One whole cut into equal parts, and which part is the page's subject.
+   *
+   * Parts, not stages: a wheel says these together are the job, so anything
+   * with a first and a last belongs in `stages` instead.
+   */
+  readonly wheel: {
+    readonly whole: string
+    readonly sectors: readonly { readonly label: string; readonly value: string }[]
+    /** Index of the one sector the page marks. */
+    readonly marked: number
+  }
+  /**
+   * One proposal, the case for it, the case against it, and the call.
+   *
+   * Both columns argue about the same proposal — a organisation's strengths
+   * against its weaknesses is two different subjects, which is `swot`'s job,
+   * not this one's.
+   */
+  readonly debate: {
+    readonly proposal: string
+    readonly forTitle: string
+    readonly againstTitle: string
+    readonly pros: readonly { readonly label: string; readonly note: string }[]
+    readonly cons: readonly { readonly label: string; readonly note: string }[]
+    readonly verdict: string
+  }
   /** Organization names — at least 12 (logo wall needs up to 12). */
   readonly orgs: Pool
   /** Named people with roles. */
@@ -516,6 +612,71 @@ const zh: Lexicon = {
     },
   ],
 
+  sets: {
+    labels: ["产品能力", "服务交付", "客户数据"],
+    overlap: "三线齐备",
+  },
+  causes: {
+    effect: "续约率卡在八成二",
+    categories: [
+      { label: "人", causes: ["顾问人均带六十二家", "新顾问上手要九周"] },
+      { label: "流程", causes: ["开通与巡检各自排期", "高危客户没有升级路径"] },
+      { label: "工具", causes: ["工单与用量不互通", "健康分靠人工打"] },
+      { label: "数据", causes: ["活跃只统计到部门", "风险提前三十天才可见"] },
+    ],
+  },
+  positions: {
+    x: { title: "实施深度", low: "浅", high: "深" },
+    y: { title: "年度客单价", low: "低", high: "高" },
+    quadrants: ["通用工具，价格拉锯", "深度实施，年费制", "自助开通，低价走量", "重服务，客单价偏低"],
+    points: [
+      { label: "云觅科技", x: 74, y: 80, mine: true },
+      { label: "临江咨询", x: 90, y: 62 },
+      { label: "北岸软件", x: 88, y: 30 },
+      { label: "云山教育", x: 30, y: 74 },
+      { label: "东启金融", x: 46, y: 56 },
+      { label: "永固传媒", x: 16, y: 38 },
+      { label: "远洋咨询", x: 58, y: 18 },
+      { label: "启明办公", x: 26, y: 8 },
+    ],
+  },
+  equation: {
+    operands: [
+      { label: "开通周期中位数", value: "5 周", note: "三方系统对接前置" },
+      { label: "付费席位月活跃", value: "88%", note: "部门级用量周报直达" },
+    ],
+    result: { label: "年度客户续约率", value: "91%", note: "六个季度以来最高" },
+  },
+  wheel: {
+    whole: "客户成功六个动作",
+    sectors: [
+      { label: "开通交付", value: "周期五周" },
+      { label: "首月激活", value: "活跃八成八" },
+      { label: "用量巡检", value: "双周一次" },
+      { label: "高危介入", value: "十四天内" },
+      { label: "增购推荐", value: "每季一轮" },
+      { label: "续约谈判", value: "提前六十天" },
+    ],
+    marked: 1,
+  },
+  debate: {
+    proposal: "按席位阶梯定价",
+    forTitle: "支持",
+    againstTitle: "反对",
+    pros: [
+      { label: "大客户扩容不必逐单谈判", note: "五百席以上自动下浮" },
+      { label: "中小客群门槛下移", note: "起售从五十席降到二十席" },
+      { label: "收入预测更稳", note: "季度预测偏差从两成收到一成" },
+      { label: "招标口径统一", note: "报价审批从五天压到一天" },
+    ],
+    cons: [
+      { label: "存量合同需要重签", note: "八十七家落在阶梯边界" },
+      { label: "小客群单价被摊薄", note: "百席以下单价降一成二" },
+      { label: "渠道返点规则失效", note: "现行返点按合同总额计" },
+      { label: "计费系统要改造", note: "分段计费最快到第四季度" },
+    ],
+    verdict: "本季度先在新签客户试行，存量合同等计费改造完成后按续约批次切换。",
+  },
   orgs: [
     "临江咨询",
     "北岸软件",
@@ -864,6 +1025,71 @@ const en: Lexicon = {
     },
   ],
 
+  sets: {
+    labels: ["Product depth", "Delivery reach", "Usage data"],
+    overlap: "All three in place",
+  },
+  causes: {
+    effect: "Renewals stuck at 82%",
+    categories: [
+      { label: "People", causes: ["62 accounts per manager", "Nine weeks to ramp"] },
+      { label: "Process", causes: ["Setup and checks unlinked", "No escalation path"] },
+      { label: "Tools", causes: ["Tickets and usage apart", "Scores hand-entered"] },
+      { label: "Data", causes: ["Activity by department", "Risk visible 30 days out"] },
+    ],
+  },
+  positions: {
+    x: { title: "Delivery depth", low: "Light", high: "Deep" },
+    y: { title: "Annual contract value", low: "Low", high: "High" },
+    quadrants: ["Generic tools, price war", "Deep delivery, annual terms", "Self-serve, volume play", "Service-heavy, low ticket"],
+    points: [
+      { label: "CloudSeek", x: 74, y: 80, mine: true },
+      { label: "Linjiang Group", x: 90, y: 62 },
+      { label: "Northshore", x: 88, y: 30 },
+      { label: "Yunshan School", x: 30, y: 74 },
+      { label: "Dongqi Fund", x: 46, y: 56 },
+      { label: "Yonggu Market", x: 16, y: 38 },
+      { label: "Ocean Education", x: 58, y: 18 },
+      { label: "Jinsui Study", x: 26, y: 8 },
+    ],
+  },
+  equation: {
+    operands: [
+      { label: "Median time to open", value: "5 weeks", note: "Integrations agreed up front" },
+      { label: "Monthly seat activity", value: "88%", note: "Usage report straight to the team lead" },
+    ],
+    result: { label: "Annual renewal rate", value: "91%", note: "Highest in six quarters" },
+  },
+  wheel: {
+    whole: "Six success moves",
+    sectors: [
+      { label: "Onboarding", value: "five weeks" },
+      { label: "First month", value: "88% active" },
+      { label: "Usage review", value: "fortnightly" },
+      { label: "At-risk rescue", value: "within 14 days" },
+      { label: "Expansion offer", value: "once a quarter" },
+      { label: "Renewal talks", value: "60 days out" },
+    ],
+    marked: 1,
+  },
+  debate: {
+    proposal: "Tiered pricing by seat count",
+    forTitle: "For",
+    againstTitle: "Against",
+    pros: [
+      { label: "Large accounts expand without a call", note: "Automatic step down above 500 seats" },
+      { label: "Lower entry for smaller teams", note: "Minimum falls from 50 seats to 20" },
+      { label: "Revenue forecasts settle down", note: "Quarterly error from 20% to 10%" },
+      { label: "One price for every bid", note: "Quote approval from five days to one" },
+    ],
+    cons: [
+      { label: "Existing contracts reopen", note: "87 accounts sit on a tier edge" },
+      { label: "Small accounts pay less per seat", note: "Under 100 seats the rate drops 12%" },
+      { label: "Channel rebates stop working", note: "Rebates are cut on contract totals" },
+      { label: "Billing needs rebuilding", note: "Tiered charging lands in Q4 at the earliest" },
+    ],
+    verdict: "Trial it on new business this quarter and move existing contracts at renewal once billing is ready.",
+  },
   orgs: [
     "Linjiang Group",
     "Northshore Software",
@@ -1212,6 +1438,71 @@ const mixed: Lexicon = {
     },
   ],
 
+  sets: {
+    labels: ["Terraform 覆盖", "ArgoCD 接管", "可观测重建"],
+    overlap: "三样齐备的 service",
+  },
+  causes: {
+    effect: "灰度期 P95 扩容耗时仍在 40s",
+    categories: [
+      { label: "镜像", causes: ["基础镜像层数过多", "拉取未走本地 registry"] },
+      { label: "调度", causes: ["节点池预热容量不足", "PDB 与 HPA 目标打架"] },
+      { label: "网络", causes: ["Ingress 侧连接复用率低", "跨 AZ 流量未就近"] },
+      { label: "观测", causes: ["指标采集间隔 60s", "扩容事件与日志不同源"] },
+    ],
+  },
+  positions: {
+    x: { title: "托管化程度", low: "自建", high: "全托管" },
+    y: { title: "单位成本", low: "低", high: "高" },
+    quadrants: ["自建高成本，最不划算", "托管高成本，买省心", "自建低成本，靠人力扛", "托管低成本，目标区"],
+    points: [
+      { label: "Quill 平台组", x: 72, y: 34, mine: true },
+      { label: "Linjiang 临江咨询", x: 24, y: 82 },
+      { label: "Northshore 北岸软件", x: 88, y: 76 },
+      { label: "Yunshan 云山教育", x: 30, y: 46 },
+      { label: "Dongqi 东启金融", x: 92, y: 40 },
+      { label: "Yonggu 永固传媒", x: 14, y: 26 },
+      { label: "Ocean 远洋咨询", x: 54, y: 60 },
+      { label: "Jinsui 锦穗学堂", x: 46, y: 12 },
+    ],
+  },
+  equation: {
+    operands: [
+      { label: "Terraform 重构覆盖", value: "40 个 service", note: "state 拆到六份" },
+      { label: "ArgoCD 灰度批次", value: "6 批", note: "每批观察 48 小时" },
+    ],
+    result: { label: "ECS 下线进度", value: "78%", note: "Q3 末剩余四台待迁" },
+  },
+  wheel: {
+    whole: "迁移的六道关",
+    sectors: [
+      { label: "方案评审", value: "两轮" },
+      { label: "Terraform 重构", value: "40 个 service" },
+      { label: "Staging 迁移", value: "两周" },
+      { label: "Canary 灰度", value: "6 批" },
+      { label: "全量切换", value: "一个夜窗" },
+      { label: "ECS 下线", value: "剩四台" },
+    ],
+    marked: 3,
+  },
+  debate: {
+    proposal: "把 observability 栈一次性重建在 K8s 上",
+    forTitle: "支持",
+    againstTitle: "反对",
+    pros: [
+      { label: "指标与日志同源", note: "扩容事件可直接对账" },
+      { label: "采集间隔降到 15s", note: "P95 曲线不再被抹平" },
+      { label: "成本下降三成八", note: "去掉两套重复采集" },
+      { label: "告警规则收敛到一处", note: "现行规则散在四个系统" },
+    ],
+    cons: [
+      { label: "迁移期双写两个月", note: "存储与带宽同时按两份计" },
+      { label: "历史数据需要回填", note: "18 个月指标要重新写入" },
+      { label: "值班手册全部作废", note: "分诊轮值组要重训一轮" },
+      { label: "etcd 写放大尚未解决", note: "跨 AZ 场景下仍有峰值" },
+    ],
+    verdict: "先在 Staging 重建整套，Canary 期间双写，全量切换后再回填历史指标。",
+  },
   orgs: [
     "Linjiang Group 临江咨询",
     "Northshore 北岸软件",

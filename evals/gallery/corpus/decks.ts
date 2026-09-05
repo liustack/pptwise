@@ -168,6 +168,7 @@ const COMPONENT_KINDS: Record<Component["type"], PageKind> = {
   gantt: "process",
   sankey: "process",
   steps: "process",
+  concept_equation: "points",
   numbered_cards: "points",
   icon_cards: "list",
   row_cards: "list",
@@ -187,7 +188,11 @@ const COMPONENT_KINDS: Record<Component["type"], PageKind> = {
   decision_tree: "process",
   from_to: "comparison",
   hub_spoke: "hierarchy",
+  segmented_wheel: "hierarchy",
   rings: "hierarchy",
+  pros_cons: "comparison",
+  positioning_map: "comparison",
+  venn: "comparison",
   matrix: "comparison",
   flowchart: "process",
   architecture: "hierarchy",
@@ -195,6 +200,7 @@ const COMPONENT_KINDS: Record<Component["type"], PageKind> = {
   insight_panel: "evidence",
   swot: "comparison",
   pest: "comparison",
+  fishbone: "hierarchy",
   five_forces: "hierarchy",
   bmc: "hierarchy",
   people_cards: "hierarchy",
@@ -248,6 +254,8 @@ const TALL_COMPONENT_TYPES = new Set<Component["type"]>([
   "iceberg",
   "pillar_model",
   "value_chain",
+  "venn",
+  "segmented_wheel",
 ])
 
 /**
@@ -260,8 +268,16 @@ const TALL_COMPONENT_TYPES = new Set<Component["type"]>([
  * strip runs out of room and the layer drops its tail. Same remedy as the
  * tall set above, different axis, so it is named for its own reason instead
  * of being filed under a name that would be untrue of it.
+ *
+ * `positioning_map` belongs to the same axis for its own reason: every point
+ * carries a name printed beside it, and half a rect is where those names
+ * start running into each other. `pros_cons` splits whatever width it is
+ * given into two columns of its own, so a side panel halves an already
+ * halved column and every point arrives cut. `fishbone` is the same case at
+ * its most extreme: the spine, its ribs and every cause label are laid out
+ * along one horizontal run.
  */
-const WIDE_COMPONENT_TYPES = new Set<Component["type"]>(["architecture"])
+const WIDE_COMPONENT_TYPES = new Set<Component["type"]>(["architecture", "positioning_map", "pros_cons", "fishbone"])
 
 // ─────────────────────────────────────────────────────────────────────────
 // Theme table — one ten-page deck, rendered once per theme

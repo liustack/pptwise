@@ -136,6 +136,71 @@ export const LUXE_LEXICON: Lexicon = {
     },
   ],
 
+  sets: {
+    labels: ["坊内手工", "客人量体", "旧料回用"],
+    overlap: "三样齐备的一件",
+  },
+  causes: {
+    effect: "年产能锁死在四十套",
+    categories: [
+      { label: "工时", causes: ["盘扣一件需二百一十四小时", "缂丝间只有两位师傅"] },
+      { label: "试衣", causes: ["每件至少三次试衣", "客人档期集中在年末"] },
+      { label: "主理人", causes: ["每件都要过手定版", "外埠客人需亲自赴约"] },
+      { label: "料作", causes: ["缂丝料到货按季", "旧料回用需逐件挑拣"] },
+    ],
+  },
+  positions: {
+    x: { title: "手工工时", low: "少", high: "多" },
+    y: { title: "客人复购率", low: "低", high: "高" },
+    quadrants: ["工时少复购高，最好卖", "工时多复购高，看家本事", "工时少复购低，不值得做", "工时多复购低，赔本赚吆喝"],
+    points: [
+      { label: "锦官高定", x: 88, y: 86, mine: true },
+      { label: "旗袍系列", x: 82, y: 90 },
+      { label: "礼服系列", x: 74, y: 66 },
+      { label: "长衫系列", x: 56, y: 72 },
+      { label: "披风系列", x: 62, y: 48 },
+      { label: "成衣改制", x: 24, y: 58 },
+      { label: "配饰单品", x: 18, y: 34 },
+      { label: "外包代工", x: 30, y: 20 },
+    ],
+  },
+  equation: {
+    operands: [
+      { label: "十年交付", value: "307 套", note: "件件出自坊内" },
+      { label: "盘扣手工工时", value: "214 小时", note: "一件旗袍的定数" },
+    ],
+    result: { label: "回场代表作", value: "12 套", note: "今晚的衣典" },
+  },
+  wheel: {
+    whole: "今夜的六段",
+    sectors: [
+      { label: "迎宾", value: "六点半" },
+      { label: "衣典展示", value: "十二套" },
+      { label: "主理人致辞", value: "八分钟" },
+      { label: "晚宴", value: "五十六位" },
+      { label: "谢幕", value: "全坊" },
+      { label: "散场相送", value: "十点" },
+    ],
+    marked: 1,
+  },
+  debate: {
+    proposal: "开放第二间缂丝工位",
+    forTitle: "支持",
+    againstTitle: "反对",
+    pros: [
+      { label: "年产能可到六十套", note: "候衣名录已排到后年" },
+      { label: "主理人可从工序抽身", note: "定版之外的活能交出去" },
+      { label: "老客等待时间减半", note: "现在平均等十四个月" },
+      { label: "学徒有位置可留", note: "两位学徒满师无处安放" },
+    ],
+    cons: [
+      { label: "缂丝手艺三年才出师", note: "第二位师傅要外聘" },
+      { label: "料作到货跟不上", note: "按季到货已被排满" },
+      { label: "客人认的是主理人的手", note: "转手的活难解释" },
+      { label: "坊内空间要重排", note: "试衣间要让出半间" },
+    ],
+    verdict: "第二间工位先做旧料回用与配饰，缂丝主件仍留在原工位，学徒两年后再定。",
+  },
   orgs: [
     "锦官高定工作室",
     "绣坊",

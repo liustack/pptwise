@@ -136,6 +136,71 @@ export const PULSE_LEXICON: Lexicon = {
     },
   ],
 
+  sets: {
+    labels: ["规律服药", "每天自测", "两周回访"],
+    overlap: "三样都做到的居民",
+  },
+  causes: {
+    effect: "在册患者的规律服药率只有六成四",
+    categories: [
+      { label: "认知", causes: ["血压一降就自行停药", "把头晕当作药物副作用"] },
+      { label: "习惯", causes: ["晨起服药常忘", "外出探亲不带药盒"] },
+      { label: "测量", causes: ["独居老人不会用电子表", "袖带位置常年偏低"] },
+      { label: "随访", causes: ["回访电话多在工作时间", "血压本回收不到一半"] },
+    ],
+  },
+  positions: {
+    x: { title: "自测频次", low: "很少", high: "每天" },
+    y: { title: "血压达标率", low: "低", high: "高" },
+    quadrants: ["少测却达标，运气成分", "常测又达标，管理到位", "少测也不达标，最需要上门", "常测但不达标，要调药"],
+    points: [
+      { label: "签约随访组", x: 78, y: 74, mine: true },
+      { label: "普通门诊组", x: 46, y: 52 },
+      { label: "独居老人组", x: 20, y: 30 },
+      { label: "在职中年组", x: 34, y: 44 },
+      { label: "药房取药组", x: 56, y: 40 },
+      { label: "讲堂常来组", x: 70, y: 62 },
+      { label: "楼组长带教组", x: 62, y: 58 },
+      { label: "新确诊组", x: 26, y: 48 },
+    ],
+  },
+  equation: {
+    operands: [
+      { label: "规律服药率", value: "64%", note: "在册四百一十二人" },
+      { label: "血压本回收率", value: "52%", note: "两周一次回收" },
+    ],
+    result: { label: "血压达标率", value: "58%", note: "较去年同期升九个点" },
+  },
+  wheel: {
+    whole: "一次讲堂之后的六件事",
+    sectors: [
+      { label: "现场测量", value: "四十人" },
+      { label: "讲解答疑", value: "半小时" },
+      { label: "发放血压本", value: "每人一册" },
+      { label: "两周回访", value: "电话" },
+      { label: "复诊提醒", value: "短信" },
+      { label: "季度小结", value: "楼组长" },
+    ],
+    marked: 3,
+  },
+  debate: {
+    proposal: "把回访从电话改成上门",
+    forTitle: "支持",
+    againstTitle: "反对",
+    pros: [
+      { label: "独居老人能被真正测到", note: "电话回访他们多说很好" },
+      { label: "袖带位置可以当面纠正", note: "常年偏低是主要误差" },
+      { label: "血压本回收率会上来", note: "现在只有五成二" },
+      { label: "楼组长可以带路", note: "签约站已有名单" },
+    ],
+    cons: [
+      { label: "全科医生一天只能走八户", note: "在册四百一十二人" },
+      { label: "在职患者白天不在家", note: "上门要排到晚上" },
+      { label: "冬季出行对老人反而不便", note: "开门等候容易受凉" },
+      { label: "人力挤占门诊时段", note: "现有两名全科医生" },
+    ],
+    verdict: "独居与新确诊两组改上门，其余维持电话回访，上门由家庭医生带楼组长同行。",
+  },
   orgs: [
     "梧桐里社区卫生服务中心",
     "全科门诊",

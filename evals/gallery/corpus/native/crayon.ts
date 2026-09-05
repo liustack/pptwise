@@ -136,6 +136,71 @@ export const CRAYON_LEXICON: Lexicon = {
     },
   ],
 
+  sets: {
+    labels: ["自己吃饭", "自己午睡", "自己表达"],
+    overlap: "三样都会的孩子",
+  },
+  causes: {
+    effect: "六个孩子还不敢当众发言",
+    categories: [
+      { label: "场合", causes: ["晨间分享人数太多", "轮到时距离老师太远"] },
+      { label: "内容", causes: ["没有可以带来的东西", "话题离家里的事太远"] },
+      { label: "同伴", causes: ["等待时被抢话", "笑声让人退回座位"] },
+      { label: "习惯", causes: ["在家很少被问到想法", "回答只需要点头"] },
+    ],
+  },
+  positions: {
+    x: { title: "同伴相处", low: "还需陪伴", high: "自己解决" },
+    y: { title: "表达意愿", low: "小声", high: "大方" },
+    quadrants: ["爱表达但常起争执", "又能说又能相处", "都还需要老师在旁", "会相处但不爱开口"],
+    points: [
+      { label: "向日葵班", x: 66, y: 58, mine: true },
+      { label: "小海豚班", x: 72, y: 64 },
+      { label: "白云班", x: 58, y: 70 },
+      { label: "彩虹桥班", x: 48, y: 44 },
+      { label: "月亮船班", x: 80, y: 52 },
+      { label: "小橡树班", x: 40, y: 62 },
+      { label: "上学期本班", x: 52, y: 40 },
+      { label: "新入园幼儿", x: 24, y: 22 },
+    ],
+  },
+  equation: {
+    operands: [
+      { label: "独立进餐", value: "28 人", note: "全班三十人" },
+      { label: "午睡入睡用时", value: "12 分钟", note: "开学时是二十六分钟" },
+    ],
+    result: { label: "学期出勤率", value: "94%", note: "全园最高的一档" },
+  },
+  wheel: {
+    whole: "一天的六件事",
+    sectors: [
+      { label: "晨间入园", value: "自己挥手" },
+      { label: "自主进餐", value: "二十八人" },
+      { label: "午睡", value: "十二分钟" },
+      { label: "户外", value: "两小时" },
+      { label: "绘本角", value: "每天两本" },
+      { label: "值日生", value: "轮到三次" },
+    ],
+    marked: 1,
+  },
+  debate: {
+    proposal: "下学期把晨间分享改成小组分享",
+    forTitle: "支持",
+    againstTitle: "反对",
+    pros: [
+      { label: "六个孩子先在小组里开口", note: "面前只有五个人" },
+      { label: "等待时间从十分钟降到两分钟", note: "抢话的机会随之减少" },
+      { label: "老师能听清每个人", note: "现在后排常被盖过" },
+      { label: "话题可以按组不同", note: "带来的东西不必一致" },
+    ],
+    cons: [
+      { label: "全班一起听的机会没了", note: "孩子们喜欢台前那一刻" },
+      { label: "需要两位老师同时在场", note: "现只有一位配班" },
+      { label: "小组固定会形成小圈子", note: "上学期积木区已有苗头" },
+      { label: "幼小衔接需要大场合", note: "小学是四十人一起举手" },
+    ],
+    verdict: "下学期先做小组分享，每两周留一次全班分享，让六个孩子先在小组里练熟。",
+  },
   orgs: [
     "向日葵班",
     "小海豚班",

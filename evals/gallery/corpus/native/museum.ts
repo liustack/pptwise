@@ -136,6 +136,71 @@ export const MUSEUM_LEXICON: Lexicon = {
     },
   ],
 
+  sets: {
+    labels: ["有出土记录", "可点亮复原", "借展可放行"],
+    overlap: "三样齐备的展件",
+  },
+  causes: {
+    effect: "重点展件保险费高出预算四成",
+    categories: [
+      { label: "展件", causes: ["一级借展占十一件", "青铜灯需恒湿柜"] },
+      { label: "运输", causes: ["两馆需专车专押", "长途段跨省报批"] },
+      { label: "展陈", causes: ["低照度需另加监测", "复原点亮涉及明火替代"] },
+      { label: "档期", causes: ["借期只有九十天", "巡展意向增加一段运输"] },
+    ],
+  },
+  positions: {
+    x: { title: "展陈难度", low: "易", high: "难" },
+    y: { title: "叙事分量", low: "轻", high: "重" },
+    quadrants: ["好展但故事轻，凑数", "难展且故事重，主线展件", "好展故事也轻，可不借", "难展但故事轻，不值得"],
+    points: [
+      { label: "青铜连枝灯", x: 88, y: 92, mine: true },
+      { label: "豆灯", x: 22, y: 66 },
+      { label: "陶灯", x: 26, y: 44 },
+      { label: "瓷灯", x: 34, y: 52 },
+      { label: "宫灯", x: 62, y: 74 },
+      { label: "省油灯", x: 30, y: 82 },
+      { label: "长明灯", x: 70, y: 58 },
+      { label: "电石灯", x: 44, y: 36 },
+    ],
+  },
+  equation: {
+    operands: [
+      { label: "展品总数", value: "146 件", note: "十一家借展" },
+      { label: "展厅照度", value: "50lux", note: "纸质与彩绘件的上限" },
+    ],
+    result: { label: "一条光路", value: "三千年", note: "从豆灯到电石灯" },
+  },
+  wheel: {
+    whole: "办一个特展",
+    sectors: [
+      { label: "借展谈判", value: "十一家" },
+      { label: "修复整理", value: "四个月" },
+      { label: "展陈搭建", value: "六周" },
+      { label: "灯光调试", value: "五十勒" },
+      { label: "开幕导览", value: "策展人" },
+      { label: "巡展评估", value: "明春" },
+    ],
+    marked: 3,
+  },
+  debate: {
+    proposal: "把展厅照度提到八十勒",
+    forTitle: "支持",
+    againstTitle: "反对",
+    pros: [
+      { label: "老年观众看得清展签", note: "现场问询多集中在这一点" },
+      { label: "青铜纹饰细节能被看见", note: "五十勒下阴刻几乎不可辨" },
+      { label: "拍照体验改善", note: "社交传播是巡展的前提" },
+      { label: "导览可缩短停留讲解", note: "不必逐件描述纹样" },
+    ],
+    cons: [
+      { label: "彩绘与纸质件不能过五十", note: "借展协议写死" },
+      { label: "保险条款按照度定档", note: "提档等于加保费" },
+      { label: "低照度是这条光路的语言", note: "整条展线为暗设计" },
+      { label: "灯具需整批更换", note: "轨道与色温都要重来" },
+    ],
+    verdict: "彩绘与纸质件维持五十勒，青铜与陶瓷区局部提到八十，展签另加背光条。",
+  },
   orgs: [
     "江原博物馆",
     "国家一级借展馆",

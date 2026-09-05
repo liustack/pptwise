@@ -136,6 +136,71 @@ export const ARENA_LEXICON: Lexicon = {
     },
   ],
 
+  sets: {
+    labels: ["前期节奏", "中野联动", "视野控制"],
+    overlap: "三样齐备的比赛",
+  },
+  causes: {
+    effect: "前期十分钟经济常落后两千",
+    categories: [
+      { label: "对线", causes: ["上单英雄池偏窄", "中单换线响应慢"] },
+      { label: "打野", causes: ["开局路线固定可被预判", "反野时机依赖对手失误"] },
+      { label: "视野", causes: ["河道眼位更新不及时", "辅助游走与做眼冲突"] },
+      { label: "备战", causes: ["版本英雄练度不均", "对手打野习惯研究不足"] },
+    ],
+  },
+  positions: {
+    x: { title: "前期节奏", low: "偏慢", high: "偏快" },
+    y: { title: "常规赛胜率", low: "低", high: "高" },
+    quadrants: ["慢节奏高胜率，后期队", "快节奏高胜率，节奏队", "慢节奏低胜率，需要重建", "快节奏低胜率，节奏空转"],
+    points: [
+      { label: "雷隼战队", x: 34, y: 76, mine: true },
+      { label: "星澜电竞", x: 82, y: 78 },
+      { label: "极夜俱乐部", x: 74, y: 52 },
+      { label: "白帜战队", x: 44, y: 58 },
+      { label: "苍梧战队", x: 20, y: 40 },
+      { label: "青樾战队", x: 88, y: 30 },
+      { label: "北岭战队", x: 56, y: 22 },
+      { label: "雷隼二队", x: 30, y: 12 },
+    ],
+  },
+  equation: {
+    operands: [
+      { label: "中野参团率", value: "67%", note: "三级后固定联动线" },
+      { label: "打野分均插眼", value: "1.49 个", note: "河道视野提前二十秒" },
+    ],
+    result: { label: "逆风局胜率", value: "41%", note: "联盟第一，高出次席七个点" },
+  },
+  wheel: {
+    whole: "赛季的六段路",
+    sectors: [
+      { label: "春季赛", value: "十二胜六负" },
+      { label: "季中集训", value: "三周" },
+      { label: "夏季赛", value: "十四胜四负" },
+      { label: "季后赛", value: "止步四强" },
+      { label: "粉丝之夜", value: "今晚" },
+      { label: "冬窗休整", value: "两个月" },
+    ],
+    marked: 3,
+  },
+  debate: {
+    proposal: "冬窗把二队上单提到一队首发",
+    forTitle: "支持",
+    againstTitle: "反对",
+    pros: [
+      { label: "英雄池比现首发宽", note: "二队本赛季用过十一个" },
+      { label: "青训体系需要出口", note: "三名小将已完成一队首秀" },
+      { label: "薪资空间可腾出", note: "省下的位置补打野轮换" },
+      { label: "训练赛数据已达标", note: "对线期经济差转正" },
+    ],
+    cons: [
+      { label: "正赛经验只有四场", note: "季后赛强度尚未验证" },
+      { label: "上中配合要重新磨", note: "现有换线默契来自两年积累" },
+      { label: "粉丝预期需要引导", note: "现首发是队史出场王" },
+      { label: "冬窗窗口只有两个月", note: "磨合期与春季赛重叠" },
+    ],
+    verdict: "冬窗按轮换准备，春季赛前六周由训练赛数据决定谁先发。",
+  },
   orgs: [
     "雷隼战队",
     "雷隼二队",

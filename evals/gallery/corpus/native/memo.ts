@@ -136,6 +136,71 @@ export const MEMO_LEXICON: Lexicon = {
     },
   ],
 
+  sets: {
+    labels: ["会做", "有人买", "价能算清"],
+    overlap: "三样齐了才敢走",
+  },
+  causes: {
+    effect: "到今天为止一件都没卖出去",
+    categories: [
+      { label: "作品", causes: ["做的都是自己想做的", "没有可复制的款"] },
+      { label: "定价", causes: ["工时没记过", "木料成本按整块算"] },
+      { label: "渠道", causes: ["市集只去过两次", "没有可下单的地方"] },
+      { label: "时间", causes: ["只能周末进工坊", "接单周期无法承诺"] },
+    ],
+  },
+  positions: {
+    x: { title: "上手难度", low: "易", high: "难" },
+    y: { title: "愿意付的价", low: "低", high: "高" },
+    quadrants: ["难做但卖不上价，最亏", "难做也卖得上价，值得练", "易做也卖不上价，不做", "易做又卖得上价，先做这类"],
+    points: [
+      { label: "小凳", x: 30, y: 62, mine: true },
+      { label: "案板", x: 18, y: 34 },
+      { label: "笔筒", x: 14, y: 22 },
+      { label: "书架", x: 62, y: 58 },
+      { label: "边柜", x: 78, y: 76 },
+      { label: "餐桌", x: 92, y: 84 },
+      { label: "托盘", x: 20, y: 40 },
+      { label: "定制修补", x: 46, y: 30 },
+    ],
+  },
+  equation: {
+    operands: [
+      { label: "存款可撑", value: "22 个月", note: "月开销上限六千五" },
+      { label: "已练工时", value: "800 小时", note: "两年的周末" },
+    ],
+    result: { label: "首单交付", value: "第 3 个月", note: "计划里的第一件事" },
+  },
+  wheel: {
+    whole: "半年的六件事",
+    sectors: [
+      { label: "交接离职", value: "一个月" },
+      { label: "工坊安顿", value: "共享工位" },
+      { label: "手艺补课", value: "两百小时" },
+      { label: "首单交付", value: "第三个月" },
+      { label: "口碑积累", value: "十位客人" },
+      { label: "半年复盘", value: "看账本" },
+    ],
+    marked: 3,
+  },
+  debate: {
+    proposal: "现在就裸辞",
+    forTitle: "支持",
+    againstTitle: "反对",
+    pros: [
+      { label: "存款够撑二十二个月", note: "按六千五的上限算过" },
+      { label: "周末进度追不上", note: "八百小时用了两年" },
+      { label: "工坊工位当月有空", note: "下一次要等半年" },
+      { label: "现在的岗位不会更好", note: "写这份备忘就是为了记住" },
+    ],
+    cons: [
+      { label: "至今零成交", note: "没有一件东西被买走过" },
+      { label: "开不出一张像样的报价", note: "工时与料钱都没记过" },
+      { label: "社保要自己接上", note: "每月多出一千一" },
+      { label: "首单周期无法承诺", note: "客人问交期我答不上来" },
+    ],
+    verdict: "先请两个月年假试运行，把工时记满两百小时、卖出三件之后再决定辞不辞。",
+  },
   orgs: [
     "现公司",
     "共享工坊",

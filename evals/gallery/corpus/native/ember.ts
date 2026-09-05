@@ -136,6 +136,71 @@ export const EMBER_LEXICON: Lexicon = {
     },
   ],
 
+  sets: {
+    labels: ["驻园验证", "按亩付费", "低碰伤手爪"],
+    overlap: "三样齐备的产区",
+  },
+  causes: {
+    effect: "单台日采量停在 1.1 吨",
+    categories: [
+      { label: "手爪", causes: ["柑橘果梗夹持点难找", "换爪需停机十二分钟"] },
+      { label: "视觉", causes: ["逆光时漏检率上升", "套袋果识别未训练"] },
+      { label: "底盘", causes: ["垄间转向半径偏大", "雨后泥地打滑降速"] },
+      { label: "调度", causes: ["满筐后回程路径固定", "多机作业互相等待"] },
+    ],
+  },
+  positions: {
+    x: { title: "作业速度", low: "慢", high: "快" },
+    y: { title: "碰伤率", low: "低", high: "高" },
+    quadrants: ["慢且碰伤高，最不可用", "快但碰伤高，果子卖不上价", "慢但碰伤低，我们的起点", "又快又轻，目标区"],
+    points: [
+      { label: "焰序样机", x: 46, y: 12, mine: true },
+      { label: "人工采摘", x: 30, y: 18 },
+      { label: "进口机型", x: 78, y: 44 },
+      { label: "国产同类甲", x: 66, y: 62 },
+      { label: "国产同类乙", x: 58, y: 76 },
+      { label: "振动式采收", x: 92, y: 88 },
+      { label: "半自动辅助", x: 40, y: 34 },
+      { label: "上一代样机", x: 34, y: 52 },
+    ],
+  },
+  equation: {
+    operands: [
+      { label: "真机碰伤率", value: "0.8%", note: "三个产区连续两季" },
+      { label: "样机降本幅度", value: "58%", note: "手爪与视觉件国产化" },
+    ],
+    result: { label: "按亩付费单价", value: "180 元/亩", note: "免除果园采购门槛" },
+  },
+  wheel: {
+    whole: "落地的六步",
+    sectors: [
+      { label: "产区调研", value: "三省" },
+      { label: "样机迭代", value: "七版" },
+      { label: "驻园验证", value: "两季" },
+      { label: "签约服务", value: "按亩" },
+      { label: "产能爬坡", value: "月产二十台" },
+      { label: "品类扩展", value: "第三种果" },
+    ],
+    marked: 2,
+  },
+  debate: {
+    proposal: "这一轮的钱全部投向第三种水果的手爪",
+    forTitle: "支持",
+    againstTitle: "反对",
+    pros: [
+      { label: "品类是估值的第一问题", note: "只覆盖两种果的机器难谈全国" },
+      { label: "柑橘产区面积最大", note: "华北之外的第一大盘" },
+      { label: "视觉模型可复用八成", note: "只需补果梗识别" },
+      { label: "淡季正好做验证", note: "桃与猕猴桃错峰" },
+    ],
+    cons: [
+      { label: "产能仍卡在单一代工厂", note: "扩品类不解决交付" },
+      { label: "碰伤率优势可能被稀释", note: "柑橘果皮更薄" },
+      { label: "驻园验证要再等一季", note: "结果最快明年秋天" },
+      { label: "现有客户等待升级", note: "两种果的调度还没做好" },
+    ],
+    verdict: "先用三成投产能与调度，其余投柑橘手爪，验证结果出来前不承诺第三品类的交付期。",
+  },
   orgs: [
     "焰序机器人",
     "王家坪桃园",

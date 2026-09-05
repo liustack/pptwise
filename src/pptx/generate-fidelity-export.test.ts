@@ -429,6 +429,74 @@ const COMPONENT_BY_TYPE: Record<Component["type"], Component> = {
       { asset_id: "photo-b", name: "集成中枢", note: "四十六个业务系统连接器", price: "¥12万", price_unit: "起 / 年", featured: true },
     ],
   },
+  venn: {
+    type: "venn",
+    sets: [{ label: "Product" }, { label: "Delivery" }, { label: "Data" }],
+    center: "All three",
+  },
+  fishbone: {
+    type: "fishbone",
+    effect: "Renewals stalled",
+    ribs: [
+      { label: "People", causes: ["Load per rep", "Ramp time"] },
+      { label: "Process", causes: ["No escalation", "Split calendars"] },
+      { label: "Tools", causes: ["Tickets and usage apart", "Manual scoring"] },
+      { label: "Data", causes: ["Team-level only", "Late signals"] },
+    ],
+  },
+  positioning_map: {
+    type: "positioning_map",
+    x_axis: { title: "Delivery depth", low: "Light", high: "Deep" },
+    y_axis: { title: "Contract value", low: "Low", high: "High" },
+    quadrants: {
+      top_left: "Generalists",
+      top_right: "Deep and dear",
+      bottom_left: "Self-serve",
+      bottom_right: "Service-heavy",
+    },
+    points: [
+      { label: "Northwind", x: 78, y: 82, emphasis: true },
+      { label: "Contoso", x: 88, y: 60 },
+      { label: "Fabrikam", x: 30, y: 74 },
+      { label: "Tailspin", x: 20, y: 24 },
+    ],
+  },
+  concept_equation: {
+    type: "concept_equation",
+    operands: [
+      { label: "Onboarding time", value: "5 weeks", note: "Consultant on site for two" },
+      { label: "Seat activation", value: "88%", note: "Weekly usage report by team" },
+    ],
+    result: { label: "Renewal rate", value: "91%", note: "Highest in six quarters" },
+  },
+  segmented_wheel: {
+    type: "segmented_wheel",
+    center: "Customer success",
+    segments: [
+      { label: "Onboarding", value: "5 weeks" },
+      { label: "Activation", value: "88%", emphasis: true },
+      { label: "Health check", value: "biweekly" },
+      { label: "Renewal", value: "60 days out" },
+    ],
+  },
+  pros_cons: {
+    type: "pros_cons",
+    pros: {
+      title: "For",
+      items: [
+        { label: "No deal-by-deal talks", note: "Cycle three weeks shorter" },
+        { label: "Lower entry threshold", note: "New logos up by a fifth" },
+      ],
+    },
+    cons: {
+      title: "Against",
+      items: [
+        { label: "Existing contracts reopen", note: "87 accounts sit on a tier edge" },
+        { label: "Billing needs rework", note: "Not before the fourth quarter" },
+      ],
+    },
+    verdict: "Trial it on new business this quarter.",
+  },
   people_cards: {
     type: "people_cards",
     people: [
@@ -557,6 +625,27 @@ function noAssetIr(): PptxIR {
       contentSlide("Scorecard", [COMPONENT_BY_TYPE.scorecard]),
       contentSlide("Pictogram", [COMPONENT_BY_TYPE.pictogram]),
       contentSlide("Word cloud", [COMPONENT_BY_TYPE.word_cloud]),
+      // One page each for the component types the deck used to declare and
+      // never export. A fixture that only lives in the table above proves
+      // nothing about the export: the six relation drawings could have gone
+      // raster, or lost Venn's alpha, without a single test noticing.
+      contentSlide("cycle", [COMPONENT_BY_TYPE.cycle]),
+      contentSlide("people_cards", [COMPONENT_BY_TYPE.people_cards]),
+      contentSlide("staircase", [COMPONENT_BY_TYPE.staircase]),
+      contentSlide("chevron_process", [COMPONENT_BY_TYPE.chevron_process]),
+      contentSlide("swimlane", [COMPONENT_BY_TYPE.swimlane]),
+      contentSlide("journey_map", [COMPONENT_BY_TYPE.journey_map]),
+      contentSlide("decision_tree", [COMPONENT_BY_TYPE.decision_tree]),
+      contentSlide("from_to", [COMPONENT_BY_TYPE.from_to]),
+      contentSlide("logo_wall", [COMPONENT_BY_TYPE.logo_wall]),
+      contentSlide("device_mockup", [COMPONENT_BY_TYPE.device_mockup]),
+      contentSlide("quote_wall", [COMPONENT_BY_TYPE.quote_wall]),
+      contentSlide("venn", [COMPONENT_BY_TYPE.venn]),
+      contentSlide("fishbone", [COMPONENT_BY_TYPE.fishbone]),
+      contentSlide("positioning_map", [COMPONENT_BY_TYPE.positioning_map]),
+      contentSlide("concept_equation", [COMPONENT_BY_TYPE.concept_equation]),
+      contentSlide("segmented_wheel", [COMPONENT_BY_TYPE.segmented_wheel]),
+      contentSlide("pros_cons", [COMPONENT_BY_TYPE.pros_cons]),
       { type: "ending", heading: "Thanks", components: [] },
     ],
   }
@@ -606,6 +695,30 @@ describe("component-type fixture completeness", () => {
     const drawn = new Set<string>(withAssetIr().slides.flatMap((slide) => slide.components.map((c) => c.type)))
     const missing = [...COMPONENT_TYPES].filter((type) => !drawn.has(type)).sort()
     expect(missing, `these types export nothing: ${missing.join(", ")}`).toEqual(ASSET_BOUND)
+  })
+})
+
+describe("the relation drawings survive the export as native shapes", () => {
+  it("keeps every authored word, the translucent discs, and no picture", async () => {
+    const zip = await JSZip.loadAsync(await (await generatePptxBlob(noAssetIr())).arrayBuffer())
+    const xml = (await Promise.all(slideParts(zip).map((path) => zip.files[path]!.async("string")))).join("")
+    // One line each: a head or a hub that wraps arrives as one run per line,
+    // and this test is about the words surviving, not about where they break.
+    const words = [
+      "Product", "Delivery", "All three",
+      "Renewals", "stalled", "People", "Load per rep",
+      "Northwind", "Generalists", "Self-serve",
+      "Onboarding", "5 weeks", "Renewal rate",
+      "Customer", "success", "Activation", "biweekly",
+      "For", "Against", "Trial it on new business this quarter.",
+    ]
+    for (const word of words) {
+      expect(xml, `"${word}" should survive as editable text`).toContain(`<a:t>${word}</a:t>`)
+    }
+    // Venn's three discs keep their alpha: without it the overlaps stop
+    // mixing and the drawing loses the only thing it says.
+    expect((xml.match(/<a:alpha val="38000"\/>/g) ?? []).length).toBeGreaterThanOrEqual(3)
+    expect(xml).not.toContain("<p:pic>")
   })
 })
 

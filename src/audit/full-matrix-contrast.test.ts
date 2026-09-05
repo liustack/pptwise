@@ -1493,6 +1493,42 @@ const MUTED_SURFACE_CLASS: Record<string, MutedSurfaceClass> = {
   // reference is the spoke line's stroke fallback (`colors.border ??
   // colors.muted`), a stroke and not a text fill.
   hub_spoke: "flat-surface",
+  // venn.tsx never reads `colors.muted`: the set labels are `colors.text` on
+  // the page background, and the shared-region chip prints
+  // `accessibleInk(surface, primary)` on its own solid primary fill. The
+  // translucent discs paint no text and, at 0.38 alpha, sit under
+  // `deck-audit.ts`'s own background-attribution floor anyway.
+  venn: "no-muted-fill",
+  // fishbone.tsx spends `colors.muted` on the rib strokes and the small cause
+  // dots — strokes and fills, never a `<text>` fill. Its cause labels are
+  // `colors.text` on the page background and its category chips print
+  // `colors.text` on their own `colors.surface` card.
+  fishbone: "no-muted-fill",
+  // positioning-map.tsx prints `colors.muted` for the axis end labels and the
+  // quadrant names, and fills the unemphasised dots with it. Every one of
+  // those sits directly on the ambient page background — the map paints no
+  // panel of its own — which is the same shape as heatmap's axis captions.
+  positioning_map: "page-bg",
+  // concept-equation.tsx uses `colors.muted` only for a term's one-line note,
+  // and only on an unfilled panel, where it goes through
+  // `accessibleInk(colors.muted, colors.surface, …)` against that panel's own
+  // flat fill — the same shape as people_cards and hub_spoke above. The
+  // filled result panel prints every line through `accessibleInk` against
+  // `colors.primary` instead, never `colors.muted`.
+  concept_equation: "flat-surface",
+  // segmented-wheel.tsx prints `colors.muted` for a segment's optional figure
+  // only, and that line sits outside the rim on the ambient page background,
+  // routed through `accessibleInk(colors.muted, defaultBg, …)`. Its other
+  // `colors.muted` reference is the wedge outline's stroke fallback
+  // (`colors.border ?? colors.muted`), a stroke and not a text fill.
+  segmented_wheel: "page-bg",
+  // pros-cons.tsx prints `colors.muted` for a point's one-line note, always
+  // inside that column's own `colors.surface` card and always through
+  // `accessibleInk(colors.muted, colors.surface, …)` — the same flat-surface
+  // shape as people_cards above. Its other `colors.muted` uses are the cross
+  // glyph's stroke and the card outline's stroke fallback, neither a text
+  // fill; the verdict band prints `accessibleInk` against its own primary.
+  pros_cons: "flat-surface",
   // progress-donuts.tsx paints `colors.muted` as the ring *track* stroke
   // (never a text fill); its source line is `accessibleInk(colors.muted,
   // pageBg, …)` on the ambient page background, same shape as timeline's.
@@ -1638,6 +1674,41 @@ describe("colors.muted component-type coverage (task-2 fix round, backlog 5a com
 // through `accessibleInk` against its own panel's real fill, so this should
 // hold by construction; the sweep locks that empirically rather than only
 // trusting the construction).
+// The wheel is the one drawing here whose own shape decides whether the
+// auditor can tell what a label sits on. Its wedges are written as ring
+// sectors (`segmented-wheel.tsx`'s `wedgePath`) precisely so background
+// attribution reads them rather than falling back to a path's bounding box —
+// which, before the fix, claimed every rim label as sitting on the filled
+// wedge it stands well outside of, on sixteen of the twenty-four themes.
+describe("segmented_wheel rim labels are attributed to the page, not to a wedge's bounding box", () => {
+  const WHEEL_SLIDE: Slide = {
+    type: "content",
+    kind: "points",
+    heading: HEADING,
+    components: [
+      {
+        type: "segmented_wheel",
+        center: "客户成功",
+        segments: [
+          { label: "开通交付", value: "周期五周" },
+          { label: "首月激活", value: "活跃八成八", emphasis: true },
+          { label: "用量巡检", value: "双周一次" },
+          { label: "高危介入", value: "十四天内" },
+          { label: "增购推荐", value: "每季一轮" },
+          { label: "续约谈判", value: "提前两月" },
+        ],
+      },
+    ],
+  } as Slide
+
+  for (const themeId of CANONICAL_THEME_IDS) {
+    it(`${themeId}: draws six readable wedges with no low-contrast finding`, () => {
+      const findings = auditFindings(deckFor(themeId, WHEEL_SLIDE))
+      expect(findings.filter((f) => f.code === "low-contrast")).toEqual([])
+    })
+  }
+})
+
 describe("swot/bmc tinted-panel contrast (structure-components wave task 1, decision 7)", () => {
   // Exercises all 4 quadrant tone branches (accent/primary/muted/
   // primary-muted-blend — swot.tsx's `badgeFill` switch) with 2 items per

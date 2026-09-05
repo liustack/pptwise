@@ -89,6 +89,12 @@ import { schema as harveyBallsSchema } from "./components/harvey-balls"
 import { schema as scorecardSchema } from "./components/scorecard"
 import { schema as pictogramSchema } from "./components/pictogram"
 import { schema as wordCloudSchema } from "./components/word-cloud"
+import { schema as vennSchema } from "./components/venn"
+import { schema as fishboneSchema } from "./components/fishbone"
+import { schema as positioningMapSchema } from "./components/positioning-map"
+import { schema as conceptEquationSchema } from "./components/concept-equation"
+import { schema as segmentedWheelSchema } from "./components/segmented-wheel"
+import { schema as prosConsSchema } from "./components/pros-cons"
 
 // Re-exported so IR, spec, theme menus, and public tooling share one exact
 // semantic vocabulary instead of maintaining independent string unions.
@@ -301,7 +307,8 @@ export const DeckBrandingSchema = z.enum(DECK_BRANDING_VALUES).describe(
   'Where the brand footer and logo appear. Omitted equals "cover-only": cover and chapter pages keep the brand logo, content and ending pages drop the footer rule, meta, and logo. "full" is the explicit declaration that draws the content-page footer and logo, and that paints confidentiality and date on cover and ending meta rows. Other postures leave those two fields off the canvas even when meta carries them. "minimal" drops the content-page footer rule and meta but keeps the logo. Layout branding:"none" still wins. Theme motifs are unaffected. Write "full" only when every content page needs the brand footer.',
 )
 
-// ── Components（56 种）──
+// ── Components（62 种）──
+// ── Components（58 种）──
 
 const ComponentSchema = z.discriminatedUnion("type", [
   bulletsSchema,
@@ -360,6 +367,12 @@ const ComponentSchema = z.discriminatedUnion("type", [
   scorecardSchema,
   pictogramSchema,
   wordCloudSchema,
+  vennSchema,
+  fishboneSchema,
+  positioningMapSchema,
+  conceptEquationSchema,
+  segmentedWheelSchema,
+  prosConsSchema,
 ], { error: componentTypeError })
 
 /**

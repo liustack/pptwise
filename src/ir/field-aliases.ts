@@ -68,6 +68,12 @@ import { aliases as fiveForcesAliases } from "./components/five-forces"
 import { aliases as heatmapAliases } from "./components/heatmap"
 import { aliases as sankeyAliases } from "./components/sankey"
 import { aliases as hubSpokeAliases } from "./components/hub-spoke"
+import { aliases as vennAliases } from "./components/venn"
+import { aliases as fishboneAliases } from "./components/fishbone"
+import { aliases as positioningMapAliases } from "./components/positioning-map"
+import { aliases as conceptEquationAliases } from "./components/concept-equation"
+import { aliases as segmentedWheelAliases } from "./components/segmented-wheel"
+import { aliases as prosConsAliases } from "./components/pros-cons"
 import { aliases as progressDonutsAliases } from "./components/progress-donuts"
 import { aliases as staircaseAliases } from "./components/staircase"
 import { aliases as chevronProcessAliases } from "./components/chevron-process"
@@ -173,6 +179,25 @@ export const COMPONENT_FIELD_ALIASES: Readonly<Record<string, FieldAliasMap>> = 
   iceberg: icebergAliases.block,
   pillar_model: pillarModelAliases.block,
   value_chain: valueChainAliases.block,
+  // A model that has written `matrix` or `swot` reaches for `intersection` or
+  // `overlap` before it reaches for the shorter `center`.
+  venn: vennAliases.block,
+  // `result` and `problem` are what a model writes for the head of a cause
+  // diagram, and `categories` for the ribs hanging off its spine.
+  fishbone: fishboneAliases.block,
+  // Every other plotted component calls its array `items`, so that is the
+  // word a model reaches for before `points`.
+  positioning_map: positioningMapAliases.block,
+  // A model writing an equation reaches for `terms`, `factors` or `inputs`
+  // before `operands`, and for `output` before `result`.
+  concept_equation: conceptEquationAliases.block,
+  // The hub is the one field a model reaches past: every other card-like
+  // component in this IR calls its lead string `title`, and every other
+  // array `items`.
+  segmented_wheel: segmentedWheelAliases.block,
+  // `for`/`against` is how the two sides are named out loud, and a model
+  // writes `conclusion` or `decision` before it writes `verdict`.
+  pros_cons: prosConsAliases.block,
 }
 
 /** One component type's item-array field aliases: which array to walk, and the alias map applied to each item object in it. */
@@ -276,6 +301,11 @@ export const COMPONENT_ITEM_FIELD_ALIASES: Readonly<Record<string, readonly Item
   scorecard: scorecardAliases.items,
   pictogram: pictogramAliases.items,
   word_cloud: wordCloudAliases.items,
+  venn: vennAliases.items,
+  fishbone: fishboneAliases.items,
+  positioning_map: positioningMapAliases.items,
+  concept_equation: conceptEquationAliases.items,
+  segmented_wheel: segmentedWheelAliases.items,
 }
 
 /**

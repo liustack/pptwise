@@ -136,6 +136,71 @@ export const STAGE_LEXICON: Lexicon = {
     },
   ],
 
+  sets: {
+    labels: ["整机三十八克", "峰值三千尼特", "十四小时续航"],
+    overlap: "三条同时成立的镜架",
+  },
+  causes: {
+    effect: "首发交付周期要八周",
+    categories: [
+      { label: "光学", causes: ["镜片良率仍在七成", "定型模具只有两套"] },
+      { label: "结构", causes: ["镜腿铰链需人工校准", "三十八克靠减材实现"] },
+      { label: "产能", causes: ["代工厂产线共用", "指环需另线组装"] },
+      { label: "渠道", causes: ["首发门店集中在三城", "试戴预约排到第五周"] },
+    ],
+  },
+  positions: {
+    x: { title: "整机重量", low: "轻", high: "重" },
+    y: { title: "峰值亮度", low: "暗", high: "亮" },
+    quadrants: ["轻但看不清，戴得住用不了", "又轻又亮，我们要去的地方", "又重又暗，上一代", "重且亮，靠堆料"],
+    points: [
+      { label: "目光 One", x: 22, y: 88, mine: true },
+      { label: "同代 A", x: 46, y: 76 },
+      { label: "同代 B", x: 62, y: 84 },
+      { label: "上一代自家", x: 70, y: 44 },
+      { label: "头显形态", x: 92, y: 90 },
+      { label: "普通眼镜", x: 14, y: 6 },
+      { label: "运动眼镜", x: 30, y: 18 },
+      { label: "工业头盔机", x: 88, y: 62 },
+    ],
+  },
+  equation: {
+    operands: [
+      { label: "整机重量", value: "38 克", note: "与普通眼镜同级" },
+      { label: "峰值亮度", value: "3000 尼特", note: "正午户外可读" },
+    ],
+    result: { label: "典型续航", value: "14 小时", note: "一天不必找充电" },
+  },
+  wheel: {
+    whole: "一副眼镜的六道关",
+    sectors: [
+      { label: "光学定型", value: "两套模具" },
+      { label: "工程样机", value: "五版" },
+      { label: "量产爬坡", value: "八周" },
+      { label: "渠道铺货", value: "三城" },
+      { label: "首发开售", value: "十月" },
+      { label: "生态开放", value: "明春" },
+    ],
+    marked: 2,
+  },
+  debate: {
+    proposal: "首发就把指环一起卖",
+    forTitle: "支持",
+    againstTitle: "反对",
+    pros: [
+      { label: "交互完整才立得住", note: "没有指环只剩语音" },
+      { label: "首批用户就是评测者", note: "半套体验会被写进测评" },
+      { label: "捆绑定价更划算", note: "单卖指环需另铺渠道" },
+      { label: "指环产线已跑通", note: "良率高于镜架" },
+    ],
+    cons: [
+      { label: "指环需单独充电", note: "一天两个电池要管" },
+      { label: "组装占用另一条线", note: "镜架爬坡正吃紧" },
+      { label: "首发价会抬高一档", note: "试戴反馈对价格敏感" },
+      { label: "尺码要备六档", note: "退换率预计高出一倍" },
+    ],
+    verdict: "首发标配镜架，指环作为可选件同步开售，量产爬坡稳住后再做捆绑套装。",
+  },
   orgs: [
     "目光科技",
     "临港光学",

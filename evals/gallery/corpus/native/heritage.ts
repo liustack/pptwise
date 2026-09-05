@@ -136,6 +136,71 @@ export const HERITAGE_LEXICON: Lexicon = {
     },
   ],
 
+  sets: {
+    labels: ["老缸发酵", "三伏晒足", "手工翻醅"],
+    overlap: "三样都守住的酱",
+  },
+  causes: {
+    effect: "客群平均年龄升到五十七岁",
+    categories: [
+      { label: "产品", causes: ["最小规格是五斤装", "口味只有传统一档"] },
+      { label: "门店", causes: ["前店陈列二十年未变", "招牌看不出在卖什么"] },
+      { label: "渠道", causes: ["只在老街两家店卖", "没有可寄送的包装"] },
+      { label: "讲述", causes: ["工序没人讲得出来", "学徒不出现在店里"] },
+    ],
+  },
+  positions: {
+    x: { title: "购买便利度", low: "难买", high: "好买" },
+    y: { title: "客单价", low: "低", high: "高" },
+    quadrants: ["难买且贵，只剩老客", "好买又贵，礼品路线", "难买也便宜，守摊", "好买而便宜，走量"],
+    points: [
+      { label: "沈记酱园", x: 26, y: 62, mine: true },
+      { label: "老街同行甲", x: 32, y: 48 },
+      { label: "老街同行乙", x: 30, y: 40 },
+      { label: "商超酱料品牌", x: 92, y: 24 },
+      { label: "电商新锐", x: 88, y: 46 },
+      { label: "文旅礼盒", x: 58, y: 84 },
+      { label: "社区团购", x: 76, y: 18 },
+      { label: "餐饮供货", x: 44, y: 30 },
+    ],
+  },
+  equation: {
+    operands: [
+      { label: "现存老缸", value: "217 口", note: "缸不动，动的是别的" },
+      { label: "三伏酱周期", value: "540 天", note: "工序封档不改" },
+    ],
+    result: { label: "小罐试销", value: "每月 800 罐", note: "新客占七成" },
+  },
+  wheel: {
+    whole: "焕新的六件事",
+    sectors: [
+      { label: "家底盘点", value: "两百一十七口" },
+      { label: "工序封档", value: "十四道" },
+      { label: "门店翻新", value: "前店" },
+      { label: "小罐试销", value: "八百罐" },
+      { label: "学徒开班", value: "六人" },
+      { label: "焕新开街", value: "腊月" },
+    ],
+    marked: 3,
+  },
+  debate: {
+    proposal: "把主销规格改成一斤小罐",
+    forTitle: "支持",
+    againstTitle: "反对",
+    pros: [
+      { label: "年轻客第一次愿意试", note: "试销新客占七成" },
+      { label: "可寄送，能进礼盒", note: "五斤装无法快递" },
+      { label: "周转变快，缸位轮得动", note: "同产量分批出货" },
+      { label: "价格带落在百元内", note: "老客的复购不受影响" },
+    ],
+    cons: [
+      { label: "分装工序要加人", note: "现有师傅只会大缸打酱" },
+      { label: "玻璃罐成本占三成", note: "五斤装摊薄得多" },
+      { label: "老客认桶不认罐", note: "有人说小罐不像酱园的东西" },
+      { label: "产能天花板不变", note: "缸数与周期都锁死" },
+    ],
+    verdict: "小罐做新客与礼盒，五斤装继续供老客与餐饮，分装先请两位学徒专做。",
+  },
   orgs: [
     "沈记酱园",
     "老街商会",

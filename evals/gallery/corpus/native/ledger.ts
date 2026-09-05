@@ -136,6 +136,71 @@ export const INSIGHT_LEXICON: Lexicon = {
     },
   ],
 
+  sets: {
+    labels: ["现金流可验证", "估值在中位以下", "出海占比过半"],
+    overlap: "三条都满足的标的",
+  },
+  causes: {
+    effect: "红利拥挤度冲到九十二分位",
+    categories: [
+      { label: "利率", causes: ["利率中枢下移四十个基点", "存款搬家找替代收益"] },
+      { label: "供给", causes: ["新发高股息产品密集", "分红承诺成为发行卖点"] },
+      { label: "行为", causes: ["机构考核期缩到一年", "回撤容忍度下降"] },
+      { label: "数据", causes: ["股息率口径含特别分红", "拥挤度指标滞后一个月"] },
+    ],
+  },
+  positions: {
+    x: { title: "拥挤度", low: "低", high: "高" },
+    y: { title: "隐含赔率", low: "差", high: "好" },
+    quadrants: ["无人问津且赔率好，先看", "又挤又赔率好，罕见", "无人问津但赔率差，别碰", "又挤赔率又差，减仓区"],
+    points: [
+      { label: "出海制造", x: 44, y: 78, mine: true },
+      { label: "红利", x: 92, y: 34 },
+      { label: "算力", x: 84, y: 58 },
+      { label: "黄金", x: 70, y: 62 },
+      { label: "消费", x: 38, y: 46 },
+      { label: "利率债", x: 62, y: 40 },
+      { label: "汇率对冲", x: 26, y: 52 },
+      { label: "流动性替代", x: 20, y: 28 },
+    ],
+  },
+  equation: {
+    operands: [
+      { label: "利率中枢下移", value: "40bp", note: "两年累计" },
+      { label: "居民超额储蓄", value: "19 万亿", note: "存款搬家的水位" },
+    ],
+    result: { label: "红利拥挤度", value: "92 分位", note: "近十年第二高" },
+  },
+  wheel: {
+    whole: "一个判断的六道工序",
+    sectors: [
+      { label: "数据采集", value: "月度" },
+      { label: "产业验证", value: "十九次调研" },
+      { label: "判断成形", value: "季度" },
+      { label: "组合落地", value: "两周" },
+      { label: "季度对账", value: "公开" },
+      { label: "年度复盘", value: "一月" },
+    ],
+    marked: 4,
+  },
+  debate: {
+    proposal: "把红利仓位整体换成出海制造",
+    forTitle: "支持",
+    againstTitle: "反对",
+    pros: [
+      { label: "赔率差距已经拉开", note: "红利九十二分位对四十四" },
+      { label: "现金流可逐季验证", note: "出口报关数据月频可得" },
+      { label: "与利率下行不冲突", note: "定价锚不在国内利率" },
+      { label: "调研覆盖已经足够", note: "样本库四十一家企业" },
+    ],
+    cons: [
+      { label: "汇率是最大变量", note: "对冲成本吃掉两个点" },
+      { label: "波动率高出一倍", note: "客户回撤容忍度只有八个点" },
+      { label: "换仓要两周", note: "部分标的流动性偏薄" },
+      { label: "海外口径依赖外部供应商", note: "口径变更曾滞后一个月" },
+    ],
+    verdict: "红利减半仓，出海分三次建至目标位，汇率对冲按月滚动，回撤到八个点先停。",
+  },
   orgs: [
     "枢机研究所",
     "宏观组",
