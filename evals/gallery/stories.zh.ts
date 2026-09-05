@@ -290,7 +290,7 @@ export const STORY_ZH: Readonly<Record<string, Partial<Record<DesignStoryField, 
     notFor: "序列或扁平列表。",
   },
 
-  // ── components (39) ─────────────────────────────────────────────────────
+  // ── components (46) ─────────────────────────────────────────────────────
 
   "component:architecture": {
     name: "层叠",

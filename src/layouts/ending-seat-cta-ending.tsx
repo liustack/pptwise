@@ -44,9 +44,8 @@ const CTA_MAX_W = 260
 const CTA_MAX_LINES = 2
 const CTA_LINE_HEIGHT_RATIO = 1.25
 /** Same "box centre + round(fontSize * 0.32)" single-line vertical-centering
- * trick `components/steps.tsx` and `components/tag-row.tsx` use: the optical
- * centre of a CJK/Latin line sits about a third of the em above its
- * baseline. */
+ * trick `components/steps.tsx` uses: the optical centre of a CJK/Latin line
+ * sits about a third of the em above its baseline. */
 const CTA_BASELINE_FUDGE_RATIO = 0.32
 
 const FOOT_X = 96
