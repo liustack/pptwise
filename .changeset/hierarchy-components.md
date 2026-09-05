@@ -1,0 +1,7 @@
+---
+"@liustack/pptwise": minor
+---
+
+Six new content blocks draw the shapes an argument takes when it has levels. `org_tree` and `issue_tree` are the same three-level tree read two ways — one where a line means reports to, one where it means breaks down into — laid out by arithmetic rather than a solver, so the same content lands in the same place on every render. `pyramid` stacks three to six levels widest at the bottom and explains each in a legend beside it. `iceberg` prints one or two stated reasons in a tip and three to six unstated ones in the mass below a waterline, both inside the silhouette rather than in a side list. `pillar_model` carries one goal on a beam over two to five columns standing on a shared base. `value_chain` interlocks three to six links with two to four supporting bands above them and an optional closing wedge.
+
+Every cap is in the schema and stated in the block's own routing sentence: the trees stop at three levels and eight end points, and a box too small to draw one of these honestly declines the page rather than shrinking it into something unreadable, so a page design that cannot hold it steps aside. Highlighting is a filled block and white text — `issue_tree` and `value_chain` each take at most one mark from the author, and nothing else on the page competes for it. The content-block vocabulary is now 44 types, and the review gallery gains a 层级 family with a page for each on all 24 themes.
