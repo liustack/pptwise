@@ -183,6 +183,14 @@ export const CAMPAIGN_LEXICON: Lexicon = {
     "价格带卡位",
     "冷链保障",
   ],
+  goals: [
+    { title: "首月铺市率", target: "70%", actual: "74%", gap: "+4 pp", status: "on_track" },
+    { title: "冰柜贴纸覆盖", target: "20000 家", actual: "21600 家", gap: "+1600 家", status: "on_track" },
+    { title: "试饮巡回城市", target: "20 城", actual: "20 城", gap: "0 城", status: "on_track" },
+    { title: "战役总预算", target: "720 万元", actual: "764 万元", gap: "+44 万元", status: "watch" },
+    { title: "首月复购率", target: "22%", actual: "12%", gap: "-10 pp", status: "off_track" },
+    { title: "单店动销", target: "每周 18 瓶", actual: "每周 9 瓶", gap: "-9 瓶", status: "off_track" },
+  ],
   shortlist: {
     criteria: ["首月铺市", "单箱成本", "复购拉动", "执行难度"],
     options: [

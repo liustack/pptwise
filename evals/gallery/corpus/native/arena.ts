@@ -183,6 +183,14 @@ export const ARENA_LEXICON: Lexicon = {
     "主场票房",
     "冬窗",
   ],
+  goals: [
+    { title: "常规赛胜率", target: "55%", actual: "58%", gap: "+3 pp", status: "on_track" },
+    { title: "中野参团率", target: "62%", actual: "67%", gap: "+5 pp", status: "on_track" },
+    { title: "打野分均插眼", target: "1.40 个", actual: "1.49 个", gap: "+0.09 个", status: "on_track" },
+    { title: "门票售罄用时", target: "6 分钟", actual: "4 分钟", gap: "-2 分钟", status: "on_track" },
+    { title: "季后赛名次", target: "四强", actual: "八强", gap: "-4 名", status: "off_track" },
+    { title: "慈善筹款", target: "80 万元", actual: "60 万元", gap: "-20 万元", status: "watch" },
+  ],
   shortlist: {
     criteria: ["前期节奏", "团战容错", "选手适配", "训练成本"],
     options: [

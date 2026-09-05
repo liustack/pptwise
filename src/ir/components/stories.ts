@@ -39,6 +39,7 @@ import * as rings from "./rings"
 import * as roadmap from "./roadmap"
 import * as rowCards from "./row-cards"
 import * as sankey from "./sankey"
+import * as scorecard from "./scorecard"
 import * as staircase from "./staircase"
 import * as steps from "./steps"
 import * as swimlane from "./swimlane"
@@ -126,6 +127,7 @@ const COMPONENT_STORY_MODULES: Readonly<Record<string, ComponentStoryModule>> = 
   pillar_model: pillarModel,
   value_chain: valueChain,
   harvey_balls: harveyBalls,
+  scorecard,
 }
 
 /**

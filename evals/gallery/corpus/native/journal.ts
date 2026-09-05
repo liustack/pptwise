@@ -183,6 +183,14 @@ export const JOURNAL_LEXICON: Lexicon = {
     "订户告知",
     "慢出版",
   ],
+  goals: [
+    { title: "问卷回收", target: "800 份", actual: "1100 份", gap: "+300 份", status: "on_track" },
+    { title: "长报道下限", target: "6000 字", actual: "8000 字", gap: "+2000 字", status: "on_track" },
+    { title: "改版后页数", target: "120 页", actual: "128 页", gap: "+8 页", status: "on_track" },
+    { title: "现有订户", target: "3600 人", actual: "3200 人", gap: "-400 人", status: "watch" },
+    { title: "单期广告收入", target: "9 万元", actual: "5.2 万元", gap: "-3.8 万元", status: "off_track" },
+    { title: "出刊准时率", target: "100%", actual: "83%", gap: "-17 pp", status: "off_track" },
+  ],
   shortlist: {
     criteria: ["读者买账", "编辑部撑得住", "账算得平", "不违初衷"],
     options: [

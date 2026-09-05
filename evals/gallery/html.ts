@@ -149,7 +149,7 @@ export const COMPONENT_FAMILIES: readonly GroupFamily[] = [
   },
   {
     label: "表格与框架",
-    members: ["data_table", "harvey_balls", "heatmap", "matrix", "comparison", "from_to", "swot", "bmc", "pest", "five_forces"],
+    members: ["data_table", "scorecard", "harvey_balls", "heatmap", "matrix", "comparison", "from_to", "swot", "bmc", "pest", "five_forces"],
   },
   {
     label: "流程与结构",

@@ -218,6 +218,21 @@ export const COMPONENT_BUILDERS: Record<string, (lex: Lexicon) => Component> = {
     })),
   }),
 
+  // Five of this track's own promises, each with the target it was measured
+  // against and the verdict that follows — never a name from one place and a
+  // number from another, which is how "付费席位总量 91%" got onto a page.
+  scorecard: (lex) => ({
+    type: "scorecard",
+    rows: lex.goals.slice(0, 5).map((goal) => ({
+      label: goal.title,
+      target: goal.target,
+      actual: goal.actual,
+      gap: goal.gap,
+      status: goal.status,
+    })),
+    note: lex.sources[0]!.label,
+  }),
+
   // No `show_grid` here: a bar chart's house default is gridline-free
   // (round-4 review, `journal p05` — every bar already prints its value, see
   // `renderBar`'s own `showGrid` doc comment), and this page is the one the

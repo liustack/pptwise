@@ -183,6 +183,14 @@ export const PULSE_LEXICON: Lexicon = {
     "健康讲堂",
     "老年友好",
   ],
+  goals: [
+    { title: "规律服药率", target: "60%", actual: "64%", gap: "+4 pp", status: "on_track" },
+    { title: "在册患者建档", target: "400 人", actual: "412 人", gap: "+12 人", status: "on_track" },
+    { title: "家庭自测血压", target: "70%", actual: "58%", gap: "-12 pp", status: "off_track" },
+    { title: "每日快走达标", target: "30 分钟", actual: "22 分钟", gap: "-8 分钟", status: "off_track" },
+    { title: "每日食盐摄入", target: "5 克", actual: "5.4 克", gap: "+0.4 克", status: "watch" },
+    { title: "讲堂期数", target: "16 讲", actual: "18 讲", gap: "+2 讲", status: "on_track" },
+  ],
   shortlist: {
     criteria: ["坚持得住", "花钱多少", "见效快慢", "家里配合"],
     options: [

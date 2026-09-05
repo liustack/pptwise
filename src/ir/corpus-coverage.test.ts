@@ -530,6 +530,23 @@ const COVERAGE_ENTRIES: Record<string, unknown> = {
       { label: "Partner", scores: [75, 100, 100] },
     ],
   }),
+  // scorecard's own hard check is the row floor: two goals are headline
+  // numbers, and kpi_cards prints those larger.
+  "coverage/scorecard-valid": minimalDeck({
+    type: "scorecard",
+    rows: [
+      { label: "Renewal", target: "88%", actual: "91%", gap: "+3.0", status: "on_track" },
+      { label: "Setup", target: "4.0", actual: "5.2", gap: "+1.2", status: "off_track" },
+      { label: "Partners", target: "25%", actual: "23%", gap: "-2.0", status: "watch" },
+    ],
+  }),
+  "coverage/scorecard-tripwire": minimalDeck({
+    type: "scorecard",
+    rows: [
+      { label: "Renewal", target: "88%", actual: "91%", gap: "+3.0", status: "on_track" },
+      { label: "Setup", target: "4.0", actual: "5.2", gap: "+1.2", status: "off_track" },
+    ],
+  }),
 }
 
 // Assembles the validation corpus from all three sources, keyed by

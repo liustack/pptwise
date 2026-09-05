@@ -183,6 +183,14 @@ export const INSIGHT_LEXICON: Lexicon = {
     "错误预案",
     "季度对账",
   ],
+  goals: [
+    { title: "利率中枢下移", target: "30 bp", actual: "40 bp", gap: "+10 bp", status: "on_track" },
+    { title: "年度公开对账", target: "4 次", actual: "4 次", gap: "0 次", status: "on_track" },
+    { title: "主线外仓位上限", target: "20%", actual: "17%", gap: "-3 pp", status: "on_track" },
+    { title: "居民超额储蓄释放", target: "3 万亿", actual: "1.8 万亿", gap: "-1.2 万亿", status: "watch" },
+    { title: "红利拥挤度回落", target: "70 分位", actual: "92 分位", gap: "+22 分位", status: "off_track" },
+    { title: "年度主线命中", target: "3 条", actual: "1 条", gap: "-2 条", status: "off_track" },
+  ],
   shortlist: {
     criteria: ["赔率", "胜率", "回撤容忍", "验证周期"],
     options: [

@@ -183,6 +183,14 @@ export const TECH_LEXICON: Lexicon = {
     "赞助透明",
     "总线因子",
   ],
+  goals: [
+    { title: "仓库星标", target: "40000 star", actual: "42000 star", gap: "+2000 star", status: "on_track" },
+    { title: "热路径提速", target: "5 倍", actual: "8.3 倍", gap: "+3.3 倍", status: "on_track" },
+    { title: "公开接口数", target: "35 个", actual: "29 个", gap: "-6 个", status: "on_track" },
+    { title: "议题首响中位", target: "12 小时", actual: "16 小时", gap: "+4 小时", status: "watch" },
+    { title: "月活跃贡献者", target: "50 人", actual: "31 人", gap: "-19 人", status: "off_track" },
+    { title: "年度赞助", target: "80000 美元", actual: "41000 美元", gap: "-39000 美元", status: "off_track" },
+  ],
   shortlist: {
     criteria: ["查询延迟", "内存占用", "实现复杂度", "兼容旧版"],
     options: [

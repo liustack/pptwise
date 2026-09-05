@@ -183,6 +183,14 @@ export const PLAYBILL_LEXICON: Lexicon = {
     "戏剧节投递",
     "散伙饭",
   ],
+  goals: [
+    { title: "排练天数", target: "90 天", actual: "102 天", gap: "+12 天", status: "on_track" },
+    { title: "首轮票量", target: "600 张", actual: "700 张", gap: "+100 张", status: "on_track" },
+    { title: "加场售罄用时", target: "30 分钟", actual: "19 分钟", gap: "-11 分钟", status: "on_track" },
+    { title: "舞美预算", target: "3200 元", actual: "3860 元", gap: "+660 元", status: "watch" },
+    { title: "剧本定稿轮次", target: "6 稿", actual: "11 稿", gap: "+5 稿", status: "off_track" },
+    { title: "合成排练完成", target: "4 次", actual: "2 次", gap: "-2 次", status: "off_track" },
+  ],
   shortlist: {
     criteria: ["排得出来", "舞美花钱", "观众进得去", "社员扛得住"],
     options: [

@@ -183,6 +183,14 @@ export const ACADEMIC_LEXICON: Lexicon = {
     "迁移学习",
     "伦理合规",
   ],
+  goals: [
+    { title: "字错率降幅", target: "6 pp", actual: "8.4 pp", gap: "+2.4 pp", status: "on_track" },
+    { title: "田野录音总量", target: "10000 小时", actual: "12000 小时", gap: "+2000 小时", status: "on_track" },
+    { title: "每小时标注成本", target: "120 元", actual: "90 元", gap: "-30 元", status: "on_track" },
+    { title: "标注语料量", target: "40 小时", actual: "30 小时", gap: "-10 小时", status: "watch" },
+    { title: "实测方言点", target: "6 个", actual: "3 个", gap: "-3 个", status: "off_track" },
+    { title: "跨点迁移准确率", target: "80%", actual: "61%", gap: "-19 pp", status: "off_track" },
+  ],
   shortlist: {
     criteria: ["标注成本", "跨点迁移", "复现难度", "语料需求"],
     options: [

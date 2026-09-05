@@ -183,6 +183,14 @@ export const STAGE_LEXICON: Lexicon = {
     "会议字幕",
     "无障碍模式",
   ],
+  goals: [
+    { title: "整机重量", target: "40 克", actual: "38 克", gap: "-2 克", status: "on_track" },
+    { title: "峰值亮度", target: "2500 尼特", actual: "3000 尼特", gap: "+500 尼特", status: "on_track" },
+    { title: "典型续航", target: "12 小时", actual: "14 小时", gap: "+2 小时", status: "on_track" },
+    { title: "指环误触率", target: "0.5%", actual: "0.8%", gap: "+0.3 pp", status: "watch" },
+    { title: "首发价", target: "3499 元", actual: "3999 元", gap: "+500 元", status: "off_track" },
+    { title: "同步发售城市", target: "150 城", actual: "100 城", gap: "-50 城", status: "off_track" },
+  ],
   shortlist: {
     criteria: ["整机重量", "亮度", "续航", "成本"],
     options: [

@@ -183,6 +183,14 @@ export const RUNWAY_LEXICON: Lexicon = {
     "旧物改造",
     "信笺主题",
   ],
+  goals: [
+    { title: "系列 look", target: "14 个", actual: "14 个", gap: "0 个", status: "on_track" },
+    { title: "回收面料占比", target: "50%", actual: "60%", gap: "+10 pp", status: "on_track" },
+    { title: "植物染打样", target: "24 缸", actual: "27 缸", gap: "+3 缸", status: "on_track" },
+    { title: "预定周期", target: "45 天", actual: "52 天", gap: "+7 天", status: "watch" },
+    { title: "巡回站点", target: "5 城", actual: "3 城", gap: "-2 城", status: "off_track" },
+    { title: "盘扣手工工时", target: "150 小时", actual: "214 小时", gap: "+64 小时", status: "off_track" },
+  ],
   shortlist: {
     criteria: ["上身效果", "可量产", "回收料占比", "打样成本"],
     options: [

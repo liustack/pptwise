@@ -53,6 +53,7 @@ import { traits as icebergTraits } from "@/ir/components/iceberg"
 import { traits as pillarModelTraits } from "@/ir/components/pillar-model"
 import { traits as valueChainTraits } from "@/ir/components/value-chain"
 import { traits as harveyBallsTraits } from "@/ir/components/harvey-balls"
+import { traits as scorecardTraits } from "@/ir/components/scorecard"
 
 /**
  * Component trait registry (W2 task 5, spec §3/§6/§8 — re-derived as a pure
@@ -183,6 +184,7 @@ const ALL_TRAITS: Record<ComponentType, ComponentTraits> = {
   pillar_model: pillarModelTraits,
   value_chain: valueChainTraits,
   harvey_balls: harveyBallsTraits,
+  scorecard: scorecardTraits,
 }
 
 /** Every component type whose own domain-file `traits` declares `trait: true`, collected as a `ReadonlySet`. */

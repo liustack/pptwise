@@ -183,6 +183,14 @@ export const INK_LEXICON: Lexicon = {
     "留言代润",
     "同临一帖",
   ],
+  goals: [
+    { title: "社藏展件", target: "48 件", actual: "50 件", gap: "+2 件", status: "on_track" },
+    { title: "社课作品", target: "30 件", actual: "36 件", gap: "+6 件", status: "on_track" },
+    { title: "在社社友", target: "25 人", actual: "27 人", gap: "+2 人", status: "on_track" },
+    { title: "通临书谱", target: "12 人", actual: "9 人", gap: "-3 人", status: "watch" },
+    { title: "残拓修复", target: "6 个月", actual: "8 个月", gap: "+2 个月", status: "off_track" },
+    { title: "雅集到场", target: "80 人", actual: "52 人", gap: "-28 人", status: "off_track" },
+  ],
   shortlist: {
     criteria: ["纸墨相宜", "初学好上手", "留得住", "耗费"],
     options: [

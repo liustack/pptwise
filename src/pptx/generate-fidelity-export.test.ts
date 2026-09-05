@@ -363,6 +363,15 @@ const COMPONENT_BY_TYPE: Record<Component["type"], Component> = {
       { label: "Build it together", scores: [100, 100, 100], total: 86, highlight: true },
     ],
   },
+  scorecard: {
+    type: "scorecard",
+    rows: [
+      { label: "Renewal rate", target: "88%", actual: "91%", gap: "+3.0", status: "on_track" },
+      { label: "Setup weeks", target: "4.0", actual: "5.2", gap: "+1.2", status: "off_track" },
+      { label: "Partner share", target: "25%", actual: "23%", gap: "-2.0", status: "watch" },
+    ],
+    note: "Gap is actual minus target.",
+  },
   hub_spoke: {
     type: "hub_spoke",
     center: "Platform",
@@ -521,6 +530,7 @@ function noAssetIr(): PptxIR {
       contentSlide("Image grid (no resolvable asset)", [COMPONENT_BY_TYPE.image_grid]),
       contentSlide("Image compare (no resolvable asset)", [COMPONENT_BY_TYPE.image_compare]),
       contentSlide("Harvey balls", [COMPONENT_BY_TYPE.harvey_balls]),
+      contentSlide("Scorecard", [COMPONENT_BY_TYPE.scorecard]),
       { type: "ending", heading: "Thanks", components: [] },
     ],
   }

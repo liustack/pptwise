@@ -183,6 +183,14 @@ export const TERRA_LEXICON: Lexicon = {
     "自然教育",
     "五年之约",
   ],
+  goals: [
+    { title: "菜箱续订率", target: "85%", actual: "87%", gap: "+2 pp", status: "on_track" },
+    { title: "土壤有机质", target: "2.8%", actual: "2.9%", gap: "+0.1 pp", status: "on_track" },
+    { title: "年堆肥处理", target: "200 吨", actual: "190 吨", gap: "-10 吨", status: "watch" },
+    { title: "轮作作物", target: "24 种", actual: "27 种", gap: "+3 种", status: "on_track" },
+    { title: "夏季断货天数", target: "6 天", actual: "14 天", gap: "+8 天", status: "off_track" },
+    { title: "年度盈余", target: "5000 元", actual: "3100 元", gap: "-1900 元", status: "off_track" },
+  ],
   shortlist: {
     criteria: ["地力恢复", "用工投入", "当年收成", "菜箱稳定"],
     options: [

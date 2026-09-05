@@ -70,6 +70,7 @@ mirror_of: skills/pptwise/references/components.md
 | `pillar_model` | `hierarchy` |
 | `value_chain` | `process` |
 | `harvey_balls` | `data`, `comparison` |
+| `scorecard` | `data`, `comparison` |
 
 ## 相近组件
 
@@ -98,6 +99,8 @@ mirror_of: skills/pptwise/references/components.md
 
 - 几个方案在同一组标准上按五档打分、要一眼看出短板时用 `harvey_balls`。数值是连续量、要看它在两个维度上的分布时用 `heatmap`，任何数字要读准时用 `data_table`，没有共同刻度的定性属性对照用 `comparison`。
 
+- 每个数字都对着一个目标、还要给结论时用 `scorecard`。只报数字不下结论用 `data_table`。
+
 `architecture.layers` 默认从上向下绘制。作者按基座优先的顺序写作时，设置 `direction: "bottom_up"`，不要手工倒置数组。
 
-`swot`、`bmc`、`waterfall`、`gantt`、`pest`、`five_forces`、`heatmap`、`sankey` 与 `harvey_balls` 是全页组件。它们必须独占页面。
+`swot`、`bmc`、`waterfall`、`gantt`、`pest`、`five_forces`、`heatmap`、`sankey`、`harvey_balls` 与 `scorecard` 是全页组件。它们必须独占页面。

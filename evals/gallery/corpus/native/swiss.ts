@@ -183,6 +183,14 @@ export const SWISS_LEXICON: Lexicon = {
     "预算缺口",
     "复捐率",
   ],
+  goals: [
+    { title: "年度总收入", target: "1000 万元", actual: "1142.6 万元", gap: "+142.6 万元", status: "on_track" },
+    { title: "管理费率", target: "10%", actual: "8.7%", gap: "-1.3 pp", status: "on_track" },
+    { title: "新建图书角", target: "200 个", actual: "217 个", gap: "+17 个", status: "on_track" },
+    { title: "月捐人数", target: "24000 人", actual: "20000 人", gap: "-4000 人", status: "watch" },
+    { title: "披露损失", target: "20 万元", actual: "47.3 万元", gap: "+27.3 万元", status: "off_track" },
+    { title: "项目审计按期完成", target: "12 个", actual: "7 个", gap: "-5 个", status: "off_track" },
+  ],
   shortlist: {
     criteria: ["每元触达儿童", "落地速度", "可核查", "长期留存"],
     options: [

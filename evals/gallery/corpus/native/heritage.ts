@@ -183,6 +183,14 @@ export const HERITAGE_LEXICON: Lexicon = {
     "非遗申报",
     "字号维权",
   ],
+  goals: [
+    { title: "小罐复购率", target: "30%", actual: "36%", gap: "+6 pp", status: "on_track" },
+    { title: "新收学徒", target: "3 人", actual: "4 人", gap: "+1 人", status: "on_track" },
+    { title: "三伏酱周期", target: "540 天", actual: "540 天", gap: "0 天", status: "on_track" },
+    { title: "老缸修复", target: "40 口", actual: "31 口", gap: "-9 口", status: "watch" },
+    { title: "老街门店客流", target: "每日 260 人", actual: "每日 180 人", gap: "-80 人", status: "off_track" },
+    { title: "翻新预算", target: "48 万元", actual: "57 万元", gap: "+9 万元", status: "off_track" },
+  ],
   shortlist: {
     criteria: ["守住味道", "老街脸面", "年轻人愿买", "手上人手"],
     options: [

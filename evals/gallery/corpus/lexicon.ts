@@ -80,6 +80,18 @@ export interface Shortlist {
   }[]
 }
 
+/** A promise and what came of it — one line of a scorecard. */
+export interface Goal {
+  readonly title: string
+  /** What was promised, written the way it should print, unit included. */
+  readonly target: string
+  /** What was reached, in the same unit as the target. */
+  readonly actual: string
+  /** The distance between the two, sign included, read the way this goal reads: a shorter wait is a good "-". */
+  readonly gap: string
+  readonly status: "on_track" | "watch" | "off_track"
+}
+
 export interface Person {
   readonly name: string
   readonly role: string
@@ -221,6 +233,8 @@ export interface Lexicon {
   readonly metrics: readonly Metric[]
   /** Technology / capability tags, <= 24 chars each. */
   readonly tags: Pool
+  /** Promises this subject made and what came of them — at least 5. */
+  readonly goals: readonly Goal[]
   /** One decision this subject actually faced, with the criteria it was weighed on. */
   readonly shortlist: Shortlist
   /**
@@ -515,6 +529,14 @@ const zh: Lexicon = {
     "SCIMv2",
     "审计日志",
     "Kubernetes",
+  ],
+  goals: [
+    { title: "客户续约率", target: "88%", actual: "91%", gap: "+3 pp", status: "on_track" },
+    { title: "新签合同额", target: "4200 万元", actual: "4386 万元", gap: "+186 万元", status: "on_track" },
+    { title: "平均开通周期", target: "4 周", actual: "5.2 周", gap: "+1.2 周", status: "off_track" },
+    { title: "付费席位量", target: "10 万席", actual: "10.2 万席", gap: "+0.2 万席", status: "on_track" },
+    { title: "自助报表启用率", target: "65%", actual: "52%", gap: "-13 pp", status: "off_track" },
+    { title: "渠道伙伴收入占比", target: "25%", actual: "23%", gap: "-2 pp", status: "watch" },
   ],
   shortlist: {
     criteria: ["开通周期", "席位成本", "集成能力", "服务响应"],
@@ -835,6 +857,14 @@ const en: Lexicon = {
     "LDAP",
     "Kubernetes",
   ],
+  goals: [
+    { title: "Renewal rate", target: "88%", actual: "91%", gap: "+3 pp", status: "on_track" },
+    { title: "New bookings", target: "$42.0M", actual: "$43.9M", gap: "+$1.9M", status: "on_track" },
+    { title: "Average setup time", target: "4 weeks", actual: "5.2 weeks", gap: "+1.2 weeks", status: "off_track" },
+    { title: "Paid seats", target: "100k", actual: "102k", gap: "+2k", status: "on_track" },
+    { title: "Self-serve reporting", target: "65%", actual: "52%", gap: "-13 pp", status: "off_track" },
+    { title: "Partner-sourced revenue", target: "25%", actual: "23%", gap: "-2 pp", status: "watch" },
+  ],
   shortlist: {
     criteria: ["Setup time", "Seat cost", "Integrations", "Response time"],
     options: [
@@ -1153,6 +1183,14 @@ const mixed: Lexicon = {
     "Spot 实例",
     "PostgreSQL RDS",
     "SLSA 签名",
+  ],
+  goals: [
+    { title: "客户续约率", target: "88%", actual: "91%", gap: "+3 pp", status: "on_track" },
+    { title: "Workspace 新签合同额", target: "4200 万元", actual: "4386 万元", gap: "+186 万元", status: "on_track" },
+    { title: "平均开通周期", target: "4 周", actual: "5.2 周", gap: "+1.2 周", status: "off_track" },
+    { title: "付费席位量", target: "10 万席", actual: "10.2 万席", gap: "+0.2 万席", status: "on_track" },
+    { title: "Insights 自助报表启用率", target: "65%", actual: "52%", gap: "-13 pp", status: "off_track" },
+    { title: "渠道伙伴收入占比", target: "25%", actual: "23%", gap: "-2 pp", status: "watch" },
   ],
   shortlist: {
     criteria: ["开通周期", "席位成本", "API 集成", "服务响应"],

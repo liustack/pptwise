@@ -183,6 +183,14 @@ export const ENTERPRISE_LEXICON: Lexicon = {
     "班组认证",
     "观察周",
   ],
+  goals: [
+    { title: "切换覆盖员工", target: "30000 人", actual: "30400 人", gap: "+400 人", status: "on_track" },
+    { title: "年等待时间", target: "5000 小时", actual: "4300 小时", gap: "-700 小时", status: "on_track" },
+    { title: "试点库存差异率", target: "0.5%", actual: "0.4%", gap: "-0.1 pp", status: "on_track" },
+    { title: "种子用户到岗", target: "1500 人", actual: "1200 人", gap: "-300 人", status: "watch" },
+    { title: "停单窗口", target: "4 小时", actual: "6 小时", gap: "+2 小时", status: "off_track" },
+    { title: "一线培训完成率", target: "90%", actual: "71%", gap: "-19 pp", status: "off_track" },
+  ],
   shortlist: {
     criteria: ["停产风险", "回退把握", "培训负担", "上线周期"],
     options: [

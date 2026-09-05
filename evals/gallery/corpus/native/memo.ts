@@ -183,6 +183,14 @@ export const MEMO_LEXICON: Lexicon = {
     "防篡改",
     "半年复盘",
   ],
+  goals: [
+    { title: "存款可撑月数", target: "18 个月", actual: "22 个月", gap: "+4 个月", status: "on_track" },
+    { title: "月开销上限", target: "7000 元", actual: "6500 元", gap: "-500 元", status: "on_track" },
+    { title: "已练工时", target: "600 小时", actual: "800 小时", gap: "+200 小时", status: "on_track" },
+    { title: "决定冷却期", target: "48 小时", actual: "72 小时", gap: "+24 小时", status: "watch" },
+    { title: "首年订单", target: "1 张", actual: "0 张", gap: "-1 张", status: "off_track" },
+    { title: "谈过的潜在客户", target: "20 位", actual: "6 位", gap: "-14 位", status: "off_track" },
+  ],
   shortlist: {
     criteria: ["现金安全", "手艺长进", "退路", "心里踏实"],
     options: [

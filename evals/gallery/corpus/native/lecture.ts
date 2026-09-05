@@ -183,6 +183,14 @@ export const LECTURE_LEXICON: Lexicon = {
     "外拍预告",
     "结课影展",
   ],
+  goals: [
+    { title: "在册学员", target: "30 人", actual: "34 人", gap: "+4 人", status: "on_track" },
+    { title: "交作业人数", target: "18 人", actual: "21 人", gap: "+3 人", status: "on_track" },
+    { title: "每组互拍", target: "10 分钟", actual: "10 分钟", gap: "0 分钟", status: "on_track" },
+    { title: "到课率", target: "85%", actual: "76%", gap: "-9 pp", status: "watch" },
+    { title: "会用手动曝光", target: "20 人", actual: "9 人", gap: "-11 人", status: "off_track" },
+    { title: "课后一周仍在拍", target: "24 人", actual: "13 人", gap: "-11 人", status: "off_track" },
+  ],
   shortlist: {
     criteria: ["当场学得会", "回家用得上", "不用买东西", "课上练得动"],
     options: [

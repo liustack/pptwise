@@ -183,6 +183,14 @@ export const CLASSROOM_LEXICON: Lexicon = {
     "暑假清单",
     "收心周",
   ],
+  goals: [
+    { title: "班级平均分", target: "85 分", actual: "86.5 分", gap: "+1.5 分", status: "on_track" },
+    { title: "九十分以上", target: "15 人", actual: "18 人", gap: "+3 人", status: "on_track" },
+    { title: "错题本坚持人数", target: "40 人", actual: "34 人", gap: "-6 人", status: "watch" },
+    { title: "辅助线得分率", target: "70%", actual: "53%", gap: "-17 pp", status: "off_track" },
+    { title: "计算失误占比", target: "20%", actual: "31%", gap: "+11 pp", status: "off_track" },
+    { title: "每日计算练习", target: "20 分钟", actual: "21 分钟", gap: "+1 分钟", status: "on_track" },
+  ],
   shortlist: {
     criteria: ["提分见效", "占用时间", "孩子愿做", "家长能盯"],
     options: [

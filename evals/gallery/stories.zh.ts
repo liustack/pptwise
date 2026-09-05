@@ -582,6 +582,13 @@ export const STORY_ZH: Readonly<Record<string, Partial<Record<DesignStoryField, 
     audience: "要判断某件事爬到了第几级的读者。",
     notFor: "在时间上一前一后的阶段，那属于 steps。",
   },
+  "component:scorecard": {
+    name: "达标榜",
+    story: "每条承诺各占一行，旁边是实际达成、两者的差距，还有三种口气的结论。团队打开季度复盘的第一页。",
+    positioning: "读者要看清哪些承诺兑现了、差多少。只报数字不下结论时用表格。",
+    audience: "定下目标、现在要为目标作答的人。",
+    notFor: "单个头条数字，那属于头条数字。",
+  },
   "component:steps": {
     name: "步骤",
     story: "两到五个带标题的步骤，按顺序排列，每步配一行说明。包装背面印的那种操作指南。",

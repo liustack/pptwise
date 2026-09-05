@@ -183,6 +183,14 @@ export const VERMILION_LEXICON: Lexicon = {
     "自助终端",
     "适老服务",
   ],
+  goals: [
+    { title: "上半年办件总量", target: "38 万件", actual: "41 万件", gap: "+3 万件", status: "on_track" },
+    { title: "一窗受理事项", target: "500 项", actual: "540 项", gap: "+40 项", status: "on_track" },
+    { title: "平均办理时限", target: "4 工作日", actual: "3.2 工作日", gap: "-0.8 工作日", status: "on_track" },
+    { title: "网上可办率", target: "95%", actual: "92%", gap: "-3 pp", status: "watch" },
+    { title: "高峰期等候时长", target: "20 分钟", actual: "38 分钟", gap: "+18 分钟", status: "off_track" },
+    { title: "帮办代办覆盖", target: "全部窗口", actual: "六成窗口", gap: "-4 成", status: "off_track" },
+  ],
   shortlist: {
     criteria: ["缩短等候", "改造投入", "老年人友好", "上线周期"],
     options: [

@@ -183,6 +183,14 @@ export const CRAYON_LEXICON: Lexicon = {
     "混龄活动",
     "幼小衔接",
   ],
+  goals: [
+    { title: "学期出勤率", target: "92%", actual: "94%", gap: "+2 pp", status: "on_track" },
+    { title: "独立进餐人数", target: "26 人", actual: "28 人", gap: "+2 人", status: "on_track" },
+    { title: "午睡入睡用时", target: "15 分钟", actual: "12 分钟", gap: "-3 分钟", status: "on_track" },
+    { title: "绘本借阅量", target: "360 本", actual: "412 本", gap: "+52 本", status: "on_track" },
+    { title: "每日户外", target: "2 小时", actual: "1.6 小时", gap: "-0.4 小时", status: "off_track" },
+    { title: "自己收玩具", target: "25 人", actual: "21 人", gap: "-4 人", status: "watch" },
+  ],
   shortlist: {
     criteria: ["孩子喜欢", "老师看得过来", "场地够用", "家长省心"],
     options: [

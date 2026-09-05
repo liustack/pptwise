@@ -1558,6 +1558,10 @@ const MUTED_SURFACE_CLASS: Record<string, MutedSurfaceClass> = {
   // row is `colors.primary` with `readableOn(primary)` ink, out of this map's
   // scope the same way steps' badge digit is.
   harvey_balls: "page-bg",
+  // scorecard.tsx's `colors.muted` text is the column headers and the target
+  // column, both on the page background — the grid fills no row. Its status
+  // words and gap figures are semantic-role inks, never `colors.muted`.
+  scorecard: "page-bg",
 }
 
 describe("colors.muted component-type coverage (task-2 fix round, backlog 5a completeness sweep)", () => {

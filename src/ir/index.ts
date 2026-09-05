@@ -86,6 +86,7 @@ import { schema as icebergSchema } from "./components/iceberg"
 import { schema as pillarModelSchema } from "./components/pillar-model"
 import { schema as valueChainSchema } from "./components/value-chain"
 import { schema as harveyBallsSchema } from "./components/harvey-balls"
+import { schema as scorecardSchema } from "./components/scorecard"
 
 // Re-exported so IR, spec, theme menus, and public tooling share one exact
 // semantic vocabulary instead of maintaining independent string unions.
@@ -298,7 +299,7 @@ export const DeckBrandingSchema = z.enum(DECK_BRANDING_VALUES).describe(
   'Where the brand footer and logo appear. Omitted equals "cover-only": cover and chapter pages keep the brand logo, content and ending pages drop the footer rule, meta, and logo. "full" is the explicit declaration that draws the content-page footer and logo, and that paints confidentiality and date on cover and ending meta rows. Other postures leave those two fields off the canvas even when meta carries them. "minimal" drops the content-page footer rule and meta but keeps the logo. Layout branding:"none" still wins. Theme motifs are unaffected. Write "full" only when every content page needs the brand footer.',
 )
 
-// ── Components（53 种）──
+// ── Components（54 种）──
 
 const ComponentSchema = z.discriminatedUnion("type", [
   bulletsSchema,
@@ -354,6 +355,7 @@ const ComponentSchema = z.discriminatedUnion("type", [
   pillarModelSchema,
   valueChainSchema,
   harveyBallsSchema,
+  scorecardSchema,
 ], { error: componentTypeError })
 
 /**

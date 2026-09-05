@@ -81,6 +81,7 @@ export const THEME_TABLE_REQUIRED_SURFACES = [
   "pillar_model",
   "value_chain",
   "harvey_balls",
+  "scorecard",
 ] as const
 
 export type ThemeChartType =
@@ -147,7 +148,7 @@ export const THEME_CONTENT_SLOTS: Record<string, readonly ThemeContentSlot[]> = 
   clinic: [slot("numbered_cards"), slot("comparison"), slot("sankey"), slot("people_cards"), slot("image_compare"), slot("issue_tree"), slot("swimlane")],
   runway: [slot("steps"), slot("data_table"), slot("product_cards"), slot("image_grid"), slot("chevron_process"), slot("verdict_banner"), slot("gantt")],
   stage: [slot("timeline"), slot("kpi_cards"), slot("pyramid"), slot("bmc"), slot("image"), slot("blockquote"), slot("architecture")],
-  swiss: [chart("pie"), slot("numbered_cards"), slot("comparison"), slot("people_cards"), slot("heatmap"), slot("icon_cards"), slot("flowchart")],
+  swiss: [chart("pie"), slot("numbered_cards"), slot("comparison"), slot("people_cards"), slot("scorecard"), slot("icon_cards"), slot("flowchart")],
   terminal: [slot("icon_cards"), slot("data_table"), slot("waterfall"), slot("code"), slot("device_mockup"), slot("decision_tree"), slot("roadmap")],
   almanac: [slot("icon_cards"), slot("iceberg"), slot("timeline"), slot("pest"), slot("image_compare"), slot("rings"), slot("people_cards")],
   vermilion: [slot("comparison"), slot("kpi_cards"), slot("gantt"), slot("from_to"), slot("people_cards"), slot("code"), slot("architecture")],

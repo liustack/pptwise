@@ -183,6 +183,14 @@ export const LUXE_LEXICON: Lexicon = {
     "故人席",
     "弱音礼",
   ],
+  goals: [
+    { title: "十年交付", target: "300 套", actual: "307 套", gap: "+7 套", status: "on_track" },
+    { title: "回场代表作", target: "12 套", actual: "12 套", gap: "0 套", status: "on_track" },
+    { title: "到场来宾", target: "56 位", actual: "56 位", gap: "0 位", status: "on_track" },
+    { title: "明年接单上限", target: "40 套", actual: "46 套", gap: "+6 套", status: "watch" },
+    { title: "单套量体次数", target: "10 次", actual: "13.7 次", gap: "+3.7 次", status: "off_track" },
+    { title: "交期准时率", target: "95%", actual: "78%", gap: "-17 pp", status: "off_track" },
+  ],
   shortlist: {
     criteria: ["合身", "工期", "料子相配", "衣主喜欢"],
     options: [

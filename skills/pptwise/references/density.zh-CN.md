@@ -23,7 +23,7 @@ mirror_of: skills/pptwise/references/density.md
 
 连续三张内容页使用相同 kind 时，spec 会给出提示。重复可能正确，但应确认故事确实需要连续三次相同的语义动作。
 
-九种组件独占整个正文区：`swot`、`bmc`、`waterfall`、`gantt`、`pest`、`five_forces`、`heatmap`、`sankey` 与 `harvey_balls`。每种都必须是该页唯一的组件。
+十种组件独占整个正文区：`swot`、`bmc`、`waterfall`、`gantt`、`pest`、`five_forces`、`heatmap`、`sankey`、`harvey_balls` 与 `scorecard`。每种都必须是该页唯一的组件。
 
 ## 装饰归属
 

@@ -183,6 +183,14 @@ export const MUSEUM_LEXICON: Lexicon = {
     "策展导览",
     "巡展",
   ],
+  goals: [
+    { title: "展品总数", target: "140 件", actual: "146 件", gap: "+6 件", status: "on_track" },
+    { title: "借展机构", target: "9 家", actual: "11 家", gap: "+2 家", status: "on_track" },
+    { title: "展厅照度", target: "50 lux", actual: "50 lux", gap: "0 lux", status: "on_track" },
+    { title: "重点修复工期", target: "9 个月", actual: "11 个月", gap: "+2 个月", status: "watch" },
+    { title: "夜场限流", target: "300 人", actual: "412 人", gap: "+112 人", status: "off_track" },
+    { title: "导览词到位率", target: "100%", actual: "72%", gap: "-28 pp", status: "off_track" },
+  ],
   shortlist: {
     criteria: ["文物安全", "看得清", "叙事连贯", "布展工期"],
     options: [

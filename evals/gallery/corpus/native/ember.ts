@@ -183,6 +183,14 @@ export const EMBER_LEXICON: Lexicon = {
     "碰伤险",
     "百台计划",
   ],
+  goals: [
+    { title: "真机碰伤率", target: "1.0%", actual: "0.8%", gap: "-0.2 pp", status: "on_track" },
+    { title: "单台日采量", target: "1.0 吨", actual: "1.1 吨", gap: "+0.1 吨", status: "on_track" },
+    { title: "样机降本幅度", target: "50%", actual: "58%", gap: "+8 pp", status: "on_track" },
+    { title: "果园续约率", target: "90%", actual: "100%", gap: "+10 pp", status: "on_track" },
+    { title: "整机交付台数", target: "12 台", actual: "7 台", gap: "-5 台", status: "off_track" },
+    { title: "本轮融资额", target: "1000 万元", actual: "800 万元", gap: "-200 万元", status: "watch" },
+  ],
   shortlist: {
     criteria: ["碰伤率", "单台成本", "量产难度", "果园接受度"],
     options: [

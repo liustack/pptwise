@@ -518,6 +518,39 @@ const BLOCK_CASES: readonly BlockCase[] = [
     },
     expected: ["speed", "cost", "fit"],
   },
+  {
+    type: "scorecard",
+    alias: "items",
+    canonical: "rows",
+    component: {
+      type: "scorecard",
+      items: [
+        { label: "Renewal", target: "88%", actual: "91%", gap: "+3.0", status: "on_track" },
+        { label: "Setup", target: "4.0", actual: "5.2", gap: "+1.2", status: "off_track" },
+        { label: "Partners", target: "25%", actual: "23%", gap: "-2.0", status: "watch" },
+      ],
+    },
+    expected: [
+      { label: "Renewal", target: "88%", actual: "91%", gap: "+3.0", status: "on_track" },
+      { label: "Setup", target: "4.0", actual: "5.2", gap: "+1.2", status: "off_track" },
+      { label: "Partners", target: "25%", actual: "23%", gap: "-2.0", status: "watch" },
+    ],
+  },
+  {
+    type: "scorecard",
+    alias: "footnote",
+    canonical: "note",
+    component: {
+      type: "scorecard",
+      footnote: "Gap is actual minus target.",
+      rows: [
+        { label: "Renewal", target: "88%", actual: "91%", gap: "+3.0", status: "on_track" },
+        { label: "Setup", target: "4.0", actual: "5.2", gap: "+1.2", status: "off_track" },
+        { label: "Partners", target: "25%", actual: "23%", gap: "-2.0", status: "watch" },
+      ],
+    },
+    expected: "Gap is actual minus target.",
+  },
 ]
 
 describe("COMPONENT_FIELD_ALIASES: every row round-trips", () => {
@@ -1208,6 +1241,54 @@ const ITEM_CASES: readonly ItemCase[] = [
     ],
     expected: [100, 25, 50],
   },
+  {
+    type: "scorecard",
+    itemsKey: "rows",
+    alias: "metric",
+    canonical: "label",
+    item: { metric: "Renewal", target: "88%", actual: "91%", gap: "+3.0", status: "on_track" },
+    pad: [
+      { label: "Setup", target: "4.0", actual: "5.2", gap: "+1.2", status: "off_track" },
+      { label: "Partners", target: "25%", actual: "23%", gap: "-2.0", status: "watch" },
+    ],
+    expected: "Renewal",
+  },
+  {
+    type: "scorecard",
+    itemsKey: "rows",
+    alias: "value",
+    canonical: "actual",
+    item: { label: "Renewal", target: "88%", value: "91%", gap: "+3.0", status: "on_track" },
+    pad: [
+      { label: "Setup", target: "4.0", actual: "5.2", gap: "+1.2", status: "off_track" },
+      { label: "Partners", target: "25%", actual: "23%", gap: "-2.0", status: "watch" },
+    ],
+    expected: "91%",
+  },
+  {
+    type: "scorecard",
+    itemsKey: "rows",
+    alias: "delta",
+    canonical: "gap",
+    item: { label: "Renewal", target: "88%", actual: "91%", delta: "+3.0", status: "on_track" },
+    pad: [
+      { label: "Setup", target: "4.0", actual: "5.2", gap: "+1.2", status: "off_track" },
+      { label: "Partners", target: "25%", actual: "23%", gap: "-2.0", status: "watch" },
+    ],
+    expected: "+3.0",
+  },
+  {
+    type: "scorecard",
+    itemsKey: "rows",
+    alias: "state",
+    canonical: "status",
+    item: { label: "Renewal", target: "88%", actual: "91%", gap: "+3.0", state: "on_track" },
+    pad: [
+      { label: "Setup", target: "4.0", actual: "5.2", gap: "+1.2", status: "off_track" },
+      { label: "Partners", target: "25%", actual: "23%", gap: "-2.0", status: "watch" },
+    ],
+    expected: "on_track",
+  },
 ]
 
 describe("COMPONENT_ITEM_FIELD_ALIASES: every row round-trips", () => {
@@ -1237,7 +1318,7 @@ describe("COMPONENT_ITEM_FIELD_ALIASES: every row round-trips", () => {
 // ── total pair count pinned (docs/changeset "53 total synonym pairs") ──────
 
 describe("total synonym-pair count", () => {
-  it("COMPONENT_FIELD_ALIASES + COMPONENT_ITEM_FIELD_ALIASES flatten to exactly 150 pairs", () => {
+  it("COMPONENT_FIELD_ALIASES + COMPONENT_ITEM_FIELD_ALIASES flatten to exactly 156 pairs", () => {
     // The "covers every row exactly once" completeness guards above only
     // prove BLOCK_CASES/ITEM_CASES stay in lockstep with each table's own
     // rows — a row deleted from a table *and* its matching test case would
@@ -1254,7 +1335,7 @@ describe("total synonym-pair count", () => {
       (n, specs) => n + specs.reduce((m, spec) => m + Object.keys(spec.aliases).length, 0),
       0,
     )
-    expect(blockCount + itemCount).toBe(150)
+    expect(blockCount + itemCount).toBe(156)
   })
 })
 
