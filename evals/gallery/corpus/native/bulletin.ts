@@ -184,6 +184,12 @@ export const ENTERPRISE_LEXICON: Lexicon = {
     "观察周",
   ],
 
+  products: [
+    { name: "迁移驻场包", note: "老系统数据搬运与双轨并行", price: "¥46万", priceUnit: "起 / 厂区" },
+    { name: "班组培训场", note: "四小时实操，一次三十人", price: "¥1.2万", priceUnit: "场" },
+    { name: "切换值守服务", note: "上线首月七乘二十四小时", price: "¥18万", priceUnit: "月" },
+  ],
+
   quote: {
     text: "老系统陪了我们二十七年，体面地送它退休，办法只有一个：新系统第一天就好好用。",
     attribution: "祁鸿川，动员大会现场",

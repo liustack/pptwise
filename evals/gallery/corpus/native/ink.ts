@@ -184,6 +184,12 @@ export const INK_LEXICON: Lexicon = {
     "同临一帖",
   ],
 
+  products: [
+    { name: "社藏册页", note: "五十件影印，宣纸线装", price: "¥380", priceUnit: "函" },
+    { name: "笔墨入门套", note: "羊毫两支、松烟一锭、毡一方", price: "¥260", priceUnit: "套" },
+    { name: "社课 · 秋季", note: "每周一课，十二课一期", price: "¥1600", priceUnit: "期" },
+  ],
+
   quote: {
     text: "把字挂起来，不是让人来评的，是让字透一口气。",
     attribution: "陆听雨，开幕致辞",

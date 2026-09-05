@@ -184,6 +184,12 @@ export const CAMPAIGN_LEXICON: Lexicon = {
     "冷链保障",
   ],
 
+  products: [
+    { name: "山茶气泡 · 单瓶", note: "冷萃茶底，零糖", price: "¥9.9", priceUnit: "瓶" },
+    { name: "六瓶尝鲜装", note: "三个口味各两瓶", price: "¥55", priceUnit: "箱" },
+    { name: "整箱囤货装", note: "二十四瓶，含冰袋直发", price: "¥199", priceUnit: "箱" },
+  ],
+
   quote: {
     text: "广告的终点不在屏幕上，在便利店冰柜打开的那三秒钟。",
     attribution: "夏一舟，战役操盘手",

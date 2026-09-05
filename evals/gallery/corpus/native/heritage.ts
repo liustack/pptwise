@@ -184,6 +184,12 @@ export const HERITAGE_LEXICON: Lexicon = {
     "字号维权",
   ],
 
+  products: [
+    { name: "头道原汁酱油", note: "春晒秋收，一年只出一批", price: "¥68", priceUnit: "瓶" },
+    { name: "陈年豆瓣酱", note: "三年缸，五百克陶罐装", price: "¥128", priceUnit: "罐" },
+    { name: "百年礼盒", note: "酱油、豆瓣与酱菜各一", price: "¥298", priceUnit: "盒" },
+  ],
+
   quote: {
     text: "缸是祖上的，手艺是师傅的，招牌是街坊给的，我只是这一棒的跑腿人。",
     attribution: "沈曼笙，交底会上",

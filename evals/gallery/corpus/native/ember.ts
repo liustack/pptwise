@@ -184,6 +184,12 @@ export const EMBER_LEXICON: Lexicon = {
     "百台计划",
   ],
 
+  products: [
+    { name: "采摘机整机", note: "四臂并采，含首年质保", price: "¥28万", priceUnit: "台" },
+    { name: "整季租用", note: "按园区面积计费，随采随撤", price: "¥3.6万", priceUnit: "季" },
+    { name: "果园测绘服务", note: "先测后配，一周出方案", price: "¥8000", priceUnit: "次" },
+  ],
+
   quote: {
     text: "投资人问我们壁垒是什么。壁垒是那两个夏天，我们的工程师和果子一起晒在地里。",
     attribution: "何燃，路演现场",

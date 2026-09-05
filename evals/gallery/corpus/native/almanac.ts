@@ -184,6 +184,12 @@ export const TERRA_LEXICON: Lexicon = {
     "五年之约",
   ],
 
+  products: [
+    { name: "青禾米 · 五斤装", note: "自留种，一年一季，当季碾", price: "¥88", priceUnit: "袋" },
+    { name: "四季菜箱", note: "每周一箱，八到十样当令菜", price: "¥168", priceUnit: "月 / 四次" },
+    { name: "荆条蜜 · 秋", note: "山场三十箱，一年只取一次", price: "¥136", priceUnit: "罐" },
+  ],
+
   quote: {
     text: "老甄说，地跟人一样，你哄它一年，它记你五年。",
     attribution: "麦穗，年记序言",

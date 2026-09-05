@@ -184,6 +184,12 @@ export const STAGE_LEXICON: Lexicon = {
     "无障碍模式",
   ],
 
+  products: [
+    { name: "目光 One", note: "四十克机身，全天佩戴", price: "¥2499", priceUnit: "副" },
+    { name: "长续航版", note: "同款机身，续航翻倍", price: "¥2999", priceUnit: "副" },
+    { name: "定制镜片", note: "按验光单磨制，两周取", price: "¥899", priceUnit: "副" },
+  ],
+
   quote: {
     text: "最好的屏幕，是需要时在眼前、不需要时不存在的那一块。",
     attribution: "林目，目光科技创始人",

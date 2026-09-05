@@ -184,6 +184,12 @@ export const INSIGHT_LEXICON: Lexicon = {
     "季度对账",
   ],
 
+  products: [
+    { name: "年度策略订阅", note: "四期深度报告与季度更新", price: "¥3.8万", priceUnit: "年" },
+    { name: "月度电话会", note: "每月一场，可提问可回听", price: "¥1.2万", priceUnit: "年" },
+    { name: "定制研究", note: "按题立项，六到八周交付", price: "¥25万", priceUnit: "起 / 项" },
+  ],
+
   quote: {
     text: "研究的信用不来自说对，来自错了以后怎么写下一页。",
     attribution: "凌枢，策略会开场",

@@ -184,6 +184,12 @@ export const VERMILION_LEXICON: Lexicon = {
     "适老服务",
   ],
 
+  products: [
+    { name: "不动产登记 · 即办", note: "材料齐全，当场出证", price: "¥80", priceUnit: "件" },
+    { name: "企业开办套餐", note: "执照、刻章与税务一次办", price: "¥0", priceUnit: "件" },
+    { name: "公证代办", note: "全程代跑，七个工作日", price: "¥260", priceUnit: "件" },
+  ],
+
   quote: {
     text: "群众不关心事项归哪个部门，只关心这件事今天能不能办成。窗口的全部改革，都是围绕这句话做的。",
     attribution: "周正明，云江区政务服务中心主任",

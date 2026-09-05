@@ -16,7 +16,7 @@
  */
 
 import type { Component } from "@/ir"
-import type { LanguageId, Lexicon } from "./lexicon"
+import type { Lexicon } from "./lexicon"
 
 /** Asset ids the corpus declares — see `deck.ts`, which materializes them. */
 export const PHOTO_ASSETS = ["photo-1", "photo-2", "photo-3", "photo-4"] as const
@@ -29,43 +29,24 @@ export const SCREENSHOT_ASSET = "screenshot-1"
  */
 export const PHONE_SCREENSHOT_ASSET = "screenshot-phone-1"
 
+/**
+ * This track's catalogue, or a failure that names the track.
+ *
+ * `products` is optional on the type so a lexicon added mid-flight does not
+ * break every unrelated file at once, and this is where that optionality is
+ * paid for: the one builder that needs a catalogue says which track is
+ * missing one instead of quietly drawing someone else's.
+ */
+function productsOf(lex: Lexicon): NonNullable<Lexicon["products"]> {
+  if (!lex.products || lex.products.length < 2) {
+    throw new Error(`lexicon "${lex.id}" (${lex.display}) has no products pool for product_cards`)
+  }
+  return lex.products
+}
+
 /** Take `n` items starting at `from`, wrapping — keeps builders total. */
 function slice(pool: readonly string[], n: number, from = 0): string[] {
   return Array.from({ length: n }, (_, i) => pool[(from + i) % pool.length]!)
-}
-
-/**
- * Three things a reader could buy, per language track.
- *
- * Written here rather than in `./lexicon.ts` because a price list is this one
- * component's vocabulary, not a track's: twenty-four native lexicons would
- * each have to invent a catalogue, and a classroom or a campaign has no
- * business having one. Before this existed the builder took a phrase, a
- * bullet and a metric by array index, which produced "存量客户席位扩容 /
- * 10.2 万席" — an operating figure wearing a price's clothes, and a card no
- * one could buy. `product_cards`' own test is whether someone could buy
- * exactly one of these, so the corpus has to pass it too.
- *
- * The pictures stay the corpus' own photographs. They are workplace scenes
- * rather than product shots, which is the honest limit of the asset set: the
- * composition under review is the card, not the photograph in it.
- */
-const PRODUCTS: Record<LanguageId, readonly { name: string; note: string; price: string; price_unit: string }[]> = {
-  zh: [
-    { name: "协作工作区", note: "文档、任务与会议记录合在一处", price: "¥68", price_unit: "席位 / 月" },
-    { name: "集成中枢", note: "预置四十六个业务系统连接器", price: "¥12万", price_unit: "起 / 年" },
-    { name: "数据洞察包", note: "按周推送经营简报与流失预警", price: "¥8万", price_unit: "起 / 年" },
-  ],
-  en: [
-    { name: "Collaboration Workspace", note: "Docs, tasks and meeting notes in one place", price: "$9", price_unit: "per seat / month" },
-    { name: "Integration Hub", note: "Forty-six business-system connectors, preconfigured", price: "$18,000", price_unit: "from / year" },
-    { name: "Insight Pack", note: "Weekly operating brief and churn warnings", price: "$12,000", price_unit: "from / year" },
-  ],
-  mixed: [
-    { name: "Workspace 协作版", note: "文档、任务与会议记录合在一处", price: "¥68", price_unit: "席位 / 月" },
-    { name: "Integration Hub 集成中枢", note: "预置四十六个业务系统连接器", price: "¥12万", price_unit: "起 / 年" },
-    { name: "Insight Pack 洞察包", note: "按周推送经营简报与流失预警", price: "¥8万", price_unit: "起 / 年" },
-  ],
 }
 
 /**
@@ -519,11 +500,19 @@ export const COMPONENT_BUILDERS: Record<string, (lex: Lexicon) => Component> = {
     items: slice(lex.orgs, 12).map((name) => ({ name })),
   }),
 
+  // The catalogue comes from the track's own world (`./lexicon.ts`'s
+  // `products`), not from a shared list: a page headed "试衣间十年的软尺挂满
+  // 一面墙" was displaying three SaaS plans under it, which is the corpus
+  // failing this component's own test — could someone buy exactly one of
+  // these, here, on this page?
   product_cards: (lex) => ({
     type: "product_cards",
-    items: PRODUCTS[lex.id].map((product, i) => ({
+    items: productsOf(lex).map((product, i) => ({
       asset_id: PHOTO_ASSETS[i % PHOTO_ASSETS.length]!,
-      ...product,
+      name: product.name,
+      note: product.note,
+      price: product.price,
+      price_unit: product.priceUnit,
       // One card carries the whole-fill highlight, the one emphasis this
       // house allows and the thing worth looking at here.
       ...(i === 1 ? { featured: true as const } : {}),

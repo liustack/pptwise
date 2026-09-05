@@ -184,6 +184,12 @@ export const CLASSROOM_LEXICON: Lexicon = {
     "收心周",
   ],
 
+  products: [
+    { name: "暑期专题课", note: "函数与几何各十讲，小班", price: "¥1200", priceUnit: "期" },
+    { name: "错题整理本", note: "按题型分册，含批注格", price: "¥26", priceUnit: "本" },
+    { name: "家庭练习册", note: "每周一套，附答题分析", price: "¥88", priceUnit: "学期" },
+  ],
+
   quote: {
     text: "我不需要孩子回家说老师讲了什么，只需要他敢把错题本摊开给你看。",
     attribution: "方晴，家长会现场",

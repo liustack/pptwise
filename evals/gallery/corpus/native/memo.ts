@@ -184,6 +184,12 @@ export const MEMO_LEXICON: Lexicon = {
     "半年复盘",
   ],
 
+  products: [
+    { name: "一小时咨询", note: "带着问题来，走时有下一步", price: "¥800", priceUnit: "小时" },
+    { name: "长文代笔", note: "两周一篇，含两轮修改", price: "¥6000", priceUnit: "篇" },
+    { name: "写作陪跑", note: "每周一次，连着做八周", price: "¥1.2万", priceUnit: "期" },
+  ],
+
   quote: {
     text: "我不是在逃离一份工作，我是在赶去见一个还来得及成为的人。",
     attribution: "周野，写给自己",

@@ -184,6 +184,12 @@ export const PULSE_LEXICON: Lexicon = {
     "老年友好",
   ],
 
+  products: [
+    { name: "血压年度随访包", note: "四次复诊加一次用药调整", price: "¥360", priceUnit: "年" },
+    { name: "家用电子血压计", note: "上臂式，社区统一校准", price: "¥268", priceUnit: "台" },
+    { name: "中老年体检套餐", note: "含血脂、心电与颈动脉超声", price: "¥580", priceUnit: "人次" },
+  ],
+
   quote: {
     text: "钱伯伯的血压本记了三年，比任何一张化验单都让我心里有底。",
     attribution: "韩心禾，讲堂现场",

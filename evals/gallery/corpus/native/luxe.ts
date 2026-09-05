@@ -184,6 +184,12 @@ export const LUXE_LEXICON: Lexicon = {
     "弱音礼",
   ],
 
+  products: [
+    { name: "手工盘扣外套", note: "十二道盘扣，全内衬手缝", price: "¥3.8万", priceUnit: "件" },
+    { name: "真丝提花长裙", note: "自织提花，可改可续", price: "¥2.6万", priceUnit: "件" },
+    { name: "量体定制", note: "三次试身，六周成衣", price: "¥6.8万", priceUnit: "起 / 套" },
+  ],
+
   quote: {
     text: "客人把最重要的日子交给我们，我们能回报的只有针脚。",
     attribution: "顾锦官，夜宴致辞",

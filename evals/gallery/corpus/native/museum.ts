@@ -184,6 +184,12 @@ export const MUSEUM_LEXICON: Lexicon = {
     "巡展",
   ],
 
+  products: [
+    { name: "特展门票", note: "含分时预约与语音导览", price: "¥80", priceUnit: "人次" },
+    { name: "展览图录", note: "二百八十页，全展品收录", price: "¥268", priceUnit: "册" },
+    { name: "豆灯复刻摆件", note: "按馆藏一比一翻模", price: "¥480", priceUnit: "件" },
+  ],
+
   quote: {
     text: "博物馆的灯照了文物一百年，这一次，我们想让文物自己发光。",
     attribution: "闻照，媒体导览开场",

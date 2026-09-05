@@ -184,6 +184,12 @@ export const PLAYBILL_LEXICON: Lexicon = {
     "散伙饭",
   ],
 
+  products: [
+    { name: "公演门票", note: "四场同价，可选座", price: "¥80", priceUnit: "张" },
+    { name: "学生票", note: "凭学生证入场，限前两排外", price: "¥40", priceUnit: "张" },
+    { name: "纪念节目册", note: "含剧本节选与后台照片", price: "¥35", priceUnit: "本" },
+  ],
+
   quote: {
     text: "旅馆是假的，床是宿舍的，雨是录的，只有告别是真的。",
     attribution: "戚照野，导演的话",

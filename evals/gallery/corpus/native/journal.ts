@@ -184,6 +184,12 @@ export const JOURNAL_LEXICON: Lexicon = {
     "慢出版",
   ],
 
+  products: [
+    { name: "单期零售", note: "改版后每期一百二十页", price: "¥45", priceUnit: "期" },
+    { name: "全年订阅", note: "十二期直邮，含增刊", price: "¥480", priceUnit: "年" },
+    { name: "旧刊合订本", note: "第一至四十八期，两卷", price: "¥360", priceUnit: "套" },
+  ],
+
   quote: {
     text: "我们不缺选题，缺的是在巷口坐一下午的时间。现在把它买回来。",
     attribution: "阮巷，改版说明会",

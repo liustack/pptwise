@@ -184,6 +184,12 @@ export const ACADEMIC_LEXICON: Lexicon = {
     "伦理合规",
   ],
 
+  products: [
+    { name: "方言语音语料库", note: "四十小时标注音频，学术授权", price: "¥2万", priceUnit: "年 / 机构" },
+    { name: "标注服务", note: "按小时计价，双人校对", price: "¥360", priceUnit: "小时" },
+    { name: "识别模型接口", note: "低资源方言，按调用计费", price: "¥0.6", priceUnit: "千次" },
+  ],
+
   quote: {
     text: "技术的意义不在识别率那一位小数，而在金花阿婆第一次看到自己的话变成字。",
     attribution: "宋知微，论文致谢",

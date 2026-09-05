@@ -184,6 +184,12 @@ export const LECTURE_LEXICON: Lexicon = {
     "结课影展",
   ],
 
+  products: [
+    { name: "单课旁听", note: "一课一主题，讲完当场练", price: "¥60", priceUnit: "课" },
+    { name: "整季课程", note: "十二课连报，含点评", price: "¥580", priceUnit: "季" },
+    { name: "周末外拍", note: "老街半日，最多十二人", price: "¥120", priceUnit: "人次" },
+  ],
+
   quote: {
     text: "王阿姨上周把孙子从窗边挪了一步，全家都问她是不是换了新手机。",
     attribution: "江一苇，课堂实录",

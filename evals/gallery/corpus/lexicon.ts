@@ -34,6 +34,28 @@ export interface Metric {
   readonly delta?: "up" | "down" | "flat"
 }
 
+/**
+ * One thing this track's world actually sells, for `product_cards`.
+ *
+ * A catalogue is the one pool that cannot be assembled out of the others: a
+ * name, a line of spec and a price have to agree with each other and with the
+ * page around them. Written per track rather than shared, because the worlds
+ * differ — a kindergarten sells picture-book sets, a couture house sells a
+ * hand-knotted coat, a clinic sells a check-up, a club sells a season ticket
+ * — and a shared catalogue put three SaaS plans under a heading about
+ * measuring tapes on a fitting-room wall.
+ */
+export interface Product {
+  /** What it is called. Card-title length. */
+  readonly name: string
+  /** One line saying what it is or who it is for. */
+  readonly note: string
+  /** The price as written, currency mark included. */
+  readonly price: string
+  /** The small print beside the price — per what, from when. */
+  readonly priceUnit: string
+}
+
 export interface Person {
   readonly name: string
   readonly role: string
@@ -175,6 +197,14 @@ export interface Lexicon {
   readonly metrics: readonly Metric[]
   /** Technology / capability tags, <= 24 chars each. */
   readonly tags: Pool
+  /**
+   * Three things this world sells, in the order a page should read them.
+   *
+   * Optional on the type so a track added mid-flight fails at the corpus
+   * builder that needs it, by name, rather than failing to compile every
+   * unrelated file at once. Every track ships one.
+   */
+  readonly products?: readonly Product[]
 
   readonly quote: { readonly text: string; readonly attribution: string }
   readonly callouts: {
@@ -414,6 +444,12 @@ const zh: Lexicon = {
     "SCIMv2",
     "审计日志",
     "Kubernetes",
+  ],
+
+  products: [
+    { name: "协作工作区", note: "文档、任务与会议记录合在一处", price: "¥68", priceUnit: "席位 / 月" },
+    { name: "集成中枢", note: "预置四十六个业务系统连接器", price: "¥12万", priceUnit: "起 / 年" },
+    { name: "数据洞察包", note: "按周推送经营简报与流失预警", price: "¥8万", priceUnit: "起 / 年" },
   ],
 
   quote: {
@@ -673,6 +709,12 @@ const en: Lexicon = {
     "Kubernetes",
   ],
 
+  products: [
+    { name: "Collaboration Workspace", note: "Docs, tasks and meeting notes in one place", price: "$9", priceUnit: "per seat / month" },
+    { name: "Integration Hub", note: "Forty-six business-system connectors, preconfigured", price: "$18,000", priceUnit: "from / year" },
+    { name: "Insight Pack", note: "Weekly operating brief and churn warnings", price: "$12,000", priceUnit: "from / year" },
+  ],
+
   quote: {
     text: "We are not selling an interface. We are selling one fewer status meeting on a weekly calendar. Whether the customer can feel that is what decides the renewal.",
     attribution: "Yanqing Chen, CTO, CloudSeek Collaboration",
@@ -928,6 +970,12 @@ const mixed: Lexicon = {
     "Spot 实例",
     "PostgreSQL RDS",
     "SLSA 签名",
+  ],
+
+  products: [
+    { name: "Workspace 协作版", note: "文档、任务与会议记录合在一处", price: "¥68", priceUnit: "席位 / 月" },
+    { name: "Integration Hub 集成中枢", note: "预置四十六个业务系统连接器", price: "¥12万", priceUnit: "起 / 年" },
+    { name: "Insight Pack 洞察包", note: "按周推送经营简报与流失预警", price: "¥8万", priceUnit: "起 / 年" },
   ],
 
   quote: {

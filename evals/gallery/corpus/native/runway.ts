@@ -184,6 +184,12 @@ export const RUNWAY_LEXICON: Lexicon = {
     "信笺主题",
   ],
 
+  products: [
+    { name: "未完成的信 · 大衣", note: "双面羊毛，可两面穿", price: "¥1.2万", priceUnit: "件" },
+    { name: "落笔连衣裙", note: "手绘印花，每件不同", price: "¥6800", priceUnit: "件" },
+    { name: "信封手袋", note: "植鞣皮，可压印姓名", price: "¥3200", priceUnit: "只" },
+  ],
+
   quote: {
     text: "衣服的完成度停在九成就够了，剩下那一成，是穿它的人带来的生活。",
     attribution: "沈鹤，系列设计师",

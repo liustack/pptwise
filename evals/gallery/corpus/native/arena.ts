@@ -184,6 +184,12 @@ export const ARENA_LEXICON: Lexicon = {
     "冬窗",
   ],
 
+  products: [
+    { name: "赛季套票", note: "主场十四战连坐，位置不变", price: "¥980", priceUnit: "席 / 赛季" },
+    { name: "主场球衣", note: "背号可绣，与队员同版", price: "¥399", priceUnit: "件" },
+    { name: "看台应援包", note: "灯牌、手幅与赛程贴纸", price: "¥89", priceUnit: "套" },
+  ],
+
   quote: {
     text: "第九名的时候看台也是满的。今天这个位置，是你们一场一场陪出来的。",
     attribution: "陆惊蛰，粉丝之夜现场",

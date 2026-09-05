@@ -184,6 +184,12 @@ export const SWISS_LEXICON: Lexicon = {
     "复捐率",
   ],
 
+  products: [
+    { name: "月捐 · 一盏", note: "每月点亮一间乡村教室", price: "¥30", priceUnit: "月" },
+    { name: "月捐 · 一间", note: "承担一所学校全年电费", price: "¥300", priceUnit: "月" },
+    { name: "专项捐赠", note: "指定项目，年度专项审计", price: "¥1万", priceUnit: "起 / 项" },
+  ],
+
   quote: {
     text: "把四十七万的失误写进正文那天，我们收到了七年来最多的一天复捐。",
     attribution: "费明澈，发布会现场",

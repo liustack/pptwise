@@ -184,6 +184,12 @@ export const TECH_LEXICON: Lexicon = {
     "总线因子",
   ],
 
+  products: [
+    { name: "Quill 社区版", note: "Apache 2.0，自行部署", price: "¥0", priceUnit: "永久" },
+    { name: "云托管", note: "按查询量计费，含备份", price: "¥0.8", priceUnit: "万次查询" },
+    { name: "企业支持", note: "四小时响应，含版本升级", price: "¥18万", priceUnit: "年" },
+  ],
+
   quote: {
     text: "用户不读文档，但每个人都读报错。报错写好了，文档就少一半。",
     attribution: "边城，大会现场",

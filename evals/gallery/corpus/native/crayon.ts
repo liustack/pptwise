@@ -184,6 +184,12 @@ export const CRAYON_LEXICON: Lexicon = {
     "幼小衔接",
   ],
 
+  products: [
+    { name: "绘本套装 · 春", note: "十二本，配家长共读卡", price: "¥240", priceUnit: "套" },
+    { name: "亲子手工包", note: "每月一份材料，回家一起做", price: "¥45", priceUnit: "月" },
+    { name: "成长纪念册", note: "一学期的照片与作品装订", price: "¥98", priceUnit: "本" },
+  ],
+
   quote: {
     text: "别急着让孩子学会什么，先让他每天都想来。想来了，剩下的都会发生。",
     attribution: "陈园长，阳光幼儿园",
