@@ -200,6 +200,7 @@ const COMPONENT_KINDS: Record<Component["type"], PageKind> = {
   image: "photo",
   image_grid: "photo",
   logo_wall: "list",
+  product_cards: "list",
   image_compare: "photo",
   device_mockup: "photo",
 }

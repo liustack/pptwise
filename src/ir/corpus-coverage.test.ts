@@ -199,6 +199,22 @@ const COVERAGE_ENTRIES: Record<string, unknown> = {
       { value: "72", label: "closure" },
     ],
   }),
+  // product_cards' own hard check is the picture: a card without one is a
+  // row_cards row, and only one card may wear the whole-fill highlight.
+  "coverage/product_cards-valid": minimalDeck({
+    type: "product_cards",
+    items: [
+      { asset_id: "shot-1", name: "Workbench", price: "¥68" },
+      { asset_id: "shot-2", name: "Hub", featured: true },
+    ],
+  }),
+  "coverage/product_cards-tripwire": minimalDeck({
+    type: "product_cards",
+    items: [
+      { asset_id: "shot-1", name: "Workbench", featured: true },
+      { asset_id: "shot-2", name: "Hub", featured: true },
+    ],
+  }),
   // logo_wall's own hard check is the floor: three names are a sentence,
   // not a wall.
   "coverage/logo_wall-valid": minimalDeck({

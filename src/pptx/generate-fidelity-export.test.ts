@@ -372,6 +372,13 @@ const COMPONENT_BY_TYPE: Record<Component["type"], Component> = {
       { name: "明远教育" },
     ],
   },
+  product_cards: {
+    type: "product_cards",
+    items: [
+      { asset_id: "photo-a", name: "Workbench", note: "One screen for renewals", price: "¥68", price_unit: "per seat / month" },
+      { asset_id: "photo-b", name: "集成中枢", note: "四十六个业务系统连接器", price: "¥12万", price_unit: "起 / 年", featured: true },
+    ],
+  },
   people_cards: {
     type: "people_cards",
     people: [

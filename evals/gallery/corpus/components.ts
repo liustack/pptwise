@@ -470,6 +470,20 @@ export const COMPONENT_BUILDERS: Record<string, (lex: Lexicon) => Component> = {
     items: slice(lex.orgs, 12).map((name) => ({ name })),
   }),
 
+  product_cards: (lex) => ({
+    type: "product_cards",
+    items: PHOTO_ASSETS.slice(0, 3).map((asset_id, i) => ({
+      asset_id,
+      name: lex.phrases[i]!,
+      note: lex.bullets[i]!,
+      price: lex.metrics[i]!.value,
+      price_unit: lex.metrics[i]!.unit,
+      // One card carries the whole-fill highlight, which is the only
+      // emphasis this house allows and the thing worth looking at here.
+      ...(i === 1 ? { featured: true as const } : {}),
+    })),
+  }),
+
   image_grid: (lex) => ({
     type: "image_grid",
     emphasis: "first",

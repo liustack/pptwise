@@ -1474,6 +1474,12 @@ const MUTED_SURFACE_CLASS: Record<string, MutedSurfaceClass> = {
   // the same shape as timeline's. Its only other paint is the row hairline
   // (`colors.border`), a rect and not a text fill.
   logo_wall: "page-bg",
+  // product-cards.tsx resolves every ink against the card's own fill —
+  // `accessibleInk(colors.muted, colors.surface, …)` for the note and the
+  // price unit on a default card, and a `mixHex` blend toward
+  // `readableOn(primary)` on the featured one. Never a bare `colors.muted`
+  // and never text on the ambient page background.
+  product_cards: "flat-surface",
   // hub-spoke.tsx's only `colors.muted` text is each element's one-line
   // description, drawn inside the element's own `colors.surface`-filled
   // capsule through `accessibleInk(colors.muted, colors.surface, …)` — the

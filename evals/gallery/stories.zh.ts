@@ -518,6 +518,13 @@ export const STORY_ZH: Readonly<Record<string, Partial<Record<DesignStoryField, 
     audience: "在用现实世界检验策略的规划者。",
     notFor: "内部的优势和劣势，那属于 swot。",
   },
+  "component:product_cards": {
+    name: "商品册",
+    story: "两到四样东西并排站着，每样一张图，图下是名字、一行说明和价格，其中一样可以整块着色。印刷版商品册里的一个跨页。",
+    positioning: "页面在给出一组可选项、读者正要挑一样时用它。同一组属性横向权衡用 comparison，参数要逐行读用 data_table。",
+    audience: "正要在几样能买到的东西之间做选择的读者。",
+    notFor: "没有配图的条目，那属于 row_cards。",
+  },
   "component:progress_donuts": {
     name: "进度环",
     story: "一排圆环，每个填到各自的比例，进度先被感受到再被读到。完成今日目标时那个合拢的仪表盘。",

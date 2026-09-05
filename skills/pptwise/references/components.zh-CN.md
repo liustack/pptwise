@@ -41,6 +41,7 @@ mirror_of: skills/pptwise/references/components.md
 | `image_grid` | `photo`, `list` |
 | `image_compare` | `comparison`, `evidence` |
 | `logo_wall` | `list` |
+| `product_cards` | `list`, `comparison` |
 | `swot` | `comparison` |
 | `bmc` | `hierarchy` |
 | `waterfall` | `data`, `process` |
@@ -77,6 +78,8 @@ mirror_of: skills/pptwise/references/components.md
 - 一个值对一个目标用 `chart` 内的 `gauge`，多个完成度百分比用 `progress_donuts`，一个或多个独立头条数字用 `kpi_cards`。
 
 - `logo_wall` 用在一串组织名字本身就是论据、每个名字权重相同时。照片用 `image_grid`，每个名字都要配一句说明用 `row_cards`。
+
+- `product_cards` 用在每一项都是可购买的东西、各自带一张图时。同一组属性横向权衡用 `comparison`，参数要逐行读用 `data_table`。
 
 `architecture.layers` 默认从上向下绘制。作者按基座优先的顺序写作时，设置 `direction: "bottom_up"`，不要手工倒置数组。
 

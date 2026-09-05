@@ -624,6 +624,51 @@ const ITEM_CASES: readonly ItemCase[] = [
     expected: "mark-1",
   },
   {
+    type: "product_cards",
+    itemsKey: "items",
+    alias: "title",
+    canonical: "name",
+    item: { asset_id: "shot-1", title: "Workbench" },
+    pad: [{ asset_id: "shot-2", name: "Hub" }],
+    expected: "Workbench",
+  },
+  {
+    type: "product_cards",
+    itemsKey: "items",
+    alias: "label",
+    canonical: "name",
+    item: { asset_id: "shot-1", label: "Workbench" },
+    pad: [{ asset_id: "shot-2", name: "Hub" }],
+    expected: "Workbench",
+  },
+  {
+    type: "product_cards",
+    itemsKey: "items",
+    alias: "image_id",
+    canonical: "asset_id",
+    item: { image_id: "shot-1", name: "Workbench" },
+    pad: [{ asset_id: "shot-2", name: "Hub" }],
+    expected: "shot-1",
+  },
+  {
+    type: "product_cards",
+    itemsKey: "items",
+    alias: "text",
+    canonical: "note",
+    item: { asset_id: "shot-1", name: "Workbench", text: "One screen for renewals" },
+    pad: [{ asset_id: "shot-2", name: "Hub" }],
+    expected: "One screen for renewals",
+  },
+  {
+    type: "product_cards",
+    itemsKey: "items",
+    alias: "description",
+    canonical: "note",
+    item: { asset_id: "shot-1", name: "Workbench", description: "One screen for renewals" },
+    pad: [{ asset_id: "shot-2", name: "Hub" }],
+    expected: "One screen for renewals",
+  },
+  {
     type: "progress_donuts",
     itemsKey: "items",
     alias: "title",
@@ -956,7 +1001,7 @@ describe("COMPONENT_ITEM_FIELD_ALIASES: every row round-trips", () => {
 // ── total pair count pinned (docs/changeset "53 total synonym pairs") ──────
 
 describe("total synonym-pair count", () => {
-  it("COMPONENT_FIELD_ALIASES + COMPONENT_ITEM_FIELD_ALIASES flatten to exactly 103 pairs", () => {
+  it("COMPONENT_FIELD_ALIASES + COMPONENT_ITEM_FIELD_ALIASES flatten to exactly 108 pairs", () => {
     // The "covers every row exactly once" completeness guards above only
     // prove BLOCK_CASES/ITEM_CASES stay in lockstep with each table's own
     // rows — a row deleted from a table *and* its matching test case would
@@ -973,7 +1018,7 @@ describe("total synonym-pair count", () => {
       (n, specs) => n + specs.reduce((m, spec) => m + Object.keys(spec.aliases).length, 0),
       0,
     )
-    expect(blockCount + itemCount).toBe(103)
+    expect(blockCount + itemCount).toBe(108)
   })
 })
 

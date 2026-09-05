@@ -16,7 +16,7 @@ import type { Lexicon } from "./lexicon"
  * does not silently get absorbed without a human adding it here.
  */
 export const THEME_TABLE_REQUIRED_SURFACES = [
-  // 44 IR types, COMPONENT_BUILDERS key order
+  // 45 IR types, COMPONENT_BUILDERS key order
   "paragraph",
   "bullets",
   "blockquote",
@@ -60,6 +60,7 @@ export const THEME_TABLE_REQUIRED_SURFACES = [
   "image_grid",
   "image_compare",
   "logo_wall",
+  "product_cards",
   "device_mockup",
   // 9 chart subtypes + horizontal bar
   "chart:bar",
@@ -136,7 +137,7 @@ export const THEME_CONTENT_SLOTS: Record<string, readonly ThemeContentSlot[]> = 
   museum: [slot("cycle"), slot("kpi_cards"), slot("bullets"), slot("heatmap"), slot("people_cards"), slot("logo_wall"), slot("architecture")],
   playbill: [slot("image_grid"), slot("data_table"), slot("callout"), slot("steps"), slot("five_forces"), slot("image"), slot("row_cards")],
   clinic: [slot("numbered_cards"), slot("comparison"), slot("sankey"), slot("people_cards"), slot("image_compare"), slot("architecture"), slot("swimlane")],
-  runway: [slot("steps"), slot("data_table"), slot("callout"), slot("image_grid"), slot("chevron_process"), slot("verdict_banner"), slot("gantt")],
+  runway: [slot("steps"), slot("data_table"), slot("product_cards"), slot("image_grid"), slot("chevron_process"), slot("verdict_banner"), slot("gantt")],
   stage: [slot("timeline"), slot("kpi_cards"), slot("bullets"), slot("bmc"), slot("image"), slot("blockquote"), slot("architecture")],
   swiss: [chart("pie"), slot("numbered_cards"), slot("comparison"), slot("people_cards"), slot("heatmap"), slot("icon_cards"), slot("flowchart")],
   terminal: [slot("icon_cards"), slot("data_table"), slot("waterfall"), slot("code"), slot("device_mockup"), slot("decision_tree"), slot("roadmap")],

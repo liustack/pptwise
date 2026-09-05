@@ -24,6 +24,7 @@ import { traits as imageTraits } from "@/ir/components/image"
 import { traits as imageGridTraits } from "@/ir/components/image-grid"
 import { traits as imageCompareTraits } from "@/ir/components/image-compare"
 import { traits as logoWallTraits } from "@/ir/components/logo-wall"
+import { traits as productCardsTraits } from "@/ir/components/product-cards"
 import { traits as swotTraits } from "@/ir/components/swot"
 import { traits as bmcTraits } from "@/ir/components/bmc"
 import { traits as waterfallTraits } from "@/ir/components/waterfall"
@@ -145,6 +146,7 @@ const ALL_TRAITS: Record<ComponentType, ComponentTraits> = {
   image_grid: imageGridTraits,
   image_compare: imageCompareTraits,
   logo_wall: logoWallTraits,
+  product_cards: productCardsTraits,
   swot: swotTraits,
   bmc: bmcTraits,
   waterfall: waterfallTraits,
