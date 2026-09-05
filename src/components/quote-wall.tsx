@@ -96,11 +96,37 @@ function layoutQuote(quote: QuoteItem, contentW: number, ctx: ComponentCtx): Quo
   return { lines, name, role }
 }
 
-/** 身份区（圆章 + 姓名 + 头衔）自己的高度：圆章与两行小字取高者。 */
-function identityHeight(layout: QuoteLayout): number {
-  const textH =
-    NAME_FONT_SIZE + (layout.role ? NAME_TO_ROLE + layout.role.lines.length * layout.role.lineHeight : 0)
-  return Math.max(AVATAR_R * 2, textH)
+/**
+ * 身份区（圆章 + 姓名 + 头衔）的共用几何，全套一份。
+ *
+ * 头衔是可选的、行数也可以不同，而每张卡如果按自己那几行去做垂直居中，
+ * 姓名基线就会跟着头衔行数漂：无头衔、一行、两行三张卡的姓名分别落在
+ * y=175、162.5、152，相差 23px，而且这个错位一路进到导出的 DrawingML。
+ * 所以居中用的是全套共用的文字块高度：姓名有一个共同锚点，头衔第一行也有
+ * 一个共同锚点，短的那张把空白留在自己下面。
+ */
+interface IdentityBand {
+  /** 头衔最多几行（没有头衔时为 0）。 */
+  roleLines: number
+  /** 头衔行高，全套取最大的一份。 */
+  roleLineHeight: number
+  /** 姓名加头衔这一块文字的共用高度。 */
+  textH: number
+  /** 身份区高度：圆章与那块文字取高者。 */
+  height: number
+  /** 姓名基线相对身份区顶边的偏移，全套同一个值。 */
+  nameOffset: number
+}
+
+function identityBandOf(layouts: readonly QuoteLayout[]): IdentityBand {
+  const roleLines = Math.max(0, ...layouts.map((layout) => layout.role?.lines.length ?? 0))
+  const roleLineHeight = Math.max(
+    Math.round(ROLE_FONT_SIZE * ROLE_LINE_HEIGHT_RATIO),
+    ...layouts.map((layout) => layout.role?.lineHeight ?? 0),
+  )
+  const textH = NAME_FONT_SIZE + (roleLines > 0 ? NAME_TO_ROLE + roleLines * roleLineHeight : 0)
+  const height = Math.max(AVATAR_R * 2, textH)
+  return { roleLines, roleLineHeight, textH, height, nameOffset: (height - textH) / 2 + NAME_FONT_SIZE }
 }
 
 /**
@@ -114,14 +140,9 @@ function textBandOf(layouts: readonly QuoteLayout[]): number {
   return Math.max(...layouts.map((layout) => layout.lines.lines.length * layout.lines.lineHeight))
 }
 
-/** 身份区的共用高度，全套取最高的一张（两行头衔的那张说了算）。 */
-function identityBandOf(layouts: readonly QuoteLayout[]): number {
-  return Math.max(...layouts.map(identityHeight))
-}
-
-function quoteCardHeight(textBand: number, identityBand: number): number {
+function quoteCardHeight(textBand: number, identity: IdentityBand): number {
   return (
-    PAD + MARK_BASELINE + MARK_TO_TEXT + textBand + RULE_GAP_ABOVE + 1 + RULE_GAP_BELOW + identityBand + PAD
+    PAD + MARK_BASELINE + MARK_TO_TEXT + textBand + RULE_GAP_ABOVE + 1 + RULE_GAP_BELOW + identity.height + PAD
   )
 }
 
@@ -134,8 +155,8 @@ interface WallGeometry {
   layouts: QuoteLayout[]
   /** 正文段的共用高度，决定分隔线的 y。 */
   textBand: number
-  /** 身份区的共用高度。 */
-  identityBand: number
+  /** 身份区的共用几何。 */
+  identity: IdentityBand
 }
 
 function wallGeometry(component: QuoteWallComponent, w: number, ctx: ComponentCtx): WallGeometry {
@@ -148,9 +169,9 @@ function wallGeometry(component: QuoteWallComponent, w: number, ctx: ComponentCt
   // 三段共用：引号带、正文段、身份区。共用之后每张卡的分隔线和署名落在
   // 同一条基线，等高的卡壳才真的等于对齐。
   const textBand = textBandOf(layouts)
-  const identityBand = identityBandOf(layouts)
-  const cardH = quoteCardHeight(textBand, identityBand)
-  return { cols, rows, cardW, contentW, cardH, layouts, textBand, identityBand }
+  const identity = identityBandOf(layouts)
+  const cardH = quoteCardHeight(textBand, identity)
+  return { cols, rows, cardW, contentW, cardH, layouts, textBand, identity }
 }
 
 /** 一张卡自己的一套墨：底色决定其余全部颜色，`featured` 只是换了底。 */
@@ -191,7 +212,7 @@ export const quoteWall: SvgComponent<QuoteWallComponent> = {
     return rows * cardH + Math.max(0, rows - 1) * GAP
   },
   render(component: QuoteWallComponent, box: ComponentBox, ctx: ComponentCtx) {
-    const { cols, rows, cardW, contentW, cardH, layouts, textBand, identityBand } = wallGeometry(
+    const { cols, rows, cardW, contentW, cardH, layouts, textBand, identity } = wallGeometry(
       component,
       box.w,
       ctx,
@@ -215,13 +236,11 @@ export const quoteWall: SvgComponent<QuoteWallComponent> = {
           // 分隔线挂在全套共用的正文段下缘，不挂在这一张自己的最后一行。
           const ruleY = textTopY + textBand + RULE_GAP_ABOVE
           const identityTopY = ruleY + 1 + RULE_GAP_BELOW
-          const idH = identityBand
-          const avatarCy = identityTopY + idH / 2
+          const avatarCy = identityTopY + identity.height / 2
           const nameX = PAD + AVATAR_R * 2 + AVATAR_TO_NAME
-          const textH =
-            NAME_FONT_SIZE +
-            (layout.role ? NAME_TO_ROLE + layout.role.lines.length * layout.role.lineHeight : 0)
-          const nameBaselineY = identityTopY + (idH - textH) / 2 + NAME_FONT_SIZE
+          // 共用锚点：姓名的基线与头衔第一行的基线在每张卡上都相同，不随
+          // 这一张自己有没有头衔、头衔占几行而移动。
+          const nameBaselineY = identityTopY + identity.nameOffset
           const initialsInk = readableOn(inks.avatarFill)
           return (
             // 审计框挂在未平移的外层 g 上（同 people-cards.tsx）：叠在同一个
@@ -294,7 +313,7 @@ export const quoteWall: SvgComponent<QuoteWallComponent> = {
                     key={li}
                     data-truncated={layout.role!.truncated ? "1" : undefined}
                     x={nameX}
-                    y={nameBaselineY + NAME_TO_ROLE + li * layout.role!.lineHeight + layout.role!.fontSize}
+                    y={nameBaselineY + NAME_TO_ROLE + li * identity.roleLineHeight + layout.role!.fontSize}
                     fontSize={layout.role!.fontSize}
                     fill={inks.role}
                     fontFamily={ctx.fonts.body}

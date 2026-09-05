@@ -225,6 +225,43 @@ describe("quote_wall in a box it cannot draw in", () => {
 })
 
 describe("quote_wall speaker baseline", () => {
+  it("keeps one name baseline and one role baseline however many lines each role runs to", () => {
+    // The role is optional and its line count varies, and centring each
+    // card's own text block inside the shared band put these three names
+    // 23px apart — an offset that reached the exported DrawingML.
+    const mixed = {
+      type: "quote_wall" as const,
+      quotes: [
+        { text: "交付流程更清楚。", name: "宋海" },
+        { text: "跨团队协作更顺畅。", name: "李蔚", role: "运营负责人" },
+        {
+          text: "业务资料更容易找到。",
+          name: "赵沁",
+          role: "企业软件事业群客户成功总监与交付服务负责人",
+        },
+      ],
+    }
+    const { container } = svg(quoteWall.render(mixed, box, ctx))
+    const cards = Array.from(container.querySelectorAll("g[data-audit-box]"))
+    const nameYs = cards.map((card, i) =>
+      Array.from(card.querySelectorAll("text")).find((t) => t.textContent === mixed.quotes[i]!.name)!.getAttribute("y"),
+    )
+    expect(new Set(nameYs).size).toBe(1)
+    // The second card's only role line and the third card's first role line
+    // sit on the same baseline too.
+    const firstRoleYs = cards
+      .slice(1)
+      .map((card, i) =>
+        Array.from(card.querySelectorAll("text"))
+          .find((t) => mixed.quotes[i + 1]!.role!.startsWith(t.textContent!.slice(0, 3)) && t.textContent !== mixed.quotes[i + 1]!.name)!
+          .getAttribute("y"),
+      )
+    expect(new Set(firstRoleYs).size).toBe(1)
+    // And the avatar discs still share a centre.
+    const discYs = cards.map((card) => card.querySelector("circle")!.getAttribute("cy"))
+    expect(new Set(discYs).size).toBe(1)
+  })
+
   it("puts every card's rule and speaker on one baseline, whatever the remark runs to", () => {
     const uneven = {
       type: "quote_wall" as const,
