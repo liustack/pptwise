@@ -198,6 +198,15 @@ describe("decision_tree component", () => {
     }
   })
 
+  it("declines a box too narrow to hold three columns rather than printing stubs", () => {
+    const { container } = svg(decisionTree.render(routing, { x: 88, y: 96, w: 470 }, themed("brief")))
+    expect(container.querySelectorAll("rect")).toHaveLength(0)
+    expect(container.querySelectorAll("text")).toHaveLength(0)
+    const marker = container.querySelector("[data-dropped]")
+    expect(marker?.getAttribute("data-dropped")).toBe("1")
+    expect(marker?.getAttribute("data-dropped-kind")).toBe("component")
+  })
+
   it("stays inside the controlled SVG subset and passes the overflow auditor", () => {
     const markup = renderToStaticMarkup(
       <svg viewBox="0 0 1280 720">{decisionTree.render(tree(3, 3), { x: 40, y: 40, w: 1200 }, themed("terminal"))}</svg>,

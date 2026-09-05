@@ -253,7 +253,10 @@ export const COMPONENT_BUILDERS: Record<string, (lex: Lexicon) => Component> = {
   // read as a climb, wide enough that a tread still holds its own number.
   staircase: (lex) => ({
     type: "staircase",
-    items: slice(lex.labels, 4, 8).map((title, i) => ({
+    // `labels[0..3]`, not the segment names further along the pool: a
+    // staircase's levels differ in degree, and printing four industries as a
+    // climb would claim one industry sits above another.
+    items: slice(lex.labels, 4).map((title, i) => ({
       title,
       value: String(412 - i * 88),
       unit: lex.metrics[0]!.unit,
@@ -292,6 +295,10 @@ export const COMPONENT_BUILDERS: Record<string, (lex: Lexicon) => Component> = {
     })),
   }),
 
+  // Details come from `labels`, not `bullets`: the mixed track writes a bullet
+  // that opens with the same product name a phrase uses ("ArgoCD app-of-apps"
+  // and "ArgoCD app-of-apps 纳管 40 个 service"), so a card would have restated
+  // its own title one line down.
   decision_tree: (lex) => ({
     type: "decision_tree",
     question: lex.headings[12]!,
@@ -299,19 +306,19 @@ export const COMPONENT_BUILDERS: Record<string, (lex: Lexicon) => Component> = {
       {
         edge: "61%",
         title: lex.phrases[0]!,
-        detail: lex.labels[0]!,
+        detail: lex.labels[6]!,
         outcomes: [
-          { edge: "38%", title: lex.phrases[1]!, detail: lex.bullets[0]!, value: "4", unit: lex.periods[0] },
-          { edge: "62%", title: lex.phrases[2]!, detail: lex.bullets[1]!, value: "6", unit: lex.periods[0], recommended: true },
+          { edge: "38%", title: lex.phrases[1]!, detail: lex.labels[0]!, value: "4", unit: lex.periods[0] },
+          { edge: "62%", title: lex.phrases[2]!, detail: lex.labels[1]!, value: "6", unit: lex.periods[0], recommended: true },
         ],
       },
       {
         edge: "39%",
         title: lex.phrases[3]!,
-        detail: lex.labels[1]!,
+        detail: lex.labels[7]!,
         outcomes: [
-          { edge: "55%", title: lex.phrases[4]!, detail: lex.bullets[2]!, value: "9", unit: lex.periods[0] },
-          { edge: "45%", title: lex.phrases[5]!, detail: lex.bullets[3]!, value: "14", unit: lex.periods[0] },
+          { edge: "55%", title: lex.phrases[4]!, detail: lex.labels[2]!, value: "9", unit: lex.periods[0] },
+          { edge: "45%", title: lex.phrases[5]!, detail: lex.labels[3]!, value: "14", unit: lex.periods[0] },
         ],
       },
     ],

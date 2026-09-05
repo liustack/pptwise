@@ -178,7 +178,13 @@ const COMPONENT_KINDS: Record<Component["type"], PageKind> = {
   chevron_process: "process",
   swimlane: "process",
   journey_map: "process",
-  decision_tree: "hierarchy",
+  // `hierarchy` and `process` are both honest homes for a decision tree
+  // (skills/pptwise/references/components.md lists both). The gallery page
+  // takes the process one because a hierarchy face on several themes is a
+  // two-column layout, and half a slide is under the width the drawing
+  // declines at — the review would be looking at a blank page instead of the
+  // component.
+  decision_tree: "process",
   from_to: "comparison",
   hub_spoke: "hierarchy",
   rings: "hierarchy",

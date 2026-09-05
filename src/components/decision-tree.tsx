@@ -19,7 +19,8 @@ type DecisionTreeComponent = Extract<Component, { type: "decision_tree" }>
  *
  * 结局最多 9 个，9 行挤进一屏时每张卡只剩一行的高度——这时 detail 与
  * value 不是被悄悄截掉，而是整行退场并 `data-dropped` 声明，导出闸门会
- * 因此拦下这一页。
+ * 因此拦下这一页。窄到 MIN_W 以下（双栏脸的一半）时整幅退场，同样声明：
+ * 三列挤在 480px 里画出来的不是决策树，是一堆两个字的残句。
  */
 
 /**
@@ -36,6 +37,15 @@ const ROW_GAP = 10
 const COL_GAP = 46
 const CARD_MAX = 84
 const CARD_MIN = 32
+/**
+ * Narrower than this and the drawing stops being one.
+ *
+ * Three columns and two gutters share the width, so an outcome card gets
+ * barely half of it: at 480px a four-word ending is cut to two characters and
+ * a percentage on a line to a bare `%`. The tree declines the box instead —
+ * a page that says nothing is honest, a page that says "手三" is not.
+ */
+const MIN_W = 660
 /** Below this a card holds its title and nothing else. */
 const DETAIL_FLOOR = 62
 
@@ -304,6 +314,14 @@ export const decisionTree: SvgComponent<DecisionTreeComponent> = {
               {unit}
             </text>
           ) : null}
+        </g>
+      )
+    }
+
+    if (box.w < MIN_W) {
+      return (
+        <g transform={`translate(${box.x},${box.y})`}>
+          <DroppedContentMarker count={1} kind="component" />
         </g>
       )
     }
