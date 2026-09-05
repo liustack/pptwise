@@ -476,6 +476,13 @@ export const STORY_ZH: Readonly<Record<string, Partial<Record<DesignStoryField, 
     audience: "只会记住数字、其他什么都不会记住的满场听众。",
     notFor: "完成率，那属于 progress_donuts。",
   },
+  "component:logo_wall": {
+    name: "字标墙",
+    story: "四到十二个标识排在等大的格子里，有图用图、没图就把名字排成字标，全部一支墨。舞台后方立的那面赞助板。",
+    positioning: "一串名字本身就是论据、谁也不该比谁大时用它。每个名字都要配一句说明用 row_cards，图片是照片用 image_grid。",
+    audience: "在掂量还有谁已经点过头的观众。",
+    notFor: "会被裁进格子的照片，那属于 image_grid。",
+  },
   "component:matrix": {
     name: "矩阵",
     story: "带标签的两到九格网格，着色后靠位置而非顺序来读。轴标题可以标明列和行的含义。",

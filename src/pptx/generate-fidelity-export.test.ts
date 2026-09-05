@@ -362,6 +362,16 @@ const COMPONENT_BY_TYPE: Record<Component["type"], Component> = {
       { label: "Search" },
     ],
   },
+  logo_wall: {
+    type: "logo_wall",
+    title: "Customers",
+    items: [
+      { name: "Yunmi Technology", asset_id: "photo-a" },
+      { name: "星岚数据" },
+      { name: "Huitong Supply" },
+      { name: "明远教育" },
+    ],
+  },
   people_cards: {
     type: "people_cards",
     people: [

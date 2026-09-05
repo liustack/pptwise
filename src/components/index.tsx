@@ -12,6 +12,7 @@ import { renderDef as kpiRenderDef } from "./kpi"
 import { renderDef as imageRenderDef } from "./image"
 import { renderDef as imageGridRenderDef } from "./image-grid"
 import { renderDef as imageCompareRenderDef } from "./image-compare"
+import { renderDef as logoWallRenderDef } from "./logo-wall"
 import { renderDef as chartRenderDef } from "./chart"
 import { renderDef as flowchartRenderDef } from "./flowchart"
 import { renderDef as architectureRenderDef } from "./architecture"
@@ -77,6 +78,7 @@ const RENDER_DEFS: Record<ComponentType, RenderDef> = {
   image: imageRenderDef,
   image_grid: imageGridRenderDef,
   image_compare: imageCompareRenderDef,
+  logo_wall: logoWallRenderDef,
   chart: chartRenderDef,
   flowchart: flowchartRenderDef,
   architecture: architectureRenderDef,

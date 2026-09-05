@@ -199,6 +199,16 @@ const COVERAGE_ENTRIES: Record<string, unknown> = {
       { value: "72", label: "closure" },
     ],
   }),
+  // logo_wall's own hard check is the floor: three names are a sentence,
+  // not a wall.
+  "coverage/logo_wall-valid": minimalDeck({
+    type: "logo_wall",
+    items: [{ name: "Yunmi" }, { name: "Xinglan", asset_id: "mark-1" }, { name: "Huitong" }, { name: "Mingyuan" }],
+  }),
+  "coverage/logo_wall-tripwire": minimalDeck({
+    type: "logo_wall",
+    items: [{ name: "Yunmi" }, { name: "Xinglan" }, { name: "Huitong" }],
+  }),
   "coverage/progress_donuts-tripwire": minimalDeck({
     type: "progress_donuts",
     items: [

@@ -461,6 +461,15 @@ export const COMPONENT_BUILDERS: Record<string, (lex: Lexicon) => Component> = {
   // ── Images ─────────────────────────────────────────────────────────────
   image: (lex) => ({ type: "image", asset_id: PHOTO_ASSETS[0], caption: lex.captions[0], fit: "cover" }),
 
+  // Every tile a wordmark, no assets: the ordinary logo wall is a set of
+  // names an author has permission to print, and the corpus has no client
+  // marks to print. The asset path is covered by the component's own tests.
+  logo_wall: (lex) => ({
+    type: "logo_wall",
+    title: lex.kickers[1],
+    items: slice(lex.orgs, 12).map((name) => ({ name })),
+  }),
+
   image_grid: (lex) => ({
     type: "image_grid",
     emphasis: "first",

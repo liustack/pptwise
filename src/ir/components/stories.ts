@@ -31,6 +31,7 @@ import * as paragraph from "./paragraph"
 import * as peopleCards from "./people-cards"
 import * as pest from "./pest"
 import * as progressDonuts from "./progress-donuts"
+import * as logoWall from "./logo-wall"
 import * as rings from "./rings"
 import * as roadmap from "./roadmap"
 import * as rowCards from "./row-cards"
@@ -95,6 +96,7 @@ const COMPONENT_STORY_MODULES: Readonly<Record<string, ComponentStoryModule>> = 
   people_cards: peopleCards,
   pest,
   progress_donuts: progressDonuts,
+  logo_wall: logoWall,
   rings,
   roadmap,
   row_cards: rowCards,

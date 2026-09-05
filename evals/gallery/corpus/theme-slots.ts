@@ -16,7 +16,7 @@ import type { Lexicon } from "./lexicon"
  * does not silently get absorbed without a human adding it here.
  */
 export const THEME_TABLE_REQUIRED_SURFACES = [
-  // 43 IR types, COMPONENT_BUILDERS key order
+  // 44 IR types, COMPONENT_BUILDERS key order
   "paragraph",
   "bullets",
   "blockquote",
@@ -59,6 +59,7 @@ export const THEME_TABLE_REQUIRED_SURFACES = [
   "image",
   "image_grid",
   "image_compare",
+  "logo_wall",
   "device_mockup",
   // 9 chart subtypes + horizontal bar
   "chart:bar",
@@ -132,7 +133,7 @@ export const THEME_CONTENT_SLOTS: Record<string, readonly ThemeContentSlot[]> = 
   lecture: [chart("area"), slot("timeline"), slot("bmc"), slot("bullets"), slot("image_grid"), slot("matrix"), slot("paragraph")],
   luxe: [slot("progress_donuts"), slot("swot"), slot("gantt"), slot("blockquote"), slot("device_mockup"), slot("flowchart"), slot("timeline")],
   memo: [chart("donut"), slot("paragraph"), slot("icon_cards"), slot("pest"), slot("blockquote"), slot("rings"), slot("waterfall")],
-  museum: [slot("cycle"), slot("kpi_cards"), slot("bullets"), slot("heatmap"), slot("people_cards"), slot("callout"), slot("architecture")],
+  museum: [slot("cycle"), slot("kpi_cards"), slot("bullets"), slot("heatmap"), slot("people_cards"), slot("logo_wall"), slot("architecture")],
   playbill: [slot("image_grid"), slot("data_table"), slot("callout"), slot("steps"), slot("five_forces"), slot("image"), slot("row_cards")],
   clinic: [slot("numbered_cards"), slot("comparison"), slot("sankey"), slot("people_cards"), slot("image_compare"), slot("architecture"), slot("swimlane")],
   runway: [slot("steps"), slot("data_table"), slot("callout"), slot("image_grid"), slot("chevron_process"), slot("verdict_banner"), slot("gantt")],

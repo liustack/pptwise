@@ -1469,6 +1469,11 @@ const MUTED_SURFACE_CLASS: Record<string, MutedSurfaceClass> = {
   // badge's own filled circle, out of this map's scope entirely, same
   // posture as steps.tsx's numbered badge digit.
   people_cards: "flat-surface",
+  // logo-wall.tsx sets every wordmark in one ink — `accessibleInk(
+  // colors.muted, pageBg, 24)` — directly on the ambient page background,
+  // the same shape as timeline's. Its only other paint is the row hairline
+  // (`colors.border`), a rect and not a text fill.
+  logo_wall: "page-bg",
   // hub-spoke.tsx's only `colors.muted` text is each element's one-line
   // description, drawn inside the element's own `colors.surface`-filled
   // capsule through `accessibleInk(colors.muted, colors.surface, …)` — the

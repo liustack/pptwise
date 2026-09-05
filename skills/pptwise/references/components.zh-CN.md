@@ -40,6 +40,7 @@ mirror_of: skills/pptwise/references/components.md
 | `image` | `photo`, `evidence` |
 | `image_grid` | `photo`, `list` |
 | `image_compare` | `comparison`, `evidence` |
+| `logo_wall` | `list` |
 | `swot` | `comparison` |
 | `bmc` | `hierarchy` |
 | `waterfall` | `data`, `process` |
@@ -74,6 +75,8 @@ mirror_of: skills/pptwise/references/components.md
 - 带宽承载数量并发生分支与汇合时用 `sankey`：宽度即论据，缺口显示未核算的流量。分支表达决策而非数量时用 `flowchart`。
 - 需要逐行读取精确值时用 `data_table`，需要一眼看懂数值形态时用 `chart`，定性属性对照用 `comparison`。
 - 一个值对一个目标用 `chart` 内的 `gauge`，多个完成度百分比用 `progress_donuts`，一个或多个独立头条数字用 `kpi_cards`。
+
+- `logo_wall` 用在一串组织名字本身就是论据、每个名字权重相同时。照片用 `image_grid`，每个名字都要配一句说明用 `row_cards`。
 
 `architecture.layers` 默认从上向下绘制。作者按基座优先的顺序写作时，设置 `direction: "bottom_up"`，不要手工倒置数组。
 

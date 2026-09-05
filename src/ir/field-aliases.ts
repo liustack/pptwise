@@ -75,6 +75,7 @@ import { aliases as swimlaneAliases } from "./components/swimlane"
 import { aliases as journeyMapAliases } from "./components/journey-map"
 import { aliases as decisionTreeAliases } from "./components/decision-tree"
 import { aliases as fromToAliases } from "./components/from-to"
+import { aliases as logoWallAliases } from "./components/logo-wall"
 
 /** One component type's `{ aliasKey: canonicalKey }` map. */
 export type FieldAliasMap = Readonly<Record<string, string>>
@@ -219,6 +220,9 @@ export const COMPONENT_ITEM_FIELD_ALIASES: Readonly<Record<string, readonly Item
   // The same before/after slip one level down, plus the generic
   // title-for-label and "delta" for the change the row shows.
   from_to: fromToAliases.items,
+  // The three names an author reaches for on a wall of organizations, plus
+  // the `image_id` spelling every image-bearing component attracts.
+  logo_wall: logoWallAliases.items,
 }
 
 /**

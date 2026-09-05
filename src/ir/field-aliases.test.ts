@@ -588,6 +588,42 @@ const ITEM_CASES: readonly ItemCase[] = [
     expected: "invoices and dunning",
   },
   {
+    type: "logo_wall",
+    itemsKey: "items",
+    alias: "label",
+    canonical: "name",
+    item: { label: "Yunmi" },
+    pad: [{ name: "Xinglan" }, { name: "Huitong" }, { name: "Mingyuan" }],
+    expected: "Yunmi",
+  },
+  {
+    type: "logo_wall",
+    itemsKey: "items",
+    alias: "title",
+    canonical: "name",
+    item: { title: "Yunmi" },
+    pad: [{ name: "Xinglan" }, { name: "Huitong" }, { name: "Mingyuan" }],
+    expected: "Yunmi",
+  },
+  {
+    type: "logo_wall",
+    itemsKey: "items",
+    alias: "org",
+    canonical: "name",
+    item: { org: "Yunmi" },
+    pad: [{ name: "Xinglan" }, { name: "Huitong" }, { name: "Mingyuan" }],
+    expected: "Yunmi",
+  },
+  {
+    type: "logo_wall",
+    itemsKey: "items",
+    alias: "image_id",
+    canonical: "asset_id",
+    item: { name: "Yunmi", image_id: "mark-1" },
+    pad: [{ name: "Xinglan" }, { name: "Huitong" }, { name: "Mingyuan" }],
+    expected: "mark-1",
+  },
+  {
     type: "progress_donuts",
     itemsKey: "items",
     alias: "title",
@@ -920,7 +956,7 @@ describe("COMPONENT_ITEM_FIELD_ALIASES: every row round-trips", () => {
 // ── total pair count pinned (docs/changeset "53 total synonym pairs") ──────
 
 describe("total synonym-pair count", () => {
-  it("COMPONENT_FIELD_ALIASES + COMPONENT_ITEM_FIELD_ALIASES flatten to exactly 99 pairs", () => {
+  it("COMPONENT_FIELD_ALIASES + COMPONENT_ITEM_FIELD_ALIASES flatten to exactly 103 pairs", () => {
     // The "covers every row exactly once" completeness guards above only
     // prove BLOCK_CASES/ITEM_CASES stay in lockstep with each table's own
     // rows — a row deleted from a table *and* its matching test case would
@@ -937,7 +973,7 @@ describe("total synonym-pair count", () => {
       (n, specs) => n + specs.reduce((m, spec) => m + Object.keys(spec.aliases).length, 0),
       0,
     )
-    expect(blockCount + itemCount).toBe(99)
+    expect(blockCount + itemCount).toBe(103)
   })
 })
 

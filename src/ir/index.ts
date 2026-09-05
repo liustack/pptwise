@@ -56,6 +56,7 @@ import { schema as verdictBannerSchema } from "./components/verdict-banner"
 import { schema as imageSchema } from "./components/image"
 import { schema as imageGridSchema } from "./components/image-grid"
 import { schema as imageCompareSchema } from "./components/image-compare"
+import { schema as logoWallSchema } from "./components/logo-wall"
 import { schema as swotSchema } from "./components/swot"
 import { schema as bmcSchema } from "./components/bmc"
 import { schema as waterfallSchema } from "./components/waterfall"
@@ -314,6 +315,7 @@ const ComponentSchema = z.discriminatedUnion("type", [
   imageSchema,
   imageGridSchema,
   imageCompareSchema,
+  logoWallSchema,
   swotSchema,
   bmcSchema,
   waterfallSchema,
