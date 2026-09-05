@@ -208,6 +208,24 @@ const COVERAGE_ENTRIES: Record<string, unknown> = {
   }),
   // staircase's own hard check is the level-count floor: two treads read as
   // a comparison, not a climb.
+  // decision_tree's own hard check is the single recommendation: two filled
+  // outcomes read as two answers to one question.
+  "coverage/decision_tree-valid": minimalDeck({
+    type: "decision_tree",
+    question: "Buy or build?",
+    branches: [
+      { edge: "buy", title: "Licence it", outcomes: [{ title: "Standard tier" }, { title: "Enterprise tier", recommended: true }] },
+      { edge: "build", title: "Build it", outcomes: [{ title: "One team" }, { title: "Two teams" }] },
+    ],
+  }),
+  "coverage/decision_tree-tripwire": minimalDeck({
+    type: "decision_tree",
+    question: "Buy or build?",
+    branches: [
+      { edge: "buy", title: "Licence it", outcomes: [{ title: "Standard tier" }, { title: "Enterprise tier", recommended: true }] },
+      { edge: "build", title: "Build it", outcomes: [{ title: "One team", recommended: true }, { title: "Two teams" }] },
+    ],
+  }),
   // journey_map's own hard check is the 1-5 emotion domain: a curve is only
   // a curve when every stage scores on the same scale.
   "coverage/journey_map-valid": minimalDeck({

@@ -42,6 +42,7 @@ import { traits as staircaseTraits } from "@/ir/components/staircase"
 import { traits as chevronProcessTraits } from "@/ir/components/chevron-process"
 import { traits as swimlaneTraits } from "@/ir/components/swimlane"
 import { traits as journeyMapTraits } from "@/ir/components/journey-map"
+import { traits as decisionTreeTraits } from "@/ir/components/decision-tree"
 
 /**
  * Component trait registry (W2 task 5, spec §3/§6/§8 — re-derived as a pure
@@ -161,6 +162,7 @@ const ALL_TRAITS: Record<ComponentType, ComponentTraits> = {
   chevron_process: chevronProcessTraits,
   swimlane: swimlaneTraits,
   journey_map: journeyMapTraits,
+  decision_tree: decisionTreeTraits,
 }
 
 /** Every component type whose own domain-file `traits` declares `trait: true`, collected as a `ReadonlySet`. */

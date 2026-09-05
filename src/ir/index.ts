@@ -75,6 +75,7 @@ import { schema as staircaseSchema } from "./components/staircase"
 import { schema as chevronProcessSchema } from "./components/chevron-process"
 import { schema as swimlaneSchema } from "./components/swimlane"
 import { schema as journeyMapSchema } from "./components/journey-map"
+import { schema as decisionTreeSchema } from "./components/decision-tree"
 
 // Re-exported so IR, spec, theme menus, and public tooling share one exact
 // semantic vocabulary instead of maintaining independent string unions.
@@ -332,6 +333,7 @@ const ComponentSchema = z.discriminatedUnion("type", [
   chevronProcessSchema,
   swimlaneSchema,
   journeyMapSchema,
+  decisionTreeSchema,
 ], { error: componentTypeError })
 
 /**

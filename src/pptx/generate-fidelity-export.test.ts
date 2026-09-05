@@ -284,6 +284,29 @@ const COMPONENT_BY_TYPE: Record<Component["type"], Component> = {
       { value: "72%", label: "closure" },
     ],
   },
+  decision_tree: {
+    type: "decision_tree",
+    question: "Does the customer already run a data platform?",
+    branches: [
+      {
+        edge: "already runs one",
+        title: "Talk to their API",
+        detail: "reuses their permissions",
+        outcomes: [
+          { edge: "38%", title: "Straight to production", detail: "peak risk theirs", value: "4", unit: "weeks" },
+          { edge: "62%", title: "One cache in between", value: "6", unit: "weeks", recommended: true },
+        ],
+      },
+      {
+        edge: "runs none",
+        title: "Host it for them",
+        outcomes: [
+          { edge: "55%", title: "Standard hosting", value: "9", unit: "weeks" },
+          { edge: "45%", title: "Hosting plus build", value: "14", unit: "weeks" },
+        ],
+      },
+    ],
+  },
   journey_map: {
     type: "journey_map",
     stages: [

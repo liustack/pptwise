@@ -73,6 +73,7 @@ import { aliases as staircaseAliases } from "./components/staircase"
 import { aliases as chevronProcessAliases } from "./components/chevron-process"
 import { aliases as swimlaneAliases } from "./components/swimlane"
 import { aliases as journeyMapAliases } from "./components/journey-map"
+import { aliases as decisionTreeAliases } from "./components/decision-tree"
 
 /** One component type's `{ aliasKey: canonicalKey }` map. */
 export type FieldAliasMap = Readonly<Record<string, string>>
@@ -127,6 +128,12 @@ export const COMPONENT_FIELD_ALIASES: Readonly<Record<string, FieldAliasMap>> = 
   // hub_spoke's center concept is the one field a model reaches past: every
   // other card-like component in this IR calls its lead string `title`.
   hub_spoke: hubSpokeAliases.block,
+  // decision_tree names its root string after what it is — a question — and
+  // its child array after what the lines out of it are. A model reaches for
+  // the generic `title` for the first, "decision" for the component's own
+  // subject, and "options" for the branches, by analogy to a multiple-choice
+  // question rather than to a tree.
+  decision_tree: decisionTreeAliases.block,
 }
 
 /** One component type's item-array field aliases: which array to walk, and the alias map applied to each item object in it. */
@@ -201,6 +208,9 @@ export const COMPONENT_ITEM_FIELD_ALIASES: Readonly<Record<string, readonly Item
   // vocabulary rather than plain English: "channels" for touchpoints,
   // "behaviour"/"behavior" for the action.
   journey_map: journeyMapAliases.items,
+  // A branch is a card whose one unusual field is `edge`, the condition on
+  // the line into it — "condition" is the word a model reaches for.
+  decision_tree: decisionTreeAliases.items,
 }
 
 /**

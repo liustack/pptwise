@@ -10,6 +10,7 @@ import * as code from "./code"
 import * as comparison from "./comparison"
 import * as cycle from "./cycle"
 import * as dataTable from "./data-table"
+import * as decisionTree from "./decision-tree"
 import * as deviceMockup from "./device-mockup"
 import * as fiveForces from "./five-forces"
 import * as flowchart from "./flowchart"
@@ -73,6 +74,7 @@ const COMPONENT_STORY_MODULES: Readonly<Record<string, ComponentStoryModule>> = 
   comparison,
   cycle,
   data_table: dataTable,
+  decision_tree: decisionTree,
   device_mockup: deviceMockup,
   five_forces: fiveForces,
   flowchart,

@@ -1515,6 +1515,12 @@ const MUTED_SURFACE_CLASS: Record<string, MutedSurfaceClass> = {
   // the ambient page background, routed through `accessibleInk` against it.
   // The pills and the opportunity cards carry `colors.text`, not muted.
   journey_map: "page-bg",
+  // decision-tree.tsx paints `colors.muted` in two places: the condition on
+  // each edge, which sits on the ambient page background, and a card's detail
+  // line and unit, which sit on the unblended `colors.surface` card fill.
+  // The one recommended card reverses both to `colors.surface` instead, so
+  // muted never lands on it.
+  decision_tree: "flat-surface",
 }
 
 describe("colors.muted component-type coverage (task-2 fix round, backlog 5a completeness sweep)", () => {

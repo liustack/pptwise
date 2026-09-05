@@ -28,6 +28,12 @@ interface BlockCase {
 }
 
 const BLOCK_CASES: readonly BlockCase[] = [
+  // decision_tree: the root question is the field a model most often names
+  // after the component ("decision"), and its branch array is the one it
+  // calls "options" by analogy to a multiple-choice question.
+  { type: "decision_tree", alias: "title", canonical: "question", component: { type: "decision_tree", title: "Buy or build?", branches: [{ edge: "buy", title: "Licence it", outcomes: [{ title: "Standard" }, { title: "Enterprise" }] }, { edge: "build", title: "Build it", outcomes: [{ title: "One team" }, { title: "Two teams" }] }] }, expected: "Buy or build?" },
+  { type: "decision_tree", alias: "decision", canonical: "question", component: { type: "decision_tree", decision: "Buy or build?", branches: [{ edge: "buy", title: "Licence it", outcomes: [{ title: "Standard" }, { title: "Enterprise" }] }, { edge: "build", title: "Build it", outcomes: [{ title: "One team" }, { title: "Two teams" }] }] }, expected: "Buy or build?" },
+  { type: "decision_tree", alias: "options", canonical: "branches", component: { type: "decision_tree", question: "Buy or build?", options: [{ edge: "buy", title: "Licence it", outcomes: [{ title: "Standard" }, { title: "Enterprise" }] }, { edge: "build", title: "Build it", outcomes: [{ title: "One team" }, { title: "Two teams" }] }] }, expected: [{ edge: "buy", title: "Licence it", outcomes: [{ title: "Standard" }, { title: "Enterprise" }] }, { edge: "build", title: "Build it", outcomes: [{ title: "One team" }, { title: "Two teams" }] }] },
   { type: "blockquote", alias: "content", canonical: "text", component: { type: "blockquote", content: "hello" }, expected: "hello" },
   { type: "blockquote", alias: "author", canonical: "attribution", component: { type: "blockquote", text: "hi", author: "Ada" }, expected: "Ada" },
   { type: "blockquote", alias: "by", canonical: "attribution", component: { type: "blockquote", text: "hi", by: "Ada" }, expected: "Ada" },
@@ -789,6 +795,46 @@ const ITEM_CASES: readonly ItemCase[] = [
     extra: { lanes: [{ label: "Success" }, { label: "Delivery" }] },
     expected: "2 days",
   },
+  {
+    type: "decision_tree",
+    itemsKey: "branches",
+    alias: "label",
+    canonical: "title",
+    item: { edge: "buy", label: "Licence it", outcomes: [{ title: "Standard" }, { title: "Enterprise" }] },
+    pad: [{ edge: "build", title: "Build it", outcomes: [{ title: "One team" }, { title: "Two teams" }] }],
+    extra: { question: "Buy or build?" },
+    expected: "Licence it",
+  },
+  {
+    type: "decision_tree",
+    itemsKey: "branches",
+    alias: "name",
+    canonical: "title",
+    item: { edge: "buy", name: "Licence it", outcomes: [{ title: "Standard" }, { title: "Enterprise" }] },
+    pad: [{ edge: "build", title: "Build it", outcomes: [{ title: "One team" }, { title: "Two teams" }] }],
+    extra: { question: "Buy or build?" },
+    expected: "Licence it",
+  },
+  {
+    type: "decision_tree",
+    itemsKey: "branches",
+    alias: "condition",
+    canonical: "edge",
+    item: { condition: "buy", title: "Licence it", outcomes: [{ title: "Standard" }, { title: "Enterprise" }] },
+    pad: [{ edge: "build", title: "Build it", outcomes: [{ title: "One team" }, { title: "Two teams" }] }],
+    extra: { question: "Buy or build?" },
+    expected: "buy",
+  },
+  {
+    type: "decision_tree",
+    itemsKey: "branches",
+    alias: "desc",
+    canonical: "detail",
+    item: { edge: "buy", title: "Licence it", desc: "one contract", outcomes: [{ title: "Standard" }, { title: "Enterprise" }] },
+    pad: [{ edge: "build", title: "Build it", outcomes: [{ title: "One team" }, { title: "Two teams" }] }],
+    extra: { question: "Buy or build?" },
+    expected: "one contract",
+  },
 ]
 
 describe("COMPONENT_ITEM_FIELD_ALIASES: every row round-trips", () => {
@@ -818,7 +864,7 @@ describe("COMPONENT_ITEM_FIELD_ALIASES: every row round-trips", () => {
 // ── total pair count pinned (docs/changeset "53 total synonym pairs") ──────
 
 describe("total synonym-pair count", () => {
-  it("COMPONENT_FIELD_ALIASES + COMPONENT_ITEM_FIELD_ALIASES flatten to exactly 84 pairs", () => {
+  it("COMPONENT_FIELD_ALIASES + COMPONENT_ITEM_FIELD_ALIASES flatten to exactly 91 pairs", () => {
     // The "covers every row exactly once" completeness guards above only
     // prove BLOCK_CASES/ITEM_CASES stay in lockstep with each table's own
     // rows — a row deleted from a table *and* its matching test case would
@@ -835,7 +881,7 @@ describe("total synonym-pair count", () => {
       (n, specs) => n + specs.reduce((m, spec) => m + Object.keys(spec.aliases).length, 0),
       0,
     )
-    expect(blockCount + itemCount).toBe(84)
+    expect(blockCount + itemCount).toBe(91)
   })
 })
 
