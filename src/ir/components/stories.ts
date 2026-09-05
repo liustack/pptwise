@@ -39,7 +39,6 @@ import * as staircase from "./staircase"
 import * as steps from "./steps"
 import * as swimlane from "./swimlane"
 import * as swot from "./swot"
-import * as tagRow from "./tag-row"
 import * as timeline from "./timeline"
 import * as verdictBanner from "./verdict-banner"
 import * as waterfall from "./waterfall"
@@ -104,7 +103,6 @@ const COMPONENT_STORY_MODULES: Readonly<Record<string, ComponentStoryModule>> = 
   steps,
   swimlane,
   swot,
-  tag_row: tagRow,
   timeline,
   verdict_banner: verdictBanner,
   waterfall,

@@ -82,19 +82,14 @@ describe("validateIr", () => {
     expect(v.errors[0]!.message).not.toMatch(/migrate|was removed/i)
   })
 
-  it("hard-rejects leftover logo_wall without pointing at a removed migration command", () => {
+  it("hard-rejects leftover tag_row without pointing at a removed migration command", () => {
     const v = validateIr({
       theme: { id: "brief" },
       slides: [
         {
           kind: "points",
           heading: "x",
-          components: [
-            {
-              type: "logo_wall",
-              items: [{ asset_id: "a" }, { asset_id: "b" }, { asset_id: "c" }, { asset_id: "d" }],
-            },
-          ],
+          components: [{ type: "tag_row", items: ["Go", "Kafka"] }],
         },
       ],
     })
@@ -102,7 +97,7 @@ describe("validateIr", () => {
     const message = v.errors.map((e) => e.message).join("\n")
     expect(message).toMatch(/removed/)
     expect(message).not.toMatch(/pptwise migrate/)
-    expect(message).toMatch(/image_grid/)
+    expect(message).toMatch(/bullets or icon_cards/)
   })
 
   it("hard-rejects the removed citation component and says where a source goes", () => {
@@ -2494,24 +2489,6 @@ describe("irJsonSchema", () => {
     expect(json).toContain("the ring form of pie")
     // the distinctive gauge-vs-kpi_cards redirect
     expect(json).toContain("never a row of gauges")
-  })
-
-  // tag_row wave (`.issues/2026-08-06-tag-row/plan.md`, 裁定 3): the whole
-  // point of this component is the selection boundary the model reads (short
-  // nominal labels vs bullets/row_cards prose) — lock that the boundary
-  // survives into the emitted JSON Schema, same as every component wave since
-  // device_mockup's Important-1 established the precedent.
-  it("surfaces tag_row's component-selection guidance (labels-not-sentences boundary + the bullets/row_cards redirects)", () => {
-    const json = JSON.stringify(irJsonSchema())
-    expect(json).toContain("wrapping row")
-    expect(json).toContain("a name, not a sentence")
-    expect(json).toContain("If each item carries its own descriptive text")
-  })
-
-  it("surfaces tag_row's item-level length guidance (the ≤24-char nominal-label contract)", () => {
-    const json = JSON.stringify(irJsonSchema())
-    expect(json).toContain("One short, nominal label")
-    expect(json).toContain("Not a sentence and not a described item")
   })
 
   it("surfaces the deck branding enum (full / cover-only / minimal)", () => {

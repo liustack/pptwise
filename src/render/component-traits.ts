@@ -35,7 +35,6 @@ import { traits as dataTableTraits } from "@/ir/components/data-table"
 import { traits as deviceMockupTraits } from "@/ir/components/device-mockup"
 import { traits as cycleTraits } from "@/ir/components/cycle"
 import { traits as peopleCardsTraits } from "@/ir/components/people-cards"
-import { traits as tagRowTraits } from "@/ir/components/tag-row"
 import { traits as hubSpokeTraits } from "@/ir/components/hub-spoke"
 import { traits as progressDonutsTraits } from "@/ir/components/progress-donuts"
 import { traits as staircaseTraits } from "@/ir/components/staircase"
@@ -156,7 +155,6 @@ const ALL_TRAITS: Record<ComponentType, ComponentTraits> = {
   device_mockup: deviceMockupTraits,
   cycle: cycleTraits,
   people_cards: peopleCardsTraits,
-  tag_row: tagRowTraits,
   hub_spoke: hubSpokeTraits,
   progress_donuts: progressDonutsTraits,
   staircase: staircaseTraits,

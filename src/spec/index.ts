@@ -382,11 +382,11 @@ function checkFocusVocabulary(spec: DeckSpec): SpecValidationIssue[] {
   const errors: SpecValidationIssue[] = []
   spec.pages.forEach((page, i) => {
     if (page.focus === undefined) return
-    if (page.focus === "logo_wall") {
+    if (page.focus === "tag_row") {
       errors.push({
         path: `pages.${i}.focus`,
         pageId: page.id,
-        message: 'component type "logo_wall" is not in the current vocabulary — use "image_grid"',
+        message: 'component type "tag_row" was removed — short labels belong in bullets or icon_cards',
       })
       return
     }

@@ -1469,18 +1469,6 @@ const MUTED_SURFACE_CLASS: Record<string, MutedSurfaceClass> = {
   // badge's own filled circle, out of this map's scope entirely, same
   // posture as steps.tsx's numbered badge digit.
   people_cards: "flat-surface",
-  // tag_row wave (`.issues/2026-08-06-tag-row/plan.md`): tag-row.tsx renders
-  // no `colors.muted` text at all. A default pill is `colors.surface` fill +
-  // `colors.text` ink (the same audited text-on-surface pair as the
-  // flat-surface entries above, ≥7.78:1 on all 16 themes), an `emphasis:
-  // "first"` pill is `colors.accent` fill + `readableOn(accent)` ink
-  // (≥5.10:1 on all 16 themes by construction), and the optional title
-  // renders `colors.text` on the page background. Each pill is an opaque
-  // rect, so `deck-audit`'s area-unrestricted `PaintedShape` attribution
-  // (defect-A) measures each label against its own pill fill — never a
-  // mid-gray or a `colors.muted`. The default pill's hairline is a `stroke`
-  // (`cardStroke`/`border`/a surface→text blend), never a `<text>` fill.
-  tag_row: "no-muted-fill",
   // hub-spoke.tsx's only `colors.muted` text is each element's one-line
   // description, drawn inside the element's own `colors.surface`-filled
   // capsule through `accessibleInk(colors.muted, colors.surface, …)` — the

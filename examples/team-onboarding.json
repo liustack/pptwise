@@ -34,14 +34,12 @@
       "heading": "The stack you'll touch",
       "components": [
         {
-          "type": "tag_row",
-          "title": "Core",
-          "items": ["Go", "PostgreSQL", "Kafka", "Kubernetes", "Terraform", "Grafana", "ArgoCD"],
-          "emphasis": "first"
+          "type": "bullets",
+          "items": ["Go and PostgreSQL behind every service", "Kafka for anything that crosses a team", "Kubernetes and Terraform for the platform", "Grafana and ArgoCD for shipping and watching"]
         },
         {
           "type": "paragraph",
-          "text": "Everything deploys through the same pipeline. If a tool is not on this row, ask before adding it."
+          "text": "Everything deploys through the same pipeline. If a tool is not on this list, ask before adding it."
         }
       ]
     },

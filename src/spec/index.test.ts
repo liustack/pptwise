@@ -249,18 +249,19 @@ describe("deck spec hard gates", () => {
     expect(text).toContain('"source" field')
   })
 
-  it("rejects logo_wall and banner-heading focus without a migrate pointer", () => {
-    const logoWall = validateSpec(
+  it("rejects a tag_row focus and points at bullets or icon_cards", () => {
+    const result = validateSpec(
       valid({
-        pages: [cover(), content("a", { focus: "logo_wall" }), content("b"), content("c"), content("d"), ending()],
+        pages: [cover(), content("a", { focus: "tag_row" }), content("b"), content("c"), content("d"), ending()],
       }),
     )
-    expect(logoWall.ok).toBe(false)
-    const logoText = formatSpecIssues(logoWall.errors)
-    expect(logoText).toContain("logo_wall")
-    expect(logoText).toContain("image_grid")
-    expect(logoText).not.toMatch(/pptwise migrate/)
+    expect(result.ok).toBe(false)
+    const text = formatSpecIssues(result.errors)
+    expect(text).toContain('"tag_row" was removed')
+    expect(text).toContain("bullets or icon_cards")
+  })
 
+  it("rejects a banner-heading focus without a migrate pointer", () => {
     const banner = validateSpec(
       valid({
         pages: [cover(), content("a", { focus: "banner-heading" }), content("b"), content("c"), content("d"), ending()],

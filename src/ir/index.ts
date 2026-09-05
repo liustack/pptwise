@@ -68,7 +68,6 @@ import { schema as dataTableSchema } from "./components/data-table"
 import { schema as deviceMockupSchema } from "./components/device-mockup"
 import { schema as cycleSchema } from "./components/cycle"
 import { schema as peopleCardsSchema } from "./components/people-cards"
-import { schema as tagRowSchema } from "./components/tag-row"
 import { schema as hubSpokeSchema } from "./components/hub-spoke"
 import { schema as progressDonutsSchema } from "./components/progress-donuts"
 import { schema as staircaseSchema } from "./components/staircase"
@@ -327,7 +326,6 @@ const ComponentSchema = z.discriminatedUnion("type", [
   deviceMockupSchema,
   cycleSchema,
   peopleCardsSchema,
-  tagRowSchema,
   hubSpokeSchema,
   progressDonutsSchema,
   staircaseSchema,

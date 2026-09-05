@@ -144,4 +144,22 @@ describe("component namespace in IR v5", () => {
     expect(message).toMatch(/"citation" was removed/)
     expect(message).toMatch(/"source" field/)
   })
+
+  it("rejects the removed tag_row component and says where short labels belong", () => {
+    const result = parsePptxIR(
+      deck([
+        {
+          type: "content",
+          kind: "list",
+          heading: "The stack you will touch",
+          components: [{ type: "tag_row", items: ["Go", "Kafka"] }],
+        },
+      ]),
+    )
+
+    expect(result.success).toBe(false)
+    const message = result.success ? "" : result.error
+    expect(message).toMatch(/"tag_row" was removed/)
+    expect(message).toMatch(/bullets or icon_cards/)
+  })
 })

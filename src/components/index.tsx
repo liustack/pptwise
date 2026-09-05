@@ -38,7 +38,6 @@ import { renderDef as dataTableRenderDef } from "./data-table"
 import { renderDef as deviceMockupRenderDef } from "./device-mockup"
 import { renderDef as cycleRenderDef } from "./cycle"
 import { renderDef as peopleCardsRenderDef } from "./people-cards"
-import { renderDef as tagRowRenderDef } from "./tag-row"
 import { renderDef as hubSpokeRenderDef } from "./hub-spoke"
 import { renderDef as progressDonutsRenderDef } from "./progress-donuts"
 import { renderDef as staircaseRenderDef } from "./staircase"
@@ -104,7 +103,6 @@ const RENDER_DEFS: Record<ComponentType, RenderDef> = {
   device_mockup: deviceMockupRenderDef,
   cycle: cycleRenderDef,
   people_cards: peopleCardsRenderDef,
-  tag_row: tagRowRenderDef,
   hub_spoke: hubSpokeRenderDef,
   progress_donuts: progressDonutsRenderDef,
   staircase: staircaseRenderDef,

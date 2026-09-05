@@ -91,8 +91,8 @@ export function componentTypeError(issue: z.core.$ZodRawIssue<z.core.$ZodIssueIn
     issue.discriminator && typeof issue.input === "object" && issue.input !== null
       ? (issue.input as Record<string, unknown>)[issue.discriminator]
       : undefined
-  if (raw === "logo_wall") {
-    return 'component type "logo_wall" was removed — use "image_grid" instead'
+  if (raw === "tag_row") {
+    return 'component type "tag_row" was removed — short labels belong in bullets or icon_cards'
   }
   if (raw === "citation") {
     return 'component type "citation" was removed — a reference list is document content, not slide content. Name a source on the component that rests on it, in its own "source" field'
