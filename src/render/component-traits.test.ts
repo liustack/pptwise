@@ -34,6 +34,12 @@ import { traits as sankeyTraits } from "@/ir/components/sankey"
 import { traits as dataTableTraits } from "@/ir/components/data-table"
 import { traits as deviceMockupTraits } from "@/ir/components/device-mockup"
 import { traits as progressDonutsTraits } from "@/ir/components/progress-donuts"
+import { traits as orgTreeTraits } from "@/ir/components/org-tree"
+import { traits as issueTreeTraits } from "@/ir/components/issue-tree"
+import { traits as pyramidTraits } from "@/ir/components/pyramid"
+import { traits as icebergTraits } from "@/ir/components/iceberg"
+import { traits as pillarModelTraits } from "@/ir/components/pillar-model"
+import { traits as valueChainTraits } from "@/ir/components/value-chain"
 import {
   EVIDENCE_TYPES,
   FULL_BODY_TYPES,
@@ -93,6 +99,12 @@ const DOMAIN_FILE_TRAITS: readonly (readonly [string, { readonly evidence: boole
   ["data_table", dataTableTraits],
   ["device_mockup", deviceMockupTraits],
   ["progress_donuts", progressDonutsTraits],
+  ["org_tree", orgTreeTraits],
+  ["issue_tree", issueTreeTraits],
+  ["pyramid", pyramidTraits],
+  ["iceberg", icebergTraits],
+  ["pillar_model", pillarModelTraits],
+  ["value_chain", valueChainTraits],
 ]
 
 /**
@@ -205,7 +217,27 @@ describe("PASSTHROUGH_SHELL_TYPES equivalence (was content-bento-panel.tsx:134-1
     // element, same self-framed-node family — third and last addition.
     // staircase (flow-components wave): a flight of self-framed treads, same
     // family again.
-    const current = [...preRefactor, "data_table", "cycle", "hub_spoke", "staircase", "chevron_process", "swimlane", "journey_map", "decision_tree", "from_to"]
+    const current = [
+      ...preRefactor,
+      "data_table",
+      "cycle",
+      "hub_spoke",
+      "staircase",
+      "chevron_process",
+      "swimlane",
+      "journey_map",
+      "decision_tree",
+      "from_to",
+      // hierarchy-components wave: a tree, a pyramid beside its legend, a
+      // berg, a beam on its columns and a chain of chevrons all paint their
+      // own panels, so the bento shell would frame an already-framed drawing.
+      "org_tree",
+      "issue_tree",
+      "pyramid",
+      "iceberg",
+      "pillar_model",
+      "value_chain",
+    ]
     expect(new Set(PASSTHROUGH_SHELL_TYPES)).toEqual(new Set(current))
     expect(PASSTHROUGH_SHELL_TYPES.size).toBe(current.length)
   })

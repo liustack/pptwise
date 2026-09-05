@@ -78,6 +78,12 @@ import { aliases as fromToAliases } from "./components/from-to"
 import { aliases as logoWallAliases } from "./components/logo-wall"
 import { aliases as productCardsAliases } from "./components/product-cards"
 import { aliases as quoteWallAliases } from "./components/quote-wall"
+import { aliases as orgTreeAliases } from "./components/org-tree"
+import { aliases as issueTreeAliases } from "./components/issue-tree"
+import { aliases as pyramidAliases } from "./components/pyramid"
+import { aliases as icebergAliases } from "./components/iceberg"
+import { aliases as pillarModelAliases } from "./components/pillar-model"
+import { aliases as valueChainAliases } from "./components/value-chain"
 
 /** One component type's `{ aliasKey: canonicalKey }` map. */
 export type FieldAliasMap = Readonly<Record<string, string>>
@@ -142,6 +148,16 @@ export const COMPONENT_FIELD_ALIASES: Readonly<Record<string, FieldAliasMap>> = 
   // that has written a before/after slide reaches for that pair instead, and
   // for the generic `items` for the row array.
   from_to: fromToAliases.block,
+  // The hierarchy family (hierarchy-components wave): each of these names its
+  // lead string with a word specific to the drawing, and a model that knows
+  // the diagram but not this schema reaches for the generic one it uses
+  // everywhere else — `title` for the question a tree answers or the goal a
+  // beam carries, `visible`/`hidden` for the two sides of a waterline,
+  // `activities` for the row of links a chain is made of.
+  issue_tree: issueTreeAliases.block,
+  iceberg: icebergAliases.block,
+  pillar_model: pillarModelAliases.block,
+  value_chain: valueChainAliases.block,
 }
 
 /** One component type's item-array field aliases: which array to walk, and the alias map applied to each item object in it. */
@@ -233,6 +249,14 @@ export const COMPONENT_ITEM_FIELD_ALIASES: Readonly<Record<string, readonly Item
   // blockquote's `text`/`attribution` pair, and `title` is the natural word
   // for the line under a speaker's name.
   quote_wall: quoteWallAliases.items,
+  // Hierarchy family: every node-bearing array here holds a `label`/`name`
+  // pair plus one explanatory line, and the generic `title`/`text` slip is
+  // the same one `row_cards` and `steps` above already document.
+  org_tree: orgTreeAliases.items,
+  issue_tree: issueTreeAliases.items,
+  pyramid: pyramidAliases.items,
+  pillar_model: pillarModelAliases.items,
+  value_chain: valueChainAliases.items,
 }
 
 /**

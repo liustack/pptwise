@@ -49,6 +49,12 @@ import { renderDef as swimlaneRenderDef } from "./swimlane"
 import { renderDef as journeyMapRenderDef } from "./journey-map"
 import { renderDef as decisionTreeRenderDef } from "./decision-tree"
 import { renderDef as fromToRenderDef } from "./from-to"
+import { renderDef as orgTreeRenderDef } from "./org-tree"
+import { renderDef as issueTreeRenderDef } from "./issue-tree"
+import { renderDef as pyramidRenderDef } from "./pyramid"
+import { renderDef as icebergRenderDef } from "./iceberg"
+import { renderDef as pillarModelRenderDef } from "./pillar-model"
+import { renderDef as valueChainRenderDef } from "./value-chain"
 
 /**
  * Dispatch table (src domain reorg wave 2, spec §4.2/§4.3): replaces the
@@ -117,6 +123,12 @@ const RENDER_DEFS: Record<ComponentType, RenderDef> = {
   journey_map: journeyMapRenderDef,
   decision_tree: decisionTreeRenderDef,
   from_to: fromToRenderDef,
+  org_tree: orgTreeRenderDef,
+  issue_tree: issueTreeRenderDef,
+  pyramid: pyramidRenderDef,
+  iceberg: icebergRenderDef,
+  pillar_model: pillarModelRenderDef,
+  value_chain: valueChainRenderDef,
 }
 
 /**

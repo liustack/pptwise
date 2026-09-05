@@ -45,6 +45,12 @@ import * as swot from "./swot"
 import * as timeline from "./timeline"
 import * as verdictBanner from "./verdict-banner"
 import * as waterfall from "./waterfall"
+import * as iceberg from "./iceberg"
+import * as issueTree from "./issue-tree"
+import * as orgTree from "./org-tree"
+import * as pillarModel from "./pillar-model"
+import * as pyramid from "./pyramid"
+import * as valueChain from "./value-chain"
 
 /**
  * Each component keeps its design story in the same module as its schema, so
@@ -112,6 +118,12 @@ const COMPONENT_STORY_MODULES: Readonly<Record<string, ComponentStoryModule>> = 
   timeline,
   verdict_banner: verdictBanner,
   waterfall,
+  org_tree: orgTree,
+  issue_tree: issueTree,
+  pyramid,
+  iceberg,
+  pillar_model: pillarModel,
+  value_chain: valueChain,
 }
 
 /**

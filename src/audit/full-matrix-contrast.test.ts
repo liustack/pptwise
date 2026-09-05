@@ -1533,6 +1533,25 @@ const MUTED_SURFACE_CLASS: Record<string, MutedSurfaceClass> = {
   // fill, so muted never lands on that panel either. No text of this
   // component's ever sits on an unblended `colors.surface` rect.
   from_to: "page-bg",
+  // Hierarchy family (hierarchy-components wave). org_tree/issue_tree paint
+  // `colors.muted` through `accessibleInk(colors.muted, colors.surface, …)`
+  // for a node's role line and a hypothesis' note, both inside that node's
+  // own unblended `colors.surface` rect; their other `colors.muted` reads are
+  // the connector stroke and the `colors.border ?? mix(muted, bg)` hairline,
+  // neither a text fill. pyramid's is the legend card's note, on the same
+  // unblended surface — its own band labels are `readableOn(fill)`, never
+  // muted. pillar_model's is a pillar's unit, on the column's surface;
+  // value_chain's are the link ordinal and a supporting band's note, both on
+  // the band's surface.
+  org_tree: "flat-surface",
+  issue_tree: "flat-surface",
+  pyramid: "flat-surface",
+  pillar_model: "flat-surface",
+  value_chain: "flat-surface",
+  // iceberg is the exception: its `below_label` renders muted over the water
+  // tint (`mixHex(colors.primary, colors.bg, 0.9)`), a component-painted
+  // blend no other check walks. Own sweep below.
+  iceberg: "needs-fixture",
 }
 
 describe("colors.muted component-type coverage (task-2 fix round, backlog 5a completeness sweep)", () => {
@@ -2954,5 +2973,141 @@ describe("decor-collision sweep (fix/decor-contrast-attribution)", () => {
       }
       expect(failures).toEqual([])
     })
+  }
+})
+
+
+// Hierarchy-components wave: two of the six paint their own blended fills and
+// then print text on them — iceberg's water tint and submerged mass, pyramid's
+// per-level ramp from `colors.primary` toward the page background. Both route
+// every text element through `accessibleInk`/`readableOn` against that shape's
+// real fill, so this should hold by construction; the sweep locks it
+// empirically, the same posture as the swot/bmc block above. iceberg is also
+// the one `"needs-fixture"` entry in `MUTED_SURFACE_CLASS`.
+describe("iceberg/pyramid blended-fill contrast (hierarchy-components wave)", () => {
+  const ICEBERG_SLIDE: Slide = {
+    type: "content",
+    kind: "points",
+    heading: HEADING,
+    components: [
+      {
+        type: "iceberg",
+        above: ["客户抱怨开通太慢"],
+        below: ["客户数据分散在六套系统", "席位口径三个部门三种算法", "健康分算完不回写客户系统"],
+        waterline: "水面",
+        above_label: "客户说得出口的",
+        below_label: "没人在会上摊开的",
+      },
+    ],
+  } as Slide
+
+  const PYRAMID_SLIDE: Slide = {
+    type: "content",
+    kind: "points",
+    heading: HEADING,
+    components: [
+      {
+        type: "pyramid",
+        layers: [
+          { label: "结论主张", note: "一句话说清要什么、谁来批" },
+          { label: "关键论据", note: "三条支撑互不重叠" },
+          { label: "数据事实", note: "口径写进脚注，来源可追" },
+          { label: "数据底座", note: "席位与续约共用一套主数据" },
+        ],
+      },
+    ],
+  } as Slide
+
+  // The other four paint `colors.surface` panels and `colors.primary` fills
+  // rather than blends, but they print `colors.primary` *as ink* on those
+  // surface panels, and a theme whose primary sits a hair off its own surface
+  // (ledger: #16202B on #171C22) makes that ink invisible. Swept here with
+  // the two blended ones so the whole family is answered in one place.
+  const ORG_TREE_SLIDE: Slide = {
+    type: "content",
+    kind: "points",
+    heading: HEADING,
+    components: [
+      {
+        type: "org_tree",
+        root: { name: "陈稚", role: "客户成功中心负责人" },
+        children: [
+          { name: "林望", role: "开通交付组组长", children: [{ name: "韩叙", role: "实施顾问" }, { name: "姚可", role: "数据接入" }] },
+          { name: "苏禾", role: "续约经营组组长", children: [{ name: "温岚", role: "续约经理" }] },
+        ],
+      },
+    ],
+  } as Slide
+
+  const ISSUE_TREE_SLIDE: Slide = {
+    type: "content",
+    kind: "points",
+    heading: HEADING,
+    components: [
+      {
+        type: "issue_tree",
+        question: "中小客群续约率为何停在七成八",
+        branches: [
+          { label: "开通体验没接住", note: "解释缺口的六成一", emphasis: true, children: [{ label: "开通周期仍是九周" }] },
+          { label: "使用深度不够", note: "解释缺口的两成七", children: [{ label: "席位激活只到六成" }] },
+        ],
+      },
+    ],
+  } as Slide
+
+  const PILLAR_SLIDE: Slide = {
+    type: "content",
+    kind: "points",
+    heading: HEADING,
+    components: [
+      {
+        type: "pillar_model",
+        goal: "续约率稳定在九成三，中小客群不低于八成六",
+        pillars: [
+          { title: "开通提速", value: "5", unit: "周" },
+          { title: "席位激活", value: "88", unit: "%" },
+          { title: "主动跟进", value: "90", unit: "天" },
+        ],
+        base: "统一的客户数据底座与席位口径",
+      },
+    ],
+  } as Slide
+
+  const VALUE_CHAIN_SLIDE: Slide = {
+    type: "content",
+    kind: "points",
+    heading: HEADING,
+    components: [
+      {
+        type: "value_chain",
+        primary: [
+          { label: "线索获取", value: "6", unit: "%" },
+          { label: "开通实施", value: "8", unit: "%" },
+          { label: "续约扩容", value: "54", unit: "%", emphasis: true },
+        ],
+        support: [
+          { label: "技术平台与数据", note: "多租户平台 · 用量数据底座" },
+          { label: "人力与顾问梯队", note: "实施顾问认证 · 行业方案库" },
+        ],
+        margin: { label: "利润空间", value: "38%" },
+      },
+    ],
+  } as Slide
+
+  const FAMILY: readonly (readonly [string, Slide])[] = [
+    ["iceberg", ICEBERG_SLIDE],
+    ["pyramid", PYRAMID_SLIDE],
+    ["org_tree", ORG_TREE_SLIDE],
+    ["issue_tree", ISSUE_TREE_SLIDE],
+    ["pillar_model", PILLAR_SLIDE],
+    ["value_chain", VALUE_CHAIN_SLIDE],
+  ]
+
+  for (const themeId of CANONICAL_THEME_IDS) {
+    for (const [name, slide] of FAMILY) {
+      it(`${themeId}: ${name} prints no low-contrast text on any fill it paints itself`, () => {
+        expect(auditFindings(deckFor(themeId, slide)).filter((f) => f.code === "low-contrast")).toEqual([])
+      })
+    }
   }
 })

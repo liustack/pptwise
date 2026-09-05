@@ -410,6 +410,106 @@ const COVERAGE_ENTRIES: Record<string, unknown> = {
       { title: "Platform", value: "96" },
     ],
   }),
+  // Hierarchy family: each tripwire trips exactly the cap its own describe()
+  // sentence states, and nothing else.
+  "coverage/org_tree-valid": minimalDeck({
+    type: "org_tree",
+    root: { name: "Chen", role: "Lead" },
+    children: [
+      { name: "Lin", children: [{ name: "Han" }, { name: "Yao" }] },
+      { name: "Su", children: [{ name: "Wen" }] },
+    ],
+  }),
+  // Nine bottom nodes against a cap of eight — the whole-tree leaf refine.
+  "coverage/org_tree-tripwire": minimalDeck({
+    type: "org_tree",
+    root: { name: "Chen" },
+    children: [
+      { name: "Lin", children: [{ name: "a" }, { name: "b" }, { name: "c" }, { name: "d" }, { name: "e" }] },
+      { name: "Su", children: [{ name: "f" }, { name: "g" }, { name: "h" }, { name: "i" }] },
+    ],
+  }),
+  "coverage/issue_tree-valid": minimalDeck({
+    type: "issue_tree",
+    question: "Why did renewals stall?",
+    branches: [
+      { label: "Onboarding", emphasis: true, children: [{ label: "Nine weeks" }] },
+      { label: "Pricing", children: [{ label: "Discount is unlinked" }] },
+    ],
+  }),
+  // Two branches both marked — the single-emphasis refine.
+  "coverage/issue_tree-tripwire": minimalDeck({
+    type: "issue_tree",
+    question: "Why did renewals stall?",
+    branches: [
+      { label: "Onboarding", emphasis: true },
+      { label: "Pricing", emphasis: true },
+    ],
+  }),
+  "coverage/pyramid-valid": minimalDeck({
+    type: "pyramid",
+    layers: [{ label: "Claim" }, { label: "Evidence", note: "three supports" }, { label: "Data" }],
+  }),
+  // Two levels against a floor of three.
+  "coverage/pyramid-tripwire": minimalDeck({
+    type: "pyramid",
+    layers: [{ label: "Claim" }, { label: "Data" }],
+  }),
+  "coverage/iceberg-valid": minimalDeck({
+    type: "iceberg",
+    above: ["Onboarding feels slow"],
+    below: ["Six systems", "Three seat definitions", "No write-back"],
+    waterline: "waterline",
+  }),
+  // Three items above a cap of two.
+  "coverage/iceberg-tripwire": minimalDeck({
+    type: "iceberg",
+    above: ["a", "b", "c"],
+    below: ["d", "e", "f"],
+  }),
+  "coverage/pillar_model-valid": minimalDeck({
+    type: "pillar_model",
+    goal: "Hold renewal at 93%",
+    pillars: [
+      { title: "Onboarding", value: "5", unit: "weeks" },
+      { title: "Activation", value: "88", unit: "%" },
+    ],
+    base: "One shared customer record",
+  }),
+  // One column under a beam is a heading over a number.
+  "coverage/pillar_model-tripwire": minimalDeck({
+    type: "pillar_model",
+    goal: "Hold renewal at 93%",
+    pillars: [{ title: "Onboarding", value: "5" }],
+    base: "One shared customer record",
+  }),
+  "coverage/value_chain-valid": minimalDeck({
+    type: "value_chain",
+    primary: [{ label: "Acquire" }, { label: "Prove" }, { label: "Renew", emphasis: true }],
+    support: [{ label: "Platform", note: "one tenant model" }, { label: "People" }],
+    margin: { label: "Operating margin", value: "38%" },
+  }),
+  // Two links are a before and an after, not a chain.
+  "coverage/value_chain-tripwire": minimalDeck({
+    type: "value_chain",
+    primary: [{ label: "Acquire" }, { label: "Renew" }],
+    support: [{ label: "Platform" }, { label: "People" }],
+  }),
+  // A unit with no figure beside it: the drawing has nowhere to put it, so
+  // the schema refuses it rather than letting the renderer erase it.
+  "coverage/value_chain-unit-tripwire": minimalDeck({
+    type: "value_chain",
+    primary: [{ label: "Acquire", unit: "%" }, { label: "Prove" }, { label: "Renew" }],
+    support: [{ label: "Platform" }, { label: "People" }],
+  }),
+  // The same loss written the other way: a figure that is present but empty
+  // satisfied "value is not undefined" while the renderer, which reads the
+  // figure for truth, still drew neither figure nor unit.
+  "coverage/value_chain-blank-value-tripwire": minimalDeck({
+    type: "value_chain",
+    primary: [{ label: "Acquire", value: "", unit: "%" }, { label: "Prove" }, { label: "Renew" }],
+    support: [{ label: "Platform" }, { label: "People" }],
+  }),
 }
 
 // Assembles the validation corpus from all three sources, keyed by

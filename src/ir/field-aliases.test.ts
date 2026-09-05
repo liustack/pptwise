@@ -367,6 +367,120 @@ const BLOCK_CASES: readonly BlockCase[] = [
     component: { type: "hub_spoke", hub: "Platform", items: [{ label: "A" }, { label: "B" }, { label: "C" }] },
     expected: "Platform",
   },
+  // The hierarchy family (hierarchy-components wave): the generic lead-string
+  // slip on a question, a goal and the two sides of a waterline.
+  {
+    type: "issue_tree",
+    alias: "title",
+    canonical: "question",
+    component: { type: "issue_tree", title: "Why?", branches: [{ label: "A" }, { label: "B" }] },
+    expected: "Why?",
+  },
+  {
+    type: "issue_tree",
+    alias: "root",
+    canonical: "question",
+    component: { type: "issue_tree", root: "Why?", branches: [{ label: "A" }, { label: "B" }] },
+    expected: "Why?",
+  },
+  {
+    type: "iceberg",
+    alias: "visible",
+    canonical: "above",
+    component: { type: "iceberg", visible: ["said"], below: ["a", "b", "c"] },
+    expected: ["said"],
+  },
+  {
+    type: "iceberg",
+    alias: "surface",
+    canonical: "above",
+    component: { type: "iceberg", surface: ["said"], below: ["a", "b", "c"] },
+    expected: ["said"],
+  },
+  {
+    type: "iceberg",
+    alias: "hidden",
+    canonical: "below",
+    component: { type: "iceberg", above: ["said"], hidden: ["a", "b", "c"] },
+    expected: ["a", "b", "c"],
+  },
+  {
+    type: "iceberg",
+    alias: "deep",
+    canonical: "below",
+    component: { type: "iceberg", above: ["said"], deep: ["a", "b", "c"] },
+    expected: ["a", "b", "c"],
+  },
+  {
+    type: "pillar_model",
+    alias: "title",
+    canonical: "goal",
+    component: {
+      type: "pillar_model",
+      title: "Hold the line",
+      pillars: [{ title: "A", value: "1" }, { title: "B", value: "2" }],
+      base: "one record",
+    },
+    expected: "Hold the line",
+  },
+  {
+    type: "pillar_model",
+    alias: "target",
+    canonical: "goal",
+    component: {
+      type: "pillar_model",
+      target: "Hold the line",
+      pillars: [{ title: "A", value: "1" }, { title: "B", value: "2" }],
+      base: "one record",
+    },
+    expected: "Hold the line",
+  },
+  {
+    type: "pillar_model",
+    alias: "foundation",
+    canonical: "base",
+    component: {
+      type: "pillar_model",
+      goal: "Hold the line",
+      pillars: [{ title: "A", value: "1" }, { title: "B", value: "2" }],
+      foundation: "one record",
+    },
+    expected: "one record",
+  },
+  {
+    type: "pillar_model",
+    alias: "items",
+    canonical: "pillars",
+    component: {
+      type: "pillar_model",
+      goal: "Hold the line",
+      items: [{ title: "A", value: "1" }, { title: "B", value: "2" }],
+      base: "one record",
+    },
+    expected: [{ title: "A", value: "1" }, { title: "B", value: "2" }],
+  },
+  {
+    type: "value_chain",
+    alias: "activities",
+    canonical: "primary",
+    component: {
+      type: "value_chain",
+      activities: [{ label: "A" }, { label: "B" }, { label: "C" }],
+      support: [{ label: "S1" }, { label: "S2" }],
+    },
+    expected: [{ label: "A" }, { label: "B" }, { label: "C" }],
+  },
+  {
+    type: "value_chain",
+    alias: "links",
+    canonical: "primary",
+    component: {
+      type: "value_chain",
+      links: [{ label: "A" }, { label: "B" }, { label: "C" }],
+      support: [{ label: "S1" }, { label: "S2" }],
+    },
+    expected: [{ label: "A" }, { label: "B" }, { label: "C" }],
+  },
 ]
 
 describe("COMPONENT_FIELD_ALIASES: every row round-trips", () => {
@@ -1008,6 +1122,29 @@ const ITEM_CASES: readonly ItemCase[] = [
     extra: { from: { title: "Today" }, to: { title: "Next year" } },
     expected: "four weeks off",
   },
+  // Hierarchy family item arrays.
+  { type: "org_tree", itemsKey: "children", alias: "title", canonical: "name", extra: { root: { name: "Ada" } }, item: { title: "Bo" }, pad: [{ name: "Cy" }], expected: "Bo" },
+  { type: "org_tree", itemsKey: "children", alias: "label", canonical: "name", extra: { root: { name: "Ada" } }, item: { label: "Bo" }, pad: [{ name: "Cy" }], expected: "Bo" },
+  { type: "org_tree", itemsKey: "children", alias: "text", canonical: "role", extra: { root: { name: "Ada" } }, item: { name: "Bo", text: "Lead" }, pad: [{ name: "Cy" }], expected: "Lead" },
+  { type: "org_tree", itemsKey: "children", alias: "desc", canonical: "role", extra: { root: { name: "Ada" } }, item: { name: "Bo", desc: "Lead" }, pad: [{ name: "Cy" }], expected: "Lead" },
+  { type: "issue_tree", itemsKey: "branches", alias: "title", canonical: "label", extra: { question: "Why?" }, item: { title: "A" }, pad: [{ label: "B" }], expected: "A" },
+  { type: "issue_tree", itemsKey: "branches", alias: "name", canonical: "label", extra: { question: "Why?" }, item: { name: "A" }, pad: [{ label: "B" }], expected: "A" },
+  { type: "issue_tree", itemsKey: "branches", alias: "text", canonical: "note", extra: { question: "Why?" }, item: { label: "A", text: "half the gap" }, pad: [{ label: "B" }], expected: "half the gap" },
+  { type: "issue_tree", itemsKey: "branches", alias: "desc", canonical: "note", extra: { question: "Why?" }, item: { label: "A", desc: "half the gap" }, pad: [{ label: "B" }], expected: "half the gap" },
+  { type: "pyramid", itemsKey: "layers", alias: "title", canonical: "label", item: { title: "Claim" }, pad: [{ label: "Evidence" }, { label: "Data" }], expected: "Claim" },
+  { type: "pyramid", itemsKey: "layers", alias: "name", canonical: "label", item: { name: "Claim" }, pad: [{ label: "Evidence" }, { label: "Data" }], expected: "Claim" },
+  { type: "pyramid", itemsKey: "layers", alias: "text", canonical: "note", item: { label: "Claim", text: "one sentence" }, pad: [{ label: "Evidence" }, { label: "Data" }], expected: "one sentence" },
+  { type: "pyramid", itemsKey: "layers", alias: "desc", canonical: "note", item: { label: "Claim", desc: "one sentence" }, pad: [{ label: "Evidence" }, { label: "Data" }], expected: "one sentence" },
+  { type: "pillar_model", itemsKey: "pillars", alias: "label", canonical: "title", extra: { goal: "Hold", base: "one record" }, item: { label: "A", value: "1" }, pad: [{ title: "B", value: "2" }], expected: "A" },
+  { type: "pillar_model", itemsKey: "pillars", alias: "name", canonical: "title", extra: { goal: "Hold", base: "one record" }, item: { name: "A", value: "1" }, pad: [{ title: "B", value: "2" }], expected: "A" },
+  { type: "pillar_model", itemsKey: "pillars", alias: "number", canonical: "value", extra: { goal: "Hold", base: "one record" }, item: { title: "A", number: "1" }, pad: [{ title: "B", value: "2" }], expected: "1" },
+  { type: "value_chain", itemsKey: "primary", alias: "title", canonical: "label", extra: { support: [{ label: "S1" }, { label: "S2" }] }, item: { title: "A" }, pad: [{ label: "B" }, { label: "C" }], expected: "A" },
+  { type: "value_chain", itemsKey: "primary", alias: "name", canonical: "label", extra: { support: [{ label: "S1" }, { label: "S2" }] }, item: { name: "A" }, pad: [{ label: "B" }, { label: "C" }], expected: "A" },
+  { type: "value_chain", itemsKey: "primary", alias: "number", canonical: "value", extra: { support: [{ label: "S1" }, { label: "S2" }] }, item: { label: "A", number: "6" }, pad: [{ label: "B" }, { label: "C" }], expected: "6" },
+  { type: "value_chain", itemsKey: "support", alias: "title", canonical: "label", extra: { primary: [{ label: "A" }, { label: "B" }, { label: "C" }] }, item: { title: "S1" }, pad: [{ label: "S2" }], expected: "S1" },
+  { type: "value_chain", itemsKey: "support", alias: "name", canonical: "label", extra: { primary: [{ label: "A" }, { label: "B" }, { label: "C" }] }, item: { name: "S1" }, pad: [{ label: "S2" }], expected: "S1" },
+  { type: "value_chain", itemsKey: "support", alias: "text", canonical: "note", extra: { primary: [{ label: "A" }, { label: "B" }, { label: "C" }] }, item: { label: "S1", text: "what it gives" }, pad: [{ label: "S2" }], expected: "what it gives" },
+  { type: "value_chain", itemsKey: "support", alias: "desc", canonical: "note", extra: { primary: [{ label: "A" }, { label: "B" }, { label: "C" }] }, item: { label: "S1", desc: "what it gives" }, pad: [{ label: "S2" }], expected: "what it gives" },
 ]
 
 describe("COMPONENT_ITEM_FIELD_ALIASES: every row round-trips", () => {
@@ -1037,7 +1174,7 @@ describe("COMPONENT_ITEM_FIELD_ALIASES: every row round-trips", () => {
 // ── total pair count pinned (docs/changeset "53 total synonym pairs") ──────
 
 describe("total synonym-pair count", () => {
-  it("COMPONENT_FIELD_ALIASES + COMPONENT_ITEM_FIELD_ALIASES flatten to exactly 112 pairs", () => {
+  it("COMPONENT_FIELD_ALIASES + COMPONENT_ITEM_FIELD_ALIASES flatten to exactly 146 pairs", () => {
     // The "covers every row exactly once" completeness guards above only
     // prove BLOCK_CASES/ITEM_CASES stay in lockstep with each table's own
     // rows — a row deleted from a table *and* its matching test case would
@@ -1054,7 +1191,7 @@ describe("total synonym-pair count", () => {
       (n, specs) => n + specs.reduce((m, spec) => m + Object.keys(spec.aliases).length, 0),
       0,
     )
-    expect(blockCount + itemCount).toBe(112)
+    expect(blockCount + itemCount).toBe(146)
   })
 })
 
