@@ -8,6 +8,7 @@ import {
   FORM_TITLE_FLOOR,
   fitFormLine,
   fitFormTitleLine,
+  fitFormUnit,
   boxTooShort,
   formHighlightFill,
   formLineHeight,
@@ -115,21 +116,17 @@ export const staircase: SvgComponent<StaircaseComponent> = {
             fontSize: step.titleSize,
             fontFamily: ctx.fonts.body,
           })
-          // The unit is fitted, not just measured: a long one used to be
-          // written out at whatever width it wanted and walk off the tread,
-          // while the number it belongs to was squeezed to a 24px stub.
+          // The unit is fitted to the room actually left beside the number,
+          // with headroom for what the width estimator under-prices (see
+          // `fitFormUnit`). A long one used to be written out at whatever width
+          // it wanted and walk off the tread, while the number it belongs to
+          // was squeezed to a 24px stub.
           const unit = (item.unit ?? "").trim()
           const unitSize = Math.max(FORM_BODY_FLOOR, Math.round(step.valueSize * 0.46))
           const unitFit = unit
-            ? fitFormLine(unit, {
-                maxWidth: Math.max(24, inner * 0.45),
-                fontSize: unitSize,
-                fontFamily: ctx.fonts.body,
-              })
+            ? fitFormUnit(unit, { room: inner * 0.45, fontSize: unitSize, fontFamily: ctx.fonts.body })
             : null
-          const unitW = unitFit
-            ? measureTextUnits(unitFit.text, { fontFamily: ctx.fonts.body }) * unitFit.fontSize + 6
-            : 0
+          const unitW = unitFit ? unitFit.width + 6 : 0
           const value = fitFormLine(item.value, {
             maxWidth: Math.max(24, inner - unitW),
             fontSize: step.valueSize,

@@ -12,6 +12,7 @@ import type { ComponentCtx } from "./types"
 import { measureTextUnits } from "../lib/svg-text-layout"
 import { contrastRatio, requiredContrastRatio } from "../render/ink"
 import {
+  fitFormUnit,
   boardTypeScale,
   capFormBody,
   fillCardType,
@@ -340,6 +341,25 @@ describe("layoutAtSize", () => {
     for (const line of r.lines) {
       expect(measureTextUnits(line) * r.fontSize).toBeLessThanOrEqual(80 + 1e-6)
     }
+  })
+
+  it("fits a unit into the room beside its number, with headroom the estimator needs", () => {
+    const fit = fitFormUnit("W".repeat(60), { room: 120, fontSize: 16 })!
+    expect(fit).not.toBeNull()
+    expect(fit.truncated).toBe(true)
+    expect(fit.width).toBeLessThanOrEqual(120)
+    // The reported width leaves room for what the estimator under-prices, so
+    // a caller placing the next run by it never has the unit painted over.
+    const estimated = measureTextUnits(fit.text) * fit.fontSize
+    expect(fit.width).toBeGreaterThan(estimated)
+    // Georgia paints a capital at about 0.94em; the padded width covers it.
+    expect(fit.width).toBeGreaterThanOrEqual(fit.text.length * fit.fontSize * 0.94)
+  })
+
+  it("returns nothing when there is no room for a unit at all, rather than a stub", () => {
+    expect(fitFormUnit("kg", { room: 4, fontSize: 16 })).toBeNull()
+    expect(fitFormUnit("   ", { room: 200, fontSize: 16 })).toBeNull()
+    expect(fitFormUnit("", { room: 200, fontSize: 16 })).toBeNull()
   })
 
   it("stamps truncated when a kept line is clipped, and paints no overflow mark", () => {

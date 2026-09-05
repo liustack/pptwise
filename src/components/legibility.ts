@@ -50,6 +50,45 @@ export function formHighlightFill(colors: { primary: string; surface: string; te
 }
 
 /**
+ * How much wider than its estimate a fitted line may actually paint.
+ *
+ * `measureTextUnits` prices regular-weight uppercase Latin at 0.66em a
+ * character; Georgia paints "W" at about 0.94. A line fitted exactly to the
+ * room left for it can therefore still be drawn past the edge of that room —
+ * measured at 140.75px for a run the estimator priced at 95.04px. Every unit
+ * is fitted to the room divided by this factor and positioned by the padded
+ * width, so the gap between a number and its unit narrows rather than the
+ * unit leaving the card.
+ */
+const WIDTH_ESTIMATE_HEADROOM = 1.5
+
+/**
+ * A unit fitted to the room actually left beside its number, or `null` when
+ * there is no such room.
+ *
+ * `null` is a real answer, not an edge case to swallow: a unit is what a
+ * number is counted in, and half of one beside the number says less than
+ * nothing. The caller declares the loss.
+ */
+export function fitFormUnit(
+  unit: string,
+  opts: { room: number; fontSize: number; fontFamily?: string },
+): { text: string; fontSize: number; width: number; truncated: boolean } | null {
+  const text = unit.trim()
+  if (!text) return null
+  const room = Math.max(0, opts.room)
+  const fitted = fitFormLine(text, {
+    maxWidth: room / WIDTH_ESTIMATE_HEADROOM,
+    fontSize: opts.fontSize,
+    fontFamily: opts.fontFamily,
+  })
+  const width =
+    measureTextUnits(fitted.text, { fontFamily: opts.fontFamily }) * fitted.fontSize * WIDTH_ESTIMATE_HEADROOM
+  if (!fitted.text || width > room) return null
+  return { text: fitted.text, fontSize: fitted.fontSize, width, truncated: fitted.truncated }
+}
+
+/**
  * A box shorter than the drawing's own floors.
  *
  * A component's geometry shrinks what it can and then stops at its minimums,

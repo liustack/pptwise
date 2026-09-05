@@ -269,6 +269,54 @@ describe("decision_tree component", () => {
     expect(container.querySelector('[data-truncated="1"]')).not.toBeNull()
   })
 
+  it("ends a unit at the card edge, so a wide one narrows the gap instead of leaving the box", () => {
+    const wide = {
+      ...routing,
+      branches: routing.branches.map((b) => ({
+        ...b,
+        outcomes: b.outcomes.map((o) => ({ ...o, unit: "W".repeat(60) })),
+      })),
+    }
+    const { container } = svg(decisionTree.render(wide, { x: 88, y: 96, w: 1104 }, themed("brief")))
+    const cards = rects(container).slice(3)
+    const units = Array.from(container.querySelectorAll("text")).filter((t) => /^W+$/.test(t.textContent ?? ""))
+    expect(units.length).toBeGreaterThan(0)
+    for (const unit of units) {
+      // Right-anchored, so its x IS its right edge — no width estimate can
+      // push it past the card, however far the estimator is out.
+      expect(unit.getAttribute("text-anchor")).toBe("end")
+      const x = Number(unit.getAttribute("x"))
+      const card = cards.find((c) => x > c.x && x <= c.x + c.w)
+      expect(card, "a unit outside every card").toBeDefined()
+      expect(x).toBeLessThanOrEqual(card!.x + card!.w)
+      // Even priced at Georgia's real 0.94em a character it stays inside.
+      const painted = (unit.textContent ?? "").length * Number(unit.getAttribute("font-size")) * 0.94
+      expect(x - painted, unit.textContent ?? "").toBeGreaterThanOrEqual(card!.x)
+    }
+  })
+
+  it("keeps a wide unit inside the card at the narrowest legal width too", () => {
+    const wide = {
+      ...routing,
+      branches: routing.branches.map((b) => ({
+        ...b,
+        outcomes: b.outcomes.map((o) => ({ ...o, unit: "W".repeat(60) })),
+      })),
+    }
+    const { container } = svg(decisionTree.render(wide, { x: 88, y: 96, w: 700 }, themed("brief")))
+    const cards = rects(container).slice(3)
+    const units = Array.from(container.querySelectorAll("text")).filter((t) => /^W+$/.test(t.textContent ?? ""))
+    expect(units.length).toBeGreaterThan(0)
+    for (const unit of units) {
+      // Fewer characters survive here than at 1104, and each one says so.
+      expect(unit.getAttribute("data-truncated")).toBe("1")
+      const x = Number(unit.getAttribute("x"))
+      const card = cards.find((c) => x > c.x && x <= c.x + c.w)!
+      const painted = (unit.textContent ?? "").length * Number(unit.getAttribute("font-size")) * 0.94
+      expect(x - painted, unit.textContent ?? "").toBeGreaterThanOrEqual(card.x)
+    }
+  })
+
   it("stays inside the controlled SVG subset and passes the overflow auditor", () => {
     const markup = renderToStaticMarkup(
       <svg viewBox="0 0 1280 720">{decisionTree.render(tree(3, 3), { x: 40, y: 40, w: 1200 }, themed("terminal"))}</svg>,

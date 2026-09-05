@@ -6,6 +6,7 @@ import { DroppedContentMarker } from "../render/drop-marker"
 import {
   FORM_BODY_FLOOR,
   fitFormLine,
+  fitFormUnit,
   boxTooShort,
   formHighlightFill,
   formTextClipMarker,
@@ -170,8 +171,29 @@ export const decisionTree: SvgComponent<DecisionTreeComponent> = {
 
     // A card too short for a second line loses its detail and its number
     // outright rather than clipping them into illegibility, and says so.
+    // An outcome card is `outcomeW` wide; a unit with no room left beside its
+    // number there leaves the drawing whole and says so, the same as a detail
+    // line that cannot be set.
+    const outcomeW = box.w - Math.round(box.w * 0.21) * 2 - COL_GAP * 2
+    const unitless = g.showDetail
+      ? component.branches.reduce(
+          (n, branch) =>
+            n +
+            branch.outcomes.filter(
+              (outcome) =>
+                (outcome.value ?? "").trim() !== "" &&
+                (outcome.unit ?? "").trim() !== "" &&
+                fitFormUnit(outcome.unit!, {
+                  room: outcomeW * 0.22,
+                  fontSize: FORM_BODY_FLOOR,
+                  fontFamily: ctx.fonts.body,
+                }) === null,
+            ).length,
+          0,
+        )
+      : 0
     const dropped = g.showDetail
-      ? 0
+      ? unitless
       : component.branches.flatMap((branch) => [
           branch.detail?.trim() ? 1 : 0,
           ...branch.outcomes.map((o) => ((o.detail?.trim() ? 1 : 0) + (o.value?.trim() ? 1 : 0) > 0 ? 1 : 0)),
@@ -251,17 +273,13 @@ export const decisionTree: SvgComponent<DecisionTreeComponent> = {
       const unit = value ? opts.unit?.trim() : undefined
       const valueSize = Math.min(32, Math.round(g.cardH * 0.4))
       const unitSize = Math.max(FORM_BODY_FLOOR, Math.round(valueSize * 0.5))
-      // Fitted, not just measured — see staircase.tsx's own note.
-      const unitFit = unit
-        ? fitFormLine(unit, {
-            maxWidth: Math.max(24, node.w * 0.22),
-            fontSize: unitSize,
-            fontFamily: ctx.fonts.body,
-          })
-        : null
-      const unitW = unitFit
-        ? measureTextUnits(unitFit.text, { fontFamily: ctx.fonts.body }) * unitFit.fontSize + 5
-        : 0
+      // The unit ends at the card's own inner edge rather than starting after
+      // the number: a right-anchored run cannot reach past the boundary it is
+      // anchored to, whatever the width estimate thought it would take. The
+      // room it may claim is fitted through `fitFormUnit`, which carries the
+      // headroom the estimator's own bias needs.
+      const unitFit = unit ? fitFormUnit(unit, { room: node.w * 0.22, fontSize: unitSize, fontFamily: ctx.fonts.body }) : null
+      const unitW = unitFit ? unitFit.width + 5 : 0
       const valueFit = value
         ? fitFormLine(value, {
             maxWidth: node.w * 0.3,
@@ -346,8 +364,9 @@ export const decisionTree: SvgComponent<DecisionTreeComponent> = {
           {valueFit && unitFit ? (
             <text
               data-truncated={unitFit.truncated ? "1" : undefined}
-              x={valueRight + 5}
+              x={node.x + node.w - g.pad}
               y={node.y + node.h / 2 + valueFit.fontSize * 0.35}
+              textAnchor="end"
               fontFamily={ctx.fonts.body}
               fontSize={unitFit.fontSize}
               fill={ink(ctx.colors.muted, unitFit.fontSize)}

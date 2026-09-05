@@ -7,6 +7,7 @@ import {
   FORM_BODY_FLOOR,
   fitFormLine,
   fitFormTitleLine,
+  fitFormUnit,
   boxTooShort,
   formHighlightFill,
 } from "./legibility"
@@ -161,13 +162,10 @@ export const fromTo: SvgComponent<FromToComponent> = {
       key: string,
     ): ReactElement => {
       const unitSize = Math.max(FORM_BODY_FLOOR, Math.round(g.valueSize * 0.5))
-      // Fitted, not just measured — see staircase.tsx's own note.
-      const unitFit = unit
-        ? fitFormLine(unit, { maxWidth: Math.max(24, maxW * 0.5), fontSize: unitSize, fontFamily: ctx.fonts.body })
-        : null
-      const unitW = unitFit
-        ? measureTextUnits(unitFit.text, { fontFamily: ctx.fonts.body }) * unitFit.fontSize + 5
-        : 0
+      // Fitted to the room left beside the number, with headroom for what the
+      // width estimator under-prices — see `fitFormUnit`.
+      const unitFit = unit ? fitFormUnit(unit, { room: maxW * 0.5, fontSize: unitSize, fontFamily: ctx.fonts.body }) : null
+      const unitW = unitFit ? unitFit.width + 5 : 0
       const fit = fitFormLine(text, {
         maxWidth: Math.max(24, maxW - unitW),
         fontSize: g.valueSize,
