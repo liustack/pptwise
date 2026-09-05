@@ -31,6 +31,7 @@ import * as rings from "./rings"
 import * as roadmap from "./roadmap"
 import * as rowCards from "./row-cards"
 import * as sankey from "./sankey"
+import * as staircase from "./staircase"
 import * as steps from "./steps"
 import * as swot from "./swot"
 import * as tagRow from "./tag-row"
@@ -90,6 +91,7 @@ const COMPONENT_STORY_MODULES: Readonly<Record<string, ComponentStoryModule>> = 
   roadmap,
   row_cards: rowCards,
   sankey,
+  staircase,
   steps,
   swot,
   tag_row: tagRow,

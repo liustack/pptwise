@@ -284,6 +284,14 @@ const COMPONENT_BY_TYPE: Record<Component["type"], Component> = {
       { value: "72%", label: "closure" },
     ],
   },
+  staircase: {
+    type: "staircase",
+    items: [
+      { title: "Trial", value: "412" },
+      { title: "Rollout", value: "248", unit: "orgs" },
+      { title: "Platform", value: "96", unit: "orgs", note: "shared roadmap" },
+    ],
+  },
   hub_spoke: {
     type: "hub_spoke",
     center: "Platform",

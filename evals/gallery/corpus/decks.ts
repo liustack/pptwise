@@ -174,6 +174,7 @@ const COMPONENT_KINDS: Record<Component["type"], PageKind> = {
   timeline: "process",
   roadmap: "process",
   cycle: "process",
+  staircase: "process",
   hub_spoke: "hierarchy",
   rings: "hierarchy",
   matrix: "comparison",

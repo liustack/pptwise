@@ -41,6 +41,7 @@ import { renderDef as peopleCardsRenderDef } from "./people-cards"
 import { renderDef as tagRowRenderDef } from "./tag-row"
 import { renderDef as hubSpokeRenderDef } from "./hub-spoke"
 import { renderDef as progressDonutsRenderDef } from "./progress-donuts"
+import { renderDef as staircaseRenderDef } from "./staircase"
 
 /**
  * Dispatch table (src domain reorg wave 2, spec §4.2/§4.3): replaces the
@@ -101,6 +102,7 @@ const RENDER_DEFS: Record<ComponentType, RenderDef> = {
   tag_row: tagRowRenderDef,
   hub_spoke: hubSpokeRenderDef,
   progress_donuts: progressDonutsRenderDef,
+  staircase: staircaseRenderDef,
 }
 
 /**

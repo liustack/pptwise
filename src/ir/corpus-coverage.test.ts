@@ -206,6 +206,23 @@ const COVERAGE_ENTRIES: Record<string, unknown> = {
       { value: "72%", label: "closure" },
     ],
   }),
+  // staircase's own hard check is the level-count floor: two treads read as
+  // a comparison, not a climb.
+  "coverage/staircase-valid": minimalDeck({
+    type: "staircase",
+    items: [
+      { title: "Trial", value: "412" },
+      { title: "Rollout", value: "248" },
+      { title: "Platform", value: "96" },
+    ],
+  }),
+  "coverage/staircase-tripwire": minimalDeck({
+    type: "staircase",
+    items: [
+      { title: "Trial", value: "412" },
+      { title: "Platform", value: "96" },
+    ],
+  }),
 }
 
 // Assembles the validation corpus from all three sources, keyed by

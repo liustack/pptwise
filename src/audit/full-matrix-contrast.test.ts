@@ -1492,6 +1492,11 @@ const MUTED_SURFACE_CLASS: Record<string, MutedSurfaceClass> = {
   // (never a text fill); its source line is `accessibleInk(colors.muted,
   // pageBg, …)` on the ambient page background, same shape as timeline's.
   progress_donuts: "page-bg",
+  // staircase.tsx paints `colors.muted` for a tread's unit and note, always
+  // on the unblended `colors.surface` tread fill. The one tread filled with
+  // `colors.primary` routes both through `accessibleInk(colors.surface, …)`
+  // instead, so muted never lands on it.
+  staircase: "flat-surface",
 }
 
 describe("colors.muted component-type coverage (task-2 fix round, backlog 5a completeness sweep)", () => {
