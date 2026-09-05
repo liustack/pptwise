@@ -1,5 +1,6 @@
 import {
   fitSvgLine,
+  hasExactWidthTable,
   layoutSvgText,
   measureTextUnits,
   truncateToUnits,
@@ -61,6 +62,32 @@ export function formHighlightFill(colors: { primary: string; surface: string; te
  * unit leaving the card.
  */
 const WIDTH_ESTIMATE_HEADROOM = 1.5
+
+/**
+ * An upper bound on the width `text` will actually paint at `fontSize` — the
+ * number to size a box by when nothing may cross its edge.
+ *
+ * Same estimator gap {@link WIDTH_ESTIMATE_HEADROOM} exists for, read the
+ * other way round: `fitFormUnit` divides the room it fits into, and a caller
+ * that has already fitted a line multiplies the width back out. The estimate
+ * is trusted as-is only where the exact per-glyph model applies (bold weight
+ * in a face that has a table) — everywhere else a 66px "LDAP" measures
+ * 148.45px and paints 170.41px, which is how two words in a cloud came to
+ * overlap while every estimated rectangle said they did not.
+ *
+ * For collision boxes and hard budgets, never for fitting: `fitSvgLine`
+ * already shrinks and truncates against the estimate, and padding there would
+ * shrink type nobody needed to shrink.
+ */
+export function paintedWidthCeiling(
+  text: string,
+  fontSize: number,
+  weight?: { bold?: boolean; fontFamily?: string },
+): number {
+  const estimate = measureTextUnits(text, weight) * fontSize
+  const exact = weight?.bold === true && hasExactWidthTable(weight.fontFamily ?? "")
+  return exact ? estimate : estimate * WIDTH_ESTIMATE_HEADROOM
+}
 
 /**
  * A unit fitted to the room actually left beside its number, or `null` when

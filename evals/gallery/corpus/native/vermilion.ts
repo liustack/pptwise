@@ -183,6 +183,16 @@ export const VERMILION_LEXICON: Lexicon = {
     "自助终端",
     "适老服务",
   ],
+  shortlist: {
+    criteria: ["缩短等候", "改造投入", "老年人友好", "上线周期"],
+    options: [
+      { label: "增开四个综合窗口", scores: [100, 25, 75, 50], total: 62 },
+      { label: "推广线上预约叫号", scores: [75, 75, 25, 100], total: 69 },
+      { label: "错峰延时服务", scores: [50, 100, 100, 100], total: 88, chosen: true },
+      { label: "全面自助机替代", scores: [75, 50, 0, 25], total: 38 },
+      { label: "维持现有安排", scores: [0, 100, 50, 100], total: 62 },
+    ],
+  },
 
   products: [
     { name: "不动产登记 · 即办", note: "材料齐全，当场出证", price: "¥80", priceUnit: "件" },

@@ -183,6 +183,16 @@ export const CRAYON_LEXICON: Lexicon = {
     "混龄活动",
     "幼小衔接",
   ],
+  shortlist: {
+    criteria: ["孩子喜欢", "老师看得过来", "场地够用", "家长省心"],
+    options: [
+      { label: "全班一起做操", scores: [50, 100, 100, 100], total: 88 },
+      { label: "分四组轮玩教具", scores: [100, 50, 75, 75], total: 75, chosen: true },
+      { label: "整班去后院跑", scores: [100, 25, 25, 50], total: 50 },
+      { label: "自由活动不分组", scores: [75, 0, 50, 50], total: 44 },
+      { label: "看一集动画片", scores: [75, 100, 100, 0], total: 69 },
+    ],
+  },
 
   products: [
     { name: "绘本套装 · 春", note: "十二本，配家长共读卡", price: "¥240", priceUnit: "套" },

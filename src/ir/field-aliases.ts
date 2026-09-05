@@ -84,6 +84,7 @@ import { aliases as pyramidAliases } from "./components/pyramid"
 import { aliases as icebergAliases } from "./components/iceberg"
 import { aliases as pillarModelAliases } from "./components/pillar-model"
 import { aliases as valueChainAliases } from "./components/value-chain"
+import { aliases as harveyBallsAliases } from "./components/harvey-balls"
 
 /** One component type's `{ aliasKey: canonicalKey }` map. */
 export type FieldAliasMap = Readonly<Record<string, string>>
@@ -138,6 +139,9 @@ export const COMPONENT_FIELD_ALIASES: Readonly<Record<string, FieldAliasMap>> = 
   // hub_spoke's center concept is the one field a model reaches past: every
   // other card-like component in this IR calls its lead string `title`.
   hub_spoke: hubSpokeAliases.block,
+  // A scoring grid's two axes are `options` and `criteria` here; a model
+  // describing the same picture reaches for the table words instead.
+  harvey_balls: harveyBallsAliases.block,
   // decision_tree names its root string after what it is — a question — and
   // its child array after what the lines out of it are. A model reaches for
   // the generic `title` for the first, "decision" for the component's own
@@ -257,6 +261,7 @@ export const COMPONENT_ITEM_FIELD_ALIASES: Readonly<Record<string, readonly Item
   pyramid: pyramidAliases.items,
   pillar_model: pillarModelAliases.items,
   value_chain: valueChainAliases.items,
+  harvey_balls: harveyBallsAliases.items,
 }
 
 /**

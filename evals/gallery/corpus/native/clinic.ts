@@ -183,6 +183,16 @@ export const PULSE_LEXICON: Lexicon = {
     "健康讲堂",
     "老年友好",
   ],
+  shortlist: {
+    criteria: ["坚持得住", "花钱多少", "见效快慢", "家里配合"],
+    options: [
+      { label: "每天定点吃药", scores: [75, 100, 100, 75], total: 88, chosen: true },
+      { label: "全家一起减盐", scores: [50, 100, 50, 25], total: 56 },
+      { label: "每天快走半小时", scores: [50, 100, 50, 100], total: 75 },
+      { label: "买台电子血压计", scores: [100, 50, 25, 100], total: 69 },
+      { label: "只等半年复查", scores: [100, 100, 0, 100], total: 75 },
+    ],
+  },
 
   products: [
     { name: "血压年度随访包", note: "四次复诊加一次用药调整", price: "¥360", priceUnit: "年" },

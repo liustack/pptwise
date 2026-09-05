@@ -183,6 +183,16 @@ export const INSIGHT_LEXICON: Lexicon = {
     "错误预案",
     "季度对账",
   ],
+  shortlist: {
+    criteria: ["赔率", "胜率", "回撤容忍", "验证周期"],
+    options: [
+      { label: "红利继续加仓", scores: [0, 75, 75, 100], total: 62 },
+      { label: "切向出海制造", scores: [100, 50, 50, 50], total: 62 },
+      { label: "长久期利率债", scores: [75, 75, 100, 25], total: 69, chosen: true },
+      { label: "等一个季度再定", scores: [50, 25, 100, 0], total: 44 },
+      { label: "全线均衡摊薄", scores: [25, 100, 75, 75], total: 69 },
+    ],
+  },
 
   products: [
     { name: "年度策略订阅", note: "四期深度报告与季度更新", price: "¥3.8万", priceUnit: "年" },

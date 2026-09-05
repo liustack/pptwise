@@ -183,6 +183,16 @@ export const LUXE_LEXICON: Lexicon = {
     "故人席",
     "弱音礼",
   ],
+  shortlist: {
+    criteria: ["合身", "工期", "料子相配", "衣主喜欢"],
+    options: [
+      { label: "手工盘扣旗袍", scores: [100, 25, 100, 100], total: 81, chosen: true },
+      { label: "缂丝改良长褂", scores: [75, 0, 100, 75], total: 62 },
+      { label: "素绸直裁长裙", scores: [75, 100, 50, 50], total: 69 },
+      { label: "刺绣披肩配裙", scores: [50, 75, 75, 75], total: 69 },
+      { label: "沿用去年版型", scores: [25, 100, 50, 25], total: 50 },
+    ],
+  },
 
   products: [
     { name: "手工盘扣外套", note: "十二道盘扣，全内衬手缝", price: "¥3.8万", priceUnit: "件" },

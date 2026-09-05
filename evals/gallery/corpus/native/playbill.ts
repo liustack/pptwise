@@ -183,6 +183,16 @@ export const PLAYBILL_LEXICON: Lexicon = {
     "戏剧节投递",
     "散伙饭",
   ],
+  shortlist: {
+    criteria: ["排得出来", "舞美花钱", "观众进得去", "社员扛得住"],
+    options: [
+      { label: "空台加一束光", scores: [100, 100, 50, 100], total: 88, chosen: true },
+      { label: "搭两层实景", scores: [25, 0, 100, 25], total: 38 },
+      { label: "投影当布景", scores: [75, 75, 75, 75], total: 75 },
+      { label: "借隔壁剧社的景", scores: [50, 100, 75, 50], total: 69 },
+      { label: "沿用去年那套", scores: [75, 100, 25, 75], total: 69 },
+    ],
+  },
 
   products: [
     { name: "公演门票", note: "四场同价，可选座", price: "¥80", priceUnit: "张" },

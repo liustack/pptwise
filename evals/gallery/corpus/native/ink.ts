@@ -183,6 +183,16 @@ export const INK_LEXICON: Lexicon = {
     "留言代润",
     "同临一帖",
   ],
+  shortlist: {
+    criteria: ["纸墨相宜", "初学好上手", "留得住", "耗费"],
+    options: [
+      { label: "生宣配松烟", scores: [100, 25, 75, 50], total: 62 },
+      { label: "半熟宣配油烟", scores: [75, 100, 75, 75], total: 81, chosen: true },
+      { label: "毛边纸练日课", scores: [25, 100, 25, 100], total: 62 },
+      { label: "洒金笺写小品", scores: [75, 25, 100, 0], total: 50 },
+      { label: "仿古皮纸", scores: [50, 50, 100, 25], total: 56 },
+    ],
+  },
 
   products: [
     { name: "社藏册页", note: "五十件影印，宣纸线装", price: "¥380", priceUnit: "函" },

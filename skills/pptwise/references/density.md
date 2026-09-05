@@ -18,7 +18,7 @@ Every content page has two independent limits. Narrative pacing sets an editoria
 
 Three consecutive content pages with the same kind produce a spec advisory. Repetition can be correct, but confirm that the story truly calls for the same semantic move three times.
 
-Eight components own the whole body: `swot`, `bmc`, `waterfall`, `gantt`, `pest`, `five_forces`, `heatmap`, and `sankey`. Each must be the page's only component.
+Nine components own the whole body: `swot`, `bmc`, `waterfall`, `gantt`, `pest`, `five_forces`, `heatmap`, `sankey`, and `harvey_balls`. Each must be the page's only component.
 
 ## Decoration ownership
 

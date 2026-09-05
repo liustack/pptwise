@@ -183,6 +183,16 @@ export const MUSEUM_LEXICON: Lexicon = {
     "策展导览",
     "巡展",
   ],
+  shortlist: {
+    criteria: ["文物安全", "看得清", "叙事连贯", "布展工期"],
+    options: [
+      { label: "低照度独立柜", scores: [100, 50, 75, 25], total: 62, chosen: true },
+      { label: "并柜集中陈列", scores: [50, 75, 100, 100], total: 81 },
+      { label: "开放式无柜展台", scores: [0, 100, 75, 75], total: 62 },
+      { label: "复制品替换原件", scores: [100, 100, 25, 50], total: 69 },
+      { label: "沿用上次展线", scores: [75, 50, 25, 100], total: 62 },
+    ],
+  },
 
   products: [
     { name: "特展门票", note: "含分时预约与语音导览", price: "¥80", priceUnit: "人次" },

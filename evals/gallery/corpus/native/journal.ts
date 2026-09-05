@@ -183,6 +183,16 @@ export const JOURNAL_LEXICON: Lexicon = {
     "订户告知",
     "慢出版",
   ],
+  shortlist: {
+    criteria: ["读者买账", "编辑部撑得住", "账算得平", "不违初衷"],
+    options: [
+      { label: "涨价到二十四元", scores: [50, 100, 75, 100], total: 81, chosen: true },
+      { label: "接品牌定制内容", scores: [25, 75, 100, 0], total: 50 },
+      { label: "季刊改双月刊", scores: [75, 25, 50, 75], total: 56 },
+      { label: "只做电子版", scores: [25, 100, 100, 25], total: 62 },
+      { label: "维持原价原页数", scores: [75, 50, 0, 100], total: 56 },
+    ],
+  },
 
   products: [
     { name: "单期零售", note: "改版后每期一百二十页", price: "¥45", priceUnit: "期" },

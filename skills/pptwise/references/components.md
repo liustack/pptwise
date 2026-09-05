@@ -64,6 +64,7 @@ The table gives each component's normal kind home. A component may serve more th
 | `iceberg` | `hierarchy`, `statement` |
 | `pillar_model` | `hierarchy` |
 | `value_chain` | `process` |
+| `harvey_balls` | `data`, `comparison` |
 
 ## Lookalikes
 
@@ -90,6 +91,8 @@ The table gives each component's normal kind home. A component may serve more th
 
 - Use `quote_wall` when several people saying the same thing is the argument. Use `blockquote` for one remark set at full size and `people_cards` when the page is about who the speakers are.
 
+- Use `harvey_balls` when options are judged on shared criteria in five steps and the reader should spot the weak column. Use `heatmap` when the values are continuous numbers whose spread across two dimensions is the message, `data_table` when any figure must be read exactly, and `comparison` for qualitative attributes with no shared scale.
+
 `architecture.layers` paints top to bottom by default. Set `direction: "bottom_up"` when the authored order should begin at the foundation. Keep the array in narrative order.
 
-`swot`, `bmc`, `waterfall`, `gantt`, `pest`, `five_forces`, `heatmap`, and `sankey` are full-body components. Each must be the page's only component.
+`swot`, `bmc`, `waterfall`, `gantt`, `pest`, `five_forces`, `heatmap`, `sankey`, and `harvey_balls` are full-body components. Each must be the page's only component.

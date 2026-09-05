@@ -183,6 +183,16 @@ export const ARENA_LEXICON: Lexicon = {
     "主场票房",
     "冬窗",
   ],
+  shortlist: {
+    criteria: ["前期节奏", "团战容错", "选手适配", "训练成本"],
+    options: [
+      { label: "四一分推体系", scores: [100, 25, 50, 75], total: 62 },
+      { label: "中野联动开雾", scores: [75, 75, 100, 50], total: 78, chosen: true },
+      { label: "双 C 后期发育", scores: [0, 100, 75, 100], total: 69 },
+      { label: "全员换线运营", scores: [50, 50, 25, 25], total: 41 },
+      { label: "沿用上赛季打法", scores: [25, 50, 75, 100], total: 55 },
+    ],
+  },
 
   products: [
     { name: "赛季套票", note: "主场十四战连坐，位置不变", price: "¥980", priceUnit: "席 / 赛季" },

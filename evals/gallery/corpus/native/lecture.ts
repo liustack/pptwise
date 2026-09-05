@@ -183,6 +183,16 @@ export const LECTURE_LEXICON: Lexicon = {
     "外拍预告",
     "结课影展",
   ],
+  shortlist: {
+    criteria: ["当场学得会", "回家用得上", "不用买东西", "课上练得动"],
+    options: [
+      { label: "只讲窗边自然光", scores: [100, 100, 100, 75], total: 94, chosen: true },
+      { label: "讲手动曝光三要素", scores: [25, 75, 100, 50], total: 62 },
+      { label: "带补光灯上课", scores: [75, 25, 0, 75], total: 44 },
+      { label: "讲后期修图", scores: [50, 75, 50, 25], total: 50 },
+      { label: "外出夜景实拍", scores: [50, 50, 100, 0], total: 50 },
+    ],
+  },
 
   products: [
     { name: "单课旁听", note: "一课一主题，讲完当场练", price: "¥60", priceUnit: "课" },

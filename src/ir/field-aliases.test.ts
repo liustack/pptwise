@@ -481,6 +481,43 @@ const BLOCK_CASES: readonly BlockCase[] = [
     },
     expected: [{ label: "A" }, { label: "B" }, { label: "C" }],
   },
+  // A data-page drawing's own item array attracts the generic container
+  // word, a scoring grid's other axis the table word, and a line set under a
+  // grid the footnote word.
+  {
+    type: "harvey_balls",
+    alias: "rows",
+    canonical: "options",
+    component: {
+      type: "harvey_balls",
+      criteria: ["speed", "cost", "fit"],
+      rows: [
+        { label: "Build", scores: [100, 25, 50] },
+        { label: "Buy", scores: [50, 75, 75] },
+        { label: "Partner", scores: [75, 100, 100] },
+      ],
+    },
+    expected: [
+      { label: "Build", scores: [100, 25, 50] },
+      { label: "Buy", scores: [50, 75, 75] },
+      { label: "Partner", scores: [75, 100, 100] },
+    ],
+  },
+  {
+    type: "harvey_balls",
+    alias: "columns",
+    canonical: "criteria",
+    component: {
+      type: "harvey_balls",
+      columns: ["speed", "cost", "fit"],
+      options: [
+        { label: "Build", scores: [100, 25, 50] },
+        { label: "Buy", scores: [50, 75, 75] },
+        { label: "Partner", scores: [75, 100, 100] },
+      ],
+    },
+    expected: ["speed", "cost", "fit"],
+  },
 ]
 
 describe("COMPONENT_FIELD_ALIASES: every row round-trips", () => {
@@ -1145,6 +1182,32 @@ const ITEM_CASES: readonly ItemCase[] = [
   { type: "value_chain", itemsKey: "support", alias: "name", canonical: "label", extra: { primary: [{ label: "A" }, { label: "B" }, { label: "C" }] }, item: { name: "S1" }, pad: [{ label: "S2" }], expected: "S1" },
   { type: "value_chain", itemsKey: "support", alias: "text", canonical: "note", extra: { primary: [{ label: "A" }, { label: "B" }, { label: "C" }] }, item: { label: "S1", text: "what it gives" }, pad: [{ label: "S2" }], expected: "what it gives" },
   { type: "value_chain", itemsKey: "support", alias: "desc", canonical: "note", extra: { primary: [{ label: "A" }, { label: "B" }, { label: "C" }] }, item: { label: "S1", desc: "what it gives" }, pad: [{ label: "S2" }], expected: "what it gives" },
+  {
+    type: "harvey_balls",
+    itemsKey: "options",
+    alias: "title",
+    canonical: "label",
+    extra: { criteria: ["speed", "cost", "fit"] },
+    item: { title: "Build", scores: [100, 25, 50] },
+    pad: [
+      { label: "Buy", scores: [50, 75, 75] },
+      { label: "Partner", scores: [75, 100, 100] },
+    ],
+    expected: "Build",
+  },
+  {
+    type: "harvey_balls",
+    itemsKey: "options",
+    alias: "values",
+    canonical: "scores",
+    extra: { criteria: ["speed", "cost", "fit"] },
+    item: { label: "Build", values: [100, 25, 50] },
+    pad: [
+      { label: "Buy", scores: [50, 75, 75] },
+      { label: "Partner", scores: [75, 100, 100] },
+    ],
+    expected: [100, 25, 50],
+  },
 ]
 
 describe("COMPONENT_ITEM_FIELD_ALIASES: every row round-trips", () => {
@@ -1174,7 +1237,7 @@ describe("COMPONENT_ITEM_FIELD_ALIASES: every row round-trips", () => {
 // ── total pair count pinned (docs/changeset "53 total synonym pairs") ──────
 
 describe("total synonym-pair count", () => {
-  it("COMPONENT_FIELD_ALIASES + COMPONENT_ITEM_FIELD_ALIASES flatten to exactly 146 pairs", () => {
+  it("COMPONENT_FIELD_ALIASES + COMPONENT_ITEM_FIELD_ALIASES flatten to exactly 150 pairs", () => {
     // The "covers every row exactly once" completeness guards above only
     // prove BLOCK_CASES/ITEM_CASES stay in lockstep with each table's own
     // rows — a row deleted from a table *and* its matching test case would
@@ -1191,7 +1254,7 @@ describe("total synonym-pair count", () => {
       (n, specs) => n + specs.reduce((m, spec) => m + Object.keys(spec.aliases).length, 0),
       0,
     )
-    expect(blockCount + itemCount).toBe(146)
+    expect(blockCount + itemCount).toBe(150)
   })
 })
 

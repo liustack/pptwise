@@ -183,6 +183,16 @@ export const ENTERPRISE_LEXICON: Lexicon = {
     "班组认证",
     "观察周",
   ],
+  shortlist: {
+    criteria: ["停产风险", "回退把握", "培训负担", "上线周期"],
+    options: [
+      { label: "全集团一次切换", scores: [0, 25, 50, 100], total: 44 },
+      { label: "两个厂区先试点", scores: [75, 100, 75, 50], total: 78, chosen: true },
+      { label: "按业务线分批", scores: [50, 75, 25, 25], total: 45 },
+      { label: "新旧系统并行一年", scores: [100, 100, 0, 0], total: 55 },
+      { label: "推迟到明年", scores: [100, 100, 100, 0], total: 62 },
+    ],
+  },
 
   products: [
     { name: "迁移驻场包", note: "老系统数据搬运与双轨并行", price: "¥46万", priceUnit: "起 / 厂区" },

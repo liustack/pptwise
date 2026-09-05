@@ -40,6 +40,7 @@ import { traits as pyramidTraits } from "@/ir/components/pyramid"
 import { traits as icebergTraits } from "@/ir/components/iceberg"
 import { traits as pillarModelTraits } from "@/ir/components/pillar-model"
 import { traits as valueChainTraits } from "@/ir/components/value-chain"
+import { traits as harveyBallsTraits } from "@/ir/components/harvey-balls"
 import {
   EVIDENCE_TYPES,
   FULL_BODY_TYPES,
@@ -105,6 +106,7 @@ const DOMAIN_FILE_TRAITS: readonly (readonly [string, { readonly evidence: boole
   ["iceberg", icebergTraits],
   ["pillar_model", pillarModelTraits],
   ["value_chain", valueChainTraits],
+  ["harvey_balls", harveyBallsTraits],
 ]
 
 /**
@@ -318,11 +320,21 @@ describe("EVIDENCE_TYPES consistency: membership matches every domain file's own
 })
 
 describe("FULL_BODY_TYPES (structure-components wave 1 task 1 decision 1, extended by wave 1 task 2 and wave 2 tasks 1-3 — new, not a refactor equivalence lock)", () => {
-  it("contains exactly the eight full-body components across both waves (named-slot family + numeric-axis family + value-grid family + flow-graph family)", () => {
+  it("contains exactly the nine full-body components across both waves plus the four data-page drawings (named-slot family + numeric-axis family + value-grid family + flow-graph family)", () => {
     expect(new Set(FULL_BODY_TYPES)).toEqual(
-      new Set(["swot", "bmc", "waterfall", "gantt", "pest", "five_forces", "heatmap", "sankey"]),
+      new Set([
+        "swot",
+        "bmc",
+        "waterfall",
+        "gantt",
+        "pest",
+        "five_forces",
+        "heatmap",
+        "sankey",
+        "harvey_balls",
+      ]),
     )
-    expect(FULL_BODY_TYPES.size).toBe(8)
+    expect(FULL_BODY_TYPES.size).toBe(9)
   })
 
   it("is disjoint from STRETCHABLE_TYPES — full-body components fill box.h directly, never through growStretchables' capped path", () => {

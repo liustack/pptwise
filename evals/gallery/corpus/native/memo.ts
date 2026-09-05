@@ -183,6 +183,16 @@ export const MEMO_LEXICON: Lexicon = {
     "防篡改",
     "半年复盘",
   ],
+  shortlist: {
+    criteria: ["现金安全", "手艺长进", "退路", "心里踏实"],
+    options: [
+      { label: "立刻裸辞全职做", scores: [0, 100, 25, 50], total: 44 },
+      { label: "先谈成一张订单再走", scores: [75, 75, 100, 100], total: 88, chosen: true },
+      { label: "转成兼职做半年", scores: [100, 50, 100, 25], total: 69 },
+      { label: "留岗只做周末", scores: [100, 25, 100, 0], total: 56 },
+      { label: "彻底放弃这个念头", scores: [100, 0, 100, 25], total: 56 },
+    ],
+  },
 
   products: [
     { name: "一小时咨询", note: "带着问题来，走时有下一步", price: "¥800", priceUnit: "小时" },

@@ -510,6 +510,26 @@ const COVERAGE_ENTRIES: Record<string, unknown> = {
     primary: [{ label: "Acquire", value: "", unit: "%" }, { label: "Prove" }, { label: "Renew" }],
     support: [{ label: "Platform" }, { label: "People" }],
   }),
+  // harvey_balls' own hard check is the rectangle: every option is scored on
+  // every criterion, and a short row would read as a column of zeros.
+  "coverage/harvey_balls-valid": minimalDeck({
+    type: "harvey_balls",
+    criteria: ["speed", "cost", "fit"],
+    options: [
+      { label: "Build", scores: [100, 25, 50] },
+      { label: "Buy", scores: [50, 75, 75] },
+      { label: "Partner", scores: [75, 100, 100] },
+    ],
+  }),
+  "coverage/harvey_balls-tripwire": minimalDeck({
+    type: "harvey_balls",
+    criteria: ["speed", "cost", "fit"],
+    options: [
+      { label: "Build", scores: [100, 25] },
+      { label: "Buy", scores: [50, 75, 75] },
+      { label: "Partner", scores: [75, 100, 100] },
+    ],
+  }),
 }
 
 // Assembles the validation corpus from all three sources, keyed by

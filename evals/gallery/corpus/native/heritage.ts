@@ -183,6 +183,16 @@ export const HERITAGE_LEXICON: Lexicon = {
     "非遗申报",
     "字号维权",
   ],
+  shortlist: {
+    criteria: ["守住味道", "老街脸面", "年轻人愿买", "手上人手"],
+    options: [
+      { label: "只换包装不动工艺", scores: [100, 75, 75, 100], total: 88, chosen: true },
+      { label: "老缸全换不锈钢罐", scores: [0, 25, 50, 100], total: 44 },
+      { label: "开一间前店后坊", scores: [75, 100, 100, 25], total: 75 },
+      { label: "上电商只做小罐", scores: [75, 25, 100, 50], total: 62 },
+      { label: "维持原样不改", scores: [100, 50, 0, 100], total: 62 },
+    ],
+  },
 
   products: [
     { name: "头道原汁酱油", note: "春晒秋收，一年只出一批", price: "¥68", priceUnit: "瓶" },

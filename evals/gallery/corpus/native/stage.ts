@@ -183,6 +183,16 @@ export const STAGE_LEXICON: Lexicon = {
     "会议字幕",
     "无障碍模式",
   ],
+  shortlist: {
+    criteria: ["整机重量", "亮度", "续航", "成本"],
+    options: [
+      { label: "单目光波导", scores: [100, 50, 100, 75], total: 81 },
+      { label: "双目光波导", scores: [50, 100, 50, 25], total: 56 },
+      { label: "微型投影方案", scores: [25, 75, 25, 100], total: 56 },
+      { label: "分体计算单元", scores: [100, 75, 75, 50], total: 75, chosen: true },
+      { label: "沿用一代方案", scores: [0, 25, 50, 100], total: 44 },
+    ],
+  },
 
   products: [
     { name: "目光 One", note: "四十克机身，全天佩戴", price: "¥2499", priceUnit: "副" },

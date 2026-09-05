@@ -183,6 +183,16 @@ export const CLASSROOM_LEXICON: Lexicon = {
     "暑假清单",
     "收心周",
   ],
+  shortlist: {
+    criteria: ["提分见效", "占用时间", "孩子愿做", "家长能盯"],
+    options: [
+      { label: "每天二十分钟计算", scores: [75, 100, 50, 100], total: 81, chosen: true },
+      { label: "周末加一节几何课", scores: [100, 25, 25, 50], total: 50 },
+      { label: "只整理错题本", scores: [50, 75, 75, 75], total: 69 },
+      { label: "同桌互相讲题", scores: [50, 100, 100, 25], total: 69 },
+      { label: "多刷两套卷子", scores: [25, 25, 0, 75], total: 31 },
+    ],
+  },
 
   products: [
     { name: "暑期专题课", note: "函数与几何各十讲，小班", price: "¥1200", priceUnit: "期" },

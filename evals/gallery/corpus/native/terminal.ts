@@ -183,6 +183,16 @@ export const TECH_LEXICON: Lexicon = {
     "赞助透明",
     "总线因子",
   ],
+  shortlist: {
+    criteria: ["查询延迟", "内存占用", "实现复杂度", "兼容旧版"],
+    options: [
+      { label: "列式重写执行器", scores: [100, 75, 0, 25], total: 50 },
+      { label: "向量化算子", scores: [75, 50, 50, 100], total: 69, chosen: true },
+      { label: "只加结果缓存", scores: [25, 0, 100, 100], total: 56 },
+      { label: "换第三方引擎", scores: [75, 75, 75, 0], total: 56 },
+      { label: "维持现有实现", scores: [0, 50, 100, 100], total: 62 },
+    ],
+  },
 
   products: [
     { name: "Quill 社区版", note: "Apache 2.0，自行部署", price: "¥0", priceUnit: "永久" },

@@ -202,6 +202,22 @@ export const COMPONENT_BUILDERS: Record<string, (lex: Lexicon) => Component> = {
     margin: { label: lex.chain.margin.label, value: lex.chain.margin.value },
   }),
 
+  // The shortlist this track's own subject actually weighed, on the criteria
+  // it weighed them by. Scores, totals and the chosen row are authored with
+  // the options (`Shortlist`, `./lexicon.ts`) — a grid whose columns came out
+  // of a general label pool asks which option is weak at "季后赛".
+  harvey_balls: (lex) => ({
+    type: "harvey_balls",
+    criteria: [...lex.shortlist.criteria],
+    legend: true,
+    options: lex.shortlist.options.map((option) => ({
+      label: option.label,
+      scores: [...option.scores],
+      total: option.total,
+      highlight: option.chosen === true ? true : undefined,
+    })),
+  }),
+
   // No `show_grid` here: a bar chart's house default is gridline-free
   // (round-4 review, `journal p05` — every bar already prints its value, see
   // `renderBar`'s own `showGrid` doc comment), and this page is the one the

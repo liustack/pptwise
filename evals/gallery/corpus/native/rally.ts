@@ -183,6 +183,16 @@ export const CAMPAIGN_LEXICON: Lexicon = {
     "价格带卡位",
     "冷链保障",
   ],
+  shortlist: {
+    criteria: ["首月铺市", "单箱成本", "复购拉动", "执行难度"],
+    options: [
+      { label: "全渠道买断陈列", scores: [100, 0, 25, 50], total: 44 },
+      { label: "冰柜贴纸加试饮", scores: [75, 75, 75, 75], total: 75, chosen: true },
+      { label: "只投线上种草", scores: [25, 100, 50, 100], total: 69 },
+      { label: "买赠装冲量", scores: [75, 25, 0, 75], total: 44 },
+      { label: "先做五城试点", scores: [25, 100, 75, 100], total: 75 },
+    ],
+  },
 
   products: [
     { name: "山茶气泡 · 单瓶", note: "冷萃茶底，零糖", price: "¥9.9", priceUnit: "瓶" },

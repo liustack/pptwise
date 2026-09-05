@@ -183,6 +183,16 @@ export const EMBER_LEXICON: Lexicon = {
     "碰伤险",
     "百台计划",
   ],
+  shortlist: {
+    criteria: ["碰伤率", "单台成本", "量产难度", "果园接受度"],
+    options: [
+      { label: "软爪气动抓取", scores: [100, 25, 25, 75], total: 62 },
+      { label: "柔性网兜托接", scores: [75, 75, 75, 100], total: 84, chosen: true },
+      { label: "震动落果加接盘", scores: [0, 100, 100, 25], total: 55 },
+      { label: "人机协作只做搬运", scores: [100, 50, 100, 50], total: 78 },
+      { label: "沿用一代机械爪", scores: [25, 75, 100, 25], total: 55 },
+    ],
+  },
 
   products: [
     { name: "采摘机整机", note: "四臂并采，含首年质保", price: "¥28万", priceUnit: "台" },

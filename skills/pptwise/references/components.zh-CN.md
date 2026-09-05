@@ -69,6 +69,7 @@ mirror_of: skills/pptwise/references/components.md
 | `iceberg` | `hierarchy`, `statement` |
 | `pillar_model` | `hierarchy` |
 | `value_chain` | `process` |
+| `harvey_balls` | `data`, `comparison` |
 
 ## 相近组件
 
@@ -95,6 +96,8 @@ mirror_of: skills/pptwise/references/components.md
 
 - `quote_wall` 用在几个人说同一件事本身就是论据时。一个人说一句、要放大到整页用 `blockquote`，页面讲的是这些人是谁用 `people_cards`。
 
+- 几个方案在同一组标准上按五档打分、要一眼看出短板时用 `harvey_balls`。数值是连续量、要看它在两个维度上的分布时用 `heatmap`，任何数字要读准时用 `data_table`，没有共同刻度的定性属性对照用 `comparison`。
+
 `architecture.layers` 默认从上向下绘制。作者按基座优先的顺序写作时，设置 `direction: "bottom_up"`，不要手工倒置数组。
 
-`swot`、`bmc`、`waterfall`、`gantt`、`pest`、`five_forces`、`heatmap` 与 `sankey` 是全页组件。它们必须独占页面。
+`swot`、`bmc`、`waterfall`、`gantt`、`pest`、`five_forces`、`heatmap`、`sankey` 与 `harvey_balls` 是全页组件。它们必须独占页面。

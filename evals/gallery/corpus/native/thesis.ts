@@ -183,6 +183,16 @@ export const ACADEMIC_LEXICON: Lexicon = {
     "迁移学习",
     "伦理合规",
   ],
+  shortlist: {
+    criteria: ["标注成本", "跨点迁移", "复现难度", "语料需求"],
+    options: [
+      { label: "全监督逐句标注", scores: [0, 50, 100, 0], total: 38 },
+      { label: "自监督预训练加微调", scores: [75, 75, 75, 100], total: 81, chosen: true },
+      { label: "跨方言迁移学习", scores: [100, 100, 25, 75], total: 75 },
+      { label: "规则加声学模型", scores: [75, 25, 100, 50], total: 62 },
+      { label: "沿用通用普通话模型", scores: [100, 0, 100, 100], total: 75 },
+    ],
+  },
 
   products: [
     { name: "方言语音语料库", note: "四十小时标注音频，学术授权", price: "¥2万", priceUnit: "年 / 机构" },

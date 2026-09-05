@@ -353,6 +353,16 @@ const COMPONENT_BY_TYPE: Record<Component["type"], Component> = {
       { title: "Platform", value: "96", unit: "orgs", note: "shared roadmap" },
     ],
   },
+  harvey_balls: {
+    type: "harvey_balls",
+    criteria: ["Setup time", "Seat cost", "Integrations"],
+    legend: true,
+    options: [
+      { label: "Build it here", scores: [75, 100, 50], total: 62 },
+      { label: "Subscribe", scores: [100, 50, 75], total: 71 },
+      { label: "Build it together", scores: [100, 100, 100], total: 86, highlight: true },
+    ],
+  },
   hub_spoke: {
     type: "hub_spoke",
     center: "Platform",
@@ -510,6 +520,7 @@ function noAssetIr(): PptxIR {
       contentSlide("Image (no resolvable asset)", [COMPONENT_BY_TYPE.image]),
       contentSlide("Image grid (no resolvable asset)", [COMPONENT_BY_TYPE.image_grid]),
       contentSlide("Image compare (no resolvable asset)", [COMPONENT_BY_TYPE.image_compare]),
+      contentSlide("Harvey balls", [COMPONENT_BY_TYPE.harvey_balls]),
       { type: "ending", heading: "Thanks", components: [] },
     ],
   }

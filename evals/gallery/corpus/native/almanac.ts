@@ -183,6 +183,16 @@ export const TERRA_LEXICON: Lexicon = {
     "自然教育",
     "五年之约",
   ],
+  shortlist: {
+    criteria: ["地力恢复", "用工投入", "当年收成", "菜箱稳定"],
+    options: [
+      { label: "整块地休耕一年", scores: [100, 100, 0, 0], total: 50 },
+      { label: "轮作绿肥压青", scores: [75, 50, 50, 75], total: 78, chosen: true },
+      { label: "只加堆肥不换茬", scores: [25, 75, 75, 75], total: 62 },
+      { label: "租下隔壁十亩", scores: [50, 0, 100, 100], total: 55 },
+      { label: "照旧不动", scores: [0, 100, 50, 50], total: 41 },
+    ],
+  },
 
   products: [
     { name: "青禾米 · 五斤装", note: "自留种，一年一季，当季碾", price: "¥88", priceUnit: "袋" },

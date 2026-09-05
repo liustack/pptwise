@@ -183,6 +183,16 @@ export const SWISS_LEXICON: Lexicon = {
     "预算缺口",
     "复捐率",
   ],
+  shortlist: {
+    criteria: ["每元触达儿童", "落地速度", "可核查", "长期留存"],
+    options: [
+      { label: "新建校园图书角", scores: [75, 75, 100, 100], total: 88, chosen: true },
+      { label: "直接发放图书", scores: [100, 100, 50, 25], total: 69 },
+      { label: "资助驻校阅读师", scores: [25, 50, 100, 100], total: 69 },
+      { label: "线上阅读平台", scores: [100, 50, 25, 50], total: 56 },
+      { label: "转拨给合作机构", scores: [50, 100, 0, 50], total: 50 },
+    ],
+  },
 
   products: [
     { name: "月捐 · 一盏", note: "每月点亮一间乡村教室", price: "¥30", priceUnit: "月" },

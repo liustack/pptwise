@@ -56,6 +56,30 @@ export interface Product {
   readonly priceUnit: string
 }
 
+/** One of the five fills a Harvey ball draws. */
+export type Fill = 0 | 25 | 50 | 75 | 100
+
+/**
+ * A shortlist and the criteria it was judged on.
+ *
+ * Written as one object because the two axes only mean anything together: a
+ * column of scores under "季后赛" is not a criterion any option can be weak
+ * at, and criteria dealt out of a general label pool produce exactly that.
+ */
+export interface Shortlist {
+  /** What every option is judged on, in the order the columns read. */
+  readonly criteria: readonly string[]
+  readonly options: readonly {
+    readonly label: string
+    /** One fill per criterion, in `criteria` order. */
+    readonly scores: readonly Fill[]
+    /** The summary figure the row ends on, on whatever scale this list uses. */
+    readonly total: number
+    /** The one option the page argues for. Exactly one row carries it. */
+    readonly chosen?: boolean
+  }[]
+}
+
 export interface Person {
   readonly name: string
   readonly role: string
@@ -197,6 +221,8 @@ export interface Lexicon {
   readonly metrics: readonly Metric[]
   /** Technology / capability tags, <= 24 chars each. */
   readonly tags: Pool
+  /** One decision this subject actually faced, with the criteria it was weighed on. */
+  readonly shortlist: Shortlist
   /**
    * Three things this world sells, in the order a page should read them.
    *
@@ -490,6 +516,16 @@ const zh: Lexicon = {
     "审计日志",
     "Kubernetes",
   ],
+  shortlist: {
+    criteria: ["开通周期", "席位成本", "集成能力", "服务响应"],
+    options: [
+      { label: "自建开通平台", scores: [25, 75, 75, 50], total: 62 },
+      { label: "采购成品订阅", scores: [100, 25, 50, 75], total: 71 },
+      { label: "迁到伙伴平台", scores: [50, 50, 25, 25], total: 48 },
+      { label: "与伙伴联合共建", scores: [75, 75, 100, 75], total: 86, chosen: true },
+      { label: "维持现状", scores: [0, 75, 0, 25], total: 29 },
+    ],
+  },
 
   products: [
     { name: "协作工作区", note: "文档、任务与会议记录合在一处", price: "¥68", priceUnit: "席位 / 月" },
@@ -799,6 +835,16 @@ const en: Lexicon = {
     "LDAP",
     "Kubernetes",
   ],
+  shortlist: {
+    criteria: ["Setup time", "Seat cost", "Integrations", "Response time"],
+    options: [
+      { label: "Build the platform here", scores: [25, 75, 75, 50], total: 62 },
+      { label: "Buy the finished product", scores: [100, 25, 50, 75], total: 71 },
+      { label: "Move onto a partner", scores: [50, 50, 25, 25], total: 48 },
+      { label: "Build it with a partner", scores: [75, 75, 100, 75], total: 86, chosen: true },
+      { label: "Leave it as it is", scores: [0, 75, 0, 25], total: 29 },
+    ],
+  },
 
   products: [
     { name: "Collaboration Workspace", note: "Docs, tasks and meeting notes in one place", price: "$9", priceUnit: "per seat / month" },
@@ -1108,6 +1154,16 @@ const mixed: Lexicon = {
     "PostgreSQL RDS",
     "SLSA 签名",
   ],
+  shortlist: {
+    criteria: ["开通周期", "席位成本", "API 集成", "服务响应"],
+    options: [
+      { label: "自建 Provisioning 平台", scores: [25, 75, 75, 50], total: 62 },
+      { label: "采购成品 SaaS 订阅", scores: [100, 25, 50, 75], total: 71 },
+      { label: "迁到伙伴的 PaaS", scores: [50, 50, 25, 25], total: 48 },
+      { label: "与伙伴联合共建", scores: [75, 75, 100, 75], total: 86, chosen: true },
+      { label: "维持现状", scores: [0, 75, 0, 25], total: 29 },
+    ],
+  },
 
   products: [
     { name: "Workspace 协作版", note: "文档、任务与会议记录合在一处", price: "¥68", priceUnit: "席位 / 月" },

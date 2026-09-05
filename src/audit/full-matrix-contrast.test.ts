@@ -1552,6 +1552,12 @@ const MUTED_SURFACE_CLASS: Record<string, MutedSurfaceClass> = {
   // tint (`mixHex(colors.primary, colors.bg, 0.9)`), a component-painted
   // blend no other check walks. Own sweep below.
   iceberg: "needs-fixture",
+  // harvey-balls.tsx paints `colors.muted` only as the column headers and the
+  // key under the grid, both on the ambient page background (the body itself
+  // is unfilled, the booktabs posture `data-table.tsx` takes); the one filled
+  // row is `colors.primary` with `readableOn(primary)` ink, out of this map's
+  // scope the same way steps' badge digit is.
+  harvey_balls: "page-bg",
 }
 
 describe("colors.muted component-type coverage (task-2 fix round, backlog 5a completeness sweep)", () => {

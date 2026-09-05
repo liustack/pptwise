@@ -16,6 +16,7 @@ import * as fiveForces from "./five-forces"
 import * as flowchart from "./flowchart"
 import * as fromTo from "./from-to"
 import * as gantt from "./gantt"
+import * as harveyBalls from "./harvey-balls"
 import * as heatmap from "./heatmap"
 import * as hubSpoke from "./hub-spoke"
 import * as iconCards from "./icon-cards"
@@ -124,6 +125,7 @@ const COMPONENT_STORY_MODULES: Readonly<Record<string, ComponentStoryModule>> = 
   iceberg,
   pillar_model: pillarModel,
   value_chain: valueChain,
+  harvey_balls: harveyBalls,
 }
 
 /**

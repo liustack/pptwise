@@ -183,6 +183,16 @@ export const RUNWAY_LEXICON: Lexicon = {
     "旧物改造",
     "信笺主题",
   ],
+  shortlist: {
+    criteria: ["上身效果", "可量产", "回收料占比", "打样成本"],
+    options: [
+      { label: "全植物染真丝", scores: [100, 25, 100, 0], total: 56 },
+      { label: "回收羊毛混纺", scores: [75, 75, 100, 75], total: 81, chosen: true },
+      { label: "新造合成面料", scores: [75, 100, 0, 100], total: 69 },
+      { label: "库存尾料拼接", scores: [50, 50, 100, 100], total: 75 },
+      { label: "沿用样衣面料", scores: [50, 100, 25, 100], total: 69 },
+    ],
+  },
 
   products: [
     { name: "未完成的信 · 大衣", note: "双面羊毛，可两面穿", price: "¥1.2万", priceUnit: "件" },

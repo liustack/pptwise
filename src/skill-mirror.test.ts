@@ -198,11 +198,11 @@ describe("pptwise SKILL model and bilingual mirrors", () => {
     expect(KIND_VALUES).toContain("quote")
   })
 
-  it("keeps the eight full-body components aligned with code", () => {
+  it("keeps the nine full-body components aligned with code", () => {
     const enComponents = codeTokensOnLine(read(REF("components.md")), "are full-body components")
     const zhComponents = codeTokensOnLine(read(REF("components.zh-CN.md")), "是全页组件")
-    const enDensity = codeTokensOnLine(read(REF("density.md")), "Eight components own the whole body")
-    const zhDensity = codeTokensOnLine(read(REF("density.zh-CN.md")), "八种组件独占整个正文区")
+    const enDensity = codeTokensOnLine(read(REF("density.md")), "components own the whole body")
+    const zhDensity = codeTokensOnLine(read(REF("density.zh-CN.md")), "种组件独占整个正文区")
     const expected = new Set(FULL_BODY_TYPES)
     expect(new Set(enComponents)).toEqual(expected)
     expect(new Set(zhComponents)).toEqual(expected)

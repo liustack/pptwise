@@ -210,6 +210,7 @@ const COMPONENT_KINDS: Record<Component["type"], PageKind> = {
   iceberg: "hierarchy",
   pillar_model: "hierarchy",
   value_chain: "process",
+  harvey_balls: "comparison",
 }
 
 function componentKind(component: Component): PageKind {

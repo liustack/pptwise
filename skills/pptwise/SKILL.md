@@ -134,7 +134,7 @@ Use `--draft` or `--allow-dropped-content` only when the user explicitly request
 | --- | --- | --- |
 | Ordered reasoning | `points` | `bullets`, `numbered_cards`, `paragraph` |
 | Reorderable inventory | `list` | `row_cards`, `icon_cards`, `people_cards` |
-| Side-by-side differences | `comparison` | `comparison`, `from_to`, `image_compare`, `matrix`, `swot` |
+| Side-by-side differences | `comparison` | `comparison`, `from_to`, `image_compare`, `matrix`, `swot`, `harvey_balls` |
 | Directed steps or time | `process` | `steps`, `chevron_process`, `staircase`, `swimlane`, `journey_map`, `flowchart`, `timeline`, `roadmap`, `gantt`, `cycle`, `value_chain` |
 | Numeric structure | `data` | `chart`, `data_table`, `kpi_cards`, `progress_donuts`, `heatmap`, `sankey` |
 | Image as the message | `photo` | `image`, `image_grid`, `device_mockup` |
