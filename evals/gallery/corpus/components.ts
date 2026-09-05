@@ -16,7 +16,7 @@
  */
 
 import type { Component } from "@/ir"
-import type { Lexicon } from "./lexicon"
+import type { LanguageId, Lexicon } from "./lexicon"
 
 /** Asset ids the corpus declares — see `deck.ts`, which materializes them. */
 export const PHOTO_ASSETS = ["photo-1", "photo-2", "photo-3", "photo-4"] as const
@@ -32,6 +32,40 @@ export const PHONE_SCREENSHOT_ASSET = "screenshot-phone-1"
 /** Take `n` items starting at `from`, wrapping — keeps builders total. */
 function slice(pool: readonly string[], n: number, from = 0): string[] {
   return Array.from({ length: n }, (_, i) => pool[(from + i) % pool.length]!)
+}
+
+/**
+ * Three things a reader could buy, per language track.
+ *
+ * Written here rather than in `./lexicon.ts` because a price list is this one
+ * component's vocabulary, not a track's: twenty-four native lexicons would
+ * each have to invent a catalogue, and a classroom or a campaign has no
+ * business having one. Before this existed the builder took a phrase, a
+ * bullet and a metric by array index, which produced "存量客户席位扩容 /
+ * 10.2 万席" — an operating figure wearing a price's clothes, and a card no
+ * one could buy. `product_cards`' own test is whether someone could buy
+ * exactly one of these, so the corpus has to pass it too.
+ *
+ * The pictures stay the corpus' own photographs. They are workplace scenes
+ * rather than product shots, which is the honest limit of the asset set: the
+ * composition under review is the card, not the photograph in it.
+ */
+const PRODUCTS: Record<LanguageId, readonly { name: string; note: string; price: string; price_unit: string }[]> = {
+  zh: [
+    { name: "协作工作区", note: "文档、任务与会议记录合在一处", price: "¥68", price_unit: "席位 / 月" },
+    { name: "集成中枢", note: "预置四十六个业务系统连接器", price: "¥12万", price_unit: "起 / 年" },
+    { name: "数据洞察包", note: "按周推送经营简报与流失预警", price: "¥8万", price_unit: "起 / 年" },
+  ],
+  en: [
+    { name: "Collaboration Workspace", note: "Docs, tasks and meeting notes in one place", price: "$9", price_unit: "per seat / month" },
+    { name: "Integration Hub", note: "Forty-six business-system connectors, preconfigured", price: "$18,000", price_unit: "from / year" },
+    { name: "Insight Pack", note: "Weekly operating brief and churn warnings", price: "$12,000", price_unit: "from / year" },
+  ],
+  mixed: [
+    { name: "Workspace 协作版", note: "文档、任务与会议记录合在一处", price: "¥68", price_unit: "席位 / 月" },
+    { name: "Integration Hub 集成中枢", note: "预置四十六个业务系统连接器", price: "¥12万", price_unit: "起 / 年" },
+    { name: "Insight Pack 洞察包", note: "按周推送经营简报与流失预警", price: "¥8万", price_unit: "起 / 年" },
+  ],
 }
 
 /**
@@ -487,14 +521,11 @@ export const COMPONENT_BUILDERS: Record<string, (lex: Lexicon) => Component> = {
 
   product_cards: (lex) => ({
     type: "product_cards",
-    items: PHOTO_ASSETS.slice(0, 3).map((asset_id, i) => ({
-      asset_id,
-      name: lex.phrases[i]!,
-      note: lex.bullets[i]!,
-      price: lex.metrics[i]!.value,
-      price_unit: lex.metrics[i]!.unit,
-      // One card carries the whole-fill highlight, which is the only
-      // emphasis this house allows and the thing worth looking at here.
+    items: PRODUCTS[lex.id].map((product, i) => ({
+      asset_id: PHOTO_ASSETS[i % PHOTO_ASSETS.length]!,
+      ...product,
+      // One card carries the whole-fill highlight, the one emphasis this
+      // house allows and the thing worth looking at here.
       ...(i === 1 ? { featured: true as const } : {}),
     })),
   }),
