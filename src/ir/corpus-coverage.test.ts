@@ -257,6 +257,24 @@ const COVERAGE_ENTRIES: Record<string, unknown> = {
       { edge: "build", title: "Build it", outcomes: [{ edge: "70%", title: "One team" }, { edge: "30%", title: "Two teams" }] },
     ],
   }),
+  // Whitespace is not a condition: it cleared a length test, trimmed to
+  // nothing at draw time, and left four lines bare with no mark to say so.
+  "coverage/decision_tree-blank-outcome-edge-tripwire": minimalDeck({
+    type: "decision_tree",
+    question: "Buy or build?",
+    branches: [
+      { edge: "buy", title: "Licence it", outcomes: [{ edge: "   ", title: "Standard tier" }, { edge: "40%", title: "Enterprise tier" }] },
+      { edge: "build", title: "Build it", outcomes: [{ edge: "70%", title: "One team" }, { edge: "30%", title: "Two teams" }] },
+    ],
+  }),
+  "coverage/decision_tree-blank-branch-edge-tripwire": minimalDeck({
+    type: "decision_tree",
+    question: "Buy or build?",
+    branches: [
+      { edge: "\t\n ", title: "Licence it", outcomes: [{ edge: "60%", title: "Standard tier" }, { edge: "40%", title: "Enterprise tier" }] },
+      { edge: "build", title: "Build it", outcomes: [{ edge: "70%", title: "One team" }, { edge: "30%", title: "Two teams" }] },
+    ],
+  }),
   // A unit is what a number is counted in, and there is no number here.
   "coverage/decision_tree-unitless-tripwire": minimalDeck({
     type: "decision_tree",

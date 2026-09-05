@@ -2,15 +2,22 @@ import { z } from "zod"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
 import type { DesignStory } from "../../design-story"
 
+/**
+ * The condition written on one line of the tree.
+ *
+ * Checked after trimming, because trimming is what the renderer does: a label
+ * of three spaces cleared a length test, then trimmed to nothing at draw time
+ * and left the line bare, with no truncation mark and no drop to say so.
+ * Validation and rendering agree on what "written" means now.
+ */
+const EdgeSchema = z.string().refine((value) => value.trim().length > 0, {
+  error:
+    "decision_tree lines carry a condition — a share, a probability, or the case that leads there — and whitespace is not one. A tree whose lines say nothing about why a reader lands on one ending rather than another is a list drawn with arrows.",
+})
+
 const OutcomeSchema = z
   .object({
-    edge: z
-      .string()
-      .min(
-        1,
-        "decision_tree outcomes carry a condition on the line into them, the same as branches do — a share, a probability, or the case that leads here. A tree whose second level says nothing about why a reader lands on one ending rather than another is a list drawn with arrows."
-      )
-      .describe("Label on the line into this outcome — a share, a probability, a condition."),
+    edge: EdgeSchema.describe("Label on the line into this outcome — a share, a probability, a condition."),
     title: z.string().min(1).describe("The outcome itself, named in a few words."),
     detail: z.string().optional().describe("Optional single line on what this outcome costs or means."),
     value: z.string().optional().describe("The one number this outcome carries, written as it should read."),
@@ -29,7 +36,7 @@ const OutcomeSchema = z
 
 const BranchSchema = z
   .object({
-    edge: z.string().min(1).describe("The condition that leads down this branch — this is what makes it a decision."),
+    edge: EdgeSchema.describe("The condition that leads down this branch — this is what makes it a decision."),
     title: z.string().min(1).describe("Where this branch goes, named in a few words."),
     detail: z.string().optional().describe("Optional single line under the branch name."),
     outcomes: z
