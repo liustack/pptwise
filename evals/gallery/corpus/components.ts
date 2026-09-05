@@ -249,6 +249,90 @@ export const COMPONENT_BUILDERS: Record<string, (lex: Lexicon) => Component> = {
     items: slice(lex.labels, 4, 8).map((label, i) => ({ label, description: lex.phrases[i] })),
   }),
 
+  // Four levels, the middle of the schema's range: enough for the rise to
+  // read as a climb, wide enough that a tread still holds its own number.
+  staircase: (lex) => ({
+    type: "staircase",
+    items: slice(lex.labels, 4, 8).map((title, i) => ({
+      title,
+      value: String(412 - i * 88),
+      unit: lex.metrics[0]!.unit,
+    })),
+  }),
+
+  chevron_process: (lex) => ({
+    type: "chevron_process",
+    items: slice(lex.stages, 4).map((title, i) => ({ title, text: lex.phrases[i]! })),
+  }),
+
+  // Three lanes and five steps that cross them twice, so both the handover
+  // arrow and an ordinary in-lane one are on show.
+  swimlane: (lex) => ({
+    type: "swimlane",
+    lanes: slice(lex.labels, 3, 12).map((label) => ({ label })),
+    steps: slice(lex.stages, 5).map((title, i) => ({
+      lane: lex.labels[12 + [0, 1, 2, 1, 0][i]!]!,
+      title,
+      detail: lex.periods[i],
+    })),
+    handoff_note: lex.phrases[4],
+  }),
+
+  // Row names are deliberately unset: the four rows have no vocabulary in
+  // this corpus's own pools, and borrowing a label pool would print the
+  // wrong word in every language track.
+  journey_map: (lex) => ({
+    type: "journey_map",
+    stages: slice(lex.stages, 4).map((label, i) => ({
+      label,
+      touchpoints: slice(lex.tags, 2, i * 2),
+      action: lex.bullets[i]!,
+      emotion: [4, 2, 3, 5][i]!,
+      opportunity: lex.phrases[i + 4]!,
+    })),
+  }),
+
+  decision_tree: (lex) => ({
+    type: "decision_tree",
+    question: lex.headings[12]!,
+    branches: [
+      {
+        edge: "61%",
+        title: lex.phrases[0]!,
+        detail: lex.labels[0]!,
+        outcomes: [
+          { edge: "38%", title: lex.phrases[1]!, detail: lex.bullets[0]!, value: "4", unit: lex.periods[0] },
+          { edge: "62%", title: lex.phrases[2]!, detail: lex.bullets[1]!, value: "6", unit: lex.periods[0], recommended: true },
+        ],
+      },
+      {
+        edge: "39%",
+        title: lex.phrases[3]!,
+        detail: lex.labels[1]!,
+        outcomes: [
+          { edge: "55%", title: lex.phrases[4]!, detail: lex.bullets[2]!, value: "9", unit: lex.periods[0] },
+          { edge: "45%", title: lex.phrases[5]!, detail: lex.bullets[3]!, value: "14", unit: lex.periods[0] },
+        ],
+      },
+    ],
+  }),
+
+  // The deltas are written as signed numbers rather than words: this row is
+  // the one piece of copy the corpus cannot take from a language track's own
+  // pools, and a sign reads the same in all three.
+  from_to: (lex) => ({
+    type: "from_to",
+    from: { title: lex.periods[0]! },
+    to: { title: lex.periods[1]! },
+    rows: lex.metrics.slice(0, 4).map((metric, i) => ({
+      label: metric.label,
+      from: String(9 + i * 12),
+      to: String(5 + i * 17),
+      unit: metric.unit,
+      change: ["-44%", "+38%", "+56%", "+64%"][i]!,
+    })),
+  }),
+
   rings: (lex) => ({
     type: "rings",
     items: slice(lex.labels, 3).map((label, i) => ({ label, desc: lex.sentences[i]! })),

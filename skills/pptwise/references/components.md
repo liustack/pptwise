@@ -50,10 +50,20 @@ The table gives each component's normal kind home. A component may serve more th
 | `tag_row` | `list` |
 | `hub_spoke` | `hierarchy` |
 | `progress_donuts` | `data` |
+| `staircase` | `process` |
+| `chevron_process` | `process` |
+| `swimlane` | `process` |
+| `journey_map` | `process` |
+| `decision_tree` | `hierarchy`, `process` |
+| `from_to` | `comparison` |
 
 ## Lookalikes
 
 - Use `steps` for a linear sequence, `flowchart` for branching decisions, and `cycle` when the final stage returns to the first.
+- Use `chevron_process` when work passes through every stage in order and the handover between them is the point. Use `staircase` when the stages climb in degree rather than follow one another, and `swimlane` when who does each step is part of the argument.
+- Use `journey_map` when each stage carries a 1-5 feeling and the low point is the argument. Use `chevron_process` when no feeling is attached to the stages.
+- Use `decision_tree` when a condition sends the reader down one of two or three paths and each ending has its own cost. Use `flowchart` for one thread with decisions along it.
+- Use `from_to` when the same measures carry a value in both states and the size of the move is the point. Use `comparison` when the two sides are different subjects rather than one subject twice.
 - Use `hub_spoke` for one central concept with unordered peer elements attached to it. Use `cycle` when they close a loop and `rings` when they nest inside one another.
 - Use `roadmap` for workstreams without a shared numeric axis. Use `gantt` for dated bars on one shared axis.
 - Use `pest` for the four external macro factors. Use `swot` for internal and external strategic assessment.

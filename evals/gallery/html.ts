@@ -149,11 +149,26 @@ export const COMPONENT_FAMILIES: readonly GroupFamily[] = [
   },
   {
     label: "表格与框架",
-    members: ["data_table", "heatmap", "matrix", "comparison", "swot", "bmc", "pest", "five_forces"],
+    members: ["data_table", "heatmap", "matrix", "comparison", "from_to", "swot", "bmc", "pest", "five_forces"],
   },
   {
     label: "流程与结构",
-    members: ["steps", "flowchart", "cycle", "hub_spoke", "rings", "architecture", "timeline", "roadmap", "gantt"],
+    members: [
+      "steps",
+      "chevron_process",
+      "staircase",
+      "swimlane",
+      "journey_map",
+      "flowchart",
+      "decision_tree",
+      "cycle",
+      "hub_spoke",
+      "rings",
+      "architecture",
+      "timeline",
+      "roadmap",
+      "gantt",
+    ],
   },
   {
     label: "图像",

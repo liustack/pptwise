@@ -16,7 +16,7 @@ import type { Lexicon } from "./lexicon"
  * does not silently get absorbed without a human adding it here.
  */
 export const THEME_TABLE_REQUIRED_SURFACES = [
-  // 38 IR types, COMPONENT_BUILDERS key order
+  // 44 IR types, COMPONENT_BUILDERS key order
   "paragraph",
   "bullets",
   "blockquote",
@@ -39,9 +39,15 @@ export const THEME_TABLE_REQUIRED_SURFACES = [
   "timeline",
   "roadmap",
   "cycle",
+  "staircase",
+  "chevron_process",
+  "swimlane",
+  "journey_map",
+  "decision_tree",
   "hub_spoke",
   "rings",
   "matrix",
+  "from_to",
   "flowchart",
   "architecture",
   "comparison",
@@ -122,20 +128,20 @@ export const THEME_CONTENT_SLOTS: Record<string, readonly ThemeContentSlot[]> = 
   bulletin: [slot("waterfall"), slot("bullets"), slot("icon_cards"), slot("bmc"), slot("timeline"), slot("architecture"), slot("device_mockup")],
   heritage: [slot("cycle"), slot("data_table"), slot("people_cards"), slot("tag_row"), slot("image_compare"), slot("five_forces"), slot("paragraph")],
   ink: [chart("bar", "horizontal"), slot("row_cards"), slot("blockquote"), slot("steps"), slot("tag_row"), slot("heatmap"), slot("image_grid")],
-  ledger: [slot("cycle"), slot("kpi_cards"), slot("bullets"), slot("blockquote"), slot("sankey"), slot("verdict_banner"), slot("architecture")],
-  journal: [chart("line"), slot("numbered_cards"), slot("comparison"), slot("blockquote"), slot("roadmap"), slot("callout"), slot("people_cards")],
+  ledger: [slot("cycle"), slot("kpi_cards"), slot("staircase"), slot("blockquote"), slot("sankey"), slot("verdict_banner"), slot("architecture")],
+  journal: [chart("line"), slot("numbered_cards"), slot("comparison"), slot("blockquote"), slot("roadmap"), slot("callout"), slot("journey_map")],
   lecture: [chart("area"), slot("timeline"), slot("bmc"), slot("bullets"), slot("image_grid"), slot("matrix"), slot("paragraph")],
   luxe: [slot("progress_donuts"), slot("swot"), slot("gantt"), slot("blockquote"), slot("device_mockup"), slot("flowchart"), slot("tag_row")],
   memo: [chart("donut"), slot("paragraph"), slot("icon_cards"), slot("pest"), slot("blockquote"), slot("rings"), slot("waterfall")],
   museum: [slot("cycle"), slot("kpi_cards"), slot("bullets"), slot("heatmap"), slot("people_cards"), slot("callout"), slot("architecture")],
   playbill: [slot("image_grid"), slot("data_table"), slot("callout"), slot("steps"), slot("five_forces"), slot("image"), slot("row_cards")],
-  clinic: [slot("numbered_cards"), slot("comparison"), slot("sankey"), slot("people_cards"), slot("image_compare"), slot("architecture"), slot("bullets")],
-  runway: [slot("steps"), slot("data_table"), slot("callout"), slot("image_grid"), slot("bullets"), slot("verdict_banner"), slot("gantt")],
+  clinic: [slot("numbered_cards"), slot("comparison"), slot("sankey"), slot("people_cards"), slot("image_compare"), slot("architecture"), slot("swimlane")],
+  runway: [slot("steps"), slot("data_table"), slot("callout"), slot("image_grid"), slot("chevron_process"), slot("verdict_banner"), slot("gantt")],
   stage: [slot("timeline"), slot("kpi_cards"), slot("bullets"), slot("bmc"), slot("image"), slot("blockquote"), slot("architecture")],
   swiss: [chart("pie"), slot("numbered_cards"), slot("comparison"), slot("people_cards"), slot("heatmap"), slot("tag_row"), slot("flowchart")],
-  terminal: [slot("icon_cards"), slot("data_table"), slot("waterfall"), slot("code"), slot("device_mockup"), slot("swot"), slot("roadmap")],
+  terminal: [slot("icon_cards"), slot("data_table"), slot("waterfall"), slot("code"), slot("device_mockup"), slot("decision_tree"), slot("roadmap")],
   almanac: [slot("icon_cards"), slot("bullets"), slot("timeline"), slot("pest"), slot("image_compare"), slot("rings"), slot("people_cards")],
-  vermilion: [slot("comparison"), slot("kpi_cards"), slot("gantt"), slot("bullets"), slot("people_cards"), slot("code"), slot("architecture")],
+  vermilion: [slot("comparison"), slot("kpi_cards"), slot("gantt"), slot("from_to"), slot("people_cards"), slot("code"), slot("architecture")],
 }
 
 /** Build the lead component for one theme-table content slot. */

@@ -55,10 +55,20 @@ mirror_of: skills/pptwise/references/components.md
 | `tag_row` | `list` |
 | `hub_spoke` | `hierarchy` |
 | `progress_donuts` | `data` |
+| `staircase` | `process` |
+| `chevron_process` | `process` |
+| `swimlane` | `process` |
+| `journey_map` | `process` |
+| `decision_tree` | `hierarchy`, `process` |
+| `from_to` | `comparison` |
 
 ## 相近组件
 
 - 直线步骤用 `steps`，有决策分支用 `flowchart`，末段回到首段用 `cycle`。
+- 工作必须依次穿过每个环节、交接本身是重点时用 `chevron_process`；环节之间差的是程度而不是先后用 `staircase`；每一步归谁做也是论点用 `swimlane`。
+- 每个阶段都带 1-5 的情绪分、最低点就是论点时用 `journey_map`；阶段不带情绪用 `chevron_process`。
+- 一个条件把读者送上两三条路之一、每个结局各有代价时用 `decision_tree`；一条主线上带若干决策用 `flowchart`。
+- 同一批指标在两个状态下都有值、移动幅度就是论点时用 `from_to`；两边是不同主体而不是同一主体的两次用 `comparison`。
 - 一个中心概念带一组无序并列要素用 `hub_spoke`，要素闭环用 `cycle`，层层包含用 `rings`。
 - 没有共享数值轴的工作线用 `roadmap`，在同一日期轴上比较条形用 `gantt`。
 - 四类外部宏观因素用 `pest`，同时评估内外部战略条件用 `swot`。
