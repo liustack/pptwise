@@ -1,6 +1,6 @@
 import type { Component } from "@/ir"
 import { fitSvgLine, layoutSvgText, truncateToUnits } from "../lib/svg-text-layout"
-import { accessibleInk, readableOn } from "../render/ink"
+import { accessibleInk, emphasisFill, readableOn } from "../render/ink"
 import { mixHex } from "./color-mix"
 import { deriveInitials } from "./people-initials"
 import type { ComponentBox, ComponentCtx, RenderDef, SvgComponent } from "./types"
@@ -50,12 +50,14 @@ const BASELINE_FUDGE_RATIO = 0.34
 const NAME_FONT_SIZE = 16
 const NAME_MIN_FONT_SIZE = 16
 const ROLE_FONT_SIZE = 16
+const ROLE_MAX_LINES = 2
+const ROLE_LINE_HEIGHT_RATIO = 1.3
 const NAME_TO_ROLE = 4
 
 interface QuoteLayout {
   lines: { lines: string[]; fontSize: number; lineHeight: number; truncated: boolean }
   name: { text: string; fontSize: number; truncated: boolean }
-  role: { text: string; fontSize: number; truncated: boolean } | null
+  role: { lines: string[]; fontSize: number; lineHeight: number; truncated: boolean } | null
 }
 
 function layoutQuote(quote: QuoteItem, contentW: number, ctx: ComponentCtx): QuoteLayout {
@@ -75,15 +77,27 @@ function layoutQuote(quote: QuoteItem, contentW: number, ctx: ComponentCtx): Quo
     bold: true,
     fontFamily: ctx.fonts.heading,
   })
+  // The role wraps rather than shrinking to a cut line: "首席技术官 · 云觅科技"
+  // is two facts, and a one-line fit drops the second one on a narrow card.
   const role = quote.role
-    ? fitSvgLine(quote.role, { maxWidth: identityW, fontSize: ROLE_FONT_SIZE, minFontSize: ROLE_FONT_SIZE })
+    ? (() => {
+        const wrapped = layoutSvgText(quote.role, {
+          maxWidth: identityW,
+          fontSize: ROLE_FONT_SIZE,
+          maxLines: ROLE_MAX_LINES,
+          lineHeightRatio: ROLE_LINE_HEIGHT_RATIO,
+        })
+        const units = identityW / wrapped.fontSize
+        return { ...wrapped, lines: wrapped.lines.map((line) => truncateToUnits(line, units)) }
+      })()
     : null
   return { lines, name, role }
 }
 
 /** 身份区（圆章 + 姓名 + 头衔）自己的高度：圆章与两行小字取高者。 */
 function identityHeight(layout: QuoteLayout): number {
-  const textH = NAME_FONT_SIZE + (layout.role ? NAME_TO_ROLE + ROLE_FONT_SIZE : 0)
+  const textH =
+    NAME_FONT_SIZE + (layout.role ? NAME_TO_ROLE + layout.role.lines.length * layout.role.lineHeight : 0)
   return Math.max(AVATAR_R * 2, textH)
 }
 
@@ -124,7 +138,7 @@ function wallGeometry(component: QuoteWallComponent, w: number, ctx: ComponentCt
 
 /** 一张卡自己的一套墨：底色决定其余全部颜色，`featured` 只是换了底。 */
 function cardInks(featured: boolean, ctx: ComponentCtx) {
-  const fill = featured ? ctx.colors.primary : ctx.colors.surface
+  const fill = featured ? emphasisFill(ctx.colors.primary, ctx.colors.text, ctx.colors.surface) : ctx.colors.surface
   if (featured) {
     const ink = readableOn(fill)
     return {
@@ -173,7 +187,9 @@ export const quoteWall: SvgComponent<QuoteWallComponent> = {
           const idH = identityHeight(layout)
           const avatarCy = identityTopY + idH / 2
           const nameX = PAD + AVATAR_R * 2 + AVATAR_TO_NAME
-          const textH = NAME_FONT_SIZE + (layout.role ? NAME_TO_ROLE + ROLE_FONT_SIZE : 0)
+          const textH =
+            NAME_FONT_SIZE +
+            (layout.role ? NAME_TO_ROLE + layout.role.lines.length * layout.role.lineHeight : 0)
           const nameBaselineY = identityTopY + (idH - textH) / 2 + NAME_FONT_SIZE
           const initialsInk = readableOn(inks.avatarFill)
           return (
@@ -242,19 +258,20 @@ export const quoteWall: SvgComponent<QuoteWallComponent> = {
                 >
                   {layout.name.text}
                 </text>
-                {layout.role && (
+                {layout.role?.lines.map((line, li) => (
                   <text
-                    data-truncated={layout.role.truncated ? "1" : undefined}
+                    key={li}
+                    data-truncated={layout.role!.truncated ? "1" : undefined}
                     x={nameX}
-                    y={nameBaselineY + NAME_TO_ROLE + ROLE_FONT_SIZE}
-                    fontSize={layout.role.fontSize}
+                    y={nameBaselineY + NAME_TO_ROLE + li * layout.role!.lineHeight + layout.role!.fontSize}
+                    fontSize={layout.role!.fontSize}
                     fill={inks.role}
                     fontFamily={ctx.fonts.body}
                     dominantBaseline="alphabetic"
                   >
-                    {layout.role.text}
+                    {line}
                   </text>
-                )}
+                ))}
               </g>
             </g>
           )

@@ -148,3 +148,57 @@ describe("quote_wall component", () => {
     expect(() => assertSubset(parseSvgRoot(markup))).not.toThrow()
   })
 })
+
+describe("quote_wall on a theme whose primary sits close to its surface", () => {
+  // luxe: a near-black surface under a deep-brown primary. Filling the
+  // featured card in primary there left all three cards looking the same,
+  // which is the same failure as drawing no emphasis at all.
+  const dark: ComponentCtx = {
+    ...ctx,
+    colors: { ...ctx.colors, bg: "#0B0A09", surface: "#171412", primary: "#241C15", text: "#F2EDE6" },
+  }
+
+  it("fills the featured card with the theme ink instead, so it still separates", () => {
+    const component = {
+      type: "quote_wall" as const,
+      quotes: [
+        { text: "开通从九周压到五周。", name: "宋海" },
+        { text: "报表现在系统自己发。", name: "李蔚", featured: true as const },
+      ],
+    }
+    const { container } = svg(quoteWall.render(component, box, dark))
+    const fills = shells(container).map((r) => r.getAttribute("fill"))
+    expect(fills).toEqual([dark.colors.surface, dark.colors.text])
+    expect(contrastRatio(fills[1]!, dark.colors.surface)).toBeGreaterThan(3)
+  })
+
+  it("keeps the primary fill on a theme whose primary is a real change of ground", () => {
+    const component = {
+      type: "quote_wall" as const,
+      quotes: [
+        { text: "开通从九周压到五周。", name: "宋海" },
+        { text: "报表现在系统自己发。", name: "李蔚", featured: true as const },
+      ],
+    }
+    const { container } = svg(quoteWall.render(component, box, ctx))
+    expect(shells(container)[1]!.getAttribute("fill")).toBe(ctx.colors.primary)
+  })
+})
+
+describe("quote_wall speaker line", () => {
+  it("wraps a two-part role rather than cutting the second part off", () => {
+    const component = {
+      type: "quote_wall" as const,
+      quotes: [
+        { text: "锦官立坊十年。", name: "顾锦官", role: "主理人 · 制衣三十年 · 锦官坊" },
+        { text: "本夜到场来宾五十六位。", name: "秦绣娘", role: "首席绣娘 · 绣坊" },
+      ],
+    }
+    const { container } = svg(quoteWall.render(component, { x: 0, y: 0, w: 560 }, ctx))
+    const roleLines = Array.from(container.querySelectorAll("text"))
+      .map((t) => t.textContent!)
+      .filter((t) => t.includes("主理人") || t.includes("锦官坊"))
+    expect(roleLines.length).toBeGreaterThan(1)
+    expect(roleLines.join("")).toContain("锦官坊")
+  })
+})

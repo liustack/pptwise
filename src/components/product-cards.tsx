@@ -1,7 +1,7 @@
 import type React from "react"
 import type { Component } from "@/ir"
 import { fitSvgLine, layoutSvgText, measureTextUnits, truncateToUnits } from "../lib/svg-text-layout"
-import { accessibleInk, readableOn } from "../render/ink"
+import { accessibleInk, emphasisFill, readableOn } from "../render/ink"
 import { mixHex } from "./color-mix"
 import type { ComponentBox, ComponentCtx, RenderDef, SvgComponent } from "./types"
 
@@ -137,7 +137,7 @@ function cardGeometry(component: ProductCardsComponent, w: number, ctx: Componen
 
 /** 一张卡自己的一套墨：底色决定其余全部颜色，`featured` 只是换了底。 */
 function cardInks(featured: boolean, ctx: ComponentCtx) {
-  const fill = featured ? ctx.colors.primary : ctx.colors.surface
+  const fill = featured ? emphasisFill(ctx.colors.primary, ctx.colors.text, ctx.colors.surface) : ctx.colors.surface
   if (featured) {
     const ink = readableOn(fill)
     return {

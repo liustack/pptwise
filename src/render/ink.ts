@@ -120,6 +120,31 @@ export function readableOn(bgHex: string): "#FFFFFF" | "#0A0E14" {
 }
 
 /**
+ * The fill that singles one card out from its siblings.
+ *
+ * The house rule for emphasis is a whole card filled in the theme primary
+ * with its text reset to read against that fill — never a bar on an edge,
+ * never accent-coloured text. On most themes `primary` against `surface` is
+ * an obvious change of ground. On a few it is not: a dark theme whose
+ * primary is a deep brown and whose surface is near-black leaves the
+ * "featured" card looking exactly like the other two, which is the same
+ * failure as drawing no emphasis at all.
+ *
+ * So `primary` is used whenever it clears a plain 3:1 separation from the
+ * surface, which is every theme whose brand colour reads as a different
+ * ground at a glance, and the theme's own `text` ink stands in when it does
+ * not. Falling back is still a whole card filled in a theme colour — a solid
+ * ink block instead of a solid primary block — and `text` can never tie with
+ * the surface, because a theme whose ink does not separate from its own card
+ * is unreadable long before this function is reached.
+ */
+const EMPHASIS_FILL_MIN_CONTRAST = 3
+
+export function emphasisFill(primary: string, text: string, surfaceHex: string): string {
+  return contrastRatio(primary, surfaceHex) >= EMPHASIS_FILL_MIN_CONTRAST ? primary : text
+}
+
+/**
  * Keep `preferredFill` — a color already chosen for this text (a theme
  * token, or a hardcoded "works on every *curated* pairing so far" white) —
  * when it clears the size-appropriate WCAG ratio against `bgHex`;

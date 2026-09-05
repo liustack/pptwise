@@ -53,10 +53,10 @@ export const COMPONENT_BUILDERS: Record<string, (lex: Lexicon) => Component> = {
     quotes: lex.people.slice(0, 3).map((person, i) => ({
       text: lex.sentences[i]!,
       name: person.name,
-      // Role first, organization second: three colleagues share one employer,
-      // and an org-first line fitted to a narrow card left all three reading
-      // the same truncated company name.
-      role: `${person.role} · ${person.org}`,
+      // The role alone. All three speakers here work for the same company,
+      // and printing that company under each of them says nothing three
+      // times — the page already names it.
+      role: person.role,
       // The middle voice takes the whole-fill highlight, the one emphasis
       // this house allows and the thing worth looking at here.
       ...(i === 1 ? { featured: true as const } : {}),
