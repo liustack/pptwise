@@ -146,7 +146,7 @@ export const THEME_CONTENT_SLOTS: Record<string, readonly ThemeContentSlot[]> = 
   bulletin: [slot("waterfall"), slot("bullets"), slot("icon_cards"), slot("bmc"), slot("timeline"), slot("architecture"), slot("device_mockup")],
   heritage: [slot("cycle"), slot("data_table"), slot("people_cards"), slot("image_grid"), slot("image_compare"), slot("five_forces"), slot("paragraph")],
   ink: [chart("bar", "horizontal"), slot("row_cards"), slot("blockquote"), slot("steps"), slot("callout"), slot("heatmap"), slot("image_grid")],
-  ledger: [slot("cycle"), slot("kpi_cards"), slot("staircase"), slot("concept_equation"), slot("sankey"), slot("verdict_banner"), slot("value_chain")],
+  ledger: [slot("cycle"), slot("kpi_cards"), slot("staircase"), slot("concept_equation"), slot("sankey"), slot("harvey_balls"), slot("value_chain")],
   journal: [chart("line"), slot("numbered_cards"), slot("comparison"), slot("blockquote"), slot("roadmap"), slot("callout"), slot("journey_map")],
   lecture: [chart("area"), slot("timeline"), slot("bmc"), slot("bullets"), slot("image_grid"), slot("matrix"), slot("paragraph")],
   luxe: [slot("progress_donuts"), slot("swot"), slot("gantt"), slot("blockquote"), slot("device_mockup"), slot("flowchart"), slot("timeline")],
