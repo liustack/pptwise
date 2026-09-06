@@ -1,5 +1,47 @@
 # @liustack/pptwise
 
+## 0.35.0
+
+### Minor Changes
+
+- 9007ce1: Breaking: `tag_row` is removed and three picture- and voice-carrying components take its place, so the IR now has 40 typed components. A row of bare labels was the answer a model reached for when it had nothing to say: every real use either had prose behind each label, which is a bullet list, or a picture and a line behind each one, which is a card. A page with `type: "tag_row"` is refused, in the IR and in a spec page's `focus`, with a message naming `bullets` and `icon_cards` as the two homes short labels actually have. There is no migration and no alias.
+
+  `logo_wall` sets 4 to 12 organizations on equal tiles in one ink, with no frames and no hero, so the page says only that these names are together. A tile takes a picture through the same asset pipeline `image` and `image_grid` use, and falls back to the organization's own name set as a wordmark.
+
+  `product_cards` puts 2 to 4 things side by side, each a required picture with a name, one line, and a price under a hairline, for a page someone is meant to choose from. When the asset pipeline hands back nothing the card leaves an empty ground marked `data-dropped` rather than inventing stand-in art.
+
+  `quote_wall` stands 2 to 4 short remarks side by side with each speaker's initials, name and role, for the argument that several people agree rather than that one of them said it well. `blockquote` still stages a single remark at full size.
+
+  Each of the three may single out one item, and singling out means filling that whole card in the theme primary with its text reset to read against it. `logo_wall` and `product_cards` span a multi-column arrangement and drop a column rather than narrow past the width their content stays readable at, so a box that cannot hold them makes the face step aside instead of printing cut names.
+
+- 48283b4: Four components join the IR, all of them for pages about numbers. `harvey_balls` scores three to six options against three to five shared criteria and draws each score as a circle filled none, a quarter, half, three quarters or full, so the reader finds the option with no weak column instead of reading twenty numbers. `scorecard` puts three to eight goals next to their targets, what was reached, the gap and a verdict in one of three tones, with the tone coming from the bound theme's own palette and the wording from the author. `pictogram` redraws one to three rates as ten figures each, filled to the count. `word_cloud` sets eight to twenty words in four sizes with a deterministic packing computed from measured text, so a Chinese word list and an English one pack by the same ruler and the same list lands in the same places on every run.
+
+  None of the four ever cuts a word out of an author's text: each fits its lines before it paints anything, and a fit that would have to drop characters declines the box and declares the loss, which sends the page to a rendering with more room and stops the export if none exists. Each also declines rather than drawing below the size its own picture needs — a column too narrow to tell a quarter from a half, a figure too small to read as a person, a key whose words will not sit on one line. All four own the page they appear on, every one of the twenty-four themes draws them from its own tokens, and their headers and verdict words come in two scripts chosen from the drawing's own content, so a Chinese page never prints English column heads.
+
+- 227703f: Six new components for pages about how work moves.
+
+  `staircase` draws levels that climb as real stairs, each tread a riser above
+  the last. `chevron_process` cuts the stages of a pipeline as chevrons that
+  bite into one another. `swimlane` runs one process across two to four bands
+  of ownership and thickens the arrow where work changes hands. `journey_map`
+  puts what a person meets, does and feels across three to six stages, marking
+  the low point of the curve and the fix beside it. `decision_tree` writes the
+  condition on every line out of a question and the cost of every ending.
+  `from_to` sets two states of the same measures side by side with the move
+  printed on each row.
+
+  The component vocabulary goes from 38 types to 44.
+
+- 02c24c9: Six new content blocks draw the shapes an argument takes when it has levels. `org_tree` and `issue_tree` are the same three-level tree read two ways — one where a line means reports to, one where it means breaks down into — laid out by arithmetic rather than a solver, so the same content lands in the same place on every render. `pyramid` stacks three to six levels widest at the bottom and explains each in a legend beside it. `iceberg` prints one or two stated reasons in a tip and three to six unstated ones in the mass below a waterline, both inside the silhouette rather than in a side list. `pillar_model` carries one goal on a beam over two to five columns standing on a shared base. `value_chain` interlocks three to six links with two to four supporting bands above them and an optional closing wedge.
+
+  Every cap is in the schema and stated in the block's own routing sentence: the trees stop at three levels and eight end points, and a box too small to draw one of these honestly declines the page rather than shrinking it into something unreadable, so a page design that cannot hold it steps aside. Highlighting is a filled block and white text — `issue_tree` and `value_chain` each take at most one mark from the author, and nothing else on the page competes for it. The content-block vocabulary is now 44 types, and the review gallery gains a 层级 family with a page for each on all 24 themes.
+
+- d7d4bc2: Six new components draw the shapes an argument takes when it is about how things relate. `venn` overlaps two or three sets as translucent discs so every pairwise overlap mixes its own tone, and names the shared region on a filled chip. `fishbone` runs a spine into a known result and hangs four to six cause categories off it, two or three causes each, every label horizontal. `positioning_map` plots four to ten subjects on two continuous dimensions with both ends of each axis named, and lets one of them be the subject of the page. `concept_equation` joins two or three terms with a plus and closes the line with an equals sign and a solid result panel. `segmented_wheel` cuts a whole into four to eight equal wedges around a hub, with one wedge able to be marked. `pros_cons` weighs one proposal in two columns, marks each point with a tick or a cross, and requires the verdict.
+
+  Every cap lives in the schema and is stated in the component's own routing sentence: a fourth Venn circle, a second marked point on a map, or a category with one cause under it is a validation error rather than a drawing that claims something it cannot show. None of the six will cut an author's words to make them fit — every fit happens before anything is painted, and one cut anywhere declines the whole drawing with a kind, which sends the page to a rendering with more room and stops the export when none exists. The same goes for height: a drawing that would run past the box it was given declines instead of letting the page clip it. A `positioning_map` label that cannot find a clear spot after twelve tries is dropped and declared, so the export refuses the deck rather than stacking two names on one dot.
+
+  Highlighting is a filled block with reversed text throughout, the tick and cross tell the two sides of `pros_cons` apart by shape since the themes carry no semantic red and green, and the wheel writes its wedges as ring sectors so the contrast auditor reads them rather than a bounding box. The component vocabulary is now 62 types, all 26 review tracks author the six relations these drawings are made of, and every one of them appears in the gallery's component band and in one theme's specimen deck.
+
 ## 0.34.0
 
 ### Minor Changes
