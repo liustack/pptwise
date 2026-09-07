@@ -314,10 +314,19 @@ same directory the model's own `run_pptwise validate`/`render` calls resolved ag
 tool loop) up into the result root alongside `deck.json`, mirroring what it already did for a
 deck-project answer's `assets/` — otherwise a correctly-authored local-path reference would
 validate and render fine inside the tool loop but then fail `score.mts`'s own re-render, which
-resolves the same relative path against the result root, not the workspace. The same copy carries the theme files
-the CLI's lookup reads — `theme.json` and `<name>.theme.json` beside the artifact, and the
-workspace-root `themes/` directory — so a custom theme the model bound resolves identically at
-scoring time (see "Scoring" above); those names are never taken for the IR itself.
+resolves the same relative path against the result root, not the workspace. The same placement
+carries the theme the artifact binds: the bound name (`ir.theme.id`, or a deck project's
+`spec.theme`) is resolved through the CLI's own lookup (`resolveThemeByName` plus the rebind
+guard) anchored exactly where the tool loop anchored it — the workspace root the CLI ran in, and
+the artifact's own directory — and the one file that lookup hit is written beside the artifact as
+`<id>.theme.json`, whatever shape it had in the workspace (`theme.json`, `<id>.theme.json`, a
+loose `<id>.json`, or any `themes/` entry). A built-in hit copies nothing. No theme file is chosen
+by name and no `themes/` directory is copied whole: a theme file that sat near the artifact but
+was never on the CLI's lookup path (a `themes/` inside a nested deck directory, say) would become
+a candidate at scoring time and silently change the result (codex review R8). When the CLI's own
+lookup failed (unknown name, malformed hit, rebind refused), nothing resolved and nothing is
+carried except the deck's bound `theme.json` if there is one, so the scorer reports the same
+failure the model saw. `theme.json` / `<id>.theme.json` names are never taken for the IR itself.
 
 The system prompt also explicitly warns the model not to call `write_file` on a path already
 under `assets/` — added after the round-2 smoke (q12, QWEN) showed the provisioning path working

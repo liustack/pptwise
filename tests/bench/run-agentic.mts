@@ -92,14 +92,12 @@ import {
 } from "node:fs"
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
+import { SPEC_FILENAME, THEME_FILENAME } from "../../src/cli/deck-dir"
+import { loadIrFile } from "../../src/cli/load-ir"
+import { assertThemeRebind, resolveThemeByName, themeNameFromUnknown } from "../../src/cli/theme-resolve"
 import { META_FILENAME, TRANSCRIPT_FILENAME, isThemeFileName } from "./harness-files.mts"
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..")
-/** The CLI's own name for the workspace theme directory
- *  (`WORKSPACE_THEMES_DIRNAME`, src/cli/theme-resolve.ts) — restated rather
- *  than imported so this runner script stays free of the engine's module
- *  graph, the same reason it shells out to `dist/cli.js`. */
-const WORKSPACE_THEMES_DIRNAME = "themes"
 const CLI = join(ROOT, "dist/cli.js")
 const SKILL_DIR = join(ROOT, "skills/pptwise")
 /** Fixed round cap, identical across every question and model in a batch.
@@ -585,45 +583,104 @@ export function locateArtifact(workspaceDir: string): LocatedArtifact {
 }
 
 /**
- * Theme files the CLI's three-level lookup reads (`resolveThemeByName`,
- * src/cli/theme-resolve.ts): `theme.json` and `<name>.theme.json` beside
- * the deck, and the workspace `themes/` directory — searched walking up from
- * the CLI's cwd, which during the tool loop is the workspace root. Copied to
- * the result root so the scorer, rooted there, resolves the same file the
- * model's own validate/render calls did (codex review R3: a theme the
- * model created and bound was left behind in workspace/, and the scorer
- * reported "unknown theme" or rendered under a same-named built-in).
- * Returns the names copied, for the placement note.
+ * What theme placement found for one artifact, mirrored from the CLI's own
+ * lookup (`applyDeckConfig`, src/cli/commands.ts): the bound name resolved
+ * through `resolveThemeByName` plus the rebind guard, anchored exactly where
+ * the tool loop anchored them — `startDir` is the workspace root the CLI ran
+ * in (`doRunPptwise`'s `cwd`), `deckDir` is the IR's own directory or the
+ * deck-project directory. Nothing is guessed from file names: a theme file
+ * that sits near the artifact but was never on that lookup path (a
+ * `themes/` inside a nested deck directory, a stray `<other>.theme.json`) is
+ * not a theme the model rendered with, and carrying it would make it a
+ * candidate at scoring time and change the result (codex review R8).
  */
-function copyThemeFiles(artifactDir: string, workspaceDir: string, resultDir: string): string[] {
-  const copied: string[] = []
-  let entries: Dirent[]
+type ThemeCarry =
+  | { kind: "none" }
+  | { kind: "builtin"; id: string }
+  | { kind: "file"; id: string; source: string; dest: string }
+  | { kind: "failed"; id: string; error: string; carried: string | undefined }
+
+/** The name an artifact binds, read loosely the way the CLI reads it before
+ *  validation: `ir.theme.id` for a bare IR, `spec.theme` for a deck
+ *  project. `undefined` when the file is unreadable or names none — that is
+ *  the scorer's finding to make, not placement's. */
+async function boundThemeName(located: Exclude<LocatedArtifact, { kind: "none" }>): Promise<string | undefined> {
   try {
-    entries = readdirSync(artifactDir, { withFileTypes: true })
+    if (located.kind === "bare-ir") {
+      const raw = (await loadIrFile(located.file)) as { theme?: unknown } | null
+      const id = (raw?.theme as { id?: unknown } | null | undefined)?.id
+      return typeof id === "string" ? id : undefined
+    }
+    return themeNameFromUnknown(await loadIrFile(join(located.dir, SPEC_FILENAME), "spec"))
   } catch {
-    entries = []
+    return undefined
   }
-  for (const e of entries) {
-    if (!e.isFile() || !isThemeFileName(e.name)) continue
-    cpSync(join(artifactDir, e.name), join(resultDir, e.name))
-    copied.push(e.name)
+}
+
+/**
+ * Resolves the artifact's bound theme the way the CLI did during the tool
+ * loop and carries the outcome into `resultDir`:
+ *
+ * - a built-in: nothing to copy, the scorer's own lookup reaches it;
+ * - a file (deck-local `theme.json` / `<id>.theme.json` / loose `<id>.json`,
+ *   or any of the workspace `themes/` shapes): that one file, written as
+ *   `<id>.theme.json` beside the artifact. The scorer's lookup is rooted at
+ *   the result directory, where `theme.json` is absent and this is the next
+ *   candidate, so it is hit before any `themes/` or built-in;
+ * - a lookup the CLI itself refused (unknown name, malformed hit, rebind
+ *   guard): nothing resolved, so nothing to carry — except the deck's own
+ *   bound `theme.json`, which is what the rebind guard and a malformed-bound-
+ *   file error are about, so the scorer fails the same way instead of
+ *   quietly resolving the built-in of that name.
+ */
+async function carryResolvedTheme(
+  located: Exclude<LocatedArtifact, { kind: "none" }>,
+  workspaceDir: string,
+  resultDir: string,
+): Promise<ThemeCarry> {
+  const id = await boundThemeName(located)
+  if (id === undefined) return { kind: "none" }
+  const deckDir = located.kind === "bare-ir" ? dirname(located.file) : located.dir
+  try {
+    const resolved = await resolveThemeByName(id, { startDir: workspaceDir, deckDir })
+    await assertThemeRebind(deckDir, resolved)
+    if (resolved.kind === "builtin") return { kind: "builtin", id }
+    const dest = `${id}.theme.json`
+    cpSync(resolved.path, join(resultDir, dest))
+    return { kind: "file", id, source: resolved.path, dest }
+  } catch (e) {
+    const bound = join(deckDir, THEME_FILENAME)
+    let carried: string | undefined
+    if (existsSync(bound)) {
+      cpSync(bound, join(resultDir, THEME_FILENAME))
+      carried = THEME_FILENAME
+    }
+    return { kind: "failed", id, error: (e as Error).message, carried }
   }
-  for (const dir of new Set([artifactDir, workspaceDir])) {
-    const themesSrc = join(dir, WORKSPACE_THEMES_DIRNAME)
-    if (!existsSync(themesSrc)) continue
-    cpSync(themesSrc, join(resultDir, WORKSPACE_THEMES_DIRNAME), { recursive: true })
-    copied.push(`${WORKSPACE_THEMES_DIRNAME}/`)
+}
+
+function describeThemeCarry(carry: ThemeCarry, resultDir: string): string {
+  switch (carry.kind) {
+    case "none":
+    case "builtin":
+      return ""
+    case "file":
+      return ` (+ theme "${carry.id}" ${relative(resultDir, carry.source)} -> ${carry.dest})`
+    case "failed":
+      return (
+        ` (theme "${carry.id}" did not resolve for the CLI either: ${carry.error}` +
+        (carry.carried !== undefined ? `; carried ${carry.carried} so the scorer sees the same failure)` : ")")
+      )
   }
-  return copied
 }
 
 /** Copies the located artifact into `resultDir` (the question root
  *  `score.mts` reads), returns a short description for logging. `none`
  *  leaves `resultDir` with only meta.json — a legitimate, recorded failure
  *  (`score.mts`'s "no artifact found" reason), not a thrown error.
- *  `workspaceDir` is the root the CLI ran in, where a workspace `themes/`
- *  directory lives (see {@link copyThemeFiles}). */
-export function placeArtifact(located: LocatedArtifact, resultDir: string, workspaceDir: string): string {
+ *  `workspaceDir` is the root the CLI ran in during the tool loop, the
+ *  `startDir` of its theme lookup (see {@link carryResolvedTheme}). */
+export async function placeArtifact(located: LocatedArtifact, resultDir: string, workspaceDir: string): Promise<string> {
   if (located.kind === "none") return "no artifact found in workspace"
   if (located.kind === "bare-ir") {
     const dest = join(resultDir, "deck.json")
@@ -640,25 +697,22 @@ export function placeArtifact(located: LocatedArtifact, resultDir: string, works
     const assetsSrc = join(artifactDir, "assets")
     const hadAssets = existsSync(assetsSrc)
     if (hadAssets) cpSync(assetsSrc, join(resultDir, "assets"), { recursive: true })
-    const themes = copyThemeFiles(artifactDir, workspaceDir, resultDir)
+    const theme = await carryResolvedTheme(located, workspaceDir, resultDir)
     return (
       `copied bare IR ${relative(resultDir, located.file)} -> deck.json` +
       (hadAssets ? ` (+ ${relative(resultDir, assetsSrc)} -> assets/)` : "") +
-      (themes.length > 0 ? ` (+ theme files ${themes.join(", ")})` : "")
+      describeThemeCarry(theme, resultDir)
     )
   }
   // deck-project: copy deck.spec.json + pages/ + assets/ (if present) — the
-  // parts `readDeckDir` (src/cli/deck-dir.ts) looks for — plus the theme
-  // files the CLI's lookup reads beside or above it.
+  // parts `readDeckDir` (src/cli/deck-dir.ts) looks for — plus the one
+  // theme file the CLI's lookup resolved for the spec's binding.
   for (const name of ["deck.spec.json", "pages", "assets"]) {
     const src = join(located.dir, name)
     if (existsSync(src)) cpSync(src, join(resultDir, name), { recursive: true })
   }
-  const themes = copyThemeFiles(located.dir, workspaceDir, resultDir)
-  return (
-    `copied deck project ${relative(resultDir, located.dir)} -> result root` +
-    (themes.length > 0 ? ` (+ theme files ${themes.join(", ")})` : "")
-  )
+  const theme = await carryResolvedTheme(located, workspaceDir, resultDir)
+  return `copied deck project ${relative(resultDir, located.dir)} -> result root` + describeThemeCarry(theme, resultDir)
 }
 
 // ── question asset provisioning (round-2 image-question fix,
@@ -1285,7 +1339,7 @@ export async function runOneAgentic(
   const located = locateArtifact(workspace)
   let placementNote: string
   if (located.kind !== "none") {
-    placementNote = placeArtifact(located, resultDir, workspace)
+    placementNote = await placeArtifact(located, resultDir, workspace)
   } else if (finalText !== undefined && stripFence(finalText).length > 0) {
     const text = stripFence(finalText)
     try {

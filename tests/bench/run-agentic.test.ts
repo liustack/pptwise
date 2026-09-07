@@ -1,8 +1,10 @@
 // @vitest-environment node
-import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs"
+import { existsSync, mkdtempSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
-import { join, sep } from "node:path"
+import { dirname, join, sep } from "node:path"
 import { afterEach, describe, expect, it } from "vitest"
+import { loadValidatedDeckIr } from "../../src/cli/commands"
+import { themeFileFromPreset } from "../../src/cli/theme-resolve"
 import {
   buildMeta,
   checkPathSafety,
@@ -28,7 +30,7 @@ import {
   type ChatCompletionResponse,
   type CompleteFn,
 } from "./run-agentic.mts"
-import { scoreQuestion } from "./score.mts"
+import { loadArtifact, scoreQuestion } from "./score.mts"
 
 // ── checkPathSafety — the tool-surface escape guard (plan 裁定 1) ──
 
@@ -564,16 +566,16 @@ describe("locateArtifact + placeArtifact", () => {
     mkdirSync(workspace, { recursive: true })
   }
 
-  it("finds a single bare IR json file at the workspace root", () => {
+  it("finds a single bare IR json file at the workspace root", async () => {
     setup()
     writeFileSync(join(workspace, "deck.json"), '{"slides": []}')
     const located = locateArtifact(workspace)
     expect(located).toEqual({ kind: "bare-ir", file: join(workspace, "deck.json") })
-    const note = placeArtifact(located, resultDir, workspace)
+    const note = await placeArtifact(located, resultDir, workspace)
     expect(note).toMatch(/copied bare IR/)
   })
 
-  it("prefers a deck-project directory over any stray json files", () => {
+  it("prefers a deck-project directory over any stray json files", async () => {
     setup()
     mkdirSync(join(workspace, "pages"), { recursive: true })
     writeFileSync(join(workspace, "deck.spec.json"), "{}")
@@ -581,7 +583,7 @@ describe("locateArtifact + placeArtifact", () => {
     writeFileSync(join(workspace, "notes.json"), "{}") // stray, not part of the project
     const located = locateArtifact(workspace)
     expect(located).toEqual({ kind: "deck-project", dir: workspace })
-    placeArtifact(located, resultDir, workspace)
+    await placeArtifact(located, resultDir, workspace)
     // deck.spec.json + pages/ land at the result root; the stray notes.json does not.
     expect(() => statSync(join(resultDir, "deck.spec.json"))).not.toThrow()
     expect(() => statSync(join(resultDir, "pages", "p-cover.json"))).not.toThrow()
@@ -601,46 +603,234 @@ describe("locateArtifact + placeArtifact", () => {
     expect(locateArtifact(workspace)).toEqual({ kind: "none" })
   })
 
-  it("copies a bare IR's sibling assets/ directory alongside deck.json (round-2 image-question fix)", () => {
+  it("copies a bare IR's sibling assets/ directory alongside deck.json (round-2 image-question fix)", async () => {
     setup()
     writeFileSync(join(workspace, "deck.json"), '{"slides": []}')
     mkdirSync(join(workspace, "assets"), { recursive: true })
     writeFileSync(join(workspace, "assets", "hero.png"), "fake-png-bytes")
     const located = locateArtifact(workspace)
-    const note = placeArtifact(located, resultDir, workspace)
+    const note = await placeArtifact(located, resultDir, workspace)
     expect(readFileSync(join(resultDir, "assets", "hero.png"), "utf8")).toBe("fake-png-bytes")
     expect(note).toContain("assets/")
   })
 
-  it("does not create an assets/ dir in the result root when the workspace has none", () => {
+  it("does not create an assets/ dir in the result root when the workspace has none", async () => {
     setup()
     writeFileSync(join(workspace, "deck.json"), '{"slides": []}')
     const located = locateArtifact(workspace)
-    placeArtifact(located, resultDir, workspace)
+    await placeArtifact(located, resultDir, workspace)
     expect(existsSync(join(resultDir, "assets"))).toBe(false)
   })
 
-  // Custom theme files (codex review R3): the CLI resolves a bound theme
-  // through deck-local theme.json / <name>.theme.json and the workspace
-  // themes/ directory (src/cli/theme-resolve.ts). Whatever the model's own
-  // validate/render calls found has to travel with the artifact, or the
-  // scorer resolves a different theme than the one the deck was built on.
+})
 
-  it("copies the workspace themes/ directory and deck-local theme files alongside a bare IR", () => {
+// ── placeArtifact carries the theme the CLI resolved (codex review R3 / R8) ──
+//
+// The tool loop runs the CLI with cwd = workspace root; a bare IR's lookup
+// is anchored at the IR's own directory, a deck project's at the project
+// directory. Placement resolves the bound name through that same lookup and
+// carries the one file it hit (or nothing, for a built-in) into the result
+// directory, so the scorer, rooted there, lands on the same definition. A
+// theme file that merely sits near the artifact but was never on the CLI's
+// lookup path must not travel: it would become a candidate at scoring time
+// and change the result.
+
+describe("placeArtifact carries the theme the CLI resolved", () => {
+  let base: string
+  let workspace: string
+  let resultDir: string
+
+  afterEach(() => {
+    if (base) rmSync(base, { recursive: true, force: true })
+  })
+
+  function setup(): void {
+    base = mkdtempSync(join(tmpdir(), "bench-agentic-theme-test-"))
+    workspace = join(base, "workspace")
+    resultDir = base
+    mkdirSync(workspace, { recursive: true })
+  }
+
+  function save(file: string, data: unknown): void {
+    mkdirSync(dirname(file), { recursive: true })
+    writeFileSync(file, JSON.stringify(data))
+  }
+
+  /** One quote page under `theme` — `quote` is a kind thesis offers and brief does not. */
+  function quoteIr(theme: string): unknown {
+    return {
+      version: "5",
+      theme: { id: theme },
+      slides: [
+        { id: "quote-1", type: "content", kind: "quote", heading: "Words", components: [{ type: "blockquote", text: "A quote", attribution: "Author" }] },
+      ],
+    }
+  }
+
+  function fx02Spec(theme: string): unknown {
+    const spec = JSON.parse(readFileSync(join(import.meta.dirname, "fixtures/results/green-model/fx02/deck.spec.json"), "utf8")) as { theme: string }
+    spec.theme = theme
+    return spec
+  }
+
+  /** What the CLI itself resolved for `target` when run from the workspace root. */
+  async function cliTheme(target: string): Promise<{ id: string | undefined; primary: string | undefined }> {
+    const { theme } = await loadValidatedDeckIr(target, workspace)
+    return { id: theme?.id, primary: theme?.style.colors.primary }
+  }
+
+  async function scoredTheme(): Promise<{ id: string | undefined; primary: string | undefined }> {
+    const loaded = await loadArtifact(resultDir)
+    if ("error" in loaded) throw new Error(loaded.error)
+    return { id: loaded.theme?.id, primary: loaded.theme?.style.colors.primary }
+  }
+
+  const THESIS_PRIMARY = "#0E6245"
+  const BRIEF_PRIMARY = "#1E2A4A"
+
+  it("R8: a nested bare IR's own themes/ is not on the CLI's lookup path and does not travel", async () => {
     setup()
-    writeFileSync(join(workspace, "deck.json"), '{"slides": []}')
-    mkdirSync(join(workspace, "themes"), { recursive: true })
-    writeFileSync(join(workspace, "themes", "sketch.theme.json"), '{"id": "sketch"}')
-    writeFileSync(join(workspace, "theme.json"), '{"id": "bound"}')
-    writeFileSync(join(workspace, "acme.theme.json"), '{"id": "acme"}')
+    const target = join(workspace, "deck", "deck.json")
+    save(target, quoteIr("thesis"))
+    // a brief copy renamed thesis: it does not offer `quote`, so if it ever
+    // resolved, validate would fail and the primary would be brief's
+    save(join(workspace, "deck", "themes", "thesis.theme.json"), themeFileFromPreset("brief", { id: "thesis" }))
+    expect(await cliTheme(target)).toEqual({ id: "thesis", primary: THESIS_PRIMARY })
+
+    const located = locateArtifact(workspace)
+    expect(located).toEqual({ kind: "bare-ir", file: target })
+    const note = await placeArtifact(located, resultDir, workspace)
+    expect(note).not.toContain("themes/")
+    expect(existsSync(join(resultDir, "themes"))).toBe(false)
+    expect(existsSync(join(resultDir, "thesis.theme.json"))).toBe(false)
+    expect(await scoredTheme()).toEqual({ id: "thesis", primary: THESIS_PRIMARY })
+    const score = await scoreQuestion("r8", resultDir, { id: "r8" })
+    expect(score.reason).toBeUndefined()
+    expect(score.validatePass).toBe(true)
+    expect(score.renderOk).toBe(true)
+  })
+
+  it("R8: a nested deck project's own themes/ does not shadow the built-in the CLI used", async () => {
+    setup()
+    const deckDir = join(workspace, "deck")
+    save(join(deckDir, "deck.spec.json"), fx02Spec("brief"))
+    for (const id of ["p-cover", "p-kpi", "p-detail", "p-ending"]) save(join(deckDir, "pages", `${id}.json`), {})
+    const shadow = themeFileFromPreset("brief", { id: "brief" })
+    shadow.style.colors.primary = "#0A3D91"
+    save(join(deckDir, "themes", "brief.theme.json"), shadow)
+    expect(await cliTheme(deckDir)).toEqual({ id: "brief", primary: BRIEF_PRIMARY })
+
+    const located = locateArtifact(workspace)
+    expect(located).toEqual({ kind: "deck-project", dir: deckDir })
+    await placeArtifact(located, resultDir, workspace)
+    expect(existsSync(join(resultDir, "themes"))).toBe(false)
+    expect(existsSync(join(resultDir, "pages", "p-cover.json"))).toBe(true)
+    expect(await scoredTheme()).toEqual({ id: "brief", primary: BRIEF_PRIMARY })
+  })
+
+  it("R3: a loose workspace themes/<id>.json theme the CLI accepted travels under its canonical name", async () => {
+    setup()
+    const target = join(workspace, "deck.json")
+    save(target, { ...(quoteIr("sketch") as object), slides: [{ id: "cover-1", type: "cover", heading: "Probe" }] })
+    const sketch = themeFileFromPreset("brief", { id: "sketch" })
+    sketch.style.colors.primary = "#0B5FFF"
+    save(join(workspace, "themes", "sketch.json"), sketch)
+    expect(await cliTheme(target)).toEqual({ id: "sketch", primary: "#0B5FFF" })
+
+    const located = locateArtifact(workspace)
+    expect(located).toEqual({ kind: "bare-ir", file: target })
+    const note = await placeArtifact(located, resultDir, workspace)
+    expect(note).toContain("sketch.theme.json")
+    expect(JSON.parse(readFileSync(join(resultDir, "sketch.theme.json"), "utf8"))).toEqual(sketch)
+    expect(existsSync(join(resultDir, "themes"))).toBe(false)
+    expect(await scoredTheme()).toEqual({ id: "sketch", primary: "#0B5FFF" })
+    const score = await scoreQuestion("r3", resultDir, { id: "r3" })
+    expect(score.reason).toBeUndefined()
+    expect(score.validatePass).toBe(true)
+    expect(score.renderOk).toBe(true)
+    expect(score.deterministic).toBe(true)
+  })
+
+  it("R3: a loose <id>.json beside the IR that shadows a built-in is what the scorer sees too", async () => {
+    setup()
+    const target = join(workspace, "deck.json")
+    save(target, quoteIr("thesis"))
+    const shadow = themeFileFromPreset("thesis", { id: "thesis" })
+    shadow.style.colors.primary = "#0A3D91"
+    save(join(workspace, "thesis.json"), shadow)
+    expect(await cliTheme(target)).toEqual({ id: "thesis", primary: "#0A3D91" })
+
+    const located = locateArtifact(workspace)
+    expect(located).toEqual({ kind: "bare-ir", file: target })
+    await placeArtifact(located, resultDir, workspace)
+    expect(existsSync(join(resultDir, "thesis.json"))).toBe(false)
+    expect(existsSync(join(resultDir, "thesis.theme.json"))).toBe(true)
+    expect(await scoredTheme()).toEqual({ id: "thesis", primary: "#0A3D91" })
+  })
+
+  it("a workspace-root themes/<id>.theme.json theme travels, nothing else does", async () => {
+    setup()
+    const target = join(workspace, "deck.json")
+    save(target, { version: "5", theme: { id: "sketch" }, slides: [{ id: "cover-1", type: "cover", heading: "Probe" }] })
+    save(join(workspace, "themes", "sketch.theme.json"), themeFileFromPreset("brief", { id: "sketch" }))
+    save(join(workspace, "themes", "acme.theme.json"), themeFileFromPreset("brief", { id: "acme" }))
+    save(join(workspace, "acme.theme.json"), themeFileFromPreset("brief", { id: "acme" }))
+    expect(await cliTheme(target)).toEqual({ id: "sketch", primary: BRIEF_PRIMARY })
+
     const located = locateArtifact(workspace)
     // theme files beside the IR are never mistaken for the IR itself
-    expect(located).toEqual({ kind: "bare-ir", file: join(workspace, "deck.json") })
-    const note = placeArtifact(located, resultDir, workspace)
-    expect(readFileSync(join(resultDir, "themes", "sketch.theme.json"), "utf8")).toBe('{"id": "sketch"}')
-    expect(readFileSync(join(resultDir, "theme.json"), "utf8")).toBe('{"id": "bound"}')
-    expect(readFileSync(join(resultDir, "acme.theme.json"), "utf8")).toBe('{"id": "acme"}')
-    expect(note).toContain("themes/")
+    expect(located).toEqual({ kind: "bare-ir", file: target })
+    const note = await placeArtifact(located, resultDir, workspace)
+    expect(note).toContain("sketch.theme.json")
+    expect(existsSync(join(resultDir, "sketch.theme.json"))).toBe(true)
+    expect(existsSync(join(resultDir, "themes"))).toBe(false)
+    expect(existsSync(join(resultDir, "acme.theme.json"))).toBe(false)
+    expect(await scoredTheme()).toEqual({ id: "sketch", primary: BRIEF_PRIMARY })
+  })
+
+  it("a nested deck project's bound theme.json travels under the name the spec binds", async () => {
+    setup()
+    const deckDir = join(workspace, "my-deck")
+    save(join(deckDir, "deck.spec.json"), fx02Spec("sketch"))
+    for (const id of ["p-cover", "p-kpi", "p-detail", "p-ending"]) save(join(deckDir, "pages", `${id}.json`), {})
+    save(join(deckDir, "theme.json"), themeFileFromPreset("brief", { id: "sketch" }))
+    expect(await cliTheme(deckDir)).toEqual({ id: "sketch", primary: BRIEF_PRIMARY })
+
+    const located = locateArtifact(workspace)
+    expect(located).toEqual({ kind: "deck-project", dir: deckDir })
+    await placeArtifact(located, resultDir, workspace)
+    expect(existsSync(join(resultDir, "sketch.theme.json"))).toBe(true)
+    expect(existsSync(join(resultDir, "pages", "p-cover.json"))).toBe(true)
+    expect(await scoredTheme()).toEqual({ id: "sketch", primary: BRIEF_PRIMARY })
+    const score = await scoreQuestion("proj", resultDir, { id: "proj" })
+    expect(score.reason).toBeUndefined()
+    expect(score.validatePass).toBe(true)
+  })
+
+  it("a built-in binding copies no theme file at all", async () => {
+    setup()
+    const target = join(workspace, "deck.json")
+    save(target, quoteIr("thesis"))
+    save(join(workspace, "themes", "acme.theme.json"), themeFileFromPreset("brief", { id: "acme" }))
+    const note = await placeArtifact(locateArtifact(workspace), resultDir, workspace)
+    expect(note).not.toContain("theme")
+    expect(readdirSync(resultDir).filter((n) => n !== "workspace")).toEqual(["deck.json"])
+  })
+
+  it("a lookup the CLI itself failed is noted, and the deck's bound theme.json still travels so the scorer fails the same way", async () => {
+    setup()
+    const deckDir = join(workspace, "deck")
+    save(join(deckDir, "deck.spec.json"), fx02Spec("thesis"))
+    for (const id of ["p-cover", "p-kpi", "p-detail", "p-ending"]) save(join(deckDir, "pages", `${id}.json`), {})
+    save(join(deckDir, "theme.json"), themeFileFromPreset("brief", { id: "brief" }))
+    await expect(cliTheme(deckDir)).rejects.toThrow(/cannot rebind theme "brief" to "thesis"/)
+
+    const note = await placeArtifact(locateArtifact(workspace), resultDir, workspace)
+    expect(note).toMatch(/cannot rebind theme "brief" to "thesis"/)
+    expect(existsSync(join(resultDir, "theme.json"))).toBe(true)
+    const score = await scoreQuestion("rebind", resultDir, { id: "rebind" })
+    expect(score.reason).toMatch(/cannot rebind theme "brief" to "thesis"/)
+    expect(score.validatePass).toBe(false)
   })
 
   it("does not pick a theme file as the bare IR when the IR has an unconventional name", () => {
@@ -650,23 +840,6 @@ describe("locateArtifact + placeArtifact", () => {
     // the theme file is written last, so a plain newest-mtime tie-break would pick it
     writeFileSync(join(workspace, "theme.json"), '{"id": "sketch"}')
     expect(locateArtifact(workspace)).toEqual({ kind: "bare-ir", file: join(workspace, "my-deck.json") })
-  })
-
-  it("copies a nested deck project's own theme.json and the workspace-root themes/ the CLI resolved against", () => {
-    setup()
-    const deckDir = join(workspace, "my-deck")
-    mkdirSync(join(deckDir, "pages"), { recursive: true })
-    writeFileSync(join(deckDir, "deck.spec.json"), '{"theme": "sketch"}')
-    writeFileSync(join(deckDir, "pages", "p-cover.json"), "{}")
-    writeFileSync(join(deckDir, "theme.json"), '{"id": "sketch"}')
-    mkdirSync(join(workspace, "themes"), { recursive: true })
-    writeFileSync(join(workspace, "themes", "acme.theme.json"), '{"id": "acme"}')
-    const located = locateArtifact(workspace)
-    expect(located).toEqual({ kind: "deck-project", dir: deckDir })
-    placeArtifact(located, resultDir, workspace)
-    expect(readFileSync(join(resultDir, "theme.json"), "utf8")).toBe('{"id": "sketch"}')
-    expect(readFileSync(join(resultDir, "themes", "acme.theme.json"), "utf8")).toBe('{"id": "acme"}')
-    expect(existsSync(join(resultDir, "pages", "p-cover.json"))).toBe(true)
   })
 })
 
