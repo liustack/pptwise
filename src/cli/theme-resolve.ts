@@ -194,9 +194,38 @@ export function themeCandidates(name: string, opts: { startDir: string; deckDir?
   return [...deck, ...workspaceThemeCandidates(opts.startDir, name)]
 }
 
-async function resolveThemeFileFrom(candidates: ThemeCandidate[], name: string): Promise<ResolvedTheme | undefined> {
+/**
+ * Options every name lookup takes. `lenient` is for a caller that asks the
+ * same question over and over in the background (`pptwise serve` re-resolves
+ * the bound name on a timer): a candidate whose existence cannot be checked
+ * (a plain file named `themes` up the chain gives ENOTDIR, a directory this
+ * user cannot traverse gives EACCES) is skipped as unusable instead of
+ * failing the lookup. The CLI's own commands leave it off and report such a
+ * path, since a lookup that cannot say whether a file is there should not
+ * quietly answer with the built-in.
+ */
+export interface ThemeLookupOptions {
+  startDir: string
+  deckDir?: string
+  lenient?: boolean
+}
+
+async function candidateExists(path: string, lenient: boolean): Promise<boolean> {
+  try {
+    return await pathExists(path)
+  } catch (e) {
+    if (lenient) return false
+    throw e
+  }
+}
+
+async function resolveThemeFileFrom(
+  candidates: ThemeCandidate[],
+  name: string,
+  lenient: boolean,
+): Promise<ResolvedTheme | undefined> {
   for (const candidate of candidates) {
-    if (!(await pathExists(candidate.path))) continue
+    if (!(await candidateExists(candidate.path, lenient))) continue
     const file = candidate.loose ? await tryParseThemeFile(candidate.path) : await readThemeFile(candidate.path)
     if (file === undefined) continue
     const hit = await acceptIfNameMatches(candidate.path, name, file)
@@ -205,12 +234,9 @@ async function resolveThemeFileFrom(candidates: ThemeCandidate[], name: string):
   return undefined
 }
 
-export async function resolveThemeByName(
-  name: string,
-  opts: { startDir: string; deckDir?: string },
-): Promise<ResolvedTheme> {
+export async function resolveThemeByName(name: string, opts: ThemeLookupOptions): Promise<ResolvedTheme> {
   assertThemeId(name)
-  const fileHit = await resolveThemeFileFrom(themeCandidates(name, opts), name)
+  const fileHit = await resolveThemeFileFrom(themeCandidates(name, opts), name, opts.lenient === true)
   if (fileHit !== undefined) return fileHit
 
   if (isCanonicalThemeId(name)) return { kind: "builtin", id: name, definition: THEME_DEFINITIONS[name] }
@@ -244,7 +270,7 @@ export async function assertThemeRebind(deckDir: string | undefined, resolved: R
  * theme.json is accepted only when its id matches the requested name. */
 export async function resolveThemeSelection(
   name: string | undefined,
-  opts: { startDir: string; deckDir?: string },
+  opts: ThemeLookupOptions,
 ): Promise<ResolvedTheme | undefined> {
   if (name === undefined || name.length === 0) return undefined
   return resolveThemeByName(name, opts)

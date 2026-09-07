@@ -45,25 +45,30 @@
  * re-deriving the bare-name/`decksDir` resolution a second time: a deck
  * project directory cares about `deck.spec.json` + `pages/` + `assets/` +
  * `theme.json`; a bare IR target cares about that one file. Both also care
- * about every place the bound theme's name could resolve to a file
+ * about where the bound theme's name resolves to, and that is covered two
+ * ways. Inside the project root (the directory holding `pptwise.config.json`,
+ * or `cwd` without one), every place the name could resolve to a file
  * (`themeCandidates`, `./theme-resolve.ts`: the deck directory's own
- * `theme.json` / `<name>.theme.json` / `<name>.json`, then `themes/` in
- * every directory from `cwd` up to the project root, existing or not, and
- * any `themes/` above that which already exists; see {@link themeWatchRoots}
- * for the ceiling), so a theme file that appears after startup and shadows
- * the built-in the deck started on is seen the moment it lands. The
- * candidates above the project root whose `themes/` does not exist yet
- * cannot be watched without sitting on `/Users` or the like, so those few
- * specific paths are checked for existence every {@link THEME_POLL_MS}
- * instead ({@link themePollPaths}), and one that appears triggers the same
- * rebuild. That list
- * is recomputed after
- * every build from the theme the spec binds *now*, and the watcher set is
- * updated to match, so rebinding the spec to another name follows along.
- * None of those paths is ever handed to `fs.watch` directly, though. Every
- * `fs.watch` here is on
- * a *directory*, with the callback filtering by entry name
- * ({@link watchTree}): a watcher on a file is bound to that file's inode,
+ * `theme.json` / `<name>.theme.json` / `<name>.json`, then `themes/` in each
+ * directory from `cwd` up to the root, existing or not; see
+ * {@link themeWatchRoots}) is watched, so a theme file that lands there
+ * refreshes the preview the moment it lands. That list is recomputed after
+ * every build from the theme the spec binds *now*, so rebinding the spec to
+ * another name follows along. Everything else about the theme source is the
+ * resolver's own business: every {@link THEME_POLL_MS} the bound name is
+ * resolved again, the way a build would resolve it, and the answer (which
+ * built-in, or which file at what mtime and size, or which error) is
+ * compared with the answer recorded after the last build. A different
+ * answer is a rebuild. That one comparison covers a `themes/` appearing,
+ * disappearing, being moved away whole, or being replaced by a plain file
+ * anywhere on the lookup chain, including above the project root where
+ * no watcher can sit without listening to `/Users` or the like. There is
+ * no hand-over between the two mechanisms: the watcher only makes the
+ * project-local case fast, and the comparison is always the last word.
+ * None of the watched paths is ever handed to `fs.watch` directly, though.
+ * Every `fs.watch` here is on a *directory*, with the callback filtering by
+ * entry name ({@link watchTree}): a watcher on a file is bound to that
+ * file's inode,
  * and an editor that saves by writing a temp file and renaming it over the
  * target replaces the inode on every save — the watcher fires once, for the
  * unlink of what it was watching, then sits on a dead inode while later
@@ -92,7 +97,7 @@
  * previous-good HTML yet to fall back to.
  */
 import { type FSWatcher, statSync, watch } from "node:fs"
-import { readFile } from "node:fs/promises"
+import { readFile, stat } from "node:fs/promises"
 import { createServer, type Server, type ServerResponse } from "node:http"
 import { platform as osPlatform } from "node:os"
 import { basename, dirname, join, resolve, sep } from "node:path"
@@ -101,8 +106,8 @@ import { PptwiseError } from "../errors"
 import { spawnHidden } from "./child"
 import { buildDeckPreview } from "./commands"
 import { findConfig } from "./config"
-import { ASSETS_DIRNAME, PAGES_DIRNAME, pathExists, SPEC_FILENAME, THEME_FILENAME } from "./deck-dir"
-import { themeCandidates, themeNameFromUnknown, WORKSPACE_THEMES_DIRNAME } from "./theme-resolve"
+import { ASSETS_DIRNAME, PAGES_DIRNAME, SPEC_FILENAME, THEME_FILENAME } from "./deck-dir"
+import { resolveThemeByName, themeCandidates, themeNameFromUnknown } from "./theme-resolve"
 import { resolveWorkspaceLocation } from "./workspace"
 
 /** `pptwise serve`'s own default (spec-plan.md §2's worked example,
@@ -115,10 +120,10 @@ export const DEFAULT_PORT = 4400
 
 const DEBOUNCE_MS = 200
 const HEARTBEAT_MS = 30_000
-/** How often the theme candidates above the watch ceiling are checked for
- *  existence — see {@link themePollPaths}. */
+/** How often the bound theme name is resolved again and the answer compared
+ *  with the one the last build recorded — see this module's own doc comment
+ *  and {@link createServeServer}. */
 export const THEME_POLL_MS = 2_000
-
 
 
 export interface ServeOptions {
@@ -197,75 +202,36 @@ export function watchRoots(resolvedTarget: string, isDir: boolean, extra: WatchR
 }
 
 /**
- * The files the bound theme's name could resolve to, as `file` roots for
- * {@link watchTree}: the list `resolveThemeByName` walks (`themeCandidates`,
- * `./theme-resolve.ts`), so a theme file created at one of those places
- * after startup shadows the built-in and refreshes the preview. Most of
- * them do not exist, and the tree hangs each one off its nearest existing
- * ancestor until the directory appears. That chain is only followed up to
+ * The files the bound theme's name could resolve to inside the project
+ * root, as `file` roots for {@link watchTree}: the head of the list
+ * `resolveThemeByName` walks (`themeCandidates`, `./theme-resolve.ts`), so a
+ * theme file created at one of those places after startup shadows the
+ * built-in and refreshes the preview on the event. Most of them do not
+ * exist, and the tree hangs each one off its nearest existing ancestor
+ * until the directory appears. That chain is only followed up to
  * `ceilingDir` (the project root, or `startDir` without a project). The
  * lookup itself walks to the filesystem root, but hanging a watcher off
- * `/`, `/Users`, or the temp root to wait for a `themes/` there is a
- * firehose on macOS, where the FSEvents backend is recursive and every
- * event on the volume is delivered before the name filter runs. Above the
- * ceiling a `themes/` directory is watched only when it already exists at
- * the time of the call. The candidates left out are the ones
- * {@link themePollPaths} returns: `createServeServer` checks those for
- * existence on a timer instead, and the list is recomputed after every
- * build, so a `themes/` that appears up there moves from the timer to a
- * real watcher on the rebuild its appearance triggers. A name the resolver
- * would refuse (bad shape) has no files to watch.
+ * `/`, `/Users`, or the temp root is a firehose on macOS, where the
+ * FSEvents backend is recursive and every event on the volume is delivered
+ * before the name filter runs. Nothing above the ceiling is watched, whether
+ * it exists or not: `createServeServer`'s timed re-resolution of the name
+ * covers every change up there. A name the resolver would refuse (bad
+ * shape) has no files to watch.
  */
 export function themeWatchRoots(
   themeName: string | undefined,
   opts: { startDir: string; deckDir: string; ceilingDir: string },
 ): WatchRoot[] {
-  return splitThemeCandidates(themeName, opts).watch.map((path) => ({ path, kind: "file" }))
-}
-
-/**
- * The other half of {@link themeWatchRoots}: the candidate files above the
- * watch ceiling whose `themes/` directory does not exist yet. No watcher
- * can wait for these without sitting on an ancestor like `/Users`, so
- * `createServeServer` stats each one every {@link THEME_POLL_MS} instead.
- * These are specific file paths, a handful per ancestor, never a
- * directory listing, so the check costs a few stats and nothing scales
- * with what else lives under those ancestors.
- */
-export function themePollPaths(
-  themeName: string | undefined,
-  opts: { startDir: string; deckDir: string; ceilingDir: string },
-): string[] {
-  return splitThemeCandidates(themeName, opts).poll
-}
-
-function splitThemeCandidates(
-  themeName: string | undefined,
-  opts: { startDir: string; deckDir: string; ceilingDir: string },
-): { watch: string[]; poll: string[] } {
-  const out: { watch: string[]; poll: string[] } = { watch: [], poll: [] }
-  if (themeName === undefined || !THEME_ID_PATTERN.test(themeName)) return out
+  if (themeName === undefined || !THEME_ID_PATTERN.test(themeName)) return []
   const ceiling = resolve(opts.ceilingDir)
   const withinCeiling = new Set<string>()
   for (let dir = resolve(opts.startDir); ; dir = dirname(dir)) {
     withinCeiling.add(dir)
     if (dir === ceiling || dirname(dir) === dir) break
   }
-  for (const candidate of themeCandidates(themeName, opts)) {
-    const waitForIt = candidate.deck || withinCeiling.has(resolve(candidate.anchor))
-    const watchable = waitForIt || isDirectory(join(candidate.anchor, WORKSPACE_THEMES_DIRNAME))
-    ;(watchable ? out.watch : out.poll).push(candidate.path)
-  }
-  return out
-}
-
-function isDirectory(path: string): boolean {
-  try {
-    return statSync(path).isDirectory()
-  } catch (e) {
-    if ((e as NodeJS.ErrnoException).code === "ENOENT") return false
-    throw e
-  }
+  return themeCandidates(themeName, opts)
+    .filter((candidate) => candidate.deck || withinCeiling.has(resolve(candidate.anchor)))
+    .map((candidate) => ({ path: candidate.path, kind: "file" }))
 }
 
 /** Per watched directory: which entry names count as a change, and which
@@ -605,11 +571,11 @@ export function injectServeClient(html: string): string {
  * failure here rejects the whole call, see this module's own doc comment —
  * then starts listening and watching. Every fs/network resource this
  * function opens (the watchers, the heartbeat and theme-poll timers, the
- * HTTP server) is
- * torn down by the returned {@link ServeHandle.close} and by nothing else:
- * this function has no other side effect a caller would need to separately
- * clean up, which is what makes it safe to call directly from a test without
- * going through the CLI at all.
+ * HTTP server) is opened as the last step, after every `await` that could
+ * reject, and torn down by the returned {@link ServeHandle.close} and by
+ * nothing else: this function has no other side effect a caller would need
+ * to separately clean up, which is what makes it safe to call directly from
+ * a test without going through the CLI at all.
  */
 export async function createServeServer(options: ServeOptions): Promise<ServeHandle> {
   const cwd = options.cwd ?? process.cwd()
@@ -673,6 +639,19 @@ export async function createServeServer(options: ServeOptions): Promise<ServeHan
     }
   }
 
+  const projectHit = await findConfig(cwd)
+  const watchCeiling = projectHit !== null ? dirname(projectHit.path) : cwd
+  const workspaceAssets = join(
+    resolveWorkspaceLocation({
+      cwd,
+      projectConfigPath: projectHit?.path,
+      outDir: projectHit?.config.outDir,
+      target: initial.resolvedTarget,
+      isDir: initial.isDir,
+    }).dir,
+    ASSETS_DIRNAME,
+  )
+
   function currentWatchRoots(): WatchRoot[] {
     return watchRoots(initial.resolvedTarget, initial.isDir, [
       { path: workspaceAssets, kind: "dir" },
@@ -680,31 +659,42 @@ export async function createServeServer(options: ServeOptions): Promise<ServeHan
     ])
   }
 
-  /** The theme candidates no watcher covers ({@link themePollPaths}), each
-   *  with whether it existed when last looked at. Replaced after every
-   *  build alongside the watcher set, so a file the timer found is handed
-   *  to a real watcher on the rebuild it triggered and drops out of here. */
-  let polledThemeFiles = new Map<string, boolean>()
-  async function snapshotPolledThemeFiles(): Promise<Map<string, boolean>> {
-    const next = new Map<string, boolean>()
-    for (const path of themePollPaths(boundThemeName, { startDir: cwd, deckDir, ceilingDir: watchCeiling })) {
-      next.set(path, await pathExists(path))
+  /**
+   * Where the bound name resolves to right now, as one comparable string:
+   * the built-in it names, or the file it lands on with that file's mtime
+   * and size, or the error the lookup raises. Asked the same way a build
+   * asks (`resolveThemeByName`, same `startDir`/`deckDir`), so whatever
+   * the resolver would do differently next build shows up here first. The
+   * lenient lookup skips a candidate it cannot even stat (ENOTDIR under a
+   * plain file named `themes`, EACCES up the chain) instead of failing, so
+   * one unrelated ancestor cannot turn every tick into an error. Never
+   * throws: an error is itself an answer, and the change from one answer
+   * to another is what matters.
+   */
+  async function themeSourceFingerprint(): Promise<string> {
+    if (boundThemeName === undefined) return "none"
+    try {
+      const hit = await resolveThemeByName(boundThemeName, { startDir: cwd, deckDir, lenient: true })
+      if (hit.kind === "builtin") return `builtin:${hit.id}`
+      const st = await stat(hit.path)
+      return `file:${hit.path}:${st.mtimeMs}:${st.size}`
+    } catch (e) {
+      return `error:${e instanceof Error ? e.message : String(e)}`
     }
-    return next
   }
-  async function pollThemeFiles(): Promise<void> {
-    let changed = false
-    for (const [path, present] of polledThemeFiles) {
-      const now = await pathExists(path)
-      if (now === present) continue
-      polledThemeFiles.set(path, now)
-      changed = true
-    }
-    if (changed) scheduleRebuild()
-  }
+
+  /** The answer recorded after the last build, and how many builds have
+   *  recorded one. A tick that started before a build finished compares
+   *  against an answer that build has since replaced, so it checks the
+   *  count on return and drops its result when the count moved. */
+  let lastThemeSource = await themeSourceFingerprint()
+  let buildGeneration = 0
+  let building = false
+  let closed = false
 
   async function buildOnce(): Promise<void> {
     const revision = ++latestRevision
+    building = true
     try {
       const result = await buildDeckPreview(options.target, { cwd })
       cachedHtml = injectServeClient(result.html)
@@ -720,7 +710,9 @@ export async function createServeServer(options: ServeOptions): Promise<ServeHan
     // `watchers` is assigned below, before the server listens. No build
     // runs before that: the initial one is awaited above this function.
     watchers.update(currentWatchRoots())
-    polledThemeFiles = await snapshotPolledThemeFiles()
+    lastThemeSource = await themeSourceFingerprint()
+    buildGeneration++
+    building = false
   }
 
   // Builds run strictly one after another. Two overlapping builds could
@@ -730,6 +722,35 @@ export async function createServeServer(options: ServeOptions): Promise<ServeHan
     const run = buildQueue.then(buildOnce)
     buildQueue = run
     return run
+  }
+
+  let debounceTimer: NodeJS.Timeout | undefined
+  function scheduleRebuild(): void {
+    if (closed) return
+    if (debounceTimer) clearTimeout(debounceTimer)
+    debounceTimer = setTimeout(() => {
+      debounceTimer = undefined
+      void rebuild()
+    }, DEBOUNCE_MS)
+  }
+
+  // One check in flight at a time: a slow read (a network mount up the
+  // chain) must not stack ticks behind it.
+  let themeCheckInFlight = false
+  async function checkThemeSource(): Promise<void> {
+    if (themeCheckInFlight) return
+    themeCheckInFlight = true
+    const generation = buildGeneration
+    try {
+      const current = await themeSourceFingerprint()
+      // Stale on return: the server closed, a build recorded a fresh answer
+      // meanwhile, or one is about to. A build in flight records its own
+      // answer when it finishes, and the next tick compares against that.
+      if (closed || building || generation !== buildGeneration) return
+      if (current !== lastThemeSource) scheduleRebuild()
+    } finally {
+      themeCheckInFlight = false
+    }
   }
 
   const server = createServer((req, res) => {
@@ -766,50 +787,15 @@ export async function createServeServer(options: ServeOptions): Promise<ServeHan
     res.end("not found")
   })
 
-  const heartbeat = setInterval(() => writeToAll(": heartbeat\n\n"), HEARTBEAT_MS)
-
-  let debounceTimer: NodeJS.Timeout | undefined
-  function scheduleRebuild(): void {
-    if (debounceTimer) clearTimeout(debounceTimer)
-    debounceTimer = setTimeout(() => {
-      debounceTimer = undefined
-      void rebuild()
-    }, DEBOUNCE_MS)
-  }
-
-  const projectHit = await findConfig(cwd)
-  const watchCeiling = projectHit !== null ? dirname(projectHit.path) : cwd
-  const workspaceAssets = join(
-    resolveWorkspaceLocation({
-      cwd,
-      projectConfigPath: projectHit?.path,
-      outDir: projectHit?.config.outDir,
-      target: initial.resolvedTarget,
-      isDir: initial.isDir,
-    }).dir,
-    ASSETS_DIRNAME,
-  )
-
+  // Everything that holds a resource starts here, after the last `await`
+  // that could reject. Nothing above leaves a watcher or a timer behind
+  // when it throws.
   const watchers = watchTree(currentWatchRoots(), scheduleRebuild)
-  polledThemeFiles = await snapshotPolledThemeFiles()
-  // One check in flight at a time: a slow stat (a network mount up the
-  // chain) must not stack ticks behind it.
-  let themePollInFlight = false
-  const themePoll = setInterval(() => {
-    if (themePollInFlight) return
-    themePollInFlight = true
-    void pollThemeFiles()
-      .catch(() => {
-        // `pathExists` refuses anything but ENOENT (a permission wall up
-        // the chain, say). The build reports what matters about such a
-        // directory. The timer keeps going.
-      })
-      .finally(() => {
-        themePollInFlight = false
-      })
-  }, THEME_POLL_MS)
+  const heartbeat = setInterval(() => writeToAll(": heartbeat\n\n"), HEARTBEAT_MS)
+  const themePoll = setInterval(() => void checkThemeSource(), THEME_POLL_MS)
 
   function teardownWatchersAndTimers(): void {
+    closed = true
     clearInterval(heartbeat)
     clearInterval(themePoll)
     if (debounceTimer) clearTimeout(debounceTimer)
@@ -842,10 +828,10 @@ export async function createServeServer(options: ServeOptions): Promise<ServeHan
   const address = server.address()
   const actualPort = typeof address === "object" && address !== null ? address.port : requestedPort
 
-  let closed = false
+  let serverClosed = false
   async function close(): Promise<void> {
-    if (closed) return
-    closed = true
+    if (serverClosed) return
+    serverClosed = true
     teardownWatchersAndTimers()
     for (const res of sseClients) res.end()
     sseClients.clear()

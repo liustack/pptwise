@@ -2,8 +2,8 @@
 import { mkdir, mkdtemp, readFile, rename, rm, writeFile } from "node:fs/promises"
 import http from "node:http"
 import { tmpdir } from "node:os"
-import { dirname, join } from "node:path"
-import { afterEach, describe, expect, it } from "vitest"
+import { join } from "node:path"
+import { afterEach, describe, expect, it, vi } from "vitest"
 import { installNodePlatform } from "@/platform/node"
 import { __resetRegisteredThemes } from "../themes/definitions"
 import { buildThmxBytes, DEFAULT_THMX_COLORS } from "../themes/extract/__fixtures__/thmx"
@@ -14,11 +14,49 @@ import {
   SERVE_CLIENT_SCRIPT_ID,
   type ServeBuildStatus,
   type ServeHandle,
-  themePollPaths,
+  THEME_POLL_MS,
   themeWatchRoots,
   watchRoots,
 } from "./serve"
-import { themeFileFromPreset } from "./theme-resolve"
+import type * as ThemeResolveModule from "./theme-resolve"
+import { themeFileFromPreset, type ThemeLookupOptions } from "./theme-resolve"
+
+/**
+ * A pass-through over `./theme-resolve` with one hook: a test can hold the
+ * next lookup `createServeServer`'s timed check makes (the only caller that
+ * passes `lenient`) at the point a build or a `close()` would race it.
+ * Every other import of that module, `commands.ts` included, sees the
+ * original behaviour.
+ */
+const resolveGate = vi.hoisted(() => ({
+  hold: undefined as { entered: () => void; released: Promise<void> } | undefined,
+}))
+vi.mock("./theme-resolve", async (importOriginal) => {
+  const original = await importOriginal<typeof ThemeResolveModule>()
+  return {
+    ...original,
+    resolveThemeByName: async (name: string, opts: ThemeLookupOptions) => {
+      if (opts.lenient === true && resolveGate.hold !== undefined) {
+        const { entered, released } = resolveGate.hold
+        resolveGate.hold = undefined
+        entered()
+        await released
+      }
+      return original.resolveThemeByName(name, opts)
+    },
+  }
+})
+
+/** Arms the gate: resolves `entered` when the timed check reaches the
+ *  lookup, and keeps that lookup waiting until `release()` is called. */
+function holdNextThemeCheck(): { entered: Promise<void>; release: () => void } {
+  let entered!: () => void
+  let release!: () => void
+  const enteredPromise = new Promise<void>((resolvePromise) => (entered = resolvePromise))
+  const released = new Promise<void>((resolvePromise) => (release = resolvePromise))
+  resolveGate.hold = { entered, released }
+  return { entered: enteredPromise, release }
+}
 
 installNodePlatform()
 
@@ -236,6 +274,20 @@ async function atomicReplace(path: string, content: string): Promise<void> {
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolvePromise) => setTimeout(resolvePromise, ms))
+}
+
+/** Long enough for a 200ms debounce to fire and a rebuild it started to
+ *  finish, for a test asserting that no such rebuild happened. */
+const DEBOUNCE_GRACE_MS = 800
+
+/** The revision once startup noise has passed. FSEvents on macOS can hand
+ *  a fresh watcher an event for a write made just before it was attached
+ *  (the fixture files this test wrote), and that stray event is a rebuild
+ *  like any other. A test that counts rebuilds from here on waits it out
+ *  first. */
+async function settledRevision(handle: ServeHandle): Promise<number> {
+  await sleep(DEBOUNCE_GRACE_MS)
+  return handle.status().latestRevision
 }
 
 /** Re-runs `probe` every 100ms until it returns a value. For a change that
@@ -782,42 +834,17 @@ describe("themeWatchRoots", () => {
     expect(roots.some((root) => root.path === "/ws/themes/acme.theme.json")).toBe(true)
   })
 
-  it("above the ceiling, still watches a themes/ that already exists", async () => {
+  it("above the ceiling, watches no themes/ even when one already exists (the timed check covers it)", async () => {
     const dir = await makeDir("pptwise-serve-far-themes-")
     await mkdir(join(dir, "themes"))
     const roots = themeWatchRoots("acme", { startDir: join(dir, "a", "b"), deckDir: join(dir, "a", "b"), ceilingDir: join(dir, "a") })
-    expect(roots).toContainEqual({ path: join(dir, "themes", "acme.theme.json"), kind: "file" })
+    expect(roots.some((root) => root.path.startsWith(join(dir, "themes") + "/"))).toBe(false)
     expect(roots.some((root) => root.path === join(dir, "a", "themes", "acme.theme.json"))).toBe(true)
   })
 
   it("watches nothing for a name the resolver would refuse", () => {
     expect(themeWatchRoots("../secret", { startDir: "/ws", deckDir: "/ws", ceilingDir: "/ws" })).toEqual([])
     expect(themeWatchRoots(undefined, { startDir: "/ws", deckDir: "/ws", ceilingDir: "/ws" })).toEqual([])
-  })
-})
-
-describe("themePollPaths", () => {
-  it("lists the candidates above the ceiling whose themes/ does not exist, and nothing the tree watches", async () => {
-    const dir = await makeDir("pptwise-poll-paths-")
-    await mkdir(join(dir, "a", "b"), { recursive: true })
-    await mkdir(join(dir, "themes"))
-    const opts = { startDir: join(dir, "a", "b"), deckDir: join(dir, "a", "b"), ceilingDir: join(dir, "a") }
-    const polled = themePollPaths("acme", opts)
-    const watched = new Set(themeWatchRoots("acme", opts).map((root) => root.path))
-    // `dir/themes/` exists and is watched. `dir/a/themes/` is inside the
-    // ceiling and watched. Everything above `dir` is polled.
-    expect(polled).not.toContain(join(dir, "themes", "acme.theme.json"))
-    expect(polled).not.toContain(join(dir, "a", "themes", "acme.theme.json"))
-    expect(polled).toContain(join(dirname(dir), "themes", "acme.theme.json"))
-    expect(polled).toContain(join(dirname(dir), "themes", "acme.json"))
-    expect(polled).toContain(join(dirname(dir), "themes", "acme", THEME_FILENAME))
-    expect(polled.some((path) => watched.has(path))).toBe(false)
-    expect(polled.some((path) => path.startsWith("/themes/"))).toBe(true)
-  })
-
-  it("polls nothing for a name the resolver would refuse", () => {
-    expect(themePollPaths("../secret", { startDir: "/ws", deckDir: "/ws", ceilingDir: "/ws" })).toEqual([])
-    expect(themePollPaths(undefined, { startDir: "/ws", deckDir: "/ws", ceilingDir: "/ws" })).toEqual([])
   })
 })
 
@@ -915,9 +942,11 @@ describe("createServeServer — theme files that appear after startup", () => {
     await servedWith(handle, "0B5FFF", BUILTIN_BRIEF_PRIMARY)
   })
 
-  it("above the project root, a themes/ that does not exist yet is found by the 2s existence check, then watched", async () => {
+  it("above the project root, a themes/ that does not exist yet is found by the timed re-resolution, and so is its removal", async () => {
     // No pptwise.config.json anywhere: the watch ceiling is the cwd itself,
-    // and `parent/themes/` sits above it. The resolver still looks there.
+    // and `parent/themes/` sits above it. No watcher ever covers it. The
+    // resolver still looks there, and re-resolving the name on a timer is
+    // what notices the answer changed.
     const parent = await makeDir("pptwise-serve-above-ceiling-")
     const cwd = join(parent, "deck")
     await mkdir(cwd)
@@ -932,13 +961,115 @@ describe("createServeServer — theme files that appear after startup", () => {
     await writeFile(themePath, briefWithPrimary("brief", "#0B5FFF"))
     await servedWith(handle, "0B5FFF", BUILTIN_BRIEF_PRIMARY)
 
-    // The directory exists now, so its file watcher took over from the
-    // existence check: removal comes back through the file event.
     await rm(themePath)
     await servedWith(handle, BUILTIN_BRIEF_PRIMARY, "0B5FFF")
 
     await handle.close()
     const timeoutsAfter = process.getActiveResourcesInfo().filter((name) => name === "Timeout").length
     expect(timeoutsAfter).toBeLessThanOrEqual(timeoutsBefore)
+  })
+
+  it.each([
+    ["renamed away", (themesDir: string) => rename(themesDir, `${themesDir}-moved`)],
+    ["removed recursively", (themesDir: string) => rm(themesDir, { recursive: true })],
+  ])("above the project root, a whole themes/ %s un-shadows the built-in within the poll interval", async (_label, takeAway) => {
+    const parent = await makeDir("pptwise-serve-themes-gone-")
+    const cwd = join(parent, "deck")
+    await mkdir(cwd)
+    const irPath = join(cwd, "deck.json")
+    await writeFile(irPath, JSON.stringify({ ...VALID_IR, theme: { id: "brief" } }))
+    const handle = await startServe(irPath, { cwd })
+    expect((await get(handle.port, "/")).body.toUpperCase()).toContain(BUILTIN_BRIEF_PRIMARY)
+
+    const themesDir = join(parent, "themes")
+    await mkdir(themesDir)
+    await writeFile(join(themesDir, "brief.theme.json"), briefWithPrimary("brief", "#0B5FFF"))
+    await servedWith(handle, "0B5FFF", BUILTIN_BRIEF_PRIMARY)
+    const shadowed = handle.status().latestRevision
+
+    // The directory itself goes, not a file inside it. No watcher sits on
+    // the file's name any more, so only the resolver's answer changing can
+    // bring the preview back.
+    await takeAway(themesDir)
+    await servedWith(handle, BUILTIN_BRIEF_PRIMARY, "0B5FFF")
+    await sleep(THEME_POLL_MS + 400)
+    expect(handle.status()).toMatchObject({ latestOk: true, latestRevision: shadowed + 1 })
+  })
+
+  it("starts when a plain file named themes/ sits above the project root, and leaves no watcher or timer behind", async () => {
+    // `parent/themes` is a file, so stat on `parent/themes/brief.theme.json`
+    // fails with ENOTDIR, not ENOENT. The deck's own theme.json answers the
+    // lookup before that candidate is reached, so the deck builds, and the
+    // timed check must not turn that ancestor into a startup failure.
+    const parent = await makeDir("pptwise-serve-themes-file-")
+    const cwd = join(parent, "deck")
+    await mkdir(cwd)
+    await writeFile(join(parent, "themes"), "not a directory\n")
+    await writeFile(join(cwd, THEME_FILENAME), briefWithPrimary("brief", "#0B5FFF"))
+    const irPath = join(cwd, "deck.json")
+    await writeFile(irPath, JSON.stringify({ ...VALID_IR, theme: { id: "brief" } }))
+
+    const count = (kind: string) => process.getActiveResourcesInfo().filter((name) => name === kind).length
+    const watchersBefore = count("FSEventWrap")
+    const timeoutsBefore = count("Timeout")
+    const handle = await startServe(irPath, { cwd })
+    expect((await get(handle.port, "/")).body.toUpperCase()).toContain("0B5FFF")
+    const settled = await settledRevision(handle)
+    await sleep(THEME_POLL_MS + DEBOUNCE_GRACE_MS)
+    expect(handle.status()).toMatchObject({ latestOk: true, latestRevision: settled })
+
+    await handle.close()
+    // A closed FSEvents handle is released a tick later, not on `close()`.
+    await pollUntil(async () => (count("FSEventWrap") <= watchersBefore ? true : undefined))
+    expect(count("Timeout")).toBeLessThanOrEqual(timeoutsBefore)
+  })
+
+  it("a timed check still in flight when close() runs schedules nothing afterwards", async () => {
+    const parent = await makeDir("pptwise-serve-close-race-")
+    const cwd = join(parent, "deck")
+    await mkdir(cwd)
+    const irPath = join(cwd, "deck.json")
+    await writeFile(irPath, JSON.stringify({ ...VALID_IR, theme: { id: "brief" } }))
+    const handle = await startServe(irPath, { cwd })
+    const settled = await settledRevision(handle)
+    const gate = holdNextThemeCheck()
+    await gate.entered
+
+    // The source changes while the check is held, so the answer it brings
+    // back would differ from the one on record. Then the server goes away.
+    await mkdir(join(parent, "themes"))
+    await writeFile(join(parent, "themes", "brief.theme.json"), briefWithPrimary("brief", "#0B5FFF"))
+    await handle.close()
+    const timeoutsAfterClose = process.getActiveResourcesInfo().filter((name) => name === "Timeout").length
+
+    gate.release()
+    await sleep(DEBOUNCE_GRACE_MS)
+    expect(handle.status()).toMatchObject({ latestRevision: settled })
+    expect(process.getActiveResourcesInfo().filter((name) => name === "Timeout").length).toBeLessThanOrEqual(
+      timeoutsAfterClose,
+    )
+  })
+
+  it("a timed check that started before a build finished does not schedule a second build", async () => {
+    const dir = await makeDir("pptwise-serve-stale-check-")
+    const irPath = join(dir, "deck.json")
+    await writeFile(irPath, JSON.stringify({ ...VALID_IR, theme: { id: "brief" } }))
+    const handle = await startServe(irPath, { cwd: dir })
+    await settledRevision(handle)
+    const gate = holdNextThemeCheck()
+    await gate.entered
+
+    // Inside the project root the watcher sees the file land and rebuilds
+    // while the check is still held with the old answer in hand.
+    await mkdir(join(dir, "themes"))
+    await sleep(400)
+    await writeFile(join(dir, "themes", "brief.theme.json"), briefWithPrimary("brief", "#0B5FFF"))
+    await servedWith(handle, "0B5FFF", BUILTIN_BRIEF_PRIMARY)
+    await sleep(DEBOUNCE_GRACE_MS)
+    const built = handle.status().latestRevision
+
+    gate.release()
+    await sleep(THEME_POLL_MS + DEBOUNCE_GRACE_MS)
+    expect(handle.status()).toMatchObject({ latestOk: true, latestRevision: built })
   })
 })
