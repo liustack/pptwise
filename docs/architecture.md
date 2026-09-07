@@ -31,7 +31,7 @@ The first two steps are editorial decisions. The theme is selected before the sp
 | audit | `src/audit` | Deterministic SVG, browser, package, and optional pixel checks. |
 | PPTX | `src/pptx` | SVG to native DrawingML conversion, PptxGenJS packaging, and ZIP-level patches. |
 | CLI | `src/cli.ts`, `src/cli` | Filesystem boundary, theme lookup, commands, review server, image providers, and install operations. |
-| platform | `src/platform` | Registry seam for browser services. Node installs linkedom and sharp implementations. |
+| platform | `src/platform` | Registry seam for browser services: DOM parsing, image re-encoding, SVG rasterizing, real image decoding, fetch. Node installs linkedom and sharp implementations. Every image asset is decoded through this seam before export, and an environment without a decoder refuses to export. |
 
 The public model has four nouns: theme, spec, component, and kind. Internal faces are engine parts reached only through a theme menu.
 

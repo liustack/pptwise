@@ -575,7 +575,7 @@ function checkDuplicateSlideIds(ir: PptxIR): ValidationIssue[] {
  * simply don't exist yet at this point in the pipeline. `inlinePptxAssets`
  * (`platform/inline-assets.ts`) is where the URL actually turns into bytes
  * (its own `fetch` call, export time) — that function's
- * `assertValidFetchedImageBytes` runs this exact same sniff on what comes
+ * `assertDecodableImage` runs this exact same sniff on what comes
  * back, right after the fetch, so the byte check still happens, just later
  * and at the seam where there's something to check. All three ingestion
  * forms therefore end up sniffed exactly once, each at the earliest point

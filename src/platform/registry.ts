@@ -38,9 +38,30 @@ export function findRemoteAssetRef(svgMarkup: string): string | null {
   return m ? m[1]! : null
 }
 
+/** What a successful `decodeImage` hands back: the pixel size of the image
+ *  the decoder actually opened. Callers use it as proof of decodability;
+ *  the dimensions themselves are a by-product. */
+export interface DecodedImageSize {
+  width: number
+  height: number
+}
+
 /** Environment seams. The SDK entry stays browser-safe: Node implementations
  *  live in ./node and are installed explicitly (CLI does it automatically). */
 export interface PptwisePlatform {
+  /**
+   * Really decode an image (PNG/JPEG/WebP/GIF bytes) and report its pixel
+   * size, rejecting when the bytes are not a complete, openable picture.
+   * `inline-assets.ts` runs every asset through this before export: magic
+   * bytes (`ir/asset-sniff.ts`) prove only that a file starts like an image,
+   * and an 8-byte PNG signature or a JPEG cut off after its header would
+   * otherwise ship in `ppt/media/*` as a picture PowerPoint cannot open.
+   * `installNodePlatform()` wires Sharp here and leaves it `undefined` when
+   * Sharp is not installed; a browser gets `./browser.ts`'s
+   * `createImageBitmap` default at the call site. No implementation at all
+   * is an export error, never a silent pass.
+   */
+  decodeImage?: (bytes: Uint8Array) => Promise<DecodedImageSize>
   /** DOMParser constructor used to parse rendered SVG markup. */
   domParser?: typeof DOMParser
   /** Re-encode an image data URL to PNG (Office rejects webp and friends). */

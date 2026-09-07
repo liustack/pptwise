@@ -1,4 +1,4 @@
-import { findRemoteAssetRef, type RasterizedImage } from "./registry"
+import { type DecodedImageSize, findRemoteAssetRef, type RasterizedImage } from "./registry"
 
 /**
  * Browser default for `rasterizeSvg` (audit-v2 phase B, spec §4.3/§11.8) —
@@ -136,5 +136,37 @@ export async function rasterizeSvgInBrowser(svgMarkup: string, width: number, he
     return { width: imageData.width, height: imageData.height, data: imageData.data }
   } finally {
     URL.revokeObjectURL(url)
+  }
+}
+
+/**
+ * Browser default for `decodeImage` (fix/decode-assets-before-export),
+ * applied at the call site in `./inline-assets.ts` the same way
+ * `rasterizeSvgInBrowser` is picked up by `../audit/pixel-audit.ts`:
+ * nothing calls `installPlatform()` automatically in a browser, and this
+ * file must stay inside `src/index.ts`'s browser-safe closure. Whether the
+ * browser can decode at all is decided by {@link hasBrowserImageDecoder};
+ * an environment without `createImageBitmap` (jsdom, an SDK caller that
+ * never installed a platform) has no decoder, and `inline-assets.ts` turns
+ * that into an explicit "cannot verify image assets" export error.
+ *
+ * `createImageBitmap` over `new Image()` because it decodes a `Blob`
+ * straight from bytes with no `src` round trip, rejects instead of firing a
+ * silent `onerror`, and works in a worker (no `document`). The bitmap is
+ * closed right away: only the fact that it opened, and its size, matter.
+ */
+export function hasBrowserImageDecoder(): boolean {
+  return typeof createImageBitmap === "function"
+}
+
+export async function decodeImageInBrowser(bytes: Uint8Array): Promise<DecodedImageSize> {
+  if (!hasBrowserImageDecoder()) {
+    throw new Error("decodeImage unavailable — this environment has no createImageBitmap")
+  }
+  const bitmap = await createImageBitmap(new Blob([bytes as BlobPart]))
+  try {
+    return { width: bitmap.width, height: bitmap.height }
+  } finally {
+    bitmap.close()
   }
 }

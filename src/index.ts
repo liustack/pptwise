@@ -62,7 +62,7 @@ export {
   type PacingBudget,
   type NarrativePreset,
 } from "./narrative"
-export { installPlatform, type PptwisePlatform, type RasterizedImage } from "./platform/registry"
+export { installPlatform, type DecodedImageSize, type PptwisePlatform, type RasterizedImage } from "./platform/registry"
 export {
   validateSpec,
   specJsonSchema,

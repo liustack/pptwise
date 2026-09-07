@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest"
+import { afterEach, beforeAll, describe, expect, it } from "vitest"
 import { PptxIRSchema } from "@/ir"
 import { measureTextUnits } from "@/lib/svg-text-layout"
 import { makeSolidRegionPngDataUri } from "@/platform/test-png-fixture"
@@ -8,6 +8,16 @@ import { CAPACITY } from "./audit/capacity"
 import { __describeQualityIssue } from "./validate-core"
 import { __resetRegisteredThemes, registerTheme } from "./themes/definitions"
 import { registerTestTheme } from "./themes/test-fixtures"
+import { decodeImageWithSharp } from "@/platform/node"
+import { installPlatform } from "@/platform/registry"
+
+// Every image asset is really decoded before export
+// (fix/decode-assets-before-export). This file runs under jsdom, which has
+// no createImageBitmap, so the Sharp decoder is installed directly: the
+// fixtures are real PNGs and should pass a real decode, not a stub.
+beforeAll(() => {
+  installPlatform({ decodeImage: decodeImageWithSharp })
+})
 
 /** A real, minimal, decodable PNG data URI — every "byte-inertness" and
  *  "dangling asset_id" test below (Task 2, borrow wave) needs an asset that

@@ -8,7 +8,7 @@
 // with mocked collaborators; real rasterization correctness is verified once
 // in a real browser via playwright (see this task's own report).
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { IMAGE_LOAD_TIMEOUT_MS, rasterizeSvgInBrowser } from "./browser"
+import { decodeImageInBrowser, hasBrowserImageDecoder, IMAGE_LOAD_TIMEOUT_MS, rasterizeSvgInBrowser } from "./browser"
 
 /** A controllable `Image` stand-in: `src` setter schedules `onload` (success)
  *  or `onerror` (failure) on the next microtask, mirroring how a real
@@ -190,5 +190,43 @@ describe("rasterizeSvgInBrowser — decode timeout", () => {
     // `src` setter above) resolve before any fake-timer time passes at all.
     await vi.advanceTimersByTimeAsync(0)
     await expect(result).resolves.toEqual({ width: 1, height: 1, data: new Uint8ClampedArray(4) })
+  })
+})
+
+// fix/decode-assets-before-export: the browser default for `decodeImage`.
+// jsdom has no createImageBitmap, so the success path runs against a stub
+// and the "no decoder" path runs against the real, empty environment.
+describe("decodeImageInBrowser", () => {
+  const bytes = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it("reports no decoder in an environment without createImageBitmap, and fails loudly when called anyway", async () => {
+    expect(hasBrowserImageDecoder()).toBe(false)
+    await expect(decodeImageInBrowser(bytes)).rejects.toThrow(/createImageBitmap/)
+  })
+
+  it("returns the bitmap's size and closes it", async () => {
+    const close = vi.fn()
+    const createImageBitmap = vi.fn(async (blob: Blob) => {
+      expect(blob.size).toBe(bytes.length)
+      return { width: 64, height: 48, close }
+    })
+    vi.stubGlobal("createImageBitmap", createImageBitmap)
+    expect(hasBrowserImageDecoder()).toBe(true)
+    await expect(decodeImageInBrowser(bytes)).resolves.toEqual({ width: 64, height: 48 })
+    expect(close).toHaveBeenCalledTimes(1)
+  })
+
+  it("propagates the browser's decode rejection", async () => {
+    vi.stubGlobal(
+      "createImageBitmap",
+      vi.fn(async () => {
+        throw new Error("The source image could not be decoded.")
+      }),
+    )
+    await expect(decodeImageInBrowser(bytes)).rejects.toThrow(/could not be decoded/)
   })
 })

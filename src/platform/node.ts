@@ -1,6 +1,7 @@
+import { createRequire } from "node:module"
 import { DOMParser as LinkedomDOMParser } from "linkedom"
 import { proxyFetch } from "../cli/proxy-fetch"
-import { findRemoteAssetRef, installPlatform, type RasterizedImage } from "./registry"
+import { type DecodedImageSize, findRemoteAssetRef, installPlatform, type RasterizedImage } from "./registry"
 import type * as Sharp from "sharp"
 
 /**
@@ -98,13 +99,69 @@ async function rasterizeWithSharp(svgMarkup: string, width: number, height: numb
   }
 }
 
+/**
+ * Longest side of the probe decode in {@link decodeImageWithSharp}. Small
+ * enough that the probe costs milliseconds even for a 6000×4000 JPEG
+ * (Sharp shrinks on load), large enough that libvips still has to walk the
+ * whole compressed stream to produce it.
+ */
+const DECODE_PROBE_PX = 16
+
+/**
+ * Node's `decodeImage` (fix/decode-assets-before-export): `metadata()` for
+ * the pixel size, then a real decode down to a {@link DECODE_PROBE_PX} probe.
+ * Two calls on purpose. `metadata()` alone reads only the header, and a PNG
+ * cut in half still carries a perfect header: measured directly while
+ * building this, `metadata()` reported 64×48 for a PNG truncated at 50%
+ * while the pixel decode failed with "libpng read error". The probe is what
+ * turns "starts like an image" into "opens as an image" without holding the
+ * full raw bitmap in memory (a 25 MB PNG can decode to hundreds of MB of
+ * pixels; the resize streams through libvips instead).
+ *
+ * Sharp's default `failOn: "warning"` stays in force so a truncated JPEG
+ * ("premature end of JPEG image") is an error here, not a half-grey picture.
+ */
+export async function decodeImageWithSharp(bytes: Uint8Array): Promise<DecodedImageSize> {
+  const sharpMod = await loadSharp("Verifying image assets before export")
+  const input = Buffer.from(bytes.buffer, bytes.byteOffset, bytes.byteLength)
+  const meta = await sharpMod(input).metadata()
+  if (!meta.width || !meta.height) {
+    throw new Error("image header carries no pixel size")
+  }
+  await sharpMod(input)
+    .resize({ width: DECODE_PROBE_PX, height: DECODE_PROBE_PX, fit: "inside", withoutEnlargement: true })
+    .raw()
+    .toBuffer()
+  return { width: meta.width, height: meta.height }
+}
+
+/**
+ * `true` when the optional `sharp` package can be resolved from this file.
+ * A resolvability probe only: nothing is imported or executed here, so the
+ * "runtime sharp loads in src are lazy" guard (`dsh-sharp-isolation.test.ts`)
+ * still holds. It lets {@link installNodePlatform} leave `decodeImage`
+ * undefined when Sharp is absent, so `inline-assets.ts` reports "cannot
+ * verify image assets" with install guidance instead of a decode failure
+ * that reads as if the picture itself were broken.
+ */
+function sharpIsResolvable(): boolean {
+  try {
+    createRequire(import.meta.url).resolve("sharp")
+    return true
+  } catch {
+    return false
+  }
+}
+
 /** Wire Node implementations (linkedom DOM, sharp image re-encode + SVG
- *  rasterize) into the SDK. */
+ *  rasterize + real image decode) into the SDK. `decodeImage` is only
+ *  installed when Sharp resolves; see {@link sharpIsResolvable}. */
 export function installNodePlatform(): void {
   installPlatform({
     domParser: LinkedomDOMParser as unknown as typeof DOMParser,
     recodeImageToPng: recodeWithSharp,
     rasterizeSvg: rasterizeWithSharp,
+    decodeImage: sharpIsResolvable() ? decodeImageWithSharp : undefined,
     fetch: proxyFetch,
   })
 }

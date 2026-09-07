@@ -1,7 +1,17 @@
-import { describe, it, expect } from "vitest"
+import { beforeAll, describe, it, expect } from "vitest"
 import JSZip from "jszip"
 import { generatePptxBlob } from "./generate"
 import { COMPONENT_TYPES, type Component, type PptxIR, type Slide } from "@/ir"
+import { decodeImageWithSharp } from "@/platform/node"
+import { installPlatform } from "@/platform/registry"
+
+// Every image asset is really decoded before export
+// (fix/decode-assets-before-export). This file runs under jsdom, which has
+// no createImageBitmap, so the Sharp decoder is installed directly: the
+// fixtures are real PNGs and should pass a real decode, not a stub.
+beforeAll(() => {
+  installPlatform({ decodeImage: decodeImageWithSharp })
+})
 
 /**
  * Regression guard for the "zero unexpected rasterization" fidelity

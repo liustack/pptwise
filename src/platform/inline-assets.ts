@@ -13,7 +13,8 @@
 import type { PptxIR } from "@/ir"
 import { dataUriMime, decodeDataUriBytes, FORMAT_BY_MIME, MIME_BY_SNIFFED_FORMAT, sniffImageFormat } from "@/ir/asset-sniff"
 import { PptwiseError } from "../errors"
-import { getPlatform } from "./registry"
+import { decodeImageInBrowser, hasBrowserImageDecoder } from "./browser"
+import { type DecodedImageSize, getPlatform } from "./registry"
 
 /**
  * 手工构造 data URL（不走 FileReader）：MIME 取 Content-Type，兜底 image/png。
@@ -141,73 +142,147 @@ export async function maybeCompressBackground(dataUrl: string): Promise<string> 
 }
 
 /**
- * Byte-level validation for an `http(s)://` asset's *fetched* bytes (borrow
- * wave, Task 2 follow-up — the review's high-severity finding: a 200
- * response with a `content-type: image/png` header and a 4-byte garbage
- * body previously sailed through `validateIr` (ok:true, zero warnings) and
- * `generatePptx` (succeeds) and landed byte-for-byte in the exported
- * `ppt/media/*` part, since `package-audit.ts`'s `checkRelationshipTargets`
- * only checks that a media part exists, never that its bytes are valid).
- * This is the third, previously-missing ingestion seam for the same sniff
- * `api.ts`'s `checkAssetBytes` and `cli/load-ir.ts`'s `resolveLocalAssets`
- * already run — validated here, right after `fetch`, because a remote
- * asset's bytes plainly don't exist yet at `validateIr` time (see this
- * module's own responsibility: inlining is what turns a URL into bytes at
- * all). `validateIr` staying network-free is a deliberate, unchanged
- * boundary — it never fetches anything, by design (spec-level "no network
- * request from validate") — not an oversight this function papers over.
- *
- * Same reject-not-relabel disposition as the other two seams for a
- * declared-MIME-vs-bytes mismatch (a server that lies about `content-type`)
- * — trusting the response header over the actual bytes is exactly the kind
- * of silent mislabeling `checkAssetBytes`'s own doc comment argues against.
- *
- * Deliberately separate from the `fetch` `try/catch` above/below this
- * function's call site: a fetch *failure* (network error, non-2xx) and a
- * fetch *success carrying broken image bytes* are different failure modes
- * that deserve different messages, not one generic "fetch failed" for both.
+ * Upper bound on the encoded bytes of one image asset, checked before any
+ * decoder touches it. 25 MB is far above anything a slide needs (a 4K JPEG
+ * photo is 2 to 5 MB, a lossless 1920×1080 PNG background 2 to 5 MB, and
+ * PowerPoint itself gets sluggish well before that) and still small enough
+ * that a decoder's raw pixel buffer, which can be ten times the encoded
+ * size, stays affordable. Anything larger is either the wrong file or a
+ * decompression bomb, and both are refused with a message rather than fed
+ * to Sharp or `createImageBitmap`.
  */
-function assertValidFetchedImageBytes(id: string, url: string, dataUrl: string): void {
+export const MAX_DECODE_BYTES = 25 * 1024 * 1024
+
+/** `slide.id` plus its 1-based page number, the same reference shape the
+ *  content-drop gate in `../pptx/generate.ts` prints. */
+function slideRef(slide: PptxIR["slides"][number], index: number): string {
+  const page = index + 1
+  return slide.id ? `${slide.id} (page ${page})` : `page ${page}`
+}
+
+/**
+ * Every place the deck refers to an asset id, so a decode failure can name
+ * the pages that would have shown the broken picture. Walks the same fields
+ * `validate-core.ts`'s `checkAssetReferences` walks (backgrounds, `image`,
+ * `image_grid`, `image_compare`, `device_mockup`) plus the optional ids on
+ * `logo_wall` and `product_cards` items and the deck-level brand logo.
+ */
+export function assetReferences(ir: PptxIR): Map<string, string[]> {
+  const refs = new Map<string, string[]>()
+  const add = (assetId: string | undefined, where: string) => {
+    if (!assetId) return
+    const list = refs.get(assetId)
+    if (!list) refs.set(assetId, [where])
+    else if (!list.includes(where)) list.push(where)
+  }
+  add(ir.brand?.logo_asset_id, "brand logo")
+  ir.slides.forEach((slide, i) => {
+    const where = slideRef(slide, i)
+    if (slide.background?.kind === "asset") add(slide.background.asset_id, where)
+    for (const c of slide.components) {
+      if (c.type === "image" || c.type === "device_mockup") {
+        add(c.asset_id, where)
+      } else if (c.type === "image_grid" || c.type === "logo_wall" || c.type === "product_cards") {
+        for (const item of c.items) add(item.asset_id, where)
+      } else if (c.type === "image_compare") {
+        add(c.left.asset_id, where)
+        add(c.right.asset_id, where)
+      }
+    }
+  })
+  return refs
+}
+
+function describeAsset(id: string, pages: string[], url?: string): string {
+  const used = pages.length > 0 ? `used on ${pages.join(", ")}` : "not referenced by any page"
+  const origin = url ? `, fetched from ${url}` : ""
+  return `asset "${id}" (${used}${origin})`
+}
+
+/**
+ * The decoder this environment can verify images with: the installed
+ * platform's `decodeImage` (Sharp after `installNodePlatform()`), else the
+ * browser's `createImageBitmap` when one exists, else nothing. "Nothing" is
+ * an export error in {@link assertDecodableImage}, never a silent pass.
+ */
+function imageDecoder(): ((bytes: Uint8Array) => Promise<DecodedImageSize>) | undefined {
+  return getPlatform().decodeImage ?? (hasBrowserImageDecoder() ? decodeImageInBrowser : undefined)
+}
+
+/**
+ * The one gate every image asset passes on its way into the export chain,
+ * whether it arrived as a local `data:` URI or was just fetched from an
+ * `http(s)://` URL (fix/decode-assets-before-export). Earlier seams
+ * (`validateIr`'s `checkAssetBytes`, `cli/load-ir.ts`'s `resolveLocalAssets`,
+ * and this module's own fetched-bytes check) only sniffed magic bytes, so an
+ * 8-byte PNG signature with no image body passed every check and landed in
+ * `ppt/media/*` as a picture PowerPoint could not open. The package audit
+ * proves a media part exists, not that it decodes.
+ *
+ * Order: header sniff and declared-MIME check first (cheap, and they give
+ * the more specific message), then the byte cap, then a real decode through
+ * {@link imageDecoder}. Every failure names the asset id and the pages that
+ * reference it, so the author knows which picture to replace and where it
+ * would have appeared.
+ */
+async function assertDecodableImage(id: string, pages: string[], dataUrl: string, url?: string): Promise<void> {
+  const who = describeAsset(id, pages, url)
   const bytes = decodeDataUriBytes(dataUrl)
   if (bytes === null || bytes.length === 0) {
     throw new PptwiseError(
-      `background/illustration asset "${id}" fetched from ${url} came back as a zero-byte or undecodable image — cannot produce a complete PPT, please retry or regenerate the image`,
+      `${who} is a zero-byte or undecodable image, cannot produce a complete PPT: re-export or regenerate the image`,
     )
   }
   const sniffed = sniffImageFormat(bytes)
   if (sniffed === null) {
     throw new PptwiseError(
-      `background/illustration asset "${id}" fetched from ${url} has a corrupt or unrecognized image header (expected PNG, JPEG, WebP, or GIF) — cannot produce a complete PPT, please retry or regenerate the image`,
+      `${who} has a corrupt or unrecognized image header (expected PNG, JPEG, WebP, or GIF), cannot produce a complete PPT: re-export or regenerate the image`,
     )
   }
-  const declaredFormat = FORMAT_BY_MIME[dataUriMime(dataUrl)]
+  const declaredMime = dataUriMime(dataUrl)
+  const declaredFormat = FORMAT_BY_MIME[declaredMime]
   if (declaredFormat && declaredFormat !== sniffed) {
     throw new PptwiseError(
-      `background/illustration asset "${id}" fetched from ${url} declares "${dataUriMime(dataUrl)}" but its bytes are actually ${MIME_BY_SNIFFED_FORMAT[sniffed]} — cannot produce a complete PPT, please retry or regenerate the image`,
+      `${who} declares "${declaredMime}" but its bytes are actually ${MIME_BY_SNIFFED_FORMAT[sniffed]}, cannot produce a complete PPT: fix the declared type or re-export the image as ${declaredMime}`,
+    )
+  }
+  if (bytes.length > MAX_DECODE_BYTES) {
+    const mb = (n: number) => (n / (1024 * 1024)).toFixed(1)
+    throw new PptwiseError(
+      `${who} is ${mb(bytes.length)} MB, above the ${mb(MAX_DECODE_BYTES)} MB limit for one slide image, cannot produce a complete PPT: downscale or recompress the image`,
+    )
+  }
+  const decode = imageDecoder()
+  if (!decode) {
+    throw new PptwiseError(
+      `cannot verify image assets: no image decoder is available in this environment, so ${who} would ship unchecked. In Node, install the optional dependency "sharp" (npm i sharp) and call installNodePlatform() from "@liustack/pptwise/node" (the pptwise CLI does this automatically). In a browser, createImageBitmap is required`,
+    )
+  }
+  try {
+    await decode(bytes)
+  } catch (e) {
+    throw new PptwiseError(
+      `${who} could not be decoded as an image (${e instanceof Error ? e.message.split("\n")[0] : String(e)}), cannot produce a complete PPT: re-export or regenerate the image`,
     )
   }
 }
 
 export async function inlinePptxAssets(ir: PptxIR): Promise<PptxIR> {
   const entries = Object.entries(ir.assets?.images ?? {})
+  if (entries.length === 0) return ir
   const bgIds = backgroundAssetIds(ir)
-  const needsWork = entries.some(
-    ([id, v]) =>
-      (v.src && !v.src.startsWith("data:")) ||
-      (bgIds.has(id) && v.src?.startsWith("data:image/png")) ||
-      (v.src?.startsWith("data:image/") &&
-        !OFFICE_SAFE_MIME.has(dataUrlMime(v.src))),
-  )
-  if (!needsWork) return ir
+  const refs = assetReferences(ir)
 
   const images: Record<string, (typeof entries)[number][1]> = {}
   await Promise.all(
     entries.map(async ([id, asset]) => {
-      if (!asset.src || asset.src.startsWith("data:")) {
-        if (!asset.src) {
-          images[id] = asset
-          return
-        }
+      if (!asset.src) {
+        images[id] = asset
+        return
+      }
+      const pages = refs.get(id) ?? []
+      if (asset.src.startsWith("data:")) {
+        await assertDecodableImage(id, pages, asset.src)
         const normalized = await normalizeAssetDataUrl(id, asset.src)
         images[id] = bgIds.has(id)
           ? { ...asset, src: await maybeCompressBackground(normalized) }
@@ -228,7 +303,7 @@ export async function inlinePptxAssets(ir: PptxIR): Promise<PptxIR> {
           `background/illustration asset "${id}" fetch failed (${e instanceof Error ? e.message : String(e)}), cannot produce a complete PPT — please retry or regenerate the image`,
         )
       }
-      assertValidFetchedImageBytes(id, asset.src, dataUrl)
+      await assertDecodableImage(id, pages, dataUrl, asset.src)
       dataUrl = await normalizeAssetDataUrl(id, dataUrl)
       images[id] = {
         ...asset,

@@ -1,7 +1,17 @@
-import { describe, expect, it } from "vitest"
+import { beforeAll, describe, expect, it } from "vitest"
 import JSZip from "jszip"
 import { createHash } from "node:crypto"
 import type { PptxIR, Slide } from "@/ir"
+import { decodeImageWithSharp } from "@/platform/node"
+import { installPlatform } from "@/platform/registry"
+
+// Every image asset is really decoded before export
+// (fix/decode-assets-before-export). This file runs under jsdom, which has
+// no createImageBitmap, so the Sharp decoder is installed directly: the
+// fixtures are real PNGs and should pass a real decode, not a stub.
+beforeAll(() => {
+  installPlatform({ decodeImage: decodeImageWithSharp })
+})
 
 /**
  * End-to-end check (vc-task-7): a real theme's `Decor` layer emits a real
