@@ -12,9 +12,13 @@
  *
  * Tool surface (deliberately minimal and neutral, plan 裁定 1): no general
  * shell. `run_pptwise` only accepts a whitelisted, read-only/artifact
- * subcommand — no `serve` (interactive), no `plan`/`scenarios` (removed
- * vocabulary-v4 aliases), no `check-update`/`self-update` (network side
- * effects unrelated to the benchmark). Every path argument to any tool —
+ * subcommand (see `ALLOWED_SUBCOMMANDS` / `ALLOWED_GROUPS` — every command
+ * the SKILL playbook asks the model to run is on it, including
+ * `theme try|new|fork`, `spec validate`, `brand extract`, and `doctor`) —
+ * no `serve` (interactive), no `plan`/`scenarios` (removed vocabulary-v4
+ * aliases), no `check-update`/`self-update`/`images`/`config` (network side
+ * effects or user-level writes unrelated to the benchmark), no `init`.
+ * Every path argument to any tool —
  * `write_file`/`read_file`/`list_files`'s own `path`, and every non-flag
  * `run_pptwise` argument — is resolved against the workspace and rejected
  * if it is absolute or escapes the workspace via `..`. Symlink-based
@@ -37,7 +41,23 @@
  * Tool-result cap: every tool's return string is capped at
  * `TOOL_RESULT_MAX_CHARS` before it goes back into the conversation — see
  * that constant's own comment for the size and the truncate-from-the-end
- * rationale.
+ * rationale. A cut result is never silently passed off as the whole thing:
+ * the full text is saved under the workspace's `.tool-results/` (one file
+ * per tool call, numbered) and the model is told the exact `read_file`
+ * call — with `offset` — that continues from where the cut happened
+ * (`finishToolResult`). `read_file` itself pages with `offset`/`limit`.
+ *
+ * Skill references: `skills/pptwise/references/` is copied into the
+ * workspace as `references/` so every `references/*.md` link SKILL.md
+ * makes resolves through `read_file` (`copySkillReferences`).
+ *
+ * Tool rejections vs tool errors: a call the harness refused before running
+ * it (path escape, disallowed subcommand, protected input, malformed
+ * arguments, unknown tool) is recorded in meta.json's `tool_rejections` /
+ * `tool_rejection_details`, apart from `tool_errors` (a call that ran and
+ * reported failure — a nonzero CLI exit, a missing file). The scorer
+ * reports the two separately so a harness refusal never reads as a model
+ * mistake.
  *
  * Round cap: `ROUND_CAP` chat-completion calls total (plan 裁定 2, raised
  * twice since — see that constant's own doc comment for the history) — one
@@ -75,6 +95,7 @@ import { fileURLToPath, pathToFileURL } from "node:url"
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..")
 const CLI = join(ROOT, "dist/cli.js")
+const SKILL_DIR = join(ROOT, "skills/pptwise")
 /** Fixed round cap, identical across every question and model in a batch.
  *  Raised 24 → 32 before the first full batch: the post-slim smoke (q01,
  *  the bank's gentlest question, on the stronger of the two weak models)
@@ -99,14 +120,24 @@ const ROUND_CAP = 48
  *  practice for a single tool result — generous enough that a real
  *  `validate`/`audit` dump or a normal IR file read round-trips intact for
  *  a single deck (empirically a few KB), while still bounding the
- *  pathological case (a huge stray file the model asks to read back). */
+ *  pathological case (a huge stray file the model asks to read back).
+ *  The cap is not the whole story: `pptwise schema` alone is megabytes, so
+ *  an over-cap result is spilled to a file and the model pages through it
+ *  with `read_file` `offset` — see `finishToolResult`. Raising this number
+ *  would only move the cliff, not remove it. */
 const TOOL_RESULT_MAX_CHARS = 8_000
-/** Per-completion-call network timeout. A single round's `max_tokens` here
- *  (8192) is far smaller than `run.mts`'s single-shot 16384, so it needs
- *  much less time than that runner's 10-minute allowance — 3 minutes is
- *  generous headroom for a slow provider while still failing a genuinely
- *  hung request well before the harness's own process-level timeout would
- *  otherwise be the only thing to notice. */
+/** Per-round output ceiling. Was 8192: the first smoke after the reach
+ *  fixes (deepseek-v4-flash, q01) hit it on round 3 while writing the deck
+ *  in one `write_file` call — the API dropped the unfinished tool call and
+ *  returned an empty reply, and the run ended with nothing saved. Now the
+ *  same 16384 `run.mts` already uses against the same providers, so the
+ *  number is known to be accepted. A cut-off reply is still possible and is
+ *  handled in `decideTurn`, not silently read as a stop. */
+const MAX_COMPLETION_TOKENS = 16_384
+/** Per-completion-call network timeout. 3 minutes is generous headroom for
+ *  a slow provider producing a full `MAX_COMPLETION_TOKENS` reply while
+ *  still failing a genuinely hung request well before the harness's own
+ *  process-level timeout would otherwise be the only thing to notice. */
 const ROUND_TIMEOUT_MS = 180_000
 /** Overall wall-clock budget for one question's whole tool loop, independent
  *  of the round cap — `ROUND_CAP` rounds at the per-round timeout above
@@ -193,12 +224,19 @@ function pathishToken(token: string): string | null {
 
 // ── run_pptwise subcommand whitelist (plan 裁定 1: read-only/artifact only, no serve) ──
 
-/** Top-level subcommands allowed through `run_pptwise`. Excludes `serve`
- *  (interactive/long-running), `plan`/`scenarios` (removed vocabulary-v4
- *  aliases that only exist to print a rename error), and
- *  `check-update`/`self-update` (network side effects with no benchmark
- *  value). `init` is excluded too — nothing in the SKILL workflow this
- *  harness exercises needs a scaffolded `pptwise.config.json`. */
+/** Top-level subcommands allowed through `run_pptwise`. Checked against
+ *  every `pptwise` invocation in `skills/pptwise/SKILL.md` (2026-09): the
+ *  playbook runs `schema`, `schema --spec`, `narratives`, `themes`, `theme
+ *  try|new|fork`, `brand extract`, `spec validate`, `assemble`, `validate`,
+ *  `audit`, `preview`, `render`, `doctor`, and `serve` — everything but
+ *  `serve` (interactive/long-running) is reachable. `layouts` is a plain
+ *  listing and comes along. Excluded on purpose: `plan`/`scenarios`
+ *  (removed vocabulary-v4 aliases that only exist to print a rename
+ *  error), `check-update`/`self-update`/`images` (network side effects
+ *  with no benchmark value), `config` (writes user-level settings outside
+ *  the workspace), and `init` (nothing in the SKILL workflow needs a
+ *  scaffolded `pptwise.config.json`). `migrate` was on the first list and
+ *  no longer exists as a CLI command (`76180bbf`). */
 const ALLOWED_SUBCOMMANDS = new Set([
   "render",
   "validate",
@@ -207,39 +245,67 @@ const ALLOWED_SUBCOMMANDS = new Set([
   "schema",
   "assemble",
   "disassemble",
-  "migrate",
   "themes",
   "narratives",
   "preview",
+  "layouts",
+  "doctor",
 ])
 
-export interface ArgsCheck {
-  ok: boolean
-  reason?: string
+/** Command groups (`pptwise <group> <sub>`) and the sub-subcommands each
+ *  may run. The group name alone is never enough — commander would just
+ *  print help — so a bare group is rejected the same as an unknown one. */
+const ALLOWED_GROUPS: Readonly<Record<string, readonly string[]>> = {
+  spec: ["validate"],
+  theme: ["new", "fork", "try"],
+  brand: ["extract"],
 }
 
+/** One human-readable list of everything `run_pptwise` accepts — the tool
+ *  schema, the system prompt, and the rejection message all print this so
+ *  they cannot drift apart (the way `ROUND_CAP` once did). */
+export function describeAllowedSubcommands(): string {
+  const groups = Object.entries(ALLOWED_GROUPS).flatMap(([group, subs]) => subs.map((sub) => `${group} ${sub}`))
+  return [...ALLOWED_SUBCOMMANDS, ...groups].join(", ")
+}
+
+/** Outcome of `checkPptwiseArgs`. A failure names its kind so the caller
+ *  can record it as the right sort of harness rejection without reading
+ *  the reason text back. */
+export type ArgsCheck =
+  | { ok: true }
+  | { ok: false; kind: "subcommand-not-allowed" | "path-escape"; reason: string }
+
 /** Validates a `run_pptwise` argv array before it is ever spawned: the
- *  subcommand (and, for the `spec` group, its one allowed sub-subcommand
- *  `spec validate`) must be on the whitelist, and every path-ish token must
- *  stay inside `workspace` (see `checkPathSafety`). */
+ *  subcommand (and, for a command group, its sub-subcommand) must be on the
+ *  whitelist, and every path-ish token must stay inside `workspace` (see
+ *  `checkPathSafety`). */
 export function checkPptwiseArgs(args: string[], workspace: string): ArgsCheck {
-  if (args.length === 0) return { ok: false, reason: "no subcommand given" }
+  if (args.length === 0) return { ok: false, kind: "subcommand-not-allowed", reason: "no subcommand given" }
   const [head, ...rest] = args
-  if (head === "spec") {
-    if (rest[0] !== "validate") {
-      return { ok: false, reason: `subcommand not allowed: spec ${rest[0] ?? ""} (only "spec validate" is)` }
+  const groupSubs = Object.hasOwn(ALLOWED_GROUPS, head!) ? ALLOWED_GROUPS[head!]! : undefined
+  if (groupSubs) {
+    if (rest[0] === undefined || !groupSubs.includes(rest[0])) {
+      const allowed = groupSubs.map((sub) => `"${head} ${sub}"`).join(", ")
+      const given = [head, rest[0]].filter((t) => t !== undefined).join(" ")
+      return {
+        ok: false,
+        kind: "subcommand-not-allowed",
+        reason: `subcommand not allowed: ${given} (only ${allowed} ${groupSubs.length === 1 ? "is" : "are"})`,
+      }
     }
   } else if (!ALLOWED_SUBCOMMANDS.has(head!)) {
     return {
       ok: false,
-      reason: `subcommand not allowed: ${head} (allowed: ${[...ALLOWED_SUBCOMMANDS].join(", ")}, spec validate)`,
+      kind: "subcommand-not-allowed",
+      reason: `subcommand not allowed: ${head} (allowed: ${describeAllowedSubcommands()})`,
     }
   }
   for (const token of args) {
     const pathish = pathishToken(token)
     if (pathish === null) continue
     const check = checkPathSafety(workspace, pathish)
-    if (!check.ok) return { ok: false, reason: check.reason }
+    if (!check.ok) return { ok: false, kind: "path-escape", reason: check.reason }
   }
   return { ok: true }
 }
@@ -248,8 +314,16 @@ export function checkPptwiseArgs(args: string[], workspace: string): ArgsCheck {
 
 export type ModelTurnKind = "spec-confirmation" | "other-question" | "stop"
 
+/** The scripted replies the harness can send in the user's place: the two
+ *  protocol lines for questions (README's "Harness role"), plus one for a
+ *  reply the API cut off at `MAX_COMPLETION_TOKENS` — a transport limit the
+ *  harness set, so the harness says so and lets the model go on. */
+export type ScriptedReplyReason = "spec-confirmation" | "other-question" | "output-limit"
+
 const SPEC_CONFIRMATION_REPLY = "Spec confirmed, proceed."
 const OTHER_QUESTION_REPLY = "Proceed with your best judgment."
+const OUTPUT_LIMIT_REPLY =
+  "Your last reply was cut off by the output limit before it finished. Continue, keeping each reply within the limit."
 
 /**
  * Classifies a model turn that made no tool calls: is it asking for
@@ -279,8 +353,43 @@ export function classifyModelTurn(content: string): ModelTurnKind {
   return mentionsSpec ? "spec-confirmation" : "other-question"
 }
 
-export function scriptedReplyFor(kind: "spec-confirmation" | "other-question"): string {
-  return kind === "spec-confirmation" ? SPEC_CONFIRMATION_REPLY : OTHER_QUESTION_REPLY
+export function scriptedReplyFor(kind: ScriptedReplyReason): string {
+  switch (kind) {
+    case "spec-confirmation":
+      return SPEC_CONFIRMATION_REPLY
+    case "other-question":
+      return OTHER_QUESTION_REPLY
+    case "output-limit":
+      return OUTPUT_LIMIT_REPLY
+  }
+}
+
+export type TurnDecision =
+  | { kind: "tools" }
+  | { kind: "scripted"; reason: ScriptedReplyReason; reply: string }
+  | { kind: "stop"; finalText: string }
+
+/**
+ * What the loop does with one model reply. Tool calls run, whatever the
+ * finish reason. A reply with no tool calls that the API cut off at
+ * `max_tokens` (`finish_reason: "length"`) is the harness's limit showing,
+ * not the model stopping — it gets the output-limit line and the run goes
+ * on. Everything else goes through {@link classifyModelTurn}: a question
+ * gets its protocol line, a statement (or a reply the model really did
+ * leave empty) ends the run.
+ */
+export function decideTurn(
+  msg: { content: string | null; tool_calls?: ToolCall[] },
+  finishReason: string | undefined,
+): TurnDecision {
+  if (msg.tool_calls && msg.tool_calls.length > 0) return { kind: "tools" }
+  if (finishReason === "length") {
+    return { kind: "scripted", reason: "output-limit", reply: scriptedReplyFor("output-limit") }
+  }
+  const content = msg.content ?? ""
+  const kind = classifyModelTurn(content)
+  if (kind === "stop") return { kind: "stop", finalText: content }
+  return { kind: "scripted", reason: kind, reply: scriptedReplyFor(kind) }
 }
 
 // ── meta.json assembly (plan 裁定 2: harness-written, requested vs reported) ──
@@ -307,6 +416,12 @@ export interface RunMeta {
    *  run can stop short of a natural finish. */
   deadline_hit: boolean
   scripted_replies: number
+  /** Rounds whose reply the API cut off at `MAX_COMPLETION_TOKENS`
+   *  (`finish_reason: "length"`) with no tool call surviving the cut. Each
+   *  one cost the model a round and a scripted continue line; a run that
+   *  ends with nothing saved and this above zero was starved by the
+   *  harness's output ceiling, not by the model's judgment. */
+  length_cutoffs: number
   /** Sum, across every round, of whatever prompt-cache-hit field the
    *  provider's response carries (plan 裁定 3) — DeepSeek's
    *  `usage.prompt_cache_hit_tokens`, dashscope/OpenAI-shaped
@@ -315,6 +430,17 @@ export interface RunMeta {
    *  Additive field beyond plan 裁定 2's base meta shape — a diagnostic
    *  alongside `prompt_tokens`, not used in any pass/fail decision. */
   cached_prompt_tokens: number
+  /** Tool calls the harness refused before running them — a path escape,
+   *  a subcommand off the whitelist, a write to a provisioned input,
+   *  malformed arguments, an unknown tool name. These are the model
+   *  bumping into the harness, not the model getting pptwise wrong, and
+   *  the scorer reports them apart from `tool_errors`. */
+  tool_rejections: number
+  tool_rejection_details: ToolRejection[]
+  /** Tool calls that ran and reported failure (a nonzero CLI exit, a
+   *  missing file) — the model's own mistakes, the loop the benchmark is
+   *  meant to measure. */
+  tool_errors: number
 }
 
 export function buildMeta(params: {
@@ -332,6 +458,9 @@ export function buildMeta(params: {
   deadlineHit: boolean
   scriptedReplies: number
   cachedPromptTokens: number
+  toolRejections: ToolRejection[]
+  toolErrors: number
+  lengthCutoffs: number
 }): RunMeta {
   return {
     provider_prefix: params.providerPrefix,
@@ -348,7 +477,11 @@ export function buildMeta(params: {
     cap_hit: params.capHit,
     deadline_hit: params.deadlineHit,
     scripted_replies: params.scriptedReplies,
+    length_cutoffs: params.lengthCutoffs,
     cached_prompt_tokens: params.cachedPromptTokens,
+    tool_rejections: params.toolRejections.length,
+    tool_rejection_details: params.toolRejections,
+    tool_errors: params.toolErrors,
   }
 }
 
@@ -499,14 +632,35 @@ export function placeArtifact(located: LocatedArtifact, resultDir: string): stri
  * scope" posture elsewhere, here applied by omission rather than a check.
  */
 export function copyQuestionAssets(questionDir: string, workspace: string): Set<string> {
-  const assetsSrc = join(questionDir, "assets")
+  return provisionDirectory(join(questionDir, "assets"), workspace, "assets")
+}
+
+/**
+ * Copies `skillDir/references/` into `workspace/references/`, so every
+ * `references/<name>.md` path SKILL.md points at resolves through
+ * `read_file` exactly as written — the injected playbook and its references
+ * keep the same relative layout they have in `skills/pptwise/`. Without
+ * this the model was handed a playbook whose every "see references/x.md"
+ * led to `no such file`, and the failure went on the model's record. The
+ * copies are protected the same way question assets are (see
+ * `doWriteFile`): the model reads them, it does not rewrite them.
+ */
+export function copySkillReferences(skillDir: string, workspace: string): Set<string> {
+  return provisionDirectory(join(skillDir, "references"), workspace, "references")
+}
+
+/** Shared body of the two provisioning copies above: every file under
+ *  `srcDir` lands at `workspace/<destRel>/<same relative path>`, each
+ *  destination path checked with {@link checkPathSafety}. Returns the
+ *  resolved destination paths for the protected-input set. */
+function provisionDirectory(srcDir: string, workspace: string, destRel: string): Set<string> {
   const provisioned = new Set<string>()
-  if (!existsSync(assetsSrc)) return provisioned
-  for (const rel of walkFiles(assetsSrc, assetsSrc)) {
-    const check = checkPathSafety(workspace, join("assets", rel))
-    if (!check.ok) continue // never let a malformed question dir write outside the workspace
+  if (!existsSync(srcDir)) return provisioned
+  for (const rel of walkFiles(srcDir, srcDir)) {
+    const check = checkPathSafety(workspace, join(destRel, rel))
+    if (!check.ok) continue // never let a malformed source dir write outside the workspace
     mkdirSync(dirname(check.resolved), { recursive: true })
-    cpSync(join(assetsSrc, rel), check.resolved)
+    cpSync(join(srcDir, rel), check.resolved)
     // Returned as RESOLVED paths so doWriteFile can compare its own
     // resolved target by exact identity — the q12 smoke watched the model
     // overwrite a provisioned PNG with base64 *text*; the prompt warning
@@ -537,54 +691,165 @@ export function truncateForModel(text: string, maxChars: number): string {
   return `${text.slice(0, maxChars)}\n\n[truncated: ${maxChars} of ${text.length} chars shown]`
 }
 
-export function doWriteFile(workspace: string, args: unknown, provisioned?: ReadonlySet<string>): string {
+/** Why the harness refused to run a tool call at all. */
+export type ToolRejectionKind =
+  | "path-escape"
+  | "subcommand-not-allowed"
+  | "protected-input"
+  | "bad-arguments"
+  | "unknown-tool"
+
+/** One refused call, as recorded in meta.json's `tool_rejection_details`. */
+export interface ToolRejection {
+  /** 1-based index of the tool call within the run. */
+  call: number
+  tool: string
+  kind: ToolRejectionKind
+  reason: string
+}
+
+/**
+ * What one tool call hands back to the conversation. `content` is what the
+ * model sees. `rejection` is set when the harness refused the call before
+ * running it (see {@link ToolRejectionKind}); `failed` when the call ran
+ * and reported failure — a nonzero CLI exit, a missing file. The two never
+ * overlap, and a plain success has neither.
+ */
+export interface ToolResult {
+  content: string
+  rejection?: { kind: ToolRejectionKind; reason: string }
+  failed?: boolean
+}
+
+function reject(kind: ToolRejectionKind, reason: string): ToolResult {
+  return { content: `ERROR: ${reason}`, rejection: { kind, reason } }
+}
+
+function fail(reason: string): ToolResult {
+  return { content: `ERROR: ${reason}`, failed: true }
+}
+
+/** Workspace-relative directory where over-cap tool results are saved. */
+export const TOOL_RESULTS_DIR = ".tool-results"
+
+/** Where the full text of tool call `callIndex` is saved when it exceeds
+ *  the cap — numbered so a transcript reader can line the file up with the
+ *  call, and so two calls to the same tool never overwrite each other. */
+export function spillPathFor(callIndex: number, tool: string): string {
+  return `${TOOL_RESULTS_DIR}/${String(callIndex).padStart(3, "0")}-${tool}.txt`
+}
+
+/** The one sentence every cut result ends with: which character range of
+ *  the whole was shown, and the exact `read_file` call that continues from
+ *  there. Same phrasing whether the whole lives in a spill file or in the
+ *  file the model asked to read. */
+export function continuationHint(from: number, to: number, total: number, path: string): string {
+  return `[truncated: chars ${from}-${to} of ${total} shown. Read the rest with read_file({"path": ${JSON.stringify(path)}, "offset": ${to}})]`
+}
+
+export interface ToolResultContext {
+  workspace: string
+  callIndex: number
+  tool: string
+  maxChars: number
+}
+
+/**
+ * Applies the tool-result cap to a `run_pptwise`/`list_files` result. An
+ * under-cap result passes through untouched. An over-cap result is written
+ * whole to `<workspace>/.tool-results/<NNN>-<tool>.txt` and the model gets
+ * the head plus a {@link continuationHint} naming that file and the offset
+ * where the head stopped — so a 2.6 MB `schema` dump is paged, not
+ * silently reduced to its first 0.3%. The file lives inside the workspace
+ * on purpose: `read_file` is the model's only reader, and it cannot see
+ * anything outside.
+ */
+export function finishToolResult(text: string, ctx: ToolResultContext): string {
+  if (text.length <= ctx.maxChars) return text
+  const rel = spillPathFor(ctx.callIndex, ctx.tool)
+  const abs = join(ctx.workspace, rel)
+  mkdirSync(dirname(abs), { recursive: true })
+  writeFileSync(abs, text, "utf8")
+  return `${text.slice(0, ctx.maxChars)}\n\n${continuationHint(0, ctx.maxChars, text.length, rel)}`
+}
+
+export function doWriteFile(workspace: string, args: unknown, provisioned?: ReadonlySet<string>): ToolResult {
   const { path, content } = (args ?? {}) as { path?: unknown; content?: unknown }
   if (typeof path !== "string" || typeof content !== "string") {
-    return "ERROR: write_file requires {path: string, content: string}"
+    return reject("bad-arguments", "write_file requires {path: string, content: string}")
   }
   const check = checkPathSafety(workspace, path)
-  if (!check.ok) return `ERROR: ${check.reason}`
+  if (!check.ok) return reject("path-escape", check.reason)
   if (provisioned?.has(check.resolved)) {
     // Code-enforced guard behind the preamble's soft warning: harness-
     // provisioned inputs are read-only for the model. The q12 smoke showed
     // a model "helpfully" rewriting a provided PNG with the prompt's
     // base64 text, corrupting it. New files (anywhere) stay writable.
-    return `ERROR: ${path} is a provided input file and cannot be overwritten — reference it as-is, or write derived output to a new path`
+    return reject(
+      "protected-input",
+      `${path} is a provided input file and cannot be overwritten — reference it as-is, or write derived output to a new path`,
+    )
   }
   mkdirSync(dirname(check.resolved), { recursive: true })
   writeFileSync(check.resolved, content, "utf8")
-  return `wrote ${Buffer.byteLength(content, "utf8")} bytes to ${path}`
+  return { content: `wrote ${Buffer.byteLength(content, "utf8")} bytes to ${path}` }
 }
 
-function doReadFile(workspace: string, args: unknown): string {
-  const { path } = (args ?? {}) as { path?: unknown }
-  if (typeof path !== "string") return "ERROR: read_file requires {path: string}"
+function isCount(value: unknown): value is number {
+  return typeof value === "number" && Number.isInteger(value) && value >= 0
+}
+
+/**
+ * Reads `path` from character `offset` (default 0) for at most `limit`
+ * characters (default and ceiling: `maxChars`). When the window stops short
+ * of the end, the result ends with a {@link continuationHint} for the next
+ * window — the same hint an over-cap `run_pptwise` result carries, so one
+ * habit reads both. Offsets are character positions, matching the numbers
+ * the hint prints.
+ */
+export function doReadFile(workspace: string, args: unknown, maxChars: number): ToolResult {
+  const { path, offset, limit } = (args ?? {}) as { path?: unknown; offset?: unknown; limit?: unknown }
+  if (typeof path !== "string") {
+    return reject("bad-arguments", "read_file requires {path: string, offset?: number, limit?: number}")
+  }
+  if (offset !== undefined && !isCount(offset)) return reject("bad-arguments", "read_file offset must be a non-negative integer")
+  if (limit !== undefined && (!isCount(limit) || limit === 0)) {
+    return reject("bad-arguments", "read_file limit must be a positive integer")
+  }
   const check = checkPathSafety(workspace, path)
-  if (!check.ok) return `ERROR: ${check.reason}`
-  if (!existsSync(check.resolved)) return `ERROR: no such file: ${path}`
-  if (statSync(check.resolved).isDirectory()) return `ERROR: ${path} is a directory, not a file`
-  return truncateForModel(readFileSync(check.resolved, "utf8"), TOOL_RESULT_MAX_CHARS)
+  if (!check.ok) return reject("path-escape", check.reason)
+  if (!existsSync(check.resolved)) return fail(`no such file: ${path}`)
+  if (statSync(check.resolved).isDirectory()) return fail(`${path} is a directory, not a file`)
+  const full = readFileSync(check.resolved, "utf8")
+  const from = offset ?? 0
+  if (from > 0 && from >= full.length) {
+    return reject("bad-arguments", `offset ${from} is past the end of ${path} (${full.length} chars)`)
+  }
+  const to = Math.min(from + Math.min(limit ?? maxChars, maxChars), full.length)
+  const window = full.slice(from, to)
+  if (to < full.length) return { content: `${window}\n\n${continuationHint(from, to, full.length, path)}` }
+  return { content: window }
 }
 
-function doListFiles(workspace: string, args: unknown): string {
+function doListFiles(workspace: string, args: unknown, ctx: ToolResultContext): ToolResult {
   const raw = (args ?? {}) as { path?: unknown }
   const rel = typeof raw.path === "string" ? raw.path : "."
   const check = checkPathSafety(workspace, rel)
-  if (!check.ok) return `ERROR: ${check.reason}`
-  if (!existsSync(check.resolved)) return `ERROR: no such path: ${rel}`
-  if (!statSync(check.resolved).isDirectory()) return `ERROR: not a directory: ${rel}`
+  if (!check.ok) return reject("path-escape", check.reason)
+  if (!existsSync(check.resolved)) return fail(`no such path: ${rel}`)
+  if (!statSync(check.resolved).isDirectory()) return fail(`not a directory: ${rel}`)
   const listing = walkEntries(check.resolved, check.resolved)
-  return truncateForModel(listing.length > 0 ? listing.join("\n") : "(empty)", TOOL_RESULT_MAX_CHARS)
+  return { content: finishToolResult(listing.length > 0 ? listing.join("\n") : "(empty)", ctx) }
 }
 
-function doRunPptwise(workspace: string, args: unknown): string {
+function doRunPptwise(workspace: string, args: unknown, ctx: ToolResultContext): ToolResult {
   const raw = (args ?? {}) as { args?: unknown }
   if (!Array.isArray(raw.args) || !raw.args.every((a): a is string => typeof a === "string")) {
-    return 'ERROR: run_pptwise requires {args: string[]}, e.g. {"args": ["validate", "deck.json"]}'
+    return reject("bad-arguments", 'run_pptwise requires {args: string[]}, e.g. {"args": ["validate", "deck.json"]}')
   }
   const argv = raw.args
   const check = checkPptwiseArgs(argv, workspace)
-  if (!check.ok) return `ERROR: ${check.reason}`
+  if (!check.ok) return reject(check.kind, check.reason)
   try {
     const stdout = execFileSync("node", [CLI, ...argv], {
       encoding: "utf8",
@@ -592,11 +857,11 @@ function doRunPptwise(workspace: string, args: unknown): string {
       timeout: 120_000,
       maxBuffer: 10 * 1024 * 1024,
     })
-    return truncateForModel(`exit 0\n${stdout}`, TOOL_RESULT_MAX_CHARS)
+    return { content: finishToolResult(`exit 0\n${stdout}`, ctx) }
   } catch (e) {
     const err = e as { status?: number; stdout?: string; stderr?: string; message: string }
     const body = [err.stdout, err.stderr].filter(Boolean).join("\n") || err.message
-    return truncateForModel(`exit ${err.status ?? "?"}\n${body}`, TOOL_RESULT_MAX_CHARS)
+    return { content: finishToolResult(`exit ${err.status ?? "?"}\n${body}`, ctx), failed: true }
   }
 }
 
@@ -606,28 +871,36 @@ interface ToolCall {
   function: { name: string; arguments: string }
 }
 
-function executeTool(tc: ToolCall, workspace: string, provisioned?: ReadonlySet<string>): string {
+export interface ExecuteContext {
+  provisioned?: ReadonlySet<string>
+  /** 1-based index of this call within the run — names the spill file. */
+  callIndex: number
+  maxChars: number
+}
+
+export function executeTool(tc: ToolCall, workspace: string, exec: ExecuteContext): ToolResult {
+  const ctx: ToolResultContext = { workspace, callIndex: exec.callIndex, tool: tc.function.name, maxChars: exec.maxChars }
   let args: unknown
   try {
     args = JSON.parse(tc.function.arguments || "{}")
   } catch (e) {
-    return `ERROR: malformed arguments JSON for ${tc.function.name}: ${(e as Error).message}`
+    return reject("bad-arguments", `malformed arguments JSON for ${tc.function.name}: ${(e as Error).message}`)
   }
   try {
     switch (tc.function.name) {
       case "write_file":
-        return doWriteFile(workspace, args, provisioned)
+        return doWriteFile(workspace, args, exec.provisioned)
       case "read_file":
-        return doReadFile(workspace, args)
+        return doReadFile(workspace, args, exec.maxChars)
       case "list_files":
-        return doListFiles(workspace, args)
+        return doListFiles(workspace, args, ctx)
       case "run_pptwise":
-        return doRunPptwise(workspace, args)
+        return doRunPptwise(workspace, args, ctx)
       default:
-        return `ERROR: unknown tool ${tc.function.name}`
+        return reject("unknown-tool", `unknown tool ${tc.function.name}`)
     }
   } catch (e) {
-    return truncateForModel(`ERROR: ${(e as Error).message}`, TOOL_RESULT_MAX_CHARS)
+    return { content: truncateForModel(`ERROR: ${(e as Error).message}`, exec.maxChars), failed: true }
   }
 }
 
@@ -653,10 +926,16 @@ const TOOLS = [
     type: "function",
     function: {
       name: "read_file",
-      description: "Read a file inside your private workspace.",
+      description:
+        "Read a file inside your private workspace. Long files come back in windows: the result ends with a " +
+        "[truncated: ...] line naming the next offset — call read_file again with that offset to continue.",
       parameters: {
         type: "object",
-        properties: { path: { type: "string", description: "File path relative to your workspace root." } },
+        properties: {
+          path: { type: "string", description: "File path relative to your workspace root." },
+          offset: { type: "integer", description: "Character position to start reading from (default 0)." },
+          limit: { type: "integer", description: `Maximum characters to return (default and ceiling ${TOOL_RESULT_MAX_CHARS}).` },
+        },
         required: ["path"],
       },
     },
@@ -680,8 +959,9 @@ const TOOLS = [
       name: "run_pptwise",
       description:
         'Run the pptwise CLI inside your workspace, e.g. {"args": ["validate", "deck.json"]}. Only read-only and ' +
-        "artifact-producing subcommands are available: render, validate, audit, asset-brief, schema, assemble, " +
-        "disassemble, migrate, themes, narratives, preview, spec validate. There is no serve command.",
+        `artifact-producing subcommands are available: ${describeAllowedSubcommands()}. There is no serve command. ` +
+        `Output longer than ${TOOL_RESULT_MAX_CHARS} characters is saved whole under ${TOOL_RESULTS_DIR}/ and the result ` +
+        "ends with a [truncated: ...] line telling you the read_file call that continues it.",
       parameters: {
         type: "object",
         properties: {
@@ -714,8 +994,26 @@ interface ChatCompletionUsage {
 
 interface ChatCompletionResponse {
   model?: string
-  choices: Array<{ message: { content: string | null; tool_calls?: ToolCall[] } }>
+  choices: Array<{ message: { content: string | null; tool_calls?: ToolCall[] }; finish_reason?: string }>
   usage?: ChatCompletionUsage
+}
+
+/** One round's harness-side record for `transcript.json`: what the API said
+ *  about the round, apart from the message itself. `finish_reason: "length"`
+ *  is the one worth reading first when a run ends with nothing saved — it
+ *  means the reply hit `max_tokens`, not that the model chose to stop. */
+interface RoundRecord {
+  round: number
+  model?: string
+  finish_reason?: string
+  usage?: ChatCompletionUsage
+  tool_calls: number
+}
+
+/** Writes the whole conversation plus per-round records beside meta.json so
+ *  a run that ends with nothing saved can be read back, not guessed at. */
+function writeTranscript(resultDir: string, rounds: RoundRecord[], messages: ChatMessage[]): void {
+  writeFileSync(join(resultDir, "transcript.json"), JSON.stringify({ rounds, messages }, null, 2) + "\n")
 }
 
 /**
@@ -750,7 +1048,7 @@ async function callRound(
       body: JSON.stringify({
         model: cfg.model,
         temperature: 0,
-        max_tokens: 8192,
+        max_tokens: MAX_COMPLETION_TOKENS,
         messages,
         tools: TOOLS,
         tool_choice: "auto",
@@ -780,20 +1078,29 @@ async function runOneAgentic(
     return
   }
   mkdirSync(workspace, { recursive: true })
-  const provisioned = copyQuestionAssets(join(dirs.questionsDir, qid), workspace)
+  const provisioned = new Set<string>([
+    ...copyQuestionAssets(join(dirs.questionsDir, qid), workspace),
+    ...copySkillReferences(SKILL_DIR, workspace),
+  ])
 
   const system = [
     "You are the model-under-test in the pptwise benchmark, agentic tool-loop mode.",
-    "You have four tools: write_file(path, content), read_file(path), list_files(path?), run_pptwise(args).",
+    "You have four tools: write_file(path, content), read_file(path, offset?, limit?), list_files(path?),",
+    "run_pptwise(args).",
     "All paths are relative to your private workspace directory — you cannot read or write anything outside",
     "it, and absolute paths or \"..\" paths that escape the workspace are rejected.",
     "run_pptwise runs the pptwise CLI (node dist/cli.js) with your workspace as its current directory; only",
-    "read-only and artifact-producing subcommands are available (render, validate, audit, asset-brief, schema,",
-    "assemble, disassemble, migrate, themes, narratives, preview, spec validate) — there is no interactive",
-    "serve command and no general shell access.",
+    `read-only and artifact-producing subcommands are available (${describeAllowedSubcommands()}) — there is`,
+    "no interactive serve command and no general shell access.",
+    `A tool result longer than ${TOOL_RESULT_MAX_CHARS} characters is cut: the whole output is saved under`,
+    `${TOOL_RESULTS_DIR}/ and the result ends with a [truncated: ...] line giving the exact read_file call (path and`,
+    "offset) that continues it. read_file pages the same way, so keep reading until no [truncated: ...] line remains",
+    "when you need the rest.",
     "The IR JSON Schema, narrative presets, and theme catalog are not preloaded below — run",
     "run_pptwise(['schema']) / run_pptwise(['narratives', '--json']) / run_pptwise(['themes', '--json']) yourself",
     "whenever you need them, the same way the SKILL playbook expects.",
+    "The playbook's references/ files (references/spec.md, references/layouts.md, ...) are in your workspace at",
+    "those exact paths — read them with read_file when the playbook points at one.",
     "Use the SKILL playbook below to design and build the deck: write your IR (or deck-project files) with",
     "write_file, run validate/audit with run_pptwise, read what they report, and fix what needs fixing — the",
     "same self-check loop the playbook describes, with real tool access instead of imagined output.",
@@ -823,10 +1130,14 @@ async function runOneAgentic(
   let roundsCompleted = 0
   let toolCalls = 0
   let scriptedReplies = 0
+  const toolRejections: ToolRejection[] = []
+  let toolErrors = 0
+  let lengthCutoffs = 0
   let promptTokens = 0
   let completionTokens = 0
   let cachedPromptTokens = 0
   const modelReported = new Set<string>()
+  const roundRecords: RoundRecord[] = []
   let finalText: string | undefined
   let deadlineHit = false
 
@@ -844,29 +1155,39 @@ async function runOneAgentic(
       cachedPromptTokens += extractCachedTokens(data.usage)
 
       const msg = data.choices[0]?.message
+      roundRecords.push({
+        round: roundsCompleted,
+        model: data.model,
+        finish_reason: data.choices[0]?.finish_reason,
+        usage: data.usage,
+        tool_calls: msg?.tool_calls?.length ?? 0,
+      })
       const assistantMsg: ChatMessage = { role: "assistant", content: msg?.content ?? null }
       if (msg?.tool_calls && msg.tool_calls.length > 0) assistantMsg.tool_calls = msg.tool_calls
       messages.push(assistantMsg)
 
-      if (assistantMsg.tool_calls && assistantMsg.tool_calls.length > 0) {
-        toolCalls += assistantMsg.tool_calls.length
-        for (const tc of assistantMsg.tool_calls) {
-          const result = executeTool(tc, workspace, provisioned)
-          messages.push({ role: "tool", tool_call_id: tc.id, name: tc.function.name, content: result })
+      const decision = decideTurn(assistantMsg, data.choices[0]?.finish_reason)
+      if (decision.kind === "tools") {
+        for (const tc of assistantMsg.tool_calls!) {
+          toolCalls++
+          const result = executeTool(tc, workspace, { provisioned, callIndex: toolCalls, maxChars: TOOL_RESULT_MAX_CHARS })
+          if (result.rejection) toolRejections.push({ call: toolCalls, tool: tc.function.name, ...result.rejection })
+          else if (result.failed) toolErrors++
+          messages.push({ role: "tool", tool_call_id: tc.id, name: tc.function.name, content: result.content })
         }
         continue
       }
 
-      const content = assistantMsg.content ?? ""
-      const kind = classifyModelTurn(content)
-      if (kind === "stop") {
-        finalText = content
+      if (decision.kind === "stop") {
+        finalText = decision.finalText
         break
       }
-      scriptedReplies++
-      messages.push({ role: "user", content: scriptedReplyFor(kind) })
+      if (decision.reason === "output-limit") lengthCutoffs++
+      else scriptedReplies++
+      messages.push({ role: "user", content: decision.reply })
     }
   } catch (e) {
+    writeTranscript(resultDir, roundRecords, messages)
     writeFileSync(
       join(resultDir, "meta.json"),
       JSON.stringify(
@@ -876,6 +1197,10 @@ async function runOneAgentic(
           model_requested: cfg.model,
           mode: "agentic",
           rounds: roundsCompleted,
+          tool_calls: toolCalls,
+          tool_rejections: toolRejections.length,
+          tool_rejection_details: toolRejections,
+          tool_errors: toolErrors,
           error: String(e).slice(0, 300),
         },
         null,
@@ -887,6 +1212,7 @@ async function runOneAgentic(
   }
 
   const capHit = !deadlineHit && finalText === undefined && roundsCompleted >= ROUND_CAP
+  writeTranscript(resultDir, roundRecords, messages)
 
   const located = locateArtifact(workspace)
   let placementNote: string
@@ -920,10 +1246,14 @@ async function runOneAgentic(
     deadlineHit,
     scriptedReplies,
     cachedPromptTokens,
+    toolRejections,
+    toolErrors,
+    lengthCutoffs,
   })
   writeFileSync(join(resultDir, "meta.json"), JSON.stringify(meta, null, 2) + "\n")
   console.log(
-    `${qid}: done — ${roundsCompleted} round(s), ${toolCalls} tool call(s), ${scriptedReplies} scripted repl(y/ies), ` +
+    `${qid}: done — ${roundsCompleted} round(s), ${toolCalls} tool call(s) (${toolRejections.length} rejected by the harness, ` +
+      `${toolErrors} failed), ${scriptedReplies} scripted repl(y/ies), ${lengthCutoffs} output-limit cutoff(s), ` +
       `cap_hit=${capHit} deadline_hit=${deadlineHit} — ${placementNote}`,
   )
 }
@@ -999,7 +1329,7 @@ async function main(): Promise<void> {
   // here — the agentic model queries live vocabulary itself via run_pptwise
   // (plan 裁定 1, see file header).
   const shared = {
-    skill: readFileSync(join(ROOT, "skills/pptwise/SKILL.md"), "utf8"),
+    skill: readFileSync(join(SKILL_DIR, "SKILL.md"), "utf8"),
   }
   console.log(
     `model-tag ${modelTag} · ${questions.length} question(s) · round cap ${ROUND_CAP} · sequential · ` +

@@ -9,8 +9,13 @@ import {
   checkPptwiseArgs,
   classifyModelTurn,
   copyQuestionAssets,
+  copySkillReferences,
+  decideTurn,
   deriveModelTag,
+  doReadFile,
   doWriteFile,
+  executeTool,
+  finishToolResult,
   sanitizeTagSegment,
   extractCachedTokens,
   flagValue,
@@ -102,7 +107,7 @@ describe("checkPptwiseArgs", () => {
   })
 
   it("allows every documented whitelisted subcommand", () => {
-    for (const cmd of ["render", "validate", "audit", "asset-brief", "schema", "assemble", "disassemble", "migrate", "themes", "narratives", "preview"]) {
+    for (const cmd of ["render", "validate", "audit", "asset-brief", "schema", "assemble", "disassemble", "themes", "narratives", "preview", "layouts", "doctor"]) {
       expect(checkPptwiseArgs([cmd], workspace).ok).toBe(true)
     }
   })
@@ -111,8 +116,39 @@ describe("checkPptwiseArgs", () => {
     expect(checkPptwiseArgs(["spec", "validate", "deck.spec.json"], workspace)).toEqual({ ok: true })
   })
 
-  it("rejects other spec sub-subcommands", () => {
+  it("rejects other spec sub-subcommands and a bare group name", () => {
     expect(checkPptwiseArgs(["spec", "assemble"], workspace).ok).toBe(false)
+    expect(checkPptwiseArgs(["spec"], workspace).ok).toBe(false)
+  })
+
+  it("allows the theme subcommands the SKILL playbook asks for (try / new / fork)", () => {
+    expect(checkPptwiseArgs(["theme", "try", "brief,swiss,memo"], workspace)).toEqual({ ok: true })
+    expect(checkPptwiseArgs(["theme", "new", "--from", "brief", "--id", "acme-report"], workspace)).toEqual({ ok: true })
+    expect(checkPptwiseArgs(["theme", "fork", "acme", "--primary", "#0B5FFF", "--id", "acme-blue"], workspace)).toEqual({
+      ok: true,
+    })
+  })
+
+  it("rejects a theme sub-subcommand that is not on the list, and a bare theme", () => {
+    expect(checkPptwiseArgs(["theme", "delete", "acme"], workspace).ok).toBe(false)
+    expect(checkPptwiseArgs(["theme"], workspace).ok).toBe(false)
+  })
+
+  it("allows brand extract (local Office-file extraction the playbook names)", () => {
+    expect(checkPptwiseArgs(["brand", "extract", "corp.pptx", "-o", "themes/acme.theme.json"], workspace)).toEqual({
+      ok: true,
+    })
+    expect(checkPptwiseArgs(["brand", "steal"], workspace).ok).toBe(false)
+  })
+
+  it("rejects migrate (the command no longer exists) and init (scaffolds config outside the workflow)", () => {
+    expect(checkPptwiseArgs(["migrate", "deck.json"], workspace).ok).toBe(false)
+    expect(checkPptwiseArgs(["init"], workspace).ok).toBe(false)
+  })
+
+  it("rejects config and images (user-level config writes, network side effects)", () => {
+    expect(checkPptwiseArgs(["config", "set", "pexels.apiKey", "x"], workspace).ok).toBe(false)
+    expect(checkPptwiseArgs(["images", "search", "office"], workspace).ok).toBe(false)
   })
 
   it("rejects serve (interactive, out of the neutral tool surface)", () => {
@@ -276,6 +312,9 @@ describe("buildMeta", () => {
       deadlineHit: false,
       scriptedReplies: 1,
       cachedPromptTokens: 9000,
+      toolRejections: [{ call: 3, tool: "run_pptwise", kind: "subcommand-not-allowed", reason: "subcommand not allowed: serve" }],
+      toolErrors: 2,
+      lengthCutoffs: 1,
     })
     expect(meta).toEqual({
       provider_prefix: "QWEN",
@@ -293,6 +332,12 @@ describe("buildMeta", () => {
       deadline_hit: false,
       scripted_replies: 1,
       cached_prompt_tokens: 9000,
+      tool_rejections: 1,
+      tool_rejection_details: [
+        { call: 3, tool: "run_pptwise", kind: "subcommand-not-allowed", reason: "subcommand not allowed: serve" },
+      ],
+      tool_errors: 2,
+      length_cutoffs: 1,
     })
   })
 
@@ -312,6 +357,9 @@ describe("buildMeta", () => {
       deadlineHit: false,
       scriptedReplies: 0,
       cachedPromptTokens: 0,
+      toolRejections: [],
+      toolErrors: 0,
+      lengthCutoffs: 0,
     })
     expect(meta.model_requested).toBe("qwen3.6-27b")
     expect(meta.model_reported).toEqual(["some-other-served-model"])
@@ -333,6 +381,9 @@ describe("buildMeta", () => {
       deadlineHit: false,
       scriptedReplies: 0,
       cachedPromptTokens: 0,
+      toolRejections: [],
+      toolErrors: 0,
+      lengthCutoffs: 0,
     })
     expect(meta.model_reported).toEqual(["a-model", "b-model"])
     expect(meta.cap_hit).toBe(true)
@@ -354,6 +405,9 @@ describe("buildMeta", () => {
       deadlineHit: true,
       scriptedReplies: 0,
       cachedPromptTokens: 0,
+      toolRejections: [],
+      toolErrors: 0,
+      lengthCutoffs: 0,
     })
     expect(meta.deadline_hit).toBe(true)
     expect(meta.cap_hit).toBe(false)
@@ -375,6 +429,9 @@ describe("buildMeta", () => {
       deadlineHit: false,
       scriptedReplies: 0,
       cachedPromptTokens: 0,
+      toolRejections: [],
+      toolErrors: 0,
+      lengthCutoffs: 0,
     })
     expect(meta.cached_prompt_tokens).toBe(0)
   })
@@ -624,10 +681,12 @@ describe("copyQuestionAssets", () => {
     writeFileSync(join(questionDir, "assets", "hero.png"), "hero-bytes")
     const provisioned = copyQuestionAssets(questionDir, workspace)
     const refused = doWriteFile(workspace, { path: "assets/hero.png", content: "base64garbage" }, provisioned)
-    expect(refused).toMatch(/^ERROR: .*provided input file/)
+    expect(refused.content).toMatch(/^ERROR: .*provided input file/)
+    expect(refused.rejection?.kind).toBe("protected-input")
     expect(readFileSync(join(workspace, "assets", "hero.png"), "utf8")).toBe("hero-bytes")
     const allowed = doWriteFile(workspace, { path: "assets/derived.png", content: "new-bytes" }, provisioned)
-    expect(allowed).toMatch(/^wrote /)
+    expect(allowed.content).toMatch(/^wrote /)
+    expect(allowed.rejection).toBeUndefined()
     expect(readFileSync(join(workspace, "assets", "derived.png"), "utf8")).toBe("new-bytes")
   })
 })
@@ -649,5 +708,221 @@ describe("sanitizeTagSegment", () => {
 
   it("deriveModelTag applies it to --model overrides", () => {
     expect(deriveModelTag("QWEN", "org/custom.Model")).toBe("org-custom.model-agentic")
+  })
+})
+
+// ── finishToolResult — over-cap results spill to a file the model can page through ──
+
+describe("finishToolResult", () => {
+  let workspace: string
+
+  afterEach(() => {
+    if (workspace) rmSync(workspace, { recursive: true, force: true })
+  })
+
+  function setup(): void {
+    workspace = mkdtempSync(join(tmpdir(), "bench-agentic-spill-test-"))
+  }
+
+  it("returns an under-cap result untouched and writes no file", () => {
+    setup()
+    const out = finishToolResult("exit 0\nok", { workspace, callIndex: 1, tool: "run_pptwise", maxChars: 100 })
+    expect(out).toBe("exit 0\nok")
+    expect(existsSync(join(workspace, ".tool-results"))).toBe(false)
+  })
+
+  it("saves the full text under .tool-results/ with the call index in the name and tells the model how to read on", () => {
+    setup()
+    const text = "0123456789".repeat(1000) // 10000 chars
+    const out = finishToolResult(text, { workspace, callIndex: 7, tool: "run_pptwise", maxChars: 8000 })
+    const spill = join(workspace, ".tool-results", "007-run_pptwise.txt")
+    expect(readFileSync(spill, "utf8")).toBe(text)
+    expect(out.startsWith(text.slice(0, 8000))).toBe(true)
+    expect(out).toContain("[truncated: chars 0-8000 of 10000 shown.")
+    expect(out).toContain('read_file({"path": ".tool-results/007-run_pptwise.txt", "offset": 8000})')
+  })
+
+  it("the spill path is readable back through read_file with the offset the hint names", () => {
+    setup()
+    const text = "a".repeat(50) + "b".repeat(50)
+    finishToolResult(text, { workspace, callIndex: 2, tool: "list_files", maxChars: 50 })
+    const rest = doReadFile(workspace, { path: ".tool-results/002-list_files.txt", offset: 50 }, 8000)
+    expect(rest.content).toBe("b".repeat(50))
+  })
+})
+
+// ── doReadFile — offset / limit paging ──
+
+describe("doReadFile", () => {
+  let workspace: string
+
+  afterEach(() => {
+    if (workspace) rmSync(workspace, { recursive: true, force: true })
+  })
+
+  function setup(content: string): void {
+    workspace = mkdtempSync(join(tmpdir(), "bench-agentic-read-test-"))
+    writeFileSync(join(workspace, "big.txt"), content)
+  }
+
+  it("reads a whole small file with no hint", () => {
+    setup("hello")
+    expect(doReadFile(workspace, { path: "big.txt" }, 8000).content).toBe("hello")
+  })
+
+  it("caps a large file at maxChars and points at the next offset", () => {
+    setup("x".repeat(20000))
+    const out = doReadFile(workspace, { path: "big.txt" }, 8000)
+    expect(out.content.startsWith("x".repeat(8000))).toBe(true)
+    expect(out.content).toContain("[truncated: chars 0-8000 of 20000 shown.")
+    expect(out.content).toContain('read_file({"path": "big.txt", "offset": 8000})')
+    expect(out.content).not.toContain("x".repeat(8001))
+  })
+
+  it("honours offset and limit as character positions", () => {
+    setup("0123456789".repeat(10))
+    const out = doReadFile(workspace, { path: "big.txt", offset: 10, limit: 5 }, 8000)
+    expect(out.content.startsWith("01234")).toBe(true)
+    expect(out.content).toContain("[truncated: chars 10-15 of 100 shown.")
+    expect(out.content).toContain('"offset": 15')
+  })
+
+  it("returns the tail with no hint when offset + limit reaches the end", () => {
+    setup("0123456789".repeat(10))
+    const out = doReadFile(workspace, { path: "big.txt", offset: 90 }, 8000)
+    expect(out.content).toBe("0123456789")
+  })
+
+  it("rejects an offset past the end as a bad argument", () => {
+    setup("short")
+    const out = doReadFile(workspace, { path: "big.txt", offset: 500 }, 8000)
+    expect(out.content).toMatch(/^ERROR: offset 500/)
+    expect(out.rejection?.kind).toBe("bad-arguments")
+  })
+
+  it("reports a missing file as a tool error, not a harness rejection", () => {
+    setup("x")
+    const out = doReadFile(workspace, { path: "nope.txt" }, 8000)
+    expect(out.content).toMatch(/^ERROR: no such file/)
+    expect(out.rejection).toBeUndefined()
+    expect(out.failed).toBe(true)
+  })
+})
+
+// ── copySkillReferences — the playbook's references/ travel with SKILL.md ──
+
+describe("copySkillReferences", () => {
+  let base: string
+
+  afterEach(() => {
+    if (base) rmSync(base, { recursive: true, force: true })
+  })
+
+  it("copies skills/pptwise/references/ into workspace/references/ and protects the copies", () => {
+    base = mkdtempSync(join(tmpdir(), "bench-agentic-refs-test-"))
+    const skillDir = join(base, "skill")
+    const workspace = join(base, "workspace")
+    mkdirSync(join(skillDir, "references"), { recursive: true })
+    writeFileSync(join(skillDir, "SKILL.md"), "see references/spec.md")
+    writeFileSync(join(skillDir, "references", "spec.md"), "spec guidance")
+    writeFileSync(join(skillDir, "references", "spec.zh-CN.md"), "spec 指南")
+    mkdirSync(workspace, { recursive: true })
+    const provisioned = copySkillReferences(skillDir, workspace)
+    expect(readFileSync(join(workspace, "references", "spec.md"), "utf8")).toBe("spec guidance")
+    expect(readFileSync(join(workspace, "references", "spec.zh-CN.md"), "utf8")).toBe("spec 指南")
+    expect(provisioned.has(join(workspace, "references", "spec.md"))).toBe(true)
+    const refused = doWriteFile(workspace, { path: "references/spec.md", content: "oops" }, provisioned)
+    expect(refused.rejection?.kind).toBe("protected-input")
+  })
+
+  it("the real skill directory ships a references/ folder for the runner to copy", () => {
+    base = mkdtempSync(join(tmpdir(), "bench-agentic-refs-real-"))
+    const copied = copySkillReferences(join(import.meta.dirname, "../../skills/pptwise"), base)
+    expect(copied.size).toBeGreaterThan(0)
+    expect(existsSync(join(base, "references", "spec.md"))).toBe(true)
+  })
+})
+
+// ── executeTool — harness rejections are recorded apart from the model's own errors ──
+
+describe("executeTool rejection classification", () => {
+  let workspace: string
+
+  afterEach(() => {
+    if (workspace) rmSync(workspace, { recursive: true, force: true })
+  })
+
+  const call = (name: string, args: unknown) => ({
+    id: "c1",
+    type: "function" as const,
+    function: { name, arguments: typeof args === "string" ? args : JSON.stringify(args) },
+  })
+  const ctx = () => ({ callIndex: 1, maxChars: 8000 })
+
+  it("flags a path escape", () => {
+    workspace = mkdtempSync(join(tmpdir(), "bench-agentic-exec-test-"))
+    const out = executeTool(call("read_file", { path: "../secret" }), workspace, ctx())
+    expect(out.rejection?.kind).toBe("path-escape")
+  })
+
+  it("flags a disallowed subcommand", () => {
+    workspace = mkdtempSync(join(tmpdir(), "bench-agentic-exec-test-"))
+    const out = executeTool(call("run_pptwise", { args: ["serve", "deck.json"] }), workspace, ctx())
+    expect(out.rejection?.kind).toBe("subcommand-not-allowed")
+  })
+
+  it("flags malformed argument JSON and an unknown tool", () => {
+    workspace = mkdtempSync(join(tmpdir(), "bench-agentic-exec-test-"))
+    expect(executeTool(call("read_file", "{not json"), workspace, ctx()).rejection?.kind).toBe("bad-arguments")
+    expect(executeTool(call("frobnicate", {}), workspace, ctx()).rejection?.kind).toBe("unknown-tool")
+  })
+
+  it("does not flag a tool that ran and reported a failure the model caused", () => {
+    workspace = mkdtempSync(join(tmpdir(), "bench-agentic-exec-test-"))
+    const out = executeTool(call("read_file", { path: "missing.json" }), workspace, ctx())
+    expect(out.rejection).toBeUndefined()
+    expect(out.failed).toBe(true)
+  })
+})
+
+// ── decideTurn — what the loop does after each model reply ──
+
+describe("decideTurn", () => {
+  const call = { id: "c1", type: "function" as const, function: { name: "list_files", arguments: "{}" } }
+
+  it("runs the tools when the reply carries tool calls, whatever the finish reason", () => {
+    expect(decideTurn({ content: null, tool_calls: [call] }, "tool_calls").kind).toBe("tools")
+    expect(decideTurn({ content: "", tool_calls: [call] }, "length").kind).toBe("tools")
+  })
+
+  it("treats a reply cut off by max_tokens as an output-limit cutoff, not a stop", () => {
+    // The first smoke after the reach fixes: round 3 came back with
+    // finish_reason "length", 8192 completion tokens, no content and no
+    // tool calls — the deck the model was writing never arrived — and the
+    // run ended as if the model had chosen to stop, with nothing saved.
+    const decision = decideTurn({ content: "" }, "length")
+    expect(decision).toEqual({ kind: "scripted", reason: "output-limit", reply: scriptedReplyFor("output-limit") })
+    expect(scriptedReplyFor("output-limit")).toBe(
+      "Your last reply was cut off by the output limit before it finished. Continue, keeping each reply within the limit.",
+    )
+  })
+
+  it("keeps the two protocol lines for questions", () => {
+    expect(decideTurn({ content: "Can you confirm this spec?" }, "stop")).toEqual({
+      kind: "scripted",
+      reason: "spec-confirmation",
+      reply: "Spec confirmed, proceed.",
+    })
+    expect(decideTurn({ content: "Blue or green?" }, "stop")).toEqual({
+      kind: "scripted",
+      reason: "other-question",
+      reply: "Proceed with your best judgment.",
+    })
+  })
+
+  it("stops on a plain statement, and on an empty reply the model actually finished", () => {
+    expect(decideTurn({ content: "Done, the deck renders." }, "stop")).toEqual({ kind: "stop", finalText: "Done, the deck renders." })
+    expect(decideTurn({ content: "" }, "stop")).toEqual({ kind: "stop", finalText: "" })
+    expect(decideTurn({ content: null }, undefined)).toEqual({ kind: "stop", finalText: "" })
   })
 })

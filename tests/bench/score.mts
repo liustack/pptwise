@@ -99,6 +99,15 @@ export interface SelfReportedMeta {
   tokens?: number
   duration_seconds?: number
   model?: string
+  /** Agentic-mode counters `run-agentic.mts` writes. `tool_rejections` are
+   *  calls the harness refused before running them (a path escape, a
+   *  subcommand off the whitelist, ...) — the model bumping into the
+   *  harness, never counted against it. `tool_errors` are calls that ran
+   *  and reported failure — the model's own mistakes. Kept apart in every
+   *  report so one is never read as the other. */
+  tool_calls?: number
+  tool_rejections?: number
+  tool_errors?: number
 }
 
 export interface QuestionScore {
@@ -212,11 +221,14 @@ async function loadSelfReportedMeta(resultDir: string): Promise<SelfReportedMeta
   try {
     const parsed = JSON.parse(text) as unknown
     if (typeof parsed !== "object" || parsed === null) return undefined
-    const { tokens, duration_seconds, model } = parsed as Record<string, unknown>
+    const { tokens, duration_seconds, model, tool_calls, tool_rejections, tool_errors } = parsed as Record<string, unknown>
     const out: SelfReportedMeta = {}
     if (typeof tokens === "number") out.tokens = tokens
     if (typeof duration_seconds === "number") out.duration_seconds = duration_seconds
     if (typeof model === "string") out.model = model
+    if (typeof tool_calls === "number") out.tool_calls = tool_calls
+    if (typeof tool_rejections === "number") out.tool_rejections = tool_rejections
+    if (typeof tool_errors === "number") out.tool_errors = tool_errors
     return out
   } catch {
     return undefined
@@ -481,6 +493,19 @@ interface Aggregates {
   determinismRate: number
   /** Reporting only, never scored — see file header. */
   coverageHitRate: number
+  /** Questions whose meta.json carries agentic tool counters at all —
+   *  the denominator for the two pairs below. Single-shot runs have none. */
+  toolLoopQuestions: number
+  /** Harness refusals: total across the model, and how many questions saw at least one. */
+  toolRejectionTotal: number
+  toolRejectionQuestions: number
+  /** Calls that ran and failed: same two numbers. */
+  toolErrorTotal: number
+  toolErrorQuestions: number
+}
+
+function hasToolCounters(s: QuestionScore): boolean {
+  return s.self?.tool_calls !== undefined || s.self?.tool_rejections !== undefined || s.self?.tool_errors !== undefined
 }
 
 function computeAggregates(scores: QuestionScore[]): Aggregates {
@@ -491,7 +516,13 @@ function computeAggregates(scores: QuestionScore[]): Aggregates {
   const determinismPassCount = determinismEligible.filter((s) => s.deterministic === true).length
   const totalExpected = scores.reduce((n, s) => n + s.expectedComponents.length, 0)
   const totalHits = scores.reduce((n, s) => n + s.coverageHits.length, 0)
+  const toolLoop = scores.filter(hasToolCounters)
   return {
+    toolLoopQuestions: toolLoop.length,
+    toolRejectionTotal: toolLoop.reduce((n, s) => n + (s.self?.tool_rejections ?? 0), 0),
+    toolRejectionQuestions: toolLoop.filter((s) => (s.self?.tool_rejections ?? 0) > 0).length,
+    toolErrorTotal: toolLoop.reduce((n, s) => n + (s.self?.tool_errors ?? 0), 0),
+    toolErrorQuestions: toolLoop.filter((s) => (s.self?.tool_errors ?? 0) > 0).length,
     total,
     validatePassRate: total === 0 ? 0 : validatePassCount / total,
     meanValidateErrorCount: total === 0 ? 0 : scores.reduce((n, s) => n + s.validateErrorCount, 0) / total,
@@ -527,16 +558,17 @@ export function renderModelReport(modelTag: string, scores: QuestionScore[]): st
   )
   lines.push("")
   lines.push(
-    "| id | strategy | pacing | workflow | validatePass | validateErrors | auditFindings | renderOk | deterministic | coverageHits | tokens | duration_s | notes |",
+    "| id | strategy | pacing | workflow | validatePass | validateErrors | auditFindings | renderOk | deterministic | coverageHits | tokens | duration_s | toolCalls | toolRejections | toolErrors | notes |",
   )
-  lines.push("|---|---|---|---|---|---|---|---|---|---|---|---|---|")
+  lines.push("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|")
   for (const s of scores) {
     const notes = [s.reason, s.renderError].filter((x): x is string => !!x).join(" / ")
     lines.push(
       `| ${mdCell(s.id)} | ${mdCell(s.coverage?.strategy)} | ${mdCell(s.coverage?.pacing)} | ${mdCell(s.coverage?.workflow)} | ` +
         `${s.validatePass} | ${s.validateErrorCount} | ${s.auditFindingCount} | ${s.renderOk} | ` +
         `${s.deterministic === null ? "n/a" : s.deterministic} | ${mdCell(s.coverageHits.join(", "))} | ` +
-        `${mdCell(s.self?.tokens)} | ${mdCell(s.self?.duration_seconds)} | ${mdCell(notes)} |`,
+        `${mdCell(s.self?.tokens)} | ${mdCell(s.self?.duration_seconds)} | ${mdCell(s.self?.tool_calls)} | ` +
+        `${mdCell(s.self?.tool_rejections)} | ${mdCell(s.self?.tool_errors)} | ${mdCell(notes)} |`,
     )
   }
   lines.push("")
@@ -550,6 +582,13 @@ export function renderModelReport(modelTag: string, scores: QuestionScore[]): st
   lines.push(`- render success rate: ${pct(agg.renderPassRate)}`)
   lines.push(`- determinism rate (of successful renders): ${pct(agg.determinismRate)}`)
   lines.push(`- coverage hit rate (reporting only, never scored): ${pct(agg.coverageHitRate)}`)
+  if (agg.toolLoopQuestions > 0) {
+    const of = `of ${agg.toolLoopQuestions} questions with a tool loop`
+    lines.push(
+      `- tool rejections (harness refused the call, not counted against the model): ${agg.toolRejectionTotal} across ${agg.toolRejectionQuestions} ${of}`,
+    )
+    lines.push(`- tool errors (call ran, reported failure): ${agg.toolErrorTotal} across ${agg.toolErrorQuestions} ${of}`)
+  }
   lines.push("")
   return lines.join("\n")
 }
@@ -564,15 +603,16 @@ export function renderSummaryReport(reports: ModelReport[]): string {
   )
   lines.push("")
   lines.push(
-    "| model | questions | validate pass rate | mean audit findings | render pass rate | determinism rate | coverage hit rate |",
+    "| model | questions | validate pass rate | mean audit findings | render pass rate | determinism rate | coverage hit rate | tool rejections | tool errors |",
   )
-  lines.push("|---|---|---|---|---|---|---|")
+  lines.push("|---|---|---|---|---|---|---|---|---|")
   const sorted = [...reports].sort((a, b) => a.modelTag.localeCompare(b.modelTag))
   for (const r of sorted) {
     const agg = computeAggregates(r.scores)
     lines.push(
       `| ${mdCell(r.modelTag)} | ${agg.total} | ${pct(agg.validatePassRate)} | ${agg.meanAuditFindingCount.toFixed(2)} | ` +
-        `${pct(agg.renderPassRate)} | ${pct(agg.determinismRate)} | ${pct(agg.coverageHitRate)} |`,
+        `${pct(agg.renderPassRate)} | ${pct(agg.determinismRate)} | ${pct(agg.coverageHitRate)} | ` +
+        `${agg.toolLoopQuestions > 0 ? agg.toolRejectionTotal : ""} | ${agg.toolLoopQuestions > 0 ? agg.toolErrorTotal : ""} |`,
     )
   }
   lines.push("")

@@ -35,9 +35,10 @@ scorer (which reads `<resultsDir>/<model-tag>/`) never mistakes an archive folde
 
 For each question:
 
-1. Give the model-under-test exactly two things: `skills/pptwise/SKILL.md` and that question's
-   `prompt.md`. Nothing else — no `meta.json`, no other question's prompt, no hints about which
-   component or layout the question is aiming at.
+1. Give the model-under-test exactly two things: the skill (`skills/pptwise/SKILL.md` together
+   with the `references/` files it links to, laid out at the same relative paths) and that
+   question's `prompt.md`. Nothing else — no `meta.json`, no other question's prompt, no hints
+   about which component or layout the question is aiming at.
 2. Let the model run the SKILL's workflow to completion: narrative/theme choice, spec (or a
    direct bare IR file for a small deck, per the SKILL's own "skip the spec" allowance),
    `pages/*.json`, `assemble`, `validate`, `render`, `audit` — whatever phases the model
@@ -48,7 +49,9 @@ For each question:
      questions that asked for the spec-then-fill workflow.
 4. Optionally drop a `meta.json` alongside it with self-reported `{ tokens?, duration_seconds?,
    model? }`. This is passed through into reports verbatim — it is never scored, never used to
-   adjust any pass/fail outcome.
+   adjust any pass/fail outcome. An agentic harness adds `tool_calls`, `tool_rejections`, and
+   `tool_errors` (see "Agentic API run mode" below); the reports print the last two in separate
+   columns so a call the harness refused is never read as a mistake the model made.
 
 **Hard rule: no manual touch-ups after generation.** Whatever the model produced on its own is
 what gets scored — no hand-editing a `pages/*.json` to fix a `validate` error, no re-running a
@@ -276,11 +279,18 @@ The second sanctioned run mode next to the agentic protocol above: `pnpm bench:r
 The full implementation of the agentic protocol described above (BENCH-01,
 `.issues/2026-08-03-bench-agentic/plan.md`): `pnpm bench:agentic <prefix> [qids...]` drives an
 external OpenAI-compatible model through a real function-calling tool loop instead of one
-completion. The model gets four tools — `write_file(path, content)`, `read_file(path)`,
-`list_files(path?)`, `run_pptwise(args)` — and a private per-question workspace, and iterates on
-its own: write IR (or deck-project files), run `validate`/`audit` via `run_pptwise`, read the
-findings, fix, repeat, the same self-check loop the SKILL playbook describes, with real tool
-access instead of imagined output. Credentials use the same `.env` shape as `run.mts`:
+completion. The model gets four tools — `write_file(path, content)`,
+`read_file(path, offset?, limit?)`, `list_files(path?)`, `run_pptwise(args)` — and a private
+per-question workspace, and iterates on its own: write IR (or deck-project files), run
+`validate`/`audit` via `run_pptwise`, read the findings, fix, repeat, the same self-check loop
+the SKILL playbook describes, with real tool access instead of imagined output.
+
+**Skill references travel with SKILL.md.** The system prompt carries SKILL.md's text, and
+`copySkillReferences` copies `skills/pptwise/references/` into the workspace as `references/`
+before round 1, so every `references/spec.md`-style link the playbook makes resolves through
+`read_file` at the path written. The copies are protected inputs, same as question assets:
+`write_file` on one is refused. Before this the playbook's every "see references/x.md" led to
+`no such file`, and that went on the model's record. Credentials use the same `.env` shape as `run.mts`:
 `<PREFIX>_BASE_URL` / `<PREFIX>_API_KEY` / `<PREFIX>_MODEL`. Same `--model=<id>` override as
 `run.mts` (see that section above for the motivating case) — when given, the result model-tag
 below is derived from the override id, not the prefix.
@@ -318,18 +328,30 @@ SKILL playbook already describe. This is the largest cost lever on this runner (
 vocabulary alone was most of an ~83k-token system prompt) and is more protocol-faithful, not a
 compromise — the protocol never asked for pre-injection in a mode where the model can just ask.
 
-**Tool-result cap.** Every tool result (a `read_file`, `list_files`, or `run_pptwise` return
-value) is capped at 8000 characters before it goes back to the model, truncated from the end so
-the head — where a CLI's error message or summary line lives — survives intact. An over-cap
-result gets a trailing marker line stating what was cut, e.g.
-`[truncated: 8000 of 41203 chars shown]`. Applies uniformly to every tool and every question, no
-per-question tuning.
+**Tool-result cap, with paging.** Every tool result (a `read_file`, `list_files`, or
+`run_pptwise` return value) is capped at 8000 characters before it goes back to the model,
+truncated from the end so the head — where a CLI's error message or summary line lives —
+survives intact. The cut is never passed off as the whole: an over-cap `run_pptwise` or
+`list_files` result is saved in full to `workspace/.tool-results/<NNN>-<tool>.txt` (`NNN` is the
+tool call's index within the run) and the model gets the head plus one closing line naming the
+file and the offset to continue from, e.g.
+`[truncated: chars 0-8000 of 2691304 shown. Read the rest with read_file({"path": ".tool-results/003-run_pptwise.txt", "offset": 8000})]`.
+`read_file` pages the same way: `offset` is the character position to start from, `limit` the
+window size (default and ceiling 8000), and a window that stops short of the end closes with the
+same line pointing at the next offset. `pptwise schema` alone is megabytes, so raising the
+number would only move the cliff — the spill file is what lets a model read all of it. Applies
+uniformly to every tool and every question, no per-question tuning.
 
 **Tool surface — minimal and neutral by design.** No general shell. `run_pptwise` only accepts a
-whitelisted, read-only/artifact-producing subcommand (`render`, `validate`, `audit`,
-`asset-brief`, `schema`, `assemble`, `disassemble`, `migrate`, `themes`, `narratives`, `preview`,
-`spec validate`) — no `serve` (interactive), no removed vocabulary-v4 aliases (`plan`,
-`scenarios`), no `check-update`/`self-update` (network side effects with no benchmark value).
+whitelisted, read-only/artifact-producing subcommand: `render`, `validate`, `audit`,
+`asset-brief`, `schema`, `assemble`, `disassemble`, `themes`, `narratives`, `preview`, `layouts`,
+`doctor`, `spec validate`, `theme new`, `theme fork`, `theme try`, `brand extract` — every
+command SKILL.md asks the model to run except `serve`. Not on it: `serve` (interactive), the
+removed vocabulary-v4 aliases (`plan`, `scenarios`), `check-update`/`self-update`/`images`
+(network side effects with no benchmark value), `config` (writes user-level settings outside the
+workspace), `init` (nothing in the workflow needs a scaffolded config), and `migrate` (no longer
+a CLI command; it sat on the first list anyway). A bare command group (`theme` with no
+sub-subcommand) is refused like an unknown command.
 Every path argument to every tool is resolved against the workspace and rejected if it is an
 absolute path or escapes the workspace via `..` — symlink-based escapes are not checked (out of
 scope: the workspace is a harness-created scratch directory the model itself populates, not
@@ -352,7 +374,20 @@ The system prompt's own stated turn budget is interpolated straight from the `RO
 hardcoded number inside the prompt string itself, `46bcd1b`) — the two can no longer drift apart.
 A model turn that makes no tool calls is classified as a spec-confirmation question, some other
 clarifying question, or a genuine stop — the harness answers the first two with the run protocol's
-two fixed scripted lines above and ends the run on the third.
+two fixed scripted lines above and ends the run on the third. One more case comes before that
+classification: a reply the API cut off at the per-round output ceiling (`finish_reason:
+"length"`, `MAX_COMPLETION_TOKENS` = 16384, the same number `run.mts` uses) with no tool call
+surviving the cut. That is the harness's limit showing, not the model stopping, so the harness
+sends a third fixed line — `Your last reply was cut off by the output limit before it finished.
+Continue, keeping each reply within the limit.` — counts it in `meta.json`'s `length_cutoffs`
+(not in `scripted_replies`), and the run goes on. Found on the first smoke after the reach fixes:
+at the old 8192 ceiling, deepseek-v4-flash's round 3 on q01 was cut mid-`write_file`, the API
+dropped the unfinished call and returned an empty reply, and the run ended with nothing saved.
+
+**`transcript.json`** lands beside `meta.json`: the full message list (system prompt, every tool
+call and tool result as the model saw them) plus one record per round with the API's
+`finish_reason`, echoed `model`, and `usage`. A run that ends with nothing saved is read from
+this file, not guessed at.
 
 **`meta.json` is harness-written, never model-self-reported** — the 2026-07-20 archived round
 found model-reported identity untrustworthy, so this harness records what it actually asked for
@@ -373,9 +408,25 @@ and what the API actually returned, side by side, without reconciling them:
   "duration_seconds": 42.0,
   "cap_hit": false,
   "scripted_replies": 1,
-  "cached_prompt_tokens": 9000        // sum of whatever provider cache-hit field (if any) each round's usage carried
+  "length_cutoffs": 0,                // replies the API cut off at the output ceiling (see above)
+  "cached_prompt_tokens": 9000,       // sum of whatever provider cache-hit field (if any) each round's usage carried
+  "tool_rejections": 1,               // calls the harness refused before running them — not the model's fault
+  "tool_rejection_details": [
+    { "call": 5, "tool": "run_pptwise", "kind": "subcommand-not-allowed", "reason": "subcommand not allowed: serve (allowed: ...)" }
+  ],
+  "tool_errors": 3                    // calls that ran and reported failure (nonzero CLI exit, missing file)
 }
 ```
+
+**Tool rejections are not model errors.** A call the harness refused before running it — a path
+outside the workspace, a subcommand off the whitelist, a write to a provisioned input, malformed
+arguments, an unknown tool name — says the model bumped into the harness, not that it got
+pptwise wrong. `run-agentic.mts` records those in `tool_rejections` / `tool_rejection_details`
+(`kind` is one of `path-escape`, `subcommand-not-allowed`, `protected-input`, `bad-arguments`,
+`unknown-tool`) and keeps `tool_errors` for calls that ran and failed. `score.mts` prints the two
+as separate `toolRejections` / `toolErrors` columns in `report.md`, separate aggregate lines, and
+separate `summary.md` columns. A rejection count that is not zero is a harness-reach problem to
+fix in the runner before the model's numbers are trusted.
 
 **Result layout and model tag.** Artifacts land in `tests/bench/results/<prefix>-agentic/<qid>/`
 — the `-agentic` suffix keeps agentic runs in their own model tag, never mixed with single-shot

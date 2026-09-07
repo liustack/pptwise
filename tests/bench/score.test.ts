@@ -1,7 +1,9 @@
 // @vitest-environment node
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs"
+import { tmpdir } from "node:os"
 import { join, resolve } from "node:path"
 import JSZip from "jszip"
-import { describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it } from "vitest"
 import {
   loadQuestionMetas,
   normalizedPptxSha1,
@@ -11,6 +13,7 @@ import {
   scoreModel,
   scoreQuestion,
   type QuestionMeta,
+  type QuestionScore,
 } from "./score.mts"
 
 const FIXTURES = join(import.meta.dirname, "fixtures")
@@ -325,6 +328,66 @@ describe("renderModelReport / renderSummaryReport", () => {
     // alphabetical: "degraded-model" < "green-model"
     expect(md.indexOf(degradedLine)).toBeLessThan(md.indexOf(greenLine))
     expect(md).not.toMatch(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/)
+  })
+})
+
+// ── tool rejections vs tool errors — harness refusals are not the model's fault ──
+
+describe("tool rejection accounting", () => {
+  let tmp: string
+
+  afterEach(() => {
+    if (tmp) rmSync(tmp, { recursive: true, force: true })
+  })
+
+  function score(id: string, self: QuestionScore["self"]): QuestionScore {
+    return {
+      id,
+      validatePass: true,
+      validateErrorCount: 0,
+      auditFindingCount: 0,
+      renderOk: true,
+      deterministic: true,
+      coverageHits: [],
+      expectedComponents: [],
+      self,
+    }
+  }
+
+  it("scoreQuestion reads tool_calls / tool_rejections / tool_errors from a harness-written meta.json", async () => {
+    tmp = mkdtempSync(join(tmpdir(), "bench-score-rejections-"))
+    const resultDir = join(tmp, "q01")
+    mkdirSync(resultDir, { recursive: true })
+    writeFileSync(
+      join(resultDir, "meta.json"),
+      JSON.stringify({ tool_calls: 12, tool_rejections: 3, tool_errors: 2, duration_seconds: 9 }),
+    )
+    const s = await scoreQuestion("q01", resultDir, { id: "q01" })
+    expect(s.self?.tool_calls).toBe(12)
+    expect(s.self?.tool_rejections).toBe(3)
+    expect(s.self?.tool_errors).toBe(2)
+  })
+
+  it("the per-model report carries the two counts as separate columns and separate aggregate lines", () => {
+    const md = renderModelReport("m", [
+      score("q01", { tool_calls: 10, tool_rejections: 2, tool_errors: 1 }),
+      score("q02", { tool_calls: 4, tool_rejections: 0, tool_errors: 3 }),
+      score("q03", undefined),
+    ])
+    const header = md.split("\n").find((l) => l.startsWith("| id |"))!
+    expect(header).toContain("| toolCalls | toolRejections | toolErrors |")
+    expect(md.split("\n").find((l) => l.startsWith("| q01 |"))).toContain("| 10 | 2 | 1 |")
+    expect(md).toContain("- tool rejections (harness refused the call, not counted against the model): 2 across 1 of 2 questions with a tool loop")
+    expect(md).toContain("- tool errors (call ran, reported failure): 4 across 2 of 2 questions with a tool loop")
+  })
+
+  it("the cross-model summary keeps rejections and errors in separate columns", () => {
+    const md = renderSummaryReport([
+      { modelTag: "m", scores: [score("q01", { tool_calls: 10, tool_rejections: 2, tool_errors: 1 })] },
+    ])
+    const header = md.split("\n").find((l) => l.startsWith("| model |"))!
+    expect(header).toContain("| tool rejections | tool errors |")
+    expect(md.split("\n").find((l) => l.startsWith("| m |"))).toContain("| 2 | 1 |")
   })
 })
 
