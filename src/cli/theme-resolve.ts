@@ -136,66 +136,73 @@ async function acceptIfNameMatches(
   return acceptThemeFile(path, file)
 }
 
-async function resolveDeckThemeFile(
-  deckDir: string,
-  name: string,
-): Promise<ResolvedTheme | undefined> {
-  const boundPath = join(deckDir, THEME_FILENAME)
-  if (await pathExists(boundPath)) {
-    const file = await readThemeFile(boundPath)
-    const hit = await acceptIfNameMatches(boundPath, name, file)
-    if (hit !== undefined) return hit
-  }
-
-  const namedTheme = join(deckDir, `${name}.theme.json`)
-  if (await pathExists(namedTheme)) {
-    const file = await readThemeFile(namedTheme)
-    const hit = await acceptIfNameMatches(namedTheme, name, file)
-    if (hit !== undefined) return hit
-  }
-
-  const namedJson = join(deckDir, `${name}.json`)
-  if (await pathExists(namedJson)) {
-    const file = await tryParseThemeFile(namedJson)
-    if (file !== undefined) {
-      const hit = await acceptIfNameMatches(namedJson, name, file)
-      if (hit !== undefined) return hit
-    }
-  }
-
-  return undefined
+/**
+ * One place a name lookup may find its theme file. `loose` marks the
+ * `<name>.json` shape: a file there is accepted only when it already parses
+ * as a complete theme file, since a plain JSON file of that name may be
+ * anything. The other shapes are read strictly and a malformed file is an
+ * error.
+ */
+export interface ThemeCandidate {
+  path: string
+  loose: boolean
+  /** From the deck-directory level rather than a workspace `themes/`. */
+  deck: boolean
+  /** The directory this lookup level is anchored at: the deck directory,
+   *  or the ancestor whose `themes/` the candidate sits under. */
+  anchor: string
 }
 
-async function resolveWorkspaceThemeFile(
-  startDir: string,
-  name: string,
-): Promise<ResolvedTheme | undefined> {
+/** The deck-directory level of the lookup: `theme.json`, `<name>.theme.json`,
+ *  and a matching complete `<name>.json`, in that order. */
+export function deckThemeCandidates(deckDir: string, name: string): ThemeCandidate[] {
+  return [
+    { path: join(deckDir, THEME_FILENAME), loose: false, deck: true, anchor: deckDir },
+    { path: join(deckDir, `${name}.theme.json`), loose: false, deck: true, anchor: deckDir },
+    { path: join(deckDir, `${name}.json`), loose: true, deck: true, anchor: deckDir },
+  ]
+}
+
+/** The workspace level of the lookup: every `themes/` directory from
+ *  `startDir` up to the filesystem root, nearest first. */
+export function workspaceThemeCandidates(startDir: string, name: string): ThemeCandidate[] {
+  const out: ThemeCandidate[] = []
   let dir = resolve(startDir)
   for (;;) {
-    const candidates = [
-      join(dir, WORKSPACE_THEMES_DIRNAME, `${name}.theme.json`),
-      join(dir, WORKSPACE_THEMES_DIRNAME, `${name}.json`),
-      join(dir, WORKSPACE_THEMES_DIRNAME, name, THEME_FILENAME),
-    ]
-    for (const candidate of candidates) {
-      if (!(await pathExists(candidate))) continue
-      const isLooseJson = candidate.endsWith(`${name}.json`) && !candidate.endsWith(`${name}.theme.json`)
-      if (isLooseJson) {
-        const file = await tryParseThemeFile(candidate)
-        if (file !== undefined) {
-          const hit = await acceptIfNameMatches(candidate, name, file)
-          if (hit !== undefined) return hit
-        }
-        continue
-      }
-      const file = await readThemeFile(candidate)
-      const hit = await acceptIfNameMatches(candidate, name, file)
-      if (hit !== undefined) return hit
-    }
+    const themesDir = join(dir, WORKSPACE_THEMES_DIRNAME)
+    out.push(
+      { path: join(themesDir, `${name}.theme.json`), loose: false, deck: false, anchor: dir },
+      { path: join(themesDir, `${name}.json`), loose: true, deck: false, anchor: dir },
+      { path: join(themesDir, name, THEME_FILENAME), loose: false, deck: false, anchor: dir },
+    )
     const parent = dirname(dir)
-    if (parent === dir) return undefined
+    if (parent === dir) return out
     dir = parent
   }
+}
+
+/**
+ * Every file path `resolveThemeByName` would look at for `name`, in lookup
+ * order, whether or not it exists. This is the list the resolver walks and
+ * the list `pptwise serve` watches, so a theme file that appears after
+ * startup at any of these places is seen by both. `name` is not validated
+ * here. Callers that take the name from user input run {@link assertThemeId}
+ * first, as the resolver does.
+ */
+export function themeCandidates(name: string, opts: { startDir: string; deckDir?: string }): ThemeCandidate[] {
+  const deck = opts.deckDir !== undefined ? deckThemeCandidates(opts.deckDir, name) : []
+  return [...deck, ...workspaceThemeCandidates(opts.startDir, name)]
+}
+
+async function resolveThemeFileFrom(candidates: ThemeCandidate[], name: string): Promise<ResolvedTheme | undefined> {
+  for (const candidate of candidates) {
+    if (!(await pathExists(candidate.path))) continue
+    const file = candidate.loose ? await tryParseThemeFile(candidate.path) : await readThemeFile(candidate.path)
+    if (file === undefined) continue
+    const hit = await acceptIfNameMatches(candidate.path, name, file)
+    if (hit !== undefined) return hit
+  }
+  return undefined
 }
 
 export async function resolveThemeByName(
@@ -203,13 +210,8 @@ export async function resolveThemeByName(
   opts: { startDir: string; deckDir?: string },
 ): Promise<ResolvedTheme> {
   assertThemeId(name)
-  if (opts.deckDir !== undefined) {
-    const deckHit = await resolveDeckThemeFile(opts.deckDir, name)
-    if (deckHit !== undefined) return deckHit
-  }
-
-  const workspaceHit = await resolveWorkspaceThemeFile(opts.startDir, name)
-  if (workspaceHit !== undefined) return workspaceHit
+  const fileHit = await resolveThemeFileFrom(themeCandidates(name, opts), name)
+  if (fileHit !== undefined) return fileHit
 
   if (isCanonicalThemeId(name)) return { kind: "builtin", id: name, definition: THEME_DEFINITIONS[name] }
 

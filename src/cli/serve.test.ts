@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { mkdir, mkdtemp, readFile, rename, writeFile } from "node:fs/promises"
+import { mkdir, mkdtemp, readFile, rename, rm, writeFile } from "node:fs/promises"
 import http from "node:http"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
@@ -14,8 +14,10 @@ import {
   SERVE_CLIENT_SCRIPT_ID,
   type ServeBuildStatus,
   type ServeHandle,
+  themeWatchRoots,
   watchRoots,
 } from "./serve"
+import { themeFileFromPreset } from "./theme-resolve"
 
 installNodePlatform()
 
@@ -757,5 +759,133 @@ describe("createServeServer — theme-file live reload", () => {
     const after = await get(handle.port, "/")
     expect(after.body.toUpperCase()).toContain("0B5FFF")
     expect(after.body.toUpperCase()).not.toContain(oldPrimary)
+  })
+})
+
+describe("themeWatchRoots", () => {
+  it("lists the deck directory's three shapes first, then themes/ from startDir up to the ceiling, as file roots", () => {
+    const roots = themeWatchRoots("acme", { startDir: "/ws/decks", deckDir: "/ws/decks/my-deck", ceilingDir: "/ws" })
+    expect(roots.slice(0, 3)).toEqual([
+      { path: "/ws/decks/my-deck/theme.json", kind: "file" },
+      { path: "/ws/decks/my-deck/acme.theme.json", kind: "file" },
+      { path: "/ws/decks/my-deck/acme.json", kind: "file" },
+    ])
+    expect(roots).toContainEqual({ path: "/ws/decks/themes/acme.theme.json", kind: "file" })
+    expect(roots).toContainEqual({ path: "/ws/themes/acme/theme.json", kind: "file" })
+    expect(roots.every((root) => root.kind === "file")).toBe(true)
+  })
+
+  it("above the ceiling, waits for no themes/ that does not exist yet", () => {
+    const roots = themeWatchRoots("acme", { startDir: "/ws/decks", deckDir: "/ws/decks/my-deck", ceilingDir: "/ws" })
+    expect(roots.some((root) => root.path.startsWith("/themes/"))).toBe(false)
+    expect(roots.some((root) => root.path === "/ws/themes/acme.theme.json")).toBe(true)
+  })
+
+  it("above the ceiling, still watches a themes/ that already exists", async () => {
+    const dir = await makeDir("pptwise-serve-far-themes-")
+    await mkdir(join(dir, "themes"))
+    const roots = themeWatchRoots("acme", { startDir: join(dir, "a", "b"), deckDir: join(dir, "a", "b"), ceilingDir: join(dir, "a") })
+    expect(roots).toContainEqual({ path: join(dir, "themes", "acme.theme.json"), kind: "file" })
+    expect(roots.some((root) => root.path === join(dir, "a", "themes", "acme.theme.json"))).toBe(true)
+  })
+
+  it("watches nothing for a name the resolver would refuse", () => {
+    expect(themeWatchRoots("../secret", { startDir: "/ws", deckDir: "/ws", ceilingDir: "/ws" })).toEqual([])
+    expect(themeWatchRoots(undefined, { startDir: "/ws", deckDir: "/ws", ceilingDir: "/ws" })).toEqual([])
+  })
+})
+
+describe("createServeServer — theme files that appear after startup", () => {
+  // The watch set used to hold only the theme file the *first* build had
+  // resolved. A deck started on a built-in had none, so a `themes/` created
+  // later, shadowing that built-in, was never heard from, and a rebuild by
+  // hand did not add it either. The tree now watches every place the name
+  // could resolve to, and recomputes that list after every build.
+
+  const BUILTIN_BRIEF_PRIMARY = "1E2A4A"
+
+  /** A copy of the built-in `brief` under `id` with `primary` swapped, so
+   *  the served page can be told apart by one hex value. */
+  function briefWithPrimary(id: string, primary: string): string {
+    const file = themeFileFromPreset("brief", { id })
+    file.style.colors.primary = primary
+    return JSON.stringify(file, null, 2) + "\n"
+  }
+
+  async function makeBriefDeck(dir: string): Promise<string> {
+    const deckDir = join(dir, "deck")
+    await mkdir(join(deckDir, "pages"), { recursive: true })
+    await writeFile(join(deckDir, "deck.spec.json"), JSON.stringify(makeDeckPlan()))
+    await writeFile(
+      join(deckDir, "pages", "p-a.json"),
+      JSON.stringify({ components: [{ type: "paragraph", text: "steady content" }] }),
+    )
+    return deckDir
+  }
+
+  function servedWith(handle: ServeHandle, present: string, absent?: string): Promise<string> {
+    return pollUntil(async () => {
+      const body = (await get(handle.port, "/")).body.toUpperCase()
+      if (!body.includes(present)) return undefined
+      if (absent !== undefined && body.includes(absent)) return undefined
+      return body
+    })
+  }
+
+  it("a workspace themes/<name>.theme.json created mid-session shadows the built-in, and its edits and removal both reach the preview", async () => {
+    const dir = await makeDir("pptwise-serve-late-theme-")
+    const deckDir = await makeBriefDeck(dir)
+    const handle = await startServe(deckDir, { cwd: dir })
+    expect((await get(handle.port, "/")).body.toUpperCase()).toContain(BUILTIN_BRIEF_PRIMARY)
+
+    // No themes/ anywhere at startup: the deck renders the factory brief.
+    // The directory is born empty first, then the file lands in it.
+    await mkdir(join(dir, "themes"))
+    await sleep(400)
+    const themePath = join(dir, "themes", "brief.theme.json")
+    await writeFile(themePath, briefWithPrimary("brief", "#0B5FFF"))
+    await servedWith(handle, "0B5FFF", BUILTIN_BRIEF_PRIMARY)
+
+    // An editor's save-by-rename over the same name.
+    await atomicReplace(themePath, briefWithPrimary("brief", "#0F5132"))
+    await servedWith(handle, "0F5132", "0B5FFF")
+
+    // Removing the file un-shadows the built-in.
+    await rm(themePath)
+    await servedWith(handle, BUILTIN_BRIEF_PRIMARY, "0F5132")
+  })
+
+  it("follows a spec rebind: the new name's file is watched before it exists, and its later edits refresh", async () => {
+    const dir = await makeDir("pptwise-serve-rebind-theme-")
+    const deckDir = await makeBriefDeck(dir)
+    await mkdir(join(dir, "themes"))
+    const handle = await startServe(deckDir, { cwd: dir })
+    const sse = await connectSSE(handle.port)
+
+    // The spec now names a theme no file provides yet: the build fails, and
+    // the watcher set has to move to that name anyway.
+    await writeFile(join(deckDir, "deck.spec.json"), JSON.stringify({ ...makeDeckPlan(), theme: "acme-live" }))
+    const failed = await sse.waitForNext("error")
+    expect(JSON.parse(failed.data)).toMatchObject({ message: expect.stringMatching(/unknown theme "acme-live"/) })
+
+    const themePath = join(dir, "themes", "acme-live.theme.json")
+    await writeFile(themePath, briefWithPrimary("acme-live", "#5B2C6F"))
+    await servedWith(handle, "5B2C6F", BUILTIN_BRIEF_PRIMARY)
+    expect(handle.status().latestOk).toBe(true)
+
+    await atomicReplace(themePath, briefWithPrimary("acme-live", "#7A1F1F"))
+    await servedWith(handle, "7A1F1F", "5B2C6F")
+    sse.close()
+  })
+
+  it("bare IR file: a <name>.theme.json dropped next to the IR after startup shadows the built-in", async () => {
+    const dir = await makeDir("pptwise-serve-ir-late-theme-")
+    const irPath = join(dir, "deck.json")
+    await writeFile(irPath, JSON.stringify({ ...VALID_IR, theme: { id: "brief" } }))
+    const handle = await startServe(irPath, { cwd: dir })
+    expect((await get(handle.port, "/")).body.toUpperCase()).toContain(BUILTIN_BRIEF_PRIMARY)
+
+    await writeFile(join(dir, "brief.theme.json"), briefWithPrimary("brief", "#0B5FFF"))
+    await servedWith(handle, "0B5FFF", BUILTIN_BRIEF_PRIMARY)
   })
 })

@@ -166,13 +166,13 @@ For a self-contained review file:
 pptwise preview my-deck/ --html
 ```
 
-For a browser session that refreshes when the spec, page files, assets, or deck-local theme change:
+For a browser session that refreshes when the spec, page files, assets, or the bound theme's file change:
 
 ```bash
 pptwise serve my-deck/ --no-open
 ```
 
-Watching is directory-level, so atomic saves (write-tmp-then-rename) and directories created after startup (`pages/`, `assets/`) trigger a rebuild. When a rebuild fails, the page shows the failure and keeps the last good result without treating it as current.
+Watching is directory-level, so atomic saves (write-tmp-then-rename) and directories created after startup (`pages/`, `assets/`) trigger a rebuild. Every place the bound theme name could resolve to is watched: the deck directory's `theme.json`, `<name>.theme.json`, and `<name>.json`, then `themes/` in each directory from the working directory up to the project root (the directory holding `pptwise.config.json`, or the working directory itself without one), whether those exist yet or not. A `themes/` directory above the project root is watched when it exists. A deck started on a factory preset picks up a `themes/<name>.theme.json` created later, and rebinding the spec to another name moves the watch to that name's files. When a rebuild fails, the page shows the failure and keeps the last good result without treating it as current.
 
 Preview output is read-only. A reviewer describes a change, and the author edits the smallest owning source file. Content revisions belong to one page file. Order, type, kind, heading, and theme changes belong to the spec.
 

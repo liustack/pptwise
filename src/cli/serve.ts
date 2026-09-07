@@ -44,9 +44,19 @@
  * (`./commands.ts`) already resolved `target` to — rather than this module
  * re-deriving the bare-name/`decksDir` resolution a second time: a deck
  * project directory cares about `deck.spec.json` + `pages/` + `assets/` +
- * `theme.json`; a bare IR target cares about that one file, plus a resolved
- * workspace theme file when the bound theme is a file. None of those paths
- * is ever handed to `fs.watch` directly, though. Every `fs.watch` here is on
+ * `theme.json`; a bare IR target cares about that one file. Both also care
+ * about every place the bound theme's name could resolve to a file
+ * (`themeCandidates`, `./theme-resolve.ts`: the deck directory's own
+ * `theme.json` / `<name>.theme.json` / `<name>.json`, then `themes/` in
+ * every directory from `cwd` up to the project root, existing or not, and
+ * any `themes/` above that which already exists; see {@link themeWatchRoots}
+ * for the ceiling), so a theme file that appears after startup and shadows
+ * the built-in the deck started on is seen the moment it lands. That list
+ * is recomputed after
+ * every build from the theme the spec binds *now*, and the watcher set is
+ * updated to match, so rebinding the spec to another name follows along.
+ * None of those paths is ever handed to `fs.watch` directly, though. Every
+ * `fs.watch` here is on
  * a *directory*, with the callback filtering by entry name
  * ({@link watchTree}): a watcher on a file is bound to that file's inode,
  * and an editor that saves by writing a temp file and renaming it over the
@@ -77,15 +87,17 @@
  * previous-good HTML yet to fall back to.
  */
 import { type FSWatcher, statSync, watch } from "node:fs"
+import { readFile } from "node:fs/promises"
 import { createServer, type Server, type ServerResponse } from "node:http"
 import { platform as osPlatform } from "node:os"
 import { basename, dirname, join, resolve, sep } from "node:path"
+import { THEME_ID_PATTERN } from "@/ir"
 import { PptwiseError } from "../errors"
 import { spawnHidden } from "./child"
 import { buildDeckPreview } from "./commands"
 import { findConfig } from "./config"
 import { ASSETS_DIRNAME, PAGES_DIRNAME, SPEC_FILENAME, THEME_FILENAME } from "./deck-dir"
-import { resolveThemeByName } from "./theme-resolve"
+import { themeCandidates, themeNameFromUnknown, WORKSPACE_THEMES_DIRNAME } from "./theme-resolve"
 import { resolveWorkspaceLocation } from "./workspace"
 
 /** `pptwise serve`'s own default (spec-plan.md §2's worked example,
@@ -162,8 +174,8 @@ export interface WatchRoot {
  *  `buildDeckPreview`'s own `resolvedTarget`/`isDir` for it — see this
  *  module's own doc comment for why these (deck-dir mode) or this one
  *  (bare-IR mode) are the whole watch surface. Deck-dir mode also lists
- *  `theme.json`. Callers pass the workspace assets directory (and a resolved
- *  workspace theme file, when the bound theme is one) via `extra`. */
+ *  `theme.json`. Callers pass the workspace assets directory and the bound
+ *  theme's candidate files ({@link themeWatchRoots}) via `extra`. */
 export function watchRoots(resolvedTarget: string, isDir: boolean, extra: WatchRoot[] = []): WatchRoot[] {
   const roots: WatchRoot[] = isDir
     ? [
@@ -174,6 +186,52 @@ export function watchRoots(resolvedTarget: string, isDir: boolean, extra: WatchR
       ]
     : [{ path: resolvedTarget, kind: "file" }]
   return [...roots, ...extra]
+}
+
+/**
+ * The files the bound theme's name could resolve to, as `file` roots for
+ * {@link watchTree}: the list `resolveThemeByName` walks (`themeCandidates`,
+ * `./theme-resolve.ts`), so a theme file created at one of those places
+ * after startup shadows the built-in and refreshes the preview. Most of
+ * them do not exist, and the tree hangs each one off its nearest existing
+ * ancestor until the directory appears. That chain is only followed up to
+ * `ceilingDir` (the project root, or `startDir` without a project). The
+ * lookup itself walks to the filesystem root, but hanging a watcher off
+ * `/`, `/Users`, or the temp root to wait for a `themes/` there is a
+ * firehose on macOS, where the FSEvents backend is recursive and every
+ * event on the volume is delivered before the name filter runs. Above the
+ * ceiling a `themes/` directory is watched only when it already exists at
+ * the time of the call, and the list is recomputed after every build, so
+ * one created later is picked up on the next rebuild rather than at once.
+ * A name the resolver would refuse (bad shape) has no files to watch.
+ */
+export function themeWatchRoots(
+  themeName: string | undefined,
+  opts: { startDir: string; deckDir: string; ceilingDir: string },
+): WatchRoot[] {
+  if (themeName === undefined || !THEME_ID_PATTERN.test(themeName)) return []
+  const ceiling = resolve(opts.ceilingDir)
+  const withinCeiling = new Set<string>()
+  for (let dir = resolve(opts.startDir); ; dir = dirname(dir)) {
+    withinCeiling.add(dir)
+    if (dir === ceiling || dirname(dir) === dir) break
+  }
+  const roots: WatchRoot[] = []
+  for (const candidate of themeCandidates(themeName, opts)) {
+    const waitForIt = candidate.deck || withinCeiling.has(resolve(candidate.anchor))
+    if (!waitForIt && !isDirectory(join(candidate.anchor, WORKSPACE_THEMES_DIRNAME))) continue
+    roots.push({ path: candidate.path, kind: "file" })
+  }
+  return roots
+}
+
+function isDirectory(path: string): boolean {
+  try {
+    return statSync(path).isDirectory()
+  } catch (e) {
+    if ((e as NodeJS.ErrnoException).code === "ENOENT") return false
+    throw e
+  }
 }
 
 /** Per watched directory: which entry names count as a change, and which
@@ -195,13 +253,22 @@ interface WatchRule {
  * moment the segment appears (then descends into whatever children it was
  * waiting for). A directory that is removed or swapped for a new one (same
  * name, new inode) is detected on its parent's event and re-attached the
- * same way, so a watcher never sits on a dead inode. Returns the teardown
- * that closes every watcher the tree ever opened.
+ * same way, so a watcher never sits on a dead inode. The root list is not
+ * fixed at creation: {@link WatchTreeHandle.update} takes a new list,
+ * attaches what is new and closes what is no longer named, keeping every
+ * watcher both lists share. `close` closes every watcher the tree ever
+ * opened, and a later `update` is a no-op, so a rebuild that finishes after
+ * shutdown cannot reopen anything.
  */
-export function watchTree(roots: WatchRoot[], onChange: () => void): () => void {
-  const rules = new Map<string, WatchRule>()
+export function watchTree(roots: WatchRoot[], onChange: () => void): WatchTreeHandle {
+  let rules = new Map<string, WatchRule>()
   const watchers = new Map<string, { watcher: FSWatcher; ino: bigint }>()
   const isEnoent = (e: unknown) => (e as NodeJS.ErrnoException).code === "ENOENT"
+  const isDenied = (e: unknown) => {
+    const code = (e as NodeJS.ErrnoException).code
+    return code === "EACCES" || code === "EPERM"
+  }
+  let closed = false
 
   function ruleFor(dir: string): WatchRule {
     let rule = rules.get(dir)
@@ -217,16 +284,6 @@ export function watchTree(roots: WatchRoot[], onChange: () => void): () => void 
     if (parent === dir) return undefined
     ruleFor(parent).children.add(basename(dir))
     return parent
-  }
-
-  for (const root of roots) {
-    const abs = resolve(root.path)
-    if (root.kind === "file") {
-      ruleFor(dirname(abs)).files.add(basename(abs))
-    } else {
-      ruleFor(abs).allFiles = true
-      linkToParent(abs)
-    }
   }
 
   function inodeOf(dir: string): bigint | undefined {
@@ -260,6 +317,14 @@ export function watchTree(roots: WatchRoot[], onChange: () => void): () => void 
       // directory only exists once a stock photo has been pinned). The
       // parent will say when it appears. Anything other than "doesn't exist"
       // (permissions, ...) is a real problem.
+      if (isDenied(e)) {
+        // The theme lookup walks up to the filesystem root, and an ancestor
+        // there may be one this user can traverse but not read (inotify
+        // needs read). Nothing can be watched under it. The build itself
+        // reports anything that actually matters about such a directory.
+        rules.delete(dir)
+        return
+      }
       if (!isEnoent(e)) throw e
       const parent = linkToParent(dir)
       if (parent !== undefined) attach(parent)
@@ -308,12 +373,45 @@ export function watchTree(roots: WatchRoot[], onChange: () => void): () => void 
     if (matters) onChange()
   }
 
-  for (const dir of [...rules.keys()]) attach(dir)
-
-  return () => {
-    for (const entry of watchers.values()) entry.watcher.close()
-    watchers.clear()
+  function update(list: WatchRoot[]): void {
+    if (closed) return
+    rules = new Map()
+    for (const root of list) {
+      const abs = resolve(root.path)
+      if (root.kind === "file") {
+        ruleFor(dirname(abs)).files.add(basename(abs))
+      } else {
+        ruleFor(abs).allFiles = true
+        linkToParent(abs)
+      }
+    }
+    // Attach first: a directory that does not exist links its ancestors
+    // into `rules` on the way, and those must survive the sweep below.
+    for (const dir of [...rules.keys()]) attach(dir)
+    for (const [dir, entry] of watchers) {
+      if (rules.has(dir)) continue
+      entry.watcher.close()
+      watchers.delete(dir)
+    }
   }
+
+  update(roots)
+
+  return {
+    update,
+    close: () => {
+      closed = true
+      for (const entry of watchers.values()) entry.watcher.close()
+      watchers.clear()
+    },
+  }
+}
+
+export interface WatchTreeHandle {
+  /** Replace the root list. Watchers both lists share stay open. */
+  update: (roots: WatchRoot[]) => void
+  /** Close every watcher. Later `update` calls do nothing. */
+  close: () => void
 }
 
 /** Marker on the injected `<script>` element (task S2: "serve 模式检测（注入的
@@ -519,6 +617,34 @@ export async function createServeServer(options: ServeOptions): Promise<ServeHan
     writeToAll(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`)
   }
 
+  const deckDir = initial.isDir ? initial.resolvedTarget : dirname(initial.resolvedTarget)
+  let boundThemeName: string | undefined = initial.ir.theme.id
+
+  /** The theme name the target binds right now, read off the spec or IR
+   *  file without building. For the watcher set after a failed build: a
+   *  spec rebound to a name whose file does not exist yet fails to build,
+   *  and the file that will fix it has to be watched for before it exists.
+   *  A file that cannot be read or parsed mid-edit keeps the last name. */
+  async function peekBoundThemeName(): Promise<string | undefined> {
+    const source = initial.isDir ? join(initial.resolvedTarget, SPEC_FILENAME) : initial.resolvedTarget
+    try {
+      const raw: unknown = JSON.parse(await readFile(source, "utf8"))
+      const fromSpec = themeNameFromUnknown(raw)
+      if (fromSpec !== undefined) return fromSpec
+      const theme = (raw as { theme?: { id?: unknown } } | null)?.theme
+      return typeof theme?.id === "string" ? theme.id : boundThemeName
+    } catch {
+      return boundThemeName
+    }
+  }
+
+  function currentWatchRoots(): WatchRoot[] {
+    return watchRoots(initial.resolvedTarget, initial.isDir, [
+      { path: workspaceAssets, kind: "dir" },
+      ...themeWatchRoots(boundThemeName, { startDir: cwd, deckDir, ceilingDir: watchCeiling }),
+    ])
+  }
+
   async function buildOnce(): Promise<void> {
     const revision = ++latestRevision
     try {
@@ -526,11 +652,16 @@ export async function createServeServer(options: ServeOptions): Promise<ServeHan
       cachedHtml = injectServeClient(result.html)
       servedRevision = revision
       latestError = undefined
+      boundThemeName = result.ir.theme.id
       broadcast("reload", { revision })
     } catch (e) {
       latestError = e instanceof Error ? e.message : String(e)
+      boundThemeName = await peekBoundThemeName()
       broadcast("error", { revision, message: latestError })
     }
+    // `watchers` is assigned below, before the server listens. No build
+    // runs before that: the initial one is awaited above this function.
+    watchers.update(currentWatchRoots())
   }
 
   // Builds run strictly one after another. Two overlapping builds could
@@ -588,6 +719,7 @@ export async function createServeServer(options: ServeOptions): Promise<ServeHan
   }
 
   const projectHit = await findConfig(cwd)
+  const watchCeiling = projectHit !== null ? dirname(projectHit.path) : cwd
   const workspaceAssets = join(
     resolveWorkspaceLocation({
       cwd,
@@ -599,24 +731,13 @@ export async function createServeServer(options: ServeOptions): Promise<ServeHan
     ASSETS_DIRNAME,
   )
 
-  const extraWatch: WatchRoot[] = [{ path: workspaceAssets, kind: "dir" }]
-  try {
-    const resolvedTheme = await resolveThemeByName(initial.ir.theme.id, {
-      startDir: cwd,
-      deckDir: initial.isDir ? initial.resolvedTarget : dirname(initial.resolvedTarget),
-    })
-    if (resolvedTheme.kind === "file") extraWatch.push({ path: resolvedTheme.path, kind: "file" })
-  } catch {
-    // Bound theme already rendered. A resolve miss here must not block serve.
-  }
-
-  const closeWatchers = watchTree(watchRoots(initial.resolvedTarget, initial.isDir, extraWatch), scheduleRebuild)
+  const watchers = watchTree(currentWatchRoots(), scheduleRebuild)
 
   function teardownWatchersAndTimers(): void {
     clearInterval(heartbeat)
     if (debounceTimer) clearTimeout(debounceTimer)
     debounceTimer = undefined
-    closeWatchers()
+    watchers.close()
   }
 
   try {

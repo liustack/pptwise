@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it } from "vitest"
 import { installNodePlatform } from "@/platform/node"
 import { __resetRegisteredThemes, getThemeDefinition, THEME_DEFINITIONS } from "../themes/definitions"
 import { runThemeNew } from "./commands"
-import { menusEqual, resolveThemeByName } from "./theme-resolve"
+import { menusEqual, resolveThemeByName, themeCandidates } from "./theme-resolve"
 import type { Menu } from "../themes/schema"
 
 installNodePlatform()
@@ -114,6 +114,38 @@ describe("a theme file resolved by name is carried by value", () => {
     await writeFile(path, JSON.stringify(broken))
     await expect(resolveThemeByName("acme", { startDir: cwd, deckDir: cwd })).rejects.toThrow(/unknown layout id/)
     expect(() => getThemeDefinition("acme")).toThrow(/unknown theme "acme"/)
+  })
+})
+
+describe("themeCandidates", () => {
+  it("lists the deck directory first, then themes/ in every directory up to the root, nearest first", () => {
+    const paths = themeCandidates("acme", { startDir: "/ws/decks", deckDir: "/ws/decks/my-deck" }).map((c) => c.path)
+    expect(paths.slice(0, 3)).toEqual([
+      "/ws/decks/my-deck/theme.json",
+      "/ws/decks/my-deck/acme.theme.json",
+      "/ws/decks/my-deck/acme.json",
+    ])
+    expect(paths.slice(3, 6)).toEqual([
+      "/ws/decks/themes/acme.theme.json",
+      "/ws/decks/themes/acme.json",
+      "/ws/decks/themes/acme/theme.json",
+    ])
+    expect(paths.slice(-3)).toEqual(["/themes/acme.theme.json", "/themes/acme.json", "/themes/acme/theme.json"])
+    expect(paths.indexOf("/ws/themes/acme.theme.json")).toBe(6)
+  })
+
+  it("marks only the <name>.json shape as loose, and only the first three as deck-level", () => {
+    const candidates = themeCandidates("acme", { startDir: "/ws", deckDir: "/ws/deck" })
+    for (const c of candidates) expect(c.loose).toBe(c.path.endsWith("/acme.json"))
+    expect(candidates.map((c) => c.deck)).toEqual([true, true, true, ...candidates.slice(3).map(() => false)])
+    expect(candidates.slice(0, 3).map((c) => c.anchor)).toEqual(["/ws/deck", "/ws/deck", "/ws/deck"])
+    expect(candidates.slice(3, 6).map((c) => c.anchor)).toEqual(["/ws", "/ws", "/ws"])
+    expect(candidates.at(-1)?.anchor).toBe("/")
+  })
+
+  it("has no deck level without a deck directory", () => {
+    const paths = themeCandidates("acme", { startDir: "/ws" }).map((c) => c.path)
+    expect(paths[0]).toBe("/ws/themes/acme.theme.json")
   })
 })
 
