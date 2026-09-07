@@ -16,7 +16,6 @@
  * `generatePptx`, and their shared `checkDraftGate` helper stay defined in
  * `./api` itself, the one file allowed to reach the render/export chain.
  */
-import { z } from "zod"
 import { PptwiseError } from "./errors"
 import { OLD_IR_VERSION_ERROR, PptxIRSchema, themeIssueMessage, type PptxIR } from "./ir"
 import { decodeDataUriBytes, dataUriMime, FORMAT_BY_MIME, MIME_BY_SNIFFED_FORMAT, sniffImageFormat } from "./ir/asset-sniff"
@@ -970,7 +969,4 @@ export function listThemes(): ThemeInfo[] {
   }))
 }
 
-/** JSON Schema for the IR — feed this to a model before it writes IR. */
-export function irJsonSchema(): Record<string, unknown> {
-  return z.toJSONSchema(PptxIRSchema) as Record<string, unknown>
-}
+export { irJsonSchema } from "./ir/json-schema"

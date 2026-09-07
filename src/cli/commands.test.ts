@@ -23,6 +23,7 @@ import {
   runSpecValidate,
   runPreview,
   runRender,
+  runIcons,
   runNarratives,
   runSchema,
   runThemes,
@@ -603,8 +604,44 @@ describe("runRender", () => {
 })
 
 describe("runSchema / runThemes", () => {
-  it("prints JSON Schema", () => {
-    expect(JSON.parse(runSchema())).toHaveProperty("$schema")
+  it("prints compact JSON Schema by default and formats only under --pretty", async () => {
+    const compact = await runSchema()
+    expect(JSON.parse(compact)).toHaveProperty("$schema")
+    expect(compact).not.toContain("\n")
+    expect(compact.length).toBeLessThan(200_000)
+    const pretty = await runSchema({ pretty: true })
+    expect(pretty.split("\n").length).toBeGreaterThan(100)
+    expect(JSON.parse(pretty)).toEqual(JSON.parse(compact))
+  })
+  it("slices one component under --component and one kind under --kind", async () => {
+    const callout = JSON.parse(await runSchema({ component: "callout" })) as { component: string; $defs: Record<string, unknown> }
+    expect(callout.component).toBe("callout")
+    expect(Object.keys(callout.$defs)).toEqual(["IconName"])
+    const fact = JSON.parse(await runSchema({ kind: "fact", theme: "brief" })) as { kind: string; components: string[] }
+    expect(fact.kind).toBe("fact")
+    expect([...fact.components].sort()).toEqual(["kpi_cards", "paragraph"])
+    const anyTheme = JSON.parse(await runSchema({ kind: "quote" })) as { themes: Record<string, unknown> }
+    expect(Object.keys(anyTheme.themes)).toContain("thesis")
+  })
+  it("keeps the icon enum out of the model view and prints it under --full", async () => {
+    expect(await runSchema()).not.toContain('"alarm-clock"')
+    expect(await runSchema({ full: true })).toContain('"alarm-clock"')
+    expect(await runSchema({ component: "callout", full: true })).toContain('"alarm-clock"')
+  })
+  it("refuses conflicting flags and unknown names with the valid values", async () => {
+    await expect(runSchema({ spec: true, component: "callout" })).rejects.toThrow(/one of --spec, --component, --kind/)
+    await expect(runSchema({ component: "callout", kind: "fact" })).rejects.toThrow(/one of --spec, --component, --kind/)
+    await expect(runSchema({ theme: "brief" })).rejects.toThrow(/--theme requires --kind/)
+    await expect(runSchema({ spec: true, full: true })).rejects.toThrow(/--full/)
+    await expect(runSchema({ component: "quote" })).rejects.toThrow(/unknown component type "quote".*blockquote/s)
+    await expect(runSchema({ kind: "bullets" })).rejects.toThrow(/unknown kind "bullets".*points, list/s)
+    await expect(runSchema({ kind: "fact", theme: "nope" })).rejects.toThrow(/unknown theme "nope"/)
+  })
+  it("lists every icon name through runIcons", () => {
+    const lines = runIcons(false).split("\n")
+    expect(lines.length).toBeGreaterThan(1000)
+    expect(lines).toContain("alarm-clock")
+    expect(JSON.parse(runIcons(true))).toEqual(lines)
   })
   it("prints 24 themes, json mode parses", () => {
     expect(runThemes(false).split("\n")).toHaveLength(24)
@@ -795,8 +832,8 @@ describe("runPreview contact sheet", () => {
 })
 
 describe("runSchema --spec", () => {
-  it("prints the deck spec schema", () => {
-    const s = JSON.parse(runSchema("spec")) as { properties?: Record<string, unknown> }
+  it("prints the deck spec schema", async () => {
+    const s = JSON.parse(await runSchema({ spec: true })) as { properties?: Record<string, unknown> }
     expect(Object.keys(s.properties ?? {})).toEqual(
       expect.arrayContaining(["version", "narrative", "theme", "brand", "branding", "pages"]),
     )
@@ -1658,6 +1695,21 @@ describe("brand extract + deck theme.json / workspace themes/", () => {
     const resolved = await resolveThemeByName("brief", { startDir: d, deckDir: d })
     expect(resolved.definition.style.colors.primary).toBe(`#${DEFAULT_THMX_COLORS.accent1}`)
     expect(getThemeDefinition("brief").style.colors.primary).toBe(factoryPrimary)
+  })
+
+  it("schema --kind --theme reads a workspace file that overrides a builtin id, not the builtin menu", async () => {
+    const d = await freshDir()
+    const src = await writeFixtureTemplate(d)
+    await mkdir(join(d, "themes"))
+    // Donor `thesis` offers `quote`; factory `brief` does not, so the answer
+    // can only come from the file.
+    await runBrandExtract(src, { output: join(d, "themes", "brief.theme.json"), id: "brief", from: "thesis" })
+    const doc = JSON.parse(await runSchema({ kind: "quote", theme: "brief", cwd: d })) as {
+      themes: Record<string, { face: string; components: string[] }>
+    }
+    expect(doc.themes.brief).toEqual(JSON.parse(await runSchema({ kind: "quote", theme: "thesis" })).themes.thesis)
+    await expect(runSchema({ kind: "quote", theme: "brief" })).rejects.toThrow(/kind "quote" is not offered by theme "brief"/)
+    expect(getThemeDefinition("brief").menu.content.quote).toBeUndefined()
   })
 
   it("an IR file uses its directory as the deck lookup layer for sibling theme.json", async () => {

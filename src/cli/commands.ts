@@ -15,6 +15,9 @@ import { PptwiseError } from "../errors"
 import { VERSION } from "../version"
 import type { PptxIR } from "../ir"
 import type { ThemeDefinition } from "../themes/definitions"
+import { componentJsonSchema } from "../ir/json-schema"
+import { PPTX_ICON_NAMES } from "../icons/catalog"
+import { kindJsonSchema } from "../kind-components"
 import { disassembleDeck, type PageContent } from "../spec/assemble"
 import { formatInvalidSpecError, specJsonSchema, resolveSpecThemeId, validateSpec } from "../spec"
 import { AUDIENCE_VALUES, PACING_BUDGETS, STRATEGY_DEFINITIONS, NARRATIVE_PRESETS, resolveNarrative, type NarrativeProfile } from "../narrative"
@@ -780,10 +783,47 @@ export async function runSpecValidate(specPath: string): Promise<string> {
   return lines.join("\n")
 }
 
-/** `mode` selects which JSON Schema to print (`pptwise schema [--spec]`). */
-export function runSchema(mode?: "spec"): string {
-  const schema = mode === "spec" ? specJsonSchema() : irJsonSchema()
-  return JSON.stringify(schema, null, 2)
+export interface SchemaCommandOptions {
+  /** Print the deck spec schema instead of the IR schema. */
+  spec?: boolean
+  /** Print one component's schema with the `$defs` it needs. */
+  component?: string
+  /** Print the components legal on a page of this kind, with their schemas. */
+  kind?: string
+  /** With `kind`: answer for one theme name (deck-less lookup: workspace `themes/`, then presets) instead of every installed theme. */
+  theme?: string
+  /** Indent the JSON. Default output is one line. */
+  pretty?: boolean
+  /** Print the closed icon enum instead of the `pptwise icons` pointer. */
+  full?: boolean
+  /** Where a workspace theme name is resolved from. Defaults to `process.cwd()`. */
+  cwd?: string
+}
+
+/** `pptwise schema [--spec | --component <type> | --kind <kind> [--theme <name>]] [--pretty] [--full]`. */
+export async function runSchema(opts: SchemaCommandOptions = {}): Promise<string> {
+  const modes = [opts.spec ? "--spec" : undefined, opts.component !== undefined ? "--component" : undefined, opts.kind !== undefined ? "--kind" : undefined]
+    .filter((flag): flag is string => flag !== undefined)
+  if (modes.length > 1) throw new PptwiseError(`pass one of --spec, --component, --kind (got ${modes.join(" and ")})`)
+  if (opts.theme !== undefined && opts.kind === undefined) throw new PptwiseError("--theme requires --kind")
+  if (opts.spec && opts.full) throw new PptwiseError("--full applies to the IR schema, not --spec")
+  let schema: Record<string, unknown>
+  if (opts.spec) {
+    schema = specJsonSchema()
+  } else if (opts.component !== undefined) {
+    schema = componentJsonSchema(opts.component, { full: opts.full })
+  } else if (opts.kind !== undefined) {
+    const resolved = await resolveThemeSelection(opts.theme, { startDir: opts.cwd ?? process.cwd() })
+    schema = kindJsonSchema(opts.kind, { theme: resolved?.definition, full: opts.full })
+  } else {
+    schema = irJsonSchema({ full: opts.full })
+  }
+  return opts.pretty ? JSON.stringify(schema, null, 2) : JSON.stringify(schema)
+}
+
+/** `pptwise icons [--json]` — every icon name an `icon` field accepts. */
+export function runIcons(asJson: boolean): string {
+  return asJson ? JSON.stringify([...PPTX_ICON_NAMES], null, 2) : PPTX_ICON_NAMES.join("\n")
 }
 
 export function runThemes(asJson: boolean): string {

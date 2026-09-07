@@ -461,6 +461,44 @@ const schemaPlanStderr = shExpectFail("node", ["dist/cli.js", "schema", "--plan"
 if (!/unknown option.*--plan/i.test(schemaPlanStderr) || /pptwise schema --spec/.test(schemaPlanStderr)) {
   throw new Error(`e2e: old-command leg, expected \`pptwise schema --plan\` to be an unknown option with no replacement pointer, got: ${schemaPlanStderr}`)
 }
+// 6d) schema slices: the default print stays inside a model's context budget,
+//     one component or one kind can be cut out alone, and a wrong name lists
+//     the valid ones instead of dumping the whole schema.
+console.log("--- schema slice leg ---")
+const schemaOut = sh("node", ["dist/cli.js", "schema"])
+if (schemaOut.trim().includes("\n") || schemaOut.length >= 200_000) {
+  throw new Error(`e2e: schema leg — expected one compact line under 200,000 chars, got ${schemaOut.length} chars`)
+}
+const schemaDoc = JSON.parse(schemaOut) as { $defs?: Record<string, { enum?: unknown[] }> }
+if (schemaDoc.$defs?.IconName?.enum !== undefined || schemaDoc.$defs?.bullets === undefined) {
+  throw new Error("e2e: schema leg — expected named $defs with the icon enum replaced by a pointer")
+}
+const fullDoc = JSON.parse(sh("node", ["dist/cli.js", "schema", "--full"])) as { $defs: Record<string, { enum?: unknown[] }> }
+if ((fullDoc.$defs.IconName?.enum?.length ?? 0) < 1000) {
+  throw new Error("e2e: schema leg — expected `schema --full` to keep the closed icon enum")
+}
+const componentDoc = JSON.parse(sh("node", ["dist/cli.js", "schema", "--component", "callout", "--pretty"])) as { component?: string; $defs?: Record<string, unknown> }
+if (componentDoc.component !== "callout" || Object.keys(componentDoc.$defs ?? {}).join() !== "IconName") {
+  throw new Error(`e2e: schema leg — expected callout's slice with only IconName in $defs, got ${JSON.stringify(Object.keys(componentDoc.$defs ?? {}))}`)
+}
+const kindDoc = JSON.parse(sh("node", ["dist/cli.js", "schema", "--kind", "fact", "--theme", "brief"])) as { components?: string[] }
+if ([...(kindDoc.components ?? [])].sort().join() !== "kpi_cards,paragraph") {
+  throw new Error(`e2e: schema leg — expected fact under brief to hold kpi_cards and paragraph, got ${JSON.stringify(kindDoc.components)}`)
+}
+const badKindStderr = shExpectFail("node", ["dist/cli.js", "schema", "--kind", "bullets"])
+if (!/unknown kind "bullets"/.test(badKindStderr) || !/points, list/.test(badKindStderr)) {
+  throw new Error(`e2e: schema leg — expected the valid kinds after a bad --kind, got: ${badKindStderr}`)
+}
+const badComponentStderr = shExpectFail("node", ["dist/cli.js", "schema", "--component", "quote"])
+if (!/unknown component type "quote"/.test(badComponentStderr) || !/blockquote/.test(badComponentStderr)) {
+  throw new Error(`e2e: schema leg — expected the valid component types after a bad --component, got: ${badComponentStderr}`)
+}
+const iconLines = sh("node", ["dist/cli.js", "icons"]).trim().split("\n")
+if (iconLines.length < 1000 || !iconLines.includes("alarm-clock")) {
+  throw new Error(`e2e: schema leg — expected \`pptwise icons\` to list the icon catalog, got ${iconLines.length} lines`)
+}
+console.log(`schema slice leg OK (default ${schemaOut.length} chars, ${iconLines.length} icons)`)
+
 const planValidateStderr = shExpectFail("node", ["dist/cli.js", "plan", "validate", join(deckDir, "deck.spec.json")])
 if (!/unknown command.*plan/i.test(planValidateStderr) || /pptwise spec validate/.test(planValidateStderr)) {
   throw new Error(`e2e: old-command leg, expected \`pptwise plan validate\` to be an unknown command with no replacement pointer, got: ${planValidateStderr}`)

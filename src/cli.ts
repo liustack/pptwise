@@ -7,6 +7,7 @@ import {
   runAudit,
   runBrandExtract,
   runDisassemble,
+  runIcons,
   runInit,
   runLayouts,
   runNarratives,
@@ -129,9 +130,28 @@ program
   .command("schema")
   .description("Print the IR JSON Schema (feed this to a model before it writes IR)")
   .option("--spec", "print the deck spec schema instead")
-  .action((opts: { spec?: boolean }) => {
-    console.log(runSchema(opts.spec ? "spec" : undefined))
+  .option("--component <type>", "print one component's schema with the $defs it needs")
+  .option("--kind <kind>", "print the components a page of this kind may hold, with their schemas")
+  .option("--theme <name>", "with --kind: answer for one theme instead of every installed theme")
+  .option("--pretty", "indent the JSON (default output is one line)")
+  .option("--full", "print the closed icon-name enum instead of the `pptwise icons` pointer")
+  .addHelpText(
+    "after",
+    "\nExamples:\n  $ pptwise schema --spec\n  $ pptwise schema --kind fact --theme brief\n  $ pptwise schema --component kpi_cards",
+  )
+  .action(async (opts: { spec?: boolean; component?: string; kind?: string; theme?: string; pretty?: boolean; full?: boolean }) => {
+    try {
+      console.log(await runSchema(opts))
+    } catch (e) {
+      fail(e)
+    }
   })
+
+program
+  .command("icons")
+  .description("List every icon name an `icon` field accepts")
+  .option("--json", "machine-readable output")
+  .action((opts: { json?: boolean }) => console.log(runIcons(Boolean(opts.json))))
 
 const spec = program.command("spec").description("Deck spec commands (spec §6)")
 spec

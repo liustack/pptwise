@@ -9,7 +9,7 @@
  * Validate, density checks, and render all call this module. No caller may
  * sample a pool or reconstruct takeover precedence independently.
  */
-import { KIND_VALUES, type PageKind, type PptxIR, type Slide } from "@/ir"
+import { COMPONENT_TYPES, KIND_VALUES, type PageKind, type PptxIR, type Slide } from "@/ir"
 import { getLayout, type LayoutDefinition } from "../layouts/registry"
 import { getThemeDefinition, type ThemeDefinition } from "../themes/definitions"
 import type { Menu, MenuEntry } from "../themes/schema"
@@ -36,6 +36,22 @@ export function resolveLayoutId(slideType: Slide["type"], kind: PageKind | undef
 /** Content kinds offered by a menu, in the global vocabulary's stable order. */
 export function offeredContentKinds(menu: Menu): PageKind[] {
   return KIND_VALUES.filter((kind) => menu.content[kind] !== undefined)
+}
+
+/**
+ * Component types the face draws anywhere on the page: the union of its
+ * slots' `accepts`, or the whole vocabulary when any slot takes `"any"`.
+ * `pptwise schema --kind` reports this list, and validate's content-page
+ * slot gate rejects exactly the types outside it.
+ */
+export function faceAcceptedComponentTypes(layout: LayoutDefinition): readonly string[] {
+  if (layout.slots.some((slot) => slot.accepts === "any")) return COMPONENT_TYPES
+  const accepted = new Set<string>()
+  for (const slot of layout.slots) {
+    if (slot.accepts === "any") continue
+    for (const type of slot.accepts) accepted.add(type)
+  }
+  return COMPONENT_TYPES.filter((type) => accepted.has(type))
 }
 
 export type EffectiveFaceRoute = "layout" | "takeover" | "image-cover" | "unresolved"
