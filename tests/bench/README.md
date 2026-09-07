@@ -192,7 +192,13 @@ Every metric is purely mechanical, computed off the SDK the render chain already
 
 - **validate first-pass**: does the produced artifact (or its assembled IR, for a deck project —
   read via `readDeckDir`, `src/cli/deck-dir.ts`, the same seam `pptwise validate`/`render` use)
-  pass `validateIr` — pass/fail plus the raw error count
+  pass `validateIr` — pass/fail plus the raw error count. The bound theme is resolved the way the
+  CLI resolves it (`resolveThemeByName`, `src/cli/theme-resolve.ts`: deck-local `theme.json` /
+  `<name>.theme.json`, then the `themes/` directory, then the built-ins, all rooted at the result
+  directory) and the same definition is handed to validate, audit, and both renders — so a theme
+  the model created with `theme new`/`theme fork`/`brand extract` scores under its own file, not
+  as "unknown theme" and not under a same-named built-in. A theme file that exists but will not
+  load is a `reason` fail. A name no file or built-in answers to stays a plain validate error.
 - **audit findings**: `auditDeck` finding count (overflow, out-of-bounds, low-contrast, overlap, plus the advisory content-truncated and content-dropped codes — all six count) —
   only computed when validate passed (an invalid IR has nothing well-formed enough to audit)
 - **render success**: does `generatePptx` produce a well-formed `.pptx` without throwing
@@ -308,7 +314,10 @@ same directory the model's own `run_pptwise validate`/`render` calls resolved ag
 tool loop) up into the result root alongside `deck.json`, mirroring what it already did for a
 deck-project answer's `assets/` — otherwise a correctly-authored local-path reference would
 validate and render fine inside the tool loop but then fail `score.mts`'s own re-render, which
-resolves the same relative path against the result root, not the workspace.
+resolves the same relative path against the result root, not the workspace. The same copy carries the theme files
+the CLI's lookup reads — `theme.json` and `<name>.theme.json` beside the artifact, and the
+workspace-root `themes/` directory — so a custom theme the model bound resolves identically at
+scoring time (see "Scoring" above); those names are never taken for the IR itself.
 
 The system prompt also explicitly warns the model not to call `write_file` on a path already
 under `assets/` — added after the round-2 smoke (q12, QWEN) showed the provisioning path working

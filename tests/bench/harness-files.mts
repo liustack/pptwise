@@ -10,3 +10,15 @@
 export const META_FILENAME = "meta.json"
 export const TRANSCRIPT_FILENAME = "transcript.json"
 export const HARNESS_FILES: ReadonlySet<string> = new Set([META_FILENAME, TRANSCRIPT_FILENAME])
+
+/**
+ * A theme file by the CLI's own naming (`resolveThemeByName`,
+ * `src/cli/theme-resolve.ts`): the deck-local `theme.json`, or a named
+ * `<id>.theme.json` beside the deck or under `themes/`. The runner copies
+ * these with the artifact and never picks one as the IR; the scorer skips
+ * them when it scans for the bare IR candidate. A loose `<id>.json` theme
+ * is indistinguishable from an IR by name and is not covered here.
+ */
+export function isThemeFileName(name: string): boolean {
+  return name === "theme.json" || name.endsWith(".theme.json")
+}

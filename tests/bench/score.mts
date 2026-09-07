@@ -33,10 +33,12 @@ import { pathToFileURL } from "node:url"
 import JSZip from "jszip"
 
 import { auditDeck, generatePptx, validateIr, type PptxIR } from "../../src/index"
-import { readDeckDir } from "../../src/cli/deck-dir"
-import { resolveLocalAssets } from "../../src/cli/load-ir"
+import { SPEC_FILENAME, readDeckDir } from "../../src/cli/deck-dir"
+import { loadIrFile, resolveLocalAssets } from "../../src/cli/load-ir"
+import { assertThemeRebind, resolveThemeByName, themeNameFromUnknown } from "../../src/cli/theme-resolve"
+import type { ThemeDefinition } from "../../src/themes/definitions"
 import { installNodePlatform } from "../../src/platform/node"
-import { HARNESS_FILES, META_FILENAME } from "./harness-files.mts"
+import { HARNESS_FILES, META_FILENAME, isThemeFileName } from "./harness-files.mts"
 
 installNodePlatform()
 
@@ -138,26 +140,78 @@ export interface ModelReport {
 
 // ── artifact loading (tests/bench/README.md's two artifact shapes) ──
 
-type ArtifactResult = { ir: unknown } | { error: string }
+type ArtifactResult = { ir: unknown; theme: ThemeDefinition | undefined } | { error: string }
+
+type ThemeLookup = { theme: ThemeDefinition | undefined } | { error: string }
+
+/** The theme id a bare IR binds (`ir.theme.id`), read loosely off the
+ *  parsed-but-not-validated artifact — a missing or non-string id is left
+ *  for `validateIr` to report. */
+function irThemeId(rawIr: unknown): string | undefined {
+  const theme = (rawIr as { theme?: unknown } | null)?.theme
+  const id = (theme as { id?: unknown } | null)?.id
+  return typeof id === "string" ? id : undefined
+}
+
+/** The lookup failed because no theme of that name exists anywhere (an
+ *  unknown, malformed, or retired id) — as opposed to a theme file that
+ *  exists but could not be loaded. The former is exactly what `validateIr`
+ *  reports on its own as a validate error, so it stays a validate error
+ *  (the degraded fx02 fixture's contract); the latter is a scoring reason. */
+function isMissingThemeError(message: string): boolean {
+  return (
+    message.startsWith("unknown theme ") ||
+    message.startsWith("invalid theme id ") ||
+    /^theme id ".*" was renamed to /.test(message)
+  )
+}
+
+/**
+ * Resolves the theme an artifact binds the way the CLI's own
+ * validate/render do (`applyDeckConfig`, src/cli/commands.ts): the
+ * three-level lookup — deck-local `theme.json` / `<name>.theme.json`, the
+ * workspace `themes/` directory walking up, then the built-ins — plus the
+ * rebind guard, both rooted at the result directory (`placeArtifact` in
+ * `run-agentic.mts` copies the model's theme files there, so the same file
+ * the model's tool-loop calls found is what resolves here). Before this
+ * (codex review R3) the scorer never resolved a theme at all: a custom id
+ * scored "unknown theme", and a forked built-in kept under the built-in's
+ * name silently rendered under the built-in.
+ */
+async function resolveArtifactTheme(name: string | undefined, dir: string): Promise<ThemeLookup> {
+  if (name === undefined) return { theme: undefined }
+  try {
+    const resolved = await resolveThemeByName(name, { startDir: dir, deckDir: dir })
+    await assertThemeRebind(dir, resolved)
+    return { theme: resolved.definition }
+  } catch (e) {
+    const message = (e as Error).message
+    if (isMissingThemeError(message)) return { theme: undefined }
+    return { error: relativizeToRepoRoot(`theme "${name}" could not be resolved: ${message}`) }
+  }
+}
 
 /**
  * Resolves one `tests/bench/results/<model>/<qid>/` directory into a raw IR
- * object. Two shapes, dispatched the same way the CLI does
+ * object plus the definition of the theme it binds. Two shapes, dispatched
+ * the same way the CLI does
  * (`isDeckDirectory` in `src/cli/deck-dir.ts`, restated here rather than
  * imported because the dispatch signal this scorer needs — "does this
  * directory contain a deck spec/plan artifact" — is cheaper than a second
  * `stat`): a bare IR `*.json` file, or a full deck-project directory
  * assembled via `readDeckDir` (the same seam `pptwise validate`/`render`
- * use, `AGENTS.md`'s "reuse, do not reimplement assembly"). Never throws —
+ * use, `AGENTS.md`'s "reuse, do not reimplement assembly"), handed the
+ * spec's theme so assembly checks the spec against the same menu render
+ * will use. Never throws —
  * every failure path (missing directory, missing/ambiguous artifact file,
- * malformed JSON, a `readDeckDir`/`assembleDeck` structural error) returns
- * `{ error }` instead.
+ * malformed JSON, a `readDeckDir`/`assembleDeck` structural error, a theme
+ * file that will not load) returns `{ error }` instead.
  *
  * A deck project is identified only by the current `deck.spec.json` entry.
  * Older project names are ordinary unsupported artifacts under the v5
  * zero-compatibility contract.
  */
-async function loadArtifact(resultDir: string): Promise<ArtifactResult> {
+export async function loadArtifact(resultDir: string): Promise<ArtifactResult> {
   let entries: Dirent[]
   try {
     entries = await readdir(resultDir, { withFileTypes: true })
@@ -165,20 +219,29 @@ async function loadArtifact(resultDir: string): Promise<ArtifactResult> {
     return { error: relativizeToRepoRoot(`no result directory found at ${resultDir}`) }
   }
 
-  const isDeckProjectDir = entries.some((e) => e.isFile() && e.name === "deck.spec.json")
+  const isDeckProjectDir = entries.some((e) => e.isFile() && e.name === SPEC_FILENAME)
   if (isDeckProjectDir) {
+    let specTheme: string | undefined
     try {
-      const { ir } = await readDeckDir(resultDir)
-      return { ir }
+      specTheme = themeNameFromUnknown(await loadIrFile(join(resultDir, SPEC_FILENAME), "spec"))
+    } catch (e) {
+      return { error: relativizeToRepoRoot(`deck project directory failed to assemble: ${(e as Error).message}`) }
+    }
+    const lookup = await resolveArtifactTheme(specTheme, resultDir)
+    if ("error" in lookup) return lookup
+    try {
+      const { ir } = await readDeckDir(resultDir, { theme: lookup.theme })
+      return { ir, theme: lookup.theme }
     } catch (e) {
       return { error: relativizeToRepoRoot(`deck project directory failed to assemble: ${(e as Error).message}`) }
     }
   }
 
-  // Bare IR: exactly one *.json file that the harness itself did not write
-  // (meta.json, transcript.json — `HARNESS_FILES`, shared with the runner).
+  // Bare IR: exactly one *.json file that is neither harness bookkeeping
+  // (meta.json, transcript.json — `HARNESS_FILES`, shared with the runner)
+  // nor a theme file the runner copied alongside (`isThemeFileName`).
   const candidates = entries
-    .filter((e) => e.isFile() && e.name.endsWith(".json") && !HARNESS_FILES.has(e.name))
+    .filter((e) => e.isFile() && e.name.endsWith(".json") && !HARNESS_FILES.has(e.name) && !isThemeFileName(e.name))
     .map((e) => e.name)
     .sort()
   if (candidates.length === 0) {
@@ -203,11 +266,15 @@ async function loadArtifact(resultDir: string): Promise<ArtifactResult> {
   } catch (e) {
     return { error: relativizeToRepoRoot(`cannot read ${filePath}: ${(e as Error).message}`) }
   }
+  let ir: unknown
   try {
-    return { ir: JSON.parse(text) as unknown }
+    ir = JSON.parse(text) as unknown
   } catch (e) {
     return { error: relativizeToRepoRoot(`malformed JSON in ${filePath}: ${(e as Error).message}`) }
   }
+  const lookup = await resolveArtifactTheme(irThemeId(ir), resultDir)
+  if ("error" in lookup) return lookup
+  return { ir, theme: lookup.theme }
 }
 
 /** Optional self-reported run stats — absent, unparseable, or wrong-shaped
@@ -359,13 +426,17 @@ export async function scoreQuestion(
   }
 
   const rawIr = loaded.ir
-  const v = validateIr(rawIr)
+  // The bound theme's definition rides through every step exactly as the
+  // CLI threads it (`runValidate`/`runAudit`/`runRender`): validate,
+  // audit, and both renders see the same definition.
+  const theme = loaded.theme
+  const v = validateIr(rawIr, { theme })
   const coverageHits = computeCoverageHits(rawIr, expected)
 
   let auditFindingCount = 0
   if (v.ok) {
     try {
-      auditFindingCount = auditDeck(v.ir!).findings.length
+      auditFindingCount = auditDeck(v.ir!, { theme }).findings.length
     } catch (e) {
       // auditDeck should never throw on a schema-valid IR — guarded anyway,
       // "never crash the run" (AGENTS.md), surfaced as a reason.
@@ -408,8 +479,8 @@ export async function scoreQuestion(
     // starts with `data:`, so the second `generatePptx` call below is a
     // no-op here) — matches `resolveLocalAssets`'s own contract, `../../src/cli/load-ir.ts`.
     if (hasAssetImages(rawIr)) await resolveLocalAssets(rawIr as PptxIR, resultDir)
-    const bytesA = await generatePptx(rawIr)
-    const bytesB = await generatePptx(rawIr)
+    const bytesA = await generatePptx(rawIr, { theme })
+    const bytesB = await generatePptx(rawIr, { theme })
     renderOk = true
     const [hashA, hashB] = await Promise.all([normalizedPptxSha1(bytesA), normalizedPptxSha1(bytesB)])
     deterministic = hashA === hashB

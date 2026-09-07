@@ -1,10 +1,13 @@
 // @vitest-environment node
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs"
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join, resolve } from "node:path"
 import JSZip from "jszip"
 import { afterEach, describe, expect, it } from "vitest"
+import { forkTheme } from "../../src/cli/theme-fork"
+import { themeFileFromPreset } from "../../src/cli/theme-resolve"
 import {
+  loadArtifact,
   loadQuestionMetas,
   normalizedPptxSha1,
   renderModelReport,
@@ -421,5 +424,91 @@ describe("runScoring — reproducibility", () => {
     for (const w of run.writes) {
       expect(w.content).not.toMatch(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/)
     }
+  })
+})
+
+// ── custom theme files travel with the artifact (codex review R3) ──
+//
+// The agentic whitelist lets a model run `theme new` / `theme fork` /
+// `brand extract`, and the CLI's own validate/render resolve the resulting
+// file through the three-level lookup (deck-local theme.json, workspace
+// themes/, built-ins — `resolveThemeByName`, src/cli/theme-resolve.ts).
+// The scorer has to resolve the same file the same way, or a deck the model
+// validated and rendered cleanly in its tool loop scores "unknown theme"
+// here (custom id), or — worse — silently renders under a same-named
+// built-in (a forked `brief` still called `brief`). Both artifact shapes
+// get a case: a bare IR with a workspace `themes/` file, and a deck project
+// with a deck-local `theme.json`. `forkTheme` gives the copy a primary the
+// built-in does not have, so "the file's own colors reached the render
+// chain" is a checkable fact, not an inference from a passing validate.
+
+describe("scoreQuestion — custom theme files beside the artifact (codex review R3)", () => {
+  let tmp: string
+
+  afterEach(() => {
+    if (tmp) rmSync(tmp, { recursive: true, force: true })
+  })
+
+  const FORK_PRIMARY = "#0B5FFF"
+
+  function sketchTheme() {
+    return forkTheme(themeFileFromPreset("brief", { id: "sketch" }), { primary: FORK_PRIMARY }, { id: "sketch" })
+  }
+
+  it("a bare IR bound to a workspace themes/ theme resolves that file's definition and scores clean", async () => {
+    tmp = mkdtempSync(join(tmpdir(), "bench-score-theme-"))
+    mkdirSync(join(tmp, "themes"), { recursive: true })
+    const theme = sketchTheme()
+    expect(theme.style.colors.primary).toBe(FORK_PRIMARY)
+    writeFileSync(join(tmp, "themes", "sketch.theme.json"), JSON.stringify(theme))
+    const ir = JSON.parse(readFileSync(join(RESULTS_DIR, "green-model", "fx01", "answer.json"), "utf8")) as { theme: unknown }
+    ir.theme = { id: "sketch" }
+    writeFileSync(join(tmp, "deck.json"), JSON.stringify(ir))
+
+    const loaded = await loadArtifact(tmp)
+    expect("error" in loaded ? loaded.error : undefined).toBeUndefined()
+    if ("error" in loaded) return
+    expect(loaded.theme?.id).toBe("sketch")
+    expect(loaded.theme?.style.colors.primary).toBe(FORK_PRIMARY)
+
+    const score = await scoreQuestion("t1", tmp, { id: "t1" })
+    expect(score.reason).toBeUndefined()
+    expect(score.validatePass).toBe(true)
+    expect(score.validateErrorCount).toBe(0)
+    expect(score.renderOk).toBe(true)
+    expect(score.renderError).toBeUndefined()
+    expect(score.deterministic).toBe(true)
+  })
+
+  it("a deck project bound to a deck-local theme.json assembles against that file and scores clean", async () => {
+    tmp = mkdtempSync(join(tmpdir(), "bench-score-theme-"))
+    cpSync(join(RESULTS_DIR, "green-model", "fx02"), tmp, { recursive: true })
+    const spec = JSON.parse(readFileSync(join(tmp, "deck.spec.json"), "utf8")) as { theme: string }
+    spec.theme = "sketch"
+    writeFileSync(join(tmp, "deck.spec.json"), JSON.stringify(spec))
+    writeFileSync(join(tmp, "theme.json"), JSON.stringify(sketchTheme()))
+
+    const loaded = await loadArtifact(tmp)
+    expect("error" in loaded ? loaded.error : undefined).toBeUndefined()
+    if ("error" in loaded) return
+    expect(loaded.theme?.style.colors.primary).toBe(FORK_PRIMARY)
+
+    const score = await scoreQuestion("t2", tmp, { id: "t2" })
+    expect(score.reason).toBeUndefined()
+    expect(score.validatePass).toBe(true)
+    expect(score.renderOk).toBe(true)
+    expect(score.deterministic).toBe(true)
+  })
+
+  it("a theme file that exists but cannot be loaded is a scoring reason, never a silent fall-through to a built-in", async () => {
+    tmp = mkdtempSync(join(tmpdir(), "bench-score-theme-"))
+    mkdirSync(join(tmp, "themes"), { recursive: true })
+    writeFileSync(join(tmp, "themes", "brief.theme.json"), "{ not json")
+    writeFileSync(join(tmp, "deck.json"), readFileSync(join(RESULTS_DIR, "green-model", "fx01", "answer.json")))
+
+    const score = await scoreQuestion("t3", tmp, { id: "t3" })
+    expect(score.reason).toMatch(/theme "brief" could not be resolved/)
+    expect(score.validatePass).toBe(false)
+    expect(score.renderOk).toBe(false)
   })
 })

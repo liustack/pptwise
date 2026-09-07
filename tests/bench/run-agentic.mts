@@ -92,9 +92,14 @@ import {
 } from "node:fs"
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
-import { META_FILENAME, TRANSCRIPT_FILENAME } from "./harness-files.mts"
+import { META_FILENAME, TRANSCRIPT_FILENAME, isThemeFileName } from "./harness-files.mts"
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..")
+/** The CLI's own name for the workspace theme directory
+ *  (`WORKSPACE_THEMES_DIRNAME`, src/cli/theme-resolve.ts) — restated rather
+ *  than imported so this runner script stays free of the engine's module
+ *  graph, the same reason it shells out to `dist/cli.js`. */
+const WORKSPACE_THEMES_DIRNAME = "themes"
 const CLI = join(ROOT, "dist/cli.js")
 const SKILL_DIR = join(ROOT, "skills/pptwise")
 /** Fixed round cap, identical across every question and model in a batch.
@@ -560,7 +565,11 @@ export function locateArtifact(workspaceDir: string): LocatedArtifact {
   if (specFiles.length > 0) {
     return { kind: "deck-project", dir: join(workspaceDir, dirname(specFiles[0]!)) }
   }
-  const jsonFiles = allFiles.filter((f) => f.endsWith(".json"))
+  // A theme file the model wrote (`theme new`, `theme fork`, `brand
+  // extract`, or by hand) is named by the CLI's own convention and is never
+  // the deck — see `isThemeFileName`. Left in the pool it would win the
+  // newest-mtime tie-break below whenever it was written last.
+  const jsonFiles = allFiles.filter((f) => f.endsWith(".json") && !isThemeFileName(f.split(/[\\/]/).pop()!))
   if (jsonFiles.length === 0) return { kind: "none" }
   if (jsonFiles.length === 1) return { kind: "bare-ir", file: join(workspaceDir, jsonFiles[0]!) }
   const conventional = jsonFiles.find((f) => f === "deck.json" || f === "ir.json")
@@ -571,11 +580,46 @@ export function locateArtifact(workspaceDir: string): LocatedArtifact {
   return { kind: "bare-ir", file: join(workspaceDir, newest) }
 }
 
+/**
+ * Theme files the CLI's three-level lookup reads (`resolveThemeByName`,
+ * src/cli/theme-resolve.ts): `theme.json` and `<name>.theme.json` beside
+ * the deck, and the workspace `themes/` directory — searched walking up from
+ * the CLI's cwd, which during the tool loop is the workspace root. Copied to
+ * the result root so the scorer, rooted there, resolves the same file the
+ * model's own validate/render calls did (codex review R3: a theme the
+ * model created and bound was left behind in workspace/, and the scorer
+ * reported "unknown theme" or rendered under a same-named built-in).
+ * Returns the names copied, for the placement note.
+ */
+function copyThemeFiles(artifactDir: string, workspaceDir: string, resultDir: string): string[] {
+  const copied: string[] = []
+  let entries: Dirent[]
+  try {
+    entries = readdirSync(artifactDir, { withFileTypes: true })
+  } catch {
+    entries = []
+  }
+  for (const e of entries) {
+    if (!e.isFile() || !isThemeFileName(e.name)) continue
+    cpSync(join(artifactDir, e.name), join(resultDir, e.name))
+    copied.push(e.name)
+  }
+  for (const dir of new Set([artifactDir, workspaceDir])) {
+    const themesSrc = join(dir, WORKSPACE_THEMES_DIRNAME)
+    if (!existsSync(themesSrc)) continue
+    cpSync(themesSrc, join(resultDir, WORKSPACE_THEMES_DIRNAME), { recursive: true })
+    copied.push(`${WORKSPACE_THEMES_DIRNAME}/`)
+  }
+  return copied
+}
+
 /** Copies the located artifact into `resultDir` (the question root
  *  `score.mts` reads), returns a short description for logging. `none`
  *  leaves `resultDir` with only meta.json — a legitimate, recorded failure
- *  (`score.mts`'s "no artifact found" reason), not a thrown error. */
-export function placeArtifact(located: LocatedArtifact, resultDir: string): string {
+ *  (`score.mts`'s "no artifact found" reason), not a thrown error.
+ *  `workspaceDir` is the root the CLI ran in, where a workspace `themes/`
+ *  directory lives (see {@link copyThemeFiles}). */
+export function placeArtifact(located: LocatedArtifact, resultDir: string, workspaceDir: string): string {
   if (located.kind === "none") return "no artifact found in workspace"
   if (located.kind === "bare-ir") {
     const dest = join(resultDir, "deck.json")
@@ -588,21 +632,29 @@ export function placeArtifact(located: LocatedArtifact, resultDir: string): stri
     // copied alongside deck.json, or the scorer would resolve the same
     // relative path against an empty result root and fail to find bytes
     // that were genuinely there during the model's own tool-loop render.
-    const assetsSrc = join(dirname(located.file), "assets")
+    const artifactDir = dirname(located.file)
+    const assetsSrc = join(artifactDir, "assets")
     const hadAssets = existsSync(assetsSrc)
     if (hadAssets) cpSync(assetsSrc, join(resultDir, "assets"), { recursive: true })
+    const themes = copyThemeFiles(artifactDir, workspaceDir, resultDir)
     return (
       `copied bare IR ${relative(resultDir, located.file)} -> deck.json` +
-      (hadAssets ? ` (+ ${relative(resultDir, assetsSrc)} -> assets/)` : "")
+      (hadAssets ? ` (+ ${relative(resultDir, assetsSrc)} -> assets/)` : "") +
+      (themes.length > 0 ? ` (+ theme files ${themes.join(", ")})` : "")
     )
   }
   // deck-project: copy deck.spec.json + pages/ + assets/ (if present) — the
-  // parts `readDeckDir` (src/cli/deck-dir.ts) looks for.
+  // parts `readDeckDir` (src/cli/deck-dir.ts) looks for — plus the theme
+  // files the CLI's lookup reads beside or above it.
   for (const name of ["deck.spec.json", "pages", "assets"]) {
     const src = join(located.dir, name)
     if (existsSync(src)) cpSync(src, join(resultDir, name), { recursive: true })
   }
-  return `copied deck project ${relative(resultDir, located.dir)} -> result root`
+  const themes = copyThemeFiles(located.dir, workspaceDir, resultDir)
+  return (
+    `copied deck project ${relative(resultDir, located.dir)} -> result root` +
+    (themes.length > 0 ? ` (+ theme files ${themes.join(", ")})` : "")
+  )
 }
 
 // ── question asset provisioning (round-2 image-question fix,
@@ -1229,7 +1281,7 @@ export async function runOneAgentic(
   const located = locateArtifact(workspace)
   let placementNote: string
   if (located.kind !== "none") {
-    placementNote = placeArtifact(located, resultDir)
+    placementNote = placeArtifact(located, resultDir, workspace)
   } else if (finalText !== undefined && stripFence(finalText).length > 0) {
     const text = stripFence(finalText)
     try {
