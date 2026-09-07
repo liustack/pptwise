@@ -724,8 +724,8 @@ async function writePinnedAsset(
 }
 
 async function defaultResolvePrompt(opts: { deck: string; as: string; cwd: string }): Promise<string | undefined> {
-  const ir = await loadValidatedDeckIr(opts.deck, opts.cwd)
-  const brief = buildAssetBrief(ir)
+  const { ir, theme } = await loadValidatedDeckIr(opts.deck, opts.cwd)
+  const brief = buildAssetBrief(ir, { theme })
   const item = brief.items.find((entry) => entry.asset_id === opts.as && entry.suggested_prompt.trim() !== "")
   return item?.suggested_prompt
 }

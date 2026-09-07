@@ -24,6 +24,7 @@ import { copyFile, mkdir, readFile, readdir, stat, writeFile } from "node:fs/pro
 import { basename, extname, isAbsolute, join, relative, resolve } from "node:path"
 import { PptwiseError } from "../errors"
 import { assembleDeck, type AssembleResult, type PageContent } from "../spec/assemble"
+import type { ThemeDefinition } from "../themes/definitions"
 import { decksRoot } from "./home"
 import { EXT_BY_MIME, loadIrFile } from "./load-ir"
 
@@ -36,11 +37,12 @@ export const PAGES_DIRNAME = "pages"
 export const ASSETS_DIRNAME = "assets"
 /** Optional deck-local brand theme file (brand-extract wave, 裁定 3's
  *  zero-flag convention): a `theme.json` sitting in the deck project
- *  directory — typically `pptwise brand extract`'s output — is auto-loaded
- *  (registered through `registerTheme`) before the deck is assembled, so the
- *  spec/IR can reference its `id` with no `--theme-file` flag. Loading
- *  happens in `./commands.ts` (`loadDeckTarget`/`runAssemble`), not here —
- *  this module stays a pure fs shell. */
+ *  directory — typically `pptwise brand extract`'s output — is resolved by
+ *  name before the deck is assembled and its compiled definition is passed
+ *  into `readDeckDir`, so the spec/IR can reference its `id` with no
+ *  `--theme-file` flag. Lookup happens in `./commands.ts`
+ *  (`loadDeckTarget`/`runAssemble`), not here — this module stays a pure fs
+ *  shell. */
 export const THEME_FILENAME = "theme.json"
 
 // ── path-traversal safety (CWE-22 defense) ──────────────────────────────
@@ -381,13 +383,13 @@ function specThemeFromRaw(spec: unknown): string | undefined {
   return typeof theme === "string" ? theme : undefined
 }
 
-export async function readDeckDir(dir: string): Promise<DeckDirResult> {
+export async function readDeckDir(dir: string, opts?: { theme?: ThemeDefinition }): Promise<DeckDirResult> {
   const deckDir = resolve(dir)
   const specPath = join(deckDir, SPEC_FILENAME)
   const spec = await readSpecFile(deckDir)
   const specTheme = specThemeFromRaw(spec)
   const pages = await readPages(deckDir)
-  const { ir } = assembleDeck(spec, pages as Record<string, PageContent>)
+  const { ir } = assembleDeck(spec, pages as Record<string, PageContent>, opts)
   const images = await scanAssets(deckDir)
   const merged = { ...ir, assets: { images: { ...ir.assets.images, ...images } } }
   return {

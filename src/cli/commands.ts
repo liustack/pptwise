@@ -14,6 +14,7 @@ import { CANVAS_H_PX, CANVAS_W_PX } from "../constants"
 import { PptwiseError } from "../errors"
 import { VERSION } from "../version"
 import type { PptxIR } from "../ir"
+import type { ThemeDefinition } from "../themes/definitions"
 import { disassembleDeck, type PageContent } from "../spec/assemble"
 import { formatInvalidSpecError, specJsonSchema, resolveSpecThemeId, validateSpec } from "../spec"
 import { AUDIENCE_VALUES, PACING_BUDGETS, STRATEGY_DEFINITIONS, NARRATIVE_PRESETS, resolveNarrative, type NarrativeProfile } from "../narrative"
@@ -49,7 +50,7 @@ import {
 import {
   assertThemeId,
   assertThemeRebind,
-  registerThemeSelection,
+  resolveThemeSelection,
   resolveThemeByName,
   themeFileFromPreset,
   themeNameFromUnknown,
@@ -70,13 +71,17 @@ type UserConfigHit = Awaited<ReturnType<typeof findUserConfig>>
  *  `decksDir` — see {@link resolveDecksDirSource}). */
 type ProjectConfigHit = Awaited<ReturnType<typeof findConfig>>
 
-async function registerThemesFromSpecSource(
+/** The compiled definition of the theme a spec file binds, or `undefined`
+ *  when there is no spec or it names none. It is handed to `readDeckDir` so
+ *  assembly validates the spec against the same definition render will use. */
+async function resolveThemeFromSpecSource(
   specPath: string,
   opts: { startDir: string; deckDir?: string },
-): Promise<void> {
-  if (!(await pathExists(specPath))) return
+): Promise<ThemeDefinition | undefined> {
+  if (!(await pathExists(specPath))) return undefined
   const specRaw = await loadIrFile(specPath, "spec")
-  await registerThemeSelection(themeNameFromUnknown(specRaw), opts)
+  const resolved = await resolveThemeSelection(themeNameFromUnknown(specRaw), opts)
+  return resolved?.definition
 }
 
 /**
@@ -112,7 +117,11 @@ function resolveDecksDirSource(
 }
 
 /**
- * Resolve deck defaults onto the raw (pre-validation) IR.
+ * Resolve deck defaults onto the raw (pre-validation) IR and return the
+ * bound theme's compiled definition, which every later step (`validateIr`,
+ * `generatePptx`, `renderSlideSvg`, `auditDeck`, `buildAssetBrief`) takes as
+ * its `theme` option. Returns `undefined` only when nothing named a theme,
+ * in which case `validateIr` reports the missing binding itself.
  * Selection authority is spec.theme (deck project) or authored IR theme.id
  * (bare file). Assembled deck-dir IR always carries theme.id from the
  * required spec theme. Pass
@@ -139,8 +148,8 @@ export async function applyDeckConfig(
     projectHit?: ProjectConfigHit
     userHit?: UserConfigHit
   },
-): Promise<void> {
-  if (typeof raw !== "object" || raw === null) return // schema error surfaces in validateIr
+): Promise<ThemeDefinition | undefined> {
+  if (typeof raw !== "object" || raw === null) return undefined // schema error surfaces in validateIr
   const deck = raw as Record<string, unknown>
   const irTheme =
     typeof deck.theme === "object" && deck.theme !== null
@@ -149,13 +158,14 @@ export async function applyDeckConfig(
   const authoredName =
     opts.specTheme
     ?? (opts.fromDeckDir ? undefined : (typeof irTheme.id === "string" ? irTheme.id : undefined))
-  if (authoredName === undefined) return
+  if (authoredName === undefined) return undefined
   const resolved = await resolveThemeByName(authoredName, { startDir: opts.cwd, deckDir: opts.deckDir })
   await assertThemeRebind(opts.deckDir, resolved)
   deck.theme = {
     ...irTheme,
     id: resolved.id,
   }
+  return resolved.definition
 }
 
 /**
@@ -235,8 +245,8 @@ async function loadDeckTarget(
 }> {
   const target = await resolveDeckTarget(arg, resolveDecksDirSource(projectHit, userHit), cwd)
   if (await isDeckDirectory(target)) {
-    await registerThemesFromSpecSource(join(target, SPEC_FILENAME), { startDir: cwd, deckDir: target })
-    const { ir, deckDir, specTheme, specPath } = await readDeckDir(target)
+    const theme = await resolveThemeFromSpecSource(join(target, SPEC_FILENAME), { startDir: cwd, deckDir: target })
+    const { ir, deckDir, specTheme, specPath } = await readDeckDir(target, { theme })
     const stock = await loadWorkspaceStock(cwd, projectHit, deckDir, true)
     return {
       raw: mergeWorkspaceImages(ir, stock.images),
@@ -263,10 +273,13 @@ async function loadDeckTarget(
 /** Load, apply deck config, validate, and resolve local assets — the same
  *  sequence `runAssetBrief` uses, exported so `images generate` can read
  *  `suggested_prompt` without duplicating the chain. */
-export async function loadValidatedDeckIr(target: string, cwd: string): Promise<PptxIR> {
+export async function loadValidatedDeckIr(
+  target: string,
+  cwd: string,
+): Promise<{ ir: PptxIR; theme: ThemeDefinition | undefined }> {
   const [projectHit, userHit] = await Promise.all([findConfig(cwd), findUserConfig()])
   const { raw, baseDir, workspaceAssetsDir, isDir, resolvedTarget, specTheme, specPath } = await loadDeckTarget(target, cwd, projectHit, userHit)
-  await applyDeckConfig(raw, {
+  const theme = await applyDeckConfig(raw, {
     cwd,
     projectHit,
     userHit,
@@ -275,14 +288,14 @@ export async function loadValidatedDeckIr(target: string, cwd: string): Promise<
     fromDeckDir: isDir,
     deckDir: deckLookupDir(resolvedTarget, isDir),
   })
-  const v = validateIr(raw)
+  const v = validateIr(raw, { theme })
   if (!v.ok) {
     throw new PptwiseError(
       `invalid IR (${v.errors.length} issue${v.errors.length === 1 ? "" : "s"}):\n${formatIssues(v.errors)}`,
     )
   }
   await resolveLocalAssets(v.ir!, baseDir, workspaceAssetsDir)
-  return v.ir!
+  return { ir: v.ir!, theme }
 }
 
 export interface RenderOptions {
@@ -331,7 +344,7 @@ export async function runRender(irPath: string, opts: RenderOptions): Promise<st
   const cwd = opts.cwd ?? process.cwd()
   const [projectHit, userHit] = await Promise.all([findConfig(cwd), findUserConfig()])
   const { raw, baseDir, isDir, resolvedTarget, workspaceAssetsDir, specTheme, specPath } = await loadDeckTarget(irPath, cwd, projectHit, userHit)
-  await applyDeckConfig(raw, {
+  const theme = await applyDeckConfig(raw, {
     specTheme,
     specPath,
     fromDeckDir: isDir,
@@ -340,12 +353,13 @@ export async function runRender(irPath: string, opts: RenderOptions): Promise<st
     projectHit,
     userHit,
   })
-  const v = validateIr(raw)
+  const v = validateIr(raw, { theme })
   if (!v.ok) throw new PptwiseError(`invalid IR:\n${formatIssues(v.errors)}`)
   await resolveLocalAssets(v.ir!, baseDir, workspaceAssetsDir)
   const bytes = await generatePptx(v.ir!, {
     draft: opts.draft,
     allowDroppedContent: opts.allowDroppedContent,
+    theme,
   })
   const extraNotes: string[] = []
   let output: string
@@ -473,7 +487,7 @@ export async function runValidate(
 ): Promise<string> {
   const [projectHit, userHit] = await Promise.all([findConfig(cwd), findUserConfig()])
   const { raw, baseDir, isDir, resolvedTarget, workspaceAssetsDir, specTheme, specPath } = await loadDeckTarget(irPath, cwd, projectHit, userHit)
-  await applyDeckConfig(raw, {
+  const theme = await applyDeckConfig(raw, {
     specTheme,
     specPath,
     fromDeckDir: isDir,
@@ -482,7 +496,7 @@ export async function runValidate(
     projectHit,
     userHit,
   })
-  const v = validateIr(raw)
+  const v = validateIr(raw, { theme })
   if (!v.ok)
     throw new PptwiseError(
       `invalid IR (${v.errors.length} issue${v.errors.length === 1 ? "" : "s"}):\n${formatIssues(v.errors)}`,
@@ -609,7 +623,7 @@ export async function runAudit(target: string, opts: AuditOptions = {}): Promise
   const cwd = opts.cwd ?? process.cwd()
   const [projectHit, userHit] = await Promise.all([findConfig(cwd), findUserConfig()])
   const { raw, baseDir, workspaceAssetsDir, isDir, resolvedTarget, specTheme, specPath } = await loadDeckTarget(target, cwd, projectHit, userHit)
-  await applyDeckConfig(raw, {
+  const theme = await applyDeckConfig(raw, {
     specTheme,
     specPath,
     fromDeckDir: isDir,
@@ -618,14 +632,14 @@ export async function runAudit(target: string, opts: AuditOptions = {}): Promise
     projectHit,
     userHit,
   })
-  const v = validateIr(raw)
+  const v = validateIr(raw, { theme })
   if (!v.ok) {
     throw new PptwiseError(
       `invalid IR (${v.errors.length} issue${v.errors.length === 1 ? "" : "s"}):\n${formatIssues(v.errors)}`,
     )
   }
   await resolveLocalAssets(v.ir!, baseDir, workspaceAssetsDir)
-  const report = opts.pixels ? await auditDeck(v.ir!, { pixels: true }) : auditDeck(v.ir!)
+  const report = opts.pixels ? await auditDeck(v.ir!, { pixels: true, theme }) : auditDeck(v.ir!, { theme })
   const hasFindings = report.findings.length > 0
   const output = opts.json ? JSON.stringify(report, null, 2) : formatAuditReport(report, v.ir!)
   return { output, hasFindings }
@@ -708,7 +722,7 @@ export async function runAssetBrief(target: string, opts: AssetBriefOptions = {}
   const cwd = opts.cwd ?? process.cwd()
   const [projectHit, userHit] = await Promise.all([findConfig(cwd), findUserConfig()])
   const { raw, baseDir, workspaceAssetsDir, isDir, resolvedTarget, specTheme, specPath } = await loadDeckTarget(target, cwd, projectHit, userHit)
-  await applyDeckConfig(raw, {
+  const theme = await applyDeckConfig(raw, {
     specTheme,
     specPath,
     fromDeckDir: isDir,
@@ -717,14 +731,14 @@ export async function runAssetBrief(target: string, opts: AssetBriefOptions = {}
     projectHit,
     userHit,
   })
-  const v = validateIr(raw)
+  const v = validateIr(raw, { theme })
   if (!v.ok) {
     throw new PptwiseError(
       `invalid IR (${v.errors.length} issue${v.errors.length === 1 ? "" : "s"}):\n${formatIssues(v.errors)}`,
     )
   }
   await resolveLocalAssets(v.ir!, baseDir, workspaceAssetsDir)
-  const brief = buildAssetBrief(v.ir!)
+  const brief = buildAssetBrief(v.ir!, { theme })
   return opts.json ? JSON.stringify(brief, null, 2) : formatAssetBriefReport(brief)
 }
 
@@ -744,8 +758,8 @@ export async function runAssetBrief(target: string, opts: AssetBriefOptions = {}
 export async function runSpecValidate(specPath: string): Promise<string> {
   const raw = await loadIrFile(specPath, "spec")
   const specDir = dirname(resolve(specPath))
-  await registerThemeSelection(themeNameFromUnknown(raw), { startDir: specDir, deckDir: specDir })
-  const v = validateSpec(raw)
+  const resolved = await resolveThemeSelection(themeNameFromUnknown(raw), { startDir: specDir, deckDir: specDir })
+  const v = validateSpec(raw, { theme: resolved?.definition })
   if (!v.ok) {
     throw new PptwiseError(formatInvalidSpecError(v.errors))
   }
@@ -1066,10 +1080,10 @@ export async function runThemeTry(idsRaw: string, opts: ThemeTryOptions = {}): P
     const resolved = await resolveThemeByName(name, { startDir: cwd })
     const raw = structuredClone(THEME_TRY_SAMPLE_IR) as { theme: { id: string }; slides: unknown[]; filename: string }
     raw.theme = { id: resolved.id }
-    const v = validateIr(raw)
+    const v = validateIr(raw, { theme: resolved.definition })
     if (!v.ok) throw new PptwiseError(`invalid IR:\n${formatIssues(v.errors)}`)
     const ir = v.ir!
-    const svgs = ir.slides.map((_, index) => renderSlideSvg(ir, index))
+    const svgs = ir.slides.map((_, index) => renderSlideSvg(ir, index, { theme: resolved.definition }))
     columns.push({ id: resolved.id, slides: contactSheetSlidesFromIr(ir, svgs) })
   }
   let resolvedOut: string
@@ -1201,6 +1215,9 @@ export interface PreviewOptions {
  */
 interface DeckRenderResult {
   ir: PptxIR
+  /** The bound theme's compiled definition, carried so the audit half of the
+   *  preview draws from the same object the slides were rendered with. */
+  theme: ThemeDefinition | undefined
   svgs: string[]
   /** The deck directory (`isDir: true`) or the single IR file (`isDir:
    *  false`) `target` resolved to — see {@link loadDeckTarget}'s own doc
@@ -1217,7 +1234,7 @@ async function renderDeckSlides(
   const cwd = opts.cwd ?? process.cwd()
   const [projectHit, userHit] = await Promise.all([findConfig(cwd), findUserConfig()])
   const { raw, baseDir, isDir, resolvedTarget, workspaceAssetsDir, specTheme, specPath } = await loadDeckTarget(target, cwd, projectHit, userHit)
-  await applyDeckConfig(raw, {
+  const theme = await applyDeckConfig(raw, {
     specTheme,
     specPath,
     fromDeckDir: isDir,
@@ -1226,12 +1243,12 @@ async function renderDeckSlides(
     projectHit,
     userHit,
   })
-  const v = validateIr(raw)
+  const v = validateIr(raw, { theme })
   if (!v.ok) throw new PptwiseError(`invalid IR:\n${formatIssues(v.errors)}`)
   await resolveLocalAssets(v.ir!, baseDir, workspaceAssetsDir)
   const ir = v.ir!
-  const svgs = ir.slides.map((_, i) => renderSlideSvg(ir, i))
-  return { ir, svgs, resolvedTarget, isDir, normalized: v.normalized }
+  const svgs = ir.slides.map((_, i) => renderSlideSvg(ir, i, { theme }))
+  return { ir, theme, svgs, resolvedTarget, isDir, normalized: v.normalized }
 }
 
 /**
@@ -1259,9 +1276,10 @@ async function renderDeckSlides(
 function buildDeckAuditAndHtml(
   ir: PptxIR,
   svgs: string[],
+  theme: ThemeDefinition | undefined,
 ): { html: string; findings: AuditFinding[]; checks?: AuditChecks } {
   const hasPlaceholder = ir.slides.some((slide) => slide.placeholder)
-  const auditReport = hasPlaceholder ? undefined : auditDeck(ir)
+  const auditReport = hasPlaceholder ? undefined : auditDeck(ir, { theme })
   const findings = auditReport?.findings ?? []
   const html = buildPreviewHtml({
     title: ir.filename,
@@ -1310,7 +1328,7 @@ export async function buildDeckPreview(
   opts: { cwd?: string } = {},
 ): Promise<DeckPreviewResult> {
   const rendered = await renderDeckSlides(target, opts)
-  const { html, findings, checks } = buildDeckAuditAndHtml(rendered.ir, rendered.svgs)
+  const { html, findings, checks } = buildDeckAuditAndHtml(rendered.ir, rendered.svgs, rendered.theme)
   return { ...rendered, html, findings, checks }
 }
 
@@ -1370,7 +1388,7 @@ async function resolvePreviewOutDir(
 
 export async function runPreview(irPath: string, outDir?: string, opts: PreviewOptions = {}): Promise<string> {
   const cwd = opts.cwd ?? process.cwd()
-  const { ir, svgs, normalized, isDir, resolvedTarget } = await renderDeckSlides(irPath, {
+  const { ir, theme, svgs, normalized, isDir, resolvedTarget } = await renderDeckSlides(irPath, {
     cwd,
   })
   // After render, not before (S1 review carry) — see this function's own doc comment.
@@ -1386,7 +1404,7 @@ export async function runPreview(irPath: string, outDir?: string, opts: PreviewO
   const aliasNote = normalizedNote(normalized)
   if (aliasNote) notes.push(aliasNote)
   if (opts.htmlOut) {
-    const { html, findings, checks } = buildDeckAuditAndHtml(ir, svgs)
+    const { html, findings, checks } = buildDeckAuditAndHtml(ir, svgs, theme)
     const htmlPath = join(resolvedOut, "preview.html")
     await writeFile(htmlPath, html)
 
@@ -1507,13 +1525,13 @@ export async function runAssemble(target: string, opts: AssembleOptions = {}): P
   if ((await pathExists(dir)) && !(await isDeckDirectory(dir))) {
     throw new PptwiseError(`expected a deck project directory: ${dir}`)
   }
-  // Same deck-local theme.json auto-load `loadDeckTarget` performs (brand-
-  // extract wave) — assemble bypasses that helper but hits the same
-  // spec-level installed-theme gate inside readDeckDir's assemble step.
-  if (await isDeckDirectory(dir)) {
-    await registerThemesFromSpecSource(join(dir, SPEC_FILENAME), { startDir: cwd, deckDir: dir })
-  }
-  const { ir, deckDir } = await readDeckDir(dir)
+  // Same deck-local theme.json lookup `loadDeckTarget` performs (brand-
+  // extract wave) — assemble bypasses that helper but hands the same
+  // definition to readDeckDir's assemble step, whose spec gate reads it.
+  const theme = (await isDeckDirectory(dir))
+    ? await resolveThemeFromSpecSource(join(dir, SPEC_FILENAME), { startDir: cwd, deckDir: dir })
+    : undefined
+  const { ir, deckDir } = await readDeckDir(dir, { theme })
   const outPath = opts.output ? resolve(cwd, opts.output) : join(deckDir, "deck.json")
   const outDir = dirname(outPath)
   const outIr = outDir === deckDir ? ir : withRewrittenAssetPaths(ir, deckDir, outDir)

@@ -2,8 +2,8 @@ import { dirname, join, resolve } from "node:path"
 import { THEME_ID_CONSTRAINT, THEME_ID_PATTERN } from "@/ir"
 import { PptwiseError } from "../errors"
 import { parseBrandThemeFile } from "../themes/brand-theme-file"
-import { getThemeDefinition, installThemeFile, type ThemeDefinition } from "../themes/definitions"
-import { CANONICAL_THEME_IDS } from "../themes"
+import { installThemeFile, THEME_DEFINITIONS, type ThemeDefinition } from "../themes/definitions"
+import { CANONICAL_THEME_IDS, type CanonicalThemeId } from "../themes"
 import { copyThemePreset } from "../themes/presets"
 import { assertNotRetiredThemeId } from "../themes/retired-ids"
 import {
@@ -16,9 +16,16 @@ import { loadIrFile } from "./load-ir"
 
 export const WORKSPACE_THEMES_DIRNAME = "themes"
 
+/**
+ * The outcome of a name lookup. `definition` is the compiled theme the
+ * caller passes down the render chain as the `theme` option of `validateIr`,
+ * `renderSlideSvg`, `generatePptx`, `auditDeck`, and `buildAssetBrief`. A
+ * built-in carries its factory definition. A file carries the definition
+ * compiled from that file, owned by this call alone.
+ */
 export type ResolvedTheme =
-  | { kind: "file"; id: string; path: string; file: ThemeFile }
-  | { kind: "builtin"; id: string }
+  | { kind: "file"; id: string; path: string; file: ThemeFile; definition: ThemeDefinition }
+  | { kind: "builtin"; id: string; definition: ThemeDefinition }
 
 function sortKeysDeep(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(sortKeysDeep)
@@ -62,13 +69,8 @@ async function readThemeFile(path: string): Promise<ThemeFile> {
   return parseBrandThemeFile(raw, path)
 }
 
-function isCanonicalThemeId(name: string): boolean {
+function isCanonicalThemeId(name: string): name is CanonicalThemeId {
   return (CANONICAL_THEME_IDS as readonly string[]).includes(name)
-}
-
-export function menuForThemeId(id: string): Menu {
-  const def = getThemeDefinition(id)
-  return def.menu
 }
 
 function publicStyle(style: ThemeDefinition["style"], id: string): ThemeFile["style"] {
@@ -126,8 +128,8 @@ async function tryParseThemeFile(path: string): Promise<ThemeFile | undefined> {
 }
 
 async function acceptThemeFile(path: string, file: ThemeFile): Promise<ResolvedTheme> {
-  installThemeFile(file)
-  return { kind: "file", id: file.id, path, file }
+  const definition = installThemeFile(file)
+  return { kind: "file", id: file.id, path, file, definition }
 }
 
 async function acceptIfNameMatches(
@@ -214,7 +216,7 @@ export async function resolveThemeByName(
   const workspaceHit = await resolveWorkspaceThemeFile(opts.startDir, name)
   if (workspaceHit !== undefined) return workspaceHit
 
-  if (isCanonicalThemeId(name)) return { kind: "builtin", id: name }
+  if (isCanonicalThemeId(name)) return { kind: "builtin", id: name, definition: THEME_DEFINITIONS[name] }
 
   const places = [
     opts.deckDir !== undefined ? `deck directory ${opts.deckDir}` : undefined,
@@ -235,16 +237,15 @@ export async function assertThemeRebind(deckDir: string | undefined, resolved: R
 
   const bound = parseBrandThemeFile(await loadIrFile(boundPath, "theme"), boundPath)
   const nextId = resolved.id
-  const nextMenu = resolved.kind === "file" ? resolved.file.menu : menuForThemeId(resolved.id)
+  const nextMenu = resolved.definition.menu
   if (menusEqual(bound.menu, nextMenu)) return
   throw new PptwiseError(`cannot rebind theme "${bound.id}" to "${nextId}": menus differ. ${REBIND_SUFFIX}`)
 }
 
-/** Resolve and register the requested theme through the ordinary lookup
- * route. A missing authored name wins before any adjacent theme file is
- * read. A deck-local theme.json is installed only when its id matches the
- * requested name. */
-export async function registerThemeSelection(
+/** Resolve the requested theme through the ordinary lookup route. A missing
+ * authored name wins before any adjacent theme file is read. A deck-local
+ * theme.json is accepted only when its id matches the requested name. */
+export async function resolveThemeSelection(
   name: string | undefined,
   opts: { startDir: string; deckDir?: string },
 ): Promise<ResolvedTheme | undefined> {

@@ -2,9 +2,8 @@ import { createHash } from "node:crypto"
 import { renderSlideSvg } from "../api"
 import type { PptxIR, Slide } from "../ir"
 import { CANONICAL_THEME_IDS } from "../themes"
-import { __resetRegisteredThemes } from "../themes/definitions"
+import { __resetRegisteredThemes, THEME_DEFINITIONS } from "../themes/definitions"
 import { registerTestTheme } from "../themes/test-fixtures"
-import { getThemeDefinition } from "../themes/definitions"
 
 /**
  * Unassigned-theme emphasis byte-nail matrix. Shared by the colocated test
@@ -13,7 +12,7 @@ import { getThemeDefinition } from "../themes/definitions"
  */
 
 export const UNASSIGNED = CANONICAL_THEME_IDS.filter(
-  (themeId) => getThemeDefinition(themeId).emphasis === undefined,
+  (themeId) => THEME_DEFINITIONS[themeId].emphasis === undefined,
 )
 
 export const MARKED_HEADING = "年度**增长结论**与下一步投入"

@@ -11,7 +11,7 @@ import type pptxgen from "pptxgenjs"
 import { PptxIRSchema, type PptxIR } from "@/ir"
 import { PptwiseError } from "../errors"
 import { inlinePptxAssets } from "../platform/inline-assets"
-import { resolveStyle } from "@/themes"
+import { getThemeDefinition, type ThemeDefinition } from "../themes/definitions"
 import { defineMastersForIR } from "./master-builder"
 import {
   renderOps,
@@ -96,7 +96,12 @@ function checkContentDropGate(dropped: DroppedPage[]): void {
 
 export async function generatePptxBlob(
   input: PptxIR,
-  opts?: { allowDroppedContent?: boolean },
+  opts?: {
+    allowDroppedContent?: boolean
+    /** The bound theme, by value. Omitted, `ir.theme.id` names a built-in
+     *  or SDK-registered theme. */
+    theme?: ThemeDefinition
+  },
 ): Promise<Blob> {
   // `kind` is an optional file-type discriminator some callers attach to the
   // IR (e.g. `{ kind: "pptx", ...IR }`), not an IR field — the strict
@@ -112,8 +117,8 @@ export async function generatePptxBlob(
   pptx.defineLayout({ name: "LAYOUT_WIDE", width: 13.33, height: 7.5 })
   pptx.layout = "LAYOUT_WIDE"
 
-  const tokens = resolveStyle(ir.theme.id)
-  defineMastersForIR(pptx, tokens)
+  const theme = opts?.theme ?? getThemeDefinition(ir.theme.id)
+  defineMastersForIR(pptx, theme.style)
 
   const gradientPatches: GradientFillPatch[] = []
   // Threaded through to `auditPptxPackage` below (alt-emission-closure fix
@@ -128,7 +133,7 @@ export async function generatePptxBlob(
   const droppedPages: DroppedPage[] = []
   ir.slides.forEach((slide, index) => {
     const s = pptx.addSlide({ masterName: slide.type })
-    const { ops, dropped, drops } = slideToRender(ir, slide, index)
+    const { ops, dropped, drops } = slideToRender(ir, slide, index, theme)
     if (dropped > 0) {
       droppedPages.push({ page: index + 1, ...(slide.id ? { slideId: slide.id } : {}), count: dropped, drops })
     }

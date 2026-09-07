@@ -22,15 +22,26 @@ import { PptwiseError } from "./errors"
 import type { PptxIR } from "./ir"
 import { generatePptxBlob } from "./pptx/generate"
 import { slideToSvgMarkup } from "./render/render-slide"
+import type { ThemeDefinition } from "./themes/definitions"
 import { formatIssues, validateIr } from "./validate-core"
 
+/**
+ * Options shared by the entry points that draw a page. `theme` is the bound
+ * theme's definition, passed by value from whoever resolved it (the CLI's
+ * name lookup, or an SDK caller's own object). Omitted, `ir.theme.id` names
+ * a built-in or an SDK-registered theme, and an unknown id is an error.
+ */
+export interface RenderThemeOptions {
+  theme?: ThemeDefinition
+}
+
 /** Render a single slide to standalone SVG markup (preview / self-check). */
-export function renderSlideSvg(ir: PptxIR, slideIndex: number): string {
+export function renderSlideSvg(ir: PptxIR, slideIndex: number, opts?: RenderThemeOptions): string {
   const slide = ir.slides[slideIndex]
   if (!slide) {
     throw new PptwiseError(`slide index ${slideIndex} out of range — deck has ${ir.slides.length} slides`)
   }
-  return slideToSvgMarkup(ir, slide, slideIndex)
+  return slideToSvgMarkup(ir, slide, slideIndex, opts?.theme)
 }
 
 /**
@@ -93,11 +104,11 @@ function checkDraftGate(ir: PptxIR): void {
  */
 export async function generatePptx(
   input: unknown,
-  opts?: { draft?: boolean; allowDroppedContent?: boolean },
+  opts?: { draft?: boolean; allowDroppedContent?: boolean } & RenderThemeOptions,
 ): Promise<Uint8Array> {
-  const v = validateIr(input)
+  const v = validateIr(input, { theme: opts?.theme })
   if (!v.ok) throw new PptwiseError(`invalid IR:\n${formatIssues(v.errors)}`)
   if (!opts?.draft) checkDraftGate(v.ir!)
-  const blob = await generatePptxBlob(v.ir!, { allowDroppedContent: opts?.allowDroppedContent })
+  const blob = await generatePptxBlob(v.ir!, { allowDroppedContent: opts?.allowDroppedContent, theme: opts?.theme })
   return new Uint8Array(await blob.arrayBuffer())
 }

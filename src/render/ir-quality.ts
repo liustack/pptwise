@@ -10,6 +10,7 @@ import { PACING_BUDGETS, resolveNarrative, type NarrativeProfile, type Pacing } 
 import { CAPACITY } from "../audit/capacity"
 import { findImageSelection } from "../layouts/find-image"
 import { resolveEffectiveFace } from "./layout-selection"
+import type { ThemeDefinition } from "../themes/definitions"
 import { measureTextUnits } from "../lib/svg-text-layout"
 import { buildChartModel } from "../components/chart-model"
 import { CATEGORY_FOLDING_TYPES } from "@/ir/components/chart"
@@ -157,7 +158,13 @@ function pushItemCountOverflow(
 
 // ── per-slide checks ──
 
-function checkSlide(ir: PptxIR, slide: Slide, index: number, resolvedAxes: NarrativeProfile): QualityIssue[] {
+function checkSlide(
+  ir: PptxIR,
+  slide: Slide,
+  index: number,
+  resolvedAxes: NarrativeProfile,
+  theme: ThemeDefinition | undefined,
+): QualityIssue[] {
   const issues: QualityIssue[] = []
   const budget = PACING_BUDGETS[resolvedAxes.pacing]
 
@@ -206,7 +213,7 @@ function checkSlide(ir: PptxIR, slide: Slide, index: number, resolvedAxes: Narra
   // four image-family takeovers. In that case only the editorial budget
   // applies.
   if (slide.type === "content") {
-    const effective = resolveEffectiveFace(ir, slide)
+    const effective = resolveEffectiveFace(ir, slide, theme)
     const layoutId = effective.layoutId
     const layoutCapacity = effective.layout?.slots.find((slot) => slot.name === "body")?.capacity
     const hasTakeoverImageSlot = effective.route === "takeover" && effective.layout?.slots.some(
@@ -498,6 +505,7 @@ function checkSlide(ir: PptxIR, slide: Slide, index: number, resolvedAxes: Narra
 export function checkIrQuality(
   ir: PptxIR,
   resolvedAxes: NarrativeProfile = resolveNarrative(undefined),
+  theme?: ThemeDefinition,
 ): QualityIssue[] {
   const issues: QualityIssue[] = []
 
@@ -517,7 +525,7 @@ export function checkIrQuality(
     // 内容规则（missing_heading/density/bullets_overflow 等），schema 校验
     // 仍照常在 validateIr 里跑。
     if (ir.slides[i].placeholder) continue
-    issues.push(...checkSlide(ir, ir.slides[i], i, resolvedAxes))
+    issues.push(...checkSlide(ir, ir.slides[i], i, resolvedAxes, theme))
   }
 
   return issues

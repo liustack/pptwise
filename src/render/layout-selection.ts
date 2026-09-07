@@ -11,8 +11,7 @@
  */
 import { KIND_VALUES, type PageKind, type PptxIR, type Slide } from "@/ir"
 import { getLayout, type LayoutDefinition } from "../layouts/registry"
-import { resolveStyle } from "../themes"
-import { getThemeDefinition } from "../themes/definitions"
+import { getThemeDefinition, type ThemeDefinition } from "../themes/definitions"
 import type { Menu, MenuEntry } from "../themes/schema"
 
 /** Resolve one menu entry without consulting registry or render state. */
@@ -60,9 +59,18 @@ function pageKind(slide: Slide): PageKind | undefined {
  * registry face for slot validation even though its bespoke renderer draws
  * the page. Registered image takeovers are ordinary menu faces and are
  * classified from their layout declaration here.
+ *
+ * `theme` is the bound theme's definition, carried by the caller. Every
+ * production caller passes the one it was handed. Omitting it looks
+ * `ir.theme.id` up in the built-in table plus SDK-registered themes, which
+ * is what an isolated test wants and what a deck or workspace theme file
+ * must never rely on.
  */
-export function resolveEffectiveFace(ir: PptxIR, slide: Slide): EffectiveFace {
-  const theme = getThemeDefinition(ir.theme.id)
+export function resolveEffectiveFace(
+  ir: PptxIR,
+  slide: Slide,
+  theme: ThemeDefinition = getThemeDefinition(ir.theme.id),
+): EffectiveFace {
   if (theme.menu === undefined) {
     return {
       route: "unresolved",
@@ -103,8 +111,7 @@ export function resolveEffectiveFace(ir: PptxIR, slide: Slide): EffectiveFace {
     }
   }
 
-  const tokens = resolveStyle(ir.theme.id)
-  const background = slide.background ?? tokens.defaultBackgrounds[slide.type]
+  const background = slide.background ?? theme.style.defaultBackgrounds[slide.type]
   if (background.kind === "asset" && (slide.type === "cover" || slide.type === "chapter")) {
     return { route: "image-cover", entry, layoutId, layout }
   }
@@ -124,8 +131,12 @@ export interface EffectiveLayoutBodyCapacity {
 }
 
 /** Read the geometric density term from the exact face selected by menu. */
-export function resolveEffectiveLayoutBodyCapacity(ir: PptxIR, slide: Slide): EffectiveLayoutBodyCapacity {
-  const effective = resolveEffectiveFace(ir, slide)
+export function resolveEffectiveLayoutBodyCapacity(
+  ir: PptxIR,
+  slide: Slide,
+  theme?: ThemeDefinition,
+): EffectiveLayoutBodyCapacity {
+  const effective = resolveEffectiveFace(ir, slide, theme)
   const capacity = effective.layout?.slots.find((slot) => slot.name === "body")?.capacity
   return { layoutId: effective.layoutId, capacity }
 }

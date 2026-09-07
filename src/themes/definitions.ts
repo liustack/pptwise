@@ -491,12 +491,31 @@ export function installThemeFile(input: unknown): ThemeDefinition {
   return installParsedThemeFile(parseThemeFile(input))
 }
 
-function installParsedThemeFile(file: ThemeFile): ThemeDefinition {
+/**
+ * Compile a complete v2 theme file into a definition the render chain can
+ * carry by value. Every gate `registerTheme` runs is run here (schema,
+ * contrast floor, menu contract, unmeasured-font warning), and nothing is
+ * written anywhere: the caller owns the returned object and hands it to
+ * `validateIr`, `renderSlideSvg`, `generatePptx`, and friends as their
+ * `theme` option. The CLI's name lookup uses this for a deck or workspace
+ * theme file, so two requests in one process can each hold a different
+ * definition under the same id without seeing each other.
+ */
+export function compileThemeDefinition(input: unknown): ThemeDefinition {
+  return compileCheckedThemeFile(parseThemeFile(input))
+}
+
+function compileCheckedThemeFile(file: ThemeFile): ThemeDefinition {
   const def = compileThemeFile(file)
   assertContrastFloor(def.id, def.style)
   assertMenuContract(def.id, def.menu)
   warnUnmeasuredFace(def.id, "heading", def.style.fonts.heading)
   warnUnmeasuredFace(def.id, "body", def.style.fonts.body)
+  return def
+}
+
+function installParsedThemeFile(file: ThemeFile): ThemeDefinition {
+  const def = compileCheckedThemeFile(file)
   REGISTERED_THEMES.set(def.id, def)
   return def
 }

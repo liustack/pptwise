@@ -1,7 +1,7 @@
 import type { PptxIR, Slide } from "@/ir"
 import type { ComponentCtx } from "../components/types"
 import { CONF_LABEL } from "../lib/conf-labels"
-import { resolveBrand } from "../themes/definitions"
+import { resolveBrand, type ThemeDefinition } from "../themes/definitions"
 import { FOOTER_DIVIDER_Y } from "./branding-geometry"
 import { resolveDeckBranding, type PageRenderContext } from "./page-context"
 
@@ -16,11 +16,15 @@ export function Branding({
   slide,
   ctx,
   page,
+  theme,
 }: {
   ir: PptxIR
   slide: Slide
   ctx: ComponentCtx
   page?: PageRenderContext
+  /** The bound theme, carried by `FullSlideSvg`. Omitted only by isolated
+   *  tests, which then read the built-in under `ir.theme.id`. */
+  theme?: ThemeDefinition
 }) {
   const { meta, brand, assets } = ir
   // Deck-level branding posture. Omitted = "cover-only": cover and chapter keep
@@ -57,7 +61,7 @@ export function Branding({
   // bulletin 持有 suppressFooterOnCardContent，其余主题不设 = 默认 false）。
   const bgAsset =
     slide.background?.kind === "asset" ? assets.images[slide.background.asset_id] : null
-  const brandConfig = resolveBrand(ir.theme.id)
+  const brandConfig = theme?.brand ?? resolveBrand(ir.theme.id)
   const cardBgSuppressesFooter =
     Boolean(brandConfig.suppressFooterOnCardContent) &&
     slide.type === "content" &&

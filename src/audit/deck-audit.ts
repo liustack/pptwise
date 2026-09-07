@@ -1,5 +1,6 @@
 import type { PptxIR } from "@/ir"
 import { renderSlideSvg } from "../api"
+import type { ThemeDefinition } from "../themes/definitions"
 import { PptwiseError } from "../errors"
 import { measureMonoTextUnits, measureTextUnits } from "../lib/svg-text-layout"
 import { getPlatform } from "../platform/registry"
@@ -58,6 +59,9 @@ export interface AuditReport {
  *  own doc comment for the overload contract this shape backs. */
 export interface AuditDeckOptions {
   pixels?: boolean
+  /** The bound theme, by value. Omitted, `ir.theme.id` names a built-in or
+   *  SDK-registered theme. */
+  theme?: ThemeDefinition
 }
 
 // ────────────────────────────────────────────────────────────────────────
@@ -2567,7 +2571,10 @@ function monotonyFindings(ir: PptxIR): AuditFinding[] {
  * same deterministic pass first and layer pixel-contrast findings on top,
  * without duplicating the render-and-walk loop.
  */
-function runDeterministicAudit(ir: PptxIR): { findings: AuditFinding[]; pagesAudited: number; pagesSkipped: number } {
+function runDeterministicAudit(
+  ir: PptxIR,
+  theme: ThemeDefinition | undefined,
+): { findings: AuditFinding[]; pagesAudited: number; pagesSkipped: number } {
   const findings: AuditFinding[] = []
   let pagesAudited = 0
   let pagesSkipped = 0
@@ -2581,7 +2588,7 @@ function runDeterministicAudit(ir: PptxIR): { findings: AuditFinding[]; pagesAud
     pagesAudited++
 
     const slideId = slide.id
-    const markup = renderSlideSvg(ir, i)
+    const markup = renderSlideSvg(ir, i, { theme })
 
     findings.push(...overflowFindings(markup, page, slideId))
     findings.push(...contrastFindings(markup, page, slideId))
@@ -2657,14 +2664,14 @@ function assertValidatedIrShape(ir: unknown): asserts ir is PptxIR {
  * auditDeck(ir, { pixels: true }) : auditDeck(ir)` (`cli/commands.ts`'s
  * `runAudit` does exactly this).
  */
-export function auditDeck(ir: PptxIR, opts?: { pixels?: false }): AuditReport
-export function auditDeck(ir: PptxIR, opts: { pixels: true }): Promise<AuditReport>
+export function auditDeck(ir: PptxIR, opts?: { pixels?: false; theme?: ThemeDefinition }): AuditReport
+export function auditDeck(ir: PptxIR, opts: { pixels: true; theme?: ThemeDefinition }): Promise<AuditReport>
 export function auditDeck(ir: PptxIR, opts: AuditDeckOptions = {}): AuditReport | Promise<AuditReport> {
   assertValidatedIrShape(ir)
-  const { findings, pagesAudited, pagesSkipped } = runDeterministicAudit(ir)
+  const { findings, pagesAudited, pagesSkipped } = runDeterministicAudit(ir, opts.theme)
   const report: AuditReport = { findings, pagesAudited, pagesSkipped, checks: { svg: "completed", pixels: "not-requested" } }
   if (!opts.pixels) return report
-  return runPixelPass(ir, report)
+  return runPixelPass(ir, report, opts.theme)
 }
 
 /**
@@ -2685,9 +2692,9 @@ export function auditDeck(ir: PptxIR, opts: AuditDeckOptions = {}): AuditReport 
  * — is never even loaded for the far more common call that never passes
  * `pixels: true`.
  */
-async function runPixelPass(ir: PptxIR, report: AuditReport): Promise<AuditReport> {
+async function runPixelPass(ir: PptxIR, report: AuditReport, theme: ThemeDefinition | undefined): Promise<AuditReport> {
   const { runPixelContrastAudit } = await import("./pixel-audit")
-  const pixelFindings = await runPixelContrastAudit(ir)
+  const pixelFindings = await runPixelContrastAudit(ir, theme)
   return {
     ...report,
     findings: [...report.findings, ...pixelFindings],

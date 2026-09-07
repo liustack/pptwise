@@ -1,7 +1,6 @@
 import type { Component, PptxIR, Slide } from "@/ir"
 import { renderSlideSvg } from "../api"
 import { getPlatform } from "../platform/registry"
-import { resolveStyle } from "../themes"
 import { CANONICAL_THEME_IDS, THEME_LABELS, type CanonicalThemeId } from "../themes/index"
 import { getThemeDefinition, type ThemeDefinition } from "../themes/definitions"
 import type { StyleColors } from "../themes/tokens"
@@ -353,10 +352,9 @@ function buildPrompt(mood: AssetBriefMood, palette: AssetBriefPalette, frame: As
  * false` shared items so the count of components sharing the id is still
  * fully visible to a reader of the brief.
  */
-export function buildAssetBrief(ir: PptxIR): AssetBrief {
-  const themeDef = getThemeDefinition(ir.theme.id)
-  const tokens = resolveStyle(ir.theme.id)
-  const palette = buildPalette(tokens.colors)
+export function buildAssetBrief(ir: PptxIR, opts?: { theme?: ThemeDefinition }): AssetBrief {
+  const themeDef = opts?.theme ?? getThemeDefinition(ir.theme.id)
+  const palette = buildPalette(themeDef.style.colors)
   const mood = buildMood(ir.theme.id, themeDef)
 
   const occurrences: { slideIndex: number; component: ImageComponent }[] = []
@@ -374,7 +372,7 @@ export function buildAssetBrief(ir: PptxIR): AssetBrief {
 
   const framesBySlide = new Map<number, Map<string, RawImageFrame[]>>()
   for (const slideIndex of new Set(occurrences.map((o) => o.slideIndex))) {
-    framesBySlide.set(slideIndex, extractImageFrames(renderSlideSvg(renderIr, slideIndex)))
+    framesBySlide.set(slideIndex, extractImageFrames(renderSlideSvg(renderIr, slideIndex, { theme: themeDef })))
   }
 
   const items: AssetBriefItem[] = []

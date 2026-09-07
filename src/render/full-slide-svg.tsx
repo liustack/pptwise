@@ -2,7 +2,6 @@ import { Children, Fragment, cloneElement, isValidElement, type ReactElement, ty
 import type { BackgroundSpec, Component, PptxIR, Slide } from "@/ir"
 import { PACING_BUDGETS, resolveNarrative, type NarrativeProfile } from "@/narrative"
 import type { StyleTokens } from "../themes/tokens"
-import { resolveStyle } from "../themes"
 import { CANVAS_W_PX, CANVAS_H_PX } from "../constants"
 import { resolveFontStack } from "./fonts"
 import type { ComponentCtx } from "../components/types"
@@ -18,7 +17,7 @@ import { CONTENT_LAYOUTS } from "../layouts/index-content"
 import { ENDING_LAYOUTS } from "../layouts/index-ending"
 import { MOTIFS } from "../motifs"
 import { treeStepsAside } from "./step-aside"
-import { getThemeDefinition, resolveThemeEmphasis } from "../themes/definitions"
+import { getThemeDefinition, resolveThemeEmphasis, type ThemeDefinition } from "../themes/definitions"
 import { resolveEffectiveFace } from "./layout-selection"
 import { partitionSvgDepth, type SvgDepthLayers } from "./depth-contract/partition"
 import { enforceMidgroundContract, resolveMidgroundBackground } from "./depth-contract/safety"
@@ -191,6 +190,13 @@ export interface FullSlideSvgProps {
   ir: PptxIR
   slide: Slide
   index: number
+  /**
+   * The bound theme's definition, carried from the entry point that
+   * resolved it. Every production caller passes it. Omitted, the built-in
+   * (or SDK-registered) theme under `ir.theme.id` is used, which is what
+   * an isolated layout test wants.
+   */
+  theme?: ThemeDefinition
   className?: string
   preserveAspectRatio?: string
 }
@@ -244,10 +250,12 @@ export function FullSlideSvg({
   ir,
   slide,
   index,
+  theme,
   className,
   preserveAspectRatio,
 }: FullSlideSvgProps) {
-  const tokens = resolveStyle(ir.theme.id)
+  const themeDef = theme ?? getThemeDefinition(ir.theme.id)
+  const tokens = themeDef.style
   // The theme's own default background for this slide type, independent of
   // any per-slide `slide.background` override — still needed below as
   // `autoScrimColor`'s source (an asset background's scrim always pulls
@@ -286,23 +294,28 @@ export function FullSlideSvg({
   // Theme `chartPalette` declared order is the series order. Offset 0 is
   // the identity rotation (`./chart-palette.ts`).
   const chartPaletteOffset = 0
-  const ctx = buildCtx(
-    tokens,
-    ir.assets.images,
-    ir.meta.animation?.elements === "auto" ? slide.components : undefined,
-    defaultBg,
-    bodyFontPx,
-    chartPaletteOffset,
-  )
+  // The emphasis stroke comes from the definition in hand, not from a lookup
+  // by id: a deck or workspace theme file that keeps a built-in id may
+  // declare a different stroke from the factory preset.
+  const ctx: ComponentCtx = {
+    ...buildCtx(
+      tokens,
+      ir.assets.images,
+      ir.meta.animation?.elements === "auto" ? slide.components : undefined,
+      defaultBg,
+      bodyFontPx,
+      chartPaletteOffset,
+    ),
+    emphasis: themeDef.emphasis,
+  }
   // This is the only face resolution performed by the renderer. Capacity
   // checks and validation consume the same route record from
   // `layout-selection.ts`, so takeover precedence cannot drift between
   // those paths.
-  const effectiveFace = resolveEffectiveFace(ir, slide)
+  const effectiveFace = resolveEffectiveFace(ir, slide, themeDef)
   if (effectiveFace.route === "unresolved") {
     throw new Error(effectiveFace.error ?? `cannot resolve a theme-menu face for "${slide.type}" page`)
   }
-  const themeDef = getThemeDefinition(ir.theme.id)
   let page = resolvePageRenderContext(ir, slide, effectiveFace, themeDef)
   let renderIr: PptxIR = page.metadataOn
     ? ir
@@ -422,7 +435,9 @@ export function FullSlideSvg({
   ) : (
     keyedBody("fg")
   )
-  const branding = page.brandOn ? <Branding ir={renderIr} slide={slide} ctx={ctx} page={page} /> : null
+  const branding = page.brandOn ? (
+    <Branding ir={renderIr} slide={slide} ctx={ctx} page={page} theme={themeDef} />
+  ) : null
   const foreground = (
     <>
       {keyedMotif("fg")}

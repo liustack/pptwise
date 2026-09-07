@@ -2,6 +2,7 @@
 import { PptwiseError } from "../errors"
 import { PptxIRSchema, type BackgroundSpec, type Component, type PptxIR, type Slide } from "../ir"
 import { formatInvalidSpecError, validateSpec, type DeckSpec, type PageSpec } from "./index"
+import type { ThemeDefinition } from "../themes/definitions"
 
 /** Fillable fields stored in one `pages/<id>.json` record. */
 export interface PageContent {
@@ -47,8 +48,12 @@ function buildSlide(page: PageSpec, content: PageContent | undefined): Record<st
  * Assemble spec-owned semantics with page content. No layout, seed, beat, or
  * other selection result is derived or written into the IR.
  */
-export function assembleDeck(spec: unknown, pages: Record<string, PageContent>): AssembleResult {
-  const validated = validateSpec(spec)
+export function assembleDeck(
+  spec: unknown,
+  pages: Record<string, PageContent>,
+  opts?: { theme?: ThemeDefinition },
+): AssembleResult {
+  const validated = validateSpec(spec, opts)
   if (!validated.ok) throw new PptwiseError(formatInvalidSpecError(validated.errors))
   const deckSpec = validated.spec!
 

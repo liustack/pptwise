@@ -28,7 +28,7 @@ import {
 import { CAPACITY } from "../audit/capacity"
 import { type SlideType } from "../layouts/registry"
 import { offeredContentKinds, resolveLayoutId } from "../render/layout-selection"
-import { getInstalledThemeIds, getThemeDefinition } from "../themes/definitions"
+import { getInstalledThemeIds, getThemeDefinition, type ThemeDefinition } from "../themes/definitions"
 import { RETIRED_THEME_IDS } from "../themes/retired-ids"
 
 // ── schema ───────────────────────────────────────────────────────────────
@@ -355,8 +355,17 @@ function checkHeadings(spec: DeckSpec): SpecValidationIssue[] {
  * `theme` stays an open string at the schema layer (like IR's `theme.id`),
  * this hard gate is where an unknown id is actually rejected.
  */
-function checkTheme(spec: DeckSpec): SpecValidationIssue[] {
+function checkTheme(spec: DeckSpec, theme: ThemeDefinition | undefined): SpecValidationIssue[] {
   const themeId = resolveSpecThemeId(spec)
+  if (theme !== undefined) {
+    if (theme.id === themeId) return []
+    return [
+      {
+        path: "theme",
+        message: `spec binds theme "${themeId}" but the supplied theme definition is "${theme.id}"`,
+      },
+    ]
+  }
   const installed = getInstalledThemeIds()
   if (installed.includes(themeId)) return []
   const renamed = RETIRED_THEME_IDS[themeId]
@@ -424,8 +433,8 @@ function checkFocusVocabulary(spec: DeckSpec): SpecValidationIssue[] {
 
 // ── theme-menu hard gate and kind-distribution advisory ─────────────────
 
-function checkThemeMenuKinds(spec: DeckSpec): SpecValidationIssue[] {
-  const menu = getThemeDefinition(resolveSpecThemeId(spec)).menu
+function checkThemeMenuKinds(spec: DeckSpec, theme: ThemeDefinition): SpecValidationIssue[] {
+  const menu = theme.menu
   if (menu === undefined) {
     return [
       {
@@ -548,7 +557,12 @@ function pageIdFromRawInput(input: unknown, index: number): string | undefined {
  * "informational, never gates `ok`" contract `ValidateResult.normalized`
  * has.
  */
-export function validateSpec(input: unknown): SpecValidateResult {
+/**
+ * `opts.theme` is the bound theme's definition passed by value (the CLI's
+ * name lookup hands it over). Omitted, `spec.theme` must name a built-in or
+ * an SDK-registered theme.
+ */
+export function validateSpec(input: unknown, opts?: { theme?: ThemeDefinition }): SpecValidateResult {
   const rootAliasPass = normalizeDeckRootAliases(input)
   const narrativeShapePass = normalizeNarrativeShape(rootAliasPass.value)
   const normalizedInput = narrativeShapePass.value
@@ -583,10 +597,10 @@ export function validateSpec(input: unknown): SpecValidateResult {
   const headingErrors = checkHeadings(spec)
   if (headingErrors.length > 0) return withNormalized({ ok: false, errors: headingErrors })
 
-  const themeErrors = checkTheme(spec)
+  const themeErrors = checkTheme(spec, opts?.theme)
   if (themeErrors.length > 0) return withNormalized({ ok: false, errors: themeErrors })
 
-  const menuErrors = checkThemeMenuKinds(spec)
+  const menuErrors = checkThemeMenuKinds(spec, opts?.theme ?? getThemeDefinition(resolveSpecThemeId(spec)))
   if (menuErrors.length > 0) return withNormalized({ ok: false, errors: menuErrors })
 
   // Narrative resolution (spec §5's defaults chain), same open-schema/

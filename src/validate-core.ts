@@ -33,7 +33,7 @@ import { findImageSelection } from "./layouts/find-image"
 import type { LayoutDefinition } from "./layouts/registry"
 import { CANONICAL_THEME_IDS, THEME_LABELS, THEME_STYLES } from "./themes"
 import { retiredThemeHint } from "./themes/retired-ids"
-import { getInstalledThemeIds, getThemeDefinition } from "./themes/definitions"
+import { getInstalledThemeIds, getThemeDefinition, type ThemeDefinition } from "./themes/definitions"
 
 export interface ValidationIssue {
   path: string
@@ -263,8 +263,8 @@ function describeQualityIssue(issue: QualityIssue): string {
 }
 
 /** Resolve every page through the same menu route the renderer consumes. */
-function checkThemeMenuFaces(ir: PptxIR): ValidationIssue[] {
-  const menu = getThemeDefinition(ir.theme.id).menu
+function checkThemeMenuFaces(ir: PptxIR, theme: ThemeDefinition): ValidationIssue[] {
+  const menu = theme.menu
   if (menu === undefined) {
     return [
       {
@@ -274,7 +274,7 @@ function checkThemeMenuFaces(ir: PptxIR): ValidationIssue[] {
     ]
   }
   return ir.slides.flatMap((slide, index) => {
-    const effective = resolveEffectiveFace(ir, slide)
+    const effective = resolveEffectiveFace(ir, slide, theme)
     if (effective.route !== "unresolved") return []
     return [
       {
@@ -319,8 +319,8 @@ function checkFullBodyExclusivity(ir: PptxIR): ValidationIssue[] {
 }
 
 /** Resolve the component surface that actually paints a boundary page. */
-function boundBoundaryLayout(ir: PptxIR, slide: PptxIR["slides"][number]) {
-  const effective = resolveEffectiveFace(ir, slide)
+function boundBoundaryLayout(ir: PptxIR, slide: PptxIR["slides"][number], theme: ThemeDefinition) {
+  const effective = resolveEffectiveFace(ir, slide, theme)
   return effective.route === "image-cover" ? undefined : effective.layout
 }
 
@@ -329,11 +329,11 @@ function layoutAcceptsComponent(layout: LayoutDefinition, componentType: string)
 }
 
 /** Content components must satisfy the slots of the exact resolved render surface. */
-function checkContentPageSlots(ir: PptxIR): ValidationIssue[] {
+function checkContentPageSlots(ir: PptxIR, theme: ThemeDefinition): ValidationIssue[] {
   const errors: ValidationIssue[] = []
   ir.slides.forEach((slide, i) => {
     if (slide.placeholder || slide.type !== "content") return
-    const layout = resolveEffectiveFace(ir, slide).layout
+    const layout = resolveEffectiveFace(ir, slide, theme).layout
     if (!layout) return
     const imageSlot = layout.kind === "takeover"
       ? layout.slots.find((slot) => slot.name === "image" && slot.selection === "first")
@@ -387,13 +387,13 @@ function checkContentPageSlots(ir: PptxIR): ValidationIssue[] {
  * still absent from this rule: no type drops it on every layout. Placeholder
  * pages (`slide.placeholder`) are exempt. `notes` is never checked here.
  */
-function checkBoundaryPageContent(ir: PptxIR): ValidationIssue[] {
+function checkBoundaryPageContent(ir: PptxIR, theme: ThemeDefinition): ValidationIssue[] {
   const errors: ValidationIssue[] = []
   ir.slides.forEach((slide, i) => {
     if (slide.placeholder) return
     if (slide.type !== "cover" && slide.type !== "chapter" && slide.type !== "ending") return
     const ignored: string[] = []
-    const layout = boundBoundaryLayout(ir, slide)
+    const layout = boundBoundaryLayout(ir, slide, theme)
     const stray = slide.components.filter((component) => !layout || !layoutAcceptsComponent(layout, component.type))
     if (stray.length > 0) ignored.push("components")
     if (slide.footnote) ignored.push("footnote")
@@ -423,12 +423,12 @@ function checkBoundaryPageContent(ir: PptxIR): ValidationIssue[] {
  * with (`layouts/boundary-content.ts`), so the number this rule enforces
  * cannot drift from the number the renderer honours.
  */
-function checkBoundarySlotCapacity(ir: PptxIR): ValidationIssue[] {
+function checkBoundarySlotCapacity(ir: PptxIR, theme: ThemeDefinition): ValidationIssue[] {
   const errors: ValidationIssue[] = []
   ir.slides.forEach((slide, i) => {
     if (slide.placeholder) return
     if (slide.type !== "cover" && slide.type !== "chapter" && slide.type !== "ending") return
-    const layout = boundBoundaryLayout(ir, slide)
+    const layout = boundBoundaryLayout(ir, slide, theme)
     if (!layout) return
     for (const slot of layout.slots) {
       if (slot.capacity === undefined || slot.accepts === "any") continue
@@ -470,12 +470,12 @@ function checkBoundarySlotCapacity(ir: PptxIR): ValidationIssue[] {
  * whose theme routes it to an asset cover — which draws no bullets at all —
  * is never measured against a cap it does not use.
  */
-function checkBoundaryItemCapacity(ir: PptxIR): ValidationIssue[] {
+function checkBoundaryItemCapacity(ir: PptxIR, theme: ThemeDefinition): ValidationIssue[] {
   const errors: ValidationIssue[] = []
   ir.slides.forEach((slide, i) => {
     if (slide.placeholder) return
     if (slide.type !== "cover" && slide.type !== "chapter" && slide.type !== "ending") return
-    const layout = boundBoundaryLayout(ir, slide)
+    const layout = boundBoundaryLayout(ir, slide, theme)
     if (!layout) return
     for (const slot of layout.slots) {
       if (slot.itemCapacity === undefined || slot.accepts === "any") continue
@@ -756,7 +756,7 @@ function checkAssetReferences(ir: PptxIR): ValidationIssue[] {
  * parsing. The error states the current v5 contract and intentionally offers
  * no compatibility rewrite or migration command.
  */
-export function validateIr(input: unknown): ValidateResult {
+export function validateIr(input: unknown, opts?: { theme?: ThemeDefinition }): ValidateResult {
   const version = typeof input === "object" && input !== null ? (input as Record<string, unknown>).version : undefined
 
   if (typeof version === "string" && ["1", "2", "3", "4"].includes(version)) {
@@ -806,30 +806,50 @@ export function validateIr(input: unknown): ValidateResult {
   // the 13 builtins + anything registered via themes/definitions.ts's
   // registerTheme (W3 task 4's SDK seam) — a strict superset of the old
   // BUILTIN_THEME_IDS-only check, same error shape.
-  const installedThemeIds = getInstalledThemeIds()
-  if (!installedThemeIds.includes(r.data.theme.id)) {
-    const themeId = r.data.theme.id
-    return withNormalized({
-      ok: false,
-      errors: [
-        {
-          path: "theme.id",
-          message: `unknown theme "${themeId}"${retiredThemeHint(themeId)}. Themes available: ${installedThemeIds.join(", ")} (see \`pptwise themes\`)`,
-        },
-      ],
-    })
+  // A definition passed by value is the theme, full stop: it must answer to
+  // the id the IR binds, and no table is consulted for it. Without one, the
+  // id must name a built-in or an SDK-registered theme.
+  let theme: ThemeDefinition
+  if (opts?.theme !== undefined) {
+    if (opts.theme.id !== r.data.theme.id) {
+      return withNormalized({
+        ok: false,
+        errors: [
+          {
+            path: "theme.id",
+            message: `IR binds theme "${r.data.theme.id}" but the supplied theme definition is "${opts.theme.id}"`,
+          },
+        ],
+      })
+    }
+    theme = opts.theme
+  } else {
+    const installedThemeIds = getInstalledThemeIds()
+    if (!installedThemeIds.includes(r.data.theme.id)) {
+      const themeId = r.data.theme.id
+      return withNormalized({
+        ok: false,
+        errors: [
+          {
+            path: "theme.id",
+            message: `unknown theme "${themeId}"${retiredThemeHint(themeId)}. Themes available: ${installedThemeIds.join(", ")} (see \`pptwise themes\`)`,
+          },
+        ],
+      })
+    }
+    theme = getThemeDefinition(r.data.theme.id)
   }
-  const menuFaceErrors = checkThemeMenuFaces(r.data)
+  const menuFaceErrors = checkThemeMenuFaces(r.data, theme)
   if (menuFaceErrors.length > 0) return withNormalized({ ok: false, errors: menuFaceErrors })
-  const contentSlotErrors = checkContentPageSlots(r.data)
+  const contentSlotErrors = checkContentPageSlots(r.data, theme)
   if (contentSlotErrors.length > 0) return withNormalized({ ok: false, errors: contentSlotErrors })
   const fullBodyErrors = checkFullBodyExclusivity(r.data)
   if (fullBodyErrors.length > 0) return withNormalized({ ok: false, errors: fullBodyErrors })
-  const boundaryPageErrors = checkBoundaryPageContent(r.data)
+  const boundaryPageErrors = checkBoundaryPageContent(r.data, theme)
   if (boundaryPageErrors.length > 0) return withNormalized({ ok: false, errors: boundaryPageErrors })
-  const boundarySlotErrors = checkBoundarySlotCapacity(r.data)
+  const boundarySlotErrors = checkBoundarySlotCapacity(r.data, theme)
   if (boundarySlotErrors.length > 0) return withNormalized({ ok: false, errors: boundarySlotErrors })
-  const boundaryItemErrors = checkBoundaryItemCapacity(r.data)
+  const boundaryItemErrors = checkBoundaryItemCapacity(r.data, theme)
   if (boundaryItemErrors.length > 0) return withNormalized({ ok: false, errors: boundaryItemErrors })
   const duplicateIdErrors = checkDuplicateSlideIds(r.data)
   if (duplicateIdErrors.length > 0) return withNormalized({ ok: false, errors: duplicateIdErrors })
@@ -866,7 +886,7 @@ export function validateIr(input: unknown): ValidateResult {
     if (!(err instanceof PptwiseError)) throw err
     return withNormalized({ ok: false, errors: [{ path: "narrative", message: err.message }] })
   }
-  const quality = checkIrQuality(r.data, resolvedAxes)
+  const quality = checkIrQuality(r.data, resolvedAxes, theme)
   // `issue.slide` indexes `r.data.slides` directly for every code but
   // "empty_deck" (that branch never reaches here, see its own `slide: 0`
   // bookkeeping in ir-quality.ts's checkIrQuality — an early return makes it
