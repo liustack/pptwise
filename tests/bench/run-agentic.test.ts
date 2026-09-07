@@ -21,10 +21,14 @@ import {
   flagValue,
   locateArtifact,
   placeArtifact,
+  runOneAgentic,
   scriptedReplyFor,
   stripFence,
   truncateForModel,
+  type ChatCompletionResponse,
+  type CompleteFn,
 } from "./run-agentic.mts"
+import { scoreQuestion } from "./score.mts"
 
 // ── checkPathSafety — the tool-surface escape guard (plan 裁定 1) ──
 
@@ -924,5 +928,94 @@ describe("decideTurn", () => {
     expect(decideTurn({ content: "Done, the deck renders." }, "stop")).toEqual({ kind: "stop", finalText: "Done, the deck renders." })
     expect(decideTurn({ content: "" }, "stop")).toEqual({ kind: "stop", finalText: "" })
     expect(decideTurn({ content: null }, undefined)).toEqual({ kind: "stop", finalText: "" })
+  })
+})
+
+// ── runOneAgentic → scoreQuestion — the result directory the runner leaves
+// behind must be one the scorer reads as intended. The runner writes its
+// own bookkeeping (meta.json, transcript.json) beside the model's artifact,
+// and the scorer's bare-IR candidate scan has to know those files are the
+// harness's, not the model's (codex review R2: a normal deck.json run was
+// scored "ambiguous artifact" the moment transcript.json appeared). Driven
+// end to end with scripted completions in place of the API. ──
+
+describe("runOneAgentic result directory scores as intended", () => {
+  let base: string
+
+  afterEach(() => {
+    if (base) rmSync(base, { recursive: true, force: true })
+  })
+
+  const cfg = { baseUrl: "https://fake.example/v1", apiKey: "k", model: "fake-model" }
+
+  function setup(): { questionsDir: string; resultsDir: string } {
+    base = mkdtempSync(join(tmpdir(), "bench-agentic-run-test-"))
+    const questionsDir = join(base, "questions")
+    const resultsDir = join(base, "results")
+    mkdirSync(join(questionsDir, "q01"), { recursive: true })
+    writeFileSync(join(questionsDir, "q01", "prompt.md"), "Make a three-slide deck.")
+    return { questionsDir, resultsDir }
+  }
+
+  function toolReply(name: string, args: unknown): ChatCompletionResponse {
+    return {
+      model: "fake-model-served",
+      choices: [
+        {
+          message: {
+            content: null,
+            tool_calls: [{ id: "c1", type: "function", function: { name, arguments: JSON.stringify(args) } }],
+          },
+          finish_reason: "tool_calls",
+        },
+      ],
+      usage: { prompt_tokens: 10, completion_tokens: 5 },
+    }
+  }
+
+  function textReply(content: string): ChatCompletionResponse {
+    return { model: "fake-model-served", choices: [{ message: { content }, finish_reason: "stop" }] }
+  }
+
+  function scripted(replies: ChatCompletionResponse[]): CompleteFn {
+    return async () => {
+      const next = replies.shift()
+      if (!next) throw new Error("scripted replies exhausted")
+      return next
+    }
+  }
+
+  it("a bare-IR run (deck.json beside meta.json and transcript.json) validates and renders under scoreQuestion", async () => {
+    const { questionsDir, resultsDir } = setup()
+    const ir = readFileSync(join(import.meta.dirname, "fixtures/results/green-model/fx01/answer.json"), "utf8")
+    const complete = scripted([
+      toolReply("write_file", { path: "deck.json", content: ir }),
+      textReply("Done. The deck is written and validates."),
+    ])
+    await runOneAgentic(cfg, "FAKE", "q01", { skill: "playbook" }, { questionsDir, resultsDir }, "fake-agentic", { complete })
+
+    const resultDir = join(resultsDir, "fake-agentic", "q01")
+    expect(existsSync(join(resultDir, "deck.json"))).toBe(true)
+    expect(existsSync(join(resultDir, "meta.json"))).toBe(true)
+    expect(existsSync(join(resultDir, "transcript.json"))).toBe(true)
+
+    const score = await scoreQuestion("q01", resultDir, { id: "q01" })
+    expect(score.reason).toBeUndefined()
+    expect(score.validatePass).toBe(true)
+    expect(score.renderOk).toBe(true)
+    expect(score.deterministic).toBe(true)
+    expect(score.self?.tool_calls).toBe(1)
+  })
+
+  it("a run that saved nothing scores 'no artifact found', never reading transcript.json as the answer", async () => {
+    const { questionsDir, resultsDir } = setup()
+    const complete = scripted([textReply("I cannot build this deck.")])
+    await runOneAgentic(cfg, "FAKE", "q01", { skill: "playbook" }, { questionsDir, resultsDir }, "fake-agentic", { complete })
+
+    const resultDir = join(resultsDir, "fake-agentic", "q01")
+    expect(existsSync(join(resultDir, "transcript.json"))).toBe(true)
+    const score = await scoreQuestion("q01", resultDir, { id: "q01" })
+    expect(score.reason).toMatch(/no artifact found/)
+    expect(score.validatePass).toBe(false)
   })
 })

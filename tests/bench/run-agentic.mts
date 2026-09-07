@@ -92,6 +92,7 @@ import {
 } from "node:fs"
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
+import { META_FILENAME, TRANSCRIPT_FILENAME } from "./harness-files.mts"
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..")
 const CLI = join(ROOT, "dist/cli.js")
@@ -865,7 +866,7 @@ function doRunPptwise(workspace: string, args: unknown, ctx: ToolResultContext):
   }
 }
 
-interface ToolCall {
+export interface ToolCall {
   id: string
   type: "function"
   function: { name: string; arguments: string }
@@ -975,7 +976,7 @@ const TOOLS = [
 
 // ── chat completion round ──
 
-interface ChatMessage {
+export interface ChatMessage {
   role: "system" | "user" | "assistant" | "tool"
   content: string | null
   tool_calls?: ToolCall[]
@@ -992,11 +993,20 @@ interface ChatCompletionUsage {
   prompt_tokens_details?: { cached_tokens?: number }
 }
 
-interface ChatCompletionResponse {
+export interface ChatCompletionResponse {
   model?: string
   choices: Array<{ message: { content: string | null; tool_calls?: ToolCall[] }; finish_reason?: string }>
   usage?: ChatCompletionUsage
 }
+
+/** One chat-completion round: the whole conversation so far in, the API's
+ *  reply out. `callRound` below is the production one; the test suite hands
+ *  `runOneAgentic` a scripted stand-in so the loop, the artifact placement,
+ *  and the files it leaves for the scorer can be driven without a network. */
+export type CompleteFn = (
+  cfg: { baseUrl: string; apiKey: string; model: string },
+  messages: ChatMessage[],
+) => Promise<ChatCompletionResponse>
 
 /** One round's harness-side record for `transcript.json`: what the API said
  *  about the round, apart from the message itself. `finish_reason: "length"`
@@ -1013,7 +1023,7 @@ interface RoundRecord {
 /** Writes the whole conversation plus per-round records beside meta.json so
  *  a run that ends with nothing saved can be read back, not guessed at. */
 function writeTranscript(resultDir: string, rounds: RoundRecord[], messages: ChatMessage[]): void {
-  writeFileSync(join(resultDir, "transcript.json"), JSON.stringify({ rounds, messages }, null, 2) + "\n")
+  writeFileSync(join(resultDir, TRANSCRIPT_FILENAME), JSON.stringify({ rounds, messages }, null, 2) + "\n")
 }
 
 /**
@@ -1062,18 +1072,20 @@ async function callRound(
 
 // ── per-question run ──
 
-async function runOneAgentic(
+export async function runOneAgentic(
   cfg: { baseUrl: string; apiKey: string; model: string },
   providerPrefix: string,
   qid: string,
   shared: { skill: string },
   dirs: { questionsDir: string; resultsDir: string },
   modelTag: string,
+  deps: { complete?: CompleteFn } = {},
 ): Promise<void> {
+  const complete = deps.complete ?? callRound
   const prompt = readFileSync(join(dirs.questionsDir, qid, "prompt.md"), "utf8")
   const resultDir = join(dirs.resultsDir, modelTag, qid)
   const workspace = join(resultDir, "workspace")
-  if (existsSync(join(resultDir, "meta.json"))) {
+  if (existsSync(join(resultDir, META_FILENAME))) {
     console.log(`${qid}: already run, skipping (resume mode)`)
     return
   }
@@ -1148,7 +1160,7 @@ async function runOneAgentic(
         break
       }
       roundsCompleted++
-      const data = await callRound(cfg, messages)
+      const data = await complete(cfg, messages)
       if (data.model) modelReported.add(data.model)
       promptTokens += data.usage?.prompt_tokens ?? 0
       completionTokens += data.usage?.completion_tokens ?? 0
@@ -1189,7 +1201,7 @@ async function runOneAgentic(
   } catch (e) {
     writeTranscript(resultDir, roundRecords, messages)
     writeFileSync(
-      join(resultDir, "meta.json"),
+      join(resultDir, META_FILENAME),
       JSON.stringify(
         {
           provider_prefix: providerPrefix,
@@ -1250,7 +1262,7 @@ async function runOneAgentic(
     toolErrors,
     lengthCutoffs,
   })
-  writeFileSync(join(resultDir, "meta.json"), JSON.stringify(meta, null, 2) + "\n")
+  writeFileSync(join(resultDir, META_FILENAME), JSON.stringify(meta, null, 2) + "\n")
   console.log(
     `${qid}: done — ${roundsCompleted} round(s), ${toolCalls} tool call(s) (${toolRejections.length} rejected by the harness, ` +
       `${toolErrors} failed), ${scriptedReplies} scripted repl(y/ies), ${lengthCutoffs} output-limit cutoff(s), ` +

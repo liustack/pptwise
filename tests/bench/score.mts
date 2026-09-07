@@ -36,6 +36,7 @@ import { auditDeck, generatePptx, validateIr, type PptxIR } from "../../src/inde
 import { readDeckDir } from "../../src/cli/deck-dir"
 import { resolveLocalAssets } from "../../src/cli/load-ir"
 import { installNodePlatform } from "../../src/platform/node"
+import { HARNESS_FILES, META_FILENAME } from "./harness-files.mts"
 
 installNodePlatform()
 
@@ -174,9 +175,10 @@ async function loadArtifact(resultDir: string): Promise<ArtifactResult> {
     }
   }
 
-  // Bare IR: exactly one *.json file that isn't the self-reported meta.json.
+  // Bare IR: exactly one *.json file that the harness itself did not write
+  // (meta.json, transcript.json — `HARNESS_FILES`, shared with the runner).
   const candidates = entries
-    .filter((e) => e.isFile() && e.name.endsWith(".json") && e.name !== "meta.json")
+    .filter((e) => e.isFile() && e.name.endsWith(".json") && !HARNESS_FILES.has(e.name))
     .map((e) => e.name)
     .sort()
   if (candidates.length === 0) {
@@ -214,7 +216,7 @@ async function loadArtifact(resultDir: string): Promise<ArtifactResult> {
 async function loadSelfReportedMeta(resultDir: string): Promise<SelfReportedMeta | undefined> {
   let text: string
   try {
-    text = await readFile(join(resultDir, "meta.json"), "utf8")
+    text = await readFile(join(resultDir, META_FILENAME), "utf8")
   } catch {
     return undefined
   }

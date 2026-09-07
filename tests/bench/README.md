@@ -222,7 +222,8 @@ comparable to one from after — some answers that used to fail purely on an edi
 (no structural or render-safety problem) now pass.
 
 A missing result directory, malformed JSON, an ambiguous artifact (more than one candidate `.json`
-file), or a `readDeckDir`/`assembleDeck` structural error scores as a fail for that question with
+file — the harness's own `meta.json` and `transcript.json` are never candidates, see
+`tests/bench/harness-files.mts`), or a `readDeckDir`/`assembleDeck` structural error scores as a fail for that question with
 a `reason` in the report's notes column, without aborting the rest of the batch. Self-reported
 `meta.json` (`{ tokens?, duration_seconds?, model? }`, run protocol step 4) passes through into
 the report's `tokens`/`duration_s` columns verbatim when present, blank otherwise — never scored.
