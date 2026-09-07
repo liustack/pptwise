@@ -111,7 +111,7 @@ describe("checkPptwiseArgs", () => {
   })
 
   it("allows every documented whitelisted subcommand", () => {
-    for (const cmd of ["render", "validate", "audit", "asset-brief", "schema", "assemble", "disassemble", "themes", "narratives", "preview", "layouts", "doctor"]) {
+    for (const cmd of ["render", "validate", "audit", "asset-brief", "schema", "assemble", "disassemble", "themes", "narratives", "preview", "layouts", "icons", "doctor"]) {
       expect(checkPptwiseArgs([cmd], workspace).ok).toBe(true)
     }
   })
@@ -198,6 +198,62 @@ describe("checkPptwiseArgs", () => {
       ok: true,
     })
     expect(checkPptwiseArgs(["audit", "deck.json", "--json"], workspace)).toEqual({ ok: true })
+  })
+})
+
+// ── the whitelist keeps up with SKILL.md (codex review R6: `pptwise icons`
+// was added to the playbook and left off the list, so every model that
+// followed the playbook collected a harness rejection). Every `pptwise
+// <sub>` the playbook writes in a code context is checked: allowed unless it
+// is one of the commands the runner keeps off on purpose. ──
+
+describe("checkPptwiseArgs covers every command SKILL.md asks for", () => {
+  const workspace = join(sep, "fake", "workspace")
+  /** Kept off the whitelist on purpose — see run-agentic.mts's
+   *  ALLOWED_SUBCOMMANDS doc comment for each one's reason. */
+  const EXCLUDED = new Set(["serve", "check-update", "self-update", "init", "images", "config"])
+
+  /** `pptwise <sub> [<subsub>]` from inline code spans and fenced code
+   *  lines only — prose mentions ("pptwise turns semantic JSON...") are not
+   *  commands. A second token is kept so a command group (`theme new`,
+   *  `brand extract`, `spec validate`) is checked with its sub-subcommand;
+   *  for a plain command it is a harmless positional (a path, a theme id). */
+  function skillCommands(markdown: string): string[][] {
+    const found = new Map<string, string[]>()
+    const record = (m: RegExpMatchArray) => {
+      const tokens = [m[1]!, ...(m[2] ? [m[2]] : [])]
+      found.set(tokens.join(" "), tokens)
+    }
+    for (const m of markdown.matchAll(/`pptwise ([a-z][a-z-]*)(?: ([a-z][a-z-]*))?/g)) record(m)
+    let inFence = false
+    for (const line of markdown.split("\n")) {
+      if (line.startsWith("```")) {
+        inFence = !inFence
+        continue
+      }
+      if (!inFence) continue
+      const m = /^pptwise ([a-z][a-z-]*)(?: ([a-z][a-z-]*))?/.exec(line)
+      if (m) record(m)
+    }
+    return [...found.values()]
+  }
+
+  const commands = skillCommands(readFileSync(join(import.meta.dirname, "../../skills/pptwise/SKILL.md"), "utf8"))
+
+  it("finds the playbook's commands (sanity: the parser is not matching nothing)", () => {
+    const heads = new Set(commands.map((c) => c[0]))
+    for (const expected of ["schema", "validate", "render", "audit", "icons", "theme", "serve"]) {
+      expect(heads.has(expected), `SKILL.md should still run \`pptwise ${expected}\``).toBe(true)
+    }
+  })
+
+  it.each(commands.map((tokens) => [tokens.join(" "), tokens] as const))("pptwise %s", (_label, tokens) => {
+    const result = checkPptwiseArgs([...tokens], workspace)
+    if (EXCLUDED.has(tokens[0]!)) {
+      expect(result.ok, `${tokens.join(" ")} is excluded on purpose and must stay refused`).toBe(false)
+    } else {
+      expect(result, `SKILL.md runs \`pptwise ${tokens.join(" ")}\` but the whitelist refuses it`).toEqual({ ok: true })
+    }
   })
 })
 

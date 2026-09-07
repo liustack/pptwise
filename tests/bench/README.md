@@ -355,8 +355,10 @@ uniformly to every tool and every question, no per-question tuning.
 **Tool surface — minimal and neutral by design.** No general shell. `run_pptwise` only accepts a
 whitelisted, read-only/artifact-producing subcommand: `render`, `validate`, `audit`,
 `asset-brief`, `schema`, `assemble`, `disassemble`, `themes`, `narratives`, `preview`, `layouts`,
-`doctor`, `spec validate`, `theme new`, `theme fork`, `theme try`, `brand extract` — every
-command SKILL.md asks the model to run except `serve`. Not on it: `serve` (interactive), the
+`icons`, `doctor`, `spec validate`, `theme new`, `theme fork`, `theme try`, `brand extract` — every
+command SKILL.md asks the model to run except `serve`. A test (`run-agentic.test.ts`, "covers every
+command SKILL.md asks for") reads the playbook's own `pptwise <sub>` commands and fails the moment
+one is added there without being allowed here. Not on it: `serve` (interactive), the
 removed vocabulary-v4 aliases (`plan`, `scenarios`), `check-update`/`self-update`/`images`
 (network side effects with no benchmark value), `config` (writes user-level settings outside the
 workspace), `init` (nothing in the workflow needs a scaffolded config), and `migrate` (no longer

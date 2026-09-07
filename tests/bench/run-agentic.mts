@@ -231,12 +231,15 @@ function pathishToken(token: string): string | null {
 // ── run_pptwise subcommand whitelist (plan 裁定 1: read-only/artifact only, no serve) ──
 
 /** Top-level subcommands allowed through `run_pptwise`. Checked against
- *  every `pptwise` invocation in `skills/pptwise/SKILL.md` (2026-09): the
- *  playbook runs `schema`, `schema --spec`, `narratives`, `themes`, `theme
- *  try|new|fork`, `brand extract`, `spec validate`, `assemble`, `validate`,
- *  `audit`, `preview`, `render`, `doctor`, and `serve` — everything but
- *  `serve` (interactive/long-running) is reachable. `layouts` is a plain
- *  listing and comes along. Excluded on purpose: `plan`/`scenarios`
+ *  every `pptwise` invocation in `skills/pptwise/SKILL.md` — by a test now
+ *  (`run-agentic.test.ts`, "covers every command SKILL.md asks for"), after
+ *  `icons` was added to the playbook and missed here (codex review R6): the
+ *  playbook runs `schema`, `schema --spec|--kind|--component`, `icons`,
+ *  `narratives`, `themes`, `theme try|new|fork`, `brand extract`, `spec
+ *  validate`, `assemble`, `validate`, `audit`, `preview`, `render`,
+ *  `doctor`, and `serve` — everything but `serve` (interactive/long-running)
+ *  is reachable. `layouts` is a plain listing and comes along. Excluded on
+ *  purpose: `plan`/`scenarios`
  *  (removed vocabulary-v4 aliases that only exist to print a rename
  *  error), `check-update`/`self-update`/`images` (network side effects
  *  with no benchmark value), `config` (writes user-level settings outside
@@ -255,6 +258,7 @@ const ALLOWED_SUBCOMMANDS = new Set([
   "narratives",
   "preview",
   "layouts",
+  "icons",
   "doctor",
 ])
 
