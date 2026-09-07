@@ -1,12 +1,12 @@
 // @vitest-environment node
-import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises"
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { afterEach, describe, expect, it } from "vitest"
 import { installNodePlatform } from "@/platform/node"
-import { __resetRegisteredThemes, getThemeDefinition } from "../themes/definitions"
+import { __resetRegisteredThemes, getThemeDefinition, THEME_DEFINITIONS } from "../themes/definitions"
 import { runThemeNew } from "./commands"
-import { loadThemeFile, menusEqual, resolveThemeByName } from "./theme-resolve"
+import { menusEqual, resolveThemeByName } from "./theme-resolve"
 import type { Menu } from "../themes/schema"
 
 installNodePlatform()
@@ -64,20 +64,56 @@ describe("menusEqual", () => {
   })
 })
 
-describe("loadThemeFile transactional replace", () => {
-  it("keeps the previous registration when the new file fails the menu gate", async () => {
-    const cwd = await tmp("pptwise-reload-")
+describe("a theme file resolved by name is carried by value", () => {
+  it("returns the file definition without writing it into any lookup table", async () => {
+    const cwd = await tmp("pptwise-by-value-")
+    await mkdir(join(cwd, "themes"))
+    const path = join(cwd, "themes", "brief.theme.json")
+    await runThemeNew({ from: "brief", output: path, id: "brief", cwd })
+    const override = JSON.parse(await readFile(path, "utf8")) as {
+      style: { colors: { primary: string } }
+    }
+    override.style.colors.primary = "#0B5FFF"
+    await writeFile(path, JSON.stringify(override))
+
+    const resolved = await resolveThemeByName("brief", { startDir: cwd })
+    expect(resolved.kind).toBe("file")
+    expect(resolved.definition.style.colors.primary).toBe("#0B5FFF")
+    expect(getThemeDefinition("brief").style.colors.primary).toBe(THEME_DEFINITIONS.brief.style.colors.primary)
+  })
+
+  it("resolves the built-in again once the workspace override is deleted", async () => {
+    const cwd = await tmp("pptwise-override-gone-")
+    await mkdir(join(cwd, "themes"))
+    const path = join(cwd, "themes", "brief.theme.json")
+    await runThemeNew({ from: "brief", output: path, id: "brief", cwd })
+    const override = JSON.parse(await readFile(path, "utf8")) as {
+      style: { colors: { primary: string } }
+    }
+    override.style.colors.primary = "#0B5FFF"
+    await writeFile(path, JSON.stringify(override))
+
+    const first = await resolveThemeByName("brief", { startDir: cwd })
+    expect(first.definition.style.colors.primary).toBe("#0B5FFF")
+
+    await rm(path)
+    const second = await resolveThemeByName("brief", { startDir: cwd })
+    expect(second.kind).toBe("builtin")
+    expect(second.definition.style.colors.primary).toBe(THEME_DEFINITIONS.brief.style.colors.primary)
+    expect(second.definition).toBe(THEME_DEFINITIONS.brief)
+  })
+
+  it("rejects a file that fails the menu gate and installs nothing", async () => {
+    const cwd = await tmp("pptwise-bad-menu-")
     const path = join(cwd, "acme.theme.json")
     await runThemeNew({ from: "brief", output: path, id: "acme", cwd })
-    await loadThemeFile(path)
-    const previous = structuredClone(getThemeDefinition("acme").menu)
     const broken = JSON.parse(await readFile(path, "utf8")) as {
       menu: { cover: { face: string } }
     }
     broken.menu.cover.face = "not-a-layout"
     await writeFile(path, JSON.stringify(broken))
-    await expect(loadThemeFile(path)).rejects.toThrow(/unknown layout id/)
-    expect(getThemeDefinition("acme").menu).toEqual(previous)
+    await expect(resolveThemeByName("acme", { startDir: cwd, deckDir: cwd })).rejects.toThrow(/unknown layout id/)
+    expect(() => getThemeDefinition("acme")).toThrow(/unknown theme "acme"/)
   })
 })
 

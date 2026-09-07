@@ -9,7 +9,7 @@ import { runThemeFork, runThemeNew } from "@/cli/commands"
 import { assertThemeId, resolveThemeByName, themeFileFromPreset } from "@/cli/theme-resolve"
 import { forkTheme } from "@/cli/theme-fork"
 import { installNodePlatform } from "@/platform/node"
-import { __resetRegisteredThemes, installThemeFile, registerTheme } from "./definitions"
+import { __resetRegisteredThemes, compileThemeDefinition, registerTheme } from "./definitions"
 import { RETIRED_MOTIF_IDS, RETIRED_THEME_IDS } from "./retired-ids"
 import { ThemeFileSchema } from "./schema"
 import { copyThemePreset, getThemePreset } from "./presets"
@@ -97,9 +97,9 @@ describe("a retired theme id cannot be taken back", () => {
     expect(() => ThemeFileSchema.parse(fileWithId(old))).toThrow(/cannot be reused/)
   })
 
-  it.each(RETIRED)("registerTheme and installThemeFile refuse %s", (old, current) => {
+  it.each(RETIRED)("registerTheme and compileThemeDefinition refuse %s", (old, current) => {
     expect(() => registerTheme(fileWithId(old))).toThrow(named(current))
-    expect(() => installThemeFile(fileWithId(old))).toThrow(named(current))
+    expect(() => compileThemeDefinition(fileWithId(old))).toThrow(named(current))
   })
 
   it.each(RETIRED)("a preset copy refuses %s as its target", (old, current) => {

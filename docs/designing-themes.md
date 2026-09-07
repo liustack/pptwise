@@ -170,7 +170,7 @@ A finished theme hands back:
 - Public schema: `src/themes/schema.ts`
 - Factory presets: `src/themes/presets.ts`
 - Built-in declarations: `src/themes/builtin/`
-- Theme registration: `src/themes/definitions.ts`
+- Theme compilation and the SDK registration seam: `src/themes/definitions.ts`
 - Workspace name lookup: `src/cli/theme-resolve.ts`
 - Palette forking: `src/cli/theme-fork.ts`
 - Faces and parameter declarations: `src/layouts/`

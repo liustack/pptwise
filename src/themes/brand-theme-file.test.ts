@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest"
-import { __resetRegisteredThemes, getInstalledThemeIds, getThemeDefinition } from "./definitions"
+import { __resetRegisteredThemes, compileThemeDefinition, getInstalledThemeIds, getThemeDefinition } from "./definitions"
 import { buildThmxBytes, PATHOLOGICAL_THMX_COLORS } from "./extract/__fixtures__/thmx"
 import { extractBrandTheme, type BrandThemeFile } from "./extract/brand-extract"
 import { parseBrandThemeFile, registerBrandThemeFile } from "./brand-theme-file"
@@ -140,19 +140,21 @@ describe("registerBrandThemeFile", () => {
     )
   })
 
-  it("shadows a builtin id so getThemeDefinition reads the file", async () => {
+  it("refuses a builtin id: a file that keeps one is passed by value, never installed", async () => {
     const theme = await extractFixtureTheme("brief")
-    expect(registerBrandThemeFile(theme)).toBe("brief")
-    const def = getThemeDefinition("brief")
+    const factoryPrimary = getThemeDefinition("brief").style.colors.primary
+    expect(() => registerBrandThemeFile(theme)).toThrow(/theme "brief" is already installed/)
+    expect(getThemeDefinition("brief").style.colors.primary).toBe(factoryPrimary)
+    const def = compileThemeDefinition(theme)
     expect(def.style.colors.primary).toBe(theme.style.colors.primary)
     expect(def.menu).toEqual(theme.menu)
     expect(getInstalledThemeIds().filter((id) => id === "brief")).toHaveLength(1)
   })
 
-  it("is idempotent for the same already-registered id (serve rebuild loop)", async () => {
+  it("refuses to install the same id twice: registration is process configuration", async () => {
     const theme = await extractFixtureTheme()
     registerBrandThemeFile(theme)
-    expect(() => registerBrandThemeFile(theme)).not.toThrow()
+    expect(() => registerBrandThemeFile(theme)).toThrow(/theme "acme" is already installed/)
     expect(getInstalledThemeIds().filter((id) => id === "acme")).toHaveLength(1)
   })
 

@@ -1,7 +1,6 @@
 /** Self-contained public theme-file examples used by the gallery. */
 
-import { registerBrandThemeFile } from "@/themes/brand-theme-file"
-import { THEME_DEFINITIONS } from "@/themes/definitions"
+import { getInstalledThemeIds, registerTheme, THEME_DEFINITIONS } from "@/themes/definitions"
 import type { ThemeFile } from "@/themes/schema"
 
 export const GALLERY_TIDE_THEME_ID = "gallery-tide"
@@ -103,6 +102,11 @@ export const GALLERY_STUDIO_THEME: ThemeFile = {
 
 export const GALLERY_SAMPLE_THEMES: readonly ThemeFile[] = [GALLERY_TIDE_THEME, GALLERY_STUDIO_THEME]
 
+/** Process-level install of the two sample themes. Idempotent: the gallery
+ *  catalog may be built more than once in one process. */
 export function registerGallerySampleThemes(): void {
-  for (const theme of GALLERY_SAMPLE_THEMES) registerBrandThemeFile(theme)
+  const installed = new Set(getInstalledThemeIds())
+  for (const theme of GALLERY_SAMPLE_THEMES) {
+    if (!installed.has(theme.id)) registerTheme(theme)
+  }
 }

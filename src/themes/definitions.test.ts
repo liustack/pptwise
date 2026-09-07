@@ -7,7 +7,7 @@ import {
   compileBuiltinTheme,
   getInstalledThemeIds,
   getThemeDefinition,
-  installThemeFile,
+  compileThemeDefinition,
   registerTheme,
   resolveBrand,
   THEME_DEFINITIONS,
@@ -282,12 +282,19 @@ describe("registerTheme", () => {
     expect(() => registerTheme(themeNamed("brief"))).toThrow(/theme "brief" is already installed/)
   })
 
-  it("installThemeFile shadows a builtin and dedupes getInstalledThemeIds", () => {
+  it("compileThemeDefinition returns a builtin-id file by value and touches no table", () => {
     const factoryPrimary = getThemeDefinition("brief").style.colors.primary
-    installThemeFile(themeNamed("brief"))
-    expect(getThemeDefinition("brief").style.colors.primary).toBe("#112233")
-    expect(getThemeDefinition("brief").style.colors.primary).not.toBe(factoryPrimary)
+    const def = compileThemeDefinition(themeNamed("brief"))
+    expect(def.id).toBe("brief")
+    expect(def.style.colors.primary).toBe("#112233")
+    expect(getThemeDefinition("brief").style.colors.primary).toBe(factoryPrimary)
     expect(getInstalledThemeIds().filter((id) => id === "brief")).toHaveLength(1)
+  })
+
+  it("compileThemeDefinition runs the menu gate without registering anything", () => {
+    const file = testTheme({ menu: { ...TEST_MENU, cover: { face: "not-a-layout" } } })
+    expect(() => compileThemeDefinition(file)).toThrow(/unknown layout id "not-a-layout"/)
+    expect(getInstalledThemeIds()).not.toContain("acme")
   })
 
   // The built-in shelf has been held to this since the token existed (see

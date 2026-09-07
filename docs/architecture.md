@@ -22,7 +22,7 @@ The first two steps are editorial decisions. The theme is selected before the sp
 | --- | --- | --- |
 | IR | `src/ir` | Strict v5 deck, page, asset, metadata, brand, and 62-component schemas. |
 | narrative | `src/narrative` | Strategy, pacing, audience, presets, body baseline, and editorial budgets. |
-| themes | `src/themes` | Public v2 schema, 24 presets, built-in declarations, workspace registration, tokens, occasions, and identity. |
+| themes | `src/themes` | Public v2 schema, 24 presets, built-in declarations, theme-file compilation, tokens, occasions, and identity. |
 | specs | `src/spec` | Version 1 theme binding, page semantics, menu-kind validation, placeholders, and pure assembly. |
 | faces | `src/layouts` | Internal page drawing code, slots, capacities, parameter declarations, and structural motif or brand facts. |
 | components | `src/components` | Typed content renderers that fill face slots. |
@@ -47,7 +47,7 @@ The menu maps every boundary page and a non-empty subset of the eleven content k
 
 Theme creation is copy-based. `theme new` copies any resolved theme. `theme fork` copies a theme, preserves the menu, rederives the palette, and checks contrast. `brand extract` copies a donor menu and applies locally extracted Office anchors.
 
-The CLI resolves a bound name from the deck directory, then upward workspace `themes/` directories, then factory presets. Render has no theme override path.
+The CLI resolves a bound name from the deck directory, then upward workspace `themes/` directories, then factory presets. The resolved definition is passed by value into `validateIr`, `renderSlideSvg`, `generatePptx`, `auditDeck`, and `buildAssetBrief` as their `theme` option, and every internal consumer takes it as a parameter. No step looks the id up in a mutable table, so a request's theme cannot leak into another request or outlive its file. Omitting the option means the id names a factory preset or an SDK theme registered through `registerTheme`, which is process-level configuration. Render has no theme override path.
 
 The spec locks theme, narrative, page order, id, type, heading, and content kind. Page fills carry only components, background, image side, footnote, and notes. `assembleDeck` is a pure function that combines them into IR v5 without storing a rendering decision.
 

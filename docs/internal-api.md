@@ -39,6 +39,18 @@ If you need pptwise from your own program, shell out to the CLI: `pptwise
 validate` / `render` / `preview` speak JSON and exit codes, and that
 contract *is* covered by semver.
 
+## Theme handling inside the package
+
+`validateIr`, `renderSlideSvg`, `generatePptx`, `auditDeck`, `buildAssetBrief`,
+and `validateSpec` accept a `theme` option carrying a `ThemeDefinition` by
+value. The CLI compiles a deck or workspace theme file once per command
+(`resolveThemeByName` returns it as `definition`) and passes that object
+down. Without the option, `ir.theme.id` must name a factory preset or a theme
+installed through `registerTheme`, which is process-level configuration for an
+embedder, never per-request state. There is no replace-in-place install: a
+file is never written into a lookup table, so nothing lingers after the file
+is deleted and two callers can use different definitions under one id.
+
 ## The former browser bundles
 
 `dist/browser.js` and `dist/validate.js` (self-contained ESM for bare

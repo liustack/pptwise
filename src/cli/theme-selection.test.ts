@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises"
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest"
@@ -8,7 +8,8 @@ import { __resetRegisteredThemes } from "../themes/definitions"
 import { buildThmxBytes } from "../themes/extract/__fixtures__/thmx"
 import { getThemeDefinition } from "../themes/definitions"
 import { DEFAULT_THMX_COLORS } from "../themes/extract/__fixtures__/thmx"
-import { applyDeckConfig, runBrandExtract, runSpecValidate, runValidate } from "./commands"
+import { applyDeckConfig, runBrandExtract, runPreview, runSpecValidate, runValidate } from "./commands"
+import { resolveThemeByName } from "./theme-resolve"
 
 installNodePlatform()
 
@@ -171,24 +172,47 @@ describe("theme selection chain", () => {
     await expect(runValidate(deckDir, cwd)).resolves.toMatch(/theme "acme-blue"/)
   })
 
-  it("11. workspace and deck files can shadow a builtin id", async () => {
+  it("11. workspace and deck files can shadow a builtin id without touching the builtin table", async () => {
+    const factoryPrimary = getThemeDefinition("brief").style.colors.primary
     const root = await tmp("pptwise-sel-shadow-")
     await mkdir(join(root, "themes"))
     await extractTheme(join(root, "themes"), "brief", "brief.theme.json")
     const deckDir = await writeDeckDir(makeDeckPlan({ theme: "brief" }))
     await expect(runValidate(deckDir, root)).resolves.toMatch(/theme "brief"/)
-    expect(getThemeDefinition("brief").style.colors.primary).toBe(`#${DEFAULT_THMX_COLORS.accent1}`)
+    const workspaceHit = await resolveThemeByName("brief", { startDir: root, deckDir })
+    expect(workspaceHit.kind).toBe("file")
+    expect(workspaceHit.definition.style.colors.primary).toBe(`#${DEFAULT_THMX_COLORS.accent1}`)
+    expect(getThemeDefinition("brief").style.colors.primary).toBe(factoryPrimary)
 
-    __resetRegisteredThemes()
     const frozenDeck = await writeDeckDir(makeDeckPlan({ theme: "brief" }))
     await extractTheme(frozenDeck, "brief", "theme.json")
     await expect(runValidate(frozenDeck, await projectDir())).resolves.toMatch(/theme "brief"/)
-    expect(getThemeDefinition("brief").style.colors.primary).toBe(`#${DEFAULT_THMX_COLORS.accent1}`)
+    const deckHit = await resolveThemeByName("brief", { startDir: frozenDeck, deckDir: frozenDeck })
+    expect(deckHit.kind).toBe("file")
+    expect(deckHit.definition.style.colors.primary).toBe(`#${DEFAULT_THMX_COLORS.accent1}`)
+    expect(getThemeDefinition("brief").style.colors.primary).toBe(factoryPrimary)
 
-    __resetRegisteredThemes()
     const plainDeck = await writeDeckDir(makeDeckPlan({ theme: "brief" }))
     await expect(runValidate(plainDeck, await projectDir())).resolves.toMatch(/theme "brief"/)
-    expect(getThemeDefinition("brief").style.colors.primary).not.toBe(`#${DEFAULT_THMX_COLORS.accent1}`)
+    const builtinHit = await resolveThemeByName("brief", { startDir: plainDeck, deckDir: plainDeck })
+    expect(builtinHit.kind).toBe("builtin")
+    expect(builtinHit.definition.style.colors.primary).toBe(factoryPrimary)
+  })
+
+  it("a shadowing workspace file renders its own colors, and the next command sees its removal", async () => {
+    const root = await tmp("pptwise-sel-shadow-render-")
+    await mkdir(join(root, "themes"))
+    const themePath = await extractTheme(join(root, "themes"), "brief", "brief.theme.json")
+    const irPath = await writeIrFile({ ...IR_NO_THEME, theme: { id: "brief" } })
+    const shadowed = await runPreview(irPath, join(root, "out-shadowed"), { cwd: root })
+    expect(shadowed).toContain("wrote")
+    const shadowedSvg = await readFile(join(root, "out-shadowed", "001-cover.svg"), "utf8")
+    expect(shadowedSvg).toContain(`#${DEFAULT_THMX_COLORS.accent1}`)
+
+    await rm(themePath)
+    await runPreview(irPath, join(root, "out-builtin"), { cwd: root })
+    const builtinSvg = await readFile(join(root, "out-builtin", "001-cover.svg"), "utf8")
+    expect(builtinSvg).not.toContain(`#${DEFAULT_THMX_COLORS.accent1}`)
   })
 
   it("12. runSpecValidate sees a workspace custom id", async () => {

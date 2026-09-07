@@ -29,6 +29,12 @@
 // `getThemeDefinition` / `getInstalledThemeIds` / `__resetRegisteredThemes`
 // (which own validation and are the only intended writers). A wrapper layer
 // would add ceremony without adding safety.
+//
+// What this map is not: a place for a deck or workspace theme file. Those
+// are compiled by `compileThemeDefinition` and carried by value down the
+// render chain, so this table only ever holds themes an embedder installed
+// for the whole process through `registerTheme`, plus the structural
+// fixtures the test corpus registers.
 import type { ThemeDefinition } from "./definitions"
 
 export const REGISTERED_THEMES = new Map<string, ThemeDefinition>()

@@ -29,7 +29,7 @@ export type {
   BackgroundSpec,
   BrandConfig,
 } from "./ir"
-export { registerTheme, getInstalledThemeIds, getThemeDefinition } from "./themes/definitions"
+export { registerTheme, compileThemeDefinition, getInstalledThemeIds, getThemeDefinition } from "./themes/definitions"
 export type { ThemeDefinition } from "./themes/definitions"
 // The factory preset shelf: the read source for "create a theme = copy a
 // preset into the workspace". A copy shares nothing with its preset.
@@ -37,9 +37,11 @@ export { THEME_PRESETS, getThemePreset, isThemePresetId, copyThemePreset } from 
 export type { ThemePresetSummary } from "./themes/presets"
 // Brand extraction (brand-extract wave, roadmap §2.0.1): extract brand
 // colors/fonts from a user's own .thmx/.potx/.pptx locally — zip bytes in,
-// pure theme-file JSON out (jszip only, browser-safe) — and load such a file
-// back through the registerTheme seam (with its contrast hard gate). The
-// `pptwise brand extract` CLI command wraps these.
+// pure theme-file JSON out (jszip only, browser-safe). Such a file is either
+// compiled by value (`compileThemeDefinition`, then passed as the `theme`
+// option) or installed for the process through the registerTheme seam
+// (`registerBrandThemeFile`). The `pptwise brand extract` CLI command wraps
+// the extraction.
 export { extractBrandTheme } from "./themes/extract/brand-extract"
 export type { BrandThemeFile, ExtractBrandThemeOptions } from "./themes/extract/brand-extract"
 export { parseBrandThemeFile, registerBrandThemeFile, BrandThemeFileSchema } from "./themes/brand-theme-file"

@@ -1,10 +1,12 @@
 /**
- * Parse and register user-authored v2 self-contained theme files. File I/O
- * stays in the CLI. File loading uses `installThemeFile` so a freeze copy
- * can shadow a builtin and a failed reload cannot drop a previous definition.
+ * Parse user-authored v2 self-contained theme files. File I/O stays in the
+ * CLI, which compiles a resolved file with `compileThemeDefinition` and
+ * passes the definition down by value. `registerBrandThemeFile` below is
+ * the process-level SDK seam for an embedder that wants an extracted theme
+ * installed next to the factory presets.
  */
 import { PptwiseError } from "../errors"
-import { installThemeFile } from "./definitions"
+import { registerTheme } from "./definitions"
 import { ThemeFileSchema, type ThemeFile } from "./schema"
 
 /** Kept as the existing exported symbol, now pointing at the unified v2 contract. */
@@ -26,11 +28,12 @@ export function parseBrandThemeFile(raw: unknown, source: string): ThemeFile {
 }
 
 /**
- * Register one parsed v2 file through the replace channel. A builtin id is
- * a freeze/shadow. Re-reading a custom id replaces the previous definition
- * only after every gate passes.
+ * Install one parsed v2 file for the life of the process through
+ * `registerTheme`: same gates, same refusal of an id that is already a
+ * factory preset or already registered. A theme that belongs to one deck or
+ * one request is not registered; the CLI compiles it and passes it by value.
  */
 export function registerBrandThemeFile(file: ThemeFile): string {
-  installThemeFile(file)
+  registerTheme(file)
   return file.id
 }

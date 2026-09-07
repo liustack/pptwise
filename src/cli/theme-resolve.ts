@@ -2,7 +2,7 @@ import { dirname, join, resolve } from "node:path"
 import { THEME_ID_CONSTRAINT, THEME_ID_PATTERN } from "@/ir"
 import { PptwiseError } from "../errors"
 import { parseBrandThemeFile } from "../themes/brand-theme-file"
-import { installThemeFile, THEME_DEFINITIONS, type ThemeDefinition } from "../themes/definitions"
+import { compileThemeDefinition, THEME_DEFINITIONS, type ThemeDefinition } from "../themes/definitions"
 import { CANONICAL_THEME_IDS, type CanonicalThemeId } from "../themes"
 import { copyThemePreset } from "../themes/presets"
 import { assertNotRetiredThemeId } from "../themes/retired-ids"
@@ -54,14 +54,6 @@ export function assertThemeId(id: string): void {
     throw new PptwiseError(`invalid theme id "${id}". ${THEME_ID_CONSTRAINT}`)
   }
   assertNotRetiredThemeId(id)
-}
-
-/** Read, parse, and register a theme file. The previous registration of the
- *  same id is replaced only after every gate passes. */
-export async function loadThemeFile(path: string): Promise<ThemeFile> {
-  const file = await readThemeFile(path)
-  installThemeFile(file)
-  return file
 }
 
 async function readThemeFile(path: string): Promise<ThemeFile> {
@@ -127,8 +119,11 @@ async function tryParseThemeFile(path: string): Promise<ThemeFile | undefined> {
   return parsed.success ? (parsed.data as ThemeFile) : undefined
 }
 
+/** Compile an accepted file into the definition this lookup hands back.
+ *  Every gate runs here (contrast floor, menu contract). Nothing is stored:
+ *  the caller owns the result and passes it down the render chain. */
 async function acceptThemeFile(path: string, file: ThemeFile): Promise<ResolvedTheme> {
-  const definition = installThemeFile(file)
+  const definition = compileThemeDefinition(file)
   return { kind: "file", id: file.id, path, file, definition }
 }
 

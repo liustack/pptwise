@@ -10,6 +10,7 @@ import { installNodePlatform } from "@/platform/node"
 import { NARRATIVE_PRESETS } from "../narrative"
 import { CAPACITY } from "../audit/capacity"
 import { __resetRegisteredThemes, getThemeDefinition } from "../themes/definitions"
+import { resolveThemeByName } from "./theme-resolve"
 import { THEME_OCCASIONS } from "../themes/occasions"
 import { buildThmxBytes, DEFAULT_THMX_COLORS, PATHOLOGICAL_THMX_COLORS } from "../themes/extract/__fixtures__/thmx"
 import {
@@ -1644,7 +1645,8 @@ describe("brand extract + deck theme.json / workspace themes/", () => {
     expect(report).toContain('theme "brief"')
   })
 
-  it("a workspace file named brief.theme.json with id=brief shadows the builtin", async () => {
+  it("a workspace file named brief.theme.json with id=brief shadows the builtin for that command only", async () => {
+    const factoryPrimary = getThemeDefinition("brief").style.colors.primary
     const d = await freshDir()
     const src = await writeFixtureTemplate(d)
     await mkdir(join(d, "themes"))
@@ -1653,7 +1655,9 @@ describe("brand extract + deck theme.json / workspace themes/", () => {
     await writeFile(join(d, "deck.json"), JSON.stringify({ ...IR_NO_THEME, theme: { id: "brief" } }))
     const report = await runValidate(join(d, "deck.json"), d)
     expect(report).toContain('theme "brief"')
-    expect(getThemeDefinition("brief").style.colors.primary).toBe(`#${DEFAULT_THMX_COLORS.accent1}`)
+    const resolved = await resolveThemeByName("brief", { startDir: d, deckDir: d })
+    expect(resolved.definition.style.colors.primary).toBe(`#${DEFAULT_THMX_COLORS.accent1}`)
+    expect(getThemeDefinition("brief").style.colors.primary).toBe(factoryPrimary)
   })
 
   it("an IR file uses its directory as the deck lookup layer for sibling theme.json", async () => {

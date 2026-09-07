@@ -86,15 +86,20 @@ export function resolveBrand(id: string): BrandConfig {
   return getThemeDefinition(id).brand
 }
 
-// ── Theme registration seam (W3 task 4, spec §4/roadmap "theme ecosystem")
-// ─────────────────────────────────────────────────────────────────────────
+// ── Theme compilation and the SDK registration seam ──────────────────────
 //
-// This is deliberately *not* the v0.4 registry protocol (no distribution,
-// no manifest fetch, no `pptwise theme add <url>`) — just the runtime SDK
-// seam a v0.4 registry client (or any embedder) would call into: hand
-// `registerTheme` a fully-formed `ThemeDefinition` and it becomes visible to
-// every internal theme lookup (installed-check, selection, resolveStyle,
-// resolveBrand) exactly like a builtin, with no second code path.
+// Two ways a theme reaches the render chain:
+//
+// - By value. `compileThemeDefinition` turns a v2 file into a definition and
+//   hands it back. The CLI does this for a deck or workspace theme file and
+//   passes the object down as the `theme` option of every entry point.
+//   Nothing is stored, so nothing lingers after the file changes and two
+//   concurrent requests can hold different definitions under one id.
+// - By id. `registerTheme` installs a definition for the life of the
+//   process, next to the factory presets, for an embedder that configures
+//   its own preset shelf once at startup. It is process-level configuration,
+//   never per-request state: it refuses an id that is already installed and
+//   there is no replace-in-place channel.
 
 /**
  * Reduce a `BackgroundSpec` to one representative hex color — a color spec
@@ -422,8 +427,15 @@ function assertMenuContract(themeId: string, menu: Menu): void {
 }
 
 /**
- * Register a theme at runtime (SDK seam, not the v0.4 distribution
- * protocol). The input is a complete v2 theme file and nothing else: one
+ * Register a theme for the life of the process (SDK seam, not the v0.4
+ * distribution protocol). This is process-level configuration, the way an
+ * embedder extends the factory preset shelf once at startup. It is not
+ * per-request state: a theme that belongs to one deck, one request, or one
+ * file on disk is compiled with {@link compileThemeDefinition} and passed
+ * by value as the `theme` option of `validateIr`, `renderSlideSvg`,
+ * `generatePptx`, `auditDeck`, and `buildAssetBrief` instead.
+ *
+ * The input is a complete v2 theme file and nothing else: one
  * self-contained declaration carrying style, brand, and the menu. There is
  * no partial completeness, no inherited structure, and no registry-wide
  * default pool to fall back on.
@@ -448,11 +460,10 @@ function assertMenuContract(themeId: string, menu: Menu): void {
  * registration that clears every check above.
  *
  * Once registered, the theme participates in `getInstalledThemeIds`,
- * `getThemeDefinition`, and `themes/index.ts`'s `resolveStyle` — every
- * internal theme lookup, with no separate "registered theme" branch.
- *
- * File loading that may shadow a builtin or replace a previous custom
- * registration uses {@link installThemeFile} instead.
+ * `getThemeDefinition`, and `themes/index.ts`'s `resolveStyle`: the id
+ * lookups every entry point falls back to when no definition is passed.
+ * A built-in id can never be shadowed here, and a registered id is never
+ * replaced. There is no uninstall outside the test-only reset.
  */
 export function registerTheme(input: unknown): void {
   const file = parseThemeFile(input)
@@ -480,15 +491,6 @@ export function registerTheme(input: unknown): void {
  */
 export function __registerStructuralTheme(input: unknown): ThemeDefinition {
   return installParsedThemeFile(parseThemeFile(input, StructuralThemeFileSchema))
-}
-
-/**
- * Validate a complete v2 theme file, then replace any previous registration
- * of the same id. Built-in ids may be shadowed. A failed gate leaves the
- * previous registration untouched.
- */
-export function installThemeFile(input: unknown): ThemeDefinition {
-  return installParsedThemeFile(parseThemeFile(input))
 }
 
 /**
@@ -526,10 +528,15 @@ export function getInstalledThemeIds(): readonly string[] {
 }
 
 /**
- * Resolve a theme id to its full definition — a registered theme first, then
- * the built-in shelf. An id that is neither throws (`resolveThemeId`), so a
- * misspelled theme surfaces at once instead of rendering as some other
- * theme. The one lookup every internal consumer calls.
+ * Resolve a theme id to its full definition — an SDK-registered theme first,
+ * then the built-in shelf. An id that is neither throws (`resolveThemeId`),
+ * so a misspelled theme surfaces at once instead of rendering as some other
+ * theme.
+ *
+ * This is the fallback every entry point uses when no `theme` option is
+ * passed. A deck or workspace theme file never goes through here: the CLI
+ * compiles it and passes the definition by value, so this table only ever
+ * answers for factory presets and process-level `registerTheme` calls.
  */
 export function getThemeDefinition(id: string): ThemeDefinition {
   return REGISTERED_THEMES.get(id) ?? THEME_DEFINITIONS[resolveThemeId(id)]

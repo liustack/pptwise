@@ -137,13 +137,17 @@ export const THEME_STYLES = Object.fromEntries(
 ) as Record<CanonicalThemeId, StyleTokens>;
 
 /**
- * Resolve a theme's style tokens. A registered theme's own style tokens
+ * Resolve a theme's style tokens by id: an SDK-registered theme's own tokens
  * (see `themes/definitions.ts`'s `registerTheme`) win over the builtin
  * fallback — same "registered lookup first, then builtin via resolveThemeId"
  * precedence as that module's `getThemeDefinition` (see
  * `registered-themes.ts`'s docstring for why this function reads that shared
- * map directly instead of calling `getThemeDefinition` itself). Recolor by
- * registering a complete theme, not by passing a partial overlay.
+ * map directly instead of calling `getThemeDefinition` itself).
+ *
+ * The render chain no longer calls this: it reads `theme.style` off the
+ * definition it was handed. This stays for callers that only hold an id
+ * (tests, tooling). Recolor by compiling a complete theme file, not by
+ * passing a partial overlay.
  */
 export function resolveStyle(id: string): StyleTokens {
   return REGISTERED_THEMES.get(id)?.style ?? THEME_STYLES[resolveThemeId(id)];

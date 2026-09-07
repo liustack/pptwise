@@ -64,7 +64,7 @@ Extraction has hard structural requirements:
 
 An unsafe palette is still written so the author can inspect it. The command appends a warning naming the contrast failure. Loading that theme later fails with the token, ratio, and background. Adjust the written colors or choose another source. Do not hide the failure with page-level color overrides.
 
-Theme loading uses the same `ThemeFileSchema` and registration path as hand-authored themes. Face names, parameter bounds, menu shape, style identity, and contrast are checked before installation.
+Theme loading uses the same `ThemeFileSchema` and compilation path as hand-authored themes. Face names, parameter bounds, menu shape, style identity, and contrast are checked when the file is resolved, before any command uses it.
 
 ## Binding
 
@@ -78,7 +78,7 @@ Place the file under a workspace `themes/` directory and bind its id in the spec
 }
 ```
 
-Project commands load the bound file through normal three-level theme lookup. There is no registration flag and no render-time theme override. `serve` watches a deck-local `theme.json`, reloads new bytes, and refreshes the review.
+Project commands load the bound file through normal three-level theme lookup and pass the compiled definition down the render chain by value. There is no registration flag and no render-time theme override. `serve` watches a deck-local `theme.json`, rereads it on every rebuild, and refreshes the review.
 
 ## Known limits
 
