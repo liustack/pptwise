@@ -26,6 +26,7 @@ import {
   runIcons,
   runNarratives,
   runSchema,
+  runThemeNew,
   runThemes,
   runValidate,
 } from "./commands"
@@ -622,6 +623,68 @@ describe("runSchema / runThemes", () => {
     expect([...fact.components].sort()).toEqual(["kpi_cards", "paragraph"])
     const anyTheme = JSON.parse(await runSchema({ kind: "quote" })) as { themes: Record<string, unknown> }
     expect(Object.keys(anyTheme.themes)).toContain("thesis")
+  })
+  // `validate` resolves a theme name through the deck directory first
+  // (theme.json, <name>.theme.json), then workspace themes/, then presets.
+  // The kind query used to skip the deck layer, so a deck-local theme.json
+  // answered validate with one menu and `schema --kind` with another.
+  describe("--kind --theme reads the deck-local theme the way validate does", () => {
+    async function deckWithLocalTheme(id: string): Promise<string> {
+      const deckDir = await mkdtemp(join(tmpdir(), "pptwise-schema-deck-"))
+      // thesis offers quote, brief does not: a same-id different-menu file.
+      await runThemeNew({ from: "thesis", output: join(deckDir, "theme.json"), id, cwd: deckDir })
+      await writeFile(
+        join(deckDir, "deck.spec.json"),
+        JSON.stringify({
+          version: "1",
+          narrative: "boardroom-report",
+          theme: id,
+          filename: "q",
+          pages: [
+            { id: "p-cover", type: "cover", heading: "Q" },
+            { id: "p-quote", type: "content", kind: "quote", heading: "Said" },
+            { id: "p-more", type: "content", kind: "points", heading: "More" },
+            { id: "p-ending", type: "ending", heading: "Thanks" },
+          ],
+        }),
+      )
+      return deckDir
+    }
+    const thesisQuote = () => JSON.parse(JSON.stringify(getThemeDefinition("thesis").menu.content.quote))
+
+    it("takes the cwd as the deck when it holds deck.spec.json", async () => {
+      const deckDir = await deckWithLocalTheme("brief")
+      const doc = JSON.parse(await runSchema({ kind: "quote", theme: "brief", cwd: deckDir })) as {
+        components: string[]
+        themes: Record<string, { face: string }>
+      }
+      expect(doc.themes.brief!.face).toBe(thesisQuote().face)
+      expect(doc.components).toContain("blockquote")
+      // Same directory, same answer from validate.
+      expect(await runValidate(deckDir, deckDir)).toMatch(/^OK/)
+    })
+
+    it("takes --deck from any cwd, and a deck-local custom id resolves", async () => {
+      const deckDir = await deckWithLocalTheme("acme")
+      const elsewhere = await mkdtemp(join(tmpdir(), "pptwise-schema-cwd-"))
+      const doc = JSON.parse(await runSchema({ kind: "quote", theme: "acme", deck: deckDir, cwd: elsewhere })) as {
+        themes: Record<string, { face: string }>
+      }
+      expect(Object.keys(doc.themes)).toEqual(["acme"])
+      expect(doc.themes.acme!.face).toBe(thesisQuote().face)
+      await expect(runSchema({ kind: "quote", theme: "acme", cwd: elsewhere })).rejects.toThrow(/unknown theme "acme"/)
+    })
+
+    it("falls back to the preset when the cwd is not a deck", async () => {
+      const cwd = await mkdtemp(join(tmpdir(), "pptwise-schema-plain-"))
+      await expect(runSchema({ kind: "quote", theme: "brief", cwd })).rejects.toThrow(/not offered by theme "brief"/)
+    })
+
+    it("refuses --deck that is not a directory, and --deck without --theme", async () => {
+      const cwd = await mkdtemp(join(tmpdir(), "pptwise-schema-nodeck-"))
+      await expect(runSchema({ kind: "quote", theme: "brief", deck: "missing", cwd })).rejects.toThrow(/--deck/)
+      await expect(runSchema({ kind: "quote", deck: cwd, cwd })).rejects.toThrow(/--deck requires --theme/)
+    })
   })
   it("never prints an empty oneOf for a kind whose face takes no component", async () => {
     const doc = JSON.parse(await runSchema({ kind: "statement", theme: "playbill" })) as Record<string, unknown>

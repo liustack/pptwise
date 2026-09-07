@@ -102,14 +102,14 @@ Any finding exits with code 1. `--pixels` adds image-backed text contrast sampli
 pptwise schema [--pretty] [--full]
 pptwise schema --spec [--pretty]
 pptwise schema --component <type> [--pretty] [--full]
-pptwise schema --kind <kind> [--theme <name>] [--pretty] [--full]
+pptwise schema --kind <kind> [--theme <name> [--deck <dir>]] [--pretty] [--full]
 pptwise icons [--json]
 pptwise spec validate deck-dir/deck.spec.json
 ```
 
 The IR schema keeps every shared piece in `$defs` once: each component under its own type name, the component union as `Component`, and the icon-name enum as `IconName`. Output is one line unless `--pretty` is passed.
 
-`--component` prints one component's schema with only the `$defs` it needs. `--kind` prints the components a page of that kind may hold, the face each installed theme binds to it, a `oneOf` over those components, and their `$defs`. Add `--theme` to answer for the bound theme alone. A face that draws no component prints an empty list and `not: {}` in place of the `oneOf`. The list comes from the same theme-menu route validate uses, so a component outside it fails `validate`. An unknown type, kind, or theme fails and lists the valid names.
+`--component` prints one component's schema with only the `$defs` it needs. `--kind` prints the components a page of that kind may hold, the face each installed theme binds to it, a `oneOf` over those components, and their `$defs`. Add `--theme` to answer for the bound theme alone. The name resolves the way `validate` resolves a spec's theme: the deck directory first (`theme.json`, `<name>.theme.json`), then workspace `themes/`, then the presets. The deck directory is `--deck <dir>`, or the cwd when it holds `deck.spec.json`. A face that draws no component prints an empty list and `not: {}` in place of the `oneOf`. The list comes from the same theme-menu route validate uses, so a component outside it fails `validate`. An unknown type, kind, or theme fails and lists the valid names.
 
 Icon fields print as a string that points at `pptwise icons`. `--full` prints the closed enum instead, for programs that validate against the schema. Validation always checks the closed enum.
 

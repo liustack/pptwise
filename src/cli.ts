@@ -132,14 +132,15 @@ program
   .option("--spec", "print the deck spec schema instead")
   .option("--component <type>", "print one component's schema with the $defs it needs")
   .option("--kind <kind>", "print the components a page of this kind may hold, with their schemas")
-  .option("--theme <name>", "with --kind: answer for one theme instead of every installed theme")
+  .option("--theme <name>", "with --kind: answer for one theme instead of every installed theme (deck theme.json, then workspace themes/, then presets)")
+  .option("--deck <dir>", "with --theme: the deck project directory to read a deck-local theme from (default: the cwd when it holds deck.spec.json)")
   .option("--pretty", "indent the JSON (default output is one line)")
   .option("--full", "print the closed icon-name enum instead of the `pptwise icons` pointer")
   .addHelpText(
     "after",
-    "\nExamples:\n  $ pptwise schema --spec\n  $ pptwise schema --kind fact --theme brief\n  $ pptwise schema --component kpi_cards",
+    "\nExamples:\n  $ pptwise schema --spec\n  $ pptwise schema --kind fact --theme brief\n  $ pptwise schema --kind quote --theme acme --deck my-deck/\n  $ pptwise schema --component kpi_cards",
   )
-  .action(async (opts: { spec?: boolean; component?: string; kind?: string; theme?: string; pretty?: boolean; full?: boolean }) => {
+  .action(async (opts: { spec?: boolean; component?: string; kind?: string; theme?: string; deck?: string; pretty?: boolean; full?: boolean }) => {
     try {
       console.log(await runSchema(opts))
     } catch (e) {

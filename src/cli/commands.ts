@@ -790,8 +790,14 @@ export interface SchemaCommandOptions {
   component?: string
   /** Print the components legal on a page of this kind, with their schemas. */
   kind?: string
-  /** With `kind`: answer for one theme name (deck-less lookup: workspace `themes/`, then presets) instead of every installed theme. */
+  /** With `kind`: answer for one theme name instead of every installed
+   *  theme. Resolved the way `validate` resolves a spec's theme: the deck
+   *  directory first (`theme.json`, `<name>.theme.json`), then workspace
+   *  `themes/`, then the presets. */
   theme?: string
+  /** With `theme`: the deck project directory to read a deck-local theme
+   *  from. Omitted, `cwd` counts as the deck when it holds `deck.spec.json`. */
+  deck?: string
   /** Indent the JSON. Default output is one line. */
   pretty?: boolean
   /** Print the closed icon enum instead of the `pptwise icons` pointer. */
@@ -800,12 +806,29 @@ export interface SchemaCommandOptions {
   cwd?: string
 }
 
-/** `pptwise schema [--spec | --component <type> | --kind <kind> [--theme <name>]] [--pretty] [--full]`. */
+/**
+ * The deck directory a `schema --kind --theme` lookup reads first. `--deck`
+ * names it outright. Otherwise the cwd is the deck when it holds
+ * `deck.spec.json`, the same file `validate <dir>` requires of a deck
+ * project (`./deck-dir.ts`'s `readDeckDir`), so an agent standing in its
+ * deck gets the answer validate will give.
+ */
+async function schemaDeckDir(cwd: string, deck: string | undefined): Promise<string | undefined> {
+  if (deck !== undefined) {
+    const dir = resolve(cwd, deck)
+    if (!(await isDeckDirectory(dir))) throw new PptwiseError(`--deck ${deck}: ${dir} is not a directory`)
+    return dir
+  }
+  return (await pathExists(join(cwd, SPEC_FILENAME))) ? cwd : undefined
+}
+
+/** `pptwise schema [--spec | --component <type> | --kind <kind> [--theme <name> [--deck <dir>]]] [--pretty] [--full]`. */
 export async function runSchema(opts: SchemaCommandOptions = {}): Promise<string> {
   const modes = [opts.spec ? "--spec" : undefined, opts.component !== undefined ? "--component" : undefined, opts.kind !== undefined ? "--kind" : undefined]
     .filter((flag): flag is string => flag !== undefined)
   if (modes.length > 1) throw new PptwiseError(`pass one of --spec, --component, --kind (got ${modes.join(" and ")})`)
   if (opts.theme !== undefined && opts.kind === undefined) throw new PptwiseError("--theme requires --kind")
+  if (opts.deck !== undefined && opts.theme === undefined) throw new PptwiseError("--deck requires --theme")
   if (opts.spec && opts.full) throw new PptwiseError("--full applies to the IR schema, not --spec")
   let schema: Record<string, unknown>
   if (opts.spec) {
@@ -813,7 +836,9 @@ export async function runSchema(opts: SchemaCommandOptions = {}): Promise<string
   } else if (opts.component !== undefined) {
     schema = componentJsonSchema(opts.component, { full: opts.full })
   } else if (opts.kind !== undefined) {
-    const resolved = await resolveThemeSelection(opts.theme, { startDir: opts.cwd ?? process.cwd() })
+    const cwd = opts.cwd ?? process.cwd()
+    const deckDir = await schemaDeckDir(cwd, opts.deck)
+    const resolved = await resolveThemeSelection(opts.theme, { startDir: cwd, deckDir })
     schema = kindJsonSchema(opts.kind, { theme: resolved?.definition, full: opts.full })
   } else {
     schema = irJsonSchema({ full: opts.full })

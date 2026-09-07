@@ -106,10 +106,10 @@ Write `pages/<id>.json` in batches of at most four. A page file may contain `com
 
 Choose components that serve the page's `kind`. `quote` is a page kind. The quotation component is `blockquote`. Component ownership and lookalike choices are in `references/components.md`. Pacing and physical capacity are in `references/density.md`. Image workflows are in `references/images.md`.
 
-Read the exact contract before writing a page, one kind or one component at a time. The kind query lists the components the bound theme's face can draw, and `validate` rejects anything outside that list. Icon fields take a name from `pptwise icons`.
+Read the exact contract before writing a page, one kind or one component at a time. The kind query lists the components the bound theme's face can draw, and `validate` rejects anything outside that list. Run it inside the deck directory, or pass `--deck deck-dir/`, so a deck-local `theme.json` answers the same way it does for `validate`. Icon fields take a name from `pptwise icons`.
 
 ```bash
-pptwise schema --kind <kind> --theme <theme>
+pptwise schema --kind <kind> --theme <theme> --deck deck-dir/
 pptwise schema --component <type>
 pptwise icons
 ```
