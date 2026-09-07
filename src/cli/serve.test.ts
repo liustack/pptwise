@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises"
+import { mkdir, mkdtemp, readFile, rename, writeFile } from "node:fs/promises"
 import http from "node:http"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
@@ -9,7 +9,13 @@ import { __resetRegisteredThemes } from "../themes/definitions"
 import { buildThmxBytes, DEFAULT_THMX_COLORS } from "../themes/extract/__fixtures__/thmx"
 import { runBrandExtract } from "./commands"
 import { THEME_FILENAME } from "./deck-dir"
-import { createServeServer, SERVE_CLIENT_SCRIPT_ID, watchRoots, type ServeHandle } from "./serve"
+import {
+  createServeServer,
+  SERVE_CLIENT_SCRIPT_ID,
+  type ServeBuildStatus,
+  type ServeHandle,
+  watchRoots,
+} from "./serve"
 
 installNodePlatform()
 
@@ -123,20 +129,33 @@ interface SseEvent {
   data: string
 }
 
+interface SseConnection {
+  events: SseEvent[]
+  waitFor: (eventName: string, timeoutMs?: number) => Promise<SseEvent>
+  /** Like `waitFor`, but ignores frames that already arrived — for a test
+   *  that needs the *second* `reload` of a session, not the one it already
+   *  awaited. */
+  waitForNext: (eventName: string, timeoutMs?: number) => Promise<SseEvent>
+  close: () => void
+}
+
 /** A raw http request reading `/events`'s stream, parsing SSE frames
  *  (`event:`/`data:` lines terminated by a blank line) and letting a test
  *  await the next frame of a given event name — event-driven, not polling.
  *  Frames with no `event:` line (the `retry:` hint, `: heartbeat` comment
  *  pings) are intentionally never surfaced: nothing here cares about either,
- *  only the `reload`/`error` frames `createServeServer` actually names. */
-function connectSSE(port: number): {
-  events: SseEvent[]
-  waitFor: (eventName: string, timeoutMs?: number) => Promise<SseEvent>
-  close: () => void
-} {
+ *  only the `reload`/`error` frames `createServeServer` actually names.
+ *  Resolves once the server has answered, so a file change made right after
+ *  cannot broadcast into a stream that is not subscribed yet (a fast-failing
+ *  rebuild plus the 200ms debounce is a narrow window on a loaded machine). */
+function connectSSE(port: number): Promise<SseConnection> {
   const events: SseEvent[] = []
   const waiters: Array<{ eventName: string; resolve: (e: SseEvent) => void }> = []
   let buffer = ""
+  let onConnected: () => void = () => {}
+  const connected = new Promise<void>((resolvePromise) => {
+    onConnected = resolvePromise
+  })
 
   function deliver(evt: SseEvent): void {
     events.push(evt)
@@ -149,6 +168,7 @@ function connectSSE(port: number): {
   }
 
   const req = http.get({ host: "127.0.0.1", port, path: "/events" }, (res) => {
+    onConnected()
     res.setEncoding("utf8")
     res.on("data", (chunk: string) => {
       buffer += chunk
@@ -186,7 +206,47 @@ function connectSSE(port: number): {
     })
   }
 
-  return { events, waitFor, close: () => req.destroy() }
+  function waitForNext(eventName: string, timeoutMs = 3000): Promise<SseEvent> {
+    return new Promise((resolvePromise, reject) => {
+      const timer = setTimeout(() => reject(new Error(`timed out waiting for the next SSE event "${eventName}"`)), timeoutMs)
+      waiters.push({
+        eventName,
+        resolve: (e) => {
+          clearTimeout(timer)
+          resolvePromise(e)
+        },
+      })
+    })
+  }
+
+  return connected.then(() => ({ events, waitFor, waitForNext, close: () => req.destroy() }))
+}
+
+/** The save an editor does when it refuses to write in place: the new bytes
+ *  land in a sibling temp file, then `rename` swaps it over the target. The
+ *  path keeps its name, the inode behind it does not. */
+async function atomicReplace(path: string, content: string): Promise<void> {
+  const tmp = `${path}.${Date.now()}.tmp`
+  await writeFile(tmp, content)
+  await rename(tmp, path)
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolvePromise) => setTimeout(resolvePromise, ms))
+}
+
+/** Re-runs `probe` every 100ms until it returns a value. For a change that
+ *  arrives through an unknown number of rebuilds (a directory appearing and
+ *  a file landing in it are two events, and how the debounce groups them
+ *  depends on timing). */
+async function pollUntil<T>(probe: () => Promise<T | undefined>, timeoutMs = 3000): Promise<T> {
+  const deadline = Date.now() + timeoutMs
+  for (;;) {
+    const value = await probe()
+    if (value !== undefined) return value
+    if (Date.now() > deadline) throw new Error("timed out polling for a served change")
+    await sleep(100)
+  }
 }
 
 const openHandles: ServeHandle[] = []
@@ -268,7 +328,7 @@ describe("createServeServer — watch + rebuild (bare IR file)", () => {
     const irPath = join(dir, "deck.json")
     await writeFile(irPath, JSON.stringify(VALID_IR))
     const handle = await startServe(irPath)
-    const sse = connectSSE(handle.port)
+    const sse = await connectSSE(handle.port)
 
     const updated = { ...VALID_IR, slides: [...VALID_IR.slides, { type: "ending", heading: "The End" }] }
     await writeFile(irPath, JSON.stringify(updated))
@@ -293,7 +353,7 @@ describe("createServeServer — watch + rebuild (deck project directory)", () =>
     const initial = await get(handle.port, "/")
     expect(initial.body).toContain("first draft")
 
-    const sse = connectSSE(handle.port)
+    const sse = await connectSSE(handle.port)
     await writeFile(
       join(deckDir, "pages", "p-a.json"),
       JSON.stringify({ components: [{ type: "paragraph", text: "revised draft" }] }),
@@ -316,7 +376,7 @@ describe("createServeServer — watch + rebuild (deck project directory)", () =>
     const handle = await startServe(deckDir)
     const beforeBody = (await get(handle.port, "/")).body
 
-    const sse = connectSSE(handle.port)
+    const sse = await connectSSE(handle.port)
     // Simulates an editor saving mid-write: the file is momentarily not
     // valid JSON.
     await writeFile(join(deckDir, "pages", "p-a.json"), "{not valid json")
@@ -359,7 +419,7 @@ describe("createServeServer — watch + rebuild (deck project directory)", () =>
     const initial = await get(handle.port, "/")
     expect(initial.body).toContain("data:image/png;base64")
 
-    const sse = connectSSE(handle.port)
+    const sse = await connectSSE(handle.port)
     // A second, unreferenced file — this test's only job is proving the
     // assets/ *directory* is watched at all (task S1's own coverage was
     // pages/*.json only), not re-proving asset-content resolution
@@ -382,13 +442,152 @@ describe("createServeServer — watch + rebuild (deck project directory)", () =>
     const initial = await get(handle.port, "/")
     expect(initial.body).toContain("serve-deck")
 
-    const sse = connectSSE(handle.port)
+    const sse = await connectSSE(handle.port)
     const renamedPlan = { ...makeDeckPlan(), filename: "serve-deck-renamed" }
     await writeFile(join(deckDir, "deck.spec.json"), JSON.stringify(renamedPlan))
     await sse.waitFor("reload")
 
     const revised = await get(handle.port, "/")
     expect(revised.body).toContain("serve-deck-renamed")
+    sse.close()
+  })
+})
+
+describe("createServeServer — watch survives atomic replacement (temp file + rename)", () => {
+  // The old watch set held one `fs.watch` per *file*. An editor that saves
+  // by writing a temp file and renaming it over the target leaves that
+  // watcher bound to the inode the rename just unlinked: the first swap
+  // still fires (the watched inode is what got removed), the second one
+  // happens to a file nobody is watching any more. Watching the directory
+  // and filtering by name is what makes the third version show up.
+
+  it("bare IR file: two consecutive atomic saves both reach the preview", async () => {
+    const dir = await makeDir()
+    const irPath = join(dir, "deck.json")
+    await writeFile(irPath, JSON.stringify(VALID_IR))
+    const handle = await startServe(irPath)
+    const sse = await connectSSE(handle.port)
+
+    await atomicReplace(irPath, JSON.stringify({ ...VALID_IR, filename: "version-b" }))
+    await sse.waitForNext("reload")
+    expect((await get(handle.port, "/")).body).toContain("version-b")
+
+    await atomicReplace(irPath, JSON.stringify({ ...VALID_IR, filename: "version-c" }))
+    await sse.waitForNext("reload")
+    const third = await get(handle.port, "/")
+    expect(third.body).toContain("version-c")
+    expect(third.body).not.toContain("version-b")
+    sse.close()
+  })
+
+  it("deck project: two consecutive atomic saves of deck.spec.json both reach the preview", async () => {
+    const deckDir = await makeDir()
+    await writeFile(join(deckDir, "deck.spec.json"), JSON.stringify(makeDeckPlan()))
+    await mkdir(join(deckDir, "pages"))
+    await writeFile(
+      join(deckDir, "pages", "p-a.json"),
+      JSON.stringify({ components: [{ type: "paragraph", text: "steady content" }] }),
+    )
+    const handle = await startServe(deckDir)
+    const sse = await connectSSE(handle.port)
+
+    await atomicReplace(join(deckDir, "deck.spec.json"), JSON.stringify({ ...makeDeckPlan(), filename: "version-b" }))
+    await sse.waitForNext("reload")
+    expect((await get(handle.port, "/")).body).toContain("version-b")
+
+    await atomicReplace(join(deckDir, "deck.spec.json"), JSON.stringify({ ...makeDeckPlan(), filename: "version-c" }))
+    await sse.waitForNext("reload")
+    const third = await get(handle.port, "/")
+    expect(third.body).toContain("version-c")
+    expect(third.body).not.toContain("version-b")
+    sse.close()
+  })
+})
+
+describe("createServeServer — directories that appear after startup", () => {
+  it("picks up an assets/ directory created mid-session and the image dropped into it", async () => {
+    const deckDir = await makeDir()
+    await writeFile(join(deckDir, "deck.spec.json"), JSON.stringify(makeDeckPlan()))
+    await mkdir(join(deckDir, "pages"))
+    await writeFile(
+      join(deckDir, "pages", "p-a.json"),
+      JSON.stringify({ components: [{ type: "paragraph", text: "no image yet" }] }),
+    )
+    const handle = await startServe(deckDir)
+    const sse = await connectSSE(handle.port)
+
+    // The page now asks for an image that does not exist. Preview never
+    // gates, so the build succeeds with a placeholder where the image would
+    // go: no embedded bytes yet.
+    await writeFile(
+      join(deckDir, "pages", "p-a.json"),
+      JSON.stringify({ components: [{ type: "image", asset_id: "logo" }] }),
+    )
+    await sse.waitForNext("reload")
+    expect((await get(handle.port, "/")).body).not.toContain("data:image/png;base64")
+
+    // assets/ is born empty first, so the only thing that can bring the
+    // bytes in is an event from inside the new directory itself.
+    await mkdir(join(deckDir, "assets"))
+    await sleep(400)
+    await writeFile(join(deckDir, "assets", "logo.png"), PNG_1PX)
+    const withImage = await pollUntil(async () => {
+      const res = await get(handle.port, "/")
+      return res.body.includes("data:image/png;base64") ? res : undefined
+    })
+    expect(withImage.body).not.toContain("no image yet")
+    sse.close()
+  })
+})
+
+describe("createServeServer — build status", () => {
+  it("marks the served HTML stale after a failed rebuild, and current again once it recovers", async () => {
+    const deckDir = await makeDir()
+    await writeFile(join(deckDir, "deck.spec.json"), JSON.stringify(makeDeckPlan()))
+    await mkdir(join(deckDir, "pages"))
+    await writeFile(
+      join(deckDir, "pages", "p-a.json"),
+      JSON.stringify({ components: [{ type: "paragraph", text: "first draft" }] }),
+    )
+    const handle = await startServe(deckDir)
+
+    const fresh = await get(handle.port, "/")
+    expect(fresh.headers["x-pptwise-build-status"]).toBe("ok")
+    expect(fresh.headers["x-pptwise-served-revision"]).toBe("1")
+    expect(fresh.headers["x-pptwise-latest-revision"]).toBe("1")
+    const freshStatus = JSON.parse((await get(handle.port, "/status")).body) as ServeBuildStatus
+    expect(freshStatus).toEqual({ latestRevision: 1, servedRevision: 1, latestOk: true })
+    expect(handle.status()).toEqual(freshStatus)
+
+    const sse = await connectSSE(handle.port)
+    await writeFile(join(deckDir, "pages", "p-a.json"), "{not valid json")
+    const errorEvent = await sse.waitForNext("error")
+    expect(JSON.parse(errorEvent.data)).toMatchObject({ revision: 2 })
+
+    const stale = await get(handle.port, "/")
+    expect(stale.status).toBe(200)
+    expect(stale.body).toContain("first draft")
+    expect(stale.headers["x-pptwise-build-status"]).toBe("failed")
+    expect(stale.headers["x-pptwise-served-revision"]).toBe("1")
+    expect(stale.headers["x-pptwise-latest-revision"]).toBe("2")
+    const staleStatus = JSON.parse((await get(handle.port, "/status")).body) as ServeBuildStatus
+    expect(staleStatus).toMatchObject({ latestRevision: 2, servedRevision: 1, latestOk: false })
+    expect(staleStatus.error).toMatch(/JSON/)
+
+    await writeFile(
+      join(deckDir, "pages", "p-a.json"),
+      JSON.stringify({ components: [{ type: "paragraph", text: "recovered draft" }] }),
+    )
+    await sse.waitForNext("reload")
+    const recovered = await get(handle.port, "/")
+    expect(recovered.body).toContain("recovered draft")
+    expect(recovered.headers["x-pptwise-build-status"]).toBe("ok")
+    expect(recovered.headers["x-pptwise-served-revision"]).toBe("3")
+    expect(JSON.parse((await get(handle.port, "/status")).body)).toEqual({
+      latestRevision: 3,
+      servedRevision: 3,
+      latestOk: true,
+    })
     sse.close()
   })
 })
@@ -450,9 +649,9 @@ describe("createServeServer — /revision-request, removed", () => {
 describe("watchRoots — theme files", () => {
   it("includes deck-dir theme.json", () => {
     const deckDir = "/tmp/some-deck"
-    const roots = watchRoots(deckDir, true, ["/tmp/workspace/themes/acme.theme.json"])
-    expect(roots).toContain(join(deckDir, THEME_FILENAME))
-    expect(roots).toContain("/tmp/workspace/themes/acme.theme.json")
+    const roots = watchRoots(deckDir, true, [{ path: "/tmp/workspace/themes/acme.theme.json", kind: "file" }])
+    expect(roots).toContainEqual({ path: join(deckDir, THEME_FILENAME), kind: "file" })
+    expect(roots).toContainEqual({ path: "/tmp/workspace/themes/acme.theme.json", kind: "file" })
   })
 })
 

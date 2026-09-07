@@ -26,8 +26,9 @@
  * `retry:` hint on connect, a `: heartbeat` comment frame every 30s (keeps
  * the connection alive through an idle-timeout proxy — pure SSE comment
  * syntax, invisible to `EventSource`), an `event: reload` frame after every
- * successful rebuild, an `event: error` frame with a JSON `{message}` body
- * after a failed one. Everything else 404s.
+ * successful rebuild, an `event: error` frame with a JSON `{revision,
+ * message}` body after a failed one. `GET /status` is the JSON
+ * {@link ServeBuildStatus} snapshot of the build state. Everything else 404s.
  *
  * This server is read-only. It carried a `POST /revision-request` endpoint
  * until 2026-08-16, which took the preview annotation panel's export and
@@ -42,31 +43,43 @@
  * own `resolvedTarget`/`isDir` — the exact path `loadDeckTarget`
  * (`./commands.ts`) already resolved `target` to — rather than this module
  * re-deriving the bare-name/`decksDir` resolution a second time: a deck
- * project directory watches `deck.spec.json` + `pages/` + `assets/` +
- * `theme.json` (non-recursive `fs.watch` on each — these flat, non-nested
- * paths cover the whole deck-project layout anyway, `docs/deck-projects.md`, so
- * `{recursive: true}` buys nothing here even now that the repo's floor
- * (Node 22.19, `package.json#engines`) has it on every platform); a bare IR
- * target watches that one file, plus a resolved workspace theme file when
- * the bound theme is a file. Multiple `fs.watch` events firing for a
- * single logical save (editors that write via a temp file + rename, or
- * saving several page files in one "save all") are coalesced by a 200ms
- * debounce into one rebuild.
+ * project directory cares about `deck.spec.json` + `pages/` + `assets/` +
+ * `theme.json`; a bare IR target cares about that one file, plus a resolved
+ * workspace theme file when the bound theme is a file. None of those paths
+ * is ever handed to `fs.watch` directly, though. Every `fs.watch` here is on
+ * a *directory*, with the callback filtering by entry name
+ * ({@link watchTree}): a watcher on a file is bound to that file's inode,
+ * and an editor that saves by writing a temp file and renaming it over the
+ * target replaces the inode on every save — the watcher fires once, for the
+ * unlink of what it was watching, then sits on a dead inode while later
+ * saves go by unseen. A directory keeps its inode across all of that, and
+ * reports each swap under the entry's name. The same tree re-attaches a
+ * directory watcher when the directory itself appears, disappears, or is
+ * replaced mid-session (`assets/` materializing with the first local image
+ * is the common case), so nothing here is fixed at startup. Multiple events
+ * for a single logical save (temp file + rename, or a "save all" over
+ * several page files) are coalesced by a 200ms debounce into one rebuild,
+ * and rebuilds run one at a time in order, so the HTML in cache always
+ * reflects the newest build, never a slower older one finishing last.
  *
  * Resilience (design ruling 3's other half): a rebuild that throws — a
  * mid-edit malformed JSON save is the common case — never crashes the server
  * or throws out of the watch handler. It's caught, turned into an `error` SSE
  * event, and the previous good `html` stays cached and keeps serving `GET /`
- * until a later rebuild succeeds. Only the *first* build (at
- * `createServeServer` call time, before the server starts listening) is
- * allowed to reject the whole call — same "throw `PptwiseError` → CLI exit 1"
- * contract every other `run*` command already has (`./commands.ts`), since
- * there is no previous-good HTML yet to fall back to.
+ * until a later rebuild succeeds. That stale page is never passed off as
+ * current, though: every build attempt gets a revision number, and both
+ * `GET /` (via `X-Pptwise-*` headers) and `GET /status` (JSON,
+ * {@link ServeBuildStatus}) say which revision the HTML came from and whether
+ * the latest attempt failed. Only the *first* build (at `createServeServer`
+ * call time, before the server starts listening) is allowed to reject the
+ * whole call — same "throw `PptwiseError` → CLI exit 1" contract every other
+ * `run*` command already has (`./commands.ts`), since there is no
+ * previous-good HTML yet to fall back to.
  */
-import { type FSWatcher, watch } from "node:fs"
+import { type FSWatcher, statSync, watch } from "node:fs"
 import { createServer, type Server, type ServerResponse } from "node:http"
 import { platform as osPlatform } from "node:os"
-import { dirname, join } from "node:path"
+import { basename, dirname, join, resolve, sep } from "node:path"
 import { PptwiseError } from "../errors"
 import { spawnHidden } from "./child"
 import { buildDeckPreview } from "./commands"
@@ -109,6 +122,8 @@ export interface ServeHandle {
    *  Exposed so a caller (or a test) can force a synchronous rebuild without
    *  waiting on the 200ms debounce. */
   rebuild: () => Promise<void>
+  /** The same snapshot `GET /status` serves — see {@link ServeBuildStatus}. */
+  status: () => ServeBuildStatus
   /** Stops watching, closes every open SSE connection, and closes the HTTP
    *  server. Safe to call more than once. */
   close: () => Promise<void>
@@ -118,22 +133,187 @@ export interface ServeHandle {
   port: number
 }
 
-/** The concrete paths `createServeServer` should `fs.watch` for `target`,
- *  given `buildDeckPreview`'s own `resolvedTarget`/`isDir` for it — see this
+/**
+ * What `GET /status` reports and what `GET /`'s `X-Pptwise-Build-Status`,
+ * `X-Pptwise-Served-Revision`, and `X-Pptwise-Latest-Revision` headers
+ * carry. A revision is one build attempt: the initial build is 1 and every
+ * rebuild — watcher-triggered or via {@link ServeHandle.rebuild} — takes the
+ * next number whether it succeeds or not. `servedRevision` is the build the
+ * cached HTML came from; when it trails `latestRevision`, the page a client
+ * sees is the last good one, not the current source.
+ */
+export interface ServeBuildStatus {
+  latestRevision: number
+  servedRevision: number
+  latestOk: boolean
+  /** The latest attempt's failure message. Absent when it succeeded. */
+  error?: string
+}
+
+/** One thing `createServeServer` wants to hear about: a single file, or
+ *  every entry of a directory. Either kind may not exist yet — see
+ *  {@link watchTree}. */
+export interface WatchRoot {
+  path: string
+  kind: "file" | "dir"
+}
+
+/** The paths `createServeServer` cares about for `target`, given
+ *  `buildDeckPreview`'s own `resolvedTarget`/`isDir` for it — see this
  *  module's own doc comment for why these (deck-dir mode) or this one
- *  (bare-IR mode) are the whole watch surface. Deck-dir mode also watches
- *  `theme.json`. Callers pass workspace assets (and later a resolved
- *  workspace theme file) via `extra`. */
-export function watchRoots(resolvedTarget: string, isDir: boolean, extra: string[] = []): string[] {
-  const roots = isDir
+ *  (bare-IR mode) are the whole watch surface. Deck-dir mode also lists
+ *  `theme.json`. Callers pass the workspace assets directory (and a resolved
+ *  workspace theme file, when the bound theme is one) via `extra`. */
+export function watchRoots(resolvedTarget: string, isDir: boolean, extra: WatchRoot[] = []): WatchRoot[] {
+  const roots: WatchRoot[] = isDir
     ? [
-        join(resolvedTarget, SPEC_FILENAME),
-        join(resolvedTarget, PAGES_DIRNAME),
-        join(resolvedTarget, ASSETS_DIRNAME),
-        join(resolvedTarget, THEME_FILENAME),
+        { path: join(resolvedTarget, SPEC_FILENAME), kind: "file" },
+        { path: join(resolvedTarget, PAGES_DIRNAME), kind: "dir" },
+        { path: join(resolvedTarget, ASSETS_DIRNAME), kind: "dir" },
+        { path: join(resolvedTarget, THEME_FILENAME), kind: "file" },
       ]
-    : [resolvedTarget]
+    : [{ path: resolvedTarget, kind: "file" }]
   return [...roots, ...extra]
+}
+
+/** Per watched directory: which entry names count as a change, and which
+ *  entries are themselves directories this tree watches (so their
+ *  appearance, removal, or replacement re-attaches that child's watcher). */
+interface WatchRule {
+  files: Set<string>
+  allFiles: boolean
+  children: Set<string>
+}
+
+/**
+ * Turns {@link WatchRoot}s into directory-level `fs.watch`ers and calls
+ * `onChange` for every event that matters. A `file` root watches the file's
+ * parent directory filtered to that one name; a `dir` root watches the
+ * directory itself and takes every entry. A directory that does not exist
+ * yet is not an error: the tree watches its nearest existing ancestor
+ * filtered to the missing segment's name, and attaches the real watcher the
+ * moment the segment appears (then descends into whatever children it was
+ * waiting for). A directory that is removed or swapped for a new one (same
+ * name, new inode) is detected on its parent's event and re-attached the
+ * same way, so a watcher never sits on a dead inode. Returns the teardown
+ * that closes every watcher the tree ever opened.
+ */
+export function watchTree(roots: WatchRoot[], onChange: () => void): () => void {
+  const rules = new Map<string, WatchRule>()
+  const watchers = new Map<string, { watcher: FSWatcher; ino: bigint }>()
+  const isEnoent = (e: unknown) => (e as NodeJS.ErrnoException).code === "ENOENT"
+
+  function ruleFor(dir: string): WatchRule {
+    let rule = rules.get(dir)
+    if (!rule) {
+      rule = { files: new Set(), allFiles: false, children: new Set() }
+      rules.set(dir, rule)
+    }
+    return rule
+  }
+
+  function linkToParent(dir: string): string | undefined {
+    const parent = dirname(dir)
+    if (parent === dir) return undefined
+    ruleFor(parent).children.add(basename(dir))
+    return parent
+  }
+
+  for (const root of roots) {
+    const abs = resolve(root.path)
+    if (root.kind === "file") {
+      ruleFor(dirname(abs)).files.add(basename(abs))
+    } else {
+      ruleFor(abs).allFiles = true
+      linkToParent(abs)
+    }
+  }
+
+  function inodeOf(dir: string): bigint | undefined {
+    try {
+      const st = statSync(dir, { bigint: true })
+      return st.isDirectory() ? st.ino : undefined
+    } catch (e) {
+      if (isEnoent(e)) return undefined
+      throw e
+    }
+  }
+
+  function detach(dir: string): void {
+    for (const [key, entry] of watchers) {
+      if (key === dir || key.startsWith(dir + sep)) {
+        entry.watcher.close()
+        watchers.delete(key)
+      }
+    }
+  }
+
+  function attach(dir: string): void {
+    if (watchers.has(dir)) return
+    const rule = ruleFor(dir)
+    let watcher: FSWatcher
+    try {
+      watcher = watch(dir, (_event, filename) => onEvent(dir, filename))
+    } catch (e) {
+      // Not there yet (a brand-new deck project has no `pages/` or `assets/`
+      // until something fills them, and the workspace's pinned-asset
+      // directory only exists once a stock photo has been pinned). The
+      // parent will say when it appears. Anything other than "doesn't exist"
+      // (permissions, ...) is a real problem.
+      if (!isEnoent(e)) throw e
+      const parent = linkToParent(dir)
+      if (parent !== undefined) attach(parent)
+      return
+    }
+    const ino = inodeOf(dir)
+    if (ino === undefined) {
+      // Vanished between the `watch` call and the stat — treat it like the
+      // ENOENT branch above, the parent's event brings it back.
+      watcher.close()
+      const parent = linkToParent(dir)
+      if (parent !== undefined) attach(parent)
+      return
+    }
+    watcher.on("error", () => detach(dir))
+    watchers.set(dir, { watcher, ino })
+    for (const child of rule.children) attach(join(dir, child))
+  }
+
+  /** A child directory's entry changed on its parent: keep the watcher when
+   *  it is still the same directory, replace it when the directory was
+   *  removed or swapped for a new inode. */
+  function refreshChild(dir: string): void {
+    const current = watchers.get(dir)
+    const ino = inodeOf(dir)
+    if (current !== undefined && current.ino === ino) return
+    detach(dir)
+    attach(dir)
+  }
+
+  function onEvent(dir: string, filename: string | Buffer | null): void {
+    const rule = rules.get(dir)
+    if (rule === undefined) return
+    if (filename === null) {
+      // The platform could not say which entry changed. Assume everything.
+      for (const child of rule.children) refreshChild(join(dir, child))
+      onChange()
+      return
+    }
+    const name = basename(filename.toString())
+    let matters = rule.allFiles || rule.files.has(name)
+    if (rule.children.has(name)) {
+      refreshChild(join(dir, name))
+      matters = true
+    }
+    if (matters) onChange()
+  }
+
+  for (const dir of [...rules.keys()]) attach(dir)
+
+  return () => {
+    for (const entry of watchers.values()) entry.watcher.close()
+    watchers.clear()
+  }
 }
 
 /** Marker on the injected `<script>` element (task S2: "serve 模式检测（注入的
@@ -238,6 +418,20 @@ export const SERVE_CLIENT_JS = `
       } catch (err) {}
       showBanner(message)
     })
+
+    // A page opened (or reloaded by hand) after a failed rebuild is the last
+    // good build, not the current source. The SSE error frame for that
+    // failure went out before this page existed, so ask once.
+    if (typeof fetch === 'function') {
+      fetch('/status')
+        .then(function (res) { return res.json() })
+        .then(function (status) {
+          if (status && status.latestOk === false) {
+            showBanner((typeof status.error === 'string' ? status.error : 'rebuild failed') + ' (showing the last successful build)')
+          }
+        })
+        .catch(function () {})
+    }
   }
 
   try {
@@ -297,7 +491,16 @@ export async function createServeServer(options: ServeOptions): Promise<ServeHan
   // rather than start a server with nothing to show at `GET /`.
   const initial = await buildDeckPreview(options.target, { cwd })
   let cachedHtml = injectServeClient(initial.html)
+  let latestRevision = 1
+  let servedRevision = 1
+  let latestError: string | undefined
   const sseClients = new Set<ServerResponse>()
+
+  function status(): ServeBuildStatus {
+    return latestError === undefined
+      ? { latestRevision, servedRevision, latestOk: true }
+      : { latestRevision, servedRevision, latestOk: false, error: latestError }
+  }
 
   function writeToAll(chunk: string): void {
     for (const res of sseClients) {
@@ -316,21 +519,45 @@ export async function createServeServer(options: ServeOptions): Promise<ServeHan
     writeToAll(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`)
   }
 
-  async function rebuild(): Promise<void> {
+  async function buildOnce(): Promise<void> {
+    const revision = ++latestRevision
     try {
       const result = await buildDeckPreview(options.target, { cwd })
       cachedHtml = injectServeClient(result.html)
-      broadcast("reload", {})
+      servedRevision = revision
+      latestError = undefined
+      broadcast("reload", { revision })
     } catch (e) {
-      broadcast("error", { message: e instanceof Error ? e.message : String(e) })
+      latestError = e instanceof Error ? e.message : String(e)
+      broadcast("error", { revision, message: latestError })
     }
+  }
+
+  // Builds run strictly one after another. Two overlapping builds could
+  // otherwise finish out of order and leave the older result in the cache.
+  let buildQueue: Promise<void> = Promise.resolve()
+  function rebuild(): Promise<void> {
+    const run = buildQueue.then(buildOnce)
+    buildQueue = run
+    return run
   }
 
   const server = createServer((req, res) => {
     const pathname = (req.url ?? "/").split("?")[0]
     if (req.method === "GET" && pathname === "/") {
-      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" })
+      const current = status()
+      res.writeHead(200, {
+        "Content-Type": "text/html; charset=utf-8",
+        "X-Pptwise-Build-Status": current.latestOk ? "ok" : "failed",
+        "X-Pptwise-Served-Revision": String(current.servedRevision),
+        "X-Pptwise-Latest-Revision": String(current.latestRevision),
+      })
       res.end(cachedHtml)
+      return
+    }
+    if (req.method === "GET" && pathname === "/status") {
+      res.writeHead(200, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" })
+      res.end(JSON.stringify(status()))
       return
     }
     if (req.method === "GET" && pathname === "/events") {
@@ -372,41 +599,24 @@ export async function createServeServer(options: ServeOptions): Promise<ServeHan
     ASSETS_DIRNAME,
   )
 
-  const extraWatch = [workspaceAssets]
+  const extraWatch: WatchRoot[] = [{ path: workspaceAssets, kind: "dir" }]
   try {
     const resolvedTheme = await resolveThemeByName(initial.ir.theme.id, {
       startDir: cwd,
       deckDir: initial.isDir ? initial.resolvedTarget : dirname(initial.resolvedTarget),
     })
-    if (resolvedTheme.kind === "file") extraWatch.push(resolvedTheme.path)
+    if (resolvedTheme.kind === "file") extraWatch.push({ path: resolvedTheme.path, kind: "file" })
   } catch {
     // Bound theme already rendered. A resolve miss here must not block serve.
   }
 
-  const watchers: FSWatcher[] = []
-  for (const path of watchRoots(initial.resolvedTarget, initial.isDir, extraWatch)) {
-    try {
-      watchers.push(watch(path, () => scheduleRebuild()))
-    } catch (e) {
-      // `pages/`/`assets/` may not exist yet for a brand-new deck project
-      // (nothing filled in, no local images) — nothing to watch there until
-      // it's created, not a reason to fail serve startup. Anything other
-      // than "doesn't exist yet" (permissions, ...) is a real problem.
-      // Consequence (S1 review carry): this watch-setup pass only ever runs
-      // once, at `createServeServer` call time — a directory that gets
-      // created *later* in the same session (e.g. the first local image
-      // asset is added, materializing `assets/` mid-edit) is never picked
-      // up, since nothing here re-scans for newly-appeared watch roots
-      // afterward. Changes under such a directory go unnoticed until the
-      // user restarts `pptwise serve`.
-      if ((e as NodeJS.ErrnoException).code !== "ENOENT") throw e
-    }
-  }
+  const closeWatchers = watchTree(watchRoots(initial.resolvedTarget, initial.isDir, extraWatch), scheduleRebuild)
 
   function teardownWatchersAndTimers(): void {
     clearInterval(heartbeat)
     if (debounceTimer) clearTimeout(debounceTimer)
-    for (const w of watchers) w.close()
+    debounceTimer = undefined
+    closeWatchers()
   }
 
   try {
@@ -462,7 +672,7 @@ export async function createServeServer(options: ServeOptions): Promise<ServeHan
     })
   }
 
-  return { server, rebuild, close, url: `http://127.0.0.1:${actualPort}`, port: actualPort }
+  return { server, rebuild, status, close, url: `http://127.0.0.1:${actualPort}`, port: actualPort }
 }
 
 /**
