@@ -108,8 +108,11 @@ export async function generatePptxBlob(
   // PptxIRSchema rejects unrecognized keys, so strip it before the strict
   // parse rather than failing every caller that includes it.
   const { kind: _kind, ...irInput } = input as PptxIR & { kind?: unknown }
-  // 导出需要真实字节：把签名 URL 资产取回内联成 data URL（预览不需要这一步）
-  const ir = await inlinePptxAssets(PptxIRSchema.parse(irInput))
+  const parsed = PptxIRSchema.parse(irInput)
+  const theme = opts?.theme ?? getThemeDefinition(parsed.theme.id)
+  // 导出需要真实字节：把签名 URL 资产取回内联成 data URL（预览不需要这一步）。
+  // 主题默认背景也可能指向资产，所以主题先于内联解析。
+  const ir = await inlinePptxAssets(parsed, theme)
 
   const PptxGenJS = (await import("pptxgenjs")).default
   const pptx: pptxgen = new PptxGenJS()
@@ -117,7 +120,6 @@ export async function generatePptxBlob(
   pptx.defineLayout({ name: "LAYOUT_WIDE", width: 13.33, height: 7.5 })
   pptx.layout = "LAYOUT_WIDE"
 
-  const theme = opts?.theme ?? getThemeDefinition(ir.theme.id)
   defineMastersForIR(pptx, theme.style)
 
   const gradientPatches: GradientFillPatch[] = []

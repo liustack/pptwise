@@ -4,6 +4,9 @@ import { assetReferences } from "@/ir/asset-references"
 import { inlinePptxAssets, MAX_DECODE_BYTES } from "./inline-assets"
 import { PptwiseError } from "../errors"
 import { installPlatform } from "./registry"
+import { getThemeDefinition } from "../themes/definitions"
+
+const BULLETIN = getThemeDefinition("bulletin")
 
 const RED_PNG =
   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
@@ -61,7 +64,7 @@ describe("inlinePptxAssets", () => {
   it("passes data URLs through untouched and skips fetch", async () => {
     const fetchSpy = vi.fn()
     vi.stubGlobal("fetch", fetchSpy)
-    const out = await inlinePptxAssets(ir({ bg: { src: RED_PNG } }))
+    const out = await inlinePptxAssets(ir({ bg: { src: RED_PNG } }), BULLETIN)
     expect(out.assets.images.bg.src).toBe(RED_PNG)
     expect(fetchSpy).not.toHaveBeenCalled()
   })
@@ -74,7 +77,7 @@ describe("inlinePptxAssets", () => {
     const globalFetch = vi.fn()
     installPlatform({ fetch: platformFetch })
     vi.stubGlobal("fetch", globalFetch)
-    const out = await inlinePptxAssets(ir({ hero: { src: "https://example.com/hero.png" } }))
+    const out = await inlinePptxAssets(ir({ hero: { src: "https://example.com/hero.png" } }), BULLETIN)
     expect(platformFetch).toHaveBeenCalled()
     expect(globalFetch).not.toHaveBeenCalled()
     expect(out.assets.images.hero?.src.startsWith("data:image/png;base64,")).toBe(true)
@@ -91,6 +94,7 @@ describe("inlinePptxAssets", () => {
     )
     const out = await inlinePptxAssets(
       ir({ bg: { src: "https://minio.local/render/cover.png?sig=x" } }),
+      BULLETIN,
     )
     expect(out.assets.images.bg.src.startsWith("data:image/png;base64,")).toBe(true)
   })
@@ -101,16 +105,16 @@ describe("inlinePptxAssets", () => {
       vi.fn(async () => new Response(null, { status: 403 })),
     )
     await expect(
-      inlinePptxAssets(ir({ cover_bg: { src: "https://minio.local/x.png" } })),
+      inlinePptxAssets(ir({ cover_bg: { src: "https://minio.local/x.png" } }), BULLETIN),
     ).rejects.toThrow(PptwiseError)
     await expect(
-      inlinePptxAssets(ir({ cover_bg: { src: "https://minio.local/x.png" } })),
+      inlinePptxAssets(ir({ cover_bg: { src: "https://minio.local/x.png" } }), BULLETIN),
     ).rejects.toThrow(/cover_bg/)
   })
 
   it("returns the same ir when there are no assets", async () => {
     const input = ir({})
-    const out = await inlinePptxAssets(input)
+    const out = await inlinePptxAssets(input, BULLETIN)
     expect(out).toBe(input)
   })
 })
@@ -132,7 +136,7 @@ describe("only referenced assets are materialized", () => {
       { type: "cover", heading: "标题", components: [] },
       { type: "ending", components: [] },
     ] as PptxIR["slides"]
-    const out = await inlinePptxAssets(input)
+    const out = await inlinePptxAssets(input, BULLETIN)
     expect(fetchSpy).not.toHaveBeenCalled()
     expect(decode).not.toHaveBeenCalled()
     expect(out.assets.images.orphan).toBe(input.assets.images.orphan)
@@ -145,7 +149,7 @@ describe("only referenced assets are materialized", () => {
     const webpDataUrl = `data:image/webp;base64,${btoa(String.fromCharCode(...FAKE_WEBP_BYTES))}`
     const input = ir({ orphan: { src: webpDataUrl } })
     input.slides = [{ type: "cover", heading: "标题", components: [] }] as PptxIR["slides"]
-    const out = await inlinePptxAssets(input)
+    const out = await inlinePptxAssets(input, BULLETIN)
     expect(decode).not.toHaveBeenCalled()
     expect(out.assets.images.orphan?.src).toBe(webpDataUrl)
   })
@@ -161,7 +165,7 @@ describe("only referenced assets are materialized", () => {
       { type: "cover", heading: "标题", components: [] },
       { type: "content", kind: "photo", heading: "Photo", components: [{ type: "image", asset_id: "hero" }] },
     ] as PptxIR["slides"]
-    const out = await inlinePptxAssets(input)
+    const out = await inlinePptxAssets(input, BULLETIN)
     expect(fetchSpy).toHaveBeenCalledTimes(1)
     expect(fetchSpy.mock.calls[0]?.[0]).toBe("https://example.com/hero.png")
     expect(out.assets.images.hero?.src.startsWith("data:image/png;base64,")).toBe(true)
@@ -175,7 +179,7 @@ describe("only referenced assets are materialized", () => {
     input.slides = [
       { type: "cover", heading: "标题", components: [], background: { kind: "asset", asset_id: "bg" } },
     ] as PptxIR["slides"]
-    const out = await inlinePptxAssets(input)
+    const out = await inlinePptxAssets(input, BULLETIN)
     expect(fetchSpy).toHaveBeenCalledTimes(1)
     expect(out.assets.images.bg?.src.startsWith("data:image/png;base64,")).toBe(true)
   })
@@ -186,7 +190,7 @@ describe("only referenced assets are materialized", () => {
     const input = ir({ mark: { src: "https://example.com/mark.png" } })
     input.brand = { logo_asset_id: "mark" }
     input.slides = [{ type: "cover", heading: "标题", components: [] }] as PptxIR["slides"]
-    const out = await inlinePptxAssets(input)
+    const out = await inlinePptxAssets(input, BULLETIN)
     expect(fetchSpy).toHaveBeenCalledTimes(1)
     expect(out.assets.images.mark?.src.startsWith("data:image/png;base64,")).toBe(true)
   })
@@ -234,7 +238,7 @@ describe("office-safe mime normalization", () => {
           new Response(bytes, { headers: { "content-type": "image/webp" } }),
       ),
     )
-    const out = await inlinePptxAssets(ir({ photo: { src: WEBP_URL } }))
+    const out = await inlinePptxAssets(ir({ photo: { src: WEBP_URL } }), BULLETIN)
     expect(out.assets.images.photo.src.startsWith("data:image/png")).toBe(true)
   })
 
@@ -243,7 +247,7 @@ describe("office-safe mime normalization", () => {
     const fetchSpy = vi.fn()
     vi.stubGlobal("fetch", fetchSpy)
     const webpDataUrl = `data:image/webp;base64,${btoa(String.fromCharCode(...FAKE_WEBP_BYTES))}`
-    const out = await inlinePptxAssets(ir({ photo: { src: webpDataUrl } }))
+    const out = await inlinePptxAssets(ir({ photo: { src: webpDataUrl } }), BULLETIN)
     expect(out.assets.images.photo.src.startsWith("data:image/png")).toBe(true)
     expect(fetchSpy).not.toHaveBeenCalled()
   })
@@ -257,7 +261,7 @@ describe("office-safe mime normalization", () => {
           new Response(bytes, { headers: { "content-type": "image/jpeg" } }),
       ),
     )
-    const out = await inlinePptxAssets(ir({ photo: { src: "https://minio.local/p.jpg" } }))
+    const out = await inlinePptxAssets(ir({ photo: { src: "https://minio.local/p.jpg" } }), BULLETIN)
     expect(out.assets.images.photo.src.startsWith("data:image/jpeg;base64,")).toBe(true)
   })
 
@@ -273,7 +277,7 @@ describe("office-safe mime normalization", () => {
       ),
     )
     await expect(
-      inlinePptxAssets(ir({ upload_bg: { src: WEBP_URL } })),
+      inlinePptxAssets(ir({ upload_bg: { src: WEBP_URL } }), BULLETIN),
     ).rejects.toThrow(/upload_bg/)
   })
 })
@@ -296,10 +300,10 @@ describe("fetched-bytes validation (Task 2 follow-up, now part of assertDecodabl
       ),
     )
     await expect(
-      inlinePptxAssets(ir({ hero: { src: "https://example.com/hero.png" } })),
+      inlinePptxAssets(ir({ hero: { src: "https://example.com/hero.png" } }), BULLETIN),
     ).rejects.toThrow(PptwiseError)
     await expect(
-      inlinePptxAssets(ir({ hero: { src: "https://example.com/hero.png" } })),
+      inlinePptxAssets(ir({ hero: { src: "https://example.com/hero.png" } }), BULLETIN),
     ).rejects.toThrow(/hero/)
   })
 
@@ -309,7 +313,7 @@ describe("fetched-bytes validation (Task 2 follow-up, now part of assertDecodabl
       vi.fn(async () => new Response(new Uint8Array([]), { headers: { "content-type": "image/png" } })),
     )
     await expect(
-      inlinePptxAssets(ir({ hero: { src: "https://example.com/hero.png" } })),
+      inlinePptxAssets(ir({ hero: { src: "https://example.com/hero.png" } }), BULLETIN),
     ).rejects.toThrow(/zero-byte or undecodable/)
   })
 
@@ -320,7 +324,7 @@ describe("fetched-bytes validation (Task 2 follow-up, now part of assertDecodabl
       vi.fn(async () => new Response(pngBytes, { headers: { "content-type": "image/jpeg" } })),
     )
     await expect(
-      inlinePptxAssets(ir({ hero: { src: "https://example.com/hero.jpg" } })),
+      inlinePptxAssets(ir({ hero: { src: "https://example.com/hero.jpg" } }), BULLETIN),
     ).rejects.toThrow(/declares "image\/jpeg" but its bytes are actually image\/png/)
   })
 
@@ -330,7 +334,7 @@ describe("fetched-bytes validation (Task 2 follow-up, now part of assertDecodabl
       "fetch",
       vi.fn(async () => new Response(pngBytes, { headers: { "content-type": "image/png" } })),
     )
-    const out = await inlinePptxAssets(ir({ hero: { src: "https://example.com/hero.png" } }))
+    const out = await inlinePptxAssets(ir({ hero: { src: "https://example.com/hero.png" } }), BULLETIN)
     expect(out.assets.images.hero?.src.startsWith("data:image/png;base64,")).toBe(true)
   })
 })
@@ -340,7 +344,7 @@ describe("background compression selection", () => {
     const { backgroundAssetIds } = await import("./inline-assets")
     const input = ir({ a: { src: RED_PNG }, b: { src: RED_PNG } })
     input.slides[0].background = { kind: "asset", asset_id: "a" }
-    expect(backgroundAssetIds(input)).toEqual(new Set(["a"]))
+    expect(backgroundAssetIds(input, BULLETIN)).toEqual(new Set(["a"]))
   })
 
   it("keeps small or non-background assets untouched by compression", async () => {
@@ -371,7 +375,7 @@ describe("real decode gate before export", () => {
   it("refuses to export when no decoder exists, and says how to get one", async () => {
     installPlatform({ decodeImage: undefined })
     expect(typeof createImageBitmap).toBe("undefined")
-    const run = inlinePptxAssets(deckWithPages({ hero: { src: RED_PNG } }))
+    const run = inlinePptxAssets(deckWithPages({ hero: { src: RED_PNG } }), BULLETIN)
     await expect(run).rejects.toThrow(PptwiseError)
     await expect(run).rejects.toThrow(/cannot verify image assets/)
     await expect(run).rejects.toThrow(/npm i sharp/)
@@ -382,7 +386,7 @@ describe("real decode gate before export", () => {
     const decode = vi.fn(acceptAnyImage)
     installPlatform({ decodeImage: decode })
     vi.stubGlobal("fetch", vi.fn(async () => new Response(pngBytes, { headers: { "content-type": "image/png" } })))
-    await inlinePptxAssets(ir({ local: { src: RED_PNG }, remote: { src: "https://example.com/a.png" } }))
+    await inlinePptxAssets(ir({ local: { src: RED_PNG }, remote: { src: "https://example.com/a.png" } }), BULLETIN)
     expect(decode).toHaveBeenCalledTimes(2)
     for (const call of decode.mock.calls) {
       expect(call[0]).toBeInstanceOf(Uint8Array)
@@ -397,7 +401,7 @@ describe("real decode gate before export", () => {
       },
     })
     const signatureOnly = `data:image/png;base64,${btoa(String.fromCharCode(...PNG_SIGNATURE_ONLY))}`
-    const run = inlinePptxAssets(deckWithPages({ hero: { src: signatureOnly } }))
+    const run = inlinePptxAssets(deckWithPages({ hero: { src: signatureOnly } }), BULLETIN)
     await expect(run).rejects.toThrow(PptwiseError)
     await expect(run).rejects.toThrow(/asset "hero" \(used on cover-1 \(page 1\), photo-2 \(page 2\)\)/)
     await expect(run).rejects.toThrow(/could not be decoded as an image \(Input buffer has corrupt header\)/)
@@ -410,7 +414,7 @@ describe("real decode gate before export", () => {
       },
     })
     vi.stubGlobal("fetch", vi.fn(async () => new Response(FAKE_JPEG_BYTES, { headers: { "content-type": "image/jpeg" } })))
-    const run = inlinePptxAssets(deckWithPages({ hero: { src: "https://example.com/hero.jpg" } }))
+    const run = inlinePptxAssets(deckWithPages({ hero: { src: "https://example.com/hero.jpg" } }), BULLETIN)
     await expect(run).rejects.toThrow(/asset "hero" \(used on cover-1 \(page 1\), photo-2 \(page 2\), fetched from https:\/\/example.com\/hero.jpg\)/)
   })
 
@@ -420,7 +424,7 @@ describe("real decode gate before export", () => {
     const huge = new Uint8Array(MAX_DECODE_BYTES + 1)
     huge.set(PNG_SIGNATURE_ONLY, 0)
     vi.stubGlobal("fetch", vi.fn(async () => new Response(huge, { headers: { "content-type": "image/png" } })))
-    const run = inlinePptxAssets(ir({ hero: { src: "https://example.com/huge.png" } }))
+    const run = inlinePptxAssets(ir({ hero: { src: "https://example.com/huge.png" } }), BULLETIN)
     await expect(run).rejects.toThrow(PptwiseError)
     await expect(run).rejects.toThrow(/above the 25\.0 MB limit/)
     expect(decode).not.toHaveBeenCalled()
@@ -430,11 +434,11 @@ describe("real decode gate before export", () => {
     const decode = vi.fn(acceptAnyImage)
     installPlatform({ decodeImage: decode })
     const pngLabeledJpeg = `data:image/jpeg;base64,${RED_PNG.split(",")[1]}`
-    await expect(inlinePptxAssets(ir({ hero: { src: pngLabeledJpeg } }))).rejects.toThrow(
+    await expect(inlinePptxAssets(ir({ hero: { src: pngLabeledJpeg } }), BULLETIN)).rejects.toThrow(
       /declares "image\/jpeg" but its bytes are actually image\/png/,
     )
     const text = `data:image/png;base64,${btoa("not an image at all")}`
-    await expect(inlinePptxAssets(ir({ hero: { src: text } }))).rejects.toThrow(/corrupt or unrecognized image header/)
+    await expect(inlinePptxAssets(ir({ hero: { src: text } }), BULLETIN)).rejects.toThrow(/corrupt or unrecognized image header/)
     expect(decode).not.toHaveBeenCalled()
   })
 
@@ -457,10 +461,74 @@ describe("real decode gate before export", () => {
         ],
       },
     ] as PptxIR["slides"]
-    const refs = assetReferences(input)
+    const refs = assetReferences(input, BULLETIN)
     expect(refs.get("logo")).toEqual(["brand logo"])
     expect(refs.get("bg")).toEqual(["c (page 1)"])
     expect(refs.get("a")).toEqual(["page 2"])
     for (const id of ["g1", "l", "r", "d", "lw", "pc"]) expect(refs.get(id)).toEqual(["page 2"])
+  })
+})
+
+// A theme's `style.defaultBackgrounds` may name an asset too, and the
+// renderer draws `slide.background ?? theme.style.defaultBackgrounds[type]`.
+// The reference list used to read only `slide.background`, so an asset only
+// the theme referred to was never fetched and never decoded: the exported
+// deck lost the picture, and a corrupt one slipped past assertDecodableImage.
+describe("theme default backgrounds", () => {
+  function themeWithCoverAsset(asset_id: string) {
+    const base = getThemeDefinition("bulletin")
+    return {
+      ...base,
+      style: {
+        ...base.style,
+        defaultBackgrounds: { ...base.style.defaultBackgrounds, cover: { kind: "asset" as const, asset_id } },
+      },
+    }
+  }
+  /** A cover with no background of its own, so the theme default applies. */
+  function deck(src: string): PptxIR {
+    return {
+      version: "5",
+      filename: "t.pptx",
+      theme: { id: "bulletin" },
+      meta: {},
+      assets: { images: { hero: { src } } },
+      slides: [
+        { id: "cover-1", type: "cover", heading: "标题", components: [] },
+        { type: "content", kind: "points", heading: "Body", components: [{ type: "paragraph", text: "x" }] },
+        { type: "ending", components: [] },
+      ],
+    } as PptxIR
+  }
+
+  it("fetches an asset only the theme's default cover background refers to", async () => {
+    const pngBytes = Uint8Array.from(atob(RED_PNG.split(",")[1]!), (c) => c.charCodeAt(0))
+    const fetchMock = vi.fn(async () => new Response(pngBytes, { headers: { "content-type": "image/png" } }))
+    vi.stubGlobal("fetch", fetchMock)
+    const out = await inlinePptxAssets(deck("https://example.com/hero.png"), themeWithCoverAsset("hero"))
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(out.assets.images.hero?.src.startsWith("data:image/png;base64,")).toBe(true)
+  })
+
+  it("leaves the asset alone when the theme defaults are colors and no page refers to it", async () => {
+    const fetchMock = vi.fn()
+    vi.stubGlobal("fetch", fetchMock)
+    const input = deck("https://example.com/hero.png")
+    const out = await inlinePptxAssets(input, getThemeDefinition("bulletin"))
+    expect(fetchMock).not.toHaveBeenCalled()
+    expect(out.assets.images.hero).toBe(input.assets.images.hero)
+  })
+
+  it("refuses a signature-only PNG behind the theme default background and names the page", async () => {
+    // Sharp's answer to an 8-byte PNG: the signature sniffs fine, the decode fails.
+    installPlatform({
+      decodeImage: async (bytes: Uint8Array) => {
+        if (bytes.length <= 8) throw new Error("Input buffer has corrupt header")
+        return { width: 1, height: 1 }
+      },
+    })
+    const promise = inlinePptxAssets(deck("data:image/png;base64,iVBORw0KGgo="), themeWithCoverAsset("hero"))
+    await expect(promise).rejects.toThrow(PptwiseError)
+    await expect(promise).rejects.toThrow(/asset "hero" \(used on cover-1 \(page 1\)\)/)
   })
 })

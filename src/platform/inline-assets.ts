@@ -5,8 +5,10 @@
  * 导出产物里整体缺失（页面只剩遮罩，视觉上是黑/灰底）。
  *
  * 只处理被页面引用的资产（`@/ir/asset-references` 的 `assetReferences`）：
- * 没有任何页面、背景或品牌 logo 指向的资产原样留在 ir.assets.images 里，
- * 不下载、不解码、不重编码。没人画它，它的字节也不会进 ppt/media。
+ * 没有任何页面、背景、主题默认背景或品牌 logo 指向的资产原样留在
+ * ir.assets.images 里，不下载、不解码、不重编码。没人画它，它的字节也不会进
+ * ppt/media。主题默认背景也能指向资产，所以这里要拿到绑定的主题定义
+ * （与 generatePptxBlob 用的是同一份按值传入的定义）。
  *
  * 失败语义与 image-export 一致：显式抛错，不生成残缺文档。
  *
@@ -18,6 +20,7 @@ import type { PptxIR } from "@/ir"
 import { assetReferences } from "@/ir/asset-references"
 import { dataUriMime, decodeDataUriBytes, FORMAT_BY_MIME, MIME_BY_SNIFFED_FORMAT, sniffImageFormat } from "@/ir/asset-sniff"
 import { PptwiseError } from "../errors"
+import type { ThemeDefinition } from "../themes/definitions"
 import { decodeImageInBrowser, hasBrowserImageDecoder } from "./browser"
 import { type DecodedImageSize, getPlatform } from "./registry"
 
@@ -36,12 +39,13 @@ async function responseToDataUrl(resp: Response): Promise<string> {
   return `data:${mime};base64,${btoa(bin)}`
 }
 
-/** 收集所有被 slide.background 引用的 asset id（仅这些参与背景压缩）。 */
-export function backgroundAssetIds(ir: PptxIR): Set<string> {
+/** 收集所有被页面背景引用的 asset id（仅这些参与背景压缩）：页面自己的
+ *  slide.background，或页面没写背景时兜底的主题默认背景。 */
+export function backgroundAssetIds(ir: PptxIR, theme: ThemeDefinition): Set<string> {
   const ids = new Set<string>()
   for (const slide of ir.slides) {
-    const bg = slide.background
-    if (bg && bg.kind === "asset" && bg.asset_id) ids.add(bg.asset_id)
+    const bg = slide.background ?? theme.style.defaultBackgrounds[slide.type]
+    if (bg.kind === "asset" && bg.asset_id) ids.add(bg.asset_id)
   }
   return ids
 }
@@ -231,11 +235,13 @@ async function assertDecodableImage(id: string, pages: string[], dataUrl: string
   }
 }
 
-export async function inlinePptxAssets(ir: PptxIR): Promise<PptxIR> {
+/** `theme` is the deck's bound theme, by value: its default backgrounds
+ *  count as references too. */
+export async function inlinePptxAssets(ir: PptxIR, theme: ThemeDefinition): Promise<PptxIR> {
   const entries = Object.entries(ir.assets?.images ?? {})
   if (entries.length === 0) return ir
-  const bgIds = backgroundAssetIds(ir)
-  const refs = assetReferences(ir)
+  const bgIds = backgroundAssetIds(ir, theme)
+  const refs = assetReferences(ir, theme)
 
   const images: Record<string, (typeof entries)[number][1]> = {}
   await Promise.all(

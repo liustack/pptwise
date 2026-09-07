@@ -1,7 +1,9 @@
 import JSZip from "jszip"
-import { describe, expect, it } from "vitest"
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest"
 import { generatePptx, renderSlideSvg, validateIr } from "./api"
 import { auditDeck } from "./audit/deck-audit"
+import { decodeImageWithSharp } from "./platform/node"
+import { installPlatform } from "./platform/registry"
 import { makeSolidRegionPngDataUri } from "./platform/test-png-fixture"
 import { buildAssetBrief } from "./render/asset-brief"
 import { THEME_DEFINITIONS, getThemeDefinition, type ThemeDefinition } from "./themes/definitions"
@@ -125,5 +127,63 @@ describe("theme definitions passed by value", () => {
     expect(brief.items[0]!.palette.primary).toBe(PRIMARY_A)
     const report = auditDeck(v.ir!, { theme: THEME_A })
     expect(report.pagesAudited).toBe(3)
+  })
+})
+
+// A theme carried by value may also carry asset-backed default backgrounds.
+// Export must fetch and decode those the same way it does a page's own
+// `background`, or the picture is missing from the deck and a corrupt one
+// bypasses the decode gate.
+describe("theme default backgrounds passed by value", () => {
+  function withCoverAsset(asset_id: string): ThemeDefinition {
+    const base = THEME_DEFINITIONS.brief
+    return {
+      ...base,
+      style: {
+        ...base.style,
+        defaultBackgrounds: { ...base.style.defaultBackgrounds, cover: { kind: "asset", asset_id } },
+      },
+    }
+  }
+  const coverDeck = (src: string) => ({
+    ...raw,
+    assets: { images: { hero: { src } } },
+    slides: [{ id: "cover-1", type: "cover", heading: "Theme by value" }, raw.slides[1]],
+  })
+
+  beforeAll(() => {
+    installPlatform({ decodeImage: decodeImageWithSharp })
+  })
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it("fetches the remote asset the theme's default cover background names", async () => {
+    const realPng = makeSolidRegionPngDataUri(4, 4, () => [200, 30, 30])
+    const pngBytes = Uint8Array.from(atob(realPng.split(",")[1]!), (c) => c.charCodeAt(0))
+    const fetchMock = vi.fn(async () => new Response(pngBytes, { headers: { "content-type": "image/png" } }))
+    vi.stubGlobal("fetch", fetchMock)
+    const bytes = await generatePptx(coverDeck("https://example.com/hero.png"), { theme: withCoverAsset("hero") })
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    const zip = await JSZip.loadAsync(bytes)
+    expect(Object.keys(zip.files).some((name) => name.startsWith("ppt/media/"))).toBe(true)
+  })
+
+  it("refuses a signature-only PNG behind the theme default background and names the page", async () => {
+    const promise = generatePptx(coverDeck("data:image/png;base64,iVBORw0KGgo="), { theme: withCoverAsset("hero") })
+    await expect(promise).rejects.toThrow(/asset "hero" \(used on cover-1 \(page 1\)\)/)
+  })
+
+  it("validate warns when the theme default background names an asset the deck does not declare", () => {
+    const v = validateIr({ ...raw, slides: [{ id: "cover-1", type: "cover", heading: "x" }, raw.slides[1]] }, { theme: withCoverAsset("ghost") })
+    expect(v.ok).toBe(true)
+    expect(v.warnings).toEqual([
+      {
+        path: "theme.style.defaultBackgrounds.cover",
+        message: 'asset_id "ghost" is not defined in assets.images — available: (none defined)',
+        page: 1,
+        slideId: "cover-1",
+      },
+    ])
   })
 })

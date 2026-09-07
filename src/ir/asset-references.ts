@@ -14,6 +14,11 @@
  *   `layouts/content-split-band.tsx`)
  * - `slides[].background.asset_id` when `background.kind === "asset"`
  *   (cover, chapter, content, and ending backgrounds alike)
+ * - `theme.style.defaultBackgrounds.<type>.asset_id` for every page of that
+ *   type that sets no `background` of its own: the renderer draws
+ *   `slide.background ?? theme.style.defaultBackgrounds[slide.type]`
+ *   (`render/full-slide-svg.tsx`, `render/layout-selection.ts`), so the
+ *   theme's default is a reference the moment a page falls back to it
  * - `image.asset_id`
  * - `device_mockup.asset_id`
  * - `image_grid.items[].asset_id`
@@ -21,17 +26,23 @@
  * - `logo_wall.items[].asset_id` (optional per item)
  * - `product_cards.items[].asset_id`
  *
- * Theme files carry no asset ids: a theme's brand block is colors and
- * posture only, and the logo comes from the deck's `brand`. Faces that
- * promote a component to a picture (`layouts/find-image.ts`) only re-read
- * the component ids above, so they add no field of their own.
+ * The theme's default backgrounds are the one place outside the deck that
+ * names an asset, which is why both functions take the bound theme by
+ * value (the same definition validate and export already hold). A theme's
+ * brand block is colors and posture only, and the logo comes from the
+ * deck's `brand`. Faces that promote a component to a picture
+ * (`layouts/find-image.ts`) only re-read the component ids above, so they
+ * add no field of their own.
  */
+import type { ThemeDefinition } from "../themes/definitions"
 import type { PptxIR } from "./index"
 
 export interface AssetReference {
   /** The `assets.images` key being referred to. */
   asset_id: string
-  /** JSON path of the referring field, e.g. `slides.2.components.0.asset_id`. */
+  /** JSON path of the referring field, e.g. `slides.2.components.0.asset_id`,
+   *  or `theme.style.defaultBackgrounds.cover` for a page that falls back to
+   *  the theme's default background (one entry per such page). */
   path: string
   /** 0-based slide index. Absent for deck-level references (the brand logo). */
   slide?: number
@@ -39,8 +50,8 @@ export interface AssetReference {
   slideId?: string
 }
 
-/** Every asset reference in the deck, in document order. */
-export function listAssetReferences(ir: PptxIR): AssetReference[] {
+/** Every asset reference in the deck, in document order, under `theme`. */
+export function listAssetReferences(ir: PptxIR, theme: ThemeDefinition): AssetReference[] {
   const refs: AssetReference[] = []
   const add = (assetId: string | undefined, path: string, slide?: number, slideId?: string) => {
     if (!assetId) return
@@ -54,8 +65,15 @@ export function listAssetReferences(ir: PptxIR): AssetReference[] {
   add(ir.brand?.logo_asset_id, "brand.logo_asset_id")
   ir.slides.forEach((slide, i) => {
     const slideId = slide.id
-    if (slide.background?.kind === "asset") {
-      add(slide.background.asset_id, `slides.${i}.background.asset_id`, i, slideId)
+    if (slide.background !== undefined) {
+      if (slide.background.kind === "asset") {
+        add(slide.background.asset_id, `slides.${i}.background.asset_id`, i, slideId)
+      }
+    } else {
+      const fallback = theme.style.defaultBackgrounds[slide.type]
+      if (fallback.kind === "asset") {
+        add(fallback.asset_id, `theme.style.defaultBackgrounds.${slide.type}`, i, slideId)
+      }
     }
     slide.components.forEach((c, ci) => {
       const base = `slides.${i}.components.${ci}`
@@ -85,9 +103,9 @@ function slideRef(slide: PptxIR["slides"][number], index: number): string {
  * key set to decide which assets to materialize and the values to name the
  * pages a broken picture would have appeared on.
  */
-export function assetReferences(ir: PptxIR): Map<string, string[]> {
+export function assetReferences(ir: PptxIR, theme: ThemeDefinition): Map<string, string[]> {
   const refs = new Map<string, string[]>()
-  for (const ref of listAssetReferences(ir)) {
+  for (const ref of listAssetReferences(ir, theme)) {
     const where = ref.slide === undefined ? "brand logo" : slideRef(ir.slides[ref.slide]!, ref.slide)
     const list = refs.get(ref.asset_id)
     if (!list) refs.set(ref.asset_id, [where])

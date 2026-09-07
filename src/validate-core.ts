@@ -654,13 +654,15 @@ function checkAssetBytes(ir: PptxIR): ValidationIssue[] {
  * render-time placeholder behavior itself is unchanged — this only makes its
  * cause visible instead of silent.
  */
-function checkAssetReferences(ir: PptxIR): ValidationIssue[] {
+function checkAssetReferences(ir: PptxIR, theme: ThemeDefinition): ValidationIssue[] {
   const known = Object.keys(ir.assets.images)
   const available = known.length > 0 ? known.map((k) => `"${k}"`).join(", ") : "(none defined)"
   const issues: ValidationIssue[] = []
-  // Every reference carries a distinct `path` (one per asset_id-bearing
-  // field in the deck), so no separate dedup bookkeeping is needed here.
-  for (const ref of listAssetReferences(ir)) {
+  // Every deck-side reference carries a distinct `path` (one per
+  // asset_id-bearing field). A theme default background repeats its path
+  // once per page that falls back to it, each with that page's number, so
+  // the author sees every page the missing picture would have covered.
+  for (const ref of listAssetReferences(ir, theme)) {
     if (known.includes(ref.asset_id)) continue
     issues.push({
       path: ref.path,
@@ -888,7 +890,7 @@ export function validateIr(input: unknown, opts?: { theme?: ThemeDefinition }): 
   // rejected (`ok: false`) deck's warnings are still worth seeing, not just
   // a clean one's.
   const warnFindings = quality.filter((issue) => issue.severity === "warn").map(toIssue)
-  const assetRefWarnings = checkAssetReferences(r.data)
+  const assetRefWarnings = checkAssetReferences(r.data, theme)
   const allWarnings = [...warnFindings, ...assetRefWarnings]
   const warnings = allWarnings.length > 0 ? allWarnings : undefined
   const errorFindings = quality.filter((issue) => issue.severity === "error")
