@@ -34,7 +34,7 @@ Fill no more than four pages between validation passes. Use `serve` when a revie
 | `validate <target>` | Validate IR, theme binding, menu kinds, components, assets, and content quality. |
 | `audit <target>` | Run deterministic visual and geometry checks. |
 | `asset-brief <target>` | Report real image frames, crop, palette, safe zones, and prompts. |
-| `schema` | Print the IR, spec, or style-override JSON Schema. |
+| `schema` | Print the IR or spec JSON Schema, or one component or kind cut from it. |
 | `spec validate <file>` | Validate a theme-shaped deck spec. |
 | `assemble <dir|name>` | Merge a deck project into derived IR v5. |
 | `disassemble <ir.json>` | Split IR v5 into a spec, page files, and assets. |
@@ -44,6 +44,7 @@ Fill no more than four pages between validation passes. Use `serve` when a revie
 | `theme try` | Render the fixed fitting-room sample across two to four themes. |
 | `brand extract` | Extract Office colors and fonts into a complete v2 theme. |
 | `narratives` | List named narrative presets and axes. |
+| `icons` | List every icon name an `icon` field accepts. |
 | `layouts` | Inspect the internal face registry for engine maintenance. |
 | `images search` | Search configured stock providers. |
 | `images fetch` | Pin one selected stock image to a deck. |
@@ -98,10 +99,19 @@ Any finding exits with code 1. `--pixels` adds image-backed text contrast sampli
 ## Schemas and specs
 
 ```bash
-pptwise schema
-pptwise schema --spec
+pptwise schema [--pretty] [--full]
+pptwise schema --spec [--pretty]
+pptwise schema --component <type> [--pretty] [--full]
+pptwise schema --kind <kind> [--theme <name>] [--pretty] [--full]
+pptwise icons [--json]
 pptwise spec validate deck-dir/deck.spec.json
 ```
+
+The IR schema keeps every shared piece in `$defs` once: each component under its own type name, the component union as `Component`, and the icon-name enum as `IconName`. Output is one line unless `--pretty` is passed.
+
+`--component` prints one component's schema with only the `$defs` it needs. `--kind` prints the components a page of that kind may hold, the face each installed theme binds to it, a `oneOf` over those components, and their `$defs`. Add `--theme` to answer for the bound theme alone. The list comes from the same theme-menu route validate uses, so a component outside it fails `validate`. An unknown type, kind, or theme fails and lists the valid names.
+
+Icon fields print as a string that points at `pptwise icons`. `--full` prints the closed enum instead, for programs that validate against the schema. Validation always checks the closed enum.
 
 IR is version `"5"`. The deck spec is version `"1"`. Theme files are numeric version `2`. Current IR has no `seed`, `layout`, `beat`, or `arrangement` fields.
 

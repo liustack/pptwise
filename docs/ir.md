@@ -134,10 +134,11 @@ Narrative guides the argument, tone, theme choice, body-text baseline, and edito
 
 ## Components
 
-`components` is a discriminated union of 62 typed units. Ask the installed schema for exact fields:
+`components` is a discriminated union of 62 typed units. Ask the installed schema for exact fields, one component or one kind at a time:
 
 ```bash
-pptwise schema > ir.schema.json
+pptwise schema --component kpi_cards
+pptwise schema --kind data --theme brief
 ```
 
 The attributed prose component is `blockquote`. There is no component type named `quote`.

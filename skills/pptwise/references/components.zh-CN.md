@@ -7,6 +7,18 @@ mirror_of: skills/pptwise/references/components.md
 
 何时读：主题与 `kind` 已经确定，需要选择填充页面的类型化内容单元时。
 
+## 读取现场契约
+
+写页面前先向已安装的 CLI 查精确字段。一次查一个 kind 或一个组件，不读整份 schema：
+
+```bash
+pptwise schema --kind <kind> --theme <theme>
+pptwise schema --component <type>
+pptwise icons
+```
+
+kind 查询列出绑定主题的脸能画的组件，每个组件一份 schema，列表之外的组件会被 `validate` 拒绝。组件查询打印一个组件的字段。图标字段的名字来自 `pptwise icons`。
+
 ## 命名
 
 组件类型叫 `blockquote`。页面讲法叫 `quote`。有归属的引文放进 `blockquote`，它既可以出现在 `quote` 页面，也可以作为其他页面的证据。不要写名为 `quote` 的组件类型。

@@ -2,6 +2,18 @@
 
 Read this when choosing the typed content units that fill a page after its theme and `kind` are fixed.
 
+## Read the live contract
+
+Ask the installed CLI for exact fields before writing a page. One kind or one component at a time, never the whole schema:
+
+```bash
+pptwise schema --kind <kind> --theme <theme>
+pptwise schema --component <type>
+pptwise icons
+```
+
+The kind query lists the components the bound theme's face can draw, one schema each, and `validate` rejects a component outside that list. The component query prints one component's fields. Icon fields take a name from `pptwise icons`.
+
 ## Naming
 
 The component type is `blockquote`. The page kind is `quote`. Use a `blockquote` for attributed prose inside a `quote` page or as supporting evidence elsewhere. Never write a component type named `quote`.

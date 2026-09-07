@@ -18,11 +18,12 @@ mirror_of: skills/pptwise/references/spec.md
 每个 deck 任务开始时运行：
 
 ```bash
-pptwise schema
 pptwise schema --spec
 pptwise narratives --json
 pptwise themes --json
 ```
+
+IR 组件契约在填页时用 `pptwise schema --kind` 或 `pptwise schema --component` 按页读取。见 `components.md`。
 
 命令输出与工作区文件优先于本指南。提问前先找已有 `deck.spec.json`、deck 内 `theme.json`、工作区 `themes/`，以及用户递来的 Office 品牌文件。
 

@@ -130,10 +130,16 @@ describe("pptwise SKILL model and bilingual mirrors", () => {
   it("reads live schemas and workspace theme signals before authoring", () => {
     for (const rel of [EN_REL, ZH_REL]) {
       const text = read(rel)
-      expect(text).toContain("pptwise schema")
       expect(text).toContain("pptwise schema --spec")
       expect(text).toContain("pptwise narratives --json")
       expect(text).toContain("pptwise themes --json")
+      // The whole IR schema is never an opening read: the component contract
+      // is cut per kind or per component while filling, and icons come from
+      // their own list.
+      expect(text).not.toMatch(/^pptwise schema$/m)
+      expect(text).toContain("pptwise schema --kind <kind> --theme <theme>")
+      expect(text).toContain("pptwise schema --component <type>")
+      expect(text).toContain("pptwise icons")
       expect(text).toContain("deck.spec.json")
       expect(text).toContain("theme.json")
       expect(text).toContain("themes/")
@@ -167,10 +173,12 @@ describe("pptwise SKILL model and bilingual mirrors", () => {
     }
     expect(read(REF("layouts.md"))).not.toMatch(/layout id/i)
     expect(read(REF("layouts.zh-CN.md"))).not.toMatch(/版式 id/i)
+    // `--theme` was the retired render-time theme switch. The one place it
+    // may appear is `pptwise schema --kind`, where it names the bound theme
+    // whose face answers the query, not a render override.
     for (const file of listSkillMarkdown()) {
-      expect(readFileSync(file.abs, "utf8"), `${file.rel} exposes render --theme`).not.toMatch(
-        /(?:^|\s)--theme(?:\s|=|$)/m,
-      )
+      const lines = readFileSync(file.abs, "utf8").split("\n").filter((line) => !/^pptwise schema --kind /.test(line))
+      expect(lines.join("\n"), `${file.rel} exposes render --theme`).not.toMatch(/(?:^|\s)--theme(?:\s|=|$)/m)
     }
   })
 

@@ -40,11 +40,12 @@ powershell -ExecutionPolicy Bypass -File <skill-dir>\scripts\run.ps1 <args>  # W
 永远不要凭记忆写 IR 或 spec。每个 deck 任务开始时运行：
 
 ```bash
-pptwise schema
 pptwise schema --spec
 pptwise narratives --json
 pptwise themes --json
 ```
+
+IR 组件契约在填页时按页读取，不整份读。见第 5 步。
 
 提问前先扫描工作区。已有 `deck.spec.json` 会记录叙事、绑定主题、页面顺序、标题与每张内容页的 `kind`。deck 内 `theme.json`、工作区 `themes/` 文件、用户点名的主题，或递来的 `.thmx`、`.potx`、带品牌 `.pptx` 都是主题信号。
 
@@ -106,6 +107,14 @@ spec 锁定主题、叙事、品牌姿态、页面顺序、页型、标题，以
 每批至多写四个 `pages/<id>.json`。页面文件可以含 `components`、`background`、`image_side`、`footnote`、`notes`。不要重复 `type`、`kind`、`heading`，它们归 spec。
 
 选择服务本页 `kind` 的组件。`quote` 是页面讲法，引用组件名是 `blockquote`。组件归属与相似项对照见 `references/components.md`。节奏与容量见 `references/density.md`。图片流程见 `references/images.md`。
+
+写页面前先读精确契约，一次读一个 kind 或一个组件。kind 查询列出绑定主题的脸能画的组件，列表之外的组件会被 `validate` 拒绝。图标字段的名字来自 `pptwise icons`。
+
+```bash
+pptwise schema --kind <kind> --theme <theme>
+pptwise schema --component <type>
+pptwise icons
+```
 
 每批完成后运行：
 

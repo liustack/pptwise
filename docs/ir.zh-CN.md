@@ -134,10 +134,11 @@ IR v5 没有 `seed`、`layout`、`beat` 或 `arrangement`，也不接受这些�
 
 ## 组件
 
-`components` 是由 62 种类型化单元组成的可辨识联合。精确字段应查询当前安装的 schema：
+`components` 是由 62 种类型化单元组成的可辨识联合。精确字段应查询当前安装的 schema，一次查一个组件或一个 kind：
 
 ```bash
-pptwise schema > ir.schema.json
+pptwise schema --component kpi_cards
+pptwise schema --kind data --theme brief
 ```
 
 带归属的引文组件叫 `blockquote`。不存在名为 `quote` 的组件类型。

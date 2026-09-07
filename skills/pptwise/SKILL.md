@@ -38,11 +38,12 @@ Run `pptwise doctor` after installation and whenever a failure is not explained 
 Never write IR or a spec from memory. Run these at the start of each deck task:
 
 ```bash
-pptwise schema
 pptwise schema --spec
 pptwise narratives --json
 pptwise themes --json
 ```
+
+The IR component contract is read per page while filling, never whole. See step 5.
 
 Scan the workspace before asking questions. An existing `deck.spec.json` already records the narrative, bound theme, page order, headings, and content kinds. A deck-local `theme.json`, a workspace `themes/` file, a named theme, or a supplied `.thmx`, `.potx`, or branded `.pptx` is a theme signal.
 
@@ -104,6 +105,14 @@ The 11 words and their boundaries are in `references/layouts.md`. Full spec guid
 Write `pages/<id>.json` in batches of at most four. A page file may contain `components`, `background`, `image_side`, `footnote`, and `notes`. Never repeat `type`, `kind`, or `heading`, because the spec owns them.
 
 Choose components that serve the page's `kind`. `quote` is a page kind. The quotation component is `blockquote`. Component ownership and lookalike choices are in `references/components.md`. Pacing and physical capacity are in `references/density.md`. Image workflows are in `references/images.md`.
+
+Read the exact contract before writing a page, one kind or one component at a time. The kind query lists the components the bound theme's face can draw, and `validate` rejects anything outside that list. Icon fields take a name from `pptwise icons`.
+
+```bash
+pptwise schema --kind <kind> --theme <theme>
+pptwise schema --component <type>
+pptwise icons
+```
 
 After each batch:
 

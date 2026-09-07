@@ -34,7 +34,7 @@ pptwise preview deck-dir/ --html
 | `validate <target>` | 验证 IR、主题绑定、菜单 kind、组件、资产与内容质量。 |
 | `audit <target>` | 运行确定性视觉与几何检查。 |
 | `asset-brief <target>` | 报告真实图片画框、裁切、配色、安全区与提示词。 |
-| `schema` | 打印 IR、spec 或 style 覆盖 JSON Schema。 |
+| `schema` | 打印 IR 或 spec JSON Schema，或从中切出一个组件或一个 kind。 |
 | `spec validate <file>` | 验证主题形状的 deck spec。 |
 | `assemble <dir|name>` | 把 deck 项目合并成派生 IR v5。 |
 | `disassemble <ir.json>` | 把 IR v5 拆成 spec、页面文件与资产。 |
@@ -44,6 +44,7 @@ pptwise preview deck-dir/ --html
 | `theme try` | 用两到四个主题渲染固定试衣样稿。 |
 | `brand extract` | 从 Office 文件抽取颜色与字体，产出完整 v2 主题。 |
 | `narratives` | 列出命名叙事预设与三轴。 |
+| `icons` | 列出 `icon` 字段接受的全部图标名。 |
 | `layouts` | 为引擎维护检查内部脸注册表。 |
 | `images search` | 搜索已配置的图库来源。 |
 | `images fetch` | 把一张选定图库图片固定到 deck。 |
@@ -98,10 +99,19 @@ Audit 渲染确定性 SVG，并检查：
 ## Schema 与 spec
 
 ```bash
-pptwise schema
-pptwise schema --spec
+pptwise schema [--pretty] [--full]
+pptwise schema --spec [--pretty]
+pptwise schema --component <type> [--pretty] [--full]
+pptwise schema --kind <kind> [--theme <name>] [--pretty] [--full]
+pptwise icons [--json]
 pptwise spec validate deck-dir/deck.spec.json
 ```
+
+IR schema 把每个共享片段只放进 `$defs` 一次：每个组件用自己的类型名，组件联合叫 `Component`，图标名枚举叫 `IconName`。默认输出一行，加 `--pretty` 才缩进。
+
+`--component` 打印一个组件的 schema，只带它用到的 `$defs`。`--kind` 打印该 kind 页面可以放的组件、每个已安装主题为它绑定的脸、这些组件的 `oneOf` 以及它们的 `$defs`。加 `--theme` 只回答绑定主题的情况。列表来自 validate 用的同一条主题菜单路线，列表之外的组件会被 `validate` 拒绝。未知的类型、kind 或主题会失败并列出合法名字。
+
+图标字段打印为一个指向 `pptwise icons` 的字符串。`--full` 改为打印完整枚举，供按 schema 校验的程序使用。校验始终按完整枚举检查。
 
 IR 版本是 `"5"`，deck spec 版本是 `"1"`，主题文件版本是数字 `2`。当前 IR 没有 `seed`、`layout`、`beat` 或 `arrangement` 字段。
 

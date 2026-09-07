@@ -13,11 +13,12 @@ intent -> narrative -> theme binding -> spec with kind -> fill -> render
 Run these at the start of every deck task:
 
 ```bash
-pptwise schema
 pptwise schema --spec
 pptwise narratives --json
 pptwise themes --json
 ```
+
+The IR component contract is read per page during fill with `pptwise schema --kind` or `pptwise schema --component`. See `components.md`.
 
 The command output and workspace files outrank this guide. Scan for an existing `deck.spec.json`, deck-local `theme.json`, workspace `themes/`, and supplied Office brand files before asking questions.
 
